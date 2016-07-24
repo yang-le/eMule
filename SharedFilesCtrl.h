@@ -30,7 +30,7 @@ class CSharedFilesCtrl : public CMuleListCtrl, public CListCtrlItemWalk
 	friend class CSharedDirsTreeCtrl;
 	DECLARE_DYNAMIC(CSharedFilesCtrl)
 public:
-	class CShareDropTarget: public COleDropTarget  
+	class CShareDropTarget: public COleDropTarget
 	{
 	public:
 		CShareDropTarget();
@@ -86,7 +86,7 @@ protected:
 	void GetItemDisplayText(const CShareableFile* file, int iSubItem, LPTSTR pszText, int cchTextMax) const;
 	bool IsFilteredItem(const CShareableFile* pKnownFile) const;
 	bool IsSharedInKad(const CKnownFile *file) const;
-	void AddShareableFiles(CString strFromDir);
+	void AddShareableFiles(const CString& strFromDir);
 	void CheckBoxClicked(int iItem);
 	bool CheckBoxesEnabled() const;
 

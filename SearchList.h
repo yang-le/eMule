@@ -20,7 +20,7 @@
 #include "QArray.h"
 #include "Mapkey.h"
 
-enum ESearchType;
+enum ESearchType: int;
 
 typedef struct
 {
@@ -59,7 +59,7 @@ public:
 	~CSearchList();
 
 	void	Clear();
-	void	NewSearch(CSearchListCtrl* in_wnd, CStringA strResultFileType, uint32 nSearchID, ESearchType eType, CString strSearchExpression, bool bMobilMuleSearch = false);
+	void	NewSearch(CSearchListCtrl* in_wnd, const CStringA& strResultFileType, uint32 nSearchID, ESearchType eType, CString& strSearchExpression, bool bMobilMuleSearch = false);
 	UINT	ProcessSearchAnswer(const uchar* packet, uint32 size, CUpDownClient* Sender, bool* pbMoreResultsAvailable, LPCTSTR pszDirectory = NULL);
 	UINT	ProcessSearchAnswer(const uchar* packet, uint32 size, bool bOptUTF8, uint32 nServerIP, uint16 nServerPort, bool* pbMoreResultsAvailable);
 	UINT	ProcessUDPSearchAnswer(CFileDataIO& packet, bool bOptUTF8, uint32 nServerIP, uint16 nServerPort);
@@ -82,10 +82,10 @@ public:
 
 	void	StoreSearches();
 	void	LoadSearches();
-	
+
 	void	DoSpamRating(CSearchFile* pSearchFile, bool bIsClientFile = false, bool bMarkAsNoSpam = false, bool bRecalculateAll = false, bool bUpdateAll = false, uint32 dwFromUDPServerIP = 0);
 	void	MarkFileAsSpam(CSearchFile* pSpamFile, bool bRecalculateAll = false, bool bUpdate = false);
-	void	MarkFileAsNotSpam(CSearchFile* pSpamFile, bool bRecalculateAll = false, bool bUpdate = false)	{ DoSpamRating(pSpamFile, false, true, bRecalculateAll, bUpdate); } 
+	void	MarkFileAsNotSpam(CSearchFile* pSpamFile, bool bRecalculateAll = false, bool bUpdate = false)	{ DoSpamRating(pSpamFile, false, true, bRecalculateAll, bUpdate); }
 	void	RecalculateSpamRatings(uint32 nSearchID, bool bExpectHigher, bool bExpectLower, bool bUpdate);
 	void	SaveSpamFilter();
 
@@ -111,7 +111,7 @@ private:
 	CMap<uint32, uint32, UINT, UINT> m_RequestedUDPAnswersCount;
 	CSearchListCtrl* outputwnd;
 	CString			m_strResultFileType;
-	
+
 	uint32			m_nCurED2KSearchID;
 	bool			m_MobilMuleSearch;
 

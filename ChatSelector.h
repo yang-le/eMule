@@ -44,7 +44,7 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 // CChatSelector
 
-class CChatSelector : public CClosableTabCtrl, CFriendConnectionListener
+class CChatSelector : public CClosableTabCtrl, private CFriendConnectionListener
 {
 	DECLARE_DYNAMIC(CChatSelector)
 
@@ -60,17 +60,17 @@ public:
 	CChatItem*	GetItemByIndex(int index);
 	void		ProcessMessage(CUpDownClient* sender, const CString& message);
 	void		ShowCaptchaRequest(CUpDownClient* sender, HBITMAP bmpCaptcha);
-	void		ShowCaptchaResult(CUpDownClient* sender, CString strResult);
+	void		ShowCaptchaResult(CUpDownClient* sender, const CString& strResult);
 	bool		SendMessage(const CString& rstrMessage);
 	void		DeleteAllItems();
 	void		ShowChat();
 	void		ConnectingResult(CUpDownClient* sender,bool success);
-	void		Send();
+//	void		Send();
 	void		UpdateFonts(CFont* pFont);
 	CChatItem*	GetCurrentChatItem();
 	BOOL		RemoveItem(int nItem) { return DeleteItem(nItem); }
 	void		EnableSmileys(bool bEnable);
-	void		ReportConnectionProgress(CUpDownClient* pClient, CString strProgressDesc, bool bNoTimeStamp);
+	void		ReportConnectionProgress(CUpDownClient* pClient, const CString& strProgressDesc, bool bNoTimeStamp);
 	void		ClientObjectChanged(CUpDownClient* pOldClient, CUpDownClient* pNewClient);
 
 protected:
@@ -94,9 +94,9 @@ protected:
 	afx_msg void OnDestroy();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnTcnSelChangeChatSel(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnBnClickedCsend();
-	afx_msg void OnBnClickedCclose();
-	afx_msg void OnBnClickedSmiley();
+//	afx_msg void OnBnClickedCsend();
+//	afx_msg void OnBnClickedCclose();
+//	afx_msg void OnBnClickedSmiley();
 	afx_msg void OnSysColorChange();
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 };

@@ -46,9 +46,11 @@ enum EFriendConnectReport{
 class CFriendConnectionListener
 {
 public:
-	virtual void	ReportConnectionProgress(CUpDownClient* pClient, CString strProgressDesc, bool bNoTimeStamp) = 0;
+	virtual void	ReportConnectionProgress(CUpDownClient* pClient, const CString& strProgressDesc, bool bNoTimeStamp) = 0;
 	virtual void	ConnectingResult(CUpDownClient* pClient, bool bSuccess) = 0;
 	virtual void	ClientObjectChanged(CUpDownClient* pOldClient, CUpDownClient* pNewClient) = 0;
+protected:
+	virtual ~CFriendConnectionListener() {}; //just in case...
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -57,13 +59,13 @@ class CFriend : public Kademlia::CKadClientSearcher
 {
 public:
 	CFriend();
-	CFriend(CUpDownClient* client);
-	CFriend(const uchar* abyUserhash, uint32 dwLastSeen, uint32 dwLastUsedIP, uint16 nLastUsedPort, 
+	explicit CFriend(CUpDownClient* client);
+	CFriend(const uchar* abyUserhash, uint32 dwLastSeen, uint32 dwLastUsedIP, uint16 nLastUsedPort,
             uint32 dwLastChatted, LPCTSTR pszName, uint32 dwHasHash);
 	~CFriend();
 
 	uchar	m_abyUserhash[16];
-	
+
 	uint32	m_dwLastSeen;
 	uint32	m_dwLastUsedIP;
 	uint16	m_nLastUsedPort;
@@ -80,16 +82,16 @@ public:
 	bool	TryToConnect(CFriendConnectionListener* pConnectionReport);
 	void	UpdateFriendConnectionState(EFriendConnectReport eEvent);
 	bool	IsTryingToConnect() const										{return m_FriendConnectState != FCS_NONE;}
-	bool	CancelTryToConnect(CFriendConnectionListener* pConnectionReport);
+//	bool	CancelTryToConnect(CFriendConnectionListener* pConnectionReport);
 	void	FindKadID();
 	void	KadSearchNodeIDByIPResult(Kademlia::EKadClientSearchRes eStatus, const uchar* pachNodeID);
 	void	KadSearchIPByNodeIDResult(Kademlia::EKadClientSearchRes eStatus, uint32 dwIP, uint16 nPort);
 
-	void	SendMessage(CString strMessage);
+//	void	SendMessage(CString strMessage);
 
     void	SetFriendSlot(bool newValue);
     bool	GetFriendSlot() const;
-	
+
 	bool	HasUserhash() const;
 	bool	HasKadID() const;
 
@@ -97,7 +99,7 @@ private:
 	uchar	m_abyKadID[16];
     bool	m_friendSlot;
 	uint32	m_dwLastKadSearch;
-	
+
 	EFriendConnectState			m_FriendConnectState;
 	CTypedPtrList<CPtrList, CFriendConnectionListener*> m_liConnectionReport;
 	CUpDownClient*				m_LinkedClient;

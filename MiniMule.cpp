@@ -52,7 +52,7 @@ extern UINT g_uMainThreadId;
 
 class CCounter {
 public:
-	CCounter(int& ri)
+	explicit CCounter(int& ri)
 		: m_ri(ri) {
 		ASSERT( ri == 0 );
 		m_ri++;
@@ -185,9 +185,12 @@ void CMiniMule::DoDataExchange(CDataExchange* pDX)
 BOOL CMiniMule::CreateControlSite(COleControlContainer* pContainer, COleControlSite** ppSite, UINT /*nID*/, REFCLSID /*clsid*/)
 {
 	ASSERT( GetCurrentThreadId() == g_uMainThreadId );
-	CMuleBrowserControlSite *pBrowserSite = new CMuleBrowserControlSite(pContainer, this);
-	if (!pBrowserSite)
+	CMuleBrowserControlSite *pBrowserSite;
+	try {
+		pBrowserSite = new CMuleBrowserControlSite(pContainer, this);
+	} catch (...) {
 		return FALSE;
+	}
 	*ppSite = pBrowserSite;
 	return TRUE;
 }
@@ -246,7 +249,7 @@ BOOL CMiniMule::OnInitDialog()
 		if (dwModPathLen != 0 && dwModPathLen < _countof(szModulePath))
 		{
 			m_strCurrentUrl = CreateFilePathUrl(szModulePath, INTERNET_SCHEME_RES);
-			m_strCurrentUrl.AppendFormat(_T("/%d"), m_nHtmlResID);
+			m_strCurrentUrl.AppendFormat(_T("/%u"), m_nHtmlResID);
 			m_nHtmlResID = 0;
 			m_szHtmlResID = NULL;
 			m_bResolveImages = true;
@@ -312,11 +315,11 @@ void CMiniMule::OnClose()
 	// create message queue sync. problems when having high system load.
 	//theApp.emuledlg->PostMessage(UM_CLOSE_MINIMULE, (WPARAM)m_bRestoreMainWnd);
 
-	// Solution #2: 'DestroyModeless' -- posts a 'destroy' message to 'this' which will have a very 
+	// Solution #2: 'DestroyModeless' -- posts a 'destroy' message to 'this' which will have a very
 	// similar effect (and most likely problems) than using PostMessage(<main-window>).
 	//DestroyModeless();
 
-	// Solution #3: 'DestroyWindow' -- destroys the window and *deletes* 'this'. On return of 
+	// Solution #3: 'DestroyWindow' -- destroys the window and *deletes* 'this'. On return of
 	// 'DestroyWindow' the 'this' is no longer valid! However, this should be safe because MFC
 	// is also using the same 'technique' for several window classes.
 	theApp.emuledlg->m_pMiniMule = NULL;
@@ -399,7 +402,7 @@ void CMiniMule::UpdateContent(UINT uUpDatarate, UINT uDownDatarate)
 	ASSERT( GetCurrentThreadId() == g_uMainThreadId );
 	if (m_bResolveImages)
 	{
-		static const LPCTSTR _apszConnectedImgs[] = 
+		static const LPCTSTR _apszConnectedImgs[] =
 		{
 			_T("CONNECTEDNOTNOT.GIF"),
 			_T("CONNECTEDNOTLOW.GIF"),
@@ -427,7 +430,7 @@ void CMiniMule::UpdateContent(UINT uUpDatarate, UINT uDownDatarate)
 			GetElementInterface(_T("connectedImg"), &elm);
 			if (elm) {
 				CString strResourceURL;
-				strResourceURL.Format(_T("%s/%s"), strFilePathUrl, _apszConnectedImgs[uIconIdx]);
+				strResourceURL.Format(_T("%s/%s"), (LPCTSTR)strFilePathUrl, _apszConnectedImgs[uIconIdx]);
 				elm->put_src(CComBSTR(strResourceURL));
 			}
 		}
@@ -439,7 +442,7 @@ void CMiniMule::UpdateContent(UINT uUpDatarate, UINT uDownDatarate)
 	UINT uCompleted = 0;
 	if (thePrefs.GetRemoveFinishedDownloads())
 		uCompleted = thePrefs.GetDownSessionCompletedFiles();
-	else if (theApp.emuledlg && theApp.emuledlg->transferwnd && theApp.emuledlg->transferwnd->GetDownloadList()->m_hWnd) {
+	else if (theApp.emuledlg->transferwnd && theApp.emuledlg->transferwnd->GetDownloadList()->m_hWnd) {
 		int iTotal;
 		uCompleted = theApp.emuledlg->transferwnd->GetDownloadList()->GetCompleteDownloads(-1, iTotal);	 // [Ded]: -1 to get the count of all completed files in all categories
 	}
@@ -462,7 +465,7 @@ void CMiniMule::_OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* /*Fl
 	ASSERT_VALID(this);
 	ASSERT( GetCurrentThreadId() == g_uMainThreadId );
 	CString strURL(V_BSTR(URL));
-	TRACE(_T("%hs: %s\n"), __FUNCTION__, strURL);
+	TRACE(_T("%hs: %s\n"), __FUNCTION__, (LPCTSTR)strURL);
 
 	// No external links allowed!
 	TCHAR szScheme[INTERNET_MAX_SCHEME_LENGTH];
@@ -497,7 +500,7 @@ void CMiniMule::OnNavigateComplete(LPDISPATCH pDisp, LPCTSTR pszUrl)
 	ASSERT_VALID(this);
 	ASSERT( GetCurrentThreadId() == g_uMainThreadId );
 	TRACE(_T("%hs: %s\n"), __FUNCTION__, pszUrl);
-	// If the HTML file contains 'OnLoad' scripts, the HTML DOM is fully accessible 
+	// If the HTML file contains 'OnLoad' scripts, the HTML DOM is fully accessible
 	// only after 'DocumentComplete', but not after 'OnNavigateComplete'
 	CDHtmlDialog::OnNavigateComplete(pDisp, pszUrl);
 }
@@ -516,7 +519,7 @@ void CMiniMule::OnDocumentComplete(LPDISPATCH pDisp, LPCTSTR pszUrl)
 	CCounter cc(m_iInCallback);
 
 	TRACE(_T("%hs: %s\n"), __FUNCTION__, pszUrl);
-	// If the HTML file contains 'OnLoad' scripts, the HTML DOM is fully accessible 
+	// If the HTML file contains 'OnLoad' scripts, the HTML DOM is fully accessible
 	// only after 'DocumentComplete', but not after 'OnNavigateComplete'
 	CDHtmlDialog::OnDocumentComplete(pDisp, pszUrl);
 
@@ -542,13 +545,13 @@ void CMiniMule::OnDocumentComplete(LPDISPATCH pDisp, LPCTSTR pszUrl)
 				{ _T("optionsImg"),		_T("PREFERENCES.GIF") }
 			};
 
-			for (int i = 0; i < ARRSIZE(_aImg); i++)
+			for (unsigned i = 0; i < ARRSIZE(_aImg); ++i)
 			{
 				CComPtr<IHTMLImgElement> elm;
 				GetElementInterface(_aImg[i].pszImgId, &elm);
 				if (elm) {
 					CString strResourceURL;
-					strResourceURL.Format(_T("%s/%s"), strFilePathUrl, _aImg[i].pszResourceId);
+					strResourceURL.Format(_T("%s/%s"), (LPCTSTR)strFilePathUrl, _aImg[i].pszResourceId);
 					elm->put_src(CComBSTR(strResourceURL));
 				}
 			}
@@ -557,7 +560,7 @@ void CMiniMule::OnDocumentComplete(LPDISPATCH pDisp, LPCTSTR pszUrl)
 			GetElementInterface(_T("table"), &elm);
 			if (elm) {
 				CString strResourceURL;
-				strResourceURL.Format(_T("%s/%s"), strFilePathUrl, _T("TABLEBACKGND.GIF"));
+				strResourceURL.Format(_T("%s/%s"), (LPCTSTR)strFilePathUrl, _T("TABLEBACKGND.GIF"));
 				elm->put_background(CComBSTR(strResourceURL));
 				elm.Release();
 			}
@@ -735,8 +738,7 @@ void CMiniMule::RestoreMainWindow()
 	ASSERT_VALID(this);
 	ASSERT( GetCurrentThreadId() == g_uMainThreadId );
 	ASSERT( m_iInInitDialog == 0);
-	if (theApp.emuledlg->IsRunning() && !theApp.emuledlg->IsWindowVisible())
-	{
+	if (!theApp.emuledlg->IsClosing() && !theApp.emuledlg->IsWindowVisible()) {
 		if (!theApp.emuledlg->IsPreferencesDlgOpen())
 		{
 			KillAutoCloseTimer();
@@ -774,8 +776,7 @@ HRESULT CMiniMule::OnOpenIncomingFolder(IHTMLElement* /*pElement*/)
 	ASSERT( GetCurrentThreadId() == g_uMainThreadId );
 	ASSERT( m_iInInitDialog == 0);
 	CCounter cc(m_iInCallback);
-	if (theApp.emuledlg->IsRunning())
-	{
+	if (!theApp.emuledlg->IsClosing()) {
 		theApp.emuledlg->SendMessage(WM_COMMAND, MP_HM_OPENINC);
 		if (GetAutoClose())
 			PostMessage(WM_CLOSE);
@@ -789,8 +790,7 @@ HRESULT CMiniMule::OnOptions(IHTMLElement* /*pElement*/)
 	ASSERT( GetCurrentThreadId() == g_uMainThreadId );
 	ASSERT( m_iInInitDialog == 0);
 	CCounter cc(m_iInCallback);
-	if (theApp.emuledlg->IsRunning())
-	{
+	if (!theApp.emuledlg->IsClosing()) {
 		// showing the 'Pref' dialog will process the message queue -> timer messages will be dispatched -> kill auto close timer!
 		KillAutoCloseTimer();
 		if (theApp.emuledlg->ShowPreferences() == -1)

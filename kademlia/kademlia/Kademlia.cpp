@@ -1,16 +1,16 @@
 /*
 Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
- 
+
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either
 version 2 of the License, or (at your option) any later version.
- 
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
- 
+
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -74,10 +74,11 @@ time_t		CKademlia::m_tLANModeCheck = 0;
 bool		CKademlia::m_bRunning = false;
 bool		CKademlia::m_bLANMode = false;
 CList<uint32, uint32> CKademlia::m_liStatsEstUsersProbes;
-_ContactList CKademlia::s_liBootstapList;
-_ContactList CKademlia::s_liTriedBootstapList;
+_ContactList CKademlia::s_liBootstrapList;
+bool		CKademlia::m_bootstrapping = false;
 
 CKademlia::CKademlia()
+	: m_pPrefs(NULL), m_pRoutingZone(NULL), m_pUDPListener(NULL), m_pIndexed(NULL)
 {}
 
 void CKademlia::Start()
@@ -90,7 +91,7 @@ void CKademlia::Start(CPrefs *pPrefs)
 {
 	try
 	{
-		// If we already have a instance, something is wrong. 
+		// If we already have a instance, something is wrong.
 		if( m_pInstance )
 		{
 			delete pPrefs;
@@ -105,33 +106,32 @@ void CKademlia::Start(CPrefs *pPrefs)
 
 		AddDebugLogLine(false, _T("Starting Kademlia"));
 
+		time_t tnow = time(NULL);
 		// Init jump start timer.
-		m_tNextSearchJumpStart = time(NULL);
+		m_tNextSearchJumpStart = tnow;
 		// Force a FindNodeComplete within the first 3 minutes.
-		m_tNextSelfLookup = time(NULL) + MIN2S(3);
+		m_tNextSelfLookup = tnow + MIN2S(3);
 		// Init status timer.
-		m_tStatusUpdate = time(NULL);
+		m_tStatusUpdate = tnow;
 		// Init big timer for Zones
-		m_tBigTimer = time(NULL);
+		m_tBigTimer = tnow;
 		// First Firewall check is done on connect, init next check.
-		m_tNextFirewallCheck = time(NULL) + (HR2S(1));
-		m_tNextUPnPCheck = m_tNextFirewallCheck - MIN2S(1); 
+		m_tNextFirewallCheck = tnow + HR2S(1);
+		m_tNextUPnPCheck = m_tNextFirewallCheck - MIN2S(1);
 		// Find a buddy after the first 5mins of starting the client.
 		// We wait just in case it takes a bit for the client to determine firewall status..
-		m_tNextFindBuddy = time(NULL) + (MIN2S(5));
+		m_tNextFindBuddy = tnow + MIN2S(5);
 		// Init contact consolidate timer;
-		m_tConsolidate = time(NULL) + (MIN2S(45));
+		m_tConsolidate = tnow + MIN2S(45);
 		// Looking up our extern port
-		m_tExternPortLookup = time(NULL);
+		m_tExternPortLookup = tnow;
 		// Init bootstrap time.
 		m_tBootstrap = 0;
 		// Init our random seed.
-		srand((UINT)time(NULL));
+		srand((UINT)tnow);
 		// Create our Kad objects.
 		m_pInstance = new CKademlia();
 		m_pInstance->m_pPrefs = pPrefs;
-		m_pInstance->m_pUDPListener = NULL;
-		m_pInstance->m_pRoutingZone = NULL;
 		m_pInstance->m_pIndexed = new CIndexed();
 		m_pInstance->m_pRoutingZone = new CRoutingZone();
 		m_pInstance->m_pUDPListener = new CKademliaUDPListener();
@@ -145,7 +145,7 @@ void CKademlia::Start(CPrefs *pPrefs)
 		// went real bad, the entire client most like is in bad shape, so this may
 		// not be something to worry about as the client most likely will crap out anyway.
 		TCHAR err[512];
-		e->GetErrorMessage(err, 512);
+		GetExceptionMessage(*e, err, 512);
 		AddDebugLogLine( false, _T("%s"), err);
 		e->Delete();
 	}
@@ -184,11 +184,10 @@ void CKademlia::Stop()
 	delete m_pInstance;
 	m_pInstance = NULL;
 
-	while (!s_liBootstapList.IsEmpty())
-		delete s_liBootstapList.RemoveHead();
+	while (!s_liBootstrapList.IsEmpty())
+		delete s_liBootstrapList.RemoveHead();
 
-	while (!s_liTriedBootstapList.IsEmpty())
-		delete s_liTriedBootstapList.RemoveHead();
+	m_bootstrapping = false;
 
 	// Make sure all zones are removed.
 	m_mapEvents.clear();
@@ -217,7 +216,7 @@ void CKademlia::Process()
 	{
 		CUInt128 uRandom;
 		uRandom.SetValueRandom();
-		CSearchManager::FindNode(uRandom, false);	
+		CSearchManager::FindNode(uRandom, false);
 	}
 #endif
 	}
@@ -243,7 +242,7 @@ void CKademlia::Process()
 		// if our UDP firewallcheck is running and we don't know our external port, we send a request every 15 seconds
 		CContact* pContact = GetRoutingZone()->GetRandomContact(3, KADEMLIA_VERSION6_49aBETA);
 		if (pContact != NULL){
-			DEBUG_ONLY( DebugLog(_T("Requesting our external port from %s"), ipstr(ntohl(pContact->GetIPAddress()))) );
+			DEBUG_ONLY( DebugLog(_T("Requesting our external port from %s"), (LPCTSTR)ipstr(ntohl(pContact->GetIPAddress()))) );
 			GetUDPListener()->SendNullPacket(KADEMLIA2_PING, pContact->GetIPAddress(), pContact->GetUDPPort(), pContact->GetUDPKey(), &pContact->GetClientID());
 		}
 		else
@@ -320,30 +319,21 @@ void CKademlia::Process()
 		}
 	}
 
-	if(!IsConnected() && !s_liBootstapList.IsEmpty() 
+	if(!IsConnected() && !s_liBootstrapList.IsEmpty()
 		&& (tNow - m_tBootstrap > 15 || (GetRoutingZone()->GetNumContacts() == 0 && tNow - m_tBootstrap >= 2)))
 	{
-		if (!s_liTriedBootstapList.IsEmpty())
-		{
-			CContact* pLastTriedContact = s_liTriedBootstapList.GetHead();
-			pLastTriedContact->SetBootstrapFailed();
-			theApp.emuledlg->kademliawnd->ContactRef(pLastTriedContact);
-		}
-		CContact* pContact = s_liBootstapList.RemoveHead();
+		CContact* pContact = s_liBootstrapList.RemoveHead();
 		m_tBootstrap = tNow;
-		DebugLog(_T("Trying to Bootstrap Kad from %s, Distance: %s, Version: %u, %u Contacts left"), ipstr(ntohl(pContact->GetIPAddress())), pContact->GetDistance().ToHexString(),  pContact->GetVersion(), s_liBootstapList.GetCount());
+		m_bootstrapping = true;
+		DebugLog(_T("Trying to Bootstrap Kad from %s, Distance: %s, Version: %u, %u Contacts left"), (LPCTSTR)ipstr(ntohl(pContact->GetIPAddress())), (LPCTSTR)pContact->GetDistance().ToHexString(), pContact->GetVersion(), s_liBootstrapList.GetCount());
 		m_pInstance->m_pUDPListener->Bootstrap(pContact->GetIPAddress(), pContact->GetUDPPort(), pContact->GetVersion(), &pContact->GetClientID());
-		s_liTriedBootstapList.AddHead(pContact);
-	}
-	else if (!IsConnected() && s_liBootstapList.IsEmpty() && !s_liTriedBootstapList.IsEmpty()  
-		&& (tNow - m_tBootstrap > 15 || (GetRoutingZone()->GetNumContacts() == 0 && tNow - m_tBootstrap >= 2)))
-	{
+		delete pContact;
+		theApp.emuledlg->kademliawnd->StartUpdateContacts();
+	} else if (m_bootstrapping) {
 		// failed to bootstrap
+		m_bootstrapping = false;
 		AddLogLine(true, GetResString(IDS_BOOTSTRAPFAILED));
 		theApp.emuledlg->kademliawnd->StopUpdateContacts();
-		while (!s_liTriedBootstapList.IsEmpty())
-			delete s_liTriedBootstapList.RemoveHead();
-		theApp.emuledlg->kademliawnd->StartUpdateContacts();
 	}
 
 	if (GetUDPListener() != NULL)
@@ -467,7 +457,7 @@ void CKademlia::RecheckFirewalled()
 		m_pInstance->m_pPrefs->SetRecheckIP();
 		// also UDP check
 		CUDPFirewallTester::ReCheckFirewallUDP(false);
-		
+
 		time_t tNow = time(NULL);
 		// Delay the next buddy search to at least 5 minutes after our firewallcheck so we are sure to be still firewalled
 		m_tNextFindBuddy = (m_tNextFindBuddy < MIN2S(5) + tNow) ?  (MIN2S(5) + tNow) : m_tNextFindBuddy;
@@ -613,9 +603,10 @@ uint32 CKademlia::CalculateKadUsersNew(){
 	{
 		uint32 nProbe = m_liStatsEstUsersProbes.GetNext(pos1);
 		bool bInserted = false;
-		for (POSITION pos2 = liMedian.GetHeadPosition(); pos2 != NULL; liMedian.GetNext(pos2)){
-			if (liMedian.GetAt(pos2) > nProbe){
-				liMedian.InsertBefore(pos2, nProbe);
+		for (POSITION pos2 = liMedian.GetHeadPosition(); pos2 != NULL;) {
+			POSITION pos3 = pos2;
+			if (liMedian.GetNext(pos2) > nProbe) {
+				liMedian.InsertBefore(pos3, nProbe);
 				bInserted = true;
 				break;
 			}
@@ -623,9 +614,9 @@ uint32 CKademlia::CalculateKadUsersNew(){
 		if (!bInserted)
 			liMedian.AddTail(nProbe);
 	}
-	// cut away 1/3 of the values - 1/6 of the top and 1/6 of the bottom  to avoid spikes having too much influence, build the average of the rest 
+	// cut away 1/3 of the values - 1/6 of the top and 1/6 of the bottom  to avoid spikes having too much influence, build the average of the rest
 	sint32 nCut = liMedian.GetCount() / 6;
-	for (int i = 0; i != nCut; i++){
+	for (int i = 0; i < nCut; ++i) {
 		liMedian.RemoveHead();
 		liMedian.RemoveTail();
 	}
@@ -649,7 +640,7 @@ uint32 CKademlia::CalculateKadUsersNew(){
 	float fNewRatio = CKademlia::GetPrefs()->StatsGetKadV8Ratio();
 	float fFirewalledModifyTotal = 0;
 	if (fNewRatio > 0 && fFirewalledModifyNew > 0) // weigth the old and the new modifier based on how many new contacts we have
-		fFirewalledModifyTotal = (fNewRatio * fFirewalledModifyNew) + ((1 - fNewRatio) * fFirewalledModifyOld); 
+		fFirewalledModifyTotal = (fNewRatio * fFirewalledModifyNew) + ((1 - fNewRatio) * fFirewalledModifyOld);
 	else
 		fFirewalledModifyTotal = fFirewalledModifyOld;
 	ASSERT( fFirewalledModifyTotal > 1.0F && fFirewalledModifyTotal < 1.90F );

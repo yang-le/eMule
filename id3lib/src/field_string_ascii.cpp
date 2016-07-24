@@ -1,7 +1,8 @@
-// $Id: field_string_ascii.cpp,v 1.29 2003/03/02 14:23:58 t1mpy Exp $
+// $Id: field_string_ascii.cpp,v 1.29 2002/09/13 15:38:33 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
+// Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
 
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Library General Public License as published by
@@ -45,7 +46,7 @@ using namespace dami;
 size_t ID3_FieldImpl::Set(const char* data)
 {
   size_t len = 0;
-  if ((this->GetType() == ID3FTY_TEXTSTRING) && data)
+  if (this->GetType() == ID3FTY_TEXTSTRING)
   {
     String str(data);
     len = this->SetText_i(str);
@@ -88,11 +89,11 @@ size_t ID3_FieldImpl::Get(char* buffer, size_t maxLength) const
 {
   size_t size = 0;
   if (this->GetType() == ID3FTY_TEXTSTRING &&
-      this->GetEncoding() == ID3TE_ASCII &&
+      ID3TE_IS_SINGLE_BYTE_ENC(this->GetEncoding()) &&
       buffer != NULL && maxLength > 0)
   {
     String data = this->GetText();
-    size = dami::min(maxLength, data.size());
+    size = min(maxLength, data.size());
     ::memcpy(buffer, data.data(), size);
     if (size < maxLength)
     {
@@ -107,11 +108,11 @@ size_t ID3_FieldImpl::Get(char* buf, size_t maxLen, size_t index) const
 {
   size_t size = 0;
   if (this->GetType() == ID3FTY_TEXTSTRING &&
-      this->GetEncoding() == ID3TE_ASCII &&
+      ID3TE_IS_SINGLE_BYTE_ENC(this->GetEncoding()) &&
       buf != NULL && maxLen > 0)
   {
     String data = this->GetTextItem(index);
-    size = dami::min(maxLen, data.size());
+    size = min(maxLen, data.size());
     ::memcpy(buf, data.data(), size);
     if (size < maxLen)
     {
@@ -135,7 +136,7 @@ String ID3_FieldImpl::GetTextItem(size_t index) const
 {
   String data;
   if (this->GetType() == ID3FTY_TEXTSTRING &&
-      this->GetEncoding() == ID3TE_ASCII)
+      ID3TE_IS_SINGLE_BYTE_ENC(this->GetEncoding()))
   {
     const char* raw = this->GetRawTextItem(index);
     if (raw != NULL)
@@ -148,7 +149,7 @@ String ID3_FieldImpl::GetTextItem(size_t index) const
 
 namespace
 {
-  String getFixed(String data, size_t size)
+  String getFixed(const String& data, size_t size)
   {
     String text(data, 0, size);
     if (text.size() < size)
@@ -160,7 +161,7 @@ namespace
 }
 
 
-size_t ID3_FieldImpl::SetText_i(String data)
+size_t ID3_FieldImpl::SetText_i(const String& data)
 {
   this->Clear();
   if (_fixed_size > 0)
@@ -186,7 +187,7 @@ size_t ID3_FieldImpl::SetText_i(String data)
   return _text.size();
 }
 
-size_t ID3_FieldImpl::SetText(String data)
+size_t ID3_FieldImpl::SetText(const dami::String& data)
 {
   size_t len = 0;
   if (this->GetType() == ID3FTY_TEXTSTRING)
@@ -210,7 +211,7 @@ size_t ID3_FieldImpl::SetText(String data)
  **
  ** \param string The string to add to the field
  **/
-size_t ID3_FieldImpl::AddText_i(String data)
+size_t ID3_FieldImpl::AddText_i(const String& data)
 {
   size_t len = 0;  // how much of str we copied into this field (max is strLen)
   ID3D_NOTICE ("ID3_FieldImpl::AddText_i: Adding \"" << data << "\"" );
@@ -225,7 +226,7 @@ size_t ID3_FieldImpl::AddText_i(String data)
 
     // ASSERT(_fixed_size == 0)
     _text += '\0';
-    if (this->GetEncoding() == ID3TE_UNICODE)
+    if (ID3TE_IS_DOUBLE_BYTE_ENC(this->GetEncoding()))
     {
       _text += '\0';
     }
@@ -237,7 +238,7 @@ size_t ID3_FieldImpl::AddText_i(String data)
   return len;
 }
 
-size_t ID3_FieldImpl::AddText(String data)
+size_t ID3_FieldImpl::AddText(const dami::String& data)
 {
   size_t len = 0;
   if (this->GetType() == ID3FTY_TEXTSTRING)
@@ -262,7 +263,7 @@ const char* ID3_FieldImpl::GetRawText() const
 {
   const char* text = NULL;
   if (this->GetType() == ID3FTY_TEXTSTRING &&
-      this->GetEncoding() == ID3TE_ASCII)
+      ID3TE_IS_SINGLE_BYTE_ENC(this->GetEncoding()))
   {
     text = _text.c_str();
   }
@@ -273,7 +274,7 @@ const char* ID3_FieldImpl::GetRawTextItem(size_t index) const
 {
   const char* text = NULL;
   if (this->GetType() == ID3FTY_TEXTSTRING &&
-      this->GetEncoding() == ID3TE_ASCII &&
+      ID3TE_IS_SINGLE_BYTE_ENC(this->GetEncoding()) &&
       index < this->GetNumTextItems())
   {
     text = _text.c_str();
@@ -289,7 +290,7 @@ namespace
 {
   String readEncodedText(ID3_Reader& reader, size_t len, ID3_TextEnc enc)
   {
-    if (enc == ID3TE_ASCII)
+    if (ID3TE_IS_SINGLE_BYTE_ENC(enc))
     {
       return io::readText(reader, len);
     }
@@ -298,29 +299,31 @@ namespace
 
   String readEncodedString(ID3_Reader& reader, ID3_TextEnc enc)
   {
-    if (enc == ID3TE_ASCII)
+    if (ID3TE_IS_SINGLE_BYTE_ENC(enc))
     {
       return io::readString(reader);
     }
     return io::readUnicodeString(reader);
   }
 
-  size_t writeEncodedText(ID3_Writer& writer, String data, ID3_TextEnc enc)
-  {
-    if (enc == ID3TE_ASCII)
-    {
+  size_t writeEncodedText(ID3_Writer& writer, const String& data, ID3_TextEnc enc)
+  { //doesn't include NULL char
+    if (ID3TE_IS_SINGLE_BYTE_ENC(enc))
       return io::writeText(writer, data);
-    }
-    return io::writeUnicodeText(writer, data);
+    else if (enc == ID3TE_UTF16BE)
+      return io::writeUnicodeText(writer, data, false);
+    else //with bom
+      return io::writeUnicodeText(writer, data, true);
   }
 
-  size_t writeEncodedString(ID3_Writer& writer, String data, ID3_TextEnc enc)
-  {
-    if (enc == ID3TE_ASCII)
-    {
+  size_t writeEncodedString(ID3_Writer& writer, const String& data, ID3_TextEnc enc)
+  { //includes NULL char
+    if (ID3TE_IS_SINGLE_BYTE_ENC(enc))
       return io::writeString(writer, data);
-    }
-    return io::writeUnicodeString(writer, data);
+    else if (enc == ID3TE_UTF16BE)
+      return io::writeUnicodeString(writer, data, false);
+    else
+      return io::writeUnicodeString(writer, data, true);
   }
 }
 
@@ -341,18 +344,21 @@ bool ID3_FieldImpl::ParseText(ID3_Reader& reader)
     this->SetText(text);
     ID3D_NOTICE( "ID3_Field::ParseText(): fixed size string = " << text );
   }
-  else if (_flags & ID3FF_LIST)
-  {
-    ID3D_NOTICE( "ID3_Field::ParseText(): text list" );
-    // lists are always the last field in a frame.  parse all remaining
-    // characters in the reader
-    while (!reader.atEnd())
-    {
-      String text = readEncodedString(reader, enc);
-      this->AddText(text);
-      ID3D_NOTICE( "ID3_Field::ParseText(): adding string = " << text );
-    }
-  }
+// following is commented because this is allready covered in the 'else' case
+// and *any* text (starting with identifier 'T') can contain lists, not just the defined ones
+//  else if (_flags & ID3FF_LIST)
+//  {
+//    ID3D_NOTICE( "ID3_Field::ParseText(): text list" );
+//    // lists are always the last field in a frame.  parse all remaining
+//    // characters in the reader
+//    while (!reader.atEnd())
+//    {
+//      //loop, because readEncodedString will break at null char, which is a valid char
+//      String text = readEncodedString(reader, enc);
+//      this->AddText(text);
+//      ID3D_NOTICE( "ID3_Field::ParseText(): adding string = " << text );
+//    }
+//  }
   else if (_flags & ID3FF_CSTR)
   {
     ID3D_NOTICE( "ID3_Field::ParseText(): null terminated string" );

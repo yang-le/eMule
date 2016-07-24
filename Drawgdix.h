@@ -111,7 +111,7 @@ class CSelect
 {
 protected:
 	CDC * const m_pDC;
-	CSelect(CDC * pDC):m_pDC(pDC) 	{ ASSERT(m_pDC);}
+	explicit CSelect(CDC * pDC):m_pDC(pDC) 	{ ASSERT(m_pDC);}
 	virtual ~CSelect() {}
 
 private:
@@ -131,7 +131,7 @@ class CSelStock : public CSelect
 
 public:
 
-	CSelStock(CDC * pDC)
+	explicit CSelStock(CDC * pDC)
 		:CSelect(pDC), m_pOldObj(NULL) {}
 
 	CSelStock(CDC * pDC, int index)
@@ -166,7 +166,7 @@ class CSelPen	: public CSelect
 
 public:
 
-	CSelPen(CDC * pDC)
+	explicit CSelPen(CDC * pDC)
 	  :CSelect(pDC), m_pOldPen(NULL){}
 
 	CSelPen(CDC * pDC, COLORREF col, int sty = PS_SOLID, int wid = 0)
@@ -215,7 +215,7 @@ class CSelBrush  : public CSelect
 	 CBrush * m_pOldBrush;
 
 public:
-	CSelBrush(CDC * pDC)
+	explicit CSelBrush(CDC * pDC)
 		:CSelect(pDC), m_pOldBrush(NULL) {}
 
 	// Solid brush
@@ -345,7 +345,7 @@ class CSelFont  : public CSelect
 
 public:
 
-	CSelFont(CDC * pDC)
+	explicit CSelFont(CDC * pDC)
 		: CSelect(pDC), m_pOldFont(NULL) {}
 
 	CSelFont(CDC * pDC, int size, LPCTSTR face = NULL, BOOL bold = 0,
@@ -353,7 +353,7 @@ public:
 	         BOOL hiquality = 0, int angleindegrees = 0)
 		: CSelect(pDC), m_pOldFont(NULL)
 	{
-		Select(size, face, bold, italic, underlined, 
+		Select(size, face, bold, italic, underlined,
 		       fixed, hiquality, angleindegrees);
 	}
 
@@ -414,7 +414,7 @@ class CSelBitmap	: public CSelect
 	CBitmap * m_pOldBmp;
 
 public:
-	CSelBitmap(CDC * pDC)
+	explicit CSelBitmap(CDC * pDC)
 		: CSelect(pDC), m_pOldBmp(NULL) {}
 
 	CSelBitmap(CDC * SelectInDC, CDC * pCompatibleToDC, int w, int h)
@@ -464,8 +464,9 @@ class CSelPalette  : public CSelect
 
 public:
 
-	CSelPalette(CDC * pDC)
-		: CSelect(pDC), m_pOldPalette(NULL) {}
+	explicit CSelPalette(CDC * pDC)
+		: CSelect(pDC), m_pOldPalette(NULL), m_fForceBackground(false), m_fRealizePalette(false)
+	{}
 
 	CSelPalette(CDC * pDC, CPalette * pPalette,
 	            BOOL fForceBackground = FALSE, BOOL fRealize = TRUE)
@@ -492,14 +493,14 @@ public:
 		m_fForceBackground = fForceBackground;
 		m_fRealizePalette = fRealize;
 	}
-	
+
 	void Restore()
 	{
 		if (!m_pOldPalette)
 			return;
 
 		VERIFY(m_pDC->SelectPalette(m_pOldPalette, m_fForceBackground));
-		if (m_fRealizePalette) 
+		if (m_fRealizePalette)
 			m_pDC->RealizePalette();
 		m_pOldPalette = NULL;
 	}
@@ -519,7 +520,7 @@ class CSelROP2 : public CSelect
 
 public:
 
-	CSelROP2(CDC * pDC)
+	explicit CSelROP2(CDC * pDC)
 		: CSelect(pDC), m_OldRop(0)
 		{ /*VERIFY(m_OldRop=m_pDC->GetROP2());*/ }
 
@@ -551,7 +552,7 @@ class CSelBkMode : public CSelect
 
 public:
 
-	CSelBkMode(CDC * pDC)
+	explicit CSelBkMode(CDC * pDC)
 		: CSelect(pDC), m_OldBkMode(0)
 		{ /*VERIFY(m_OldBkMode = m_pDC->GetBkMode());*/ }
 
@@ -583,7 +584,7 @@ class CSelBkColor : public CSelect
 
 public:
 
-	CSelBkColor(CDC * pDC)
+	explicit CSelBkColor(CDC * pDC)
 		: CSelect(pDC), m_OldBkColor(CLR_INVALID)
 		{ m_OldBkColor = m_pDC->GetBkColor(); }
 
@@ -617,7 +618,7 @@ class CSelTextColor : public CSelect
 
 public:
 
-	CSelTextColor(CDC * pDC)
+	explicit CSelTextColor(CDC * pDC)
 		: CSelect(pDC), m_OldTextColor(CLR_INVALID)
 		{ m_OldTextColor = m_pDC->GetTextColor(); }
 
@@ -651,7 +652,7 @@ class CSelTextAlign : public CSelect
 
 public:
 
-	CSelTextAlign(CDC * pDC)
+	explicit CSelTextAlign(CDC * pDC)
 		: CSelect(pDC), m_OldTextAlign(GDI_ERROR)
 		{ m_OldTextAlign = m_pDC->GetTextAlign(); }
 
@@ -685,7 +686,7 @@ class CSelMapMode : public CSelect
 
 public:
 
-	CSelMapMode(CDC * pDC)
+	explicit CSelMapMode(CDC * pDC)
 		: CSelect(pDC), m_OldMapMode(0)
 		{ /*VERIFY(m_OldMapMode = m_pDC->GetMapMode());*/ }
 
@@ -720,7 +721,7 @@ class CSaveDC : public CSelect
 
 public:
 
-	CSaveDC(CDC * pDC)
+	explicit CSaveDC(CDC * pDC)
 		: CSelect(pDC)
 		{ VERIFY(m_SavedDC = m_pDC->SaveDC()); }
 

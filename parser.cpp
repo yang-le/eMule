@@ -1262,7 +1262,7 @@ yyparse ()
 #endif
 #endif
 {
-  
+
   int yystate;
   int yyn;
   int yyresult;
@@ -1753,7 +1753,7 @@ yyreduce:
 
   case 30:
 
-    { yyerrorf(GetResString(IDS_SEARCH_OPRERR), DbgGetSearchOperatorName((yyvsp[(1) - (1)].iopr))); return 1; ;}
+    { yyerrorf(GetResString(IDS_SEARCH_OPRERR), (LPCTSTR)DbgGetSearchOperatorName((yyvsp[(1) - (1)].iopr))); return 1; ;}
     break;
 
   case 31:
@@ -2137,11 +2137,11 @@ int yyerror(LPCTSTR errstr)
 		// If there is already an error in the list, don't add the "syntax error" string.
 		// This is needed to not 'overwrite' any errors which were placed by 'lex' there,
 		// because we will read only the last error eventually.
-		if (g_astrParserErrors.GetCount() > 0)
+		if (!g_astrParserErrors.IsEmpty())
 			return EXIT_FAILURE;
 	}
 	else {
-		if (g_astrParserErrors.GetCount() > 0 && g_astrParserErrors[g_astrParserErrors.GetCount() - 1] != _T("syntax error"))
+		if (!g_astrParserErrors.IsEmpty() && g_astrParserErrors[g_astrParserErrors.GetCount() - 1] != _T("syntax error"))
 			return EXIT_FAILURE;
 	}
 	g_astrParserErrors.Add(errstr);
@@ -2154,11 +2154,11 @@ int yyerrorf(LPCTSTR errstr, ...)
 	// This is needed to not 'overwrite' any errors which were placed by 'lex' there,
 	// because we will read only the last error eventually.
 	if (_tcscmp(errstr, _T("syntax error")) == 0) {
-		if (g_astrParserErrors.GetCount() > 0)
+		if (!g_astrParserErrors.IsEmpty())
 			return EXIT_FAILURE;
 	}
 	else {
-		if (g_astrParserErrors.GetCount() > 0 && g_astrParserErrors[g_astrParserErrors.GetCount() - 1] != _T("syntax error"))
+		if (!g_astrParserErrors.IsEmpty() && g_astrParserErrors[g_astrParserErrors.GetCount() - 1] != _T("syntax error"))
 			return EXIT_FAILURE;
 	}
 

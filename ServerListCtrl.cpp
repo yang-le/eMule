@@ -98,7 +98,7 @@ bool CServerListCtrl::Init()
 	ShowServerCount();
 
 	return true;
-} 
+}
 
 CServerListCtrl::~CServerListCtrl()
 {
@@ -201,7 +201,7 @@ void CServerListCtrl::RemoveServer(const CServer* pServer)
 	int iItem = FindItem(&find);
 	if (iItem != -1) {
 		theApp.serverlist->RemoveServer(pServer);
-		DeleteItem(iItem); 
+		DeleteItem(iItem);
 		ShowServerCount();
 	}
 }
@@ -209,14 +209,10 @@ void CServerListCtrl::RemoveServer(const CServer* pServer)
 void CServerListCtrl::RemoveAllDeadServers()
 {
 	ShowWindow(SW_HIDE);
-	for (POSITION pos = theApp.serverlist->list.GetHeadPosition(); pos != NULL; )
-	{
+	for (POSITION pos = theApp.serverlist->list.GetHeadPosition(); pos != NULL;) {
 		const CServer* cur_server = theApp.serverlist->list.GetNext(pos);
 		if (cur_server->GetFailedCount() >= thePrefs.GetDeadServerRetries())
-		{
 			RemoveServer(cur_server);
-			pos = theApp.serverlist->list.GetHeadPosition();
-		}
 	}
 	ShowWindow(SW_SHOW);
 }
@@ -232,9 +228,8 @@ void CServerListCtrl::RemoveAllFilteredServers()
 		if (theApp.ipfilter->IsFiltered(cur_server->GetIP()))
 		{
 			if (thePrefs.GetLogFilteredIPs())
-				AddDebugLogLine(false, _T("IPFilter(Updated): Filtered server \"%s\" (IP=%s) - IP filter (%s)"), cur_server->GetListName(), ipstr(cur_server->GetIP()), theApp.ipfilter->GetLastHit());
+				AddDebugLogLine(false, _T("IPFilter(Updated): Filtered server \"%s\" (IP=%s) - IP filter (%s)"), (LPCTSTR)cur_server->GetListName(), (LPCTSTR)ipstr(cur_server->GetIP()), (LPCTSTR)theApp.ipfilter->GetLastHit());
 			RemoveServer(cur_server);
-			pos = theApp.serverlist->list.GetHeadPosition();
 		}
 	}
 	ShowWindow(SW_SHOW);
@@ -256,7 +251,7 @@ bool CServerListCtrl::AddServer(const CServer* pServer, bool bAddToList, bool bR
 
 void CServerListCtrl::RefreshServer(const CServer* server)
 {
-	if (!server || !theApp.emuledlg->IsRunning())
+	if (!server || theApp.emuledlg->IsClosing())
 		return;
 
 	LVFINDINFO find;
@@ -274,7 +269,7 @@ void CServerListCtrl::RefreshServer(const CServer* server)
 
 	// Ping
 	if (server->GetPing()) {
-		temp.Format(_T("%i"), server->GetPing());
+		temp.Format(_T("%u"), server->GetPing());
 		SetItemText(itemnr, 3, temp);
 	}
 	else
@@ -282,55 +277,55 @@ void CServerListCtrl::RefreshServer(const CServer* server)
 
 	// Users
 	if (server->GetUsers())
-		SetItemText(itemnr, 4, CastItoIShort(server->GetUsers()));
+		SetItemText(itemnr, 4, (LPCTSTR)CastItoIShort(server->GetUsers()));
 	else
 		SetItemText(itemnr, 4, _T(""));
 
 	// Max Users
 	if (server->GetMaxUsers())
-		SetItemText(itemnr, 5, CastItoIShort(server->GetMaxUsers()));
+		SetItemText(itemnr, 5, (LPCTSTR)CastItoIShort(server->GetMaxUsers()));
 	else
 		SetItemText(itemnr, 5, _T(""));
 
 	// Files
 	if (server->GetFiles())
-		SetItemText(itemnr, 6, CastItoIShort(server->GetFiles()));
+		SetItemText(itemnr, 6, (LPCTSTR)CastItoIShort(server->GetFiles()));
 	else
 		SetItemText(itemnr, 6, _T(""));
 
 	switch (server->GetPreference()) {
 		case SRV_PR_LOW:
-			SetItemText(itemnr, 7, GetResString(IDS_PRIOLOW));
+			SetItemText(itemnr, 7, (LPCTSTR)GetResString(IDS_PRIOLOW));
 			break;
 		case SRV_PR_NORMAL:
-			SetItemText(itemnr, 7, GetResString(IDS_PRIONORMAL));
+			SetItemText(itemnr, 7, (LPCTSTR)GetResString(IDS_PRIONORMAL));
 			break;
 		case SRV_PR_HIGH:
-			SetItemText(itemnr, 7, GetResString(IDS_PRIOHIGH));
+			SetItemText(itemnr, 7, (LPCTSTR)GetResString(IDS_PRIOHIGH));
 			break;
 		default:
-			SetItemText(itemnr, 7, GetResString(IDS_PRIONOPREF));
+			SetItemText(itemnr, 7, (LPCTSTR)GetResString(IDS_PRIONOPREF));
 	}
-	
+
 	// Failed Count
-	temp.Format(_T("%i"), server->GetFailedCount());
+	temp.Format(_T("%u"), server->GetFailedCount());
 	SetItemText(itemnr, 8, temp);
 
 	// Static server
 	if (server->IsStaticMember())
-		SetItemText(itemnr, 9, GetResString(IDS_YES)); 
+		SetItemText(itemnr, 9, (LPCTSTR)GetResString(IDS_YES));
 	else
-		SetItemText(itemnr, 9, GetResString(IDS_NO));
+		SetItemText(itemnr, 9, (LPCTSTR)GetResString(IDS_NO));
 
 	// Soft Files
 	if (server->GetSoftFiles())
-		SetItemText(itemnr, 10, CastItoIShort(server->GetSoftFiles()));
+		SetItemText(itemnr, 10, (LPCTSTR)CastItoIShort(server->GetSoftFiles()));
 	else
 		SetItemText(itemnr, 10, _T(""));
 
 	// Hard Files
 	if (server->GetHardFiles())
-		SetItemText(itemnr, 11, CastItoIShort(server->GetHardFiles()));
+		SetItemText(itemnr, 11, (LPCTSTR)CastItoIShort(server->GetHardFiles()));
 	else
 		SetItemText(itemnr, 11, _T(""));
 
@@ -353,19 +348,19 @@ void CServerListCtrl::RefreshServer(const CServer* server)
 
 	// LowID Users
 	if (server->GetLowIDUsers())
-		SetItemText(itemnr, 13, CastItoIShort(server->GetLowIDUsers()));
+		SetItemText(itemnr, 13, (LPCTSTR)CastItoIShort(server->GetLowIDUsers()));
 	else
 		SetItemText(itemnr, 13, _T(""));
 
 	// Obfuscation
 	if (server->SupportsObfuscationTCP() && server->GetObfuscationPortTCP() != 0)
-		SetItemText(itemnr, 14, GetResString(IDS_YES));
+		SetItemText(itemnr, 14, (LPCTSTR)GetResString(IDS_YES));
 	else
-		SetItemText(itemnr, 14, GetResString(IDS_NO));
+		SetItemText(itemnr, 14, (LPCTSTR)GetResString(IDS_NO));
 }
 
 void CServerListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
-{ 
+{
 	// get merged settings
 	bool bFirstItem = true;
 	int iSelectedItems = GetSelectedCount();
@@ -471,7 +466,7 @@ BOOL CServerListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 		DeleteSelectedServers();
 		return TRUE;
 	}
-	
+
 	case MP_COPYSELECTED:
 	case MP_GETED2KLINK:
 	case Irc_SetSendLink: {
@@ -492,18 +487,7 @@ BOOL CServerListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 
 	case MP_REMOVE:
 	case MPG_DELETE: {
-		SetRedraw(FALSE);
-		while (GetFirstSelectedItemPosition() != NULL)
-		{
-			POSITION pos = GetFirstSelectedItemPosition();
-			int iItem = GetNextSelectedItem(pos);
-			theApp.serverlist->RemoveServer((CServer*)GetItemData(iItem));
-			DeleteItem(iItem);
-		}
-		ShowServerCount();
-		SetRedraw(TRUE);
-		SetFocus();
-		AutoSelectItem();
+		DeleteSelectedServers();
 		return TRUE;
 	}
 
@@ -528,8 +512,7 @@ BOOL CServerListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 		return TRUE;
 
 	case MP_ADDTOSTATIC: {
-		POSITION pos = GetFirstSelectedItemPosition();
-		while (pos != NULL) {
+		for (POSITION pos = GetFirstSelectedItemPosition(); pos != NULL;) {
 			CServer* pServer = (CServer*)GetItemData(GetNextSelectedItem(pos));
 			if (!StaticServerFileAppend(pServer))
 				return FALSE;
@@ -539,8 +522,7 @@ BOOL CServerListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 	}
 
 	case MP_REMOVEFROMSTATIC: {
-		POSITION pos = GetFirstSelectedItemPosition();
-		while (pos != NULL) {
+		for (POSITION pos = GetFirstSelectedItemPosition(); pos != NULL;) {
 			CServer* pServer = (CServer*)GetItemData(GetNextSelectedItem(pos));
 			if (!StaticServerFileRemove(pServer))
 				return FALSE;
@@ -552,11 +534,11 @@ BOOL CServerListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 	case MP_PRIOLOW:
 		SetSelectedServersPriority(SRV_PR_LOW);
 		return TRUE;
-	
+
 	case MP_PRIONORMAL:
 		SetSelectedServersPriority(SRV_PR_NORMAL);
 		return TRUE;
-	
+
 	case MP_PRIOHIGH:
 		SetSelectedServersPriority(SRV_PR_HIGH);
 		return TRUE;
@@ -566,9 +548,8 @@ BOOL CServerListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 
 CString CServerListCtrl::CreateSelectedServersURLs()
 {
-	POSITION pos = GetFirstSelectedItemPosition();
 	CString buffer, link;
-	while (pos != NULL) {
+	for (POSITION pos = GetFirstSelectedItemPosition(); pos != NULL;) {
 		const CServer* pServer = (CServer*)GetItemData(GetNextSelectedItem(pos));
 		buffer.Format(_T("ed2k://|server|%s|%u|/"), pServer->GetAddress(), pServer->GetPort());
 		if (link.GetLength() > 0)
@@ -580,16 +561,16 @@ CString CServerListCtrl::CreateSelectedServersURLs()
 
 void CServerListCtrl::DeleteSelectedServers()
 {
-	//SetRedraw(FALSE);
-	while (GetFirstSelectedItemPosition() != NULL)
+	POSITION pos;
+	SetRedraw(FALSE);
+	while ((pos = GetFirstSelectedItemPosition()) != NULL)
 	{
-		POSITION pos = GetFirstSelectedItemPosition();
 		int iItem = GetNextSelectedItem(pos);
 		theApp.serverlist->RemoveServer((CServer*)GetItemData(iItem));
 		DeleteItem(iItem);
 	}
 	ShowServerCount();
-	//SetRedraw(TRUE);
+	SetRedraw(TRUE);
 	SetFocus();
 	AutoSelectItem();
 }
@@ -668,37 +649,19 @@ void CServerListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
-int CServerListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+int CALLBACK CServerListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
+	if (lParam1 == 0 || lParam2 == 0)
+		return 0;
 	const CServer* item1 = (CServer*)lParam1;
 	const CServer* item2 = (CServer*)lParam2;
-	if (item1 == NULL || item2 == NULL)
-		return 0;
-
-#define UNDEFINED_STR_AT_BOTTOM(s1, s2) \
-	if ((s1).IsEmpty() && (s2).IsEmpty()) \
-		return 0;						\
-	if ((s1).IsEmpty())					\
-		return 1;						\
-	if ((s2).IsEmpty())					\
-		return -1;						\
-
-#define UNDEFINED_INT_AT_BOTTOM(i1, i2) \
-	if ((i1) == (i2))					\
-		return 0;						\
-	if ((i1) == 0)						\
-		return 1;						\
-	if ((i2) == 0)						\
-		return -1;						\
-
 	int iResult;
+
 	switch (LOWORD(lParamSort))
 	{
 	  case 0:
-		  UNDEFINED_STR_AT_BOTTOM(item1->GetListName(), item2->GetListName());
-		  iResult = item1->GetListName().CompareNoCase(item2->GetListName());
+		  iResult = Undefined_at_bottom(item1->GetListName(), item2->GetListName());
 		  break;
-
 	  case 1:
 		  if (item1->HasDynIP() && item2->HasDynIP())
 			  iResult = item1->GetDynIP().CompareNoCase(item2->GetDynIP());
@@ -719,28 +682,23 @@ int CServerListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 		  break;
 
 	  case 2:
-		  UNDEFINED_STR_AT_BOTTOM(item1->GetDescription(), item2->GetDescription());
-		  iResult = item1->GetDescription().CompareNoCase(item2->GetDescription());
+		  iResult = Undefined_at_bottom(item1->GetDescription(), item2->GetDescription());
 		  break;
 
 	  case 3:
-		  UNDEFINED_INT_AT_BOTTOM(item1->GetPing(), item2->GetPing());
-		  iResult = CompareUnsigned(item1->GetPing(), item2->GetPing());
+		  iResult = Undefined_at_bottom(item1->GetPing(), item2->GetPing());
 		  break;
 
 	  case 4:
-		  UNDEFINED_INT_AT_BOTTOM(item1->GetUsers(), item2->GetUsers());
-		  iResult = CompareUnsigned(item1->GetUsers(), item2->GetUsers());
+		  iResult = Undefined_at_bottom(item1->GetUsers(), item2->GetUsers());
 		  break;
 
 	  case 5:
-		  UNDEFINED_INT_AT_BOTTOM(item1->GetMaxUsers(), item2->GetMaxUsers());
-		  iResult = CompareUnsigned(item1->GetMaxUsers(), item2->GetMaxUsers());
+		  iResult = Undefined_at_bottom(item1->GetMaxUsers(), item2->GetMaxUsers());
 		  break;
 
 	  case 6:
-		  UNDEFINED_INT_AT_BOTTOM(item1->GetFiles(), item2->GetFiles());
-		  iResult = CompareUnsigned(item1->GetFiles(), item2->GetFiles());
+		  iResult = Undefined_at_bottom(item1->GetFiles(), item2->GetFiles());
 		  break;
 
 	  case 7:
@@ -766,32 +724,30 @@ int CServerListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 		  iResult = (int)item1->IsStaticMember() - (int)item2->IsStaticMember();
 		  break;
 
-	  case 10:  
-		  UNDEFINED_INT_AT_BOTTOM(item1->GetSoftFiles(), item2->GetSoftFiles());
-		  iResult = CompareUnsigned(item1->GetSoftFiles(), item2->GetSoftFiles());
+	  case 10:
+		  iResult = Undefined_at_bottom(item1->GetSoftFiles(), item2->GetSoftFiles());
 		  break;
 
-	  case 11: 
-		  UNDEFINED_INT_AT_BOTTOM(item1->GetHardFiles(), item2->GetHardFiles());
-		  iResult = CompareUnsigned(item1->GetHardFiles(), item2->GetHardFiles());
+	  case 11:
+		  iResult = Undefined_at_bottom(item1->GetHardFiles(), item2->GetHardFiles());
 		  break;
 
 	  case 12:
-		  UNDEFINED_STR_AT_BOTTOM(item1->GetVersion(), item2->GetVersion());
-		  iResult = item1->GetVersion().CompareNoCase(item2->GetVersion());
+		  iResult = Undefined_at_bottom(item1->GetVersion(), item2->GetVersion());
 		  break;
 
 	  case 13:
-		  UNDEFINED_INT_AT_BOTTOM(item1->GetLowIDUsers(), item2->GetLowIDUsers());
-		  iResult = CompareUnsigned(item1->GetLowIDUsers(), item2->GetLowIDUsers());
+		  iResult = Undefined_at_bottom(item1->GetLowIDUsers(), item2->GetLowIDUsers());
 		  break;
-	  case 14: 
+	  case 14:
 		 iResult = (int)(item1->SupportsObfuscationTCP() && item1->GetObfuscationPortTCP() != 0) - (int)(item2->SupportsObfuscationTCP() && item2->GetObfuscationPortTCP() != 0);
 		 break;
 
-	  default: 
+	  default:
 		  iResult = 0;
-	} 
+	}
+	if (iResult > 3)
+		return iResult - 5;
 
 	//call secondary sortorder, if this one results in equal
 	int dwNextSort;
@@ -806,7 +762,7 @@ int CServerListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 bool CServerListCtrl::StaticServerFileAppend(CServer *server)
 {
 	bool bResult;
-	AddLogLine(false, _T("'%s:%i,%s' %s"), server->GetAddress(), server->GetPort(), server->GetListName(), GetResString(IDS_ADDED2SSF));
+	AddLogLine(false, _T("'%s:%i,%s' %s"), server->GetAddress(), server->GetPort(), (LPCTSTR)server->GetListName(), (LPCTSTR)GetResString(IDS_ADDED2SSF));
 	server->SetIsStaticMember(true);
 	bResult = theApp.serverlist->SaveStaticServers();
 	RefreshServer(server);
@@ -887,11 +843,11 @@ void CServerListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 			if (iSelected > 0)
 			{
 				CString strInfo;
-				strInfo.Format(_T("%s: %u\r\n%s: %s\r\n%s: %s\r\n%s: %s"), 
-					GetResString(IDS_FSTAT_SERVERS), iSelected, 
-					GetResString(IDS_UUSERS), CastItoIShort(ulTotalUsers),
-					GetResString(IDS_IDLOW), CastItoIShort(ulTotalLowIdUsers),
-					GetResString(IDS_PW_FILES), CastItoIShort(ulTotalFiles));
+				strInfo.Format(_T("%s: %i\r\n%s: %s\r\n%s: %s\r\n%s: %s"),
+					(LPCTSTR)GetResString(IDS_FSTAT_SERVERS), iSelected,
+					(LPCTSTR)GetResString(IDS_UUSERS), (LPCTSTR)CastItoIShort(ulTotalUsers),
+					(LPCTSTR)GetResString(IDS_IDLOW), (LPCTSTR)CastItoIShort(ulTotalLowIdUsers),
+					(LPCTSTR)GetResString(IDS_PW_FILES), (LPCTSTR)CastItoIShort(ulTotalFiles));
 				strInfo += TOOLTIP_AUTOFORMAT_SUFFIX_CH;
 				_tcsncpy(pGetInfoTip->pszText, strInfo, pGetInfoTip->cchTextMax);
 				pGetInfoTip->pszText[pGetInfoTip->cchTextMax-1] = _T('\0');
@@ -900,6 +856,28 @@ void CServerListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 	}
 
 	*pResult = 0;
+}
+
+int CServerListCtrl::Undefined_at_bottom(const uint32 i1, const uint32 i2)
+{
+	if (i1 == i2)
+		return 5;
+	if (i1 == 0)
+		return 6;
+	if (i2 == 0)
+		return 4;
+	return sgn(CompareUnsigned(i1, i2));
+}
+
+int CServerListCtrl::Undefined_at_bottom(const CString& s1, const CString& s2)
+{
+	if (s1.IsEmpty() && s2.IsEmpty())
+		return 5;
+	if (s1.IsEmpty())
+		return 6;
+	if (s2.IsEmpty())
+		return 4;
+	return sgn(s1.CompareNoCase(s2));
 }
 
 void CServerListCtrl::OnNmCustomDraw(NMHDR *pNMHDR, LRESULT *plResult)

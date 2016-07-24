@@ -1,7 +1,8 @@
-// $Id: frame_impl.cpp,v 1.9 2002/07/02 22:12:38 t1mpy Exp $
+// $Id: frame_impl.cpp,v 1.10 2002/09/13 15:38:34 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
+// Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
 
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Library General Public License as published by
@@ -100,20 +101,20 @@ void ID3_FrameImpl::_InitFields()
   if (NULL == info)
   {
     // log this
-    ID3_Field* fld = new ID3_FieldImpl(ID3_FieldDef::DEFAULT[0]);
+    ID3_Field* fld = LEAKTESTNEW( ID3_FieldImpl(ID3_FieldDef::DEFAULT[0]));
     _fields.push_back(fld);
     _bitset.set(fld->GetID());
   }
   else
   {
-    
+
     for (size_t i = 0; info->aeFieldDefs[i]._id != ID3FN_NOFIELD; ++i)
     {
-      ID3_Field* fld = new ID3_FieldImpl(info->aeFieldDefs[i]);
+      ID3_Field* fld = LEAKTESTNEW(ID3_FieldImpl(info->aeFieldDefs[i]));
       _fields.push_back(fld);
       _bitset.set(fld->GetID());
     }
-    
+
     _changed = true;
   }
 }
@@ -172,18 +173,18 @@ size_t ID3_FrameImpl::NumFields() const
 size_t ID3_FrameImpl::Size()
 {
   size_t bytesUsed = _hdr.Size();
-  
+
   if (this->GetEncryptionID())
   {
     bytesUsed++;
   }
-    
+
   if (this->GetGroupingID())
   {
     bytesUsed++;
   }
-    
-  ID3_TextEnc enc = ID3TE_ASCII;
+
+  ID3_TextEnc enc = ID3TE_ISO8859_1;
   for (iterator fi = _fields.begin(); fi != _fields.end(); ++fi)
   {
     if (*fi && (*fi)->InScope(this->GetSpec()))
@@ -199,7 +200,7 @@ size_t ID3_FrameImpl::Size()
       bytesUsed += (*fi)->BinSize();
     }
   }
-  
+
   return bytesUsed;
 }
 
@@ -207,7 +208,7 @@ size_t ID3_FrameImpl::Size()
 bool ID3_FrameImpl::HasChanged() const
 {
   bool changed = _changed;
-  
+
   for (const_iterator fi = _fields.begin(); fi != _fields.end(); ++fi)
   {
     if (*fi && (*fi)->InScope(this->GetSpec()))
@@ -215,7 +216,7 @@ bool ID3_FrameImpl::HasChanged() const
       changed = (*fi)->HasChanged();
     }
   }
-  
+
   return changed;
 }
 
@@ -241,7 +242,7 @@ ID3_FrameImpl::operator=( const ID3_Frame &rFrame )
   this->SetCompression(rFrame.GetCompression());
   this->SetSpec(rFrame.GetSpec());
   _changed = false;
-  
+
   return *this;
 }
 

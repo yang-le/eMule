@@ -1,5 +1,5 @@
 // -*- C++ -*-
-// $Id: tag.h,v 1.63 2003/03/02 13:35:59 t1mpy Exp $
+// $Id: tag.h,v 1.64 2009/09/04 14:21:18 nagilo Exp $
 
 // id3lib: a software library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
@@ -29,9 +29,18 @@
 #ifndef _ID3LIB_TAG_H_
 #define _ID3LIB_TAG_H_
 
+#if defined(__BORLANDC__)
+// due to a bug in borland it sometimes still wants mfc compatibility even when you disable it
+#  if defined(_MSC_VER)
+#    undef _MSC_VER
+#  endif
+#  if defined(__MFC_COMPAT__)
+#    undef __MFC_COMPAT__
+#  endif
+#endif
+
 #include <id3/id3lib_frame.h>
 #include <id3/field.h>
-#include <id3/utils.h>//for ID3_PATH_LENGTH
 
 class ID3_Reader;
 class ID3_Writer;
@@ -41,26 +50,25 @@ class ID3_Tag;
 class ID3_CPP_EXPORT ID3_Tag
 {
   ID3_TagImpl* _impl;
-  char _tmp_filename[ID3_PATH_LENGTH];
 public:
 
   class Iterator
   {
   public:
     virtual ID3_Frame*       GetNext()       = 0;
-	virtual ~Iterator() {};
+    virtual ~Iterator() {};
   };
 
   class ConstIterator
   {
   public:
     virtual const ID3_Frame* GetNext()       = 0;
-	virtual ~ConstIterator() {};
+    virtual ~ConstIterator() {};
   };
 
 public:
 
-  ID3_Tag(const char *name = NULL);
+  ID3_Tag(const char *name = NULL, flags_t = (flags_t) ID3TT_ALL);
   ID3_Tag(const ID3_Tag &tag);
   virtual ~ID3_Tag();
 
@@ -90,6 +98,7 @@ public:
 
   size_t     Link(const char *fileInfo, flags_t = (flags_t) ID3TT_ALL);
   size_t     Link(ID3_Reader &reader, flags_t = (flags_t) ID3TT_ALL);
+
   flags_t    Update(flags_t = (flags_t) ID3TT_ALL);
   flags_t    Strip(flags_t = (flags_t) ID3TT_ALL);
 
@@ -97,6 +106,7 @@ public:
   size_t     GetAppendedBytes() const;
   size_t     GetFileSize() const;
   const char* GetFileName() const;
+  ID3_Err    GetLastError();
 
   ID3_Frame* Find(ID3_FrameID) const;
   ID3_Frame* Find(ID3_FrameID, ID3_FieldID, uint32) const;

@@ -1,23 +1,18 @@
-$Id: THANKS,v 1.20 2003/03/02 16:38:17 t1mpy Exp $
+$Id: THANKS,v 1.19 2002/11/02 17:50:57 t1mpy Exp $
 
 id3lib THANKS file
 
-See the AUTHORS file for a list of past and current project maintainers.
+See the AUTHORS file for a list of current project maintainers.
 
 Since version 3.05a, several individuals have helped further the development of
 id3lib.  They are listed below, in no particular order.  Please inform the
 current project maintainer if anyone has been missed.
 
-* Paul-Henri (paul-henri.ferme@noos.fr) and Christopher John Shaker <(cjshaker@shaker-net.com)
-  for pointing out where the code could have been more robust in tag_find.cpp.
-* Bradley J. Marker for pointing out that checking for NULL in Set() can
-  prevent crashes.
-* Todd Wilson for making a better field.cpp.
-* Baz (thebaz@pluizig.com) for creating a patch to get vbr info. 
+* Baz (thebaz@pluizig.com) for creating a patch to get vbr info.
 * Tobias Hoppe (choppe@cs.uni-magdeburg.de) for providing a better way to
   get the framesize.
 * Philipp Thomas (pthomas@suse.de) for help with compiling id3lib for gcc 3.2,
-  and make it better compliant with libstdc++
+  and make it better compliant with libstdc++ 
 * John George (johngeorge_k@asianetindia.com) for donating a number of routines
   in misc_support.cpp.
 * Frog Prince (thefrogprince@hotmail.com) for helping with compatibility issues

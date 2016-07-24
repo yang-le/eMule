@@ -42,7 +42,7 @@ protected:
 	bool m_bDataChanged;
 
 	void Localize();
-	void RefreshData();
+//	void RefreshData();
 
 	virtual BOOL OnInitDialog();
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support

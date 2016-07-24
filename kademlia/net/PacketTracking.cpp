@@ -57,7 +57,7 @@ void CPacketTracking::AddTrackedOutPacket(uint32 dwIP, uint8 byOpcode){
 	}
 }
 
-bool CPacketTracking::IsTrackedOutListRequestPacket(uint8 byOpcode) const
+bool CPacketTracking::IsTrackedOutListRequestPacket(uint8 byOpcode)
 {
 	switch(byOpcode){
 		case KADEMLIA2_BOOTSTRAP_REQ:
@@ -74,7 +74,6 @@ bool CPacketTracking::IsTrackedOutListRequestPacket(uint8 byOpcode) const
 		case KADEMLIA_CALLBACK_REQ:
 		case KADEMLIA2_PING:
 			return true;
-			break;
 		default:
 			return false;
 	}
@@ -83,13 +82,15 @@ bool CPacketTracking::IsTrackedOutListRequestPacket(uint8 byOpcode) const
 
 bool CPacketTracking::IsOnOutTrackList(uint32 dwIP, uint8 byOpcode, bool bDontRemove){
 #ifdef _DEBUG
-		if (!IsTrackedOutListRequestPacket(byOpcode))
-			ASSERT( false ); // code error / bug
+	if (!IsTrackedOutListRequestPacket(byOpcode))
+		ASSERT( false ); // code error / bug
 #endif
-	for (POSITION pos = listTrackedRequests.GetHeadPosition(); pos != NULL; listTrackedRequests.GetNext(pos)){
-		if (listTrackedRequests.GetAt(pos).dwIP == dwIP && listTrackedRequests.GetAt(pos).byOpcode == byOpcode && ::GetTickCount() - listTrackedRequests.GetAt(pos).dwInserted < SEC2MS(180)){
+	for (POSITION pos = listTrackedRequests.GetHeadPosition(); pos != NULL;) {
+		POSITION pos2 = pos;
+		const TrackPackets_Struct& req = listTrackedRequests.GetNext(pos);
+		if (req.dwIP == dwIP && req.byOpcode == byOpcode && ::GetTickCount() < req.dwInserted + SEC2MS(180)) {
 			if (!bDontRemove)
-				listTrackedRequests.RemoveAt(pos);
+				listTrackedRequests.RemoveAt(pos2);
 			return true;
 		}
 	}
@@ -172,7 +173,7 @@ bool CPacketTracking::InTrackListIsAllowedPacket(uint32 uIP, uint8 byOpcode, boo
 		if (pTrackEntry->m_aTrackedRequests[i].m_byOpcode == byOpcode){
 			// already tracked requests with theis opcode, remove already expired request counts
 			TrackPacketsIn_Struct::TrackedRequestIn_Struct& rCurTrackedRequest = pTrackEntry->m_aTrackedRequests[i];
-			if (rCurTrackedRequest.m_nCount > 0 
+			if (rCurTrackedRequest.m_nCount > 0
 				&& dwCurrentTick - rCurTrackedRequest.m_dwFirstAdded > SEC2MS(iSecondsPerPacket))
 			{
 				uint32 nRemoveCount = (dwCurrentTick - rCurTrackedRequest.m_dwFirstAdded) / SEC2MS(iSecondsPerPacket);
@@ -189,7 +190,7 @@ bool CPacketTracking::InTrackListIsAllowedPacket(uint32 uIP, uint8 byOpcode, boo
 			rCurTrackedRequest.m_nCount++;
 			// remember only for easier cleanup
 			pTrackEntry->m_dwLastExpire = max(pTrackEntry->m_dwLastExpire, rCurTrackedRequest.m_dwFirstAdded + SEC2MS(iSecondsPerPacket) * rCurTrackedRequest.m_nCount);
-		
+
 			if (CKademlia::IsRunningInLANMode() && ::IsLANIP(ntohl(uIP))) // no flood detection in LanMode
 				return true;
 
@@ -197,7 +198,7 @@ bool CPacketTracking::InTrackListIsAllowedPacket(uint32 uIP, uint8 byOpcode, boo
 			if (rCurTrackedRequest.m_nCount > iAllowedPacketsPerMinute * 5){
 				// this is so far above the limit that it has to be an intentional flood / misuse in any case
 				// so we take the next higher punishment and ban the IP
-				DebugLogWarning(_T("Kad: Massive request flood detected for opcode 0x%X (0x%X) from IP %s - Banning IP"), byOpcode, byDbgOrgOpcode, ipstr(ntohl(uIP))); 
+				DebugLogWarning(_T("Kad: Massive request flood detected for opcode 0x%X (0x%X) from IP %s - Banning IP"), byOpcode, byDbgOrgOpcode, (LPCTSTR)ipstr(ntohl(uIP)));
 				theApp.clientlist->AddBannedClient(ntohl(uIP));
 				return false; // drop packet
 			}
@@ -205,14 +206,14 @@ bool CPacketTracking::InTrackListIsAllowedPacket(uint32 uIP, uint8 byOpcode, boo
 				// over the limit, drop the packet but do nothing else
 				if (!rCurTrackedRequest.m_bDbgLogged){
 					rCurTrackedRequest.m_bDbgLogged = true;
-					DebugLog(_T("Kad: Request flood detected for opcode 0x%X (0x%X) from IP %s - Droping packets with this opcode"), byOpcode, byDbgOrgOpcode, ipstr(ntohl(uIP))); 
+					DebugLog(_T("Kad: Request flood detected for opcode 0x%X (0x%X) from IP %s - Droping packets with this opcode"), byOpcode, byDbgOrgOpcode, (LPCTSTR)ipstr(ntohl(uIP)));
 				}
 				return false; // drop packet
 			}
 			else
 				rCurTrackedRequest.m_bDbgLogged = false;
 			return true;
-		}	
+		}
 	}
 
 	// add a new entry for this request, no checks needed since 1 is always ok
@@ -231,10 +232,9 @@ void CPacketTracking::InTrackListCleanup(){
 	const uint32 dwCurrentTick = ::GetTickCount();
 	const uint32 dbgOldSize = m_liTrackPacketsIn.GetCount();
 	dwLastTrackInCleanup = dwCurrentTick;
-	POSITION pos1, pos2;
-	for (pos1 = m_liTrackPacketsIn.GetHeadPosition();( pos2 = pos1 ) != NULL;) {
-		m_liTrackPacketsIn.GetNext(pos1);
-		TrackPacketsIn_Struct* curEntry = m_liTrackPacketsIn.GetAt(pos2);
+	for (POSITION pos1 = m_liTrackPacketsIn.GetHeadPosition(); pos1 != NULL;) {
+		POSITION pos2 = pos1;
+		const TrackPacketsIn_Struct *curEntry = m_liTrackPacketsIn.GetNext(pos1);
 		if (curEntry->m_dwLastExpire < dwCurrentTick){
 			VERIFY(m_mapTrackPacketsIn.RemoveKey(curEntry->m_uIP));
 			m_liTrackPacketsIn.RemoveAt(pos2);
@@ -249,7 +249,7 @@ void CPacketTracking::AddLegacyChallenge(CUInt128 uContactID, CUInt128 uChalleng
 	listChallengeRequests.AddHead(sTrack);
 	while (!listChallengeRequests.IsEmpty()){
 		if (::GetTickCount() - listChallengeRequests.GetTail().dwInserted > SEC2MS(180)){
-			DEBUG_ONLY( DebugLog(_T("Challenge timed out, client not verified - %s"), ipstr(ntohl(listChallengeRequests.GetTail().uIP))) ); 
+			DEBUG_ONLY( DebugLog(_T("Challenge timed out, client not verified - %s"), (LPCTSTR)ipstr(ntohl(listChallengeRequests.GetTail().uIP))) );
 			listChallengeRequests.RemoveTail();
 		}
 		else
@@ -259,14 +259,15 @@ void CPacketTracking::AddLegacyChallenge(CUInt128 uContactID, CUInt128 uChalleng
 
 bool CPacketTracking::IsLegacyChallenge(CUInt128 uChallengeID, uint32 uIP, uint8 byOpcode, CUInt128& ruContactID){
 	bool bDbgWarning = false;
-	for (POSITION pos = listChallengeRequests.GetHeadPosition(); pos != NULL; listChallengeRequests.GetNext(pos)){
-		if (listChallengeRequests.GetAt(pos).uIP == uIP && listChallengeRequests.GetAt(pos).byOpcode == byOpcode 
-			&& ::GetTickCount() - listChallengeRequests.GetAt(pos).dwInserted < SEC2MS(180))
+	for (POSITION pos1 = listChallengeRequests.GetHeadPosition(); pos1 != NULL;) {
+		POSITION pos2 = pos1;
+		const TrackChallenge_Struct& tc = listChallengeRequests.GetNext(pos1);
+		if (tc.uIP == uIP && tc.byOpcode == byOpcode && ::GetTickCount() < tc.dwInserted + SEC2MS(180))
 		{
-			ASSERT( listChallengeRequests.GetAt(pos).uChallenge != 0 || byOpcode == KADEMLIA2_PING );
-			if (listChallengeRequests.GetAt(pos).uChallenge == 0 || listChallengeRequests.GetAt(pos).uChallenge == uChallengeID) {
-				ruContactID = listChallengeRequests.GetAt(pos).uContactID;
-				listChallengeRequests.RemoveAt(pos);
+			ASSERT(tc.uChallenge != 0 || byOpcode == KADEMLIA2_PING);
+			if (tc.uChallenge == 0 || tc.uChallenge == uChallengeID) {
+				ruContactID = tc.uContactID;
+				listChallengeRequests.RemoveAt(pos2);
 				return true;
 			}
 			else
@@ -274,14 +275,15 @@ bool CPacketTracking::IsLegacyChallenge(CUInt128 uChallengeID, uint32 uIP, uint8
 		}
 	}
 	if (bDbgWarning)
-		DebugLogWarning(_T("Kad: IsLegacyChallenge: Wrong challenge answer received, client not verified (%s)"), ipstr(ntohl(uIP)));
+		DebugLogWarning(_T("Kad: IsLegacyChallenge: Wrong challenge answer received, client not verified (%s)"), (LPCTSTR)ipstr(ntohl(uIP)));
 	return false;
 }
 
 bool CPacketTracking::HasActiveLegacyChallenge(uint32 uIP) const
 {
-	for (POSITION pos = listChallengeRequests.GetHeadPosition(); pos != NULL; listChallengeRequests.GetNext(pos)){
-		if (listChallengeRequests.GetAt(pos).uIP == uIP && ::GetTickCount() - listChallengeRequests.GetAt(pos).dwInserted < SEC2MS(180))
+	for (POSITION pos = listChallengeRequests.GetHeadPosition(); pos != NULL;) {
+		const TrackChallenge_Struct& tcstruct = listChallengeRequests.GetNext(pos);
+		if (tcstruct.uIP == uIP && ::GetTickCount() < tcstruct.dwInserted + SEC2MS(180))
 			return true;
 	}
 	return false;

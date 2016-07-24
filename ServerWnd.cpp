@@ -72,7 +72,7 @@ BEGIN_MESSAGE_MAP(CServerWnd, CResizableDialog)
 END_MESSAGE_MAP()
 
 CServerWnd::CServerWnd(CWnd* pParent /*=NULL*/)
-	: CResizableDialog(CServerWnd::IDD, pParent)
+	: CResizableDialog(CServerWnd::IDD, pParent), debug(false)
 {
 	servermsgbox = new CHTRichEditCtrl;
 	logbox = new CHTRichEditCtrl;
@@ -291,6 +291,7 @@ BOOL CServerWnd::OnInitDialog()
 	m_wndSplitter.Create(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_SERVER);
 	m_wndSplitter.SetDrawBorder(true);
 	InitSplitter();
+	GetDlgItem(IDC_ED2KCONNECT)->EnableWindow(false);
 
 	return true;
 }
@@ -319,16 +320,16 @@ bool CServerWnd::UpdateServerMetFromURL(CString strURL)
 		m_pacServerMetURL->AddItem(strURL, 0);
 
 	CString strTempFilename;
-	strTempFilename.Format(_T("%stemp-%d-server.met"), thePrefs.GetMuleDirectory(EMULE_CONFIGDIR), ::GetTickCount());
+	strTempFilename.Format(_T("%stemp-%u-server.met"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR), ::GetTickCount());
 
 	// try to download server.met
-	Log(GetResString(IDS_DOWNLOADING_SERVERMET_FROM), strURL);
+	Log(GetResString(IDS_DOWNLOADING_SERVERMET_FROM), (LPCTSTR)strURL);
 	CHttpDownloadDlg dlgDownload;
 	dlgDownload.m_strTitle = GetResString(IDS_DOWNLOADING_SERVERMET);
 	dlgDownload.m_sURLToDownload = strURL;
 	dlgDownload.m_sFileToDownloadInto = strTempFilename;
 	if (dlgDownload.DoModal() != IDOK) {
-		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FAILEDDOWNLOADMET), strURL);
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FAILEDDOWNLOADMET), (LPCTSTR)strURL);
 		return false;
 	}
 
@@ -431,7 +432,7 @@ void CServerWnd::OnBnClickedAddserver()
 				}
 			}
 		}
-		catch(CString strError){
+		catch (const CString& strError) {
 			AfxMessageBox(strError);
 			serveraddr.Empty();
 		}
@@ -486,7 +487,7 @@ void CServerWnd::PasteServerFromClipboard()
 				}
 			}
 		}
-		catch(CString strError){
+		catch (const CString& strError) {
 			AfxMessageBox(strError);
 		}
 		delete pLink;
@@ -499,7 +500,7 @@ void CServerWnd::PasteServerFromClipboard()
 	}
 }
 
-bool CServerWnd::AddServer(uint16 nPort, CString strAddress, CString strName, bool bShowErrorMB)
+bool CServerWnd::AddServer(uint16 nPort, const CString& strAddress, CString strName, bool bShowErrorMB)
 {
 	CServer* toadd = new CServer(nPort, strAddress);
 
@@ -535,7 +536,7 @@ bool CServerWnd::AddServer(uint16 nPort, CString strAddress, CString strName, bo
 	}
 	else
 	{
-		AddLogLine(true, GetResString(IDS_SERVERADDED), toadd->GetListName());
+		AddLogLine(true, GetResString(IDS_SERVERADDED), (LPCTSTR)toadd->GetListName());
 		return true;
 	}
 }
@@ -554,12 +555,8 @@ void CServerWnd::OnBnClickedUpdateServerMetFromUrl()
 		else
 		{
 			bool bDownloaded = false;
-			POSITION pos = thePrefs.addresses_list.GetHeadPosition();
-			while (!bDownloaded && pos != NULL)
-			{
-				strURL = thePrefs.addresses_list.GetNext(pos);
-				bDownloaded = UpdateServerMetFromURL(strURL);
-			}
+			for (POSITION pos = thePrefs.addresses_list.GetHeadPosition(); !bDownloaded && pos != NULL;)
+				bDownloaded = UpdateServerMetFromURL(thePrefs.addresses_list.GetNext(pos));
 		}
 	}
 	else
@@ -749,7 +746,7 @@ void CServerWnd::OnEnLinkServerBox(NMHDR *pNMHDR, LRESULT *pResult)
 		servermsgbox->GetTextRange(pEnLink->chrg.cpMin, pEnLink->chrg.cpMax, strUrl);
 		if (strUrl == m_strClickNewVersion){
 			// MOD Note: Do not remove this part - Merkur
-			strUrl.Format(_T("/en/version_check.php?version=%i&language=%i"),theApp.m_uCurVersionCheck,thePrefs.GetLanguageID());
+			strUrl.Format(_T("/en/version_check.php?version=%u&language=%u"),theApp.m_uCurVersionCheck,thePrefs.GetLanguageID());
 			strUrl = thePrefs.GetVersionCheckBaseURL()+strUrl;
 			// MOD Note: end
 		}
@@ -894,12 +891,12 @@ void CServerWnd::ReattachAnchors()
 	RemoveAnchor(*logbox);
 	RemoveAnchor(*debuglog);
 
-	AddAnchor(serverlistctrl, TOP_LEFT, CSize(100, thePrefs.GetSplitterbarPositionServer()));
-	AddAnchor(StatusSelector, CSize(0, thePrefs.GetSplitterbarPositionServer()), BOTTOM_RIGHT);
+	AddAnchor(serverlistctrl, TOP_LEFT, ANCHOR(100, thePrefs.GetSplitterbarPositionServer()));
+	AddAnchor(StatusSelector, ANCHOR(0, thePrefs.GetSplitterbarPositionServer()), BOTTOM_RIGHT);
 	AddAnchor(IDC_LOGRESET, MIDDLE_RIGHT);
-	AddAnchor(*servermsgbox, CSize(0, thePrefs.GetSplitterbarPositionServer()), BOTTOM_RIGHT);
-	AddAnchor(*logbox, CSize(0, thePrefs.GetSplitterbarPositionServer()), BOTTOM_RIGHT);
-	AddAnchor(*debuglog, CSize(0, thePrefs.GetSplitterbarPositionServer()), BOTTOM_RIGHT);
+	AddAnchor(*servermsgbox, ANCHOR(0, thePrefs.GetSplitterbarPositionServer()), BOTTOM_RIGHT);
+	AddAnchor(*logbox, ANCHOR(0, thePrefs.GetSplitterbarPositionServer()), BOTTOM_RIGHT);
+	AddAnchor(*debuglog, ANCHOR(0, thePrefs.GetSplitterbarPositionServer()), BOTTOM_RIGHT);
 
 	GetDlgItem(IDC_LOGRESET)->Invalidate();
 
@@ -935,7 +932,7 @@ void CServerWnd::UpdateSplitterRange()
 	ReattachAnchors();
 }
 
-LRESULT CServerWnd::DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam) 
+LRESULT CServerWnd::DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{

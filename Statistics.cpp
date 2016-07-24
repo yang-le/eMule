@@ -179,7 +179,7 @@ void CStatistics::Init()
 }
 
 // This function is going to basically calculate and save a bunch of averages.
-//				I made a seperate funtion so that it would always run instead of having
+//				I made a separate funtion so that it would always run instead of having
 //				the averages not be calculated if the graphs are disabled (Which is bad!).
 void CStatistics::UpdateConnectionStats(float uploadrate, float downloadrate)
 {
@@ -211,26 +211,26 @@ void CStatistics::UpdateConnectionStats(float uploadrate, float downloadrate)
 		maxcumUpavg = cumUpavg;
 		thePrefs.SetConnMaxAvgUpRate(maxcumUpavg);
 	}
-	
+
 	// Transfer Times (Increment Session)
 	if (uploadrate > 0 || downloadrate > 0) {
 		if (start_timeTransfers == 0)
 			start_timeTransfers = GetTickCount();
 		else
-			time_thisTransfer = (GetTickCount() - start_timeTransfers) / 1000;
+			time_thisTransfer = (GetTickCount() - start_timeTransfers) / SEC2MS(1);
 
 		if (uploadrate > 0) {
 			if (start_timeUploads == 0)
 				start_timeUploads = GetTickCount();
 			else
-				time_thisUpload = (GetTickCount() - start_timeUploads) / 1000;
+				time_thisUpload = (GetTickCount() - start_timeUploads) / SEC2MS(1);
 		}
 
 		if (downloadrate > 0) {
 			if (start_timeDownloads == 0)
 				start_timeDownloads = GetTickCount();
 			else
-				time_thisDownload = (GetTickCount() - start_timeDownloads) / 1000;
+				time_thisDownload = (GetTickCount() - start_timeDownloads) / SEC2MS(1);
 		}
 	}
 
@@ -253,7 +253,7 @@ void CStatistics::UpdateConnectionStats(float uploadrate, float downloadrate)
 	}
 
 	// Server Durations
-	if (theStats.serverConnectTime == 0) 
+	if (theStats.serverConnectTime == 0)
 		time_thisServerDuration = 0;
 	else
 		time_thisServerDuration = (GetTickCount() - theStats.serverConnectTime) / 1000;
@@ -273,7 +273,7 @@ void CStatistics::RecordRate()
 	uprateHistory.push_front(newitemUP);
 
 	// limit to maxmins
-	UINT uAverageMilliseconds = thePrefs.GetStatsAverageMinutes() * 60000;
+	UINT uAverageMilliseconds = MIN2MS(thePrefs.GetStatsAverageMinutes());
 	while (downrateHistory.front().timestamp - downrateHistory.back().timestamp > uAverageMilliseconds)
 		downrateHistory.pop_back();
 	while (uprateHistory.front().timestamp - uprateHistory.back().timestamp > uAverageMilliseconds)
@@ -284,80 +284,82 @@ void CStatistics::RecordRate()
 float CStatistics::GetAvgDownloadRate(int averageType)
 {
 	DWORD running;
-	switch (averageType)
-	{
-		case AVG_SESSION:
-			if (theStats.transferStarttime == 0)
-				return 0.0F;
-			running = (GetTickCount() - theStats.transferStarttime) / 1000;
-			if (running < 5)
-				return 0.0F;
-			return (float)(theStats.sessionReceivedBytes / 1024) / running;
 
-		case AVG_TOTAL:
-			if (theStats.transferStarttime == 0)
-				return thePrefs.GetConnAvgDownRate();
-			running = (GetTickCount() - theStats.transferStarttime) / 1000;
-			if (running < 5)
-				return thePrefs.GetConnAvgDownRate();
-			return (((float)(theStats.sessionReceivedBytes / 1024) / running) + thePrefs.GetConnAvgDownRate()) / 2.0F;
+	switch (averageType) {
+	case AVG_SESSION:
+		if (theStats.transferStarttime > 0) {
+			running = (GetTickCount() - theStats.transferStarttime) / SEC2MS(1);
+			if (running >= 5)
+				return (float)theStats.sessionReceivedBytes / 1024 / running;
+		}
+		return 0.0F;
 
-		default:
-			if (downrateHistory.size() == 0)
-				return 0.0F;
-			float deltat = (downrateHistory.front().timestamp - downrateHistory.back().timestamp) / 1000.0F;
-			if (deltat > 0.0F)
-				return ((downrateHistory.front().datalen - downrateHistory.back().datalen) / deltat) / 1024.0F;
-			return 0.0F;
+	case AVG_TOTAL:
+		if (theStats.transferStarttime > 0) {
+			running = (GetTickCount() - theStats.transferStarttime) / SEC2MS(1);
+			if (running >= 5)
+				return ((float)theStats.sessionReceivedBytes / 1024 / running + thePrefs.GetConnAvgDownRate()) / 2.0F;
+		}
+		return thePrefs.GetConnAvgDownRate();
+
+	case AVG_TIME:
+		if (!downrateHistory.empty()) {
+			running = (downrateHistory.front().timestamp - downrateHistory.back().timestamp) / SEC2MS(1);
+			if (running > 0)
+				return (float)(downrateHistory.front().datalen - downrateHistory.back().datalen) / 1024 / running;
+		}
+	default:
+		return 0.0F;
 	}
 }
 
 float CStatistics::GetAvgUploadRate(int averageType)
 {
 	DWORD running;
-	switch (averageType)
-	{
-		case AVG_SESSION:
-			if (theStats.transferStarttime == 0)
-				return 0.0F;
-			running = (GetTickCount() - theStats.transferStarttime) / 1000;
-			if (running < 5)
-				return 0.0F;
-			return (float)(theStats.sessionSentBytes / 1024) / running;
 
-		case AVG_TOTAL:
-			if (theStats.transferStarttime == 0)
-				return thePrefs.GetConnAvgUpRate();
-			running = (GetTickCount() - theStats.transferStarttime) / 1000;
-			if (running < 5)
-				return thePrefs.GetConnAvgUpRate();
-			return (((float)(theStats.sessionSentBytes / 1024) / running) + thePrefs.GetConnAvgUpRate()) / 2.0F;
+	switch (averageType) {
+	case AVG_SESSION:
+		if (theStats.transferStarttime) {
+			running = (GetTickCount() - theStats.transferStarttime) / SEC2MS(1);
+			if (running >= 5)
+				return (float)theStats.sessionSentBytes / 1024 / running;
+		}
+		return 0.0F;
 
-		default:
-			if (uprateHistory.size() == 0)
-				return 0.0F;
-			float deltat = (uprateHistory.front().timestamp - uprateHistory.back().timestamp) / 1000.0F;
-			if (deltat > 0.0F)
-				return ((uprateHistory.front().datalen - uprateHistory.back().datalen) / deltat) / 1024.0F;
-			return 0.0F;
+	case AVG_TOTAL:
+		if (theStats.transferStarttime > 0) {
+			running = (GetTickCount() - theStats.transferStarttime) / SEC2MS(1);
+			if (running >= 5)
+				return ((float)theStats.sessionSentBytes / 1024 / running + thePrefs.GetConnAvgUpRate()) / 2.0F;
+		}
+		return thePrefs.GetConnAvgUpRate();
+
+	case AVG_TIME:
+		if (!uprateHistory.empty()) {
+			running = (uprateHistory.front().timestamp - uprateHistory.back().timestamp) / SEC2MS(1);
+			if (running > 0)
+				return (float)(uprateHistory.front().datalen - uprateHistory.back().datalen) / 1024 / running;
+		}
+	default:
+		return 0.0F;
 	}
 }
 
 void CStatistics::CompDownDatarateOverhead()
 {
 	TransferredData newitem = {m_nDownDataRateMSOverhead, GetTickCount()};
-	m_AvarageDDRO_list.AddTail(newitem);
+	m_AverageDDRO_list.AddTail(newitem);
 	m_sumavgDDRO += m_nDownDataRateMSOverhead;
 	m_nDownDataRateMSOverhead = 0;
 
-	while (m_AvarageDDRO_list.GetTail().timestamp - m_AvarageDDRO_list.GetHead().timestamp > MAXAVERAGETIME)
-		m_sumavgDDRO -= m_AvarageDDRO_list.RemoveHead().datalen;
+	while (m_AverageDDRO_list.GetTail().timestamp - m_AverageDDRO_list.GetHead().timestamp > MAXAVERAGETIME)
+		m_sumavgDDRO -= m_AverageDDRO_list.RemoveHead().datalen;
 
-	if (m_AvarageDDRO_list.GetCount() > 10)
+	if (m_AverageDDRO_list.GetCount() > 10)
 	{
-		DWORD dwDuration = m_AvarageDDRO_list.GetTail().timestamp - m_AvarageDDRO_list.GetHead().timestamp;
+		DWORD dwDuration = m_AverageDDRO_list.GetTail().timestamp - m_AverageDDRO_list.GetHead().timestamp;
 		if (dwDuration)
-			m_nDownDatarateOverhead = 1000 * (m_sumavgDDRO - m_AvarageDDRO_list.GetHead().datalen) / dwDuration;
+			m_nDownDatarateOverhead = 1000 * (m_sumavgDDRO - m_AverageDDRO_list.GetHead().datalen) / dwDuration;
 	}
 	else
 		m_nDownDatarateOverhead = 0;
@@ -366,18 +368,18 @@ void CStatistics::CompDownDatarateOverhead()
 void CStatistics::CompUpDatarateOverhead()
 {
 	TransferredData newitem = {m_nUpDataRateMSOverhead, GetTickCount()};
-	m_AvarageUDRO_list.AddTail(newitem);
+	m_AverageUDRO_list.AddTail(newitem);
 	m_sumavgUDRO += m_nUpDataRateMSOverhead;
 	m_nUpDataRateMSOverhead = 0;
 
-	while (m_AvarageUDRO_list.GetTail().timestamp - m_AvarageUDRO_list.GetHead().timestamp > MAXAVERAGETIME)
-		m_sumavgUDRO -= m_AvarageUDRO_list.RemoveHead().datalen;
+	while (m_AverageUDRO_list.GetTail().timestamp - m_AverageUDRO_list.GetHead().timestamp > MAXAVERAGETIME)
+		m_sumavgUDRO -= m_AverageUDRO_list.RemoveHead().datalen;
 
-	if (m_AvarageUDRO_list.GetCount() > 10)
+	if (m_AverageUDRO_list.GetCount() > 10)
 	{
-		DWORD dwDuration = m_AvarageUDRO_list.GetTail().timestamp - m_AvarageUDRO_list.GetHead().timestamp;
+		DWORD dwDuration = m_AverageUDRO_list.GetTail().timestamp - m_AverageUDRO_list.GetHead().timestamp;
 		if (dwDuration)
-			m_nUpDatarateOverhead = 1000 * (m_sumavgUDRO - m_AvarageUDRO_list.GetHead().datalen) / dwDuration;
+			m_nUpDatarateOverhead = 1000 * (m_sumavgUDRO - m_AverageUDRO_list.GetHead().datalen) / dwDuration;
 	}
 	else
 		m_nUpDatarateOverhead = 0;
@@ -385,18 +387,18 @@ void CStatistics::CompUpDatarateOverhead()
 
 void CStatistics::ResetDownDatarateOverhead()
 {
+	m_AverageDDRO_list.RemoveAll();
 	m_nDownDataRateMSOverhead = 0;
-	m_AvarageDDRO_list.RemoveAll();
-	m_sumavgDDRO = 0;
 	m_nDownDatarateOverhead = 0;
+	m_sumavgDDRO = 0;
 }
 
 void CStatistics::ResetUpDatarateOverhead()
 {
+	m_AverageUDRO_list.RemoveAll();
 	m_nUpDataRateMSOverhead = 0;
-	m_sumavgUDRO = 0;
-	m_AvarageUDRO_list.RemoveAll();
 	m_nUpDatarateOverhead = 0;
+	m_sumavgUDRO = 0;
 }
 
 #ifdef USE_MEM_STATS
@@ -424,6 +426,7 @@ int AFX_CDECL AfxNewHandler(size_t /* nSize */)
 	return 0;
 }
 
+#pragma warning(push)
 #pragma warning(disable: 4273)
 
 _PNH _afxNewHandler = &AfxNewHandler;
@@ -495,4 +498,5 @@ void __cdecl operator delete[](void* p)
 	::operator delete(p);
 }
 
+#pragma warning(pop)
 #endif

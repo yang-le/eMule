@@ -1,4 +1,4 @@
-/* $Id: id3.h,v 1.21 2002/09/21 17:23:32 t1mpy Exp $
+/* $Id: id3.h,v 1.23 2004/01/21 04:59:53 shadrack Exp $
  *
  * id3lib: a software library for creating and manipulating id3v1/v2 tags
  * Copyright 1999, 2000  Scott Thomas Haug
@@ -73,7 +73,7 @@ extern "C"
   ID3_C_EXPORT void                 CCONV ID3TagIterator_Delete       (ID3TagIterator*);
   ID3_C_EXPORT ID3Frame*            CCONV ID3TagIterator_GetNext      (ID3TagIterator*);
   ID3_C_EXPORT void                 CCONV ID3TagConstIterator_Delete  (ID3TagConstIterator*);
-  ID3_C_EXPORT const ID3Frame*      CCONV ID3TagConstIterator_GetNext(ID3TagConstIterator*);
+  ID3_C_EXPORT const ID3Frame*      CCONV ID3TagConstIterator_GetNext (ID3TagConstIterator*);
 
   /* frame wrappers */
   ID3_C_EXPORT ID3Frame*            CCONV ID3Frame_New                (void);
@@ -106,12 +106,13 @@ extern "C"
   ID3_C_EXPORT void                 CCONV ID3Field_ToFile             (const ID3Field *field, const char *fileName);
 
   /* field-info wrappers */
-  ID3_C_EXPORT char*                CCONV ID3FrameInfo_ShortName     (ID3_FrameID frameid);
-  ID3_C_EXPORT char*                CCONV ID3FrameInfo_LongName      (ID3_FrameID frameid);
-  ID3_C_EXPORT const char*          CCONV ID3FrameInfo_Description   (ID3_FrameID frameid);
+  ID3_C_EXPORT char*                CCONV ID3FrameInfo_ShortName      (ID3_FrameID frameid);
+  ID3_C_EXPORT char*                CCONV ID3FrameInfo_LongName       (ID3_FrameID frameid);
+  ID3_C_EXPORT const char*          CCONV ID3FrameInfo_Description    (ID3_FrameID frameid);
   ID3_C_EXPORT int                  CCONV ID3FrameInfo_MaxFrameID     (void);
   ID3_C_EXPORT int                  CCONV ID3FrameInfo_NumFields      (ID3_FrameID frameid);
-  ID3_C_EXPORT ID3_FieldType        CCONV ID3FrameInfo_FieldType    (ID3_FrameID frameid, int fieldnum);
+  ID3_C_EXPORT ID3_FieldID          CCONV ID3FrameInfo_FieldID        (ID3_FrameID frameid, int fieldnum);
+  ID3_C_EXPORT ID3_FieldType        CCONV ID3FrameInfo_FieldType      (ID3_FrameID frameid, int fieldnum);
   ID3_C_EXPORT size_t               CCONV ID3FrameInfo_FieldSize      (ID3_FrameID frameid, int fieldnum);
   ID3_C_EXPORT flags_t              CCONV ID3FrameInfo_FieldFlags     (ID3_FrameID frameid, int fieldnum);
 

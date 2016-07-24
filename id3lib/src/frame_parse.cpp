@@ -1,7 +1,8 @@
-// $Id: frame_parse.cpp,v 1.34 2002/07/06 13:53:18 t1mpy Exp $
+// $Id: frame_parse.cpp,v 1.36 2002/09/19 09:54:25 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
+// Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
 
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Library General Public License as published by
@@ -40,11 +41,12 @@ namespace
     int iLoop;
     int iFields;
     io::ExitTrigger et(rdr);
-    ID3_TextEnc enc = ID3TE_ASCII;  // set the default encoding 
-    ID3_V2Spec spec = frame.GetSpec(); 
-    // parse the frame's fields  
+    ID3_TextEnc enc = ID3TE_ISO8859_1;  // set the default encoding
+    ID3_V2Spec spec = frame.GetSpec();
+    size_t linked_fixed_size = 0; // set the default linkedsize
+    // parse the frame's fields
     iFields = frame.NumFields();
-    ID3D_NOTICE( "ID3_FrameImpl::Parse(): num_fields = " << iFields );
+    ID3D_NOTICE( "parseFields(): num_fields = " << iFields );
     iLoop = 0;
     for (ID3_FrameImpl::iterator fi = frame.begin(); fi != frame.end(); ++fi)
     {
@@ -52,10 +54,9 @@ namespace
       ++iLoop;
 
       if (rdr.atEnd())
-      { 
-        // there's no remaining data to parse! 
-        ID3D_WARNING( "ID3_FrameImpl::Parse(): out of data at postion " <<
-                      rdr.getCur() );
+      {
+        // there's no remaining data to parse!
+        ID3D_WARNING( "parseFields(): out of data at postion " << rdr.getCur() );
         if (iLoop == iFields)
         {
           //if we are at the last field, (the 'data' field) it's apparently
@@ -64,65 +65,112 @@ namespace
           break;
         }
         return false;
-      } 
-      
+      }
+
       if (NULL == fp)
       {
         // Ack!  Why is the field NULL?  Log this...
-        ID3D_WARNING( "ID3_FrameImpl::Parse(): field is null" );
+        ID3D_WARNING( "parseFields(): field is null" );
         continue;
       }
-      
-      if (!fp->InScope(spec)) 
+
+      if (!fp->InScope(spec))
       {
-        ID3D_NOTICE( "ID3_FrameImpl::Parse(): field is not in scope" );
+        ID3D_NOTICE( "parseFields(): field is not in scope" );
         // continue with the rest of the fields
-        continue; 
+        continue;
       }
-      
-      ID3D_NOTICE( "ID3_FrameImpl::Parse(): setting enc to " << enc );
+
+      if (!fp->SetLinkedSize(linked_fixed_size))
+      {
+        ID3D_NOTICE( "parseFields(): field is empty sized" );
+        // continue with the rest of the fields
+        continue;
+      }
+
+      ID3D_NOTICE( "parseFields(): setting enc to " << enc );
       fp->SetEncoding(enc);
       ID3_Reader::pos_type beg = rdr.getCur();
       et.setExitPos(beg);
       ID3D_NOTICE( "ID3_FrameImpl::Parse(): parsing field, cur = " << beg );
-      ID3D_NOTICE( "ID3_FrameImpl::Parse(): parsing field, end = " << 
-                   rdr.getEnd() );
-      if (!fp->Parse(rdr) || rdr.getCur() == beg) 
-      { 
-        // nothing to parse!  ack!  parse error... 
-        ID3D_WARNING( "ID3_FrameImpl::Parse(): no data parsed, bad parse" );
+      ID3D_NOTICE( "ID3_FrameImpl::Parse(): parsing field, end = " << rdr.getEnd() );
+      if (!fp->Parse(rdr) || rdr.getCur() == beg)
+      {
+        // nothing to parse!  ack!  parse error...
+        ID3D_WARNING( "parseFields(): no data parsed, bad parse" );
         return false;
       }
-      
-      if (fp->GetID() == ID3FN_TEXTENC)  
+
+      if (fp->GetID() == ID3FN_TEXTENC)
       {
-        enc = static_cast<ID3_TextEnc>(fp->Get());  
-        ID3D_NOTICE( "ID3_FrameImpl::Parse(): found encoding = " << enc );
+        enc = static_cast<ID3_TextEnc>(fp->Get());
+        ID3D_NOTICE( "parseFields(): found encoding = " << enc );
+      }
+      if (fp->HasFlag(ID3FF_HASLINKEDSIZE))
+      {
+        // check whether it has a fixed size itself and is an integer and and no _linked_field
+        if (fp->GetType() == ID3FTY_INTEGER  && fp->HasFixedSize() && fp->GetLinkedField() == ID3FN_NOFIELD)
+        {
+          switch (fp->GetID())
+          {
+            case ID3FN_BITSSIZE:
+            {
+              uint32 _tmp_byte_size_ = fp->Get();
+              linked_fixed_size = 0;
+
+              for (; _tmp_byte_size_ > 0;) //round to whole bytes: 1 bit will become 1 byte, 7 bits will become 1 byte, 9 bits become 2 bytes, etc
+              {
+                if (_tmp_byte_size_ < 8 && _tmp_byte_size_ != 0)
+                {
+                  ++linked_fixed_size;
+                  break;
+                }
+                else if (_tmp_byte_size_ >= 8)
+                {
+                  ++linked_fixed_size;
+                  _tmp_byte_size_ -= 8;
+                }
+              }
+              ID3D_NOTICE( "parseFields(): found linked_fixed_size = " << linked_fixed_size );
+              break;
+            }
+            case ID3FN_BYTESSIZE:
+            {
+              linked_fixed_size = static_cast<size_t>(fp->Get());
+              ID3D_NOTICE( "parseFields(): found linked_fixed_size = " << linked_fixed_size );
+              break;
+            }
+            default:
+            {
+              break; //should never reach here, added to avoid compiler errors
+            }
+          }
+        }
       }
     }
     et.setExitPos(rdr.getCur());
-    
+
     return true;
   }
 };
 
-bool ID3_FrameImpl::Parse(ID3_Reader& reader) 
-{ 
+bool ID3_FrameImpl::Parse(ID3_Reader& reader)
+{
   io::ExitTrigger et(reader);
   ID3D_NOTICE( "ID3_FrameImpl::Parse(): reader.getBeg() = " << reader.getBeg() );
   ID3D_NOTICE( "ID3_FrameImpl::Parse(): reader.getCur() = " << reader.getCur() );
   ID3D_NOTICE( "ID3_FrameImpl::Parse(): reader.getEnd() = " << reader.getEnd() );
   ID3_Reader::pos_type beg = reader.getCur();
 
-  if (!_hdr.Parse(reader) || reader.getCur() == beg)  
-  { 
+  if (!_hdr.Parse(reader) || reader.getCur() == beg)
+  {
     ID3D_WARNING( "ID3_FrameImpl::Parse(): no header to parse" );
-    return false; 
+    return false;
   }
   ID3D_NOTICE( "ID3_FrameImpl::Parse(): after hdr, getCur() = " << reader.getCur() );
   ID3D_NOTICE( "ID3_FrameImpl::Parse(): found frame! id = " << _hdr.GetTextID() );
 
-  // data is the part of the frame buffer that appears after the header  
+  // data is the part of the frame buffer that appears after the header
   const size_t dataSize = _hdr.GetDataSize();
   ID3D_NOTICE( "ID3_FrameImpl::Parse(): dataSize = " << dataSize );
   if (reader.getEnd() < beg + dataSize)
@@ -134,16 +182,11 @@ bool ID3_FrameImpl::Parse(ID3_Reader& reader)
   ID3D_NOTICE( "ID3_FrameImpl::Parse(): window getBeg() = " << wr.getBeg() );
   ID3D_NOTICE( "ID3_FrameImpl::Parse(): window getCur() = " << wr.getCur() );
   ID3D_NOTICE( "ID3_FrameImpl::Parse(): window getEnd() = " << wr.getEnd() );
-  
+
   unsigned long origSize = 0;
   if (_hdr.GetCompression())
   {
     origSize = io::readBENumber(reader, sizeof(uint32));
-	// allocate 2MB instead 4GB max in the decompressor later on (TODO decompressor should actually do the sanitycheck)
-	if (origSize > 2 * 1024 * 1024){
-		ID3D_WARNING( "ID3_FrameImpl::Parse(): _hdr.GetCompression() exeeds sanity limit" );
-		return false;
-	}
     ID3D_NOTICE( "ID3_FrameImpl::Parse(): frame is compressed, origSize = " << origSize );
   }
 
@@ -161,12 +204,12 @@ bool ID3_FrameImpl::Parse(ID3_Reader& reader)
     ID3D_NOTICE( "ID3_FrameImpl::Parse(): frame is encrypted, grouping_id = " << (int) ch );
   }
 
-  // set the type of frame based on the parsed header  
-  this->_ClearFields(); 
-  this->_InitFields(); 
+  // set the type of frame based on the parsed header
+  this->_ClearFields();
+  this->_InitFields();
 
   bool success = false;
-  // expand out the data if it's compressed 
+  // expand out the data if it's compressed
   if (!_hdr.GetCompression())
   {
     success = parseFields(wr, *this);
@@ -180,5 +223,5 @@ bool ID3_FrameImpl::Parse(ID3_Reader& reader)
 
   _changed = false;
   return true;
-} 
+}
 

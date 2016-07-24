@@ -64,7 +64,7 @@ public:
 	// Return:		None. 
 	// Notes:		None.
 	//***********************************************************************
-	void SetColor(COLORREF Color);
+	void SetColor(COLORREF dwColor);
 
 
 	//***********************************************************************
@@ -84,7 +84,7 @@ public:
 	// Return:		None. 
 	// Notes:		None.
 	//***********************************************************************
-	void SetDefaultColor(COLORREF Color);
+	void SetDefaultColor(COLORREF dwColor);
 
 	//***********************************************************************
 	// Name:		SetCustomText

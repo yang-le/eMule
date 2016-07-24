@@ -45,7 +45,7 @@ namespace Kademlia
 		TrackPacketsIn_Struct() { m_dwLastExpire = 0; m_uIP = 0; }
 
 		uint32	m_uIP;
-		uint32	m_dwLastExpire;	
+		uint32	m_dwLastExpire;
 		CArray<TrackedRequestIn_Struct> m_aTrackedRequests;
 	};
 
@@ -65,7 +65,7 @@ namespace Kademlia
 			bool HasActiveLegacyChallenge(uint32 uIP) const;
 
 		private:
-			bool IsTrackedOutListRequestPacket(uint8 byOpcode) const;
+			static bool IsTrackedOutListRequestPacket(uint8 byOpcode);
 			CList<TrackPackets_Struct> listTrackedRequests;
 			CList<TrackChallenge_Struct> listChallengeRequests;
 			CTypedPtrList<CPtrList, TrackPacketsIn_Struct*>					m_liTrackPacketsIn;

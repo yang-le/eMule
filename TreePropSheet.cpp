@@ -42,7 +42,7 @@ BEGIN_MESSAGE_MAP(CTreePropSheet, CPropertySheet)
 	ON_MESSAGE(PSM_SETCURSEL, OnSetCurSel)
 	ON_MESSAGE(PSM_SETCURSELID, OnSetCurSelId)
 	ON_MESSAGE(PSM_ISDIALOGMESSAGE, OnIsDialogMessage)
-	
+
 	ON_NOTIFY(TVN_SELCHANGINGA, s_unPageTreeId, OnPageTreeSelChanging)
 	ON_NOTIFY(TVN_SELCHANGINGW, s_unPageTreeId, OnPageTreeSelChanging)
 	ON_NOTIFY(TVN_SELCHANGEDA, s_unPageTreeId, OnPageTreeSelChanged)
@@ -163,7 +163,7 @@ BOOL CTreePropSheet::SetTreeDefaultImages(CImageList *pImages)
 	// update, if necessary
 	if (IsWindow(m_hWnd))
 		RefillPageTree();
-	
+
 	return TRUE;
 }
 
@@ -319,7 +319,7 @@ void CTreePropSheet::RefillPageTree()
 
 		// add default images
 		if (m_DefaultImages.GetSafeHandle())
-		{	
+		{
 			HICON	hIcon;
 
 			// add default images
@@ -381,7 +381,7 @@ HTREEITEM CTreePropSheet::CreatePageTreeItem(LPCTSTR lpszPath, HTREEITEM hParent
 {
 	CString		strPath(lpszPath);
 	CString		strTopMostItem(SplitPageTreePath(strPath));
-	
+
 	// Check if an item with the given text does already exist
 	HTREEITEM	hItem = NULL;
 	HTREEITEM	hChild = m_pwndPageTree->GetChildItem(hParent);
@@ -419,33 +419,33 @@ HTREEITEM CTreePropSheet::CreatePageTreeItem(LPCTSTR lpszPath, HTREEITEM hParent
 
 CString CTreePropSheet::SplitPageTreePath(CString &strRest)
 {
-	int	nSeperatorPos = 0;
+	int	nSeparatorPos = 0;
 	for (;;)
 	{
-		nSeperatorPos = strRest.Find(_T("::"), nSeperatorPos);
-		if (nSeperatorPos == -1)
+		nSeparatorPos = strRest.Find(_T("::"), nSeparatorPos);
+		if (nSeparatorPos == -1)
 		{
 			CString	strItem(strRest);
 			strRest.Empty();
 			return strItem;
 		}
-		else if (nSeperatorPos>0)
+		else if (nSeparatorPos>0)
 		{
 			// if there is an odd number of backslashes infront of the
-			// seperator, than do not interpret it as separator
+			// separator, than do not interpret it as separator
 			int	nBackslashCount = 0;
-			for (int nPos = nSeperatorPos-1; nPos >= 0 && strRest[nPos]==_T('\\'); --nPos, ++nBackslashCount);
+			for (int nPos = nSeparatorPos-1; nPos >= 0 && strRest[nPos]==_T('\\'); --nPos, ++nBackslashCount);
 			if (nBackslashCount%2 == 0)
 				break;
 			else
-				++nSeperatorPos;
+				++nSeparatorPos;
 		}
 	}
 
-	CString	strItem(strRest.Left(nSeperatorPos));
+	CString	strItem(strRest.Left(nSeparatorPos));
 	strItem.Replace(_T("\\::"), _T("::"));
 	strItem.Replace(_T("\\\\"), _T("\\"));
-	strRest = strRest.Mid(nSeperatorPos+2);
+	strRest = strRest.Mid(nSeparatorPos+2);
 	return strItem;
 }
 
@@ -640,7 +640,7 @@ void CTreePropSheet::ActivatePreviousPage()
 					hPrevItem = m_pwndPageTree->GetNextSiblingItem(hPrevItem);
 			}
 		}
-		else 
+		else
 			hPrevItem=m_pwndPageTree->GetParentItem(hItem);
 
 		if (!hPrevItem)
@@ -722,7 +722,7 @@ void CTreePropSheet::ActivateNextPage()
 /////////////////////////////////////////////////////////////////////
 // Overridings
 
-BOOL CTreePropSheet::OnInitDialog() 
+BOOL CTreePropSheet::OnInitDialog()
 {
 	if (m_bTreeViewMode)
 	{
@@ -847,8 +847,8 @@ BOOL CTreePropSheet::OnInitDialog()
 		// Using 'CTreeCtrl::CreateEx' (and it's indeed a good idea to call this one), results in
 		// flawed window styles (border is missing) when running under WinXP themed.. ???
 		//m_pwndPageTree->CreateEx(
-		//	WS_EX_CLIENTEDGE|WS_EX_NOPARENTNOTIFY, 
-		//	WS_TABSTOP|WS_CHILD|WS_VISIBLE|dwTreeStyle, 
+		//	WS_EX_CLIENTEDGE|WS_EX_NOPARENTNOTIFY,
+		//	WS_TABSTOP|WS_CHILD|WS_VISIBLE|dwTreeStyle,
 		//	rectTree, this, s_unPageTreeId);
 
 		// Feel free to explain to me why we need to call CWnd::CreateEx to get the proper window style
@@ -863,9 +863,9 @@ BOOL CTreePropSheet::OnInitDialog()
 	#else
 	{
 		m_pwndPageTree->CreateEx(
-			WS_EX_CLIENTEDGE|WS_EX_NOPARENTNOTIFY, 
-			_T("SysTreeView32"), _T("PageTree"), 
-			WS_TABSTOP|WS_CHILD|WS_VISIBLE|dwTreeStyle, 
+			WS_EX_CLIENTEDGE|WS_EX_NOPARENTNOTIFY,
+			_T("SysTreeView32"), _T("PageTree"),
+			WS_TABSTOP|WS_CHILD|WS_VISIBLE|dwTreeStyle,
 			rectTree, this, s_unPageTreeId);
 	}
 	#endif
@@ -874,7 +874,7 @@ BOOL CTreePropSheet::OnInitDialog()
 	// settings from the parent dialog. Need to set the font explicitly so that it fits
 	// to the font which is used for the property pages.
 	m_pwndPageTree->SendMessage(WM_SETFONT, (WPARAM)AfxGetMainWnd()->GetFont()->m_hObject, TRUE);
-	
+
 	// Win98: Explicitly set to Unicode to receive Unicode notifications.
 	m_pwndPageTree->SendMessage(CCM_SETUNICODEFORMAT, TRUE);
 
@@ -897,10 +897,10 @@ BOOL CTreePropSheet::OnInitDialog()
 }
 
 
-void CTreePropSheet::OnDestroy() 
+void CTreePropSheet::OnDestroy()
 {
 	CPropertySheet::OnDestroy();
-	
+
 	if (m_Images.GetSafeHandle())
 		m_Images.DeleteImageList();
 

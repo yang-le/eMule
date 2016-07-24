@@ -5,10 +5,10 @@ Purpose: Defines the implementation for an MFC dialog which performs HTTP downlo
 Created: PJN / 14-11-1999
 History: PJN / 25-01-2000 1. Fixed a problem where server authentication was not being detected correctly,
                           while proxy authentication was being handled.
-                          2. Updated the way and periodicity certain UI controls are updated during the 
+                          2. Updated the way and periodicity certain UI controls are updated during the
                           HTTP download
 
-Copyright (c) 1999 - 2000 by PJ Naughter.  
+Copyright (c) 1999 - 2000 by PJ Naughter.
 All rights reserved.
 
 
@@ -73,7 +73,10 @@ static int check_header(z_stream *stream, HINTERNET m_hHttpFile) {
 	for(len = 0; len < 2; len++) {
 		c = get_byte(m_hHttpFile);
 		if(c != gz_magic[len]) {
-			if(len != 0) stream->avail_in++, stream->next_in--;
+			if (len != 0) {
+				++stream->avail_in;
+				--stream->next_in;
+			}
 			if(c != EOF) {
 				stream->avail_in++, stream->next_in--;
 				//do not support transparent streams
@@ -127,19 +130,19 @@ static int check_header(z_stream *stream, HINTERNET m_hHttpFile) {
       szContentEncoding += 2;                                               \
     if(!stricmp(szContentEncoding, "gzip")                                  \
       bEncodedWithGZIP = TRUE;                                              \
-   }                                                                        \
+     }                                                                        \
   }
 
 #define PREPARE_DECODER                                                     \
   if(bEncodedWithGZIP) {                                                    \
     zs.next_out = cBufferGZIP;                                              \
-    zs.zalloc = (alloc_func)0;                                              \
-    zs.zfree = (free_func)0;                                                \
-    zs.opaque = (voidpf)0;                                                  \
+    zs.zalloc = (alloc_func)Z_NULL;                                         \
+    zs.zfree = (free_func)Z_NULL;                                           \
+    zs.opaque = (voidpf)Z_NULL;                                             \
     zs.next_in = (unsigned char*)szReadBuf;                                 \
-    zs.next_out = Z_NULL;                                                   \
-    zs.avail_in = 0;                                                        \
-	zs.avail_out = sizeof(szReadBuf);                                       \
+    zs.total_out = 0;                                                       \
+    zs.avail_in = sizeof(szReadBuf);                                        \
+	zs.avail_out = 0;                                                       \
                                                                             \
     VERIFY(inflateInit2(&zs, -MAX_WBITS) == Z_OK);                          \
     int result = check_header(&zs, m_hHttpFile);                            \
@@ -243,7 +246,7 @@ LRESULT CHttpDownloadDlg::OnThreadFinished(WPARAM wParam, LPARAM /*lParam*/)
 	else if (wParam)
 	{
 		if (!m_sError.IsEmpty())
-			LogError(LOG_STATUSBAR, _T("%s"), m_sError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)m_sError);
 		EndDialog(IDCANCEL);
 	}
 	else
@@ -252,7 +255,7 @@ LRESULT CHttpDownloadDlg::OnThreadFinished(WPARAM wParam, LPARAM /*lParam*/)
 	return 0L;
 }
 
-BOOL CHttpDownloadDlg::OnInitDialog() 
+BOOL CHttpDownloadDlg::OnInitDialog()
 {
 	CString cap;
 	cap = GetResString(IDS_CANCEL);
@@ -276,7 +279,7 @@ BOOL CHttpDownloadDlg::OnInitDialog()
 		m_sURLToDownload = _T("http://") + m_sURLToDownload;
 		if (!AfxParseURL(m_sURLToDownload, m_dwServiceType, m_sServer, m_sObject, m_nPort))
 		{
-			TRACE(_T("Failed to parse the URL: %s\n"), m_sURLToDownload);
+			TRACE(_T("Failed to parse the URL: %s\n"), (LPCTSTR)m_sURLToDownload);
 			EndDialog(IDCANCEL);
 			return TRUE;
 		}
@@ -304,7 +307,7 @@ BOOL CHttpDownloadDlg::OnInitDialog()
 	{
 		DWORD dwError = GetLastError();
 		CString sMsg;
-		sMsg.Format(GetResString(IDS_HTTPDOWNLOAD_FAIL_FILE_OPEN), GetErrorMessage(dwError));
+		sMsg.Format(GetResString(IDS_HTTPDOWNLOAD_FAIL_FILE_OPEN), (LPCTSTR)GetErrorMessage(dwError));
 		AfxMessageBox(sMsg);
 		EndDialog(IDCANCEL);
 		return TRUE;
@@ -323,7 +326,7 @@ BOOL CHttpDownloadDlg::OnInitDialog()
 	CString sFileStatus;
 	ASSERT(m_sObject.GetLength());
 	ASSERT(m_sServer.GetLength());
-	sFileStatus.Format(GetResString(IDS_HTTPDOWNLOAD_FILESTATUS), m_sFilename, m_sServer);
+	sFileStatus.Format(GetResString(IDS_HTTPDOWNLOAD_FILESTATUS), (LPCTSTR)m_sFilename, (LPCTSTR)m_sServer); //fo88
 	m_ctrlFileStatus.SetWindowText(sFileStatus);
 
 	// set labels
@@ -362,7 +365,7 @@ void CHttpDownloadDlg::SetPercentage(int nPercentage)
 	CString sPercentage;
 	sPercentage.Format(_T("%d"), nPercentage);
 	CString sCaption;
-	sCaption.Format(GetResString(IDS_HTTPDOWNLOAD_PERCENTAGE), sPercentage, m_sFilename);
+	sCaption.Format(GetResString(IDS_HTTPDOWNLOAD_PERCENTAGE), (LPCTSTR)sPercentage, (LPCTSTR)m_sFilename);
 	SetWindowText(sCaption);
 }
 
@@ -379,10 +382,10 @@ void CHttpDownloadDlg::SetProgress(DWORD dwBytesRead)
 void CHttpDownloadDlg::SetTimeLeft(DWORD dwSecondsLeft, DWORD dwBytesRead, DWORD dwFileSize)
 {
 	CString sOf;
-	sOf.Format(GetResString(IDS_HTTPDOWNLOAD_OF), CastItoXBytes((uint64)dwBytesRead, false, false), CastItoXBytes((uint64)dwFileSize, false, false));
+	sOf.Format(GetResString(IDS_HTTPDOWNLOAD_OF), (LPCTSTR)CastItoXBytes((uint64)dwBytesRead, false, false), (LPCTSTR)CastItoXBytes((uint64)dwFileSize, false, false));
 
 	CString sTimeLeft;
-	sTimeLeft.Format(GetResString(IDS_HTTPDOWNLOAD_TIMELEFT), CastSecondsToHM(dwSecondsLeft), sOf);
+	sTimeLeft.Format(GetResString(IDS_HTTPDOWNLOAD_TIMELEFT), (LPCTSTR)CastSecondsToHM(dwSecondsLeft), (LPCTSTR)sOf);
 	m_ctrlTimeLeft.SetWindowText(sTimeLeft);
 }
 
@@ -391,7 +394,7 @@ void CHttpDownloadDlg::SetStatus(const CString& sCaption)
 	m_ctrlStatus.SetWindowText(sCaption);
 }
 
-void CHttpDownloadDlg::SetStatus(CString strFmt, LPCTSTR lpsz1)
+void CHttpDownloadDlg::SetStatus(const CString& strFmt, LPCTSTR lpsz1)
 {
 	CString sStatus;
 	sStatus.Format(strFmt, lpsz1);
@@ -401,7 +404,7 @@ void CHttpDownloadDlg::SetStatus(CString strFmt, LPCTSTR lpsz1)
 void CHttpDownloadDlg::SetTransferRate(double KbPerSecond)
 {
 	CString sRate;
-	sRate.Format(_T("%s"), CastItoXBytes(KbPerSecond, true, true));
+	sRate.Format(_T("%s"), (LPCTSTR)CastItoXBytes(KbPerSecond, true, true));
 	m_ctrlTransferRate.SetWindowText(sRate);
 }
 
@@ -410,7 +413,7 @@ void CHttpDownloadDlg::PlayAnimation()
 	m_ctrlAnimate.Play(0, (UINT)-1, (UINT)-1);
 }
 
-void CHttpDownloadDlg::HandleThreadErrorWithLastError(CString strIDError, DWORD dwLastError)
+void CHttpDownloadDlg::HandleThreadErrorWithLastError(const CString& strIDError, DWORD dwLastError)
 {
 	if (dwLastError == 0)
 		dwLastError = GetLastError();
@@ -419,7 +422,7 @@ void CHttpDownloadDlg::HandleThreadErrorWithLastError(CString strIDError, DWORD 
 		GetModuleErrorString(dwLastError, strLastError, _T("wininet"));
 	else
 		GetSystemErrorString(dwLastError, strLastError);
-	m_sError.Format(strIDError, _T(" ") + strLastError);
+	m_sError.Format(strIDError, (LPCTSTR)(_T(" ") + strLastError));
 
 	//Delete the file being downloaded to if it is present
 	try {
@@ -433,7 +436,7 @@ void CHttpDownloadDlg::HandleThreadErrorWithLastError(CString strIDError, DWORD 
 	PostMessage(WM_HTTPDOWNLOAD_THREAD_FINISHED, 1);
 }
 
-void CHttpDownloadDlg::HandleThreadError(CString strIDError)
+void CHttpDownloadDlg::HandleThreadError(const CString& strIDError)
 {
 	m_sError = strIDError;
 	PostMessage(WM_HTTPDOWNLOAD_THREAD_FINISHED, 1);
@@ -457,7 +460,7 @@ void CHttpDownloadDlg::DownloadThread()
 	{
 		PostMessage(WM_HTTPDOWNLOAD_THREAD_FINISHED);
 		return;
-	}  
+	}
 
 	//Setup the status callback function
 	if (::InternetSetStatusCallback(m_hInternetSession, _OnStatusCallBack) == INTERNET_INVALID_STATUS_CALLBACK)
@@ -478,11 +481,11 @@ void CHttpDownloadDlg::DownloadThread()
 	ASSERT(m_hHttpConnection == NULL);
 	if (m_sUserName.GetLength())
 		// Elandal: Assumes sizeof(void*) == sizeof(unsigned long)
-		m_hHttpConnection = ::InternetConnect(m_hInternetSession, m_sServer, m_nPort, m_sUserName, 
+		m_hHttpConnection = ::InternetConnect(m_hInternetSession, m_sServer, m_nPort, m_sUserName,
                                           m_sPassword, m_dwServiceType, 0, (DWORD) this);
 	else
 		// Elandal: Assumes sizeof(void*) == sizeof(unsigned long)
-		m_hHttpConnection = ::InternetConnect(m_hInternetSession, m_sServer, m_nPort, NULL, 
+		m_hHttpConnection = ::InternetConnect(m_hInternetSession, m_sServer, m_nPort, NULL,
                                           NULL, m_dwServiceType, 0, (DWORD) this);
 	if (m_hHttpConnection == NULL)
 	{
@@ -507,7 +510,7 @@ void CHttpDownloadDlg::DownloadThread()
 	ppszAcceptTypes[1] = NULL;
 	ASSERT(m_hHttpFile == NULL);
 	// Elandal: Assumes sizeof(void*) == sizeof(unsigned long)
-	m_hHttpFile = HttpOpenRequest(m_hHttpConnection, NULL, m_sObject, NULL, NULL, ppszAcceptTypes, INTERNET_FLAG_RELOAD | 
+	m_hHttpFile = HttpOpenRequest(m_hHttpConnection, NULL, m_sObject, NULL, NULL, ppszAcceptTypes, INTERNET_FLAG_RELOAD |
 								  INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_KEEP_CONNECTION, (DWORD)this);
 	if (m_hHttpFile == NULL)
 	{
@@ -647,9 +650,9 @@ resend:
 			}
 
 			//Increment the total number of bytes read
-			dwTotalBytesRead += dwBytesRead;  
+			dwTotalBytesRead += dwBytesRead;
 
-			UpdateControlsDuringTransfer(dwStartTicks, dwCurrentTicks, dwTotalBytesRead, dwLastTotalBytes, 
+			UpdateControlsDuringTransfer(dwStartTicks, dwCurrentTicks, dwTotalBytesRead, dwLastTotalBytes,
                                      dwLastPercentage, bGotFileSize, dwFileSize);
 		}
 	}
@@ -674,7 +677,7 @@ resend:
 	PostMessage(WM_HTTPDOWNLOAD_THREAD_FINISHED);
 }
 
-void CHttpDownloadDlg::UpdateControlsDuringTransfer(DWORD dwStartTicks, DWORD& dwCurrentTicks, DWORD dwTotalBytesRead, DWORD& dwLastTotalBytes, 
+void CHttpDownloadDlg::UpdateControlsDuringTransfer(DWORD dwStartTicks, DWORD& dwCurrentTicks, DWORD dwTotalBytesRead, DWORD& dwLastTotalBytes,
                                                     DWORD& dwLastPercentage, BOOL bGotFileSize, DWORD dwFileSize)
 {
 	if (bGotFileSize)
@@ -708,7 +711,7 @@ void CHttpDownloadDlg::UpdateControlsDuringTransfer(DWORD dwStartTicks, DWORD& d
 			//Update the estimated time left
 			if (dwTotalBytesRead)
 			{
-				DWORD dwSecondsLeft = (DWORD) (((double)dwNowTicks - dwStartTicks) / dwTotalBytesRead * 
+				DWORD dwSecondsLeft = (DWORD) (((double)dwNowTicks - dwStartTicks) / dwTotalBytesRead *
 					(dwFileSize - dwTotalBytesRead) / 1000);
 				SetTimeLeft(dwSecondsLeft, dwTotalBytesRead, dwFileSize);
 			}
@@ -716,7 +719,7 @@ void CHttpDownloadDlg::UpdateControlsDuringTransfer(DWORD dwStartTicks, DWORD& d
 	}
 }
 
-void CALLBACK CHttpDownloadDlg::_OnStatusCallBack(HINTERNET hInternet, DWORD dwContext, DWORD dwInternetStatus, 
+void CALLBACK CHttpDownloadDlg::_OnStatusCallBack(HINTERNET hInternet, DWORD dwContext, DWORD dwInternetStatus,
                                                   LPVOID lpvStatusInformation, DWORD dwStatusInformationLength)
 {
 	CHttpDownloadDlg* pDlg = (CHttpDownloadDlg*) dwContext;
@@ -747,7 +750,7 @@ CString CHttpDownloadDlg::GetStatusInfo(LPVOID lpvStatusInformation, DWORD dwSta
 	return strStatus;
 }
 
-void CHttpDownloadDlg::OnStatusCallBack(HINTERNET /*hInternet*/, DWORD dwInternetStatus, 
+void CHttpDownloadDlg::OnStatusCallBack(HINTERNET /*hInternet*/, DWORD dwInternetStatus,
                                         LPVOID lpvStatusInformation, DWORD dwStatusInformationLength)
 {
 	switch (dwInternetStatus)
@@ -770,7 +773,7 @@ void CHttpDownloadDlg::OnStatusCallBack(HINTERNET /*hInternet*/, DWORD dwInterne
 	}
 }
 
-void CHttpDownloadDlg::OnDestroy() 
+void CHttpDownloadDlg::OnDestroy()
 {
 	//Wait for the worker thread to exit
 	if (m_pThread)
@@ -801,7 +804,7 @@ void CHttpDownloadDlg::OnDestroy()
 	CDialog::OnDestroy();
 }
 
-void CHttpDownloadDlg::OnCancel() 
+void CHttpDownloadDlg::OnCancel()
 {
 	// Asynchronously free up the internet handles we may be using.
 	// Otherwise we may get some kind of deadlock situation, because 'InternetConnect'
@@ -824,20 +827,20 @@ void CHttpDownloadDlg::OnCancel()
 
 	//Just set the abort flag to TRUE and
 	//disable the cancel button
-	m_bAbort = TRUE;	
+	m_bAbort = TRUE;
 	GetDlgItem(IDCANCEL)->EnableWindow(FALSE);
 	SetStatus(GetResString(IDS_HTTPDOWNLOAD_ABORTING_TRANSFER));
 }
 
-void CHttpDownloadDlg::OnClose() 
+void CHttpDownloadDlg::OnClose()
 {
-	if (m_bSafeToClose)	
+	if (m_bSafeToClose)
 		CDialog::OnClose();
 	else
 	{
 		//Just set the abort flag to TRUE and
 		//disable the cancel button
-		m_bAbort = TRUE;	
+		m_bAbort = TRUE;
 		GetDlgItem(IDCANCEL)->EnableWindow(FALSE);
 		SetStatus(GetResString(IDS_HTTPDOWNLOAD_ABORTING_TRANSFER));
 	}

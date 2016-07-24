@@ -18,14 +18,12 @@
 #include "emule.h"
 #include "emuledlg.h"
 #include "CollectionViewDialog.h"
-#include "OtherFunctions.h"
 #include "Collection.h"
 #include "CollectionFile.h"
 #include "DownloadQueue.h"
 #include "TransferDlg.h"
 #include "CatDialog.h"
 #include "SearchDlg.h"
-#include "Partfile.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -34,13 +32,6 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 #define	PREF_INI_SECTION	_T("CollectionViewDlg")
-
-enum ECols
-{
-	colName = 0,
-	colSize,
-	colHash
-};
 
 IMPLEMENT_DYNAMIC(CCollectionViewDialog, CDialog)
 
@@ -101,7 +92,7 @@ BOOL CCollectionViewDialog::OnInitDialog(void)
 	m_CollectionViewList.Init(_T("CollectionView"));
 	SetIcon(m_icoWnd = theApp.LoadIcon(_T("Collection_View")), FALSE);
 
-	m_AddNewCatagory.SetCheck(false);
+	m_AddNewCatagory.SetCheck(0);
 
 	SetWindowText(GetResString(IDS_VIEWCOLLECTION) + _T(": ") + m_pCollection->m_sCollectionName);
 
@@ -129,9 +120,7 @@ BOOL CCollectionViewDialog::OnInitDialog(void)
 	AddAnchor(IDC_VIEWCOLLECTIONDL, BOTTOM_RIGHT);
 	EnableSaveRestore(PREF_INI_SECTION);
 
-	POSITION pos = m_pCollection->m_CollectionFilesMap.GetStartPosition();
-	while (pos != NULL)
-	{
+	for (POSITION pos = m_pCollection->m_CollectionFilesMap.GetStartPosition(); pos != NULL;) {
 		CCollectionFile* pCollectionFile;
 		CSKey key;
 		m_pCollection->m_CollectionFilesMap.GetNextAssoc(pos, key, pCollectionFile);
@@ -141,7 +130,7 @@ BOOL CCollectionViewDialog::OnInitDialog(void)
 		if (iItem != -1)
 		{
 			m_CollectionViewList.SetItemText(iItem, colName, pCollectionFile->GetFileName());
-			m_CollectionViewList.SetItemText(iItem, colSize, CastItoXBytes(pCollectionFile->GetFileSize()));
+			m_CollectionViewList.SetItemText(iItem, colSize, (LPCTSTR)CastItoXBytes(pCollectionFile->GetFileSize()));
 			m_CollectionViewList.SetItemText(iItem, colHash, md4str(pCollectionFile->GetFileHash()));
 		}
 	}
@@ -190,7 +179,7 @@ void CCollectionViewDialog::DownloadSelected(void)
 			collectionFileList.AddTail((CCollectionFile*)m_CollectionViewList.GetItemData(index));
 	}
 
-	while (collectionFileList.GetCount() > 0)
+	while (!collectionFileList.IsEmpty())
 	{
 		CCollectionFile* pCollectionFile = collectionFileList.RemoveHead();
 		if (pCollectionFile)

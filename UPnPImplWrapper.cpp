@@ -49,13 +49,17 @@ CUPnPImplWrapper::~CUPnPImplWrapper(){
 void CUPnPImplWrapper::Init(){
 	ASSERT( !m_liAvailable.IsEmpty() );
 	m_pActiveImpl = NULL;
-	for (POSITION pos = m_liAvailable.GetHeadPosition(); pos != 0; m_liAvailable.GetNext(pos)){
-		if (m_liAvailable.GetAt(pos)->GetImplementationID() == thePrefs.GetLastWorkingUPnPImpl()){
-			m_pActiveImpl = m_liAvailable.GetAt(pos);
-			m_liAvailable.RemoveAt(pos);
+
+	for (POSITION pos = m_liAvailable.GetHeadPosition(); pos != 0;) {
+		POSITION pos2 = pos;
+		CUPnPImpl *tmp = m_liAvailable.GetNext(pos);
+		if (tmp->GetImplementationID() == thePrefs.GetLastWorkingUPnPImpl()) {
+			m_pActiveImpl = tmp;
+			m_liAvailable.RemoveAt(pos2);
 			break;
 		}
 	}
+
 	if (m_pActiveImpl == NULL)
 		m_pActiveImpl = m_liAvailable.RemoveHead();
 	m_liUsed.AddTail(m_pActiveImpl);

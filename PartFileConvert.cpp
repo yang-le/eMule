@@ -57,12 +57,12 @@ struct ConvertJob {
 	uint64	spaceneeded;
 	uint8	partmettype;
 	bool	removeSource;
-	ConvertJob() {size=0;spaceneeded=0;partmettype=PMT_UNKNOWN;removeSource=true;}
+	ConvertJob() {size=0;spaceneeded=0;partmettype=PMT_UNKNOWN;removeSource=true;format=0;state=0;}
 	//~ConvertJob() {}
 };
 
 
-int CPartFileConvert::ScanFolderToAdd(CString folder,bool deletesource) {
+int CPartFileConvert::ScanFolderToAdd(const CString& folder,bool deletesource) {
 	int count=0;
 	CFileFind finder;
 	BOOL bWorking;
@@ -85,7 +85,6 @@ int CPartFileConvert::ScanFolderToAdd(CString folder,bool deletesource) {
 	bWorking = finder.FindFile(folder+_T("\\*.*"));
 	while (bWorking) {
         bWorking = finder.FindNextFile();
-		CString test=finder.GetFilePath();
 		if (finder.IsDirectory() && finder.GetFileName().Left(1)!=_T("."))
 			count += ScanFolderToAdd(finder.GetFilePath(),deletesource);
 	}
@@ -93,11 +92,11 @@ int CPartFileConvert::ScanFolderToAdd(CString folder,bool deletesource) {
 	return count;
 }
 
-void CPartFileConvert::ConvertToeMule(CString folder,bool deletesource)
+void CPartFileConvert::ConvertToeMule(const CString& folder, bool deletesource)
 {
 	if (!PathFileExists(folder))
 		return;
-	
+
 	//if ( folder.Left(strlen(thePrefs.GetTempDir())).CompareNoCase(thePrefs.GetTempDir()) ==0 ) return;
 
 	ConvertJob* newjob=new ConvertJob ();
@@ -108,7 +107,7 @@ void CPartFileConvert::ConvertToeMule(CString folder,bool deletesource)
 
 	if (m_convertgui)
 		m_convertgui->AddJob(newjob);
-	
+
 	StartThread();
 }
 
@@ -128,8 +127,8 @@ UINT AFX_CDECL CPartFileConvert::run(LPVOID /*lpParam*/)
 	{
 		// search next queued job and start it
 		pfconverting=NULL;
-		for(POSITION pos = m_jobs.GetHeadPosition(); pos != NULL; m_jobs.GetNext(pos)){
-			pfconverting=m_jobs.GetAt(pos);
+		for (POSITION pos = m_jobs.GetHeadPosition(); pos != NULL;) {
+			pfconverting = m_jobs.GetNext(pos);
 			if (pfconverting->state==CONV_QUEUE) break; else pfconverting=NULL;
 		}
 		if (pfconverting!=NULL) {
@@ -141,7 +140,7 @@ UINT AFX_CDECL CPartFileConvert::run(LPVOID /*lpParam*/)
 				++imported;
 
 			UpdateGUI(pfconverting);
-			AddLogLine(true,GetResString(IDS_IMP_STATUS),pfconverting->folder,GetReturncodeText(pfconverting->state));
+			AddLogLine(true,GetResString(IDS_IMP_STATUS), (LPCTSTR)pfconverting->folder, (LPCTSTR)GetReturncodeText(pfconverting->state));
 		} else
 			break;// nothing more to do now
 	}
@@ -161,9 +160,8 @@ int CPartFileConvert::performConvertToeMule(CString folder)
 	BOOL bWorking;
 	CString filepartindex,newfilename;
 	CString buffer;
-	UINT fileindex;
 	CFileFind finder;
-	
+
 	CString partfile=folder;
 	folder.Delete(folder.ReverseFind('\\'),folder.GetLength());
 	partfile=partfile.Mid(partfile.ReverseFind('\\')+1,partfile.GetLength());
@@ -179,7 +177,7 @@ int CPartFileConvert::performConvertToeMule(CString folder)
 
 	CPartFile* file=new CPartFile();
 	EPartFileFormat eFormat = PMT_UNKNOWN;
-		
+
 	if (file->LoadPartFile(folder, partfile, &eFormat) == PLR_CHECKSUCCESS)
 	{
 		pfconverting->partmettype = (uint8)eFormat;
@@ -189,7 +187,6 @@ int CPartFileConvert::performConvertToeMule(CString folder)
 			case PMT_BADFORMAT:
 				delete file;
 				return CONV_BADFORMAT;
-				break;
 		}
 	}
 	else
@@ -209,7 +206,7 @@ int CPartFileConvert::performConvertToeMule(CString folder)
 		delete file;
 		return CONV_ALREADYEXISTS;
 	}
-	
+
 	if (pfconverting->partmettype==PMT_SPLITTED ) {
 		try {
 			CByteArray ba;
@@ -230,7 +227,7 @@ int CPartFileConvert::performConvertToeMule(CString folder)
 				buffer=finder.GetFileName();
 				pos1=buffer.Find('.');
 				pos2=buffer.Find('.',pos1+1);
-				fileindex=_tstoi(buffer.Mid(pos1+1,pos2-pos1) );
+				UINT fileindex = _tstoi(buffer.Mid(pos1+1, pos2-pos1));
 				if (fileindex==0) continue;
 				if (fileindex>maxindex) maxindex=fileindex;
 			}
@@ -243,7 +240,7 @@ int CPartFileConvert::performConvertToeMule(CString folder)
 				stepperpart=80.0f;
 				pfconverting->spaceneeded=0;
 			}
-			
+
 			UpdateGUI(pfconverting);
 
 			if (GetFreeDiskSpaceX(thePrefs.GetTempDir()) < ((uint64)maxindex*PARTSIZE) ) {
@@ -263,7 +260,7 @@ int CPartFileConvert::performConvertToeMule(CString folder)
 			while (bWorking)
 			{
 				bWorking = finder.FindNextFile();
-				
+
 				//stats
 				++curindex;
 				buffer.Format(GetResString(IDS_IMP_LOADDATA),curindex,partfilecount);
@@ -272,7 +269,7 @@ int CPartFileConvert::performConvertToeMule(CString folder)
 				filename=finder.GetFileName();
 				pos1=filename.Find('.');
 				pos2=filename.Find('.',pos1+1);
-				fileindex=_tstoi(filename.Mid(pos1+1,pos2-pos1) );
+				UINT fileindex = _tstoi(filename.Mid(pos1+1, pos2-pos1));
 				if (fileindex==0) continue;
 
 				uint32 chunkstart=(uint32)(fileindex-1) * PARTSIZE ;
@@ -293,11 +290,11 @@ int CPartFileConvert::performConvertToeMule(CString folder)
 		catch(CFileException* error) {
 			CString strError(GetResString(IDS_IMP_IOERROR));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (error->GetErrorMessage(szError, ARRSIZE(szError))){
+			if (GetExceptionMessage(*error, szError, ARRSIZE(szError))) {
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(false, _T("%s"), strError);
+			LogError(LOG_DEFAULT, _T("%s"), (LPCTSTR)strError);
 			error->Delete();
 			delete file;
 			return CONV_IOERROR;
@@ -305,10 +302,10 @@ int CPartFileConvert::performConvertToeMule(CString folder)
 		file->m_hpartfile.Close();
 	}
 	// import an external common format partdownload
-	else //if (pfconverting->partmettype==PMT_DEFAULTOLD || pfconverting->partmettype==PMT_NEWOLD || Shareaza  ) 
+	else //if (pfconverting->partmettype==PMT_DEFAULTOLD || pfconverting->partmettype==PMT_NEWOLD || Shareaza  )
 	{
-		
-		if (!pfconverting->removeSource) 
+
+		if (!pfconverting->removeSource)
 			pfconverting->spaceneeded = (UINT)GetDiskFileSize(oldfile);
 
 		UpdateGUI(pfconverting);
@@ -336,16 +333,15 @@ int CPartFileConvert::performConvertToeMule(CString folder)
 							CREATE_NEW,         // existing file only
 							FILE_ATTRIBUTE_NORMAL, // normal file
 							NULL);                 // no attr. template
-			 
+
 			ret= !(hFile == INVALID_HANDLE_VALUE) ;
 
 			CloseHandle(hFile);
-		}
-			else 
-		if (pfconverting->removeSource) 
-			ret=MoveFile( oldfile, newfilename.Left(newfilename.GetLength()-4) );
-		else 
-			ret=CopyFile( oldfile, newfilename.Left(newfilename.GetLength()-4) ,false);
+		} else
+			if (pfconverting->removeSource)
+				ret=MoveFile( oldfile, newfilename.Left(newfilename.GetLength()-4) );
+			else
+				ret=CopyFile( oldfile, newfilename.Left(newfilename.GetLength()-4) ,false);
 
 		if (!ret) {
 			file->DeleteFile();
@@ -364,10 +360,8 @@ int CPartFileConvert::performConvertToeMule(CString folder)
 	else CopyFile(folder+_T("\\")+partfile,newfilename,false);
 
 	file->GetFileIdentifier().DeleteMD4Hashset();
-	while (file->gaplist.GetCount()>0 ) {
-		delete file->gaplist.GetAt(file->gaplist.GetHeadPosition());
-		file->gaplist.RemoveAt(file->gaplist.GetHeadPosition());
-	}
+	while (!file->gaplist.IsEmpty())
+		delete file->gaplist.RemoveHead();
 
 	if (file->LoadPartFile(thePrefs.GetTempDir(), file->GetPartMetFileName()) != PLR_LOADSUCCESS) {
 		//delete file;
@@ -385,7 +379,7 @@ int CPartFileConvert::performConvertToeMule(CString folder)
 
 	theApp.downloadqueue->AddDownload(file,thePrefs.AddNewFilesPaused());
 	file->SavePartFile();
-	
+
 	if (file->GetStatus(true) == PS_READY)
 		theApp.sharedfiles->SafeAddKFile(file); // part files are always shared files
 
@@ -406,8 +400,8 @@ int CPartFileConvert::performConvertToeMule(CString folder)
 	return CONV_OK;
 }
 
-void CPartFileConvert::UpdateGUI(float percent,CString text, bool fullinfo) {
-	
+void CPartFileConvert::UpdateGUI(float percent, const CString& text, bool fullinfo) {
+
 	if (m_convertgui==NULL) return;
 
 	m_convertgui->pb_current.SetPos((int)percent);
@@ -424,7 +418,7 @@ void CPartFileConvert::UpdateGUI(float percent,CString text, bool fullinfo) {
 }
 
 void CPartFileConvert::UpdateGUI(ConvertJob* job){
-	
+
 	if (m_convertgui==NULL) return;
 
 	m_convertgui->UpdateJobInfo(job);
@@ -452,12 +446,12 @@ void CPartFileConvert::ShowGUI(){
 		m_convertgui->AddAnchor(IDC_HIDECONVDLG, BOTTOM_RIGHT);
 
 		m_convertgui->SetIcon(m_convertgui->m_icnWnd = theApp.LoadIcon(_T("Convert")), FALSE);
-		
+
 		// init gui
 		m_convertgui->pb_current.SetRange(0,100);
 		m_convertgui->joblist.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
-		if (!pfconverting==NULL)  { 
+		if (!pfconverting==NULL)  {
 			UpdateGUI(pfconverting);
 			UpdateGUI(50,GetResString(IDS_IMP_FETCHSTATUS),true);
 		}
@@ -465,9 +459,8 @@ void CPartFileConvert::ShowGUI(){
 		Localize();
 
 		// fill joblist
-		ConvertJob* job;
-		for(POSITION pos = m_jobs.GetHeadPosition(); pos != NULL; m_jobs.GetNext(pos)){
-			job=m_jobs.GetAt(pos);
+		for (POSITION pos = m_jobs.GetHeadPosition(); pos != NULL;) {
+			ConvertJob *job = m_jobs.GetNext(pos);
 			m_convertgui->AddJob(job);
 			UpdateGUI(job);
 		}
@@ -490,7 +483,7 @@ void CPartFileConvert::Localize() {
 	m_convertgui->SetDlgItemText(IDC_ADDITEM,GetResString(IDS_IMP_ADDBTN));
 	m_convertgui->SetDlgItemText(IDC_RETRY,GetResString(IDS_IMP_RETRYBTN));
 	m_convertgui->SetDlgItemText(IDC_CONVREMOVE,GetResString(IDS_IMP_REMOVEBTN));
-	m_convertgui->SetDlgItemText(IDC_HIDECONVDLG,GetResString(IDS_FD_CLOSE));		
+	m_convertgui->SetDlgItemText(IDC_HIDECONVDLG,GetResString(IDS_FD_CLOSE));
 	m_convertgui->SetWindowText(GetResString(IDS_IMPORTSPLPF));
 }
 
@@ -500,40 +493,44 @@ void CPartFileConvert::CloseGUI(){
 
 	m_convertgui->DestroyWindow();
 	ClosedGUI();
-	
+
 }
 
 void CPartFileConvert::ClosedGUI() {
 	m_convertgui=NULL;
 }
 
-void CPartFileConvert::RemoveAllJobs(){
-	for(POSITION pos = m_jobs.GetHeadPosition(); pos != NULL; m_jobs.GetNext(pos)){
-		if (m_convertgui) m_convertgui->RemoveJob(m_jobs.GetAt(pos));
-		delete m_jobs.GetAt(pos);
-	}
-	m_jobs.RemoveAll();
-}
-
-void CPartFileConvert::RemoveJob(ConvertJob* job){
-	for(POSITION pos = m_jobs.GetHeadPosition(); pos != NULL; m_jobs.GetNext(pos)){
-		ConvertJob* del=m_jobs.GetAt(pos);
-		if (del==job) {
-			if (m_convertgui) m_convertgui->RemoveJob(del);
-			m_jobs.RemoveAt(pos);
-			delete del;
-			if (m_jobs.GetCount()==0) return;
-		}
+void CPartFileConvert::RemoveAllJobs()
+{
+	while (!m_jobs.IsEmpty()) {
+		ConvertJob* del = m_jobs.RemoveHead();
+		if (m_convertgui)
+			m_convertgui->RemoveJob(del);
+		delete del;
 	}
 }
 
-void CPartFileConvert::RemoveAllSuccJobs(){
-	for(POSITION pos = m_jobs.GetHeadPosition(); pos != NULL; m_jobs.GetNext(pos)){
-		ConvertJob* del=m_jobs.GetAt(pos);
+void CPartFileConvert::RemoveJob(ConvertJob* job)
+{
+	POSITION pos = NULL;
+	while ((pos = m_jobs.Find(job, pos)) != NULL) {
+		ConvertJob* del = m_jobs.GetAt(pos);
+		if (m_convertgui)
+			m_convertgui->RemoveJob(del);
+		m_jobs.RemoveAt(pos);
+		delete del;
+	}
+}
+
+void CPartFileConvert::RemoveAllSuccJobs()
+{
+	for (POSITION pos = m_jobs.GetHeadPosition(); pos != NULL;) {
+		POSITION pos2 = pos;
+		ConvertJob* del = m_jobs.GetNext(pos);
 		if (del->state==CONV_OK) {
 			if (m_convertgui) m_convertgui->RemoveJob(del);
-			m_jobs.RemoveAt(pos);
-			delete del;	
+			m_jobs.RemoveAt(pos2);
+			delete del;
 		}
 	}
 }
@@ -583,7 +580,7 @@ CPartFileConvertDlg::~CPartFileConvertDlg()
 void CPartFileConvertDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CResizableDialog::DoDataExchange(pDX);
-	
+
 	DDX_Control(pDX, IDC_CONV_PB_CURRENT, pb_current);
 	DDX_Control(pDX, IDC_JOBLIST, joblist);
 }
@@ -609,7 +606,7 @@ void CPartFileConvertDlg::PostNcDestroy()
 
 void CPartFileConvertDlg::OnAddFolder() {
 	// browse...
-	
+
 	LPMALLOC pMalloc = NULL;
 	if (SHGetMalloc(&pMalloc) == NOERROR)
 	{
@@ -630,14 +627,13 @@ void CPartFileConvertDlg::OnAddFolder() {
 		LPITEMIDLIST pidlRoot;
 		if((pidlRoot = SHBrowseForFolder(&bi)) != NULL)
 		{
-			bool removesrc;
 			int reply=IDNO;
-			
+
 			if (thePrefs.IsExtControlsEnabled())
 				reply=AfxMessageBox(GetResString(IDS_IMP_DELSRC), MB_YESNOCANCEL | MB_DEFBUTTON2 );
-			
+
 			if (reply!=IDCANCEL){
-				removesrc = (reply==IDYES);
+				bool removesrc = (reply==IDYES);
 
 				//
 				// Again, almost undocumented.  How to get a ASCII pathname
@@ -658,8 +654,8 @@ void CPartFileConvertDlg::OnAddFolder() {
 	}
 }
 
-void CPartFileConvertDlg::UpdateJobInfo(ConvertJob* job) {
-
+void CPartFileConvertDlg::UpdateJobInfo(ConvertJob* job)
+{
 	if (job==NULL) {
 		SetDlgItemText(IDC_CURJOB, GetResString(IDS_FSTAT_WAITING) );
 		SetDlgItemText(IDC_CONV_PROZENT, _T(""));
@@ -667,7 +663,7 @@ void CPartFileConvertDlg::UpdateJobInfo(ConvertJob* job) {
 		SetDlgItemText(IDC_CONV_PB_LABEL,_T(""));
 		return;
 	}
-	
+
 	CString buffer;
 
 	// search jobitem in listctrl
@@ -678,13 +674,12 @@ void CPartFileConvertDlg::UpdateJobInfo(ConvertJob* job) {
 	if (itemnr != -1) {
 		joblist.SetItemText(itemnr,0, job->filename.IsEmpty()?job->folder:job->filename  );
 		joblist.SetItemText(itemnr,1, CPartFileConvert::GetReturncodeText(job->state) );
-		buffer=_T("");
+		buffer.Empty();
 		if (job->size>0)
-			buffer.Format(GetResString(IDS_IMP_SIZE),CastItoXBytes(job->size, false, false),CastItoXBytes(job->spaceneeded, false, false));
+			buffer.Format(GetResString(IDS_IMP_SIZE), (LPCTSTR)CastItoXBytes(job->size, false, false), (LPCTSTR)CastItoXBytes(job->spaceneeded, false, false));
 		joblist.SetItemText(itemnr,2, buffer );
 		joblist.SetItemText(itemnr,3, job->filehash);
-
-	} else {
+//	} else {
 //		AddJob(job);	why???
 	}
 }
@@ -708,11 +703,11 @@ void CPartFileConvertDlg::RemoveSel() {
 	if (joblist.GetSelectedCount()==0) return;
 
 	ConvertJob* job;
-	POSITION pos = joblist.GetFirstSelectedItemPosition(); 
-	while(pos != NULL) 
-	{ 
+	POSITION pos = joblist.GetFirstSelectedItemPosition();
+	while(pos != NULL)
+	{
 		int index = joblist.GetNextSelectedItem(pos);
-		if(index > -1) 
+		if(index > -1)
 		{
 			job=(ConvertJob*)joblist.GetItemData(index);
 			if (job->state != CONV_INPROGRESS) {
@@ -720,7 +715,7 @@ void CPartFileConvertDlg::RemoveSel() {
 				CPartFileConvert::RemoveJob(job);
 				pos = joblist.GetFirstSelectedItemPosition();
 			}
-		} 
+		}
 	}
 }
 
@@ -729,19 +724,19 @@ void CPartFileConvertDlg::RetrySel(){
 	if (joblist.GetSelectedCount()==0) return;
 
 	ConvertJob* job;
-	POSITION pos = joblist.GetFirstSelectedItemPosition(); 
-	while(pos != NULL) 
-	{ 
-		int index = joblist.GetNextSelectedItem(pos); 
-		if(index > -1) 
+	POSITION pos = joblist.GetFirstSelectedItemPosition();
+	while(pos != NULL)
+	{
+		int index = joblist.GetNextSelectedItem(pos);
+		if(index > -1)
 		{
 			job=(ConvertJob*)joblist.GetItemData(index);
 			if (job->state != CONV_OK && job->state !=CONV_INPROGRESS) {
 				UpdateJobInfo(job);
 				job->state=CONV_QUEUE;
 			}
-		} 
-	} 
+		}
+	}
 
 	CPartFileConvert::StartThread();
 }

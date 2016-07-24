@@ -23,7 +23,7 @@
 // Added text formatting
 // Added tied mode for text and rubber bar mode
 // Added support for vertical oriented control(PBS_VERTICAL)
-// 
+//
 // version : 1.0
 //
 
@@ -63,7 +63,7 @@ public:
 
 	void SetGradientColorsX(int nCount, COLORREF clrFirst, COLORREF clrNext, ...);
 	const CDWordArray& GetGradientColorsX() { return m_ardwGradColors; }
-	
+
 	void SetBarBrush(CBrush* pbrBar) { m_pbrBar = pbrBar; }
 	CBrush* GetBarBrush() { return m_pbrBar; }
 
@@ -73,7 +73,7 @@ public:
 	void SetBkBrush(CBrush* pbrBk) { m_pbrBk = pbrBk; }
 	CBrush* GetBkBrush() { return m_pbrBk; }
 
-	void SetTextColor(COLORREF clrTextOnBar, COLORREF clrTextOnBk = -1) { m_clrTextOnBar = m_clrTextOnBk = clrTextOnBar; if(clrTextOnBk != -1) m_clrTextOnBk = clrTextOnBk;}
+	void SetTextColor(COLORREF clrTextOnBar, COLORREF clrTextOnBk = (DWORD)-1) { m_clrTextOnBar = m_clrTextOnBk = clrTextOnBar; if(clrTextOnBk != (DWORD)-1) m_clrTextOnBk = clrTextOnBk;}
 	COLORREF GetTextColor() { return m_clrTextOnBar; }
 	COLORREF GetTextColorOnBk() { return m_clrTextOnBk; }
 
@@ -105,7 +105,7 @@ public:
 
 // Operations
 public:
-	
+
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CProgressCtrlX)
@@ -125,7 +125,7 @@ protected:
 		int nLower;
 		int nUpper;
 	};
-	
+
 	virtual void DrawMultiGradient(const CDrawInfo& info, const CRect &rcGrad, const CRect &rcClip);
 	virtual void DrawGradient(const CDrawInfo& info, const CRect &rcGrad, const CRect &rcClip, COLORREF clrStart, COLORREF clrEnd);
 	virtual void DrawText(const CDrawInfo& info, const CRect &rcMax, const CRect &rcGrad);
@@ -136,7 +136,7 @@ protected:
 	bool m_bEmpty;
 	// color atributes
 	CDWordArray m_ardwGradColors;
-	CBrush* m_pbrBar; 
+	CBrush* m_pbrBar;
 	COLORREF m_clrBk;
 	CBrush* m_pbrBk;
 	COLORREF m_clrTextOnBar;
@@ -151,7 +151,7 @@ protected:
 
 	// Generated message map functions
 protected:
-	
+
 	//{{AFX_MSG(CProgressCtrlX)
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnPaint();

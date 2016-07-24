@@ -13,6 +13,9 @@
 #include "AfxBeginMsgMapTemplate.h"
 #include "OtherFunctions.h"
 #include "MenuCmds.h"
+#undef SCHEMADEF_H
+#undef SCHEMA_VERIFY_VSSYM32
+#include "SchemaDef.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -53,7 +56,7 @@ BEGIN_TM_PART_STATES(TRAYBUTTON)
     TM_STATE(3, TRAYBS, PUSHED)
     TM_STATE(4, TRAYBS, DISABLED)
 	// Inactive
-    TM_STATE(5, TRAYBS, INORMAL)	
+    TM_STATE(5, TRAYBS, INORMAL)
     TM_STATE(6, TRAYBS, IHOT)
     TM_STATE(7, TRAYBS, IPUSHED)
     TM_STATE(8, TRAYBS, IDISABLED)
@@ -77,7 +80,7 @@ TEMPLATE const TCHAR *CDialogMinTrayBtn<BASE>::m_pszMinTrayBtnBmpName[] = { BMP_
 #define VISUALSTYLESXP_NAMEHOMESTEAD	L"HOMESTEAD"
 
 // _WIN32_WINNT >= 0x0501 (XP only)
-#define _WM_THEMECHANGED                0x031A	
+#define _WM_THEMECHANGED                0x031A
 #if _MFC_VER>=0x0800
 #define _ON_WM_THEMECHANGED() \
 	{ _WM_THEMECHANGED, 0, 0, 0, AfxSig_l, \
@@ -106,21 +109,21 @@ END_MESSAGE_MAP()
 
 
 TEMPLATE CDialogMinTrayBtn<BASE>::CDialogMinTrayBtn() :
-    m_MinTrayBtnPos(0,0), m_MinTrayBtnSize(0,0), m_bMinTrayBtnEnabled(TRUE), m_bMinTrayBtnVisible(TRUE), 
+    m_MinTrayBtnPos(0,0), m_MinTrayBtnSize(0,0), m_bMinTrayBtnEnabled(TRUE), m_bMinTrayBtnVisible(TRUE),
     m_bMinTrayBtnUp(TRUE), m_bMinTrayBtnCapture(FALSE), m_bMinTrayBtnActive(FALSE), m_bMinTrayBtnHitTest(FALSE)
 {
     MinTrayBtnInit();
 }
 
 TEMPLATE CDialogMinTrayBtn<BASE>::CDialogMinTrayBtn(LPCTSTR lpszTemplateName, CWnd* pParentWnd) : BASE(lpszTemplateName, pParentWnd),
-    m_MinTrayBtnPos(0,0), m_MinTrayBtnSize(0,0), m_bMinTrayBtnEnabled(TRUE), m_bMinTrayBtnVisible(TRUE), 
+    m_MinTrayBtnPos(0,0), m_MinTrayBtnSize(0,0), m_bMinTrayBtnEnabled(TRUE), m_bMinTrayBtnVisible(TRUE),
     m_bMinTrayBtnUp(TRUE), m_bMinTrayBtnCapture(FALSE), m_bMinTrayBtnActive(FALSE), m_bMinTrayBtnHitTest(FALSE)
 {
     MinTrayBtnInit();
 }
 
 TEMPLATE CDialogMinTrayBtn<BASE>::CDialogMinTrayBtn(UINT nIDTemplate, CWnd* pParentWnd) : BASE(nIDTemplate, pParentWnd),
-    m_MinTrayBtnPos(0,0), m_MinTrayBtnSize(0,0), m_bMinTrayBtnEnabled(TRUE), m_bMinTrayBtnVisible(TRUE), 
+    m_MinTrayBtnPos(0,0), m_MinTrayBtnSize(0,0), m_bMinTrayBtnEnabled(TRUE), m_bMinTrayBtnVisible(TRUE),
     m_bMinTrayBtnUp(TRUE), m_bMinTrayBtnCapture(FALSE), m_bMinTrayBtnActive(FALSE), m_bMinTrayBtnHitTest(FALSE)
 {
     MinTrayBtnInit();
@@ -185,7 +188,7 @@ CDialogMinTrayBtn<BASE>::OnNcHitTest(CPoint point)
     return BASE::OnNcHitTest(point);
 }
 
-TEMPLATE void CDialogMinTrayBtn<BASE>::OnNcLButtonDown(UINT nHitTest, CPoint point) 
+TEMPLATE void CDialogMinTrayBtn<BASE>::OnNcLButtonDown(UINT nHitTest, CPoint point)
 {
     if ((GetStyle() & WS_DISABLED) || !MinTrayBtnIsEnabled() || !MinTrayBtnIsVisible() || !MinTrayBtnHitTest(point))
     {
@@ -197,7 +200,7 @@ TEMPLATE void CDialogMinTrayBtn<BASE>::OnNcLButtonDown(UINT nHitTest, CPoint poi
     MinTrayBtnSetDown();
 }
 
-TEMPLATE void CDialogMinTrayBtn<BASE>::OnNcRButtonDown(UINT nHitTest, CPoint point) 
+TEMPLATE void CDialogMinTrayBtn<BASE>::OnNcRButtonDown(UINT nHitTest, CPoint point)
 {
     if ((GetStyle() & WS_DISABLED) || !MinTrayBtnIsVisible() || !MinTrayBtnHitTest(point))
         BASE::OnNcRButtonDown(nHitTest, point);
@@ -206,7 +209,7 @@ TEMPLATE void CDialogMinTrayBtn<BASE>::OnNcRButtonDown(UINT nHitTest, CPoint poi
 TEMPLATE void CDialogMinTrayBtn<BASE>::OnMouseMove(UINT nFlags, CPoint point)
 {
     if ((GetStyle() & WS_DISABLED) || !m_bMinTrayBtnCapture)
-    { 
+    {
         BASE::OnMouseMove(nFlags, point);
         return;
     }
@@ -225,7 +228,7 @@ TEMPLATE void CDialogMinTrayBtn<BASE>::OnMouseMove(UINT nFlags, CPoint point)
     }
 }
 
-TEMPLATE void CDialogMinTrayBtn<BASE>::OnLButtonUp(UINT nFlags, CPoint point) 
+TEMPLATE void CDialogMinTrayBtn<BASE>::OnLButtonUp(UINT nFlags, CPoint point)
 {
     if ((GetStyle() & WS_DISABLED) || !m_bMinTrayBtnCapture)
     {
@@ -462,7 +465,7 @@ TEMPLATE BOOL CDialogMinTrayBtn<BASE>::MinTrayBtnHitTest(CPoint ptScreen) const
 	// adjust 'ptScreen' with possible RTL window layout
 	CRect rcWndOrg(rcWnd);
 	CPoint ptScreenOrg(ptScreen);
-	if (::MapWindowPoints(HWND_DESKTOP, m_hWnd, &rcWnd.TopLeft(), 2) == 0 || 
+	if (::MapWindowPoints(HWND_DESKTOP, m_hWnd, &rcWnd.TopLeft(), 2) == 0 ||
 		::MapWindowPoints(HWND_DESKTOP, m_hWnd, &ptScreen, 1) == 0)
 	{
 		// several bug reports about not working on NT SP6 (?). in case of any problems with

@@ -24,7 +24,7 @@ class CSharedFileList;
 class CKnownFile;
 struct SUnresolvedHostname;
 
-namespace Kademlia 
+namespace Kademlia
 {
 	class CUInt128;
 };
@@ -65,12 +65,12 @@ public:
 
 	void	Process();
 	void	Init();
-	
+
 	// add/remove entries
 	void	AddPartFilesToShare();
 	void	AddDownload(CPartFile* newfile, bool paused);
 	void	AddSearchToDownload(CSearchFile* toadd, uint8 paused = 2, int cat = 0);
-	void	AddSearchToDownload(CString link, uint8 paused = 2, int cat = 0);
+	void	AddSearchToDownload(const CString& link, uint8 paused = 2, int cat = 0);
 	void	AddFileLinkToDownload(class CED2KFileLink* pLink, int cat = 0);
 	void	RemoveFile(CPartFile* toremove);
 	void	DeleteAll();
@@ -89,7 +89,7 @@ public:
     void    StartNextFileIfPrefs(int cat);
 	void	StartNextFile(int cat=-1,bool force=false);
 
-	void	RefilterAllComments();	
+	void	RefilterAllComments();
 
 	// sources
 	CUpDownClient* GetDownloadClientByIP(uint32 dwIP);
@@ -102,11 +102,11 @@ public:
 
 	// statistics
 	typedef struct{
-		int	a[23];
+		unsigned a[23];
 	} SDownloadStats;
 	void	GetDownloadSourcesStats(SDownloadStats& results);
 	int		GetDownloadFilesStats(uint64 &ui64TotalFileSize, uint64 &ui64TotalLeftToTransfer, uint64 &ui64TotalAdditionalNeededSpace);
-	uint32	GetDatarate() {return datarate;}
+	uint32	GetDatarate() const	{return datarate;}
 
 	void	AddUDPFileReasks()								{m_nUDPFileReasks++;}
 	uint32	GetUDPFileReasks() const						{return m_nUDPFileReasks;}
@@ -119,7 +119,7 @@ public:
     void    RemoveAutoPrioInCat(UINT cat, uint8 newprio); // ZZ:DownloadManager
 	void	SetCatStatus(UINT cat, int newstatus);
 	void	MoveCat(UINT from, UINT to);
-	void	SetAutoCat(CPartFile* newfile);
+	static void	SetAutoCat(CPartFile* newfile);
 
 	// searching on local server
 	void	SendLocalSrcRequest(CPartFile* sender);
@@ -162,7 +162,7 @@ private:
 	CTypedPtrList<CPtrList, CPartFile*> m_localServerReqQueue;
 	uint16	filesrdy;
 	uint32	datarate;
-	
+
 	CPartFile*	lastfile;
 	uint32		lastcheckdiskspacetime;
 	uint32		lastudpsearchtime;
@@ -178,11 +178,11 @@ private:
 	uint32		m_nFailedUDPFileReasks;
 
 	// By BadWolf - Accurate Speed Measurement
-	typedef struct TransferredData {
+	typedef struct {
 		uint32	datalen;
 		DWORD	timestamp;
-	};
-	CList<TransferredData> avarage_dr_list;
+	} TransferredData;
+	CList<TransferredData> average_dr_list;
 	// END By BadWolf - Accurate Speed Measurement
 
 	CSourceHostnameResolveWnd m_srcwnd;

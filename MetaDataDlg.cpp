@@ -102,7 +102,7 @@ BOOL CMetaDataDlg::OnInitDialog()
 
 	AddAnchor(IDC_TAGS, TOP_LEFT, BOTTOM_RIGHT);
 	AddAnchor(IDC_TOTAL_TAGS, BOTTOM_LEFT, BOTTOM_RIGHT);
-	
+
 	GetDlgItem(IDC_TOTAL_TAGS)->SetWindowText(GetResString(IDS_METATAGS));
 
 	m_tags.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_GRIDLINES);
@@ -267,14 +267,14 @@ CString GetValue(const Kademlia::CKadTag* pTag) // FIXME LARGE FILES
 		else if (pTag->m_name.Compare(TAG_FILERATING) == 0)
 			strValue = GetRateString((UINT)pTag->GetInt());
 		else if ((BYTE)pTag->m_name[0] == 0x10 || (BYTE)pTag->m_name[0] >= 0xFA)
-			strValue.Format(_T("%u"), pTag->GetInt());
+			strValue.Format(_T("%I64u"), pTag->GetInt());
 		else
 			strValue = GetFormatedUInt((UINT)pTag->GetInt());
 	}
-	else if (pTag->m_type == 4)
+	else if (pTag->m_type == TAGTYPE_FLOAT32)
 		strValue.Format(_T("%f"), pTag->GetFloat());
-	else if (pTag->m_type == 5)
-		strValue.Format(_T("%u"), pTag->GetInt());
+	else if (pTag->m_type == TAGTYPE_BOOL)
+		strValue.Format(_T("%u"), (UINT)pTag->GetBool());
 	else
 		strValue.Format(_T("<Unknown value of type 0x%02X>"), pTag->m_type);
 	return strValue;
@@ -283,21 +283,21 @@ CString GetValue(const Kademlia::CKadTag* pTag) // FIXME LARGE FILES
 CString GetType(UINT uType)
 {
 	CString strValue;
-	if (uType == 1)
+	if (uType == TAGTYPE_HASH)
 		strValue = _T("Hash");
-	else if (uType == 2)
+	else if (uType == TAGTYPE_STRING)
 		strValue = _T("String");
-	else if (uType == 3)
+	else if (uType == TAGTYPE_UINT32)
 		strValue = _T("Int32");
-	else if (uType == 4)
+	else if (uType == TAGTYPE_FLOAT32)
 		strValue = _T("Float");
-	else if (uType == 5)
+	else if (uType == TAGTYPE_BOOL)
 		strValue = _T("Bool");
-	else if (uType == 8)
+	else if (uType == TAGTYPE_UINT16)
 		strValue = _T("Int16");
-	else if (uType == 9)
+	else if (uType == TAGTYPE_UINT8)
 		strValue = _T("Int8");
-	else if (uType == 11)
+	else if (uType == TAGTYPE_UINT64)
 		strValue = _T("Int64");
 	else
 		strValue.Format(_T("<Unknown type 0x%02X>"), uType);
@@ -375,11 +375,9 @@ void CMetaDataDlg::RefreshData()
 	}
 	else if (m_taglist != NULL)
 	{
-		const Kademlia::CKadTag* pTag;
-		Kademlia::TagList::const_iterator it;
-		for (it = m_taglist->begin(); it != m_taglist->end(); it++)
+		for (Kademlia::TagList::const_iterator it = m_taglist->begin(); it != m_taglist->end(); ++it)
 		{
-			pTag = *it;
+			const Kademlia::CKadTag *pTag = *it;
 			CString strBuff;
 			LVITEM lvi;
 			lvi.mask = LVIF_TEXT;
@@ -408,7 +406,7 @@ void CMetaDataDlg::RefreshData()
 		}
 	}
 	CString strTmp;
-	strTmp.Format(_T("%s %u"), GetResString(IDS_METATAGS), iMetaTags);
+	strTmp.Format(_T("%s %i"), (LPCTSTR)GetResString(IDS_METATAGS), iMetaTags);
 	SetDlgItemText(IDC_TOTAL_TAGS, strTmp);
 	m_tags.SetRedraw();
 }

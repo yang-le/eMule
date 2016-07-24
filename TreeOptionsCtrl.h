@@ -1,7 +1,7 @@
 /*
 Module : TreeOptionsCtrl.h
-Purpose: Defines the interface for an MFC class to implement a tree options control 
-         similiar to the advanced tab as seen on the "Internet options" dialog in 
+Purpose: Defines the interface for an MFC class to implement a tree options control
+         similiar to the advanced tab as seen on the "Internet options" dialog in
          Internet Explorer 4 and later
 Created: PJN / 31-03-1999
 
@@ -12,11 +12,11 @@ All rights reserved.
 
 Copyright / Usage Details:
 
-You are allowed to include the source code in any product (commercial, shareware, freeware or otherwise) 
-when your product is released in binary form. You are allowed to modify the source code in any way you want 
-except you cannot modify the copyright details at the top of each module. If you want to distribute source 
-code with your application, then you are only allowed to distribute versions released by the author. This is 
-to maintain a single distribution point for the source code. 
+You are allowed to include the source code in any product (commercial, shareware, freeware or otherwise)
+when your product is released in binary form. You are allowed to modify the source code in any way you want
+except you cannot modify the copyright details at the top of each module. If you want to distribute source
+code with your application, then you are only allowed to distribute versions released by the author. This is
+to maintain a single distribution point for the source code.
 
 */
 
@@ -434,9 +434,9 @@ public:
 
 
 	//Methods
-	CTreeOptionsItemData() 
+	CTreeOptionsItemData()
+		: m_Type(Unknown)
 	{
-		m_Type = Unknown;
 		m_pRuntimeClass1 = NULL;
 		m_pRuntimeClass2 = NULL;
 		m_dwItemData = (DWORD) -1;
@@ -473,9 +473,9 @@ public:
 	virtual BOOL DeleteAllItems();
 
 	//Inserting items into the control
-	HTREEITEM InsertGroup(LPCTSTR lpszItem, int nImage, HTREEITEM hParent = TVI_ROOT, HTREEITEM hAfter = TVI_LAST, DWORD dwItemData = -1);
-	HTREEITEM InsertCheckBox(LPCTSTR lpszItem, HTREEITEM hParent, BOOL bCheck = TRUE, HTREEITEM hAfter = TVI_LAST, DWORD dwItemData = -1);
-	HTREEITEM InsertRadioButton(LPCTSTR lpszItem, HTREEITEM hParent, BOOL bCheck = TRUE, HTREEITEM hAfter = TVI_LAST, DWORD dwItemData = -1);
+	HTREEITEM InsertGroup(LPCTSTR lpszItem, int nImage, HTREEITEM hParent = TVI_ROOT, HTREEITEM hAfter = TVI_LAST, DWORD dwItemData = (DWORD)-1);
+	HTREEITEM InsertCheckBox(LPCTSTR lpszItem, HTREEITEM hParent, BOOL bCheck = TRUE, HTREEITEM hAfter = TVI_LAST, DWORD dwItemData = (DWORD)-1);
+	HTREEITEM InsertRadioButton(LPCTSTR lpszItem, HTREEITEM hParent, BOOL bCheck = TRUE, HTREEITEM hAfter = TVI_LAST, DWORD dwItemData = (DWORD)-1);
 
 	//Validation methods
 	BOOL IsGroup(HTREEITEM hItem) const;
@@ -503,55 +503,55 @@ public:
 	//Enable / Disbale items
 	BOOL SetGroupEnable(HTREEITEM hItem, BOOL bEnable);
 	BOOL SetCheckBoxEnable(HTREEITEM hItem, BOOL bEnable);
-	BOOL SetRadioButtonEnable(HTREEITEM hItem, BOOL bEnable);  
+	BOOL SetRadioButtonEnable(HTREEITEM hItem, BOOL bEnable);
 	BOOL GetRadioButtonEnable(HTREEITEM hItem, BOOL& bEnable) const;
 	BOOL GetCheckBoxEnable(HTREEITEM hItem, BOOL& bEnable) const;
 
 	//Adding a combo box to an item
-	BOOL    AddComboBox(HTREEITEM hItem, CRuntimeClass* pRuntimeClass, DWORD dwItemData = -1);
+	BOOL    AddComboBox(HTREEITEM hItem, CRuntimeClass* pRuntimeClass, DWORD dwItemData = (DWORD)-1);
 	CString GetComboText(HTREEITEM hItem) const;
 	void    SetComboText(HTREEITEM hItem, const CString& sComboText);
 
 	//Adding an edit box (and a spin control) to an item
-	BOOL    AddEditBox(HTREEITEM hItem, CRuntimeClass* pRuntimeClassEditCtrl, DWORD dwItemData = -1);
-	BOOL    AddEditBox(HTREEITEM hItem, CRuntimeClass* pRuntimeClassEditCtrl, CRuntimeClass* pRuntimeClassSpinCtrl, DWORD dwItemData = -1);
+	BOOL    AddEditBox(HTREEITEM hItem, CRuntimeClass* pRuntimeClassEditCtrl, DWORD dwItemData = (DWORD)-1);
+	BOOL    AddEditBox(HTREEITEM hItem, CRuntimeClass* pRuntimeClassEditCtrl, CRuntimeClass* pRuntimeClassSpinCtrl, DWORD dwItemData = (DWORD)-1);
 	CString GetEditText(HTREEITEM hItem) const;
 	void    SetEditText(HTREEITEM hItem, const CString& sEditText);
 
 	//Adding a file / Folder edit box (and a browse button) to an item
-	BOOL    AddFileEditBox(HTREEITEM hItem, CRuntimeClass* pRuntimeClassEditCtrl, CRuntimeClass* pRuntimeClassButton, DWORD dwItemData = -1);
+	BOOL    AddFileEditBox(HTREEITEM hItem, CRuntimeClass* pRuntimeClassEditCtrl, CRuntimeClass* pRuntimeClassButton, DWORD dwItemData = (DWORD)-1);
 	CString GetFileEditText(HTREEITEM hItem) const;
 	void    SetFileEditText(HTREEITEM hItem, const CString& sEditText);
-	BOOL    AddFolderEditBox(HTREEITEM hItem, CRuntimeClass* pRuntimeClassEditCtrl, CRuntimeClass* pRuntimeClassButton, DWORD dwItemData = -1);
+	BOOL    AddFolderEditBox(HTREEITEM hItem, CRuntimeClass* pRuntimeClassEditCtrl, CRuntimeClass* pRuntimeClassButton, DWORD dwItemData = (DWORD)-1);
 	CString GetFolderEditText(HTREEITEM hItem) const;
 	void    SetFolderEditText(HTREEITEM hItem, const CString& sEditText);
 
 	//Adding a Color selector to an item
-	BOOL     AddColorSelector(HTREEITEM hItem, CRuntimeClass* pRuntimeClassButton, DWORD dwItemData = -1, BOOL bDrawColorForIcon = TRUE);  
+	BOOL     AddColorSelector(HTREEITEM hItem, CRuntimeClass* pRuntimeClassButton, DWORD dwItemData = (DWORD)-1, BOOL bDrawColorForIcon = TRUE);
 	COLORREF GetColor(HTREEITEM hItem) const;
 	void     SetColor(HTREEITEM hItem, COLORREF color);
 
 	//Adding a font name selector to an item
-	BOOL     AddFontSelector(HTREEITEM hItem, CRuntimeClass* pRuntimeClassButton, DWORD dwItemData = -1);  
+	BOOL     AddFontSelector(HTREEITEM hItem, CRuntimeClass* pRuntimeClassButton, DWORD dwItemData = (DWORD)-1);
 	void     GetFontItem(HTREEITEM hItem, LOGFONT* pLogFont) const;
 	void     SetFontItem(HTREEITEM hItem, const LOGFONT* pLogFont);
 
 	//Adding a Date Time  selector to an item
-	BOOL     AddDateTime(HTREEITEM hItem, CRuntimeClass* pRuntimeClassDateTime, DWORD dwItemData = -1);  
+	BOOL     AddDateTime(HTREEITEM hItem, CRuntimeClass* pRuntimeClassDateTime, DWORD dwItemData = (DWORD)-1);
 	void     GetDateTime(HTREEITEM hItem, SYSTEMTIME& st) const;
 	void     SetDateTime(HTREEITEM hItem, const SYSTEMTIME& st);
 
 	//Adding an IP Address selector to an item
-	BOOL     AddIPAddress(HTREEITEM hItem, CRuntimeClass* pRuntimeClassIPAddress, DWORD dwItemData = -1);  
+	BOOL     AddIPAddress(HTREEITEM hItem, CRuntimeClass* pRuntimeClassIPAddress, DWORD dwItemData = (DWORD)-1);
 	DWORD    GetIPAddress(HTREEITEM hItem) const;
 	void     SetIPAddress(HTREEITEM hItem, DWORD dwAddress);
 
 	//Adding a Opaque selector to an item
-	BOOL     AddOpaque(HTREEITEM hItem, CRuntimeClass* pRuntimeClass1, CRuntimeClass* pRuntimeClass2, DWORD dwItemData = -1);  
+	BOOL     AddOpaque(HTREEITEM hItem, CRuntimeClass* pRuntimeClass1, CRuntimeClass* pRuntimeClass2, DWORD dwItemData = (DWORD)-1);
 	DWORD    GetOpaque(HTREEITEM hItem) const;
 	void     SetOpaque(HTREEITEM hItem, DWORD dwItemData);
 
-	//Virtual methods    
+	//Virtual methods
 	virtual void OnCreateImageList();
 	virtual HTREEITEM CopyItem(HTREEITEM hItem, HTREEITEM htiNewParent, HTREEITEM htiAfter = TVI_LAST);
 	virtual HTREEITEM CopyBranch(HTREEITEM htiBranch, HTREEITEM htiNewParent, HTREEITEM htiAfter = TVI_LAST);
@@ -577,8 +577,8 @@ protected:
 	virtual void DestroyOldChildControl();
 	virtual void RemoveChildControlText(HTREEITEM hItem);
 	virtual void CreateNewChildControl(HTREEITEM hItem);
-	virtual void CreateSpinCtrl(CRuntimeClass* pRuntimeClassSpinCtrl, CRect rItem, CRect rText, CRect rPrimaryControl);
-	virtual void CreateBrowseButton(CRuntimeClass* pRuntimeClassBrowseButton, CRect rItem, CRect rText);
+	virtual void CreateSpinCtrl(CRuntimeClass* pRuntimeClassSpinCtrl, const CRect& rItem, const CRect& rText, const CRect& rPrimaryControl);
+	virtual void CreateBrowseButton(CRuntimeClass* pRuntimeClassBrowseButton, const CRect& rItem, const CRect& rText);
 	virtual void UpdateTreeControlValueFromChildControl(HTREEITEM hItem);
 	virtual void HandleChildControlLosingFocus();
 	virtual void HandleCheckBox(HTREEITEM hItem, BOOL bCheck);
@@ -638,6 +638,3 @@ void DDX_TreeIPAddress(CDataExchange* pDX, int nIDC, HTREEITEM hItem, DWORD& dwA
 
 
 #endif //__TREEOPTIONSCTRL_H__
-
-
-

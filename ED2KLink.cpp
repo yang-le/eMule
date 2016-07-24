@@ -33,37 +33,23 @@ static char THIS_FILE[] = __FILE__;
 
 namespace {
 	struct autoFree {
-		autoFree(TCHAR* p) : m_p(p) {}
+		explicit autoFree(TCHAR* p) : m_p(p) {} //fo88
 		~autoFree() { free(m_p); }
 	private:
 		TCHAR * m_p;
 	};
-	inline unsigned int FromHexDigit(TCHAR digit) {
-		switch (digit) {
-		case _T('0'): return 0;
-		case _T('1'): return 1;
-		case _T('2'): return 2;
-		case _T('3'): return 3;
-		case _T('4'): return 4;
-		case _T('5'): return 5;
-		case _T('6'): return 6;
-		case _T('7'): return 7;
-		case _T('8'): return 8;
-		case _T('9'): return 9;
-		case _T('A'): return 10;
-		case _T('B'): return 11;
-		case _T('C'): return 12;
-		case _T('D'): return 13;
-		case _T('E'): return 14;
-		case _T('F'): return 15;
-		case _T('a'): return 10;
-		case _T('b'): return 11;
-		case _T('c'): return 12;
-		case _T('d'): return 13;
-		case _T('e'): return 14;
-		case _T('f'): return 15;
-		default: throw GetResString(IDS_ERR_ILLFORMEDHASH);
+
+	inline unsigned int FromHexDigit(TCHAR digit)
+	{
+		unsigned int i = digit - _T('0');
+		if (i > 9) {
+			i = i + _T('0') - _T('A') + 10;
+			if (i > 15)
+				i = i + _T('A') - _T('a');
+			if (i > 15)
+				throw GetResString(IDS_ERR_ILLFORMEDHASH);
 		}
+		return i;
 	}
 }
 
@@ -71,9 +57,9 @@ CED2KLink::~CED2KLink()
 {
 }
 
-///////////////////////////////////////////// 
-// CED2KServerListLink implementation 
-///////////////////////////////////////////// 
+/////////////////////////////////////////////
+// CED2KServerListLink implementation
+/////////////////////////////////////////////
 CED2KServerListLink::CED2KServerListLink(const TCHAR* address)
 {
 	m_address = address;
@@ -81,11 +67,11 @@ CED2KServerListLink::CED2KServerListLink(const TCHAR* address)
 
 CED2KServerListLink::~CED2KServerListLink()
 {
-} 
+}
 
 void CED2KServerListLink::GetLink(CString& lnk) const
 {
-	lnk.Format(_T("ed2k://|serverlist|%s|/"), m_address);
+	lnk.Format(_T("ed2k://|serverlist|%s|/"), (LPCTSTR)m_address);
 }
 
 CED2KServerListLink* CED2KServerListLink::GetServerListLink()
@@ -108,9 +94,9 @@ CED2KLink::LinkType CED2KServerListLink::GetKind() const
 	return kServerList;
 }
 
-///////////////////////////////////////////// 
-// CED2KNodesListLink implementation 
-///////////////////////////////////////////// 
+/////////////////////////////////////////////
+// CED2KNodesListLink implementation
+/////////////////////////////////////////////
 CED2KNodesListLink::CED2KNodesListLink(const TCHAR* address)
 {
 	m_address = address;
@@ -118,11 +104,11 @@ CED2KNodesListLink::CED2KNodesListLink(const TCHAR* address)
 
 CED2KNodesListLink::~CED2KNodesListLink()
 {
-} 
+}
 
 void CED2KNodesListLink::GetLink(CString& lnk) const
 {
-	lnk.Format(_T("ed2k://|nodeslist|%s|/"), m_address);
+	lnk.Format(_T("ed2k://|nodeslist|%s|/"), (LPCTSTR)m_address);
 }
 
 CED2KServerListLink* CED2KNodesListLink::GetServerListLink()
@@ -172,21 +158,21 @@ CED2KServerLink::~CED2KServerLink()
 
 void CED2KServerLink::GetLink(CString& lnk) const
 {
-	lnk.Format(_T("ed2k://|server|%s|%u|/"), GetAddress(), (UINT)GetPort());
+	lnk.Format(_T("ed2k://|server|%s|%u|/"), (LPCTSTR)GetAddress(), (UINT)GetPort());
 }
 
-CED2KServerListLink* CED2KServerLink::GetServerListLink() 
-{ 
+CED2KServerListLink* CED2KServerLink::GetServerListLink()
+{
 	return NULL;
 }
 
-CED2KServerLink* CED2KServerLink::GetServerLink() 
-{ 
+CED2KServerLink* CED2KServerLink::GetServerLink()
+{
 	return this;
 }
 
-CED2KFileLink* CED2KServerLink::GetFileLink() 
-{ 
+CED2KFileLink* CED2KServerLink::GetFileLink()
+{
 	return NULL;
 }
 
@@ -195,9 +181,9 @@ CED2KLink::LinkType CED2KServerLink::GetKind() const
 	return kServer;
 }
 
-///////////////////////////////////////////// 
-// CED2KSearchLink implementation 
-///////////////////////////////////////////// 
+/////////////////////////////////////////////
+// CED2KSearchLink implementation
+/////////////////////////////////////////////
 CED2KSearchLink::CED2KSearchLink(const TCHAR* pszSearchTerm)
 {
 	m_strSearchTerm = OptUtf8ToStr(URLDecode(pszSearchTerm));
@@ -205,11 +191,11 @@ CED2KSearchLink::CED2KSearchLink(const TCHAR* pszSearchTerm)
 
 CED2KSearchLink::~CED2KSearchLink()
 {
-} 
+}
 
 void CED2KSearchLink::GetLink(CString& lnk) const
 {
-	lnk.Format(_T("ed2k://|search|%s|/"), EncodeUrlUtf8(m_strSearchTerm));
+	lnk.Format(_T("ed2k://|search|%s|/"), (LPCTSTR)EncodeUrlUtf8(m_strSearchTerm));
 }
 
 CED2KServerListLink* CED2KSearchLink::GetServerListLink()
@@ -246,13 +232,13 @@ CED2KLink::LinkType CED2KSearchLink::GetKind() const
 /////////////////////////////////////////////
 // CED2KFileLink implementation
 /////////////////////////////////////////////
-CED2KFileLink::CED2KFileLink(const TCHAR* pszName, const TCHAR* pszSize, const TCHAR* pszHash, 
+CED2KFileLink::CED2KFileLink(const TCHAR* pszName, const TCHAR* pszSize, const TCHAR* pszHash,
 							 const CStringArray& astrParams, const TCHAR* pszSources)
 	: m_size(pszSize)
 {
 	// Here we have a little problem.. Actually the proper solution would be to decode from UTF8,
 	// only if the string does contain escape sequences. But if user pastes a raw UTF8 encoded
-	// string (for whatever reason), we would miss to decode that string. On the other side, 
+	// string (for whatever reason), we would miss to decode that string. On the other side,
 	// always decoding UTF8 can give flaws in case the string is valid for Unicode and UTF8
 	// at the same time. However, to avoid the pasting of raw UTF8 strings (which would lead
 	// to a greater mess in the network) we always try to decode from UTF8, even if the string
@@ -269,13 +255,13 @@ CED2KFileLink::CED2KFileLink(const TCHAR* pszName, const TCHAR* pszSize, const T
 	if (_tcslen(pszHash) != 32)
 		throw GetResString(IDS_ERR_ILLFORMEDHASH);
 
-	if (_tstoi64(pszSize) >= MAX_EMULE_FILE_SIZE)
+	if ((uint64)_tstoi64(pszSize) >= MAX_EMULE_FILE_SIZE)
 		throw GetResString(IDS_ERR_TOOLARGEFILE);
 	if (_tstoi64(pszSize)<=0)
 		throw GetResString(IDS_ERR_NOTAFILELINK);
-	if (_tstoi64(pszSize) > OLD_MAX_EMULE_FILE_SIZE && !thePrefs.CanFSHandleLargeFiles(0))
+	if ((uint64)_tstoi64(pszSize) > OLD_MAX_EMULE_FILE_SIZE && !thePrefs.CanFSHandleLargeFiles(0))
 		throw GetResString(IDS_ERR_FSCANTHANDLEFILE);
-	
+
 	for (int idx = 0; idx < 16; ++idx) {
 		m_hash[idx] = (BYTE)(FromHexDigit(*pszHash++)*16);
 		m_hash[idx] = (BYTE)(m_hash[idx] + FromHexDigit(*pszHash++));
@@ -367,7 +353,7 @@ CED2KFileLink::CED2KFileLink(const TCHAR* pszName, const TCHAR* pszSize, const T
 			CString strHash = strParam.Mid(iPos + 1);
 			if (!strHash.IsEmpty())
 			{
-				if (DecodeBase32(strHash, m_AICHHash.GetRawHash(), CAICHHash::GetHashSize()) == (UINT)CAICHHash::GetHashSize()){
+				if (DecodeBase32(strHash, m_AICHHash.GetRawHash(), CAICHHash::GetHashSize()) == CAICHHash::GetHashSize()) {
 					m_bAICHHashValid = true;
 					ASSERT( m_AICHHash.GetString().CompareNoCase(strHash) == 0 );
 				}
@@ -394,45 +380,37 @@ CED2KFileLink::CED2KFileLink(const TCHAR* pszName, const TCHAR* pszSize, const T
 		TCHAR* pCh = pNewString;
 		TCHAR* pEnd;
 		TCHAR* pIP;
-		TCHAR* pPort;
 
-		bool bAllowSources;
-		TCHAR date[3];
 		COleDateTime expirationDate;
-		int nYear,nMonth,nDay;
-
-		uint16 nCount = 0;
-		uint32 dwID;
-		uint16 nPort;
-		uint32 dwServerIP = 0; 
-		uint16 nServerPort = 0;
-		unsigned long ul;
-
-		int nInvalid = 0;
 
 		pCh = _tcsstr( pCh, _T("sources") );
 		if( pCh != NULL ) {
 			pCh = pCh + 7; // point to char after "sources"
 			pEnd = pCh;
 			while( *pEnd ) pEnd++; // make pEnd point to the terminating NULL
-			bAllowSources=true;
+			bool bAllowSources = true;
 			// if there's an expiration date...
 			if( *pCh == _T('@') && (pEnd-pCh) > 7 )
 			{
+				TCHAR date[3];
 				pCh++; // after '@'
 				date[2] = 0; // terminate the two character string
 				date[0] = *(pCh++); date[1] = *(pCh++);
-				nYear = _tcstol( date, 0, 10 ) + 2000;
+				int nYear = _tcstol(date, 0, 10) + 2000;
 				date[0] = *(pCh++); date[1] = *(pCh++);
-				nMonth = _tcstol( date, 0, 10 );
+				int nMonth = _tcstol(date, 0, 10);
 				date[0] = *(pCh++); date[1] = *(pCh++);
-				nDay = _tcstol( date, 0, 10 );
+				int nDay = _tcstol(date, 0, 10);
 				bAllowSources = ( expirationDate.SetDate(nYear,nMonth,nDay) == 0 );
 				if (bAllowSources) bAllowSources=(COleDateTime::GetCurrentTime() < expirationDate);
 			}
 
 			// increment pCh to point to the first "ip:port" and check for sources
 			if ( bAllowSources && ++pCh < pEnd ) {
+				uint32 dwServerIP = 0;
+				uint16 nServerPort = 0;
+				uint16 nCount = 0;
+				int nInvalid = 0;
 				SourcesList = new CSafeMemFile(256);
 				SourcesList->WriteUInt16(nCount); // init to 0, we'll fix this at the end.
 				// for each "ip:port" source string until the end
@@ -446,17 +424,17 @@ CED2KFileLink::CED2KFileLink(const TCHAR* pszName, const TCHAR* pszSize, const T
 					}
 					else
 						pCh = pEnd;
-
+					TCHAR *pPort = _tcschr(pIP, _T(':'));
 					// if port is not present for this ip, go to the next ip.
-					if( (pPort = _tcschr(pIP, _T(':'))) == NULL )
+					if (pPort == NULL)
 					{	nInvalid++;	continue;	}
 
 					*pPort = 0;	// terminate ip string
 					pPort++;	// point pPort to port string.
 
-					dwID = inet_addr(CStringA(pIP));
-					ul = _tcstoul( pPort, 0, 10 );
-					nPort = static_cast<uint16>(ul);
+					uint32 dwID = inet_addr(CStringA(pIP));
+					unsigned long ul = _tcstoul(pPort, 0, 10);
+					uint16 nPort = static_cast<uint16>(ul);
 
 					// skip bad ips / ports
 					if (ul > 0xFFFF || ul == 0 )	// port

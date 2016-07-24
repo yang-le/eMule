@@ -1,16 +1,16 @@
 /*
 Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
- 
+
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either
 version 2 of the License, or (at your option) any later version.
- 
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
- 
+
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -58,10 +58,8 @@ void CMiscUtils::DebugHexDump(const byte *pbyData, uint32 uLenData)
 	try
 	{
 		int iLenLine = 16;
-		UINT uPos = 0;
-		byte byC = 0;
 
-		while (uPos < uLenData)
+		for (UINT uPos = 0; uPos < uLenData; uPos += iLenLine)
 		{
 			CStringA sLine;
 			CStringA sSingle;
@@ -77,12 +75,11 @@ void CMiscUtils::DebugHexDump(const byte *pbyData, uint32 uLenData)
 			sLine += CStringA(' ', 60 - sLine.GetLength());
 			for (int i=0; i<iLenLine; i++)
 			{
-				byC = pbyData[uPos + i];
+				byte byC = pbyData[uPos + i];
 				sSingle.Format("%c", (((byC > 31) && (byC < 127)) ? byC : '.'));
 				sLine += sSingle;
 			}
-			AddDebugLogLine(false, _T("%hs"), sLine);
-			uPos += iLenLine;
+			AddDebugLogLine(false, _T("%hs"), (LPCSTR)sLine);
 		}
 	}
 	catch (...)

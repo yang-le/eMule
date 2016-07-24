@@ -64,6 +64,9 @@ to tim.kosse@gmx.de
 #include "stdafx.h"
 #include "DebugHelpers.h"
 #include "AsyncSocketEx.h"
+#if !NO_USE_CLIENT_TCP_CATCH_ALL_HANDLER
+#include "OtherFunctions.h"
+#endif //!NO_USE_CLIENT_TCP_CATCH_ALL_HANDLER
 
 #ifndef NOLAYERS
 #include "AsyncSocketExLayer.h"
@@ -435,7 +438,7 @@ public:
 		}
 		catch(CException* e){
 			TCHAR szError[1024];
-			e->GetErrorMessage(szError, ARRSIZE(szError));
+			GetExceptionMessage(*e, szError, ARRSIZE(szError));
 			const CRuntimeClass* pRuntimeClass = e->GetRuntimeClass();
 			LPCSTR pszClassName = (pRuntimeClass) ? pRuntimeClass->m_lpszClassName : NULL;
 			if (!pszClassName)
@@ -453,7 +456,7 @@ public:
 #endif//!NO_USE_CLIENT_TCP_CATCH_ALL_HANDLER
 	}
 
-	HWND CAsyncSocketExHelperWindow::GetHwnd()
+	HWND GetHwnd()
 	{
 		return m_hWnd;
 	}
@@ -476,6 +479,7 @@ private:
 IMPLEMENT_DYNAMIC(CAsyncSocketEx, CObject)
 
 CAsyncSocketEx::CAsyncSocketEx()
+	: m_lEvent(0), m_nAsyncGetHostByNamePort(0)
 {
 	m_SocketData.hSocket = INVALID_SOCKET;
 	m_SocketData.nSocketIndex = -1;
@@ -490,12 +494,12 @@ CAsyncSocketEx::CAsyncSocketEx()
 
 CAsyncSocketEx::~CAsyncSocketEx()
 {
-	Close();
+	CAsyncSocketEx::Close();
 	FreeAsyncSocketExInstance();
 }
 
-BOOL CAsyncSocketEx::Create(UINT nSocketPort /*=0*/, int nSocketType /*=SOCK_STREAM*/, 
-							long lEvent /*=FD_READ | FD_WRITE | FD_OOB | FD_ACCEPT | FD_CONNECT | FD_CLOSE*/, 
+BOOL CAsyncSocketEx::Create(UINT nSocketPort /*=0*/, int nSocketType /*=SOCK_STREAM*/,
+							long lEvent /*=FD_READ | FD_WRITE | FD_OOB | FD_ACCEPT | FD_CONNECT | FD_CLOSE*/,
 							LPCSTR lpszSocketAddress /*=NULL*/, BOOL bReuseAddr /*=FALSE*/ )
 {
 	//Close the socket, although this should not happen
@@ -614,11 +618,11 @@ void CAsyncSocketEx::DetachHandle(SOCKET /*hSocket*/)
 	ASSERT( m_pLocalAsyncSocketExThreadData );
 	if (!m_pLocalAsyncSocketExThreadData)
 		return;
-	
+
 	ASSERT( m_pLocalAsyncSocketExThreadData->m_pHelperWindow );
 	if (!m_pLocalAsyncSocketExThreadData->m_pHelperWindow)
 		return;
-	
+
 	VERIFY( m_pLocalAsyncSocketExThreadData->m_pHelperWindow->RemoveSocket(this, m_SocketData.nSocketIndex) );
 }
 
@@ -664,7 +668,7 @@ BOOL CAsyncSocketEx::InitAsyncSocketExInstance()
 		    {
 			    ASSERT( pList->pThreadData );
 			    ASSERT( pList->pThreadData->nInstanceCount > 0 );
-    
+
 			    if (pList->pThreadData->nThreadId == id)
 			    {
 				    m_pLocalAsyncSocketExThreadData = pList->pThreadData;
@@ -722,7 +726,7 @@ void CAsyncSocketEx::FreeAsyncSocketExInstance()
 	    ASSERT( m_spAsyncSocketExThreadDataList );
 	    t_AsyncSocketExThreadDataList *pList = m_spAsyncSocketExThreadDataList;
 	    t_AsyncSocketExThreadDataList *pPrev = 0;
-    
+
 	    //Search for data for current thread and decrease instance count
 	    while (pList)
 	    {
@@ -733,7 +737,7 @@ void CAsyncSocketEx::FreeAsyncSocketExInstance()
 		    {
 			    ASSERT( m_pLocalAsyncSocketExThreadData == pList->pThreadData );
 			    m_pLocalAsyncSocketExThreadData->nInstanceCount--;
-    
+
 			    //Freeing last instance?
 			    //If so, destroy helper window
 			    if (!m_pLocalAsyncSocketExThreadData->nInstanceCount)
@@ -826,7 +830,7 @@ BOOL CAsyncSocketEx::GetPeerName(CString& rPeerAddress, UINT& rPeerPort)
 #ifndef NOLAYERS
 	if (m_pFirstLayer)
 		return m_pFirstLayer->GetPeerName(rPeerAddress, rPeerPort);
-#endif NOLAYERS
+#endif //NOLAYERS
 
 	SOCKADDR_IN sockAddr = {0};
 	int nSockAddrLen = sizeof(sockAddr);

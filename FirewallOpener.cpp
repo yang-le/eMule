@@ -50,7 +50,7 @@ bool CFirewallOpener::Init(bool bPreInit)
 			return false;
 		HRESULT hr = CoInitializeSecurity (NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_PKT, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL);
 		if (!SUCCEEDED(hr) || !SUCCEEDED(::CoCreateInstance (__uuidof(NetSharingManager), NULL, CLSCTX_ALL, __uuidof(INetSharingManager), (void**)&m_pINetSM)) ){
-			CoUninitialize(); 
+			CoUninitialize();
 			return false;
 		}
 	}
@@ -64,7 +64,7 @@ bool CFirewallOpener::Init(bool bPreInit)
 
 	if (m_pINetSM == NULL){
 		if (!SUCCEEDED(::CoCreateInstance (__uuidof(NetSharingManager), NULL, CLSCTX_ALL, __uuidof(INetSharingManager), (void**)&m_pINetSM)) ){
-			UnInit(); 
+			UnInit();
 			return false;
 		}
 	}
@@ -74,7 +74,7 @@ bool CFirewallOpener::Init(bool bPreInit)
 void CFirewallOpener::UnInit(){
 	if (!m_bInited)
 		return;
-	
+
 	for (int i = 0; i != m_liAddedRules.GetCount(); i++){
 		if (m_liAddedRules[i].m_bRemoveOnExit)
 			RemoveRule(m_liAddedRules[i]);
@@ -106,16 +106,16 @@ bool CFirewallOpener::DoAction(const EFOCAction eAction, const CICSRuleInfo& riP
     RETURN_ON_FAIL(m_pINetSM->get_EnumEveryConnection(&NSECCP));
     RETURN_ON_FAIL(NSECCP->get__NewEnum(&pUnk));
 	RETURN_ON_FAIL(pUnk->QueryInterface(__uuidof(IEnumVARIANT), (void**)&varEnum));
-	
+
 	_variant_t var;
 	while (S_OK == varEnum->Next(1, &var, NULL)) {
-		INetConnectionPtr NCP;		
+		INetConnectionPtr NCP;
 		if (V_VT(&var) == VT_UNKNOWN
-			&& SUCCEEDED(V_UNKNOWN(&var)->QueryInterface(__uuidof(INetConnection),(void**)&NCP))) 
+			&& SUCCEEDED(V_UNKNOWN(&var)->QueryInterface(__uuidof(INetConnection),(void**)&NCP)))
 		{
 			INetConnectionPropsPtr pNCP;
 			if ( !SUCCEEDED(m_pINetSM->get_NetConnectionProps (NCP, &pNCP)) )
-				continue;	
+				continue;
 			DWORD dwCharacteristics = 0;
 			pNCP->get_Characteristics(&dwCharacteristics);
 			if (dwCharacteristics & (NCCF_FIREWALLED)) {
@@ -174,7 +174,8 @@ bool CFirewallOpener::DoAction(const EFOCAction eAction, const CICSRuleInfo& riP
 	return bSuccess && bFoundAtLeastOneConn;
 }
 
-bool CFirewallOpener::AddRule(const CICSRuleInfo& riPortRule, const INetSharingConfigurationPtr pNSC, const INetConnectionPropsPtr pNCP){
+bool CFirewallOpener::AddRule(const CICSRuleInfo& riPortRule, const INetSharingConfigurationPtr& pNSC, const INetConnectionPropsPtr& pNCP)
+{
         INetSharingPortMappingPtr pNSPM;
         HRESULT hr = pNSC->AddPortMapping(riPortRule.m_strRuleName.AllocSysString(),
                              riPortRule.m_byProtocol,
@@ -187,19 +188,19 @@ bool CFirewallOpener::AddRule(const CICSRuleInfo& riPortRule, const INetSharingC
 		CComBSTR bstrName;
 		pNCP->get_Name(&bstrName);
 		if ( SUCCEEDED(hr) && SUCCEEDED(pNSPM->Enable())){
-			theApp.QueueDebugLogLine(false, _T("Succeeded to add Rule '%s' for Port '%u' on Connection '%s'"),riPortRule.m_strRuleName, riPortRule.m_nPortNumber, CString(bstrName));
+			theApp.QueueDebugLogLine(false, _T("Succeeded to add Rule '%s' for Port '%u' on Connection '%s'"), (LPCTSTR)riPortRule.m_strRuleName, riPortRule.m_nPortNumber, (LPCSTR)&CString(bstrName));
 			return true;
 		}
 		else{
-			theApp.QueueDebugLogLine(false, _T("Failed to add Rule '%s' for Port '%u' on Connection '%s'"),riPortRule.m_strRuleName, riPortRule.m_nPortNumber, CString(bstrName));
+			theApp.QueueDebugLogLine(false, _T("Failed to add Rule '%s' for Port '%u' on Connection '%s'"), (LPCTSTR)riPortRule.m_strRuleName, riPortRule.m_nPortNumber, (LPCSTR)&CString(bstrName));
 			return false;
 		}
 }
 
-bool CFirewallOpener::FindRule(const EFOCAction eAction, const CICSRuleInfo& riPortRule, const INetSharingConfigurationPtr pNSC, INetSharingPortMappingPropsPtr* outNSPMP){
+bool CFirewallOpener::FindRule(const EFOCAction eAction, const CICSRuleInfo& riPortRule, const INetSharingConfigurationPtr& pNSC, INetSharingPortMappingPropsPtr* outNSPMP) {
 	INetSharingPortMappingCollectionPtr pNSPMC;
     RETURN_ON_FAIL(pNSC->get_EnumPortMappings (ICSSC_DEFAULT, &pNSPMC));
-       
+
 	INetSharingPortMappingPtr pNSPM;
     IEnumVARIANTPtr varEnum;
     IUnknownPtr pUnk;
@@ -209,7 +210,7 @@ bool CFirewallOpener::FindRule(const EFOCAction eAction, const CICSRuleInfo& riP
 	while (S_OK == varEnum->Next(1, &var, NULL)) {
 		INetSharingPortMappingPropsPtr pNSPMP;
 		if (V_VT(&var) == VT_DISPATCH
-			&& SUCCEEDED(V_DISPATCH(&var)->QueryInterface(__uuidof(INetSharingPortMapping),(void**)&pNSPM)) 
+			&& SUCCEEDED(V_DISPATCH(&var)->QueryInterface(__uuidof(INetSharingPortMapping),(void**)&pNSPM))
 			&& SUCCEEDED(pNSPM->get_Properties (&pNSPMP)))
 		{
 			UCHAR ucProt = 0;
@@ -265,7 +266,7 @@ bool CFirewallOpener::FindRule(const EFOCAction eAction, const CICSRuleInfo& riP
 	}
 }
 
-bool CFirewallOpener::RemoveRule(const CString strName){
+bool CFirewallOpener::RemoveRule(const CString& strName) {
 	return DoAction(FOC_DELETERULEBYNAME, CICSRuleInfo(0, 0, strName) );
 }
 
@@ -273,7 +274,7 @@ bool CFirewallOpener::RemoveRule(const CICSRuleInfo& riPortRule){
 	return DoAction(FOC_DELETERULEEXCACT, riPortRule);
 }
 
-bool CFirewallOpener::DoesRuleExist(const CString strName){
+bool CFirewallOpener::DoesRuleExist(const CString& strName) {
 	return DoAction(FOC_FINDRULEBYNAME, CICSRuleInfo(0, 0, strName) );
 }
 
@@ -281,7 +282,7 @@ bool CFirewallOpener::DoesRuleExist(const uint16 nPortNumber,const uint8 byProto
 	return DoAction(FOC_FINDRULEBYPORT, CICSRuleInfo(nPortNumber, byProtocol, _T("")) );
 }
 
-bool CFirewallOpener::OpenPort(const uint16 nPortNumber,const uint8 byProtocol,const CString strRuleName, const bool bRemoveOnExit){
+bool CFirewallOpener::OpenPort(const uint16 nPortNumber,const uint8 byProtocol,const CString& strRuleName, const bool bRemoveOnExit) {
 	return DoAction(FOC_ADDRULE, CICSRuleInfo(nPortNumber, byProtocol, strRuleName, bRemoveOnExit));
 }
 

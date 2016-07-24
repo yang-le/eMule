@@ -64,11 +64,9 @@ CCollection::CCollection(const CCollection* pCollection)
 	m_bTextFormat = pCollection->m_bTextFormat;
 
 	m_CollectionFilesMap.InitHashTable(1031);
-	POSITION pos = pCollection->m_CollectionFilesMap.GetStartPosition();
-	CCollectionFile* pCollectionFile;
-	CSKey key;
-	while( pos != NULL )
-	{
+	for (POSITION pos = pCollection->m_CollectionFilesMap.GetStartPosition(); pos != NULL;) {
+		CCollectionFile* pCollectionFile;
+		CSKey key;
 		pCollection->m_CollectionFilesMap.GetNextAssoc( pos, key, pCollectionFile );
 		AddFileToCollection(pCollectionFile, true);
 	}
@@ -77,11 +75,9 @@ CCollection::CCollection(const CCollection* pCollection)
 CCollection::~CCollection(void)
 {
 	delete[] m_pabyCollectionAuthorKey;
-	POSITION pos = m_CollectionFilesMap.GetStartPosition();
-	CCollectionFile* pCollectionFile;
-	CSKey key;
-	while( pos != NULL )
-	{
+	for (POSITION pos = m_CollectionFilesMap.GetStartPosition(); pos != NULL;) {
+		CCollectionFile* pCollectionFile;
+		CSKey key;
 		m_CollectionFilesMap.GetNextAssoc( pos, key, pCollectionFile );
 	    delete pCollectionFile;
 	}
@@ -174,7 +170,6 @@ bool CCollection::InitCollectionFromFile(const CString& sFilePath, CString sFile
 							{
 								SetCollectionAuthorKey(tag.GetBlob(), tag.GetBlobSize());
 							}
-							break;
 						}
 					}
 					headerTagCount--;
@@ -182,9 +177,13 @@ bool CCollection::InitCollectionFromFile(const CString& sFilePath, CString sFile
 				uint32 fileCount = data.ReadUInt32();
 				while(fileCount)
 				{
-					CCollectionFile* pCollectionFile = new CCollectionFile(&data);
-					if(pCollectionFile)
-						AddFileToCollection(pCollectionFile, false);
+					CCollectionFile* pCollectionFile;
+					try {
+						pCollectionFile = new CCollectionFile(&data);
+					} catch (...) {
+						continue;
+					}
+					AddFileToCollection(pCollectionFile, false);
 					fileCount--;
 				}
 				bCollectionLoaded = true;
@@ -201,7 +200,7 @@ bool CCollection::InitCollectionFromFile(const CString& sFilePath, CString sFile
 
 						StringSource ss_Pubkey(m_pabyCollectionAuthorKey, m_nKeySize, true, 0);
 						RSASSA_PKCS1v15_SHA_Verifier pubkey(ss_Pubkey);
-		
+
 						int nSignLen = (int)(data.GetLength() - data.GetPosition());
 						BYTE* pSignature = new BYTE[nSignLen ];
 						VERIFY( data.Read(pSignature, nSignLen) == (UINT)nSignLen);
@@ -210,20 +209,20 @@ bool CCollection::InitCollectionFromFile(const CString& sFilePath, CString sFile
 
 						delete[] pMessage;
 						delete[] pSignature;
-					}	
+					}
 					if (!bResult){
-						DebugLogWarning(_T("Collection %s: Verifying of public key failed!"), m_sCollectionName);
+						DebugLogWarning(_T("Collection %s: Verifying of public key failed!"), (LPCTSTR)m_sCollectionName);
 						delete[] m_pabyCollectionAuthorKey;
 						m_pabyCollectionAuthorKey = NULL;
 						m_nKeySize = 0;
-						m_sCollectionAuthorName = _T("");
+						m_sCollectionAuthorName.Empty();
 					}
 					else
-						DebugLog(_T("Collection %s: Public key verified"), m_sCollectionName);
-					
+						DebugLog(_T("Collection %s: Public key verified"), (LPCTSTR)m_sCollectionName);
+
 			}
 			else
-				m_sCollectionAuthorName = _T("");
+				m_sCollectionAuthorName.Empty();
 			data.Close();
 		}
 		catch(CFileException* error)
@@ -243,13 +242,13 @@ bool CCollection::InitCollectionFromFile(const CString& sFilePath, CString sFile
 
 	if(!bCollectionLoaded)
 	{
-		CStdioFile data;
-		if(data.Open(sFilePath, CFile::modeRead | CFile::shareDenyWrite | CFile::typeText))
+		CStdioFile data1;
+		if(data1.Open(sFilePath, CFile::modeRead | CFile::shareDenyWrite | CFile::typeText))
 		{
 			try
 			{
 				CString sLink;
-				while(data.ReadString(sLink))
+				while(data1.ReadString(sLink))
 				{
 					//Ignore all lines that start with #.
 					//These lines can be used for future features..
@@ -266,12 +265,12 @@ bool CCollection::InitCollectionFromFile(const CString& sFilePath, CString sFile
 						catch(...)
 						{
 							ASSERT( false );
-							data.Close();
+							data1.Close();
 							return false;
 						}
 					}
 				}
-				data.Close();
+				data1.Close();
 				m_sCollectionName = sFileName;
 				bCollectionLoaded = true;
 				m_bTextFormat = true;
@@ -284,7 +283,7 @@ bool CCollection::InitCollectionFromFile(const CString& sFilePath, CString sFile
 			catch(...)
 			{
 				ASSERT( false );
-				data.Close();
+				data1.Close();
 				return false;
 			}
 		}
@@ -297,10 +296,10 @@ void CCollection::WriteToFileAddShared(CryptoPP::RSASSA_PKCS1v15_SHA_Signer* pSi
 {
 	using namespace CryptoPP;
 	CString sFileName;
-	sFileName.Format(_T("%s%s"), m_sCollectionName, COLLECTION_FILEEXTENSION);
-	
+	sFileName.Format(_T("%s%s"), (LPCTSTR)m_sCollectionName, COLLECTION_FILEEXTENSION);
+
 	CString sFilePath;
-	sFilePath.Format(_T("%s\\%s"), thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR), sFileName);
+	sFilePath.Format(_T("%s\\%s"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR), (LPCTSTR)sFileName);
 
 	if(m_bTextFormat)
 	{
@@ -309,15 +308,12 @@ void CCollection::WriteToFileAddShared(CryptoPP::RSASSA_PKCS1v15_SHA_Signer* pSi
 		{
 			try
 			{
-				POSITION pos = m_CollectionFilesMap.GetStartPosition();
-				CCollectionFile* pCollectionFile;
-				CSKey key;
-				while( pos != NULL )
-				{
+				for (POSITION pos = m_CollectionFilesMap.GetStartPosition(); pos != NULL;) {
+					CCollectionFile* pCollectionFile;
+					CSKey key;
 					m_CollectionFilesMap.GetNextAssoc( pos, key, pCollectionFile );
-					CString sLink;
-					sLink.Format(_T("%s\n"), pCollectionFile->GetED2kLink()); 
-					data.WriteString(sLink);
+					if (pCollectionFile)
+						data.WriteString(pCollectionFile->GetED2kLink() + _T('\n'));
 				}
 				data.Close();
 			}
@@ -344,10 +340,9 @@ void CCollection::WriteToFileAddShared(CryptoPP::RSASSA_PKCS1v15_SHA_Signer* pSi
 				//Version
 				// check first if we have any large files in the map - write use lowest version possible
 				uint32 dwVersion = COLLECTION_FILE_VERSION1_INITIAL;
-				POSITION pos = m_CollectionFilesMap.GetStartPosition();
-				CCollectionFile* pCollectionFile;
-				CSKey key;
-				while( pos != NULL ) {
+				for (POSITION pos = m_CollectionFilesMap.GetStartPosition(); pos != NULL;) {
+					CCollectionFile* pCollectionFile;
+					CSKey key;
 					m_CollectionFilesMap.GetNextAssoc( pos, key, pCollectionFile );
 					if (pCollectionFile->IsLargeFile()){
 						dwVersion = COLLECTION_FILE_VERSION2_LARGEFILES;
@@ -379,8 +374,9 @@ void CCollection::WriteToFileAddShared(CryptoPP::RSASSA_PKCS1v15_SHA_Signer* pSi
 				//Total Files
 				data.WriteUInt32(m_CollectionFilesMap.GetSize());
 
-				pos = m_CollectionFilesMap.GetStartPosition();
-				while( pos != NULL ) {
+				for (POSITION pos = m_CollectionFilesMap.GetStartPosition(); pos != NULL;) {
+					CCollectionFile* pCollectionFile;
+					CSKey key;
 					m_CollectionFilesMap.GetNextAssoc( pos, key, pCollectionFile );
 					pCollectionFile->WriteCollectionInfo(&data);
 				}

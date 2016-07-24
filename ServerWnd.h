@@ -30,7 +30,7 @@ class CServerWnd : public CResizableDialog
 	DECLARE_DYNAMIC(CServerWnd)
 
 public:
-	CServerWnd(CWnd* pParent = NULL);   // standard constructor
+	explicit CServerWnd(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CServerWnd();
 	void Localize();
 	bool UpdateServerMetFromURL(CString strURL);
@@ -43,7 +43,7 @@ public:
 	void UpdateControlsState();
 	void ResetHistory();
 	void PasteServerFromClipboard();
-	bool AddServer(uint16 uPort, CString strAddress, CString strName = _T(""), bool bShowErrorMB = true);
+	bool AddServer(uint16 uPort, const CString& strAddress, CString strName = _T(""), bool bShowErrorMB = true);
 	CString GetMyInfoString();
 
 // Dialog Data

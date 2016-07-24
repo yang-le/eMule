@@ -74,7 +74,7 @@ HICON CMeterIcon::CreateMeterIcon(const int *pBarData)
 	{// begin error check
 		return NULL;
 	}// end error check
-	
+
 	// load bitmaps
 	iiNewIcon.hbmColor = CreateCompatibleBitmap(hScreenDC,m_sDimensions.cx,m_sDimensions.cy);
 	if(iiNewIcon.hbmColor == NULL)
@@ -113,8 +113,8 @@ HICON CMeterIcon::CreateMeterIcon(const int *pBarData)
 
 	// draw the meters
 	for(int i = 0;i < m_nNumBars;i++)
-		if(DrawIconMeter(hIconDC,hMaskDC,pBarData[i],i) == false)
-			return false;
+		if (!DrawIconMeter(hIconDC,hMaskDC,pBarData[i],i))
+			return NULL;
 
 	if(!DrawIconEx(hIconDC,0,0,m_hFrame,m_sDimensions.cx,m_sDimensions.cy,NULL,NULL,DI_NORMAL|DI_IMAGE))
 	{// begin error check
@@ -189,7 +189,7 @@ bool CMeterIcon::DrawIconMeter(HDC hDestDC, HDC hDestDCMask, int nLevel, int nPo
 	if(hOldMaskPen == NULL)
 		return false;
 
-	if (nLevel>0) 
+	if (nLevel>0)
 	if(!Rectangle(hDestDCMask,
 		m_sDimensions.cx-2,
 		m_sDimensions.cy-((nLevel*(m_sDimensions.cy-1)/m_nMaxVal)+1),
@@ -286,7 +286,7 @@ bool CMeterIcon::SetColorLevels(const int* pLimits, const COLORREF* pColors, int
 	// free exsisting memory
 	delete[] m_pLimits;
 	m_pLimits = NULL; // 'new' may throw an exception
-	
+
 	delete[] m_pColors;
 	m_pColors = NULL; // 'new' may throw an exception
 

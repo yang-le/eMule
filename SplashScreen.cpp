@@ -88,7 +88,7 @@ BOOL CSplashScreen::PreTranslateMessage(MSG* pMsg)
 	return bResult;
 }
 
-void CSplashScreen::OnPaint() 
+void CSplashScreen::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
 
@@ -104,11 +104,15 @@ void CSplashScreen::OnPaint()
 			if (pOldBM)
 				dcMem.SelectObject(pOldBM);
 
-			CRect rc(0, (int)(BM.bmHeight * 0.65), BM.bmWidth, BM.bmHeight);
+			CRect rc(0, BM.bmHeight * 65/100, BM.bmWidth, BM.bmHeight);
 			dc.FillSolidRect(rc.left+1, rc.top+1, rc.Width()-2, rc.Height()-2, RGB(255,255,255));
 
 			LOGFONT lf = {0};
+#if defined(_DEBUG) && (defined(_BETA) || defined(_DEVBUILD))
+			lf.lfHeight = 28;
+#else
 			lf.lfHeight = 30;
+#endif
 			lf.lfWeight = FW_BOLD;
 			lf.lfQuality = afxIsWin95() ? NONANTIALIASED_QUALITY : ANTIALIASED_QUALITY;
 			_tcscpy(lf.lfFaceName, _T("Arial"));

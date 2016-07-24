@@ -1,7 +1,8 @@
-// $Id: field_integer.cpp,v 1.21 2002/07/02 22:12:13 t1mpy Exp $
+// $Id: field_integer.cpp,v 1.22 2002/09/13 15:38:08 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
+// Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
 
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Library General Public License as published by
@@ -36,7 +37,7 @@ using namespace dami;
  ** \code
  **   myFrame.GetField(ID3FN_PICTURETYPE)->= 0x0B;
  ** \endcode
- ** 
+ **
  ** \param val The data to assign to this field
  ** \sa Set(uint32)
  **/
@@ -54,7 +55,7 @@ void ID3_FieldImpl::SetInteger(uint32 val)
   if (this->GetType() == ID3FTY_INTEGER)
   {
     this->Clear();
-    
+
     _integer = val;
     _changed = true;
   }
@@ -62,7 +63,7 @@ void ID3_FieldImpl::SetInteger(uint32 val)
 
 /** \fn uint32 ID3_Field::Get() const
  ** \brief Returns the value of the integer field.
- ** 
+ **
  ** \code
  **   uint32 picType = myFrame.GetField(ID3FN_PICTURETYPE)->Get();
  ** \endcode

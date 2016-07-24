@@ -45,19 +45,20 @@ CString MD5Sum::Calculate(const CString& sSource)
 CString MD5Sum::Calculate(const unsigned char* pachSource, uint32 nLen)
 {
 	MD5_CTX context;
+	static const char *hexDigits = "0123456789abcdef";
+	char m_str[2*16+1];
 
 	MD5Init(&context);
 	MD5Update(&context, pachSource, nLen);
 	MD5Final(m_rawHash, &context);
 
-	m_sHash.Empty();
-	for (int i = 0; i < 16; i++)
+	for (int i = 0; i < 16; ++i)
 	{
-		CString sT;
-		sT.Format(_T("%02x"), m_rawHash[i]);
-		m_sHash += sT;
+		m_str[i * 2] = hexDigits[(m_rawHash[i] >> 4) & 0xF];
+		m_str[i * 2 + 1] = hexDigits[m_rawHash[i] & 0xF];
 	}
-
+	m_str[32] = '\0';
+	m_sHash = CString(m_str);
 	return m_sHash;
 }
 

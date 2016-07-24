@@ -31,7 +31,6 @@
 // that you have found/implemented and I will fix/incorporate them into this
 // file.
 #include "stdafx.h"
-#include <math.h>
 #include "ColourPopup.h"
 #include "UserMsgs.h"
 
@@ -101,6 +100,7 @@ ColourTableEntry CColourPopup::m_crColours[] =
 // CColourPopup
 
 CColourPopup::CColourPopup()
+	: colourArrayPassed(NULL)
 {
 	Initialise();
 }

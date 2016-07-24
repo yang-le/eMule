@@ -29,7 +29,7 @@ class CChatWnd : public CResizableDialog
 	DECLARE_DYNAMIC(CChatWnd)
 
 public:
-	CChatWnd(CWnd* pParent = NULL);   // standard constructor
+	explicit CChatWnd(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CChatWnd();
 
 // Dialog Data
@@ -61,8 +61,8 @@ protected:
 	void DoResize(int delta);
 	void ShowFriendMsgDetails(CFriend* pFriend);
 
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support	
-	virtual BOOL OnInitDialog(); 
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	virtual BOOL OnInitDialog();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 	virtual LRESULT DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam);

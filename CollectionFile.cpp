@@ -17,7 +17,6 @@
 
 #include "StdAfx.h"
 #include "collectionfile.h"
-#include "OtherFunctions.h"
 #include "Packets.h"
 #include "Ed2kLink.h"
 #include "resource.h"
@@ -44,11 +43,15 @@ CCollectionFile::CCollectionFile(CFileDataIO* in_data)
 
 	for (UINT i = 0; i < tagcount; i++)
 	{
-		CTag* toadd = new CTag(in_data, true);
-		if (toadd)
-			taglist.Add(toadd);
+		CTag* toadd;
+		try {
+			toadd = new CTag(in_data, true);
+		} catch (...) {
+			continue;
+		}
+		taglist.Add(toadd);
 	}
-	
+
 	CTag* pTagHash = GetTag(FT_FILEHASH);
 	if(pTagHash)
 		SetFileHash(pTagHash->GetHash());
@@ -59,12 +62,12 @@ CCollectionFile::CCollectionFile(CFileDataIO* in_data)
 	if (pTagHash != NULL && pTagHash->IsStr())
 	{
 		CAICHHash hash;
-		if (DecodeBase32(pTagHash->GetStr(), hash) == (UINT)CAICHHash::GetHashSize())
+		if (DecodeBase32(pTagHash->GetStr(), hash) == CAICHHash::GetHashSize())
 			m_FileIdentifier.SetAICHHash(hash);
 		else
 			ASSERT( false );
 	}
-	
+
 	// here we have two choices
 	//	- if the server/client sent us a filetype, we could use it (though it could be wrong)
 	//	- we always trust our filetype list and determine the filetype by the extension of the file
@@ -75,23 +78,23 @@ CCollectionFile::CCollectionFile(CFileDataIO* in_data)
 	// but, in no case, we will use the receive file type when adding this search result to the download queue, to avoid
 	// that we are using 'wrong' file types in part files. (this has to be handled when creating the part files)
 	const CString& rstrFileType = GetStrTagValue(FT_FILETYPE);
-	SetFileName(GetStrTagValue(FT_FILENAME), false, rstrFileType.IsEmpty());
-	SetFileSize(GetInt64TagValue(FT_FILESIZE));
+	CCollectionFile::SetFileName(GetStrTagValue(FT_FILENAME), false, rstrFileType.IsEmpty());
+	CCollectionFile::SetFileSize(GetInt64TagValue(FT_FILESIZE));
 	if (!rstrFileType.IsEmpty())
 	{
 		if (_tcscmp(rstrFileType, _T(ED2KFTSTR_PROGRAM))==0)
 		{
 			CString strDetailFileType = GetFileTypeByName(GetFileName());
 			if (!strDetailFileType.IsEmpty())
-				SetFileType(strDetailFileType);
+				CCollectionFile::SetFileType(strDetailFileType);
 			else
-				SetFileType(rstrFileType);
+				CCollectionFile::SetFileType(rstrFileType);
 		}
 		else
-			SetFileType(rstrFileType);
+			CCollectionFile::SetFileType(rstrFileType);
 	}
 
-	if(GetFileSize() == (uint64)0 || !GetFileName().Compare(_T("")))
+	if((uint64)GetFileSize() == 0ull || GetFileName().IsEmpty())
 		ASSERT(0);
 }
 
@@ -112,14 +115,14 @@ CCollectionFile::CCollectionFile(CAbstractFile* pAbstractFile) : CAbstractFile(p
 	if(pAbstractFile->GetFileRating())
 		taglist.Add(new CTag(FT_FILERATING, pAbstractFile->GetFileRating()));
 
-	UpdateFileRatingCommentAvail();
+	CCollectionFile::UpdateFileRatingCommentAvail();
 }
 
-bool CCollectionFile::InitFromLink(CString sLink)
+bool CCollectionFile::InitFromLink(const CString& sLink)
 {
 	CED2KLink* pLink = NULL;
 	CED2KFileLink* pFileLink = NULL;
-	try 
+	try
 	{
 		pLink = CED2KLink::CreateLinkFromUrl(sLink);
 		if(!pLink)
@@ -127,12 +130,12 @@ bool CCollectionFile::InitFromLink(CString sLink)
 		pFileLink = pLink->GetFileLink();
 		if (!pFileLink)
 			throw GetResString(IDS_ERR_NOTAFILELINK);
-	} 
-	catch (CString error) 
+	}
+	catch (const CString& error)
 	{
 		CString strBuffer;
-		strBuffer.Format(GetResString(IDS_ERR_INVALIDLINK),error);
-		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_LINKERROR), strBuffer);
+		strBuffer.Format(GetResString(IDS_ERR_INVALIDLINK), (LPCTSTR)error);
+		LogError(LOG_STATUSBAR, (LPCTSTR)GetResString(IDS_ERR_LINKERROR), (LPCTSTR)strBuffer);
 		return false;
 	}
 
@@ -178,7 +181,7 @@ void CCollectionFile::UpdateFileRatingCommentAvail(bool /*bForceUpdate*/)
 
 	for(POSITION pos = m_kadNotes.GetHeadPosition(); pos != NULL; )
 	{
-		Kademlia::CEntry* entry = m_kadNotes.GetNext(pos);
+		const Kademlia::CEntry* entry = m_kadNotes.GetNext(pos);
 		if (!m_bHasComment && !entry->GetStrTagValue(TAG_DESCRIPTION).IsEmpty())
 			m_bHasComment = true;
 		UINT rating = (UINT)entry->GetIntTagValue(TAG_FILERATING);

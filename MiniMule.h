@@ -26,7 +26,7 @@ class CMiniMule : public CDHtmlDialog
 	DECLARE_DYNCREATE(CMiniMule)
 
 public:
-	CMiniMule(CWnd* pParent = NULL);   // standard constructor
+	explicit CMiniMule(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CMiniMule();
 
 // Dialog Data
@@ -63,7 +63,7 @@ protected:
 	virtual BOOL OnInitDialog();
 	virtual BOOL CreateControlSite(COleControlContainer* pContainer, COleControlSite** ppSite, UINT nID, REFCLSID clsid);
 	virtual void PostNcDestroy();
-	
+
 	virtual void OnBeforeNavigate(LPDISPATCH pDisp, LPCTSTR szUrl);
 	virtual void OnNavigateComplete(LPDISPATCH pDisp, LPCTSTR szUrl);
 	virtual void OnDocumentComplete(LPDISPATCH pDisp, LPCTSTR szUrl);

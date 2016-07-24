@@ -52,6 +52,7 @@ BEGIN_MESSAGE_MAP(CEditDelayed, CEdit)
 END_MESSAGE_MAP()
 
 CEditDelayed::CEditDelayed()
+	: m_hCursor(0), m_nCurrentColumnIdx(0), m_pctrlColumnHeader(NULL)
 {
 	m_uTimerResult = 0;
 	m_dwLastModified = 0;
@@ -180,7 +181,7 @@ void CEditDelayed::OnInit(CHeaderCtrl* pColumnHeader, CArray<int, int>* paIgnore
 		pImageList->Add(CTempIconLoader(_T("KADNODESEARCH")));
 	m_iwColumn.SetImageList(pImageList);
 	m_iwColumn.Create(_T(""), WS_CHILD | WS_VISIBLE, CRect(0, 0, ICON_LEFTSPACE, rectWindow.bottom), this, 1);
-	
+
 	pImageList = new CImageList();
 	pImageList->Create(16, 16, theApp.m_iDfltImageListColorFlags | ILC_MASK, 0, 1);
 	pImageList->Add(CTempIconLoader(_T("FILTERCLEAR1")));
@@ -196,7 +197,7 @@ void CEditDelayed::OnInit(CHeaderCtrl* pColumnHeader, CArray<int, int>* paIgnore
 void CEditDelayed::SetEditRect(bool bUpdateResetButtonPos, bool bUpdateColumnButton)
 {
 	ASSERT( GetStyle() & ES_MULTILINE );
-	
+
 	CRect editRect;
 	GetClientRect(&editRect);
 
@@ -205,7 +206,7 @@ void CEditDelayed::SetEditRect(bool bUpdateResetButtonPos, bool bUpdateColumnBut
 	if (m_bShowResetButton)
 		editRect.right -= 20;
 	SetRect(&editRect);
-	
+
 	if (m_bShowResetButton && bUpdateResetButtonPos)
 		m_iwReset.MoveWindow(editRect.right + 1, 0, 16, editRect.bottom);
 	if (bUpdateColumnButton)
@@ -228,18 +229,16 @@ void CEditDelayed::OnLButtonDown(UINT nFlags, CPoint point)
 			hdi.pszText = szBuffer;
 			hdi.cchTextMax = _countof(szBuffer);
 			int nCount = m_pctrlColumnHeader->GetItemCount();
-			int nIdx;
 			for (int i = 0; i < nCount ;i++) {
-				nIdx = m_pctrlColumnHeader->OrderToIndex(i);
+				int nIdx = m_pctrlColumnHeader->OrderToIndex(i);
 				m_pctrlColumnHeader->GetItem(nIdx, &hdi);
 				szBuffer[_countof(szBuffer) - 1] = _T('\0');
 				bool bIgnored = false;
-				for (int i = 0; i < m_aIgnoredColums.GetCount(); i++){
-					if (m_aIgnoredColums[i] == nIdx){
+				for (int j = 0; j < m_aIgnoredColums.GetCount(); ++j)
+					if (m_aIgnoredColums[j] == nIdx) {
 						bIgnored = true;
 						break;
 					}
-				}
 				if (hdi.cxy > 0 && !bIgnored) // ignore hidden columns
 					menu.AppendMenu(MF_STRING | ((m_nCurrentColumnIdx == nIdx) ? MF_CHECKED : MF_UNCHECKED), MP_FILTERCOLUMNS + nIdx, hdi.pszText);
 			}
@@ -271,7 +270,7 @@ void CEditDelayed::OnLButtonUp(UINT nFlags, CPoint point)
 	{
 		m_iwReset.ShowIcon(0);
 		ReleaseCapture();
-		
+
 		CRect editRect;
 		GetClientRect(&editRect);
 		if (m_pointMousePos.x > editRect.right - ICON_LEFTSPACE)

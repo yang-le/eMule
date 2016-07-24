@@ -25,10 +25,11 @@
 #include "SplitterControl.h"
 
 // id3lib
+#pragma warning(push)
 #pragma warning(disable:4100) // unreferenced formal parameter
 #include <id3/tag.h>
 #include <id3/misc_support.h>
-#pragma warning(default:4100) // unreferenced formal parameter
+#pragma warning(pop)
 
 // MediaInfoDLL
 /** @brief Kinds of Stream */
@@ -86,6 +87,7 @@ class CGetMediaInfoThread : public CWinThread
 
 protected:
 	CGetMediaInfoThread()
+		: m_hFont(NULL)
 	{
 		m_hWndOwner = NULL;
 	}
@@ -308,7 +310,7 @@ public:
 		return _T("");
 	}
 
-	int Count_Get(void* Handle, stream_t_C StreamKind, int StreamNumber)
+	int Count_Get(void* Handle, stream_t_C StreamKind, int StreamNumber) const
 	{
 		if (m_pfnMediaInfo4_Get)
 			return (*m_pfnMediaInfo4_Count_Get)(Handle, StreamKind, StreamNumber);
@@ -391,7 +393,7 @@ BOOL CFileInfoDialog::OnInitDialog()
 		GetDlgItem(IDC_FILESIZE)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_FULL_FILE_INFO)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_FD_XI1)->ShowWindow(SW_HIDE);
-	
+
 		CRect rc;
 		GetDlgItem(IDC_FILESIZE)->GetWindowRect(rc);
 		int nDelta = rc.Height();
@@ -427,33 +429,26 @@ BOOL CFileInfoDialog::OnInitDialog()
 
 	// General Group
 	AddAnchor(IDC_GENERAL, TOP_LEFT, TOP_RIGHT);
-	AddAnchor(IDC_LENGTH, TOP_LEFT, TOP_RIGHT);
-	AddAnchor(IDC_FORMAT, TOP_LEFT, TOP_RIGHT);
 
 	// Video Group
 	AddAnchor(IDC_FD_XI3, TOP_LEFT, TOP_CENTER);
-	AddAnchor(IDC_VCODEC, TOP_LEFT, TOP_CENTER);
-	AddAnchor(IDC_VBITRATE, TOP_LEFT, TOP_CENTER);
-	AddAnchor(IDC_VWIDTH, TOP_LEFT, TOP_CENTER);
-	AddAnchor(IDC_VASPECT, TOP_LEFT, TOP_CENTER);
-	AddAnchor(IDC_VFPS, TOP_LEFT, TOP_CENTER);
 
 	// Audio Group - Labels
+	AddAnchor(IDC_FD_XI4, TOP_CENTER, TOP_RIGHT);
 	AddAnchor(IDC_FD_XI6, TOP_CENTER, TOP_CENTER);
 	AddAnchor(IDC_FD_XI8, TOP_CENTER, TOP_CENTER);
 	AddAnchor(IDC_FD_XI10, TOP_CENTER, TOP_CENTER);
 	AddAnchor(IDC_FD_XI12, TOP_CENTER, TOP_CENTER);
 	AddAnchor(IDC_STATIC_LANGUAGE, TOP_CENTER, TOP_CENTER);
 
-	// Audio Group - Frame and Values
-	AddAnchor(IDC_FD_XI4, TOP_CENTER, TOP_RIGHT);
+	// Audio Group - Values
 	AddAnchor(IDC_ACODEC, TOP_CENTER, TOP_RIGHT);
 	AddAnchor(IDC_ABITRATE, TOP_CENTER, TOP_RIGHT);
 	AddAnchor(IDC_ACHANNEL, TOP_CENTER, TOP_RIGHT);
 	AddAnchor(IDC_ASAMPLERATE, TOP_CENTER, TOP_RIGHT);
 	AddAnchor(IDC_ALANGUAGE, TOP_CENTER, TOP_RIGHT);
 
-
+	AddAllOtherAnchors();
 
 	CResizablePage::UpdateData(FALSE);
 	Localize();
@@ -583,7 +578,7 @@ int CGetMediaInfoThread::Run()
 	//	delete pThreadRes;
 
 	// Usage of 'SendMessage': Using 'SendMessage' seems to be dangerous because of potential
-	// deadlocks. Basically it depends on what the target thread/window is currently doing 
+	// deadlocks. Basically it depends on what the target thread/window is currently doing
 	// whether there is a risk for a deadlock. However, even with extensive stress testing
 	// there does not show any problem. The worse thing which can happen, is that we call
 	// 'SendMessage', then the target window gets destroyed (while we are still waiting in
@@ -757,18 +752,18 @@ LRESULT CFileInfoDialog::OnMediaInfoResult(WPARAM, LPARAM lParam)
 	{
 		if (!buffer.IsEmpty())
 			buffer += _T("; MIME type=");
-		buffer.AppendFormat(_T("%s"), ami.strMimeType);
+		buffer.AppendFormat(_T("%s"), (LPCTSTR)ami.strMimeType);
 	}
 	SetDlgItemText(IDC_FORMAT, buffer);
 
 	if (uTotalFileSize)
-		SetDlgItemText(IDC_FILESIZE, CastItoXBytes(uTotalFileSize, false, false));
-	
+		SetDlgItemText(IDC_FILESIZE, (LPCTSTR)CastItoXBytes(uTotalFileSize, false, false));
+
 	if (ami.fFileLengthSec) {
 		CString strLength(CastSecondsToHM((time_t)ami.fFileLengthSec));
 		if (ami.bFileLengthEstimated)
 			strLength += _T(" (") + GetResString(IDS_ESTIMATED)+ _T(")");
-		SetDlgItemText(IDC_LENGTH, strLength);
+		SetDlgItemText(IDC_LENGTH, (LPCTSTR)strLength);
 	}
 
 	if (ami.iVideoStreams)
@@ -788,7 +783,7 @@ LRESULT CFileInfoDialog::OnMediaInfoResult(WPARAM, LPARAM lParam)
 			if (ami.video.dwBitRate == (DWORD)-1)
 				buffer = _T("Variable");
 			else
-				buffer.Format(_T("%u %s"), (ami.video.dwBitRate + 500) / 1000, GetResString(IDS_KBITSSEC));
+				buffer.Format(_T("%u %s"), (ami.video.dwBitRate + 500) / 1000, (LPCTSTR)GetResString(IDS_KBITSSEC));
 			SetDlgItemText(IDC_VBITRATE, buffer);
 		}
 		else
@@ -797,7 +792,7 @@ LRESULT CFileInfoDialog::OnMediaInfoResult(WPARAM, LPARAM lParam)
 		buffer.Empty();
 		if (!bDiffVideoWidth && ami.video.bmiHeader.biWidth && !bDiffVideoHeight && ami.video.bmiHeader.biHeight)
 		{
-			buffer.AppendFormat(_T("%u x %u"), abs(ami.video.bmiHeader.biWidth), abs(ami.video.bmiHeader.biHeight));
+			buffer.AppendFormat(_T("%i x %i"), abs(ami.video.bmiHeader.biWidth), abs(ami.video.bmiHeader.biHeight));
 			SetDlgItemText(IDC_VWIDTH, buffer);
 		}
 		else
@@ -808,7 +803,7 @@ LRESULT CFileInfoDialog::OnMediaInfoResult(WPARAM, LPARAM lParam)
 			buffer.Format(_T("%.3f"), ami.fVideoAspectRatio);
 			CString strAR = GetKnownAspectRatioDisplayString((float)ami.fVideoAspectRatio);
 			if (!strAR.IsEmpty())
-				buffer.AppendFormat(_T("  (%s)"), strAR);
+				buffer.AppendFormat(_T("  (%s)"), (LPCTSTR)strAR);
 			SetDlgItemText(IDC_VASPECT, buffer);
 		}
 		else
@@ -869,7 +864,7 @@ LRESULT CFileInfoDialog::OnMediaInfoResult(WPARAM, LPARAM lParam)
 			if (ami.audio.nAvgBytesPerSec == (DWORD)-1)
 				buffer = _T("Variable");
 			else
-				buffer.Format(_T("%u %s"), (UINT)((ami.audio.nAvgBytesPerSec * 8) / 1000.0 + 0.5), GetResString(IDS_KBITSSEC));
+				buffer.Format(_T("%u %s"), (UINT)((ami.audio.nAvgBytesPerSec * 8) / 1000.0 + 0.5), (LPCTSTR)GetResString(IDS_KBITSSEC));
 			SetDlgItemText(IDC_ABITRATE, buffer);
 		}
 		else
@@ -902,11 +897,11 @@ void CGetMediaInfoThread::WarnAboutWrongFileExtension(SMediaInfo* mi, LPCTSTR ps
 
 wchar_t *ID3_GetStringW(const ID3_Frame *frame, ID3_FieldID fldName)
 {
-	// ID3LIB BUG: Use the Unicode support of id3lib only if the tag is already 
-	// in Unicode format, thus avoiding couple of bugs with character conversion in 
+	// ID3LIB BUG: Use the Unicode support of id3lib only if the tag is already
+	// in Unicode format, thus avoiding couple of bugs with character conversion in
 	// id3lib to get triggered.
 	ID3_Field* fld;
-	if (NULL != frame && NULL != (fld = frame->GetField(fldName)) 
+	if (NULL != frame && NULL != (fld = frame->GetField(fldName))
 		&& fld->GetEncoding() == ID3TE_UTF16)
 	{
 		unicode_t *text = NULL;
@@ -950,7 +945,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 			if (!mi->strInfo.IsEmpty())
 				mi->strInfo << _T("\r\n");
 			mi->strInfo.SetSelectionCharFormat(mi->strInfo.m_cfRed);
-			mi->strInfo.AppendFormat(GetResString(IDS_MEDIAINFO_DRMWARNING), pFile->GetFileName());
+			mi->strInfo.AppendFormat(GetResString(IDS_MEDIAINFO_DRMWARNING), (LPCTSTR)pFile->GetFileName());
 			mi->strInfo.SetSelectionCharFormat(mi->strInfo.m_cfDef);
 		}
 	}
@@ -1002,11 +997,11 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 	////////////////////////////////////////////////////////////////////////////
 	// Check for RM file
 	//
-	bool bIsRM = false;
 	if (theApp.GetProfileInt(_T("eMule"), _T("MediaInfo_RM"), 1))
 	{
 		try
 		{
+			bool bIsRM = false;
 			if (GetRMHeaders(pFile->GetFilePath(), mi, bIsRM, true))
 			{
 				if (bIsRM && (_tcscmp(szExt, _T(".rm")) != 0 && _tcscmp(szExt, _T(".rmvb")) != 0 && _tcscmp(szExt, _T(".ra")) != 0))
@@ -1027,17 +1022,17 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 	// Check for WM file
 	//
 #ifdef HAVE_WMSDK_H
-	bool bIsWM = false;
-	if (theApp.GetProfileInt(_T("eMule"), _T("MediaInfo_WM"), 1))
+ 	if (theApp.GetProfileInt(_T("eMule"), _T("MediaInfo_WM"), 1))
 	{
 		try
 		{
+			bool bIsWM = false;
 			if (GetWMHeaders(pFile->GetFilePath(), mi, bIsWM, true))
 			{
-				if (bIsWM && (   _tcscmp(szExt, _T(".asf")) != 0 
-							  && _tcscmp(szExt, _T(".wm")) != 0 
-							  && _tcscmp(szExt, _T(".wma")) != 0 
-							  && _tcscmp(szExt, _T(".wmv")) != 0 
+				if (bIsWM && (   _tcscmp(szExt, _T(".asf")) != 0
+							  && _tcscmp(szExt, _T(".wm")) != 0
+							  && _tcscmp(szExt, _T(".wma")) != 0
+							  && _tcscmp(szExt, _T(".wmv")) != 0
 							  && _tcscmp(szExt, _T(".dvr-ms")) != 0))
 					WarnAboutWrongFileExtension(mi, pFile->GetFileName(), _T("asf wm wma wmv dvr-ms"));
 				return true;
@@ -1064,7 +1059,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 			// ID3LIB BUG: If there are ID3v2 _and_ ID3v1 tags available, id3lib
 			// destroys (actually corrupts) the Unicode strings from ID3v2 tags due to
 			// converting Unicode to ASCII and then convertion back from ASCII to Unicode.
-			// To prevent this, we force the reading of ID3v2 tags only, in case there are 
+			// To prevent this, we force the reading of ID3v2 tags only, in case there are
 			// also ID3v1 tags available.
 			ID3_Tag myTag;
 			CStringA strFilePathA(pFile->GetFilePath());
@@ -1122,12 +1117,14 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 				if (!bSingleFile)
 				{
 					mi->strInfo << _T("   ") << GetResString(IDS_CODEC) << _T(":\t") << mi->strAudioFormat << _T("\n");
-					mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << ((mp3info->vbr_bitrate ? mp3info->vbr_bitrate : mp3info->bitrate) + 500) / 1000 << _T(" ") << GetResString(IDS_KBITSSEC) << _T("\n");
+//no vbr bitrate					mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << ((mp3info->vbr_bitrate ? mp3info->vbr_bitrate : mp3info->bitrate) + 500) / 1000 << _T(" ") << GetResString(IDS_KBITSSEC) << _T("\n");
+					mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << (mp3info->bitrate + 500) / 1000 << _T(" ") << GetResString(IDS_KBITSSEC) << _T("\n");
 					mi->strInfo << _T("   ") << GetResString(IDS_SAMPLERATE) << _T(":\t") << mp3info->frequency / 1000.0 << _T(" kHz\n");
 				}
 
 				mi->iAudioStreams++;
-				mi->audio.nAvgBytesPerSec = mp3info->vbr_bitrate ? mp3info->vbr_bitrate/8 : mp3info->bitrate/8;
+//no vbr bitrate				mi->audio.nAvgBytesPerSec = mp3info->vbr_bitrate ? mp3info->vbr_bitrate/8 : mp3info->bitrate/8;
+				mi->audio.nAvgBytesPerSec = mp3info->bitrate/8;
 				mi->audio.nSamplesPerSec = mp3info->frequency;
 
 				if (!bSingleFile)
@@ -1282,10 +1279,8 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 						CString strDesc(sDesc);
 						strDesc.Trim();
 						if (!strDesc.IsEmpty())
-							strFidInfo << _T("(") << strDesc << _T(")");
+							strFidInfo << _T("(") << strDesc << _T("): ");
 
-						if (!strDesc.IsEmpty())
-							strFidInfo << _T(": ");
 						strFidInfo << strText;
 					}
 					delete[] sText;
@@ -1352,10 +1347,8 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 						CString strDesc(sDesc);
 						strDesc.Trim();
 						if (!strDesc.IsEmpty())
-							strFidInfo << _T("(") << strDesc << _T(")");
+							strFidInfo << _T("(") << strDesc << _T("): ");
 
-						if (!strDesc.IsEmpty())
-							strFidInfo << _T(": ");
 						strFidInfo << strURL;
 					}
 					delete[] sURL;
@@ -1534,13 +1527,13 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 	bool bGiveMediaInfoLibHint = false;
 	// check again for AV type; MediaDet object has trouble with RAR files (?)
 	EED2KFileType eFileType = GetED2KFileTypeID(pFile->GetFileName());
-	if (thePrefs.GetInspectAllFileTypes() 
+	if (thePrefs.GetInspectAllFileTypes()
 		|| (eFileType == ED2KFT_AUDIO || eFileType == ED2KFT_VIDEO))
 	{
 		/////////////////////////////////////////////////////////////////////////////
 		// Try MediaInfo lib
 		//
-		// Use MediaInfo only for non AVI files.. Reading potentially broken AVI files 
+		// Use MediaInfo only for non AVI files.. Reading potentially broken AVI files
 		// with the VfW API (as MediaInfo is doing) is rather dangerous.
 		//
 		if (!bIsAVI)
@@ -1698,8 +1691,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 								mi->strInfo.SetSelectionCharFormat(mi->strInfo.m_cfBold);
 								mi->strInfo << GetResString(IDS_VIDEO) << _T(" #") << s+1 << _T("\n");
 
-								CString strCodec = theMediaInfoDLL.Get(Handle, Stream_Video, s, _T("Codec"), Info_Text, Info_Name);
-								CString strVideoFormat = strCodec;
+								CString strVideoFormat = theMediaInfoDLL.Get(Handle, Stream_Video, s, _T("Codec"), Info_Text, Info_Name);
 								str = theMediaInfoDLL.Get(Handle, Stream_Video, s, _T("Codec_String"), Info_Text, Info_Name);
 								if (!str.IsEmpty() && str.Compare(strVideoFormat) != 0)
 									strVideoFormat += _T(" (") + str + _T(")");
@@ -1721,7 +1713,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 											uAllBitrates = (UINT)-1;
 										}
 										else {
-											strBitrate.Format(_T("%u %s"), (iBitrate + 500) / 1000, GetResString(IDS_KBITSSEC));
+											strBitrate.Format(_T("%u %s"), (iBitrate + 500u) / 1000, (LPCTSTR)GetResString(IDS_KBITSSEC));
 											if (uAllBitrates != (UINT)-1)
 												uAllBitrates += iBitrate;
 										}
@@ -1834,7 +1826,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 											uAllBitrates = (UINT)-1;
 										}
 										else {
-											strBitrate.Format(_T("%u %s"), (iBitrate + 500) / 1000, GetResString(IDS_KBITSSEC));
+											strBitrate.Format(_T("%u %s"), (iBitrate + 500u) / 1000, (LPCTSTR)GetResString(IDS_KBITSSEC));
 											if (uAllBitrates != (UINT)-1)
 												uAllBitrates += iBitrate;
 										}
@@ -2000,7 +1992,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 		// Avoid processing of some file types which are known to crash due to bugged DirectShow filters.
 #ifdef HAVE_QEDIT_H
 		if (theApp.GetProfileInt(_T("eMule"), _T("MediaInfo_MediaDet"), 1)
-			&& (   thePrefs.GetInspectAllFileTypes() 
+			&& (   thePrefs.GetInspectAllFileTypes()
 			    || (_tcscmp(szExt, _T(".ogm"))!=0 && _tcscmp(szExt, _T(".ogg"))!=0 && _tcscmp(szExt, _T(".mkv"))!=0)))
 		{
 			try
@@ -2114,9 +2106,9 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 
 													// Try to determine if the stream is VBR.
 													//
-													// MediaDet seems to only look at the AVI stream headers to get a hint 
+													// MediaDet seems to only look at the AVI stream headers to get a hint
 													// about CBR/VBR. If the stream headers are looking "odd", MediaDet
-													// reports "VBR". Typically, files muxed with Nandub get identified as 
+													// reports "VBR". Typically, files muxed with Nandub get identified as
 													// VBR (just because of the stream headers) even if they are CBR. Also,
 													// real VBR MP3 files still get reported as CBR. Though, basically it's
 													// better to report VBR even if it's CBR. The other way round is even
@@ -2139,7 +2131,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 															if (wfx->nAvgBytesPerSec == (DWORD)-1)
 																strBitrate = _T("Variable");
 															else
-																strBitrate.Format(_T("%u %s"), (UINT)(((wfx->nAvgBytesPerSec * 8.0) + 500.0) / 1000.0), GetResString(IDS_KBITSSEC));
+																strBitrate.Format(_T("%u %s"), (UINT)(((wfx->nAvgBytesPerSec * 8.0) + 500.0) / 1000.0), (LPCTSTR)GetResString(IDS_KBITSSEC));
 															mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << strBitrate << _T("\n");
 														}
 
@@ -2159,7 +2151,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 
 														if (wfx->nSamplesPerSec)
 															mi->strInfo << _T("   ") << GetResString(IDS_SAMPLERATE) << _T(":\t") << wfx->nSamplesPerSec / 1000.0 << _T(" kHz\n");
-														
+
 														if (wfx->wBitsPerSample)
 															mi->strInfo << _T("   Bit/sample:\t") << wfx->wBitsPerSample << _T(" Bit\n");
 													}
@@ -2222,7 +2214,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 						}
 					}
 					else{
-						TRACE(_T("Failed to open \"%s\" - %s\n"), pFile->GetFilePath(), GetErrorMessage(hr, 1));
+						TRACE(_T("Failed to open \"%s\" - %s\n"), (LPCTSTR)pFile->GetFilePath(), (LPCTSTR)GetErrorMessage(hr, 1));
 					}
 				}
 			}
@@ -2245,7 +2237,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 		PathRemoveFileSpec(strInstFolder.GetBuffer(strInstFolder.GetLength()));
 		strInstFolder.ReleaseBuffer();
 		CString strHint;
-		strHint.Format(GetResString(IDS_MEDIAINFO_DLLMISSING), strInstFolder);
+		strHint.Format(GetResString(IDS_MEDIAINFO_DLLMISSING), (LPCTSTR)strInstFolder);
 		if (!mi->strInfo.IsEmpty())
 			mi->strInfo << _T("\r\n");
 		mi->strInfo << strHint;

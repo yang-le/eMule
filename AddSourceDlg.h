@@ -38,7 +38,7 @@ class CAddSourceDlg : public CResizableDialog
 	DECLARE_DYNAMIC(CAddSourceDlg)
 
 public:
-	CAddSourceDlg(CWnd* pParent = NULL);   // standard constructor
+	explicit CAddSourceDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CAddSourceDlg();
 
 	void SetFile( CPartFile* pFile );

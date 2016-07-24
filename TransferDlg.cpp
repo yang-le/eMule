@@ -61,7 +61,7 @@ BOOL CTransferDlg::Create(CWnd* pParent)
 {
 	// *) The initial size of that frame window must not exceed the window size of the
 	//    dialog resource template of the client window (the search results window).
-	// *) The dialog resource template's window size (of the search results window) must not 
+	// *) The dialog resource template's window size (of the search results window) must not
 	//	  exceed the minimum client area of the frame window.
 	// Otherwise we may get scrollbars in the search results window
 	CRect rc(0, 0, 50, 50);
@@ -82,8 +82,8 @@ int CTransferDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_pwndTransfer->ModifyStyle(WS_BORDER, 0);
 	m_pwndTransfer->ModifyStyleEx(WS_EX_CLIENTEDGE, WS_EX_STATICEDGE);
 
-	m_pwndToolbar->Create(this, IDD_DOWNLOAD_TOOLBARS, 
-						 WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_SIZE_FIXED | CBRS_SIZE_DYNAMIC | CBRS_GRIPPER, 
+	m_pwndToolbar->Create(this, IDD_DOWNLOAD_TOOLBARS,
+						 WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_SIZE_FIXED | CBRS_SIZE_DYNAMIC | CBRS_GRIPPER,
 						 IDBAR_DOWNLOAD_TOOLBAR);
 	ASSERT( m_pwndToolbar->GetStyle() & WS_CLIPSIBLINGS );
 	ASSERT( m_pwndToolbar->GetStyle() & WS_CLIPCHILDREN );
@@ -245,7 +245,7 @@ void CTransferDlg::UpdateListCount(EWnd2 listindex, int iCount)
 	m_pwndTransfer->UpdateListCount((CTransferWnd::EWnd2)listindex, iCount);
 }
 
-int	CTransferDlg::AddCategory(CString newtitle,CString newincoming,CString newcomment,CString newautocat,bool addTab)
+int	CTransferDlg::AddCategory(const CString& newtitle, const CString& newincoming, const CString& newcomment, const CString& newautocat, bool addTab)
 {
 	return m_pwndTransfer->AddCategory(newtitle, newincoming, newcomment, newautocat, addTab);
 }
@@ -276,4 +276,3 @@ CDownloadClientsCtrl* CTransferDlg::GetDownloadClientsList()
 	return &(m_pwndTransfer->downloadclientsctrl);
 }
 //////////////////////////////////////////////////////////////////
-

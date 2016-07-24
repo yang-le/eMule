@@ -58,7 +58,7 @@ BEGIN_MESSAGE_MAP(CPPgWebServer, CPropertyPage)
 END_MESSAGE_MAP()
 
 CPPgWebServer::CPPgWebServer()
-	: CPropertyPage(CPPgWebServer::IDD)
+	: CPropertyPage(CPPgWebServer::IDD), m_bModified(false)
 {
 	bCreated = false;
 	m_icoBrowse = NULL;
@@ -128,7 +128,7 @@ void CPPgWebServer::LoadSettings(void)
 }
 
 BOOL CPPgWebServer::OnApply()
-{	
+{
 	if(m_bModified)
 	{
 		CString sBuf;
@@ -137,7 +137,7 @@ BOOL CPPgWebServer::OnApply()
 		GetDlgItem(IDC_TMPLPATH)->GetWindowText(sBuf);
 		if ( IsDlgButtonChecked(IDC_WSENABLED) && !PathFileExists(sBuf)) {
 			CString buffer;
-			buffer.Format(GetResString(IDS_WEB_ERR_CANTLOAD),sBuf);
+			buffer.Format(GetResString(IDS_WEB_ERR_CANTLOAD), (LPCTSTR)sBuf);
 			AfxMessageBox(buffer,MB_OK);
 			return FALSE;
 		}
@@ -150,7 +150,7 @@ BOOL CPPgWebServer::OnApply()
 		GetDlgItem(IDC_WSPASS)->GetWindowText(sBuf);
 		if(sBuf != HIDDEN_PASSWORD)
 			thePrefs.SetWSPass(sBuf);
-		
+
 		GetDlgItem(IDC_WSPASSLOW)->GetWindowText(sBuf);
 		if(sBuf != HIDDEN_PASSWORD)
 			thePrefs.SetWSLowPass(sBuf);
@@ -169,7 +169,7 @@ BOOL CPPgWebServer::OnApply()
 		thePrefs.SetWebUseGzip(IsDlgButtonChecked(IDC_WS_GZIP)!=0);
 		theApp.webserver->StartServer();
 		thePrefs.m_bAllowAdminHiLevFunc= (IsDlgButtonChecked(IDC_WS_ALLOWHILEVFUNC)!=0);
-		
+
 		if (IsDlgButtonChecked(IDC_WSUPNP))
 		{
 			ASSERT( thePrefs.IsUPnPEnabled() );
@@ -219,8 +219,8 @@ void CPPgWebServer::Localize(void)
 void CPPgWebServer::OnEnChangeWSEnabled()
 {
 	UINT bIsWIEnabled=IsDlgButtonChecked(IDC_WSENABLED);
-	GetDlgItem(IDC_WSPASS)->EnableWindow(bIsWIEnabled);	
-	GetDlgItem(IDC_WSPORT)->EnableWindow(bIsWIEnabled);	
+	GetDlgItem(IDC_WSPASS)->EnableWindow(bIsWIEnabled);
+	GetDlgItem(IDC_WSPORT)->EnableWindow(bIsWIEnabled);
 	GetDlgItem(IDC_WSENABLEDLOW)->EnableWindow(bIsWIEnabled);
 	GetDlgItem(IDC_TMPLPATH)->EnableWindow(bIsWIEnabled);
 	GetDlgItem(IDC_TMPLBROWSE)->EnableWindow(bIsWIEnabled);
@@ -229,7 +229,7 @@ void CPPgWebServer::OnEnChangeWSEnabled()
 	GetDlgItem(IDC_WSTIMEOUT)->EnableWindow(bIsWIEnabled);
 	GetDlgItem(IDC_WSPASSLOW)->EnableWindow(bIsWIEnabled && IsDlgButtonChecked(IDC_WSENABLEDLOW));
 	GetDlgItem(IDC_WSUPNP)->EnableWindow(thePrefs.IsUPnPEnabled() && bIsWIEnabled);
-	
+
 	//GetDlgItem(IDC_WSRELOADTMPL)->EnableWindow(bIsWIEnabled);
 	SetTmplButtonState();
 

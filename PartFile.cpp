@@ -15,7 +15,6 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
-#include <math.h>
 #include <sys/stat.h>
 #include <io.h>
 #include <winioctl.h>
@@ -61,6 +60,9 @@
 #include "Log.h"
 #include "CollectionViewDialog.h"
 #include "Collection.h"
+#ifndef XP_BUILD
+#include <urlmon.h>
+#endif
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -73,7 +75,7 @@ static char THIS_FILE[] = __FILE__;
 #define PROGRESS_HEIGHT 3
 
 CBarShader CPartFile::s_LoadBar(PROGRESS_HEIGHT); // Barry - was 5
-CBarShader CPartFile::s_ChunkBar(16); 
+CBarShader CPartFile::s_ChunkBar(16);
 
 IMPLEMENT_DYNAMIC(CPartFile, CKnownFile)
 
@@ -88,18 +90,15 @@ CPartFile::CPartFile(CSearchFile* searchresult, UINT cat)
 	Init();
 
 	const CTypedPtrList<CPtrList, Kademlia::CEntry*>& list = searchresult->getNotes();
-	for(POSITION pos = list.GetHeadPosition(); pos != NULL; )
-	{
-			Kademlia::CEntry* entry = list.GetNext(pos);
-			m_kadNotes.AddTail(entry->Copy());
-	}
-	UpdateFileRatingCommentAvail();
-	
+	for (POSITION pos = list.GetHeadPosition(); pos != NULL;)
+			m_kadNotes.AddTail(list.GetNext(pos)->Copy());
+	CPartFile::UpdateFileRatingCommentAvail();
+
 	m_FileIdentifier.SetMD4Hash(searchresult->GetFileHash());
-	if (searchresult->GetFileIdentifierC().HasAICHHash())
-	{
-		m_FileIdentifier.SetAICHHash(searchresult->GetFileIdentifierC().GetAICHHash());
-		m_pAICHRecoveryHashSet->SetMasterHash(searchresult->GetFileIdentifierC().GetAICHHash(), AICH_VERIFIED);
+	const CFileIdentifier& fileid = searchresult->GetFileIdentifierC();
+	if (fileid.HasAICHHash()) {
+		m_FileIdentifier.SetAICHHash(fileid.GetAICHHash());
+		m_pAICHRecoveryHashSet->SetMasterHash(fileid.GetAICHHash(), AICH_VERIFIED);
 	}
 
 	for (int i = 0; i < searchresult->taglist.GetCount();i++){
@@ -107,16 +106,16 @@ CPartFile::CPartFile(CSearchFile* searchresult, UINT cat)
 		switch (pTag->GetNameID()){
 			case FT_FILENAME:{
 				ASSERT( pTag->IsStr() );
-				if (pTag->IsStr()){
+				if (pTag->IsStr()) {
 					if (GetFileName().IsEmpty())
-						SetFileName(pTag->GetStr(), true, true);
+						CPartFile::SetFileName(pTag->GetStr(), true, true);
 				}
 				break;
 			}
 			case FT_FILESIZE:{
 				ASSERT( pTag->IsInt64(true) );
 				if (pTag->IsInt64(true))
-					SetFileSize(pTag->GetInt64());
+					CPartFile::SetFileSize(pTag->GetInt64());
 				break;
 			}
 			default:{
@@ -127,7 +126,7 @@ CPartFile::CPartFile(CSearchFile* searchresult, UINT cat)
 					{
 						uint8	nName;
 						uint8	nType;
-					} _aMetaTags[] = 
+					} _aMetaTags[] =
 					{
 						{ FT_MEDIA_ARTIST,  2 },
 						{ FT_MEDIA_ALBUM,   2 },
@@ -138,7 +137,7 @@ CPartFile::CPartFile(CSearchFile* searchresult, UINT cat)
 						{ FT_FILETYPE,		2 },
 						{ FT_FILEFORMAT,	2 }
 					};
-					for (int t = 0; t < ARRSIZE(_aMetaTags); t++)
+					for (unsigned t = 0; t < ARRSIZE(_aMetaTags); ++t)
 					{
 						if (pTag->GetType() == _aMetaTags[t].nType && pTag->GetNameID() == _aMetaTags[t].nName)
 						{
@@ -150,7 +149,7 @@ CPartFile::CPartFile(CSearchFile* searchresult, UINT cat)
 							if (pTag->IsInt() && pTag->GetInt() == 0)
 								break;
 
-							TRACE(_T("CPartFile::CPartFile(CSearchFile*): added tag %s\n"), pTag->GetFullInfo(DbgGetFileMetaTagName));
+							TRACE(_T("CPartFile::CPartFile(CSearchFile*): added tag %s\n"), (LPCTSTR)pTag->GetFullInfo(DbgGetFileMetaTagName));
 							CTag* newtag = new CTag(*pTag);
 							taglist.Add(newtag);
 							bTagAdded = true;
@@ -160,7 +159,7 @@ CPartFile::CPartFile(CSearchFile* searchresult, UINT cat)
 				}
 
 				if (!bTagAdded)
-					TRACE(_T("CPartFile::CPartFile(CSearchFile*): ignored tag %s\n"), pTag->GetFullInfo(DbgGetFileMetaTagName));
+					TRACE(_T("CPartFile::CPartFile(CSearchFile*): ignored tag %s\n"), (LPCTSTR)pTag->GetFullInfo(DbgGetFileMetaTagName));
 			}
 		}
 	}
@@ -175,13 +174,13 @@ CPartFile::CPartFile(CString edonkeylink, UINT cat)
 		pLink = CED2KLink::CreateLinkFromUrl(edonkeylink);
 		_ASSERT( pLink != 0 );
 		CED2KFileLink* pFileLink = pLink->GetFileLink();
-		if (pFileLink==0) 
+		if (pFileLink==0)
 			throw GetResString(IDS_ERR_NOTAFILELINK);
 		InitializeFromLink(pFileLink,cat);
-	} catch (CString error) {
+	} catch (const CString& error) {
 		CString strMsg;
-		strMsg.Format(GetResString(IDS_ERR_INVALIDLINK), error);
-		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_LINKERROR), strMsg);
+		strMsg.Format(GetResString(IDS_ERR_INVALIDLINK), (LPCTSTR)error);
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_LINKERROR), (LPCTSTR)strMsg);
 		SetStatus(PS_ERROR);
 	}
 	delete pLink;
@@ -207,7 +206,7 @@ void CPartFile::InitializeFromLink(CED2KFileLink* fileLink, UINT cat)
 				{
 					if (!m_FileIdentifier.LoadMD4HashsetFromFile(fileLink->m_hashset, true))
 					{
-						ASSERT( m_FileIdentifier.GetRawMD4HashSet().GetCount() == 0 );
+						ASSERT( m_FileIdentifier.GetRawMD4HashSet().IsEmpty() );
 						AddDebugLogLine(false, _T("eD2K link \"%s\" specified with invalid hashset"), fileLink->GetName());
 					}
 					else
@@ -216,7 +215,7 @@ void CPartFile::InitializeFromLink(CED2KFileLink* fileLink, UINT cat)
 				catch (CFileException* e)
 				{
 					TCHAR szError[MAX_CFEXP_ERRORMSG];
-					e->GetErrorMessage(szError, ARRSIZE(szError));
+					GetExceptionMessage(*e, szError, ARRSIZE(szError));
 					AddDebugLogLine(false, _T("Error: Failed to process hashset for eD2K link \"%s\" - %s"), fileLink->GetName(), szError);
 					e->Delete();
 				}
@@ -227,10 +226,10 @@ void CPartFile::InitializeFromLink(CED2KFileLink* fileLink, UINT cat)
 		else
 			SetStatus(PS_ERROR);
 	}
-	catch(CString error){
+	catch (const CString& error) {
 		CString strMsg;
-		strMsg.Format(GetResString(IDS_ERR_INVALIDLINK), error);
-		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_LINKERROR), strMsg);
+		strMsg.Format(GetResString(IDS_ERR_INVALIDLINK), (LPCTSTR)error);
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_LINKERROR), (LPCTSTR)strMsg);
 		SetStatus(PS_ERROR);
 	}
 }
@@ -272,14 +271,14 @@ void CPartFile::Init(){
 	m_bAICHPartHashsetNeeded = true;
 	count = 0;
 	percentcompleted = 0;
-	completedsize = (uint64)0;
+	completedsize = 0ull;
 	m_bPreviewing = false;
 	lastseencomplete = NULL;
 	availablePartsCount=0;
 	m_ClientSrcAnswered = 0;
 	m_LastNoNeededCheck = 0;
 	m_uRating = 0;
-	(void)m_strComment;
+	m_strComment.Empty();
 	m_nTotalBufferData = 0;
 	m_nLastBufferFlushTime = 0;
 	m_bRecoveringArchive = false;
@@ -291,7 +290,7 @@ void CPartFile::Init(){
 	m_bLocalSrcReqQueued = false;
 	memset(src_stats,0,sizeof(src_stats));
 	memset(net_stats,0,sizeof(net_stats));
-	m_nCompleteSourcesTime = time(NULL);
+	m_nCompleteSourcesTime = m_iLastPausePurge;
 	m_nCompleteSourcesCount = 0;
 	m_nCompleteSourcesCountLo = 0;
 	m_nCompleteSourcesCountHi = 0;
@@ -306,7 +305,7 @@ void CPartFile::Init(){
 	m_uFileOpProgress = 0;
     m_bpreviewprio = false;
     m_random_update_wait = (uint32)(rand()/(RAND_MAX/1000));
-    lastSwapForSourceExchangeTick = ::GetTickCount();
+	lastSwapForSourceExchangeTick = lastpurgetime;
 	m_DeadSourceList.Init(false);
 	m_bPauseOnPreview = false;
 }
@@ -328,7 +327,7 @@ CPartFile::~CPartFile()
 	catch(CFileException* e){
 		e->Delete();
 	}
-	
+
 	if (m_hpartfile.m_hFile != INVALID_HANDLE_VALUE){
 		// commit file and directory entry
 		m_hpartfile.Close();
@@ -336,18 +335,15 @@ CPartFile::~CPartFile()
 		SavePartFile();
 	}
 
-	POSITION pos;
-	for (pos = gaplist.GetHeadPosition();pos != 0;)
-		delete gaplist.GetNext(pos);
+	while (!gaplist.IsEmpty())
+		delete gaplist.RemoveHead();
 
-	pos = m_BufferedData_list.GetHeadPosition();
-	while (pos){
-		PartFileBufferedData *item = m_BufferedData_list.GetNext(pos);
+	while (!m_BufferedData_list.IsEmpty()) {
+		PartFileBufferedData *item = m_BufferedData_list.RemoveHead();
 		delete[] item->data;
 		delete item;
 	}
 	delete m_pAICHRecoveryHashSet;
-	m_pAICHRecoveryHashSet = NULL;
 }
 
 #ifdef _DEBUG
@@ -377,7 +373,7 @@ void CPartFile::AssertValid() const
 	ASSERT( completedsize <= m_nFileSize );
 	(void)m_uCorruptionLoss;
 	(void)m_uCompressionGain;
-	(void)m_uPartsSavedDueICH; 
+	(void)m_uPartsSavedDueICH;
 	(void)datarate;
 	(void)m_fullname;
 	(void)m_partmetfilename;
@@ -429,20 +425,18 @@ void CPartFile::CreatePartFile(UINT cat)
 	CString tempdirtouse=theApp.downloadqueue->GetOptimalTempDir(cat,GetFileSize());
 
 	// use lowest free partfilenumber for free file (InterCeptor)
-	int i = 0; 
-	CString filename; 
-	do{
-		i++; 
-		filename.Format(_T("%s\\%03i.part"), tempdirtouse, i); 
-	}
+	CString filename;
+	int i = 0;
+	do
+		filename.Format(_T("%s\\%03i.part"), (LPCTSTR)tempdirtouse, ++i);
 	while (PathFileExists(filename));
-	m_partmetfilename.Format(_T("%03i.part.met"), i); 
+	m_partmetfilename.Format(_T("%03i.part.met"), i);
 	SetPath(tempdirtouse);
-	m_fullname.Format(_T("%s\\%s"), tempdirtouse, m_partmetfilename);
+	m_fullname.Format(_T("%s\\%s"), (LPCTSTR)tempdirtouse, (LPCTSTR)m_partmetfilename);
 
 	CTag* partnametag = new CTag(FT_PARTFILENAME,RemoveFileExtension(m_partmetfilename));
 	taglist.Add(partnametag);
-	
+
 	Gap_Struct* gap = new Gap_Struct;
 	gap->start = 0;
 	gap->end = m_nFileSize - (uint64)1;
@@ -463,7 +457,7 @@ void CPartFile::CreatePartFile(UINT cat)
 				// ERROR_INVALID_FUNCTION	returned by WinXP when attempting to create a sparse file on a FAT32 partition
 				DWORD dwError = GetLastError();
 				if (dwError != ERROR_INVALID_FUNCTION && thePrefs.GetVerboseLogPriority() <= DLP_VERYLOW)
-					DebugLogError(_T("Failed to apply NTFS sparse file attribute to file \"%s\" - %s"), partfull, GetErrorMessage(dwError, 1));
+					DebugLogError(_T("Failed to apply NTFS sparse file attribute to file \"%s\" - %s"), (LPCTSTR)partfull, (LPCTSTR)GetErrorMessage(dwError, 1));
 			}
 		}
 
@@ -473,7 +467,7 @@ void CPartFile::CreatePartFile(UINT cat)
 			m_tCreated = fileinfo.st_ctime;
 		}
 		else
-			AddDebugLogLine(false, _T("Failed to get file date for \"%s\" - %s"), partfull, _tcserror(errno));
+			AddDebugLogLine(false, _T("Failed to get file date for \"%s\" - %s"), (LPCTSTR)partfull, _tcserror(errno));
 	}
 	m_dwFileAttributes = GetFileAttributes(partfull);
 	if (m_dwFileAttributes == INVALID_FILE_ATTRIBUTES)
@@ -485,8 +479,8 @@ void CPartFile::CreatePartFile(UINT cat)
 		m_bAICHPartHashsetNeeded = false;
 
 	m_SrcpartFrequency.SetSize(GetPartCount());
-	for (UINT i = 0; i < GetPartCount();i++)
-		m_SrcpartFrequency[i] = 0;
+	for (UINT j = 0; j < GetPartCount(); ++j)
+		m_SrcpartFrequency[j] = 0;
 	paused = false;
 
 	if (thePrefs.AutoFilenameCleanup())
@@ -496,24 +490,24 @@ void CPartFile::CreatePartFile(UINT cat)
 	SetActive(theApp.IsConnected());
 }
 
-/* 
+/*
 * David: Lets try to import a Shareaza download ...
 *
-* The first part to get filename size and hash is easy 
+* The first part to get filename size and hash is easy
 * the secund part to get the hashset and the gap List
 * is much more complicated.
 *
 * We could parse the whole *.sd file but I chose a other tricky way:
-* To find the hashset we will search for the ed2k hash, 
+* To find the hashset we will search for the ed2k hash,
 * it is repeated on the begin of the hashset
-* To get the gap list we will process analog 
+* To get the gap list we will process analog
 * but now we will search for the file size.
 *
 *
 * The *.sd file format for version 32
 * [S][D][L] <-- File ID
 * [20][0][0][0] <-- Version
-* [FF][FE][FF][BYTE]NAME <-- len;Name 
+* [FF][FE][FF][BYTE]NAME <-- len;Name
 * [QWORD] <-- Size
 * [BYTE][0][0][0]SHA(20)[BYTE][0][0][0] <-- SHA Hash
 * [BYTE][0][0][0]TIGER(24)[BYTE][0][0][0] <-- TIGER Hash
@@ -526,7 +520,7 @@ void CPartFile::CreatePartFile(UINT cat)
 * [DWORD]ED2K(16)HASH1(16)HASH2(16)... <-- ED2K Hash Set: count;ed2k hash;hash1,hash2,hash3,...
 * [...] <-- Comments
 */
-EPartFileLoadResult CPartFile::ImportShareazaTempfile(LPCTSTR in_directory,LPCTSTR in_filename, EPartFileFormat* pOutCheckFileFormat) 
+EPartFileLoadResult CPartFile::ImportShareazaTempfile(LPCTSTR in_directory,LPCTSTR in_filename, EPartFileFormat* pOutCheckFileFormat)
 {
 	CString fullname;
 	fullname.Format(_T("%s\\%s"), in_directory, in_filename);
@@ -538,11 +532,11 @@ EPartFileLoadResult CPartFile::ImportShareazaTempfile(LPCTSTR in_directory,LPCTS
 		CString strError;
 		strError.Format(GetResString(IDS_ERR_OPENMET), in_filename, _T(""));
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (fexpMet.GetErrorMessage(szError, ARRSIZE(szError))){
+		if (GetExceptionMessage(fexpMet, szError, ARRSIZE(szError))) {
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, _T("%s"), strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		return PLR_FAILED_METFILE_NOACCESS;
 	}
 	//	setvbuf(sdFile.m_pStream, NULL, _IOFBF, 16384);
@@ -553,7 +547,7 @@ EPartFileLoadResult CPartFile::ImportShareazaTempfile(LPCTSTR in_directory,LPCTS
 		// Is it a valid Shareaza temp file?
 		CHAR szID[3];
 		ar.Read( szID, 3 );
-		if ( strncmp( szID, "SDL", 3 ) ){ 
+		if ( strncmp( szID, "SDL", 3 ) ){
 			ar.Close();
 			sdFile.Close();
 			if (pOutCheckFileFormat != NULL)
@@ -627,7 +621,7 @@ EPartFileLoadResult CPartFile::ImportShareazaTempfile(LPCTSTR in_directory,LPCTS
 		if(gotostring(sdFile,nVersion >= 29 ? (uchar*)&lSize : (uchar*)&nSize,nVersion >= 29 ? 8 : 4)) // search the gap list
 		{
 			sdFile.Seek(sdFile.GetPosition()-(nVersion >= 29 ? 8 : 4),CFile::begin); // - file size
-			CArchive ar( &sdFile, CArchive::load );
+			CArchive ar1(&sdFile, CArchive::load);
 
 			bool badGapList = false;
 
@@ -635,12 +629,12 @@ EPartFileLoadResult CPartFile::ImportShareazaTempfile(LPCTSTR in_directory,LPCTS
 			{
 				__int64 nTotal, nRemaining;
 				DWORD nFragments;
-				ar >> nTotal >> nRemaining >> nFragments;
+				ar1 >> nTotal >> nRemaining >> nFragments;
 
 				if(nTotal >= nRemaining){
 					__int64 begin, length;
-					for (; nFragments--; ){
-						ar >> begin >> length;
+					while (nFragments--) {
+						ar1 >> begin >> length;
 						if(begin + length > nTotal){
 							badGapList = true;
 							break;
@@ -654,12 +648,12 @@ EPartFileLoadResult CPartFile::ImportShareazaTempfile(LPCTSTR in_directory,LPCTS
 			{
 				DWORD nTotal, nRemaining;
 				DWORD nFragments;
-				ar >> nTotal >> nRemaining >> nFragments;
+				ar1 >> nTotal >> nRemaining >> nFragments;
 
 				if(nTotal >= nRemaining){
 					DWORD begin, length;
-					for (; nFragments--; ){
-						ar >> begin >> length;
+					while (nFragments--) {
+						ar1 >> begin >> length;
 						if(begin + length > nTotal){
 							badGapList = true;
 							break;
@@ -671,14 +665,12 @@ EPartFileLoadResult CPartFile::ImportShareazaTempfile(LPCTSTR in_directory,LPCTS
 			}
 
 			if(badGapList){
-				while (gaplist.GetCount()>0 ) {
-					delete gaplist.GetAt(gaplist.GetHeadPosition());
-					gaplist.RemoveAt(gaplist.GetHeadPosition());
-				}
+				while (!gaplist.IsEmpty())
+					delete gaplist.RemoveHead();
 				Log(LOG_WARNING,GetResString(IDS_X_SHAREAZA_IMPORT_GAP_LIST_CORRUPT),in_filename);
 			}
 
-			ar.Close();
+			ar1.Close();
 		}
 		else{
 			Log(LOG_WARNING,GetResString(IDS_X_SHAREAZA_IMPORT_NO_GAP_LIST),in_filename);
@@ -689,18 +681,18 @@ EPartFileLoadResult CPartFile::ImportShareazaTempfile(LPCTSTR in_directory,LPCTS
 		if(gotostring(sdFile,m_FileIdentifier.GetMD4Hash(),16)) // search the hashset
 		{
 			sdFile.Seek(sdFile.GetPosition()-16-4,CFile::begin); // - list size - hash length
-			CArchive ar( &sdFile, CArchive::load );
+			CArchive ar2(&sdFile, CArchive::load);
 
 			DWORD nCount;
-			ar >> nCount;
+			ar2 >> nCount;
 
 			BYTE pMD4[16];
-			ar.Read( pMD4, sizeof(pMD4) ); // read the hash again
+			ar2.Read( pMD4, sizeof(pMD4) ); // read the hash again
 
 			// read the hashset
 			for (DWORD i = 0; i < nCount; i++){
 				uchar* curhash = new uchar[16];
-				ar.Read( curhash, 16 );
+				ar2.Read( curhash, 16 );
 				m_FileIdentifier.GetRawMD4HashSet().Add(curhash);
 			}
 
@@ -715,7 +707,7 @@ EPartFileLoadResult CPartFile::ImportShareazaTempfile(LPCTSTR in_directory,LPCTS
 				m_FileIdentifier.DeleteMD4Hashset();
 			}
 
-			ar.Close();
+			ar2.Close();
 		}
 		else{
 			Log(LOG_WARNING,GetResString(IDS_X_SHAREAZA_IMPORT_NO_HASH_SET),in_filename);
@@ -727,40 +719,38 @@ EPartFileLoadResult CPartFile::ImportShareazaTempfile(LPCTSTR in_directory,LPCTS
 	}
 	catch(CArchiveException* error){
 		TCHAR buffer[MAX_CFEXP_ERRORMSG];
-		error->GetErrorMessage(buffer,ARRSIZE(buffer));
-		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FILEERROR), in_filename, GetFileName(), buffer);
+		GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FILEERROR), in_filename, (LPCTSTR)GetFileName(), buffer);
 		error->Delete();
 		return PLR_FAILED_OTHER;
 	}
 	catch(CFileException* error){
 		if (error->m_cause == CFileException::endOfFile){
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_METCORRUPT), in_filename, GetFileName());
+			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_METCORRUPT), in_filename, (LPCTSTR)GetFileName());
 		}else{
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			error->GetErrorMessage(buffer,ARRSIZE(buffer));
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FILEERROR), in_filename, GetFileName(), buffer);
+			GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
+			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FILEERROR), in_filename, (LPCTSTR)GetFileName(), buffer);
 		}
 		error->Delete();
 		return PLR_FAILED_OTHER;
 	}
 #ifndef _DEBUG
 	catch(...){
-		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_METCORRUPT), in_filename, GetFileName());
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_METCORRUPT), in_filename, (LPCTSTR)GetFileName());
 		ASSERT(0);
 		return PLR_FAILED_OTHER;
 	}
 #endif
 
-	// The part below would be a copy of the CPartFile::LoadPartFile, 
+	// The part below would be a copy of the CPartFile::LoadPartFile,
 	// so it is smarter to save and reload the file insta dof dougling the whole stuff
 	if(!SavePartFile())
 		return PLR_FAILED_OTHER;
 
 	m_FileIdentifier.DeleteMD4Hashset();
-	while (gaplist.GetCount()>0 ) {
-		delete gaplist.GetAt(gaplist.GetHeadPosition());
-		gaplist.RemoveAt(gaplist.GetHeadPosition());
-	}
+	while (!gaplist.IsEmpty())
+		delete gaplist.RemoveHead();
 
 	return LoadPartFile(in_directory, in_filename);
 }
@@ -768,43 +758,42 @@ EPartFileLoadResult CPartFile::ImportShareazaTempfile(LPCTSTR in_directory,LPCTS
 EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_filename, EPartFileFormat* pOutCheckFileFormat)
 {
 	bool isnewstyle;
-	uint8 version;
 	EPartFileFormat partmettype = PMT_UNKNOWN;
 
 	CMap<UINT, UINT, Gap_Struct*, Gap_Struct*> gap_map; // Slugfiller
 	m_uTransferred = 0;
 	m_partmetfilename = in_filename;
 	SetPath(in_directory);
-	m_fullname.Format(_T("%s\\%s"), GetPath(), m_partmetfilename);
-	
+	m_fullname.Format(_T("%s\\%s"), (LPCTSTR)GetPath(), (LPCTSTR)m_partmetfilename);
+
 	// readfile data form part.met file
 	CSafeBufferedFile metFile;
 	CFileException fexpMet;
 	if (!metFile.Open(m_fullname, CFile::modeRead|CFile::osSequentialScan|CFile::typeBinary|CFile::shareDenyWrite, &fexpMet)){
 		CString strError;
-		strError.Format(GetResString(IDS_ERR_OPENMET), m_partmetfilename, _T(""));
+		strError.Format(GetResString(IDS_ERR_OPENMET), (LPCTSTR)m_partmetfilename, _T(""));
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (fexpMet.GetErrorMessage(szError, ARRSIZE(szError))){
+		if (GetExceptionMessage(fexpMet, szError, ARRSIZE(szError))) {
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, _T("%s"), strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		return PLR_FAILED_METFILE_NOACCESS;
 	}
 	setvbuf(metFile.m_pStream, NULL, _IOFBF, 16384);
 
 	try{
-		version = metFile.ReadUInt8();
-		
+		uint8 version = metFile.ReadUInt8();
+
 		if (version != PARTFILE_VERSION && version != PARTFILE_SPLITTEDVERSION && version != PARTFILE_VERSION_LARGEFILE){
 			metFile.Close();
-			if (version==83) {				
+			if (version==83) {
 				return ImportShareazaTempfile(in_directory, in_filename, pOutCheckFileFormat);
 			}
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_BADMETVERSION), m_partmetfilename, GetFileName());
+			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_BADMETVERSION), (LPCTSTR)m_partmetfilename, (LPCTSTR)GetFileName());
 			return PLR_FAILED_METFILE_CORRUPT;
 		}
-		
+
 		isnewstyle = (version == PARTFILE_SPLITTEDVERSION);
 		partmettype = isnewstyle ? PMT_SPLITTED : PMT_DEFAULTOLD;
 		if (!isnewstyle) {
@@ -847,73 +836,64 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 		UINT tagcount = metFile.ReadUInt32();
 		for (UINT j = 0; j < tagcount; j++){
 			CTag* newtag = new CTag(&metFile, false);
-			if (pOutCheckFileFormat == NULL || (pOutCheckFileFormat != NULL && (newtag->GetNameID()==FT_FILESIZE || newtag->GetNameID()==FT_FILENAME))){
+			if (pOutCheckFileFormat == NULL || newtag->GetNameID()==FT_FILESIZE || newtag->GetNameID()==FT_FILENAME) {
 			    switch (newtag->GetNameID()){
 				    case FT_FILENAME:{
 					    if (!newtag->IsStr()) {
-						    LogError(LOG_STATUSBAR, GetResString(IDS_ERR_METCORRUPT), m_partmetfilename, GetFileName());
+						    LogError(LOG_STATUSBAR, GetResString(IDS_ERR_METCORRUPT), (LPCTSTR)m_partmetfilename, (LPCTSTR)GetFileName());
 						    delete newtag;
 						    return PLR_FAILED_METFILE_CORRUPT;
 					    }
 						if (GetFileName().IsEmpty())
 							SetFileName(newtag->GetStr());
-					    delete newtag;
 					    break;
 				    }
 				    case FT_LASTSEENCOMPLETE:{
 						ASSERT( newtag->IsInt() );
 						if (newtag->IsInt())
 						    lastseencomplete = newtag->GetInt();
-					    delete newtag;
 					    break;
 				    }
 				    case FT_FILESIZE:{
 						ASSERT( newtag->IsInt64(true) );
 						if (newtag->IsInt64(true))
 						    SetFileSize(newtag->GetInt64());
-					    delete newtag;
 					    break;
 				    }
 				    case FT_TRANSFERRED:{
 						ASSERT( newtag->IsInt64(true) );
 						if (newtag->IsInt64(true))
 						    m_uTransferred = newtag->GetInt64();
-					    delete newtag;
 					    break;
 				    }
 				    case FT_COMPRESSION:{
 						ASSERT( newtag->IsInt64(true) );
 						if (newtag->IsInt64(true))
 							m_uCompressionGain = newtag->GetInt64();
-					    delete newtag;
 					    break;
 				    }
 				    case FT_CORRUPTED:{
 						ASSERT( newtag->IsInt64() );
 						if (newtag->IsInt64())
 							m_uCorruptionLoss = newtag->GetInt64();
-					    delete newtag;
 					    break;
 				    }
 				    case FT_FILETYPE:{
 						ASSERT( newtag->IsStr() );
 						if (newtag->IsStr())
 						    SetFileType(newtag->GetStr());
-					    delete newtag;
 					    break;
 				    }
 				    case FT_CATEGORY:{
 						ASSERT( newtag->IsInt() );
 						if (newtag->IsInt())
 							m_category = newtag->GetInt();
-					    delete newtag;
 					    break;
 				    }
 					case FT_MAXSOURCES: {
 						ASSERT( newtag->IsInt() );
 						if (newtag->IsInt())
 							m_uMaxSources = newtag->GetInt();
-					    delete newtag;
 					    break;
 				    }
 				    case FT_DLPRIORITY:{
@@ -932,7 +912,6 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 								}
 							}
 						}
-						delete newtag;
 						break;
 				    }
 				    case FT_STATUS:{
@@ -941,7 +920,6 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 						    paused = newtag->GetInt()!=0;
 						    stopped = paused;
 						}
-					    delete newtag;
 					    break;
 				    }
 				    case FT_ULPRIORITY:{
@@ -961,7 +939,6 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 								}
 							}
 						}
-						delete newtag;
 					    break;
 				    }
 				    case FT_KADLASTPUBLISHSRC:{
@@ -975,7 +952,6 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 								SetLastPublishTimeKadSrc(0,0);
 							}
 						}
-					    delete newtag;
 					    break;
 				    }
 				    case FT_KADLASTPUBLISHNOTES:{
@@ -984,14 +960,12 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 						{
 						    SetLastPublishTimeKadNotes(newtag->GetInt());
 						}
-					    delete newtag;
 					    break;
 				    }
                     case FT_DL_PREVIEW:{
                         ASSERT( newtag->IsInt() );
 						SetPreviewPrio(((newtag->GetInt() >>  0) & 0x01) == 1);
 						SetPauseOnPreview(((newtag->GetInt() >>  1) & 0x01) == 1);
-                        delete newtag;
                         break;
                     }
 
@@ -1000,7 +974,6 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 						ASSERT( newtag->IsInt() );
 						if (newtag->IsInt())
 							statistic.SetAllTimeTransferred(newtag->GetInt());
-						delete newtag;
 						break;
 					}
 					case FT_ATTRANSFERREDHI:{
@@ -1015,38 +988,32 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 							hi2=hi2<<32;
 							statistic.SetAllTimeTransferred(low+hi2);
 						}
-						delete newtag;
 						break;
 					}
 					case FT_ATREQUESTED:{
 						ASSERT( newtag->IsInt() );
 						if (newtag->IsInt())
 							statistic.SetAllTimeRequests(newtag->GetInt());
-						delete newtag;
 						break;
 					}
  					case FT_ATACCEPTED:{
 						ASSERT( newtag->IsInt() );
 						if (newtag->IsInt())
 							statistic.SetAllTimeAccepts(newtag->GetInt());
-						delete newtag;
 						break;
 					}
 
 					// old tags: as long as they are not needed, take the chance to purge them
 					case FT_PERMISSIONS:
 						ASSERT( newtag->IsInt() );
-						delete newtag;
 						break;
 					case FT_KADLASTPUBLISHKEY:
 						ASSERT( newtag->IsInt() );
-						delete newtag;
 						break;
 					case FT_DL_ACTIVE_TIME:
 						ASSERT( newtag->IsInt() );
 						if (newtag->IsInt())
 							m_nDlActiveTime = newtag->GetInt();
-						delete newtag;
 						break;
 					case FT_CORRUPTEDPARTS:
 						ASSERT( newtag->IsStr() );
@@ -1067,19 +1034,17 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 								strPart = strCorruptedParts.Tokenize(_T(","), iPos);
 							}
 						}
-						delete newtag;
 						break;
 					case FT_AICH_HASH:{
 						ASSERT( newtag->IsStr() );
 						CAICHHash hash;
-						if (DecodeBase32(newtag->GetStr(), hash) == (UINT)CAICHHash::GetHashSize())
+						if (DecodeBase32(newtag->GetStr(), hash) == CAICHHash::GetHashSize())
 						{
 							m_FileIdentifier.SetAICHHash(hash);
 							m_pAICHRecoveryHashSet->SetMasterHash(hash, AICH_VERIFIED);
 						}
 						else
 							ASSERT( false );
-						delete newtag;
 						break;
 					}
 					case FT_AICHHASHSET:
@@ -1092,7 +1057,6 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 						}
 						else
 							ASSERT( false );
-						delete newtag;
 						break;
 				    default:{
 					    if (newtag->GetNameID()==0 && (newtag->GetName()[0]==FT_GAPSTART || newtag->GetName()[0]==FT_GAPEND))
@@ -1114,25 +1078,25 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 								if (newtag->GetName()[0] == FT_GAPEND)
 									gap->end = newtag->GetInt64() - 1;
 							}
-						    delete newtag;
 					    }
-					    else
-						    taglist.Add(newtag);
+						else {
+							taglist.Add(newtag);
+							newtag = NULL;
+						}
 				    }
 				}
 			}
-			else
-				delete newtag;
+			delete newtag;
 		}
 
 		//m_bAICHPartHashsetNeeded = m_FileIdentifier.GetTheoreticalAICHPartHashCount() > 0;
 		if (bHadAICHHashSetTag)
 		{
 			if (!m_FileIdentifier.VerifyAICHHashSet())
-				DebugLogError(_T("Failed to load AICH Part HashSet for part file %s"), GetFileName());
+				DebugLogError(_T("Failed to load AICH Part HashSet for part file %s"), (LPCTSTR)GetFileName());
 			else
 			{
-			//	DebugLog(_T("Succeeded to load AICH Part HashSet for file %s"), GetFileName());
+			//	DebugLog(_T("Succeeded to load AICH Part HashSet for file %s"), (LPCTSTR)GetFileName());
 				m_bAICHPartHashsetNeeded = false;
 			}
 		}
@@ -1141,9 +1105,9 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 		if (isnewstyle && pOutCheckFileFormat == NULL && (metFile.GetPosition()<metFile.GetLength()) ) {
 			uint8 temp;
 			metFile.Read(&temp,1);
-			
+
 			UINT parts = GetPartCount();	// assuming we will get all hashsets
-			
+
 			for (UINT i = 0; i < parts && (metFile.GetPosition() + 16 < metFile.GetLength()); i++){
 				uchar* cur_hash = new uchar[16];
 				metFile.Read(cur_hash, 16);
@@ -1156,25 +1120,25 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 	}
 	catch(CFileException* error){
 		if (error->m_cause == CFileException::endOfFile)
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_METCORRUPT), m_partmetfilename, GetFileName());
+			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_METCORRUPT), (LPCTSTR)m_partmetfilename, (LPCTSTR)GetFileName());
 		else{
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			error->GetErrorMessage(buffer,ARRSIZE(buffer));
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FILEERROR), m_partmetfilename, GetFileName(), buffer);
+			GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
+			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FILEERROR), (LPCTSTR)m_partmetfilename, (LPCTSTR)GetFileName(), buffer);
 		}
 		error->Delete();
 		return PLR_FAILED_METFILE_CORRUPT;
 	}
 #ifndef _DEBUG
 	catch(...){
-		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_METCORRUPT), m_partmetfilename, GetFileName());
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_METCORRUPT), (LPCTSTR)m_partmetfilename, (LPCTSTR)GetFileName());
 		ASSERT(0);
 		return PLR_FAILED_METFILE_CORRUPT;
 	}
 #endif
 
 	if (m_nFileSize > (uint64)MAX_EMULE_FILE_SIZE) {
-		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FILEERROR), m_partmetfilename, GetFileName(), _T("File size exceeds supported limit"));
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FILEERROR), (LPCTSTR)m_partmetfilename, (LPCTSTR)GetFileName(), _T("File size exceeds supported limit"));
 		return PLR_FAILED_OTHER;
 	}
 
@@ -1191,7 +1155,7 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 		UINT gapkey;
 		gap_map.GetNextAssoc(pos, gapkey, gap);
 		// SLUGFILLER: SafeHash - revised code, and extra safety
-		if (gap->start != -1 && gap->end != -1 && gap->start <= gap->end && gap->start < m_nFileSize){
+		if (gap->start != (uint64)-1 && gap->end != (uint64)-1 && gap->start <= gap->end && gap->start < m_nFileSize) {
 			if (gap->end >= m_nFileSize)
 				gap->end = m_nFileSize - (uint64)1; // Clipping
 			AddGap(gap->start, gap->end); // All tags accounted for, use safe adding
@@ -1201,12 +1165,10 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 	}
 
 	// verify corrupted parts list
-	POSITION posCorruptedPart = corrupted_list.GetHeadPosition();
-	while (posCorruptedPart)
-	{
+	for (POSITION posCorruptedPart = corrupted_list.GetHeadPosition(); posCorruptedPart;) {
 		POSITION posLast = posCorruptedPart;
 		UINT uCorruptedPart = corrupted_list.GetNext(posCorruptedPart);
-		if (IsComplete((uint64)uCorruptedPart*PARTSIZE, (uint64)(uCorruptedPart+1)*PARTSIZE-1, true))
+		if (IsComplete(uCorruptedPart*PARTSIZE, (uCorruptedPart+1)*PARTSIZE-1, true))
 			corrupted_list.RemoveAt(posLast);
 	}
 
@@ -1220,13 +1182,13 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 	CFileException fexpPart;
 	if (!m_hpartfile.Open(searchpath, CFile::modeReadWrite|CFile::shareDenyWrite|CFile::osSequentialScan, &fexpPart)){
 		CString strError;
-		strError.Format(GetResString(IDS_ERR_FILEOPEN), searchpath, GetFileName());
+		strError.Format(GetResString(IDS_ERR_FILEOPEN), (LPCTSTR)searchpath, (LPCTSTR)GetFileName());
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (fexpPart.GetErrorMessage(szError, ARRSIZE(szError))){
+		if (GetExceptionMessage(fexpPart, szError, ARRSIZE(szError))) {
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, _T("%s"), strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		return PLR_FAILED_OTHER;
 	}
 
@@ -1237,7 +1199,7 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 		m_tCreated = fileinfo.st_ctime;
 	}
 	else
-		AddDebugLogLine(false, _T("Failed to get file date for \"%s\" - %s"), searchpath, _tcserror(errno));
+		AddDebugLogLine(false, _T("Failed to get file date for \"%s\" - %s"), (LPCTSTR)searchpath, _tcserror(errno));
 
 	try{
 		SetFilePath(searchpath);
@@ -1250,7 +1212,7 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 			AddGap(m_hpartfile.GetLength(), m_nFileSize - (uint64)1);
 		// Goes both ways - Partfile should never be too large
 		if (m_hpartfile.GetLength() > m_nFileSize){
-			TRACE(_T("Partfile \"%s\" is too large! Truncating %I64u bytes.\n"), GetFileName(), m_hpartfile.GetLength() - m_nFileSize);
+			TRACE(_T("Partfile \"%s\" is too large! Truncating %I64u bytes.\n"), (LPCTSTR)GetFileName(), m_hpartfile.GetLength() - (uint64)m_nFileSize);
 			m_hpartfile.SetLength(m_nFileSize);
 		}
 		// SLUGFILLER: SafeHash
@@ -1268,7 +1230,7 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 		else {
 			m_bMD4HashsetNeeded = false;
 			for (UINT i = 0; i < (UINT)m_FileIdentifier.GetAvailableMD4PartHashCount(); i++){
-				if (i < GetPartCount() && IsComplete((uint64)i*PARTSIZE, (uint64)(i + 1)*PARTSIZE - 1, true)){
+				if (i < GetPartCount() && IsComplete(i*PARTSIZE, (i + 1)*PARTSIZE - 1, true)) {
 					SetStatus(PS_READY);
 					break;
 				}
@@ -1293,17 +1255,17 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 			uint32 fdate = (UINT)filestatus.m_mtime.GetTime();
 			if (fdate == 0)
 				fdate = (UINT)-1;
-			if (fdate == -1){
+			if (fdate == (UINT)-1) {
 				if (thePrefs.GetVerbose())
-					AddDebugLogLine(false, _T("Failed to get file date of \"%s\" (%s)"), filestatus.m_szFullName, GetFileName());
+					AddDebugLogLine(false, _T("Failed to get file date of \"%s\" (%s)"), filestatus.m_szFullName, (LPCTSTR)GetFileName());
 			}
 			else
 				AdjustNTFSDaylightFileTime(fdate, filestatus.m_szFullName);
 
 			if (m_tUtcLastModified != fdate){
 				CString strFileInfo;
-				strFileInfo.Format(_T("%s (%s)"), GetFilePath(), GetFileName());
-				LogError(LOG_STATUSBAR, GetResString(IDS_ERR_REHASH), strFileInfo);
+				strFileInfo.Format(_T("%s (%s)"), (LPCTSTR)GetFilePath(), (LPCTSTR)GetFileName());
+				LogError(LOG_STATUSBAR, GetResString(IDS_ERR_REHASH), (LPCTSTR)strFileInfo);
 				// rehash
 				SetStatus(PS_WAITINGFORHASH);
 				CAddFileThread* addfilethread = (CAddFileThread*) AfxBeginThread(RUNTIME_CLASS(CAddFileThread), THREAD_PRIORITY_NORMAL,0, CREATE_SUSPENDED);
@@ -1320,13 +1282,13 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 	}
 	catch(CFileException* error){
 		CString strError;
-		strError.Format(_T("Failed to initialize part file \"%s\" (%s)"), m_hpartfile.GetFilePath(), GetFileName());
+		strError.Format(_T("Failed to initialize part file \"%s\" (%s)"), (LPCTSTR)m_hpartfile.GetFilePath(), (LPCTSTR)GetFileName());
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (error->GetErrorMessage(szError, ARRSIZE(szError))){
+		if (GetExceptionMessage(*error, szError, ARRSIZE(szError))) {
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, _T("%s"), strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		error->Delete();
 		return PLR_FAILED_OTHER;
 	}
@@ -1350,7 +1312,7 @@ bool CPartFile::SavePartFile(bool bDontOverrideBak)
 	if (!end)
 		ff.FindNextFile();
 	if (end || ff.IsDirectory()){
-		LogError(GetResString(IDS_ERR_SAVEMET) + _T(" - %s"), m_partmetfilename, GetFileName(), GetResString(IDS_ERR_PART_FNF));
+		LogError(GetResString(IDS_ERR_SAVEMET) + _T(" - %s"), (LPCTSTR)m_partmetfilename, (LPCTSTR)GetFileName(), (LPCTSTR)GetResString(IDS_ERR_PART_FNF));
 		return false;
 	}
 
@@ -1366,9 +1328,9 @@ bool CPartFile::SavePartFile(bool bDontOverrideBak)
 	if (m_tLastModified == 0)
 		m_tLastModified = (UINT)-1;
 	m_tUtcLastModified = m_tLastModified;
-	if (m_tUtcLastModified == -1){
+	if (m_tUtcLastModified == (uint32)-1) {
 		if (thePrefs.GetVerbose())
-			AddDebugLogLine(false, _T("Failed to get file date of \"%s\" (%s)"), m_partmetfilename, GetFileName());
+			AddDebugLogLine(false, _T("Failed to get file date of \"%s\" (%s)"), (LPCTSTR)m_partmetfilename, (LPCTSTR)GetFileName());
 	}
 	else
 		AdjustNTFSDaylightFileTime(m_tUtcLastModified, ff.GetFilePath());
@@ -1382,13 +1344,13 @@ bool CPartFile::SavePartFile(bool bDontOverrideBak)
 	CFileException fexp;
 	if (!file.Open(strTmpFile, CFile::modeWrite|CFile::modeCreate|CFile::typeBinary|CFile::shareDenyWrite, &fexp)){
 		CString strError;
-		strError.Format(GetResString(IDS_ERR_SAVEMET), m_partmetfilename, GetFileName());
+		strError.Format(GetResString(IDS_ERR_SAVEMET), (LPCTSTR)m_partmetfilename, (LPCTSTR)GetFileName());
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (fexp.GetErrorMessage(szError, ARRSIZE(szError))){
+		if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(_T("%s"), strError);
+		LogError(_T("%s"), (LPCTSTR)strError);
 		return false;
 	}
 	setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
@@ -1488,7 +1450,7 @@ bool CPartFile::SavePartFile(bool bDontOverrideBak)
 			CTag attag1(FT_ATTRANSFERRED, (uint32)statistic.GetAllTimeTransferred());
 			attag1.WriteTagToFile(&file);
 			uTagCount++;
-			
+
 			CTag attag4(FT_ATTRANSFERREDHI, (uint32)(statistic.GetAllTimeTransferred() >> 32));
 			attag4.WriteTagToFile(&file);
 			uTagCount++;
@@ -1499,7 +1461,7 @@ bool CPartFile::SavePartFile(bool bDontOverrideBak)
 			attag2.WriteTagToFile(&file);
 			uTagCount++;
 		}
-		
+
 		if (statistic.GetAllTimeAccepts()){
 			CTag attag3(FT_ATACCEPTED, statistic.GetAllTimeAccepts());
 			attag3.WriteTagToFile(&file);
@@ -1538,7 +1500,7 @@ bool CPartFile::SavePartFile(bool bDontOverrideBak)
 
 			// AICH Part HashSet
 			// no point in permanently storing the AICH part hashset if we need to rehash the file anyway to fetch the full recovery hashset
-			// the tag will make the known.met incompatible with emule version prior 0.44a - but that one is nearly 6 years old 
+			// the tag will make the known.met incompatible with emule version prior 0.44a - but that one is nearly 6 years old
 			if (m_FileIdentifier.HasExpectedAICHHashCount())
 			{
 				uint32 nAICHHashSetSize = (CAICHHash::GetHashSize() * (m_FileIdentifier.GetAvailableAICHPartHashCount() + 1)) + 2;
@@ -1579,7 +1541,7 @@ bool CPartFile::SavePartFile(bool bDontOverrideBak)
 		UINT i_pos = 0;
 		for (POSITION pos = gaplist.GetHeadPosition(); pos != 0; )
 		{
-			Gap_Struct* gap = gaplist.GetNext(pos);
+			const Gap_Struct* gap = gaplist.GetNext(pos);
 			_itoa(i_pos, number, 10);
 			namebuffer[0] = FT_GAPSTART;
 			CTag gapstarttag(namebuffer,gap->start, IsLargeFile());
@@ -1592,7 +1554,7 @@ bool CPartFile::SavePartFile(bool bDontOverrideBak)
 			CTag gapendtag(namebuffer,gap->end+1, IsLargeFile());
 			gapendtag.WriteTagToFile(&file);
 			uTagCount++;
-			
+
 			i_pos++;
 		}
 		// Add buffered data as gap too - at the time of writing this file, this data does not exists on
@@ -1602,7 +1564,7 @@ bool CPartFile::SavePartFile(bool bDontOverrideBak)
 		uint32 dbgMerged = 0;
 		for (POSITION pos = m_BufferedData_list.GetHeadPosition(); pos != 0; )
 		{
-			PartFileBufferedData* gap = m_BufferedData_list.GetNext(pos);
+			const PartFileBufferedData* gap = m_BufferedData_list.GetNext(pos);
 			const uint64 nStart = gap->start;
 			uint64 nEnd = gap->end;
 			while (pos != 0) // merge if obvious
@@ -1632,13 +1594,13 @@ bool CPartFile::SavePartFile(bool bDontOverrideBak)
 			uTagCount++;
 			i_pos++;
 		}
-		//DEBUG_ONLY( DebugLog(_T("Wrote %u buffered gaps (%u merged) for file %s"), m_BufferedData_list.GetCount(), dbgMerged, GetFileName()) );
+		//DEBUG_ONLY( DebugLog(_T("Wrote %u buffered gaps (%u merged) for file %s"), m_BufferedData_list.GetCount(), dbgMerged, (LPCTSTR)GetFileName()) );
 
 		file.Seek(uTagCountFilePos, CFile::begin);
 		file.WriteUInt32(uTagCount);
 		file.SeekToEnd();
 
-		if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && !theApp.emuledlg->IsRunning())){
+		if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.emuledlg->IsClosing())) {
 			file.Flush(); // flush file stream buffers to disk buffers
 			if (_commit(_fileno(file.m_pStream)) != 0) // commit disk buffers to disk
 				AfxThrowFileException(CFileException::hardIO, GetLastError(), file.GetFileName());
@@ -1647,13 +1609,13 @@ bool CPartFile::SavePartFile(bool bDontOverrideBak)
 	}
 	catch(CFileException* error){
 		CString strError;
-		strError.Format(GetResString(IDS_ERR_SAVEMET), m_partmetfilename, GetFileName());
+		strError.Format(GetResString(IDS_ERR_SAVEMET), (LPCTSTR)m_partmetfilename, (LPCTSTR)GetFileName());
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (error->GetErrorMessage(szError, ARRSIZE(szError))){
+		if (GetExceptionMessage(*error, szError, ARRSIZE(szError))) {
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(_T("%s"), strError);
+		LogError(_T("%s"), (LPCTSTR)strError);
 		error->Delete();
 
 		// remove the partially written or otherwise damaged temporary file
@@ -1665,19 +1627,19 @@ bool CPartFile::SavePartFile(bool bDontOverrideBak)
 	// after successfully writing the temporary part.met file...
 	if (_tremove(m_fullname) != 0 && errno != ENOENT){
 		if (thePrefs.GetVerbose())
-			DebugLogError(_T("Failed to remove \"%s\" - %s"), m_fullname, _tcserror(errno));
+			DebugLogError(_T("Failed to remove \"%s\" - %s"), (LPCTSTR)m_fullname, _tcserror(errno));
 	}
 
 	if (_trename(strTmpFile, m_fullname) != 0){
 		int iErrno = errno;
 		if (thePrefs.GetVerbose())
-			DebugLogError(_T("Failed to move temporary part.met file \"%s\" to \"%s\" - %s"), strTmpFile, m_fullname, _tcserror(iErrno));
+			DebugLogError(_T("Failed to move temporary part.met file \"%s\" to \"%s\" - %s"), (LPCTSTR)strTmpFile, (LPCTSTR)m_fullname, _tcserror(iErrno));
 
 		CString strError;
-		strError.Format(GetResString(IDS_ERR_SAVEMET), m_partmetfilename, GetFileName());
+		strError.Format(GetResString(IDS_ERR_SAVEMET), (LPCTSTR)m_partmetfilename, (LPCTSTR)GetFileName());
 		strError += _T(" - ");
 		strError += _tcserror(iErrno);
-		LogError(_T("%s"), strError);
+		LogError(_T("%s"), (LPCTSTR)strError);
 		return false;
 	}
 
@@ -1686,7 +1648,7 @@ bool CPartFile::SavePartFile(bool bDontOverrideBak)
 	BAKName.Append(PARTMET_BAK_EXT);
 	if (!::CopyFile(m_fullname, BAKName, bDontOverrideBak ? TRUE : FALSE)){
 		if (!bDontOverrideBak)
-			DebugLogError(_T("Failed to create backup of %s (%s) - %s"), m_fullname, GetFileName(), GetErrorMessage(GetLastError()));
+			DebugLogError(_T("Failed to create backup of %s (%s) - %s"), (LPCTSTR)m_fullname, (LPCTSTR)GetFileName(), (LPCTSTR)GetErrorMessage(GetLastError()));
 	}
 
 	return true;
@@ -1700,13 +1662,13 @@ void CPartFile::PartFileHashFinished(CKnownFile* result){
 	// check each part
 	for (uint16 nPart = 0; nPart < GetPartCount(); nPart++)
 	{
-		const uint64 nPartStartPos = (uint64)nPart *  PARTSIZE;
-		const uint64 nPartEndPos = min(((uint64)(nPart + 1) *  PARTSIZE) - 1, GetFileSize() - (uint64)1);
+		const uint64 nPartStartPos = nPart * PARTSIZE;
+		const uint64 nPartEndPos = mini(((nPart + 1) *  PARTSIZE), (uint64)GetFileSize()) - 1ull;
 		ASSERT( IsComplete(nPartStartPos, nPartEndPos, true) == IsComplete(nPartStartPos, nPartEndPos, false) );
 		if (IsComplete(nPartStartPos, nPartEndPos, false))
 		{
 			bool bMD4Error = false;
-			bool bMD4Checked = false; 
+			bool bMD4Checked = false;
 			bool bAICHError = false;
 			bool bAICHChecked = false;
 			// MD4
@@ -1743,18 +1705,18 @@ void CPartFile::PartFileHashFinished(CKnownFile* result){
 			if (bMD4Error || bAICHError)
 			{
 				errorfound = true;
-				LogWarning(GetResString(IDS_ERR_FOUNDCORRUPTION), nPart + 1, GetFileName());
+				LogWarning(GetResString(IDS_ERR_FOUNDCORRUPTION), nPart + 1, (LPCTSTR)GetFileName());
 				AddGap(nPartStartPos, nPartEndPos);
 				if (bMD4Checked && bAICHChecked && bMD4Error != bAICHError)
 					DebugLogError(_T("AICH and MD4 HashSet disagree on verifying part %u for file %s. MD4: %s - AICH: %s"), nPart
-					, GetFileName(), bMD4Error ? _T("Corrupt") : _T("OK"), bAICHError ? _T("Corrupt") : _T("OK"));
+					, (LPCTSTR)GetFileName(), bMD4Error ? _T("Corrupt") : _T("OK"), bAICHError ? _T("Corrupt") : _T("OK"));
 			}
 		}
 	}
 	// missing md4 hashset?
 	if (!m_FileIdentifier.HasExpectedMD4HashCount())
 	{
-		DebugLogError(_T("Final hashing/rehashing without valid MD4 HashSet for file %s"), GetFileName());
+		DebugLogError(_T("Final hashing/rehashing without valid MD4 HashSet for file %s"), (LPCTSTR)GetFileName());
 		// if finished we can copy over the hashset from our hashresult
 		if (IsComplete(0, m_nFileSize - (uint64)1, false) &&  md4cmp(result->GetFileIdentifier().GetMD4Hash(), GetFileIdentifier().GetMD4Hash()) == 0)
 		{
@@ -1766,7 +1728,7 @@ void CPartFile::PartFileHashFinished(CKnownFile* result){
 	if (!errorfound && status == PS_COMPLETING)
 	{
 		if (!result->GetFileIdentifier().HasAICHHash())
-			AddDebugLogLine(false, _T("Failed to store new AICH Recovery and Part Hashset for completed file %s"), GetFileName());
+			AddDebugLogLine(false, _T("Failed to store new AICH Recovery and Part Hashset for completed file %s"), (LPCTSTR)GetFileName());
 		else
 		{
 			m_FileIdentifier.SetAICHHash(result->GetFileIdentifier().GetAICHHash());
@@ -1780,24 +1742,24 @@ void CPartFile::PartFileHashFinished(CKnownFile* result){
 	if (!errorfound){
 		if (status == PS_COMPLETING){
 			if (thePrefs.GetVerbose())
-				AddDebugLogLine(true, _T("Completed file-hashing for \"%s\""), GetFileName());
+				AddDebugLogLine(true, _T("Completed file-hashing for \"%s\""), (LPCTSTR)GetFileName());
 			if (theApp.sharedfiles->GetFileByID(GetFileHash()) == NULL)
 				theApp.sharedfiles->SafeAddKFile(this);
 			CompleteFile(true);
 			return;
 		}
 		else
-			AddLogLine(false, GetResString(IDS_HASHINGDONE), GetFileName());
+			AddLogLine(false, GetResString(IDS_HASHINGDONE), (LPCTSTR)GetFileName());
 	}
 	else{
 		SetStatus(PS_READY);
 		if (thePrefs.GetVerbose())
-			DebugLogError(LOG_STATUSBAR, _T("File-hashing failed for \"%s\""), GetFileName());
+			DebugLogError(LOG_STATUSBAR, _T("File-hashing failed for \"%s\""), (LPCTSTR)GetFileName());
 		SavePartFile();
 		return;
 	}
 	if (thePrefs.GetVerbose())
-		AddDebugLogLine(true, _T("Completed file-hashing for \"%s\""), GetFileName());
+		AddDebugLogLine(true, _T("Completed file-hashing for \"%s\""), (LPCTSTR)GetFileName());
 	SetStatus(PS_READY);
 	SavePartFile();
 	theApp.sharedfiles->SafeAddKFile(this);
@@ -1807,9 +1769,9 @@ void CPartFile::AddGap(uint64 start, uint64 end)
 {
 	ASSERT( start <= end );
 
-	POSITION pos1, pos2;
-	for (pos1 = gaplist.GetHeadPosition();(pos2 = pos1) != NULL;){
-		Gap_Struct* cur_gap = gaplist.GetNext(pos1);
+	for (POSITION pos1 = gaplist.GetHeadPosition(); pos1 != NULL;) {
+		POSITION pos2 = pos1;
+		const Gap_Struct* cur_gap = gaplist.GetNext(pos1);
 		if (cur_gap->start >= start && cur_gap->end <= end){ // this gap is inside the new gap - delete
 			gaplist.RemoveAt(pos2);
 			delete cur_gap;
@@ -1851,7 +1813,7 @@ bool CPartFile::IsComplete(uint64 start, uint64 end, bool bIgnoreBufferedData) c
 			|| (start          >= cur_gap->start && end            <= cur_gap->end)
 		   )
 		{
-			return false;	
+			return false;
 		}
 	}
 
@@ -1865,7 +1827,7 @@ bool CPartFile::IsComplete(uint64 start, uint64 end, bool bIgnoreBufferedData) c
 				|| (start          >= cur_gap->start && end            <= cur_gap->end)
 			)	// should be equal to if (start <= cur_gap->end  && end >= cur_gap->start)
 			{
-				return false;	
+				return false;
 			}
 		}
 	}
@@ -1930,7 +1892,7 @@ bool CPartFile::ShrinkToAvoidAlreadyRequested(uint64& start, uint64& end) const
                     return false;
                 }
             }
-			else 
+			else
                 return false;
         }
 	}
@@ -1951,7 +1913,7 @@ bool CPartFile::ShrinkToAvoidAlreadyRequested(uint64& start, uint64& end) const
                     return false;
                 }
             }
-			else 
+			else
                 return false;
         }
 	}
@@ -1971,9 +1933,7 @@ uint64 CPartFile::GetTotalGapSizeInRange(uint64 uRangeStart, uint64 uRangeEnd) c
 	if (uRangeEnd >= m_nFileSize)
 		uRangeEnd = m_nFileSize - (uint64)1;
 
-	POSITION pos = gaplist.GetHeadPosition();
-	while (pos)
-	{
+	for (POSITION pos = gaplist.GetHeadPosition(); pos;) {
 		const Gap_Struct* pGap = gaplist.GetNext(pos);
 
 		if (pGap->start < uRangeStart && pGap->end > uRangeEnd)
@@ -2000,7 +1960,7 @@ uint64 CPartFile::GetTotalGapSizeInRange(uint64 uRangeStart, uint64 uRangeEnd) c
 
 uint64 CPartFile::GetTotalGapSizeInPart(UINT uPart) const
 {
-	uint64 uRangeStart = (uint64)uPart * PARTSIZE;
+	uint64 uRangeStart = uPart * PARTSIZE;
 	uint64 uRangeEnd = uRangeStart + PARTSIZE - 1;
 	if (uRangeEnd >= m_nFileSize)
 		uRangeEnd = m_nFileSize;
@@ -2011,15 +1971,13 @@ bool CPartFile::GetNextEmptyBlockInPart(UINT partNumber, Requested_Block_Struct 
 {
 	Gap_Struct *firstGap;
 	Gap_Struct *currentGap;
-	uint64 end;
-	uint64 blockLimit;
 
 	// Find start of this part
-	uint64 partStart = PARTSIZE * (uint64)partNumber;
+	uint64 partStart = PARTSIZE * partNumber;
 	uint64 start = partStart;
 
 	// What is the end limit of this block, i.e. can't go outside part (or filesize)
-	uint64 partEnd = PARTSIZE * (uint64)(partNumber + 1) - 1;
+	uint64 partEnd = PARTSIZE * (partNumber + 1) - 1;
 	if (partEnd >= GetFileSize())
 		partEnd = GetFileSize() - (uint64)1;
 	ASSERT( partStart <= partEnd );
@@ -2055,13 +2013,13 @@ bool CPartFile::GetNextEmptyBlockInPart(UINT partNumber, Requested_Block_Struct 
 			return false;
 
 		// Find end, keeping within the max block size and the part limit
-		end = firstGap->end;
-		blockLimit = partStart + (uint64)((UINT)(start - partStart)/EMBLOCKSIZE + 1)*EMBLOCKSIZE - 1;
+		uint64 end = firstGap->end;
+		uint64 blockLimit = partStart + (uint64)((UINT)(start - partStart)/EMBLOCKSIZE + 1)*EMBLOCKSIZE - 1;
 		if (end > blockLimit)
 			end = blockLimit;
 		if (end > partEnd)
 			end = partEnd;
-    
+
 		// If this gap has not already been requested, we have found a valid entry
 		if (!IsAlreadyRequested(start, end, true))
 		{
@@ -2082,7 +2040,7 @@ bool CPartFile::GetNextEmptyBlockInPart(UINT partNumber, Requested_Block_Struct 
 
             bool shrinkSucceeded = ShrinkToAvoidAlreadyRequested(tempStart, tempEnd);
             if(shrinkSucceeded) {
-                AddDebugLogLine(false, _T("Shrunk interval to prevent collision with already requested block: Old interval %I64u-%I64u. New interval: %I64u-%I64u. File %s."), start, end, tempStart, tempEnd, GetFileName());
+                AddDebugLogLine(false, _T("Shrunk interval to prevent collision with already requested block: Old interval %I64u-%I64u. New interval: %I64u-%I64u. File %s."), start, end, tempStart, tempEnd, (LPCTSTR)GetFileName());
 
                 // Was this block to be returned
 			    if (result != NULL)
@@ -2112,8 +2070,8 @@ void CPartFile::FillGap(uint64 start, uint64 end)
 {
 	ASSERT( start <= end );
 
-	POSITION pos1, pos2;
-	for (pos1 = gaplist.GetHeadPosition();(pos2 = pos1) != NULL;){
+	for (POSITION pos1 = gaplist.GetHeadPosition(); pos1 != NULL;) {
+		POSITION pos2 = pos1;
 		Gap_Struct* cur_gap = gaplist.GetNext(pos1);
 		if (cur_gap->start >= start && cur_gap->end <= end){ // our part fills this gap completly
 			gaplist.RemoveAt(pos2);
@@ -2143,9 +2101,9 @@ void CPartFile::FillGap(uint64 start, uint64 end)
 
 void CPartFile::UpdateCompletedInfos()
 {
-   	uint64 allgaps = 0; 
+   	uint64 allgaps = 0;
 
-	for (POSITION pos = gaplist.GetHeadPosition();pos !=  0;){ 
+	for (POSITION pos = gaplist.GetHeadPosition();pos !=  0;){
 		const Gap_Struct* cur_gap = gaplist.GetNext(pos);
 		allgaps += cur_gap->end - cur_gap->start + 1;
 	}
@@ -2160,12 +2118,12 @@ void CPartFile::UpdateCompletedInfos(uint64 uTotalGaps)
 		uTotalGaps = m_nFileSize;
 	}
 
-	if (gaplist.GetCount() || requestedblocks_list.GetCount()){ 
-		// 'percentcompleted' is only used in GUI, round down to avoid showing "100%" in case 
+	if (!gaplist.IsEmpty() || !requestedblocks_list.IsEmpty()){
+		// 'percentcompleted' is only used in GUI, round down to avoid showing "100%" in case
 		// we actually have only "99.9%"
 		percentcompleted = (float)(floor((1.0 - (double)uTotalGaps/(uint64)m_nFileSize) * 1000.0) / 10.0);
 		completedsize = m_nFileSize - uTotalGaps;
-	} 
+	}
 	else{
 		percentcompleted = 100.0F;
 		completedsize = m_nFileSize;
@@ -2188,23 +2146,9 @@ void CPartFile::DrawShareStatusBar(CDC* dc, LPCRECT rect, bool onlygreyrect, boo
 
 	if (!onlygreyrect){
     	const COLORREF crMissing = RGB(255, 0, 0);
-		COLORREF crProgress;
-		COLORREF crHave;
-		COLORREF crPending;
-        COLORREF crNooneAsked;
-		if(bFlat) { 
-			crProgress = RGB(0, 150, 0);
-			crHave = RGB(0, 0, 0);
-			crPending = RGB(255,208,0);
-		    crNooneAsked = RGB(0, 0, 0);
-		} else { 
-			crProgress = RGB(0, 224, 0);
-			crHave = RGB(104, 104, 104);
-			crPending = RGB(255, 208, 0);
-		    crNooneAsked = RGB(104, 104, 104);
-		}
+        COLORREF crNooneAsked(bFlat ? RGB(0, 0, 0) : RGB(104, 104, 104));
 		for (UINT i = 0; i < GetPartCount(); i++){
-            if(IsComplete((uint64)i*PARTSIZE,((uint64)(i+1)*PARTSIZE)-1, true)) {
+			if (IsComplete(i*PARTSIZE, (i+1)*PARTSIZE-1, true)) {
                 if(GetStatus() != PS_PAUSED || m_ClientUploadList.GetSize() > 0 || m_nCompleteSourcesCountHi > 0) {
                     uint32 frequency;
                     if(GetStatus() != PS_PAUSED && !m_SrcpartFrequency.IsEmpty()) {
@@ -2217,18 +2161,18 @@ void CPartFile::DrawShareStatusBar(CDC* dc, LPCRECT rect, bool onlygreyrect, boo
 
     			    if(frequency > 0 ){
 				        COLORREF color = RGB(0, (22*(frequency-1) >= 210) ? 0 : 210-(22*(frequency-1)), 255);
-				        s_ChunkBar.FillRange(PARTSIZE*(uint64)(i),PARTSIZE*(uint64)(i+1),color);
+						s_ChunkBar.FillRange(PARTSIZE*i, PARTSIZE*(i+1), color);
                     } else {
-			            s_ChunkBar.FillRange(PARTSIZE*(uint64)(i),PARTSIZE*(uint64)(i+1),crMissing);
+						s_ChunkBar.FillRange(PARTSIZE*i, PARTSIZE*(i+1), crMissing);
                     }
                 } else {
-				    s_ChunkBar.FillRange(PARTSIZE*(uint64)(i),PARTSIZE*(uint64)(i+1),crNooneAsked);
+					s_ChunkBar.FillRange(PARTSIZE*i, PARTSIZE*(i+1), crNooneAsked);
                 }
 			}
 		}
 	}
-   	s_ChunkBar.Draw(dc, rect->left, rect->top, bFlat); 
-} 
+   	s_ChunkBar.Draw(dc, rect->left, rect->top, bFlat);
+}
 
 void CPartFile::DrawStatusBar(CDC* dc, LPCRECT rect, bool bFlat) /*const*/
 {
@@ -2318,12 +2262,12 @@ void CPartFile::DrawStatusBar(CDC* dc, LPCRECT rect, bool bFlat) /*const*/
 		    uint64 gapstart = cur_gap->start;
 		    uint64 gapend = cur_gap->end;
 		    for (UINT i = 0; i < GetPartCount(); i++){
-			    if (gapstart >= (uint64)i*PARTSIZE && gapstart <= (uint64)(i+1)*PARTSIZE - 1){ // is in this part?
-				    if (gapend <= (uint64)(i+1)*PARTSIZE - 1)
+			    if (gapstart >= i*PARTSIZE && gapstart <= (i+1)*PARTSIZE - 1){ // is in this part?
+					if (gapend <= (i+1)*PARTSIZE - 1)
 					    gapdone = true;
 				    else
-					    gapend = (uint64)(i+1)*PARTSIZE - 1; // and next part
-    
+					    gapend = (i+1)*PARTSIZE - 1; // and next part
+
 				    // paint
 				    COLORREF color;
 				    if (m_SrcpartFrequency.GetCount() >= (INT_PTR)i && m_SrcpartFrequency[(uint16)i])
@@ -2355,7 +2299,7 @@ void CPartFile::DrawStatusBar(CDC* dc, LPCRECT rect, bool bFlat) /*const*/
 				    else
 					    color = crMissing;
 				    s_ChunkBar.FillRange(gapstart, gapend + 1, color);
-    
+
 				    if (gapdone) // finished?
 					    break;
 				    else{
@@ -2365,22 +2309,22 @@ void CPartFile::DrawStatusBar(CDC* dc, LPCRECT rect, bool bFlat) /*const*/
 			    }
 		    }
 	    }
-    
+
 	    // yellow pending parts
 	    for (POSITION pos = requestedblocks_list.GetHeadPosition();pos !=  0;){
 		    const Requested_Block_Struct* block = requestedblocks_list.GetNext(pos);
 		    s_ChunkBar.FillRange(block->StartOffset + block->transferred, block->EndOffset + 1, crPending);
 	    }
-    
+
 	    s_ChunkBar.Draw(dc, rect->left, rect->top, bFlat);
-    
+
 	    // green progress
 	    float blockpixel = (float)(rect->right - rect->left)/(float)m_nFileSize;
 	    RECT gaprect;
 	    gaprect.top = rect->top;
 	    gaprect.bottom = gaprect.top + PROGRESS_HEIGHT;
 	    gaprect.left = rect->left;
-    
+
 	    if (!bFlat) {
 		    s_LoadBar.SetWidth((int)( (uint64)(m_nFileSize - allgaps)*blockpixel + 0.5F));
 		    s_LoadBar.Fill(crProgress);
@@ -2393,7 +2337,7 @@ void CPartFile::DrawStatusBar(CDC* dc, LPCRECT rect, bool bFlat) /*const*/
 		    gaprect.right = rect->right;
 		    dc->FillRect(&gaprect, &CBrush(crProgressBk));
 	    }
-    
+
 	    UpdateCompletedInfos(allgaps);
     }
 
@@ -2426,14 +2370,14 @@ void CPartFile::WritePartStatus(CSafeMemFile* file) const
 {
 	UINT uED2KPartCount = GetED2KPartCount();
 	file->WriteUInt16((uint16)uED2KPartCount);
-	
+
 	UINT uPart = 0;
 	while (uPart != uED2KPartCount)
 	{
 		uint8 towrite = 0;
 		for (UINT i = 0; i < 8; i++)
 		{
-			if (uPart < GetPartCount() && IsComplete((uint64)uPart*PARTSIZE, (uint64)(uPart + 1)*PARTSIZE - 1, true))
+			if (uPart < GetPartCount() && IsComplete(uPart*PARTSIZE, (uPart + 1)*PARTSIZE - 1, true))
 				towrite |= (1 << i);
 			uPart++;
 			if (uPart == uED2KPartCount)
@@ -2571,7 +2515,6 @@ uint32 CPartFile::Process(uint32 reducedownload, UINT icounter/*in percent*/)
 		memset(m_anStates,0,sizeof(m_anStates));
 		memset(src_stats,0,sizeof(src_stats));
 		memset(net_stats,0,sizeof(net_stats));
-		UINT nCountForState;
 
 		for (POSITION pos = srclist.GetHeadPosition(); pos != NULL;)
 		{
@@ -2580,7 +2523,7 @@ uint32 CPartFile::Process(uint32 reducedownload, UINT icounter/*in percent*/)
 				ASSERT_VALID( cur_src );
 
 			// BEGIN -rewritten- refreshing statistics (no need for temp vars since it is not multithreaded)
-			nCountForState = cur_src->GetDownloadState();
+			UINT nCountForState = cur_src->GetDownloadState();
 			//special case which is not yet set as downloadstate
 			if (nCountForState == DS_ONQUEUE)
 			{
@@ -2620,7 +2563,7 @@ uint32 CPartFile::Process(uint32 reducedownload, UINT icounter/*in percent*/)
 						datarate += cur_datarate;
 						if (reducedownload && cur_src->GetDownloadState() == DS_DOWNLOADING)
 						{
-							uint32 limit = reducedownload*cur_datarate/1000; //(uint32)(((float)reducedownload/100)*cur_datarate)/10;		
+							uint32 limit = reducedownload*cur_datarate/1000; //(uint32)(((float)reducedownload/100)*cur_datarate)/10;
 							if (limit < 1000 && reducedownload == 200)
 								limit += 1000;
 							else if(limit<200 && cur_datarate == 0 && reducedownload >= 100)
@@ -2659,7 +2602,7 @@ uint32 CPartFile::Process(uint32 reducedownload, UINT icounter/*in percent*/)
 						if( !theApp.CanDoCallback( cur_src ) )
 						{
 							//If we are almost maxed on sources, slowly remove these client to see if we can find a better source.
-							if( ((dwCurTick - lastpurgetime) > SEC2MS(30)) && (this->GetSourceCount() >= (GetMaxSources()*.8 )) )
+							if( (dwCurTick > lastpurgetime + SEC2MS(30)) && (this->GetSourceCount() >= (GetMaxSources()*4/5)) )
 							{
 								theApp.downloadqueue->RemoveSource( cur_src );
 								lastpurgetime = dwCurTick;
@@ -2672,20 +2615,20 @@ uint32 CPartFile::Process(uint32 reducedownload, UINT icounter/*in percent*/)
 					break;
 				}
 				case DS_NONEEDEDPARTS:
-				{ 
+				{
 					// To Mods, please stop instantly removing these sources..
 					// This causes sources to pop in and out creating extra overhead!
-					if( (dwCurTick - lastpurgetime) > SEC2MS(40) ){
+					if (dwCurTick > lastpurgetime + SEC2MS(40)) {
 						lastpurgetime = dwCurTick;
 						// we only delete them if reaching the limit
-						if (GetSourceCount() >= (GetMaxSources()*.8 )){
+						if (GetSourceCount() >= (GetMaxSources()*4/5 )) {
 							theApp.downloadqueue->RemoveSource( cur_src );
 							break;
-						}			
+						}
 					}
 					// doubled reasktime for no needed parts - save connections and traffic
                     if (cur_src->GetTimeUntilReask() > 0)
-						break; 
+						break;
 
                     cur_src->SwapToAnotherFile(_T("A4AF for NNP file. CPartFile::Process()"), true, false, false, NULL, true, true); // ZZ:DownloadManager
 					// Recheck this client to see if still NNP.. Set to DS_NONE so that we force a TCP reask next time..
@@ -2696,9 +2639,9 @@ uint32 CPartFile::Process(uint32 reducedownload, UINT icounter/*in percent*/)
 				{
 					// To Mods, please stop instantly removing these sources..
 					// This causes sources to pop in and out creating extra overhead!
-					if( cur_src->IsRemoteQueueFull() ) 
+					if( cur_src->IsRemoteQueueFull() )
 					{
-						if( ((dwCurTick - lastpurgetime) > MIN2MS(1)) && (GetSourceCount() >= (GetMaxSources()*.8 )) )
+						if( (dwCurTick > lastpurgetime + MIN2MS(1)) && (GetSourceCount() >= (GetMaxSources()*4/5)) )
 						{
 							theApp.downloadqueue->RemoveSource( cur_src );
 							lastpurgetime = dwCurTick;
@@ -2706,7 +2649,7 @@ uint32 CPartFile::Process(uint32 reducedownload, UINT icounter/*in percent*/)
 						}
 					}
 					//Give up to 1 min for UDP to respond.. If we are within one min of TCP reask, do not try..
-					if (theApp.IsConnected() && cur_src->GetTimeUntilReask() < MIN2MS(2) && cur_src->GetTimeUntilReask() > SEC2MS(1) && ::GetTickCount()-cur_src->getLastTriedToConnectTime() > 20*60*1000) // ZZ:DownloadManager (one resk timestamp for each file)
+					if (theApp.IsConnected() && cur_src->GetTimeUntilReask() < MIN2MS(2) && cur_src->GetTimeUntilReask() > SEC2MS(1) && ::GetTickCount() > cur_src->getLastTriedToConnectTime() + MIN2MS(20)) // ZZ:DownloadManager (one resk timestamp for each file)
 						cur_src->UDPReaskForDownload();
 				}
 				case DS_CONNECTING:
@@ -2716,7 +2659,7 @@ uint32 CPartFile::Process(uint32 reducedownload, UINT icounter/*in percent*/)
 				case DS_WAITCALLBACK:
 				case DS_WAITCALLBACKKAD:
 				{
-					if (theApp.IsConnected() && cur_src->GetTimeUntilReask() == 0 && ::GetTickCount()-cur_src->getLastTriedToConnectTime() > 20*60*1000) // ZZ:DownloadManager (one resk timestamp for each file)
+					if (theApp.IsConnected() && cur_src->GetTimeUntilReask() == 0 && ::GetTickCount() > cur_src->getLastTriedToConnectTime() + MIN2MS(20)) // ZZ:DownloadManager (one resk timestamp for each file)
 					{
 						if(!cur_src->AskForDownload()) // NOTE: This may *delete* the client!!
 							break; //I left this break here just as a reminder just in case re rearange things..
@@ -2727,7 +2670,7 @@ uint32 CPartFile::Process(uint32 reducedownload, UINT icounter/*in percent*/)
 		}
 		if (downloadingbefore!=(m_anStates[DS_DOWNLOADING]>0))
 			NotifyStatusChange();
- 
+
 		if( GetMaxSourcePerFileUDP() > GetSourceCount()){
 			if (theApp.downloadqueue->DoKademliaFileRequest() && (Kademlia::CKademlia::GetTotalFile() < KADEMLIATOTALFILE) && (dwCurTick > m_LastSearchTimeKad) &&  Kademlia::CKademlia::IsConnected() && theApp.IsConnected() && !stopped){ //Once we can handle lowID users in Kad, we remove the second IsConnected
 				//Kademlia
@@ -2757,7 +2700,7 @@ uint32 CPartFile::Process(uint32 reducedownload, UINT icounter/*in percent*/)
 
 
 		// check if we want new sources from server
-		if ( !m_bLocalSrcReqQueued && ((!m_LastSearchTime) || (dwCurTick - m_LastSearchTime) > SERVERREASKTIME) && theApp.serverconnect->IsConnected()
+		if ( !m_bLocalSrcReqQueued && ((!m_LastSearchTime) || dwCurTick > m_LastSearchTime + SERVERREASKTIME) && theApp.serverconnect->IsConnected()
 			&& GetMaxSourcePerFileSoft() > GetSourceCount() && !stopped
 			&& (!IsLargeFile() || (theApp.serverconnect->GetCurrentServer() != NULL && theApp.serverconnect->GetCurrentServer()->SupportsLargeFilesTCP())))
 		{
@@ -2776,7 +2719,7 @@ uint32 CPartFile::Process(uint32 reducedownload, UINT icounter/*in percent*/)
 
 	if ( GetSrcStatisticsValue(DS_DOWNLOADING) != nOldTransSourceCount ){
 		if (theApp.emuledlg->transferwnd->GetDownloadList()->curTab == 0)
-			theApp.emuledlg->transferwnd->GetDownloadList()->ChangeCategory(0); 
+			theApp.emuledlg->transferwnd->GetDownloadList()->ChangeCategory(0);
 		else
 			UpdateDisplayedInfo(true);
 		if (thePrefs.ShowCatTabInfos() )
@@ -2788,7 +2731,7 @@ uint32 CPartFile::Process(uint32 reducedownload, UINT icounter/*in percent*/)
 
 bool CPartFile::CanAddSource(uint32 userid, uint16 port, uint32 serverip, uint16 serverport, UINT* pdebug_lowiddropped, bool Ed2kID)
 {
-	//The incoming ID could have the userid in the Hybrid format.. 
+	//The incoming ID could have the userid in the Hybrid format..
 	uint32 hybridID = 0;
 	if( Ed2kID )
 	{
@@ -2840,13 +2783,13 @@ bool CPartFile::CanAddSource(uint32 userid, uint16 port, uint32 serverip, uint16
 
 void CPartFile::AddSources(CSafeMemFile* sources, uint32 serverip, uint16 serverport, bool bWithObfuscationAndHash)
 {
-	UINT count = sources->ReadUInt8();
+	UINT ucount = sources->ReadUInt8();
 
 	UINT debug_lowiddropped = 0;
 	UINT debug_possiblesources = 0;
 	uchar achUserHash[16];
 	bool bSkip = false;
-	for (UINT i = 0; i < count; i++)
+	for (UINT i = 0; i < ucount; ++i)
 	{
 		uint32 userid = sources->ReadUInt32();
 		uint16 port = sources->ReadUInt16();
@@ -2858,11 +2801,11 @@ void CPartFile::AddSources(CSafeMemFile* sources, uint32 serverip, uint16 server
 
 			if ((thePrefs.IsClientCryptLayerRequested() && (byCryptOptions & 0x01/*supported*/) > 0 && (byCryptOptions & 0x80) == 0)
 				|| (thePrefs.IsClientCryptLayerSupported() && (byCryptOptions & 0x02/*requested*/) > 0 && (byCryptOptions & 0x80) == 0))
-				DebugLogWarning(_T("Server didn't provide UserHash for source %u, even if it was expected to (or local obfuscationsettings changed during serverconnect"), userid);
+				DebugLogWarning(_T("Server didn't provide UserHash for source %u, even if it was expected to (or local obfuscationsettings changed during serverconnect)"), userid);
 			else if (!thePrefs.IsClientCryptLayerRequested() && (byCryptOptions & 0x02/*requested*/) == 0 && (byCryptOptions & 0x80) != 0)
-				DebugLogWarning(_T("Server provided UserHash for source %u, even if it wasn't expected to (or local obfuscationsettings changed during serverconnect"), userid);
+				DebugLogWarning(_T("Server provided UserHash for source %u, even if it wasn't expected to (or local obfuscationsettings changed during serverconnect)"), userid);
 		}
-		
+
 		// since we may received multiple search source UDP results we have to "consume" all data of that packet
 		if (stopped || bSkip)
 			continue;
@@ -2871,23 +2814,24 @@ void CPartFile::AddSources(CSafeMemFile* sources, uint32 serverip, uint16 server
 		if (!IsLowID(userid))
 		{
 			if (!IsGoodIP(userid))
-			{ 
+			{
 				// check for 0-IP, localhost and optionally for LAN addresses
 				//if (thePrefs.GetLogFilteredIPs())
-				//	AddDebugLogLine(false, _T("Ignored source (IP=%s) received from server - bad IP"), ipstr(userid));
+				//	AddDebugLogLine(false, _T("Ignored source (IP=%s) received from server - bad IP"), (LPCTSTR)ipstr(userid));
 				continue;
 			}
 			if (theApp.ipfilter->IsFiltered(userid))
 			{
 				if (thePrefs.GetLogFilteredIPs())
-					AddDebugLogLine(false, _T("Ignored source (IP=%s) received from server - IP filter (%s)"), ipstr(userid), theApp.ipfilter->GetLastHit());
+					AddDebugLogLine(false, _T("Ignored source (IP=%s) received from server - IP filter (%s)"), (LPCTSTR)ipstr(userid), (LPCTSTR)theApp.ipfilter->GetLastHit());
 				continue;
 			}
 			if (theApp.clientlist->IsBannedClient(userid)){
 #ifdef _DEBUG
 				if (thePrefs.GetLogBannedClients()){
 					CUpDownClient* pClient = theApp.clientlist->FindClientByIP(userid);
-					AddDebugLogLine(false, _T("Ignored source (IP=%s) received from server - banned client %s"), ipstr(userid), pClient->DbgGetClientInfo());
+					if (pClient)
+						AddDebugLogLine(false, _T("Ignored source (IP=%s) received from server - banned client %s"), (LPCTSTR)ipstr(userid), (LPCTSTR)pClient->DbgGetClientInfo());
 				}
 #endif
 				continue;
@@ -2898,7 +2842,7 @@ void CPartFile::AddSources(CSafeMemFile* sources, uint32 serverip, uint16 server
 		if (!CanAddSource(userid, port, serverip, serverport, &debug_lowiddropped))
 		{
 			//if (thePrefs.GetLogFilteredIPs())
-			//	AddDebugLogLine(false, _T("Ignored source (IP=%s) received from server"), ipstr(userid));
+			//	AddDebugLogLine(false, _T("Ignored source (IP=%s) received from server"), (LPCTSTR)ipstr(userid));
 			continue;
 		}
 
@@ -2922,7 +2866,7 @@ void CPartFile::AddSources(CSafeMemFile* sources, uint32 serverip, uint16 server
 		}
 	}
 	if (thePrefs.GetDebugSourceExchange())
-		AddDebugLogLine(false, _T("SXRecv: Server source response; Count=%u, Dropped=%u, PossibleSources=%u, File=\"%s\""), count, debug_lowiddropped, debug_possiblesources, GetFileName());
+		AddDebugLogLine(false, _T("SXRecv: Server source response; Count=%u, Dropped=%u, PossibleSources=%u, File=\"%s\""), ucount, debug_lowiddropped, debug_possiblesources, (LPCTSTR)GetFileName());
 }
 
 void CPartFile::AddSource(LPCTSTR pszURL, uint32 nIP)
@@ -2931,16 +2875,16 @@ void CPartFile::AddSource(LPCTSTR pszURL, uint32 nIP)
 		return;
 
 	if (!IsGoodIP(nIP))
-	{ 
+	{
 		// check for 0-IP, localhost and optionally for LAN addresses
 		//if (thePrefs.GetLogFilteredIPs())
-		//	AddDebugLogLine(false, _T("Ignored URL source (IP=%s) \"%s\" - bad IP"), ipstr(nIP), pszURL);
+		//	AddDebugLogLine(false, _T("Ignored URL source (IP=%s) \"%s\" - bad IP"), (LPCTSTR)ipstr(nIP), pszURL);
 		return;
 	}
 	if (theApp.ipfilter->IsFiltered(nIP))
 	{
 		if (thePrefs.GetLogFilteredIPs())
-			AddDebugLogLine(false, _T("Ignored URL source (IP=%s) \"%s\" - IP filter (%s)"), ipstr(nIP), pszURL, theApp.ipfilter->GetLastHit());
+			AddDebugLogLine(false, _T("Ignored URL source (IP=%s) \"%s\" - IP filter (%s)"), (LPCTSTR)ipstr(nIP), pszURL, (LPCTSTR)theApp.ipfilter->GetLastHit());
 		return;
 	}
 
@@ -2987,38 +2931,36 @@ void CPartFile::UpdatePartsInfo()
 
 	// Cache part count
 	UINT partcount = GetPartCount();
-	bool flag = (time(NULL) - m_nCompleteSourcesTime > 0); 
+	bool flag = (time(NULL) - m_nCompleteSourcesTime > 0);
 
 	// Reset part counters
 	if ((UINT)m_SrcpartFrequency.GetSize() < partcount)
 		m_SrcpartFrequency.SetSize(partcount);
 	for (UINT i = 0; i < partcount; i++)
 		m_SrcpartFrequency[i] = 0;
-	
-	CArray<uint16, uint16> count;
+
+	CArray<uint16, uint16> acount;
 	if (flag)
-		count.SetSize(0, srclist.GetSize());
+		acount.SetSize(0, srclist.GetSize());
 	for (POSITION pos = srclist.GetHeadPosition(); pos != 0; )
 	{
-		CUpDownClient* cur_src = srclist.GetNext(pos);
+		const CUpDownClient* cur_src = srclist.GetNext(pos);
 		if( cur_src->GetPartStatus() )
-		{		
+		{
 			for (UINT i = 0; i < partcount; i++)
 			{
 				if (cur_src->IsPartAvailable(i))
 					m_SrcpartFrequency[i] += 1;
 			}
 			if ( flag )
-			{
-				count.Add(cur_src->GetUpCompleteSourcesCount());
-			}
+				acount.Add(cur_src->GetUpCompleteSourcesCount());
 		}
 	}
 
 	if (flag)
 	{
 		m_nCompleteSourcesCount = m_nCompleteSourcesCountLo = m_nCompleteSourcesCountHi = 0;
-	
+
 		for (UINT i = 0; i < partcount; i++)
 		{
 			if (!i)
@@ -3026,21 +2968,21 @@ void CPartFile::UpdatePartsInfo()
 			else if( m_nCompleteSourcesCount > m_SrcpartFrequency[i])
 				m_nCompleteSourcesCount = m_SrcpartFrequency[i];
 		}
-	
-		count.Add(m_nCompleteSourcesCount);
-	
-		int n = count.GetSize();
+
+		acount.Add(m_nCompleteSourcesCount);
+
+		int n = acount.GetSize();
 		if (n > 0)
 		{
 			// SLUGFILLER: heapsortCompletesrc
 			int r;
 			for (r = n/2; r--; )
-				HeapSort(count, r, n-1);
+				HeapSort(acount, r, n-1);
 			for (r = n; --r; ){
-				uint16 t = count[r];
-				count[r] = count[0];
-				count[0] = t;
-				HeapSort(count, 0, r-1);
+				uint16 t = acount[r];
+				acount[r] = acount[0];
+				acount[0] = t;
+				HeapSort(acount, 0, r-1);
 			}
 			// SLUGFILLER: heapsortCompletesrc
 
@@ -3065,12 +3007,12 @@ void CPartFile::UpdatePartsInfo()
 			//  Adjust 80% network and 20% what we see.
 			else if (n < 20)
 			{
-				if ( count.GetAt(i) < m_nCompleteSourcesCount )
+				if (acount[i] < m_nCompleteSourcesCount)
 					m_nCompleteSourcesCountLo = m_nCompleteSourcesCount;
 				else
-					m_nCompleteSourcesCountLo = (uint16)((float)(count.GetAt(i)*.8)+(float)(m_nCompleteSourcesCount*.2));
+					m_nCompleteSourcesCountLo = (acount[i]*4+m_nCompleteSourcesCount)/5;
 				m_nCompleteSourcesCount= m_nCompleteSourcesCountLo;
-				m_nCompleteSourcesCountHi= (uint16)((float)(count.GetAt(j)*.8)+(float)(m_nCompleteSourcesCount*.2));
+				m_nCompleteSourcesCountHi = (acount[j]*4+m_nCompleteSourcesCount)/5;
 				if( m_nCompleteSourcesCountHi < m_nCompleteSourcesCount )
 					m_nCompleteSourcesCountHi = m_nCompleteSourcesCount;
 			}
@@ -3084,10 +3026,10 @@ void CPartFile::UpdatePartsInfo()
 			//  Adjust network accounts for 80%, we account for 20% with what we see and make sure we are still above the normal.
 			{
 				m_nCompleteSourcesCountLo= m_nCompleteSourcesCount;
-				m_nCompleteSourcesCount= (uint16)((float)(count.GetAt(j)*.8)+(float)(m_nCompleteSourcesCount*.2));
+				m_nCompleteSourcesCount = (acount[j]*4+m_nCompleteSourcesCount)/5;
 				if( m_nCompleteSourcesCount < m_nCompleteSourcesCountLo )
 					m_nCompleteSourcesCount = m_nCompleteSourcesCountLo;
-				m_nCompleteSourcesCountHi= (uint16)((float)(count.GetAt(k)*.8)+(float)(m_nCompleteSourcesCount*.2));
+				m_nCompleteSourcesCountHi = (acount[k]*4+m_nCompleteSourcesCount)/5;
 				if( m_nCompleteSourcesCountHi < m_nCompleteSourcesCount )
 					m_nCompleteSourcesCountHi = m_nCompleteSourcesCount;
 			}
@@ -3095,7 +3037,7 @@ void CPartFile::UpdatePartsInfo()
 		m_nCompleteSourcesTime = time(NULL) + (60);
 	}
 	UpdateDisplayedInfo();
-}	
+}
 
 bool CPartFile::RemoveBlockFromList(uint64 start, uint64 end)
 {
@@ -3104,7 +3046,7 @@ bool CPartFile::RemoveBlockFromList(uint64 start, uint64 end)
 	bool bResult = false;
 	for (POSITION pos = requestedblocks_list.GetHeadPosition(); pos != NULL; ){
 		POSITION posLast = pos;
-		Requested_Block_Struct* block = requestedblocks_list.GetNext(pos);
+		const Requested_Block_Struct* block = requestedblocks_list.GetNext(pos);
 		if (block->StartOffset <= start && block->EndOffset >= end){
 			requestedblocks_list.RemoveAt(posLast);
 			bResult = true;
@@ -3131,7 +3073,7 @@ void CPartFile::CompleteFile(bool bIsHashingDone)
 
 	if (srcarevisible)
 		theApp.emuledlg->transferwnd->GetDownloadList()->HideSources(this);
-	
+
 	if (!bIsHashingDone){
 		SetStatus(PS_COMPLETING);
 		datarate = 0;
@@ -3143,7 +3085,7 @@ void CPartFile::CompleteFile(bool bIsHashingDone)
 			_tcscpy(mytemppath,m_fullname);
 			mytemppath[ _tcslen(mytemppath)-_tcslen(m_partmetfilename)-1]=0;
 			addfilethread->SetValues(NULL, mytemppath, RemoveFileExtension(m_partmetfilename), _T(""), this);
-			addfilethread->ResumeThread();	
+			addfilethread->ResumeThread();
 		}
 		else{
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FILECOMPLETIONTHREAD));
@@ -3172,17 +3114,17 @@ void CPartFile::CompleteFile(bool bIsHashingDone)
 	UpdateDisplayedInfo(true);
 }
 
-UINT CPartFile::CompleteThreadProc(LPVOID pvParams) 
-{ 
+UINT CPartFile::CompleteThreadProc(LPVOID pvParams)
+{
 	DbgSetThreadName("PartFileComplete");
 	InitThreadLocale();
 	CPartFile* pFile = (CPartFile*)pvParams;
 	if (!pFile)
-		return (UINT)-1; 
+		return (UINT)-1;
 	CoInitialize(NULL);
    	pFile->PerformFileComplete();
 	CoUninitialize();
-   	return 0; 
+   	return 0;
 }
 
 void UncompressFile(LPCTSTR pszFilePath, CPartFile* pPartFile)
@@ -3204,10 +3146,10 @@ void UncompressFile(LPCTSTR pszFilePath, CPartFile* pPartFile)
 	HANDLE hFile = CreateFile(pszFilePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
 	if (hFile == INVALID_HANDLE_VALUE){
 		if (thePrefs.GetVerbose())
-			theApp.QueueDebugLogLine(true, _T("Failed to open file \"%s\" for decompressing - %s"), pszFilePath, GetErrorMessage(GetLastError(), 1));
+			theApp.QueueDebugLogLine(true, _T("Failed to open file \"%s\" for decompressing - %s"), pszFilePath, (LPCTSTR)GetErrorMessage(GetLastError(), 1));
 		return;
 	}
-	
+
 	if (pPartFile)
 		pPartFile->SetFileOp(PFOP_UNCOMPRESSING);
 
@@ -3215,11 +3157,12 @@ void UncompressFile(LPCTSTR pszFilePath, CPartFile* pPartFile)
 	DWORD dwReturned = 0;
 	if (!DeviceIoControl(hFile, FSCTL_SET_COMPRESSION, &usInData, sizeof usInData, NULL, 0, &dwReturned, NULL)){
 		if (thePrefs.GetVerbose())
-			theApp.QueueDebugLogLine(true, _T("Failed to decompress file \"%s\" - %s"), pszFilePath, GetErrorMessage(GetLastError(), 1));
+			theApp.QueueDebugLogLine(true, _T("Failed to decompress file \"%s\" - %s"), pszFilePath, (LPCTSTR)GetErrorMessage(GetLastError(), 1));
 	}
 	CloseHandle(hFile);
 }
 
+#ifdef XP_BUILD
 #ifndef __IZoneIdentifier_INTERFACE_DEFINED__
 MIDL_INTERFACE("cd45f185-1b21-48e2-967b-ead743a8914e")
 IZoneIdentifier : public IUnknown
@@ -3236,26 +3179,23 @@ EXTERN_C const IID CLSID_PersistentZoneIdentifier;
 #else
 const GUID CLSID_PersistentZoneIdentifier = { 0x0968E258, 0x16C7, 0x4DBA, { 0xAA, 0x86, 0x46, 0x2D, 0xD6, 0x1E, 0x31, 0xA3 } };
 #endif
+#endif
 
 void SetZoneIdentifier(LPCTSTR pszFilePath)
 {
 	if (!thePrefs.GetCheckFileOpen())
 		return;
 	CComPtr<IZoneIdentifier> pZoneIdentifier;
-	HRESULT hr = pZoneIdentifier.CoCreateInstance(CLSID_PersistentZoneIdentifier, NULL, CLSCTX_INPROC_SERVER);
-	if (SUCCEEDED(hr))
-	{
+	if (SUCCEEDED(pZoneIdentifier.CoCreateInstance(CLSID_PersistentZoneIdentifier, NULL, CLSCTX_INPROC_SERVER))) {
 		CComQIPtr<IPersistFile> pPersistFile = pZoneIdentifier;
 		if (pPersistFile)
 		{
 			// Specify the 'zone identifier' which has to be commited with 'IPersistFile::Save'
-			hr = pZoneIdentifier->SetId(URLZONE_INTERNET);
-			if (SUCCEEDED(hr))
-			{
+			if (SUCCEEDED(pZoneIdentifier->SetId(URLZONE_INTERNET))) {
 				// Save the 'zone identifier'
-				// NOTE: This does not modify the file content in any way, 
+				// NOTE: This does not modify the file content in any way,
 				// *but* it modifies the "Last Modified" file time!
-				VERIFY( SUCCEEDED(hr = pPersistFile->Save(pszFilePath, FALSE)) );
+				VERIFY( SUCCEEDED(pPersistFile->Save(pszFilePath, FALSE)) );
 			}
 		}
 	}
@@ -3263,7 +3203,7 @@ void SetZoneIdentifier(LPCTSTR pszFilePath)
 
 DWORD CALLBACK CopyProgressRoutine(LARGE_INTEGER TotalFileSize, LARGE_INTEGER TotalBytesTransferred,
 								   LARGE_INTEGER /*StreamSize*/, LARGE_INTEGER /*StreamBytesTransferred*/, DWORD /*dwStreamNumber*/,
-								   DWORD /*dwCallbackReason*/, HANDLE /*hSourceFile*/, HANDLE /*hDestinationFile*/, 
+								   DWORD /*dwCallbackReason*/, HANDLE /*hSourceFile*/, HANDLE /*hDestinationFile*/,
 								   LPVOID lpData)
 {
 	CPartFile* pPartFile = (CPartFile*)lpData;
@@ -3314,10 +3254,10 @@ DWORD MoveCompletedPartFile(LPCTSTR pszPartFilePath, LPCTSTR pszNewPartFilePath,
 }
 
 // Lord KiRon - using threads for file completion
-// NOTE: This function is executed within a seperate thread, do *NOT* use any lists/queues of the main thread without
+// NOTE: This function is executed within a separate thread, do *NOT* use any lists/queues of the main thread without
 // synchronization. Even the access to couple of members of the CPartFile (e.g. filename) would need to be properly
 // synchronization to achive full multi threading compliance.
-BOOL CPartFile::PerformFileComplete() 
+BOOL CPartFile::PerformFileComplete()
 {
 	// If that function is invoked from within the file completion thread, it's ok if we wait (and block) the thread.
 	CSingleLock sLock(&m_FileCompleteMutex, TRUE);
@@ -3326,17 +3266,13 @@ BOOL CPartFile::PerformFileComplete()
 	TCHAR* newfilename = _tcsdup(GetFileName());
 	_tcscpy(newfilename, (LPCTSTR)StripInvalidFilenameChars(newfilename));
 
-	CString strNewname;
 	CString indir;
 
-	if (PathFileExists(thePrefs.GetCategory(GetCategory())->strIncomingPath)){
+	if (PathFileExists(thePrefs.GetCategory(GetCategory())->strIncomingPath))
 		indir = thePrefs.GetCategory(GetCategory())->strIncomingPath;
-		strNewname.Format(_T("%s\\%s"), indir, newfilename);
-	}
-	else{
+	else
 		indir = thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR);
-		strNewname.Format(_T("%s\\%s"), indir, newfilename);
-	}
+	CString strNewname = indir+L'\\'+newfilename;
 
 	// close permanent handle
 	try{
@@ -3345,8 +3281,8 @@ BOOL CPartFile::PerformFileComplete()
 	}
 	catch(CFileException* error){
 		TCHAR buffer[MAX_CFEXP_ERRORMSG];
-		error->GetErrorMessage(buffer, ARRSIZE(buffer));
-		theApp.QueueLogLine(true, GetResString(IDS_ERR_FILEERROR), m_partmetfilename, GetFileName(), buffer);
+		GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
+		theApp.QueueLogLine(true, GetResString(IDS_ERR_FILEERROR), (LPCTSTR)m_partmetfilename, (LPCTSTR)GetFileName(), buffer);
 		error->Delete();
 		//return false;
 	}
@@ -3390,7 +3326,7 @@ BOOL CPartFile::PerformFileComplete()
 		CString strTestName;
 		do {
 			namecount++;
-			strTestName.Format(_T("%s\\%s(%d).%s"), indir, newfilename, namecount, min(ext + 1, newfilename + length));
+			strTestName.Format(_T("%s\\%s(%d).%s"), (LPCTSTR)indir, newfilename, namecount, mini(ext + 1, newfilename + length));
 		}
 		while (PathFileExists(strTestName));
 		strNewname = strTestName;
@@ -3410,23 +3346,23 @@ BOOL CPartFile::PerformFileComplete()
 				// So wait a few seconds and try again. Due to the lock we set, the UploadThread will close the file ASAP
 				bFirstTry = false;
 				theApp.QueueDebugLogLine(false, _T("Sharing violation while finishing partfile, might be due to ongoing upload. Locked and trying again soon. File %s")
-					, GetFileName());
+					, (LPCTSTR)GetFileName());
 				Sleep(5000); // we can sleep here, because we are threaded
 				continue;
 			}
 			else
 			{
-				theApp.QueueLogLine(true,GetResString(IDS_ERR_COMPLETIONFAILED) + _T(" - \"%s\": ") + GetErrorMessage(dwMoveResult), GetFileName(), strNewname);
+				theApp.QueueLogLine(true,GetResString(IDS_ERR_COMPLETIONFAILED) + _T(" - \"%s\": ") + GetErrorMessage(dwMoveResult), (LPCTSTR)GetFileName(), (LPCTSTR)strNewname);
 				// If the destination file path is too long, the default system error message may not be helpful for user to know what failed.
 				if (strNewname.GetLength() >= MAX_PATH)
-					theApp.QueueLogLine(true,GetResString(IDS_ERR_COMPLETIONFAILED) + _T(" - \"%s\": Path too long"),GetFileName(), strNewname);
+					theApp.QueueLogLine(true,GetResString(IDS_ERR_COMPLETIONFAILED) + _T(" - \"%s\": Path too long"), (LPCTSTR)GetFileName(), (LPCTSTR)strNewname);
 
 				paused = true;
 				stopped = true;
 				SetStatus(PS_ERROR);
 				m_bCompletionError = true;
 				SetFileOp(PFOP_NONE);
-				if (theApp.emuledlg && theApp.emuledlg->IsRunning())
+				if (theApp.emuledlg && !theApp.emuledlg->IsClosing())
 					VERIFY( PostMessage(theApp.emuledlg->m_hWnd, TM_FILECOMPLETED, FILE_COMPLETION_THREAD_FAILED, (LPARAM)this) );
 				return FALSE;
 			}
@@ -3438,7 +3374,7 @@ BOOL CPartFile::PerformFileComplete()
 	SetZoneIdentifier(strNewname);		// may modify the file's "Last Modified" time
 
 	// to have the accurate date stored in known.met we have to update the 'date' of a just completed file.
-	// if we don't update the file date here (after commiting the file and before adding the record to known.met), 
+	// if we don't update the file date here (after commiting the file and before adding the record to known.met),
 	// that file will be rehashed at next startup and there would also be a duplicate entry (hash+size) in known.met
 	// because of different file date!
 	ASSERT( m_hpartfile.m_hFile == INVALID_HANDLE_VALUE ); // the file must be closed/commited!
@@ -3452,19 +3388,19 @@ BOOL CPartFile::PerformFileComplete()
 
 	// remove part.met file
 	if (_tremove(m_fullname))
-		theApp.QueueLogLine(true, GetResString(IDS_ERR_DELETEFAILED) + _T(" - ") + CString(_tcserror(errno)), m_fullname);
+		theApp.QueueLogLine(true, GetResString(IDS_ERR_DELETEFAILED) + _T(" - ") + CString(_tcserror(errno)), (LPCTSTR)m_fullname);
 
 	// remove backup files
 	CString BAKName(m_fullname);
 	BAKName.Append(PARTMET_BAK_EXT);
 	if (_taccess(BAKName, 0) == 0 && !::DeleteFile(BAKName))
-		theApp.QueueLogLine(true,GetResString(IDS_ERR_DELETE) + _T(" - ") + GetErrorMessage(GetLastError()), BAKName);
+		theApp.QueueLogLine(true,GetResString(IDS_ERR_DELETE) + _T(" - ") + GetErrorMessage(GetLastError()), (LPCTSTR)BAKName);
 
 	BAKName = m_fullname;
 	BAKName.Append(PARTMET_TMP_EXT);
 	if (_taccess(BAKName, 0) == 0 && !::DeleteFile(BAKName))
-		theApp.QueueLogLine(true,GetResString(IDS_ERR_DELETE) + _T(" - ") + GetErrorMessage(GetLastError()), BAKName);
-	
+		theApp.QueueLogLine(true,GetResString(IDS_ERR_DELETE) + _T(" - ") + GetErrorMessage(GetLastError()), (LPCTSTR)BAKName);
+
 	// initialize 'this' part file for being a 'complete' file, this is to be done *before* releasing the file mutex.
 	m_fullname = strNewname;
 	SetPath(indir);
@@ -3479,7 +3415,7 @@ BOOL CPartFile::PerformFileComplete()
 	// explicitly unlock the file before posting something to the main thread.
 	sLock.Unlock();
 
-	if (theApp.emuledlg && theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg && !theApp.emuledlg->IsClosing())
 		VERIFY( PostMessage(theApp.emuledlg->m_hWnd, TM_FILECOMPLETED, FILE_COMPLETION_THREAD_SUCCESS | (renamed ? FILE_COMPLETION_THREAD_RENAMED : 0), (LPARAM)this) );
 	return TRUE;
 }
@@ -3513,14 +3449,14 @@ void CPartFile::PerformFileCompleteEnd(DWORD dwResult)
 		theApp.sharedfiles->RepublishFile(this);
 
 		// give visual response
-		Log(LOG_SUCCESS | LOG_STATUSBAR, GetResString(IDS_DOWNLOADDONE), GetFileName());
+		Log(LOG_SUCCESS | LOG_STATUSBAR, GetResString(IDS_DOWNLOADDONE), (LPCTSTR)GetFileName());
 		theApp.emuledlg->ShowNotifier(GetResString(IDS_TBN_DOWNLOADDONE) + _T('\n') + GetFileName(), TBN_DOWNLOADFINISHED, GetFilePath());
 		if (dwResult & FILE_COMPLETION_THREAD_RENAMED)
 		{
 			CString strFilePath(GetFullName());
 			PathStripPath(strFilePath.GetBuffer());
 			strFilePath.ReleaseBuffer();
-			Log(LOG_STATUSBAR, GetResString(IDS_DOWNLOADRENAMED), strFilePath);
+			Log(LOG_STATUSBAR, GetResString(IDS_DOWNLOADRENAMED), (LPCTSTR)strFilePath);
 		}
 		if(!m_pCollection && CCollection::HasCollectionExtention(GetFileName()))
 		{
@@ -3536,47 +3472,36 @@ void CPartFile::PerformFileCompleteEnd(DWORD dwResult)
 	theApp.downloadqueue->StartNextFileIfPrefs(GetCategory());
 }
 
-void  CPartFile::RemoveAllSources(bool bTryToSwap){
-	POSITION pos1,pos2;
-	for( pos1 = srclist.GetHeadPosition(); ( pos2 = pos1 ) != NULL; ){
-		srclist.GetNext(pos1);
-		if (bTryToSwap){
-			if (!srclist.GetAt(pos2)->SwapToAnotherFile(_T("Removing source. CPartFile::RemoveAllSources()"), true, true, true, NULL, false, false) ) // ZZ:DownloadManager
-				theApp.downloadqueue->RemoveSource(srclist.GetAt(pos2), false);
-		}
-		else
-			theApp.downloadqueue->RemoveSource(srclist.GetAt(pos2), false);
+void  CPartFile::RemoveAllSources(bool bTryToSwap)
+{
+	for (POSITION pos = srclist.GetHeadPosition(); pos != NULL;) {
+		CUpDownClient* cli = srclist.GetNext(pos);
+		if (bTryToSwap) {
+			if (!cli->SwapToAnotherFile(_T("Removing source. CPartFile::RemoveAllSources()"), true, true, true, NULL, false, false) ) // ZZ:DownloadManager
+				theApp.downloadqueue->RemoveSource(cli, false);
+		} else
+			theApp.downloadqueue->RemoveSource(cli, false);
 	}
-	UpdatePartsInfo(); 
+	UpdatePartsInfo();
 	UpdateAvailablePartsCount();
 
 	//[enkeyDEV(Ottavio84) -A4AF-]
 	// remove all links A4AF in sources to this file
-	if(!A4AFsrclist.IsEmpty())
-	{
-		POSITION pos1, pos2;
-		for(pos1 = A4AFsrclist.GetHeadPosition();(pos2=pos1)!=NULL;)
-		{
-			A4AFsrclist.GetNext(pos1);
-			
-			POSITION pos3 = A4AFsrclist.GetAt(pos2)->m_OtherRequests_list.Find(this); 
-			if(pos3)
-			{ 
-				A4AFsrclist.GetAt(pos2)->m_OtherRequests_list.RemoveAt(pos3);
-				theApp.emuledlg->transferwnd->GetDownloadList()->RemoveSource(this->A4AFsrclist.GetAt(pos2),this);
-			}
-			else{
-				pos3 = A4AFsrclist.GetAt(pos2)->m_OtherNoNeeded_list.Find(this); 
-				if(pos3)
-				{ 
-					A4AFsrclist.GetAt(pos2)->m_OtherNoNeeded_list.RemoveAt(pos3);
-					theApp.emuledlg->transferwnd->GetDownloadList()->RemoveSource(A4AFsrclist.GetAt(pos2),this);
-				}
+	while (!A4AFsrclist.IsEmpty()) {
+		CUpDownClient* cli = A4AFsrclist.RemoveHead();
+		POSITION pos = cli->m_OtherRequests_list.Find(this);
+		if (pos) {
+			cli->m_OtherRequests_list.RemoveAt(pos);
+			theApp.emuledlg->transferwnd->GetDownloadList()->RemoveSource(cli, this);
+		} else {
+			pos = cli->m_OtherNoNeeded_list.Find(this);
+			if (pos) {
+				cli->m_OtherNoNeeded_list.RemoveAt(pos);
+				theApp.emuledlg->transferwnd->GetDownloadList()->RemoveSource(cli,this);
 			}
 		}
-		A4AFsrclist.RemoveAll();
 	}
-	
+
 	UpdateFileRatingCommentAvail();
 }
 
@@ -3588,7 +3513,7 @@ void CPartFile::DeleteFile(){
 
 	// feel free to implement a runtime handling mechanism!
 	if (m_AllocateThread != NULL){
-		LogWarning(LOG_STATUSBAR, GetResString(IDS_DELETEAFTERALLOC), GetFileName());
+		LogWarning(LOG_STATUSBAR, GetResString(IDS_DELETEAFTERALLOC), (LPCTSTR)GetFileName());
 		m_bDeleteAfterAlloc=true;
 		return;
 	}
@@ -3602,20 +3527,20 @@ void CPartFile::DeleteFile(){
 		m_hpartfile.Close();
 
 	if (_tremove(m_fullname))
-		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_DELETE) + _T(" - ") + CString(_tcserror(errno)), m_fullname);
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_DELETE) + _T(" - ") + CString(_tcserror(errno)), (LPCTSTR)m_fullname);
 	CString partfilename(RemoveFileExtension(m_fullname));
 	if (_tremove(partfilename))
-		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_DELETE) + _T(" - ") + CString(_tcserror(errno)), partfilename);
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_DELETE) + _T(" - ") + CString(_tcserror(errno)), (LPCTSTR)partfilename);
 
 	CString BAKName(m_fullname);
 	BAKName.Append(PARTMET_BAK_EXT);
 	if (_taccess(BAKName, 0) == 0 && !::DeleteFile(BAKName))
-		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_DELETE) + _T(" - ") + GetErrorMessage(GetLastError()), BAKName);
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_DELETE) + _T(" - ") + GetErrorMessage(GetLastError()), (LPCTSTR)BAKName);
 
 	BAKName = m_fullname;
 	BAKName.Append(PARTMET_TMP_EXT);
 	if (_taccess(BAKName, 0) == 0 && !::DeleteFile(BAKName))
-		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_DELETE) + _T(" - ") + GetErrorMessage(GetLastError()), BAKName);
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_DELETE) + _T(" - ") + GetErrorMessage(GetLastError()), (LPCTSTR)BAKName);
 
 	delete this;
 }
@@ -3632,20 +3557,20 @@ bool CPartFile::HashSinglePart(UINT partnumber, bool* pbAICHReportedOK)
 		*pbAICHReportedOK = false;
 	if (!m_FileIdentifier.HasExpectedMD4HashCount() && !(m_FileIdentifier.HasAICHHash() && m_FileIdentifier.HasExpectedAICHHashCount()))
 	{
-		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_HASHERRORWARNING), GetFileName());
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_HASHERRORWARNING), (LPCTSTR)GetFileName());
 		m_bMD4HashsetNeeded = true;
 		m_bAICHPartHashsetNeeded = true;
-		return true;		
+		return true;
 	}
 	else{
 		uchar hashresult[16];
-		m_hpartfile.Seek((LONGLONG)PARTSIZE*(uint64)partnumber,0);
+		m_hpartfile.Seek((LONGLONG)(PARTSIZE*partnumber), 0);
 		uint32 length = PARTSIZE;
-		if ((ULONGLONG)PARTSIZE*(uint64)(partnumber+1) > m_hpartfile.GetLength()){
-			length = (UINT)(m_hpartfile.GetLength() - ((ULONGLONG)PARTSIZE*(uint64)partnumber));
+		if (PARTSIZE*(partnumber+1) > m_hpartfile.GetLength()) {
+			length = (UINT)(m_hpartfile.GetLength() - (PARTSIZE*partnumber));
 			ASSERT( length <= PARTSIZE );
 		}
-		
+
 		CAICHHashTree* phtAICHPartHash = NULL;
 		if (m_FileIdentifier.HasAICHHash() && m_FileIdentifier.HasExpectedAICHHashCount())
 		{
@@ -3653,7 +3578,7 @@ bool CPartFile::HashSinglePart(UINT partnumber, bool* pbAICHReportedOK)
 			if (pPartTree != NULL)
 			{
 				// use a new part tree, so we don't overwrite any existing recovery data which we might still need lateron
-				phtAICHPartHash = new CAICHHashTree(pPartTree->m_nDataSize,pPartTree->m_bIsLeftBranch, pPartTree->GetBaseSize());	
+				phtAICHPartHash = new CAICHHashTree(pPartTree->m_nDataSize,pPartTree->m_bIsLeftBranch, pPartTree->GetBaseSize());
 			}
 			else
 				ASSERT( false );
@@ -3668,7 +3593,7 @@ bool CPartFile::HashSinglePart(UINT partnumber, bool* pbAICHReportedOK)
 		if (m_FileIdentifier.HasExpectedMD4HashCount())
 		{
 			bMD4Checked = true;
-			if (GetPartCount() > 1 || GetFileSize()== (uint64)PARTSIZE)
+			if (GetPartCount() > 1 || GetFileSize() == PARTSIZE)
 			{
 				if (m_FileIdentifier.GetAvailableMD4PartHashCount() > partnumber)
 					bMD4Error = md4cmp(hashresult, m_FileIdentifier.GetMD4PartHash(partnumber)) != 0;
@@ -3683,7 +3608,7 @@ bool CPartFile::HashSinglePart(UINT partnumber, bool* pbAICHReportedOK)
 		}
 		else
 		{
-			DebugLogError(_T("MD4 HashSet not present while veryfing part %u for file %s"), partnumber, GetFileName());
+			DebugLogError(_T("MD4 HashSet not present while veryfing part %u for file %s"), partnumber, (LPCTSTR)GetFileName());
 			m_bMD4HashsetNeeded = true;
 		}
 
@@ -3702,19 +3627,18 @@ bool CPartFile::HashSinglePart(UINT partnumber, bool* pbAICHReportedOK)
 				bAICHError = m_FileIdentifier.GetAICHHash() != phtAICHPartHash->m_Hash;
 		}
 		//else
-		//	DebugLogWarning(_T("AICH HashSet not present while verifying part %u for file %s"), partnumber, GetFileName());
+		//	DebugLogWarning(_T("AICH HashSet not present while verifying part %u for file %s"), partnumber, (LPCTSTR)GetFileName());
 
 		delete phtAICHPartHash;
-		phtAICHPartHash = NULL;
 		if (pbAICHReportedOK != NULL && bAICHChecked)
 			*pbAICHReportedOK = !bAICHError;
 		if (bMD4Checked && bAICHChecked && bMD4Error != bAICHError)
 			DebugLogError(_T("AICH and MD4 HashSet disagree on verifying part %u for file %s. MD4: %s - AICH: %s"), partnumber
-			, GetFileName(), bMD4Error ? _T("Corrupt") : _T("OK"), bAICHError ? _T("Corrupt") : _T("OK"));
+			, (LPCTSTR)GetFileName(), bMD4Error ? _T("Corrupt") : _T("OK"), bAICHError ? _T("Corrupt") : _T("OK"));
 #ifdef _DEBUG
 		else
-			DebugLog(_T("Verifying part %u for file %s. MD4: %s - AICH: %s"), partnumber , GetFileName()
-			, bMD4Checked ? (bMD4Error ? _T("Corrupt") : _T("OK")) : _T("Unavailable"), bAICHChecked ? (bAICHError ? _T("Corrupt") : _T("OK")) : _T("Unavailable"));	
+			DebugLog(_T("Verifying part %u for file %s. MD4: %s - AICH: %s"), partnumber , (LPCTSTR)GetFileName()
+			, bMD4Checked ? (bMD4Error ? _T("Corrupt") : _T("OK")) : _T("Unavailable"), bAICHChecked ? (bAICHError ? _T("Corrupt") : _T("OK")) : _T("Unavailable"));
 #endif
 		return !bMD4Error && !bAICHError;
 	}
@@ -3753,9 +3677,9 @@ void CPartFile::SetDownPriority(uint8 np, bool resort)
 			ASSERT(0);
 			np = PR_NORMAL;
 		}
-	
+
 		m_iDownPriority = np;
-		//Some methods will change a batch of priorites then call these methods. 
+		//Some methods will change a batch of priorites then call these methods.
 	    if(resort) {
 			//Sort the downloadqueue so contacting sources work correctly.
 			theApp.downloadqueue->SortByPriority();
@@ -3821,17 +3745,10 @@ void CPartFile::StopPausedFile()
 	//Once an hour, remove any sources for files which are no longer active downloads
 	EPartFileStatus uState = GetStatus();
 	if( (uState==PS_PAUSED || uState==PS_INSUFFICIENT || uState==PS_ERROR) && !stopped && time(NULL) - m_iLastPausePurge > (60*60) )
-	{
 		StopFile();
-	}
 	else
-	{
 		if (m_bDeleteAfterAlloc && m_AllocateThread==NULL)
-		{
 			DeleteFile();
-			return;
-		}
-	}
 }
 
 bool CPartFile::CanPauseFile() const
@@ -3877,7 +3794,7 @@ void CPartFile::PauseFile(bool bInsufficient, bool resort)
 
 	if (bInsufficient)
 	{
-		LogError(LOG_STATUSBAR, _T("Insufficient diskspace - pausing download of \"%s\""), GetFileName());
+		LogError(LOG_STATUSBAR, _T("Insufficient diskspace - pausing download of \"%s\""), (LPCTSTR)GetFileName());
 		insufficient = true;
 	}
 	else
@@ -3937,7 +3854,7 @@ void CPartFile::ResumeFileInsufficient()
 		return;
 	if (!insufficient)
 		return;
-	AddLogLine(false, _T("Resuming download of \"%s\""), GetFileName());
+	AddLogLine(false, _T("Resuming download of \"%s\""), (LPCTSTR)GetFileName());
 	insufficient = false;
 	SetActive(theApp.IsConnected());
 	m_LastSearchTime = 0;
@@ -3983,12 +3900,12 @@ CString CPartFile::getPartfileStatus() const
 		return GetResString(IDS_DOWNLOADING);
 	else
 		return GetResString(IDS_WAITING);
-} 
+}
 
 int CPartFile::getPartfileStatusRang() const
 {
 	switch (GetStatus()) {
-		case PS_HASHING: 
+		case PS_HASHING:
 		case PS_WAITINGFORHASH:
 			return 7;
 
@@ -4012,7 +3929,7 @@ int CPartFile::getPartfileStatusRang() const
 	if (GetSrcStatisticsValue(DS_DOWNLOADING) == 0)
 		return 3; // waiting?
 	return 2; // downloading?
-} 
+}
 
 time_t CPartFile::getTimeRemainingSimple() const
 {
@@ -4096,9 +4013,9 @@ bool CPartFile::IsReadyForPreview() const
 	// Barry - Allow preview of archives of any length > 1k
 	if (IsArchive(true))
 	{
-		//if (GetStatus() != PS_COMPLETE && GetStatus() != PS_COMPLETING 
-		//	&& GetFileSize()>1024 && GetCompletedSize()>1024 
-		//	&& !m_bRecoveringArchive 
+		//if (GetStatus() != PS_COMPLETE && GetStatus() != PS_COMPLETING
+		//	&& GetFileSize()>1024 && GetCompletedSize()>1024
+		//	&& !m_bRecoveringArchive
 		//	&& GetFreeDiskSpaceX(thePrefs.GetTempDir())+100000000 > 2*GetFileSize())
 		//	return true;
 
@@ -4125,21 +4042,21 @@ bool CPartFile::IsReadyForPreview() const
 			uMinFreeDiskSpace += (uint64)(GetCompletedSize() + (uint64)16*1024);
 		if (GetFreeDiskSpaceX(GetTempPath()) < uMinFreeDiskSpace)
 			return false;
-		return true; 
+		return true;
 	}
 
 	if (thePrefs.IsMoviePreviewBackup())
 	{
-		return !( (GetStatus() != PS_READY && GetStatus() != PS_PAUSED) 
+		return !( (GetStatus() != PS_READY && GetStatus() != PS_PAUSED)
 				|| m_bPreviewing || GetPartCount() < 5 || !IsMovie() || (GetFreeDiskSpaceX(GetTempPath()) + 100000000) < GetFileSize()
-				|| ( !IsComplete(0,PARTSIZE-1, false) || !IsComplete(PARTSIZE*(uint64)(GetPartCount()-1),GetFileSize() - (uint64)1, false)));
+				|| (!IsComplete(0, PARTSIZE-1, false) || !IsComplete(PARTSIZE*(GetPartCount()-1), GetFileSize() - 1ull, false)));
 	}
 	else
 	{
 		TCHAR szVideoPlayerFileName[_MAX_FNAME];
 		_tsplitpath(thePrefs.GetVideoPlayer(), NULL, NULL, szVideoPlayerFileName, NULL);
 
-		// enable the preview command if the according option is specified 'PreviewSmallBlocks' 
+		// enable the preview command if the according option is specified 'PreviewSmallBlocks'
 		// or if VideoLAN client is specified
 		if (thePrefs.GetPreviewSmallBlocks() || !_tcsicmp(szVideoPlayerFileName, _T("vlc")))
 		{
@@ -4150,7 +4067,7 @@ bool CPartFile::IsReadyForPreview() const
 			if (!(uState == PS_READY || uState == PS_EMPTY || uState == PS_PAUSED || uState == PS_INSUFFICIENT))
 			    return false;
 
-			// default: check the ED2K file format to be of type audio, video or CD image. 
+			// default: check the ED2K file format to be of type audio, video or CD image.
 			// but because this could disable the preview command for some file types which eMule does not know,
 			// this test can be avoided by specifying 'PreviewSmallBlocks=2'
 			if (thePrefs.GetPreviewSmallBlocks() <= 1)
@@ -4191,12 +4108,12 @@ bool CPartFile::IsReadyForPreview() const
 					    return false;
 			    }
 			}
-    
+
 		    return true;
 		}
 		else{
-		    return !((GetStatus() != PS_READY && GetStatus() != PS_PAUSED) 
-				    || m_bPreviewing || GetPartCount() < 2 || !IsMovie() || !IsComplete(0,PARTSIZE-1, false)); 
+		    return !((GetStatus() != PS_READY && GetStatus() != PS_PAUSED)
+				    || m_bPreviewing || GetPartCount() < 2 || !IsMovie() || !IsComplete(0,PARTSIZE-1, false));
 		}
 	}
 }
@@ -4208,12 +4125,12 @@ void CPartFile::UpdateAvailablePartsCount()
 	for (UINT ixPart = 0; ixPart < iPartCount; ixPart++){
 		for (POSITION pos = srclist.GetHeadPosition(); pos; ){
 			if (srclist.GetNext(pos)->IsPartAvailable(ixPart)){
-				availablecounter++; 
+				availablecounter++;
 				break;
 			}
 		}
 	}
-	if (iPartCount == availablecounter && availablePartsCount < iPartCount)
+	if (iPartCount == availablecounter && availablePartsCount <= iPartCount) //set lastseencomplete to the latest time, not to the earliest
 		lastseencomplete = CTime::GetCurrentTime();
 	availablePartsCount = availablecounter;
 }
@@ -4225,7 +4142,7 @@ Packet* CPartFile::CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 byR
 
 	if (md4cmp(forClient->GetUploadFileID(), GetFileHash()) != 0) {
 		// should never happen
-		DEBUG_ONLY( DebugLogError(_T("*** %hs - client (%s) upload file \"%s\" does not match file \"%s\""), __FUNCTION__, forClient->DbgGetClientInfo(), DbgGetFileInfo(forClient->GetUploadFileID()), GetFileName()) );
+		DEBUG_ONLY( DebugLogError(_T("*** %hs - client (%s) upload file \"%s\" does not match file \"%s\""), __FUNCTION__, (LPCTSTR)forClient->DbgGetClientInfo(), (LPCTSTR)DbgGetFileInfo(forClient->GetUploadFileID()), (LPCTSTR)GetFileName()) );
 		ASSERT(0);
 		return NULL;
 	}
@@ -4235,7 +4152,7 @@ Packet* CPartFile::CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 byR
 		&& !(forClient->GetUpPartCount() == GetPartCount() && forClient->GetUpPartStatus() != NULL))
 	{
 		// should never happen
-		DEBUG_ONLY( DebugLogError(_T("*** %hs - part count (%u) of client (%s) does not match part count (%u) of file \"%s\""), __FUNCTION__, forClient->GetUpPartCount(), forClient->DbgGetClientInfo(), GetPartCount(), GetFileName()) );
+		DEBUG_ONLY( DebugLogError(_T("*** %hs - part count (%u) of client (%s) does not match part count (%u) of file \"%s\""), __FUNCTION__, forClient->GetUpPartCount(), (LPCTSTR)forClient->DbgGetClientInfo(), GetPartCount(), (LPCTSTR)GetFileName()) );
 		ASSERT(0);
 		return NULL;
 	}
@@ -4244,7 +4161,7 @@ Packet* CPartFile::CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 byR
 		return NULL;
 
 	CSafeMemFile data(1024);
-	
+
 	uint8 byUsedVersion;
 	bool bIsSX2Packet;
 	if (forClient->SupportsSourceExchange2() && byRequestedVersion > 0){
@@ -4256,23 +4173,22 @@ Packet* CPartFile::CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 byR
 
 		// we don't support any special SX2 options yet, reserved for later use
 		if (nRequestedOptions != 0)
-			DebugLogWarning(_T("Client requested unknown options for SourceExchange2: %u (%s)"), nRequestedOptions, forClient->DbgGetClientInfo());
+			DebugLogWarning(_T("Client requested unknown options for SourceExchange2: %u (%s)"), nRequestedOptions, (LPCTSTR)forClient->DbgGetClientInfo());
 	}
 	else{
 		byUsedVersion = forClient->GetSourceExchange1Version();
 		bIsSX2Packet = false;
 		if (forClient->SupportsSourceExchange2())
-			DebugLogWarning(_T("Client which announced to support SX2 sent SX1 packet instead (%s)"), forClient->DbgGetClientInfo());
+			DebugLogWarning(_T("Client which announced to support SX2 sent SX1 packet instead (%s)"), (LPCTSTR)forClient->DbgGetClientInfo());
 	}
 
 	UINT nCount = 0;
 	data.WriteHash16(m_FileIdentifier.GetMD4Hash());
 	data.WriteUInt16((uint16)nCount);
-	
-	bool bNeeded;
+
 	const uint8* reqstatus = forClient->GetUpPartStatus();
 	for (POSITION pos = srclist.GetHeadPosition();pos != 0;){
-		bNeeded = false;
+		bool bNeeded = false;
 		const CUpDownClient* cur_src = srclist.GetNext(pos);
 		if (cur_src->HasLowID() || !cur_src->IsValidSource())
 			continue;
@@ -4302,7 +4218,7 @@ Packet* CPartFile::CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 byR
 			else{
 				// should never happen
 				if (thePrefs.GetVerbose())
-					DEBUG_ONLY(DebugLogError(_T("*** %hs - found source (%s) with wrong partcount (%u) attached to partfile \"%s\" (partcount=%u)"), __FUNCTION__, cur_src->DbgGetClientInfo(), cur_src->GetPartCount(), GetFileName(), GetPartCount()));
+					DEBUG_ONLY(DebugLogError(_T("*** %hs - found source (%s) with wrong partcount (%u) attached to partfile \"%s\" (partcount=%u)"), __FUNCTION__, (LPCTSTR)cur_src->DbgGetClientInfo(), cur_src->GetPartCount(), (LPCTSTR)GetFileName(), GetPartCount()));
 			}
 		}
 
@@ -4322,7 +4238,7 @@ Packet* CPartFile::CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 byR
 			if (byUsedVersion >= 4){
 				// ConnectSettings - SourceExchange V4
 				// 4 Reserved (!)
-				// 1 DirectCallback Supported/Available 
+				// 1 DirectCallback Supported/Available
 				// 1 CryptLayer Required
 				// 1 CryptLayer Requested
 				// 1 CryptLayer Supported
@@ -4348,7 +4264,7 @@ Packet* CPartFile::CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 byR
 	if (result->size > 354)
 		result->PackPacket();
 	if (thePrefs.GetDebugSourceExchange())
-		AddDebugLogLine(false, _T("SXSend: Client source response SX2=%s, Version=%u; Count=%u, %s, File=\"%s\""), bIsSX2Packet ? _T("Yes") : _T("No"), byUsedVersion, nCount, forClient->DbgGetClientInfo(), GetFileName());
+		AddDebugLogLine(false, _T("SXSend: Client source response SX2=%s, Version=%u; Count=%u, %s, File=\"%s\""), bIsSX2Packet ? _T("Yes") : _T("No"), byUsedVersion, nCount, (LPCTSTR)forClient->DbgGetClientInfo(), (LPCTSTR)GetFileName());
 	return result;
 }
 
@@ -4362,8 +4278,8 @@ void CPartFile::AddClientSources(CSafeMemFile* sources, uint8 uClientSXVersion, 
 	if (thePrefs.GetDebugSourceExchange()) {
 		CString strDbgClientInfo;
 		if (pClient)
-			strDbgClientInfo.Format(_T("%s, "), pClient->DbgGetClientInfo());
-		AddDebugLogLine(false, _T("SXRecv: Client source response; SX2=%s, Ver=%u, %sFile=\"%s\""), bSourceExchange2 ? _T("Yes") : _T("No"), uClientSXVersion, strDbgClientInfo, GetFileName());
+			strDbgClientInfo.Format(_T("%s, "), (LPCTSTR)pClient->DbgGetClientInfo());
+		AddDebugLogLine(false, _T("SXRecv: Client source response; SX2=%s, Ver=%u, %sFile=\"%s\""), bSourceExchange2 ? _T("Yes") : _T("No"), uClientSXVersion, (LPCTSTR)strDbgClientInfo, (LPCTSTR)GetFileName());
 	}
 
 	UINT uPacketSXVersion = 0;
@@ -4382,8 +4298,8 @@ void CPartFile::AddClientSources(CSafeMemFile* sources, uint8 uClientSXVersion, 
 				if (thePrefs.GetVerbose()) {
 					CString strDbgClientInfo;
 					if (pClient)
-						strDbgClientInfo.Format(_T("%s, "), pClient->DbgGetClientInfo());
-					DebugLogWarning(_T("Received invalid SX packet (v%u, count=%u, size=%u), %sFile=\"%s\""), uClientSXVersion, nCount, uDataSize, strDbgClientInfo, GetFileName());
+						strDbgClientInfo.Format(_T("%s, "), (LPCTSTR)pClient->DbgGetClientInfo());
+					DebugLogWarning(_T("Received invalid SX packet (v%u, count=%u, size=%u), %sFile=\"%s\""), uClientSXVersion, nCount, uDataSize, (LPCTSTR)strDbgClientInfo, (LPCTSTR)GetFileName());
 				}
 				return;
 			}
@@ -4397,8 +4313,8 @@ void CPartFile::AddClientSources(CSafeMemFile* sources, uint8 uClientSXVersion, 
 				if (thePrefs.GetVerbose()) {
 					CString strDbgClientInfo;
 					if (pClient)
-						strDbgClientInfo.Format(_T("%s, "), pClient->DbgGetClientInfo());
-					DebugLogWarning(_T("Received invalid SX packet (v%u, count=%u, size=%u), %sFile=\"%s\""), uClientSXVersion, nCount, uDataSize, strDbgClientInfo, GetFileName());
+						strDbgClientInfo.Format(_T("%s, "), (LPCTSTR)pClient->DbgGetClientInfo());
+					DebugLogWarning(_T("Received invalid SX packet (v%u, count=%u, size=%u), %sFile=\"%s\""), uClientSXVersion, nCount, uDataSize, (LPCTSTR)strDbgClientInfo, (LPCTSTR)GetFileName());
 				}
 				return;
 			}
@@ -4415,8 +4331,8 @@ void CPartFile::AddClientSources(CSafeMemFile* sources, uint8 uClientSXVersion, 
 				if (thePrefs.GetVerbose()) {
 					CString strDbgClientInfo;
 					if (pClient)
-						strDbgClientInfo.Format(_T("%s, "), pClient->DbgGetClientInfo());
-					DebugLogWarning(_T("Received invalid SX packet (v%u, count=%u, size=%u), %sFile=\"%s\""), uClientSXVersion, nCount, uDataSize, strDbgClientInfo, GetFileName());
+						strDbgClientInfo.Format(_T("%s, "), (LPCTSTR)pClient->DbgGetClientInfo());
+					DebugLogWarning(_T("Received invalid SX packet (v%u, count=%u, size=%u), %sFile=\"%s\""), uClientSXVersion, nCount, uDataSize, (LPCTSTR)strDbgClientInfo, (LPCTSTR)GetFileName());
 				}
 				return;
 			}
@@ -4425,13 +4341,13 @@ void CPartFile::AddClientSources(CSafeMemFile* sources, uint8 uClientSXVersion, 
 		else
 		{
 			// If v5+ inserts additional data (like v2), the above code will correctly filter those packets.
-			// If v5+ appends additional data after <count>(<Sources>)[count], we are in trouble with the 
+			// If v5+ appends additional data after <count>(<Sources>)[count], we are in trouble with the
 			// above code. Though a client which does not understand v5+ should never receive such a packet.
 			if (thePrefs.GetVerbose()) {
 				CString strDbgClientInfo;
 				if (pClient)
-					strDbgClientInfo.Format(_T("%s, "), pClient->DbgGetClientInfo());
-				DebugLogWarning(_T("Received invalid SX packet (v%u, count=%u, size=%u), %sFile=\"%s\""), uClientSXVersion, nCount, uDataSize, strDbgClientInfo, GetFileName());
+					strDbgClientInfo.Format(_T("%s, "), (LPCTSTR)pClient->DbgGetClientInfo());
+				DebugLogWarning(_T("Received invalid SX packet (v%u, count=%u, size=%u), %sFile=\"%s\""), uClientSXVersion, nCount, uDataSize, (LPCTSTR)strDbgClientInfo, (LPCTSTR)GetFileName());
 			}
 			return;
 		}
@@ -4445,15 +4361,15 @@ void CPartFile::AddClientSources(CSafeMemFile* sources, uint8 uClientSXVersion, 
 			if (thePrefs.GetVerbose()) {
 				CString strDbgClientInfo;
 				if (pClient)
-					strDbgClientInfo.Format(_T("%s, "), pClient->DbgGetClientInfo());
+					strDbgClientInfo.Format(_T("%s, "), (LPCTSTR)pClient->DbgGetClientInfo());
 
-				DebugLogWarning(_T("Received invalid SX2 packet - Version unknown (v%u), %sFile=\"%s\""), uClientSXVersion, strDbgClientInfo, GetFileName());
+				DebugLogWarning(_T("Received invalid SX2 packet - Version unknown (v%u), %sFile=\"%s\""), uClientSXVersion, (LPCTSTR)strDbgClientInfo, (LPCTSTR)GetFileName());
 			}
 			return;
 		}
 		// all known versions use the first 2 bytes as count and unknown version are already filtered above
 		nCount = sources->ReadUInt16();
-		UINT uDataSize = (UINT)(sources->GetLength() - sources->GetPosition());	
+		UINT uDataSize = (UINT)(sources->GetLength() - sources->GetPosition());
 		bool bError = false;
 		switch (uClientSXVersion){
 			case 1:
@@ -4475,8 +4391,8 @@ void CPartFile::AddClientSources(CSafeMemFile* sources, uint8 uClientSXVersion, 
 			if (thePrefs.GetVerbose()) {
 				CString strDbgClientInfo;
 				if (pClient)
-					strDbgClientInfo.Format(_T("%s, "), pClient->DbgGetClientInfo());
-				DebugLogWarning(_T("Received invalid/corrupt SX2 packet (v%u, count=%u, size=%u), %sFile=\"%s\""), uClientSXVersion, nCount, uDataSize, strDbgClientInfo, GetFileName());
+					strDbgClientInfo.Format(_T("%s, "), (LPCTSTR)pClient->DbgGetClientInfo());
+				DebugLogWarning(_T("Received invalid/corrupt SX2 packet (v%u, count=%u, size=%u), %sFile=\"%s\""), uClientSXVersion, nCount, uDataSize, (LPCTSTR)strDbgClientInfo, (LPCTSTR)GetFileName());
 			}
 			return;
 		}
@@ -4504,26 +4420,27 @@ void CPartFile::AddClientSources(CSafeMemFile* sources, uint8 uClientSXVersion, 
 			uint32 dwIDED2K = ntohl(dwID);
 
 			// check the HighID(IP) - "Filter LAN IPs" and "IPfilter" the received sources IP addresses
-			if (!IsLowID(dwID))
+			if (!IsLowID(dwIDED2K))
 			{
 				if (!IsGoodIP(dwIDED2K))
 				{
 					// check for 0-IP, localhost and optionally for LAN addresses
 					//if (thePrefs.GetLogFilteredIPs())
-					//	AddDebugLogLine(false, _T("Ignored source (IP=%s) received via source exchange - bad IP"), ipstr(dwIDED2K));
+					//	AddDebugLogLine(false, _T("Ignored source (IP=%s) received via source exchange - bad IP"), (LPCTSTR)ipstr(dwIDED2K));
 					continue;
 				}
 				if (theApp.ipfilter->IsFiltered(dwIDED2K))
 				{
 					if (thePrefs.GetLogFilteredIPs())
-						AddDebugLogLine(false, _T("Ignored source (IP=%s) received via source exchange - IP filter (%s)"), ipstr(dwIDED2K), theApp.ipfilter->GetLastHit());
+						AddDebugLogLine(false, _T("Ignored source (IP=%s) received via source exchange - IP filter (%s)"), (LPCTSTR)ipstr(dwIDED2K), (LPCTSTR)theApp.ipfilter->GetLastHit());
 					continue;
 				}
 				if (theApp.clientlist->IsBannedClient(dwIDED2K)){
 #ifdef _DEBUG
 					if (thePrefs.GetLogBannedClients()){
-						CUpDownClient* pClient = theApp.clientlist->FindClientByIP(dwIDED2K);
-						AddDebugLogLine(false, _T("Ignored source (IP=%s) received via source exchange - banned client %s"), ipstr(dwIDED2K), pClient->DbgGetClientInfo());
+						CUpDownClient* pClient1 = theApp.clientlist->FindClientByIP(dwIDED2K);
+						if (pClient1)
+							AddDebugLogLine(false, _T("Ignored source (IP=%s) received via source exchange - banned client %s"), (LPCTSTR)ipstr(dwIDED2K), (LPCTSTR)pClient1->DbgGetClientInfo());
 					}
 #endif
 					continue;
@@ -4534,7 +4451,7 @@ void CPartFile::AddClientSources(CSafeMemFile* sources, uint8 uClientSXVersion, 
 			if (!CanAddSource(dwID, nPort, dwServerIP, nServerPort, NULL, false))
 			{
 				//if (thePrefs.GetLogFilteredIPs())
-				//	AddDebugLogLine(false, _T("Ignored source (IP=%s) received via source exchange"), ipstr(dwIDED2K));
+				//	AddDebugLogLine(false, _T("Ignored source (IP=%s) received via source exchange"), (LPCTSTR)ipstr(dwIDED2K));
 				continue;
 			}
 		}
@@ -4544,23 +4461,24 @@ void CPartFile::AddClientSources(CSafeMemFile* sources, uint8 uClientSXVersion, 
 			if (!IsLowID(dwID))
 			{
 				if (!IsGoodIP(dwID))
-				{ 
+				{
 					// check for 0-IP, localhost and optionally for LAN addresses
 					//if (thePrefs.GetLogFilteredIPs())
-					//	AddDebugLogLine(false, _T("Ignored source (IP=%s) received via source exchange - bad IP"), ipstr(dwID));
+					//	AddDebugLogLine(false, _T("Ignored source (IP=%s) received via source exchange - bad IP"), (LPCTSTR)ipstr(dwID));
 					continue;
 				}
 				if (theApp.ipfilter->IsFiltered(dwID))
 				{
 					if (thePrefs.GetLogFilteredIPs())
-						AddDebugLogLine(false, _T("Ignored source (IP=%s) received via source exchange - IP filter (%s)"), ipstr(dwID), theApp.ipfilter->GetLastHit());
+						AddDebugLogLine(false, _T("Ignored source (IP=%s) received via source exchange - IP filter (%s)"), (LPCTSTR)ipstr(dwID), (LPCTSTR)theApp.ipfilter->GetLastHit());
 					continue;
 				}
 				if (theApp.clientlist->IsBannedClient(dwID)){
 #ifdef _DEBUG
 					if (thePrefs.GetLogBannedClients()){
-						CUpDownClient* pClient = theApp.clientlist->FindClientByIP(dwID);
-						AddDebugLogLine(false, _T("Ignored source (IP=%s) received via source exchange - banned client %s"), ipstr(dwID), pClient->DbgGetClientInfo());
+						CUpDownClient* pClient1 = theApp.clientlist->FindClientByIP(dwID);
+						if (pClient1)
+							AddDebugLogLine(false, _T("Ignored source (IP=%s) received via source exchange - banned client %s"), (LPCTSTR)ipstr(dwID), (LPCTSTR)pClient1->DbgGetClientInfo());
 					}
 #endif
 					continue;
@@ -4571,28 +4489,24 @@ void CPartFile::AddClientSources(CSafeMemFile* sources, uint8 uClientSXVersion, 
 			if (!CanAddSource(dwID, nPort, dwServerIP, nServerPort))
 			{
 				//if (thePrefs.GetLogFilteredIPs())
-				//	AddDebugLogLine(false, _T("Ignored source (IP=%s) received via source exchange"), ipstr(dwID));
+				//	AddDebugLogLine(false, _T("Ignored source (IP=%s) received via source exchange"), (LPCTSTR)ipstr(dwID));
 				continue;
 			}
 		}
 
 		if (GetMaxSources() > GetSourceCount())
 		{
-			CUpDownClient* newsource;
-			if (uPacketSXVersion >= 3)
-				newsource = new CUpDownClient(this, nPort, dwID, dwServerIP, nServerPort, false);
-			else
-				newsource = new CUpDownClient(this, nPort, dwID, dwServerIP, nServerPort, true);
+			CUpDownClient* newsource = new CUpDownClient(this, nPort, dwID, dwServerIP, nServerPort, (uPacketSXVersion < 3));
 			if (uPacketSXVersion >= 2)
 				newsource->SetUserHash(achUserHash);
 			if (uPacketSXVersion >= 4) {
 				newsource->SetConnectOptions(byCryptOptions, true, false);
 				//if (thePrefs.GetDebugSourceExchange()) // remove this log later
-				//	AddDebugLogLine(false, _T("Received CryptLayer aware (%u) source from V4 Sourceexchange (%s)"), byCryptOptions, newsource->DbgGetClientInfo());
+				//	AddDebugLogLine(false, _T("Received CryptLayer aware (%u) source from V4 Sourceexchange (%s)"), byCryptOptions, (LPCTSTR)newsource->DbgGetClientInfo());
 			}
 			newsource->SetSourceFrom(SF_SOURCE_EXCHANGE);
 			theApp.downloadqueue->CheckAndAddSource(this, newsource);
-		} 
+		}
 		else
 			break;
 	}
@@ -4606,10 +4520,10 @@ void CPartFile::AddClientSources(CSafeMemFile* sources, uint8 uClientSXVersion, 
 	return MINCOMMONPENALTY;
 }
 */
-/* Barry - Replaces BlockReceived() 
+/* Barry - Replaces BlockReceived()
 
-           Originally this only wrote to disk when a full 180k block 
-           had been received from a client, and only asked for data in 
+           Originally this only wrote to disk when a full 180k block
+           had been received from a client, and only asked for data in
 		   180k blocks.
 
 		   This meant that on average 90k was lost for every connection
@@ -4623,7 +4537,7 @@ void CPartFile::AddClientSources(CSafeMemFile* sources, uint8 uClientSXVersion, 
 		   The requests will still not exceed 180k, but may be smaller to
 		   fill a gap.
 */
-uint32 CPartFile::WriteToBuffer(uint64 transize, const BYTE *data, uint64 start, uint64 end, Requested_Block_Struct *block, 
+uint32 CPartFile::WriteToBuffer(uint64 transize, const BYTE *data, uint64 start, uint64 end, Requested_Block_Struct *block,
 								const CUpDownClient* client)
 {
 	ASSERT( (sint64)transize > 0 );
@@ -4645,25 +4559,25 @@ uint32 CPartFile::WriteToBuffer(uint64 transize, const BYTE *data, uint64 start,
 	if (IsComplete(start, end, false))
 	{
 		if (thePrefs.GetVerbose())
-			AddDebugLogLine(false, _T("PrcBlkPkt: Already written block %s; File=%s; %s"), DbgGetBlockInfo(start, end), GetFileName(), client->DbgGetClientInfo());
+			AddDebugLogLine(false, _T("PrcBlkPkt: Already written block %s; File=%s; %s"), (LPCTSTR)DbgGetBlockInfo(start, end), (LPCTSTR)GetFileName(), (LPCTSTR)client->DbgGetClientInfo());
 		return 0;
 	}
 	// security sanitize check to make sure we do not write anything into an already hashed complete chunk
 	const uint64 nStartChunk = start / PARTSIZE;
 	const uint64 nEndChunk = end / PARTSIZE;
-	if (IsComplete(PARTSIZE * (uint64)nStartChunk, (PARTSIZE * (uint64)(nStartChunk + 1)) - 1, false)){
-		DebugLogError( _T("PrcBlkPkt: Received data touches already hashed chunk - ignored (start) %s; File=%s; %s"), DbgGetBlockInfo(start, end), GetFileName(), client->DbgGetClientInfo());
+	if (IsComplete(PARTSIZE * nStartChunk, (PARTSIZE * (nStartChunk + 1)) - 1, false)) {
+		DebugLogError( _T("PrcBlkPkt: Received data touches already hashed chunk - ignored (start) %s; File=%s; %s"), (LPCTSTR)DbgGetBlockInfo(start, end), (LPCTSTR)GetFileName(), (LPCTSTR)client->DbgGetClientInfo());
 		return 0;
 	}
 	else if (nStartChunk != nEndChunk) {
-		if (IsComplete(PARTSIZE * (uint64)nEndChunk, (PARTSIZE * (uint64)(nEndChunk + 1)) - 1, false)){
-			DebugLogError( _T("PrcBlkPkt: Received data touches already hashed chunk - ignored (end) %s; File=%s; %s"), DbgGetBlockInfo(start, end), GetFileName(), client->DbgGetClientInfo());
+		if (IsComplete(PARTSIZE * nEndChunk, (PARTSIZE * (nEndChunk + 1)) - 1, false)) {
+			DebugLogError( _T("PrcBlkPkt: Received data touches already hashed chunk - ignored (end) %s; File=%s; %s"), (LPCTSTR)DbgGetBlockInfo(start, end), (LPCTSTR)GetFileName(), (LPCTSTR)client->DbgGetClientInfo());
 			return 0;
 		}
 		else
-			DEBUG_ONLY( DebugLogWarning(_T("PrcBlkPkt: Received data crosses chunk boundaries %s; File=%s; %s"), DbgGetBlockInfo(start, end), GetFileName(), client->DbgGetClientInfo()) );
+			DEBUG_ONLY( DebugLogWarning(_T("PrcBlkPkt: Received data crosses chunk boundaries %s; File=%s; %s"), (LPCTSTR)DbgGetBlockInfo(start, end), (LPCTSTR)GetFileName(), (LPCTSTR)client->DbgGetClientInfo()) );
 	}
-	
+
 	// log transferinformation in our "blackbox"
 	m_CorruptionBlackBox.TransferredData(start, end, client);
 
@@ -4679,13 +4593,10 @@ uint32 CPartFile::WriteToBuffer(uint64 transize, const BYTE *data, uint64 start,
 	item->block = block;
 
 	// Add to the queue in the correct position (most likely the end)
-	PartFileBufferedData *queueItem;
 	bool added = false;
-	POSITION pos = m_BufferedData_list.GetTailPosition();
-	while (pos != NULL)
-	{
+	for (POSITION pos = m_BufferedData_list.GetTailPosition(); pos != NULL;) {
 		POSITION posLast = pos;
-		queueItem = m_BufferedData_list.GetPrev(pos);
+		PartFileBufferedData *queueItem = m_BufferedData_list.GetPrev(pos);
 		if (item->end > queueItem->end)
 		{
 			added = true;
@@ -4702,21 +4613,16 @@ uint32 CPartFile::WriteToBuffer(uint64 transize, const BYTE *data, uint64 start,
 	// Mark this small section of the file as filled
 	FillGap(item->start, item->end);
 
-	// Update the flushed mark on the requested block 
-	// The loop here is unfortunate but necessary to detect deleted blocks.
-	pos = requestedblocks_list.GetHeadPosition();
-	while (pos != NULL)
-	{	
-		if (requestedblocks_list.GetNext(pos) == item->block)
-			item->block->transferred += lenData;
-	}
-
+	// Update the flushed mark on the requested block
+	// Unlike in official, do not add to every item->block in a loop
+	if (requestedblocks_list.Find(block) != NULL)
+		block->transferred += lenData;
 	if (gaplist.IsEmpty())
 		FlushBuffer(true);
 
 	// We rather prefer to flush the buffer on our timer, but if we get over our limit too far (highspeed upload), we need
 	// to flush here in order to not eat up too much memory and use too much time on the bufferlist
-	if (m_nTotalBufferData > thePrefs.GetFileBufferSize()*2)
+	if (m_nTotalBufferData > thePrefs.GetFileBufferSize()*2ull)
 			FlushBuffer();
 
 	// Return the length of data written to the buffer
@@ -4741,7 +4647,7 @@ void CPartFile::FlushBuffer(bool forcewait, bool bForceICH, bool bNoAICH)
 	}
 
 	//if (thePrefs.GetVerbose())
-	//	AddDebugLogLine(false, _T("Flushing file %s - buffer size = %ld bytes (%ld queued items) transferred = %ld [time = %ld]"), GetFileName(), m_nTotalBufferData, m_BufferedData_list.GetCount(), m_uTransferred, m_nLastBufferFlushTime);
+	//	AddDebugLogLine(false, _T("Flushing file %s - buffer size = %ld bytes (%ld queued items) transferred = %ld [time = %ld]"), (LPCTSTR)GetFileName(), m_nTotalBufferData, m_BufferedData_list.GetCount(), m_uTransferred, m_nLastBufferFlushTime);
 
 	UINT partCount = GetPartCount();
 	bool *changedPart = new bool[partCount];
@@ -4757,7 +4663,7 @@ void CPartFile::FlushBuffer(bool forcewait, bool bForceICH, bool bNoAICH)
 		// Check free diskspace for compressed/sparse files before possibly increasing the file size
 		if (bCheckDiskspace && !IsNormalFile())
 		{
-			// Compressed/sparse files; regardless whether the file is increased in size, 
+			// Compressed/sparse files; regardless whether the file is increased in size,
 			// check the amount of data which will be written
 			// would need to use disk cluster sizes for more accuracy
 			if (m_nTotalBufferData + thePrefs.GetMinFreeDiskSpace() >= uFreeDiskSpace)
@@ -4768,7 +4674,7 @@ void CPartFile::FlushBuffer(bool forcewait, bool bForceICH, bool bNoAICH)
 		PartFileBufferedData *item = m_BufferedData_list.GetTail();
 		if (m_hpartfile.GetLength() <= item->end)
 		{
-			uint64 newsize = thePrefs.GetAllocCompleteMode() ? GetFileSize() : (item->end + 1);
+			uint64 newsize = thePrefs.GetAllocCompleteMode() ? (uint64)GetFileSize() : (item->end + 1);
 			ULONGLONG uIncrease = newsize - m_hpartfile.GetLength();
 
 			// Check free diskspace for normal files before increasing the file size
@@ -4780,7 +4686,7 @@ void CPartFile::FlushBuffer(bool forcewait, bool bForceICH, bool bNoAICH)
 					AfxThrowFileException(CFileException::diskFull, 0, m_hpartfile.GetFileName());
 			}
 
-			if (!IsNormalFile() || uIncrease<2097152) 
+			if (!IsNormalFile() || uIncrease<2097152)
 				forcewait=true;	// <2MB -> alloc it at once
 
 			// Allocate filesize
@@ -4797,10 +4703,10 @@ void CPartFile::FlushBuffer(bool forcewait, bool bForceICH, bool bNoAICH)
 					return;
 				}
 			}
-			
+
 			if (forcewait) {
 				bIncreasedFile=true;
-				// If this is a NTFS compressed file and the current block is the 1st one to be written and there is not 
+				// If this is a NTFS compressed file and the current block is the 1st one to be written and there is not
 				// enough free disk space to hold the entire *uncompressed* file, windows throws a 'diskFull'!?
 				if (IsNormalFile())
 					m_hpartfile.SetLength(newsize); // allocate disk space (may throw 'diskFull')
@@ -4839,7 +4745,7 @@ void CPartFile::FlushBuffer(bool forcewait, bool bForceICH, bool bNoAICH)
 		// Partfile should never be too large
  		if (m_hpartfile.GetLength() > m_nFileSize){
 			// it's "last chance" correction. the real bugfix has to be applied 'somewhere' else
-			TRACE(_T("Partfile \"%s\" is too large! Truncating %I64u bytes.\n"), GetFileName(), m_hpartfile.GetLength() - m_nFileSize);
+			TRACE(_T("Partfile \"%s\" is too large! Truncating %I64u bytes.\n"), (LPCTSTR)GetFileName(), m_hpartfile.GetLength() - (uint64)m_nFileSize);
 			m_hpartfile.SetLength(m_nFileSize);
 		}
 
@@ -4859,14 +4765,14 @@ void CPartFile::FlushBuffer(bool forcewait, bool bForceICH, bool bNoAICH)
 			}
 
 			// Is this 9MB part complete
-			if (IsComplete(PARTSIZE * (uint64)uPartNumber, (PARTSIZE * (uint64)(uPartNumber + 1)) - 1, false))
+			if (IsComplete(PARTSIZE * uPartNumber, (PARTSIZE * (uPartNumber + 1)) - 1, false))
 			{
 				// Is part corrupt
 				bool bAICHAgreed = false;
 				if (!HashSinglePart(uPartNumber, &bAICHAgreed))
 				{
-					LogWarning(LOG_STATUSBAR, GetResString(IDS_ERR_PARTCORRUPT), uPartNumber, GetFileName());
-					AddGap(PARTSIZE*(uint64)uPartNumber, PARTSIZE*(uint64)uPartNumber + partRange);
+					LogWarning(LOG_STATUSBAR, GetResString(IDS_ERR_PARTCORRUPT), uPartNumber, (LPCTSTR)GetFileName());
+					AddGap(PARTSIZE*uPartNumber, PARTSIZE*uPartNumber + partRange);
 
 					// add part to corrupted list, if not already there
 					if (!IsCorruptedPart(uPartNumber))
@@ -4884,11 +4790,11 @@ void CPartFile::FlushBuffer(bool forcewait, bool bForceICH, bool bNoAICH)
 				{
 					if (!m_bMD4HashsetNeeded){
 						if (thePrefs.GetVerbose())
-							AddDebugLogLine(DLP_VERYLOW, false, _T("Finished part %u of \"%s\""), uPartNumber, GetFileName());
+							AddDebugLogLine(DLP_VERYLOW, false, _T("Finished part %u of \"%s\""), uPartNumber, (LPCTSTR)GetFileName());
 					}
 
 					// tell the blackbox about the verified data
-					m_CorruptionBlackBox.VerifiedData(PARTSIZE*(uint64)uPartNumber, PARTSIZE*(uint64)uPartNumber + partRange);
+					m_CorruptionBlackBox.VerifiedData(PARTSIZE*uPartNumber, PARTSIZE*uPartNumber + partRange);
 
 					// if this part was successfully completed (although ICH is active), remove from corrupted list
 					POSITION posCorrupted = corrupted_list.Find((uint16)uPartNumber);
@@ -4897,8 +4803,7 @@ void CPartFile::FlushBuffer(bool forcewait, bool bForceICH, bool bNoAICH)
 
 					if (status == PS_EMPTY)
 					{
-						if (theApp.emuledlg->IsRunning()) // may be called during shutdown!
-						{
+						if (!theApp.emuledlg->IsClosing()) { // may be called during shutdown!
 							if (m_FileIdentifier.HasExpectedMD4HashCount() && !m_bMD4HashsetNeeded)
 							{
 								// Successfully completed part, make it available for sharing
@@ -4918,24 +4823,24 @@ void CPartFile::FlushBuffer(bool forcewait, bool bForceICH, bool bNoAICH)
 					thePrefs.Add2SessionPartsSavedByICH(1);
 
 					uint32 uRecovered = (uint32)GetTotalGapSizeInPart(uPartNumber);
-					FillGap(PARTSIZE*(uint64)uPartNumber, PARTSIZE*(uint64)uPartNumber + partRange);
-					RemoveBlockFromList(PARTSIZE*(uint64)uPartNumber, PARTSIZE*(uint64)uPartNumber + partRange);
+					FillGap(PARTSIZE*uPartNumber, PARTSIZE*uPartNumber + partRange);
+					RemoveBlockFromList(PARTSIZE*uPartNumber, PARTSIZE*uPartNumber + partRange);
 
 					// tell the blackbox about the verified data
-					m_CorruptionBlackBox.VerifiedData(PARTSIZE*(uint64)uPartNumber, PARTSIZE*(uint64)uPartNumber + partRange);
+					m_CorruptionBlackBox.VerifiedData(PARTSIZE*uPartNumber, PARTSIZE*uPartNumber + partRange);
 
 					// remove from corrupted list
 					POSITION posCorrupted = corrupted_list.Find((uint16)uPartNumber);
 					if (posCorrupted)
 						corrupted_list.RemoveAt(posCorrupted);
 
-					AddLogLine(true, GetResString(IDS_ICHWORKED), uPartNumber, GetFileName(), CastItoXBytes(uRecovered, false, false));
+					AddLogLine(true, GetResString(IDS_ICHWORKED), uPartNumber, (LPCTSTR)GetFileName(), (LPCTSTR)CastItoXBytes(uRecovered, false, false));
 
 					// correct file stats
 					if (m_uCorruptionLoss >= uRecovered) // check, in case the tag was not present in part.met
 						m_uCorruptionLoss -= uRecovered;
 					// here we can't know if we have to subtract the amount of recovered data from the session stats
-					// or the cumulative stats, so we subtract from where we can which leads eventuall to correct 
+					// or the cumulative stats, so we subtract from where we can which leads eventuall to correct
 					// total stats
 					if (thePrefs.sesLostFromCorruption >= uRecovered)
 						thePrefs.sesLostFromCorruption -= uRecovered;
@@ -4944,8 +4849,7 @@ void CPartFile::FlushBuffer(bool forcewait, bool bForceICH, bool bNoAICH)
 
 					if (status == PS_EMPTY)
 					{
-						if (theApp.emuledlg->IsRunning()) // may be called during shutdown!
-						{
+						if (!theApp.emuledlg->IsClosing()) { // may be called during shutdown!
 							if (m_FileIdentifier.HasExpectedMD4HashCount() && !m_bMD4HashsetNeeded)
 							{
 								// Successfully recovered part, make it available for sharing
@@ -4964,8 +4868,7 @@ void CPartFile::FlushBuffer(bool forcewait, bool bForceICH, bool bNoAICH)
 		// Update met file
 		SavePartFile();
 
-		if (theApp.emuledlg->IsRunning()) // may be called during shutdown!
-		{
+		if (!theApp.emuledlg->IsClosing()) { // may be called during shutdown!
 			// Is this file finished?
 			if (gaplist.IsEmpty())
 				CompleteFile(false);
@@ -4982,7 +4885,7 @@ void CPartFile::FlushBuffer(bool forcewait, bool bForceICH, bool bNoAICH)
 			// and accurate to check the free disk space again, after file was written and buffers were flushed to disk.
 			//
 			// If useing a normal file, we could avoid the check disk space if the file was not increased.
-			// If useing a compressed or sparse file, we always have to check the space 
+			// If useing a compressed or sparse file, we always have to check the space
 			// regardless whether the file was increased in size or not.
 			if (bCheckDiskspace && ((IsNormalFile() && bIncreasedFile) || !IsNormalFile()))
 			{
@@ -5029,16 +4932,15 @@ void CPartFile::FlushBuffersExceptionHandler(CFileException* error)
 {
 	if (thePrefs.IsCheckDiskspaceEnabled() && error->m_cause == CFileException::diskFull)
 	{
-		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_OUTOFSPACE), GetFileName());
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_OUTOFSPACE), (LPCTSTR)GetFileName());
 		if (theApp.emuledlg->IsRunning() && thePrefs.GetNotifierOnImportantError()){
 			CString msg;
-			msg.Format(GetResString(IDS_ERR_OUTOFSPACE), GetFileName());
+			msg.Format(GetResString(IDS_ERR_OUTOFSPACE), (LPCTSTR)GetFileName());
 			theApp.emuledlg->ShowNotifier(msg, TBN_IMPORTANTEVENT);
 		}
 
 		// 'CFileException::diskFull' is also used for 'not enough min. free space'
-		if (theApp.emuledlg->IsRunning())
-		{
+		if (!theApp.emuledlg->IsClosing()) {
 			if (thePrefs.IsCheckDiskspaceEnabled() && thePrefs.GetMinFreeDiskSpace()==0)
 				theApp.downloadqueue->CheckDiskspace(true);
 			else
@@ -5050,21 +4952,21 @@ void CPartFile::FlushBuffersExceptionHandler(CFileException* error)
 		if (thePrefs.IsErrorBeepEnabled())
 			Beep(800,200);
 
-		if (error->m_cause == CFileException::diskFull) 
+		if (error->m_cause == CFileException::diskFull)
 		{
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_OUTOFSPACE), GetFileName());
+			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_OUTOFSPACE), (LPCTSTR)GetFileName());
 			// may be called during shutdown!
-			if (theApp.emuledlg->IsRunning() && thePrefs.GetNotifierOnImportantError()){
+			if (!theApp.emuledlg->IsClosing() && thePrefs.GetNotifierOnImportantError()) {
 				CString msg;
-				msg.Format(GetResString(IDS_ERR_OUTOFSPACE), GetFileName());
+				msg.Format(GetResString(IDS_ERR_OUTOFSPACE), (LPCTSTR)GetFileName());
 				theApp.emuledlg->ShowNotifier(msg, TBN_IMPORTANTEVENT);
 			}
 		}
 		else
 		{
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			error->GetErrorMessage(buffer,ARRSIZE(buffer));
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_WRITEERROR), GetFileName(), buffer);
+			GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
+			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_WRITEERROR), (LPCTSTR)GetFileName(), buffer);
 			SetStatus(PS_ERROR);
 		}
 		paused = true;
@@ -5074,7 +4976,7 @@ void CPartFile::FlushBuffersExceptionHandler(CFileException* error)
 		m_anStates[DS_DOWNLOADING] = 0;
 	}
 
-	if (theApp.emuledlg->IsRunning()) // may be called during shutdown!
+	if (!theApp.emuledlg->IsClosing()) // may be called during shutdown!
 		UpdateDisplayedInfo();
 
 	error->Delete();
@@ -5083,14 +4985,14 @@ void CPartFile::FlushBuffersExceptionHandler(CFileException* error)
 void CPartFile::FlushBuffersExceptionHandler()
 {
 	ASSERT(0);
-	LogError(LOG_STATUSBAR, GetResString(IDS_ERR_WRITEERROR), GetFileName(), GetResString(IDS_UNKNOWN));
+	LogError(LOG_STATUSBAR, GetResString(IDS_ERR_WRITEERROR), (LPCTSTR)GetFileName(), (LPCTSTR)GetResString(IDS_UNKNOWN));
 	SetStatus(PS_ERROR);
 	paused = true;
 	m_iLastPausePurge = time(NULL);
 	theApp.downloadqueue->RemoveLocalServerRequest(this);
 	datarate = 0;
 	m_anStates[DS_DOWNLOADING] = 0;
-	if (theApp.emuledlg->IsRunning()) // may be called during shutdown!
+	if (!theApp.emuledlg->IsClosing()) // may be called during shutdown!
 		UpdateDisplayedInfo();
 }
 
@@ -5100,10 +5002,10 @@ UINT AFX_CDECL CPartFile::AllocateSpaceThread(LPVOID lpParam)
 	InitThreadLocale();
 
 	CPartFile* myfile=(CPartFile*)lpParam;
-	theApp.QueueDebugLogLine(false,_T("ALLOC:Start (%s) (%s)"),myfile->GetFileName(), CastItoXBytes(myfile->m_iAllocinfo, false, false) );
+	theApp.QueueDebugLogLine(false,_T("ALLOC:Start (%s) (%s)"), (LPCTSTR)myfile->GetFileName(), (LPCTSTR)CastItoXBytes(myfile->m_iAllocinfo, false, false));
 
 	try{
-		// If this is a NTFS compressed file and the current block is the 1st one to be written and there is not 
+		// If this is a NTFS compressed file and the current block is the 1st one to be written and there is not
 		// enough free disk space to hold the entire *uncompressed* file, windows throws a 'diskFull'!?
 		myfile->m_hpartfile.SetLength(myfile->m_iAllocinfo); // allocate disk space (may throw 'diskFull')
 
@@ -5134,7 +5036,7 @@ UINT AFX_CDECL CPartFile::AllocateSpaceThread(LPVOID lpParam)
 #endif
 
 	myfile->m_AllocateThread=NULL;
-	theApp.QueueDebugLogLine(false,_T("ALLOC:End (%s)"),myfile->GetFileName());
+	theApp.QueueDebugLogLine(false,_T("ALLOC:End (%s)"), (LPCTSTR)myfile->GetFileName());
 	return 0;
 }
 
@@ -5142,14 +5044,12 @@ UINT AFX_CDECL CPartFile::AllocateSpaceThread(LPVOID lpParam)
 // 'Gaps' returned are really the filled areas, and guaranteed to be in order
 void CPartFile::GetFilledList(CTypedPtrList<CPtrList, Gap_Struct*> *filled) const
 {
-	if (gaplist.GetHeadPosition() == NULL )
+	if (gaplist.IsEmpty())
 		return;
 
 	Gap_Struct *gap=NULL;
 	Gap_Struct *best=NULL;
-	POSITION pos;
 	uint64 start = 0;
-	uint64 bestEnd = 0;
 
 	// Loop until done
 	bool finished = false;
@@ -5157,10 +5057,8 @@ void CPartFile::GetFilledList(CTypedPtrList<CPtrList, Gap_Struct*> *filled) cons
 	{
 		finished = true;
 		// Find first gap after current start pos
-		bestEnd = m_nFileSize;
-		pos = gaplist.GetHeadPosition();
-		while (pos != NULL)
-		{
+		uint64 bestEnd = m_nFileSize;
+		for (POSITION pos = gaplist.GetHeadPosition(); pos != NULL;) {
 			gap = gaplist.GetNext(pos);
 			if ( (gap->start >= start) && (gap->end < bestEnd))
 			{
@@ -5186,7 +5084,7 @@ void CPartFile::GetFilledList(CTypedPtrList<CPtrList, Gap_Struct*> *filled) cons
 				gap->end = best->start - 1;
 				filled->AddTail(gap);
 				start = best->end + 1;
-			} else 				
+			} else
 				start = best->end + 1;
 
 		}
@@ -5222,7 +5120,7 @@ void CPartFile::UpdateFileRatingCommentAvail(bool bForceUpdate)
 	}
 	for(POSITION pos = m_kadNotes.GetHeadPosition(); pos != NULL; )
 	{
-		Kademlia::CEntry* entry = m_kadNotes.GetNext(pos);
+		const Kademlia::CEntry* entry = m_kadNotes.GetNext(pos);
 		if (!m_bHasComment && !entry->GetStrTagValue(TAG_DESCRIPTION).IsEmpty())
 			m_bHasComment = true;
 		UINT rating = (UINT)entry->GetIntTagValue(TAG_FILERATING);
@@ -5244,7 +5142,7 @@ void CPartFile::UpdateFileRatingCommentAvail(bool bForceUpdate)
 
 void CPartFile::UpdateDisplayedInfo(bool force)
 {
-	if (theApp.emuledlg->IsRunning()){
+	if (!theApp.emuledlg->IsClosing()) {
 		DWORD curTick = ::GetTickCount();
 
         if(force || curTick-m_lastRefreshedDLDisplay > MINWAIT_BEFORE_DLDISPLAY_WINDOWUPDATE+m_random_update_wait) {
@@ -5275,7 +5173,7 @@ UINT CPartFile::GetCategory() /*const*/
 	return m_category;
 }
 
-bool CPartFile::HasDefaultCategory() const // extra function for const 
+bool CPartFile::HasDefaultCategory() const // extra function for const
 {
 	return m_category == 0 || m_category > (UINT)(thePrefs.GetCatCount() - 1);
 }
@@ -5283,11 +5181,11 @@ bool CPartFile::HasDefaultCategory() const // extra function for const
 // Ornis: Creating progressive presentation of the partfilestatuses - for webdisplay
 CString CPartFile::GetProgressString(uint16 size) const
 {
-	char crProgress = '0';//green
-	char crHave = '1';	// black
-	char crPending='2';	// yellow
-	char crMissing='3';  // red
-	
+	const char crProgress = '0';//green
+	const char crHave = '1';	//black
+	const char crPending='2';	//yellow
+	const char crMissing='3';   //red
+
 	char crWaiting[6];
 	crWaiting[0]='4'; // blue few source
 	crWaiting[1]='5';
@@ -5311,12 +5209,11 @@ CString CPartFile::GetProgressString(uint16 size) const
 		    uint64 gapstart = cur_gap->start;
 		    uint64 gapend = cur_gap->end;
 		    for (UINT i = 0; i < GetPartCount(); i++){
-			    if (gapstart >= (uint64)i*PARTSIZE && gapstart <=  (uint64)(i+1)*PARTSIZE){ // is in this part?
-				    if (gapend <= (uint64)(i+1)*PARTSIZE)
+			    if (gapstart >= i*PARTSIZE && gapstart <=  (i+1)*PARTSIZE){ // is in this part?
+					if (gapend <= (i+1)*PARTSIZE)
 					    gapdone = true;
-				    else{
-					    gapend = (uint64)(i+1)*PARTSIZE; // and next part
-				    }
+				    else
+					    gapend = (i+1)*PARTSIZE; // and next part
 				    // paint
 				    uint8 color;
 				    if (m_SrcpartFrequency.GetCount() >= (INT_PTR)i && m_SrcpartFrequency[(uint16)i])  // frequency?
@@ -5324,9 +5221,9 @@ CString CPartFile::GetProgressString(uint16 size) const
 					    color = m_SrcpartFrequency[(uint16)i] <  10 ? crWaiting[m_SrcpartFrequency[(uint16)i]/2]:crWaiting[5];
 				    else
 					    color = crMissing;
-    
+
 				    CharFillRange(&my_ChunkBar,(uint32)(gapstart*unit), (uint32)(gapend*unit + 1),  color);
-    
+
 				    if (gapdone) // finished?
 					    break;
 				    else{
@@ -5339,7 +5236,7 @@ CString CPartFile::GetProgressString(uint16 size) const
 
 	// yellow pending parts
 	for (POSITION pos = requestedblocks_list.GetHeadPosition();pos !=  0;){
-		Requested_Block_Struct* block =  requestedblocks_list.GetNext(pos);
+		const Requested_Block_Struct* block =  requestedblocks_list.GetNext(pos);
 		CharFillRange(&my_ChunkBar, (uint32)((block->StartOffset + block->transferred)*unit), (uint32)(block->EndOffset*unit),  crPending);
 	}
 
@@ -5355,7 +5252,7 @@ void CPartFile::CharFillRange(CString* buffer, uint32 start, uint32 end, char co
 void CPartFile::SetCategory(UINT cat)
 {
 	m_category=cat;
-	
+
 // ZZ:DownloadManager -->
 	// set new prio
 	if (IsPartFile()){
@@ -5375,8 +5272,7 @@ void CPartFile::_SetStatus(EPartFileStatus eStatus)
 void CPartFile::SetStatus(EPartFileStatus eStatus)
 {
 	_SetStatus(eStatus);
-	if (theApp.emuledlg->IsRunning())
-	{
+	if (!theApp.emuledlg->IsClosing()) {
 		NotifyStatusChange();
 		UpdateDisplayedInfo(true);
 		if (thePrefs.ShowCatTabInfos())
@@ -5386,7 +5282,7 @@ void CPartFile::SetStatus(EPartFileStatus eStatus)
 
 void CPartFile::NotifyStatusChange()
 {
-	if (theApp.emuledlg->IsRunning())
+	if (!theApp.emuledlg->IsClosing())
 		theApp.emuledlg->transferwnd->GetDownloadList()->UpdateCurrentCategoryView(this);
 }
 
@@ -5401,16 +5297,16 @@ uint8* CPartFile::MMCreatePartStatus(){
 	uint8* result = new uint8[GetPartCount()+1];
 	for (UINT i = 0; i < GetPartCount(); i++){
 		result[i] = 0;
-		if (IsComplete((uint64)i*PARTSIZE,((uint64)(i+1)*PARTSIZE)-1, false)){
+		if (IsComplete(i*PARTSIZE, ((i+1)*PARTSIZE)-1, false)) {
 			result[i] = 1;
 			continue;
 		}
 		else{
-			if (IsComplete((uint64)i*PARTSIZE + (0*(PARTSIZE/3)), (((uint64)i*PARTSIZE)+(1*(PARTSIZE/3)))-1, false))
+			if (IsComplete(i*PARTSIZE + (0*(PARTSIZE/3)), ((i*PARTSIZE)+(1*(PARTSIZE/3)))-1, false))
 				result[i] += 2;
-			if (IsComplete((uint64)i*PARTSIZE+ (1*(PARTSIZE/3)), (((uint64)i*PARTSIZE)+(2*(PARTSIZE/3)))-1, false))
+			if (IsComplete(i*PARTSIZE+ (1*(PARTSIZE/3)), ((i*PARTSIZE)+(2*(PARTSIZE/3)))-1, false))
 				result[i] += 4;
-			if (IsComplete((uint64)i*PARTSIZE+ (2*(PARTSIZE/3)), (((uint64)i*PARTSIZE)+(3*(PARTSIZE/3)))-1, false))
+			if (IsComplete(i*PARTSIZE+ (2*(PARTSIZE/3)), ((i*PARTSIZE)+(3*(PARTSIZE/3)))-1, false))
 				result[i] += 8;
 			uint8 freq;
 			if (m_SrcpartFrequency.GetCount() > (signed)i)
@@ -5452,46 +5348,46 @@ struct Chunk {
 };
 #pragma pack()
 
-bool CPartFile::GetNextRequestedBlock(CUpDownClient* sender, 
-                                      Requested_Block_Struct** newblocks, 
-									  uint16* count) /*const*/
+bool CPartFile::GetNextRequestedBlock(CUpDownClient* sender,
+										Requested_Block_Struct** newblocks,
+										uint16* pcount) /*const*/
 {
 	// The purpose of this function is to return a list of blocks (~180KB) to
-	// download. To avoid a prematurely stop of the downloading, all blocks that 
-	// are requested from the same source must be located within the same 
+	// download. To avoid a prematurely stop of the downloading, all blocks that
+	// are requested from the same source must be located within the same
 	// chunk (=> part ~9MB).
-	//  
-	// The selection of the chunk to download is one of the CRITICAL parts of the 
+	//
+	// The selection of the chunk to download is one of the CRITICAL parts of the
 	// edonkey network. The selection algorithm must insure the best spreading
 	// of files.
-	//  
+	//
 	// The selection is based on several criteria:
-	//  -   Frequency of the chunk (availability), very rare chunks must be downloaded 
+	//  -   Frequency of the chunk (availability), very rare chunks must be downloaded
 	//      as quickly as possible to become a new available source.
-	//  -   Parts used for preview (first + last chunk), preview or check a 
+	//  -   Parts used for preview (first + last chunk), preview or check a
 	//      file (e.g. movie, mp3)
-	//  -   Completion (shortest-to-complete), partially retrieved chunks should be 
+	//  -   Completion (shortest-to-complete), partially retrieved chunks should be
 	//      completed before starting to download other one.
-	//  
+	//
 	// The frequency criterion defines several zones: very rare, rare, almost rare,
-	// and common. Inside each zone, the criteria have a specific ‘weight’, used 
-	// to calculate the priority of chunks. The chunk(s) with the highest 
+	// and common. Inside each zone, the criteria have a specific ‘weight’, used
+	// to calculate the priority of chunks. The chunk(s) with the highest
 	// priority (highest=0, lowest=0xffff) is/are selected first.
-	//  
+	//
 	// This algorithm usually selects first the rarest chunk(s). However, partially
-	// complete chunk(s) that is/are close to completion may overtake the priority 
+	// complete chunk(s) that is/are close to completion may overtake the priority
 	// (priority inversion). For common chunks, it also tries to put the transferring
     // clients on the same chunk, to complete it sooner.
 	//
 
 	// Check input parameters
-	if(count == 0)
+	if (pcount == NULL)
 		return false;
 	if(sender->GetPartStatus() == NULL)
 		return false;
 
-    //AddDebugLogLine(DLP_VERYLOW, false, _T("Evaluating chunks for file: \"%s\" Client: %s"), GetFileName(), sender->DbgGetClientInfo());
-    
+    //AddDebugLogLine(DLP_VERYLOW, false, _T("Evaluating chunks for file: \"%s\" Client: %s"), (LPCTSTR)GetFileName(), (LPCTSTR)sender->DbgGetClientInfo());
+
 	// Define and create the list of the chunks to download
 	const uint16 partCount = GetPartCount();
 	CList<Chunk> chunksList(partCount);
@@ -5503,19 +5399,19 @@ bool CPartFile::GetNextRequestedBlock(CUpDownClient* sender,
 
 	// Main loop
 	uint16 newBlockCount = 0;
-	while(newBlockCount != *count){
+	while (newBlockCount != *pcount) {
 		// Create a request block stucture if a chunk has been previously selected
 		if(tempLastPartAsked != (uint16)-1){
 			Requested_Block_Struct* pBlock = new Requested_Block_Struct;
 			if(GetNextEmptyBlockInPart(tempLastPartAsked, pBlock) == true){
-                //AddDebugLogLine(false, _T("Got request block. Interval %i-%i. File %s. Client: %s"), pBlock->StartOffset, pBlock->EndOffset, GetFileName(), sender->DbgGetClientInfo());
+                //AddDebugLogLine(false, _T("Got request block. Interval %i-%i. File %s. Client: %s"), pBlock->StartOffset, pBlock->EndOffset, (LPCTSTR)GetFileName(), (LPCTSTR)sender->DbgGetClientInfo());
 				// Keep a track of all pending requested blocks
 				requestedblocks_list.AddTail(pBlock);
 				// Update list of blocks to return
 				newblocks[newBlockCount++] = pBlock;
 				// Skip end of loop (=> CPU load)
 				continue;
-			} 
+			}
 			else {
 				// All blocks for this chunk have been already requested
 				delete pBlock;
@@ -5527,7 +5423,7 @@ bool CPartFile::GetNextRequestedBlock(CUpDownClient* sender,
 		// Check if a new chunk must be selected (e.g. download starting, previous chunk complete)
 		if(tempLastPartAsked == (uint16)-1){
 
-			// Quantify all chunks (create list of chunks to download) 
+			// Quantify all chunks (create list of chunks to download)
 			// This is done only one time and only if it is necessary (=> CPU load)
 			if(chunksList.IsEmpty() == TRUE){
 				// Indentify the locally missing part(s) that this source has
@@ -5564,40 +5460,38 @@ bool CPartFile::GetNextRequestedBlock(CUpDownClient* sender,
 
 					// Offsets of chunk
 					UINT uCurChunkPart = cur_chunk.part; // help VC71...
-					const uint64 uStart = (uint64)uCurChunkPart * PARTSIZE;
-					const uint64 uEnd  = ((GetFileSize() - (uint64)1) < (uStart + PARTSIZE - 1)) ? 
-										  (GetFileSize() - (uint64)1) : (uStart + PARTSIZE - 1);
+					const uint64 uStart = uCurChunkPart * PARTSIZE;
+					const uint64 uEnd = ((GetFileSize() - 1ull) < (uStart + PARTSIZE - 1))
+										 ? ((uint64)GetFileSize() - 1ull) : (uStart + PARTSIZE - 1);
 					ASSERT( uStart <= uEnd );
 
 					// Criterion 2. Parts used for preview
 					// Remark: - We need to download the first part and the last part(s).
-					//        - When the last part is very small, it's necessary to 
+					//        - When the last part is very small, it's necessary to
 					//          download the two last parts.
 					bool critPreview = false;
-					if(isPreviewEnable == true){
-						if(cur_chunk.part == 0){
+					if (isPreviewEnable == true){
+						if (cur_chunk.part == 0)
 							critPreview = true; // First chunk
-						}
 						else if(cur_chunk.part == partCount-1){
-							critPreview = true; // Last chunk 
+							critPreview = true; // Last chunk
 						}
-						else if(cur_chunk.part == partCount-2){
+						else if(cur_chunk.part == partCount-2) {
 							// Last chunk - 1 (only if last chunk is too small)
-							if( (GetFileSize() - uEnd) < (uint64)PARTSIZE/3){
+							if ((GetFileSize() - uEnd) < PARTSIZE/3)
 								critPreview = true; // Last chunk - 1
-							}
 						}
 					}
 
 					// Criterion 3. Request state (downloading in process from other source(s))
 					//const bool critRequested = IsAlreadyRequested(uStart, uEnd);
-                    bool critRequested = false; // <--- This is set as a part of the second critCompletion loop below
+					bool critRequested = false; // <--- This is set as a part of the second critCompletion loop below
 
 					// Criterion 4. Completion
 					uint64 partSize = uEnd - uStart + 1; //If all is covered by gaps, we have downloaded PARTSIZE, or possibly less for the last chunk;
-                    ASSERT(partSize <= PARTSIZE);
-					for(POSITION pos = gaplist.GetHeadPosition(); pos != NULL; ) {
-						const Gap_Struct* cur_gap = gaplist.GetNext(pos);
+					ASSERT(partSize <= PARTSIZE);
+					for (POSITION gappos = gaplist.GetHeadPosition(); gappos != NULL;) {
+						const Gap_Struct* cur_gap = gaplist.GetNext(gappos);
 						// Check if Gap is into the limit
 						if(cur_gap->start < uStart) {
 							if(cur_gap->end > uStart && cur_gap->end < uEnd) {
@@ -5678,7 +5572,7 @@ bool CPartFile::GetNextRequestedBlock(CUpDownClient* sender,
                             }
                         }
 
-                        bandwidthScore = (uint16)min((UINT)((PARTSIZE-partSize)/(totalDownloadDatarateForThisPart*5)), 2000);
+                        bandwidthScore = (uint16)mini((UINT)((PARTSIZE-partSize)/(totalDownloadDatarateForThisPart*5ull)), 2000u);
                         //AddDebugLogLine(DLP_VERYLOW, false,
                         //    _T("BandwidthScore for chunk %i: bandwidthScore = %u = min((PARTSIZE-partSize)/(totalDownloadDatarateForThisChunk*5), 2000) = min((PARTSIZE-%I64u)/(%u*5), 2000)"),
                         //    cur_chunk.part, bandwidthScore, partSize, totalDownloadDatarateForThisChunk);
@@ -5716,7 +5610,7 @@ bool CPartFile::GetNextRequestedBlock(CUpDownClient* sender,
 						// 10102..1xxxx  unrequested rare chunks
                         //ASSERT(cur_chunk.frequency >= veryRareBound);
 
-                        cur_chunk.rank = (25 * cur_chunk.frequency) +                 // Criterion 1 
+                        cur_chunk.rank = (25 * cur_chunk.frequency) +                 // Criterion 1
 										 ((critRequested == true) ? 10101 : 10102) +  // Criterion 3
 										 (100 - critCompletion) +                     // Criterion 4
                                          ((sameChunk == true) ? 0 : 1) +              // Criterion 5
@@ -5754,36 +5648,35 @@ bool CPartFile::GetNextRequestedBlock(CUpDownClient* sender,
 			// Select the next chunk to download
 			if(chunksList.IsEmpty() == FALSE){
 				// Find and count the chunck(s) with the highest priority
-				uint16 count = 0; // Number of found chunks with same priority
+				uint16 cnt = 0; // Number of found chunks with same priority
 				uint16 rank = 0xffff; // Highest priority found
 				for(POSITION pos = chunksList.GetHeadPosition(); pos != NULL; ){
 					const Chunk& cur_chunk = chunksList.GetNext(pos);
 					if(cur_chunk.rank < rank){
-						count = 1;
+						cnt = 1;
 						rank = cur_chunk.rank;
 					}
-					else if(cur_chunk.rank == rank){
-						count++;
-					}
+					else if(cur_chunk.rank == rank)
+						++cnt;
 				}
 
-				// Use a random access to avoid that everybody tries to download the 
+				// Use a random access to avoid that everybody tries to download the
 				// same chunks at the same time (=> spread the selected chunk among clients)
-				uint16 randomness = 1 + (uint16)((((uint32)rand()*(count-1))+(RAND_MAX/2))/RAND_MAX);
-				for(POSITION pos = chunksList.GetHeadPosition(); ; ){
+				uint16 randomness = 1 + (uint16)((((uint32)rand()*(cnt-1))+(RAND_MAX/2))/RAND_MAX);
+				for(POSITION pos = chunksList.GetHeadPosition(); pos;) {
 					POSITION cur_pos = pos;
 					const Chunk& cur_chunk = chunksList.GetNext(pos);
 					if(cur_chunk.rank == rank){
-						randomness--; 
+						randomness--;
 						if(randomness == 0){
-							// Selection process is over 
+							// Selection process is over
                             sender->m_lastPartAsked = tempLastPartAsked = cur_chunk.part;
                             //AddDebugLogLine(DLP_VERYLOW, false, _T("Chunk number %i selected. Rank: %u"), cur_chunk.part, cur_chunk.rank);
 
 							// Remark: this list might be reused up to ‘*count’ times
 							chunksList.RemoveAt(cur_pos);
 							break; // exit loop for()
-						}  
+						}
 					}
 				}
 			}
@@ -5793,9 +5686,9 @@ bool CPartFile::GetNextRequestedBlock(CUpDownClient* sender,
 			}
 		}
 	}
-	// Return the number of the blocks 
-	*count = newBlockCount;
-	
+	// Return the number of the blocks
+	*pcount = newBlockCount;
+
 	// Return
 	return (newBlockCount > 0);
 }
@@ -5807,41 +5700,41 @@ CString CPartFile::GetInfoSummary(bool bNoFormatCommands) const
 	if (!IsPartFile())
 		return CKnownFile::GetInfoSummary();
 
-	CString Sbuffer, lsc, compl, buffer, lastdwl;
+	CString lsc, compl, buffer, lastdwl;
 
-	lsc.Format(_T("%s"), CastItoXBytes(GetCompletedSize(), false, false));
-	compl.Format(_T("%s"), CastItoXBytes(GetFileSize(), false, false));
-	buffer.Format(_T("%s/%s"), lsc, compl);
-	compl.Format(_T("%s: %s (%.1f%%)\n"), GetResString(IDS_DL_TRANSFCOMPL), buffer, GetPercentCompleted());
+	lsc.Format(_T("%s"), (LPCTSTR)CastItoXBytes(GetCompletedSize(), false, false));
+	compl.Format(_T("%s"), (LPCTSTR)CastItoXBytes(GetFileSize(), false, false));
+	buffer.Format(_T("%s/%s"), (LPCTSTR)lsc, (LPCTSTR)compl);
+	compl.Format(_T("%s: %s (%.1f%%)\n"), (LPCTSTR)GetResString(IDS_DL_TRANSFCOMPL), (LPCTSTR)buffer, GetPercentCompleted());
 
 	if (lastseencomplete == NULL)
-		lsc.Format(_T("%s"), GetResString(IDS_NEVER));
+		lsc = GetResString(IDS_NEVER);
 	else
-		lsc.Format(_T("%s"), lastseencomplete.Format(thePrefs.GetDateTimeFormat()));
+		lsc = lastseencomplete.Format(thePrefs.GetDateTimeFormat());
 
 	float availability = 0.0F;
 	if (GetPartCount() != 0)
 		availability = (float)(GetAvailablePartCount() * 100.0 / GetPartCount());
-	
+
 	CString avail;
 	avail.Format(GetResString(IDS_AVAIL), GetPartCount(), GetAvailablePartCount(), availability);
 
 	if (GetCFileDate() != NULL)
-		lastdwl.Format(_T("%s"), GetCFileDate().Format(thePrefs.GetDateTimeFormat()));
+		lastdwl = GetCFileDate().Format(thePrefs.GetDateTimeFormat());
 	else
 		lastdwl = GetResString(IDS_NEVER);
-	
+
 	CString sourcesinfo;
 	sourcesinfo.Format(GetResString(IDS_DL_SOURCES) + _T(": ") + GetResString(IDS_SOURCESINFO) + _T('\n'), GetSourceCount(), GetValidSourcesCount(), GetSrcStatisticsValue(DS_NONEEDEDPARTS), GetSrcA4AFCount());
-		
+
 	// always show space on disk
 	CString sod = _T("  (") + GetResString(IDS_ONDISK) + CastItoXBytes(GetRealFileSize(), false, false) + _T(")");
 
-	CString status;
+	CString state;
 	if (GetTransferringSrcCount() > 0)
-		status.Format(GetResString(IDS_PARTINFOS2) + _T("\n"), GetTransferringSrcCount());
-	else 
-		status.Format(_T("%s\n"), getPartfileStatus());
+		state.Format(GetResString(IDS_PARTINFOS2) + _T("\n"), GetTransferringSrcCount());
+	else
+		state = getPartfileStatus() + _T('\n');
 
 	CString strHeadFormatCommand = bNoFormatCommands ? _T("") : _T("<br_head>");
 	CString info;
@@ -5849,32 +5742,32 @@ CString CPartFile::GetInfoSummary(bool bNoFormatCommands) const
 		+ GetResString(IDS_FD_HASH) + _T(" %s\n")
 		+ GetResString(IDS_FD_SIZE) + _T(" %s  %s\n") + strHeadFormatCommand + _T("\n")
 		+ GetResString(IDS_FD_MET)+ _T(" %s\n")
-		+ GetResString(IDS_STATUS) + _T(": ") + status
+		+ GetResString(IDS_STATUS) + _T(": ") + state
 		+ _T("%s")
 		+ sourcesinfo
 		+ _T("%s")
 		+ GetResString(IDS_LASTSEENCOMPL) + _T(' ') + lsc + _T('\n')
 		+ GetResString(IDS_FD_LASTCHANGE) + _T(' ') + lastdwl,
-		GetFileName(),
-		md4str(GetFileHash()),
-		CastItoXBytes(GetFileSize(), false, false),	sod,
-		GetPartMetFileName(),
-		compl,
-		avail);
+		(LPCTSTR)GetFileName(),
+		(LPCTSTR)md4str(GetFileHash()),
+		(LPCTSTR)CastItoXBytes(GetFileSize(), false, false),
+		(LPCTSTR)sod,
+		(LPCTSTR)GetPartMetFileName(),
+		(LPCTSTR)compl,
+		(LPCTSTR)avail);
 	return info;
 }
 
 bool CPartFile::GrabImage(uint8 nFramesToGrab, double dStartTime, bool bReduceColor, uint16 nMaxWidth, void* pSender)
 {
 	if (!IsPartFile()){
-		return CKnownFile::GrabImage(GetPath() + CString(_T("\\")) + GetFileName(),nFramesToGrab, dStartTime, bReduceColor, nMaxWidth, pSender);
+		return CKnownFile::GrabImage(GetPath() + CString(_T('\\')) + GetFileName(),nFramesToGrab, dStartTime, bReduceColor, nMaxWidth, pSender);
 	}
 	else{
 		if ( ((GetStatus() != PS_READY && GetStatus() != PS_PAUSED) || m_bPreviewing || GetPartCount() < 2 || !IsComplete(0,PARTSIZE-1, true))  )
 			return false;
-		CString strFileName = RemoveFileExtension(GetFullName());
 		if (m_FileCompleteMutex.Lock(100)){
-			m_bPreviewing = true; 
+			m_bPreviewing = true;
 			try{
 				if (m_hpartfile.m_hFile != INVALID_HANDLE_VALUE){
 					m_hpartfile.Close();
@@ -5883,14 +5776,14 @@ bool CPartFile::GrabImage(uint8 nFramesToGrab, double dStartTime, bool bReduceCo
 			catch(CFileException* exception){
 				exception->Delete();
 				m_FileCompleteMutex.Unlock();
-				m_bPreviewing = false; 
+				m_bPreviewing = false;
 				return false;
 			}
 		}
 		else
 			return false;
-
-		return CKnownFile::GrabImage(strFileName,nFramesToGrab, dStartTime, bReduceColor, nMaxWidth, pSender);
+		CString strFileName = RemoveFileExtension(GetFullName());
+		return CKnownFile::GrabImage(strFileName, nFramesToGrab, dStartTime, bReduceColor, nMaxWidth, pSender);
 	}
 }
 
@@ -5901,7 +5794,7 @@ void CPartFile::GrabbingFinished(CxImage** imgResults, uint8 nFramesGrabbed, voi
 		CString strFileName = RemoveFileExtension(GetFullName());
 		if (!m_hpartfile.Open(strFileName, CFile::modeReadWrite|CFile::shareDenyWrite|CFile::osSequentialScan)){
 			// uhuh, that's really bad
-			LogError(LOG_STATUSBAR, GetResString(IDS_FAILEDREOPEN), RemoveFileExtension(GetPartMetFileName()), GetFileName());
+			LogError(LOG_STATUSBAR, GetResString(IDS_FAILEDREOPEN), (LPCTSTR)RemoveFileExtension(GetPartMetFileName()), (LPCTSTR)GetFileName());
 			SetStatus(PS_ERROR);
 			StopFile();
 		}
@@ -5912,7 +5805,7 @@ void CPartFile::GrabbingFinished(CxImage** imgResults, uint8 nFramesGrabbed, voi
 	CKnownFile::GrabbingFinished(imgResults, nFramesGrabbed, pSender);
 }
 
-void CPartFile::GetLeftToTransferAndAdditionalNeededSpace(uint64 &rui64LeftToTransfer, 
+void CPartFile::GetLeftToTransferAndAdditionalNeededSpace(uint64 &rui64LeftToTransfer,
 														  uint64 &rui64AdditionalNeededSpace) const
 {
 	uint64 uSizeLastGap = 0;
@@ -5999,7 +5892,7 @@ bool CPartFile::CheckShowItemInGivenCat(int inCategory) /*const*/
 			case 14 : ret= (ED2KFT_DOCUMENT == GetED2KFileTypeID(GetFileName()));break;
 			case 15 : ret= (ED2KFT_IMAGE == GetED2KFileTypeID(GetFileName()));break;
 			case 16 : ret= (ED2KFT_PROGRAM == GetED2KFileTypeID(GetFileName()));break;
-			case 18 : ret= RegularExpressionMatch(thePrefs.GetCategory(inCategory)->regexp ,GetFileName());break;
+			case 18 : ret= RegularExpressionMatch(thePrefs.GetCategory(inCategory)->regexp,GetFileName());break;
 			case 20 : ret= (ED2KFT_EMULECOLLECTION == GetED2KFileTypeID(GetFileName()));break;
 		}
 	}
@@ -6071,7 +5964,7 @@ bool CPartFile::RightFileHasHigherPrio(CPartFile* left, CPartFile* right)
            right->GetDownPriority() == left->GetDownPriority() &&
            (
                right->GetCategory() == left->GetCategory() && right->GetCategory() != 0 &&
-               (thePrefs.GetCategory(right->GetCategory())->downloadInAlphabeticalOrder && thePrefs.IsExtControlsEnabled()) && 
+               (thePrefs.GetCategory(right->GetCategory())->downloadInAlphabeticalOrder && thePrefs.IsExtControlsEnabled()) &&
                right->GetFileName() && left->GetFileName() &&
                right->GetFileName().CompareNoCase(left->GetFileName()) < 0
            )
@@ -6089,7 +5982,7 @@ void CPartFile::RequestAICHRecovery(UINT nPart)
 		AddDebugLogLine(DLP_DEFAULT, false, _T("Unable to request AICH Recoverydata because we have no trusted Masterhash"));
 		return;
 	}
-	if (GetFileSize() <= (uint64)EMBLOCKSIZE || GetFileSize() - PARTSIZE*(uint64)nPart <= (uint64)EMBLOCKSIZE)
+	if ((uint64)GetFileSize() <= PARTSIZE*nPart + EMBLOCKSIZE)
 		return;
 	if (CAICHRecoveryHashSet::IsClientRequestPending(this, (uint16)nPart)){
 		AddDebugLogLine(DLP_DEFAULT, false, _T("RequestAICHRecovery: Already a request for this part pending"));
@@ -6097,7 +5990,7 @@ void CPartFile::RequestAICHRecovery(UINT nPart)
 	}
 
 	// first check if we have already the recoverydata, no need to rerequest it then
-	if (m_pAICHRecoveryHashSet->IsPartDataAvailable((uint64)nPart*PARTSIZE)){
+	if (m_pAICHRecoveryHashSet->IsPartDataAvailable(nPart*PARTSIZE)) {
 		AddDebugLogLine(DLP_DEFAULT, false, _T("Found PartRecoveryData in memory"));
 		AICHRecoveryDataAvailable(nPart);
 		return;
@@ -6109,7 +6002,7 @@ void CPartFile::RequestAICHRecovery(UINT nPart)
 	uint32 cAICHClients = 0;
 	uint32 cAICHLowIDClients = 0;
 	for (POSITION pos = srclist.GetHeadPosition(); pos != NULL;){
-		CUpDownClient* pCurClient = srclist.GetNext(pos);
+		const CUpDownClient* pCurClient = srclist.GetNext(pos);
 		if (pCurClient->IsSupportingAICH() && pCurClient->GetReqFileAICHHash() != NULL && !pCurClient->IsAICHReqPending()
 			&& (*pCurClient->GetReqFileAICHHash()) == m_pAICHRecoveryHashSet->GetMasterHash())
 		{
@@ -6123,27 +6016,27 @@ void CPartFile::RequestAICHRecovery(UINT nPart)
 		AddDebugLogLine(DLP_DEFAULT, false, _T("Unable to request AICH Recoverydata because found no client who supports it and has the same hash as the trusted one"));
 		return;
 	}
-	uint32 nSeclectedClient;
+	uint32 nSelectedClient;
 	if (cAICHClients > 0)
-		nSeclectedClient = (rand() % cAICHClients) + 1;
+		nSelectedClient = (rand() % cAICHClients) + 1;
 	else
-		nSeclectedClient = (rand() % cAICHLowIDClients) + 1;
-	
+		nSelectedClient = (rand() % cAICHLowIDClients) + 1;
+
 	CUpDownClient* pClient = NULL;
-	for (POSITION pos = srclist.GetHeadPosition(); pos != NULL;){
+	for (POSITION pos = srclist.GetHeadPosition(); pos != NULL;) {
 		CUpDownClient* pCurClient = srclist.GetNext(pos);
 		if (pCurClient->IsSupportingAICH() && pCurClient->GetReqFileAICHHash() != NULL && !pCurClient->IsAICHReqPending()
 			&& (*pCurClient->GetReqFileAICHHash()) == m_pAICHRecoveryHashSet->GetMasterHash())
 		{
 			if (cAICHClients > 0){
 				if (!pCurClient->HasLowID())
-					nSeclectedClient--;
+					--nSelectedClient;
 			}
 			else{
 				ASSERT( pCurClient->HasLowID());
-				nSeclectedClient--;
+				--nSelectedClient;
 			}
-			if (nSeclectedClient == 0){
+			if (nSelectedClient == 0) {
 				pClient = pCurClient;
 				break;
 			}
@@ -6153,7 +6046,7 @@ void CPartFile::RequestAICHRecovery(UINT nPart)
 		ASSERT( false );
 		return;
 	}
-	AddDebugLogLine(DLP_DEFAULT, false, _T("Requesting AICH Hash (%s) from client %s"),cAICHClients? _T("HighId"):_T("LowID"), pClient->DbgGetClientInfo());
+	AddDebugLogLine(DLP_DEFAULT, false, _T("Requesting AICH Hash (%s) from client %s"),cAICHClients? _T("HighId"):_T("LowID"), (LPCTSTR)pClient->DbgGetClientInfo());
 	pClient->SendAICHRequest(this, (uint16)nPart);
 }
 
@@ -6165,19 +6058,19 @@ void CPartFile::AICHRecoveryDataAvailable(UINT nPart)
 	}
 	FlushBuffer(true, true, true);
 	uint32 length = PARTSIZE;
-	if ((ULONGLONG)PARTSIZE*(uint64)(nPart+1) > m_hpartfile.GetLength()){
-		length = (UINT)(m_hpartfile.GetLength() - ((ULONGLONG)PARTSIZE*(uint64)nPart));
+	if (PARTSIZE*(nPart+1) > m_hpartfile.GetLength()) {
+		length = (UINT)(m_hpartfile.GetLength() - PARTSIZE*nPart);
 		ASSERT( length <= PARTSIZE );
-	}	
+	}
 	// if the part was already ok, it would now be complete
-	if (IsComplete((uint64)nPart*PARTSIZE, (((uint64)nPart*PARTSIZE)+length)-1, true)){
+	if (IsComplete(nPart*PARTSIZE, ((nPart*PARTSIZE)+length)-1, true)) {
 		AddDebugLogLine(DLP_DEFAULT, false, _T("Processing AICH Recovery data: The part (%u) is already complete, canceling"));
 		return;
 	}
-	
 
 
-	const CAICHHashTree* pVerifiedHash = m_pAICHRecoveryHashSet->m_pHashTree.FindExistingHash((uint64)nPart*PARTSIZE, length);
+
+	const CAICHHashTree* pVerifiedHash = m_pAICHRecoveryHashSet->m_pHashTree.FindExistingHash(nPart*PARTSIZE, length);
 	if (pVerifiedHash == NULL || !pVerifiedHash->m_bHashValid){
 		AddDebugLogLine(DLP_DEFAULT, false, _T("Processing AICH Recovery data: Unable to get verified hash from hashset (should never happen)"));
 		ASSERT( false );
@@ -6185,7 +6078,7 @@ void CPartFile::AICHRecoveryDataAvailable(UINT nPart)
 	}
 	CAICHHashTree htOurHash(pVerifiedHash->m_nDataSize, pVerifiedHash->m_bIsLeftBranch, pVerifiedHash->GetBaseSize());
 	try{
-		m_hpartfile.Seek((LONGLONG)PARTSIZE*(uint64)nPart,0);
+		m_hpartfile.Seek((LONGLONG)PARTSIZE*nPart, 0);
 		CreateHash(&m_hpartfile,length, NULL, &htOurHash);
 	}
 	catch(...){
@@ -6202,7 +6095,7 @@ void CPartFile::AICHRecoveryDataAvailable(UINT nPart)
 	// now compare the hash we just did, to the verified hash and readd all blocks which are ok
 	uint32 nRecovered = 0;
 	for (uint32 pos = 0; pos < length; pos += EMBLOCKSIZE){
-		const uint32 nBlockSize = min(EMBLOCKSIZE, length - pos);
+		const uint32 nBlockSize = mini(EMBLOCKSIZE, length - pos);
 		const CAICHHashTree* pVerifiedBlock = pVerifiedHash->FindExistingHash(pos, nBlockSize);
 		CAICHHashTree* pOurBlock = htOurHash.FindHash(pos, nBlockSize);
 		if ( pVerifiedBlock == NULL || pOurBlock == NULL || !pVerifiedBlock->m_bHashValid || !pOurBlock->m_bHashValid){
@@ -6210,19 +6103,19 @@ void CPartFile::AICHRecoveryDataAvailable(UINT nPart)
 			continue;
 		}
 		if (pOurBlock->m_Hash == pVerifiedBlock->m_Hash){
-			FillGap(PARTSIZE*(uint64)nPart+pos, PARTSIZE*(uint64)nPart + pos + (nBlockSize-1));
-			RemoveBlockFromList(PARTSIZE*(uint64)nPart+pos, PARTSIZE*(uint64)nPart + pos + (nBlockSize-1));
+			FillGap(PARTSIZE*nPart+pos, PARTSIZE*nPart + pos + (nBlockSize-1));
+			RemoveBlockFromList(PARTSIZE*nPart+pos, PARTSIZE*nPart + pos + (nBlockSize-1));
 			nRecovered += nBlockSize;
 			// tell the blackbox about the verified data
-			m_CorruptionBlackBox.VerifiedData(PARTSIZE*(uint64)nPart+pos, PARTSIZE*(uint64)nPart + pos + (nBlockSize-1));
+			m_CorruptionBlackBox.VerifiedData(PARTSIZE*nPart+pos, PARTSIZE*nPart + pos + (nBlockSize-1));
 		}
 		else{
 			// inform our "blackbox" about the corrupted block which may ban clients who sent it
-			m_CorruptionBlackBox.CorruptedData(PARTSIZE*(uint64)nPart+pos, PARTSIZE*(uint64)nPart + pos + (nBlockSize-1));
+			m_CorruptionBlackBox.CorruptedData(PARTSIZE*nPart+pos, PARTSIZE*nPart + pos + (nBlockSize-1));
 		}
 	}
 	m_CorruptionBlackBox.EvaluateData((uint16)nPart);
-	
+
 	if (m_uCorruptionLoss >= nRecovered)
 		m_uCorruptionLoss -= nRecovered;
 	if (thePrefs.sesLostFromCorruption >= nRecovered)
@@ -6230,7 +6123,7 @@ void CPartFile::AICHRecoveryDataAvailable(UINT nPart)
 
 
 	// ok now some sanity checks
-	if (IsComplete((uint64)nPart*PARTSIZE, (((uint64)nPart*PARTSIZE)+length)-1, true)){
+	if (IsComplete(nPart*PARTSIZE, ((nPart*PARTSIZE)+length)-1, true)) {
 		// this is a bad, but it could probably happen under some rare circumstances
 		// make sure that HashSinglePart() (MD4 and possibly AICH again) agrees to this fact too, for Verified Hashes problems are handled within that functions, otherwise:
 		if (!HashSinglePart(nPart))
@@ -6239,7 +6132,7 @@ void CPartFile::AICHRecoveryDataAvailable(UINT nPart)
 			// now we are fu... unhappy
 			if (!m_FileIdentifier.HasAICHHash())
 				m_pAICHRecoveryHashSet->SetStatus(AICH_ERROR); // set it to error on unverified hashs
-			AddGap(PARTSIZE*(uint64)nPart, (((uint64)nPart*PARTSIZE)+length)-1);
+			AddGap(PARTSIZE*nPart, ((nPart*PARTSIZE)+length)-1);
 			ASSERT( false );
 			return;
 		}
@@ -6249,7 +6142,7 @@ void CPartFile::AICHRecoveryDataAvailable(UINT nPart)
 			POSITION posCorrupted = corrupted_list.Find((uint16)nPart);
 			if (posCorrupted)
 				corrupted_list.RemoveAt(posCorrupted);
-			if (status == PS_EMPTY && theApp.emuledlg->IsRunning()){
+			if (status == PS_EMPTY && !theApp.emuledlg->IsClosing()) {
 				if (m_FileIdentifier.HasExpectedMD4HashCount() && !m_bMD4HashsetNeeded){
 					// Successfully recovered part, make it available for sharing
 					SetStatus(PS_READY);
@@ -6257,7 +6150,7 @@ void CPartFile::AICHRecoveryDataAvailable(UINT nPart)
 				}
 			}
 
-			if (theApp.emuledlg->IsRunning()){
+			if (!theApp.emuledlg->IsClosing()) {
 				// Is this file finished?
 				if (gaplist.IsEmpty())
 					CompleteFile(false);
@@ -6267,7 +6160,7 @@ void CPartFile::AICHRecoveryDataAvailable(UINT nPart)
 	// Update met file
 	SavePartFile();
 	// make sure the user appreciates our great recovering work :P
-	AddLogLine(true, GetResString(IDS_AICH_WORKED), CastItoXBytes(nRecovered), CastItoXBytes(length), nPart, GetFileName());
+	AddLogLine(true, GetResString(IDS_AICH_WORKED), (LPCTSTR)CastItoXBytes(nRecovered), (LPCTSTR)CastItoXBytes(length), nPart, (LPCTSTR)GetFileName());
 	//AICH successfully recovered %s of %s from part %u for %s
 }
 
@@ -6287,7 +6180,7 @@ UINT CPartFile::GetMaxSourcePerFileSoft() const
 }
 
 UINT CPartFile::GetMaxSourcePerFileUDP() const
-{	
+{
 	UINT temp = ((UINT)GetMaxSources() * 3L) / 4;
 	if (temp > MAX_SOURCES_FILE_UDP)
 		return MAX_SOURCES_FILE_UDP;
@@ -6300,8 +6193,9 @@ CString CPartFile::GetTempPath() const
 }
 
 void CPartFile::RefilterFileComments(){
+	const CString& cfilter = thePrefs.GetCommentFilter();
 	// check all availabe comments against our filter again
-	if (thePrefs.GetCommentFilter().IsEmpty())
+	if (cfilter.IsEmpty())
 		return;
 	for (POSITION pos = srclist.GetHeadPosition(); pos != NULL;)
 	{
@@ -6312,7 +6206,7 @@ void CPartFile::RefilterFileComments(){
 			strCommentLower.MakeLower();
 
 			int iPos = 0;
-			CString strFilter(thePrefs.GetCommentFilter().Tokenize(_T("|"), iPos));
+			CString strFilter(cfilter.Tokenize(_T("|"), iPos));
 			while (!strFilter.IsEmpty())
 			{
 				// comment filters are already in lowercase, compare with temp. lowercased received comment
@@ -6322,8 +6216,8 @@ void CPartFile::RefilterFileComments(){
 					cur_src->SetFileRating(0);
 					break;
 				}
-				strFilter = thePrefs.GetCommentFilter().Tokenize(_T("|"), iPos);
-			}		
+				strFilter = cfilter.Tokenize(_T("|"), iPos);
+			}
 		}
 	}
 	RefilterKadNotes();

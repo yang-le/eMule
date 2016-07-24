@@ -1,21 +1,21 @@
 /*
 Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
- 
+
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either
 version 2 of the License, or (at your option) any later version.
- 
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
- 
+
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- 
- 
+
+
 This work is based on the java implementation of the Kademlia protocol.
 Kademlia: Peer-to-peer routing based on the XOR metric
 Copyright (C) 2002  Petar Maymounkov [petar@post.harvard.edu]
@@ -59,20 +59,19 @@ CContact::~CContact()
 }
 
 CContact::CContact()
+	: m_uClientID(0ul), m_cUDPKey(0, 0)
 {
-	m_uClientID = 0;
 	m_uIp = 0;
 	m_uUdpPort = 0;
 	m_uTcpPort = 0;
 	m_uVersion = 0;
-	m_cUDPKey = CKadUDPKey(0, 0);
 	m_bIPVerified = false;
 	InitContact();
 }
 
 CContact::CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint16 uTcpPort, uint8 uVersion, CKadUDPKey cUDPKey, bool bIPVerified)
+	: m_uClientID(uClientID)
 {
-	m_uClientID = uClientID;
 	CKademlia::GetPrefs()->GetKadID(&m_uDistance);
 	m_uDistance.Xor(uClientID);
 	m_uIp = uIp;
@@ -85,8 +84,8 @@ CContact::CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint1
 }
 
 CContact::CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint16 uTcpPort, const CUInt128 &uTarget, uint8 uVersion, CKadUDPKey cUDPKey, bool bIPVerified)
+	: m_uClientID(uClientID)
 {
-	m_uClientID = uClientID;
 	m_uDistance.SetValue(uTarget);
 	m_uDistance.Xor(uClientID);
 	m_uIp = uIp;
@@ -99,7 +98,7 @@ CContact::CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint1
 }
 
 void CContact::Copy(const CContact& fromContact){
-	ASSERT( fromContact.m_bGuiRefs == false ); // don't do this, if this is needed at some point, the code has to be adjusted before
+	ASSERT(!fromContact.m_bGuiRefs); // don't do this, if this is needed at some point, the code has to be adjusted before
 	m_uClientID = fromContact.m_uClientID;
 	m_uDistance = fromContact.m_uDistance;
 	m_uIp = fromContact.m_uIp;
@@ -116,7 +115,6 @@ void CContact::Copy(const CContact& fromContact){
 	m_cUDPKey = fromContact.m_cUDPKey;
 	m_bReceivedHelloPacket = fromContact.m_bReceivedHelloPacket;
 	m_bBootstrapContact = fromContact.m_bBootstrapContact;
-	m_bBootstrapFailed = fromContact.m_bBootstrapFailed;
 }
 
 void CContact::InitContact()
@@ -129,7 +127,6 @@ void CContact::InitContact()
 	m_tCreated = time(NULL);
 	m_bReceivedHelloPacket = false;
 	m_bBootstrapContact = false;
-	m_bBootstrapFailed = false;
 }
 
 void CContact::GetClientID(CUInt128 *puId) const
@@ -278,7 +275,7 @@ void CContact::SetGuiRefs(bool bRefs)
 	m_bGuiRefs = bRefs;
 }
 
-bool CContact::InUse()
+bool CContact::InUse() const
 {
 	return (m_uInUse>0);
 }

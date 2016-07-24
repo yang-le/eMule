@@ -40,6 +40,7 @@ BEGIN_MESSAGE_MAP(CRichEditCtrlX, CRichEditCtrl)
 END_MESSAGE_MAP()
 
 CRichEditCtrlX::CRichEditCtrlX()
+	: m_cfDef(), m_cfKeyword()
 {
 	m_bDisableSelectOnFocus = true;
 	m_bSelfUpdate = false;
@@ -56,15 +57,15 @@ void CRichEditCtrlX::SetDisableSelectOnFocus(bool bDisable)
 	m_bDisableSelectOnFocus = bDisable;
 }
 
-void CRichEditCtrlX::SetSyntaxColoring(const LPCTSTR* ppszKeywords, LPCTSTR pszSeperators)
+void CRichEditCtrlX::SetSyntaxColoring(const LPCTSTR* ppszKeywords, LPCTSTR pszSeparators)
 {
 	int i = 0;
 	while (ppszKeywords[i] != NULL)
 		m_astrKeywords.Add(ppszKeywords[i++]);
-	m_strSeperators = pszSeperators;
+	m_strSeparators = pszSeparators;
 
-	if (m_astrKeywords.GetCount() == 0)
-		m_strSeperators.Empty();
+	if (m_astrKeywords.IsEmpty())
+		m_strSeparators.Empty();
 	else
 	{
 		SetEventMask(GetEventMask() | ENM_CHANGE);
@@ -114,7 +115,7 @@ CRichEditCtrlX& CRichEditCtrlX::operator<<(double fVal)
 	return *this;
 }
 
-UINT CRichEditCtrlX::OnGetDlgCode() 
+UINT CRichEditCtrlX::OnGetDlgCode()
 {
 	if (m_bDisableSelectOnFocus)
 	{
@@ -163,7 +164,7 @@ void CRichEditCtrlX::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	int iTextLen = GetWindowTextLength();
 
 	// Context menu of standard edit control
-	// 
+	//
 	// Undo
 	// ----
 	// Cut
@@ -177,12 +178,11 @@ void CRichEditCtrlX::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 
 	CMenu menu;
 	menu.CreatePopupMenu();
-	if (!bReadOnly){
+	if (!bReadOnly) {
 		menu.AppendMenu(MF_STRING, MP_UNDO, GetResString(IDS_UNDO));
 		menu.AppendMenu(MF_SEPARATOR);
-	}
-	if (!bReadOnly)
 		menu.AppendMenu(MF_STRING, MP_CUT, GetResString(IDS_CUT));
+	}
 	menu.AppendMenu(MF_STRING, MP_COPYSELECTED, GetResString(IDS_COPY));
 	if (!bReadOnly){
 		menu.AppendMenu(MF_STRING, MP_PASTE, GetResString(IDS_PASTE));
@@ -204,8 +204,8 @@ void CRichEditCtrlX::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 		point.y = 32;
 		ClientToScreen(&point);
 	}
-	// Cheap workaround for the "Text cursor is showing while context menu is open" glitch. It could be solved properly 
-	// with the RE's COM interface, but because the according messages are not routed with a unique control ID, it's not 
+	// Cheap workaround for the "Text cursor is showing while context menu is open" glitch. It could be solved properly
+	// with the RE's COM interface, but because the according messages are not routed with a unique control ID, it's not
 	// really useable (e.g. if there are more RE controls in one window). Would to envelope each RE window to get a unique ID..
 	m_bForceArrowCursor = true;
 	menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
@@ -257,7 +257,7 @@ void CRichEditCtrlX::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 void CRichEditCtrlX::OnEnChange()
 {
-	if (!m_bSelfUpdate && m_astrKeywords.GetCount())
+	if (!m_bSelfUpdate && !m_astrKeywords.IsEmpty())
 		UpdateSyntaxColoring();
 }
 
@@ -295,11 +295,10 @@ void CRichEditCtrlX::UpdateSyntaxColoring()
 			{
 				const CString& rstrKeyword = m_astrKeywords[k];
 				int iKwLen = rstrKeyword.GetLength();
-				if (_tcsncmp(psz, rstrKeyword, iKwLen)==0 && (psz[iKwLen]==_T('\0') || _tcschr(m_strSeperators, psz[iKwLen])!=NULL))
+				if (_tcsncmp(psz, rstrKeyword, iKwLen)==0 && (psz[iKwLen]==_T('\0') || _tcschr(m_strSeparators, psz[iKwLen])!=NULL))
 				{
 					int iStart = psz - pszStart;
 					int iEnd = iStart + iKwLen;
-					long lCurSelStart, lCurSelEnd;
 					GetSel(lCurSelStart, lCurSelEnd);
 					SetSel(iStart, iEnd);
 					SetSelectionCharFormat(m_cfKeyword);
@@ -322,8 +321,8 @@ void CRichEditCtrlX::UpdateSyntaxColoring()
 
 BOOL CRichEditCtrlX::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 {
-	// Cheap workaround for the "Text cursor is showing while context menu is open" glitch. It could be solved properly 
-	// with the RE's COM interface, but because the according messages are not routed with a unique control ID, it's not 
+	// Cheap workaround for the "Text cursor is showing while context menu is open" glitch. It could be solved properly
+	// with the RE's COM interface, but because the according messages are not routed with a unique control ID, it's not
 	// really useable (e.g. if there are more RE controls in one window). Would to envelope each RE window to get a unique ID..
 	if (m_bForceArrowCursor && m_hArrowCursor)
 	{

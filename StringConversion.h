@@ -88,7 +88,7 @@ template< int t_nBufferLength = SHORT_ED2K_STR*4 >
 class TUnicodeToUTF8
 {
 public:
-	TUnicodeToUTF8(const CStringW& rwstr)
+	explicit TUnicodeToUTF8(const CStringW& rwstr)
 	{
 		int iBuffSize;
 		int iMaxEncodedStrSize = rwstr.GetLength()*4;
@@ -104,7 +104,7 @@ public:
 		}
 
 		m_iChars = AtlUnicodeToUTF8(rwstr, rwstr.GetLength(), m_psz, iBuffSize);
-		ASSERT( m_iChars > 0 || rwstr.GetLength() == 0 );
+		ASSERT( m_iChars > 0 || rwstr.IsEmpty() );
 	}
 
 	TUnicodeToUTF8(LPCWSTR pwsz, int iLength = -1)
@@ -160,7 +160,7 @@ template< int t_nBufferLength = SHORT_ED2K_STR*4 >
 class TUnicodeToBOMUTF8
 {
 public:
-	TUnicodeToBOMUTF8(const CStringW& rwstr)
+	explicit TUnicodeToBOMUTF8(const CStringW& rwstr)
 	{
 		int iBuffSize;
 		int iMaxEncodedStrSize = 3 + rwstr.GetLength()*4;

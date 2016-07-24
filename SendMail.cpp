@@ -93,11 +93,12 @@ protected:
 ///////////////////////////////////////////////////////////////////////////////
 // CMimeMessageEx -- needed to access the bug fixed version of CMimeRawAttachmentEx
 
+#pragma warning(push)
 #pragma warning(disable:4701) // local variable 'pRawAttach' may be used without having been initialized
 class CMimeMessageEx : public CMimeMessage
 {
 public:
-	BOOL AttachRaw(void* pRawData, DWORD dwDataLength, int nEncodingScheme = ATLSMTP_BASE64_ENCODE, BOOL bCopyData = TRUE, 
+	BOOL AttachRaw(void* pRawData, DWORD dwDataLength, int nEncodingScheme = ATLSMTP_BASE64_ENCODE, BOOL bCopyData = TRUE,
 		LPCTSTR szDisplayName = NULL, LPCTSTR szContentType = _T("application/octet-stream"), UINT uiCodepage = 0)
 	{
 		if (!pRawData)
@@ -132,12 +133,12 @@ public:
 		return bRet;
 	}
 };
-#pragma warning(default:4701)
+#pragma warning(pop)
 
 // Print the hash in a format which is similar to CertMgr's..
 CString GetCertHash(const BYTE* pucHash, int iBytes)
 {
-	const static LPCTSTR pszHex = _T("0123456789abcdef");
+	static const LPCTSTR pszHex = _T("0123456789abcdef");
 	CString strHash;
 	LPTSTR pszHash = strHash.GetBuffer(iBytes * 3);
 	for (int i = 0; i < iBytes; i++, pucHash++)
@@ -177,7 +178,7 @@ PCCERT_CONTEXT GetCertificate(HCERTSTORE hCertStore, DWORD dwFindType, LPCWSTR p
 				DebugLog(LOG_DONTNOTIFY, _T("E-Mail Encryption: Subject: %s"), szString);
 
 			if (pCertInfo->SerialNumber.cbData && pCertInfo->SerialNumber.pbData)
-				DebugLog(LOG_DONTNOTIFY, _T("E-Mail Encryption: Serial nr.: %s"), GetCertInteger(pCertInfo->SerialNumber.pbData, pCertInfo->SerialNumber.cbData));
+				DebugLog(LOG_DONTNOTIFY, _T("E-Mail Encryption: Serial nr.: %s"), (LPCTSTR)GetCertInteger(pCertInfo->SerialNumber.pbData, pCertInfo->SerialNumber.cbData));
 
 			if (CertNameToStr(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, &pCertInfo->Issuer, CERT_X500_NAME_STR, szString, ARRSIZE(szString)))
 				DebugLog(LOG_DONTNOTIFY, _T("E-Mail Encryption: Issuer: %s"), szString);
@@ -190,12 +191,12 @@ PCCERT_CONTEXT GetCertificate(HCERTSTORE hCertStore, DWORD dwFindType, LPCWSTR p
 			BYTE md5[16] = {0};
 			DWORD cb = sizeof md5;
 			if (CertGetCertificateContextProperty(pCertContext, CERT_MD5_HASH_PROP_ID, md5, &cb) && cb == sizeof md5)
-				DebugLog(LOG_DONTNOTIFY, _T("E-Mail Encryption: MD5 hash: %s"), GetCertHash(md5, cb));
+				DebugLog(LOG_DONTNOTIFY, _T("E-Mail Encryption: MD5 hash: %s"), (LPCTSTR)GetCertHash(md5, cb));
 
 			BYTE sha1[20] = {0};
 			cb = sizeof sha1;
 			if (CertGetCertificateContextProperty(pCertContext, CERT_SHA1_HASH_PROP_ID, sha1, &cb) && cb == sizeof sha1)
-				DebugLog(LOG_DONTNOTIFY, _T("E-Mail Encryption: SHA1 hash: %s"), GetCertHash(sha1, cb));
+				DebugLog(LOG_DONTNOTIFY, _T("E-Mail Encryption: SHA1 hash: %s"), (LPCTSTR)GetCertHash(sha1, cb));
 		}
 	}
 
@@ -209,12 +210,12 @@ bool Encrypt(const CStringA& rstrContentA, CByteArray& raEncrypted, LPCWSTR pwsz
 	if (!CryptAcquireContext(&hCryptProv, pszContainer, NULL, PROV_RSA_FULL, NULL))
 	{
 		DWORD dwError = GetLastError();
-		if (dwError != NTE_BAD_KEYSET) {
-			DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Encryption: Failed to acquire certificate context container '%s' - %s"), pszContainer, GetErrorMessage(dwError, 1));
+		if (dwError != (DWORD)NTE_BAD_KEYSET) {
+			DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Encryption: Failed to acquire certificate context container '%s' - %s"), pszContainer, (LPCTSTR)GetErrorMessage(dwError, 1));
 			return false;
 		}
 		if (!CryptAcquireContext(&hCryptProv, pszContainer, NULL, PROV_RSA_FULL, CRYPT_NEWKEYSET)) {
-			DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Encryption: Failed to create certificate context container '%s' - %s"), pszContainer, GetErrorMessage(GetLastError(), 1));
+			DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Encryption: Failed to create certificate context container '%s' - %s"), pszContainer, (LPCTSTR)GetErrorMessage(GetLastError(), 1));
 			return false;
 		}
 	}
@@ -244,7 +245,7 @@ bool Encrypt(const CStringA& rstrContentA, CByteArray& raEncrypted, LPCWSTR pwsz
 				try {
 					raEncrypted.SetSize(cbEncryptedBlob);
 					if (!CryptEncryptMessage(&EncryptParams, 1, RecipientCertArray, (const BYTE*)(LPCSTR)rstrContentA, rstrContentA.GetLength(), raEncrypted.GetData(), &cbEncryptedBlob)) {
-						DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Encryption: Failed to encrypt message - %s"), GetErrorMessage(GetLastError(), 1));
+						DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Encryption: Failed to encrypt message - %s"), (LPCTSTR)GetErrorMessage(GetLastError(), 1));
 						raEncrypted.SetSize(0);
 					}
 				}
@@ -254,22 +255,19 @@ bool Encrypt(const CStringA& rstrContentA, CByteArray& raEncrypted, LPCWSTR pwsz
 				}
 			}
 			else {
-				DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Encryption: Failed to get length of encrypted message - %s"), GetErrorMessage(GetLastError(), 1));
+				DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Encryption: Failed to get length of encrypted message - %s"), (LPCTSTR)GetErrorMessage(GetLastError(), 1));
 			}
 			VERIFY( CertFreeCertificateContext(pRecipientCert) );
-			pRecipientCert = NULL;
 		}
 		else {
-			DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Encryption: Failed to find certificate with subject '%ls' - %s"), pwszCertSubject, GetErrorMessage(GetLastError(), 1));
+			DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Encryption: Failed to find certificate with subject '%ls' - %s"), pwszCertSubject, (LPCTSTR)GetErrorMessage(GetLastError(), 1));
 		}
 		VERIFY( CertCloseStore(hStoreHandle, 0) );
-		hStoreHandle = NULL;
 	}
 	else {
-		DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Encryption: Failed to open certificate store '%s' - %s"), pszCertStore, GetErrorMessage(GetLastError(), 1));
+		DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Encryption: Failed to open certificate store '%s' - %s"), pszCertStore, (LPCTSTR)GetErrorMessage(GetLastError(), 1));
 	}
 	VERIFY( CryptReleaseContext(hCryptProv, 0) );
-	hCryptProv = NULL;
 
 	return raEncrypted.GetSize() > 0;
 }
@@ -313,8 +311,7 @@ CNotifierMailThread::~CNotifierMailThread()
 BOOL CNotifierMailThread::InitInstance()
 {
 	DbgSetThreadName("NotifierMailThread");
-	if (theApp.emuledlg != NULL && theApp.emuledlg->IsRunning())
-	{
+	if (theApp.emuledlg != NULL && !theApp.emuledlg->IsClosing()) {
 		sm_critSect.Lock();
 		InitThreadLocale();
 		CoInitialize(NULL);
@@ -354,7 +351,7 @@ BOOL CNotifierMailThread::InitInstance()
 				pMimeText.Attach(pszMimeText);
 			}
 			else {
-				DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Notification: Failed to instantiate 'IMultiLanguage' - %s"), GetErrorMessage(hr, 1));
+				DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Notification: Failed to instantiate 'IMultiLanguage' - %s"), (LPCTSTR)GetErrorMessage(hr, 1));
 			}
 		}
 		else
@@ -367,15 +364,14 @@ BOOL CNotifierMailThread::InitInstance()
 			CSMTPConnection smtp;
 			if (smtp.Connect(m_strHostName))
 			{
-				if (theApp.emuledlg != NULL && theApp.emuledlg->IsRunning())
-				{
+				if (theApp.emuledlg != NULL && !theApp.emuledlg->IsClosing()) {
 					CMimeMessageEx msg;
 					msg.SetSenderName(_T("eMule"));
 					msg.SetSender(m_strSender);
 					msg.AddRecipient(m_strRecipient);
 					msg.SetSubject(m_strSubject);
 					if (aEncryptedBody.GetSize() > 0) {
-						msg.AttachRaw((void*)aEncryptedBody.GetData(), aEncryptedBody.GetSize(), ATLSMTP_BASE64_ENCODE, TRUE, 
+						msg.AttachRaw((void*)aEncryptedBody.GetData(), aEncryptedBody.GetSize(), ATLSMTP_BASE64_ENCODE, TRUE,
 									_T("smime.p7m"), _T("application/x-pkcs7-mime;\r\n\tformat=flowed;\r\n\tsmime-type=enveloped-data"));
 					}
 					else {
@@ -383,13 +379,13 @@ BOOL CNotifierMailThread::InitInstance()
 					}
 					if (!smtp.SendMessage(msg)) {
 						// can't use 'GetLastError' here!
-						DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Notification: Failed to send e-mail to '%s'"), m_strRecipient);
+						DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Notification: Failed to send e-mail to '%s'"), (LPCTSTR)m_strRecipient);
 					}
 				}
 			}
 			else {
 				// can't use 'GetLastError' here!
-				DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Notification: Failed to connect to SMTP server '%s'"), m_strHostName);
+				DebugLogWarning(LOG_DONTNOTIFY, _T("E-Mail Notification: Failed to connect to SMTP server '%s'"), (LPCTSTR)m_strHostName);
 			}
 		}
 

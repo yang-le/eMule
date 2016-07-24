@@ -29,7 +29,7 @@ namespace Kademlia {
 class CChatWnd;
 class CIrcWnd;
 class CKademliaWnd;
-class CKnownFileList; 
+class CKnownFileList;
 class CMainFrameDropTarget;
 class CMuleStatusBarCtrl;
 class CMuleToolbarCtrl;
@@ -59,12 +59,13 @@ class CemuleDlg : public CTrayDialog
 	friend class CMiniMule;
 
 public:
-	CemuleDlg(CWnd* pParent = NULL);
+	explicit CemuleDlg(CWnd* pParent = NULL);
 	~CemuleDlg();
 
 	enum { IDD = IDD_EMULE_DIALOG };
 
 	static bool IsRunning();
+	static bool IsClosing();
 	void ShowConnectionState();
 	void ShowNotifier(LPCTSTR pszText, int iMsgType, LPCTSTR pszLink = NULL, bool bForceSoundOFF = false);
 	void SendNotificationMail(int iMsgType, LPCTSTR pszText);
@@ -108,8 +109,8 @@ public:
 	CString	GetConnectionStateString();
 	UINT GetConnectionStateIconIndex() const;
 	CString	GetTransferRateString();
-	CString	GetUpDatarateString(UINT uUpDatarate = -1);
-	CString	GetDownDatarateString(UINT uDownDatarate = -1);
+	CString	GetUpDatarateString(UINT uUpDatarate = (UINT)-1);
+	CString	GetDownDatarateString(UINT uDownDatarate = (UINT)-1);
 
 	void StopTimer();
 	void DoVersioncheck(bool manual);
@@ -218,7 +219,7 @@ protected:
 	void ShowUserStateIcon();
 	void AddSpeedSelectorMenus(CMenu* addToMenu);
 	int  GetRecMaxUpload();
-	void LoadNotifier(CString configuration);
+	void LoadNotifier(const CString& configuration);
 	bool notifierenabled;
 	void ShowToolPopup(bool toolsonly = false);
 	void SetAllIcons();
@@ -266,7 +267,7 @@ protected:
 	afx_msg void QuickSpeedDownload(UINT nID);
 	afx_msg void QuickSpeedOther(UINT nID);
 	// end of quick-speed changer
-	
+
 	afx_msg LRESULT OnTaskbarNotifierClicked(WPARAM wParam,LPARAM lParam);
 	afx_msg LRESULT OnWMData(WPARAM wParam,LPARAM lParam);
 	afx_msg LRESULT OnFileHashed(WPARAM wParam,LPARAM lParam);

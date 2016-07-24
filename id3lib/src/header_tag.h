@@ -1,5 +1,5 @@
 // -*- C++ -*-
-// $Id: header_tag.h,v 1.2 2002/07/31 13:20:49 t1mpy Exp $
+// $Id: header_tag.h,v 1.3 2002/09/13 15:37:23 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
@@ -57,7 +57,7 @@ public:
 
   bool   SetSpec(ID3_V2Spec);
   size_t Size() const;
-  void Render(ID3_Writer&) const;
+  ID3_Err Render(ID3_Writer&) const;
   bool Parse(ID3_Reader&);
   void ParseExtended(ID3_Reader&);
   ID3_TagHeader& operator=(const ID3_TagHeader&hdr)
@@ -95,7 +95,7 @@ public:
   // id3v2 tag header signature:  $49 44 33 MM mm GG ss ss ss ss
   // MM = major version (will never be 0xFF)
   // mm = minor version (will never be 0xFF)
-  // ff = flags byte 
+  // ff = flags byte
   // ss = size bytes (less than $80)
   static const char* const ID;
   enum
@@ -107,7 +107,7 @@ public:
     SIZE_OFFSET    = 6,
     SIZE           = 10 // does not include extented headers
   };
-  
+
 };
 
 #endif /* _ID3LIB_HEADER_TAG_H_ */

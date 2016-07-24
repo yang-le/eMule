@@ -89,11 +89,11 @@ public:
 	virtual CED2KFileLink* GetFileLink();
 	virtual CED2KNodesListLink* GetNodesListLink() 		{ return NULL; }
 	virtual CED2KSearchLink* GetSearchLink()			{ return NULL; }
-	
+
 	const TCHAR* GetName() const			{ return m_name; }
 	const uchar* GetHashKey() const			{ return m_hash;}
 	const CAICHHash& GetAICHHash() const	{ return m_AICHHash;}
-	EMFileSize GetSize() const				{ return (uint64)_tstoi64(m_size); }	
+	EMFileSize GetSize() const				{ return (uint64)_tstoi64(m_size); }
 	bool HasValidSources() const			{ return (SourcesList != NULL); }
 	bool HasHostnameSources() const			{ return (!m_HostnameSourcesList.IsEmpty()); }
 	bool HasValidAICHHash() const			{ return m_bAICHHashValid; }
@@ -118,7 +118,7 @@ private:
 class CED2KServerListLink : public CED2KLink
 {
 public:
-	CED2KServerListLink(const TCHAR* pszAddress);
+	explicit CED2KServerListLink(const TCHAR* pszAddress);
 	virtual ~CED2KServerListLink();
 
 	virtual LinkType GetKind() const;
@@ -139,7 +139,7 @@ private:
 class CED2KNodesListLink : public CED2KLink
 {
 public:
-	CED2KNodesListLink(const TCHAR* pszAddress);
+	explicit CED2KNodesListLink(const TCHAR* pszAddress);
 	virtual ~CED2KNodesListLink();
 
 	virtual LinkType GetKind() const;
@@ -159,7 +159,7 @@ private:
 class CED2KSearchLink : public CED2KLink
 {
 public:
-	CED2KSearchLink(const TCHAR* pszSearchTerm);
+	explicit CED2KSearchLink(const TCHAR* pszSearchTerm);
 	virtual ~CED2KSearchLink();
 
 	virtual LinkType GetKind() const;

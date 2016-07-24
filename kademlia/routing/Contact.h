@@ -1,21 +1,21 @@
 /*
 Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
- 
+
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either
 version 2 of the License, or (at your option) any later version.
- 
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
- 
+
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
- 
- 
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
 This work is based on the java implementation of the Kademlia protocol.
 Kademlia: Peer-to-peer routing based on the XOR metric
 Copyright (C) 2002  Petar Maymounkov [petar@post.harvard.edu]
@@ -47,8 +47,8 @@ namespace Kademlia
 			~CContact();
 			CContact();
 			CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint16 uTcpPort, uint8 uVersion, CKadUDPKey cUDPKey, bool bIPVerified);
-			CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint16 uTcpPort, const CUInt128 &uTarget, uint8 uVersion, CKadUDPKey cUDPKey, bool bIPVerified);	
-			CContact& operator=(const CContact& k1)				{ Copy(k1); return *this; }	
+			CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint16 uTcpPort, const CUInt128 &uTarget, uint8 uVersion, CKadUDPKey cUDPKey, bool bIPVerified);
+			CContact& operator=(const CContact& k1)				{ Copy(k1); return *this; }
 
 			void GetClientID(CUInt128 *puId) const;
 			CUInt128 GetClientID() const;
@@ -71,7 +71,7 @@ namespace Kademlia
 			void CheckingType();
 			bool GetGuiRefs() const;
 			void SetGuiRefs(bool bRefs);
-			bool InUse();
+			bool InUse() const;
 			void IncUse();
 			void DecUse();
 			uint8 GetVersion() const;
@@ -80,7 +80,7 @@ namespace Kademlia
 			time_t GetExpireTime() const;
 			time_t GetLastTypeSet() const;
 			time_t GetLastSeen() const;
-			
+
 			bool		GetReceivedHelloPacket() const					{return m_bReceivedHelloPacket;}
 			void		SetReceivedHelloPacket()						{m_bReceivedHelloPacket = true;}
 
@@ -90,11 +90,9 @@ namespace Kademlia
 			void		SetIpVerified(bool bIPVerified);
 
 			// bootstrapcontact functions only used for GUI
-			bool		IsBootstrapContact() const						{return m_bBootstrapContact;} 
-			void		SetBootstrapContact()							{m_bBootstrapContact = true;} 
-			bool		IsBootstrapFailed() const						{return m_bBootstrapFailed;}
-			void		SetBootstrapFailed()								{m_bBootstrapFailed = true;}
-			
+			bool		IsBootstrapContact() const						{return m_bBootstrapContact;}
+			void		SetBootstrapContact()							{m_bBootstrapContact = true;}
+
 		private:
 			void	InitContact(); // Common var initialization goes here
 			void	Copy(const CContact& fromContact);
@@ -114,7 +112,6 @@ namespace Kademlia
 			bool m_bIPVerified;
 			bool m_bReceivedHelloPacket;
 			bool m_bBootstrapContact;
-			bool m_bBootstrapFailed;
 			CKadUDPKey	m_cUDPKey;
 	};
 }

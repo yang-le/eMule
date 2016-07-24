@@ -84,12 +84,12 @@ void CPPgConnection::DoDataExchange(CDataExchange* pDX)
 
 void CPPgConnection::OnEnChangeTCP()
 {
-	OnEnChangePorts(true);
+	OnEnChangePorts(1); //ports changed
 }
 
 void CPPgConnection::OnEnChangeUDP()
 {
-	OnEnChangePorts(false);
+	OnEnChangePorts(0); //IDC_UDPDISABLE checkbox changed
 }
 
 void CPPgConnection::OnEnChangePorts(uint8 istcpport)
@@ -101,9 +101,9 @@ void CPPgConnection::OnEnChangePorts(uint8 istcpport)
 	GetDlgItem(IDC_UDPPORT)->GetWindowText(buffer);
 	uint16 udp = (uint16)_tstoi(buffer);
 
-	GetDlgItem(IDC_STARTTEST)->EnableWindow( 
-		tcp == theApp.listensocket->GetConnectedPort() && 
-		udp == theApp.clientudp->GetConnectedPort() 
+	GetDlgItem(IDC_STARTTEST)->EnableWindow(
+		tcp == theApp.listensocket->GetConnectedPort() &&
+		udp == theApp.clientudp->GetConnectedPort()
 	);
 
 	if (istcpport == 0)
@@ -116,12 +116,12 @@ void CPPgConnection::OnEnChangeUDPDisable()
 {
 	if (guardian)
 		return;
+	guardian = true; //immediately after return
 
 	uint16 tempVal = 0;
 	CString strBuffer;
 	TCHAR buffer[510];
-	
-	guardian = true;
+
 	SetModified();
 
 	GetDlgItem(IDC_UDPPORT)->EnableWindow(!IsDlgButtonChecked(IDC_UDPDISABLE));
@@ -133,7 +133,7 @@ void CPPgConnection::OnEnChangeUDPDisable()
 	}
 	else
 		buffer[0] = _T('\0');
-	
+
 	if (IsDlgButtonChecked(IDC_UDPDISABLE) || (!IsDlgButtonChecked(IDC_UDPDISABLE) && tempVal == 0))
 	{
 		tempVal = (uint16)_tstoi(buffer) ? (uint16)(_tstoi(buffer)+10) : (uint16)(thePrefs.port+10);
@@ -174,13 +174,13 @@ void CPPgConnection::LoadSettings(void)
 			thePrefs.maxdownload = thePrefs.GetMaxDownload();
 
 		CString strBuffer;
-		
+
 		strBuffer.Format(_T("%d"), thePrefs.udpport);
 		GetDlgItem(IDC_UDPPORT)->SetWindowText(strBuffer);
 		CheckDlgButton(IDC_UDPDISABLE, (thePrefs.udpport == 0));
 
 		GetDlgItem(IDC_UDPPORT)->EnableWindow(thePrefs.udpport > 0);
-	
+
 		strBuffer.Format(_T("%d"), thePrefs.maxGraphDownloadRate);
 		GetDlgItem(IDC_DOWNLOAD_CAP)->SetWindowText(strBuffer);
 
@@ -205,13 +205,13 @@ void CPPgConnection::LoadSettings(void)
 		strBuffer.Format(_T("%d"), thePrefs.port);
 		GetDlgItem(IDC_PORT)->SetWindowText(strBuffer);
 
-		strBuffer.Format(_T("%d"), thePrefs.maxconnections);
+		strBuffer.Format(_T("%u"), thePrefs.maxconnections);
 		GetDlgItem(IDC_MAXCON)->SetWindowText(strBuffer);
 
 		if (thePrefs.maxsourceperfile == 0xFFFF)
 			GetDlgItem(IDC_MAXSOURCEPERFILE)->SetWindowText(_T("0"));
 		else{
-			strBuffer.Format(_T("%d"), thePrefs.maxsourceperfile);
+			strBuffer.Format(_T("%u"), thePrefs.maxsourceperfile);
 			GetDlgItem(IDC_MAXSOURCEPERFILE)->SetWindowText(strBuffer);
 		}
 
@@ -219,7 +219,7 @@ void CPPgConnection::LoadSettings(void)
 			CheckDlgButton(IDC_RECONN, 1);
 		else
 			CheckDlgButton(IDC_RECONN, 0);
-		
+
 		if (thePrefs.m_bshowoverhead)
 			CheckDlgButton(IDC_SHOWOVERHEAD, 1);
 		else
@@ -247,7 +247,7 @@ void CPPgConnection::LoadSettings(void)
 		else
 			GetDlgItem(IDC_OPENPORTS)->ShowWindow(SW_HIDE);
 
-		
+
 		if (thePrefs.GetWindowsVersion() != _WINVER_95_ && thePrefs.GetWindowsVersion() != _WINVER_98_ && thePrefs.GetWindowsVersion() != _WINVER_NT4_)
 			GetDlgItem(IDC_PREF_UPNPONSTART)->EnableWindow(true);
 		else
@@ -271,7 +271,7 @@ BOOL CPPgConnection::OnApply()
 	bool bRestartApp = false;
 
 	if (GetDlgItem(IDC_DOWNLOAD_CAP)->GetWindowTextLength())
-	{ 
+	{
 		GetDlgItem(IDC_DOWNLOAD_CAP)->GetWindowText(buffer, 20);
 		thePrefs.SetMaxGraphDownloadRate(_tstoi(buffer));
 	}
@@ -309,7 +309,7 @@ BOOL CPPgConnection::OnApply()
 
 	if (thePrefs.GetMaxUpload() != UNLIMITED)
 		m_ctlMaxUp.SetPos(thePrefs.GetMaxUpload());
-	
+
 	if (!IsDlgButtonChecked(IDC_DLIMIT_LBL))
 		thePrefs.SetMaxDownload(UNLIMITED);
 	else
@@ -333,7 +333,7 @@ BOOL CPPgConnection::OnApply()
 				bRestartApp = true;
 		}
 	}
-	
+
 	if (GetDlgItem(IDC_MAXSOURCEPERFILE)->GetWindowTextLength())
 	{
 		GetDlgItem(IDC_MAXSOURCEPERFILE)->GetWindowText(buffer, 20);
@@ -348,7 +348,7 @@ BOOL CPPgConnection::OnApply()
 			thePrefs.udpport = nNewPort;
 			if (theApp.IsPortchangeAllowed())
 				theApp.clientudp->Rebind();
-			else 
+			else
 				bRestartApp = true;
 		}
 	}
@@ -384,8 +384,8 @@ BOOL CPPgConnection::OnApply()
 
 	thePrefs.autoconnect = IsDlgButtonChecked(IDC_AUTOCONNECT)!=0;
 	thePrefs.reconnect = IsDlgButtonChecked(IDC_RECONN)!=0;
-		
-	if (lastmaxgu != thePrefs.maxGraphUploadRate) 
+
+	if (lastmaxgu != thePrefs.maxGraphUploadRate)
 		theApp.emuledlg->statisticswnd->SetARange(false, thePrefs.GetMaxGraphUploadRate(true));
 	if (lastmaxgd!=thePrefs.maxGraphDownloadRate)
 		theApp.emuledlg->statisticswnd->SetARange(true, thePrefs.maxGraphDownloadRate);
@@ -400,12 +400,12 @@ BOOL CPPgConnection::OnApply()
 	if (tempcon > (unsigned)::GetMaxWindowsTCPConnections())
 	{
 		CString strMessage;
-		strMessage.Format(GetResString(IDS_PW_WARNING), GetResString(IDS_PW_MAXC), ::GetMaxWindowsTCPConnections());
+		strMessage.Format(GetResString(IDS_PW_WARNING), (LPCTSTR)GetResString(IDS_PW_MAXC), ::GetMaxWindowsTCPConnections());
 		int iResult = AfxMessageBox(strMessage, MB_ICONWARNING | MB_YESNO);
 		if (iResult != IDYES)
 		{
 			//TODO: set focus to max connection?
-			strMessage.Format(_T("%d"), thePrefs.maxconnections);
+			strMessage.Format(_T("%u"), thePrefs.maxconnections);
 			GetDlgItem(IDC_MAXCON)->SetWindowText(strMessage);
 			tempcon = ::GetMaxWindowsTCPConnections();
 		}
@@ -430,13 +430,13 @@ BOOL CPPgConnection::OnApply()
 	if (bRestartApp)
 		AfxMessageBox(GetResString(IDS_NOPORTCHANGEPOSSIBLE));
 
-	OnEnChangePorts(2);
+	OnEnChangePorts(2); //refresh ports display only
 
 	return CPropertyPage::OnApply();
 }
 
 void CPPgConnection::Localize(void)
-{	
+{
 	if (m_hWnd)
 	{
 		SetWindowText(GetResString(IDS_PW_CONNECTION));
@@ -472,7 +472,7 @@ void CPPgConnection::OnBnClickedWizard()
 	conWizard.DoModal();
 }
 
-void CPPgConnection::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
+void CPPgConnection::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	SetModified(TRUE);
 
@@ -505,7 +505,7 @@ void CPPgConnection::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 
 	ShowLimitValues();
 
-	UpdateData(false); 
+	UpdateData(false);
 	CPropertyPage::OnHScroll(nSBCode, nPos, pScrollBar);
 }
 
@@ -514,15 +514,15 @@ void CPPgConnection::ShowLimitValues()
 	CString buffer;
 
 	if (!IsDlgButtonChecked(IDC_ULIMIT_LBL))
-		buffer = _T("");
+		buffer.Empty();
 	else
-		buffer.Format(_T("%u %s"), m_ctlMaxUp.GetPos(), GetResString(IDS_KBYTESPERSEC));
+		buffer.Format(_T("%i %s"), m_ctlMaxUp.GetPos(), (LPCTSTR)GetResString(IDS_KBYTESPERSEC));
 	GetDlgItem(IDC_KBS4)->SetWindowText(buffer);
-	
+
 	if (!IsDlgButtonChecked(IDC_DLIMIT_LBL))
-		buffer = _T("");
+		buffer.Empty();
 	else
-		buffer.Format(_T("%u %s"), m_ctlMaxDown.GetPos(), GetResString(IDS_KBYTESPERSEC));
+		buffer.Format(_T("%i %s"), m_ctlMaxDown.GetPos(), (LPCTSTR)GetResString(IDS_KBYTESPERSEC));
 	GetDlgItem(IDC_KBS1)->SetWindowText(buffer);
 }
 
@@ -532,7 +532,7 @@ void CPPgConnection::OnLimiterChange()
 	m_ctlMaxUp.ShowWindow(IsDlgButtonChecked(IDC_ULIMIT_LBL) ? SW_SHOW : SW_HIDE);
 
 	ShowLimitValues();
-	SetModified(TRUE);	
+	SetModified(TRUE);
 }
 
 void CPPgConnection::OnHelp()

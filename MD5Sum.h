@@ -26,7 +26,7 @@ class MD5Sum
 {
 public:
 	MD5Sum();
-	MD5Sum(const CString& sSource);
+	explicit MD5Sum(const CString& sSource);
 	MD5Sum(const unsigned char* pachSource, uint32 nLen);
 
 	CString Calculate(const CString& sSource);

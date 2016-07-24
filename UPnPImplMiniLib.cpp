@@ -21,9 +21,9 @@
 #include "UPnPImplMiniLib.h"
 #include "Log.h"
 #include "Otherfunctions.h"
-#include ".\miniupnpc\miniupnpc.h"
-#include ".\miniupnpc\upnpcommands.h"
-#include ".\miniupnpc\upnperrors.h"
+#include "miniupnpc\miniupnpc.h"
+#include "miniupnpc\upnpcommands.h"
+#include "miniupnpc\upnperrors.h"
 
 
 #ifdef _DEBUG
@@ -34,7 +34,9 @@ static char THIS_FILE[] = __FILE__;
 
 CMutex CUPnPImplMiniLib::m_mutBusy;
 
-CUPnPImplMiniLib::CUPnPImplMiniLib(){
+CUPnPImplMiniLib::CUPnPImplMiniLib()
+	: m_hThreadHandle(0)
+{
 	m_nOldUDPPort = 0;
 	m_nOldTCPPort = 0;
 	m_nOldTCPWebPort = 0;
@@ -44,7 +46,7 @@ CUPnPImplMiniLib::CUPnPImplMiniLib(){
 	m_bSucceededOnce = false;
 	m_achLanIP[0] = 0;
 }
-	
+
 CUPnPImplMiniLib::~CUPnPImplMiniLib(){
 	if (m_pURLs != NULL)
 		FreeUPNPUrls(m_pURLs);
@@ -89,7 +91,7 @@ void CUPnPImplMiniLib::StopAsyncFind(){
 }
 
 void CUPnPImplMiniLib::DeletePorts()
-{ 
+{
 	m_nOldUDPPort = (ArePortsForwarded() == TRIS_TRUE) ? m_nUDPPort : 0;
 	m_nUDPPort = 0;
 	m_nOldTCPPort = (ArePortsForwarded() == TRIS_TRUE) ? m_nTCPPort : 0;
@@ -97,7 +99,7 @@ void CUPnPImplMiniLib::DeletePorts()
 	m_nOldTCPWebPort = (ArePortsForwarded() == TRIS_TRUE) ? m_nTCPWebPort : 0;
 	m_nTCPWebPort = 0;
 	m_bUPnPPortsForwarded = TRIS_FALSE;
-	DeletePorts(false); 
+	DeletePorts(false);
 }
 
 void CUPnPImplMiniLib::DeletePorts(bool bSkipLock){
@@ -161,7 +163,7 @@ void CUPnPImplMiniLib::DeletePorts(bool bSkipLock){
 
 void CUPnPImplMiniLib::StartDiscovery(uint16 nTCPPort, uint16 nUDPPort, uint16 nTCPWebPort){
 	DebugLog(_T("Using MiniUPnPLib based implementation"));
-	DebugLog(_T("miniupnpc (c) 2006-2013 Thomas Bernard - http://miniupnp.free.fr/"));
+	DebugLog(_T("miniupnpc (c) 2006-2015 Thomas Bernard - http://miniupnp.free.fr/"));
 	m_nOldUDPPort = (ArePortsForwarded() == TRIS_TRUE) ? m_nUDPPort : 0;
 	m_nUDPPort = nUDPPort;
 	m_nOldTCPPort = (ArePortsForwarded() == TRIS_TRUE) ? m_nTCPPort : 0;
@@ -192,7 +194,7 @@ bool CUPnPImplMiniLib::CheckAndRefresh()
 	// on a CheckAndRefresh we don't do any new time consuming discovery tries, we expect to find the same router like the first time
 	// and of course we also don't delete old ports (this was done on Discovery) but only check that our current mappings still exist
 	// and refresh them if not
-	if (m_bAbortDiscovery || !m_bSucceededOnce|| !IsReady() || m_pURLs == NULL || m_pIGDData == NULL 
+	if (m_bAbortDiscovery || !m_bSucceededOnce|| !IsReady() || m_pURLs == NULL || m_pIGDData == NULL
 		|| m_pURLs->controlURL == NULL || m_nTCPPort == 0)
 	{
 		DebugLog(_T("Not refreshing UPnP ports because they don't seem to be forwarded in the first place"));
@@ -247,9 +249,10 @@ int CUPnPImplMiniLib::CStartDiscoveryThread::Run()
 	{
 		if (!m_pOwner->m_bCheckAndRefresh)
 		{
-			UPNPDev* structDeviceList = upnpDiscover(2000, NULL, NULL, 0, 0, 0);
+			int error = 0;
+			UPNPDev* structDeviceList = upnpDiscover(2000, NULL, NULL, 0, 0, 2, &error);
 			if (structDeviceList == NULL){
-				DebugLog(_T("UPNP: No Internet Gateway Devices found, aborting"));
+				DebugLog(_T("UPNP: No Internet Gateway Devices found, aborting: %d"), error);
 				m_pOwner->m_bUPnPPortsForwarded = TRIS_FALSE;
 				m_pOwner->SendResultMessage();
 				return 0;
@@ -269,7 +272,7 @@ int CUPnPImplMiniLib::CStartDiscoveryThread::Run()
 			ZeroMemory(m_pOwner->m_pURLs, sizeof(UPNPUrls));
 			m_pOwner->m_pIGDData = new IGDdatas;
 			ZeroMemory(m_pOwner->m_pIGDData, sizeof(IGDdatas));
-			
+
 			m_pOwner->m_achLanIP[0] = 0;
 			int iResult = UPNP_GetValidIGD(structDeviceList, m_pOwner->m_pURLs, m_pOwner->m_pIGDData, m_pOwner->m_achLanIP, sizeof(m_pOwner->m_achLanIP));
 			freeUPNPDevlist(structDeviceList);
@@ -302,7 +305,7 @@ int CUPnPImplMiniLib::CStartDiscoveryThread::Run()
 			// do we still have old mappings? Remove them first
 			m_pOwner->DeletePorts(true);
 		}
-		
+
 		bSucceeded = OpenPort(m_pOwner->m_nTCPPort, true, m_pOwner->m_achLanIP, m_pOwner->m_bCheckAndRefresh);
 		if (bSucceeded && m_pOwner->m_nUDPPort != 0)
 			bSucceeded = OpenPort(m_pOwner->m_nUDPPort, false, m_pOwner->m_achLanIP, m_pOwner->m_bCheckAndRefresh);
@@ -330,7 +333,7 @@ bool CUPnPImplMiniLib::CStartDiscoveryThread::OpenPort(uint16 nPort, bool bTCP, 
 	const char achDescUDP[] = "eMule_UDP";
 	char achPort[10];
 	sprintf(achPort, "%u", nPort);
-	
+
 	if (m_pOwner->m_bAbortDiscovery)
 		return false;
 
@@ -354,7 +357,7 @@ bool CUPnPImplMiniLib::CStartDiscoveryThread::OpenPort(uint16 nPort, bool bTCP, 
 			DebugLog(_T("Checking UPnP: Mapping for port %u (%s) on local IP %S still exists"), nPort, bTCP ? _T("TCP") : _T("UDP"), achOutIP);
 			return true;
 		}
-		else 
+		else
 			DebugLogWarning(_T("Checking UPnP: Mapping for port %u (%s) on local IP %S is gone, trying to reopen port"), nPort, bTCP ? _T("TCP") : _T("UDP"), achOutIP);
 	}
 

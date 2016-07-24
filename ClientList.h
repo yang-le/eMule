@@ -49,7 +49,7 @@ struct CONNECTINGCLIENT{
 
 class CDeletedClient{
 public:
-	CDeletedClient(const CUpDownClient* pClient);
+	explicit CDeletedClient(const CUpDownClient* pClient);
 	CArray<PORTANDHASH> m_ItemsList;
 	uint32				m_dwInserted;
 	uint32				m_cBadRequest;
@@ -114,8 +114,8 @@ public:
 	void	AddToKadList(CUpDownClient* toadd);
 	bool	DoRequestFirewallCheckUDP(const Kademlia::CContact& contact);
 	//bool	DebugDoRequestFirewallCheckUDP(uint32 ip, uint16 port);
-	uint8	GetBuddyStatus()			{ return m_nBuddyStatus; }
-	CUpDownClient* GetBuddy()			{ return m_pBuddy; }
+	uint8	GetBuddyStatus() const			{ return m_nBuddyStatus; }
+	CUpDownClient* GetBuddy() const			{ return m_pBuddy; }
 
 	void	AddKadFirewallRequest(uint32 dwIP);
 	bool	IsKadFirewallCheckIP(uint32 dwIP) const;

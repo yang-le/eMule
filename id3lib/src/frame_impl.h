@@ -1,5 +1,5 @@
 // -*- C++ -*-
-// $Id: frame_impl.h,v 1.6 2002/08/10 10:50:31 t1mpy Exp $
+// $Id: frame_impl.h,v 1.7 2002/09/13 15:37:23 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
@@ -29,6 +29,16 @@
 #ifndef _ID3LIB_FRAME_IMPL_H_
 #define _ID3LIB_FRAME_IMPL_H_
 
+#if defined(__BORLANDC__)
+// due to a bug in borland it sometimes still wants mfc compatibility even when you disable it
+#  if defined(_MSC_VER)
+#    undef _MSC_VER
+#  endif
+#  if defined(__MFC_COMPAT__)
+#    undef __MFC_COMPAT__
+#  endif
+#endif
+
 #include <vector>
 #ifndef HAVE_BITSET
 #include "id3/id3lib_bitset"
@@ -46,22 +56,22 @@ public:
   typedef Fields::iterator iterator;
   typedef Fields::const_iterator const_iterator;
 public:
-  ID3_FrameImpl(ID3_FrameID id = ID3FID_NOFRAME);
-  ID3_FrameImpl(const ID3_FrameHeader&);
-  ID3_FrameImpl(const ID3_Frame&);
+  explicit ID3_FrameImpl(ID3_FrameID id = ID3FID_NOFRAME);
+  explicit ID3_FrameImpl(const ID3_FrameHeader&);
+  explicit ID3_FrameImpl(const ID3_Frame&);
 
   /// Destructor.
   virtual ~ID3_FrameImpl();
-  
+
   void        Clear();
 
   bool        SetID(ID3_FrameID id);
   ID3_FrameID GetID() const { return _hdr.GetFrameID(); }
-  
+
   ID3_Field*  GetField(ID3_FieldID name) const;
 
   size_t      NumFields() const;
-  
+
   const char* GetDescription() const;
   static const char* GetDescription(ID3_FrameID);
 
@@ -70,7 +80,7 @@ public:
   ID3_FrameImpl&  operator=(const ID3_Frame &);
   bool        HasChanged() const;
   bool        Parse(ID3_Reader&);
-  void        Render(ID3_Writer&) const;
+  ID3_Err     Render(ID3_Writer&) const;
   size_t      Size();
   bool        Contains(ID3_FieldID fld) const
   { return _bitset.test(fld); }
@@ -117,7 +127,7 @@ public:
   iterator         end()         { return _fields.end(); }
   const_iterator   begin() const { return _fields.begin(); }
   const_iterator   end()   const { return _fields.end(); }
-  
+
 protected:
   bool        _SetID(ID3_FrameID);
   bool        _ClearFields();
@@ -129,7 +139,7 @@ private:
   mutable bool        _changed;    // frame changed since last parse/render?
   Bitset      _bitset;             // which fields are present?
   Fields      _fields;
-  ID3_FrameHeader _hdr;            // 
+  ID3_FrameHeader _hdr;            //
   uchar       _encryption_id;      // encryption id
   uchar       _grouping_id;        // grouping id
 }

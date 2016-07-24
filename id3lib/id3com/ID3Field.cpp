@@ -91,7 +91,7 @@ STDMETHODIMP CID3Field::get_Text(long ItemNum, BSTR *pVal)
 	{
 		*pVal = NULL;
 		size_t nText = m_Field->Size();
-        if(m_Field->GetEncoding() == ID3TE_UNICODE)
+        if(ID3TE_IS_DOUBLE_BYTE_ENC(m_Field->GetEncoding()))
         {
 		    unicode_t* sText = new unicode_t[nText + 1];
 		    try 

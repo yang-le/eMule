@@ -18,7 +18,6 @@
 #include "emule.h"
 #include "emuledlg.h"
 #include "CollectionCreateDialog.h"
-#include "OtherFunctions.h"
 #include "Collection.h"
 #include "Sharedfilelist.h"
 #include "CollectionFile.h"
@@ -27,19 +26,6 @@
 #include "PartFile.h"
 #include "TransferDlg.h"
 #include "DownloadListCtrl.h"
-#pragma warning(disable:4516) // access-declarations are deprecated; member using-declarations provide a better alternative
-#pragma warning(disable:4244) // conversion from 'type1' to 'type2', possible loss of data
-#pragma warning(disable:4100) // unreferenced formal parameter
-#pragma warning(disable:4702) // unreachable code
-#include <crypto51/rsa.h>
-#include <crypto51/base64.h>
-#include <crypto51/osrng.h>
-#include <crypto51/files.h>
-#include <crypto51/sha.h>
-#pragma warning(default:4702) // unreachable code
-#pragma warning(default:4100) // unreferenced formal parameter
-#pragma warning(default:4244) // conversion from 'type1' to 'type2', possible loss of data
-#pragma warning(default:4516) // access-declarations are deprecated; member using-declarations provide a better alternative
 #include "Preferences.h"
 
 #ifdef _DEBUG
@@ -49,13 +35,6 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 #define	PREF_INI_SECTION	_T("CollectionCreateDlg")
-
-enum ECols
-{
-	colName = 0,
-	colSize,
-	colHash
-};
 
 IMPLEMENT_DYNAMIC(CCollectionCreateDialog, CDialog)
 
@@ -173,9 +152,7 @@ BOOL CCollectionCreateDialog::OnInitDialog(void)
 	AddAnchor(IDC_COLLECTIONCREATESIGNCHECK, BOTTOM_LEFT, BOTTOM_RIGHT);
 	EnableSaveRestore(PREF_INI_SECTION);
 
-	POSITION pos = m_pCollection->m_CollectionFilesMap.GetStartPosition();
-	while (pos != NULL)
-	{
+	for (POSITION pos = m_pCollection->m_CollectionFilesMap.GetStartPosition(); pos != NULL;) {
 		CSKey key;
 		CCollectionFile* pCollectionFile;
 		m_pCollection->m_CollectionFilesMap.GetNextAssoc(pos, key, pCollectionFile);
@@ -186,7 +163,7 @@ BOOL CCollectionCreateDialog::OnInitDialog(void)
 	m_CollectionListLabel.SetWindowText(strTitle);
 
 	OnBnClickedCollectionViewShared();
-	
+
 	m_CollectionNameEdit.SetWindowText(::CleanupFilename(m_pCollection->m_sCollectionName));
 	m_CollectionCreateFormatCheck.SetCheck(m_pCollection->m_bTextFormat);
 	OnBnClickedCollectionFormat();
@@ -206,7 +183,7 @@ void CCollectionCreateDialog::AddSelectedFiles(void)
 			knownFileList.AddTail((CKnownFile*)m_CollectionAvailListCtrl.GetItemData(index));
 	}
 
-	while (knownFileList.GetCount() > 0)
+	while (!knownFileList.IsEmpty())
 	{
 		CAbstractFile* pAbstractFile = knownFileList.RemoveHead();
 		CCollectionFile* pCollectionFile = m_pCollection->AddFileToCollection(pAbstractFile, true);
@@ -232,7 +209,7 @@ void CCollectionCreateDialog::RemoveSelectedFiles(void)
 			collectionFileList.AddTail((CCollectionFile*)m_CollectionListCtrl.GetItemData(index));
 	}
 
-	while (collectionFileList.GetCount() > 0)
+	while (!collectionFileList.IsEmpty())
 	{
 		CCollectionFile* pCollectionFile = collectionFileList.RemoveHead();
 		m_CollectionListCtrl.RemoveFileFromList(pCollectionFile);
@@ -271,7 +248,7 @@ void CCollectionCreateDialog::OnBnClickedOk()
 		m_pCollection->m_bTextFormat = (m_CollectionCreateFormatCheck.GetCheck() == BST_CHECKED);
 
 		CString sFilePath;
-		sFilePath.Format(_T("%s\\%s.emulecollection"), thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR), m_pCollection->m_sCollectionName);
+		sFilePath.Format(_T("%s\\%s.emulecollection"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR), (LPCTSTR)m_pCollection->m_sCollectionName);
 
 		using namespace CryptoPP;
 		RSASSA_PKCS1v15_SHA_Signer* pSignkey = NULL;
@@ -313,7 +290,7 @@ void CCollectionCreateDialog::OnBnClickedOk()
 				byte abyMyPublicKey[1000];
 				ArraySink asink(abyMyPublicKey, 1000);
 				pubkey.DEREncode(asink);
-				int nLen = asink.TotalPutLength();
+				uint32 nLen = (uint32)asink.TotalPutLength();
 				asink.MessageEnd();
 				m_pCollection->SetCollectionAuthorKey(abyMyPublicKey, nLen);
 			}
@@ -351,9 +328,8 @@ void CCollectionCreateDialog::OnBnClickedOk()
 				AfxMessageBox(GetResString(IDS_COLL_ERR_DELETING),MB_ICONWARNING | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_YESNO);
 			}
 		}
-		
+
 		delete pSignkey;
-		pSignkey = NULL;
 
 		OnOK();
 	}

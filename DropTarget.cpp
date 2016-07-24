@@ -42,18 +42,16 @@ BOOL IsUrlSchemeSupportedA(LPCSTR pszUrl)
 	{
 		LPCSTR pszPrefix;
 		int iLen;
-	} _aSchemes[] = 
+	} _aSchemes[] =
 	{
 #define SCHEME_ENTRY(prefix)	{ prefix, ARRSIZE(prefix)-1 }
 		SCHEME_ENTRY("ed2k://")
 #undef SCHEME_ENTRY
 	};
 
-	for (int i = 0; i < ARRSIZE(_aSchemes); i++)
-	{
+	for (unsigned i = 0; i < ARRSIZE(_aSchemes); ++i)
 		if (strncmp(pszUrl, _aSchemes[i].pszPrefix, _aSchemes[i].iLen) == 0)
 			return TRUE;
-	}
 	return FALSE;
 }
 
@@ -63,28 +61,26 @@ BOOL IsUrlSchemeSupportedW(LPCWSTR pszUrl)
 	{
 		LPCWSTR pszPrefix;
 		int iLen;
-	} _aSchemes[] = 
+	} _aSchemes[] =
 	{
 #define SCHEME_ENTRY(prefix)	{ prefix, ARRSIZE(prefix)-1 }
 		SCHEME_ENTRY(L"ed2k://")
 #undef SCHEME_ENTRY
 	};
 
-	for (int i = 0; i < ARRSIZE(_aSchemes); i++)
-	{
+	for (unsigned i = 0; i < ARRSIZE(_aSchemes); ++i)
 		if (wcsncmp(pszUrl, _aSchemes[i].pszPrefix, _aSchemes[i].iLen) == 0)
 			return TRUE;
-	}
 	return FALSE;
 }
 
 // GetFileExtA -- ANSI version
-// 
+//
 // This function is thought to be used only for filenames which have been
 // validated by 'GetFullPathName' or similar functions.
 LPCSTR GetFileExtA(LPCSTR pszPathA, int iLen /*= -1*/)
 {
-	// Just search the last '.'-character which comes after an optionally 
+	// Just search the last '.'-character which comes after an optionally
 	// available last '\'-char.
 	int iPos = iLen >= 0 ? iLen : strlen(pszPathA);
 	while (iPos-- > 0)
@@ -104,7 +100,7 @@ LPCSTR GetFileExtA(LPCSTR pszPathA, int iLen /*= -1*/)
 // validated by 'GetFullPathName' or similar functions.
 LPCWSTR GetFileExtW(LPCWSTR pszPathW, int iLen /*= -1*/)
 {
-	// Just search the last '.'-character which comes after an optionally 
+	// Just search the last '.'-character which comes after an optionally
 	// available last '\'-char.
 	int iPos = iLen >= 0 ? iLen : wcslen(pszPathW);
 	while (iPos-- > 0)
@@ -125,19 +121,19 @@ LPCWSTR GetFileExtW(LPCWSTR pszPathW, int iLen /*= -1*/)
 struct PASTEURLDATA
 {
 	PASTEURLDATA()
+		: m_eType((DataType)-1)
 	{
-		m_eType = (DataType)-1;
 		m_dwFlags = 0;
 	}
 	PASTEURLDATA(BSTR bstrText, DWORD dwFlags = 0)
+		: m_eType(HTMLText)
 	{
-		m_eType = HTMLText;
 		m_bstrURLs = bstrText;
 		m_dwFlags = dwFlags;
 	}
 	PASTEURLDATA(IDispatch *pIDispatch, DWORD dwFlags = 0)
+		: m_eType(Document)
 	{
-		m_eType = Document;
 		m_pIDispDoc = pIDispatch;
 		m_dwFlags = dwFlags;
 	}
@@ -306,9 +302,8 @@ HRESULT CMainFrameDropTarget::PasteHTML(PASTEURLDATA* pPaste)
 	HRESULT hrPasteResult = S_FALSE; // default: nothing was pasted
 	if (pPaste->m_bstrURLs[0] != L'\0')
 	{
-		HRESULT hr;
 		CComPtr<IHTMLDocument2> doc;
-		if (SUCCEEDED(hr = doc.CoCreateInstance(CLSID_HTMLDocument, NULL)))
+		if (SUCCEEDED(doc.CoCreateInstance(CLSID_HTMLDocument, NULL)))
 		{
 			SAFEARRAY* psfHtmlLines = SafeArrayCreateVector(VT_VARIANT, 0, 1);
 			if (psfHtmlLines != NULL)
@@ -325,10 +320,10 @@ HRESULT CMainFrameDropTarget::PasteHTML(PASTEURLDATA* pPaste)
 					// NOTE: 'bstrHTML' may contain a complete HTML document (see CF_HTML) or
 					// just a fragment (without <HTML>, <BODY>, ... tags).
 					//
-					// WOW! We even can pump partially (but well defined) HTML stuff into the 
+					// WOW! We even can pump partially (but well defined) HTML stuff into the
 					// document (e.g. contents without <HTML>, <BODY>...) *and* we are capable
 					// of accessing the HTML object model (can use 'get_links'...)
-					if ((hr = doc->write(psfHtmlLines)) == S_OK)
+					if (doc->write(psfHtmlLines) == S_OK)
 						hrPasteResult = PasteHTMLDocument(doc, pPaste);
 					else
 						hrPasteResult = E_FAIL;
@@ -391,7 +386,7 @@ HRESULT CMainFrameDropTarget::PasteText(CLIPFORMAT cfData, COleDataObject& data)
 			// skip white space
 			while (isspace((unsigned char)*pszUrlA))
 				pszUrlA++;
-			
+
 			hrPasteResult = S_FALSE; // default: nothing was pasted
 			if (_strnicmp(pszUrlA, "ed2k://|", 8) == 0)
 			{

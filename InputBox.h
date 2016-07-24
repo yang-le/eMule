@@ -20,13 +20,13 @@ class InputBox : public CDialog
 {
 	DECLARE_DYNAMIC(InputBox)
 public:
-	InputBox(CWnd* pParent = NULL);   // standard constructor
+	explicit InputBox(CWnd* pParent = NULL);   // standard constructor
 	virtual ~InputBox();
 
 // Dialog Data
 	enum { IDD = IDD_INPUTBOX };
 
-	void	SetLabels(CString title, CString label, CString defaultStr);
+	void	SetLabels(const CString& title, const CString& label, const CString& defaultStr);
 	const CString& GetInput() const { return m_return; }
 	bool	WasCancelled() const { return m_cancel;}
 	void	SetEditFilenameMode(bool isfilenamemode = true) { m_bFilenameMode = isfilenamemode; }

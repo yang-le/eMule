@@ -26,7 +26,7 @@ public:
 	CFriendList();
 	~CFriendList();
 
-	bool		IsAlreadyFriend(CString strUserHash) const;
+	bool		IsAlreadyFriend(const CString& strUserHash) const;
 	bool		IsValid(CFriend* pToCheck) const;
 	void		SaveList();
 	bool		LoadList();
@@ -35,7 +35,7 @@ public:
 	void		SetWindow(CFriendListCtrl* NewWnd)	{ m_wndOutput = NewWnd; }
 	void		ShowFriends() const;
 	bool		AddFriend(CUpDownClient* toadd);
-	bool		AddFriend(const uchar* abyUserhash, uint32 dwLastSeen, uint32 dwLastUsedIP, uint16 nLastUsedPort, 
+	bool		AddFriend(const uchar* abyUserhash, uint32 dwLastSeen, uint32 dwLastUsedIP, uint16 nLastUsedPort,
                           uint32 dwLastChatted, LPCTSTR pszName, uint32 dwHasHash);
 	void		RemoveFriend(CFriend* todel);
 	void		RemoveAllFriendSlots();

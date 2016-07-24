@@ -4,7 +4,7 @@
 //         hdietrich@gmail.com
 //
 // Description:
-//     XMessageBox.cpp implements XMessageBox(), a drop-in replacement for 
+//     XMessageBox.cpp implements XMessageBox(), a drop-in replacement for
 //     MessageBox() that includes custom checkboxes, custom buttons, custom
 //     icon, and more.  For more information see
 //         http://www.codeproject.com/KB/dialog/xmessagebox.aspx
@@ -18,26 +18,26 @@
 //
 //     Version 1.8 - 2008 November 19
 //     - Added new bit flag VistaStyle to XMSGBOXPARAMS::dwOptions.
-//       Setting this option bit will cause the message background to be 
-//       painted with the current window color (typically white), and the 
+//       Setting this option bit will cause the message background to be
+//       painted with the current window color (typically white), and the
 //       buttons to be right-justified.
 //     - Added new bit flag Narrow to XMSGBOXPARAMS::dwOptions.
-//       Setting this option bit will cause the message box to be no wider 
-//       than SM_CXSCREEN / 3. 
-//     - Added two new members to XMSGBOXPARAMS:  crText and crBackground, 
+//       Setting this option bit will cause the message box to be no wider
+//       than SM_CXSCREEN / 3.
+//     - Added two new members to XMSGBOXPARAMS:  crText and crBackground,
 //       allowing you to specify the message text and background colors.
-//     - Made all buttons auto-size, depending on button text.  Buttons will 
+//     - Made all buttons auto-size, depending on button text.  Buttons will
 //       have the usual width, unless the text is too long to fit.
-//     - Eliminated requirement that you define all the user-defined button 
-//       strings, even if you just wanted to change a few strings. All the 
-//       button strings that you do <u>not</u> specify will have their default 
-//       value. 
+//     - Eliminated requirement that you define all the user-defined button
+//       strings, even if you just wanted to change a few strings. All the
+//       button strings that you do <u>not</u> specify will have their default
+//       value.
 //     - Fixed centering problem when checkbox is specified
 //     - Replaced checkbox width calculation with one based on DLUs
-//     - Added function XMessageBoxGetCheckBox() to check if a checkbox value 
+//     - Added function XMessageBoxGetCheckBox() to check if a checkbox value
 //       has been stored in registry or ini file
 //     - Added countdown indicator to caption when disabled timer is used
-//     - Added an internal message loop.  
+//     - Added an internal message loop.
 //
 //     Version 1.7 - 2008 November 9
 //     - Converted button sizes to dialog units, suggested by Brian
@@ -120,6 +120,7 @@
 
 #include "XMessageBox.h"
 
+#pragma warning(push)
 #pragma warning(disable : 4127)		// conditional expression is constant
 #pragma warning(disable : 4996)		// disable bogus deprecation warning
 
@@ -211,7 +212,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// If you do not want automatic saving of "Do Not Ask/Tell" checkbox, 
+// If you do not want automatic saving of "Do Not Ask/Tell" checkbox,
 // uncomment the following line:
 //
 #define XMESSAGEBOX_DO_NOT_SAVE_CHECKBOX
@@ -231,9 +232,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// This identifier specifies the format of the text displayed for the timeout 
-// key, which by default is "%s = %d".  You may change this to anything you 
-// wish, as long as 1) there is both a %s and a %d;  and 2) the %s precedes 
+// This identifier specifies the format of the text displayed for the timeout
+// key, which by default is "%s = %d".  You may change this to anything you
+// wish, as long as 1) there is both a %s and a %d;  and 2) the %s precedes
 // the %d.
 //
 #define XMESSAGEBOX_TIMEOUT_TEXT_FORMAT	_T("%s = %d")
@@ -241,7 +242,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// This identifier specifies the name of the ini file, which by default 
+// This identifier specifies the name of the ini file, which by default
 // is "XMessageBox.ini".
 //
 //#define XMESSAGEBOX_INI_FILE			_T("XMessageBox.ini")
@@ -249,7 +250,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// This identifier specifies the registry key used to store checkbox values.  
+// This identifier specifies the registry key used to store checkbox values.
 // By default it is "XMessageBox".
 //
 //#define XMESSAGEBOX_REGISTRY_KEY		_T("XMessageBox")
@@ -263,7 +264,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //+++1.8
-// If you do not want to use automatic Vista detection and style, comment out 
+// If you do not want to use automatic Vista detection and style, comment out
 // the following line:
 //
 #define XMESSAGEBOX_AUTO_VISTA_STYLE
@@ -320,10 +321,10 @@ public:
 
 public:
 	CXDialogItem(Econtroltype cType);	// default constructor will fill in default values
-	CXDialogItem() {};					// default constructor, not to be called directly
+	CXDialogItem() : m_dlgItemTemplate(), m_controltype(), m_pszCaption(NULL) {}	// default constructor, not to be called directly
 	virtual ~CXDialogItem();			//+++1.5
 
-	void AddItem(CXDialogTemplate& dialog, 
+	void AddItem(CXDialogTemplate& dialog,
 				 Econtroltype cType,
 				 UINT nID,
 				 CXRect* prect = NULL,
@@ -389,12 +390,12 @@ public:
 					UINT nID,
 					CXRect* prect = NULL,
 					LPCTSTR pszCaption = NULL);
-	void	AddCheckBox(int& x, 
-						int& y, 
-						CXRect& rect, 
-						CXRect& mbrect, 
-						CXRect& buttonrow, 
-						CXRect& checkboxrect, 
+	void	AddCheckBox(int& x,
+						int& y,
+						CXRect& rect,
+						CXRect& mbrect,
+						CXRect& buttonrow,
+						CXRect& checkboxrect,
 						LPCTSTR lpszButtonCaption);
 	int		Display();
 
@@ -459,7 +460,7 @@ protected:
 
 	LPTSTR		m_lpszMessage;		// message buffer
 	LPTSTR		m_lpszCaption;		// caption buffer
-	TCHAR		m_szCustomButtons[MAX_PATH];	// custom buttons - strings 
+	TCHAR		m_szCustomButtons[MAX_PATH];	// custom buttons - strings
 												// separated by \n
 	TCHAR		m_szCompanyName[MAX_PATH];		// used when saving checkbox state in registry
 	HICON		m_hIcon;			// Handle of icon
@@ -470,7 +471,7 @@ protected:
 
 	DLGTEMPLATE m_dlgTempl;			// message box dialog template
 
-	TCHAR		m_szDefaultButton	[MaxButtonStringSize];	// used for original default 
+	TCHAR		m_szDefaultButton	[MaxButtonStringSize];	// used for original default
 															// button text, in case of
 															// countdown timer
 
@@ -505,7 +506,7 @@ protected:
 	void	Unset(EOptions id)			{ m_Options &= ~id;};
 
 	//-[UK
-	void LoadUserDefinedButtonStrings( 
+	void LoadUserDefinedButtonStrings(
 		const XMSGBOXPARAMS::CUserDefinedButtonCaptions& udcs);
 	//-]UK
 };
@@ -513,9 +514,9 @@ protected:
 
 ///////////////////////////////////////////////////////////////////////////////
 // default button strings - must be in same order as EButtons enum
-struct CXDialogTemplate::ButtonInfo CXDialogTemplate::g_ButtonText[] =		
+struct CXDialogTemplate::ButtonInfo CXDialogTemplate::g_ButtonText[] =
 {
-	IDS_ABORT,            _T("&Abort"), 
+	IDS_ABORT,            _T("&Abort"),
 	IDS_CANCEL,           _T("Cancel"),
 	IDS_CONTINUE,         _T("&Continue"),
 	IDS_DONOTASKAGAIN,    _T("Don't ask me again"),
@@ -673,7 +674,7 @@ int XMessageBox(HWND hwnd,
 #ifndef XMESSAGEBOX_DO_NOT_SAVE_CHECKBOX
 
 	// are Do Not Ask styles specified?
-	if ((nStyle & MB_DONOTASKAGAIN) || 
+	if ((nStyle & MB_DONOTASKAGAIN) ||
 		(nStyle & MB_DONOTTELLAGAIN) ||
 		(nStyle & MB_DONOTSHOWAGAIN))
 	{
@@ -685,10 +686,10 @@ int XMessageBox(HWND hwnd,
 
 			DWORD dwData = XMessageBoxGetCheckBox(xmb);
 
-			// Note:  dwData will be 0 if either ReadRegistry or 
+			// Note:  dwData will be 0 if either ReadRegistry or
 			// GetPrivateProfileString fail to find key
 
-			if ((dwData & MB_DONOTASKAGAIN) || 
+			if ((dwData & MB_DONOTASKAGAIN) ||
 				(dwData & MB_DONOTTELLAGAIN) ||
 				(dwData & MB_DONOTSHOWAGAIN))
 			{
@@ -838,7 +839,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 	// store company name to use for saving checkbox state in registry
 	memset(m_szCompanyName, 0, sizeof(m_szCompanyName));
 	_tcscpy(m_szCompanyName, pXMB->szCompanyName);
-		
+
 	// m_szDefaultButton is used to save text for timeout option
 	memset(m_szDefaultButton, 0, sizeof(m_szDefaultButton));
 
@@ -847,13 +848,11 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 	// (instead of just using pointers) because we may need to load the strings
 	// from resources
 	m_lpszMessage = new TCHAR [MessageSize];
-	if (m_lpszMessage)
-		m_lpszMessage[0] = _T('\0');
+	m_lpszMessage[0] = _T('\0');
 	memset(m_lpszMessage, 0, MessageSize*sizeof(TCHAR));
 
 	m_lpszCaption = new TCHAR [MessageSize];
-	if (m_lpszCaption)
-		m_lpszCaption[0] = _T('\0');
+	m_lpszCaption[0] = _T('\0');
 	memset(m_lpszCaption, 0, MessageSize*sizeof(TCHAR));
 
 	///////////////////////////////////////////////////////////////////////////
@@ -946,7 +945,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 	m_szButtonText[eReport][MaxButtonStringSize-1] = _T('\0');
 
 	///////////////////////////////////////////////////////////////////////////
-	// load button captions 
+	// load button captions
 
 	LoadButtonStrings();				// assume default strings
 
@@ -985,7 +984,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 		LOGFONT lfMessageFont;
 	};
 
-	// Get the system window message font for use in 
+	// Get the system window message font for use in
 	// the buttons and message
 
 	const UINT cbProperSize = sizeof(OLD_NONCLIENTMETRICS);
@@ -994,7 +993,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 	ncm.cbSize = cbProperSize;
 
 #ifdef _DEBUG
-	BOOL ok = 
+	BOOL ok =
 #endif
 		::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, cbProperSize, &ncm, 0);
 	_ASSERTE(ok);
@@ -1008,7 +1007,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 	for (int button_index = 0; button_index < LAST_BUTTON; button_index++)
 	{
 		SIZE size;
-		::GetTextExtentPoint32(hdc, m_szButtonText[button_index], 
+		::GetTextExtentPoint32(hdc, m_szButtonText[button_index],
 			_tcslen(m_szButtonText[button_index]), &size);
 
 		_ASSERTE(size.cx != 0);
@@ -1140,9 +1139,9 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 		if (m_bVistaStyle)
 		{
 			// check if more than one line
-			if (nMessageHeight > nLineSize.cy)	
+			if (nMessageHeight > nLineSize.cy)
 			{
-				// more than one line in message, so align 
+				// more than one line in message, so align
 				// message top with icon top
 				int h = m_msgrect.Height();
 				m_msgrect.top = iconrect.top;
@@ -1169,58 +1168,58 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 
 		switch (nStyle & MB_TYPEMASK)
 		{
-			case MB_ABORTRETRYIGNORE: 
+			case MB_ABORTRETRYIGNORE:
 				cItems = 3;
-				nWidthStdButtons = m_nButtonWidths[eAbort] + 
-								   m_nButtonWidths[eRetry] + 
+				nWidthStdButtons = m_nButtonWidths[eAbort] +
+								   m_nButtonWidths[eRetry] +
 								   m_nButtonWidths[eIgnore];
 				break;
-			case MB_CANCELTRYCONTINUE: 
-				cItems = 3; 
-				nWidthStdButtons = m_nButtonWidths[eCancel] + 
-								   m_nButtonWidths[eTryAgain] + 
+			case MB_CANCELTRYCONTINUE:
+				cItems = 3;
+				nWidthStdButtons = m_nButtonWidths[eCancel] +
+								   m_nButtonWidths[eTryAgain] +
 								   m_nButtonWidths[eContinue];
 				break;
-			case MB_CONTINUEABORT: 
-				cItems = 2; 
-				nWidthStdButtons = m_nButtonWidths[eContinue] + 
+			case MB_CONTINUEABORT:
+				cItems = 2;
+				nWidthStdButtons = m_nButtonWidths[eContinue] +
 								   m_nButtonWidths[eAbort];
 				break;
-			case MB_IGNOREIGNOREALLCANCEL: 
-				cItems = 3; 
-				nWidthStdButtons = m_nButtonWidths[eIgnore] + 
-								   m_nButtonWidths[eIgnoreAll] + 
+			case MB_IGNOREIGNOREALLCANCEL:
+				cItems = 3;
+				nWidthStdButtons = m_nButtonWidths[eIgnore] +
+								   m_nButtonWidths[eIgnoreAll] +
 								   m_nButtonWidths[eCancel];
 				break;
-			case MB_OK: 
-				cItems = 1; 
+			case MB_OK:
+				cItems = 1;
 				nWidthStdButtons = m_nButtonWidths[eOK];
 				break;
-			case MB_OKCANCEL: 
-				cItems = 2; 
-				nWidthStdButtons = m_nButtonWidths[eOK] + 
+			case MB_OKCANCEL:
+				cItems = 2;
+				nWidthStdButtons = m_nButtonWidths[eOK] +
 								   m_nButtonWidths[eCancel];
 				break;
-			case MB_RETRYCANCEL: 
-				cItems = 2; 
-				nWidthStdButtons = m_nButtonWidths[eRetry] + 
+			case MB_RETRYCANCEL:
+				cItems = 2;
+				nWidthStdButtons = m_nButtonWidths[eRetry] +
 								   m_nButtonWidths[eCancel];
 				break;
-			case MB_SKIPSKIPALLCANCEL: 
-				cItems = 3; 
-				nWidthStdButtons = m_nButtonWidths[eSkip] + 
-								   m_nButtonWidths[eSkipAll] + 
+			case MB_SKIPSKIPALLCANCEL:
+				cItems = 3;
+				nWidthStdButtons = m_nButtonWidths[eSkip] +
+								   m_nButtonWidths[eSkipAll] +
 								   m_nButtonWidths[eCancel];
 				break;
-			case MB_YESNO: 
-				cItems = 2; 
-				nWidthStdButtons = m_nButtonWidths[eYes] + 
+			case MB_YESNO:
+				cItems = 2;
+				nWidthStdButtons = m_nButtonWidths[eYes] +
 								   m_nButtonWidths[eNo];
 				break;
-			case MB_YESNOCANCEL: 
-				cItems = 3; 
-				nWidthStdButtons = m_nButtonWidths[eYes] + 
-								   m_nButtonWidths[eNo] + 
+			case MB_YESNOCANCEL:
+				cItems = 3;
+				nWidthStdButtons = m_nButtonWidths[eYes] +
+								   m_nButtonWidths[eNo] +
 								   m_nButtonWidths[eCancel];
 				break;
 		}
@@ -1311,7 +1310,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 		y += 9;
 
 	//+++1.7
-	int nTotalButtonWidth = nWidthStdButtons + 
+	int nTotalButtonWidth = nWidthStdButtons +
 							nWidthCustomButtons +
 							(ButtonSpacing * (cItems-1));
 
@@ -1504,7 +1503,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 	{
 		CXRect checkboxrect;
 		SetRect(&checkboxrect, 0, 0, nCheckBoxWidth, m_nDoNotAskAgainHeight);
-		AddCheckBox(x, y, rect, mbrect, buttonrow, checkboxrect, 
+		AddCheckBox(x, y, rect, mbrect, buttonrow, checkboxrect,
 			m_szButtonText[checkbox_index]);
 	}
 
@@ -1548,12 +1547,10 @@ CXDialogTemplate::~CXDialogTemplate()
 		}
 	}
 
-	if (m_lpszMessage)
-		delete [] m_lpszMessage;
+	delete [] m_lpszMessage;
 	m_lpszMessage = NULL;
 
-	if (m_lpszCaption)
-		delete [] m_lpszCaption;
+	delete [] m_lpszCaption;
 	m_lpszCaption = NULL;
 }
 
@@ -1569,12 +1566,12 @@ int CXDialogTemplate::AddButton(EButtons eButton, UINT nID, int x, int y)
 
 ///////////////////////////////////////////////////////////////////////////////
 // AddCheckBox
-void CXDialogTemplate::AddCheckBox(int& x, 
-								   int& y, 
-								   CXRect& rect, 
-								   CXRect& mbrect, 
-								   CXRect& buttonrow, 
-								   CXRect& checkboxrect, 
+void CXDialogTemplate::AddCheckBox(int& x,
+								   int& y,
+								   CXRect& rect,
+								   CXRect& mbrect,
+								   CXRect& buttonrow,
+								   CXRect& checkboxrect,
 								   LPCTSTR lpszButtonCaption)
 {
 	x = 2 * ButtonSpacing + 5;
@@ -1592,7 +1589,7 @@ void CXDialogTemplate::AddCheckBox(int& x,
 }
 
 //-[UK
-void CXDialogTemplate::LoadUserDefinedButtonStrings( 
+void CXDialogTemplate::LoadUserDefinedButtonStrings(
 	const XMSGBOXPARAMS::CUserDefinedButtonCaptions& udcs)
 {
 	TRACE(_T("in CXDialogTemplate::LoadUserDefinedButtonStrings\n"));
@@ -1750,12 +1747,12 @@ INT_PTR CALLBACK CXDialogTemplate::MsgBoxDlgProc(HWND hwnd,
 				CXRect rect;
 				::GetClientRect(hwnd, &rect);
 
-				// first fill entire client area 
+				// first fill entire client area
 				HBRUSH hBrush = ::CreateSolidBrush(::GetSysColor(COLOR_BTNFACE));
 				::FillRect(hdc, &rect, hBrush);
 				::DeleteObject(hBrush);
 
-				// next fill message background 
+				// next fill message background
 				rect.bottom = Me->m_msgrect.bottom;
 				if (Me->m_hBackgroundBrush)
 					::FillRect(hdc, &rect, Me->m_hBackgroundBrush);
@@ -1922,8 +1919,7 @@ INT_PTR CALLBACK CXDialogTemplate::MsgBoxDlgProc(HWND hwnd,
 				{
 					TCHAR szBuf[_MAX_PATH*2] = { 0 };
 					::GetModuleFileName(NULL, szBuf, countof(szBuf) - 1);
-					if (_tcslen(szBuf) > 0)
-					{
+					if (*szBuf != '\0') {
 						TCHAR *cp = _tcsrchr(szBuf, _T('.'));
 						if (cp)
 						{
@@ -2020,7 +2016,7 @@ INT_PTR CALLBACK CXDialogTemplate::MsgBoxDlgProc(HWND hwnd,
 
 #ifndef XMESSAGEBOX_USE_PROFILE_FILE
 
-						// read from registry 
+						// read from registry
 
 						dwData = ReadRegistry(Me->m_szCompanyName, szKey);
 						TRACE(_T("ReadRegistry: dwData=0x%08X\n"), dwData);
@@ -2088,7 +2084,7 @@ INT_PTR CALLBACK CXDialogTemplate::MsgBoxDlgProc(HWND hwnd,
 					::KillTimer(hwnd, wParam);
 
 					// time's up, select default button
-					::SendMessage(hwnd, WM_COMMAND, 
+					::SendMessage(hwnd, WM_COMMAND,
 						Me->GetDefaultButtonId() | MB_TIMEOUT, 0);
 
 					return FALSE;
@@ -2104,12 +2100,12 @@ INT_PTR CALLBACK CXDialogTemplate::MsgBoxDlgProc(HWND hwnd,
 				if (Me->m_szDefaultButton[0] == _T('\0'))
 				{
 					// first time - get text of default button
-					::GetWindowText(hwndDefButton, Me->m_szDefaultButton, 
+					::GetWindowText(hwndDefButton, Me->m_szDefaultButton,
 						MaxButtonStringSize);
 				}
 
 				TCHAR szButtonText[MaxButtonStringSize*2];
-				_stprintf(szButtonText, XMESSAGEBOX_TIMEOUT_TEXT_FORMAT, 
+				_stprintf(szButtonText, XMESSAGEBOX_TIMEOUT_TEXT_FORMAT,
 					Me->m_szDefaultButton, Me->m_nTimeoutSeconds);
 
 				::SetWindowText(hwndDefButton, szButtonText);
@@ -2408,7 +2404,7 @@ int CXDialogTemplate::Display()
 		int nActualChars = _tcslen(m_pDlgItemArray[i]->m_pszCaption) + 1;	//+++1.5;
 #else
 		int nActualChars = MultiByteToWideChar(CP_ACP, 0,
-								(LPCSTR)m_pDlgItemArray[i]->m_pszCaption, 
+								(LPCSTR)m_pDlgItemArray[i]->m_pszCaption,
 								-1, NULL, 0);	//+++1.5
 #endif
 
@@ -2480,14 +2476,14 @@ int CXDialogTemplate::Display()
 
 		int nChars = (int)_tcslen(m_pDlgItemArray[i]->m_pszCaption) + 1;	//+++1.5
 
-		WCHAR * pchCaption = new WCHAR[nChars+100];
+/*		WCHAR * */ pchCaption = new WCHAR[nChars+100];
 
 #ifdef _UNICODE
 		memset(pchCaption, 0, nChars*sizeof(TCHAR) + 2);
 		memcpy(pchCaption, m_pDlgItemArray[i]->m_pszCaption, nChars * sizeof(TCHAR));	//+++1.5
-		int nActualChars = nChars;
+/*		int */ nActualChars = nChars;
 #else
-		int nActualChars = MultiByteToWideChar(CP_ACP, 0,
+/*		int */ nActualChars = MultiByteToWideChar(CP_ACP, 0,
 			(LPCSTR)m_pDlgItemArray[i]->m_pszCaption, -1, pchCaption, nChars);	//+++1.5
 #endif
 
@@ -2521,25 +2517,25 @@ int CXDialogTemplate::Display()
 
 		while (!IsEnded())
 		{
-			if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) 
+			if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 			{
-				if (msg.message == WM_QUIT) 
+				if (msg.message == WM_QUIT)
 				{
 					break;
-				} 
+				}
 				if (msg.message == WM_KEYDOWN)
 				{
 					// returns TRUE if Ctrl-C processed
 					if (OnKeyDown(hDlg, msg.wParam, msg.lParam))
 						continue;
 				}
-				if (!::IsDialogMessage(hDlg, &msg)) 
+				if (!::IsDialogMessage(hDlg, &msg))
 				{
 					::TranslateMessage(&msg);
 					::DispatchMessage(&msg);
 				}
 			}
-			else if (!IsEnded()) 
+			else if (!IsEnded())
 			{
 				::WaitMessage();	// suspend thread until new message arrives
 			}
@@ -2547,7 +2543,7 @@ int CXDialogTemplate::Display()
 
 		TRACE(_T("===== message loop ended\n"));
 
-		if (msg.message == WM_QUIT) 
+		if (msg.message == WM_QUIT)
 		{
 			TRACE(_T("_____ WM_QUIT seen\n"));
 			PostQuitMessage((int)msg.wParam);
@@ -2571,6 +2567,7 @@ int CXDialogTemplate::Display()
 ///////////////////////////////////////////////////////////////////////////////
 // CXDialogItem ctor
 CXDialogItem::CXDialogItem(CXDialogItem::Econtroltype ctrlType) :
+	m_dlgItemTemplate(),
 	m_controltype(ctrlType),
 	m_pszCaption(NULL)		//+++1.5
 {
@@ -2580,8 +2577,7 @@ CXDialogItem::CXDialogItem(CXDialogItem::Econtroltype ctrlType) :
 // CXDialogItem dtor
 CXDialogItem::~CXDialogItem()
 {
-	if (m_pszCaption)
-		delete [] m_pszCaption;
+	delete [] m_pszCaption;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2791,8 +2787,8 @@ static void WriteRegistry(LPCTSTR lpszCompanyName, LPCTSTR lpszKey, DWORD dwData
 // For more information see
 //     http://www.codeproject.com/KB/dialog/xmessagebox.aspx
 //
-// DWORD XMessageBoxGetCheckBox(LPCTSTR lpszCompanyName, 
-//                              LPCTSTR lpszModule, 
+// DWORD XMessageBoxGetCheckBox(LPCTSTR lpszCompanyName,
+//                              LPCTSTR lpszModule,
 //                              int nLine)
 //
 // PARAMETERS
@@ -2807,8 +2803,8 @@ static void WriteRegistry(LPCTSTR lpszCompanyName, LPCTSTR lpszKey, DWORD dwData
 //                       Should be the same as passed to XMessageBox().
 //
 ///////////////////////////////////////////////////////////////////////////////
-DWORD XMessageBoxGetCheckBox(LPCTSTR lpszCompanyName, 
-							 LPCTSTR lpszModule, 
+DWORD XMessageBoxGetCheckBox(LPCTSTR lpszCompanyName,
+							 LPCTSTR lpszModule,
 							 int nLine)
 {
 	DWORD dwData = 0;
@@ -2883,7 +2879,7 @@ DWORD XMessageBoxGetCheckBox(LPCTSTR lpszCompanyName,
 // For more information see
 //     http://www.codeproject.com/KB/dialog/xmessagebox.aspx
 //
-// DWORD XMessageBoxGetCheckBox(XMSGBOXPARAMS& xmb) 
+// DWORD XMessageBoxGetCheckBox(XMSGBOXPARAMS& xmb)
 //
 // PARAMETERS
 //
@@ -2894,9 +2890,10 @@ DWORD XMessageBoxGetCheckBox(LPCTSTR lpszCompanyName,
 DWORD XMessageBoxGetCheckBox(XMSGBOXPARAMS& xmb)
 {
 	TRACE(_T("in XMessageBoxGetCheckBox\n"));
-	return XMessageBoxGetCheckBox(xmb.szCompanyName, 
-								  xmb.lpszModule, 
+	return XMessageBoxGetCheckBox(xmb.szCompanyName,
+								  xmb.lpszModule,
 								  xmb.nLine);
 }
 
 #endif	// XMESSAGEBOX_DO_NOT_SAVE_CHECKBOX
+#pragma warning(pop)

@@ -98,7 +98,7 @@ void CDownloadClientsCtrl::Localize()
 	strRes = GetResString(IDS_DL_SPEED);
 	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
 	pHeaderCtrl->SetItem(3, &hdi);
-	
+
 	strRes = GetResString(IDS_AVAILABLEPARTS);
 	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
 	pHeaderCtrl->SetItem(4, &hdi);
@@ -153,12 +153,12 @@ void CDownloadClientsCtrl::SetAllIcons()
 
 void CDownloadClientsCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 {
-	if (!theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg->IsClosing())
 		return;
 	if (!lpDrawItemStruct->itemData)
 		return;
 
-	CMemDC dc(CDC::FromHandle(lpDrawItemStruct->hDC), &lpDrawItemStruct->rcItem);
+	CMemoryDC dc(CDC::FromHandle(lpDrawItemStruct->hDC), &lpDrawItemStruct->rcItem);
 	BOOL bCtrlFocused;
 	InitItemMemDC(dc, lpDrawItemStruct, bCtrlFocused);
 	CRect cur_rec(lpDrawItemStruct->rcItem);
@@ -283,7 +283,7 @@ void CDownloadClientsCtrl::GetItemDisplayText(const CUpDownClient *client, int i
 	{
 		case 0:
 			if (client->GetUserName() == NULL)
-				_sntprintf(pszText, cchTextMax, _T("(%s)"), GetResString(IDS_UNKNOWN));
+				_sntprintf(pszText, cchTextMax, _T("(%s)"), (LPCTSTR)GetResString(IDS_UNKNOWN));
 			else
 				_tcsncpy(pszText, client->GetUserName(), cchTextMax);
 			break;
@@ -295,29 +295,29 @@ void CDownloadClientsCtrl::GetItemDisplayText(const CUpDownClient *client, int i
 		case 2:
 			_tcsncpy(pszText, client->GetRequestFile()->GetFileName(), cchTextMax);
 			break;
-		
+
 		case 3:
-			_tcsncpy(pszText, CastItoXBytes((float)client->GetDownloadDatarate(), false, true), cchTextMax);
+			_tcsncpy(pszText, (LPCTSTR)CastItoXBytes((float)client->GetDownloadDatarate(), false, true), cchTextMax);
 			break;
-		
+
 		case 4:
 			_tcsncpy(pszText, GetResString(IDS_AVAILABLEPARTS), cchTextMax);
 			break;
 
 		case 5:
 			if (client->credits && client->GetSessionDown() < client->credits->GetDownloadedTotal())
-				_sntprintf(pszText, cchTextMax, _T("%s (%s)"), CastItoXBytes(client->GetSessionDown()), CastItoXBytes(client->credits->GetDownloadedTotal()));
+				_sntprintf(pszText, cchTextMax, _T("%s (%s)"), (LPCTSTR)CastItoXBytes(client->GetSessionDown()), (LPCTSTR)CastItoXBytes(client->credits->GetDownloadedTotal()));
 			else
-				_tcsncpy(pszText, CastItoXBytes(client->GetSessionDown()), cchTextMax);
+				_tcsncpy(pszText, (LPCTSTR)CastItoXBytes(client->GetSessionDown()), cchTextMax);
 			break;
-		
+
 		case 6:
 			if (client->credits && client->GetSessionUp() < client->credits->GetUploadedTotal())
-				_sntprintf(pszText, cchTextMax, _T("%s (%s)"), CastItoXBytes(client->GetSessionUp()), CastItoXBytes(client->credits->GetUploadedTotal()));
+				_sntprintf(pszText, cchTextMax, _T("%s (%s)"), (LPCTSTR)CastItoXBytes(client->GetSessionUp()), (LPCTSTR)CastItoXBytes(client->credits->GetUploadedTotal()));
 			else
-				_tcsncpy(pszText, CastItoXBytes(client->GetSessionUp()), cchTextMax);
+				_tcsncpy(pszText, (LPCTSTR)CastItoXBytes(client->GetSessionUp()), cchTextMax);
 			break;
-		
+
 		case 7:
 			switch (client->GetSourceFrom())
 			{
@@ -347,7 +347,7 @@ void CDownloadClientsCtrl::GetItemDisplayText(const CUpDownClient *client, int i
 
 void CDownloadClientsCtrl::OnLvnGetDispInfo(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	if (theApp.emuledlg->IsRunning()) {
+	if (!theApp.emuledlg->IsClosing()) {
 		// Although we have an owner drawn listview control we store the text for the primary item in the listview, to be
 		// capable of quick searching those items via the keyboard. Because our listview items may change their contents,
 		// we do this via a text callback function. The listview control will send us the LVN_DISPINFO notification if
@@ -400,7 +400,7 @@ void CDownloadClientsCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
-int CDownloadClientsCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+int CALLBACK CDownloadClientsCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	const CUpDownClient *item1 = (CUpDownClient *)lParam1;
 	const CUpDownClient *item2 = (CUpDownClient *)lParam2;
@@ -420,7 +420,7 @@ int CDownloadClientsCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParam
 		case 1:
 			if (item1->GetClientSoft() == item2->GetClientSoft())
 			    iResult = item1->GetVersion() - item2->GetVersion();
-		    else 
+		    else
 				iResult = -(item1->GetClientSoft() - item2->GetClientSoft()); // invert result to place eMule's at top
 			break;
 
@@ -545,7 +545,7 @@ BOOL CDownloadClientsCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 
 void CDownloadClientsCtrl::AddClient(const CUpDownClient *client)
 {
-	if (!theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg->IsClosing())
 		return;
 
 	int iItemCount = GetItemCount();
@@ -555,7 +555,7 @@ void CDownloadClientsCtrl::AddClient(const CUpDownClient *client)
 
 void CDownloadClientsCtrl::RemoveClient(const CUpDownClient *client)
 {
-	if (!theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg->IsClosing())
 		return;
 
 	LVFINDINFO find;
@@ -564,13 +564,13 @@ void CDownloadClientsCtrl::RemoveClient(const CUpDownClient *client)
 	int result = FindItem(&find);
 	if (result != -1) {
 		DeleteItem(result);
-		theApp.emuledlg->transferwnd->UpdateListCount(CTransferDlg::wnd2Downloading, GetItemCount()); 
+		theApp.emuledlg->transferwnd->UpdateListCount(CTransferDlg::wnd2Downloading, GetItemCount());
 	}
 }
 
 void CDownloadClientsCtrl::RefreshClient(const CUpDownClient *client)
 {
-	if (!theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg->IsClosing())
 		return;
 
 	if (theApp.emuledlg->activewnd != theApp.emuledlg->transferwnd || !theApp.emuledlg->transferwnd->GetDownloadClientsList()->IsWindowVisible())
@@ -588,9 +588,9 @@ void CDownloadClientsCtrl::ShowSelectedUserDetails()
 {
 	POINT point;
 	::GetCursorPos(&point);
-	CPoint p = point; 
-    ScreenToClient(&p); 
-    int it = HitTest(p); 
+	CPoint p = point;
+    ScreenToClient(&p);
+    int it = HitTest(p);
     if (it == -1)
 		return;
 

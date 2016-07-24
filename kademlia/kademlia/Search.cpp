@@ -1,17 +1,17 @@
 /*
 Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
 Copyright (C)2004-2010 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
- 
+
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either
 version 2 of the License, or (at your option) any later version.
- 
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
- 
+
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -66,7 +66,7 @@ static char THIS_FILE[] = __FILE__;
 
 using namespace Kademlia;
 
-void DebugSend(LPCTSTR pszMsg, uint32 uIP, uint16 uUDPPort);
+//void DebugSend(LPCTSTR pszMsg, uint32 uIP, uint16 uUDPPort);
 
 CSearch::CSearch()
 {
@@ -92,7 +92,7 @@ CSearch::CSearch()
 
 CSearch::~CSearch()
 {
-	
+
 	// remember the closest node we found and tried to contact (if any) during this search
 	// for statistical caluclations, but only if its a certain type
 	switch(m_uType)
@@ -166,8 +166,7 @@ CSearch::~CSearch()
 				break;
 		}
 	}
-	if(m_pucSearchTermsData)
-		delete[] m_pucSearchTermsData;
+	delete[] m_pucSearchTermsData;
 
 	CKademlia::GetUDPListener()->Free(m_pSearchTerm);
 	m_pSearchTerm = NULL;
@@ -196,11 +195,11 @@ void CSearch::Go()
 
 		// Take top ALPHA_QUERY to start search with.
 		int iCount;
-		
+
 		if(m_uType == NODE)
 			iCount = 1;
 		else
-			iCount = min(ALPHA_QUERY, (int)m_mapPossible.size());
+			iCount = mini(ALPHA_QUERY, (int)m_mapPossible.size());
 
 		ContactMap::iterator itContactMap2 = m_mapPossible.begin();
 		// Send initial packets to start the search.
@@ -292,11 +291,10 @@ void CSearch::JumpStart()
 	// In this case try to discover more close nodes before using our other results
 	// The reason for this is that we may not have found the closest node alive due to results beeing limited to 2 contacts,
 	// which could very well have been the duplicates of our dead closest nodes [link paper]
-	bool bLookupCloserNodes = false;
 	if (pRequestedMoreNodesContact == NULL && GetRequestContactCount() == KADEMLIA_FIND_VALUE && m_mapTried.size() >= 3*KADEMLIA_FIND_VALUE)
 	{
 		ContactMap::const_iterator itContactMap = m_mapTried.begin();
-		bLookupCloserNodes = true;
+		bool bLookupCloserNodes = true;
 		for (uint32 i = 0; i < KADEMLIA_FIND_VALUE; i++)
 		{
 			if (m_mapResponded.count(itContactMap->first) > 0)
@@ -304,7 +302,7 @@ void CSearch::JumpStart()
 				bLookupCloserNodes = false;
 				break;
 			}
-			itContactMap++;
+			++itContactMap;
 		}
 		if (bLookupCloserNodes)
 		{
@@ -312,11 +310,11 @@ void CSearch::JumpStart()
 			{
 				if (m_mapResponded.count(itContactMap->first) > 0)
 				{
-					DEBUG_ONLY( DebugLogWarning(_T("Best KADEMLIA_FIND_VALUE nodes for LookUp (%s) were unreachable or dead, reasking closest for more"), GetGUIName()) );
+					DEBUG_ONLY( DebugLogWarning(_T("Best KADEMLIA_FIND_VALUE nodes for LookUp (%s) were unreachable or dead, reasking closest for more"), (LPCTSTR)GetGUIName()));
 					SendFindValue(itContactMap->second, true);
 					return;
 				}
-				itContactMap++;
+				++itContactMap;
 			}
 		}
 	}
@@ -324,24 +322,23 @@ void CSearch::JumpStart()
 	// Search for contacts that can be used to jumpstart a stalled search.
 	while(!m_mapPossible.empty())
 	{
+		const ContactMap::iterator cmit = m_mapPossible.begin();
 		// Get a contact closest to our target.
-		CContact* pContact = m_mapPossible.begin()->second;
+		CContact* pContact = cmit->second;
 
 		// Have we already tried to contact this node.
-		if (m_mapTried.count(m_mapPossible.begin()->first) > 0)
-		{
+		if (m_mapTried.count(cmit->first) > 0) {
 			// Did we get a response from this node, if so, try to store or get info.
-			if(m_mapResponded.count(m_mapPossible.begin()->first) > 0)
-			{
+			if (m_mapResponded.count(cmit->first) > 0) {
 				StorePacket();
 			}
 			// Remove from possible list.
-			m_mapPossible.erase(m_mapPossible.begin());
+			m_mapPossible.erase(cmit);
 		}
 		else
 		{
 			// Add to tried list.
-			m_mapTried[m_mapPossible.begin()->first] = pContact;
+			m_mapTried[cmit->first] = pContact;
 			// Send the KadID so other side can check if I think it has the right KadID. (Saftey net)
 			// Send request
 			SendFindValue(pContact);
@@ -371,12 +368,12 @@ void CSearch::ProcessResponse(uint32 uFromIP, uint16 uFromPort, ContactList *pli
 			break;
 		}
 	}
-	
+
 	// Make sure the node is not sending more results than we requested, which is not only a protocol vialoation
 	// but most likely a malicous answer
 	if (plistResults->size() > GetRequestContactCount() && !(pRequestedMoreNodesContact == pFromContact && plistResults->size() <= KADEMLIA_FIND_VALUE_MORE) )
 	{
-		DebugLogWarning(_T("Node %s sent more contacts than requested on a routing query, ignoring response"), ipstr(ntohl(uFromIP)));
+		DebugLogWarning(_T("Node %s sent more contacts than requested on a routing query, ignoring response"), (LPCTSTR)ipstr(ntohl(uFromIP)));
 		delete plistResults;
 		return;
 	}
@@ -384,7 +381,7 @@ void CSearch::ProcessResponse(uint32 uFromIP, uint16 uFromPort, ContactList *pli
 	if (m_uType == NODEFWCHECKUDP){
 		m_uAnswers++;
 		// Results are not passed to the search and not much point in changing this, but make sure we show on the graph that the contact responded
-		m_pLookupHistory->ContactReceived(NULL, pFromContact, (ULONG)0, true);
+		m_pLookupHistory->ContactReceived(NULL, pFromContact, 0ul, true);
 		theApp.emuledlg->kademliawnd->UpdateSearchGraph(m_pLookupHistory);
 		delete plistResults;
 		// Update search on the GUI.
@@ -400,7 +397,7 @@ void CSearch::ProcessResponse(uint32 uFromIP, uint16 uFromPort, ContactList *pli
 		m_uAnswers++;
 		// Add contacts to the History for GUI purposes
 		for (ContactList::iterator itContactList = plistResults->begin(); itContactList != plistResults->end(); ++itContactList)
-		{			
+		{
 			CUInt128 uDistance(((CContact*)*itContactList)->GetClientID().Xor(m_uTarget));
 			m_pLookupHistory->ContactReceived(*itContactList, pFromContact, uDistance, uDistance < uFromDistance, true);
 		}
@@ -449,7 +446,7 @@ void CSearch::ProcessResponse(uint32 uFromIP, uint16 uFromPort, ContactList *pli
 				// is no longer allowed since 0.49a anyway
 				if (mapReceivedIPs.count(pContact->GetIPAddress()) > 0){
 					DebugLogWarning(_T("Multiple KadIDs pointing to same IP (%s) in KADEMLIA(2)_RES answer - ignored, sent by %s")
-						, ipstr(ntohl(pContact->GetIPAddress())), ipstr(ntohl(pFromContact->GetIPAddress())));
+						, (LPCTSTR)ipstr(ntohl(pContact->GetIPAddress())), (LPCTSTR)ipstr(ntohl(pFromContact->GetIPAddress())));
 					continue;
 				}
 				else
@@ -463,7 +460,7 @@ void CSearch::ProcessResponse(uint32 uFromIP, uint16 uFromPort, ContactList *pli
 					if (nSubNetCount >= 2)
 					{
 						DebugLogWarning(_T("More than 2 KadIDs pointing to same Subnet (%s) in KADEMLIA(2)_RES answer - ignored, sent by %s")
-							, ipstr(ntohl(pContact->GetIPAddress() & 0xFFFFFF00)), ipstr(ntohl(pFromContact->GetIPAddress())));
+							, (LPCTSTR)ipstr(ntohl(pContact->GetIPAddress() & 0xFFFFFF00)), (LPCTSTR)ipstr(ntohl(pFromContact->GetIPAddress())));
 						continue;
 					}
 					else
@@ -489,7 +486,7 @@ void CSearch::ProcessResponse(uint32 uFromIP, uint16 uFromPort, ContactList *pli
 					else
 					{
 						ContactMap::iterator itContactMapBest = m_mapBest.end();
-						itContactMapBest--;
+						--itContactMapBest;
 						if (uDistance < itContactMapBest->first)
 						{
 							// Prevent having more then ALPHA_QUERY within the Best list.
@@ -631,7 +628,7 @@ void CSearch::StorePacket()
 						m_pfileSearchTerms.Write(m_pucSearchTermsData, m_uSearchTermsDataSize);
 					}
 				}
-				
+
 				if (pFromContact->GetVersion() >= 6){ /*48b*/
 					if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 						DebugSend("KADEMLIA2_SEARCH_KEY_REQ", pFromContact->GetIPAddress(), pFromContact->GetUDPPort());
@@ -733,12 +730,11 @@ void CSearch::StorePacket()
 					//4 >4GB file HighID Source.
 					//5 >4GB file Firewalled Kad source.
 					//6 Firewalled Source with Direct Callback (supports >4GB)
-					
-					bool bDirectCallback = false;
+
 					TagList listTag;
 					if( theApp.IsFirewalled() )
 					{
-						bDirectCallback = (Kademlia::CKademlia::IsRunning() && !Kademlia::CUDPFirewallTester::IsFirewalledUDP(true) && Kademlia::CUDPFirewallTester::IsVerified());
+						bool bDirectCallback = (Kademlia::CKademlia::IsRunning() && !Kademlia::CUDPFirewallTester::IsFirewalledUDP(true) && Kademlia::CUDPFirewallTester::IsVerified());
 						if (bDirectCallback){
 							// firewalled, but direct udp callback is possible so no need for buddies
 							// We are not firewalled..
@@ -749,7 +745,7 @@ void CSearch::StorePacket()
 							if (pFromContact->GetVersion() >= 2/*47a*/)
 							{
 								listTag.push_back(new CKadTagUInt(TAG_FILESIZE, pFile->GetFileSize()));
-							}							
+							}
 						}
 						else if( theApp.clientlist->GetBuddy() ) // We are firewalled, make sure we have a buddy.
 						{
@@ -797,7 +793,7 @@ void CSearch::StorePacket()
 					}
 
 					listTag.push_back(new CKadTagUInt8(TAG_ENCRYPTION, CKademlia::GetPrefs()->GetMyConnectOptions(true, true)));
-					
+
 
 					// Send packet
 					CKademlia::GetUDPListener()->SendPublishSourcePacket(pFromContact, m_uTarget, uID, listTag);
@@ -833,11 +829,8 @@ void CSearch::StorePacket()
 				else if(iCount > 150)
 					iCount = 150;
 
-				UIntList::const_iterator itListFileID = m_listFileIDs.begin();
-				uchar ucharFileid[16];
-
-				while(iCount && (itListFileID != m_listFileIDs.end()))
-				{
+				for (UIntList::const_iterator itListFileID = m_listFileIDs.begin(); iCount && itListFileID != m_listFileIDs.end();) {
+					uchar ucharFileid[16];
 					uint16 iPacketCount = 0;
 					byte byPacket[1024*50];
 					CByteIO byIO(byPacket,sizeof(byPacket));
@@ -857,13 +850,13 @@ void CSearch::StorePacket()
 						}
 						++itListFileID;
 					}
-					
+
 					// Correct file count.
 					uint32 current_pos = byIO.GetUsed();
 					byIO.Seek(16);
 					byIO.WriteUInt16(iPacketCount);
 					byIO.Seek(current_pos);
-					
+
 					// Send packet
 					if (pFromContact->GetVersion() >= 6){ /*48b*/
 						if (thePrefs.GetDebugClientKadUDPLevel() > 0)
@@ -871,7 +864,7 @@ void CSearch::StorePacket()
 						CUInt128 uClientID = pFromContact->GetClientID();
 						CKademlia::GetUDPListener()->SendPacket( byPacket, sizeof(byPacket)-byIO.GetAvailable(), KADEMLIA2_PUBLISH_KEY_REQ, pFromContact->GetIPAddress(), pFromContact->GetUDPPort(), pFromContact->GetUDPKey(), &uClientID);
 
-					}	
+					}
 					else if (pFromContact->GetVersion() >= 2/*47a*/)
 					{
 						if (thePrefs.GetDebugClientKadUDPLevel() > 0)
@@ -910,7 +903,7 @@ void CSearch::StorePacket()
 					listTag.push_back(new CKadTagStr(TAG_FILENAME, pFile->GetFileName()));
 					if(pFile->GetFileRating() != 0)
 						listTag.push_back(new CKadTagUInt(TAG_FILERATING, pFile->GetFileRating()));
-					if(pFile->GetFileComment() != _T(""))
+					if(!pFile->GetFileComment().IsEmpty())
 						listTag.push_back(new CKadTagStr(TAG_DESCRIPTION, pFile->GetFileComment()));
 					if (pFromContact->GetVersion() >= 2/*47a*/)
 						listTag.push_back(new CKadTagUInt(TAG_FILESIZE, pFile->GetFileSize()));
@@ -1025,7 +1018,6 @@ void CSearch::StorePacket()
 					pNodeSpecialSearchRequester = NULL;
 					PrepareToStop();
 				}
-				break;
 			}
 	}
 }
@@ -1044,7 +1036,6 @@ void CSearch::ProcessResult(const CUInt128 &uAnswer, TagList *plistInfo, uint32 
 			break;
 		case NOTES:
 			ProcessResultNotes(uAnswer, plistInfo);
-			break;
 	}
 	if (iAnswerBefore < m_uAnswers)
 	{
@@ -1142,15 +1133,15 @@ void CSearch::ProcessResultNotes(const CUInt128 &uAnswer, TagList *plistInfo)
 		}
 		else if (!pTag->m_name.Compare(TAG_FILENAME) || !pTag->m_name.Compare(TAG_DESCRIPTION))
 		{
+			const CString& cfilter = thePrefs.GetCommentFilter();
 			// Run the filter against the comment as well as against the filename since both values could be misused
-			if (!thePrefs.GetCommentFilter().IsEmpty())
-			{
+			if (!cfilter.IsEmpty()) {
 				CString strCommentLower(pTag->GetStr());
 				// Verified Locale Dependency: Locale dependent string conversion (OK)
 				strCommentLower.MakeLower();
 
 				int iPos = 0;
-				CString strFilter(thePrefs.GetCommentFilter().Tokenize(_T("|"), iPos));
+				CString strFilter(cfilter.Tokenize(_T("|"), iPos));
 				while (!strFilter.IsEmpty())
 				{
 					// comment filters are already in lowercase, compare with temp. lowercased received comment
@@ -1159,7 +1150,7 @@ void CSearch::ProcessResultNotes(const CUInt128 &uAnswer, TagList *plistInfo)
 						bFilterComment = true;
 						break;
 					}
-					strFilter = thePrefs.GetCommentFilter().Tokenize(_T("|"), iPos);
+					strFilter = cfilter.Tokenize(_T("|"), iPos);
 				}
 			}
 			if (!pTag->m_name.Compare(TAG_FILENAME))
@@ -1250,7 +1241,7 @@ void CSearch::ProcessResultKeyword(const CUInt128 &uAnswer, TagList *plistInfo, 
 	if (pFromContact != NULL)
 		uFromKadVersion = pFromContact->GetVersion();
 	else
-		DebugLogWarning(_T("Unable to find answering contact in ProcessResultKeyword - %s"), ipstr(ntohl(uFromIP)));
+		DebugLogWarning(_T("Unable to find answering contact in ProcessResultKeyword - %s"), (LPCTSTR)ipstr(ntohl(uFromIP)));
 	// Process a keyword that we received.
 	// Set of data we can use for a keyword result
 	CKadTagValueString sName;
@@ -1279,10 +1270,7 @@ void CSearch::ProcessResultKeyword(const CUInt128 &uAnswer, TagList *plistInfo, 
 		{
 			// Set flag based on last tag we saw.
 			sName = pTag->GetStr();
-			if( sName != L"" )
-				bFileName = true;
-			else
-				bFileName = false;
+			bFileName = !sName.IsEmpty();
 		}
 		else if (!pTag->m_name.Compare(TAG_FILESIZE))
 		{
@@ -1292,10 +1280,7 @@ void CSearch::ProcessResultKeyword(const CUInt128 &uAnswer, TagList *plistInfo, 
 				uSize = pTag->GetInt();
 
 			// Set flag based on last tag we saw.
-			if(uSize)
-				bFileSize = true;
-			else
-				bFileSize = false;
+			bFileSize = (uSize > 0);
 		}
 		else if (!pTag->m_name.Compare(TAG_FILETYPE))
 			sType = pTag->GetStr();
@@ -1331,12 +1316,12 @@ void CSearch::ProcessResultKeyword(const CUInt128 &uAnswer, TagList *plistInfo, 
 				uint32 byDifferentNames = (uPublishInfo & 0xFF000000) >> 24;
 				uint32 byPublishersKnown = (uPublishInfo & 0x00FF0000) >> 16;
 				uint32 wTrustValue = uPublishInfo & 0x0000FFFF;
-				DebugLog(_T("Received PublishInfoTag: %u different names, %u Publishers, %.2f Trustvalue"), byDifferentNames, byPublishersKnown, (float)wTrustValue / 100.0f);  
-#endif*/	
+				DebugLog(_T("Received PublishInfoTag: %u different names, %u Publishers, %.2f Trustvalue"), byDifferentNames, byPublishersKnown, (float)wTrustValue / 100.0f);
+#endif*/
 			}
 			else
 				DebugLogWarning(_T("ProcessResultKeyword: Received special pbulish tag (TAG_PUBLISHINFO) from node (version %u, ip: %s) which is not aware of it, filtering")
-					, uFromKadVersion, ipstr(ntohl(uFromIP)));
+					, uFromKadVersion, (LPCTSTR)ipstr(ntohl(uFromIP)));
 		}
 		else if (!pTag->m_name.Compare(TAG_KADAICHHASHRESULT))
 		{
@@ -1358,7 +1343,7 @@ void CSearch::ProcessResultKeyword(const CUInt128 &uAnswer, TagList *plistInfo, 
 				}
 				catch (CFileException* pError)
 				{
-					DebugLogError(_T("ProcessResultKeyword: Corrupt or invalid TAG_KADAICHHASHRESULT received - ip: %s)") , ipstr(ntohl(uFromIP)));
+					DebugLogError(_T("ProcessResultKeyword: Corrupt or invalid TAG_KADAICHHASHRESULT received - ip: %s)") , (LPCTSTR)ipstr(ntohl(uFromIP)));
 					pError->Delete();
 					aAICHHashPopularity.RemoveAll();
 					aAICHHashs.RemoveAll();
@@ -1366,7 +1351,7 @@ void CSearch::ProcessResultKeyword(const CUInt128 &uAnswer, TagList *plistInfo, 
 			}
 			else
 				DebugLogWarning(_T("ProcessResultKeyword: Received special pbulish tag (TAG_KADAICHHASHRESULT) from node (version %u, ip: %s) which is not aware of it, filtering")
-					, uFromKadVersion, ipstr(ntohl(uFromIP)));
+					, uFromKadVersion, (LPCTSTR)ipstr(ntohl(uFromIP)));
 		}
 		delete pTag;
 	}
@@ -1643,7 +1628,7 @@ void CSearch::PreparePacketForTags(CByteIO *byIO, CKnownFile *pFile, uint8 byTar
 				    { FT_MEDIA_CODEC,   TAGTYPE_STRING }
 				};
 				CStringArray astrFileNameWords;
-				for (int iIndex = 0; iIndex < ARRSIZE(_aMetaTags); iIndex++)
+				for (unsigned iIndex = 0; iIndex < ARRSIZE(_aMetaTags); ++iIndex)
 				{
 					const ::CTag* pTag = pFile->GetTag(_aMetaTags[iIndex].uName, _aMetaTags[iIndex].uType);
 					if (pTag)
@@ -1728,7 +1713,7 @@ void CSearch::SetTargetID( CUInt128 uVal )
 }
 uint32 CSearch::GetAnswers() const
 {
-	if(m_listFileIDs.size() == 0)
+	if (m_listFileIDs.empty())
 		return m_uAnswers;
 	// If we sent more then one packet per node, we have to average the answers for the real count.
 	return m_uAnswers/((m_listFileIDs.size()+49)/50);
@@ -1783,29 +1768,26 @@ void CSearch::SetSearchTermData( uint32 uSearchTermDataSize, LPBYTE pucSearchTer
 uint8 CSearch::GetRequestContactCount() const
 {
 	// Returns the amount of contacts we request on routing queries based on the search type
-		switch(m_uType)
-		{
-			case NODE:
-			case NODECOMPLETE:
-			case NODESPECIAL:
-			case NODEFWCHECKUDP:
-				return KADEMLIA_FIND_NODE;
-				break;
-			case FILE:
-			case KEYWORD:
-			case FINDSOURCE:
-			case NOTES:
-				return KADEMLIA_FIND_VALUE;
-				break;
-			case FINDBUDDY:
-			case STOREFILE:
-			case STOREKEYWORD:
-			case STORENOTES:
-				return KADEMLIA_STORE;
-				break;
-			default:
-				DebugLogError(false, _T("Invalid search type. (CSearch::GetRequestContactCount())"));
-				ASSERT( false );
-				return 0;
-		}
+	switch(m_uType)
+	{
+		case NODE:
+		case NODECOMPLETE:
+		case NODESPECIAL:
+		case NODEFWCHECKUDP:
+			return KADEMLIA_FIND_NODE;
+		case FILE:
+		case KEYWORD:
+		case FINDSOURCE:
+		case NOTES:
+			return KADEMLIA_FIND_VALUE;
+		case FINDBUDDY:
+		case STOREFILE:
+		case STOREKEYWORD:
+		case STORENOTES:
+			return KADEMLIA_STORE;
+		default:
+			DebugLogError(LOG_DEFAULT, _T("Invalid search type. (CSearch::GetRequestContactCount())"));
+			ASSERT( false );
+			return 0;
+	}
 }

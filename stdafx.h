@@ -22,16 +22,16 @@
 //Windows 98			_WIN32_WINDOWS>=0x0410	WINVER>=0x0410
 //Windows 95			_WIN32_WINDOWS>=0x0400	WINVER>=0x0400
 //
-//IE 7.0				_WIN32_IE>=0x0700 
-//IE 6.0 SP2			_WIN32_IE>=0x0603 
-//IE 6.0 SP1			_WIN32_IE>=0x0601 
-//IE 6.0				_WIN32_IE>=0x0600 
-//IE 5.5				_WIN32_IE>=0x0550 
-//IE 5.01				_WIN32_IE>=0x0501 
-//IE 5.0, 5.0a, 5.0b	_WIN32_IE>=0x0500 
-//IE 4.01				_WIN32_IE>=0x0401 
-//IE 4.0				_WIN32_IE>=0x0400 
-//IE 3.0, 3.01, 3.02	_WIN32_IE>=0x0300 
+//IE 7.0				_WIN32_IE>=0x0700
+//IE 6.0 SP2			_WIN32_IE>=0x0603
+//IE 6.0 SP1			_WIN32_IE>=0x0601
+//IE 6.0				_WIN32_IE>=0x0600
+//IE 5.5				_WIN32_IE>=0x0550
+//IE 5.01				_WIN32_IE>=0x0501
+//IE 5.0, 5.0a, 5.0b	_WIN32_IE>=0x0500
+//IE 4.01				_WIN32_IE>=0x0401
+//IE 4.0				_WIN32_IE>=0x0400
+//IE 3.0, 3.01, 3.02	_WIN32_IE>=0x0300
 
 #if defined(HAVE_VISTA_SDK)
 
@@ -194,8 +194,6 @@
 #include <..\src\mfc\afximpl.h>
 #include <atlcoll.h>
 #include <afxcoll.h>
-#include <afxtempl.h>
-#include <math.h>
 
 
 #ifndef EWX_FORCEIFHUNG

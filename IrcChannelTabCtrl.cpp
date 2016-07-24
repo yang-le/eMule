@@ -103,8 +103,7 @@ Channel* CIrcChannelTabCtrl::FindChannelByName(const CString& sName)
 	CString sTempName(sName);
 	sTempName.Trim();
 
-	POSITION pos = m_lstChannels.GetHeadPosition();
-	while (pos)
+	for (POSITION pos = m_lstChannels.GetHeadPosition(); pos != NULL;)
 	{
 		Channel* pChannel = m_lstChannels.GetNext(pos);
 		if (pChannel->m_sName.CompareNoCase(sTempName) == 0 && (pChannel->m_eType == Channel::ctNormal || pChannel->m_eType == Channel::ctPrivate))
@@ -136,7 +135,7 @@ Channel* CIrcChannelTabCtrl::NewChannel(const CString& sName, Channel::EType eTy
 #endif
 			)
 		{
-			CRect rcTitle(rcChannelPane.left, rcChannelPane.top, 
+			CRect rcTitle(rcChannelPane.left, rcChannelPane.top,
 						  rcChannelPane.right, rcChannelPane.top + IRC_TITLE_WND_DFLT_HEIGHT);
 			pChannel->m_wndTitle.Create(WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_NOHIDESEL, rcTitle, m_pParent, IDC_TITLEWINDOW);
 			pChannel->m_wndTitle.ModifyStyleEx(0, WS_EX_STATICEDGE, SWP_FRAMECHANGED);
@@ -169,7 +168,7 @@ Channel* CIrcChannelTabCtrl::NewChannel(const CString& sName, Channel::EType eTy
 			}
 #endif
 
-			CRect rcSplitter(rcChannelPane.left, rcTitle.bottom, 
+			CRect rcSplitter(rcChannelPane.left, rcTitle.bottom,
 							 rcChannelPane.right, rcTitle.bottom + IRC_CHANNEL_SPLITTER_HEIGHT);
 			pChannel->m_wndSplitter.Create(WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, rcSplitter, m_pParent, IDC_SPLITTER_IRC_CHANNEL);
 			pChannel->m_wndSplitter.SetRange(rcTitle.top + IRC_TITLE_WND_MIN_HEIGHT + IRC_CHANNEL_SPLITTER_HEIGHT/2, rcTitle.top + IRC_TITLE_WND_MAX_HEIGHT - IRC_CHANNEL_SPLITTER_HEIGHT/2);
@@ -330,13 +329,10 @@ void CIrcChannelTabCtrl::RemoveChannel(const CString& sChannel)
 
 void CIrcChannelTabCtrl::DeleteAllChannels()
 {
-	POSITION pos1, pos2;
-	for (pos1 = m_lstChannels.GetHeadPosition(); (pos2 = pos1) != NULL; )
+	while (!m_lstChannels.IsEmpty())
 	{
-		m_lstChannels.GetNext(pos1);
-		Channel* pCurChannel = m_lstChannels.GetAt(pos2);
+		const Channel* pCurChannel = m_lstChannels.RemoveHead();
 		m_pParent->m_wndNicks.DeleteAllNick(pCurChannel->m_sName);
-		m_lstChannels.RemoveAt(pos2);
 		delete pCurChannel;
 	}
 	m_pChanStatus = NULL;
@@ -505,6 +501,7 @@ void CIrcChannelTabCtrl::OnTcnSelChange(NMHDR*, LRESULT* pResult)
 
 	//We entered the channel, set activity flag off.
 	SetActivity(m_pCurrentChannel, false);
+	m_pParent->GetDlgItem(IDC_CLOSECHAT)->EnableWindow(m_pCurrentChannel->m_eType > Channel::ctChannelList);
 
 	if (m_pCurrentChannel->m_eType == Channel::ctChannelList)
 	{
@@ -565,7 +562,7 @@ void CIrcChannelTabCtrl::ScrollHistory(bool bDown)
 	else
 		--m_pCurrentChannel->m_iHistoryPos;
 
-	CString sBuffer = (m_pCurrentChannel->m_iHistoryPos == m_pCurrentChannel->m_astrHistory.GetCount()) ? _T("") : m_pCurrentChannel->m_astrHistory.GetAt(m_pCurrentChannel->m_iHistoryPos);
+	CString sBuffer = (m_pCurrentChannel->m_iHistoryPos == m_pCurrentChannel->m_astrHistory.GetCount()) ? CString() : m_pCurrentChannel->m_astrHistory[m_pCurrentChannel->m_iHistoryPos];
 	m_pParent->m_wndInput.SetWindowText(sBuffer);
 	m_pParent->m_wndInput.SetSel(sBuffer.GetLength(), sBuffer.GetLength());
 }
@@ -621,11 +618,10 @@ void CIrcChannelTabCtrl::SetActivity(Channel *pChannel, bool bFlag)
 
 void CIrcChannelTabCtrl::ChatSend(CString sSend)
 {
-	if (sSend.IsEmpty())
-		return;
-	if (!m_pParent->IsConnected())
-		return;
+	CString cs;
 
+	if (sSend.IsEmpty() || !m_pParent->IsConnected())
+		return;
 	if ((UINT)m_pCurrentChannel->m_astrHistory.GetCount() == thePrefs.GetMaxChatHistoryLines())
 		m_pCurrentChannel->m_astrHistory.RemoveAt(0);
 	m_pCurrentChannel->m_astrHistory.Add(sSend);
@@ -633,7 +629,7 @@ void CIrcChannelTabCtrl::ChatSend(CString sSend)
 
 	if (sSend.Left(4) == _T("/hop"))
 	{
-		if (m_pCurrentChannel->m_sName.Left(1) == _T("#"))
+		if (m_pCurrentChannel->m_eType == Channel::ctNormal)
 		{
 			m_pParent->m_pIrcMain->SendString(_T("PART ") + m_pCurrentChannel->m_sName);
 			m_pParent->m_pIrcMain->SendString(_T("JOIN ") + m_pCurrentChannel->m_sName);
@@ -641,24 +637,29 @@ void CIrcChannelTabCtrl::ChatSend(CString sSend)
 		return;
 	}
 
-	if (   sSend.Left(1) == _T("/")
+	if (sSend.Left(1) == _T("/")
 		&& sSend.Left(3).MakeLower() != _T("/me")
 		&& sSend.Left(6).MakeLower() != _T("/sound"))
 	{
+		int i;
 		if (sSend.Left(4) == _T("/msg"))
 		{
+			i = 5;
+			cs = sSend.Tokenize(_T(" "),i);
 			if (m_pCurrentChannel->m_eType == Channel::ctNormal || m_pCurrentChannel->m_eType == Channel::ctPrivate)
-				m_pParent->AddInfoMessageF(m_pCurrentChannel->m_sName, _T("* >> %s"), sSend.Mid(5));
+				m_pParent->AddInfoMessageF(m_pCurrentChannel->m_sName, _T(" -> *%s* %s"), (LPCTSTR)cs, (LPCTSTR)sSend.Mid(i));
 			else
-				m_pParent->AddStatusF(_T("* >> %s"), sSend.Mid(5));
+				m_pParent->AddStatusF(_T(" -> *%s* %s"), (LPCTSTR)cs, (LPCTSTR)sSend.Mid(i));
 			sSend = _T("/PRIVMSG") + sSend.Mid(4);
 		}
 		else if (sSend.Left(7).CompareNoCase(_T("/notice")) == 0)
 		{
+			i = 8;
+			cs = sSend.Tokenize(_T(" "),i);
 			if (m_pCurrentChannel->m_eType == Channel::ctNormal || m_pCurrentChannel->m_eType == Channel::ctPrivate)
-				m_pParent->AddInfoMessageF(m_pCurrentChannel->m_sName, _T("* >> %s"), sSend.Mid(8));
+				m_pParent->AddInfoMessageF(m_pCurrentChannel->m_sName, _T(" -> -%s- %s"), (LPCTSTR)cs, (LPCTSTR)sSend.Mid(i));
 			else
-				m_pParent->AddStatusF(_T("* >> %s"), sSend.Mid(8));
+				m_pParent->AddStatusF(_T(" -> -%s- %s"), (LPCTSTR)cs, (LPCTSTR)sSend.Mid(i));
 		}
 
 		if (sSend.Left(17).CompareNoCase(_T("/PRIVMSG nickserv")) == 0)
@@ -669,12 +670,16 @@ void CIrcChannelTabCtrl::ChatSend(CString sSend)
 		{
 			sSend = _T("/cs") + sSend.Mid(17);
 		}
+		else if (sSend.Left(5).CompareNoCase(_T("/part")) == 0)
+		{
+			if (sSend.TrimRight().GetLength() == 5 && m_pCurrentChannel->m_eType == Channel::ctNormal)
+				sSend += _T(" ") + m_pCurrentChannel->m_sName;
+		}
 		else if (sSend.Left(8).CompareNoCase(_T("/PRIVMSG")) == 0)
 		{
 			int iIndex = sSend.Find(_T(' '), sSend.Find(_T(' ')) + 1);
 			sSend.Insert(iIndex + 1, _T(":"));
-		}
-		else if (sSend.Left(6).CompareNoCase(_T("/TOPIC")) == 0)
+		} else if (sSend.Left(6).CompareNoCase(_T("/TOPIC")) == 0)
 		{
 			int iIndex = sSend.Find(_T(' '), sSend.Find(_T(' ')) + 1);
 			sSend.Insert(iIndex + 1, _T(":"));
@@ -692,16 +697,16 @@ void CIrcChannelTabCtrl::ChatSend(CString sSend)
 	CString sBuild;
 	if (sSend.Left(3) == _T("/me"))
 	{
-		sBuild.Format(_T("PRIVMSG %s :\001ACTION %s\001"), m_pCurrentChannel->m_sName, sSend.Mid(4));
-		m_pParent->AddInfoMessageF(m_pCurrentChannel->m_sName, _T("* %s %s"), m_pParent->m_pIrcMain->GetNick(), sSend.Mid(4));
+		sBuild.Format(_T("PRIVMSG %s :\001ACTION %s\001"), (LPCTSTR)m_pCurrentChannel->m_sName, (LPCTSTR)sSend.Mid(4));
+		m_pParent->AddInfoMessageCF(m_pCurrentChannel->m_sName, RGB(156,0,156), _T("* %s %s"), (LPCTSTR)m_pParent->m_pIrcMain->GetNick(), (LPCTSTR)sSend.Mid(4));
 		m_pParent->m_pIrcMain->SendString(sBuild);
 		return;
 	}
-	
+
 	if (sSend.Left(6) == _T("/sound"))
 	{
 		CString sound;
-		sBuild.Format(_T("PRIVMSG %s :\001SOUND %s\001"), m_pCurrentChannel->m_sName, sSend.Mid(7));
+		sBuild.Format(_T("PRIVMSG %s :\001SOUND %s\001"), (LPCTSTR)m_pCurrentChannel->m_sName, (LPCTSTR)sSend.Mid(7));
 		m_pParent->m_pIrcMain->SendString(sBuild);
 		sSend = sSend.Mid(7);
 		int soundlen = sSend.Find(_T(' '));
@@ -716,15 +721,15 @@ void CIrcChannelTabCtrl::ChatSend(CString sSend)
 			sBuild = sSend;
 			sSend = _T("[SOUND]");
 		}
-		sound.Format(_T("%sSounds\\IRC\\%s"), thePrefs.GetMuleDirectory(EMULE_EXECUTEABLEDIR), sBuild);
-		m_pParent->AddInfoMessageF(m_pCurrentChannel->m_sName, _T("* %s %s"), m_pParent->m_pIrcMain->GetNick(), sSend);
+		sound.Format(_T("%sSounds\\IRC\\%s"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_EXECUTEABLEDIR), (LPCTSTR)sBuild);
+		m_pParent->AddInfoMessageF(m_pCurrentChannel->m_sName, _T("* %s %s"), (LPCTSTR)m_pParent->m_pIrcMain->GetNick(), (LPCTSTR)sSend);
 		PlaySound(sound, NULL, SND_FILENAME | SND_NOSTOP | SND_NOWAIT | SND_ASYNC);
 		return;
 	}
 
 	sBuild = _T("PRIVMSG ") + m_pCurrentChannel->m_sName + _T(" :") + sSend;
 	m_pParent->m_pIrcMain->SendString(sBuild);
-	m_pParent->AddMessageF(m_pCurrentChannel->m_sName, m_pParent->m_pIrcMain->GetNick(), _T("%s"), sSend);
+	m_pParent->AddMessageF(m_pCurrentChannel->m_sName, m_pParent->m_pIrcMain->GetNick(), _T("%s"), (LPCTSTR)sSend);
 }
 
 void CIrcChannelTabCtrl::Localize()
@@ -783,11 +788,10 @@ LRESULT CIrcChannelTabCtrl::OnQueryTab(WPARAM wParam, LPARAM /*lParam*/)
 
 void CIrcChannelTabCtrl::EnableSmileys(bool bEnable)
 {
-	POSITION pos = m_lstChannels.GetHeadPosition();
-	while (pos){
+	for (POSITION pos = m_lstChannels.GetHeadPosition(); pos != NULL;) {
 		Channel* pChannel = m_lstChannels.GetNext(pos);
 		if (pChannel->m_eType != Channel::ctChannelList){
-			pChannel->m_wndLog.EnableSmileys(bEnable);			
+			pChannel->m_wndLog.EnableSmileys(bEnable);
 			if (pChannel->m_eType == Channel::ctNormal)
 				pChannel->m_wndTitle.EnableSmileys(bEnable);
 		}
@@ -800,7 +804,7 @@ void Channel::Show()
 		m_wndTitle.EnableWindow(TRUE);
 		m_wndTitle.ShowWindow(SW_SHOW);
 	}
-	
+
 	if (m_wndSplitter.m_hWnd) {
 		m_wndSplitter.EnableWindow(TRUE);
 		m_wndSplitter.ShowWindow(SW_SHOW);
@@ -818,7 +822,7 @@ void Channel::Hide()
 		m_wndTitle.ShowWindow(SW_HIDE);
 		m_wndTitle.EnableWindow(FALSE);
 	}
-	
+
 	if (m_wndSplitter.m_hWnd) {
 		m_wndSplitter.ShowWindow(SW_HIDE);
 		m_wndSplitter.EnableWindow(FALSE);

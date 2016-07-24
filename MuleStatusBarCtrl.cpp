@@ -66,11 +66,11 @@ void CMuleStatusBarCtrl::OnLButtonDblClk(UINT /*nFlags*/, CPoint point)
 		case SBarUsers:
 			theApp.emuledlg->serverwnd->ShowNetworkInfo();
 			break;
-		
+
 		case SBarUpDown:
 			theApp.emuledlg->SetActiveDialog(theApp.emuledlg->statisticswnd);
 			break;
-		
+
 		case SBarConnected:
 			theApp.emuledlg->serverwnd->ShowNetworkInfo();
 			break;
@@ -79,8 +79,8 @@ void CMuleStatusBarCtrl::OnLButtonDblClk(UINT /*nFlags*/, CPoint point)
 			theApp.emuledlg->SetActiveDialog(theApp.emuledlg->chatwnd);
 			break;
 
-        case SBarUSS:           
-            theApp.emuledlg->ShowPreferences(IDD_PPG_TWEAKS);               
+        case SBarUSS:
+            theApp.emuledlg->ShowPreferences(IDD_PPG_TWEAKS);
             break;
 	}
 }
@@ -110,10 +110,10 @@ CString CMuleStatusBarCtrl::GetPaneToolTipText(EStatusBarPane iPane) const
 			CServer* srv = cur_server ? theApp.serverlist->GetServerByAddress(cur_server->GetAddress(), cur_server->GetPort()) : NULL;
 			if (srv)
 			{
-				// Can't add more info than just the server name, unfortunately the MFC tooltip which 
+				// Can't add more info than just the server name, unfortunately the MFC tooltip which
 				// we use here does not show more than one(!) line of text.
 				strText = _T("eD2K ") + GetResString(IDS_SERVER) + _T(": ") + srv->GetListName();
-				strText.AppendFormat(_T("  (%s %s)"), GetFormatedUInt(srv->GetUsers()), GetResString(IDS_UUSERS));
+				strText.AppendFormat(_T("  (%s %s)"), (LPCTSTR)GetFormatedUInt(srv->GetUsers()), (LPCTSTR)GetResString(IDS_UUSERS));
 			}
 		}
 		break;

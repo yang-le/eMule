@@ -25,7 +25,7 @@ class CPartFile;
 class CSafeMemFile;
 class CShareableFile;
 
-enum EFileType { 
+enum EFileType: int {
 		FILETYPE_UNKNOWN,
 		FILETYPE_EXECUTABLE,
 		ARCHIVE_ZIP,
@@ -43,9 +43,22 @@ enum EFileType {
 };
 
 
-#define ROUND(x) (floor((float)x+0.5f))
-#define LODWORD(l)           ((DWORD)(((DWORD64)(l)) & 0xffffffff))
-#define HIDWORD(l)           ((DWORD)((((DWORD64)(l)) >> 32) & 0xffffffff))
+#define ROUND(x) (floor((float)(x)+0.5f))
+
+template <typename T> inline static const T maxi(const T& v0, const T& v1)
+{
+	return v0 >= v1 ? v0 : v1;
+}
+
+template <typename T> inline static const T mini(const T& v0, const T& v1)
+{
+	return v0 <= v1 ? v0 : v1;
+}
+
+template <typename T> inline static const int sgn(const T& val)
+{
+	return (T(0) < val) - (val < T(0));
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Low level str
@@ -82,7 +95,7 @@ CString GetFormatedUInt(ULONG ulVal);
 CString GetFormatedUInt64(ULONGLONG ullVal);
 void SecToTimeLength(unsigned long ulSec, CStringA& rstrTimeLength);
 void SecToTimeLength(unsigned long ulSec, CStringW& rstrTimeLength);
-bool RegularExpressionMatch(CString regexpr, CString teststring);
+bool RegularExpressionMatch(const CString& regexpr, const CString& teststring);
 
 ///////////////////////////////////////////////////////////////////////////////
 // URL conversion
@@ -111,7 +124,7 @@ uint32 DecodeBase32(LPCTSTR pszInput, CAICHHash& Hash);
 void MakeFoldername(CString &path);
 CString RemoveFileExtension(const CString& rstrFilePath);
 int CompareDirectories(const CString& rstrDir1, const CString& rstrDir2);
-CString StringLimit(CString in, UINT length);
+CString StringLimit(const CString& in, UINT length);
 CString CleanupFilename(CString filename, bool bExtension = true);
 CString ValidFilename(CString filename);
 bool ExpandEnvironmentStrings(CString& rstrStrings);
@@ -126,7 +139,7 @@ void		Sort(CSimpleArray<const CString*>& apstr, int (__cdecl *pfnCompare)(const 
 void		StripTrailingCollon(CString& rstr);
 bool		IsUnicodeFile(LPCTSTR pszFilePath);
 UINT64		GetFreeTempSpace(int tempdirindex);
-int			GetPathDriveNumber(CString path);
+int			GetPathDriveNumber(const CString& path);
 EFileType	GetFileTypeEx(CShareableFile* kfile, bool checkextention=true, bool checkfileheader=true, bool nocached=false);
 CString		GetFileTypeName(EFileType ftype);
 int			IsExtensionTypeOf(EFileType type, CString ext);
@@ -138,8 +151,8 @@ bool		_tmakepathlimit(TCHAR *path, const TCHAR *drive, const TCHAR *dir, const T
 //
 void InstallSkin(LPCTSTR pszSkinPackage);
 bool CheckFileOpen(LPCTSTR pszFilePath, LPCTSTR pszFileTitle = NULL);
-void ShellOpenFile(CString name);
-void ShellOpenFile(CString name, LPCTSTR pszVerb);
+void ShellOpenFile(const CString& name);
+void ShellOpenFile(const CString& name, LPCTSTR pszVerb);
 bool ShellDeleteFile(LPCTSTR pszFilePath);
 CString ShellGetFolderPath(int iCSIDL);
 bool SelectDir(HWND hWnd, LPTSTR pszPath, LPCTSTR pszTitle = NULL, LPCTSTR pszDlgTitle = NULL);
@@ -181,6 +194,7 @@ int GetSystemErrorString(DWORD dwError, CString &rstrError);
 int GetModuleErrorString(DWORD dwError, CString &rstrError, LPCTSTR pszModule);
 int GetErrorMessage(DWORD dwError, CString &rstrErrorMsg, DWORD dwFlags = 0);
 CString GetErrorMessage(DWORD dwError, DWORD dwFlags = 0);
+BOOL GetExceptionMessage(const CException& ex, LPTSTR lpszErrorMsg, UINT nMaxError);
 LPCTSTR	GetShellExecuteErrMsg(DWORD dwShellExecError);
 CString DbgGetHexDump(const uint8* data, UINT size);
 void DbgSetThreadName(LPCSTR szThreadName, ...);
@@ -235,6 +249,9 @@ int GetMaxWindowsTCPConnections();
 #define _WINVER_VISTA_	0x0600	// 6.0
 #define _WINVER_7_		0x0601	// 6.1
 #define	_WINVER_S2008_	0x0601	// 6.1
+#define _WINVER_8_		0x0602	// 6.2
+#define _WINVER_8_1_	0x0603	// 6.3
+#define _WINVER_10_		0x0a00	// 10.0
 
 WORD		DetectWinVersion();
 int			IsRunningXPSP2();
@@ -253,7 +270,7 @@ bool		AddIconGrayscaledToImageList(CImageList& rList, HICON hIcon);
 //
 
 __inline BYTE toHex(const BYTE &x){
-	return x > 9 ? x + 55: x + 48;
+	return x > 9 ? x + ('A'-10): x + '0';
 }
 
 // md4cmp -- replacement for memcmp(hash1,hash2,16)
@@ -390,7 +407,7 @@ bool IsGoodIP(uint32 nIP, bool forceCheck = false);
 bool IsGoodIPPort(uint32 nIP, uint16 nPort);
 bool IsLANIP(uint32 nIP);
 uint8 GetMyConnectOptions(bool bEncryption = true, bool bCallback = true);
-//No longer need seperate lowID checks as we now know the servers just give *.*.*.0 users a lowID
+//No longer need separate lowID checks as we now know the servers just give *.*.*.0 users a lowID
 __inline bool IsLowID(uint32 id){
 	return (id < 16777216);
 }

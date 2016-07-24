@@ -1,8 +1,9 @@
-// -*- C++ -*- 
-// $Id: field_impl.h,v 1.4 2002/06/29 14:43:00 t1mpy Exp $
+// -*- C++ -*-
+// $Id: field_impl.h,v 1.5 2002/09/13 15:38:21 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
+// Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
 
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Library General Public License as published by
@@ -28,21 +29,18 @@
 #ifndef _ID3LIB_FIELD_IMPL_H_
 #define _ID3LIB_FIELD_IMPL_H_
 
-#include <stdlib.h>
 #include "field.h"
-#include "id3/id3lib_strings.h"
+#include "id3lib_frame.h"
 
 struct ID3_FieldDef;
 struct ID3_FrameDef;
-class ID3_Frame;
-class ID3_Reader;
 
 class ID3_FieldImpl : public ID3_Field
 {
   friend class ID3_FrameImpl;
 public:
   ~ID3_FieldImpl();
-  
+
   void Clear();
 
   size_t Size() const;
@@ -68,8 +66,8 @@ public:
 
   dami::String  GetText() const;
   dami::String  GetTextItem(size_t) const;
-  size_t        SetText(dami::String);
-  size_t        AddText(dami::String);
+  size_t        SetText(const dami::String&);
+  size_t        AddText(const dami::String&);
 
   // Unicode string field functions
   ID3_Field&    operator= (const unicode_t* s) { this->Set(s); return *this; }
@@ -90,8 +88,8 @@ public:
   const uchar*  GetRawBinary() const;
   void          FromFile(const char*);
   void          ToFile(const char *sInfo) const;
-  
-  size_t        SetBinary(dami::BString);
+
+  size_t        SetBinary(const dami::BString&);
   dami::BString GetBinary() const;
 
   // miscelaneous functions
@@ -100,48 +98,53 @@ public:
   { return _spec_begin <= spec && spec <= _spec_end; }
 
   ID3_FieldID   GetID() const { return _id; }
+  ID3_FieldID   GetLinkedField() const { return _linked_field; }
   ID3_FieldType GetType() const { return _type; }
   bool          SetEncoding(ID3_TextEnc enc);
+  bool          SetLinkedSize(size_t newfixedsize);
+  bool          HasFixedSize() { return _fixed_size != 0; };
   ID3_TextEnc   GetEncoding() const { return _enc; }
-  bool          IsEncodable() const { return (_flags & ID3FF_ENCODABLE) > 0; }
-  
 
-  void          Render(ID3_Writer&) const;
+  bool          HasFlag(const flags_t flag) const { return (_flags & flag) == flag; }
+  bool          IsEncodable() const { return this->HasFlag(ID3FF_ENCODABLE); }
+
+  ID3_Err       Render(ID3_Writer&) const;
   bool          Parse(ID3_Reader&);
   bool          HasChanged() const;
 
 private:
-  size_t        SetText_i(dami::String);
-  size_t        AddText_i(dami::String);
+  size_t        SetText_i(const dami::String&);
+  size_t        AddText_i(const dami::String&);
 
 private:
   // To prevent public instantiation, the constructor is made private
   ID3_FieldImpl();
-  ID3_FieldImpl(const ID3_FieldDef&);
+  explicit ID3_FieldImpl(const ID3_FieldDef&);
 
   const ID3_FieldID   _id;          // the ID of this field
   const ID3_FieldType _type;        // what type is this field or should be
   const ID3_V2Spec    _spec_begin;  // spec end
   const ID3_V2Spec    _spec_end;    // spec begin
   const flags_t       _flags;       // special field flags
+  const ID3_FieldID   _linked_field;    // the ID of field where fixed size comes from
   mutable bool        _changed;     // field changed since last parse/render?
 
   dami::BString       _binary;      // for binary strings
   dami::String        _text;        // for ascii strings
   uint32              _integer;     // for numbers
 
-  const size_t        _fixed_size;  // for fixed length fields (0 if not)
+  size_t              _fixed_size;  // for fixed length fields (0 if not)
   size_t              _num_items;   // the number of items in the text string
   ID3_TextEnc         _enc;         // encoding for text fields
 protected:
   void RenderInteger(ID3_Writer&) const;
   void RenderText(ID3_Writer&) const;
   void RenderBinary(ID3_Writer&) const;
-  
+
   bool ParseInteger(ID3_Reader&);
   bool ParseText(ID3_Reader&);
   bool ParseBinary(ID3_Reader&);
-  
+
 };
 
 
@@ -150,4 +153,3 @@ ID3_FrameDef *ID3_FindFrameDef(ID3_FrameID id);
 ID3_FrameID   ID3_FindFrameID(const char *id);
 
 #endif /* _ID3LIB_FIELD_H_ */
-

@@ -43,56 +43,55 @@ struct UDP_Header_Struct{
 };
 #pragma pack()
 
+void Packet::init()
+{
+	m_bPacked = false;
+	tempbuffer = NULL;
+	uStatsPayLoad = 0;
+	memset(head, 0, sizeof head);
+}
 
 Packet::Packet(uint8 protocol){
+	init();
 	m_bSplitted = false;
 	m_bLastSplitted = false;
 	m_bFromPF = false;
 	size = 0;
 	pBuffer = 0;
 	completebuffer = 0;
-	tempbuffer = 0;
 	opcode = 0x00;
 	prot = protocol;
-	m_bPacked = false;
-	uStatsPayLoad = 0;
 }
 
 Packet::Packet(char* header){
+	init();
 	m_bSplitted = false;
-	m_bPacked = false;
 	m_bLastSplitted = false;
 	m_bFromPF = false;
-	tempbuffer = 0;
 	pBuffer = 0;
 	completebuffer = 0;
-	Header_Struct* head = (Header_Struct*) header;
-	size = head->packetlength-1;
-	opcode = head->command;
-	prot = head->eDonkeyID;
-	uStatsPayLoad = 0;
+	size = ((Header_Struct*)header)->packetlength-1;
+	opcode = ((Header_Struct*)header)->command;
+	prot = ((Header_Struct*)header)->eDonkeyID;
 }
 
 Packet::Packet(char* pPacketPart, uint32 nSize, bool bLast, bool bFromPartFile){// only used for splitted packets!
+	init();
 	m_bFromPF = bFromPartFile;
 	m_bSplitted = true;
-	m_bPacked = false;
 	m_bLastSplitted = bLast;
-	tempbuffer = 0;
 	pBuffer = 0;
 	completebuffer = pPacketPart;
 	size = nSize-6;
 	opcode = 0x00;
 	prot = 0x00;
-	uStatsPayLoad = 0;
 }
 
 Packet::Packet(uint8 in_opcode, uint32 in_size, uint8 protocol, bool bFromPartFile){
+	init();
 	m_bFromPF = bFromPartFile;
 	m_bSplitted = false;
-	m_bPacked = false;
 	m_bLastSplitted = false;
-	tempbuffer = 0;
 	if (in_size){
 		completebuffer = new char[in_size+10];
 		pBuffer = completebuffer+6;
@@ -105,12 +104,11 @@ Packet::Packet(uint8 in_opcode, uint32 in_size, uint8 protocol, bool bFromPartFi
 	opcode = in_opcode;
 	size = in_size;
 	prot = protocol;
-	uStatsPayLoad = 0;
 }
 
 Packet::Packet(CMemFile* datafile, uint8 protocol, uint8 ucOpcode){
+	init();
 	m_bSplitted = false;
-	m_bPacked = false;
 	m_bLastSplitted = false;
 	m_bFromPF = false;
 	size = (UINT)datafile->GetLength();
@@ -119,25 +117,21 @@ Packet::Packet(CMemFile* datafile, uint8 protocol, uint8 ucOpcode){
 	BYTE* tmp = datafile->Detach();
 	memcpy(pBuffer,tmp,size);
 	free(tmp);
-	tempbuffer = 0;
 	opcode = ucOpcode;
 	prot = protocol;
-	uStatsPayLoad = 0;
 }
 
 Packet::Packet(const CStringA& str, uint8 ucProtocol, uint8 ucOpcode){
+	init();
 	m_bSplitted = false;
-	m_bPacked = false;
 	m_bLastSplitted = false;
 	m_bFromPF = false;
 	size = str.GetLength();
 	completebuffer = new char[size+10];
 	pBuffer = completebuffer+6;
 	memcpy(pBuffer,(LPCSTR)str,size);
-	tempbuffer = 0;
 	opcode = ucOpcode;
 	prot = ucProtocol;
-	uStatsPayLoad = 0;
 }
 
 Packet::~Packet(){
@@ -222,7 +216,7 @@ void Packet::PackPacket(){
 }
 
 bool Packet::UnPackPacket(UINT uMaxDecompressedSize){
-	ASSERT ( prot == OP_PACKEDPROT || prot == OP_KADEMLIAPACKEDPROT); 
+	ASSERT ( prot == OP_PACKEDPROT || prot == OP_KADEMLIAPACKEDPROT);
 	uint32 nNewSize = size*10+300;
 	if (nNewSize > uMaxDecompressedSize){
 		//ASSERT(0);
@@ -237,8 +231,8 @@ bool Packet::UnPackPacket(UINT uMaxDecompressedSize){
 		unpackedsize = nNewSize;
 		result = uncompress(unpack,&unpackedsize,(BYTE*)pBuffer,size);
 		nNewSize *= 2; // size for the next try if needed
-	} while (result == Z_BUF_ERROR && nNewSize < uMaxDecompressedSize);
-	
+	} while (result == (UINT)Z_BUF_ERROR && nNewSize < uMaxDecompressedSize);
+
 	if (result == Z_OK){
 		ASSERT ( completebuffer == NULL );
 		ASSERT ( pBuffer != NULL );
@@ -485,18 +479,18 @@ CTag::CTag(CFileDataIO* data, bool bOptUTF8)
 			try{
 				data->Read(m_pszName, length);
 			}
-			catch(CFileException* ex){
+			catch (...) {
 				delete[] m_pszName;
-				throw ex;
+				throw;
 			}
 			m_pszName[length] = '\0';
 		}
 	}
-	
+
 	m_nBlobSize = 0;
 
 	// NOTE: It's very important that we read the *entire* packet data, even if we do
-	// not use each tag. Otherwise we will get troubles when the packets are returned in 
+	// not use each tag. Otherwise we will get troubles when the packets are returned in
 	// a list - like the search results from a server.
 	if (m_uType == TAGTYPE_STRING)
 	{
@@ -536,9 +530,9 @@ CTag::CTag(CFileDataIO* data, bool bOptUTF8)
 		try{
 			data->Read(m_pData, 16);
 		}
-		catch(CFileException* ex){
+		catch (...) {
 			delete[] m_pData;
-			throw ex;
+			throw;
 		}
 	}
 	else if (m_uType == TAGTYPE_BOOL)
@@ -601,20 +595,20 @@ bool CTag::WriteNewEd2kTag(CFileDataIO* data, EUtf8Str eStrEncode) const
 	CStringA* pstrValA = NULL;
 	if (IsInt())
 	{
-		if (m_uVal <= 0xFF)
+		if (m_uVal <= 0xFFu)
 			uType = TAGTYPE_UINT8;
-		else if (m_uVal <= 0xFFFF)
+		else if (m_uVal <= 0xFFFFu)
 			uType = TAGTYPE_UINT16;
 		else
 			uType = TAGTYPE_UINT32;
 	}
 	else if (IsInt64(false))
 	{
-		if (m_uVal <= 0xFF)
+		if (m_uVal <= 0xFFu)
 			uType = TAGTYPE_UINT8;
-		else if (m_uVal <= 0xFFFF)
+		else if (m_uVal <= 0xFFFFu)
 			uType = TAGTYPE_UINT16;
-		else if (m_uVal <= 0xFFFFFFFF)
+		else if (m_uVal <= 0xFFFFFFFFul)
 			uType = TAGTYPE_UINT32;
 		else
 			uType = TAGTYPE_UINT64;
@@ -723,12 +717,12 @@ bool CTag::WriteTagToFile(CFileDataIO* file, EUtf8Str eStrEncode) const
 {
 	ASSERT_VALID(this);
 
-	// don't write tags of unknown types, we wouldn't be able to read them in again 
+	// don't write tags of unknown types, we wouldn't be able to read them in again
 	// and the met file would be corrupted
 	if (IsStr() || IsInt() || IsFloat() || IsBlob() || IsInt64())
 	{
 		file->WriteUInt8(m_uType);
-		
+
 		if (m_pszName)
 		{
 			UINT taglen = strlen(m_pszName);
@@ -819,7 +813,7 @@ CString CTag::GetFullInfo(CString (*pfnDbgGetFileMetaTagName)(UINT uMetaTagID)) 
 	else
 	{
 		if (pfnDbgGetFileMetaTagName)
-			strTag.Format(_T("\"%s\""), (*pfnDbgGetFileMetaTagName)(m_uName));
+			strTag.Format(_T("\"%s\""), (LPCTSTR)(*pfnDbgGetFileMetaTagName)(m_uName));
 		else
 			strTag.Format(_T("Tag0x%02X"), m_uName);
 	}
@@ -832,7 +826,7 @@ CString CTag::GetFullInfo(CString (*pfnDbgGetFileMetaTagName)(UINT uMetaTagID)) 
 	}
 	else if (m_uType >= TAGTYPE_STR1 && m_uType <= TAGTYPE_STR16)
 	{
-		strTag.AppendFormat(_T("(Str%u)\"%s\""), m_uType - TAGTYPE_STR1 + 1, *m_pstrVal);
+		strTag.AppendFormat(_T("(Str%u)\"%s\""), m_uType - TAGTYPE_STR1 + 1, (LPCTSTR)*m_pstrVal);
 	}
 	else if (m_uType == TAGTYPE_UINT32)
 	{
@@ -844,11 +838,11 @@ CString CTag::GetFullInfo(CString (*pfnDbgGetFileMetaTagName)(UINT uMetaTagID)) 
 	}
 	else if (m_uType == TAGTYPE_UINT16)
 	{
-		strTag.AppendFormat(_T("(Int16)%u"), m_uVal);
+		strTag.AppendFormat(_T("(Int16)%u"), (uint16)m_uVal);
 	}
 	else if (m_uType == TAGTYPE_UINT8)
 	{
-		strTag.AppendFormat(_T("(Int8)%u"), m_uVal);
+		strTag.AppendFormat(_T("(Int8)%u"), (uint8)m_uVal);
 	}
 	else if (m_uType == TAGTYPE_FLOAT32)
 	{

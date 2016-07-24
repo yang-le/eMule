@@ -117,7 +117,7 @@ BOOL CSharedFilesWnd::OnInitDialog()
 	rcSpl.left = rcSpl.right + SPLITTER_MARGIN;
 	rcSpl.right = rcSpl.left + SPLITTER_WIDTH;
 	m_wndSplitter.Create(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_SHAREDFILES);
-	
+
 	AddAnchor(IDC_SF_HIDESHOWDETAILS, BOTTOM_RIGHT);
 	AddAnchor(m_wndSplitter, TOP_LEFT);
 	AddAnchor(sharedfilesctrl, TOP_LEFT, BOTTOM_RIGHT);
@@ -126,7 +126,7 @@ BOOL CSharedFilesWnd::OnInitDialog()
 	AddAnchor(IDC_FILES_ICO, TOP_LEFT);
 	AddAnchor(IDC_RELOADSHAREDFILES, TOP_RIGHT);
 	AddAnchor(IDC_TRAFFIC_TEXT, TOP_LEFT);
-	
+
 	int iPosStatInit = rcSpl.left;
 	int iPosStatNew = thePrefs.GetSplitterbarPositionShared();
 	if (iPosStatNew > SPLITTER_RANGE_MAX)
@@ -155,7 +155,7 @@ void CSharedFilesWnd::DoResize(int iDelta)
 	CSplitterControl::ChangeWidth(&m_ctlFilter, iDelta);
 	CSplitterControl::ChangePos(&sharedfilesctrl, -iDelta, 0);
 	CSplitterControl::ChangeWidth(&sharedfilesctrl, -iDelta);
-	bool bAntiFlicker = m_dlgDetails.IsWindowVisible() == TRUE;
+	bool bAntiFlicker = (m_dlgDetails.IsWindowVisible() != FALSE);
 	if (bAntiFlicker)
 		m_dlgDetails.SetRedraw(FALSE);
 	CSplitterControl::ChangePos(&m_dlgDetails, -iDelta, 0);
@@ -191,7 +191,7 @@ void CSharedFilesWnd::DoResize(int iDelta)
 
 
 void CSharedFilesWnd::Reload(bool bForceTreeReload)
-{	
+{
 	sharedfilesctrl.SetDirectoryFilter(NULL, false);
 	m_ctlSharedDirTree.Reload(bForceTreeReload); // force a reload of the tree to update the 'accessible' state of each directory
 	sharedfilesctrl.SetDirectoryFilter(m_ctlSharedDirTree.GetSelectedFilter(), false);
@@ -249,9 +249,9 @@ BOOL CSharedFilesWnd::PreTranslateMessage(MSG* pMsg)
 	{
 		POINT point;
 		::GetCursorPos(&point);
-		CPoint p = point; 
-		sharedfilesctrl.ScreenToClient(&p); 
-		int it = sharedfilesctrl.HitTest(p); 
+		CPoint p = point;
+		sharedfilesctrl.ScreenToClient(&p);
+		int it = sharedfilesctrl.HitTest(p);
 		if (it == -1)
 			return FALSE;
 
@@ -295,7 +295,7 @@ void CSharedFilesWnd::OnTvnSelChangedSharedDirsTree(NMHDR* /*pNMHDR*/, LRESULT* 
 	*pResult = 0;
 }
 
-LRESULT CSharedFilesWnd::DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam) 
+LRESULT CSharedFilesWnd::DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
@@ -323,7 +323,7 @@ LRESULT CSharedFilesWnd::DefWindowProc(UINT message, WPARAM wParam, LPARAM lPara
 
 		case WM_NOTIFY:
 			if (wParam == IDC_SPLITTER_SHAREDFILES)
-			{ 
+			{
 				SPC_NMHDR* pHdr = (SPC_NMHDR*)lParam;
 				DoResize(pHdr->delta);
 			}
@@ -432,7 +432,7 @@ void CSharedFilesWnd::ShowDetailsPanel(bool bShow)
 	thePrefs.SetShowSharedFilesDetails(bShow);
 	RemoveAnchor(sharedfilesctrl);
 	RemoveAnchor(IDC_SF_HIDESHOWDETAILS);
-	
+
 	CRect rcFile, rcDetailDlg, rcButton;
 	sharedfilesctrl.GetWindowRect(rcFile);
 	m_dlgDetails.GetWindowRect(rcDetailDlg);
@@ -486,10 +486,10 @@ BEGIN_MESSAGE_MAP(CSharedFileDetailsModelessSheet, CListViewPropertySheet)
 	ON_WM_CREATE()
 END_MESSAGE_MAP()
 
-int CSharedFileDetailsModelessSheet::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+int CSharedFileDetailsModelessSheet::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
-	// skip CResizableSheet::OnCreate because we don't the styles and stuff which are set there
-	CreateSizeGrip(FALSE); // create grip but dont show it
+	// skip CResizableSheet::OnCreate because we don't need the styles and stuff which are set there
+//	CreateSizeGrip(FALSE); // create grip but dont show it - do not do this with new library!
 	return CPropertySheet::OnCreate(lpCreateStruct);
 }
 
@@ -580,8 +580,7 @@ BOOL CSharedFileDetailsModelessSheet::OnInitDialog()
 void  CSharedFileDetailsModelessSheet::SetFiles(CTypedPtrList<CPtrList, CShareableFile*>& aFiles)
 {
 	m_aItems.RemoveAll();
-	POSITION pos = aFiles.GetHeadPosition();
-	while (pos)
+	for (POSITION pos = aFiles.GetHeadPosition(); pos;)
 		m_aItems.Add(aFiles.GetNext(pos));
 	ChangedData();
 }

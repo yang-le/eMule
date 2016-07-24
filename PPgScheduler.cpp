@@ -101,15 +101,15 @@ void CPPgScheduler::Localize(void)
 		GetDlgItem(IDC_STATIC_S_TITLE)->SetWindowText(GetResString(IDS_TITLE));
 		GetDlgItem(IDC_STATIC_DETAILS)->SetWindowText(GetResString(IDS_DETAILS));
 		GetDlgItem(IDC_STATIC_S_TIME)->SetWindowText(GetResString(IDS_TIME));
-		
+
 		GetDlgItem(IDC_STATIC_S_ACTION)->SetWindowText(GetResString(IDS_ACTION));
 		GetDlgItem(IDC_APPLY)->SetWindowText(GetResString(IDS_PW_APPLY));
 		GetDlgItem(IDC_REMOVE)->SetWindowText(GetResString(IDS_REMOVE));
 		GetDlgItem(IDC_NEW)->SetWindowText(GetResString(IDS_NEW));
 		GetDlgItem(IDC_CHECKNOENDTIME)->SetWindowText(GetResString(IDS_CHECKNOENDTIME));
-		
+
 		while (m_timesel.GetCount()>0) m_timesel.DeleteString(0);
-		for (int i=0;i<11;i++) 
+		for (int i=0;i<11;i++)
 			m_timesel.AddString(GetDayLabel(i));
 		m_timesel.SetCurSel(0);
 		if (m_list.GetSelectionMark()!=-1) m_timesel.SetCurSel(theApp.scheduler->GetSchedule(m_timesel.GetCurSel())->day);
@@ -130,7 +130,7 @@ void CPPgScheduler::LoadSchedule(int index) {
 	CTime time=time.GetCurrentTime();
 	if (schedule->time>0) time=schedule->time;
 	m_time.SetTime(&time);
-	
+
 	CTime time2=time2.GetCurrentTime();
 	if (schedule->time2>0) time2=schedule->time2;
 	m_timeTo.SetTime(&time2);
@@ -155,13 +155,13 @@ void CPPgScheduler::LoadSchedule(int index) {
 void CPPgScheduler::FillScheduleList() {
 
 	m_list.DeleteAllItems();
-	
+
 	for (uint8 index=0;index<theApp.scheduler->GetCount();index++) {
-		m_list.InsertItem(index , theApp.scheduler->GetSchedule(index)->title );
-		CTime time(theApp.scheduler->GetSchedule(index)->time);
-		CString timeS;
-		m_list.SetItemText(index, 1, GetDayLabel(theApp.scheduler->GetSchedule(index)->day));
-		timeS.Format(_T("%s"),time.Format(_T("%H:%M")));
+		const Schedule_Struct *sch = theApp.scheduler->GetSchedule(index);
+		m_list.InsertItem(index, sch->title);
+		CTime time(sch->time);
+		CString timeS(time.Format(_T("%H:%M")));
+		m_list.SetItemText(index, 1, GetDayLabel(sch->day));
 		m_list.SetItemText(index, 2, timeS);
 	}
 	if (m_list.GetItemCount()>0) {
@@ -177,8 +177,7 @@ void CPPgScheduler::OnBnClickedAdd()
 	Schedule_Struct* newschedule=new Schedule_Struct();
 	newschedule->day=0;
 	newschedule->enabled=false;
-	newschedule->time=time(NULL);
-	newschedule->time2=time(NULL);
+	newschedule->time2 = newschedule->time = time(NULL);
 	newschedule->title=_T("?");
 	newschedule->ResetActions();
 
@@ -223,12 +222,11 @@ void CPPgScheduler::OnBnClickedApply()
 			schedule->actions[i]=m_actions.GetItemData(i);
 			schedule->values[i]=m_actions.GetItemText(i,1);
 		}
-		
+
 		m_list.SetItemText(index, 0, schedule->title);
 		m_list.SetItemText(index, 1, GetDayLabel(schedule->day));
 		CTime time(theApp.scheduler->GetSchedule(index)->time);
-		CString timeS;
-		timeS.Format(_T("%s"),time.Format(_T("%H:%M")));
+		CString timeS(time.Format(_T("%H:%M")));
 		m_list.SetItemText(index, 2, timeS);
 	}
 	RecheckSchedules();
@@ -344,8 +342,8 @@ void CPPgScheduler::OnNmRClickActionlist(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 }
 
 BOOL CPPgScheduler::OnCommand(WPARAM wParam, LPARAM lParam)
-{ 
-	int item= m_actions.GetSelectionMark(); 
+{
+	int item= m_actions.GetSelectionMark();
 	// add
 	if (wParam>=MP_SCHACTIONS && wParam<MP_SCHACTIONS+20 && m_actions.GetItemCount()<16)
 	{
@@ -360,7 +358,7 @@ BOOL CPPgScheduler::OnCommand(WPARAM wParam, LPARAM lParam)
 	else if (wParam>=MP_SCHACTIONS+20 && wParam<=MP_SCHACTIONS+80)
 	{
 		CString newval;
-		newval.Format(_T("%i"),wParam-MP_SCHACTIONS-22);
+		newval.Format(_T("%u"),wParam-MP_SCHACTIONS-22);
 		m_actions.SetItemText(item,1,newval);
 	}
 	else if (wParam == ID_HELP)
@@ -369,9 +367,9 @@ BOOL CPPgScheduler::OnCommand(WPARAM wParam, LPARAM lParam)
 		return TRUE;
 	}
 
-	switch (wParam){ 
-		case MP_CAT_EDIT: 
-        { 
+	switch (wParam){
+		case MP_CAT_EDIT:
+        {
 			if (item!=-1) {
 				InputBox inputbox;
 				// todo: differen prompts
@@ -388,7 +386,7 @@ BOOL CPPgScheduler::OnCommand(WPARAM wParam, LPARAM lParam)
 				CString res=inputbox.GetInput();
 				if (!inputbox.WasCancelled()) m_actions.SetItemText(item,1,res);
 			}
-			break; 
+			break;
         }
 		case MP_CAT_REMOVE:
 		{
@@ -401,7 +399,7 @@ BOOL CPPgScheduler::OnCommand(WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		}
-	} 
+	}
 	return CPropertyPage::OnCommand(wParam, lParam);
 }
 
@@ -412,9 +410,9 @@ void CPPgScheduler::RecheckSchedules() {
 void CPPgScheduler::OnEnableChange() {
 	thePrefs.scheduler=IsDlgButtonChecked(IDC_ENABLE)!=0;
 	if (!thePrefs.scheduler) theApp.scheduler->RestoreOriginals();
-	
+
 	RecheckSchedules();
-	theApp.emuledlg->preferenceswnd->m_wndConnection.LoadSettings();	
+	theApp.emuledlg->preferenceswnd->m_wndConnection.LoadSettings();
 	SetModified();
 }
 

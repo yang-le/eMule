@@ -96,15 +96,15 @@ BOOL CClientDetailPage::OnSetActive()
 			GetDlgItem(IDC_DNAME)->SetWindowText(client->GetUserName());
 		else
 			GetDlgItem(IDC_DNAME)->SetWindowText(_T("?"));
-		
+
 		if (client->HasValidHash())
 			GetDlgItem(IDC_DHASH)->SetWindowText(md4str(client->GetUserHash()));
 		else
 			GetDlgItem(IDC_DHASH)->SetWindowText(_T("?"));
-		
+
 		GetDlgItem(IDC_DSOFT)->SetWindowText(client->GetClientSoftVer());
 
-		if (client->SupportsCryptLayer() && thePrefs.IsClientCryptLayerSupported() && (client->RequestsCryptLayer() || thePrefs.IsClientCryptLayerRequested()) 
+		if (client->SupportsCryptLayer() && thePrefs.IsClientCryptLayerSupported() && (client->RequestsCryptLayer() || thePrefs.IsClientCryptLayerRequested())
 			&& (client->IsObfuscatedConnectionEstablished() || !(client->socket != NULL && client->socket->IsConnected())))
 		{
 			buffer = GetResString(IDS_ENABLED);
@@ -119,9 +119,9 @@ BOOL CClientDetailPage::OnSetActive()
 #endif
 		GetDlgItem(IDC_OBFUSCATION_STAT)->SetWindowText(buffer);
 
-		buffer.Format(_T("%s"),(client->HasLowID() ? GetResString(IDS_IDLOW):GetResString(IDS_IDHIGH)));
+		buffer.Format(_T("%s"), (LPCTSTR)GetResString(client->HasLowID() ? IDS_IDLOW : IDS_IDHIGH));
 		GetDlgItem(IDC_DID)->SetWindowText(buffer);
-		
+
 		if (client->GetServerIP()){
 			GetDlgItem(IDC_DSIP)->SetWindowText(ipstr(client->GetServerIP()));
 			CServer* cserver = theApp.serverlist->GetServerByIPTCP(client->GetServerIP(), client->GetServerPort());
@@ -143,27 +143,28 @@ BOOL CClientDetailPage::OnSetActive()
 
 		if (client->GetRequestFile())
 			GetDlgItem(IDC_UPLOADING)->SetWindowText( client->GetRequestFile()->GetFileName()  );
-		else 
+		else
 			GetDlgItem(IDC_UPLOADING)->SetWindowText(_T("-"));
 
 		GetDlgItem(IDC_DDUP)->SetWindowText(CastItoXBytes(client->GetTransferredDown(), false, false));
 
 		GetDlgItem(IDC_DDOWN)->SetWindowText(CastItoXBytes(client->GetTransferredUp(), false, false));
 
-		buffer.Format(_T("%s"), CastItoXBytes(client->GetDownloadDatarate(), false, true));
+		buffer.Format(_T("%s"), (LPCTSTR)CastItoXBytes(client->GetDownloadDatarate(), false, true));
 		GetDlgItem(IDC_DAVUR)->SetWindowText(buffer);
 
-		buffer.Format(_T("%s"),CastItoXBytes(client->GetDatarate(), false, true));
+		buffer.Format(_T("%s"), (LPCTSTR)CastItoXBytes(client->GetDatarate(), false, true));
 		GetDlgItem(IDC_DAVDR)->SetWindowText(buffer);
-		
-		if (client->Credits()){
-			GetDlgItem(IDC_DUPTOTAL)->SetWindowText(CastItoXBytes(client->Credits()->GetDownloadedTotal(), false, false));
-			GetDlgItem(IDC_DDOWNTOTAL)->SetWindowText(CastItoXBytes(client->Credits()->GetUploadedTotal(), false, false));
-			buffer.Format(_T("%.1f"),(float)client->Credits()->GetScoreRatio(client->GetIP()));
+
+		const CClientCredits *clcredits = client->Credits();
+		if (clcredits){
+			GetDlgItem(IDC_DUPTOTAL)->SetWindowText(CastItoXBytes(clcredits->GetDownloadedTotal(), false, false));
+			GetDlgItem(IDC_DDOWNTOTAL)->SetWindowText(CastItoXBytes(clcredits->GetUploadedTotal(), false, false));
+			buffer.Format(_T("%.1f"),clcredits->GetScoreRatio(client->GetIP()));
 			GetDlgItem(IDC_DRATIO)->SetWindowText(buffer);
-			
+
 			if (theApp.clientcredits->CryptoAvailable()){
-				switch(client->Credits()->GetCurrentIdentState(client->GetIP())){
+				switch(clcredits->GetCurrentIdentState(client->GetIP())){
 					case IS_NOTAVAILABLE:
 						GetDlgItem(IDC_CDIDENT)->SetWindowText(GetResString(IDS_IDENTNOSUPPORT));
 						break;
@@ -179,7 +180,7 @@ BOOL CClientDetailPage::OnSetActive()
 			}
 			else
 				GetDlgItem(IDC_CDIDENT)->SetWindowText(GetResString(IDS_IDENTNOSUPPORT));
-		}	
+		}
 		else{
 			GetDlgItem(IDC_DDOWNTOTAL)->SetWindowText(_T("?"));
 			GetDlgItem(IDC_DUPTOTAL)->SetWindowText(_T("?"));
@@ -187,14 +188,14 @@ BOOL CClientDetailPage::OnSetActive()
 			GetDlgItem(IDC_CDIDENT)->SetWindowText(_T("?"));
 		}
 
-		if (client->GetUserName() && client->Credits()!=NULL){
+		if (client->GetUserName() && clcredits!=NULL){
 			buffer.Format(_T("%.1f"),(float)client->GetScore(false,client->IsDownloading(),true));
 			GetDlgItem(IDC_DRATING)->SetWindowText(buffer);
 		}
 		else
 			GetDlgItem(IDC_DRATING)->SetWindowText(_T("?"));
 
-		if (client->GetUploadState() != US_NONE && client->Credits()!=NULL){
+		if (client->GetUploadState() != US_NONE && clcredits!=NULL){
 			if (!client->GetFriendSlot()){
 				buffer.Format(_T("%u"),client->GetScore(false,client->IsDownloading(),false));
 				GetDlgItem(IDC_DSCORE)->SetWindowText(buffer);
@@ -206,9 +207,9 @@ BOOL CClientDetailPage::OnSetActive()
 			GetDlgItem(IDC_DSCORE)->SetWindowText(_T("-"));
 
 		if (client->GetKadPort() )
-			buffer.Format( _T("%s"), GetResString(IDS_CONNECTED));
+			buffer.Format( _T("%s"), (LPCTSTR)GetResString(IDS_CONNECTED));
 		else
-			buffer.Format( _T("%s"), GetResString(IDS_DISCONNECTED));
+			buffer.Format( _T("%s"), (LPCTSTR)GetResString(IDS_DISCONNECTED));
 		GetDlgItem(IDC_CLIENTDETAIL_KADCON)->SetWindowText(buffer);
 
 		m_bDataChanged = false;
@@ -297,7 +298,7 @@ void CClientDetailDialog::OnDestroy()
 }
 
 BOOL CClientDetailDialog::OnInitDialog()
-{		
+{
 	EnableStackedTabs(FALSE);
 	BOOL bResult = CListViewWalkerPropertySheet::OnInitDialog();
 	HighColorTab::UpdateImageList(*this);

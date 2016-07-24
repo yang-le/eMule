@@ -12,13 +12,13 @@
 #endif
 
 // This type of "last chance" exception handling is to be used at least in several callback functions to avoid memory leaks.
-// It is *not* thought as a proper handling of exceptions in general! 
+// It is *not* thought as a proper handling of exceptions in general!
 // -> Use explicit exception handlers where needed!
 
 #define CATCH_MFC_EXCEPTION(fname) \
 	catch(CException* e){ \
 		TCHAR szError[1024]; \
-		e->GetErrorMessage(szError, _countof(szError)); \
+		GetExceptionMessage(*e, szError, _countof(szError)); \
 		const CRuntimeClass* pRuntimeClass = e->GetRuntimeClass(); \
 		LPCSTR pszClassName = (pRuntimeClass) ? pRuntimeClass->m_lpszClassName : NULL; \
 		if (!pszClassName) \
@@ -29,9 +29,9 @@
 	}
 
 #define	CATCH_STR_EXCEPTION(fname) \
-	catch(CString strError){ \
+	catch (const CString& strError){ \
 		if (thePrefs.GetVerbose()) \
-			DebugLogError(LOG_STATUSBAR, _T("Unknown CString exception in ") fname _T(" - %s"), strError); \
+			DebugLogError(LOG_STATUSBAR, _T("Unknown CString exception in ") fname _T(" - %s"), (LPCTSTR)strError); \
 	}
 
 #define CATCH_DFLT_EXCEPTIONS(fname) \

@@ -89,31 +89,19 @@ BOOL CBase64Coding::Encode( const char * source, int len, char * destination_str
    int loop_index                = 0;
    int number_of_bytes_to_encode = len;
 
-   BYTE byte_to_add = 0;
-   BYTE byte_1      = 0;
    BYTE byte_2      = 0;
    BYTE byte_3      = 0;
 
-   DWORD number_of_bytes_encoded = (DWORD) ( (double) number_of_bytes_to_encode / (double) 0.75 ) + 1;
-
-   // Now add in the CR/LF pairs, each line is truncated at 72 characters
-
-   // 2000-05-12
-   // Thanks go to Ilia Golubev (ilia@varicom.co.il) for finding a bug here.
-   // I was using number_of_bytes_to_encode rather than number_of_bytes_encoded.
-
-   number_of_bytes_encoded += (DWORD)( ( ( number_of_bytes_encoded / BASE64_NUMBER_OF_CHARACTERS_PER_LINE ) + 1 ) * 2 );
-
    char * destination = destination_string;
 
-   number_of_bytes_encoded = 0;
+   DWORD number_of_bytes_encoded = 0;
 
    while( loop_index < number_of_bytes_to_encode )
    {
       // Output the first byte
 
-      byte_1 = source[ loop_index ];
-      byte_to_add = alphabet[ ( byte_1 >> 2 ) ];
+      BYTE byte_1 = source[ loop_index ];
+      BYTE byte_to_add = alphabet[ ( byte_1 >> 2 ) ];
 
       destination[ number_of_bytes_encoded ] = static_cast< char >( byte_to_add );
       number_of_bytes_encoded++;

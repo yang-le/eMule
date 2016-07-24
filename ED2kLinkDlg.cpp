@@ -14,7 +14,7 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-#include "stdafx.h" 
+#include "stdafx.h"
 #include "emule.h"
 #include "ED2kLinkDlg.h"
 #include "KnownFile.h"
@@ -30,41 +30,41 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 
-IMPLEMENT_DYNAMIC(CED2kLinkDlg, CResizablePage) 
+IMPLEMENT_DYNAMIC(CED2kLinkDlg, CResizablePage)
 
-BEGIN_MESSAGE_MAP(CED2kLinkDlg, CResizablePage) 
+BEGIN_MESSAGE_MAP(CED2kLinkDlg, CResizablePage)
 	ON_BN_CLICKED(IDC_LD_CLIPBOARDBUT, OnBnClickedClipboard)
 	ON_BN_CLICKED(IDC_LD_SOURCECHE, OnSettingsChange)
 	ON_BN_CLICKED(IDC_LD_HTMLCHE, OnSettingsChange)
 	ON_BN_CLICKED(IDC_LD_HOSTNAMECHE, OnSettingsChange)
 	ON_BN_CLICKED(IDC_LD_HASHSETCHE, OnSettingsChange)
 	ON_MESSAGE(UM_DATA_CHANGED, OnDataChanged)
-END_MESSAGE_MAP() 
+END_MESSAGE_MAP()
 
-CED2kLinkDlg::CED2kLinkDlg() 
-   : CResizablePage(CED2kLinkDlg::IDD, IDS_CMT_READALL) 
-{ 
+CED2kLinkDlg::CED2kLinkDlg()
+   : CResizablePage(CED2kLinkDlg::IDD, IDS_CMT_READALL)
+{
 	m_paFiles = NULL;
 	m_bDataChanged = false;
 	m_strCaption = GetResString(IDS_SW_LINK);
 	m_psp.pszTitle = m_strCaption;
 	m_psp.dwFlags |= PSP_USETITLE;
 	m_bReducedDlg = false;
-} 
+}
 
-CED2kLinkDlg::~CED2kLinkDlg() 
-{ 
-} 
+CED2kLinkDlg::~CED2kLinkDlg()
+{
+}
 
-void CED2kLinkDlg::DoDataExchange(CDataExchange* pDX) 
-{ 
-	CResizablePage::DoDataExchange(pDX); 
+void CED2kLinkDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CResizablePage::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_LD_LINKEDI, m_ctrlLinkEdit);
-} 
+}
 
 BOOL CED2kLinkDlg::OnInitDialog()
-{ 
-	CResizablePage::OnInitDialog(); 
+{
+	CResizablePage::OnInitDialog();
 	InitWindowStyles(this);
 
 
@@ -104,7 +104,7 @@ BOOL CED2kLinkDlg::OnInitDialog()
 		GetDlgItem(IDC_LD_CLIPBOARDBUT)->GetWindowRect(rcDefault);
 		ScreenToClient(rcDefault);
 		GetDlgItem(IDC_LD_CLIPBOARDBUT)->SetWindowPos(NULL, rcDefault.left, rcDefault.top + nDeltaY, 0, 0, SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOACTIVATE);
-		
+
 		GetDlgItem(IDC_LD_BASICGROUP)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_LD_SOURCECHE)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_LD_ADVANCEDGROUP)->ShowWindow(SW_HIDE);
@@ -115,10 +115,10 @@ BOOL CED2kLinkDlg::OnInitDialog()
 	AddAnchor(IDC_LD_LINKGROUP,TOP_LEFT,BOTTOM_RIGHT);
 	AddAnchor(IDC_LD_LINKEDI,TOP_LEFT,BOTTOM_RIGHT);
 	AddAnchor(IDC_LD_CLIPBOARDBUT,BOTTOM_RIGHT);
-	Localize(); 
+	Localize();
 
-	return TRUE; 
-} 
+	return TRUE;
+}
 
 BOOL CED2kLinkDlg::OnSetActive()
 {
@@ -135,15 +135,11 @@ BOOL CED2kLinkDlg::OnSetActive()
 			if (!(*m_paFiles)[i]->IsKindOf(RUNTIME_CLASS(CKnownFile)))
 				continue;
 			bShowHTML = TRUE;
-			CKnownFile* file = STATIC_DOWNCAST(CKnownFile, (*m_paFiles)[i]);
-			if (file->GetFileIdentifier().GetAvailableMD4PartHashCount() > 0 && file->GetFileIdentifier().HasExpectedMD4HashCount())
-			{
+			const CFileIdentifier& fileid = STATIC_DOWNCAST(CKnownFile, (*m_paFiles)[i])->GetFileIdentifier();
+			if (fileid.GetAvailableMD4PartHashCount() > 0 && fileid.HasExpectedMD4HashCount())
 				bShowHashset = TRUE;
-			}
-			if (file->GetFileIdentifier().HasAICHHash())
-			{	
+			if (fileid.HasAICHHash())
 				bShowAICH = TRUE;
-			}
 			if (bShowHashset && bShowAICH)
 				break;
 		}
@@ -167,16 +163,16 @@ LRESULT CED2kLinkDlg::OnDataChanged(WPARAM, LPARAM)
 }
 
 void CED2kLinkDlg::Localize(void)
-{ 	
-	GetDlgItem(IDC_LD_LINKGROUP)->SetWindowText(GetResString(IDS_SW_LINK)); 
+{
+	GetDlgItem(IDC_LD_LINKGROUP)->SetWindowText(GetResString(IDS_SW_LINK));
 	GetDlgItem(IDC_LD_CLIPBOARDBUT)->SetWindowText(GetResString(IDS_LD_COPYCLIPBOARD));
 	if (!m_bReducedDlg)
 	{
 		GetDlgItem(IDC_LD_BASICGROUP)->SetWindowText(GetResString(IDS_LD_BASICOPT));
-		GetDlgItem(IDC_LD_SOURCECHE)->SetWindowText(GetResString(IDS_LD_ADDSOURCE)); 
-		GetDlgItem(IDC_LD_ADVANCEDGROUP)->SetWindowText(GetResString(IDS_LD_ADVANCEDOPT)); 
-		GetDlgItem(IDC_LD_HTMLCHE)->SetWindowText(GetResString(IDS_LD_ADDHTML)); 
-		GetDlgItem(IDC_LD_HASHSETCHE)->SetWindowText(GetResString(IDS_LD_ADDHASHSET)); 
+		GetDlgItem(IDC_LD_SOURCECHE)->SetWindowText(GetResString(IDS_LD_ADDSOURCE));
+		GetDlgItem(IDC_LD_ADVANCEDGROUP)->SetWindowText(GetResString(IDS_LD_ADVANCEDOPT));
+		GetDlgItem(IDC_LD_HTMLCHE)->SetWindowText(GetResString(IDS_LD_ADDHTML));
+		GetDlgItem(IDC_LD_HASHSETCHE)->SetWindowText(GetResString(IDS_LD_ADDHASHSET));
 		GetDlgItem(IDC_LD_HOSTNAMECHE)->SetWindowText(GetResString(IDS_LD_HOSTNAME));
 	}
 }
@@ -184,7 +180,6 @@ void CED2kLinkDlg::Localize(void)
 void CED2kLinkDlg::UpdateLink()
 {
 	CString strLinks;
-	CString strBuffer;
 	const bool bHashset = ((CButton*)GetDlgItem(IDC_LD_HASHSETCHE))->GetCheck() == BST_CHECKED;
 	const bool bHTML = ((CButton*)GetDlgItem(IDC_LD_HTMLCHE))->GetCheck() == BST_CHECKED;
 	const bool bSource = ((CButton*)GetDlgItem(IDC_LD_SOURCECHE))->GetCheck() == BST_CHECKED && theApp.IsConnected() && theApp.GetPublicIP() != 0 && !theApp.IsFirewalled();
@@ -193,12 +188,12 @@ void CED2kLinkDlg::UpdateLink()
 
 	for (int i = 0; i != m_paFiles->GetSize(); i++)
 	{
-		if (!(*m_paFiles)[i]->IsKindOf(RUNTIME_CLASS(CKnownFile)))
+		if (!(*m_paFiles)[i] || !(*m_paFiles)[i]->IsKindOf(RUNTIME_CLASS(CKnownFile)))
 			continue;
 
 		if (!strLinks.IsEmpty())
 			strLinks += _T("\r\n\r\n");
-	
+
 		CKnownFile* file = STATIC_DOWNCAST(CKnownFile, (*m_paFiles)[i]);
 		strLinks += file->GetED2kLink(bHashset, bHTML, bHostname, bSource, theApp.GetPublicIP());
 	}

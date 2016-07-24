@@ -46,7 +46,7 @@ public:
 	CFont* GetFont() const;
 
 protected:
-	bool m_bRichEdit;
+//	bool m_bRichEdit;
 	int m_iLimitText;
 	bool m_bAutoScroll;
 	CStringArray m_astrBuff;
@@ -72,7 +72,7 @@ protected:
 
 	void SelectAllItems();
 	void CopySelectedItems();
-	int GetMaxSize();
+//	int GetMaxSize();
 	void SafeAddLine(int nPos, LPCTSTR pszLine, int iLen, long& nStartChar, long& nEndChar, bool bLink, COLORREF cr, COLORREF bk, DWORD mask);
 	void FlushBuffer();
 	void AddString(int nPos, LPCTSTR pszString, bool bLink, COLORREF cr, COLORREF bk, DWORD mask);

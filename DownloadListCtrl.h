@@ -58,7 +58,7 @@ public:
 class CDownloadListListCtrlItemWalk : public CListCtrlItemWalk
 {
 public:
-	CDownloadListListCtrlItemWalk(CDownloadListCtrl* pListCtrl);
+	explicit CDownloadListListCtrlItemWalk(CDownloadListCtrl* pListCtrl);
 
 	virtual CObject* GetNextSelectableItem();
 	virtual CObject* GetPrevSelectableItem();

@@ -57,7 +57,7 @@ void ConvertED2KTag(CTag*& pTag)
 			uint8	nID;
 			uint8	nED2KType;
 			LPCSTR	pszED2KName;
-		} _aEmuleToED2KMetaTagsMap[] = 
+		} _aEmuleToED2KMetaTagsMap[] =
 		{
 			// Artist, Album and Title are disabled because they should be already part of the filename
 			// and would therefore be redundant information sent to the servers.. and the servers count the
@@ -71,7 +71,7 @@ void ConvertED2KTag(CTag*& pTag)
 			{ FT_MEDIA_CODEC,   TAGTYPE_STRING, FT_ED2K_MEDIA_CODEC }
 		};
 
-		for (int j = 0; j < ARRSIZE(_aEmuleToED2KMetaTagsMap); j++)
+		for (unsigned j = 0; j < ARRSIZE(_aEmuleToED2KMetaTagsMap); ++j)
 		{
 			if (    CmpED2KTagName(pTag->GetName(), _aEmuleToED2KMetaTagsMap[j].pszED2KName) == 0
 				&& (   (pTag->IsStr() && _aEmuleToED2KMetaTagsMap[j].nED2KType == TAGTYPE_STRING)
@@ -96,8 +96,8 @@ void ConvertED2KTag(CTag*& pTag)
 					}
 					else
 					{
-						CTag* tag = (!pTag->GetStr().IsEmpty()) 
-										? new CTag(_aEmuleToED2KMetaTagsMap[j].nID, pTag->GetStr()) 
+						CTag* tag = (!pTag->GetStr().IsEmpty())
+										? new CTag(_aEmuleToED2KMetaTagsMap[j].nID, pTag->GetStr())
 										: NULL;
 						delete pTag;
 						pTag = tag;
@@ -105,8 +105,8 @@ void ConvertED2KTag(CTag*& pTag)
 				}
 				else if (pTag->IsInt())
 				{
-					CTag* tag = (pTag->GetInt() != 0) 
-									? new CTag(_aEmuleToED2KMetaTagsMap[j].nID, pTag->GetInt()) 
+					CTag* tag = (pTag->GetInt() != 0)
+									? new CTag(_aEmuleToED2KMetaTagsMap[j].nID, pTag->GetInt())
 									: NULL;
 					delete pTag;
 					pTag = tag;
@@ -125,20 +125,20 @@ IMPLEMENT_DYNAMIC(CSearchFile, CAbstractFile)
 CSearchFile::CSearchFile(const CSearchFile* copyfrom)
 	: CAbstractFile(copyfrom)
 {
-	UpdateFileRatingCommentAvail();
+	CSearchFile::UpdateFileRatingCommentAvail();
 
 	m_nClientServerIP = copyfrom->GetClientServerIP();
 	m_nClientServerPort = copyfrom->GetClientServerPort();
 	m_nClientID = copyfrom->GetClientID();
 	m_nClientPort = copyfrom->GetClientPort();
-	m_pszDirectory = copyfrom->GetDirectory()? _tcsdup(copyfrom->GetDirectory()) : NULL;
+	m_pszDirectory = copyfrom->GetDirectory() ? _tcsdup(copyfrom->GetDirectory()) : NULL;
 	m_nSearchID = copyfrom->GetSearchID();
 	m_bKademlia = copyfrom->IsKademlia();
-	
+
 	const CSimpleArray<SClient>& clients = copyfrom->GetClients();
 	for (int i = 0; i < clients.GetSize(); i++)
 		AddClient(clients[i]);
-	
+
 	const CSimpleArray<SServer>& servers = copyfrom->GetServers();
 	for (int i = 0; i < servers.GetSize(); i++)
 		AddServer(servers[i]);
@@ -153,10 +153,14 @@ CSearchFile::CSearchFile(const CSearchFile* copyfrom)
 	m_nSpamRating = copyfrom->GetSpamRating();
 	m_nKadPublishInfo = copyfrom->GetKadPublishInfo();
 	m_bMultipleAICHFound = copyfrom->m_bMultipleAICHFound;
+	m_flags = copyfrom->m_flags;
+	m_nSources = copyfrom->m_nSources;
+	m_nCompleteSources = copyfrom->m_nCompleteSources;
 }
 
-CSearchFile::CSearchFile(CFileDataIO* in_data, bool bOptUTF8, 
+CSearchFile::CSearchFile(CFileDataIO* in_data, bool bOptUTF8,
 						 uint32 nSearchID, uint32 nServerIP, uint16 nServerPort, LPCTSTR pszDirectory, bool bKademlia, bool bServerUDPAnswer)
+	: m_nSources(0), m_nCompleteSources(0), m_flags(0)
 {
 	m_bMultipleAICHFound = false;
 	m_bKademlia = bKademlia;
@@ -167,7 +171,7 @@ CSearchFile::CSearchFile(CFileDataIO* in_data, bool bOptUTF8,
 	m_nClientPort = in_data->ReadUInt16();
 	if ((m_nClientID || m_nClientPort) && !IsValidSearchResultClientIPPort(m_nClientID, m_nClientPort)){
 		if (thePrefs.GetDebugServerSearchesLevel() > 1)
-			Debug(_T("Filtered source from search result %s:%u\n"), DbgGetClientID(m_nClientID), m_nClientPort);
+			Debug(_T("Filtered source from search result %s:%u\n"), (LPCTSTR)DbgGetClientID(m_nClientID), m_nClientPort);
 		m_nClientID = 0;
 		m_nClientPort = 0;
 	}
@@ -180,7 +184,7 @@ CSearchFile::CSearchFile(CFileDataIO* in_data, bool bOptUTF8,
 	//  *) if the OP_OFFERFILES packet does contain our HighID and Port the server returns that data at least when
 	//     returning search results via TCP.
 	if (thePrefs.GetDebugServerSearchesLevel() > 1)
-		Debug(_T("Search Result: %s  Client=%u.%u.%u.%u:%u  Tags=%u\n"), md4str(m_FileIdentifier.GetMD4Hash()), (uint8)m_nClientID,(uint8)(m_nClientID>>8),(uint8)(m_nClientID>>16),(uint8)(m_nClientID>>24), m_nClientPort, tagcount);
+		Debug(_T("Search Result: %s  Client=%u.%u.%u.%u:%u  Tags=%u\n"), (LPCTSTR)md4str(m_FileIdentifier.GetMD4Hash()), (uint8)m_nClientID,(uint8)(m_nClientID>>8),(uint8)(m_nClientID>>16),(uint8)(m_nClientID>>24), m_nClientPort, tagcount);
 
 	// Copy/Convert ED2K-server tags to local tags
 	//
@@ -188,7 +192,7 @@ CSearchFile::CSearchFile(CFileDataIO* in_data, bool bOptUTF8,
 	{
 		CTag* tag = new CTag(in_data, bOptUTF8);
 		if (thePrefs.GetDebugServerSearchesLevel() > 1)
-			Debug(_T("  %s\n"), tag->GetFullInfo(DbgGetFileMetaTagName));
+			Debug(_T("  %s\n"), (LPCTSTR)tag->GetFullInfo(DbgGetFileMetaTagName));
 		ConvertED2KTag(tag);
 		if (tag)
 		{
@@ -199,30 +203,41 @@ CSearchFile::CSearchFile(CFileDataIO* in_data, bool bOptUTF8,
 			// a local tag with an eMule known rating value and drop the percentage (which is currently done),
 			// or add a second tag which holds the percentage in addition to the eMule-known rating value.
 			// Be aware, that adding that tag in packed-rating format will create troubles in other code parts!
-			if (tag->GetNameID() == FT_FILERATING && tag->IsInt())
-			{
-				uint16 nPackedRating = (uint16)tag->GetInt();
+			switch (tag->GetNameID()) {
+			case FT_FILERATING:
+				if (tag->IsInt()) {
+					uint16 nPackedRating = (uint16)tag->GetInt();
 
-				// Percent of clients (related to 'Availability') which rated on that file
-				UINT uPercentClientRatings = HIBYTE(nPackedRating);
-				(void)uPercentClientRatings;
+					// Percent of clients (related to 'Availability') which rated on that file
+					UINT uPercentClientRatings = HIBYTE(nPackedRating);
+					(void)uPercentClientRatings;
 
-				// Average rating used by clients
-				UINT uAvgRating = LOBYTE(nPackedRating);
-				m_uUserRating = uAvgRating / (255/5/*RatingExcellent*/);
+					// Average rating used by clients
+					UINT uAvgRating = LOBYTE(nPackedRating);
+					m_uUserRating = uAvgRating / (255/5/*RatingExcellent*/);
 
-				tag->SetInt(m_uUserRating);
-			}
-			else if (tag->GetNameID() == FT_AICH_HASH && tag->IsStr())
-			{
-				CAICHHash hash;
-				if (DecodeBase32(tag->GetStr(),hash) == (UINT)CAICHHash::GetHashSize())
-					m_FileIdentifier.SetAICHHash(hash);
-				else
-					ASSERT( false );
-				delete tag;
-				tag = NULL;
-				continue;
+					tag->SetInt(m_uUserRating);
+				}
+				break;
+			case FT_AICH_HASH:
+				if (tag->IsStr()) {
+					CAICHHash hash;
+					if (DecodeBase32(tag->GetStr(), hash) == CAICHHash::GetHashSize())
+						m_FileIdentifier.SetAICHHash(hash);
+					else
+						ASSERT(false);
+					delete tag;
+
+					continue;
+				}
+				break;
+			case FT_SOURCES:
+				if (tag->IsInt())
+					m_nSources = tag->GetInt();
+				break;
+			case FT_COMPLETE_SOURCES:
+				if (tag->IsInt())
+					m_nCompleteSources = tag->GetInt();
 			}
 			taglist.Add(tag);
 		}
@@ -238,7 +253,7 @@ CSearchFile::CSearchFile(CFileDataIO* in_data, bool bOptUTF8,
 	// but, in no case, we will use the receive file type when adding this search result to the download queue, to avoid
 	// that we are using 'wrong' file types in part files. (this has to be handled when creating the part files)
 	const CString& rstrFileType = GetStrTagValue(FT_FILETYPE);
-	SetFileName(GetStrTagValue(FT_FILENAME), false, rstrFileType.IsEmpty(), true);
+	CSearchFile::SetFileName(GetStrTagValue(FT_FILENAME), false, rstrFileType.IsEmpty(), true);
 
 	uint64 ui64FileSize = 0;
 	CTag* pTagFileSize = GetTag(FT_FILESIZE);
@@ -261,7 +276,7 @@ CSearchFile::CSearchFile(CFileDataIO* in_data, bool bOptUTF8,
 			DeleteTag(FT_FILESIZE_HI);
 		}
 	}
-	SetFileSize(ui64FileSize);
+	CSearchFile::SetFileSize(ui64FileSize);
 
 	if (!rstrFileType.IsEmpty())
 	{
@@ -269,12 +284,12 @@ CSearchFile::CSearchFile(CFileDataIO* in_data, bool bOptUTF8,
 		{
 			CString strDetailFileType = GetFileTypeByName(GetFileName());
 			if (!strDetailFileType.IsEmpty())
-				SetFileType(strDetailFileType);
+				CSearchFile::SetFileType(strDetailFileType);
 			else
-				SetFileType(rstrFileType);
+				CSearchFile::SetFileType(rstrFileType);
 		}
 		else
-			SetFileType(rstrFileType);
+			CSearchFile::SetFileType(rstrFileType);
 	}
 
 	m_nClientServerIP = nServerIP;
@@ -285,7 +300,7 @@ CSearchFile::CSearchFile(CFileDataIO* in_data, bool bOptUTF8,
 		AddServer(server);
 	}
 	m_pszDirectory = pszDirectory ? _tcsdup(pszDirectory) : NULL;
-	
+
 	m_list_bExpanded = false;
 	m_list_parent = NULL;
 	m_list_childcount = 0;
@@ -313,14 +328,13 @@ void CSearchFile::StoreToFile(CFileDataIO& rFile) const
 	rFile.WriteUInt32(nTagCount);
 	INT_PTR pos;
 	for (pos = 0; pos < taglist.GetCount(); pos++){
-		CTag* tag = taglist.GetAt(pos);
+		CTag* tag = taglist[pos];
 		if (tag->GetNameID() == FT_FILERATING && tag->IsInt())
 		{
 			CTag temp(FT_FILERATING, (tag->GetInt() * (255/5)) & 0xFF);
 			temp.WriteNewEd2kTag(&rFile);
-			continue;
-		}
-		tag->WriteNewEd2kTag(&rFile, utf8strRaw);
+		} else
+			tag->WriteNewEd2kTag(&rFile, utf8strRaw);
 	}
 	if (m_FileIdentifier.HasAICHHash())
 	{
@@ -350,7 +364,7 @@ void CSearchFile::UpdateFileRatingCommentAvail(bool bForceUpdate)
 			uUserRatings += rating;
 		}
 	}
-	
+
 	// searchfile specific
 	// the file might have had a serverrating, don't change the rating if no kad ratings were found
 	if (uRatings)
@@ -362,65 +376,28 @@ void CSearchFile::UpdateFileRatingCommentAvail(bool bForceUpdate)
 
 uint32 CSearchFile::AddSources(uint32 count)
 {
-	for (int i = 0; i < taglist.GetSize(); i++)
-	{
-		CTag* pTag = taglist[i];
-		if (pTag->GetNameID() == FT_SOURCES)
-		{
-			if (m_bKademlia)
-			{
-				if (count > pTag->GetInt())
-					pTag->SetInt(count);
-			}
-			else
-				pTag->SetInt(pTag->GetInt() + count);
-			return pTag->GetInt();
-		}
-	}
-
-	// FT_SOURCES is not yet supported by clients, we may have to create such a tag..
-	CTag* pTag = new CTag(FT_SOURCES, count);
-	taglist.Add(pTag);
-	return count;
-}
-
-uint32 CSearchFile::GetSourceCount() const
-{
-	return GetIntTagValue(FT_SOURCES);
+	if (m_bKademlia) {
+		if (count > m_nSources)
+			m_nSources = count;
+	} else
+		m_nSources += count;
+	return m_nSources;
 }
 
 uint32 CSearchFile::AddCompleteSources(uint32 count)
 {
-	for (int i = 0; i < taglist.GetSize(); i++)
+	if (m_bKademlia)
 	{
-		CTag* pTag = taglist[i];
-		if (pTag->GetNameID() == FT_COMPLETE_SOURCES)
-		{
-			if (m_bKademlia)
-			{
-				if (count > pTag->GetInt())
-					pTag->SetInt(count);
-			}
-			else
-				pTag->SetInt(pTag->GetInt() + count);
-			return pTag->GetInt();
-		}
-	}
-
-	// FT_COMPLETE_SOURCES is not yet supported by all servers, we may have to create such a tag..
-	CTag* pTag = new CTag(FT_COMPLETE_SOURCES, count);
-	taglist.Add(pTag);
-	return count;
-}
-
-uint32 CSearchFile::GetCompleteSourceCount() const
-{
-	return GetIntTagValue(FT_COMPLETE_SOURCES);
+		if (count > m_nCompleteSources)
+			m_nCompleteSources = count;
+	} else
+		m_nCompleteSources += count;
+	return m_nCompleteSources;
 }
 
 int CSearchFile::IsComplete() const
 {
-	return IsComplete(GetSourceCount(), GetIntTagValue(FT_COMPLETE_SOURCES));
+	return IsComplete(m_nSources, m_nCompleteSources);
 }
 
 int CSearchFile::IsComplete(UINT uSources, UINT uCompleteSources) const
@@ -447,6 +424,7 @@ time_t CSearchFile::GetLastSeenComplete() const
 	return GetIntTagValue(FT_LASTSEENCOMPLETE);
 }
 
-bool CSearchFile::IsConsideredSpam() const{
+bool CSearchFile::IsConsideredSpam() const
+{
 	return GetSpamRating() >= SEARCH_SPAM_THRESHOLD;
 }

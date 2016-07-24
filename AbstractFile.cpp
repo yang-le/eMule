@@ -17,7 +17,6 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
 #include "AbstractFile.h"
-#include "OtherFunctions.h"
 #include "Kademlia/Kademlia/Entry.h"
 #include "ini2.h"
 #include "Preferences.h"
@@ -37,9 +36,8 @@ static char THIS_FILE[] = __FILE__;
 IMPLEMENT_DYNAMIC(CAbstractFile, CObject)
 
 CAbstractFile::CAbstractFile()
-	: m_FileIdentifier(m_nFileSize)
+	: m_nFileSize(0ull), m_FileIdentifier(m_nFileSize)
 {
-	m_nFileSize = (uint64)0;
 	m_uRating = 0;
 	m_bCommentLoaded = false;
 	m_uUserRating = 0;
@@ -48,10 +46,9 @@ CAbstractFile::CAbstractFile()
 }
 
 CAbstractFile::CAbstractFile(const CAbstractFile* pAbstractFile)
-	: m_FileIdentifier(pAbstractFile->m_FileIdentifier, m_nFileSize)
+	: m_nFileSize(pAbstractFile->m_nFileSize), m_FileIdentifier(pAbstractFile->m_FileIdentifier, m_nFileSize)
 {
 	m_strFileName = pAbstractFile->m_strFileName;
-	m_nFileSize = pAbstractFile->m_nFileSize;
 	m_strComment = pAbstractFile->m_strComment;
 	m_uRating = pAbstractFile->m_uRating;
 	m_bCommentLoaded = pAbstractFile->m_bCommentLoaded;
@@ -63,8 +60,7 @@ CAbstractFile::CAbstractFile(const CAbstractFile* pAbstractFile)
 	const CTypedPtrList<CPtrList, Kademlia::CEntry*>& list = pAbstractFile->getNotes();
 	for(POSITION pos = list.GetHeadPosition(); pos != NULL; )
 	{
-			Kademlia::CEntry* entry = list.GetNext(pos);
-			m_kadNotes.AddTail(entry->Copy());
+			m_kadNotes.AddTail(list.GetNext(pos)->Copy());
 	}
 
 	CopyTags(pAbstractFile->GetTags());
@@ -73,11 +69,8 @@ CAbstractFile::CAbstractFile(const CAbstractFile* pAbstractFile)
 CAbstractFile::~CAbstractFile()
 {
 	ClearTags();
-	for(POSITION pos = m_kadNotes.GetHeadPosition(); pos != NULL; )
-	{
-		Kademlia::CEntry* entry = m_kadNotes.GetNext(pos);
-		delete entry;
-	}
+	while (!m_kadNotes.IsEmpty())
+		delete m_kadNotes.RemoveHead();
 }
 
 #ifdef _DEBUG
@@ -106,7 +99,7 @@ bool CAbstractFile::AddNote(Kademlia::CEntry* pEntry)
 {
 	for(POSITION pos = m_kadNotes.GetHeadPosition(); pos != NULL; )
 	{
-		Kademlia::CEntry* entry = m_kadNotes.GetNext(pos);
+		const Kademlia::CEntry* entry = m_kadNotes.GetNext(pos);
 		if(entry->m_uSourceID == pEntry->m_uSourceID)
 		{
 			ASSERT(entry != pEntry);
@@ -170,7 +163,7 @@ void CAbstractFile::AddTagUnique(CTag* pTag)
 }
 
 void CAbstractFile::SetFileName(LPCTSTR pszFileName, bool bReplaceInvalidFileSystemChars, bool bAutoSetFileType, bool bRemoveControlChars)
-{ 
+{
 	m_strFileName = pszFileName;
 	if (bReplaceInvalidFileSystemChars){
 		m_strFileName.Replace(_T('/'), _T('-'));
@@ -185,7 +178,7 @@ void CAbstractFile::SetFileName(LPCTSTR pszFileName, bool bReplaceInvalidFileSys
 	}
 	if (bAutoSetFileType)
 		SetFileType(GetFileTypeByName(m_strFileName));
-	
+
 	if (bRemoveControlChars){
 		for (int i = 0; i < m_strFileName.GetLength(); )
 			if (m_strFileName.GetAt(i) <= '\x1F')
@@ -193,10 +186,10 @@ void CAbstractFile::SetFileName(LPCTSTR pszFileName, bool bReplaceInvalidFileSys
 			else
 				i++;
 	}
-} 
-      
+}
+
 void CAbstractFile::SetFileType(LPCTSTR pszFileType)
-{ 
+{
 	m_strFileType = pszFileType;
 }
 
@@ -409,21 +402,21 @@ void CAbstractFile::SetKadCommentSearchRunning(bool bVal){
 }
 
 void CAbstractFile::RefilterKadNotes(bool bUpdate){
+	const CString& cfilter = thePrefs.GetCommentFilter();
 	// check all availabe comments against our filter again
-	if (thePrefs.GetCommentFilter().IsEmpty())
+	if (cfilter.IsEmpty())
 		return;
-	POSITION pos1, pos2;
-	for (pos1 = m_kadNotes.GetHeadPosition();( pos2 = pos1 ) != NULL;)
-	{
-		m_kadNotes.GetNext(pos1);
-		Kademlia::CEntry* entry = m_kadNotes.GetAt(pos2);
+
+	for (POSITION pos1 = m_kadNotes.GetHeadPosition(); pos1 != NULL;) {
+		POSITION pos2 = pos1;
+		const Kademlia::CEntry* entry = m_kadNotes.GetNext(pos1);
 		if (!entry->GetStrTagValue(TAG_DESCRIPTION).IsEmpty()){
 			CString strCommentLower(entry->GetStrTagValue(TAG_DESCRIPTION));
 			// Verified Locale Dependency: Locale dependent string conversion (OK)
 			strCommentLower.MakeLower();
 
 			int iPos = 0;
-			CString strFilter(thePrefs.GetCommentFilter().Tokenize(_T("|"), iPos));
+			CString strFilter(cfilter.Tokenize(_T("|"), iPos));
 			while (!strFilter.IsEmpty())
 			{
 				// comment filters are already in lowercase, compare with temp. lowercased received comment
@@ -433,29 +426,24 @@ void CAbstractFile::RefilterKadNotes(bool bUpdate){
 					delete entry;
 					break;
 				}
-				strFilter = thePrefs.GetCommentFilter().Tokenize(_T("|"), iPos);
-			}		
+				strFilter = cfilter.Tokenize(_T("|"), iPos);
+			}
 		}
 	}
-	if (bUpdate) // untill updated rating and m_bHasComment might be wrong
+	if (bUpdate) // until updated rating and m_bHasComment might be wrong
 		UpdateFileRatingCommentAvail();
 }
 
 CString CAbstractFile::GetED2kLink(bool bHashset, bool bHTML, bool bHostname, bool bSource, uint32 dwSourceIP) const
 {
-	if (this == NULL)
-	{
-		ASSERT( false );
-		return _T("");
-	}
 	CString strLink, strBuffer;
 	strLink.Format(_T("ed2k://|file|%s|%I64u|%s|"),
-		EncodeUrlUtf8(StripInvalidFilenameChars(GetFileName())),
-		GetFileSize(),
-		EncodeBase16(GetFileHash(),16));
+		(LPCTSTR)EncodeUrlUtf8(StripInvalidFilenameChars(GetFileName())),
+		(uint64)GetFileSize(),
+		(LPCTSTR)EncodeBase16(GetFileHash(), 16));
 
 	if (bHTML)
-		strLink = _T("<a href=\"") + strLink;	
+		strLink = _T("<a href=\"") + strLink;
 	if (bHashset && GetFileIdentifierC().GetAvailableMD4PartHashCount() > 0 && GetFileIdentifierC().HasExpectedMD4HashCount()){
 		strLink += _T("p=");
 		for (UINT j = 0; j < GetFileIdentifierC().GetAvailableMD4PartHashCount(); j++)
@@ -468,15 +456,12 @@ CString CAbstractFile::GetED2kLink(bool bHashset, bool bHTML, bool bHostname, bo
 	}
 
 	if (GetFileIdentifierC().HasAICHHash())
-	{
-		strBuffer.Format(_T("h=%s|"), GetFileIdentifierC().GetAICHHash().GetString() );
-		strLink += strBuffer;			
-	}
+		strLink += _T("h=") + GetFileIdentifierC().GetAICHHash().GetString() + _T('|');
 
 	strLink += _T('/');
 	if (bHostname && !thePrefs.GetYourHostname().IsEmpty() && thePrefs.GetYourHostname().Find(_T('.')) != -1)
 	{
-		strBuffer.Format(_T("|sources,%s:%i|/"), thePrefs.GetYourHostname(), thePrefs.GetPort() );
+		strBuffer.Format(_T("|sources,%s:%i|/"), (LPCTSTR)thePrefs.GetYourHostname(), thePrefs.GetPort() );
 		strLink += strBuffer;
 	}
 	else if(bSource && dwSourceIP != 0)
@@ -486,6 +471,6 @@ CString CAbstractFile::GetED2kLink(bool bHashset, bool bHTML, bool bHostname, bo
 	}
 	if (bHTML)
 		strLink += _T("\">") + StripInvalidFilenameChars(GetFileName()) + _T("</a>");
-	
+
 	return strLink;
 }

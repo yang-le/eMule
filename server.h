@@ -53,9 +53,9 @@ struct ServerMet_Struct {
 
 class CServer{
 public:
-	CServer(const ServerMet_Struct* in_data);
+	explicit CServer(const ServerMet_Struct* in_data);
 	CServer(uint16 in_port, LPCTSTR i_addr);
-	CServer(const CServer* pOld);
+	explicit CServer(const CServer* pOld);
 	~CServer();
 
 	bool	AddTagFromFile(CFileDataIO* servermet);
@@ -94,7 +94,7 @@ public:
 
 	uint32	GetFailedCount() const					{return failedcount;}
 	void	SetFailedCount(uint32 nCount)			{failedcount = nCount;}
-	void	AddFailedCount()						{failedcount++;} 
+	void	AddFailedCount()						{failedcount++;}
 	void	ResetFailedCount()						{failedcount = 0;}
 
 	uint32	GetLastPingedTime() const				{return lastpingedtime;}
@@ -181,7 +181,7 @@ private:
 	uint16		port;
 	bool		staticservermember;
 	bool		m_bCryptPingReplyPending;
-	uint32		failedcount; 
+	uint32		failedcount;
 	CString		m_strVersion;
 	uint32		m_uTCPFlags;
 	uint32		m_uUDPFlags;

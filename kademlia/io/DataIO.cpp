@@ -1,16 +1,16 @@
 /*
 Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
- 
+
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either
 version 2 of the License, or (at your option) any later version.
- 
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
- 
+
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -111,7 +111,7 @@ BYTE* CDataIO::ReadBsob(uint8* puSize)
 	{
 		ReadArray(pbyBsob, *puSize);
 	}
-	catch(CException*)
+	catch (...)
 	{
 		delete[] pbyBsob;
 		throw;
@@ -173,8 +173,8 @@ CKadTag *CDataIO::ReadTag(bool bOptACP)
 				//	 -	those tag types have to be ignored by any client, otherwise those tags would also be sent (and
 				//		that's really the problem)
 				//
-				//	 -	ignoring means, each client has to read and right throw away those tags, so those tags get
-				//		get never stored in any tag list which might be sent by that client to some other client.
+				//	 -	ignoring means, each client has to read and throw right away those tag types, so the tags
+				//		never get stored in any tag list which might be sent by that client to some other client.
 				//
 				//	 -	all calling functions have to be changed to deal with the 'nr. of tags' attribute (which was
 				//		already parsed) correctly.. just ignoring those tags here is not enough, any taglists have to
@@ -228,7 +228,7 @@ CKadTag *CDataIO::ReadTag(bool bOptACP)
 					{
 						pRetVal = new CKadTagBsob(pcName, pValue, uSize);
 					}
-					catch(CException*)
+					catch (...)
 					{
 						delete[] pValue;
 						throw;
@@ -240,8 +240,6 @@ CKadTag *CDataIO::ReadTag(bool bOptACP)
 			default:
 				throw new CNotSupportedException;
 		}
-		delete [] pcName;
-		pcName = NULL;
 	}
 	catch (...)
 	{
@@ -250,6 +248,7 @@ CKadTag *CDataIO::ReadTag(bool bOptACP)
 		delete pRetVal;
 		throw;
 	}
+	delete[] pcName;
 	return pRetVal;
 }
 
@@ -371,7 +370,7 @@ void CDataIO::WriteTag(const CKadTag* pTag)
 	catch (CIOException *ioe)
 	{
 		AddDebugLogLine( false, _T("Exception in CDataIO:writeTag (IO Error(%i))"), ioe->m_iCause);
-		throw ioe;
+		throw;
 	}
 	catch (...)
 	{
@@ -429,9 +428,10 @@ namespace Kademlia
 {
 	void deleteTagListEntries(TagList* pTaglist)
 	{
-		for (TagList::const_iterator itTagList = pTaglist->begin(); itTagList != pTaglist->end(); ++itTagList)
-			delete *itTagList;
-		pTaglist->clear();
+		while (!pTaglist->empty()) {
+			delete pTaglist->front();
+			pTaglist->pop_front();
+		}
 	}
 }
 
@@ -564,7 +564,7 @@ void KadTagStrMakeLower(CKadTagValueString& rwstr)
 #endif
 }
 
-int KadTagStrCompareNoCase(LPCWSTR dst, LPCWSTR src)
+int KadTagStrCompareNoCase(LPCWSTR dst, LPCWSTR src) throw()
 {
 	// NOTE: It's very important that the Unicode->LowerCase map already was initialized!
 	if (s_awcLowerMap[L'A'] != L'a')

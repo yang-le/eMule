@@ -63,7 +63,7 @@ public:
 	virtual ~CColourPopup();
 
 protected:
-		COLORREF* colourArrayPassed;
+	COLORREF* colourArrayPassed;
 	BOOL GetCellRect(int nIndex, const LPRECT& rect);
 	void FindCellFromColour(COLORREF crColour);
 	void SetWindowSize();

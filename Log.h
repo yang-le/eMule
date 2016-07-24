@@ -1,6 +1,6 @@
 #pragma once
 
-enum EDebugLogPriority{
+enum EDebugLogPriority: int {
 	DLP_VERYLOW = 0,
 	DLP_LOW,
 	DLP_DEFAULT,
@@ -50,7 +50,7 @@ void AddLogTextV(UINT uFlags, EDebugLogPriority dlpPriority, LPCTSTR pszLine, va
 ///////////////////////////////////////////////////////////////////////////////
 // CLogFile
 
-enum ELogFileFormat
+enum ELogFileFormat: int
 {
 	Unicode = 0,
 	Utf8

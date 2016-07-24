@@ -15,8 +15,8 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
+#define _USE_MATH_DEFINES
 #include <math.h>
-#include "emule.h"
 #include "barshader.h"
 #include "Preferences.h"
 
@@ -26,18 +26,13 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-
-// Why does _USE_MATH_DEFINES work in debug builds, but not in release builds??
-#ifndef M_PI
-#define M_PI       3.14159265358979323846
-#endif
-
 #define HALF(X) (((X) + 1) / 2)
 
-CBarShader::CBarShader(uint32 height, uint32 width) {
+CBarShader::CBarShader(uint32 height, uint32 width)
+	: m_uFileSize(1ull), m_dPixelsPerByte(0.0), m_dBytesPerPixel(0.0), m_used3dlevel(0)
+{
 	m_iWidth = width;
 	m_iHeight = height;
-	m_uFileSize = (uint64)1;
 	m_Spans.SetAt(0, 0);	// SLUGFILLER: speedBarShader
 	m_Modifiers = NULL;
 	m_bIsPreview=false;
@@ -55,7 +50,7 @@ void CBarShader::BuildModifiers() {
 	delete[] m_Modifiers;
 	m_Modifiers = NULL; // 'new' may throw an exception
 
-	if (!m_bIsPreview) 
+	if (!m_bIsPreview)
 		m_used3dlevel=thePrefs.Get3DDepth();
 
 	// Barry - New property page slider to control depth of gradient
@@ -63,7 +58,7 @@ void CBarShader::BuildModifiers() {
 	// Depth must be at least 2
 	// 2 gives greatest depth, the higher the value, the flatter the appearance
 	// m_Modifiers[count-1] will always be 1, m_Modifiers[0] depends on the value of depth
-	
+
 	int depth = (7-m_used3dlevel);
 	int count = HALF(m_iHeight);
 	double piOverDepth = M_PI/depth;
@@ -138,7 +133,7 @@ void CBarShader::FillRange(uint64 start, uint64 end, COLORREF color) {
 		m_Spans.GetNext(pos);
 		m_Spans.RemoveAt(pos1);
 	}
-	
+
 	m_Spans.GetPrev(endpos);
 
 	if (m_Spans.GetValueAt(endpos) != color)
@@ -164,17 +159,16 @@ void CBarShader::Draw(CDC* dc, int iLeft, int iTop, bool bFlat) {
 	uint64 uBytesInOnePixel = (uint64)(m_dBytesPerPixel + 0.5f);
 	uint64 start = 0;//bsCurrent->start;
 	// SLUGFILLER: speedBarShader
-	COLORREF color = m_Spans.GetValueAt(pos);
-	m_Spans.GetNext(pos);
+	COLORREF color = m_Spans.GetNextValue(pos);
 	// SLUGFILLER: speedBarShader
 	while(pos != NULL && rectSpan.right < (iLeft + m_iWidth)) {	// SLUGFILLER: speedBarShader
 		uint64 uSpan = m_Spans.GetKeyAt(pos) - start;	// SLUGFILLER: speedBarShader
-		uint64 uPixels = (uint64)(uSpan * m_dPixelsPerByte + 0.5f);
+		uint64 uPixels = (uint64)(uSpan * m_dPixelsPerByte + 0.5);
 		if (uPixels > 0) {
 			rectSpan.left = rectSpan.right;
 			rectSpan.right += (int)uPixels;
 			FillRect(dc, &rectSpan, color, bFlat);	// SLUGFILLER: speedBarShader
-			start += (uint64)(uPixels * m_dBytesPerPixel + 0.5f);
+			start += (uint64)(uPixels * m_dBytesPerPixel + 0.5);
 		} else {
 			float fRed = 0;
 			float fGreen = 0;
@@ -183,13 +177,14 @@ void CBarShader::Draw(CDC* dc, int iLeft, int iTop, bool bFlat) {
 			uint64 iLast = start;
 			// SLUGFILLER: speedBarShader
 			do {
-				float fWeight = (float)((min(m_Spans.GetKeyAt(pos), iEnd) - iLast) * m_dPixelsPerByte);
+				uint64 uKey = m_Spans.GetKeyAt(pos);
+				float fWeight = (float)((min(uKey, iEnd) - iLast) * m_dPixelsPerByte);
 				fRed   += GetRValue(color) * fWeight;
 				fGreen += GetGValue(color) * fWeight;
 				fBlue  += GetBValue(color) * fWeight;
-				if(m_Spans.GetKeyAt(pos) > iEnd)
+				if(uKey > iEnd)
 					break;
-				iLast = m_Spans.GetKeyAt(pos);
+				iLast = uKey;
 				color = m_Spans.GetValueAt(pos);
 				m_Spans.GetNext(pos);
 			} while(pos != NULL);
@@ -232,7 +227,7 @@ void CBarShader::FillRect(CDC *dc, LPRECT rectSpan, float fRed, float fGreen,
 		int iMax = HALF(m_iHeight);
 		for(int i = 0; i < iMax; i++) {
 			CBrush cbNew(RGB((int)(fRed * m_Modifiers[i] + .5f), (int)(fGreen * m_Modifiers[i] + .5f), (int)(fBlue * m_Modifiers[i] + .5f)));
-			
+
 			rect.top = iTop + i;
 			rect.bottom = iTop + i + 1;
 			dc->FillRect(&rect, &cbNew);

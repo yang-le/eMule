@@ -119,7 +119,7 @@ protected:
 	//Calls OnLayerCallback on owner socket
 	int DoLayerCallback(int nType, int nCode, WPARAM wParam = 0, LPARAM lParam = 0);
 
-	int GetLayerState();
+	int GetLayerState() const;
 	BOOL TriggerEvent(long lEvent, int nErrorCode, BOOL bPassThrough = FALSE);
 
 	enum LayerState

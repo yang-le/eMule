@@ -14,22 +14,19 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 #include "StdAfx.h"
-#include <windns.h>
 #include "peercachefinder.h"
 #include "emule.h"
 #include "emuledlg.h"
 #include "otherfunctions.h"
 #include "Preferences.h"
 #include "md5sum.h"
+#pragma warning(push)
 #pragma warning(disable:4516) // access-declarations are deprecated; member using-declarations provide a better alternative
 #pragma warning(disable:4244) // conversion from 'type1' to 'type2', possible loss of data
 #pragma warning(disable:4100) // unreferenced formal parameter
 #pragma warning(disable:4702) // unreachable code
-#include <crypto51/rsa.h>
-#pragma warning(default:4702) // unreachable code
-#pragma warning(default:4100) // unreferenced formal parameter
-#pragma warning(default:4244) // conversion from 'type1' to 'type2', possible loss of data
-#pragma warning(default:4516) // access-declarations are deprecated; member using-declarations provide a better alternative
+#include <cryptopp/rsa.h>
+#pragma warning(pop)
 #include "Log.h"
 #include "UserMsgs.h"
 
@@ -49,30 +46,29 @@ static char s_acDNSBuffer[MAXGETHOSTSTRUCT];
 static const uint16 anPeerCachPorts[3] = {4662, 1214, 80};
 
 static const uchar achVerify_Key[256] = {
-    0xCE, 0x9A, 0x90, 0x08, 0x47, 0xE7, 0x1E, 0x15, 0x94, 0xFD, 0x65, 0xC7, 0x82, 0xF9, 0xB2, 
-    0xB7, 0xB7, 0x6A, 0xF2, 0x4A, 0x31, 0x08, 0xFC, 0x36, 0x6C, 0xB1, 0xD9, 0x3F, 0x3B, 0x94, 0x6B, 
-    0xC4, 0x55, 0x39, 0xAF, 0x53, 0x4D, 0x78, 0xE7, 0x1A, 0xE9, 0x83, 0x34, 0x1D, 0x6C, 0xE3, 0xEF, 
-    0xAD, 0x56, 0x88, 0x0D, 0x38, 0x94, 0x86, 0x0F, 0x81, 0x7C, 0x9C, 0x21, 0xCF, 0x49, 0xDA, 0xE8, 
-    0x13, 0x38, 0x30, 0x88, 0xBD, 0x6A, 0xCE, 0x66, 0x4C, 0xB0, 0x36, 0x3E, 0x43, 0x0B, 0x74, 0x1F, 
-    0xCC, 0xA8, 0xB6, 0x7A, 0xC9, 0xEE, 0x45, 0xBD, 0xB6, 0x2C, 0x55, 0xA7, 0x8E, 0x20, 0x65, 0x60, 
-    0x54, 0x0B, 0xBF, 0x68, 0x99, 0x4B, 0x30, 0x69, 0x16, 0xF7, 0xB7, 0x6E, 0xFC, 0x4E, 0x4B, 0x4F, 
-    0xD8, 0x28, 0x56, 0x4E, 0xC2, 0xCE, 0x91, 0x0C, 0x74, 0xFB, 0xAE, 0x79, 0xAB, 0x86, 0x03, 0xEA, 
-    0x35, 0x92, 0xB1, 0x10, 0x4B, 0x7F, 0xF2, 0xA9, 0x39, 0x56, 0xDB, 0xFF, 0x83, 0x5E, 0x44, 0x8F, 
-    0xF2, 0x41, 0x61, 0x62, 0x74, 0x36, 0xB3, 0xCF, 0x3E, 0xE5, 0xAC, 0x0B, 0x04, 0x1B, 0x2B, 0x59, 
-    0x81, 0x8A, 0xFC, 0x80, 0xC5, 0x4B, 0x36, 0x2E, 0x5F, 0xD0, 0xD3, 0x66, 0x7B, 0x40, 0xD3, 0x82, 
-    0x57, 0xF7, 0xA5, 0x05, 0x8D, 0xA9, 0xC9, 0xEE, 0xA8, 0x5F, 0x82, 0x5F, 0xD5, 0x4B, 0xBB, 0x00, 
-    0x4D, 0xA3, 0xD8, 0x72, 0x48, 0x84, 0xC0, 0x4B, 0x59, 0x6E, 0xDC, 0x49, 0xCF, 0x00, 0xDD, 0x7C, 
-    0xF8, 0xB7, 0xAC, 0x7A, 0xD8, 0x43, 0x6F, 0xA4, 0x21, 0x51, 0x93, 0xDF, 0x58, 0x9A, 0xC1, 0xC7, 
-    0x77, 0x45, 0xD7, 0xBE, 0x9B, 0x55, 0x0F, 0x2E, 0xC9, 0xD5, 0x85, 0x8F, 0xB5, 0xF9, 0xF0, 0x49, 
-    0xF6, 0x85, 0x24, 0x7A, 0xA8, 0x74, 0x64, 0xB1, 0x8B, 0x71, 0x63, 0xFC, 0x1F, 0x1B, 0x5E, 0x26, 
-    0xF5, 
+    0xCE, 0x9A, 0x90, 0x08, 0x47, 0xE7, 0x1E, 0x15, 0x94, 0xFD, 0x65, 0xC7, 0x82, 0xF9, 0xB2,
+    0xB7, 0xB7, 0x6A, 0xF2, 0x4A, 0x31, 0x08, 0xFC, 0x36, 0x6C, 0xB1, 0xD9, 0x3F, 0x3B, 0x94, 0x6B,
+    0xC4, 0x55, 0x39, 0xAF, 0x53, 0x4D, 0x78, 0xE7, 0x1A, 0xE9, 0x83, 0x34, 0x1D, 0x6C, 0xE3, 0xEF,
+    0xAD, 0x56, 0x88, 0x0D, 0x38, 0x94, 0x86, 0x0F, 0x81, 0x7C, 0x9C, 0x21, 0xCF, 0x49, 0xDA, 0xE8,
+    0x13, 0x38, 0x30, 0x88, 0xBD, 0x6A, 0xCE, 0x66, 0x4C, 0xB0, 0x36, 0x3E, 0x43, 0x0B, 0x74, 0x1F,
+    0xCC, 0xA8, 0xB6, 0x7A, 0xC9, 0xEE, 0x45, 0xBD, 0xB6, 0x2C, 0x55, 0xA7, 0x8E, 0x20, 0x65, 0x60,
+    0x54, 0x0B, 0xBF, 0x68, 0x99, 0x4B, 0x30, 0x69, 0x16, 0xF7, 0xB7, 0x6E, 0xFC, 0x4E, 0x4B, 0x4F,
+    0xD8, 0x28, 0x56, 0x4E, 0xC2, 0xCE, 0x91, 0x0C, 0x74, 0xFB, 0xAE, 0x79, 0xAB, 0x86, 0x03, 0xEA,
+    0x35, 0x92, 0xB1, 0x10, 0x4B, 0x7F, 0xF2, 0xA9, 0x39, 0x56, 0xDB, 0xFF, 0x83, 0x5E, 0x44, 0x8F,
+    0xF2, 0x41, 0x61, 0x62, 0x74, 0x36, 0xB3, 0xCF, 0x3E, 0xE5, 0xAC, 0x0B, 0x04, 0x1B, 0x2B, 0x59,
+    0x81, 0x8A, 0xFC, 0x80, 0xC5, 0x4B, 0x36, 0x2E, 0x5F, 0xD0, 0xD3, 0x66, 0x7B, 0x40, 0xD3, 0x82,
+    0x57, 0xF7, 0xA5, 0x05, 0x8D, 0xA9, 0xC9, 0xEE, 0xA8, 0x5F, 0x82, 0x5F, 0xD5, 0x4B, 0xBB, 0x00,
+    0x4D, 0xA3, 0xD8, 0x72, 0x48, 0x84, 0xC0, 0x4B, 0x59, 0x6E, 0xDC, 0x49, 0xCF, 0x00, 0xDD, 0x7C,
+    0xF8, 0xB7, 0xAC, 0x7A, 0xD8, 0x43, 0x6F, 0xA4, 0x21, 0x51, 0x93, 0xDF, 0x58, 0x9A, 0xC1, 0xC7,
+    0x77, 0x45, 0xD7, 0xBE, 0x9B, 0x55, 0x0F, 0x2E, 0xC9, 0xD5, 0x85, 0x8F, 0xB5, 0xF9, 0xF0, 0x49,
+    0xF6, 0x85, 0x24, 0x7A, 0xA8, 0x74, 0x64, 0xB1, 0x8B, 0x71, 0x63, 0xFC, 0x1F, 0x1B, 0x5E, 0x26,
+    0xF5,
 } ;
 
 CPeerCacheFinder::CPeerCacheFinder()
+	: m_PCStatus(PCS_NOINIT), m_PCLUState(LUS_NONE)
 {
 	m_dwPCIP = 0;
-	m_PCStatus = PCS_NOINIT;
-	m_PCLUState = LUS_NONE;
 	m_posCurrentLookUp = 0;
 	m_dwMyIP = 0;
 	m_bValdited = false;
@@ -85,7 +81,6 @@ CPeerCacheFinder::CPeerCacheFinder()
 
 CPeerCacheFinder::~CPeerCacheFinder(void)
 {
-
 }
 
 void CPeerCacheFinder::Save(){
@@ -114,7 +109,7 @@ void CPeerCacheFinder::Init(uint32 dwLastSearch, bool bLastSearchSuccess, bool b
 	else{
 		if (bLastSearchSuccess){ // sanitycheck
 			bool bOK = false;
-			for (int i = 0; i < _countof(anPeerCachPorts); i++){
+			for (unsigned i = 0; i < _countof(anPeerCachPorts); ++i) {
 				if(anPeerCachPorts[i] == nPort)
 					bOK = true;
 			}
@@ -223,16 +218,13 @@ void CPeerCacheFinder::SearchForPC(){
 
 LRESULT CPeerCacheFinder::OnPeerCacheCheckResponse(WPARAM /*wParam*/, LPARAM lParam)
 {
-	if (m_PCLUState == LUS_MYHOSTNAME){
-		if (WSAGETASYNCERROR(lParam) == 0)
-		{
-			int iBufLen = WSAGETASYNCBUFLEN(lParam);
-			if (iBufLen >= sizeof(HOSTENT))
-			{
+	if (m_PCLUState == LUS_MYHOSTNAME) {
+		if (WSAGETASYNCERROR(lParam) == 0) {
+			if (WSAGETASYNCBUFLEN(lParam) >= sizeof(HOSTENT)) {
 				LPHOSTENT pHost = (LPHOSTENT)s_acDNSBuffer;
 				m_strMyHostname = pHost->h_name;
-				if (!m_strMyHostname.IsEmpty()){
-					DEBUG_ONLY(AddDebugLogLine(false, _T("PeerCache: Found my Hostname: %s, continue search"), m_strMyHostname));
+				if (!m_strMyHostname.IsEmpty()) {
+					DEBUG_ONLY(AddDebugLogLine(false, _T("PeerCache: Found my Hostname: %s, continue search"), (LPCTSTR)m_strMyHostname));
 					SearchForPC();
 					return 0;
 				}
@@ -245,15 +237,15 @@ LRESULT CPeerCacheFinder::OnPeerCacheCheckResponse(WPARAM /*wParam*/, LPARAM lPa
 	else{
 		if (WSAGETASYNCERROR(lParam) == 0)
 		{
-			int iBufLen = WSAGETASYNCBUFLEN(lParam);
+			WORD iBufLen = WSAGETASYNCBUFLEN(lParam);
 			if (iBufLen >= sizeof(HOSTENT))
 			{
 				LPHOSTENT pHost = (LPHOSTENT)s_acDNSBuffer;
 				if (pHost->h_length == 4 && pHost->h_addr_list && pHost->h_addr_list[0])
 				{
 					m_dwPCIP = ((LPIN_ADDR)(pHost->h_addr_list[0]))->s_addr;
-					DEBUG_ONLY(AddDebugLogLine(false, _T("Found PeerCache IP: %s"), ipstr(m_dwPCIP) ));
-					
+					DEBUG_ONLY(AddDebugLogLine(false, _T("Found PeerCache IP: %s"), (LPCTSTR)ipstr(m_dwPCIP) ));
+
 					m_PCLUState = LUS_FINISHED;
 					SearchForPC();
 					return 0;
@@ -267,18 +259,18 @@ LRESULT CPeerCacheFinder::OnPeerCacheCheckResponse(WPARAM /*wParam*/, LPARAM lPa
 	return 0;
 }
 
-void CPeerCacheFinder::DoLookUp(CStringA strHostname){
-	if (WSAAsyncGetHostByName(theApp.emuledlg->m_hWnd, UM_PEERCHACHE_RESPONSE, strHostname, s_acDNSBuffer, sizeof(s_acDNSBuffer)) == 0){
+void CPeerCacheFinder::DoLookUp(const CStringA& strHostname)
+{
+	if (WSAAsyncGetHostByName(theApp.emuledlg->m_hWnd, UM_PEERCHACHE_RESPONSE, strHostname, s_acDNSBuffer, sizeof(s_acDNSBuffer)) == 0)
 		DEBUG_ONLY(AddDebugLogLine(false, _T("DNS Lookup for PC, state %i, failed (DoLookUP) - PC not found yet"), m_PCLUState));
-	}
 }
 
-bool CPeerCacheFinder::IsCacheAvailable() const { 
-	if(m_nDownloadAttempts > 20 && m_nFailedDownloads > 0){
-		if ( (float)(m_nDownloadAttempts/m_nFailedDownloads) < (float)2)
+bool CPeerCacheFinder::IsCacheAvailable() const
+{
+	if(m_nDownloadAttempts > 20 && m_nFailedDownloads > 0)
+		if (m_nDownloadAttempts/m_nFailedDownloads < 2)
 			return false;
-	}
-	return m_PCStatus == PCS_READY && theApp.GetPublicIP() != 0 && m_nPCPort != 0; 
+	return m_PCStatus == PCS_READY && theApp.GetPublicIP() != 0 && m_nPCPort != 0;
 }
 
 
@@ -299,7 +291,7 @@ CString ReverseDnsLookup(DWORD dwIP)
 
 		if (pfnDnsQueryConfig && pfnDnsQuery && pfnDnsRecordListFree)
 		{
-			// WinXP: We explicitly need to pass the DNS servers to be used to DnsQuery, 
+			// WinXP: We explicitly need to pass the DNS servers to be used to DnsQuery,
 			// otherwise that function will never query a DNS server for the *local* host name.
 			IP4_ARRAY* pDnsServers = NULL;
 			BYTE aucBuff[16384];
@@ -324,7 +316,7 @@ CString ReverseDnsLookup(DWORD dwIP)
 			}
 			else{
 				if (thePrefs.GetVerbose())
-					DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("ReverseDNS: Failed to get list of DNS servers - %s"), GetErrorMessage(nDnsState, 1)));
+					DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("ReverseDNS: Failed to get list of DNS servers - %s"), (LPCTSTR)GetErrorMessage(nDnsState, 1)));
 			}
 
 			CString strDnsQuery;
@@ -344,7 +336,7 @@ CString ReverseDnsLookup(DWORD dwIP)
 			}
 			else{
 				if (thePrefs.GetVerbose())
-					DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("ReverseDNS: Failed to resolve address \"%s\" - %s"), strDnsQuery, GetErrorMessage(nDnsState, 1)));
+					DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("ReverseDNS: Failed to resolve address \"%s\" - %s"), (LPCTSTR)strDnsQuery, (LPCTSTR)GetErrorMessage(nDnsState, 1)));
 			}
 
 			delete[] (BYTE*)pDnsServers;
@@ -364,8 +356,8 @@ void CPeerCacheFinder::DoReverseLookUp(uint32 dwIP){
 
 void CPeerCacheFinder::ValditeDescriptorFile(){
 	CPCValditeThread* pValditeThread = (CPCValditeThread*) AfxBeginThread(RUNTIME_CLASS(CPCValditeThread), THREAD_PRIORITY_BELOW_NORMAL,0, CREATE_SUSPENDED);
-	pValditeThread->SetValues(this, m_dwPCIP, m_dwMyIP); 
-	pValditeThread->ResumeThread();	
+	pValditeThread->SetValues(this, m_dwPCIP, m_dwMyIP);
+	pValditeThread->ResumeThread();
 }
 
 void	CPeerCacheFinder::AddBannedVersion(CClientVersionInfo cviVersion){
@@ -402,7 +394,7 @@ void CPeerCacheFinder::DownloadAttemptFailed(){
 	m_nFailedDownloads++;
 	if(m_nDownloadAttempts > 20 && m_nFailedDownloads > 0){
 		DEBUG_ONLY(AddDebugLogLine(DLP_LOW, false, _T("PeerCache fail value: %0.2f"), (float)(m_nDownloadAttempts/m_nFailedDownloads)));
-		if ( (float)(m_nDownloadAttempts/m_nFailedDownloads) < (float)2)
+		if (m_nDownloadAttempts/m_nFailedDownloads < 2)
 			AddDebugLogLine(DLP_LOW, false, _T("PeerCache fail value too high, disabling cache downloads"));
 	}
 }
@@ -413,6 +405,7 @@ void CPeerCacheFinder::DownloadAttemptFailed(){
 IMPLEMENT_DYNCREATE(CPCValditeThread, CWinThread)
 
 CPCValditeThread::CPCValditeThread()
+	: m_dwMyIP(0), m_dwPCIP(0), m_pOwner(NULL), m_nPCPort(0)
 {
 }
 
@@ -427,8 +420,9 @@ BOOL CPCValditeThread::InitInstance()
 	return TRUE;
 }
 
-BOOL CPCValditeThread::Run(){
-	if (theApp.emuledlg != NULL && theApp.emuledlg->IsRunning()){
+BOOL CPCValditeThread::Run()
+{
+	if (theApp.emuledlg != NULL && !theApp.emuledlg->IsClosing()) {
 		if (Valdite()){
 			m_pOwner->m_bValdited = true;
 			m_pOwner->m_nPCPort = m_nPCPort;
@@ -461,12 +455,12 @@ bool CPCValditeThread::Valdite(){
 
 	CInternetSession session;
 	CInternetFile* file = NULL;
-	for (int i = 0; i < _countof(anPeerCachPorts); i++){
+	for (unsigned i = 0; i < _countof(anPeerCachPorts); ++i) {
 		try
 		{
 			// try to connect to the URL
 			CString strURL;
-			strURL.Format(_T("http://%s:%u/.p2pinfo"), ipstr(m_dwPCIP), anPeerCachPorts[i]);
+			strURL.Format(_T("http://%s:%u/.p2pinfo"), (LPCTSTR)ipstr(m_dwPCIP), anPeerCachPorts[i]);
 			file = (CInternetFile*)session.OpenURL(strURL);
 			m_nPCPort = anPeerCachPorts[i];
 			break;
@@ -475,13 +469,13 @@ bool CPCValditeThread::Valdite(){
 			// set file to NULL if there's an error
 			file = NULL;
 			CString strError;
-			pException->GetErrorMessage(strError.GetBuffer(512), 512);
+			GetExceptionMessage(*pException, strError.GetBuffer(512), 512);
 			strError.ReleaseBuffer();
 			strError.Trim(_T(" \r\n"));
 			pException->Delete();
-			DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: Failed to retrieve .p2pinfo file on Port %u - %s"),anPeerCachPorts[i], strError));
+			DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: Failed to retrieve .p2pinfo file on Port %u - %s"), anPeerCachPorts[i], (LPCTSTR)strError));
 			if (i == (_countof(anPeerCachPorts)-1)){ // was last try
-				DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: Failed to retrieve .p2pinfo file, cache disabled"),anPeerCachPorts[i]));
+				DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: Failed to retrieve .p2pinfo file, cache disabled"), anPeerCachPorts[i]));
 				return false;
 			}
 		}
@@ -490,7 +484,7 @@ bool CPCValditeThread::Valdite(){
 	// TODO: This will work successfully only for very small files which were received completely right at the
 	// time the 'GetLength' function is called. -> Use a polling loop which reads everything up to get bytes
 	// specified in 'Content-Length' or some other appropriate limit in case 'Content-Length' is missing.
-	uint32 nIFileSize = (UINT)file->GetLength();
+	uint32 nIFileSize = file ? (uint32)file->GetLength() : 0;
 	ASSERT (nIFileSize > SIGNATURELENGTH);
 
 	if (file && nIFileSize > SIGNATURELENGTH){
@@ -512,11 +506,11 @@ bool CPCValditeThread::Valdite(){
 		while (pszLine && !bContentCheckFailed)
 		{
 			strLine = pszLine;
-			int posSeperator = strLine.Find('=',1);
-			if ( posSeperator != -1 && strLine.GetLength() - posSeperator > 1)
+			int posSeparator = strLine.Find('=',1);
+			if ( posSeparator != -1 && strLine.GetLength() - posSeparator > 1)
 			{
-				CStringA strTopic = strLine.Left(posSeperator).Trim();
-				CStringA strContent = strLine.Mid(posSeperator+1).Trim();
+				CStringA strTopic = strLine.Left(posSeparator).Trim();
+				CStringA strContent = strLine.Mid(posSeparator+1).Trim();
 
 				//DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: Current line to be processed: %hs"),strLine);
 
@@ -544,18 +538,18 @@ bool CPCValditeThread::Valdite(){
 					}
 					if (bDateCheckFailed){
 						bContentCheckFailed = true;
-						DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: ExpireDate check failed. Expiring date: %hs"),strContent));
+						DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: ExpireDate check failed. Expiring date: %hs"), (LPCSTR)strContent));
 					}
 				}
 				///////***** EnableED2K
 				else if (strTopic == "EnableED2K"){
 					if (atol(strContent) != 1){
 						bContentCheckFailed = true;
-						DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: EnableED2K check failed. Value: %hs"),strContent));
+						DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: EnableED2K check failed. Value: %hs"), (LPCSTR)strContent));
 					}
 				}
 				else{
-					DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: Unused content tag for validity check: %hs"),strLine));
+					DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: Unused content tag for validity check: %hs"), (LPCSTR)strLine));
 				}
 
 			}
@@ -576,21 +570,21 @@ bool CPCValditeThread::Valdite(){
 		}
 		// finish the RangeChack
 		bool bIPCheckFailed = true;
-		for (int i = 0; i != astrIPRanges.GetCount(); i++){ 
+		for (int i = 0; i != astrIPRanges.GetCount(); i++){
 			CStringA strCurRange = astrIPRanges[i];
-			int posContentSeperator = strCurRange.Find('-',7);
-			if ( !(posContentSeperator == -1 || strCurRange.GetLength() - posContentSeperator <= 7) ){
-				uint32 dwIPRangeStart = inet_addr(strCurRange.Left(posContentSeperator).Trim());
-				uint32 dwIPRangeEnd = inet_addr(strCurRange.Mid(posContentSeperator+1).Trim());
+			int posContentSeparator = strCurRange.Find('-',7);
+			if ( !(posContentSeparator == -1 || strCurRange.GetLength() - posContentSeparator <= 7) ){
+				uint32 dwIPRangeStart = inet_addr(strCurRange.Left(posContentSeparator).Trim());
+				uint32 dwIPRangeEnd = inet_addr(strCurRange.Mid(posContentSeparator+1).Trim());
 				if (dwIPRangeStart != INADDR_NONE || dwIPRangeEnd != INADDR_NONE){
 					if (ntohl(dwIPRangeStart) <= ntohl(m_dwMyIP) && ntohl(dwIPRangeEnd) >= ntohl(m_dwMyIP))
-						bIPCheckFailed = false; // check passed	
+						bIPCheckFailed = false; // check passed
 				}
 			}
 		}
 		if (bIPCheckFailed){
 			bContentCheckFailed = true;
-			DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: ClientIPRange check failed. my IP: %s"), ipstr(m_dwMyIP)));
+			DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: ClientIPRange check failed. my IP: %s"), (LPCTSTR)ipstr(m_dwMyIP)));
 		}
 
 		//----------- CHECKING SPECIAL HEADERS CONTENT
@@ -602,13 +596,13 @@ bool CPCValditeThread::Valdite(){
 			CStringA strCurHeader = strHeaders.Tokenize("\r\n",nHeaderPos);
 			while (!strCurHeader.IsEmpty())
 			{
-				int posSeperator = strCurHeader.Find(':',1);
-				if ( posSeperator != -1 && strCurHeader.GetLength() - posSeperator > 1)
+				int posSeparator = strCurHeader.Find(':',1);
+				if ( posSeparator != -1 && strCurHeader.GetLength() - posSeparator > 1)
 				{
-					CStringA strTopic = strCurHeader.Left(posSeperator).Trim();
-					CStringA strContent = strCurHeader.Mid(posSeperator+1).Trim();
+					CStringA strTopic = strCurHeader.Left(posSeparator).Trim();
+					CStringA strContent = strCurHeader.Mid(posSeparator+1).Trim();
 
-					DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: Current Header to be processed: %hs"),strCurHeader));
+					DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: Current Header to be processed: %hs"), (LPCSTR)strCurHeader));
 					///////***** X-eMule-Require-Version
 					if (strTopic == "X-eMule-Require-Version"){
 						int curPos= 0;
@@ -619,7 +613,7 @@ bool CPCValditeThread::Valdite(){
 							m_pOwner->AddAllowedVersion(CClientVersionInfo(strVersion));
 							strVersion = strPCEncodedVersion.Tokenize(_T(" "),curPos);
 						}
-					} 
+					}
 					///////***** X-eMule-Reject-Version
 					else if (strTopic == "X-eMule-Reject-Version"){
 						int curPos= 0;
@@ -641,7 +635,7 @@ bool CPCValditeThread::Valdite(){
 			}
 		}
 		else if (!bContentCheckFailed)
-			DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache Error: Failed to retrieve headers, Errornumber %s"),GetErrorMessage(GetLastError()) ));
+			DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache Error: Failed to retrieve headers, Errornumber %s"), (LPCTSTR)GetErrorMessage(GetLastError()) ));
 
 
 		//----------- CHECKING .P2PINFO SIGNATURE
@@ -669,10 +663,11 @@ bool CPCValditeThread::Valdite(){
 				rsa.SetModulus(n);
 				Integer result = rsa.ApplyFunction(m);
 				uchar aucResult[SIGNATURELENGTH];
-				if(result.Encode(aucResult, SIGNATURELENGTH)){
+				(result.Encode(aucResult, SIGNATURELENGTH));
+				{
 					uchar aucHash1[16];
-					for (int i = 0; i != 16; i++)
-						aucHash1[i] = aucResult[(SIGNATURELENGTH-1)-i]; 
+					for (int i = 0; i < 16; i++)
+						aucHash1[i] = aucResult[(SIGNATURELENGTH-1)-i];
 					bSignatureCheckResult = md4cmp(MD5Sum(pachCompleteFile, nIFileSize-SIGNATURELENGTH).GetRawHash(), aucHash1) == 0;
 				}
 			}
@@ -703,12 +698,11 @@ BOOL CPCReverseDnsThread::InitInstance()
 
 	memset(s_acDNSBuffer, 0, sizeof s_acDNSBuffer);
 	CString strHostname = ReverseDnsLookup(m_dwIP);
-	UINT uBufLen = 0;
 	UINT uError = WSAEINVAL;
 	if (!strHostname.IsEmpty())
 	{
 		CStringA strHostnameA(strHostname);
-		uBufLen = sizeof(HOSTENT)		// 'hostent' structure
+		UINT uBufLen = sizeof(HOSTENT)		// 'hostent' structure
 			+ sizeof(char*)		// h_aliases list + NUL entry
 			+ sizeof(DWORD)*2		// h_addr_list + NUL entry
 			+ strHostnameA.GetLength() + 1;
@@ -750,7 +744,7 @@ BOOL CPCReverseDnsThread::InitInstance()
 		if (WSAAsyncGetHostByAddr(theApp.emuledlg->m_hWnd, UM_PEERCHACHE_RESPONSE, (const char*) &IPHost, sizeof(struct in_addr), AF_INET, s_acDNSBuffer, sizeof(s_acDNSBuffer)) == 0){
 			if (thePrefs.GetVerbose())
 				DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("DNS Reverse Lookup for own IP failed")));
-		}	
+		}
 	}
 	return FALSE;
 }

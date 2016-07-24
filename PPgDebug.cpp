@@ -69,19 +69,15 @@ void CPPgDebug::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_DEBUG_OPTS, m_ctrlTreeOptions);
 	if (!m_bInitializedTreeOpts)
 	{
-		int iImgServer = 8; // default icon
-		int iImgClient = 8; // default icon
 		CImageList* piml = m_ctrlTreeOptions.GetImageList(TVSIL_NORMAL);
 		if (piml){
 			HICON hIcon = theApp.LoadIcon(_T("Server"));
 			if (hIcon){
-				iImgServer = piml->Add(hIcon);
 				VERIFY( ::DestroyIcon(hIcon) );
 			}
 
 			hIcon = theApp.LoadIcon(_T("StatsClients"));
 			if (hIcon){
-				iImgClient = piml->Add(hIcon);
 				VERIFY( ::DestroyIcon(hIcon) );
 			}
 		}
@@ -117,15 +113,15 @@ void CPPgDebug::DoDataExchange(CDataExchange* pDX)
 		m_bInitializedTreeOpts = true;
 	}
 
-	for (int i = 0; i < ARRSIZE(m_cb); i++)
+	for (unsigned i = 0; i < ARRSIZE(m_cb); ++i)
 		DDX_TreeCheck(pDX, IDC_DEBUG_OPTS, m_cb[i], m_checks[i]);
 	m_ctrlTreeOptions.UpdateCheckBoxGroup(m_htiServer);
 	m_ctrlTreeOptions.UpdateCheckBoxGroup(m_htiClient);
 
-	for (int i = 0; i < ARRSIZE(m_lv); i++)
+	for (unsigned i = 0; i < ARRSIZE(m_lv); ++i)
 		DDX_TreeEdit(pDX, IDC_DEBUG_OPTS, m_lv[i], m_levels[i]);
 
-	for (int i = 0; i < ARRSIZE(m_htiInteger); i++)
+	for (unsigned i = 0; i < ARRSIZE(m_htiInteger); ++i)
 		DDX_TreeEdit(pDX, IDC_DEBUG_OPTS, m_htiInteger[i], m_iValInteger[i]);
 }
 

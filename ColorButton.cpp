@@ -24,8 +24,8 @@ static char THIS_FILE[] = __FILE__;
 void AFXAPI DDX_ColorButton(CDataExchange *pDX, int nIDC, COLORREF& crColour)
 {
     HWND hWndCtrl = pDX->PrepareCtrl(nIDC);
-    ASSERT (hWndCtrl != NULL);                
-    
+    ASSERT (hWndCtrl != NULL);
+
     CColorButton* pColourButton = (CColorButton*) CWnd::FromHandle(hWndCtrl);
     if (pDX->m_bSaveAndValidate)
     {
@@ -85,11 +85,11 @@ COLORREF CColorButton::GetColor(void) const
 // Method:	CColorButton::SetColor()
 // Notes:	None.
 //***********************************************************************
-void CColorButton::SetColor(COLORREF Color)
+void CColorButton::SetColor(COLORREF dwColor)
 {
-	m_Color = Color;
+	m_Color = dwColor;
 
-	if (::IsWindow(m_hWnd)) 
+	if (::IsWindow(m_hWnd))
         RedrawWindow();
 }
 
@@ -107,9 +107,9 @@ COLORREF CColorButton::GetDefaultColor(void) const
 // Method:	CColorButton::SetDefaultColor()
 // Notes:	None.
 //***********************************************************************
-void CColorButton::SetDefaultColor(COLORREF Color)
+void CColorButton::SetDefaultColor(COLORREF dwColor)
 {
-	m_DefaultColor = Color;
+	m_DefaultColor = dwColor;
 }
 
 //***********************************************************************
@@ -152,9 +152,9 @@ BOOL CColorButton::GetTrackSelection(void) const
 //***********************************************************************
 //**                         CButton Overrides                         **
 //***********************************************************************
-void CColorButton::PreSubclassWindow() 
+void CColorButton::PreSubclassWindow()
 {
-    ModifyStyle(0, BS_OWNERDRAW);      
+    ModifyStyle(0, BS_OWNERDRAW);
 
     _Inherited::PreSubclassWindow();
 }
@@ -182,12 +182,12 @@ LONG CColorButton::OnSelEndOK(UINT lParam, LONG /*wParam*/)
 	m_bPopupActive = FALSE;
 
     COLORREF OldColor = m_Color;
-	
+
 	Color = (COLORREF)lParam;
 
     CWnd *pParent = GetParent();
 
-    if (pParent) 
+    if (pParent)
 	{
         pParent->SendMessage(UM_CPN_CLOSEUP, lParam, (WPARAM) GetDlgCtrlID());
         pParent->SendMessage(UM_CPN_SELENDOK, lParam, (WPARAM) GetDlgCtrlID());
@@ -207,12 +207,12 @@ LONG CColorButton::OnSelEndOK(UINT lParam, LONG /*wParam*/)
 LONG CColorButton::OnSelEndCancel(UINT lParam, LONG /*wParam*/)
 {
 	m_bPopupActive = FALSE;
-	
+
 	Color = (COLORREF)lParam;
 
     CWnd *pParent = GetParent();
 
-    if (pParent) 
+    if (pParent)
 	{
         pParent->SendMessage(UM_CPN_CLOSEUP, lParam, (WPARAM) GetDlgCtrlID());
         pParent->SendMessage(UM_CPN_SELENDCANCEL, lParam, (WPARAM) GetDlgCtrlID());
@@ -228,7 +228,7 @@ LONG CColorButton::OnSelEndCancel(UINT lParam, LONG /*wParam*/)
 //***********************************************************************
 LONG CColorButton::OnSelChange(UINT lParam, LONG /*wParam*/)
 {
-    if (m_bTrackSelection) 
+    if (m_bTrackSelection)
 		Color = (COLORREF)lParam;
 
     CWnd *pParent = GetParent();
@@ -242,7 +242,7 @@ LONG CColorButton::OnSelChange(UINT lParam, LONG /*wParam*/)
 // Method:	CColorButton::OnCreate()
 // Notes:	None.
 //***********************************************************************
-int CColorButton::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+int CColorButton::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
     if (CButton::OnCreate(lpCreateStruct) == -1)
         return -1;
@@ -281,7 +281,7 @@ BOOL CColorButton::OnClicked()
 // Method:	CColorButton::DrawItem()
 // Notes:	None.
 //***********************************************************************
-void CColorButton::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct) 
+void CColorButton::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 {
 	ASSERT(lpDrawItemStruct);
 
@@ -303,7 +303,7 @@ void CColorButton::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 
 	if (state & ODS_DISABLED)
 		uFrameState |= DFCS_INACTIVE;
-	
+
 	pDC->DrawFrameControl(&rDraw,
 						  DFC_BUTTON,
 						  uFrameState);
@@ -315,13 +315,13 @@ void CColorButton::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	//******************************************************
 	//**                     Draw Focus
 	//******************************************************
-	if (state & ODS_FOCUS) 
+	if (state & ODS_FOCUS)
     {
 		RECT rFocus = {rDraw.left,
 					   rDraw.top,
 					   rDraw.right - 1,
 					   rDraw.bottom};
-  
+
         pDC->DrawFocusRect(&rFocus);
     }
 
@@ -339,8 +339,8 @@ void CColorButton::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	DrawArrow(pDC,
 			  &rArrow,
 			  0,
-			  (state & ODS_DISABLED) 
-			  ? ::GetSysColor(COLOR_GRAYTEXT) 
+			  (state & ODS_DISABLED)
+			  ? ::GetSysColor(COLOR_GRAYTEXT)
 			  : RGB(0,0,0));
 
 
@@ -354,7 +354,7 @@ void CColorButton::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 				  BF_RIGHT);
 
 	rDraw.right -= (::GetSystemMetrics(SM_CXEDGE) * 2) + 1 ;
-				  
+
 	//******************************************************
 	//**                     Draw Color
 	//******************************************************
@@ -380,8 +380,8 @@ void CColorButton::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 // Method:	CColorButton::DrawArrow()
 // Notes:	None.
 //***********************************************************************
-void CColorButton::DrawArrow(CDC* pDC, 
-							 RECT* pRect, 
+void CColorButton::DrawArrow(CDC* pDC,
+							 RECT* pRect,
 							 int iDirection,
 							 COLORREF clrArrow /*= RGB(0,0,0)*/)
 {
@@ -433,13 +433,13 @@ void CColorButton::DrawArrow(CDC* pDC,
 			break;
 		}
 	}
-	
+
 	CBrush brsArrow(clrArrow);
 	CPen penArrow(PS_SOLID, 1 , clrArrow);
 
 	CBrush* pOldBrush = pDC->SelectObject(&brsArrow);
 	CPen*   pOldPen   = pDC->SelectObject(&penArrow);
-	
+
 	pDC->SetPolyFillMode(WINDING);
 	pDC->Polygon(ptsArrow, 3);
 

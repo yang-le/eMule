@@ -1,7 +1,8 @@
-// $Id: helpers.cpp,v 1.12 2002/09/21 17:23:32 t1mpy Exp $
+// $Id: helpers.cpp,v 1.13 2002/09/21 17:20:39 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
+// Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
 
 // Lots of hacking added to this file by Scott Wheeler (scott@slackorama.net)
 // 11/02/2001
@@ -52,7 +53,7 @@ String id3::v2::getString(const ID3_Frame* frame, ID3_FieldID fldName)
     return "";
   }
   ID3_TextEnc enc = fp->GetEncoding();
-  fp->SetEncoding(ID3TE_ASCII);
+  fp->SetEncoding(ID3TE_ISO8859_1);
 
   String text(fp->GetRawText(), fp->Size());
 
@@ -72,7 +73,7 @@ String id3::v2::getStringAtIndex(const ID3_Frame* frame, ID3_FieldID fldName,
   if (fp && fp->GetNumTextItems() < nIndex)
   {
     ID3_TextEnc enc = fp->GetEncoding();
-    fp->SetEncoding(ID3TE_ASCII);
+    fp->SetEncoding(ID3TE_ISO8859_1);
 
     text = fp->GetRawTextItem(nIndex);
 
@@ -102,12 +103,12 @@ String id3::v2::getFrameText(const ID3_TagImpl& tag, ID3_FrameID id)
   return getString(frame, ID3FN_TEXT);
 }
 
-ID3_Frame* id3::v2::setFrameText(ID3_TagImpl& tag, ID3_FrameID id, String text)
+ID3_Frame* id3::v2::setFrameText(ID3_TagImpl& tag, ID3_FrameID id, const String& text)
 {
   ID3_Frame* frame = tag.Find(id);
   if (!frame)
   {
-    frame = new ID3_Frame(id);
+    frame = LEAKTESTNEW( ID3_Frame(id));
     if(!tag.AttachFrame(frame)) return NULL;
   }
   frame->GetField(ID3FN_TEXT)->Set(text.c_str());
@@ -133,7 +134,7 @@ String id3::v2::getArtist(const ID3_TagImpl& tag)
   return getString(frame, ID3FN_TEXT);
 }
 
-ID3_Frame* id3::v2::setArtist(ID3_TagImpl& tag, String text)
+ID3_Frame* id3::v2::setArtist(ID3_TagImpl& tag, const String& text)
 {
   removeArtists(tag);
   return setFrameText(tag, ID3FID_LEADARTIST, text);
@@ -167,7 +168,7 @@ String id3::v2::getAlbum(const ID3_TagImpl& tag)
   return getFrameText(tag, ID3FID_ALBUM);
 }
 
-ID3_Frame* id3::v2::setAlbum(ID3_TagImpl& tag, String text)
+ID3_Frame* id3::v2::setAlbum(ID3_TagImpl& tag, const String& text)
 {
   return setFrameText(tag, ID3FID_ALBUM, text);
 }
@@ -190,7 +191,7 @@ String id3::v2::getTitle(const ID3_TagImpl& tag)
   return getFrameText(tag, ID3FID_TITLE);
 }
 
-ID3_Frame* id3::v2::setTitle(ID3_TagImpl& tag, String text)
+ID3_Frame* id3::v2::setTitle(ID3_TagImpl& tag, const String& text)
 {
   return setFrameText(tag, ID3FID_TITLE, text);
 }
@@ -213,7 +214,7 @@ String id3::v2::getYear(const ID3_TagImpl& tag)
   return getFrameText(tag, ID3FID_YEAR);
 }
 
-ID3_Frame* id3::v2::setYear(ID3_TagImpl& tag, String text)
+ID3_Frame* id3::v2::setYear(ID3_TagImpl& tag, const String& text)
 {
   return setFrameText(tag, ID3FID_YEAR, text);
 }
@@ -249,14 +250,14 @@ String id3::v2::getV1Comment(const ID3_TagImpl& tag)
   return getString(frame, ID3FN_TEXT);
 }
 
-String id3::v2::getComment(const ID3_TagImpl& tag, String desc)
+String id3::v2::getComment(const ID3_TagImpl& tag, const String& desc)
 {
   ID3_Frame* frame = tag.Find(ID3FID_COMMENT, ID3FN_DESCRIPTION, desc.c_str());
   return getString(frame, ID3FN_TEXT);
 }
 
-ID3_Frame* id3::v2::setComment(ID3_TagImpl& tag, String text, String desc,
-                               String lang)
+ID3_Frame* id3::v2::setComment(ID3_TagImpl& tag, const String& text, const String& desc,
+                               const String& lang)
 {
   ID3D_NOTICE( "id3::v2::setComment: trying to find frame with description = " << desc );
   ID3_Frame* frame = NULL;
@@ -282,7 +283,7 @@ ID3_Frame* id3::v2::setComment(ID3_TagImpl& tag, String text, String desc,
   if (frame == NULL)
   {
     ID3D_NOTICE( "id3::v2::setComment: creating new comment frame" );
-    frame = new ID3_Frame(ID3FID_COMMENT);
+    frame = LEAKTESTNEW( ID3_Frame(ID3FID_COMMENT));
     if(!tag.AttachFrame(frame)) return NULL;
   }
   if (!frame)
@@ -306,7 +307,7 @@ size_t id3::v2::removeAllComments(ID3_TagImpl& tag)
 }
 
 // Remove all comments from the tag with the given description
-size_t id3::v2::removeComments(ID3_TagImpl& tag, String desc)
+size_t id3::v2::removeComments(ID3_TagImpl& tag, const String& desc)
 {
   size_t numRemoved = 0;
 
@@ -436,8 +437,8 @@ String id3::v2::getLyrics(const ID3_TagImpl& tag)
   return getFrameText(tag, ID3FID_UNSYNCEDLYRICS);
 }
 
-ID3_Frame* id3::v2::setLyrics(ID3_TagImpl& tag, String text, String desc,
-                              String lang)
+ID3_Frame* id3::v2::setLyrics(ID3_TagImpl& tag, const String& text, const String& desc,
+                              const String& lang)
 {
   ID3_Frame* frame = NULL;
   // See if there is already a comment with this description
@@ -460,7 +461,7 @@ ID3_Frame* id3::v2::setLyrics(ID3_TagImpl& tag, String text, String desc,
   }
   if (frame == NULL)
   {
-    frame = new ID3_Frame(ID3FID_UNSYNCEDLYRICS);
+    frame = LEAKTESTNEW( ID3_Frame(ID3FID_UNSYNCEDLYRICS));
     if(!tag.AttachFrame(frame)) return NULL;
   }
   frame->GetField(ID3FN_LANGUAGE)->Set(lang.c_str());
@@ -480,7 +481,7 @@ String id3::v2::getLyricist(const ID3_TagImpl& tag)
   return getFrameText(tag, ID3FID_LYRICIST);
 }
 
-ID3_Frame* id3::v2::setLyricist(ID3_TagImpl& tag, String text)
+ID3_Frame* id3::v2::setLyricist(ID3_TagImpl& tag, const String& text)
 {
   return setFrameText(tag, ID3FID_LYRICIST, text);
 }
@@ -492,7 +493,7 @@ size_t id3::v2::removeLyricists(ID3_TagImpl& tag)
 
 ////////////////////////////////////////////////////////////
 
-ID3_Frame* id3::v2::hasSyncLyrics(const ID3_TagImpl& tag, String lang, String desc)
+ID3_Frame* id3::v2::hasSyncLyrics(const ID3_TagImpl& tag, const String& lang, const String& desc)
 {
   ID3_Frame* frame=NULL;
   (frame = tag.Find(ID3FID_SYNCEDLYRICS, ID3FN_LANGUAGE, lang)) ||
@@ -500,9 +501,9 @@ ID3_Frame* id3::v2::hasSyncLyrics(const ID3_TagImpl& tag, String lang, String de
   return(frame);
 }
 
-ID3_Frame* id3::v2::setSyncLyrics(ID3_TagImpl& tag, BString data,
-                                  ID3_TimeStampFormat format, String desc,
-                                  String lang, ID3_ContentType type)
+ID3_Frame* id3::v2::setSyncLyrics(ID3_TagImpl& tag, const BString& data,
+                                  ID3_TimeStampFormat format, const String& desc,
+                                  const String& lang, ID3_ContentType type)
 {
   ID3_Frame* frame = NULL;
 
@@ -512,7 +513,7 @@ ID3_Frame* id3::v2::setSyncLyrics(ID3_TagImpl& tag, BString data,
 
   if (!frame)
   {
-    frame = new ID3_Frame(ID3FID_SYNCEDLYRICS);
+    frame = LEAKTESTNEW( ID3_Frame(ID3FID_SYNCEDLYRICS));
     if(!tag.AttachFrame(frame)) return NULL;
   }
   frame->GetField(ID3FN_LANGUAGE)->Set(lang.c_str());
@@ -524,7 +525,7 @@ ID3_Frame* id3::v2::setSyncLyrics(ID3_TagImpl& tag, BString data,
   return frame;
 }
 
-BString id3::v2::getSyncLyrics(const ID3_TagImpl& tag, String lang, String desc)
+BString id3::v2::getSyncLyrics(const ID3_TagImpl& tag, const String& lang, const String& desc)
 {
   // check if a SYLT frame of this language or descriptor exists
   ID3_Frame* frame = NULL;

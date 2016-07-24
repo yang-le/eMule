@@ -24,7 +24,6 @@
 #include "emuledlg.h"
 #include "sharedfilelist.h"
 #include "knownfilelist.h"
-#include "preferences.h"
 #include "sharedfileswnd.h"
 #include "Log.h"
 
@@ -53,21 +52,21 @@ BOOL CAICHSyncThread::InitInstance()
 
 int CAICHSyncThread::Run()
 {
-	if ( !theApp.emuledlg->IsRunning() )
+	if (theApp.emuledlg->IsClosing())
 		return 0;
 	// we need to keep a lock on this file while the thread is running
 	CSingleLock lockKnown2Met(&CAICHRecoveryHashSet::m_mutKnown2File);
 	lockKnown2Met.Lock();
-	
+
 	CSafeFile file;
 	bool bJustCreated = ConvertToKnown2ToKnown264(&file);
-	
+
 	// we collect all masterhashs which we find in the known2.met and store them in a list
 	CArray<CAICHHash> aKnown2Hashs;
 	CArray<ULONGLONG> aKnown2HashsFilePos;
 	CString fullpath = thePrefs.GetMuleDirectory(EMULE_CONFIGDIR);
 	fullpath.Append(KNOWN2_MET_FILENAME);
-	
+
 	CFileException fexp;
 	uint32 nLastVerifiedPos = 0;
 
@@ -75,13 +74,13 @@ int CAICHSyncThread::Run()
 		if (fexp.m_cause != CFileException::fileNotFound){
 			CString strError(_T("Failed to load ") KNOWN2_MET_FILENAME _T(" file"));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (fexp.GetErrorMessage(szError, ARRSIZE(szError))){
+			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, _T("%s"), strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
-		return false;
+		return 0;
 	}
 	try {
 		if (file.GetLength() >= 1){
@@ -90,18 +89,17 @@ int CAICHSyncThread::Run()
 				AfxThrowFileException(CFileException::endOfFile, 0, file.GetFileName());
 			}
 			//setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
-			uint32 nExistingSize = (UINT)file.GetLength();
-			uint32 nHashCount;
+			uint32 nExistingSize = (uint32)file.GetLength();
 			while (file.GetPosition() < nExistingSize){
 				aKnown2HashsFilePos.Add(file.GetPosition());
 				aKnown2Hashs.Add(CAICHHash(&file));
-				nHashCount = file.ReadUInt32();
-				if (file.GetPosition() + nHashCount*CAICHHash::GetHashSize() > nExistingSize){
+				uint32 nHashCount = file.ReadUInt32();
+				if (file.GetPosition() + nHashCount*(ULONGLONG)CAICHHash::GetHashSize() > nExistingSize) {
 					AfxThrowFileException(CFileException::endOfFile, 0, file.GetFileName());
 				}
 				// skip the rest of this hashset
-				file.Seek(nHashCount*CAICHHash::GetHashSize(), CFile::current);
-				nLastVerifiedPos = (UINT)file.GetPosition();
+				file.Seek(nHashCount*(LONGLONG)CAICHHash::GetHashSize(), CFile::current);
+				nLastVerifiedPos = (uint32)file.GetPosition();
 			}
 		}
 		else
@@ -124,16 +122,16 @@ int CAICHSyncThread::Run()
 		}
 		else{
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			error->GetErrorMessage(buffer, ARRSIZE(buffer));
+			GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
 			LogError(LOG_STATUSBAR,GetResString(IDS_ERR_SERVERMET_UNKNOWN),buffer);
 		}
 		error->Delete();
-		return false;
+		return 0;
 	}
-	
+
 	// now we check that all files which are in the sharedfilelist have a corresponding hash in out list
-	// those who don'T are added to the hashinglist
-	CList<CAICHHash> liUsedHashs;	
+	// those who don't are added to the hashinglist
+	CList<CAICHHash> liUsedHashs;
 	CSingleLock sharelock(&theApp.sharedfiles->m_mutWriteList);
 	sharelock.Lock();
 
@@ -144,38 +142,36 @@ int CAICHSyncThread::Run()
 		{
 			if (theApp.emuledlg==NULL || !theApp.emuledlg->IsRunning()) // in case of shutdown while still hashing
 				return 0;
-			if (pCurFile->GetFileIdentifier().HasAICHHash()){
+			CFileIdentifier& fileid = pCurFile->GetFileIdentifier();
+			if (fileid.HasAICHHash()) {
 				bool bFound = false;
-				for (int i = 0; i < aKnown2Hashs.GetCount(); i++)
-				{
-					CAICHHash current_hash = aKnown2Hashs[i];
-					if (current_hash == pCurFile->GetFileIdentifier().GetAICHHash()){
+				for (int j = 0; j < aKnown2Hashs.GetCount(); ++j) {
+					CAICHHash current_hash = aKnown2Hashs[j];
+					if (current_hash == fileid.GetAICHHash()) {
 						bFound = true;
 						liUsedHashs.AddTail(current_hash);
 						pCurFile->SetAICHRecoverHashSetAvailable(true);
 						// Has the file the proper AICH Parthashset? If not probably upgrading, create it
-						if (!pCurFile->GetFileIdentifier().HasExpectedAICHHashCount())
-						{
+						if (!fileid.HasExpectedAICHHashCount()) {
 							if (bDbgMsgCreatingPartHashs)
 							{
 								bDbgMsgCreatingPartHashs = false;
 								DebugLogWarning(_T("Missing AICH Part Hashsets for known files - maybe upgrading from earlier version. Creating them out of full AICH Recovery Hashsets, shouldn't take too long"));
 							}
 							CAICHRecoveryHashSet tempHashSet(pCurFile, pCurFile->GetFileSize());
-							tempHashSet.SetMasterHash(pCurFile->GetFileIdentifier().GetAICHHash(), AICH_HASHSETCOMPLETE);
+							tempHashSet.SetMasterHash(fileid.GetAICHHash(), AICH_HASHSETCOMPLETE);
 							if (!tempHashSet.LoadHashSet())
 							{
 								ASSERT( false );
-								DebugLogError(_T("Failed to load full AICH Recovery Hashset - known2.met might be corrupt. Unable to create AICH Part Hashset - %s"), pCurFile->GetFileName());
+								DebugLogError(_T("Failed to load full AICH Recovery Hashset - known2.met might be corrupt. Unable to create AICH Part Hashset - %s"), (LPCTSTR)pCurFile->GetFileName());
 							}
 							else
 							{
-								if (!pCurFile->GetFileIdentifier().SetAICHHashSet(tempHashSet))
-								{
-									DebugLogError(_T("Failed to create AICH Part Hashset out of full AICH Recovery Hashset - %s"), pCurFile->GetFileName());
+								if (!fileid.SetAICHHashSet(tempHashSet)) {
+									DebugLogError(_T("Failed to create AICH Part Hashset out of full AICH Recovery Hashset - %s"), (LPCTSTR)pCurFile->GetFileName());
 									ASSERT( false );
 								}
-								ASSERT(pCurFile->GetFileIdentifier().HasExpectedAICHHashCount());
+								ASSERT(fileid.HasExpectedAICHHashCount());
 							}
 						}
 						//theApp.QueueDebugLogLine(false, _T("%s - %s"), current_hash.GetString(), pCurFile->GetFileName());
@@ -192,7 +188,7 @@ int CAICHSyncThread::Run()
 	sharelock.Unlock();
 
 	// removed all unused AICH hashsets from known2.met
-	if (liUsedHashs.GetCount() != aKnown2Hashs.GetCount() && 
+	if (liUsedHashs.GetCount() != aKnown2Hashs.GetCount() &&
 		(!thePrefs.IsRememberingDownloadedFiles() || thePrefs.DoPartiallyPurgeOldKnownFiles()))
 	{
 		file.SeekToBegin();
@@ -202,36 +198,35 @@ int CAICHSyncThread::Run()
 				AfxThrowFileException(CFileException::endOfFile, 0, file.GetFileName());
 			}
 
-			uint32 nExistingSize = (UINT)file.GetLength();
-			uint32 nHashCount;
+			uint32 nExistingSize = (uint32)file.GetLength();
 			ULONGLONG posWritePos = file.GetPosition();
-			ULONGLONG posReadPos = file.GetPosition();
+			ULONGLONG posReadPos = posWritePos;
 			uint32 nPurgeCount = 0;
 			uint32 nPurgeBecauseOld = 0;
 			while (file.GetPosition() < nExistingSize){
 				ULONGLONG nCurrentHashsetPos = file.GetPosition();
 				CAICHHash aichHash(&file);
-				nHashCount = file.ReadUInt32();
-				if (file.GetPosition() + nHashCount*CAICHHash::GetHashSize() > nExistingSize){
+				uint32 nHashCount = file.ReadUInt32();
+				if (file.GetPosition() + nHashCount*(ULONGLONG)CAICHHash::GetHashSize() > nExistingSize) {
 					AfxThrowFileException(CFileException::endOfFile, 0, file.GetFileName());
 				}
 				if (!thePrefs.IsRememberingDownloadedFiles() && liUsedHashs.Find(aichHash) == NULL)
 				{
 					// unused hashset skip the rest of this hashset
-					file.Seek(nHashCount*CAICHHash::GetHashSize(), CFile::current);
+					file.Seek(nHashCount*(LONGLONG)CAICHHash::GetHashSize(), CFile::current);
 					nPurgeCount++;
 				}
 				else if (thePrefs.IsRememberingDownloadedFiles() && theApp.knownfiles->ShouldPurgeAICHHashset(aichHash))
 				{
 					ASSERT( thePrefs.DoPartiallyPurgeOldKnownFiles() );
 					// also unused (purged) hashset skip the rest of this hashset
-					file.Seek(nHashCount*CAICHHash::GetHashSize(), CFile::current);
+					file.Seek(nHashCount*(LONGLONG)CAICHHash::GetHashSize(), CFile::current);
 					nPurgeCount++;
 					nPurgeBecauseOld++;
 				}
 				else if(nPurgeCount == 0){
 					// used Hashset, but it does not need to be moved as nothing changed yet
-					file.Seek(nHashCount*CAICHHash::GetHashSize(), CFile::current);
+					file.Seek(nHashCount*(LONGLONG)CAICHHash::GetHashSize(), CFile::current);
 					posWritePos = file.GetPosition();
 					CAICHRecoveryHashSet::AddStoredAICHHash(aichHash, nCurrentHashsetPos);
 				}
@@ -254,7 +249,7 @@ int CAICHSyncThread::Run()
 			posReadPos = file.GetPosition();
 			file.SetLength(posWritePos);
 			theApp.QueueDebugLogLine(false, _T("Cleaned up known2.met, removed %u hashsets and purged %u hashsets of old known files (%s)")
-				, nPurgeCount - nPurgeBecauseOld, nPurgeBecauseOld, CastItoXBytes(posReadPos-posWritePos)); 
+				, nPurgeCount - nPurgeBecauseOld, nPurgeBecauseOld, (LPCTSTR)CastItoXBytes(posReadPos-posWritePos));
 
 			file.Flush();
 			file.Close();
@@ -266,11 +261,11 @@ int CAICHSyncThread::Run()
 			}
 			else{
 				TCHAR buffer[MAX_CFEXP_ERRORMSG];
-				error->GetErrorMessage(buffer, ARRSIZE(buffer));
+				GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
 				LogError(LOG_STATUSBAR,GetResString(IDS_ERR_SERVERMET_UNKNOWN),buffer);
 			}
 			error->Delete();
-			return false;
+			return 0;
 		}
 	}
 	else
@@ -285,8 +280,7 @@ int CAICHSyncThread::Run()
 #ifdef _DEBUG
 	for (POSITION pos = liUsedHashs.GetHeadPosition();pos != 0;)
 	{
-		CAICHHash current_hash = liUsedHashs.GetNext(pos);
-		CKnownFile* pCurFile = theApp.sharedfiles->GetFileByAICH(current_hash);
+		CKnownFile* pCurFile = theApp.sharedfiles->GetFileByAICH(liUsedHashs.GetNext(pos));
 		if (pCurFile == NULL)
 		{
 			ASSERT( false );
@@ -304,7 +298,7 @@ int CAICHSyncThread::Run()
 	// warn the user if he just upgraded
 	if (thePrefs.IsFirstStart() && !m_liToHash.IsEmpty() && !bJustCreated){
 		LogWarning(GetResString(IDS_AICH_WARNUSER));
-	}	
+	}
 	if (!m_liToHash.IsEmpty()){
 		theApp.QueueLogLine(true, GetResString(IDS_AICH_SYNCTOTAL), m_liToHash.GetCount() );
 		theApp.emuledlg->sharedfileswnd->sharedfilesctrl.SetAICHHashing(m_liToHash.GetCount());
@@ -312,14 +306,14 @@ int CAICHSyncThread::Run()
 		CSingleLock sLock1(&theApp.hashing_mut); // only one filehash at a time
 		while (theApp.sharedfiles->GetHashingCount() != 0){
 			Sleep(100);
-			if (!CemuleDlg::IsRunning())
+			if (CemuleDlg::IsClosing())
 				return 0;
 		}
 		sLock1.Lock();
 		uint32 cDone = 0;
 		for (POSITION pos = m_liToHash.GetHeadPosition();pos != 0; cDone++)
 		{
-			if (!CemuleDlg::IsRunning()){ // in case of shutdown while still hashing
+			if (CemuleDlg::IsClosing()) { // in case of shutdown while still hashing
 				return 0;
 			}
 			theApp.emuledlg->sharedfileswnd->sharedfilesctrl.SetAICHHashing(m_liToHash.GetCount()-cDone);
@@ -329,9 +323,9 @@ int CAICHSyncThread::Run()
 			// just to be sure that the file hasnt been deleted lately
 			if (!(theApp.knownfiles->IsKnownFile(pCurFile) && theApp.sharedfiles->GetFileByID(pCurFile->GetFileHash())) )
 				continue;
-			theApp.QueueLogLine(false, GetResString(IDS_AICH_CALCFILE), pCurFile->GetFileName());
+			theApp.QueueLogLine(false, GetResString(IDS_AICH_CALCFILE), (LPCTSTR)pCurFile->GetFileName());
 			if(!pCurFile->CreateAICHHashSetOnly())
-				theApp.QueueDebugLogLine(false, _T("Failed to create AICH Hashset while sync. for file %s"), pCurFile->GetFileName());
+				theApp.QueueDebugLogLine(false, _T("Failed to create AICH Hashset while sync. for file %s"), (LPCTSTR)pCurFile->GetFileName());
 		}
 
 		theApp.emuledlg->sharedfileswnd->sharedfilesctrl.SetAICHHashing(0);
@@ -366,11 +360,11 @@ bool CAICHSyncThread::ConvertToKnown2ToKnown264(CSafeFile* pTargetFile){
 		if (fexp.m_cause != CFileException::fileNotFound){
 			CString strError(_T("Failed to load ") OLD_KNOWN2_MET_FILENAME _T(" file"));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (fexp.GetErrorMessage(szError, ARRSIZE(szError))){
+			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, _T("%s"), strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
 		// else -> known2.met also doesn't exists, so nothing to convert
 		return false;
@@ -381,11 +375,11 @@ bool CAICHSyncThread::ConvertToKnown2ToKnown264(CSafeFile* pTargetFile){
 		if (fexp.m_cause != CFileException::fileNotFound){
 			CString strError(_T("Failed to load ") KNOWN2_MET_FILENAME _T(" file"));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (fexp.GetErrorMessage(szError, ARRSIZE(szError))){
+			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, _T("%s"), strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
 		return false;
 	}
@@ -394,11 +388,10 @@ bool CAICHSyncThread::ConvertToKnown2ToKnown264(CSafeFile* pTargetFile){
 
 	try {
 		pTargetFile->WriteUInt8(KNOWN2_MET_VERSION);
-		uint32 nHashCount;
 		while (oldfile.GetPosition() < oldfile.GetLength()){
 			CAICHHash aichHash(&oldfile);
-			nHashCount = oldfile.ReadUInt16();
-			if (oldfile.GetPosition() + nHashCount*CAICHHash::GetHashSize() > oldfile.GetLength()){
+			uint32 nHashCount = oldfile.ReadUInt16();
+			if (oldfile.GetPosition() + nHashCount*(ULONGLONG)CAICHHash::GetHashSize() > oldfile.GetLength()) {
 				AfxThrowFileException(CFileException::endOfFile, 0, oldfile.GetFileName());
 			}
 			BYTE* buffer = new BYTE[nHashCount*CAICHHash::GetHashSize()];
@@ -418,7 +411,7 @@ bool CAICHSyncThread::ConvertToKnown2ToKnown264(CSafeFile* pTargetFile){
 		}
 		else{
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			error->GetErrorMessage(buffer, ARRSIZE(buffer));
+			GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
 			LogError(LOG_STATUSBAR,GetResString(IDS_ERR_SERVERMET_UNKNOWN),buffer);
 		}
 		error->Delete();
@@ -427,12 +420,9 @@ bool CAICHSyncThread::ConvertToKnown2ToKnown264(CSafeFile* pTargetFile){
 		return false;
 	}
 	theApp.QueueLogLine(false, GetResString(IDS_CONVERTINGKNOWN2DONE));
-	
+
 	// FIXME LARGE FILES (uncomment)
 	//DeleteFile(oldfullpath);
 	pTargetFile->SeekToBegin();
 	return true;
-
-
 }
-

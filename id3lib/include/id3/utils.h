@@ -1,8 +1,9 @@
 // -*- C++ -*-
-// $Id: utils.h,v 1.22 2002/07/02 22:11:03 t1mpy Exp $
+// $Id: utils.h,v 1.23 2002/09/13 14:26:48 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
+// Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
 
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Library General Public License as published by
@@ -28,6 +29,16 @@
 #ifndef _ID3LIB_UTILS_H_
 #define _ID3LIB_UTILS_H_
 
+#if defined(__BORLANDC__)
+// due to a bug in borland it sometimes still wants mfc compatibility even when you disable it
+#  if defined(_MSC_VER)
+#    undef _MSC_VER
+#  endif
+#  if defined(__MFC_COMPAT__)
+#    undef __MFC_COMPAT__
+#  endif
+#endif
+
 #if defined HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -35,6 +46,7 @@
 #include "id3/id3lib_streams.h"
 #include "id3/globals.h" //has <stdlib.h> "id3/sized_types.h"
 #include "id3/id3lib_strings.h"
+#include <stdlib.h>
 
 namespace dami
 {
@@ -83,7 +95,7 @@ namespace dami
 
   String ID3_C_EXPORT toString(uint32 val);
   WString ID3_C_EXPORT toWString(const unicode_t[], size_t);
-  
+
   size_t ID3_C_EXPORT ucslen(const unicode_t *unicode);
   String ID3_C_EXPORT convert(String data, ID3_TextEnc, ID3_TextEnc);
 
@@ -91,13 +103,13 @@ namespace dami
   size_t ID3_C_EXPORT getFileSize(fstream&);
   size_t ID3_C_EXPORT getFileSize(ifstream&);
   size_t ID3_C_EXPORT getFileSize(ofstream&);
-  ID3_Err ID3_C_EXPORT createFile(String, fstream&);
-  ID3_Err ID3_C_EXPORT openWritableFile(String, fstream&);
-  ID3_Err ID3_C_EXPORT openWritableFile(String, ofstream&);
-  ID3_Err ID3_C_EXPORT openReadableFile(String, fstream&);
-  ID3_Err ID3_C_EXPORT openReadableFile(String, ifstream&);
+  ID3_Err ID3_C_EXPORT createFile(const String&, fstream&);
+  ID3_Err ID3_C_EXPORT openWritableFile(const String&, fstream&);
+  ID3_Err ID3_C_EXPORT openWritableFile(const String&, ofstream&);
+  ID3_Err ID3_C_EXPORT openReadableFile(const String&, fstream&);
+  ID3_Err ID3_C_EXPORT openReadableFile(const String&, ifstream&);
 
 };
-  
+
 #endif /* _ID3LIB_UTILS_H_ */
 

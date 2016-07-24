@@ -5,27 +5,27 @@
 
  LICENSE TERMS
 
- The free distribution and use of this software in both source and binary 
+ The free distribution and use of this software in both source and binary
  form is allowed (with or without changes) provided that:
 
-   1. distributions of this source code include the above copyright 
+   1. distributions of this source code include the above copyright
       notice, this list of conditions and the following disclaimer;
 
    2. distributions in binary form include the above copyright
       notice, this list of conditions and the following disclaimer
       in the documentation and/or other associated materials;
 
-   3. the copyright holder's name is not used to endorse products 
-      built using this software without specific written permission. 
+   3. the copyright holder's name is not used to endorse products
+      built using this software without specific written permission.
 
  ALTERNATIVELY, provided that this notice is retained in full, this product
  may be distributed under the terms of the GNU General Public License (GPL),
  in which case the provisions of the GPL apply INSTEAD OF those given above.
- 
+
  DISCLAIMER
 
  This software is provided 'as is' with no explicit or implied warranties
- in respect of its properties, including, but not limited to, correctness 
+ in respect of its properties, including, but not limited to, correctness
  and/or fitness for purpose.
  ---------------------------------------------------------------------------
  Issue Date: 30/11/2002
@@ -105,8 +105,9 @@ static unsigned char SHA_PADDING[64] = {
 //
 
 CSHA::CSHA()
+	: m_nBuffer()
 {
-	Reset();
+	CSHA::Reset();
 }
 
 CSHA::~CSHA()
@@ -123,11 +124,11 @@ void CSHA::Reset()
     m_nHash[4] = 0xc3d2e1f0;
 }
 
-void CSHA::GetHash(SHA1* pHash)
+void CSHA::GetHash(SHA1* pHash) const
 {
     /* extract the hash value as bytes in case the hash buffer is   */
     /* misaligned for 32-bit words                                  */
-    for(int i = 0; i < SHA1_DIGEST_SIZE; ++i)
+    for(unsigned i = 0; i < SHA1_DIGEST_SIZE; ++i)
         pHash->b[i] = (unsigned char)(m_nHash[i >> 2] >> 8 * (~i & 3));
 }
 
@@ -174,7 +175,7 @@ void CSHA::Finish(CAICHHash& rHash)
 //////////////////////////////////////////////////////////////////////
 // CSHA get hash string (Base64)
 
-CString CSHA::GetHashString(BOOL bURN)
+CString CSHA::GetHashString(BOOL bURN) const
 {
 	SHA1 pHash;
 	GetHash( &pHash );
@@ -272,7 +273,7 @@ BOOL CSHA::HashFromString(LPCTSTR pszHash, SHA1* pHashIn)
 			nBits |= ( *pszHash - '2' + 26 );
 		else
 			return FALSE;
-		
+
 		nCount += 5;
 
 		if ( nCount >= 8 )

@@ -63,7 +63,7 @@ CQueueListCtrl::CQueueListCtrl()
 	// Barry - Refresh the queue every 10 secs
 	VERIFY( (m_hTimer = ::SetTimer(NULL, NULL, 10000, QueueUpdateTimer)) != NULL );
 	if (thePrefs.GetVerbose() && !m_hTimer)
-		AddDebugLogLine(true,_T("Failed to create 'queue list control' timer - %s"),GetErrorMessage(GetLastError()));
+		AddDebugLogLine(true,_T("Failed to create 'queue list control' timer - %s"), (LPCTSTR)GetErrorMessage(GetLastError()));
 }
 
 CQueueListCtrl::~CQueueListCtrl()
@@ -137,7 +137,7 @@ void CQueueListCtrl::Localize()
 	strRes = GetResString(IDS_BANNED);
 	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
 	pHeaderCtrl->SetItem(8, &hdi);
-	
+
 	strRes = GetResString(IDS_UPSTATUS);
 	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
 	pHeaderCtrl->SetItem(9, &hdi);
@@ -180,12 +180,12 @@ void CQueueListCtrl::SetAllIcons()
 
 void CQueueListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 {
-	if (!theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg->IsClosing())
 		return;
 	if (!lpDrawItemStruct->itemData)
 		return;
 
-	CMemDC dc(CDC::FromHandle(lpDrawItemStruct->hDC), &lpDrawItemStruct->rcItem);
+	CMemoryDC dc(CDC::FromHandle(lpDrawItemStruct->hDC), &lpDrawItemStruct->rcItem);
 	BOOL bCtrlFocused;
 	InitItemMemDC(dc, lpDrawItemStruct, bCtrlFocused);
 	CRect cur_rec(lpDrawItemStruct->rcItem);
@@ -211,7 +211,7 @@ void CQueueListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 				GetItemDisplayText(client, iColumn, szItem, _countof(szItem));
 				switch (iColumn)
 				{
-					case 0:{
+					case 0:{ //user name
 						int iImage;
 						if (client->IsFriend())
 							iImage = 4;
@@ -274,7 +274,7 @@ void CQueueListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 						break;
 					}
 
-					case 9:
+					case 9: //obtained parts
 						if (client->GetUpPartCount()) {
 							cur_rec.bottom--;
 							cur_rec.top++;
@@ -307,14 +307,14 @@ void CQueueListCtrl::GetItemDisplayText(const CUpDownClient *client, int iSubIte
 	{
 		case 0:
 			if (client->GetUserName() == NULL)
-				_sntprintf(pszText, cchTextMax, _T("(%s)"), GetResString(IDS_UNKNOWN));
+				_sntprintf(pszText, cchTextMax, _T("(%s)"), (LPCTSTR)GetResString(IDS_UNKNOWN));
 			else
 				_tcsncpy(pszText, client->GetUserName(), cchTextMax);
 			break;
 
 		case 1: {
 			const CKnownFile *file = theApp.sharedfiles->GetFileByID(client->GetUploadFileID());
-			_tcsncpy(pszText, file != NULL ? file->GetFileName() : _T(""), cchTextMax);
+			_tcsncpy(pszText, file != NULL ? (LPCTSTR)file->GetFileName() : _T(""), cchTextMax);
 			break;
 		}
 
@@ -327,14 +327,14 @@ void CQueueListCtrl::GetItemDisplayText(const CUpDownClient *client, int iSubIte
 					case PR_VERYLOW:
 						_tcsncpy(pszText, GetResString(IDS_PRIOVERYLOW), cchTextMax);
 						break;
-					
+
 					case PR_LOW:
 						if (file->IsAutoUpPriority())
 							_tcsncpy(pszText, GetResString(IDS_PRIOAUTOLOW), cchTextMax);
 						else
 							_tcsncpy(pszText, GetResString(IDS_PRIOLOW), cchTextMax);
 						break;
-					
+
 					case PR_NORMAL:
 						if (file->IsAutoUpPriority())
 							_tcsncpy(pszText, GetResString(IDS_PRIOAUTONORMAL), cchTextMax);
@@ -356,32 +356,32 @@ void CQueueListCtrl::GetItemDisplayText(const CUpDownClient *client, int iSubIte
 			}
 			break;
 		}
-		
+
 		case 3:
-			_sntprintf(pszText, cchTextMax, _T("%i"), client->GetScore(false, false, true));
+			_sntprintf(pszText, cchTextMax, _T("%u"), client->GetScore(false, false, true));
 			break;
-		
+
 		case 4:
 			if (client->HasLowID()) {
 				if (client->m_bAddNextConnect)
-					_sntprintf(pszText, cchTextMax, _T("%i ****"),client->GetScore(false));
+					_sntprintf(pszText, cchTextMax, _T("%u ****"), client->GetScore(false));
 				else
-					_sntprintf(pszText, cchTextMax, _T("%i (%s)"),client->GetScore(false), GetResString(IDS_IDLOW));
+					_sntprintf(pszText, cchTextMax, _T("%u (%s)"), client->GetScore(false), (LPCTSTR)GetResString(IDS_IDLOW));
 			}
 			else
-				_sntprintf(pszText, cchTextMax, _T("%i"), client->GetScore(false));
+				_sntprintf(pszText, cchTextMax, _T("%u"), client->GetScore(false));
 			break;
 
 		case 5:
-			_sntprintf(pszText, cchTextMax, _T("%i"), client->GetAskedCount());
+			_sntprintf(pszText, cchTextMax, _T("%u"), client->GetAskedCount());
 			break;
-		
+
 		case 6:
-			_tcsncpy(pszText, CastSecondsToHM((GetTickCount() - client->GetLastUpRequest()) / 1000), cchTextMax);
+			_tcsncpy(pszText, (LPCTSTR)CastSecondsToHM((GetTickCount() - client->GetLastUpRequest()) / SEC2MS(1)), cchTextMax);
 			break;
 
 		case 7:
-			_tcsncpy(pszText, CastSecondsToHM((GetTickCount() - client->GetWaitStartTime()) / 1000), cchTextMax);
+			_tcsncpy(pszText, (LPCTSTR)CastSecondsToHM((GetTickCount() - client->GetWaitStartTime()) / SEC2MS(1)), cchTextMax);
 			break;
 
 		case 8:
@@ -397,7 +397,7 @@ void CQueueListCtrl::GetItemDisplayText(const CUpDownClient *client, int iSubIte
 
 void CQueueListCtrl::OnLvnGetDispInfo(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	if (theApp.emuledlg->IsRunning()) {
+	if (!theApp.emuledlg->IsClosing()) {
 		// Although we have an owner drawn listview control we store the text for the primary item in the listview, to be
 		// capable of quick searching those items via the keyboard. Because our listview items may change their contents,
 		// we do this via a text callback function. The listview control will send us the LVN_DISPINFO notification if
@@ -451,7 +451,7 @@ void CQueueListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
-int CQueueListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+int CALLBACK CQueueListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	const CUpDownClient *item1 = (CUpDownClient *)lParam1;
 	const CUpDownClient *item2 = (CUpDownClient *)lParam2;
@@ -515,8 +515,8 @@ int CQueueListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 		case 8:
 			iResult = item1->IsBanned() - item2->IsBanned();
 			break;
-		
-		case 9: 
+
+		case 9:
 			iResult = CompareUnsigned(item1->GetUpPartCount(), item2->GetUpPartCount());
 			break;
 	}
@@ -622,7 +622,7 @@ void CQueueListCtrl::AddClient(/*const*/ CUpDownClient *client, bool resetclient
 		client->SetAskedCount(1);
 	}
 
-	if (!theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg->IsClosing())
 		return;
 	if (thePrefs.IsQueueListDisabled())
 		return;
@@ -635,7 +635,7 @@ void CQueueListCtrl::AddClient(/*const*/ CUpDownClient *client, bool resetclient
 
 void CQueueListCtrl::RemoveClient(const CUpDownClient *client)
 {
-	if (!theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg->IsClosing())
 		return;
 
 	LVFINDINFO find;
@@ -650,7 +650,7 @@ void CQueueListCtrl::RemoveClient(const CUpDownClient *client)
 
 void CQueueListCtrl::RefreshClient(const CUpDownClient *client)
 {
-	if (!theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg->IsClosing())
 		return;
 
 	if (theApp.emuledlg->activewnd != theApp.emuledlg->transferwnd || !theApp.emuledlg->transferwnd->GetQueueList()->IsWindowVisible())
@@ -668,9 +668,9 @@ void CQueueListCtrl::ShowSelectedUserDetails()
 {
 	POINT point;
 	::GetCursorPos(&point);
-	CPoint p = point; 
-    ScreenToClient(&p); 
-    int it = HitTest(p); 
+	CPoint p = point;
+    ScreenToClient(&p);
+    int it = HitTest(p);
     if (it == -1)
 		return;
 
@@ -687,7 +687,7 @@ void CQueueListCtrl::ShowSelectedUserDetails()
 
 void CQueueListCtrl::ShowQueueClients()
 {
-	DeleteAllItems(); 
+	DeleteAllItems();
 	CUpDownClient *update = theApp.uploadqueue->GetNextClient(NULL);
 	while( update )
 	{
@@ -702,7 +702,7 @@ void CALLBACK CQueueListCtrl::QueueUpdateTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UI
 	// NOTE: Always handle all type of MFC exceptions in TimerProcs - otherwise we'll get mem leaks
 	try
 	{
-		if (   !theApp.emuledlg->IsRunning() // Don't do anything if the app is shutting down - can cause unhandled exceptions
+		if (   theApp.emuledlg->IsClosing() // Don't do anything if the app is shutting down - can cause unhandled exceptions
 			|| !thePrefs.GetUpdateQueueList()
 			|| theApp.emuledlg->activewnd != theApp.emuledlg->transferwnd
 			|| !theApp.emuledlg->transferwnd->GetQueueList()->IsWindowVisible() )

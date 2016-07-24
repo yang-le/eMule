@@ -118,7 +118,7 @@ CTaskbarNotifier::~CTaskbarNotifier()
 {
 	if (m_hMsImg32Dll)
 		FreeLibrary(m_hMsImg32Dll);
-	while (m_MessageHistory.GetCount() > 0)
+	while (!m_MessageHistory.IsEmpty())
 		delete (CTaskbarNotifierHistory*)m_MessageHistory.RemoveTail();
 }
 
@@ -136,14 +136,14 @@ int CTaskbarNotifier::Create(CWnd *pWndParent)
 	wcx.cbSize = sizeof(wcx);
 	// From: http://www.trigeminal.com/usenet/usenet031.asp?1033
 	// Subject: If you are using MFC 6.0 or 7.0 and you want to use MSLU...
-	// 
+	//
 	// There is one additional problem that can occur if you are using AfxWndProc (MFC's main, shared window
-	// proc wrapper) as an actual wndproc in any of your windows. You see, MFC has code in it so that if AfxWndProc 
-	// is called and is told that the wndproc to follow up with is AfxWndProc, it notices that it is being asked to 
+	// proc wrapper) as an actual wndproc in any of your windows. You see, MFC has code in it so that if AfxWndProc
+	// is called and is told that the wndproc to follow up with is AfxWndProc, it notices that it is being asked to
 	// call itself and forwards for DefWindowProc instead.
-	// 
-	// Unfortunately, MSLU breaks this code by having its own proc be the one that shows up. MFC has no way of 
-	// detecting this case so it calls the MSLU proc which calls AfxWndProc which calls the MSLU proc, etc., until 
+	//
+	// Unfortunately, MSLU breaks this code by having its own proc be the one that shows up. MFC has no way of
+	// detecting this case so it calls the MSLU proc which calls AfxWndProc which calls the MSLU proc, etc., until
 	// the stack overflows. By using either DefWindowProc or your own proc yourself, you avoid the stack overflow.
 	extern bool g_bUnicoWS;
 	if (g_bUnicoWS)
@@ -220,20 +220,20 @@ BOOL CTaskbarNotifier::LoadConfiguration(LPCTSTR pszFilePath)
 	iFontSize = ini.GetInt(_T("FontSize"), 8) * 10;
 
 	m_dwTimeToStay = ini.GetInt(_T("TimeToStay"), 4000);
-	m_dwTimeToShow = ini.GetInt(_T("TimeToShow"), 500); 
+	m_dwTimeToShow = ini.GetInt(_T("TimeToShow"), 500);
 	m_dwTimeToHide = ini.GetInt(_T("TimeToHide"), 200);
 
 	strBmpFileName = ini.GetString(_T("BmpFileName"), _T(""));
 	if (!strBmpFileName.IsEmpty()) {
 		if (PathIsRelative(strBmpFileName))
-			strBmpFilePath.Format(_T("%s%s"), szConfigDir, strBmpFileName);
+			strBmpFilePath.Format(_T("%s%s"), szConfigDir, (LPCTSTR)strBmpFileName);
 		else
 			strBmpFilePath = strBmpFileName;
 	}
 
 	// get text rectangle coordinates
 	iLeft = ini.GetInt(_T("rcTextLeft"), 5);
-	iTop = ini.GetInt(_T("rcTextTop"), 45);	
+	iTop = ini.GetInt(_T("rcTextTop"), 45);
 	iRight = ini.GetInt(_T("rcTextRight"), 220);
 	iBottom = ini.GetInt(_T("rcTextBottom"), 85);
 	if (iLeft <= 0)
@@ -248,7 +248,7 @@ BOOL CTaskbarNotifier::LoadConfiguration(LPCTSTR pszFilePath)
 
 	// get close button rectangle coordinates
 	iLeft = ini.GetInt(_T("rcCloseBtnLeft"), 286);
-	iTop = ini.GetInt(_T("rcCloseBtnTop"), 40); 
+	iTop = ini.GetInt(_T("rcCloseBtnTop"), 40);
 	iRight = ini.GetInt(_T("rcCloseBtnRight"), 300);
 	iBottom = ini.GetInt(_T("rcCloseBtnBottom"), 54);
 	if (iLeft <= 0)
@@ -263,7 +263,7 @@ BOOL CTaskbarNotifier::LoadConfiguration(LPCTSTR pszFilePath)
 
 	// get history button rectangle coordinates
 	iLeft = ini.GetInt(_T("rcHistoryBtnLeft"), 283);
-	iTop = ini.GetInt(_T("rcHistoryBtnTop"), 14);	
+	iTop = ini.GetInt(_T("rcHistoryBtnTop"), 14);
 	iRight = ini.GetInt(_T("rcHistoryBtnRight"), 299);
 	iBottom = ini.GetInt(_T("rcHistoryBtnBottom"), 39);
 	if (iLeft <= 0)
@@ -289,7 +289,7 @@ BOOL CTaskbarNotifier::LoadConfiguration(LPCTSTR pszFilePath)
 	}
 
 	SetTextFont(strFontType, iFontSize, TN_TEXT_NORMAL, TN_TEXT_UNDERLINE);
-	SetTextColor(RGB(iTextNormalRed, iTextNormalGreen, iTextNormalBlue), 
+	SetTextColor(RGB(iTextNormalRed, iTextNormalGreen, iTextNormalBlue),
 			     RGB(iTextSelectedRed, iTextSelectedGreen, iTextSelectedBlue));
 
 	m_tConfigFileLastModified = st.st_mtime;
@@ -360,17 +360,17 @@ void CTaskbarNotifier::SetTextColor(COLORREF crNormalTextColor, COLORREF crSelec
 	RedrawWindow(&m_rcText);
 }
 
-void CTaskbarNotifier::SetTextRect(RECT rcText)
+void CTaskbarNotifier::SetTextRect(const RECT& rcText)
 {
 	m_rcText = rcText;
 }
 
-void CTaskbarNotifier::SetCloseBtnRect(RECT rcCloseBtn)
+void CTaskbarNotifier::SetCloseBtnRect(const RECT& rcCloseBtn)
 {
 	m_rcCloseBtn = rcCloseBtn;
 }
 
-void CTaskbarNotifier::SetHistoryBtnRect(RECT rcHistoryBtn)
+void CTaskbarNotifier::SetHistoryBtnRect(const RECT& rcHistoryBtn)
 {
 	m_rcHistoryBtn = rcHistoryBtn;
 }
@@ -480,7 +480,7 @@ void CTaskbarNotifier::SetAutoClose(BOOL bAutoClose)
 
 void CTaskbarNotifier::ShowLastHistoryMessage()
 {
-	if (m_MessageHistory.GetCount() > 0)
+	if (!m_MessageHistory.IsEmpty())
 	{
 		CTaskbarNotifierHistory* pHistMsg = (CTaskbarNotifierHistory*)m_MessageHistory.RemoveHead();
 		Show(pHistMsg->m_strMessage, pHistMsg->m_nMessageType, pHistMsg->m_strLink);
@@ -501,7 +501,7 @@ void CTaskbarNotifier::Show(LPCTSTR pszCaption, int nMsgType, LPCTSTR pszLink, B
 	}
 
 	UINT nScreenWidth;
-	UINT nScreenHeight;
+//	UINT nScreenHeight;
 	UINT nEvents;
 	UINT nBitmapSize;
 	CRect rcTaskbar;
@@ -526,11 +526,11 @@ void CTaskbarNotifier::Show(LPCTSTR pszCaption, int nMsgType, LPCTSTR pszLink, B
 	}
 
 	nScreenWidth = ::GetSystemMetrics(SM_CXSCREEN);
-	nScreenHeight = ::GetSystemMetrics(SM_CYSCREEN);
+//	nScreenHeight = ::GetSystemMetrics(SM_CYSCREEN);
 	HWND hWndTaskbar = ::FindWindow(_T("Shell_TrayWnd"), 0);
 	::GetWindowRect(hWndTaskbar, &rcTaskbar);
 
-	// Daniel Lohmann: Calculate taskbar position from its window rect. However, on XP  it may be that 
+	// Daniel Lohmann: Calculate taskbar position from its window rect. However, on XP  it may be that
 	// the taskbar is slightly larger or smaller than the screen size. Therefore we allow some tolerance here.
 	if (NearlyEqual(rcTaskbar.left, 0, TASKBAR_X_TOLERANCE) && NearlyEqual(rcTaskbar.right, nScreenWidth, TASKBAR_X_TOLERANCE)) {
 		// Taskbar is on top or on bottom
@@ -767,7 +767,7 @@ HRGN CTaskbarNotifier::CreateRgnFromBitmap(HBITMAP hBmp, COLORREF color)
 					bWasFirst = false;
 				}
 				else if (!bWasFirst && bIsMask)
-				{	
+				{
 					iFirstXPos = x;
 					bWasFirst = true;
 				}
@@ -850,7 +850,7 @@ void CTaskbarNotifier::OnLButtonUp(UINT nFlags, CPoint point)
 	// cycle history button clicked
 	if (m_rcHistoryBtn.PtInRect(point))
 	{
-		if (m_MessageHistory.GetCount() > 0)
+		if (!m_MessageHistory.IsEmpty())
 		{
 			CTaskbarNotifierHistory* pHistMsg = (CTaskbarNotifierHistory*)m_MessageHistory.RemoveHead();
 			Show(pHistMsg->m_strMessage, pHistMsg->m_nMessageType, pHistMsg->m_strLink);
@@ -900,7 +900,7 @@ LRESULT CTaskbarNotifier::OnMouseHover(WPARAM /*wParam*/, LPARAM lParam)
 
 LRESULT CTaskbarNotifier::OnMouseLeave(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
-	if (m_bMouseIsOver == TRUE)
+	if (m_bMouseIsOver)
 	{
 		m_bMouseIsOver = FALSE;
 		RedrawWindow(&m_rcText);
@@ -917,7 +917,7 @@ BOOL CTaskbarNotifier::OnEraseBkgnd(CDC* pDC)
 	CBitmap *pOldBitmap = memDC.SelectObject(&m_bitmapBackground);
 	if (m_bBitmapAlpha && m_pfnAlphaBlend) {
 		static const BLENDFUNCTION bf = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
-		(*m_pfnAlphaBlend)(pDC->m_hDC, 0, 0, m_nCurrentWidth, m_nCurrentHeight, 
+		(*m_pfnAlphaBlend)(pDC->m_hDC, 0, 0, m_nCurrentWidth, m_nCurrentHeight,
 			               memDC.m_hDC, 0, 0, m_nCurrentWidth, m_nCurrentHeight, bf);
 	}
 	else {
@@ -1037,7 +1037,7 @@ void CTaskbarNotifier::OnTimer(UINT nIDEvent)
 		GetWindowRgn(hRgn);
 		SetWindowPos(&wndTopMost, m_nCurrentPosX, m_nCurrentPosY, m_nCurrentWidth, m_nCurrentHeight, SWP_NOACTIVATE);
 		VERIFY( SetWindowRgn(hRgn, TRUE) != 0 );
-		
+
 		break;
 	}
 	case IDT_WAITING:
@@ -1085,7 +1085,7 @@ void CTaskbarNotifier::OnTimer(UINT nIDEvent)
 
 		case ABE_RIGHT:
 			if (m_nCurrentWidth > 0)
-			{					 
+			{
 				m_nCurrentPosX += m_nIncrementHide;
 				m_nCurrentWidth -= m_nIncrementHide;
 			}

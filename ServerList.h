@@ -30,9 +30,9 @@ public:
 	void		Sort();
 	void		GetUserSortedServers();
 	void		MoveServerDown(const CServer* pServer);
-	void		AutoUpdate();
+	static void	AutoUpdate();
 	bool		AddServerMetToList(const CString& rstrFile, bool bMerge);
-	void		AddServersFromTextFile(const CString& rstrFilename);
+	void		AddServersFromTextFile(const CString& rstrFilename) const;
 	bool		SaveServermetToFile();
 	bool		SaveStaticServers();
 
@@ -61,8 +61,8 @@ public:
 	void		ServerStats();
 	CServer*	GetNextStatServer();
 
-	bool		IsGoodServerIP(const CServer* pServer) const;
-	void		GetStatus(uint32& total, uint32& failed, uint32& user, uint32& file, uint32& lowiduser, 
+	static bool	IsGoodServerIP(const CServer* pServer);
+	void		GetStatus(uint32& total, uint32& failed, uint32& user, uint32& file, uint32& lowiduser,
 						  uint32& totaluser, uint32& totalfile, float& occ) const;
 	void		GetAvgFile(uint32& average) const;
 	void		GetUserFileStatus(uint32& user, uint32& file) const;

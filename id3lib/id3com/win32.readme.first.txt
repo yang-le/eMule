@@ -1,7 +1,8 @@
 Compiling on win32:
 
-So far, it has only been confirmed it compiles on visual C 6.0 (service pack 5), 
-but if you got it working on Borland or other compilers, drop me a mail, or better, add a patch
+So far, it has only been confirmed it compiles on visual C 6.0 (service pack 5),
+and Borland Cbuilder 6.
+but if you got it working on Borland 5 or other compilers, drop me a mail, or better, add a patch
 here: http://sourceforge.net/tracker/?group_id=979&atid=300979 with the (e.g.) borland project files.
 
 These are the directories you'll be needing:
@@ -19,9 +20,7 @@ The third one is not too much tested, it was created outside this project but
 it doesn't seem to be maintained anymore. I've included it as a service.
 The original location is http://sourceforge.net/projects/id3com
 
-And, last but not least, there is a delphi project in cvs
-(http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/id3lib/id3lib-stable/delphi/)
-which uses the allready compiled dll.
+And, last but not least, there is a delphi project in id3lib/delphi which uses the allready compiled dll.
 Also in there is a file called Id3lib.pas which has the interface to the dll
 defined.
 
@@ -35,7 +34,8 @@ A) ***Your project wants to link id3lib static, and has mfc linked static:
 5) Add the following include dirs to your program:
    /I <path_to_id3lib>\\include /I <path_to_id3lib>\\include\\id3  
 6) (add your code which uses id3lib)
-7) Try to compile, and see if you need any of the following:
+7) Add ole32.lib to link to your project if it is not allready there.
+8) Try to compile, and see if you need any of the following:
  (debug) /nodefaultlib:"msvcprtd"         or(release) /nodefaultlib:"msvcprt"
  (debug) /nodefaultlib:"MSVCRTD"          or(release) /nodefaultlib:"MSVCRT"
  (debug) /nodefaultlib:"libcd"            or(release) /nodefaultlib:"libc"
@@ -50,7 +50,8 @@ B)***Your project wants to link id3lib static, and has mfc linked dynamic or has
 5) Add the following include dirs to your program:
    /I <path_to_id3lib>\\include /I <path_to_id3lib>\\include\\id3
 6) (add your code which uses id3lib)
-7) Try to compile, and see if you need any of the following:
+7) Add ole32.lib to link to your project if it is not allready there.
+8) Try to compile, and see if you need any of the following:
  (debug) /nodefaultlib:"msvcprtd"         or(release) /nodefaultlib:"msvcprt"
  (debug) /nodefaultlib:"MSVCRTD"          or(release) /nodefaultlib:"MSVCRT"
  (debug) /nodefaultlib:"libcmtd"          or(release) /nodefaultlib:"libcmt"

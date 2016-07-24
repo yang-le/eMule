@@ -32,7 +32,7 @@ struct Requested_Block_Struct;
 class CSafeMemFile;
 class CEMSocket;
 class CAICHHash;
-enum EUtf8Str;
+enum EUtf8Str: int;
 
 struct Pending_Block_Struct{
 	Pending_Block_Struct()
@@ -79,7 +79,7 @@ public:
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Base
-	CUpDownClient(CClientReqSocket* sender = 0);
+	explicit CUpDownClient(CClientReqSocket* sender = 0);
 	CUpDownClient(CPartFile* in_reqfile, uint16 in_port, uint32 in_userid, uint32 in_serverup, uint16 in_serverport, bool ed2kID = false);
 	virtual ~CUpDownClient();
 
@@ -236,7 +236,7 @@ public:
 	void 			ClearWaitStartTime();
 	uint32			GetWaitTime() const								{ return m_dwUploadTime - GetWaitStartTime(); }
 	bool			IsDownloading() const							{ return (m_nUploadState == US_UPLOADING); }
-	UINT			GetDatarate() const								{ return m_nUpDatarate; }	
+	UINT			GetDatarate() const								{ return m_nUpDatarate; }
 	UINT			GetScore(bool sysvalue, bool isdownloading = false, bool onlybasevalue = false) const;
 	void			AddReqBlock(Requested_Block_Struct* reqblock, bool bSignalIOThread);
 	uint32			GetUpStartTimeDelay() const						{ return ::GetTickCount() - m_dwUploadTime; }
@@ -362,7 +362,7 @@ public:
 	EChatCaptchaState GetChatCaptchaState() const					{ return (EChatCaptchaState)m_nChatCaptchaState; }
 	void			SetChatCaptchaState(EChatCaptchaState nNewS)	{ m_nChatCaptchaState = (_EChatCaptchaState)nNewS; }
 	void			ProcessChatMessage(CSafeMemFile* data, uint32 nLength);
-	void			SendChatMessage(CString strMessage);
+	void			SendChatMessage(const CString& strMessage);
 	void			ProcessCaptchaRequest(CSafeMemFile* data);
 	void			ProcessCaptchaReqRes(uint8 nStatus);
 	// message filtering
@@ -384,7 +384,7 @@ public:
 
 	//File Comment
 	bool			HasFileComment() const							{ return !m_strFileComment.IsEmpty(); }
-    const CString&	GetFileComment() const							{ return m_strFileComment; } 
+    const CString&	GetFileComment() const							{ return m_strFileComment; }
     void			SetFileComment(LPCTSTR pszComment)				{ m_strFileComment = pszComment; }
 
 	bool			HasFileRating() const							{ return m_uFileRating > 0; }
@@ -465,7 +465,7 @@ public:
 	bool ProcessPeerCacheAcknowledge(const uchar* packet, UINT size);
 	void OnPeerCacheDownSocketClosed(int nErrorCode);
 	bool OnPeerCacheDownSocketTimeout();
-	
+
 	bool ProcessPeerCacheDownHttpResponse(const CStringAArray& astrHeaders);
 	bool ProcessPeerCacheDownHttpResponseBody(const BYTE* pucData, UINT uSize);
 	void ProcessPeerCacheUpHttpResponse(const CStringAArray& astrHeaders);
@@ -556,7 +556,7 @@ protected:
 	CString m_strMuleInfo;
 	CString m_strCaptchaChallenge;
 	CString m_strCaptchaPendingMsg;
-	
+
 
 	// States
 	_EClientSoftware	m_clientSoft;
@@ -591,17 +591,17 @@ protected:
     UINT		m_slotNumber;
 	bool		m_bCollectionUploadSlot;
 
-	typedef struct TransferredData {
+	typedef struct {
 		UINT	datalen;
 		DWORD	timestamp;
-	};
+	} TransferredData;
 	CTypedPtrList<CPtrList, Requested_File_Struct*>	 m_RequestedFiles_list;
 
 	//////////////////////////////////////////////////////////
 	// Download
 	//
 	CPartFile*	reqfile;
-	CAICHHash*  m_pReqFileAICHHash; 
+	CAICHHash*  m_pReqFileAICHHash;
 	UINT		m_cDownAsked;
 	uint8*		m_abyPartStatus;
 	CString		m_strClientFilename;
@@ -622,7 +622,7 @@ protected:
 	bool		m_bReaskPending;
 	bool		m_bUDPPending;
 	bool		m_bTransferredDownMini;
-	bool		m_bHasMatchingAICHHash;
+//	bool		m_bHasMatchingAICHHash;
 
 	// Download from URL
 	CStringA	m_strUrlPath;
@@ -636,7 +636,7 @@ protected:
 	//
 	UINT		m_nUpDatarate;
 	UINT		m_nSumForAvgUpDataRate;
-	CList<TransferredData> m_AvarageUDR_list;
+	CList<TransferredData> m_AverageUDR_list;
 
 	//////////////////////////////////////////////////////////
 	// Download data rate computation
@@ -644,7 +644,7 @@ protected:
 	UINT		m_nDownDatarate;
 	UINT		m_nDownDataRateMS;
 	UINT		m_nSumForAvgDownDataRate;
-	CList<TransferredData> m_AvarageDDR_list;
+	CList<TransferredData> m_AverageDDR_list;
 
 	//////////////////////////////////////////////////////////
 	// GUI helpers
@@ -680,7 +680,7 @@ protected:
 		 m_fRequiresCryptLayer: 1,
 		 m_fSupportsSourceEx2 : 1,
 		 m_fSupportsCaptcha	  : 1,
-		 m_fDirectUDPCallback : 1,	
+		 m_fDirectUDPCallback : 1,
 		 m_fSupportsFileIdent : 1; // 0 bits left
 	UINT m_fHashsetRequestingAICH : 1; // 31 bits left
 	CTypedPtrList<CPtrList, Pending_Block_Struct*>	 m_PendingBlocks_list;

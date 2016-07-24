@@ -47,7 +47,7 @@ protected:
 //	CHARFORMAT m_cfBold;
 //	CHARFORMAT m_cfRed;
 
-	bool GetMediaInfo(const CKnownFile* file, SMediaInfo* mi, bool bSingleFile);
+//	bool GetMediaInfo(const CKnownFile* file, SMediaInfo* mi, bool bSingleFile);
 	void Localize();
 	void AddFileInfo(LPCTSTR pszFmt, ...);
 

@@ -23,11 +23,11 @@ struct ConvertJob;
 class CPartFileConvert
 {
 public:
-	static int	ScanFolderToAdd(CString folder,bool deletesource=false);
-	static void ConvertToeMule(CString folder,bool deletesource=false);
-	static void CPartFileConvert::StartThread();
+	static int	ScanFolderToAdd(const CString& folder, bool deletesource = false);
+	static void ConvertToeMule(const CString& folder, bool deletesource = false);
+	static void StartThread();
 	static void ShowGUI();
-	static void UpdateGUI(float percent,CString text, bool fullinfo=false);	// current file information
+	static void UpdateGUI(float percent, const CString& text, bool fullinfo = false);	// current file information
 	static void UpdateGUI(ConvertJob* job); // listcontrol update
 	static void CloseGUI();
 	static void ClosedGUI();
@@ -51,7 +51,7 @@ class CPartFileConvertDlg : public CResizableDialog
 {
 	DECLARE_DYNAMIC(CPartFileConvertDlg)
 public:
-	CPartFileConvertDlg(CWnd* pParent = NULL);   // standard constructor
+	explicit CPartFileConvertDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CPartFileConvertDlg();
 
 	enum { IDD = IDD_CONVERTPARTFILES };

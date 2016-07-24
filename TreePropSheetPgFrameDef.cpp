@@ -115,7 +115,7 @@ CRect CPropPageFrameDefault::CalcMsgArea()
 			g_xpStyle.GetThemeBackgroundContentRect(hTheme, pDc->m_hDC, TABP_PANE, 0, rect, rectContent);
 			ReleaseDC(pDc);
 			g_xpStyle.CloseThemeData(hTheme);
-			
+
 			if (GetShowCaption())
 				rectContent.top = rect.top+GetCaptionHeight()+1;
 			rect = rectContent;
@@ -123,7 +123,7 @@ CRect CPropPageFrameDefault::CalcMsgArea()
 	}
 	else if (GetShowCaption())
 		rect.top+= GetCaptionHeight()+1;
-	
+
 	return rect;
 }
 
@@ -142,7 +142,7 @@ CRect CPropPageFrameDefault::CalcCaptionArea()
 			g_xpStyle.GetThemeBackgroundContentRect(hTheme, pDc->m_hDC, TABP_PANE, 0, rect, rectContent);
 			ReleaseDC(pDc);
 			g_xpStyle.CloseThemeData(hTheme);
-			
+
 			if (GetShowCaption())
 				rectContent.bottom = rect.top+GetCaptionHeight();
 			else
@@ -221,15 +221,14 @@ void CPropPageFrameDefault::FillGradientRectH(CDC *pDc, const RECT &rect, COLORR
 	double	dG = (double)GetGValue(clrLeft);
 	double	dB = (double)GetBValue(clrLeft);
 
-	CPen	*pPrevPen = NULL;
 	for (int x = rect.left; x <= rect.right; ++x)
 	{
 		CPen	Pen(PS_SOLID, 1, RGB((BYTE)dR, (BYTE)dG, (BYTE)dB));
-		pPrevPen = pDc->SelectObject(&Pen);
+		CPen *pPrevPen = pDc->SelectObject(&Pen);
 		pDc->MoveTo(x, rect.top);
 		pDc->LineTo(x, rect.bottom);
 		pDc->SelectObject(pPrevPen);
-		
+
 		dR+= dRStep;
 		dG+= dGStep;
 		dB+= dBStep;
@@ -240,14 +239,14 @@ void CPropPageFrameDefault::FillGradientRectH(CDC *pDc, const RECT &rect, COLORR
 /////////////////////////////////////////////////////////////////////
 // message handlers
 
-void CPropPageFrameDefault::OnPaint() 
+void CPropPageFrameDefault::OnPaint()
 {
 	CPaintDC dc(this);
-	Draw(&dc);	
+	Draw(&dc);
 }
 
 
-BOOL CPropPageFrameDefault::OnEraseBkgnd(CDC* pDC) 
+BOOL CPropPageFrameDefault::OnEraseBkgnd(CDC* pDC)
 {
 	if (g_xpStyle.IsThemeActive() && g_xpStyle.IsAppThemed())
 	{

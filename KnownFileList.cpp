@@ -83,11 +83,11 @@ bool CKnownFileList::LoadKnownFiles()
 		if (fexp.m_cause != CFileException::fileNotFound){
 			CString strError(_T("Failed to load ") KNOWN_MET_FILENAME _T(" file"));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (fexp.GetErrorMessage(szError, ARRSIZE(szError))){
+			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, _T("%s"), strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
 		return false;
 	}
@@ -101,14 +101,14 @@ bool CKnownFileList::LoadKnownFiles()
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_BAD));
 			return false;
 		}
-		AddDebugLogLine(false, _T("Known.met file version is %u (%s support 64bit tags)"), header, (header == MET_HEADER) ? _T("doesn't") : _T("does")); 
+		AddDebugLogLine(false, _T("Known.met file version is %u (%s support 64bit tags)"), header, (header == MET_HEADER) ? _T("doesn't") : _T("does"));
 
 		UINT RecordsNumber = file.ReadUInt32();
 		for (UINT i = 0; i < RecordsNumber; i++) {
 			pRecord = new CKnownFile();
 			if (!pRecord->LoadFromFile(&file)){
-				TRACE(_T("*** Failed to load entry %u (name=%s  hash=%s  size=%I64u  parthashs=%u expected parthashs=%u) from known.met\n"), i, 
-					pRecord->GetFileName(), md4str(pRecord->GetFileHash()), pRecord->GetFileSize()
+				TRACE(_T("*** Failed to load entry %u (name=%s  hash=%s  size=%I64u  parthashs=%u expected parthashs=%u) from known.met\n"), i,
+					(LPCTSTR)pRecord->GetFileName(), (LPCTSTR)md4str(pRecord->GetFileHash()), (uint64)pRecord->GetFileSize()
 					, pRecord->GetFileIdentifier().GetAvailableMD4PartHashCount(), pRecord->GetFileIdentifier().GetTheoreticalMD4PartHashCount());
 				delete pRecord;
 				pRecord = NULL;
@@ -124,7 +124,7 @@ bool CKnownFileList::LoadKnownFiles()
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_BAD));
 		else{
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			error->GetErrorMessage(buffer, ARRSIZE(buffer));
+			GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_UNKNOWN),buffer);
 		}
 		error->Delete();
@@ -147,16 +147,15 @@ bool CKnownFileList::LoadCancelledFiles(){
 		if (fexp.m_cause != CFileException::fileNotFound){
 			CString strError(_T("Failed to load ") CANCELLED_MET_FILENAME _T(" file"));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (fexp.GetErrorMessage(szError, ARRSIZE(szError))){
+			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, _T("%s"), strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
 		return false;
 	}
 	setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
-	uchar ucHash[16];
 	try {
 		bool bOldVersion = false;
 		uint8 header = file.ReadUInt8();
@@ -170,10 +169,8 @@ bool CKnownFileList::LoadCancelledFiles(){
 				return false;
 			}
 		}
-		uint8 byVersion = 0;
-		if (!bOldVersion){
-			byVersion = file.ReadUInt8();
-			if (byVersion > CANCELLED_VERSION){
+		if (!bOldVersion) {
+			if (file.ReadUInt8() > CANCELLED_VERSION) {
 				file.Close();
 				return false;
 			}
@@ -185,6 +182,7 @@ bool CKnownFileList::LoadCancelledFiles(){
 			m_dwCancelledFilesSeed = (GetRandomUInt32() % 0xFFFFFFFE) + 1;
 		}
 
+		uchar ucHash[16];
 		UINT RecordsNumber = file.ReadUInt32();
 		for (UINT i = 0; i < RecordsNumber; i++) {
 			file.ReadHash16(ucHash);
@@ -199,7 +197,7 @@ bool CKnownFileList::LoadCancelledFiles(){
 				PokeUInt32(pachSeedHash, m_dwCancelledFilesSeed);
 				md4cpy(pachSeedHash + 4, ucHash);
 				MD5Sum md5(pachSeedHash, sizeof(pachSeedHash));
-				md4cpy(ucHash, md5.GetRawHash()); 
+				md4cpy(ucHash, md5.GetRawHash());
 			}
 			m_mapCancelledFiles.SetAt(CSKey(ucHash), 1);
 		}
@@ -210,7 +208,7 @@ bool CKnownFileList::LoadCancelledFiles(){
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_CONFIGCORRUPT), CANCELLED_MET_FILENAME);
 		else{
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			error->GetErrorMessage(buffer, ARRSIZE(buffer));
+			GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FAILEDTOLOAD), CANCELLED_MET_FILENAME, buffer);
 		}
 		error->Delete();
@@ -223,7 +221,7 @@ void CKnownFileList::Save()
 {
 	if (thePrefs.GetLogFileSaving())
 		AddDebugLogLine(false, _T("Saving known files list file \"%s\""), KNOWN_MET_FILENAME);
-	m_nLastSaved = ::GetTickCount(); 
+	m_nLastSaved = ::GetTickCount();
 	CString fullpath = thePrefs.GetMuleDirectory(EMULE_CONFIGDIR);
 	fullpath += KNOWN_MET_FILENAME;
 	CSafeBufferedFile file;
@@ -231,11 +229,11 @@ void CKnownFileList::Save()
 	if (!file.Open(fullpath, CFile::modeWrite|CFile::modeCreate|CFile::typeBinary|CFile::shareDenyWrite, &fexp)){
 		CString strError(_T("Failed to save ") KNOWN_MET_FILENAME _T(" file"));
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (fexp.GetErrorMessage(szError, ARRSIZE(szError))){
+		if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, _T("%s"), strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 	}
 	else{
 		setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
@@ -265,7 +263,7 @@ void CKnownFileList::Save()
 			file.WriteUInt8(bContainsAnyLargeFiles ? MET_HEADER_I64TAGS : MET_HEADER);
 			file.WriteUInt32(nRecordsNumber);
 
-			if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && !theApp.emuledlg->IsRunning())){
+			if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.emuledlg->IsClosing())) {
 				file.Flush(); // flush file stream buffers to disk buffers
 				if (_commit(_fileno(file.m_pStream)) != 0) // commit disk buffers to disk
 					AfxThrowFileException(CFileException::hardIO, GetLastError(), file.GetFileName());
@@ -275,11 +273,11 @@ void CKnownFileList::Save()
 		catch(CFileException* error){
 			CString strError(_T("Failed to save ") KNOWN_MET_FILENAME _T(" file"));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (error->GetErrorMessage(szError, ARRSIZE(szError))){
+			if (GetExceptionMessage(*error, szError, ARRSIZE(szError))) {
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, _T("%s"), strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 			error->Delete();
 		}
 	}
@@ -292,11 +290,11 @@ void CKnownFileList::Save()
 	if (!file.Open(fullpath, CFile::modeWrite|CFile::modeCreate|CFile::typeBinary|CFile::shareDenyWrite, &fexp)){
 		CString strError(_T("Failed to save ") CANCELLED_MET_FILENAME _T(" file"));
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (fexp.GetErrorMessage(szError, ARRSIZE(szError))){
+		if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, _T("%s"), strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 	}
 	else{
 		setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
@@ -322,7 +320,7 @@ void CKnownFileList::Save()
 				}
 			}
 
-			if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && !theApp.emuledlg->IsRunning())){
+			if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.emuledlg->IsClosing())) {
 				file.Flush(); // flush file stream buffers to disk buffers
 				if (_commit(_fileno(file.m_pStream)) != 0) // commit disk buffers to disk
 					AfxThrowFileException(CFileException::hardIO, GetLastError(), file.GetFileName());
@@ -332,11 +330,11 @@ void CKnownFileList::Save()
 		catch(CFileException* error){
 			CString strError(_T("Failed to save ") CANCELLED_MET_FILENAME _T(" file"));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (error->GetErrorMessage(szError, ARRSIZE(szError))){
+			if (GetExceptionMessage(*error, szError, ARRSIZE(szError))) {
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, _T("%s"), strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 			error->Delete();
 		}
 	}
@@ -345,9 +343,7 @@ void CKnownFileList::Save()
 void CKnownFileList::Clear()
 {
 	m_mapKnownFilesByAICH.RemoveAll();
-	POSITION pos = m_Files_map.GetStartPosition();
-	while( pos != NULL )
-	{
+	for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
 		CKnownFile* pFile;
 		CCKey key;
 		m_Files_map.GetNextAssoc( pos, key, pFile );
@@ -369,8 +365,8 @@ bool CKnownFileList::SafeAddKFile(CKnownFile* toadd)
 	CKnownFile* pFileInMap;
 	if (m_Files_map.Lookup(key, pFileInMap))
 	{
-		TRACE(_T("%hs: Already in known list:   %s %I64u \"%s\"\n"), __FUNCTION__, md4str(pFileInMap->GetFileHash()), pFileInMap->GetFileSize(), pFileInMap->GetFileName());
-		TRACE(_T("%hs: Old entry replaced with: %s %I64u \"%s\"\n"), __FUNCTION__, md4str(toadd->GetFileHash()), toadd->GetFileSize(), toadd->GetFileName());
+		TRACE(_T("%hs: Already in known list:   %s %I64u \"%s\"\n"), __FUNCTION__, (LPCTSTR)md4str(pFileInMap->GetFileHash()), (uint64)pFileInMap->GetFileSize(), (LPCTSTR)pFileInMap->GetFileName());
+		TRACE(_T("%hs: Old entry replaced with: %s %I64u \"%s\"\n"), __FUNCTION__, (LPCTSTR)md4str(toadd->GetFileHash()), (uint64)toadd->GetFileSize(), (LPCTSTR)toadd->GetFileName());
 
 		// if we hash files which are already in known file list and add them later (when the hashing thread is finished),
 		// we can not delete any already available entry from known files list. that entry can already be used by the
@@ -379,16 +375,16 @@ bool CKnownFileList::SafeAddKFile(CKnownFile* toadd)
 		m_Files_map.RemoveKey(CCKey(pFileInMap->GetFileHash()));
 		m_mapKnownFilesByAICH.RemoveKey(pFileInMap->GetFileIdentifier().GetAICHHash());
 		//This can happen in a couple situations..
-		//File was renamed outside of eMule.. 
+		//File was renamed outside of eMule..
 		//A user decided to redownload a file he has downloaded and unshared..
 		if (theApp.sharedfiles)
 		{
 			// This solves the problem with dangl. ptr in shared files ctrl,
-			// but creates a new bug. It may lead to unshared files! Even 
-			// worse it may lead to files which are 'shared' in GUI but 
+			// but creates a new bug. It may lead to unshared files! Even
+			// worse it may lead to files which are 'shared' in GUI but
 			// which are though not shared 'logically'.
 			//
-			// To reduce the harm, remove the file from shared files list, 
+			// To reduce the harm, remove the file from shared files list,
 			// only if really needed. Right now this 'harm' applies for files
 			// which are re-shared and then completed (again) because they were
 			// also in download queue (they were added there when the already
@@ -498,8 +494,8 @@ void CKnownFileList::AddCancelledFileID(const uchar* hash){
 		PokeUInt32(pachSeedHash, m_dwCancelledFilesSeed);
 		md4cpy(pachSeedHash + 4, hash);
 		MD5Sum md5(pachSeedHash, sizeof(pachSeedHash));
-		md4cpy(pachSeedHash, md5.GetRawHash()); 
-		m_mapCancelledFiles.SetAt(CSKey(pachSeedHash), 1);	
+		md4cpy(pachSeedHash, md5.GetRawHash());
+		m_mapCancelledFiles.SetAt(CSKey(pachSeedHash), 1);
 	}
 }
 
@@ -510,7 +506,7 @@ bool CKnownFileList::IsCancelledFileByID(const uchar* hash) const
 		PokeUInt32(pachSeedHash, m_dwCancelledFilesSeed);
 		md4cpy(pachSeedHash + 4, hash);
 		MD5Sum md5(pachSeedHash, sizeof(pachSeedHash));
-		md4cpy(pachSeedHash, md5.GetRawHash()); 
+		md4cpy(pachSeedHash, md5.GetRawHash());
 
 		int dwDummy;
 		if (m_mapCancelledFiles.Lookup(CSKey(pachSeedHash), dwDummy)){

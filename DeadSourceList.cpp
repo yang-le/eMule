@@ -16,10 +16,8 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "StdAfx.h"
 #include "deadsourcelist.h"
-#include "preferences.h"
 #include "opcodes.h"
 #include "updownclient.h"
-#include "partfile.h"
 #include "Log.h"
 
 #ifdef _DEBUG
@@ -41,7 +39,7 @@ CDeadSource::CDeadSource(uint32 dwID, uint16 nPort, uint32 dwServerIP, uint16 nK
 	m_dwID = dwID;
 	m_dwServerIP = dwServerIP;
 	m_nPort = nPort;
-	m_nKadPort = nKadPort; 
+	m_nKadPort = nKadPort;
 	md4clr(m_aucHash);
 }
 
@@ -79,6 +77,7 @@ CDeadSource& CDeadSource::operator=(const CDeadSource& ds){
 CDeadSourceList::CDeadSourceList()
 {
 	m_dwLastCleanUp = 0;
+	m_bGlobalList = false;
 }
 
 CDeadSourceList::~CDeadSourceList()
@@ -98,43 +97,43 @@ void CDeadSourceList::Init(bool bGlobalList){
 
 bool CDeadSourceList::IsDeadSource(const CUpDownClient* pToCheck) const{
 	uint32 dwExpTime;
-	bool bDbgCheck = false;
+//	bool bDbgCheck = false;
 	if(!pToCheck->HasLowID() || pToCheck->GetServerIP() != 0){
 		if (m_mapDeadSources.Lookup(CDeadSource(pToCheck->GetUserIDHybrid(), pToCheck->GetUserPort(), pToCheck->GetServerIP(), pToCheck->GetKadPort()), dwExpTime)){
 			if (dwExpTime > ::GetTickCount())
 				return true;
 		}
-		bDbgCheck = true;
+//		bDbgCheck = true;
 	}
 	if (((pToCheck->HasValidBuddyID() || pToCheck->SupportsDirectUDPCallback()) && isnulmd4(pToCheck->GetUserHash()) == FALSE) || (pToCheck->HasLowID() && pToCheck->GetServerIP() == 0) ){
 		if (m_mapDeadSources.Lookup(CDeadSource(pToCheck->GetUserHash()), dwExpTime)){
 			if (dwExpTime > ::GetTickCount())
 				return true;
 		}
-		bDbgCheck = true;
+//		bDbgCheck = true;
 	}
-	//ASSERT ( bDbgCheck );
+//	ASSERT ( bDbgCheck );
 	return false;
 }
 
 void CDeadSourceList::AddDeadSource(const CUpDownClient* pToAdd){
 	//if (thePrefs.GetLogFilteredIPs())
 	//	AddDebugLogLine(DLP_VERYLOW, false, _T("Added source to bad source list (%s) - file %s : %s")
-	//	, m_bGlobalList? _T("Global"):_T("Local"), (pToAdd->GetRequestFile() != NULL)? pToAdd->GetRequestFile()->GetFileName() : _T("???"), pToAdd->DbgGetClientInfo() );
+	//	, m_bGlobalList? _T("Global"):_T("Local"), (pToAdd->GetRequestFile() != NULL)? pToAdd->GetRequestFile()->GetFileName() : CString("???"), (LPCTSTR)pToAdd->DbgGetClientInfo());
 
 	if(!pToAdd->HasLowID())
 		m_mapDeadSources.SetAt(CDeadSource(pToAdd->GetUserIDHybrid(), pToAdd->GetUserPort(), pToAdd->GetServerIP(), pToAdd->GetKadPort()), BLOCKTIME );
 	else{
-		bool bDbgCheck = false;
+//		bool bDbgCheck = false;
 		if(pToAdd->GetServerIP() != 0){
-			bDbgCheck = true;
+//			bDbgCheck = true;
 			m_mapDeadSources.SetAt(CDeadSource(pToAdd->GetUserIDHybrid(), pToAdd->GetUserPort(), pToAdd->GetServerIP(), 0), BLOCKTIMEFW);
 		}
 		if (pToAdd->HasValidBuddyID() || pToAdd->SupportsDirectUDPCallback()){
-			bDbgCheck = true;
+//			bDbgCheck = true;
 			m_mapDeadSources.SetAt(CDeadSource(pToAdd->GetUserHash()), BLOCKTIMEFW);
 		}
-		//ASSERT( bDbgCheck );
+//		ASSERT( bDbgCheck );
 	}
 	if (::GetTickCount() - m_dwLastCleanUp  > CLEANUPTIME)
 		CleanUp();

@@ -10,7 +10,7 @@ class CNetworkInfoDlg : public CResizableDialog
 	DECLARE_DYNAMIC(CNetworkInfoDlg)
 
 public:
-	CNetworkInfoDlg(CWnd* pParent = NULL);   // standard constructor
+	explicit CNetworkInfoDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CNetworkInfoDlg();
 
 // Dialog Data

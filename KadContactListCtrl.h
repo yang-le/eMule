@@ -28,6 +28,14 @@ public:
 	CKadContactListCtrl();
 	virtual ~CKadContactListCtrl();
 
+private:
+	enum ECols
+	{
+		colID = 0,
+		colType,
+		colDistance
+	};
+
 protected:
 	friend class CKademliaWnd;
 

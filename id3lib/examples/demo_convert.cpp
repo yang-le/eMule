@@ -1,16 +1,28 @@
-// $Id: demo_convert.cpp,v 1.15 2002/06/27 12:46:55 t1mpy Exp $
+// $Id: demo_convert.cpp,v 1.17 2009/09/02 09:07:13 nagilo Exp $
+
+// id3lib: a C++ library for creating and manipulating id3v1/v2 tags
+// Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
+
+// This library is free software; you can redistribute it and/or modify it
+// under the terms of the GNU Library General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or (at your
+// option) any later version.
 //
-//  The authors have released ID3Lib as Public Domain (PD) and claim no
-//  copyright, patent or other intellectual property protection in this work.
-//  This means that it may be modified, redistributed and used in commercial
-//  and non-commercial software and hardware without restrictions.  ID3Lib is
-//  distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either
-//  express or implied.
-//  
-//  The ID3Lib authors encourage improvements and optimisations to be sent to
-//  the ID3Lib coordinator, currently Dirk Mahoney (dirk@id3.org).  Approved
-//  submissions may be altered, and will be included and released under these
-//  terms.
+// This library is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+// License for more details.
+//
+// You should have received a copy of the GNU Library General Public License
+// along with this library; if not, write to the Free Software Foundation,
+// Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+// The id3lib authors encourage improvements and optimisations to be sent to
+// the id3lib coordinator.  Please see the README file for details on where to
+// send such submissions.  See the AUTHORS file for a list of people who have
+// contributed to id3lib.  See the ChangeLog file for a list of changes to
+// id3lib.  These files are distributed with id3lib at
+// http://download.sourceforge.net/id3lib/
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -24,7 +36,7 @@
 using std::cout;
 using std::endl;
 
-static const char* VERSION_NUMBER = "$Revision: 1.15 $";
+static const char* VERSION_NUMBER = "$Revision: 1.17 $";
 
 void PrintUsage(const char *sName)
 {
@@ -43,7 +55,7 @@ void PrintVersion(const char *sName)
   cout << sName << " ";
   for (nIndex = 0; nIndex < strlen(VERSION_NUMBER); nIndex++)
   {
-    if (VERSION_NUMBER[nIndex] == ' ') 
+    if (VERSION_NUMBER[nIndex] == ' ')
     {
       break;
     }
@@ -51,7 +63,7 @@ void PrintVersion(const char *sName)
   nIndex++;
   for (; nIndex < strlen (VERSION_NUMBER); nIndex++)
   {
-    if (VERSION_NUMBER[nIndex] == ' ') 
+    if (VERSION_NUMBER[nIndex] == ' ')
     {
       break;
     }
@@ -84,7 +96,7 @@ void DisplayTags(ostream &os, luint nTags)
   }
 }
 
-int main( unsigned int argc, char * const argv[])
+int main( int argc, char * const argv[])
 {
   flags_t ulFlag = ID3TT_ALL;
   gengetopt_args_info args;
@@ -123,7 +135,7 @@ int main( unsigned int argc, char * const argv[])
   {
     filename = args.inputs[i];
     ID3_Tag myTag;
-    
+
     if (args.strip_given)
     {
       cout << "Stripping ";
@@ -133,15 +145,15 @@ int main( unsigned int argc, char * const argv[])
       cout << "Converting ";
     }
     cout << filename << ": ";
-    
+
     myTag.Clear();
     myTag.Link(filename, ID3TT_ALL);
     myTag.SetPadding(args.padding_flag);
-    
+
     cout << "attempting ";
     DisplayTags(cout, ulFlag);
     luint nTags;
-    
+
     if (args.strip_flag)
     {
       nTags = myTag.Strip(ulFlag);
@@ -152,11 +164,11 @@ int main( unsigned int argc, char * const argv[])
       nTags = myTag.Update(ulFlag);
       cout << ", converted ";
     }
-    
+
     DisplayTags(cout, nTags);
     cout << endl;
   }
-  
+
   return 0;
 }
 

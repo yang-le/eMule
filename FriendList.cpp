@@ -38,6 +38,7 @@ static char THIS_FILE[] = __FILE__;
 #define EMFRIENDS_MET_FILENAME	_T("emfriends.met")
 
 CFriendList::CFriendList()
+	: m_wndOutput(NULL)
 {
 	LoadList();
 	m_nLastSaved = ::GetTickCount();
@@ -46,8 +47,8 @@ CFriendList::CFriendList()
 CFriendList::~CFriendList()
 {
 	SaveList();
-	for (POSITION pos = m_listFriends.GetHeadPosition();pos != 0;)
-		delete m_listFriends.GetNext(pos);
+	while (!m_listFriends.IsEmpty())
+		delete m_listFriends.RemoveHead();
 }
 
 bool CFriendList::LoadList(){
@@ -58,11 +59,11 @@ bool CFriendList::LoadList(){
 		if (fexp.m_cause != CFileException::fileNotFound){
 			CString strError(GetResString(IDS_ERR_READEMFRIENDS));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (fexp.GetErrorMessage(szError, ARRSIZE(szError))){
+			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, _T("%s"), strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
 		return false;
 	}
@@ -86,7 +87,7 @@ bool CFriendList::LoadList(){
 			LogError(LOG_STATUSBAR,GetResString(IDS_ERR_EMFRIENDSINVALID));
 		else{
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			error->GetErrorMessage(buffer, ARRSIZE(buffer));
+			GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
 			LogError(LOG_STATUSBAR,GetResString(IDS_ERR_READEMFRIENDS),buffer);
 		}
 		error->Delete();
@@ -107,21 +108,21 @@ void CFriendList::SaveList(){
 	if (!file.Open(strFileName, CFile::modeCreate | CFile::modeWrite | CFile::typeBinary | CFile::shareDenyWrite, &fexp)){
 		CString strError(_T("Failed to save ") EMFRIENDS_MET_FILENAME _T(" file"));
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (fexp.GetErrorMessage(szError, ARRSIZE(szError))){
+		if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, _T("%s"), strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		return;
 	}
 	setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
-	
+
 	try{
 		file.WriteUInt8(MET_HEADER);
 		file.WriteUInt32(m_listFriends.GetCount());
 		for (POSITION pos = m_listFriends.GetHeadPosition();pos != 0;)
 			m_listFriends.GetNext(pos)->WriteToFile(&file);
-		if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && !theApp.emuledlg->IsRunning())){
+		if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.emuledlg->IsClosing())) {
 			file.Flush(); // flush file stream buffers to disk buffers
 			if (_commit(_fileno(file.m_pStream)) != 0) // commit disk buffers to disk
 				AfxThrowFileException(CFileException::hardIO, GetLastError(), file.GetFileName());
@@ -131,18 +132,18 @@ void CFriendList::SaveList(){
 	catch(CFileException* error){
 		CString strError(_T("Failed to save ") EMFRIENDS_MET_FILENAME _T(" file"));
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (error->GetErrorMessage(szError, ARRSIZE(szError))){
+		if (GetExceptionMessage(*error, szError, ARRSIZE(szError))) {
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, _T("%s"), strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		error->Delete();
 	}
 }
 
-CFriend* CFriendList::SearchFriend(const uchar* abyUserHash, uint32 dwIP, uint16 nPort) const {
-	POSITION pos = m_listFriends.GetHeadPosition();
-	while (pos){
+CFriend* CFriendList::SearchFriend(const uchar* abyUserHash, uint32 dwIP, uint16 nPort) const
+{
+	for (POSITION pos = m_listFriends.GetHeadPosition(); pos;) {
 		CFriend* cur_friend = m_listFriends.GetNext(pos);
 		// to avoid that unwanted clients become a friend, we have to distinguish between friends with
 		// a userhash and of friends which are identified by IP+port only.
@@ -176,7 +177,7 @@ void CFriendList::ShowFriends() const {
 }
 
 //You can add a friend without a IP to allow the IRC to trade links with lowID users.
-bool CFriendList::AddFriend(const uchar* abyUserhash, uint32 dwLastSeen, uint32 dwLastUsedIP, uint16 nLastUsedPort, 
+bool CFriendList::AddFriend(const uchar* abyUserhash, uint32 dwLastSeen, uint32 dwLastUsedIP, uint16 nLastUsedPort,
 							uint32 dwLastChatted, LPCTSTR pszName, uint32 dwHasHash){
 	// client must have an IP (HighID) or a hash
 	// TODO: check if this can be switched to a hybridID so clients with *.*.*.0 can be added..
@@ -192,7 +193,7 @@ bool CFriendList::AddFriend(const uchar* abyUserhash, uint32 dwLastSeen, uint32 
 }
 
 
-bool CFriendList::IsAlreadyFriend(CString strUserHash) const
+bool CFriendList::IsAlreadyFriend(const CString& strUserHash) const
 {
 	for (POSITION pos = m_listFriends.GetHeadPosition();pos != 0;){
 		const CFriend* cur_friend = m_listFriends.GetNext(pos);
@@ -241,25 +242,20 @@ void CFriendList::RemoveFriend(CFriend* todel){
 		m_wndOutput->UpdateList();
 }
 
-void CFriendList::RemoveAllFriendSlots(){
-	for (POSITION pos = m_listFriends.GetHeadPosition();pos != 0;){
-		CFriend* cur_friend = m_listFriends.GetNext(pos);
-        cur_friend->SetFriendSlot(false);
-	}
+void CFriendList::RemoveAllFriendSlots()
+{
+	for (POSITION pos = m_listFriends.GetHeadPosition();pos != 0;)
+		m_listFriends.GetNext(pos)->SetFriendSlot(false);
 }
 
 void CFriendList::Process()
 {
-	if (::GetTickCount() - m_nLastSaved > MIN2MS(19))
+	if (::GetTickCount() > m_nLastSaved + MIN2MS(19))
 		SaveList();
 }
 
 bool CFriendList::IsValid(CFriend* pToCheck) const
 {
 	// debug/sanity check function
-	for (POSITION pos = m_listFriends.GetHeadPosition();pos != 0;){
-		if (pToCheck == m_listFriends.GetNext(pos))
-			return true;
-	}
-	return false;
+	return m_listFriends.Find(pToCheck) != NULL;
 }

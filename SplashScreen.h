@@ -7,7 +7,7 @@ class CSplashScreen : public CDialog
 	DECLARE_DYNAMIC(CSplashScreen)
 
 public:
-	CSplashScreen(CWnd* pParent = NULL);   // standard constructor
+	explicit CSplashScreen(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CSplashScreen();
 
 // Dialog Data
@@ -21,5 +21,5 @@ protected:
 	BOOL PreTranslateMessage(MSG* pMsg);
 
 	DECLARE_MESSAGE_MAP()
-	void OnPaint(); 
+	void OnPaint();
 };

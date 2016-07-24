@@ -28,7 +28,7 @@ class CZIPFile
 {
 // Construction
 public:
-	CZIPFile(HANDLE hAttach = INVALID_HANDLE_VALUE);
+	explicit CZIPFile(HANDLE hAttach = INVALID_HANDLE_VALUE);
 	~CZIPFile();
 
 // File Class
@@ -51,14 +51,14 @@ public:
 		int			m_nCompression;
 		BOOL		PrepareToDecompress(LPVOID pStream);
 	};
-	
+
 // Attributes
 protected:
 	BOOL	m_bAttach;
 	HANDLE	m_hFile;
 	File*	m_pFile;
 	int		m_nFile;
-	
+
 // Operations
 public:
 	BOOL	Open(LPCTSTR pszFile);
@@ -73,5 +73,5 @@ protected:
 	BOOL	LocateCentralDirectory();
 	BOOL	ParseCentralDirectory(BYTE* pDirectory, DWORD nDirectory);
 	BOOL	SeekToFile(File* pFile);
-	
+
 };

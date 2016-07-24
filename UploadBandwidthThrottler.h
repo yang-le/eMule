@@ -19,7 +19,7 @@
 #include "ThrottledSocket.h" // ZZ:UploadBandWithThrottler (UDP)
 
 class UploadBandwidthThrottler :
-    public CWinThread 
+    public CWinThread
 {
 public:
     UploadBandwidthThrottler(void);
@@ -44,7 +44,7 @@ public:
     void EndThread();
 
     void Pause(bool paused);
-    static uint32 UploadBandwidthThrottler::GetSlotLimit(uint32 currentUpSpeed);
+    static uint32 GetSlotLimit(uint32 currentUpSpeed);
 private:
     static UINT RunProc(LPVOID pParam);
     UINT RunInternal();

@@ -39,15 +39,14 @@ static char THIS_FILE[] = __FILE__;
 // Request from IRC-folks: don't use similar colors for Status and Info messages
 #define	STATUS_MSG_COLOR		RGB(0,128,0)		// dark green
 #define	INFO_MSG_COLOR			RGB(192,0,0)		// mid red
-#define	SENT_TARGET_MSG_COLOR	RGB(0,192,0)		// bright green
-#define	RECV_SOURCE_MSG_COLOR	RGB(0,128,255)		// bright cyan/blue
 
-#define	TIME_STAMP_FORMAT		_T("[%H:%M] ")
+#define	TIME_STAMP_FORMAT		_T("[%H:%M:%S] ")
 
+#pragma warning(push)
 #pragma warning(disable:4125) // decimal digit terminates octal escape sequence
 //static TCHAR s_szTimeStampColorPrefix[] = _T("\00302");		// dark blue
 static TCHAR s_szTimeStampColorPrefix[] = _T("");	// default foreground color
-#pragma warning(default:4125) // decimal digit terminates octal escape sequence
+#pragma warning(pop)
 
 #define	SPLITTER_HORZ_MARGIN	0
 #define	SPLITTER_HORZ_WIDTH		4
@@ -235,6 +234,7 @@ BOOL CIrcWnd::OnInitDialog()
 	m_wndNicks.Init();
 	m_wndNicks.SetColumnWidth(0, LVSCW_AUTOSIZE_USEHEADER);
 	m_wndChanSel.Init();
+	GetDlgItem(IDC_CLOSECHAT)->EnableWindow(false);
 	OnChatTextChange();
 
 	return true;
@@ -286,7 +286,7 @@ void CIrcWnd::DoResize(int iDelta)
 	CRect rcWnd;
 	GetWindowRect(rcWnd);
 	ScreenToClient(rcWnd);
-	m_wndSplitterHorz.SetRange(rcWnd.left + SPLITTER_HORZ_RANGE_MIN + SPLITTER_HORZ_WIDTH/2, 
+	m_wndSplitterHorz.SetRange(rcWnd.left + SPLITTER_HORZ_RANGE_MIN + SPLITTER_HORZ_WIDTH/2,
 							   rcWnd.left + SPLITTER_HORZ_RANGE_MAX - SPLITTER_HORZ_WIDTH/2);
 
 	Invalidate();
@@ -338,7 +338,7 @@ LRESULT CIrcWnd::DefWindowProc(UINT uMessage, WPARAM wParam, LPARAM lParam)
 				CRect rcWnd;
 				GetWindowRect(rcWnd);
 				ScreenToClient(rcWnd);
-				m_wndSplitterHorz.SetRange(rcWnd.left + SPLITTER_HORZ_RANGE_MIN + SPLITTER_HORZ_WIDTH/2, 
+				m_wndSplitterHorz.SetRange(rcWnd.left + SPLITTER_HORZ_RANGE_MIN + SPLITTER_HORZ_WIDTH/2,
 										   rcWnd.left + SPLITTER_HORZ_RANGE_MAX - SPLITTER_HORZ_WIDTH/2);
 			}
 			break;
@@ -505,25 +505,19 @@ void CIrcWnd::AutoComplete()
 	CString sSend;
 	CString sName;
 	m_wndInput.GetWindowText(sSend);
-	if (sSend.ReverseFind(_T(' ')) == -1)
-	{
+	if (sSend.ReverseFind(_T(' ')) == -1) {
 		if (sSend.IsEmpty())
 			return;
 		sName = sSend;
 		sSend.Empty();
-	}
-	else
-	{
+	} else {
 		sName = sSend.Mid(sSend.ReverseFind(_T(' ')) + 1);
 		sSend = sSend.Mid(0, sSend.ReverseFind(_T(' ')) + 1);
 	}
 
-	POSITION pos = m_wndChanSel.m_pCurrentChannel->m_lstNicks.GetHeadPosition();
-	while (pos)
-	{
+	for (POSITION pos = m_wndChanSel.m_pCurrentChannel->m_lstNicks.GetHeadPosition(); pos != NULL;) {
 		Nick* pNick = m_wndChanSel.m_pCurrentChannel->m_lstNicks.GetNext(pos);
-		if (pNick->m_sNick.Left(sName.GetLength()).CompareNoCase(sName) == 0)
-		{
+		if (!pNick->m_sNick.Left(sName.GetLength()).CompareNoCase(sName)) {
 			m_wndInput.SetWindowText(sSend + pNick->m_sNick);
 			m_wndInput.SetFocus();
 			m_wndInput.SendMessage(WM_KEYDOWN, VK_END);
@@ -534,34 +528,25 @@ void CIrcWnd::AutoComplete()
 
 void CIrcWnd::OnBnClickedIrcConnect()
 {
-	if (!m_bConnected)
-	{
+	if (!m_bConnected) {
 		CString sInput = thePrefs.GetIRCNick();
 		sInput.Trim();
 		sInput = sInput.SpanExcluding(_T(" !@#$%^&*():;<>,.?{}~`+=-"));
 		sInput = sInput.Left(25);
-		while (sInput.IsEmpty()
-			   || sInput.CompareNoCase(_T("emule")) == 0
-			   || stristr(sInput, _T("emuleirc")) != NULL)
-		{
+		while (sInput.IsEmpty() || sInput.CompareNoCase(_T("emule")) == 0 || stristr(sInput, _T("emuleirc")) != NULL) {
 			InputBox inputBox;
 			inputBox.SetLabels(GetResString(IDS_IRC_NEWNICK), GetResString(IDS_IRC_NEWNICKDESC), sInput);
-			if (inputBox.DoModal() == IDOK)
-			{
-				sInput = inputBox.GetInput();
-				sInput.Trim();
-				sInput = sInput.SpanExcluding(_T(" !@#$%^&*():;<>,.?{}~`+=-"));
-				sInput = sInput.Left(25);
-			}
-			else
+			if (inputBox.DoModal() != IDOK)
 				return;
+			sInput = inputBox.GetInput();
+			sInput.Trim();
+			sInput = sInput.SpanExcluding(_T(" !@#$%^&*():;<>,.?{}~`+=-"));
+			sInput = sInput.Left(25);
 		}
 		thePrefs.SetIRCNick(sInput);
 		//if not connected, connect..
 		m_pIrcMain->Connect();
-	}
-	else
-	{
+	} else {
 		//If connected, disconnect..
 		m_pIrcMain->Disconnect();
 		m_wndChanList.ResetServerChannelList();
@@ -574,37 +559,34 @@ void CIrcWnd::OnBnClickedCloseChannel(int iItem)
 	TCITEM item;
 	item.mask = TCIF_PARAM;
 	if (iItem == -1)
-	{
 		//If no item was send, get our current channel..
 		iItem = m_wndChanSel.GetCurSel();
-	}
 
-	if (iItem == -1) {
+	if (iItem == -1)
 		//We have no channel, abort.
 		return;
-	}
 
-	if (!m_wndChanSel.GetItem(iItem, &item)) {
+	if (!m_wndChanSel.GetItem(iItem, &item))
 		//We had no valid item here.. Something isn't right..
 		//TODO: this should never happen, so maybe we should remove this tab?
 		return;
-	}
 
 	Channel* pPartChannel = (Channel*)item.lParam;
-	if (pPartChannel->m_eType == Channel::ctNormal && m_bConnected)
-	{
+	if (pPartChannel->m_eType == Channel::ctNormal && m_bConnected) {
 		//If this was a channel and we were connected, do not just delete the channel!!
 		//Send a part command and the server must respond with a successful part which will remove the channel!
 		m_pIrcMain->SendString(_T("PART ") + pPartChannel->m_sName);
 		return;
 	}
-	else if (pPartChannel->m_eType == Channel::ctNormal || pPartChannel->m_eType == Channel::ctPrivate)
-	{
+	if (pPartChannel->m_eType == Channel::ctNormal || pPartChannel->m_eType == Channel::ctPrivate)
 		//If this is a private room, we just remove it as the server doesn't track this.
 		//If this was a channel, but we are disconnected, remove the channel..
 		m_wndChanSel.RemoveChannel(pPartChannel->m_sName);
-		return;
-	}
+}
+
+CString make_time_stamp()
+{
+	return (thePrefs.GetIRCAddTimeStamp()) ? s_szTimeStampColorPrefix + CTime::GetCurrentTime().Format(TIME_STAMP_FORMAT) : CString();
 }
 
 void CIrcWnd::AddStatus(CString sLine, bool bShowActivity, UINT uStatusCode)
@@ -613,43 +595,30 @@ void CIrcWnd::AddStatus(CString sLine, bool bShowActivity, UINT uStatusCode)
 	if (!pStatusChannel)
 		return;
 	sLine += _T("\r\n");
-
+	CString cs = make_time_stamp();
 	// This allows for us to add blank lines to the status..
 	if (sLine == _T("\r\n"))
 		pStatusChannel->m_wndLog.AppendText(sLine);
-	else if (sLine.GetLength() >= 1 && sLine[0] == _T('*'))
-	{
-		if (thePrefs.GetIRCAddTimeStamp())
-			AddColorLine(s_szTimeStampColorPrefix + CTime::GetCurrentTime().Format(TIME_STAMP_FORMAT), pStatusChannel->m_wndLog);
-		AddColorLine(sLine, pStatusChannel->m_wndLog, STATUS_MSG_COLOR);
-	}
-	else if (uStatusCode >= 400)
-	{
-		if (thePrefs.GetIRCAddTimeStamp())
-			AddColorLine(s_szTimeStampColorPrefix + CTime::GetCurrentTime().Format(TIME_STAMP_FORMAT), pStatusChannel->m_wndLog);
-		if (!(sLine.GetLength() >= 1 && sLine[0] == _T('-')))
+	else if (sLine[0] == _T('*'))
+		AddColorLine(cs+sLine, pStatusChannel->m_wndLog, STATUS_MSG_COLOR);
+	else if (uStatusCode >= 400) {
+		if (sLine[0] != _T('-'))
 			sLine = _T("-Error- ") + sLine;
-		AddColorLine(sLine, pStatusChannel->m_wndLog, INFO_MSG_COLOR);
-	}
-	else
-	{
-		if (thePrefs.GetIRCAddTimeStamp())
-			AddColorLine(s_szTimeStampColorPrefix + CTime::GetCurrentTime().Format(TIME_STAMP_FORMAT), pStatusChannel->m_wndLog);
-		AddColorLine(sLine, pStatusChannel->m_wndLog);
-	}
-	if (m_wndChanSel.m_pCurrentChannel == pStatusChannel)
-		return;
-	if (bShowActivity)
-		m_wndChanSel.SetActivity(pStatusChannel, true);
-	if (uStatusCode >= 400)
-	{
-		if (!(sLine.GetLength() >= 1 && sLine[0] == _T('-')))
-			sLine = _T("-Error- ") + sLine;
-		AddInfoMessage(m_wndChanSel.m_pCurrentChannel, sLine);
+		AddColorLine(cs+sLine, pStatusChannel->m_wndLog, INFO_MSG_COLOR);
+	} else
+		AddColorLine(cs+sLine, pStatusChannel->m_wndLog);
+	if (m_wndChanSel.m_pCurrentChannel != pStatusChannel) {
+		if (bShowActivity)
+			m_wndChanSel.SetActivity(pStatusChannel, true);
+		if (uStatusCode >= 400) {
+			if (sLine[0] != _T('-'))
+				sLine = _T("-Error- ") + sLine;
+			AddInfoMessage(m_wndChanSel.m_pCurrentChannel, sLine);
+		}
 	}
 }
 
-void CIrcWnd::AddStatusF(CString sLine, ...)
+void CIrcWnd::AddStatusF(const CString sLine, ...)
 {
 	va_list argptr;
 	va_start(argptr, sLine);
@@ -659,44 +628,28 @@ void CIrcWnd::AddStatusF(CString sLine, ...)
 	AddStatus(sTemp);
 }
 
-void CIrcWnd::AddInfoMessage(Channel *pChannel, CString sLine)
+void CIrcWnd::AddInfoMessage(Channel *pChannel, const CString& sLine)
 {
-	if (sLine.GetLength() >= 1 && sLine[0] == _T('*'))
-	{
-		if (thePrefs.GetIRCAddTimeStamp())
-			AddColorLine(s_szTimeStampColorPrefix + CTime::GetCurrentTime().Format(TIME_STAMP_FORMAT), pChannel->m_wndLog);
-		AddColorLine(sLine, pChannel->m_wndLog, STATUS_MSG_COLOR);
-	}
-	else if (sLine.GetLength() >= 1 && sLine[0] == _T('-') && sLine.Find(_T('-'), 1) != -1)
-	{
-		if (thePrefs.GetIRCAddTimeStamp())
-			AddColorLine(s_szTimeStampColorPrefix + CTime::GetCurrentTime().Format(TIME_STAMP_FORMAT), pChannel->m_wndLog);
-		AddColorLine(sLine, pChannel->m_wndLog, INFO_MSG_COLOR);
-	}
+	CString cs = make_time_stamp()+sLine;
+	if (!sLine.IsEmpty() && sLine[0] == _T('*'))
+		AddColorLine(cs, pChannel->m_wndLog, STATUS_MSG_COLOR);
+	else if (!sLine.IsEmpty() && sLine[0] == _T('-') && sLine.Find(_T('-'), 1) != -1)
+		AddColorLine(cs, pChannel->m_wndLog, INFO_MSG_COLOR);
 	else
-	{
-		if (thePrefs.GetIRCAddTimeStamp())
-			AddColorLine(s_szTimeStampColorPrefix + CTime::GetCurrentTime().Format(TIME_STAMP_FORMAT), pChannel->m_wndLog);
-		AddColorLine(sLine, pChannel->m_wndLog);
-	}
-	if (m_wndChanSel.m_pCurrentChannel == pChannel)
-		return;
-	m_wndChanSel.SetActivity(pChannel, true);
+		AddColorLine(cs, pChannel->m_wndLog);
+	if (m_wndChanSel.m_pCurrentChannel != pChannel)
+		m_wndChanSel.SetActivity(pChannel, true);
 }
 
-void CIrcWnd::AddInfoMessage(const CString& sChannelName, CString sLine, bool bShowChannel)
+void CIrcWnd::AddInfoMessage(const CString& sChannelName, const CString& sLine, const bool bShowChannel)
 {
 	if (sChannelName.IsEmpty())
 		return;
-	sLine += _T("\r\n");
-
 	Channel* pUpdateChannel = m_wndChanSel.FindChannelByName(sChannelName);
-	if (!pUpdateChannel)
-	{
-		if (sChannelName.GetLength() >= 1 && sChannelName[0] == _T('#'))
+	if (!pUpdateChannel) {
+		if (!sChannelName.IsEmpty() && sChannelName[0] == _T('#'))
 			pUpdateChannel = m_wndChanSel.NewChannel(sChannelName, Channel::ctNormal);
-		else if (sChannelName == thePrefs.GetIRCNick())
-		{
+		else if (sChannelName == thePrefs.GetIRCNick()) {
 			// A 'Notice' message for myself - display in current channel window
 			pUpdateChannel = m_wndChanSel.m_pCurrentChannel;
 			if (pUpdateChannel && pUpdateChannel->m_eType == Channel::ctChannelList)
@@ -707,10 +660,10 @@ void CIrcWnd::AddInfoMessage(const CString& sChannelName, CString sLine, bool bS
 	}
 	if (bShowChannel)
 		m_wndChanSel.SelectChannel(pUpdateChannel);
-	AddInfoMessage(pUpdateChannel, sLine);
+	AddInfoMessage(pUpdateChannel, sLine+_T("\r\n"));
 }
 
-void CIrcWnd::AddInfoMessageF(const CString& sChannelName, CString sLine, ...)
+void CIrcWnd::AddInfoMessageF(const CString& sChannelName, const CString sLine, ...)
 {
 	if (sChannelName.IsEmpty())
 		return;
@@ -722,36 +675,58 @@ void CIrcWnd::AddInfoMessageF(const CString& sChannelName, CString sLine, ...)
 	AddInfoMessage(sChannelName, sTemp);
 }
 
-void CIrcWnd::AddMessage(const CString& sChannelName, CString sTargetName, CString sLine)
+void CIrcWnd::AddInfoMessageC(const CString& sChannelName, const COLORREF& msgcolour, const CString& sLine)
+{
+	if (sChannelName.IsEmpty())
+		return;
+	CString cs = make_time_stamp();
+	Channel* pUpdateChannel = m_wndChanSel.FindChannelByName(sChannelName);
+	if (!pUpdateChannel) {
+		if (!sChannelName.IsEmpty() && sChannelName[0] == _T('#'))
+			pUpdateChannel = m_wndChanSel.NewChannel(sChannelName, Channel::ctNormal);
+		else if (sChannelName == thePrefs.GetIRCNick()) {
+			// A 'Notice' message for myself - display in current channel window
+			pUpdateChannel = m_wndChanSel.m_pCurrentChannel;
+			if (pUpdateChannel && pUpdateChannel->m_eType == Channel::ctChannelList)
+				pUpdateChannel = NULL;	// channels list window -> open a new channel window
+		}
+		if (!pUpdateChannel)
+			pUpdateChannel = m_wndChanSel.NewChannel(sChannelName, Channel::ctPrivate);
+	}
+	AddColorLine(cs+sLine+_T("\r\n"), pUpdateChannel->m_wndLog, msgcolour);
+	if (m_wndChanSel.m_pCurrentChannel != pUpdateChannel)
+		m_wndChanSel.SetActivity(pUpdateChannel, true);
+}
+
+void CIrcWnd::AddInfoMessageCF(const CString& sChannelName, const COLORREF& msgcolour, const CString sLine, ...)
+{
+	if (sChannelName.IsEmpty())
+		return;
+	va_list argptr;
+	va_start(argptr, sLine);
+	CString sTemp;
+	sTemp.FormatV(sLine, argptr);
+	va_end(argptr);
+	AddInfoMessageC(sChannelName, msgcolour, sTemp);
+}
+
+void CIrcWnd::AddMessage(const CString& sChannelName, const CString& sTargetName, const CString& sLine)
 {
 	if (sChannelName.IsEmpty() || sTargetName.IsEmpty())
 		return;
-	sLine += _T("\r\n");
-
+	CString cs = make_time_stamp();
 	Channel* pUpdateChannel = m_wndChanSel.FindChannelByName(sChannelName);
 	if (!pUpdateChannel)
-	{
-		if (sChannelName.GetLength() >= 1 && sChannelName[0] == _T('#'))
+		if (!sChannelName.IsEmpty() && sChannelName[0] == _T('#'))
 			pUpdateChannel = m_wndChanSel.NewChannel(sChannelName, Channel::ctNormal);
 		else
 			pUpdateChannel = m_wndChanSel.NewChannel(sChannelName, Channel::ctPrivate);
-	}
-	COLORREF color;
-	if (m_pIrcMain->GetNick() == sTargetName)
-		color = SENT_TARGET_MSG_COLOR;	// color for own nick of a sent message
-	else
-		color = RECV_SOURCE_MSG_COLOR;	// color for nick of received message
-	sTargetName = _T("<") + sTargetName + _T(">");
-	if (thePrefs.GetIRCAddTimeStamp())
-		AddColorLine(s_szTimeStampColorPrefix + CTime::GetCurrentTime().Format(TIME_STAMP_FORMAT), pUpdateChannel->m_wndLog);
-	pUpdateChannel->m_wndLog.AppendKeyWord(sTargetName, color);
-	AddColorLine(_T(" ") + sLine, pUpdateChannel->m_wndLog);
-	if (m_wndChanSel.m_pCurrentChannel == pUpdateChannel)
-		return;
-	m_wndChanSel.SetActivity(pUpdateChannel, true);
+	AddColorLine(cs+_T("<") + sTargetName + _T("> ")+sLine+_T("\r\n"), pUpdateChannel->m_wndLog);
+	if (m_wndChanSel.m_pCurrentChannel != pUpdateChannel)
+		m_wndChanSel.SetActivity(pUpdateChannel, true);
 }
 
-void CIrcWnd::AddMessageF(const CString& sChannelName, CString sTargetName, CString sLine, ...)
+void CIrcWnd::AddMessageF(const CString& sChannelName, const CString& sTargetName, const CString sLine, ...)
 {
 	if (sChannelName.IsEmpty() || sTargetName.IsEmpty())
 		return;
@@ -782,38 +757,22 @@ s_apszSchemes[] =
 
 static const COLORREF s_aColors[16] =
 {
-    //RGB(255,255,255), //  0: white
-    //RGB(  0,  0,  0), //  1: black
-    //RGB(  0,  0,128), //  2: dark blue
-    //RGB(  0,128,  0), //  3: dark green
-    //RGB(255,  0,  0), //  4: red
-    //RGB(128,  0,  0), //  5: dark red
-    //RGB(128,  0,128), //  6: purple
-    //RGB(255,128,  0), //  7: orange
-    //RGB(255,255,  0), //  8: yellow
-    //RGB(  0,255,  0), //  9: green
-    //RGB(  0,128,128), // 10: dark cyan
-    //RGB(  0,255,255), // 11: cyan
-    //RGB(  0,  0,255), // 12: blue
-    //RGB(255,  0,255), // 13: pink
-    //RGB(128,128,128), // 14: dark grey
-    //RGB(192,192,192)  // 15: light grey
     RGB(255,255,255), //  0: white
     RGB(  0,  0,  0), //  1: black
-    RGB(  0,  0,192), //  2: dark blue
-    RGB(  0,192,  0), //  3: dark green
+    RGB(  0,  0,127), //  2: dark blue
+    RGB(  0,147,  0), //  3: dark green
     RGB(255,  0,  0), //  4: red
-    RGB(192,  0,  0), //  5: dark red
-    RGB(192,  0,192), //  6: purple
-    RGB(255,128,  0), //  7: orange
+    RGB(127,  0,  0), //  5: dark red
+    RGB(156,  0,156), //  6: purple
+    RGB(252,127,  0), //  7: orange
     RGB(255,255,  0), //  8: yellow
     RGB(  0,255,  0), //  9: green
-    RGB(  0,128,128), // 10: dark cyan
+    RGB(  0,127,127), // 10: dark cyan
     RGB(  0,255,255), // 11: cyan
     RGB(  0,  0,255), // 12: blue
     RGB(255,  0,255), // 13: pink
-    RGB(128,128,128), // 14: dark grey
-    RGB(192,192,192)  // 15: light grey
+    RGB(127,127,127), // 14: dark grey
+    RGB(210,210,210)  // 15: light grey
 };
 
 bool IsValidURLTerminationChar(TCHAR ch)
@@ -831,18 +790,16 @@ void CIrcWnd::AddColorLine(const CString& line, CHTRichEditCtrl &wnd, COLORREF c
 	int linkfoundat = 0;//This variable is to save needless costly string manipulation
 	COLORREF foregroundColour = crForeground;
 	COLORREF cr = foregroundColour;//set start foreground colour
-	COLORREF backgroundColour = CLR_DEFAULT;
+	COLORREF backgroundColour = wnd.GetBackgroundColor(); //CLR_DEFAULT;
 	COLORREF bgcr = backgroundColour;//set start background colour COMMENTED left for possible future use
 	CString text;
-	while (line.GetLength() > index)
-	{
+	while (line.GetLength() > index) {
 		TCHAR aChar = line[index];
 
 		// find any hyperlinks
 		if (index == linkfoundat) //only run the link finding code once it a line with no links
 		{
-			for (int iScheme = 0; iScheme < _countof(s_apszSchemes); /**/)
-			{
+			for (unsigned iScheme = 0; iScheme < _countof(s_apszSchemes);) {
 				CString strLeft = line.Right(line.GetLength() - index);//make a string of what we have left
 				int foundat = strLeft.Find(s_apszSchemes[iScheme].pszScheme);//get position of link -1 == not found
 				if (foundat == 0) //link starts at this character
@@ -854,8 +811,7 @@ void CIrcWnd::AddColorLine(const CString& line, CHTRichEditCtrl &wnd, COLORREF c
 
 					// search next space or EOL or control code
 					int iLen = strLeft.FindOneOf(_T(" \t\r\n\x02\x03\x0F\x16\x1F"));
-					if (iLen == -1)
-					{
+					if (iLen == -1) {
 						// truncate some special chars from end of URL (and only from end)
 						iLen = strLeft.GetLength();
 						while (iLen > 0) {
@@ -870,9 +826,7 @@ void CIrcWnd::AddColorLine(const CString& line, CHTRichEditCtrl &wnd, COLORREF c
 
 						aChar = line[index]; // get a new char
 						break;
-					}
-					else
-					{
+					} else {
 						// truncate some special chars from end of URL (and only from end)
 						while (iLen > 0) {
 							if (IsValidURLTerminationChar(strLeft[iLen - 1]))
@@ -889,10 +843,8 @@ void CIrcWnd::AddColorLine(const CString& line, CHTRichEditCtrl &wnd, COLORREF c
 						linkfoundat = index; // reset previous finds as iScheme=0 we re-search
 						aChar = line[index]; // get a new char
 					}
-				}
-				else
-				{
-					iScheme++;//only increment if not found at this position so if we find http at this position we check for further http occurances
+				} else {
+					++iScheme;//only increment if not found at this position so if we find http at this position we check for further http occurances
 					//foundat A Valid Position && (no valid position recorded || a farther position previously recorded)
 					if (foundat != -1 && (linkfoundat == index || (index + foundat) < linkfoundat))
 						linkfoundat = index + foundat;//set the next closest link to process
@@ -900,122 +852,114 @@ void CIrcWnd::AddColorLine(const CString& line, CHTRichEditCtrl &wnd, COLORREF c
 			}
 		}
 
-		switch ((_TUCHAR)aChar)
-		{
-			case 0x02: // Bold
-				if (!text.IsEmpty()) {
-					wnd.AppendColoredText(text, cr, bgcr, dwMask);
-					text.Empty();
-				}
-				index++;
-				if (dwMask & CFM_BOLD)
-					dwMask ^= CFM_BOLD;
-				else
-					dwMask |= CFM_BOLD;
-				break;
+		switch ((_TUCHAR)aChar) {
+		case 0x02: // Bold
+			if (!text.IsEmpty()) {
+				wnd.AppendColoredText(text, cr, bgcr, dwMask);
+				text.Empty();
+			}
+			index++;
+			if (dwMask & CFM_BOLD)
+				dwMask ^= CFM_BOLD;
+			else
+				dwMask |= CFM_BOLD;
+			break;
 
-			case 0x03: // foreground & background colour
-				if (!text.IsEmpty()) {
-					wnd.AppendColoredText(text, cr, bgcr, dwMask);
-					text.Empty();
-				}
-				index++;
-				if (line[index] >= _T('0') && line[index] <= _T('9'))
+		case 0x03: // foreground & background colour
+			if (!text.IsEmpty()) {
+				wnd.AppendColoredText(text, cr, bgcr, dwMask);
+				text.Empty();
+			}
+			index++;
+			if (line[index] >= _T('0') && line[index] <= _T('9')) {
+				int iColour = (int)(line[index] - _T('0'));
+				if (iColour == 1 && line[index + 1] >= _T('0') && line[index + 1] <= _T('5')) //is there a second digit
 				{
-					int iColour = (int)(line[index] - _T('0'));
-					if (iColour == 1 && line[index + 1] >= _T('0') && line[index + 1] <= _T('5')) //is there a second digit
+					// make a two digit number
+					index++;
+					iColour = 10 + (int)(line[index] - _T('0'));
+				} else if (iColour == 0 && line[index + 1] >= _T('0') && line[index + 1] <= _T('9')) //if first digit is zero and there is a second digit eg: 3 in 03
+				{
+					// make a two digit number
+					index++;
+					iColour = (int)(line[index] - _T('0'));
+				}
+
+				if (iColour >= 0 && iColour < 16) {
+					// If the first colour is not valid, don't look for a second background colour!
+					cr = s_aColors[iColour];//if the number is a valid colour index set new foreground colour
+					index++;
+					if (line[index] == _T(',') && line[index + 1] >= _T('0') && line[index + 1] <= _T('9'))//is there a background colour
 					{
-						// make a two digit number
-						index++;
-						iColour = 10 + (int)(line[index] - _T('0'));
-					}
-					else if (iColour == 0 && line[index + 1] >= _T('0') && line[index + 1] <= _T('9')) //if first digit is zero and there is a second digit eg: 3 in 03
-					{
-						// make a two digit number
 						index++;
 						iColour = (int)(line[index] - _T('0'));
-					}
-
-					if (iColour >= 0 && iColour < 16)
-					{
-						// If the first colour is not valid, don't look for a second background colour!
-						cr = s_aColors[iColour];//if the number is a valid colour index set new foreground colour
-						index++;
-						if (line[index] == _T(',') && line[index + 1] >= _T('0') && line[index + 1] <= _T('9'))//is there a background colour
+						if (iColour == 1 && line[index + 1] >= _T('0') && line[index + 1] <= _T('5')) // is there a second digit
 						{
+							// make a two digit number
 							index++;
-							int iColour = (int)(line[index] - _T('0'));
-							if (iColour == 1 && line[index + 1] >= _T('0') && line[index + 1] <= _T('5')) // is there a second digit
-							{
-								// make a two digit number
-								index++;
-								iColour = 10 + (int)(line[index] - _T('0'));
-							}
-							else if (iColour == 0 && line[index + 1] >= _T('0') && line[index + 1] <= _T('9')) // if first digit is zero and there is a second digit eg: 3 in 03
-							{
-								// make a two digit number
-								index++;
-								iColour = (int)(line[index] - _T('0'));
-							}
+							iColour = 10 + (int)(line[index] - _T('0'));
+						} else if (iColour == 0 && line[index + 1] >= _T('0') && line[index + 1] <= _T('9')) // if first digit is zero and there is a second digit eg: 3 in 03
+						{
+							// make a two digit number
 							index++;
-							if (iColour >= 0 && iColour < 16)
-								bgcr = s_aColors[iColour];//if the number is a valid colour index set new foreground colour
+							iColour = (int)(line[index] - _T('0'));
 						}
+						index++;
+						if (iColour >= 0 && iColour < 16)
+							bgcr = s_aColors[iColour];//if the number is a valid colour index set new foreground colour
 					}
 				}
-				else
-				{
-					// reset
-					cr = foregroundColour;
-					bgcr = backgroundColour;
-				}
-				break;
-
-			case 0x0F: // attributes reset
-				if (!text.IsEmpty()) {
-					wnd.AppendColoredText(text, cr, bgcr, dwMask);
-					text.Empty();
-				}
-				index++;
-				dwMask = 0;
+			} else {
+				// reset
 				cr = foregroundColour;
 				bgcr = backgroundColour;
-				break;
+			}
+			break;
 
-			case 0x16: // Reverse (as per Mirc) toggle
-				// NOTE:This does not reset the bold/underline,(dwMask = 0), attributes but does reset colours 'As per mIRC 6.16!!'
-				if (!text.IsEmpty()) {
-					wnd.AppendColoredText(text, cr, bgcr, dwMask);
-					text.Empty();
-				}
-				index++;
-				if (cr != backgroundColour || bgcr != foregroundColour) {
-					// set inverse
-					cr = backgroundColour;
-					bgcr = foregroundColour;
-				}
-				else {
-					// reset fg/bk colours
-					cr = foregroundColour;
-					bgcr = backgroundColour;
-				}
-				break;
+		case 0x0F: // attributes reset
+			if (!text.IsEmpty()) {
+				wnd.AppendColoredText(text, cr, bgcr, dwMask);
+				text.Empty();
+			}
+			index++;
+			dwMask = 0;
+			cr = foregroundColour;
+			bgcr = backgroundColour;
+			break;
 
-			case 0x1f: // Underlined toggle
-				if (!text.IsEmpty()) {
-					wnd.AppendColoredText(text, cr, bgcr, dwMask);
-					text.Empty();
-				}
-				index++;
-				if (dwMask & CFM_UNDERLINE)
-					dwMask ^= CFM_UNDERLINE;
-				else
-					dwMask |= CFM_UNDERLINE;
-				break;
+		case 0x16: // Reverse (as per Mirc) toggle
+			// NOTE:This does not reset the bold/underline,(dwMask = 0), attributes but does reset colours 'As per mIRC 6.16!!'
+			if (!text.IsEmpty()) {
+				wnd.AppendColoredText(text, cr, bgcr, dwMask);
+				text.Empty();
+			}
+			index++;
+			if (cr != backgroundColour || bgcr != foregroundColour) {
+				// set inverse
+				cr = backgroundColour;
+				bgcr = foregroundColour;
+			} else {
+				// reset fg/bk colours
+				cr = foregroundColour;
+				bgcr = backgroundColour;
+			}
+			break;
 
-			default:
-				text += aChar;
-				index++;
+		case 0x1f: // Underlined toggle
+			if (!text.IsEmpty()) {
+				wnd.AppendColoredText(text, cr, bgcr, dwMask);
+				text.Empty();
+			}
+			index++;
+			if (dwMask & CFM_UNDERLINE)
+				dwMask ^= CFM_UNDERLINE;
+			else
+				dwMask |= CFM_UNDERLINE;
+			break;
+
+		default:
+			text += aChar;
+			index++;
 		}
 	}
 	if (!text.IsEmpty())
@@ -1024,20 +968,16 @@ void CIrcWnd::AddColorLine(const CString& line, CHTRichEditCtrl &wnd, COLORREF c
 
 void CIrcWnd::SetConnectStatus(bool bFlag)
 {
-	if (bFlag)
-	{
+	if (bFlag) {
 		GetDlgItem(IDC_BN_IRCCONNECT)->SetWindowText(GetResString(IDS_IRC_DISCONNECT));
 		AddStatus(GetResString(IDS_CONNECTED));
 		m_bConnected = true;
-	}
-	else
-	{
+	} else {
 		GetDlgItem(IDC_BN_IRCCONNECT)->SetWindowText(GetResString(IDS_IRC_CONNECT));
 		AddStatus(GetResString(IDS_DISCONNECTED));
 		m_bConnected = false;
 		m_bLoggedIn = false;
-		while (m_wndChanSel.m_lstChannels.GetCount() > 2)
-		{
+		while (m_wndChanSel.m_lstChannels.GetCount() > 2) {
 			Channel* pToDel = m_wndChanSel.m_lstChannels.GetTail();
 			m_wndChanSel.RemoveChannel(pToDel->m_sName);
 		}
@@ -1047,36 +987,32 @@ void CIrcWnd::SetConnectStatus(bool bFlag)
 void CIrcWnd::NoticeMessage(const CString& sSource, const CString& sTarget, const CString& sMessage)
 {
 	if (sTarget == thePrefs.GetIRCNick()) {
-		AddInfoMessageF(sTarget, _T("-%s:%s- %s"), sSource, sTarget, sMessage);
+		AddInfoMessageF(sTarget, _T("-%s- %s"), (LPCTSTR)sSource,/* sTarget,*/ (LPCTSTR)sMessage);
 		return;
 	}
 
 	bool bFlag = false;
-	if (m_wndChanSel.FindChannelByName(sTarget))
-	{
-		AddInfoMessageF(sTarget, _T("-%s:%s- %s"), sSource, sTarget, sMessage);
+	if (m_wndChanSel.FindChannelByName(sTarget)) {
+		AddInfoMessageF(sTarget, _T("-%s:%s- %s"), (LPCTSTR)sSource, (LPCTSTR)sTarget, (LPCTSTR)sMessage);
 		bFlag = true;
-	}
-	else
-	{
-		POSITION pos = m_wndChanSel.m_lstChannels.GetHeadPosition();
-		while (pos)
-		{
+	} else {
+		for (POSITION pos = m_wndChanSel.m_lstChannels.GetHeadPosition(); pos != NULL;) {
 			const Channel *pChannel = m_wndChanSel.m_lstChannels.GetNext(pos);
-			if (pChannel)
-			{
+			if (pChannel) {
 				const Nick* pNick = m_wndNicks.FindNickByName(pChannel->m_sName, sSource);
-				if (pNick)
-				{
-					AddInfoMessageF(pChannel->m_sName, _T("-%s:%s- %s"), sSource, sTarget, sMessage);
+				if (pNick) {
+					AddInfoMessageF(pChannel->m_sName, _T("-%s:%s- %s"), (LPCTSTR)sSource, (LPCTSTR)sTarget, (LPCTSTR)sMessage);
 					bFlag = true;
 				}
 			}
 		}
 	}
-	if (!bFlag)
-	{
-		AddStatusF(_T("-%s:%s- %s"), sSource, sTarget, sMessage);
+	if (!bFlag) {
+		CString cs = make_time_stamp()+_T("-")+sSource+_T("- ")+sMessage+_T("\r\n");
+		Channel* pStatusChannel = m_wndChanSel.m_lstChannels.GetHead();
+		if (pStatusChannel)
+			AddColorLine(cs, pStatusChannel->m_wndLog, INFO_MSG_COLOR);
+		//		AddStatusF(_T("-%s- %s"), sSource,/* sTarget,*/ sMessage);
 	}
 }
 
@@ -1093,12 +1029,10 @@ CString CIrcWnd::StripMessageOfFontCodes(CString sTemp)
 
 CString CIrcWnd::StripMessageOfColorCodes(CString sTemp)
 {
-	if (!sTemp.IsEmpty())
-	{
+	if (!sTemp.IsEmpty()) {
 		CString sTemp1, sTemp2;
 		int iTest = sTemp.Find(_T('\003'));
-		if (iTest != -1)
-		{
+		if (iTest != -1) {
 			int iTestLength = sTemp.GetLength() - iTest;
 			if (iTestLength < 2)
 				return sTemp;
@@ -1106,34 +1040,23 @@ CString CIrcWnd::StripMessageOfColorCodes(CString sTemp)
 			sTemp2 = sTemp.Mid(iTest + 2);
 			if (iTestLength < 4)
 				return sTemp1 + sTemp2;
-			if (sTemp2[0] == _T(',') && sTemp2.GetLength() > 2)
-			{
+			if (sTemp2[0] == _T(',') && sTemp2.GetLength() > 2) {
 				sTemp2 = sTemp2.Mid(2);
 				for (TCHAR iIndex = _T('0'); iIndex <= _T('9'); iIndex++)
-				{
 					if (sTemp2[0] == iIndex)
 						sTemp2 = sTemp2.Mid(1);
-				}
-			}
-			else
-			{
+			} else
 				for (TCHAR iIndex = _T('0'); iIndex <= _T('9'); iIndex++)
-				{
-					if (sTemp2[0] == iIndex)
-					{
+					if (sTemp2[0] == iIndex) {
 						sTemp2 = sTemp2.Mid(1);
-						if (sTemp2[0] == _T(',') && sTemp2.GetLength() > 2)
-						{
+						if (sTemp2[0] == _T(',') && sTemp2.GetLength() > 2) {
 							sTemp2 = sTemp2.Mid(2);
-							for (TCHAR iIndex = _T('0'); iIndex <= _T('9'); iIndex++)
-							{
-								if (sTemp2[0] == iIndex)
+							for (TCHAR jIndex = _T('0'); jIndex <= _T('9'); ++jIndex)
+								if (sTemp2[0] == jIndex)
 									sTemp2 = sTemp2.Mid(1);
-							}
+
 						}
 					}
-				}
-			}
 			sTemp = sTemp1 + sTemp2;
 			sTemp = StripMessageOfColorCodes(sTemp);
 		}
@@ -1160,7 +1083,7 @@ void CIrcWnd::SetTitle(const CString& sChannel, const CString& sTitle)
 		ScreenToClient(rcTitle);
 
 		pChannel->m_wndSplitter.SetWindowPos(NULL, rcTitle.left, rcTitle.bottom, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-		
+
 		CRect rcSplitter;
 		pChannel->m_wndSplitter.GetWindowRect(rcSplitter);
 		ScreenToClient(rcSplitter);
@@ -1201,70 +1124,60 @@ void CIrcWnd::OnChatTextChange()
 
 void CIrcWnd::ParseChangeMode(const CString& sChannel, const CString& sChanger, CString sCommands, const CString& sParams)
 {
+	if (sChanger.IsEmpty())
+		return;
 	CString sCommandsOrig = sCommands;
 	CString sParamsOrig = sParams;
-	try
-	{
-		if( sCommands.GetLength() >= 2 )
-		{
+	try {
+		if (sCommands.GetLength() >= 2) {
 			CString sDir;
 			int iParamIndex = 0;
-			while( !sCommands.IsEmpty() )
-			{
-				if (sCommands[0] == _T('+') || sCommands[0] == _T('-'))
-				{
+			while (!sCommands.IsEmpty()) {
+				if (sCommands[0] == _T('+') || sCommands[0] == _T('-')) {
 					sDir = sCommands.Left(1);
 					sCommands = sCommands.Right(sCommands.GetLength()-1);
 				}
-				if( !sCommands.IsEmpty() && !sDir.IsEmpty() )
-				{
+				if (!sCommands.IsEmpty() && !sDir.IsEmpty()) {
 					CString sCommand = sCommands.Left(1);
 					sCommands = sCommands.Right(sCommands.GetLength()-1);
 
-					if(m_wndNicks.m_sUserModeSettings.Find(sCommand) != -1 )
-					{
+					if (m_wndNicks.m_sUserModeSettings.Find(sCommand) != -1) {
 						//This is a user mode change and must have a param!
 						CString sParam = sParams.Tokenize(_T(" "), iParamIndex);
-						m_wndNicks.ChangeNickMode( sChannel, sParam, sDir + sCommand);
+						m_wndNicks.ChangeNickMode(sChannel, sParam, sDir + sCommand);
 					}
-					if(m_wndChanSel.m_sChannelModeSettingsTypeA.Find(sCommand) != -1)
-					{
+					if (m_wndChanSel.m_sChannelModeSettingsTypeA.Find(sCommand) != -1) {
 						//We do not use these messages yet.. But we can display them for the user to see
 						//These modes always have a param and will add or remove a user from some type of list.
 						CString sParam = sParams.Tokenize(_T(" "), iParamIndex);
-						m_wndChanSel.ChangeChanMode( sChannel, sParam, sDir, sCommand);
+						m_wndChanSel.ChangeChanMode(sChannel, sParam, sDir, sCommand);
 					}
-					if(m_wndChanSel.m_sChannelModeSettingsTypeB.Find(sCommand) != -1)
-					{
+					if (m_wndChanSel.m_sChannelModeSettingsTypeB.Find(sCommand) != -1) {
 						//We do not use these messages yet.. But we can display them for the user to see
 						//These modes will always have a param..
 						CString sParam = sParams.Tokenize(_T(" "), iParamIndex);
-						m_wndChanSel.ChangeChanMode( sChannel, sParam, sDir, sCommand);
+						m_wndChanSel.ChangeChanMode(sChannel, sParam, sDir, sCommand);
 					}
-					if(m_wndChanSel.m_sChannelModeSettingsTypeC.Find(sCommand) != -1 )
-					{
+					if (m_wndChanSel.m_sChannelModeSettingsTypeC.Find(sCommand) != -1) {
 						//We do not use these messages yet.. But we can display them for the user to see
 						//These modes will only have a param if your setting it!
 						CString sParam;
 						if (sDir == _T("+"))
 							sParam = sParams.Tokenize(_T(" "), iParamIndex);
-						m_wndChanSel.ChangeChanMode( sChannel, sParam, sDir, sCommand);
+						m_wndChanSel.ChangeChanMode(sChannel, sParam, sDir, sCommand);
 					}
-					if(m_wndChanSel.m_sChannelModeSettingsTypeD.Find(sCommand) != -1 )
-					{
+					if (m_wndChanSel.m_sChannelModeSettingsTypeD.Find(sCommand) != -1) {
 						//We do not use these messages yet.. But we can display them for the user to see
 						//These modes will never have a param for it!
 						CString sParam;
-						m_wndChanSel.ChangeChanMode( sChannel, sParam, sDir, sCommand);
+						m_wndChanSel.ChangeChanMode(sChannel, sParam, sDir, sCommand);
 					}
 				}
 			}
 			if (!thePrefs.GetIRCIgnoreMiscMessages())
-				AddInfoMessageF(sChannel, GetResString(IDS_IRC_SETSMODE), sChanger, sCommandsOrig, sParamsOrig);
+				AddInfoMessageF(sChannel, GetResString(IDS_IRC_SETSMODE), (LPCTSTR)sChanger, (LPCTSTR)sCommandsOrig, (LPCTSTR)sParamsOrig);
 		}
-	}
-	catch(...)
-	{
+	} catch (...) {
 		AddInfoMessage(sChannel, GetResString(IDS_IRC_NOTSUPPORTED));
 		ASSERT(0);
 	}

@@ -1,4 +1,28 @@
-// $Id: test_io.cpp,v 1.6 2003/03/02 15:17:21 t1mpy Exp $
+// $Id: test_io.cpp,v 1.7 2009/08/31 22:01:50 nagilo Exp $
+
+// id3lib: a C++ library for creating and manipulating id3v1/v2 tags
+// Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
+
+// This library is free software; you can redistribute it and/or modify it
+// under the terms of the GNU Library General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or (at your
+// option) any later version.
+//
+// This library is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+// License for more details.
+//
+// You should have received a copy of the GNU Library General Public License
+// along with this library; if not, write to the Free Software Foundation,
+// Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+// The id3lib authors encourage improvements and optimisations to be sent to
+// the id3lib coordinator.  Please see the README file for details on where to
+// send such submissions.  See the AUTHORS file for a list of people who have
+// contributed to id3lib.  See the ChangeLog file for a list of changes to
+// id3lib.  These files are distributed with id3lib at
+// http://download.sourceforge.net/id3lib/
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -11,11 +35,8 @@
 #include <id3/io_strings.h>
 #include <id3/utils.h>
 
-using std::cout;
-using std::endl;
-using std::cerr;
-
 using namespace dami;
+using namespace std;
 
 int
 main(size_t argc, const char** argv)
@@ -26,9 +47,9 @@ main(size_t argc, const char** argv)
 
   ID3_IStreamReader isr(cin);
   BString orig = io::readAllBinary(isr);
-    
+
   cout << "input size:    " << orig.size() << endl;
-  
+
   cout << endl;
 
   cout << "=== Testing Synchronization ===" << endl;
@@ -51,7 +72,7 @@ main(size_t argc, const char** argv)
 
     uw.writeChars(synced.data(), synced.size());
   }
-  
+
   cout << "unsynced size: " << unsynced.size() << endl;
 
   BString resynced;
@@ -135,7 +156,7 @@ main(size_t argc, const char** argv)
   String compressed;
   size_t origSize = orig.size();
   cout << "origSize = " << origSize << endl;
-  
+
 
   {
     io::StringWriter sw(compressed);
@@ -152,7 +173,7 @@ main(size_t argc, const char** argv)
   cout << "compressed size = " << compressed.size() << endl;
 
   BString uncompressed;
-  
+
   if (origSize == 0)
   {
     cout << "no compression" << endl;
@@ -188,9 +209,9 @@ main(size_t argc, const char** argv)
 
   cout << endl;
   cout << "ascii.size() = " << ascii.size() << endl;
-  String unicode = dami::convert(ascii, ID3TE_ASCII, ID3TE_UTF16BE);
+  String unicode = dami::convert(ascii, ID3TE_ISO8859_1, ID3TE_UTF16BE);
   cout << "uncicode.size() = " << unicode.size() << endl;
-  String ascii_2 = dami::convert(unicode, ID3TE_UTF16BE, ID3TE_ASCII);
+  String ascii_2 = dami::convert(unicode, ID3TE_UTF16BE, ID3TE_ISO8859_1);
   if (ascii != ascii_2)
   {
     cout << "ascii != ascii_2" << endl;

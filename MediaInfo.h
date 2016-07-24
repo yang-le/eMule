@@ -102,6 +102,11 @@ typedef struct tagVIDEOINFOHEADER {
 #define NOMCIWND
 #define NOAVICAP
 #define NOMSACM
+#include <windows.h>
+#include <mmiscapi.h>
+#include <mmeapi.h>
+#define MMNOMIXERDEV
+#include <mmddk.h>
 #include <vfw.h>
 
 
@@ -111,10 +116,10 @@ typedef struct tagVIDEOINFOHEADER {
 struct SMediaInfo
 {
 	SMediaInfo()
+		: ulFileSize(0ull)
 	{
 		(void)strFileFormat;
 		(void)strMimeType;
-		ulFileSize = (uint64)0;
 		fFileLengthSec = 0.0;
 		bFileLengthEstimated = false;
 		(void)strTitle;
@@ -163,6 +168,8 @@ struct SMediaInfo
 		fAudioLengthSec = strm.fAudioLengthSec;
 		bAudioLengthEstimated = strm.bAudioLengthEstimated;
 		strAudioLanguage = strm.strAudioLanguage;
+		strFileName = strm.strFileName;
+		bOutputFileName = strm.bOutputFileName;
 		return *this;
 	}
 

@@ -67,8 +67,7 @@ bool CTextToSpeech::CreateTTS()
 	bool bResult = FALSE;
 	if (m_pISpVoice == NULL)
 	{
-		HRESULT hr;
-		if (SUCCEEDED(hr = m_pISpVoice.CoCreateInstance(CLSID_SpVoice)))
+		if (SUCCEEDED(m_pISpVoice.CoCreateInstance(CLSID_SpVoice)))
 		{
 			m_lTTSLangID = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL);
 			bResult = TRUE;
@@ -105,7 +104,7 @@ static bool s_bInitialized = false;
 bool Speak(LPCTSTR pszSay)
 {
 #ifdef HAVE_SAPI_H
-	if (theApp.emuledlg == NULL || !theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg == NULL || theApp.emuledlg->IsClosing())
 		return false;
 	if (s_bTTSDisabled)
 		return false;

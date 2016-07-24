@@ -42,7 +42,7 @@ public:
 	CTransferWnd* m_pwndTransfer;
 
 	BOOL Create(CWnd* pParent);
-	
+
 	//Wrappers
 	void Localize();
 	void ShowQueueCount(uint32 number);
@@ -55,7 +55,7 @@ public:
 	void SetToolTipsDelay(DWORD dwDelay);
 	void OnDisableList();
 	void UpdateListCount(EWnd2 listindex, int iCount = -1);
-	int	 AddCategory(CString newtitle,CString newincoming,CString newcomment,CString newautocat,bool addTab=true);
+	int	 AddCategory(const CString& newtitle, const CString& newincoming, const CString& newcomment, const CString& newautocat, bool addTab = true);
 	void ShowToolbar(bool bShow);
 
 	CUploadListCtrl*		GetUploadList();

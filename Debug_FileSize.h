@@ -45,7 +45,7 @@ public:
 	__declspec(deprecated) CEMFileSize& operator+=(sint64 k1)				{Check(); m_nSize += k1; Check(); return *this; }
 	__declspec(deprecated) CEMFileSize& operator+=(uint32 k1)				{Check(); m_nSize += k1; Check(); return *this; }
 	__declspec(deprecated) CEMFileSize& operator+=(sint32 k1)				{Check(); m_nSize += k1; Check(); return *this; }
-    
+
 
 	operator uint64() const													{return m_nSize;}
 	operator double() const													{return (double)m_nSize;}
@@ -108,7 +108,7 @@ public:
 	friend CEMFileSize operator/(uint64 k1,const CEMFileSize& k2)					{return CEMFileSize(k1, k2.m_nSize, DFSA_DIV);}
 
 private:
-	CEMFileSize(uint64 nSize1, uint64 nSize2, E_DebugFSAtion edfsAction)	{ 
+	CEMFileSize(uint64 nSize1, uint64 nSize2, E_DebugFSAtion edfsAction)	{
 		if (edfsAction == DFSA_ADD){
 			m_nSize = nSize1 + nSize2;
 			ASSERT( m_nSize >= nSize1 && m_nSize >= nSize2 && m_nSize <= 0x4000000000 );

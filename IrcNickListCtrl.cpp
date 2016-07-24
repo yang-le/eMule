@@ -54,7 +54,7 @@ void CIrcNickListCtrl::Init()
 	SortItems(&SortProc, GetSortItem() + (GetSortAscending() ? 0 : 10));
 }
 
-int CIrcNickListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+int CALLBACK CIrcNickListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	const Nick* pItem1 = (Nick*)lParam1;
 	const Nick* pItem2 = (Nick*)lParam2;
@@ -151,8 +151,7 @@ Nick* CIrcNickListCtrl::FindNickByName(const CString& sChannel, const CString& s
 
 Nick* CIrcNickListCtrl::FindNickByName(const Channel* pChannel, const CString& sName)
 {
-	POSITION pos = pChannel->m_lstNicks.GetHeadPosition();
-	while (pos)
+	for (POSITION pos = pChannel->m_lstNicks.GetHeadPosition(); pos != NULL;)
 	{
 		Nick* pNick = pChannel->m_lstNicks.GetNext(pos);
 		if (pNick->m_sNick == sName)
@@ -212,12 +211,10 @@ void CIrcNickListCtrl::RefreshNickList(const CString& sChannel)
 		return;
 	}
 
-	POSITION pos = pChannel->m_lstNicks.GetHeadPosition();
-	while (pos)
+	for (POSITION pos = pChannel->m_lstNicks.GetHeadPosition(); pos != NULL;)
 	{
 		const Nick* pNick = pChannel->m_lstNicks.GetNext(pos);
-		int iItem = InsertItem(LVIF_TEXT | LVIF_PARAM, GetItemCount(), pNick->m_sModes + pNick->m_sNick, 0, 0, 0, (LPARAM)pNick);
-		if (iItem < 0)
+		if (InsertItem(LVIF_TEXT | LVIF_PARAM, GetItemCount(), pNick->m_sModes + pNick->m_sNick, 0, 0, 0, (LPARAM)pNick) < 0)
 			break;
 	}
 	UpdateNickCount();
@@ -230,11 +227,10 @@ bool CIrcNickListCtrl::RemoveNick(const CString& sChannel, const CString& sNick)
 	if (!pChannel)
 		return false;
 
-	POSITION pos = pChannel->m_lstNicks.GetHeadPosition();
-	while (pos)
+	for (POSITION pos1 = pChannel->m_lstNicks.GetHeadPosition(); pos1 != NULL;)
 	{
-		POSITION posPrev = pos;
-		Nick *pNick = pChannel->m_lstNicks.GetNext(pos);
+		POSITION pos2 = pos1;
+		Nick *pNick = pChannel->m_lstNicks.GetNext(pos1);
 		if (pNick->m_sNick == sNick)
 		{
 			if (pChannel == m_pParent->m_wndChanSel.m_pCurrentChannel)
@@ -250,7 +246,7 @@ bool CIrcNickListCtrl::RemoveNick(const CString& sChannel, const CString& sNick)
 					UpdateNickCount();
 				}
 			}
-			pChannel->m_lstNicks.RemoveAt(posPrev);
+			pChannel->m_lstNicks.RemoveAt(pos2);
 			delete pNick;
 			return true;
 		}
@@ -261,25 +257,20 @@ bool CIrcNickListCtrl::RemoveNick(const CString& sChannel, const CString& sNick)
 void CIrcNickListCtrl::DeleteAllNick(const CString& sChannel)
 {
 	Channel* pChannel = m_pParent->m_wndChanSel.FindChannelByName(sChannel);
-	if (!pChannel)
-		return;
-
-	POSITION pos = pChannel->m_lstNicks.GetHeadPosition();
-	while (pos)
-		delete pChannel->m_lstNicks.GetNext(pos);
-	pChannel->m_lstNicks.RemoveAll();
+	if (pChannel)
+		while (!pChannel->m_lstNicks.IsEmpty())
+			delete pChannel->m_lstNicks.RemoveHead();
 }
 
 void CIrcNickListCtrl::DeleteNickInAll(const CString& sNick, const CString& sMessage)
 {
-	POSITION pos = m_pParent->m_wndChanSel.m_lstChannels.GetHeadPosition();
-	while (pos)
+	for (POSITION pos = m_pParent->m_wndChanSel.m_lstChannels.GetHeadPosition(); pos != NULL;)
 	{
 		Channel *pChannel = m_pParent->m_wndChanSel.m_lstChannels.GetNext(pos);
 		if (RemoveNick(pChannel->m_sName, sNick))
 		{
 			if (!thePrefs.GetIRCIgnoreQuitMessages())
-				m_pParent->AddInfoMessageF(pChannel->m_sName, GetResString(IDS_IRC_HASQUIT), sNick, sMessage);
+				m_pParent->AddInfoMessageCF(pChannel->m_sName, RGB(0,0,127), GetResString(IDS_IRC_HASQUIT), (LPCTSTR)sNick, (LPCTSTR)sMessage);
 		}
 	}
 }
@@ -290,8 +281,7 @@ bool CIrcNickListCtrl::ChangeNick(const CString& sChannel, const CString& sOldNi
 	if (!pChannel)
 		return false;
 
-	POSITION pos = pChannel->m_lstNicks.GetHeadPosition();
-	while (pos)
+	for (POSITION pos = pChannel->m_lstNicks.GetHeadPosition(); pos != NULL;)
 	{
 		Nick *pNick = pChannel->m_lstNicks.GetNext(pos);
 		if (pNick->m_sNick == sOldNick)
@@ -323,8 +313,7 @@ bool CIrcNickListCtrl::ChangeNickMode(const CString& sChannel, const CString& sN
 	if (!pChannel)
 		return false;
 
-	POSITION pos = pChannel->m_lstNicks.GetHeadPosition();
-	while (pos)
+	for (POSITION pos = pChannel->m_lstNicks.GetHeadPosition(); pos != NULL;)
 	{
 		Nick *pNick = pChannel->m_lstNicks.GetNext(pos);
 		if (pNick->m_sNick == sNick)
@@ -419,14 +408,13 @@ bool CIrcNickListCtrl::ChangeAllNick(const CString& sOldNick, const CString& sNe
 
 	// Go through all other channel nicklists..
 	bool bChanged = false;
-	POSITION pos = m_pParent->m_wndChanSel.m_lstChannels.GetHeadPosition();
-	while (pos)
+	for (POSITION pos = m_pParent->m_wndChanSel.m_lstChannels.GetHeadPosition(); pos != NULL;)
 	{
 		pChannel = m_pParent->m_wndChanSel.m_lstChannels.GetNext(pos);
 		if (ChangeNick(pChannel->m_sName, sOldNick, sNewNick))
 		{
 			if (!thePrefs.GetIRCIgnoreMiscMessages())
-				m_pParent->AddInfoMessageF(pChannel->m_sName, GetResString(IDS_IRC_NOWKNOWNAS), sOldNick, sNewNick);
+				m_pParent->AddInfoMessageF(pChannel->m_sName, GetResString(IDS_IRC_NOWKNOWNAS), (LPCTSTR)sOldNick, (LPCTSTR)sNewNick);
 			bChanged = true;
 		}
 	}
@@ -438,9 +426,9 @@ void CIrcNickListCtrl::UpdateNickCount()
 	CString sResource;
 	int iItemCount = GetItemCount();
 	if (iItemCount)
-		sResource.Format(_T("%s (%u)"), GetResString(IDS_IRC_NICK), iItemCount);
+		sResource.Format(_T("%s (%d)"), (LPCTSTR)GetResString(IDS_IRC_NICK), iItemCount);
 	else
-		sResource.Format(_T("%s"), GetResString(IDS_IRC_NICK));
+		sResource.Format(_T("%s"), (LPCTSTR)GetResString(IDS_IRC_NICK));
 	HDITEM hdi;
 	hdi.mask = HDI_TEXT;
 	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)sResource);
@@ -480,7 +468,7 @@ BOOL CIrcNickListCtrl::OnCommand(WPARAM wParam, LPARAM)
 			if (pNick && pChannel)
 			{
 				CString sSend;
-				sSend.Format(_T("KICK %s %s"), pChannel->m_sName, pNick->m_sNick);
+				sSend.Format(_T("KICK %s %s"), (LPCTSTR)pChannel->m_sName, (LPCTSTR)pNick->m_sNick);
 				m_pParent->m_pIrcMain->SendString(sSend);
 			}
 			return TRUE;
@@ -489,7 +477,7 @@ BOOL CIrcNickListCtrl::OnCommand(WPARAM wParam, LPARAM)
 			if (pNick && pChannel)
 			{
 				CString sSend;
-				sSend.Format(_T("cs ban %s %s"), pChannel->m_sName, pNick->m_sNick);
+				sSend.Format(_T("cs ban %s %s"), (LPCTSTR)pChannel->m_sName, (LPCTSTR)pNick->m_sNick);
 				m_pParent->m_pIrcMain->SendString(sSend);
 			}
 			return TRUE;
@@ -498,8 +486,8 @@ BOOL CIrcNickListCtrl::OnCommand(WPARAM wParam, LPARAM)
 			if (pNick && pChannel)
 			{
 				CString sSend;
-				sSend.Format(GetResString(IDS_IRC_SLAPMSGSEND), pChannel->m_sName, pNick->m_sNick);
-				m_pParent->AddInfoMessageF(pChannel->m_sName, GetResString(IDS_IRC_SLAPMSG), m_pParent->m_pIrcMain->GetNick(), pNick->m_sNick);
+				sSend.Format(GetResString(IDS_IRC_SLAPMSGSEND), (LPCTSTR)pChannel->m_sName, (LPCTSTR)pNick->m_sNick);
+				m_pParent->AddInfoMessageF(pChannel->m_sName, GetResString(IDS_IRC_SLAPMSG), (LPCTSTR)m_pParent->m_pIrcMain->GetNick(), (LPCTSTR)pNick->m_sNick);
 				m_pParent->m_pIrcMain->SendString(sSend);
 			}
 			return TRUE;
@@ -509,7 +497,7 @@ BOOL CIrcNickListCtrl::OnCommand(WPARAM wParam, LPARAM)
 			{
 				//SetVerify() sets a new challenge which is required by the other end to respond with for some protection.
 				CString sSend;
-				sSend.Format(_T("PRIVMSG %s :\001RQSFRIEND|%u|\001"), pNick->m_sNick, m_pParent->m_pIrcMain->SetVerify());
+				sSend.Format(_T("PRIVMSG %s :\001RQSFRIEND|%u|\001"), (LPCTSTR)pNick->m_sNick, m_pParent->m_pIrcMain->SetVerify());
 				m_pParent->m_pIrcMain->SendString(sSend);
 			}
 			return TRUE;
@@ -521,7 +509,7 @@ BOOL CIrcNickListCtrl::OnCommand(WPARAM wParam, LPARAM)
 			{
 				//We send our nick and ClientID to allow the other end to only accept links from friends..
 				CString sSend;
-				sSend.Format(_T("PRIVMSG %s :\001SENDLINK|%s|%s\001"), pNick->m_sNick, md4str(thePrefs.GetUserHash()), m_pParent->GetSendFileString());
+				sSend.Format(_T("PRIVMSG %s :\001SENDLINK|%s|%s\001"), (LPCTSTR)pNick->m_sNick, (LPCTSTR)md4str(thePrefs.GetUserHash()), (LPCTSTR)m_pParent->GetSendFileString());
 				m_pParent->m_pIrcMain->SendString(sSend);
 			}
 			return TRUE;

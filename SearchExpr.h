@@ -35,7 +35,7 @@ public:
 		m_nNum = 0;
 	}
 
-	CSearchAttr(const CStringA* pstrString)
+	explicit CSearchAttr(const CStringA* pstrString)
 	{
 		m_iTag = FT_FILENAME;
 		m_str = *pstrString;
@@ -78,7 +78,7 @@ public:
 			case FT_FILERATING:
 			case FT_MEDIA_BITRATE:
 			case FT_MEDIA_LENGTH:
-				strDbg.AppendFormat(_T("%s%s%I64u"), DbgGetFileMetaTagName(m_iTag), DbgGetSearchOperatorName(m_uIntegerOperator), m_nNum);
+				strDbg.AppendFormat(_T("%s%s%I64u"), (LPCTSTR)DbgGetFileMetaTagName(m_iTag), (LPCTSTR)DbgGetSearchOperatorName(m_uIntegerOperator), m_nNum);
 				break;
 			case FT_FILETYPE:
 			case FT_FILEFORMAT:
@@ -87,11 +87,11 @@ public:
 			case FT_MEDIA_ALBUM:
 			case FT_MEDIA_ARTIST:
 				ASSERT( m_uIntegerOperator == ED2K_SEARCH_OP_EQUAL );
-				strDbg.AppendFormat(_T("%s=%s"), DbgGetFileMetaTagName(m_iTag), OptUtf8ToStr(m_str));
+				strDbg.AppendFormat(_T("%s=%s"), (LPCTSTR)DbgGetFileMetaTagName(m_iTag), (LPCTSTR)OptUtf8ToStr(m_str));
 				break;
 			default:
 				ASSERT( m_iTag == FT_FILENAME );
-				strDbg.AppendFormat(_T("\"%s\""), OptUtf8ToStr(m_str));
+				strDbg.AppendFormat(_T("\"%s\""), (LPCTSTR)OptUtf8ToStr(m_str));
 		}
 		return strDbg;
 	}
@@ -111,11 +111,11 @@ public:
 		(void)m_aExpr;
 	}
 
-	CSearchExpr(const CSearchAttr* pAttr)
+	explicit CSearchExpr(const CSearchAttr* pAttr)
 	{
 		m_aExpr.Add(*pAttr);
 	}
-	
+
 	void Add(ESearchOperators eOperator)
 	{
 		if (eOperator == SEARCHOP_OR)

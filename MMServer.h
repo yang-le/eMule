@@ -25,7 +25,7 @@ class CxImage;
 class CKnownFile;
 class CPartFile;
 
-#define  MMS_BLOCKTIME	600000	
+#define  MMS_BLOCKTIME	600000
 #define  MMS_SEARCHID	500
 
 class CMMServer
@@ -54,7 +54,7 @@ public:
 	void	PreviewFinished(CxImage** imgFrames, uint8 nCount);
 	void	Process();
 	void	AddFinishedFile(CKnownFile* file)	{m_SentFinishedList.Add(file);}
-	CStringA GetContentType();
+	CStringA GetContentType() const;
 
 	UINT_PTR h_timer;
 	uint8	m_byPendingCommand;

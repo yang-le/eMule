@@ -107,10 +107,10 @@ void CTitleMenu::DeleteIcons()
 
 BOOL CTitleMenu::CreateMenu()
 {
-	ASSERT( m_mapIconNameToIconIdx.GetCount() == 0 );
-	ASSERT( m_mapMenuIdToIconIdx.GetCount() == 0 );
+	ASSERT( m_mapIconNameToIconIdx.IsEmpty() );
+	ASSERT( m_mapMenuIdToIconIdx.IsEmpty() );
 	ASSERT( m_ImageList.m_hImageList == NULL || m_ImageList.GetImageCount() == 0 );
-	ASSERT( m_mapIconNameToBitmap.GetCount() == 0 );
+	ASSERT( m_mapIconNameToBitmap.IsEmpty() );
 	return __super::CreateMenu();
 }
 
@@ -142,11 +142,14 @@ void CTitleMenu::AddMenuTitle(LPCTSTR lpszTitle, bool bIsIconMenu)
 
 void CTitleMenu::EnableIcons()
 {
-	if (thePrefs.GetWindowsVersion() == _WINVER_XP_ || 
-		thePrefs.GetWindowsVersion() == _WINVER_2K_ || 
-		thePrefs.GetWindowsVersion() == _WINVER_2003_ || 
-		thePrefs.GetWindowsVersion() == _WINVER_VISTA_|| 
-		thePrefs.GetWindowsVersion() == _WINVER_7_)
+	if (thePrefs.GetWindowsVersion() == _WINVER_XP_ ||
+		thePrefs.GetWindowsVersion() == _WINVER_2K_ ||
+		thePrefs.GetWindowsVersion() == _WINVER_2003_ ||
+		thePrefs.GetWindowsVersion() == _WINVER_VISTA_||
+		thePrefs.GetWindowsVersion() == _WINVER_7_ ||
+		thePrefs.GetWindowsVersion() == _WINVER_8_ ||
+		thePrefs.GetWindowsVersion() == _WINVER_8_1_ ||
+		thePrefs.GetWindowsVersion() == _WINVER_10_)
 	{
 		m_bIconMenu = true;
 		m_ImageList.DeleteImageList();
@@ -201,7 +204,7 @@ void CTitleMenu::DrawItem(LPDRAWITEMSTRUCT di)
 		if (!g_bLowColorDesktop && m_pfnGradientFill && (m_clLeft != m_clRight))
 		{
  			TRIVERTEX rcVertex[2];
-			di->rcItem.right--; // exclude this point, like FillRect does 
+			di->rcItem.right--; // exclude this point, like FillRect does
 			di->rcItem.bottom--;
 			rcVertex[0].x = di->rcItem.left;
 			rcVertex[0].y = di->rcItem.top;
@@ -209,7 +212,7 @@ void CTitleMenu::DrawItem(LPDRAWITEMSTRUCT di)
 			rcVertex[0].Green = GetGValue(m_clLeft) << 8;
 			rcVertex[0].Blue = GetBValue(m_clLeft) << 8;
 			rcVertex[0].Alpha = 0x0000;
-			rcVertex[1].x = di->rcItem.right; 
+			rcVertex[1].x = di->rcItem.right;
 			rcVertex[1].y = di->rcItem.bottom;
 			rcVertex[1].Red = GetRValue(m_clRight) << 8;
 			rcVertex[1].Green = GetGValue(m_clRight) << 8;
@@ -335,8 +338,8 @@ void CTitleMenu::SetMenuBitmap(UINT nFlags, UINT_PTR nIDNewItem, LPCTSTR /*lpszN
 		return;
 	}
 
-	// Those MFC warnings which are thrown when one opens certain context menus 
-	// are because of sub menu items. All the IDs shown in the warnings are sub 
+	// Those MFC warnings which are thrown when one opens certain context menus
+	// are because of sub menu items. All the IDs shown in the warnings are sub
 	// menu handles! Seems to be a bug in MFC. Look at '_AfxFindPopupMenuFromID'.
 	// ---
 	// Warning: unknown WM_MEASUREITEM for menu item 0x530601.
@@ -350,7 +353,7 @@ void CTitleMenu::SetMenuBitmap(UINT nFlags, UINT_PTR nIDNewItem, LPCTSTR /*lpszN
 	if (thePrefs.GetWindowsVersion() >= _WINVER_VISTA_)
 	{
 		// Vista+: Use the Windows built-in feature for 32-bit menu item bitmaps.
-		// 'MeasureItem', 'DrawItem' will not get called any longer and Vista 
+		// 'MeasureItem', 'DrawItem' will not get called any longer and Vista
 		// cares properly about grayed/selected menu item bitmaps.
 		if (!strIconLower.IsEmpty())
 		{
@@ -414,7 +417,7 @@ void CTitleMenu::SetMenuBitmap(UINT nFlags, UINT_PTR nIDNewItem, LPCTSTR /*lpszN
 								CDC* pdcScreen = CDC::FromHandle(hdcScreen);
 								CDC dcMem;
 								dcMem.CreateCompatibleDC(pdcScreen);
-								
+
 								CBitmap bmpCheckmark;
 								bmpCheckmark.CreateCompatibleBitmap(pdcScreen, ICONSIZE+4, ICONSIZE+4);
 								CBitmap* pBmpOld = dcMem.SelectObject(&bmpCheckmark);
@@ -481,7 +484,7 @@ void CTitleMenu::DrawMonoIcon(int nIconPos, CPoint nDrawPos, CDC *dc)
 	colorDC.DeleteDC();
 	bmpColor.DeleteObject();
 #else
-	// The code below does not solve the problems under Vista. I though want to keep the code 
+	// The code below does not solve the problems under Vista. I though want to keep the code
 	// as it does not require any "CxImage" functions.
 	ULONG_PTR gdiplusToken = 0;
 	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
@@ -552,10 +555,8 @@ void CTitleMenu::FreeAPI()
 
 bool CTitleMenu::HasEnabledItems() const
 {
-	for (UINT i = 0; i < GetMenuItemCount(); i++)
-	{
-		if ((GetMenuState(i, MF_BYPOSITION) & (MF_DISABLED | MF_SEPARATOR | MF_GRAYED)) == 0)
+	for (int i = 0; i < GetMenuItemCount(); ++i)
+		if ((GetMenuState((UINT)i, MF_BYPOSITION) & (MF_DISABLED | MF_SEPARATOR | MF_GRAYED)) == 0)
 			return true;
-	}
 	return false;
 }

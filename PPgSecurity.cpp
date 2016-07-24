@@ -84,8 +84,8 @@ void CPPgSecurity::DoDataExchange(CDataExchange* pDX)
 void CPPgSecurity::LoadSettings(void)
 {
 	CString strBuffer;
-	
-	strBuffer.Format(_T("%i"), thePrefs.filterlevel);
+
+	strBuffer.Format(_T("%u"), thePrefs.filterlevel);
 	GetDlgItem(IDC_FILTERLEVEL)->SetWindowText(strBuffer);
 	CheckDlgButton(IDC_FILTERSERVERBYIPFILTER, thePrefs.filterserverbyip);
 
@@ -160,8 +160,8 @@ BOOL CPPgSecurity::OnApply()
 {
 	bool bIPFilterSettingsChanged = false;
 
-	TCHAR buffer[510];
 	if (GetDlgItem(IDC_FILTERLEVEL)->GetWindowTextLength()) {
+		TCHAR buffer[510];
 		GetDlgItem(IDC_FILTERLEVEL)->GetWindowText(buffer, 4);
 		int iNewFilterLevel = _tstoi(buffer);
 		if (iNewFilterLevel >= 0 && (UINT)iNewFilterLevel != thePrefs.filterlevel) {
@@ -296,26 +296,25 @@ void CPPgSecurity::OnLoadIPFFromURL()
 				if (zfile->Extract(strTempUnzipFilePath))
 				{
 					zip.Close();
-					zfile = NULL;
 
 					if (_tremove(theApp.ipfilter->GetDefaultFilePath()) != 0)
-						TRACE(_T("*** Error: Failed to remove default IP filter file \"%s\" - %s\n"), theApp.ipfilter->GetDefaultFilePath(), _tcserror(errno));
+						TRACE(_T("*** Error: Failed to remove default IP filter file \"%s\" - %s\n"), (LPCTSTR)theApp.ipfilter->GetDefaultFilePath(), _tcserror(errno));
 					if (_trename(strTempUnzipFilePath, theApp.ipfilter->GetDefaultFilePath()) != 0)
-						TRACE(_T("*** Error: Failed to rename uncompressed IP filter file \"%s\" to default IP filter file \"%s\" - %s\n"), strTempUnzipFilePath, theApp.ipfilter->GetDefaultFilePath(), _tcserror(errno));
+						TRACE(_T("*** Error: Failed to rename uncompressed IP filter file \"%s\" to default IP filter file \"%s\" - %s\n"), (LPCTSTR)strTempUnzipFilePath, (LPCTSTR)theApp.ipfilter->GetDefaultFilePath(), _tcserror(errno));
 					if (_tremove(strTempFilePath) != 0)
-						TRACE(_T("*** Error: Failed to remove temporary IP filter file \"%s\" - %s\n"), strTempFilePath, _tcserror(errno));
+						TRACE(_T("*** Error: Failed to remove temporary IP filter file \"%s\" - %s\n"), (LPCTSTR)strTempFilePath, _tcserror(errno));
 					bUncompressed = true;
 					bHaveNewFilterFile = true;
 				}
 				else {
 					CString strError;
-					strError.Format(GetResString(IDS_ERR_IPFILTERZIPEXTR), strTempFilePath);
+					strError.Format(GetResString(IDS_ERR_IPFILTERZIPEXTR), (LPCTSTR)strTempFilePath);
 					AfxMessageBox(strError, MB_ICONERROR);
 				}
 			}
 			else {
 				CString strError;
-				strError.Format(GetResString(IDS_ERR_IPFILTERCONTENTERR), strTempFilePath);
+				strError.Format(GetResString(IDS_ERR_IPFILTERCONTENTERR), (LPCTSTR)strTempFilePath);
 				AfxMessageBox(strError, MB_ICONERROR);
 			}
 
@@ -330,7 +329,7 @@ void CPPgSecurity::OnLoadIPFFromURL()
 			{
 				CString strFile;
 				if (rar.GetNextFile(strFile)
-					&& (   strFile.CompareNoCase(_T("ipfilter.dat")) == 0 
+					&& (   strFile.CompareNoCase(_T("ipfilter.dat")) == 0
 					    || strFile.CompareNoCase(_T("guarding.p2p")) == 0
 						|| strFile.CompareNoCase(_T("guardian.p2p")) == 0))
 				{
@@ -342,25 +341,25 @@ void CPPgSecurity::OnLoadIPFFromURL()
 						rar.Close();
 
 						if (_tremove(theApp.ipfilter->GetDefaultFilePath()) != 0)
-							TRACE(_T("*** Error: Failed to remove default IP filter file \"%s\" - %s\n"), theApp.ipfilter->GetDefaultFilePath(), _tcserror(errno));
+							TRACE(_T("*** Error: Failed to remove default IP filter file \"%s\" - %s\n"), (LPCTSTR)theApp.ipfilter->GetDefaultFilePath(), _tcserror(errno));
 						if (_trename(strTempUnzipFilePath, theApp.ipfilter->GetDefaultFilePath()) != 0)
-							TRACE(_T("*** Error: Failed to rename uncompressed IP filter file \"%s\" to default IP filter file \"%s\" - %s\n"), strTempUnzipFilePath, theApp.ipfilter->GetDefaultFilePath(), _tcserror(errno));
+							TRACE(_T("*** Error: Failed to rename uncompressed IP filter file \"%s\" to default IP filter file \"%s\" - %s\n"), (LPCTSTR)strTempUnzipFilePath, (LPCTSTR)theApp.ipfilter->GetDefaultFilePath(), _tcserror(errno));
 						if (_tremove(strTempFilePath) != 0)
-							TRACE(_T("*** Error: Failed to remove temporary IP filter file \"%s\" - %s\n"), strTempFilePath, _tcserror(errno));
+							TRACE(_T("*** Error: Failed to remove temporary IP filter file \"%s\" - %s\n"), (LPCTSTR)strTempFilePath, _tcserror(errno));
 						bUncompressed = true;
 						bHaveNewFilterFile = true;
 					}
 					else
 					{
 						CString strError;
-						strError.Format(_T("Failed to extract IP filter file from RAR file \"%s\"."), strTempFilePath);
+						strError.Format(_T("Failed to extract IP filter file from RAR file \"%s\"."), (LPCTSTR)strTempFilePath);
 						AfxMessageBox(strError, MB_ICONERROR);
 					}
 				}
 				else
 				{
 					CString strError;
-					strError.Format(_T("Failed to find IP filter file \"guarding.p2p\" or \"ipfilter.dat\" in RAR file \"%s\"."), strTempFilePath);
+					strError.Format(_T("Failed to find IP filter file \"guarding.p2p\" or \"ipfilter.dat\" in RAR file \"%s\"."), (LPCTSTR)strTempFilePath);
 					AfxMessageBox(strError, MB_ICONERROR);
 				}
 				rar.Close();
@@ -368,7 +367,7 @@ void CPPgSecurity::OnLoadIPFFromURL()
 			else
 			{
 				CString strError;
-				strError.Format(_T("Failed to open file \"%s\".\r\n\r\nInvalid file format?\r\n\r\nDownload latest version of UNRAR.DLL from http://www.rarlab.com and copy UNRAR.DLL into eMule installation folder."), url);
+				strError.Format(_T("Failed to open file \"%s\".\r\n\r\nInvalid file format?\r\n\r\nDownload latest version of UNRAR.DLL from http://www.rarlab.com and copy UNRAR.DLL into eMule installation folder."), (LPCTSTR)url);
 				AfxMessageBox(strError, MB_ICONERROR);
 			}
 		}
@@ -396,17 +395,17 @@ void CPPgSecurity::OnLoadIPFFromURL()
 					gz.Close();
 
 					if (_tremove(theApp.ipfilter->GetDefaultFilePath()) != 0)
-						TRACE(_T("*** Error: Failed to remove default IP filter file \"%s\" - %s\n"), theApp.ipfilter->GetDefaultFilePath(), _tcserror(errno));
+						TRACE(_T("*** Error: Failed to remove default IP filter file \"%s\" - %s\n"), (LPCTSTR)theApp.ipfilter->GetDefaultFilePath(), _tcserror(errno));
 					if (_trename(strTempUnzipFilePath, theApp.ipfilter->GetDefaultFilePath()) != 0)
-						TRACE(_T("*** Error: Failed to rename uncompressed IP filter file \"%s\" to default IP filter file \"%s\" - %s\n"), strTempUnzipFilePath, theApp.ipfilter->GetDefaultFilePath(), _tcserror(errno));
+						TRACE(_T("*** Error: Failed to rename uncompressed IP filter file \"%s\" to default IP filter file \"%s\" - %s\n"), (LPCTSTR)strTempUnzipFilePath, (LPCTSTR)theApp.ipfilter->GetDefaultFilePath(), _tcserror(errno));
 					if (_tremove(strTempFilePath) != 0)
-						TRACE(_T("*** Error: Failed to remove temporary IP filter file \"%s\" - %s\n"), strTempFilePath, _tcserror(errno));
+						TRACE(_T("*** Error: Failed to remove temporary IP filter file \"%s\" - %s\n"), (LPCTSTR)strTempFilePath, _tcserror(errno));
 					bUncompressed = true;
 					bHaveNewFilterFile = true;
 				}
 				else {
 					CString strError;
-					strError.Format(GetResString(IDS_ERR_IPFILTERZIPEXTR), strTempFilePath);
+					strError.Format(GetResString(IDS_ERR_IPFILTERZIPEXTR), (LPCTSTR)strTempFilePath);
 					AfxMessageBox(strError, MB_ICONERROR);
 				}
 			}
@@ -459,12 +458,12 @@ void CPPgSecurity::OnLoadIPFFromURL()
 
 	// In case we received an invalid IP-filter file (e.g. an 404 HTML page with HTTP status "OK"),
 	// warn the user that there are no IP-filters available any longer.
-	if (bHaveNewFilterFile && theApp.ipfilter->GetIPFilter().GetCount() == 0)
+	if (bHaveNewFilterFile && theApp.ipfilter->GetIPFilter().IsEmpty())
 	{
 		CString strLoaded;
 		strLoaded.Format(GetResString(IDS_IPFILTERLOADED), theApp.ipfilter->GetIPFilter().GetCount());
 		CString strError;
-		strError.Format(_T("%s\r\n\r\n%s"), GetResString(IDS_DWLIPFILTERFAILED), strLoaded);
+		strError.Format(_T("%s\r\n\r\n%s"), (LPCTSTR)GetResString(IDS_DWLIPFILTERFAILED), (LPCTSTR)strLoaded);
 		AfxMessageBox(strError, MB_ICONERROR);
 	}
 }
@@ -486,7 +485,7 @@ void CPPgSecurity::DeleteDDB()
 	}
 }
 
-BOOL CPPgSecurity::PreTranslateMessage(MSG* pMsg) 
+BOOL CPPgSecurity::PreTranslateMessage(MSG* pMsg)
 {
 	if (pMsg->message == WM_KEYDOWN){
 
@@ -516,7 +515,7 @@ BOOL CPPgSecurity::PreTranslateMessage(MSG* pMsg)
 			}
 		}
 	}
-   
+
 	return CPropertyPage::PreTranslateMessage(pMsg);
 }
 

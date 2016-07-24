@@ -60,7 +60,7 @@ class CSharedDirsTreeCtrl : public CTreeCtrl
 public:
 	CSharedDirsTreeCtrl();
 	virtual ~CSharedDirsTreeCtrl();
-	
+
 	void			Initalize(CSharedFilesCtrl* pSharedFilesCtrl);
 	void			SetAllIcons();
 
@@ -111,19 +111,19 @@ protected:
 
 private:
 	void	InitalizeStandardItems();
-	
+
 	void	FileSystemTreeCreateTree();
 	void	FileSystemTreeAddChildItem(CDirectoryItem* pRoot, CString strText, bool bTopLevel);
 	bool	FileSystemTreeHasSubdirectories(CString strDir);
 	bool	FileSystemTreeHasSharedSubdirectory(CString strDir, bool bOrFiles);
 	void	FileSystemTreeAddSubdirectories(CDirectoryItem* pRoot);
-	bool	FileSystemTreeIsShared(CString strDir);
+	bool	FileSystemTreeIsShared(const CString& strDir);
 
 	void	FileSystemTreeUpdateShareState(const CDirectoryItem* pDir = NULL);
 	void	FileSystemTreeSetShareState(const CDirectoryItem* pDir, bool bSubDirectories);
 	void	FilterTreeAddSharedDirectory(CDirectoryItem* pDir, bool bRefresh);
 	void	FilterTreeAddSubDirectories(CDirectoryItem* pDirectory, const CStringList& liDirs, int nLevel, bool &rbShowWarning, bool bParentAccessible);
-	bool	FilterTreeIsSubDirectory(CString strDir, CString strRoot, const CStringList& liDirs);
+	bool	FilterTreeIsSubDirectory(CString& strDir, CString& strRoot, const CStringList& liDirs);
 	void	FilterTreeReloadTree();
 
 
@@ -131,5 +131,3 @@ private:
 	bool			m_bUseIcons;
 	CMap<int, int, int, int> m_mapSystemIcons;
 };
-
-

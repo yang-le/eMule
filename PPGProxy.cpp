@@ -43,7 +43,7 @@ BEGIN_MESSAGE_MAP(CPPgProxy, CPropertyPage)
 END_MESSAGE_MAP()
 
 CPPgProxy::CPPgProxy()
-	: CPropertyPage(CPPgProxy::IDD)
+	: CPropertyPage(CPPgProxy::IDD), proxy()
 {
 }
 
@@ -101,7 +101,7 @@ BOOL CPPgProxy::OnApply()
 	else
 		proxy.port = 1080;
 
-	if (GetDlgItem(IDC_USERNAME_A)->GetWindowTextLength()) { 
+	if (GetDlgItem(IDC_USERNAME_A)->GetWindowTextLength()) {
 		CString strUser;
 		GetDlgItem(IDC_USERNAME_A)->GetWindowText(strUser);
 		proxy.user = CStringA(strUser);
@@ -111,7 +111,7 @@ BOOL CPPgProxy::OnApply()
 		proxy.EnablePassword = false;
 	}
 
-	if (GetDlgItem(IDC_PASSWORD)->GetWindowTextLength()) { 
+	if (GetDlgItem(IDC_PASSWORD)->GetWindowTextLength()) {
 		CString strPasswd;
 		GetDlgItem(IDC_PASSWORD)->GetWindowText(strPasswd);
 		proxy.password = CStringA(strPasswd);
@@ -129,23 +129,26 @@ BOOL CPPgProxy::OnApply()
 void CPPgProxy::OnBnClickedEnableProxy()
 {
 	SetModified(TRUE);
-	CButton* btn = (CButton*) GetDlgItem(IDC_ENABLEPROXY);
-	GetDlgItem(IDC_ENABLEAUTH)->EnableWindow(btn->GetCheck() != 0);
-	GetDlgItem(IDC_PROXYTYPE)->EnableWindow(btn->GetCheck() != 0);
-	GetDlgItem(IDC_PROXYNAME)->EnableWindow(btn->GetCheck() != 0);
-	GetDlgItem(IDC_PROXYPORT)->EnableWindow(btn->GetCheck() != 0);
-	GetDlgItem(IDC_USERNAME_A)->EnableWindow(btn->GetCheck() != 0);
-	GetDlgItem(IDC_PASSWORD)->EnableWindow(btn->GetCheck() != 0);
-	if (btn->GetCheck() != 0) OnBnClickedEnableAuthentication();
-	if (btn->GetCheck() != 0) OnCbnSelChangeProxyType();
+
+	BOOL enabled = ((CButton*)GetDlgItem(IDC_ENABLEPROXY))->GetCheck();
+	GetDlgItem(IDC_ENABLEAUTH)->EnableWindow(enabled);
+	GetDlgItem(IDC_PROXYTYPE)->EnableWindow(enabled);
+	GetDlgItem(IDC_PROXYNAME)->EnableWindow(enabled);
+	GetDlgItem(IDC_PROXYPORT)->EnableWindow(enabled);
+	GetDlgItem(IDC_USERNAME_A)->EnableWindow(enabled);
+	GetDlgItem(IDC_PASSWORD)->EnableWindow(enabled);
+	if (enabled) {
+		OnBnClickedEnableAuthentication();
+		OnCbnSelChangeProxyType();
+	}
 }
 
 void CPPgProxy::OnBnClickedEnableAuthentication()
 {
 	SetModified(TRUE);
-	CButton* btn = (CButton*)GetDlgItem(IDC_ENABLEAUTH);
-	GetDlgItem(IDC_USERNAME_A)->EnableWindow(btn->GetCheck() != 0);
-	GetDlgItem(IDC_PASSWORD)->EnableWindow(btn->GetCheck() != 0);
+	BOOL enabled = ((CButton*)GetDlgItem(IDC_ENABLEAUTH))->GetCheck();
+	GetDlgItem(IDC_USERNAME_A)->EnableWindow(enabled);
+	GetDlgItem(IDC_PASSWORD)->EnableWindow(enabled);
 }
 
 void CPPgProxy::OnCbnSelChangeProxyType()
@@ -157,8 +160,7 @@ void CPPgProxy::OnCbnSelChangeProxyType()
 		((CButton*)GetDlgItem(IDC_ENABLEAUTH))->SetCheck(0);
 		OnBnClickedEnableAuthentication();
 		GetDlgItem(IDC_ENABLEAUTH)->EnableWindow(FALSE);
-	} 
-	else
+	} else
 		GetDlgItem(IDC_ENABLEAUTH)->EnableWindow(TRUE);
 }
 
@@ -181,15 +183,15 @@ void CPPgProxy::Localize()
 	if (m_hWnd)
 	{
 		SetWindowText(GetResString(IDS_PW_PROXY));
-		GetDlgItem(IDC_ENABLEPROXY)->SetWindowText(GetResString(IDS_PROXY_ENABLE));	
-		GetDlgItem(IDC_PROXYTYPE_LBL)->SetWindowText(GetResString(IDS_PROXY_TYPE));	
-		GetDlgItem(IDC_PROXYNAME_LBL)->SetWindowText(GetResString(IDS_PROXY_HOST));	
-		GetDlgItem(IDC_PROXYPORT_LBL)->SetWindowText(GetResString(IDS_PROXY_PORT));	
-		GetDlgItem(IDC_ENABLEAUTH)->SetWindowText(GetResString(IDS_PROXY_AUTH));	
-		GetDlgItem(IDC_USERNAME_LBL)->SetWindowText(GetResString(IDS_CD_UNAME));	
-		GetDlgItem(IDC_PASSWORD_LBL)->SetWindowText(GetResString(IDS_WS_PASS) + _T(":"));	
-		GetDlgItem(IDC_AUTH_LBL)->SetWindowText(GetResString(IDS_AUTH));	
-		GetDlgItem(IDC_AUTH_LBL2)->SetWindowText(GetResString(IDS_PW_GENERAL));	
+		GetDlgItem(IDC_ENABLEPROXY)->SetWindowText(GetResString(IDS_PROXY_ENABLE));
+		GetDlgItem(IDC_PROXYTYPE_LBL)->SetWindowText(GetResString(IDS_PROXY_TYPE));
+		GetDlgItem(IDC_PROXYNAME_LBL)->SetWindowText(GetResString(IDS_PROXY_HOST));
+		GetDlgItem(IDC_PROXYPORT_LBL)->SetWindowText(GetResString(IDS_PROXY_PORT));
+		GetDlgItem(IDC_ENABLEAUTH)->SetWindowText(GetResString(IDS_PROXY_AUTH));
+		GetDlgItem(IDC_USERNAME_LBL)->SetWindowText(GetResString(IDS_CD_UNAME));
+		GetDlgItem(IDC_PASSWORD_LBL)->SetWindowText(GetResString(IDS_WS_PASS) + _T(":"));
+		GetDlgItem(IDC_AUTH_LBL)->SetWindowText(GetResString(IDS_AUTH));
+		GetDlgItem(IDC_AUTH_LBL2)->SetWindowText(GetResString(IDS_PW_GENERAL));
 	}
 }
 

@@ -18,13 +18,13 @@
 
 class Packet;
 
-typedef enum EHttpSocketState
+typedef enum
 {
 	HttpStateUnknown = 0,
 	HttpStateRecvExpected,
 	HttpStateRecvHeaders,
 	HttpStateRecvBody
-};
+} EHttpSocketState;
 
 ///////////////////////////////////////////////////////////////////////////////
 // CHttpClientReqSocket
@@ -44,7 +44,7 @@ public:
 	void ClearHttpHeaders();
 
 protected:
-	CHttpClientReqSocket(CUpDownClient* client = NULL);
+	CHttpClientReqSocket(CUpDownClient* pclient = NULL);
 	virtual ~CHttpClientReqSocket();
 
 	virtual void DataReceived(const BYTE* pucData, UINT uSize);

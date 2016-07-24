@@ -19,12 +19,12 @@
 // use this class if the hash is stored somehwere else (and stays valid as long as this object exists)
 class CCKey : public CObject{
 public:
-	CCKey(const uchar* key = 0)	{m_key = key;}
-	CCKey(const CCKey& k1)		{m_key = k1.m_key;}
+	explicit CCKey(const uchar* key = 0)	{m_key = key;}
+	explicit CCKey(const CCKey& k1)		{m_key = k1.m_key;}
 
 	CCKey& operator=(const CCKey& k1)						{m_key = k1.m_key; return *this; }
 	friend bool operator==(const CCKey& k1,const CCKey& k2);
-	
+
 	const uchar* m_key;
 };
 
@@ -38,12 +38,12 @@ template<> inline UINT AFXAPI HashKey(const CCKey& key){
 // use this class if the hash is stored somehwere inside the key (in any case safer but needs more memory)
 class CSKey : public CObject{
 public:
-	CSKey(const uchar* key = 0)	{ if(key) md4cpy(m_key, key); else md4clr(m_key); }
+	explicit CSKey(const uchar* key = 0)	{ if(key) md4cpy(m_key, key); else md4clr(m_key); }
 	CSKey(const CSKey& k1)		{ md4cpy(m_key, k1.m_key); }
 
 	CSKey& operator=(const CSKey& k1)						{md4cpy(m_key, k1.m_key); return *this; }
 	friend bool operator==(const CSKey& k1,const CSKey& k2);
-	
+
 	uchar m_key[16];
 };
 

@@ -1,16 +1,16 @@
 /*
 Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
- 
+
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either
 version 2 of the License, or (at your option) any later version.
- 
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
- 
+
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -29,15 +29,13 @@ there client on the eMule forum..
 */
 
 #include "stdafx.h"
+#pragma warning(push)
 #pragma warning(disable:4516) // access-declarations are deprecated; member using-declarations provide a better alternative
 #pragma warning(disable:4244) // conversion from 'type1' to 'type2', possible loss of data
 #pragma warning(disable:4100) // unreferenced formal parameter
 #pragma warning(disable:4702) // unreachable code
-#include <crypto51/osrng.h>
-#pragma warning(default:4702) // unreachable code
-#pragma warning(default:4100) // unreferenced formal parameter
-#pragma warning(default:4244) // conversion from 'type1' to 'type2', possible loss of data
-#pragma warning(default:4516) // access-declarations are deprecated; member using-declarations provide a better alternative
+#include <cryptopp/osrng.h>
+#pragma warning(pop)
 #include "./UInt128.h"
 
 #ifdef _DEBUG
@@ -51,7 +49,7 @@ using namespace CryptoPP;
 
 CUInt128::CUInt128()
 {
-	SetValue((ULONG)0);
+	SetValue(0ul);
 }
 
 CUInt128::CUInt128(bool bFill)
@@ -64,7 +62,7 @@ CUInt128::CUInt128(bool bFill)
 		m_uData[3] = (ULONG)-1;
 	}
 	else
-		SetValue((ULONG)0);
+		SetValue(0ul);
 }
 
 CUInt128::CUInt128(ULONG uValue)
@@ -113,7 +111,7 @@ CUInt128& CUInt128::SetValue(ULONG uValue)
 
 CUInt128& CUInt128::SetValueBE(const byte *pbyValueBE)
 {
-	SetValue((ULONG)0);
+	SetValue(0ul);
 	for (int iIndex=0; iIndex<16; iIndex++)
 		m_uData[iIndex/4] |= ((ULONG)pbyValueBE[iIndex]) << (8*(3-(iIndex%4)));
 	return *this;
@@ -130,7 +128,7 @@ CUInt128& CUInt128::SetValueRandom()
 
 CUInt128& CUInt128::SetValueGUID()
 {
-	SetValue((ULONG)0);
+	SetValue(0ul);
 	GUID guid;
 	if (CoCreateGuid(&guid) != S_OK)
 		return *this;
@@ -178,7 +176,7 @@ void CUInt128::ToHexString(CString *pstr) const
 	CString sElement;
 	for (int iIndex=0; iIndex<4; iIndex++)
 	{
-		sElement.Format(_T("%08X"), m_uData[iIndex]);
+		sElement.Format(_T("%08lX"), m_uData[iIndex]);
 		pstr->Append(sElement);
 	}
 }
@@ -189,7 +187,7 @@ CString CUInt128::ToHexString() const
 	CString sElement;
 	for (int iIndex=0; iIndex<4; iIndex++)
 	{
-		sElement.Format(_T("%08X"), m_uData[iIndex]);
+		sElement.Format(_T("%08lX"), m_uData[iIndex]);
 		pstr.Append(sElement);
 	}
 	return pstr;
@@ -199,10 +197,9 @@ void CUInt128::ToBinaryString(CString *pstr, bool bTrim) const
 {
 	pstr->SetString(_T(""));
 	CString sElement;
-	int iBit;
 	for (int iIndex=0; iIndex<128; iIndex++)
 	{
-		iBit = GetBitNumber(iIndex);
+		int iBit = GetBitNumber(iIndex);
 		if ((!bTrim) || (iBit != 0))
 		{
 			sElement.Format(_T("%d"), iBit);
@@ -210,7 +207,7 @@ void CUInt128::ToBinaryString(CString *pstr, bool bTrim) const
 			bTrim = false;
 		}
 	}
-	if (pstr->GetLength() == 0)
+	if (pstr->IsEmpty())
 		pstr->SetString(_T("0"));
 }
 
@@ -325,7 +322,7 @@ CUInt128& CUInt128::ShiftLeft(UINT uBits)
 		return *this;
 	if (uBits > 127)
 	{
-		SetValue((ULONG)0);
+		SetValue(0ul);
 		return *this;
 	}
 
@@ -358,17 +355,17 @@ ULONG CUInt128::Get32BitChunk(int iVal) const
 	return m_uData[iVal];
 }
 
-void CUInt128::operator+  (const CUInt128 &uValue)
+CUInt128& CUInt128::operator+  (const CUInt128 &uValue)
 {
-	Add(uValue);
+	return Add(uValue);
 }
-void CUInt128::operator-  (const CUInt128 &uValue)
+CUInt128& CUInt128::operator-  (const CUInt128 &uValue)
 {
-	Subtract(uValue);
+	return Subtract(uValue);
 }
-void CUInt128::operator=  (const CUInt128 &uValue)
+CUInt128& CUInt128::operator=  (const CUInt128 &uValue)
 {
-	SetValue(uValue);
+	return SetValue(uValue); //fo8x8
 }
 bool CUInt128::operator<  (const CUInt128 &uValue) const
 {
@@ -395,17 +392,17 @@ bool CUInt128::operator!= (const CUInt128 &uValue) const
 	return (CompareTo(uValue) != 0);
 }
 
-void CUInt128::operator+  (ULONG uValue)
+CUInt128& CUInt128::operator+  (ULONG uValue)
 {
-	Add(uValue);
+	return Add(uValue);
 }
-void CUInt128::operator-  (ULONG uValue)
+CUInt128& CUInt128::operator-  (ULONG uValue)
 {
-	Subtract(uValue);
+	return Subtract(uValue);
 }
-void CUInt128::operator=  (ULONG uValue)
+CUInt128& CUInt128::operator=  (ULONG uValue)
 {
-	SetValue(uValue);
+	return SetValue(uValue);
 }
 bool CUInt128::operator<  (ULONG uValue) const
 {

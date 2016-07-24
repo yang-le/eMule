@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "GradientStatic.h"
+#define _USE_MATH_DEFINES
 #include <math.h>
 
 #ifdef _DEBUG
@@ -11,13 +12,11 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-
-long l = 0;
-
 /////////////////////////////////////////////////////////////////////////////
 // CGradientStatic
 
 CGradientStatic::CGradientStatic()
+	: m_Mem()
 {
 	m_bInit = TRUE;
 	m_bHorizontal = TRUE;
@@ -48,15 +47,15 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CGradientStatic message handlers
 
-void CGradientStatic::OnPaint() 
+void CGradientStatic::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
-	
+
 	CRect rClient;
 	GetClientRect(rClient);
-	
+
 	if(m_bInit)
-	{		
+	{
 		CreateGradient(&dc, &rClient);
 		m_bInit = false;
 	}
@@ -70,13 +69,13 @@ void CGradientStatic::CreateGradient(CDC *pDC, CRect *pRect)
 	m_Mem.cy = pRect->Height();
 
 	if(m_Mem.dc.GetSafeHdc())
-	{	
+	{
 		if(m_Mem.bmp.GetSafeHandle() && m_Mem.pold)
 			m_Mem.dc.SelectObject(m_Mem.pold);
 		m_Mem.dc.DeleteDC();
 	}
 	m_Mem.dc.CreateCompatibleDC(pDC);
-	
+
 	if(m_Mem.bmp.GetSafeHandle())
 		m_Mem.bmp.DeleteObject();
 	m_Mem.bmp.CreateCompatibleBitmap(pDC, m_Mem.cx, m_Mem.cy);
@@ -93,7 +92,7 @@ void CGradientStatic::CreateGradient(CDC *pDC, CRect *pRect)
 	else
 	{
 		DrawVerticalGradient();
-		DrawVerticalText(pRect);		
+		DrawVerticalText(pRect);
 	}
 }
 
@@ -148,7 +147,7 @@ void CGradientStatic::DrawHorizontalText(CRect *pRect)
 	CFont *pOldFont = NULL;
 	if (m_cfFont.GetSafeHandle())
 		pOldFont = m_Mem.dc.SelectObject(&m_cfFont);
-	
+
 	CString strText;
 	GetWindowText(strText);
 
@@ -162,11 +161,10 @@ void CGradientStatic::DrawHorizontalText(CRect *pRect)
 void DrawRotatedText(HDC hdc, LPCTSTR str, LPRECT rect, double angle, UINT nOptions = 0)
 {
    // convert angle to radian
-   double pi = 3.141592654;
-   double radian = pi * 2 / 360 * angle;
+   double radian = M_PI * 2 / 360 * angle;
 
    // get the center of a not-rotated text
-   SIZE TextSize;;
+   SIZE TextSize;
    GetTextExtentPoint32(hdc, str, _tcslen(str), &TextSize);
 
    POINT center;
@@ -186,22 +184,22 @@ void DrawRotatedText(HDC hdc, LPCTSTR str, LPRECT rect, double angle, UINT nOpti
 }
 
 void CGradientStatic::DrawVerticalText(CRect *pRect)
-{	
-	CFont *pOldFont = NULL;;
+{
+	CFont *pOldFont = NULL;
 
 	LOGFONT lfFont;
 	if(m_cfFont.GetSafeHandle())
-	{	
+	{
 		m_cfFont.GetLogFont(&lfFont);
 	}
 	else
-	{	
+	{
 		CFont *pFont = GetFont();
 		pFont->GetLogFont(&lfFont);
 		_tcscpy(lfFont.lfFaceName, _T("Arial"));	// some fonts won't turn :(
 	}
 	lfFont.lfEscapement = 900;
-	
+
 	CFont Font;
 	Font.CreateFontIndirect(&lfFont);
 	pOldFont = m_Mem.dc.SelectObject(&Font);
@@ -214,9 +212,9 @@ void CGradientStatic::DrawVerticalText(CRect *pRect)
 	CRect rText = pRect;
 	rText.bottom -= 5;
 	DrawRotatedText(m_Mem.dc.m_hDC, strText, rText, 90);
-	
+
 	m_Mem.dc.SelectObject(pOldFont);
-}	
+}
 
 void CGradientStatic::SetFont(CFont *pFont)
 {

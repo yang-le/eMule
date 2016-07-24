@@ -50,7 +50,7 @@ class CPreviewApps
 public:
 	CPreviewApps();
 
-	CString GetDefaultAppsFile() const;
+	static CString GetDefaultAppsFile();
 	int ReadAllApps();
 	void RemoveAllApps();
 

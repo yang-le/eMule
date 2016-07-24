@@ -35,14 +35,14 @@ static char THIS_FILE[] = __FILE__;
 class EncodeFileName
 {
   private:
-	byte *EncName;
+//	byte *EncName;
 	byte Flags;
 	int FlagBits;
 	int FlagsPos;
 	int DestSize;
   public:
 	EncodeFileName();
-	int Encode(char *Name,wchar_t *NameW,byte *EncName);
+//	int Encode(char *Name,wchar_t *NameW,byte *EncName);
 	void Decode(char *Name,byte *EncName,int EncSize,wchar_t *NameW,int MaxDecSize);
 };
 
@@ -91,7 +91,6 @@ void EncodeFileName::Decode(char *Name,byte *EncName,int EncSize,wchar_t *NameW,
 			for (Length+=2;Length>0 && DecPos<MaxDecSize;Length--,DecPos++)
 			  NameW[DecPos]=Name[DecPos];
 		}
-		break;
 	}
 	Flags<<=2;
 	FlagBits-=2;
@@ -144,7 +143,7 @@ BEGIN_MESSAGE_MAP(CArchivePreviewDlg, CResizablePage)
 END_MESSAGE_MAP()
 
 CArchivePreviewDlg::CArchivePreviewDlg()
-   : CResizablePage(CArchivePreviewDlg::IDD, 0)
+   : CResizablePage(CArchivePreviewDlg::IDD, 0), m_StoredColWidth2(0), m_StoredColWidth5(0)
 {
 	m_paFiles = NULL;
 	m_bDataChanged = false;
@@ -217,7 +216,7 @@ BOOL CArchivePreviewDlg::OnInitDialog()
 
 	// Win98: Explicitly set to Unicode to receive Unicode notifications.
 	m_ContentList.SendMessage(CCM_SETUNICODEFORMAT, TRUE);
-	// To support full sorting of the archive entries list we'd need a seperate list which
+	// To support full sorting of the archive entries list we'd need a separate list which
 	// is holding the unified archive entries for all different supported archive formats so
 	// that the ListView's sortproc can get valid 'lParam' values which are pointing to those
 	// entries. This could be done, but for now we just let the default ListView sort
@@ -227,7 +226,7 @@ BOOL CArchivePreviewDlg::OnInitDialog()
 	m_ContentList.SendMessage(LVM_SETIMAGELIST, LVSIL_SMALL, (LPARAM)theApp.GetSystemImageList());
 	m_ContentList.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_GRIDLINES);
 	m_ContentList.EnableHdrCtrlSortBitmaps();
-	
+
 	m_ContentList.ReadColumnStats(_countof(s_aColumns), s_aColumns);
 	m_ContentList.CreateColumns(_countof(s_aColumns), s_aColumns);
 	m_ContentList.InitColumnOrders(_countof(s_aColumns), s_aColumns);
@@ -268,7 +267,7 @@ BOOL CArchivePreviewDlg::OnSetActive()
 {
 	if (!CResizablePage::OnSetActive())
 		return FALSE;
-	
+
 	if (m_bDataChanged)
 	{
 		UpdateArchiveDisplay(thePrefs.m_bAutomaticArcPreviewStart);
@@ -331,7 +330,7 @@ void CArchivePreviewDlg::OnBnClickedRead()
 }
 
 void CArchivePreviewDlg::OnBnClickedCreateRestored() {
-	if ( ((CShareableFile*)STATIC_DOWNCAST(CShareableFile, (*m_paFiles)[0])->IsPartFile()==false))
+	if (!STATIC_DOWNCAST(CShareableFile, (*m_paFiles)[0])->IsPartFile())
 		return;
 
 	CPartFile* file=STATIC_DOWNCAST(CPartFile, (*m_paFiles)[0]);
@@ -359,21 +358,14 @@ int CArchivePreviewDlg::ShowAceResults(int succ, archiveScannerThreadParams_s* t
 
 	SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPARSED) + _T(" ") +
 		(tp->ai->ACEdir->IsEmpty()?GetResString(IDS_ARCPREV_INSUFFDATA):
-		(tp->file->IsPartFile()?GetResString(IDS_ARCPREV_LISTMAYBEINCOMPL):_T("")))		);
+		(tp->file->IsPartFile()?GetResString(IDS_ARCPREV_LISTMAYBEINCOMPL):CString())) );
 
 	if (!tp->ai->ACEdir->IsEmpty())
 	{
-		CTime lm;
-		int iItem;
-		int uSubId=1;
-		ACE_BlockFile *block;
-
 		m_ContentList.SetRedraw(FALSE);
-		POSITION pos = tp->ai->ACEdir->GetHeadPosition();
-		while (pos != NULL)
-		{
-			block = tp->ai->ACEdir->GetNext(pos);
-			uSubId = 1;
+		for (POSITION pos = tp->ai->ACEdir->GetHeadPosition(); pos != NULL;) {
+			const ACE_BlockFile *block = tp->ai->ACEdir->GetNext(pos);
+			int uSubId = 1;
 
 			bool bCompleteEntry = !tp->file->IsPartFile() || STATIC_DOWNCAST(CPartFile, tp->file)->IsComplete(block->data_offset, block->data_offset + block->PACK_SIZE, true);
 			bool bIsDirectory = ((block->FILE_ATTRIBS & FILE_ATTRIBUTE_DIRECTORY) != 0);
@@ -383,8 +375,8 @@ int CArchivePreviewDlg::ShowAceResults(int succ, archiveScannerThreadParams_s* t
 			// file/folder name
 			temp = CString(block->FNAME);
 			int iSystemImage = bIsDirectory ? theApp.GetFileTypeSystemImageIdx(_T("\\"), 1) : theApp.GetFileTypeSystemImageIdx(temp, temp.GetLength());
-			iItem = m_ContentList.InsertItem(LVIF_TEXT | LVIF_PARAM | (iSystemImage > 0 ? LVIF_IMAGE : 0),
-											 INT_MAX, temp, 0, 0, iSystemImage, 
+			int iItem = m_ContentList.InsertItem(LVIF_TEXT | LVIF_PARAM | (iSystemImage > 0 ? LVIF_IMAGE : 0),
+											 INT_MAX, temp, 0, 0, iSystemImage,
 											 !bCompleteEntry ? 0x00000001 : 0x00000000);
 
 			if (bIsDirectory)
@@ -392,8 +384,7 @@ int CArchivePreviewDlg::ShowAceResults(int succ, archiveScannerThreadParams_s* t
 			else {
 				// size (uncompressed)
 				UINT64 size=block->ORIG_SIZE;
-				temp.Format(_T("%s"), CastItoXBytes(size));
-				m_ContentList.SetItemText(iItem,uSubId++,temp);
+				m_ContentList.SetItemText(iItem,uSubId++, (LPCTSTR)CastItoXBytes(size));
 
 				// crc
 				temp.Format(_T("%08X"),block->CRC32);
@@ -447,7 +438,7 @@ int CArchivePreviewDlg::ShowAceResults(int succ, archiveScannerThreadParams_s* t
 			UINT16 fdate,ftime;
 			ftime=(UINT16)block->FTIME;
 			fdate=(UINT16)(block->FTIME>>16);
-			lm=CTime((WORD)(((fdate>>9) & 0x7f) + 1980),
+			CTime lm = CTime((WORD)(((fdate>>9) & 0x7f) + 1980),
 					 (WORD)((fdate>>5) & 0xf),
 					 (WORD)(fdate & 0x1f),
 					 (WORD)((ftime >> 11) & 0x1f),
@@ -461,7 +452,7 @@ int CArchivePreviewDlg::ShowAceResults(int succ, archiveScannerThreadParams_s* t
 		m_ContentList.SetRedraw(TRUE);
 	}
 
-	temp.Format(_T("%s: %u"), GetResString(IDS_FILES), uArchiveFileEntries);
+	temp.Format(_T("%s: %u"), (LPCTSTR)GetResString(IDS_FILES), uArchiveFileEntries);
 	SetDlgItemText( IDC_INFO_FILECOUNT, temp);
 
 	// general info / archive attribs
@@ -515,7 +506,7 @@ int CArchivePreviewDlg::ShowISOResults(int succ, archiveScannerThreadParams_s* t
 	// file content into list
 	SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPARSED) + _T(" ") +
 		(tp->ai->ISOdir->IsEmpty()?GetResString(IDS_ARCPREV_INSUFFDATA):
-		(tp->file->IsPartFile()?GetResString(IDS_ARCPREV_LISTMAYBEINCOMPL):_T("")))		);
+		(tp->file->IsPartFile()?GetResString(IDS_ARCPREV_LISTMAYBEINCOMPL):CString())) );
 
 	DWORD filecount = 0;
 
@@ -523,26 +514,23 @@ int CArchivePreviewDlg::ShowISOResults(int succ, archiveScannerThreadParams_s* t
 
 	m_ContentList.SetRedraw(FALSE);
 
-	ISO_FileFolderEntry* file = NULL;
-	POSITION pos = tp->ai->ISOdir->GetHeadPosition();
-	while (pos != NULL)
-	{
-		file = tp->ai->ISOdir->GetNext(pos);
+	for (POSITION pos = tp->ai->ISOdir->GetHeadPosition(); pos != NULL;) {
+		ISO_FileFolderEntry *file = tp->ai->ISOdir->GetNext(pos);
 
 		bool bCompleteEntry = !tp->file->IsPartFile() || STATIC_DOWNCAST(CPartFile, tp->file)->IsComplete(
-			LODWORD(file->sector1OfExtension) * tp->ai->isoInfos.secSize,
-			(LODWORD(file->sector1OfExtension) * tp->ai->isoInfos.secSize) + file->dataSize,
+			LODWORD(file->sector1OfExtension) * (uint64)tp->ai->isoInfos.secSize,
+			(LODWORD(file->sector1OfExtension) * (uint64)tp->ai->isoInfos.secSize) + file->dataSize,
 			true);
 
 		temp = CString(file->name);
-		// remove seperator extentions
+		// remove separator extentions
 		int sep = temp.ReverseFind(';');
 		if (sep>=0)
 			temp.Delete(sep, temp.GetLength()-sep);
 
 		int iSystemImage = theApp.GetFileTypeSystemImageIdx(temp, temp.GetLength());
 		int iItem = m_ContentList.InsertItem(LVIF_TEXT | LVIF_PARAM | (iSystemImage > 0 ? LVIF_IMAGE : 0),
-										 INT_MAX, temp, 0, 0, iSystemImage, 
+										 INT_MAX, temp, 0, 0, iSystemImage,
 										 !bCompleteEntry ? 0x00000001 : 0x00000000);
 
 
@@ -557,9 +545,7 @@ int CArchivePreviewDlg::ShowISOResults(int succ, archiveScannerThreadParams_s* t
 
 			// size
 			UINT32 size= LODWORD(file->dataSize);
-			temp.Format(_T("%s"), CastItoXBytes(size));
-			m_ContentList.SetItemText(iItem,1,temp);
-			temp.Empty();
+			m_ContentList.SetItemText(iItem,1, (LPCTSTR)CastItoXBytes(size));
 		}
 
 		// file attribs
@@ -573,8 +559,8 @@ int CArchivePreviewDlg::ShowISOResults(int succ, archiveScannerThreadParams_s* t
 			if (!temp.IsEmpty()) temp+=_T(',');
 			temp+=_T('R');
 		}
-			
-		if (!bCompleteEntry) 
+
+		if (!bCompleteEntry)
 		{
 			// packed data not yet downloaded
 			if (!temp.IsEmpty()) temp+=_T(',');
@@ -598,7 +584,7 @@ int CArchivePreviewDlg::ShowISOResults(int succ, archiveScannerThreadParams_s* t
 		delete file;
 	}
 	m_ContentList.SetRedraw(TRUE);
-	temp.Format(_T("%s: %u"), GetResString(IDS_FILES), filecount );
+	temp.Format(_T("%s: %lu"), (LPCTSTR)GetResString(IDS_FILES), filecount);
 	SetDlgItemText( IDC_INFO_FILECOUNT, temp);
 
 	temp.Empty();
@@ -654,27 +640,20 @@ int CArchivePreviewDlg::ShowRarResults(int succ, archiveScannerThreadParams_s* t
 	else
 		SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPARSED) + _T(" ") +
 			(tp->ai->RARdir->IsEmpty()?GetResString(IDS_ARCPREV_INSUFFDATA):
-				(tp->file->IsPartFile()?GetResString(IDS_ARCPREV_LISTMAYBEINCOMPL):_T("")))		);
+				(tp->file->IsPartFile()?GetResString(IDS_ARCPREV_LISTMAYBEINCOMPL):CString())) );
 
 	if (!tp->ai->RARdir->IsEmpty())
 	{
 		char buf[MAX_PATH + MAX_PATH*2];
-		CStringA strBuffA;
-		CTime lm;
-		int iItem;
-		int uSubId = 1;
-		RAR_BlockFile *block;
 
 		// This file could be a self extracting RAR archive. Now that we eventually have read something
 		// RAR-like from that file, we can set the 'verified' file type.
 		tp->file->SetVerifiedFileType(ARCHIVE_RAR);
 
 		m_ContentList.SetRedraw(FALSE);
-		POSITION pos = tp->ai->RARdir->GetHeadPosition();
-		while (pos != NULL)
-		{
-			block = tp->ai->RARdir->GetNext(pos);
-			uSubId=1;
+		for (POSITION pos = tp->ai->RARdir->GetHeadPosition(); pos != NULL;) {
+			RAR_BlockFile *block = tp->ai->RARdir->GetNext(pos);
+			int uSubId = 1;
 
 			bool bCompleteEntry = !tp->file->IsPartFile() || STATIC_DOWNCAST(CPartFile, tp->file)->IsComplete(block->offsetData, block->offsetData + block->dataLength, true);
 			bool bIsDirectory = (block->HEAD_FLAGS & 0xE0) == 0xE0;
@@ -696,8 +675,8 @@ int CArchivePreviewDlg::ShowRarResults(int succ, archiveScannerThreadParams_s* t
 				temp = buf;
 
 			int iSystemImage = bIsDirectory ? theApp.GetFileTypeSystemImageIdx(_T("\\"), 1) : theApp.GetFileTypeSystemImageIdx(temp, temp.GetLength());
-			iItem = m_ContentList.InsertItem(LVIF_TEXT | LVIF_PARAM | (iSystemImage > 0 ? LVIF_IMAGE : 0),
-											 INT_MAX, temp, 0, 0, iSystemImage, 
+			int iItem = m_ContentList.InsertItem(LVIF_TEXT | LVIF_PARAM | (iSystemImage > 0 ? LVIF_IMAGE : 0),
+											 INT_MAX, temp, 0, 0, iSystemImage,
 											 !bCompleteEntry ? 0x00000001 : 0x00000000);
 
 			if ( (block->HEAD_FLAGS & 0xE0) != 0xE0) {
@@ -706,8 +685,7 @@ int CArchivePreviewDlg::ShowRarResults(int succ, archiveScannerThreadParams_s* t
 				UINT64 size=block->UNP_SIZE;
 				if (block->ATTR & 0x100)
 					size+=block->HIGH_UNP_SIZE*0x100000000;
-				temp.Format(_T("%s"), CastItoXBytes(size));
-				m_ContentList.SetItemText(iItem,uSubId++,temp);
+				m_ContentList.SetItemText(iItem,uSubId++, (LPCTSTR)CastItoXBytes(size));
 
 				// crc
 				temp.Format(_T("%08X"),block->FILE_CRC);
@@ -760,7 +738,7 @@ int CArchivePreviewDlg::ShowRarResults(int succ, archiveScannerThreadParams_s* t
 			UINT16 fdate,ftime;
 			ftime=(UINT16)block->FTIME;
 			fdate=(UINT16)(block->FTIME>>16);
-			lm=CTime((WORD)(((fdate>>9) & 0x7f) + 1980),
+			CTime lm = CTime((WORD)(((fdate>>9) & 0x7f) + 1980),
 					 (WORD)((fdate>>5) & 0xf),
 					 (WORD)(fdate & 0x1f),
 					 (WORD)((ftime >> 11) & 0x1f),
@@ -775,7 +753,7 @@ int CArchivePreviewDlg::ShowRarResults(int succ, archiveScannerThreadParams_s* t
 		m_ContentList.SetRedraw(TRUE);
 	}
 
-	temp.Format(_T("%s: %u"), GetResString(IDS_FILES), uArchiveFileEntries);
+	temp.Format(_T("%s: %u"), (LPCTSTR)GetResString(IDS_FILES), uArchiveFileEntries);
 	SetDlgItemText(IDC_INFO_FILECOUNT, temp);
 
 	// general info / archive attribs
@@ -815,7 +793,7 @@ int CArchivePreviewDlg::ShowRarResults(int succ, archiveScannerThreadParams_s* t
 int CArchivePreviewDlg::ShowZipResults(int succ, archiveScannerThreadParams_s* tp) {
 
 	if (succ==0) {
-		SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPREV_INSUFFDATA));
+		SetDlgItemText(IDC_INFO_STATUS, (LPCTSTR)GetResString(IDS_ARCPREV_INSUFFDATA));
 		return 1;
 	}
 
@@ -824,7 +802,7 @@ int CArchivePreviewDlg::ShowZipResults(int succ, archiveScannerThreadParams_s* t
 	UINT uArchiveFileEntries = 0;
 
 	if (tp->ai->bZipCentralDir)
-		SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPREV_DIRSUCCREAD) );
+		SetDlgItemText(IDC_INFO_STATUS, (LPCTSTR)GetResString(IDS_ARCPREV_DIRSUCCREAD));
 	else
 		SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPREV_DIRNOTFOUND)	+ _T(" ") +
 										GetResString(IDS_ARCPARSED)				+ _T(" ") +
@@ -835,25 +813,19 @@ int CArchivePreviewDlg::ShowZipResults(int succ, archiveScannerThreadParams_s* t
 	if (!tp->ai->centralDirectoryEntries->IsEmpty())
 	{
 		CStringA strBuffA;
-		CTime lm;
-		int iItem;
-		int uSubId=1;
-		ZIP_CentralDirectory *cdEntry;
 		m_ContentList.SetRedraw(FALSE);
-		POSITION pos = tp->ai->centralDirectoryEntries->GetHeadPosition();
-		while (pos != NULL)
-		{
-			cdEntry = tp->ai->centralDirectoryEntries->GetNext(pos);
-			uSubId = 1;
+		for (POSITION pos = tp->ai->centralDirectoryEntries->GetHeadPosition(); pos != NULL;) {
+			ZIP_CentralDirectory *cdEntry = tp->ai->centralDirectoryEntries->GetNext(pos);
+			int uSubId = 1;
 
 			// compressed data not available yet?
 			bool bCompleteEntry = true;
 			if (tp->file->IsPartFile()) {
 				const CPartFile* pf = STATIC_DOWNCAST(CPartFile, tp->file);
-				UINT64 dataoffset = cdEntry->relativeOffsetOfLocalHeader 
-									+ sizeof(ZIP_Entry) - (3 * sizeof(BYTE*)) 
-									+ cdEntry->lenComment 
-									+ cdEntry->lenFilename 
+				UINT64 dataoffset = cdEntry->relativeOffsetOfLocalHeader
+									+ sizeof(ZIP_Entry) - (3 * sizeof(BYTE*))
+									+ cdEntry->lenComment
+									+ cdEntry->lenFilename
 									+ cdEntry->lenExtraField;
 				bCompleteEntry = pf->IsComplete(dataoffset, dataoffset + cdEntry->lenCompressed, true);
 			}
@@ -868,14 +840,13 @@ int CArchivePreviewDlg::ShowZipResults(int succ, archiveScannerThreadParams_s* t
 			strBuffA.SetString((char *)cdEntry->filename, cdEntry->lenFilename);
 			temp = CString(strBuffA);
 			int iSystemImage = bIsDirectory ? theApp.GetFileTypeSystemImageIdx(_T("\\"), 1) : theApp.GetFileTypeSystemImageIdx(temp, temp.GetLength());
-			iItem = m_ContentList.InsertItem(LVIF_TEXT | LVIF_PARAM | (iSystemImage > 0 ? LVIF_IMAGE : 0),
+			int iItem = m_ContentList.InsertItem(LVIF_TEXT | LVIF_PARAM | (iSystemImage > 0 ? LVIF_IMAGE : 0),
 											 INT_MAX, temp, 0, 0, iSystemImage,
 											 !bCompleteEntry ? 0x00000001 : 0x00000000);
 
 			// size (uncompressed)
 			if (!bIsDirectory) {
-				temp.Format(_T("%s"), CastItoXBytes(cdEntry->lenUncompressed));
-				m_ContentList.SetItemText(iItem,uSubId++,temp);
+				m_ContentList.SetItemText(iItem,uSubId++, (LPCTSTR)CastItoXBytes(cdEntry->lenUncompressed));
 
 				// crc
 				temp.Format(_T("%08X"),cdEntry->crc32);
@@ -904,7 +875,7 @@ int CArchivePreviewDlg::ShowZipResults(int succ, archiveScannerThreadParams_s* t
 			m_ContentList.SetItemText(iItem,uSubId++,temp);
 
 			// date time
-			lm=CTime((WORD)(((cdEntry->lastModFileDate>>9) & 0x7f) + 1980),
+			CTime lm = CTime((WORD)(((cdEntry->lastModFileDate>>9) & 0x7f) + 1980),
 					 (WORD)((cdEntry->lastModFileDate>>5) & 0xf),
 					 (WORD)(cdEntry->lastModFileDate & 0x1f),
 					 (WORD)((cdEntry->lastModFileTime >> 11) & 0x1f),
@@ -932,7 +903,7 @@ int CArchivePreviewDlg::ShowZipResults(int succ, archiveScannerThreadParams_s* t
 		m_ContentList.SetRedraw(TRUE);
 	}
 
-	temp.Format(_T("%s: %u"), GetResString(IDS_FILES), uArchiveFileEntries);
+	temp.Format(_T("%s: %u"), (LPCTSTR)GetResString(IDS_FILES), uArchiveFileEntries);
 	SetDlgItemText(IDC_INFO_FILECOUNT, temp);
 
 	// general info / archive attribs
@@ -955,20 +926,15 @@ static void FreeMemory(void* arg) {
 
 	archiveScannerThreadParams_s* tp=(archiveScannerThreadParams_s*)arg;
 
-	POSITION pos = tp->filled->GetHeadPosition();
-	while (pos != NULL)
-		delete tp->filled->GetNext(pos);
-	tp->filled->RemoveAll();
+	while (!tp->filled->IsEmpty())
+		delete tp->filled->RemoveHead();
 	delete tp->filled;
 	tp->filled=NULL;
 
 
 	if (tp->ai->RARdir) {
-		RAR_BlockFile *block;
-		POSITION pos = tp->ai->RARdir->GetHeadPosition();
-		while (pos != NULL)
-		{
-			block = tp->ai->RARdir->GetNext(pos);
+		while (!tp->ai->RARdir->IsEmpty())	{
+			RAR_BlockFile *block = tp->ai->RARdir->RemoveHead();
 			delete [] block->FILE_NAME;
 			delete block;
 		}
@@ -977,10 +943,8 @@ static void FreeMemory(void* arg) {
 	}
 
 	if (tp->ai->centralDirectoryEntries) {
-		pos = tp->ai->centralDirectoryEntries->GetHeadPosition();
-		while (pos != NULL)
-		{
-			ZIP_CentralDirectory *cdEntry = tp->ai->centralDirectoryEntries->GetNext(pos);
+		while (!tp->ai->centralDirectoryEntries->IsEmpty()) {
+			ZIP_CentralDirectory *cdEntry = tp->ai->centralDirectoryEntries->RemoveHead();
 			// cleanup
 			delete [] cdEntry->filename;
 			if (cdEntry->lenExtraField > 0)
@@ -993,17 +957,11 @@ static void FreeMemory(void* arg) {
 		tp->ai->centralDirectoryEntries=NULL;
 	}
 
-	if (tp->ai->ACEhdr){
-		delete tp->ai->ACEhdr;
-		tp->ai->ACEhdr=NULL;
-	}
+	delete tp->ai->ACEhdr;
+	tp->ai->ACEhdr=NULL;
 	if (tp->ai->ACEdir){
-		pos = tp->ai->ACEdir->GetHeadPosition();
-		while (pos != NULL)
-		{
-			ACE_BlockFile *block= tp->ai->ACEdir->GetNext(pos);
-			delete block;
-		}
+		while (!tp->ai->ACEdir->IsEmpty())
+			delete tp->ai->ACEdir->RemoveHead();
 		delete tp->ai->ACEdir;
 		tp->ai->ACEdir=NULL;
 	}
@@ -1012,7 +970,6 @@ static void FreeMemory(void* arg) {
 	tp->ai=NULL;
 
 	delete tp;
-	tp=NULL;
 }
 
 void CArchivePreviewDlg::UpdateArchiveDisplay(bool doscan) {
@@ -1032,14 +989,14 @@ void CArchivePreviewDlg::UpdateArchiveDisplay(bool doscan) {
 	SetDlgItemText(IDC_INFO_ATTR, _T(""));
 	SetDlgItemText(IDC_INFO_STATUS, _T(""));
 	SetDlgItemText(IDC_INFO_FILECOUNT, _T(""));
-	
+
 	if (m_paFiles == NULL || m_paFiles->GetSize() == 0)
 		return;
 
 	CShareableFile* file=STATIC_DOWNCAST(CShareableFile, (*m_paFiles)[0]);
 
-	GetDlgItem(IDC_RESTOREARCH)->EnableWindow( file->IsPartFile()  && 
-		(((CPartFile*)file)->IsArchive(true)) && 
+	GetDlgItem(IDC_RESTOREARCH)->EnableWindow( file->IsPartFile()  &&
+		(((CPartFile*)file)->IsArchive(true)) &&
 		(((CPartFile*)file)->IsReadyForPreview() )	);
 
 
@@ -1059,9 +1016,8 @@ void CArchivePreviewDlg::UpdateArchiveDisplay(bool doscan) {
 			SetDlgItemText(IDC_INFO_TYPE, _T("ISO"));
 			break;
 		default:
-			SetDlgItemText(IDC_INFO_TYPE, GetResString(IDS_ARCPREV_UNKNOWNFORMAT));
+			SetDlgItemText(IDC_INFO_TYPE, (LPCTSTR)GetResString(IDS_ARCPREV_UNKNOWNFORMAT));
 			return;
-			break;
 	}
 
 	if (!doscan)
@@ -1076,7 +1032,7 @@ void CArchivePreviewDlg::UpdateArchiveDisplay(bool doscan) {
 	if (file->IsPartFile()) {
 		((CPartFile*)(file))->GetFilledList(filled);
 		if (filled->GetCount()==0) {
-			SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPREV_INSUFFDATA));
+			SetDlgItemText(IDC_INFO_STATUS, (LPCTSTR)GetResString(IDS_ARCPREV_INSUFFDATA));
 			delete filled;
 			delete ai;
 			return;
@@ -1089,7 +1045,7 @@ void CArchivePreviewDlg::UpdateArchiveDisplay(bool doscan) {
 		filled->AddTail(gap);
 	}
 
-	SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPREV_PLEASEWAIT) );
+	SetDlgItemText(IDC_INFO_STATUS, (LPCTSTR)GetResString(IDS_ARCPREV_PLEASEWAIT));
 
 	switch(type) {
 		case ARCHIVE_ZIP:
@@ -1103,7 +1059,6 @@ void CArchivePreviewDlg::UpdateArchiveDisplay(bool doscan) {
 			break;
 		case IMAGE_ISO:
 			ai->ISOdir = new CTypedPtrList<CPtrList, ISO_FileFolderEntry*>;
-			break;
 	}
 
 	// prepare threadparams
@@ -1120,7 +1075,7 @@ void CArchivePreviewDlg::UpdateArchiveDisplay(bool doscan) {
 	// start scanning thread
 	if (AfxBeginThread(RunArchiveScanner, (LPVOID)tp, THREAD_PRIORITY_BELOW_NORMAL) == NULL) {
 		FreeMemory(tp);
-		SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ERROR) );
+		SetDlgItemText(IDC_INFO_STATUS, (LPCTSTR)GetResString(IDS_ERROR));
 	}
 }
 
@@ -1148,7 +1103,6 @@ UINT AFX_CDECL CArchivePreviewDlg::RunArchiveScanner(LPVOID pParam) {
 				break;
 			case IMAGE_ISO:
 				ret=CArchiveRecovery::recoverISO(&inFile, NULL, tp, tp->filled);
-				break;
 		}
 
 		inFile.Close();
@@ -1172,7 +1126,7 @@ LRESULT CArchivePreviewDlg::ShowScanResults(WPARAM wParam, LPARAM lParam)
 	{
 		m_progressbar.SetPos(0);
 		if (ret == -1) {
-			SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_IMP_ERR_IO));
+			SetDlgItemText(IDC_INFO_STATUS, (LPCTSTR)GetResString(IDS_IMP_ERR_IO));
 		}
 		else if (tp->m_bIsValid) {
 
@@ -1183,8 +1137,8 @@ LRESULT CArchivePreviewDlg::ShowScanResults(WPARAM wParam, LPARAM lParam)
 					m_ContentList.SetColumnWidth(2, m_StoredColWidth2);
 				if (m_ContentList.GetColumnWidth(5)==0)
 					m_ContentList.SetColumnWidth(5, m_StoredColWidth5);
-			} 
-				else
+			}
+			else
 			{
 				int w = m_ContentList.GetColumnWidth(2);
 				if (w>0)
@@ -1210,7 +1164,6 @@ LRESULT CArchivePreviewDlg::ShowScanResults(WPARAM wParam, LPARAM lParam)
 					break;
 				case IMAGE_ISO:
 					ShowISOResults(ret,tp);
-					break;
 			}
 		}
 		ASSERT( tp == m_activeTParams );

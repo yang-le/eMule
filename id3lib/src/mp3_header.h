@@ -1,5 +1,5 @@
 // -*- C++ -*-
-// $Id: mp3_header.h,v 1.4 2002/11/02 17:48:51 t1mpy Exp $
+// $Id: mp3_header.h,v 1.4 2002/09/13 15:40:04 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
@@ -33,7 +33,7 @@
 class Mp3Info
 {
 public:
-  Mp3Info() { _mp3_header_output = new Mp3_Headerinfo; };
+  Mp3Info() { _mp3_header_output = LEAKTESTNEW(Mp3_Headerinfo); };
   ~Mp3Info() { this->Clean(); };
   void Clean();
 
@@ -47,7 +47,6 @@ public:
   Mp3_ModeExt ModeExt() const { return _mp3_header_output->modeext; };
   Mp3_Emphasis Emphasis() const { return _mp3_header_output->emphasis; };
   Mp3_Crc Crc() const { return _mp3_header_output->crc; };
-  uint32 VbrBitrate() const { return _mp3_header_output->vbr_bitrate; };
   uint32 Frequency() const { return _mp3_header_output->frequency; };
   uint32 Framesize() const { return _mp3_header_output->framesize; };
   uint32 Frames() const { return _mp3_header_output->frames; };
@@ -55,6 +54,7 @@ public:
   bool Copyrighted() const { return _mp3_header_output->copyrighted; };
   bool Original() const { return _mp3_header_output->original; };
   uint32 Seconds() const { return _mp3_header_output->time; };
+  uint32 DataSize() const { return _mp3_header_output->datasize; };
 
 private:
 

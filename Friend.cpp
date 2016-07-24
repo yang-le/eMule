@@ -51,7 +51,7 @@ CFriend::CFriend(void)
 }
 
 //Added this to work with the IRC.. Probably a better way to do it.. But wanted this in the release..
-CFriend::CFriend(const uchar* abyUserhash, uint32 dwLastSeen, uint32 dwLastUsedIP, uint16 nLastUsedPort, 
+CFriend::CFriend(const uchar* abyUserhash, uint32 dwLastSeen, uint32 dwLastUsedIP, uint16 nLastUsedPort,
 				 uint32 dwLastChatted, LPCTSTR pszName, uint32 dwHasHash){
 	m_dwLastSeen = dwLastSeen;
 	m_dwLastUsedIP = dwLastUsedIP;
@@ -220,7 +220,7 @@ CUpDownClient* CFriend::GetLinkedClient(bool bValidCheck) const
 		ASSERT( false );
 		return NULL;
 	}
-	return m_LinkedClient; 
+	return m_LinkedClient;
 };
 
 CUpDownClient* CFriend::GetClientForChatSession()
@@ -245,11 +245,11 @@ bool CFriend::TryToConnect(CFriendConnectionListener* pConnectionReport)
 		m_liConnectionReport.AddTail(pConnectionReport);
 		return true;
 	}
-	if (isnulmd4(m_abyKadID) && (m_dwLastUsedIP == 0 || m_nLastUsedPort == 0) 
+	if (isnulmd4(m_abyKadID) && (m_dwLastUsedIP == 0 || m_nLastUsedPort == 0)
 		&& (GetLinkedClient() == NULL || GetLinkedClient()->GetIP() == 0 || GetLinkedClient()->GetUserPort() == 0))
 	{
 		pConnectionReport->ReportConnectionProgress(m_LinkedClient, _T("*** ") + GetResString(IDS_CONNECTING), false);
-		pConnectionReport->ConnectingResult(GetLinkedClient(), false);	
+		pConnectionReport->ConnectingResult(GetLinkedClient(), false);
 		return false;
 	}
 
@@ -277,9 +277,9 @@ void CFriend::UpdateFriendConnectionState(EFriendConnectReport eEvent)
 {
 /*#ifdef _DEBUG
 	CString strDbg;
-	strDbg.Format(_T("*** Debug: UpdateFriendConnectionState, Report: %u, CurrentState: %u \n"), eEvent, m_FriendConnectState); 
+	strDbg.Format(_T("*** Debug: UpdateFriendConnectionState, Report: %u, CurrentState: %u \n"), eEvent, m_FriendConnectState);
 	for (POSITION pos = m_liConnectionReport.GetHeadPosition(); pos != 0;)
-		m_liConnectionReport.GetNext(pos)->ReportConnectionProgress(GetLinkedClient(), strDbg, false);			
+		m_liConnectionReport.GetNext(pos)->ReportConnectionProgress(GetLinkedClient(), strDbg, false);
 #endif*/
 	if (m_FriendConnectState == FCS_NONE || GetLinkedClient(true) == NULL){
 		// we aren't currently trying to build up a friendconnection, we shouldn't be called
@@ -303,9 +303,10 @@ void CFriend::UpdateFriendConnectionState(EFriendConnectReport eEvent)
 				ASSERT( eEvent != FCR_USERHASHVERIFIED );
 				// we connected, the userhash matches, now we wait for the authentification
 				// nothing todo, just report about it
-				for (POSITION pos = m_liConnectionReport.GetHeadPosition(); pos != 0; m_liConnectionReport.GetNext(pos)){
-					m_liConnectionReport.GetAt(pos)->ReportConnectionProgress(GetLinkedClient(),  _T(" ...") + GetResString(IDS_TREEOPTIONS_OK) + _T("\n"), true);
-					m_liConnectionReport.GetAt(pos)->ReportConnectionProgress(GetLinkedClient(), _T("*** ") + CString(_T("Authenticating friend")) /*to stringlist*/, false);
+				for (POSITION pos = m_liConnectionReport.GetHeadPosition(); pos != 0;) {
+					CFriendConnectionListener *flistener = m_liConnectionReport.GetNext(pos);
+					flistener->ReportConnectionProgress(GetLinkedClient(), _T(" ...") + GetResString(IDS_TREEOPTIONS_OK) + _T("\n"), true);
+					flistener->ReportConnectionProgress(GetLinkedClient(), _T("*** ") + CString(_T("Authenticating friend")) /*to stringlist*/, false);
 				}
 				if (m_FriendConnectState == FCS_CONNECTING)
 					m_FriendConnectState = FCS_AUTH;
@@ -325,9 +326,10 @@ void CFriend::UpdateFriendConnectionState(EFriendConnectReport eEvent)
 					// connecting failed to the last known IP, now we search kad for an updated IP of our friend
 					m_FriendConnectState = FCS_KADSEARCHING;
 					m_dwLastKadSearch = ::GetTickCount();
-					for (POSITION pos = m_liConnectionReport.GetHeadPosition(); pos != 0; m_liConnectionReport.GetNext(pos)){
-						m_liConnectionReport.GetAt(pos)->ReportConnectionProgress(GetLinkedClient(), _T(" ...") + GetResString(IDS_FAILED) + _T("\n"), true);
-						m_liConnectionReport.GetAt(pos)->ReportConnectionProgress(GetLinkedClient(), _T("*** ") + GetResString(IDS_SEARCHINGFRIENDKAD), false);
+					for (POSITION pos = m_liConnectionReport.GetHeadPosition(); pos != 0;) {
+						CFriendConnectionListener *flistener = m_liConnectionReport.GetNext(pos);
+						flistener->ReportConnectionProgress(GetLinkedClient(), _T(" ...") + GetResString(IDS_FAILED) + _T("\n"), true);
+						flistener->ReportConnectionProgress(GetLinkedClient(), _T("*** ") + GetResString(IDS_SEARCHINGFRIENDKAD), false);
 					}
 					Kademlia::CKademlia::FindIPByNodeID(*this, m_abyKadID);
 					break;
@@ -389,10 +391,10 @@ void CFriend::UpdateFriendConnectionState(EFriendConnectReport eEvent)
 }
 
 void CFriend::FindKadID(){
-	if (!HasKadID() && Kademlia::CKademlia::IsRunning() && GetLinkedClient(true) != NULL 
+	if (!HasKadID() && Kademlia::CKademlia::IsRunning() && GetLinkedClient(true) != NULL
 		&& GetLinkedClient()->GetKadPort() != 0 && GetLinkedClient()->GetKadVersion() >= 2)
 	{
-		DebugLog(_T("Searching KadID for friend %s by IP %s"), m_strName.IsEmpty() ? _T("(Unknown)") : m_strName, ipstr(GetLinkedClient()->GetConnectIP()));
+		DebugLog(_T("Searching KadID for friend %s by IP %s"), m_strName.IsEmpty() ? _T("(Unknown)") : (LPCTSTR)m_strName, (LPCTSTR)ipstr(GetLinkedClient()->GetConnectIP()));
 		Kademlia::CKademlia::FindNodeIDByIP(*this, GetLinkedClient()->GetConnectIP(), GetLinkedClient()->GetUserPort(), GetLinkedClient()->GetKadPort());
 	}
 }
@@ -405,11 +407,11 @@ void CFriend::KadSearchNodeIDByIPResult(Kademlia::EKadClientSearchRes eStatus, c
 	}
 	if (eStatus == Kademlia::KCSR_SUCCEEDED){
 		ASSERT( pachNodeID != NULL );
-		DebugLog(_T("Successfully fetched KadID (%s) for friend %s"), md4str(pachNodeID), m_strName.IsEmpty() ? _T("(Unknown)") : m_strName);
+		DebugLog(_T("Successfully fetched KadID (%s) for friend %s"), (LPCTSTR)md4str(pachNodeID), m_strName.IsEmpty() ? _T("(Unknown)") : (LPCTSTR)m_strName);
 		md4cpy(m_abyKadID, pachNodeID);
 	}
 	else
-		DebugLog(_T("Failed to fetch KadID for friend %s (%s)"), m_strName.IsEmpty() ? _T("(Unknown)") : m_strName, ipstr(m_dwLastUsedIP));
+		DebugLog(_T("Failed to fetch KadID for friend %s (%s)"), m_strName.IsEmpty() ? _T("(Unknown)") : (LPCTSTR)m_strName, (LPCTSTR)ipstr(m_dwLastUsedIP));
 }
 
 void CFriend::KadSearchIPByNodeIDResult(Kademlia::EKadClientSearchRes eStatus, uint32 dwIP, uint16 nPort){
@@ -420,12 +422,13 @@ void CFriend::KadSearchIPByNodeIDResult(Kademlia::EKadClientSearchRes eStatus, u
 	}
 	if (m_FriendConnectState == FCS_KADSEARCHING ){
 		if (eStatus == Kademlia::KCSR_SUCCEEDED && GetLinkedClient(true) != NULL){
-			DebugLog(_T("Successfully fetched IP (%s) by KadID (%s) for friend %s"), ipstr(dwIP), md4str(m_abyKadID), m_strName.IsEmpty() ? _T("(Unknown)") : m_strName);
+			DebugLog(_T("Successfully fetched IP (%s) by KadID (%s) for friend %s"), (LPCTSTR)ipstr(dwIP), (LPCTSTR)md4str(m_abyKadID), m_strName.IsEmpty() ? _T("(Unknown)") : (LPCTSTR)m_strName);
 			if (GetLinkedClient()->GetIP() != dwIP || GetLinkedClient()->GetUserPort() != nPort){
 				// retry to connect with our new found IP
-				for (POSITION pos = m_liConnectionReport.GetHeadPosition(); pos != 0; m_liConnectionReport.GetNext(pos)){
-					m_liConnectionReport.GetAt(pos)->ReportConnectionProgress(GetLinkedClient(), _T(" ...") + GetResString(IDS_FOUND) + _T("\n"), true);
-					m_liConnectionReport.GetAt(pos)->ReportConnectionProgress(m_LinkedClient, _T("*** ") + GetResString(IDS_CONNECTING), false);
+				for (POSITION pos = m_liConnectionReport.GetHeadPosition(); pos != 0;) {
+					CFriendConnectionListener *flistener = m_liConnectionReport.GetNext(pos);
+					flistener->ReportConnectionProgress(GetLinkedClient(), _T(" ...") + GetResString(IDS_FOUND) + _T("\n"), true);
+					flistener->ReportConnectionProgress(m_LinkedClient, _T("*** ") + GetResString(IDS_CONNECTING), false);
 				}
 				m_FriendConnectState = FCS_CONNECTING;
 				m_LinkedClient->SetChatState(MS_CONNECTING);
@@ -443,9 +446,9 @@ void CFriend::KadSearchIPByNodeIDResult(Kademlia::EKadClientSearchRes eStatus, u
 				return;
 			}
 			else
-				DebugLog(_T("KadSearchIPByNodeIDResult: Result IP is the same as known (not working) IP (%s)"), ipstr(dwIP));
+				DebugLog(_T("KadSearchIPByNodeIDResult: Result IP is the same as known (not working) IP (%s)"), (LPCTSTR)ipstr(dwIP));
 		}
-		DebugLog(_T("Failed to fetch IP by KadID (%s) for friend %s"), md4str(m_abyKadID), m_strName.IsEmpty() ? _T("(Unknown)") : m_strName);
+		DebugLog(_T("Failed to fetch IP by KadID (%s) for friend %s"), (LPCTSTR)md4str(m_abyKadID), m_strName.IsEmpty() ? _T("(Unknown)") : (LPCTSTR)m_strName);
 		// here ends our journey to connect to our friend unsuccessfully
 		m_FriendConnectState = FCS_NONE;
 		for (POSITION pos = m_liConnectionReport.GetHeadPosition(); pos != 0;)

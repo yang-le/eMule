@@ -1,16 +1,16 @@
 /*
 Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
- 
+
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either
 version 2 of the License, or (at your option) any later version.
- 
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
- 
+
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -36,7 +36,7 @@ there client on the eMule forum..
 // forward declarations
 namespace Kademlia { class CKadTagValueString; }
 void KadTagStrMakeLower(Kademlia::CKadTagValueString &rstr);
-int KadTagStrCompareNoCase(LPCWSTR dst, LPCWSTR src);
+int KadTagStrCompareNoCase(LPCWSTR dst, LPCWSTR src) throw();
 
 namespace Kademlia
 {
@@ -58,7 +58,7 @@ namespace Kademlia
 			{}
 
 			// A tag name may include character values >= 0xD0 and therefor also >= 0xF0. to prevent those
-			// characters be interpreted as multi byte character sequences we have to sensure that a binary
+			// characters be interpreted as multi byte character sequences we have to ensure that a binary
 			// string compare is performed.
 			int Compare(LPCSTR psz) const throw()
 			{
@@ -247,9 +247,9 @@ namespace Kademlia
 
 		protected:
 			CKadTag()
+				: m_type(0)
 			{}
-	}
-	;
+	};
 
 
 	class CKadTagUnk : public CKadTag

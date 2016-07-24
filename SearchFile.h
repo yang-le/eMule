@@ -25,26 +25,29 @@ class CSearchFile : public CAbstractFile
 	DECLARE_DYNAMIC(CSearchFile)
 
 	friend class CPartFile;
+	friend class CSearchList;
 	friend class CSearchListCtrl;
 public:
 	CSearchFile(CFileDataIO* in_data, bool bOptUTF8, uint32 nSearchID,
 				uint32 nServerIP=0, uint16 nServerPort=0,
-				LPCTSTR pszDirectory = NULL, 
+				LPCTSTR pszDirectory = NULL,
 				bool nKademlia = false, bool bServerUDPAnswer = false);
-	CSearchFile(const CSearchFile* copyfrom);
+	explicit CSearchFile(const CSearchFile* copyfrom);
 	virtual ~CSearchFile();
 
 	bool	IsKademlia() const				{ return m_bKademlia; }
 	bool	IsServerUDPAnswer() const		{ return m_bServerUDPAnswer; }
 	uint32	AddSources(uint32 count);
-	uint32	GetSourceCount() const;
+	uint32	GetSourceCount() const			{ return m_nSources; }
+	void	SetSourceCount(uint32 count)	{ m_nSources = count; }
 	uint32	AddCompleteSources(uint32 count);
-	uint32	GetCompleteSourceCount() const;
+	uint32	GetCompleteSourceCount() const	{ return m_nCompleteSources; }
+	void	SetCompleteSourceCount(uint32 count) { m_nCompleteSources = count; }
 	int		IsComplete() const;
 	int		IsComplete(UINT uSources, UINT uCompleteSources) const;
 	time_t	GetLastSeenComplete() const;
-	uint32	GetSearchID() const { return m_nSearchID; }
-	LPCTSTR GetDirectory() const { return m_pszDirectory; }
+	uint32	GetSearchID() const				{ return m_nSearchID; }
+	LPCTSTR GetDirectory() const			{ return m_pszDirectory; }
 
 	uint32	GetClientID() const				{ return m_nClientID; }
 	void	SetClientID(uint32 nClientID)	{ m_nClientID = nClientID; }
@@ -61,7 +64,7 @@ public:
 	void	SetFoundMultipleAICH()			{ m_bMultipleAICHFound = true; }
 
 	// Spamfilter
-	void	SetNameWithoutKeyword(CString strName)	{ m_strNameWithoutKeywords = strName; }
+	void	SetNameWithoutKeyword(const CString& strName)	{ m_strNameWithoutKeywords = strName; }
 	CString	GetNameWithoutKeyword()	const			{ return m_strNameWithoutKeywords; }
 	void	SetSpamRating(uint32 nRating)			{ m_nSpamRating = nRating; }
 	uint32	GetSpamRating() const					{ return m_nSpamRating; }
@@ -129,7 +132,7 @@ public:
 	void AddServer(const SServer& server) { m_aServers.Add(server); }
 	const CSimpleArray<SServer>& GetServers() const { return m_aServers; }
 	SServer& GetServerAt(int iServer) { return m_aServers[iServer]; }
-	
+
 	void	AddPreviewImg(CxImage* img)	{	m_listImages.Add(img); }
 	const CSimpleArray<CxImage*>& GetPreviews() const { return m_listImages; }
 	bool	IsPreviewPossible() const { return m_bPreviewPossible;}
@@ -152,6 +155,9 @@ private:
 	bool	m_bMultipleAICHFound;
 	bool	m_bKademlia;
 	bool	m_bServerUDPAnswer;
+	byte	m_flags; //bit: #0 - do not show in list; #1 - do not write to file
+	uint32	m_nSources;
+	uint32	m_nCompleteSources;
 	uint32	m_nClientID;
 	uint16	m_nClientPort;
 	uint32	m_nSearchID;

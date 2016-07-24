@@ -23,7 +23,7 @@ class CxImage;
 class CCaptchaGenerator
 {
 public:
-	CCaptchaGenerator(uint32 nLetterCount = 4);
+	explicit CCaptchaGenerator(uint32 nLetterCount = 4);
 	~CCaptchaGenerator(void);
 
 	void	ReGenerateCaptcha(uint32 nLetterCount = 4);

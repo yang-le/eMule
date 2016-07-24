@@ -1,4 +1,4 @@
-// $Id: tag_render.cpp,v 1.44 2002/07/31 13:20:49 t1mpy Exp $
+// $Id: tag_render.cpp,v 1.45 2002/09/13 15:37:23 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
@@ -29,8 +29,6 @@
 #include "tag_impl.h" //has <stdio.h> "tag.h" "header_tag.h" "frame.h" "field.h" "spec.h" "id3lib_strings.h" "utils.h"
 #include "helpers.h"
 #include "writers.h"
-#include "id3/io_decorators.h" //has "readers.h" "io_helpers.h" "utils.h"
-#include "io_helpers.h"
 #include "io_strings.h"
 
 #if defined HAVE_SYS_PARAM_H
@@ -42,12 +40,12 @@ using namespace dami;
 void id3::v1::render(ID3_Writer& writer, const ID3_TagImpl& tag)
 {
   writer.writeChars("TAG", 3);
-  
+
   io::writeTrailingSpaces(writer, id3::v2::getTitle(tag),  ID3_V1_LEN_TITLE);
   io::writeTrailingSpaces(writer, id3::v2::getArtist(tag), ID3_V1_LEN_ARTIST);
   io::writeTrailingSpaces(writer, id3::v2::getAlbum(tag),  ID3_V1_LEN_ALBUM);
   io::writeTrailingSpaces(writer, id3::v2::getYear(tag),   ID3_V1_LEN_YEAR);
-  
+
   size_t track = id3::v2::getTrackNum(tag);
   String comment = id3::v2::getV1Comment(tag);
   if (track > 0)
@@ -65,32 +63,39 @@ void id3::v1::render(ID3_Writer& writer, const ID3_TagImpl& tag)
 
 namespace
 {
-  void renderFrames(ID3_Writer& writer, const ID3_TagImpl& tag)
+  ID3_Err renderFrames(ID3_Writer& writer, const ID3_TagImpl& tag)
   {
     for (ID3_TagImpl::const_iterator iter = tag.begin(); iter != tag.end(); ++iter)
     {
       const ID3_Frame* frame = *iter;
-      if (frame) frame->Render(writer);
+      if (frame)
+      {
+        ID3_Err err = frame->Render(writer);
+        if (err != ID3E_NoError)
+          return err;
+      }
     }
+    return ID3E_NoError;
   }
 }
 
-void id3::v2::render(ID3_Writer& writer, const ID3_TagImpl& tag)
+ID3_Err id3::v2::render(ID3_Writer& writer, const ID3_TagImpl& tag)
 {
   // There has to be at least one frame for there to be a tag...
+  ID3_Err err = ID3E_NoError;
   if (tag.NumFrames() == 0)
   {
     ID3D_WARNING( "id3::v2::render(): no frames to render" );
-    return;
+    return ID3E_NoData;
   }
-  
+
   ID3D_NOTICE( "id3::v2::render(): rendering" );
   ID3_TagHeader hdr;
   hdr.SetSpec(tag.GetSpec());
   hdr.SetExtended(tag.GetExtended());
   hdr.SetExperimental(tag.GetExperimental());
   hdr.SetFooter(tag.GetFooter());
-    
+
   // set up the encryption and grouping IDs
 
   // ...
@@ -99,14 +104,18 @@ void id3::v2::render(ID3_Writer& writer, const ID3_TagImpl& tag)
   if (!tag.GetUnsync())
   {
     ID3D_NOTICE( "id3::v2::render(): rendering frames" );
-    renderFrames(frmWriter, tag);
+    err = renderFrames(frmWriter, tag);
+    if (err != ID3E_NoError)
+      return err;
     hdr.SetUnsync(false);
   }
   else
   {
     ID3D_NOTICE( "id3::v2::render(): rendering unsynced frames" );
     io::UnsyncedWriter uw(frmWriter);
-    renderFrames(uw, tag);
+    err = renderFrames(uw, tag);
+    if (err != ID3E_NoError)
+      return err;
     uw.flush();
     ID3D_NOTICE( "id3::v2::render(): numsyncs = " << uw.getNumSyncs() );
     hdr.SetUnsync(uw.getNumSyncs() > 0);
@@ -115,16 +124,18 @@ void id3::v2::render(ID3_Writer& writer, const ID3_TagImpl& tag)
   if (frmSize == 0)
   {
     ID3D_WARNING( "id3::v2::render(): rendered frame size is 0 bytes" );
-    return;
+    return ID3E_InvalidFrameSize;
   }
-  
+
   // zero the remainder of the buffer so that our padding bytes are zero
   luint nPadding = tag.PaddingSize(frmSize);
   ID3D_NOTICE( "id3::v2::render(): padding size = " << nPadding );
-  
+
   hdr.SetDataSize(frmSize + tag.GetExtendedBytes() + nPadding);
-  
-  hdr.Render(writer);
+
+  err = hdr.Render(writer);
+  if (err != ID3E_NoError)
+    return err;
 
   writer.writeChars(frms.data(), frms.size());
 
@@ -135,6 +146,7 @@ void id3::v2::render(ID3_Writer& writer, const ID3_TagImpl& tag)
       break;
     }
   }
+  return ID3E_NoError;
 }
 
 size_t ID3_TagImpl::Size() const
@@ -147,7 +159,7 @@ size_t ID3_TagImpl::Size() const
 
   hdr.SetSpec(this->GetSpec());
   size_t bytesUsed = hdr.Size();
-  
+
   size_t frameBytes = 0;
   for (const_iterator cur = _frames.begin(); cur != _frames.end(); ++cur)
   {
@@ -157,53 +169,41 @@ size_t ID3_TagImpl::Size() const
       frameBytes += (*cur)->Size();
     }
   }
-  
+
   if (!frameBytes)
   {
     return 0;
   }
-  
+
   bytesUsed += frameBytes;
   // add 30% for sync
   if (this->GetUnsync())
   {
     bytesUsed += bytesUsed / 3;
   }
-    
+
   bytesUsed += this->PaddingSize(bytesUsed);
   return bytesUsed;
 }
 
-
-void ID3_TagImpl::RenderExtHeader(uchar *buffer)
-{
-  if (this->GetSpec() == ID3V2_3_0)
-  {
-  }
-  
-  return ;
-}
-
-
 #define ID3_PADMULTIPLE (2048)
 #define ID3_PADMAX  (4096)
-
 
 size_t ID3_TagImpl::PaddingSize(size_t curSize) const
 {
   luint newSize = 0;
-  
+
   // if padding is switched off
   if (! _is_padded)
   {
     return 0;
   }
-    
+
   // if the old tag was large enough to hold the new tag, then we will simply
   // pad out the difference - that way the new tag can be written without
   // shuffling the rest of the song file around
-  if ((this->GetPrependedBytes()-ID3_TagHeader::SIZE > 0) &&
-      (this->GetPrependedBytes()-ID3_TagHeader::SIZE >= curSize) && 
+  if ((this->GetPrependedBytes() > ID3_TagHeader::SIZE) &&
+      (this->GetPrependedBytes()-ID3_TagHeader::SIZE >= curSize) &&
       (this->GetPrependedBytes()-ID3_TagHeader::SIZE - curSize) < ID3_PADMAX)
   {
     newSize = this->GetPrependedBytes()-ID3_TagHeader::SIZE;
@@ -212,17 +212,17 @@ size_t ID3_TagImpl::PaddingSize(size_t curSize) const
   {
     luint tempSize = curSize + ID3_GetDataSize(*this) +
                      this->GetAppendedBytes() + ID3_TagHeader::SIZE;
-    
+
     // this method of automatic padding rounds the COMPLETE FILE up to the
     // nearest 2K.  If the file will already be an even multiple of 2K (with
     // the tag included) then we just add another 2K of padding
     tempSize = ((tempSize / ID3_PADMULTIPLE) + 1) * ID3_PADMULTIPLE;
-    
+
     // the size of the new tag is the new filesize minus the audio data
     newSize = tempSize - ID3_GetDataSize(*this) - this->GetAppendedBytes () -
               ID3_TagHeader::SIZE;
   }
-  
+
   return newSize - curSize;
 }
 

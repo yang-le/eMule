@@ -101,10 +101,10 @@ BOOL CSmileySelector::Create(CWnd *pWndParent, const RECT *pRect, CEdit *pwndEdi
 	CString strClassName = AfxRegisterWndClass(
 			CS_CLASSDC | CS_SAVEBITS | CS_HREDRAW | CS_VREDRAW,
 			AfxGetApp()->LoadStandardCursor(IDC_ARROW), (HBRUSH)(crBackground + 1), 0);
-	if (!CWnd::CreateEx(0, strClassName, _T(""), 
-						WS_POPUP 
-						| WS_BORDER 
-						| WS_CLIPCHILDREN 
+	if (!CWnd::CreateEx(0, strClassName, _T(""),
+						WS_POPUP
+						| WS_BORDER
+						| WS_CLIPCHILDREN
 						| WS_CLIPSIBLINGS,
 						CRect(pRect->left, pRect->top, pRect->left, pRect->top),
 						pWndParent, 0, NULL))
@@ -113,9 +113,9 @@ BOOL CSmileySelector::Create(CWnd *pWndParent, const RECT *pRect, CEdit *pwndEdi
 	//////////////////////////////////////////////////////////////////////////
 	// Create the toolbar window
 	//
-	if (!m_tb.Create(WS_CHILD 
-					 | WS_VISIBLE 
-					 | WS_CLIPCHILDREN 
+	if (!m_tb.Create(WS_CHILD
+					 | WS_VISIBLE
+					 | WS_CLIPCHILDREN
 					 | WS_CLIPSIBLINGS
 					 | TBSTYLE_FLAT
 					 | TBSTYLE_TRANSPARENT
@@ -123,8 +123,8 @@ BOOL CSmileySelector::Create(CWnd *pWndParent, const RECT *pRect, CEdit *pwndEdi
 #ifndef SHOW_SMILEY_SHORTCUTS
 					 | TBSTYLE_TOOLTIPS
 #endif
-					 | CCS_NOPARENTALIGN 
-					 | CCS_NODIVIDER, 
+					 | CCS_NOPARENTALIGN
+					 | CCS_NODIVIDER,
 					 CRect(0, 0, 0, 0), this, IDC_SMILEY_TOOLBAR))
 		return FALSE;
 	// Win98: Explicitly set to Unicode to receive Unicode notifications.
@@ -137,7 +137,7 @@ BOOL CSmileySelector::Create(CWnd *pWndParent, const RECT *pRect, CEdit *pwndEdi
 	m_iBitmaps = 0;
 	CImageList iml;
 	iml.Create(sizSmiley.cx, sizSmiley.cy, theApp.m_iDfltImageListColorFlags | ILC_MASK, 0, 1);
-	for (int i = 0; i < _countof(g_aSmileys); i++)
+	for (unsigned i = 0; i < _countof(g_aSmileys); ++i)
 	{
 		iml.Add(CTempIconLoader(g_aSmileys[i].pszResource, sizSmiley.cx, sizSmiley.cy));
 		m_iBitmaps++;
@@ -238,7 +238,7 @@ BOOL CSmileySelector::OnCommand(WPARAM wParam, LPARAM lParam)
 		CString strEdit;
 		m_pwndEdit->GetWindowText(strEdit);
 		int iEditLen =  strEdit.GetLength();
-		
+
 		CString strInsert;
 		if (   (iStart > 0 && iStart < iEditLen - 1 && strEdit[iStart] != _T(' '))
 			|| (iStart == iEnd && iEnd >= iEditLen && iEditLen > 0 && strEdit[iEditLen - 1] != _T(' ')))

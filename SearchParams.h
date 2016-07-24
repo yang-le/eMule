@@ -5,7 +5,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // ESearchType
 
-enum ESearchType
+enum ESearchType: int
 {
 	//NOTE: The numbers are *equal* to the entries in the comboxbox -> TODO: use item data
 	SearchTypeAutomatic = 0,
@@ -24,9 +24,9 @@ enum ESearchType
 struct SSearchParams
 {
 	SSearchParams()
+		: eType(SearchTypeEd2kServer)
 	{
 		dwSearchID = (DWORD)-1;
-		eType = SearchTypeEd2kServer;
 		bClientSharedFiles = false;
 		ullMinSize = 0;
 		ullMaxSize = 0;
@@ -37,7 +37,7 @@ struct SSearchParams
 		bMatchKeywords = false;
 	}
 
-	SSearchParams(CFileDataIO& rFile)
+	explicit SSearchParams(CFileDataIO& rFile)
 	{
 		dwSearchID = rFile.ReadUInt32();
 		eType = (ESearchType)rFile.ReadUInt8();

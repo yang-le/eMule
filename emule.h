@@ -55,15 +55,17 @@ class CUploadDiskIOThread;
 struct SLogItem;
 
 enum AppState{
-	APP_STATE_RUNNING = 0,
-   	APP_STATE_SHUTTINGDOWN,
+	APP_STATE_STARTING = 0, //initialization phase
+	APP_STATE_RUNNING,
+	APP_STATE_ASKCLOSE, //exit confirmation dialog is active
+	APP_STATE_SHUTTINGDOWN,
 	APP_STATE_DONE
 };
 
 class CemuleApp : public CWinApp
 {
 public:
-	CemuleApp(LPCTSTR lpszAppName = NULL);
+	explicit CemuleApp(LPCTSTR lpszAppName = NULL);
 
 	// ZZ:UploadSpeedSense -->
     UploadBandwidthThrottler* uploadBandwidthThrottler;
@@ -73,7 +75,7 @@ public:
 	CClientList*		clientlist;
 	CKnownFileList*		knownfiles;
 	CServerConnect*		serverconnect;
-	CServerList*		serverlist;	
+	CServerList*		serverlist;
 	CSharedFileList*	sharedfiles;
 	CSearchList*		searchlist;
 	CListenSocket*		listensocket;
@@ -110,7 +112,7 @@ public:
 	UINT				m_uCurVersionShort;
 	UINT				m_uCurVersionCheck;
 	ULONGLONG			m_ullComCtrlVer;
-	AppState			m_app_state; // defines application state for shutdown 
+	AppState			m_app_state; // defines application state for shutdown
 	CMutex				hashing_mut;
 	CString*			pstrPendingLink;
 	COPYDATASTRUCT		sendstruct;
@@ -123,7 +125,7 @@ public:
 	// ed2k link functions
 	void		AddEd2kLinksToDownload(CString strLinks, int cat);
 	void		SearchClipboard();
-	void		IgnoreClipboardLinks(CString strLinks) {m_strLastClipboardContents = strLinks;}
+	void		IgnoreClipboardLinks(const CString& strLinks) {m_strLastClipboardContents = strLinks;}
 	void		PasteClipboard(int cat = 0);
 	bool		IsEd2kFileLinkInClipboard();
 	bool		IsEd2kServerLinkInClipboard();
@@ -133,7 +135,7 @@ public:
 	CString		CreateKadSourceLink(const CAbstractFile* f);
 
 	// clipboard (text)
-	bool		CopyTextToClipboard(CString strText);
+	bool		CopyTextToClipboard(const CString& strText);
 	CString		CopyTextFromClipboard();
 
 	void		OnlineSig();
@@ -242,8 +244,8 @@ public:
 	CTempIconLoader(UINT uResourceID, int cx = 16, int cy = 16, UINT uFlags = LR_DEFAULTCOLOR);
 	~CTempIconLoader();
 
-	operator HICON() const{
-		return this == NULL ? NULL : m_hIcon;
+	operator HICON() const {
+		return m_hIcon;
 	}
 
 protected:

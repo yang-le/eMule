@@ -50,6 +50,7 @@ BEGIN_MESSAGE_MAP(CHTRichEditCtrl, CRichEditCtrl)
 END_MESSAGE_MAP()
 
 CHTRichEditCtrl::CHTRichEditCtrl()
+	: m_iLimitText(0)
 {
 	m_bAutoScroll = true;
 	m_bNoPaint = false;
@@ -277,12 +278,10 @@ void CHTRichEditCtrl::AddLine(LPCTSTR pszMsg, int iLen, bool bLink, COLORREF cr,
 	bool bAutoAutoScroll = m_bAutoScroll;
 	// Use the 'ScrollInfo' only, if there is a scrollbar available, otherwise we would
 	// use a scrollinfo which points to the top and we would thus stay at the top.
-	bool bScrollInfo = false;
 	SCROLLINFO si;
 	si.cbSize = sizeof si;
 	si.fMask = SIF_ALL;
 	if ((GetStyle() & WS_VSCROLL) && GetScrollInfo(SB_VERT, &si)) {
-		bScrollInfo = true;
 		// use some threshold to determine if at end or "very near" at end, unfortunately
 		// this is needed to get around richedit specific stuff. this threshold (pixels)
 		// should somewhat reflect the font size used in the control.
@@ -299,7 +298,7 @@ void CHTRichEditCtrl::AddLine(LPCTSTR pszMsg, int iLen, bool bLink, COLORREF cr,
 	//int iFirstLine = !bAutoAutoScroll ? GetFirstVisibleLine() : 0;
 	POINT ptScrollPos;
 	SendMessage(EM_GETSCROLLPOS, 0, (LPARAM)&ptScrollPos);
-	
+
 	// Select at the end of text and replace the selection
 	SafeAddLine(iSize, pszMsg, iMsgLen, lStartChar, lEndChar, bLink, cr, bk, mask);
 	SetSel(lStartChar, lEndChar); // Restore previous selection
@@ -644,14 +643,14 @@ bool CHTRichEditCtrl::SaveLog(LPCTSTR pszDefName)
 		if (fp)
 		{
 			// write Unicode byte-order mark 0xFEFF
-			fputwc(0xFEFF, fp);
+			fputwc((wchar_t)0xFEFF, fp);
 
 			CString strText;
 			GetWindowText(strText);
 			fwrite(strText, sizeof(TCHAR), strText.GetLength(), fp);
 			if (ferror(fp)){
 				CString strError;
-				strError.Format(_T("Failed to write log file \"%s\" - %s"), dlg.GetPathName(), _tcserror(errno));
+				strError.Format(_T("Failed to write log file \"%s\" - %s"), (LPCTSTR)dlg.GetPathName(), _tcserror(errno));
 				AfxMessageBox(strError, MB_ICONERROR);
 			}
 			else
@@ -660,7 +659,7 @@ bool CHTRichEditCtrl::SaveLog(LPCTSTR pszDefName)
 		}
 		else{
 			CString strError;
-			strError.Format(_T("Failed to create log file \"%s\" - %s"), dlg.GetPathName(), _tcserror(errno));
+			strError.Format(_T("Failed to create log file \"%s\" - %s"), (LPCTSTR)dlg.GetPathName(), _tcserror(errno));
 			AfxMessageBox(strError, MB_ICONERROR);
 		}
 	}
@@ -741,7 +740,7 @@ void CHTRichEditCtrl::AppendText(const CString& sText)
 	while (*psz != _T('\0'))
 	{
 		bool bFoundScheme = false;
-		for (int i = 0; i < _countof(s_apszSchemes); i++)
+		for (unsigned i = 0; i < _countof(s_apszSchemes); ++i)
 		{
 			if (_tcsncmp(psz, s_apszSchemes[i].pszScheme, s_apszSchemes[i].iLen) == 0)
 			{
@@ -808,7 +807,7 @@ BOOL CHTRichEditCtrl::OnEnLink(NMHDR *pNMHDR, LRESULT *pResult)
 
 		// check if that "URL" has a valid URL scheme. if it does not have, pass that notification up to the
 		// parent window which may interpret that "URL" in some other way.
-		for (int i = 0; i < _countof(s_apszSchemes); i++){
+		for (unsigned i = 0; i < _countof(s_apszSchemes); ++i) {
 			if (_tcsncmp(strUrl, s_apszSchemes[i].pszScheme, s_apszSchemes[i].iLen) == 0){
 				ShellExecute(NULL, NULL, strUrl, NULL, NULL, SW_SHOWDEFAULT);
 				*pResult = 1;
@@ -998,7 +997,7 @@ BOOL CHTRichEditCtrl::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 class CBitmapDataObject : public CCmdTarget
 {
 public:
-	CBitmapDataObject(HBITMAP hBitmap);
+	explicit CBitmapDataObject(HBITMAP hBitmap);
 	virtual ~CBitmapDataObject();
 
 protected:
@@ -1032,6 +1031,7 @@ CBitmapDataObject::~CBitmapDataObject()
 {
 }
 
+#pragma warning(push)
 #pragma warning(disable:4100) // unreferenced paramter
 #pragma warning(disable:4555) // expression has no effect; expected expression with side-effect (because of the 'METHOD_PROLOGUE' macro)
 
@@ -1048,7 +1048,7 @@ STDMETHODIMP_(ULONG) CBitmapDataObject::XDataObject::AddRef()
 }
 
 STDMETHODIMP_(ULONG) CBitmapDataObject::XDataObject::Release()
-{                            
+{
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 	return pThis->ExternalRelease();
 }
@@ -1115,8 +1115,7 @@ STDMETHODIMP CBitmapDataObject::XDataObject::EnumDAdvise(IEnumSTATDATA **ppenumA
 	return E_NOTIMPL;
 }
 
-#pragma warning(default:4555) // expression has no effect; expected expression with side-effect (because of the 'METHOD_PROLOGUE' macro)
-#pragma warning(default:4100) // unreferenced paramter
+#pragma warning(pop)
 
 static const struct
 {
@@ -1220,7 +1219,7 @@ void CHTRichEditCtrl::AddSmileys(LPCTSTR pszLine)
 		bool bFoundSmiley = false;
 		if (iPos == 0 || psz[-1] == _T(' ') || psz[-1] == _T('.'))
 		{
-			for (int i = 0; i < _countof(s_apszSmileys); i++)
+			for (unsigned i = 0; i < _countof(s_apszSmileys); ++i)
 			{
 				if (_tcsncmp(psz, s_apszSmileys[i].pszSmiley, s_apszSmileys[i].iLen) == 0
 					&& (   psz[s_apszSmileys[i].iLen] == _T('\0')
@@ -1261,7 +1260,7 @@ HBITMAP IconToBitmap(HICON hIcon, COLORREF crBackground, int cx = 16, int cy = 1
 		int iSize = GetObject(ii.hbmColor, sizeof(bmi), &bmi);
 		DeleteObject(ii.hbmMask);
 		DeleteObject(ii.hbmColor);
-		if (iSize < sizeof(bmi) - sizeof(bmi.bmBits))
+		if ((unsigned)iSize < sizeof(bmi) - sizeof(bmi.bmBits))
 			return NULL;
 		cx = bmi.bmWidth;
 		cy = bmi.bmHeight;
@@ -1298,7 +1297,7 @@ HBITMAP IconToBitmap(HICON hIcon, COLORREF crBackground, int cx = 16, int cy = 1
 				hBitmap = (HBITMAP)CloseEnhMetaFile(hdcEnhMF);
 			}
 			ReleaseDC(HWND_DESKTOP, hdc);
-		}  
+		}
 #else
 		CClientDC dcScreen(CWnd::GetDesktopWindow());
 		CDC dcMem;
@@ -1363,7 +1362,7 @@ HBITMAP CHTRichEditCtrl::GetSmileyBitmap(LPCTSTR pszSmileyID)
 		return (HBITMAP)NULL;
 
 	// Don't specify an icon size for the bitmap creation, we could use 'cx' and 'cy' only for
-	// the builtin icons because we know their sizes, but if there is a skin active, the 
+	// the builtin icons because we know their sizes, but if there is a skin active, the
 	// icons (which can also be GIF images) can have any size.
 	HBITMAP hBitmap = IconToBitmap(hIcon, m_crBackground, 0, 0);
 	if (hBitmap == NULL)
@@ -1375,13 +1374,12 @@ HBITMAP CHTRichEditCtrl::GetSmileyBitmap(LPCTSTR pszSmileyID)
 
 bool CHTRichEditCtrl::InsertSmiley(LPCTSTR pszSmileyID)
 {
-	HRESULT hr;
 	HBITMAP hbmp = GetSmileyBitmap(pszSmileyID);
 	if (hbmp == NULL)
 		return false;
 
 	CBitmapDataObject *pbdo = new CBitmapDataObject(hbmp);
-	CComPtr<IDataObject> pIDataObject; 
+	CComPtr<IDataObject> pIDataObject;
 	pIDataObject.Attach((IDataObject *)pbdo->GetInterface(&IID_IDataObject));
 
 	CComPtr<IRichEditOle> pIRichEditOle;
@@ -1397,9 +1395,9 @@ bool CHTRichEditCtrl::InsertSmiley(LPCTSTR pszSmileyID)
 	if (sm_pIStorageSmileys == NULL)
 	{
 		CComPtr<ILockBytes> pILockBytes;
-		if ((hr = CreateILockBytesOnHGlobal(NULL, TRUE, &pILockBytes)) != S_OK)
+		if (CreateILockBytesOnHGlobal(NULL, TRUE, &pILockBytes) != S_OK)
 			return false;
-		if ((hr = StgCreateDocfileOnILockBytes(pILockBytes, STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_READWRITE, 0, &sm_pIStorageSmileys)) != S_OK)
+		if (StgCreateDocfileOnILockBytes(pILockBytes, STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_READWRITE, 0, &sm_pIStorageSmileys) != S_OK)
 			return false;
 	}
 
@@ -1419,22 +1417,22 @@ bool CHTRichEditCtrl::InsertSmiley(LPCTSTR pszSmileyID)
 #endif
 
 	CComPtr<IOleObject> pIOleObject;
-	if ((hr = OleCreateStaticFromData(pIDataObject, __uuidof(pIOleObject), OLERENDER_FORMAT, &FormatEtc, pIOleClientSite, sm_pIStorageSmileys, (void **)&pIOleObject)) != S_OK)
+	if (OleCreateStaticFromData(pIDataObject, __uuidof(pIOleObject), OLERENDER_FORMAT, &FormatEtc, pIOleClientSite, sm_pIStorageSmileys, (void **)&pIOleObject) != S_OK)
 		return false;
 	OleSetContainedObject(pIOleObject, TRUE);
 
 	REOBJECT reobject = {0};
 	reobject.cbStruct = sizeof(reobject);
-	if ((hr = pIOleObject->GetUserClassID(&reobject.clsid)) != S_OK)
+	if (pIOleObject->GetUserClassID(&reobject.clsid) != S_OK)
 		return false;
-	reobject.cp = REO_CP_SELECTION;
+	reobject.cp = (LONG)REO_CP_SELECTION;
 	reobject.dvaspect = DVASPECT_CONTENT;
 	reobject.poleobj = pIOleObject;
 	reobject.polesite = pIOleClientSite;
 	reobject.pstg = sm_pIStorageSmileys;
 	reobject.dwFlags = REO_BELOWBASELINE;
 
-	if ((hr = pIRichEditOle->InsertObject(&reobject)) != S_OK)
+	if (pIRichEditOle->InsertObject(&reobject) != S_OK)
 		return false;
 
 	return true;
@@ -1442,13 +1440,12 @@ bool CHTRichEditCtrl::InsertSmiley(LPCTSTR pszSmileyID)
 
 bool CHTRichEditCtrl::AddCaptcha(HBITMAP hbmp)
 {
-	HRESULT hr;
 	if (hbmp == NULL)
 		return false;
-	
+
 	SetSel(GetWindowTextLength(), GetWindowTextLength());
 	CBitmapDataObject *pbdo = new CBitmapDataObject(hbmp);
-	CComPtr<IDataObject> pIDataObject; 
+	CComPtr<IDataObject> pIDataObject;
 	pIDataObject.Attach((IDataObject *)pbdo->GetInterface(&IID_IDataObject));
 
 	CComPtr<IRichEditOle> pIRichEditOle;
@@ -1464,9 +1461,9 @@ bool CHTRichEditCtrl::AddCaptcha(HBITMAP hbmp)
 	if (m_pIStorageCaptchas == NULL)
 	{
 		CComPtr<ILockBytes> pILockBytes;
-		if ((hr = CreateILockBytesOnHGlobal(NULL, TRUE, &pILockBytes)) != S_OK)
+		if (CreateILockBytesOnHGlobal(NULL, TRUE, &pILockBytes) != S_OK)
 			return false;
-		if ((hr = StgCreateDocfileOnILockBytes(pILockBytes, STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_READWRITE, 0, &m_pIStorageCaptchas)) != S_OK)
+		if (StgCreateDocfileOnILockBytes(pILockBytes, STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_READWRITE, 0, &m_pIStorageCaptchas) != S_OK)
 			return false;
 	}
 
@@ -1486,22 +1483,22 @@ bool CHTRichEditCtrl::AddCaptcha(HBITMAP hbmp)
 #endif
 
 	CComPtr<IOleObject> pIOleObject;
-	if ((hr = OleCreateStaticFromData(pIDataObject, __uuidof(pIOleObject), OLERENDER_FORMAT, &FormatEtc, pIOleClientSite, m_pIStorageCaptchas, (void **)&pIOleObject)) != S_OK)
+	if (OleCreateStaticFromData(pIDataObject, __uuidof(pIOleObject), OLERENDER_FORMAT, &FormatEtc, pIOleClientSite, m_pIStorageCaptchas, (void **)&pIOleObject) != S_OK)
 		return false;
 	OleSetContainedObject(pIOleObject, TRUE);
 
 	REOBJECT reobject = {0};
 	reobject.cbStruct = sizeof(reobject);
-	if ((hr = pIOleObject->GetUserClassID(&reobject.clsid)) != S_OK)
+	if (pIOleObject->GetUserClassID(&reobject.clsid) != S_OK)
 		return false;
-	reobject.cp = REO_CP_SELECTION;
+	reobject.cp = (LONG)REO_CP_SELECTION;
 	reobject.dvaspect = DVASPECT_CONTENT;
 	reobject.poleobj = pIOleObject;
 	reobject.polesite = pIOleClientSite;
 	reobject.pstg = m_pIStorageCaptchas;
 	reobject.dwFlags = REO_BELOWBASELINE;
 
-	if ((hr = pIRichEditOle->InsertObject(&reobject)) != S_OK)
+	if (pIRichEditOle->InsertObject(&reobject) != S_OK)
 		return false;
 	ReplaceSel(_T(""));
 

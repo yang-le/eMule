@@ -59,7 +59,7 @@ BOOL CSearchDlg::Create(CWnd* pParent)
 {
 	// *) The initial size of that frame window must not exceed the window size of the
 	//    dialog resource template of the client window (the search results window).
-	// *) The dialog resource template's window size (of the search results window) must not 
+	// *) The dialog resource template's window size (of the search results window) must not
 	//	  exceed the minimum client area of the frame window.
 	// Otherwise we may get scrollbars in the search results window
 	CRect rc(0, 0, 50, 50);
@@ -81,8 +81,8 @@ int CSearchDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_pwndResults->ModifyStyle(WS_BORDER, 0);
 	m_pwndResults->ModifyStyleEx(WS_EX_CLIENTEDGE, WS_EX_STATICEDGE);
 
-	m_pwndParams->Create(this, IDD_SEARCH_PARAMS, 
-						 WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_SIZE_FIXED | CBRS_SIZE_DYNAMIC | CBRS_GRIPPER, 
+	m_pwndParams->Create(this, IDD_SEARCH_PARAMS,
+						 WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_SIZE_FIXED | CBRS_SIZE_DYNAMIC | CBRS_GRIPPER,
 						 IDBAR_SEARCH_PARAMS);
 	ASSERT( m_pwndParams->GetStyle() & WS_CLIPSIBLINGS );
 	ASSERT( m_pwndParams->GetStyle() & WS_CLIPCHILDREN );
@@ -133,7 +133,7 @@ void CSearchDlg::OnSetFocus(CWnd* pOldWnd)
 
 void CSearchDlg::SaveAllSettings()
 {
-	m_pwndParams->SaveSettings(); 
+	m_pwndParams->SaveSettings();
 }
 
 void CSearchDlg::ResetHistory()
@@ -209,8 +209,8 @@ void CSearchDlg::CancelKadSearch(UINT uSearchID)
 }
 
 void CSearchDlg::SetNextSearchID(uint32 uNextID)
-{ 
-	m_pwndResults->SetNextSearchID(uNextID); 
+{
+	m_pwndResults->SetNextSearchID(uNextID);
 }
 
 void CSearchDlg::AddGlobalEd2kSearchResults(UINT nCount)
@@ -239,7 +239,7 @@ bool CSearchDlg::DoNewEd2kSearch(SSearchParams* pParams)
 	return m_pwndResults->DoNewEd2kSearch(pParams);
 }
 
-void CSearchDlg::ProcessEd2kSearchLinkRequest(CString strSearchTerm)
+void CSearchDlg::ProcessEd2kSearchLinkRequest(const CString& strSearchTerm)
 {
 	m_pwndParams->ProcessEd2kSearchLinkRequest(strSearchTerm);
 }

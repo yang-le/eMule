@@ -22,7 +22,7 @@ namespace Kademlia{
 
 #define MAX_CFEXP_ERRORMSG	(MAX_PATH + 256)
 
-enum EUtf8Str
+enum EUtf8Str: int
 {
 	utf8strNone,		// convert Unicode string to locale dependent MBCS
 	utf8strOptBOM,		// convert Unicode string to BOM'd UTF-8 string (non ASCII data in string)
@@ -74,7 +74,7 @@ class CSafeFile : public CFile, public CFileDataIO
 {
 public:
 	CSafeFile() {}
-	CSafeFile::CSafeFile(LPCTSTR lpszFileName, UINT nOpenFlags)
+	CSafeFile(LPCTSTR lpszFileName, UINT nOpenFlags)
 		: CFile(lpszFileName, nOpenFlags) {}
 
 	virtual UINT Read(void* lpBuf, UINT nCount);
@@ -91,11 +91,11 @@ public:
 class CSafeMemFile : public CMemFile, public CFileDataIO
 {
 public:
-	CSafeMemFile(UINT nGrowBytes = 512)
+	explicit CSafeMemFile(UINT nGrowBytes = 512)
 		: CMemFile(nGrowBytes) {}
 	//CSafeMemFile::CSafeMemFile(BYTE* lpBuffer, UINT nBufferSize, UINT nGrowBytes = 0)
 	//	: CMemFile(lpBuffer, nBufferSize, nGrowBytes) {}
-	CSafeMemFile::CSafeMemFile(const BYTE* lpBuffer, UINT nBufferSize)
+	CSafeMemFile(const BYTE* lpBuffer, UINT nBufferSize)
 		: CMemFile(const_cast<BYTE*>(lpBuffer), nBufferSize, 0) {}
 
 	const BYTE* GetBuffer() const { return m_lpBuffer; }
@@ -129,7 +129,7 @@ class CSafeBufferedFile : public CStdioFile, public CFileDataIO
 {
 public:
 	CSafeBufferedFile() {}
-	CSafeBufferedFile::CSafeBufferedFile(LPCTSTR lpszFileName, UINT nOpenFlags)
+	CSafeBufferedFile(LPCTSTR lpszFileName, UINT nOpenFlags)
 		: CStdioFile(lpszFileName, nOpenFlags) {}
 
 	virtual UINT Read(void* lpBuf, UINT nCount);
@@ -198,7 +198,7 @@ template<class T>
 class Array
 {
 public:
-	Array(UINT nCount)
+	explicit Array(UINT nCount)
 	{
 		m_aT = new T[nCount];
 	}
@@ -207,7 +207,7 @@ public:
 		delete[] m_aT;
 	}
 
-	operator T* ()
+	operator T* () const
 	{
 		return m_aT;
 	}

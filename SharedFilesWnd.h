@@ -57,7 +57,7 @@ class CSharedFilesWnd : public CResizableDialog
 	DECLARE_DYNAMIC(CSharedFilesWnd)
 
 public:
-	CSharedFilesWnd(CWnd* pParent = NULL);   // standard constructor
+	explicit CSharedFilesWnd(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CSharedFilesWnd();
 
 	void Localize();

@@ -1,21 +1,21 @@
 /*
 Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
- 
+
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either
 version 2 of the License, or (at your option) any later version.
- 
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
- 
+
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- 
- 
+
+
 This work is based on the java implementation of the Kademlia protocol.
 Kademlia: Peer-to-peer routing based on the XOR metric
 Copyright (C) 2002  Petar Maymounkov [petar@post.harvard.edu]
@@ -47,16 +47,15 @@ namespace Kademlia
 	 * Each zone is either an internal node or a leaf node.
 	 * Internal nodes have "bin == null" and "subZones[i] != null",
 	 * leaf nodes have "subZones[i] == null" and "bin != null".
-	 * 
+	 *
 	 * All key pseudoaddresses are relative to the center (self), which
 	 * is considered to be 000..000
 	 */
 	class CRoutingZone
 	{
-			friend CRoutingZone;
 		public:
 			CRoutingZone();
-			CRoutingZone(LPCSTR szFilename);
+			explicit CRoutingZone(LPCSTR szFilename);
 			~CRoutingZone();
 
 			uint32		Consolidate();
@@ -65,15 +64,15 @@ namespace Kademlia
 			bool		Add(const CUInt128 &uID, uint32 uIP, uint16 uUDPPort, uint16 uTCPPort, uint8 uVersion, CKadUDPKey cUDPKey, bool& bIPVerified, bool bUpdate, bool bFromNodesDat, bool bFromHello);
 			bool		AddUnfiltered(const CUInt128 &uID, uint32 uIP, uint16 uUDPPort, uint16 uTCPPort, uint8 uVersion, CKadUDPKey cUDPKey, bool& bIPVerified, bool bUpdate, bool bFromNodesDat, bool bFromHello);
 			bool		Add(CContact* pContact, bool& bUpdate, bool& bOutIPVerified);
-			void		ReadFile(CString strSpecialNodesdate = _T(""));
-			bool		VerifyContact(const CUInt128 &uID, uint32 uIP);
+			void		ReadFile(const CString& strSpecialNodesdate = _T(""));
+			bool		VerifyContact(const CUInt128 &uID, uint32 uIP) const;
 			CContact*	GetContact(const CUInt128 &uID) const;
 			CContact*	GetContact(uint32 uIP, uint16 nPort, bool bTCPPort) const;
 			CContact*	GetRandomContact(uint32 nMaxType, uint32 nMinKadVersion) const;
 			uint32		GetNumContacts() const;
 			void		GetNumContacts(uint32& nInOutContacts, uint32& nInOutFilteredContacts, uint8 byMinVersion) const;
 			// Check if we know a conact with the same ID or IP but notmatching IP/ID and other limitations, similar checks like when adding a node to the table except allowing duplicates
-			bool		IsAcceptableContact(const CContact* pToCheck) const; 
+			bool		IsAcceptableContact(const CContact* pToCheck) const;
 			// Returns a list of all contacts in all leafs of this zone.
 			void		GetAllEntries(ContactList *plistResult, bool bEmptyFirst = true);
 			// Returns the *maxRequired* tokens that are closest to the target within this zone's subtree.
@@ -88,9 +87,9 @@ namespace Kademlia
 		private:
 			CRoutingZone(CRoutingZone *pSuper_zone, int iLevel, const CUInt128 &uZone_index);
 			void Init(CRoutingZone *pSuper_zone, int iLevel, const CUInt128 &uZone_index);
-			void ReadBootstrapNodesDat(CFileDataIO& file);
+			static void ReadBootstrapNodesDat(CFileDataIO& file);
 			void DbgWriteBootstrapFile();
-			
+
 			void WriteFile();
 			bool IsLeaf() const;
 			bool CanSplit() const;

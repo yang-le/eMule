@@ -24,7 +24,7 @@ enum EUploadState{
 	US_NONE
 };
 
-enum EDownloadState{
+enum EDownloadState: int {
 	DS_DOWNLOADING,
 	DS_ONQUEUE,
 	DS_CONNECTED,

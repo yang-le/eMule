@@ -13,14 +13,14 @@ class CTimeTick
 	CTimeTick(const CTimeTick& d);
 	CTimeTick& operator=(const CTimeTick& d);
 
-public:	
+public:
 	CTimeTick();
 	~CTimeTick();
 
 	// Operations
 	void Start();
 	float Tick();
-	bool  isPerformanceCounter() {return m_nPerformanceFrequency!=0;}
+	static bool  isPerformanceCounter() {return m_nPerformanceFrequency!=0;}
 
 	// Implementation
 protected:

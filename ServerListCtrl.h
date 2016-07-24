@@ -1,11 +1,11 @@
 #pragma once
 #include "MuleListCtrl.h"
 
-class CServerList; 
+class CServerList;
 class CServer;
 class CToolTipCtrlX;
 
-class CServerListCtrl : public CMuleListCtrl 
+class CServerListCtrl : public CMuleListCtrl
 {
 	DECLARE_DYNAMIC(CServerListCtrl)
 public:
@@ -25,6 +25,10 @@ public:
 	void	ShowServerCount();
 	bool	StaticServerFileAppend(CServer* pServer);
 	bool	StaticServerFileRemove(CServer* pServer);
+
+private:
+	static int Undefined_at_bottom(const uint32 u0, const uint32 u1);
+	static int Undefined_at_bottom(const CString& s0, const CString& s1);
 
 protected:
 	CToolTipCtrlX*	m_tooltip;

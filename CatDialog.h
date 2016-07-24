@@ -24,7 +24,7 @@ class CCatDialog : public CDialog
 {
 	DECLARE_DYNAMIC(CCatDialog)
 public:
-	CCatDialog(int catindex);   // standard constructor
+	explicit CCatDialog(int catindex);   // standard constructor
 	virtual ~CCatDialog();
 
 	enum { IDD = IDD_CAT };

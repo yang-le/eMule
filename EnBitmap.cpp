@@ -53,7 +53,6 @@ BOOL CEnBitmap::LoadImage(LPCTSTR lpszResourceName, LPCTSTR szResourceType, HMOD
 	if (m_hObject != NULL)
 		return FALSE;
 
-	BYTE*	pBuff = NULL;
 	int		nSize = 0;
 	BOOL bResult = FALSE;
 
@@ -62,8 +61,8 @@ BOOL CEnBitmap::LoadImage(LPCTSTR lpszResourceName, LPCTSTR szResourceType, HMOD
 	{
 		if (nSize > 0)
 		{
-			pBuff = new BYTE[nSize];
-			
+			BYTE *pBuff = new BYTE[nSize];
+
 			// this loads it
 			if (GetResource(lpszResourceName, szResourceType, hInst, pBuff, nSize))
 			{
@@ -75,7 +74,7 @@ BOOL CEnBitmap::LoadImage(LPCTSTR lpszResourceName, LPCTSTR szResourceType, HMOD
 					pPicture->Release();
 				}
 			}
-			
+
 			delete [] pBuff;
 		}
 	}
@@ -108,7 +107,7 @@ BOOL CEnBitmap::LoadImage(LPCTSTR szImagePath, COLORREF crBack)
 	BOOL bResult = FALSE;
 	CFile			cFile;
 	CFileException	e;
-	
+
 	if (cFile.Open(szImagePath, CFile::modeRead | CFile::typeBinary | CFile::shareDenyWrite, &e))
 	{
 		int nSize = (int)cFile.GetLength();
@@ -116,7 +115,7 @@ BOOL CEnBitmap::LoadImage(LPCTSTR szImagePath, COLORREF crBack)
 		if (cFile.Read(pBuff, nSize) > 0)
 		{
 			IPicture* pPicture = LoadFromBuffer(pBuff, nSize);
-			
+
 			if (pPicture)
 			{
 				bResult = Attach(pPicture, crBack);
@@ -164,29 +163,29 @@ IPicture* CEnBitmap::LoadFromBuffer(BYTE* pBuff, int nSize)
 }
 
 BOOL CEnBitmap::GetResource(LPCTSTR lpName, LPCTSTR lpType, HMODULE hInst, void* pResource, int& nBufSize)
-{ 
+{
 	HRSRC		hResInfo;
 	HANDLE		hRes;
-	LPSTR		lpRes	= NULL; 
+	LPSTR		lpRes	= NULL;
 	bool		bResult	= FALSE;
 
 	// Find the resource
 	hResInfo = FindResource(hInst, lpName, lpType);
 
-	if (hResInfo == NULL) 
+	if (hResInfo == NULL)
 		return false;
 
 	// Load the resource
 	hRes = LoadResource(hInst, hResInfo);
 
-	if (hRes == NULL) 
+	if (hRes == NULL)
 		return false;
 
 	// Lock the resource
 	lpRes = (char*)LockResource(hRes);
 
 	if (lpRes != NULL)
-	{ 
+	{
 		if (pResource == NULL)
 		{
 			nBufSize = SizeofResource(hInst, hResInfo);
@@ -199,9 +198,9 @@ BOOL CEnBitmap::GetResource(LPCTSTR lpName, LPCTSTR lpType, HMODULE hInst, void*
 				memcpy(pResource, lpRes, nBufSize);
 				bResult = true;
 			}
-		} 
+		}
 
-		UnlockResource(hRes);  
+		UnlockResource(hRes);
 	}
 
 	// Free the resource
@@ -234,7 +233,7 @@ BOOL CEnBitmap::Attach(IPicture* pPicture, COLORREF crBack)
 
 		pPicture->get_Width(&hmWidth);
 		pPicture->get_Height(&hmHeight);
-		
+
 		int nWidth	= MulDiv(hmWidth,	pDC->GetDeviceCaps(LOGPIXELSX), HIMETRIC_INCH);
 		int nHeight	= MulDiv(hmHeight,	pDC->GetDeviceCaps(LOGPIXELSY), HIMETRIC_INCH);
 
@@ -244,9 +243,9 @@ BOOL CEnBitmap::Attach(IPicture* pPicture, COLORREF crBack)
 		{
 			CBitmap* pOldBM = dcMem.SelectObject(&bmMem);
 
-			if (crBack != -1)
+			if (crBack != (DWORD)-1)
 				dcMem.FillSolidRect(0, 0, nWidth, nHeight, crBack);
-			
+
 			HRESULT hr = pPicture->Render(dcMem, 0, 0, nWidth, nHeight, 0, hmHeight, hmWidth, -hmHeight, NULL);
 			dcMem.SelectObject(pOldBM);
 

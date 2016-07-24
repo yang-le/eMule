@@ -3,7 +3,7 @@
 #include "resource.h"
 
 class CIni;
-class CMemDC;
+class CMemoryDC;
 
 ///////////////////////////////////////////////////////////////////////////////
 // CMuleListCtrl
@@ -11,7 +11,7 @@ class CMemDC;
 #define MLC_DT_TEXT (DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS)
 
 #define DFLT_FILENAME_COL_WIDTH		260
-#define DFLT_FILETYPE_COL_WIDTH		 60 
+#define DFLT_FILETYPE_COL_WIDTH		 60
 #define	DFLT_CLIENTNAME_COL_WIDTH	150
 #define	DFLT_CLIENTSOFT_COL_WIDTH	100
 #define	DFLT_SIZE_COL_WIDTH			 65
@@ -132,10 +132,10 @@ public:
 	// Retrieves the number of items in the control.
 	int GetItemCount() const { return m_Params.GetCount(); };
 
-	enum ArrowType { 
-		arrowDown		= IDB_DOWN, 
+	enum ArrowType {
+		arrowDown		= IDB_DOWN,
 		arrowUp			= IDB_UP,
-		arrowDoubleDown = IDB_DOWN2X, 
+		arrowDoubleDown = IDB_DOWN2X,
 		arrowDoubleUp	= IDB_UP2X
 	};
 
@@ -193,7 +193,7 @@ protected:
 	int MoveItem(int iOldIndex, int iNewIndex);
 	void SetColors();
 	void DrawFocusRect(CDC *pDC, const CRect &rcItem, BOOL bItemFocused, BOOL bCtrlFocused, BOOL bItemSelected);
-	void InitItemMemDC(CMemDC *dc, LPDRAWITEMSTRUCT lpDrawItemStruct, BOOL &bCtrlFocused);
+	void InitItemMemDC(CMemoryDC *dc, LPDRAWITEMSTRUCT lpDrawItemStruct, BOOL &bCtrlFocused);
 
 	static __inline bool HaveIntersection(const CRect &rc1, const CRect &rc2) {
         return (rc1.left   < rc2.right  &&
@@ -266,7 +266,7 @@ private:
 	CList<DWORD_PTR, DWORD_PTR> m_Params;
 
 	DWORD_PTR GetParamAt(POSITION pos, int iPos) {
-		LPARAM lParam = m_Params.GetAt(pos);
+		DWORD_PTR lParam = m_Params.GetAt(pos);
 		if(lParam == 0xFEEBDEEF) //same as MLC_MAGIC!
 			m_Params.SetAt(pos, lParam = CListCtrl::GetItemData(iPos));
 		return lParam;

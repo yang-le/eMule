@@ -1,4 +1,4 @@
-// $Id: tag_parse_lyrics3.cpp,v 1.35 2002/10/04 08:52:23 t1mpy Exp $
+// $Id: tag_parse_lyrics3.cpp,v 1.35 2002/10/04 08:51:23 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
@@ -29,7 +29,6 @@
 #include <memory.h>
 #include "tag_impl.h" //has <stdio.h> "tag.h" "header_tag.h" "frame.h" "field.h" "spec.h" "id3lib_strings.h" "utils.h"
 #include "helpers.h"
-#include "id3/io_decorators.h" //has "readers.h" "io_helpers.h" "utils.h"
 #include "io_strings.h"
 
 using namespace dami;
@@ -83,7 +82,7 @@ namespace
     return sec * 1000;
   }
 
-  bool findText(ID3_Reader& reader, String text)
+  bool findText(ID3_Reader& reader, const String& text)
   {
     if (text.empty())
     {

@@ -18,7 +18,7 @@
 
 #define	MULE_TOOLBAR_BAND_NR	0
 
-enum EToolbarLabelType {
+enum EToolbarLabelType: int {
 	NoLabels	= 0,
 	LabelsBelow = 1,
 	LabelsRight = 2

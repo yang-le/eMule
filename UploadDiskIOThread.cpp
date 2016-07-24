@@ -41,7 +41,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 #define SLOT_COMPRESSIONCHECK_DATARATE		1024*150	// Datarate for a single client from which we start to check if we need to disable compression
-#define MAX_FINISHED_REQUESTS_COMPRESSION	15			// Max waiting finished requests before disabling compression (if total upload > SLOT_COMPRESSIONCHECK_DATARATE) 
+#define MAX_FINISHED_REQUESTS_COMPRESSION	15			// Max waiting finished requests before disabling compression (if total upload > SLOT_COMPRESSIONCHECK_DATARATE)
 #define BIGBUFFER_MINDATARATE				75 * 1024;
 
 IMPLEMENT_DYNCREATE(CUploadDiskIOThread, CWinThread)
@@ -100,7 +100,7 @@ UINT CUploadDiskIOThread::RunInternal()
 			{
 				UploadingToClient_Struct* pCurUploadingClientStruct = rUploadList.GetNext(pos);
 				const CUpDownClient* cur_client = pCurUploadingClientStruct->m_pClient;
-				if (cur_client->socket != NULL && cur_client->socket->IsConnected() 
+				if (cur_client->socket != NULL && cur_client->socket->IsConnected()
 					&& (!cur_client->IsUploadingToPeerCache() || cur_client->m_pPCUpSocket != NULL))
 				{
 					StartCreateNextBlockPackage(pCurUploadingClientStruct);
@@ -110,16 +110,13 @@ UINT CUploadDiskIOThread::RunInternal()
 		}
 
 		// check if any pending requests have finished
-		m_eventAsyncIOFinished.SetEvent(); // Windows doesn't like finished Overlapped results with unsignaled events. But we don't want to create an event for each our reads (which would be the suggested solution) 
-		POSITION pos1, pos2;
-		for (pos2 = m_listPendingIO.GetHeadPosition(); ( pos1 = pos2 ) != NULL; )
-		{
-			m_listPendingIO.GetNext(pos2);
-			OverlappedEx_Struct* pCurPendingIO = m_listPendingIO.GetAt(pos1);
+		m_eventAsyncIOFinished.SetEvent(); // Windows doesn't like finished Overlapped results with unsignaled events. But we don't want to create an event for each our reads (which would be the suggested solution)
+		for (POSITION pos1 = m_listPendingIO.GetHeadPosition(); pos1 != NULL;) {
+			POSITION pos2 = pos1;
+			OverlappedEx_Struct* pCurPendingIO = m_listPendingIO.GetNext(pos1);
 			DWORD dwRead;
-			if (GetOverlappedResult(pCurPendingIO->pFileStruct->hFile, &pCurPendingIO->oOverlap, &dwRead, FALSE) == TRUE)
-			{
-				m_listPendingIO.RemoveAt(pos1);
+			if (GetOverlappedResult(pCurPendingIO->pFileStruct->hFile, &pCurPendingIO->oOverlap, &dwRead, FALSE)) {
+				m_listPendingIO.RemoveAt(pos2);
 				// we add it to a list instead of processing it directly because we need to know how many finished
 				// IOs we have to deceide if we can use compression or need to speedup lateron
 				pCurPendingIO->dwRead = dwRead;
@@ -130,8 +127,8 @@ UINT CUploadDiskIOThread::RunInternal()
 				int nError = GetLastError();
 				if (nError != ERROR_IO_PENDING && nError != ERROR_IO_INCOMPLETE)
 				{
-					theApp.QueueDebugLogLineEx(LOG_ERROR, _T("IO Error: GetOverlappedResult: %s"), GetErrorMessage(nError));
-					m_listPendingIO.RemoveAt(pos1);
+					theApp.QueueDebugLogLineEx(LOG_ERROR, _T("IO Error: GetOverlappedResult: %s"), (LPCTSTR)GetErrorMessage(nError));
+					m_listPendingIO.RemoveAt(pos2);
 					// calling it with an error will cause it to clean up the mess
 					ReadCompletetionRoutine(nError != 0 ? nError : (-1), dwRead, pCurPendingIO);
 				}
@@ -141,25 +138,22 @@ UINT CUploadDiskIOThread::RunInternal()
 		// work down all the finished IOs
 		while (!m_listFinishedIO.IsEmpty())
 			ReadCompletetionRoutine(0, 0, m_listFinishedIO.RemoveHead());
-		
+
 		// if we put new data on some socket, tell the throttler
 		if (m_bSignalThrottler && theApp.uploadBandwidthThrottler != NULL)
 		{
 			theApp.uploadBandwidthThrottler->NewUploadDataAvailable();
 			m_bSignalThrottler = false;
 		}
-		
+
 		HANDLE aEvents[3] = { m_eventAsyncIOFinished, m_eventNewBlockRequests, m_eventSocketNeedsData };
 		DWORD nRes = WaitForMultipleObjects(ARRSIZE(aEvents), aEvents, FALSE, 500);
 		ASSERT( nRes != WAIT_FAILED );
 		bCheckForPendingIOOnly = nRes == WAIT_OBJECT_0;
 	}
 	// cleanup - signal all open files to cancel all their pending operations
-	for (POSITION pos = m_listOpenFiles.GetHeadPosition(); pos != NULL; m_listOpenFiles.GetNext(pos))
-	{
-		OpenOvFile_Struct* pCurOpenOvFileStruct = m_listOpenFiles.GetAt(pos);
-		if (CancelIo(pCurOpenOvFileStruct->hFile) == FALSE)
-		{
+	for (POSITION pos = m_listOpenFiles.GetHeadPosition(); pos != NULL;) {
+		if (!CancelIo(m_listOpenFiles.GetNext(pos)->hFile)) {
 			theApp.QueueDebugLogLineEx(LOG_ERROR, _T("CUploadDiskIOThread cleanip, CancelIO failed!"));
 			ASSERT( false );
 		}
@@ -201,7 +195,7 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* 
 	const uint32 nBufferLimit = bFastUpload ? ((5 * EMBLOCKSIZE) + 1) : (EMBLOCKSIZE + 1);
 
 	if(pUploadClientStruct->m_BlockRequests_queue.IsEmpty() || // There are no new blocks requested
-       (addedPayloadQueueSession > nCurQueueSessionPayloadUp && addedPayloadQueueSession - nCurQueueSessionPayloadUp > nBufferLimit)) 
+       (addedPayloadQueueSession > nCurQueueSessionPayloadUp && addedPayloadQueueSession - nCurQueueSessionPayloadUp > nBufferLimit))
 	{ // the buffered data is large enough already
 		return;
     }
@@ -224,16 +218,16 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* 
 
 			// fetch a lock for the shared files list, makes also sure the fileobject doesn't gets deleted while we access it
 			// other active Locks: UploadList, m_csBlockListsLock
-			CSingleLock lockSharedFiles(&theApp.sharedfiles->m_mutWriteList, TRUE); 
+			CSingleLock lockSharedFiles(&theApp.sharedfiles->m_mutWriteList, TRUE);
 			CKnownFile* srcfile = theApp.sharedfiles->GetFileByID(currentblock->FileID);
 			if (srcfile == NULL)
 				throw GetResString(IDS_ERR_REQ_FNF);
-			
+
 			CSyncHelper lockFile;
 			CString fullname;
 			if (srcfile->IsPartFile() && ((CPartFile*)srcfile)->GetStatus() != PS_COMPLETE){
 				// Do not access a part file, if it is currently moved into the incoming directory.
-				// Because the moving of part file into the incoming directory may take a noticable 
+				// Because the moving of part file into the incoming directory may take a noticable
 				// amount of time, we can not wait for 'm_FileCompleteMutex' and block the main thread.
 				if (!((CPartFile*)srcfile)->m_FileCompleteMutex.Lock(0))// just do a quick test of the mutex's state and return if it's locked.
 					return;
@@ -241,8 +235,8 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* 
 				fullname = RemoveFileExtension(((CPartFile*)srcfile)->GetFullName());
 			}
 			else
-				fullname.Format(_T("%s\\%s"),srcfile->GetPath(),srcfile->GetFileName());
-		
+				fullname.Format(_T("%s\\%s"), (LPCTSTR)srcfile->GetPath(), (LPCTSTR)srcfile->GetFileName());
+
 			// we have done all important sanitychecks for the blockrequest in the mainthread when adding it already, just redo some quick important ones
 			uint64 i64uTogo = currentblock->EndOffset - currentblock->StartOffset;
 			if (currentblock->StartOffset >= currentblock->EndOffset || currentblock->EndOffset > srcfile->GetFileSize())
@@ -250,7 +244,7 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* 
 			else if( i64uTogo > EMBLOCKSIZE*3 )
 				throw GetResString(IDS_ERR_LARGEREQBLOCK);
 			uint32 togo = (uint32)i64uTogo;
-			
+
 			// check if we already have a handle for this shared file and if so use it. Our checks above make sure we
 			// don't continue using a file a user might have removed from his share
 			OpenOvFile_Struct* pOpenOvFileStruct = NULL;
@@ -275,7 +269,7 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* 
 				hFile = ::CreateFile(fullname, GENERIC_READ, dwShare, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 				if (hFile == INVALID_HANDLE_VALUE)
 					throw GetResString(IDS_ERR_OPEN);
-				
+
 				pOpenOvFileStruct = new OpenOvFile_Struct;
 				md4cpy(pOpenOvFileStruct->ucMD4FileHash, currentblock->FileID);
 				pOpenOvFileStruct->hFile = hFile;
@@ -296,7 +290,7 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* 
 			// we now have all informations we need, so also release the sharedfilelist
 			lockSharedFiles.Unlock();
 			srcfile = NULL; // not safe anymore
-			
+
 			// now for the actual reading
 			OverlappedEx_Struct* pstructOverlappedEx = new OverlappedEx_Struct;
 			ASSERT( sizeof(pstructOverlappedEx->oOverlap) == sizeof(OVERLAPPED) );
@@ -311,7 +305,7 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* 
 			pstructOverlappedEx->pBuffer = new byte[togo+500];
 			pstructOverlappedEx->dwRead = 0;
 			pstructOverlappedEx->pFileStruct->nInUse++;
-			
+
 			DWORD dwRead = 0;
 			if (ReadFile(pstructOverlappedEx->pFileStruct->hFile, pstructOverlappedEx->pBuffer, togo, &dwRead, (LPOVERLAPPED)pstructOverlappedEx) == FALSE)
 			{
@@ -321,7 +315,7 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* 
 					ReleaseOvOpenFile(pstructOverlappedEx->pFileStruct);
 					delete[] pstructOverlappedEx->pBuffer;
 					delete pstructOverlappedEx;
-					
+
 					if (dwError == ERROR_INVALID_USER_BUFFER || dwError == ERROR_NOT_ENOUGH_MEMORY)
 					{
 						theApp.QueueDebugLogLineEx(LOG_WARNING, _T("ReadFile failed, possibly too many pending requests, trying again later"));
@@ -343,22 +337,22 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* 
 				m_listFinishedIO.AddTail(pstructOverlappedEx);
 				dbgDataReadPending += togo;
 			}
-			
+
 			addedPayloadQueueSession += togo;
-			pUploadClientStruct->m_pClient->SetQueueSessionUploadAdded(addedPayloadQueueSession);			
+			pUploadClientStruct->m_pClient->SetQueueSessionUploadAdded(addedPayloadQueueSession);
 			pUploadClientStruct->m_DoneBlocks_list.AddHead(pUploadClientStruct->m_BlockRequests_queue.RemoveHead());
 		}
 	}
-	catch(CString error)
+	catch (const CString& error)
 	{
-		theApp.QueueDebugLogLineEx(LOG_ERROR, GetResString(IDS_ERR_CLIENTERRORED), pUploadClientStruct->m_pClient->GetUserName(), error);
+		theApp.QueueDebugLogLineEx(LOG_ERROR, GetResString(IDS_ERR_CLIENTERRORED), pUploadClientStruct->m_pClient->GetUserName(), (LPCTSTR)error);
 		pUploadClientStruct->m_bIOError = true; // will let the mainthread remove this client from the list
 		return;
 	}
 	catch(CFileException* e)
 	{
 		TCHAR szError[MAX_PATH + 256];
-		e->GetErrorMessage(szError, ARRSIZE(szError));
+		GetExceptionMessage(*e, szError, ARRSIZE(szError));
 		theApp.QueueDebugLogLineEx(LOG_ERROR, _T("Failed to create upload package for %s - %s"), pUploadClientStruct->m_pClient->GetUserName(), szError);
 		e->Delete();
 		pUploadClientStruct->m_bIOError = true; // will let the mainthread remove this client from the list
@@ -382,7 +376,7 @@ void CUploadDiskIOThread::ReadCompletetionRoutine(DWORD dwErrorCode, DWORD dwByt
 		{
 			theApp.QueueDebugLogLineEx(LOG_ERROR, _T("ReadCompletetionRoutine: Didn't read requested datacount - wanted: %u, read: %u")
 				, (uint32)(pOverlappedExStruct->uEndOffset - pOverlappedExStruct->uStartOffset), dwBytesRead);
-			bError = true;		
+			bError = true;
 		}
 		dbgDataReadPending -= (uint32)(pOverlappedExStruct->uEndOffset - pOverlappedExStruct->uStartOffset);
 		// check if the clientstruct is still in the uploadlist (otherwise it is a deleted pointer)
@@ -390,15 +384,7 @@ void CUploadDiskIOThread::ReadCompletetionRoutine(DWORD dwErrorCode, DWORD dwByt
 		const CUploadingPtrList& rUploadList = theApp.uploadqueue->GetUploadListTS(&pcsUploadListRead);
 		CSingleLock lockUploadListRead(pcsUploadListRead, TRUE);
 		ASSERT( lockUploadListRead.IsLocked() );
-		bool bFound = false;
-		for (POSITION pos = rUploadList.GetHeadPosition(); pos != NULL;)
-		{
-			if (pOverlappedExStruct->pUploadClientStruct == rUploadList.GetNext(pos))
-			{
-				bFound = true;
-				break;
-			}
-		}
+		bool bFound = (rUploadList.Find(pOverlappedExStruct->pUploadClientStruct) != NULL);
 		if (!bFound)
 		{
 			theApp.QueueDebugLogLineEx(LOG_WARNING, _T("ReadCompletetionRoutine: Client not found in uploadlist anymore when reading finished, discarding block"));
@@ -412,14 +398,12 @@ void CUploadDiskIOThread::ReadCompletetionRoutine(DWORD dwErrorCode, DWORD dwByt
 			// instead of sending the packets directly, we store them and send them after we have released the uploadlist lock
 			// just to be sure there isn't any deadlock chance (now or in future version, also it doesn't costs us anything)
 			CPacketList packetsList;
-			bool bPeerCache = false;
 
-			CClientReqSocket* pSocket;
-			bPeerCache = pOverlappedExStruct->pUploadClientStruct->m_pClient->IsUploadingToPeerCache();
-			pSocket = bPeerCache ? pOverlappedExStruct->pUploadClientStruct->m_pClient->m_pPCUpSocket : pOverlappedExStruct->pUploadClientStruct->m_pClient->socket;
+			bool bPeerCache = pOverlappedExStruct->pUploadClientStruct->m_pClient->IsUploadingToPeerCache();
+			CClientReqSocket *pSocket = bPeerCache ? pOverlappedExStruct->pUploadClientStruct->m_pClient->m_pPCUpSocket : pOverlappedExStruct->pUploadClientStruct->m_pClient->socket;
 			if (pSocket == NULL || !(bPeerCache || pSocket->IsConnected()))
 			{
-				theApp.QueueDebugLogLineEx(LOG_ERROR, _T("ReadCompletetionRoutine: Client has no connected socket, %s"), pOverlappedExStruct->pUploadClientStruct->m_pClient);
+				theApp.QueueDebugLogLineEx(LOG_ERROR, _T("ReadCompletetionRoutine: Client has no connected socket, %s"), (LPCTSTR)pOverlappedExStruct->pUploadClientStruct->m_pClient->DbgGetClientInfo(true));
 			}
 			else
 			{
@@ -434,13 +418,13 @@ void CUploadDiskIOThread::ReadCompletetionRoutine(DWORD dwErrorCode, DWORD dwByt
 					{
 						pOverlappedExStruct->pUploadClientStruct->m_bDisableCompression = true;
 						if (thePrefs.GetVerbose())
-							theApp.QueueDebugLogLine(false, _T("Disabled compression for uploadslot because of too many unproccessed finished IO requests (%u), client: %s"), m_listFinishedIO.GetCount(), pOverlappedExStruct->pUploadClientStruct->m_pClient->DbgGetClientInfo(true));
+							theApp.QueueDebugLogLine(false, _T("Disabled compression for uploadslot because of too many unproccessed finished IO requests (%u), client: %s"), m_listFinishedIO.GetCount(), (LPCTSTR)pOverlappedExStruct->pUploadClientStruct->m_pClient->DbgGetClientInfo(true));
 					}
 					else if (pOverlappedExStruct->pUploadClientStruct->m_pClient->GetDatarate() > SLOT_COMPRESSIONCHECK_DATARATE && !pSocket->HasQueues(true) && !pSocket->IsBusyQuickCheck())
 					{
 						pOverlappedExStruct->pUploadClientStruct->m_bDisableCompression = true;
 						if (thePrefs.GetVerbose())
-							theApp.QueueDebugLogLine(false, _T("Disabled compression for uploadslot because socket is starving for data, client: %s"), pOverlappedExStruct->pUploadClientStruct->m_pClient->DbgGetClientInfo(true));						
+							theApp.QueueDebugLogLine(false, _T("Disabled compression for uploadslot because socket is starving for data, client: %s"), (LPCTSTR)pOverlappedExStruct->pUploadClientStruct->m_pClient->DbgGetClientInfo(true));
 					}
 					else
 						bUseCompression = true;
@@ -488,7 +472,7 @@ void CUploadDiskIOThread::ReadCompletetionRoutine(DWORD dwErrorCode, DWORD dwByt
 			lockUploadListRead.Unlock();
 		}
 	}
-	
+
 	// cleanup
 	ReleaseOvOpenFile(pOverlappedExStruct->pFileStruct);
 	delete[] pOverlappedExStruct->pBuffer;
@@ -497,22 +481,15 @@ void CUploadDiskIOThread::ReadCompletetionRoutine(DWORD dwErrorCode, DWORD dwByt
 
 bool CUploadDiskIOThread::ReleaseOvOpenFile(OpenOvFile_Struct* pOpenOvFileStruct)
 {
-	POSITION pos1, pos2;
-	for (pos2 = m_listOpenFiles.GetHeadPosition(); ( pos1 = pos2 ) != NULL; )
-	{
-		m_listOpenFiles.GetNext(pos2);
-		OpenOvFile_Struct* pCurOpenOvFileStruct = m_listOpenFiles.GetAt(pos1);
-		if (pCurOpenOvFileStruct == pOpenOvFileStruct)
-		{
-			pCurOpenOvFileStruct->nInUse--;
-			if (pCurOpenOvFileStruct->nInUse == 0)
-			{
-				VERIFY( CloseHandle(pCurOpenOvFileStruct->hFile) );
-				m_listOpenFiles.RemoveAt(pos1);
-				delete pCurOpenOvFileStruct;
-			}
-			return true;
+	POSITION pos = m_listOpenFiles.Find(pOpenOvFileStruct);
+	if (pos) {
+		pOpenOvFileStruct->nInUse--;
+		if (pOpenOvFileStruct->nInUse == 0) {
+			VERIFY(CloseHandle(pOpenOvFileStruct->hFile));
+			m_listOpenFiles.RemoveAt(pos);
+			delete pOpenOvFileStruct;
 		}
+		return true;
 	}
 	ASSERT( false );
 	return false;
@@ -524,18 +501,17 @@ bool CUploadDiskIOThread::ShouldCompressBasedOnFilename(CString strFileName)
 	int pos = strFileName.ReverseFind(_T('.'));
 	if (pos>-1)
 		strFileName = strFileName.Mid(pos);
-	bool compFlag = (strFileName!=_T(".zip") && strFileName!=_T(".cbz") && strFileName!=_T(".rar") && strFileName!=_T(".cbr") && strFileName!=_T(".ace") && strFileName!=_T(".ogm"));
 	if (strFileName==_T(".avi") && thePrefs.GetDontCompressAvi())
-		compFlag=false;
-	return compFlag;
+		return false;
+	return (strFileName!=_T(".zip") && strFileName!=_T(".cbz") && strFileName!=_T(".rar") && strFileName!=_T(".cbr") && strFileName!=_T(".ace") && strFileName!=_T(".ogm"));
 }
 
-void CUploadDiskIOThread::CreateStandardPackets(byte* pbyData, uint64 uStartOffset, uint64 uEndOffset, bool bFromPF, CPacketList& rOutPacketList, const uchar* pucMD4FileHash, CString strDbgClientInfo)
+void CUploadDiskIOThread::CreateStandardPackets(byte* pbyData, uint64 uStartOffset, uint64 uEndOffset, bool bFromPF, CPacketList& rOutPacketList, const uchar* pucMD4FileHash, const CString& strDbgClientInfo)
 {
 	uint32 nPacketSize;
 	uint32 togo = (uint32)(uEndOffset - uStartOffset);
 	CMemFile memfile((BYTE*)pbyData, togo);
-	if (togo > 10240) 
+	if (togo > 10240)
 		nPacketSize = togo/(uint32)(togo/10240);
 	else
 		nPacketSize = togo;
@@ -566,7 +542,7 @@ void CUploadDiskIOThread::CreateStandardPackets(byte* pbyData, uint64 uStartOffs
 			theStats.AddUpDataOverheadFileRequest(24);
 		}
 		if (thePrefs.GetDebugClientTCPLevel() > 0){
-			Debug(_T(">>> %-20hs to   %s; %s\n"), _T("OP__SendingPart"), strDbgClientInfo, md4str(pucMD4FileHash));
+			Debug(_T(">>> %-20hs to   %s; %s\n"), _T("OP__SendingPart"), (LPCTSTR)strDbgClientInfo, (LPCTSTR)md4str(pucMD4FileHash));
 			Debug(_T("  Start=%I64u  End=%I64u  Size=%u\n"), statpos, endpos, nPacketSize);
 		}
 		packet->uStatsPayLoad = nPacketSize;
@@ -574,7 +550,7 @@ void CUploadDiskIOThread::CreateStandardPackets(byte* pbyData, uint64 uStartOffs
 	}
 }
 
-void CUploadDiskIOThread::CreatePackedPackets(byte* pbyData, uint64 uStartOffset, uint64 uEndOffset, bool bFromPF, CPacketList& rOutPacketList, const uchar* pucMD4FileHash, CString strDbgClientInfo)
+void CUploadDiskIOThread::CreatePackedPackets(byte* pbyData, uint64 uStartOffset, uint64 uEndOffset, bool bFromPF, CPacketList& rOutPacketList, const uchar* pucMD4FileHash, const CString& strDbgClientInfo)
 {
 	uint32 togo = (uint32)(uEndOffset - uStartOffset);
 	BYTE* output = new BYTE[togo+300];
@@ -589,11 +565,11 @@ void CUploadDiskIOThread::CreatePackedPackets(byte* pbyData, uint64 uStartOffset
     uint32 oldSize = togo;
 	togo = newsize;
 	uint32 nPacketSize;
-    if (togo > 10240) 
+    if (togo > 10240)
         nPacketSize = togo/(uint32)(togo/10240);
     else
         nPacketSize = togo;
-    
+
     uint32 totalPayloadSize = 0;
 
     while (togo){
@@ -619,7 +595,7 @@ void CUploadDiskIOThread::CreatePackedPackets(byte* pbyData, uint64 uStartOffset
 		}
 
 		if (thePrefs.GetDebugClientTCPLevel() > 0){
-			Debug(_T(">>> %-20hs to   %s; %s\n"), _T("OP__CompressedPart"), strDbgClientInfo, md4str(pucMD4FileHash));
+			Debug(_T(">>> %-20hs to   %s; %s\n"), _T("OP__CompressedPart"), (LPCTSTR)strDbgClientInfo, (LPCTSTR)md4str(pucMD4FileHash));
 			Debug(_T("  Start=%I64u  BlockSize=%u  Size=%u\n"), statpos, newsize, nPacketSize);
 		}
         // approximate payload size
@@ -642,8 +618,7 @@ void CUploadDiskIOThread::CreatePeerCachePackets(byte* pbyData, uint64 uStartOff
 {
 	uint32 nPacketSize;
 	uint32 togo = (uint32)(uEndOffset - uStartOffset);
-	CMemFile memfile((BYTE*)pbyData, togo);
-	if (togo > 10240) 
+	if (togo > 10240)
 		nPacketSize = togo/(uint32)(togo/10240);
 	else
 		nPacketSize = togo;
@@ -662,7 +637,7 @@ void CUploadDiskIOThread::CreatePeerCachePackets(byte* pbyData, uint64 uStartOff
 			str.AppendFormat("Content-Range: bytes %I64u-%I64u/%I64u\r\n", uStartOffset, uEndOffset - 1, uFilesize);
 			str.AppendFormat("Content-Type: application/octet-stream\r\n");
 			str.AppendFormat("Content-Length: %u\r\n", (uint32)(uEndOffset - uStartOffset));
-			str.AppendFormat("Server: eMule/%s\r\n", CStringA(theApp.m_strCurVersionLong));
+			str.AppendFormat("Server: eMule/%s\r\n", (LPCSTR)CStringA(theApp.m_strCurVersionLong));
 			str.AppendFormat("\r\n");
 			dataHttp.Write((LPCSTR)str, str.GetLength());
 			theStats.AddUpDataOverheadFileRequest((UINT)dataHttp.GetLength());

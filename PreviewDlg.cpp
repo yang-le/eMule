@@ -37,18 +37,16 @@ BEGIN_MESSAGE_MAP(PreviewDlg, CDialog)
 END_MESSAGE_MAP()
 
 PreviewDlg::PreviewDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(PreviewDlg::IDD, pParent)
+	: CDialog(PreviewDlg::IDD, pParent), m_pFile(NULL), m_nCurrentImage(0)
 {
 	memset(m_icons, 0, sizeof m_icons);
 }
 
 PreviewDlg::~PreviewDlg()
 {
-	for (int i = 0; i < ARRSIZE(m_icons); i++)
-	{
+	for (unsigned i = 0; i < ARRSIZE(m_icons); ++i)
 		if (m_icons[i])
 			VERIFY( DestroyIcon(m_icons[i]) );
-	}
 }
 
 void PreviewDlg::DoDataExchange(CDataExchange* pDX)
@@ -81,7 +79,7 @@ BOOL PreviewDlg::OnInitDialog()
 void PreviewDlg::ShowImage(int nNumber)
 {
 	int nImageCount = m_pFile->GetPreviews().GetSize();
-	if (nImageCount == 0)
+	if (nImageCount <= 0)
 		return;
 	else if (nImageCount <= nNumber)
 		nNumber = 0;
@@ -93,7 +91,7 @@ void PreviewDlg::ShowImage(int nNumber)
 	if (hbitmap)
 		DeleteObject(hbitmap);
 	CString strInfo;
-	strInfo.Format(_T("Image %u of %u"), nNumber+1, nImageCount);
+	strInfo.Format(_T("Image %i of %i"), nNumber+1, nImageCount);
 	SetDlgItemText(IDC_PREVIEW_INFO, strInfo);
 }
 

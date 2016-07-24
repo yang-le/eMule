@@ -149,7 +149,7 @@ void CToolbarWnd::FillToolbar()
 	atb1[11].fsState = TBSTATE_WRAP;
 	atb1[11].fsStyle = BTNS_BUTTON  | BTNS_AUTOSIZE;
 	atb1[11].iString = m_btnBar->AddString(GetResString(IDS_DL_SHOWED2KLINK));
-	
+
 	/////////////
 	atb1[12].iBitmap = -1;
 	atb1[12].idCommand = 0;
@@ -412,7 +412,7 @@ void CToolbarWnd::OnUpdateCmdUI(CFrameWnd* /*pTarget*/, BOOL /*bDisableIfNoHndle
 {
 	CList<int> liCommands;
 	bool bUpdate = true;
-	if (m_pCommandTargetWnd != NULL && theApp.m_app_state == APP_STATE_RUNNING)
+	if (m_pCommandTargetWnd != NULL && !theApp.emuledlg->IsClosing())
 		bUpdate = m_pCommandTargetWnd->ReportAvailableCommands(liCommands);
 	if (bUpdate)
 		OnAvailableCommandsChanged(&liCommands);

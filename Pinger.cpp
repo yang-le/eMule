@@ -9,9 +9,9 @@
 * <--- Cut --->
 *
 * Description:
-*  This is a ping program that uses Microsoft's ICMP.DLL functions 
+*  This is a ping program that uses Microsoft's ICMP.DLL functions
 *  for access to Internet Control Message Protocol.  This is capable
-*  of doing "ping or "traceroute", although beware that Microsoft 
+*  of doing "ping or "traceroute", although beware that Microsoft
 *  discourages the use of these APIs.
 *
 *  Tested with MSVC 5 compile with "cl ms_icmp.c /link ws2_32.lib"
@@ -19,7 +19,7 @@
 *  ships with MSVC to set the proper environment variables)
 *
 * NOTES:
-* - With both "Don't Fragment" and "Router Alert" set, the 
+* - With both "Don't Fragment" and "Router Alert" set, the
 *    IP don't fragment bit is set, but not the router alert option.
 * - The ICMP.DLL calls are not redirected to the TCP/IP service
 *    provider (what's interesting about this is that the setsockopt()
@@ -29,7 +29,7 @@
 *    a limited or subnet broadcast address) IcmpSendEcho() only
 *    returns one.  Interesting that NT4 and Win98 don't respond
 *    to broadcast pings.
-* - using winsock.h  WSOCK32.LIB and version 1.1 works as well as 
+* - using winsock.h  WSOCK32.LIB and version 1.1 works as well as
 *    using winsock2.h WS2_32.LIB  and version 2.2
 *
 * Some Background:
@@ -37,38 +37,38 @@
 * The standard Berkeley Sockets SOCK_RAW socket type, is normally used
 * to create ping (echo request/reply), and sometimes traceroute applications
 * (the original traceroute application from Van Jacobson used UDP, rather
-* than ICMP). Microsoft's WinSock version 2 implementations for NT4 and 
+* than ICMP). Microsoft's WinSock version 2 implementations for NT4 and
 * Windows 95 support raw sockets, but none of their WinSock version 1.1
 * implementations (WFWG, NT3.x or standard Windows 95) did.
 *
 * Microsoft has their own API for an ICMP.DLL that their ping and tracert
 * applications use (by the way, they are both non-GUI text-based console
-* applications. This is a proprietary API, and all function calls that 
-* involve network functions operate in blocking mode. They still include 
+* applications. This is a proprietary API, and all function calls that
+* involve network functions operate in blocking mode. They still include
 * it with WinSock 2 implementations.
 *
 * There is little documentation available (I first found it in the Win32
 * SDK in \MSTOOLS\ICMP, and it exists on the MS Developers' Network
-* CD-ROM now, also). Microsoft disclaims this API about as strongly as 
+* CD-ROM now, also). Microsoft disclaims this API about as strongly as
 * possible.  The README.TXT that accompanies it says:
 *
 * [DISCLAIMER]
-* 
+*
 * We have had requests in the past to expose the functions exported from
 * icmp.dll. The files in this directory are provided for your convenience
 * in building applications which make use of ICMPSendEcho(). Notice that
 * the functions in icmp.dll are not considered part of the Win32 API and
 * will not be supported in future releases. Once we have a more complete
 * solution in the operating system, this DLL, and the functions it exports,
-* will be dropped.    
-*      
-* [DOCUMENTATION]     
+* will be dropped.
+*
+* [DOCUMENTATION]
 *
 * The ICMPSendEcho() function sends an ICMP echo request to the specified
 * destination IP address and returns any replies received within the timeout
 * specified. The API is synchronous, requiring the process to spawn a thread
 * before calling the API to avoid blocking. An open IcmpHandle is required
-* for the request to complete. IcmpCreateFile() and IcmpCloseHandle() 
+* for the request to complete. IcmpCreateFile() and IcmpCloseHandle()
 * functions are used to create and destroy the context handle.
 *
 * <--- End cut --->
@@ -92,9 +92,10 @@
 */
 
 #include "stdafx.h"
+#pragma warning(push)
 #pragma warning(disable:4127) // conditional expression is constant
 #include <Ws2tcpip.h>       // UDPing - raw socket and TTL setting support
-#pragma warning(default:4127) // conditional expression is constant
+#pragma warning(pop)
 #include "emule.h"
 #include "TimeTick.h"
 #include "Pinger.h"
@@ -116,14 +117,14 @@ static char THIS_FILE[] = __FILE__;
 
 /*---------------------------------------------------------
  * IcmpSendEcho() Error Strings
- * 
- * The values in the status word returned in the ICMP Echo 
+ *
+ * The values in the status word returned in the ICMP Echo
  *  Reply buffer after calling IcmpSendEcho() all have a
  *  base value of 11000 (IP_STATUS_BASE).  At times,
- *  when IcmpSendEcho() fails outright, GetLastError() will 
+ *  when IcmpSendEcho() fails outright, GetLastError() will
  *  subsequently return these error values also.
  *
- * Two Errors value defined in ms_icmp.h are missing from 
+ * Two Errors value defined in ms_icmp.h are missing from
  *  this string table (just to simplify use of the table):
  *    "IP_GENERAL_FAILURE (11050)"
  *    "IP_PENDING (11255)"
@@ -155,22 +156,23 @@ static const LPCTSTR aszSendEchoErr[] = {
     _T("IP_UNLOAD (11022)")
 };
 
-Pinger::Pinger() {
+Pinger::Pinger()
+	: us(INVALID_SOCKET)
+{
     // udp start
     sockaddr_in sa;     // for UDP and raw sockets
 
     // ICMP must accept all responses
     sa.sin_family = AF_INET;
-    sa.sin_addr.s_addr = INADDR_ANY;	
+    sa.sin_addr.s_addr = INADDR_ANY;
     sa.sin_port = 0;
 
     udpStarted = false;
     // attempt to initialize raw ICMP socket
     is = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
     if (is != INVALID_SOCKET) {
-        int nRet = bind(is, (sockaddr *)&sa, sizeof(sa));
-        if (nRet==SOCKET_ERROR) { 
-            nRet = WSAGetLastError();
+        if (bind(is, (sockaddr *)&sa, sizeof(sa)) == SOCKET_ERROR) {
+            WSAGetLastError();
             closesocket(is);        // ignore return value - error close anyway
         } else {
             // attempt to initialize ordinal UDP socket - why should this fail???
@@ -184,7 +186,7 @@ Pinger::Pinger() {
         }
     }
     // udp end
- 
+
     // Open ICMP.DLL
     hICMP_DLL = LoadLibrary(_T("ICMP.DLL"));
     if (hICMP_DLL == 0) {
@@ -196,8 +198,8 @@ Pinger::Pinger() {
     lpfnIcmpCreateFile  = (IcmpCreateFile*)GetProcAddress(hICMP_DLL,"IcmpCreateFile");
     lpfnIcmpCloseHandle = (IcmpCloseHandle*)GetProcAddress(hICMP_DLL,"IcmpCloseHandle");
     lpfnIcmpSendEcho    = (IcmpSendEcho*)GetProcAddress(hICMP_DLL,"IcmpSendEcho");
-    if ((!lpfnIcmpCreateFile) || 
-        (!lpfnIcmpCloseHandle) || 
+    if ((!lpfnIcmpCreateFile) ||
+        (!lpfnIcmpCloseHandle) ||
         (!lpfnIcmpSendEcho)) {
 
         theApp.QueueDebugLogLine(false,_T("Pinger: GetProcAddr() failed for at least one function."));
@@ -253,7 +255,7 @@ PingStatus Pinger::PingUDP(uint32 lAddr, uint32 ttl, bool doLog) {
 	int nTTL = ttl;
 	int nRet;
 	sockaddr_in sa;
-	int nAddrLen = sizeof(struct sockaddr_in); 
+	int nAddrLen = sizeof(struct sockaddr_in);
 	char bufICMP[1500];             // allow full MTU
 
 	// clear ICMP socket before sending UDP - not best solution, but may be needed to exclude late responses etc
@@ -262,14 +264,14 @@ PingStatus Pinger::PingUDP(uint32 lAddr, uint32 ttl, bool doLog) {
 		nRet = ioctlsocket(is, FIONREAD, &bytes2read);
 		if (bytes2read > 0) {       // ignore errors here
 			sa.sin_family = AF_INET;
-			sa.sin_addr.s_addr = INADDR_ANY;	
+			sa.sin_addr.s_addr = INADDR_ANY;
 			sa.sin_port = 0;
 
-			nRet = recvfrom (is,    /* socket */ 
-				(LPSTR)bufICMP,     /* buffer */ 
-				1500,               /* length */ 
-				0,                  /* flags  */ 
-				(sockaddr*)&sa,     /* source */ 
+			nRet = recvfrom (is,    /* socket */
+				(LPSTR)bufICMP,     /* buffer */
+				1500,               /* length */
+				0,                  /* flags  */
+				(sockaddr*)&sa,     /* source */
 				&nAddrLen);         /* addrlen*/
 
 			//if (lastTimeOut) lastTimeOut--;
@@ -284,10 +286,10 @@ PingStatus Pinger::PingUDP(uint32 lAddr, uint32 ttl, bool doLog) {
 	// NB! take care about IP_TTL value - it's redefined in Ws2tcpip.h!
 	// TODO: solve next problem correctly:
 	// eMule is linking sockets functions using wsock32.lib (IP_TTL=7)
-	// to use IP_TTL define, we must enforce linker to bind this function 
+	// to use IP_TTL define, we must enforce linker to bind this function
 	// to ws2_32.lib (IP_TTL=4) (linker options: ignore wsock32.lib)
 	nRet = setsockopt(us, IPPROTO_IP, IP_TTL, (char*)&nTTL, sizeof(int));
-	if (nRet==SOCKET_ERROR) { 
+	if (nRet==SOCKET_ERROR) {
 		DWORD lastError = WSAGetLastError();
         PingStatus returnValue;
 		returnValue.success = false;
@@ -296,17 +298,17 @@ PingStatus Pinger::PingUDP(uint32 lAddr, uint32 ttl, bool doLog) {
 		//if (toNowTimeOut < 3) toNowTimeOut++;
 		//	lastTimeOut = 3;
 		return returnValue;
-	} 
+	}
 
 	sa.sin_family = AF_INET;
-	sa.sin_addr.s_addr = lAddr;	
+	sa.sin_addr.s_addr = lAddr;
 	sa.sin_port = htons(UDP_PORT);
 
 	// send lonely UDP packet with almost minimal content (0 bytes is allowed too, but no data will be sent then)
 	nRet = sendto(us, (LPSTR)&nTTL, 4, 0, (sockaddr*)&sa, sizeof(sa));  // send four bytes - TTL :)
     CTimeTick m_time;
     m_time.Tick();
-	if (nRet==SOCKET_ERROR) { 
+	if (nRet==SOCKET_ERROR) {
 		DWORD lastError = WSAGetLastError();
         PingStatus returnValue;
 		returnValue.success = false;
@@ -314,7 +316,7 @@ PingStatus Pinger::PingUDP(uint32 lAddr, uint32 ttl, bool doLog) {
 		//if (toNowTimeOut < 3) toNowTimeOut++;
 		//	lastTimeOut = 3;
 		return returnValue;
-	} 
+	}
 
 	IPHeader* reply = (IPHeader*)bufICMP;
 
@@ -347,17 +349,17 @@ PingStatus Pinger::PingUDP(uint32 lAddr, uint32 ttl, bool doLog) {
 			}
 		}
 		sa.sin_family = AF_INET;
-		sa.sin_addr.s_addr = INADDR_ANY;	
+		sa.sin_addr.s_addr = INADDR_ANY;
 		sa.sin_port = 0;
-		nRet = recvfrom (is,    /* socket */ 
-			(LPSTR)bufICMP,     /* buffer */ 
-			1500,               /* length */ 
-			0,                  /* flags  */ 
-			(sockaddr*)&sa,     /* source */ 
-			&nAddrLen);         /* addrlen*/ 
+		nRet = recvfrom (is,    /* socket */
+			(LPSTR)bufICMP,     /* buffer */
+			1500,               /* length */
+			0,                  /* flags  */
+			(sockaddr*)&sa,     /* source */
+			&nAddrLen);         /* addrlen*/
 
 		usResTime += m_time.Tick();
-		if (nRet==SOCKET_ERROR) { 
+		if (nRet==SOCKET_ERROR) {
 			DWORD lastError = WSAGetLastError();
             PingStatus returnValue;
 			returnValue.success = false;
@@ -366,7 +368,7 @@ PingStatus Pinger::PingUDP(uint32 lAddr, uint32 ttl, bool doLog) {
 			//if (toNowTimeOut < 3) toNowTimeOut++;
 			//	lastTimeOut = 3;
 			return returnValue;
-		} 
+		}
 
 		unsigned short header_len = reply->h_len * 4;
 		ICMPHeader* icmphdr = (ICMPHeader*)(bufICMP + header_len);
@@ -374,12 +376,12 @@ PingStatus Pinger::PingUDP(uint32 lAddr, uint32 ttl, bool doLog) {
 
 		stDestAddr.s_addr = reply->source_ip;
 
-		if (((icmphdr->type == ICMP_TTL_EXPIRE) || (icmphdr->type == ICMP_DEST_UNREACH)) &&
+		if (((icmphdr->type == ICMP_T_TTL_EXPIRE) || (icmphdr->type == ICMP_T_DEST_UNREACH)) &&
 			(icmphdr->UDP.dest_port == htons(UDP_PORT)) && (icmphdr->hdrsent.dest_ip == lAddr)) {
 
             PingStatus returnValue;
 
-            if(icmphdr->type == ICMP_TTL_EXPIRE) {
+            if(icmphdr->type == ICMP_T_TTL_EXPIRE) {
                 returnValue.success = true;
 			    returnValue.status = IP_TTL_EXPIRED_TRANSIT;
 			    returnValue.delay = usResTime;
@@ -395,7 +397,7 @@ PingStatus Pinger::PingUDP(uint32 lAddr, uint32 ttl, bool doLog) {
 
 			if(doLog) {
 				theApp.QueueDebugLogLine(false,_T("Reply (UDP-pinger) from %s: bytes=%d time=%3.2fms TTL=%i"),
-					ipstr(stDestAddr),
+					(LPCTSTR)ipstr(stDestAddr),
 					nRet,
 					usResTime,
 					returnValue.ttl);
@@ -409,7 +411,7 @@ PingStatus Pinger::PingUDP(uint32 lAddr, uint32 ttl, bool doLog) {
 			//}
 			if(doLog) {
 				theApp.QueueDebugLogLine(false,_T("Filtered reply (UDP-pinger) from %s: bytes=%d time=%3.2fms TTL=%i type=%i"),
-					ipstr(stDestAddr),
+					(LPCTSTR)ipstr(stDestAddr),
 					nRet,
 					usResTime,
 					64 - (reply->ttl & 63),
@@ -435,7 +437,7 @@ PingStatus Pinger::PingICMP(uint32 lAddr, uint32 ttl, bool doLog) {
     PingStatus returnValue;
 
     IN_ADDR stDestAddr;
-    char achRepData[sizeof(ICMPECHO) + BUFSIZE];
+    char achRepData[sizeof(icmp_echo_reply) + BUFSIZE];
 
     // Address is assumed to be ok
     stDestAddr.s_addr = lAddr;
@@ -444,36 +446,36 @@ PingStatus Pinger::PingICMP(uint32 lAddr, uint32 ttl, bool doLog) {
     CTimeTick m_time;
 	m_time.Tick();
     // Send the ICMP Echo Request and read the Reply
-    DWORD dwReplyCount = lpfnIcmpSendEcho(hICMP, 
+    DWORD dwReplyCount = lpfnIcmpSendEcho(hICMP,
                                     stDestAddr.s_addr,
                                     0, // databuffer
                                     0, // DataLen, length of databuffer
-                                    &stIPInfo, 
-                                    achRepData, 
-                                    sizeof(achRepData), 
+                                    &stIPInfo,
+                                    achRepData,
+                                    sizeof(achRepData),
                                     TIMEOUT
                             );
 	float usResTime=m_time.Tick();
     if (dwReplyCount != 0) {
         long pingTime = *(u_long *) &(achRepData[8]);
 
-        IN_ADDR stDestAddr;
+        IN_ADDR stDestAddr1;
 
-        stDestAddr.s_addr = *(u_long *)achRepData;
+        stDestAddr1.s_addr = *(u_long *)achRepData;
 
         returnValue.success = true;
         returnValue.status = *(DWORD *) &(achRepData[4]);
 		returnValue.delay = (m_time.isPerformanceCounter() && (pingTime <= 20 || pingTime%10 == 0) && (pingTime+10 > usResTime && usResTime+10 > pingTime )? usResTime : pingTime);
-        returnValue.destinationAddress = stDestAddr.s_addr;
+        returnValue.destinationAddress = stDestAddr1.s_addr;
         returnValue.ttl = (returnValue.status != IP_SUCCESS)?ttl:(*(char *)&(achRepData[20]))&0x00FF;
 
         if(doLog) {
             theApp.QueueDebugLogLine(false,_T("Reply (ICMP-pinger) from %s: bytes=%d time=%3.2fms (%3.2fms %ldms) TTL=%i"),
-                                                        ipstr(stDestAddr),
+                                                        (LPCTSTR)ipstr(stDestAddr1),
                                                         *(u_long *) &(achRepData[12]),
                                                         returnValue.delay,
-                                                        m_time.isPerformanceCounter() ? usResTime : -1.0f, 
-                                                        (u_long)(achRepData[8]),
+                                                        m_time.isPerformanceCounter() ? usResTime : -1.0f,
+                                                        *(u_long *)(&achRepData[8]),
                                                         returnValue.ttl);
         }
     } else {
@@ -482,7 +484,7 @@ PingStatus Pinger::PingICMP(uint32 lAddr, uint32 ttl, bool doLog) {
         returnValue.error = lastError;
         if(doLog) {
 			theApp.QueueDebugLogLine(false,_T("Error from %s: Error=%i"),
-				ipstr(stDestAddr),
+				(LPCTSTR)ipstr(stDestAddr),
 				returnValue.error);
         }
     }
@@ -494,11 +496,11 @@ PingStatus Pinger::PingICMP(uint32 lAddr, uint32 ttl, bool doLog) {
 void Pinger::PIcmpErr(int nICMPErr) {
     int  nErrIndex = nICMPErr - IP_STATUS_BASE;
 
-    if ((nICMPErr > MAX_ICMP_ERR_STRING) || 
+    if ((nICMPErr > MAX_ICMP_ERR_STRING) ||
         (nICMPErr < IP_STATUS_BASE+1)) {
 
         // Error value is out of range, display normally
-		theApp.QueueDebugLogLine(false,_T("Pinger: %s"),GetErrorMessage(nICMPErr,1));
+		theApp.QueueDebugLogLine(false,_T("Pinger: %s"), (LPCTSTR)GetErrorMessage(nICMPErr,1));
     } else {
 
         // Display ICMP Error String

@@ -18,6 +18,7 @@
 #include "emule.h"
 #include "TrayDialog.h"
 #include "emuledlg.h"
+#include "Preferences.h"
 #include "MenuCmds.h"
 #include "UserMsgs.h"
 
@@ -68,7 +69,7 @@ int CTrayDialog::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (CTrayDialogBase::OnCreate(lpCreateStruct) == -1)
 		return -1;
-	
+
 	ASSERT( WM_TASKBARCREATED );
 	m_nidIconData.hWnd = m_hWnd;
 	m_nidIconData.uID = 1;
@@ -120,7 +121,7 @@ void CTrayDialog::TraySetIcon(LPCTSTR lpszResourceName)
 
 void CTrayDialog::TraySetToolTip(LPCTSTR lpszToolTip)
 {
-	ASSERT( _tcslen(lpszToolTip) > 0 && _tcslen(lpszToolTip) < NOTIFYICONDATA_V1_TIP_SIZE );
+	ASSERT( *lpszToolTip != '\0' && _tcslen(lpszToolTip) < NOTIFYICONDATA_V1_TIP_SIZE );
 	_tcsncpy(m_nidIconData.szTip, lpszToolTip, NOTIFYICONDATA_V1_TIP_SIZE);
 	m_nidIconData.szTip[NOTIFYICONDATA_V1_TIP_SIZE - 1] = _T('\0');
 	m_nidIconData.uFlags |= NIF_TIP;
@@ -131,24 +132,20 @@ void CTrayDialog::TraySetToolTip(LPCTSTR lpszToolTip)
 BOOL CTrayDialog::TrayShow()
 {
 	BOOL bSuccess = FALSE;
-	if (!m_bTrayIconVisible)
-	{
-		bSuccess = Shell_NotifyIcon(NIM_ADD, &m_nidIconData);
-		if (bSuccess)
-			m_bTrayIconVisible = TRUE;
-	}
+
+	bSuccess = Shell_NotifyIcon(NIM_ADD, &m_nidIconData);
+	if (bSuccess)
+		m_bTrayIconVisible = TRUE;
 	return bSuccess;
 }
 
 BOOL CTrayDialog::TrayHide()
 {
 	BOOL bSuccess = FALSE;
-	if (m_bTrayIconVisible)
-	{
-		bSuccess = Shell_NotifyIcon(NIM_DELETE, &m_nidIconData);
-		if (bSuccess)
-			m_bTrayIconVisible = FALSE;
-	}
+
+	bSuccess = Shell_NotifyIcon(NIM_DELETE, &m_nidIconData);
+	if (bSuccess)
+		m_bTrayIconVisible = FALSE;
 	return bSuccess;
 }
 
@@ -163,15 +160,15 @@ BOOL CTrayDialog::TrayUpdate()
             return FALSE; // don't delete 'm_hPrevIconDelete' because it's still attached to the tray
         }
     }
-   
+
     if (m_hPrevIconDelete != NULL)
     {
         VERIFY( ::DestroyIcon(m_hPrevIconDelete) );
         m_hPrevIconDelete = NULL;
-    }        
-   
+    }
+
 	return bSuccess;
-} 
+}
 
 BOOL CTrayDialog::TraySetMenu(UINT nResourceID)
 {
@@ -202,7 +199,7 @@ LRESULT CTrayDialog::OnTrayNotify(WPARAM wParam, LPARAM lParam)
 	CPoint pt;
     UINT uMsg = (UINT)lParam;
     switch (uMsg)
-	{ 
+	{
 		case WM_MOUSEMOVE:
 			GetCursorPos(&pt);
 			ClientToScreen(&pt);
@@ -221,10 +218,12 @@ LRESULT CTrayDialog::OnTrayNotify(WPARAM wParam, LPARAM lParam)
 			// WM_LBUTTONUP without checking this, we may get a single WM_LBUTTONUP message
 			// whereby the according WM_LBUTTONDOWN message was meant for some other tray bar
 			// icon.
-			if (m_bLButtonDblClk)
+			if (m_bLButtonDblClk || m_bLButtonDown && !thePrefs.m_bEnableMiniMule) //use single click to restore from tray
 			{
 				KillSingleClickTimer();
 				RestoreWindow();
+				if (!thePrefs.m_bEnableMiniMule) //if restoring on single click
+					m_bLButtonDown = false; //reset single click too
 				m_bLButtonDblClk = false;
 			}
 			else if (m_bLButtonDown)
@@ -259,7 +258,7 @@ LRESULT CTrayDialog::OnTrayNotify(WPARAM wParam, LPARAM lParam)
 			ClientToScreen(&pt);
 			OnTrayRButtonDblClk(pt);
 			break;
-	} 
+	}
 	return 1;
 }
 

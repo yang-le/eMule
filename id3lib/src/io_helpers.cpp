@@ -1,7 +1,8 @@
-// $Id: io_helpers.cpp,v 1.13 2002/07/02 22:13:56 t1mpy Exp $
+// $Id: io_helpers.cpp,v 1.14 2002/09/13 15:39:18 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
+// Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
 
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Library General Public License as published by
@@ -102,8 +103,8 @@ namespace
     return 0;
   }
 
-  bool readTwoChars(ID3_Reader& reader, 
-                    ID3_Reader::char_type& ch1, 
+  bool readTwoChars(ID3_Reader& reader,
+                    ID3_Reader::char_type& ch1,
                     ID3_Reader::char_type& ch2)
   {
     if (reader.atEnd())
@@ -123,7 +124,7 @@ namespace
 }
 
 String io::readUnicodeString(ID3_Reader& reader)
-{
+{ //keeps reading until null char or at end of reader end
   String unicode;
   ID3_Reader::char_type ch1, ch2;
   if (!readTwoChars(reader, ch1, ch2) || isNull(ch1, ch2))
@@ -170,7 +171,7 @@ String io::readUnicodeText(ID3_Reader& reader, size_t len)
   {
     unicode += ch1;
     unicode += ch2;
-    unicode += readText(reader, len);
+    unicode += readText(reader, len); //awooga why difference with readUnicodeString routine
   }
   else if (bom == 1)
   {
@@ -200,7 +201,7 @@ BString io::readBinary(ID3_Reader& reader, size_t len)
 {
   BString binary;
   binary.reserve(len);
-  
+
   size_t remaining = len;
   const size_t SIZE = 1024;
   ID3_Reader::char_type buf[SIZE];
@@ -210,7 +211,7 @@ BString io::readBinary(ID3_Reader& reader, size_t len)
     remaining -= numRead;
     binary.append(reinterpret_cast<BString::value_type *>(buf), numRead);
   }
-  
+
   return binary;
 }
 
@@ -231,7 +232,7 @@ uint32 io::readLENumber(ID3_Reader& reader, size_t len)
 uint32 io::readBENumber(ID3_Reader& reader, size_t len)
 {
   uint32 val = 0;
-  
+
   for (ID3_Reader::size_type i = 0; i < len && !reader.atEnd(); ++i)
   {
     val *= 256; // 2^8
@@ -291,7 +292,7 @@ size_t io::writeBENumber(ID3_Writer& writer, uint32 val, size_t len)
   return writer.writeChars(bytes, size);
 }
 
-size_t io::writeTrailingSpaces(ID3_Writer& writer, String buf, size_t len)
+size_t io::writeTrailingSpaces(ID3_Writer& writer, const String& buf, size_t len)
 {
   ID3_Writer::pos_type beg = writer.getCur();
   ID3_Writer::size_type strLen = buf.size();
@@ -310,7 +311,7 @@ size_t io::writeUInt28(ID3_Writer& writer, uint32 val)
   const unsigned short BITSUSED = 7;
   const uint32 MAXVAL = MASK(BITSUSED * sizeof(uint32));
   val = min(val, MAXVAL);
-  // This loop renders the value to the character buffer in reverse order, as 
+  // This loop renders the value to the character buffer in reverse order, as
   // it is easy to extract the last 7 bits of an integer.  This is why the
   // loop shifts the value of the integer by 7 bits for each iteration.
   for (size_t i = 0; i < sizeof(uint32); ++i)
@@ -323,26 +324,26 @@ size_t io::writeUInt28(ID3_Writer& writer, uint32 val)
     // right by that many bits for the next iteration
     val >>= BITSUSED;
   }
-  
+
   // Should always render 4 bytes
   return writer.writeChars(data, sizeof(uint32));
 }
 
-size_t io::writeString(ID3_Writer& writer, String data)
+size_t io::writeString(ID3_Writer& writer, const String& data)
 {
   size_t size = writeText(writer, data);
   writer.writeChar('\0');
   return size + 1;
 }
 
-size_t io::writeText(ID3_Writer& writer, String data)
+size_t io::writeText(ID3_Writer& writer, const String& data)
 {
   ID3_Writer::pos_type beg = writer.getCur();
   writer.writeChars(data.data(), data.size());
   return writer.getCur() - beg;
 }
 
-size_t io::writeUnicodeString(ID3_Writer& writer, String data, bool bom)
+size_t io::writeUnicodeString(ID3_Writer& writer, const String& data, bool bom)
 {
   size_t size = writeUnicodeText(writer, data, bom);
   unicode_t null = NULL_UNICODE;
@@ -350,7 +351,7 @@ size_t io::writeUnicodeString(ID3_Writer& writer, String data, bool bom)
   return size + 2;
 }
 
-size_t io::writeUnicodeText(ID3_Writer& writer, String data, bool bom)
+size_t io::writeUnicodeText(ID3_Writer& writer, const String& data, bool bom)
 {
   ID3_Writer::pos_type beg = writer.getCur();
   size_t size = (data.size() / 2) * 2;
@@ -363,11 +364,11 @@ size_t io::writeUnicodeText(ID3_Writer& writer, String data, bool bom)
     // Write the BOM: 0xFEFF
     unicode_t BOM = 0xFEFF;
     writer.writeChars((const unsigned char*) &BOM, 2);
-    for (size_t i = 0; i < size; i += 2)
-    {
-      unicode_t ch = (data[i] << 8) | data[i+1];
-      writer.writeChars((const unsigned char*) &ch, 2);
-    }
+  }
+  for (size_t i = 0; i < size; i += 2)
+  {
+    unicode_t ch = (data[i] << 8) | data[i+1];
+    writer.writeChars((const unsigned char*) &ch, 2);
   }
   return writer.getCur() - beg;
 }

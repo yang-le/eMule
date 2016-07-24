@@ -1,7 +1,7 @@
 /*
 Module : TreeOptionsCtrl.cpp
-Purpose: Implementation for an MFC class to implement a tree options control 
-         similiar to the advanced tab as seen on the "Internet options" dialog in 
+Purpose: Implementation for an MFC class to implement a tree options control
+         similiar to the advanced tab as seen on the "Internet options" dialog in
          Internet Explorer 4 and later
 
 Created: PJN / 31-03-1999
@@ -13,36 +13,36 @@ History: PJN / 21-04-1999 Added full support for enabling / disabling all the it
          PJN / 29-02-2000 Removed a VC 6 level 4 warning
          PJN / 03-04-2000 Added support for navigation into and out of the combo boxes and edit controls
                           inside the control
-         PJN / 10-05-2000 1. Fixed a bug where the text was not being transferred to the control when the 
+         PJN / 10-05-2000 1. Fixed a bug where the text was not being transferred to the control when the
                           in inplace combo or edit box is active and the tree control gets destroyed.
                           2. Added support for having check box items as children of other check box items
-                          3. Setting the check box state of a parent now also sets the check box state 
+                          3. Setting the check box state of a parent now also sets the check box state
                           for all child box children.
                           4. Setting the check box state afects the check box state of the parent if that
                           parent is also a check box.
-         PJN / 30-05-2000 Code now uses ON_NOTIFY_REFLECT_EX instead of ON_NOTIFY_REFLECT. This allows 
+         PJN / 30-05-2000 Code now uses ON_NOTIFY_REFLECT_EX instead of ON_NOTIFY_REFLECT. This allows
                           derived classes to handle the reflected messages also.
          PJN / 03-07-2000 Now includes support for edit boxes with accompanying spin controls
          PJN / 25-04-2001 1. Creation of the image list is now virtual. This allows customisation such as
                           being able to use high color bitmaps
-                          2. Added an option which determines if check box state should be changed when you 
+                          2. Added an option which determines if check box state should be changed when you
                           click anywhere on an item or just over the checkbox icon
                           3. Updated copyright message
-         PJN / 12-08-2001 1. Fixed an issue in GetComboText and GetEditText where the code was modifying the 
-                          contents of the combo/edit box when it was being read. This was because that 
-                          function is doing double duty as it is called when the child control is about to be 
-                          created in place, and you want to remove the text from the tree control and put it 
+         PJN / 12-08-2001 1. Fixed an issue in GetComboText and GetEditText where the code was modifying the
+                          contents of the combo/edit box when it was being read. This was because that
+                          function is doing double duty as it is called when the child control is about to be
+                          created in place, and you want to remove the text from the tree control and put it
                           in the child control. Thanks to "Jef" for spotting this.
                           2. Made the code in SetComboText more robust. Thanks to "Jef" for this also.
                           3. Added a DDX method for integers in a edit box. Thanks to Colin Urquhart for this.
                           4. Added an extra member to CTreeOptionsItemData to be used as an item data. This
                           allows you to avoid having to implement multiple derived classes and instead use
                           the item data's I now provide to stash away pointers etc.
-         PJN / 27-08-2001 1. Provided a "GetUserItemData" member to provide access to the item data provided 
+         PJN / 27-08-2001 1. Provided a "GetUserItemData" member to provide access to the item data provided
                           by the class. Thanks to Colin Urquhart for this.
-                          2. Fixed a redraw problem which occured when you scrolled using an wheel enabled 
+                          2. Fixed a redraw problem which occured when you scrolled using an wheel enabled
                           mouse. Thanks to "Jef" for spotting this.
-                          3. Provided an AutoSelect option which automatically sets focus to child control 
+                          3. Provided an AutoSelect option which automatically sets focus to child control
                           in the tree control. Thanks to "Jef" for this suggestion.
                           4. Added full support for CBS_DROPDOWN and CBS_SIMPLE style combo boxes. Thanks
                           to "Jef" for this suggestion.
@@ -51,11 +51,11 @@ History: PJN / 21-04-1999 Added full support for enabling / disabling all the it
                           3. Provided support for specifying a font via CFontDialog
                           4. Provided support for specifying a font name from a combo box
                           5. Provided support for specifying a boolean value from a combo box
-         PJN / 27-11-2001 1. Fixed a bug where the message map for OnMouseWheel was setup incorrectly. It 
+         PJN / 27-11-2001 1. Fixed a bug where the message map for OnMouseWheel was setup incorrectly. It
                           should have been ON_WM_MOUSEWHEEL instead of ON_MESSAGE!!!.
-                          2. Allowed passing in the hAfter item for the InsertItem calls. All parms are defaulted 
+                          2. Allowed passing in the hAfter item for the InsertItem calls. All parms are defaulted
                           as to not affect any current code.
-                          3. Made possible the use of radio button groups followed by other items (in which case 
+                          3. Made possible the use of radio button groups followed by other items (in which case
                           the group is considered complete).
                           4. Added a couple of utility functions at the bottom of the cpp file. Thanks to Mike
                           Funduc for all these updates.
@@ -65,41 +65,41 @@ History: PJN / 21-04-1999 Added full support for enabling / disabling all the it
                           2. Fixed issue with return value from GetUserItemData
          PJN / 02-06-2002 1. Moved sample app to VC 6 to facilitate support for IP Address control and date and
                           time controls.
-                          2. Fixed a bug where the child controls can get orphaned when a node in the tree 
+                          2. Fixed a bug where the child controls can get orphaned when a node in the tree
                           control is expaned or contracted. Thanks to Lauri Ott for spotting this problem.
                           3. Now fully supports the CDateTimeCtrl for editing of dates and times
                           4. Now fully supports the CIPAddressCtrl for editing of IP addresses
                           5. Custom draw support for color browser items is now configurable via an additional
                           parameter of the AddColorBrowser method
-         PJN / 24-09-2002 1. Updated documentation which incorrectly stated that the parent of a check box item 
-                          must be a group item as inserted with InsertGroup. Thanks to Kögl Christoph for 
+         PJN / 24-09-2002 1. Updated documentation which incorrectly stated that the parent of a check box item
+                          must be a group item as inserted with InsertGroup. Thanks to Kögl Christoph for
                           spotting this.
-                          2. Fixed an issue with "IMPLEMENT_DYNAMIC(CDateTimeCtrl..." not being declared propertly. 
-                          Some users reported that it worked ok, while others said that my fix was causing link 
-                          problems. The problem should be sorted out for good now. Thanks to Kögl Christoph for 
+                          2. Fixed an issue with "IMPLEMENT_DYNAMIC(CDateTimeCtrl..." not being declared propertly.
+                          Some users reported that it worked ok, while others said that my fix was causing link
+                          problems. The problem should be sorted out for good now. Thanks to Kögl Christoph for
                           reporting this.
                           3. Renamed the SetImageListToUse function to "SetImageListResourceIDToUse".
                           4. Provided a GetImageListResourceIDToUse function to match up with the Set function.
-                          5. Provided a method to allow the user item data to be changed after an item has 
+                          5. Provided a method to allow the user item data to be changed after an item has
                           been created.
-                          6. Provided some documentation info how how to safely use item data in the control. 
+                          6. Provided some documentation info how how to safely use item data in the control.
                           Thanks to Kögl Christoph for reporting this.
-                          7. Fixed a potential memory leak in AddComboBox if the function is invoked twice without 
+                          7. Fixed a potential memory leak in AddComboBox if the function is invoked twice without
                           an explicit delete of the item first. Thanks to Kögl Christoph for reporting this.
-                          8. Fixed sometypos in the documentation. It incorectly stated that the return type of 
-                          member functions InsertGroup, InsertCheckBox, and InsertRadioButton is BOOL when in fact 
+                          8. Fixed sometypos in the documentation. It incorectly stated that the return type of
+                          member functions InsertGroup, InsertCheckBox, and InsertRadioButton is BOOL when in fact
                           it is HTREEITEM.  Thanks to Kögl Christoph for reporting this.
-                          9. Improved the look of the disabled checked check button. Thanks to Kögl Christoph for 
+                          9. Improved the look of the disabled checked check button. Thanks to Kögl Christoph for
                           reporting this.
-                          10. Improved the look of the disabled radio button which is selected. Thanks to Kögl 
+                          10. Improved the look of the disabled radio button which is selected. Thanks to Kögl
                           Christoph for reporting this.
          PJN / 17-10-2002 1. Added a method to add an "Opaque Browser" to the Tree options control. An
                           Opaque Browser is where the tree options control allows a end user specified
                           structure to be edited by the tree options control without it explicitly
-                          knowing what it is editing. 
-         PJN / 25-10-2002 1. Updated the download to include the missing files OpaqueShow.cpp/h. Thanks to Kögl 
+                          knowing what it is editing.
+         PJN / 25-10-2002 1. Updated the download to include the missing files OpaqueShow.cpp/h. Thanks to Kögl
                           Christoph for reporting this.
-                          2. Made the class more const-correct. e.g. the Get... member functions are now const. 
+                          2. Made the class more const-correct. e.g. the Get... member functions are now const.
                           Thanks to Kögl Christoph for reporting this. Also updated the documentation for this.
                           3. Updated the documentation to refer to the "Opaque Browser" support.
          PJN / 28-10-2002 1. Fixed a bug where upon a combo losing focus it will also result in the associated
@@ -108,20 +108,20 @@ History: PJN / 21-04-1999 Added full support for enabling / disabling all the it
                           in this area.
          PJN / 30-10-2002 1. Made a number of other methods const. Thanks to Kögl Christoph for reporting this.
          PJN / 15-11-2002 1. Now allows the Field Data separator i.e. ": " to be configured. Please note that the
-                          characters you pick should be avoided in the descriptive text you display for an item 
-                          as it is used as the divider between the descriptive text and the actual data to be 
+                          characters you pick should be avoided in the descriptive text you display for an item
+                          as it is used as the divider between the descriptive text and the actual data to be
                           edited. Thanks to Kögl Christoph for this update.
                           2. Fixed an access violation in CTreeOptionsCtrl::OnSelchanged when there is no selected
                           item in the control. Thanks to Kögl Christoph for this update.
-         PJN / 06-03-2003 1. Fixed a memory leak which can occur when the control is used in a property sheet. 
+         PJN / 06-03-2003 1. Fixed a memory leak which can occur when the control is used in a property sheet.
                           Thanks to David Rainey for reporting this problem.
                           2. Fixed another memory leak in the destructor of the CTreeOptionsCtrl class when the
                           test app is closed
-         PJN / 14-05-2003 1. Fixed a bug where the OnSelChanged function was getting in the way when the control was 
+         PJN / 14-05-2003 1. Fixed a bug where the OnSelChanged function was getting in the way when the control was
                           being cleared down, leading to an ASSERT. Thanks to Chen Fu for reporting this problem.
          PJN / 07-06-2003 1. Fixed a bug where the date time control was not reflecting the changes when the child
                           control was displayed. Thanks to Tom Serface for reporting this problem.
-         PJN / 17-07-2003 1. Made SetRadioButton methods in CTreeOptionsCtrl virtual to allow further client 
+         PJN / 17-07-2003 1. Made SetRadioButton methods in CTreeOptionsCtrl virtual to allow further client
                           customisation.
 
 
@@ -132,11 +132,11 @@ All rights reserved.
 
 Copyright / Usage Details:
 
-You are allowed to include the source code in any product (commercial, shareware, freeware or otherwise) 
-when your product is released in binary form. You are allowed to modify the source code in any way you want 
-except you cannot modify the copyright details at the top of each module. If you want to distribute source 
-code with your application, then you are only allowed to distribute versions released by the author. This is 
-to maintain a single distribution point for the source code. 
+You are allowed to include the source code in any product (commercial, shareware, freeware or otherwise)
+when your product is released in binary form. You are allowed to modify the source code in any way you want
+except you cannot modify the copyright details at the top of each module. If you want to distribute source
+code with your application, then you are only allowed to distribute versions released by the author. This is
+to maintain a single distribution point for the source code.
 
 */
 
@@ -150,6 +150,7 @@ to maintain a single distribution point for the source code.
 #include <shlobj.h>
 #endif
 #include "TreeOptionsCtrl.h"
+#pragma warning(push)
 #pragma warning(disable:4189) // 'bSuccess' : local variable is initialized but not referenced
 
 
@@ -210,6 +211,8 @@ CTreeOptionsCtrl::CTreeOptionsCtrl()
 	m_pIPAddress = NULL;
 #ifdef IDB_TREE_CTRL_OPTIONS
 	m_nilID = IDB_TREE_CTRL_OPTIONS;
+#else
+	m_nilID = 0;
 #endif
 	m_hControlItem = NULL;
 	m_bToggleOverIconOnly = FALSE;
@@ -220,7 +223,7 @@ CTreeOptionsCtrl::CTreeOptionsCtrl()
 
 CTreeOptionsCtrl::~CTreeOptionsCtrl()
 {
-	DestroyOldChildControl();
+	CTreeOptionsCtrl::DestroyOldChildControl();
 
 	ASSERT(m_pCombo == NULL);
 	ASSERT(m_pEdit == NULL);
@@ -241,7 +244,7 @@ LRESULT CTreeOptionsCtrl::OnSetFocusToChild(WPARAM /*wParam*/, LPARAM /*lParam*/
 	else if (m_pIPAddress)
 		m_pIPAddress->SetFocus();
 
-	return 0L;  
+	return 0L;
 }
 
 LRESULT CTreeOptionsCtrl::OnRepositionChild(WPARAM /*wParam*/, LPARAM /*lParam*/)
@@ -304,7 +307,7 @@ void CTreeOptionsCtrl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags )
 	{
 		HTREEITEM hItem = GetSelectedItem();
 		if (GetItemData(hItem) && m_hControlItem != NULL)
-		{ 
+		{
 			// if we have a children and VK_RIGHT -> Focus on it !
 			CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
 			if (pItemData->m_pRuntimeClass1->IsDerivedFrom(RUNTIME_CLASS(CTreeOptionsCombo)))
@@ -365,13 +368,13 @@ void CTreeOptionsCtrl::HandleCheckBox(HTREEITEM hItem, BOOL bCheck)
 	while (hChild)
 	{
 		if (IsCheckBox(hChild))
-			SetCheckBox(hChild, !bCheck);  
+			SetCheckBox(hChild, !bCheck);
 
 		//Move on to the next item
 		hChild = GetNextItem(hChild, TVGN_NEXT);
 	}
 
-	//Get the parent item and if it is a checkbox, then iterate through 
+	//Get the parent item and if it is a checkbox, then iterate through
 	//all its children and if all the checkboxes are checked, then also
 	//automatically check the parent. If no checkboxes are checked, then
 	//also automatically uncheck the parent.
@@ -414,7 +417,7 @@ void CTreeOptionsCtrl::HandleCheckBox(HTREEITEM hItem, BOOL bCheck)
 	SetRedraw(TRUE);
 }
 
-void CTreeOptionsCtrl::OnLButtonDown(UINT nFlags, CPoint point) 
+void CTreeOptionsCtrl::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	UINT uFlags=0;
 	HTREEITEM hItem = HitTest(point, &uFlags);
@@ -467,7 +470,7 @@ void CTreeOptionsCtrl::OnLButtonDown(UINT nFlags, CPoint point)
 	}
 }
 
-void CTreeOptionsCtrl::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags) 
+void CTreeOptionsCtrl::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	if (nChar == VK_SPACE)
 	{
@@ -526,8 +529,8 @@ void CTreeOptionsCtrl::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 HTREEITEM CTreeOptionsCtrl::InsertGroup(LPCTSTR lpszItem, int nImage, HTREEITEM hParent, HTREEITEM hAfter, DWORD dwItemData)
 {
-	ASSERT(nImage > 9); //You must specify an image index greater than 9 as the 
-	//first 10 images in the image list are reserved for the 
+	ASSERT(nImage > 9); //You must specify an image index greater than 9 as the
+	//first 10 images in the image list are reserved for the
 	//checked and unchecked check box and radio buttons images
 
 	HTREEITEM hItem = InsertItem(lpszItem, nImage, nImage, hParent, hAfter);
@@ -693,7 +696,7 @@ BOOL CTreeOptionsCtrl::SetCheckBox(HTREEITEM hItem, BOOL bCheck)
 			bSuccess = SetItemImage(hItem, 1, 1);
 	}
 	else
-		bSuccess = SetItemImage(hItem, 0, 0);   
+		bSuccess = SetItemImage(hItem, 0, 0);
 
 	return bSuccess;
 }
@@ -830,7 +833,7 @@ BOOL CTreeOptionsCtrl::GetRadioButton(HTREEITEM hParent, int& nIndex, HTREEITEM&
 	HTREEITEM hChild = GetNextItem(hParent, TVGN_CHILD);
 	ASSERT(hChild); //Must have some child items
 
-	//Find the checked item  
+	//Find the checked item
 	nIndex = 0;
 	BOOL bFound = FALSE;
 	while (!bFound)
@@ -933,7 +936,7 @@ BOOL CTreeOptionsCtrl::GetSemiCheckBox(HTREEITEM hItem, BOOL& bSemi) const
 
 	bSemi = (nImage == 8 || nImage == 9);
 
-	return bSuccess;  
+	return bSuccess;
 }
 
 BOOL CTreeOptionsCtrl::SetCheckBoxEnable(HTREEITEM hItem, BOOL bEnable)
@@ -1015,7 +1018,7 @@ BOOL CTreeOptionsCtrl::GetCheckBoxEnable(HTREEITEM hItem, BOOL& bEnable) const
 
 	bEnable = (nImage == 0 || nImage == 1 || nImage == 8);
 
-	return bSuccess;  
+	return bSuccess;
 }
 
 BOOL CTreeOptionsCtrl::GetRadioButtonEnable(HTREEITEM hItem, BOOL& bEnable) const
@@ -1029,7 +1032,7 @@ BOOL CTreeOptionsCtrl::GetRadioButtonEnable(HTREEITEM hItem, BOOL& bEnable) cons
 
 	bEnable = (nImage == 2 || nImage == 3);
 
-	return bSuccess;  
+	return bSuccess;
 }
 
 void CTreeOptionsCtrl::OnCreateImageList()
@@ -1038,9 +1041,9 @@ void CTreeOptionsCtrl::OnCreateImageList()
 	VERIFY(m_ilTree.Create(m_nilID, 16, 1, RGB(255, 0, 255)));
 }
 
-void CTreeOptionsCtrl::PreSubclassWindow() 
+void CTreeOptionsCtrl::PreSubclassWindow()
 {
-	//Let the parent class do its thing	
+	//Let the parent class do its thing
 	CTreeCtrl::PreSubclassWindow();
 
 	//Call the virtual function to setup the image list
@@ -1058,7 +1061,7 @@ BOOL CTreeOptionsCtrl::AddComboBox(HTREEITEM hItem, CRuntimeClass* pRuntimeClass
 	CTreeOptionsItemData* pOldItemData = (CTreeOptionsItemData*) GetItemData(hItem);
 	delete pOldItemData;
 
-	//A pointer to the runtime class is stored in the Item data which itself is an 
+	//A pointer to the runtime class is stored in the Item data which itself is an
 	//internal structure we maintain per tree item
 	CTreeOptionsItemData* pItemData = new CTreeOptionsItemData;
 	pItemData->m_dwItemData = dwItemData;
@@ -1252,11 +1255,10 @@ void CTreeOptionsCtrl::CreateNewChildControl(HTREEITEM hItem)
 		}
 		else if (pItemData->m_Type == CTreeOptionsItemData::FontBrowser)
 		{
-			LOGFONT lf;
 			GetFontItem(hItem, &lf);
 			m_pButton->SetFontItem(&lf);
 		}
-		else 
+		else
 		{
 			ASSERT(pItemData->m_Type == CTreeOptionsItemData::OpaqueBrowser);
 		}
@@ -1308,7 +1310,7 @@ void CTreeOptionsCtrl::CreateNewChildControl(HTREEITEM hItem)
 		m_pCombo->Create(m_pCombo->GetWindowStyle(), r, this, TREE_OPTIONS_COMBOBOX_ID);
 		ASSERT(m_pCombo->GetCount()); //You forget to add string items to the combo box in your OnCreate message handler!
 
-		//set the font the combo box should use based on the font in the tree control, 
+		//set the font the combo box should use based on the font in the tree control,
 		m_pCombo->SetFont(&m_Font);
 
 		//Also select the right text into the combo box
@@ -1395,7 +1397,7 @@ void CTreeOptionsCtrl::CreateNewChildControl(HTREEITEM hItem)
 
 			if (m_pEdit)
 				m_pEdit->SetButtonBuddy(m_pButton);
-			else 
+			else
 			{
 				ASSERT(m_pCombo);
 				m_pCombo->SetButtonBuddy(m_pButton);
@@ -1606,7 +1608,7 @@ void CTreeOptionsCtrl::SetFolderEditText(HTREEITEM hItem, const CString& sEditTe
 	SetEditText(hItem, sEditText);
 }
 
-void CTreeOptionsCtrl::CreateSpinCtrl(CRuntimeClass* pRuntimeClassSpinCtrl, CRect rItem, CRect /*rText*/, CRect rPrimaryControl)
+void CTreeOptionsCtrl::CreateSpinCtrl(CRuntimeClass* pRuntimeClassSpinCtrl, const CRect& rItem, const CRect& /*rText*/, const CRect& rPrimaryControl)
 {
 	ASSERT(pRuntimeClassSpinCtrl);
 	if (pRuntimeClassSpinCtrl->IsDerivedFrom(RUNTIME_CLASS(CTreeOptionsSpinCtrl)))
@@ -1639,7 +1641,7 @@ void CTreeOptionsCtrl::CreateSpinCtrl(CRuntimeClass* pRuntimeClassSpinCtrl, CRec
 		ASSERT(FALSE); //Your class must be derived from CTreeOptionsSpinCtrl
 }
 
-void CTreeOptionsCtrl::CreateBrowseButton(CRuntimeClass* pRuntimeClassBrowseButton, CRect rItem, CRect rText)
+void CTreeOptionsCtrl::CreateBrowseButton(CRuntimeClass* pRuntimeClassBrowseButton, const CRect& rItem, const CRect& rText)
 {
 	ASSERT(pRuntimeClassBrowseButton);
 	if (pRuntimeClassBrowseButton->IsDerivedFrom(RUNTIME_CLASS(CTreeOptionsBrowseButton)))
@@ -1713,7 +1715,7 @@ void CTreeOptionsCtrl::SetEditText(HTREEITEM hItem, const CString& sEditText)
 	SetComboText(hItem, sEditText);
 }
 
-BOOL CTreeOptionsCtrl::OnSelchanged(NMHDR *pNMHDR, LRESULT *pResult) 
+BOOL CTreeOptionsCtrl::OnSelchanged(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	NMTREEVIEW *pNMTreeView = (NMTREEVIEW *)pNMHDR;
 
@@ -1741,7 +1743,7 @@ BOOL CTreeOptionsCtrl::OnSelchanged(NMHDR *pNMHDR, LRESULT *pResult)
 	return FALSE;
 }
 
-BOOL CTreeOptionsCtrl::OnItemExpanding(NMHDR* /*pNMHDR*/, LRESULT* pResult) 
+BOOL CTreeOptionsCtrl::OnItemExpanding(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
 	//Clean up any controls currently open we used (assuming it is a standard
 	//scroll message and not from one of our spin controls)
@@ -1761,33 +1763,33 @@ void CTreeOptionsCtrl::Clear()
 	m_bBeingCleared = TRUE;
 	HTREEITEM hRoot = GetRootItem();
 	m_hControlItem = NULL;
-	if (hRoot) 
+	if (hRoot)
 		MemDeleteAllItems(hRoot);
 	m_bBeingCleared = FALSE;
 }
 
-void CTreeOptionsCtrl::MemDeleteAllItems(HTREEITEM hParent) 
-{ 
-	HTREEITEM hItem = hParent; 
-	while (hItem) 
-	{ 
-		HTREEITEM hNextItem = CTreeCtrl::GetNextItem(hItem, TVGN_NEXT); 
-		if (ItemHasChildren(hItem)) 
-			MemDeleteAllItems(GetChildItem(hItem)); 
+void CTreeOptionsCtrl::MemDeleteAllItems(HTREEITEM hParent)
+{
+	HTREEITEM hItem = hParent;
+	while (hItem)
+	{
+		HTREEITEM hNextItem = CTreeCtrl::GetNextItem(hItem, TVGN_NEXT);
+		if (ItemHasChildren(hItem))
+			MemDeleteAllItems(GetChildItem(hItem));
 
-		CTreeOptionsItemData* pItem = (CTreeOptionsItemData*)CTreeCtrl::GetItemData(hItem); 
-		delete pItem; 
-		SetItemData(hItem, 0);  
+		CTreeOptionsItemData* pItem = (CTreeOptionsItemData*)CTreeCtrl::GetItemData(hItem);
+		delete pItem;
+		SetItemData(hItem, 0);
 
 		//let the base class do its thing
-		CTreeCtrl::DeleteItem(hItem); 
+		CTreeCtrl::DeleteItem(hItem);
 
 		//Move on to the next item
-		hItem = hNextItem; 
-	} 
+		hItem = hNextItem;
+	}
 }
 
-void CTreeOptionsCtrl::OnDestroy() 
+void CTreeOptionsCtrl::OnDestroy()
 {
 	//Destroy the old combo or edit box if need be
 	DestroyOldChildControl();
@@ -1807,7 +1809,7 @@ BOOL CTreeOptionsCtrl::DeleteAllItems()
 	return CTreeCtrl::DeleteAllItems();
 }
 
-void CTreeOptionsCtrl::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
+void CTreeOptionsCtrl::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	if (!(pScrollBar && pScrollBar->IsKindOf(RUNTIME_CLASS(CTreeOptionsSpinCtrl))))
 	{
@@ -1824,7 +1826,7 @@ void CTreeOptionsCtrl::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar
 	}
 }
 
-void CTreeOptionsCtrl::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
+void CTreeOptionsCtrl::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	//Clean up any controls currently open we used
 	if (m_hControlItem)
@@ -1837,10 +1839,10 @@ void CTreeOptionsCtrl::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar
 	CTreeCtrl::OnHScroll(nSBCode, nPos, pScrollBar);
 }
 
-BOOL CTreeOptionsCtrl::OnNmClick(NMHDR* /*pNMHDR*/, LRESULT* pResult) 
+BOOL CTreeOptionsCtrl::OnNmClick(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
 	//If the mouse was over the label or icon and the item is a combo box
-	//or edit box and editing is currently not active then create the 
+	//or edit box and editing is currently not active then create the
 	//new control
 	UINT uFlags=0;
 	CPoint point = GetCurrentMessage()->pt;
@@ -1862,10 +1864,10 @@ BOOL CTreeOptionsCtrl::OnNmClick(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 	return FALSE;
 }
 
-void CTreeOptionsCtrl::OnKillFocus(CWnd* pNewWnd) 
+void CTreeOptionsCtrl::OnKillFocus(CWnd* pNewWnd)
 {
 	//Clean up any controls currently open if we are losing focus to something else
-	BOOL bForeignWnd = (m_hControlItem && (pNewWnd != m_pCombo) && (pNewWnd != m_pEdit) && 
+	BOOL bForeignWnd = (m_hControlItem && (pNewWnd != m_pCombo) && (pNewWnd != m_pEdit) &&
 		(pNewWnd != m_pDateTime) && (pNewWnd != m_pIPAddress) && (pNewWnd != m_pButton));
 	if (bForeignWnd && m_pCombo)
 		bForeignWnd = !m_pCombo->IsRelatedWnd(pNewWnd);
@@ -1906,16 +1908,16 @@ int CTreeOptionsCtrl::GetIndentPostion(HTREEITEM hItem) const
 	return nAncestors * uIndent;
 }
 
-BOOL CTreeOptionsCtrl::OnCustomDraw(NMHDR* pNMHDR, LRESULT* pResult) 
+BOOL CTreeOptionsCtrl::OnCustomDraw(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	NMTVCUSTOMDRAW* pCustomDraw = (NMTVCUSTOMDRAW*) pNMHDR;
-	switch (pCustomDraw->nmcd.dwDrawStage) 
+	switch (pCustomDraw->nmcd.dwDrawStage)
 	{
 	case CDDS_PREPAINT:
 		{
 			*pResult = CDRF_NOTIFYITEMDRAW; //Tell the control that we are interested in item notifications
 			break;
-		}	
+		}
 	case CDDS_ITEMPREPAINT:
 		{
 			//Just let me know about post painting
@@ -2088,12 +2090,12 @@ BEGIN_MESSAGE_MAP(CTreeOptionsCombo, CComboBox)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-UINT CTreeOptionsCombo::OnGetDlgCode() 
+UINT CTreeOptionsCombo::OnGetDlgCode()
 {
 	return CComboBox::OnGetDlgCode() | DLGC_WANTTAB;
 }
 
-void CTreeOptionsCombo::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags) 
+void CTreeOptionsCombo::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	if (nChar == VK_TAB)
 	{
@@ -2133,15 +2135,15 @@ BOOL CTreeOptionsCombo::IsRelatedWnd(CWnd* pChild)
 	if (!bRelated)
 	{
 		ASSERT(m_pTreeCtrl);
-		bRelated = (pChild == m_pTreeCtrl->m_pButton); 
+		bRelated = (pChild == m_pTreeCtrl->m_pButton);
 		if (!bRelated)
-			bRelated = (pChild == m_pTreeCtrl->m_pSpin); 
+			bRelated = (pChild == m_pTreeCtrl->m_pSpin);
 	}
 
 	return bRelated;
 }
 
-void CTreeOptionsCombo::OnKillFocus(CWnd* pNewWnd) 
+void CTreeOptionsCombo::OnKillFocus(CWnd* pNewWnd)
 {
 	//Let the parent class do its thing
 	CComboBox::OnKillFocus(pNewWnd);
@@ -2173,7 +2175,7 @@ BEGIN_MESSAGE_MAP(CTreeOptionsFontNameCombo, CTreeOptionsCombo)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-int CTreeOptionsFontNameCombo::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+int CTreeOptionsFontNameCombo::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	//Let the parent class do its thing
 	if (CTreeOptionsCombo::OnCreate(lpCreateStruct) == -1)
@@ -2199,12 +2201,12 @@ int CTreeOptionsFontNameCombo::EnumFontProc(CONST LOGFONT* lplf, CONST TEXTMETRI
 
 int CALLBACK CTreeOptionsFontNameCombo::_EnumFontProc(CONST LOGFONT* lplf, CONST TEXTMETRIC* lptm,
 													  DWORD dwType, LPARAM lpData)
-{ 
+{
 	//Convert from the SDK world to the C++ world
 	CTreeOptionsFontNameCombo* pThis = (CTreeOptionsFontNameCombo*) lpData;
 	ASSERT(pThis);
 	return pThis->EnumFontProc(lplf, lptm, dwType);
-} 
+}
 
 DWORD CTreeOptionsFontNameCombo::GetWindowStyle()
 {
@@ -2218,7 +2220,7 @@ DWORD CTreeOptionsFontNameCombo::GetWindowStyle()
 
 
 
-//The following line is to fix a bug in VC 6 where the CDateTimeCtrl 
+//The following line is to fix a bug in VC 6 where the CDateTimeCtrl
 //does not correctly expose it's runtime information when you link
 //to MFC as a DLL
 #ifdef _AFXDLL
@@ -2228,6 +2230,7 @@ IMPLEMENT_DYNAMIC(CDateTimeCtrl, CWnd)
 IMPLEMENT_DYNCREATE(CTreeOptionsDateCtrl, CDateTimeCtrl)
 
 CTreeOptionsDateCtrl::CTreeOptionsDateCtrl()
+	: m_SystemTime()
 {
 	m_pTreeCtrl = NULL;
 	m_bDoNotDestroyUponLoseFocus = FALSE;
@@ -2246,12 +2249,12 @@ BEGIN_MESSAGE_MAP(CTreeOptionsDateCtrl, CDateTimeCtrl)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-UINT CTreeOptionsDateCtrl::OnGetDlgCode() 
+UINT CTreeOptionsDateCtrl::OnGetDlgCode()
 {
 	return CDateTimeCtrl::OnGetDlgCode() | DLGC_WANTTAB;
 }
 
-void CTreeOptionsDateCtrl::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags) 
+void CTreeOptionsDateCtrl::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	if (nChar == VK_TAB)
 	{
@@ -2270,7 +2273,7 @@ DWORD CTreeOptionsDateCtrl::GetWindowStyle()
 	return WS_CHILD | WS_VISIBLE | DTS_SHORTDATEFORMAT;
 }
 
-void CTreeOptionsDateCtrl::OnKillFocus(CWnd* pNewWnd) 
+void CTreeOptionsDateCtrl::OnKillFocus(CWnd* pNewWnd)
 {
 	//Let the parent class do its thing
 	CDateTimeCtrl::OnKillFocus(pNewWnd);
@@ -2334,6 +2337,7 @@ DWORD CTreeOptionsTimeCtrl::GetWindowStyle()
 IMPLEMENT_DYNCREATE(CTreeOptionsIPAddressCtrl, CIPAddressCtrl)
 
 CTreeOptionsIPAddressCtrl::CTreeOptionsIPAddressCtrl()
+	: m_dwAddress(0)
 {
 	m_pTreeCtrl = NULL;
 	m_bDoNotDestroyUponLoseFocus = FALSE;
@@ -2352,12 +2356,12 @@ BEGIN_MESSAGE_MAP(CTreeOptionsIPAddressCtrl, CIPAddressCtrl)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-UINT CTreeOptionsIPAddressCtrl::OnGetDlgCode() 
+UINT CTreeOptionsIPAddressCtrl::OnGetDlgCode()
 {
 	return CIPAddressCtrl::OnGetDlgCode() | DLGC_WANTTAB;
 }
 
-void CTreeOptionsIPAddressCtrl::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags) 
+void CTreeOptionsIPAddressCtrl::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	if (nChar == VK_TAB)
 	{
@@ -2376,7 +2380,7 @@ DWORD CTreeOptionsIPAddressCtrl::GetWindowStyle()
 	return WS_CHILD | WS_VISIBLE;
 }
 
-void CTreeOptionsIPAddressCtrl::OnKillFocus(CWnd* pNewWnd) 
+void CTreeOptionsIPAddressCtrl::OnKillFocus(CWnd* pNewWnd)
 {
 	//Let the parent class do its thing
 	CIPAddressCtrl::OnKillFocus(pNewWnd);
@@ -2392,8 +2396,8 @@ void CTreeOptionsIPAddressCtrl::OnKillFocus(CWnd* pNewWnd)
 CString CTreeOptionsIPAddressCtrl::GetDisplayText(DWORD dwAddress)
 {
 	CString sAddress;
-	sAddress.Format(_T("%d.%d.%d.%d"), (dwAddress & 0xFF000000) >> 24, 
-		(dwAddress & 0xFF0000) >> 16, (dwAddress & 0xFF00) >> 8,
+	sAddress.Format(_T("%u.%u.%u.%u"), (dwAddress >> 24) & 0xFF,
+		(dwAddress >> 16) & 0xFF, (dwAddress >> 8) & 0xFF,
 		(dwAddress & 0xFF));
 	return sAddress;
 }
@@ -2439,7 +2443,7 @@ BEGIN_MESSAGE_MAP(CTreeOptionsBooleanCombo, CTreeOptionsCombo)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-int CTreeOptionsBooleanCombo::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+int CTreeOptionsBooleanCombo::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	//Let the parent class do its thing
 	if (CTreeOptionsCombo::OnCreate(lpCreateStruct) == -1)
@@ -2482,18 +2486,18 @@ BEGIN_MESSAGE_MAP(CTreeOptionsEdit, CEdit)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-UINT CTreeOptionsEdit::OnGetDlgCode() 
+UINT CTreeOptionsEdit::OnGetDlgCode()
 {
 	return CEdit::OnGetDlgCode() | DLGC_WANTTAB;
 }
 
-void CTreeOptionsEdit::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags) 
+void CTreeOptionsEdit::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	if (nChar == VK_TAB)
 	{
 		ASSERT(m_pTreeCtrl);
 		if (m_pTreeCtrl->m_pButton)
-			m_pTreeCtrl->m_pButton->SetFocus();  
+			m_pTreeCtrl->m_pButton->SetFocus();
 		else
 			m_pTreeCtrl->SetFocus();
 	}
@@ -2514,7 +2518,7 @@ int CTreeOptionsEdit::GetHeight(int nItemHeight)
 	return max(nItemHeight, 20);
 }
 
-void CTreeOptionsEdit::OnKillFocus(CWnd* pNewWnd) 
+void CTreeOptionsEdit::OnKillFocus(CWnd* pNewWnd)
 {
 	//Let the parent class do its thing
 	CEdit::OnKillFocus(pNewWnd);
@@ -2627,14 +2631,14 @@ BEGIN_MESSAGE_MAP(CTreeOptionsSpinCtrl, CSpinButtonCtrl)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-void CTreeOptionsSpinCtrl::SetTreeBuddy(CTreeOptionsCtrl* pTreeCtrl) 
-{ 
-	m_pTreeCtrl = pTreeCtrl; 
+void CTreeOptionsSpinCtrl::SetTreeBuddy(CTreeOptionsCtrl* pTreeCtrl)
+{
+	m_pTreeCtrl = pTreeCtrl;
 }
 
-void CTreeOptionsSpinCtrl::SetEditBuddy(CTreeOptionsEdit* pEdit) 
-{ 
-	m_pEdit = pEdit; 
+void CTreeOptionsSpinCtrl::SetEditBuddy(CTreeOptionsEdit* pEdit)
+{
+	m_pEdit = pEdit;
 }
 
 DWORD CTreeOptionsSpinCtrl::GetWindowStyle()
@@ -2648,7 +2652,7 @@ void CTreeOptionsSpinCtrl::GetDefaultRange(int &lower, int& upper)
 	upper = 100;
 }
 
-void CTreeOptionsSpinCtrl::OnKillFocus(CWnd* pNewWnd) 
+void CTreeOptionsSpinCtrl::OnKillFocus(CWnd* pNewWnd)
 {
 	//Let the parent class do its thing
 	CSpinButtonCtrl::OnKillFocus(pNewWnd);
@@ -2665,6 +2669,7 @@ void CTreeOptionsSpinCtrl::OnKillFocus(CWnd* pNewWnd)
 IMPLEMENT_DYNCREATE(CTreeOptionsBrowseButton, CButton)
 
 CTreeOptionsBrowseButton::CTreeOptionsBrowseButton()
+	: m_Color(), m_Font()
 {
 	m_pTreeCtrl = NULL;
 	m_pEdit = NULL;
@@ -2684,14 +2689,14 @@ BEGIN_MESSAGE_MAP(CTreeOptionsBrowseButton, CButton)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-void CTreeOptionsBrowseButton::SetTreeBuddy(CTreeOptionsCtrl* pTreeCtrl) 
-{ 
-	m_pTreeCtrl = pTreeCtrl; 
+void CTreeOptionsBrowseButton::SetTreeBuddy(CTreeOptionsCtrl* pTreeCtrl)
+{
+	m_pTreeCtrl = pTreeCtrl;
 }
 
-void CTreeOptionsBrowseButton::SetEditBuddy(CTreeOptionsEdit* pEdit) 
-{ 
-	m_pEdit = pEdit; 
+void CTreeOptionsBrowseButton::SetEditBuddy(CTreeOptionsEdit* pEdit)
+{
+	m_pEdit = pEdit;
 }
 
 void CTreeOptionsBrowseButton::SetComboBuddy(CTreeOptionsCombo* pCombo)
@@ -2734,7 +2739,7 @@ int CTreeOptionsBrowseButton::GetWidth()
 	return nButtonWidth;
 }
 
-void CTreeOptionsBrowseButton::OnKillFocus(CWnd* pNewWnd) 
+void CTreeOptionsBrowseButton::OnKillFocus(CWnd* pNewWnd)
 {
 	//Let the parent class do its thing
 	CButton::OnKillFocus(pNewWnd);
@@ -2751,7 +2756,7 @@ void CTreeOptionsBrowseButton::OnKillFocus(CWnd* pNewWnd)
 	}
 }
 
-void CTreeOptionsBrowseButton::OnClicked() 
+void CTreeOptionsBrowseButton::OnClicked()
 {
 	ASSERT(m_pTreeCtrl);
 
@@ -2822,7 +2827,7 @@ void CTreeOptionsBrowseButton::BrowseForColor()
 		SetColor(dialog.GetColor());
 		m_pTreeCtrl->SetColor(m_pTreeCtrl->GetSelectedItem(), m_Color);
 
-		//Ask the tree control to reposition the button if need be  
+		//Ask the tree control to reposition the button if need be
 		m_pTreeCtrl->PostMessage(WM_TOC_REPOSITION_CHILD_CONTROL);
 	}
 }
@@ -2838,7 +2843,7 @@ void CTreeOptionsBrowseButton::BrowseForFont()
 		dialog.GetCurrentFont(&m_Font);
 		m_pTreeCtrl->SetFontItem(m_pTreeCtrl->GetSelectedItem(), &m_Font);
 
-		//Ask the tree control to reposition the button if need be  
+		//Ask the tree control to reposition the button if need be
 		m_pTreeCtrl->PostMessage(WM_TOC_REPOSITION_CHILD_CONTROL);
 	}
 }
@@ -2846,10 +2851,10 @@ void CTreeOptionsBrowseButton::BrowseForFont()
 void CTreeOptionsBrowseButton::BrowseForOpaque()
 {
 	ASSERT(FALSE); //Derived classes must implement this function if we are editing
-	//an opaque item. The code which "normally" display some CDialog 
+	//an opaque item. The code which "normally" display some CDialog
 	//derived class to allow the item to be edited and then hive the
 	//data away somehow so that it can show the new value when the
-	//dialog is brought up again. Following is some pseudo code which 
+	//dialog is brought up again. Following is some pseudo code which
 	//would do this.
 
 	/*
@@ -2868,9 +2873,9 @@ void CTreeOptionsBrowseButton::BrowseForOpaque()
 	*/
 }
 
-void CTreeOptionsBrowseButton::SetColor(COLORREF color) 
-{ 
-	m_Color = color; 
+void CTreeOptionsBrowseButton::SetColor(COLORREF color)
+{
+	m_Color = color;
 }
 
 void CTreeOptionsBrowseButton::GetFontItem(LOGFONT* pLogFont)
@@ -2892,7 +2897,7 @@ void CTreeOptionsBrowseButton::SetFontItem(const LOGFONT* pLogFont)
 
 IMPLEMENT_DYNAMIC(CTreeOptionsFileDialog, CFileDialog)
 
-CTreeOptionsFileDialog::CTreeOptionsFileDialog(BOOL bOpenFileDialog, LPCTSTR lpszDefExt, LPCTSTR lpszFileName, DWORD dwFlags, LPCTSTR lpszFilter, 
+CTreeOptionsFileDialog::CTreeOptionsFileDialog(BOOL bOpenFileDialog, LPCTSTR lpszDefExt, LPCTSTR lpszFileName, DWORD dwFlags, LPCTSTR lpszFilter,
 											   CWnd* pParentWnd) :	CFileDialog(bOpenFileDialog, lpszDefExt, lpszFileName, dwFlags, lpszFilter, pParentWnd)
 {
 }
@@ -3128,7 +3133,7 @@ HTREEITEM CTreeOptionsCtrl::CopyItem(HTREEITEM hItem, HTREEITEM htiNewParent, HT
 	tvstruct.item.mask |= TVIF_TEXT;
 	HTREEITEM hNewItem = InsertItem(&tvstruct);
 
-	//Don't forget to release the CString buffer  
+	//Don't forget to release the CString buffer
 	sText.ReleaseBuffer();
 
 	return hNewItem;
@@ -3146,3 +3151,4 @@ HTREEITEM CTreeOptionsCtrl::CopyBranch(HTREEITEM htiBranch, HTREEITEM htiNewPare
 	}
 	return hNewItem;
 }
+#pragma warning(pop)

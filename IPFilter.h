@@ -34,9 +34,9 @@ struct SIPFilter
 
 #define	DFLT_IPFILTER_FILENAME	_T("ipfilter.dat")
 
-// 'CArray' would give us more cach hits, but would also be slow in array element creation 
+// 'CArray' would give us more cache hits, but would also be slow in array element creation
 // (because of the implicit ctor in 'SIPFilter'
-//typedef CArray<SIPFilter, SIPFilter> CIPFilterArray; 
+//typedef CArray<SIPFilter, SIPFilter> CIPFilterArray;
 typedef CTypedPtrArray<CPtrArray, SIPFilter*> CIPFilterArray;
 
 class CIPFilter
@@ -45,7 +45,7 @@ public:
 	CIPFilter();
 	~CIPFilter();
 
-	CString GetDefaultFilePath() const;
+	static CString GetDefaultFilePath();
 
 	void AddIPRange(uint32 start, uint32 end, UINT level, const CStringA& rstrDesc) {
 		m_iplist.Add(new SIPFilter(start, end, level, rstrDesc));
@@ -68,6 +68,6 @@ private:
 	CIPFilterArray m_iplist;
 	bool m_bModified;
 
-	bool ParseFilterLine1(const CStringA& rstrBuffer, uint32& ip1, uint32& ip2, UINT& level, CStringA& rstrDesc) const;
-	bool ParseFilterLine2(const CStringA& rstrBuffer, uint32& ip1, uint32& ip2, UINT& level, CStringA& rstrDesc) const;
+	static bool ParseFilterLine1(const CStringA& rstrBuffer, uint32& ip1, uint32& ip2, UINT& level, CStringA& rstrDesc);
+	static bool ParseFilterLine2(const CStringA& rstrBuffer, uint32& ip1, uint32& ip2, UINT& level, CStringA& rstrDesc);
 };

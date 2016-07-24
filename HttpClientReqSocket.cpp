@@ -38,8 +38,8 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNCREATE(CHttpClientReqSocket, CClientReqSocket)
 
-CHttpClientReqSocket::CHttpClientReqSocket(CUpDownClient* client)
-	: CClientReqSocket(client)
+CHttpClientReqSocket::CHttpClientReqSocket(CUpDownClient* pclient)
+	: CClientReqSocket(pclient)
 {
 	SetHttpState(HttpStateUnknown);
 	SetConnectionEncryption(false, NULL, false); // just to make sure - disable protocol encryption explicit
@@ -90,25 +90,25 @@ void CHttpClientReqSocket::DataReceived(const BYTE* pucData, UINT uSize)
 	}
 	catch(CMemoryException* ex)
 	{
-		strError.Format(_T("Error: HTTP socket: Memory exception; %s"), DbgGetClientInfo());
+		strError.Format(_T("Error: HTTP socket: Memory exception; %s"), (LPCTSTR)DbgGetClientInfo());
 		if (thePrefs.GetVerbose())
-			AddDebugLogLine(false, _T("%s"), strError);
+			AddDebugLogLine(false, _T("%s"), (LPCTSTR)strError);
 		ex->Delete();
 	}
 	catch(CFileException* ex)
 	{
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		ex->GetErrorMessage(szError, ARRSIZE(szError));
+		GetExceptionMessage(*ex, szError, ARRSIZE(szError));
 		strError.Format(_T("Error: HTTP socket: File exception - %s"), szError);
 		if (thePrefs.GetVerbose())
-			AddDebugLogLine(false, _T("%s"), strError);
+			AddDebugLogLine(false, _T("%s"), (LPCTSTR)strError);
 		ex->Delete();
 	}
-	catch(CString ex)
+	catch (const CString& ex)
 	{
-		strError.Format(_T("Error: HTTP socket: %s; %s"), ex, DbgGetClientInfo());
+		strError.Format(_T("Error: HTTP socket: %s; %s"), (LPCTSTR)ex, (LPCTSTR)DbgGetClientInfo());
 		if (thePrefs.GetVerbose())
-			AddDebugLogLine(false, _T("%s"), strError);
+			AddDebugLogLine(false, _T("%s"), (LPCTSTR)strError);
 	}
 
 	if (!bResult && !deletethis)
@@ -116,7 +116,7 @@ void CHttpClientReqSocket::DataReceived(const BYTE* pucData, UINT uSize)
 		if (thePrefs.GetVerbose() && thePrefs.GetDebugClientTCPLevel() <= 0)
 		{
 			for (int i = 0; i < m_astrHttpHeaders.GetCount(); i++)
-				AddDebugLogLine(false, _T("<%hs"), m_astrHttpHeaders.GetAt(i));
+				AddDebugLogLine(false, _T("<%hs"), (LPCSTR)m_astrHttpHeaders[i]);
 		}
 
 		// In case this socket is attached to an CUrlClient, we are dealing with the real CUpDownClient here
@@ -308,8 +308,8 @@ void CHttpClientReqSocket::ProcessHttpHeaderPacket(const char* packet, UINT size
 
 IMPLEMENT_DYNCREATE(CHttpClientDownSocket, CHttpClientReqSocket)
 
-CHttpClientDownSocket::CHttpClientDownSocket(CUpDownClient* client)
-	: CHttpClientReqSocket(client)
+CHttpClientDownSocket::CHttpClientDownSocket(CUpDownClient* pclient)
+	: CHttpClientReqSocket(pclient)
 {
 }
 
@@ -332,7 +332,7 @@ bool CHttpClientDownSocket::ProcessHttpResponseBody(const BYTE* pucData, UINT si
 {
 	if (GetClient() == NULL)
 		throw CString(__FUNCTION__ " - No client attached to HTTP socket");
-	
+
 	GetClient()->ProcessHttpDownResponseBody(pucData, size);
 
 	return true;

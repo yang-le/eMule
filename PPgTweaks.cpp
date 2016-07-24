@@ -56,6 +56,7 @@ END_MESSAGE_MAP()
 CPPgTweaks::CPPgTweaks()
 	: CPropertyPage(CPPgTweaks::IDD)
 	, m_ctrlTreeOptions(theApp.m_iDfltImageListColorFlags)
+	, m_iDynUpPingToleranceMilliseconds(0), m_iDynUpRadioPingTolerance(0), m_htiExtractMetaDataNever(NULL), m_htiExtractMetaDataID3Lib(NULL)
 {
 	m_iFileBufferSize = 0;
 	m_iQueueSize = 0;
@@ -176,7 +177,7 @@ void CPPgTweaks::DoDataExchange(CDataExchange* pDX)
 		int iImgLog = 8;
 		int iImgDynyp = 8;
 		int iImgConnection = 8;
-		int iImgA4AF = 8;
+//		int iImgA4AF = 8;
 		int iImgMetaData = 8;
 		int iImgUPnP = 8;
 		int iImgShareeMule = 8;
@@ -186,8 +187,8 @@ void CPPgTweaks::DoDataExchange(CDataExchange* pDX)
 			iImgLog =		piml->Add(CTempIconLoader(_T("Log")));
 			iImgDynyp =		piml->Add(CTempIconLoader(_T("upload")));
 			iImgConnection=	piml->Add(CTempIconLoader(_T("connection")));
-            iImgA4AF =		piml->Add(CTempIconLoader(_T("Download")));
-            iImgMetaData =	piml->Add(CTempIconLoader(_T("MediaInfo")));
+//			iImgA4AF =		piml->Add(CTempIconLoader(_T("Download")));
+			iImgMetaData =	piml->Add(CTempIconLoader(_T("MediaInfo")));
 			iImgUPnP =		piml->Add(CTempIconLoader(_T("connectedhighhigh")));
 			iImgShareeMule =piml->Add(CTempIconLoader(_T("viewfiles")));
 		}
@@ -292,7 +293,7 @@ void CPPgTweaks::DoDataExchange(CDataExchange* pDX)
 		m_htiShareeMuleMultiUser = m_ctrlTreeOptions.InsertRadioButton(GetResString(IDS_SHAREEMULEMULTI), m_htiShareeMule, m_iShareeMule == 0);
 		m_htiShareeMulePublicUser = m_ctrlTreeOptions.InsertRadioButton(GetResString(IDS_SHAREEMULEPUBLIC), m_htiShareeMule, m_iShareeMule == 1);
 		m_htiShareeMuleOldStyle = m_ctrlTreeOptions.InsertRadioButton(GetResString(IDS_SHAREEMULEOLD), m_htiShareeMule, m_iShareeMule == 2);
-		
+
 
 	    m_ctrlTreeOptions.Expand(m_htiTCPGroup, TVE_EXPAND);
         if (m_htiVerboseGroup)
@@ -330,7 +331,7 @@ void CPPgTweaks::DoDataExchange(CDataExchange* pDX)
     DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiA4AFSaveCpu, m_bA4AFSaveCpu);
 	DDX_TreeEdit(pDX, IDC_EXT_OPTS, m_htiYourHostname, m_sYourHostname);
 	DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiAutoArch, m_bAutoArchDisable);
-	
+
 	/////////////////////////////////////////////////////////////////////////////
 	// File related group
 	//
@@ -339,7 +340,7 @@ void CPPgTweaks::DoDataExchange(CDataExchange* pDX)
 	DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiFullAlloc, m_bFullAlloc);
 	DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiCheckDiskspace, m_bCheckDiskspace);
 	DDX_Text(pDX, IDC_EXT_OPTS, m_htiMinFreeDiskSpace, m_fMinFreeDiskSpaceMB);
-	DDV_MinMaxFloat(pDX, m_fMinFreeDiskSpaceMB, 0.0, UINT_MAX / (1024*1024));
+	DDV_MinMaxFloat(pDX, m_fMinFreeDiskSpaceMB, 0.0, UINT_MAX / (float)(1024*1024));
 	DDX_TreeRadio(pDX, IDC_EXT_OPTS, m_htiCommit, m_iCommitFiles);
 	DDX_TreeRadio(pDX, IDC_EXT_OPTS, m_htiExtractMetaData, m_iExtractMetaData);
 	DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiResolveShellLinks, m_bResolveShellLinks);
@@ -351,26 +352,45 @@ void CPPgTweaks::DoDataExchange(CDataExchange* pDX)
 	if (m_htiLogLevel){
 		DDX_TreeEdit(pDX, IDC_EXT_OPTS, m_htiLogLevel, m_iLogLevel);
 		DDV_MinMaxInt(pDX, m_iLogLevel, 1, 5);
-	}	
-	if (m_htiVerbose)				DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiVerbose, m_bVerbose);
-	if (m_htiDebug2Disk)			DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiDebug2Disk, m_bDebug2Disk);
-	if (m_htiDebug2Disk)			m_ctrlTreeOptions.SetCheckBoxEnable(m_htiDebug2Disk, m_bVerbose);
-	if (m_htiDebugSourceExchange)	DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiDebugSourceExchange, m_bDebugSourceExchange);
-	if (m_htiDebugSourceExchange)	m_ctrlTreeOptions.SetCheckBoxEnable(m_htiDebugSourceExchange, m_bVerbose);
-	if (m_htiLogBannedClients)		DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiLogBannedClients, m_bLogBannedClients);
-	if (m_htiLogBannedClients)		m_ctrlTreeOptions.SetCheckBoxEnable(m_htiLogBannedClients, m_bVerbose);
-	if (m_htiLogRatingDescReceived) DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiLogRatingDescReceived, m_bLogRatingDescReceived);
-	if (m_htiLogRatingDescReceived) m_ctrlTreeOptions.SetCheckBoxEnable(m_htiLogRatingDescReceived, m_bVerbose);
-	if (m_htiLogSecureIdent)		DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiLogSecureIdent, m_bLogSecureIdent);
-	if (m_htiLogSecureIdent)		m_ctrlTreeOptions.SetCheckBoxEnable(m_htiLogSecureIdent, m_bVerbose);
-	if (m_htiLogFilteredIPs)		DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiLogFilteredIPs, m_bLogFilteredIPs);
-	if (m_htiLogFilteredIPs)		m_ctrlTreeOptions.SetCheckBoxEnable(m_htiLogFilteredIPs, m_bVerbose);
-	if (m_htiLogFileSaving)			DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiLogFileSaving, m_bLogFileSaving);
-	if (m_htiLogFileSaving)			m_ctrlTreeOptions.SetCheckBoxEnable(m_htiLogFileSaving, m_bVerbose);
-    if (m_htiLogA4AF)			    DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiLogA4AF, m_bLogA4AF);
-	if (m_htiLogA4AF)               m_ctrlTreeOptions.SetCheckBoxEnable(m_htiLogA4AF, m_bVerbose);
-	if (m_htiLogUlDlEvents)			DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiLogUlDlEvents, m_bLogUlDlEvents);
-	if (m_htiLogUlDlEvents)         m_ctrlTreeOptions.SetCheckBoxEnable(m_htiLogUlDlEvents, m_bVerbose);
+	}
+	if (m_htiVerbose)
+		DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiVerbose, m_bVerbose);
+	if (m_htiDebug2Disk) {
+		DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiDebug2Disk, m_bDebug2Disk);
+		m_ctrlTreeOptions.SetCheckBoxEnable(m_htiDebug2Disk, m_bVerbose);
+	}
+	if (m_htiDebugSourceExchange) {
+		DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiDebugSourceExchange, m_bDebugSourceExchange);
+		m_ctrlTreeOptions.SetCheckBoxEnable(m_htiDebugSourceExchange, m_bVerbose);
+	}
+	if (m_htiLogBannedClients) {
+		DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiLogBannedClients, m_bLogBannedClients);
+		m_ctrlTreeOptions.SetCheckBoxEnable(m_htiLogBannedClients, m_bVerbose);
+	}
+	if (m_htiLogRatingDescReceived) {
+		DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiLogRatingDescReceived, m_bLogRatingDescReceived);
+		m_ctrlTreeOptions.SetCheckBoxEnable(m_htiLogRatingDescReceived, m_bVerbose);
+	}
+	if (m_htiLogSecureIdent) {
+		DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiLogSecureIdent, m_bLogSecureIdent);
+		m_ctrlTreeOptions.SetCheckBoxEnable(m_htiLogSecureIdent, m_bVerbose);
+	}
+	if (m_htiLogFilteredIPs) {
+		DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiLogFilteredIPs, m_bLogFilteredIPs);
+		m_ctrlTreeOptions.SetCheckBoxEnable(m_htiLogFilteredIPs, m_bVerbose);
+	}
+	if (m_htiLogFileSaving) {
+		DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiLogFileSaving, m_bLogFileSaving);
+		m_ctrlTreeOptions.SetCheckBoxEnable(m_htiLogFileSaving, m_bVerbose);
+	}
+	if (m_htiLogA4AF) {
+		DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiLogA4AF, m_bLogA4AF);
+		m_ctrlTreeOptions.SetCheckBoxEnable(m_htiLogA4AF, m_bVerbose);
+	}
+	if (m_htiLogUlDlEvents) {
+		DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiLogUlDlEvents, m_bLogUlDlEvents);
+		m_ctrlTreeOptions.SetCheckBoxEnable(m_htiLogUlDlEvents, m_bVerbose);
+	}
 
 	/////////////////////////////////////////////////////////////////////////////
 	// USS group
@@ -437,7 +457,7 @@ BOOL CPPgTweaks::OnInitDialog()
 	m_bResolveShellLinks = thePrefs.GetResolveSharedShellLinks();
 	m_fMinFreeDiskSpaceMB = (float)(thePrefs.m_uMinFreeDiskSpace / (1024.0 * 1024.0));
 	m_sYourHostname = thePrefs.GetYourHostname();
-	m_bFirewallStartup = ((thePrefs.GetWindowsVersion() == _WINVER_XP_) ? thePrefs.m_bOpenPortsOnStartUp : 0); 
+	m_bFirewallStartup = ((thePrefs.GetWindowsVersion() == _WINVER_XP_) ? thePrefs.m_bOpenPortsOnStartUp : 0);
 	m_bAutoArchDisable = !thePrefs.m_bAutomaticArcPreviewStart;
 
     m_bDynUpEnabled = thePrefs.m_bDynUpEnabled;
@@ -595,28 +615,27 @@ BOOL CPPgTweaks::OnApply()
 	return CPropertyPage::OnApply();
 }
 
-void CPPgTweaks::OnHScroll(UINT /*nSBCode*/, UINT /*nPos*/, CScrollBar* pScrollBar) 
+void CPPgTweaks::OnHScroll(UINT /*nSBCode*/, UINT /*nPos*/, CScrollBar* pScrollBar)
 {
 	if (pScrollBar->GetSafeHwnd() == m_ctlFileBuffSize.m_hWnd)
 	{
 		m_iFileBufferSize = m_ctlFileBuffSize.GetPos() * 1024;
         CString temp;
-		temp.Format(_T("%s: %s"), GetResString(IDS_FILEBUFFERSIZE), CastItoXBytes(m_iFileBufferSize, false, false));
+		temp.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_FILEBUFFERSIZE), (LPCTSTR)CastItoXBytes(m_iFileBufferSize, false, false));
 		GetDlgItem(IDC_FILEBUFFERSIZE_STATIC)->SetWindowText(temp);
 		SetModified(TRUE);
 	}
 	else if (pScrollBar->GetSafeHwnd() == m_ctlQueueSize.m_hWnd)
 	{
 		m_iQueueSize = ((CSliderCtrl*)pScrollBar)->GetPos() * 100;
-		CString temp;
-		temp.Format(_T("%s: %s"), GetResString(IDS_QUEUESIZE), GetFormatedUInt(m_iQueueSize));
+		CString temp(GetResString(IDS_QUEUESIZE) + _T(": ") + GetFormatedUInt(m_iQueueSize));
 		GetDlgItem(IDC_QUEUESIZE_STATIC)->SetWindowText(temp);
 		SetModified(TRUE);
 	}
 }
 
 void CPPgTweaks::Localize(void)
-{	
+{
 	if(m_hWnd)
 	{
 		SetWindowText(GetResString(IDS_PW_TWEAK));
@@ -679,10 +698,9 @@ void CPPgTweaks::Localize(void)
 		if (m_htiShareeMuleOldStyle) m_ctrlTreeOptions.SetItemText(m_htiShareeMuleOldStyle, GetResString(IDS_SHAREEMULEOLD));
 		if (m_htiResolveShellLinks) m_ctrlTreeOptions.SetItemText(m_htiResolveShellLinks, GetResString(IDS_RESOLVELINKS));
 
-        CString temp;
-		temp.Format(_T("%s: %s"), GetResString(IDS_FILEBUFFERSIZE), CastItoXBytes(m_iFileBufferSize, false, false));
+        CString temp(GetResString(IDS_FILEBUFFERSIZE)+_T(": ")+CastItoXBytes(m_iFileBufferSize, false, false));
 		GetDlgItem(IDC_FILEBUFFERSIZE_STATIC)->SetWindowText(temp);
-		temp.Format(_T("%s: %s"), GetResString(IDS_QUEUESIZE), GetFormatedUInt(m_iQueueSize));
+		temp = GetResString(IDS_QUEUESIZE) + _T(": ") + GetFormatedUInt(m_iQueueSize);
 		GetDlgItem(IDC_QUEUESIZE_STATIC)->SetWindowText(temp);
 	}
 }
@@ -750,7 +768,7 @@ void CPPgTweaks::OnDestroy()
 	m_htiShareeMuleOldStyle = NULL;
 	//m_htiExtractMetaDataMediaDet = NULL;
 	m_htiResolveShellLinks = NULL;
-    
+
     CPropertyPage::OnDestroy();
 }
 

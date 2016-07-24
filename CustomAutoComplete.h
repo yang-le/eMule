@@ -1,13 +1,13 @@
 //--------------------------------------------------------------------------------------------
 //  Author:         Klaus H. Probst [kprobst@vbbox.com]
-// 
+//
 //--------------------------------------------------------------------------------------------
 #pragma once
 #include <initguid.h>
 #include <shldisp.h>
 #include <shlguid.h>
 
-class CCustomAutoComplete : 
+class CCustomAutoComplete :
 	public IEnumString
 {
 private:
@@ -22,7 +22,7 @@ private:
 	// Constructors/destructors
 public:
 	CCustomAutoComplete();
-	CCustomAutoComplete(const CStringArray& p_sItemList);
+	explicit CCustomAutoComplete(const CStringArray& p_sItemList);
 	~CCustomAutoComplete();
 
 	// Implementation
@@ -39,11 +39,11 @@ public:
 	BOOL RemoveItem(const CString& p_sItem);
 	BOOL RemoveSelectedItem();
 	CString GetItem(int pos);
-	
+
 	BOOL Clear();
 	BOOL Disable();
 	BOOL Enable(VOID);
-	
+
 	BOOL LoadList(LPCTSTR pszFileName);
 	BOOL SaveList(LPCTSTR pszFileName);
 

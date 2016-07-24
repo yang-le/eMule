@@ -39,7 +39,7 @@ class CSharedFileList
 	friend class CClientReqSocket;
 
 public:
-	CSharedFileList(CServerConnect* in_server);
+	explicit CSharedFileList(CServerConnect* in_server);
 	~CSharedFileList();
 
 	void	SendListToServer();
@@ -53,25 +53,25 @@ public:
 	void	ClearED2KPublishInfo();
 	void	ClearKadSourcePublishInfo();
 
-	void	CreateOfferedFilePacket(CKnownFile* cur_file, CSafeMemFile* files, CServer* pServer, CUpDownClient* pClient = NULL);
+	static void	CreateOfferedFilePacket(CKnownFile* cur_file, CSafeMemFile* files, CServer* pServer, CUpDownClient* pClient = NULL);
 
 	bool	SafeAddKFile(CKnownFile* toadd, bool bOnlyAdd = false);
 	void	RepublishFile(CKnownFile* pFile);
-	void	SetOutputCtrl(CSharedFilesCtrl* in_ctrl);	
+	void	SetOutputCtrl(CSharedFilesCtrl* in_ctrl);
 	bool	RemoveFile(CKnownFile* toremove, bool bDeleted = false);	// removes a specific shared file from the list
 	void	UpdateFile(CKnownFile* toupdate);
 	void	AddFileFromNewlyCreatedCollection(const CString& rstrFilePath)		{ CheckAndAddSingleFile(rstrFilePath); }
 
-	// GUI is not initially updated 
+	// GUI is not initially updated
 	bool	AddSingleSharedFile(const CString& rstrFilePath, bool bNoUpdate = false); // includes updating sharing preferences, calls CheckAndAddSingleSharedFile afterwards
-	bool	AddSingleSharedDirectory(const CString& rstrFilePath, bool bNoUpdate = false); 
+	bool	AddSingleSharedDirectory(const CString& rstrFilePath, bool bNoUpdate = false);
 	bool	ExcludeFile(CString strFilePath);	// excludes a specific file from being shared and removes it from the list if it exists
-	
+
 	void	AddKeywords(CKnownFile* pFile);
 	void	RemoveKeywords(CKnownFile* pFile);
 
-	void	CopySharedFileMap(CMap<CCKey,const CCKey&,CKnownFile*,CKnownFile*> &Files_Map);	
-	
+	void	CopySharedFileMap(CMap<CCKey,const CCKey&,CKnownFile*,CKnownFile*> &Files_Map);
+
 	CKnownFile* GetFileByID(const uchar* filehash) const;
 	CKnownFile* GetFileByIdentifier(const CFileIdentifierBase& rFileIdent, bool bStrict = false) const;
 	CKnownFile*	GetFileByIndex(int index) const; // slow
@@ -79,7 +79,7 @@ public:
 
 	bool	IsFilePtrInList(const CKnownFile* file) const; // slow
 	bool	IsUnsharedFile(const uchar* auFileHash) const;
-	bool	ShouldBeShared(CString strPath, CString strFilePath, bool bMustBeShared) const;
+	bool	ShouldBeShared(const CString& strPath, const CString& strFilePath, bool bMustBeShared) const;
 	bool	ContainsSingleSharedFiles(CString strDirectory) const; // includes subdirs
 	CString GetPseudoDirName(const CString& strDirectoryName);
 	CString GetDirNameByPseudo(const CString& strPseudoName) const;
@@ -100,7 +100,7 @@ protected:
 	bool	AddFile(CKnownFile* pFile);
 	void	AddFilesFromDirectory(const CString& rstrDirectory);
 	void	FindSharedFiles();
-	
+
 	void	HashNextFile();
 	bool	IsHashing(const CString& rstrDirectory, const CString& rstrName);
 	void	RemoveFromHashing(CKnownFile* hashed);

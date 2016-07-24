@@ -10,7 +10,7 @@ public:
 	virtual ~CRichEditCtrlX();
 
 	void SetDisableSelectOnFocus(bool bDisable = true);
-	void SetSyntaxColoring(const LPCTSTR* ppszKeywords = NULL, LPCTSTR pszSeperators = NULL);
+	void SetSyntaxColoring(const LPCTSTR* ppszKeywords = NULL, LPCTSTR pszSeparators = NULL);
 
 	CRichEditCtrlX& operator<<(LPCTSTR psz);
 	CRichEditCtrlX& operator<<(char* psz);
@@ -26,7 +26,7 @@ protected:
 	bool m_bForceArrowCursor;
 	HCURSOR m_hArrowCursor;
 	CStringArray m_astrKeywords;
-	CString m_strSeperators;
+	CString m_strSeparators;
 	CHARFORMAT m_cfDef;
 	CHARFORMAT m_cfKeyword;
 

@@ -18,7 +18,6 @@
 #include "emule.h"
 #include "filedetaildlgstatistics.h"
 #include "UserMsgs.h"
-#include "OtherFunctions.h"
 #include "KnownFile.h"
 #include "KnownFileList.h"
 #include "SharedFileList.h"
@@ -196,13 +195,13 @@ void CFileDetailDlgStatistics::RefreshData()
 		pop_bartrans.SetEmpty(false);
 		pop_bartrans.SetRange32(0, (int)(theApp.knownfiles->transferred/1024));
 		pop_bartrans.SetPos((int)(uTransferred/1024));
-		SetDlgItemText(IDC_STRANSFERRED, CastItoXBytes(uTransferred, false, false));
+		SetDlgItemText(IDC_STRANSFERRED, (LPCTSTR)CastItoXBytes(uTransferred, false, false));
 
 		pop_bar.SetEmpty(false);
 		pop_bar.SetRange32(0, theApp.knownfiles->requested);
 		pop_bar.SetPos(uRequests);
 		SetDlgItemInt(IDC_SREQUESTED, uRequests, FALSE);
-		
+
 		pop_baraccept.SetEmpty(false);
 		pop_baraccept.SetRange32(0, theApp.knownfiles->accepted);
 		pop_baraccept.SetPos(uAccepted);
@@ -215,21 +214,21 @@ void CFileDetailDlgStatistics::RefreshData()
 		pop_bar2.SetEmpty(false);
 		pop_bar2.SetRange32(0, theApp.knownfiles->m_nRequestedTotal);
 		pop_bar2.SetPos(uAllTimeRequests);
-		
+
 		pop_baraccept2.SetEmpty(false);
 		pop_baraccept2.SetRange32(0, theApp.knownfiles->m_nAcceptedTotal);
 		pop_baraccept2.SetPos(uAllTimeAccepted);
 
-		SetDlgItemText(IDC_STRANSFERRED2, CastItoXBytes(uAllTimeTransferred, false, false));
+		SetDlgItemText(IDC_STRANSFERRED2, (LPCTSTR)CastItoXBytes(uAllTimeTransferred, false, false));
 		SetDlgItemInt(IDC_SREQUESTED2, uAllTimeRequests, FALSE);
 		SetDlgItemInt(IDC_SACCEPTED2, uAllTimeAccepted, FALSE);
 
 		uint32 nQueueCount = theApp.uploadqueue->GetWaitingUserForFileCount(*m_paFiles, !m_bDataChanged);
-		if (nQueueCount != (-1))
+		if (nQueueCount != (uint32)-1)
 		{
 			SetDlgItemInt(IDC_FS_ONQUEUE_VAL, nQueueCount, FALSE);
 		}
-		SetDlgItemText(IDC_FS_UPLOADING_VAL,  CastItoXBytes(theApp.uploadqueue->GetDatarateForFile(*m_paFiles), false, true));
+		SetDlgItemText(IDC_FS_UPLOADING_VAL, (LPCTSTR)CastItoXBytes(theApp.uploadqueue->GetDatarateForFile(*m_paFiles), false, true));
 
 
 		if (iFiles == 1)
@@ -315,7 +314,7 @@ void CFileDetailDlgStatistics::OnTimer(UINT nIDEvent)
 {
 	if (nIDEvent == REFRESH_TIMER_ID)
 	{
-		if (theApp.emuledlg == NULL || !theApp.emuledlg->IsRunning() || !GetParent()->IsWindowVisible()
+		if (theApp.emuledlg == NULL || theApp.emuledlg->IsClosing() || !GetParent()->IsWindowVisible()
 			|| theApp.emuledlg->GetActiveDialog() != (CWnd*)theApp.emuledlg->sharedfileswnd)
 		{
 			KillTimer(REFRESH_TIMER_ID);

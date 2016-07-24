@@ -47,7 +47,7 @@ public:
 
 protected:
 	CFileIdentifierBase();
-	CFileIdentifierBase(const CFileIdentifierBase& rFileIdentifier);
+	explicit CFileIdentifierBase(const CFileIdentifierBase& rFileIdentifier);
 
 	uchar					m_abyMD4Hash[16];
 	CAICHHash				m_AICHFileHash;
@@ -60,7 +60,7 @@ protected:
 class CFileIdentifier : public CFileIdentifierBase
 {
 public:
-	CFileIdentifier(EMFileSize&	rFileSize);
+	explicit CFileIdentifier(EMFileSize&	rFileSize);
 	CFileIdentifier(const CFileIdentifier& rFileIdentifier, EMFileSize&	rFileSize);
 	virtual ~CFileIdentifier();
 
@@ -84,17 +84,17 @@ public:
 	bool			HasExpectedMD4HashCount() const							{ return GetTheoreticalMD4PartHashCount() == GetAvailableMD4PartHashCount(); }
 
 	CArray<uchar*, uchar*>&	GetRawMD4HashSet()								{ return m_aMD4HashSet; }
-	
+
 	//******************** AICH Related
 	bool			LoadAICHHashsetFromFile(CFileDataIO* pFile, bool bVerify = true); // only set verify to false if you call VerifyAICHHashSet yourself immediately after
 	void			WriteAICHHashsetToFile(CFileDataIO* pFile) const;
-	
+
 	bool			SetAICHHashSet(const CAICHRecoveryHashSet& rSourceHashSet);
 	bool			SetAICHHashSet(const CFileIdentifier& rSourceHashSet);
 
 	bool			VerifyAICHHashSet();
 	uint16			GetTheoreticalAICHPartHashCount() const;
-	uint16			GetAvailableAICHPartHashCount() const					{ return (uint16)m_aAICHPartHashSet.GetCount(); } 
+	uint16			GetAvailableAICHPartHashCount() const					{ return (uint16)m_aAICHPartHashSet.GetCount(); }
 	bool			HasExpectedAICHHashCount() const						{ return GetTheoreticalAICHPartHashCount() == GetAvailableAICHPartHashCount(); }
 
 	const CArray<CAICHHash>&	GetRawAICHHashSet()	const					{ return m_aAICHPartHashSet; }
@@ -112,7 +112,7 @@ class CFileIdentifierSA : public CFileIdentifierBase
 public:
 	CFileIdentifierSA(const uchar* pucFileHash, EMFileSize FileSize, const CAICHHash& rHash, bool bAICHHashValid);
 	CFileIdentifierSA();
-	
+
 	virtual ~CFileIdentifierSA()											{ }
 	virtual EMFileSize GetFileSize() const									{ return m_nFileSize; }
 

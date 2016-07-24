@@ -5,7 +5,7 @@
 #include "ListCtrlEditable.h"
 class CCustomAutoComplete;
 
-typedef enum EOptsRows
+typedef enum
 {
 	orMinSize,
 	orMaxSize,
@@ -18,7 +18,7 @@ typedef enum EOptsRows
 	orTitle,
 	orAlbum,
 	orArtist
-};
+} EOptsRows;
 
 class CSearchParamsWnd : public CDialogBar
 {
@@ -44,7 +44,7 @@ public:
 
 	SSearchParams* GetParameters();
 	void SetParameters(const SSearchParams* pParams);
-	void ProcessEd2kSearchLinkRequest(CString strSearchTerm);
+	void ProcessEd2kSearchLinkRequest(const CString& strSearchTerm);
 
 	virtual CSize CalcDynamicLayout(int, DWORD nMode);
 	virtual void OnUpdateCmdUI(CFrameWnd* pTarget, BOOL bDisableIfNoHndler);

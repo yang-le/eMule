@@ -180,7 +180,7 @@ void CAsyncProxySocketLayer::SetProxy(int nProxyType, const CStringA& strProxyHo
 	m_ProxyData.bUseLogon = FALSE;
 }
 
-void CAsyncProxySocketLayer::SetProxy(int nProxyType, const CStringA& strProxyHost, int ProxyPort, 
+void CAsyncProxySocketLayer::SetProxy(int nProxyType, const CStringA& strProxyHost, int ProxyPort,
 									  const CStringA& strProxyUser, const CStringA& strProxyPass)
 {
 	//Validate the parameters
@@ -287,7 +287,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 				m_pRecvBuffer = new char[8];
 			int numread = ReceiveNext(m_pRecvBuffer + m_nRecvBufferPos, 8 - m_nRecvBufferPos);
 			if (numread == SOCKET_ERROR) {
-				int nErrorCode = WSAGetLastError();
+				nErrorCode = WSAGetLastError();
 				if (nErrorCode != WSAEWOULDBLOCK) {
 					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, nErrorCode);
 					if (m_nProxyOpID == PROXYOP_CONNECT)
@@ -318,7 +318,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 
 			if (m_nRecvBufferPos == 8)
 			{
-				TRACE("SOCKS4 response: VN=%u  CD=%u  DSTPORT=%u  DSTIP=%s\n", (BYTE)m_pRecvBuffer[0], (BYTE)m_pRecvBuffer[1], ntohs(*(u_short*)&m_pRecvBuffer[2]), ipstrA(*(u_long*)&m_pRecvBuffer[4]));
+				TRACE("SOCKS4 response: VN=%u  CD=%u  DSTPORT=%u  DSTIP=%s\n", (BYTE)m_pRecvBuffer[0], (BYTE)m_pRecvBuffer[1], ntohs(*(u_short*)&m_pRecvBuffer[2]), (LPCSTR)ipstrA(*(u_long*)&m_pRecvBuffer[4]));
 				if (m_pRecvBuffer[0] != 0 || m_pRecvBuffer[1] != 90) {
 					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0, (LPARAM)(LPCSTR)GetSocks4Error(m_pRecvBuffer[0], m_pRecvBuffer[1]));
 					if (m_nProxyOpID == PROXYOP_CONNECT)
@@ -387,7 +387,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 				m_pRecvBuffer = new char[2];
 			int numread = ReceiveNext(m_pRecvBuffer + m_nRecvBufferPos, 2 - m_nRecvBufferPos);
 			if (numread == SOCKET_ERROR) {
-				int nErrorCode = WSAGetLastError();
+				nErrorCode = WSAGetLastError();
 				if (nErrorCode != WSAEWOULDBLOCK) {
 					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, nErrorCode);
 					if (m_nProxyOpID == PROXYOP_CONNECT)
@@ -458,14 +458,14 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 					// association with the given UNAME.
 
 					char cBuff[1 + 1 + 255 + 1 + 255];
-					int iLen = _snprintf(cBuff, _countof(cBuff), "\x01%c%s%c%s", 
-						m_ProxyData.strProxyUser.GetLength(), m_ProxyData.strProxyUser, 
-						m_ProxyData.strProxyPass.GetLength(), m_ProxyData.strProxyPass);
+					int iLen = _snprintf(cBuff, _countof(cBuff), "\x01%c%s%c%s",
+						m_ProxyData.strProxyUser.GetLength(), (LPCSTR)m_ProxyData.strProxyUser,
+						m_ProxyData.strProxyPass.GetLength(), (LPCSTR)m_ProxyData.strProxyPass);
 
 					int res = SendNext(cBuff, iLen);
 					if (res == SOCKET_ERROR || res < iLen)
 					{
-						int nErrorCode = WSAGetLastError();
+						nErrorCode = WSAGetLastError();
 						if (nErrorCode != WSAEWOULDBLOCK || res < iLen) {
 							DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, nErrorCode);
 							if (m_nProxyOpID == PROXYOP_CONNECT)
@@ -514,7 +514,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 				int res = SendNext(pcReq, iReqLen);
 				if (res == SOCKET_ERROR || res < iReqLen)
 				{
-					int nErrorCode = WSAGetLastError();
+					nErrorCode = WSAGetLastError();
 					if (nErrorCode != WSAEWOULDBLOCK || res < iReqLen) {
 						DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, nErrorCode);
 						if (m_nProxyOpID == PROXYOP_CONNECT)
@@ -536,7 +536,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 				m_pRecvBuffer = new char[10];
 			int numread = ReceiveNext(m_pRecvBuffer + m_nRecvBufferPos, 10 - m_nRecvBufferPos);
 			if (numread == SOCKET_ERROR) {
-				int nErrorCode = WSAGetLastError();
+				nErrorCode = WSAGetLastError();
 				if (nErrorCode != WSAEWOULDBLOCK) {
 					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, nErrorCode);
 					if (m_nProxyOpID == PROXYOP_CONNECT)
@@ -551,7 +551,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 
 			if (m_nRecvBufferPos == 10)
 			{
-				TRACE("SOCKS5 response: VER=%u  REP=%u  RSV=%u  ATYP=%u  BND.ADDR=%s  BND.PORT=%u\n", (BYTE)m_pRecvBuffer[0], (BYTE)m_pRecvBuffer[1], (BYTE)m_pRecvBuffer[2], (BYTE)m_pRecvBuffer[3], ipstrA(*(u_long*)&m_pRecvBuffer[4]), ntohs(*(u_short*)&m_pRecvBuffer[8]));
+				TRACE("SOCKS5 response: VER=%u  REP=%u  RSV=%u  ATYP=%u  BND.ADDR=%s  BND.PORT=%u\n", (BYTE)m_pRecvBuffer[0], (BYTE)m_pRecvBuffer[1], (BYTE)m_pRecvBuffer[2], (BYTE)m_pRecvBuffer[3], (LPCSTR)ipstrA(*(u_long*)&m_pRecvBuffer[4]), ntohs(*(u_short*)&m_pRecvBuffer[8]));
 				if (m_pRecvBuffer[0] != 5 || m_pRecvBuffer[1] != 0) {
 					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0, (LPARAM)(LPCSTR)GetSocks5Error(m_pRecvBuffer[1]));
 					if (m_nProxyOpID == PROXYOP_CONNECT)
@@ -611,7 +611,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 			char cBuff[4096];
 			int iRead = ReceiveNext(cBuff, sizeof cBuff);
 			if (iRead == SOCKET_ERROR) {
-				int nErrorCode = WSAGetLastError();
+				nErrorCode = WSAGetLastError();
 				if (nErrorCode != WSAEWOULDBLOCK) {
 					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, nErrorCode);
 					Reset();
@@ -657,11 +657,11 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 		// as a NUL-character in the context of 'sscanf'.
 		//
 		UINT uHttpStatus;
-		if (sscanf(m_pStrBuffer, "HTTP/%*u.%*u %u", &uHttpStatus) != 1 || uHttpStatus != 200)
+		if (sscanf(m_pStrBuffer, "HTTP/%*2u.%*2u %4u", &uHttpStatus) != 1 || uHttpStatus != 200)
 		{
 			if (*(DWORD*)m_pStrBuffer == 'PTTH')
 			{
-				TRACE("%hs\n", CStringA(m_pStrBuffer, m_iStrBuffSize).TrimRight("\r\n"));
+				TRACE("%hs\n", (LPCSTR)CStringA(m_pStrBuffer, m_iStrBuffSize).TrimRight("\r\n"));
 				char* pcNl = (char*)memchr(m_pStrBuffer, '\n', m_iStrBuffSize);
 				if (pcNl) {
 					*pcNl = '\0';
@@ -682,7 +682,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 			return;
 		}
 
-		TRACE("%hs\n", CStringA(m_pStrBuffer, m_iStrBuffSize).TrimRight("\r\n"));
+		TRACE("%hs\n", (LPCSTR)CStringA(m_pStrBuffer, m_iStrBuffSize).TrimRight("\r\n"));
 		Reset();
 		ClearBuffer();
 		TriggerEvent(FD_CONNECT, 0, TRUE);
@@ -860,8 +860,8 @@ void CAsyncProxySocketLayer::OnConnect(int nErrorCode)
 
 				pcReq[8] = 0;	// Terminating NUL-byte for USERID
 
-				// Following the NULL byte terminating USERID, the client must send the 
-				// destination domain name and termiantes it with another NULL byte. 
+				// Following the NULL byte terminating USERID, the client must send the
+				// destination domain name and termiantes it with another NULL byte.
 
 				// Add hostname (including terminating NUL-byte)
 				memcpy(&pcReq[9], pszAsciiProxyPeerHost, iSizeAsciiProxyPeerHost);
@@ -874,7 +874,7 @@ void CAsyncProxySocketLayer::OnConnect(int nErrorCode)
 
 			int res = SendNext(pcReq, iReqLen);
 			if (res == SOCKET_ERROR) {
-				int nErrorCode = WSAGetLastError();
+				nErrorCode = WSAGetLastError();
 				DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, nErrorCode);
 				if (m_nProxyOpID == PROXYOP_CONNECT)
 					TriggerEvent(FD_CONNECT, (nErrorCode == WSAEWOULDBLOCK) ? WSAECONNABORTED : nErrorCode, TRUE);
@@ -932,7 +932,7 @@ void CAsyncProxySocketLayer::OnConnect(int nErrorCode)
 
 			int res = SendNext(acReq, iReqLen);
 			if (res == SOCKET_ERROR) {
-				int nErrorCode = WSAGetLastError();
+				nErrorCode = WSAGetLastError();
 				DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, nErrorCode);
 				if (m_nProxyOpID == PROXYOP_CONNECT)
 					TriggerEvent(FD_CONNECT, (nErrorCode == WSAEWOULDBLOCK) ? WSAECONNABORTED : nErrorCode, TRUE);
@@ -967,7 +967,7 @@ void CAsyncProxySocketLayer::OnConnect(int nErrorCode)
 			if (!m_ProxyData.bUseLogon)
 			{
 				if (m_ProxyData.nProxyType == PROXYTYPE_HTTP10) {
-					// The reason why we offer HTTP/1.0 support is just because it 
+					// The reason why we offer HTTP/1.0 support is just because it
 					// allows us to *not *send the "Host" field, thus saving overhead.
 					iHttpReqLen = _snprintf(szHttpReq, _countof(szHttpReq),
 						"CONNECT %s:%u HTTP/1.0\r\n"
@@ -986,7 +986,7 @@ void CAsyncProxySocketLayer::OnConnect(int nErrorCode)
 			else
 			{
 				char szUserPass[512];
-				int iUserPassLen = _snprintf(szUserPass, _countof(szUserPass), "%s:%s", m_ProxyData.strProxyUser, m_ProxyData.strProxyPass);
+				int iUserPassLen = _snprintf(szUserPass, _countof(szUserPass), "%s:%s", (LPCSTR)m_ProxyData.strProxyUser, (LPCSTR)m_ProxyData.strProxyPass);
 
 				char szUserPassBase64[2048];
 				CBase64Coding base64coding;
@@ -1002,9 +1002,9 @@ void CAsyncProxySocketLayer::OnConnect(int nErrorCode)
 				}
 
 				if (m_ProxyData.nProxyType == PROXYTYPE_HTTP10) {
-					// The reason why we offer HTTP/1.0 support is just because it 
+					// The reason why we offer HTTP/1.0 support is just because it
 					// allows us to *not *send the "Host" field, thus saving overhead.
-					iHttpReqLen = _snprintf(szHttpReq, _countof(szHttpReq), 
+					iHttpReqLen = _snprintf(szHttpReq, _countof(szHttpReq),
 						"CONNECT %s:%u HTTP/1.0\r\n"
 						"Authorization: Basic %s\r\n"
 						"Proxy-Authorization: Basic %s\r\n"
@@ -1013,7 +1013,7 @@ void CAsyncProxySocketLayer::OnConnect(int nErrorCode)
 				}
 				else {
 					// "Host" field is a MUST for HTTP/1.1 according RFC 2161
-					iHttpReqLen = _snprintf(szHttpReq, _countof(szHttpReq), 
+					iHttpReqLen = _snprintf(szHttpReq, _countof(szHttpReq),
 						"CONNECT %s:%u HTTP/1.1\r\n"
 						"Host: %s:%u\r\n"
 						"Authorization: Basic %s\r\n"
@@ -1025,7 +1025,7 @@ void CAsyncProxySocketLayer::OnConnect(int nErrorCode)
 
 			int iSent = SendNext(szHttpReq, iHttpReqLen);
 			if (iSent == SOCKET_ERROR) {
-				int nErrorCode = WSAGetLastError();
+				nErrorCode = WSAGetLastError();
 				DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, nErrorCode);
 				if (m_nProxyOpID == PROXYOP_CONNECT)
 					TriggerEvent(FD_CONNECT, (nErrorCode == WSAEWOULDBLOCK) ? WSAECONNABORTED : nErrorCode, TRUE);

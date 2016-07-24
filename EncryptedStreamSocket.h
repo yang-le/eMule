@@ -27,11 +27,11 @@
 #include "AsyncSocketEx.h"
 
 // cryptoPP used for DH integer calculations
+#pragma warning(push)
 #pragma warning(disable:4244) // conversion from 'type1' to 'type2', possible loss of data
 #pragma warning(disable:4100) // unreferenced formal parameter
-#include <crypto51/integer.h>
-#pragma warning(default:4100) // unreferenced formal parameter
-#pragma warning(default:4244) // conversion from 'type1' to 'type2', possible loss of data
+#include <cryptopp/integer.h>
+#pragma warning(pop)
 
 
 
@@ -51,12 +51,12 @@ enum EStreamCryptState {
 
 enum ENegotiatingState {
 	ONS_NONE,
-	
+
 	ONS_BASIC_CLIENTA_RANDOMPART,
 	ONS_BASIC_CLIENTA_MAGICVALUE,
 	ONS_BASIC_CLIENTA_METHODTAGSPADLEN,
 	ONS_BASIC_CLIENTA_PADDING,
-	
+
 	ONS_BASIC_CLIENTB_MAGICVALUE,
 	ONS_BASIC_CLIENTB_METHODTAGSPADLEN,
 	ONS_BASIC_CLIENTB_PADDING,
@@ -87,8 +87,8 @@ public:
 	void	SetConnectionEncryption(bool bEnabled, const uchar* pTargetClientHash, bool bServerConnection);
 	uint32	GetRealReceivedBytes() const		{ return m_nObfuscationBytesReceived; } // indicates how many bytes were received including obfusication so that the parent knows if the receive limit was reached
 	bool	IsObfusicating() const				{ return m_StreamCryptState == ECS_ENCRYPTING && m_EncryptionMethod == ENM_OBFUSCATION; }
-	
-	bool	IsServerCryptEnabledConnection() const { return m_bServerCrypt; }	
+
+	bool	IsServerCryptEnabledConnection() const { return m_bServerCrypt; }
 
 	uint8	m_dbgbyEncryptionSupported;
 	uint8	m_dbgbyEncryptionRequested;
@@ -104,7 +104,7 @@ protected:
 	void			CryptPrepareSendData(uchar* pBuffer, uint32 nLen);
 	bool			IsEncryptionLayerReady();
 	uint8			GetSemiRandomNotProtocolMarker() const;
-	
+
 	uint32	m_nObfuscationBytesReceived;
 	EStreamCryptState	m_StreamCryptState;
 	EEncryptionMethods  m_EncryptionMethod;

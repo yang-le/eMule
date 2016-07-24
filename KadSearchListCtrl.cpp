@@ -36,18 +36,6 @@ static char THIS_FILE[] = __FILE__;
 
 // CKadSearchListCtrl
 
-enum ECols
-{
-	colNum = 0,
-	colKey,
-	colType,
-	colName,
-	colStop,
-	colLoad,
-	colPacketsSent,
-	colResponses
-};
-
 IMPLEMENT_DYNAMIC(CKadSearchListCtrl, CMuleListCtrl)
 
 BEGIN_MESSAGE_MAP(CKadSearchListCtrl, CMuleListCtrl)
@@ -78,7 +66,7 @@ void CKadSearchListCtrl::Init()
 	InsertColumn(colLoad,			GetResString(IDS_THELOAD),		LVCFMT_LEFT, 100);
 	InsertColumn(colPacketsSent,	GetResString(IDS_PACKSENT),		LVCFMT_LEFT, 100);
 	InsertColumn(colResponses,		GetResString(IDS_RESPONSES),	LVCFMT_LEFT, 100);
-	
+
 	SetAllIcons();
 	Localize();
 
@@ -90,7 +78,7 @@ void CKadSearchListCtrl::Init()
 void CKadSearchListCtrl::UpdateKadSearchCount()
 {
 	CString id;
-	id.Format(_T("%s (%i)"), GetResString(IDS_KADSEARCHLAB), GetItemCount());
+	id.Format(_T("%s (%i)"), (LPCTSTR)GetResString(IDS_KADSEARCHLAB), GetItemCount());
 	theApp.emuledlg->kademliawnd->GetDlgItem(IDC_KADSEARCHLAB)->SetWindowText(id);
 }
 
@@ -150,7 +138,7 @@ void CKadSearchListCtrl::Localize()
 void CKadSearchListCtrl::UpdateSearch(int iItem, const Kademlia::CSearch *search)
 {
 	CString id;
-	id.Format(_T("%i"), search->GetSearchID());
+	id.Format(_T("%u"), search->GetSearchID());
 	SetItemText(iItem, colNum, id);
 
 	switch (search->GetSearchTypes())
@@ -188,15 +176,15 @@ void CKadSearchListCtrl::UpdateSearch(int iItem, const Kademlia::CSearch *search
 		case Kademlia::CSearch::FINDBUDDY:
 			id = GetResString(IDS_FINDBUDDY);
 			break;
-		
+
 		case Kademlia::CSearch::STORENOTES:
 			id = GetResString(IDS_STORENOTES);
 			break;
-		
+
 		case Kademlia::CSearch::NOTES:
 			id = GetResString(IDS_NOTES);
 			break;
-		
+
 		default:
 			id = GetResString(IDS_KAD_UNKNOWN);
 			break;
@@ -305,10 +293,10 @@ void CKadSearchListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
-int CKadSearchListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+int CALLBACK CKadSearchListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const Kademlia::CSearch *item1 = (Kademlia::CSearch *)lParam1; 
-	const Kademlia::CSearch *item2 = (Kademlia::CSearch *)lParam2; 
+	const Kademlia::CSearch *item1 = (Kademlia::CSearch *)lParam1;
+	const Kademlia::CSearch *item2 = (Kademlia::CSearch *)lParam2;
 	if (item1 == NULL || item2 == NULL)
 		return 0;
 
@@ -329,11 +317,11 @@ int CKadSearchListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSo
 			else
 				iResult = item1->GetTarget().CompareTo(item2->GetTarget());
 			break;
-		
+
 		case colType:
 			iResult = item1->GetSearchTypes() - item2->GetSearchTypes();
 			break;
-		
+
 		case colName:
 			iResult = CompareLocaleStringNoCase(item1->GetGUIName(), item2->GetGUIName());
 			break;
@@ -366,7 +354,7 @@ Kademlia::CLookupHistory* CKadSearchListCtrl::FetchAndSelectActiveSearch(bool bM
 {
 	int iIntrestingItem = (-1);
 	int iItem = (-1);
-	
+
 	for (int i = 1; i <= GetItemCount(); i++)
 	{
 		const Kademlia::CSearch* pSearch = (Kademlia::CSearch*)GetItemData(GetItemCount() - i);

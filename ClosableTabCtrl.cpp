@@ -30,7 +30,7 @@ static char THIS_FILE[] = __FILE__;
 
 
 // _WIN32_WINNT >= 0x0501 (XP only)
-#define _WM_THEMECHANGED                0x031A	
+#define _WM_THEMECHANGED                0x031A
 #define _ON_WM_THEMECHANGED()														\
 	{	_WM_THEMECHANGED, 0, 0, 0, AfxSig_l,										\
 		(AFX_PMSG)(AFX_PMSGW)														\
@@ -155,7 +155,7 @@ void CClosableTabCtrl::OnLButtonUp(UINT nFlags, CPoint point)
 			CRect rcItem;
 			GetItemRect(iTab, rcItem);
 			rcItem.InflateRect(2, 2); // get the real tab item rect
-			
+
 			bool bVistaThemeActive = theApp.IsVistaThemeActive();
 			CRect rcCloseButton;
 			GetCloseButtonRect(iTab, rcItem, rcCloseButton, iTab == GetCurSel(), bVistaThemeActive);
@@ -174,7 +174,7 @@ void CClosableTabCtrl::OnLButtonUp(UINT nFlags, CPoint point)
 			}
 		}
 	}
-	
+
 	CTabCtrl::OnLButtonUp(nFlags, point);
 }
 
@@ -264,7 +264,7 @@ void CClosableTabCtrl::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 	if (bVistaThemeActive)
 	{
 		// To determine if the current item is in 'hot tracking' mode, we need to evaluate
-		// the current foreground color - there is no flag which would indicate this state 
+		// the current foreground color - there is no flag which would indicate this state
 		// more safely. This applies only for Vista and for tab controls which have the
 		// TCS_OWNERDRAWFIXED style.
 		bVistaHotTracked = pDC->GetTextColor() == GetSysColor(COLOR_HOTLIGHT);
@@ -360,8 +360,8 @@ void CClosableTabCtrl::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 		HTHEME hThemeNC = bVistaThemeActive ? g_xpStyle.OpenThemeData(m_hWnd, _T("WINDOW")) : NULL;
 		if (hThemeNC) {
 			// Possible "Close" parts: WP_CLOSEBUTTON, WP_SMALLCLOSEBUTTON, WP_MDICLOSEBUTTON
-			int iPartId = WP_SMALLCLOSEBUTTON;
-			int iStateId = (bSelected || bVistaHotTracked) ? CBS_NORMAL : CBS_DISABLED;
+			iPartId = WP_SMALLCLOSEBUTTON;
+			iStateId = (bSelected || bVistaHotTracked) ? CBS_NORMAL : CBS_DISABLED;
 			if (g_xpStyle.IsThemeBackgroundPartiallyTransparent(hTheme, iPartId, iStateId))
 				g_xpStyle.DrawThemeParentBackground(m_hWnd, *pDC, &rcCloseButton);
 			g_xpStyle.DrawThemeBackground(hThemeNC, *pDC, iPartId, iStateId, rcCloseButton, NULL);
@@ -433,7 +433,7 @@ void CClosableTabCtrl::InternalInit()
 	// Under Vista Aero, all tab controls get by default the TCS_HOTTRACK
 	// style even if it was not specified within the resource file. Though, to 'see'
 	// the hot tracking effect the control also need to get initialized explicitly with
-	// the WS_CLIPCHILDREN style within a *seperate* function call. Yes, there is no
+	// the WS_CLIPCHILDREN style within a *separate* function call. Yes, there is no
 	// logic to all this, not at all. It simply is that way.
 	//
 	// So, do *not* "optimize" that code by using only one "ModifyStyle" function call.

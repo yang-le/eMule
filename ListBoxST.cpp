@@ -38,7 +38,7 @@ BEGIN_MESSAGE_MAP(CListBoxST, CListBox)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-void CListBoxST::OnDestroy() 
+void CListBoxST::OnDestroy()
 {
 	FreeResources();
 	CListBox::OnDestroy();
@@ -49,7 +49,7 @@ void CListBoxST::MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct)
 	ASSERT(lpMeasureItemStruct->CtlType == ODT_LISTBOX);
 	CDC*    pDC = GetDC();
 	int		nHeight = 0;
-	
+
 	CString	sText;
 	CListBox::GetText(lpMeasureItemStruct->itemID, sText);
 
@@ -89,11 +89,10 @@ void CListBoxST::DrawItem(LPDRAWITEMSTRUCT pDIStruct)
 	CRect rcItem = pDIStruct->rcItem;
 	CRect rcIcon = pDIStruct->rcItem;
 	CRect rcText = pDIStruct->rcItem;
-	CRect rcCenteredText = pDIStruct->rcItem;
 
 	pDC->SetBkMode(TRANSPARENT);
 
-	// ONLY FOR DEBUG 
+	// ONLY FOR DEBUG
 	//CBrush brBtnShadow(RGB(255, 0, 0));
 	//pDC->FrameRect(&rcItem, &brBtnShadow);
 
@@ -111,7 +110,7 @@ void CListBoxST::DrawItem(LPDRAWITEMSTRUCT pDIStruct)
 	// Calculate rcCenteredText
 	// Get list box item text
 	CListBox::GetText(pDIStruct->itemID, sText);
-	rcCenteredText = rcText;
+	CRect rcCenteredText = rcText;
 	pDC->DrawText(sText, -1, rcCenteredText, DT_WORDBREAK | DT_EXPANDTABS| DT_CALCRECT | lpLBData->nFormat);
 	rcCenteredText.OffsetRect(0, (rcText.Height() - rcCenteredText.Height())/2);
 
@@ -289,9 +288,9 @@ DWORD CListBoxST::OnDrawIcon(int /*nIndex*/, CDC* pDC, CRect* /*prcItem*/, CRect
 
 		// Ole'!
 		pDC->DrawState(	Point,
-						Size, 
+						Size,
 						hIcon,
-						(bIsDisabled ? DSS_DISABLED : DSS_NORMAL), 
+						(bIsDisabled ? DSS_DISABLED : DSS_NORMAL),
 						(CBrush*)NULL);
 
 		::DestroyIcon(hIcon);
@@ -300,15 +299,14 @@ DWORD CListBoxST::OnDrawIcon(int /*nIndex*/, CDC* pDC, CRect* /*prcItem*/, CRect
 	return 0;
 } // End of OnDrawIcon
 
-BOOL CListBoxST::OnReflectedDblclk() 
+BOOL CListBoxST::OnReflectedDblclk()
 {
-	INT				nIndex = LB_ERR;
 	BOOL			bOutside = FALSE;
 	DWORD			dwPos = ::GetMessagePos();
 	CPoint			Point(((int)(short)LOWORD(dwPos)), ((int)(short)HIWORD(dwPos)));
 
 	ScreenToClient(&Point);
-	nIndex = ItemFromPoint(Point, bOutside);
+	INT nIndex = ItemFromPoint(Point, bOutside);
 	if (!bOutside)	return !IsItemEnabled(nIndex);
 
 	return FALSE;
@@ -336,8 +334,12 @@ int CListBoxST::ReplaceItemData(int nIndex, DWORD dwItemData, LPVOID pData, int 
 	// If no datas exist create a new one
 	if (lpLBData == NULL)
 	{
-		lpLBData = new STRUCT_LBDATA;
-		if (lpLBData)	::ZeroMemory(lpLBData, sizeof(STRUCT_LBDATA));
+		try {
+			lpLBData = new STRUCT_LBDATA;
+		} catch (...) {
+			return nRetValue;
+		}
+		::ZeroMemory(lpLBData, sizeof(STRUCT_LBDATA));
 	} // if
 
 	if (lpLBData)
@@ -381,18 +383,14 @@ void CListBoxST::DeleteItemData(int nIndex)
 //
 // Return value:
 //		The zero-based index of the string in the list box.
-//		The return value is LB_ERR if an error occurs; the return value 
+//		The return value is LB_ERR if an error occurs; the return value
 //		is LB_ERRSPACE if insufficient space is available to store the new string.
 //
 int CListBoxST::AddString(LPCTSTR lpszItem, int nImage)
 {
-	int	nIndex   = LB_ERR;
-
-	nIndex = CListBox::AddString(lpszItem);
+	int nIndex = CListBox::AddString(lpszItem);
 	if (nIndex != LB_ERR && nIndex != LB_ERRSPACE)
-	{
 		ReplaceItemData(nIndex, 0, NULL, nImage, 0, MASK_ALL);
-	} // if
 
 	return nIndex;
 } // End of AddString
@@ -411,18 +409,14 @@ int CListBoxST::AddString(LPCTSTR lpszItem, int nImage)
 //
 // Return value:
 //		The zero-based index of the position at which the string was inserted.
-//		The return value is LB_ERR if an error occurs; the return value 
+//		The return value is LB_ERR if an error occurs; the return value
 //		is LB_ERRSPACE if insufficient space is available to store the new string.
 //
 int CListBoxST::InsertString(int nIndex, LPCTSTR lpszString, int nImage)
 {
-	int	nNewIndex   = LB_ERR;
-
-	nNewIndex = CListBox::InsertString(nIndex, lpszString);
+	int nNewIndex = CListBox::InsertString(nIndex, lpszString);
 	if (nNewIndex != LB_ERR && nNewIndex != LB_ERRSPACE)
-	{
 		ReplaceItemData(nNewIndex, 0, NULL, nImage, 0, MASK_ALL);
-	} // if
 
 	return nNewIndex;
 } // End of InsertString
@@ -435,17 +429,13 @@ int CListBoxST::InsertString(int nIndex, LPCTSTR lpszString, int nImage)
 //
 // Return value:
 //		A count of the strings remaining in the list box.
-//		The return value is LB_ERR if nIndex specifies an index greater than 
+//		The return value is LB_ERR if nIndex specifies an index greater than
 //		the number of items in the list.
 //
 int CListBoxST::DeleteString(int nIndex)
 {
-	int	nRetValue = LB_ERR;
-
 	DeleteItemData(nIndex);
-	nRetValue = CListBox::DeleteString(nIndex);
-
-	return nRetValue;
+	return CListBox::DeleteString(nIndex);
 } // End of DeleteString
 
 // Replaces a string at a specific location in the list box.
@@ -461,18 +451,14 @@ int CListBoxST::DeleteString(int nIndex)
 //
 // Return value:
 //		The zero-based index of the position at which the string was replaced.
-//		The return value is LB_ERR if an error occurs; the return value 
+//		The return value is LB_ERR if an error occurs; the return value
 //		is LB_ERRSPACE if insufficient space is available to store the new string.
 //
 int CListBoxST::ReplaceString(int nIndex, LPCTSTR lpszString, int nImage)
 {
-	int	nRetValue;
-
-	nRetValue = DeleteString(nIndex);
+	int nRetValue = DeleteString(nIndex);
 	if (nRetValue != LB_ERR)
-	{
 		nRetValue = InsertString(nIndex, lpszString, nImage);
-	} // if
 
 	return nRetValue;
 } // End of ReplaceString
@@ -600,7 +586,7 @@ int CListBoxST::Move(int nOldIndex, int nNewIndex, BOOL bSetCurSel)
 //
 // Return value:
 //		The zero-based index of the position at which the string was moved.
-//		The return value is LB_ERR if an error occurs; the return value 
+//		The return value is LB_ERR if an error occurs; the return value
 //		is LB_ERRSPACE if insufficient space is available to store the string.
 //
 int CListBoxST::MoveUp(int nIndex, BOOL bSetCurSel)
@@ -625,7 +611,7 @@ int CListBoxST::MoveUp(int nIndex, BOOL bSetCurSel)
 //
 // Return value:
 //		The zero-based index of the position at which the string was moved.
-//		The return value is LB_ERR if an error occurs; the return value 
+//		The return value is LB_ERR if an error occurs; the return value
 //		is LB_ERRSPACE if insufficient space is available to store the string.
 //
 int CListBoxST::MoveDown(int nIndex, BOOL bSetCurSel)
@@ -650,7 +636,7 @@ int CListBoxST::MoveDown(int nIndex, BOOL bSetCurSel)
 //
 // Return value:
 //		The zero-based index of the position at which the string was moved.
-//		The return value is LB_ERR if an error occurs; the return value 
+//		The return value is LB_ERR if an error occurs; the return value
 //		is LB_ERRSPACE if insufficient space is available to store the string.
 //
 int CListBoxST::MoveTop(int nIndex, BOOL bSetCurSel)
@@ -675,7 +661,7 @@ int CListBoxST::MoveTop(int nIndex, BOOL bSetCurSel)
 //
 // Return value:
 //		The zero-based index of the position at which the string was moved.
-//		The return value is LB_ERR if an error occurs; the return value 
+//		The return value is LB_ERR if an error occurs; the return value
 //		is LB_ERRSPACE if insufficient space is available to store the string.
 //
 int CListBoxST::MoveBottom(int nIndex, BOOL bSetCurSel)

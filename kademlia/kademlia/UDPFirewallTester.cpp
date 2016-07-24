@@ -35,7 +35,7 @@ static char THIS_FILE[] = __FILE__;
 
 using namespace Kademlia;
 
-#define UDP_FIREWALLTEST_CLIENTSTOASK	2	// more clients increase the chance of a false positiv, while less the chance of a false negative 
+#define UDP_FIREWALLTEST_CLIENTSTOASK	2	// more clients increase the chance of a false positiv, while less the chance of a false negative
 
 bool CUDPFirewallTester::m_bFirewalledUDP = false;
 bool CUDPFirewallTester::m_bFirewalledLastStateUDP = false;
@@ -50,7 +50,7 @@ CList<CContact> CUDPFirewallTester::m_liPossibleTestClients;
 CList<UsedClient_Struct> CUDPFirewallTester::m_liUsedTestClients;
 
 bool CUDPFirewallTester::IsFirewalledUDP(bool bLastStateIfTesting)
-{ 
+{
 	if (CKademlia::IsRunningInLANMode())
 		return false;
 	if (!m_bTimedOut && IsFWCheckUDPRunning())
@@ -79,12 +79,13 @@ bool CUDPFirewallTester::GetUDPCheckClientsNeeded()
 	return (m_byFWChecksRunningUDP + m_byFWChecksFinishedUDP) < UDP_FIREWALLTEST_CLIENTSTOASK;
 }
 
-void CUDPFirewallTester::SetUDPFWCheckResult(bool bSucceeded, bool bTestCancelled, uint32 uFromIP, uint16 nIncomingPort){	
+void CUDPFirewallTester::SetUDPFWCheckResult(bool bSucceeded, bool bTestCancelled, uint32 uFromIP, uint16 nIncomingPort){
 	// check if we actually requested a firewallcheck from this cleint
 	bool bRequested = false;
-	for (POSITION pos = m_liUsedTestClients.GetHeadPosition(); pos != NULL; m_liUsedTestClients.GetNext(pos)){
-		if (m_liUsedTestClients.GetAt(pos).contact.GetIPAddress() == uFromIP){
-			
+	for (POSITION pos = m_liUsedTestClients.GetHeadPosition(); pos != NULL;) {
+		UsedClient_Struct& ucs = m_liUsedTestClients.GetNext(pos);
+		if (ucs.contact.GetIPAddress() == uFromIP) {
+
 			if (!IsFWCheckUDPRunning() && !m_bFirewalledUDP && m_bIsFWVerifiedUDP && m_dwLastSucceededTime + SEC2MS(10) > ::GetTickCount()
 				&& nIncomingPort == CKademlia::GetPrefs()->GetInternKadPort() && CKademlia::GetPrefs()->GetUseExternKadPort())
 			{
@@ -98,19 +99,19 @@ void CUDPFirewallTester::SetUDPFWCheckResult(bool bSucceeded, bool bTestCancelle
 				theApp.emuledlg->ShowConnectionState();
 				return;
 			}
-			else if (m_liUsedTestClients.GetAt(pos).bAnswered){
+			else if (ucs.bAnswered) {
 				// we already received an answer. This may happen since all tests contain of two answer pakcets
 				// , but the answer could also be too late and we already counted it as failure.
 				return;
 			}
 			else
-				m_liUsedTestClients.GetAt(pos).bAnswered = true;
+				ucs.bAnswered = true;
 			bRequested = true;
 			break;
 		}
 	}
 	if (!bRequested){
-		DebugLogWarning(_T("Unrequested UDPFWCheckResult from %s"), ipstr(ntohl(uFromIP)));
+		DebugLogWarning(_T("Unrequested UDPFWCheckResult from %s"), (LPCTSTR)ipstr(ntohl(uFromIP)));
 		return;
 	}
 
@@ -160,10 +161,10 @@ void CUDPFirewallTester::SetUDPFWCheckResult(bool bSucceeded, bool bTestCancelle
 			return;
 		}
 		else
-			DebugLogWarning(_T("Kad UDP firewalltest from %s result: Firewalled, continue testing"), ipstr(ntohl(uFromIP)));
+			DebugLogWarning(_T("Kad UDP firewalltest from %s result: Firewalled, continue testing"), (LPCTSTR)ipstr(ntohl(uFromIP)));
 	}
 	else
-		DebugLogWarning(_T("Kad UDP firewalltest from %s cancelled"), ipstr(ntohl(uFromIP)));
+		DebugLogWarning(_T("Kad UDP firewalltest from %s cancelled"), (LPCTSTR)ipstr(ntohl(uFromIP)));
 	QueryNextClient();
 }
 void CUDPFirewallTester::ReCheckFirewallUDP(bool bSetUnverified){
@@ -219,7 +220,7 @@ void CUDPFirewallTester::AddPossibleTestContact(const CUInt128 &uClientID, uint3
 }
 
 void CUDPFirewallTester::QueryNextClient(){ // try the next available client for the firewallcheck
-	
+
 	if (!IsFWCheckUDPRunning() || !GetUDPCheckClientsNeeded() || CKademlia::GetPrefs()->FindExternKadPort(false))
 		return; // check if more tests are needed and wait till we know our extern port
 
@@ -260,6 +261,6 @@ void CUDPFirewallTester::QueryNextClient(){ // try the next available client for
 }
 
 bool CUDPFirewallTester::IsVerified()
-{ 
+{
 	return m_bIsFWVerifiedUDP || CKademlia::IsRunningInLANMode();
 }

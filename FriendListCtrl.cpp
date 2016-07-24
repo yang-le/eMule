@@ -183,9 +183,9 @@ BOOL CFriendListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 
 	CFriend* cur_friend = NULL;
 	int iSel = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
-	if (iSel != -1) 
+	if (iSel != -1)
 		cur_friend = (CFriend*)GetItemData(iSel);
-	
+
 	switch (wParam)
 	{
 		case MP_MESSAGE:
@@ -207,7 +207,7 @@ BOOL CFriendListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 			}
 			break;
 		case MP_ADDFRIEND:{
-			CAddFriend dialog2; 
+			CAddFriend dialog2;
 			dialog2.DoModal();
 			break;
 		}
@@ -250,7 +250,7 @@ BOOL CFriendListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 void CFriendListCtrl::OnNmDblClk(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
 	int iSel = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
-	if (iSel != -1) 
+	if (iSel != -1)
 		ShowFriendDetails((CFriend*)GetItemData(iSel));
 	*pResult = 0;
 }
@@ -273,7 +273,7 @@ void CFriendListCtrl::ShowFriendDetails(const CFriend* pFriend)
 	}
 }
 
-BOOL CFriendListCtrl::PreTranslateMessage(MSG* pMsg) 
+BOOL CFriendListCtrl::PreTranslateMessage(MSG* pMsg)
 {
 	if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_DELETE)
 		PostMessage(WM_COMMAND, MP_REMOVEFRIEND, 0);
@@ -302,10 +302,10 @@ void CFriendListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
-int CFriendListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+int CALLBACK CFriendListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	const CFriend *item1 = (CFriend *)lParam1;
-	const CFriend *item2 = (CFriend *)lParam2; 
+	const CFriend *item2 = (CFriend *)lParam2;
 	if (item1 == NULL || item2 == NULL)
 		return 0;
 

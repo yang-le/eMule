@@ -30,7 +30,7 @@ class CIrcWnd : public CResizableDialog
 {
 	DECLARE_DYNAMIC(CIrcWnd)
 public:
-	CIrcWnd(CWnd* pParent = NULL);
+	explicit CIrcWnd(CWnd* pParent = NULL);
 	virtual ~CIrcWnd();
 
 	enum { IDD = IDD_IRC };
@@ -44,12 +44,14 @@ public:
 	void UpdateFonts(CFont* pFont);
 	void ParseChangeMode(const CString& sChannel, const CString& sChanger, CString sCommands, const CString& sParams);
 	void AddStatus(CString sLine, bool bShowActivity = true, UINT uStatusCode = 0);
-	void AddStatusF(CString sReceived, ...);
-	void AddInfoMessage(Channel *pChannel, CString sLine);
-	void AddInfoMessage(const CString& sChannelName, CString sReceived, bool bShowChannel = false);
-	void AddInfoMessageF(const CString& sChannelName, CString sReceived, ...);
-	void AddMessage(const CString& sChannelName, CString sTargetname, CString sLine);
-	void AddMessageF(const CString& sChannelName, CString sTargetname, CString sLine, ...);
+	void AddStatusF(const CString sLine, ...); //cannot pass sLine by reference - would be 'undefined behaviour' by C++ standards
+	void AddInfoMessage(Channel *pChannel, const CString& sLine);
+	void AddInfoMessage(const CString& sChannelName, const CString& sLine, const bool bShowChannel = false);
+	void AddInfoMessageF(const CString& sChannelName, const CString sLine, ...);
+	void AddInfoMessageC(const CString& sChannelName, const COLORREF& msgcolour, const CString& sLine);
+	void AddInfoMessageCF(const CString& sChannelName, const COLORREF& msgcolour, const CString sLine, ...);
+	void AddMessage(const CString& sChannelName, const CString& sTargetname, const CString& sLine);
+	void AddMessageF(const CString& sChannelName, const CString& sTargetname, const CString sLine, ...);
 	void AddColorLine(const CString& line, CHTRichEditCtrl& wnd, COLORREF crForeground = CLR_DEFAULT);
 	void SetConnectStatus(bool bConnected);
 	void NoticeMessage(const CString& sSource, const CString& sTarget, const CString& sMessage);

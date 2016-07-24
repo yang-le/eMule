@@ -1,4 +1,28 @@
-// $Id: demo_tag.cpp,v 1.15 2002/06/29 17:18:35 t1mpy Exp $
+// $Id: demo_tag.cpp,v 1.17 2009/09/02 09:07:13 nagilo Exp $
+
+// id3lib: a C++ library for creating and manipulating id3v1/v2 tags
+// Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
+
+// This library is free software; you can redistribute it and/or modify it
+// under the terms of the GNU Library General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or (at your
+// option) any later version.
+//
+// This library is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+// License for more details.
+//
+// You should have received a copy of the GNU Library General Public License
+// along with this library; if not, write to the Free Software Foundation,
+// Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+// The id3lib authors encourage improvements and optimisations to be sent to
+// the id3lib coordinator.  Please see the README file for details on where to
+// send such submissions.  See the AUTHORS file for a list of people who have
+// contributed to id3lib.  See the ChangeLog file for a list of changes to
+// id3lib.  These files are distributed with id3lib at
+// http://download.sourceforge.net/id3lib/
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -16,7 +40,7 @@
 using std::cout;
 using std::endl;
 
-static const char* VERSION_NUMBER = "$Revision: 1.15 $";
+static const char* VERSION_NUMBER = "$Revision: 1.17 $";
 
 void PrintUsage(const char *sName)
 {
@@ -46,7 +70,7 @@ void DisplayTags(ostream &os, luint nTags)
     os << "v2";
 }
 
-int main( unsigned int argc, char * const argv[])
+int main( int argc, char * const argv[])
 {
   int ulFlag = ID3TT_ID3;
   ID3D_INIT_DOUT();
@@ -93,7 +117,7 @@ int main( unsigned int argc, char * const argv[])
     nTotal    = 0,
     nGenre    = 0;
 
-  
+
   if (args.artist_given)
   {
     sArtist = args.artist_arg;
@@ -150,14 +174,14 @@ int main( unsigned int argc, char * const argv[])
   {
     filename = args.inputs[i];
     ID3_Tag myTag;
-    
+
     cout << "Tagging " << filename << ": ";
-    
+
     myTag.Link(filename);
-    
+
     cout << "attempting ";
     DisplayTags(cout, ulFlag);
-    
+
     if (args.artist_given)
     {
       ID3_AddArtist(&myTag, sArtist, true);
@@ -188,9 +212,9 @@ int main( unsigned int argc, char * const argv[])
     }
     luint nTags = myTag.Update(ulFlag);
     cout << ", tagged ";
-    
+
     DisplayTags(cout, nTags);
-    
+
     cout << endl;
   }
 

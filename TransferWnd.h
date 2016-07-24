@@ -32,7 +32,7 @@ class CTransferWnd : public CResizableFormView
 	DECLARE_DYNCREATE(CTransferWnd)
 
 public:
-	CTransferWnd(CWnd* pParent = NULL);   // standard constructor
+	explicit CTransferWnd(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CTransferWnd();
 
 	enum EWnd1Icon {
@@ -64,7 +64,7 @@ public:
 	void Localize();
 	void UpdateCatTabTitles(bool force = true);
 	void VerifyCatTabSize();
-	int	 AddCategory(CString newtitle,CString newincoming,CString newcomment,CString newautocat,bool addTab=true);
+	int	 AddCategory(const CString& newtitle, const CString& newincoming, const CString& newcomment, const CString& newautocat, bool addTab = true);
 	int	 AddCategoryInteractive();
 	void SwitchUploadList();
 	void ResetTransToolbar(bool bShowToolbar, bool bResetLists = true);
@@ -112,7 +112,7 @@ protected:
 	int		GetTabUnderMouse(CPoint* point);
 	int		GetItemUnderMouse(CListCtrl* ctrl);
 	CString	GetCatTitle(int catid);
-	void	EditCatTabLabel(int index,CString newlabel);
+	void	EditCatTabLabel(int index, CString& newlabel);
 	void	EditCatTabLabel(int index);
 	void	ShowList(uint32 dwListIDC);
 	void	SetWnd1Icon(EWnd1Icon iIcon);
@@ -125,7 +125,7 @@ protected:
 	virtual void OnInitialUpdate();
 	virtual LRESULT DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
-	
+
 	DECLARE_MESSAGE_MAP()
 	afx_msg BOOL OnHelpInfo(HELPINFO* pHelpInfo);
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);

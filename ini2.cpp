@@ -90,6 +90,7 @@ CIni::CIni(CIni const &Ini):
 	m_strFileName(Ini.m_strFileName),
 	m_strSection(Ini.m_strSection),
 	m_bModulPath(Ini.m_bModulPath)
+	, m_chBuffer()
 {
 	if (m_strFileName.IsEmpty())
 		m_strFileName = GetDefaultIniFile(m_bModulPath);
@@ -170,7 +171,7 @@ CString CIni::GetStringLong(LPCTSTR lpszEntry, LPCTSTR lpszDefault, LPCTSTR lpsz
 		m_strSection = lpszSection;
 
 	do {
-		GetPrivateProfileString(m_strSection, lpszEntry, (lpszDefault == NULL) ? _T("") : lpszDefault, 
+		GetPrivateProfileString(m_strSection, lpszEntry, (lpszDefault == NULL) ? _T("") : lpszDefault,
 			ret.GetBufferSetLength(maxstrlen), maxstrlen, m_strFileName);
 		ret.ReleaseBuffer();
 		if ((unsigned int)ret.GetLength() < maxstrlen - 2)
@@ -259,7 +260,7 @@ CPoint CIni::GetPoint(LPCTSTR lpszEntry, CPoint ptDefault, LPCTSTR lpszSection)
 	strDefault.Format(_T("(%d,%d)"), ptDefault.x, ptDefault.y);
 
 	CString strPoint = GetString(lpszEntry, strDefault, lpszSection);
-	if (_stscanf(strPoint,_T("(%d,%d)"), &ptReturn.x, &ptReturn.y) != 2)
+	if (_stscanf(strPoint,_T("(%ld,%ld)"), &ptReturn.x, &ptReturn.y) != 2)
 		return ptDefault;
 
 	return ptReturn;
@@ -270,15 +271,15 @@ CRect CIni::GetRect(LPCTSTR lpszEntry, CRect rectDefault, LPCTSTR lpszSection)
 	CRect rectReturn = rectDefault;
 
 	CString strDefault;
-	strDefault.Format(_T("%d,%d,%d,%d"), rectDefault.left, rectDefault.top, rectDefault.right, rectDefault.bottom);
+	strDefault.Format(_T("%ld,%ld,%ld,%ld"), rectDefault.left, rectDefault.top, rectDefault.right, rectDefault.bottom);
 
 	CString strRect = GetString(lpszEntry, strDefault, lpszSection);
 
 	//new Version found
-	if (_stscanf(strRect, _T("%d,%d,%d,%d"), &rectDefault.left, &rectDefault.top, &rectDefault.right, &rectDefault.bottom) == 4)
+	if (_stscanf(strRect, _T("%ld,%ld,%ld,%ld"), &rectDefault.left, &rectDefault.top, &rectDefault.right, &rectDefault.bottom) == 4)
 		return rectReturn;
 	//old Version found
-	if (_stscanf(strRect, _T("(%d,%d,%d,%d)"), &rectReturn.top, &rectReturn.left, &rectReturn.bottom, &rectReturn.right) != 4)
+	if (_stscanf(strRect, _T("(%ld,%ld,%ld,%ld)"), &rectReturn.top, &rectReturn.left, &rectReturn.bottom, &rectReturn.right) != 4)
 		return rectDefault;
 	return rectReturn;
 }
@@ -298,17 +299,17 @@ COLORREF CIni::GetColRef(LPCTSTR lpszEntry, COLORREF crDefault, LPCTSTR lpszSect
 
 	return RGB(temp[0], temp[1], temp[2]);
 }
-	
+
 void CIni::WriteString(LPCTSTR lpszEntry, LPCTSTR lpsz, LPCTSTR lpszSection)
 {
-	if (lpszSection != NULL) 
+	if (lpszSection != NULL)
 		m_strSection = lpszSection;
 	WritePrivateProfileString(m_strSection, lpszEntry, lpsz, m_strFileName);
 }
 
 void CIni::WriteStringUTF8(LPCTSTR lpszEntry, LPCTSTR lpsz, LPCTSTR lpszSection)
 {
-	if (lpszSection != NULL) 
+	if (lpszSection != NULL)
 		m_strSection = lpszSection;
 	CString str(lpsz);
 	WritePrivateProfileStringA(CT2CA(m_strSection), CT2CA(lpszEntry), StrToUtf8(str), CT2CA(m_strFileName));
@@ -371,7 +372,7 @@ void CIni::WriteBool(LPCTSTR lpszEntry, bool b, LPCTSTR lpszSection)
 	WritePrivateProfileString(m_strSection, lpszEntry, szBuffer, m_strFileName);
 }
 
-void CIni::WritePoint(LPCTSTR lpszEntry, CPoint pt, LPCTSTR lpszSection)
+void CIni::WritePoint(LPCTSTR lpszEntry, const CPoint& pt, LPCTSTR lpszSection)
 {
 	if (lpszSection != NULL)
 		m_strSection = lpszSection;
@@ -380,7 +381,7 @@ void CIni::WritePoint(LPCTSTR lpszEntry, CPoint pt, LPCTSTR lpszSection)
 	Write(m_strFileName, m_strSection, lpszEntry, strBuffer);
 }
 
-void CIni::WriteRect(LPCTSTR lpszEntry, CRect rect, LPCTSTR lpszSection)
+void CIni::WriteRect(LPCTSTR lpszEntry, const CRect& rect, LPCTSTR lpszSection)
 {
 	if (lpszSection != NULL)
 		m_strSection = lpszSection;
@@ -460,7 +461,7 @@ void CIni::SerGetBool(bool bGet, bool &b, LPCTSTR lpszEntry, LPCTSTR lpszSection
 		WriteBool(lpszEntry, b, lpszSection);
 }
 
-void CIni::SerGetPoint(bool bGet, CPoint &pt, LPCTSTR lpszEntry, LPCTSTR lpszSection, CPoint ptDefault)
+void CIni::SerGetPoint(bool bGet, CPoint &pt, LPCTSTR lpszEntry, LPCTSTR lpszSection, const CPoint& ptDefault)
 {
 	if (bGet)
 		pt = GetPoint(lpszEntry, ptDefault, lpszSection);
@@ -468,7 +469,7 @@ void CIni::SerGetPoint(bool bGet, CPoint &pt, LPCTSTR lpszEntry, LPCTSTR lpszSec
 		WritePoint(lpszEntry, pt, lpszSection);
 }
 
-void CIni::SerGetRect(bool bGet, CRect & rect, LPCTSTR lpszEntry, LPCTSTR lpszSection, CRect rectDefault)
+void CIni::SerGetRect(bool bGet, CRect & rect, LPCTSTR lpszEntry, LPCTSTR lpszSection, const CRect& rectDefault)
 {
 	if (bGet)
 		rect = GetRect(lpszEntry, rectDefault, lpszSection);
@@ -523,12 +524,12 @@ void CIni::SerGet(bool bGet, WORD &n, LPCTSTR lpszEntry, LPCTSTR lpszSection, DW
 	n = (WORD)dwTemp;
 }
 
-void CIni::SerGet(bool bGet, CPoint &pt, LPCTSTR lpszEntry, LPCTSTR lpszSection, CPoint ptDefault)
+void CIni::SerGet(bool bGet, CPoint &pt, LPCTSTR lpszEntry, LPCTSTR lpszSection, const CPoint& ptDefault)
 {
 	SerGetPoint(bGet, pt, lpszEntry, lpszSection, ptDefault);
 }
 
-void CIni::SerGet(bool bGet, CRect &rect, LPCTSTR lpszEntry, LPCTSTR lpszSection, CRect rectDefault)
+void CIni::SerGet(bool bGet, CRect &rect, LPCTSTR lpszEntry, LPCTSTR lpszSection, const CRect& rectDefault)
 {
 	SerGetRect(bGet, rect, lpszEntry, lpszSection, rectDefault);
 }
@@ -542,7 +543,7 @@ void CIni::SerGet(bool bGet, CString *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR
 			int nOffset = 0;
 			for (int i = 0; i < nCount; i++) {
 				nOffset = Parse(strBuffer, nOffset, ar[i]);
-				if (ar[i].GetLength() == 0)
+				if (ar[i].IsEmpty())
 					ar[i] = lpszDefault;
 			}
 		} else {
@@ -566,7 +567,7 @@ void CIni::SerGet(bool bGet, double *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR 
 			int nOffset = 0;
 			for (int i = 0; i < nCount; i++) {
 				nOffset = Parse(strBuffer, nOffset, strTemp);
-				if (strTemp.GetLength() == 0)
+				if (strTemp.IsEmpty())
 					ar[i] = fDefault;
 				else
 					ar[i] = _tstof(strTemp);
@@ -594,7 +595,7 @@ void CIni::SerGet(bool bGet, float *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR l
 			int nOffset = 0;
 			for (int i = 0; i < nCount; i++) {
 				nOffset = Parse(strBuffer, nOffset, strTemp);
-				if (strTemp.GetLength() == 0)
+				if (strTemp.IsEmpty())
 					ar[i] = fDefault;
 				else
 					ar[i] = (float)_tstof(strTemp);
@@ -622,7 +623,7 @@ void CIni::SerGet(bool bGet, int *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lps
 			int nOffset = 0;
 			for (int i = 0; i < nCount; i++) {
 				nOffset = Parse(strBuffer, nOffset, strTemp);
-				if (strTemp.GetLength() == 0)
+				if (strTemp.IsEmpty())
 					ar[i] = iDefault;
 				else
 					ar[i] = _tstoi(strTemp);
@@ -650,7 +651,7 @@ void CIni::SerGet(bool bGet, unsigned char *ar, int nCount, LPCTSTR lpszEntry, L
 			int nOffset = 0;
 			for (int i = 0; i < nCount; i++) {
 				nOffset = Parse(strBuffer, nOffset, strTemp);
-				if (strTemp.GetLength() == 0)
+				if (strTemp.IsEmpty())
 					ar[i] = ucDefault;
 				else
 					ar[i] = (unsigned char)_tstoi(strTemp);
@@ -678,7 +679,7 @@ void CIni::SerGet(bool bGet, short *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR l
 			int nOffset = 0;
 			for (int i = 0; i < nCount; i++) {
 				nOffset = Parse(strBuffer, nOffset, strTemp);
-				if (strTemp.GetLength() == 0)
+				if (strTemp.IsEmpty())
 					ar[i] = (short)iDefault;
 				else
 					ar[i] = (short)_tstoi(strTemp);
@@ -706,16 +707,16 @@ void CIni::SerGet(bool bGet, DWORD *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR l
 			int nOffset = 0;
 			for (int i = 0; i < nCount; i++) {
 				nOffset = Parse(strBuffer, nOffset, strTemp);
-				if(strTemp.GetLength() == 0)
+				if(strTemp.IsEmpty())
 					ar[i] = dwDefault;
 				else
 					ar[i] = (DWORD)_tstoi(strTemp);
 			}
 		} else {
 			CString strTemp;
-			strBuffer.Format(_T("%d"), ar[0]);
+			strBuffer.Format(_T("%lu"), ar[0]);
 			for (int i = 1; i < nCount; i++) {
-				strTemp.Format(_T("%d"), ar[i]);
+				strTemp.Format(_T("%lu"), ar[i]);
 				strBuffer.AppendChar(_T(','));
 				strBuffer.Append(strTemp);
 			}
@@ -734,7 +735,7 @@ void CIni::SerGet(bool bGet, WORD *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lp
 			int nOffset = 0;
 			for (int i = 0; i < nCount; i++) {
 				nOffset = Parse(strBuffer, nOffset, strTemp);
-				if (strTemp.GetLength() == 0)
+				if (strTemp.IsEmpty())
 					ar[i] = (WORD)dwDefault;
 				else
 					ar[i] = (WORD)_tstoi(strTemp);
@@ -752,7 +753,7 @@ void CIni::SerGet(bool bGet, WORD *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lp
 	}
 }
 
-void CIni::SerGet(bool bGet, CPoint * ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection, CPoint ptDefault)
+void CIni::SerGet(bool bGet, CPoint * ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection, const CPoint& ptDefault)
 {
 	CString strBuffer;
 	for (int i = 0; i < nCount; i++)
@@ -763,7 +764,7 @@ void CIni::SerGet(bool bGet, CPoint * ar, int nCount, LPCTSTR lpszEntry, LPCTSTR
 	}
 }
 
-void CIni::SerGet(bool bGet, CRect *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection, CRect rcDefault)
+void CIni::SerGet(bool bGet, CRect *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection, const CRect& rcDefault)
 {
 	CString strBuffer;
 	for (int i = 0; i < nCount; i++)

@@ -17,8 +17,6 @@
 #include "stdafx.h"
 #include "emule.h"
 #include "CustomAutoComplete.h"
-#include "Preferences.h"
-#include "otherfunctions.h"
 #include "SharedFileList.h"
 #include "emuledlg.h"
 #include "TransferDlg.h"
@@ -103,8 +101,8 @@ void CCatDialog::UpdateData()
 	CheckDlgButton(IDC_REGEXPR,m_myCat->ac_regexpeval);
 
 	newcolor = m_myCat->color;
-	m_ctlColor.SetColor(m_myCat->color == -1 ? m_ctlColor.GetDefaultColor() : m_myCat->color);
-	
+	m_ctlColor.SetColor(m_myCat->color == (DWORD)-1 ? m_ctlColor.GetDefaultColor() : m_myCat->color);
+
 	GetDlgItem(IDC_AUTOCATEXT)->SetWindowText(m_myCat->autocat);
 
 	m_prio.SetCurSel(m_myCat->prio);
@@ -134,7 +132,7 @@ void CCatDialog::Localize()
 
 	SetWindowText(GetResString(IDS_EDITCAT));
 
-	SetDlgItemText(IDC_STATIC_REGEXP,GetResString(IDS_STATIC_REGEXP));	
+	SetDlgItemText(IDC_STATIC_REGEXP,GetResString(IDS_STATIC_REGEXP));
 
 	m_prio.ResetContent();
 	m_prio.AddString(GetResString(IDS_PRIOLOW));
@@ -144,7 +142,7 @@ void CCatDialog::Localize()
 }
 
 void CCatDialog::OnBnClickedBrowse()
-{	
+{
 	TCHAR buffer[MAX_PATH] = {0};
 	GetDlgItemText(IDC_INCOMING, buffer, _countof(buffer));
 	if (SelectDir(GetSafeHwnd(), buffer,GetResString(IDS_SELECT_INCOMINGDIR)))
@@ -156,10 +154,10 @@ void CCatDialog::OnBnClickedOk()
 	CString oldpath = m_myCat->strIncomingPath;
 	if (GetDlgItem(IDC_TITLE)->GetWindowTextLength()>0)
 		GetDlgItem(IDC_TITLE)->GetWindowText(m_myCat->strTitle);
-	
+
 	if (GetDlgItem(IDC_INCOMING)->GetWindowTextLength()>2)
 		GetDlgItem(IDC_INCOMING)->GetWindowText(m_myCat->strIncomingPath);
-	
+
 	GetDlgItem(IDC_COMMENT)->GetWindowText(m_myCat->strComment);
 
 	m_myCat->ac_regexpeval= IsDlgButtonChecked(IDC_REGEXPR)>0;

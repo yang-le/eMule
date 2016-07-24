@@ -32,17 +32,17 @@ class CStatistics
 public:
 	CStatistics();   // standard constructor
 
-	void	Init();
+	static void	Init();
 	void	RecordRate();
 	float	GetAvgDownloadRate(int averageType);
 	float	GetAvgUploadRate(int averageType);
 
 	// -khaos--+++> (2-11-03)
-	uint32	GetTransferTime()			{ return timeTransfers + time_thisTransfer; }
-	uint32	GetUploadTime()				{ return timeUploads + time_thisUpload; }
-	uint32	GetDownloadTime()			{ return timeDownloads + time_thisDownload; }
-	uint32	GetServerDuration()			{ return timeServerDuration + time_thisServerDuration; }
-	void	Add2TotalServerDuration()	{ timeServerDuration += time_thisServerDuration;
+	static uint32	GetTransferTime()			{ return timeTransfers + time_thisTransfer; }
+	static uint32	GetUploadTime()				{ return timeUploads + time_thisUpload; }
+	static uint32	GetDownloadTime()			{ return timeDownloads + time_thisDownload; }
+	static uint32	GetServerDuration()			{ return timeServerDuration + time_thisServerDuration; }
+	static void	Add2TotalServerDuration()	{ timeServerDuration += time_thisServerDuration;
 										  time_thisServerDuration = 0; }
 	void	UpdateConnectionStats(float uploadrate, float downloadrate);
 
@@ -52,33 +52,33 @@ public:
 	//
 	void	CompDownDatarateOverhead();
 	void	ResetDownDatarateOverhead();
-	void	AddDownDataOverheadSourceExchange(uint32 data)	{ m_nDownDataRateMSOverhead += data;
-															  m_nDownDataOverheadSourceExchange += data;
-															  m_nDownDataOverheadSourceExchangePackets++;}
-	void	AddDownDataOverheadFileRequest(uint32 data)		{ m_nDownDataRateMSOverhead += data;
-															  m_nDownDataOverheadFileRequest += data;
-															  m_nDownDataOverheadFileRequestPackets++;}
-	void	AddDownDataOverheadServer(uint32 data)			{ m_nDownDataRateMSOverhead += data;
-															  m_nDownDataOverheadServer += data;
-															  m_nDownDataOverheadServerPackets++;}
-	void	AddDownDataOverheadOther(uint32 data)			{ m_nDownDataRateMSOverhead += data;
-															  m_nDownDataOverheadOther += data;
-															  m_nDownDataOverheadOtherPackets++;}
-	void	AddDownDataOverheadKad(uint32 data)				{ m_nDownDataRateMSOverhead += data;
-															  m_nDownDataOverheadKad += data;
-															  m_nDownDataOverheadKadPackets++;}
-	void	AddDownDataOverheadCrypt(uint32 /*data*/)			{;}
-	uint32	GetDownDatarateOverhead()					{return m_nDownDatarateOverhead;}
-	uint64	GetDownDataOverheadSourceExchange()			{return m_nDownDataOverheadSourceExchange;}
-	uint64	GetDownDataOverheadFileRequest()			{return m_nDownDataOverheadFileRequest;}
-	uint64	GetDownDataOverheadServer()					{return m_nDownDataOverheadServer;}
-	uint64	GetDownDataOverheadKad()					{return m_nDownDataOverheadKad;}
-	uint64	GetDownDataOverheadOther()					{return m_nDownDataOverheadOther;}
-	uint64	GetDownDataOverheadSourceExchangePackets()	{return m_nDownDataOverheadSourceExchangePackets;}
-	uint64	GetDownDataOverheadFileRequestPackets()		{return m_nDownDataOverheadFileRequestPackets;}
-	uint64	GetDownDataOverheadServerPackets()			{return m_nDownDataOverheadServerPackets;}
-	uint64	GetDownDataOverheadKadPackets()				{return m_nDownDataOverheadKadPackets;}
-	uint64	GetDownDataOverheadOtherPackets()			{return m_nDownDataOverheadOtherPackets;}
+	static void	AddDownDataOverheadSourceExchange(uint32 data)	{ m_nDownDataRateMSOverhead += data;
+																  m_nDownDataOverheadSourceExchange += data;
+																  m_nDownDataOverheadSourceExchangePackets++;}
+	static void	AddDownDataOverheadFileRequest(uint32 data)		{ m_nDownDataRateMSOverhead += data;
+																  m_nDownDataOverheadFileRequest += data;
+																  m_nDownDataOverheadFileRequestPackets++;}
+	static void	AddDownDataOverheadServer(uint32 data)			{ m_nDownDataRateMSOverhead += data;
+																  m_nDownDataOverheadServer += data;
+																  m_nDownDataOverheadServerPackets++;}
+	static void	AddDownDataOverheadOther(uint32 data)			{ m_nDownDataRateMSOverhead += data;
+																  m_nDownDataOverheadOther += data;
+																  m_nDownDataOverheadOtherPackets++;}
+	static void	AddDownDataOverheadKad(uint32 data)				{ m_nDownDataRateMSOverhead += data;
+																  m_nDownDataOverheadKad += data;
+																  m_nDownDataOverheadKadPackets++;}
+	static void	AddDownDataOverheadCrypt(uint32 /*data*/)		{}
+	static uint32	GetDownDatarateOverhead()					{return m_nDownDatarateOverhead;}
+	static uint64	GetDownDataOverheadSourceExchange()			{return m_nDownDataOverheadSourceExchange;}
+	static uint64	GetDownDataOverheadFileRequest()			{return m_nDownDataOverheadFileRequest;}
+	static uint64	GetDownDataOverheadServer()					{return m_nDownDataOverheadServer;}
+	static uint64	GetDownDataOverheadKad()					{return m_nDownDataOverheadKad;}
+	static uint64	GetDownDataOverheadOther()					{return m_nDownDataOverheadOther;}
+	static uint64	GetDownDataOverheadSourceExchangePackets()	{return m_nDownDataOverheadSourceExchangePackets;}
+	static uint64	GetDownDataOverheadFileRequestPackets()		{return m_nDownDataOverheadFileRequestPackets;}
+	static uint64	GetDownDataOverheadServerPackets()			{return m_nDownDataOverheadServerPackets;}
+	static uint64	GetDownDataOverheadKadPackets()				{return m_nDownDataOverheadKadPackets;}
+	static uint64	GetDownDataOverheadOtherPackets()			{return m_nDownDataOverheadOtherPackets;}
 
 
 	///////////////////////////////////////////////////////////////////////////
@@ -86,34 +86,34 @@ public:
 	//
 	void	CompUpDatarateOverhead();
 	void	ResetUpDatarateOverhead();
-	void	AddUpDataOverheadSourceExchange(uint32 data)	{ m_nUpDataRateMSOverhead += data;
-															  m_nUpDataOverheadSourceExchange += data;
-															  m_nUpDataOverheadSourceExchangePackets++;}
-	void	AddUpDataOverheadFileRequest(uint32 data)		{ m_nUpDataRateMSOverhead += data;
-															  m_nUpDataOverheadFileRequest += data;
-															  m_nUpDataOverheadFileRequestPackets++;}
-	void	AddUpDataOverheadServer(uint32 data)			{ m_nUpDataRateMSOverhead += data;
-															  m_nUpDataOverheadServer += data;
-															  m_nUpDataOverheadServerPackets++;}
-	void	AddUpDataOverheadKad(uint32 data)				{ m_nUpDataRateMSOverhead += data;
-															  m_nUpDataOverheadKad += data;
-															  m_nUpDataOverheadKadPackets++;}
-	void	AddUpDataOverheadOther(uint32 data)				{ m_nUpDataRateMSOverhead += data;
+	static void	AddUpDataOverheadSourceExchange(uint32 data)	{ m_nUpDataRateMSOverhead += data;
+																  m_nUpDataOverheadSourceExchange += data;
+																  m_nUpDataOverheadSourceExchangePackets++;}
+	static void	AddUpDataOverheadFileRequest(uint32 data)		{ m_nUpDataRateMSOverhead += data;
+																  m_nUpDataOverheadFileRequest += data;
+																  m_nUpDataOverheadFileRequestPackets++;}
+	static void	AddUpDataOverheadServer(uint32 data)			{ m_nUpDataRateMSOverhead += data;
+																  m_nUpDataOverheadServer += data;
+																  m_nUpDataOverheadServerPackets++;}
+	static void	AddUpDataOverheadKad(uint32 data)				{ m_nUpDataRateMSOverhead += data;
+																  m_nUpDataOverheadKad += data;
+																  m_nUpDataOverheadKadPackets++;}
+	static void	AddUpDataOverheadOther(uint32 data)				{ m_nUpDataRateMSOverhead += data;
 															  m_nUpDataOverheadOther += data;
 															  m_nUpDataOverheadOtherPackets++;}
-	void	AddUpDataOverheadCrypt(uint32 /*data*/)				{ ;}
+	static void	AddUpDataOverheadCrypt(uint32 /*data*/)			{}
 
-	uint32	GetUpDatarateOverhead()						{return m_nUpDatarateOverhead;}
-	uint64	GetUpDataOverheadSourceExchange()			{return m_nUpDataOverheadSourceExchange;}
-	uint64	GetUpDataOverheadFileRequest()				{return m_nUpDataOverheadFileRequest;}
-	uint64	GetUpDataOverheadServer()					{return m_nUpDataOverheadServer;}
-	uint64	GetUpDataOverheadKad()						{return m_nUpDataOverheadKad;}
-	uint64	GetUpDataOverheadOther()					{return m_nUpDataOverheadOther;}
-	uint64	GetUpDataOverheadSourceExchangePackets()	{return m_nUpDataOverheadSourceExchangePackets;}
-	uint64	GetUpDataOverheadFileRequestPackets()		{return m_nUpDataOverheadFileRequestPackets;}
-	uint64	GetUpDataOverheadServerPackets()			{return m_nUpDataOverheadServerPackets;}
-	uint64	GetUpDataOverheadKadPackets()				{return m_nUpDataOverheadKadPackets;}
-	uint64	GetUpDataOverheadOtherPackets()				{return m_nUpDataOverheadOtherPackets;}
+	static uint32	GetUpDatarateOverhead()						{return m_nUpDatarateOverhead;}
+	static uint64	GetUpDataOverheadSourceExchange()			{return m_nUpDataOverheadSourceExchange;}
+	static uint64	GetUpDataOverheadFileRequest()				{return m_nUpDataOverheadFileRequest;}
+	static uint64	GetUpDataOverheadServer()					{return m_nUpDataOverheadServer;}
+	static uint64	GetUpDataOverheadKad()						{return m_nUpDataOverheadKad;}
+	static uint64	GetUpDataOverheadOther()					{return m_nUpDataOverheadOther;}
+	static uint64	GetUpDataOverheadSourceExchangePackets()	{return m_nUpDataOverheadSourceExchangePackets;}
+	static uint64	GetUpDataOverheadFileRequestPackets()		{return m_nUpDataOverheadFileRequestPackets;}
+	static uint64	GetUpDataOverheadServerPackets()			{return m_nUpDataOverheadServerPackets;}
+	static uint64	GetUpDataOverheadKadPackets()				{return m_nUpDataOverheadKadPackets;}
+	static uint64	GetUpDataOverheadOtherPackets()				{return m_nUpDataOverheadOtherPackets;}
 
 public:
 	//	Cumulative Stats
@@ -154,10 +154,10 @@ public:
 	static DWORD	starttime;
 
 private:
-	typedef struct TransferredData {
+	typedef struct {
 		uint32	datalen;
 		DWORD	timestamp;
-	};
+	} TransferredData;
 	std::list<TransferredData> uprateHistory;
 	std::list<TransferredData> downrateHistory;
 
@@ -189,8 +189,8 @@ private:
 
 	static uint32	m_sumavgDDRO;
 	static uint32	m_sumavgUDRO;
-	CList<TransferredData> m_AvarageDDRO_list;
-	CList<TransferredData> m_AvarageUDRO_list;
+	CList<TransferredData> m_AverageDDRO_list;
+	CList<TransferredData> m_AverageUDRO_list;
 };
 
 extern CStatistics theStats;

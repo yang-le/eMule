@@ -1,14 +1,13 @@
 #include "stdafx.h"
 #include "MD4.h"
 #include "SHA.h"
+#pragma warning(push)
 #pragma warning(disable:4244) // conversion from 'type1' to 'type2', possible loss of data
 #pragma warning(disable:4100) // unreferenced formal parameter
 #pragma warning(disable:4702) // unreachable code
-#include <crypto51/sha.h>
-#include <crypto51/md4.h>
-#pragma warning(default:4702) // unreachable code
-#pragma warning(default:4100) // unreferenced formal parameter
-#pragma warning(default:4244) // conversion from 'type1' to 'type2', possible loss of data
+#include <cryptopp/sha.h>
+#include <cryptopp/md4.h>
+#pragma warning(pop)
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -130,9 +129,9 @@ bool CheckResources()
 int fooAsCode(int a)
 {
 	return a + 30;
-00401000 8B 44 24 04      mov         eax,dword ptr [esp+4] 
-00401004 83 C0 1E         add         eax,1Eh 
-00401007 C3               ret              
+00401000 8B 44 24 04      mov         eax,dword ptr [esp+4]
+00401004 83 C0 1E         add         eax,1Eh
+00401007 C3               ret
 }
 */
 unsigned char fooAsData[] = {
@@ -164,7 +163,7 @@ bool SelfTest()
 		return false; // DO *NOT* START !!!
 	}
 
-	// Win98/WinME PROBLEM: Those Windows version have some icon resource limit. 
+	// Win98/WinME PROBLEM: Those Windows version have some icon resource limit.
 	// That limit seems to be a combination of the total amount of icon (image)
 	// data which is used by all icons as well as the total number of icon resources
 	// which are listed here in that section. We already exceeded that limit and we

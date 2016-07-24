@@ -503,7 +503,7 @@ BEGIN
     CONTROL         "-",IDC_FORMAT,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,63,31,328,8
     GROUPBOX        "Video",IDC_FD_XI3,4,43,195,62
     RTEXT           "Codec:",IDC_FD_XI5,7,53,77,8
-    EDITTEXT        IDC_VCODEC,85,53,109,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    CONTROL         "-",IDC_VCODEC,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,87,53,107,8
     RTEXT           "Bitrate:",IDC_FD_XI7,7,63,77,8
     CONTROL         "-",IDC_VBITRATE,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,87,63,107,8
     RTEXT           "Width x Height:",IDC_FD_XI9,7,73,77,8
@@ -514,7 +514,7 @@ BEGIN
     CONTROL         "-",IDC_VFPS,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,87,93,107,8
     GROUPBOX        "Audio",IDC_FD_XI4,203,43,195,62
     RTEXT           "Codec:",IDC_FD_XI6,210,53,65,8
-    EDITTEXT        IDC_ACODEC,277,53,114,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    CONTROL         "-",IDC_ACODEC,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,279,53,112,8
     RTEXT           "Bitrate:",IDC_FD_XI8,210,63,65,8
     CONTROL         "-",IDC_ABITRATE,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,279,63,112,8
     RTEXT           "Channel:",IDC_FD_XI10,210,73,65,8
@@ -807,9 +807,9 @@ CAPTION "Upload Priority"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL         "Do you want eMule to manage your download priorities?\n\nTurning this on will allow eMule to make sure downloads with a lot of sources do not interfere with downloads that have few sources...",IDC_DAP,
-                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE,0,0,315,64
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE,0,3,315,61
     CONTROL         "Do you want eMule to manage your upload priorities?\n\nTurning this on will allow eMule to boost rare files meaning popular files will be harder for other people to get.\nTurning this off...",IDC_UAP,
-                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE,0,71,315,69
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE,0,74,315,66
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,1,67,316,1
 END
 
@@ -819,7 +819,7 @@ CAPTION "Security"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL         "Enable this option if you want to enable protocol obfuscation\n\nIf your ISP tries throttle or block eMule, enabling obfuscation will help to circumvent such restrictions.",IDC_WIZZARDOBFUSCATION,
-                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE,0,0,317,60
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE,0,3,317,57
 END
 
 IDD_WIZ1_SERVER DIALOGEX 0, 0, 317, 143
@@ -832,7 +832,7 @@ BEGIN
     CONTROL         "Kad",IDC_WIZARD_NETWORK_KADEMLIA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,158,14,145,10
     GROUPBOX        "eD2K Setting",IDC_WIZARD_ED2K,0,38,317,63
     CONTROL         "Do you want eMule to connect using Safe Connect?\n\nTurning this feature off allows eMule to connect to servers a little faster, but can cause you to get more false lowID connects.",IDC_SAFESERVERCONNECT,
-                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,8,50,289,48
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,8,53,289,45
 END
 
 IDD_WIZ1_END DIALOGEX 0, 0, 317, 193
@@ -2547,7 +2547,7 @@ BEGIN
     IDS_ERR_KADCONTACTS     "No contacts found, please bootstrap, or download a nodes.dat file."
     IDS_METATAGS            "Meta tag count:"
     IDS_FILEFORMAT          "Format"
-    IDS_UDPREASKS           "UDP File Reasks"
+    IDS_UDPREASKS           "UDP File Re-asks"
     IDS_DYNUP_PINGTOLERANCE_MS "Ping tolerance (ms)"
     IDS_DYNUP_RADIO_PINGTOLERANCE_HEADER "Method for ping tolerance"
     IDS_DYNUP_RADIO_PINGTOLERANCE_MS "Milliseconds (ms)"
@@ -2646,7 +2646,7 @@ BEGIN
     IDS_INSTALL_SKIN_FILE_ERROR 
                             "Failed to extract file ""%s"" from eMule Skin to local file ""%s"" - %s"
     IDS_INSTALL_SKIN_PKG_ERROR "This is not a valid eMule Skin package file."
-    IDS_NEXT_REASK          "Next reask"
+    IDS_NEXT_REASK          "Next re-ask"
     IDS_A4AF_FILES          "A4AF files"
     IDS_FO_TEMPTCP_S        "Opened port %u (TCP) on internal WinXP firewall for this eMule session"
     IDS_FO_TEMPTCP_F        "Failed to open port %u (TCP) on internal WinXP firewall for this eMule session"
@@ -3744,7 +3744,8 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "res\\emule.manifest"
 
 #include "version.h"
 #include "res\emule.rc2"
-#include "afxres.rc"
+#include "afxres.rc"
+
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED

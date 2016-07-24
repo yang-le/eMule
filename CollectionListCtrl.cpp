@@ -70,8 +70,7 @@ CCollectionFileDetailsSheet::CCollectionFileDetailsSheet(CTypedPtrList<CPtrList,
 	: CListViewWalkerPropertySheet(pListCtrl)
 {
 	m_uPshInvokePage = uPshInvokePage;
-	POSITION pos = aFiles.GetHeadPosition();
-	while (pos)
+	for (POSITION pos = aFiles.GetHeadPosition(); pos;)
 		m_aItems.Add(aFiles.GetNext(pos));
 	m_psh.dwFlags &= ~PSH_HASHELP;
 
@@ -138,13 +137,6 @@ void CCollectionFileDetailsSheet::UpdateTitle()
 //////////////////////////////////////////////////////////////////////////////
 // CCollectionListCtrl
 
-enum ECols
-{
-	colName = 0,
-	colSize,
-	colHash
-};
-
 IMPLEMENT_DYNAMIC(CCollectionListCtrl, CMuleListCtrl)
 
 BEGIN_MESSAGE_MAP(CCollectionListCtrl, CMuleListCtrl)
@@ -161,13 +153,13 @@ CCollectionListCtrl::~CCollectionListCtrl()
 {
 }
 
-void CCollectionListCtrl::Init(CString strNameAdd)
+void CCollectionListCtrl::Init(const CString& strNameAdd)
 {
 	SetPrefsKey(_T("CollectionListCtrl") + strNameAdd);
 
 	ASSERT( GetStyle() & LVS_SHAREIMAGELISTS );
 	SendMessage(LVM_SETIMAGELIST, LVSIL_SMALL, (LPARAM)theApp.GetSystemImageList());
-	
+
 	ASSERT( (GetStyle() & LVS_SINGLESEL) == 0 );
 	SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
@@ -200,10 +192,10 @@ void CCollectionListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
-int CCollectionListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+int CALLBACK CCollectionListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	const CAbstractFile *item1 = (CAbstractFile *)lParam1;
-	const CAbstractFile *item2 = (CAbstractFile *)lParam2; 
+	const CAbstractFile *item2 = (CAbstractFile *)lParam2;
 	if (item1 == NULL || item2 == NULL)
 		return 0;
 
@@ -213,15 +205,15 @@ int CCollectionListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamS
 		case colName:
 			iResult = CompareLocaleStringNoCase(item1->GetFileName(),item2->GetFileName());
 			break;
-		
+
 		case colSize:
 			iResult = CompareUnsigned64(item1->GetFileSize(), item2->GetFileSize());
 			break;
-		
+
 		case colHash:
 			iResult = memcmp(item1->GetFileHash(), item2->GetFileHash(), 16);
 			break;
-		
+
 		default:
 			return 0;
 	}
@@ -233,15 +225,13 @@ int CCollectionListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamS
 void CCollectionListCtrl::OnNmRClick(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
 	CTypedPtrList<CPtrList, CAbstractFile*> abstractFileList;
-	POSITION pos = GetFirstSelectedItemPosition();
-	while (pos != NULL)
-	{
+	for (POSITION pos = GetFirstSelectedItemPosition(); pos != NULL;) {
 		int index = GetNextSelectedItem(pos);
 		if (index >= 0)
 			abstractFileList.AddTail((CAbstractFile*)GetItemData(index));
 	}
 
-	if(abstractFileList.GetCount() > 0)
+	if (!abstractFileList.IsEmpty())
 	{
 		CCollectionFileDetailsSheet dialog(abstractFileList, 0, this);
 		dialog.DoModal();

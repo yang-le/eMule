@@ -1,6 +1,5 @@
 #pragma once
 #include "GDIThread.h"
-#include "resource.h"
 #include "enbitmap.h"
 
 /////////////////////////////////////////////////////////////////////////////
@@ -12,8 +11,8 @@ class CCreditsDlg : public CDialog
 public:
 	void KillThread();
 	void StartThread();
-	CCreditsDlg(CWnd* pParent = NULL);   // standard constructor
-	CCreditsDlg::~CCreditsDlg();
+	explicit CCreditsDlg(CWnd* pParent = NULL);   // standard constructor
+	~CCreditsDlg();
 
 	CClientDC*	m_pDC;
 	CRect		m_rectScreen;

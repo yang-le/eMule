@@ -48,6 +48,7 @@ static char THIS_FILE[] = __FILE__;
 
 
 CMMServer::CMMServer(void)
+	: m_byPendingCommand(0), m_bUseFakeContent(false)
 {
 	m_SendSearchList.SetSize(0);
 	h_timer = NULL;
@@ -59,7 +60,6 @@ CMMServer::CMMServer(void)
 	m_nMaxDownloads = 0;
 	m_nMaxBufDownloads = 0;
 	m_bGrabListLogin =false;
-
 }
 
 CMMServer::~CMMServer(void)
@@ -110,7 +110,7 @@ bool CMMServer::PreProcessPacket(char* pPacket, uint32 nSize, CMMSocket* sender)
 			return false;
 		}
 	}
-	
+
 	CMMPacket* packet = new CMMPacket(MMP_GENERALERROR);
 	sender->SendPacket(packet);
 	return false;
@@ -131,7 +131,7 @@ void CMMServer::ProcessHelloPacket(CMMData* data, CMMSocket* sender){
 		}
 		CString plainPW = data->ReadString();
 		CString testValue =MD5Sum(plainPW).GetHash();
-		if (testValue != thePrefs.GetMMPass() || plainPW.GetLength() == 0 ){
+		if (testValue != thePrefs.GetMMPass() || plainPW.IsEmpty()) {
 			m_dwBlocked = 0;
 			packet->WriteByte(MMT_WRONGPASSWORD);
 			sender->SendPacket(packet);
@@ -144,7 +144,7 @@ void CMMServer::ProcessHelloPacket(CMMData* data, CMMSocket* sender){
 			return;
 		}
 		else{
-			m_bUseFakeContent = (data->ReadByte() != 0); 
+			m_bUseFakeContent = (data->ReadByte() != 0);
 			m_nMaxDownloads = data->ReadShort();
 			m_nMaxBufDownloads = data->ReadShort();
 			m_bGrabListLogin = (data->ReadByte() != 0);
@@ -220,12 +220,12 @@ void CMMServer::ProcessStatusRequest(CMMSocket* sender, CMMPacket* packet){
 }
 
 void CMMServer::ProcessFileListRequest(CMMSocket* sender, CMMPacket* packet){
-	
+
 	if (packet == NULL)
 		packet = new CMMPacket(MMP_FILELISTANS);
 	else
 		packet->WriteByte(MMP_FILELISTANS);
-	
+
 	int nCount = thePrefs.GetCatCount();
 	packet->WriteByte((uint8)nCount);
 	for (int i = 0; i != nCount; i++){
@@ -299,7 +299,7 @@ void CMMServer::ProcessFileCommand(CMMData* data, CMMSocket* sender){
 		CMMPacket* packet = new CMMPacket(MMP_GENERALERROR);
 		sender->SendPacket(packet);
 		ASSERT ( false );
-		return;		
+		return;
 	}
 	CPartFile* selFile = m_SentFileList[byFileIndex];
 	switch (byCommand){
@@ -310,18 +310,18 @@ void CMMServer::ProcessFileCommand(CMMData* data, CMMSocket* sender){
 			selFile->ResumeFile();
 			break;
 		case MMT_CANCEL:{
-			switch(selFile->GetStatus()) { 
-				case PS_WAITINGFORHASH: 
-				case PS_HASHING: 
-				case PS_COMPLETING: 
-				case PS_COMPLETE:  
+			switch(selFile->GetStatus()) {
+				case PS_WAITINGFORHASH:
+				case PS_HASHING:
+				case PS_COMPLETING:
+				case PS_COMPLETE:
 					break;
 				case PS_PAUSED:
-					selFile->DeleteFile(); 
+					selFile->DeleteFile();
 					break;
 				default:
                     theApp.downloadqueue->StartNextFileIfPrefs(selFile->GetCategory());
-					selFile->DeleteFile(); 
+					selFile->DeleteFile();
 			}
 			break;
 		}
@@ -331,7 +331,7 @@ void CMMServer::ProcessFileCommand(CMMData* data, CMMSocket* sender){
 			return;
 	}
 	CMMPacket* packet = new CMMPacket(MMP_FILECOMMANDANS);
-	ProcessFileListRequest(sender,packet); 
+	ProcessFileListRequest(sender,packet);
 
 }
 
@@ -343,7 +343,7 @@ void  CMMServer::ProcessDetailRequest(CMMData* data, CMMSocket* sender){
 		CMMPacket* packet = new CMMPacket(MMP_GENERALERROR);
 		sender->SendPacket(packet);
 		ASSERT ( false );
-		return;		
+		return;
 	}
 	CPartFile* selFile = m_SentFileList[byFileIndex];
 	CMMPacket* packet = new CMMPacket(MMP_FILEDETAILANS);
@@ -462,7 +462,7 @@ void  CMMServer::ProcessSearchRequest(CMMData* data, CMMSocket* sender){
 	theStats.AddUpDataOverheadServer(searchpacket->size);
 	theApp.serverconnect->SendPacket(searchpacket,true);
 	char buffer[500];
-	int iBuffLen = _snprintf(buffer, _countof(buffer), "HTTP/1.1 200 OK\r\nConnection: Close\r\nContent-Type: %s\r\n", GetContentType());
+	int iBuffLen = _snprintf(buffer, _countof(buffer), "HTTP/1.1 200 OK\r\nConnection: Close\r\nContent-Type: %s\r\n", (LPCSTR)GetContentType());
 	if (iBuffLen > 0)
 		sender->Send(buffer,iBuffLen);
 }
@@ -529,7 +529,7 @@ void  CMMServer::ProcessDownloadRequest(CMMData* data, CMMSocket* sender){
 		CMMPacket* packet = new CMMPacket(MMP_GENERALERROR);
 		sender->SendPacket(packet);
 		ASSERT ( false );
-		return;		
+		return;
 	}
 	CSearchFile* todownload = m_SendSearchList[byFileIndex];
 	theApp.downloadqueue->AddSearchToDownload(todownload, 2, 0);
@@ -555,7 +555,7 @@ void  CMMServer::ProcessPreviewRequest(CMMData* data, CMMSocket* sender){
 		if (byFileIndex >= m_SentFileList.GetSize()
 		|| !theApp.downloadqueue->IsPartFile(m_SentFileList[byFileIndex]))
 		{
-			bError = true;	
+			bError = true;
 		}
 		else
 			knownfile = m_SentFileList[byFileIndex];
@@ -564,7 +564,7 @@ void  CMMServer::ProcessPreviewRequest(CMMData* data, CMMSocket* sender){
 		if (byFileIndex >= m_SentFinishedList.GetSize()
 		|| !theApp.knownfiles->IsKnownFile(m_SentFinishedList[byFileIndex]))
 		{
-			bError = true;	
+			bError = true;
 		}
 		else
 			knownfile = m_SentFinishedList[byFileIndex];
@@ -614,12 +614,14 @@ void CMMServer::PreviewFinished(CxImage** imgFrames, uint8 nCount){
 		CxImage* cur_frame = imgFrames[0];
 		if (cur_frame == NULL){
 			ASSERT ( false );
+			delete packet;
 			return;
 		}
 		BYTE* abyResultBuffer = NULL;
-		long nResultSize = 0;
+		int32_t nResultSize = 0;
 		if (!cur_frame->Encode(abyResultBuffer, nResultSize, CXIMAGE_FORMAT_PNG)){
-			ASSERT ( false );			
+			ASSERT ( false );
+			delete packet;
 			return;
 		}
 		packet->WriteInt(nResultSize);
@@ -635,16 +637,16 @@ void CMMServer::PreviewFinished(CxImage** imgFrames, uint8 nCount){
 }
 
 void CMMServer::Process(){
-	if (m_pSocket){ 
-		m_pSocket->Process(); 
-	} 
+	if (m_pSocket){
+		m_pSocket->Process();
+	}
 }
 
-CStringA CMMServer::GetContentType(){
+CStringA CMMServer::GetContentType() const
+{
 	if (m_bUseFakeContent)
 		return CStringA("image/vnd.wap.wbmp");
-	else
-		return CStringA("application/octet-stream");
+	return CStringA("application/octet-stream");
 }
 
 VOID CALLBACK CMMServer::CommandTimer(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEvent*/, DWORD /*dwTime*/)
@@ -656,19 +658,19 @@ VOID CALLBACK CMMServer::CommandTimer(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*i
 		theApp.mmserver->h_timer = 0;
 		switch(theApp.mmserver->m_byPendingCommand){
 			case MMT_SDPC:{
-				HANDLE hToken; 
-				TOKEN_PRIVILEGES tkp; 
+				HANDLE hToken;
+				TOKEN_PRIVILEGES tkp;
 				try{
-					if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) 
-						throw 1; 
-					LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &tkp.Privileges[0].Luid); 
-					tkp.PrivilegeCount = 1;  // one privilege to set    
-					tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED; 
-					AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0); 
+					if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+						throw 1;
+					LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &tkp.Privileges[0].Luid);
+					tkp.PrivilegeCount = 1;  // one privilege to set
+					tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+					AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
 				}
 				catch(...){
 				}
-				if (!ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCEIFHUNG, 0)) 
+				if (!ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCEIFHUNG, 0))
 					break;
 			}
 			case MMT_SDEMULE:
@@ -686,35 +688,36 @@ VOID CALLBACK CMMServer::CommandTimer(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*i
 	CATCH_DFLT_EXCEPTIONS(_T("CMMServer::CommandTimer"))
 }
 
-void  CMMServer::ProcessStatisticsRequest(CMMData* data, CMMSocket* sender){
+void  CMMServer::ProcessStatisticsRequest(CMMData* data, CMMSocket* sender)
+{
 	uint16 nWidth = data->ReadShort();
 	CArray<UpDown>* rawData = theApp.webserver->GetPointsForWeb();
 	int nRawDataSize = rawData->GetSize();
 	int nCompressEvery = (nRawDataSize > nWidth) ? nRawDataSize / nWidth : 1;
 	int nPos = (nRawDataSize > nWidth) ? (nRawDataSize % nWidth) : 0;
-	int nAddUp, nAddDown, nAddCon, i;
 	ASSERT (nPos + nCompressEvery * nWidth == nRawDataSize || (nPos == 0 && nRawDataSize < nWidth));
-	
+
 	CMMPacket* packet = new CMMPacket(MMP_STATISTICSANS);
 	packet->WriteShort((uint16)((nRawDataSize-nPos)*thePrefs.GetTrafficOMeterInterval()));
 	packet->WriteShort((uint16)(min(nWidth, nRawDataSize)));
 	while (nPos < nRawDataSize){
-		nAddUp = nAddDown = nAddCon = 0;
+		int nAddUp = 0, nAddDown = 0, nAddCon = 0, i;
 		for (i = 0; i != nCompressEvery; i++){
 			if (nPos >= nRawDataSize){
 				ASSERT ( false );
 				break;
 			}
 			else{
-				nAddUp += (int) (rawData->ElementAt(nPos).upload * 1024);
-				nAddDown += (int) (rawData->ElementAt(nPos).download * 1024);
-				nAddCon += rawData->ElementAt(nPos).connections;
+				const UpDown& ud = rawData->ElementAt(nPos);
+				nAddUp += (int) (ud.upload * 1024);
+				nAddDown += (int) (ud.download * 1024);
+				nAddCon += ud.connections;
 			}
-			nPos++;
+			++nPos;
 		}
-		packet->WriteInt((uint32)ROUND(nAddUp/i));
-		packet->WriteInt((uint32)ROUND(nAddDown/i));
-		packet->WriteShort((uint16)ROUND(nAddCon/i));
+		packet->WriteInt((uint32)ROUND((float)nAddUp/i));
+		packet->WriteInt((uint32)ROUND((float)nAddDown/i));
+		packet->WriteShort((uint16)ROUND((float)nAddCon/i));
 	}
 	ASSERT ( nPos == nRawDataSize );
 	sender->SendPacket(packet);

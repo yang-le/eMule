@@ -29,9 +29,9 @@ public:
 	void Disconnect(bool bIsShuttingDown = false);
 	void SetConnectStatus(bool bConnected);
 	void SetIRCWnd(CIrcWnd *pwndIRC);
-	int SendString(CString sSend);
+	int SendString(const CString& sSend);
 	void ParsePerform();
-	void ProcessLink(CString sED2KLink);
+	void ProcessLink(const CString& sED2KLink);
 	uint32 SetVerify();
 	CString GetNick();
 

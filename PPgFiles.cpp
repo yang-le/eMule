@@ -50,8 +50,8 @@ BEGIN_MESSAGE_MAP(CPPgFiles, CPropertyPage)
 	ON_EN_CHANGE(IDC_VIDEOPLAYER, OnSettingsChange)
 	ON_EN_CHANGE(IDC_VIDEOPLAYER_ARGS, OnSettingsChange)
 	ON_BN_CLICKED(IDC_VIDEOBACKUP, OnSettingsChange)
-	ON_BN_CLICKED(IDC_REMEMBERDOWNLOADED, OnSettingsChange) 
-	ON_BN_CLICKED(IDC_REMEMBERCANCELLED, OnSettingsChange) 
+	ON_BN_CLICKED(IDC_REMEMBERDOWNLOADED, OnSettingsChange)
+	ON_BN_CLICKED(IDC_REMEMBERCANCELLED, OnSettingsChange)
 	ON_BN_CLICKED(IDC_BROWSEV, BrowseVideoplayer)
 	ON_WM_HELPINFO()
 	ON_WM_DESTROY()
@@ -155,14 +155,12 @@ void CPPgFiles::LoadSettings(void)
 		CheckDlgButton(IDC_REMEMBERCANCELLED,1);
 	else
 		CheckDlgButton(IDC_REMEMBERCANCELLED,0);
-	
+
 	GetDlgItem(IDC_STARTNEXTFILECAT)->EnableWindow(IsDlgButtonChecked(IDC_STARTNEXTFILE));
 }
 
 BOOL CPPgFiles::OnApply()
 {
-	CString buffer;
-
     bool bOldPreviewPrio = thePrefs.m_bpreviewprio;
 	if (IsDlgButtonChecked(IDC_PREVIEWPRIO))
 		thePrefs.m_bpreviewprio = true;
@@ -251,9 +249,9 @@ void CPPgFiles::Localize(void)
 		GetDlgItem(IDC_STATICVIDEOPLAYER)->SetWindowText(GetResString(IDS_PW_VIDEOPLAYER));
 		GetDlgItem(IDC_VIDEOPLAYER_CMD_LBL)->SetWindowText(GetResString(IDS_COMMAND));
 		GetDlgItem(IDC_VIDEOPLAYER_ARGS_LBL)->SetWindowText(GetResString(IDS_ARGUMENTS));
-		GetDlgItem(IDC_VIDEOBACKUP)->SetWindowText(GetResString(IDS_VIDEOBACKUP));		
+		GetDlgItem(IDC_VIDEOBACKUP)->SetWindowText(GetResString(IDS_VIDEOBACKUP));
 		GetDlgItem(IDC_REMEMBERDOWNLOADED)->SetWindowText(GetResString(IDS_PW_REMEMBERDOWNLOADED));
-		GetDlgItem(IDC_REMEMBERCANCELLED)->SetWindowText(GetResString(IDS_PW_REMEMBERCANCELLED));		
+		GetDlgItem(IDC_REMEMBERCANCELLED)->SetWindowText(GetResString(IDS_PW_REMEMBERCANCELLED));
 	}
 }
 

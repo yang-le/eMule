@@ -75,7 +75,7 @@ BOOL CPPgDirectories::OnInitDialog()
 
 	AddBuddyButton(GetDlgItem(IDC_INCFILES)->m_hWnd, ::GetDlgItem(m_hWnd, IDC_SELINCDIR));
 	InitAttachedBrowseButton(::GetDlgItem(m_hWnd, IDC_SELINCDIR), m_icoBrowse);
-	
+
 	AddBuddyButton(GetDlgItem(IDC_TEMPFILES)->m_hWnd, ::GetDlgItem(m_hWnd, IDC_SELTEMPDIR));
 	InitAttachedBrowseButton(::GetDlgItem(m_hWnd, IDC_SELTEMPDIR), m_icoBrowse);
 
@@ -143,8 +143,7 @@ BOOL CPPgDirectories::OnApply()
 		// if the user chooses a non-default directory which already contains files, inform him that all those files
 		// will be shared
 		CFileFind ff;
-		CString strSearchPath;
-		strSearchPath.Format(_T("%s\\*"),strIncomingDir);
+		CString strSearchPath(strIncomingDir + _T("\\*"));
 		bool bEnd = !ff.FindFile(strSearchPath, 0);
 		bool bExistingFile = false;
 		while (!bEnd)
@@ -177,7 +176,7 @@ BOOL CPPgDirectories::OnApply()
 			return FALSE;
 		}
 	}
-	
+
 	// checking specified tempdir(s)
 	CString strTempDir;
 	GetDlgItemText(IDC_TEMPFILES, strTempDir);
@@ -196,7 +195,7 @@ BOOL CPPgDirectories::OnApply()
 			if (CompareDirectories(strIncomingDir, atmp)==0){
 					AfxMessageBox(GetResString(IDS_WRN_INCTEMP_SAME));
 					return FALSE;
-			}	
+			}
 			if (thePrefs.IsInstallationDirectory(atmp)){
 				AfxMessageBox(GetResString(IDS_WRN_TEMPFILES_RESERVED));
 				return FALSE;
@@ -249,11 +248,9 @@ BOOL CPPgDirectories::OnApply()
 		thePrefs.shareddir_list.AddTail(m_ctlUncPaths.GetItemText(i, 0));
 
 	// check shared directories for reserved folder names
-	POSITION pos = thePrefs.shareddir_list.GetHeadPosition();
-	while (pos){
+	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos;) {
 		POSITION posLast = pos;
-		const CString& rstrDir = thePrefs.shareddir_list.GetNext(pos);
-		if (!thePrefs.IsShareableDirectory(rstrDir))
+		if (!thePrefs.IsShareableDirectory(thePrefs.shareddir_list.GetNext(pos)))
 			thePrefs.shareddir_list.RemoveAt(posLast);
 	}
 
@@ -282,7 +279,7 @@ BOOL CPPgDirectories::OnApply()
 		AfxMessageBox(GetResString(IDS_SETTINGCHANGED_RESTART));
 
 	theApp.emuledlg->sharedfileswnd->Reload();
-	
+
 	SetModified(0);
 	return CPropertyPage::OnApply();
 }
@@ -290,7 +287,7 @@ BOOL CPPgDirectories::OnApply()
 BOOL CPPgDirectories::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	if (wParam == UM_ITEMSTATECHANGED)
-		SetModified();	
+		SetModified();
 	else if (wParam == ID_HELP)
 	{
 		OnHelp();
@@ -331,14 +328,14 @@ void CPPgDirectories::OnBnClickedAddUNC()
 		return;
 	CString unc=inputbox.GetInput();
 
-	// basic unc-check 
+	// basic unc-check
 	if (!PathIsUNC(unc)){
 		AfxMessageBox(GetResString(IDS_ERR_BADUNC), MB_ICONERROR);
 		return;
 	}
 
 	if (unc.Right(1) == _T("\\"))
-		unc.Delete(unc.GetLength()-1, 1);
+		unc.Truncate(unc.GetLength()-1);
 
 	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition();pos != 0;){
 		if (unc.CompareNoCase(thePrefs.shareddir_list.GetNext(pos))==0)

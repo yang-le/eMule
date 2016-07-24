@@ -121,7 +121,7 @@ void CIrcChannelListCtrl::GetItemDisplayText(const ChannelName *pChannel, int iS
 
 void CIrcChannelListCtrl::OnLvnGetDispInfo(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	if (theApp.emuledlg->IsRunning()) {
+	if (!theApp.emuledlg->IsClosing()) {
 		// Although we have an owner drawn listview control we store the text for the primary item in the listview, to be
 		// capable of quick searching those items via the keyboard. Because our listview items may change their contents,
 		// we do this via a text callback function. The listview control will send us the LVN_DISPINFO notification if
@@ -154,7 +154,7 @@ void CIrcChannelListCtrl::OnLvnColumnClick(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
-int CIrcChannelListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+int CALLBACK CIrcChannelListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	const ChannelName* pItem1 = (ChannelName*)lParam1;
 	const ChannelName* pItem2 = (ChannelName*)lParam2;
@@ -165,11 +165,11 @@ int CIrcChannelListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamS
 		case 0:
 			iResult = pItem1->m_sName.CompareNoCase(pItem2->m_sName);
 			break;
-		
+
 		case 1:
 			iResult = CompareUnsigned(pItem1->m_uUsers, pItem2->m_uUsers);
 			break;
-		
+
 		case 2:
 			iResult = pItem1->m_sDesc.CompareNoCase(pItem2->m_sDesc);
 			break;
@@ -241,10 +241,8 @@ bool CIrcChannelListCtrl::AddChannelToList(const CString& sName, const CString& 
 
 void CIrcChannelListCtrl::ResetServerChannelList(bool bShutDown)
 {
-	POSITION pos = m_lstChannelNames.GetHeadPosition();
-	while (pos)
-		delete m_lstChannelNames.GetNext(pos);
-	m_lstChannelNames.RemoveAll();
+	while (!m_lstChannelNames.IsEmpty())
+		delete m_lstChannelNames.RemoveHead();
 	if (!bShutDown)
 		DeleteAllItems();
 }
@@ -253,8 +251,7 @@ void CIrcChannelListCtrl::JoinChannels()
 {
 	if (!m_pParent->IsConnected())
 		return;
-	POSITION pos = GetFirstSelectedItemPosition();
-	while (pos != NULL)
+	for (POSITION pos = GetFirstSelectedItemPosition(); pos != NULL;)
 	{
 		int iIndex = GetNextSelectedItem(pos);
 		if (iIndex >= 0)

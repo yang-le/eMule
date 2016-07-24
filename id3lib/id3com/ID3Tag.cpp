@@ -30,7 +30,7 @@
 //
 // Date          Developer             Changes
 //
-// 05 Jan 2000   John Adcock           Original Release
+// 05 Jan 2000   John Adcock           Original Release    
 // 26 Apr 2000   John Adcock           Got working with id3lib 3.7.3
 // 18 Aug 2000   Philip Oldaker        Added Picture Functionality
 //
@@ -64,7 +64,7 @@ CID3Tag::~CID3Tag()
 
 STDMETHODIMP CID3Tag::InterfaceSupportsErrorInfo(REFIID riid)
 {
-	static const IID* arr[] =
+	static const IID* arr[] = 
 	{
 		&IID_IID3ComTag
 	};
@@ -184,10 +184,10 @@ STDMETHODIMP CID3Tag::get_Item(long FrameNum, IID3ComFrame** pVal)
 		*pVal = NULL;
         ID3_Frame* pFrame = NULL;
         ID3_Tag::Iterator* it = m_ID3Tag->CreateIterator();
-        pFrame = it->GetNext();
+        pFrame = it->GetNext();    
         while(FrameNum)
         {
-            pFrame = it->GetNext();
+            pFrame = it->GetNext();    
             --FrameNum;
         }
         delete it;
@@ -874,10 +874,10 @@ STDMETHODIMP CID3Tag::RemoveFrameByNum(long FrameNum)
 	{
         ID3_Frame* pFrame = NULL;
         ID3_Tag::Iterator* it = m_ID3Tag->CreateIterator();
-        pFrame = it->GetNext();
+        pFrame = it->GetNext();    
         while(FrameNum)
         {
-            pFrame = it->GetNext();
+            pFrame = it->GetNext();    
             --FrameNum;
         }
         delete it;

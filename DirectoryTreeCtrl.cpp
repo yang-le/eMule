@@ -68,7 +68,7 @@ CDirectoryTreeCtrl::~CDirectoryTreeCtrl()
 
 void CDirectoryTreeCtrl::OnDestroy()
 {
-	// If a treeview control is created with TVS_CHECKBOXES, the application has to 
+	// If a treeview control is created with TVS_CHECKBOXES, the application has to
 	// delete the image list which was implicitly created by the control.
 	CImageList *piml = GetImageList(TVSIL_STATE);
 	if (piml)
@@ -130,12 +130,12 @@ void CDirectoryTreeCtrl::ShareSubDirTree(HTREEITEM hItem, BOOL bRecurse)
 
 void CDirectoryTreeCtrl::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	//VQB adjustments to provide for sharing or unsharing of subdirectories when control key is Down 
-	UINT uHitFlags; 
-	HTREEITEM hItem = HitTest(point, &uHitFlags); 
+	//VQB adjustments to provide for sharing or unsharing of subdirectories when control key is Down
+	UINT uHitFlags;
+	HTREEITEM hItem = HitTest(point, &uHitFlags);
 	if (hItem && (uHitFlags & TVHT_ONITEMSTATEICON))
 		ShareSubDirTree(hItem, nFlags & MK_CONTROL);
-	CTreeCtrl::OnLButtonDown(nFlags, point); 
+	CTreeCtrl::OnLButtonDown(nFlags, point);
 }
 
 void CDirectoryTreeCtrl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
@@ -173,18 +173,18 @@ void CDirectoryTreeCtrl::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 		CTreeCtrl::OnChar(nChar, nRepCnt, nFlags);
 }
 
-void CDirectoryTreeCtrl::MarkChilds(HTREEITEM hChild,bool mark) { 
-	CheckChanged(hChild, mark); 
-	SetCheck(hChild,mark);  
-	Expand(hChild, TVE_TOGGLE); // VQB - make sure tree has entries 
-	HTREEITEM hChild2; 
-	hChild2 = GetChildItem(hChild); 
-	while( hChild2 != NULL) 
-	{ 
-		MarkChilds(hChild2,mark); 
-		hChild2 = GetNextSiblingItem( hChild2 ); 
-	} 
-	Expand(hChild, TVE_TOGGLE); // VQB - restore tree to initial disposition 
+void CDirectoryTreeCtrl::MarkChilds(HTREEITEM hChild,bool mark) {
+	CheckChanged(hChild, mark);
+	SetCheck(hChild,mark);
+	Expand(hChild, TVE_TOGGLE); // VQB - make sure tree has entries
+	HTREEITEM hChild2;
+	hChild2 = GetChildItem(hChild);
+	while( hChild2 != NULL)
+	{
+		MarkChilds(hChild2,mark);
+		hChild2 = GetNextSiblingItem( hChild2 );
+	}
+	Expand(hChild, TVE_TOGGLE); // VQB - restore tree to initial disposition
 }
 
 void CDirectoryTreeCtrl::OnTvnGetdispinfo(NMHDR *pNMHDR, LRESULT *pResult)
@@ -255,7 +255,7 @@ HTREEITEM CDirectoryTreeCtrl::AddChildItem(HTREEITEM hRoot, CString strText)
 		strPath += _T("\\");
 	CString strDir = strPath + strText;
 	TVINSERTSTRUCT itInsert = {0};
-	
+
 	// START: changed by FoRcHa /////
 	WORD wWinVer = thePrefs.GetWindowsVersion();
 	if (wWinVer != _WINVER_95_ && wWinVer != _WINVER_NT4_)
@@ -270,7 +270,7 @@ HTREEITEM CDirectoryTreeCtrl::AddChildItem(HTREEITEM hRoot, CString strText)
 		itInsert.item.stateMask = TVIS_BOLD;
 	}
 	// END: changed by FoRcHa ///////
-	
+
 	if (HasSharedSubdirectory(strDir))
 		itInsert.item.state = TVIS_BOLD;
 	else
@@ -283,18 +283,18 @@ HTREEITEM CDirectoryTreeCtrl::AddChildItem(HTREEITEM hRoot, CString strText)
 	itInsert.item.pszText = const_cast<LPTSTR>((LPCTSTR)strText);
 	itInsert.hInsertAfter = hRoot ? TVI_SORT : TVI_LAST;
 	itInsert.hParent = hRoot;
-	
+
 	// START: added by FoRcHa ////////////////
 	if (wWinVer != _WINVER_95_ && wWinVer != _WINVER_NT4_)
 	{
 		CString strTemp = strDir;
 		if(strTemp.Right(1) != _T("\\"))
 			strTemp += _T("\\");
-		
+
 		UINT nType = GetDriveType(strTemp);
 		if(DRIVE_REMOVABLE <= nType && nType <= DRIVE_RAMDISK)
 			itInsert.item.iImage = nType;
-	
+
 		SHFILEINFO shFinfo;
 		shFinfo.szDisplayName[0] = _T('\0');
 		if(!SHGetFileInfo(strTemp, 0, &shFinfo,	sizeof(shFinfo),
@@ -372,7 +372,7 @@ void CDirectoryTreeCtrl::AddSubdirectories(HTREEITEM hRoot, CString strDir)
 			continue;
 		if (!finder.IsDirectory())
 			continue;
-		
+
 		CString strFilename = finder.GetFileName();
 		if (strFilename.ReverseFind(_T('\\')) != -1)
 			strFilename = strFilename.Mid(strFilename.ReverseFind(_T('\\')) + 1);
@@ -480,7 +480,7 @@ void CDirectoryTreeCtrl::AddShare(CString strDir)
 {
 	if (strDir.Right(1) != _T('\\'))
 		strDir += _T('\\');
-	
+
 	if (IsShared(strDir) || !strDir.CompareNoCase(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR)))
 		return;
 
@@ -494,8 +494,7 @@ void CDirectoryTreeCtrl::DelShare(CString strDir)
 	for (POSITION pos = m_lstShared.GetHeadPosition(); pos != NULL; )
 	{
 		POSITION pos2 = pos;
-		CString str = m_lstShared.GetNext(pos);
-		if (str.CompareNoCase(strDir) == 0)
+		if (m_lstShared.GetNext(pos).CompareNoCase(strDir) == 0)
 			m_lstShared.RemoveAt(pos2);
 	}
 }

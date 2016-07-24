@@ -83,7 +83,7 @@ struct ZIP_CentralDirectory
 #pragma pack()
 
 #pragma pack(1)
-struct RAR_BlockFile 
+struct RAR_BlockFile
 {
 	RAR_BlockFile()
 	{
@@ -96,10 +96,10 @@ struct RAR_BlockFile
 	}
 
 	// This indicates the position in the input file just after the filename
-	ULONGLONG offsetData; 
+	ULONGLONG offsetData;
 	// This indicates how much of the block is after this offset
 	uint32 dataLength;
-    
+
 	uint16	HEAD_CRC;
 	BYTE	HEAD_TYPE;
 	uint16	HEAD_FLAGS;
@@ -122,7 +122,7 @@ struct RAR_BlockFile
 };
 #pragma pack()
 #pragma pack(1)
-struct ACE_ARCHIVEHEADER 
+struct ACE_ARCHIVEHEADER
 {
 	uint16	HEAD_CRC;
 	uint16	HEAD_SIZE;
@@ -136,7 +136,7 @@ struct ACE_ARCHIVEHEADER
 	uint32	FTIME;
 	BYTE	RESERVED[8];
 	BYTE	AVSIZE;
-	//**AV 
+	//**AV
 	uint16	COMMENT_SIZE;
 
 	char*   AV;
@@ -157,7 +157,7 @@ struct ACE_ARCHIVEHEADER
 };
 #pragma pack()
 #pragma pack(1)
-struct ACE_BlockFile 
+struct ACE_BlockFile
 {
 	uint16	HEAD_CRC;
 	uint16	HEAD_SIZE;
@@ -196,7 +196,7 @@ static unsigned char sig_udf_bea[5]  = { 0x42, 0x45, 0x41, 0x30, 0x31 };		// "BE
 static unsigned char sig_udf_nsr2[5] = { 0x4e, 0x53, 0x52, 0x30, 0x32 };		// "NSR02"
 static unsigned char sig_udf_nsr3[5] = { 0x4e, 0x53, 0x52, 0x30, 0x33 };		// "NSR03"
 static unsigned char sig_tea[5]		 = { 0x54, 0x45, 0x41, 0x30, 0x31 };		// "TEA01"
-static const    char sElToritoID[]		 = "EL TORITO SPECIFICATION";
+static const unsigned char sElToritoID[] = "EL TORITO SPECIFICATION";
 
 enum ISO_ImageType
 {
@@ -216,7 +216,7 @@ enum ISO_FileFlags
 };
 #pragma pack(1)
 struct ISO_DateTimePVD_s
-{ 
+{
 	unsigned char year[4];
 	unsigned char month[2];
 	unsigned char day[2];
@@ -230,7 +230,7 @@ struct ISO_DateTimePVD_s
 
 #pragma pack(1)
 struct ISO_DateTimeFileFolder_s
-{ 
+{
 	unsigned char year;
 	unsigned char month;
 	unsigned char day;
@@ -242,7 +242,7 @@ struct ISO_DateTimeFileFolder_s
 #pragma pack()
 
 #pragma pack(1)
-struct ISO_PVD_s { 
+struct ISO_PVD_s {
 	unsigned char descr_type;
 	unsigned char magic[5];
 	unsigned char descr_ver;
@@ -252,7 +252,7 @@ struct ISO_PVD_s {
 	unsigned char zeros1[8];
 	unsigned char seknum[8];
 	unsigned char escSeq[32];
-	
+
 	UINT32 volsetsize;
 	UINT32 volseqnum;
 	UINT32 seksize;
@@ -286,31 +286,31 @@ struct ISO_PVD_s {
 
 #pragma pack(1)
 struct BootDescr
-{ 
+{
 	unsigned char descr_type;
 	unsigned char magic[5];
 	unsigned char descr_ver;
 	unsigned char sysid[32];
 	unsigned char bootid[32];
-	unsigned char system_use[1977]; 
+	unsigned char system_use[1977];
 };
 #pragma pack()
 
 #pragma pack(1)
 struct ISO_BootDescr_s
-{ 
+{
 	unsigned char descr_type;
 	unsigned char magic[5];
 	unsigned char descr_ver;
 	unsigned char sysid[32];
 	unsigned char bootid[32];
-	unsigned char system_use[1977]; 
+	unsigned char system_use[1977];
 };
 #pragma pack()
 
 #pragma pack(1)
 struct ISO_PathtableEntry
-{ 
+{
 	BYTE	len;
 	BYTE	lenExt;
 	unsigned int	sectorOfExtension;
@@ -320,7 +320,7 @@ struct ISO_PathtableEntry
 #pragma pack()
 #pragma pack(1)
 struct ISO_FileFolderEntry
-{ 
+{
 	BYTE	lenRecord;
 	BYTE	nrOfSecInExt;
 	UINT64	sector1OfExtension;
@@ -333,7 +333,7 @@ struct ISO_FileFolderEntry
 	BYTE	nameLen;
 	TCHAR*	name;
 	ISO_FileFolderEntry() { name=NULL;};
-	~ISO_FileFolderEntry() { if (name) free(name);};
+	~ISO_FileFolderEntry() { free(name);};
 };
 #pragma pack()
 struct ISOInfos_s
@@ -359,20 +359,21 @@ struct archiveinfo_s {
 	CTypedPtrList<CPtrList, RAR_BlockFile*> *RARdir;
 	CTypedPtrList<CPtrList, ACE_BlockFile*> *ACEdir;
 	CTypedPtrList<CPtrList, ISO_FileFolderEntry*> *ISOdir;
-	
+
 	bool bZipCentralDir;
 	WORD rarFlags;
 	ISOInfos_s isoInfos;
 	ACE_ARCHIVEHEADER *ACEhdr;
-	archiveinfo_s() { 
+	archiveinfo_s() {
 		centralDirectoryEntries=NULL;
 		RARdir=NULL;
 		ACEdir=NULL;
 		rarFlags=0;
 		bZipCentralDir=false;
 		ACEhdr=NULL;
+		ISOdir = NULL;
 		isoInfos.bBootable=false;
-		isoInfos.secSize=false;
+		isoInfos.secSize=0;
 		isoInfos.iJolietUnicode=0;
 	}
 };
@@ -412,13 +413,13 @@ private:
 
 	static ACE_BlockFile *scanForAceFileHeader(CFile *input, archiveScannerThreadParams_s* aitp, UINT64 available);
 	static void writeAceBlock(CFile *input, CFile *output, ACE_BlockFile *block);
-	static void CArchiveRecovery::writeAceHeader(CFile *output, ACE_ARCHIVEHEADER* hdr);
+	static void writeAceHeader(CFile *output, ACE_ARCHIVEHEADER* hdr);
 
-	static bool CopyFile(CPartFile *partFile, CTypedPtrList<CPtrList, Gap_Struct*> *filled, CString tempFileName);
+	static bool CopyFile(CPartFile *partFile, CTypedPtrList<CPtrList, Gap_Struct*> *filled, const CString& tempFileName);
 	static void DeleteMemory(ThreadParam *tp);
 	static bool IsFilled(uint32 start, uint32 end, CTypedPtrList<CPtrList, Gap_Struct*> *filled);
 
-	static void ISOReadDirectory(archiveScannerThreadParams_s* aitp, UINT32 startSec, CFile* isoInput, CString currentDirName);
+	static void ISOReadDirectory(archiveScannerThreadParams_s* aitp, UINT32 startSec, CFile* isoInput, const CString& currentDirName);
 
 	static void ProcessProgress(archiveScannerThreadParams_s* aitp, UINT64 pos);
 

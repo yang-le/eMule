@@ -18,7 +18,6 @@
 #include "emule.h"
 #include "FileDetailDialogName.h"
 #include "UserMsgs.h"
-#include "OtherFunctions.h"
 #include "PartFile.h"
 #include "UpDownClient.h"
 #include "TitleMenu.h"
@@ -35,7 +34,7 @@ IMPLEMENT_DYNAMIC(CFileDetailDialogName, CResizablePage)
 
 BEGIN_MESSAGE_MAP(CFileDetailDialogName, CResizablePage)
 	ON_BN_CLICKED(IDC_BUTTONSTRIP, OnBnClickedButtonStrip)
-	ON_BN_CLICKED(IDC_TAKEOVER, TakeOver)	
+	ON_BN_CLICKED(IDC_TAKEOVER, TakeOver)
 	ON_EN_CHANGE(IDC_FILENAME, OnEnChangeFilename)
 	ON_MESSAGE(UM_DATA_CHANGED, OnDataChanged)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LISTCTRLFILENAMES, OnLvnColumnClick)
@@ -158,11 +157,11 @@ void CFileDetailDialogName::Localize()
 
 void CFileDetailDialogName::FillSourcenameList()
 {
-	LVFINDINFO info; 
-	info.flags = LVFI_STRING; 
-	int itempos; 
+	LVFINDINFO info;
+	info.flags = LVFI_STRING;
+	int itempos;
 
-	CString strText; 
+	CString strText;
 
 	// reset
 	for (int i=0;i<m_listFileNames.GetItemCount();i++){
@@ -173,14 +172,14 @@ void CFileDetailDialogName::FillSourcenameList()
 	// update
 	const CPartFile* file = STATIC_DOWNCAST(CPartFile, (*m_paFiles)[0]);
 	for (POSITION pos = file->srclist.GetHeadPosition(); pos != NULL; )
-	{ 
-		CUpDownClient* cur_src = file->srclist.GetNext(pos); 
-		if (cur_src->GetRequestFile() != file || cur_src->GetClientFilename().GetLength()==0)
+	{
+		CUpDownClient* cur_src = file->srclist.GetNext(pos);
+		if (cur_src->GetRequestFile() != file || cur_src->GetClientFilename().IsEmpty())
 			continue;
 
-		info.psz = cur_src->GetClientFilename(); 
+		info.psz = cur_src->GetClientFilename();
 		if ((itempos=m_listFileNames.FindItem(&info, -1)) == -1)
-		{ 
+		{
 			FCtrlItem_Struct* newitem= new FCtrlItem_Struct();
 			newitem->count=1;
 			newitem->filename=cur_src->GetClientFilename();
@@ -194,16 +193,16 @@ void CFileDetailDialogName::FillSourcenameList()
 			}
 
 			int ix = m_listFileNames.InsertItem(LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE, m_listFileNames.GetItemCount() ,cur_src->GetClientFilename(), 0, 0, iSystemIconIdx, (LPARAM)newitem);
-			m_listFileNames.SetItemText(ix, 1, _T("1")); 
+			m_listFileNames.SetItemText(ix, 1, _T("1"));
 		}
 		else
 		{
 			FCtrlItem_Struct* item= (FCtrlItem_Struct*)m_listFileNames.GetItemData(itempos);
 			item->count+=1;
 			strText.Format(_T("%i"),item->count);
-			m_listFileNames.SetItemText(itempos, 1,strText ); 
-		} 
-	} 
+			m_listFileNames.SetItemText(itempos, 1,strText );
+		}
+	}
 
 	// remove 0'er
 	for (int i=0;i<m_listFileNames.GetItemCount();i++)
@@ -289,7 +288,7 @@ int CALLBACK CFileDetailDialogName::CompareListNameItems(LPARAM lParam1, LPARAM 
 		iResult = -iResult;
 
 	return iResult;
-} 
+}
 
 void CFileDetailDialogName::OnNmDblClkList(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {

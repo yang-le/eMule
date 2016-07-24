@@ -54,8 +54,6 @@ void CMiniDumper::Enable(LPCTSTR pszAppName, bool bShowErrors, LPCTSTR pszDumpDi
 		if (pfnMiniDumpWriteDump)
 			SetUnhandledExceptionFilter(TopLevelFilter);
 		FreeLibrary(hDbgHelpDll);
-		hDbgHelpDll = NULL;
-		pfnMiniDumpWriteDump = NULL;
 	}
 }
 
@@ -88,7 +86,7 @@ HMODULE CMiniDumper::GetDebugHelperDll(FARPROC* ppfnMiniDumpWriteDump, bool bSho
 	return hDll;
 }
 
-LONG CMiniDumper::TopLevelFilter(struct _EXCEPTION_POINTERS* pExceptionInfo)
+LONG WINAPI CMiniDumper::TopLevelFilter(struct _EXCEPTION_POINTERS* pExceptionInfo)
 {
 	LONG lRetValue = EXCEPTION_CONTINUE_SEARCH;
 	TCHAR szResult[MAX_PATH + 1024] = {0};
@@ -155,7 +153,7 @@ LONG CMiniDumper::TopLevelFilter(struct _EXCEPTION_POINTERS* pExceptionInfo)
 					else
 					{
 						// Do *NOT* localize that string (in fact, do not use MFC to load it)!
-						_sntprintf(szResult, _countof(szResult) - 1, _T("Failed to save dump file to \"%s\".\r\n\r\nError: %u"), szDumpPath, GetLastError());
+						_sntprintf(szResult, _countof(szResult) - 1, _T("Failed to save dump file to \"%s\".\r\n\r\nError: %lu"), szDumpPath, GetLastError());
 						szResult[_countof(szResult) - 1] = _T('\0');
 					}
 					CloseHandle(hFile);
@@ -163,14 +161,12 @@ LONG CMiniDumper::TopLevelFilter(struct _EXCEPTION_POINTERS* pExceptionInfo)
 				else
 				{
 					// Do *NOT* localize that string (in fact, do not use MFC to load it)!
-					_sntprintf(szResult, _countof(szResult) - 1, _T("Failed to create dump file \"%s\".\r\n\r\nError: %u"), szDumpPath, GetLastError());
+					_sntprintf(szResult, _countof(szResult) - 1, _T("Failed to create dump file \"%s\".\r\n\r\nError: %lu"), szDumpPath, GetLastError());
 					szResult[_countof(szResult) - 1] = _T('\0');
 				}
 			}
 		}
 		FreeLibrary(hDll);
-		hDll = NULL;
-		pfnMiniDumpWriteDump = NULL;
 	}
 
 	if (szResult[0] != _T('\0'))

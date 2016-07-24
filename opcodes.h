@@ -33,7 +33,7 @@
 #define PARTFILE_VERSION				0xe0
 #define PARTFILE_SPLITTEDVERSION		0xe1
 #define PARTFILE_VERSION_LARGEFILE		0xe2
-#define SOURCEEXCHANGE2_VERSION			4		// replaces the version sent in MISC_OPTIONS flag fro SX1
+#define SOURCEEXCHANGE2_VERSION			4		// replaces the version sent in MISC_OPTIONS flag from SX1
 
 #define CREDITFILE_VERSION		0x12
 #define CREDITFILE_VERSION_29	0x11
@@ -103,17 +103,17 @@
 // MOD Note: end
 
 #define CONFIGFOLDER			_T("config\\")
-#define MAXCONPER5SEC			20	
+#define MAXCONPER5SEC			20
 #define MAXCON5WIN9X			10
-#define	UPLOAD_CLIENT_MAXDATARATE	50*1024	// max. target uploadspeed per client 
+#define	UPLOAD_CLIENT_MAXDATARATE	25*1024	// max. target uploadspeed per client
 #define	MAX_UP_CLIENTS_ALLOWED	100			// max. clients allowed regardless of any other factors.
 #define	MIN_UP_CLIENTS_ALLOWED	2			// min. clients allowed to download regardless of any other factors. Don't set this too high
 #define DOWNLOADTIMEOUT			SEC2MS(100)
 #define CONSERVTIMEOUT			SEC2MS(25)	// agelimit for pending connection attempts
 #define RARE_FILE				50
 #define BADCLIENTBAN			4
-#define	MIN_REQUESTTIME			MIN2MS(10) 
-#define	MAX_PURGEQUEUETIME		HR2MS(1) 
+#define	MIN_REQUESTTIME			MIN2MS(10)
+#define	MAX_PURGEQUEUETIME		HR2MS(1)
 #define PURGESOURCESWAPSTOP		MIN2MS(15)	// (15 mins), how long forbid swapping a source to a certain file (NNP,...)
 #define CONNECTION_LATENCY		22050		// latency for responces
 #define MINWAIT_BEFORE_DLDISPLAY_WINDOWUPDATE   1000
@@ -129,8 +129,8 @@
 #define OLDFILES_PARTIALLYPURGE DAY2S(31)	// time after which some data about a know file in the known.met and known2.met is deleted
 
 // you shouldn't change anything here if you are not really sure, or emule will probaly not work
-#define UDP_KAD_MAXFRAGMENT		1420		// based on a 1500 ethernet MTU, use a conservative value to leave enough room for IP/UDP headers, tunnel headers, Kad headers(16) and misconfigs 
-#define EMBLOCKSIZE				184320
+#define UDP_KAD_MAXFRAGMENT		1420		// based on a 1500 ethernet MTU, use a conservative value to leave enough room for IP/UDP headers, tunnel headers, Kad headers(16) and misconfigs
+#define EMBLOCKSIZE				184320u
 #define OP_EDONKEYHEADER		0xE3
 #define OP_KADEMLIAHEADER		0xE4
 #define OP_KADEMLIAPACKEDPROT	0xE5
@@ -142,7 +142,7 @@
 #define OP_MLDONKEYPROT			0x00
 #define	MET_HEADER				0x0E
 #define	MET_HEADER_I64TAGS		0x0F
-	
+
 #define UNLIMITED				0xFFFF
 
 //Proxytypes deadlake
@@ -191,7 +191,7 @@
 #define OP_GLOBSERVSTATREQ		0x96	// (null)
 #define	OP_GLOBSERVSTATRES		0x97	// <USER 4><FILES 4>
 #define OP_GLOBSEARCHREQ		0x98	// <search_tree>
-#define OP_GLOBSEARCHRES		0x99	// 
+#define OP_GLOBSEARCHRES		0x99	//
 #define OP_GLOBGETSOURCES		0x9A	// <HASH 16>
 #define OP_GLOBGETSOURCES2		0x94	// <HASH 16><FILESIZE 4>
 #define OP_GLOBFOUNDSOURCES		0x9B	//
@@ -222,7 +222,7 @@
 #define OP_HASHSETANSWER		0x52	// *DEPRECATED* <count 2><HASH[count] 16*count>
 #define	OP_STARTUPLOADREQ		0x54	// <HASH 16>
 #define	OP_ACCEPTUPLOADREQ		0x55	// (null)
-#define	OP_CANCELTRANSFER		0x56	// (null)	
+#define	OP_CANCELTRANSFER		0x56	// (null)
 #define OP_OUTOFPARTREQS		0x57	// (null)
 #define OP_REQUESTFILENAME		0x58	// <HASH 16>	(more correctly file_name_request)
 #define OP_REQFILENAMEANSWER	0x59	// <HASH 16><len 4><NAME len>
@@ -269,8 +269,8 @@
 #define OP_REASKCALLBACKTCP		0x9A
 #define OP_AICHREQUEST			0x9B	// <HASH 16><uint16><HASH aichhashlen>
 #define OP_AICHANSWER			0x9C	// <HASH 16><uint16><HASH aichhashlen> <data>
-#define OP_AICHFILEHASHANS		0x9D	// *DEPRECATED*   
-#define OP_AICHFILEHASHREQ		0x9E	// *DEPRECATED* 
+#define OP_AICHFILEHASHANS		0x9D	// *DEPRECATED*
+#define OP_AICHFILEHASHREQ		0x9E	// *DEPRECATED*
 #define OP_BUDDYPING			0x9F
 #define OP_BUDDYPONG			0xA0
 #define OP_COMPRESSEDPART_I64	0xA1	// <HASH 16><von 8><size 4><Daten len:size>
@@ -368,7 +368,7 @@
 #define	 FT_DL_ACTIVE_TIME		 0x23	// <uint32>
 #define	 FT_CORRUPTEDPARTS		 0x24	// <string>
 #define  FT_DL_PREVIEW			 0x25
-#define  FT_KADLASTPUBLISHNOTES	 0x26	// <uint32> 
+#define  FT_KADLASTPUBLISHNOTES	 0x26	// <uint32>
 #define  FT_AICH_HASH			 0x27
 #define  FT_FILEHASH			 0x28
 #define	 FT_COMPLETE_SOURCES	 0x30	// nr. of sources which share a complete version of the associated file (supported by eserver 16.46+)

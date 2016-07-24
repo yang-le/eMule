@@ -31,7 +31,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 
-CIrcSocket::CIrcSocket(CIrcMain* pIrcMain) 
+CIrcSocket::CIrcSocket(CIrcMain* pIrcMain)
 {
 	m_pIrcMain = pIrcMain;
 	m_pProxyLayer = NULL;
@@ -39,7 +39,7 @@ CIrcSocket::CIrcSocket(CIrcMain* pIrcMain)
 
 CIrcSocket::~CIrcSocket()
 {
-	RemoveAllLayers();
+	CIrcSocket::RemoveAllLayers();
 }
 
 BOOL CIrcSocket::Create(UINT uSocketPort, int uSocketType, long lEvent, LPCSTR lpszSocketAddress)
@@ -91,7 +91,7 @@ void CIrcSocket::OnReceive(int iErrorCode)
 	if (iErrorCode)
 	{
 		if (thePrefs.GetVerbose())
-			AddDebugLogLine(false, _T("IRC socket: Failed to read - %s"), GetErrorMessage(iErrorCode, 1));
+			AddDebugLogLine(false, _T("IRC socket: Failed to read - %s"), (LPCTSTR)GetErrorMessage(iErrorCode, 1));
 		return;
 	}
 
@@ -107,7 +107,7 @@ void CIrcSocket::OnReceive(int iErrorCode)
 			if (iLength < 0)
 			{
 				if (thePrefs.GetVerbose())
-					AddDebugLogLine(false, _T("IRC socket: Failed to read - %s"), GetErrorMessage(GetLastError(), 1));
+					AddDebugLogLine(false, _T("IRC socket: Failed to read - %s"), (LPCTSTR)GetErrorMessage(GetLastError(), 1));
 				return;
 			}
 			if (iLength > 0)
@@ -128,7 +128,7 @@ void CIrcSocket::OnSend(int iErrorCode)
 	if (iErrorCode)
 	{
 		if (thePrefs.GetVerbose())
-			AddDebugLogLine(false, _T("IRC socket: Failed to send - %s"), GetErrorMessage(iErrorCode, 1));
+			AddDebugLogLine(false, _T("IRC socket: Failed to send - %s"), (LPCTSTR)GetErrorMessage(iErrorCode, 1));
 		return;
 	}
 	TRACE("CIrcSocket::OnSend\n");
@@ -138,7 +138,7 @@ void CIrcSocket::OnConnect(int iErrorCode)
 {
 	if (iErrorCode)
 	{
-		LogError(LOG_STATUSBAR, _T("IRC socket: Failed to connect - %s"), GetErrorMessage(iErrorCode, 1));
+		LogError(LOG_STATUSBAR, _T("IRC socket: Failed to connect - %s"), (LPCTSTR)GetErrorMessage(iErrorCode, 1));
 		m_pIrcMain->Disconnect();
 		return;
 	}
@@ -151,7 +151,7 @@ void CIrcSocket::OnClose(int iErrorCode)
 	if (iErrorCode)
 	{
 		if (thePrefs.GetVerbose())
-			AddDebugLogLine(false, _T("IRC socket: Failed to close - %s"), GetErrorMessage(iErrorCode, 1));
+			AddDebugLogLine(false, _T("IRC socket: Failed to close - %s"), (LPCTSTR)GetErrorMessage(iErrorCode, 1));
 		m_pIrcMain->Disconnect();
 		return;
 	}
@@ -161,12 +161,12 @@ void CIrcSocket::OnClose(int iErrorCode)
 int CIrcSocket::SendString(const CString& sMessage)
 {
 	CStringA sMessageA(sMessage);
-	TRACE("CIrcSocket::SendString: %s\n", sMessageA);
+	TRACE("CIrcSocket::SendString: %s\n", (LPCSTR)sMessageA);
 	sMessageA += "\r\n";
 	int iSize = sMessageA.GetLength();
 	theStats.AddUpDataOverheadOther(iSize);
 	int iResult = Send(sMessageA, iSize);
-	ASSERT( iResult == iSize );
+//	ASSERT( iResult == iSize ); useless as it occurs on any common network error
 	return iResult;
 }
 
@@ -201,11 +201,11 @@ int CIrcSocket::OnLayerCallback(const CAsyncSocketExLayer* pLayer, int nType, in
 							if (GetErrorMessage(wParam, strErrInf, 1))
 								strError += _T(" - ") + strErrInf;
 						}
-						LogWarning(LOG_STATUSBAR, _T("IRC socket: %s"), strError);
+						LogWarning(LOG_STATUSBAR, _T("IRC socket: %s"), (LPCTSTR)strError);
 						break;
 					}
 				default:
-					LogWarning(LOG_STATUSBAR, _T("IRC socket: %s"), GetProxyError(nCode));
+					LogWarning(LOG_STATUSBAR, _T("IRC socket: %s"), (LPCTSTR)GetProxyError(nCode));
 			}
 		}
 	}

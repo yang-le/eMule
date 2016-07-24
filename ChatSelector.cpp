@@ -17,17 +17,12 @@
 #include "stdafx.h"
 #include "emule.h"
 #include "ChatSelector.h"
-#include "packets.h"
 #include "HTRichEditCtrl.h"
 #include "emuledlg.h"
-#include "Statistics.h"
-#include "OtherFunctions.h"
 #include "UpDownClient.h"
-#include "Preferences.h"
 #include "TaskbarNotifier.h"
 #include "ListenSocket.h"
 #include "ChatWnd.h"
-#include "SafeFile.h"
 #include "Log.h"
 #include "MenuCmds.h"
 #include "ClientDetailDialog.h"
@@ -77,6 +72,7 @@ BEGIN_MESSAGE_MAP(CChatSelector, CClosableTabCtrl)
 END_MESSAGE_MAP()
 
 CChatSelector::CChatSelector()
+	: m_pParent(NULL), m_iContextIndex(-1)
 {
 	m_lastemptyicon = false;
 	m_blinkstate = false;
@@ -174,7 +170,7 @@ CChatItem* CChatSelector::StartSession(CUpDownClient* client, bool show)
 	if (client->GetUserName() != NULL)
 		name = client->GetUserName();
 	else
-		name.Format(_T("(%s)"), GetResString(IDS_UNKNOWN));
+		name.Format(_T("(%s)"), (LPCTSTR)GetResString(IDS_UNKNOWN));
 	chatitem->log->SetTitle(name);
 
 	TCITEM newitem;
@@ -206,7 +202,7 @@ CChatItem* CChatSelector::GetItemByIndex(int index)
 {
 	TCITEM item;
 	item.mask = TCIF_PARAM;
-	if (GetItem(index, &item)==FALSE)
+	if (!GetItem(index, &item))
 		return NULL;
 
     return (CChatItem*)item.lParam;
@@ -228,15 +224,15 @@ void CChatSelector::ProcessMessage(CUpDownClient* sender, const CString& message
 	sender->IncMessagesReceived();
 	CChatItem* ci = GetItemByClient(sender);
 
-	AddLogLine(true, GetResString(IDS_NEWMSG), sender->GetUserName(), ipstr(sender->GetConnectIP()));
-	
+	AddLogLine(true, GetResString(IDS_NEWMSG), (LPCTSTR)sender->GetUserName(), (LPCTSTR)ipstr(sender->GetConnectIP()));
+
 	bool isNewChatWindow = false;
 	if (!ci)
 	{
 		if ((UINT)GetItemCount() >= thePrefs.GetMsgSessionsMax())
 			return;
 		ci = StartSession(sender, false);
-		isNewChatWindow = true; 
+		isNewChatWindow = true;
 	}
 	if (thePrefs.GetIRCAddTimeStamp())
 		AddTimeStamp(ci);
@@ -259,7 +255,6 @@ void CChatSelector::ProcessMessage(CUpDownClient* sender, const CString& message
 		ci->notify = true;
         if (isNewChatWindow || thePrefs.GetNotifierOnEveryChatMsg())
 			theApp.emuledlg->ShowNotifier(GetResString(IDS_TBN_NEWCHATMSG) + _T(" ") + CString(sender->GetUserName()) + _T(":'") + message + _T("'\n"), TBN_CHAT);
-		isNewChatWindow = false;
 	}
 }
 
@@ -276,7 +271,7 @@ void CChatSelector::ShowCaptchaRequest(CUpDownClient* sender, HBITMAP bmpCaptcha
 	}
 }
 
-void CChatSelector::ShowCaptchaResult(CUpDownClient* sender, CString strResult)
+void CChatSelector::ShowCaptchaResult(CUpDownClient* sender, const CString& strResult)
 {
 	CChatItem* ci = GetItemByClient(sender);
 	if (ci != NULL)
@@ -303,7 +298,7 @@ bool CChatSelector::SendMessage(const CString& rstrMessage)
 	ci->client->SetSpammer(false);
 	if (ci->client->GetChatState() == MS_CONNECTING)
 		return false;
-	
+
 	if (ci->client->GetChatCaptchaState() == CA_CAPTCHARECV)
 		ci->client->SetChatCaptchaState(CA_SOLUTIONSENT);
 	else if (ci->client->GetChatCaptchaState() == CA_SOLUTIONSENT)
@@ -311,7 +306,7 @@ bool CChatSelector::SendMessage(const CString& rstrMessage)
 	else
 		ci->client->SetChatCaptchaState(CA_ACCEPTING);
 
-	
+
 
 
 	// there are three cases on connectiing/sending the message:
@@ -322,8 +317,7 @@ bool CChatSelector::SendMessage(const CString& rstrMessage)
 		if (thePrefs.GetIRCAddTimeStamp())
 			AddTimeStamp(ci);
 		ci->log->AppendKeyWord(thePrefs.GetUserNick(), SENT_TARGET_MSG_COLOR);
-		ci->log->AppendText(_T(": "));
-		ci->log->AppendText(rstrMessage + _T("\n"));
+		ci->log->AppendText(_T(": ") + rstrMessage + _T("\n"));
 	}
 	else if (ci->client->GetFriend() != NULL)
 	{
@@ -374,7 +368,7 @@ void CChatSelector::ConnectingResult(CUpDownClient* sender, bool success)
 		ci->log->AppendKeyWord(thePrefs.GetUserNick(), SENT_TARGET_MSG_COLOR);
 		ci->log->AppendText(_T(": "));
 		ci->log->AppendText(ci->strMessagePending + _T("\n"));
-		
+
 		ci->strMessagePending.Empty();
 	}
 	else{
@@ -500,7 +494,7 @@ void CChatSelector::EndSession(CUpDownClient* client)
 		iCurSel = GetCurSel();
 	if (iCurSel == -1)
 		return;
-	
+
 	TCITEM item;
 	item.mask = TCIF_PARAM;
 	if (!GetItem(iCurSel, &item) || item.lParam == 0)
@@ -520,9 +514,8 @@ void CChatSelector::EndSession(CUpDownClient* client)
 		else if (iCurSel >= iTabItems)
 			iCurSel = iTabItems - 1;
 		(void)SetCurSel(iCurSel);				// returns CB_ERR if error or no prev. selection(!)
-		iCurSel = GetCurSel();					// get the real current selection
-		if (iCurSel == CB_ERR)					// if still error
-			iCurSel = SetCurSel(0);
+		if (GetCurSel() == CB_ERR)				// get the real current selection
+			(void)SetCurSel(0);              	// if still error
 		ShowChat();
 	}
 }
@@ -639,7 +632,7 @@ void CChatSelector::OnContextMenu(CWnd*, CPoint point)
 		menu.AppendMenu(MF_STRING, MP_ADDFRIEND, GetResString(IDS_IRC_ADDTOFRIENDLIST), _T("ADDFRIEND"));
 	else
 		menu.AppendMenu(MF_STRING, MP_REMOVEFRIEND, GetResString(IDS_REMOVEFRIEND), _T("DELETEFRIEND"));
-	
+
 	menu.AppendMenu(MF_STRING, MP_REMOVE, GetResString(IDS_FD_CLOSE));
 
 	m_ptCtxMenu = point;
@@ -657,7 +650,7 @@ void CChatSelector::EnableSmileys(bool bEnable)
 	}
 }
 
-void CChatSelector::ReportConnectionProgress(CUpDownClient* pClient, CString strProgressDesc, bool bNoTimeStamp)
+void CChatSelector::ReportConnectionProgress(CUpDownClient* pClient, const CString& strProgressDesc, bool bNoTimeStamp)
 {
 	CChatItem* ci = GetItemByClient(pClient);
 	if (!ci)

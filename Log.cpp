@@ -37,7 +37,7 @@ void LogV(UINT uFlags, LPCTSTR pszFmt, va_list argp)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// 
+//
 
 void Log(LPCTSTR pszFmt, ...)
 {
@@ -50,7 +50,7 @@ void Log(LPCTSTR pszFmt, ...)
 void LogError(LPCTSTR pszFmt, ...)
 {
 	va_list argp;
-	va_start(argp, pszFmt);	
+	va_start(argp, pszFmt);
 	LogV(LOG_ERROR, pszFmt, argp);
 	va_end(argp);
 }
@@ -58,13 +58,13 @@ void LogError(LPCTSTR pszFmt, ...)
 void LogWarning(LPCTSTR pszFmt, ...)
 {
 	va_list argp;
-	va_start(argp, pszFmt);	
+	va_start(argp, pszFmt);
 	LogV(LOG_WARNING, pszFmt, argp);
 	va_end(argp);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// 
+//
 
 void Log(UINT uFlags, LPCTSTR pszFmt, ...)
 {
@@ -77,7 +77,7 @@ void Log(UINT uFlags, LPCTSTR pszFmt, ...)
 void LogError(UINT uFlags, LPCTSTR pszFmt, ...)
 {
 	va_list argp;
-	va_start(argp, pszFmt);	
+	va_start(argp, pszFmt);
 	LogV(uFlags | LOG_ERROR, pszFmt, argp);
 	va_end(argp);
 }
@@ -85,18 +85,18 @@ void LogError(UINT uFlags, LPCTSTR pszFmt, ...)
 void LogWarning(UINT uFlags, LPCTSTR pszFmt, ...)
 {
 	va_list argp;
-	va_start(argp, pszFmt);	
+	va_start(argp, pszFmt);
 	LogV(uFlags | LOG_WARNING, pszFmt, argp);
 	va_end(argp);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// 
+//
 
 void DebugLog(LPCTSTR pszFmt, ...)
 {
 	va_list argp;
-	va_start(argp, pszFmt);	
+	va_start(argp, pszFmt);
 	LogV(LOG_DEBUG, pszFmt, argp);
 	va_end(argp);
 }
@@ -104,7 +104,7 @@ void DebugLog(LPCTSTR pszFmt, ...)
 void DebugLogError(LPCTSTR pszFmt, ...)
 {
 	va_list argp;
-	va_start(argp, pszFmt);	
+	va_start(argp, pszFmt);
 	LogV(LOG_DEBUG | LOG_ERROR, pszFmt, argp);
 	va_end(argp);
 }
@@ -112,18 +112,18 @@ void DebugLogError(LPCTSTR pszFmt, ...)
 void DebugLogWarning(LPCTSTR pszFmt, ...)
 {
 	va_list argp;
-	va_start(argp, pszFmt);	
+	va_start(argp, pszFmt);
 	LogV(LOG_DEBUG | LOG_WARNING, pszFmt, argp);
 	va_end(argp);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// 
+//
 
 void DebugLog(UINT uFlags, LPCTSTR pszFmt, ...)
 {
 	va_list argp;
-	va_start(argp, pszFmt);	
+	va_start(argp, pszFmt);
 	LogV(uFlags | LOG_DEBUG, pszFmt, argp);
 	va_end(argp);
 }
@@ -131,7 +131,7 @@ void DebugLog(UINT uFlags, LPCTSTR pszFmt, ...)
 void DebugLogError(UINT uFlags, LPCTSTR pszFmt, ...)
 {
 	va_list argp;
-	va_start(argp, pszFmt);	
+	va_start(argp, pszFmt);
 	LogV(uFlags | LOG_DEBUG | LOG_ERROR, pszFmt, argp);
 	va_end(argp);
 }
@@ -139,14 +139,14 @@ void DebugLogError(UINT uFlags, LPCTSTR pszFmt, ...)
 void DebugLogWarning(UINT uFlags, LPCTSTR pszFmt, ...)
 {
 	va_list argp;
-	va_start(argp, pszFmt);	
+	va_start(argp, pszFmt);
 	LogV(uFlags | LOG_DEBUG | LOG_WARNING, pszFmt, argp);
 	va_end(argp);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// 
+//
 
 void AddLogLine(bool bAddToStatusBar, LPCTSTR pszLine, ...)
 {
@@ -165,7 +165,7 @@ void AddDebugLogLine(bool bAddToStatusBar, LPCTSTR pszLine, ...)
 	va_list argptr;
 	va_start(argptr, pszLine);
 	AddLogTextV(LOG_DEBUG | (bAddToStatusBar ? LOG_STATUSBAR : 0), DLP_DEFAULT, pszLine, argptr);
-	va_end(argptr);	
+	va_end(argptr);
 }
 
 void AddDebugLogLine(EDebugLogPriority Priority, bool bAddToStatusBar, LPCTSTR pszLine, ...)
@@ -174,7 +174,7 @@ void AddDebugLogLine(EDebugLogPriority Priority, bool bAddToStatusBar, LPCTSTR p
 	// (which only means 3 instead of 5 levels which you can select in the preferences)
 	// makes no sense to implement two different priority indicators
 	//
-	// untill there is some time todo this, It will convert DLP_VERYHIGH to ERRORs
+	// until there is some time todo this, It will convert DLP_VERYHIGH to ERRORs
 	// and DLP_HIGH to LOG_WARNING in order to be able using the Loglevel and color indicator
 	ASSERT(pszLine != NULL);
 
@@ -187,7 +187,7 @@ void AddDebugLogLine(EDebugLogPriority Priority, bool bAddToStatusBar, LPCTSTR p
 		nFlag = LOG_WARNING;
 
 	AddLogTextV(LOG_DEBUG | nFlag | (bAddToStatusBar ? LOG_STATUSBAR : 0), Priority, pszLine, argptr);
-	va_end(argptr);	
+	va_end(argptr);
 }
 
 void AddLogTextV(UINT uFlags, EDebugLogPriority dlpPriority, LPCTSTR pszLine, va_list argptr)
@@ -195,12 +195,12 @@ void AddLogTextV(UINT uFlags, EDebugLogPriority dlpPriority, LPCTSTR pszLine, va
 	ASSERT(pszLine != NULL);
 
 	if ((uFlags & LOG_DEBUG) && !(thePrefs.GetVerbose() && dlpPriority >= thePrefs.GetVerboseLogPriority()))
-		return;	
+		return;
 
 	TCHAR szLogLine[1000];
 	_vsntprintf(szLogLine, _countof(szLogLine), pszLine, argptr);
 	szLogLine[_countof(szLogLine) - 1] = _T('\0');
-	
+
 	if (theApp.emuledlg)
 		theApp.emuledlg->AddLogText(uFlags, szLogLine);
 	else
@@ -208,7 +208,7 @@ void AddLogTextV(UINT uFlags, EDebugLogPriority dlpPriority, LPCTSTR pszLine, va
 		TRACE(_T("App Log: %s\n"), szLogLine);
 
 		TCHAR szFullLogLine[1060];
-		int iLen = _sntprintf(szFullLogLine, _countof(szFullLogLine), _T("%s: %s\r\n"), CTime::GetCurrentTime().Format(thePrefs.GetDateTimeFormat4Log()), szLogLine);
+		int iLen = _sntprintf(szFullLogLine, _countof(szFullLogLine), _T("%s: %s\r\n"), (LPCTSTR)CTime::GetCurrentTime().Format(thePrefs.GetDateTimeFormat4Log()), szLogLine);
 		if (iLen > 0)
 		{
 			if (!(uFlags & LOG_DEBUG))
@@ -310,7 +310,7 @@ bool CLogFile::Open()
 			if (m_eFileFormat == Unicode)
 			{
 				// write Unicode byte-order mark 0xFEFF
-				fputwc(0xFEFF, m_fp);
+				fputwc((wchar_t)0xFEFF, m_fp);
 			}
 			else
 			{
@@ -403,12 +403,12 @@ bool CLogFile::Logf(LPCTSTR pszFmt, ...)
 	TCHAR szMsg[1024];
 	_vsntprintf(szMsg, _countof(szMsg), pszFmt, argp);
 	szMsg[_countof(szMsg) - 1] = _T('\0');
+	va_end(argp);
 
 	TCHAR szFullMsg[1060];
-	int iLen = _sntprintf(szFullMsg, _countof(szFullMsg), _T("%s: %s\r\n"), CTime::GetCurrentTime().Format(thePrefs.GetDateTimeFormat4Log()), szMsg);
+	int iLen = _sntprintf(szFullMsg, _countof(szFullMsg), _T("%s: %s\r\n"), (LPCTSTR)CTime::GetCurrentTime().Format(thePrefs.GetDateTimeFormat4Log()), szMsg);
 	if (iLen <= 0)
 		return false;
-	va_end(argp);
 	return Log(szFullMsg, iLen);
 }
 

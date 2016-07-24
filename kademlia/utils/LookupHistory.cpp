@@ -30,6 +30,7 @@ static char THIS_FILE[] = __FILE__;
 using namespace Kademlia;
 
 CLookupHistory::CLookupHistory()
+	: m_uType(0)
 {
 	m_bSearchStopped = false;
 	m_bSearchDeleted = false;
@@ -39,9 +40,9 @@ CLookupHistory::CLookupHistory()
 
 CLookupHistory::~CLookupHistory()
 {
-	for (int i = 0; i < m_aHistoryEntries.GetCount(); i++)
+	for (int i = 0; i < m_aHistoryEntries.GetCount(); ++i)
 		delete m_aHistoryEntries[i];
-	 m_aHistoryEntries.RemoveAll();
+	m_aHistoryEntries.RemoveAll();
 }
 
 void CLookupHistory::SetSearchDeleted()
@@ -56,8 +57,7 @@ void CLookupHistory::SetSearchDeleted()
 void CLookupHistory::SetGUIDeleted()
 {
 	ASSERT( m_uRefCount );
-	m_uRefCount--;
-	if (m_uRefCount == 0)
+	if (--m_uRefCount == 0)
 		delete this;
 }
 

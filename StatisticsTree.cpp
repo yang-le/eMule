@@ -5,12 +5,12 @@
 	modify it under the terms of the GNU General Public License
 	as published by the Free Software Foundation; either
 	version 2 of the License, or (at your option) any later version.
-	
+
 	This program is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
-	
+
 	You should have received a copy of the GNU General Public License
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -50,6 +50,7 @@ BEGIN_MESSAGE_MAP(CStatisticsTree, CTreeCtrl)
 END_MESSAGE_MAP()
 
 CStatisticsTree::CStatisticsTree()
+	: m_bExpandingAll(false)
 {
 }
 
@@ -135,7 +136,7 @@ void CStatisticsTree::DoMenu(CPoint doWhere, UINT nFlags)
 	CString		myBuffer;
 	int			myFlags;
 
-	myBuffer.Format(_T("%sstatbkup.ini"), thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+	myBuffer.Format(_T("%sstatbkup.ini"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
 	if (!findBackUp.FindFile(myBuffer)) myFlags = MF_GRAYED;
 		else myFlags = MF_STRING;
 
@@ -182,8 +183,8 @@ BOOL CStatisticsTree::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 				AddLogLine(false, GetResString(IDS_STATS_NFORESET));
 				theApp.emuledlg->statisticswnd->ShowStatistics();
 
-				CString myBuffer; 
-				myBuffer.Format(GetResString(IDS_STATS_LASTRESETSTATIC), thePrefs.GetStatsLastResetStr(false));
+				CString myBuffer;
+				myBuffer.Format(GetResString(IDS_STATS_LASTRESETSTATIC), (LPCTSTR)thePrefs.GetStatsLastResetStr(false));
 				GetParent()->GetDlgItem(IDC_STATIC_LASTRESET)->SetWindowText(myBuffer);
 
 				break;
@@ -198,7 +199,7 @@ BOOL CStatisticsTree::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 				else {
 					AddLogLine(false, GetResString(IDS_STATS_NFOLOADEDBKUP));
 					CString myBuffer;
-					myBuffer.Format(GetResString(IDS_STATS_LASTRESETSTATIC), thePrefs.GetStatsLastResetStr(false));
+					myBuffer.Format(GetResString(IDS_STATS_LASTRESETSTATIC), (LPCTSTR)thePrefs.GetStatsLastResetStr(false));
 					GetParent()->GetDlgItem(IDC_STATIC_LASTRESET)->SetWindowText(myBuffer);
 				}
 
@@ -290,7 +291,7 @@ CString CStatisticsTree::GetItemText(HTREEITEM theItem)
 		return _T("");
 
 	TVITEM item;
-	TCHAR szText[1024]; 
+	TCHAR szText[1024];
 	item.mask = TVIF_TEXT | TVIF_HANDLE;
 	item.hItem = theItem;
 	item.pszText = szText;
@@ -304,9 +305,9 @@ CString CStatisticsTree::GetItemText(HTREEITEM theItem)
 	return _T("");
 }
 
-// This seperates the title from the value in a tree item that has
+// This separates the title from the value in a tree item that has
 // a title to the left of a colon, and a value to the right, with
-// a space seperating the value from the colon. ": "
+// a space separating the value from the colon. ": "
 // int getPart can be GET_TITLE (0) or GET_VALUE (1)
 // EXAMPLE:
 // HTREEITEM hMyItem = treeCtrl.InsertItem("Title: 5", hMyParent);
@@ -325,9 +326,9 @@ CString CStatisticsTree::GetItemText(HTREEITEM theItem, int getPart)
 		return _T("");
 
 	int posSeparator = fullText.Find(_T(": "));
-	
+
 	if (posSeparator < 1) {
-		returnText = getPart == GET_TITLE ? fullText : _T("");
+		returnText = getPart == GET_TITLE ? fullText : CString();
 		return returnText;
 	}
 
@@ -336,7 +337,7 @@ CString CStatisticsTree::GetItemText(HTREEITEM theItem, int getPart)
 	else if (getPart == GET_VALUE)
 		returnText = fullText.Mid(posSeparator + 2);
 	else
-		returnText = _T("");
+		returnText.Empty();
 
 	return returnText;
 }
@@ -357,7 +358,7 @@ CString CStatisticsTree::GetHTML(bool onlyVisible, HTREEITEM theItem, int theIte
 
 	CString	strBuffer;
 	if (firstItem)
-		strBuffer.Format(_T("<font face=\"Tahoma,Verdana,Courier New,Helvetica\" size=\"2\">\r\n<b>eMule v%s %s [%s]</b>\r\n<br /><br />\r\n"), theApp.m_strCurVersionLong, GetResString(IDS_SF_STATISTICS), thePrefs.GetUserNick());
+		strBuffer.Format(_T("<font face=\"Tahoma,Verdana,Courier New,Helvetica\" size=\"2\">\r\n<b>eMule v%s %s [%s]</b>\r\n<br /><br />\r\n"), (LPCTSTR)theApp.m_strCurVersionLong, (LPCTSTR)GetResString(IDS_SF_STATISTICS), (LPCTSTR)thePrefs.GetUserNick());
 
 	while (hCurrent != NULL)
 	{
@@ -437,7 +438,7 @@ CString CStatisticsTree::GetText(bool onlyVisible, HTREEITEM theItem, int theIte
 
 	CString	strBuffer;
 	if (bPrintHeader)
-		strBuffer.Format(_T("eMule v%s %s [%s]\r\n\r\n"), theApp.m_strCurVersionLong, GetResString(IDS_SF_STATISTICS) ,thePrefs.GetUserNick());
+		strBuffer.Format(_T("eMule v%s %s [%s]\r\n\r\n"), (LPCTSTR)theApp.m_strCurVersionLong, (LPCTSTR)GetResString(IDS_SF_STATISTICS), (LPCTSTR)thePrefs.GetUserNick());
 
 	while (hCurrent != NULL)
 	{
@@ -541,10 +542,10 @@ CString CStatisticsTree::GetHTMLForExport(HTREEITEM theItem, int theItemLevel, b
 		else
 		{
 			strChild = _T("space");
-			strDiv=_T("");
-			strDivStart=_T("");
-			strDivEnd=_T("");
-			strName=_T("");
+			strDiv.Empty();
+			strDivStart.Empty();
+			strDivEnd.Empty();
+			strName.Empty();
 		}
 		strBuffer += _T("\n");
 		for (int i = 0; i < theItemLevel; i++)
@@ -555,7 +556,7 @@ CString CStatisticsTree::GetHTMLForExport(HTREEITEM theItem, int theItemLevel, b
 		strItem += strDivA;
 
 		if (GetItemImage(hCurrent, nImage, nSelectedImage))
-			strImage.Format(_T("%u"),nImage);
+			strImage.Format(_T("%i"),nImage);
 		else
 			strImage.Format(_T("%u"),0);
 
@@ -637,15 +638,15 @@ void CStatisticsTree::ExportHTML()
 
 			"<span id=\"pghdr\"><b>eMule %s</b></span><br /><span id=\"pghdr2\">%s %s</span>\r\n<br /><br />\r\n"
 			"%s</body></html>") ,
-			GetResString(IDS_SF_STATISTICS), thePrefs.GetUserNick(),
-			GetResString(IDS_SF_STATISTICS), GetResString(IDS_CD_UNAME), thePrefs.GetUserNick(),
-			GetHTMLForExport() );
+			(LPCTSTR)GetResString(IDS_SF_STATISTICS), (LPCTSTR)thePrefs.GetUserNick(),
+			(LPCTSTR)GetResString(IDS_SF_STATISTICS), (LPCTSTR)GetResString(IDS_CD_UNAME), (LPCTSTR)thePrefs.GetUserNick(),
+			(LPCTSTR)GetHTMLForExport() );
 
 		htmlFile.Open(saveAsDlg.GetPathName(), CFile::modeCreate | CFile::modeWrite | CFile::shareDenyWrite);
-		
+
 		CStringA strHtmlA(wc2utf8(strHTML));
-		htmlFile.Write(strHtmlA, strHtmlA.GetLength());		
-		
+		htmlFile.Write(strHtmlA, strHtmlA.GetLength());
+
 		htmlFile.Close();
 
 		static const TCHAR *const s_apcFileNames[] = {
@@ -748,7 +749,7 @@ CString CStatisticsTree::GetExpandedMask(HTREEITEM theItem)
 
 // This takes a string and uses it to set the expanded or
 // collapsed state of the tree items.
-int CStatisticsTree::ApplyExpandedMask(CString theMask, HTREEITEM theItem, int theStringIndex)
+int CStatisticsTree::ApplyExpandedMask(const CString& theMask, HTREEITEM theItem, int theStringIndex)
 {
 	HTREEITEM	hCurrent;
 
@@ -766,7 +767,7 @@ int CStatisticsTree::ApplyExpandedMask(CString theMask, HTREEITEM theItem, int t
 		if (ItemHasChildren(hCurrent) && IsBold(hCurrent)) {
 			if (theMask.GetAt(theStringIndex) == '0') Expand(hCurrent, TVE_COLLAPSE);
 			theStringIndex++;
-			theStringIndex = ApplyExpandedMask(theMask, GetChildItem(hCurrent), theStringIndex);			
+			theStringIndex = ApplyExpandedMask(theMask, GetChildItem(hCurrent), theStringIndex);
 		}
 		hCurrent = GetNextItem(hCurrent, TVGN_NEXT);
 	}

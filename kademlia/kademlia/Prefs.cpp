@@ -1,16 +1,16 @@
 /*
 Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
- 
+
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either
 version 2 of the License, or (at your option) any later version.
- 
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
- 
+
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -432,7 +432,7 @@ uint32 CPrefs::GetUDPVerifyKey(uint32 dwTargetIP) {
 	ui64Buffer <<= 32;
 	ui64Buffer |= dwTargetIP;
 	MD5Sum md5((uchar*)&ui64Buffer, 8);
-	return ((uint32)(PeekUInt32(md5.GetRawHash() + 0) ^ PeekUInt32(md5.GetRawHash() + 4) ^ PeekUInt32(md5.GetRawHash() + 8) ^ PeekUInt32(md5.GetRawHash() + 12)) % 0xFFFFFFFE) + 1; 
+	return ((uint32)(PeekUInt32(md5.GetRawHash() + 0) ^ PeekUInt32(md5.GetRawHash() + 4) ^ PeekUInt32(md5.GetRawHash() + 8) ^ PeekUInt32(md5.GetRawHash() + 12)) % 0xFFFFFFFE) + 1;
 }
 
 bool CPrefs::GetUseExternKadPort() const
@@ -460,7 +460,7 @@ void CPrefs::SetExternKadPort(uint16 uVal, uint32 uFromIP)
 				return;
 		}
 		m_anExternPortIPs.Add(uFromIP);
-		DebugLog(_T("Received possible external Kad Port %u from %s"), uVal, ipstr(ntohl(uFromIP)));
+		DebugLog(_T("Received possible external Kad Port %u from %s"), uVal, (LPCTSTR)ipstr(ntohl(uFromIP)));
 		// if 2 out of 3 tries result in the same external port its fine, otherwise consider it as unreliable
 		for (int i = 0; i < m_anExternPorts.GetCount(); i++)
 		{
@@ -482,7 +482,7 @@ void CPrefs::SetExternKadPort(uint16 uVal, uint32 uFromIP)
 	}
 }
 
-uint16 CPrefs::GetInternKadPort() const
+uint16 CPrefs::GetInternKadPort()
 {
 	return thePrefs.GetUDPPort();
 }

@@ -30,9 +30,9 @@ struct OpenOvFile_Struct
 struct UploadingToClient_Struct;
 class CUploadDiskIOThread;
 struct OverlappedEx_Struct
-{ 
+{
    OVERLAPPED					oOverlap; // must be first member
-   OpenOvFile_Struct*			pFileStruct; 
+   OpenOvFile_Struct*			pFileStruct;
    UploadingToClient_Struct*	pUploadClientStruct;
    uint64						uStartOffset;
    uint64						uEndOffset;
@@ -69,13 +69,13 @@ private:
 	bool		ReleaseOvOpenFile(OpenOvFile_Struct* pOpenOvFileStruct);
 	void		ReadCompletetionRoutine(DWORD dwErrorCode, DWORD dwBytesRead, OverlappedEx_Struct*  pOverlappedExStruct);
 
-	static void CreateStandardPackets(byte* pbyData, uint64 uStartOffset, uint64 uEndOffset, bool bFromPF, CPacketList& rOutPackedList, const uchar* pucMD4FileHash, CString strDbgClientInfo);
-	static void CreatePackedPackets(byte* pbyData, uint64 uStartOffset, uint64 uEndOffset, bool bFromPF, CPacketList& rOutPackedList, const uchar* pucMD4FileHash, CString strDbgClientInfo);
+	static void CreateStandardPackets(byte* pbyData, uint64 uStartOffset, uint64 uEndOffset, bool bFromPF, CPacketList& rOutPackedList, const uchar* pucMD4FileHash, const CString& strDbgClientInfo);
+	static void CreatePackedPackets(byte* pbyData, uint64 uStartOffset, uint64 uEndOffset, bool bFromPF, CPacketList& rOutPackedList, const uchar* pucMD4FileHash, const CString& strDbgClientInfo);
 	static void CreatePeerCachePackets(byte* pbyData, uint64 uStartOffset, uint64 uEndOffset, uint64 uFilesize, bool bFromPF, CPacketList& rOutPacketList, const uchar* pucMD4FileHash, CUpDownClient* pClient);
 
 
 	volatile bool									m_bRun;
-	bool											m_bSignalThrottler;	
+	bool											m_bSignalThrottler;
 	CEvent*											m_eventThreadEnded;
 	CEvent											m_eventNewBlockRequests;
 	CEvent											m_eventAsyncIOFinished;

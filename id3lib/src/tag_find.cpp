@@ -1,7 +1,8 @@
-// $Id: tag_find.cpp,v 1.28 2003/03/02 14:39:25 t1mpy Exp $
+// $Id: tag_find.cpp,v 1.28 2002/09/13 15:38:08 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
+// Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
 
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Library General Public License as published by
@@ -96,7 +97,7 @@ ID3_Frame *ID3_TagImpl::Find(ID3_FrameID id) const
   return frame;
 }
 
-ID3_Frame *ID3_TagImpl::Find(ID3_FrameID id, ID3_FieldID fldID, String data) const
+ID3_Frame *ID3_TagImpl::Find(ID3_FrameID id, ID3_FieldID fldID, const String& data) const
 {
   ID3_Frame *frame = NULL;
   ID3D_NOTICE( "Find: looking for comment with data = " << data.c_str() );
@@ -134,7 +135,7 @@ ID3_Frame *ID3_TagImpl::Find(ID3_FrameID id, ID3_FieldID fldID, String data) con
           ID3D_NOTICE( "Find: didn't have the right field" );
         }
 
-        String text( NULL == fld->GetRawText() ? "" : fld->GetRawText() , fld->Size()); //PHF
+        String text(fld->GetRawText(), fld->Size());
         ID3D_NOTICE( "Find: text = " << text.c_str() );
 
         if (text == data)
@@ -151,7 +152,7 @@ ID3_Frame *ID3_TagImpl::Find(ID3_FrameID id, ID3_FieldID fldID, String data) con
   return frame;
 }
 
-ID3_Frame *ID3_TagImpl::Find(ID3_FrameID id, ID3_FieldID fldID, WString data) const
+ID3_Frame *ID3_TagImpl::Find(ID3_FrameID id, ID3_FieldID fldID, const WString& data) const
 {
   ID3_Frame *frame = NULL;
 

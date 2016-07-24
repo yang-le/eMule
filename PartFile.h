@@ -51,7 +51,7 @@ enum EPartFileFormat{
 	PMT_SPLITTED,
 	PMT_NEWOLD,
 	PMT_SHAREAZA,
-	PMT_BADFORMAT	
+	PMT_BADFORMAT
 };
 
 enum EPartFileLoadResult{
@@ -75,7 +75,7 @@ enum EPartFileOp{
 
 class CSearchFile;
 class CUpDownClient;
-enum EDownloadState;
+enum EDownloadState: int;
 class CxImage;
 class CSafeMemFile;
 
@@ -111,7 +111,7 @@ class CPartFile : public CKnownFile
 
 	friend class CPartFileConvert;
 public:
-	CPartFile(UINT cat = 0);
+	explicit CPartFile(UINT cat = 0);
 	CPartFile(CSearchFile* searchresult, UINT cat = 0);
 	CPartFile(CString edonkeylink, UINT cat = 0);
 	CPartFile(class CED2KFileLink* fileLink, UINT cat = 0);
@@ -127,7 +127,7 @@ public:
 
 	// full path to part.met file or completed file
 	const CString& GetFullName() const { return m_fullname; }
-	void	SetFullName(CString name) { m_fullname = name; }
+	void	SetFullName(const CString& name) { m_fullname = name; }
 	CString	GetTempPath() const;
 
 	// local file system related properties
@@ -141,6 +141,7 @@ public:
 	// last file modification time (NT's version of UTC), to be used for stats only!
 	CTime	GetCFileDate() const { return CTime(m_tLastModified); }
 	uint32	GetFileDate() const { return m_tLastModified; }
+	uint32	GetLastReceptionDate() const { return (m_uTransferred > 0 && m_tLastModified > 0) ? m_tLastModified : (UINT)-1; }
 
 	// file creation time (NT's version of UTC), to be used for stats only!
 	CTime	GetCrCFileDate() const { return CTime(m_tCreated); }
@@ -170,13 +171,13 @@ public:
 	void	UpdateCompletedInfos(uint64 uTotalGaps);
 	virtual void	UpdatePartsInfo();
 
-	bool	GetNextRequestedBlock(CUpDownClient* sender, Requested_Block_Struct** newblocks, uint16* count) /*const*/;
+	bool	GetNextRequestedBlock(CUpDownClient* sender, Requested_Block_Struct** newblocks, uint16* pcount) /*const*/;
 	void	WritePartStatus(CSafeMemFile* file) const;
 	void	WriteCompleteSourcesCount(CSafeMemFile* file) const;
 	void	AddSources(CSafeMemFile* sources,uint32 serverip, uint16 serverport, bool bWithObfuscationAndHash);
 	void	AddSource(LPCTSTR pszURL, uint32 nIP);
 	static bool CanAddSource(uint32 userid, uint16 port, uint32 serverip, uint16 serverport, UINT* pdebug_lowiddropped = NULL, bool Ed2kID = true);
-	
+
 	EPartFileStatus	GetStatus(bool ignorepause = false) const;
 	void	SetStatus(EPartFileStatus eStatus);		// set status and update GUI
 	void	_SetStatus(EPartFileStatus eStatus);	// set status and do *not* update GUI
@@ -286,7 +287,7 @@ public:
 	void	SetFileOpProgress(UINT uProgress);
 	UINT	GetFileOpProgress() const										{ return m_uFileOpProgress; }
 
-	CAICHRecoveryHashSet* GetAICHRecoveryHashSet()							{ return m_pAICHRecoveryHashSet; }
+	CAICHRecoveryHashSet* GetAICHRecoveryHashSet() const					{ return m_pAICHRecoveryHashSet; }
 	void	RequestAICHRecovery(UINT nPart);
 	void	AICHRecoveryDataAvailable(UINT nPart);
 	bool	IsAICHPartHashSetNeeded() const									{ return m_FileIdentifier.HasAICHHash() && !m_FileIdentifier.HasExpectedAICHHashCount() && m_bAICHPartHashsetNeeded; }
@@ -310,9 +311,9 @@ public:
 	uint8	m_TotalSearchesKad;
     bool    AllowSwapForSourceExchange()					{ return ::GetTickCount()-lastSwapForSourceExchangeTick > 30*1000; } // ZZ:DownloadManager
     void    SetSwapForSourceExchangeTick()					{ lastSwapForSourceExchangeTick = ::GetTickCount(); } // ZZ:DownloadManager
-	
-	UINT	SetPrivateMaxSources(uint32 in)					{ return m_uMaxSources = in; } 
-	UINT	GetPrivateMaxSources() const					{ return m_uMaxSources; } 
+
+	UINT	SetPrivateMaxSources(uint32 in)					{ return m_uMaxSources = in; }
+	UINT	GetPrivateMaxSources() const					{ return m_uMaxSources; }
 	UINT	GetMaxSources() const;
 	UINT	GetMaxSourcePerFileSoft() const;
 	UINT	GetMaxSourcePerFileUDP() const;
@@ -391,7 +392,7 @@ private:
 	uint32	m_nDlActiveTime;
 	uint32	m_tLastModified;	// last file modification time (NT's version of UTC), to be used for stats only!
 	uint32	m_tCreated;			// file creation time (NT's version of UTC), to be used for stats only!
-    uint32	m_random_update_wait;	
+    uint32	m_random_update_wait;
 	volatile EPartFileOp m_eFileOp;
 	volatile UINT m_uFileOpProgress;
 	CAICHRecoveryHashSet*	m_pAICHRecoveryHashSet;

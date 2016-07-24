@@ -12,15 +12,15 @@
 //void CMyClass::UpdateFromIni(bool bFromIni)
 //{
 //   CIni ini(m_strFileName,m_strSection);
-//   ini.SER_GET(bFromIni,m_nValueXY); 
+//   ini.SER_GET(bFromIni,m_nValueXY);
 //   ini.SER_GET(bFromIni,m_strValue);
-//   ini.SER_ARR(bFromIni,m_arValue,MAX_AR); 
+//   ini.SER_ARR(bFromIni,m_arValue,MAX_AR);
 //   ini.SER_ARR(bFromIni,m_ar3D,3);
-//   //ore with default values 
-//   ini.SER_GETD(bFromIni,m_nValueXY,5); 
+//   //ore with default values
+//   ini.SER_GETD(bFromIni,m_nValueXY,5);
 //   ini.SER_GETD(bFromIni,m_strValue,"Hello");
-//   ini.SER_ARRD(bFromIni,m_arValue,MAX_AR,10); 
-//   ini.SER_ARRD(bFromIni,m_ar3D,3,5); 
+//   ini.SER_ARRD(bFromIni,m_arValue,MAX_AR,10);
+//   ini.SER_ARRD(bFromIni,m_ar3D,3,5);
 //}
 #pragma once
 
@@ -29,7 +29,7 @@
 #define SER_GETD(bGet,value,default) SerGet(bGet,value,#value,NULL,default)
 #define SER_ARRD(bGet,value,n,default) SerGet(bGet,value,n,#value,default)
 
-class CIni  
+class CIni
 {
 public:
    // If the IniFilename contains no path,
@@ -41,8 +41,8 @@ public:
 	static CString GetDefaultIniFile(bool bModulPath = true);
 
 	CIni();
-	CIni(CIni const& rIni);
-	CIni(CString const& rstrFileName);
+	explicit CIni(CIni const& rIni);
+	explicit CIni(CString const& rstrFileName);
 	CIni(CString const& rstrFileName, CString const& rstrSection);
 	virtual ~CIni();
 
@@ -73,8 +73,8 @@ public:
 	void		WriteUInt64(LPCTSTR lpszEntry,	ULONGLONG	n,								LPCTSTR lpszSection = NULL);
 	void		WriteWORD(LPCTSTR lpszEntry,	WORD		n,								LPCTSTR lpszSection = NULL);
 	void		WriteBool(LPCTSTR lpszEntry,	bool		b,								LPCTSTR lpszSection = NULL);
-	void		WritePoint(LPCTSTR lpszEntry,	CPoint		pt,								LPCTSTR lpszSection = NULL);
-	void		WriteRect(LPCTSTR lpszEntry,	CRect		rect,							LPCTSTR lpszSection = NULL);
+	void		WritePoint(LPCTSTR lpszEntry,	const CPoint&	pt,							LPCTSTR lpszSection = NULL);
+	void		WriteRect(LPCTSTR lpszEntry,	const CRect&	rect,						LPCTSTR lpszSection = NULL);
 	void		WriteColRef(LPCTSTR lpszEntry,	COLORREF	cr,								LPCTSTR lpszSection = NULL);
 	bool		WriteBinary(LPCTSTR lpszEntry,	LPBYTE pData, UINT nBytes,					LPCTSTR lpszSection = NULL);
 
@@ -84,8 +84,8 @@ public:
 	void		SerGetInt(		bool bGet, int&			n,	LPCTSTR lpszEntry,	LPCTSTR lpszSection = NULL,	int nDefault = 0);
 	void		SerGetDWORD(	bool bGet, DWORD&		n,	LPCTSTR lpszEntry,	LPCTSTR lpszSection = NULL,	DWORD nDefault = 0);
 	void		SerGetBool(		bool bGet, bool&		b,	LPCTSTR lpszEntry,	LPCTSTR lpszSection = NULL,	bool bDefault = false);
-	void		SerGetPoint(	bool bGet, CPoint&		pt,	LPCTSTR lpszEntry,	LPCTSTR lpszSection = NULL,	CPoint ptDefault = CPoint(0,0));
-	void		SerGetRect(		bool bGet, CRect&		rc,	LPCTSTR lpszEntry,	LPCTSTR lpszSection = NULL,	CRect rectDefault = CRect(0,0,0,0));
+	void		SerGetPoint(	bool bGet, CPoint&		pt,	LPCTSTR lpszEntry,	LPCTSTR lpszSection = NULL,	const CPoint& ptDefault = CPoint(0,0));
+	void		SerGetRect(		bool bGet, CRect&		rc,	LPCTSTR lpszEntry,	LPCTSTR lpszSection = NULL,	const CRect& rectDefault = CRect(0,0,0,0));
 	void		SerGetColRef(	bool bGet, COLORREF&	cr,	LPCTSTR lpszEntry,	LPCTSTR lpszSection = NULL,	COLORREF crDefault = RGB(128,128,128));
 
 	void		SerGet(	bool bGet, CString&	 s,	 LPCTSTR lpszEntry,	LPCTSTR lpszSection = NULL,	LPCTSTR lpszDefault = NULL);
@@ -95,9 +95,9 @@ public:
 	void		SerGet(	bool bGet, short&	 n,	 LPCTSTR lpszEntry,	LPCTSTR lpszSection = NULL,	int nDefault = 0);
 	void		SerGet(	bool bGet, DWORD&	 n,	 LPCTSTR lpszEntry,	LPCTSTR lpszSection = NULL,	DWORD nDefault = 0);
 	void		SerGet(	bool bGet, WORD&	 n,	 LPCTSTR lpszEntry,	LPCTSTR lpszSection = NULL,	DWORD nDefault = 0);
-	void		SerGet(	bool bGet, CPoint&	 pt, LPCTSTR lpszEntry,	LPCTSTR lpszSection = NULL,	CPoint ptDefault = CPoint(0,0));
-	void		SerGet(	bool bGet, CRect&	 rc, LPCTSTR lpszEntry,	LPCTSTR lpszSection = NULL,	CRect rectDefault = CRect(0,0,0,0));
-   
+	void		SerGet(	bool bGet, CPoint&	 pt, LPCTSTR lpszEntry,	LPCTSTR lpszSection = NULL,	const CPoint& ptDefault = CPoint(0,0));
+	void		SerGet(	bool bGet, CRect&	 rc, LPCTSTR lpszEntry,	LPCTSTR lpszSection = NULL,	const CRect& rectDefault = CRect(0,0,0,0));
+
 	void		SerGet(	bool bGet, CString*	s,	int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection = NULL, LPCTSTR lpszDefault = NULL);
 	void		SerGet(	bool bGet, double*	f,	int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection = NULL, double fDefault = 0.0);
 	void		SerGet(	bool bGet, float*	f,	int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection = NULL, float fDefault = 0.0F);
@@ -106,10 +106,10 @@ public:
 	void		SerGet(	bool bGet, short*	n,	int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection = NULL, int nDefault = 0);
 	void		SerGet(	bool bGet, DWORD*	n,	int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection = NULL, DWORD nDefault = 0);
 	void		SerGet(	bool bGet, WORD*	n,	int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection = NULL, DWORD nDefault = 0);
-	void		SerGet(	bool bGet, CPoint*	pt,	int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection = NULL, CPoint ptDefault = CPoint(0,0));
-	void		SerGet(	bool bGet, CRect*	rc,	int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection = NULL, CRect rectDefault = CRect(0,0,0,0));
+	void		SerGet(	bool bGet, CPoint*	pt,	int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection = NULL, const CPoint& ptDefault = CPoint(0,0));
+	void		SerGet(	bool bGet, CRect*	rc,	int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection = NULL, const CRect& rectDefault = CRect(0,0,0,0));
 
-	int			Parse(const CString&, int nOffset, CString &rstrOut);
+	static int	Parse(const CString&, int nOffset, CString &rstrOut);
 	void		DeleteKey(LPCTSTR lpszKey);
 
 private:

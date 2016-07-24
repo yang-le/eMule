@@ -28,7 +28,6 @@
 
 // DirectShow MediaDet
 #include <strmif.h>
-//#include <uuids.h>
 #define _DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
         EXTERN_C const GUID DECLSPEC_SELECTANY name \
                 = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
@@ -69,6 +68,7 @@ static char THIS_FILE[] = __FILE__;
 IMPLEMENT_DYNCREATE(CFrameGrabThread, CWinThread)
 
 CFrameGrabThread::CFrameGrabThread()
+	: nFramesToGrab(0), imgResults(NULL), dStartTime(0), bReduceColor(0), pOwner(NULL), nMaxWidth(0), pSender(NULL)
 {
 }
 
@@ -113,41 +113,41 @@ UINT CFrameGrabThread::GrabFrames(){
 
 		// Convert the file name to a BSTR.
 		CComBSTR bstrFilename(strFileName);
-		hr = pDet->put_Filename(bstrFilename);
+		pDet->put_Filename(bstrFilename);
 
 		long lStreams;
 		bool bFound = false;
-		hr = pDet->get_OutputStreams(&lStreams);
+		pDet->get_OutputStreams(&lStreams);
 		for (long i = 0; i < lStreams; i++)
 		{
 			GUID major_type;
-			hr = pDet->put_CurrentStream(i);
-			hr = pDet->get_StreamType(&major_type);
+			pDet->put_CurrentStream(i);
+			pDet->get_StreamType(&major_type);
 			if (major_type == MEDIATYPE_Video)
 			{
 				bFound = true;
 				break;
 			}
 		}
-		
+
 		if (!bFound)
 			return 0;
-		
+
 		double dLength = 0;
 		pDet->get_StreamLength(&dLength);
 		if (dStartTime > dLength)
 			dStartTime = 0;
 
-		long width = 0, height = 0; 
+		long width = 0, height = 0;
 		AM_MEDIA_TYPE mt;
 		hr = pDet->get_StreamMediaType(&mt);
-		if (mt.formattype == FORMAT_VideoInfo) 
+		if (mt.formattype == FORMAT_VideoInfo)
 		{
 			VIDEOINFOHEADER *pVih = (VIDEOINFOHEADER*)(mt.pbFormat);
 			width = pVih->bmiHeader.biWidth;
 			height = pVih->bmiHeader.biHeight;
-			
-	        
+
+
 			// We want the absolute height, don't care about orientation.
 			if (height < 0) height *= -1;
 		}
@@ -155,7 +155,7 @@ UINT CFrameGrabThread::GrabFrames(){
 			return 0; // Should not happen, in theory.
 		}
 
-		/*FreeMediaType(mt); = */	
+		/*FreeMediaType(mt); = */
 		if (mt.cbFormat != 0){
 			CoTaskMemFree((PVOID)mt.pbFormat);
 			mt.cbFormat = 0;
@@ -167,18 +167,18 @@ UINT CFrameGrabThread::GrabFrames(){
 		}
 		/**/
 
-	    
+
 		long size;
 		uint32 nFramesGrabbed;
 		for (nFramesGrabbed = 0; nFramesGrabbed != nFramesToGrab; nFramesGrabbed++){
 			hr = pDet->GetBitmapBits(dStartTime + (nFramesGrabbed*TIMEBETWEENFRAMES), &size, NULL, width, height);
-			if (SUCCEEDED(hr)) 
+			if (SUCCEEDED(hr))
 			{
 				// we could also directly create a Bitmap in memory, however this caused problems/failed with *some* movie files
 				// when I tried it for the MMPreview, while this method works always - so I'll continue to use this one
 				long nFullBufferLen = sizeof( BITMAPFILEHEADER ) + size;
 				char* buffer = new char[nFullBufferLen];
-				
+
 				BITMAPFILEHEADER bfh;
 				memset( &bfh, 0, sizeof( bfh ) );
 				bfh.bfType = 'MB';
@@ -210,7 +210,7 @@ UINT CFrameGrabThread::GrabFrames(){
 						int nMaxHeigth = (int)(imgResult->GetHeight() * scale);
 						imgResult->Resample(nMaxWidth, nMaxHeigth, 0);
 					}
-					
+
 					// decrease bpp if needed
 					if (bReduceColor){
 						RGBQUAD* ppal=(RGBQUAD*)malloc(256*sizeof(RGBQUAD));
@@ -222,7 +222,7 @@ UINT CFrameGrabThread::GrabFrames(){
 							free(ppal);
 						}
 					}
-					
+
 					//CString TestName;
 					//TestName.Format("G:\\testframe%i.png",nFramesGrabbed);
 					//imgResult->Save(TestName,CXIMAGE_FORMAT_PNG);
@@ -243,7 +243,8 @@ UINT CFrameGrabThread::GrabFrames(){
 	}
 }
 
-void CFrameGrabThread::SetValues(const CKnownFile* in_pOwner, CString in_strFileName,uint8 in_nFramesToGrab, double in_dStartTime, bool in_bReduceColor, uint16 in_nMaxWidth, void* in_pSender){
+void CFrameGrabThread::SetValues(const CKnownFile* in_pOwner, const CString& in_strFileName,uint8 in_nFramesToGrab, double in_dStartTime, bool in_bReduceColor, uint16 in_nMaxWidth, void* in_pSender)
+{
 	strFileName =in_strFileName;
 	nFramesToGrab = in_nFramesToGrab;
 	dStartTime = in_dStartTime;

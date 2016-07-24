@@ -16,19 +16,16 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #pragma once
 #include "MapKey.h"
+#pragma warning(push)
 #pragma warning(disable:4516) // access-declarations are deprecated; member using-declarations provide a better alternative
 #pragma warning(disable:4244) // conversion from 'type1' to 'type2', possible loss of data
 #pragma warning(disable:4100) // unreferenced formal parameter
 #pragma warning(disable:4702) // unreachable code
-#include <crypto51/rsa.h>
-#include <crypto51/base64.h>
-#include <crypto51/osrng.h>
-#include <crypto51/files.h>
-#include <crypto51/sha.h>
-#pragma warning(default:4702) // unreachable code
-#pragma warning(default:4100) // unreferenced formal parameter
-#pragma warning(default:4244) // conversion from 'type1' to 'type2', possible loss of data
-#pragma warning(default:4516) // access-declarations are deprecated; member using-declarations provide a better alternative
+#include <cryptopp/rsa.h>
+#include <cryptopp/base64.h>
+#include <cryptopp/osrng.h>
+#include <cryptopp/files.h>
+#pragma warning(pop)
 
 #define COLLECTION_FILEEXTENSION	_T(".emulecollection")
 
@@ -43,7 +40,7 @@ class CCollection
 	friend class CCollectionViewDialog;
 public:
 	CCollection(void);
-	CCollection(const CCollection* pCollection);
+	explicit CCollection(const CCollection* pCollection);
 	~CCollection(void);
 	bool InitCollectionFromFile(const CString& sFilePath, CString sFileName);
 	CCollectionFile* AddFileToCollection(CAbstractFile* pAbstractFile, bool bCreateClone);

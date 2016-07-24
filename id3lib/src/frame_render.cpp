@@ -1,4 +1,4 @@
-// $Id: frame_render.cpp,v 1.27 2002/07/31 13:45:18 t1mpy Exp $
+// $Id: frame_render.cpp,v 1.28 2002/09/13 15:37:23 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
@@ -29,57 +29,55 @@
 #include <config.h>
 #endif
 
-
-
-//#include <string.h>
 #include <memory.h>
-#include "../../zlib/zlib.h"
+#include <zlib.h>
 
 #include "tag.h"
 #include "frame_impl.h"
 #include "id3/io_decorators.h" //has "readers.h" "io_helpers.h" "utils.h"
 #include "io_strings.h"
-#include "io_helpers.h"
 
 using namespace dami;
 
-namespace 
+namespace
 {
-  void renderFields(ID3_Writer& writer, const ID3_FrameImpl& frame)
+  ID3_Err renderFields(ID3_Writer& writer, const ID3_FrameImpl& frame)
   {
-    ID3_TextEnc enc = ID3TE_ASCII;
+    ID3_Err err;
+    ID3_TextEnc enc = ID3TE_ISO8859_1;
     for (ID3_FrameImpl::const_iterator fi = frame.begin(); fi != frame.end(); ++fi)
     {
       ID3_Field* fld = *fi;
       if (fld != NULL && fld->InScope(frame.GetSpec()))
       {
-        if (fld->GetID() == ID3FN_TEXTENC)  
+        if (fld->GetID() == ID3FN_TEXTENC)
         {
-          enc = static_cast<ID3_TextEnc>(fld->Get());  
+          enc = static_cast<ID3_TextEnc>(fld->Get());
           ID3D_NOTICE( "id3::v2::renderFields(): found encoding = " << enc );
         }
         else
         {
           fld->SetEncoding(enc);
         }
-        fld->Render(writer);
+        err = fld->Render(writer);
+        if (err != ID3E_NoError)
+          return err;
       }
     }
+    return ID3E_NoError;
   }
 }
-  
-void ID3_FrameImpl::Render(ID3_Writer& writer) const
+
+ID3_Err ID3_FrameImpl::Render(ID3_Writer& writer) const
 {
   // Return immediately if we have no fields, which (usually) means we're
   // trying to render a frame which has been Cleared or hasn't been initialized
   if (!this->NumFields())
   {
-    return;
+    return ID3E_NoError;
   }
 
   ID3_FrameHeader hdr;
-  
-  const size_t hdr_size = hdr.Size();
 
   // 1.  Write out the field data to the buffer, with the assumption that
   //     we won't be decompressing, since this is the usual behavior
@@ -111,7 +109,7 @@ void ID3_FrameImpl::Render(ID3_Writer& writer) const
 //    ID3D_WARNING ( "ID3_FrameImpl::Render(): no field data" );
 //    return;
 //  }
-  
+
   // determine which flags need to be set
   uchar eID = this->GetEncryptionID(), gID = this->GetGroupingID();
   ID3_FrameID fid = this->GetID();
@@ -127,12 +125,14 @@ void ID3_FrameImpl::Render(ID3_Writer& writer) const
   hdr.SetEncryption(eID > 0);
   hdr.SetGrouping(gID > 0);
   hdr.SetCompression(origSize > fldSize);
-  hdr.SetDataSize(fldSize + ((hdr.GetCompression() ? 4 : 0) + 
-                             (hdr.GetEncryption()  ? 1 : 0) + 
+  hdr.SetDataSize(fldSize + ((hdr.GetCompression() ? 4 : 0) +
+                             (hdr.GetEncryption()  ? 1 : 0) +
                              (hdr.GetGrouping()    ? 1 : 0)));
 
   // write out the header
-  hdr.Render(writer);
+  ID3_Err err = hdr.Render(writer);
+  if (err != ID3E_NoError)
+    return err;
 
   if (fldSize != 0)
   {
@@ -157,5 +157,6 @@ void ID3_FrameImpl::Render(ID3_Writer& writer) const
     writer.writeChars(flds.data(), fldSize);
   }
   _changed = false;
+  return ID3E_NoError;
 }
 

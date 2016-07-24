@@ -22,7 +22,7 @@ typedef CTypedPtrList<CPtrList, CUpDownClient*> CUpDownClientPtrList;
 
 struct UploadingToClient_Struct
 {
-	UploadingToClient_Struct()							{ m_bIOError = false; m_bDisableCompression = false; }
+	UploadingToClient_Struct()							{ m_bIOError = false; m_bDisableCompression = false; m_pClient = NULL; }
 	~UploadingToClient_Struct();
 	CUpDownClient*										m_pClient;
 	CTypedPtrList<CPtrList, Requested_Block_Struct*>	m_BlockRequests_queue;
@@ -60,7 +60,7 @@ public:
 	uint32	GetWaitingUserForFileCount(const CSimpleArray<CObject*>& raFiles, bool bOnlyIfChanged);
 	uint32	GetDatarateForFile(const CSimpleArray<CObject*>& raFiles) const;
 	uint32	GetTargetClientDataRate(bool bMinDatarate) const;
-	
+
 	POSITION GetFirstFromUploadList()				{return uploadinglist.GetHeadPosition();}
 	CUpDownClient* GetNextFromUploadList(POSITION &curpos)	{return ((UploadingToClient_Struct*)uploadinglist.GetNext(curpos))->m_pClient;}
 	CUpDownClient* GetQueueClientAt(POSITION &curpos)	{return ((UploadingToClient_Struct*)uploadinglist.GetAt(curpos))->m_pClient;}
@@ -75,33 +75,33 @@ public:
 
 	UploadingToClient_Struct* GetUploadingClientStructByClient(const CUpDownClient* pClient) const;
 
-	const CUploadingPtrList& GetUploadListTS(CCriticalSection** outUploadListReadLock); 
+	const CUploadingPtrList& GetUploadListTS(CCriticalSection** outUploadListReadLock);
 
-	
+
 	void	DeleteAll();
 	UINT	GetWaitingPosition(CUpDownClient* client);
-	
-	uint32	GetSuccessfullUpCount()					{return successfullupcount;}
-	uint32	GetFailedUpCount()						{return failedupcount;}
+
+	uint32	GetSuccessfullUpCount() const			{return successfullupcount;}
+	uint32	GetFailedUpCount() const				{return failedupcount;}
 	uint32	GetAverageUpTime();
 
     CUpDownClient* FindBestClientInQueue();
     void ReSortUploadSlots(bool force = false);
 
 	CUpDownClientPtrList waitinglist;
-	
+
 protected:
 	void		RemoveFromWaitingQueue(POSITION pos, bool updatewindow);
 	bool		AcceptNewClient(bool addOnNextConnect = false);
 	bool		AcceptNewClient(uint32 curUploadSlots);
 	bool		ForceNewClient(bool allowEmptyWaitingQueue = false);
 	bool		AddUpNextClient(LPCTSTR pszReason, CUpDownClient* directadd = 0);
-	
+
 	static VOID CALLBACK UploadTimer(HWND hWnd, UINT nMsg, UINT nId, DWORD dwTime);
 
 private:
 	void	UpdateMaxClientScore();
-	uint32	GetMaxClientScore()						{return m_imaxscore;}
+	uint32	GetMaxClientScore() const				{return m_imaxscore;}
     void    UpdateActiveClientsInfo(DWORD curTick);
 
 	void InsertInUploadingList(CUpDownClient* newclient, bool bNoLocking = false);
@@ -110,18 +110,18 @@ private:
 
 
 	// By BadWolf - Accurate Speed Measurement
-	typedef struct TransferredData {
+	typedef struct {
 		uint32	datalen;
 		DWORD	timestamp;
-	};
+	} TransferredData;
 
 	CUploadingPtrList		uploadinglist;
 	// this lock only assumes only the main thread writes the uploadinglist, other threads need to fetch the lock if they want to read (but are not allowed to write)
 	CCriticalSection		m_csUploadListMainThrdWriteOtherThrdsRead; // don't acquire other locks while having this one in any thread other than UploadDiskIOThread or make sure deadlocks are impossible
 
-	CList<uint64> avarage_dr_list;
-    CList<uint64> avarage_friend_dr_list;
-	CList<DWORD,DWORD> avarage_tick_list;
+	CList<uint64> average_dr_list;
+    CList<uint64> average_friend_dr_list;
+	CList<DWORD,DWORD> average_tick_list;
 	CList<int,int> activeClients_list;
     CList<DWORD,DWORD> activeClients_tick_list;
 	uint32	datarate;   //datarate sent to network (including friends)
@@ -144,7 +144,7 @@ private:
     uint32  m_MaxActiveClientsShortTime;
 
     DWORD   m_lastCalculatedDataRateTick;
-    uint64  m_avarage_dr_sum;
+    uint64  m_average_dr_sum;
 
     DWORD   m_dwLastResortedUploadSlots;
 	bool	m_bStatisticsWaitingListDirty;

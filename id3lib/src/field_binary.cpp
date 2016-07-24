@@ -1,7 +1,8 @@
-// $Id: field_binary.cpp,v 1.27 2003/03/02 14:23:59 t1mpy Exp $
+// $Id: field_binary.cpp,v 1.27 2002/09/13 15:37:47 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
+// Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
 
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Library General Public License as published by
@@ -39,10 +40,10 @@ using namespace dami;
 size_t ID3_FieldImpl::Set(const uchar* data, size_t len)
 {
   size_t size = 0;
-  if ((this->GetType() == ID3FTY_BINARY) && data && len)
+  if (this->GetType() == ID3FTY_BINARY)
   {
     BString str(data, len);
-    size = dami::min(len, this->SetBinary(str));
+    size = min(len, this->SetBinary(str));
   }
   return size;
 }
@@ -52,7 +53,7 @@ size_t ID3_FieldImpl::Set(const uchar* data, size_t len)
  ** Again, like the string types, the binary Set() function copies the data
  ** so you may dispose of the source data after a call to this method.
  **/
-size_t ID3_FieldImpl::SetBinary(BString data) //< data to assign to this field.
+size_t ID3_FieldImpl::SetBinary(const BString& data) //< data to assign to this field.
 {
   size_t size = 0;
   if (this->GetType() == ID3FTY_BINARY)
@@ -66,7 +67,7 @@ size_t ID3_FieldImpl::SetBinary(BString data) //< data to assign to this field.
     }
     else
     {
-      _binary.assign(data, 0, dami::min(size, fixed));
+      _binary.assign(data, 0, min(size, fixed));
       if (size < fixed)
       {
         _binary.append(fixed - size, '\0');
@@ -117,7 +118,7 @@ size_t ID3_FieldImpl::Get(uchar *buffer,    //< Destination of retrieved string
   size_t bytes = 0;
   if (this->GetType() == ID3FTY_BINARY)
   {
-    bytes = dami::min(max_bytes, this->Size());
+    bytes = min(max_bytes, this->Size());
     if (NULL != buffer && bytes > 0)
     {
       ::memcpy(buffer, _binary.data(), bytes);
@@ -148,8 +149,8 @@ void ID3_FieldImpl::FromFile(const char *info //< Source filename
     size_t fileSize = ::ftell(temp_file);
     ::fseek(temp_file, 0, SEEK_SET);
 
-    uchar* buffer = new uchar[fileSize];
-    if (buffer != NULL)
+    uchar* buffer = LEAKTESTNEW(uchar[fileSize]);
+//    if (buffer != NULL)
     {
       ::fread(buffer, 1, fileSize, temp_file);
 

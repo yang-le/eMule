@@ -1,4 +1,4 @@
-//this file is part of eMule 
+//this file is part of eMule
 //Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
@@ -47,7 +47,7 @@ LastCommonRouteFinder::LastCommonRouteFinder() {
 	m_LowestInitialPingAllowed = 20;
 	pingDelaysTotal = 0;
 
-	m_state = _T("");
+	m_state.Empty();
 
 	needMoreHosts = false;
 
@@ -55,7 +55,7 @@ LastCommonRouteFinder::LastCommonRouteFinder() {
 	newTraceRouteHostEvent = new CEvent(0, 0);
 	prefsEvent = new CEvent(0, 0);
 
-    m_initiateFastReactionPeriod = false;
+	m_initiateFastReactionPeriod = false;
 
 	m_enabled = false;
 	doRun = true;
@@ -107,32 +107,16 @@ bool LastCommonRouteFinder::AddHostsToCheck(CTypedPtrList<CPtrList, CServer*> &l
 		addHostLocker.Lock();
 
 		if(needMoreHosts) {
-			POSITION pos = list.GetHeadPosition();
-
-            if(pos) {
-				uint32 startPos = rand()/(RAND_MAX/(min(list.GetCount(), 100)));
-
-				for(uint32 skipCounter = 0; skipCounter < startPos && pos != NULL; skipCounter++) {
-					list.GetNext(pos);
-                }
-
-                if(!pos) {
-                    pos = list.GetHeadPosition();
-                }
-
-			    uint32 tryCount = 0;
-			    while(needMoreHosts && tryCount < (uint32)list.GetCount()) {
-				    tryCount++;
-				    CServer* server = list.GetNext(pos);
-                    if(!pos) {
-                        pos = list.GetHeadPosition();
-                    }
-
-				    uint32 ip = server->GetIP();
-
-				    AddHostToCheckNoLock(ip);
-                }
-            }
+			int cnt = list.GetCount() - 1; //index must be in the range [0, count-1]
+			if (cnt >= 0) {
+				POSITION pos = list.FindIndex(rand() / (RAND_MAX / min(cnt, 100)));
+				while (needMoreHosts && cnt >= 0) {
+					--cnt;
+					AddHostToCheckNoLock(list.GetNext(pos)->GetIP());
+					if (!pos)
+						pos = list.GetHeadPosition();
+				}
+			}
 		}
 
         gotEnoughHosts = !needMoreHosts;
@@ -150,32 +134,16 @@ bool LastCommonRouteFinder::AddHostsToCheck(CUpDownClientPtrList &list) {
 		addHostLocker.Lock();
 
 		if(needMoreHosts) {
-			POSITION pos = list.GetHeadPosition();
-
-            if(pos) {
-				uint32 startPos = rand()/(RAND_MAX/(min(list.GetCount(), 100)));
-
-				for(uint32 skipCounter = 0; skipCounter < startPos && pos != NULL; skipCounter++) {
-					list.GetNext(pos);
-                }
-
-                if(!pos) {
-                    pos = list.GetHeadPosition();
-                }
-
-			    uint32 tryCount = 0;
-			    while(needMoreHosts && tryCount < (uint32)list.GetCount()) {
-				    tryCount++;
-                    CUpDownClient* client = list.GetNext(pos);
-                    if(!pos) {
-                        pos = list.GetHeadPosition();
-                    }
-
-					uint32 ip = client->GetIP();
-
-				    AddHostToCheckNoLock(ip);
-                }
-            }
+			int cnt = list.GetCount() - 1; //index must be in the range [0, count-1]
+			if (cnt >= 0) {
+				POSITION pos = list.FindIndex(rand() / (RAND_MAX / min(cnt, 100)));
+				while (needMoreHosts && cnt >= 0) {
+					--cnt;
+					AddHostToCheckNoLock(list.GetNext(pos)->GetIP());
+					if (!pos)
+						pos = list.GetHeadPosition();
+				}
+			}
 		}
 
         gotEnoughHosts = !needMoreHosts;
@@ -197,7 +165,7 @@ CurrentPingStruct LastCommonRouteFinder::GetCurrentPing() {
         returnVal.currentLimit = m_upload;
 		pingLocker.Unlock();
 	} else {
-		returnVal.state = _T("");
+		returnVal.state.Empty();
 		returnVal.latency = 0;
 		returnVal.lowest = 0;
         returnVal.currentLimit = 0;
@@ -365,7 +333,6 @@ UINT LastCommonRouteFinder::RunInternal() {
 			// Calculate a good starting value for the upload control. If the user has entered a max upload value, we use that. Otherwise 10 KBytes/s
 			int startUpload = (maxUpload != _UI32_MAX)?maxUpload:10*1024;
 
-			bool atLeastOnePingSucceded = false;
 			while(doRun && enabled && foundLastCommonHost == false) {
 				uint32 traceRouteTries = 0;
 				while(doRun && enabled && foundLastCommonHost == false && (traceRouteTries < 5 || hasSucceededAtLeastOnce && traceRouteTries < _UI32_MAX) && (hostsToTraceRoute.GetCount() < 10 || hasSucceededAtLeastOnce)) {
@@ -384,16 +351,15 @@ UINT LastCommonRouteFinder::RunInternal() {
 
 					theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Got enough hosts. Listing the hosts that will be tracerouted:"));
 
-					POSITION pos = hostsToTraceRoute.GetStartPosition();
 					int counter = 0;
-					while(pos != NULL) {
-						counter++;
+					for (POSITION pos = hostsToTraceRoute.GetStartPosition(); pos != NULL;) {
+						++counter;
 						uint32 hostToTraceRoute, dummy;
                         hostsToTraceRoute.GetNextAssoc(pos, hostToTraceRoute, dummy);
 						IN_ADDR stDestAddr;
 						stDestAddr.s_addr = hostToTraceRoute;
 
-						theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Host #%i: %s"), counter, ipstr(stDestAddr));
+						theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Host #%i: %s"), counter, (LPCTSTR)ipstr(stDestAddr));
 					}
 
 					// find the last common host, using traceroute
@@ -418,29 +384,27 @@ UINT LastCommonRouteFinder::RunInternal() {
 						curHost = 0;
 						if(m_enabled == false) {
 							enabled = false;
-                        }
+						}
 
 						uint32 lastSuccedingPingAddress = 0;
-                        uint32 lastDestinationAddress = 0;
-                        uint32 hostsToTraceRouteCounter = 0;
-                        bool failedThisTtl = false;
-						POSITION pos = hostsToTraceRoute.GetStartPosition();
-                        while(doRun && enabled && failed == false && failedThisTtl == false && pos != NULL &&
-                              ( lastDestinationAddress == 0 || lastDestinationAddress == curHost)) // || pingStatus.success == false && pingStatus.error == IP_REQ_TIMED_OUT ))
-						{
-    						PingStatus pingStatus = {0};
+						uint32 lastDestinationAddress = 0;
+						uint32 hostsToTraceRouteCounter = 0;
+						bool failedThisTtl = false;
+						for (POSITION pos = hostsToTraceRoute.GetStartPosition(); doRun && enabled && !failed && !failedThisTtl
+								&& pos != NULL && (lastDestinationAddress == 0 || lastDestinationAddress == curHost);) { // || pingStatus.success == false && pingStatus.error == IP_REQ_TIMED_OUT ))
+							PingStatus pingStatus = {0};
 
-                            hostsToTraceRouteCounter++;
+							hostsToTraceRouteCounter++;
 
 							// this is the current address we send ping to, in loop below.
 							// PENDING: Don't confuse this with curHost, which is unfortunately almost
 							// the same name. Will rename one of these variables as soon as possible, to
 							// get more different names.
 							uint32 curAddress, dummy;
-                            hostsToTraceRoute.GetNextAssoc(pos, curAddress, dummy);
+							hostsToTraceRoute.GetNextAssoc(pos, curAddress, dummy);
 
 							pingStatus.success = false;
-							for(int counter = 0; doRun && enabled && counter < 2 && (pingStatus.success == false || pingStatus.success == true && pingStatus.status != IP_SUCCESS && pingStatus.status != IP_TTL_EXPIRED_TRANSIT); counter++) {
+							for (int cnt = 0; doRun && enabled && cnt < 2 && (pingStatus.success == false || pingStatus.success == true && pingStatus.status != IP_SUCCESS && pingStatus.status != IP_TTL_EXPIRED_TRANSIT); ++cnt) {
 								pingStatus = pinger.Ping(curAddress, ttl, true, useUdp);
 								if(doRun && enabled &&
                                    (
@@ -449,11 +413,11 @@ UINT LastCommonRouteFinder::RunInternal() {
                                     pingStatus.status != IP_SUCCESS &&
                                     pingStatus.status != IP_TTL_EXPIRED_TRANSIT
                                    ) &&
-                                   counter < 3-1)
+                                   cnt < 3-1)
                                 {
 									IN_ADDR stDestAddr;
 									stDestAddr.s_addr = curAddress;
-                                    theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Failure #%i to ping host! (TTL: %i IP: %s error: %i). Sleeping 1 sec before retry. Error info follows."), counter+1, ttl, ipstr(stDestAddr), (pingStatus.success)?pingStatus.status:pingStatus.error);
+                                    theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Failure #%i to ping host! (TTL: %i IP: %s error: %i). Sleeping 1 sec before retry. Error info follows."), cnt+1, ttl, (LPCTSTR)ipstr(stDestAddr), (pingStatus.success)?pingStatus.status:pingStatus.error);
 									pinger.PIcmpErr((pingStatus.success)?pingStatus.status:pingStatus.error);
 
 									Sleep(1000);
@@ -469,7 +433,6 @@ UINT LastCommonRouteFinder::RunInternal() {
 							if(pingStatus.success == true && pingStatus.status == IP_TTL_EXPIRED_TRANSIT) {
 								if(curHost == 0)
 									curHost = pingStatus.destinationAddress;
-								atLeastOnePingSucceded = true;
 								lastSuccedingPingAddress = curAddress;
                                 lastDestinationAddress = pingStatus.destinationAddress;
 							} else {
@@ -479,21 +442,21 @@ UINT LastCommonRouteFinder::RunInternal() {
 								IN_ADDR stDestAddr;
 								stDestAddr.s_addr = curAddress;
 								if(pingStatus.success == true && pingStatus.status == IP_SUCCESS) {
-									theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Host was too close! Removing this host. (TTL: %i IP: %s status: %i). Removing this host and restarting host collection."), ttl, ipstr(stDestAddr), pingStatus.status);
+									theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Host was too close! Removing this host. (TTL: %i IP: %s status: %i). Removing this host and restarting host collection."), ttl, (LPCTSTR)ipstr(stDestAddr), pingStatus.status);
 
 									hostsToTraceRoute.RemoveKey(curAddress);
 								} else if(pingStatus.success == true && pingStatus.status == IP_DEST_HOST_UNREACHABLE) {
-									theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Host unreacheable! (TTL: %i IP: %s status: %i). Removing this host. Status info follows."), ttl, ipstr(stDestAddr), pingStatus.status);
+									theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Host unreacheable! (TTL: %i IP: %s status: %i). Removing this host. Status info follows."), ttl, (LPCTSTR)ipstr(stDestAddr), pingStatus.status);
 									pinger.PIcmpErr(pingStatus.status);
 
 									hostsToTraceRoute.RemoveKey(curAddress);
                                 } else if(pingStatus.success == true) {
-									theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Unknown ping status! (TTL: %i IP: %s status: %i). Reason follows. Changing ping method to see if it helps."), ttl, ipstr(stDestAddr), pingStatus.status);
+									theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Unknown ping status! (TTL: %i IP: %s status: %i). Reason follows. Changing ping method to see if it helps."), ttl, (LPCTSTR)ipstr(stDestAddr), pingStatus.status);
 									pinger.PIcmpErr(pingStatus.status);
 									useUdp = !useUdp;
 								} else {
 									if(pingStatus.error == IP_REQ_TIMED_OUT) {
-										theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Timeout when pinging a host! (TTL: %i IP: %s Error: %i). Keeping host. Error info follows."), ttl, ipstr(stDestAddr), pingStatus.error);
+										theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Timeout when pinging a host! (TTL: %i IP: %s Error: %i). Keeping host. Error info follows."), ttl, (LPCTSTR)ipstr(stDestAddr), pingStatus.error);
 										pinger.PIcmpErr(pingStatus.error);
 
                                         if(hostsToTraceRouteCounter > 2 && lastSuccedingPingAddress == 0) {
@@ -501,7 +464,7 @@ UINT LastCommonRouteFinder::RunInternal() {
                                             failedThisTtl = true;
                                         }
                                     } else {
-									    theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Unknown pinging error! (TTL: %i IP: %s status: %i). Reason follows. Changing ping method to see if it helps."), ttl, ipstr(stDestAddr), pingStatus.error);
+									    theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Unknown pinging error! (TTL: %i IP: %s status: %i). Reason follows. Changing ping method to see if it helps."), ttl, (LPCTSTR)ipstr(stDestAddr), pingStatus.error);
 										pinger.PIcmpErr(pingStatus.error);
     									useUdp = !useUdp;
 									}
@@ -519,7 +482,7 @@ UINT LastCommonRouteFinder::RunInternal() {
 								if(lastDestinationAddress == curHost) {
 									IN_ADDR stDestAddr;
 									stDestAddr.s_addr = curHost;
-									theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Host at TTL %i: %s"), ttl, ipstr(stDestAddr));
+									theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Host at TTL %i: %s"), ttl, (LPCTSTR)ipstr(stDestAddr));
 
 									lastCommonHost = curHost;
 									lastCommonTTL = ttl;
@@ -530,13 +493,13 @@ UINT LastCommonRouteFinder::RunInternal() {
 									CString hostToPingString = ipstr(hostToPing);
 
 									if(lastCommonHost != 0) {
-										theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Found differing host at TTL %i: %s. This will be the host to ping."), ttl, hostToPingString);
+										theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Found differing host at TTL %i: %s. This will be the host to ping."), ttl, (LPCTSTR)hostToPingString);
 									} else {
 										CString lastCommonHostString = ipstr(lastDestinationAddress);
 
 										lastCommonHost = lastDestinationAddress;
 										lastCommonTTL = ttl;
-										theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Found differing host at TTL %i, but last ttl couldn't be pinged so we don't know last common host. Taking a chance and using first differing ip as last commonhost. Host to ping: %s. Faked LastCommonHost: %s"), ttl, hostToPingString, lastCommonHostString);
+										theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Found differing host at TTL %i, but last ttl couldn't be pinged so we don't know last common host. Taking a chance and using first differing ip as last commonhost. Host to ping: %s. Faked LastCommonHost: %s"), ttl, (LPCTSTR)hostToPingString, (LPCTSTR)lastCommonHostString);
 									}
 								}
 							} else {
@@ -579,11 +542,11 @@ UINT LastCommonRouteFinder::RunInternal() {
 					    stLastCommonHostAddr.s_addr = lastCommonHost;
 
 					    // log result
-					    theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Found last common host. LastCommonHost: %s @ TTL: %i"), ipstr(stLastCommonHostAddr), lastCommonTTL);
+					    theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Found last common host. LastCommonHost: %s @ TTL: %i"), (LPCTSTR)ipstr(stLastCommonHostAddr), lastCommonTTL);
 
 					    IN_ADDR stHostToPingAddr;
 					    stHostToPingAddr.s_addr = hostToPing;
-					    theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Found last common host. HostToPing: %s"), ipstr(stHostToPingAddr));
+					    theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Found last common host. HostToPing: %s"), (LPCTSTR)ipstr(stHostToPingAddr));
 				    } else {
 					    theApp.QueueDebugLogLine(false,GetResString(IDS_USS_TRACEROUTEOFTENFAILED));
 						theApp.QueueLogLine(true, GetResString(IDS_USS_TRACEROUTEOFTENFAILED));
@@ -684,7 +647,7 @@ UINT LastCommonRouteFinder::RunInternal() {
             }
 
 			pingLocker.Lock();
-			m_state = _T("");
+			m_state.Empty();
 			pingLocker.Unlock();
 
 			// There may be several reasons to start over with tracerouting again.
@@ -693,7 +656,6 @@ UINT LastCommonRouteFinder::RunInternal() {
 			bool restart = false;
 
 			DWORD lastLoopTick = ::GetTickCount();
-			DWORD lastUploadReset = 0;
 
 			while(doRun && enabled && restart == false) {
 				DWORD ticksBetweenPings = 1000;
@@ -756,7 +718,6 @@ UINT LastCommonRouteFinder::RunInternal() {
                     goingUpDivider = (UINT)(goingUpDivider * 0.75);
                     goingDownDivider = (UINT)(goingDownDivider * 0.75);
 				} else if(tempTick - initTime < SEC2MS(61)) {
-					lastUploadReset = tempTick;
 					prefsLocker.Lock();
 					upload = m_CurUpload;
 					prefsLocker.Unlock();
@@ -767,14 +728,14 @@ UINT LastCommonRouteFinder::RunInternal() {
 
 				uint32 soll_ping = (UINT)(initial_ping*pingTolerance);
 				if (useMillisecondPingTolerance) {
-					soll_ping = pingToleranceMilliseconds; 
+					soll_ping = pingToleranceMilliseconds;
 				} else {
 					soll_ping = (UINT)(initial_ping*pingTolerance);
                 }
 
 				uint32 raw_ping = soll_ping; // this value will cause the upload speed not to change at all.
 
-				bool pingFailure = false;        
+				bool pingFailure = false;
 				for(uint64 pingTries = 0; doRun && enabled && (pingTries == 0 || pingFailure) && pingTries < 60; pingTries++) {
                     if(m_enabled == false) {
                         enabled = false;
@@ -790,7 +751,7 @@ UINT LastCommonRouteFinder::RunInternal() {
 							CString lastCommonHostAddressString = ipstr(lastCommonHost);
 							CString destinationAddressString = ipstr(pingStatus.destinationAddress);
 
-							theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Network topology has changed. TTL: %i Expected ip: %s Got ip: %s Will do a new traceroute."), lastCommonTTL, lastCommonHostAddressString, destinationAddressString);
+							theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Network topology has changed. TTL: %i Expected ip: %s Got ip: %s Will do a new traceroute."), lastCommonTTL, (LPCTSTR)lastCommonHostAddressString, (LPCTSTR)destinationAddressString);
 							restart = true;
 						}
 
@@ -837,10 +798,8 @@ UINT LastCommonRouteFinder::RunInternal() {
 
 					pingDelaysTotal += raw_ping;
 					pingDelays.AddTail(raw_ping);
-					while(!pingDelays.IsEmpty() && (uint32)pingDelays.GetCount() > numberOfPingsForAverage) {
-						uint32 pingDelay = pingDelays.RemoveHead();
-						pingDelaysTotal -= pingDelay;
-					}
+					while(!pingDelays.IsEmpty() && (uint32)pingDelays.GetCount() > numberOfPingsForAverage)
+						pingDelaysTotal -= pingDelays.RemoveHead();
 
                     uint32 pingAverage = Median(pingDelays); //(pingDelaysTotal/pingDelays.GetCount());
 					int normalized_ping = pingAverage - initial_ping;
@@ -867,7 +826,7 @@ UINT LastCommonRouteFinder::RunInternal() {
 						acceptNewClient = false;
 
 						// lower the speed
-						sint64 ulDiff = hping*1024*10 / (sint64)(goingDownDivider*initial_ping);
+						sint64 ulDiff = hping*1024*10 / (goingDownDivider*(sint64)initial_ping);
 
 						//theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Down! Ping cur %i ms. Ave %I64i ms %i values. New Upload %i + %I64i = %I64i"), raw_ping, pingDelaysTotal/pingDelays.GetCount(), pingDelays.GetCount(), upload, ulDiff, upload+ulDiff);
 						// prevent underflow
@@ -882,8 +841,8 @@ UINT LastCommonRouteFinder::RunInternal() {
 
 						if(curUpload+30*1024 > upload) {
 						    // raise the speed
-						    uint64 ulDiff = hping*1024*10 / (uint64)(goingUpDivider*initial_ping);
-    
+						    sint64 ulDiff = hping*1024*10 / (goingUpDivider*(sint64)initial_ping);
+
 						    //theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Up! Ping cur %i ms. Ave %I64i ms %i values. New Upload %i + %I64i = %I64i"), raw_ping, pingDelaysTotal/pingDelays.GetCount(), pingDelays.GetCount(), upload, ulDiff, upload+ulDiff);
 						    // prevent overflow
 						    if(_I32_MAX-upload > ulDiff) {
@@ -928,19 +887,16 @@ uint32 LastCommonRouteFinder::Median(UInt32Clist& list) {
         uint32* arr = new uint32[size];
 
         uint32 counter = 0;
-        for(POSITION pos = list.GetHeadPosition(); pos; list.GetNext(pos)) {
-            arr[counter] = list.GetAt(pos);
+        for(POSITION pos = list.GetHeadPosition(); pos;) {
+            arr[counter] =  list.GetNext(pos);
             counter++;
         }
 
         std::sort(arr, arr+size);
 
-        double returnVal;
+        double returnVal = arr[size / 2 - (size & 1)];
+		returnVal = (returnVal + arr[size / 2]) / 2;
 
-        if(size%2)
-            returnVal = arr[size/2];
-        else
-            returnVal = (arr[size/2-1] + arr[size/2])/2;
 
         delete[] arr;
 

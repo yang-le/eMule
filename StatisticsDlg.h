@@ -30,7 +30,7 @@ class CStatisticsDlg : public CResizableDialog
 {
 	DECLARE_DYNAMIC(CStatisticsDlg)
 public:
-	CStatisticsDlg(CWnd* pParent = NULL);   // standard constructor
+	explicit CStatisticsDlg(CWnd* pParent = NULL);   // standard constructor
 	~CStatisticsDlg();
 	enum { IDD = IDD_STATISTICS };
 
@@ -52,7 +52,6 @@ public:
 
 private:
     COScopeCtrl m_DownloadOMeter,m_UploadOMeter,m_Statistics;
-	TOOLINFO tt;
 
 	double m_dPlotDataMore[4];
 	uint32 m_ilastMaxConnReached;
@@ -115,9 +114,9 @@ private:
 protected:
 	void SetAllIcons();
 
-	virtual BOOL OnInitDialog(); 
+	virtual BOOL OnInitDialog();
 	virtual void OnSize(UINT nType,int cx,int cy);
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support	
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
 	//MORPH START - Added by SiRoB, Splitting Bar [O²]
 	CSplitterControl m_wndSplitterstat; //bzubzusplitstat

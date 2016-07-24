@@ -9,6 +9,6 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = id3lib.dsp id3lib.dsw id3lib.mcp win32.readme.first.txt
+EXTRA_DIST = id3lib.dsp id3lib.dsw id3lib.mcp win32.readme.first.txt id3lib.bpr id3lib.bpf
 
 

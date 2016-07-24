@@ -67,14 +67,14 @@ public:
 	LRESULT OnPeerCacheCheckResponse(WPARAM wParam, LPARAM lParam);
 
 protected:
-	void	DoLookUp(CStringA strHostname);
-	void	DoReverseLookUp(uint32 dwIP);
+	void	DoLookUp(const CStringA& strHostname);
+	static void	DoReverseLookUp(uint32 dwIP);
 	void	SearchForPC();
 	void	ValditeDescriptorFile();
 
 private:
 	EPeerCacheStatus	m_PCStatus;
-	EPCLookUpState		m_PCLUState;	
+	EPCLookUpState		m_PCLUState;
 	uint32	m_dwPCIP;
 	uint32	m_dwMyIP;
 	CString m_strMyHostname;
@@ -131,4 +131,3 @@ public:
 	DWORD m_dwIP;
 	HWND m_hwndAsyncResult;
 };
-

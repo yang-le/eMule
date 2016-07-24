@@ -56,9 +56,9 @@ class CSearchResultsWnd : public CResizableFormView
 	DECLARE_DYNCREATE(CSearchResultsWnd)
 
 public:
-	CSearchResultsWnd(CWnd* pParent = NULL);   // standard constructor
+	explicit CSearchResultsWnd(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CSearchResultsWnd();
-	
+
 	enum { IDD = IDD_SEARCH };
 
 	CSearchListCtrl searchlistctrl;
@@ -101,7 +101,7 @@ public:
 	void	UpdateCatTabs();
 
 	SSearchParams* GetSearchResultsParams(UINT uSearchID) const;
-	
+
 	uint32	GetFilterColumn() const				{ return m_nFilterColumn; }
 
 protected:
@@ -132,7 +132,7 @@ protected:
 	void SetSearchResultsIcon(UINT uSearchID, int iImage);
 	void SetActiveSearchResultsIcon(UINT uSearchID);
 	void SetInactiveSearchResultsIcon(UINT uSearchID);
-	
+
 
 	virtual void OnInitialUpdate();
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);

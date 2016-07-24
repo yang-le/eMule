@@ -19,11 +19,6 @@
 #include "kademlia/routing/contact.h"
 #include "KadContactHistogramCtrl.h"
 #include "OtherFunctions.h"
-//#pragma warning(disable:4244) // conversion from 'type1' to 'type2', possible loss of data
-//#pragma warning(disable:4100) // unreferenced formal parameter
-//#include <crypto51/integer.h>
-//#pragma warning(default:4100) // unreferenced formal parameter
-//#pragma warning(default:4244) // conversion from 'type1' to 'type2', possible loss of data
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -152,14 +147,10 @@ void CKadContactHistogramCtrl::OnPaint()
 		return;
 	}
 
-	int i = 0;
-	UINT uMax = m_aHist[i++];
-	while (i < ARRSIZE(m_aHist))
-	{
+	UINT uMax = 0;
+	for (unsigned i = 0; i < ARRSIZE(m_aHist); ++i)
 		if (m_aHist[i] > uMax)
 			uMax = m_aHist[i];
-		i++;
-	}
 
 	//Lets take the average. This will keep the cluster of closest contacts from
 	//streching the graph too far..

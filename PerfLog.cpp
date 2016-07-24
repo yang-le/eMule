@@ -37,10 +37,8 @@ static char THIS_FILE[] = __FILE__;
 CPerfLog thePerfLog;
 
 CPerfLog::CPerfLog()
+	: m_eMode(None), m_eFileFormat(CSV), m_dwInterval(MIN2MS(5))
 {
-	m_eMode = None;
-	m_eFileFormat = CSV;
-	m_dwInterval = MIN2MS(5);
 	m_bInitialized = false;
 	m_dwLastSampled = 0;
 	m_nLastSessionSentBytes = 0;
@@ -113,7 +111,7 @@ void CPerfLog::WriteSamples(UINT nCurDn, UINT nCurUp, UINT nCurDnOH, UINT nCurUp
 
 		FILE* fp = _tfsopen(m_strFilePath, (m_eMode == OneSample) ? _T("wt") : _T("at"), _SH_DENYWR);
 		if (fp == NULL){
-			LogError(false, _T("Failed to open performance log file \"%s\" - %s"), m_strFilePath, _tcserror(errno));
+			LogError(LOG_DEFAULT, _T("Failed to open performance log file \"%s\" - %s"), (LPCTSTR)m_strFilePath, _tcserror(errno));
 			return;
 		}
 		setvbuf(fp, NULL, _IOFBF, 16384); // ensure that all lines are written to file with one call
@@ -132,7 +130,7 @@ void CPerfLog::WriteSamples(UINT nCurDn, UINT nCurUp, UINT nCurDnOH, UINT nCurUp
 			fclose(fp);
 		}
 		else {
-			LogError(false, _T("Failed to open performance log file \"%s\" - %s"), m_strMRTGDataFilePath, _tcserror(errno));
+			LogError(LOG_DEFAULT, _T("Failed to open performance log file \"%s\" - %s"), (LPCTSTR)m_strMRTGDataFilePath, _tcserror(errno));
 		}
 
 		fp = _tfsopen(m_strMRTGOverheadFilePath, (m_eMode == OneSample) ? _T("wt") : _T("at"), _SH_DENYWR);
@@ -141,7 +139,7 @@ void CPerfLog::WriteSamples(UINT nCurDn, UINT nCurUp, UINT nCurDnOH, UINT nCurUp
 			fclose(fp);
 		}
 		else {
-			LogError(false, _T("Failed to open performance log file \"%s\" - %s"), m_strMRTGOverheadFilePath, _tcserror(errno));
+			LogError(LOG_DEFAULT, _T("Failed to open performance log file \"%s\" - %s"), (LPCTSTR)m_strMRTGOverheadFilePath, _tcserror(errno));
 		}
 	}
 }
@@ -160,15 +158,15 @@ void CPerfLog::LogSamples()
 	UINT nCurUp = (UINT)(theStats.sessionSentBytes - m_nLastSessionSentBytes);
 
 	// 'overhead counters' amount of total overhead
-	uint64 nDnOHTotal = theStats.GetDownDataOverheadFileRequest() + 
-						theStats.GetDownDataOverheadSourceExchange() + 
-						theStats.GetDownDataOverheadServer() + 
-						theStats.GetDownDataOverheadKad() + 
+	uint64 nDnOHTotal = theStats.GetDownDataOverheadFileRequest() +
+						theStats.GetDownDataOverheadSourceExchange() +
+						theStats.GetDownDataOverheadServer() +
+						theStats.GetDownDataOverheadKad() +
 						theStats.GetDownDataOverheadOther();
-	uint64 nUpOHTotal = theStats.GetUpDataOverheadFileRequest() + 
-						theStats.GetUpDataOverheadSourceExchange() + 
-						theStats.GetUpDataOverheadServer() + 
-						theStats.GetUpDataOverheadKad() + 
+	uint64 nUpOHTotal = theStats.GetUpDataOverheadFileRequest() +
+						theStats.GetUpDataOverheadSourceExchange() +
+						theStats.GetUpDataOverheadServer() +
+						theStats.GetUpDataOverheadKad() +
 						theStats.GetUpDataOverheadOther();
 	UINT nCurDnOH = (UINT)(nDnOHTotal - m_nLastDnOH);
 	UINT nCurUpOH = (UINT)(nUpOHTotal - m_nLastUpOH);

@@ -47,16 +47,16 @@ CButtonST::CButtonST()
 	m_bIsFlat = TRUE;
 	// Button will be tracked also if when the window is inactive (like Internet Explorer)
 	m_bAlwaysTrack = TRUE;
-  
-	// By default draw border in "flat" button 
-	m_bDrawBorder = TRUE; 
-  
+
+	// By default draw border in "flat" button
+	m_bDrawBorder = TRUE;
+
 	// By default icon is aligned horizontally
-	m_byAlign = ST_ALIGN_HORIZ; 
+	m_byAlign = ST_ALIGN_HORIZ;
 
 	// By default use usual pressed style
 	SetPressedStyle(BTNST_PRESSED_LEFTRIGHT, FALSE);
-  
+
 	// By default, for "flat" button, don't draw the focus rect
 	m_bDrawFlatFocus = FALSE;
 
@@ -176,11 +176,11 @@ void CButtonST::FreeResources(BOOL bCheckForNULL)
 			VERIFY( ::DeleteObject(m_csBitmaps[1].hMask) );
 	} // if
 
-	::ZeroMemory(&m_csIcons, sizeof(m_csIcons));
-	::ZeroMemory(&m_csBitmaps, sizeof(m_csBitmaps));
+	::ZeroMemory(m_csIcons, sizeof m_csIcons);
+	::ZeroMemory(m_csBitmaps, sizeof m_csBitmaps);
 } // End of FreeResources
 
-void CButtonST::PreSubclassWindow() 
+void CButtonST::PreSubclassWindow()
 {
 	UINT nBS;
 
@@ -213,7 +213,7 @@ void CButtonST::PreSubclassWindow()
 	CButton::PreSubclassWindow();
 } // End of PreSubclassWindow
 
-UINT CButtonST::OnGetDlgCode() 
+UINT CButtonST::OnGetDlgCode()
 {
 	UINT nCode = CButton::OnGetDlgCode();
 
@@ -224,28 +224,28 @@ UINT CButtonST::OnGetDlgCode()
 	return nCode;
 } // End of OnGetDlgCode
 
-BOOL CButtonST::PreTranslateMessage(MSG* pMsg) 
+BOOL CButtonST::PreTranslateMessage(MSG* pMsg)
 {
 	InitToolTip();
 	m_ToolTip.RelayEvent(pMsg);
-	
+
 	if (pMsg->message == WM_LBUTTONDBLCLK)
 		pMsg->message = WM_LBUTTONDOWN;
 
 	return CButton::PreTranslateMessage(pMsg);
 } // End of PreTranslateMessage
 
-HBRUSH CButtonST::CtlColor(CDC* /*pDC*/, UINT /*nCtlColor*/) 
+HBRUSH CButtonST::CtlColor(CDC* /*pDC*/, UINT /*nCtlColor*/)
 {
-	return (HBRUSH)::GetStockObject(NULL_BRUSH); 
+	return (HBRUSH)::GetStockObject(NULL_BRUSH);
 } // End of CtlColor
 
-void CButtonST::OnSysColorChange() 
+void CButtonST::OnSysColorChange()
 {
 	CButton::OnSysColorChange();
 
 	m_dcBk.DeleteDC();
-	m_bmpBk.DeleteObject();	
+	m_bmpBk.DeleteObject();
 	SetDefaultColors();
 } // End of OnSysColorChange
 
@@ -283,7 +283,6 @@ LRESULT CButtonST::OnSetCheck(WPARAM wParam, LPARAM /*lParam*/)
 			break;
 		default:
 			SetCheck(0);
-			break;
 	} // switch
 
 	return 0;
@@ -296,7 +295,7 @@ LRESULT CButtonST::OnGetCheck(WPARAM /*wParam*/, LPARAM /*lParam*/)
 } // End of OnGetCheck
 
 #ifdef	BTNST_USE_BCMENU
-LRESULT CButtonST::OnMenuChar(UINT nChar, UINT nFlags, CMenu* pMenu) 
+LRESULT CButtonST::OnMenuChar(UINT nChar, UINT nFlags, CMenu* pMenu)
 {
 	LRESULT lResult;
 	if (BCMenu::IsMenu(pMenu))
@@ -308,7 +307,7 @@ LRESULT CButtonST::OnMenuChar(UINT nChar, UINT nFlags, CMenu* pMenu)
 #endif
 
 #ifdef	BTNST_USE_BCMENU
-void CButtonST::OnMeasureItem(int nIDCtl, LPMEASUREITEMSTRUCT lpMeasureItemStruct) 
+void CButtonST::OnMeasureItem(int nIDCtl, LPMEASUREITEMSTRUCT lpMeasureItemStruct)
 {
 	BOOL bSetFlag = FALSE;
 	if (lpMeasureItemStruct->CtlType == ODT_MENU)
@@ -323,11 +322,11 @@ void CButtonST::OnMeasureItem(int nIDCtl, LPMEASUREITEMSTRUCT lpMeasureItemStruc
 } // End of OnMeasureItem
 #endif
 
-void CButtonST::OnEnable(BOOL bEnable) 
+void CButtonST::OnEnable(BOOL bEnable)
 {
 	CButton::OnEnable(bEnable);
-	
-	if (bEnable == FALSE)	
+
+	if (bEnable == FALSE)
 	{
 		CWnd*	pWnd = GetParent()->GetNextDlgTabItem(this);
 		if (pWnd)
@@ -345,19 +344,19 @@ void CButtonST::OnKillFocus(CWnd * pNewWnd)
 	CancelHover();
 } // End of OnKillFocus
 
-void CButtonST::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized) 
+void CButtonST::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 {
 	CButton::OnActivate(nState, pWndOther, bMinimized);
 	if (nState == WA_INACTIVE && !marked)	CancelHover();
 } // End of OnActivate
 
-void CButtonST::OnCancelMode() 
+void CButtonST::OnCancelMode()
 {
 	CButton::OnCancelMode();
 	CancelHover();
 } // End of OnCancelMode
 
-BOOL CButtonST::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message) 
+BOOL CButtonST::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 {
 	// If a cursor was specified then use it!
 	if (m_hCursor != NULL)
@@ -430,8 +429,8 @@ LRESULT CButtonST::OnMouseLeave(WPARAM /*wParam*/, LPARAM /*lParam*/)
 	return 0;
 } // End of OnMouseLeave
 
-BOOL CButtonST::OnClicked() 
-{	
+BOOL CButtonST::OnClicked()
+{
 	SetFocus();
 
 #ifdef	BTNST_USE_SOUND
@@ -479,7 +478,7 @@ BOOL CButtonST::OnClicked()
 		else
 		{
 			// Handle the URL (if any)
-			if (_tcslen(m_szURL) > 0)
+			if (*m_szURL != _T('\0'))
 			{
 				SHELLEXECUTEINFO	csSEI;
 
@@ -500,7 +499,6 @@ BOOL CButtonST::OnClicked()
 void CButtonST::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 {
 	CDC*	pDC = CDC::FromHandle(lpDIS->hDC);
-	CPen*	pOldPen;
 
 	// Checkbox?
 	if (m_bIsCheckBox)
@@ -514,9 +512,9 @@ void CButtonST::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 		// If there is a menu and it's displayed, draw the button as pressed
 		if (
 #ifdef	BTNST_USE_BCMENU
-			m_menuPopup.m_hMenu 
+			m_menuPopup.m_hMenu
 #else
-			m_hMenu 
+			m_hMenu
 #endif
 			&& m_bMenuDisplayed)	m_bIsPressed = TRUE;
 	} // else
@@ -532,7 +530,7 @@ void CButtonST::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 	{
 		if (m_bIsFocused || m_bIsDefault)
 		{
-			CBrush br(RGB(0,0,0));  
+			CBrush br(RGB(0,0,0));
 			pDC->FrameRect(&itemRect, &br);
 			itemRect.DeflateRect(1, 1);
 		} // if
@@ -554,7 +552,7 @@ void CButtonST::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 			if (m_bDrawBorder)
 				OnDrawBorder(pDC, &itemRect);
 		}
-		else    
+		else
 		{
 			CBrush brBtnShadow(GetSysColor(COLOR_BTNSHADOW));
 			pDC->FrameRect(&itemRect, &brBtnShadow);
@@ -576,7 +574,7 @@ void CButtonST::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 		{
 			// Draw top-left borders
 			// White line
-			pOldPen = pDC->SelectObject(&penBtnHiLight);
+			CPen *pOldPen = pDC->SelectObject(&penBtnHiLight);
 			pDC->MoveTo(itemRect.left, itemRect.bottom-1);
 			pDC->LineTo(itemRect.left, itemRect.top);
 			pDC->LineTo(itemRect.right, itemRect.top);
@@ -735,7 +733,7 @@ void CButtonST::PrepareImageRect(BOOL bHasTitle, RECT* rpItem, CRect* rpTitle, B
 			else
 			{
 				// Image must be placed just inside the focus rect
-				rpImage->left += m_ptImageOrg.x;  
+				rpImage->left += m_ptImageOrg.x;
 				rpTitle->left += dwWidth + m_ptImageOrg.x;
 			}
 			// Center image vertically
@@ -759,14 +757,14 @@ void CButtonST::PrepareImageRect(BOOL bHasTitle, RECT* rpItem, CRect* rpTitle, B
 				rpImage->top += ((rpImage->Height() - (long)dwHeight)/2);
 			}
 			break;
-		
+
 		case ST_ALIGN_VERT:
 			// Center image horizontally
 			rpImage->left += ((rpImage->Width() - (long)dwWidth)/2);
 			if (bHasTitle == FALSE)
 			{
 				// Center image vertically
-				rpImage->top += ((rpImage->Height() - (long)dwHeight)/2);           
+				rpImage->top += ((rpImage->Height() - (long)dwHeight)/2);
 			}
 			else
 			{
@@ -778,7 +776,7 @@ void CButtonST::PrepareImageRect(BOOL bHasTitle, RECT* rpItem, CRect* rpTitle, B
 		case ST_ALIGN_OVERLAP:
 			break;
 	} // switch
-    
+
 	// If button is pressed then press image also
 	if (bIsPressed && m_bIsCheckBox == FALSE)
 		rpImage->OffsetRect(m_ptPressedOffset.x, m_ptPressedOffset.y);
@@ -799,9 +797,9 @@ void CButtonST::DrawTheIcon(CDC* pDC, BOOL bHasTitle, RECT* rpItem, CRect* rpCap
 
 	// Ole'!
 	pDC->DrawState(	rImage.TopLeft(),
-					rImage.Size(), 
+					rImage.Size(),
 					m_csIcons[byIndex].hIcon,
-					(bIsDisabled ? DSS_DISABLED : DSS_NORMAL), 
+					(bIsDisabled ? DSS_DISABLED : DSS_NORMAL),
 					(CBrush*)NULL);
 } // End of DrawTheIcon
 
@@ -856,8 +854,8 @@ void CButtonST::DrawTheBitmap(CDC* pDC, BOOL bHasTitle, RECT* rpItem, CRect* rpC
 		::SelectObject(hDC, hOldBmp2);
 		::DeleteDC(hDC);
 
-		pDC->DrawState(	CPoint(rImage.left/*+1*/, rImage.top), 
-						CSize(m_csBitmaps[byIndex].dwWidth, m_csBitmaps[byIndex].dwHeight), 
+		pDC->DrawState(	CPoint(rImage.left/*+1*/, rImage.top),
+						CSize(m_csBitmaps[byIndex].dwWidth, m_csBitmaps[byIndex].dwHeight),
 						hBitmap, DST_BITMAP | DSS_DISABLED);
 
 		VERIFY( ::DeleteObject(hBitmap) );
@@ -883,7 +881,7 @@ void CButtonST::DrawTheText(CDC* pDC, LPCTSTR lpszText, RECT* /*rpItem*/, CRect*
 	if (m_bIsPressed && m_bIsCheckBox == FALSE)
 		rpCaption->OffsetRect(m_ptPressedOffset.x, m_ptPressedOffset.y);
 
-	// ONLY FOR DEBUG 
+	// ONLY FOR DEBUG
 	//CBrush brBtnShadow(RGB(255, 0, 0));
 	//pDC->FrameRect(rCaption, &brBtnShadow);
 
@@ -891,9 +889,9 @@ void CButtonST::DrawTheText(CDC* pDC, LPCTSTR lpszText, RECT* /*rpItem*/, CRect*
 	CRect centerRect = rpCaption;
 	pDC->DrawText(lpszText, -1, rpCaption, DT_WORDBREAK | DT_CENTER | DT_CALCRECT);
 
-	if (!leftAligned) rpCaption->OffsetRect((centerRect.Width() - rpCaption->Width())/2, (centerRect.Height() - rpCaption->Height())/2); 
+	if (!leftAligned) rpCaption->OffsetRect((centerRect.Width() - rpCaption->Width())/2, (centerRect.Height() - rpCaption->Height())/2);
 		else rpCaption->OffsetRect( 8, (centerRect.Height() - rpCaption->Height())/2);
-	
+
 	/* RFU
 	rpCaption->OffsetRect(0, (centerRect.Height() - rpCaption->Height())/2);
 	rpCaption->OffsetRect((centerRect.Width() - rpCaption->Width())-4, (centerRect.Height() - rpCaption->Height())/2);
@@ -901,7 +899,7 @@ void CButtonST::DrawTheText(CDC* pDC, LPCTSTR lpszText, RECT* /*rpItem*/, CRect*
 
 	pDC->SetBkMode(TRANSPARENT);
 	/*
-	pDC->DrawState(rCaption->TopLeft(), rCaption->Size(), (LPCTSTR)sTitle, (bIsDisabled ? DSS_DISABLED : DSS_NORMAL), 
+	pDC->DrawState(rCaption->TopLeft(), rCaption->Size(), (LPCTSTR)sTitle, (bIsDisabled ? DSS_DISABLED : DSS_NORMAL),
 					TRUE, 0, (CBrush*)NULL);
 	*/
 	if (m_bIsDisabled)
@@ -915,12 +913,12 @@ void CButtonST::DrawTheText(CDC* pDC, LPCTSTR lpszText, RECT* /*rpItem*/, CRect*
 	} // if
 	else
 	{
-		if (m_bMouseOnButton || m_bIsPressed) 
+		if (m_bMouseOnButton || m_bIsPressed)
 		{
 			pDC->SetTextColor(m_crColors[BTNST_COLOR_FG_IN]);
 			pDC->SetBkColor(m_crColors[BTNST_COLOR_BK_IN]);
 		} // if
-		else 
+		else
 		{
 			pDC->SetTextColor(m_crColors[BTNST_COLOR_FG_OUT]);
 			pDC->SetBkColor(m_crColors[BTNST_COLOR_BK_OUT]);
@@ -950,18 +948,16 @@ HICON CButtonST::CreateGrayscaleIcon(HICON hIcon)
 	HICON		hGrayIcon = NULL;
 	HDC			hMainDC = NULL, hMemDC1 = NULL, hMemDC2 = NULL;
 	BITMAP		bmp;
-	HBITMAP		hOldBmp1 = NULL, hOldBmp2 = NULL;
 	ICONINFO	csII, csGrayII;
-	BOOL		bRetValue = FALSE;
+	BOOL		bRetValue = ::GetIconInfo(hIcon, &csII);
 
-	bRetValue = ::GetIconInfo(hIcon, &csII);
 	if (bRetValue == FALSE)	return NULL;
 
 	hMainDC = ::GetDC(HWND_DESKTOP);
 	hMemDC1 = ::CreateCompatibleDC(hMainDC);
 	hMemDC2 = ::CreateCompatibleDC(hMainDC);
 	if (hMainDC == NULL || hMemDC1 == NULL || hMemDC2 == NULL)	return NULL;
-  
+
 	if (::GetObject(csII.hbmColor, sizeof(BITMAP), &bmp))
 	{
 		DWORD	dwWidth = csII.xHotspot*2;
@@ -970,8 +966,8 @@ HICON CButtonST::CreateGrayscaleIcon(HICON hIcon)
 		csGrayII.hbmColor = ::CreateBitmap(dwWidth, dwHeight, bmp.bmPlanes, bmp.bmBitsPixel, NULL);
 		if (csGrayII.hbmColor)
 		{
-			hOldBmp1 = (HBITMAP)::SelectObject(hMemDC1, csII.hbmColor);
-			hOldBmp2 = (HBITMAP)::SelectObject(hMemDC2, csGrayII.hbmColor);
+			HBITMAP hOldBmp1 = (HBITMAP)::SelectObject(hMemDC1, csII.hbmColor);
+			HBITMAP hOldBmp2 = (HBITMAP)::SelectObject(hMemDC2, csGrayII.hbmColor);
 
 			//::BitBlt(hMemDC2, 0, 0, dwWidth, dwHeight, hMemDC1, 0, 0, SRCCOPY);
 
@@ -1068,7 +1064,6 @@ DWORD CButtonST::SetIcon(LPCTSTR pszIconIn, LPCTSTR pszIconOut)
 //
 DWORD CButtonST::SetIcon(HICON hIconIn, HICON hIconOut)
 {
-	BOOL		bRetValue;
 	ICONINFO	ii;
 
 	// Free any loaded resource
@@ -1080,8 +1075,7 @@ DWORD CButtonST::SetIcon(HICON hIconIn, HICON hIconOut)
 		m_csIcons[0].hIcon = hIconIn;
 		// Get icon dimension
 		::ZeroMemory(&ii, sizeof(ICONINFO));
-		bRetValue = ::GetIconInfo(hIconIn, &ii);
-		if (bRetValue == FALSE)
+		if (!::GetIconInfo(hIconIn, &ii))
 		{
 			FreeResources();
 			return BTNST_INVALIDRESOURCE;
@@ -1103,8 +1097,7 @@ DWORD CButtonST::SetIcon(HICON hIconIn, HICON hIconOut)
 			m_csIcons[1].hIcon = hIconOut;
 			// Get icon dimension
 			::ZeroMemory(&ii, sizeof(ICONINFO));
-			bRetValue = ::GetIconInfo(hIconOut, &ii);
-			if (bRetValue == FALSE)
+			if (!::GetIconInfo(hIconOut, &ii))
 			{
 				FreeResources();
 				return BTNST_INVALIDRESOURCE;
@@ -1150,7 +1143,7 @@ DWORD CButtonST::SetBitmaps(int nBitmapIn, COLORREF crTransColorIn, int nBitmapO
 	HBITMAP		hBitmapIn		= NULL;
 	HBITMAP		hBitmapOut		= NULL;
 	HINSTANCE	hInstResource	= NULL;
-	
+
 	// Find correct resource handle
 	hInstResource = AfxFindResourceHandle(MAKEINTRESOURCE(nBitmapIn), RT_BITMAP);
 
@@ -1189,9 +1182,6 @@ DWORD CButtonST::SetBitmaps(int nBitmapIn, COLORREF crTransColorIn, int nBitmapO
 //
 DWORD CButtonST::SetBitmaps(HBITMAP hBitmapIn, COLORREF crTransColorIn, HBITMAP hBitmapOut, COLORREF crTransColorOut)
 {
-	int		nRetValue;
-	BITMAP	csBitmapSize;
-
 	// Free any loaded resource
 	FreeResources();
 
@@ -1199,9 +1189,9 @@ DWORD CButtonST::SetBitmaps(HBITMAP hBitmapIn, COLORREF crTransColorIn, HBITMAP 
 	{
 		m_csBitmaps[0].hBitmap = hBitmapIn;
 		m_csBitmaps[0].crTransparent = crTransColorIn;
+		BITMAP csBitmapSize;
 		// Get bitmap size
-		nRetValue = ::GetObject(hBitmapIn, sizeof(csBitmapSize), &csBitmapSize);
-		if (nRetValue == 0)
+		if (!::GetObject(hBitmapIn, sizeof(csBitmapSize), &csBitmapSize))
 		{
 			FreeResources();
 			return BTNST_INVALIDRESOURCE;
@@ -1222,8 +1212,7 @@ DWORD CButtonST::SetBitmaps(HBITMAP hBitmapIn, COLORREF crTransColorIn, HBITMAP 
 			m_csBitmaps[1].hBitmap = hBitmapOut;
 			m_csBitmaps[1].crTransparent = crTransColorOut;
 			// Get bitmap size
-			nRetValue = ::GetObject(hBitmapOut, sizeof(csBitmapSize), &csBitmapSize);
-			if (nRetValue == 0)
+			if (!::GetObject(hBitmapOut, sizeof(csBitmapSize), &csBitmapSize))
 			{
 				FreeResources();
 				return BTNST_INVALIDRESOURCE;
@@ -1290,7 +1279,7 @@ DWORD CButtonST::SetFlat(BOOL bFlat, BOOL bRepaint)
 DWORD CButtonST::SetAlign(BYTE byAlign, BOOL bRepaint)
 {
 	switch (byAlign)
-	{    
+	{
 		case ST_ALIGN_HORIZ:
 		case ST_ALIGN_HORIZ_RIGHT:
 		case ST_ALIGN_VERT:
@@ -1298,7 +1287,6 @@ DWORD CButtonST::SetAlign(BYTE byAlign, BOOL bRepaint)
 			m_byAlign = byAlign;
 			if (bRepaint)	Invalidate();
 			return BTNST_OK;
-			break;
 	} // switch
 
 	return BTNST_INVALIDALIGN;
@@ -1567,7 +1555,6 @@ DWORD CButtonST::SetAlwaysTrack(BOOL bAlwaysTrack)
 //
 DWORD CButtonST::SetBtnCursor(int nCursorId, BOOL bRepaint)
 {
-	HINSTANCE	hInstResource = NULL;
 	// Destroy any previous cursor
 	if (m_hCursor)
 	{
@@ -1578,7 +1565,7 @@ DWORD CButtonST::SetBtnCursor(int nCursorId, BOOL bRepaint)
 	// Load cursor
 	if (nCursorId)
 	{
-		hInstResource = AfxFindResourceHandle(MAKEINTRESOURCE(nCursorId), RT_GROUP_CURSOR);
+		HINSTANCE hInstResource = AfxFindResourceHandle(MAKEINTRESOURCE(nCursorId), RT_GROUP_CURSOR);
 		// Load cursor resource
 		m_hCursor = (HCURSOR)::LoadImage(hInstResource, MAKEINTRESOURCE(nCursorId), IMAGE_CURSOR, 0, 0, 0);
 		// Repaint the button
@@ -1683,7 +1670,7 @@ void CButtonST::SetTooltipText(LPCTSTR lpszText, BOOL bActivate)
 	// If there is no tooltip defined then add it
 	if (m_ToolTip.GetToolCount() == 0)
 	{
-		CRect rectBtn; 
+		CRect rectBtn;
 		GetClientRect(rectBtn);
 		m_ToolTip.AddTool(this, lpszText, rectBtn, 1);
 	} // if
@@ -1828,8 +1815,6 @@ DWORD CButtonST::SetURL(LPCTSTR lpszURL)
 #ifndef	BTNST_USE_BCMENU
 DWORD CButtonST::SetMenu(UINT nMenu, HWND hParentWnd, BOOL bRepaint)
 {
-	HINSTANCE	hInstResource	= NULL;
-
 	// Destroy any previous menu
 	if (m_hMenu)
 	{
@@ -1843,7 +1828,7 @@ DWORD CButtonST::SetMenu(UINT nMenu, HWND hParentWnd, BOOL bRepaint)
 	if (nMenu)
 	{
 		// Find correct resource handle
-		hInstResource = AfxFindResourceHandle(MAKEINTRESOURCE(nMenu), RT_MENU);
+		HINSTANCE hInstResource = AfxFindResourceHandle(MAKEINTRESOURCE(nMenu), RT_MENU);
 		// Load menu resource
 		m_hMenu = ::LoadMenu(hInstResource, MAKEINTRESOURCE(nMenu));
 		m_hParentWndMenu = hParentWnd;
@@ -1919,7 +1904,7 @@ DWORD CButtonST::SetMenu(UINT nMenu, HWND hParentWnd, BOOL bWinXPStyle, UINT nTo
 
 			bRetValue = m_menuPopup.LoadToolbar(nToolbarID);
 			// If something wrong
-			if (bRetValue == FALSE) 
+			if (bRetValue == FALSE)
 			{
 				VERIFY( m_menuPopup.DestroyMenu() );
 				return BTNST_INVALIDRESOURCE;

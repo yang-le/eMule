@@ -17,7 +17,6 @@
 #include "stdafx.h"
 #include "emule.h"
 #include "ButtonsTabCtrl.h"
-#include "OtherFunctions.h"
 #include "MenuCmds.h"
 #include "UserMsgs.h"
 #include "VisualStylesXP.h"
@@ -30,7 +29,7 @@ static char THIS_FILE[] = __FILE__;
 
 
 // _WIN32_WINNT >= 0x0501 (XP only)
-#define _WM_THEMECHANGED                0x031A	
+#define _WM_THEMECHANGED                0x031A
 #define _ON_WM_THEMECHANGED()														\
 	{	_WM_THEMECHANGED, 0, 0, 0, AfxSig_l,										\
 		(AFX_PMSG)(AFX_PMSGW)														\
@@ -110,7 +109,7 @@ void CButtonsTabCtrl::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 	if (bVistaThemeActive)
 	{
 		// To determine if the current item is in 'hot tracking' mode, we need to evaluate
-		// the current foreground color - there is no flag which would indicate this state 
+		// the current foreground color - there is no flag which would indicate this state
 		// more safely. This applies only for Vista and for tab controls which have the
 		// TCS_OWNERDRAWFIXED style.
 		bVistaHotTracked = pDC->GetTextColor() == GetSysColor(COLOR_HOTLIGHT);

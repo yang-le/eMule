@@ -3,7 +3,7 @@
 class CBarShader
 {
 public:
-	CBarShader(uint32 height = 1, uint32 width = 1);
+	explicit CBarShader(uint32 height = 1, uint32 width = 1);
 	~CBarShader(void);
 
 	//set the width of the bar
@@ -13,12 +13,12 @@ public:
 	void SetHeight(int height);
 
 	//returns the width of the bar
-	int GetWidth() {
+	int GetWidth() const {
 		return m_iWidth;
 	}
 
 	//returns the height of the bar
-	int GetHeight() {
+	int GetHeight() const {
 		return m_iHeight;
 	}
 

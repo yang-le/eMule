@@ -47,16 +47,16 @@ int CScheduler::LoadFromFile(){
 	CString strName;
 	CString temp;
 
-	strName.Format(_T("%spreferences.ini"), thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+	strName.Format(_T("%spreferences.ini"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
 	CIni ini(strName, _T("Scheduler"));
-	
+
 	UINT max=ini.GetInt(_T("Count"),0);
 	UINT count=0;
 
 	while (count<max) {
-		strName.Format(_T("Schedule#%i"),count);
+		strName.Format(_T("Schedule#%u"),count);
 		temp=ini.GetString(_T("Title"),_T(""),strName);
-		if (temp!=_T("")) {
+		if (!temp.IsEmpty()) {
 			Schedule_Struct* news= new Schedule_Struct();
 			news->title=temp;
 			news->day=ini.GetInt(_T("Day"),0);
@@ -79,13 +79,12 @@ int CScheduler::LoadFromFile(){
 void CScheduler::SaveToFile(){
 
 	CString temp;
-	Schedule_Struct* schedule;
 
 	CIni ini(thePrefs.GetConfigFile(), _T("Scheduler"));
 	ini.WriteInt(_T("Count"), GetCount());
-	
+
 	for (uint8 i=0; i<GetCount();i++) {
-		schedule=theApp.scheduler->GetSchedule(i);
+		Schedule_Struct *schedule = theApp.scheduler->GetSchedule(i);
 
 		temp.Format(_T("Schedule#%i"),i);
 		ini.WriteString(_T("Title"),schedule->title,temp);
@@ -102,7 +101,7 @@ void CScheduler::SaveToFile(){
 }
 
 void CScheduler::RemoveSchedule(int index){
-	
+
 	if (index>=schedulelist.GetCount()) return;
 
 	Schedule_Struct* todel;
@@ -112,7 +111,7 @@ void CScheduler::RemoveSchedule(int index){
 }
 
 void CScheduler::RemoveAll(){
-	while( schedulelist.GetCount()>0 )
+	while (!schedulelist.IsEmpty())
 		RemoveSchedule(0);
 }
 
@@ -124,19 +123,18 @@ int CScheduler::AddSchedule(Schedule_Struct* schedule) {
 int CScheduler::Check(bool forcecheck){
 	if (!thePrefs.IsSchedulerEnabled()
 		|| theApp.scheduler->GetCount()==0
-		|| !theApp.emuledlg->IsRunning()) return -1;
+		|| theApp.emuledlg->IsClosing()) return -1;
 
-	Schedule_Struct* schedule;
 	struct tm tmTemp;
 	CTime tNow = CTime(safe_mktime(CTime::GetCurrentTime().GetLocalTm(&tmTemp)));
-	
+
 	if (!forcecheck && tNow.GetMinute()==m_iLastCheckedMinute) return -1;
 
 	m_iLastCheckedMinute=tNow.GetMinute();
 	theApp.scheduler->RestoreOriginals();
 
 	for (uint8 si=0;si<theApp.scheduler->GetCount();si++) {
-		schedule=theApp.scheduler->GetSchedule(si);
+		Schedule_Struct *schedule = theApp.scheduler->GetSchedule(si);
 		if (schedule->actions[0]==0 || !schedule->enabled) continue;
 
 		// check day of week
@@ -209,13 +207,13 @@ void CScheduler::ActivateSchedule(int index,bool makedefault) {
 
 	for (int ai=0;ai<16;ai++) {
 		if (schedule->actions[ai]==0) break;
-		if (schedule->values[ai]==_T("") /* maybe ignore in some future cases...*/ ) continue;
+		if (schedule->values[ai].IsEmpty() /* maybe ignore in some future cases...*/ ) continue;
 
 		switch (schedule->actions[ai]) {
 			case 1 :
 				thePrefs.SetMaxUpload(_tstoi(schedule->values[ai]));
 				if (makedefault)
-					original_upload=(uint16)_tstoi(schedule->values[ai]); 
+					original_upload=(uint16)_tstoi(schedule->values[ai]);
 				break;
 			case 2 :
 				thePrefs.SetMaxDownload(_tstoi(schedule->values[ai]));

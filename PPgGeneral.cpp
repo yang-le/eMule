@@ -84,7 +84,7 @@ void CPPgGeneral::LoadSettings(void)
 	for(int i = 0; i < m_language.GetCount(); i++)
 		if(m_language.GetItemData(i) == thePrefs.GetLanguageID())
 			m_language.SetCurSel(i);
-	
+
 	if(thePrefs.m_bAutoStart)
 		CheckDlgButton(IDC_STARTWIN,1);
 	else
@@ -137,7 +137,7 @@ void CPPgGeneral::LoadSettings(void)
 	}
 
 	CString strBuffer;
-	strBuffer.Format(_T("%i %s"),thePrefs.versioncheckdays,GetResString(IDS_DAYS2));
+	strBuffer.Format(_T("%u %s"),thePrefs.versioncheckdays, (LPCTSTR)GetResString(IDS_DAYS2));
 	GetDlgItem(IDC_DAYS)->SetWindowText(strBuffer);
 }
 
@@ -190,7 +190,7 @@ BOOL CPPgGeneral::OnInitDialog()
 	CSliderCtrl *sliderUpdate = (CSliderCtrl*)GetDlgItem(IDC_CHECKDAYS);
 	sliderUpdate->SetRange(2, 7, true);
 	sliderUpdate->SetPos(thePrefs.GetUpdateDays());
-	
+
 	LoadSettings();
 	Localize();
 	GetDlgItem(IDC_CHECKDAYS)->ShowWindow( IsDlgButtonChecked(IDC_CHECK4UPDATE) ? SW_SHOW : SW_HIDE );
@@ -313,8 +313,8 @@ void CPPgGeneral::Localize(void)
 		GetDlgItem(IDC_EXIT)->SetWindowText(GetResString(IDS_PW_PROMPT));
 		GetDlgItem(IDC_SPLASHON)->SetWindowText(GetResString(IDS_PW_SPLASH));
 		GetDlgItem(IDC_BRINGTOFOREGROUND)->SetWindowText(GetResString(IDS_PW_FRONT));
-		GetDlgItem(IDC_ONLINESIG)->SetWindowText(GetResString(IDS_PREF_ONLINESIG));	
-		GetDlgItem(IDC_STARTMIN)->SetWindowText(GetResString(IDS_PREF_STARTMIN));	
+		GetDlgItem(IDC_ONLINESIG)->SetWindowText(GetResString(IDS_PREF_ONLINESIG));
+		GetDlgItem(IDC_STARTMIN)->SetWindowText(GetResString(IDS_PREF_STARTMIN));
 		GetDlgItem(IDC_WEBSVEDIT)->SetWindowText(GetResString(IDS_WEBSVEDIT));
 		GetDlgItem(IDC_ED2KFIX)->SetWindowText(GetResString(IDS_ED2KLINKFIX));
 		GetDlgItem(IDC_CHECK4UPDATE)->SetWindowText(GetResString(IDS_CHECK4UPDATE));
@@ -325,18 +325,18 @@ void CPPgGeneral::Localize(void)
 	}
 }
 
-void CPPgGeneral::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
+void CPPgGeneral::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	SetModified(TRUE);
 
 	if (pScrollBar==GetDlgItem(IDC_CHECKDAYS)) {
 		CSliderCtrl* slider =(CSliderCtrl*)pScrollBar;
 		CString text;
-		text.Format(_T("%i %s"),slider->GetPos(),GetResString(IDS_DAYS2));
+		text.Format(_T("%i %s"),slider->GetPos(), (LPCTSTR)GetResString(IDS_DAYS2));
 		GetDlgItem(IDC_DAYS)->SetWindowText(text);
 	}
 
-	UpdateData(false); 
+	UpdateData(false);
 	CPropertyPage::OnHScroll(nSBCode, nPos, pScrollBar);
 }
 
@@ -347,7 +347,7 @@ void CPPgGeneral::OnBnClickedEditWebservices()
 
 void CPPgGeneral::OnLangChange()
 {
-#define MIRRORS_URL	_T("http://langmirror%i.emule-project.org/lang/%i%i%i%i/")
+#define MIRRORS_URL	_T("http://langmirror%u.emule-project.org/lang/%u%u%u%u/")
 
 	WORD byNewLang = (WORD)m_language.GetItemData(m_language.GetCurSel());
 	if (thePrefs.GetLanguageID() != byNewLang){
@@ -374,8 +374,8 @@ void CPPgGeneral::OnLangChange()
 					return;
 				}
 				CString strErr;
-				strErr.Format(GetResString(IDS_ERR_FAILEDDOWNLOADLANG), strUrl);
-				LogError(LOG_STATUSBAR, _T("%s"), strErr);
+				strErr.Format(GetResString(IDS_ERR_FAILEDDOWNLOADLANG), (LPCTSTR)strUrl);
+				LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strErr);
 				AfxMessageBox(strErr, MB_ICONERROR | MB_OK);
 			}
 			// undo change selection

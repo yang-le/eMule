@@ -74,17 +74,18 @@ void CMMSocket::OnReceive(int nErrorCode){
 		return;
 	}
 	const UINT SIZE_PRESERVE = 0x1000;
-	uint32 readMax = sizeof(GlobalReadBuffer); 
+	uint32 readMax = sizeof(GlobalReadBuffer);
 	uint32 dwSize = Receive(GlobalReadBuffer, readMax);
-	if(dwSize == SOCKET_ERROR || dwSize == 0){
+	if(dwSize == (uint32)SOCKET_ERROR || dwSize == 0) {
 		return;
 	}
 	if (m_dwBufSize < dwSize + m_dwRecv)
 	{
 		// reallocate
-		char* pNewBuf = new char[m_dwBufSize = dwSize + m_dwRecv + SIZE_PRESERVE];
-		if (!pNewBuf)
-		{
+		char* pNewBuf;
+		try {
+			pNewBuf = new char[m_dwBufSize = dwSize + m_dwRecv + SIZE_PRESERVE];
+		} catch (...) {
 			shutdown(m_hSocket, SD_BOTH);
 			Close();
 			return;
@@ -172,18 +173,19 @@ bool CMMSocket::SendPacket(CMMPacket* packet, bool bQueueFirst){
 	else{
 		char szBuf[0x1000];
 		int nLen;
+		UINT bLen = (UINT)packet->m_pBuffer->GetLength();
 		if (!packet->m_bSpecialHeader)
-			nLen = _snprintf(szBuf, _countof(szBuf), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: %s\r\nContent-Length: %ld\r\n\r\n",m_pOwner->GetContentType(), (uint32)packet->m_pBuffer->GetLength());
+			nLen = _snprintf(szBuf, _countof(szBuf), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: %s\r\nContent-Length: %u\r\n\r\n", (LPCSTR)m_pOwner->GetContentType(), bLen);
 		else
-			nLen = _snprintf(szBuf, _countof(szBuf), "Content-Length: %ld\r\n\r\n", (uint32)packet->m_pBuffer->GetLength());
-		m_nSendLen = nLen + (UINT)packet->m_pBuffer->GetLength();
+			nLen = _snprintf(szBuf, _countof(szBuf), "Content-Length: %u\r\n\r\n", bLen);
+		m_nSendLen = nLen + bLen;
 		m_pSendBuffer =	new char[m_nSendLen];
 		memcpy(m_pSendBuffer,szBuf,nLen);
 		packet->m_pBuffer->SeekToBegin();
-		packet->m_pBuffer->Read(m_pSendBuffer+nLen, (UINT)packet->m_pBuffer->GetLength()); 
-		
+		packet->m_pBuffer->Read(m_pSendBuffer+nLen, bLen);
+
 		m_nSent = Send(m_pSendBuffer,m_nSendLen);
-		if (m_nSent == SOCKET_ERROR){
+		if (m_nSent == (uint32)SOCKET_ERROR) {
 			delete[] m_pSendBuffer;
 			m_pSendBuffer = NULL;
 			m_nSendLen = 0;
@@ -212,7 +214,7 @@ bool CMMSocket::SendPacket(CMMPacket* packet, bool bQueueFirst){
 				delete packet;
 				return false;
 			}
-			
+
 		}
 	}
 }
@@ -226,26 +228,23 @@ void CMMSocket::CheckForClosing()
 
 void CMMSocket::OnSend(int /*nErrorCode*/)
 {
-	if(m_pSendBuffer != NULL){
+	if (m_pSendBuffer != NULL) {
 		uint32 res = Send(m_pSendBuffer+m_nSent,m_nSendLen-m_nSent);
-		if (res == SOCKET_ERROR){
+		if (res == (uint32)SOCKET_ERROR) {
 			if (GetLastError() != WSAEWOULDBLOCK)
 				Close();
 			return;
 		}
-		else{
-			m_nSent += res;
-			if (m_nSent >= m_nSendLen){
-				delete[] m_pSendBuffer;
-				m_pSendBuffer = NULL;
-				m_nSendLen = 0;
-				CheckForClosing();
-			}
-			else
-				return;
-		}
+		m_nSent += res;
+		if (m_nSent >= m_nSendLen) {
+			delete[] m_pSendBuffer;
+			m_pSendBuffer = NULL;
+			m_nSendLen = 0;
+			CheckForClosing();
+		} else
+			return;
 	}
-	while (!m_PacketQueue.IsEmpty()){
+	while (!m_PacketQueue.IsEmpty()) {
 		CMMPacket* packet = m_PacketQueue.RemoveHead();
 		if (!SendPacket(packet,true))
 			return;
@@ -337,7 +336,7 @@ CListenMMSocket::~CListenMMSocket(void)
 }
 
 bool  CListenMMSocket::Create(){
-	return CAsyncSocket::Create(thePrefs.GetMMPort(),SOCK_STREAM,FD_ACCEPT) && Listen();;
+	return CAsyncSocket::Create(thePrefs.GetMMPort(),SOCK_STREAM,FD_ACCEPT) && Listen();
 }
 
 

@@ -21,7 +21,7 @@ class CAsyncProxySocketLayer;
 class CIrcSocket : public CAsyncSocketEx
 {
 public:
-	CIrcSocket(CIrcMain* pIrcMain);
+	explicit CIrcSocket(CIrcMain* pIrcMain);
 	virtual ~CIrcSocket();
 
 	BOOL Create(UINT uSocketPort = 0, int iSocketType = SOCK_STREAM,

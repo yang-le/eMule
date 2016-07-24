@@ -116,7 +116,7 @@ am__quote = @am__quote@
 cxxflags_set = @cxxflags_set@
 install_sh = @install_sh@
 
-EXTRA_DIST = id3lib.dsp id3lib.dsw id3lib.mak version.rc id3lib.def win32.readme.first.txt
+EXTRA_DIST = id3lib.dsp id3lib.dsw id3lib.mak version.rc id3lib.def win32.readme.first.txt id3lib.bpr id3lib.bpg id3lib.bpf
 subdir = prj
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h

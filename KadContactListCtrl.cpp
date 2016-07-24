@@ -31,13 +31,6 @@ static char THIS_FILE[] = __FILE__;
 
 // CONContactListCtrl
 
-enum ECols
-{
-	colID = 0,
-	colType,
-	colDistance
-};
-
 IMPLEMENT_DYNAMIC(CKadContactListCtrl, CMuleListCtrl)
 
 BEGIN_MESSAGE_MAP(CKadContactListCtrl, CMuleListCtrl)
@@ -110,9 +103,9 @@ void CKadContactListCtrl::Localize()
 	hdi.mask = HDI_TEXT;
 	CString strRes;
 
-	for (int icol = 0; icol < pHeaderCtrl->GetItemCount(); icol++) 
+	for (int icol = 0; icol < pHeaderCtrl->GetItemCount(); icol++)
 	{
-		switch (icol) 
+		switch (icol)
 		{
 			case colID: strRes = GetResString(IDS_ID); break;
 			case colType: strRes = GetResString(IDS_TYPE); break;
@@ -123,7 +116,7 @@ void CKadContactListCtrl::Localize()
 		pHeaderCtrl->SetItem(icol, &hdi);
 	}
 }
-	
+
 void CKadContactListCtrl::UpdateContact(int iItem, const Kademlia::CContact *contact)
 {
 	CString id;
@@ -138,11 +131,8 @@ void CKadContactListCtrl::UpdateContact(int iItem, const Kademlia::CContact *con
 
 	UINT nImageShown;
 	if (contact->IsBootstrapContact())
-	{
-		nImageShown = contact->IsBootstrapFailed() ? 4 : 5;
-	}
-	else
-	{
+		nImageShown = 5; //contact->IsBootstrapFailed() ? 4 : 5;
+	else {
 		nImageShown = contact->GetType() > 4 ? 4 : contact->GetType();
 		if (nImageShown < 3 && !contact->IsIpVerified())
 			nImageShown = 5; // if we have an active contact, which is however not IP verified (and therefore not used), show this icon instead
@@ -236,10 +226,10 @@ void CKadContactListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
-int CKadContactListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+int CALLBACK CKadContactListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	const Kademlia::CContact *item1 = (Kademlia::CContact *)lParam1;
-	const Kademlia::CContact *item2 = (Kademlia::CContact *)lParam2; 
+	const Kademlia::CContact *item2 = (Kademlia::CContact *)lParam2;
 	if (item1 == NULL || item2 == NULL)
 		return 0;
 

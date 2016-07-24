@@ -26,13 +26,21 @@ class CCollectionCreateDialog : public CResizableDialog
 	DECLARE_DYNAMIC(CCollectionCreateDialog)
 
 public:
-	CCollectionCreateDialog(CWnd* pParent = NULL);   // standard constructor
+	explicit CCollectionCreateDialog(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CCollectionCreateDialog();
 
 // Dialog Data
 	enum { IDD = IDD_COLLECTIONCREATEDIALOG };
 
 	void SetCollection(CCollection* pCollection, bool create);
+
+private:
+	enum ECols
+	{
+		colName = 0,
+		colSize,
+		colHash
+	};
 
 protected:
 	CCollection* m_pCollection;

@@ -33,7 +33,7 @@
 #define DAY_SA			6
 #define DAY_SO			7
 #define DAY_MO_FR		8
-#define DAY_MO_SA		9 
+#define DAY_MO_SA		9
 #define DAY_SA_SO		10
 
 struct Schedule_Struct{
@@ -44,7 +44,7 @@ struct Schedule_Struct{
    uint32			time2;
    CString			values[16];
    int				actions[16];
-   void ResetActions()	{for (uint8 index=0;index<16;index++) {actions[index]=0;values[index]=_T("");}}
+   void ResetActions()	{for (uint8 index=0;index<16;++index) {actions[index]=0;values[index].Empty();}}
    ~Schedule_Struct() {  }
 };
 
@@ -66,7 +66,7 @@ public:
 	void	SaveOriginals();
 	void	RestoreOriginals();
 	void	ActivateSchedule(int index,bool makedefault=false);
-	
+
 	uint16	original_upload;
 	uint16	original_download;
 	UINT	original_connections;

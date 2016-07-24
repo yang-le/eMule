@@ -63,8 +63,8 @@ static char THIS_FILE[] = __FILE__;
 //////////////////////////////////
 // CMuleListCtrl
 
-// Be carefull with that offsets, they are supposed to match *exactly* the Windows built-in metric.
-// If it does not match that value, column auto-sizeing (double clicking on header divider) will
+// Be carefull with these offsets, they are supposed to match *exactly* the Windows built-in metric.
+// If it does not match that value, column auto-sizing (double clicking on header divider) will
 // give inaccurate results.
 const int CMuleListCtrl::sm_iIconOffset = 4;	// Offset from left window border to icon (of 1st column)
 const int CMuleListCtrl::sm_iLabelOffset = 2;	// Offset between right icon border and item text (of 1st column)
@@ -82,6 +82,7 @@ BEGIN_MESSAGE_MAP(CMuleListCtrl, CListCtrl)
 END_MESSAGE_MAP()
 
 CMuleListCtrl::CMuleListCtrl(PFNLVCOMPARE pfnCompare, DWORD dwParamSort)
+	: m_atSortArrow(), m_lvcd()
 {
 	m_SortProc = pfnCompare;
 	m_dwParamSort = dwParamSort;
@@ -117,7 +118,7 @@ CMuleListCtrl::~CMuleListCtrl() {
 	delete[] m_aColumns;
 }
 
-int CMuleListCtrl::SortProc(LPARAM /*lParam1*/, LPARAM /*lParam2*/, LPARAM /*lParamSort*/)
+int CALLBACK CMuleListCtrl::SortProc(LPARAM /*lParam1*/, LPARAM /*lParam2*/, LPARAM /*lParamSort*/)
 {
 	return 0;
 }
@@ -223,10 +224,10 @@ void CMuleListCtrl::ShowColumn(int iColumn) {
 	pHeaderCtrl->GetOrderArray(piArray, m_iColumnsTracked);
 	int iCurrent = IndexToOrder(pHeaderCtrl, iColumn);
 
-	for(; iCurrent < IndexToOrder(pHeaderCtrl, 0) && iCurrent < m_iColumnsTracked - 1; iCurrent++ )
+	for (; iCurrent < m_iColumnsTracked - 1 && iCurrent < IndexToOrder(pHeaderCtrl, 0); ++iCurrent)
 		piArray[iCurrent] = piArray[iCurrent + 1];
-	for(; m_aColumns[iColumn].iLocation > m_aColumns[pHeaderCtrl->OrderToIndex(iCurrent + 1)].iLocation &&
-	      iCurrent < m_iColumnsTracked - 1; iCurrent++)
+	for (; iCurrent < m_iColumnsTracked - 1 &&
+			m_aColumns[iColumn].iLocation > m_aColumns[pHeaderCtrl->OrderToIndex(iCurrent + 1)].iLocation; ++iCurrent)
 		piArray[iCurrent] = piArray[iCurrent + 1];
 	piArray[iCurrent] = iColumn;
 	pHeaderCtrl->SetOrderArray(m_iColumnsTracked, piArray);
@@ -249,7 +250,7 @@ void CMuleListCtrl::ShowColumn(int iColumn) {
 void CMuleListCtrl::SaveSettings()
 {
 	ASSERT(!m_Name.IsEmpty());
-	
+
 	ASSERT(GetHeaderCtrl()->GetItemCount() == m_iColumnsTracked);
 
 	if (m_Name.IsEmpty() || GetHeaderCtrl()->GetItemCount() != m_iColumnsTracked)
@@ -261,12 +262,8 @@ void CMuleListCtrl::SaveSettings()
 
 	int* piSortHist  = new int[MAX_SORTORDERHISTORY];
 	int i=0;
-	POSITION pos1, pos2;
-	for (pos1 = m_liSortHistory.GetHeadPosition();( pos2 = pos1 ) != NULL;)
-	{
-		m_liSortHistory.GetNext(pos1);
-		piSortHist[i++]=m_liSortHistory.GetAt(pos2)+1;
-	}
+	for (POSITION pos = m_liSortHistory.GetHeadPosition(); pos != NULL;)
+		piSortHist[i++] = m_liSortHistory.GetNext(pos) + 1;
 	ini.SerGet(false, piSortHist, i, m_Name + _T("SortHistory"));
 	// store additional settings
 	ini.WriteInt(m_Name + _T("TableSortItem"), GetSortItem());
@@ -290,7 +287,7 @@ void CMuleListCtrl::SaveSettings()
 	for(i = 0; i < m_iColumnsTracked; i++)
 		if (piColHidden[i]==1)
 			HideColumn(i);
-	
+
 	ShowWindow(SW_SHOW);
 
 	delete[] piSortHist;
@@ -335,9 +332,9 @@ void CMuleListCtrl::LoadSettings()
 	for (int i = 0; i < MAX_SORTORDERHISTORY; i++)
 		if (piSortHist[i] > 0)
 			m_liSortHistory.AddTail(piSortHist[i]-1);
-		else 
+		else
 			break;
-	
+
 	m_iCurrentSortItem = ini.GetInt(m_Name + _T("TableSortItem"), 0);
 	m_atSortArrow = GetArrowType(ini.GetInt(m_Name + _T("TableSortAscending"), 1));
 	if (m_liSortHistory.IsEmpty())
@@ -350,7 +347,7 @@ void CMuleListCtrl::LoadSettings()
 	ini.SerGet(true, piColWidths, m_iColumnsTracked, m_Name + _T("ColumnWidths"));
 	ini.SerGet(true, piColHidden, m_iColumnsTracked, m_Name + _T("ColumnHidden"), 0, -1);
 	ini.SerGet(true, piColOrders, m_iColumnsTracked, m_Name + _T("ColumnOrders"));
-	
+
 	// apply columnwidths and verify sortorder
 	INT *piArray = new INT[m_iColumnsTracked];
 	for (int i = 0; i < m_iColumnsTracked; i++)
@@ -459,7 +456,7 @@ void CMuleListCtrl::SetColors()
 	SetBkColor(m_crWindow);
 	SetTextBkColor(m_crWindowTextBk);
 	SetTextColor(m_crWindowText);
-	
+
 	// Must explicitly set a NULL watermark bitmap, to clear any already set watermark bitmap.
 	LVBKIMAGE lvimg = {0};
 	lvimg.ulFlags = LVBKIF_TYPE_WATERMARK;
@@ -568,7 +565,7 @@ void CMuleListCtrl::SetSortArrow(int iColumn, ArrowType atType) {
 				if (imlSortStates.Create(14, 14, theApp.m_iDfltImageListColorFlags | ILC_MASK, 1, 0)){
 					VERIFY( imlSortStates.Add(&bmSortStates, RGB(255, 0, 255)) != -1 );
 
-					// To avoid drawing problems (which occure only with an image list *with* a mask) while
+					// To avoid drawing problems (which occur only with an image list *with* a mask) while
 					// resizing list view columns which have the header control bitmap right aligned, set
 					// the background color of the image list.
 					if (theApp.m_ullComCtrlVer < MAKEDLLVERULL(6,0,0,0))
@@ -580,7 +577,7 @@ void CMuleListCtrl::SetSortArrow(int iColumn, ArrowType atType) {
 					m_imlHeaderCtrl.DeleteImageList();
 					m_imlHeaderCtrl.Attach(imlSortStates.Detach());
 
-					// Use smaller bitmap margins -- this saves some pixels which may be required for 
+					// Use smaller bitmap margins -- this saves some pixels which may be required for
 					// rather small column titles.
 					if (theApp.m_ullComCtrlVer >= MAKEDLLVERULL(5,8,0,0)){
 						int iBmpMargin = pHeaderCtrl->GetBitmapMargin();
@@ -622,21 +619,21 @@ int CMuleListCtrl::MoveItem(int iOldIndex, int iNewIndex)
 	CSimpleArray<void *> aSubItems;
 	DWORD Style = GetStyle();
 	if ((Style & LVS_OWNERDATA) == 0) {
-		TCHAR szText[256];
-		LVITEM lvi;
-		lvi.mask = LVIF_TEXT | LVIF_NORECOMPUTE;
-		lvi.iItem = iOldIndex;
+		TCHAR szText1[256];
+		LVITEM lvi1;
+		lvi1.mask = LVIF_TEXT | LVIF_NORECOMPUTE;
+		lvi1.iItem = iOldIndex;
 		for (int i = 1; i < m_iColumnsTracked; i++) {
-			lvi.iSubItem = i;
-			lvi.cchTextMax = _countof(szText);
-			lvi.pszText = szText;
+			lvi1.iSubItem = i;
+			lvi1.cchTextMax = _countof(szText1);
+			lvi1.pszText = szText1;
 			void *pstrSubItem = NULL;
-			if (GetItem(&lvi)) {
-				if (lvi.pszText == LPSTR_TEXTCALLBACK)
+			if (GetItem(&lvi1)) {
+				if (lvi1.pszText == LPSTR_TEXTCALLBACK)
 					pstrSubItem = LPSTR_TEXTCALLBACK;
 				else {
-					szText[_countof(szText) - 1] = _T('\0');
-					pstrSubItem = new CString(szText);
+					szText1[_countof(szText1) - 1] = _T('\0');
+					pstrSubItem = new CString(szText1);
 				}
 			}
 			aSubItems.Add(pstrSubItem);
@@ -652,15 +649,15 @@ int CMuleListCtrl::MoveItem(int iOldIndex, int iNewIndex)
 	// restore strings of sub items
 	if ((Style & LVS_OWNERDATA) == 0) {
 		for (int i = 1; i < m_iColumnsTracked; i++) {
-			LVITEM lvi;
-			lvi.iSubItem = i;
+			LVITEM lvi1;
+			lvi1.iSubItem = i;
 			void *pstrSubItem = aSubItems[i-1];
 			if (pstrSubItem != NULL) {
 				if (pstrSubItem == LPSTR_TEXTCALLBACK)
-					lvi.pszText = LPSTR_TEXTCALLBACK;
+					lvi1.pszText = LPSTR_TEXTCALLBACK;
 				else
-					lvi.pszText = const_cast<LPTSTR>((LPCTSTR)*((CString *)pstrSubItem));
-				DefWindowProc(LVM_SETITEMTEXT, iNewIndex, (LPARAM)&lvi);
+					lvi1.pszText = const_cast<LPTSTR>((LPCTSTR)*((CString *)pstrSubItem));
+				DefWindowProc(LVM_SETITEMTEXT, iNewIndex, (LPARAM)&lvi1);
 				if (pstrSubItem != LPSTR_TEXTCALLBACK)
 					delete (CString *)pstrSubItem;
 			}
@@ -852,7 +849,7 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 				//
 				// Though, a few of our listviews are already capable of providing all the
 				// information which is needed by the listview control to properly auto size
-				// a column. Those listviews can set the 'm_iAutoSizeWidth' to 'LVSCW_AUTOSIZE' 
+				// a column. Those listviews can set the 'm_iAutoSizeWidth' to 'LVSCW_AUTOSIZE'
 				// which will lead to standard Windows behaviour.
 				//
 				if (GetStyle() & LVS_OWNERDRAWFIXED) {
@@ -956,7 +953,7 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 		break;
 
 	case LVM_DELETEALLITEMS:
-		if(!CListCtrl::OnWndMsg(message, wParam, lParam, pResult) && DefWindowProc(message, wParam, lParam)) 
+		if(!CListCtrl::OnWndMsg(message, wParam, lParam, pResult) && DefWindowProc(message, wParam, lParam))
 			m_Params.RemoveAll();
 		return *pResult = TRUE;
 
@@ -1049,7 +1046,6 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 			}
 			return *pResult = lResult;
 		}
-		break;
 
 	case WM_DESTROY:
 		SaveSettings();
@@ -1067,7 +1063,7 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 		return *pResult = TRUE;
 
 	case WM_CONTEXTMENU:
-		// If the context menu is opened with the _mouse_ and if it was opened _outside_ 
+		// If the context menu is opened with the _mouse_ and if it was opened _outside_
 		// the client area of the list view, let Windows handle that message.
 		// Otherwise we would prevent the context menu for e.g. scrollbars to be invoked.
 		if ((HWND)wParam == m_hWnd)
@@ -1082,7 +1078,6 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 					return DefWindowProc(message, wParam, lParam);
 			}
 		}
-		break;
 	}
 
 	return CListCtrl::OnWndMsg(message, wParam, lParam, pResult);
@@ -1163,7 +1158,7 @@ BOOL CMuleListCtrl::OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LR
 	return TRUE;
 }
 
-void CMuleListCtrl::InitItemMemDC(CMemDC *dc, LPDRAWITEMSTRUCT lpDrawItemStruct, BOOL &bCtrlFocused)
+void CMuleListCtrl::InitItemMemDC(CMemoryDC *dc, LPDRAWITEMSTRUCT lpDrawItemStruct, BOOL &bCtrlFocused)
 {
 	bCtrlFocused = ((GetFocus() == this) || (GetStyle() & LVS_SHOWSELALWAYS));
 
@@ -1197,7 +1192,7 @@ void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	//set up our flicker free drawing
 	CRect rcItem(lpDrawItemStruct->rcItem);
 	CDC *oDC = CDC::FromHandle(lpDrawItemStruct->hDC);
-	CMemDC pDC(oDC, &rcItem, m_crWindow);
+	CMemoryDC pDC(oDC, &rcItem, m_crWindow);
 	CFont *pOldFont = pDC->SelectObject(GetFont());
 	CRect rcClient;
 	GetClientRect(&rcClient);
@@ -1211,7 +1206,7 @@ void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	lvi.mask = LVIF_IMAGE | LVIF_STATE;
 	lvi.iItem = iItem;
 	lvi.iSubItem = 0;
-	lvi.stateMask = LVIS_DROPHILITED | LVIS_FOCUSED | LVIS_SELECTED | LVIS_GLOW; 
+	lvi.stateMask = LVIS_DROPHILITED | LVIS_FOCUSED | LVIS_SELECTED | LVIS_GLOW;
 	GetItem(&lvi);
 
 	//see if the item be highlighted
@@ -1219,18 +1214,17 @@ void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	BOOL bCtrlFocused = ((GetFocus() == this) || (GetStyle() & LVS_SHOWSELALWAYS));
 	BOOL bGlowing = ( lvi.state & LVIS_GLOW );
 
-	COLORREF crOldTextColor;
 	if (m_bCustomDraw) {
 		if (bHighlight)
-			crOldTextColor = pDC->SetTextColor(g_bLowColorDesktop ? m_crHighlightText : m_lvcd.clrText);
+			pDC->SetTextColor(g_bLowColorDesktop ? m_crHighlightText : m_lvcd.clrText);
 		else
-			crOldTextColor = pDC->SetTextColor(m_lvcd.clrText);
+			pDC->SetTextColor(m_lvcd.clrText);
 	}
 	else {
 		if (bHighlight)
-			crOldTextColor = pDC->SetTextColor(m_crHighlightText);
+			pDC->SetTextColor(m_crHighlightText);
 		else
-			crOldTextColor = pDC->SetTextColor(m_crWindowText);
+			pDC->SetTextColor(m_crWindowText);
 	}
 
 	//get rectangles for drawing
@@ -1245,7 +1239,6 @@ void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	//labels are offset by a certain amount
 	//this offset is related to the width of a space character
 	CRect rcHighlight;
-	CRect rcWnd;
 
 	//should I check (GetExtendedStyle() & LVS_EX_FULLROWSELECT) ?
 	rcHighlight.top    = rcBounds.top;
@@ -1254,9 +1247,9 @@ void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	rcHighlight.right  = rcBounds.right;
 
 	//draw the background color
-	if(bHighlight) 
+	if(bHighlight)
 	{
-		if(bCtrlFocused) 
+		if(bCtrlFocused)
 		{
 			pDC->FillRect(rcHighlight, &CBrush(m_crHighlight));
 			pDC->SetBkColor(m_crHighlight);
@@ -1266,12 +1259,12 @@ void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 			pDC->FillRect(rcHighlight, &CBrush(m_crGlow));
 			pDC->SetBkColor(m_crGlow);
 		}
-		else 
+		else
 		{
 			pDC->FillRect(rcHighlight, &CBrush(m_crNoHighlight));
 			pDC->SetBkColor(m_crNoHighlight);
 		}
-	} 
+	}
 	else
 	{
 		if(bGlowing)
@@ -1293,11 +1286,11 @@ void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	rcCol.right = rcCol.left + GetColumnWidth(0);
 
 	//draw state icon
-	if(lvi.state & LVIS_STATEIMAGEMASK) 
+	if(lvi.state & LVIS_STATEIMAGEMASK)
 	{
 		int nImage = ((lvi.state & LVIS_STATEIMAGEMASK)>>12) - 1;
 		pImageList = GetImageList(LVSIL_STATE);
-		if(pImageList) 
+		if(pImageList)
 		{
 			pImageList->Draw(pDC, nImage, rcCol.TopLeft(), ILD_TRANSPARENT);
 		}
@@ -1305,7 +1298,7 @@ void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 
 	//draw the item's icon
 	pImageList = GetImageList(LVSIL_SMALL);
-	if(pImageList) 
+	if(pImageList)
 	{
 		int iIconPosY = (rcItem.Height() > 16) ? ((rcItem.Height() - 16) / 2) : 0;
 		pImageList->Draw(pDC, lvi.iImage, CPoint(rcIcon.left, rcIcon.top + iIconPosY), ILD_TRANSPARENT);
@@ -1325,7 +1318,7 @@ void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	rcBounds.right = rcHighlight.right > rcBounds.right ? rcHighlight.right : rcBounds.right;
 
 	int iCount = pHeaderCtrl->GetItemCount();
-	for(int iCurrent = 1; iCurrent < iCount; iCurrent++) 
+	for(int iCurrent = 1; iCurrent < iCount; iCurrent++)
 	{
 		int iColumn = pHeaderCtrl->OrderToIndex(iCurrent);
 		//don't draw column 0 again
@@ -1343,12 +1336,12 @@ void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 		if (rcCol.left < rcCol.right && HaveIntersection(rcClient, rcCol))
 		{
 			sLabel = GetItemText(iItem, iColumn);
-			if (sLabel.GetLength() == 0)
+			if (sLabel.IsEmpty())
 				continue;
 
 			//get the text justification
 			UINT nJustify = DT_LEFT;
-			switch(lvc.fmt & LVCFMT_JUSTIFYMASK) 
+			switch(lvc.fmt & LVCFMT_JUSTIFYMASK)
 			{
 				case LVCFMT_RIGHT:
 					nJustify = DT_RIGHT;
@@ -1377,7 +1370,7 @@ void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 void CMuleListCtrl::DrawFocusRect(CDC *pDC, const CRect &rcItem, BOOL bItemFocused, BOOL bCtrlFocused, BOOL bItemSelected)
 {
 	//draw focus rectangle if item has focus
-	if (bItemFocused && (bCtrlFocused || bItemSelected)) 
+	if (bItemFocused && (bCtrlFocused || bItemSelected))
 	{
 		if (!bCtrlFocused || !bItemSelected)
 			pDC->FrameRect(rcItem, &CBrush(m_crNoFocusLine));
@@ -1399,7 +1392,6 @@ BOOL CMuleListCtrl::OnEraseBkgnd(CDC* pDC)
 	RECT itemRect;
 	int topIndex = GetTopIndex();
 	int maxItems = GetCountPerPage();
-	int drawnItems = itemCount < maxItems ? itemCount : maxItems;
 	CRect rcClip;
 
 	//draw top portion
@@ -1414,6 +1406,7 @@ BOOL CMuleListCtrl::OnEraseBkgnd(CDC* pDC)
 
 	//draw bottom portion if we have to
 	if(topIndex + maxItems >= itemCount) {
+		int drawnItems = itemCount < maxItems ? itemCount : maxItems;
 		GetClientRect(&clientRect);
 		GetItemRect(topIndex + drawnItems - 1, &itemRect, LVIR_BOUNDS);
 		clientRect.top = itemRect.bottom;
@@ -1449,14 +1442,14 @@ void CMuleListCtrl::OnSysColorChange()
 	//adjust colors
 	CListCtrl::OnSysColorChange();
 	SetColors();
-	
+
 	//redraw the up/down sort arrow (if it's there)
 	if(m_iCurrentSortItem >= 0)
 		SetSortArrow(m_iCurrentSortItem, (ArrowType)m_atSortArrow);
 
 	if (thePrefs.GetUseSystemFontForMainControls())
 	{
-		// Send a (useless) WM_WINDOWPOSCHANGED to the listview control to trigger a 
+		// Send a (useless) WM_WINDOWPOSCHANGED to the listview control to trigger a
 		// WM_MEASUREITEM message which is needed to set the new item height in case
 		// there was a font changed in the Windows System settings.
 		//
@@ -1610,7 +1603,7 @@ void CMuleListCtrl::OnFindPrev()
 	DoFind(iStartItem, !m_iFindDirection, FALSE/*bShowError*/);
 }
 
-BOOL CMuleListCtrl::PreTranslateMessage(MSG* pMsg) 
+BOOL CMuleListCtrl::PreTranslateMessage(MSG* pMsg)
 {
 	if (pMsg->message == WM_SYSKEYDOWN && pMsg->wParam == VK_RETURN && GetAsyncKeyState(VK_MENU)<0) {
 		PostMessage(WM_COMMAND, MPG_ALTENTER, 0);
@@ -1649,14 +1642,14 @@ void CMuleListCtrl::AutoSelectItem()
 	}
 }
 
-void CMuleListCtrl::UpdateSortHistory(int dwNewOrder, int dwInverseValue){
+void CMuleListCtrl::UpdateSortHistory(int dwNewOrder, int dwInverseValue)
+{
 	int dwInverse = (dwNewOrder > dwInverseValue) ? (dwNewOrder-dwInverseValue) : (dwNewOrder+dwInverseValue);
 	// delete the value (or its inverse sorting value) if it appears already in the list
-	POSITION pos1, pos2;
-	for (pos1 = m_liSortHistory.GetHeadPosition();( pos2 = pos1 ) != NULL;)
-	{
-		m_liSortHistory.GetNext(pos1);
-		if (m_liSortHistory.GetAt(pos2) == dwNewOrder || m_liSortHistory.GetAt(pos2) == dwInverse)
+	for (POSITION pos1 = m_liSortHistory.GetHeadPosition(); pos1 != NULL;) {
+		POSITION pos2 = pos1;
+		int i = m_liSortHistory.GetNext(pos1);
+		if (i == dwNewOrder || i == dwInverse)
 			m_liSortHistory.RemoveAt(pos2);
 	}
 	m_liSortHistory.AddHead(dwNewOrder);
@@ -1665,21 +1658,17 @@ void CMuleListCtrl::UpdateSortHistory(int dwNewOrder, int dwInverseValue){
 		m_liSortHistory.RemoveTail();
 }
 
-int	CMuleListCtrl::GetNextSortOrder(int dwCurrentSortOrder) const{
-	POSITION pos1, pos2;
-	for (pos1 = m_liSortHistory.GetHeadPosition();( pos2 = pos1 ) != NULL;)
-	{
-		m_liSortHistory.GetNext(pos1);
-		if (m_liSortHistory.GetAt(pos2) == dwCurrentSortOrder){
-			if (pos1 == NULL)
-				return -1; // there is no further sortorder stored
-			else
-				return m_liSortHistory.GetAt(pos1);
-		}
+int	CMuleListCtrl::GetNextSortOrder(int dwCurrentSortOrder) const
+{
+	POSITION pos = m_liSortHistory.Find(dwCurrentSortOrder);
+	if (pos) {
+		m_liSortHistory.GetNext(pos);
+		if (pos != NULL)
+			return m_liSortHistory.GetAt(pos);
 	}
-	// current one not found, shouldn't happen
-//	ASSERT( false );
-	return -1;
+// current one not found - shouldn't happen
+//	else ASSERT( false );
+	return -1; // there is no further sortorder stored
 }
 
 CMuleListCtrl::EUpdateMode CMuleListCtrl::SetUpdateMode(EUpdateMode eUpdateMode)
@@ -1714,12 +1703,12 @@ void CMuleListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 		ScreenToClient(&hti.pt);
 		if (SubItemHitTest(&hti) == -1 || hti.iItem != pGetInfoTip->iItem || hti.iSubItem != 0)
 		{
-			// Don't show the default label tip for the main item, if the mouse is not over 
+			// Don't show the default label tip for the main item, if the mouse is not over
 			// the main item.
 			if ((pGetInfoTip->dwFlags & LVGIT_UNFOLDED) == 0 && pGetInfoTip->cchTextMax > 0 && pGetInfoTip->pszText[0] != _T('\0'))
 			{
-				// For any reason this does not work with Win98 (COMCTL32 v5.8). Even when 
-				// the info tip text is explicitly set to empty, the list view control may 
+				// For any reason this does not work with Win98 (COMCTL32 v5.8). Even when
+				// the info tip text is explicitly set to empty, the list view control may
 				// display the unfolded text for the 1st item. It though works for WinXP.
 				pGetInfoTip->pszText[0] = _T('\0');
 			}

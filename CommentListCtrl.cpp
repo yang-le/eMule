@@ -16,7 +16,6 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
 #include "CommentListCtrl.h"
-#include "OtherFunctions.h"
 #include "MenuCmds.h"
 #include "TitleMenu.h"
 #include "emule.h"
@@ -28,15 +27,6 @@
 #undef THIS_FILE
 static char THIS_FILE[]=__FILE__;
 #endif
-
-enum ECols
-{
-	colRating = 0,
-	colComment,
-	colFileName,
-	colUserName,
-	colOrigin
-};
 
 IMPLEMENT_DYNAMIC(CCommentListCtrl, CMuleListCtrl)
 
@@ -84,7 +74,7 @@ void CCommentListCtrl::Init(void)
 	SortItems(SortProc, MAKELONG(GetSortItem(), (GetSortAscending() ? 0 : 1)));
 }
 
-int CCommentListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+int CALLBACK CCommentListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	const SComment *item1 = (SComment *)lParam1;
 	const SComment *item2 = (SComment *)lParam2;
@@ -102,11 +92,11 @@ int CCommentListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort
 			else
 				iResult = 0;
 			break;
-		
+
 		case colComment:
 			iResult = CompareLocaleStringNoCase(item1->m_strComment, item2->m_strComment);
 			break;
-		
+
 		case colFileName:
 			iResult = CompareLocaleStringNoCase(item1->m_strFileName, item2->m_strFileName);
 			break;
@@ -114,7 +104,7 @@ int CCommentListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort
 		case colUserName:
 			iResult = CompareLocaleStringNoCase(item1->m_strUserName, item2->m_strUserName);
 			break;
-		
+
 		case colOrigin:
 			if (item1->m_iOrigin < item2->m_iOrigin)
 				iResult = -1;
@@ -123,7 +113,7 @@ int CCommentListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort
 			else
 				iResult = 0;
 			break;
-		
+
 		default:
 			ASSERT(0);
 			return 0;
@@ -174,8 +164,7 @@ BOOL CCommentListCtrl::OnCommand(WPARAM wParam, LPARAM lParam)
 	{
 		case MP_COPYSELECTED: {
 			CString strText;
-			POSITION posItem = GetFirstSelectedItemPosition();
-			while (posItem) {
+			for (POSITION posItem = GetFirstSelectedItemPosition(); posItem;) {
 				int iItem = GetNextSelectedItem(posItem);
 				if (iItem >= 0) {
 					CString strComment = GetItemText(iItem, colComment);
@@ -207,7 +196,7 @@ int CCommentListCtrl::FindClientComment(const void* pClientCookie)
 
 void CCommentListCtrl::AddComment(const SComment* pComment)
 {
-	int iItem = InsertItem(LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM, 
+	int iItem = InsertItem(LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM,
 						   0, GetRateString(pComment->m_iRating),
 						   0, 0, pComment->m_iRating, (LPARAM)pComment);
 	SetItemText(iItem, colComment, pComment->m_strComment);

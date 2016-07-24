@@ -1,8 +1,9 @@
 // -*- C++ -*-
-// $Id: spec.h,v 1.2 2002/07/02 22:14:16 t1mpy Exp $
+// $Id: spec.h,v 1.3 2002/09/13 15:38:08 t1mpy Exp $
 
 // id3lib: a software library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
+// Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
 
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Library General Public License as published by
@@ -35,4 +36,3 @@ uchar      ID3_V2SpecToVer(ID3_V2Spec spec);
 uchar      ID3_V2SpecToRev(ID3_V2Spec spec);
 
 #endif /* _ID3LIB_SPEC_H_ */
-

@@ -1,4 +1,4 @@
-// $Id: header_tag.cpp,v 1.25 2003/03/02 14:30:46 t1mpy Exp $
+// $Id: header_tag.cpp,v 1.27 2009/09/02 19:41:26 nagilo Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
@@ -54,7 +54,7 @@ size_t ID3_TagHeader::Size() const
 {
   size_t bytesUsed = ID3_TagHeader::SIZE;
 
-  if (_info->is_extended)
+  if (_info && _info->is_extended)
   {
     bytesUsed += _info->extended_bytes;
   }
@@ -63,12 +63,14 @@ size_t ID3_TagHeader::Size() const
 }
 
 
-void ID3_TagHeader::Render(ID3_Writer& writer) const
+ID3_Err ID3_TagHeader::Render(ID3_Writer& writer) const
 {
   writer.writeChars((uchar *) ID, strlen(ID));
 
-  writer.writeChar(ID3_V2SpecToVer(ID3V2_LATEST));
-  writer.writeChar(ID3_V2SpecToRev(ID3V2_LATEST));
+  ID3_V2Spec spec2use = this->GetSpec(); //this is set in tag_file.cpp right before RenderV2ToFile
+
+  writer.writeChar(ID3_V2SpecToVer(spec2use));
+  writer.writeChar(ID3_V2SpecToRev(spec2use));
 
   // set the flags byte in the header
   writer.writeChar(static_cast<uchar>(_flags.get() & MASK8));
@@ -77,25 +79,33 @@ void ID3_TagHeader::Render(ID3_Writer& writer) const
   // now we render the extended header
   if (_flags.test(HEADER_FLAG_EXTENDED))
   {
-    if (this->GetSpec() == ID3V2_4_0)
+    switch (spec2use)
     {
-      io::writeUInt28(writer, 6); //write 4 bytes of v2.4.0 ext header containing size '6'
-      io::writeBENumber(writer, 1, 1); //write that it has only one flag byte (value '1')
-      io::writeBENumber(writer, 0, 1); //write flag byte with value '0'
-    }
-    else if (this->GetSpec() == ID3V2_3_0)
-    {
-      io::writeBENumber(writer, 6, sizeof(uint32));
-      for (size_t i = 0; i < 6; ++i)
+      case ID3V2_4_0:
       {
-        if (writer.writeChar('\0') == ID3_Writer::END_OF_WRITER)
+        io::writeUInt28(writer, 6); //write 4 bytes of v2.4.0 ext header containing size '6'
+        io::writeBENumber(writer, 1, 1); //write that it has only one flag byte (value '1')
+        io::writeBENumber(writer, 0, 1); //write flag byte with value '0'
+      }
+      case ID3V2_3_0:
+      {
+        io::writeBENumber(writer, 6, sizeof(uint32));
+        for (size_t i = 0; i < 6; ++i)
         {
-          break;
+          if (writer.writeChar('\0') == ID3_Writer::END_OF_WRITER)
+          {
+            break;
+          }
         }
+      }
+      default:
+      {
+        break; //can't reach here, but added to avoid compiler warnings
       }
     }
   //  else //not implemented
   }
+  return ID3E_NoError;
 }
 
 bool ID3_TagHeader::Parse(ID3_Reader& reader)
@@ -172,7 +182,7 @@ void ID3_TagHeader::ParseExtended(ID3_Reader& reader)
     ID3_Flags* extflags[1]; // ID3V2_4_0 has 1 flag byte, extflagbytes should be equal to 1
     for (i = 0; i < extflagbytes; ++i)
     {
-      extflags[i] = new ID3_Flags;
+      extflags[i] = LEAKTESTNEW(ID3_Flags);
       extflags[i]->set(reader.readChar()); //flags
     }
     extrabytes = 0;
@@ -210,7 +220,8 @@ void ID3_TagHeader::ParseExtended(ID3_Reader& reader)
       reader.setCur(reader.getCur() + extheaderflagdatasize);
       //reader.readChars(buf, extheaderflagdatasize); //buf should be at least 127 bytes = max extended header flagdata size
     }
-    _info->extended_bytes = 5 + extflagbytes + extrabytes;
+    if (_info)
+      _info->extended_bytes = 5 + extflagbytes + extrabytes;
   }
   // a bit unorthodox, but since we are not using any of the extended header, but were merely
   // parsing it to get the cursor right, we delete it. Be Gone !

@@ -79,7 +79,7 @@ IMPLEMENT_DYNCREATE(CDlgPageWizard, CPropertyPageEx)
 BEGIN_MESSAGE_MAP(CDlgPageWizard, CPropertyPageEx)
 END_MESSAGE_MAP()
 
-CDlgPageWizard::CDlgPageWizard() 
+CDlgPageWizard::CDlgPageWizard()
 	: CPropertyPageEx()
 {
 }
@@ -89,7 +89,7 @@ void CDlgPageWizard::DoDataExchange(CDataExchange* pDX)
 	CPropertyPageEx::DoDataExchange(pDX);
 }
 
-BOOL CDlgPageWizard::OnSetActive() 
+BOOL CDlgPageWizard::OnSetActive()
 {
 	CPropertySheetEx* pSheet = (CPropertySheetEx*)GetParent();
 	if (pSheet->IsWizard())
@@ -254,7 +254,7 @@ class CPPgWiz1Ports : public CDlgPageWizard
 public:
 	CPPgWiz1Ports();
 	CPPgWiz1Ports(UINT nIDTemplate, LPCTSTR pszCaption = NULL, LPCTSTR pszHeaderTitle = NULL, LPCTSTR pszHeaderSubTitle = NULL)
-		: CDlgPageWizard(nIDTemplate, pszCaption, pszHeaderTitle, pszHeaderSubTitle)
+		: CDlgPageWizard(nIDTemplate, pszCaption, pszHeaderTitle, pszHeaderSubTitle), m_pbUDPDisabled(NULL), m_nUPnPTicks(0)
 	{
 	}
 
@@ -269,7 +269,7 @@ public:
 	afx_msg void OnEnChangeUDP();
 	afx_msg void OnEnChangeTCP();
 	afx_msg void OnTimer(UINT nIDEvent);
-	
+
 	BOOL	OnKillActive();
 	void	OnOK();
 	void	OnCancel();
@@ -307,7 +307,7 @@ BEGIN_MESSAGE_MAP(CPPgWiz1Ports, CDlgPageWizard)
 END_MESSAGE_MAP()
 
 CPPgWiz1Ports::CPPgWiz1Ports()
-	: CDlgPageWizard(CPPgWiz1Ports::IDD)
+	: CDlgPageWizard(CPPgWiz1Ports::IDD), m_nUPnPTicks(0)
 {
 	m_pbUDPDisabled = NULL;
 }
@@ -348,15 +348,15 @@ uint16 CPPgWiz1Ports::GetUDPPort() {
 }
 
 void CPPgWiz1Ports::OnPortChange() {
-	
-	bool flag= (theApp.IsPortchangeAllowed() && 
-		( 
+
+	bool flag= (theApp.IsPortchangeAllowed() &&
+		(
 		(theApp.listensocket->GetConnectedPort()!=GetTCPPort()  || theApp.listensocket->GetConnectedPort()==0)
 		||
-		(theApp.clientudp->GetConnectedPort()!=GetUDPPort() || theApp.clientudp->GetConnectedPort()==0 )    
-		)	
+		(theApp.clientudp->GetConnectedPort()!=GetUDPPort() || theApp.clientudp->GetConnectedPort()==0 )
+		)
 	);
-	
+
 	GetDlgItem(IDC_STARTTEST)->EnableWindow(flag);
 }
 
@@ -453,7 +453,7 @@ BOOL CPPgWiz1Ports::OnInitDialog()
 	GetDlgItem(IDC_UDP)->EnableWindow(IsDlgButtonChecked(IDC_UDPDISABLE) == 0);
 	((CProgressCtrl*)GetDlgItem(IDC_UPNPPROGRESS))->SetRange(0, 40);
 	InitWindowStyles(this);
-	
+
 	lastudp = m_sUDP;
 
 	// disable changing ports to prevent harm
@@ -472,17 +472,17 @@ void CPPgWiz1Ports::OnEnChangeUDPDisable()
 {
 	bool disabled = IsDlgButtonChecked(IDC_UDPDISABLE)!=0;
 	GetDlgItem(IDC_UDP)->EnableWindow(!disabled);
-	
+
 	if (disabled) {
 		GetDlgItemText(IDC_UDP, lastudp);
 		GetDlgItem(IDC_UDP)->SetWindowText(_T("0"));
 	}
 	else
 		GetDlgItem(IDC_UDP)->SetWindowText(lastudp);
-	
+
 	if (m_pbUDPDisabled != NULL)
 		*m_pbUDPDisabled = disabled;
-	
+
 	OnPortChange();
 }
 
@@ -619,7 +619,7 @@ class CPPgWiz1Server : public CDlgPageWizard
 public:
 	CPPgWiz1Server();
 	CPPgWiz1Server(UINT nIDTemplate, LPCTSTR pszCaption = NULL, LPCTSTR pszHeaderTitle = NULL, LPCTSTR pszHeaderSubTitle = NULL)
-		: CDlgPageWizard(nIDTemplate, pszCaption, pszHeaderTitle, pszHeaderSubTitle)
+		: CDlgPageWizard(nIDTemplate, pszCaption, pszHeaderTitle, pszHeaderSubTitle), m_pbUDPDisabled(NULL)
 	{
 		m_iSafeServerConnect = 0;
 		m_iKademlia = 1;
@@ -815,16 +815,16 @@ BOOL FirstTimeWizard()
 
 	CPPgWiz1Ports page3(IDD_WIZ1_PORTS, GetResString(IDS_WIZ1), GetResString(IDS_PORTSCON), GetResString(IDS_PW_CONNECTION));
 	sheet.AddPage(&page3);
-	
+
 	CPPgWiz1UlPrio page4(IDD_WIZ1_ULDL_PRIO, GetResString(IDS_WIZ1), GetResString(IDS_PW_CON_DOWNLBL) + _T(" / ") + GetResString(IDS_PW_CON_UPLBL), GetResString(IDS_PRIORITY));
 	sheet.AddPage(&page4);
-	
+
 	CPPgWiz1Upload page5(IDD_WIZ1_UPLOAD, GetResString(IDS_WIZ1), GetResString(IDS_SECURITY), GetResString(IDS_OBFUSCATION));
 	sheet.AddPage(&page5);
-	
+
 	CPPgWiz1Server page6(IDD_WIZ1_SERVER, GetResString(IDS_WIZ1), GetResString(IDS_PW_SERVER), GetResString(IDS_NETWORK));
 	sheet.AddPage(&page6);
-	
+
 	CPPgWiz1End page7(IDD_WIZ1_END, GetResString(IDS_WIZ1));
 	page7.m_psp.dwFlags |= PSP_HIDEHEADER;
 	sheet.AddPage(&page7);
@@ -896,7 +896,7 @@ BOOL FirstTimeWizard()
 			theApp.listensocket->Rebind() ;
 			theApp.clientudp->Rebind();
 		}
-	
+
 	return TRUE;
 }
 

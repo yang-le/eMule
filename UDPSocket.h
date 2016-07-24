@@ -33,7 +33,7 @@ class CUDPSocketWnd : public CWnd
 {
 // Construction
 public:
-	CUDPSocketWnd() {};
+	CUDPSocketWnd() : m_pOwner(NULL) {};
 	CUDPSocket* m_pOwner;
 
 protected:
@@ -64,7 +64,7 @@ protected:
 
 private:
 	HWND m_hWndResolveMessage;
-	CUDPSocketWnd m_udpwnd;
+	CUDPSocketWnd *m_udpwnd;
 	CTypedPtrList<CPtrList, SServerDNSRequest*> m_aDNSReqs;
 
 	void SendBuffer(uint32 nIP, uint16 nPort, BYTE* pPacket, UINT uSize);

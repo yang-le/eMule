@@ -36,16 +36,20 @@ index.html: $(srcdir)/index.html.in  $(top_builddir)/config.status
 
 docsdistdir = $(PACKAGE)-doc-$(VERSION)
 
-dox: Doxyfile
+docs: Doxyfile
 	-rm -rf @DOX_DIR_HTML@ @DOX_DIR_LATEX@
 	cd $(srcdir) && doxygen Doxyfile
 
-docs: dox index.html id3lib.css
-	-rm -rf $(docsdistdir).*
-	cd $(srcdir)/@DOX_DIR_LATEX@ && \
-	make pdf && \
-	(cp *.pdf ../$(docsdistdir).pdf || true) && \
-	cp *.ps ../$(docsdistdir).ps && \
-	gzip -9 ../$(docsdistdir).ps
-	-rm -rf $(srcdir)/@DOX_DIR_LATEX@
+dox: docs
+
+# The pdf build is completely broken and has been for at least three
+# years.  Nobody seems to care, so I'm commenting this out. - Cedric
+#docs: dox index.html id3lib.css
+#	-rm -rf $(docsdistdir).*
+#	cd $(srcdir)/@DOX_DIR_LATEX@ && \
+#	make pdf && \
+#	(cp *.pdf ../$(docsdistdir).pdf || true) && \
+#	cp *.ps ../$(docsdistdir).ps && \
+#	gzip -9 ../$(docsdistdir).ps
+#	-rm -rf $(srcdir)/@DOX_DIR_LATEX@
 

@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = zlib.dsp zlib.dsw zlib.mak
+EXTRA_DIST = zlib.dsp zlib.dsw zlib.mak zlib.bpr zlib.bpf
 
 
 

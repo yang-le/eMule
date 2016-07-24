@@ -16,15 +16,13 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #pragma once
 #include "MapKey.h"
+#pragma warning(push)
 #pragma warning(disable:4516) // access-declarations are deprecated; member using-declarations provide a better alternative
 #pragma warning(disable:4244) // conversion from 'type1' to 'type2', possible loss of data
 #pragma warning(disable:4100) // unreferenced formal parameter
 #pragma warning(disable:4702) // unreachable code
-#include <crypto51/rsa.h>
-#pragma warning(default:4702) // unreachable code
-#pragma warning(default:4100) // unreferenced formal parameter
-#pragma warning(default:4244) // conversion from 'type1' to 'type2', possible loss of data
-#pragma warning(default:4516) // access-declarations are deprecated; member using-declarations provide a better alternative
+#include <cryptopp/rsa.h>
+#pragma warning(pop)
 
 #define	 MAXPUBKEYSIZE		80
 
@@ -67,8 +65,8 @@ class CClientCredits
 {
 	friend class CClientCreditsList;
 public:
-	CClientCredits(CreditStruct* in_credits);
-	CClientCredits(const uchar* key);
+	explicit CClientCredits(CreditStruct* in_credits);
+	explicit CClientCredits(const uchar* key);
 	~CClientCredits();
 
 	const uchar* GetKey() const					{return m_pCredits->abyKey;}
@@ -107,21 +105,21 @@ class CClientCreditsList
 public:
 	CClientCreditsList();
 	~CClientCreditsList();
-	
+
 			// return signature size, 0 = Failed | use sigkey param for debug only
-	uint8	CreateSignature(CClientCredits* pTarget, uchar* pachOutput, uint8 nMaxSize, uint32 ChallengeIP, uint8 byChaIPKind, CryptoPP::RSASSA_PKCS1v15_SHA_Signer* sigkey = NULL);
+	uint8	CreateSignature(CClientCredits* pTarget, uchar* pachOutput, uint8 nMaxSize, uint32 ChallengeIP, uint8 byChaIPKind, CryptoPP::RSASSA_PKCS1v15_SHA_Signer* sigkey = NULL) const;
 	bool	VerifyIdent(CClientCredits* pTarget, const uchar* pachSignature, uint8 nInputSize, uint32 dwForIP, uint8 byChaIPKind);
 
 	CClientCredits* GetCredit(const uchar* key) ;
 	void	Process();
 	uint8	GetPubKeyLen() const			{return m_nMyPublicKeyLen;}
 	byte*	GetPublicKey()					{return m_abyMyPublicKey;}
-	bool	CryptoAvailable();
+	bool	CryptoAvailable() const;
 protected:
 	void	LoadList();
 	void	SaveList();
 	void	InitalizeCrypting();
-	bool	CreateKeyPair();
+	static bool CreateKeyPair();
 #ifdef _DEBUG
 	bool	Debug_CheckCrypting();
 #endif

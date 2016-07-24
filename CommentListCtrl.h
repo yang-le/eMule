@@ -35,13 +35,23 @@ public:
 	void AddItem(const CUpDownClient* client);
 	void AddItem(const Kademlia::CEntry* entry);
 
+private:
+	enum ECols
+	{
+		colRating = 0,
+		colComment,
+		colFileName,
+		colUserName,
+		colOrigin
+	};
+
 protected:
 	struct SComment
 	{
-		SComment(const void* pClientCookie, int iRating, const CString& strComment, 
+		SComment(const void* pClientCookie, int iRating, const CString& strComment,
 			     const CString& strFileName, const CString& strUserName, int iOrigin)
-			: m_pClientCookie(pClientCookie), m_iRating(iRating), 
-			  m_strComment(strComment), m_strFileName(strFileName), 
+			: m_pClientCookie(pClientCookie), m_iRating(iRating),
+			  m_strComment(strComment), m_strFileName(strFileName),
 			  m_strUserName(strUserName), m_iOrigin(iOrigin)
 		{ }
 

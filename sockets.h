@@ -43,7 +43,7 @@ public:
 
 	void	ConnectionFailed(CServerSocket* sender);
 	void	ConnectionEstablished(CServerSocket* sender);
-	
+
 	void	ConnectToAnyServer() { ConnectToAnyServer(0, true, true); }
 	void	ConnectToAnyServer(UINT startAt, bool prioSort = false, bool isAuto = true, bool bNoCrypt = false);
 	void	ConnectToServer(CServer* toconnect, bool multiconnect = false, bool bNoCrypt = false);
@@ -57,9 +57,9 @@ public:
 	bool	SendUDPPacket(Packet* packet,CServer* host, bool delpacket = false, uint16 nSpecialPort = 0, BYTE* pRawPacket = NULL, uint32 nLen = 0);
 	void	KeepConnectionAlive();
 	bool	Disconnect();
-	bool	IsConnecting()		{ return connecting; }
-	bool	IsConnected()		{ return connected; }
-	uint32	GetClientID()		{ return clientid; }
+	bool	IsConnecting() const	{ return connecting; }
+	bool	IsConnected() const	{ return connected; }
+	uint32	GetClientID() const	{ return clientid; }
 	CServer* GetCurrentServer();
 
 	uint32	clientid;
@@ -70,9 +70,9 @@ public:
 	void	SetClientID(uint32 newid);
 	bool	IsLocalServer(uint32 dwIP, uint16 nPort);
 	void	TryAnotherConnectionRequest();
-	bool	IsSingleConnect()	{ return singleconnecting; }
+	bool	IsSingleConnect() const	{ return singleconnecting; }
 	void	InitLocalIP();
-	uint32	GetLocalIP()		{ return m_nLocalIP; }
+	uint32	GetLocalIP() const	{ return m_nLocalIP; }
 
 	bool	AwaitingTestFromIP(uint32 dwIP) const;
 	bool	IsConnectedObfuscated() const;

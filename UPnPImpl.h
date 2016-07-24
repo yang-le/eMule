@@ -36,7 +36,7 @@ class CUPnPImpl
 public:
 	CUPnPImpl();
 	virtual ~CUPnPImpl();
-	struct UPnPError : std::exception {};
+	struct UPnPError : public std::exception {};
 	enum {
 		UPNP_OK,
 		UPNP_FAILED,
@@ -49,13 +49,13 @@ public:
 	virtual void	DeletePorts() = 0;
 	virtual bool	IsReady() = 0;
 	virtual int		GetImplementationID() = 0;
-	
+
 	void			LateEnableWebServerPort(uint16 nPort); // Add Webserverport on already installed portmapping
 
 	void			SetMessageOnResult(HWND hWindow, UINT nMessageID);
 	TRISTATE		ArePortsForwarded() const								{ return m_bUPnPPortsForwarded; }
-	uint16			GetUsedTCPPort()										{ return m_nTCPPort; }
-	uint16			GetUsedUDPPort()										{ return m_nUDPPort; }	
+	uint16			GetUsedTCPPort() const									{ return m_nTCPPort; }
+	uint16			GetUsedUDPPort() const									{ return m_nUDPPort; }
 
 // Implementation
 protected:

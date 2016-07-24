@@ -176,7 +176,7 @@ private:
 	void ClearBuffer();		//Clears the receive buffer
 
 	char *m_pRecvBuffer;	//The receive buffer
-	int m_nRecvBufferLen;	//Length of the RecvBuffer
+//	int m_nRecvBufferLen;	//Length of the RecvBuffer
 	int m_nRecvBufferPos;	//Position within the receive buffer
 
 	char *m_pStrBuffer;		//Recvbuffer needed by HTTP1.1 proxy

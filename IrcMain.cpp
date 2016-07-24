@@ -47,6 +47,7 @@
 #include "StringConversion.h"
 #include "Log.h"
 #include "Exceptions.h"
+#include "opcodes.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -84,7 +85,7 @@ void CIrcMain::PreParseMessage(const char *pszBufferA)
 				iRawMessageLen -= 1;
 			else
 				ASSERT(0);
-			TRACE(_T("%s\n"), CString(pszRawMessageA, iRawMessageLen));
+			TRACE(_T("%s\n"), (LPCTSTR)CString(pszRawMessageA, iRawMessageLen));
 			ParseMessage(CString(pszRawMessageA, iRawMessageLen));
 
 			m_sPreParseBufferA = m_sPreParseBufferA.Mid(iIndex + 1);
@@ -95,57 +96,50 @@ void CIrcMain::PreParseMessage(const char *pszBufferA)
 	CATCH_DFLT_ALL(_T(__FUNCTION__))
 }
 
-void CIrcMain::ProcessLink( CString sED2KLink )
+void CIrcMain::ProcessLink(const CString& sED2KLink)
 {
-	try
-	{
+	try {
 		CString sLink = OptUtf8ToStr(URLDecode(sED2KLink));
 		CED2KLink* pLink = CED2KLink::CreateLinkFromUrl(sLink);
-		_ASSERT( pLink !=0 );
-		switch (pLink->GetKind())
+		_ASSERT(pLink !=0);
+		switch (pLink->GetKind()) {
+		case CED2KLink::kFile:
 		{
-			case CED2KLink::kFile:
-				{
-					CED2KFileLink* pFileLink = pLink->GetFileLink();
-					_ASSERT(pFileLink !=0);
-					theApp.downloadqueue->AddFileLinkToDownload(pFileLink);
-					break;
-				}
-			case CED2KLink::kServerList:
-				{
-					CED2KServerListLink* pListLink = pLink->GetServerListLink();
-					_ASSERT( pListLink !=0 );
-					CString sAddress = pListLink->GetAddress();
-					if(sAddress.GetLength() != 0)
-						theApp.emuledlg->serverwnd->UpdateServerMetFromURL(sAddress);
-					break;
-				}
-			case CED2KLink::kServer:
-				{
-					CString sDefName;
-					CED2KServerLink* pSrvLink = pLink->GetServerLink();
-					_ASSERT( pSrvLink !=0 );
-					CServer* pSrv = new CServer(pSrvLink->GetPort(), pSrvLink->GetAddress());
-					_ASSERT( pSrv !=0 );
-					pSrvLink->GetDefaultName(sDefName);
-					pSrv->SetListName(sDefName);
+			CED2KFileLink* pFileLink = pLink->GetFileLink();
+			_ASSERT(pFileLink !=0);
+			theApp.downloadqueue->AddFileLinkToDownload(pFileLink);
+			break;
+		}
+		case CED2KLink::kServerList:
+		{
+			CED2KServerListLink* pListLink = pLink->GetServerListLink();
+			_ASSERT(pListLink !=0);
+			CString sAddress = pListLink->GetAddress();
+			if (!sAddress.IsEmpty())
+				theApp.emuledlg->serverwnd->UpdateServerMetFromURL(sAddress);
+			break;
+		}
+		case CED2KLink::kServer:
+		{
+			CString sDefName;
+			CED2KServerLink* pSrvLink = pLink->GetServerLink();
+			_ASSERT(pSrvLink !=0);
+			CServer* pSrv = new CServer(pSrvLink->GetPort(), pSrvLink->GetAddress());
+			_ASSERT(pSrv !=0);
+			pSrvLink->GetDefaultName(sDefName);
+			pSrv->SetListName(sDefName);
 
-					if (thePrefs.GetManualAddedServersHighPriority())
-						pSrv->SetPreference(SRV_PR_HIGH);
+			if (thePrefs.GetManualAddedServersHighPriority())
+				pSrv->SetPreference(SRV_PR_HIGH);
 
-					if (!theApp.emuledlg->serverwnd->serverlistctrl.AddServer(pSrv,true))
-						delete pSrv;
-					else
-						AddLogLine(true,GetResString(IDS_SERVERADDED), pSrv->GetListName());
-					break;
-				}
-			default:
-				break;
+			if (!theApp.emuledlg->serverwnd->serverlistctrl.AddServer(pSrv, true))
+				delete pSrv;
+			else
+				AddLogLine(true, GetResString(IDS_SERVERADDED), (LPCTSTR)pSrv->GetListName());
+		}
 		}
 		delete pLink;
-	}
-	catch(...)
-	{
+	} catch (...) {
 		LogWarning(LOG_STATUSBAR, GetResString(IDS_LINKNOTADDED));
 		ASSERT(0);
 	}
@@ -182,21 +176,16 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 		CString sUser;
 		CString sHost;
 		if (sRawMessage[0] != _T(':'))
-		{
 			sCommand = sRawMessage.Tokenize(_T(" "), iIndex);
-		}
-		else
-		{
+		else {
 			sServername = sRawMessage.Tokenize(_T(" "), iIndex);
 			sServername.Remove(_T(':'));
 			int iPos;
-			if ((iPos = sServername.Find(_T('!'))) != -1)
-			{
+			if ((iPos = sServername.Find(_T('!'))) != -1) {
 				sNickname = sServername.Left(iPos);
 				sServername = sServername.Mid(iPos + 1);
 				iPos = sServername.Find(_T('@'));
-				if (iPos != -1)
-				{
+				if (iPos != -1) {
 					sUser = sServername.Left(iPos);
 					sHost = sServername.Mid(iPos + 1);
 				}
@@ -211,31 +200,27 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 		if (sRawMessage.IsEmpty())
 			throw CString(_T("SMIRC Errow: Received a message with no target or message."));
 
-		if (sCommand == _T("PRIVMSG"))
-		{
+		if (sCommand == _T("PRIVMSG")) {
 			CString sTarget = sRawMessage.Tokenize(_T(" "), iIndex);
 
 			// Channel and Private message were merged into this one if statement, this check allows that to happen.
-			if (sTarget.GetLength() >= 1 && sTarget[0] != _T('#'))
+			if (!sTarget.IsEmpty() && sTarget[0] != _T('#'))
 				sTarget = sNickname;
 
 			//If this is a special message.. Find out what kind..
-			if (sRawMessage.Mid(iIndex, 2) == _T(":\001"))
-			{
+			if (sRawMessage.Mid(iIndex, 2) == _T(":\001")) {
 				//Check if this is a ACTION message..
-				if( sRawMessage.Mid(iIndex, 8) == _T(":\001ACTION") )
-				{
+				if (sRawMessage.Mid(iIndex, 8) == _T(":\001ACTION")) {
 					iIndex += 8;
 					CString sMessage = sRawMessage.Mid(iIndex);
 					sMessage.Remove(_T('\001'));
 					//Channel Action..
-					m_pwndIRC->AddInfoMessageF(sTarget, _T("* %s %s"), sNickname, sMessage);
+					m_pwndIRC->AddInfoMessageCF(sTarget, RGB(156, 0, 156), _T("* %s %s"), (LPCTSTR)sNickname, (LPCTSTR)sMessage);
 					return;
 				}
 				//Check if this is a SOUND message.
-				if( sRawMessage.Mid(iIndex, 7) == _T(":\001SOUND") )
-				{	
-					if(!thePrefs.GetIRCPlaySoundEvents())
+				if (sRawMessage.Mid(iIndex, 7) == _T(":\001SOUND")) {
+					if (!thePrefs.GetIRCPlaySoundEvents())
 						return;
 					iIndex += 7;
 					CString sSound = sRawMessage.Tokenize(_T(" "), iIndex);
@@ -243,23 +228,22 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 					//Check if the there was a message to the sound.
 					CString sMessage = sRawMessage.Mid(iIndex);
 					sMessage.Remove(_T('\001'));
-					if(sMessage.IsEmpty())
+					if (sMessage.IsEmpty())
 						sMessage = _T("[SOUND]");
 					//Check for proper form.
 					sSound.Remove(_T('\\'));
 					sSound.Remove(_T('/'));
 					sSound = sSound.MakeLower();
-					if( (sSound.Right(4) != _T(".wav")) && (sSound.Right(4) != _T(".mp3")) )
+					if ((sSound.Right(4) != _T(".wav")) && (sSound.Right(4) != _T(".mp3")))
 						return;
-					sSound.Format(_T("%sSounds\\IRC\\%s"), thePrefs.GetMuleDirectory(EMULE_EXECUTEABLEDIR), sSound);
+					sSound = thePrefs.GetMuleDirectory(EMULE_EXECUTEABLEDIR) + _T("Sounds\\IRC\\") + sSound;
 					PlaySound(sSound, NULL, SND_FILENAME | SND_NOSTOP | SND_NOWAIT | SND_ASYNC);
-					m_pwndIRC->AddInfoMessageF(sTarget, _T("* %s %s"), sNickname, sMessage);
+					m_pwndIRC->AddInfoMessageF(sTarget, _T("* %s %s"), (LPCTSTR)sNickname, (LPCTSTR)sMessage);
 					return;
 				}
 				//Check if this was a VERSION message.
-				if( sRawMessage.Mid(iIndex, 9) == _T(":\001VERSION") )
-				{
-					if (::GetTickCount() - m_dwLastRequest < 1000){ // excess flood protection
+				if (sRawMessage.Mid(iIndex, 9) == _T(":\001VERSION")) {
+					if (::GetTickCount() - m_dwLastRequest < 1000) { // excess flood protection
 						m_dwLastRequest = ::GetTickCount();
 						return;
 					}
@@ -269,13 +253,12 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 					iIndex += 9;
 					m_sVersion = _T("eMule") + theApp.m_strCurVersionLong + Irc_Version;
 					CString sBuild;
-					sBuild.Format( _T("NOTICE %s :\001VERSION %s\001"), sNickname, m_sVersion );
-					m_pIRCSocket->SendString( sBuild );
+					sBuild.Format(_T("NOTICE %s :\001VERSION %s\001"), (LPCTSTR)sNickname, (LPCTSTR)m_sVersion);
+					m_pIRCSocket->SendString(sBuild);
 					return;
 				}
-				if( sRawMessage.Mid(iIndex, 6) == _T(":\001PING") )
-				{
-					if (::GetTickCount() - m_dwLastRequest < 1000){ // excess flood protection
+				if (sRawMessage.Mid(iIndex, 6) == _T(":\001PING")) {
+					if (::GetTickCount() < m_dwLastRequest + SEC2MS(1)) { // excess flood protection
 						m_dwLastRequest = ::GetTickCount();
 						return;
 					}
@@ -284,54 +267,49 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 					CString sVerify = sRawMessage.Tokenize(_T(" "), iIndex);
 					sVerify.Remove(_T('\001'));
 					CString sBuild;
-					sBuild.Format( _T("NOTICE %s :\001PING %s\001"), sNickname, sVerify );
-					m_pIRCSocket->SendString( sBuild );
+					sBuild.Format(_T("NOTICE %s :\001PING %s\001"), (LPCTSTR)sNickname, (LPCTSTR)sVerify);
+					m_pIRCSocket->SendString(sBuild);
 					return;
 				}
-				if( sRawMessage.Mid(iIndex, 11) == _T(":\001RQSFRIEND") )
-				{
-					if (::GetTickCount() - m_dwLastRequest < 1000){ // excess flood protection
+				if (sRawMessage.Mid(iIndex, 11) == _T(":\001RQSFRIEND")) {
+					if (::GetTickCount() < m_dwLastRequest + SEC2MS(1)) { // excess flood protection
 						m_dwLastRequest = ::GetTickCount();
 						return;
 					}
 					m_dwLastRequest = ::GetTickCount();
 
 					//eMule user requested to add you as friend.
-					if( !thePrefs.GetIRCAllowEmuleAddFriend() )
+					if (!thePrefs.GetIRCAllowEmuleAddFriend())
 						return;
 					iIndex += 11;
 					//Adds a little protection
 					CString sVerify = sRawMessage.Tokenize(_T("|"), iIndex);
 					CString sIP;
 					CString sPort;
-					if(theApp.serverconnect->IsConnected())
-					{
+					if (theApp.serverconnect->IsConnected()) {
 						//Tell them what server we are on for possible lowID support later.
-						sIP.Format( _T("%i"), theApp.serverconnect->GetCurrentServer()->GetIP());
-						sPort.Format( _T("%i"), theApp.serverconnect->GetCurrentServer()->GetPort());
-					}
-					else
-					{
+						sIP.Format(_T("%u"), theApp.serverconnect->GetCurrentServer()->GetIP());
+						sPort.Format(_T("%u"), theApp.serverconnect->GetCurrentServer()->GetPort());
+					} else {
 						//Not on a server.
 						sIP = _T("0.0.0.0");
 						sPort = _T("0");
 					}
 					//Create our response.
 					CString sBuild;
-					sBuild.Format(_T("PRIVMSG %s :\001REPFRIEND eMule%s%s|%s|%u:%u|%s:%s|%s|\001"), sTarget, theApp.m_strCurVersionLong, Irc_Version, sVerify, theApp.IsFirewalled() ? 0 : theApp.GetID(), thePrefs.GetPort(), sIP, sPort, md4str(thePrefs.GetUserHash()));
+					sBuild.Format(_T("PRIVMSG %s :\001REPFRIEND eMule%s%s|%s|%u:%u|%s:%s|%s|\001"), (LPCTSTR)sTarget, (LPCTSTR)theApp.m_strCurVersionLong, Irc_Version, (LPCTSTR)sVerify, theApp.IsFirewalled() ? 0 : theApp.GetID(), thePrefs.GetPort(), (LPCTSTR)sIP, (LPCTSTR)sPort, (LPCTSTR)md4str(thePrefs.GetUserHash()));
 					m_pIRCSocket->SendString(sBuild);
-					sBuild.Format(_T("%s %s"), sTarget, GetResString(IDS_IRC_ADDASFRIEND));
+					sBuild.Format(_T("%s %s"), (LPCTSTR)sTarget, (LPCTSTR)GetResString(IDS_IRC_ADDASFRIEND));
 					if (!thePrefs.GetIRCIgnoreEmuleAddFriendMsgs())
 						m_pwndIRC->NoticeMessage(_T("*EmuleProto*"), _T(""), sBuild);
 					return;
 				}
-				if( sRawMessage.Mid(iIndex, 11) == _T(":\001REPFRIEND") )
-				{
+				if (sRawMessage.Mid(iIndex, 11) == _T(":\001REPFRIEND")) {
 					iIndex += 11;
-					CString sVersion = sRawMessage.Tokenize(_T("|"), iIndex);
+/*					CString sVersion =*/ (void)sRawMessage.Tokenize(_T("|"), iIndex);
 					CString sVerify = sRawMessage.Tokenize(_T("|"), iIndex);
 					//Make sure we requested this!
-					if( m_uVerify != (UINT)_tstoi(sVerify))
+					if (m_uVerify != (UINT)_tstoi(sVerify))
 						return;
 					//Pick a new random verify.
 					SetVerify();
@@ -343,46 +321,37 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 					if (theApp.friendlist->IsAlreadyFriend(sHash))
 						return;
 					uchar ucharUserID[16];
-					if (!strmd4(sHash,ucharUserID))
-						throw CString( _T("SMIRC Error: Received Invalid friend reply") );
-					theApp.friendlist->AddFriend( ucharUserID, 0, uNewClientID, uNewClientPort, 0, sTarget, 1);
+					if (!strmd4(sHash, ucharUserID))
+						throw CString(_T("SMIRC Error: Received Invalid friend reply"));
+					theApp.friendlist->AddFriend(ucharUserID, 0, uNewClientID, uNewClientPort, 0, sTarget, 1);
 					return;
 				}
-				if( sRawMessage.Mid(iIndex, 10) == _T(":\001SENDLINK") )
-				{
+				if (sRawMessage.Mid(iIndex, 10) == _T(":\001SENDLINK")) {
 					//Received a ED2K link from someone.
 					iIndex += 10;
-					if ( !thePrefs.GetIRCAcceptLinks() )
-					{
-						if( !thePrefs.GetIRCIgnoreEmuleSendLinkMsgs() )
-						{
+					if (!thePrefs.GetIRCAcceptLinks()) {
+						if (!thePrefs.GetIRCIgnoreEmuleSendLinkMsgs())
 							m_pwndIRC->NoticeMessage(_T("*EmuleProto*"), _T(""), sTarget + _T(" attempted to send you a file. If you wanted to accept the files from this person, enable Receive files in the IRC Preferences."));
-						}
 						return;
 					}
 					CString sHash = sRawMessage.Tokenize(_T("|"), iIndex);
-					if (thePrefs.GetIRCAcceptLinksFriendsOnly() && !theApp.friendlist->IsAlreadyFriend(sHash)){
-						if( !thePrefs.GetIRCIgnoreEmuleSendLinkMsgs() )
-						{
+					if (thePrefs.GetIRCAcceptLinksFriendsOnly() && !theApp.friendlist->IsAlreadyFriend(sHash)) {
+						if (!thePrefs.GetIRCIgnoreEmuleSendLinkMsgs())
 							m_pwndIRC->NoticeMessage(_T("*EmuleProto*"), _T(""), sTarget + _T(" attempted to send you a file. If you wanted to accept the files from this person, add him as a friend or change your IRC Preferences."));
-						}
-						return;		
+						return;
 					}
 					CString sLink = sRawMessage.Mid(iIndex);
 					sLink.Remove(_T('\001'));
-					if( !sLink.IsEmpty() )
-					{
+					if (!sLink.IsEmpty()) {
 						CString sBuild;
-						sBuild.Format( GetResString(IDS_IRC_RECIEVEDLINK), sTarget, sLink );
+						sBuild.Format(GetResString(IDS_IRC_RECIEVEDLINK), (LPCTSTR)sTarget, (LPCTSTR)sLink);
 						if (!thePrefs.GetIRCIgnoreEmuleSendLinkMsgs())
 							m_pwndIRC->NoticeMessage(_T("*EmuleProto*"), _T(""), sBuild);
-						ProcessLink( sLink );
+						ProcessLink(sLink);
 					}
 					return;
 				}
-			}
-			else
-			{
+			} else {
 				//This is a normal channel message..
 				if (iIndex < sRawMessage.GetLength() && sRawMessage[iIndex] == _T(':'))
 					iIndex++;
@@ -390,75 +359,67 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 				return;
 			}
 		}
-		if( sCommand == _T("JOIN") )
-		{
+		if (sCommand == _T("JOIN")) {
 			//Channel join
 			CString sChannel = sRawMessage.Tokenize(_T(":"), iIndex);
 			//If this was you, just add a message to create a new channel..
 			//The list of Nicks received from the server will include you, so don't
 			//add yourself here.
-			if( sNickname == m_sNick )
-			{
-				m_pwndIRC->AddInfoMessageF(sChannel, GetResString(IDS_IRC_HASJOINED), sNickname, sChannel);
+			if (sNickname == m_sNick) {
+				m_pwndIRC->AddInfoMessageF(sChannel, GetResString(IDS_IRC_HASJOINED), (LPCTSTR)sNickname, (LPCTSTR)sChannel);
 				return;
 			}
 
-			if( !thePrefs.GetIRCIgnoreJoinMessages() || sNickname == m_sNick )
-				m_pwndIRC->AddInfoMessageF(sChannel, GetResString(IDS_IRC_HASJOINED), sNickname, sChannel);
+			if (!thePrefs.GetIRCIgnoreJoinMessages() || sNickname == m_sNick)
+				m_pwndIRC->AddInfoMessageF(sChannel, GetResString(IDS_IRC_HASJOINED), (LPCTSTR)sNickname, (LPCTSTR)sChannel);
 			//Add new nick to your channel.
-			m_pwndIRC->m_wndNicks.NewNick( sChannel, sNickname);
+			m_pwndIRC->m_wndNicks.NewNick(sChannel, sNickname);
 			return;
 
 		}
-		if( sCommand == _T("PART") )
-		{
+		if (sCommand == _T("PART")) {
 			//Part message
 			CString sChannel = sRawMessage.Tokenize(_T(" "), iIndex);
-			if(sRawMessage.Mid(iIndex, 1) == _T(":"))
+			if (sRawMessage.Mid(iIndex, 1) == _T(":"))
 				iIndex++;
-			if ( sNickname == m_sNick )
-			{
+			if (sNickname == m_sNick) {
 				//This was you, so remove channel.
-				m_pwndIRC->m_wndChanSel.RemoveChannel( sChannel );
+				m_pwndIRC->m_wndChanSel.RemoveChannel(sChannel);
 				return;
 			}
-			if( !thePrefs.GetIRCIgnorePartMessages() )
-				m_pwndIRC->AddInfoMessageF(sChannel, GetResString(IDS_IRC_HASPARTED), sNickname, sChannel, sRawMessage.Mid(iIndex));
+			if (!thePrefs.GetIRCIgnorePartMessages())
+				m_pwndIRC->AddInfoMessageF(sChannel, GetResString(IDS_IRC_HASPARTED), (LPCTSTR)sNickname, (LPCTSTR)sChannel, (LPCTSTR)sRawMessage.Mid(iIndex));
 			//Remove nick from your channel.
-			m_pwndIRC->m_wndNicks.RemoveNick( sChannel, sNickname );
+			m_pwndIRC->m_wndNicks.RemoveNick(sChannel, sNickname);
 			return;
 		}
 
-		if( sCommand == _T("TOPIC") )
-		{
+		if (sCommand == _T("TOPIC")) {
 			CString sChannel = sRawMessage.Tokenize(_T(" "), iIndex);
-			if(sRawMessage.Mid(iIndex, 1) == _T(":"))
+			if (sRawMessage.Mid(iIndex, 1) == _T(":"))
 				iIndex++;
 			CString sMessage = sRawMessage.Mid(iIndex);
-			m_pwndIRC->AddInfoMessageF(sChannel, _T("* %s changes topic to '%s'"), sNickname, sMessage);
-			m_pwndIRC->SetTitle( sChannel, sMessage );
+			m_pwndIRC->AddInfoMessageF(sChannel, _T("* %s changes topic to '%s'"), (LPCTSTR)sNickname, (LPCTSTR)sMessage);
+			m_pwndIRC->SetTitle(sChannel, sMessage);
 			return;
 		}
 
-		if( sCommand == _T("QUIT") )
-		{
-			if(sRawMessage.Mid(iIndex,1) == _T(":"))
+		if (sCommand == _T("QUIT")) {
+			if (sRawMessage.Mid(iIndex, 1) == _T(":"))
 				iIndex++;
 			CString sMessage = sRawMessage.Mid(iIndex);
 			//This user left the network.. Remove from all Channels..
-			m_pwndIRC->m_wndNicks.DeleteNickInAll( sNickname, sMessage );
+			m_pwndIRC->m_wndNicks.DeleteNickInAll(sNickname, sMessage);
 			return;
 		}
 
-		if( sCommand == _T("NICK") )
-		{
+		if (sCommand == _T("NICK")) {
 			// Someone changed a nick..
-			if (sRawMessage.Mid(iIndex,1) == _T(":"))
+			if (sRawMessage.Mid(iIndex, 1) == _T(":"))
 				iIndex++;
 			bool bOwnNick = false;
 			CString sNewNick = sRawMessage.Tokenize(_T(" "), iIndex);
-			if (sNickname == m_sNick)
-			{
+			if (sNickname == m_sNick) {
 				// It was you.. Update!
 				m_sNick = sNewNick;
 				thePrefs.SetIRCNick(m_sNick);
@@ -466,55 +427,50 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 			}
 			// Update new nick in all channels..
 			if (!m_pwndIRC->m_wndNicks.ChangeAllNick(sNickname, sNewNick) && bOwnNick)
-				m_pwndIRC->AddStatusF(GetResString(IDS_IRC_NOWKNOWNAS), sNickname, sNewNick);
+				m_pwndIRC->AddStatusF(GetResString(IDS_IRC_NOWKNOWNAS), (LPCTSTR)sNickname, (LPCTSTR)sNewNick);
 			return;
 		}
 
-		if( sCommand == _T("KICK") )
-		{
+		if (sCommand == _T("KICK")) {
 			//Someone was kicked from a channel..
 			CString sChannel = sRawMessage.Tokenize(_T(" "), iIndex);
 			CString sNick = sRawMessage.Tokenize(_T(" "), iIndex);
-			if(sRawMessage.Mid(iIndex,1) == _T(":"))
+			if (sRawMessage.Mid(iIndex, 1) == _T(":"))
 				iIndex++;
 
-			if( sNick == m_sNick )
-			{
+			if (sNick == m_sNick) {
 				//It was you!
-				m_pwndIRC->m_wndChanSel.RemoveChannel( sChannel );
-				m_pwndIRC->AddStatusF(GetResString(IDS_IRC_WASKICKEDBY), sNick, sNickname, sRawMessage.Mid(iIndex));
+				m_pwndIRC->m_wndChanSel.RemoveChannel(sChannel);
+				m_pwndIRC->AddStatusF(GetResString(IDS_IRC_WASKICKEDBY), (LPCTSTR)sNick, (LPCTSTR)sNickname, (LPCTSTR)sRawMessage.Mid(iIndex));
 				return;
 			}
-			if( !thePrefs.GetIRCIgnoreMiscMessages() )
-				m_pwndIRC->AddInfoMessageF(sChannel, GetResString(IDS_IRC_WASKICKEDBY), sNick, sNickname, sRawMessage.Mid(iIndex));
+			if (!thePrefs.GetIRCIgnoreMiscMessages())
+				m_pwndIRC->AddInfoMessageF(sChannel, GetResString(IDS_IRC_WASKICKEDBY), (LPCTSTR)sNick, (LPCTSTR)sNickname, (LPCTSTR)sRawMessage.Mid(iIndex));
 			//Remove nick from your channel.
-			m_pwndIRC->m_wndNicks.RemoveNick( sChannel, sNick );
+			m_pwndIRC->m_wndNicks.RemoveNick(sChannel, sNick);
 			return;
 		}
-		if( sCommand == _T("MODE") )
-		{
+		if (sCommand == _T("MODE")) {
 			//A mode was set..
 			CString sTarget = sRawMessage.Tokenize(_T(" "), iIndex);
-			if( sTarget.Left(1) == _T("#") )
-			{
+			if (sTarget.Left(1) == _T("#")) {
 				CString sCommands = sRawMessage.Tokenize(_T(" "), iIndex);
 
-				if( sCommand.IsEmpty() )
-					throw CString( _T("SMIRC Error: Received Invalid Mode change.") );
+				if (sCommand.IsEmpty())
+					throw CString(_T("SMIRC Error: Received Invalid Mode change."));
 
 				CString sParams = sRawMessage.Mid(iIndex);
-				m_pwndIRC->ParseChangeMode( sTarget, sNickname, sCommands, sParams );
+				if (sNickname.IsEmpty())
+					sNickname = sServername;
+				m_pwndIRC->ParseChangeMode(sTarget, sNickname, sCommands, sParams);
 				return;
-			}
-			else
-			{
+			} else {
 				//The server just set a server user mode that relates to no channels!
 				//Atm, we do not handle these modes.
 				return;
 			}
 		}
-		if (sCommand == _T("NOTICE"))
-		{
+		if (sCommand == _T("NOTICE")) {
 			CString sTarget = sRawMessage.Tokenize(_T(" "), iIndex);
 			if (sRawMessage.Mid(iIndex, 1) == _T(":"))
 				iIndex++;
@@ -527,9 +483,9 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 
 		//TODO: Double and trible check this.. I don't know of any 3 letter commands
 		//So I'm currently assuming it's a numberical command..
-		if( sCommand.GetLength() == 3 )
+		if (sCommand.GetLength() == 3)
 		{
-			CString sUser = sRawMessage.Tokenize(_T(" "), iIndex);
+			/*CString */sUser = sRawMessage.Tokenize(_T(" "), iIndex);
 			UINT uCommand = _tstoi(sCommand);
 			switch(uCommand)
 			{
@@ -701,6 +657,22 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 				case 312:
 				case 313:
 				case 317:
+					if (uCommand == 317) {
+						CString s = sRawMessage.Tokenize(_T(" "),iIndex)+_T(" ");
+						CTimeSpan idle(_tstoi64(sRawMessage.Tokenize(_T(" "), iIndex)));
+						if (idle.GetHours() > 0)
+							s += idle.Format("%Hhrs %Mmins %Ssecs");
+						else if (idle.GetMinutes() > 0)
+							s += idle.Format("%Mmins %Ssecs");
+						else
+							s += idle.Format("%Ssecs" );
+						s += " idle";
+						CTime signon(_tstoi64(sRawMessage.Tokenize(_T(" "), iIndex)));
+						if (signon != 0)
+							s += signon.Format(", signed on %a %b %d %H:%M:%S");
+						m_pwndIRC->AddStatus(s);
+						return;
+					}
 				case 318:
 				case 319:
 
@@ -739,7 +711,7 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 
 				case 322: {
 					CString sChannel = sRawMessage.Tokenize(_T(" "), iIndex);
-					if (sChannel.GetLength() >= 1 && sChannel[0] != _T('#'))
+					if (!sChannel.IsEmpty() && sChannel[0] != _T('#'))
 						return;
 					CString sChanNum = sRawMessage.Tokenize(_T(" "), iIndex);
 					iIndex++;
@@ -783,12 +755,12 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 				case 332: {
 					//Set Channel Topic
 					CString sChannel = sRawMessage.Tokenize(_T(" "), iIndex);
-					if (sChannel.GetLength() >= 1 && sChannel[0] != _T('#'))
+					if (!sChannel.IsEmpty() && sChannel[0] != _T('#'))
 						return;
 					if (sRawMessage.Mid(iIndex, 1) == _T(":"))
 						iIndex++;
 					m_pwndIRC->SetTitle(sChannel, sRawMessage.Mid(iIndex));
-					m_pwndIRC->AddInfoMessageF(sChannel, _T("* Channel Title: %s"), sRawMessage.Mid(iIndex));
+					m_pwndIRC->AddInfoMessageF(sChannel, _T("* Channel Title: %s"), (LPCTSTR)sRawMessage.Mid(iIndex));
 					return;
 				}
 
@@ -882,14 +854,13 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 					//"<channel> :End of NAMES list"
 				case 353: {
 					m_pwndIRC->m_wndNicks.ShowWindow(SW_HIDE);
-					CString sChannelType = sRawMessage.Tokenize(_T(" "), iIndex);
+/*					CString sChannelType =*/ (void)sRawMessage.Tokenize(_T(" "), iIndex);
 					CString sChannel = sRawMessage.Tokenize(_T(" "), iIndex);
-					if (sChannel.GetLength() >= 1 && sChannel[0] != _T('#'))
+					if (!sChannel.IsEmpty() && sChannel[0] != _T('#'))
 						return;
 					iIndex++;
 					CString sNewNick = sRawMessage.Tokenize(_T(" "), iIndex);
-					while (!sNewNick.IsEmpty())
-					{
+					while (!sNewNick.IsEmpty()) {
 						m_pwndIRC->m_wndNicks.NewNick(sChannel, sNewNick);
 						sNewNick = sRawMessage.Tokenize(_T(" "), iIndex);
 					}
@@ -1485,7 +1456,7 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 		}
 	}
 	CATCH_MFC_EXCEPTION(_T(__FUNCTION__))
-	catch(CString e)
+	catch(const CString& e)
 	{
 		m_pwndIRC->AddStatus(e);
 	}
@@ -1505,7 +1476,7 @@ void CIrcMain::SendLogin()
 
 void CIrcMain::ParsePerform()
 {
-	//We need to do the perform first and seperate from the help option.
+	//We need to do the perform first and separate from the help option.
 	//This allows you to do all your passwords and stuff before joining the
 	//help channel and to keep both options from interfering with each other.
 	try
@@ -1584,13 +1555,13 @@ void CIrcMain::Connect()
 	{
 		CString sHash = md4str(thePrefs.GetUserHash());
 		CString sIdent;
-		sIdent.Format(_T("%u%s"), thePrefs.GetLanguageID(), sHash);
+		sIdent.Format(_T("%u%s"), thePrefs.GetLanguageID(), (LPCTSTR)sHash);
 		if (m_pIRCSocket)
 			Disconnect();
 		m_pIRCSocket = new CIrcSocket(this);
 		m_sNick = thePrefs.GetIRCNick();
 		if (m_sNick.CompareNoCase(_T("emule")) == 0)
-			m_sNick.Format(_T("eMuleIRC%u-%s"), thePrefs.GetLanguageID(), sHash);
+			m_sNick.Format(_T("eMuleIRC%u-%s"), thePrefs.GetLanguageID(), (LPCTSTR)sHash);
 		m_sNick = m_sNick.Left(25);
 		m_sVersion = _T("eMule") + theApp.m_strCurVersionLong + Irc_Version;
 		m_sUser = _T("USER ") + sIdent + _T(" 8 * :") + m_sVersion;
@@ -1627,7 +1598,7 @@ void CIrcMain::SetConnectStatus(bool bConnected)
 	CATCH_DFLT_ALL(_T(__FUNCTION__))
 }
 
-int CIrcMain::SendString( CString sSend )
+int CIrcMain::SendString(const CString& sSend)
 {
 	return m_pIRCSocket->SendString(sSend);
 }

@@ -44,24 +44,24 @@ namespace {
 		_vsnprintf(bufferline, 512, fmt, argptr);
 		va_end(argptr);
 		//(Ornis+)
-		char osDate[30],osTime[30]; 
-		char temp[1024]; 
+		char osDate[30],osTime[30];
+		char temp[1024];
 		_strtime( osTime );
 		_strdate( osDate );
 		int len = _snprintf(temp,1021,"%s %s: %s",osDate,osTime,bufferline);
 		temp[len++] = 0x0d;
 		temp[len++] = 0x0a;
 		temp[len+1] = 0;
-		HANDLE hFile = CreateFile("c:\\EMSocket.log",           // open MYFILE.TXT 
-                GENERIC_WRITE,              // open for reading 
-                FILE_SHARE_READ,           // share for reading 
-                NULL,                      // no security 
-                OPEN_ALWAYS,               // existing file only 
-                FILE_ATTRIBUTE_NORMAL,     // normal file 
-                NULL);                     // no attr. template 
-  
-		if (hFile != INVALID_HANDLE_VALUE) 
-		{ 
+		HANDLE hFile = CreateFile("c:\\EMSocket.log",           // open MYFILE.TXT
+                GENERIC_WRITE,              // open for reading
+                FILE_SHARE_READ,           // share for reading
+                NULL,                      // no security
+                OPEN_ALWAYS,               // existing file only
+                FILE_ATTRIBUTE_NORMAL,     // normal file
+                NULL);                     // no attr. template
+
+		if (hFile != INVALID_HANDLE_VALUE)
+		{
 			DWORD nbBytesWritten = 0;
 			SetFilePointer(hFile, 0, NULL, FILE_END);
 			BOOL b = WriteFile(
@@ -73,7 +73,7 @@ namespace {
 			);
 			CloseHandle(hFile);
 		}
-#else 
+#else
 		//va_list argptr;
 		//va_start(argptr, fmt);
 		//va_end(argptr);
@@ -84,11 +84,13 @@ namespace {
 
 IMPLEMENT_DYNAMIC(CEMSocket, CEncryptedStreamSocket)
 
-CEMSocket::CEMSocket(void){
+CEMSocket::CEMSocket(void)
+	: lastFinishedStandard(0), pendingHeader()
+{
 	byConnected = ES_NOTCONNECTED;
 	m_uTimeOut = CONNECTION_TIMEOUT; // default timeout for ed2k sockets
 
-	// Download (pseudo) rate control	
+	// Download (pseudo) rate control
 	downloadLimit = 0;
 	downloadLimitEnable = false;
 	pendingOnReceive = false;
@@ -134,7 +136,6 @@ CEMSocket::CEMSocket(void){
     m_hasSent = false;
 	m_bUsesBigSendBuffers = false;
 	m_pPendingSendOperation = NULL;
-	// Overlapped sockets are under investigations for buggyness (heap corruption), only use for testing
 	m_bOverlappedSending = thePrefs.GetUseOverlappedSockets() && theApp.IsWinSock2Available();
 }
 
@@ -153,7 +154,7 @@ CEMSocket::~CEMSocket(){
     theApp.uploadBandwidthThrottler->RemoveFromAllQueues(this);
 
     ClearQueues();
-	RemoveAllLayers(); // deadlake PROXYSUPPORT
+	CEMSocket::RemoveAllLayers(); // deadlake PROXYSUPPORT
 	AsyncSelect(0);
 }
 
@@ -217,16 +218,14 @@ void CEMSocket::ClearQueues(){
 	EMTrace("CEMSocket::ClearQueues on %d",(SOCKET)this);
 
     sendLocker.Lock();
-	for(POSITION pos = controlpacket_queue.GetHeadPosition(); pos != NULL; )
-		delete controlpacket_queue.GetNext(pos);
-	controlpacket_queue.RemoveAll();
+	while (!controlpacket_queue.IsEmpty())
+		delete controlpacket_queue.RemoveHead();
 
-	for(POSITION pos = standartpacket_queue.GetHeadPosition(); pos != NULL; )
-		delete standartpacket_queue.GetNext(pos).packet;
-	standartpacket_queue.RemoveAll();
+	while (!standartpacket_queue.IsEmpty())
+		delete standartpacket_queue.RemoveHead().packet;
     sendLocker.Unlock();
 
-	// Download (pseudo) rate control	
+	// Download (pseudo) rate control
 	downloadLimit = 0;
 	downloadLimitEnable = false;
 	pendingOnReceive = false;
@@ -287,12 +286,12 @@ void CEMSocket::OnReceive(int nErrorCode){
 		OnError(nErrorCode);
 		return;
 	}
-	
+
 	// Check current connection state
 	if(byConnected == ES_DISCONNECTED){
 		return;
 	}
-	else {	
+	else {
 		byConnected = ES_CONNECTED; // ES_DISCONNECTED, ES_NOTCONNECTED, ES_CONNECTED
 	}
 
@@ -306,22 +305,20 @@ void CEMSocket::OnReceive(int nErrorCode){
     }
 
 	// Remark: an overflow can not occur here
-	uint32 readMax = sizeof(GlobalReadBuffer) - pendingHeaderSize; 
+	uint32 readMax = sizeof(GlobalReadBuffer) - pendingHeaderSize;
 	if(downloadLimitEnable == true && readMax > downloadLimit) {
 		readMax = downloadLimit;
 	}
 
 	// We attempt to read up to 2 megs at a time (minus whatever is in our internal read buffer)
 	uint32 ret = Receive(GlobalReadBuffer + pendingHeaderSize, readMax);
-	if(ret == SOCKET_ERROR || byConnected == ES_DISCONNECTED){
+	if(ret == (uint32)SOCKET_ERROR || byConnected == ES_DISCONNECTED)
 		return;
-	}
 
 	// Bandwidth control
-	if(downloadLimitEnable == true){
+	if(downloadLimitEnable == true)
 		// Update limit
 		downloadLimit -= GetRealReceivedBytes();
-	}
 
 	// CPU load improvement
 	// Detect if the socket's buffer is empty (or the size did match...)
@@ -345,11 +342,10 @@ void CEMSocket::OnReceive(int nErrorCode){
 
 	char *rptr = GlobalReadBuffer; // floating index initialized with begin of buffer
 	const char *rend = GlobalReadBuffer + ret; // end of buffer
-
 	// Loop, processing packets until we run out of them
-	while ((rend - rptr >= PACKET_HEADER_SIZE) || ((pendingPacket != NULL) && (rend - rptr > 0)))
+	while ((rend >= rptr + PACKET_HEADER_SIZE) || ((pendingPacket != NULL) && (rend > rptr)))
 	{
-		// Two possibilities here: 
+		// Two possibilities here:
 		//
 		// 1. There is no pending incoming packet
 		// 2. There is already a partial pending incoming packet
@@ -357,20 +353,20 @@ void CEMSocket::OnReceive(int nErrorCode){
 		// It's important to remember that emule exchange two kinds of packet
 		// - The control packet
 		// - The data packet for the transport of the block
-		// 
-		// The biggest part of the traffic is done with the data packets. 
+		//
+		// The biggest part of the traffic is done with the data packets.
 		// The default size of one block is 10240 bytes (or less if compressed), but the
 		// maximal size for one packet on the network is 1300 bytes. It's the reason
-		// why most of the Blocks are splitted before to be sent. 
+		// why most of the Blocks are splitted before to be sent.
 		//
-		// Conclusion: When the download limit is disabled, this method can be at least 
-		// called 8 times (10240/1300) by the lower layer before a splitted packet is 
+		// Conclusion: When the download limit is disabled, this method can be at least
+		// called 8 times (10240/1300) by the lower layer before a splitted packet is
 		// rebuild and transferred to the above layer for processing.
 		//
 		// The purpose of this algorithm is to limit the amount of data exchanged between buffers
 
 		if(pendingPacket == NULL){
-			pendingPacket = new Packet(rptr); // Create new packet container. 
+			pendingPacket = new Packet(rptr); // Create new packet container.
 			rptr += 6;                        // Only the header is initialized so far
 
 			// Bugfix We still need to check for a valid protocol
@@ -403,25 +399,25 @@ void CEMSocket::OnReceive(int nErrorCode){
 
 		// Bytes ready to be copied into packet's internal buffer
 		ASSERT(rptr <= rend);
-		uint32 toCopy = ((pendingPacket->size - pendingPacketSize) < (uint32)(rend - rptr)) ? 
+		uint32 toCopy = ((pendingPacket->size - pendingPacketSize) < (uint32)(rend - rptr)) ?
 			             (pendingPacket->size - pendingPacketSize) : (uint32)(rend - rptr);
 
 		// Copy Bytes from Global buffer to packet's internal buffer
 		memcpy(&pendingPacket->pBuffer[pendingPacketSize], rptr, toCopy);
 		pendingPacketSize += toCopy;
 		rptr += toCopy;
-		
-		// Check if packet is complet
+
+		// Check if packet is complete
 		ASSERT(pendingPacket->size >= pendingPacketSize);
 		if(pendingPacket->size == pendingPacketSize){
 #ifdef EMSOCKET_DEBUG
-			EMTrace("CEMSocket::PacketReceived on %d, opcode=%X, realSize=%d", 
+			EMTrace("CEMSocket::PacketReceived on %d, opcode=%X, realSize=%d",
 				    (SOCKET)this, pendingPacket->opcode, pendingPacket->GetRealPacketSize());
 #endif
 
 			// Process packet
 			bool bPacketResult = PacketReceived(pendingPacket);
-			delete pendingPacket;	
+			delete pendingPacket;
 			pendingPacket = NULL;
 			pendingPacketSize = 0;
 
@@ -437,13 +433,13 @@ void CEMSocket::OnReceive(int nErrorCode){
 		// Keep the partial head
 		pendingHeaderSize = rend - rptr;
 		memcpy(pendingHeader, rptr, pendingHeaderSize);
-	}	
+	}
 }
 
-void CEMSocket::SetDownloadLimit(uint32 limit){	
+void CEMSocket::SetDownloadLimit(uint32 limit){
 	downloadLimit = limit;
-	downloadLimitEnable = true;	
-	
+	downloadLimitEnable = true;
+
 	// CPU load improvement
 	if(limit > 0 && pendingOnReceive == true){
 		OnReceive(0);
@@ -605,7 +601,7 @@ void CEMSocket::OnSend(int nErrorCode){
 //void CEMSocket::StoppedSendSoUpdateStats() {
 //    if(m_startSendTick > 0) {
 //        m_lastSendLatency = ::GetTickCount()-m_startSendTick;
-//        
+//
 //        if(m_lastSendLatency > 0) {
 //            if(m_wasBlocked == true) {
 //                SocketTransferStats newLatencyStat = { m_lastSendLatency, ::GetTickCount() };
@@ -756,7 +752,7 @@ SocketSentBytes CEMSocket::SendStd(uint32 maxNumberOfBytesToSend, uint32 minFrag
                         tosend = nextFragMaxBytesToSent-(sentStandardPacketBytesThisCall + sentControlPacketBytesThisCall);
                 }
 		        ASSERT (tosend != 0 && tosend <= sendblen-sent);
-        		
+
                 //DWORD tempStartSendTick = ::GetTickCount();
 
                 lastSent = ::GetTickCount();
@@ -855,7 +851,7 @@ SocketSentBytes CEMSocket::SendOv(uint32 maxNumberOfBytesToSend, uint32 minFragS
     bool anErrorHasOccured = false;
     uint32 sentStandardPacketBytesThisCall = 0;
     uint32 sentControlPacketBytesThisCall = 0;
-    
+
 	if(byConnected == ES_CONNECTED && IsEncryptionLayerReady() && !IsBusyExtensiveCheck() && maxNumberOfBytesToSend > 0) {
         if(minFragSize < 1) {
             minFragSize = 1;
@@ -874,7 +870,7 @@ SocketSentBytes CEMSocket::SendOv(uint32 maxNumberOfBytesToSend, uint32 minFragS
 			// first send the existing sendbuffer (already started packet)
 			if (sendbuffer != NULL)
 			{
-				WSABUF pCurBuf;;
+				WSABUF pCurBuf;
 				pCurBuf.len = min(sendblen - sent, (uint32)nBytesLeft);
 				pCurBuf.buf = new CHAR[pCurBuf.len];
 				memcpy(pCurBuf.buf, sendbuffer + sent, pCurBuf.len);
@@ -921,7 +917,7 @@ SocketSentBytes CEMSocket::SendOv(uint32 maxNumberOfBytesToSend, uint32 minFragS
 				WSABUF pCurBuf;
 				Packet* curPacket = queueEntry.packet;
 				m_currentPackageIsFromPartFile = curPacket->IsFromPF();
-				
+
 				// can we send it right away or only a part of it?
 				if (queueEntry.packet->GetRealPacketSize() <= (uint32)nBytesLeft)
 				{
@@ -973,7 +969,7 @@ SocketSentBytes CEMSocket::SendOv(uint32 maxNumberOfBytesToSend, uint32 minFragS
 				if (nError != WSA_IO_PENDING)
 				{
 					anErrorHasOccured = true;
-					theApp.QueueDebugLogLineEx(ERROR, _T("WSASend() Error: %u, %s"), nError, GetErrorMessage(nError));
+					theApp.QueueDebugLogLineEx(ERROR, _T("WSASend() Error: %u, %s"), nError, (LPCTSTR)GetErrorMessage(nError));
 				}
 			}
 		}
@@ -1003,7 +999,7 @@ uint32 CEMSocket::GetNextFragSize(uint32 current, uint32 minFragSize) {
 
 /**
  * Decides the (minimum) amount the socket needs to send to prevent timeout.
- * 
+ *
  * @author SlugFiller
  */
 uint32 CEMSocket::GetNeededBytes() {
@@ -1084,33 +1080,33 @@ int CEMSocket::Receive(void* lpBuf, int nBufLen, int nFlags)
 			ASSERT(true);
 			EMTrace("CEMSocket::OnReceive:The socket %d received a net down error",(SOCKET)this);
 			break;
-		case WSAENOTCONN: // The socket is not connected. 
+		case WSAENOTCONN: // The socket is not connected.
 			EMTrace("CEMSocket::OnReceive:The socket %d is not connected",(SOCKET)this);
 			break;
-		case WSAEINPROGRESS:   // A blocking Windows Sockets operation is in progress. 
+		case WSAEINPROGRESS:   // A blocking Windows Sockets operation is in progress.
 			EMTrace("CEMSocket::OnReceive:The socket %d is blocked",(SOCKET)this);
 			break;
-		case WSAEWOULDBLOCK:   // The socket is marked as nonblocking and the Receive operation would block. 
+		case WSAEWOULDBLOCK:   // The socket is marked as nonblocking and the Receive operation would block.
 			EMTrace("CEMSocket::OnReceive:The socket %d would block",(SOCKET)this);
 			break;
-		case WSAENOTSOCK:   // The descriptor is not a socket. 
+		case WSAENOTSOCK:   // The descriptor is not a socket.
 			EMTrace("CEMSocket::OnReceive:The descriptor %d is not a socket (may have been closed or never created)",(SOCKET)this);
 			break;
-		case WSAEOPNOTSUPP:  // MSG_OOB was specified, but the socket is not of type SOCK_STREAM. 
+		case WSAEOPNOTSUPP:  // MSG_OOB was specified, but the socket is not of type SOCK_STREAM.
 			break;
-		case WSAESHUTDOWN:   // The socket has been shut down; it is not possible to call Receive on a socket after ShutDown has been invoked with nHow set to 0 or 2. 
+		case WSAESHUTDOWN:   // The socket has been shut down; it is not possible to call Receive on a socket after ShutDown has been invoked with nHow set to 0 or 2.
 			EMTrace("CEMSocket::OnReceive:The socket %d has been shut down",(SOCKET)this);
 			break;
-		case WSAEMSGSIZE:   // The datagram was too large to fit into the specified buffer and was truncated. 
+		case WSAEMSGSIZE:   // The datagram was too large to fit into the specified buffer and was truncated.
 			EMTrace("CEMSocket::OnReceive:The datagram was too large to fit and was truncated (socket %d)",(SOCKET)this);
 			break;
-		case WSAEINVAL:   // The socket has not been bound with Bind. 
+		case WSAEINVAL:   // The socket has not been bound with Bind.
 			EMTrace("CEMSocket::OnReceive:The socket %d has not been bound",(SOCKET)this);
 			break;
-		case WSAECONNABORTED:   // The virtual circuit was aborted due to timeout or other failure. 
+		case WSAECONNABORTED:   // The virtual circuit was aborted due to timeout or other failure.
 			EMTrace("CEMSocket::OnReceive:The socket %d has not been bound",(SOCKET)this);
 			break;
-		case WSAECONNRESET:   // The virtual circuit was reset by the remote side. 
+		case WSAECONNRESET:   // The virtual circuit was reset by the remote side.
 			EMTrace("CEMSocket::OnReceive:The socket %d has not been bound",(SOCKET)this);
 			break;
 		default:
@@ -1178,7 +1174,7 @@ int CEMSocket::OnLayerCallback(const CAsyncSocketExLayer *pLayer, int nType, int
 					break;
 				default:
 					m_strLastProxyError = GetProxyError(nCode);
-					LogWarning(false, _T("Proxy-Error: %s"), m_strLastProxyError);
+					LogWarning(LOG_DEFAULT, _T("Proxy-Error: %s"), (LPCTSTR)m_strLastProxyError);
 			}
 		}
 	}
@@ -1199,9 +1195,8 @@ void CEMSocket::TruncateQueues() {
 
     // Clear the standard queue totally
     // Please note! There may still be a standardpacket in the sendbuffer variable!
-	for(POSITION pos = standartpacket_queue.GetHeadPosition(); pos != NULL; )
-		delete standartpacket_queue.GetNext(pos).packet;
-	standartpacket_queue.RemoveAll();
+	while (!standartpacket_queue.IsEmpty())
+		delete standartpacket_queue.RemoveHead().packet;
 
     sendLocker.Unlock();
 }
@@ -1292,59 +1287,52 @@ CString CEMSocket::GetFullErrorMessage(DWORD nErrorCode)
 bool CEMSocket::UseBigSendBuffer()
 {
 #define BIGSIZE 128 * 1024
-	if (m_bUsesBigSendBuffers)
-		return true;
-	m_bUsesBigSendBuffers = true;
-    int val = BIGSIZE;
-    int vallen = sizeof(int);
-	int oldval = 0;
-	GetSockOpt(SO_SNDBUF, &oldval, &vallen);
-	if (val > oldval)
-		SetSockOpt(SO_SNDBUF, &val, sizeof(int));
-	val = 0;
-	vallen = sizeof(int);
-	GetSockOpt(SO_SNDBUF, &val, &vallen);
+
+	if (!m_bUsesBigSendBuffers) {
+		m_bUsesBigSendBuffers = true;
+		int val = BIGSIZE;
+		int oldval = 0;
+		int vallen = sizeof(oldval);
+		GetSockOpt(SO_SNDBUF, &oldval, &vallen);
+		if (val > oldval) {
+			SetSockOpt(SO_SNDBUF, &val, sizeof(val));
+			val = 0;
+			vallen = sizeof(val);
+			GetSockOpt(SO_SNDBUF, &val, &vallen);
+			m_bUsesBigSendBuffers = (val >= BIGSIZE);
 #if defined(_DEBUG) || defined(_BETA) || defined(_DEVBUILD)
-	if (val == BIGSIZE)
-		theApp.QueueDebugLogLine(false, _T("Increased Sendbuffer for uploading socket from %uKB to %uKB"), oldval/1024, val/1024);
-	else
-		theApp.QueueDebugLogLine(false, _T("Failed to increase Sendbuffer for uploading socket, stays at %uKB"), oldval/1024);
+			if (m_bUsesBigSendBuffers)
+				theApp.QueueDebugLogLine(false, _T("Increased Sendbuffer for uploading socket from %uKB to %uKB"), oldval / 1024, val / 1024);
+			else
+				theApp.QueueDebugLogLine(false, _T("Failed to increase Sendbuffer for uploading socket, stays at %uKB"), oldval / 1024);
 #endif
-	return val == BIGSIZE;
+		}
+	}
+	return m_bUsesBigSendBuffers;
 }
 
 bool CEMSocket::IsBusyExtensiveCheck()
 {
-	
 	if (!m_bOverlappedSending)
 		return m_bBusy;
 
 	CSingleLock lockSend(&sendLocker, TRUE);
 	if (m_pPendingSendOperation == NULL)
 		return false;
-	else
+	DWORD dwTransferred = 0;
+	DWORD dwFlags;
+	if (WSAGetOverlappedResult(GetSocketHandle(), m_pPendingSendOperation, &dwTransferred, FALSE, &dwFlags))
 	{
-		DWORD dwTransferred = 0;
-		DWORD dwFlags;
-		if (WSAGetOverlappedResult(GetSocketHandle(), m_pPendingSendOperation, &dwTransferred, FALSE, &dwFlags) == TRUE)
-		{
-			CleanUpOverlappedSendOperation(false);
-			OnSend(0);
-			return false;
-		}
-		else
-		{
-			int nError = WSAGetLastError();
-			if (nError == WSA_IO_INCOMPLETE)
-				return true;
-			else
-			{
-				CleanUpOverlappedSendOperation(false);
-				theApp.QueueDebugLogLineEx(LOG_ERROR, _T("WSAGetOverlappedResult return error: %s"), GetErrorMessage(nError));
-				return false;
-			}
-		}
+		CleanUpOverlappedSendOperation(false);
+		OnSend(0);
+		return false;
 	}
+	int nError = WSAGetLastError();
+	if (nError == WSA_IO_INCOMPLETE)
+		return true;
+	CleanUpOverlappedSendOperation(false);
+	theApp.QueueDebugLogLineEx(LOG_ERROR, _T("WSAGetOverlappedResult return error: %s"), (LPCTSTR)GetErrorMessage(nError));
+	return false;
 }
 
 // won't always deliver the proper result (sometimes reports busy even if it isn't anymore and thread related errors) but doesn't needs locks or function calls
@@ -1352,7 +1340,7 @@ bool CEMSocket::IsBusyQuickCheck() const
 {
 	if (!m_bOverlappedSending)
 		return m_bBusy;
-	else 
+	else
 		return m_pPendingSendOperation != NULL;
 }
 
@@ -1370,25 +1358,24 @@ void CEMSocket::CleanUpOverlappedSendOperation(bool bCancelRequestFirst)
 			WSABUF pDel = m_aBufferSend[i];
 			delete[] pDel.buf;
 		}
-		 m_aBufferSend.RemoveAll();
+		m_aBufferSend.RemoveAll();
 	}
 }
 
 bool CEMSocket::HasQueues(bool bOnlyStandardPackets) const
 {
 	// not trustworthy threaded? but it's ok if we don't get the correct result now and then
-	return sendbuffer || standartpacket_queue.GetCount() > 0 || (controlpacket_queue.GetCount() > 0 && !bOnlyStandardPackets);
-} 
+	return sendbuffer || !standartpacket_queue.IsEmpty() || !controlpacket_queue.IsEmpty() && !bOnlyStandardPackets;
+}
 
 bool CEMSocket::IsEnoughFileDataQueued(uint32 nMinFilePayloadBytes) const
 {
 	// check we have at least nMinFilePayloadBytes Payload data in our standardqueue
-	for (POSITION pos = standartpacket_queue.GetHeadPosition(); pos != NULL; standartpacket_queue.GetNext(pos))
-	{
-		if (standartpacket_queue.GetAt(pos).actualPayloadSize > nMinFilePayloadBytes)
+	for (POSITION pos = standartpacket_queue.GetHeadPosition(); pos != NULL;) {
+		uint32 actualsize = standartpacket_queue.GetNext(pos).actualPayloadSize;
+		if (actualsize > nMinFilePayloadBytes)
 			return true;
-		else
-			nMinFilePayloadBytes -= standartpacket_queue.GetAt(pos).actualPayloadSize;
+		nMinFilePayloadBytes -= actualsize;
 	}
 	return false;
 }

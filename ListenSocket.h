@@ -20,9 +20,9 @@
 class CUpDownClient;
 class CPacket;
 class CTimerWnd;
-enum EDebugLogPriority;
+enum EDebugLogPriority: int;
 
-enum SocketState 
+enum SocketState
 {
 	SS_Other,		//These are sockets we created that may or may not be used.. Or incoming connections.
 	SS_Half,		//These are sockets that we called ->connect(..) and waiting for some kind of response.
@@ -35,16 +35,16 @@ class CClientReqSocket : public CEMSocket
 	DECLARE_DYNCREATE(CClientReqSocket)
 
 public:
-	CClientReqSocket(CUpDownClient* in_client = NULL);
+	explicit CClientReqSocket(CUpDownClient* in_client = NULL);
 
 	void	SetClient(CUpDownClient* pClient);
 	void	Disconnect(LPCTSTR pszReason);
 	void	WaitForOnConnect();
 	void	ResetTimeOutTimer();
 	bool	CheckTimeOut();
-	virtual UINT GetTimeOut();
+	virtual UINT GetTimeOut() const;
 	virtual void Safe_Delete();
-	
+
 	bool	Create();
 	virtual void SendPacket(Packet* packet, bool delpacket = true, bool controlpacket = true, uint32 actualPayloadSize = 0, bool bForceImmediateSend = false);
     virtual SocketSentBytes SendControlData(uint32 maxNumberOfBytesToSend, uint32 overchargeMaxBytesToSend);

@@ -20,7 +20,7 @@ class CHttpDownloadDlg : public CDialog
 {
 public:
 //Constructors / Destructors
-	CHttpDownloadDlg(CWnd* pParent = NULL);
+	explicit CHttpDownloadDlg(CWnd* pParent = NULL);
 
 //Public Member variables
 	CString m_strTitle;
@@ -63,14 +63,14 @@ protected:
 						  LPVOID lpvStatusInformation, DWORD dwStatusInformationLength);
 	CString GetStatusInfo(LPVOID lpvStatusInformation, DWORD dwStatusInformationLength);
 	static UINT _DownloadThread(LPVOID pParam);
-	void HandleThreadErrorWithLastError(CString strIDError, DWORD dwLastError = 0);
-	void HandleThreadError(CString strIDError);
+	void HandleThreadErrorWithLastError(const CString& strIDError, DWORD dwLastError = 0);
+	void HandleThreadError(const CString& strIDError);
 	void DownloadThread();
 	void SetPercentage(int nPercentage);
 	void SetTimeLeft(DWORD dwSecondsLeft, DWORD dwBytesRead, DWORD dwFileSize);
 	void SetProgressRange(DWORD dwFileSize);
 	void SetStatus(const CString& sCaption);
-	void SetStatus(CString strFmt, LPCTSTR lpsz1);
+	void SetStatus(const CString& strFmt, LPCTSTR lpsz1);
 	void SetTransferRate(double KbPerSecond);
 	void PlayAnimation();
 	void SetProgress(DWORD dwBytesRead);

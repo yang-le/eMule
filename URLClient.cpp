@@ -149,7 +149,7 @@ bool CUrlClient::SendHttpBlockRequests()
         SwapToAnotherFile(_T("A4AF for NNP file. UrlClient::SendHttpBlockRequests()"), true, false, false, NULL, true, true);
 		return false;
 	}
-	
+
 	POSITION pos = m_PendingBlocks_list.GetHeadPosition();
 	Pending_Block_Struct* pending = m_PendingBlocks_list.GetNext(pos);
 	m_uReqStart = pending->block->StartOffset;
@@ -174,15 +174,15 @@ bool CUrlClient::SendHttpBlockRequests()
 	m_nUrlStartPos = m_uReqStart;
 
 	CStringA strHttpRequest;
-	strHttpRequest.AppendFormat("GET %s HTTP/1.0\r\n", m_strUrlPath);
+	strHttpRequest.AppendFormat("GET %s HTTP/1.0\r\n", (LPCSTR)m_strUrlPath);
 	strHttpRequest.AppendFormat("Accept: */*\r\n");
 	strHttpRequest.AppendFormat("Range: bytes=%I64u-%I64u\r\n", m_uReqStart, m_uReqEnd);
 	strHttpRequest.AppendFormat("Connection: Keep-Alive\r\n");
-	strHttpRequest.AppendFormat("Host: %s\r\n", m_strHostA);
+	strHttpRequest.AppendFormat("Host: %s\r\n", (LPCSTR)m_strHostA);
 	strHttpRequest.AppendFormat("\r\n");
 
 	if (thePrefs.GetDebugClientTCPLevel() > 0)
-		Debug(_T("Sending HTTP request:\n%hs"), strHttpRequest);
+		Debug(_T("Sending HTTP request:\n%hs"), (LPCSTR)strHttpRequest);
 	CRawPacket* pHttpPacket = new CRawPacket(strHttpRequest);
 	theStats.AddUpDataOverheadFileRequest(pHttpPacket->size);
 	socket->SendPacket(pHttpPacket);
@@ -199,7 +199,7 @@ void CUrlClient::Connect()
 {
 	if (GetConnectIP() != 0 && GetConnectIP() != INADDR_NONE){
 		CUpDownClient::Connect();
-		return; 
+		return;
 	}
 	//Try to always tell the socket to WaitForOnConnect before you call Connect.
 	socket->WaitForOnConnect();
@@ -248,19 +248,19 @@ bool CUrlClient::ProcessHttpDownResponse(const CStringAArray& astrHeaders)
 {
 	if (reqfile == NULL)
 		throw CString(_T("Failed to process received HTTP data block - No 'reqfile' attached"));
-	if (astrHeaders.GetCount() == 0)
+	if (astrHeaders.IsEmpty())
 		throw CString(_T("Unexpected HTTP response - No headers available"));
 
-	const CStringA& rstrHdr = astrHeaders.GetAt(0);
+	const CStringA& rstrHdr = astrHeaders[0];
 	UINT uHttpMajVer, uHttpMinVer, uHttpStatusCode;
 	if (sscanf(rstrHdr, "HTTP/%u.%u %u", &uHttpMajVer, &uHttpMinVer, &uHttpStatusCode) != 3){
 		CString strError;
-		strError.Format(_T("Unexpected HTTP response: \"%hs\""), rstrHdr);
+		strError.Format(_T("Unexpected HTTP response: \"%hs\""), (LPCSTR)rstrHdr);
 		throw strError;
 	}
 	if (uHttpMajVer != 1 || (uHttpMinVer != 0 && uHttpMinVer != 1)){
 		CString strError;
-		strError.Format(_T("Unexpected HTTP version: \"%hs\""), rstrHdr);
+		strError.Format(_T("Unexpected HTTP version: \"%hs\""), (LPCSTR)rstrHdr);
 		throw strError;
 	}
 	bool bExpectData = uHttpStatusCode == HTTP_STATUS_OK || uHttpStatusCode == HTTP_STATUS_PARTIAL_CONTENT;
@@ -275,46 +275,46 @@ bool CUrlClient::ProcessHttpDownResponse(const CStringAArray& astrHeaders)
 	bool bValidContentRange = false;
 	for (int i = 1; i < astrHeaders.GetCount(); i++)
 	{
-		const CStringA& rstrHdr = astrHeaders.GetAt(i);
-		if (bExpectData && _strnicmp(rstrHdr, "Content-Length:", 15) == 0)
+		const CStringA& rstrHdr1 = astrHeaders[i];
+		if (bExpectData && _strnicmp(rstrHdr1, "Content-Length:", 15) == 0)
 		{
-			uint64 uContentLength = _atoi64((LPCSTR)rstrHdr + 15);
+			uint64 uContentLength = _atoi64((LPCSTR)rstrHdr1 + 15);
 			if (uContentLength != m_uReqEnd - m_uReqStart + 1){
 				if (uContentLength != reqfile->GetFileSize()){ // tolerate this case only
 					CString strError;
-					strError.Format(_T("Unexpected HTTP header field \"%hs\""), rstrHdr);
+					strError.Format(_T("Unexpected HTTP header field \"%hs\""), (LPCSTR)rstrHdr1);
 					throw strError;
 				}
-				TRACE("+++ Unexpected HTTP header field \"%s\"\n", rstrHdr);
+				TRACE("+++ Unexpected HTTP header field \"%s\"\n", (LPCSTR)rstrHdr1);
 			}
 		}
-		else if (bExpectData && _strnicmp(rstrHdr, "Content-Range:", 14) == 0)
+		else if (bExpectData && _strnicmp(rstrHdr1, "Content-Range:", 14) == 0)
 		{
 			uint64 ui64Start = 0, ui64End = 0, ui64Len = 0;
-			if (sscanf((LPCSTR)rstrHdr + 14," bytes %I64u - %I64u / %I64u", &ui64Start, &ui64End, &ui64Len) != 3){
+			if (sscanf((LPCSTR)rstrHdr1 + 14," bytes %I64u - %I64u / %I64u", &ui64Start, &ui64End, &ui64Len) != 3) {
 				CString strError;
-				strError.Format(_T("Unexpected HTTP header field \"%hs\""), rstrHdr);
+				strError.Format(_T("Unexpected HTTP header field \"%hs\""), (LPCSTR)rstrHdr1);
 				throw strError;
 			}
 
 			if (ui64Start != m_uReqStart || ui64End != m_uReqEnd || ui64Len != reqfile->GetFileSize()){
 				CString strError;
-				strError.Format(_T("Unexpected HTTP header field \"%hs\""), rstrHdr);
+				strError.Format(_T("Unexpected HTTP header field \"%hs\""), (LPCSTR)rstrHdr1);
 				throw strError;
 			}
 			bValidContentRange = true;
 		}
-		else if (_strnicmp(rstrHdr, "Server:", 7) == 0)
+		else if (_strnicmp(rstrHdr1, "Server:", 7) == 0)
 		{
 			if (m_strClientSoftware.IsEmpty())
-				m_strClientSoftware = rstrHdr.Mid(7).Trim();
+				m_strClientSoftware = rstrHdr1.Mid(7).Trim();
 		}
-		else if (bRedirection && _strnicmp(rstrHdr, "Location:", 9) == 0)
+		else if (bRedirection && _strnicmp(rstrHdr1, "Location:", 9) == 0)
 		{
-			CString strLocation(rstrHdr.Mid(9).Trim());
+			CString strLocation(rstrHdr1.Mid(9).Trim());
 			if (!SetUrl(strLocation)){
 				CString strError;
-				strError.Format(_T("Failed to process HTTP redirection URL \"%s\""), strLocation);
+				strError.Format(_T("Failed to process HTTP redirection URL \"%s\""), (LPCTSTR)strLocation);
 				throw strError;
 			}
 			bNewLocation = true;
@@ -331,7 +331,7 @@ bool CUrlClient::ProcessHttpDownResponse(const CStringAArray& astrHeaders)
 		socket->Safe_Delete();		// mark our parent object for getting deleted!
 		if (!TryToConnect(true))	// replace our parent object with a new one
 			throw CString(_T("Failed to connect to redirected URL"));
-		return false;				// tell our old parent object (which was marked as to get deleted 
+		return false;				// tell our old parent object (which was marked as to get deleted
 									// and which is no longer attached to us) to disconnect.
 	}
 
@@ -376,7 +376,7 @@ void CUpDownClient::ProcessHttpBlockPacket(const BYTE* pucData, UINT uSize)
 	m_nUrlStartPos += uSize;
 
 //	if (thePrefs.GetDebugClientTCPLevel() > 0)
-//		Debug("  Start=%I64u  End=%I64u  Size=%u  %s\n", nStartPos, nEndPos, size, DbgGetFileInfo(reqfile->GetFileHash()));
+//		Debug("  Start=%I64u  End=%I64u  Size=%u  %s\n", nStartPos, nEndPos, size, (LPCTSTR)DbgGetFileInfo(reqfile->GetFileHash()));
 
 	if (!(GetDownloadState() == DS_DOWNLOADING || GetDownloadState() == DS_NONEEDEDPARTS))
 		throw CString(_T("Failed to process HTTP data block - Invalid download state"));
@@ -401,7 +401,7 @@ void CUpDownClient::ProcessHttpBlockPacket(const BYTE* pucData, UINT uSize)
 			if (thePrefs.GetDebugClientTCPLevel() > 0){
 				// NOTE: 'Left' is only accurate in case we have one(!) request block!
 				void* p = m_pPCDownSocket ? (void*)m_pPCDownSocket : (void*)socket;
-				Debug(_T("%08x  Start=%I64u  End=%I64u  Size=%u  Left=%I64u  %s\n"), p, nStartPos, nEndPos, uSize, cur_block->block->EndOffset - (nStartPos + uSize) + 1, DbgGetFileInfo(reqfile->GetFileHash()));
+				Debug(_T("%08x  Start=%I64u  End=%I64u  Size=%u  Left=%I64u  %s\n"), p, nStartPos, nEndPos, uSize, cur_block->block->EndOffset - (nStartPos + uSize) + 1, (LPCTSTR)DbgGetFileInfo(reqfile->GetFileHash()));
 			}
 
 			m_nLastBlockOffset = nStartPos;

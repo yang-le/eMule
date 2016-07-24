@@ -1,7 +1,8 @@
-// $Id: field_string_unicode.cpp,v 1.33 2003/03/02 14:23:58 t1mpy Exp $
+// $Id: field_string_unicode.cpp,v 1.33 2002/09/13 15:38:34 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
+// Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
 
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Library General Public License as published by
@@ -50,7 +51,7 @@ size_t ID3_FieldImpl::Set(const unicode_t* data)
 {
   size_t size = 0;
   if (this->GetType() == ID3FTY_TEXTSTRING &&
-      this->GetEncoding() == ID3TE_UNICODE && data)
+      ID3TE_IS_DOUBLE_BYTE_ENC(this->GetEncoding()))
   {
     String text((const char*) data, ucslen(data) * 2);
     size = this->SetText_i(text);
@@ -62,7 +63,7 @@ size_t ID3_FieldImpl::Add(const unicode_t* data)
 {
   size_t size = 0;
   if (this->GetType() == ID3FTY_TEXTSTRING &&
-      this->GetEncoding() == ID3TE_UNICODE)
+      ID3TE_IS_DOUBLE_BYTE_ENC(this->GetEncoding()))
   {
     String text((const char*) data, ucslen(data) * 2);
     size = this->AddText_i(text);
@@ -94,11 +95,11 @@ size_t ID3_FieldImpl::Get(unicode_t *buffer, size_t maxLength) const
 {
   size_t length = 0;
   if (this->GetType() == ID3FTY_TEXTSTRING &&
-      this->GetEncoding() == ID3TE_UNICODE &&
-      buffer != NULL && maxLength > 0)
+    ID3TE_IS_DOUBLE_BYTE_ENC(this->GetEncoding()) &&
+    buffer != NULL && maxLength > 0)
   {
     size_t size = this->Size();
-    length = dami::min(maxLength, size);
+    length = min(maxLength, size);
     ::memcpy((void *)buffer, (void *)_text.data(), length * 2);
     if (length < maxLength)
     {
@@ -112,7 +113,7 @@ const unicode_t* ID3_FieldImpl::GetRawUnicodeText() const
 {
   const unicode_t* text = NULL;
   if (this->GetType() == ID3FTY_TEXTSTRING &&
-      this->GetEncoding() == ID3TE_UNICODE)
+      ID3TE_IS_DOUBLE_BYTE_ENC(this->GetEncoding()))
   {
     text = (unicode_t *)_text.data();
   }
@@ -123,7 +124,7 @@ const unicode_t* ID3_FieldImpl::GetRawUnicodeTextItem(size_t index) const
 {
   const unicode_t* text = NULL;
   if (this->GetType() == ID3FTY_TEXTSTRING &&
-      this->GetEncoding() == ID3TE_UNICODE &&
+      ID3TE_IS_DOUBLE_BYTE_ENC(this->GetEncoding()) &&
       index < this->GetNumTextItems())
   {
     String unicode = _text + '\0' + '\0';
@@ -141,13 +142,13 @@ size_t ID3_FieldImpl::Get(unicode_t *buffer, size_t maxLength, size_t itemNum) c
   size_t length = 0;
   size_t total_items = this->GetNumTextItems();
   if (this->GetType() == ID3FTY_TEXTSTRING &&
-      this->GetEncoding() == ID3TE_UNICODE &&
+      ID3TE_IS_DOUBLE_BYTE_ENC(this->GetEncoding()) &&
       buffer != NULL && maxLength > 0 && itemNum < total_items)
   {
     const unicode_t* text = this->GetRawUnicodeTextItem(itemNum);
     if (NULL != text)
     {
-      size_t length = dami::min(maxLength, ucslen(text));
+      size_t length = min(maxLength, ucslen(text));
       ::memcpy(buffer, text, length * 2);
       if (length < maxLength)
       {
@@ -158,5 +159,6 @@ size_t ID3_FieldImpl::Get(unicode_t *buffer, size_t maxLength, size_t itemNum) c
 
   return length;
 }
+
 
 

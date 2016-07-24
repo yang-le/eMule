@@ -84,14 +84,14 @@ BOOL CServerSocket::OnHostNameResolved(const SOCKADDR_IN *pSockAddr)
 			// with the same IP as this dynIP-server, remove the duplicates.
 			theApp.serverlist->RemoveDuplicatesByIP(pServer);
 		}
-		DEBUG_ONLY( DebugLog(_T("Resolved DN for server '%s': IP=%s"), cur_server->GetAddress(), ipstr(cur_server->GetIP())) );
+		DEBUG_ONLY( DebugLog(_T("Resolved DN for server '%s': IP=%s"), cur_server->GetAddress(), (LPCTSTR)ipstr(cur_server->GetIP())) );
 
 		// As this is a dynIP-server, we need to check the IP against the IP-filter
 		// and eventually disconnect and delete that server.
 		//
 		if (thePrefs.GetFilterServerByIP() && theApp.ipfilter->IsFiltered(cur_server->GetIP())) {
 			if (thePrefs.GetLogFilteredIPs())
-				AddDebugLogLine(false, _T("IPFilter(TCP/DNSResolve): Filtered server \"%s\" (IP=%s) - IP filter (%s)"), pServer ? pServer->GetAddress() : cur_server->GetAddress(), ipstr(cur_server->GetIP()), theApp.ipfilter->GetLastHit());
+				AddDebugLogLine(false, _T("IPFilter(TCP/DNSResolve): Filtered server \"%s\" (IP=%s) - IP filter (%s)"), pServer ? pServer->GetAddress() : cur_server->GetAddress(), (LPCTSTR)ipstr(cur_server->GetIP()), (LPCTSTR)theApp.ipfilter->GetLastHit());
 			if (pServer)
 				theApp.emuledlg->serverwnd->serverlistctrl.RemoveServer(pServer);
 			m_bIsDeleting = true;
@@ -119,7 +119,7 @@ void CServerSocket::OnConnect(int nErrorCode)
 		case WSAETIMEDOUT:
 		case WSAEADDRINUSE:
 			if (thePrefs.GetVerbose())
-				DebugLogError(_T("Failed to connect to server %s; %s"), cur_server->GetAddress(), GetFullErrorMessage(nErrorCode));
+				DebugLogError(_T("Failed to connect to server %s; %s"), cur_server->GetAddress(), (LPCTSTR)GetFullErrorMessage(nErrorCode));
 			m_bIsDeleting = true;
 			SetConnectionState(CS_SERVERDEAD);
 			serverconnect->DestroySocket(this);
@@ -129,7 +129,7 @@ void CServerSocket::OnConnect(int nErrorCode)
 			if (m_bProxyConnectFailed)
 			{
 				if (thePrefs.GetVerbose())
-					DebugLogError(_T("Failed to connect to server %s; %s"), cur_server->GetAddress(), GetFullErrorMessage(nErrorCode));
+					DebugLogError(_T("Failed to connect to server %s; %s"), cur_server->GetAddress(), (LPCTSTR)GetFullErrorMessage(nErrorCode));
 				m_bProxyConnectFailed = false;
 				m_bIsDeleting = true;
 				SetConnectionState(CS_SERVERDEAD);
@@ -139,7 +139,7 @@ void CServerSocket::OnConnect(int nErrorCode)
 			/* fall through */
 		default:
 			if (thePrefs.GetVerbose())
-				DebugLogError(_T("Failed to connect to server %s; %s"), cur_server->GetAddress(), GetFullErrorMessage(nErrorCode));
+				DebugLogError(_T("Failed to connect to server %s; %s"), cur_server->GetAddress(), (LPCTSTR)GetFullErrorMessage(nErrorCode));
 			m_bIsDeleting = true;
 			SetConnectionState(CS_FATALERROR);
 			serverconnect->DestroySocket(this);
@@ -198,22 +198,22 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 							theApp.emuledlg->serverwnd->UpdateMyInfo();
 						}
 						if (thePrefs.GetDebugServerTCPLevel() > 0)
-							Debug(_T("%s\n"), message);
+							Debug(_T("%s\n"), (LPCTSTR)message);
 					}
 					else if (_tcsncmp(message, _T("ERROR"), 5) == 0){
-						LogError(LOG_STATUSBAR, _T("%s %s (%s:%u) - %s"), 
-							GetResString(IDS_ERROR),
-							pServer ? pServer->GetListName() : GetResString(IDS_PW_SERVER), 
-							cur_server ? cur_server->GetAddress() : _T(""), 
-							cur_server ? cur_server->GetPort() : 0, message.Mid(5).Trim(_T(" :")));
+						LogError(LOG_STATUSBAR, _T("%s %s (%s:%u) - %s"),
+							(LPCTSTR)GetResString(IDS_ERROR),
+							pServer ? (LPCTSTR)pServer->GetListName() : (LPCTSTR)GetResString(IDS_PW_SERVER),
+							cur_server ? cur_server->GetAddress() : _T(""),
+							cur_server ? cur_server->GetPort() : 0, (LPCTSTR)message.Mid(5).Trim(_T(" :")));
 						bOutputMessage = false;
 					}
 					else if (_tcsncmp(message, _T("WARNING"), 7) == 0){
-						LogWarning(LOG_STATUSBAR, _T("%s %s (%s:%u) - %s"), 
-							GetResString(IDS_WARNING),
-							pServer ? pServer->GetListName() : GetResString(IDS_PW_SERVER), 
+						LogWarning(LOG_STATUSBAR, _T("%s %s (%s:%u) - %s"),
+							(LPCTSTR)GetResString(IDS_WARNING),
+							pServer ? (LPCTSTR)pServer->GetListName() : (LPCTSTR)GetResString(IDS_PW_SERVER),
 							cur_server ? cur_server->GetAddress() : _T(""),
-							cur_server ? cur_server->GetPort() : 0, message.Mid(7).Trim(_T(" :")));
+							cur_server ? cur_server->GetPort() : 0, (LPCTSTR)message.Mid(7).Trim(_T(" :")));
 						bOutputMessage = false;
 					}
 
@@ -248,9 +248,9 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 							if (cur_server) {
 								CString strMsg;
 								if (IsObfusicating())
-									strMsg.Format(_T("%s: ") + GetResString(IDS_CONNECTEDTOOBFUSCATED) + _T(" (%s:%u)"), CTime::GetCurrentTime().Format(thePrefs.GetDateTimeFormat4Log()), cur_server->GetListName(), cur_server->GetAddress(), cur_server->GetObfuscationPortTCP());
+									strMsg.Format(_T("%s: ") + GetResString(IDS_CONNECTEDTOOBFUSCATED) + _T(" (%s:%u)"), (LPCTSTR)CTime::GetCurrentTime().Format(thePrefs.GetDateTimeFormat4Log()), (LPCTSTR)cur_server->GetListName(), cur_server->GetAddress(), cur_server->GetObfuscationPortTCP());
 								else
-									strMsg.Format(_T("%s: ") + GetResString(IDS_CONNECTEDTO) + _T(" (%s:%u)"), CTime::GetCurrentTime().Format(thePrefs.GetDateTimeFormat4Log()), cur_server->GetListName(), cur_server->GetAddress(), cur_server->GetPort());
+									strMsg.Format(_T("%s: ") + GetResString(IDS_CONNECTEDTO) + _T(" (%s:%u)"), (LPCTSTR)CTime::GetCurrentTime().Format(thePrefs.GetDateTimeFormat4Log()), (LPCTSTR)cur_server->GetListName(), cur_server->GetAddress(), cur_server->GetPort());
 								theApp.emuledlg->AddServerMessageLine(LOG_SUCCESS, strMsg);
 							}
 						}
@@ -295,7 +295,7 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 								strInfo.AppendFormat(_T("  LargeFiles=1"));
 							if (dwFlags & SRV_TCPFLG_TCPOBFUSCATION)
 								strInfo.AppendFormat(_T("  TCP_Obfscation=1"));
-							Debug(_T("%s\n"), strInfo);
+							Debug(_T("%s\n"), (LPCTSTR)strInfo);
 						}
 						cur_server->SetTCPFlags(dwFlags);
 					}
@@ -309,7 +309,6 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 				}
 
 				uint32 dwServerReportedIP = 0;
-				uint32 dwObfuscationTCPPort = 0;
 				if (size >= 20){
 					dwServerReportedIP = *((uint32*)(packet + 12));
 					if (::IsLowID(dwServerReportedIP)){
@@ -317,7 +316,7 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 						dwServerReportedIP = 0;
 					}
 					ASSERT( dwServerReportedIP == la->clientid || ::IsLowID(la->clientid) );
-					dwObfuscationTCPPort = *((uint32*)(packet + 16));
+					uint32 dwObfuscationTCPPort = *((uint32*)(packet + 16));
 					if (cur_server != NULL && dwObfuscationTCPPort != 0)
 						cur_server->SetObfuscationPortTCP((uint16)dwObfuscationTCPPort);
 					if (pServer != NULL && dwObfuscationTCPPort != 0)
@@ -360,13 +359,13 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 						}
 					}
 				}
-				
+
 				// we need to know our client's HighID when sending our shared files (done indirectly on SetConnectionState)
 				serverconnect->clientid = la->clientid;
 
 				if (connectionstate != CS_CONNECTED) {
 					SetConnectionState(CS_CONNECTED);
-					theApp.OnlineSig();       // Added By Bouc7 
+					theApp.OnlineSig();       // Added By Bouc7
 				}
 				serverconnect->SetClientID(la->clientid);
 				if (::IsLowID(la->clientid) && dwServerReportedIP != 0)
@@ -390,7 +389,7 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 			case OP_FOUNDSOURCES_OBFU:
 			case OP_FOUNDSOURCES:{
 				if (thePrefs.GetDebugServerTCPLevel() > 0)
-					Debug(_T("ServerMsg - OP_FoundSources%s; Sources=%u  %s\n"), (opcode == OP_FOUNDSOURCES_OBFU) ? _T("_OBFU") : _T(""), (UINT)packet[16], DbgGetFileInfo(packet));
+					Debug(_T("ServerMsg - OP_FoundSources%s; Sources=%u  %s\n"), (opcode == OP_FOUNDSOURCES_OBFU) ? _T("_OBFU") : _T(""), (UINT)packet[16], (LPCTSTR)DbgGetFileInfo(packet));
 
 				ASSERT( cur_server );
 				if (cur_server)
@@ -433,22 +432,22 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 					Debug(_T("ServerMsg - OP_ServerIdent\n"));
 				if (size<16+4+2+4){
 					if (thePrefs.GetVerbose())
-						DebugLogError(_T("%s"), GetResString(IDS_ERR_KNOWNSERVERINFOREC));
-					break;// throw "Invalid server info received"; 
-				} 
+						DebugLogError(_T("%s"), (LPCTSTR)GetResString(IDS_ERR_KNOWNSERVERINFOREC));
+					break;// throw "Invalid server info received";
+				}
 
 				CServer* pServer = cur_server ? theApp.serverlist->GetServerByAddress(cur_server->GetAddress(),cur_server->GetPort()) : NULL;
 				CString strInfo;
 				CSafeMemFile data(packet, size);
-				
+
 				uint8 aucHash[16];
 				data.ReadHash16(aucHash);
 				if (thePrefs.GetDebugServerTCPLevel() > 0)
-					strInfo.AppendFormat(_T("Hash=%s (%s)"), md4str(aucHash), DbgGetHashTypeString(aucHash));
+					strInfo.AppendFormat(_T("Hash=%s (%s)"), (LPCTSTR)md4str(aucHash), DbgGetHashTypeString(aucHash));
 				uint32 nServerIP = data.ReadUInt32();
 				uint16 nServerPort = data.ReadUInt16();
 				if (thePrefs.GetDebugServerTCPLevel() > 0)
-					strInfo.AppendFormat(_T("  IP=%s:%u"), ipstr(nServerIP), nServerPort);
+					strInfo.AppendFormat(_T("  IP=%s:%u"), (LPCTSTR)ipstr(nServerIP), nServerPort);
 				UINT nTags = data.ReadUInt32();
 				if (thePrefs.GetDebugServerTCPLevel() > 0)
 					strInfo.AppendFormat(_T("  Tags=%u"), nTags);
@@ -461,14 +460,14 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 						if (tag.IsStr()){
 							strName = tag.GetStr();
 							if (thePrefs.GetDebugServerTCPLevel() > 0)
-								strInfo.AppendFormat(_T("  Name=%s"), strName);
+								strInfo.AppendFormat(_T("  Name=%s"), (LPCTSTR)strName);
 						}
 					}
 					else if (tag.GetNameID() == ST_DESCRIPTION){
 						if (tag.IsStr()){
 							strDescription = tag.GetStr();
 							if (thePrefs.GetDebugServerTCPLevel() > 0)
-								strInfo.AppendFormat(_T("  Desc=%s"), strDescription);
+								strInfo.AppendFormat(_T("  Desc=%s"), (LPCTSTR)strDescription);
 						}
 					}
 					else if (thePrefs.GetDebugServerTCPLevel() > 0)
@@ -476,7 +475,7 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 				}
 				if (thePrefs.GetDebugServerTCPLevel() > 0){
 					strInfo += _T('\n');
-					Debug(_T("%s"), strInfo);
+					Debug(_T("%s"), (LPCTSTR)strInfo);
 
 					UINT uAddData = (UINT)(data.GetLength() - data.GetPosition());
 					if (uAddData > 0){
@@ -495,11 +494,11 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 						else
 							pServer->SetVersion(_T("eFarm"));
 					}
-					theApp.emuledlg->ShowConnectionState(); 
-					theApp.emuledlg->serverwnd->serverlistctrl.RefreshServer(pServer); 
+					theApp.emuledlg->ShowConnectionState();
+					theApp.emuledlg->serverwnd->serverlistctrl.RefreshServer(pServer);
 				}
 				break;
-			} 
+			}
 			// tecxx 1609 2002 - add server's serverlist to own serverlist
 			case OP_SERVERLIST:{
 				if (!thePrefs.GetAddServersFromServer())
@@ -538,7 +537,7 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 				}
 				catch(CFileException* error){
 					if (thePrefs.GetVerbose())
-						DebugLogError(_T("%s"), GetResString(IDS_ERR_BADSERVERLISTRECEIVED));
+						DebugLogError(_T("%s"), (LPCTSTR)GetResString(IDS_ERR_BADSERVERLISTRECEIVED));
 					error->Delete();
 				}
 				break;
@@ -553,14 +552,14 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 					if (theApp.ipfilter->IsFiltered(dwIP)){
 						theStats.filteredclients++;
 						if (thePrefs.GetLogFilteredIPs())
-							AddDebugLogLine(false, _T("Ignored callback request (IP=%s) - IP filter (%s)"), ipstr(dwIP), theApp.ipfilter->GetLastHit());
+							AddDebugLogLine(false, _T("Ignored callback request (IP=%s) - IP filter (%s)"), (LPCTSTR)ipstr(dwIP), (LPCTSTR)theApp.ipfilter->GetLastHit());
 						break;
 					}
 
 					if (theApp.clientlist->IsBannedClient(dwIP)){
 						if (thePrefs.GetLogBannedClients()){
 							CUpDownClient* pClient = theApp.clientlist->FindClientByIP(dwIP);
-							AddDebugLogLine(false, _T("Ignored callback request from banned client %s; %s"), ipstr(dwIP), pClient->DbgGetClientInfo());
+							AddDebugLogLine(false, _T("Ignored callback request from banned client %s; %s"), (LPCTSTR)ipstr(dwIP), pClient ? (LPCTSTR)pClient->DbgGetClientInfo() : _T(""));
 						}
 						break;
 					}
@@ -572,7 +571,7 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 						byCryptOptions = packet[6];
 						md4cpy(achUserHash, packet + 7);
 					}
-					
+
 					CUpDownClient* client = theApp.clientlist->FindClientByIP(dwIP,nPort);
 					if (client == NULL)
 					{
@@ -605,12 +604,12 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 			}
 			case OP_CALLBACK_FAIL:{
 				if (thePrefs.GetDebugServerTCPLevel() > 0)
-					Debug(_T("ServerMsg - OP_Callback_Fail %s\n"), DbgGetHexDump(packet, size));
+					Debug(_T("ServerMsg - OP_Callback_Fail %s\n"), (LPCTSTR)DbgGetHexDump(packet, size));
 				break;
 			}
 			case OP_REJECT:{
 				if (thePrefs.GetDebugServerTCPLevel() > 0)
-					Debug(_T("ServerMsg - OP_Reject %s\n"), DbgGetHexDump(packet, size));
+					Debug(_T("ServerMsg - OP_Reject %s\n"), (LPCTSTR)DbgGetHexDump(packet, size));
 				// this could happen if we send a command with the wrong protocol (e.g. sending a compressed packet to
 				// a server which does not support that protocol).
 				if (thePrefs.GetVerbose())
@@ -619,8 +618,7 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 			}
 			default:
 				if (thePrefs.GetDebugServerTCPLevel() > 0)
-					Debug(_T("***NOTE: ServerMsg - Unknown message; opcode=0x%02x  %s\n"), opcode, DbgGetHexDump(packet, size));
-				;
+					Debug(_T("***NOTE: ServerMsg - Unknown message; opcode=0x%02x  %s\n"), opcode, (LPCTSTR)DbgGetHexDump(packet, size));
 		}
 
 		return true;
@@ -631,7 +629,7 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 		{
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
 			error->m_strFileName = _T("server packet");
-			error->GetErrorMessage(szError, ARRSIZE(szError));
+			GetExceptionMessage(*error, szError, ARRSIZE(szError));
 			ProcessPacketError(size, opcode, szError);
 		}
 		ASSERT(0);
@@ -647,7 +645,7 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 		if (opcode==OP_SEARCHRESULT || opcode==OP_FOUNDSOURCES)
 			return true;
 	}
-	catch(CString error)
+	catch (const CString& error)
 	{
 		ProcessPacketError(size, opcode, error);
 		ASSERT(0);
@@ -677,7 +675,7 @@ void CServerSocket::ProcessPacketError(UINT size, UINT opcode, LPCTSTR pszError)
 		}
 		catch(...){
 		}
-		DebugLogWarning(false, _T("Error: Failed to process server TCP packet from %s: opcode=0x%02x size=%u - %s"), strServer, opcode, size, pszError);
+		DebugLogWarning(LOG_DEFAULT, _T("Error: Failed to process server TCP packet from %s: opcode=0x%02x size=%u - %s"), (LPCTSTR)strServer, opcode, size, pszError);
 	}
 }
 
@@ -692,12 +690,12 @@ void CServerSocket::ConnectTo(CServer* server, bool bNoCrypt)
 	uint16 nPort = 0;
 	cur_server = new CServer(server);
 	if ( !bNoCrypt && thePrefs.IsServerCryptLayerTCPRequested() && server->GetObfuscationPortTCP() != 0 && server->SupportsObfuscationTCP()){
-		Log(GetResString(IDS_CONNECTINGTOOBFUSCATED), cur_server->GetListName(), cur_server->GetAddress(), cur_server->GetObfuscationPortTCP());
+		Log(GetResString(IDS_CONNECTINGTOOBFUSCATED), (LPCTSTR)cur_server->GetListName(), cur_server->GetAddress(), cur_server->GetObfuscationPortTCP());
 		nPort = cur_server->GetObfuscationPortTCP();
 		SetConnectionEncryption(true, NULL, true);
 	}
 	else{
-		Log(GetResString(IDS_CONNECTINGTO), cur_server->GetListName(), cur_server->GetAddress(), cur_server->GetPort());
+		Log(GetResString(IDS_CONNECTINGTO), (LPCTSTR)cur_server->GetListName(), cur_server->GetAddress(), cur_server->GetPort());
 		nPort = cur_server->GetPort();
 		SetConnectionEncryption(false, NULL, true);
 	}
@@ -716,7 +714,7 @@ void CServerSocket::ConnectTo(CServer* server, bool bNoCrypt)
 	if (!Connect(CStringA(server->GetAddress()), nPort)){
 		DWORD dwError = GetLastError();
 		if (dwError != WSAEWOULDBLOCK){
-			LogError(GetResString(IDS_ERR_CONNECTIONERROR), cur_server->GetListName(), cur_server->GetAddress(), nPort, GetFullErrorMessage(dwError));
+			LogError(GetResString(IDS_ERR_CONNECTIONERROR), (LPCTSTR)cur_server->GetListName(), cur_server->GetAddress(), nPort, (LPCTSTR)GetFullErrorMessage(dwError));
 			SetConnectionState(CS_FATALERROR);
 			return;
 		}
@@ -727,7 +725,7 @@ void CServerSocket::OnError(int nErrorCode)
 {
 	SetConnectionState(CS_DISCONNECTED);
 	if (thePrefs.GetVerbose())
-		DebugLogError(GetResString(IDS_ERR_SOCKET), cur_server->GetListName(), cur_server->GetAddress(), cur_server->GetPort(), GetFullErrorMessage(nErrorCode));
+		DebugLogError(GetResString(IDS_ERR_SOCKET), (LPCTSTR)cur_server->GetListName(), cur_server->GetAddress(), cur_server->GetPort(), (LPCTSTR)GetFullErrorMessage(nErrorCode));
 }
 
 bool CServerSocket::PacketReceived(Packet* packet)

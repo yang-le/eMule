@@ -52,6 +52,7 @@ static char THIS_FILE[] = __FILE__;
 // CSearchList
 
 CSearchList::CSearchList()
+	: 	m_nCurED2KSearchID(0)
 {
 	outputwnd = NULL;
 	m_MobilMuleSearch = false;
@@ -61,15 +62,13 @@ CSearchList::CSearchList()
 CSearchList::~CSearchList()
 {
 	Clear();
-	POSITION pos = m_aUDPServerRecords.GetStartPosition();
-	while( pos != NULL )
-	{
+	for (POSITION pos = m_aUDPServerRecords.GetStartPosition(); pos != NULL;) {
 		uint32 dwIP;
 		UDPServerRecord* pRecord;
 		m_aUDPServerRecords.GetNextAssoc(pos, dwIP, pRecord);
 		delete pRecord;
 	}
-	m_aUDPServerRecords.RemoveAll();
+//	m_aUDPServerRecords.RemoveAll(); will be called in next destructor
 }
 
 void CSearchList::Clear()
@@ -78,10 +77,8 @@ void CSearchList::Clear()
 	{
 		POSITION posLast = pos;
 		SearchListsStruct* listCur = m_listFileLists.GetNext(pos);
-		for(POSITION pos2 = listCur->m_listSearchFiles.GetHeadPosition(); pos2 != NULL; )
-			delete listCur->m_listSearchFiles.GetNext(pos2);
-		listCur->m_listSearchFiles.RemoveAll();
-
+		while (!listCur->m_listSearchFiles.IsEmpty())
+			delete listCur->m_listSearchFiles.RemoveHead();
 		m_listFileLists.RemoveAt(posLast);
 		delete listCur;
 	}
@@ -96,10 +93,8 @@ void CSearchList::RemoveResults(uint32 nSearchID)
 		SearchListsStruct* listCur =	m_listFileLists.GetNext(pos);
 		if (listCur->m_nSearchID == nSearchID)
 		{
-			for(POSITION pos2 = listCur->m_listSearchFiles.GetHeadPosition(); pos2 != NULL; )
-				delete listCur->m_listSearchFiles.GetNext(pos2);
-			listCur->m_listSearchFiles.RemoveAll();
-
+			while (!listCur->m_listSearchFiles.IsEmpty())
+				delete listCur->m_listSearchFiles.RemoveHead();
 			m_listFileLists.RemoveAt(posLast);
 			delete listCur;
 			return;
@@ -118,7 +113,7 @@ void CSearchList::ShowResults(uint32 nSearchID)
 	{
 		const CSearchFile* cur_file = list->GetNext(pos);
 		ASSERT( cur_file->GetSearchID() == nSearchID );
-		if (cur_file->GetListParent() == NULL)
+		if (cur_file->GetListParent() == NULL && !(cur_file->m_flags & 1))
 		{
 			outputwnd->AddResult(cur_file);
 			if (cur_file->IsListExpanded() && cur_file->GetListChildCount() > 0)
@@ -133,21 +128,15 @@ void CSearchList::ShowResults(uint32 nSearchID)
 void CSearchList::RemoveResult(CSearchFile* todel)
 {
 	SearchList* list = GetSearchListForID(todel->GetSearchID());
-	for (POSITION pos = list->GetHeadPosition(); pos != NULL; )
-	{
-		POSITION posLast = pos;
-		CSearchFile* cur_file = list->GetNext(pos);
-		if (cur_file == todel)
-		{
-			theApp.emuledlg->searchwnd->RemoveResult(todel);
-			list->RemoveAt(posLast);
-			delete todel;
-			return;
-		}
+	POSITION pos = list->Find(todel);
+	if (pos != NULL) {
+		theApp.emuledlg->searchwnd->RemoveResult(todel);
+		list->RemoveAt(pos);
+		delete todel;
 	}
 }
 
-void CSearchList::NewSearch(CSearchListCtrl* pWnd, CStringA strResultFileType, uint32 nSearchID, ESearchType eSearchType, CString strSearchExpression, bool bMobilMuleSearch)
+void CSearchList::NewSearch(CSearchListCtrl* pWnd, const CStringA& strResultFileType, uint32 nSearchID, ESearchType eSearchType, CString& strSearchExpression, bool bMobilMuleSearch)
 {
 	if (pWnd)
 		outputwnd = pWnd;
@@ -176,13 +165,11 @@ void CSearchList::NewSearch(CSearchListCtrl* pWnd, CStringA strResultFileType, u
 			m_astrSpamCheckCurSearchExp.Add(strQuoted);
 			strSearchExpression.Delete(nPos, (nPos2 - nPos) + 1);
 		}
-		strSearchExpression.Replace(_T("AND"), _T(""));
-		strSearchExpression.Replace(_T("OR"), _T(""));
-		strSearchExpression.Replace(_T("NOT"), _T(""));
 		nPos = 0;
 		CString strToken = strSearchExpression.Tokenize(_T(".[]()!-'_ "), nPos);
 		while (!strToken.IsEmpty()){
-			m_astrSpamCheckCurSearchExp.Add(strToken);
+			if (strToken != "and" && strToken != "or" && strToken != "not")
+				m_astrSpamCheckCurSearchExp.Add(strToken);
 			strToken = strSearchExpression.Tokenize(_T(".[]()!-'_ "), nPos);
 		}
 	}
@@ -202,17 +189,15 @@ UINT CSearchList::ProcessSearchAnswer(const uchar* in_packet, uint32 size,
 		m_foundFilesCount.SetAt(nSearchID, 0);
 		m_foundSourcesCount.SetAt(nSearchID, 0);
 	}
-	else{
+	else
 		delete pParams;
-		pParams = NULL;
-	}
 
 	CSafeMemFile packet(in_packet, size);
 	UINT results = packet.ReadUInt32();
 	for (UINT i = 0; i < results; i++){
 		CSearchFile* toadd = new CSearchFile(&packet, Sender ? Sender->GetUnicodeSupport()!=utf8strNone : false, nSearchID, 0, 0, pszDirectory);
 		if (toadd->IsLargeFile() && (Sender == NULL || !Sender->SupportsLargeFiles())){
-			DebugLogWarning(_T("Client offers large file (%s) but doesn't announced support for it - ignoring file"), toadd->GetFileName());
+			DebugLogWarning(_T("Client offers large file (%s) but doesn't announced support for it - ignoring file"), (LPCTSTR)toadd->GetFileName());
 			delete toadd;
 			continue;
 		}
@@ -225,7 +210,7 @@ UINT CSearchList::ProcessSearchAnswer(const uchar* in_packet, uint32 size,
 				CSearchFile::SServer server(Sender->GetServerIP(), Sender->GetServerPort(), false);
 				server.m_uAvail = 1;
 				toadd->AddServer(server);
-			}			
+			}
 			toadd->SetPreviewPossible( Sender->GetPreviewSupport() && ED2KFT_VIDEO == GetED2KFileTypeID(toadd->GetFileName()) );
 		}
 		AddToList(toadd, true);
@@ -249,7 +234,7 @@ UINT CSearchList::ProcessSearchAnswer(const uchar* in_packet, uint32 size,
 	}
 	else if (iAddData > 0){
 		if (thePrefs.GetDebugClientTCPLevel() > 0){
-			Debug(_T("*** NOTE: Client ProcessSearchAnswer(%s): ***AddData: %u bytes\n"), Sender->GetUserName(), iAddData);
+			Debug(_T("*** NOTE: Client ProcessSearchAnswer(%s): ***AddData: %u bytes\n"), Sender ? Sender->GetUserName() : _T(""), iAddData);
 			DebugHexDump(in_packet + packet.GetPosition(), iAddData);
 		}
 	}
@@ -287,16 +272,16 @@ UINT CSearchList::ProcessSearchAnswer(const uchar* in_packet, uint32 size, bool 
 			if (pbMoreResultsAvailable)
 				*pbMoreResultsAvailable = ucMore!=0;
 			if (thePrefs.GetDebugServerTCPLevel() > 0)
-				Debug(_T("  Search answer(Server %s:%u): More=%u\n"), ipstr(nServerIP), nServerPort, ucMore);
+				Debug(_T("  Search answer(Server %s:%u): More=%u\n"), (LPCTSTR)ipstr(nServerIP), nServerPort, ucMore);
 		}
 		else{
 			if (thePrefs.GetDebugServerTCPLevel() > 0)
-				Debug(_T("*** NOTE: ProcessSearchAnswer(Server %s:%u): ***AddData: 1 byte: 0x%02x\n"), ipstr(nServerIP), nServerPort, ucMore);
+				Debug(_T("*** NOTE: ProcessSearchAnswer(Server %s:%u): ***AddData: 1 byte: 0x%02x\n"), (LPCTSTR)ipstr(nServerIP), nServerPort, ucMore);
 		}
 	}
 	else if (iAddData > 0){
 		if (thePrefs.GetDebugServerTCPLevel() > 0){
-			Debug(_T("*** NOTE: ProcessSearchAnswer(Server %s:%u): ***AddData: %u bytes\n"), ipstr(nServerIP), nServerPort, iAddData);
+			Debug(_T("*** NOTE: ProcessSearchAnswer(Server %s:%u): ***AddData: %u bytes\n"), (LPCTSTR)ipstr(nServerIP), nServerPort, iAddData);
 			DebugHexDump(in_packet + packet.GetPosition(), iAddData);
 		}
 	}
@@ -308,7 +293,7 @@ UINT CSearchList::ProcessSearchAnswer(const uchar* in_packet, uint32 size, bool 
 UINT CSearchList::ProcessUDPSearchAnswer(CFileDataIO& packet, bool bOptUTF8, uint32 nServerIP, uint16 nServerPort)
 {
 	CSearchFile* toadd = new CSearchFile(&packet, bOptUTF8, m_nCurED2KSearchID, nServerIP, nServerPort, NULL, false, true);
-	
+
 	bool bFound = false;
 	for (int i = 0; i != m_aCurED2KSentRequestsIPs.GetCount(); i++){
 		if (m_aCurED2KSentRequestsIPs[i] == nServerIP){
@@ -317,7 +302,7 @@ UINT CSearchList::ProcessUDPSearchAnswer(CFileDataIO& packet, bool bOptUTF8, uin
 		}
 	}
 	if (!bFound){
-		DebugLogError(_T("Unrequested or delayed Server UDP Searchresult received from IP %s, ignoring"), ipstr(nServerIP));
+		DebugLogError(_T("Unrequested or delayed Server UDP Searchresult received from IP %s, ignoring"), (LPCTSTR)ipstr(nServerIP));
 		delete toadd;
 		return 0;
 	}
@@ -346,8 +331,8 @@ UINT CSearchList::ProcessUDPSearchAnswer(CFileDataIO& packet, bool bOptUTF8, uin
 	}
 	else
 		pRecord->m_nResults++;
-			
-	
+
+
 	AddToList(toadd, false, nServerIP);
 	return GetED2KResultCount();
 }
@@ -389,7 +374,7 @@ void CSearchList::GetWebList(CQArray<SearchFileStruct, SearchFileStruct> *Search
 					structFile.m_strIndex = structFile.m_strFileName;
 					break;
 				case 1:
-					structFile.m_strIndex.Format(_T("%10u"), structFile.m_uFileSize);
+					structFile.m_strIndex.Format(_T("%10I64u"), structFile.m_uFileSize);
 					break;
 				case 2:
 					structFile.m_strIndex = structFile.m_strFileHash;
@@ -428,7 +413,7 @@ void CSearchList::AddFileToDownloadByHash(const uchar* hash, int cat)
 CSearchFile* CSearchList::DetachNextFile(uint32 nSearchID)
 {
 	// the files are NOT deleted, make sure you do this if you call this function
-	// find, removes and returns the searchresult with most Sources	
+	// find, removes and returns the searchresult with most Sources
 	uint32 nHighSource = 0;
 	POSITION resultpos = 0;
 
@@ -438,9 +423,9 @@ CSearchFile* CSearchList::DetachNextFile(uint32 nSearchID)
 		POSITION cur_pos = pos;
 		CSearchFile* cur_file = list->GetNext(pos);
 		ASSERT( cur_file->GetSearchID() == nSearchID );
-		if (cur_file->GetIntTagValue(FT_SOURCES) >= nHighSource)
+		if (cur_file->GetSourceCount() >= nHighSource)
 		{
-			nHighSource = cur_file->GetIntTagValue(FT_SOURCES);
+			nHighSource = cur_file->GetSourceCount();
 			resultpos = cur_pos;
 		}
 	}
@@ -462,15 +447,14 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 	}
 	SearchList* list = GetSearchListForID(toadd->GetSearchID());
 
-	// Spamfilter: Calculate the filename without any used keywords (and seperators) for later use
+	// Spamfilter: Calculate the filename without any used keywords (and separators) for later use
 	CString strNameWithoutKeyword;
 	CString strName = toadd->GetFileName();
 	strName.MakeLower();
 	int nPos = 0;
 	CString strToken = strName.Tokenize(_T(".[]()!-'_ "), nPos);
-	bool bFound;
 	while (!strToken.IsEmpty()){
-		bFound = false;
+		bool bFound = false;
 		if (!bClientResponse && toadd->GetSearchID() == m_nCurED2KSearchID){
 			for (int i = 0; i < m_astrSpamCheckCurSearchExp.GetCount(); i++){
 				if (strToken.Compare(m_astrSpamCheckCurSearchExp[i]) == 0){
@@ -496,13 +480,14 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 			&& md4cmp(parent->GetFileHash(), toadd->GetFileHash()) == 0)
 		{
 
-			// if this parent does not yet have any child entries, create one child entry 
+			// if this parent does not yet have any child entries, create one child entry
 			// which is equal to the current parent entry (needed for GUI when expanding the child list).
 			if (parent->GetListChildCount() == 0)
 			{
 				CSearchFile* child = new CSearchFile(parent);
+				child->m_flags |= 2; //do not write this
 				child->SetListParent(parent);
-				int iSources = parent->GetIntTagValue(FT_SOURCES);
+				int iSources = parent->GetSourceCount();
 				if (iSources == 0)
 					iSources = 1;
 				child->SetListChildCount(iSources);
@@ -511,19 +496,13 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 			}
 
 			// get the 'Availability' of the new search result entry
-			UINT uAvail;
-			if (bClientResponse) {
+			UINT uAvail = toadd->GetSourceCount();
+			if (bClientResponse && !uAvail)
 				// If this is a response from a client ("View Shared Files"), we set the "Availability" at least to 1.
-				if (!toadd->GetIntTagValue(FT_SOURCES, uAvail) || uAvail==0)
-					uAvail = 1;
-			}
-			else
-				uAvail = toadd->GetIntTagValue(FT_SOURCES);
-
+				uAvail = 1;
 
 			// get 'Complete Sources' of the new search result entry
-			uint32 uCompleteSources = (uint32)-1;
-			bool bHasCompleteSources = toadd->GetIntTagValue(FT_COMPLETE_SOURCES, uCompleteSources);
+			uint32 uCompleteSources = toadd->GetCompleteSourceCount();
 
 			bool bFound = false;
 			if (thePrefs.GetDebugSearchResultDetailLevel() >= 1)
@@ -537,7 +516,7 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 				{
 					CSearchFile* child = list->GetNext(pos2);
 					if (    child != toadd													// not the same object
-						&& child->GetListParent() == parent								// is a child of our result (one filehash)
+						&& child->GetListParent() == parent									// is a child of our result (one filehash)
 						&& toadd->GetFileName().CompareNoCase(child->GetFileName()) == 0)	// same name
 					{
 						bFound = true;
@@ -552,8 +531,7 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 							child->AddListChildCount(uAvail);
 						}
 						child->AddSources(uAvail);
-						if (bHasCompleteSources)
-							child->AddCompleteSources(uCompleteSources);
+						child->AddCompleteSources(uCompleteSources);
 
 						// Check AICH Hash - if they differ, clear it (see KademliaSearchKeyword)
 						//					 if we didn't have a hash yet, take it over
@@ -563,14 +541,14 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 							{
 								if (parent->GetFileIdentifier().GetAICHHash() != toadd->GetFileIdentifier().GetAICHHash())
 								{
-									DEBUG_ONLY(DebugLogWarning(_T("Kad: SearchList: AddToList: Received searchresult with different AICH hash than existing one, ignoring AICH for result %s"), child->GetFileName()) );
+									DEBUG_ONLY(DebugLogWarning(_T("Kad: SearchList: AddToList: Received searchresult with different AICH hash than existing one, ignoring AICH for result %s"), (LPCTSTR)child->GetFileName()) );
 									child->SetFoundMultipleAICH();
 									child->GetFileIdentifier().ClearAICHHash();
 								}
 							}
 							else if (!child->DidFoundMultipleAICH())
 							{
-								DEBUG_ONLY(DebugLog(_T("Kad: SearchList: AddToList: Received searchresult with new AICH hash %s, taking over to existing result. Entry: %s"), toadd->GetFileIdentifier().GetAICHHash().GetString(), child->GetFileName()) );
+								DEBUG_ONLY(DebugLog(_T("Kad: SearchList: AddToList: Received searchresult with new AICH hash %s, taking over to existing result. Entry: %s"), (LPCTSTR)toadd->GetFileIdentifier().GetAICHHash().GetString(), (LPCTSTR)child->GetFileName()) );
 								child->GetFileIdentifier().SetAICHHash(toadd->GetFileIdentifier().GetAICHHash());
 							}
 						}
@@ -585,8 +563,9 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 				//
 				toadd->SetListParent(parent);
 				toadd->SetListChildCount(uAvail);
-				parent->AddListChildCount(1);
-				list->AddHead(toadd);
+				if (!(toadd->m_flags & 1))
+					parent->AddListChildCount(1);
+				list->AddTail(toadd);
 			}
 
 			// copy possible available sources from new search result entry to parent
@@ -608,7 +587,7 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 					if (thePrefs.GetDebugServerSearchesLevel() > 1)
 					{
 						uint32 nIP = toadd->GetClientID();
-						Debug(_T("Filtered source from search result %s:%u\n"), DbgGetClientID(nIP), toadd->GetClientPort());
+						Debug(_T("Filtered source from search result %s:%u\n"), (LPCTSTR)DbgGetClientID(nIP), toadd->GetClientPort());
 					}
 				}
 			}
@@ -642,14 +621,14 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 				const CSearchFile* child = list->GetNext(pos2);
 				if (child->GetListParent() == parent)
 				{
+					const CFileIdentifier& fileid = child->GetFileIdentifierC();
 					// figure out if the childs of different AICH hashs
-					if (child->GetFileIdentifierC().HasAICHHash())
-					{
-						if (bAICHHashValid && aichHash != child->GetFileIdentifierC().GetAICHHash())
+					if (fileid.HasAICHHash()) {
+						if (bAICHHashValid && aichHash != fileid.GetAICHHash())
 							 bHasMultipleAICHHashs = true;
 						else if (!bAICHHashValid)
 						{
-							aichHash = child->GetFileIdentifierC().GetAICHHash();
+							aichHash = fileid.GetAICHHash();
 							bAICHHashValid = true;
 						}
 					}
@@ -662,11 +641,12 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 							uAllChildsSourceCount = child->GetListChildCount();
 						/*if (child->GetCompleteSourceCount() > uAllChildsCompleteSourceCount) // not yet supported
 							uAllChildsCompleteSourceCount = child->GetCompleteSourceCount();*/
-						if (child->GetKadPublishInfo() != 0){
+						uint32 u = child->GetKadPublishInfo();
+						if (u != 0) {
 							nPublishInfoTags++;
-							uDifferentNames = max(uDifferentNames, ((child->GetKadPublishInfo() & 0xFF000000) >> 24));
-							uPublishersKnown = max (uPublishersKnown, ((child->GetKadPublishInfo() & 0x00FF0000) >> 16));
-							uTrustValue += child->GetKadPublishInfo() & 0x0000FFFF;
+							uDifferentNames = maxi(uDifferentNames, ((u & 0xFF000000) >> 24));
+							uPublishersKnown = maxi(uPublishersKnown, ((u & 0x00FF0000) >> 16));
+							uTrustValue += u & 0x0000FFFF;
 						}
 					}
 					else
@@ -686,10 +666,8 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 				parent->SetFileSize(bestEntry->GetFileSize());
 				parent->SetFileName(bestEntry->GetFileName());
 				parent->SetFileType(bestEntry->GetFileType());
-				parent->ClearTags();
-				parent->CopyTags(bestEntry->GetTags());
-				parent->SetIntTagValue(FT_SOURCES, uAllChildsSourceCount);
-				parent->SetIntTagValue(FT_COMPLETE_SOURCES, uAllChildsCompleteSourceCount);
+				parent->SetSourceCount(uAllChildsSourceCount);
+				parent->SetCompleteSourceCount(uAllChildsCompleteSourceCount);
 				if (uTrustValue > 0 && nPublishInfoTags > 0)
 					uTrustValue = uTrustValue / nPublishInfoTags;
 				parent->SetKadPublishInfo(((uDifferentNames & 0xFF) << 24) | ((uPublishersKnown & 0xFF) << 16) | ((uTrustValue & 0xFFFF) << 0));
@@ -704,20 +682,22 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 
 			// add the 'Availability' of the new search result entry to the total search result count for this search
 			AddResultCount(parent->GetSearchID(), parent->GetFileHash(), uAvail, parent->IsConsideredSpam());
-			
+
 			// update parent in GUI
 			if (outputwnd && !m_MobilMuleSearch)
 				outputwnd->UpdateSources(parent);
 
-			if (bFound)
-				delete toadd;
+			if (bFound) {
+				toadd->m_flags |= 1; //hide in GUI
+				list->AddTail(toadd);
+			}
 			return true;
 		}
 	}
-	
+
 	// no bounded result found yet -> add as parent to list
 	toadd->SetListParent(NULL);
-	UINT uAvail = 0;
+	UINT uAvail = toadd->GetSourceCount();
 	if (list->AddTail(toadd))
 	{
 		UINT tempValue = 0;
@@ -725,15 +705,13 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 		m_foundFilesCount.SetAt(toadd->GetSearchID(), tempValue + 1);
 
 		// get the 'Availability' of this new search result entry
-		
+
 		if (bClientResponse) {
 			// If this is a response from a client ("View Shared Files"), we set the "Availability" at least to 1.
-			if (!toadd->GetIntTagValue(FT_SOURCES, uAvail) || uAvail==0)
+			if (uAvail == 0)
 				uAvail = 1;
 			toadd->AddSources(uAvail);
 		}
-		else
-			uAvail = toadd->GetIntTagValue(FT_SOURCES);
 	}
 
 	if (thePrefs.GetDebugSearchResultDetailLevel() >= 1)
@@ -780,7 +758,7 @@ bool CSearchList::AddNotes(Kademlia::CEntry* entry, const uchar *hash)
 				Kademlia::CEntry* entryClone = entry->Copy();
 				if(sf->AddNote(entryClone))
 					flag = true;
-				else 
+				else
 					delete entryClone;
 			}
 		}
@@ -809,9 +787,9 @@ void CSearchList::AddResultCount(uint32 nSearchID, const uchar* hash, UINT nCoun
 
 	UINT tempValue = 0;
 	VERIFY( m_foundSourcesCount.Lookup(nSearchID, tempValue) );
-	
+
 	// spam files count as max 5 availability
-	m_foundSourcesCount.SetAt(nSearchID, tempValue 
+	m_foundSourcesCount.SetAt(nSearchID, tempValue
 		+ ( (bSpam && thePrefs.IsSearchSpamFilterEnabled()) ? min(nCount, 5) : nCount) );
 }
 // FIXME LARGE FILES
@@ -831,11 +809,11 @@ void CSearchList::KademliaSearchKeyword(uint32 searchID, const Kademlia::CUInt12
 	uchar fileid[16];
 	fileID->ToByteArray(fileid);
 	temp->WriteHash16(fileid);
-	
-	
+
+
 	temp->WriteUInt32(0);	// client IP
 	temp->WriteUInt16(0);	// client port
-	
+
 	// write tag list
 	UINT uFilePosTagCount = (UINT)temp->GetPosition();
 	uint32 tagcount = 0;
@@ -847,7 +825,7 @@ void CSearchList::KademliaSearchKeyword(uint32 searchID, const Kademlia::CUInt12
 	tagcount++;
 	verifierEntry.SetFileName(name);
 
-	CTag tagSize(FT_FILESIZE, size, true); 
+	CTag tagSize(FT_FILESIZE, size, true);
 	tagSize.WriteTagToFile(temp, eStrEncode);
 	tagcount++;
 	verifierEntry.m_uSize = size;
@@ -887,7 +865,7 @@ void CSearchList::KademliaSearchKeyword(uint32 searchID, const Kademlia::CUInt12
 		else if (uPropType == 3 /*TAGTYPE_UINT32*/)
 		{
 			if ((uint32)pvPropValue != 0)
-			{	
+			{
 				CTag tagProp(pszPropName, (uint32)pvPropValue);
 				tagProp.WriteTagToFile(temp, eStrEncode);
 				tagcount++;
@@ -902,7 +880,7 @@ void CSearchList::KademliaSearchKeyword(uint32 searchID, const Kademlia::CUInt12
 	va_end(args);
 	temp->Seek(uFilePosTagCount, SEEK_SET);
 	temp->WriteUInt32(tagcount);
-	
+
 	temp->SeekToBegin();
 	if (pQueriedSearchTerm == NULL || verifierEntry.StartSearchTermsMatch(pQueriedSearchTerm))
 	{
@@ -924,22 +902,22 @@ void CSearchList::KademliaSearchKeyword(uint32 searchID, const Kademlia::CUInt12
 			if ( byPublishers > 0 && raAICHHashPopularity[0] > 0 && byPublishers / raAICHHashPopularity[0] <= 3)
 			{
 				DEBUG_ONLY( DebugLog(_T("Received accepted AICH Hash for search result %s, %u out of %u Publishers, Hash: %s")
-								, tempFile->GetFileName(), raAICHHashPopularity[0], byPublishers, raAICHHashs[0].GetString()) );
+								, (LPCTSTR)tempFile->GetFileName(), raAICHHashPopularity[0], byPublishers, (LPCTSTR)raAICHHashs[0].GetString()) );
 				tempFile->GetFileIdentifier().SetAICHHash(raAICHHashs[0]);
 			}
 			else
 				DEBUG_ONLY( DebugLog(_T("Received unaccepted AICH Hash for search result %s, %u out of %u Publishers, Hash: %s")
-								, tempFile->GetFileName(), raAICHHashPopularity[0], byPublishers, raAICHHashs[0].GetString()) );
+								, (LPCTSTR)tempFile->GetFileName(), raAICHHashPopularity[0], byPublishers, (LPCTSTR)raAICHHashs[0].GetString()) );
 		}
 		else if (raAICHHashs.GetCount() > 1)
-			DEBUG_ONLY( DebugLog(_T("Received multiple (%u) AICH Hashs for search result %s, ignoring AICH"), raAICHHashs.GetCount(), tempFile->GetFileName()) );
+			DEBUG_ONLY( DebugLog(_T("Received multiple (%u) AICH Hashs for search result %s, ignoring AICH"), raAICHHashs.GetCount(), (LPCTSTR)tempFile->GetFileName()) );
 		AddToList(tempFile);
 	}
 	else
 	{
 		DebugLogWarning(_T("Kad Searchresult failed sanitize check against search query, ignoring. (%s)"), name);
 	}
-	
+
 	delete temp;
 }
 
@@ -986,24 +964,24 @@ void CSearchList::DoSpamRating(CSearchFile* pSearchFile, bool bIsClientFile, boo
 		remembered data is:
 		* FileHash (of course, a hit will always lead to a full score rating)
 		* Equal filename
-		* Equal or similar name after removing the search keywords and seperators 
+		* Equal or similar name after removing the search keywords and separators
 			(if search for "emule", "blubby!! emule foo.rar" is remembered as "blubby foo rar")
 		* Similar size (+- 5% but max 5MB) as other spam files
 		* Equal search source server (UDP only)
 		* Equal initial source clients
-		* Ratio (Spam / NotSpam) of UDP Servers 
+		* Ratio (Spam / NotSpam) of UDP Servers
 	Both detection methods add to the same score rating.
 
 	bMarkAsNoSpam = true: Will remove all stored characteristics which would add to an postive spam score for this file
 	*/
-	ASSERT( (bRecalculateAll && bMarkAsNoSpam) || !bRecalculateAll );
+	ASSERT( !bRecalculateAll || bMarkAsNoSpam );
 
 	if (!thePrefs.IsSearchSpamFilterEnabled())
 		return;
-	
+
 	if (!m_bSpamFilterLoaded)
 		LoadSpamFilter();
-	
+
 	int nSpamScore = 0;
 	CString strDebug;
 	bool bSureNegative = false;
@@ -1039,7 +1017,7 @@ void CSearchList::DoSpamRating(CSearchFile* pSearchFile, bool bIsClientFile, boo
 		// consider also filenames of childs / parents / silblings and take the highest rating
 
 
-		uint32 nHighestRating;	
+		uint32 nHighestRating;
 		if (pParent != NULL){
 			nHighestRating = GetSpamFilenameRatings(pParent, bMarkAsNoSpam);
 			SearchList* list = GetSearchListForID(pParent->GetSearchID());
@@ -1075,14 +1053,14 @@ void CSearchList::DoSpamRating(CSearchFile* pSearchFile, bool bIsClientFile, boo
 		}
 
 		if (!bIsClientFile){ // only to skip some useless calculations
+			const CSimpleArray<CSearchFile::SServer>& aservers = pTempFile->GetServers();
 			//5 Servers
-			for (int i = 0; i != pTempFile->GetServers().GetSize(); i++){
+			for (int i = 0; i != aservers.GetSize(); ++i) {
 				bool bFound = false;
-				if (pTempFile->GetServers()[i].m_nIP != 0 && pTempFile->GetServers()[i].m_bUDPAnswer 
-					&& m_mapKnownSpamServerIPs.Lookup(pTempFile->GetServers()[i].m_nIP, bFound))
+				if (aservers[i].m_nIP != 0 && aservers[i].m_bUDPAnswer && m_mapKnownSpamServerIPs.Lookup(aservers[i].m_nIP, bFound))
 				{
 					if (!bMarkAsNoSpam){
-						strDebug.AppendFormat(_T(" (Serverhit: %s)"), ipstr(pTempFile->GetServers()[i].m_nIP));
+						strDebug.AppendFormat(_T(" (Serverhit: %s)"), (LPCTSTR)ipstr(aservers[i].m_nIP));
 						if (pSearchFile->GetServers().GetSize() == 1 && m_mapKnownSpamServerIPs.GetCount() <= 10){
 							// source only from one server
 							nSpamScore += SPAM_UDPSERVERRES_HIT;
@@ -1102,18 +1080,18 @@ void CSearchList::DoSpamRating(CSearchFile* pSearchFile, bool bIsClientFile, boo
 						break;
 					}
 					else
-						m_mapKnownSpamServerIPs.RemoveKey(pTempFile->GetServers()[i].m_nIP);
+						m_mapKnownSpamServerIPs.RemoveKey(aservers[i].m_nIP);
 				}
 			}
 
 			// partial heuristic - only udp spamservers
 			// has this file at least one server as origin which is not rated for spam or UDP
 			// or not a result from a server at all
-			bool bNormalServerWithoutCurrentPresent = (pTempFile->GetServers().GetSize() == 0);
-			bool bNormalServerPresent = (pTempFile->GetServers().GetSize() == 0); 
-			for (int i = 0; i != pTempFile->GetServers().GetSize(); i++){
+			bool bNormalServerWithoutCurrentPresent = (aservers.GetSize() == 0);
+			bool bNormalServerPresent = bNormalServerWithoutCurrentPresent;
+			for (int i = 0; i != aservers.GetSize(); ++i) {
 				UDPServerRecord* pRecord = NULL;
-				if (!bMarkAsNoSpam && pTempFile->GetServers()[i].m_bUDPAnswer && m_aUDPServerRecords.Lookup(pTempFile->GetServers()[i].m_nIP, pRecord) && pRecord != NULL){
+				if (!bMarkAsNoSpam && aservers[i].m_bUDPAnswer && m_aUDPServerRecords.Lookup(aservers[i].m_nIP, pRecord) && pRecord != NULL) {
 					ASSERT( pRecord->m_nResults >= pRecord->m_nSpamResults );
 					int nRatio;
 					if (pRecord->m_nResults >= pRecord->m_nSpamResults && pRecord->m_nResults != 0){
@@ -1122,11 +1100,11 @@ void CSearchList::DoSpamRating(CSearchFile* pSearchFile, bool bIsClientFile, boo
 					else
 						nRatio = 100;
 					if (nRatio < 50){
-						bNormalServerWithoutCurrentPresent |= (dwFromUDPServerIP != pTempFile->GetServers()[i].m_nIP);
-						bNormalServerPresent = true; 
+						bNormalServerWithoutCurrentPresent |= (dwFromUDPServerIP != aservers[i].m_nIP);
+						bNormalServerPresent = true;
 					}
 				}
-				else if (!pTempFile->GetServers()[i].m_bUDPAnswer){
+				else if (!aservers[i].m_bUDPAnswer) {
 					bNormalServerWithoutCurrentPresent = true;
 					bNormalServerPresent = true;
 					break;
@@ -1148,23 +1126,23 @@ void CSearchList::DoSpamRating(CSearchFile* pSearchFile, bool bIsClientFile, boo
 			VERIFY( m_ReceivedUDPAnswersCount.Lookup(pTempFile->GetSearchID(), nResponses) );
 			uint32 nRequests = 0;
 			VERIFY( m_RequestedUDPAnswersCount.Lookup(pTempFile->GetSearchID(), nRequests) );
-			if (!bNormalServerWithoutCurrentPresent 
-				&& (nResponses >= 3 || nRequests >= 5) && pTempFile->GetSourceCount() > 100)		
+			if (!bNormalServerWithoutCurrentPresent
+				&& (nResponses >= 3 || nRequests >= 5) && pTempFile->GetSourceCount() > 100)
 			{
 				// check if the one of the files sources are in the same ip subnet as a udp server
 				// which indicates that the server is advertising its own files
 				bool bSourceServer = false;
-				for (int i = 0; i != pTempFile->GetServers().GetSize(); i++){
-					if (pTempFile->GetServers()[i].m_nIP != 0){
-						if ( (pTempFile->GetServers()[i].m_nIP & 0x00FFFFFF) == (pTempFile->GetClientID() & 0x00FFFFFF)){
+				for (int i = 0; i != aservers.GetSize(); ++i) {
+					if (aservers[i].m_nIP != 0) {
+						if ((aservers[i].m_nIP & 0x00FFFFFF) == (pTempFile->GetClientID() & 0x00FFFFFF)) {
 							bSourceServer = true;
-							strDebug.AppendFormat(_T(" (Server: %s - Source: %s Hit)"), ipstr(pTempFile->GetServers()[i].m_nIP), ipstr(pTempFile->GetClientID()));
+							strDebug.AppendFormat(_T(" (Server: %s - Source: %s Hit)"), (LPCTSTR)ipstr(aservers[i].m_nIP), (LPCTSTR)ipstr(pTempFile->GetClientID()));
 							break;
 						}
 						for (int j = 0; j != pTempFile->GetClients().GetSize(); j++){
-							if ( (pTempFile->GetServers()[i].m_nIP & 0x00FFFFFF) == (pTempFile->GetClients()[j].m_nIP & 0x00FFFFFF)){
+							if ((aservers[i].m_nIP & 0x00FFFFFF) == (pTempFile->GetClients()[j].m_nIP & 0x00FFFFFF)) {
 								bSourceServer = true;
-								strDebug.AppendFormat(_T(" (Server: %s - Source: %s Hit)"), ipstr(pTempFile->GetServers()[i].m_nIP), ipstr(pTempFile->GetClients()[j].m_nIP));
+								strDebug.AppendFormat(_T(" (Server: %s - Source: %s Hit)"), (LPCTSTR)ipstr(aservers[i].m_nIP), (LPCTSTR)ipstr(pTempFile->GetClients()[j].m_nIP));
 								break;
 							}
 						}
@@ -1184,7 +1162,7 @@ void CSearchList::DoSpamRating(CSearchFile* pSearchFile, bool bIsClientFile, boo
 					nDbgHeuristic = SPAM_HEURISTIC_BASEHIT;
 				}
 			}
-		}		
+		}
 		// 6 Sources
 		bool bFound = false;
 		if (IsValidSearchResultClientIPPort(pTempFile->GetClientID(), pTempFile->GetClientPort())
@@ -1192,7 +1170,7 @@ void CSearchList::DoSpamRating(CSearchFile* pSearchFile, bool bIsClientFile, boo
 			&& m_mapKnownSpamSourcesIPs.Lookup(pTempFile->GetClientID(), bFound))
 		{
 			if (!bMarkAsNoSpam){
-				strDebug.AppendFormat(_T(" (Sourceshit: %s)"), ipstr(pTempFile->GetClientID()));
+				strDebug.AppendFormat(_T(" (Sourceshit: %s)"), (LPCTSTR)ipstr(pTempFile->GetClientID()));
 				nSpamScore += SPAM_SOURCE_HIT;
 				nDbgSources = SPAM_SOURCE_HIT;
 			}
@@ -1201,18 +1179,18 @@ void CSearchList::DoSpamRating(CSearchFile* pSearchFile, bool bIsClientFile, boo
 		}
 		else{
 			for (int i = 0; i != pTempFile->GetClients().GetSize(); i++){
-				if (pTempFile->GetClients()[i].m_nIP != 0 
+				if (pTempFile->GetClients()[i].m_nIP != 0
 					&& m_mapKnownSpamSourcesIPs.Lookup(pTempFile->GetClients()[i].m_nIP, bFound))
 				{
 					if (!bMarkAsNoSpam){
-						strDebug.AppendFormat(_T(" (Sources: %s)"), ipstr(pTempFile->GetClients()[i].m_nIP));
+						strDebug.AppendFormat(_T(" (Sources: %s)"), (LPCTSTR)ipstr(pTempFile->GetClients()[i].m_nIP));
 						nSpamScore += SPAM_SOURCE_HIT;
 						nDbgSources = SPAM_SOURCE_HIT;
 						break;
 					}
 					else
 						m_mapKnownSpamSourcesIPs.RemoveKey(pTempFile->GetClients()[i].m_nIP);
-				}		
+				}
 			}
 		}
 #ifndef _DEBUG
@@ -1222,12 +1200,12 @@ void CSearchList::DoSpamRating(CSearchFile* pSearchFile, bool bIsClientFile, boo
 	if (!bMarkAsNoSpam){
 		if (nSpamScore > 0)
 			DebugLog(_T("Spamrating Result: %u. Details: Hash: %u, Name: %u, Size: %u, Server: %u, Sources: %u, Heuristic: %u, OnlySpamServers: %u. %s Filename: %s")
-				,bSureNegative ? 0 : nSpamScore, nDbgFileHash, nDbgStrings, nDbgSize, nDbgServer, nDbgSources, nDbgHeuristic, nDbgOnlySpamServer, strDebug, pSearchFile->GetFileName());
+				,bSureNegative ? 0 : nSpamScore, nDbgFileHash, nDbgStrings, nDbgSize, nDbgServer, nDbgSources, nDbgHeuristic, nDbgOnlySpamServer, (LPCTSTR)strDebug, (LPCTSTR)pSearchFile->GetFileName());
 	}
 	else{
 		DebugLog(_T("Marked file as No Spam, Old Rating: %u."), pSearchFile->GetSpamRating());
 	}
-	
+
 	bool bOldSpamStatus = pSearchFile->IsConsideredSpam();
 
 	pParent = NULL;
@@ -1251,10 +1229,10 @@ void CSearchList::DoSpamRating(CSearchFile* pSearchFile, bool bIsClientFile, boo
 
 	// keep record about ratio of spam in UDP server results
 	if (bOldSpamStatus != pSearchFile->IsConsideredSpam()){
-		for (int i = 0; i != pTempFile->GetServers().GetSize(); i++){
+		const CSimpleArray<CSearchFile::SServer>& aservers = pTempFile->GetServers();
+		for (int i = 0; i != aservers.GetSize(); ++i) {
 			UDPServerRecord* pRecord = NULL;
-			if (pTempFile->GetServers()[i].m_bUDPAnswer
-				&& m_aUDPServerRecords.Lookup(pTempFile->GetServers()[i].m_nIP, pRecord) && pRecord != NULL)
+			if (aservers[i].m_bUDPAnswer && m_aUDPServerRecords.Lookup(aservers[i].m_nIP, pRecord) && pRecord != NULL)
 			{
 				if (pSearchFile->IsConsideredSpam())
 					pRecord->m_nSpamResults++;
@@ -1271,7 +1249,7 @@ void CSearchList::DoSpamRating(CSearchFile* pSearchFile, bool bIsClientFile, boo
 		if (m_aUDPServerRecords.Lookup(dwFromUDPServerIP, pRecord) && pRecord != NULL)
 			pRecord->m_nSpamResults++;
 	}
-	
+
 	if (bUpdate && outputwnd != NULL)
 		outputwnd->UpdateSources((pParent != NULL) ? pParent : pSearchFile);
 	if (bRecalculateAll)
@@ -1295,32 +1273,30 @@ uint32 CSearchList::GetSpamFilenameRatings(const CSearchFile* pSearchFile, bool 
 	}
 	uint32 nResult = 0;
 	if (!m_astrKnownSimilarSpamNames.IsEmpty() && !pSearchFile->GetNameWithoutKeyword().IsEmpty()){
-		
+		const CString& cname = pSearchFile->GetNameWithoutKeyword();
 		for (int i = 0; i < m_astrKnownSimilarSpamNames.GetCount(); i++){
 			bool bRemove = false;
-			if (pSearchFile->GetNameWithoutKeyword().Compare(m_astrKnownSimilarSpamNames[i]) == 0){
+			if (cname.Compare(m_astrKnownSimilarSpamNames[i]) == 0) {
 				if (!bMarkAsNoSpam){
-					if (pSearchFile->GetNameWithoutKeyword().GetLength() <= 10)
+					if (cname.GetLength() <= 10)
 						return SPAM_SMALLSIMILARNAME_HIT;
-					else
-						return SPAM_SIMILARNAME_HIT;
-				}
-				else
+					return SPAM_SIMILARNAME_HIT;
+				} else
 					bRemove = true;
 			}
-			else if (pSearchFile->GetNameWithoutKeyword().GetLength() > 10 
-				&& (abs(pSearchFile->GetNameWithoutKeyword().GetLength() - m_astrKnownSimilarSpamNames[i].GetLength()) == 0
-				|| pSearchFile->GetNameWithoutKeyword().GetLength() / abs(pSearchFile->GetNameWithoutKeyword().GetLength() - m_astrKnownSimilarSpamNames[i].GetLength()) >= 3))
+			else if (cname.GetLength() > 10
+				&& (cname.GetLength() == m_astrKnownSimilarSpamNames[i].GetLength()
+				|| cname.GetLength() / abs(cname.GetLength() - m_astrKnownSimilarSpamNames[i].GetLength()) >= 3))
 			{
-				uint32 nStringComp = LevenshteinDistance(pSearchFile->GetNameWithoutKeyword(), m_astrKnownSimilarSpamNames[i]);
+				uint32 nStringComp = LevenshteinDistance(cname, m_astrKnownSimilarSpamNames[i]);
 				if (nStringComp != 0)
-					nStringComp = pSearchFile->GetNameWithoutKeyword().GetLength() / nStringComp;
+					nStringComp = cname.GetLength() / nStringComp;
 				if (nStringComp >= 3){
 					if (!bMarkAsNoSpam){
 						if (nStringComp >= 6)
 							nResult = SPAM_SIMILARNAME_NEARHIT;
 						else
-							nResult = max(nResult, SPAM_SIMILARNAME_FARHIT); 
+							nResult = max(nResult, SPAM_SIMILARNAME_FARHIT);
 					}
 					else
 						bRemove = true;
@@ -1345,7 +1321,7 @@ SearchList* CSearchList::GetSearchListForID(uint32 nSearchID){
 	}
 	SearchListsStruct* list = new SearchListsStruct;
 	list->m_nSearchID = nSearchID;
-	m_listFileLists.AddHead(list);
+	m_listFileLists.AddTail(list);
 	return &list->m_listSearchFiles;
 }
 
@@ -1366,7 +1342,7 @@ void CSearchList::MarkFileAsSpam(CSearchFile* pSpamFile, bool bRecalculateAll, b
 	m_astrKnownSimilarSpamNames.Add(pSpamFile->GetNameWithoutKeyword());
 	m_mapKnownSpamHashs.SetAt(CSKey(pSpamFile->GetFileHash()), true);
 	m_aui64KnownSpamSizes.Add((uint64)pSpamFile->GetFileSize());
-	
+
 	if (IsValidSearchResultClientIPPort(pSpamFile->GetClientID(), pSpamFile->GetClientPort())
 		&& !::IsLowID(pSpamFile->GetClientID()))
 	{
@@ -1375,12 +1351,12 @@ void CSearchList::MarkFileAsSpam(CSearchFile* pSpamFile, bool bRecalculateAll, b
 	for (int i = 0; i != pSpamFile->GetClients().GetSize(); i++){;
 		if (pSpamFile->GetClients()[i].m_nIP != 0){
 			m_mapKnownSpamSourcesIPs.SetAt(pSpamFile->GetClients()[i].m_nIP, true);
-		}		
+		}
 	}
 	for (int i = 0; i != pSpamFile->GetServers().GetSize(); i++){
 		if (pSpamFile->GetServers()[i].m_nIP != 0 && pSpamFile->GetServers()[i].m_bUDPAnswer){
 			m_mapKnownSpamServerIPs.SetAt(pSpamFile->GetServers()[i].m_nIP, true);
-		}		
+		}
 	}
 
 
@@ -1388,7 +1364,7 @@ void CSearchList::MarkFileAsSpam(CSearchFile* pSpamFile, bool bRecalculateAll, b
 		RecalculateSpamRatings(pSpamFile->GetSearchID(), true, false, bUpdate);
 	else
 		DoSpamRating(pSpamFile);
-	
+
 	if (bUpdate && outputwnd != NULL)
 		outputwnd->UpdateSources(pSpamFile);
 }
@@ -1431,11 +1407,11 @@ void CSearchList::LoadSpamFilter(){
 		if (fexp.m_cause != CFileException::fileNotFound){
 			CString strError(_T("Failed to load ") SPAMFILTER_FILENAME _T(" file"));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (fexp.GetErrorMessage(szError, ARRSIZE(szError))){
+			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
 				strError += _T(" - ");
 				strError += szError;
 			}
-			DebugLogError(_T("%s"), strError);
+			DebugLogError(_T("%s"), (LPCTSTR)strError);
 		}
 		return;
 	}
@@ -1505,7 +1481,7 @@ void CSearchList::LoadSpamFilter(){
 						else
 							nRatio = 100;
 						DEBUG_ONLY(DebugLog(_T("UDP Server Spam Record: IP: %s, Results: %u, SpamResults: %u, Ratio: %u")
-							, ipstr(PeekUInt32(&pBuffer[0])), pRecord->m_nResults, pRecord->m_nSpamResults, nRatio));
+							, (LPCTSTR)ipstr(PeekUInt32(&pBuffer[0])), pRecord->m_nResults, pRecord->m_nSpamResults, nRatio));
 					}
 					break;
 				default:
@@ -1519,7 +1495,7 @@ void CSearchList::LoadSpamFilter(){
 			DebugLogError(_T("Failed to load searchspam.met, corrupt"));
 		else{
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			error->GetErrorMessage(buffer, ARRSIZE(buffer));
+			GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
 			DebugLogError(_T("Failed to load searchspam.met, %s"),buffer);
 		}
 		error->Delete();
@@ -1543,11 +1519,11 @@ void CSearchList::SaveSpamFilter(){
 		if (fexp.m_cause != CFileException::fileNotFound){
 			CString strError(_T("Failed to load ") SPAMFILTER_FILENAME _T(" file"));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (fexp.GetErrorMessage(szError, ARRSIZE(szError))){
+			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
 				strError += _T(" - ");
 				strError += szError;
 			}
-			DebugLogError(_T("%s"), strError);
+			DebugLogError(_T("%s"), (LPCTSTR)strError);
 		}
 		return;
 	}
@@ -1555,9 +1531,9 @@ void CSearchList::SaveSpamFilter(){
 	uint32 nCount = 0;
 	try{
 		file.WriteUInt8(MET_HEADER_I64TAGS);
-		
+
 		file.WriteUInt32(nCount);
-		
+
 		for (int i = 0; i < m_astrKnownSpamNames.GetCount(); i++){
 			CTag tag(SP_FILEFULLNAME, m_astrKnownSpamNames[i]);
 			tag.WriteNewEd2kTag(&file, utf8strOptBOM);
@@ -1636,7 +1612,7 @@ void CSearchList::SaveSpamFilter(){
 	}
 	catch(CFileException* error){
 		TCHAR buffer[MAX_CFEXP_ERRORMSG];
-		error->GetErrorMessage(buffer, ARRSIZE(buffer));
+		GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
 		DebugLogError(_T("Failed to save searchspam.met, %s"),buffer);
 		error->Delete();
 		return;
@@ -1655,11 +1631,11 @@ void CSearchList::StoreSearches(){
 		if (fexp.m_cause != CFileException::fileNotFound){
 			CString strError(_T("Failed to load ") STOREDSEARCHES_FILENAME _T(" file"));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (fexp.GetErrorMessage(szError, ARRSIZE(szError))){
+			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
 				strError += _T(" - ");
 				strError += szError;
 			}
-			DebugLogError(_T("%s"), strError);
+			DebugLogError(_T("%s"), (LPCTSTR)strError);
 		}
 		return;
 	}
@@ -1669,25 +1645,29 @@ void CSearchList::StoreSearches(){
 		file.WriteUInt8(MET_HEADER_I64TAGS);
 		uint8 byVersion = STOREDSEARCHES_VERSION;
 		file.WriteUInt8(byVersion);
-		// count how many (if any) open searches we have which are GUI related	
-		POSITION pos;
-		for (pos = m_listFileLists.GetHeadPosition(); pos != NULL; ){
+		// count how many (if any) open searches we have which are GUI related
+		for (POSITION pos = m_listFileLists.GetHeadPosition(); pos != NULL;) {
 			SearchListsStruct* pSl = m_listFileLists.GetNext(pos);
 			if (theApp.emuledlg->searchwnd->GetSearchParamsBySearchID(pSl->m_nSearchID) != NULL)
 				nCount++;
 		}
 		file.WriteUInt16(nCount);
 		if (nCount > 0){
-			POSITION pos;
-			for (pos = m_listFileLists.GetTailPosition(); pos != NULL; ){
-				SearchListsStruct* pSl = m_listFileLists.GetPrev(pos);
+			for (POSITION pos = m_listFileLists.GetHeadPosition(); pos != NULL;) {
+				SearchListsStruct* pSl = m_listFileLists.GetNext(pos);
 				SSearchParams* pParams = theApp.emuledlg->searchwnd->GetSearchParamsBySearchID(pSl->m_nSearchID);
 				if (pParams != NULL){
 					pParams->StorePartially(file);
-					file.WriteUInt32(pSl->m_listSearchFiles.GetCount());
-					POSITION pos2;
-					for (pos2 = pSl->m_listSearchFiles.GetHeadPosition(); pos2 != NULL;)
-						pSl->m_listSearchFiles.GetNext(pos2)->StoreToFile(file);
+					uint32 uCount = 0;
+					for (POSITION pos2 = pSl->m_listSearchFiles.GetHeadPosition(); pos2 != NULL;)
+						if (!(pSl->m_listSearchFiles.GetNext(pos2)->m_flags & 2))
+							++uCount;
+					file.WriteUInt32(uCount);
+					for (POSITION pos2 = pSl->m_listSearchFiles.GetHeadPosition(); pos2 != NULL;) {
+						CSearchFile *f = pSl->m_listSearchFiles.GetNext(pos2);
+						if (!(f->m_flags & 2))
+							f->StoreToFile(file);
+					}
 				}
 			}
 		}
@@ -1695,7 +1675,7 @@ void CSearchList::StoreSearches(){
 	}
 	catch(CFileException* error){
 		TCHAR buffer[MAX_CFEXP_ERRORMSG];
-		error->GetErrorMessage(buffer, ARRSIZE(buffer));
+		GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
 		DebugLogError(_T("Failed to save %s, %s"), STOREDSEARCHES_FILENAME, buffer);
 		error->Delete();
 		return;
@@ -1704,7 +1684,7 @@ void CSearchList::StoreSearches(){
 }
 
 void CSearchList::LoadSearches(){
-	ASSERT( m_listFileLists.GetCount() == 0 );
+	ASSERT( m_listFileLists.IsEmpty() );
 	CString fullpath = thePrefs.GetMuleDirectory(EMULE_CONFIGDIR);
 	fullpath.Append(STOREDSEARCHES_FILENAME);
 	CSafeBufferedFile file;
@@ -1713,11 +1693,11 @@ void CSearchList::LoadSearches(){
 		if (fexp.m_cause != CFileException::fileNotFound){
 			CString strError(_T("Failed to load ") STOREDSEARCHES_FILENAME _T(" file"));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (fexp.GetErrorMessage(szError, ARRSIZE(szError))){
+			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
 				strError += _T(" - ");
 				strError += szError;
 			}
-			DebugLogError(_T("%s"), strError);
+			DebugLogError(_T("%s"), (LPCTSTR)strError);
 		}
 		return;
 	}
@@ -1748,13 +1728,13 @@ void CSearchList::LoadSearches(){
 				pParams->eType = SearchTypeEd2kServer;
 			else if (pParams->eType == SearchTypeEd2kGlobal && pParams->dwSearchID < 0x80000000)
 				pParams->eType = SearchTypeKademlia;
-			
+
 			if (pParams->eType == SearchTypeKademlia && (nHighestKadSearchID == 0xFFFFFFFF || nHighestKadSearchID < pParams->dwSearchID)){
-				ASSERT( pParams->dwSearchID < 0x80000000 );
+				//ASSERT( pParams->dwSearchID < 0x80000000 );
 				nHighestKadSearchID = pParams->dwSearchID;
 			}
 			else if (pParams->eType != SearchTypeKademlia && (nHighestEd2kSearchID == 0xFFFFFFFF || nHighestEd2kSearchID < pParams->dwSearchID)){
-				ASSERT( pParams->dwSearchID >= 0x80000000 );
+//				ASSERT( pParams->dwSearchID >= 0x80000000 );
 				nHighestEd2kSearchID = pParams->dwSearchID;
 			}
 
@@ -1763,7 +1743,7 @@ void CSearchList::LoadSearches(){
 			if (strResultType == ED2KFTSTR_PROGRAM)
 				strResultType.Empty();
 			NewSearch(NULL, strResultType, pParams->dwSearchID, pParams->eType, pParams->strExpression, false);
-			
+
 			bool bDeleteParams = false;
 			if (theApp.emuledlg->searchwnd->CreateNewTab(pParams, false)){
 				m_foundFilesCount.SetAt(pParams->dwSearchID, 0);
@@ -1796,7 +1776,7 @@ void CSearchList::LoadSearches(){
 			DebugLogError(_T("Failed to load %s, corrupt"), STOREDSEARCHES_FILENAME);
 		else{
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			error->GetErrorMessage(buffer, ARRSIZE(buffer));
+			GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
 			DebugLogError(_T("Failed to load %s, %s"), STOREDSEARCHES_FILENAME, buffer);
 		}
 		error->Delete();

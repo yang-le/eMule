@@ -23,18 +23,20 @@ class CMMServer;
 class CMMPacket
 {
 public:
-	CMMPacket(uint8 byOpcode)	{m_pBuffer = new CMemFile; m_pBuffer->Write(&byOpcode,1); m_bSpecialHeader = false;}
+	explicit CMMPacket(const uint8 byOpcode)	{m_pBuffer = new CMemFile; m_pBuffer->Write(&byOpcode,1); m_bSpecialHeader = false;}
 	~CMMPacket()				{delete m_pBuffer;}
-	void	WriteByte(uint8 write)		{m_pBuffer->Write(&write,1);}
-	void	WriteShort(uint16 write)	{m_pBuffer->Write(&write,2);}
-	void	WriteInt(uint32 write)		{m_pBuffer->Write(&write,4);}
-	void	WriteInt64(uint64 write)	{m_pBuffer->Write(&write,8);}
-	void	WriteString(CStringA write){
+	void	WriteByte(const uint8 write) { m_pBuffer->Write(&write, 1); }
+	void	WriteShort(const uint16 write) { m_pBuffer->Write(&write, 2); }
+	void	WriteInt(const uint32 write) { m_pBuffer->Write(&write, 4); }
+	void	WriteInt64(const uint64 write) { m_pBuffer->Write(&write, 8); }
+	void	WriteString(const CStringA& write)
+	{
 		uint8 len = (write.GetLength() > 255) ? (uint8)255 : (uint8)write.GetLength();
 		WriteByte(len);
 		m_pBuffer->Write(const_cast<LPSTR>((LPCSTR)write), len);
 	}
-	void	WriteString(CString write){
+	void	WriteString(const CString& write)
+	{
 		CStringA strA(write);
 		WriteString(strA);
 	}
@@ -81,7 +83,7 @@ public:
 class CMMSocket: public CAsyncSocket
 {
 public:
-	CMMSocket(CMMServer* pOwner);
+	explicit CMMSocket(CMMServer* pOwner);
 	~CMMSocket(void);
 	bool	SendPacket(CMMPacket* packet, bool bQueueFirst = false);
 	bool	m_bClosed;
@@ -111,7 +113,7 @@ private:
 class CListenMMSocket: public CAsyncSocket
 {
 public:
-	CListenMMSocket(CMMServer* pOwner);
+	explicit CListenMMSocket(CMMServer* pOwner);
 	~CListenMMSocket(void);
 	bool	Create();
 	void	Process();

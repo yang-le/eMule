@@ -20,14 +20,14 @@
 
 // A file we know on the filesystem we could share, but don't do so yet
 
-enum EFileType;
+enum EFileType: int;
 
 class CShareableFile : public CAbstractFile
 {
 	DECLARE_DYNAMIC(CShareableFile)
 
 public:
-	CShareableFile();	
+	CShareableFile();
 	virtual ~CShareableFile()						{};
 	virtual void UpdateFileRatingCommentAvail(bool /*bForceUpdate = false*/)		{ ASSERT( false ); }
 

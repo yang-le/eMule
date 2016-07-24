@@ -123,7 +123,7 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 	//
 	// Windows Vista *without* SP1
 	// ---------------------------
-	// The Vista 'TOOLTIP' theme offers a bold version of the standard tooltip font via 
+	// The Vista 'TOOLTIP' theme offers a bold version of the standard tooltip font via
 	// the TTP_STANDARDTITLE part id. Furthermore TTP_STANDARDTITLE is the same font as
 	// the standard tooltip font (TTP_STANDARD). So, the 'TOOLTIP' theme can get used
 	// thoroughly.
@@ -142,7 +142,7 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 	// Windows XP
 	// ----------
 	// Can *not* use the 'TOOLTIP' theme at all because it would give us only a (non-bold)
-	// black font on a white tooltip window background. Seems that the 'TOOLTIP' theme under 
+	// black font on a white tooltip window background. Seems that the 'TOOLTIP' theme under
 	// WinXP is just using the default Window values (black+white) and does not
 	// use any of the tooltip specific Window metrics...
 	//
@@ -229,7 +229,7 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 	// Auto-format the text only if explicitly requested. Otherwise we would also format
 	// single line tooltips for regular list items, and if those list items contain ':'
 	// characters they would be shown partially in bold. For performance reasons, the
-	// auto-format is to be requested by appending the TOOLTIP_AUTOFORMAT_SUFFIX_CH 
+	// auto-format is to be requested by appending the TOOLTIP_AUTOFORMAT_SUFFIX_CH
 	// character. Appending, because we can remove that character efficiently without
 	// re-allocating the entire string.
 	bool bAutoFormatText = strText.GetLength() > 0 && strText[strText.GetLength() - 1] == TOOLTIP_AUTOFORMAT_SUFFIX_CH;
@@ -244,7 +244,7 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 				bShowFileIcon = false; // 1st line does not contain a filename
 		}
 	}
-	
+
 	int iTextHeight = 0;
 	int iMaxCol1Width = 0;
 	int iMaxCol2Width = 0;
@@ -252,7 +252,7 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 	CSize sizText(0);
 	int iPos = 0;
 	int iCaptionHeight = 0;
-	const int iCaptionEnd = bShowFileIcon ? max(strText.Find(_T("\n<br_head>\n")), 0) : 0; // special tooltip with file icon
+	const int iCaptionEnd = bShowFileIcon ? maxi(strText.Find(_T("\n<br_head>\n")), 0) : 0; // special tooltip with file icon
 	const int iLineHeightOff = 1;
 	const int iIconMinYBorder = bShowFileIcon ? 3 : 0;
 	const int iIconWidth = bShowFileIcon ? theApp.GetBigSytemIconSize().cx : 0;
@@ -277,7 +277,7 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 				if (pOldFont)
 					pdc->SelectObject(pOldFont);
 			}
-			iMaxCol1Width = max(iMaxCol1Width, siz.cx + ((bShowFileIcon && iPos <= iCaptionEnd + strLine.GetLength()) ? iIconDrawingWidth : 0));
+			iMaxCol1Width = maxi(iMaxCol1Width, (int)(siz.cx + ((bShowFileIcon && iPos <= iCaptionEnd + strLine.GetLength()) ? iIconDrawingWidth : 0)));
 			iTextHeight = siz.cy + iLineHeightOff; // update height with 'col1' string, because 'col2' string might be empty and therefore has no height
 			if (iPos <= iCaptionEnd)
 				iCaptionHeight += siz.cy + iLineHeightOff;
@@ -332,7 +332,7 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 			else {
 				siz = pdc->GetTextExtent(strLine);
 			}
-			iMaxSingleLineWidth = max(iMaxSingleLineWidth, siz.cx + ((bShowFileIcon && iPos <= iCaptionEnd) ? iIconDrawingWidth : 0));
+			iMaxSingleLineWidth = maxi(iMaxSingleLineWidth, (int)(siz.cx + ((bShowFileIcon && iPos <= iCaptionEnd) ? iIconDrawingWidth : 0)));
 			if (bShowFileIcon && iPos <= iCaptionEnd + strLine.GetLength())
 				iCaptionHeight += siz.cy + iLineHeightOff;
 			else
@@ -355,7 +355,7 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 		}
 	}
 	if (bShowFileIcon && iCaptionEnd > 0)
-		iCaptionHeight = max(iCaptionHeight, theApp.GetBigSytemIconSize().cy + (2*iIconMinYBorder));
+		iCaptionHeight = maxi(iCaptionHeight, (int)(theApp.GetBigSytemIconSize().cy + (2*iIconMinYBorder)));
 	sizText.cy += iCaptionHeight;
 	if (hTheme && theApp.m_ullComCtrlVer >= MAKEDLLVERULL(6,16,0,0))
 		sizText.cy += 2; // extra bottom margin for Vista/Theme
@@ -364,7 +364,7 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 	iMaxCol2Width = min(m_iScreenWidth4*2, iMaxCol2Width);
 
 	const int iMiddleMargin = 6;
-	iMaxSingleLineWidth = max(iMaxSingleLineWidth, iMaxCol1Width + iMiddleMargin + iMaxCol2Width);
+	iMaxSingleLineWidth = maxi(iMaxSingleLineWidth, iMaxCol1Width + iMiddleMargin + iMaxCol2Width);
 	if (iMaxSingleLineWidth > m_iScreenWidth4*3)
 		iMaxSingleLineWidth = m_iScreenWidth4*3;
 	sizText.cx = iMaxSingleLineWidth;
@@ -470,13 +470,13 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 			}
 			else {
 				bool bIsBrHeadLine = false;
-				if (bAutoFormatText && (strLine.Compare(_T("<br>")) == 0 || (bIsBrHeadLine = strLine.Compare(_T("<br_head>")) == 0) == true)){
+				if (bAutoFormatText && (strLine.Compare(_T("<br>")) == 0 || (bIsBrHeadLine = (strLine.Compare(_T("<br_head>")) == 0)))) {
 					CPen pen;
 					pen.CreatePen(0, 1, m_crTooltipTextColor);
 					CPen *pOP = pdc->SelectObject(&pen);
 					if (bIsBrHeadLine)
 						ptText.y = iCaptionHeight;
-					pdc->MoveTo(ptText.x, ptText.y + ((iTextHeight - 2) / 2)); 
+					pdc->MoveTo(ptText.x, ptText.y + ((iTextHeight - 2) / 2));
 					pdc->LineTo(ptText.x + iMaxSingleLineWidth, ptText.y + ((iTextHeight - 2) / 2));
 					ptText.y += iTextHeight;
 					pdc->SelectObject(pOP);
@@ -586,7 +586,7 @@ void CToolTipCtrlX::OnNmCustomDraw(NMHDR *pNMHDR, LRESULT *pResult)
 	// For each tooltip which is to be shown Windows invokes the draw function at least 2 times.
 	//	1st invokation: to get the drawing rectangle
 	//	2nd invokation: to draw the actual tooltip window contents
-	// 
+	//
 	// 'DrawText' flags for the 1st and 2nd/3rd call
 	// ---------------------------------------------
 	// NMTTCUSTOMDRAW 00000e50	DT_NOPREFIX | DT_CALCRECT | DT_EXTERNALLEADING | DT_EXPANDTABS | DT_WORDBREAK

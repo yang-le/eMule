@@ -33,7 +33,7 @@ END_MESSAGE_MAP()
 // 'TabControl::TabControl'
 //
 TabControl::TabControl()
-	: m_bDragging(false), m_InsertPosRect(0,0,0,0), m_pSpinCtrl(0), m_bHotTracking(false)
+	: m_bDragging(false), m_InsertPosRect(0,0,0,0), m_pSpinCtrl(0), m_bHotTracking(false), m_nSrcTab(0), m_nDstTab(0)
 {
 }
 
@@ -43,7 +43,7 @@ TabControl::TabControl()
 TabControl::~TabControl()
 {
 	if (m_pSpinCtrl)
-	{ 
+	{
 		m_pSpinCtrl->Detach();
 		delete m_pSpinCtrl;
 	}
@@ -74,12 +74,12 @@ void TabControl::OnLButtonDown(UINT nFlags, CPoint point)
 		DrawIndicator(point);
 		SetCapture();
 	}
-	else  
+	else
 	{
 		CTabCtrl::OnLButtonDown(nFlags, point);
 	}
 
-	// Note: We're not calling the base classes CTabCtrl::OnLButtonDown 
+	// Note: We're not calling the base classes CTabCtrl::OnLButtonDown
 	//       everytime, because we want to be able to drag a tab without
 	//       actually select it first (so that it gets the focus).
 }
@@ -88,8 +88,8 @@ void TabControl::OnLButtonDown(UINT nFlags, CPoint point)
 // 'TabControl::OnLButtonUp'
 //
 // @mfunc Handler that is called when the left mouse button is released.
-//        Is used to stop the drag 'n drop process, releases the mouse 
-//        capture and reorders the tabs accordingly to insertion (drop) 
+//        Is used to stop the drag 'n drop process, releases the mouse
+//        capture and reorders the tabs accordingly to insertion (drop)
 //        position.
 //
 void TabControl::OnLButtonUp(UINT nFlags, CPoint point)
@@ -209,7 +209,7 @@ void TabControl::OnCaptureChanged(CWnd *)
 //
 // 'TabControl::DrawIndicator'
 //
-// @mfunc Utility member function to draw the (drop) indicator of where the 
+// @mfunc Utility member function to draw the (drop) indicator of where the
 //        tab will be inserted.
 //
 bool TabControl::DrawIndicator(CPoint point		// @parm Specifies a position (e.g. the mouse pointer position) which
@@ -244,7 +244,7 @@ bool TabControl::DrawIndicator(CPoint point		// @parm Specifies a position (e.g.
 	CRect newInsertPosRect(rect.left - 1, rect.top, rect.left - 1 + INDICATOR_WIDTH, rect.bottom);
 
 	// Determine whether the indicator should be painted at the right of
-	// the tab - in which case we update the indicator position and the 
+	// the tab - in which case we update the indicator position and the
 	// destination tab ...
 	if (point.x >= rect.right - rect.Width()/2)
 	{
@@ -259,7 +259,7 @@ bool TabControl::DrawIndicator(CPoint point		// @parm Specifies a position (e.g.
 
 		// Update to new insert indicator position...
 		m_InsertPosRect = newInsertPosRect;
-	}  
+	}
 
 	// Create a simple device context in which we initialize the pen and brush
 	// that we will use for drawing the new indicator...
@@ -406,7 +406,7 @@ void TabControl::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 	if (bVistaThemeActive)
 	{
 		// To determine if the current item is in 'hot tracking' mode, we need to evaluate
-		// the current foreground color - there is no flag which would indicate this state 
+		// the current foreground color - there is no flag which would indicate this state
 		// more safely. This applies only for Vista and for tab controls which have the
 		// TCS_OWNERDRAWFIXED style.
 		bVistaHotTracked = pDC->GetTextColor() == GetSysColor(COLOR_HOTLIGHT);
@@ -476,7 +476,7 @@ void TabControl::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 	int iOldBkMode = pDC->SetBkMode(TRANSPARENT);
 
 	COLORREF crOldColor = CLR_NONE;
-	if (tci.lParam != (DWORD)-1)
+	if (tci.lParam != -1)
 		crOldColor = pDC->SetTextColor(tci.lParam);
 	else if (bVistaHotTracked)
 		crOldColor = pDC->SetTextColor(GetSysColor(COLOR_BTNTEXT));

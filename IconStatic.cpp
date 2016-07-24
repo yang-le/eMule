@@ -68,7 +68,7 @@ void CIconStatic::SetIcon(LPCTSTR pszIconID)
 	CDC *pDC = GetDC();
 	CDC MemDC;
 	CBitmap *pOldBMP;
-	
+
 	VERIFY( MemDC.CreateCompatibleDC(pDC) );
 
 	CFont *pOldFont = MemDC.SelectObject(GetFont());
@@ -99,7 +99,7 @@ void CIconStatic::SetIcon(LPCTSTR pszIconID)
 
 	// clear all alpha channel data
 	BITMAP bmMem;
-	if (m_MemBMP.GetObject(sizeof bmMem, &bmMem) >= sizeof bmMem && bmMem.bmBitsPixel == 32)
+	if ((unsigned)m_MemBMP.GetObject(sizeof bmMem, &bmMem) >= sizeof bmMem && bmMem.bmBitsPixel == 32u)
 	{
 		DWORD dwSize = m_MemBMP.GetBitmapBits(0, NULL);
 		if (dwSize)
@@ -126,12 +126,12 @@ void CIconStatic::SetIcon(LPCTSTR pszIconID)
 	}
 
 	rCaption.left += 22;
-	
+
 	if(g_xpStyle.IsThemeActive() && g_xpStyle.IsAppThemed())
     {
-		HTHEME hTheme = g_xpStyle.OpenThemeData(NULL, L"BUTTON"); 
-		g_xpStyle.DrawThemeText(hTheme, MemDC.m_hDC, BP_GROUPBOX, GBS_NORMAL, m_strText, m_strText.GetLength(), 
-			DT_WORDBREAK | DT_CENTER | DT_WORD_ELLIPSIS, NULL, &rCaption); 
+		HTHEME hTheme = g_xpStyle.OpenThemeData(NULL, L"BUTTON");
+		g_xpStyle.DrawThemeText(hTheme, MemDC.m_hDC, BP_GROUPBOX, GBS_NORMAL, m_strText, m_strText.GetLength(),
+			DT_WORDBREAK | DT_CENTER | DT_WORD_ELLIPSIS, NULL, &rCaption);
 		g_xpStyle.CloseThemeData(hTheme);
 	}
 	else
@@ -144,7 +144,7 @@ void CIconStatic::SetIcon(LPCTSTR pszIconID)
 
 	MemDC.SelectObject(pOldBMP);
 	MemDC.SelectObject(pOldFont);
-	
+
 	if (m_wndPicture.m_hWnd == NULL)
 		m_wndPicture.Create(NULL, WS_CHILD | WS_VISIBLE | SS_BITMAP, CRect(0,0,0,0), this);
 	m_wndPicture.SetWindowPos(NULL, rRect.left+8, rRect.top, rCaption.Width()+22, rCaption.Height(), SWP_SHOWWINDOW);

@@ -22,6 +22,7 @@ class CStatisticFile
 public:
 	CStatisticFile()
 	{
+		fileParent = NULL;
 		requested = 0;
 		transferred = 0;
 		accepted = 0;
@@ -44,7 +45,7 @@ public:
 	void	SetAllTimeRequests(uint32 nVal);
 	void	SetAllTimeAccepts(uint32 nVal);
 	void	SetAllTimeTransferred(uint64 nVal);
-	
+
 	CKnownFile* fileParent;
 
 private:

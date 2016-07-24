@@ -1,8 +1,8 @@
 /********************************************************************
-		HyperTextCtrl.h - Controls that shows hyperlinks 
+		HyperTextCtrl.h - Controls that shows hyperlinks
 		in text
 
-		Copyright (C) 2001-2002 Magomed G. Abdurakhmanov			
+		Copyright (C) 2001-2002 Magomed G. Abdurakhmanov
 ********************************************************************/
 
 //edited by (C)2002 Merkur ( devs@emule-project.net / http://www.emule-project.net )
@@ -32,6 +32,7 @@
 #include "hypertextctrl.h"
 #include <deque>
 
+#pragma warning(push)
 #pragma warning(disable:4244) // conversion from <type1> to <type2>, possible loss of data
 #pragma warning(disable:4018) // signed/unsigned mismatch
 #pragma warning(disable:4100) // unreferenced formal parameter
@@ -44,22 +45,24 @@ static char THIS_FILE[] = __FILE__;
 
 
 // CHyperLink
-CHyperLink::CHyperLink(int iBegin, uint16 iEnd, const CString& sTitle, const CString& sCommand, const CString& sDirectory){
-	m_Type = lt_Shell;
+CHyperLink::CHyperLink(int iBegin, uint16 iEnd, const CString& sTitle, const CString& sCommand, const CString& sDirectory)
+	: m_Type(lt_Shell)
+{
 	m_iBegin = iBegin;
 	m_iEnd = iEnd;
 	m_sTitle = sTitle;
 	m_sCommand = sCommand;
 	m_sDirectory = sDirectory;
-   // [i_a] used for lt_Message  
-    m_hWnd = 0; 
-    m_uMsg = 0; 
-    m_wParam = 0; 
-    m_lParam = 0; 
-} // [/i_a] 
+   // [i_a] used for lt_Message
+    m_hWnd = 0;
+    m_uMsg = 0;
+    m_wParam = 0;
+    m_lParam = 0;
+} // [/i_a]
 
-CHyperLink::CHyperLink(int iBegin, uint16 iEnd, const CString& sTitle, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
-	m_Type = lt_Message;
+CHyperLink::CHyperLink(int iBegin, uint16 iEnd, const CString& sTitle, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	: m_Type(lt_Message)
+{
 	m_iBegin = iBegin;
 	m_iEnd = iEnd;
 	m_sTitle = sTitle;
@@ -68,20 +71,23 @@ CHyperLink::CHyperLink(int iBegin, uint16 iEnd, const CString& sTitle, HWND hWnd
 	m_wParam = wParam;
 	m_lParam = lParam;
 }
- CHyperLink::CHyperLink(){  // [i_a] 
-   m_Type = lt_Unknown; 
-   m_iBegin = 0; 
-   m_iEnd = 0; 
-   m_sTitle.Empty(); 
-   m_sCommand.Empty(); 
-   m_sDirectory.Empty(); 
-   m_hWnd = 0; 
-   m_uMsg = 0; 
-   m_wParam = 0; 
-   m_lParam = 0; 
- } // [/i_a] 
-CHyperLink::CHyperLink(const CHyperLink& Src){
-	m_Type = Src.m_Type;
+ CHyperLink::CHyperLink()
+	 : m_Type(lt_Unknown)
+ {  // [i_a]
+   m_iBegin = 0;
+   m_iEnd = 0;
+   m_sTitle.Empty();
+   m_sCommand.Empty();
+   m_sDirectory.Empty();
+   m_hWnd = 0;
+   m_uMsg = 0;
+   m_wParam = 0;
+   m_lParam = 0;
+ } // [/i_a]
+
+CHyperLink::CHyperLink(const CHyperLink& Src)
+	: m_Type(Src.m_Type)
+{
 	m_iBegin = Src.m_iBegin;
 	m_iEnd = Src.m_iEnd;
 	m_sTitle = Src.m_sTitle;
@@ -138,11 +144,11 @@ void CPreparedHyperText::PrepareText(const CString& sText)
 
 	int WordPos = 0;
 	TCHAR sz[2];
-	TCHAR& c = sz[0];
 	sz[1] = 0;
 	int last = m_sText.GetLength() -1;
 	for(int i = 0; i <= last; i++)
 	{
+		TCHAR& c = sz[0];
 		c = m_sText[i];
 		_tcslwr(sz);
 
@@ -153,7 +159,7 @@ void CPreparedHyperText::PrepareText(const CString& sText)
 				state = space;
 			else
 				if(c == _T('@') && WordPos != i)
-					state = mail;		
+					state = mail;
 			break;
 
 		case space:
@@ -523,27 +529,10 @@ void CPreparedHyperText::PrepareText(const CString& sText)
 
  void CPreparedHyperText::RemoveLastSign(CString& sLink)
 {
-	int len = sLink.GetLength();
-	if(len > 0)
-	{
-		TCHAR c = sLink[len-1];
-		switch(c)
-		{
-		case _T('.'):
-		case _T(','):
-		case _T(';'):
-		case _T('\"'):
-		case _T('\''):
-		case _T('('):
-		case _T(')'):
-		case _T('['):
-		case _T(']'):
-		case _T('{'):
-		case _T('}'):
-			sLink.Delete(len -1, 1);
-			break;
-		}
-	}
+	static const CString cs(".,;\"'()[]{}");
+	int i = sLink.GetLength() - 1;
+	if (i >= 0 && cs.Find(sLink[i]) > 0)
+		sLink.Delete(i, 1);
 }
 
 CPreparedHyperText::CPreparedHyperText(const CString& sText){
@@ -570,40 +559,29 @@ void CPreparedHyperText::AppendText(const CString& sText){
 	////////////////////////////////////////////////
 	//Top:The Original code didn't check to see if the buffer was full..
 	////////////////////////////////////////////////
-	bool flag = true;
 	if( len > 60000 ){
 		m_sText = m_sText.Right(50000);
-		int shift = len - m_sText.GetLength();
-		while( flag == true ){
+		unsigned shift = len - m_sText.GetLength();
+
+		for (;;) {
 			CHyperLink &test = m_Links.front();
-			if( !m_Links.empty() ){
-				if( test.Begin() < shift )
-					m_Links.pop_front();
-				else
-					flag = false;
-			}
-			else
-				flag = false;
+			if (m_Links.empty() || test.Begin() >= shift)
+				break;
+			m_Links.pop_front();
 		}
-		flag = true;
-		while( flag == true ){
+		for (;;) {
 			CKeyWord &test = m_KeyWords.front();
-			if( !m_KeyWords.empty() ){
-				if( test.Begin() < shift )
-					m_KeyWords.pop_front();
-				else
-					flag = false;
-			}
-			else
-				flag = false;
+			if (m_KeyWords.empty() || test.Begin() >= shift)
+				break;
+			m_KeyWords.pop_front();
 		}
+
 		len = m_sText.GetLength();
 		CHyperLink &ltest = m_Links.front();
 		int litest = ltest.Begin() - shift;
 		CKeyWord &wtest = m_KeyWords.front();
 		int witest = wtest.Begin() - shift;
-		flag = true;
-		while( flag == true && !m_Links.empty() ){
+		while (!m_Links.empty()) {
 			CHyperLink &temp = m_Links.front();
 			CHyperLink backup( temp);
 			backup.SetBegin( backup.Begin() - shift );
@@ -611,16 +589,15 @@ void CPreparedHyperText::AppendText(const CString& sText){
 			m_Links.pop_front();
 			m_Links.push_back( backup );
 			if( ((CHyperLink)m_Links.front()).Begin() == (UINT)litest )
-				flag = false;
+				break;
 		}
-		flag = true;
-		while( flag == true && !m_KeyWords.empty() ){
+		while (!m_KeyWords.empty()) {
 			CKeyWord &temp = m_KeyWords.front();
 			CKeyWord backup( temp.Begin()-shift, temp.End()-shift, temp.Color());
 			m_KeyWords.pop_front();
 			m_KeyWords.push_back( backup );
 			if( ((CKeyWord)m_KeyWords.front()).Begin() == (UINT)witest )
-				flag = false;
+				break;
 		}
 	}
 	////////////////////////////////////////////////
@@ -628,7 +605,7 @@ void CPreparedHyperText::AppendText(const CString& sText){
 	////////////////////////////////////////////////
 	CPreparedHyperText ht(sText);
 	m_sText+=sText;
-	for(std::list<CHyperLink>::iterator it = ht.m_Links.begin(); it != ht.m_Links.end(); it++)
+	for(std::list<CHyperLink>::iterator it = ht.m_Links.begin(); it != ht.m_Links.end(); ++it)
 	{
 		CHyperLink hl = *it;
 		hl.m_iBegin += len;
@@ -644,40 +621,29 @@ void CPreparedHyperText::AppendHyperLink(const CString& sText, const CString& sT
 	////////////////////////////////////////////////
 	//Top:The Original code didn't check to see if the buffer was full..
 	////////////////////////////////////////////////
-	bool flag = true;
 	if( len > 60000 ){
 		m_sText = m_sText.Right(50000);
-		int shift = len - m_sText.GetLength();
-		while( flag == true ){
+		unsigned shift = len - m_sText.GetLength();
+
+		for (;;) {
 			CHyperLink &test = m_Links.front();
-			if( !m_Links.empty() ){
-				if( test.Begin() < shift )
-					m_Links.pop_front();
-				else
-					flag = false;
-			}
-			else
-				flag = false;
+			if (m_Links.empty() || test.Begin() >= shift)
+				break;
+			m_Links.pop_front();
 		}
-		flag = true;
-		while( flag == true ){
+		for (;;) {
 			CKeyWord &test = m_KeyWords.front();
-			if( !m_KeyWords.empty() ){
-				if( test.Begin() < shift )
-					m_KeyWords.pop_front();
-				else
-					flag = false;
-			}
-			else
-				flag = false;
+			if (m_KeyWords.empty() || test.Begin() >= shift)
+				break;
+			m_KeyWords.pop_front();
 		}
+
 		len = m_sText.GetLength();
 		CHyperLink &ltest = m_Links.front();
 		int litest = ltest.Begin() - shift;
 		CKeyWord &wtest = m_KeyWords.front();
 		int witest = wtest.Begin() - shift;
-		flag = true;
-		while( flag == true && !m_Links.empty() ){
+		while (!m_Links.empty()) {
 			CHyperLink &temp = m_Links.front();
 			CHyperLink backup( temp);
 			backup.SetBegin( backup.Begin() - shift );
@@ -685,16 +651,15 @@ void CPreparedHyperText::AppendHyperLink(const CString& sText, const CString& sT
 			m_Links.pop_front();
 			m_Links.push_back( backup );
 			if( ((CHyperLink)m_Links.front()).Begin() == (UINT)litest )
-				flag = false;
+				break;
 		}
-		flag = true;
-		while( flag == true && !m_KeyWords.empty() ){
+		while (!m_KeyWords.empty()) {
 			CKeyWord &temp = m_KeyWords.front();
 			CKeyWord backup( temp.Begin()-shift, temp.End()-shift, temp.Color());
 			m_KeyWords.pop_front();
 			m_KeyWords.push_back( backup );
 			if( ((CKeyWord)m_KeyWords.front()).Begin() == (UINT)witest )
-				flag = false;
+				break;
 		}
 	}
 	////////////////////////////////////////////////
@@ -711,40 +676,29 @@ void CPreparedHyperText::AppendHyperLink(const CString& sText, const CString& sT
 	////////////////////////////////////////////////
 	//Top:The Original code didn't check to see if the buffer was full..
 	////////////////////////////////////////////////
-	bool flag = true;
 	if( len > 60000 ){
 		m_sText = m_sText.Right(50000);
-		int shift = len - m_sText.GetLength();
-		while( flag == true ){
+		unsigned shift = len - m_sText.GetLength();
+
+		for (;;) {
 			CHyperLink &test = m_Links.front();
-			if( !m_Links.empty() ){
-				if( test.Begin() < shift )
-					m_Links.pop_front();
-				else
-					flag = false;
-			}
-			else
-				flag = false;
+			if (m_Links.empty() || test.Begin() >= shift)
+				break;
+			m_Links.pop_front();
 		}
-		flag = true;
-		while( flag == true ){
+		for (;;) {
 			CKeyWord &test = m_KeyWords.front();
-			if( !m_KeyWords.empty() ){
-				if( test.Begin() < shift )
-					m_KeyWords.pop_front();
-				else
-					flag = false;
-			}
-			else
-				flag = false;
+			if (m_KeyWords.empty() || test.Begin() >= shift)
+				break;
+			m_KeyWords.pop_front();
 		}
+
 		len = m_sText.GetLength();
 		CHyperLink &ltest = m_Links.front();
 		int litest = ltest.Begin() - shift;
 		CKeyWord &wtest = m_KeyWords.front();
 		int witest = wtest.Begin() - shift;
-		flag = true;
-		while( flag == true && !m_Links.empty() ){
+		while (!m_Links.empty()) {
 			CHyperLink &temp = m_Links.front();
 			CHyperLink backup( temp);
 			backup.SetBegin( backup.Begin() - shift );
@@ -752,16 +706,15 @@ void CPreparedHyperText::AppendHyperLink(const CString& sText, const CString& sT
 			m_Links.pop_front();
 			m_Links.push_back( backup );
 			if( ((CHyperLink)m_Links.front()).Begin() == (UINT)litest )
-				flag = false;
+				break;
 		}
-		flag = true;
-		while( flag == true && !m_KeyWords.empty() ){
+		while (!m_KeyWords.empty()) {
 			CKeyWord &temp = m_KeyWords.front();
 			CKeyWord backup( temp.Begin()-shift, temp.End()-shift, temp.Color());
 			m_KeyWords.pop_front();
 			m_KeyWords.push_back( backup );
 			if( ((CKeyWord)m_KeyWords.front()).Begin() == (UINT)witest )
-				flag = false;
+				break;
 		}
 	}
 	////////////////////////////////////////////////
@@ -771,47 +724,37 @@ void CPreparedHyperText::AppendHyperLink(const CString& sText, const CString& sT
 	m_Links.push_back(CHyperLink(len, len + sText.GetLength() - 1, sTitle, hWnd, uMsg, wParam, lParam));
 }
 
-void CPreparedHyperText::AppendKeyWord(const CString& sText, COLORREF iColor){
-	if (!sText.GetLength())
+void CPreparedHyperText::AppendKeyWord(const CString& sText, COLORREF iColor)
+{
+	if (sText.IsEmpty())
 		return;
 	int len = m_sText.GetLength();
 	////////////////////////////////////////////////
 	//Top:The Original code didn't check to see if the buffer was full..
 	////////////////////////////////////////////////
-	bool flag = true;
 	if( len > 60000 ){
 		m_sText = m_sText.Right(50000);
-		int shift = len - m_sText.GetLength();
-		while( flag == true ){
+		unsigned shift = len - m_sText.GetLength();
+
+		for (;;) {
 			CHyperLink &test = m_Links.front();
-			if( !m_Links.empty() ){
-				if( test.Begin() < shift )
-					m_Links.pop_front();
-				else
-					flag = false;
-			}
-			else
-				flag = false;
+			if (m_Links.empty()|| test.Begin() >= shift)
+				break;
+			m_Links.pop_front();
 		}
-		flag = true;
-		while( flag == true ){
+		for (;;) {
 			CKeyWord &test = m_KeyWords.front();
-			if( !m_KeyWords.empty() ){
-				if( test.Begin() < shift )
-					m_KeyWords.pop_front();
-				else
-					flag = false;
-			}
-			else
-				flag = false;
+			if (m_KeyWords.empty() || test.Begin() >= shift)
+				break;
+			m_KeyWords.pop_front();
 		}
+
 		len = m_sText.GetLength();
 		CHyperLink &ltest = m_Links.front();
 		int litest = ltest.Begin() - shift;
 		CKeyWord &wtest = m_KeyWords.front();
 		int witest = wtest.Begin() - shift;
-		flag = true;
-		while( flag == true && !m_Links.empty() ){
+		while (!m_Links.empty()) {
 			CHyperLink &temp = m_Links.front();
 			CHyperLink backup( temp);
 			backup.SetBegin( backup.Begin() - shift );
@@ -819,16 +762,15 @@ void CPreparedHyperText::AppendKeyWord(const CString& sText, COLORREF iColor){
 			m_Links.pop_front();
 			m_Links.push_back( backup );
 			if( ((CHyperLink)m_Links.front()).Begin() == (UINT)litest )
-				flag = false;
+				break;
 		}
-		flag = true;
-		while( flag == true && !m_KeyWords.empty() ){
+		while (!m_KeyWords.empty()) {
 			CKeyWord &temp = m_KeyWords.front();
 			CKeyWord backup( temp.Begin()-shift, temp.End()-shift, temp.Color());
 			m_KeyWords.pop_front();
 			m_KeyWords.push_back( backup );
 			if( ((CKeyWord)m_KeyWords.front()).Begin() == (UINT)witest )
-				flag = false;
+				break;
 		}
 	}
 	////////////////////////////////////////////////
@@ -917,7 +859,6 @@ END_MESSAGE_MAP()
 CHyperTextCtrl::CHyperTextCtrl()
 {
 	m_Text = &standart_Text;
-	vscrollon = false;
 	m_Font = NULL;
 	m_BkColor = RGB(0,0,0);
 	m_TextColor = RGB(0,0,0);
@@ -938,7 +879,7 @@ CHyperTextCtrl::CHyperTextCtrl()
 
 //message handlers
 
-LRESULT CHyperTextCtrl::OnDestroy(WPARAM wParam, LPARAM lParam){  
+LRESULT CHyperTextCtrl::OnDestroy(WPARAM wParam, LPARAM lParam){
 	if (m_LinkCursor){
 		SetCursor(m_DefaultCursor);
 		VERIFY( DestroyCursor(m_LinkCursor) );
@@ -948,7 +889,7 @@ LRESULT CHyperTextCtrl::OnDestroy(WPARAM wParam, LPARAM lParam){
 	return 0;
 }
 
-LRESULT CHyperTextCtrl::OnCreate(WPARAM wParam, LPARAM lParam){  
+LRESULT CHyperTextCtrl::OnCreate(WPARAM wParam, LPARAM lParam){
 	//LPCREATESTRUCT lpCreateStruct = (LPCREATESTRUCT)lParam;
 	m_iMaxWidth = 0;
 	m_iLinesHeight = 0;
@@ -956,7 +897,7 @@ LRESULT CHyperTextCtrl::OnCreate(WPARAM wParam, LPARAM lParam){
 	m_iHorzPos = 0;
 	m_iVertPos = 0;
 	m_Font = &theApp.m_fontHyperText;
-	SetColors(); 
+	SetColors();
 	LoadHandCursor();
 	m_DefaultCursor = LoadCursor(NULL,IDC_ARROW);
 	m_pActivePart = NULL;
@@ -968,7 +909,7 @@ LRESULT CHyperTextCtrl::OnCreate(WPARAM wParam, LPARAM lParam){
 		m_tip.Activate(TRUE);
 
 	UpdateFonts();
-	return 0; 
+	return 0;
 }
 
 LRESULT CHyperTextCtrl::OnPaint(WPARAM wParam, LPARAM lParam){
@@ -992,10 +933,10 @@ LRESULT CHyperTextCtrl::OnPaint(WPARAM wParam, LPARAM lParam){
 	brBk.CreateSolidBrush(m_BkColor);
 	dc.FillRect(rc, &brBk);
 
-	for(std::vector<CVisLine>::iterator it = m_VisLines.begin(); it != m_VisLines.end(); it++){
+	for (std::vector<CVisLine>::iterator it = m_VisLines.begin(); it != m_VisLines.end(); ++it) {
 		int iLastX = dc.m_ps.rcPaint.left;
 
-		for(CVisLine::iterator jt = it->begin(); jt != it->end(); jt++){
+		for (CVisLine::iterator jt = it->begin(); jt != it->end(); ++jt) {
 			if (jt->m_pKeyWord)
 				dc.SetTextColor(jt->m_pKeyWord->Color());
 			else if(jt->m_pHyperLink == NULL)
@@ -1010,13 +951,13 @@ LRESULT CHyperTextCtrl::OnPaint(WPARAM wParam, LPARAM lParam){
 					dc.SelectObject(m_LinksFont);
 				}
 			}
-
-			TextOut(dc, jt->m_rcBounds.left, jt->m_rcBounds.top, s + jt->m_iRealBegin, jt->m_iRealLen);
+			const CRect& cr = jt->m_rcBounds;
+			TextOut(dc, cr.left, cr.top, s + jt->m_iRealBegin, jt->m_iRealLen);
 
 			if(jt->m_pHyperLink != NULL)
 				dc.SelectObject(m_Font);
 
-			iLastX = jt->m_rcBounds.right;
+			iLastX = cr.right;
 		}
 
 		rc.left = iLastX;
@@ -1039,38 +980,40 @@ LRESULT CHyperTextCtrl::OnPaint(WPARAM wParam, LPARAM lParam){
 	return 0;
 }
 
-LRESULT CHyperTextCtrl::OnSize(WPARAM wParam, LPARAM lParam){
-	WORD cx, cy;
-	cx = LOWORD(lParam);
-	cy = HIWORD(lParam);
-
-	UpdateSize(IsWindowVisible() == TRUE);
+LRESULT CHyperTextCtrl::OnSize(WPARAM wParam, LPARAM lParam)
+{
+	UpdateSize(IsWindowVisible() != FALSE);
 	return 0;
 }
 
-LRESULT CHyperTextCtrl::OnShowWindow(WPARAM wParam, LPARAM lParam){
-	if(TRUE == (BOOL)wParam)
+LRESULT CHyperTextCtrl::OnShowWindow(WPARAM wParam, LPARAM lParam)
+{
+	if (wParam)
 		UpdateSize(false);
 	return 0;
 }
 
-LRESULT CHyperTextCtrl::OnSetText(WPARAM wParam, LPARAM lParam){
+LRESULT CHyperTextCtrl::OnSetText(WPARAM wParam, LPARAM lParam)
+{
 	m_Text->SetText((LPTSTR)lParam);
-	UpdateSize(IsWindowVisible() == TRUE);
+	UpdateSize(IsWindowVisible() != FALSE);
 	return TRUE;
 }
 
-LRESULT CHyperTextCtrl::OnGetText(WPARAM wParam, LPARAM lParam){
+LRESULT CHyperTextCtrl::OnGetText(WPARAM wParam, LPARAM lParam)
+{
 	int bufsize = wParam;
 	LPTSTR buf = (LPTSTR)lParam;
-	if(lParam == NULL || bufsize == 0 || m_Text->GetText().IsEmpty())
+	const CString& s(m_Text->GetText());
+	if (lParam == NULL || bufsize == 0 || s.IsEmpty())
 		return 0;
-	int cpy = m_Text->GetText().GetLength() > (bufsize-1) ? (bufsize-1) : m_Text->GetText().GetLength();
-	_tcsncpy(buf, m_Text->GetText(), cpy);
+	int cpy = s.GetLength() > (bufsize-1) ? (bufsize-1) : s.GetLength();
+	_tcsncpy(buf, s, cpy);
 	return cpy;
 }
 
-LRESULT CHyperTextCtrl::OnSetFont(WPARAM wParam, LPARAM lParam){
+LRESULT CHyperTextCtrl::OnSetFont(WPARAM wParam, LPARAM lParam)
+{
 	m_Font = CFont::FromHandle((HFONT)wParam);
 	UpdateFonts();
 	UpdateSize(LOWORD(lParam) != 0);
@@ -1100,12 +1043,12 @@ LRESULT CHyperTextCtrl::OnHScroll(WPARAM wParam, LPARAM lParam){
 
 	case SB_LINELEFT:
 		if(si.nPos > si.nMin)
-			si.nPos-=1;
+			si.nPos--;
 		break;
 
 	case SB_LINERIGHT:
 		if(si.nPos < si.nMax)
-			si.nPos+=1;
+			si.nPos++;
 		break;
 
 	case SB_PAGELEFT:
@@ -1124,7 +1067,6 @@ LRESULT CHyperTextCtrl::OnHScroll(WPARAM wParam, LPARAM lParam){
 
 	case SB_THUMBTRACK:
 		si.nPos=si.nTrackPos;
-		break;
 	}
 
 	if(si.nMax != si.nMin)
@@ -1153,12 +1095,12 @@ LRESULT CHyperTextCtrl::OnVScroll(WPARAM wParam, LPARAM lParam){
 
 	case SB_LINEUP:
 		if(si.nPos > si.nMin)
-			si.nPos-=1;
+			si.nPos--;
 		break;
 
 	case SB_LINEDOWN:
 		if(si.nPos < si.nMax)
-			si.nPos+=1;
+			si.nPos++;
 		break;
 
 	case SB_PAGEUP:
@@ -1177,7 +1119,6 @@ LRESULT CHyperTextCtrl::OnVScroll(WPARAM wParam, LPARAM lParam){
 
 	case SB_THUMBTRACK:
 		si.nPos=si.nTrackPos;
-		break;
 	}
 
 	if(si.nMax != si.nMin)
@@ -1198,7 +1139,7 @@ void CHyperTextCtrl::OnMouseMove(UINT nFlags,CPoint pt){
 		if(i < m_VisLines.size())
 		{
 			std::vector<CVisLine>::iterator it = m_VisLines.begin() + i;
-			for(CVisLine::iterator jt = it->begin(); jt != it->end(); jt++)
+			for (CVisLine::iterator jt = it->begin(); jt != it->end(); ++jt)
 				if(pt.x >= jt->m_rcBounds.left && pt.x <= jt->m_rcBounds.right)
 				{
 					if(jt->m_pHyperLink != NULL)
@@ -1214,30 +1155,27 @@ void CHyperTextCtrl::OnMouseMove(UINT nFlags,CPoint pt){
 		if(!bFound){
 			RestoreLink();
 			if (GetCapture() == this)
-				ReleaseCapture(); 
+				ReleaseCapture();
 		}
 	}
 	else
 		ReleaseCapture();
 }
 
-void CHyperTextCtrl::OnLButtonDown(UINT nFlags,CPoint pt){
+void CHyperTextCtrl::OnLButtonDown(UINT nFlags,CPoint pt)
+{
 	CRect rcClient;
 	GetClientRect(rcClient);
 	if(PtInRect(rcClient, pt) && m_iLineHeight)
 	{
-		bool bFound = false;
 		UINT i = pt.y / m_iLineHeight;
 		if(i < m_VisLines.size()){
 			std::vector<CVisLine>::iterator it = m_VisLines.begin() + i;
-			for(CVisLine::iterator jt = it->begin(); jt != it->end(); jt++)
+			for (CVisLine::iterator jt = it->begin(); jt != it->end(); ++jt)
 				if(pt.x >= jt->m_rcBounds.left && pt.x <= jt->m_rcBounds.right)
 				{
 					if(jt->m_pHyperLink != NULL)
-					{
 						jt->m_pHyperLink->Execute();
-						bFound = true;
-					}
 					break;
 				}
 		}
@@ -1252,9 +1190,9 @@ BOOL CHyperTextCtrl::OnMouseWheel(UINT nFlags,short zDelta,CPoint pt){
 	if(PtInRect(rc, pt))
 	{
 		int iScrollLines;
-		SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 
-			0, 
-			&iScrollLines, 
+		SystemParametersInfo(SPI_GETWHEELSCROLLLINES,
+			0,
+			&iScrollLines,
 			0);
 
 		m_iWheelDelta -= zDelta;
@@ -1278,7 +1216,7 @@ BOOL CHyperTextCtrl::OnMouseWheel(UINT nFlags,short zDelta,CPoint pt){
 	//m_tip.OnMouseWheel(nFlags,zDelta,pt);
 }
 
-LRESULT CHyperTextCtrl::OnCaptureChanged(WPARAM wParam, LPARAM lParam){    
+LRESULT CHyperTextCtrl::OnCaptureChanged(WPARAM wParam, LPARAM lParam){
 	RestoreLink();
 	return 0;
 }
@@ -1335,7 +1273,7 @@ void CHyperTextCtrl::UpdateSize(bool bRepaint){
 
 	CClientDC dc(this);
 	CFont* hOldFont = dc.SelectObject(m_Font);
-	
+
 
 	int iScrollHeight = GetSystemMetrics(SM_CYHSCROLL);
 
@@ -1356,15 +1294,13 @@ void CHyperTextCtrl::UpdateSize(bool bRepaint){
 		int len = m_Text->GetText().GetLength();
 		int width = rc.Width();
 
-		int npos, // new position
-			pos = 0, // current position
-			ll, // line length
-			rll; // line length with wordwrap (if used)
+		unsigned pos = 0; // current position
+		int	rll; // line length with wordwrap (if used)
 
 		while(len>0)
 		{
-			ll = len;
-			npos = ll;
+			int ll = len; // line length
+			int npos = ll; // new position
 			for(int i = 0; i < len; i++)
 			{
 				if(s[i] == _T('\r') || s[i] == _T('\n'))
@@ -1414,13 +1350,13 @@ void CHyperTextCtrl::UpdateSize(bool bRepaint){
 			CLinePartInfo pl(pos, pos + rll - 1);
 
 			while(it != m_Text->GetLinks().end() && it->End() < pos)
-				it++;
+				++it;
 			while(ht != m_Text->GetKeywords().end() && ht->End() < pos)
-				ht++;
+				++ht;
 
-			//split the line into parts of hypertext, normaltext, keywords etc 
-			for (int i = pl.Begin(); i < pl.End(); i++){
-				if (it != m_Text->GetLinks().end() && i >= it->Begin() && it->End() > i){ // i_a 
+			//split the line into parts of hypertext, normaltext, keywords etc
+			for (unsigned i = pl.Begin(); i < pl.End(); ++i) {
+				if (it != m_Text->GetLinks().end() && i >= it->Begin() && it->End() > i){ // i_a
 					if (i > pl.m_xBegin){
 						CLinePartInfo pln(pl.m_xBegin,i-1);
 						li.push_back(pln);
@@ -1437,11 +1373,11 @@ void CHyperTextCtrl::UpdateSize(bool bRepaint){
 						CLinePartInfo pln((uint16)i, (uint16)it->End(), &*it);
 						li.push_back(pln);
 						i = pl.m_xBegin;
-						it++;
+						++it;
 					}
 
 				}
-				else if (ht != m_Text->GetKeywords().end() && i >= ht->Begin() && ht->End() > i){ // i_a 
+				else if (ht != m_Text->GetKeywords().end() && i >= ht->Begin() && ht->End() > i){ // i_a
 					if (i > pl.m_xBegin){
 							CLinePartInfo pln(pl.m_xBegin,i-1);
 							li.push_back(pln);
@@ -1457,7 +1393,7 @@ void CHyperTextCtrl::UpdateSize(bool bRepaint){
 						CLinePartInfo pln((uint16)i, (uint16)ht->End(),0, &*ht);
 						li.push_back(pln);
 						i = pl.m_xBegin;
-						ht++;
+						++ht;
 					}
 
 				}
@@ -1471,7 +1407,7 @@ void CHyperTextCtrl::UpdateSize(bool bRepaint){
 			m_iLinesHeight+=m_iLineHeight;
 			if(sz.cx > m_iMaxWidth)
 				m_iMaxWidth = sz.cx;
-			if(iMaxWidthChars < li.Len())
+			if (iMaxWidthChars < (long)li.Len())
 				iMaxWidthChars = li.Len();
 
 			m_Lines.push_back(li);
@@ -1487,7 +1423,7 @@ void CHyperTextCtrl::UpdateSize(bool bRepaint){
 		if(bRepaint)
 			InvalidateRect(rc);
 	}
-	
+
 	dc.SelectObject(hOldFont);
 
 	// Update scroll bars
@@ -1545,7 +1481,7 @@ void CHyperTextCtrl::UpdateFonts(){
 	DWORD dwStyle = GetWindowLongPtr(m_hWnd,GWL_STYLE);
 	m_LinksFont.DeleteObject();
 	m_HoverFont.DeleteObject();
-	
+
 	LOGFONT lf;
 	m_Font->GetLogFont(&lf);
 	if(check_bits(dwStyle, HTC_UNDERLINE_LINKS))
@@ -1558,14 +1494,15 @@ void CHyperTextCtrl::UpdateFonts(){
 	m_HoverFont.CreateFontIndirect(&lf);
 }
 
-void CHyperTextCtrl::UpdateVisLines(){
+void CHyperTextCtrl::UpdateVisLines()
+{
 	RestoreLink();
 	DWORD dwStyle = ::GetWindowLongPtr(m_hWnd,GWL_STYLE);
 	int id = 1;
 	if(check_bits(dwStyle, HTC_ENABLE_TOOLTIPS))
 	{
-		for(std::vector<CVisLine>::iterator itv = m_VisLines.begin(); itv != m_VisLines.end(); itv++)
-			for(CVisLine::iterator jt = itv->begin(); jt != itv->end(); jt++)
+		for (std::vector<CVisLine>::iterator itv = m_VisLines.begin(); itv != m_VisLines.end(); ++itv)
+			for (CVisLine::iterator jt = itv->begin(); jt != itv->end(); ++jt)
 			{
 				if(jt->m_pHyperLink != NULL)
 					m_tip.DelTool(this, id++);
@@ -1597,7 +1534,7 @@ void CHyperTextCtrl::UpdateVisLines(){
 	CRect rcClient;
 	GetClientRect(rcClient);
 
-	for(; it != m_Lines.end(); it++)
+	for (; it != m_Lines.end(); ++it)
 	{
 		int XPos = 2;
 		UINT LinePos = it->Begin();
@@ -1609,7 +1546,7 @@ void CHyperTextCtrl::UpdateVisLines(){
 
 		std::vector<CLinePartInfo>::iterator jt;
 
-		for(jt = it->begin(); jt != it->end(); jt++)
+		for (jt = it->begin(); jt != it->end(); ++jt)
 		{
 			if(jt->Begin() <= (LinePos + iHorzPos) && jt->End() >= (LinePos + iHorzPos))
 			{
@@ -1638,12 +1575,12 @@ void CHyperTextCtrl::UpdateVisLines(){
 			if(XPos > rcClient.Width())
 				break;
 
-			jt++;
+			++jt;
 			if (jt == it->end())
 				break;
 			Offset = jt->m_xBegin;
 			Len = jt->Len();
-			
+
 		}
 
 		m_VisLines.push_back(vl);
@@ -1655,12 +1592,12 @@ void CHyperTextCtrl::UpdateVisLines(){
 	CVisPart *pPrev = NULL, *pNext;
 
 	id = 1;
-	for(std::vector<CVisLine>::iterator it2 = m_VisLines.begin(); it2 != m_VisLines.end(); it2++)
-		for(CVisLine::iterator jt = it2->begin(); jt != it2->end(); jt++)
+	for (std::vector<CVisLine>::iterator it2 = m_VisLines.begin(); it2 != m_VisLines.end(); ++it2)
+		for (CVisLine::iterator jt = it2->begin(); jt != it2->end(); ++jt)
 		{
 			pNext = &*jt;
-			if(pPrev != NULL && 
-				pPrev->m_pHyperLink != NULL && 
+			if(pPrev != NULL &&
+				pPrev->m_pHyperLink != NULL &&
 				pPrev->m_pHyperLink == pNext->m_pHyperLink &&
 				pPrev != pNext)
 			{
@@ -1673,10 +1610,11 @@ void CHyperTextCtrl::UpdateVisLines(){
 				m_tip.AddTool(this, (LPCTSTR)jt->m_pHyperLink->Title(), jt->m_rcBounds, id++);
 		}
 
-		dc.SelectObject(hOldFont);
+	dc.SelectObject(hOldFont);
 }
 
-void CHyperTextCtrl::HighlightLink(CVisPart* Part, const CPoint& MouseCoords){
+void CHyperTextCtrl::HighlightLink(CVisPart* Part, const CPoint& MouseCoords)
+{
 	if(m_pActivePart == Part)
 		return;
 
@@ -1696,7 +1634,7 @@ void CHyperTextCtrl::HighlightLink(CVisPart* Part, const CPoint& MouseCoords){
 	CVisPart* p = m_pActivePart;
 	while(p != NULL)
 	{
-		TextOut(dc, p->m_rcBounds.left, p->m_rcBounds.top, 
+		TextOut(dc, p->m_rcBounds.left, p->m_rcBounds.top,
 			s + p->m_iRealBegin, p->m_iRealLen);
 		p = p->m_pNext;
 	}
@@ -1706,7 +1644,8 @@ void CHyperTextCtrl::HighlightLink(CVisPart* Part, const CPoint& MouseCoords){
 	SetCursor(m_LinkCursor);
 }
 
-void CHyperTextCtrl::RestoreLink(){
+void CHyperTextCtrl::RestoreLink()
+{
 	if(m_pActivePart == NULL)
 		return;
 
@@ -1719,7 +1658,7 @@ void CHyperTextCtrl::RestoreLink(){
 	CVisPart* p = m_pActivePart;
 	while(p != NULL)
 	{
-		TextOut(dc, p->m_rcBounds.left, p->m_rcBounds.top, 
+		TextOut(dc, p->m_rcBounds.left, p->m_rcBounds.top,
 			s + p->m_iRealBegin, p->m_iRealLen);
 		p = p->m_pNext;
 	}
@@ -1730,13 +1669,15 @@ void CHyperTextCtrl::RestoreLink(){
 	SetCursor(m_DefaultCursor);
 }
 
-void CHyperTextCtrl::OnSysColorChange() {
+void CHyperTextCtrl::OnSysColorChange()
+{
 	//adjust colors
 	CWnd::OnSysColorChange();
 	SetColors();
 }
 
-void CHyperTextCtrl::SetColors() {
+void CHyperTextCtrl::SetColors()
+{
 	m_BkColor = GetSysColor(COLOR_WINDOW);
 	m_TextColor = GetSysColor(COLOR_WINDOWTEXT);
 	//perhaps some sort of check against the bk and text color can be made
@@ -1764,3 +1705,5 @@ void CHyperTextCtrl::LoadHandCursor()
 	if (m_LinkCursor == NULL)
 		m_LinkCursor = CopyCursor(::LoadCursor(NULL,IDC_ARROW));
 }
+
+#pragma warning(pop)

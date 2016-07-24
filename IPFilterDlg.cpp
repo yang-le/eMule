@@ -203,7 +203,7 @@ BOOL CIPFilterDlg::OnInitDialog()
 	SetIcon(m_icoDlg = theApp.LoadIcon(_T("IPFilter")), FALSE);
 
 	InitIPFilters();
-	
+
 	m_pMenuIPFilter = new CMenu();
 	if (m_pMenuIPFilter->CreatePopupMenu())
 	{
@@ -267,13 +267,13 @@ void CIPFilterDlg::OnLvnGetDispInfoIPFilter(NMHDR *pNMHDR, LRESULT *pResult)
 		{
 			case IPFILTER_COL_START:
 				if (pDispInfo->item.cchTextMax > 0){
-					_tcsncpy(pDispInfo->item.pszText, ipstr(htonl(m_ppIPFilterItems[pDispInfo->item.iItem]->start)), pDispInfo->item.cchTextMax);
+					_tcsncpy(pDispInfo->item.pszText, (LPCTSTR)ipstr(htonl(m_ppIPFilterItems[pDispInfo->item.iItem]->start)), pDispInfo->item.cchTextMax);
 					pDispInfo->item.pszText[pDispInfo->item.cchTextMax - 1] = _T('\0');
 				}
 				break;
 			case IPFILTER_COL_END:
 				if (pDispInfo->item.cchTextMax > 0){
-					_tcsncpy(pDispInfo->item.pszText, ipstr(htonl(m_ppIPFilterItems[pDispInfo->item.iItem]->end)), pDispInfo->item.cchTextMax);
+					_tcsncpy(pDispInfo->item.pszText, (LPCTSTR)ipstr(htonl(m_ppIPFilterItems[pDispInfo->item.iItem]->end)), pDispInfo->item.cchTextMax);
 					pDispInfo->item.pszText[pDispInfo->item.cchTextMax - 1] = _T('\0');
 				}
 				break;
@@ -306,17 +306,16 @@ void CIPFilterDlg::OnCopyIPFilter()
 	int iSelected = 0;
 	CString strData;
 	POSITION pos = m_ipfilter.GetFirstSelectedItemPosition();
-	while (pos)
-	{
+	while (pos) {
 		int iItem = m_ipfilter.GetNextSelectedItem(pos);
 		if (!strData.IsEmpty())
 			strData += _T("\r\n");
 
-		strData.AppendFormat(_T("%-15s - %-15s  Hits=%-5s  %s"), 
-				m_ipfilter.GetItemText(iItem, IPFILTER_COL_START),
-				m_ipfilter.GetItemText(iItem, IPFILTER_COL_END),
-				m_ipfilter.GetItemText(iItem, IPFILTER_COL_HITS),
-				m_ipfilter.GetItemText(iItem, IPFILTER_COL_DESC));
+		strData.AppendFormat(_T("%-15s - %-15s  Hits=%-5s  %s")
+				, (LPCTSTR)m_ipfilter.GetItemText(iItem, IPFILTER_COL_START)
+				, (LPCTSTR)m_ipfilter.GetItemText(iItem, IPFILTER_COL_END)
+				, (LPCTSTR)m_ipfilter.GetItemText(iItem, IPFILTER_COL_HITS)
+				, (LPCTSTR)m_ipfilter.GetItemText(iItem, IPFILTER_COL_DESC));
 		iSelected++;
 	}
 
@@ -375,14 +374,14 @@ void CIPFilterDlg::OnBnClickedAppend()
 					else
 					{
 						CString strError;
-						strError.Format(_T("Failed to extract IP filter file from ZIP file \"%s\"."), strFilePath);
+						strError.Format(_T("Failed to extract IP filter file from ZIP file \"%s\"."), (LPCTSTR)strFilePath);
 						AfxMessageBox(strError, MB_ICONERROR);
 					}
 				}
 				else
 				{
 					CString strError;
-					strError.Format(_T("Failed to find IP filter file \"guarding.p2p\", \"guardian.p2p\" or \"ipfilter.dat\" in ZIP file \"%s\"."), strFilePath);
+					strError.Format(_T("Failed to find IP filter file \"guarding.p2p\", \"guardian.p2p\" or \"ipfilter.dat\" in ZIP file \"%s\"."), (LPCTSTR)strFilePath);
 					AfxMessageBox(strError, MB_ICONERROR);
 				}
 				zip.Close();
@@ -390,7 +389,7 @@ void CIPFilterDlg::OnBnClickedAppend()
 			else
 			{
 				CString strError;
-				strError.Format(_T("Failed to open file \"%s\".\r\n\r\nInvalid file format?"), strFilePath);
+				strError.Format(_T("Failed to open file \"%s\".\r\n\r\nInvalid file format?"), (LPCTSTR)strFilePath);
 				AfxMessageBox(strError, MB_ICONERROR);
 			}
 		}
@@ -401,7 +400,7 @@ void CIPFilterDlg::OnBnClickedAppend()
 			{
 				CString strFile;
 				if (rar.GetNextFile(strFile)
-					&& (   strFile.CompareNoCase(_T("ipfilter.dat")) == 0 
+					&& (   strFile.CompareNoCase(_T("ipfilter.dat")) == 0
 					    || strFile.CompareNoCase(_T("guarding.p2p")) == 0
 						|| strFile.CompareNoCase(_T("guardian.p2p")) == 0))
 				{
@@ -415,14 +414,14 @@ void CIPFilterDlg::OnBnClickedAppend()
 					else
 					{
 						CString strError;
-						strError.Format(_T("Failed to extract IP filter file from RAR file \"%s\"."), strFilePath);
+						strError.Format(_T("Failed to extract IP filter file from RAR file \"%s\"."), (LPCTSTR)strFilePath);
 						AfxMessageBox(strError, MB_ICONERROR);
 					}
 				}
 				else
 				{
 					CString strError;
-					strError.Format(_T("Failed to find IP filter file \"guarding.p2p\", \"guardian.p2p\" or \"ipfilter.dat\" in RAR file \"%s\"."), strFilePath);
+					strError.Format(_T("Failed to find IP filter file \"guarding.p2p\", \"guardian.p2p\" or \"ipfilter.dat\" in RAR file \"%s\"."), (LPCTSTR)strFilePath);
 					AfxMessageBox(strError, MB_ICONERROR);
 				}
 				rar.Close();
@@ -430,7 +429,7 @@ void CIPFilterDlg::OnBnClickedAppend()
 			else
 			{
 				CString strError;
-				strError.Format(_T("Failed to open file \"%s\".\r\n\r\nInvalid file format?\r\n\r\nDownload latest version of UNRAR.DLL from http://www.rarlab.com and copy UNRAR.DLL into eMule installation folder."), strFilePath);
+				strError.Format(_T("Failed to open file \"%s\".\r\n\r\nInvalid file format?\r\n\r\nDownload latest version of UNRAR.DLL from http://www.rarlab.com and copy UNRAR.DLL into eMule installation folder."), (LPCTSTR)strFilePath);
 				AfxMessageBox(strError, MB_ICONERROR);
 			}
 		}
@@ -460,7 +459,7 @@ void CIPFilterDlg::OnBnClickedAppend()
 			else
 			{
 				CString strError;
-				strError.Format(_T("Failed to open file \"%s\".\r\n\r\nInvalid file format?"), strFilePath);
+				strError.Format(_T("Failed to open file \"%s\".\r\n\r\nInvalid file format?"), (LPCTSTR)strFilePath);
 				AfxMessageBox(strError, MB_ICONERROR);
 			}
 		}
@@ -540,11 +539,11 @@ void CIPFilterDlg::OnBnClickedDelete()
 			    }
 		    }
 	    }
-    
+
 	    m_ipfilter.SetRedraw(FALSE);
 	    for (int i = aItems.GetCount() - 1; i >= 0; i--)
 		    m_ipfilter.DeleteItem(aItems[i]);
-	    if (aItems.GetCount() > 0)
+		if (!aItems.IsEmpty())
 	    {
 		    int iNextSelItem = aItems[0];
 		    if (iNextSelItem >= m_ipfilter.GetItemCount())
@@ -591,7 +590,7 @@ void CIPFilterDlg::OnBnClickedSave()
 	{
 		theApp.ipfilter->SaveToDefaultFile();
 	}
-	catch(CString err)
+	catch(const CString& err)
 	{
 		AfxMessageBox(err, MB_ICONERROR);
 	}

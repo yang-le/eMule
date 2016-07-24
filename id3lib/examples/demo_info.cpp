@@ -1,21 +1,28 @@
-// Copyright 1999 Scott Thomas Haug <scott@id3.org>
-//  
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-//  
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-//  
-// $Id: demo_info.cpp,v 1.32 2002/07/28 21:53:56 t1mpy Exp $
+// $Id: demo_info.cpp,v 1.34 2009/09/02 09:07:13 nagilo Exp $
 
+// id3lib: a C++ library for creating and manipulating id3v1/v2 tags
+// Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
+
+// This library is free software; you can redistribute it and/or modify it
+// under the terms of the GNU Library General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or (at your
+// option) any later version.
+//
+// This library is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+// License for more details.
+//
+// You should have received a copy of the GNU Library General Public License
+// along with this library; if not, write to the Free Software Foundation,
+// Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+// The id3lib authors encourage improvements and optimisations to be sent to
+// the id3lib coordinator.  Please see the README file for details on where to
+// send such submissions.  See the AUTHORS file for a list of people who have
+// contributed to id3lib.  See the ChangeLog file for a list of changes to
+// id3lib.  These files are distributed with id3lib at
+// http://download.sourceforge.net/id3lib/
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -33,7 +40,7 @@ using namespace dami;
 using std::cout;
 using std::endl;
 
-static String VERSION_NUMBER = "$Revision: 1.32 $";
+static String VERSION_NUMBER = "$Revision: 1.34 $";
 
 void PrintUsage(const char *sName)
 {
@@ -111,8 +118,8 @@ void PrintInformation(const ID3_Tag &myTag)
       }
       case ID3FID_USERTEXT:
       {
-        char 
-        *sText = ID3_GetString(frame, ID3FN_TEXT), 
+        char
+        *sText = ID3_GetString(frame, ID3FN_TEXT),
         *sDesc = ID3_GetString(frame, ID3FN_DESCRIPTION);
         cout << "(" << sDesc << "): " << sText << endl;
         delete [] sText;
@@ -122,9 +129,9 @@ void PrintInformation(const ID3_Tag &myTag)
       case ID3FID_COMMENT:
       case ID3FID_UNSYNCEDLYRICS:
       {
-        char 
-        *sText = ID3_GetString(frame, ID3FN_TEXT), 
-        *sDesc = ID3_GetString(frame, ID3FN_DESCRIPTION), 
+        char
+        *sText = ID3_GetString(frame, ID3FN_TEXT),
+        *sDesc = ID3_GetString(frame, ID3FN_DESCRIPTION),
         *sLang = ID3_GetString(frame, ID3FN_LANGUAGE);
         cout << "(" << sDesc << ")[" << sLang << "]: "
              << sText << endl;
@@ -149,7 +156,7 @@ void PrintInformation(const ID3_Tag &myTag)
       }
       case ID3FID_WWWUSER:
       {
-        char 
+        char
         *sURL = ID3_GetString(frame, ID3FN_URL),
         *sDesc = ID3_GetString(frame, ID3FN_DESCRIPTION);
         cout << "(" << sDesc << "): " << sURL << endl;
@@ -192,13 +199,13 @@ void PrintInformation(const ID3_Tag &myTag)
       }
       case ID3FID_GENERALOBJECT:
       {
-        char 
-        *sMimeType = ID3_GetString(frame, ID3FN_MIMETYPE), 
-        *sDesc = ID3_GetString(frame, ID3FN_DESCRIPTION), 
+        char
+        *sMimeType = ID3_GetString(frame, ID3FN_MIMETYPE),
+        *sDesc = ID3_GetString(frame, ID3FN_DESCRIPTION),
         *sFileName = ID3_GetString(frame, ID3FN_FILENAME);
-        size_t 
+        size_t
         nDataSize = frame->GetField(ID3FN_DATA)->Size();
-        cout << "(" << sDesc << ")[" 
+        cout << "(" << sDesc << ")["
              << sFileName << "]: " << sMimeType << ", " << nDataSize
              << " bytes" << endl;
         delete [] sMimeType;
@@ -227,7 +234,7 @@ void PrintInformation(const ID3_Tag &myTag)
         size_t
         nCounter = frame->GetField(ID3FN_COUNTER)->Get(),
         nRating = frame->GetField(ID3FN_RATING)->Get();
-        cout << sEmail << ", counter=" 
+        cout << sEmail << ", counter="
              << nCounter << " rating=" << nRating << endl;
         delete [] sEmail;
         break;
@@ -236,7 +243,7 @@ void PrintInformation(const ID3_Tag &myTag)
       case ID3FID_GROUPINGREG:
       {
         char *sOwner = ID3_GetString(frame, ID3FN_OWNER);
-        size_t 
+        size_t
         nSymbol = frame->GetField(ID3FN_ID)->Get(),
         nDataSize = frame->GetField(ID3FN_DATA)->Size();
         cout << "(" << nSymbol << "): " << sOwner
@@ -245,8 +252,8 @@ void PrintInformation(const ID3_Tag &myTag)
       }
       case ID3FID_SYNCEDLYRICS:
       {
-        char 
-        *sDesc = ID3_GetString(frame, ID3FN_DESCRIPTION), 
+        char
+        *sDesc = ID3_GetString(frame, ID3FN_DESCRIPTION),
         *sLang = ID3_GetString(frame, ID3FN_LANGUAGE);
         size_t
         nTimestamp = frame->GetField(ID3FN_TIMESTAMPFORMAT)->Get(),
@@ -271,7 +278,7 @@ void PrintInformation(const ID3_Tag &myTag)
           while (!mr.atEnd())
           {
             cout << io::readString(mr).c_str();
-            cout << " [" << io::readBENumber(mr, sizeof(uint32)) << " " 
+            cout << " [" << io::readBENumber(mr, sizeof(uint32)) << " "
                  << format << "] ";
           }
         }
@@ -309,7 +316,7 @@ void PrintInformation(const ID3_Tag &myTag)
 
 #define DEBUG
 
-int main( unsigned int argc, char * const argv[])
+int main( int argc, char * const argv[])
 {
   ID3D_INIT_DOUT();
 
@@ -339,7 +346,7 @@ int main( unsigned int argc, char * const argv[])
   {
     filename = args.inputs[i];
     ID3_Tag myTag;
-    
+
     myTag.Link(filename, ID3TT_ALL);
     const Mp3_Headerinfo* mp3info;
     mp3info = myTag.GetMp3HeaderInfo();

@@ -21,7 +21,6 @@
 #include "FriendList.h"
 #include "emuledlg.h"
 #include "UpDownClient.h"
-#include "OtherFunctions.h"
 #include "HelpIDs.h"
 #include "Opcodes.h"
 #include "friend.h"
@@ -114,36 +113,36 @@ void CChatWnd::ShowFriendMsgDetails(CFriend* pFriend)
 {
 	if (pFriend)
 	{
-		CString buffer;
+		const CUpDownClient *linkedc = pFriend->GetLinkedClient();
 
 		// Name
-		if (pFriend->GetLinkedClient())
-			GetDlgItem(IDC_FRIENDS_NAME_EDIT)->SetWindowText(pFriend->GetLinkedClient()->GetUserName());
-		else if (pFriend->m_strName != _T(""))
+		if (linkedc)
+			GetDlgItem(IDC_FRIENDS_NAME_EDIT)->SetWindowText(linkedc->GetUserName());
+		else if (!pFriend->m_strName.IsEmpty())
 			GetDlgItem(IDC_FRIENDS_NAME_EDIT)->SetWindowText(pFriend->m_strName);
 		else
 			GetDlgItem(IDC_FRIENDS_NAME_EDIT)->SetWindowText(_T("?"));
 
 		// Hash
-		if (pFriend->GetLinkedClient())
-			GetDlgItem(IDC_FRIENDS_USERHASH_EDIT)->SetWindowText(md4str(pFriend->GetLinkedClient()->GetUserHash()));
+		if (linkedc)
+			GetDlgItem(IDC_FRIENDS_USERHASH_EDIT)->SetWindowText(md4str(linkedc->GetUserHash()));
 		else if (pFriend->HasUserhash())
 			GetDlgItem(IDC_FRIENDS_USERHASH_EDIT)->SetWindowText(md4str(pFriend->m_abyUserhash));
 		else
 			GetDlgItem(IDC_FRIENDS_USERHASH_EDIT)->SetWindowText(_T("?"));
 
 		// Client
-		if (pFriend->GetLinkedClient())
-			GetDlgItem(IDC_FRIENDS_CLIENTE_EDIT)->SetWindowText(pFriend->GetLinkedClient()->GetClientSoftVer());
+		if (linkedc)
+			GetDlgItem(IDC_FRIENDS_CLIENTE_EDIT)->SetWindowText(linkedc->GetClientSoftVer());
 		else
 			GetDlgItem(IDC_FRIENDS_CLIENTE_EDIT)->SetWindowText(_T("?"));
 
 		// Identification
-		if (pFriend->GetLinkedClient() && pFriend->GetLinkedClient()->Credits())
+		if (linkedc && linkedc->Credits())
 		{
 			if (theApp.clientcredits->CryptoAvailable())
 			{
-				switch (pFriend->GetLinkedClient()->Credits()->GetCurrentIdentState(pFriend->GetLinkedClient()->GetIP()))
+				switch (linkedc->Credits()->GetCurrentIdentState(linkedc->GetIP()))
 				{
 					case IS_NOTAVAILABLE:
 						GetDlgItem(IDC_FRIENDS_IDENTIFICACION_EDIT)->SetWindowText(GetResString(IDS_IDENTNOSUPPORT));
@@ -165,13 +164,13 @@ void CChatWnd::ShowFriendMsgDetails(CFriend* pFriend)
 			GetDlgItem(IDC_FRIENDS_IDENTIFICACION_EDIT)->SetWindowText(_T("?"));
 
 		// Upload and downloaded
-		if (pFriend->GetLinkedClient() && pFriend->GetLinkedClient()->Credits())
-			GetDlgItem(IDC_FRIENDS_DESCARGADO_EDIT)->SetWindowText(CastItoXBytes(pFriend->GetLinkedClient()->Credits()->GetDownloadedTotal(), false, false));
+		if (linkedc && linkedc->Credits())
+			GetDlgItem(IDC_FRIENDS_DESCARGADO_EDIT)->SetWindowText(CastItoXBytes(linkedc->Credits()->GetDownloadedTotal(), false, false));
 		else
 			GetDlgItem(IDC_FRIENDS_DESCARGADO_EDIT)->SetWindowText(_T("?"));
 
-		if (pFriend->GetLinkedClient() && pFriend->GetLinkedClient()->Credits())
-			GetDlgItem(IDC_FRIENDS_SUBIDO_EDIT)->SetWindowText(CastItoXBytes(pFriend->GetLinkedClient()->Credits()->GetUploadedTotal(), false, false));
+		if (linkedc && linkedc->Credits())
+			GetDlgItem(IDC_FRIENDS_SUBIDO_EDIT)->SetWindowText(CastItoXBytes(linkedc->Credits()->GetUploadedTotal(), false, false));
 		else
 			GetDlgItem(IDC_FRIENDS_SUBIDO_EDIT)->SetWindowText(_T("?"));
 	}
@@ -326,14 +325,14 @@ void CChatWnd::DoResize(int iDelta)
 	CRect rcWnd;
 	GetWindowRect(rcWnd);
 	ScreenToClient(rcWnd);
-	m_wndSplitterHorz.SetRange(rcWnd.left + SPLITTER_HORZ_RANGE_MIN + SPLITTER_HORZ_WIDTH/2, 
+	m_wndSplitterHorz.SetRange(rcWnd.left + SPLITTER_HORZ_RANGE_MIN + SPLITTER_HORZ_WIDTH/2,
 							   rcWnd.left + SPLITTER_HORZ_RANGE_MAX - SPLITTER_HORZ_WIDTH/2);
 
 	Invalidate();
 	UpdateWindow();
 }
 
-LRESULT CChatWnd::DefWindowProc(UINT uMessage, WPARAM wParam, LPARAM lParam) 
+LRESULT CChatWnd::DefWindowProc(UINT uMessage, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMessage)
 	{
@@ -358,7 +357,7 @@ LRESULT CChatWnd::DefWindowProc(UINT uMessage, WPARAM wParam, LPARAM lParam)
 
 		case WM_NOTIFY:
 			if (wParam == IDC_SPLITTER_FRIEND)
-			{ 
+			{
 				SPC_NMHDR* pHdr = (SPC_NMHDR*)lParam;
 				DoResize(pHdr->delta);
 			}
@@ -370,7 +369,7 @@ LRESULT CChatWnd::DefWindowProc(UINT uMessage, WPARAM wParam, LPARAM lParam)
 				CRect rcWnd;
 				GetWindowRect(rcWnd);
 				ScreenToClient(rcWnd);
-				m_wndSplitterHorz.SetRange(rcWnd.left + SPLITTER_HORZ_RANGE_MIN + SPLITTER_HORZ_WIDTH/2, 
+				m_wndSplitterHorz.SetRange(rcWnd.left + SPLITTER_HORZ_RANGE_MIN + SPLITTER_HORZ_WIDTH/2,
 										   rcWnd.left + SPLITTER_HORZ_RANGE_MAX - SPLITTER_HORZ_WIDTH/2);
 			}
 			break;
@@ -392,7 +391,7 @@ void CChatWnd::OnShowWindow(BOOL bShow, UINT /*nStatus*/)
 		chatselector.ShowChat();
 }
 
-BOOL CChatWnd::PreTranslateMessage(MSG* pMsg) 
+BOOL CChatWnd::PreTranslateMessage(MSG* pMsg)
 {
 	if (pMsg->message == WM_KEYDOWN)
 	{
@@ -485,7 +484,7 @@ void CChatWnd::ScrollHistory(bool down)
 	else
 		--ci->history_pos;
 
-	CString strBuffer = (ci->history_pos == ci->history.GetCount()) ? _T("") : ci->history.GetAt(ci->history_pos);
+	CString strBuffer = (ci->history_pos == ci->history.GetCount()) ? CString() : ci->history[ci->history_pos];
 	m_wndMessage.SetWindowText(strBuffer);
 	m_wndMessage.SetSel(strBuffer.GetLength(), strBuffer.GetLength());
 }
@@ -499,7 +498,7 @@ void CChatWnd::OnSysColorChange()
 void CChatWnd::UpdateFriendlistCount(UINT count)
 {
 	CString strTemp;
-	strTemp.Format(_T(" (%i)"), count);
+	strTemp.Format(_T(" (%u)"), count);
 	GetDlgItem(IDC_FRIENDS_LBL)->SetWindowText(GetResString(IDS_CW_FRIENDS) + strTemp);
 }
 

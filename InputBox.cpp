@@ -60,7 +60,7 @@ void InputBox::OnOK()
 	CDialog::OnOK();
 }
 
-void InputBox::SetLabels(CString title, CString label, CString defaultStr)
+void InputBox::SetLabels(const CString& title, const CString& label, const CString& defaultStr)
 {
 	m_label = label;
 	m_title = title;

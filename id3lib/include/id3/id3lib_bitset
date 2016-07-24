@@ -39,7 +39,7 @@
 #include <limits.h>     // for CHAR_BIT
 #include <string>
 #include <stdexcept>    // for invalid_argument, out_of_range, overflow_error
-#include <iostream.h>   // for istream, ostream
+#include <iostream>   // for istream, ostream
 
 #define __BITS_PER_WORDT(__wt) (CHAR_BIT*sizeof(__wt))
 #define __BITSET_WORDS(__n,__wt) \
@@ -1045,7 +1045,7 @@ unsigned char _First_one<__dummy>::_S_first_one[] = {
   4, /* 240 */ 0, /* 241 */ 1, /* 242 */ 0, /* 243 */ 2, /* 244 */
   0, /* 245 */ 1, /* 246 */ 0, /* 247 */ 3, /* 248 */ 0, /* 249 */
   1, /* 250 */ 0, /* 251 */ 2, /* 252 */ 0, /* 253 */ 1, /* 254 */
-  0, /* 255 */
+  0 /* 255 */
 }; // end _First_one
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)

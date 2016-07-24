@@ -145,6 +145,7 @@ Private Sub File1_Click()
     Dim oField As ID3ComField
     Dim FrameLine As String
     Dim n As Long
+    Dim m As Long
     
     List1.Clear
     
@@ -162,16 +163,17 @@ Private Sub File1_Click()
         If Not oField Is Nothing Then
             FrameLine = FrameLine & " - " & oField.Text(1)
         End If
-        Set oField = oFrame.Field(ID3_FIELD_EMAIL)
-        If Not oField Is Nothing Then
-            FrameLine = FrameLine & " - " & oField.Text(1)
-        End If
-        Set oField = oFrame.Field(ID3_FIELD_TEXT)
-        If Not oField Is Nothing Then
-            For n = 1 To oField.NumTextItems
-                FrameLine = FrameLine & " - " & oField.Text(n)
-            Next n
-        End If
+        
+        For n = ID3_FIELD_NOFIELD + 1 To ID3_FIELD_LASTFIELDID - 1
+            If n <> ID3_FIELD_DESCRIPTION Then
+                Set oField = oFrame.Field(n)
+                If Not oField Is Nothing Then
+                    For m = 1 To oField.NumTextItems
+                        FrameLine = FrameLine & " - " & oField.Text(m)
+                    Next m
+                End If
+            End If
+        Next n
         ' could go on
         List1.AddItem FrameLine
     Next

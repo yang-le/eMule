@@ -1,8 +1,9 @@
 // -*- C++ -*-
-// $Id: frame_def.h,v 1.2 2002/07/02 22:12:32 t1mpy Exp $
+// $Id: frame_def.h,v 1.3 2002/09/13 15:38:45 t1mpy Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
+// Copyright 2002 Thijmen Klok (thijmen@id3lib.org)
 
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Library General Public License as published by
@@ -28,9 +29,8 @@
 #ifndef _ID3LIB_FRAME_DEF_H_
 #define _ID3LIB_FRAME_DEF_H_
 
-#include "id3/globals.h" //has <stdlib.h> "id3/sized_types.h"
-
 struct ID3_FieldDef;
+class ID3_Frame;
 
 // Structure used for defining how frames are defined internally.
 struct ID3_FrameDef
@@ -38,6 +38,10 @@ struct ID3_FrameDef
   ID3_FrameID   eID;
   char          sShortTextID[3 + 1];
   char          sLongTextID[4 + 1];
+  ID3_V2Spec    eFirstAppearance;
+  ID3_V2Spec    eLastAppearance;
+  ID3_Frame*     (*convert)(ID3_Frame* frame, ID3_V2Spec tospec);
+//  ID3_FrameID   eReplacedBy;
   bool          bTagDiscard;
   bool          bFileDiscard;
   const ID3_FieldDef* aeFieldDefs;

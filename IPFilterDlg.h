@@ -9,7 +9,7 @@ class CIPFilterDlg : public CResizableDialog
 	DECLARE_DYNAMIC(CIPFilterDlg)
 
 public:
-	CIPFilterDlg(CWnd* pParent = NULL);   // standard constructor
+	explicit CIPFilterDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CIPFilterDlg();
 
 // Dialog Data

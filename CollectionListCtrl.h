@@ -29,11 +29,19 @@ public:
 	CCollectionListCtrl();
 	virtual ~CCollectionListCtrl();
 
-	void Init(CString strNameAdd);
+	void Init(const CString& strNameAdd);
 	void Localize();
 
 	void AddFileToList(CAbstractFile* pAbstractFile);
 	void RemoveFileFromList(CAbstractFile* pAbstractFile);
+
+private:
+	enum ECols
+	{
+		colName = 0,
+		colSize,
+		colHash
+	};
 
 protected:
 	static int CALLBACK SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);

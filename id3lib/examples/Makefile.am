@@ -30,6 +30,8 @@ endif
 
 LDADD =  $(top_builddir)/src/libid3.la $(zlib_lib) $(ID3_DEBUG_LIBS) $(getopt_lib)
 
+C_LINK_ADD = -lstdc++ -lz -lid3
+
 INCLUDES = @ID3LIB_DEBUG_FLAGS@ -I$(top_srcdir)/include
 
 bin_PROGRAMS            = id3info id3convert id3tag id3cp
@@ -96,3 +98,11 @@ PROGNAME = gengetopt
 	$(PROGNAME) --file-name=$* --unamed-opts --input=$<
 
 demo_%.cpp: demo_%_options.c
+
+# This works, but it's probably not good automake form 'cause I
+# I don't know automake very well. Corrections/cleanups
+# are welcome. - Cedric
+demo_simple: demo_simple.o
+	$(LINK) $(C_LINK_ADD) $<
+
+	

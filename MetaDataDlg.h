@@ -20,7 +20,7 @@ public:
 
 	void SetFiles(const CSimpleArray<CObject*>* paFiles) { m_paFiles = paFiles; m_bDataChanged = true; }
 	void SetTagList(Kademlia::TagList* taglist);
-	CString GetTagNameByID(UINT id);
+//not implemented	CString GetTagNameByID(UINT id);
 
 // Dialog Data
 	enum { IDD = IDD_META_DATA };

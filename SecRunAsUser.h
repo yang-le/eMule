@@ -120,20 +120,20 @@ typedef DWORD (WINAPI* TGetLengthSid)(
 );
 
 typedef HRESULT (WINAPI* TADsGetObject) (
-  LPWSTR lpszPathName, 
-  REFIID riid, 
+  LPWSTR lpszPathName,
+  REFIID riid,
   VOID** ppObject
 );
 
 typedef HRESULT (WINAPI* TADsBuildEnumerator) (
-  IADsContainer* pADsContainer, 
+  IADsContainer* pADsContainer,
   IEnumVARIANT** ppEnumVariant
 );
 
 typedef HRESULT (WINAPI* TADsEnumerateNext) (
-  IEnumVARIANT* pEnumVariant, 
-  ULONG cElements, 
-  VARIANT* pvar, 
+  IEnumVARIANT* pEnumVariant,
+  ULONG cElements,
+  VARIANT* pvar,
   ULONG* pcElementsFetched
 );
 
@@ -144,11 +144,11 @@ typedef BOOL (WINAPI* TOpenProcessToken)(
 );
 
 typedef BOOL (WINAPI* TGetTokenInformation)(
-  HANDLE TokenHandle,                           
-  TOKEN_INFORMATION_CLASS TokenInformationClass, 
-  LPVOID TokenInformation,                       
-  DWORD TokenInformationLength,                  
-  PDWORD ReturnLength                            
+  HANDLE TokenHandle,
+  TOKEN_INFORMATION_CLASS TokenInformationClass,
+  LPVOID TokenInformation,
+  DWORD TokenInformationLength,
+  PDWORD ReturnLength
 );
 
 typedef BOOL (WINAPI* TCreateRestrictedToken)(
@@ -197,10 +197,10 @@ public:
 	~CSecRunAsUser();
 
 	eResult	RestartSecure();
-	bool	IsRunningEmuleAccount()		{return m_bRunningAsEmule;}
-	bool	IsRunningRestricted()		{return m_bRunningRestricted;}
-	bool	IsRunningSecure()			{return m_bRunningRestricted || m_bRunningAsEmule;}
-	CStringW	GetCurrentUserW();
+	bool	IsRunningEmuleAccount() const	{return m_bRunningAsEmule;}
+	bool	IsRunningRestricted() const		{return m_bRunningRestricted;}
+	bool	IsRunningSecure() const			{return m_bRunningRestricted || m_bRunningAsEmule;}
+	CStringW	GetCurrentUserW() const;
 
 protected:
 	eResult	PrepareUser();
@@ -209,7 +209,7 @@ protected:
 
 	bool	SetDirectoryPermissions();
 	bool	CreateEmuleUser(IADsContainerPtr pUsers);
-	CStringW	CreateRandomPW();
+	static CStringW	CreateRandomPW();
 	bool	SetObjectPermission(CString strDirFile, DWORD lGrantedAccess);
 	bool	LoadAPI();
 	void	FreeAPI();

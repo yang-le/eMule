@@ -107,10 +107,10 @@ void CDirectDownloadDlg::OnOK()
 				delete pLink;
 			}
 		}
-		catch(CString error)
+		catch (const CString& error)
 		{
 			TCHAR szBuffer[200];
-			_sntprintf(szBuffer, _countof(szBuffer), GetResString(IDS_ERR_INVALIDLINK), error);
+			_sntprintf(szBuffer, _countof(szBuffer), (LPCTSTR)GetResString(IDS_ERR_INVALIDLINK), (LPCTSTR)error);
 			szBuffer[_countof(szBuffer) - 1] = _T('\0');
 			CString strError;
 			strError.Format(GetResString(IDS_ERR_LINKERROR), szBuffer);
@@ -150,7 +150,7 @@ BOOL CDirectDownloadDlg::OnInitDialog()
 
 	GetDlgItem(IDOK)->SetWindowText(GetResString(IDS_DOWNLOAD));
 	GetDlgItem(IDCANCEL)->SetWindowText(GetResString(IDS_CANCEL));
-	
+
 
 	if (thePrefs.GetCatCount()==0) {
 		GetDlgItem(IDC_CATLABEL)->ShowWindow(SW_HIDE);

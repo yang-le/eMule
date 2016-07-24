@@ -29,7 +29,7 @@ class CListViewWalkerPropertySheet : public CListViewPropertySheet
 	DECLARE_DYNAMIC(CListViewWalkerPropertySheet)
 
 public:
-	CListViewWalkerPropertySheet(CListCtrlItemWalk* pListCtrl)
+	explicit CListViewWalkerPropertySheet(CListCtrlItemWalk* pListCtrl)
 	{
 		m_pListCtrl = pListCtrl;
 	}

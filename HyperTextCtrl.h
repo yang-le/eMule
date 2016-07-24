@@ -1,9 +1,9 @@
 /********************************************************************
 
-		HyperTextCtrl.h - Controls that shows hyperlinks 
+		HyperTextCtrl.h - Controls that shows hyperlinks
 		in text
 
-		Copyright (C) 2001-2002 Magomed G. Abdurakhmanov			
+		Copyright (C) 2001-2002 Magomed G. Abdurakhmanov
 
 ********************************************************************/
 //edited by (C)2002 Merkur ( devs@emule-project.net / http://www.emule-project.net )
@@ -43,7 +43,7 @@
 class CHyperLink{
 	friend class CPreparedHyperText;
 public:
-	CHyperLink(); // i_a 
+	CHyperLink(); // i_a
 	CHyperLink(int iBegin, uint16 iEnd, const CString& sTitle, const CString& sCommand, const CString& sDirectory);
 	CHyperLink(int iBegin, uint16 iEnd, const CString& sTitle, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	CHyperLink(const CHyperLink& Src);
@@ -64,7 +64,7 @@ protected:
 
 	enum LinkType
 	{
-		lt_Unknown = 0,  // i_a 
+		lt_Unknown = 0,  // i_a
 		lt_Shell = 0, /* http:// mailto:*/
 		lt_Message = 1 /* WM_COMMAND */
 	} m_Type;
@@ -73,7 +73,7 @@ protected:
 	CString m_sCommand;
 	CString m_sDirectory;
 	// used for lt_Message
-	HWND m_hWnd; 
+	HWND m_hWnd;
 	UINT m_uMsg;
 	WPARAM m_wParam;
 	LPARAM m_lParam;
@@ -85,7 +85,7 @@ protected:
 class CKeyWord{
 	friend class CPreparedHyperText;
 public:
-	CKeyWord();
+	CKeyWord() : m_iBegin(0), m_iEnd(0), color(0) {}
 	CKeyWord(int iBegin, uint16 iEnd, COLORREF icolor);
 
 	bool operator< (const CKeyWord& Arg) const		{return m_iEnd < Arg.m_iEnd;}
@@ -107,8 +107,8 @@ protected:
 class CPreparedHyperText{
 public:
 	CPreparedHyperText()						{}
-	CPreparedHyperText(const CString& sText);
-	CPreparedHyperText(const CPreparedHyperText& src);
+	explicit CPreparedHyperText(const CString& sText);
+	explicit CPreparedHyperText(const CPreparedHyperText& src);
 
 	void Clear();
 	void SetText(const CString& sText);
@@ -127,9 +127,9 @@ protected:
 	std::list<CHyperLink> m_Links;
 	std::list<CKeyWord> m_KeyWords;
 
-	void RemoveLastSign(CString& sLink);
+	static void RemoveLastSign(CString& sLink);
 	void PrepareText(const CString& sText);
-	bool tspace(TCHAR c)						{return _istspace((_TUCHAR)c) || /*c < _T(' ') || */c == _T(';') || c == _T('!');}
+	static bool tspace(TCHAR c)			{return _istspace((_TUCHAR)c) || /*c < _T(' ') || */c == _T(';') || c == _T('!');}
 
 };
 // --------------------------------------------------------------
@@ -143,9 +143,9 @@ public:
 
 	CLinePartInfo(int iBegin, uint16 iEnd, CHyperLink* pHyperLink = NULL, CKeyWord* pKeyWord = NULL);
 	CLinePartInfo(const CLinePartInfo& Src);
-	uint16 Begin()							{return m_xBegin;}
-	uint16 End()							{return m_xEnd;}
-	uint16 Len()							{return ((m_xEnd - m_xBegin) + 1);}
+	uint16 Begin() const				{return m_xBegin;}
+	uint16 End() const					{return m_xEnd;}
+	uint16 Len() const					{return ((m_xEnd - m_xBegin) + 1);}
 };
 
 // --------------------------------------------------------------
@@ -157,9 +157,9 @@ public:
 
 	CLineInfo(int iBegin, uint16 iEnd);
 	CLineInfo(const CLineInfo& Src);
-	UINT Begin()						{return m_iBegin;}
-	UINT End()							{return m_iEnd;}
-	UINT Len()							{return m_iEnd - m_iBegin + 1;}
+	UINT Begin() const					{return m_iBegin;}
+	UINT End() const					{return m_iEnd;}
+	UINT Len() const					{return m_iEnd - m_iBegin + 1;}
 };
 
 // --------------------------------------------------------------
@@ -172,7 +172,7 @@ public:
 	CVisPart* m_pPrev;
 	CVisPart* m_pNext;
 
-	CVisPart(const CLinePartInfo& LinePartInfo, const CRect& rcBounds, 
+	CVisPart(const CLinePartInfo& LinePartInfo, const CRect& rcBounds,
 		int iRealBegin, uint16 iRealLen,CVisPart* pPrev,CVisPart* pNext);
 	CVisPart(const CVisPart& Src);
 };
@@ -189,7 +189,7 @@ class CHyperTextCtrl : public CWnd{
 protected:
 	CPreparedHyperText* m_Text;
 	CPreparedHyperText  standart_Text;
-	std::vector<CLineInfo> m_Lines;	
+	std::vector<CLineInfo> m_Lines;
 	CFont* m_Font;
 	COLORREF m_BkColor;
 	COLORREF m_TextColor;
@@ -247,13 +247,13 @@ public:
 	 void AppendHyperLink(const CString& sText, const CString& sTitle, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool bInvalidate = true);
 	 void AppendKeyWord(const CString& sText, COLORREF icolor);
 	 COLORREF GetBkColor()							{return m_BkColor;}
-	 void SetBkColor(COLORREF Color)				{m_BkColor = Color;}	
+	 void SetBkColor(COLORREF Color)				{m_BkColor = Color;}
 	 COLORREF GetTextColor()						{return m_TextColor;}
-	 void SetTextColor(COLORREF Color)				{m_TextColor = Color;}	
+	 void SetTextColor(COLORREF Color)				{m_TextColor = Color;}
 	 COLORREF GetLinkColor()						{return m_LinkColor;}
 	 void SetLinkColor(COLORREF LinkColor, bool bInvalidate = true);
 	 COLORREF GetHoverColor()						{return m_HoverColor;}
-	 void SetHoverColor(COLORREF HoverColor)		{m_HoverColor = HoverColor;}	
+	 void SetHoverColor(COLORREF HoverColor)		{m_HoverColor = HoverColor;}
 	 HCURSOR GetLinkCursor()						{return m_LinkCursor;}
 	 void SetLinkCursor(HCURSOR LinkCursor)			{m_LinkCursor = LinkCursor;}
 	 HCURSOR GetDefaultCursor()						{return m_DefaultCursor;}

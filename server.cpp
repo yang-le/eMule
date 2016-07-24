@@ -32,7 +32,7 @@ CServer::CServer(const ServerMet_Struct* in_data)
 {
 	port = in_data->port;
 	ip = in_data->ip;
-	_tcscpy(ipfull, ipstr(ip));
+	_tcscpy(ipfull, (LPCTSTR)ipstr(ip));
 	files = 0;
 	users = 0;
 	m_uPreference = 0;
@@ -65,7 +65,7 @@ CServer::CServer(uint16 in_port, LPCTSTR i_addr)
 		m_strDynIP = i_addr;
 		ip = 0;
 	}
-	_tcscpy(ipfull, ipstr(ip));
+	_tcscpy(ipfull, (LPCTSTR)ipstr(ip));
 	files = 0;
 	users = 0;
 	m_uPreference = 0;
@@ -94,7 +94,7 @@ CServer::CServer(uint16 in_port, LPCTSTR i_addr)
 CServer::CServer(const CServer* pOld)
 {
 	port = pOld->port;
-	ip = pOld->ip; 
+	ip = pOld->ip;
 	staticservermember = pOld->IsStaticMember();
 	_tcscpy(ipfull, pOld->ipfull);
 	files = pOld->files;
@@ -250,7 +250,7 @@ bool CServer::AddTagFromFile(CFileDataIO* servermet)
 				users = tag->GetInt();
 		}
 		else{
-			TRACE(_T("***Unknown tag in server.met: %s\n"), tag->GetFullInfo());
+			TRACE(_T("***Unknown tag in server.met: %s\n"), (LPCTSTR)tag->GetFullInfo());
 		}
 	}
 	delete tag;
@@ -278,7 +278,7 @@ LPCTSTR CServer::GetAddress() const
 void CServer::SetIP(uint32 newip)
 {
 	ip = newip;
-	_tcscpy(ipfull, ipstr(ip));
+	_tcscpy(ipfull, (LPCTSTR)ipstr(ip));
 }
 
 void CServer::SetDynIP(LPCTSTR newdynip)

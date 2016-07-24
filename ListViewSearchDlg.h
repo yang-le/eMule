@@ -8,7 +8,7 @@ class CListViewSearchDlg : public CDialog
 	DECLARE_DYNAMIC(CListViewSearchDlg)
 
 public:
-	CListViewSearchDlg(CWnd* pParent = NULL);	  // standard constructor
+	explicit CListViewSearchDlg(CWnd* pParent = NULL);	  // standard constructor
 	virtual ~CListViewSearchDlg();
 
 // Dialog Data

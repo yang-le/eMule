@@ -19,7 +19,7 @@ class CKademliaWnd : public CResizableDialog
 	DECLARE_DYNAMIC(CKademliaWnd)
 
 public:
-	CKademliaWnd(CWnd* pParent = NULL);   // standard constructor
+	explicit CKademliaWnd(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CKademliaWnd();
 
 	// Dialog Data
@@ -46,12 +46,13 @@ public:
 	void Localize();
 	void UpdateControlsState();
 	BOOL SaveAllSettings();
-
+private:
+	bool						m_btnsetsize;
 protected:
 	CIconStatic					m_ctrlBootstrap;
 	CKadContactListCtrl*		m_contactListCtrl;
 	CKadContactHistogramCtrl*	m_contactHistogramCtrl;
-	CKadLookupGraph*			m_kadLookupGraph; 
+	CKadLookupGraph*			m_kadLookupGraph;
 	CCustomAutoComplete*		m_pacONBSIPs;
 	HICON						icon_kadsea;
 	CDropDownButton*			m_pbtnWnd;
@@ -77,4 +78,5 @@ protected:
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnNMDblclkSearchlist(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnListModifiedSearchlist(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnSettingChange(UINT uFlags, LPCTSTR lpszSection);
 };

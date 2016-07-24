@@ -48,9 +48,9 @@ enum EFOCAction{
 /// CICSRuleInfo
 class CICSRuleInfo{
 public:
-	CICSRuleInfo()								{}
+	CICSRuleInfo() : m_nPortNumber(0), m_byProtocol(0), m_bRemoveOnExit(false)	{}
 	CICSRuleInfo(const CICSRuleInfo& ri)		{*this = ri;}
-	CICSRuleInfo(uint16 nPortNumber, uint8 byProtocol, CString strRuleName, bool bRemoveOnExit = false)
+	CICSRuleInfo(uint16 nPortNumber, uint8 byProtocol, const CString& strRuleName, bool bRemoveOnExit = false)
 	{
 		m_nPortNumber = nPortNumber;
 		m_byProtocol = byProtocol;
@@ -82,10 +82,10 @@ public:
 	CFirewallOpener(void);
 	~CFirewallOpener(void);
 	bool			OpenPort(const CICSRuleInfo& riPortRule);
-	bool			OpenPort(const uint16 nPortNumber,const uint8 byProtocol,const CString strRuleName, const bool bRemoveOnExit = false);
-	bool			RemoveRule(const CString strName);
+	bool			OpenPort(const uint16 nPortNumber,const uint8 byProtocol,const CString& strRuleName, const bool bRemoveOnExit = false);
+	bool			RemoveRule(const CString& strName);
 	bool			RemoveRule(const CICSRuleInfo& riPortRule);
-	bool			DoesRuleExist(const CString strName);
+	bool			DoesRuleExist(const CString& strName);
 	bool			DoesRuleExist(const uint16 nPortNumber,const uint8 byProtocol);
 	bool			DoesFWConnectionExist();
 	void			UnInit();
@@ -93,9 +93,9 @@ public:
 
 protected:
 
-	bool			AddRule(const CICSRuleInfo& riPortRule, const INetSharingConfigurationPtr pNSC, const INetConnectionPropsPtr pNCP);
-	bool			DoAction(const EFOCAction eAction, const CICSRuleInfo& riPortRule);			
-	bool			FindRule(const EFOCAction eAction, const CICSRuleInfo& riPortRule, const INetSharingConfigurationPtr pNSC, INetSharingPortMappingPropsPtr* outNSPMP);
+	static bool		AddRule(const CICSRuleInfo& riPortRule, const INetSharingConfigurationPtr& pNSC, const INetConnectionPropsPtr& pNCP);
+	bool			DoAction(const EFOCAction eAction, const CICSRuleInfo& riPortRule);
+	static bool		FindRule(const EFOCAction eAction, const CICSRuleInfo& riPortRule, const INetSharingConfigurationPtr& pNSC, INetSharingPortMappingPropsPtr* outNSPMP);
 
 	CArray<CICSRuleInfo> m_liAddedRules;
 

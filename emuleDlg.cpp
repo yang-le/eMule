@@ -15,7 +15,6 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
-#include <math.h>
 #include <afxinet.h>
 #define MMNODRV			// mmsystem: Installable driver support
 //#define MMNOSOUND		// mmsystem: Sound support
@@ -120,10 +119,10 @@ extern BOOL FirstTimeWizard();
 #define	SYS_TRAY_ICON_COOKIE_FORCE_UPDATE	(UINT)-1
 
 UINT g_uMainThreadId = 0;
-const static UINT UWM_ARE_YOU_EMULE = RegisterWindowMessage(EMULE_GUID);
+static const UINT UWM_ARE_YOU_EMULE = RegisterWindowMessage(EMULE_GUID);
 
 #ifdef HAVE_WIN7_SDK_H
-const static UINT UWM_TASK_BUTTON_CREATED = RegisterWindowMessage(_T("TaskbarButtonCreated"));
+static const UINT UWM_TASK_BUTTON_CREATED = RegisterWindowMessage(_T("TaskbarButtonCreated"));
 #endif
 
 
@@ -163,12 +162,12 @@ BEGIN_MESSAGE_MAP(CemuleDlg, CTrayDialog)
 	ON_COMMAND(MP_DISCONNECT, CloseConnection)
 	ON_COMMAND(MP_EXIT, OnClose)
 	ON_COMMAND(MP_RESTORE, RestoreWindow)
-	// quick-speed changer -- 
+	// quick-speed changer --
 	ON_COMMAND_RANGE(MP_QS_U10, MP_QS_UP10, QuickSpeedUpload)
 	ON_COMMAND_RANGE(MP_QS_D10, MP_QS_DC, QuickSpeedDownload)
 	//--- quickspeed - paralize all ---
 	ON_COMMAND_RANGE(MP_QS_PA, MP_QS_UA, QuickSpeedOther)
-	// quick-speed changer -- based on xrmb	
+	// quick-speed changer -- based on xrmb
 	ON_NOTIFY_EX_RANGE(RBN_CHEVRONPUSHED, 0, 0xFFFF, OnChevronPushed)
 
 	ON_REGISTERED_MESSAGE(UWM_ARE_YOU_EMULE, OnAreYouEmule)
@@ -179,7 +178,7 @@ BEGIN_MESSAGE_MAP(CemuleDlg, CTrayDialog)
 	//
 	ON_MESSAGE(UM_TASKBARNOTIFIERCLICKED, OnTaskbarNotifierClicked)
 	ON_MESSAGE(UM_CLOSE_MINIMULE, OnCloseMiniMule)
-	
+
 	// Webserver messages
 	ON_MESSAGE(WEB_GUI_INTERACTION, OnWebGUIInteraction)
 	ON_MESSAGE(WEB_CLEAR_COMPLETED, OnWebServerClearCompleted)
@@ -215,7 +214,8 @@ BEGIN_MESSAGE_MAP(CemuleDlg, CTrayDialog)
 END_MESSAGE_MAP()
 
 CemuleDlg::CemuleDlg(CWnd* pParent /*=NULL*/)
-	: CTrayDialog(CemuleDlg::IDD, pParent)
+	: CTrayDialog(CemuleDlg::IDD, pParent), m_currentTBP_state(TBPF_NOPROGRESS), m_prevProgress(0), m_ovlIcon(0)
+	, m_acVCDNSBuffer(), m_thbButtons()
 {
 	g_uMainThreadId = GetCurrentThreadId();
 	preferenceswnd = new CPreferencesDlg;
@@ -232,8 +232,8 @@ CemuleDlg::CemuleDlg(CWnd* pParent /*=NULL*/)
 	m_wndTaskbarNotifier = new CTaskbarNotifier;
 
 	m_hIcon = NULL;
-	theApp.m_app_state = APP_STATE_RUNNING;
-	ready = false; 
+	theApp.m_app_state = APP_STATE_STARTING;
+	ready = false;
 	m_bStartMinimizedChecked = false;
 	m_bStartMinimized = false;
 	memset(&m_wpFirstRestore, 0, sizeof m_wpFirstRestore);
@@ -241,7 +241,7 @@ CemuleDlg::CemuleDlg(CWnd* pParent /*=NULL*/)
 	m_uDownDatarate = 0;
 	status = 0;
 	activewnd = NULL;
-	for (int i = 0; i < _countof(connicons); i++)
+	for (unsigned i = 0; i < _countof(connicons); ++i)
 		connicons[i] = NULL;
 	transicons[0] = NULL;
 	transicons[1] = NULL;
@@ -278,7 +278,7 @@ CemuleDlg::~CemuleDlg()
 	DestroyMiniMule();
 	if (m_icoSysTrayCurrent) VERIFY( DestroyIcon(m_icoSysTrayCurrent) );
 	if (m_hIcon) VERIFY( ::DestroyIcon(m_hIcon) );
-	for (int i = 0; i < _countof(connicons); i++){
+	for (unsigned i = 0; i < _countof(connicons); ++i) {
 		if (connicons[i]) VERIFY( ::DestroyIcon(connicons[i]) );
 	}
 	if (transicons[0]) VERIFY( ::DestroyIcon(transicons[0]) );
@@ -361,7 +361,7 @@ BOOL CemuleDlg::OnInitDialog()
 		{
 			m_bInitedCOM = true;
 			typedef BOOL (WINAPI* PChangeWindowMessageFilter)(UINT message, DWORD dwFlag);
-			PChangeWindowMessageFilter ChangeWindowMessageFilter = 
+			PChangeWindowMessageFilter ChangeWindowMessageFilter =
 			(PChangeWindowMessageFilter )(GetProcAddress(
 				GetModuleHandle(TEXT("user32.dll")), "ChangeWindowMessageFilter"));
 			if (ChangeWindowMessageFilter) {
@@ -414,7 +414,7 @@ BOOL CemuleDlg::OnInitDialog()
 		if (thePrefs.GetUseReBarToolbar())
 		{
 		    if (m_ctlMainTopReBar.Create(WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
-									     RBS_BANDBORDERS | RBS_AUTOSIZE | CCS_NODIVIDER, 
+									     RBS_BANDBORDERS | RBS_AUTOSIZE | CCS_NODIVIDER,
 									     CRect(0, 0, 0, 0), this, AFX_IDW_REBAR))
 		    {
 			    CSize sizeBar;
@@ -432,7 +432,7 @@ BOOL CemuleDlg::OnInitDialog()
 			    VERIFY( m_ctlMainTopReBar.InsertBand((UINT)-1, &rbbi) );
 				toolbar->SaveCurHeight();
 		    	toolbar->UpdateBackground();
-    
+
 			    pwndToolbarX = &m_ctlMainTopReBar;
 		    }
 		}
@@ -531,7 +531,7 @@ BOOL CemuleDlg::OnInitDialog()
 		ircwnd,
 		statisticswnd
 	};
-	for (int i = 0; i < _countof(apWnds); i++)
+	for (unsigned i = 0; i < _countof(apWnds); ++i)
 		apWnds[i]->SetWindowPos(NULL, rcClient.left, rcClient.top, rcClient.Width(), rcClient.Height(), SWP_NOZORDER);
 
 	// anchors
@@ -623,7 +623,7 @@ BOOL CemuleDlg::OnInitDialog()
 
 	VERIFY( (m_hTimer = ::SetTimer(NULL, NULL, 300, StartupTimer)) != NULL );
 	if (thePrefs.GetVerbose() && !m_hTimer)
-		AddDebugLogLine(true,_T("Failed to create 'startup' timer - %s"),GetErrorMessage(GetLastError()));
+		AddDebugLogLine(true,_T("Failed to create 'startup' timer - %s"), (LPCTSTR)GetErrorMessage(GetLastError()));
 
 	theStats.starttime = GetTickCount();
 
@@ -643,12 +643,12 @@ BOOL CemuleDlg::OnInitDialog()
 
 	// initalize PeerCache
 	theApp.m_pPeerCache->Init(thePrefs.GetPeerCacheLastSearch(), thePrefs.WasPeerCacheFound(), thePrefs.IsPeerCacheDownloadEnabled(), thePrefs.GetPeerCachePort());
-	
+
 	// start aichsyncthread
 	AfxBeginThread(RUNTIME_CLASS(CAICHSyncThread), THREAD_PRIORITY_BELOW_NORMAL,0);
 
 	// debug info
-	DebugLog(_T("Using '%s' as config directory"), thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+	DebugLog(_T("Using '%s' as config directory"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
 	if (thePrefs.GetUseOverlappedSockets())
 		DebugLog(_T("Using overlapped sockets"));
 
@@ -728,7 +728,7 @@ void CALLBACK CemuleDlg::StartupTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT /*idEv
 				if (!theApp.listensocket->StartListening()) {
 					CString strError;
 					strError.Format(GetResString(IDS_MAIN_SOCKETERROR), thePrefs.GetPort());
-					LogError(LOG_STATUSBAR, _T("%s"), strError);
+					LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 					if (thePrefs.GetNotifierOnImportantError())
 						theApp.emuledlg->ShowNotifier(strError, TBN_IMPORTANTEVENT);
 					bError = true;
@@ -736,13 +736,19 @@ void CALLBACK CemuleDlg::StartupTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT /*idEv
 				if (!theApp.clientudp->Create()) {
 					CString strError;
 					strError.Format(GetResString(IDS_MAIN_SOCKETERROR), thePrefs.GetUDPPort());
-					LogError(LOG_STATUSBAR, _T("%s"), strError);
+					LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 					if (thePrefs.GetNotifierOnImportantError())
 						theApp.emuledlg->ShowNotifier(strError, TBN_IMPORTANTEVENT);
 				}
-				
+
 				if (!bError) // show the success msg, only if we had no serious error
-					AddLogLine(true, GetResString(IDS_MAIN_READY), theApp.m_strCurVersionLong);
+					AddLogLine(true, GetResString(IDS_MAIN_READY), (LPCTSTR)theApp.m_strCurVersionLong);
+
+				theApp.m_app_state = APP_STATE_RUNNING; //initialization completed
+				theApp.emuledlg->toolbar->EnableButton(TBBTN_CONNECT, true);
+				theApp.emuledlg->m_SysMenuOptions.EnableMenuItem(MP_CONNECT, MF_ENABLED);
+				theApp.emuledlg->serverwnd->GetDlgItem(IDC_ED2KCONNECT)->EnableWindow(true);
+				theApp.emuledlg->kademliawnd->UpdateControlsState(); //application state change is not tracked - force update
 
 				if (thePrefs.DoAutoConnect())
 					theApp.emuledlg->OnBnClickedConnect();
@@ -772,7 +778,7 @@ void CemuleDlg::StopTimer()
 	}
 	if (thePrefs.UpdateNotify())
 		DoVersioncheck(false);
-	
+
 	if (theApp.pstrPendingLink != NULL){
 		OnWMData(NULL, (LPARAM)&theApp.sendstruct);
 		delete theApp.pstrPendingLink;
@@ -795,7 +801,7 @@ void CemuleDlg::OnSysCommand(UINT nID, LPARAM lParam)
 		QuickSpeedOther(nID);
 		return;
 	}
-	
+
 	switch (nID /*& 0xFFF0*/)
 	{
 		case MP_ABOUTBOX: {
@@ -916,7 +922,7 @@ void CemuleDlg::AddLogText(UINT uFlags, LPCTSTR pszText)
 	{
         if (statusbar->m_hWnd /*&& ready*/)
 		{
-			if (theApp.m_app_state != APP_STATE_SHUTTINGDOWN)
+			if (!theApp.emuledlg->IsClosing())
 				statusbar->SetText(pszText, SBarLog, 0);
 		}
 		else
@@ -930,7 +936,7 @@ void CemuleDlg::AddLogText(UINT uFlags, LPCTSTR pszText)
 		return;
 
 	TCHAR temp[1060];
-	int iLen = _sntprintf(temp, _countof(temp), _T("%s: %s\r\n"), CTime::GetCurrentTime().Format(thePrefs.GetDateTimeFormat4Log()), pszText);
+	int iLen = _sntprintf(temp, _countof(temp), _T("%s: %s\r\n"), (LPCTSTR)CTime::GetCurrentTime().Format(thePrefs.GetDateTimeFormat4Log()), pszText);
 	if (iLen >= 0)
 	{
 		if (!(uFlags & LOG_DEBUG))
@@ -1037,21 +1043,21 @@ void CemuleDlg::ShowConnectionStateIcon()
 
 CString CemuleDlg::GetConnectionStateString()
 {
-	CString status;
+	CString state;
 	if (theApp.serverconnect->IsConnected())
-		status = _T("eD2K:") + GetResString(IDS_CONNECTED);
+		state = _T("eD2K:") + GetResString(IDS_CONNECTED);
 	else if (theApp.serverconnect->IsConnecting())
-		status = _T("eD2K:") + GetResString(IDS_CONNECTING);
+		state = _T("eD2K:") + GetResString(IDS_CONNECTING);
 	else
-		status = _T("eD2K:") + GetResString(IDS_NOTCONNECTED);
+		state = _T("eD2K:") + GetResString(IDS_NOTCONNECTED);
 
 	if (Kademlia::CKademlia::IsConnected())
-		status += _T("|Kad:") + GetResString(IDS_CONNECTED);
+		state += _T("|Kad:") + GetResString(IDS_CONNECTED);
 	else if (Kademlia::CKademlia::IsRunning())
-		status += _T("|Kad:") + GetResString(IDS_CONNECTING);
+		state += _T("|Kad:") + GetResString(IDS_CONNECTING);
 	else
-		status += _T("|Kad:") + GetResString(IDS_NOTCONNECTED);
-	return status;
+		state += _T("|Kad:") + GetResString(IDS_NOTCONNECTED);
+	return state;
 }
 
 void CemuleDlg::ShowConnectionState()
@@ -1073,10 +1079,13 @@ void CemuleDlg::ShowConnectionState()
 		tbi.iImage = 1;
 		tbi.pszText = const_cast<LPTSTR>((LPCTSTR)strPane);
 		toolbar->SetButtonInfo(TBBTN_CONNECT, &tbi);
+		strPane.Remove(_T('&'));
+		if (!theApp.emuledlg->m_SysMenuOptions.ModifyMenuW(MP_CONNECT, MF_STRING, MP_DISCONNECT, strPane))
+			theApp.emuledlg->m_SysMenuOptions.ModifyMenuW(MP_DISCONNECT, MF_STRING, MP_DISCONNECT, strPane); //replace "Cancel" with "Disconnect"
 	}
 	else
 	{
-		if (theApp.serverconnect->IsConnecting() || Kademlia::CKademlia::IsRunning()) 
+		if (theApp.serverconnect->IsConnecting() || Kademlia::CKademlia::IsRunning())
 		{
 			CString strPane(GetResString(IDS_MAIN_BTN_CANCEL));
 			TBBUTTONINFO tbi;
@@ -1085,8 +1094,10 @@ void CemuleDlg::ShowConnectionState()
 			tbi.iImage = 2;
 			tbi.pszText = const_cast<LPTSTR>((LPCTSTR)strPane);
 			toolbar->SetButtonInfo(TBBTN_CONNECT, &tbi);
-		} 
-		else 
+			strPane.Remove(_T('&'));
+			theApp.emuledlg->m_SysMenuOptions.ModifyMenuW(MP_CONNECT, MF_STRING, MP_DISCONNECT, strPane);
+		}
+		else
 		{
 			CString strPane(GetResString(IDS_MAIN_BTN_CONNECT));
 			TBBUTTONINFO tbi;
@@ -1095,6 +1106,8 @@ void CemuleDlg::ShowConnectionState()
 			tbi.iImage = 0;
 			tbi.pszText = const_cast<LPTSTR>((LPCTSTR)strPane);
 			toolbar->SetButtonInfo(TBBTN_CONNECT, &tbi);
+			strPane.Remove(_T('&'));
+			theApp.emuledlg->m_SysMenuOptions.ModifyMenuW(MP_DISCONNECT, MF_STRING, MP_CONNECT, strPane);
 		}
 	}
 	ShowUserCount();
@@ -1110,13 +1123,13 @@ void CemuleDlg::ShowUserCount()
 	theApp.serverlist->GetUserFileStatus( totaluser, totalfile );
 	CString buffer;
 	if (theApp.serverconnect->IsConnected() && Kademlia::CKademlia::IsRunning() && Kademlia::CKademlia::IsConnected())
-		buffer.Format(_T("%s:%s(%s)|%s:%s(%s)"), GetResString(IDS_UUSERS), CastItoIShort(totaluser, false, 1), CastItoIShort(Kademlia::CKademlia::GetKademliaUsers(), false, 1), GetResString(IDS_FILES), CastItoIShort(totalfile, false, 1), CastItoIShort(Kademlia::CKademlia::GetKademliaFiles(), false, 1));
+		buffer.Format(_T("%s:%s(%s)|%s:%s(%s)"), (LPCTSTR)GetResString(IDS_UUSERS), (LPCTSTR)CastItoIShort(totaluser, false, 1), (LPCTSTR)CastItoIShort(Kademlia::CKademlia::GetKademliaUsers(), false, 1), (LPCTSTR)GetResString(IDS_FILES), (LPCTSTR)CastItoIShort(totalfile, false, 1), (LPCTSTR)CastItoIShort(Kademlia::CKademlia::GetKademliaFiles(), false, 1));
 	else if (theApp.serverconnect->IsConnected())
-		buffer.Format(_T("%s:%s|%s:%s"), GetResString(IDS_UUSERS), CastItoIShort(totaluser, false, 1), GetResString(IDS_FILES), CastItoIShort(totalfile, false, 1));
+		buffer.Format(_T("%s:%s|%s:%s"), (LPCTSTR)GetResString(IDS_UUSERS), (LPCTSTR)CastItoIShort(totaluser, false, 1), (LPCTSTR)GetResString(IDS_FILES), (LPCTSTR)CastItoIShort(totalfile, false, 1));
 	else if (Kademlia::CKademlia::IsRunning() && Kademlia::CKademlia::IsConnected())
-		buffer.Format(_T("%s:%s|%s:%s"), GetResString(IDS_UUSERS), CastItoIShort(Kademlia::CKademlia::GetKademliaUsers(), false, 1), GetResString(IDS_FILES), CastItoIShort(Kademlia::CKademlia::GetKademliaFiles(), false, 1));
+		buffer.Format(_T("%s:%s|%s:%s"), (LPCTSTR)GetResString(IDS_UUSERS), (LPCTSTR)CastItoIShort(Kademlia::CKademlia::GetKademliaUsers(), false, 1), (LPCTSTR)GetResString(IDS_FILES), (LPCTSTR)CastItoIShort(Kademlia::CKademlia::GetKademliaFiles(), false, 1));
 	else
-		buffer.Format(_T("%s:0|%s:0"), GetResString(IDS_UUSERS), GetResString(IDS_FILES));
+		buffer.Format(_T("%s:0|%s:0"), (LPCTSTR)GetResString(IDS_UUSERS), (LPCTSTR)GetResString(IDS_FILES));
 	statusbar->SetText(buffer, SBarUsers, 0);
 }
 
@@ -1203,11 +1216,11 @@ void CemuleDlg::ShowTransferRate(bool bForceAll)
 		UpdateTrayIcon(iDownRateProcent);
 
 		if (theApp.IsConnected()) {
-			_sntprintf(buffer2, _countof(buffer2), _T("eMule v%s (%s)\r\n%s"), theApp.m_strCurVersionLong, GetResString(IDS_CONNECTED), strTransferRate);
+			_sntprintf(buffer2, _countof(buffer2), _T("eMule v%s (%s)\r\n%s"), (LPCTSTR)theApp.m_strCurVersionLong, (LPCTSTR)GetResString(IDS_CONNECTED), (LPCTSTR)strTransferRate);
 			buffer2[_countof(buffer2) - 1] = _T('\0');
 		}
 		else {
-			_sntprintf(buffer2, _countof(buffer2), _T("eMule v%s (%s)\r\n%s"), theApp.m_strCurVersionLong, GetResString(IDS_DISCONNECTED), strTransferRate);
+			_sntprintf(buffer2, _countof(buffer2), _T("eMule v%s (%s)\r\n%s"), (LPCTSTR)theApp.m_strCurVersionLong, (LPCTSTR)GetResString(IDS_DISCONNECTED), (LPCTSTR)strTransferRate);
 			buffer2[_countof(buffer2) - 1] = _T('\0');
 		}
 
@@ -1231,7 +1244,7 @@ void CemuleDlg::ShowTransferRate(bool bForceAll)
 	if (IsWindowVisible() && thePrefs.ShowRatesOnTitle())
 	{
 		TCHAR szBuff[128];
-		_sntprintf(szBuff, _countof(szBuff), _T("(U:%.1f D:%.1f) eMule v%s"), (float)m_uUpDatarate/1024, (float)m_uDownDatarate/1024, theApp.m_strCurVersionLong);
+		_sntprintf(szBuff, _countof(szBuff), _T("(U:%.1f D:%.1f) eMule v%s"), (float)m_uUpDatarate/1024, (float)m_uDownDatarate/1024, (LPCTSTR)theApp.m_strCurVersionLong);
 		szBuff[_countof(szBuff) - 1] = _T('\0');
 		SetWindowText(szBuff);
 	}
@@ -1249,12 +1262,12 @@ void CemuleDlg::ShowPing()
         if (thePrefs.IsDynUpEnabled())
 		{
 			CurrentPingStruct lastPing = theApp.lastCommonRouteFinder->GetCurrentPing();
-            if (lastPing.state.GetLength() == 0)
+			if (lastPing.state.IsEmpty())
 			{
                 if (lastPing.lowest > 0 && !thePrefs.IsDynUpUseMillisecondPingTolerance())
-                    buffer.Format(_T("%.1f | %ims | %i%%"),lastPing.currentLimit/1024.0f, lastPing.latency, lastPing.latency*100/lastPing.lowest);
+                    buffer.Format(_T("%.1f | %ums | %u%%"),lastPing.currentLimit/1024.0f, lastPing.latency, lastPing.latency*100/lastPing.lowest);
                 else
-                    buffer.Format(_T("%.1f | %ims"),lastPing.currentLimit/1024.0f, lastPing.latency);
+                    buffer.Format(_T("%.1f | %ums"),lastPing.currentLimit/1024.0f, lastPing.latency);
             }
 			else
                 buffer.SetString(lastPing.state);
@@ -1324,16 +1337,16 @@ void CemuleDlg::SetStatusBarPartsSize()
         else
             ussShift = 110;
 	}
-		int aiWidths[6] =
-		{ 
-			rect.right - 675 - ussShift,
-			rect.right - 440 - ussShift,
-			rect.right - 250 - ussShift,
-			rect.right - ussShift - 25,
-			rect.right -  25, 
-			-1
-		};
-		statusbar->SetParts(_countof(aiWidths), aiWidths);
+	int aiWidths[6] =
+	{
+		rect.right - 675 - ussShift,
+		rect.right - 440 - ussShift,
+		rect.right - 250 - ussShift,
+		rect.right - ussShift - 25,
+		rect.right -  25,
+		-1
+	};
+	statusbar->SetParts(_countof(aiWidths), aiWidths);
 }
 
 void CemuleDlg::OnSize(UINT nType, int cx, int cy)
@@ -1341,7 +1354,7 @@ void CemuleDlg::OnSize(UINT nType, int cx, int cy)
 	CTrayDialog::OnSize(nType, cx, cy);
 	SetStatusBarPartsSize();
 	// we might receive this message during shutdown -> bad
-	if (transferwnd != NULL && IsRunning())
+	if (transferwnd != NULL && !IsClosing())
 		transferwnd->VerifyCatTabSize();
 }
 
@@ -1366,24 +1379,24 @@ void CemuleDlg::ProcessED2KLink(LPCTSTR pszData)
 			break;
 		case CED2KLink::kServerList:
 			{
-				CED2KServerListLink* pListLink = pLink->GetServerListLink(); 
-				_ASSERT( pListLink !=0 ); 
-				CString strAddress = pListLink->GetAddress(); 
-				if(strAddress.GetLength() != 0)
+				CED2KServerListLink* pListLink = pLink->GetServerListLink();
+				_ASSERT( pListLink !=0 );
+				CString strAddress = pListLink->GetAddress();
+				if (!strAddress.IsEmpty())
 					serverwnd->UpdateServerMetFromURL(strAddress);
 			}
 			break;
 		case CED2KLink::kNodesList:
 			{
-				CED2KNodesListLink* pListLink = pLink->GetNodesListLink(); 
-				_ASSERT( pListLink !=0 ); 
+				CED2KNodesListLink* pListLink = pLink->GetNodesListLink();
+				_ASSERT( pListLink !=0 );
 				CString strAddress = pListLink->GetAddress();
 				// Becasue the nodes.dat is vital for kad and its routing and doesn't needs to be updated in general
 				// we request a confirm to avoid accidental / malicious updating of this file. This is a bit inconsitent
 				// as the same kinda applies to the server.met, but those require more updates and are easier to understand
 				CString strConfirm;
-				strConfirm.Format(GetResString(IDS_CONFIRMNODESDOWNLOAD), strAddress);
-				if(strAddress.GetLength() != 0 && AfxMessageBox(strConfirm, MB_YESNO | MB_ICONQUESTION, 0) == IDYES)
+				strConfirm.Format(GetResString(IDS_CONFIRMNODESDOWNLOAD), (LPCTSTR)strAddress);
+				if (!strAddress.IsEmpty() && AfxMessageBox(strConfirm, MB_YESNO | MB_ICONQUESTION, 0) == IDYES)
 					kademliawnd->UpdateNodesDatFromURL(strAddress);
 			}
 			break;
@@ -1401,16 +1414,16 @@ void CemuleDlg::ProcessED2KLink(LPCTSTR pszData)
 				if (thePrefs.GetManualAddedServersHighPriority())
 					pSrv->SetPreference(SRV_PR_HIGH);
 
-				if (!serverwnd->serverlistctrl.AddServer(pSrv,true)) 
-					delete pSrv; 
+				if (!serverwnd->serverlistctrl.AddServer(pSrv,true))
+					delete pSrv;
 				else
-					AddLogLine(true,GetResString(IDS_SERVERADDED), pSrv->GetListName());
+					AddLogLine(true,GetResString(IDS_SERVERADDED), (LPCTSTR)pSrv->GetListName());
 			}
 			break;
 		case CED2KLink::kSearch:
 			{
 				CED2KSearchLink* pListLink = pLink->GetSearchLink();
-				_ASSERT( pListLink !=0 ); 
+				_ASSERT( pListLink !=0 );
 				SetActiveDialog(searchwnd);
 				searchwnd->ProcessEd2kSearchLinkRequest(pListLink->GetSearchTerm());
 			}
@@ -1420,7 +1433,7 @@ void CemuleDlg::ProcessED2KLink(LPCTSTR pszData)
 		}
 		delete pLink;
 	}
-	catch(CString strError){
+	catch(const CString& strError) {
 		LogWarning(LOG_STATUSBAR, GetResString(IDS_LINKNOTADDED) + _T(" - ") + strError);
 	}
 	catch(...){
@@ -1467,7 +1480,7 @@ LRESULT CemuleDlg::OnWMData(WPARAM /*wParam*/, LPARAM lParam)
 		// command line command received
 		CString clcommand((LPCTSTR)data->lpData);
 		clcommand.MakeLower();
-		AddLogLine(true,_T("CLI: %s"),clcommand);
+		AddLogLine(true,_T("CLI: %s"), (LPCTSTR)clcommand);
 
 		if (clcommand==_T("connect")) {StartConnection(); return true;}
 		if (clcommand==_T("disconnect")) {theApp.serverconnect->Disconnect(); return true;}
@@ -1475,7 +1488,7 @@ LRESULT CemuleDlg::OnWMData(WPARAM /*wParam*/, LPARAM lParam)
 		if (clcommand==_T("exit"))
 		{
 			theApp.m_app_state = APP_STATE_SHUTTINGDOWN; // do no ask to close
-			OnClose(); 
+			OnClose();
 			return true;
 		}
 		if (clcommand==_T("restore")) {RestoreWindow();return true;}
@@ -1488,8 +1501,8 @@ LRESULT CemuleDlg::OnWMData(WPARAM /*wParam*/, LPARAM lParam)
 				down=up.Mid(pos+1);
 				up=up.Left(pos);
 			}
-			if (down.GetLength()>0) thePrefs.SetMaxDownload(_tstoi(down));
-			if (up.GetLength()>0) thePrefs.SetMaxUpload(_tstoi(up));
+			if (!down.IsEmpty()) thePrefs.SetMaxDownload(_tstoi(down));
+			if (!up.IsEmpty()) thePrefs.SetMaxUpload(_tstoi(up));
 
 			return true;
 		}
@@ -1501,7 +1514,7 @@ LRESULT CemuleDlg::OnWMData(WPARAM /*wParam*/, LPARAM lParam)
 
 		if (clcommand==_T("status")) {
 			CString strBuff;
-			strBuff.Format(_T("%sstatus.log"), thePrefs.GetMuleDirectory(EMULE_CONFIGBASEDIR));
+			strBuff.Format(_T("%sstatus.log"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGBASEDIR));
 			FILE* file = _tfsopen(strBuff, _T("wt"), _SH_DENYWR);
 			if (file){
 				if (theApp.serverconnect->IsConnected())
@@ -1510,12 +1523,12 @@ LRESULT CemuleDlg::OnWMData(WPARAM /*wParam*/, LPARAM lParam)
 					strBuff = GetResString(IDS_CONNECTING);
 				else
 					strBuff = GetResString(IDS_DISCONNECTED);
-				_ftprintf(file, _T("%s\n"), strBuff);
+				_ftprintf(file, _T("%s\n"), (LPCTSTR)strBuff);
 
 				strBuff.Format(GetResString(IDS_UPDOWNSMALL), (float)theApp.uploadqueue->GetDatarate()/1024, (float)theApp.downloadqueue->GetDatarate()/1024);
-				_ftprintf(file, _T("%s"), strBuff); // next string (getTextList) is already prefixed with '\n'!
-				_ftprintf(file, _T("%s\n"), transferwnd->GetDownloadList()->getTextList());
-				
+				_ftprintf(file, _T("%s"), (LPCTSTR)strBuff); // next string (getTextList) is already prefixed with '\n'!
+				_ftprintf(file, _T("%s\n"), (LPCTSTR)transferwnd->GetDownloadList()->getTextList());
+
 				fclose(file);
 			}
 			return true;
@@ -1527,7 +1540,7 @@ LRESULT CemuleDlg::OnWMData(WPARAM /*wParam*/, LPARAM lParam)
 
 LRESULT CemuleDlg::OnFileHashed(WPARAM wParam, LPARAM lParam)
 {
-	if (theApp.m_app_state == APP_STATE_SHUTTINGDOWN)
+	if (theApp.emuledlg->IsClosing())
 		return FALSE;
 
 	CKnownFile* result = (CKnownFile*)lParam;
@@ -1563,7 +1576,7 @@ LRESULT CemuleDlg::OnFileHashed(WPARAM wParam, LPARAM lParam)
 
 LRESULT CemuleDlg::OnFileOpProgress(WPARAM wParam, LPARAM lParam)
 {
-	if (theApp.m_app_state == APP_STATE_SHUTTINGDOWN)
+	if (theApp.emuledlg->IsClosing())
 		return FALSE;
 
 	CKnownFile* pKnownFile = (CKnownFile*)lParam;
@@ -1629,15 +1642,14 @@ BOOL CemuleDlg::OnQueryEndSession()
 void CemuleDlg::OnEndSession(BOOL bEnding)
 {
 	AddDebugLogLine(DLP_VERYLOW, _T("%hs: bEnding=%d"), __FUNCTION__, bEnding);
-	if (bEnding && theApp.m_app_state == APP_STATE_RUNNING)
-	{
+	if (bEnding && !IsClosing()) {
 		// If eMule was *not* started with "RUNAS":
 		// When user is logging of (or reboots or shutdown system), Windows sends the
 		// WM_QUERYENDSESSION/WM_ENDSESSION to all top level windows.
 		// Here we can consume as much time as we need to perform our shutdown. Even if we
 		// take longer than 20 seconds, Windows will just show a dialog box that 'emule'
 		// is not terminating in time and gives the user a chance to cancel that. If the user
-		// does not cancel the Windows dialog, Windows will though wait until eMule has 
+		// does not cancel the Windows dialog, Windows will though wait until eMule has
 		// terminated by itself - no data loss, no file corruption, everything is fine.
 		theApp.m_app_state = APP_STATE_SHUTTINGDOWN;
 		OnClose();
@@ -1667,14 +1679,13 @@ LRESULT CemuleDlg::OnConsoleThreadEvent(WPARAM wParam, LPARAM lParam)
 	// has finished processing this inter-application message), the application will get
 	// forcefully terminated by Windows after 20 seconds! There is no known way to prevent
 	// that. This means, that if we would invoke our standard shutdown code ('OnClose') here
-	// and the shutdown takes longer than 20 sec, we will get forcefully terminated by 
+	// and the shutdown takes longer than 20 sec, we will get forcefully terminated by
 	// Windows, regardless of what we are doing. This means, MET-file and PART-file corruption
-	// may occure. Because the shutdown code in 'OnClose' does also shutdown Kad (which takes
+	// may occur. Because the shutdown code in 'OnClose' does also shutdown Kad (which takes
 	// a noticeable amount of time) it is not that unlikely that we run into problems with
 	// not being finished with our shutdown in 20 seconds.
-	// 
-	if (theApp.m_app_state == APP_STATE_RUNNING)
-	{
+	//
+	if (!IsClosing()) {
 #if 1
 		// And it really should be OK to expect that emule can shutdown in 20 sec on almost
 		// all computers. So, use the proper shutdown.
@@ -1696,13 +1707,13 @@ LRESULT CemuleDlg::OnConsoleThreadEvent(WPARAM wParam, LPARAM lParam)
 #endif
 
 		// Actually, just calling 'ExitProcess' should be the most safe thing which we can
-		// do here. Because we received this message via the main message queue we are 
+		// do here. Because we received this message via the main message queue we are
 		// totally in-sync with the application and therefore we know that we are currently
 		// not within a file save action and thus we simply can not cause any file corruption
 		// when we exit right now.
 		//
 		// Of course, there may be some data loss. But it's the same amount of data loss which
-		// could occure if we keep running. But if we keep running and wait until Windows
+		// could occur if we keep running. But if we keep running and wait until Windows
 		// terminates us after 20 sec, there is also the chance for file corruption.
 		if (thePrefs.GetDebug2Disk()) {
 			theVerboseLog.Logf(_T("%hs: ExitProcess"), __FUNCTION__);
@@ -1721,10 +1732,10 @@ void CemuleDlg::OnDestroy()
 	AddDebugLogLine(DLP_VERYLOW, _T("%hs"), __FUNCTION__);
 
 	// If eMule was started with "RUNAS":
-	// When user is logging of (or reboots or shutdown system), Windows may or may not send 
-	// a WM_DESTROY (depends on how long the application needed to process the 
+	// When user is logging of (or reboots or shutdown system), Windows may or may not send
+	// a WM_DESTROY (depends on how long the application needed to process the
 	// CTRL_LOGOFF_EVENT). But, regardless of what happened and regardless of how long any
-	// application specific shutdown took, Windows fill forcefully terminate the process 
+	// application specific shutdown took, Windows fill forcefully terminate the process
 	// after 1-2 seconds after WM_DESTROY! So, we can not use WM_DESTROY for any lengthy
 	// shutdown actions in that case.
 	CTrayDialog::OnDestroy();
@@ -1734,13 +1745,17 @@ bool CemuleDlg::CanClose()
 {
 	if (theApp.m_app_state == APP_STATE_RUNNING && thePrefs.IsConfirmExitEnabled())
 	{
+		theApp.m_app_state = APP_STATE_ASKCLOSE; //disable tray menu
 		if (IsIconic())
 			ShowWindow(SW_SHOWNORMAL); // XMessageBox has a bug when displaying in minimized windows, but it makes sense to restore it for this prompt anyway
-		int nResult = XMessageBox(GetSafeHwnd(), GetResString(IDS_MAIN_EXIT), GetResString(IDS_CLOSEEMULE), MB_YESNO | MB_DEFBUTTON2 | MB_DONOTASKAGAIN | MB_ICONQUESTION);
+		int nResult = XMessageBox(GetSafeHwnd(), GetResString(IDS_MAIN_EXIT), GetResString(IDS_CLOSEEMULE), MB_OKCANCEL | MB_DEFBUTTON2 | MB_DONOTASKAGAIN | MB_ICONQUESTION); //enable Esc key (was MB_YESNO)
 		if ((nResult & MB_DONOTASKAGAIN) > 0)
 			thePrefs.SetConfirmExit(false);
-		if ((nResult & 0xFF) == IDNO)
+		if ((nResult & 0xFF) == IDCANCEL) { //was IDNO
+			if (theApp.m_app_state == APP_STATE_ASKCLOSE) //if application state did not change
+				theApp.m_app_state = APP_STATE_RUNNING; //then restore
 			return false;
+		}
 	}
 	return true;
 }
@@ -1749,13 +1764,13 @@ void CemuleDlg::OnClose()
 {
 	if (!CanClose())
 		return;
+	theApp.m_app_state = APP_STATE_SHUTTINGDOWN;
 
 	Log(_T("Closing eMule"));
 	CloseTTS();
 	m_pDropTarget->Revoke();
-	theApp.m_app_state = APP_STATE_SHUTTINGDOWN;
 	theApp.serverconnect->Disconnect();
-	theApp.OnlineSig(); // Added By Bouc7 
+	theApp.OnlineSig(); // Added By Bouc7
 
 	// get main window placement
 	WINDOWPLACEMENT wp;
@@ -1793,7 +1808,7 @@ void CemuleDlg::OnClose()
 
 	Kademlia::CKademlia::Stop();	// couple of data files are written
 
-	// try to wait untill the hashing thread notices that we are shutting down
+	// try to wait until the hashing thread notices that we are shutting down
 	CSingleLock sLock1(&theApp.hashing_mut); // only one filehash at a time
 	sLock1.Lock(2000);
 
@@ -1820,7 +1835,7 @@ void CemuleDlg::OnClose()
 	theApp.searchlist->SaveSpamFilter();
 	if (thePrefs.IsStoringSearchesEnabled())
 		theApp.searchlist->StoreSearches();
-	
+
 	// close uPnP Ports
 	theApp.m_pUPnPFinder->GetImplementation()->StopAsyncFind();
 	if (thePrefs.CloseUPnPOnExit())
@@ -1855,7 +1870,7 @@ void CemuleDlg::OnClose()
 	transferwnd->SendMessage(WM_CLOSE);
 
     // NOTE: Do not move those dtors into 'CemuleApp::InitInstance' (althought they should be there). The
-	// dtors are indirectly calling functions which access several windows which would not be available 
+	// dtors are indirectly calling functions which access several windows which would not be available
 	// after we have closed the main window -> crash!
 	delete theApp.mmserver;			theApp.mmserver = NULL;
 	delete theApp.listensocket;		theApp.listensocket = NULL;
@@ -1918,7 +1933,7 @@ LRESULT CemuleDlg::OnCloseMiniMule(WPARAM wParam, LPARAM /*lParam*/)
 
 void CemuleDlg::OnTrayLButtonUp(CPoint /*pt*/)
 {
-	if(!IsRunning())
+	if (IsClosing())
 		return;
 
 	// Avoid reentrancy problems with main window, options dialog and mini mule window
@@ -1968,7 +1983,7 @@ void CemuleDlg::OnTrayLButtonUp(CPoint /*pt*/)
 
 void CemuleDlg::OnTrayRButtonUp(CPoint pt)
 {
-	if (!IsRunning())
+	if (theApp.m_app_state != APP_STATE_RUNNING)
 		return;
 
 	// Avoid reentrancy problems with main window, options dialog and mini mule window
@@ -2001,37 +2016,40 @@ void CemuleDlg::OnTrayRButtonUp(CPoint pt)
 		return;
 	}
 
-	m_pSystrayDlg = new CMuleSystrayDlg(this, pt,
-										thePrefs.GetMaxGraphUploadRate(true), thePrefs.GetMaxGraphDownloadRate(),
-										thePrefs.GetMaxUpload(), thePrefs.GetMaxDownload());
-	if (m_pSystrayDlg)
+	try {
+		m_pSystrayDlg = new CMuleSystrayDlg(this, pt,
+											thePrefs.GetMaxGraphUploadRate(true), thePrefs.GetMaxGraphDownloadRate(),
+											thePrefs.GetMaxUpload(), thePrefs.GetMaxDownload());
+	} catch (...) {
+		return;
+	}
+//	if (m_pSystrayDlg)
 	{
 		UINT nResult = m_pSystrayDlg->DoModal();
 		delete m_pSystrayDlg;
 		m_pSystrayDlg = NULL;
 		switch (nResult)
 		{
-			case IDC_TOMAX:
-				QuickSpeedOther(MP_QS_UA);
-				break;
-			case IDC_TOMIN:
-				QuickSpeedOther(MP_QS_PA);
-				break;
-			case IDC_RESTORE:
-				RestoreWindow();
-				break;
-			case IDC_CONNECT:
-				StartConnection();
-				break;
-			case IDC_DISCONNECT:
-				CloseConnection();
-				break;
-			case IDC_EXIT:
-				OnClose();
-				break;
-			case IDC_PREFERENCES:
-				ShowPreferences();
-				break;
+		case IDC_TOMAX:
+			QuickSpeedOther(MP_QS_UA);
+			break;
+		case IDC_TOMIN:
+			QuickSpeedOther(MP_QS_PA);
+			break;
+		case IDC_RESTORE:
+			RestoreWindow();
+			break;
+		case IDC_CONNECT:
+			StartConnection();
+			break;
+		case IDC_DISCONNECT:
+			CloseConnection();
+			break;
+		case IDC_EXIT:
+			OnClose();
+			break;
+		case IDC_PREFERENCES:
+			ShowPreferences();
 		}
 	}
 }
@@ -2044,19 +2062,19 @@ void CemuleDlg::AddSpeedSelectorMenus(CMenu* addToMenu)
 	ASSERT( m_menuUploadCtrl.m_hMenu == NULL );
 	if (m_menuUploadCtrl.CreateMenu())
 	{
-		text.Format(_T("20%%\t%i %s"),  (uint16)(thePrefs.GetMaxGraphUploadRate(true)*0.2),GetResString(IDS_KBYTESPERSEC));	m_menuUploadCtrl.AppendMenu(MF_STRING, MP_QS_U20,  text);
-		text.Format(_T("40%%\t%i %s"),  (uint16)(thePrefs.GetMaxGraphUploadRate(true)*0.4),GetResString(IDS_KBYTESPERSEC));	m_menuUploadCtrl.AppendMenu(MF_STRING, MP_QS_U40,  text);
-		text.Format(_T("60%%\t%i %s"),  (uint16)(thePrefs.GetMaxGraphUploadRate(true)*0.6),GetResString(IDS_KBYTESPERSEC));	m_menuUploadCtrl.AppendMenu(MF_STRING, MP_QS_U60,  text);
-		text.Format(_T("80%%\t%i %s"),  (uint16)(thePrefs.GetMaxGraphUploadRate(true)*0.8),GetResString(IDS_KBYTESPERSEC));	m_menuUploadCtrl.AppendMenu(MF_STRING, MP_QS_U80,  text);
-		text.Format(_T("100%%\t%i %s"), (uint16)(thePrefs.GetMaxGraphUploadRate(true)),GetResString(IDS_KBYTESPERSEC));		m_menuUploadCtrl.AppendMenu(MF_STRING, MP_QS_U100, text);
+		text.Format(_T("20%%\t%i %s"),  (uint16)(thePrefs.GetMaxGraphUploadRate(true)*0.2), (LPCTSTR)GetResString(IDS_KBYTESPERSEC));	m_menuUploadCtrl.AppendMenu(MF_STRING, MP_QS_U20, text);
+		text.Format(_T("40%%\t%i %s"),  (uint16)(thePrefs.GetMaxGraphUploadRate(true)*0.4), (LPCTSTR)GetResString(IDS_KBYTESPERSEC));	m_menuUploadCtrl.AppendMenu(MF_STRING, MP_QS_U40, text);
+		text.Format(_T("60%%\t%i %s"),  (uint16)(thePrefs.GetMaxGraphUploadRate(true)*0.6), (LPCTSTR)GetResString(IDS_KBYTESPERSEC));	m_menuUploadCtrl.AppendMenu(MF_STRING, MP_QS_U60, text);
+		text.Format(_T("80%%\t%i %s"),  (uint16)(thePrefs.GetMaxGraphUploadRate(true)*0.8), (LPCTSTR)GetResString(IDS_KBYTESPERSEC));	m_menuUploadCtrl.AppendMenu(MF_STRING, MP_QS_U80, text);
+		text.Format(_T("100%%\t%i %s"), (uint16)(thePrefs.GetMaxGraphUploadRate(true)), (LPCTSTR)GetResString(IDS_KBYTESPERSEC));		m_menuUploadCtrl.AppendMenu(MF_STRING, MP_QS_U100, text);
 		m_menuUploadCtrl.AppendMenu(MF_SEPARATOR);
-		
+
 		if (GetRecMaxUpload() > 0) {
 			text.Format(GetResString(IDS_PW_MINREC) + GetResString(IDS_KBYTESPERSEC), GetRecMaxUpload());
 			m_menuUploadCtrl.AppendMenu(MF_STRING, MP_QS_UP10, text);
 		}
 
-		text.Format(_T("%s:"), GetResString(IDS_PW_UPL));
+		text.Format(_T("%s:"), (LPCTSTR)GetResString(IDS_PW_UPL));
 		addToMenu->AppendMenu(MF_STRING|MF_POPUP, (UINT_PTR)m_menuUploadCtrl.m_hMenu, text);
 	}
 
@@ -2064,19 +2082,18 @@ void CemuleDlg::AddSpeedSelectorMenus(CMenu* addToMenu)
 	ASSERT( m_menuDownloadCtrl.m_hMenu == NULL );
 	if (m_menuDownloadCtrl.CreateMenu())
 	{
-		text.Format(_T("20%%\t%i %s"),  (uint16)(thePrefs.GetMaxGraphDownloadRate()*0.2),GetResString(IDS_KBYTESPERSEC));	m_menuDownloadCtrl.AppendMenu(MF_STRING|MF_POPUP, MP_QS_D20,  text);
-		text.Format(_T("40%%\t%i %s"),  (uint16)(thePrefs.GetMaxGraphDownloadRate()*0.4),GetResString(IDS_KBYTESPERSEC));	m_menuDownloadCtrl.AppendMenu(MF_STRING|MF_POPUP, MP_QS_D40,  text);
-		text.Format(_T("60%%\t%i %s"),  (uint16)(thePrefs.GetMaxGraphDownloadRate()*0.6),GetResString(IDS_KBYTESPERSEC));	m_menuDownloadCtrl.AppendMenu(MF_STRING|MF_POPUP, MP_QS_D60,  text);
-		text.Format(_T("80%%\t%i %s"),  (uint16)(thePrefs.GetMaxGraphDownloadRate()*0.8),GetResString(IDS_KBYTESPERSEC));	m_menuDownloadCtrl.AppendMenu(MF_STRING|MF_POPUP, MP_QS_D80,  text);
-		text.Format(_T("100%%\t%i %s"), (uint16)(thePrefs.GetMaxGraphDownloadRate()),GetResString(IDS_KBYTESPERSEC));		m_menuDownloadCtrl.AppendMenu(MF_STRING|MF_POPUP, MP_QS_D100, text);
+		text.Format(_T("20%%\t%i %s"),  (uint16)(thePrefs.GetMaxGraphDownloadRate()*0.2), (LPCTSTR)GetResString(IDS_KBYTESPERSEC));	m_menuDownloadCtrl.AppendMenu(MF_STRING|MF_POPUP, MP_QS_D20,  (LPCTSTR)text);
+		text.Format(_T("40%%\t%i %s"),  (uint16)(thePrefs.GetMaxGraphDownloadRate()*0.4), (LPCTSTR)GetResString(IDS_KBYTESPERSEC));	m_menuDownloadCtrl.AppendMenu(MF_STRING|MF_POPUP, MP_QS_D40,  (LPCTSTR)text);
+		text.Format(_T("60%%\t%i %s"),  (uint16)(thePrefs.GetMaxGraphDownloadRate()*0.6), (LPCTSTR)GetResString(IDS_KBYTESPERSEC));	m_menuDownloadCtrl.AppendMenu(MF_STRING|MF_POPUP, MP_QS_D60,  (LPCTSTR)text);
+		text.Format(_T("80%%\t%i %s"),  (uint16)(thePrefs.GetMaxGraphDownloadRate()*0.8), (LPCTSTR)GetResString(IDS_KBYTESPERSEC));	m_menuDownloadCtrl.AppendMenu(MF_STRING|MF_POPUP, MP_QS_D80,  (LPCTSTR)text);
+		text.Format(_T("100%%\t%i %s"), (uint16)(thePrefs.GetMaxGraphDownloadRate()), (LPCTSTR)GetResString(IDS_KBYTESPERSEC));		m_menuDownloadCtrl.AppendMenu(MF_STRING|MF_POPUP, MP_QS_D100, (LPCTSTR)text);
 
-		text.Format(_T("%s:"), GetResString(IDS_PW_DOWNL));
+		text.Format(_T("%s:"), (LPCTSTR)GetResString(IDS_PW_DOWNL));
 		addToMenu->AppendMenu(MF_STRING|MF_POPUP, (UINT_PTR)m_menuDownloadCtrl.m_hMenu, text);
 	}
 
 	addToMenu->AppendMenu(MF_SEPARATOR);
-	addToMenu->AppendMenu(MF_STRING, MP_CONNECT, GetResString(IDS_MAIN_BTN_CONNECT));
-	addToMenu->AppendMenu(MF_STRING, MP_DISCONNECT, GetResString(IDS_MAIN_BTN_DISCONNECT)); 
+	addToMenu->AppendMenu(MF_STRING | MF_GRAYED, MP_CONNECT, GetResString(IDS_MAIN_BTN_CONNECT));
 }
 
 void CemuleDlg::StartConnection()
@@ -2085,7 +2102,7 @@ void CemuleDlg::StartConnection()
 		|| !Kademlia::CKademlia::IsRunning())
 	{
 		// UPnP is still trying to open the ports. In order to not get a LowID by connecting to the servers / kad before
-		// the ports are opened we delay the connection untill UPnP gets a result or the timeout is reached
+		// the ports are opened we delay the connection until UPnP gets a result or the timeout is reached
 		// If the user clicks two times on the button, let him have his will and connect regardless
 		if (m_hUPnPTimeOutTimer != 0 && !m_bConnectRequestDelayedForUPnP){
 			AddLogLine(false, GetResString(IDS_DELAYEDBYUPNP));
@@ -2128,7 +2145,7 @@ void CemuleDlg::CloseConnection()
 		theApp.serverconnect->StopConnectionTry();
 	}
 	Kademlia::CKademlia::Stop();
-	theApp.OnlineSig(); // Added By Bouc7 
+	theApp.OnlineSig(); // Added By Bouc7
 	ShowConnectionState();
 }
 
@@ -2166,7 +2183,7 @@ void CemuleDlg::UpdateTrayIcon(int iPercent)
 	}
 	else
 		uSysTrayIconCookie += 100;
-	
+
 	// dont update if the same icon as displayed would be generated
 	if (m_uLastSysTrayIconCookie == uSysTrayIconCookie)
 		return;
@@ -2212,10 +2229,10 @@ int CemuleDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CemuleDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 {
-	if (IsRunning()){
+	if (!IsClosing()) {
 		ShowTransferRate(true);
 
-		if (bShow == TRUE && activewnd == chatwnd)
+		if (bShow/* == TRUE*/ && activewnd == chatwnd)
 			chatwnd->chatselector.ShowChat();
 
 	}
@@ -2293,7 +2310,7 @@ void CemuleDlg::ShowNotifier(LPCTSTR pszText, int iMsgType, LPCTSTR pszLink, boo
 			bShowIt = true;
 			break;
 	}
-	
+
 	if (bShowIt && !bForceSoundOFF && thePrefs.GetNotifierSoundType() != ntfstNoSound)
 	{
 		bool bNotifiedWithAudio = false;
@@ -2316,7 +2333,7 @@ void CemuleDlg::ShowNotifier(LPCTSTR pszText, int iMsgType, LPCTSTR pszLink, boo
 	}
 }
 
-void CemuleDlg::LoadNotifier(CString configuration)
+void CemuleDlg::LoadNotifier(const CString& configuration)
 {
 	notifierenabled = m_wndTaskbarNotifier->LoadConfiguration(configuration)!=FALSE;
 }
@@ -2328,7 +2345,6 @@ LRESULT CemuleDlg::OnTaskbarNotifierClicked(WPARAM /*wParam*/, LPARAM lParam)
 		LPTSTR pszLink = (LPTSTR)lParam;
 		ShellOpenFile(pszLink, NULL);
 		free(pszLink);
-		pszLink = NULL;
 	}
 
 	switch (m_wndTaskbarNotifier->GetMessageType())
@@ -2354,18 +2370,18 @@ LRESULT CemuleDlg::OnTaskbarNotifierClicked(WPARAM /*wParam*/, LPARAM lParam)
 
 		case TBN_IMPORTANTEVENT:
 			RestoreWindow();
-			SetActiveDialog(serverwnd);	
+			SetActiveDialog(serverwnd);
 			break;
 
 		case TBN_LOG:
 			RestoreWindow();
-			SetActiveDialog(serverwnd);	
+			SetActiveDialog(serverwnd);
 			break;
 
 		case TBN_NEWVERSION:
 		{
 			CString theUrl;
-			theUrl.Format(_T("/en/version_check.php?version=%i&language=%i"),theApp.m_uCurVersionCheck,thePrefs.GetLanguageID());
+			theUrl.Format(_T("/en/version_check.php?version=%u&language=%u"),theApp.m_uCurVersionCheck,thePrefs.GetLanguageID());
 			theUrl = thePrefs.GetVersionCheckBaseURL()+theUrl;
 			ShellExecute(NULL, NULL, theUrl, NULL, thePrefs.GetMuleDirectory(EMULE_EXECUTEABLEDIR), SW_SHOWDEFAULT);
 			break;
@@ -2428,7 +2444,7 @@ void CemuleDlg::SetAllIcons()
 	//SetIcon(m_hIcon, FALSE);
 
 	// connection state
-	for (int i = 0; i < _countof(connicons); i++){
+	for (unsigned i = 0; i < _countof(connicons); ++i) {
 		if (connicons[i]) VERIFY( ::DestroyIcon(connicons[i]) );
 	}
 	connicons[0] = theApp.LoadIcon(_T("ConnectedNotNot"), 16, 16);
@@ -2503,7 +2519,6 @@ void CemuleDlg::Localize()
 				{
 					ASSERT( pAccelMenu->m_hMenu == m_SysMenuOptions.m_hMenu );
 					VERIFY( pSysMenu->RemoveMenu(uOptMenuPos, MF_BYPOSITION) );
-					pAccelMenu = NULL;
 				}
 
 				// destroy all 'speed control' menus
@@ -2542,11 +2557,11 @@ void CemuleDlg::ShowUserStateIcon()
 void CemuleDlg::QuickSpeedOther(UINT nID)
 {
 	switch (nID) {
-		case MP_QS_PA: 
+		case MP_QS_PA:
 			thePrefs.SetMaxUpload(1);
 			thePrefs.SetMaxDownload(1);
 			break ;
-		case MP_QS_UA: 
+		case MP_QS_UA:
 			thePrefs.SetMaxUpload(thePrefs.GetMaxGraphUploadRate(true));
 			thePrefs.SetMaxDownload(thePrefs.GetMaxGraphDownloadRate());
 			break ;
@@ -2591,7 +2606,7 @@ void CemuleDlg::QuickSpeedDownload(UINT nID)
 // quick-speed changer -- based on xrmb
 
 int CemuleDlg::GetRecMaxUpload() {
-	
+
 	if (thePrefs.GetMaxGraphUploadRate(true)<7) return 0;
 	if (thePrefs.GetMaxGraphUploadRate(true)<15) return thePrefs.GetMaxGraphUploadRate(true)-3;
 	return (thePrefs.GetMaxGraphUploadRate(true)-4);
@@ -2601,7 +2616,7 @@ int CemuleDlg::GetRecMaxUpload() {
 BOOL CemuleDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	switch(wParam)
-	{	
+	{
 		case TBBTN_CONNECT:
 			OnBnClickedConnect();
 			break;
@@ -2647,7 +2662,7 @@ BOOL CemuleDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 			ShowToolPopup(true);
 			break;
 		case MP_HM_OPENINC:
-			ShellExecute(NULL, _T("open"), thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR),NULL, NULL, SW_SHOW); 
+			ShellExecute(NULL, _T("open"), thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR),NULL, NULL, SW_SHOW);
 			break;
 		case MP_HM_HELP:
 		case TBBTN_HELP:
@@ -2701,7 +2716,7 @@ BOOL CemuleDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 			dlg.DoModal();
 			break;
 		}
-	}	
+	}
 	if (wParam>=MP_WEBURL && wParam<=MP_WEBURL+99) {
 		theWebServices.RunURL(NULL, wParam);
 	}
@@ -2732,9 +2747,13 @@ LRESULT CemuleDlg::OnMenuChar(UINT nChar, UINT nFlags, CMenu* pMenu)
 // Barry - To find out if app is running or shutting/shut down
 bool CemuleDlg::IsRunning()
 {
-	return (theApp.m_app_state == APP_STATE_RUNNING);
+	return theApp.m_app_state == APP_STATE_RUNNING || theApp.m_app_state == APP_STATE_ASKCLOSE;
 }
 
+bool CemuleDlg::IsClosing()
+{
+	return theApp.m_app_state == APP_STATE_SHUTTINGDOWN || theApp.m_app_state == APP_STATE_DONE;
+}
 
 void CemuleDlg::OnBnClickedHotmenu()
 {
@@ -2842,7 +2861,7 @@ void CemuleDlg::ApplyLogFont(LPLOGFONT plf)
 LRESULT CemuleDlg::OnFrameGrabFinished(WPARAM wParam,LPARAM lParam){
 	CKnownFile* pOwner = (CKnownFile*)wParam;
 	FrameGrabResult_Struct* result = (FrameGrabResult_Struct*)lParam;
-	
+
 	if (theApp.knownfiles->IsKnownFile(pOwner) || theApp.downloadqueue->IsPartFile(pOwner) ){
 		pOwner->GrabbingFinished(result->imgResults,result->nImagesGrabbed, result->pSender);
 	}
@@ -2951,13 +2970,13 @@ LRESULT CemuleDlg::OnVersionCheckResponse(WPARAM /*wParam*/, LPARAM lParam)
 {
 	if (WSAGETASYNCERROR(lParam) == 0)
 	{
-		int iBufLen = WSAGETASYNCBUFLEN(lParam);
+		WORD iBufLen = WSAGETASYNCBUFLEN(lParam);
 		if (iBufLen >= sizeof(HOSTENT))
 		{
 			LPHOSTENT pHost = (LPHOSTENT)m_acVCDNSBuffer;
 			if (pHost->h_length == 4 && pHost->h_addr_list && pHost->h_addr_list[0])
 			{
-				uint32 dwResult = ((LPIN_ADDR)(pHost->h_addr_list[0]))->s_addr;		
+				uint32 dwResult = ((LPIN_ADDR)(pHost->h_addr_list[0]))->s_addr;
 				// last byte contains informations about mirror urls, to avoid effects of future DDoS Attacks against eMules Homepage
 				thePrefs.SetWebMirrorAlertLevel((uint8)(dwResult >> 24));
 				uint8 abyCurVer[4] = { (uint8)(CemuleApp::m_nVersionBld + 1), (uint8)(CemuleApp::m_nVersionUpd), (uint8)(CemuleApp::m_nVersionMin), (uint8)0};
@@ -2971,7 +2990,7 @@ LRESULT CemuleDlg::OnVersionCheckResponse(WPARAM /*wParam*/, LPARAM lParam)
 					if (!thePrefs.GetNotifierOnNewVersion()){
 						if (AfxMessageBox(GetResString(IDS_NEWVERSIONAVL)+GetResString(IDS_VISITVERSIONCHECK),MB_YESNO)==IDYES) {
 							CString theUrl;
-							theUrl.Format(_T("/en/version_check.php?version=%i&language=%i"),theApp.m_uCurVersionCheck,thePrefs.GetLanguageID());
+							theUrl.Format(_T("/en/version_check.php?version=%u&language=%u"),theApp.m_uCurVersionCheck,thePrefs.GetLanguageID());
 							theUrl = thePrefs.GetVersionCheckBaseURL()+theUrl;
 							ShellExecute(NULL, NULL, theUrl, NULL, thePrefs.GetMuleDirectory(EMULE_EXECUTEABLEDIR), SW_SHOWDEFAULT);
 						}
@@ -3003,8 +3022,12 @@ void CemuleDlg::ShowSplash()
 	ASSERT( m_pSplashWnd == NULL );
 	if (m_pSplashWnd == NULL)
 	{
-		m_pSplashWnd = new CSplashScreen;
-		if (m_pSplashWnd != NULL)
+		try {
+			m_pSplashWnd = new CSplashScreen;
+		} catch (...) {
+			return;
+		}
+//		if (m_pSplashWnd != NULL)
 		{
 			ASSERT(m_hWnd);
 			if (m_pSplashWnd->Create(CSplashScreen::IDD, this))
@@ -3044,7 +3067,7 @@ BOOL CemuleApp::IsIdleMessage(MSG *pMsg)
 {
 	// This function is closely related to 'CemuleDlg::OnKickIdle'.
 	//
-	// * See MFC source code for 'CWnd::RunModalLoop' to see how those functions are related 
+	// * See MFC source code for 'CWnd::RunModalLoop' to see how those functions are related
 	//	 to each other.
 	//
 	// * See MFC documentation for 'CWnd::IsIdleMessage' to see why WM_TIMER messages are
@@ -3106,8 +3129,7 @@ LRESULT CemuleDlg::OnKickIdle(UINT /*nWhy*/, long lIdleCount)
 
 	if (searchwnd && searchwnd->m_hWnd)
 	{
-		if (theApp.m_app_state != APP_STATE_SHUTTINGDOWN)
-		{
+		if (!theApp.emuledlg->IsClosing()) {
 //#ifdef _DEBUG
 //			TCHAR szDbg[80];
 //			wsprintf(szDbg, L"%10u: lIdleCount=%d, %s", GetTickCount(), lIdleCount, (lIdleCount > 0) ? L"FreeTempMaps" : L"");
@@ -3290,8 +3312,7 @@ void CemuleDlg::HtmlHelp(DWORD_PTR dwData, UINT nCmd)
 			} HH_LAST_ERROR;
 			HH_LAST_ERROR hhLastError = {0};
 			hhLastError.cbStruct = sizeof hhLastError;
-			HWND hwndResult = AfxHtmlHelp(pWnd->m_hWnd, NULL, HH_GET_LAST_ERROR, reinterpret_cast<DWORD>(&hhLastError));
-			if (hwndResult != 0)
+			if (!AfxHtmlHelp(pWnd->m_hWnd, NULL, HH_GET_LAST_ERROR, reinterpret_cast<DWORD>(&hhLastError)))
 			{
 				if (FAILED(hhLastError.hr))
 				{
@@ -3300,8 +3321,8 @@ void CemuleDlg::HtmlHelp(DWORD_PTR dwData, UINT nCmd)
 						strHelpError = hhLastError.description;
 						::SysFreeString(hhLastError.description);
 					}
-					if (   hhLastError.hr == 0x8004020A  /*no topics IDs available in Help file*/
-						|| hhLastError.hr == 0x8004020B) /*requested Help topic ID not found*/
+					if (   (unsigned long)hhLastError.hr == 0x8004020Aul  /*no topics IDs available in Help file*/
+						|| (unsigned long)hhLastError.hr == 0x8004020Bul) /*requested Help topic ID not found*/
 					{
 						// try opening once again without help topic ID
 						if (nCmd != HH_DISPLAY_TOC)
@@ -3313,14 +3334,13 @@ void CemuleDlg::HtmlHelp(DWORD_PTR dwData, UINT nCmd)
 					}
 				}
 			}
-			break;
 		}
 		else
 		{
 			bHelpError = false;
 			strHelpError.Empty();
-			break;
 		}
+		break;
 	}
 
 	if (bHelpError)
@@ -3537,9 +3557,9 @@ LRESULT CemuleDlg::OnWebGUIInteraction(WPARAM wParam, LPARAM lParam) {
 				try {
 					HANDLE hToken;
 					TOKEN_PRIVILEGES tkp;	// Get a token for this process.
-					
+
 					if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
-						throw;
+						throw 0; //parameterless throw not allowed here
 					LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &tkp.Privileges[0].Luid);
 					tkp.PrivilegeCount = 1;  // one privilege to set
 					tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;	// Get the shutdown privilege for this process.
@@ -3547,7 +3567,7 @@ LRESULT CemuleDlg::OnWebGUIInteraction(WPARAM wParam, LPARAM lParam) {
 
 					if (lParam==1) {	// shutdown
 						ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCE, 0);
-					} else 
+					} else
 					if (lParam==2) {
 						ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
 					}
@@ -3557,18 +3577,16 @@ LRESULT CemuleDlg::OnWebGUIInteraction(WPARAM wParam, LPARAM lParam) {
 						AddLogLine(true, GetResString(IDS_WEB_REBOOT) + _T(' ') + GetResString(IDS_FAILED));
 				}
 			}
-			else 
+			else
 				AddLogLine(true, GetResString(IDS_WEB_REBOOT) + _T(' ') + GetResString(IDS_ACCESSDENIED));
 			break;
 		}
 		case WEBGUIIA_UPD_CATTABS:
 			theApp.emuledlg->transferwnd->UpdateCatTabTitles();
 			break;
-		case WEBGUIIA_UPD_SFUPDATE: {
-			CKnownFile* kf=(CKnownFile*)lParam;
-			if (kf)
-				theApp.sharedfiles->UpdateFile(kf);
-			}
+		case WEBGUIIA_UPD_SFUPDATE:
+			if (lParam)
+				theApp.sharedfiles->UpdateFile((CKnownFile*)lParam);
 			break;
 		case WEBGUIIA_UPDATESERVER:
 			serverwnd->serverlistctrl.RefreshServer((CServer*)lParam);
@@ -3576,14 +3594,12 @@ LRESULT CemuleDlg::OnWebGUIInteraction(WPARAM wParam, LPARAM lParam) {
 		case WEBGUIIA_STOPCONNECTING:
 			theApp.serverconnect->StopConnectionTry();
 			break;
-		case WEBGUIIA_CONNECTTOSERVER: {
-			CServer* server=(CServer*)lParam;
-			if (server==NULL) 
+		case WEBGUIIA_CONNECTTOSERVER:
+			if (!lParam)
 				theApp.serverconnect->ConnectToAnyServer();
-			else 
-				theApp.serverconnect->ConnectToServer(server);
+			else
+				theApp.serverconnect->ConnectToServer((CServer*)lParam);
 			break;
-			}
 		case WEBGUIIA_DISCONNECT:
 			if (lParam!=2)	// !KAD
 				theApp.serverconnect->Disconnect();
@@ -3635,7 +3651,6 @@ LRESULT CemuleDlg::OnWebGUIInteraction(WPARAM wParam, LPARAM lParam) {
 			break;
 		case WEBGUIIA_KAD_RCFW:
 			Kademlia::CKademlia::RecheckFirewalled();
-			break;
 	}
 
 	return 0;
@@ -3649,12 +3664,10 @@ void CemuleDlg::TrayMinimizeToTrayChange()
 		if (!thePrefs.GetMinToTray())
 		{
 			// just for safety, ensure that we are not adding duplicate menu entries..
-			if (pSysMenu->EnableMenuItem(MP_MINIMIZETOTRAY, MF_BYCOMMAND | MF_ENABLED) == -1)
-			{
+			if (pSysMenu->EnableMenuItem(MP_MINIMIZETOTRAY, MF_BYCOMMAND | MF_ENABLED) == (UINT)-1) {
 				ASSERT( (MP_MINIMIZETOTRAY & 0xFFF0) == MP_MINIMIZETOTRAY && MP_MINIMIZETOTRAY < 0xF000);
 				VERIFY( pSysMenu->InsertMenu(SC_MINIMIZE, MF_BYCOMMAND, MP_MINIMIZETOTRAY, GetResString(IDS_PW_TRAY)) );
-			}
-			else
+			} else
 				ASSERT(0);
 		}
 		else
@@ -3672,13 +3685,21 @@ void CemuleDlg::SetToolTipsDelay(UINT uMilliseconds)
 	sharedfileswnd->SetToolTipsDelay(uMilliseconds);
 }
 
-void CemuleDlg::UPnPTimeOutTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT /*idEvent*/, DWORD /*dwTime*/){
+void CALLBACK CemuleDlg::UPnPTimeOutTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT /*idEvent*/, DWORD /*dwTime*/) {
 	::PostMessage(theApp.emuledlg->GetSafeHwnd(), UM_UPNP_RESULT, (WPARAM)CUPnPImpl::UPNP_TIMEOUT, 0);
 }
 
 LRESULT CemuleDlg::OnUPnPResult(WPARAM wParam, LPARAM lParam){
 	bool bWasRefresh = lParam != 0;
-	if (!bWasRefresh && wParam == CUPnPImpl::UPNP_FAILED){		
+
+//>>> WiZaRd - handle "UPNP_TIMEOUT" events!
+	if (!bWasRefresh && wParam != CUPnPImpl::UPNP_OK) {
+		//just to be sure, stop any running services and also delete the forwarded ports (if necessary)
+		if (wParam == CUPnPImpl::UPNP_TIMEOUT) {
+			theApp.m_pUPnPFinder->GetImplementation()->StopAsyncFind();
+			if (thePrefs.CloseUPnPOnExit())
+				theApp.m_pUPnPFinder->GetImplementation()->DeletePorts();
+		}
 		// UPnP failed, check if we can retry it with another implementation
 		if (theApp.m_pUPnPFinder->SwitchImplentation()){
 			StartUPnP(false);
@@ -3696,10 +3717,10 @@ LRESULT CemuleDlg::OnUPnPResult(WPARAM wParam, LPARAM lParam){
 		StartConnection();
 	}
 	if (!bWasRefresh && wParam == CUPnPImpl::UPNP_OK){
+		CUPnPImpl *impl = theApp.m_pUPnPFinder->GetImplementation();
 		// remember the last working implementation
-		thePrefs.SetLastWorkingUPnPImpl(theApp.m_pUPnPFinder->GetImplementation()->GetImplementationID());
-		Log(GetResString(IDS_UPNPSUCCESS), theApp.m_pUPnPFinder->GetImplementation()->GetUsedTCPPort()
-			, theApp.m_pUPnPFinder->GetImplementation()->GetUsedUDPPort());
+		thePrefs.SetLastWorkingUPnPImpl(impl->GetImplementationID());
+		Log(GetResString(IDS_UPNPSUCCESS), impl->GetUsedTCPPort(), impl->GetUsedUDPPort());
 	}
 	else if (!bWasRefresh)
 		LogWarning(GetResString(IDS_UPNPFAILED));
@@ -3712,7 +3733,6 @@ LRESULT  CemuleDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 	//DebugLog(_T("DEBUG:Power state change. wParam=%d lPararm=%ld"),wParam,lParam);
 	switch (wParam) {
 		case PBT_APMRESUMEAUTOMATIC:
-		{
 			if (m_bEd2kSuspendDisconnect || m_bKadSuspendDisconnect)
 			{
 				DebugLog(_T("Reconnect after Power state change. wParam=%d lPararm=%ld"),wParam,lParam);
@@ -3720,17 +3740,12 @@ LRESULT  CemuleDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 				PostMessage(WM_SYSCOMMAND , MP_CONNECT, 0); // tell to connect.. a sec later...
 			}
 			return TRUE; // message processed.
-			break;
-		}
 		case PBT_APMSUSPEND:
-		{		
 			DebugLog(_T("System is going is suspending operation, disconnecting. wParam=%d lPararm=%ld"),wParam,lParam);
 			m_bEd2kSuspendDisconnect = theApp.serverconnect->IsConnected();
 			m_bKadSuspendDisconnect = Kademlia::CKademlia::IsConnected();
 			CloseConnection();
 			return TRUE; // message processed.
-			break;
-		}
 		default:
 			return FALSE; // we do not process this message
 	}
@@ -3745,18 +3760,19 @@ void CemuleDlg::StartUPnP(bool bReset, uint16 nForceTCPPort, uint16 nForceUDPPor
 		}
 		try
 		{
-			if (theApp.m_pUPnPFinder->GetImplementation()->IsReady()){
-				theApp.m_pUPnPFinder->GetImplementation()->SetMessageOnResult(GetSafeHwnd(), UM_UPNP_RESULT);
+			CUPnPImpl *impl = theApp.m_pUPnPFinder->GetImplementation();
+			if (impl->IsReady()) {
+				impl->SetMessageOnResult(GetSafeHwnd(), UM_UPNP_RESULT);
 				if (bReset)
-					VERIFY( (m_hUPnPTimeOutTimer = ::SetTimer(NULL, NULL, SEC2MS(40), UPnPTimeOutTimer)) != NULL );
-				theApp.m_pUPnPFinder->GetImplementation()->StartDiscovery(((nForceTCPPort != 0) ? nForceTCPPort : thePrefs.GetPort())
+					VERIFY( (m_hUPnPTimeOutTimer = ::SetTimer(NULL, NULL, SEC2MS(40), (TIMERPROC)UPnPTimeOutTimer)) != NULL );
+				impl->StartDiscovery(((nForceTCPPort != 0) ? nForceTCPPort : thePrefs.GetPort())
 					, ((nForceUDPPort != 0) ? nForceUDPPort :thePrefs.GetUDPPort())
 					, thePrefs.GetWSUseUPnP() ? thePrefs.GetWSPort() : 0);
 			}
 			else
 				::PostMessage(theApp.emuledlg->GetSafeHwnd(), UM_UPNP_RESULT, (WPARAM)CUPnPImpl::UPNP_FAILED, 0);
 		}
-		catch ( CUPnPImpl::UPnPError& ) {}
+		catch (const CUPnPImpl::UPnPError& ) {}
 		catch ( CException* e ) { e->Delete(); }
 	}
 	else
@@ -3770,21 +3786,18 @@ void CemuleDlg::RefreshUPnP(bool bRequestAnswer)
 	if (theApp.m_pUPnPFinder != NULL && m_hUPnPTimeOutTimer == 0){
 		try
 		{
-			if (theApp.m_pUPnPFinder->GetImplementation()->IsReady())
-			{
+			CUPnPImpl *impl = theApp.m_pUPnPFinder->GetImplementation();
+			if (impl->IsReady()) {
 				if (bRequestAnswer)
-					theApp.m_pUPnPFinder->GetImplementation()->SetMessageOnResult(GetSafeHwnd(), UM_UPNP_RESULT);
-				if (theApp.m_pUPnPFinder->GetImplementation()->CheckAndRefresh() && bRequestAnswer)
-				{
+					impl->SetMessageOnResult(GetSafeHwnd(), UM_UPNP_RESULT);
+				if (impl->CheckAndRefresh() && bRequestAnswer)
 					VERIFY( (m_hUPnPTimeOutTimer = ::SetTimer(NULL, NULL, SEC2MS(10), UPnPTimeOutTimer)) != NULL );
-				}
 				else
-					theApp.m_pUPnPFinder->GetImplementation()->SetMessageOnResult(0, 0);
-			}
-			else
+					impl->SetMessageOnResult(0, 0);
+			} else
 				DebugLogWarning(_T("RefreshUPnP, implementation not ready"));
 		}
-		catch ( CUPnPImpl::UPnPError& ) {}
+		catch (const CUPnPImpl::UPnPError& ) {}
 		catch ( CException* e ) { e->Delete(); }
 	}
 	else
@@ -3846,7 +3859,7 @@ BOOL CemuleDlg::OnDeviceChange(UINT nEventType, DWORD_PTR dwData)
 			DEBUG_ONLY( strMsg.AppendFormat(_T(" devicetype=0x%08x"), pHdr->dbch_devicetype) );
 		}
 #ifdef _DEBUG
-		TRACE(_T("CemuleDlg::OnDeviceChange: %s\n"), strMsg);
+		TRACE(_T("CemuleDlg::OnDeviceChange: %s\n"), (LPCTSTR)strMsg);
 #endif
 	}
 	else
@@ -3861,10 +3874,10 @@ BOOL CemuleDlg::OnDeviceChange(UINT nEventType, DWORD_PTR dwData)
 #ifdef HAVE_WIN7_SDK_H
 // update thumbbarbutton structs and add/update the GUI thumbbar
 void CemuleDlg::UpdateThumbBarButtons(bool initialAddToDlg) {
-	
+
 	if (!m_pTaskbarList)
 		return;
-	
+
 	THUMBBUTTONMASK dwMask = THB_ICON | THB_FLAGS;
 	for (int i=TBB_FIRST; i<=TBB_LAST;i++) {
 		m_thbButtons[i].dwMask = dwMask;
@@ -3878,7 +3891,7 @@ void CemuleDlg::UpdateThumbBarButtons(bool initialAddToDlg) {
 				{
 					m_thbButtons[i].hIcon   =  theApp.LoadIcon(_T("CONNECT"), 16, 16);
 					tooltip = GetResString(IDS_MAIN_BTN_CONNECT);
-					if (theApp.IsConnected()==true)
+					if (theApp.IsConnected())
 						m_thbButtons[i].dwFlags |= THBF_DISABLED;
 					break;
 				}
@@ -3886,7 +3899,7 @@ void CemuleDlg::UpdateThumbBarButtons(bool initialAddToDlg) {
 				{
 					m_thbButtons[i].hIcon   = theApp.LoadIcon(_T("DISCONNECT"), 16, 16);
 					tooltip = GetResString(IDS_MAIN_BTN_DISCONNECT);
-					if (theApp.IsConnected()==false)
+					if (!theApp.IsConnected())
 						m_thbButtons[i].dwFlags |= THBF_DISABLED;
 					break;
 				}
@@ -3952,19 +3965,18 @@ void CemuleDlg::OnTBBPressed(UINT id)
 LRESULT CemuleDlg::OnTaskbarBtnCreated ( WPARAM , LPARAM  )
 {
 	// Sanity check that the OS is Win 7 or later
-	if (thePrefs.GetWindowsVersion() >= _WINVER_7_ && IsRunning())
-	{
+	if (thePrefs.GetWindowsVersion() >= _WINVER_7_ && !IsClosing()) {
 		if (m_pTaskbarList)
 			m_pTaskbarList.Release();
-		
+
 		if (m_pTaskbarList.CoCreateInstance ( CLSID_TaskbarList ) == S_OK)
 		{
 			m_pTaskbarList->SetProgressState ( m_hWnd, TBPF_NOPROGRESS );
-			
+
 			m_currentTBP_state = TBPF_NOPROGRESS;
 			m_prevProgress=0;
 			m_ovlIcon = NULL;
-			
+
 			UpdateThumbBarButtons(true);
 			UpdateStatusBarProgress();
 		}
@@ -3992,7 +4004,7 @@ void CemuleDlg::EnableTaskbarGoodies(bool enable)
 }
 void CemuleDlg::UpdateStatusBarProgress()
 {
-	if (m_pTaskbarList && thePrefs.IsWin7TaskbarGoodiesEnabled()) 
+	if (m_pTaskbarList && thePrefs.IsWin7TaskbarGoodiesEnabled())
 	{
 		// calc global progress & status
 		float globalDone = theStats.m_fGlobalDone;
@@ -4016,7 +4028,7 @@ void CemuleDlg::UpdateStatusBarProgress()
 
 			if (theStats.m_dwOverallStatus & STATE_DOWNLOADING) // smth downloading
 				new_state=TBPF_NORMAL;
-			
+
 			if (theStats.m_dwOverallStatus & STATE_ERROROUS) // smth error
 				new_state=TBPF_ERROR;
 
@@ -4032,7 +4044,7 @@ void CemuleDlg::UpdateStatusBarProgress()
 
 		}
 		// overlay up/down-speed
-		if (thePrefs.IsShowUpDownIconInTaskbar()) 
+		if (thePrefs.IsShowUpDownIconInTaskbar())
 		{
 			bool bUp   = theApp.emuledlg->transferwnd->GetUploadList()->GetItemCount() >0;
 			bool bDown = theStats.m_dwOverallStatus & STATE_DOWNLOADING;
@@ -4075,13 +4087,12 @@ void CemuleDlg::SetTaskbarIconColor()
 				{
 					uint8 byAlpha = (uint8)(dwGlassColor >> 24);
 					cr = 0xFFFFFF & dwGlassColor;
-					if (byAlpha < 200 && bOpaque == FALSE)
-					{
+					if (byAlpha < 200 && !bOpaque) {
 						// on transparent themes we can never figure out which excact color is shown (may we could in real time?)
 						// but given that a color is blended against the background, it is a good guess that a bright speedbar will
 						// be the best solution in most cases
 						bTransparent = true;
-					}							
+					}
 				}
 			}
 			FreeLibrary(hDWMAPI);

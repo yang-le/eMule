@@ -22,6 +22,7 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 #pragma once
+#pragma warning(push)
 #pragma warning( disable: 4355 )
 
 #include "UPnPImpl.h"
@@ -77,7 +78,7 @@ public:
 	virtual int		GetImplementationID()									{ return UPNP_IMPL_WINDOWSERVICE; }
 
 	// No Support for Refreshing on this  (fallback) implementation yet - in many cases where it would be needed (router reset etc)
-	// the windows side of the implementation tends to get bugged untill reboot anyway. Still might get added later
+	// the windows side of the implementation tends to get bugged until reboot anyway. Still might get added later
 	virtual bool	CheckAndRefresh()										{ return false; };
 
 protected:
@@ -87,7 +88,7 @@ protected:
 	bool	OnSearchComplete();
 	void	Init();
 
-	inline bool IsAsyncFindRunning() 
+	inline bool IsAsyncFindRunning()
 	{
 		if ( m_pDeviceFinder != NULL && m_bAsyncFindRunning && GetTickCount() - m_tLastEvent > 10000 )
 		{
@@ -119,9 +120,9 @@ protected:
 	TGetIfEntry				m_pfGetIfEntry;
 
 	static FinderPointer CreateFinderInstance();
-	struct FindDevice : std::unary_function< DevicePointer, bool >
+	struct FindDevice : private std::unary_function< DevicePointer, bool >
 	{
-		FindDevice(const CComBSTR& udn) : m_udn( udn ) {}
+		explicit FindDevice(const CComBSTR& udn) : m_udn( udn ) {}
 		result_type operator()(argument_type device) const
 		{
 			CComBSTR deviceName;
@@ -134,7 +135,7 @@ protected:
 		}
 		CComBSTR m_udn;
 	};
-	
+
 	void	ProcessAsyncFind(CComBSTR bsSearchType);
 	HRESULT	GetDeviceServices(DevicePointer pDevice);
 	void	StartPortMapping();
@@ -142,7 +143,7 @@ protected:
 	void	DeleteExistingPortMappings(ServicePointer pService);
 	void	CreatePortMappings(ServicePointer pService);
 	HRESULT SaveServices(EnumUnknownPtr pEU, const LONG nTotalItems);
-	HRESULT InvokeAction(ServicePointer pService, CComBSTR action, 
+	HRESULT InvokeAction(ServicePointer pService, CComBSTR action,
 		LPCTSTR pszInArgString, CString& strResult);
 	void	StopUPnPService();
 
@@ -150,7 +151,7 @@ protected:
 	HRESULT CreateSafeArray(const VARTYPE vt, const ULONG nArgs, SAFEARRAY** ppsa);
 	INT_PTR CreateVarFromString(const CString& strArgs, VARIANT*** pppVars);
 	INT_PTR	GetStringFromOutArgs(const VARIANT* pvaOutArgs, CString& strArgs);
-	void	DestroyVars(const INT_PTR nCount, VARIANT*** pppVars);
+	static void	DestroyVars(const INT_PTR nCount, VARIANT*** pppVars);
 	HRESULT GetSafeArrayBounds(SAFEARRAY* psa, LONG* pLBound, LONG* pUBound);
 	HRESULT GetVariantElement(SAFEARRAY* psa, LONG pos, VARIANT* pvar);
 	CString	GetLocalRoutableIP(ServicePointer pService);
@@ -187,7 +188,7 @@ class CDeviceFinderCallback
 	: public IUPnPDeviceFinderCallback
 {
 public:
-	CDeviceFinderCallback(CUPnPImplWinServ& instance)
+	explicit CDeviceFinderCallback(CUPnPImplWinServ& instance)
 		: m_instance( instance )
 	{ m_lRefCount = 0; }
 
@@ -206,15 +207,15 @@ private:
 	LONG m_lRefCount;
 };
 
-// Service Callback 
+// Service Callback
 class CServiceCallback
 	: public IUPnPServiceCallback
 {
 public:
-	CServiceCallback(CUPnPImplWinServ& instance)
+	explicit CServiceCallback(CUPnPImplWinServ& instance)
 		: m_instance( instance )
 	{ m_lRefCount = 0; }
-   
+
    STDMETHODIMP QueryInterface(REFIID iid, LPVOID* ppvObject);
    STDMETHODIMP_(ULONG) AddRef();
    STDMETHODIMP_(ULONG) Release();
@@ -228,3 +229,4 @@ private:
 	CUPnPImplWinServ& m_instance;
 	LONG m_lRefCount;
 };
+#pragma warning(pop)

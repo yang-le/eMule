@@ -3,7 +3,7 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
-Project: "id3com"=.\id3com.dsp - Package Owner=<4>
+Project: "id3com"=".\id3com.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -14,11 +14,14 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name id3lib
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name zlib
+    End Project Dependency
 }}}
 
 ###############################################################################
 
-Project: "id3lib"=..\libprj\id3lib.dsp - Package Owner=<4>
+Project: "id3lib"="..\libprj\id3lib.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -33,7 +36,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "zlib"=..\zlib\prj\zlib.dsp - Package Owner=<4>
+Project: "zlib"="..\zlib\prj\zlib.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{

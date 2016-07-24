@@ -1,4 +1,4 @@
-// $Id: tag.cpp,v 1.55 2003/03/02 13:35:58 t1mpy Exp $
+// $Id: tag.cpp,v 1.56 2004/01/16 01:53:55 shadrack Exp $
 
 // id3lib: a C++ library for creating and manipulating id3v1/v2 tags
 // Copyright 1999, 2000  Scott Thomas Haug
@@ -54,6 +54,12 @@ using namespace dami;
  ** There are other files that must be included to access more advanced
  ** functionality, but this will do most of the core functionality.
  **
+ ** In straight C the \c #include is slightly different:
+ **
+ ** \code
+ **   #include <id3.h>
+ ** \endcode
+ **
  ** \subsection creation Creating a tag
  **
  ** Almost all functionality occurs via an ID3_Tag object.  An ID3_Tag object
@@ -76,6 +82,14 @@ using namespace dami;
  **   myTag.Link("song.mp3");
  ** \endcode
  **
+ ** This is similar to the interface in straight C, where the tag creation and
+ ** tag link must be done separately:
+ **
+ ** \code
+ **   ID3Tag *myTag = ID3Tag_New();
+ **   ID3Tag_Link(myTag, "song.mp3");
+ ** \endcode
+ **
  ** The default behavior of Link() is to parse all possible tagging information
  ** and convert it into ID3v2 frames.  The tagging information parsed can be
  ** limited to a particular type (or types) of tag by passing an ID3_TagType
@@ -86,11 +100,18 @@ using namespace dami;
  **   myTag.Link("song.mp3", ID3TT_ID3V1);
  ** \endcode
  **
- ** Another example would be to read in all tags that could possibly appear at
- ** the end of the file.
+ ** The C equivalent is this:
  **
  ** \code
- **   myTag.Link("song.mp3", ID3TT_ID3V1 | ID3TT_LYRICS3V2 | ID3TT_MUSICMATCH);
+ **   ID3Tag_LinkWithFlags(myTag, "song.mp3", ID3TT_ID3V1);
+ ** \endcode
+ **
+ ** Another example would be to read in all tags that could possibly appear at
+ ** the end of the file.  Here are the C++ and C examples:
+ **
+ ** \code
+ **   myTag.Link("song.mp3", ID3TT_ID3V1 | ID3TT_LYRICS3V2 | ID3TT_MUSICMATCH); // C++
+ **   ID3Tag_LinkWithFlags(myTag, "song.mp3", ID3TT_ID3V1 | ID3TT_LYRICS3V2 | ID3TT_MUSICMATCH); // C
  ** \endcode
  **
  ** \section accessing Accessing the Tag Data
@@ -271,7 +292,7 @@ using namespace dami;
  ** formatted 'CDM' frames from the unreleased ID3v2 2.01 draft specification.
  **
  ** \author Dirk Mahoney
- ** \version $Id: tag.cpp,v 1.55 2003/03/02 13:35:58 t1mpy Exp $
+ ** \version $Id: tag.cpp,v 1.56 2004/01/16 01:53:55 shadrack Exp $
  ** \sa ID3_Frame
  ** \sa ID3_Field
  ** \sa ID3_Err
@@ -286,8 +307,8 @@ using namespace dami;
  **
  ** \param name The filename of the mp3 file to link to
  **/
-ID3_Tag::ID3_Tag(const char *name)
-  : _impl(new ID3_TagImpl(name))
+ID3_Tag::ID3_Tag(const char *name, flags_t flags)
+  : _impl(new ID3_TagImpl(name, flags))
 {
 }
 
@@ -646,7 +667,7 @@ size_t ID3_Tag::Parse(const uchar header[ID3_TAGHEADERSIZE], const uchar *buffer
  **/
 size_t ID3_Tag::Render(uchar* buffer, ID3_TagType tt) const
 {
-  ID3_MemoryWriter mw(buffer, -1);
+  ID3_MemoryWriter mw(buffer, (size_t)-1);
   return this->Render(mw, tt);
 }
 
@@ -655,11 +676,13 @@ size_t ID3_Tag::Render(ID3_Writer& writer, ID3_TagType tt) const
   ID3_Writer::pos_type beg = writer.getCur();
   if (ID3TT_ID3V2 & tt)
   {
-    id3::v2::render(writer, *this);
+    ID3_Err err = id3::v2::render(writer, (ID3_TagImpl)(*this));
+    if (err != ID3E_NoError)
+      _impl->SetLastError(err);
   }
   else if (ID3TT_ID3V1 & tt)
   {
-    id3::v1::render(writer, *this);
+    id3::v1::render(writer, (ID3_TagImpl)(*this));
   }
   return writer.getCur() - beg;
 }
@@ -729,6 +752,17 @@ const Mp3_Headerinfo* ID3_Tag::GetMp3HeaderInfo() const
   return _impl->GetMp3HeaderInfo();
 }
 
+/**
+ ** Returns the last error
+ ** Can be run after Link() and Update()
+ ** Will be reset to ID3E_NoError after being called for.
+ **
+ **/
+ID3_Err ID3_Tag::GetLastError()
+{
+  return _impl->GetLastError();
+}
+
 /** Strips the tag(s) from the attached file. The type of tag stripped
  ** can be specified as a parameter.  The default is to strip all tag types.
  **
@@ -757,16 +791,7 @@ size_t ID3_Tag::GetFileSize() const
 
 const char* ID3_Tag::GetFileName() const
 {
-  //fix because GetFileName need to return a pointer which keeps to be valid
-  String fn = _impl->GetFileName();
-  if (fn.size())
-  {
-    memset((char *)_tmp_filename, 0, ID3_PATH_LENGTH);
-    memmove((char *)_tmp_filename, fn.c_str(), fn.size());
-    return _tmp_filename; //_impl->GetFileName().c_str();
-  }
-  else
-    return NULL;
+  return _impl->GetFileName().c_str();
 }
 
 /// Finds frame with given frame id
@@ -945,7 +970,10 @@ ID3_V2Spec ID3_Tag::GetSpec() const
 
 bool ID3_Tag::SetSpec(ID3_V2Spec spec)
 {
-  return _impl->SetSpec(spec);
+  //a user cannot set a spec lower than ID3V2_3_0, it's obsolete!
+  ID3_V2Spec spec2use = spec < ID3V2_3_0 ? ID3V2_LATEST : spec;
+  _impl->UserUpdatedSpec = _impl->GetSpec() != spec2use;
+  return _impl->SetSpec(spec2use);
 }
 
 /** Analyses a buffer to determine if we have a valid ID3v2 tag header.
@@ -1071,7 +1099,7 @@ namespace
     ID3_TagImpl::iterator _cur;
     ID3_TagImpl::iterator _end;
   public:
-    IteratorImpl(ID3_TagImpl& tag)
+    explicit IteratorImpl(ID3_TagImpl& tag)
       : _cur(tag.begin()), _end(tag.end())
     {
     }
@@ -1094,7 +1122,7 @@ namespace
     ID3_TagImpl::const_iterator _cur;
     ID3_TagImpl::const_iterator _end;
   public:
-    ConstIteratorImpl(ID3_TagImpl& tag)
+   explicit  ConstIteratorImpl(ID3_TagImpl& tag)
       : _cur(tag.begin()), _end(tag.end())
     {
     }

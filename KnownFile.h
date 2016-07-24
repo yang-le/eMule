@@ -40,7 +40,7 @@ public:
 	virtual ~CKnownFile();
 
 	virtual void SetFileName(LPCTSTR pszFileName, bool bReplaceInvalidFileSystemChars = false, bool bRemoveControlChars = false); // 'bReplaceInvalidFileSystemChars' is set to 'false' for backward compatibility!
-	
+
 	bool	CreateFromFile(LPCTSTR directory, LPCTSTR filename, LPVOID pvProgressParam); // create date, hashset and tags from a file
 	bool	LoadFromFile(CFileDataIO* file);	//load date, hashset and tags from a .met file
 	bool	WriteToFile(CFileDataIO* file);
@@ -120,7 +120,7 @@ public:
 
 	//aich
 	void	SetAICHRecoverHashSetAvailable(bool bVal)			{ m_bAICHRecoverHashSetAvailable = bVal; }
-	bool	IsAICHRecoverHashSetAvailable() const				{ return m_bAICHRecoverHashSetAvailable; }						
+	bool	IsAICHRecoverHashSetAvailable() const				{ return m_bAICHRecoverHashSetAvailable; }
 
 	static bool	CreateHash(const uchar* pucData, uint32 uSize, uchar* pucHash, CAICHHashTree* pShaHashOut = NULL);
 
@@ -147,10 +147,10 @@ public:
 
 protected:
 	//preview
-	bool	GrabImage(CString strFileName, uint8 nFramesToGrab, double dStartTime, bool bReduceColor, uint16 nMaxWidth, void* pSender);
+	bool	GrabImage(const CString& strFileName, uint8 nFramesToGrab, double dStartTime, bool bReduceColor, uint16 nMaxWidth, void* pSender);
 	bool	LoadTagsFromFile(CFileDataIO* file);
 	bool	LoadDateFromFile(CFileDataIO* file);
-	static void	CreateHash(CFile* pFile, uint64 uSize, uchar* pucHash, CAICHHashTree* pShaHashOut = NULL);
+	static void	CreateHash(CFile* pFile, uint64 Length, uchar* pucHash, CAICHHashTree* pShaHashOut = NULL);
 	static bool	CreateHash(FILE* fp, uint64 uSize, uchar* pucHash, CAICHHashTree* pShaHashOut = NULL);
 	virtual void	UpdateFileRatingCommentAvail(bool bForceUpdate = false);
 

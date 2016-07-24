@@ -3,7 +3,7 @@
 class CListCtrlItemWalk
 {
 public:
-	CListCtrlItemWalk(CListCtrl* pListCtrl) { m_pListCtrl = pListCtrl; }
+	explicit CListCtrlItemWalk(CListCtrl* pListCtrl) { m_pListCtrl = pListCtrl; }
 
 	virtual CObject* GetNextSelectableItem();
 	virtual CObject* GetPrevSelectableItem();
@@ -11,5 +11,6 @@ public:
 	CListCtrl* GetListCtrl() const { return m_pListCtrl; }
 
 protected:
+	virtual ~CListCtrlItemWalk() {}; //just in case...
 	CListCtrl* m_pListCtrl;
 };

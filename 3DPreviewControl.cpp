@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include "eMule.h"
 #include "3DPreviewControl.h"
 
 #ifdef _DEBUG
@@ -9,7 +8,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 
-CBarShader C3DPreviewControl::s_preview(16,32); 
+CBarShader C3DPreviewControl::s_preview(16,32);
 
 // C3DPreviewControl
 IMPLEMENT_DYNAMIC(C3DPreviewControl, CStatic)
@@ -19,7 +18,7 @@ BEGIN_MESSAGE_MAP(C3DPreviewControl, CStatic)
 END_MESSAGE_MAP()
 
 C3DPreviewControl::C3DPreviewControl()
-: m_iSliderPos(0) // use flat 
+: m_iSliderPos(0) // use flat
 {
 }
 
@@ -56,6 +55,6 @@ void C3DPreviewControl::OnPaint()
 	dc.FrameRect(&outline_rec, &gdiBrush);
 	dc.SelectObject(pOldBrush);						//eklmn: recover an old brush
 	s_preview.SetFileSize((uint64)32);
-	s_preview.Fill(RGB(192,192,255)); 
-	s_preview.DrawPreview(&dc, 1, 1, m_iSliderPos); 
+	s_preview.Fill(RGB(192,192,255));
+	s_preview.DrawPreview(&dc, 1, 1, m_iSliderPos);
 }

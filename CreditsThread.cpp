@@ -17,6 +17,7 @@
 #include "stdafx.h"
 #include "emule.h"
 #include "CreditsThread.h"
+#include "opcodes.h"
 #include "OtherFunctions.h"
 
 #ifdef _DEBUG
@@ -55,7 +56,7 @@ CCreditsThread::CCreditsThread(CWnd* pWnd, HDC hDC, CRect rectScreen)
 	m_nCreditsBmpHeight = 0;
 }
 
-CCreditsThread::~CCreditsThread() 
+CCreditsThread::~CCreditsThread()
 {
 }
 
@@ -138,7 +139,6 @@ void CCreditsThread::SingleStep()
 	LARGE_INTEGER nFrequency;
 	LARGE_INTEGER nStart;
 	LARGE_INTEGER nEnd;
-	int nTimeInMilliseconds;
 	BOOL bTimerValid;
 
 	nStart.QuadPart = 0;
@@ -181,7 +181,7 @@ void CCreditsThread::SingleStep()
 	if(bTimerValid)
 	{
 		QueryPerformanceCounter(&nEnd);
-		nTimeInMilliseconds = (int)((nEnd.QuadPart - nStart.QuadPart) * 1000 / nFrequency.QuadPart);
+		int nTimeInMilliseconds = (int)((nEnd.QuadPart - nStart.QuadPart) * SEC2MS(1) / nFrequency.QuadPart);
 
 		if(nTimeInMilliseconds < m_nDelay)
 		{
@@ -247,19 +247,18 @@ void CCreditsThread::CreateCredits()
 
 	for(int n = 0; n < m_arCredits.GetSize(); n++)
 	{
-		CString sType = m_arCredits.GetAt(n).Left(1);
+		const CString& cs = m_arCredits[n];
+		const wchar_t cType = cs[0];
 
-		if(sType == 'B')
+		if(cType == _T('B'))
 		{
 			// it's a bitmap
 
 			CBitmap bmp;
-			if(! bmp.LoadBitmap(m_arCredits.GetAt(n).Mid(2)))
+			if (!bmp.LoadBitmap(cs.Mid(2)))
 			{
-				CString str; 
-				str.Format(_T("Could not find bitmap resource \"%s\". Be sure to assign the bitmap a QUOTED resource name"), m_arCredits.GetAt(n).Mid(2)); 
-				AfxMessageBox(str); 
-				return; 
+				AfxMessageBox(_T("Could not find bitmap resource \"") + cs.Mid(2) + _T("\". Be sure to assign the bitmap a QUOTED resource name"));
+				return;
 			}
 
 			BITMAP bmInfo;
@@ -277,33 +276,33 @@ void CCreditsThread::CreateCredits()
 
 			y += bmInfo.bmHeight;
 		}
-		else if(sType == 'S')
+		else if(cType == _T('S'))
 		{
 			// it's a vertical space
 
-			y += _ttoi(m_arCredits.GetAt(n).Mid(2));
+			y += _ttoi(cs.Mid(2));
 		}
 		else
 		{
 			// it's a text string
 
-			nFont = _ttoi(m_arCredits.GetAt(n).Left(2));
-			nColor = _ttoi(m_arCredits.GetAt(n).Mid(3,2));
+			nFont = _ttoi(cs.Left(2));
+			nColor = _ttoi(cs.Mid(3,2));
 
 			if(nFont != nLastFont)
 			{
-				m_dcCredits.SelectObject(m_arFonts.GetAt(nFont));
-				nTextHeight = m_arFontHeights.GetAt(nFont);
+				m_dcCredits.SelectObject(m_arFonts[nFont]);
+				nTextHeight = m_arFontHeights[nFont];
 			}
 
 			if(nColor != nLastColor)
 			{
-				m_dcCredits.SetTextColor(m_arColors.GetAt(nColor));
+				m_dcCredits.SetTextColor(m_arColors[nColor]);
 			}
 
 			CRect rect(0, y, m_rectScreen.Width(), y + nTextHeight);
 
-			m_dcCredits.DrawText(m_arCredits.GetAt(n).Mid(6), &rect, DT_CENTER);
+			m_dcCredits.DrawText(cs.Mid(6), &rect, DT_CENTER);
 
 			y += nTextHeight;
 		}
@@ -420,7 +419,7 @@ void CCreditsThread::InitText()
 	// S = Space (moves down the specified number of pixels)
 
 	CString sTmp;
-	
+
 	/*
 		You may NOT modify this copyright message. You may add your name, if you
 		changed or improved this code, but you mot not delete any part of this message,
@@ -432,7 +431,7 @@ void CCreditsThread::InitText()
 	m_arCredits.Add(sTmp);
 
 	m_arCredits.Add(_T("03:00:eMule"));
-	sTmp.Format(_T("02:01:Version %s"),theApp.m_strCurVersionLong);
+	sTmp.Format(_T("02:01:Version %s"), (LPCTSTR)theApp.m_strCurVersionLong);
 	m_arCredits.Add(sTmp);
 	m_arCredits.Add(_T("01:06:Copyright (C) 2002-2015 Merkur"));
 	m_arCredits.Add(_T("S:50"));
@@ -483,7 +482,7 @@ void CCreditsThread::InitText()
 	m_arCredits.Add(_T("01:06:Dirus"));
 	m_arCredits.Add(_T("S:5"));
 	m_arCredits.Add(_T("01:06:Unknown1"));
-	
+
 
 	m_arCredits.Add(_T("S:50"));
 	m_arCredits.Add(_T("02:04:Thanks to these programmers"));
@@ -510,18 +509,18 @@ void CCreditsThread::InitText()
 	m_arCredits.Add(_T("02:07:people for translating eMule"));
 	m_arCredits.Add(_T("02:07:into different languages:"));
 	m_arCredits.Add(_T("S:20"));
-	
+
 
 	m_arCredits.Add(_T("01:06:Arabic: Dody"));
-	m_arCredits.Add(_T("S:05"));	
+	m_arCredits.Add(_T("S:05"));
 	m_arCredits.Add(_T("01:06:Albanian: Besmir"));
-	m_arCredits.Add(_T("S:05"));	
+	m_arCredits.Add(_T("S:05"));
 	m_arCredits.Add(_T("01:06:Basque: TXiKi"));
-	m_arCredits.Add(_T("S:05"));	
+	m_arCredits.Add(_T("S:05"));
 	m_arCredits.Add(_T("01:06:Breton: KAD-Korvigelloù an Drouizig"));
-	m_arCredits.Add(_T("S:05"));	
+	m_arCredits.Add(_T("S:05"));
 	m_arCredits.Add(_T("01:06:Bulgarian: DapKo, Dumper"));
-	m_arCredits.Add(_T("S:05"));	
+	m_arCredits.Add(_T("S:05"));
 	m_arCredits.Add(_T("01:06:Catalan: LeChuck"));
 	m_arCredits.Add(_T("S:05"));
 	m_arCredits.Add(_T("01:06:Chinese simplyfied: Tim Chen, Qilu T."));
@@ -605,19 +604,18 @@ int CCreditsThread::CalcCreditsHeight()
 
 	for(int n = 0; n < m_arCredits.GetSize(); n++)
 	{
-		CString sType = m_arCredits.GetAt(n).Left(1);
+		const CString& cs = m_arCredits[n];
+		const wchar_t cType = cs[0];
 
-		if(sType == 'B')
+		if(cType == _T('B'))
 		{
 			// it's a bitmap
 
 			CBitmap bmp;
-			if (! bmp.LoadBitmap(m_arCredits.GetAt(n).Mid(2)))
+			if (! bmp.LoadBitmap(cs.Mid(2)))
 			{
-				CString str; 
-				str.Format(_T("Could not find bitmap resource \"%s\". Be sure to assign the bitmap a QUOTED resource name"), m_arCredits.GetAt(n).Mid(2)); 
-				AfxMessageBox(str); 
-				return -1; 
+				AfxMessageBox(_T("Could not find bitmap resource \"") + cs.Mid(2) + _T("\". Be sure to assign the bitmap a QUOTED resource name"));
+				return -1;
 			}
 
 			BITMAP bmInfo;
@@ -625,18 +623,18 @@ int CCreditsThread::CalcCreditsHeight()
 
 			nHeight += bmInfo.bmHeight;
 		}
-		else if(sType == 'S')
+		else if(cType == _T('S'))
 		{
 			// it's a vertical space
 
-			nHeight += _ttoi(m_arCredits.GetAt(n).Mid(2));
+			nHeight += _ttoi(cs.Mid(2));
 		}
 		else
 		{
 			// it's a text string
 
-			int nFont = _ttoi(m_arCredits.GetAt(n).Left(2));
-			nHeight += m_arFontHeights.GetAt(nFont);
+			int nFont = _ttoi(cs.Left(2));
+			nHeight += m_arFontHeights[nFont];
 		}
 	}
 

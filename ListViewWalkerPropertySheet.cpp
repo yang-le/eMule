@@ -105,12 +105,12 @@ BEGIN_MESSAGE_MAP(CListViewWalkerPropertySheet, CListViewPropertySheet)
 END_MESSAGE_MAP()
 
 CListViewWalkerPropertySheet::CListViewWalkerPropertySheet(UINT nIDCaption, CWnd* pParentWnd, UINT iSelectPage)
-	:CListViewPropertySheet(nIDCaption, pParentWnd, iSelectPage)
+	:CListViewPropertySheet(nIDCaption, pParentWnd, iSelectPage), m_pListCtrl(NULL)
 {
 }
 
 CListViewWalkerPropertySheet::CListViewWalkerPropertySheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage)
-	:CListViewPropertySheet(pszCaption, pParentWnd, iSelectPage)
+	:CListViewPropertySheet(pszCaption, pParentWnd, iSelectPage), m_pListCtrl(NULL)
 {
 }
 
@@ -146,7 +146,7 @@ BOOL CListViewWalkerPropertySheet::OnInitDialog()
 		int iLeftMostButtonId = IDOK;
 		int iMax = 32767;
 		static const int _aiPropSheetButtons[] = { IDOK, IDCANCEL, ID_APPLY_NOW, IDHELP };
-		for (int i = 0; i < ARRSIZE(_aiPropSheetButtons); i++)
+		for (unsigned i = 0; i < ARRSIZE(_aiPropSheetButtons); ++i)
 		{
 			CWnd* pBtn = GetDlgItem(_aiPropSheetButtons[i]);
 			if (pBtn /*&& pBtn->IsWindowVisible()*/)
@@ -168,7 +168,7 @@ BOOL CListViewWalkerPropertySheet::OnInitDialog()
 		ScreenToClient(&rcOk);
 		CFont* pDefCtrlFont = pctlOk->GetFont();
 
-		for (int i = 0; i < ARRSIZE(aCtrls); i++)
+		for (unsigned i = 0; i < ARRSIZE(aCtrls); ++i)
 		{
 			const int iNaviBtnWidth = rcOk.Width()/2;
 			CRect rc;

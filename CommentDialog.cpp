@@ -21,7 +21,6 @@
 #include "PartFile.h"
 #include "OtherFunctions.h"
 #include "Opcodes.h"
-#include "StringConversion.h"
 #include "UpDownClient.h"
 #include "kademlia/kademlia/kademlia.h"
 #include "kademlia/kademlia/SearchManager.h"
@@ -47,7 +46,7 @@ BEGIN_MESSAGE_MAP(CCommentDialog, CResizablePage)
 	ON_EN_CHANGE(IDC_CMT_TEXT, OnEnChangeCmtText)
 	ON_CBN_SELENDOK(IDC_RATELIST, OnCbnSelendokRatelist)
 	ON_CBN_SELCHANGE(IDC_RATELIST, OnCbnSelchangeRatelist)
-   	ON_BN_CLICKED(IDC_SEARCHKAD, OnBnClickedSearchKad) 
+   	ON_BN_CLICKED(IDC_SEARCHKAD, OnBnClickedSearchKad)
 	ON_WM_TIMER()
 	ON_WM_DESTROY()
 END_MESSAGE_MAP()
@@ -112,7 +111,7 @@ BOOL CCommentDialog::OnSetActive()
 		return FALSE;
 	if (m_bDataChanged)
 	{
-		bool bContainsSharedKnownFile = false;;
+		bool bContainsSharedKnownFile = false;
 		int iRating = -1;
 		m_bMergedComment = false;
 		CString strComment;
@@ -218,7 +217,7 @@ void CCommentDialog::Localize(void)
 	m_ratebox.SetImageList(&iml);
 	m_imlRating.DeleteImageList();
 	m_imlRating.Attach(iml.Detach());
-	
+
 	m_ratebox.ResetContent();
 	m_ratebox.AddItem(GetResString(IDS_CMT_NOTRATED), 0);
 	m_ratebox.AddItem(GetResString(IDS_CMT_FAKE), 1);
@@ -260,13 +259,13 @@ void CCommentDialog::OnCbnSelchangeRatelist()
 }
 
 void CCommentDialog::RefreshData(bool deleteOld)
-{ 
+{
 	if (deleteOld)
 		m_lstComments.DeleteAllItems();
-	
+
 	if (!m_bEnabled)
 		return;
-	
+
 	bool kadsearchable = true;
     for (int i = 0; i < m_paFiles->GetSize(); i++)
     {
@@ -274,7 +273,7 @@ void CCommentDialog::RefreshData(bool deleteOld)
 		if (file->IsPartFile())
 		{
 			for (POSITION pos = ((CPartFile*)file)->srclist.GetHeadPosition(); pos != NULL; )
-			{ 
+			{
 				CUpDownClient* cur_src = ((CPartFile*)file)->srclist.GetNext(pos);
 				if (cur_src->HasFileRating() || !cur_src->GetFileComment().IsEmpty())
 					m_lstComments.AddItem(cur_src);
@@ -284,12 +283,11 @@ void CCommentDialog::RefreshData(bool deleteOld)
 			continue;
 		else if (theApp.sharedfiles->GetFileByID(file->GetFileHash()) == NULL)
 			continue;
-	
+
 		const CTypedPtrList<CPtrList, Kademlia::CEntry*>& list = file->getNotes();
 		for (POSITION pos = list.GetHeadPosition(); pos != NULL; )
 		{
-			Kademlia::CEntry* entry = list.GetNext(pos);
-			m_lstComments.AddItem(entry);
+			m_lstComments.AddItem(list.GetNext(pos));
 		}
 
 		// check if note searches are running for this file(s)
@@ -315,7 +313,7 @@ void CCommentDialog::OnBnClickedSearchKad()
 	if (m_bEnabled && Kademlia::CKademlia::IsConnected())
 	{
 		bool bSkipped = false;
-		int iMaxSearches = min(m_paFiles->GetSize(), KADEMLIATOTALFILE);
+		int iMaxSearches = mini(m_paFiles->GetSize(), KADEMLIATOTALFILE);
 	    for (int i = 0; i < iMaxSearches; i++)
 	    {
 			CAbstractFile* file = STATIC_DOWNCAST(CAbstractFile, (*m_paFiles)[i]);

@@ -32,7 +32,7 @@ static char THIS_FILE[] = __FILE__;
 
 
 CCreditsDlg::CCreditsDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CCreditsDlg::IDD, pParent)
+	: CDialog(CCreditsDlg::IDD, pParent), m_pThread(NULL)
 {
 	//{{AFX_DATA_INIT(CCreditsDlg)
 		// NOTE: the ClassWizard will add member initialization here
@@ -63,7 +63,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CCreditsDlg message handlers
 
-void CCreditsDlg::OnLButtonDown(UINT nFlags, CPoint point) 
+void CCreditsDlg::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	CDialog::OnLButtonDown(nFlags, point);
 
@@ -80,7 +80,7 @@ void CCreditsDlg::OnLButtonDown(UINT nFlags, CPoint point)
 	PostMessage(WM_NCLBUTTONDOWN, HTCAPTION, MAKELPARAM(point.x, point.y));
 }
 
-BOOL CCreditsDlg::OnInitDialog() 
+BOOL CCreditsDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	VERIFY( m_imgSplash.Attach(theApp.LoadImage(_T("ABOUT"), _T("JPG"))) );
@@ -90,7 +90,7 @@ BOOL CCreditsDlg::OnInitDialog()
 	return TRUE;
 }
 
-void CCreditsDlg::OnDestroy() 
+void CCreditsDlg::OnDestroy()
 {
 	KillThread();
 
@@ -102,15 +102,16 @@ void CCreditsDlg::OnDestroy()
 
 void CCreditsDlg::StartThread()
 {
-	m_pThread = new CCreditsThread(this, m_pDC->GetSafeHdc(), m_rectScreen);
-
-	if (m_pThread == NULL)
+	try {
+		m_pThread = new CCreditsThread(this, m_pDC->GetSafeHdc(), m_rectScreen);
+	} catch (...) {
+		m_pThread = NULL;
 		return;
-
+	}
 	ASSERT_VALID(m_pThread);
 	m_pThread->m_pThreadParams = NULL;
 
-	// Create Thread in a suspended state so we can set the Priority 
+	// Create Thread in a suspended state so we can set the Priority
 	// before it starts getting away from us
 	if (!m_pThread->CreateThread(CREATE_SUSPENDED))
 	{
@@ -138,19 +139,19 @@ void CCreditsDlg::KillThread()
 	m_pThread = NULL;
 }
 
-int CCreditsDlg::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+int CCreditsDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (CDialog::OnCreate(lpCreateStruct) == -1)
 		return -1;
-	
+
 	// m_pDC must be initialized here instead of the constructor
 	// because the HWND isn't created until Create is called.
 	m_pDC = new CClientDC(this);
-	
+
 	return 0;
 }
 
-void CCreditsDlg::OnPaint() 
+void CCreditsDlg::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
 
@@ -169,7 +170,7 @@ void CCreditsDlg::OnPaint()
 			wp.rcNormalPosition.right= wp.rcNormalPosition.left+BM.bmWidth;
 			wp.rcNormalPosition.bottom= wp.rcNormalPosition.top+BM.bmHeight;
 			this->SetWindowPlacement(&wp);
-			
+
 			dc.BitBlt(0, 0, BM.bmWidth, BM.bmHeight, &dcMem, 0, 0, SRCCOPY);
 			dcMem.SelectObject(pOldBM);
 		}

@@ -21,13 +21,14 @@
 // Added text formatting
 // Added tied mode for text and rubber bar mode
 // Added support for vertical oriented control(PBS_VERTICAL)
-// 
+//
 // version : 1.0
 //
 #include "stdafx.h"
 #include "ProgressCtrlX.h"
 #include "MemDC.h"
 #include "DrawGdiX.h"
+#include "otherfunctions.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -46,7 +47,7 @@ CProgressCtrlX::CProgressCtrlX()
 	m_clrBk = ::GetSysColor(COLOR_3DFACE);
 	m_clrTextOnBar = ::GetSysColor(COLOR_CAPTIONTEXT);
 	m_clrTextOnBk = ::GetSysColor(COLOR_BTNTEXT);
-	
+
 	// set gradient colors
 	COLORREF clrStart, clrEnd;
 	clrStart = clrEnd = ::GetSysColor(COLOR_ACTIVECAPTION);
@@ -81,13 +82,13 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CProgressCtrlX message handlers
 
-BOOL CProgressCtrlX::OnEraseBkgnd(CDC* /*pDC*/) 
+BOOL CProgressCtrlX::OnEraseBkgnd(CDC* /*pDC*/)
 {
 	// TODO: Add your message handler code here and/or call default
 	return TRUE; // erase in OnPaint()
 }
 
-void CProgressCtrlX::OnPaint() 
+void CProgressCtrlX::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
 
@@ -96,7 +97,7 @@ void CProgressCtrlX::OnPaint()
 	GetClientRect(&info.rcClient);
 
 	// retrieve current position and range
-	
+
 	if (!m_bEmpty)
 	{
 		info.nCurPos = GetPos();
@@ -111,12 +112,12 @@ void CProgressCtrlX::OnPaint()
 		info.dwStyle = 0;
 	}
 
-	
+
 	// Draw to memory DC
-	CMemDC memDC(&dc);
+	CMemoryDC memDC(&dc);
 	info.pDC = &memDC;
-	
-	// fill background 
+
+	// fill background
 	if(m_pbrBk)
 		memDC.FillRect(&info.rcClient, m_pbrBk);
 	else
@@ -124,7 +125,7 @@ void CProgressCtrlX::OnPaint()
 
 	// apply borders
 	info.rcClient.DeflateRect(m_rcBorders);
-		
+
 	// if current pos is out of range return
 	if (info.nCurPos < info.nLower || info.nCurPos > info.nUpper)
 		return;
@@ -140,7 +141,7 @@ void CProgressCtrlX::OnPaint()
 	rcBar.right = (int)((float)(info.nCurPos-info.nLower) * rcMax.right / ((info.nUpper-info.nLower == 0) ? 1 : info.nUpper-info.nLower));
 	if(fSnake)
 		rcBar.left = (int)((float)(m_nTail-info.nLower) * rcMax.right / ((info.nUpper-info.nLower == 0) ? 1 : info.nUpper-info.nLower));
-	
+
 	// draw bar
 	if(m_pbrBar)
 		memDC.FillRect(&ConvertToReal(info, rcBar), m_pbrBar);
@@ -158,7 +159,7 @@ void CProgressCtrlX::DrawMultiGradient(const CDrawInfo& info, const CRect &rcGra
 	int nSteps = m_ardwGradColors.GetSize()-1;
 	float nWidthPerStep = (float)rcGrad.Width() / nSteps;
 	CRect rcGradBand(rcGrad);
-	for (int i = 0; i < nSteps; i++) 
+	for (int i = 0; i < nSteps; i++)
 	{
 		rcGradBand.left = rcGrad.left + (int)(nWidthPerStep * i);
 		rcGradBand.right = rcGrad.left + (int)(nWidthPerStep * (i+1));
@@ -167,7 +168,7 @@ void CProgressCtrlX::DrawMultiGradient(const CDrawInfo& info, const CRect &rcGra
 
 		if(rcGradBand.right < rcClip.left)
 			continue; // skip - band before cliping rect
-		
+
 		CRect rcClipBand(rcGradBand);
 		if(rcClipBand.left < rcClip.left)
 			rcClipBand.left = rcClip.left;
@@ -183,14 +184,14 @@ void CProgressCtrlX::DrawMultiGradient(const CDrawInfo& info, const CRect &rcGra
 
 void CProgressCtrlX::DrawGradient(const CDrawInfo& info, const CRect &rcGrad, const CRect &rcClip, COLORREF clrStart, COLORREF clrEnd)
 {
-	// Split colors to RGB chanels, find chanel with maximum difference 
-	// between the start and end colors. This distance will determine 
+	// Split colors to RGB chanels, find chanel with maximum difference
+	// between the start and end colors. This distance will determine
 	// number of steps of gradient
 	int r = (GetRValue(clrEnd) - GetRValue(clrStart));
 	int g = (GetGValue(clrEnd) - GetGValue(clrStart));
 	int b = (GetBValue(clrEnd) - GetBValue(clrStart));
-	int nSteps = max(abs(r), max(abs(g), abs(b)));
-	// if number of pixels in gradient less than number of steps - 
+	int nSteps = maxi(abs(r), maxi(abs(g), abs(b)));
+	// if number of pixels in gradient less than number of steps -
 	// use it as numberof steps
 	int nPixels = rcGrad.Width();
 	nSteps = min(nPixels, nSteps);
@@ -213,7 +214,7 @@ void CProgressCtrlX::DrawGradient(const CDrawInfo& info, const CRect &rcGrad, co
 	CRect rcFill(rcGrad);
 	CBrush br;
 	// Start filling
-	for (int i = 0; i < nSteps; i++) 
+	for (int i = 0; i < nSteps; i++)
 	{
 		rcFill.left = rcGrad.left + (int)(nWidthPerStep * i);
 		rcFill.right = rcGrad.left + (int)(nWidthPerStep * (i+1));
@@ -222,7 +223,7 @@ void CProgressCtrlX::DrawGradient(const CDrawInfo& info, const CRect &rcGrad, co
 
 		if(rcFill.right < rcClip.left)
 			continue; // skip - band before cliping rect
-		
+
 		// clip it
 		if(rcFill.left < rcClip.left)
 			rcFill.left = rcClip.left;
@@ -282,7 +283,7 @@ void CProgressCtrlX::DrawText(const CDrawInfo& info, const CRect &rcMax, const C
   CPoint ptOrg = pDC->GetWindowOrg();
 	CString sText;
 	sText.Format(sFormat, nValue);
-	
+
 	LONG grad = 0;
 	if(pFont)
 	{
@@ -303,22 +304,22 @@ void CProgressCtrlX::DrawText(const CDrawInfo& info, const CRect &rcMax, const C
 		CRect rcFill(ConvertToReal(info, rcBar));
 		if((fVert ? y : x) <= rcBar.Width())
 		{
-			pDC->SetViewportOrg(rcFill.left + (rcFill.Width() + dx)/2, 
+			pDC->SetViewportOrg(rcFill.left + (rcFill.Width() + dx)/2,
 													rcFill.top + (rcFill.Height() + dy)/2);
 			DrawClippedText(info, rcBar, sText, ptOrg);
 		}
 	}
 	else
 	{
-		pDC->SetViewportOrg(info.rcClient.left + (info.rcClient.Width() + dx)/2, 
+		pDC->SetViewportOrg(info.rcClient.left + (info.rcClient.Width() + dx)/2,
 												info.rcClient.top + (info.rcClient.Height() + dy)/2);
 		if(m_clrTextOnBar == m_clrTextOnBk)
 			// if the same color for bar and background draw text once
 			DrawClippedText(info, rcMax, sText, ptOrg);
 		else
-		{	
+		{
 			// else, draw clipped parts of text
-			
+
 			// draw text on gradient
 			if(rcBar.left != rcBar.right)
 				DrawClippedText(info, rcBar, sText, ptOrg);
@@ -359,13 +360,13 @@ LRESULT CProgressCtrlX::OnSetBarColor(WPARAM clrEnd, LPARAM clrStart)
 {
 	SetGradientColors(clrStart, clrEnd ? clrEnd : clrStart);
 
-	return CLR_DEFAULT;
+	return (LRESULT)CLR_DEFAULT;
 }
 
 LRESULT CProgressCtrlX::OnSetBkColor(WPARAM, LPARAM clrBk)
 {
 	m_clrBk = clrBk;
-	return CLR_DEFAULT;
+	return (LRESULT)CLR_DEFAULT;
 }
 
 LRESULT CProgressCtrlX::OnSetStep(WPARAM nStepInc, LPARAM)
@@ -409,7 +410,7 @@ BOOL CProgressCtrlX::SetSnakePos(int& nOldPos, int nNewPos, BOOL fIncrement)
 	DWORD dwStyle = GetStyle();
 	if(!(dwStyle&PBS_SNAKE))
 		return FALSE;
-	
+
 	int nLower, nUpper;
 	GetRange(nLower, nUpper);
 	if(fIncrement)
@@ -434,7 +435,7 @@ BOOL CProgressCtrlX::SetSnakePos(int& nOldPos, int nNewPos, BOOL fIncrement)
 	}
 	else if(nNewPos >= nUpper)
 		Invalidate();
-	
+
 	m_nTail = nNewPos - m_nTailSize;
 	if(m_nTail < nLower)
 		m_nTail = nLower;
@@ -446,7 +447,7 @@ BOOL CProgressCtrlX::SetSnakePos(int& nOldPos, int nNewPos, BOOL fIncrement)
 void CProgressCtrlX::SetTextFormat(LPCTSTR szFormat, DWORD ffFormat)
 {
 	ASSERT(::IsWindow(m_hWnd));
-	
+
 	if(!szFormat || !szFormat[0] || !ffFormat)
 	{
 		ModifyStyle(PBS_TEXTMASK, 0);
@@ -467,13 +468,13 @@ CRect CProgressCtrlX::ConvertToReal(const CDrawInfo& info, const CRect& rcVirt)
 	CRect rc(info.rcClient);
 	if(fVert)
 	{
-		rc.top = info.rcClient.top + 
+		rc.top = info.rcClient.top +
 		         (fReverse ? rcVirt.left : (info.rcClient.Height() - rcVirt.right));
 		rc.bottom = rc.top + rcVirt.Width();
 	}
 	else
 	{
-		rc.left = info.rcClient.left + 
+		rc.left = info.rcClient.left +
 		          (fReverse ? (info.rcClient.Width() - rcVirt.right) : rcVirt.left);
 		rc.right = rc.left + rcVirt.Width();
 	}
@@ -481,11 +482,11 @@ CRect CProgressCtrlX::ConvertToReal(const CDrawInfo& info, const CRect& rcVirt)
 }
 
 void CProgressCtrlX::SetGradientColorsX(int nCount, COLORREF clrFirst, COLORREF clrNext, ...)
-{ 
-	m_ardwGradColors.SetSize(nCount); 
-	
-	m_ardwGradColors.SetAt(0, clrFirst); 
-	m_ardwGradColors.SetAt(1, clrNext);  
+{
+	m_ardwGradColors.SetSize(nCount);
+
+	m_ardwGradColors.SetAt(0, clrFirst);
+	m_ardwGradColors.SetAt(1, clrNext);
 
   va_list pArgs;
   va_start(pArgs, clrNext);

@@ -7,12 +7,12 @@ This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either
 version 2 of the License, or (at your option) any later version.
- 
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
- 
+
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -70,8 +70,8 @@ using namespace Kademlia;
 
 CKademliaUDPListener::~CKademliaUDPListener() {
 	// report timeout to all pending FetchNodeIDRequests
-	for (POSITION pos = listFetchNodeIDRequests.GetHeadPosition(); pos != NULL; listFetchNodeIDRequests.GetNext(pos))
-		listFetchNodeIDRequests.GetAt(pos).pRequester->KadSearchNodeIDByIPResult(KCSR_TIMEOUT, NULL);
+	for (POSITION pos = listFetchNodeIDRequests.GetHeadPosition(); pos != NULL;)
+		listFetchNodeIDRequests.GetNext(pos).pRequester->KadSearchNodeIDByIPResult(KCSR_TIMEOUT, NULL);
 }
 
 // Used by Kad1.0 and Kad 2.0
@@ -114,12 +114,12 @@ void CKademliaUDPListener::SendMyDetails(byte byOpcode, uint32 uIP, uint16 uUDPP
 		byteIOResponse.WriteUInt128(CKademlia::GetPrefs()->GetKadID());
 		byteIOResponse.WriteUInt16(thePrefs.GetPort());
 		byteIOResponse.WriteUInt8(KADEMLIA_VERSION);
-		
+
 		// Tag Count.
 		uint8 byTagCount = 0;
-		if (!CKademlia::GetPrefs()->GetUseExternKadPort()) 
+		if (!CKademlia::GetPrefs()->GetUseExternKadPort())
 			byTagCount++;
-		if (byKadVersion >= KADEMLIA_VERSION8_49b 
+		if (byKadVersion >= KADEMLIA_VERSION8_49b
 			&& (bRequestAckPackage || CKademlia::GetPrefs()->GetFirewalled() ||  CUDPFirewallTester::IsFirewalledUDP(true)))
 		{
 			byTagCount++;
@@ -127,8 +127,8 @@ void CKademliaUDPListener::SendMyDetails(byte byOpcode, uint32 uIP, uint16 uUDPP
 		byteIOResponse.WriteUInt8(byTagCount);
 		if (!CKademlia::GetPrefs()->GetUseExternKadPort())
 			byteIOResponse.WriteTag(&CKadTagUInt16(TAG_SOURCEUPORT, CKademlia::GetPrefs()->GetInternKadPort()));
-		if (byKadVersion >= KADEMLIA_VERSION8_49b 
-			&& (bRequestAckPackage || CKademlia::GetPrefs()->GetFirewalled() ||  CUDPFirewallTester::IsFirewalledUDP(true)))
+		if (byKadVersion >= KADEMLIA_VERSION8_49b
+			&& (bRequestAckPackage || CKademlia::GetPrefs()->GetFirewalled() || CUDPFirewallTester::IsFirewalledUDP(true)))
 		{
 			// if we are firewalled we sent this tag, so the other client doesn't adds us to his routing table (if UDP firewalled) and for statistics reasons (TCP firewalled)
 			// 5 - reserved (!)
@@ -146,8 +146,8 @@ void CKademliaUDPListener::SendMyDetails(byte byOpcode, uint32 uIP, uint16 uUDPP
 
 		uint32 uLen = sizeof(byPacket) - byteIOResponse.GetAvailable();
 		if (byKadVersion >= KADEMLIA_VERSION6_49aBETA){
-			if (isnulmd4(uCryptTargetID->GetDataPtr())){
-				DebugLogWarning(_T("Sending hello response to crypt enabled Kad Node which provided an empty NodeID: %s (%u)"), ipstr(ntohl(uIP)), byKadVersion);  
+			if (uCryptTargetID && isnulmd4(uCryptTargetID->GetDataPtr())) {
+				DebugLogWarning(_T("Sending hello response to crypt enabled Kad Node which provided an empty NodeID: %s (%u)"), (LPCTSTR)ipstr(ntohl(uIP)), byKadVersion);
 				SendPacket(byPacket, uLen,  uIP, uUDPPort, targetUDPKey, NULL);
 			}
 			else
@@ -160,7 +160,7 @@ void CKademliaUDPListener::SendMyDetails(byte byOpcode, uint32 uIP, uint16 uUDPP
 	}
 	else
 	{
-		ASSERT( false );
+//		ASSERT( false );
 	}
 }
 
@@ -237,7 +237,7 @@ void CKademliaUDPListener::ProcessPacket(const byte* pbyData, uint32 uLenData, u
 {
 	// we do not accept (<= 0.48a) unencrypted incoming packages from port 53 (DNS) to avoid attacks based on DNS protocol confusion
 	if (uUDPPort == 53 && senderUDPKey.IsEmpty()){
-		DEBUG_ONLY(DebugLog(_T("Droping incoming unencrypted packet on port 53 (DNS), IP: %s"), ipstr(ntohl(uIP))));
+		DEBUG_ONLY(DebugLog(_T("Droping incoming unencrypted packet on port 53 (DNS), IP: %s"), (LPCTSTR)ipstr(ntohl(uIP))));
 		return;
 	}
 
@@ -255,7 +255,7 @@ void CKademliaUDPListener::ProcessPacket(const byte* pbyData, uint32 uLenData, u
 	if (!InTrackListIsAllowedPacket(uIP, byOpcode, bValidReceiverKey))
 		return;
 
-	//	AddDebugLogLine( false, _T("Processing UDP Packet from %s port %ld : opcode length %ld", ipstr(senderAddress->sin_addr), ntohs(senderAddress->sin_port), uLenPacket);
+	//	AddDebugLogLine( false, _T("Processing UDP Packet from %s port %ld : opcode length %ld", (LPCTSTR)ipstr(senderAddress->sin_addr), ntohs(senderAddress->sin_port), uLenPacket);
 	//	CMiscUtils::debugHexDump(pbyPacketData, uLenPacket);
 
 	switch (byOpcode)
@@ -443,11 +443,9 @@ bool CKademliaUDPListener::AddContact_KADEMLIA2(const byte* pbyData, uint32 uLen
 
 	bool bUDPFirewalled = false;
 	bool bTCPFirewalled = false;
-	uint8 uTags = byteIO.ReadByte();
-	while (uTags)
-	{
-		CKadTag* pTag = byteIO.ReadTag();
-		
+	for (unsigned uTags = byteIO.ReadByte(); uTags--;) {
+		const CKadTag* pTag = byteIO.ReadTag();
+
 		if (!pTag->m_name.Compare(TAG_SOURCEUPORT))
 		{
 			if (pTag->IsInt() && (uint16)pTag->GetInt() > 0)
@@ -474,18 +472,19 @@ bool CKademliaUDPListener::AddContact_KADEMLIA2(const byte* pbyData, uint32 uLen
 		}
 
 		delete pTag;
-		--uTags;
 	}
 	// check if we are waiting for informations (nodeid) about this client and if so inform the requester
-	for (POSITION pos = listFetchNodeIDRequests.GetHeadPosition(); pos != NULL; listFetchNodeIDRequests.GetNext(pos)){
-		if (listFetchNodeIDRequests.GetAt(pos).dwIP == uIP && listFetchNodeIDRequests.GetAt(pos).dwTCPPort == uTCPPort){
+	for (POSITION pos = listFetchNodeIDRequests.GetHeadPosition(); pos != NULL;) {
+		POSITION pos2 = pos;
+		const FetchNodeID_Struct& fnode = listFetchNodeIDRequests.GetNext(pos);
+		if (fnode.dwIP == uIP && fnode.dwTCPPort == uTCPPort) {
 			CString strID;
 			uID.ToHexString(&strID);
-			DebugLog(_T("Result Addcontact: %s"), strID);
+			DebugLog(_T("Result Addcontact: %s"), (LPCTSTR)strID);
 			uchar uchID[16];
 			uID.ToByteArray(uchID);
-			listFetchNodeIDRequests.GetAt(pos).pRequester->KadSearchNodeIDByIPResult(KCSR_SUCCEEDED, uchID);
-			listFetchNodeIDRequests.RemoveAt(pos);
+			fnode.pRequester->KadSearchNodeIDByIPResult(KCSR_SUCCEEDED, uchID);
+			listFetchNodeIDRequests.RemoveAt(pos2);
 			break;
 		}
 	}
@@ -502,7 +501,7 @@ bool CKademliaUDPListener::AddContact_KADEMLIA2(const byte* pbyData, uint32 uLen
 	if (!bUDPFirewalled) // do not add (or update) UDP firewalled sources to our routing table
 		return CKademlia::GetRoutingZone()->Add(uID, uIP, uUDPPort, uTCPPort, uVersion, cUDPKey, rbIPVerified, bUpdate, false, true);
 	else{
-		//DEBUG_ONLY( AddDebugLogLine(DLP_LOW, false, _T("Kad: Not adding firewalled client to routing table (%s)"), ipstr(ntohl(uIP))) );
+		//DEBUG_ONLY( AddDebugLogLine(DLP_LOW, false, _T("Kad: Not adding firewalled client to routing table (%s)"), (LPCTSTR)ipstr(ntohl(uIP))) );
 		return false;
 	}
 }
@@ -563,22 +562,19 @@ void CKademliaUDPListener::Process_KADEMLIA2_BOOTSTRAP_RES (const byte *pbyPacke
 	// major effects, so thats a good trade
 	bool bAssumeVerified = CKademlia::GetRoutingZone()->GetNumContacts() == 0;
 
-	if (CKademlia::s_liBootstapList.IsEmpty())
+	if (CKademlia::s_liBootstrapList.IsEmpty())
 		pRoutingZone->Add(uContactID, uIP, uUDPPort, uTCPPort, uVersion, senderUDPKey, bValidReceiverKey, true, false, false);
 
-	DEBUG_ONLY( AddDebugLogLine(DLP_LOW, false, _T("Inc Kad2 Bootstrap Packet from %s"), ipstr(ntohl(uIP))) ); 
-	
-	uint16 uNumContacts = fileIO.ReadUInt16();
-	while(uNumContacts)
-	{
+	DEBUG_ONLY( AddDebugLogLine(DLP_LOW, false, _T("Inc Kad2 Bootstrap Packet from %s"), (LPCTSTR)ipstr(ntohl(uIP))) );
+
+	for (unsigned uNumContacts = fileIO.ReadUInt16(); uNumContacts--;) {
 		fileIO.ReadUInt128(&uContactID);
-		uint32 uIP = fileIO.ReadUInt32();
-		uint16 uUDPPort = fileIO.ReadUInt16();
-		uint16 uTCPPort = fileIO.ReadUInt16();
-		uint8 uVersion = fileIO.ReadUInt8();
+		uIP = fileIO.ReadUInt32();
+		uUDPPort = fileIO.ReadUInt16();
+		uTCPPort = fileIO.ReadUInt16();
+		uVersion = fileIO.ReadUInt8();
 		bool bVerified = bAssumeVerified;
 		pRoutingZone->Add(uContactID, uIP, uUDPPort, uTCPPort, uVersion, 0, bVerified, false, false, false);
-		uNumContacts--;
 	}
 }
 
@@ -589,9 +585,9 @@ void CKademliaUDPListener::Process_KADEMLIA2_HELLO_REQ (const byte *pbyPacketDat
 	uint8 byContactVersion = 0;
 	CUInt128 uContactID;
 	bool bAddedOrUpdated = AddContact_KADEMLIA2(pbyPacketData, uLenPacket, uIP, uUDPPort, &byContactVersion, senderUDPKey, bValidReceiverKey, true, true, NULL, &uContactID); // might change uUDPPort, bValidReceiverKey
-	ASSERT( byContactVersion >= 2 );
+//	ASSERT( byContactVersion >= 2 );
 	//if (dbgOldUDPPort != uUDPPort)
-	//	DEBUG_ONLY( DebugLog(_T("KadContact %s uses his internal (%u) instead external (%u) UDP Port"), ipstr(ntohl(uIP)), uUDPPort, dbgOldUDPPort) ); 
+	//	DEBUG_ONLY( DebugLog(_T("KadContact %s uses his internal (%u) instead external (%u) UDP Port"), (LPCTSTR)ipstr(ntohl(uIP)), uUDPPort, dbgOldUDPPort) );
 
 	if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 		DebugSend("KADEMLIA2_HELLO_RES", uIP, uUDPPort);
@@ -602,13 +598,13 @@ void CKademliaUDPListener::Process_KADEMLIA2_HELLO_REQ (const byte *pbyPacketDat
 
 	if (bAddedOrUpdated && !bValidReceiverKey && byContactVersion == KADEMLIA_VERSION7_49a && !HasActiveLegacyChallenge(uIP)){
 		// Kad Version 7 doesnt supports HELLO_RES_ACK, but sender/receiver keys, so send a ping to validate
-		AddLegacyChallenge(uContactID, (ULONG)0, uIP, KADEMLIA2_PING);
+		AddLegacyChallenge(uContactID, 0ul, uIP, KADEMLIA2_PING);
 		SendNullPacket(KADEMLIA2_PING, uIP, uUDPPort, senderUDPKey, NULL);
 #ifdef _DEBUG
 		CContact* pContact = CKademlia::GetRoutingZone()->GetContact(uContactID);
 		if (pContact != NULL){
 			if (pContact->GetType() < 2)
-				DebugLogWarning(_T("Process_KADEMLIA2_HELLO_REQ: Sending (ping) challenge to a long known contact (should be verified already) - %s"), ipstr(ntohl(uIP)));
+				DebugLogWarning(_T("Process_KADEMLIA2_HELLO_REQ: Sending (ping) challenge to a long known contact (should be verified already) - %s"), (LPCTSTR)ipstr(ntohl(uIP)));
 		}
 		else
 			ASSERT( false );
@@ -616,7 +612,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_HELLO_REQ (const byte *pbyPacketDat
 	}
 	else if (CKademlia::GetPrefs()->FindExternKadPort(false) && byContactVersion > KADEMLIA_VERSION5_48a) // do we need to find out our extern port?
 		SendNullPacket(KADEMLIA2_PING, uIP, uUDPPort, senderUDPKey, NULL);
-	
+
 	if (bAddedOrUpdated && !bValidReceiverKey && byContactVersion < KADEMLIA_VERSION7_49a && !HasActiveLegacyChallenge(uIP)) {
 		// we need to verify this contact but it doesn'T support HELLO_RES_ACK nor Keys, do a little work arround
 		SendLegacyChallenge(uIP, uUDPPort, uContactID);
@@ -624,7 +620,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_HELLO_REQ (const byte *pbyPacketDat
 
 	// Check if firewalled
 	if(CKademlia::GetPrefs()->GetRecheckIP())
-		FirewalledCheck(uIP, uUDPPort, senderUDPKey, byContactVersion);	
+		FirewalledCheck(uIP, uUDPPort, senderUDPKey, byContactVersion);
 }
 
 // Used in Kad2.0 only
@@ -642,7 +638,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_HELLO_RES_ACK (const byte *pbyPacke
 		throw strError;
 	}
 	else if (!bValidReceiverKey){
-		DebugLogWarning(_T("Kad: Process_KADEMLIA2_HELLO_RES_ACK: Receiver key is invalid! (sender: %s)"), ipstr(ntohl(uIP)));
+		DebugLogWarning(_T("Kad: Process_KADEMLIA2_HELLO_RES_ACK: Receiver key is invalid! (sender: %s)"), (LPCTSTR)ipstr(ntohl(uIP)));
 		return;
 	}
 	// additional packet to complete a three-way-handshake, makeing sure the remote contact is not using a spoofed IP
@@ -650,10 +646,10 @@ void CKademliaUDPListener::Process_KADEMLIA2_HELLO_RES_ACK (const byte *pbyPacke
 	CUInt128 uRemoteID;
 	fileIO.ReadUInt128(&uRemoteID);
 	if (!CKademlia::GetRoutingZone()->VerifyContact(uRemoteID, uIP)){
-		DebugLogWarning(_T("Kad: Process_KADEMLIA2_HELLO_RES_ACK: Unable to find valid sender in routing table (sender: %s)"), ipstr(ntohl(uIP)));
+		DebugLogWarning(_T("Kad: Process_KADEMLIA2_HELLO_RES_ACK: Unable to find valid sender in routing table (sender: %s)"), (LPCTSTR)ipstr(ntohl(uIP)));
 	}
 	//else
-	//	DEBUG_ONLY( AddDebugLogLine(DLP_LOW, false, _T("Verified contact (%s) by HELLO_RES_ACK"), ipstr(ntohl(uIP))) ); 
+	//	DEBUG_ONLY( AddDebugLogLine(DLP_LOW, false, _T("Verified contact (%s) by HELLO_RES_ACK"), (LPCTSTR)ipstr(ntohl(uIP))) );
 }
 
 // Used in Kad2.0 only
@@ -670,14 +666,14 @@ void CKademliaUDPListener::Process_KADEMLIA2_HELLO_RES (const byte *pbyPacketDat
 	CUInt128 uContactID;
 	bool bSendACK = false;
 	bool bAddedOrUpdated = AddContact_KADEMLIA2(pbyPacketData, uLenPacket, uIP, uUDPPort, &byContactVersion, senderUDPKey, bValidReceiverKey, true, false, &bSendACK, &uContactID);
-	
+
 	if (bSendACK){
 		// the client requested us to send an ACK package, which proves that we are not a spoofed fake contact
 		// fullfill his wish
 		if (senderUDPKey.IsEmpty()) {
 			// but we don't have a valid senderkey - there is no point to reply in this case
 			// most likely a bug in the remote client:
-			DebugLogWarning(_T("Kad: Process_KADEMLIA2_HELLO_RES: Remote clients demands ACK, but didn't sent any Senderkey! (%s)"), ipstr(ntohl(uIP)));
+			DebugLogWarning(_T("Kad: Process_KADEMLIA2_HELLO_RES: Remote clients demands ACK, but didn't sent any Senderkey! (%s)"), (LPCTSTR)ipstr(ntohl(uIP)));
 		}
 		else
 		{
@@ -688,7 +684,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_HELLO_RES (const byte *pbyPacketDat
 			if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 				DebugSend("KADEMLIA2_HELLO_RES_ACK", uIP, uUDPPort);
 			SendPacket(&fileIO, KADEMLIA2_HELLO_RES_ACK, uIP, uUDPPort, senderUDPKey, NULL);
-			//DEBUG_ONLY( AddDebugLogLine(DLP_LOW, false, _T("Sent HELLO_RES_ACK to %s"), ipstr(ntohl(uIP))) ); 
+			//DEBUG_ONLY( AddDebugLogLine(DLP_LOW, false, _T("Sent HELLO_RES_ACK to %s"), (LPCTSTR)ipstr(ntohl(uIP))) );
 		}
 	}
 	else if (bAddedOrUpdated && !bValidReceiverKey && byContactVersion < KADEMLIA_VERSION7_49a) {
@@ -744,9 +740,9 @@ void CKademliaUDPListener::Process_KADEMLIA2_REQ (const byte *pbyPacketData, uin
 		CSafeMemFile fileIO2( 817 );
 		fileIO2.WriteUInt128(&uTarget);
 		fileIO2.WriteUInt8(uCount);
-		CUInt128 uID;
 		for (ContactMap::const_iterator itContactMap = results.begin(); itContactMap != results.end(); ++itContactMap)
 		{
+			CUInt128 uID;
 			CContact* pContact = itContactMap->second;
 			pContact->GetClientID(&uID);
 			fileIO2.WriteUInt128(&uID);
@@ -777,7 +773,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_RES (const byte *pbyPacketData, uin
 
 	// don't do firewallchecks on this opcode anymore, since we need the contacts kad version - hello opcodes are good enough
 	/*if(CKademlia::GetPrefs()->GetRecheckIP())
-	{	
+	{
 		FirewalledCheck(uIP, uUDPPort, senderUDPKey);
 		if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 			DebugSend("KADEMLIA2_HELLO_REQ", uIP, uUDPPort);
@@ -795,10 +791,10 @@ void CKademliaUDPListener::Process_KADEMLIA2_RES (const byte *pbyPacketData, uin
 	if (IsLegacyChallenge(uTarget, uIP, KADEMLIA2_REQ, uContactID)){
 		// yup it is, set the contact as verified
 		if (!CKademlia::GetRoutingZone()->VerifyContact(uContactID, uIP)){
-			DebugLogWarning(_T("Kad: KADEMLIA2_RES: Unable to find valid sender in routing table (sender: %s)"), ipstr(ntohl(uIP)));
+			DebugLogWarning(_T("Kad: KADEMLIA2_RES: Unable to find valid sender in routing table (sender: %s)"), (LPCTSTR)ipstr(ntohl(uIP)));
 		}
 		else
-			DEBUG_ONLY( AddDebugLogLine(DLP_VERYLOW, false, _T("Verified contact with legacy challenge (KADEMLIA2_REQ) - %s"), ipstr(ntohl(uIP))) );
+			DEBUG_ONLY( AddDebugLogLine(DLP_VERYLOW, false, _T("Verified contact with legacy challenge (KADEMLIA2_REQ) - %s"), (LPCTSTR)ipstr(ntohl(uIP))) );
 		return; // we do not actually care for its other content
 	}
 
@@ -814,14 +810,14 @@ void CKademliaUDPListener::Process_KADEMLIA2_RES (const byte *pbyPacketData, uin
 	if (uNumContacts > CSearchManager::GetExpectedResponseContactCount(uTarget))
 	{
 		if (CSearchManager::GetExpectedResponseContactCount(uTarget) == 0)
-			DebugLogWarning(_T("Kad: KADEMLIA2_RES: Search already expired, ignoring answer (sender: %s)"), ipstr(ntohl(uIP)));
+			DebugLogWarning(_T("Kad: KADEMLIA2_RES: Search already expired, ignoring answer (sender: %s)"), (LPCTSTR)ipstr(ntohl(uIP)));
 		else
 			DebugLogWarning(_T("Kad: KADEMLIA2_RES: Contact sent more nodes (%u) than requested (%u), ignoring answer (sender: %s)")
-				, uNumContacts, CSearchManager::GetExpectedResponseContactCount(uTarget), ipstr(ntohl(uIP)));
+				, uNumContacts, CSearchManager::GetExpectedResponseContactCount(uTarget), (LPCTSTR)ipstr(ntohl(uIP)));
 		return;
 	}
 
-	
+
 	// is this a search for firewallcheck ips?
 	bool bIsFirewallUDPCheckSearch = false;
 	if (CUDPFirewallTester::IsFWCheckUDPRunning() && CSearchManager::IsFWCheckUDPSearch(uTarget))
@@ -849,7 +845,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_RES (const byte *pbyPacketData, uin
 							// UDP FirewallCheck searches are special. The point is we need an IP which we didn't sent an UDP message yet
 							// (or in the near future), so we do not try to add those contacts to our routingzone and we also don't
 							// deliver them back to the searchmanager (because he would UDP-ask them for further results), but only report
-							// them to to FirewallChecker - this will of course cripple the search but thats not the point, since we only 
+							// them to to FirewallChecker - this will of course cripple the search but thats not the point, since we only
 							// care for IPs and not the radom set target
 							CUDPFirewallTester::AddPossibleTestContact(uIDResult, uIPResult, uUDPPortResult, uTCPPortResult, uTarget, uVersion, 0, false);
 						}
@@ -867,12 +863,12 @@ void CKademliaUDPListener::Process_KADEMLIA2_RES (const byte *pbyPacketData, uin
 						}
 					}
 					else if (!(uUDPPortResult == 53 && uVersion <= KADEMLIA_VERSION5_48a) && ::thePrefs.GetLogFilteredIPs())
-						AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u) - IP filter (%s)") , ipstr(uhostIPResult), uUDPPortResult,::theApp.ipfilter->GetLastHit());
+						AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u) - IP filter (%s)") , (LPCTSTR)ipstr(uhostIPResult), uUDPPortResult, (LPCTSTR)::theApp.ipfilter->GetLastHit());
 					else if (::thePrefs.GetLogFilteredIPs())
-						AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u) - Bad port (Kad2_Res)"), ipstr(uhostIPResult), uUDPPortResult);
+						AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u) - Bad port (Kad2_Res)"), (LPCTSTR)ipstr(uhostIPResult), uUDPPortResult);
 				}
 				else if (::thePrefs.GetLogFilteredIPs())
-					AddDebugLogLine(false, _T("Ignored kad contact (IP=%s) - Bad IP"), ipstr(uhostIPResult));
+					AddDebugLogLine(false, _T("Ignored kad contact (IP=%s) - Bad IP"), (LPCTSTR)ipstr(uhostIPResult));
 			}
 		}
 	}
@@ -884,7 +880,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_RES (const byte *pbyPacketData, uin
 		throw;
 	}
 	if (nIgnoredCount > 0)
-		DebugLogWarning(_T("Ignored %u bad contacts in routing answer from %s"), nIgnoredCount, ipstr(ntohl(uIP)));
+		DebugLogWarning(_T("Ignored %u bad contacts in routing answer from %s"), nIgnoredCount, (LPCTSTR)ipstr(ntohl(uIP)));
 	CSearchManager::ProcessResponse(uTarget, uIP, uUDPPort, pResults);
 }
 
@@ -902,9 +898,7 @@ void CKademliaUDPListener::Free(SSearchTerm* pSearchTerms)
 
 static void TokenizeOptQuotedSearchTerm(LPCTSTR pszString, CStringWArray* lst)
 {
-	LPCTSTR pch = pszString;
-	while (*pch != _T('\0'))
-	{
+	for (LPCTSTR pch = pszString; *pch != _T('\0');) {
 		if (*pch == _T('\"'))
 		{
 			// Start of quoted string found. If there is no terminating quote character found,
@@ -1032,7 +1026,7 @@ SSearchTerm* CKademliaUDPListener::CreateSearchExpressionTree(CSafeMemFile& file
 
 		KadTagStrMakeLower(str); // make lowercase, the search code expects lower case strings!
 		if (s_pstrDbgSearchExpr)
-			s_pstrDbgSearchExpr->AppendFormat(_T(" \"%ls\""), str);
+			s_pstrDbgSearchExpr->AppendFormat(_T(" \"%ls\""), (LPCTSTR)str);
 
 		SSearchTerm* pSearchTerm = new SSearchTerm;
 		pSearchTerm->m_type = SSearchTerm::String;
@@ -1062,9 +1056,9 @@ SSearchTerm* CKademliaUDPListener::CreateSearchExpressionTree(CSafeMemFile& file
 		if (s_pstrDbgSearchExpr)
 		{
 			if (lenTagName == 1)
-				s_pstrDbgSearchExpr->AppendFormat(_T(" Tag%02X=\"%ls\""), (BYTE)strTagName[0], strValue);
+				s_pstrDbgSearchExpr->AppendFormat(_T(" Tag%02X=\"%ls\""), (BYTE)strTagName[0], (LPCTSTR)strValue);
 			else
-				s_pstrDbgSearchExpr->AppendFormat(_T(" \"%s\"=\"%ls\""), strTagName, strValue);
+				s_pstrDbgSearchExpr->AppendFormat(_T(" \"%hs\"=\"%ls\""), (LPCSTR)strTagName, (LPCTSTR)strValue);
 		}
 		return pSearchTerm;
 	}
@@ -1111,7 +1105,7 @@ SSearchTerm* CKademliaUDPListener::CreateSearchExpressionTree(CSafeMemFile& file
 			if (uLenTagName == 1)
 				s_pstrDbgSearchExpr->AppendFormat(_T(" Tag%02X%s%I64u"), (BYTE)strTagName[0], _aOps[mmop].pszOp, ullValue);
 			else
-				s_pstrDbgSearchExpr->AppendFormat(_T(" \"%s\"%s%I64u"), strTagName, _aOps[mmop].pszOp, ullValue);
+				s_pstrDbgSearchExpr->AppendFormat(_T(" \"%hs\"%s%I64u"), (LPCSTR)strTagName, _aOps[mmop].pszOp, ullValue);
 		}
 
 		return pSearchTerm;
@@ -1143,7 +1137,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_SEARCH_KEY_REQ (const byte *pbyPack
 			pSearchTerms = CreateSearchExpressionTree(fileIO, 0);
 			if (s_pstrDbgSearchExpr)
 			{
-				Debug(_T("KadSearchTerm=%s\n"), *s_pstrDbgSearchExpr);
+				Debug(_T("KadSearchTerm=%s\n"), (LPCTSTR)*s_pstrDbgSearchExpr);
 				delete s_pstrDbgSearchExpr;
 				s_pstrDbgSearchExpr = NULL;
 			}
@@ -1191,10 +1185,8 @@ void CKademliaUDPListener::Process_KADEMLIA_SEARCH_RES (const byte *pbyPacketDat
 	byteIO.ReadUInt128(&uTarget);
 
 	// How many results.. Not supported yet..
-	uint16 uCount = byteIO.ReadUInt16();
 	CUInt128 uAnswer;
-	while( uCount > 0 )
-	{
+	for (unsigned uCount = byteIO.ReadUInt16(); uCount-- > 0;) {
 		// What is the answer
 		byteIO.ReadUInt128(&uAnswer);
 
@@ -1213,11 +1205,9 @@ void CKademliaUDPListener::Process_KADEMLIA_SEARCH_RES (const byte *pbyPacketDat
 		{
 			deleteTagListEntries(pTags);
 			delete pTags;
-			pTags = NULL;
 			throw;
 		}
 		CSearchManager::ProcessResult(uTarget, uAnswer, pTags, uIP, uUDPPort);
-		uCount--;
 	}
 }
 
@@ -1235,10 +1225,8 @@ void CKademliaUDPListener::Process_KADEMLIA2_SEARCH_RES (const byte *pbyPacketDa
 	byteIO.ReadUInt128(&uTarget);
 
 	// Total results.
-	uint16 uCount = byteIO.ReadUInt16();
 	CUInt128 uAnswer;
-	while( uCount > 0 )
-	{
+	for (unsigned uCount = byteIO.ReadUInt16(); uCount-- > 0;) {
 		// What is the answer
 		byteIO.ReadUInt128(&uAnswer);
 
@@ -1257,11 +1245,9 @@ void CKademliaUDPListener::Process_KADEMLIA2_SEARCH_RES (const byte *pbyPacketDa
 		{
 			deleteTagListEntries(pTags);
 			delete pTags;
-			pTags = NULL;
 			throw;
 		}
 		CSearchManager::ProcessResult(uTarget, uAnswer, pTags, uIP, uUDPPort);
-		uCount--;
 	}
 }
 
@@ -1275,7 +1261,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_KEY_REQ (const byte *pbyPac
 	if (CUDPFirewallTester::IsFirewalledUDP(true))
 	{
 		//We are firewalled. We should not index this entry and give publisher a false report.
-		return;		
+		return;
 	}
 
 	CByteIO byteIO(pbyPacketData, uLenPacket);
@@ -1291,15 +1277,15 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_KEY_REQ (const byte *pbyPac
 
 	bool bDbgInfo = (thePrefs.GetDebugClientKadUDPLevel() > 0);
 	CString sInfo;
-	uint16 uCount = byteIO.ReadUInt16();
 	uint8 uLoad = 0;
 	CUInt128 uTarget;
-	while( uCount > 0 )
+	for (unsigned uCount = byteIO.ReadUInt16(); uCount-- > 0;)
 	{
 		sInfo.Empty();
 
 		byteIO.ReadUInt128(&uTarget);
 
+		CKadTag* pTag = NULL;
 		CKeyEntry* pEntry = new Kademlia::CKeyEntry();
 		try
 		{
@@ -1309,10 +1295,9 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_KEY_REQ (const byte *pbyPac
 			pEntry->m_uSourceID.SetValue(uTarget);
 			pEntry->m_tLifetime = (uint32)time(NULL)+KADEMLIAREPUBLISHTIMEK;
 			pEntry->m_bSource = false;
-			uint32 uTags = byteIO.ReadByte();
-			while(uTags > 0)
+			for (unsigned uTags = byteIO.ReadByte(); uTags > 0; uTags--)
 			{
-				CKadTag* pTag = byteIO.ReadTag();
+				pTag = byteIO.ReadTag();
 				if(pTag)
 				{
 					if (!pTag->m_name.Compare(TAG_FILENAME))
@@ -1321,14 +1306,13 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_KEY_REQ (const byte *pbyPac
 						{
 							pEntry->SetFileName(pTag->GetStr());
 							if (bDbgInfo)
-								sInfo.AppendFormat(_T("  Name=\"%ls\""), pEntry->GetCommonFileName());
+								sInfo.AppendFormat(_T("  Name=\"%ls\""), (LPCTSTR)pEntry->GetCommonFileName());
 						}
-						delete pTag; // tag is no longer stored, but membervar is used
 					}
 					else if (!pTag->m_name.Compare(TAG_FILESIZE))
 					{
 						if( pEntry->m_uSize == 0 )
-						{ 
+						{
 							if(pTag->IsBsob() && pTag->GetBsobSize() == 8)
 							{
 								pEntry->m_uSize = *((uint64*)pTag->GetBsob());
@@ -1336,9 +1320,8 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_KEY_REQ (const byte *pbyPac
 							else
 								pEntry->m_uSize = pTag->GetInt();
 							if (bDbgInfo)
-								sInfo.AppendFormat(_T("  Size=%u"), pEntry->m_uSize);
+								sInfo.AppendFormat(_T("  Size=%I64u"), pEntry->m_uSize);
 						}
-						delete pTag; // tag is no longer stored, but membervar is used
 					}
 					else if (!pTag->m_name.Compare(TAG_KADAICHHASHPUB))
 					{
@@ -1348,28 +1331,30 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_KEY_REQ (const byte *pbyPac
 							{
 								pEntry->AddRemoveAICHHash(CAICHHash((uchar*)pTag->GetBsob()), true);
 								if (bDbgInfo)
-									sInfo.AppendFormat(_T("  AICH Hash=%s"), CAICHHash((uchar*)pTag->GetBsob()).GetString());
+									sInfo.AppendFormat(_T("  AICH Hash=%s"), (LPCTSTR)CAICHHash((uchar*)pTag->GetBsob()).GetString());
 							}
 							else
-								DebugLogWarning(_T("Multiple TAG_KADAICHHASHPUB tags received for single file from %s"), ipstr(ntohl(uIP)));
+								DebugLogWarning(_T("Multiple TAG_KADAICHHASHPUB tags received for single file from %s"), (LPCTSTR)ipstr(ntohl(uIP)));
 						}
 						else
-							DEBUG_ONLY( DebugLogWarning(_T("Bad TAG_KADAICHHASHPUB received from %s"), ipstr(ntohl(uIP))) ); 
-						delete pTag;
+							DEBUG_ONLY( DebugLogWarning(_T("Bad TAG_KADAICHHASHPUB received from %s"), (LPCTSTR)ipstr(ntohl(uIP))) );
 					}
 					else
-					{		
+					{
 						//TODO: Filter tags - we do some basic filtering already within this function, might want to do more at some point
 						pEntry->AddTag(pTag);
+						pTag = NULL;
 					}
+					delete pTag; //tag is no longer stored, but membervar is used
+					pTag = NULL;
 				}
-				uTags--;
 			}
 			if (bDbgInfo && !sInfo.IsEmpty())
-				Debug(_T("%s\n"), sInfo);
+				Debug(_T("%s\n"), (LPCTSTR)sInfo);
 		}
 		catch(...)
 		{
+			delete pTag;
 			delete pEntry;
 			throw;
 		}
@@ -1384,9 +1369,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_KEY_REQ (const byte *pbyPac
 			//So, once we are full, we will periodically clean our list until we can
 			//begin storing again..
 			delete pEntry;
-			pEntry = NULL;
 		}
-		uCount--;
 	}
 	CSafeMemFile fileIO2(17);
 	fileIO2.WriteUInt128(&uFile);
@@ -1406,7 +1389,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_SOURCE_REQ (const byte *pby
 	if (CUDPFirewallTester::IsFirewalledUDP(true))
 	{
 		//We are firewalled. We should not index this entry and give publisher a false report.
-		return;		
+		return;
 	}
 
 	CByteIO byteIO(pbyPacketData, uLenPacket);
@@ -1423,9 +1406,9 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_SOURCE_REQ (const byte *pby
 	CString sInfo;
 	sInfo.Empty();
 	uint8 uLoad = 0;
-	bool bFlag = false;
 	CUInt128 uTarget;
 	byteIO.ReadUInt128(&uTarget);
+	CKadTag* pTag = NULL;
 	CEntry* pEntry = new Kademlia::CEntry();
 	try
 	{
@@ -1436,10 +1419,9 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_SOURCE_REQ (const byte *pby
 		pEntry->m_bSource = false;
 		pEntry->m_tLifetime = (uint32)time(NULL)+KADEMLIAREPUBLISHTIMES;
 		bool bAddUDPPortTag = true;
-		uint32 uTags = byteIO.ReadByte();
-		while(uTags > 0)
+		for (unsigned uTags = byteIO.ReadByte(); uTags > 0; uTags--)
 		{
-			CKadTag* pTag = byteIO.ReadTag();
+			pTag = byteIO.ReadTag();
 			if(pTag)
 			{
 				if (!pTag->m_name.Compare(TAG_SOURCETYPE))
@@ -1449,11 +1431,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_SOURCE_REQ (const byte *pby
 						pEntry->AddTag(new CKadTagUInt(TAG_SOURCEIP, pEntry->m_uIP));
 						pEntry->AddTag(pTag);
 						pEntry->m_bSource = true;
-					}
-					else
-					{
-						//More then one sourcetype tag found.
-						delete pTag;
+						pTag = NULL;
 					}
 				}
 				else if (!pTag->m_name.Compare(TAG_FILESIZE))
@@ -1467,9 +1445,8 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_SOURCE_REQ (const byte *pby
 						else
 							pEntry->m_uSize = pTag->GetInt();
 						if (bDbgInfo)
-							sInfo.AppendFormat(_T("  Size=%u"), pEntry->m_uSize);
+							sInfo.AppendFormat(_T("  Size=%I64u"), pEntry->m_uSize);
 					}
-					delete pTag;
 				}
 				else if (!pTag->m_name.Compare(TAG_SOURCEPORT))
 				{
@@ -1477,63 +1454,43 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_SOURCE_REQ (const byte *pby
 					{
 						pEntry->m_uTCPPort = (uint16)pTag->GetInt();
 						pEntry->AddTag(pTag);
-					}
-					else
-					{
-						//More then one port tag found
-						delete pTag;
+						pTag = NULL;
 					}
 				}
 				else if (!pTag->m_name.Compare(TAG_SOURCEUPORT))
 				{
-					if(bAddUDPPortTag && pTag->IsInt() && pTag->GetInt() != 0)
+					if (bAddUDPPortTag && pTag->IsInt() && (uint16)pTag->GetInt() > 0)
 					{
 						pEntry->m_uUDPPort = (uint16)pTag->GetInt();
 						pEntry->AddTag(pTag);
 						bAddUDPPortTag = false;
-					}
-					else
-					{
-						//More then one udp port tag found
-						delete pTag;
+						pTag = NULL;
 					}
 				}
 				else
 				{
 					//TODO: Filter tags
 					pEntry->AddTag(pTag);
+					pTag = NULL; //do not delete
 				}
+				delete pTag;
+				pTag = NULL;
 			}
-			uTags--;
 		}
 		if (bAddUDPPortTag)
 			pEntry->AddTag(new CKadTagUInt(TAG_SOURCEUPORT, pEntry->m_uUDPPort));
 
 		if (bDbgInfo && !sInfo.IsEmpty())
-			Debug(_T("%s\n"), sInfo);
+			Debug(_T("%s\n"), (LPCTSTR)sInfo);
 	}
 	catch(...)
 	{
+		delete pTag;
 		delete pEntry;
 		throw;
 	}
 
-	if( pEntry->m_bSource == true )
-	{
-		if( pIndexed->AddSources(uFile, uTarget, pEntry, uLoad ) )
-			bFlag = true;
-		else
-		{
-			delete pEntry;
-			pEntry = NULL;
-		}
-	}
-	else
-	{
-		delete pEntry;
-		pEntry = NULL;
-	}
-	if( bFlag )
+	if (pEntry->m_bSource && pIndexed->AddSources(uFile, uTarget, pEntry, uLoad))
 	{
 		CSafeMemFile fileIO2(17);
 		fileIO2.WriteUInt128(&uFile);
@@ -1541,7 +1498,8 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_SOURCE_REQ (const byte *pby
 		if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 			DebugSend("KADEMLIA2_PUBLISH_RES", uIP, uUDPPort);
 		SendPacket( &fileIO2, KADEMLIA2_PUBLISH_RES, uIP, uUDPPort, senderUDPKey, NULL);
-	}
+	} else
+		delete pEntry;
 }
 
 // Used only by Kad1.0
@@ -1593,7 +1551,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_RES (const byte *pbyPacketD
 		uint8 byOptions = fileIO.ReadUInt8();
 		bool bRequestACK = (byOptions & 0x01) > 0;
 		if (bRequestACK && !senderUDPKey.IsEmpty()){
-			DEBUG_ONLY( DebugLogWarning(_T("KADEMLIA2_PUBLISH_RES_ACK requested (%s)"), ipstr(ntohl(uIP))) );
+			DEBUG_ONLY( DebugLogWarning(_T("KADEMLIA2_PUBLISH_RES_ACK requested (%s)"), (LPCTSTR)ipstr(ntohl(uIP))) );
 			if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 				DebugSend("KADEMLIA2_PUBLISH_RES_ACK", uIP, uUDPPort);
 			SendNullPacket(KADEMLIA2_PUBLISH_RES_ACK, uIP, uUDPPort, senderUDPKey, NULL);
@@ -1632,9 +1590,8 @@ void CKademliaUDPListener::Process_KADEMLIA_SEARCH_NOTES_RES (const byte *pbyPac
 	CUInt128 uTarget;
 	byteIO.ReadUInt128(&uTarget);
 
-	uint16 uCount = byteIO.ReadUInt16();
 	CUInt128 uAnswer;
-	while( uCount > 0 )
+	for (unsigned uCount = byteIO.ReadUInt16(); uCount > 0; uCount--)
 	{
 		// What is the answer
 		byteIO.ReadUInt128(&uAnswer);
@@ -1654,11 +1611,9 @@ void CKademliaUDPListener::Process_KADEMLIA_SEARCH_NOTES_RES (const byte *pbyPac
 		{
 			deleteTagListEntries(pTags);
 			delete pTags;
-			pTags = NULL;
 			throw;
 		}
 		CSearchManager::ProcessResult(uTarget, uAnswer, pTags, uIP, uUDPPort);
-		uCount--;
 	}
 }
 
@@ -1669,7 +1624,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_NOTES_REQ (const byte *pbyP
 	if (CUDPFirewallTester::IsFirewalledUDP(true))
 	{
 		//We are firewalled. We should not index this entry and give publisher a false report.
-		return;		
+		return;
 	}
 
 	CByteIO byteIO(pbyPacketData, uLenPacket);
@@ -1686,6 +1641,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_NOTES_REQ (const byte *pbyP
 	CUInt128 uSource;
 	byteIO.ReadUInt128(&uSource);
 
+	CKadTag* pTag = NULL;
 	Kademlia::CEntry* pEntry = new Kademlia::CEntry();
 	try
 	{
@@ -1694,10 +1650,9 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_NOTES_REQ (const byte *pbyP
 		pEntry->m_uKeyID.SetValue(uTarget);
 		pEntry->m_uSourceID.SetValue(uSource);
 		pEntry->m_bSource = false;
-		uint32 uTags = byteIO.ReadByte();
-		while(uTags > 0)
+		for (unsigned uTags = byteIO.ReadByte(); uTags > 0; uTags--)
 		{
-			CKadTag* pTag = byteIO.ReadTag();
+			pTag = byteIO.ReadTag();
 			if(pTag)
 			{
 				if (!pTag->m_name.Compare(TAG_FILENAME))
@@ -1706,7 +1661,6 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_NOTES_REQ (const byte *pbyP
 					{
 						pEntry->SetFileName(pTag->GetStr());
 					}
-					delete pTag;
 				}
 				else if (!pTag->m_name.Compare(TAG_FILESIZE))
 				{
@@ -1714,21 +1668,22 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_NOTES_REQ (const byte *pbyP
 					{
 						pEntry->m_uSize = pTag->GetInt();
 					}
-					delete pTag;
 				}
 				else
 				{
 					//TODO: Filter tags
 					pEntry->AddTag(pTag);
+					pTag = NULL;
 				}
+				delete pTag;
+				pTag = NULL;
 			}
-			uTags--;
 		}
 	}
 	catch(...)
 	{
+		delete pTag;
 		delete pEntry;
-		pEntry = NULL;
 		throw;
 	}
 
@@ -1824,7 +1779,7 @@ void CKademliaUDPListener::Process_KADEMLIA_FIREWALLED_RES (const byte *pbyPacke
 	else if (!theApp.clientlist->IsKadFirewallCheckIP(ntohl(uIP))){ /*KADEMLIA_FIREWALLED2_REQ + KADEMLIA_FIREWALLED_REQ*/
 		CString strError;
 		strError.Format(_T("Received unrequested firewall response packet in %hs"), __FUNCTION__);
-		throw strError;		
+		throw strError;
 	}
 
 	CSafeMemFile fileIO(pbyPacketData, uLenPacket);
@@ -2003,13 +1958,13 @@ void CKademliaUDPListener::Process_KADEMLIA2_PONG (const byte* pbyPacketData, ui
 
 	// is this one of our legacy challenge packets?
 	CUInt128 uContactID;
-	if (IsLegacyChallenge((ULONG)0, uIP, KADEMLIA2_PING, uContactID)){
+	if (IsLegacyChallenge(0ul, uIP, KADEMLIA2_PING, uContactID)) {
 		// yup it is, set the contact as verified
 		if (!CKademlia::GetRoutingZone()->VerifyContact(uContactID, uIP)){
-			DebugLogWarning(_T("Kad: KADEMLIA2_PONG: Unable to find valid sender in routing table (sender: %s)"), ipstr(ntohl(uIP)));
+			DebugLogWarning(_T("Kad: KADEMLIA2_PONG: Unable to find valid sender in routing table (sender: %s)"), (LPCTSTR)ipstr(ntohl(uIP)));
 		}
 		else
-			DEBUG_ONLY( AddDebugLogLine(DLP_LOW, false, _T("Verified contact with legacy challenge (KADEMLIA2_PING) - %s"), ipstr(ntohl(uIP))) );
+			DEBUG_ONLY( AddDebugLogLine(DLP_LOW, false, _T("Verified contact with legacy challenge (KADEMLIA2_PING) - %s"), (LPCTSTR)ipstr(ntohl(uIP))) );
 		// we might care for its other content
 	}
 
@@ -2039,15 +1994,15 @@ void CKademliaUDPListener::Process_KADEMLIA2_FIREWALLUDP(const byte *pbyPacketDa
 
 	if ((nIncomingPort != CKademlia::GetPrefs()->GetExternalKadPort() && nIncomingPort != CKademlia::GetPrefs()->GetInternKadPort())
 		|| nIncomingPort == 0){
-		DebugLogWarning(_T("Received UDP FirewallCheck on unexpected incoming port %u (%s)"), nIncomingPort, ipstr(ntohl(uIP)));
-		CUDPFirewallTester::SetUDPFWCheckResult(false, true, uIP, 0);		
+		DebugLogWarning(_T("Received UDP FirewallCheck on unexpected incoming port %u (%s)"), nIncomingPort, (LPCTSTR)ipstr(ntohl(uIP)));
+		CUDPFirewallTester::SetUDPFWCheckResult(false, true, uIP, 0);
 	}
 	else if (byErrorCode == 0){
-		DebugLog(_T("Received UDP FirewallCheck packet from %s with incoming port %u"), ipstr(ntohl(uIP)), nIncomingPort);
+		DebugLog(_T("Received UDP FirewallCheck packet from %s with incoming port %u"), (LPCTSTR)ipstr(ntohl(uIP)), nIncomingPort);
 		CUDPFirewallTester::SetUDPFWCheckResult(true, false, uIP, nIncomingPort);
 	}
 	else{
-		DebugLog(_T("Received UDP FirewallCheck packet from %s with incoming port %u with remote errorcode %u - ignoring result"), ipstr(ntohl(uIP)), nIncomingPort, byErrorCode);
+		DebugLog(_T("Received UDP FirewallCheck packet from %s with incoming port %u with remote errorcode %u - ignoring result"), (LPCTSTR)ipstr(ntohl(uIP)), nIncomingPort, byErrorCode);
 		CUDPFirewallTester::SetUDPFWCheckResult(false, true, uIP, 0);
 	}
 }
@@ -2103,10 +2058,10 @@ void CKademliaUDPListener::SendPacket(CSafeMemFile *pbyData, byte byOpcode, uint
 
 bool CKademliaUDPListener::FindNodeIDByIP(CKadClientSearcher* pRequester, uint32 dwIP, uint16 nTCPPort, uint16 nUDPPort){
 	// send a hello packet to the given IP in order to get a HELLO_RES with the NodeID
-	
+
 	// we will drop support for Kad1 soon, so dont bother sending two packets in case we don't know if kad2 is supported
 	// (if we know that its not, this function isn't called in the first place)
-	DebugLog(_T("FindNodeIDByIP: Requesting NodeID from %s by sending KADEMLIA2_HELLO_REQ"), ipstr(ntohl(dwIP)));
+	DebugLog(_T("FindNodeIDByIP: Requesting NodeID from %s by sending KADEMLIA2_HELLO_REQ"), (LPCTSTR)ipstr(ntohl(dwIP)));
 	if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 		DebugSend("KADEMLIA2_HELLO_REQ", dwIP, nUDPPort);
 	SendMyDetails(KADEMLIA2_HELLO_REQ, dwIP, nUDPPort, 1, 0, NULL, false); // todo: we send this unobfuscated, which is not perfect, see this can be avoided in the future
@@ -2116,11 +2071,9 @@ bool CKademliaUDPListener::FindNodeIDByIP(CKadClientSearcher* pRequester, uint32
 }
 
 void CKademliaUDPListener::ExpireClientSearch(CKadClientSearcher* pExpireImmediately){
-	POSITION pos1, pos2;
-	for (pos1 = listFetchNodeIDRequests.GetHeadPosition();( pos2 = pos1 ) != NULL;)
-	{
-		listFetchNodeIDRequests.GetNext(pos1);
-		FetchNodeID_Struct sRequest = listFetchNodeIDRequests.GetAt(pos2);
+	for (POSITION pos1 = listFetchNodeIDRequests.GetHeadPosition(); pos1 != NULL;) {
+		POSITION pos2 = pos1;
+		const FetchNodeID_Struct& sRequest = listFetchNodeIDRequests.GetNext(pos1);
 		if (sRequest.pRequester == pExpireImmediately){
 			listFetchNodeIDRequests.RemoveAt(pos2);
 		}
@@ -2140,7 +2093,7 @@ void CKademliaUDPListener::SendLegacyChallenge(uint32 uIP, uint16 uUDPPort, cons
 	CContact* pContact = CKademlia::GetRoutingZone()->GetContact(uContactID);
 	if (pContact != NULL){
 		if (pContact->GetType() < 2)
-			DebugLogWarning(_T("Process_KADEMLIA_HELLO_RES: Sending challenge to a long known contact (should be verified already) - %s"), ipstr(ntohl(uIP)));
+			DebugLogWarning(_T("Process_KADEMLIA_HELLO_RES: Sending challenge to a long known contact (should be verified already) - %s"), (LPCTSTR)ipstr(ntohl(uIP)));
 	}
 	else
 		ASSERT( false );

@@ -18,7 +18,6 @@
 #include "eMule.h"
 #include "FileDetailDialogInfo.h"
 #include "UserMsgs.h"
-#include "OtherFunctions.h"
 #include "PartFile.h"
 #include "Preferences.h"
 #include "shahashset.h"
@@ -78,24 +77,8 @@ BOOL CFileDetailDialogInfo::OnInitDialog()
 	AddAnchor(IDC_FD_X0, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_FD_X6, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_FD_X8, TOP_LEFT, TOP_RIGHT);
-	AddAnchor(IDC_FD_X11, TOP_LEFT, TOP_RIGHT);
-	
-	AddAnchor(IDC_FNAME, TOP_LEFT, TOP_RIGHT);
-	AddAnchor(IDC_METFILE, TOP_LEFT, TOP_RIGHT);
-	AddAnchor(IDC_FHASH, TOP_LEFT, TOP_RIGHT);
-	AddAnchor(IDC_FD_AICHHASH, TOP_LEFT, TOP_RIGHT);
-	AddAnchor(IDC_FSIZE, TOP_LEFT, TOP_RIGHT);
-	AddAnchor(IDC_PARTCOUNT, TOP_LEFT, TOP_RIGHT);
-	AddAnchor(IDC_HASHSET, TOP_LEFT, TOP_RIGHT);
 
-	AddAnchor(IDC_SOURCECOUNT, TOP_LEFT, TOP_RIGHT);
-	AddAnchor(IDC_DATARATE, TOP_LEFT, TOP_RIGHT);
-
-	AddAnchor(IDC_FILECREATED, TOP_LEFT, TOP_RIGHT);
-	AddAnchor(IDC_DL_ACTIVE_TIME, TOP_LEFT, TOP_RIGHT);
-	AddAnchor(IDC_LASTSEENCOMPL, TOP_LEFT, TOP_RIGHT);
-	AddAnchor(IDC_LASTRECEIVED, TOP_LEFT, TOP_RIGHT);
-
+	AddAllOtherAnchors();
 	Localize();
 
 	// no need to explicitly call 'RefreshData' here, 'OnSetActive' will be called right after 'OnInitDialog'
@@ -131,13 +114,14 @@ void CFileDetailDialogInfo::RefreshData()
 
 	if (m_paFiles->GetSize() == 1)
 	{
-		CPartFile* file = STATIC_DOWNCAST(CPartFile, (*m_paFiles)[0]);
+		const CPartFile* file = STATIC_DOWNCAST(CPartFile, (*m_paFiles)[0]);
+		const CString& fname(file->GetFileName());
 
 		// if file is completed, we output the 'file path' and not the 'part.met file path'
 		if (file->GetStatus(true) == PS_COMPLETE)
 			GetDlgItem(IDC_FD_X2)->SetWindowText(GetResString(IDS_DL_FILENAME));
 
-		SetDlgItemText(IDC_FNAME, file->GetFileName());
+		SetDlgItemText(IDC_FNAME, fname);
 		SetDlgItemText(IDC_METFILE, file->GetFullName());
 		SetDlgItemText(IDC_FHASH, md4str(file->GetFileHash()));
 
@@ -147,14 +131,14 @@ void CFileDetailDialogInfo::RefreshData()
 			str = file->getPartfileStatus();
 		SetDlgItemText(IDC_PFSTATUS, str);
 
-		str.Format(_T("%u;  %s: %u (%.1f%%)"), file->GetPartCount(), GetResString(IDS_AVAILABLE) , file->GetAvailablePartCount(), (float)((file->GetAvailablePartCount()*100)/file->GetPartCount()));
+		str.Format(_T("%u;  %s: %u (%.1f%%)"), file->GetPartCount(), (LPCTSTR)GetResString(IDS_AVAILABLE) , file->GetAvailablePartCount(), (file->GetAvailablePartCount()*100.0)/file->GetPartCount());
 		SetDlgItemText(IDC_PARTCOUNT, str);
 
 		// date created
 		if (file->GetCrFileDate() != 0) {
 			str.Format(_T("%s   ") + GetResString(IDS_TIMEBEFORE),
-						file->GetCrCFileDate().Format(thePrefs.GetDateTimeFormat()),
-						CastSecondsToLngHM(time(NULL) - file->GetCrFileDate()));
+						(LPCTSTR)file->GetCrCFileDate().Format(thePrefs.GetDateTimeFormat()),
+						(LPCTSTR)CastSecondsToLngHM(time(NULL) - file->GetCrFileDate()));
 		}
 		else
 			str = GetResString(IDS_UNKNOWN);
@@ -175,8 +159,8 @@ void CFileDetailDialogInfo::RefreshData()
 			str.Format(GetResString(IDS_NEVER));
 		else {
 			str.Format(_T("%s   ") + GetResString(IDS_TIMEBEFORE),
-						file->lastseencomplete.Format(thePrefs.GetDateTimeFormat()),
-						CastSecondsToLngHM(time(NULL) - safe_mktime(ptimLastSeenComplete)));
+						(LPCTSTR)file->lastseencomplete.Format(thePrefs.GetDateTimeFormat()),
+						(LPCTSTR)CastSecondsToLngHM(time(NULL) - safe_mktime(ptimLastSeenComplete)));
 		}
 		SetDlgItemText(IDC_LASTSEENCOMPL, str);
 
@@ -192,14 +176,14 @@ void CFileDetailDialogInfo::RefreshData()
 			if (tNow >= tLastModified)
 				tAgo = tNow - tLastModified;
 			else{
-				TRACE("tNow = %s\n", CTime(tNow).Format("%X"));
-				TRACE("tLMd = %s, +%u\n", CTime(tLastModified).Format("%X"), tLastModified - tNow);
+				TRACE("tNow = %s\n", (LPCTSTR)CTime(tNow).Format("%X"));
+				TRACE("tLMd = %s, +%u\n", (LPCTSTR)CTime(tLastModified).Format("%X"), tLastModified - tNow);
 				TRACE("\n");
 				tAgo = 0;
 			}
 			str.Format(_T("%s   ") + GetResString(IDS_TIMEBEFORE),
-						file->GetCFileDate().Format(thePrefs.GetDateTimeFormat()),
-						CastSecondsToLngHM(tAgo));
+						(LPCTSTR)file->GetCFileDate().Format(thePrefs.GetDateTimeFormat()),
+						(LPCTSTR)CastSecondsToLngHM(tAgo));
 		}
 		else
 			str = GetResString(IDS_NEVER);
@@ -221,12 +205,12 @@ void CFileDetailDialogInfo::RefreshData()
 		// file type
 		CString ext;
 		bool showwarning = false;
-		int pos = file->GetFileName().ReverseFind(_T('.'));
-		if (file->GetFileName().ReverseFind(_T('\\')) < pos) {
-			ext = file->GetFileName().Mid(pos + 1);
+		int pos = fname.ReverseFind(_T('.'));
+		if (fname.ReverseFind(_T('\\')) < pos) {
+			ext = fname.Mid(pos + 1);
 			ext.MakeUpper();
 		}
-		
+
 		EFileType bycontent = GetFileTypeEx((CKnownFile *)file, false, true);
 		if (bycontent != FILETYPE_UNKNOWN) {
 			str = GetFileTypeName(bycontent) + _T("  (");
@@ -248,7 +232,7 @@ void CFileDetailDialogInfo::RefreshData()
 		else {
 			// not verified
 			if (pos != -1) {
-				str =file->GetFileName().Mid(pos + 1);
+				str = fname.Mid(pos + 1);
 				str.MakeUpper();
 				str.Append(_T("  (") );
 				str.Append( GetResString(IDS_UNVERIFIED) + _T(')'));
@@ -314,7 +298,7 @@ void CFileDetailDialogInfo::RefreshData()
 		}
 	}
 
-	str.Format(_T("%s  (%s %s);  %s %s"), CastItoXBytes(uFileSize, false, false), GetFormatedUInt64(uFileSize), GetResString(IDS_BYTES), GetResString(IDS_ONDISK), CastItoXBytes(uRealFileSize, false, false));
+	str.Format(_T("%s  (%s %s);  %s %s"), (LPCTSTR)CastItoXBytes(uFileSize, false, false), (LPCTSTR)GetFormatedUInt64(uFileSize), (LPCTSTR)GetResString(IDS_BYTES), (LPCTSTR)GetResString(IDS_ONDISK), (LPCTSTR)CastItoXBytes(uRealFileSize, false, false));
 	SetDlgItemText(IDC_FSIZE, str);
 
 	if (m_paFiles->GetSize() == 1)
@@ -333,7 +317,7 @@ void CFileDetailDialogInfo::RefreshData()
 		if (iAICHHashsetAvailable == 0 && iMD4HashsetAvailable == 0)
 			SetDlgItemText(IDC_HASHSET, GetResString(IDS_NO));
 		else if (iMD4HashsetAvailable == m_paFiles->GetSize() && iAICHHashsetAvailable == m_paFiles->GetSize())
-			SetDlgItemText(IDC_HASHSET, GetResString(IDS_YES) +  + _T(" (eD2K + AICH)"));
+			SetDlgItemText(IDC_HASHSET, GetResString(IDS_YES) + _T(" (eD2K + AICH)"));
 		else
 			SetDlgItemText(IDC_HASHSET, _T(""));
 	}
@@ -341,23 +325,23 @@ void CFileDetailDialogInfo::RefreshData()
 	str.Format(GetResString(IDS_SOURCESINFO), uSources, uValidSources, uNNPSources, uA4AFSources);
 	SetDlgItemText(IDC_SOURCECOUNT, str);
 
-	SetDlgItemText(IDC_DATARATE, CastItoXBytes(uDataRate, false, true));
+	SetDlgItemText(IDC_DATARATE, (LPCTSTR)CastItoXBytes(uDataRate, false, true));
 
-	SetDlgItemText(IDC_TRANSFERRED, CastItoXBytes(uTransferred, false, false));
+	SetDlgItemText(IDC_TRANSFERRED, (LPCTSTR)CastItoXBytes(uTransferred, false, false));
 
-	str.Format(_T("%s (%.1f%%)"), CastItoXBytes(uCompleted, false, false), uFileSize!=0 ? (uCompleted * 100.0 / uFileSize) : 0.0);
+	str.Format(_T("%s (%.1f%%)"), (LPCTSTR)CastItoXBytes(uCompleted, false, false), uFileSize!=0 ? (uCompleted * 100.0 / uFileSize) : 0.0);
 	SetDlgItemText(IDC_COMPLSIZE, str);
 
-	str.Format(_T("%s (%.1f%%)"), CastItoXBytes(uCorrupted, false, false), uTransferred!=0 ? (uCorrupted * 100.0 / uTransferred) : 0.0);
+	str.Format(_T("%s (%.1f%%)"), (LPCTSTR)CastItoXBytes(uCorrupted, false, false), uTransferred!=0 ? (uCorrupted * 100.0 / uTransferred) : 0.0);
 	SetDlgItemText(IDC_CORRUPTED, str);
 
-	str.Format(_T("%s (%.1f%%)"), CastItoXBytes(uFileSize - uCompleted, false, false), uFileSize!=0 ? ((uFileSize - uCompleted) * 100.0 / uFileSize) : 0.0);
+	str.Format(_T("%s (%.1f%%)"), (LPCTSTR)CastItoXBytes(uFileSize - uCompleted, false, false), uFileSize!=0 ? ((uFileSize - uCompleted) * 100.0 / uFileSize) : 0.0);
 	SetDlgItemText(IDC_REMAINING, str);
 
-	str.Format(_T("%u %s"), uRecoveredParts, GetResString(IDS_FD_PARTS));
+	str.Format(_T("%u %s"), uRecoveredParts, (LPCTSTR)GetResString(IDS_FD_PARTS));
 	SetDlgItemText(IDC_RECOVERED, str);
 
-	str.Format(_T("%s (%.1f%%)"), CastItoXBytes(uCompression, false, false), uTransferred!=0 ? (uCompression * 100.0 / uTransferred) : 0.0);
+	str.Format(_T("%s (%.1f%%)"), (LPCTSTR)CastItoXBytes(uCompression, false, false), uTransferred!=0 ? (uCompression * 100.0 / uTransferred) : 0.0);
 	SetDlgItemText(IDC_COMPRESSION, str);
 }
 

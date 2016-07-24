@@ -49,7 +49,7 @@ class CAbstractFile: public CObject
 
 public:
 	CAbstractFile();
-	CAbstractFile(const CAbstractFile* pAbstractFile);
+	explicit CAbstractFile(const CAbstractFile* pAbstractFile);
 	virtual ~CAbstractFile();
 
 	const CString& GetFileName() const { return m_strFileName; }
@@ -122,9 +122,9 @@ public:
 #endif
 
 protected:
+	EMFileSize		m_nFileSize; //must be before m_FileIdentifier for initializer list
 	CFileIdentifier m_FileIdentifier;
 	CString			m_strFileName;
-	EMFileSize		m_nFileSize;
 	CString			m_strComment;
 	UINT	m_uRating;
 	bool	m_bCommentLoaded;

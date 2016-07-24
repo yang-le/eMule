@@ -25,13 +25,21 @@ class CCollectionViewDialog : public CResizableDialog
 	DECLARE_DYNAMIC(CCollectionViewDialog)
 
 public:
-	CCollectionViewDialog(CWnd* pParent = NULL);   // standard constructor
+	explicit CCollectionViewDialog(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CCollectionViewDialog();
 
 	// Dialog Data
 	enum { IDD = IDD_COLLECTIONVIEWDIALOG };
 
 	void SetCollection(CCollection* pCollection);
+
+private:
+	enum ECols
+	{
+		colName = 0,
+		colSize,
+		colHash
+	};
 
 protected:
 	CButton m_AddNewCatagory;

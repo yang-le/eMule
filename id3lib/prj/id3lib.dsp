@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 ..\zlib\zlib.lib /nologo /subsystem:windows /dll /incremental:yes /machine:I386
+# ADD LINK32 ..\zlib\zlib.lib ole32.lib /nologo /subsystem:windows /dll /incremental:yes /machine:I386
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "id3lib - Win32 Debug"
@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 ..\zlib\zlibD.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 ..\zlib\zlibD.lib ole32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
@@ -247,10 +247,6 @@ SOURCE=..\src\flags.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\id3\id3lib_frame.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\src\frame_def.h
 # End Source File
 # Begin Source File
@@ -280,6 +276,10 @@ SOURCE=..\include\id3\helpers.h
 # Begin Source File
 
 SOURCE=..\include\id3.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\id3\id3lib_frame.h
 # End Source File
 # Begin Source File
 

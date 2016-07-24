@@ -140,12 +140,12 @@ CRect CPropPageFrame::CalcMsgArea()
 }
 
 
-void CPropPageFrame::DrawMsg(CDC *pDc, CRect rect, LPCTSTR /*lpszMsg*/, DWORD /*dwFormat*/) 
+void CPropPageFrame::DrawMsg(CDC *pDc, const CRect& rect, LPCTSTR /*lpszMsg*/, DWORD /*dwFormat*/)
 {
 	CFont	*pPrevFont = (CFont*)pDc->SelectObject(AfxGetMainWnd()->GetFont());
 	int		nPrevBkMode = pDc->SetBkMode(TRANSPARENT);
 
-	pDc->DrawText(GetMsgText(), rect, GetMsgFormat());
+	pDc->DrawText(GetMsgText(), (CRect&)rect, GetMsgFormat());
 
 	pDc->SetBkMode(nPrevBkMode);
 	pDc->SelectObject(pPrevFont);
@@ -167,7 +167,7 @@ CRect	CPropPageFrame::CalcCaptionArea()
 }
 
 
-void CPropPageFrame::DrawCaption(CDC* /*pDC*/, CRect /*rect*/, LPCTSTR /*lpszCaption*/, HICON /*hIcon*/) 
+void CPropPageFrame::DrawCaption(CDC* /*pDC*/, CRect /*rect*/, LPCTSTR /*lpszCaption*/, HICON /*hIcon*/)
 {
 	// should be implemented by specialized classes
 }

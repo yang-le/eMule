@@ -43,6 +43,7 @@ BEGIN_MESSAGE_MAP(CPreviewThread, CWinThread)
 END_MESSAGE_MAP()
 
 CPreviewThread::CPreviewThread()
+	: m_pPartfile(NULL)
 {
 }
 
@@ -167,11 +168,12 @@ void CPreviewThread::SetValues(CPartFile* pPartFile, LPCTSTR pszCommand, LPCTSTR
 // CPreviewApps
 
 CPreviewApps::CPreviewApps()
+	: m_pLastCheckedPartFile(NULL), m_pLastPartFileApp(NULL)
 {
 	m_tDefAppsFileLastModified = 0;
 }
 
-CString CPreviewApps::GetDefaultAppsFile() const
+CString CPreviewApps::GetDefaultAppsFile()
 {
 	return thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("PreviewApps.dat");
 }
@@ -190,7 +192,7 @@ int CPreviewApps::ReadAllApps()
 	FILE* readFile = _tfsopen(strFilePath, _T("r"), _SH_DENYWR);
 	if (readFile != NULL)
 	{
-		CString name, url, sbuffer;
+		CString /*name, url, */sbuffer;
 		while (!feof(readFile))
 		{
 			TCHAR buffer[1024];
@@ -214,7 +216,7 @@ int CPreviewApps::ReadAllApps()
 				{
 					LPCTSTR pszCommandLine = strCommandLine;
 					LPTSTR pszCommandArgs = PathGetArgs(pszCommandLine);
-					CString strCommand, strCommandArgs;
+					CString strCommand; //, strCommandArgs;
 					if (pszCommandArgs)
 						strCommand = strCommandLine.Left(pszCommandArgs - pszCommandLine);
 					else
@@ -281,7 +283,7 @@ int CPreviewApps::ReadAllApps()
 
 void CPreviewApps::UpdateApps()
 {
-	if (m_aApps.GetCount() == 0)
+	if (m_aApps.IsEmpty())
 	{
 		ReadAllApps();
 	}
@@ -365,10 +367,10 @@ void ExecutePartFile(CPartFile* file, LPCTSTR pszCommand, LPCTSTR pszCommandArgs
 	}
 
 	TRACE(_T("Starting preview application:\n"));
-	TRACE(_T("  Command =%s\n"), strCommand);
-	TRACE(_T("  Args    =%s\n"), strArgs);
-	TRACE(_T("  Dir     =%s\n"), strCommandDir);
-	DWORD_PTR dwError = (DWORD_PTR)ShellExecute(NULL, pszVerb, strCommand, strArgs.IsEmpty() ? NULL : strArgs, strCommandDir.IsEmpty() ? NULL : strCommandDir, SW_SHOWNORMAL);
+	TRACE(_T("  Command =%s\n"), (LPCTSTR)strCommand);
+	TRACE(_T("  Args    =%s\n"), (LPCTSTR)strArgs);
+	TRACE(_T("  Dir     =%s\n"), (LPCTSTR)strCommandDir);
+	DWORD_PTR dwError = (DWORD_PTR)ShellExecute(NULL, pszVerb, strCommand, strArgs.IsEmpty() ? NULL : (LPCTSTR)strArgs, strCommandDir.IsEmpty() ? NULL : (LPCTSTR)strCommandDir, SW_SHOWNORMAL);
 	if (dwError <= 32)
 	{
 		//
@@ -388,7 +390,7 @@ void ExecutePartFile(CPartFile* file, LPCTSTR pszCommand, LPCTSTR pszCommandArgs
 		// decide to always show an application specific error dialog!
 		//
 		CString strMsg;
-		strMsg.Format(_T("Failed to execute: %s %s"), strCommand, strArgs);
+		strMsg.Format(_T("Failed to execute: %s %s"), (LPCTSTR)strCommand, (LPCTSTR)strArgs);
 
 		CString strSysErrMsg(GetShellExecuteErrMsg(dwError));
 		if (!strSysErrMsg.IsEmpty())

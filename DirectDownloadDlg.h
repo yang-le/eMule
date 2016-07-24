@@ -25,7 +25,7 @@ class CDirectDownloadDlg : public CResizableDialog
 	DECLARE_DYNAMIC(CDirectDownloadDlg)
 
 public:
-	CDirectDownloadDlg(CWnd* pParent = NULL);   // standard constructor
+	explicit CDirectDownloadDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CDirectDownloadDlg();
 
 // Dialog Data

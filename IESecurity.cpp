@@ -36,7 +36,7 @@ CMuleBrowserControlSite::CMuleBrowserControlSite(COleControlContainer* pCtrlCont
 	: CBrowserControlSite(pCtrlCont, pHandler)
 {
 	// Compiler bug?, MFC bug?, eMule bug (compiler settings)?
-	// 
+	//
 	// When this class is compiled with _AFXDLL and /Zp4, the offset for 'CMuleBrowserControlSite::m_eUrlZone'
 	// and 'CBrowserControlSite::m_pHandler' are *EQUAL* !!
 	//
@@ -126,7 +126,7 @@ void DumpIID(REFIID iid, LPCTSTR pszClassName)
 			}
 		}
 	}
-	
+
 	if (!bFound)
 		OutputDebugString(pszGUID);
 	OutputDebugString(_T("\n"));
@@ -138,6 +138,7 @@ void DumpIID(REFIID iid, LPCTSTR pszClassName)
 ///////////////////////////////////////////////////////////////////////////////
 // InternetSecurityManager
 //
+#pragma warning(push)
 #pragma warning(disable:4555) // expression has no effect; expected expression with side-effect (because of the 'METHOD_PROLOGUE' macro)
 
 STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::QueryInterface(REFIID riid, void** ppvObj)
@@ -153,7 +154,7 @@ STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XInternetSecurityManager::AddRef()
 }
 
 STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XInternetSecurityManager::Release()
-{                            
+{
 	METHOD_PROLOGUE(CMuleBrowserControlSite, InternetSecurityManager);
 	return pThis->ExternalRelease();
 }
@@ -180,7 +181,7 @@ STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::MapUrlToZone(
 	UNREFERENCED_PARAMETER(pwszUrl);
 	UNREFERENCED_PARAMETER(dwFlags);
 	METHOD_PROLOGUE(CMuleBrowserControlSite, InternetSecurityManager);
-	TRACE(_T("%hs: URL=%ls, Zone=%d, Flags=0x%x\n"), "MapUrlToZone", pwszUrl, *pdwZone, dwFlags);
+	TRACE(_T("%hs: URL=%ls, Zone=%d, Flags=0x%x\n"), "MapUrlToZone", pwszUrl, pdwZone ? *pdwZone : 0, dwFlags);
 	if (pdwZone != NULL)
 	{
 		*pdwZone = (DWORD)pThis->m_eUrlZone;
@@ -191,7 +192,7 @@ STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::MapUrlToZone(
 
 STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::GetSecurityId(
 										LPCWSTR pwszUrl,
-										BYTE* /*pbSecurityId*/, DWORD* /*pcbSecurityId*/, 
+										BYTE* /*pbSecurityId*/, DWORD* /*pcbSecurityId*/,
 										DWORD dwReserved)
 {
 	UNREFERENCED_PARAMETER(pwszUrl);
@@ -200,7 +201,7 @@ STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::GetSecurityId(
 	TRACE(_T("%hs: URL=%ls, Reserved=%u\n"), "GetSecurityId", pwszUrl, dwReserved);
 	return INET_E_DEFAULT_ACTION;
 }
- 
+
 STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::ProcessUrlAction(
 										LPCWSTR pwszUrl,
 										DWORD dwAction,
@@ -221,7 +222,7 @@ STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::ProcessUrlAction
 	{
 		*(DWORD*)pPolicy = dwPolicy;
 		return S_OK;
-	} 
+	}
 	return S_FALSE;
 #else
 	// Use the policy for the zone which was specified with 'MapUrlToZone'
@@ -244,8 +245,8 @@ STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::QueryCustomPolic
 }
 
 STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::SetZoneMapping(
-										DWORD dwZone, 
-										LPCWSTR lpszPattern, 
+										DWORD dwZone,
+										LPCWSTR lpszPattern,
 										DWORD dwFlags)
 {
 	UNREFERENCED_PARAMETER(dwZone);
@@ -257,8 +258,8 @@ STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::SetZoneMapping(
 }
 
 STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::GetZoneMappings(
-										DWORD dwZone, 
-										IEnumString** /*ppenumString*/, 
+										DWORD dwZone,
+										IEnumString** /*ppenumString*/,
 										DWORD dwFlags)
 {
 	UNREFERENCED_PARAMETER(dwZone);
@@ -280,7 +281,7 @@ STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XServiceProvider::AddRef()
 }
 
 STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XServiceProvider::Release()
-{                            
+{
 	METHOD_PROLOGUE(CMuleBrowserControlSite, ServiceProvider);
 	return pThis->ExternalRelease();
 }
@@ -300,9 +301,9 @@ STDMETHODIMP CMuleBrowserControlSite::XServiceProvider::QueryService(REFGUID gui
 	{
 		TRACE(_T("%hs\n"), "QueryService");
 		return (HRESULT)pThis->ExternalQueryInterface(&riid, ppvObject);
-	} 
+	}
 	*ppvObject = NULL;
 	return E_NOINTERFACE;
 }
 
-#pragma warning(default:4555) // expression has no effect; expected expression with side-effect (because of the 'METHOD_PROLOGUE' macro)
+#pragma warning(pop)

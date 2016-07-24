@@ -352,7 +352,7 @@ void UpdateHdrImageList(CListCtrl& lv, CImageList& imlHdr, UINT uIDHdrImgList,
 					// Fill images and masks into image list
 					VERIFY( imlHdr.Add(&bmSortStates, RGB(255, 0, 255)) != -1 );
 
-					// To avoid drawing problems (which occure only with an image list *with* a mask) while
+					// To avoid drawing problems (which occur only with an image list *with* a mask) while
 					// resizing list view columns which have the header control bitmap right aligned, set
 					// the background color of the image list.
 					if (theApp.m_ullComCtrlVer < MAKEDLLVERULL(6,0,0,0))
@@ -615,57 +615,90 @@ void CreateItemReport(CListCtrl& lv, CString& rstrReport)
 	int iCols = hdr->GetItemCount();
 	if (iCols == 0)
 		return;
-
 	// Get max. chars per column
-	int* paiColWidths = new int[iCols];
-	if (paiColWidths != NULL)
+	int* paiColWidths;
+	try {
+		paiColWidths = new int[iCols];
+	} catch (...) {
+		return;
+	}
+	TCHAR szItem[512];
+	int iItems = lv.GetItemCount();
+
+	memset(paiColWidths, 0, sizeof(*paiColWidths) * iCols);
+	for (int iCol = 0; iCol < iCols; iCol++)
 	{
-		TCHAR szItem[512];
-		int iItems = lv.GetItemCount();
-
-		memset(paiColWidths, 0, sizeof(*paiColWidths) * iCols);
-		for (int iCol = 0; iCol < iCols; iCol++)
+		LVCOLUMN lvc;
+		lvc.mask = LVCF_TEXT | LVCF_WIDTH;
+		lvc.pszText = szItem;
+		lvc.cchTextMax = _countof(szItem);
+		if (lv.GetColumn(iCol, &lvc) && lvc.cx > 0)
 		{
-			LVCOLUMN lvc;
-			lvc.mask = LVCF_TEXT | LVCF_WIDTH;
-			lvc.pszText = szItem;
-			lvc.cchTextMax = _countof(szItem);
-			if (lv.GetColumn(iCol, &lvc) && lvc.cx > 0)
-			{
-				szItem[_countof(szItem) - 1] = _T('\0');
-				int iLen = _tcslen(lvc.pszText);
-				if (iLen > paiColWidths[iCol])
-					paiColWidths[iCol] = iLen;
+			szItem[_countof(szItem) - 1] = _T('\0');
+			int iLen = _tcslen(lvc.pszText);
+			if (iLen > paiColWidths[iCol])
+				paiColWidths[iCol] = iLen;
 
-				for (int iItem = 0; iItem < iItems; iItem++)
+			for (int iItem = 0; iItem < iItems; iItem++)
+			{
+				LVITEM lvi;
+				lvi.mask = LVIF_TEXT;
+				lvi.iItem = iItem;
+				lvi.iSubItem = iCol;
+				lvi.pszText = szItem;
+				lvi.cchTextMax = _countof(szItem);
+				if (lv.GetItem(&lvi))
 				{
-					LVITEM lvi;
-					lvi.mask = LVIF_TEXT;
-					lvi.iItem = iItem;
-					lvi.iSubItem = iCol;
-					lvi.pszText = szItem;
-					lvi.cchTextMax = _countof(szItem);
-					if (lv.GetItem(&lvi))
-					{
-						szItem[_countof(szItem) - 1] = _T('\0');
-						int iLen = _tcslen(lvi.pszText);
-						if (iLen > paiColWidths[iCol])
-							paiColWidths[iCol] = iLen;
-					}
+					szItem[_countof(szItem) - 1] = _T('\0');
+					iLen = _tcslen(lvi.pszText);
+					if (iLen > paiColWidths[iCol])
+						paiColWidths[iCol] = iLen;
 				}
 			}
 		}
+	}
 
-		CString strLine;
+	CString strLine;
+	for (int iCol = 0; iCol < iCols; iCol++)
+	{
+		if (paiColWidths[iCol] > 0)
+		{
+			LVCOLUMN lvc;
+			lvc.mask = LVCF_TEXT;
+			lvc.pszText = szItem;
+			lvc.cchTextMax = _countof(szItem);
+			if (lv.GetColumn(iCol, &lvc))
+			{
+				szItem[_countof(szItem) - 1] = _T('\0');
+				TCHAR szFmtItem[_countof(szItem)+32];
+				_sntprintf(szFmtItem, _countof(szFmtItem), _T("%-*s"), paiColWidths[iCol] + 2, szItem);
+				szFmtItem[_countof(szFmtItem) - 1] = _T('\0');
+				strLine += szFmtItem;
+			}
+		}
+	}
+	if (!strLine.IsEmpty()) {
+		if (!rstrReport.IsEmpty())
+			rstrReport += _T("\r\n");
+		rstrReport += strLine;
+		rstrReport += _T("\r\n");
+		for (int i = 0; i < strLine.GetLength(); i++)
+			rstrReport += _T("-");
+	}
+
+	for (int iItem = 0; iItem < iItems; iItem++)
+	{
 		for (int iCol = 0; iCol < iCols; iCol++)
 		{
 			if (paiColWidths[iCol] > 0)
 			{
-				LVCOLUMN lvc;
-				lvc.mask = LVCF_TEXT;
-				lvc.pszText = szItem;
-				lvc.cchTextMax = _countof(szItem);
-				if (lv.GetColumn(iCol, &lvc))
+				LVITEM lvi;
+				lvi.mask = LVIF_TEXT;
+				lvi.iItem = iItem;
+				lvi.iSubItem = iCol;
+				lvi.pszText = szItem;
+				lvi.cchTextMax = _countof(szItem);
+				if (lv.GetItem(&lvi))
 				{
 					szItem[_countof(szItem) - 1] = _T('\0');
 					TCHAR szFmtItem[_countof(szItem)+32];
@@ -675,51 +708,18 @@ void CreateItemReport(CListCtrl& lv, CString& rstrReport)
 				}
 			}
 		}
+
 		if (!strLine.IsEmpty()) {
 			if (!rstrReport.IsEmpty())
 				rstrReport += _T("\r\n");
 			rstrReport += strLine;
-			rstrReport += _T("\r\n");
-			for (int i = 0; i < strLine.GetLength(); i++)
-				rstrReport += _T("-");
 		}
-
-		for (int iItem = 0; iItem < iItems; iItem++)
-		{
-			CString strLine;
-			for (int iCol = 0; iCol < iCols; iCol++)
-			{
-				if (paiColWidths[iCol] > 0)
-				{
-					LVITEM lvi;
-					lvi.mask = LVIF_TEXT;
-					lvi.iItem = iItem;
-					lvi.iSubItem = iCol;
-					lvi.pszText = szItem;
-					lvi.cchTextMax = _countof(szItem);
-					if (lv.GetItem(&lvi))
-					{
-						szItem[_countof(szItem) - 1] = _T('\0');
-						TCHAR szFmtItem[_countof(szItem)+32];
-						_sntprintf(szFmtItem, _countof(szFmtItem), _T("%-*s"), paiColWidths[iCol] + 2, szItem);
-						szFmtItem[_countof(szFmtItem) - 1] = _T('\0');
-						strLine += szFmtItem;
-					}
-				}
-			}
-
-			if (!strLine.IsEmpty()) {
-				if (!rstrReport.IsEmpty())
-					rstrReport += _T("\r\n");
-				rstrReport += strLine;
-			}
-		}
-
-		delete[] paiColWidths;
-
-		if (!rstrReport.IsEmpty())
-			rstrReport += _T("\r\n");
 	}
+
+	delete[] paiColWidths;
+
+	if (!rstrReport.IsEmpty())
+		rstrReport += _T("\r\n");
 }
 
 LRESULT CListCtrlX::OnCopy(WPARAM /*wParam*/, LPARAM /*lParam*/)
@@ -733,30 +733,32 @@ LRESULT CListCtrlX::OnCopy(WPARAM /*wParam*/, LPARAM /*lParam*/)
 
 void InitColumnOrders(CListCtrl& lv, int iColumns, const LCX_COLUMN_INIT* pColumns)
 {
-	ASSERT( lv.GetHeaderCtrl()->GetItemCount() == iColumns );
-	LPINT piOrders = new INT[iColumns];
-	if (piOrders != NULL)
+	ASSERT(lv.GetHeaderCtrl()->GetItemCount() == iColumns);
+	LPINT piOrders;
+	try {
+		piOrders = new INT[iColumns];
+	} catch (...) {
+		return;
+	}
+	for (int iCol = 0; iCol < iColumns; iCol++)
 	{
-		for (int iCol = 0; iCol < iColumns; iCol++)
+		int j;
+		for (j = 0; j < iColumns; j++)
 		{
-			int j;
-			for (j = 0; j < iColumns; j++)
+			if (pColumns[j].iOrder == iCol)
 			{
-				if (pColumns[j].iOrder == iCol)
-				{
-					piOrders[iCol] = j;
-					break;
-				}
-			}
-			if (j >= iColumns)
-			{
-				ASSERT(0);
-				piOrders[iCol] = iCol;
+				piOrders[iCol] = j;
+				break;
 			}
 		}
-		VERIFY( lv.SetColumnOrderArray(iColumns, piOrders) );
-		delete[] piOrders;
+		if (j >= iColumns)
+		{
+			ASSERT(0);
+			piOrders[iCol] = iCol;
+		}
 	}
+	VERIFY( lv.SetColumnOrderArray(iColumns, piOrders) );
+	delete[] piOrders;
 }
 
 void SetItemFocus(CListCtrl &ctl)

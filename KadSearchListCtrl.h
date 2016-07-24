@@ -44,6 +44,19 @@ public:
 
 	Kademlia::CLookupHistory* FetchAndSelectActiveSearch(bool bMark);
 
+private:
+	enum ECols
+	{
+		colNum = 0,
+		colKey,
+		colType,
+		colName,
+		colStop,
+		colLoad,
+		colPacketsSent,
+		colResponses
+	};
+
 protected:
 	void UpdateSearch(int iItem, const Kademlia::CSearch* search);
 	void SetAllIcons();

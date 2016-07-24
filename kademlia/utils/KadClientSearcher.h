@@ -29,6 +29,7 @@ namespace Kademlia
 	class CKadClientSearcher
 	{
 		public:
+			virtual ~CKadClientSearcher() {}; //just in case...
 			virtual	void KadSearchNodeIDByIPResult(EKadClientSearchRes eStatus, const uchar* pachNodeID) = 0;
 			virtual	void KadSearchIPByNodeIDResult(EKadClientSearchRes eStatus, uint32 dwIP, uint16 nPort) = 0;
 	};

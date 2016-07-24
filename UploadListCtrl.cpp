@@ -77,7 +77,7 @@ void CUploadListCtrl::Init()
 		m_tooltip->SubclassWindow(tooltip->m_hWnd);
 		tooltip->ModifyStyle(0, TTS_NOPREFIX);
 		tooltip->SetDelayTime(TTDT_AUTOPOP, 20000);
-		tooltip->SetDelayTime(TTDT_INITIAL, thePrefs.GetToolTipDelay()*1000);
+		tooltip->SetDelayTime(TTDT_INITIAL, thePrefs.GetToolTipDelay()*SEC2MS(1));
 	}
 
 	InsertColumn(0, GetResString(IDS_QL_USERNAME),	LVCFMT_LEFT,  DFLT_CLIENTNAME_COL_WIDTH);
@@ -173,12 +173,12 @@ void CUploadListCtrl::SetAllIcons()
 
 void CUploadListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 {
-	if (!theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg->IsClosing())
 		return;
 	if (!lpDrawItemStruct->itemData)
 		return;
 
-	CMemDC dc(CDC::FromHandle(lpDrawItemStruct->hDC), &lpDrawItemStruct->rcItem);
+	CMemoryDC dc(CDC::FromHandle(lpDrawItemStruct->hDC), &lpDrawItemStruct->rcItem);
 	BOOL bCtrlFocused;
 	InitItemMemDC(dc, lpDrawItemStruct, bCtrlFocused);
 	CRect cur_rec(lpDrawItemStruct->rcItem);
@@ -300,38 +300,38 @@ void CUploadListCtrl::GetItemDisplayText(const CUpDownClient *client, int iSubIt
 	{
 		case 0:
 			if (client->GetUserName() == NULL)
-				_sntprintf(pszText, cchTextMax, _T("(%s)"), GetResString(IDS_UNKNOWN));
+				_sntprintf(pszText, cchTextMax, _T("(%s)"), (LPCTSTR)GetResString(IDS_UNKNOWN));
 			else
 				_tcsncpy(pszText, client->GetUserName(), cchTextMax);
 			break;
 
 		case 1: {
 			const CKnownFile *file = theApp.sharedfiles->GetFileByID(client->GetUploadFileID());
-			_tcsncpy(pszText, file != NULL ? file->GetFileName() : _T(""), cchTextMax);
+			_tcsncpy(pszText, file != NULL ? (LPCTSTR)file->GetFileName() : _T(""), cchTextMax);
 			break;
 		}
 
 		case 2:
-			_tcsncpy(pszText, CastItoXBytes(client->GetDatarate(), false, true), cchTextMax);
+			_tcsncpy(pszText, (LPCTSTR)CastItoXBytes(client->GetDatarate(), false, true), cchTextMax);
 			break;
 
 		case 3:
 			// NOTE: If you change (add/remove) anything which is displayed here, update also the sorting part..
 			if (thePrefs.m_bExtControls)
-				_sntprintf(pszText, cchTextMax, _T("%s (%s)"), CastItoXBytes(client->GetSessionUp(), false, false), CastItoXBytes(client->GetQueueSessionPayloadUp(), false, false));
+				_sntprintf(pszText, cchTextMax, _T("%s (%s)"), (LPCTSTR)CastItoXBytes(client->GetSessionUp(), false, false), (LPCTSTR)CastItoXBytes(client->GetQueueSessionPayloadUp(), false, false));
 			else
-				_tcsncpy(pszText, CastItoXBytes(client->GetSessionUp(), false, false), cchTextMax);
+				_tcsncpy(pszText, (LPCTSTR)CastItoXBytes(client->GetSessionUp(), false, false), cchTextMax);
 			break;
 
 		case 4:
 			if (client->HasLowID())
-				_sntprintf(pszText, cchTextMax, _T("%s (%s)"), CastSecondsToHM(client->GetWaitTime() / 1000), GetResString(IDS_IDLOW));
+				_sntprintf(pszText, cchTextMax, _T("%s (%s)"), (LPCTSTR)CastSecondsToHM(client->GetWaitTime() / SEC2MS(1)), (LPCTSTR)GetResString(IDS_IDLOW));
 			else
-				_tcsncpy(pszText, CastSecondsToHM(client->GetWaitTime() / 1000), cchTextMax);
+				_tcsncpy(pszText, (LPCTSTR)CastSecondsToHM(client->GetWaitTime() / SEC2MS(1)), cchTextMax);
 			break;
 
 		case 5:
-			_tcsncpy(pszText, CastSecondsToHM(client->GetUpStartTimeDelay() / 1000), cchTextMax);
+			_tcsncpy(pszText, (LPCTSTR)CastSecondsToHM(client->GetUpStartTimeDelay() / SEC2MS(1)), cchTextMax);
 			break;
 
 		case 6:
@@ -347,7 +347,7 @@ void CUploadListCtrl::GetItemDisplayText(const CUpDownClient *client, int iSubIt
 
 void CUploadListCtrl::OnLvnGetDispInfo(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	if (theApp.emuledlg->IsRunning()) {
+	if (!theApp.emuledlg->IsClosing()) {
 		// Although we have an owner drawn listview control we store the text for the primary item in the listview, to be
 		// capable of quick searching those items via the keyboard. Because our listview items may change their contents,
 		// we do this via a text callback function. The listview control will send us the LVN_DISPINFO notification if
@@ -379,7 +379,7 @@ void CUploadListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 		ScreenToClient(&hti.pt);
 		if (SubItemHitTest(&hti) == -1 || hti.iItem != pGetInfoTip->iItem || hti.iSubItem != 0){
 			// don't show the default label tip for the main item, if the mouse is not over the main item
-			if ((pGetInfoTip->dwFlags & LVGIT_UNFOLDED) == 0 && pGetInfoTip->cchTextMax > 0 && pGetInfoTip->pszText[0] != _T('\0'))
+			if ((pGetInfoTip->dwFlags & LVGIT_UNFOLDED) == 0 && pGetInfoTip->cchTextMax > 0 && pGetInfoTip->pszText)
 				pGetInfoTip->pszText[0] = _T('\0');
 			return;
 		}
@@ -394,8 +394,8 @@ void CUploadListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 			{
 				strInfo += GetResString(IDS_SF_REQUESTED) + _T(' ') + file->GetFileName() + _T('\n');
 				strInfo.AppendFormat(GetResString(IDS_FILESTATS_SESSION) + GetResString(IDS_FILESTATS_TOTAL),
-					file->statistic.GetAccepts(), file->statistic.GetRequests(), CastItoXBytes(file->statistic.GetTransferred(), false, false),
-					file->statistic.GetAllTimeAccepts(), file->statistic.GetAllTimeRequests(), CastItoXBytes(file->statistic.GetAllTimeTransferred(), false, false));
+					file->statistic.GetAccepts(), file->statistic.GetRequests(), (LPCTSTR)CastItoXBytes(file->statistic.GetTransferred(), false, false),
+					file->statistic.GetAllTimeAccepts(), file->statistic.GetAllTimeRequests(), (LPCTSTR)CastItoXBytes(file->statistic.GetAllTimeTransferred(), false, false));
 			}
 			else
 			{
@@ -439,7 +439,7 @@ void CUploadListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
-int CUploadListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+int CALLBACK CUploadListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	const CUpDownClient *item1 = (CUpDownClient *)lParam1;
 	const CUpDownClient *item2 = (CUpDownClient *)lParam2;
@@ -583,7 +583,7 @@ BOOL CUploadListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 
 void CUploadListCtrl::AddClient(const CUpDownClient *client)
 {
-	if (!theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg->IsClosing())
 		return;
 
 	int iItemCount = GetItemCount();
@@ -594,7 +594,7 @@ void CUploadListCtrl::AddClient(const CUpDownClient *client)
 
 void CUploadListCtrl::RemoveClient(const CUpDownClient *client)
 {
-	if (!theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg->IsClosing())
 		return;
 
 	LVFINDINFO find;
@@ -609,7 +609,7 @@ void CUploadListCtrl::RemoveClient(const CUpDownClient *client)
 
 void CUploadListCtrl::RefreshClient(const CUpDownClient *client)
 {
-	if (!theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg->IsClosing())
 		return;
 
 	if (theApp.emuledlg->activewnd != theApp.emuledlg->transferwnd || !theApp.emuledlg->transferwnd->m_pwndTransfer->uploadlistctrl.IsWindowVisible())
@@ -627,9 +627,9 @@ void CUploadListCtrl::ShowSelectedUserDetails()
 {
 	POINT point;
 	::GetCursorPos(&point);
-	CPoint p = point; 
-    ScreenToClient(&p); 
-    int it = HitTest(p); 
+	CPoint p = point;
+    ScreenToClient(&p);
+    int it = HitTest(p);
     if (it == -1)
 		return;
 

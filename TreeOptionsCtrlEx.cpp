@@ -70,7 +70,7 @@ void CTreeOptionsCtrlEx::HandleCheckBox(HTREEITEM hItem, BOOL bCheck)
 		hChild = GetNextItem(hChild, TVGN_NEXT);
 	}
 
-	//Get the parent item and if it is a checkbox, then iterate through 
+	//Get the parent item and if it is a checkbox, then iterate through
 	//all its children and if all the checkboxes are checked, then also
 	//automatically check the parent. If no checkboxes are checked, then
 	//also automatically uncheck the parent.
@@ -113,7 +113,7 @@ void CTreeOptionsCtrlEx::UpdateCheckBoxGroup(HTREEITEM hItem)
 			BOOL bOldState;
 			GetCheckBox(hParent, bOldState);
 			SetCheckBox(hParent, FALSE);
-			if (bOldState != FALSE)
+			if (bOldState)
 				NotifyParent(BN_CLICKED, hParent);
 		}
 		else if (bAllCheckBoxesChecked)
@@ -122,7 +122,7 @@ void CTreeOptionsCtrlEx::UpdateCheckBoxGroup(HTREEITEM hItem)
 			GetCheckBox(hParent, bOldState);
 			SetCheckBox(hParent, FALSE); //gets rid of the semi state
 			SetCheckBox(hParent, TRUE);
-			if (bOldState != TRUE)
+			if (!bOldState)
 				NotifyParent(BN_CLICKED, hParent);
 		}
 		else
@@ -363,7 +363,7 @@ void CTreeOptionsCtrlEx::OnCreateImageList()
 					} else
 						dcMem.DrawFrameControl(&rcCtrl, DFC_BUTTON, DFCS_BUTTON3STATE | DFCS_CHECKED | DFCS_FLAT);
 
-					// checkbox checked tri-state disabled 
+					// checkbox checked tri-state disabled
 					rcCtrl.MoveToX(iCtrlLeft+iBmpWidth*9);
 					if (hTheme){
 						g_xpStyle.DrawThemeBackground(hTheme, dcMem, BP_CHECKBOX, CBS_MIXEDDISABLED, &rcCtrl, NULL);
@@ -445,7 +445,7 @@ void EditTextFloatFormat(CDataExchange* pDX, int nIDC, HTREEITEM hItem, void* pD
 	CTreeOptionsCtrl* pCtrlTreeOptions = (CTreeOptionsCtrl*) CWnd::FromHandlePermanent(hWndCtrl);
 	ASSERT(pCtrlTreeOptions);
 	ASSERT(pCtrlTreeOptions->IsKindOf(RUNTIME_CLASS(CTreeOptionsCtrl)));
-	
+
 	if (pDX->m_bSaveAndValidate)
 	{
 		CString sText(pCtrlTreeOptions->GetEditText(hItem));
@@ -579,7 +579,7 @@ BEGIN_MESSAGE_MAP(CNumTreeOptionsEdit, CTreeOptionsEdit)
 	ON_CONTROL_REFLECT(EN_CHANGE, OnEnChange)
 END_MESSAGE_MAP()
 
-int CNumTreeOptionsEdit::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+int CNumTreeOptionsEdit::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	m_bSelf = true;
 	if (CTreeOptionsEdit::OnCreate(lpCreateStruct) == -1)

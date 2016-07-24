@@ -14,7 +14,7 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-#include "stdafx.h" 
+#include "stdafx.h"
 #include "emule.h"
 #include "CommentDialogLst.h"
 #include "PartFile.h"
@@ -34,43 +34,43 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 
-IMPLEMENT_DYNAMIC(CCommentDialogLst, CResizablePage) 
+IMPLEMENT_DYNAMIC(CCommentDialogLst, CResizablePage)
 
-BEGIN_MESSAGE_MAP(CCommentDialogLst, CResizablePage) 
-   	ON_BN_CLICKED(IDOK, OnBnClickedApply) 
+BEGIN_MESSAGE_MAP(CCommentDialogLst, CResizablePage)
+   	ON_BN_CLICKED(IDOK, OnBnClickedApply)
    	ON_BN_CLICKED(IDC_SEARCHKAD, OnBnClickedSearchKad)
-	ON_BN_CLICKED(IDC_EDITCOMMENTFILTER, OnBnClickedFilter) 
+	ON_BN_CLICKED(IDC_EDITCOMMENTFILTER, OnBnClickedFilter)
 	ON_MESSAGE(UM_DATA_CHANGED, OnDataChanged)
 	ON_WM_TIMER()
 	ON_WM_DESTROY()
-END_MESSAGE_MAP() 
+END_MESSAGE_MAP()
 
-CCommentDialogLst::CCommentDialogLst() 
-   : CResizablePage(CCommentDialogLst::IDD, IDS_CMT_READALL) 
+CCommentDialogLst::CCommentDialogLst()
+   : CResizablePage(CCommentDialogLst::IDD, IDS_CMT_READALL)
 {
 	m_paFiles = NULL;
 	m_bDataChanged = false;
 	m_strCaption = GetResString(IDS_CMT_READALL);
 	m_psp.pszTitle = m_strCaption;
 	m_psp.dwFlags |= PSP_USETITLE;
-	m_paFiles = NULL; 
+	m_paFiles = NULL;
 	m_timer = 0;
-} 
+}
 
-CCommentDialogLst::~CCommentDialogLst() 
-{ 
-} 
+CCommentDialogLst::~CCommentDialogLst()
+{
+}
 
-void CCommentDialogLst::DoDataExchange(CDataExchange* pDX) 
-{ 
-	CResizablePage::DoDataExchange(pDX); 
+void CCommentDialogLst::DoDataExchange(CDataExchange* pDX)
+{
+	CResizablePage::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_LST, m_lstComments);
-} 
+}
 
-void CCommentDialogLst::OnBnClickedApply() 
-{ 
-	CResizablePage::OnOK(); 
-} 
+void CCommentDialogLst::OnBnClickedApply()
+{
+	CResizablePage::OnOK();
+}
 
 void CCommentDialogLst::OnTimer(UINT /*nIDEvent*/)
 {
@@ -78,8 +78,8 @@ void CCommentDialogLst::OnTimer(UINT /*nIDEvent*/)
 }
 
 BOOL CCommentDialogLst::OnInitDialog()
-{ 
-	CResizablePage::OnInitDialog(); 
+{
+	CResizablePage::OnInitDialog();
 	InitWindowStyles(this);
 
 	AddAnchor(IDC_LST,TOP_LEFT,BOTTOM_RIGHT);
@@ -87,13 +87,13 @@ BOOL CCommentDialogLst::OnInitDialog()
 	AddAnchor(IDC_EDITCOMMENTFILTER,BOTTOM_LEFT);
 
 	m_lstComments.Init();
-	Localize(); 
+	Localize();
 
 	// start time for calling 'RefreshData'
 	VERIFY( (m_timer = SetTimer(301, 5000, 0)) != NULL );
 
-	return TRUE; 
-} 
+	return TRUE;
+}
 
 BOOL CCommentDialogLst::OnSetActive()
 {
@@ -122,10 +122,10 @@ void CCommentDialogLst::OnDestroy()
 }
 
 void CCommentDialogLst::Localize(void)
-{ 
+{
 	GetDlgItem(IDC_SEARCHKAD)->SetWindowText(GetResString(IDS_SEARCHKAD));
 	GetDlgItem(IDC_EDITCOMMENTFILTER)->SetWindowText(GetResString(IDS_EDITSPAMFILTER));
-} 
+}
 
 void CCommentDialogLst::RefreshData(bool deleteOld)
 {
@@ -139,19 +139,16 @@ void CCommentDialogLst::RefreshData(bool deleteOld)
 		if (file->IsPartFile())
 		{
 			for (POSITION pos = ((CPartFile*)file)->srclist.GetHeadPosition(); pos != NULL; )
-			{ 
+			{
 				CUpDownClient* cur_src = ((CPartFile*)file)->srclist.GetNext(pos);
 				if (cur_src->HasFileRating() || !cur_src->GetFileComment().IsEmpty())
 					m_lstComments.AddItem(cur_src);
 			}
-		} 
-	
+		}
+
 		const CTypedPtrList<CPtrList, Kademlia::CEntry*>& list = file->getNotes();
 		for (POSITION pos = list.GetHeadPosition(); pos != NULL; )
-		{
-			Kademlia::CEntry* entry = list.GetNext(pos);
-			m_lstComments.AddItem(entry);
-		}
+			m_lstComments.AddItem(list.GetNext(pos));
 		if (file->IsPartFile())
 			((CPartFile*)file)->UpdateFileRatingCommentAvail();
 
@@ -178,9 +175,9 @@ void CCommentDialogLst::OnBnClickedSearchKad()
 	if (Kademlia::CKademlia::IsConnected())
 	{
 		bool bSkipped = false;
-		int iMaxSearches = min(m_paFiles->GetSize(), KADEMLIATOTALFILE);
-	    for (int i = 0; i < iMaxSearches; i++)
-	    {
+		int iMaxSearches = mini(m_paFiles->GetSize(), KADEMLIATOTALFILE);
+		for (int i = 0; i < iMaxSearches; i++)
+		{
 			CAbstractFile* file = STATIC_DOWNCAST(CAbstractFile, (*m_paFiles)[i]);
  			if (file)
 			{
@@ -224,5 +221,3 @@ void CCommentDialogLst::OnBnClickedFilter()
 		}
 	}
 }
-
-

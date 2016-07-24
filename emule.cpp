@@ -73,6 +73,7 @@
 #include "UPnPImplWrapper.h"
 #include "VisualStylesXP.h"
 #include "UploadDiskIOThread.h"
+#include "windows.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -103,7 +104,7 @@ bool g_bGdiPlusInstalled = false;
 
 ///////////////////////////////////////////////////////////////////////////////
 // MSLU (Microsoft Layer for Unicode) support - UnicoWS
-// 
+//
 bool g_bUnicoWS = false;
 
 void ShowUnicowsError()
@@ -137,9 +138,9 @@ extern "C" HMODULE __stdcall ExplicitPreLoadUnicows()
 
 	// NOTE: Do *NOT* use any MFC nor W-functions here!
 	// NOTE: Do *NOT* use eMule's localization functions here!
-	MessageBoxA(NULL, 
-				"This eMule version (Unicode, MSLU, shared MFC) does not run with this version of Windows.", 
-				"eMule", 
+	MessageBoxA(NULL,
+				"This eMule version (Unicode, MSLU, shared MFC) does not run with this version of Windows.",
+				"eMule",
 				MB_ICONSTOP | MB_SYSTEMMODAL | MB_SETFOREGROUND);
 	exit(1);
 #endif
@@ -162,7 +163,7 @@ extern "C" HMODULE (__stdcall *_PfnLoadUnicows)(void) = &ExplicitPreLoadUnicows;
 
 ///////////////////////////////////////////////////////////////////////////////
 // C-RTL Memory Debug Support
-// 
+//
 #ifdef _DEBUG
 static CMemoryState oldMemState, newMemState, diffMemState;
 
@@ -207,12 +208,12 @@ void InitSafeSEH()
 
 ///////////////////////////////////////////////////////////////////////////////
 // DEP - Data Execution Prevention
-// 
+//
 // For Windows XP SP2 and later. Does *not* have any performance impact!
 //
-// VS2003:	DEP must be enabled dynamically because the linker does not support 
+// VS2003:	DEP must be enabled dynamically because the linker does not support
 //			the "/NXCOMPAT" command line option.
-// VS2005:	DEP can get enabled at link time by using the "/NXCOMPAT" command 
+// VS2005:	DEP can get enabled at link time by using the "/NXCOMPAT" command
 //			line option.
 // VS2008:	DEP can get enabled at link time by using the "DEP" option within
 //			'Visual Studio Linker Advanced Options'.
@@ -220,8 +221,6 @@ void InitSafeSEH()
 #ifndef PROCESS_DEP_ENABLE
 #define	PROCESS_DEP_ENABLE						0x00000001
 #define	PROCESS_DEP_DISABLE_ATL_THUNK_EMULATION	0x00000002
-BOOL WINAPI GetProcessDEPPolicy(HANDLE hProcess, LPDWORD lpFlags, PBOOL lpPermanent);
-BOOL WINAPI SetProcessDEPPolicy(DWORD dwFlags);
 #endif//!PROCESS_DEP_ENABLE
 
 void InitDEP()
@@ -279,7 +278,7 @@ void InitDEP()
 				// VS2003:	Enable DEP (with ATL-thunk emulation) if not already set by system policy
 				//			or if the policy is not yet permanent.
 				//
-				// VS2005:	Enable DEP (without ATL-thunk emulation) if not already set by system policy 
+				// VS2005:	Enable DEP (without ATL-thunk emulation) if not already set by system policy
 				//			or linker "/NXCOMPAT" option or if the policy is not yet permanent. We should
 				//			not reach this code path at all because the "/NXCOMPAT" option is specified.
 				//			However, the code path is here for safety reasons.
@@ -299,10 +298,9 @@ void InitDEP()
 // Heap Corruption Detection
 //
 // For Windows Vista and later. Does *not* have any performance impact!
-// 
+//
 #ifndef HeapEnableTerminationOnCorruption
 #define HeapEnableTerminationOnCorruption (HEAP_INFORMATION_CLASS)1
-WINBASEAPI BOOL WINAPI HeapSetInformation(HANDLE HeapHandle, HEAP_INFORMATION_CLASS HeapInformationClass, PVOID HeapInformation, SIZE_T HeapInformationLength);
 #endif//!HeapEnableTerminationOnCorruption
 
 void InitHeapCorruptionDetection()
@@ -310,9 +308,7 @@ void InitHeapCorruptionDetection()
 	BOOL (WINAPI *pfnHeapSetInformation)(HANDLE HeapHandle, HEAP_INFORMATION_CLASS HeapInformationClass, PVOID HeapInformation, SIZE_T HeapInformationLength);
 	(FARPROC&)pfnHeapSetInformation = GetProcAddress(GetModuleHandle(_T("kernel32")), "HeapSetInformation");
 	if (pfnHeapSetInformation)
-	{
 		(*pfnHeapSetInformation)(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
-	}
 }
 
 
@@ -326,23 +322,23 @@ void CALLBACK myErrHandler(Kademlia::CKademliaError *error)
 {
 	CString msg;
 	msg.Format(_T("\r\nError 0x%08X : %hs\r\n"), error->m_iErrorCode, error->m_szErrorDescription);
-	if(theApp.emuledlg && theApp.emuledlg->IsRunning())
-		theApp.QueueDebugLogLine(false, _T("%s"), msg);
+	if (theApp.emuledlg && !theApp.emuledlg->IsClosing())
+		theApp.QueueDebugLogLine(false, _T("%s"), (LPCTSTR)msg);
 }
 
 void CALLBACK myDebugAndLogHandler(LPCSTR lpMsg)
 {
-	if(theApp.emuledlg && theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg && !theApp.emuledlg->IsClosing())
 		theApp.QueueDebugLogLine(false, _T("%hs"), lpMsg);
 }
 
 void CALLBACK myLogHandler(LPCSTR lpMsg)
 {
-	if(theApp.emuledlg && theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg && !theApp.emuledlg->IsClosing())
 		theApp.QueueLogLine(false, _T("%hs"), lpMsg);
 }
 
-const static UINT UWM_ARE_YOU_EMULE = RegisterWindowMessage(EMULE_GUID);
+static const UINT UWM_ARE_YOU_EMULE = RegisterWindowMessage(EMULE_GUID);
 
 BOOL WINAPI ConsoleCtrlHandler(DWORD dwCtrlType);
 
@@ -400,7 +396,7 @@ CemuleApp::CemuleApp(LPCTSTR lpszAppName)
 	m_strCurVersionLong.Format(_T("%u.%u%c"), CemuleApp::m_nVersionMjr, CemuleApp::m_nVersionMin, _T('a') + CemuleApp::m_nVersionUpd);
 #endif
 
-#ifdef _DEBUG
+#if defined( _DEBUG) && !defined(_BOOTSTRAPNODESDAT)
 	m_strCurVersionLong += _T(" DEBUG");
 #endif
 #ifdef _BETA
@@ -410,7 +406,7 @@ CemuleApp::CemuleApp(LPCTSTR lpszAppName)
 	m_strCurVersionLong += _T(" DEVBUILD");
 #endif
 #ifdef _BOOTSTRAPNODESDAT
-	m_strCurVersionLong = _T("BOOTSTRAP BUILD");
+	m_strCurVersionLong += _T(" BOOTSTRAP BUILD");
 #endif
 
 	// create the protocol version number
@@ -435,7 +431,7 @@ CemuleApp theApp(_T("eMule"));
 
 
 // Workaround for bugged 'AfxSocketTerm' (needed at least for MFC 7.0, 7.1, 8.0, 9.0)
-#if _MFC_VER==0x0700 || _MFC_VER==0x0710 || _MFC_VER==0x0800 || _MFC_VER==0x0900
+#if _MFC_VER>=0x0700
 void __cdecl __AfxSocketTerm()
 {
 #if defined(_AFXDLL) && (_MFC_VER==0x0700 || _MFC_VER==0x0710)
@@ -452,37 +448,36 @@ void __cdecl __AfxSocketTerm()
 #error "You are using an MFC version which may require a special version of the above function!"
 #endif
 
-BOOL InitWinsock2(WSADATA *lpwsaData) 
-{  
-_AFX_SOCK_STATE* pState = _afxSockState.GetData();
-if (pState->m_pfnSockTerm == NULL)
-	{
-	// initialize Winsock library
-	WSADATA wsaData;
-	if (lpwsaData == NULL)
-		lpwsaData = &wsaData;
-	WORD wVersionRequested = MAKEWORD(2, 2);
-	int nResult = WSAStartup(wVersionRequested, lpwsaData);
-	if (nResult != 0)
-		return FALSE;
-	if (LOBYTE(lpwsaData->wVersion) != 2 || HIBYTE(lpwsaData->wVersion) != 2)
-		{
-		WSACleanup();
-		return FALSE;
-		}
-	// setup for termination of sockets
-	pState->m_pfnSockTerm = &AfxSocketTerm;
+BOOL InitWinsock2(WSADATA *lpwsaData)
+{
+	_AFX_SOCK_STATE* pStateS = _afxSockState.GetData();
+	if (pStateS->m_pfnSockTerm == NULL) {
+		// initialize Winsock library
+		static WSADATA wsaData;
+		if (lpwsaData == NULL)
+			lpwsaData = &wsaData;
+		WORD wVersionRequested = MAKEWORD(2, 2);
+		int nResult = WSAStartup(wVersionRequested, lpwsaData);
+		if (nResult != 0)
+			return FALSE;
+		if (LOBYTE(lpwsaData->wVersion) != 2 || HIBYTE(lpwsaData->wVersion) != 2)
+			{
+			WSACleanup();
+			return FALSE;
+			}
+		// setup for termination of sockets
+		pStateS->m_pfnSockTerm = &AfxSocketTerm;
 	}
 #ifndef _AFXDLL
 	//BLOCK: setup maps and lists specific to socket state
 	{
-	_AFX_SOCK_THREAD_STATE* pState = _afxSockThreadState;
-	if (pState->m_pmapSocketHandle == NULL)
-		pState->m_pmapSocketHandle = new CMapPtrToPtr;
-	if (pState->m_pmapDeadSockets == NULL)
-		pState->m_pmapDeadSockets = new CMapPtrToPtr;
-	if (pState->m_plistSocketNotifications == NULL)
-		pState->m_plistSocketNotifications = new CPtrList;
+		_AFX_SOCK_THREAD_STATE* pStateT = _afxSockThreadState;
+		if (pStateT->m_pmapSocketHandle == NULL)
+			pStateT->m_pmapSocketHandle = new CMapPtrToPtr;
+		if (pStateT->m_pmapDeadSockets == NULL)
+			pStateT->m_pmapDeadSockets = new CMapPtrToPtr;
+		if (pStateT->m_plistSocketNotifications == NULL)
+			pStateT->m_plistSocketNotifications = new CPtrList;
 	}
 #endif
 return TRUE;
@@ -545,6 +540,7 @@ BOOL CemuleApp::InitInstance()
 	// XP SP3				6   0
 	// Vista SP1			6   16
 	InitCommonControls();
+#if _MFC_VER<0x0900 // the check can be a lot simpler when minimum supported OS is w2k or even xp
 	DWORD dwComCtrlMjr = 4;
 	DWORD dwComCtrlMin = 0;
 	AtlGetCommCtrlVersion(&dwComCtrlMjr, &dwComCtrlMin);
@@ -582,6 +578,19 @@ BOOL CemuleApp::InitInstance()
 			// No need to exit eMule, it will most likely work as expected but it will have some GUI glitches here and there..
 		}
 	}
+#else
+	switch (thePrefs.GetWindowsVersion()) {
+	case _WINVER_2K_:
+		m_ullComCtrlVer = MAKEDLLVERULL(5, 81, 0, 0);
+		break;
+	case _WINVER_XP_:
+	case _WINVER_2003_:
+		m_ullComCtrlVer = MAKEDLLVERULL(6, 0, 0, 0);
+		break;
+	default:  //Vista .. Win10
+		m_ullComCtrlVer = MAKEDLLVERULL(6, 16, 0, 0);
+	};
+#endif
 
 	m_sizSmallSystemIcon.cx = GetSystemMetrics(SM_CXSMICON);
 	m_sizSmallSystemIcon.cy = GetSystemMetrics(SM_CYSMICON);
@@ -600,7 +609,7 @@ BOOL CemuleApp::InitInstance()
 			return FALSE;
 		}
 	}
-#if _MFC_VER==0x0700 || _MFC_VER==0x0710 || _MFC_VER==0x0800 || _MFC_VER==0x0900
+#if _MFC_VER>=0x0700
 	atexit(__AfxSocketTerm);
 #else
 #error "You are using an MFC version which may require a special version of the above function!"
@@ -620,7 +629,7 @@ BOOL CemuleApp::InitInstance()
 	if (!SelfTest())
 		return FALSE; // DO *NOT* START !!!
 
-	// create & initalize all the important stuff 
+	// create & initalize all the important stuff
 	thePrefs.Init();
 	theStats.Init();
 
@@ -632,7 +641,7 @@ BOOL CemuleApp::InitInstance()
 			return FALSE; // emule restart as secure user, kill this instance
 		else if (res == RES_FAILED){
 			// something went wrong
-			theApp.QueueLogLine(false, GetResString(IDS_RAU_FAILED), rau.GetCurrentUserW()); 
+			theApp.QueueLogLine(false, GetResString(IDS_RAU_FAILED), (LPCTSTR)rau.GetCurrentUserW());
 		}
 	}
 
@@ -640,7 +649,7 @@ BOOL CemuleApp::InitInstance()
 		EnableRTLWindowsLayout();
 
 #ifdef _DEBUG
-	_sntprintf(s_szCrtDebugReportFilePath, _countof(s_szCrtDebugReportFilePath) - 1, _T("%s%s"), thePrefs.GetMuleDirectory(EMULE_LOGDIR, false), APP_CRT_DEBUG_LOG_FILE);
+	_sntprintf(s_szCrtDebugReportFilePath, _countof(s_szCrtDebugReportFilePath) - 1, _T("%s%s"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_LOGDIR, false), APP_CRT_DEBUG_LOG_FILE);
 #endif
 	VERIFY( theLog.SetFilePath(thePrefs.GetMuleDirectory(EMULE_LOGDIR, thePrefs.GetLog2Disk()) + _T("eMule.log")) );
 	VERIFY( theVerboseLog.SetFilePath(thePrefs.GetMuleDirectory(EMULE_LOGDIR, false) + _T("eMule_Verbose.log")) );
@@ -656,7 +665,7 @@ BOOL CemuleApp::InitInstance()
 		theVerboseLog.Open();
 		theVerboseLog.Log(_T("\r\n"));
 	}
-	Log(_T("Starting eMule v%s"), m_strCurVersionLong);
+	Log(_T("Starting eMule v%s"), (LPCTSTR)m_strCurVersionLong);
 
 	SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
 
@@ -704,11 +713,11 @@ BOOL CemuleApp::InitInstance()
     m_wTimerRes = 0;
     if(thePrefs.GetHighresTimer()) {
         TIMECAPS tc;
-        if (timeGetDevCaps(&tc, sizeof(TIMECAPS)) == TIMERR_NOERROR) 
+        if (timeGetDevCaps(&tc, sizeof(TIMECAPS)) == TIMERR_NOERROR)
         {
             m_wTimerRes = min(max(tc.wPeriodMin, 1), tc.wPeriodMax);
             if(m_wTimerRes > 0) {
-                MMRESULT mmResult = timeBeginPeriod(m_wTimerRes); 
+                MMRESULT mmResult = timeBeginPeriod(m_wTimerRes);
                 if(thePrefs.GetVerbose()) {
                     if(mmResult == TIMERR_NOERROR) {
                         theApp.QueueDebugLogLine(false,_T("Succeeded to set timer/scheduler resolution to %i ms."), m_wTimerRes);
@@ -746,7 +755,7 @@ BOOL CemuleApp::InitInstance()
 	scheduler = new CScheduler();
 	m_pPeerCache = new CPeerCacheFinder();
 	m_pUploadDiskIOThread = new CUploadDiskIOThread();
-	
+
 	thePerfLog.Startup();
 	dlg.DoModal();
 
@@ -798,7 +807,7 @@ int CrtDebugReportCB(int reportType, char* message, int* returnValue)
 		time_t tNow = time(NULL);
 		TCHAR szTime[40];
 		_tcsftime(szTime, _countof(szTime), _T("%H:%M:%S"), localtime(&tNow));
-		_ftprintf(fp, _T("%s  %u  %hs"), szTime, reportType, message);
+		_ftprintf(fp, _T("%ls  %i  %hs"), szTime, reportType, message);
 		fclose(fp);
 	}
 	*returnValue = 0; // avoid invokation of 'AfxDebugBreak' in ASSERT macros
@@ -845,7 +854,7 @@ bool CemuleApp::ProcessCommandline()
 
 	CCommandLineInfo cmdInfo;
     ParseCommandLine(cmdInfo);
-    
+
 	// If we create our TCP listen socket with SO_REUSEADDR, we have to ensure that there are
 	// not 2 emules are running using the same port.
 	// NOTE: This will not prevent from some other application using that port!
@@ -853,14 +862,14 @@ bool CemuleApp::ProcessCommandline()
 	CString strMutextName;
 	strMutextName.Format(_T("%s:%u"), EMULE_GUID, uTcpPort);
 	m_hMutexOneInstance = ::CreateMutex(NULL, FALSE, strMutextName);
-	
+
 	HWND maininst = NULL;
 	bool bAlreadyRunning = false;
 
 	//this codepart is to determine special cases when we do add a link to our eMule
 	//because in this case it would be nonsense to start another instance!
 	if(bIgnoreRunningInstances)
-	{       
+	{
 		if (cmdInfo.m_nShellCommand == CCommandLineInfo::FileOpen
 			&& (cmdInfo.m_strFileName.Find(_T("://")) > 0
 			|| CCollection::HasCollectionExtention(cmdInfo.m_strFileName)) )
@@ -922,13 +931,13 @@ BOOL CALLBACK CemuleApp::SearchEmuleWindow(HWND hWnd, LPARAM lParam){
 	LRESULT res = ::SendMessageTimeout(hWnd,UWM_ARE_YOU_EMULE,0, 0,SMTO_BLOCK |SMTO_ABORTIFHUNG,10000,&dwMsgResult);
 	if(res == 0)
 		return TRUE;
-	if(dwMsgResult == UWM_ARE_YOU_EMULE){ 
+	if(dwMsgResult == UWM_ARE_YOU_EMULE){
 		HWND * target = (HWND *)lParam;
 		*target = hWnd;
-		return FALSE; 
-	} 
-	return TRUE; 
-} 
+		return FALSE;
+	}
+	return TRUE;
+}
 
 
 void CemuleApp::UpdateReceivedBytes(uint32 bytesToAdd) {
@@ -947,7 +956,7 @@ void CemuleApp::UpdateSentBytes(uint32 bytesToAdd, bool sentToFriend) {
 
 void CemuleApp::SetTimeOnTransfer() {
 	if (theStats.transferStarttime>0) return;
-	
+
 	theStats.transferStarttime=GetTickCount();
 }
 
@@ -959,16 +968,16 @@ CString CemuleApp::CreateKadSourceLink(const CAbstractFile* f)
 		CString KadID;
 		Kademlia::CKademlia::GetPrefs()->GetKadID().Xor(Kademlia::CUInt128(true)).ToHexString(&KadID);
 		strLink.Format(_T("ed2k://|file|%s|%I64u|%s|/|kadsources,%s:%s|/"),
-			EncodeUrlUtf8(StripInvalidFilenameChars(f->GetFileName())),
-			f->GetFileSize(),
-			EncodeBase16(f->GetFileHash(),16),
-			md4str(thePrefs.GetUserHash()), KadID);
+			(LPCTSTR)EncodeUrlUtf8(StripInvalidFilenameChars(f->GetFileName())),
+			(uint64)f->GetFileSize(),
+			(LPCTSTR)EncodeBase16(f->GetFileHash(),16),
+			(LPCTSTR)md4str(thePrefs.GetUserHash()), (LPCTSTR)KadID);
 	}
 	return strLink;
 }
 
 //TODO: Move to emule-window
-bool CemuleApp::CopyTextToClipboard(CString strText)
+bool CemuleApp::CopyTextToClipboard(const CString& strText)
 {
 	if (strText.IsEmpty())
 		return false;
@@ -1036,18 +1045,12 @@ bool CemuleApp::CopyTextToClipboard(CString strText)
 		CloseClipboard();
 	}
 
-	if (iCopied == 0)
-	{
-		if (hGlobalT){
+	if (iCopied == 0) {
+		if (hGlobalT)
 			GlobalFree(hGlobalT);
-			hGlobalT = NULL;
-		}
-		if (hGlobalA){
+		if (hGlobalA)
 			GlobalFree(hGlobalA);
-			hGlobalA = NULL;
-		}
-	}
-	else
+	} else
 		IgnoreClipboardLinks(strText); // this is so eMule won't think the clipboard has ed2k links for adding
 
 	return (iCopied != 0);
@@ -1100,8 +1103,8 @@ CString CemuleApp::CopyTextFromClipboard()
 	return retstring;
 }
 
-void CemuleApp::OnlineSig() // Added By Bouc7 
-{ 
+void CemuleApp::OnlineSig() // Added By Bouc7
+{
 	if (!thePrefs.IsOnlineSignatureEnabled())
 		return;
 
@@ -1112,20 +1115,20 @@ void CemuleApp::OnlineSig() // Added By Bouc7
 	// The 'onlinesig.dat' is potentially read by other applications at more or less frequent intervals.
 	//	 -	Set the file shareing mode to allow other processes to read the file while we are writing
 	//		it (see also next point).
-	//	 -	Try to write the hole file data at once, so other applications are always reading 
+	//	 -	Try to write the hole file data at once, so other applications are always reading
 	//		a consistent amount of file data. C-RTL uses a 4 KB buffer, this is large enough to write
 	//		those 2 lines into the onlinesig.dat file with one IO operation.
-	//	 -	Although this file is a text file, we set the file mode to 'binary' because of backward 
+	//	 -	Although this file is a text file, we set the file mode to 'binary' because of backward
 	//		compatibility with older eMule versions.
     CSafeBufferedFile file;
 	CFileException fexp;
 	if (!file.Open(strFullPath, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyWrite | CFile::typeBinary, &fexp)){
 		CString strError = GetResString(IDS_ERROR_SAVEFILE) + _T(" ") + CString(_szFileName);
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		fexp.GetErrorMessage(szError, _countof(szError));
+		GetExceptionMessage(fexp, szError, _countof(szError));
 		strError += _T(" - ");
 		strError += szError;
-		LogError(LOG_STATUSBAR, _T("%s"), strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError); //fo88
 		return;
     }
 
@@ -1134,46 +1137,46 @@ void CemuleApp::OnlineSig() // Added By Bouc7
 		char buffer[20];
 		CStringA strBuff;
 		if (IsConnected()){
-			file.Write("1",1); 
+			file.Write("1",1);
 			file.Write("|",1);
 			if(serverconnect->IsConnected()){
 				strBuff = serverconnect->GetCurrentServer()->GetListName();
-				file.Write(strBuff, strBuff.GetLength()); 
+				file.Write(strBuff, strBuff.GetLength());
 			}
 			else{
 				strBuff = "Kademlia";
-				file.Write(strBuff,strBuff.GetLength()); 
+				file.Write(strBuff,strBuff.GetLength());
 			}
 
-			file.Write("|",1); 
+			file.Write("|",1);
 			if(serverconnect->IsConnected()){
 				strBuff = serverconnect->GetCurrentServer()->GetAddress();
-				file.Write(strBuff,strBuff.GetLength()); 
+				file.Write(strBuff,strBuff.GetLength());
 			}
 			else{
 				strBuff = "0.0.0.0";
-				file.Write(strBuff,strBuff.GetLength()); 
+				file.Write(strBuff,strBuff.GetLength());
 			}
-			file.Write("|",1); 
+			file.Write("|",1);
 			if(serverconnect->IsConnected()){
-				_itoa(serverconnect->GetCurrentServer()->GetPort(),buffer,10); 
+				_itoa(serverconnect->GetCurrentServer()->GetPort(),buffer,10);
 				file.Write(buffer,strlen(buffer));
 			}
 			else{
 				strBuff = "0";
 				file.Write(strBuff,strBuff.GetLength());
 			}
-		} 
-		else 
-			file.Write("0",1); 
-		file.Write("\n",1); 
+		}
+		else
+			file.Write("0",1);
+		file.Write("\n",1);
 
 		_snprintf(buffer, _countof(buffer), "%.1f", (float)downloadqueue->GetDatarate() / 1024);
 		buffer[_countof(buffer) - 1] = '\0';
-		file.Write(buffer, strlen(buffer)); 
+		file.Write(buffer, strlen(buffer));
 		file.Write("|", 1);
 
-		_snprintf(buffer, _countof(buffer), "%.1f", (float)uploadqueue->GetDatarate() / 1024); 
+		_snprintf(buffer, _countof(buffer), "%.1f", (float)uploadqueue->GetDatarate() / 1024);
 		buffer[_countof(buffer) - 1] = '\0';
 		file.Write(buffer, strlen(buffer));
 		file.Write("|", 1);
@@ -1181,16 +1184,16 @@ void CemuleApp::OnlineSig() // Added By Bouc7
 		_itoa(uploadqueue->GetWaitingUserCount(), buffer, 10);
 		file.Write(buffer, strlen(buffer));
 
-		file.Close(); 
+		file.Close();
 	}
 	catch (CFileException* ex)
 	{
 		CString strError = GetResString(IDS_ERROR_SAVEFILE) + _T(" ") + CString(_szFileName);
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		ex->GetErrorMessage(szError, _countof(szError));
+		GetExceptionMessage(*ex, szError, _countof(szError));
 		strError += _T(" - ");
 		strError += szError;
-		LogError(LOG_STATUSBAR, _T("%s"), strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		ex->Delete();
 	}
 } //End Added By Bouc7
@@ -1198,39 +1201,25 @@ void CemuleApp::OnlineSig() // Added By Bouc7
 bool CemuleApp::GetLangHelpFilePath(CString& strResult)
 {
 	// Change extension for help file
-	CString strHelpFile = m_pszHelpFilePath;
+	strResult = m_pszHelpFilePath;
+	WORD langID = thePrefs.GetLanguageID();
+	CString temp;
+	if (langID == MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT))
+		langID = (WORD)(-1);
+	else
+		temp.Format(_T(".%u"), langID);
+	int pos = strResult.ReverseFind(_T('\\'));   //CML
+	if (pos < 0)
+		strResult.Replace(_T(".HLP"), _T(".chm"));
+	else
+		strResult = strResult.Left(pos) + _T("\\eMule") + temp + _T(".chm");
 	CFileFind ff;
-	bool bFound;
-	if (thePrefs.GetLanguageID() != MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT))
-	{
-		int pos = strHelpFile.ReverseFind(_T('\\'));   //CML
-		CString temp;
-		temp.Format(_T("%s\\eMule.%u.chm"), strHelpFile.Left(pos), thePrefs.GetLanguageID());
-		if (pos>0)
-			strHelpFile = temp;
-
-		// if not exists, use original help (english)
-		if (!ff.FindFile(strHelpFile, 0)){
-			strHelpFile = m_pszHelpFilePath;
-			bFound = false;
-		}
-		else
-			bFound = true;
-		strHelpFile.Replace(_T(".HLP"), _T(".chm"));
-	}
-	else{
-		int pos = strHelpFile.ReverseFind(_T('\\'));
-		CString temp;
-		temp.Format(_T("%s\\eMule.chm"), strHelpFile.Left(pos));
-		strHelpFile = temp;
-		strHelpFile.Replace(_T(".HLP"), _T(".chm"));
-		if (!ff.FindFile(strHelpFile, 0))
-			bFound = false;
-		else
-			bFound = true;
-	}
+	bool bFound = (ff.FindFile(strResult, 0) != FALSE);
 	ff.Close();
-	strResult = strHelpFile;
+	if (!bFound && langID>0) {
+		strResult = m_pszHelpFilePath; // if not exists, use original help (english)
+		strResult.Replace(_T(".HLP"), _T(".chm"));
+	}
 	return bFound;
 }
 
@@ -1255,11 +1244,8 @@ void CemuleApp::OnHelp()
 void CemuleApp::ShowHelp(UINT uTopic, UINT uCmd)
 {
 	CString strHelpFilePath;
-	bool bResult = GetLangHelpFilePath(strHelpFilePath);
-	if (!bResult){
-		if (ShowWebHelp(uTopic))
-			return;
-	}
+	if (!GetLangHelpFilePath(strHelpFilePath) && ShowWebHelp(uTopic))
+		return;
 	SetHelpFilePath(strHelpFilePath);
 	WinHelpInternal(uTopic, uCmd);
 }
@@ -1372,15 +1358,15 @@ void CemuleApp::SetPublicIP(const uint32 dwIP){
 		ASSERT ( m_pPeerCache );
 
 		if ( GetPublicIP() == 0)
-			AddDebugLogLine(DLP_VERYLOW, false, _T("My public IP Address is: %s"),ipstr(dwIP));
+			AddDebugLogLine(DLP_VERYLOW, false, _T("My public IP Address is: %s"), (LPCTSTR)ipstr(dwIP));
 		else if (Kademlia::CKademlia::IsConnected() && Kademlia::CKademlia::GetPrefs()->GetIPAddress())
 			if(ntohl(Kademlia::CKademlia::GetIPAddress()) != dwIP)
-				AddDebugLogLine(DLP_DEFAULT, false,  _T("Public IP Address reported from Kademlia (%s) differs from new found (%s)"),ipstr(ntohl(Kademlia::CKademlia::GetIPAddress())),ipstr(dwIP));
-		m_pPeerCache->FoundMyPublicIPAddress(dwIP);	
+				AddDebugLogLine(DLP_DEFAULT, false,  _T("Public IP Address reported from Kademlia (%s) differs from new found (%s)"), (LPCTSTR)ipstr(ntohl(Kademlia::CKademlia::GetIPAddress())), (LPCTSTR)ipstr(dwIP));
+		m_pPeerCache->FoundMyPublicIPAddress(dwIP);
 	}
 	else
 		AddDebugLogLine(DLP_VERYLOW, false, _T("Deleted public IP"));
-	
+
 	if (dwIP != 0 && dwIP != m_dwPublicIP && serverlist != NULL){
 		m_dwPublicIP = dwIP;
 		serverlist->CheckForExpiredUDPKeys();
@@ -1536,7 +1522,7 @@ HICON CemuleApp::LoadIcon(LPCTSTR lpszResourceName, int cx, int cy, UINT uFlags)
 			{
 				if (uFlags != 0 || !(cx == cy && (cx == 16 || cx == 32)))
 				{
-					static UINT (WINAPI *_pfnPrivateExtractIcons)(LPCTSTR, int, int, int, HICON*, UINT*, UINT, UINT) 
+					static UINT (WINAPI *_pfnPrivateExtractIcons)(LPCTSTR, int, int, int, HICON*, UINT*, UINT, UINT)
 						= (UINT (WINAPI *)(LPCTSTR, int, int, int, HICON*, UINT*, UINT, UINT))GetProcAddress(GetModuleHandle(_T("user32")), _TWINAPI("PrivateExtractIcons"));
 					if (_pfnPrivateExtractIcons)
 					{
@@ -1577,7 +1563,7 @@ HICON CemuleApp::LoadIcon(LPCTSTR lpszResourceName, int cx, int cy, UINT uFlags)
 							}
 						}
 
-						for (int i = 0; i < _countof(aIconsLarge); i++)
+						for (unsigned i = 0; i < _countof(aIconsLarge); ++i)
 						{
 							if (aIconsLarge[i] != NULL)
 								VERIFY( DestroyIcon(aIconsLarge[i]) );
@@ -1589,7 +1575,7 @@ HICON CemuleApp::LoadIcon(LPCTSTR lpszResourceName, int cx, int cy, UINT uFlags)
 			}
 			else
 			{
-				// WINBUG???: 'ExtractIcon' does not work well on ICO-files when using the color 
+				// WINBUG???: 'ExtractIcon' does not work well on ICO-files when using the color
 				// scheme 'Windows-Standard (extragroß)' -> always try to use 'LoadImage'!
 				//
 				// If the ICO file contains a 16x16 icon, 'LoadImage' will though return a 32x32 icon,
@@ -1617,7 +1603,7 @@ HICON CemuleApp::LoadIcon(LPCTSTR lpszResourceName, int cx, int cy, UINT uFlags)
 		if (hIcon == NULL)
 		{
 			//TODO: Either do not use that function or copy the returned icon. All the calling code is designed
-			// in a way that the icons returned by this function are to be freed with 'DestroyIcon'. But an 
+			// in a way that the icons returned by this function are to be freed with 'DestroyIcon'. But an
 			// icon which was loaded with 'LoadIcon', is not be freed with 'DestroyIcon'.
 			// Right now, we never come here...
 			ASSERT(0);
@@ -1790,10 +1776,10 @@ void CemuleApp::AddEd2kLinksToDownload(CString strLinks, int cat)
 				delete pLink;
 			}
 		}
-		catch(CString error)
+		catch (const CString& error)
 		{
 			TCHAR szBuffer[200];
-			_sntprintf(szBuffer, _countof(szBuffer), GetResString(IDS_ERR_INVALIDLINK), error);
+			_sntprintf(szBuffer, _countof(szBuffer), GetResString(IDS_ERR_INVALIDLINK), (LPCTSTR)error);
 			szBuffer[_countof(szBuffer) - 1] = _T('\0');
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_LINKERROR), szBuffer);
 		}
@@ -1818,10 +1804,8 @@ void CemuleApp::SearchClipboard()
 	LPCTSTR pszTrimmedLinks = strLinks;
 	while (_istspace((_TUCHAR)*pszTrimmedLinks)) // Skip leading whitespaces
 		pszTrimmedLinks++;
-	if (_tcsnicmp(pszTrimmedLinks, _T("ed2k://|file|"), 13) == 0)
-	{
-		m_bGuardClipboardPrompt = true;
-
+	m_bGuardClipboardPrompt = !_tcsnicmp(pszTrimmedLinks, _T("ed2k://|file|"), 13);
+	if (m_bGuardClipboardPrompt) {
 		// Don't feed too long strings into the MessageBox function, it may freak out..
 		CString strLinksDisplay;
 		if (strLinks.GetLength() > 512)
@@ -1854,7 +1838,7 @@ bool CemuleApp::IsEd2kLinkInClipboard(LPCSTR pszLinkType, int iLinkTypeLen)
 		{
 			HGLOBAL	hText = GetClipboardData(CF_TEXT);
 			if (hText != NULL)
-			{ 
+			{
 				// Use the ANSI string
 				LPCSTR pszText = (LPCSTR)GlobalLock(hText);
 				if (pszText != NULL)
@@ -1978,7 +1962,7 @@ void CemuleApp::HandleDebugLogQueue()
 	{
 		const SLogItem* newItem = m_QueueDebugLog.RemoveHead();
 		if (thePrefs.GetVerbose())
-			Log(newItem->uFlags, _T("%s"), newItem->line);
+			Log(newItem->uFlags, _T("%s"), (LPCTSTR)newItem->line);
 		delete newItem;
 	}
 	m_queueLock.Unlock();
@@ -1990,7 +1974,7 @@ void CemuleApp::HandleLogQueue()
 	while (!m_QueueLog.IsEmpty())
 	{
 		const SLogItem* newItem = m_QueueLog.RemoveHead();
-		Log(newItem->uFlags, _T("%s"), newItem->line);
+		Log(newItem->uFlags, _T("%s"), (LPCTSTR)newItem->line);
 		delete newItem;
 	}
 	m_queueLock.Unlock();
@@ -2002,7 +1986,7 @@ void CemuleApp::ClearDebugLogQueue(bool bDebugPendingMsgs)
 	while(!m_QueueDebugLog.IsEmpty())
 	{
 		if (bDebugPendingMsgs)
-			TRACE(_T("Queued dbg log msg: %s\n"), m_QueueDebugLog.GetHead()->line);
+			TRACE(_T("Queued dbg log msg: %s\n"), (LPCTSTR)m_QueueDebugLog.GetHead()->line);
 		delete m_QueueDebugLog.RemoveHead();
 	}
 	m_queueLock.Unlock();
@@ -2011,10 +1995,9 @@ void CemuleApp::ClearDebugLogQueue(bool bDebugPendingMsgs)
 void CemuleApp::ClearLogQueue(bool bDebugPendingMsgs)
 {
 	m_queueLock.Lock();
-	while(!m_QueueLog.IsEmpty())
-	{
+	while(!m_QueueLog.IsEmpty()) {
 		if (bDebugPendingMsgs)
-			TRACE(_T("Queued log msg: %s\n"), m_QueueLog.GetHead()->line);
+			TRACE(_T("Queued log msg: %s\n"), (LPCTSTR)m_QueueLog.GetHead()->line);
 		delete m_QueueLog.RemoveHead();
 	}
 	m_queueLock.Unlock();
@@ -2049,8 +2032,8 @@ void CemuleApp::CreateAllFonts()
 	//
 	// (*1) Do not use 'GetStockObject(DEFAULT_GUI_FONT)' to get the 'Tahoma' font. It does
 	// not work...
-	//	
-	// The documentation in MSDN states that DEFAULT_GUI_FONT returns 'Tahoma' on 
+	//
+	// The documentation in MSDN states that DEFAULT_GUI_FONT returns 'Tahoma' on
 	// Win2000/XP systems. Though this is wrong, it may be true for US-English locales, but
 	// it is wrong for other locales. Furthermore it is even documented that "MS Shell Dlg"
 	// gets mapped to "MS Sans Serif" on Windows XP systems. Only "MS Shell Dlg 2" would
@@ -2091,7 +2074,7 @@ void CemuleApp::CreateAllFonts()
 	// font unfortunately does not look as good as a scaled up "MS Sans Serif" font.
 	//
 	// No! Do *not* use "MS Sans Serif" (never!). This will give a very old fashioned
-	// font on certain Asian Windows systems. So, better use "MS Shell Dlg" or 
+	// font on certain Asian Windows systems. So, better use "MS Shell Dlg" or
 	// "MS Shell Dlg 2" to let Windows map that font to the proper font on all Windows
 	// systems.
 	//
@@ -2118,7 +2101,7 @@ void CemuleApp::CreateAllFonts()
 	// font unfortunately does not look as good as a scaled up "MS Sans Serif" font.
 	//
 	// No! Do *not* use "MS Sans Serif" (never!). This will give a very old fashioned
-	// font on certain Asian Windows systems. So, better use "MS Shell Dlg" or 
+	// font on certain Asian Windows systems. So, better use "MS Shell Dlg" or
 	// "MS Shell Dlg 2" to let Windows map that font to the proper font on all Windows
 	// systems.
 	//
@@ -2165,7 +2148,7 @@ void CemuleApp::UpdateDesktopColorDepth()
 
 	if (g_bLowColorDesktop)
 	{
-		// If we have 4- or 8-bit desktop color depth, Windows will (by design) load only 
+		// If we have 4- or 8-bit desktop color depth, Windows will (by design) load only
 		// the 16 color versions of icons. Thus we force all image lists also to 4-bit format.
 		m_iDfltImageListColorFlags = ILC_COLOR4;
 	}
@@ -2217,7 +2200,7 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD dwCtrlType)
 		else if (dwCtrlType == CTRL_LOGOFF_EVENT)	pszCtrlType = _T("CTRL_LOGOFF_EVENT");
 		else if (dwCtrlType == CTRL_SHUTDOWN_EVENT)	pszCtrlType = _T("CTRL_SHUTDOWN_EVENT");
 		else {
-			_sntprintf(szCtrlType, _countof(szCtrlType), _T("0x%08x"), dwCtrlType);
+			_sntprintf(szCtrlType, _countof(szCtrlType), _T("0x%08lx"), dwCtrlType);
 			szCtrlType[_countof(szCtrlType) - 1] = _T('\0');
 			pszCtrlType = szCtrlType;
 		}
@@ -2272,7 +2255,7 @@ void CemuleApp::UpdateLargeIconSize()
 	m_sizBigSystemIcon.cx = GetSystemMetrics(SM_CXICON);
 	m_sizBigSystemIcon.cy = GetSystemMetrics(SM_CYICON);
 
-	// get the Shell's registry key for the large icon size - the large icons which are 
+	// get the Shell's registry key for the large icon size - the large icons which are
 	// returned by the Shell are based on that size rather than on the system icon size
 	CRegKey key;
 	if (key.Open(HKEY_CURRENT_USER, _T("Control Panel\\desktop\\WindowMetrics"), KEY_READ) == ERROR_SUCCESS)

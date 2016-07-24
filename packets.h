@@ -24,8 +24,8 @@
 class Packet
 {
 public:
-	Packet(uint8 protocol = OP_EDONKEYPROT);
-	Packet(char* header); // only used for receiving packets
+	explicit Packet(uint8 protocol = OP_EDONKEYPROT);
+	explicit Packet(char* header); // only used for receiving packets
 	Packet(CMemFile* datafile, uint8 protocol = OP_EDONKEYPROT, uint8 ucOpcode = 0x00);
 	Packet(const CStringA& str, uint8 ucProtocol, uint8 ucOpcode);
 	Packet(uint8 in_opcode, uint32 in_size, uint8 protocol = OP_EDONKEYPROT, bool bFromPartFile = true);
@@ -57,6 +57,8 @@ protected:
 	char*	completebuffer;
 	char*	tempbuffer;
 	char	head[6];
+private:
+	void	init();
 };
 
 
@@ -66,7 +68,7 @@ protected:
 class CRawPacket : public Packet
 {
 public:
-	CRawPacket(const CStringA& rstr);
+	explicit CRawPacket(const CStringA& rstr);
 	CRawPacket(const char* pcData, UINT uSize, bool bFromPartFile = false);
 	virtual ~CRawPacket();
 
@@ -104,14 +106,14 @@ public:
 	UINT GetType() const			{ return m_uType; }
 	UINT GetNameID() const			{ return m_uName; }
 	LPCSTR GetName() const			{ return m_pszName; }
-	
+
 	bool IsStr() const				{ return m_uType == TAGTYPE_STRING; }
 	bool IsInt() const				{ return m_uType == TAGTYPE_UINT32; }
 	bool IsFloat() const			{ return m_uType == TAGTYPE_FLOAT32; }
 	bool IsHash() const				{ return m_uType == TAGTYPE_HASH; }
 	bool IsBlob() const				{ return m_uType == TAGTYPE_BLOB; }
 	bool IsInt64(bool bOrInt32 = true) const { return m_uType == TAGTYPE_UINT64 || (bOrInt32 && IsInt()); }
-	
+
 	UINT	GetInt() const			{ ASSERT(IsInt());		return (UINT)m_uVal; }
 	uint64	GetInt64() const		{ ASSERT(IsInt64(true));return m_uVal; }
 	const	CString& GetStr() const	{ ASSERT(IsStr());		return *m_pstrVal; }
@@ -123,12 +125,12 @@ public:
 	void SetInt(UINT uVal);
 	void SetInt64(uint64 uVal);
 	void SetStr(LPCTSTR pszVal);
-	
+
 	CTag* CloneTag()				{ return new CTag(*this); }
-	
+
 	bool WriteTagToFile(CFileDataIO* file, EUtf8Str eStrEncode = utf8strNone) const;	// old eD2K tags
 	bool WriteNewEd2kTag(CFileDataIO* file, EUtf8Str eStrEncode = utf8strNone) const;	// new eD2K tags
-	
+
 	CString GetFullInfo(CString (*pfnDbgGetFileMetaTagName)(UINT uMetaTagID) = NULL) const;
 
 #ifdef _DEBUG

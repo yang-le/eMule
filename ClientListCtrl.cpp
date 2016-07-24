@@ -17,7 +17,6 @@
 #include "stdafx.h"
 #include "emule.h"
 #include "ClientListCtrl.h"
-#include "otherfunctions.h"
 #include "MenuCmds.h"
 #include "ClientDetailDialog.h"
 #include "KademliaWnd.h"
@@ -153,12 +152,12 @@ void CClientListCtrl::SetAllIcons()
 
 void CClientListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 {
-	if (!theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg->IsClosing())
 		return;
 	if (!lpDrawItemStruct->itemData)
 		return;
-	
-	CMemDC dc(CDC::FromHandle(lpDrawItemStruct->hDC), &lpDrawItemStruct->rcItem);
+
+	CMemoryDC dc(CDC::FromHandle(lpDrawItemStruct->hDC), &lpDrawItemStruct->rcItem);
 	BOOL bCtrlFocused;
 	InitItemMemDC(dc, lpDrawItemStruct, bCtrlFocused);
 	CRect cur_rec(lpDrawItemStruct->rcItem);
@@ -242,49 +241,48 @@ void CClientListCtrl::GetItemDisplayText(const CUpDownClient *client, int iSubIt
 	pszText[0] = _T('\0');
 	switch (iSubItem)
 	{
-		case 0:
+		case 0: //user name
 			if (client->GetUserName() == NULL)
-				_sntprintf(pszText, cchTextMax, _T("(%s)"), GetResString(IDS_UNKNOWN));
+				_sntprintf(pszText, cchTextMax, _T("(%s)"), (LPCTSTR)GetResString(IDS_UNKNOWN));
 			else
 				_tcsncpy(pszText, client->GetUserName(), cchTextMax);
 			break;
 
-		case 1:
+		case 1: //upload status
 			_tcsncpy(pszText, client->GetUploadStateDisplayString(), cchTextMax);
 			break;
 
-		case 2:
-			_tcsncpy(pszText, client->credits != NULL ? CastItoXBytes(client->credits->GetUploadedTotal(), false, false) : _T(""), cchTextMax);
+		case 2: //transferred up
+			_tcsncpy(pszText, client->credits != NULL ? (LPCTSTR)CastItoXBytes(client->credits->GetUploadedTotal(), false, false) : _T(""), cchTextMax);
 			break;
 
-		case 3:
+		case 3: //download status
 			_tcsncpy(pszText, client->GetDownloadStateDisplayString(), cchTextMax);
 			break;
 
-		case 4:
-			_tcsncpy(pszText, client->credits != NULL ? CastItoXBytes(client->credits->GetDownloadedTotal(), false, false) : _T(""), cchTextMax);
+		case 4: //transferred down
+			_tcsncpy(pszText, client->credits != NULL ? (LPCTSTR)CastItoXBytes(client->credits->GetDownloadedTotal(), false, false) : _T(""), cchTextMax);
 			break;
 
-		case 5:
+		case 5: //software
 			_tcsncpy(pszText, client->GetClientSoftVer(), cchTextMax);
 			if (pszText[0] == _T('\0'))
 				_tcsncpy(pszText, GetResString(IDS_UNKNOWN), cchTextMax);
 			break;
 
-		case 6:
+		case 6: //connected
 			_tcsncpy(pszText, GetResString((client->socket && client->socket->IsConnected()) ? IDS_YES : IDS_NO), cchTextMax);
 			break;
 
-		case 7:
-			_tcsncpy(pszText, md4str(client->GetUserHash()), cchTextMax);
-			break;
+		case 7: //hash
+			_tcsncpy(pszText, (LPCTSTR)md4str(client->GetUserHash()), cchTextMax);
 	}
 	pszText[cchTextMax - 1] = _T('\0');
 }
 
 void CClientListCtrl::OnLvnGetDispInfo(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	if (theApp.emuledlg->IsRunning()) {
+	if (!theApp.emuledlg->IsClosing()) {
 		// Although we have an owner drawn listview control we store the text for the primary item in the listview, to be
 		// capable of quick searching those items via the keyboard. Because our listview items may change their contents,
 		// we do this via a text callback function. The listview control will send us the LVN_DISPINFO notification if
@@ -323,7 +321,6 @@ void CClientListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 				break;
 			default:
 				sortAscending = true;
-				break;
 		}
 	}
 	else
@@ -337,7 +334,7 @@ void CClientListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
-int CClientListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+int CALLBACK CClientListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	const CUpDownClient *item1 = (CUpDownClient *)lParam1;
 	const CUpDownClient *item2 = (CUpDownClient *)lParam2;
@@ -345,7 +342,7 @@ int CClientListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 	int iResult = 0;
 	switch (iColumn)
 	{
-		case 0:
+		case 0: //user name
 			if (item1->GetUserName() && item2->GetUserName())
 				iResult = CompareLocaleStringNoCase(item1->GetUserName(), item2->GetUserName());
 			else if (item1->GetUserName() == NULL)
@@ -354,11 +351,11 @@ int CClientListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 				iResult = -1; // place clients with no usernames at bottom
 			break;
 
-		case 1:
+		case 1: //upload status
 		    iResult = item1->GetUploadState() - item2->GetUploadState();
 			break;
 
-		case 2:
+		case 2: //transferred up
 			if (item1->credits && item2->credits)
 				iResult = CompareUnsigned64(item1->credits->GetUploadedTotal(), item2->credits->GetUploadedTotal());
 			else if (item1->credits)
@@ -367,7 +364,7 @@ int CClientListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 				iResult = -1;
 			break;
 
-		case 3:
+		case 3: //download status
 		    if (item1->GetDownloadState() == item2->GetDownloadState())
 			{
 			    if (item1->IsRemoteQueueFull() && item2->IsRemoteQueueFull())
@@ -381,7 +378,7 @@ int CClientListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 				iResult = item1->GetDownloadState() - item2->GetDownloadState();
 			break;
 
-		case 4:
+		case 4: //transferred down
 			if (item1->credits && item2->credits)
 				iResult = CompareUnsigned64(item1->credits->GetDownloadedTotal(), item2->credits->GetDownloadedTotal());
 		    else if (item1->credits)
@@ -390,14 +387,14 @@ int CClientListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 				iResult = -1;
 			break;
 
-		case 5:
+		case 5: //software
 			if (item1->GetClientSoft() == item2->GetClientSoft())
 			    iResult = item1->GetVersion() - item2->GetVersion();
-		    else 
+		    else
 				iResult = -(item1->GetClientSoft() - item2->GetClientSoft()); // invert result to place eMule's at top
 			break;
 
-		case 6:
+		case 6: //connected
 			if (item1->socket && item2->socket)
 				iResult = item1->socket->IsConnected() - item2->socket->IsConnected();
 			else if (item1->socket)
@@ -406,7 +403,7 @@ int CClientListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 				iResult = -1;
 			break;
 
-		case 7:
+		case 7: //hash
 			iResult = memcmp(item1->GetUserHash(), item2->GetUserHash(), 16);
 			break;
 	}
@@ -505,7 +502,7 @@ BOOL CClientListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 
 void CClientListCtrl::AddClient(const CUpDownClient *client)
 {
-	if (!theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg->IsClosing())
 		return;
 	if (thePrefs.IsKnownClientListDisabled())
 		return;
@@ -517,7 +514,7 @@ void CClientListCtrl::AddClient(const CUpDownClient *client)
 
 void CClientListCtrl::RemoveClient(const CUpDownClient *client)
 {
-	if (!theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg->IsClosing())
 		return;
 
 	LVFINDINFO find;
@@ -532,7 +529,7 @@ void CClientListCtrl::RemoveClient(const CUpDownClient *client)
 
 void CClientListCtrl::RefreshClient(const CUpDownClient *client)
 {
-	if (!theApp.emuledlg->IsRunning())
+	if (theApp.emuledlg->IsClosing())
 		return;
 
 	if (theApp.emuledlg->activewnd != theApp.emuledlg->transferwnd || !theApp.emuledlg->transferwnd->GetClientList()->IsWindowVisible())
@@ -550,9 +547,9 @@ void CClientListCtrl::ShowSelectedUserDetails()
 {
 	POINT point;
 	::GetCursorPos(&point);
-	CPoint p = point; 
-    ScreenToClient(&p); 
-    int it = HitTest(p); 
+	CPoint p = point;
+    ScreenToClient(&p);
+    int it = HitTest(p);
     if (it == -1)
 		return;
 
@@ -572,8 +569,7 @@ void CClientListCtrl::ShowKnownClients()
 	DeleteAllItems();
 	int iItemCount = 0;
 	for (POSITION pos = theApp.clientlist->list.GetHeadPosition(); pos != NULL; ) {
-		const CUpDownClient *cur_client = theApp.clientlist->list.GetNext(pos);
-		int iItem = InsertItem(LVIF_TEXT | LVIF_PARAM, iItemCount, LPSTR_TEXTCALLBACK, 0, 0, 0, (LPARAM)cur_client);
+		int iItem = InsertItem(LVIF_TEXT | LVIF_PARAM, iItemCount, LPSTR_TEXTCALLBACK, 0, 0, 0, (LPARAM)theApp.clientlist->list.GetNext(pos));
 		Update(iItem);
 		iItemCount++;
 	}

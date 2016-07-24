@@ -48,7 +48,7 @@ END_MESSAGE_MAP()
 
 CPPgIRC::CPPgIRC()
 	: CPropertyPage(CPPgIRC::IDD)
-	, m_ctrlTreeOptions(theApp.m_iDfltImageListColorFlags)
+	, m_ctrlTreeOptions(theApp.m_iDfltImageListColorFlags), m_bIRCEnableSmileys(false)
 {
 	m_bTimeStamp = false;
 	m_bSoundEvents = false;
@@ -179,23 +179,23 @@ BOOL CPPgIRC::OnKillActive()
 }
 
 void CPPgIRC::LoadSettings(void)
-{	
+{
 	if(thePrefs.m_bIRCUseChannelFilter)
 		CheckDlgButton(IDC_IRC_USECHANFILTER,1);
 	else
 		CheckDlgButton(IDC_IRC_USECHANFILTER,0);
-	
+
 	if(thePrefs.m_bIRCUsePerform)
 		CheckDlgButton(IDC_IRC_USEPERFORM,1);
 	else
 		CheckDlgButton(IDC_IRC_USEPERFORM,0);
-	
+
 	GetDlgItem(IDC_IRC_SERVER_BOX)->SetWindowText(thePrefs.m_strIRCServer);
 	GetDlgItem(IDC_IRC_NICK_BOX)->SetWindowText(thePrefs.m_strIRCNick);
 	GetDlgItem(IDC_IRC_NAME_BOX)->SetWindowText(thePrefs.m_strIRCChannelFilter);
 	GetDlgItem(IDC_IRC_PERFORM_BOX)->SetWindowText(thePrefs.m_strIRCPerformString);
 	CString strBuffer;
-	strBuffer.Format(_T("%d"), thePrefs.m_uIRCChannelUserFilter);
+	strBuffer.Format(_T("%u"), thePrefs.m_uIRCChannelUserFilter);
 	GetDlgItem(IDC_IRC_MINUSER_BOX)->SetWindowText(strBuffer);
 }
 
@@ -246,8 +246,7 @@ BOOL CPPgIRC::OnApply()
 			input.Format(_T("%s"), buffer);
 			input.Trim();
 			input = input.SpanExcluding(_T(" !@#$%^&*():;<>,.?{}~`+=-"));
-			if (input != _T(""))
-			{
+			if (!input.IsEmpty()) {
 				theApp.emuledlg->ircwnd->SendString(_T("NICK ") + input);
 				thePrefs.m_strIRCNick = input;
 			}

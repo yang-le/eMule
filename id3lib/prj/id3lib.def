@@ -1,6 +1,5 @@
 LIBRARY "id3lib"
 DESCRIPTION  'id3lib for windows'
-VERSION 3.8.0
 
 EXPORTS 
 

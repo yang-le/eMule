@@ -14,7 +14,7 @@
 //					file header.
 //
 //
-//  Updates:        09-Mai-2003 [bluecow]: 
+//  Updates:        09-Mai-2003 [bluecow]:
 //						- changed original string list code to deal with a LRU list
 //						  and auto cleanup of list entries according 'iMaxItemCount'.
 //						- splitted original code into cpp/h file
@@ -24,7 +24,7 @@
 //						- changed adding strings to replace existing ones on a new position
 //
 //
-//  Notes:			
+//  Notes:
 //
 //
 //  Dependencies:
@@ -33,7 +33,9 @@
 //
 //--------------------------------------------------------------------------------------------
 #include "stdafx.h"
+#if _MSC_VER<=1700
 #include <share.h>
+#endif
 #include "CustomAutoComplete.h"
 
 #ifdef _DEBUG
@@ -66,8 +68,7 @@ BOOL CCustomAutoComplete::Bind(HWND p_hWndEdit, DWORD p_dwOptions, LPCTSTR p_lps
 	if ((m_fBound) || (m_pac))
 		return FALSE;
 
-	HRESULT hr = m_pac.CoCreateInstance(CLSID_AutoComplete);
-	if (SUCCEEDED(hr))
+	if (SUCCEEDED(m_pac.CoCreateInstance(CLSID_AutoComplete)))
 	{
 		if (p_dwOptions){
 			CComQIPtr<IAutoComplete2> pAC2(m_pac);
@@ -77,7 +78,7 @@ BOOL CCustomAutoComplete::Bind(HWND p_hWndEdit, DWORD p_dwOptions, LPCTSTR p_lps
 			}
 		}
 
-		if (SUCCEEDED(hr = m_pac->Init(p_hWndEdit, this, NULL, p_lpszFormatString)))
+		if (SUCCEEDED(m_pac->Init(p_hWndEdit, this, NULL, p_lpszFormatString)))
 		{
 			m_fBound = TRUE;
 			return TRUE;
@@ -275,7 +276,7 @@ STDMETHODIMP CCustomAutoComplete::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pcelt
 
 		if (pceltFetched)
 			(*pceltFetched)++;
-		
+
 		m_nCurrentElement++;
 	}
 
@@ -304,7 +305,7 @@ STDMETHODIMP CCustomAutoComplete::Clone(IEnumString** ppenum)
 {
 	if (!ppenum)
 		return E_POINTER;
-	
+
 	CCustomAutoComplete* pnew = new CCustomAutoComplete();
 	pnew->AddRef();
 	*ppenum = pnew;
@@ -357,17 +358,13 @@ BOOL CCustomAutoComplete::SaveList(LPCTSTR pszFileName)
 	FILE* fp = _tfsopen(pszFileName, _T("wb"), _SH_DENYWR);
 	if (fp == NULL)
 		return FALSE;
-
-	// write Unicode byte-order mark 0xFEFF
-	fputwc(0xFEFF, fp);
-
-	for (int i = 0; i < m_asList.GetCount(); i++)
-		_ftprintf(fp, _T("%s\r\n"), m_asList[i]);
-	fclose(fp);
-	return !ferror(fp);
+	BOOL ret = (fputwc((wchar_t)0xFEFF, fp) != WEOF); // write Unicode byte-order mark 0xFEFF
+	for (int i = 0; ret && i < m_asList.GetCount(); i++)
+		ret = (_ftprintf(fp, _T("%s\r\n"), (LPCTSTR)m_asList[i]) > 0);
+	return fclose(fp) ? FALSE : ret;
 }
 
 CString CCustomAutoComplete::GetItem(int pos){
-	if (pos>=m_asList.GetCount()) return NULL; 
+	if (pos>=m_asList.GetCount()) return NULL;
 	else return m_asList.GetAt(pos);
 }

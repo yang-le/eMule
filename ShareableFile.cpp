@@ -21,9 +21,9 @@
 
 IMPLEMENT_DYNAMIC(CShareableFile, CAbstractFile)
 
-CShareableFile::CShareableFile()								
-{ 
-	m_verifiedFileType=FILETYPE_UNKNOWN; 
+CShareableFile::CShareableFile()
+	: m_verifiedFileType(FILETYPE_UNKNOWN)
+{
 }
 
 CString	CShareableFile::GetInfoSummary(bool bNoFormatCommands) const
@@ -42,9 +42,9 @@ CString	CShareableFile::GetInfoSummary(bool bNoFormatCommands) const
 		+ GetResString(IDS_FD_SIZE) + _T(" %s\n") + strHeadFormatCommand + _T("\n")
 		+ GetResString(IDS_TYPE) + _T(": %s\n")
 		+ GetResString(IDS_FOLDER) + _T(": %s"),
-		GetFileName(),
-		CastItoXBytes(GetFileSize(), false, false),
-		strType,
-		strFolder);
+		(LPCTSTR)GetFileName(),
+		(LPCTSTR)CastItoXBytes(GetFileSize(), false, false),
+		(LPCTSTR)strType,
+		(LPCTSTR)strFolder);
 	return info;
 }

@@ -99,7 +99,7 @@ int utf8towc(LPCSTR pcUtf8, UINT uUtf8Size, LPWSTR pwc, UINT uWideCharSize)
                 uWideCharSize--;
                 *(pwc++) = (WCHAR)uWideChar;
             }
-            else 
+            else
             {
                 uWideCharSize -= 2;
                 uWideChar -= 0x10000;
@@ -260,8 +260,8 @@ CStringW DecodeDoubleEncodedUtf8(LPCWSTR pszFileName)
 
 	// Check if all characters are valid for UTF-8 value range
 	//
-	for (UINT i = 0; i < nChars; i++) {
-		if ((_TUCHAR)pszFileName[i] > 0xFFU)
+	for (unsigned i = 0; i < nChars; ++i) {
+		if (pszFileName[i] > (WCHAR)0xFFU)
 			return pszFileName; // string is already using Unicode character value range; return original
 	}
 

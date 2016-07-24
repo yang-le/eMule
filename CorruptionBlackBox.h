@@ -35,7 +35,7 @@ public:
 	CCBBRecord& operator=(const CCBBRecord& cv);
 
 	bool	Merge(uint64 nStartPos, uint64 nEndPos, uint32 dwIP, EBBRStatus BBRStatus = BBR_NONE);
-	bool	CanMerge(uint64 nStartPos, uint64 nEndPos, uint32 dwIP, EBBRStatus BBRStatus = BBR_NONE);
+	bool	CanMerge(uint64 nStartPos, uint64 nEndPos, uint32 dwIP, EBBRStatus BBRStatus = BBR_NONE) const;
 
 	uint64	m_nStartPos;
 	uint64	m_nEndPos;

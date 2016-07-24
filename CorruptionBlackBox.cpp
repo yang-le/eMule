@@ -30,7 +30,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 
-#define	 CBB_BANTHRESHOLD	32 //% max corrupted data	
+#define	 CBB_BANTHRESHOLD	32 //% max corrupted data
 
 CCBBRecord::CCBBRecord(uint64 nStartPos, uint64 nEndPos, uint32 dwIP, EBBRStatus BBRStatus){
 	if (nStartPos > nEndPos){
@@ -49,7 +49,7 @@ CCBBRecord& CCBBRecord::operator=(const CCBBRecord& cv)
 	m_nEndPos = cv.m_nEndPos;
 	m_dwIP = cv.m_dwIP;
 	m_BBRStatus = cv.m_BBRStatus;
-	return *this; 
+	return *this;
 }
 
 bool CCBBRecord::Merge(uint64 nStartPos, uint64 nEndPos, uint32 dwIP, EBBRStatus BBRStatus){
@@ -68,7 +68,7 @@ bool CCBBRecord::Merge(uint64 nStartPos, uint64 nEndPos, uint32 dwIP, EBBRStatus
 		return false;
 }
 
-bool CCBBRecord::CanMerge(uint64 nStartPos, uint64 nEndPos, uint32 dwIP, EBBRStatus BBRStatus){
+bool CCBBRecord::CanMerge(uint64 nStartPos, uint64 nEndPos, uint32 dwIP, EBBRStatus BBRStatus) const {
 
 	if (m_dwIP == dwIP && m_BBRStatus == BBRStatus && (nStartPos == m_nEndPos + 1 || nEndPos + 1 == m_nStartPos)){
 		return true;
@@ -96,8 +96,8 @@ void CCorruptionBlackBox::TransferredData(uint64 nStartPos, uint64 nEndPos, cons
 		return;
 	}
 	uint32 dwSenderIP = pSender->GetIP();
-	// we store records seperated for each part, so we don't have to search all entries everytime
-	
+	// we store records separated for each part, so we don't have to search all entries everytime
+
 	// convert pos to relative block pos
 	UINT nPart = (UINT)(nStartPos / PARTSIZE);
 	uint64 nRelStartPos = nStartPos - (uint64)nPart*PARTSIZE;
@@ -148,14 +148,14 @@ void CCorruptionBlackBox::TransferredData(uint64 nStartPos, uint64 nEndPos, cons
 				return;
 			}
 			else if (m_aaRecords[nPart][i].m_nStartPos >= nRelStartPos && m_aaRecords[nPart][i].m_nStartPos <= nRelEndPos){
-				// old one laps over new one on the right site
-				ASSERT( nRelEndPos - m_aaRecords[nPart][i].m_nStartPos > 0 );
+				// old one laps over new one on the right side
+				ASSERT( nRelEndPos > m_aaRecords[nPart][i].m_nStartPos );
 				ndbgRewritten += nRelEndPos - m_aaRecords[nPart][i].m_nStartPos;
 				m_aaRecords[nPart][i].m_nStartPos = nRelEndPos + 1;
 			}
 			else if (m_aaRecords[nPart][i].m_nEndPos >= nRelStartPos && m_aaRecords[nPart][i].m_nEndPos <= nRelEndPos){
-				// old one laps over new one on the left site
-				ASSERT( m_aaRecords[nPart][i].m_nEndPos - nRelStartPos > 0 );
+				// old one laps over new one on the left side
+				ASSERT( m_aaRecords[nPart][i].m_nEndPos > nRelStartPos );
 				ndbgRewritten += m_aaRecords[nPart][i].m_nEndPos - nRelStartPos;
 				m_aaRecords[nPart][i].m_nEndPos = nRelStartPos - 1;
 			}
@@ -166,7 +166,7 @@ void CCorruptionBlackBox::TransferredData(uint64 nStartPos, uint64 nEndPos, cons
 	}
 	else
 		m_aaRecords[nPart].Add(CCBBRecord(nRelStartPos, nRelEndPos, dwSenderIP, BBR_NONE));
-	
+
 	if (ndbgRewritten > 0){
 		DEBUG_ONLY( AddDebugLogLine(DLP_DEFAULT, false, _T("CorruptionBlackBox: Debug: %i bytes were rewritten and records replaced with new stats (2)"), ndbgRewritten) );
 	}
@@ -324,15 +324,15 @@ void CCorruptionBlackBox::EvaluateData(uint16 nPart)
 				y++;
 		}
 		if (theApp.clientlist->IsBannedClient(aGuiltyClients[k])){
-			AddDebugLogLine(DLP_DEFAULT, false, _T("CorruptionBlackBox: Suspicous IP (%s) is already banned, skipping recheck"), ipstr(aGuiltyClients[k]));
+			AddDebugLogLine(DLP_DEFAULT, false, _T("CorruptionBlackBox: Suspicous IP (%s) is already banned, skipping recheck"), (LPCTSTR)ipstr(aGuiltyClients[k]));
 			aGuiltyClients.RemoveAt(k);
 		}
 		else
 			k++;
 	}
-	if (aGuiltyClients.GetCount() > 0){
+	if (!aGuiltyClients.IsEmpty()) {
 		// parse all recorded data for this file to produce a statistic for the involved clients
-		
+
 		// first init arrays for the statistic
 		CArray<uint64> aDataCorrupt;
 		CArray<uint64> aDataVerified;
@@ -342,16 +342,16 @@ void CCorruptionBlackBox::EvaluateData(uint16 nPart)
 			aDataCorrupt[j] = aDataVerified[j] = 0;
 
 		// now the parsing
-		for (int nPart = 0; nPart < m_aaRecords.GetCount(); nPart++){
-			for (int i = 0; i < m_aaRecords[nPart].GetCount(); i++){
-				for(int k = 0; k < aGuiltyClients.GetCount(); k++){
-					if (m_aaRecords[nPart][i].m_dwIP == aGuiltyClients[k]){
-						if (m_aaRecords[nPart][i].m_BBRStatus == BBR_CORRUPTED){
+		for (int iPart = 0; iPart < m_aaRecords.GetCount(); ++iPart) {
+			for (int i = 0; i < m_aaRecords[iPart].GetCount(); ++i) {
+				for(int k = 0; k < aGuiltyClients.GetCount(); ++k) {
+					if (m_aaRecords[iPart][i].m_dwIP == aGuiltyClients[k]) {
+						if (m_aaRecords[iPart][i].m_BBRStatus == BBR_CORRUPTED) {
 							// corrupted data records are always counted as at least blocksize or bigger
-							aDataCorrupt[k] += max((m_aaRecords[nPart][i].m_nEndPos-m_aaRecords[nPart][i].m_nStartPos)+1, EMBLOCKSIZE);
+							aDataCorrupt[k] += maxi(m_aaRecords[iPart][i].m_nEndPos-m_aaRecords[iPart][i].m_nStartPos+1ull, (uint64)EMBLOCKSIZE);
 						}
-						else if(m_aaRecords[nPart][i].m_BBRStatus == BBR_VERIFIED){
-							aDataVerified[k] += (m_aaRecords[nPart][i].m_nEndPos-m_aaRecords[nPart][i].m_nStartPos)+1;
+						else if(m_aaRecords[iPart][i].m_BBRStatus == BBR_VERIFIED) {
+							aDataVerified[k] += (m_aaRecords[iPart][i].m_nEndPos-m_aaRecords[iPart][i].m_nStartPos)+1;
 						}
 					}
 				}
@@ -372,23 +372,23 @@ void CCorruptionBlackBox::EvaluateData(uint16 nPart)
 
 				CUpDownClient* pEvilClient = theApp.clientlist->FindClientByIP(aGuiltyClients[k]);
 				if (pEvilClient != NULL){
-					AddDebugLogLine(DLP_HIGH, false, _T("CorruptionBlackBox: Banning: Found client which send %s of %s corrupted data, %s"), CastItoXBytes(aDataCorrupt[k]), CastItoXBytes((aDataVerified[k] + aDataCorrupt[k])), pEvilClient->DbgGetClientInfo());
+					AddDebugLogLine(DLP_HIGH, false, _T("CorruptionBlackBox: Banning: Found client which send %s of %s corrupted data, %s"), (LPCTSTR)CastItoXBytes(aDataCorrupt[k]), (LPCTSTR)CastItoXBytes((aDataVerified[k] + aDataCorrupt[k])), (LPCTSTR)pEvilClient->DbgGetClientInfo());
 					theApp.clientlist->AddTrackClient(pEvilClient);
 					pEvilClient->Ban(_T("Identified as sender of corrupt data"));
 				}
 				else{
-					AddDebugLogLine(DLP_HIGH, false, _T("CorruptionBlackBox: Banning: Found client which send %s of %s corrupted data, %s"), CastItoXBytes(aDataCorrupt[k]), CastItoXBytes((aDataVerified[k] + aDataCorrupt[k])), ipstr(aGuiltyClients[k]));
+					AddDebugLogLine(DLP_HIGH, false, _T("CorruptionBlackBox: Banning: Found client which send %s of %s corrupted data, %s"), (LPCTSTR)CastItoXBytes(aDataCorrupt[k]), (LPCTSTR)CastItoXBytes((aDataVerified[k] + aDataCorrupt[k])), (LPCTSTR)ipstr(aGuiltyClients[k]));
 					theApp.clientlist->AddBannedClient(aGuiltyClients[k]);
 				}
 			}
 			else{
 				CUpDownClient* pSuspectClient = theApp.clientlist->FindClientByIP(aGuiltyClients[k]);
 				if (pSuspectClient != NULL){
-					AddDebugLogLine(DLP_DEFAULT, false, _T("CorruptionBlackBox: Reporting: Found client which probably send %s of %s corrupted data, but it is within the acceptable limit, %s"), CastItoXBytes(aDataCorrupt[k]), CastItoXBytes((aDataVerified[k] + aDataCorrupt[k])), pSuspectClient->DbgGetClientInfo());
+					AddDebugLogLine(DLP_DEFAULT, false, _T("CorruptionBlackBox: Reporting: Found client which probably send %s of %s corrupted data, but it is within the acceptable limit, %s"), (LPCTSTR)CastItoXBytes(aDataCorrupt[k]), (LPCTSTR)CastItoXBytes((aDataVerified[k] + aDataCorrupt[k])), (LPCTSTR)pSuspectClient->DbgGetClientInfo());
 					theApp.clientlist->AddTrackClient(pSuspectClient);
 				}
 				else
-					AddDebugLogLine(DLP_DEFAULT, false, _T("CorruptionBlackBox: Reporting: Found client which probably send %s of %s corrupted data, but it is within the acceptable limit, %s"), CastItoXBytes(aDataCorrupt[k]), CastItoXBytes((aDataVerified[k] + aDataCorrupt[k])), ipstr(aGuiltyClients[k]));
+					AddDebugLogLine(DLP_DEFAULT, false, _T("CorruptionBlackBox: Reporting: Found client which probably send %s of %s corrupted data, but it is within the acceptable limit, %s"), (LPCTSTR)CastItoXBytes(aDataCorrupt[k]), (LPCTSTR)CastItoXBytes((aDataVerified[k] + aDataCorrupt[k])), (LPCTSTR)ipstr(aGuiltyClients[k]));
 			}
 		}
 	}

@@ -46,9 +46,9 @@ namespace Kademlia
 			virtual		CEntry* Copy();
 			virtual bool IsKeyEntry()					{ return false; }
 
-			uint64		GetIntTagValue(CKadTagNameString strTagName, bool bIncludeVirtualTags = true) const;
-			bool		GetIntTagValue(CKadTagNameString strTagName, uint64& rValue, bool bIncludeVirtualTags = true) const;
-			CKadTagValueString GetStrTagValue(CKadTagNameString strTagName) const;
+			uint64		GetIntTagValue(const CKadTagNameString& strTagName, bool bIncludeVirtualTags = true) const;
+			bool		GetIntTagValue(const CKadTagNameString& strTagName, uint64& rValue, bool bIncludeVirtualTags = true) const;
+			CKadTagValueString GetStrTagValue(const CKadTagNameString& strTagName) const;
 			void		AddTag(CKadTag* pTag, uint32 uDbgSourceIP = 0);
 			uint32		GetTagCount() const; // Adds filename and size to the count if not empty, even if they are not stored as tags
 			void		WriteTagList(CDataIO* pData)	{ WriteTagListInc(pData, 0); }
@@ -102,12 +102,12 @@ namespace Kademlia
 		protected:
 			void				RecalcualteTrustValue();
 			static void			AdjustGlobalPublishTracking(uint32 uIP, bool bIncrease, CString strDbgReason);
-			
-			uint32	dwLastTrustValueCalc;			
+
+			uint32	dwLastTrustValueCalc;
 			float	m_fTrustValue;
 			CList<structPublishingIP> *m_pliPublishingIPs;
 			static CMap<uint32, uint32, uint32, uint32> s_mapGlobalPublishIPs; // tracks count of publishings for each 255.255.255.0/28 subnet
-			
+
 			CArray<uint8>		m_anAICHHashPopularity;
 			CArray<CAICHHash>	m_aAICHHashs;
 

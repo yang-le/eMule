@@ -25,16 +25,16 @@ class CDeadSource : public CObject{
 public:
 	CDeadSource(const CDeadSource& ds)			{*this = ds;}
 	CDeadSource(uint32 dwID = 0, uint16 nPort = 0, uint32 dwServerIP = 0, uint16 nKadPort = 0);
-	CDeadSource(const uchar* paucHash);
+	explicit CDeadSource(const uchar* paucHash);
 
 	CDeadSource& operator=(const CDeadSource& ds);
 	friend bool operator==(const CDeadSource& ds1,const CDeadSource& ds2);
-	
+
 	uint32			m_dwID;
 	uint32			m_dwServerIP;
 	uint16			m_nPort;
 	uint16			m_nKadPort;
-	uchar			m_aucHash[16];			
+	uchar			m_aucHash[16];
 };
 
 template<> inline UINT AFXAPI HashKey(const CDeadSource& ds){
@@ -56,7 +56,7 @@ template<> inline UINT AFXAPI HashKey(const CDeadSource& ds){
 ///////////////////////////////////////////////////////////////////////////////////////
 //// CDeadSourceList
 class CUpDownClient;
-class CDeadSourceList 
+class CDeadSourceList
 {
 public:
 	CDeadSourceList(void);

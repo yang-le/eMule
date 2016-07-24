@@ -16,7 +16,7 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-/* 
+/*
  SHA haset basically exists of 1 Tree for all Parts (9.28MB) + n  Trees
  for all blocks (180KB) while n is the number of Parts.
  This means it is NOT a complete hashtree, since the 9.28MB is a given level, in order
@@ -48,12 +48,12 @@ When sending hashs, they are send with a 16bit identifier which specifies its po
 tree (so StartPosition + HashDataSize would lead to the same hash)
 The identifier basically describes the way from the top of the tree to the hash. a set bit (1)
 means follow the left branch, a 0 means follow the right. The highest bit which is set is seen as the start-
-postion (since the first node is always seend as left).
+postion (since the first node is always sent as left).
 
 Example
 
 								x                   0000000000000001
-							 /     \		
+							 /     \
 						 x		    \				0000000000000011
 					  /		\	       \
                     x       _X_          x 	        0000000000000110
@@ -66,7 +66,7 @@ Version 2 of AICH also supports 32bit identifiers to support large files, check 
 
 #pragma once
 
-#define HASHSIZE		20
+#define HASHSIZE		20u
 #define KNOWN2_MET_FILENAME			_T("known2_64.met")
 #define OLD_KNOWN2_MET_FILENAME		_T("known2.met")
 #define KNOWN2_MET_VERSION			0x02
@@ -87,42 +87,44 @@ class CPartFile;
 class CUpDownClient;
 /////////////////////////////////////////////////////////////////////////////////////////
 ///CAICHHash
-class CAICHHash 
+class CAICHHash
 {
 public:
 
 	~CAICHHash()									{;}
 	CAICHHash()										{ ZeroMemory(m_abyBuffer, HASHSIZE); }
-	CAICHHash(CFileDataIO* file)					{ Read(file); }
-	CAICHHash(uchar* data)							{ Read(data); }
+	explicit CAICHHash(CFileDataIO* file)			{ Read(file); }
+	explicit CAICHHash(uchar* data)					{ Read(data); }
 	CAICHHash(const CAICHHash& k1)					{ *this = k1; }
 	CAICHHash&	operator=(const CAICHHash& k1)		{ memcpy(m_abyBuffer, k1.m_abyBuffer, HASHSIZE); return *this; }
 	friend bool operator==(const CAICHHash& k1,const CAICHHash& k2)	{ return memcmp(k1.m_abyBuffer, k2.m_abyBuffer, HASHSIZE) == 0;}
 	friend bool operator!=(const CAICHHash& k1,const CAICHHash& k2)	{ return !(k1 == k2); }
 	void		Read(CFileDataIO* file);
+	static void	Skip(LONGLONG dist, CFileDataIO* file);
 	void		Write(CFileDataIO* file) const;
 	void		Read(uchar* data)					{ memcpy(m_abyBuffer, data, HASHSIZE); }
 	CString		GetString() const;
 	uchar*		GetRawHash()						{ return m_abyBuffer; }
 	const uchar* GetRawHashC() const				{ return m_abyBuffer; }
 
-	static int	GetHashSize()						{ return HASHSIZE;}
+	static unsigned	GetHashSize()					{ return HASHSIZE; }
 private:
 	uchar m_abyBuffer[HASHSIZE];
 };
 
 template<> inline UINT AFXAPI HashKey(const CAICHHash& key){
    uint32 hash = 1;
-   for (int i = 0;i != HASHSIZE;i++)
+   for (unsigned i = 0; i < HASHSIZE; ++i)
 	   hash += (key.GetRawHashC()[i]+1)*((i*i)+1);
    return hash;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ///CAICHHashAlgo
-class CAICHHashAlgo 
+class CAICHHashAlgo
 {
 public:
+	virtual ~CAICHHashAlgo() {}; //just in case...
 	virtual void	Reset() = 0;
 	virtual void	Add(LPCVOID pData, DWORD nLength) = 0;
 	virtual void	Finish(CAICHHash& Hash) = 0;
@@ -133,7 +135,6 @@ public:
 ///CAICHHashTree
 class CAICHHashTree
 {
-	friend class CAICHHashTree;
 	friend class CAICHRecoveryHashSet;
 public:
 	CAICHHashTree(uint64 nDataSize, bool bLeftBranch, uint64 nBaseSize);
@@ -143,7 +144,7 @@ public:
 	bool			VerifyHashTree(CAICHHashAlgo* hashalg, bool bDeleteBadTrees);
 	CAICHHashTree*	FindHash(uint64 nStartPos, uint64 nSize)					{uint8 buffer = 0; return FindHash(nStartPos, nSize, &buffer);}
 	const CAICHHashTree* FindExistingHash(uint64 nStartPos, uint64 nSize) const		{uint8 buffer = 0; return FindExistingHash(nStartPos, nSize, &buffer);}
-	uint64			GetBaseSize() const;		
+	uint64			GetBaseSize() const;
 	void			SetBaseSize(uint64 uValue);
 
 protected:
@@ -155,18 +156,18 @@ protected:
 	bool			LoadLowestLevelHashs(CFileDataIO* fileInput);
 	bool			SetHash(CFileDataIO* fileInput, uint32 wHashIdent, sint8 nLevel = (-1), bool bAllowOverwrite = true);
 	bool			ReduceToBaseSize(uint64 nBaseSize);
-	
+
 	CAICHHashTree*	m_pLeftTree;
 	CAICHHashTree*	m_pRightTree;
 
 public:
+	uint64			m_nDataSize;		// size of data which is covered by this hash //moved up
 	CAICHHash		m_Hash;
-	uint64			m_nDataSize;		// size of data which is covered by this hash	
 	bool			m_bIsLeftBranch;	// left or right branch of the tree
 	bool			m_bHashValid;		// the hash is valid and not empty
 
 private:
-	// BaseSize: to save ressources we use a bool to store the basesize as currently only two values are used
+	// BaseSize: to save resources we use a bool to store the basesize as currently only two values are used
 	// keep the original number based calculations and checks in the code through, so it can easily be adjusted in case we want to use hashsets with different basesizes
 	bool			m_bBaseSize;		// blocksize on which the lowest hash is based on
 };
@@ -198,7 +199,7 @@ public:
 class CAICHRecoveryHashSet
 {
 public:
-	CAICHRecoveryHashSet(CKnownFile* pOwner, EMFileSize nSize = (uint64)0);
+	explicit CAICHRecoveryHashSet(CKnownFile* pOwner, EMFileSize nSize = (uint64)0);
 	~CAICHRecoveryHashSet(void);
 	bool			CreatePartRecoveryData(uint64 nPartStartPos, CFileDataIO* fileDataOut, bool bDbgDontLoad = false);
 	bool			ReadRecoveryData(uint64 nPartStartPos, CSafeMemFile* fileDataIn);
@@ -209,13 +210,13 @@ public:
 	void			SetStatus(EAICHStatus bNewValue)			{m_eStatus = bNewValue;}
 	EAICHStatus		GetStatus()	const							{return m_eStatus;}
 	void			SetOwner(CKnownFile* val)					{m_pOwner = val;}
-	
+
 	void			FreeHashSet();
 	void			SetFileSize(EMFileSize nSize);
-	
-	const CAICHHash& GetMasterHash() const						{return m_pHashTree.m_Hash;} 
+
+	const CAICHHash& GetMasterHash() const						{return m_pHashTree.m_Hash;}
 	void			SetMasterHash(const CAICHHash& Hash, EAICHStatus eNewStatus);
-	bool			HasValidMasterHash()				{return m_pHashTree.m_bHashValid;}
+	bool			HasValidMasterHash() const					{return m_pHashTree.m_bHashValid;}
 	bool			GetPartHashs(CArray<CAICHHash>& rResult) const;
 	const CAICHHashTree*	FindPartHash(uint16 nPart);
 

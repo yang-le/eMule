@@ -77,10 +77,8 @@ static char THIS_FILE[] = __FILE__;
 //////////////////////////////////////////////////////////////////////
 
 CAsyncSocketExLayer::CAsyncSocketExLayer()
+	: m_pOwnerSocket(NULL), m_pNextLayer(NULL), m_pPrevLayer(NULL)
 {
-	m_pOwnerSocket=0;
-	m_pNextLayer=0;
-
 	m_nLayerState=notsock;
 	m_nCriticalError=0;
 }
@@ -382,7 +380,7 @@ void CAsyncSocketExLayer::Init(CAsyncSocketExLayer *pPrevLayer, CAsyncSocketEx *
 	m_pNextLayer=0;
 }
 
-int CAsyncSocketExLayer::GetLayerState()
+int CAsyncSocketExLayer::GetLayerState() const
 {
 	return m_nLayerState;
 }
@@ -458,28 +456,17 @@ BOOL CAsyncSocketExLayer::CreateNext(UINT nSocketPort, int nSocketType, long lEv
 	else
 	{
 		SOCKET hSocket=socket(AF_INET, nSocketType, 0);
-		if (hSocket==INVALID_SOCKET)
-			res=FALSE;
 		m_pOwnerSocket->m_SocketData.hSocket=hSocket;
 		m_pOwnerSocket->AttachHandle(hSocket);
 		if (!m_pOwnerSocket->AsyncSelect(lEvent))
-		{
 			m_pOwnerSocket->Close();
-			res=FALSE;
-		}
 		if (m_pOwnerSocket->m_pFirstLayer)
 		{
 			if (WSAAsyncSelect(m_pOwnerSocket->m_SocketData.hSocket, m_pOwnerSocket->GetHelperWindowHandle(), m_pOwnerSocket->m_SocketData.nSocketIndex+WM_SOCKETEX_NOTIFY, FD_READ | FD_WRITE | FD_OOB | FD_ACCEPT | FD_CONNECT | FD_CLOSE) )
-			{
 				m_pOwnerSocket->Close();
-				res=FALSE;
-			}
 		}
 		if (!m_pOwnerSocket->Bind(nSocketPort, lpszSocketAddress))
-		{
 			m_pOwnerSocket->Close();
-			res=FALSE;
-		}
 		res=TRUE;
 	}
 	if (res)
@@ -535,9 +522,8 @@ BOOL CAsyncSocketExLayer::Accept( CAsyncSocketEx& rConnectedSocket, SOCKADDR* lp
 BOOL CAsyncSocketExLayer::AcceptNext( CAsyncSocketEx& rConnectedSocket, SOCKADDR* lpSockAddr /*=NULL*/, int* lpSockAddrLen /*=NULL*/ )
 {
 	ASSERT(GetLayerState()==listening);
-	BOOL res;
 	if (m_pNextLayer)
-		res=m_pNextLayer->Accept(rConnectedSocket, lpSockAddr, lpSockAddrLen);
+		return m_pNextLayer->Accept(rConnectedSocket, lpSockAddr, lpSockAddrLen);
 	else
 	{
 		SOCKET hTemp = accept(m_pOwnerSocket->m_SocketData.hSocket, lpSockAddr, lpSockAddrLen);

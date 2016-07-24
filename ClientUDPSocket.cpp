@@ -59,9 +59,8 @@ CClientUDPSocket::~CClientUDPSocket()
 {
     theApp.uploadBandwidthThrottler->RemoveFromAllQueues(this); // ZZ:UploadBandWithThrottler (UDP)
 
-    POSITION pos = controlpacket_queue.GetHeadPosition();
-	while (pos){
-		UDPPack* p = controlpacket_queue.GetNext(pos);
+	while (!controlpacket_queue.IsEmpty()) {
+		const UDPPack* p = controlpacket_queue.RemoveHead();
 		delete p->packet;
 		delete p;
 	}
@@ -72,7 +71,7 @@ void CClientUDPSocket::OnReceive(int nErrorCode)
 	if (nErrorCode)
 	{
 		if (thePrefs.GetVerbose())
-			DebugLogError(_T("Error: Client UDP socket, error on receive event: %s"), GetErrorMessage(nErrorCode, 1));
+			DebugLogError(_T("Error: Client UDP socket, error on receive event: %s"), (LPCTSTR)GetErrorMessage(nErrorCode, 1));
 	}
 
 	BYTE buffer[5000];
@@ -136,7 +135,6 @@ void CClientUDPSocket::OnReceive(int nErrorCode)
 							else
 							{
 								delete[] unpack;
-								CString strError;
 								strError.Format(_T("Failed to uncompress Kad packet: zip error: %d (%hs)"), iZLibResult, zError(iZLibResult));
 								throw strError;
 							}
@@ -159,7 +157,6 @@ void CClientUDPSocket::OnReceive(int nErrorCode)
 					}
 					default:
 					{
-						CString strError;
 						strError.Format(_T("Unknown protocol 0x%02x"), pBuffer[0]);
 						throw strError;
 					}
@@ -175,7 +172,7 @@ void CClientUDPSocket::OnReceive(int nErrorCode)
 				error->Delete();
 				strError = _T("Memory exception");
 			}
-			catch(CString error)
+			catch(const CString& error)
 			{
 				strError = error;
 			}
@@ -207,9 +204,9 @@ void CClientUDPSocket::OnReceive(int nErrorCode)
 				if (client)
 					strClientInfo = client->DbgGetClientInfo();
 				else
-					strClientInfo.Format(_T("%s:%u"), ipstr(sockAddr.sin_addr), ntohs(sockAddr.sin_port));
+					strClientInfo.Format(_T("%s:%hu"), (LPCTSTR)ipstr(sockAddr.sin_addr), ntohs(sockAddr.sin_port));
 
-				DebugLogWarning(_T("Client UDP socket: prot=0x%02x  opcode=0x%02x  sizeaftercrypt=%u realsize=%u  %s: %s"), pBuffer[0], pBuffer[1], nPacketLen, nRealLen, strError, strClientInfo);
+				DebugLogWarning(_T("Client UDP socket: prot=0x%02x  opcode=0x%02x  sizeaftercrypt=%u realsize=%u  %s: %s"), pBuffer[0], pBuffer[1], nPacketLen, nRealLen, (LPCTSTR)strError, (LPCTSTR)strClientInfo);
 			}
 		}
 		else if (nPacketLen == SOCKET_ERROR)
@@ -218,11 +215,11 @@ void CClientUDPSocket::OnReceive(int nErrorCode)
 			if (dwError == WSAECONNRESET)
 			{
 				// Depending on local and remote OS and depending on used local (remote?) router we may receive
-				// WSAECONNRESET errors. According some KB articles, this is a special way of winsock to report 
-				// that a sent UDP packet was not received by the remote host because it was not listening on 
+				// WSAECONNRESET errors. According some KB articles, this is a special way of winsock to report
+				// that a sent UDP packet was not received by the remote host because it was not listening on
 				// the specified port -> no eMule running there.
 				//
-				// TODO: So, actually we should do something with this information and drop the related Kad node 
+				// TODO: So, actually we should do something with this information and drop the related Kad node
 				// or eMule client...
 				;
 			}
@@ -230,8 +227,8 @@ void CClientUDPSocket::OnReceive(int nErrorCode)
 			{
 				CString strClientInfo;
 				if (iSockAddrLen > 0 && sockAddr.sin_addr.S_un.S_addr != 0 && sockAddr.sin_addr.S_un.S_addr != INADDR_NONE)
-					strClientInfo.Format(_T(" from %s:%u"), ipstr(sockAddr.sin_addr), ntohs(sockAddr.sin_port));
-				DebugLogError(_T("Error: Client UDP socket, failed to receive data%s: %s"), strClientInfo, GetErrorMessage(dwError, 1));
+					strClientInfo.Format(_T(" from %s:%u"), (LPCTSTR)ipstr(sockAddr.sin_addr), ntohs(sockAddr.sin_port));
+				DebugLogError(_T("Error: Client UDP socket, failed to receive data%s: %s"), (LPCTSTR)strClientInfo, (LPCTSTR)GetErrorMessage(dwError, 1));
 			}
 		}
 	}
@@ -275,7 +272,7 @@ bool CClientUDPSocket::ProcessPacket(const BYTE* packet, UINT size, uint8 opcode
 			uchar reqfilehash[16];
 			data_in.ReadHash16(reqfilehash);
 			CKnownFile* reqfile = theApp.sharedfiles->GetFileByID(reqfilehash);
-			
+
 			bool bSenderMultipleIpUnknown = false;
 			CUpDownClient* sender = theApp.uploadqueue->GetWaitingClientByIP_UDP(ip, port, true, &bSenderMultipleIpUnknown);
 			if (!reqfile)
@@ -308,7 +305,7 @@ bool CClientUDPSocket::ProcessPacket(const BYTE* packet, UINT size, uint8 opcode
 					//So now I am forced to check UDPVersion to see if we are sending all the extended info.
 					//For now on, we should not have to change anything here if we change
 					//anything to the extended info data as this will be taken care of in ProcessExtendedInfo()
-					//Update extended info. 
+					//Update extended info.
 					if (sender->GetUDPVersion() > 3)
 					{
 						sender->ProcessExtendedInfo(&data_in, reqfile);
@@ -343,8 +340,8 @@ bool CClientUDPSocket::ProcessPacket(const BYTE* packet, UINT size, uint8 opcode
 				else
 				{
 					DebugLogError(_T("Client UDP socket; ReaskFilePing; reqfile does not match"));
-					TRACE(_T("reqfile:         %s\n"), DbgGetFileInfo(reqfile->GetFileHash()));
-					TRACE(_T("sender->GetRequestFile(): %s\n"), sender->GetRequestFile() ? DbgGetFileInfo(sender->GetRequestFile()->GetFileHash()) : _T("(null)"));
+					TRACE(_T("reqfile:         %s\n"), (LPCTSTR)DbgGetFileInfo(reqfile->GetFileHash())); //fo88
+					TRACE(_T("sender->GetRequestFile(): %s\n"), sender->GetRequestFile() ? (LPCTSTR)DbgGetFileInfo(sender->GetRequestFile()->GetFileHash()) : _T("(null)"));
 				}
 			}
 			else
@@ -363,7 +360,7 @@ bool CClientUDPSocket::ProcessPacket(const BYTE* packet, UINT size, uint8 opcode
 					}
 				}
 				else{
-					DebugLogWarning(_T("UDP Packet received - multiple clients with the same IP but different UDP port found. Possible UDP Portmapping problem, enforcing TCP connection. IP: %s, Port: %u"), ipstr(ip), port); 
+					DebugLogWarning(_T("UDP Packet received - multiple clients with the same IP but different UDP port found. Possible UDP Portmapping problem, enforcing TCP connection. IP: %s, Port: %u"), (LPCTSTR)ipstr(ip), port);
 				}
 			}
 			break;
@@ -379,7 +376,7 @@ bool CClientUDPSocket::ProcessPacket(const BYTE* packet, UINT size, uint8 opcode
 				sender->UDPReaskACK(0);
 			}
 			else if (sender != NULL)
-				DebugLogError(_T("Received UDP Packet (OP_QUEUEFULL) which was not requested (pendingflag == false); Ignored packet - %s"), sender->DbgGetClientInfo());
+				DebugLogError(_T("Received UDP Packet (OP_QUEUEFULL) which was not requested (pendingflag == false); Ignored packet - %s"), (LPCTSTR)sender->DbgGetClientInfo());
 			break;
 		}
 		case OP_REASKACK:
@@ -400,8 +397,8 @@ bool CClientUDPSocket::ProcessPacket(const BYTE* packet, UINT size, uint8 opcode
 				sender->AddAskedCountDown();
 			}
 			else if (sender != NULL)
-				DebugLogError(_T("Received UDP Packet (OP_REASKACK) which was not requested (pendingflag == false); Ignored packet - %s"), sender->DbgGetClientInfo());
-			
+				DebugLogError(_T("Received UDP Packet (OP_REASKACK) which was not requested (pendingflag == false); Ignored packet - %s"), (LPCTSTR)sender->DbgGetClientInfo()); //fo88
+
 			break;
 		}
 		case OP_FILENOTFOUND:
@@ -412,10 +409,9 @@ bool CClientUDPSocket::ProcessPacket(const BYTE* packet, UINT size, uint8 opcode
 				DebugRecv("OP_FileNotFound", sender, NULL, ip);
 			if (sender && sender->UDPPacketPending()){
 				sender->UDPReaskFNF(); // may delete 'sender'!
-				sender = NULL;
 			}
 			else if (sender != NULL)
-				DebugLogError(_T("Received UDP Packet (OP_FILENOTFOUND) which was not requested (pendingflag == false); Ignored packet - %s"), sender->DbgGetClientInfo());
+				DebugLogError(_T("Received UDP Packet (OP_FILENOTFOUND) which was not requested (pendingflag == false); Ignored packet - %s"), (LPCTSTR)sender->DbgGetClientInfo());
 
 			break;
 		}
@@ -437,7 +433,7 @@ bool CClientUDPSocket::ProcessPacket(const BYTE* packet, UINT size, uint8 opcode
 			if (thePrefs.GetDebugClientUDPLevel() > 0)
 				DebugRecv("OP_DIRECTCALLBACKREQ", NULL, NULL, ip);
 			if (!theApp.clientlist->AllowCalbackRequest(ip)){
-				DebugLogWarning(_T("Ignored DirectCallback Request because this IP (%s) has sent too many request within a short time"), ipstr(ip));
+				DebugLogWarning(_T("Ignored DirectCallback Request because this IP (%s) has sent too many request within a short time"), (LPCTSTR)ipstr(ip));
 				break;
 			}
 			// do we accept callbackrequests at all?
@@ -459,11 +455,11 @@ bool CClientUDPSocket::ProcessPacket(const BYTE* packet, UINT size, uint8 opcode
 				pRequester->SetDirectUDPCallbackSupport(false);
 				pRequester->SetIP(ip);
 				pRequester->SetUserPort(nRemoteTCPPort);
-				DEBUG_ONLY( DebugLog(_T("Accepting incoming DirectCallbackRequest from %s"), pRequester->DbgGetClientInfo()) );
+				DEBUG_ONLY( DebugLog(_T("Accepting incoming DirectCallbackRequest from %s"), (LPCTSTR)pRequester->DbgGetClientInfo()) );
 				pRequester->TryToConnect();
 			}
 			else
-				DebugLogWarning(_T("Ignored DirectCallback Request because we do not accept DirectCall backs at all (%s)"), ipstr(ip));
+				DebugLogWarning(_T("Ignored DirectCallback Request because we do not accept DirectCall backs at all (%s)"), (LPCTSTR)ipstr(ip));
 
 			break;
 		}
@@ -472,7 +468,7 @@ bool CClientUDPSocket::ProcessPacket(const BYTE* packet, UINT size, uint8 opcode
 			if (thePrefs.GetDebugClientUDPLevel() > 0)
 			{
 				CUpDownClient* sender = theApp.downloadqueue->GetDownloadClientByIP_UDP(ip, port, true);
-				Debug(_T("Unknown client UDP packet: host=%s:%u (%s) opcode=0x%02x  size=%u\n"), ipstr(ip), port, sender ? sender->DbgGetClientInfo() : _T(""), opcode, size);
+				Debug(_T("Unknown client UDP packet: host=%s:%u (%s) opcode=0x%02x  size=%u\n"), (LPCTSTR)ipstr(ip), port, sender ? (LPCTSTR)sender->DbgGetClientInfo() : _T(""), opcode, size);
 			}
 			return false;
 	}
@@ -482,7 +478,7 @@ bool CClientUDPSocket::ProcessPacket(const BYTE* packet, UINT size, uint8 opcode
 void CClientUDPSocket::OnSend(int nErrorCode){
 	if (nErrorCode){
 		if (thePrefs.GetVerbose())
-			DebugLogError(_T("Error: Client UDP socket, error on send event: %s"), GetErrorMessage(nErrorCode, 1));
+			DebugLogError(_T("Error: Client UDP socket, error on send event: %s"), (LPCTSTR)GetErrorMessage(nErrorCode, 1));
 		return;
 	}
 
@@ -513,10 +509,10 @@ SocketSentBytes CClientUDPSocket::SendControlData(uint32 maxNumberOfBytesToSend,
 			uchar* sendbuffer = new uchar[nLen];
 			memcpy(sendbuffer,cur_packet->packet->GetUDPHeader(),2);
 			memcpy(sendbuffer+2,cur_packet->packet->pBuffer,cur_packet->packet->size);
-			
+
 			if (cur_packet->bEncrypt && (theApp.GetPublicIP() > 0 || cur_packet->bKad)){
 				nLen = EncryptSendClient(&sendbuffer, nLen, cur_packet->pachTargetClientHashORKadID, cur_packet->bKad,  cur_packet->nReceiverVerifyKey, (cur_packet->bKad ? Kademlia::CPrefs::GetUDPVerifyKey(cur_packet->dwIP) : (uint16)0));
-				//DEBUG_ONLY(  AddDebugLogLine(DLP_VERYLOW, false, _T("Sent obfuscated UDP packet to clientIP: %s, Kad: %s, ReceiverKey: %u"), ipstr(cur_packet->dwIP), cur_packet->bKad ? _T("Yes") : _T("No"), cur_packet->nReceiverVerifyKey) );
+				//DEBUG_ONLY(  AddDebugLogLine(DLP_VERYLOW, false, _T("Sent obfuscated UDP packet to clientIP: %s, Kad: %s, ReceiverKey: %u"), (LPCTSTR)ipstr(cur_packet->dwIP), cur_packet->bKad ? _T("Yes") : _T("No"), cur_packet->nReceiverVerifyKey) );
 			}
 
             if (!SendTo((char*)sendbuffer, nLen, cur_packet->dwIP, cur_packet->nPort)){
@@ -557,7 +553,7 @@ int CClientUDPSocket::SendTo(char* lpBuf,int nBufLen,uint32 dwIP, uint16 nPort){
 			return -1;
 		}
 		if (thePrefs.GetVerbose())
-			DebugLogError(_T("Error: Client UDP socket, failed to send data to %s:%u: %s"), ipstr(dwIP), nPort, GetErrorMessage(error, 1));
+			DebugLogError(_T("Error: Client UDP socket, failed to send data to %s:%u: %s"), (LPCTSTR)ipstr(dwIP), nPort, (LPCTSTR)GetErrorMessage(error, 1));
 	}
 	return 0;
 }

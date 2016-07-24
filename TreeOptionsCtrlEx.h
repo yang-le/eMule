@@ -19,7 +19,7 @@ class CTreeOptionsCtrlEx :
 	public CTreeOptionsCtrl
 {
 public:
-	CTreeOptionsCtrlEx(UINT uImageListColorFlags = ILC_COLOR);
+	explicit CTreeOptionsCtrlEx(UINT uImageListColorFlags = ILC_COLOR);
 	virtual ~CTreeOptionsCtrlEx(void);
 
 	void SetEditLabel(HTREEITEM hItem, const CString& rstrLabel);
@@ -61,7 +61,7 @@ class CNumTreeOptionsEdit : public CTreeOptionsEdit
 	DECLARE_DYNCREATE(CNumTreeOptionsEdit)
 
 public:
-	CNumTreeOptionsEdit(){}
+	CNumTreeOptionsEdit() : m_bSelf(false) {}
 	virtual ~CNumTreeOptionsEdit(){}
 
 	virtual DWORD GetWindowStyle() { return CTreeOptionsEdit::GetWindowStyle() | ES_NUMBER; }
@@ -84,7 +84,7 @@ class CTreeOptionsEditEx : public CTreeOptionsEdit
 	DECLARE_DYNCREATE(CTreeOptionsEditEx)
 
 public:
-	CTreeOptionsEditEx(){}
+	CTreeOptionsEditEx() : m_bSelf(false) {}
 	virtual ~CTreeOptionsEditEx(){}
 
 protected:
