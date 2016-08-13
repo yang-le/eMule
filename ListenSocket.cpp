@@ -202,30 +202,31 @@ void CClientReqSocket::OnClose(int nErrorCode){
 	delete pstrReason;
 }
 
-void CClientReqSocket::Disconnect(LPCTSTR pszReason){
+void CClientReqSocket::Disconnect(LPCTSTR pszReason)
+{
 	AsyncSelect(0);
 	byConnected = ES_DISCONNECTED;
 	if (!client)
 		Safe_Delete();
 	else
-        if(client->Disconnected(CString(_T("CClientReqSocket::Disconnect(): ")) + pszReason, true)){
+		if (client->Disconnected(CString(_T("CClientReqSocket::Disconnect(): ")) + pszReason, true)) {
 			CUpDownClient* temp = client;
 			client->socket = NULL;
 			client = NULL;
 			delete temp;
 			Safe_Delete();
-		}
-		else{
+		} else {
 			client = NULL;
 			Safe_Delete();
 		}
-};
+}
 
-void CClientReqSocket::Delete_Timed(){
+void CClientReqSocket::Delete_Timed()
+{
 // it seems that MFC Sockets call socketfunctions after they are deleted, even if the socket is closed
 // and select(0) is set. So we need to wait some time to make sure this doesn't happens
 // we currently also trust on this for multithreading, rework snychronization if this ever changes
-	if (::GetTickCount() - deltimer > 10000)
+	if (::GetTickCount() - deltimer > SEC2MS(10))
 		delete this;
 }
 
@@ -236,9 +237,10 @@ void CClientReqSocket::Safe_Delete()
 	deltimer = ::GetTickCount();
 	if (m_SocketData.hSocket != INVALID_SOCKET) // deadlake PROXYSUPPORT - changed to AsyncSocketEx
 		ShutDown(SD_BOTH);
-	if (client)
+	if (client) {
 		client->socket = 0;
-	client = 0;
+		client = 0;
+	}
 	byConnected = ES_DISCONNECTED;
 	deletethis = true;
 }
@@ -2652,18 +2654,16 @@ void CListenSocket::Process()
 void CListenSocket::RecalculateStats()
 {
 	memset(m_ConnectionStates, 0, sizeof m_ConnectionStates);
-	for (POSITION pos = socket_list.GetHeadPosition(); pos != NULL; )
-	{
-		switch (socket_list.GetNext(pos)->GetConState())
-		{
-			case ES_DISCONNECTED:
-				m_ConnectionStates[0]++;
-				break;
-			case ES_NOTCONNECTED:
-				m_ConnectionStates[1]++;
-				break;
-			case ES_CONNECTED:
-				m_ConnectionStates[2]++;
+	for (POSITION pos = socket_list.GetHeadPosition(); pos != NULL;) {
+		switch (socket_list.GetNext(pos)->GetConState()) {
+		case ES_DISCONNECTED:
+			m_ConnectionStates[0]++;
+			break;
+		case ES_NOTCONNECTED:
+			m_ConnectionStates[1]++;
+			break;
+		case ES_CONNECTED:
+			m_ConnectionStates[2]++;
 		}
 	}
 }

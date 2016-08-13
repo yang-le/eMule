@@ -34,8 +34,8 @@ public:
     void AddToStandardList(uint32 index, ThrottledFileSocket* socket);
     bool RemoveFromStandardList(ThrottledFileSocket* socket);
 
-    void QueueForSendingControlPacket(ThrottledControlSocket* socket, bool hasSent = false); // ZZ:UploadBandWithThrottler (UDP)
-    void RemoveFromAllQueues(ThrottledControlSocket* socket) { RemoveFromAllQueues(socket, true); }; // ZZ:UploadBandWithThrottler (UDP)
+    void QueueForSendingControlPacket(ThrottledControlSocket* socket, const bool hasSent = false); // ZZ:UploadBandWithThrottler (UDP)
+    void RemoveFromAllQueuesLocked(ThrottledControlSocket* socket) { RemoveFromAllQueues(socket, true); }; // ZZ:UploadBandWithThrottler (UDP)
     void RemoveFromAllQueues(ThrottledFileSocket* socket);
 	void NewUploadDataAvailable();
 	void SocketAvailable();

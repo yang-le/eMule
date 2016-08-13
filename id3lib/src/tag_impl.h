@@ -93,7 +93,7 @@ public:
 
   void       Clear();
   bool       HasChanged() const;
-  void       SetChanged(bool b) { _changed = b; }
+  void       SetChanged(bool b) const { _changed = b; }
   size_t     Size() const;
 
   bool       SetUnsync(bool);
@@ -151,7 +151,7 @@ public:
   /* Deprecated! */
   void       AddNewFrame(ID3_Frame* f) { this->AttachFrame(f); }
   size_t     Link(const char *fileInfo, bool parseID3v1, bool parseLyrics3);
-  void       SetCompression(bool) { ; }
+  void       SetCompression(bool) {}
 //  void       AddFrames(const ID3_Frame *, size_t);
   bool       HasLyrics() const { return this->HasTagType(ID3TT_LYRICS); }
   bool       HasV2Tag()  const { return this->HasTagType(ID3TT_ID3V2); }

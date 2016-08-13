@@ -128,7 +128,7 @@ private:
 			ASSERT( m_nSize >= nSize1 && m_nSize >= nSize2 && m_nSize <= 0x4000000000 );
 		}
 	}
-	void	Check()	{ ASSERT( m_nSize != (uint64)(-1) && m_nSize <= 0x4000000000 ); }
+	void	Check()	const { ASSERT( m_nSize != (uint64)(-1) && m_nSize <= 0x4000000000 ); }
 	uint64	m_nSize;
 };
 

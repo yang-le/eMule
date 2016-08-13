@@ -357,7 +357,7 @@ void CSearchList::GetWebList(CQArray<SearchFileStruct, SearchFileStruct> *Search
 		for(POSITION pos2 = listCur->m_listSearchFiles.GetHeadPosition(); pos2 != NULL; )
 		{
 			const CSearchFile* pFile = listCur->m_listSearchFiles.GetNext(pos2);
-			if (pFile == NULL || pFile->GetListParent() != NULL || pFile->GetFileSize() == (uint64)0 || pFile->GetFileName().IsEmpty())
+			if (pFile == NULL || pFile->GetListParent() != NULL || pFile->GetFileSize() == 0ull || pFile->GetFileName().IsEmpty())
 				continue;
 
 			SearchFileStruct structFile;

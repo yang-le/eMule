@@ -41,18 +41,18 @@ public:
 	virtual ~CEMSocket();
 
 	virtual void 	SendPacket(Packet* packet, bool delpacket = true, bool controlpacket = true, uint32 actualPayloadSize = 0, bool bForceImmediateSend = false);
-	bool	IsConnected() const {return byConnected == ES_CONNECTED;}
-	uint8	GetConState() const {return byConnected;}
+	bool	IsConnected() const { return byConnected == ES_CONNECTED; }
+	uint8	GetConState() const { return byConnected; }
 	virtual bool IsRawDataMode() const { return false; }
 	void	SetDownloadLimit(uint32 limit);
 	void	DisableDownloadLimit();
 	BOOL	AsyncSelect(long lEvent);
 	virtual bool IsBusyExtensiveCheck();
 	virtual bool IsBusyQuickCheck() const;
-    virtual bool HasQueues(bool bOnlyStandardPackets = false) const;
+	virtual bool HasQueues(bool bOnlyStandardPackets = false) const;
 	virtual bool IsEnoughFileDataQueued(uint32 nMinFilePayloadBytes) const;
 	virtual bool UseBigSendBuffer();
-	int			 DbgGetStdQueueCount() const	{return standartpacket_queue.GetCount();}
+	int			 DbgGetStdQueueCount() const { return standardpacket_queue.GetCount(); }
 
 	virtual UINT GetTimeOut() const;
 	virtual void SetTimeOut(UINT uTimeOut);
@@ -67,17 +67,17 @@ public:
 
 	CString GetFullErrorMessage(DWORD dwError);
 
-	DWORD GetLastCalledSend() { return lastCalledSend; }
+	DWORD GetLastCalledSend() const	{ return lastCalledSend; }
 	uint64 GetSentBytesCompleteFileSinceLastCallAndReset();
 	uint64 GetSentBytesPartFileSinceLastCallAndReset();
 	uint64 GetSentBytesControlPacketSinceLastCallAndReset();
 	uint64 GetSentPayloadSinceLastCall(bool bReset);
 	void TruncateQueues();
 
-    virtual SocketSentBytes SendControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize) { return Send(maxNumberOfBytesToSend, minFragSize, true); };
-    virtual SocketSentBytes SendFileAndControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize) { return Send(maxNumberOfBytesToSend, minFragSize, false); };
+	virtual SocketSentBytes SendControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize) { return Send(maxNumberOfBytesToSend, minFragSize, true); };
+	virtual SocketSentBytes SendFileAndControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize) { return Send(maxNumberOfBytesToSend, minFragSize, false); };
 
-    uint32	GetNeededBytes();
+	uint32	GetNeededBytes();
 #ifdef _DEBUG
 	// Diagnostic Support
 	virtual void AssertValid() const;
@@ -86,7 +86,7 @@ public:
 
 protected:
 	virtual int	OnLayerCallback(const CAsyncSocketExLayer *pLayer, int nType, int nCode, WPARAM wParam, LPARAM lParam);
-	
+
 	virtual void	DataReceived(const BYTE* pcData, UINT uSize);
 	virtual bool	PacketReceived(Packet* packet) = 0;
 	virtual void	OnError(int nErrorCode) = 0;
@@ -100,15 +100,15 @@ protected:
 	CString m_strLastProxyError;
 
 private:
-    virtual SocketSentBytes Send(uint32 maxNumberOfBytesToSend, uint32 minFragSize, bool onlyAllowedToSendControlPacket);
+	virtual SocketSentBytes Send(uint32 maxNumberOfBytesToSend, uint32 minFragSize, bool onlyAllowedToSendControlPacket);
 	SocketSentBytes SendStd(uint32 maxNumberOfBytesToSend, uint32 minFragSize, bool onlyAllowedToSendControlPacket);
 	SocketSentBytes SendOv(uint32 maxNumberOfBytesToSend, uint32 minFragSize, bool onlyAllowedToSendControlPacket);
 	void	ClearQueues();
 	virtual int Receive(void* lpBuf, int nBufLen, int nFlags = 0);
 	void	CleanUpOverlappedSendOperation(bool bCancelRequestFirst);
 
-    uint32 GetNextFragSize(uint32 current, uint32 minFragSize);
-    bool    HasSent() { return m_hasSent; }
+	static uint32 GetNextFragSize(uint32 current, uint32 minFragSize);
+	bool    HasSent() const { return m_hasSent; }
 
 	// Download (pseudo) rate control
 	uint32	downloadLimit;
@@ -131,7 +131,7 @@ private:
 	CArray<WSABUF> m_aBufferSend;
 
 	CTypedPtrList<CPtrList, Packet*> controlpacket_queue;
-	CList<StandardPacketQueueEntry> standartpacket_queue;
+	CList<StandardPacketQueueEntry> standardpacket_queue;
 	bool m_currentPacket_is_controlpacket;
 	CCriticalSection sendLocker;
 	uint64 m_numberOfSentBytesCompleteFile;
@@ -140,12 +140,12 @@ private:
 	bool m_currentPackageIsFromPartFile;
 	bool m_bAccelerateUpload;
 	DWORD lastCalledSend;
-    DWORD lastSent;
+	DWORD lastSent;
 	uint32 lastFinishedStandard;
 	uint32 m_actualPayloadSize;			// Payloadsize of the data currently in sendbuffer
 	uint32 m_actualPayloadSizeSent;
-    bool m_bBusy;
-    bool m_hasSent;
+	bool m_bBusy;
+	bool m_hasSent;
 	bool m_bUsesBigSendBuffers;
 	bool m_bOverlappedSending;
 };

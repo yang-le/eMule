@@ -165,7 +165,7 @@ void CFileDetailDialogInfo::RefreshData()
 		SetDlgItemText(IDC_LASTSEENCOMPL, str);
 
 		// last receive
-		if (file->GetFileDate() != 0 && file->GetRealFileSize() > (uint64)0)
+		if (file->GetFileDate() != 0 && file->GetRealFileSize() > 0ull)
 		{
 			// 'Last Modified' sometimes is up to 2 seconds greater than the current time ???
 			// If it's related to the FAT32 seconds time resolution the max. failure should still be only 1 sec.

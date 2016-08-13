@@ -87,6 +87,10 @@ void CConnectionWizardDlg::OnBnClickedApply()
 	{ 
 		GetDlgItem(IDC_WIZ_TRUEDOWNLOAD_BOX)->GetWindowText(buffer, 20);
 		download = _tstoi(buffer);
+		if (download < 0 || download >= INT_MAX) {
+			GetDlgItem(IDC_WIZ_TRUEDOWNLOAD_BOX)->SetFocus();
+			return;
+		}
 	}
 	else
 	{
@@ -97,6 +101,10 @@ void CConnectionWizardDlg::OnBnClickedApply()
 	{ 
 		GetDlgItem(IDC_WIZ_TRUEUPLOAD_BOX)->GetWindowText(buffer, 20);
 		upload = _tstoi(buffer);
+		if (upload < 0 || upload >= INT_MAX) {
+			GetDlgItem(IDC_WIZ_TRUEUPLOAD_BOX)->SetFocus();
+			return;
+		}
 	}
 	else
 	{
@@ -137,7 +145,7 @@ void CConnectionWizardDlg::OnBnClickedApply()
 
 		if (m_iOS == 1)
 			thePrefs.maxconnections = 50;
-		else{
+		else {
 			if (upload <= 7)
 				thePrefs.maxconnections = 80;
 			else if (upload < 12)
@@ -155,78 +163,28 @@ void CConnectionWizardDlg::OnBnClickedApply()
 
 		if (download <= 7)
 		{
-			switch (m_iTotalDownload)
-			{
-				case 0:
-					thePrefs.maxsourceperfile = 100;
-					break;
-				case 1:
-					thePrefs.maxsourceperfile = 60;
-					break;
-				case 2:
-					thePrefs.maxsourceperfile = 40;
-					break;
-			}
+			static const UINT a[3] = {100u, 60u, 40u};
+			thePrefs.maxsourceperfile = a[m_iTotalDownload];
 		}
 		else if (download < 62)
 		{
-			switch (m_iTotalDownload)
-			{
-				case 0:
-					thePrefs.maxsourceperfile = 300;
-					break;
-				case 1:
-					thePrefs.maxsourceperfile = 200;
-					break;
-				case 2:
-					thePrefs.maxsourceperfile = 100;
-					break;
-			}
+			static const UINT a[3] = {300u, 200u, 100u};
+			thePrefs.maxsourceperfile = a[m_iTotalDownload];
 		}
 		else if (download < 187)
 		{
-			switch (m_iTotalDownload)
-			{
-				case 0:
-					thePrefs.maxsourceperfile = 500;
-					break;
-				case 1:
-					thePrefs.maxsourceperfile = 400;
-					break;
-				case 2:
-					thePrefs.maxsourceperfile = 350;
-					break;
-			}
+			static const UINT a[3] = {500u, 400u, 350u};
+			thePrefs.maxsourceperfile = a[m_iTotalDownload];
 		}
 		else if (download <= 312)
 		{
-			switch (m_iTotalDownload)
-			{
-				case 0:
-					thePrefs.maxsourceperfile = 800;
-					break;
-				case 1:
-					thePrefs.maxsourceperfile = 600;
-					break;
-				case 2:
-					thePrefs.maxsourceperfile = 400;
-					break;
-			}
+			static const UINT a[3] = {800u, 600u, 400u};
+			thePrefs.maxsourceperfile = a[m_iTotalDownload];
 		}
 		else
 		{
-			switch (m_iTotalDownload)
-			{
-				case 0:
-					thePrefs.maxsourceperfile = 1000;
-					break;
-				case 1:
-					thePrefs.maxsourceperfile = 750;
-					break;
-				case 2:
-					thePrefs.maxsourceperfile = 500;
-					break;
-			}
+			static const UINT a[3] = {1000u, 750u, 500u};
+			thePrefs.maxsourceperfile = a[m_iTotalDownload];
 		}
 	}
 	theApp.emuledlg->preferenceswnd->m_wndConnection.LoadSettings();
@@ -330,28 +288,18 @@ void CConnectionWizardDlg::OnNmClickProviders(NMHDR* /*pNMHDR*/, LRESULT* pResul
 {
 	SetCustomItemsActivation();
 
+	int i = m_provider.GetSelectionMark();
+	if (i < 0 || i > 17)
+		return;
+	static const UINT adown[18] = {0, 0, 56u, 64u, 128u, 1024u, 1536u, 2048u, 2048u, 3072u, 6016u, 6016u, 6016u, 6144u, 187u, 187u, 1500u, 44000u};
+	static const UINT aup[18] =   {0, 0, 33u, 64u, 128u,  128u,  192u,  192u,  384u,  384u,  576u,  572u,  512u,  512u,  32u,  64u, 1500u, 44000u};
 	UINT up, down;
-	switch (m_provider.GetSelectionMark())
-	{
-		case  0: down=   0;up=   0; break;
-		case  1: down= ((thePrefs.maxGraphDownloadRate * 1024) + 500) / 1000 * 8; up= ((thePrefs.GetMaxGraphUploadRate(true) * 1024) + 500) / 1000 * 8; break;
-		case  2: down=   56;	up=   33; break;
-		case  3: down=   64;	up=   64; break;
-		case  4: down=  128;	up=  128; break;
-		case  5: down= 1024;	up=  128; break;
-		case  6: down= 1536;	up=  192; break;
-		case  7: down= 2048;	up=  192; break;
-		case  8: down= 2048;	up=  384; break;
-		case  9: down= 3072;	up=  384; break;
-		case 10: down= 6016;	up=  576; break;
-		case 11: down= 6016;	up=  572; break;
-		case 12: down= 6016;	up=  512; break;
-		case 13: down= 6144;	up=  512; break;
-		case 14: down=  187;	up=   32; break;
-		case 15: down=  187;	up=   64; break;
-		case 16: down= 1500;	up= 1500; break;
-		case 17: down=44000;	up=44000; break;
-		default: return;
+	if (i == 1) {
+		down = ((thePrefs.maxGraphDownloadRate * 1024) + 500) / 1000 * 8;
+		up = ((thePrefs.GetMaxGraphUploadRate(true) * 1024) + 500) / 1000 * 8;
+	} else {
+		down = adown[i];
+		up = aup[i];
 	}
 	
 	SetDlgItemInt(IDC_WIZ_TRUEDOWNLOAD_BOX, down, FALSE);

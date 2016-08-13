@@ -166,9 +166,8 @@ void CCollectionFile::WriteCollectionInfo(CFileDataIO *out_data)
 {
 	out_data->WriteUInt32(taglist.GetSize());
 
-	for (int i = 0; i < taglist.GetSize(); i++)
-	{
-		CTag tempTag(*taglist.GetAt(i));
+	for (int i = 0; i < taglist.GetSize(); ++i) {
+		CTag tempTag(*taglist[i]);
 		tempTag.WriteNewEd2kTag(out_data, utf8strRaw);
 	}
 }

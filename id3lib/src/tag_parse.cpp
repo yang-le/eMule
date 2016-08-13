@@ -46,7 +46,6 @@ namespace
     ID3_Reader::pos_type beg = rdr.getCur();
     io::ExitTrigger et(rdr, beg);
     ID3_Reader::pos_type last_pos = beg;
-    size_t frameSize = 0;
     while (!rdr.atEnd() && rdr.peekChar() != '\0')
     {
       ID3D_NOTICE( "id3::v2::parseFrames(): rdr.getBeg() = " << rdr.getBeg() );
@@ -56,7 +55,7 @@ namespace
       ID3_Frame* f = LEAKTESTNEW(ID3_Frame);
       f->SetSpec(tag.GetSpec());
       bool goodParse = f->Parse(rdr);
-      frameSize = rdr.getCur() - last_pos;
+	  size_t frameSize = rdr.getCur() - last_pos;
       ID3D_NOTICE( "id3::v2::parseFrames(): frameSize = " << frameSize );
 
       if (frameSize == 0)
@@ -202,8 +201,6 @@ bool id3::v2::parse(ID3_TagImpl& tag, ID3_Reader& reader)
 void ID3_TagImpl::ParseFile()
 { //changes in this routine should also be made in the routine for streaming parsing below
   ifstream file;
-  size_t mp3_core_size;
-  size_t bytes_till_sync;
 
   _last_error = openReadableFile(this->GetFileName(), file);
   if (ID3E_NoError != _last_error)
@@ -326,7 +323,7 @@ void ID3_TagImpl::ParseFile()
       //return;
     }
   }
-  bytes_till_sync = cur - beg;
+  size_t bytes_till_sync = cur - beg;
 
   cur = wr.setCur(end);
   if (_file_size > _prepended_bytes)
@@ -381,7 +378,7 @@ void ID3_TagImpl::ParseFile()
     _appended_bytes = end - cur;
 
     // Now get the mp3 header
-    mp3_core_size = (_file_size - _appended_bytes) - (_prepended_bytes + bytes_till_sync);
+	size_t mp3_core_size = (_file_size - _appended_bytes) - (_prepended_bytes + bytes_till_sync);
     if (mp3_core_size >= 4)
     { //it has at least the size for a mp3 header (a mp3 header is 4 bytes)
       wr.setBeg(_prepended_bytes + bytes_till_sync);
@@ -410,9 +407,7 @@ void ID3_TagImpl::ParseFile()
 //used for streaming media
 void ID3_TagImpl::ParseReader(ID3_Reader &reader)
 {
-//allthough largely the same, stays a severate routine than ParseFile() above.
-  size_t mp3_core_size;
-  size_t bytes_till_sync;
+//allthough largely the same, stays a separate routine than ParseFile() above.
 
   io::WindowedReader wr(reader);
   wr.setBeg(wr.getCur());
@@ -510,7 +505,7 @@ void ID3_TagImpl::ParseReader(ID3_Reader &reader)
       //return;
     }
   }
-  bytes_till_sync = cur - beg;
+  size_t bytes_till_sync = cur - beg;
 
   cur = wr.setCur(end);
   if (_file_size > _prepended_bytes)
@@ -565,7 +560,7 @@ void ID3_TagImpl::ParseReader(ID3_Reader &reader)
     _appended_bytes = end - cur;
 
     // Now get the mp3 header
-    mp3_core_size = (_file_size - _appended_bytes) - (_prepended_bytes + bytes_till_sync);
+	size_t mp3_core_size = (_file_size - _appended_bytes) - (_prepended_bytes + bytes_till_sync);
     if (mp3_core_size >= 4)
     { //it has at least the size for a mp3 header (a mp3 header is 4 bytes)
       wr.setBeg(_prepended_bytes + bytes_till_sync);

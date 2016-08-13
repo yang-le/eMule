@@ -73,7 +73,7 @@ void CBarShader::BuildModifiers() {
 void CBarShader::SetWidth(int width) {
 	if(m_iWidth != width) {
 		m_iWidth = width;
-		if (m_uFileSize > (uint64)0)
+		if (m_uFileSize > 0ull)
 			m_dPixelsPerByte = (double)m_iWidth / (uint64)m_uFileSize;
 		else
 			m_dPixelsPerByte = 0.0;
@@ -88,7 +88,7 @@ void CBarShader::SetFileSize(EMFileSize fileSize) {
 	if(m_uFileSize != fileSize) {
 		m_uFileSize = fileSize;
 
-		if (m_uFileSize > (uint64)0)
+		if (m_uFileSize > 0ull)
 			m_dPixelsPerByte = (double)m_iWidth / (uint64)m_uFileSize;
 		else
 			m_dPixelsPerByte = 0.0;

@@ -562,7 +562,7 @@ CAICHRecoveryHashSet::CAICHRecoveryHashSet(CKnownFile* pOwner, EMFileSize nSize)
 	: m_pHashTree(0, true, PARTSIZE), m_eStatus(AICH_EMPTY)
 {
 	m_pOwner = pOwner;
-	if (nSize != (uint64)0)
+	if (nSize != 0ull)
 		SetFileSize(nSize);
 }
 

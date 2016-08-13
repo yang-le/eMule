@@ -477,7 +477,7 @@ void CxImage::SetPalette(RGBQUAD* pPal,uint32_t nColors)
  * The function doesn't change the pixels; for standard
  * gray scale conversion use GrayScale().
  */
-void CxImage::SetGrayPalette()
+void CxImage::SetGrayPalette() const
 {
 	if ((pDib==NULL)||(head.biClrUsed==0)) return;
 	RGBQUAD* pal=GetPalette();
@@ -489,7 +489,7 @@ void CxImage::SetGrayPalette()
  * Colorize the palette.
  * \sa Colorize
  */
-void CxImage::BlendPalette(COLORREF cr,int32_t perc)
+void CxImage::BlendPalette(COLORREF cr,int32_t perc) const
 {
 	if ((pDib==NULL)||(head.biClrUsed==0)) return;
 	uint8_t* iDst = (uint8_t*)(pDib) + sizeof(BITMAPINFOHEADER);

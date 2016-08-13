@@ -166,7 +166,7 @@ CDownloadQueue::~CDownloadQueue()
 
 void CDownloadQueue::AddSearchToDownload(CSearchFile* toadd, uint8 paused, int cat)
 {
-	if (toadd->GetFileSize()== (uint64)0 || IsFileExisting(toadd->GetFileHash()))
+	if (toadd->GetFileSize()== 0ull || IsFileExisting(toadd->GetFileHash()))
 		return;
 
 	if (toadd->GetFileSize() > OLD_MAX_EMULE_FILE_SIZE && !thePrefs.CanFSHandleLargeFiles(cat)){

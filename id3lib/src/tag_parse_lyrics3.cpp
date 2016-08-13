@@ -267,8 +267,6 @@ bool lyr3::v2::parse(ID3_TagImpl& tag, ID3_Reader& reader)
 
   bool has_time_stamps = false;
 
-  ID3_Frame* lyr_frame = NULL;
-
   while (!wr.atEnd())
   {
     uint32 fldSize;
@@ -330,12 +328,13 @@ bool lyr3::v2::parse(ID3_TagImpl& tag, ID3_Reader& reader)
     // the LYRICS field
     else if (fldName == "LYR")
     {
+//      ID3_Frame* lyr_frame = NULL;
       // if already found an INF field, use it as description
       String desc =  "Converted from Lyrics3 v2.00";
       //tag.setLyrics(fldData);
       if (!has_time_stamps)
       {
-        lyr_frame = id3::v2::setLyrics(tag, fldData, desc, "XXX");
+/*        lyr_frame =*/ id3::v2::setLyrics(tag, fldData, desc, "XXX");
       }
       else
       {
@@ -346,7 +345,7 @@ bool lyr3::v2::parse(ID3_TagImpl& tag, ID3_Reader& reader)
         io::BStringWriter sw(sylt);
         lyrics3ToSylt(sr, sw);
 
-        lyr_frame = id3::v2::setSyncLyrics(tag, sylt, ID3TSF_MS, desc,
+/*        lyr_frame =*/ id3::v2::setSyncLyrics(tag, sylt, ID3TSF_MS, desc,
                                            "XXX", ID3CT_LYRICS);
         ID3D_NOTICE( "lyr3::v2::parse: determined synced lyrics" );
       }

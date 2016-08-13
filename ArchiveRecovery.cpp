@@ -175,7 +175,7 @@ bool CArchiveRecovery::performRecovery(CPartFile *partFile, CTypedPtrList<CPtrLi
 		if (success)
 		{
 			theApp.QueueLogLine(true, _T("%s \"%s\""), (LPCTSTR)GetResString(IDS_RECOVERY_SUCCESSFUL), (LPCTSTR)partFile->GetFileName());
-			theApp.QueueDebugLogLine(false, _T("Archive recovery: Part file size: %s, temp. archive file size: %s (%.1f%%)"), (LPCTSTR)CastItoXBytes(partFile->GetFileSize()), (LPCTSTR)CastItoXBytes(ulTempFileSize), partFile->GetFileSize() > (uint64)0 ? (ulTempFileSize * 100.0 / (uint64)partFile->GetFileSize()) : 0.0);
+			theApp.QueueDebugLogLine(false, _T("Archive recovery: Part file size: %s, temp. archive file size: %s (%.1f%%)"), (LPCTSTR)CastItoXBytes(partFile->GetFileSize()), (LPCTSTR)CastItoXBytes(ulTempFileSize), partFile->GetFileSize() > 0ull ? (ulTempFileSize * 100.0 / (uint64)partFile->GetFileSize()) : 0.0);
 
 			// Preview file if required
 			if (preview)

@@ -698,9 +698,8 @@ void CPreferences::Init()
 
 void CPreferences::Uninit()
 {
-	while (!catMap.IsEmpty())
-	{
-		Category_Struct* delcat = catMap.GetAt(0);
+	while (!catMap.IsEmpty()) {
+		const Category_Struct* delcat = catMap[0];
 		catMap.RemoveAt(0);
 		delete delcat;
 	}
@@ -2615,9 +2614,8 @@ void CPreferences::LoadCats()
 
 void CPreferences::RemoveCat(int index)
 {
-	if (index >= 0 && index < catMap.GetCount())
-	{
-		Category_Struct* delcat = catMap.GetAt(index);
+	if (index >= 0 && index < catMap.GetCount()) {
+		const Category_Struct* delcat = catMap[index];
 		catMap.RemoveAt(index);
 		delete delcat;
 	}
@@ -2625,9 +2623,8 @@ void CPreferences::RemoveCat(int index)
 
 bool CPreferences::SetCatFilter(int index, int filter)
 {
-	if (index >= 0 && index < catMap.GetCount())
-	{
-		catMap.GetAt(index)->filter = filter;
+	if (index >= 0 && index < catMap.GetCount()) {
+		catMap[index]->filter = filter;
 		return true;
 	}
 	return false;
@@ -2636,21 +2633,21 @@ bool CPreferences::SetCatFilter(int index, int filter)
 int CPreferences::GetCatFilter(int index)
 {
 	if (index >= 0 && index < catMap.GetCount())
-		return catMap.GetAt(index)->filter;
-    return 0;
+		return catMap[index]->filter;
+	return 0;
 }
 
 bool CPreferences::GetCatFilterNeg(int index)
 {
 	if (index >= 0 && index < catMap.GetCount())
-		return catMap.GetAt(index)->filterNeg;
-    return false;
+		return catMap[index]->filterNeg;
+	return false;
 }
 
 void CPreferences::SetCatFilterNeg(int index, bool val)
 {
 	if (index >= 0 && index < catMap.GetCount())
-		catMap.GetAt(index)->filterNeg = val;
+		catMap[index]->filterNeg = val;
 }
 
 bool CPreferences::MoveCat(UINT from, UINT to)
@@ -2658,7 +2655,7 @@ bool CPreferences::MoveCat(UINT from, UINT to)
 	if (from >= (UINT)catMap.GetCount() || to >= (UINT)catMap.GetCount() + 1 || from == to)
 		return false;
 
-	Category_Struct* tomove = catMap.GetAt(from);
+	Category_Struct* tomove = catMap[from];
 	if (from < to) {
 		catMap.RemoveAt(from);
 		catMap.InsertAt(to - 1, tomove);
@@ -2671,11 +2668,12 @@ bool CPreferences::MoveCat(UINT from, UINT to)
 }
 
 
-DWORD CPreferences::GetCatColor(int index, int nDefault) {
+DWORD CPreferences::GetCatColor(int index, int nDefault)
+{
 	if (index>=0 && index<catMap.GetCount()) {
-		DWORD c=catMap.GetAt(index)->color;
-		if (c!=(DWORD)-1)
-			return catMap.GetAt(index)->color;
+		const DWORD c = catMap[index]->color;
+		if (c != (DWORD)-1)
+			return c;
 	}
 
 	return GetSysColor(nDefault);
@@ -2693,18 +2691,11 @@ bool CPreferences::IsInstallationDirectory(const CString& rstrDir)
 		strFullPath = rstrDir;
 
 	// skip sharing of several special eMule folders
-	if (!CompareDirectories(strFullPath, GetMuleDirectory(EMULE_EXECUTEABLEDIR)))
-		return true;
-	if (!CompareDirectories(strFullPath, GetMuleDirectory(EMULE_CONFIGDIR)))
-		return true;
-	if (!CompareDirectories(strFullPath, GetMuleDirectory(EMULE_WEBSERVERDIR)))
-		return true;
-	if (!CompareDirectories(strFullPath, GetMuleDirectory(EMULE_INSTLANGDIR)))
-		return true;
-	if (!CompareDirectories(strFullPath, GetMuleDirectory(EMULE_LOGDIR)))
-		return true;
-
-	return false;
+	return !CompareDirectories(strFullPath, GetMuleDirectory(EMULE_EXECUTEABLEDIR))
+		|| !CompareDirectories(strFullPath, GetMuleDirectory(EMULE_CONFIGDIR))
+		|| !CompareDirectories(strFullPath, GetMuleDirectory(EMULE_WEBSERVERDIR))
+		|| !CompareDirectories(strFullPath, GetMuleDirectory(EMULE_INSTLANGDIR))
+		|| !CompareDirectories(strFullPath, GetMuleDirectory(EMULE_LOGDIR));
 }
 
 bool CPreferences::IsShareableDirectory(const CString& rstrDir)
@@ -2829,8 +2820,7 @@ UINT CPreferences::GetWebMirrorAlertLevel(){
 	// end
 	if (UpdateNotify())
 		return m_nWebMirrorAlertLevel;
-	else
-		return 0;
+	return 0;
 }
 
 bool CPreferences::IsRunAsUserEnabled(){
@@ -2844,17 +2834,13 @@ bool CPreferences::GetUseReBarToolbar()
 	return GetReBarToolbar() && theApp.m_ullComCtrlVer >= MAKEDLLVERULL(5,8,0,0);
 }
 
-int	CPreferences::GetMaxGraphUploadRate(bool bEstimateIfUnlimited){
-	if (maxGraphUploadRate != UNLIMITED || !bEstimateIfUnlimited){
+int	CPreferences::GetMaxGraphUploadRate(bool bEstimateIfUnlimited)
+{
+	if (maxGraphUploadRate != UNLIMITED || !bEstimateIfUnlimited)
 		return maxGraphUploadRate;
-	}
-	else{
-		if (maxGraphUploadRateEstimated != 0){
-			return maxGraphUploadRateEstimated +4;
-		}
-		else
-			return 16;
-	}
+	if (maxGraphUploadRateEstimated != 0)
+		return maxGraphUploadRateEstimated + 4;
+	return 16;
 }
 
 void CPreferences::EstimateMaxUploadCap(uint32 nCurrentUpload){
@@ -2867,7 +2853,7 @@ void CPreferences::EstimateMaxUploadCap(uint32 nCurrentUpload){
 
 void CPreferences::SetMaxGraphUploadRate(int in)
 {
-	maxGraphUploadRate	=(in) ? in : UNLIMITED;
+	maxGraphUploadRate = (in) ? in : UNLIMITED;
 }
 
 bool CPreferences::IsDynUpEnabled()

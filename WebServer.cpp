@@ -479,14 +479,12 @@ void CWebServer::ProcessURL(ThreadData Data)
 		}
 		isUseGzip = false; // [Julien]
 		if (login) {	// on login, forget previous failed attempts
-			i=0;
-			while (i<pThis->m_Params.badlogins.GetSize() ) {
-				if ( pThis->m_Params.badlogins[i].datalen==myip ) {
+			i = 0;
+			while (i < pThis->m_Params.badlogins.GetSize())
+				if ( pThis->m_Params.badlogins[i].datalen == myip )
 					pThis->m_Params.badlogins.RemoveAt(i);
-					continue;
-				}
-				i++;
-			}
+				else
+					i++;
 		}
 	}
 
@@ -581,7 +579,7 @@ void CWebServer::ProcessURL(ThreadData Data)
 						Data.pSocket->SendData(szBuf, nLen);
 
 						DWORD r=1;
-						while (filesize > (uint64)0 && r) {
+						while (filesize > 0ull && r) {
 							r=file.Read(buffer,SENDFILEBUFSIZE);
 							filesize -= (uint64)r;
 							Data.pSocket->SendData(buffer, r);
@@ -1850,11 +1848,11 @@ CString CWebServer::_GetTransferList(ThreadData Data)
 
 		if (strTmp.IsEmpty())
 		{
-			if (sSort.GetAt(0) == _T('d'))
+			if (sSort[0] == _T('d'))
 				pThis->m_Params.bDownloadSortReverse = bDirection;
-			else if (sSort.GetAt(0) == _T('u'))
+			else if (sSort[0] == _T('u'))
 				pThis->m_Params.bUploadSortReverse = bDirection;
-			else if (sSort.GetAt(0) == _T('q'))
+			else if (sSort[0] == _T('q'))
 				pThis->m_Params.bQueueSortReverse = bDirection;
 		}
 	}
@@ -1862,11 +1860,11 @@ CString CWebServer::_GetTransferList(ThreadData Data)
 	if (!strTmp.IsEmpty())
 	{
 		bDirection = (strTmp == _T("true"));
-		if (sSort.GetAt(0) == _T('d'))
+		if (sSort[0] == _T('d'))
 			pThis->m_Params.bDownloadSortReverse = bDirection;
-		else if (sSort.GetAt(0) == _T('u'))
+		else if (sSort[0] == _T('u'))
 			pThis->m_Params.bUploadSortReverse = bDirection;
-		else if (sSort.GetAt(0) == _T('q'))
+		else if (sSort[0] == _T('q'))
 			pThis->m_Params.bQueueSortReverse = bDirection;
 	}
 
@@ -2158,7 +2156,7 @@ CString CWebServer::_GetTransferList(ThreadData Data)
 	// Populating array
 	for (int i=0;i<partlist.GetCount();i++) {
 
-		CPartFile* pPartFile=partlist.GetAt(i);
+		CPartFile* pPartFile=partlist[i];
 
 		if (pPartFile)
 		{
@@ -2794,7 +2792,7 @@ CString CWebServer::_CreateTransferList(CString Out, CWebServer *pThis, ThreadDa
 
 	for(int i = 0; i < UploadArray->GetCount(); i++)
 	{
-		UploadUsers ulu=UploadArray->GetAt(i);
+		UploadUsers ulu = (*UploadArray)[i];
 		HTTPProcessData = OutE;
 
 		HTTPProcessData.Replace(_T("[UserHash]"), ulu.sUserHash);
@@ -4262,7 +4260,7 @@ Session CWebServer::GetSessionByID(ThreadData Data,long sessionID)
 		for(int i = 0; i < pThis->m_Params.Sessions.GetSize(); i++)
 		{
 			if(pThis->m_Params.Sessions[i].lSession == sessionID && sessionID != 0)
-				return pThis->m_Params.Sessions.GetAt(i);
+				return pThis->m_Params.Sessions[i];
 		}
 	}
 

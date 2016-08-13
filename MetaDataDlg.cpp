@@ -346,7 +346,7 @@ void CMetaDataDlg::RefreshData()
 		int iTags = aTags.GetCount();
 		for (int i = 0; i < iTags; i++)
 		{
-			const CTag* pTag = aTags.GetAt(i);
+			const CTag* pTag = aTags[i];
 			LVITEM lvi;
 			lvi.mask = LVIF_TEXT;
 			lvi.iItem = INT_MAX;

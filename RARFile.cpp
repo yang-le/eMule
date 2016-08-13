@@ -101,7 +101,7 @@ void CRARFile::Close()
 		ASSERT( m_pfnRARCloseArchive );
 		if (m_pfnRARCloseArchive)
 		{
-			try{
+			try {
 				VERIFY( (*m_pfnRARCloseArchive)(m_hArchive) == 0 );
 			}
 			catch(...){
@@ -112,7 +112,7 @@ void CRARFile::Close()
 	m_strArchiveFilePath.Empty();
 }
 
-bool CRARFile::GetNextFile(CString& strFile)
+bool CRARFile::GetNextFile(CString& strFile) const
 {
 	if (m_hLibUnRar == NULL || m_pfnRARReadHeaderEx == NULL || m_hArchive == NULL) {
 		ASSERT(0);
@@ -121,10 +121,10 @@ bool CRARFile::GetNextFile(CString& strFile)
 
 	struct RARHeaderDataEx HeaderData = {0};
 	int iReadHeaderResult;
-	try{
+	try {
 		iReadHeaderResult = (*m_pfnRARReadHeaderEx)(m_hArchive, &HeaderData);
 	}
-	catch(...){
+	catch(...) {
 		iReadHeaderResult = -1;
 	}
 	if (iReadHeaderResult != 0)
@@ -133,7 +133,7 @@ bool CRARFile::GetNextFile(CString& strFile)
 	return !strFile.IsEmpty();
 }
 
-bool CRARFile::Extract(LPCTSTR pszDstFilePath)
+bool CRARFile::Extract(LPCTSTR pszDstFilePath) const
 {
 	if (m_hLibUnRar == NULL || m_pfnRARProcessFileW == NULL || m_hArchive == NULL) {
 		ASSERT(0);
@@ -141,19 +141,16 @@ bool CRARFile::Extract(LPCTSTR pszDstFilePath)
 	}
 
 	int iProcessFileResult;
-	try{
+	try {
 		iProcessFileResult = (*m_pfnRARProcessFileW)(m_hArchive, RAR_EXTRACT, NULL, pszDstFilePath);
 	}
-	catch(...){
+	catch(...) {
 		iProcessFileResult = -1;
 	}
-	if (iProcessFileResult != 0)
-		return false;
-
-	return true;
+	return (iProcessFileResult == 0);
 }
 
-bool CRARFile::Skip()
+bool CRARFile::Skip() const
 {
 	if (m_hLibUnRar == NULL || m_pfnRARProcessFileW == NULL || m_hArchive == NULL) {
 		ASSERT(0);
@@ -161,14 +158,11 @@ bool CRARFile::Skip()
 	}
 
 	int iProcessFileResult;
-	try{
+	try {
 		iProcessFileResult = (*m_pfnRARProcessFileW)(m_hArchive, RAR_SKIP, NULL, NULL);
 	}
-	catch(...){
+	catch(...) {
 		iProcessFileResult = -1;
 	}
-	if (iProcessFileResult != 0)
-		return false;
-
-	return true;
+	return (iProcessFileResult == 0);
 }

@@ -208,16 +208,16 @@ bool ID3_FrameImpl::Parse(ID3_Reader& reader)
   this->_ClearFields();
   this->_InitFields();
 
-  bool success = false;
+//  bool success = false;
   // expand out the data if it's compressed
   if (!_hdr.GetCompression())
   {
-    success = parseFields(wr, *this);
+/*    success =*/ parseFields(wr, *this);
   }
   else
   {
     io::CompressedReader csr(wr, origSize);
-    success = parseFields(csr, *this);
+/*    success =*/ parseFields(csr, *this);
   }
   et.setExitPos(wr.getCur());
 

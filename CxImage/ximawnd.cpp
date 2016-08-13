@@ -319,7 +319,6 @@ bool CxImage::CreateFromHANDLE(HANDLE hMem)
 					switch (dwCompression) {
 					case BI_RLE4:
 						{
-							uint8_t status_byte = 0;
 							uint8_t second_byte = 0;
 							int32_t scanline = 0;
 							int32_t bits = 0;
@@ -327,7 +326,7 @@ bool CxImage::CreateFromHANDLE(HANDLE hMem)
 							CImageIterator iter(this);
 
 							for (BOOL bContinue = TRUE; bContinue; ) {
-								status_byte = *(lpDIBBits++);
+								uint8_t status_byte = *(lpDIBBits++);
 								switch (status_byte) {
 								case RLE_COMMAND :
 									status_byte = *(lpDIBBits++);
@@ -410,14 +409,13 @@ bool CxImage::CreateFromHANDLE(HANDLE hMem)
 						break;
 					case BI_RLE8 :
 						{
-							uint8_t status_byte = 0;
 							uint8_t second_byte = 0;
 							int32_t scanline = 0;
 							int32_t bits = 0;
 							CImageIterator iter(this);
 
 							for (BOOL bContinue = TRUE; bContinue; ) {
-								status_byte = *(lpDIBBits++);
+								uint8_t status_byte = *(lpDIBBits++);
 								if (status_byte==RLE_COMMAND) {
 									status_byte = *(lpDIBBits++);
 									switch (status_byte) {
@@ -875,37 +873,31 @@ int32_t CxImage::Draw(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t cy, REC
 			bmInfo.bmiHeader.biPlanes=1;
 			bmInfo.bmiHeader.biBitCount=24;
 			uint8_t *pbase;	//points to the final dib
-			uint8_t *pdst;		//current pixel from pbase
-			uint8_t *ppix;		//current pixel from image
 			//get the background
 			HDC TmpDC=CreateCompatibleDC(hdc);
 			HBITMAP TmpBmp=CreateDIBSection(hdc,&bmInfo,DIB_RGB_COLORS,(void**)&pbase,0,0);
 			HGDIOBJ TmpObj=SelectObject(TmpDC,TmpBmp);
 
-			if (pbase){
-				int32_t xx,yy;
-				int32_t sx,sy;
-				float dx,dy;
-				uint8_t *psrc;
-
+			if (pbase) {
 				int32_t ew = ((((24 * destw) + 31) / 32) * 4);
 				int32_t ymax = paintbox.bottom;
 				int32_t xmin = paintbox.left;
-				float fx=(float)head.biWidth/(float)cx;
-				float fy=(float)head.biHeight/(float)cy;
+				float fx = head.biWidth/(float)cx;
+				float fy = head.biHeight/(float)cy;
 
-				for(yy=0;yy<desth;yy++){
-					dy = head.biHeight-(ymax-yy-y)*fy;
-					sy = max(0L,(int32_t)floor(dy));
-					psrc = info.pImage+sy*info.dwEffWidth;
-					if (bFlipY){
-						pdst = pbase+(desth-1-yy)*ew;
-					} else {
-						pdst = pbase+yy*ew;
-					}
-					for(xx=0;xx<destw;xx++){
-						dx = (xx+xmin-x)*fx;
-						sx = max(0L,(int32_t)floor(dx));
+				for(int32_t yy=0; yy<desth; ++yy) {
+					float dy = head.biHeight-(ymax-yy-y)*fy;
+					int32_t sy = max(0L,(int32_t)floor(dy));
+					uint8_t *psrc = info.pImage+sy*info.dwEffWidth;
+					uint8_t *pdst = pbase;	//current pixel from pbase
+					if (bFlipY)
+						pdst += (desth-1-yy)*ew;
+					else
+						pdst += yy*ew;
+
+					for(int32_t xx=0; xx<destw; ++xx) {
+						float dx = (xx+xmin-x)*fx;
+						int32_t sx = max(0L,(int32_t)floor(dx));
 #if CXIMAGE_SUPPORT_INTERPOLATION
 						if (bSmooth){
 							if (fx > 1 && fy > 1) {
@@ -919,7 +911,7 @@ int32_t CxImage::Draw(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t cy, REC
 							if (head.biClrUsed){
 								c=GetPaletteColor(GetPixelIndex(sx,sy));
 							} else {
-								ppix = psrc + sx*3;
+								uint8_t *ppix = psrc + sx*3;	//current pixel from image
 								c.rgbBlue = *ppix++;
 								c.rgbGreen= *ppix++;
 								c.rgbRed  = *ppix;
@@ -946,7 +938,6 @@ int32_t CxImage::Draw(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t cy, REC
 		int32_t* pc = (int32_t*)&c;
 		int32_t* pct= (int32_t*)&ct;
 		int32_t cit = GetTransIndex();
-		int32_t ci = 0;
 
 		//Preparing Bitmap Info
 		BITMAPINFO bmInfo;
@@ -958,8 +949,6 @@ int32_t CxImage::Draw(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t cy, REC
 		bmInfo.bmiHeader.biBitCount=24;
 
 		uint8_t *pbase;	//points to the final dib
-		uint8_t *pdst;		//current pixel from pbase
-		uint8_t *ppix;		//current pixel from image
 
 		//get the background
 		HDC TmpDC=CreateCompatibleDC(hdc);
@@ -967,35 +956,34 @@ int32_t CxImage::Draw(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t cy, REC
 		HGDIOBJ TmpObj=SelectObject(TmpDC,TmpBmp);
 		BitBlt(TmpDC,0,0,destw,desth,hdc,paintbox.left,paintbox.top,SRCCOPY);
 
-		if (pbase){
-			int32_t xx,yy,alphaoffset,ix,iy;
-			uint8_t a,a1,*psrc;
+		if (pbase) {
+			int32_t alphaoffset;
+			uint8_t a,a1;
 			int32_t ew = ((((24 * destw) + 31) / 32) * 4);
 			int32_t ymax = paintbox.bottom;
 			int32_t xmin = paintbox.left;
+			int32_t ci = 0;
 
 			if (cx!=head.biWidth || cy!=head.biHeight){
 				//STRETCH
-				float fx=(float)head.biWidth/(float)cx;
-				float fy=(float)head.biHeight/(float)cy;
-				float dx,dy;
-				int32_t sx,sy;
+				float fx = head.biWidth/(float)cx;
+				float fy = head.biHeight/(float)cy;
 
-				for(yy=0;yy<desth;yy++){
-					dy = head.biHeight-(ymax-yy-y)*fy;
-					sy = max(0L,(int32_t)floor(dy));
+				for (int32_t yy=0; yy<desth; ++yy) {
+					float dy = head.biHeight-(ymax-yy-y)*fy;
+					int32_t sy = max(0L,(int32_t)floor(dy));
 
 					alphaoffset = sy*head.biWidth;
-					if (bFlipY){
-						pdst = pbase+(desth-1-yy)*ew;
-					} else {
-						pdst = pbase + yy*ew;
-					}
-					psrc = info.pImage + sy*info.dwEffWidth;
+					uint8_t *pdst = pbase;	//current pixel from pbase
+					if (bFlipY)
+						pdst += (desth-1-yy)*ew;
+					else
+						pdst += yy*ew;
+					uint8_t *psrc = info.pImage + sy*info.dwEffWidth;
 
-					for(xx=0;xx<destw;xx++){
-						dx = (xx+xmin-x)*fx;
-						sx = max(0L,(int32_t)floor(dx));
+					for (int32_t xx=0; xx<destw; ++xx) {
+						float dx = (xx+xmin-x)*fx;
+						int32_t sx = max(0L,(int32_t)floor(dx));
 
 						if (bAlpha) a=pAlpha[alphaoffset+sx]; else a=255;
 						a =(uint8_t)((a*(1+info.nAlphaMax))>>8);
@@ -1020,15 +1008,14 @@ int32_t CxImage::Draw(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t cy, REC
 						} else {
 #if CXIMAGE_SUPPORT_INTERPOLATION
 							if (bSmooth){
-								if (fx > 1 && fy > 1) {
+								if (fx > 1 && fy > 1)
 									c = GetAreaColorInterpolated(dx - 0.5f, dy - 0.5f, fx, fy, CxImage::IM_BILINEAR, CxImage::OM_REPEAT);
-								} else {
+								else
 									c = GetPixelColorInterpolated(dx - 0.5f, dy - 0.5f, CxImage::IM_BILINEAR, CxImage::OM_REPEAT);
-								}
 							} else
 #endif //CXIMAGE_SUPPORT_INTERPOLATION
 							{
-								ppix = psrc + sx*3;
+								uint8_t *ppix = psrc + sx*3;	//current pixel from image
 								c.rgbBlue = *ppix++;
 								c.rgbGreen= *ppix++;
 								c.rgbRed  = *ppix;
@@ -1039,7 +1026,7 @@ int32_t CxImage::Draw(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t cy, REC
 						if ((head.biClrUsed && ci!=cit) || (!head.biClrUsed && *pc!=*pct) || !bTransparent){
 							// DJT, assume many pixels are fully transparent or opaque and thus avoid multiplication
 							if (a == 0) {			// Transparent, retain dest
-								pdst+=3;
+								pdst += 3;
 							} else if (a == 255) {	// opaque, ignore dest
 								*pdst++= c.rgbBlue;
 								*pdst++= c.rgbGreen;
@@ -1060,17 +1047,17 @@ int32_t CxImage::Draw(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t cy, REC
 				}
 			} else {
 				//NORMAL
-				iy=head.biHeight-ymax+y;
-				for(yy=0;yy<desth;yy++,iy++){
+				int32_t iy = head.biHeight-ymax+y;
+				for (int32_t yy=0; yy<desth; ++yy,++iy) {
 					alphaoffset=iy*head.biWidth;
-					ix=xmin-x;
-					if (bFlipY){
-						pdst = pbase+(desth-1-yy)*ew;
-					} else {
-						pdst = pbase+yy*ew;
-					}
-					ppix=info.pImage+iy*info.dwEffWidth+ix*3;
-					for(xx=0;xx<destw;xx++,ix++){
+					int32_t ix = xmin-x;
+					uint8_t *pdst = pbase;	//current pixel from pbase
+					if (bFlipY)
+						pdst += (desth-1-yy)*ew;
+					else
+						pdst += yy*ew;
+					uint8_t *ppix=info.pImage+iy*info.dwEffWidth+ix*3;
+					for (int32_t xx=0; xx<destw; ++xx,++ix) {
 
 						if (bAlpha) a=pAlpha[alphaoffset+ix]; else a=255;
 						a = (uint8_t)((a*(1+info.nAlphaMax))>>8);
@@ -1201,47 +1188,39 @@ HBITMAP CxImage::Draw2HBITMAP(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t
 			bmInfo.bmiHeader.biPlanes=1;
 			bmInfo.bmiHeader.biBitCount=24;
 			uint8_t *pbase;	//points to the final dib
-			uint8_t *pdst;		//current pixel from pbase
-			uint8_t *ppix;		//current pixel from image
 			//get the background
 			HDC TmpDC=CreateCompatibleDC(hdc);
 			TmpBmp=CreateDIBSection(hdc,&bmInfo,DIB_RGB_COLORS,(void**)&pbase,0,0);
 			HGDIOBJ TmpObj=SelectObject(TmpDC,TmpBmp);
 
-			if (pbase){
-				int32_t xx,yy;
-				int32_t sx,sy;
-				float dx,dy;
-				uint8_t *psrc;
-
+			if (pbase) {
 				int32_t ew = ((((24 * destw) + 31) / 32) * 4);
 				int32_t ymax = paintbox.bottom;
 				int32_t xmin = paintbox.left;
 				float fx=(float)head.biWidth/(float)cx;
 				float fy=(float)head.biHeight/(float)cy;
 
-				for(yy=0;yy<desth;yy++){
-					dy = head.biHeight-(ymax-yy-y)*fy;
-					sy = max(0L,(int32_t)floor(dy));
-					psrc = info.pImage+sy*info.dwEffWidth;
-					pdst = pbase+yy*ew;
-					for(xx=0;xx<destw;xx++){
-						dx = (xx+xmin-x)*fx;
-						sx = max(0L,(int32_t)floor(dx));
+				for (int32_t yy=0; yy<desth; ++yy) {
+					float dy = head.biHeight-(ymax-yy-y)*fy;
+					int32_t sy = max(0L,(int32_t)floor(dy));
+					uint8_t *psrc = info.pImage+sy*info.dwEffWidth;
+					uint8_t *pdst = pbase+yy*ew;	//current pixel from pbase
+					for(int32_t xx=0; xx<destw; ++xx) {
+						float dx = (xx+xmin-x)*fx;
+						int32_t sx = max(0L,(int32_t)floor(dx));
 #if CXIMAGE_SUPPORT_INTERPOLATION
-						if (bSmooth){
-							if (fx > 1 && fy > 1) {
+						if (bSmooth) {
+							if (fx > 1 && fy > 1)
 								c = GetAreaColorInterpolated(dx - 0.5f, dy - 0.5f, fx, fy, CxImage::IM_BILINEAR, CxImage::OM_REPEAT);
-							} else {
+							else
 								c = GetPixelColorInterpolated(dx - 0.5f, dy - 0.5f, CxImage::IM_BILINEAR, CxImage::OM_REPEAT);
-							}
 						} else
 #endif //CXIMAGE_SUPPORT_INTERPOLATION
 						{
-							if (head.biClrUsed){
-								c=GetPaletteColor(GetPixelIndex(sx,sy));
-							} else {
-								ppix = psrc + sx*3;
+							if (head.biClrUsed)
+								c = GetPaletteColor(GetPixelIndex(sx,sy));
+							else {
+								uint8_t *ppix = psrc + sx*3;	//current pixel from image
 								c.rgbBlue = *ppix++;
 								c.rgbGreen= *ppix++;
 								c.rgbRed  = *ppix;
@@ -1267,7 +1246,6 @@ HBITMAP CxImage::Draw2HBITMAP(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t
 		int32_t* pc = (int32_t*)&c;
 		int32_t* pct= (int32_t*)&ct;
 		int32_t cit = GetTransIndex();
-		int32_t ci = 0;
 
 		//Preparing Bitmap Info
 		BITMAPINFO bmInfo;
@@ -1279,8 +1257,6 @@ HBITMAP CxImage::Draw2HBITMAP(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t
 		bmInfo.bmiHeader.biBitCount=24;
 
 		uint8_t *pbase;	//points to the final dib
-		uint8_t *pdst;		//current pixel from pbase
-		uint8_t *ppix;		//current pixel from image
 
 		//get the background
 		HDC TmpDC=CreateCompatibleDC(hdc);
@@ -1289,30 +1265,29 @@ HBITMAP CxImage::Draw2HBITMAP(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t
 		BitBlt(TmpDC,0,0,destw,desth,hdc,paintbox.left,paintbox.top,SRCCOPY);
 
 		if (pbase){
-			int32_t xx,yy,alphaoffset,ix,iy;
-			uint8_t a,a1,*psrc;
+			int32_t alphaoffset;
+			uint8_t a,a1;
 			int32_t ew = ((((24 * destw) + 31) / 32) * 4);
 			int32_t ymax = paintbox.bottom;
 			int32_t xmin = paintbox.left;
+			int32_t ci = 0;
 
 			if (cx!=head.biWidth || cy!=head.biHeight){
 				//STRETCH
-				float fx=(float)head.biWidth/(float)cx;
-				float fy=(float)head.biHeight/(float)cy;
-				float dx,dy;
-				int32_t sx,sy;
+				float fx = (float)head.biWidth/(float)cx;
+				float fy = (float)head.biHeight/(float)cy;
 
-				for(yy=0;yy<desth;yy++){
-					dy = head.biHeight-(ymax-yy-y)*fy;
-					sy = max(0L,(int32_t)floor(dy));
+				for (int32_t yy=0; yy<desth; ++yy) {
+					float dy = head.biHeight-(ymax-yy-y)*fy;
+					int32_t sy = max(0L,(int32_t)floor(dy));
 
 					alphaoffset = sy*head.biWidth;
-					pdst = pbase + yy*ew;
-					psrc = info.pImage + sy*info.dwEffWidth;
+					uint8_t *pdst = pbase + yy*ew;	//current pixel from pbase
+					uint8_t *psrc = info.pImage + sy*info.dwEffWidth;
 
-					for(xx=0;xx<destw;xx++){
-						dx = (xx+xmin-x)*fx;
-						sx = max(0L,(int32_t)floor(dx));
+					for (int32_t xx=0; xx<destw; ++xx) {
+						float dx = (xx+xmin-x)*fx;
+						int32_t sx = max(0L,(int32_t)floor(dx));
 
 						if (bAlpha) a=pAlpha[alphaoffset+sx]; else a=255;
 						a =(uint8_t)((a*(1+info.nAlphaMax))>>8);
@@ -1321,11 +1296,10 @@ HBITMAP CxImage::Draw2HBITMAP(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t
 							ci = GetPixelIndex(sx,sy);
 #if CXIMAGE_SUPPORT_INTERPOLATION
 							if (bSmooth){
-								if (fx > 1 && fy > 1) {
+								if (fx > 1 && fy > 1)
 									c = GetAreaColorInterpolated(dx - 0.5f, dy - 0.5f, fx, fy, CxImage::IM_BILINEAR, CxImage::OM_REPEAT);
-								} else {
+								else
 									c = GetPixelColorInterpolated(dx - 0.5f, dy - 0.5f, CxImage::IM_BILINEAR, CxImage::OM_REPEAT);
-								}
 							} else
 #endif //CXIMAGE_SUPPORT_INTERPOLATION
 							{
@@ -1337,15 +1311,14 @@ HBITMAP CxImage::Draw2HBITMAP(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t
 						} else {
 #if CXIMAGE_SUPPORT_INTERPOLATION
 							if (bSmooth){
-								if (fx > 1 && fy > 1) {
+								if (fx > 1 && fy > 1)
 									c = GetAreaColorInterpolated(dx - 0.5f, dy - 0.5f, fx, fy, CxImage::IM_BILINEAR, CxImage::OM_REPEAT);
-								} else {
+								else
 									c = GetPixelColorInterpolated(dx - 0.5f, dy - 0.5f, CxImage::IM_BILINEAR, CxImage::OM_REPEAT);
-								}
 							} else
 #endif //CXIMAGE_SUPPORT_INTERPOLATION
 							{
-								ppix = psrc + sx*3;
+								uint8_t *ppix = psrc + sx*3;	//current pixel from image
 								c.rgbBlue = *ppix++;
 								c.rgbGreen= *ppix++;
 								c.rgbRed  = *ppix;
@@ -1377,13 +1350,13 @@ HBITMAP CxImage::Draw2HBITMAP(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t
 				}
 			} else {
 				//NORMAL
-				iy=head.biHeight-ymax+y;
-				for(yy=0;yy<desth;yy++,iy++){
+				int32_t iy = head.biHeight-ymax+y;
+				for (int32_t yy=0; yy<desth; ++yy,++iy) {
 					alphaoffset=iy*head.biWidth;
-					ix=xmin-x;
-					pdst=pbase+yy*ew;
-					ppix=info.pImage+iy*info.dwEffWidth+ix*3;
-					for(xx=0;xx<destw;xx++,ix++){
+					int32_t ix = xmin-x;
+					uint8_t *pdst = pbase+yy*ew;	//current pixel from pbase
+					uint8_t *ppix = info.pImage+iy*info.dwEffWidth+ix*3;	//current pixel from image
+					for (int32_t xx=0; xx<destw; ++xx,++ix) {
 
 						if (bAlpha) a=pAlpha[alphaoffset+ix]; else a=255;
 						a = (uint8_t)((a*(1+info.nAlphaMax))>>8);
@@ -1567,13 +1540,12 @@ int32_t CxImage::Tile(HDC hdc, RECT *rc)
 	if((pDib)&&(hdc)&&(rc)) {
 		int32_t w = rc->right - rc->left;
 		int32_t h = rc->bottom - rc->top;
-		int32_t x,y,z;
 		int32_t bx=head.biWidth;
 		int32_t by=head.biHeight;
-		for (y = 0 ; y < h ; y += by){
+		for (int32_t y = 0 ; y < h ; y += by){
 			if ((y+by)>h) by=h-y;
-			z=bx;
-			for (x = 0 ; x < w ; x += z){
+			int32_t z=bx;
+			for (int32_t x = 0 ; x < w ; x += z){
 				if ((x+z)>w) z=w-x;
 				RECT r = {rc->left + x,rc->top + y,rc->left + x + z,rc->top + y + by};
 				Draw(hdc,rc->left + x, rc->top + y,-1,-1,&r);
@@ -1648,11 +1620,10 @@ int32_t CxImage::DrawString(HDC hdc, int32_t x, int32_t y, const TCHAR* text, RG
 		itext.CreateFromHBITMAP(TmpBmp);
 
 		y=head.biHeight-y-1;
-		for (int32_t ix=0;ix<width;ix++){
-			for (int32_t iy=0;iy<height;iy++){
-				if (itext.GetPixelColor(ix,iy).rgbBlue) SetPixelColor(x+ix,y+iy,color,bSetAlpha);
-			}
-		}
+		for (int32_t ix=0; ix<width; ++ix)
+			for (int32_t iy=0; iy<height; ++iy)
+				if (itext.GetPixelColor(ix,iy).rgbBlue)
+					SetPixelColor(x+ix,y+iy,color,bSetAlpha);
 
 		//cleanup
 		if (pOldFont) SelectObject(TmpDC,pOldFont);
@@ -1781,11 +1752,10 @@ int32_t CxImage::DrawStringEx(HDC hdc, int32_t x, int32_t y, CXTEXTINFO *pTextTy
     if (x<0) x=0;
 
     //draw the background first, if it exists
-    int32_t ix,iy;
     if ( pTextType->opaque )
     {
         int32_t ixf=0;
-        for (ix=0;ix<width;ix++)
+        for (int32_t ix=0; ix<width; ++ix)
         {
             if ( ix<=roundR )
                 ixf = (int32_t)(.5+roundR-sqrt((float)(roundR*roundR-(ix-roundR)*(ix-roundR))));
@@ -1794,7 +1764,7 @@ int32_t CxImage::DrawStringEx(HDC hdc, int32_t x, int32_t y, CXTEXTINFO *pTextTy
             else
                 ixf=0;
 
-            for (iy=0;iy<height;iy++)
+            for (int32_t iy=0; iy<height; ++iy)
             {
                 if ( (ix<=roundR && ( iy > height-ixf-1 || iy < ixf )) ||
                      (ix>=width-roundR-1 && ( iy > height-ixf-1 || iy < ixf )) )
@@ -1818,9 +1788,9 @@ int32_t CxImage::DrawStringEx(HDC hdc, int32_t x, int32_t y, CXTEXTINFO *pTextTy
     }
 
     // draw the text itself
-    for (ix=0;ix<width;ix++)
+    for (int32_t ix=0; ix<width; ++ix)
     {
-		for (iy=0;iy<height;iy++)
+		for (int32_t iy=0; iy<height; ++iy)
         {
 			RGBQUAD pcolor = GetPixelColor(x+ix,y+iy);
 			RGBQUAD tcolor = itext.GetPixelColor(ix,iy);

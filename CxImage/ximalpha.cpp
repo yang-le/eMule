@@ -84,7 +84,7 @@ void CxImage::AlphaDelete()
 	if (pAlpha) { free(pAlpha); pAlpha=0; }
 }
 ////////////////////////////////////////////////////////////////////////////////
-void CxImage::AlphaInvert()
+void CxImage::AlphaInvert() const
 {
 	if (pAlpha) {
 		uint8_t *iSrc=pAlpha;

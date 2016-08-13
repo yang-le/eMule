@@ -100,14 +100,13 @@ void CScheduler::SaveToFile(){
 	}
 }
 
-void CScheduler::RemoveSchedule(int index){
-
-	if (index>=schedulelist.GetCount()) return;
-
-	Schedule_Struct* todel;
-	todel=schedulelist.GetAt(index);
-	delete todel;
-	schedulelist.RemoveAt(index);
+void CScheduler::RemoveSchedule(int index)
+{
+	if (index < schedulelist.GetCount()) {
+		const Schedule_Struct* todel = schedulelist[index];
+		delete todel;
+		schedulelist.RemoveAt(index);
+	}
 }
 
 void CScheduler::RemoveAll(){

@@ -959,24 +959,24 @@ bool ID3_HasChars(char* text, char* chars)
   //not found
   return false;
 }
-
+/*
 char* chartest(char** input)
 {
 //_CrtMemState* test1 = &s1;
 //_CrtMemState** test2 = &test1;
 //s1 = *test1;
 //test1 = *test2;
-//  int iSize;
+  int iSize;
 //  ID3_Frame* bla = LEAKTESTNEW(ID3_Frame, 0);
 //  ID3_Frame* bli = LEAKTESTNEW(ID3_Frame, 0);
   char* tmpchars = "ba";
-//  iSize = sizeof(char);
-//  int iSize = sizeof(ID3_Frame); // TODO reassigning value to iSize (???)
+  iSize = sizeof(char);
+  iSize = sizeof(ID3_Frame); // TODO reassigning value to iSize (???)
   char* genre = *input;
   input = &tmpchars;
   return genre;
 }
-
+*/
 ID3_Frame* ID3_AddGenre(ID3_Tag* tag, size_t genreNum, char* genre, bool add_v1_genre_number, bool add_v1_genre_description, bool addRXorCR, bool replace)
 {
 /* This routine should work for the following (all examples):
@@ -1028,8 +1028,9 @@ ID3_Frame* ID3_AddGenre(ID3_Tag* tag, size_t genreNum, char* genre, bool add_v1_
     {
       for (newGenreNum2 = 0; newGenreNum2 < ID3_NR_OF_V1_GENRES; ++newGenreNum2)
       {
-        tmpgenre = ID3_V1GENRE2DESCRIPTION(newGenreNum2);
-        // if tmpgenre = "Blues" and tmpgenre1 = "Blues, HardRock" they should match i accept a space, a comma and a ; as de;imters
+//		  tmpgenre = ID3_V1GENRE2DESCRIPTION(newGenreNum2); - no point to use that macro with checks for signed int values while here only valid unsigned numbers are present
+		  tmpgenre = ID3_v1_genre_description[newGenreNum2];
+        // if tmpgenre = "Blues" and tmpgenre1 = "Blues, HardRock" they should match i accept a space, a comma and a ; as delimters
         // if tmpgenre = "Pop" and tmpgenre1 = "Pop-Folk" they shouldn't match
         // if tmpgenre = "Jazz" and tmpgenre1 = "Jazz+Funk" they shouldn't match
         int iCompare = ID3_strncasecmp(tmpgenre, tmpgenre1, 23); //biggest genre is "Contemporary Christian" which is 22 chars
@@ -1088,21 +1089,24 @@ ID3_Frame* ID3_AddGenre(ID3_Tag* tag, size_t genreNum, char* genre, bool add_v1_
   {
     if (genreNum < ID3_NR_OF_V1_GENRES)
     {
-      tmpgenre = ID3_V1GENRE2DESCRIPTION(genreNum);
-      newgenre->append(tmpgenre, strlen(tmpgenre));
+//      tmpgenre = ID3_V1GENRE2DESCRIPTION(genreNum);
+	  tmpgenre = ID3_v1_genre_description[genreNum];
+	  newgenre->append(tmpgenre, strlen(tmpgenre));
     }
     if (newGenreNum1 < ID3_NR_OF_V1_GENRES && newGenreNum1 != genreNum)
     {
       if (genreNum < ID3_NR_OF_V1_GENRES) //also valid
         newgenre->append(", ", 2);
-      tmpgenre = ID3_V1GENRE2DESCRIPTION(newGenreNum1);
+//	  tmpgenre = ID3_V1GENRE2DESCRIPTION(newGenreNum1);
+	  tmpgenre = ID3_v1_genre_description[newGenreNum1];
       newgenre->append(tmpgenre, strlen(tmpgenre));
     }
     if (newGenreNum2 < ID3_NR_OF_V1_GENRES && newGenreNum2 != genreNum && newGenreNum2 != newGenreNum1)
     {
       if (genreNum < ID3_NR_OF_V1_GENRES || newGenreNum1 < ID3_NR_OF_V1_GENRES)
         newgenre->append(", ", 2);
-      tmpgenre = ID3_V1GENRE2DESCRIPTION(newGenreNum2);
+//	  tmpgenre = ID3_V1GENRE2DESCRIPTION(newGenreNum2);
+	  tmpgenre = ID3_v1_genre_description[newGenreNum2];
       newgenre->append(tmpgenre, strlen(tmpgenre));
     }
     // add any remaining text

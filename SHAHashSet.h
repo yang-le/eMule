@@ -199,7 +199,7 @@ public:
 class CAICHRecoveryHashSet
 {
 public:
-	explicit CAICHRecoveryHashSet(CKnownFile* pOwner, EMFileSize nSize = (uint64)0);
+	explicit CAICHRecoveryHashSet(CKnownFile* pOwner, EMFileSize nSize = 0ull);
 	~CAICHRecoveryHashSet(void);
 	bool			CreatePartRecoveryData(uint64 nPartStartPos, CFileDataIO* fileDataOut, bool bDbgDontLoad = false);
 	bool			ReadRecoveryData(uint64 nPartStartPos, CSafeMemFile* fileDataIn);

@@ -202,7 +202,7 @@ int CPreviewApps::ReadAllApps()
 			sbuffer.TrimRight(_T("\r\n\t"));
 
 			// ignore comments & too short lines
-			if (sbuffer.GetAt(0) == _T('#') || sbuffer.GetAt(0) == _T('/') || sbuffer.GetLength() < 5)
+			if (sbuffer[0] == _T('#') || sbuffer[0] == _T('/') || sbuffer.GetLength() < 5)
 				continue;
 
 			int iPos = 0;
@@ -301,7 +301,7 @@ int CPreviewApps::GetAllMenuEntries(CMenu& rMenu, const CPartFile* file)
 
 	for (int i = 0; i < m_aApps.GetCount(); i++)
 	{
-		const SPreviewApp& rSvc = m_aApps.GetAt(i);
+		const SPreviewApp& rSvc = m_aApps[i];
 		if (MP_PREVIEW_APP_MIN + i > MP_PREVIEW_APP_MAX)
 			break;
 		bool bEnabled = false;
@@ -317,7 +317,7 @@ int CPreviewApps::GetAllMenuEntries(CMenu& rMenu, const CPartFile* file)
 
 void CPreviewApps::RunApp(CPartFile* file, UINT uMenuID)
 {
-	const SPreviewApp& svc = m_aApps.GetAt(uMenuID - MP_PREVIEW_APP_MIN);
+	const SPreviewApp& svc = m_aApps[uMenuID - MP_PREVIEW_APP_MIN];
 	::ExecutePartFile(file, svc.strCommand, svc.strCommandArgs);
 }
 
@@ -411,7 +411,7 @@ int CPreviewApps::GetPreviewApp(const CPartFile* file)
 	int iApp = -1;
 	for (int i = 0; iApp == -1 && i < m_aApps.GetCount(); i++)
 	{
-		const SPreviewApp& rApp = m_aApps.GetAt(i);
+		const SPreviewApp& rApp = m_aApps[i];
 		for (int j = 0; j < rApp.astrExtensions.GetCount(); j++)
 		{
 			if (rApp.astrExtensions.GetAt(j).CompareNoCase(pszExt) == 0) {
@@ -430,7 +430,7 @@ CPreviewApps::ECanPreviewRes CPreviewApps::CanPreview(const CPartFile* file)
 	if (iApp == -1)
 		return NotHandled;
 
-	const SPreviewApp* pApp = &m_aApps.GetAt(iApp);
+	const SPreviewApp* pApp = &m_aApps[iApp];
 	if (pApp->ullMinCompletedSize != 0)
 	{
 		if (file->GetCompletedSize() < pApp->ullMinCompletedSize)

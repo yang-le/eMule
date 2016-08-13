@@ -125,7 +125,7 @@ CEMSocket::CEMSocket(void)
     m_numberOfSentBytesControlPacket = 0;
 
     lastCalledSend = ::GetTickCount();
-    lastSent = ::GetTickCount()-1000;
+    lastSent = lastCalledSend-SEC2MS(1);
 
 	m_bAccelerateUpload = false;
 
@@ -221,8 +221,8 @@ void CEMSocket::ClearQueues(){
 	while (!controlpacket_queue.IsEmpty())
 		delete controlpacket_queue.RemoveHead();
 
-	while (!standartpacket_queue.IsEmpty())
-		delete standartpacket_queue.RemoveHead().packet;
+	while (!standardpacket_queue.IsEmpty())
+		delete standardpacket_queue.RemoveHead().packet;
     sendLocker.Unlock();
 
 	// Download (pseudo) rate control
@@ -296,7 +296,7 @@ void CEMSocket::OnReceive(int nErrorCode){
 	}
 
     // CPU load improvement
-    if(downloadLimitEnable == true && downloadLimit == 0){
+    if (downloadLimitEnable && downloadLimit == 0){
         EMTrace("CEMSocket::OnReceive blocked by limit");
         pendingOnReceive = true;
 
@@ -306,17 +306,17 @@ void CEMSocket::OnReceive(int nErrorCode){
 
 	// Remark: an overflow can not occur here
 	uint32 readMax = sizeof(GlobalReadBuffer) - pendingHeaderSize;
-	if(downloadLimitEnable == true && readMax > downloadLimit) {
+	if (downloadLimitEnable && readMax > downloadLimit) {
 		readMax = downloadLimit;
 	}
 
 	// We attempt to read up to 2 megs at a time (minus whatever is in our internal read buffer)
-	uint32 ret = Receive(GlobalReadBuffer + pendingHeaderSize, readMax);
-	if(ret == (uint32)SOCKET_ERROR || byConnected == ES_DISCONNECTED)
+	int ret = Receive(GlobalReadBuffer + pendingHeaderSize, readMax);
+	if (ret == SOCKET_ERROR || byConnected == ES_DISCONNECTED)
 		return;
 
 	// Bandwidth control
-	if(downloadLimitEnable == true)
+	if (downloadLimitEnable)
 		// Update limit
 		downloadLimit -= GetRealReceivedBytes();
 
@@ -367,7 +367,7 @@ void CEMSocket::OnReceive(int nErrorCode){
 
 		if(pendingPacket == NULL){
 			pendingPacket = new Packet(rptr); // Create new packet container.
-			rptr += 6;                        // Only the header is initialized so far
+			rptr += PACKET_HEADER_SIZE;       // Only the header is initialized so far
 
 			// Bugfix We still need to check for a valid protocol
 			// Remark: the default eMule v0.26b had removed this test......
@@ -441,7 +441,7 @@ void CEMSocket::SetDownloadLimit(uint32 limit){
 	downloadLimitEnable = true;
 
 	// CPU load improvement
-	if(limit > 0 && pendingOnReceive == true){
+	if (limit > 0 && pendingOnReceive) {
 		OnReceive(0);
 	}
 }
@@ -450,7 +450,7 @@ void CEMSocket::DisableDownloadLimit(){
 	downloadLimitEnable = false;
 
 	// CPU load improvement
-	if(pendingOnReceive == true){
+	if (pendingOnReceive) {
 		OnReceive(0);
 	}
 }
@@ -477,7 +477,7 @@ void CEMSocket::DisableDownloadLimit(){
  * @return true if the packet was added to the queue, false otherwise
  */
 void CEMSocket::SendPacket(Packet* packet, bool delpacket, bool controlpacket, uint32 actualPayloadSize, bool bForceImmediateSend){
-	//EMTrace("CEMSocket::OnSenPacked1 linked: %i, controlcount %i, standartcount %i, isbusy: %i",m_bLinkedPackets, controlpacket_queue.GetCount(), standartpacket_queue.GetCount(), IsBusy());
+	//EMTrace("CEMSocket::OnSenPacked1 linked: %i, controlcount %i, standartcount %i, isbusy: %i",m_bLinkedPackets, controlpacket_queue.GetCount(), standardpacket_queue.GetCount(), IsBusy());
 
     if (byConnected == ES_DISCONNECTED)
 	{
@@ -503,9 +503,8 @@ void CEMSocket::SendPacket(Packet* packet, bool delpacket, bool controlpacket, u
             // queue up for controlpacket
             theApp.uploadBandwidthThrottler->QueueForSendingControlPacket(this, HasSent());
 	    } else {
-            bool first = !((sendbuffer && !m_currentPacket_is_controlpacket) || !standartpacket_queue.IsEmpty());
-            StandardPacketQueueEntry queueEntry = { actualPayloadSize, packet };
-		    standartpacket_queue.AddTail(queueEntry);
+            bool first = !((sendbuffer && !m_currentPacket_is_controlpacket) || !standardpacket_queue.IsEmpty());
+		    standardpacket_queue.AddTail(StandardPacketQueueEntry{actualPayloadSize, packet});
 
             // reset timeout for the first time
             if (first) {
@@ -513,9 +512,9 @@ void CEMSocket::SendPacket(Packet* packet, bool delpacket, bool controlpacket, u
                 m_bAccelerateUpload = true;	// Always accelerate first packet in a block
             }
 	    }
-    }
+		sendLocker.Unlock();
+	}
 
-    sendLocker.Unlock();
 	if (bForceImmediateSend){
 		ASSERT( controlpacket_queue.GetSize() == 1 );
 		Send(1024, 0, true);
@@ -576,7 +575,7 @@ void CEMSocket::OnSend(int nErrorCode){
 		return;
 	}
 
-	//EMTrace("CEMSocket::OnSend linked: %i, controlcount %i, standartcount %i, isbusy: %i",m_bLinkedPackets, controlpacket_queue.GetCount(), standartpacket_queue.GetCount(), IsBusy());
+	//EMTrace("CEMSocket::OnSend linked: %i, controlcount %i, standartcount %i, isbusy: %i",m_bLinkedPackets, controlpacket_queue.GetCount(), standardpacket_queue.GetCount(), IsBusy());
 	CEncryptedStreamSocket::OnSend(0);
 
     m_bBusy = false;
@@ -586,24 +585,24 @@ void CEMSocket::OnSend(int nErrorCode){
 
     if (byConnected == ES_DISCONNECTED) {
 		return;
-    } else
-		byConnected = ES_CONNECTED;
+    }
+	byConnected = ES_CONNECTED;
 
-    if(m_currentPacket_is_controlpacket) {
+    if (m_currentPacket_is_controlpacket) {
         // queue up for control packet
         theApp.uploadBandwidthThrottler->QueueForSendingControlPacket(this, HasSent());
     }
 
-	if (!m_bOverlappedSending && (!standartpacket_queue.IsEmpty() || sendbuffer != NULL))
+	if (!m_bOverlappedSending && (!standardpacket_queue.IsEmpty() || sendbuffer != NULL))
 		theApp.uploadBandwidthThrottler->SocketAvailable();
 }
 
 //void CEMSocket::StoppedSendSoUpdateStats() {
-//    if(m_startSendTick > 0) {
+//    if (m_startSendTick > 0) {
 //        m_lastSendLatency = ::GetTickCount()-m_startSendTick;
 //
 //        if(m_lastSendLatency > 0) {
-//            if(m_wasBlocked == true) {
+//            if(m_wasBlocked) {
 //                SocketTransferStats newLatencyStat = { m_lastSendLatency, ::GetTickCount() };
 //                m_Average_sendlatency_list.AddTail(newLatencyStat);
 //                m_latency_sum += m_lastSendLatency;
@@ -618,7 +617,7 @@ void CEMSocket::OnSend(int nErrorCode){
 //}
 //
 //void CEMSocket::CleanSendLatencyList() {
-//    while(m_Average_sendlatency_list.GetCount() > 0 && ::GetTickCount() - m_Average_sendlatency_list.GetHead().timestamp > 3*1000) {
+//    while(m_Average_sendlatency_list.GetCount() > 0 && ::GetTickCount() - m_Average_sendlatency_list.GetHead().timestamp > SEC2MS(3)) {
 //        SocketTransferStats removedLatencyStat = m_Average_sendlatency_list.RemoveHead();
 //        m_latency_sum -= removedLatencyStat.latency;
 //    }
@@ -627,15 +626,11 @@ void CEMSocket::OnSend(int nErrorCode){
 
 SocketSentBytes CEMSocket::Send(uint32 maxNumberOfBytesToSend, uint32 minFragSize, bool onlyAllowedToSendControlPacket)
 {
-    if (byConnected == ES_DISCONNECTED)
-	{
-        SocketSentBytes returnVal = { false, 0, 0 };
-        return returnVal;
-    }
+	if (byConnected == ES_DISCONNECTED)
+		return SocketSentBytes{false, 0, 0};
 	if (m_bOverlappedSending)
 		return SendOv(maxNumberOfBytesToSend, minFragSize, onlyAllowedToSendControlPacket);
-	else
-		return SendStd(maxNumberOfBytesToSend, minFragSize, onlyAllowedToSendControlPacket);
+	return SendStd(maxNumberOfBytesToSend, minFragSize, onlyAllowedToSendControlPacket);
 }
 
 /**
@@ -659,7 +654,7 @@ SocketSentBytes CEMSocket::Send(uint32 maxNumberOfBytesToSend, uint32 minFragSiz
  * @return the actual number of bytes that were put on the socket.
  */
 SocketSentBytes CEMSocket::SendStd(uint32 maxNumberOfBytesToSend, uint32 minFragSize, bool onlyAllowedToSendControlPacket) {
-	//EMTrace("CEMSocket::Send linked: %i, controlcount %i, standartcount %i, isbusy: %i",m_bLinkedPackets, controlpacket_queue.GetCount(), standartpacket_queue.GetCount(), IsBusy());
+	//EMTrace("CEMSocket::Send linked: %i, controlcount %i, standartcount %i, isbusy: %i",m_bLinkedPackets, controlpacket_queue.GetCount(), standardpacket_queue.GetCount(), IsBusy());
 	sendLocker.Lock();
     bool anErrorHasOccured = false;
     uint32 sentStandardPacketBytesThisCall = 0;
@@ -672,14 +667,14 @@ SocketSentBytes CEMSocket::SendStd(uint32 maxNumberOfBytesToSend, uint32 minFrag
 
         maxNumberOfBytesToSend = GetNextFragSize(maxNumberOfBytesToSend, minFragSize);
 
-        bool bWasLongTimeSinceSend = (::GetTickCount() - lastSent) > 1000;
+        bool bWasLongTimeSinceSend = (::GetTickCount() - lastSent) > SEC2MS(1);
 
         lastCalledSend = ::GetTickCount();
 
         while(sentStandardPacketBytesThisCall + sentControlPacketBytesThisCall < maxNumberOfBytesToSend && anErrorHasOccured == false && // don't send more than allowed. Also, there should have been no error in earlier loop
-              (sendbuffer != NULL || !controlpacket_queue.IsEmpty() || !standartpacket_queue.IsEmpty()) && // there must exist something to send
+              (sendbuffer != NULL || !controlpacket_queue.IsEmpty() || !standardpacket_queue.IsEmpty()) && // there must exist something to send
                (onlyAllowedToSendControlPacket == false || // this means we are allowed to send both types of packets, so proceed
-                sendbuffer != NULL && m_currentPacket_is_controlpacket == true || // We are in the progress of sending a control packet. We are always allowed to send those
+                sendbuffer != NULL && m_currentPacket_is_controlpacket || // We are in the progress of sending a control packet. We are always allowed to send those
                 sentStandardPacketBytesThisCall + sentControlPacketBytesThisCall > 0 && (sentStandardPacketBytesThisCall + sentControlPacketBytesThisCall) % minFragSize != 0 || // Once we've started, continue to send until an even minFragsize to minimize packet overhead
                 sendbuffer == NULL && !controlpacket_queue.IsEmpty() || // There's a control packet in queue, and we are not currently sending anything, so we will handle the control packet next
                 sendbuffer != NULL && m_currentPacket_is_controlpacket == false && bWasLongTimeSinceSend && !controlpacket_queue.IsEmpty() && (sentStandardPacketBytesThisCall + sentControlPacketBytesThisCall) < minFragSize // We have waited to long to clean the current packet (which may be a standard packet that is in the way). Proceed no matter what the value of onlyAllowedToSendControlPacket.
@@ -694,10 +689,10 @@ SocketSentBytes CEMSocket::SendStd(uint32 maxNumberOfBytesToSend, uint32 minFrag
                     // There's a control packet to send
                     m_currentPacket_is_controlpacket = true;
                     curPacket = controlpacket_queue.RemoveHead();
-                } else if(!standartpacket_queue.IsEmpty()) {
+                } else if(!standardpacket_queue.IsEmpty()) {
                     // There's a standard packet to send
                     m_currentPacket_is_controlpacket = false;
-                    StandardPacketQueueEntry queueEntry = standartpacket_queue.RemoveHead();
+                    StandardPacketQueueEntry queueEntry = standardpacket_queue.RemoveHead();
                     curPacket = queueEntry.packet;
                     m_actualPayloadSize = queueEntry.actualPayloadSize;
 
@@ -711,8 +706,7 @@ SocketSentBytes CEMSocket::SendStd(uint32 maxNumberOfBytesToSend, uint32 minFrag
                     ASSERT(0);
                     theApp.QueueDebugLogLine(true,_T("EMSocket: Couldn't get a new packet! There's an error in the first while condition in EMSocket::Send()"));
 
-                    SocketSentBytes returnVal = { true, sentStandardPacketBytesThisCall, sentControlPacketBytesThisCall };
-                    return returnVal;
+					return SocketSentBytes{ true, sentStandardPacketBytesThisCall, sentControlPacketBytesThisCall };
                 }
 
                 // We found a package to send. Get the data to send from the
@@ -766,8 +760,8 @@ SocketSentBytes CEMSocket::SendStd(uint32 maxNumberOfBytesToSend, uint32 minFrag
                         //m_wasBlocked = true;
                         sendLocker.Unlock();
 
-                        SocketSentBytes returnVal = { true, sentStandardPacketBytesThisCall, sentControlPacketBytesThisCall };
-                        return returnVal; // Send() blocked, onsend will be called when ready to send again
+						// Send() blocked, onsend will be called when ready to send again
+						return SocketSentBytes{ true, sentStandardPacketBytesThisCall, sentControlPacketBytesThisCall };
 			        } else{
                         // Send() gave an error
                         anErrorHasOccured = true;
@@ -828,8 +822,7 @@ SocketSentBytes CEMSocket::SendStd(uint32 maxNumberOfBytesToSend, uint32 minFrag
 
     sendLocker.Unlock();
 
-    SocketSentBytes returnVal = { !anErrorHasOccured, sentStandardPacketBytesThisCall, sentControlPacketBytesThisCall };
-    return returnVal;
+	return SocketSentBytes{ !anErrorHasOccured, sentStandardPacketBytesThisCall, sentControlPacketBytesThisCall };
 }
 
 /**
@@ -845,7 +838,7 @@ SocketSentBytes CEMSocket::SendStd(uint32 maxNumberOfBytesToSend, uint32 minFrag
  * @return the actual number of bytes that were put on the socket.
  */
 SocketSentBytes CEMSocket::SendOv(uint32 maxNumberOfBytesToSend, uint32 minFragSize, bool onlyAllowedToSendControlPacket) {
-	//EMTrace("CEMSocket::Send linked: %i, controlcount %i, standartcount %i, isbusy: %i",m_bLinkedPackets, controlpacket_queue.GetCount(), standartpacket_queue.GetCount(), IsBusy());
+	//EMTrace("CEMSocket::Send linked: %i, controlcount %i, standartcount %i, isbusy: %i",m_bLinkedPackets, controlpacket_queue.GetCount(), standardpacket_queue.GetCount(), IsBusy());
     ASSERT( m_pProxyLayer == NULL );
 	sendLocker.Lock();
     bool anErrorHasOccured = false;
@@ -861,7 +854,7 @@ SocketSentBytes CEMSocket::SendOv(uint32 maxNumberOfBytesToSend, uint32 minFragS
         lastCalledSend = ::GetTickCount();
 		ASSERT( m_pPendingSendOperation == NULL && m_aBufferSend.IsEmpty());
 		sint32 nBytesLeft = maxNumberOfBytesToSend;
-		if (sendbuffer != NULL || !controlpacket_queue.IsEmpty() || !standartpacket_queue.IsEmpty())
+		if (sendbuffer != NULL || !controlpacket_queue.IsEmpty() || !standardpacket_queue.IsEmpty())
 		{
 			// WSASend takes multiple buffers which is quite nice for our case, as we have to call send
 			// only once regardless how many packets we want to ship without memorymoving. But before
@@ -911,9 +904,9 @@ SocketSentBytes CEMSocket::SendOv(uint32 maxNumberOfBytesToSend, uint32 minFragS
 			}
 
 			// and now finally the standard packets if there are any and we have bytes left and we are allowed to
-			while (!standartpacket_queue.IsEmpty() && nBytesLeft > 0 && !onlyAllowedToSendControlPacket)
+			while (!standardpacket_queue.IsEmpty() && nBytesLeft > 0 && !onlyAllowedToSendControlPacket)
 			{
-				StandardPacketQueueEntry queueEntry = standartpacket_queue.RemoveHead();
+				StandardPacketQueueEntry queueEntry = standardpacket_queue.RemoveHead();
 				WSABUF pCurBuf;
 				Packet* curPacket = queueEntry.packet;
 				m_currentPackageIsFromPartFile = curPacket->IsFromPF();
@@ -985,16 +978,14 @@ SocketSentBytes CEMSocket::SendOv(uint32 maxNumberOfBytesToSend, uint32 minFragS
     }
 
     sendLocker.Unlock();
-    SocketSentBytes returnVal = { !anErrorHasOccured, sentStandardPacketBytesThisCall, sentControlPacketBytesThisCall };
-    return returnVal;
+	return SocketSentBytes{ !anErrorHasOccured, sentStandardPacketBytesThisCall, sentControlPacketBytesThisCall };
 }
 
-uint32 CEMSocket::GetNextFragSize(uint32 current, uint32 minFragSize) {
-    if(current % minFragSize == 0) {
-        return current;
-    } else {
-        return minFragSize*(current/minFragSize+1);
-    }
+uint32 CEMSocket::GetNextFragSize(uint32 current, uint32 minFragSize)
+{
+	if (current % minFragSize == 0)
+		return current;
+	return minFragSize*(current/minFragSize+1);
 }
 
 /**
@@ -1009,7 +1000,7 @@ uint32 CEMSocket::GetNeededBytes() {
 		return 0;
 	}
 
-    if (!((sendbuffer && !m_currentPacket_is_controlpacket) || !standartpacket_queue.IsEmpty())) {
+    if (!((sendbuffer && !m_currentPacket_is_controlpacket) || !standardpacket_queue.IsEmpty())) {
     	// No standard packet to send. Even if data needs to be sent to prevent timout, there's nothing to send.
         sendLocker.Unlock();
 		return 0;
@@ -1020,7 +1011,7 @@ uint32 CEMSocket::GetNeededBytes() {
 
 	uint32 sendgap = ::GetTickCount() - lastCalledSend;
 
-	uint64 timetotal = m_bAccelerateUpload?45000:90000;
+	uint64 timetotal = m_bAccelerateUpload ? SEC2MS(45): SEC2MS(90);
 	uint64 timeleft = ::GetTickCount() - lastFinishedStandard;
 	uint64 sizeleft, sizetotal;
 	if (sendbuffer && !m_currentPacket_is_controlpacket) {
@@ -1028,12 +1019,12 @@ uint32 CEMSocket::GetNeededBytes() {
 		sizetotal = sendblen;
 	}
 	else {
-		sizeleft = sizetotal = standartpacket_queue.GetHead().packet->GetRealPacketSize();
+		sizeleft = sizetotal = standardpacket_queue.GetHead().packet->GetRealPacketSize();
 	}
 	sendLocker.Unlock();
 
 	if (timeleft >= timetotal)
-		return (UINT)sizeleft;
+		return (uint32)sizeleft;
 	timeleft = timetotal-timeleft;
 	if (timeleft*sizetotal >= timetotal*sizeleft) {
 		// don't use 'GetTimeOut' here in case the timeout value is high,
@@ -1043,11 +1034,10 @@ uint32 CEMSocket::GetNeededBytes() {
 	}
 	uint64 decval = timeleft*sizetotal/timetotal;
 	if (!decval)
-		return (UINT)sizeleft;
+		return (uint32)sizeleft;
 	if (decval < sizeleft)
-		return (UINT)(sizeleft-decval+1);	// Round up
-	else
-		return 1;
+		return (uint32)(sizeleft-decval+1);	// Round up
+	return 1;
 }
 
 // pach2:
@@ -1195,8 +1185,8 @@ void CEMSocket::TruncateQueues() {
 
     // Clear the standard queue totally
     // Please note! There may still be a standardpacket in the sendbuffer variable!
-	while (!standartpacket_queue.IsEmpty())
-		delete standartpacket_queue.RemoveHead().packet;
+	while (!standardpacket_queue.IsEmpty())
+		delete standardpacket_queue.RemoveHead().packet;
 
     sendLocker.Unlock();
 }
@@ -1221,7 +1211,7 @@ void CEMSocket::AssertValid() const
 	CHECK_ARR(sendbuffer, sendblen);
 	(void)sent;
 	controlpacket_queue.AssertValid();
-	standartpacket_queue.AssertValid();
+	standardpacket_queue.AssertValid();
 	CHECK_BOOL(m_currentPacket_is_controlpacket);
     //(void)sendLocker;
     (void)m_numberOfSentBytesCompleteFile;
@@ -1340,13 +1330,13 @@ bool CEMSocket::IsBusyQuickCheck() const
 {
 	if (!m_bOverlappedSending)
 		return m_bBusy;
-	else
-		return m_pPendingSendOperation != NULL;
+	return m_pPendingSendOperation != NULL;
 }
 
 void CEMSocket::CleanUpOverlappedSendOperation(bool bCancelRequestFirst)
 {
-	CSingleLock lockSend(&sendLocker, TRUE);
+//	CSingleLock lockSend(&sendLocker, TRUE);
+	sendLocker.Lock();
 	if (m_pPendingSendOperation != NULL)
 	{
 		if (bCancelRequestFirst)
@@ -1360,19 +1350,20 @@ void CEMSocket::CleanUpOverlappedSendOperation(bool bCancelRequestFirst)
 		}
 		m_aBufferSend.RemoveAll();
 	}
+	sendLocker.Unlock();
 }
 
 bool CEMSocket::HasQueues(bool bOnlyStandardPackets) const
 {
 	// not trustworthy threaded? but it's ok if we don't get the correct result now and then
-	return sendbuffer || !standartpacket_queue.IsEmpty() || !controlpacket_queue.IsEmpty() && !bOnlyStandardPackets;
+	return sendbuffer || !standardpacket_queue.IsEmpty() || !controlpacket_queue.IsEmpty() && !bOnlyStandardPackets;
 }
 
 bool CEMSocket::IsEnoughFileDataQueued(uint32 nMinFilePayloadBytes) const
 {
 	// check we have at least nMinFilePayloadBytes Payload data in our standardqueue
-	for (POSITION pos = standartpacket_queue.GetHeadPosition(); pos != NULL;) {
-		uint32 actualsize = standartpacket_queue.GetNext(pos).actualPayloadSize;
+	for (POSITION pos = standardpacket_queue.GetHeadPosition(); pos != NULL;) {
+		uint32 actualsize = standardpacket_queue.GetNext(pos).actualPayloadSize;
 		if (actualsize > nMinFilePayloadBytes)
 			return true;
 		nMinFilePayloadBytes -= actualsize;

@@ -96,10 +96,9 @@ BOOL CCreditsThread::InitInstance()
 	}
 
 	// clean up the fonts we created
-	for(int n = 0; n < m_arFonts.GetSize(); n++)
-	{
-		m_arFonts.GetAt(n)->DeleteObject();
-		delete m_arFonts.GetAt(n);
+	for (int n = 0; n < m_arFonts.GetSize(); ++n) {
+		m_arFonts[n]->DeleteObject();
+		delete m_arFonts[n];
 	}
 	m_arFonts.RemoveAll();
 
@@ -231,7 +230,7 @@ void CCreditsThread::CreateCredits()
 
 	CFont* pOldFont;
 
-	pOldFont  = m_dcCredits.SelectObject(m_arFonts.GetAt(0));
+	pOldFont  = m_dcCredits.SelectObject(m_arFonts[0]);
 
 	m_dcCredits.SetBkMode(TRANSPARENT);
 

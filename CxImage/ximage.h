@@ -379,8 +379,8 @@ public:
 	RGBQUAD GetPaletteColor(uint8_t idx) const;
 	bool	GetPaletteColor(uint8_t i, uint8_t* r, uint8_t* g, uint8_t* b) const;
 	uint8_t	GetNearestIndex(RGBQUAD c);
-	void	BlendPalette(COLORREF cr,int32_t perc);
-	void	SetGrayPalette();
+	void	BlendPalette(COLORREF cr,int32_t perc) const;
+	void	SetGrayPalette() const;
 	void	SetPalette(uint32_t n, uint8_t *r, uint8_t *g, uint8_t *b);
 	void	SetPalette(RGBQUAD* pPal,uint32_t nColors=256);
 	void	SetPalette(rgb_color *rgb,uint32_t nColors=256);
@@ -513,7 +513,7 @@ public:
 	int32_t    DrawStringEx(HDC hdc, int32_t x, int32_t y, CXTEXTINFO *pTextType, bool bSetAlpha=false );
 	void    InitTextInfo( CXTEXTINFO *txt );
 protected:
-	bool IsHBITMAPAlphaValid( HBITMAP hbmp );
+	static bool IsHBITMAPAlphaValid( HBITMAP hbmp );
 public:
 #endif //CXIMAGE_SUPPORT_WINDOWS
 //@}
@@ -739,7 +739,7 @@ public:
 	void AlphaClear();
 	bool AlphaCreate();
 	void AlphaDelete();
-	void AlphaInvert();
+	void AlphaInvert() const;
 	bool AlphaMirror();
 	bool AlphaFlip();
 	bool AlphaCopy(CxImage &from);

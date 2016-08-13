@@ -74,9 +74,9 @@ TIFF*
 TIFFOpen(const char* name, const char* mode)
 {
 	static const char module[] = "TIFFOpen";
-   FILE* stream = fopen(name, mode);
+    FILE* stream = fopen(name, mode);
 	if (stream == NULL) 
-   {
+    {
 		TIFFError(module, "%s: Cannot open", name);
 		return NULL;
 	}

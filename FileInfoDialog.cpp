@@ -660,7 +660,7 @@ LRESULT CFileInfoDialog::OnMediaInfoResult(WPARAM, LPARAM lParam)
 	bool bDiffAudioLanguage = false;
 	for (int i = 0; i < paMediaInfo->GetSize(); i++)
 	{
-		SMediaInfo& mi = paMediaInfo->GetAt(i);
+		SMediaInfo& mi = (*paMediaInfo)[i];
 
 		mi.InitFileLength();
 		uTotalFileSize += (uint64)mi.ulFileSize;

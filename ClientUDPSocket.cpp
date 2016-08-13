@@ -37,8 +37,8 @@
 #include "IPFilter.h"
 #include "Log.h"
 #include "EncryptedDatagramSocket.h"
-#include "./kademlia/kademlia/prefs.h"
-#include "./kademlia/utils/KadUDPKey.h"
+#include "kademlia/kademlia/prefs.h"
+#include "kademlia/utils/KadUDPKey.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -57,13 +57,14 @@ CClientUDPSocket::CClientUDPSocket()
 
 CClientUDPSocket::~CClientUDPSocket()
 {
-    theApp.uploadBandwidthThrottler->RemoveFromAllQueues(this); // ZZ:UploadBandWithThrottler (UDP)
-
+	theApp.uploadBandwidthThrottler->RemoveFromAllQueuesLocked(this); // ZZ:UploadBandWithThrottler (UDP)
+	sendLocker.Lock();
 	while (!controlpacket_queue.IsEmpty()) {
 		const UDPPack* p = controlpacket_queue.RemoveHead();
 		delete p->packet;
 		delete p;
 	}
+	sendLocker.Unlock();
 }
 
 void CClientUDPSocket::OnReceive(int nErrorCode)
@@ -538,8 +539,7 @@ SocketSentBytes CClientUDPSocket::SendControlData(uint32 maxNumberOfBytesToSend,
     }
     sendLocker.Unlock();
 
-    SocketSentBytes returnVal = { true, 0, sentBytes };
-    return returnVal;
+	return SocketSentBytes{ true, 0, sentBytes };
 // <-- ZZ:UploadBandWithThrottler (UDP)
 }
 

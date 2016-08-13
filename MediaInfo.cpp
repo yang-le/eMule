@@ -1205,7 +1205,7 @@ BOOL GetRMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsRM, bool bFullI
 	CArray<SRmFileProp> aFileProps;
 	try
 	{
-		ULONGLONG ullCurFilePos = 0;
+		ULONGLONG ullCurFilePos = 0ull;
 		ULONGLONG ullChunkStartFilePos = ullCurFilePos;
 		ULONGLONG ullChunkEndFilePos;
 
@@ -1606,7 +1606,7 @@ bool GetAttributeT(IWMHeaderInfo *pIWMHeaderInfo, WORD wStream, LPCWSTR pwszName
 	return true;
 }
 
-template<class T> bool GetAttribute(IWMHeaderInfo *pIWMHeaderInfo, WORD wStream, LPCWSTR pwszName, T &nData);
+template<class T> bool GetAttributeT(IWMHeaderInfo *pIWMHeaderInfo, WORD wStream, LPCWSTR pwszName, T &nData);
 
 bool GetAttribute(IWMHeaderInfo *pIWMHeaderInfo, WORD wStream, LPCWSTR pwszName, BOOL &nData)
 {
@@ -1716,7 +1716,7 @@ bool GetAttributeExT(IWMHeaderInfo3 *pIWMHeaderInfo, WORD wStream, LPCWSTR pwszN
 	return true;
 }
 
-template<class T> bool GetAttributeEx(IWMHeaderInfo3 *pIWMHeaderInfo, WORD wStream, LPCWSTR pwszName, T &nData);
+template<class T> bool GetAttributeExT(IWMHeaderInfo3 *pIWMHeaderInfo, WORD wStream, LPCWSTR pwszName, T &nData);
 
 bool GetAttributeEx(IWMHeaderInfo3 *pIWMHeaderInfo, WORD wStream, LPCWSTR pwszName, BOOL &nData)
 {

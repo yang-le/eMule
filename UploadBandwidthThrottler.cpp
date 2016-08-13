@@ -180,8 +180,8 @@ bool UploadBandwidthThrottler::RemoveFromStandardListNoLock(ThrottledFileSocket*
 	// Find the slot
 	int slotCounter = 0;
 	bool foundSocket = false;
-	while(slotCounter < m_StandardOrder_list.GetSize() && foundSocket == false) {
-		if(m_StandardOrder_list.GetAt(slotCounter) == socket) {
+	while(slotCounter < m_StandardOrder_list.GetSize() && !foundSocket) {
+		if(m_StandardOrder_list[slotCounter] == socket) {
 			// Remove the slot
 			m_StandardOrder_list.RemoveAt(slotCounter);
 			foundSocket = true;
@@ -209,7 +209,7 @@ bool UploadBandwidthThrottler::RemoveFromStandardListNoLock(ThrottledFileSocket*
 * @param socket address to the socket that requests to have controlpacket send
 *               to be called on it
 */
-void UploadBandwidthThrottler::QueueForSendingControlPacket(ThrottledControlSocket* socket, bool hasSent) {
+void UploadBandwidthThrottler::QueueForSendingControlPacket(ThrottledControlSocket* socket, const bool hasSent) {
 	// Get critical section
 	tempQueueLocker.Lock();
 
@@ -256,8 +256,7 @@ void UploadBandwidthThrottler::RemoveFromAllQueues(ThrottledControlSocket* socke
 			m_TempControlQueueFirst_list.RemoveAt(pos);
 		tempQueueLocker.Unlock();
 	}
-
-	if(lock) {
+	if(lock) { 
 		// End critical section
 		sendLocker.Unlock();
     }
@@ -616,7 +615,7 @@ UINT UploadBandwidthThrottler::RunInternal() {
                 }
 
 			    if(socket != NULL) {
-                    SocketSentBytes socketSentBytes = socket->SendControlData(allowedDataRate > 0?(UINT)(bytesToSpend - spentBytes):1, minFragSize);
+                    SocketSentBytes socketSentBytes = socket->SendControlData(allowedDataRate > 0?(uint32)(bytesToSpend - spentBytes):1u, minFragSize);
 					spentBytes += socketSentBytes.sentBytesControlPackets + socketSentBytes.sentBytesStandardPackets;
 				    spentOverhead += socketSentBytes.sentBytesControlPackets;
 			    }
@@ -624,7 +623,7 @@ UINT UploadBandwidthThrottler::RunInternal() {
 
 		    // Check if any sockets haven't gotten data for a long time. Then trickle them a package.
 		    for(uint32 slotCounter = 0; slotCounter < (uint32)m_StandardOrder_list.GetSize(); slotCounter++) {
-			    ThrottledFileSocket* socket = m_StandardOrder_list.GetAt(slotCounter);
+			    ThrottledFileSocket* socket = m_StandardOrder_list[slotCounter];
 
 			    if(socket != NULL) {
 				    if(thisLoopTick-socket->GetLastCalledSend() > SEC2MS(1)) {
@@ -664,7 +663,7 @@ UINT UploadBandwidthThrottler::RunInternal() {
                     rememberedSlotCounter = 0;
                 }
 
-                ThrottledFileSocket* socket = m_StandardOrder_list.GetAt(rememberedSlotCounter);
+                ThrottledFileSocket* socket = m_StandardOrder_list[rememberedSlotCounter];
 				if(socket != NULL) {
 					SocketSentBytes socketSentBytes = socket->SendFileAndControlData((uint32)mini(maxi((uint64)doubleSendSize, (uint64)bytesToSpend/maxSlot), (uint64)bytesToSpend-spentBytes), doubleSendSize);
 					uint32 lastSpentBytes = socketSentBytes.sentBytesControlPackets + socketSentBytes.sentBytesStandardPackets;
@@ -681,7 +680,7 @@ UINT UploadBandwidthThrottler::RunInternal() {
 
 		    // Any bandwidth that hasn't been used yet are used first to last.
 			for(uint32 slotCounter = 0; slotCounter < (uint32)m_StandardOrder_list.GetSize() && bytesToSpend > 0 && spentBytes < (uint64)bytesToSpend; slotCounter++) {
-				ThrottledFileSocket* socket = m_StandardOrder_list.GetAt(slotCounter);
+				ThrottledFileSocket* socket = m_StandardOrder_list[slotCounter];
 
 				if(socket != NULL) {
                     uint32 bytesToSpendTemp = (UINT)(bytesToSpend-spentBytes);

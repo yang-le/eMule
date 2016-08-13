@@ -135,8 +135,8 @@ void CAbstractFile::LoadComment()
 
 void CAbstractFile::CopyTags(const CArray<CTag*, CTag*>& tags)
 {
-	for (int i = 0; i < tags.GetSize(); i++)
-		taglist.Add(new CTag(*tags.GetAt(i)));
+	for (int i = 0; i < tags.GetSize(); ++i)
+		taglist.Add(new CTag(*tags[i]));
 }
 
 void CAbstractFile::ClearTags()

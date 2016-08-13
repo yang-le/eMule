@@ -223,34 +223,31 @@ bool CxImage::HistogramStretch(int32_t method, double threshold)
 		uint8_t lutR[256];
 		uint8_t range = maxR - minR;
 		if (range != 0)	{
-			for (x = 0; x <256; x++){
-				lutR[x] = (uint8_t)max(0,min(255,(255 * (x - minR) / range)));
-			}
+			for (x = 0; x <256; ++x)
+				lutR[x] = (uint8_t)max(0,min(255,(255 * (x - minR) / (int32_t)range)));
 		} else lutR[minR] = minR;
 
 		uint8_t lutG[256];
 		range = maxG - minG;
 		if (range != 0)	{
-			for (x = 0; x <256; x++){
-				lutG[x] = (uint8_t)max(0,min(255,(255 * (x - minG) / range)));
-			}
+			for (x = 0; x <256; ++x)
+				lutG[x] = (uint8_t)max(0,min(255,(255 * (x - minG) / (int32_t)range)));
 		} else lutG[minG] = minG;
 
 		uint8_t lutB[256];
 		range = maxB - minB;
 		if (range != 0)	{
-			for (x = 0; x <256; x++){
-				lutB[x] = (uint8_t)max(0,min(255,(255 * (x - minB) / range)));
-			}
+			for (x = 0; x <256; ++x)
+				lutB[x] = (uint8_t)max(0,min(255,(255 * (x - minB) / (int32_t)range)));
 		} else lutB[minB] = minB;
 
 		// normalize image
-		for (y=0; y<head.biHeight; y++)
+		for (y=0; y<head.biHeight; ++y)
 		{
 			info.nProgress = (int32_t)(50.0+y*dbScaler);
 			if (info.nEscape) break;
 
-			for (x=0; x<head.biWidth; x++)
+			for (x=0; x<head.biWidth; ++x)
 			{
 				RGBQUAD color = BlindGetPixelColor(x, y);
 
@@ -267,11 +264,11 @@ bool CxImage::HistogramStretch(int32_t method, double threshold)
 	  { // <dave>
 		double p[256];
 		memset(p,  0, 256*sizeof(double));
-		for (y=0; y<head.biHeight; y++)
+		for (y=0; y<head.biHeight; ++y)
 		{
 			info.nProgress = (int32_t)(y*dbScaler);
 			if (info.nEscape) break;
-			for (x=0; x<head.biWidth; x++)	{
+			for (x=0; x<head.biWidth; ++x)	{
 				RGBQUAD color = BlindGetPixelColor(x, y);
 				p[RGB2GRAY(color.rgbRed, color.rgbGreen, color.rgbBlue)]++;
 			}
@@ -290,9 +287,8 @@ bool CxImage::HistogramStretch(int32_t method, double threshold)
 
 		// calculate LUT
 		uint8_t lut[256];
-		for (x = 0; x <256; x++){
+		for (x = 0; x <256; ++x)
 			lut[x] = (uint8_t)max(0,min(255,(255 * (x - minc) / (maxc - minc))));
-		}
 
 		for(y=0; y<head.biHeight; y++){
 			info.nProgress = (int32_t)(50.0+y*dbScaler);

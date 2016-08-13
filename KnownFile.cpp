@@ -681,7 +681,7 @@ void CKnownFile::SetFileSize(EMFileSize nFileSize)
 	// PARTSIZE*2      2               3(!)            3(!)					2
 	// PARTSIZE*2+1    3               3               3					3
 
-	if (nFileSize == (uint64)0){
+	if (nFileSize == 0ull){
 		ASSERT(0);
 		m_iPartCount = 0;
 		m_iED2KPartCount = 0;

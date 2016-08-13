@@ -1986,7 +1986,7 @@ bool CSearchListCtrl::IsFilteredItem(const CSearchFile* pSearchFile) const
 
 	for (int i = 0; i < rastrFilter.GetSize(); i++)
 	{
-		const CString& rstrExpr = rastrFilter.GetAt(i);
+		const CString& rstrExpr = rastrFilter[i];
 		bool bAnd = true;
 		LPCTSTR pszText = (LPCTSTR)rstrExpr;
 		if (pszText[0] == _T('-')) {

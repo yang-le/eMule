@@ -82,7 +82,7 @@ void CUpDownClient::DrawUpStatusBar(CDC* dc, RECT* rect, bool onlygreyrect, bool
 		filesize = (uint64)(PARTSIZE * (uint64)m_nUpPartCount);
 	// wistily: UpStatusFix
 
-    if(filesize > (uint64)0) {
+    if(filesize > 0ull) {
 	    s_UpStatusBar.SetFileSize(filesize);
 	    s_UpStatusBar.SetHeight(rect->bottom - rect->top);
 	    s_UpStatusBar.SetWidth(rect->right - rect->left);

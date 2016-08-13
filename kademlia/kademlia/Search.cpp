@@ -1544,7 +1544,7 @@ static bool IsRedundantMetaData(const CStringArray& rastrFileNameWords, const CS
 		for (int i = 0; i < rastrFileNameWords.GetSize(); i++)
 		{
 			// Verified Locale Dependency: Locale dependent string comparison (OK)
-			if (rastrFileNameWords.GetAt(i).CompareNoCase(strMetaDataWord) == 0)
+			if (rastrFileNameWords[i].CompareNoCase(strMetaDataWord) == 0)
 			{
 				iFoundInFileName++;
 				break;

@@ -40,12 +40,10 @@ ID3_FrameDef *ID3_FindFrameDef(ID3_FrameID id);
 int ID3_strncasecmp (const char *s1, const char *s2, int n)
 {
   // this routine is borrowed from half-life
-  int c1, c2;
-
   while (1)
   {
-    c1 = *s1++;
-    c2 = *s2++;
+    int c1 = *s1++;
+    int c2 = *s2++;
 
     if (!n--)
       return 0; // strings are equal until end point n
@@ -78,20 +76,14 @@ bool IsUrl(const String& tmpUrl)//char* url)
   // should start with ftp:// and be at least 10 chars (ftp://a.bb) OR
   // should start with mailto: and be at least 13 chars (mailto:a@b.cc)
   // these sizes do not take into consideration those that have emails or links directly at TLD's (e.g. a@b or http://a/ )
-  if ((tmpUrl.size() > 11 && ID3_strncasecmp(tmpUrl.c_str(), "http://", 7) == 0) ||
+  return ((tmpUrl.size() > 11 && ID3_strncasecmp(tmpUrl.c_str(), "http://", 7) == 0) ||
       (tmpUrl.size() > 10 && ID3_strncasecmp(tmpUrl.c_str(), "ftp://", 6) == 0) ||
-      (tmpUrl.size() > 13 && ID3_strncasecmp(tmpUrl.c_str(), "mailto:", 7) == 0))
-    return true;
-  else
-    return false;
+      (tmpUrl.size() > 13 && ID3_strncasecmp(tmpUrl.c_str(), "mailto:", 7) == 0));
 }
 
 bool ValidFrameOwner(const String& owner)
 {
-  if (IsUrl(owner))
-    return true;
-  else
-    return false;
+  return (IsUrl(owner));
 }
 
 size_t ID3_TagImpl::IsV2Tag(ID3_Reader& reader)
@@ -100,7 +92,7 @@ size_t ID3_TagImpl::IsV2Tag(ID3_Reader& reader)
   size_t tagSize = 0;
   String id = io::readText(reader, ID3_TagHeader::ID_SIZE);
   String ver = io::readText(reader, 2);
-  char flags = reader.readChar();
+/*  char flags =*/ (void)reader.readChar();
   String size = io::readText(reader, 4);
 
   if (id == ID3_TagHeader::ID &&
@@ -164,9 +156,7 @@ ID3_TagImpl::ID3_TagImpl(const char *name, flags_t flags)
 #endif
   this->Clear();
   if (name)
-  {
     this->Link(name, flags);
-  }
 }
 
 ID3_TagImpl::ID3_TagImpl(const ID3_Tag &tag)
@@ -287,9 +277,7 @@ bool ID3_TagImpl::IsValidFrame(ID3_Frame& frame, bool testlinkedFrames)
           this->RemoveFrame(tmpFrame); //remove old one, there can be only one
         return true;
       }
-      else
-        return false;
-      break;
+      return false;
     } //
     case ID3FID_CRYPTOREG:
     {
@@ -306,9 +294,7 @@ bool ID3_TagImpl::IsValidFrame(ID3_Frame& frame, bool testlinkedFrames)
           this->RemoveFrame(tmpFrame); //remove old one, there can be only one
         return true;
       }
-      else
-        return false;
-      break;
+      return false;
     }
     case ID3FID_GROUPINGREG:
     {
@@ -325,9 +311,7 @@ bool ID3_TagImpl::IsValidFrame(ID3_Frame& frame, bool testlinkedFrames)
           this->RemoveFrame(tmpFrame); //remove old one, there can be only one
         return true;
       }
-      else
-        return false;
-      break;
+      return false;
     }
     case ID3FID_PRIVATE:
     {
@@ -340,9 +324,7 @@ bool ID3_TagImpl::IsValidFrame(ID3_Frame& frame, bool testlinkedFrames)
         // or that the data field cannot be the same, or both..
         return true;
       }
-      else
-        return false;
-      break;
+      return false;
     } //
     case ID3FID_PRODUCEDNOTICE:
     {
@@ -350,12 +332,8 @@ bool ID3_TagImpl::IsValidFrame(ID3_Frame& frame, bool testlinkedFrames)
       tmpField = testframe->GetField(ID3FN_TEXT);
       String tmpText = tmpField->GetText();
       if (tmpText.size() > 4)
-      {
         return true;
-      }
-      else
-        return false;
-      break;
+      return false;
     } //
     case ID3FID_COPYRIGHT:
     {
@@ -363,12 +341,8 @@ bool ID3_TagImpl::IsValidFrame(ID3_Frame& frame, bool testlinkedFrames)
       tmpField = testframe->GetField(ID3FN_TEXT);
       String tmpText = tmpField->GetText();
       if (tmpText.size() > 4)
-      {
         return true;
-      }
-      else
-        return false;
-      break;
+      return false;
     } //
     case ID3FID_ENCODINGTIME:
     {
@@ -376,12 +350,8 @@ bool ID3_TagImpl::IsValidFrame(ID3_Frame& frame, bool testlinkedFrames)
       tmpField = testframe->GetField(ID3FN_TEXT);
       String tmpText = tmpField->GetText();
       if (tmpText.size() > 3)
-      {
         return true;
-      }
-      else
-        return false;
-      break;
+      return false;
     }
     case ID3FID_ORIGRELEASETIME:
     {
@@ -389,12 +359,8 @@ bool ID3_TagImpl::IsValidFrame(ID3_Frame& frame, bool testlinkedFrames)
       tmpField = testframe->GetField(ID3FN_TEXT);
       String tmpText = tmpField->GetText();
       if (tmpText.size() > 3)
-      {
         return true;
-      }
-      else
-        return false;
-      break;
+      return false;
     }
     case ID3FID_RECORDINGTIME:
     {
@@ -402,12 +368,8 @@ bool ID3_TagImpl::IsValidFrame(ID3_Frame& frame, bool testlinkedFrames)
       tmpField = testframe->GetField(ID3FN_TEXT);
       String tmpText = tmpField->GetText();
       if (tmpText.size() > 3)
-      {
         return true;
-      }
-      else
-        return false;
-      break;
+      return false;
     }
     case ID3FID_RELEASETIME:
     {
@@ -415,12 +377,8 @@ bool ID3_TagImpl::IsValidFrame(ID3_Frame& frame, bool testlinkedFrames)
       tmpField = testframe->GetField(ID3FN_TEXT);
       String tmpText = tmpField->GetText();
       if (tmpText.size() > 3)
-      {
         return true;
-      }
-      else
-        return false;
-      break;
+      return false;
     }
     case ID3FID_TAGGINGTIME:
     {
@@ -428,12 +386,8 @@ bool ID3_TagImpl::IsValidFrame(ID3_Frame& frame, bool testlinkedFrames)
       tmpField = testframe->GetField(ID3FN_TEXT);
       String tmpText = tmpField->GetText();
       if (tmpText.size() > 3)
-      {
         return true;
-      }
-      else
-        return false;
-      break;
+      return false;
     }
     case ID3FID_CDID:
     {
@@ -447,19 +401,14 @@ bool ID3_TagImpl::IsValidFrame(ID3_Frame& frame, bool testlinkedFrames)
           tmpFrame = this->Find(ID3FID_TRACKNUM);
           if (tmpFrame)
             return true; //todo...
-          else
-            return false;
+          return false;
         }
-        else return true;
+        return true;
       }
-      else return false;
-      break;
+      return false;
     }//
     default:
-    {
       return true;
-      break;
-    }
   }
 }
 
@@ -488,8 +437,7 @@ bool ID3_TagImpl::AttachFrame(ID3_Frame* frame)
 {
   ID3_Frame& testframe = *frame;
 
-  bool isvalid = IsValidFrame(testframe, false);
-  if (isvalid)
+  if (IsValidFrame(testframe, false))
   {
     frame = &testframe;
     _frames.push_back(frame);
@@ -497,11 +445,7 @@ bool ID3_TagImpl::AttachFrame(ID3_Frame* frame)
     _changed = true;
     return true;
   }
-  else
-  {
-    delete frame;
-    frame = NULL;
-  }
+  delete frame;
   return false;
 }
 
@@ -527,21 +471,9 @@ bool ID3_TagImpl::HasChanged() const
 {
   bool changed = _changed;
 
-  if (! changed)
-  {
-    for (const_iterator fi = _frames.begin(); fi != _frames.end(); ++fi)
-    {
-      if (*fi)
-      {
-        changed = (*fi)->HasChanged();
-      }
-
-      if (changed)
-      {
-        break;
-      }
-    }
-  }
+  for (const_iterator fi = _frames.begin(); !changed && fi != _frames.end(); ++fi)
+    if (*fi)
+      changed = (*fi)->HasChanged();
 
   return changed;
 }

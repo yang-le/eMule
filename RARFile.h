@@ -91,9 +91,9 @@ public:
 
 	bool Open(LPCTSTR pszArchiveFilePath);
 	void Close();
-	bool GetNextFile(CString& strFile);
-	bool Extract(LPCTSTR pszDstFilePath);
-	bool Skip();
+	bool GetNextFile(CString& strFile) const;
+	bool Extract(LPCTSTR pszDstFilePath) const;
+	bool Skip() const;
 
 protected:
 	HMODULE m_hLibUnRar;

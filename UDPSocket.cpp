@@ -110,13 +110,14 @@ CUDPSocket::CUDPSocket()
 
 CUDPSocket::~CUDPSocket()
 {
-    theApp.uploadBandwidthThrottler->RemoveFromAllQueues(this); // ZZ:UploadBandWithThrottler (UDP)
-
+	theApp.uploadBandwidthThrottler->RemoveFromAllQueuesLocked(this); // ZZ:UploadBandWithThrottler (UDP)
+	sendLocker.Lock();
 	while (!controlpacket_queue.IsEmpty()) {
 		const SServerUDPPacket* p = controlpacket_queue.RemoveHead();
 		delete[] p->packet;
 		delete p;
 	}
+	sendLocker.Unlock();
 	m_udpwnd->DestroyWindow();
 
 	while (!m_aDNSReqs.IsEmpty())
@@ -730,8 +731,7 @@ SocketSentBytes CUDPSocket::SendControlData(uint32 maxNumberOfBytesToSend, uint3
     }
     sendLocker.Unlock();
 
-    SocketSentBytes returnVal = { true, 0, sentBytes };
-    return returnVal;
+	return SocketSentBytes{ true, 0, sentBytes };
 // <-- ZZ:UploadBandWithThrottler (UDP)
 }
 
