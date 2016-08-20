@@ -629,7 +629,7 @@ bool CSharedFileList::CheckAndAddSingleFile(const CString& rstrFilePath)
 bool CSharedFileList::SafeAddKFile(CKnownFile* toadd, bool bOnlyAdd)
 {
 	RemoveFromHashing(toadd);	// SLUGFILLER: SafeHash - hashed ok, remove from list, in case it was on the list
-	bool bAdded = AddFile(toadd); //fo88
+	bool bAdded = AddFile(toadd); 
 	if (bOnlyAdd)
 		return bAdded;
 	if (bAdded && output)
@@ -792,7 +792,7 @@ void CSharedFileList::SetOutputCtrl(CSharedFilesCtrl* in_ctrl)
 uint8 GetRealPrio(uint8 in)
 {
 	switch(in) {
-		case 4 : return 0;
+//		case 4 : return 0;
 		case 0 : return 1;
 		case 1 : return 2;
 		case 2 : return 3;
@@ -1590,7 +1590,8 @@ bool CSharedFileList::ExcludeFile(CString strFilePath)
 	return true;
 }
 
-void CSharedFileList::CheckAndAddSingleFile(const CFileFind& ff){
+void CSharedFileList::CheckAndAddSingleFile(const CFileFind& ff)
+{
 	if (ff.IsDirectory() || ff.IsDots() || ff.IsSystem() || ff.IsTemporary() || ff.GetLength()==0 || ff.GetLength()>MAX_EMULE_FILE_SIZE)
 		return;
 
@@ -1601,17 +1602,16 @@ void CSharedFileList::CheckAndAddSingleFile(const CFileFind& ff){
 	ULONGLONG ullFoundFileSize = ff.GetLength();
 
 	// check if this file is explicit unshared
-	for (POSITION pos = m_liSingleExcludedFiles.GetHeadPosition(); pos != NULL;) {
+	for (POSITION pos = m_liSingleExcludedFiles.GetHeadPosition(); pos != NULL;)
 		if (strFoundFilePath.CompareNoCase(m_liSingleExcludedFiles.GetNext(pos)) == 0)
 			return;
-	}
 
 
 	CTime tFoundFileTime;
-	try{
+	try {
 		ff.GetLastWriteTime(tFoundFileTime);
 	}
-	catch(CException* ex){
+	catch(CException* ex) {
 		ex->Delete();
 	}
 
@@ -1688,10 +1688,10 @@ void CSharedFileList::CheckAndAddSingleFile(const CFileFind& ff){
 		}
 	}
 
-	uint32 fdate = (UINT)tFoundFileTime.GetTime();
+	uint32 fdate = (uint32)tFoundFileTime.GetTime();
 	if (fdate == 0)
-		fdate = (UINT)-1;
-	if (fdate == (UINT)-1){
+		fdate = (uint32)-1;
+	if (fdate == (uint32)-1){
 		if (thePrefs.GetVerbose())
 			AddDebugLogLine(false, _T("Failed to get file date of \"%s\""), (LPCTSTR)strFoundFilePath);
 	}

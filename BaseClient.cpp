@@ -853,7 +853,7 @@ void CUpDownClient::ProcessMuleInfoPacket(const uchar* pachPacket, uint32 nSize)
 						m_strMuleInfo.AppendFormat(_T("\n  UDPPort=%u"), (UINT)temptag.GetInt());
 				}
 				else if (bDbgInfo)
-					m_strMuleInfo.AppendFormat(_T("\n  ***UnkType=%s"), (LPCTSTR)temptag.GetFullInfo()); //fo88
+					m_strMuleInfo.AppendFormat(_T("\n  ***UnkType=%s"), (LPCTSTR)temptag.GetFullInfo());
 				break;
 
 			case ET_UDPVER:
@@ -1381,7 +1381,7 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 	////////////////////////////////////////////////////////////
 	// Check for 1) Already Connected/Connecting
 	if (m_nConnectingState != CCS_NONE) {
-		DebugLog(_T("TryToConnect: Already Connecting (%s)"), (LPCTSTR)DbgGetClientInfo());// TODO LogRemove //fo88
+		DebugLog(_T("TryToConnect: Already Connecting (%s)"), (LPCTSTR)DbgGetClientInfo());// TODO LogRemove
 		return true;
 	}
 	else if (socket != NULL){

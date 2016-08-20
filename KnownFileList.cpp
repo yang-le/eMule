@@ -423,13 +423,11 @@ bool CKnownFileList::SafeAddKFile(CKnownFile* toadd)
 
 CKnownFile* CKnownFileList::FindKnownFile(LPCTSTR filename, uint32 date, uint64 size) const
 {
-	POSITION pos = m_Files_map.GetStartPosition();
-	while (pos != NULL)
-	{
+	for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
 		CKnownFile* cur_file;
 		CCKey key;
 		m_Files_map.GetNextAssoc(pos, key, cur_file);
-		if (cur_file->GetUtcFileDate() == date && cur_file->GetFileSize() == size && !_tcscmp(filename, cur_file->GetFileName()))
+		if (cur_file->GetUtcFileDate() == date && (uint64)cur_file->GetFileSize() == size && !_tcscmp(filename, cur_file->GetFileName()))
 			return cur_file;
 	}
 	return NULL;

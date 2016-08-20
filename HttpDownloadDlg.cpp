@@ -326,7 +326,7 @@ BOOL CHttpDownloadDlg::OnInitDialog()
 	CString sFileStatus;
 	ASSERT(m_sObject.GetLength());
 	ASSERT(m_sServer.GetLength());
-	sFileStatus.Format(GetResString(IDS_HTTPDOWNLOAD_FILESTATUS), (LPCTSTR)m_sFilename, (LPCTSTR)m_sServer); //fo88
+	sFileStatus.Format(GetResString(IDS_HTTPDOWNLOAD_FILESTATUS), (LPCTSTR)m_sFilename, (LPCTSTR)m_sServer);
 	m_ctrlFileStatus.SetWindowText(sFileStatus);
 
 	// set labels

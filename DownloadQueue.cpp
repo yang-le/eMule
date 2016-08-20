@@ -1744,7 +1744,7 @@ void CDownloadQueue::KademliaSearchFile(uint32 searchID, const Kademlia::CUInt12
 				break;
 
 			if ((byCryptOptions & 0x08) == 0){
-				DebugLogWarning(_T("Received Kad source type 6 (direct callback) which has the direct callback flag not set (%s)"), (LPCTSTR)ipstr(ED2Kip)); //fo88
+				DebugLogWarning(_T("Received Kad source type 6 (direct callback) which has the direct callback flag not set (%s)"), (LPCTSTR)ipstr(ED2Kip));
 				break;
 			}
 			ctemp = new CUpDownClient(temp, tcp, 1, 0, 0, false);

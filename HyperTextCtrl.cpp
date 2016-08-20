@@ -858,7 +858,7 @@ END_MESSAGE_MAP()
 
 CHyperTextCtrl::CHyperTextCtrl()
 {
-	m_Text = &standart_Text;
+	m_Text = &standard_Text;
 	m_Font = NULL;
 	m_BkColor = RGB(0,0,0);
 	m_TextColor = RGB(0,0,0);
@@ -1234,7 +1234,7 @@ void CHyperTextCtrl::SetHyperText(CPreparedHyperText* Src, bool bInvalidate){
 	if (Src)
 		m_Text = Src;
 	else
-		m_Text = &standart_Text;
+		m_Text = &standard_Text;
 	UpdateSize(bInvalidate);
 }
 

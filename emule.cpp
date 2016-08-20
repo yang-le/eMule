@@ -1128,7 +1128,7 @@ void CemuleApp::OnlineSig() // Added By Bouc7
 		GetExceptionMessage(fexp, szError, _countof(szError));
 		strError += _T(" - ");
 		strError += szError;
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError); //fo88
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		return;
     }
 

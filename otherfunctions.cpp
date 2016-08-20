@@ -3025,7 +3025,7 @@ bool AdjustNTFSDaylightFileTime(uint32& ruFileDate, LPCTSTR pszFilePath)
 {
 	if (!thePrefs.GetAdjustNTFSDaylightFileTime())
 		return false;
-	if (ruFileDate == 0 || ruFileDate == -1)
+	if (ruFileDate == 0 || ruFileDate == (uint32)-1)
 		return false;
 
 	// See also KB 129574
@@ -3652,23 +3652,20 @@ static void swap_byte (uint8* a, uint8* b){
 	*b = bySwap;
 }
 
-RC4_Key_Struct* RC4CreateKey(const uchar* pachKeyData, uint32 nLen, RC4_Key_Struct* key, bool bSkipDiscard){
-	uint8 index1;
-	uint8 index2;
-	uint8* pabyState;
-
+RC4_Key_Struct* RC4CreateKey(const uchar* pachKeyData, uint32 nLen, RC4_Key_Struct* key, bool bSkipDiscard)
+{
 	if (key == NULL)
 		key = new RC4_Key_Struct;
 
-	pabyState= &key->abyState[0];
-	for (int i = 0; i < 256; i++)
+	uint8* pabyState = &key->abyState[0];
+	for (int i = 0; i < 256; ++i)
 		pabyState[i] = (uint8)i;
 
 	key->byX = 0;
 	key->byY = 0;
-	index1 = 0;
-	index2 = 0;
-	for (int i = 0; i < 256; i++){
+	uint8 index1 = 0;
+	uint8 index2 = 0;
+	for (int i = 0; i < 256; ++i) {
 		index2 = (pachKeyData[index1] + pabyState[i] + index2);
 		swap_byte(&pabyState[i], &pabyState[index2]);
 		index1 = (uint8)((index1 + 1) % nLen);
@@ -3678,8 +3675,9 @@ RC4_Key_Struct* RC4CreateKey(const uchar* pachKeyData, uint32 nLen, RC4_Key_Stru
 	return key;
 }
 
-void RC4Crypt(const uchar* pachIn, uchar* pachOut, uint32 nLen, RC4_Key_Struct* key){
-	ASSERT( key != NULL && nLen > 0 );
+void RC4Crypt(const uchar* pachIn, uchar* pachOut, uint32 nLen, RC4_Key_Struct* key)
+{
+	ASSERT(key != NULL && nLen > 0);
 	if (key == NULL)
 		return;
 
@@ -3688,15 +3686,14 @@ void RC4Crypt(const uchar* pachIn, uchar* pachOut, uint32 nLen, RC4_Key_Struct* 
 	uint8* pabyState = key->abyState;
 	uint8 byXorIndex;
 
-	for (uint32 i = 0; i < nLen; i++)
-	{
+	for (uint32 i = 0; i < nLen; ++i) {
 		byY += pabyState[++byX];
 		swap_byte(&pabyState[byX], &pabyState[byY]);
 		byXorIndex = (pabyState[byX] + pabyState[byY]);
 
 		if (pachIn != NULL)
 			pachOut[i] = pachIn[i] ^ pabyState[byXorIndex];
-    }
+	}
 	key->byX = byX;
 	key->byY = byY;
 }

@@ -560,7 +560,7 @@ void CSharedFilesCtrl::ReloadFileList()
 
 	CCKey bufKey;
 	CKnownFile* cur_file;
-	for (POSITION pos = theApp.sharedfiles->m_Files_map.GetStartPosition(); pos != 0; ){
+	for (POSITION pos = theApp.sharedfiles->m_Files_map.GetStartPosition(); pos != NULL;) {
 		theApp.sharedfiles->m_Files_map.GetNextAssoc(pos, bufKey, cur_file);
 		AddFile(cur_file);
 	}
@@ -834,9 +834,7 @@ void CSharedFilesCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	int iCompleteFileSelected = -1;
 	UINT uPrioMenuItem = 0;
 	const CShareableFile* pSingleSelFile = NULL;
-	POSITION pos = GetFirstSelectedItemPosition();
-	while (pos)
-	{
+	for (POSITION pos = GetFirstSelectedItemPosition(); pos != NULL;) {
 		const CShareableFile* pFile = (CShareableFile*)GetItemData(GetNextSelectedItem(pos));
 		if (bFirstItem)
 			pSingleSelFile = pFile;
@@ -1602,8 +1600,7 @@ void CSharedFilesCtrl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		// selection and item position might change during processing (shouldn't though, but lets make sure), so first get all pointers instead using the selection pos directly
 		SetRedraw(FALSE);
 		CTypedPtrList<CPtrList, CShareableFile*> selectedList;
-		POSITION pos = GetFirstSelectedItemPosition();
-		while (pos != NULL){
+		for (POSITION pos = GetFirstSelectedItemPosition(); pos != NULL;) {
 			int index = GetNextSelectedItem(pos);
 			if (index >= 0)
 				selectedList.AddTail((CShareableFile*)GetItemData(index));
@@ -1761,11 +1758,10 @@ void CSharedFilesCtrl::AddShareableFiles(const CString& strFromDir)
 		// ignore real(!) LNK files
 		TCHAR szExt[_MAX_EXT];
 		_tsplitpath(strFoundFileName, NULL, NULL, NULL, szExt);
-		if (_tcsicmp(szExt, _T(".lnk")) == 0){
+		if (_tcsicmp(szExt, _T(".lnk")) == 0) {
 			SHFILEINFO info;
-			if (SHGetFileInfo(strFoundFilePath, 0, &info, sizeof(info), SHGFI_ATTRIBUTES) && (info.dwAttributes & SFGAO_LINK)){
+			if (SHGetFileInfo(strFoundFilePath, 0, &info, sizeof(info), SHGFI_ATTRIBUTES) && (info.dwAttributes & SFGAO_LINK))
 				continue;
-			}
 		}
 
 		// ignore real(!) thumbs.db files -- seems that lot of ppl have 'thumbs.db' files without the 'System' file attribute
@@ -1789,10 +1785,10 @@ void CSharedFilesCtrl::AddShareableFiles(const CString& strFromDir)
 			}
 		}
 
-		uint32 fdate = (UINT)tFoundFileTime.GetTime();
+		uint32 fdate = (uint32)tFoundFileTime.GetTime();
 		if (fdate == 0)
-			fdate = (UINT)-1;
-		if (fdate == (UINT)-1) {
+			fdate = (uint32)-1;
+		if (fdate == (uint32)-1) {
 			if (thePrefs.GetVerbose())
 				AddDebugLogLine(false, _T("Failed to get file date of \"%s\""), (LPCTSTR)strFoundFilePath);
 		}

@@ -555,11 +555,11 @@ void CPreferences::Init()
 	LoadPreferences();
 
 	if (!preffile){
-		SetStandartValues();
+		SetStandardValues();
 	}
 	else{
 		if (fread(prefsExt,sizeof(Preferences_Ext_Struct),1,preffile) != 1 || ferror(preffile))
-			SetStandartValues();
+			SetStandardValues();
 
 		md4cpy(userhash, prefsExt->userhash);
 		EmuleWindowPlacement = prefsExt->EmuleWindowPlacement;
@@ -705,7 +705,7 @@ void CPreferences::Uninit()
 	}
 }
 
-void CPreferences::SetStandartValues()
+void CPreferences::SetStandardValues()
 {
 	CreateUserHash();
 
@@ -2313,7 +2313,7 @@ void CPreferences::LoadPreferences()
 	m_strTemplateFile = ini.GetString(L"WebTemplateFile", GetMuleDirectory(EMULE_EXECUTEABLEDIR) + L"eMule.tmpl");
 	// if emule is using the default, check if the file is in the config folder, as it used to be in prior version
 	// and might be wanted by the user when switching to a personalized template
-	if (m_strTemplateFile.Compare(GetMuleDirectory(EMULE_EXECUTEABLEDIR) + L"eMule.tmpl") == 0){
+	if (m_strTemplateFile.Compare(GetMuleDirectory(EMULE_EXECUTEABLEDIR) + L"eMule.tmpl") == 0) {
 		CFileFind ff;
 		if (ff.FindFile(GetMuleDirectory(EMULE_CONFIGDIR) + L"eMule.tmpl"))
 			m_strTemplateFile = GetMuleDirectory(EMULE_CONFIGDIR) + L"eMule.tmpl";
@@ -2327,7 +2327,7 @@ void CPreferences::LoadPreferences()
 	m_iExtractMetaData = ini.GetInt(L"ExtractMetaData", 1); // 0=disable, 1=mp3, 2=MediaDet
 	if (m_iExtractMetaData > 1)
 		m_iExtractMetaData = 1;
-	m_bAdjustNTFSDaylightFileTime=ini.GetBool(L"AdjustNTFSDaylightFileTime", true);
+	m_bAdjustNTFSDaylightFileTime = ini.GetBool(L"AdjustNTFSDaylightFileTime", false);
 	m_bRearrangeKadSearchKeywords = ini.GetBool(L"RearrangeKadSearchKeywords", true);
 
 	m_bUseSecureIdent=ini.GetBool(L"SecureIdent",true);

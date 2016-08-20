@@ -174,7 +174,7 @@ void CFileDetailDlgStatistics::RefreshData()
 	for (int i = 0; i != m_paFiles->GetSize(); i++){
 		if (!(*m_paFiles)[i]->IsKindOf(RUNTIME_CLASS(CKnownFile)))
 			continue;
-		const CKnownFile* pFile = (CKnownFile*)(*m_paFiles)[i];
+		const CKnownFile* pFile = static_cast<CKnownFile*>((*m_paFiles)[i]);
 		if (theApp.sharedfiles->GetFileByIdentifier(pFile->GetFileIdentifierC()) == NULL)
 			continue;
 		iFiles++;

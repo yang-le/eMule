@@ -33,7 +33,7 @@ static char THIS_FILE[] = __FILE__;
 
 namespace {
 	struct autoFree {
-		explicit autoFree(TCHAR* p) : m_p(p) {} //fo88
+		explicit autoFree(TCHAR* p) : m_p(p) {}
 		~autoFree() { free(m_p); }
 	private:
 		TCHAR * m_p;

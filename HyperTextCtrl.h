@@ -188,7 +188,7 @@ class CHyperTextCtrl : public CWnd{
 	DECLARE_DYNAMIC(CHyperTextCtrl)
 protected:
 	CPreparedHyperText* m_Text;
-	CPreparedHyperText  standart_Text;
+	CPreparedHyperText  standard_Text;
 	std::vector<CLineInfo> m_Lines;
 	CFont* m_Font;
 	COLORREF m_BkColor;

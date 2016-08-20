@@ -74,12 +74,11 @@ CKnownFile::CKnownFile()
 {
 	m_iPartCount = 0;
 	m_iED2KPartCount = 0;
-	m_tUtcLastModified = (UINT)-1;
-	if(thePrefs.GetNewAutoUp()){
+	m_tUtcLastModified = (uint32)-1;
+	if (thePrefs.GetNewAutoUp()) {
 		m_iUpPriority = PR_HIGH;
 		m_bAutoUpPriority = true;
-	}
-	else{
+	} else {
 		m_iUpPriority = PR_NORMAL;
 		m_bAutoUpPriority = false;
 	}
@@ -700,162 +699,131 @@ bool CKnownFile::LoadTagsFromFile(CFileDataIO* file)
 {
 	UINT tagcount = file->ReadUInt32();
 	bool bHadAICHHashSetTag = false;
-	for (UINT j = 0; j < tagcount; j++){
+	for (UINT j = 0; j < tagcount; ++j) {
 		CTag* newtag = new CTag(file, false);
-		switch (newtag->GetNameID()){
-			case FT_FILENAME:{
-				ASSERT( newtag->IsStr() );
-				if (newtag->IsStr()){
-					if (GetFileName().IsEmpty())
-						SetFileName(newtag->GetStr());
+		switch (newtag->GetNameID()) {
+		case FT_FILENAME:
+			ASSERT(newtag->IsStr());
+			if (newtag->IsStr()) {
+				if (GetFileName().IsEmpty())
+					SetFileName(newtag->GetStr());
+			}
+			break;
+		case FT_FILESIZE:
+			ASSERT(newtag->IsInt64(true));
+			if (newtag->IsInt64(true)) {
+				SetFileSize(newtag->GetInt64());
+				m_AvailPartFrequency.SetSize(GetPartCount());
+				for (UINT i = 0; i < GetPartCount(); i++)
+					m_AvailPartFrequency[i] = 0;
+			}
+			break;
+		case FT_ATTRANSFERRED:
+			ASSERT(newtag->IsInt());
+			if (newtag->IsInt())
+				statistic.SetAllTimeTransferred(newtag->GetInt());
+			break;
+		case FT_ATTRANSFERREDHI:
+			ASSERT(newtag->IsInt());
+			if (newtag->IsInt())
+				statistic.SetAllTimeTransferred(((uint64)newtag->GetInt() << 32) | (UINT)statistic.GetAllTimeTransferred());
+			break;
+		case FT_ATREQUESTED:
+			ASSERT(newtag->IsInt());
+			if (newtag->IsInt())
+				statistic.SetAllTimeRequests(newtag->GetInt());
+			break;
+		case FT_ATACCEPTED:
+			ASSERT(newtag->IsInt());
+			if (newtag->IsInt())
+				statistic.SetAllTimeAccepts(newtag->GetInt());
+			break;
+		case FT_ULPRIORITY:
+			ASSERT(newtag->IsInt());
+			if (newtag->IsInt()) {
+				m_iUpPriority = (uint8)newtag->GetInt();
+				if (m_iUpPriority == PR_AUTO) {
+					m_iUpPriority = PR_HIGH;
+					m_bAutoUpPriority = true;
+				} else {
+					if (m_iUpPriority != PR_VERYLOW && m_iUpPriority != PR_LOW && m_iUpPriority != PR_NORMAL && m_iUpPriority != PR_HIGH && m_iUpPriority != PR_VERYHIGH)
+						m_iUpPriority = PR_NORMAL;
+					m_bAutoUpPriority = false;
 				}
-				delete newtag;
-				break;
 			}
-			case FT_FILESIZE:{
-				ASSERT( newtag->IsInt64(true) );
-				if (newtag->IsInt64(true))
-				{
-					SetFileSize(newtag->GetInt64());
-					m_AvailPartFrequency.SetSize(GetPartCount());
-					for (UINT i = 0; i < GetPartCount();i++)
-						m_AvailPartFrequency[i] = 0;
-				}
-				delete newtag;
-				break;
+			break;
+		case FT_KADLASTPUBLISHSRC:
+			ASSERT(newtag->IsInt());
+			if (newtag->IsInt())
+				SetLastPublishTimeKadSrc(newtag->GetInt(), 0);
+			if (GetLastPublishTimeKadSrc() > (uint32)time(NULL)+KADEMLIAREPUBLISHTIMES) {
+				//There may be a posibility of an older client that saved a random number here.. This will check for that..
+				SetLastPublishTimeKadSrc(0, 0);
 			}
-			case FT_ATTRANSFERRED:{
-				ASSERT( newtag->IsInt() );
-				if (newtag->IsInt())
-					statistic.SetAllTimeTransferred(newtag->GetInt());
-				delete newtag;
-				break;
-			}
-			case FT_ATTRANSFERREDHI:{
-				ASSERT( newtag->IsInt() );
-				if (newtag->IsInt())
-					statistic.SetAllTimeTransferred(((uint64)newtag->GetInt() << 32) | (UINT)statistic.GetAllTimeTransferred());
-				delete newtag;
-				break;
-			}
-			case FT_ATREQUESTED:{
-				ASSERT( newtag->IsInt() );
-				if (newtag->IsInt())
-					statistic.SetAllTimeRequests(newtag->GetInt());
-				delete newtag;
-				break;
-			}
- 			case FT_ATACCEPTED:{
-				ASSERT( newtag->IsInt() );
-				if (newtag->IsInt())
-					statistic.SetAllTimeAccepts(newtag->GetInt());
-				delete newtag;
-				break;
-			}
-			case FT_ULPRIORITY:{
-				ASSERT( newtag->IsInt() );
-				if (newtag->IsInt())
-				{
-					m_iUpPriority = (uint8)newtag->GetInt();
-					if( m_iUpPriority == PR_AUTO ){
-						m_iUpPriority = PR_HIGH;
-						m_bAutoUpPriority = true;
-					}
-					else{
-						if (m_iUpPriority != PR_VERYLOW && m_iUpPriority != PR_LOW && m_iUpPriority != PR_NORMAL && m_iUpPriority != PR_HIGH && m_iUpPriority != PR_VERYHIGH)
-							m_iUpPriority = PR_NORMAL;
-						m_bAutoUpPriority = false;
-					}
-				}
-				delete newtag;
-				break;
-			}
-			case FT_KADLASTPUBLISHSRC:{
-				ASSERT( newtag->IsInt() );
-				if (newtag->IsInt())
-					SetLastPublishTimeKadSrc( newtag->GetInt(), 0 );
-				if(GetLastPublishTimeKadSrc() > (uint32)time(NULL)+KADEMLIAREPUBLISHTIMES)
-				{
-					//There may be a posibility of an older client that saved a random number here.. This will check for that..
-					SetLastPublishTimeKadSrc(0,0);
-				}
-				delete newtag;
-				break;
-			}
-			case FT_KADLASTPUBLISHNOTES:{
-				ASSERT( newtag->IsInt() );
-				if (newtag->IsInt())
-					SetLastPublishTimeKadNotes( newtag->GetInt() );
-				delete newtag;
-				break;
-			}
-			case FT_FLAGS:
-				// Misc. Flags
-				// ------------------------------------------------------------------------------
-				// Bits  3-0: Meta data version
-				//				0	untrusted meta data which was received via search results
-				//				1	trusted meta data, Unicode (strings where not stored correctly)
-				//				2	0.49c: trusted meta data, Unicode
-				// Bits 31-4: Reserved
-				ASSERT( newtag->IsInt() );
-				if (newtag->IsInt())
-					m_uMetaDataVer = newtag->GetInt() & 0x0F;
-				delete newtag;
-				break;
+			break;
+		case FT_KADLASTPUBLISHNOTES:
+			ASSERT(newtag->IsInt());
+			if (newtag->IsInt())
+				SetLastPublishTimeKadNotes(newtag->GetInt());
+			break;
+		case FT_FLAGS:
+			// Misc. Flags
+			// ------------------------------------------------------------------------------
+			// Bits  3-0: Meta data version
+			//				0	untrusted meta data which was received via search results
+			//				1	trusted meta data, Unicode (strings where not stored correctly)
+			//				2	0.49c: trusted meta data, Unicode
+			// Bits 31-4: Reserved
+			ASSERT(newtag->IsInt());
+			if (newtag->IsInt())
+				m_uMetaDataVer = newtag->GetInt() & 0x0F;
+			break;
 			// old tags: as long as they are not needed, take the chance to purge them
-			case FT_PERMISSIONS:
-				ASSERT( newtag->IsInt() );
-				delete newtag;
-				break;
-			case FT_KADLASTPUBLISHKEY:
-				ASSERT( newtag->IsInt() );
-				delete newtag;
-				break;
-			case FT_AICH_HASH:{
-				if(!newtag->IsStr()){
-					//ASSERT( false ); uncomment later
-					break;
-				}
-				CAICHHash hash;
-				if (DecodeBase32(newtag->GetStr(),hash) == CAICHHash::GetHashSize())
-					m_FileIdentifier.SetAICHHash(hash);
-				else
-					ASSERT( false );
-				delete newtag;
+		case FT_PERMISSIONS:
+		case FT_KADLASTPUBLISHKEY:
+			ASSERT(newtag->IsInt());
+			break;
+		case FT_AICH_HASH: {
+			if (!newtag->IsStr()) {
+				//ASSERT( false ); uncomment later
 				break;
 			}
-			case FT_LASTSHARED:
-				if (newtag->IsInt())
-					m_timeLastSeen = newtag->GetInt();
-				else
-					ASSERT( false );
-				delete newtag;
-				break;
-			case FT_AICHHASHSET:
-				if (newtag->IsBlob())
-				{
-					CSafeMemFile aichHashSetFile(newtag->GetBlob(), newtag->GetBlobSize());
-					m_FileIdentifier.LoadAICHHashsetFromFile(&aichHashSetFile, false);
-					aichHashSetFile.Detach();
-					bHadAICHHashSetTag = true;
-				}
-				else
-					ASSERT( false );
-				delete newtag;
-				break;
-			default:
-				ConvertED2KTag(newtag);
-				if (newtag)
-					taglist.Add(newtag);
+			CAICHHash hash;
+			if (DecodeBase32(newtag->GetStr(), hash) == CAICHHash::GetHashSize())
+				m_FileIdentifier.SetAICHHash(hash);
+			else
+				ASSERT(false);
+			break;
 		}
+		case FT_LASTSHARED:
+			if (newtag->IsInt())
+				m_timeLastSeen = newtag->GetInt();
+			else
+				ASSERT(false);
+			break;
+		case FT_AICHHASHSET:
+			if (newtag->IsBlob()) {
+				CSafeMemFile aichHashSetFile(newtag->GetBlob(), newtag->GetBlobSize());
+				m_FileIdentifier.LoadAICHHashsetFromFile(&aichHashSetFile, false);
+				aichHashSetFile.Detach();
+				bHadAICHHashSetTag = true;
+			} else
+				ASSERT(false);
+			break;
+		default:
+			ConvertED2KTag(newtag);
+			if (newtag) {
+				taglist.Add(newtag);
+				newtag = NULL;
+			}
+		}
+		delete newtag;
 	}
 	if (bHadAICHHashSetTag)
-	{
 		if (!m_FileIdentifier.VerifyAICHHashSet())
 			DebugLogError(_T("Failed to load AICH Part HashSet for file %s"), (LPCTSTR)GetFileName());
 		//else
 		//	DebugLog(_T("Succeeded to load AICH Part HashSet for file %s"), (LPCTSTR)GetFileName());
-	}
 
 	// 05-Jan-2004 [bc]: ed2k and Kad are already full of totally wrong and/or not properly attached meta data. Take
 	// the chance to clean any available meta data tags and provide only tags which were determined by us.
@@ -863,8 +831,7 @@ bool CKnownFile::LoadTagsFromFile(CFileDataIO* file)
 	// missing meta data.
 	if (m_uMetaDataVer == 0)
 		RemoveMetaDataTags();
-	else if (m_uMetaDataVer == 1)
-	{
+	else if (m_uMetaDataVer == 1) {
 		// Meta data tags v1 did not store Unicode strings correctly.
 		// Remove broken Unicode string meta data tags from v1, but keep the integer tags.
 		RemoveBrokenUnicodeMetaDataTags();
@@ -874,12 +841,14 @@ bool CKnownFile::LoadTagsFromFile(CFileDataIO* file)
 	return true;
 }
 
-bool CKnownFile::LoadDateFromFile(CFileDataIO* file){
+bool CKnownFile::LoadDateFromFile(CFileDataIO* file)
+{
 	m_tUtcLastModified = file->ReadUInt32();
 	return true;
 }
 
-bool CKnownFile::LoadFromFile(CFileDataIO* file){
+bool CKnownFile::LoadFromFile(CFileDataIO* file)
+{
 	// SLUGFILLER: SafeHash - load first, verify later
 	bool ret1 = LoadDateFromFile(file);
 	bool ret2 = m_FileIdentifier.LoadMD4HashsetFromFile(file, false);

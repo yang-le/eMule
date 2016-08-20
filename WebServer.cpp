@@ -3964,7 +3964,7 @@ CString CWebServer::_GetKadDlg(ThreadData Data)
 
 	// kadstats
 	// labels
-	buffer.Format(_T("%s<br />%s"), (LPCTSTR)GetResString(IDS_KADCONTACTLAB), (LPCTSTR)GetResString(IDS_KADSEARCHLAB)); //foxx88
+	buffer.Format(_T("%s<br />%s"), (LPCTSTR)GetResString(IDS_KADCONTACTLAB), (LPCTSTR)GetResString(IDS_KADSEARCHLAB));
 	Out.Replace(_T("[KADSTATSLABELS]"),buffer);
 
 	// numbers

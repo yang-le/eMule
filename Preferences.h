@@ -1401,7 +1401,7 @@ protected:
 	static	int		m_nCurrentUserDirMode; // Only for PPgTweaks
 
 	static void	CreateUserHash();
-	static void	SetStandartValues();
+	static void	SetStandardValues();
 	static int	GetRecommendedMaxConnections();
 	static void LoadPreferences();
 	static void SavePreferences();
