@@ -88,8 +88,7 @@ CIndexed::~CIndexed()
 		// and then delete all loaded items without writing them to the files (as they are incomplete and unchanged)
 		DebugLogWarning(_T("Kad stopping while still loading CIndexed data, waiting for abort"));
 		m_bAbortLoading = true;
-		CSingleLock sLock(&m_mutSync);
-		sLock.Lock(); // wait
+		CSingleLock sLock(&m_mutSync, TRUE); // wait
 		ASSERT( m_bDataLoaded );
 
 		// cleanup without storing
@@ -1025,8 +1024,7 @@ int CIndexed::CLoadDataThread::Run()
 		return 0;
 
 	ASSERT( m_pOwner->m_bDataLoaded == false );
-	CSingleLock sLock(&m_pOwner->m_mutSync);
-	sLock.Lock();
+	CSingleLock sLock(&m_pOwner->m_mutSync, TRUE);
 
 	try
 	{

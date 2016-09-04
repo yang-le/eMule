@@ -35,12 +35,12 @@ static char THIS_FILE[] = __FILE__;
 
 
 CFriend::CFriend(void)
+	: m_strName()
 {
 	m_dwLastSeen = 0;
 	m_dwLastUsedIP = 0;
 	m_nLastUsedPort = 0;
 	m_dwLastChatted = 0;
-	(void)m_strName;
 	m_LinkedClient = 0;
 	md4clr(m_abyUserhash);
 	md4clr(m_abyKadID);

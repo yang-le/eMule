@@ -4154,16 +4154,14 @@ CString CWebServer::_GetLoginScreen(ThreadData Data)
 int CWebServer::_GzipCompress(Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen, int level)
 {
 	static const int gz_magic[2] = {0x1f, 0x8b}; // gzip magic header
-	int err;
-	uLong crc;
 	z_stream stream = {0};
 	stream.zalloc = (alloc_func)0;
 	stream.zfree = (free_func)0;
 	stream.opaque = (voidpf)0;
-	crc = crc32(0L, Z_NULL, 0);
+	uLong crc = crc32(0L, Z_NULL, 0);
 	// init Zlib stream
 	// NOTE windowBits is passed < 0 to suppress zlib header
-	err = deflateInit2(&stream, level, Z_DEFLATED, -MAX_WBITS, MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY);
+	int err = deflateInit2(&stream, level, Z_DEFLATED, -MAX_WBITS, MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY);
 	if (err != Z_OK)
 		return err;
 

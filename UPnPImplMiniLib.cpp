@@ -47,7 +47,8 @@ CUPnPImplMiniLib::CUPnPImplMiniLib()
 	m_achLanIP[0] = 0;
 }
 
-CUPnPImplMiniLib::~CUPnPImplMiniLib(){
+CUPnPImplMiniLib::~CUPnPImplMiniLib()
+{
 	if (m_pURLs != NULL)
 		FreeUPNPUrls(m_pURLs);
 	delete m_pURLs;
@@ -56,13 +57,11 @@ CUPnPImplMiniLib::~CUPnPImplMiniLib(){
 	m_pIGDData = NULL;
 }
 
-bool CUPnPImplMiniLib::IsReady(){
+bool CUPnPImplMiniLib::IsReady()
+{
 	// the only check we need to do is if we are already busy with some async/threaded function
 	CSingleLock lockTest(&m_mutBusy);
-	 if (!m_bAbortDiscovery && lockTest.Lock(0))
-		 return true;
-	 else
-		 return false;
+	return !m_bAbortDiscovery && lockTest.Lock(0);
 }
 
 void CUPnPImplMiniLib::StopAsyncFind(){

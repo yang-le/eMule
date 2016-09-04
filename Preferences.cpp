@@ -638,12 +638,10 @@ void CPreferences::Init()
 				sdirfile->Seek(sizeof(WORD), SEEK_CUR); // skip BOM
 
 			CString toadd;
-			while (sdirfile->ReadString(toadd))
-			{
+			while (sdirfile->ReadString(toadd)) {
 				toadd.Trim(L" \t\r\n"); // need to trim '\r' in binary mode
-				if (toadd.IsEmpty())
-					continue;
-				addresses_list.AddTail(toadd);
+				if (!toadd.IsEmpty())
+					addresses_list.AddTail(toadd);
 			}
 		}
 		catch (CFileException* ex) {
@@ -1201,23 +1199,23 @@ bool CPreferences::LoadStats(int loadBackUp)
 	// loadBackUp is 0 by default
 	// loadBackUp = 0: Load the stats normally like we used to do in LoadPreferences
 	// loadBackUp = 1: Load the stats from statbkup.ini and create a backup of the current stats.  Also, do not initialize session variables.
-	CString sINI;
+	CString sINI(GetMuleDirectory(EMULE_CONFIGDIR));
 	CFileFind findBackUp;
 
 	switch (loadBackUp) {
-		case 0:
-			// for transition...
-			if (PathFileExists(GetMuleDirectory(EMULE_CONFIGDIR) + L"statistics.ini"))
-				sINI.Format(L"%sstatistics.ini", (LPCTSTR)GetMuleDirectory(EMULE_CONFIGDIR));
-			else
-				sINI.Format(L"%spreferences.ini", (LPCTSTR)GetMuleDirectory(EMULE_CONFIGDIR));
-			break;
-		case 1:
-			sINI.Format(L"%sstatbkup.ini", (LPCTSTR)GetMuleDirectory(EMULE_CONFIGDIR));
-			if (!findBackUp.FindFile(sINI))
-				return false;
-			SaveStats(2); // Save our temp backup of current values to statbkuptmp.ini, we will be renaming it at the end of this function.
-			break;
+	case 1:
+		sINI += L"statbkup.ini";
+		if (!findBackUp.FindFile(sINI))
+			return false;
+		SaveStats(2); // Save our temp backup of current values to statbkuptmp.ini, we will be renaming it at the end of this function.
+		break;
+	case 0:
+	default:
+		// for transition...
+		if (PathFileExists(sINI + L"statistics.ini"))
+			sINI += L"statistics.ini";
+		else
+			sINI += L"preferences.ini";
 	}
 
 	BOOL fileex = PathFileExists(sINI);
@@ -1323,17 +1321,17 @@ bool CPreferences::LoadStats(int loadBackUp)
 	if (loadBackUp == 1)
 	{
 		// Load records for servers / network
-		if ((UINT)ini.GetInt(L"SrvrsMostWorkingServers") > cumSrvrsMostWorkingServers)
+		if ((uint32)ini.GetInt(L"SrvrsMostWorkingServers") > cumSrvrsMostWorkingServers)
 			cumSrvrsMostWorkingServers = ini.GetInt(L"SrvrsMostWorkingServers");
 
-		if ((UINT)ini.GetInt(L"SrvrsMostUsersOnline") > cumSrvrsMostUsersOnline)
+		if ((uint32)ini.GetInt(L"SrvrsMostUsersOnline") > cumSrvrsMostUsersOnline)
 			cumSrvrsMostUsersOnline = ini.GetInt(L"SrvrsMostUsersOnline");
 
-		if ((UINT)ini.GetInt(L"SrvrsMostFilesAvail") > cumSrvrsMostFilesAvail)
+		if ((uint32)ini.GetInt(L"SrvrsMostFilesAvail") > cumSrvrsMostFilesAvail)
 			cumSrvrsMostFilesAvail = ini.GetInt(L"SrvrsMostFilesAvail");
 
 		// Load records for shared files
-		if ((UINT)ini.GetInt(L"SharedMostFilesShared") > cumSharedMostFilesShared)
+		if ((uint32)ini.GetInt(L"SharedMostFilesShared") > cumSharedMostFilesShared)
 			cumSharedMostFilesShared =	ini.GetInt(L"SharedMostFilesShared");
 
 		uint64 temp64 = ini.GetUInt64(L"SharedLargestShareSize");
@@ -1350,8 +1348,7 @@ bool CPreferences::LoadStats(int loadBackUp)
 
 		// Check to make sure the backup of the values we just overwrote exists.  If so, rename it to the backup file.
 		// This allows us to undo a restore, so to speak, just in case we don't like the restored values...
-		CString sINIBackUp;
-		sINIBackUp.Format(L"%sstatbkuptmp.ini", (LPCTSTR)GetMuleDirectory(EMULE_CONFIGDIR));
+		CString sINIBackUp(GetMuleDirectory(EMULE_CONFIGDIR) + L"statbkuptmp.ini");
 		if (findBackUp.FindFile(sINIBackUp)){
 			::DeleteFile(sINI);				// Remove the backup that we just restored from
 			::MoveFile(sINIBackUp, sINI);	// Rename our temporary backup to the normal statbkup.ini filename.
@@ -1812,8 +1809,8 @@ void CPreferences::SavePreferences()
 	ini.WriteInt(L"statsConnectionsGraphRatio", statsConnectionsGraphRatio,L"Statistics");
 	ini.WriteString(L"statsExpandedTreeItems", m_strStatsExpandedTreeItems);
 	CString buffer2;
-	for (int i=0;i<15;i++) {
-		buffer.Format(L"0x%06x",GetStatsColor(i));
+	for (int i=0; i<15; ++i) {
+		buffer.Format(L"0x%06lx",GetStatsColor(i));
 		buffer2.Format(L"StatColor%i",i);
 		ini.WriteString(buffer2,buffer,L"Statistics" );
 	}
@@ -1929,11 +1926,8 @@ void CPreferences::LoadPreferences()
 	strCurrVersion = theApp.m_strCurVersionLong;
 	strPrefsVersion = ini.GetString(L"AppVersion");
 
-	m_bFirstStart = false;
+	m_bFirstStart = strPrefsVersion.IsEmpty();
 
-	if (strPrefsVersion.IsEmpty()){
-		m_bFirstStart = true;
-	}
 #ifdef _BETA
 	CString strBetaNotified = ini.GetString(L"BetaVersionNotified", L"");
 	m_bBetaNaggingDone = strBetaNotified.Compare(strCurrVersion) == 0;
@@ -1979,9 +1973,9 @@ void CPreferences::LoadPreferences()
 					break;
 				}
 			if (!doubled) {
-				if (PathFileExists(atmp)==FALSE) {
+				if (!PathFileExists(atmp)) {
 					CreateDirectory(atmp,NULL);
-					if (PathFileExists(atmp)/*==TRUE*/ || tempdir.GetCount()==0)
+					if (PathFileExists(atmp) || tempdir.GetCount()==0)
 						tempdir.Add(atmp);
 				}
 				else
@@ -2547,7 +2541,7 @@ void CPreferences::SaveCats()
 	(void)_tremove(strCatIniFilePath);
 	CIni ini(strCatIniFilePath);
 	ini.WriteInt(L"Count", catMap.GetCount() - 1, L"General");
-	for (int i = 0; i < catMap.GetCount(); i++)
+	for (int i = 0; i < catMap.GetCount(); ++i)
 	{
 		CString strSection;
 		strSection.Format(L"Cat#%i", i);
@@ -2565,7 +2559,7 @@ void CPreferences::SaveCats()
 		ini.WriteInt(L"Filter", cmap->filter);
 		ini.WriteBool(L"FilterNegator", cmap->filterNeg);
 		ini.WriteBool(L"AutoCatAsRegularExpression", cmap->ac_regexpeval);
-        ini.WriteBool(L"downloadInAlphabeticalOrder", cmap->downloadInAlphabeticalOrder!=FALSE);
+		ini.WriteBool(L"downloadInAlphabeticalOrder", cmap->downloadInAlphabeticalOrder!=FALSE);
 		ini.WriteBool(L"Care4All", cmap->care4all);
 	}
 }

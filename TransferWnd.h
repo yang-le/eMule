@@ -112,7 +112,7 @@ protected:
 	int		GetTabUnderMouse(CPoint* point);
 	int		GetItemUnderMouse(CListCtrl* ctrl);
 	CString	GetCatTitle(int catid);
-	void	EditCatTabLabel(int index, CString& newlabel);
+	void	EditCatTabLabel(int index, CString newlabel);
 	void	EditCatTabLabel(int index);
 	void	ShowList(uint32 dwListIDC);
 	void	SetWnd1Icon(EWnd1Icon iIcon);

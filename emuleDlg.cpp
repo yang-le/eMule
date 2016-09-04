@@ -420,7 +420,7 @@ BOOL CemuleDlg::OnInitDialog()
 			    CSize sizeBar;
 			    VERIFY( toolbar->GetMaxSize(&sizeBar) );
 			    REBARBANDINFO rbbi = {0};
-			    rbbi.cbSize = sizeof(rbbi);
+			    rbbi.cbSize = sizeof rbbi;
 				rbbi.fMask = RBBIM_STYLE | RBBIM_SIZE | RBBIM_CHILD | RBBIM_CHILDSIZE | RBBIM_IDEALSIZE | RBBIM_ID;
 			    rbbi.fStyle = RBBS_NOGRIPPER | RBBS_BREAK | RBBS_USECHEVRON;
 			    rbbi.hwndChild = toolbar->m_hWnd;
@@ -560,7 +560,7 @@ BOOL CemuleDlg::OnInitDialog()
 	// Restore saved window placement
 	//
 	WINDOWPLACEMENT wp = {0};
-	wp.length = sizeof(wp);
+	wp.length = sizeof wp;
 	wp = thePrefs.GetEmuleWindowPlacement();
 	if (m_bStartMinimized)
 	{

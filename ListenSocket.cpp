@@ -2123,7 +2123,7 @@ CString CClientReqSocket::DbgGetClientInfo()
 {
 	CString str;
 	SOCKADDR_IN sockAddr = {0};
-	int nSockAddrLen = sizeof(sockAddr);
+	int nSockAddrLen = sizeof sockAddr;
 	GetPeerName((SOCKADDR*)&sockAddr, &nSockAddrLen);
 	if (sockAddr.sin_addr.S_un.S_addr != 0 && (client == NULL || sockAddr.sin_addr.S_un.S_addr != client->GetIP()))
 		str.AppendFormat(_T("IP=%s"), (LPCTSTR)ipstr(sockAddr.sin_addr));

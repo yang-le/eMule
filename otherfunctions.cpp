@@ -3645,9 +3645,9 @@ bool gotostring(CFile &file, const uchar *find, LONGLONG plen)
 	return false;
 }
 
-static void swap_byte (uint8* a, uint8* b){
-	uint8 bySwap;
-	bySwap = *a;
+static void swap_byte (uint8* a, uint8* b)
+{
+	uint8 bySwap = *a;
 	*a = *b;
 	*b = bySwap;
 }
@@ -3657,7 +3657,7 @@ RC4_Key_Struct* RC4CreateKey(const uchar* pachKeyData, uint32 nLen, RC4_Key_Stru
 	if (key == NULL)
 		key = new RC4_Key_Struct;
 
-	uint8* pabyState = &key->abyState[0];
+	uint8* pabyState = key->abyState;
 	for (int i = 0; i < 256; ++i)
 		pabyState[i] = (uint8)i;
 
@@ -3666,7 +3666,7 @@ RC4_Key_Struct* RC4CreateKey(const uchar* pachKeyData, uint32 nLen, RC4_Key_Stru
 	uint8 index1 = 0;
 	uint8 index2 = 0;
 	for (int i = 0; i < 256; ++i) {
-		index2 = (pachKeyData[index1] + pabyState[i] + index2);
+		index2 += pachKeyData[index1] + pabyState[i];
 		swap_byte(&pabyState[i], &pabyState[index2]);
 		index1 = (uint8)((index1 + 1) % nLen);
 	}

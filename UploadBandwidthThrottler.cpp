@@ -209,17 +209,16 @@ bool UploadBandwidthThrottler::RemoveFromStandardListNoLock(ThrottledFileSocket*
 * @param socket address to the socket that requests to have controlpacket send
 *               to be called on it
 */
-void UploadBandwidthThrottler::QueueForSendingControlPacket(ThrottledControlSocket* socket, const bool hasSent) {
+void UploadBandwidthThrottler::QueueForSendingControlPacket(ThrottledControlSocket* socket, const bool hasSent)
+{
 	// Get critical section
 	tempQueueLocker.Lock();
 
-	if(doRun) {
-        if(hasSent) {
-            m_TempControlQueueFirst_list.AddTail(socket);
-        } else {
-            m_TempControlQueue_list.AddTail(socket);
-        }
-    }
+	if (doRun)
+		if (hasSent)
+			m_TempControlQueueFirst_list.AddTail(socket);
+		else
+			m_TempControlQueue_list.AddTail(socket);
 
 	// End critical section
 	tempQueueLocker.Unlock();
@@ -749,12 +748,16 @@ UINT UploadBandwidthThrottler::RunInternal() {
 
 void UploadBandwidthThrottler::NewUploadDataAvailable()
 {
+	sendLocker.Lock();
 	if (doRun)
 		m_eventNewDataAvailable.SetEvent();
+	sendLocker.Unlock();
 }
 
 void UploadBandwidthThrottler::SocketAvailable()
 {
+	sendLocker.Lock();
 	if (doRun)
 		m_eventSocketAvailable.SetEvent();
+	sendLocker.Unlock();
 }

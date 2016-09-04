@@ -148,7 +148,7 @@ public:
 	//ProxyPass - the password for SOCKS5 proxies
 
 	//Prepare listen
-	BOOL PrepareListen(ULONG ip);
+	BOOL PrepareListen(unsigned long ip);
 
 	//Returns the type of the proxy
 	int GetProxyType() const;

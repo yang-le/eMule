@@ -691,14 +691,14 @@ void CUDPSocket::OnSend(int nErrorCode)
 			DebugLogError(_T("Error: Server UDP socket: Failed to send packet - %s"), (LPCTSTR)GetErrorMessage(nErrorCode, 1));
 		return;
 	}
+	sendLocker.Lock();
 	m_bWouldBlock = false;
 
-// ZZ:UploadBandWithThrottler (UDP) -->
-    sendLocker.Lock();
-    if (!controlpacket_queue.IsEmpty()) {
-        theApp.uploadBandwidthThrottler->QueueForSendingControlPacket(this);
-    }
-    sendLocker.Unlock();
+	// ZZ:UploadBandWithThrottler (UDP) -->
+	if (!controlpacket_queue.IsEmpty())
+		theApp.uploadBandwidthThrottler->QueueForSendingControlPacket(this);
+
+	sendLocker.Unlock();
 // <-- ZZ:UploadBandWithThrottler (UDP)
 }
 
@@ -706,52 +706,47 @@ SocketSentBytes CUDPSocket::SendControlData(uint32 maxNumberOfBytesToSend, uint3
 {
 // ZZ:UploadBandWithThrottler (UDP) -->
 	// NOTE: *** This function is invoked from a *different* thread!
-    sendLocker.Lock();
+	uint32 sentBytes = 0;
 
-    uint32 sentBytes = 0;
+	sendLocker.Lock();
+
 // <-- ZZ:UploadBandWithThrottler (UDP)
-	while (!controlpacket_queue.IsEmpty() && !IsBusy() && sentBytes < maxNumberOfBytesToSend) // ZZ:UploadBandWithThrottler (UDP)
-	{
-		const SServerUDPPacket* packet = controlpacket_queue.GetHead();
-        int sendSuccess = SendTo(packet->packet, packet->size, packet->dwIP, packet->nPort);
-		if (sendSuccess >= 0)
-		{
-            if (sendSuccess > 0) {
-                sentBytes += packet->size; // ZZ:UploadBandWithThrottler (UDP)
-            }
-			controlpacket_queue.RemoveHead();
+	while (!controlpacket_queue.IsEmpty() && !IsBusy() && sentBytes < maxNumberOfBytesToSend) { // ZZ:UploadBandWithThrottler (UDP)
+		SServerUDPPacket* packet = controlpacket_queue.RemoveHead();
+		if (SendTo(packet->packet, packet->size, packet->dwIP, packet->nPort) >= 0) {
+			sentBytes += packet->size; // ZZ:UploadBandWithThrottler (UDP)
 			delete[] packet->packet;
 			delete packet;
-		}
+		} else
+			controlpacket_queue.AddHead(packet);
 	}
 
 // ZZ:UploadBandWithThrottler (UDP) -->
-    if (!IsBusy() && !controlpacket_queue.IsEmpty()) {
-        theApp.uploadBandwidthThrottler->QueueForSendingControlPacket(this);
-    }
-    sendLocker.Unlock();
+	if (!IsBusy() && !controlpacket_queue.IsEmpty())
+		theApp.uploadBandwidthThrottler->QueueForSendingControlPacket(this);
 
-	return SocketSentBytes{ true, 0, sentBytes };
+	sendLocker.Unlock();
+
+	return SocketSentBytes{true, 0, sentBytes};
 // <-- ZZ:UploadBandWithThrottler (UDP)
 }
 
 int CUDPSocket::SendTo(BYTE* lpBuf, int nBufLen, uint32 dwIP, uint16 nPort)
 {
 	// NOTE: *** This function is invoked from a *different* thread!
-	int iResult = CAsyncSocket::SendTo(lpBuf, nBufLen, nPort, ipstr(dwIP));
-	if (iResult == SOCKET_ERROR) {
+	//Currently called only locally; sendLocker must be locked by the caller
+	int result = CAsyncSocket::SendTo(lpBuf, nBufLen, nPort, ipstr(dwIP));
+	if (result == SOCKET_ERROR) {
 		DWORD dwError = GetLastError();
 		if (dwError == WSAEWOULDBLOCK) {
 			m_bWouldBlock = true;
 			return -1; // blocked
 		}
-		else{
-			if (thePrefs.GetVerbose())
-				theApp.QueueDebugLogLine(false, _T("Error: Server UDP socket: Failed to send packet to %s:%u - %s"), (LPCTSTR)ipstr(dwIP), nPort, (LPCTSTR)GetErrorMessage(dwError, 1));
-			return 0; // error
-		}
+		if (thePrefs.GetVerbose())
+			theApp.QueueDebugLogLine(false, _T("Error: Server UDP socket: Failed to send packet to %s:%u - %s"), (LPCTSTR)ipstr(dwIP), nPort, (LPCTSTR)GetErrorMessage(dwError, 1));
+		return 0; // error
 	}
-	return 1; // success
+	return result;
 }
 
 void CUDPSocket::SendBuffer(uint32 nIP, uint16 nPort, BYTE* pPacket, UINT uSize)
@@ -762,10 +757,10 @@ void CUDPSocket::SendBuffer(uint32 nIP, uint16 nPort, BYTE* pPacket, UINT uSize)
 	newpending->nPort = nPort;
 	newpending->packet = pPacket;
 	newpending->size = uSize;
-    sendLocker.Lock();
+	sendLocker.Lock();
 	controlpacket_queue.AddTail(newpending);
-    sendLocker.Unlock();
-    theApp.uploadBandwidthThrottler->QueueForSendingControlPacket(this);
+	sendLocker.Unlock();
+	theApp.uploadBandwidthThrottler->QueueForSendingControlPacket(this);
 // <-- ZZ:UploadBandWithThrottler (UDP)
 }
 

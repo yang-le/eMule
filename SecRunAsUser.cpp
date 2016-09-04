@@ -349,7 +349,7 @@ eResult CSecRunAsUser::RestartAsUser(){
 		strAppName.Format(_T("\"%s\""),szAppPath);
 
 		STARTUPINFOW StartInf = {0};
-		StartInf.cb = sizeof(StartInf);
+		StartInf.cb = sizeof StartInf;
 		StartInf.dwFlags = STARTF_USESHOWWINDOW;
 		StartInf.wShowWindow = SW_NORMAL;
 
@@ -505,7 +505,7 @@ eResult CSecRunAsUser::RestartAsRestricted(){
 		strAppName.Format(_T("\"%s\""),szAppPath);
 
 		STARTUPINFO StartInf = {0};
-		StartInf.cb = sizeof(StartInf);
+		StartInf.cb = sizeof StartInf;
 		StartInf.dwFlags = STARTF_USESHOWWINDOW;
 		StartInf.wShowWindow = SW_NORMAL;
 

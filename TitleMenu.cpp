@@ -378,7 +378,7 @@ void CTitleMenu::SetMenuBitmap(UINT nFlags, UINT_PTR nIDNewItem, LPCTSTR /*lpszN
 				MENUITEMINFOEX info = {0};
 				info.fMask = MIIM_BITMAP;
 				info.hbmpItem = hBmp;
-				info.cbSize = sizeof(info);
+				info.cbSize = sizeof info;
 				VERIFY( SetMenuItemInfo(nIDNewItem, (MENUITEMINFO *)&info, FALSE) );
 				m_mapIconNameToBitmap.SetAt(strIconLower, hBmp);
 			}

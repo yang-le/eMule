@@ -62,7 +62,7 @@ to tim.kosse@gmx.de
 
 */
 #pragma once
-#include "AsyncSocketEx.h"	// Hinzugefügt von der Klassenansicht
+#include "AsyncSocketEx.h"	// Hinzugefugt von der Klassenansicht
 
 class CAsyncSocketEx;
 class CAsyncSocketExLayer

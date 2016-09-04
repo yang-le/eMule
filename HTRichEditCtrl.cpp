@@ -1422,7 +1422,7 @@ bool CHTRichEditCtrl::InsertSmiley(LPCTSTR pszSmileyID)
 	OleSetContainedObject(pIOleObject, TRUE);
 
 	REOBJECT reobject = {0};
-	reobject.cbStruct = sizeof(reobject);
+	reobject.cbStruct = sizeof reobject;
 	if (pIOleObject->GetUserClassID(&reobject.clsid) != S_OK)
 		return false;
 	reobject.cp = (LONG)REO_CP_SELECTION;
@@ -1488,7 +1488,7 @@ bool CHTRichEditCtrl::AddCaptcha(HBITMAP hbmp)
 	OleSetContainedObject(pIOleObject, TRUE);
 
 	REOBJECT reobject = {0};
-	reobject.cbStruct = sizeof(reobject);
+	reobject.cbStruct = sizeof reobject;
 	if (pIOleObject->GetUserClassID(&reobject.clsid) != S_OK)
 		return false;
 	reobject.cp = (LONG)REO_CP_SELECTION;

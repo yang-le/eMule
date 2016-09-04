@@ -339,8 +339,7 @@ int CAddFileThread::Run()
 	// locking that hashing thread is needed because we may create a couple of those threads at startup when rehashing
 	// potentially corrupted downloading part files. if all those hash threads would run concurrently, the io-system would be
 	// under very heavy load and slowly progressing
-	CSingleLock sLock1(&theApp.hashing_mut); // only one filehash at a time
-	sLock1.Lock();
+	CSingleLock sLock1(&theApp.hashing_mut, TRUE); // only one filehash at a time
 
 	CString strFilePath;
 	_tmakepathlimit(strFilePath.GetBuffer(MAX_PATH), NULL, m_strDirectory, m_strFilename, NULL);
@@ -668,8 +667,7 @@ bool CSharedFileList::AddFile(CKnownFile* pFile)
 	}
 	m_UnsharedFiles_map.RemoveKey(CSKey(pFile->GetFileHash()));
 
-	CSingleLock listlock(&m_mutWriteList);
-	listlock.Lock();
+	CSingleLock listlock(&m_mutWriteList, TRUE);
 	m_Files_map.SetAt(key, pFile);
 	listlock.Unlock();
 
@@ -751,8 +749,7 @@ void CSharedFileList::FileHashingFinished(CKnownFile* file)
 
 bool CSharedFileList::RemoveFile(CKnownFile* pFile, bool bDeleted)
 {
-	CSingleLock listlock(&m_mutWriteList);
-	listlock.Lock();
+	CSingleLock listlock(&m_mutWriteList, TRUE);
 	bool bResult = (m_Files_map.RemoveKey(CCKey(pFile->GetFileHash())) != FALSE);
 	listlock.Unlock();
 

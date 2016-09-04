@@ -967,7 +967,7 @@ BOOL CSharedFilesCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 
 		CKnownFile* pKnownFile = NULL;
 		if (file != NULL && file->IsKindOf(RUNTIME_CLASS(CKnownFile)))
-			pKnownFile = (CKnownFile*)file;
+			pKnownFile = static_cast<CKnownFile *>(file);
 
 		switch (wParam){
 			case Irc_SetSendLink:
@@ -977,7 +977,7 @@ BOOL CSharedFilesCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 			case MP_GETED2KLINK:{
 				CString str;
 				for (POSITION pos = selectedList.GetHeadPosition(); pos != NULL;) {
-					CKnownFile *pfile = (CKnownFile *)selectedList.GetNext(pos);
+					CKnownFile *pfile = static_cast<CKnownFile *>(selectedList.GetNext(pos));
 					if (pfile != NULL && pfile->IsKindOf(RUNTIME_CLASS(CKnownFile))) {
 						if (!str.IsEmpty())
 							str += _T("\r\n");
@@ -992,7 +992,7 @@ BOOL CSharedFilesCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 			case MP_GETKADSOURCELINK:{
 				CString str;
 				for (POSITION pos = selectedList.GetHeadPosition(); pos != NULL;) {
-					CKnownFile *pfile = (CKnownFile *)selectedList.GetNext(pos);
+					const CKnownFile *pfile = static_cast<CKnownFile *>(selectedList.GetNext(pos));
 					if (pfile->IsKindOf(RUNTIME_CLASS(CKnownFile))) {
 						if (!str.IsEmpty())
 							str += _T("\r\n");
@@ -1158,33 +1158,30 @@ BOOL CSharedFilesCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 				break;
 			}
 			case MP_SEARCHAUTHOR:
-				if (pKnownFile && pKnownFile->m_pCollection)
-				{
+				if (pKnownFile && pKnownFile->m_pCollection) {
 					SSearchParams* pParams = new SSearchParams;
 					pParams->strExpression = pKnownFile->m_pCollection->GetCollectionAuthorKeyString();
 					pParams->eType = SearchTypeKademlia;
 					pParams->strFileType = ED2KFTSTR_EMULECOLLECTION;
 					pParams->strSpecialTitle = pKnownFile->m_pCollection->m_sCollectionAuthorName;
-					if (pParams->strSpecialTitle.GetLength() > 50){
+					if (pParams->strSpecialTitle.GetLength() > 50)
 						pParams->strSpecialTitle = pParams->strSpecialTitle.Left(50) + _T("...");
-					}
+
 					theApp.emuledlg->searchwnd->m_pwndResults->StartSearch(pParams);
 				}
 				break;
 			case MP_VIEWCOLLECTION:
-				if (pKnownFile && pKnownFile->m_pCollection)
-				{
+				if (pKnownFile && pKnownFile->m_pCollection) {
 					CCollectionViewDialog dialog;
 					dialog.SetCollection(pKnownFile->m_pCollection);
 					dialog.DoModal();
 				}
 				break;
 			case MP_MODIFYCOLLECTION:
-				if (pKnownFile && pKnownFile->m_pCollection)
-				{
+				if (pKnownFile && pKnownFile->m_pCollection) {
 					CCollectionCreateDialog dialog;
 					CCollection* pCollection = new CCollection(pKnownFile->m_pCollection);
-					dialog.SetCollection(pCollection,false);
+					dialog.SetCollection(pCollection, false);
 					dialog.DoModal();
 					delete pCollection;
 				}
@@ -1198,49 +1195,36 @@ BOOL CSharedFilesCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 			case MP_PRIOHIGH:
 			case MP_PRIOVERYHIGH:
 			case MP_PRIOAUTO:
-				{
 					for (POSITION pos = selectedList.GetHeadPosition(); pos != NULL;) {
-						CKnownFile *pfile = (CKnownFile *)selectedList.GetNext(pos);
-						if (!pfile->IsKindOf(RUNTIME_CLASS(CKnownFile)))
-							continue;
-						switch (wParam) {
+						CKnownFile *pfile = static_cast<CKnownFile *>(selectedList.GetNext(pos));
+						if (pfile->IsKindOf(RUNTIME_CLASS(CKnownFile))) {
+							pfile->SetAutoUpPriority(wParam == MP_PRIOAUTO);
+							switch (wParam) {
 							case MP_PRIOVERYLOW:
-								pfile->SetAutoUpPriority(false);
 								pfile->SetUpPriority(PR_VERYLOW);
-								UpdateFile(pfile);
 								break;
 							case MP_PRIOLOW:
-								pfile->SetAutoUpPriority(false);
 								pfile->SetUpPriority(PR_LOW);
-								UpdateFile(pfile);
 								break;
 							case MP_PRIONORMAL:
-								pfile->SetAutoUpPriority(false);
 								pfile->SetUpPriority(PR_NORMAL);
-								UpdateFile(pfile);
 								break;
 							case MP_PRIOHIGH:
-								pfile->SetAutoUpPriority(false);
 								pfile->SetUpPriority(PR_HIGH);
-								UpdateFile(pfile);
 								break;
 							case MP_PRIOVERYHIGH:
-								pfile->SetAutoUpPriority(false);
 								pfile->SetUpPriority(PR_VERYHIGH);
-								UpdateFile(pfile);
 								break;
 							case MP_PRIOAUTO:
-								pfile->SetAutoUpPriority(true);
 								pfile->UpdateAutoUpPriority();
-								UpdateFile(pfile);
+							}
+							UpdateFile(pfile);
 						}
 					}
 					break;
-				}
 			default:
-				if (file && wParam>=MP_WEBURL && wParam<=MP_WEBURL+256){
+				if (file && wParam>=MP_WEBURL && wParam<=MP_WEBURL+256)
 					theWebServices.RunURL(file, wParam);
-				}
 				break;
 		}
 	}
@@ -1251,27 +1235,23 @@ void CSharedFilesCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	NMLISTVIEW *pNMListView = (NMLISTVIEW *)pNMHDR;
 	bool sortAscending;
-	if (GetSortItem() != pNMListView->iSubItem)
-	{
-		switch (pNMListView->iSubItem)
-		{
-			case 3:  // Priority
-			case 10: // Complete Sources
-			case 11: // Shared
-				sortAscending = false;
-				break;
-			case 5:  // Requests
-			case 6:  // Accepted Requests
-			case 7:  // Transferred Data
-				// Keep the current 'm_aSortBySecondValue' for that column, but reset to 'descending'
-				sortAscending = false;
-				break;
-			default:
-				sortAscending = true;
-				break;
+	if (GetSortItem() != pNMListView->iSubItem) {
+		switch (pNMListView->iSubItem) {
+		case 3:  // Priority
+		case 10: // Complete Sources
+		case 11: // Shared
+//			sortAscending = false;
+//			break;
+		case 5:  // Requests
+		case 6:  // Accepted Requests
+		case 7:  // Transferred Data
+			// Keep the current 'm_aSortBySecondValue' for that column, but reset to 'descending'
+			sortAscending = false;
+			break;
+		default:
+			sortAscending = true;
 		}
-	}
-	else
+	} else
 		sortAscending = !GetSortAscending();
 
 	// Ornis 4-way-sorting
@@ -1304,67 +1284,62 @@ void CSharedFilesCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 int CALLBACK CSharedFilesCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const CShareableFile* item1 = (CShareableFile*)lParam1;
-	const CShareableFile* item2 = (CShareableFile*)lParam2;
+	const CShareableFile* item1 = reinterpret_cast<CShareableFile *>(lParam1);
+	const CShareableFile* item2 = reinterpret_cast<CShareableFile *>(lParam2);
 
 	bool bSortAscending;
-	int iColumn;
-	if (lParamSort >= 100) {
+	if (lParamSort >= 100)
 		bSortAscending = lParamSort < 120;
-		iColumn = bSortAscending ? lParamSort : lParamSort - 20;
-	}
-	else {
+	else
 		bSortAscending = lParamSort < 20;
-		iColumn = bSortAscending ? lParamSort : lParamSort - 20;
-	}
+	int iColumn = bSortAscending ? lParamSort : lParamSort - 20;
 
 	int iResult = 0;
 	bool bExtColumn = false;
-	switch (iColumn)
-	{
-		case 0: //filename
-			iResult = CompareLocaleStringNoCase(item1->GetFileName(), item2->GetFileName());
-			break;
 
-		case 1: //filesize
-			iResult = CompareUnsigned64(item1->GetFileSize(), item2->GetFileSize());
-			break;
+	switch (iColumn) {
+	case 0: //filename
+		iResult = CompareLocaleStringNoCase(item1->GetFileName(), item2->GetFileName());
+		break;
 
-		case 2: //filetype
-			iResult = item1->GetFileTypeDisplayStr().Compare(item2->GetFileTypeDisplayStr());
-			// if the type is equal, subsort by extension
-			if (iResult == 0)
-			{
-				LPCTSTR pszExt1 = PathFindExtension(item1->GetFileName());
-				LPCTSTR pszExt2 = PathFindExtension(item2->GetFileName());
-				if ((pszExt1 == NULL) ^ (pszExt2 == NULL))
-					iResult = pszExt1 == NULL ? 1 : (-1);
-				else
-					iResult = pszExt1 != NULL ? _tcsicmp(pszExt1, pszExt2) : 0;
-			}
-			break;
+	case 1: //filesize
+		iResult = CompareUnsigned64(item1->GetFileSize(), item2->GetFileSize());
+		break;
 
-		case 9: //folder
-			iResult = CompareLocaleStringNoCase(item1->GetPath(), item2->GetPath());
-			break;
-		default:
-			bExtColumn = true;
+	case 2: //filetype
+		iResult = item1->GetFileTypeDisplayStr().Compare(item2->GetFileTypeDisplayStr());
+		// if the type is equal, subsort by extension
+		if (iResult == 0)
+		{
+			LPCTSTR pszExt1 = PathFindExtension(item1->GetFileName());
+			LPCTSTR pszExt2 = PathFindExtension(item2->GetFileName());
+			if ((pszExt1 == NULL) ^ (pszExt2 == NULL))
+				iResult = pszExt1 == NULL ? 1 : (-1);
+			else
+				iResult = pszExt1 != NULL ? _tcsicmp(pszExt1, pszExt2) : 0;
+		}
+		break;
+
+	case 9: //folder
+		iResult = CompareLocaleStringNoCase(item1->GetPath(), item2->GetPath());
+		break;
+	default:
+		bExtColumn = true;
 	}
 
 	if (bExtColumn)
 	{
 		if (item1->IsKindOf(RUNTIME_CLASS(CKnownFile)) && !item2->IsKindOf(RUNTIME_CLASS(CKnownFile)))
-			iResult = (-1);
+			iResult = -1;
 		else if (!item1->IsKindOf(RUNTIME_CLASS(CKnownFile)) && item2->IsKindOf(RUNTIME_CLASS(CKnownFile)))
 			iResult = 1;
 		else if (item1->IsKindOf(RUNTIME_CLASS(CKnownFile)) && item2->IsKindOf(RUNTIME_CLASS(CKnownFile)))
 		{
-			CKnownFile* kitem1 = (CKnownFile*)item1;
-			CKnownFile* kitem2 = (CKnownFile*)item2;
+			const CKnownFile* kitem1 = (CKnownFile *)item1;
+			const CKnownFile* kitem2 = (CKnownFile *)item2;
 
-			switch (iColumn)
-			{
-				case 3:{//prio
+			switch (iColumn) {
+				case 3: {//prio
 					uint8 p1 = kitem1->GetUpPriority() + 1;
 					if (p1 == 5)
 						p1 = 0;
@@ -1436,12 +1411,11 @@ int CALLBACK CSharedFilesCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM l
 					iResult = CompareUnsigned64(kitem1->statistic.GetAllTimeTransferred(), kitem2->statistic.GetAllTimeTransferred());
 					break;
 
-				case 111:{ //kad shared
+				case 111: { //kad shared
 					uint32 tNow = time(NULL);
 					int i1 = (tNow < kitem1->GetLastPublishTimeKadSrc()) ? 1 : 0;
 					int i2 = (tNow < kitem2->GetLastPublishTimeKadSrc()) ? 1 : 0;
 					iResult = i1 - i2;
-					break;
 				}
 			}
 		}

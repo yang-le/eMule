@@ -1215,25 +1215,26 @@ BOOL CAsyncProxySocketLayer::Accept( CAsyncSocketEx& rConnectedSocket, SOCKADDR*
 
 CString GetProxyError(UINT nError)
 {
-	if (nError == PROXYERROR_NOERROR)
+	switch (nError) {
+	case PROXYERROR_NOERROR:
 		return _T("No proxy error");
-	else if (nError == PROXYERROR_NOCONN)
+	case PROXYERROR_NOCONN:
 		return _T("Proxy connection failed");
-	else if (nError == PROXYERROR_REQUESTFAILED)
+	case PROXYERROR_REQUESTFAILED:
 		return _T("Proxy request failed");
-	else if (nError == PROXYERROR_AUTHREQUIRED)
+	case PROXYERROR_AUTHREQUIRED:
 		return _T("Proxy authentication required");
-	else if (nError == PROXYERROR_AUTHTYPEUNKNOWN)
+	case PROXYERROR_AUTHTYPEUNKNOWN:
 		return _T("Proxy authentication not supported");
-	else if (nError == PROXYERROR_AUTHFAILED)
+	case PROXYERROR_AUTHFAILED:
 		return _T("Proxy authentication failed");
-	else if (nError == PROXYERROR_AUTHNOLOGON)
+	case PROXYERROR_AUTHNOLOGON:
 		return _T("Proxy authentication required");
-	else if (nError == PROXYERROR_CANTRESOLVEHOST)
+	case PROXYERROR_CANTRESOLVEHOST:
 		return _T("Proxy hostname not resolved");
-	else if (nError == PROXYSTATUS_LISTENSOCKETCREATED)
+	case PROXYSTATUS_LISTENSOCKETCREATED:
 		return _T("Proxy listen socket created");
-	else{
+	default:
 		CString strError;
 		strError.Format(_T("Proxy-Error: %u"), nError);
 		return strError;

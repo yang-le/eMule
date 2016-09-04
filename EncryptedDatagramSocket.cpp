@@ -194,7 +194,7 @@ int CEncryptedDatagramSocket::DecryptReceivedClient(BYTE* pbyBufIn, int nBufLen,
 				uchar achKeyData[18];
 				memcpy(achKeyData, Kademlia::CKademlia::GetPrefs()->GetKadID().GetData(), 16);
 				memcpy(achKeyData + 16, pbyBufIn + 1, 2); // random key part sent from remote client
-				md5.Calculate(achKeyData, sizeof(achKeyData));
+				md5.Calculate(achKeyData, sizeof achKeyData);
 			}
 		}
 		else if (byCurrentTry == 1) {
@@ -206,7 +206,7 @@ int CEncryptedDatagramSocket::DecryptReceivedClient(BYTE* pbyBufIn, int nBufLen,
 			achKeyData[20] = MAGICVALUE_UDP;
 			memcpy(achKeyData + 16, &dwIP, 4);
 			memcpy(achKeyData + 21, pbyBufIn + 1, 2); // random key part sent from remote client
-			md5.Calculate(achKeyData, sizeof(achKeyData));
+			md5.Calculate(achKeyData, sizeof achKeyData);
 		}
 		else if (byCurrentTry == 2) {
 			// kad packet with ReceiverKey as key
@@ -216,14 +216,14 @@ int CEncryptedDatagramSocket::DecryptReceivedClient(BYTE* pbyBufIn, int nBufLen,
 				uchar achKeyData[6];
 				PokeUInt32(achKeyData, Kademlia::CPrefs::GetUDPVerifyKey(dwIP));
 				memcpy(achKeyData + 4, pbyBufIn + 1, 2); // random key part sent from remote client
-				md5.Calculate(achKeyData, sizeof(achKeyData));
+				md5.Calculate(achKeyData, sizeof achKeyData);
 			}
 		}
 		else
 			ASSERT( false );
 
 		RC4CreateKey(md5.GetRawHash(), 16, &keyReceiveKey, true);
-		RC4Crypt(pbyBufIn + 3, (uchar*)&dwValue, sizeof(dwValue), &keyReceiveKey);
+		RC4Crypt(pbyBufIn + 3, (uchar*)&dwValue, sizeof dwValue, &keyReceiveKey);
 		byCurrentTry = (byCurrentTry + 1) % 3;
 	} while (dwValue != MAGICVALUE_UDP_SYNC_CLIENT && byTries > 0); // try to decrypt as ed2k as well as kad packet if needed (max 3 rounds)
 
@@ -298,14 +298,14 @@ int CEncryptedDatagramSocket::EncryptSendClient(uchar** ppbyBuf, int nBufLen, co
 			uchar achKeyData[6];
 			PokeUInt32(achKeyData, nReceiverVerifyKey);
 			PokeUInt16(achKeyData+4, nRandomKeyPart);
-			md5.Calculate(achKeyData, sizeof(achKeyData));
+			md5.Calculate(achKeyData, sizeof achKeyData);
 			//DEBUG_ONLY( DebugLog(_T("Creating obfuscated Kad packet encrypted by ReceiverKey (%u)"), nReceiverVerifyKey) );
 		}
 		else if (pachClientHashOrKadID != NULL && !isnulmd4(pachClientHashOrKadID)) {
 			uchar achKeyData[18];
 			md4cpy(achKeyData, pachClientHashOrKadID);
 			PokeUInt16(achKeyData+16, nRandomKeyPart);
-			md5.Calculate(achKeyData, sizeof(achKeyData));
+			md5.Calculate(achKeyData, sizeof achKeyData);
 			//DEBUG_ONLY( DebugLog(_T("Creating obfuscated Kad packet encrypted by Hash/NodeID %s"), (LPCTSTR)md4str(pachClientHashOrKadID)) );
 		}
 		else {
@@ -319,9 +319,9 @@ int CEncryptedDatagramSocket::EncryptSendClient(uchar** ppbyBuf, int nBufLen, co
 		md4cpy(achKeyData, pachClientHashOrKadID);
 		uint32 dwIP = theApp.GetPublicIP();
 		memcpy(achKeyData+16, &dwIP, 4);
-		memcpy(achKeyData+21, &nRandomKeyPart, 2);
 		achKeyData[20] = MAGICVALUE_UDP;
-		md5.Calculate(achKeyData, sizeof(achKeyData));
+		memcpy(achKeyData+21, &nRandomKeyPart, 2);
+		md5.Calculate(achKeyData, sizeof achKeyData);
 	}
 	RC4_Key_Struct keySendKey;
 	RC4CreateKey(md5.GetRawHash(), 16, &keySendKey, true);
@@ -331,11 +331,12 @@ int CEncryptedDatagramSocket::EncryptSendClient(uchar** ppbyBuf, int nBufLen, co
 	int i;
 	for (i = 0; i < 128; i++){
 		bySemiRandomNotProtocolMarker = cryptRandomGen.GenerateByte();
-		bySemiRandomNotProtocolMarker = bKad ? (bySemiRandomNotProtocolMarker & 0xFE) : (bySemiRandomNotProtocolMarker | 0x01); // set the ed2k/kad marker bit
-		if (bKad)
-			bySemiRandomNotProtocolMarker = bKadRecKeyUsed ? ((bySemiRandomNotProtocolMarker & 0xFE) | 0x02) : (bySemiRandomNotProtocolMarker & 0xFC); // set the ed2k/kad and nodeid/reckey markerbit
-		else
-			bySemiRandomNotProtocolMarker = (bySemiRandomNotProtocolMarker | 0x01); // set the ed2k/kad marker bit
+		if (bKad) {
+			bySemiRandomNotProtocolMarker &= 0xFC;
+			if (bKadRecKeyUsed)
+				bySemiRandomNotProtocolMarker |= 0x02; // set the ed2k/kad and nodeid/reckey markerbit
+		} else
+			bySemiRandomNotProtocolMarker |= 0x01; // set the ed2k/kad marker bit
 
 		bool bOk = false;
 		switch (bySemiRandomNotProtocolMarker){ // not allowed values
@@ -364,8 +365,8 @@ int CEncryptedDatagramSocket::EncryptSendClient(uchar** ppbyBuf, int nBufLen, co
 	RC4Crypt((uchar*)&dwMagicValue, pachCryptedBuffer + 3, 4, &keySendKey);
 	RC4Crypt((uchar*)&byPadLen, pachCryptedBuffer + 7, 1, &keySendKey);
 
-	for (int j = 0; j < byPadLen; j++){
-		uint8 byRand = (uint8)rand();	// they actually dont really need to be random, but it doesn't hurts either
+	for (int j = 0; j < byPadLen; ++j) {
+		uint8 byRand = (uint8)rand();	// they actually dont really need to be random, but it doesn't hurt either
 		RC4Crypt((uchar*)&byRand, pachCryptedBuffer + CRYPT_HEADER_WITHOUTPADDING + j, 1, &keySendKey);
 	}
 
@@ -398,12 +399,12 @@ int CEncryptedDatagramSocket::DecryptReceivedServer(BYTE* pbyBufIn, int nBufLen,
 	memcpy(achKeyData, &dwBaseKey, 4);
 	achKeyData[4] = MAGICVALUE_UDP_SERVERCLIENT;
 	memcpy(achKeyData + 5, pbyBufIn + 1, 2); // random key part sent from remote server
-	MD5Sum md5(achKeyData, sizeof(achKeyData));
+	MD5Sum md5(achKeyData, sizeof achKeyData);
 	RC4_Key_Struct keyReceiveKey;
 	RC4CreateKey(md5.GetRawHash(), 16, &keyReceiveKey, true);
 
 	uint32 dwValue;
-	RC4Crypt(pbyBufIn + 3, (uchar*)&dwValue, sizeof(dwValue), &keyReceiveKey);
+	RC4Crypt(pbyBufIn + 3, (uchar*)&dwValue, sizeof dwValue, &keyReceiveKey);
 	if (dwValue == MAGICVALUE_UDP_SYNC_SERVER){
 		// yup this is an encrypted packet
 		if (thePrefs.GetDebugServerUDPLevel() > 0)
@@ -446,14 +447,14 @@ int CEncryptedDatagramSocket::EncryptSendServer(uchar** ppbyBuf, int nBufLen, ui
 	memcpy(achKeyData, &dwBaseKey, 4);
 	achKeyData[4] = MAGICVALUE_UDP_CLIENTSERVER;
 	memcpy(achKeyData + 5, &nRandomKeyPart, 2);
-	MD5Sum md5(achKeyData, sizeof(achKeyData));
+	MD5Sum md5(achKeyData, sizeof achKeyData);
 	RC4_Key_Struct keySendKey;
 	RC4CreateKey(md5.GetRawHash(), 16, &keySendKey, true);
 
 	// create the semi random byte encryption header
 	uint8 bySemiRandomNotProtocolMarker = 0;
 	int i;
-	for (i = 0; i < 128; i++){
+	for (i = 0; i < 128; ++i) {
 		bySemiRandomNotProtocolMarker = cryptRandomGen.GenerateByte();
 		if (bySemiRandomNotProtocolMarker != OP_EDONKEYPROT) // not allowed values
 			break;

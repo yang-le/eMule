@@ -69,8 +69,7 @@ UINT AFX_CDECL CUploadDiskIOThread::RunProc(LPVOID pParam) {
 	InitThreadLocale();
 	if (pParam != NULL)
 		return ((CUploadDiskIOThread*)pParam)->RunInternal();
-	else
-		return 1;
+	return 1;
 }
 
 

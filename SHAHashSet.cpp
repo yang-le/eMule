@@ -97,136 +97,107 @@ uint64	CAICHHashTree::GetBaseSize() const
 }
 
 // recursive
-CAICHHashTree* CAICHHashTree::FindHash(uint64 nStartPos, uint64 nSize, uint8* nLevel){
-	(*nLevel)++;
-	if (*nLevel > 22){ // sanity
-		ASSERT( false );
-		return NULL;
-	}
-	if (nStartPos + nSize > m_nDataSize){ // sanity
-		ASSERT ( false );
-		return NULL;
-	}
-	if (nSize > m_nDataSize){ // sanity
-		ASSERT ( false );
+CAICHHashTree* CAICHHashTree::FindHash(uint64 nStartPos, uint64 nSize, uint8* nLevel)
+{
+	++(*nLevel);
+	if (*nLevel > 22 || nStartPos + nSize > m_nDataSize || nSize > m_nDataSize) { // sanity
+		ASSERT(false);
 		return NULL;
 	}
 
-	if (nStartPos == 0 && nSize == m_nDataSize){
-		// this is the searched hash
-		return this;
-	}
-	else if (m_nDataSize <= GetBaseSize()){ // sanity
+	if (nStartPos == 0 && nSize == m_nDataSize)
+		return this;	// this is the searched hash
+
+	if (m_nDataSize <= GetBaseSize()) { // sanity
 		// this is already the last level, cant go deeper
-		ASSERT( false );
+		ASSERT(false);
 		return NULL;
 	}
-	else{
-		uint64 nBlocks = m_nDataSize / GetBaseSize() + ((m_nDataSize % GetBaseSize() != 0 )? 1:0);
-		uint64 nLeft = ( ((m_bIsLeftBranch) ? nBlocks+1:nBlocks) / 2)* GetBaseSize();
-		uint64 nRight = m_nDataSize - nLeft;
-		if (nStartPos < nLeft){
-			if (nStartPos + nSize > nLeft){ // sanity
-				ASSERT ( false );
-				return NULL;
-			}
-			if (m_pLeftTree == NULL)
-				m_pLeftTree = new CAICHHashTree(nLeft, true, (nLeft <= PARTSIZE) ? EMBLOCKSIZE : PARTSIZE);
-			else{
-				ASSERT( m_pLeftTree->m_nDataSize == nLeft );
-			}
-			return m_pLeftTree->FindHash(nStartPos, nSize, nLevel);
+	uint64 nBlocks = m_nDataSize / GetBaseSize() + ((m_nDataSize % GetBaseSize() != 0)? 1 : 0);
+	uint64 nLeft = ((m_bIsLeftBranch ? nBlocks+1 : nBlocks) / 2) * GetBaseSize();
+	uint64 nRight = m_nDataSize - nLeft;
+	if (nStartPos < nLeft) {
+		if (nStartPos + nSize > nLeft) { // sanity
+			ASSERT(false);
+			return NULL;
 		}
-		else{
-			nStartPos -= nLeft;
-			if (nStartPos + nSize > nRight){ // sanity
-				ASSERT ( false );
-				return NULL;
-			}
-			if (m_pRightTree == NULL)
-				m_pRightTree = new CAICHHashTree(nRight, false, (nRight <= PARTSIZE) ? EMBLOCKSIZE : PARTSIZE);
-			else{
-				ASSERT( m_pRightTree->m_nDataSize == nRight );
-			}
-			return m_pRightTree->FindHash(nStartPos, nSize, nLevel);
-		}
+		if (m_pLeftTree == NULL)
+			m_pLeftTree = new CAICHHashTree(nLeft, true, (nLeft <= PARTSIZE) ? EMBLOCKSIZE : PARTSIZE);
+		else
+			ASSERT(m_pLeftTree->m_nDataSize == nLeft);
+		return m_pLeftTree->FindHash(nStartPos, nSize, nLevel);
 	}
+	nStartPos -= nLeft;
+	if (nStartPos + nSize > nRight) { // sanity
+		ASSERT(false);
+		return NULL;
+	}
+	if (m_pRightTree == NULL)
+		m_pRightTree = new CAICHHashTree(nRight, false, (nRight <= PARTSIZE) ? EMBLOCKSIZE : PARTSIZE);
+	else
+		ASSERT(m_pRightTree->m_nDataSize == nRight);
+
+	return m_pRightTree->FindHash(nStartPos, nSize, nLevel);
 }
 
 // find existing hash, which is part of a properly build tree/branch
 // recursive
 const CAICHHashTree* CAICHHashTree::FindExistingHash(uint64 nStartPos, uint64 nSize, uint8* nLevel) const
 {
-	(*nLevel)++;
-	if (*nLevel > 22){ // sanity
-		ASSERT( false );
-		return NULL;
-	}
-	if (nStartPos + nSize > m_nDataSize){ // sanity
-		ASSERT ( false );
-		return NULL;
-	}
-	if (nSize > m_nDataSize){ // sanity
-		ASSERT ( false );
+	++(*nLevel);
+	if (*nLevel > 22 || nStartPos + nSize > m_nDataSize || nSize > m_nDataSize) { // sanity
+		ASSERT(false);
 		return NULL;
 	}
 
-	if (nStartPos == 0 && nSize == m_nDataSize){
+	if (nStartPos == 0 && nSize == m_nDataSize) {
 		// this is the searched hash
 		if (m_bHashValid)
 			return this;
-		else
-			return NULL;
-	}
-	else if (m_nDataSize <= GetBaseSize()){ // sanity
-		// this is already the last level, cant go deeper
-		ASSERT( false );
 		return NULL;
 	}
-	else{
-		uint64 nBlocks = m_nDataSize / GetBaseSize() + ((m_nDataSize % GetBaseSize() != 0 )? 1:0);
-		uint64 nLeft = ( ((m_bIsLeftBranch) ? nBlocks+1:nBlocks) / 2)* GetBaseSize();
-		uint64 nRight = m_nDataSize - nLeft;
-		if (nStartPos < nLeft){
-			if (nStartPos + nSize > nLeft){ // sanity
-				ASSERT ( false );
-				return NULL;
-			}
-			if (m_pLeftTree == NULL || !m_pLeftTree->m_bHashValid)
-				return NULL;
-			else{
-				ASSERT( m_pLeftTree->m_nDataSize == nLeft );
-				return m_pLeftTree->FindExistingHash(nStartPos, nSize, nLevel);
-			}
-		}
-		else{
-			nStartPos -= nLeft;
-			if (nStartPos + nSize > nRight){ // sanity
-				ASSERT ( false );
-				return NULL;
-			}
-			if (m_pRightTree == NULL || !m_pRightTree->m_bHashValid)
-				return NULL;
-			else{
-				ASSERT( m_pRightTree->m_nDataSize == nRight );
-				return m_pRightTree->FindExistingHash(nStartPos, nSize, nLevel);
-			}
-		}
+	if (m_nDataSize <= GetBaseSize()) { // sanity
+		// this is already the last level, cant go deeper
+		ASSERT(false);
+		return NULL;
 	}
+	uint64 nBlocks = m_nDataSize / GetBaseSize() + ((m_nDataSize % GetBaseSize() != 0)? 1:0);
+	uint64 nLeft = (((m_bIsLeftBranch) ? nBlocks+1:nBlocks) / 2)* GetBaseSize();
+	uint64 nRight = m_nDataSize - nLeft;
+	if (nStartPos < nLeft) {
+		if (nStartPos + nSize > nLeft) { // sanity
+			ASSERT(false);
+			return NULL;
+		}
+		if (m_pLeftTree == NULL || !m_pLeftTree->m_bHashValid)
+			return NULL;
+		ASSERT(m_pLeftTree->m_nDataSize == nLeft);
+		return m_pLeftTree->FindExistingHash(nStartPos, nSize, nLevel);
+	}
+	nStartPos -= nLeft;
+	if (nStartPos + nSize > nRight) { // sanity
+		ASSERT(false);
+		return NULL;
+	}
+	if (m_pRightTree == NULL || !m_pRightTree->m_bHashValid)
+		return NULL;
+	ASSERT(m_pRightTree->m_nDataSize == nRight);
+	return m_pRightTree->FindExistingHash(nStartPos, nSize, nLevel);
 }
 
 // recursive
 // calculates missing hash fromt he existing ones
 // overwrites existing hashs
 // fails if no hash is found for any branch
-bool CAICHHashTree::ReCalculateHash(CAICHHashAlgo* hashalg, bool bDontReplace){
-	ASSERT ( !( (m_pLeftTree != NULL) ^ (m_pRightTree != NULL)) );
-	if (m_pLeftTree && m_pRightTree){
-		if ( !m_pLeftTree->ReCalculateHash(hashalg, bDontReplace) || !m_pRightTree->ReCalculateHash(hashalg, bDontReplace) )
+bool CAICHHashTree::ReCalculateHash(CAICHHashAlgo* hashalg, bool bDontReplace)
+{
+	ASSERT(!((m_pLeftTree != NULL) ^ (m_pRightTree != NULL)));
+	if (m_pLeftTree && m_pRightTree) {
+		if (!m_pLeftTree->ReCalculateHash(hashalg, bDontReplace) || !m_pRightTree->ReCalculateHash(hashalg, bDontReplace))
 			return false;
 		if (bDontReplace && m_bHashValid)
 			return true;
-		if (m_pRightTree->m_bHashValid && m_pLeftTree->m_bHashValid){
+		if (m_pRightTree->m_bHashValid && m_pLeftTree->m_bHashValid) {
 			hashalg->Reset();
 			hashalg->Add(m_pLeftTree->m_Hash.GetRawHash(), HASHSIZE);
 			hashalg->Add(m_pRightTree->m_Hash.GetRawHash(), HASHSIZE);
@@ -234,14 +205,13 @@ bool CAICHHashTree::ReCalculateHash(CAICHHashAlgo* hashalg, bool bDontReplace){
 			m_bHashValid = true;
 			return true;
 		}
-		else
-			return m_bHashValid;
+		return m_bHashValid;
 	}
-	else
-		return true;
+	return true;
 }
 
-bool CAICHHashTree::VerifyHashTree(CAICHHashAlgo* hashalg, bool bDeleteBadTrees){
+bool CAICHHashTree::VerifyHashTree(CAICHHashAlgo* hashalg, bool bDeleteBadTrees)
+{
 	if (!m_bHashValid){
 		ASSERT ( false );
 		if (bDeleteBadTrees){
@@ -315,7 +285,8 @@ bool CAICHHashTree::VerifyHashTree(CAICHHashAlgo* hashalg, bool bDeleteBadTrees)
 
 }
 
-void CAICHHashTree::SetBlockHash(uint64 nSize, uint64 nStartPos, CAICHHashAlgo* pHashAlg){
+void CAICHHashTree::SetBlockHash(uint64 nSize, uint64 nStartPos, CAICHHashAlgo* pHashAlg)
+{
 	ASSERT ( nSize <= EMBLOCKSIZE );
 	CAICHHashTree* pToInsert = FindHash(nStartPos, nSize);
 	if (pToInsert == NULL){ // sanity
@@ -337,56 +308,49 @@ void CAICHHashTree::SetBlockHash(uint64 nSize, uint64 nStartPos, CAICHHashAlgo* 
 
 }
 
-bool CAICHHashTree::CreatePartRecoveryData(uint64 nStartPos, uint64 nSize, CFileDataIO* fileDataOut, uint32 wHashIdent, bool b32BitIdent){
-	if (nStartPos + nSize > m_nDataSize){ // sanity
-		ASSERT ( false );
-		return false;
-	}
-	if (nSize > m_nDataSize){ // sanity
-		ASSERT ( false );
+bool CAICHHashTree::CreatePartRecoveryData(uint64 nStartPos, uint64 nSize, CFileDataIO* fileDataOut, uint32 wHashIdent, bool b32BitIdent)
+{
+	if (nStartPos + nSize > m_nDataSize || nSize > m_nDataSize) { // sanity
+		ASSERT(false);
 		return false;
 	}
 
-	if (nStartPos == 0 && nSize == m_nDataSize){
+	if (nStartPos == 0 && nSize == m_nDataSize) {
 		// this is the searched part, now write all blocks of this part
 		// hashident for this level will be adjsuted by WriteLowestLevelHash
 		return WriteLowestLevelHashs(fileDataOut, wHashIdent, false, b32BitIdent);
 	}
-	else if (m_nDataSize <= GetBaseSize()){ // sanity
+	if (m_nDataSize <= GetBaseSize()) { // sanity
 		// this is already the last level, cant go deeper
-		ASSERT( false );
+		ASSERT(false);
 		return false;
 	}
-	else{
-		wHashIdent <<= 1;
-		wHashIdent |= (m_bIsLeftBranch) ? 1: 0;
+	wHashIdent <<= 1;
+	wHashIdent |= (m_bIsLeftBranch) ? 1: 0;
 
-		uint64 nBlocks = m_nDataSize / GetBaseSize() + ((m_nDataSize % GetBaseSize() != 0 )? 1:0);
-		uint64 nLeft = ( ((m_bIsLeftBranch) ? nBlocks+1:nBlocks) / 2)* GetBaseSize();
-		uint64 nRight = m_nDataSize - nLeft;
-		if (m_pLeftTree == NULL || m_pRightTree == NULL){
-			ASSERT( false );
+	uint64 nBlocks = m_nDataSize / GetBaseSize() + ((m_nDataSize % GetBaseSize() != 0)? 1:0);
+	uint64 nLeft = (((m_bIsLeftBranch) ? nBlocks+1:nBlocks) / 2)* GetBaseSize();
+	uint64 nRight = m_nDataSize - nLeft;
+	if (m_pLeftTree == NULL || m_pRightTree == NULL) {
+		ASSERT(false);
+		return false;
+	}
+	if (nStartPos < nLeft) {
+		if (nStartPos + nSize > nLeft || !m_pRightTree->m_bHashValid) { // sanity
+			ASSERT(false);
 			return false;
 		}
-		if (nStartPos < nLeft){
-			if (nStartPos + nSize > nLeft || !m_pRightTree->m_bHashValid){ // sanity
-				ASSERT ( false );
-				return false;
-			}
-			m_pRightTree->WriteHash(fileDataOut, wHashIdent, b32BitIdent);
-			return m_pLeftTree->CreatePartRecoveryData(nStartPos, nSize, fileDataOut, wHashIdent, b32BitIdent);
-		}
-		else{
-			nStartPos -= nLeft;
-			if (nStartPos + nSize > nRight || !m_pLeftTree->m_bHashValid){ // sanity
-				ASSERT ( false );
-				return false;
-			}
-			m_pLeftTree->WriteHash(fileDataOut, wHashIdent, b32BitIdent);
-			return m_pRightTree->CreatePartRecoveryData(nStartPos, nSize, fileDataOut, wHashIdent, b32BitIdent);
-
-		}
+		m_pRightTree->WriteHash(fileDataOut, wHashIdent, b32BitIdent);
+		return m_pLeftTree->CreatePartRecoveryData(nStartPos, nSize, fileDataOut, wHashIdent, b32BitIdent);
 	}
+	nStartPos -= nLeft;
+	if (nStartPos + nSize > nRight || !m_pLeftTree->m_bHashValid) { // sanity
+		ASSERT(false);
+		return false;
+	}
+	m_pLeftTree->WriteHash(fileDataOut, wHashIdent, b32BitIdent);
+	return m_pRightTree->CreatePartRecoveryData(nStartPos, nSize, fileDataOut, wHashIdent, b32BitIdent);
+
 }
 
 void CAICHHashTree::WriteHash(CFileDataIO* fileDataOut, uint32 wHashIdent, bool b32BitIdent) const{
@@ -758,19 +722,18 @@ bool CAICHRecoveryHashSet::ReadRecoveryData(uint64 nPartStartPos, CSafeMemFile* 
 
 // this function is only allowed to be called right after successfully calculating the hashset (!)
 // will delete the hashset, after saving to free the memory
-bool CAICHRecoveryHashSet::SaveHashSet(){
-	if (m_eStatus != AICH_HASHSETCOMPLETE){
+bool CAICHRecoveryHashSet::SaveHashSet()
+{
+	if (m_eStatus != AICH_HASHSETCOMPLETE
+		|| !m_pHashTree.m_bHashValid
+		|| m_pHashTree.m_nDataSize != m_pOwner->GetFileSize())
+	{
 		ASSERT( false );
 		return false;
 	}
-	if ( !m_pHashTree.m_bHashValid || m_pHashTree.m_nDataSize != m_pOwner->GetFileSize()){
-		ASSERT( false );
+	CSingleLock lockKnown2Met(&m_mutKnown2File);
+	if (!lockKnown2Met.Lock(5000))
 		return false;
-	}
-	CSingleLock lockKnown2Met(&m_mutKnown2File, false);
-	if (!lockKnown2Met.Lock(5000)){
-		return false;
-	}
 
 	CString fullpath = thePrefs.GetMuleDirectory(EMULE_CONFIGDIR);
 	fullpath.Append(KNOWN2_MET_FILENAME);

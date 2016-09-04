@@ -787,7 +787,7 @@ protected:
 	void Startup(uint32_t imagetype = 0);
 	void CopyInfo(const CxImage &src);
 	void Ghost(const CxImage *src);
-	void RGBtoBGR(uint8_t *buffer, int32_t length) const; //fox8
+	void RGBtoBGR(uint8_t *buffer, int32_t length) const;
 	static float HueToRGB(float n1,float n2, float hue);
 	void Bitfield2RGB(uint8_t *src, uint32_t redmask, uint32_t greenmask, uint32_t bluemask, uint8_t bpp);
 	static int32_t CompareColors(const void *elem1, const void *elem2);

@@ -152,8 +152,8 @@ void CEncryptedStreamSocket::CryptPrepareSendData(uchar* pBuffer, uint32 nLen){
 		return;
 	}
 	if (m_StreamCryptState == ECS_UNKNOWN){
-		//this happens when the encryption option was not set on a outgoing connection
-		//or if we try to send before receiving on a incoming connection - both shouldn't happen
+		//this happens when the encryption option was not set on an outgoing connection
+		//or if we try to send before receiving on an incoming connection - both shouldn't happen
 		m_StreamCryptState = ECS_NONE;
 		DebugLogError(_T("CEncryptedStreamSocket: Overwriting State ECS_UNKNOWN with ECS_NONE because of premature Send() (%s)"), (LPCTSTR)DbgGetIPString());
 	}
@@ -163,12 +163,13 @@ void CEncryptedStreamSocket::CryptPrepareSendData(uchar* pBuffer, uint32 nLen){
 
 // unfortunatly sending cannot be made transparent for the derived class, because of WSA_WOULDBLOCK
 // together with the fact that each byte must pass the keystream only once
-int CEncryptedStreamSocket::Send(const void* lpBuf, int nBufLen, int nFlags){
+int CEncryptedStreamSocket::Send(const void* lpBuf, int nBufLen, int nFlags)
+{
 	if (!IsEncryptionLayerReady()){
 		ASSERT( false ); // must be a bug
 		return 0;
 	}
-	else if (m_bServerCrypt && m_StreamCryptState == ECS_ENCRYPTING && m_pfiSendBuffer != NULL){
+	if (m_bServerCrypt && m_StreamCryptState == ECS_ENCRYPTING && m_pfiSendBuffer != NULL){
 		ASSERT( m_NegotiatingState == ONS_BASIC_SERVER_DELAYEDSENDING );
 		// handshakedata was delayed to put it into one frame with the first paypload to the server
 		// do so now with the payload attached
@@ -177,7 +178,7 @@ int CEncryptedStreamSocket::Send(const void* lpBuf, int nBufLen, int nFlags){
 		(void)nRes;
 		return nBufLen;	// report a full send, even if we didn't for some reason - the data is know in our buffer and will be handled later
 	}
-	else if (m_NegotiatingState == ONS_BASIC_SERVER_DELAYEDSENDING)
+	if (m_NegotiatingState == ONS_BASIC_SERVER_DELAYEDSENDING)
 		ASSERT( false );
 
 	if (m_StreamCryptState == ECS_UNKNOWN){
@@ -195,7 +196,7 @@ int CEncryptedStreamSocket::SendOv(CArray<WSABUF>& raBuffer, DWORD& dwBytesSent,
 		ASSERT( false ); // must be a bug
 		return -1;
 	}
-	else if (m_bServerCrypt && m_StreamCryptState == ECS_ENCRYPTING && m_pfiSendBuffer != NULL){
+	if (m_bServerCrypt && m_StreamCryptState == ECS_ENCRYPTING && m_pfiSendBuffer != NULL){
 		ASSERT( m_NegotiatingState == ONS_BASIC_SERVER_DELAYEDSENDING );
 		// handshakedata was delayed to put it into one frame with the first paypload to the server
 		// attach it now to the sendbuffer
@@ -211,8 +212,8 @@ int CEncryptedStreamSocket::SendOv(CArray<WSABUF>& raBuffer, DWORD& dwBytesSent,
 		ASSERT( false );
 
 	if (m_StreamCryptState == ECS_UNKNOWN){
-		//this happens when the encryption option was not set on a outgoing connection
-		//or if we try to send before receiving on a incoming connection - both shouldn't happen
+		//this happens when the encryption option was not set on an outgoing connection
+		//or if we try to send before receiving on an incoming connection - both shouldn't happen
 		m_StreamCryptState = ECS_NONE;
 		DebugLogError(_T("CEncryptedStreamSocket: Overwriting State ECS_UNKNOWN with ECS_NONE because of premature Send() (%s)"), (LPCTSTR)DbgGetIPString());
 	}
@@ -283,7 +284,7 @@ int CEncryptedStreamSocket::Receive(void* lpBuf, int nBufLen, int nFlags){
 					// Update: New server now support encrypted callbacks
 
 					SOCKADDR_IN sockAddr = {0};
-					int nSockAddrLen = sizeof(sockAddr);
+					int nSockAddrLen = sizeof sockAddr;
 					GetPeerName((SOCKADDR*)&sockAddr, &nSockAddrLen);
 					if (thePrefs.IsClientCryptLayerRequiredStrict() || (!theApp.serverconnect->AwaitingTestFromIP(sockAddr.sin_addr.S_un.S_addr)
 						&& !theApp.clientlist->IsKadFirewallCheckIP(sockAddr.sin_addr.S_un.S_addr)) )
@@ -533,7 +534,7 @@ int CEncryptedStreamSocket::Negotiate(const uchar* pBuffer, uint32 nLen)
 					fileResponse.WriteUInt8(bySelectedEncryptionMethod);
 
 					SOCKADDR_IN sockAddr = {0};
-					int nSockAddrLen = sizeof(sockAddr);
+					int nSockAddrLen = sizeof sockAddr;
 					GetPeerName((SOCKADDR*)&sockAddr, &nSockAddrLen);
 					const uint8 byPaddingLen = theApp.serverconnect->AwaitingTestFromIP(sockAddr.sin_addr.S_un.S_addr) ? 16 : (thePrefs.GetCryptTCPPaddingLength() + 1);
 					uint8 byPadding = (uint8)(cryptRandomGen.GenerateByte() % byPaddingLen);
@@ -731,7 +732,7 @@ int CEncryptedStreamSocket::SendNegotiatingData(const void* lpBuf, uint32 nBufLe
 
 CString	CEncryptedStreamSocket::DbgGetIPString(){
 	SOCKADDR_IN sockAddr = {0};
-	int nSockAddrLen = sizeof(sockAddr);
+	int nSockAddrLen = sizeof sockAddr;
 	GetPeerName((SOCKADDR*)&sockAddr, &nSockAddrLen);
 	return ipstr(sockAddr.sin_addr.S_un.S_addr);
 }

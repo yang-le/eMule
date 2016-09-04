@@ -153,7 +153,6 @@ void CTransferWnd::OnInitialUpdate()
 			break;
 		case 5:
 			m_dwShowListIDC = IDC_CLIENTLIST;
-			break;
 	}
 
 	//cats
@@ -508,7 +507,6 @@ void CTransferWnd::UpdateListCount(EWnd2 listindex, int iCount /*=-1*/)
 				strBuffer.Format(_T(" (%i)"), iCount == -1 ? downloadclientsctrl.GetItemCount() : iCount);
 				m_btnWnd1->SetWindowText(GetResString(IDS_DOWNLOADING) + strBuffer);
 			}
-			break;
 
 		default:
 			//ASSERT(0);
@@ -717,12 +715,8 @@ void CTransferWnd::LocalizeToolbars()
 
 void CTransferWnd::OnBnClickedQueueRefreshButton()
 {
-	CUpDownClient* update = theApp.uploadqueue->GetNextClient(NULL);
-
-	while( update ){
+	for (CUpDownClient* update = theApp.uploadqueue->GetNextClient(NULL); update; update = theApp.uploadqueue->GetNextClient(update))
 		queuelistctrl.RefreshClient( update);
-		update = theApp.uploadqueue->GetNextClient(update);
-	}
 }
 
 void CTransferWnd::OnHoverUploadList(NMHDR* /*pNMHDR*/, LRESULT* pResult)
@@ -1111,7 +1105,6 @@ BOOL CTransferWnd::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 
 		case MP_HM_OPENINC:
 			ShellExecute(NULL, _T("open"), thePrefs.GetCategory(m_isetcatmenu)->strIncomingPath,NULL, NULL, SW_SHOW);
-			break;
 
 	}
 	return TRUE;
@@ -1135,7 +1128,7 @@ void CTransferWnd::EditCatTabLabel(int i)
 	EditCatTabLabel(i,/*(i==0)? GetCatTitle( thePrefs.GetAllcatType() ):*/thePrefs.GetCategory(i)->strTitle);
 }
 
-void CTransferWnd::EditCatTabLabel(int index, CString& newlabel)
+void CTransferWnd::EditCatTabLabel(int index, CString newlabel)
 {
 	TCITEM tabitem;
 	tabitem.mask = TCIF_PARAM;
@@ -1187,7 +1180,7 @@ void CTransferWnd::EditCatTabLabel(int index, CString& newlabel)
 
 int CTransferWnd::AddCategory(const CString& newtitle, const CString& newincoming, const CString& newcomment, const CString& newautocat, bool addTab)
 {
-	Category_Struct* newcat=new Category_Struct;
+	Category_Struct* newcat = new Category_Struct;
 	newcat->strTitle = newtitle;
 	newcat->prio=PR_NORMAL;
 	newcat->strIncomingPath = newincoming;
@@ -1225,11 +1218,8 @@ int CTransferWnd::AddCategoryInteractive()
 			theApp.emuledlg->sharedfileswnd->Reload();
 		return newindex;
 	}
-	else
-	{
-		thePrefs.RemoveCat(newindex);
-		return 0;
-	}
+	thePrefs.RemoveCat(newindex);
+	return 0;
 }
 
 int CTransferWnd::GetTabUnderMouse(CPoint* point)
@@ -1249,8 +1239,7 @@ int CTransferWnd::GetTabUnderMouse(CPoint* point)
 
 	if( hitinfo.flags != TCHT_NOWHERE )
 		return nTab;
-	else
-		return -1;
+	return -1;
 }
 
 void CTransferWnd::OnLvnKeydownDownloadList(NMHDR *pNMHDR, LRESULT *pResult)
@@ -1309,8 +1298,7 @@ void CTransferWnd::SetToolTipsDelay(DWORD dwDelay)
 
 CString CTransferWnd::GetTabStatistic(int tab)
 {
-	uint16 count, dwl, err, paus;
-	count = dwl = err = paus = 0;
+	uint16 count = 0, dwl = 0, err = 0, paus = 0;
 	float speed = 0;
 	uint64 size = 0;
 	uint64 trsize = 0;
@@ -1351,7 +1339,6 @@ CString CTransferWnd::GetTabStatistic(int tab)
             break;
         default:
             prio = GetResString(IDS_PRIONORMAL);
-            break;
     }
 
 	CString title;
@@ -1386,7 +1373,8 @@ void CTransferWnd::OnTabMovement(NMHDR* /*pNMHDR*/, LRESULT* /*pResult*/)
 	UINT from=m_dlTab.GetLastMovementSource();
 	UINT to=m_dlTab.GetLastMovementDestionation();
 
-	if (from==0 || to==0 || from==to-1) return;
+	if (from==0 || to==0 || from==to-1)
+		return;
 
 	// do the reorder
 
@@ -1405,7 +1393,8 @@ void CTransferWnd::OnTabMovement(NMHDR* /*pNMHDR*/, LRESULT* /*pResult*/)
 	UpdateCatTabTitles();
 	theApp.emuledlg->searchwnd->UpdateCatTabs();
 
-	if (to>from) --to;
+	if (to>from)
+		--to;
 	m_dlTab.SetCurSel(to);
 	downloadlistctrl.ChangeCategory(to);
 }
@@ -1495,7 +1484,6 @@ void CTransferWnd::OnBnClickedChangeView()
 			break;
 		case IDC_UPLOADLIST + IDC_DOWNLOADLIST:
 			ShowList(IDC_DOWNLOADLIST);
-			break;
 	}
 }
 

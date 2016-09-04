@@ -470,7 +470,7 @@ void CMiniMule::_OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* /*Fl
 	// No external links allowed!
 	TCHAR szScheme[INTERNET_MAX_SCHEME_LENGTH];
 	URL_COMPONENTS Url = {0};
-	Url.dwStructSize = sizeof(Url);
+	Url.dwStructSize = sizeof Url;
 	Url.lpszScheme = szScheme;
 	Url.dwSchemeLength = ARRSIZE(szScheme);
 	if (InternetCrackUrl(strURL, 0, 0, &Url) && Url.dwSchemeLength)
@@ -604,9 +604,9 @@ UINT GetTaskbarPos(HWND hwndTaskbar)
 		// In other words, while processing 'SHAppBarMessage' our thread will receive incoming messages.
 		//
 		APPBARDATA abd = {0};
-	    abd.cbSize = sizeof abd;
+		abd.cbSize = sizeof abd;
 		abd.hWnd = hwndTaskbar;
-	    SHAppBarMessage(ABM_GETTASKBARPOS, &abd);
+		SHAppBarMessage(ABM_GETTASKBARPOS, &abd);
 
 		// SHAppBarMessage may fail to get the rectangle...
 		CRect rcAppBar(abd.rc);
@@ -620,7 +620,7 @@ UINT GetTaskbarPos(HWND hwndTaskbar)
 		else if (abd.rc.top > abd.rc.left)
 			return ABE_BOTTOM;
 		return ABE_RIGHT;
-    }
+	}
 	return ABE_BOTTOM;
 }
 #endif

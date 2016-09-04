@@ -139,21 +139,22 @@ CEMSocket::CEMSocket(void)
 	m_bOverlappedSending = thePrefs.GetUseOverlappedSockets() && theApp.IsWinSock2Available();
 }
 
-CEMSocket::~CEMSocket(){
-	EMTrace("CEMSocket::~CEMSocket() on %d",(SOCKET)this);
+CEMSocket::~CEMSocket()
+{
+	EMTrace("CEMSocket::~CEMSocket() on %d", (SOCKET)this);
 
-    // need to be locked here to know that the other methods
-    // won't be in the middle of things
-    sendLocker.Lock();
+	// need to be locked here to know that the other methods
+	// won't be in the middle of things
+	sendLocker.Lock();
 	byConnected = ES_DISCONNECTED;
-    sendLocker.Unlock();
+	sendLocker.Unlock();
 	CleanUpOverlappedSendOperation(true);
 
-    // now that we know no other method will keep adding to the queue
-    // we can remove ourself from the queue
-    theApp.uploadBandwidthThrottler->RemoveFromAllQueues(this);
+	// now that we know no other method will keep adding to the queue
+	// we can remove ourself from the queue
+	theApp.uploadBandwidthThrottler->RemoveFromAllQueues(this);
 
-    ClearQueues();
+	ClearQueues();
 	CEMSocket::RemoveAllLayers(); // deadlake PROXYSUPPORT
 	AsyncSelect(0);
 }
@@ -183,28 +184,26 @@ void CEMSocket::InitProxySupport()
 
 	// ProxyInitialisation
 	const ProxySettings& settings = thePrefs.GetProxySettings();
-	if (settings.UseProxy && settings.type != PROXYTYPE_NOPROXY)
-	{
+	if (settings.UseProxy && settings.type != PROXYTYPE_NOPROXY) {
 		m_bOverlappedSending = false;
 		Close();
 
 		m_pProxyLayer = new CAsyncProxySocketLayer;
-		switch (settings.type)
-		{
-			case PROXYTYPE_SOCKS4:
-			case PROXYTYPE_SOCKS4A:
+		switch (settings.type) {
+		case PROXYTYPE_SOCKS4:
+		case PROXYTYPE_SOCKS4A:
+			m_pProxyLayer->SetProxy(settings.type, settings.name, settings.port);
+			break;
+		case PROXYTYPE_SOCKS5:
+		case PROXYTYPE_HTTP10:
+		case PROXYTYPE_HTTP11:
+			if (settings.EnablePassword)
+				m_pProxyLayer->SetProxy(settings.type, settings.name, settings.port, settings.user, settings.password);
+			else
 				m_pProxyLayer->SetProxy(settings.type, settings.name, settings.port);
-				break;
-			case PROXYTYPE_SOCKS5:
-			case PROXYTYPE_HTTP10:
-			case PROXYTYPE_HTTP11:
-				if (settings.EnablePassword)
-					m_pProxyLayer->SetProxy(settings.type, settings.name, settings.port, settings.user, settings.password);
-				else
-					m_pProxyLayer->SetProxy(settings.type, settings.name, settings.port);
-				break;
-			default:
-				ASSERT(0);
+			break;
+		default:
+			ASSERT(0);
 		}
 		AddLayer(m_pProxyLayer);
 
@@ -214,7 +213,8 @@ void CEMSocket::InitProxySupport()
 	}
 }
 
-void CEMSocket::ClearQueues(){
+void CEMSocket::ClearQueues()
+{
 	EMTrace("CEMSocket::ClearQueues on %d",(SOCKET)this);
 
     sendLocker.Lock();
@@ -552,17 +552,18 @@ uint64 CEMSocket::GetSentBytesControlPacketSinceLastCallAndReset() {
     return sentBytes;
 }
 
-uint64 CEMSocket::GetSentPayloadSinceLastCall(bool bReset) {
+uint64 CEMSocket::GetSentPayloadSinceLastCall(bool bReset)
+{
 	if (!bReset)
 		return m_actualPayloadSizeSent;
-    sendLocker.Lock();
+	sendLocker.Lock();
 
-    uint64 sentBytes = m_actualPayloadSizeSent;
-    m_actualPayloadSizeSent = 0;
+	uint64 sentBytes = m_actualPayloadSizeSent;
+	m_actualPayloadSizeSent = 0;
 
-    sendLocker.Unlock();
+	sendLocker.Unlock();
 
-    return sentBytes;
+	return sentBytes;
 }
 
 void CEMSocket::OnSend(int nErrorCode)
@@ -577,7 +578,8 @@ void CEMSocket::OnSend(int nErrorCode)
 	//EMTrace("CEMSocket::OnSend linked: %i, controlcount %i, standardcount %i, isbusy: %i",m_bLinkedPackets, controlpacket_queue.GetCount(), standardpacket_queue.GetCount(), IsBusy());
 	CEncryptedStreamSocket::OnSend(0);
 
-    m_bBusy = false;
+	sendLocker.Lock();
+	m_bBusy = false;
 
     // stopped sending here.
     //StoppedSendSoUpdateStats();
@@ -594,6 +596,7 @@ void CEMSocket::OnSend(int nErrorCode)
 
 	if (!m_bOverlappedSending && (!standardpacket_queue.IsEmpty() || sendbuffer != NULL))
 		theApp.uploadBandwidthThrottler->SocketAvailable();
+	sendLocker.Unlock();
 }
 
 //void CEMSocket::StoppedSendSoUpdateStats() {
@@ -1330,7 +1333,6 @@ bool CEMSocket::IsBusyQuickCheck() const
 
 void CEMSocket::CleanUpOverlappedSendOperation(bool bCancelRequestFirst)
 {
-//	CSingleLock lockSend(&sendLocker, TRUE);
 	sendLocker.Lock();
 	if (m_pPendingSendOperation != NULL)
 	{
@@ -1338,7 +1340,7 @@ void CEMSocket::CleanUpOverlappedSendOperation(bool bCancelRequestFirst)
 			CancelIo((HANDLE)GetSocketHandle());
 		delete m_pPendingSendOperation;
 		m_pPendingSendOperation = NULL;
-		for (int i = 0; i < m_aBufferSend.GetCount(); i++)
+		for (int i = 0; i < m_aBufferSend.GetCount(); ++i)
 		{
 			WSABUF pDel = m_aBufferSend[i];
 			delete[] pDel.buf;

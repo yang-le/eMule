@@ -646,7 +646,7 @@ void CMuleToolbarCtrl::ChangeToolbarBitmap(const CString& path, bool bRefresh)
 	if (!path.IsEmpty() && Bitmap.LoadImage(path))
 	{
 		BITMAP bm = {0};
-		Bitmap.GetObject(sizeof(bm), &bm);
+		Bitmap.GetObject(sizeof bm, &bm);
 		if (bm.bmWidth == NUM_BUTTON_BITMAPS*m_sizBtnBmp.cx && bm.bmHeight == m_sizBtnBmp.cy)
 		{
 			bool bAlpha = bm.bmBitsPixel > 24;
@@ -846,7 +846,7 @@ void CMuleToolbarCtrl::ChangeTextLabelStyle(EToolbarLabelType eLabelType, bool b
 		for (int i = 0; i < m_buttoncount; i++)
 		{
 			TBBUTTONINFO tbbi = {0};
-			tbbi.cbSize = sizeof(tbbi);
+			tbbi.cbSize = sizeof tbbi;
 			tbbi.dwMask = TBIF_STYLE;
 			GetButtonInfo(IDC_TOOLBARBUTTON + i, &tbbi);
 			if (eLabelType == LabelsRight)
@@ -1056,7 +1056,7 @@ void CMuleToolbarCtrl::UpdateIdealSize()
 		ASSERT( sizeBar.cx != 0 && sizeBar.cy != 0 );
 
 	    REBARBANDINFO rbbi = {0};
-	    rbbi.cbSize = sizeof(rbbi);
+	    rbbi.cbSize = sizeof rbbi;
 	    rbbi.fMask = RBBIM_IDEALSIZE;
 		rbbi.cxIdeal = sizeBar.cx;
 	    VERIFY( theApp.emuledlg->m_ctlMainTopReBar.SetBandInfo(MULE_TOOLBAR_BAND_NR, &rbbi) );
@@ -1132,7 +1132,7 @@ void CMuleToolbarCtrl::Dump()
 	{
 		TCHAR szLabel[256];
 		TBBUTTONINFO tbi = {0};
-		tbi.cbSize = sizeof(tbi);
+		tbi.cbSize = sizeof tbi;
 		tbi.dwMask |= TBIF_BYINDEX | TBIF_COMMAND | TBIF_IMAGE | TBIF_LPARAM | TBIF_SIZE | TBIF_STATE | TBIF_STYLE | TBIF_TEXT;
 		tbi.cchText = _countof(szLabel);
 		tbi.pszText = szLabel;
@@ -1186,7 +1186,7 @@ void CMuleToolbarCtrl::UpdateBackground()
 		if (hbmp)
 		{
 			REBARBANDINFO rbbi = {0};
-			rbbi.cbSize = sizeof(rbbi);
+			rbbi.cbSize = sizeof rbbi;
 			rbbi.fMask = RBBIM_STYLE;
 			if (theApp.emuledlg->m_ctlMainTopReBar.GetBandInfo(MULE_TOOLBAR_BAND_NR, &rbbi))
 			{
@@ -1207,7 +1207,7 @@ void CMuleToolbarCtrl::UpdateBackground()
 		else
 		{
 			REBARBANDINFO rbbi = {0};
-			rbbi.cbSize = sizeof(rbbi);
+			rbbi.cbSize = sizeof rbbi;
 			rbbi.fMask = RBBIM_STYLE;
 			if (theApp.emuledlg->m_ctlMainTopReBar.GetBandInfo(MULE_TOOLBAR_BAND_NR, &rbbi))
 			{

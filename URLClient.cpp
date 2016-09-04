@@ -77,7 +77,7 @@ bool CUrlClient::SetUrl(LPCTSTR pszUrl, uint32 nIP)
 	TCHAR szPassword[INTERNET_MAX_PASSWORD_LENGTH];
 	TCHAR szExtraInfo[INTERNET_MAX_URL_LENGTH];
 	URL_COMPONENTS Url = {0};
-	Url.dwStructSize = sizeof(Url);
+	Url.dwStructSize = sizeof Url;
 	Url.lpszScheme = szScheme;
 	Url.dwSchemeLength = ARRSIZE(szScheme);
 	Url.lpszHostName = szHostName;
@@ -253,16 +253,12 @@ bool CUrlClient::ProcessHttpDownResponse(const CStringAArray& astrHeaders)
 
 	const CStringA& rstrHdr = astrHeaders[0];
 	UINT uHttpMajVer, uHttpMinVer, uHttpStatusCode;
-	if (sscanf(rstrHdr, "HTTP/%u.%u %u", &uHttpMajVer, &uHttpMinVer, &uHttpStatusCode) != 3){
-		CString strError;
-		strError.Format(_T("Unexpected HTTP response: \"%hs\""), (LPCSTR)rstrHdr);
-		throw strError;
-	}
-	if (uHttpMajVer != 1 || (uHttpMinVer != 0 && uHttpMinVer != 1)){
-		CString strError;
-		strError.Format(_T("Unexpected HTTP version: \"%hs\""), (LPCSTR)rstrHdr);
-		throw strError;
-	}
+	if (sscanf(rstrHdr, "HTTP/%u.%u %u", &uHttpMajVer, &uHttpMinVer, &uHttpStatusCode) != 3)
+		throw CString(_T("Unexpected HTTP response: \"")) + CString(rstrHdr) + _T('\"');
+
+	if (uHttpMajVer != 1 || uHttpMinVer > 1)
+		throw CString(_T("Unexpected HTTP version: \"")) + CString(rstrHdr) + _T('\"');
+
 	bool bExpectData = uHttpStatusCode == HTTP_STATUS_OK || uHttpStatusCode == HTTP_STATUS_PARTIAL_CONTENT;
 	bool bRedirection = uHttpStatusCode == HTTP_STATUS_MOVED || uHttpStatusCode == HTTP_STATUS_REDIRECT;
 	if (!bExpectData && !bRedirection){
@@ -273,34 +269,28 @@ bool CUrlClient::ProcessHttpDownResponse(const CStringAArray& astrHeaders)
 
 	bool bNewLocation = false;
 	bool bValidContentRange = false;
-	for (int i = 1; i < astrHeaders.GetCount(); i++)
+	for (int i = 1; i < astrHeaders.GetCount(); ++i)
 	{
 		const CStringA& rstrHdr1 = astrHeaders[i];
 		if (bExpectData && _strnicmp(rstrHdr1, "Content-Length:", 15) == 0)
 		{
 			uint64 uContentLength = _atoi64((LPCSTR)rstrHdr1 + 15);
-			if (uContentLength != m_uReqEnd - m_uReqStart + 1){
-				if (uContentLength != reqfile->GetFileSize()){ // tolerate this case only
-					CString strError;
-					strError.Format(_T("Unexpected HTTP header field \"%hs\""), (LPCSTR)rstrHdr1);
-					throw strError;
-				}
+			if (uContentLength != m_uReqEnd - m_uReqStart + 1) {
+				if (uContentLength != reqfile->GetFileSize()) // tolerate this case only
+					throw CString(_T("Unexpected HTTP header field: \"")) + CString(rstrHdr1) + _T('\"');
+
 				TRACE("+++ Unexpected HTTP header field \"%s\"\n", (LPCSTR)rstrHdr1);
 			}
 		}
 		else if (bExpectData && _strnicmp(rstrHdr1, "Content-Range:", 14) == 0)
 		{
 			uint64 ui64Start = 0, ui64End = 0, ui64Len = 0;
-			if (sscanf((LPCSTR)rstrHdr1 + 14," bytes %I64u - %I64u / %I64u", &ui64Start, &ui64End, &ui64Len) != 3) {
-				CString strError;
-				strError.Format(_T("Unexpected HTTP header field \"%hs\""), (LPCSTR)rstrHdr1);
-				throw strError;
-			}
-
-			if (ui64Start != m_uReqStart || ui64End != m_uReqEnd || ui64Len != reqfile->GetFileSize()){
-				CString strError;
-				strError.Format(_T("Unexpected HTTP header field \"%hs\""), (LPCSTR)rstrHdr1);
-				throw strError;
+			if (sscanf((LPCSTR)rstrHdr1 + 14," bytes %I64u - %I64u / %I64u", &ui64Start, &ui64End, &ui64Len) != 3
+				|| ui64Start != m_uReqStart
+				|| ui64End != m_uReqEnd
+				|| ui64Len != reqfile->GetFileSize())
+			{
+				throw CString(_T("Unexpected HTTP header field: \"")) + CString(rstrHdr1) + _T('\"');
 			}
 			bValidContentRange = true;
 		}
@@ -312,19 +302,16 @@ bool CUrlClient::ProcessHttpDownResponse(const CStringAArray& astrHeaders)
 		else if (bRedirection && _strnicmp(rstrHdr1, "Location:", 9) == 0)
 		{
 			CString strLocation(rstrHdr1.Mid(9).Trim());
-			if (!SetUrl(strLocation)){
-				CString strError;
-				strError.Format(_T("Failed to process HTTP redirection URL \"%s\""), (LPCTSTR)strLocation);
-				throw strError;
-			}
+			if (!SetUrl((LPCTSTR)strLocation))
+				throw CString(_T("Failed to process HTTP redirection URL \"")) + strLocation + _T('\"');
+
 			bNewLocation = true;
 		}
 	}
 
 	if (bNewLocation)
 	{
-		m_iRedirected++;
-		if (m_iRedirected >= 3)
+		if (++m_iRedirected >= 3)
 			throw CString(_T("Max. HTTP redirection count exceeded"));
 
 		// the tricky part
@@ -335,12 +322,10 @@ bool CUrlClient::ProcessHttpDownResponse(const CStringAArray& astrHeaders)
 									// and which is no longer attached to us) to disconnect.
 	}
 
-	if (!bValidContentRange){
+	if (!bValidContentRange) {
 		if (thePrefs.GetDebugClientTCPLevel() <= 0)
 			DebugHttpHeaders(astrHeaders);
-		CString strError;
-		strError.Format(_T("Unexpected HTTP response - No valid HTTP content range found"));
-		throw strError;
+		throw CString(_T("Unexpected HTTP response - No valid HTTP content range found"));
 	}
 
 	SetDownloadState(DS_DOWNLOADING);

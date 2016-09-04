@@ -43,23 +43,23 @@ public:
 
 	bool	Create();
 	bool	Rebind();
-	uint16	GetConnectedPort()			{ return m_port; }
+	uint16	GetConnectedPort() { return m_port; }
 	bool	SendPacket(Packet* packet, uint32 dwIP, uint16 nPort, bool bEncrypt, const uchar* pachTargetClientHashORKadID, bool bKad, uint32 nReceiverVerifyKey);
-    SocketSentBytes  SendControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize); // ZZ:UploadBandWithThrottler (UDP)
+	SocketSentBytes  SendControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize); // ZZ:UploadBandWithThrottler (UDP)
 
 protected:
 	bool	ProcessPacket(const BYTE* packet, UINT size, uint8 opcode, uint32 ip, uint16 port);
-	
-	virtual void	OnSend(int nErrorCode);	
+
+	virtual void	OnSend(int nErrorCode);
 	virtual void	OnReceive(int nErrorCode);
 
 private:
-	int		SendTo(char* lpBuf,int nBufLen,uint32 dwIP, uint16 nPort);
-    bool	IsBusy() const { return m_bWouldBlock; }
+	int		SendTo(uchar* lpBuf, int nBufLen, uint32 dwIP, uint16 nPort);
+	bool	IsBusy() const { return m_bWouldBlock; }
 	bool	m_bWouldBlock;
 	uint16	m_port;
 
 	CTypedPtrList<CPtrList, UDPPack*> controlpacket_queue;
 
-    CCriticalSection sendLocker; // ZZ:UploadBandWithThrottler (UDP)
+	CCriticalSection sendLocker; // ZZ:UploadBandWithThrottler (UDP)
 };

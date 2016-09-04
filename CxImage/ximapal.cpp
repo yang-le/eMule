@@ -394,7 +394,7 @@ uint8_t CxImage::GetNearestIndex(RGBQUAD c)
  * \param buffer : pointer to the pixels
  * \param length : number of bytes to swap. lenght may not exceed the scan line.
  */
-void CxImage::RGBtoBGR(uint8_t *buffer, int32_t length) const //fox8
+void CxImage::RGBtoBGR(uint8_t *buffer, int32_t length) const
 {
 	if (buffer && (head.biClrUsed==0)){
 		length = min(length,(int32_t)info.dwEffWidth);

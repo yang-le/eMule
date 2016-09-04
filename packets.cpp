@@ -29,15 +29,13 @@ static char THIS_FILE[] = __FILE__;
 
 
 #pragma pack(1)
-struct Header_Struct{
+struct Header_Struct {
 	uint8	eDonkeyID;
 	uint32	packetlength;
 	uint8	command;
 };
-#pragma pack()
 
-#pragma pack(1)
-struct UDP_Header_Struct{
+struct UDP_Header_Struct {
 	uint8	eDonkeyID;
 	uint8	command;
 };
@@ -188,31 +186,30 @@ char* Packet::GetHeader(){
 	return head;
 }
 
-char* Packet::GetUDPHeader(){
-	ASSERT ( !m_bSplitted );
-	UDP_Header_Struct* header = (UDP_Header_Struct*) head;
-	header->command = opcode;
-	header->eDonkeyID =  prot;
+char* Packet::GetUDPHeader()
+{
+	ASSERT(!m_bSplitted);
+	((UDP_Header_Struct *)head)->command = opcode;
+	((UDP_Header_Struct *)head)->eDonkeyID = prot;
 	return head;
 }
 
-void Packet::PackPacket(){
-	ASSERT (!m_bSplitted);
+void Packet::PackPacket()
+{
+	ASSERT(!m_bSplitted);
 	uLongf newsize = size+300;
 	BYTE* output = new BYTE[newsize];
-	UINT result = compress2(output,&newsize,(BYTE*)pBuffer,size,Z_BEST_COMPRESSION);
-	if (result != Z_OK || size <= newsize){
-		delete[] output;
-		return;
+	UINT result = compress2(output, &newsize, (BYTE*)pBuffer, size, Z_BEST_COMPRESSION);
+	if (result == Z_OK && newsize < size) {
+		if (prot == OP_KADEMLIAHEADER)
+			prot = OP_KADEMLIAPACKEDPROT;
+		else
+			prot = OP_PACKEDPROT;
+		memcpy(pBuffer, output, newsize);
+		size = newsize;
+		m_bPacked = true;
 	}
-	if( prot == OP_KADEMLIAHEADER )
-		prot = OP_KADEMLIAPACKEDPROT;
-	else
-		prot = OP_PACKEDPROT;
-	memcpy(pBuffer,output,newsize);
-	size = newsize;
 	delete[] output;
-	m_bPacked = true;
 }
 
 bool Packet::UnPackPacket(UINT uMaxDecompressedSize){

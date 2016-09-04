@@ -377,7 +377,8 @@ bool CPeerCacheFinder::IsClientPCCompatible(uint32 dwTagVersionInfo, UINT nClien
 	return IsClientPCCompatible(CClientVersionInfo(dwTagVersionInfo, nClientSoft));
 }
 
-bool CPeerCacheFinder::IsClientPCCompatible(const CClientVersionInfo& cviToCheck){
+bool CPeerCacheFinder::IsClientPCCompatible(const CClientVersionInfo& cviToCheck)
+{
 	CSingleLock lock(&m_SettingsMutex, TRUE);
 	for (int i = 0; i != liAllowedVersions.GetSize(); i++){
 		if (cviToCheck < liAllowedVersions[i])

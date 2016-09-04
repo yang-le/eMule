@@ -709,13 +709,12 @@ bool CArchiveRecovery::recoverRar(CFile *rarInput, CFile *rarOutput, archiveScan
 		{
 			bool bOldFormat = false;
 			if (fileHeader[0] == 0x52) {
-				if (fileHeader[1] == 0x45 && fileHeader[2] ==0x7e && fileHeader[3] == 0x5e) {
+				if (fileHeader[1] == 0x45 && fileHeader[2] == 0x7e && fileHeader[3] == 0x5e) { //"RE~^"
 					bOldFormat = true;
 					bValidFileHeader = true;
 				}
-				else if (fileHeader[1] == 0x61 && fileHeader[2] == 0x72 && fileHeader[3] == 0x21 && fileHeader[4] == 0x1a && fileHeader[5] == 0x07 && fileHeader[6] == 0x00) {
+				else if (fileHeader[1] == 0x61 && fileHeader[2] == 0x72 && fileHeader[3] == 0x21 && fileHeader[4] == 0x1a && fileHeader[5] == 0x07 && fileHeader[6] == 0x00) //"Rar!\x1a\7\0"
 					bValidFileHeader = true;
-				}
 			}
 
 			if (bValidFileHeader && !bOldFormat)

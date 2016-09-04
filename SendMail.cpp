@@ -234,7 +234,7 @@ bool Encrypt(const CStringA& rstrContentA, CByteArray& raEncrypted, LPCWSTR pwsz
 			EncryptAlgorithm.pszObjId = szOID_RSA_DES_EDE3_CBC;
 
 			CRYPT_ENCRYPT_MESSAGE_PARA EncryptParams = {0};
-			EncryptParams.cbSize = sizeof(EncryptParams);
+			EncryptParams.cbSize = sizeof EncryptParams;
 			EncryptParams.dwMsgEncodingType = PKCS_7_ASN_ENCODING | X509_ASN_ENCODING;
 			EncryptParams.hCryptProv = hCryptProv;
 			EncryptParams.ContentEncryptionAlgorithm = EncryptAlgorithm;

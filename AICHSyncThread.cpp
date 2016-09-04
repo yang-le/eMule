@@ -54,12 +54,8 @@ int CAICHSyncThread::Run()
 {
 	if (theApp.emuledlg->IsClosing())
 		return 0;
-	// we need to keep a lock on this file while the thread is running
-	CSingleLock lockKnown2Met(&CAICHRecoveryHashSet::m_mutKnown2File);
-	lockKnown2Met.Lock();
 
 	CSafeFile file;
-	bool bJustCreated = ConvertToKnown2ToKnown264(&file);
 
 	// we collect all masterhashs which we find in the known2.met and store them in a list
 	CArray<CAICHHash> aKnown2Hashs;
@@ -69,6 +65,10 @@ int CAICHSyncThread::Run()
 
 	CFileException fexp;
 	uint32 nLastVerifiedPos = 0;
+
+	// we need to keep a lock on this file while the thread is running
+	CSingleLock lockKnown2Met(&CAICHRecoveryHashSet::m_mutKnown2File, TRUE);
+	bool bJustCreated = ConvertToKnown2ToKnown264(&file);
 
 	if (!bJustCreated && !file.Open(fullpath,CFile::modeCreate|CFile::modeReadWrite|CFile::modeNoTruncate|CFile::osSequentialScan|CFile::typeBinary|CFile::shareDenyNone, &fexp)){
 		if (fexp.m_cause != CFileException::fileNotFound){
@@ -132,8 +132,7 @@ int CAICHSyncThread::Run()
 	// now we check that all files which are in the sharedfilelist have a corresponding hash in out list
 	// those who don't are added to the hashinglist
 	CList<CAICHHash> liUsedHashs;
-	CSingleLock sharelock(&theApp.sharedfiles->m_mutWriteList);
-	sharelock.Lock();
+	CSingleLock sharelock(&theApp.sharedfiles->m_mutWriteList, TRUE);
 
 	bool bDbgMsgCreatingPartHashs = true;
 	for (int i = 0; i < theApp.sharedfiles->GetCount(); i++){

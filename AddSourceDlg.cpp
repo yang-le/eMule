@@ -164,7 +164,7 @@ void CAddSourceDlg::OnBnClickedButton1()
 				TCHAR szPassword[INTERNET_MAX_PASSWORD_LENGTH];
 				TCHAR szExtraInfo[INTERNET_MAX_URL_LENGTH];
 				URL_COMPONENTS Url = {0};
-				Url.dwStructSize = sizeof(Url);
+				Url.dwStructSize = sizeof Url;
 				Url.lpszScheme = szScheme;
 				Url.dwSchemeLength = ARRSIZE(szScheme);
 				Url.lpszHostName = szHostName;

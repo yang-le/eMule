@@ -382,9 +382,8 @@ UINT LastCommonRouteFinder::RunInternal() {
 						useUdp = false; // PENDING: Get default value from prefs?
 
 						curHost = 0;
-						if(m_enabled == false) {
+						if(m_enabled == false)
 							enabled = false;
-						}
 
 						uint32 lastSuccedingPingAddress = 0;
 						uint32 lastDestinationAddress = 0;
