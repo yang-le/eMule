@@ -43,7 +43,7 @@ protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
 	DECLARE_MESSAGE_MAP()
-	afx_msg LONG OnSelChange(UINT lParam, LONG wParam);
+	afx_msg LRESULT OnSelChange(UINT lParam, LONG wParam);
 	afx_msg void OnBnClickedBrowse();
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnDDBnClicked();

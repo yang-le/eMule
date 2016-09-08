@@ -65,6 +65,7 @@ void CUpDownClient::DrawStatusBar(CDC* dc, LPCRECT rect, bool onlygreyrect, bool
 		crNeither = RGB(240, 240, 240);
 	}
 
+	ASSERT(reqfile);
 	if (reqfile) {
 		s_StatusBar.SetFileSize(reqfile->GetFileSize());
 		s_StatusBar.SetHeight(rect->bottom - rect->top);
@@ -125,8 +126,7 @@ void CUpDownClient::DrawStatusBar(CDC* dc, LPCRECT rect, bool onlygreyrect, bool
 			}
 			delete[] pcNextPendingBlks;
 		}
-	} else
-		ASSERT(reqfile);
+	}
 	s_StatusBar.Draw(dc, rect->left, rect->top, bFlat);
 }
 

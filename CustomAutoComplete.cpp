@@ -62,11 +62,11 @@ CCustomAutoComplete::~CCustomAutoComplete()
 		m_pac.Release();
 }
 
-BOOL CCustomAutoComplete::Bind(HWND p_hWndEdit, DWORD p_dwOptions, LPCTSTR p_lpszFormatString)
+bool CCustomAutoComplete::Bind(HWND p_hWndEdit, DWORD p_dwOptions, LPCTSTR p_lpszFormatString)
 {
 	ATLASSERT(::IsWindow(p_hWndEdit));
-	if ((m_fBound) || (m_pac))
-		return FALSE;
+	if (m_fBound || m_pac)
+		return false;
 
 	if (SUCCEEDED(m_pac.CoCreateInstance(CLSID_AutoComplete)))
 	{
@@ -80,29 +80,27 @@ BOOL CCustomAutoComplete::Bind(HWND p_hWndEdit, DWORD p_dwOptions, LPCTSTR p_lps
 
 		if (SUCCEEDED(m_pac->Init(p_hWndEdit, this, NULL, p_lpszFormatString)))
 		{
-			m_fBound = TRUE;
-			return TRUE;
+			m_fBound = true;
+			return true;
 		}
 	}
-	return FALSE;
+	return false;
 }
 
-VOID CCustomAutoComplete::Unbind()
+void CCustomAutoComplete::Unbind()
 {
-	if (!m_fBound)
-		return;
-	if (m_pac){
+	if (m_fBound && m_pac) {
 		m_pac.Release();
-		m_fBound = FALSE;
+		m_fBound = false;
 	}
 }
 
-BOOL CCustomAutoComplete::SetList(const CStringArray& p_sItemList)
+bool CCustomAutoComplete::SetList(const CStringArray& p_sItemList)
 {
 	ATLASSERT(p_sItemList.GetSize() != 0);
 	Clear();
 	m_asList.Append(p_sItemList);
-	return TRUE;
+	return true;
 }
 
 int CCustomAutoComplete::FindItem(const CString& rstr)
@@ -113,7 +111,7 @@ int CCustomAutoComplete::FindItem(const CString& rstr)
 	return -1;
 }
 
-BOOL CCustomAutoComplete::AddItem(const CString& p_sItem, int iPos)
+bool CCustomAutoComplete::AddItem(const CString& p_sItem, int iPos)
 {
 	if (p_sItem.GetLength() != 0)
 	{
@@ -128,18 +126,19 @@ BOOL CCustomAutoComplete::AddItem(const CString& p_sItem, int iPos)
 
 			while (m_asList.GetSize() > m_iMaxItemCount)
 				m_asList.RemoveAt(m_asList.GetSize() - 1);
-			return TRUE;
+			return true;
 		} else if (iPos!=-1) {
 			m_asList.RemoveAt(oldpos);
-			if (oldpos<iPos) --iPos;
+			if (oldpos < iPos)
+				--iPos;
 			m_asList.InsertAt(iPos, p_sItem);
 
 			while (m_asList.GetSize() > m_iMaxItemCount)
 				m_asList.RemoveAt(m_asList.GetSize() - 1);
-			return TRUE;
+			return true;
 		}
 	}
-	return FALSE;
+	return false;
 }
 
 int CCustomAutoComplete::GetItemCount()
@@ -147,63 +146,58 @@ int CCustomAutoComplete::GetItemCount()
 	return (int)m_asList.GetCount();
 }
 
-BOOL CCustomAutoComplete::RemoveItem(const CString& p_sItem)
+bool CCustomAutoComplete::RemoveItem(const CString& p_sItem)
 {
-	if (p_sItem.GetLength() != 0)
-	{
+	if (!p_sItem.IsEmpty()) {
 		int iPos = FindItem(p_sItem);
-		if (iPos != -1)
-		{
+		if (iPos != -1) {
 			m_asList.RemoveAt(iPos);
-			return TRUE;
+			return false;
 		}
 	}
-	return FALSE;
+	return false;
 }
 
-BOOL CCustomAutoComplete::RemoveSelectedItem()
+bool CCustomAutoComplete::RemoveSelectedItem()
 {
 	if (m_pac == NULL || !IsBound())
-		return FALSE;
+		return false;
 	CComQIPtr<IAutoCompleteDropDown> pIAutoCompleteDropDown = m_pac;
 	if (!pIAutoCompleteDropDown)
-		return FALSE;
+		return false;
 
 	DWORD dwFlags;
 	LPWSTR pwszItem;
-	if (FAILED(pIAutoCompleteDropDown->GetDropDownStatus(&dwFlags, &pwszItem)))
-		return FALSE;
-	if (dwFlags != ACDD_VISIBLE)
-		return FALSE;
-	if (pwszItem == NULL)
-		return FALSE;
+	if (FAILED(pIAutoCompleteDropDown->GetDropDownStatus(&dwFlags, &pwszItem))
+	  || dwFlags != ACDD_VISIBLE || pwszItem == NULL)
+		return false;
 	CString strItem(pwszItem);
 	CoTaskMemFree(pwszItem);
 
 	return RemoveItem(strItem);
 }
 
-BOOL CCustomAutoComplete::Clear()
+bool CCustomAutoComplete::Clear()
 {
 	if (m_asList.GetSize() != 0)
 	{
 		m_asList.RemoveAll();
-		return TRUE;
+		return true;
 	}
-	return FALSE;
+	return false;
 }
 
-BOOL CCustomAutoComplete::Disable()
+bool CCustomAutoComplete::Disable()
 {
-	if ((!m_pac) || (!m_fBound))
-		return FALSE;
+	if (!m_pac || !m_fBound)
+		return false;
 	return SUCCEEDED(EnDisable(FALSE));
 }
 
-BOOL CCustomAutoComplete::Enable(VOID)
+bool CCustomAutoComplete::Enable(void)
 {
-	if ((!m_pac) || (m_fBound))
-		return FALSE;
+	if (!m_pac || m_fBound)
+		return false;
 	return SUCCEEDED(EnDisable(TRUE));
 }
 
@@ -316,7 +310,7 @@ void CCustomAutoComplete::InternalInit()
 {
 	m_nCurrentElement = 0;
 	m_nRefCount = 0;
-	m_fBound = FALSE;
+	m_fBound = false;
 	m_iMaxItemCount = 30;
 }
 
@@ -326,21 +320,21 @@ HRESULT CCustomAutoComplete::EnDisable(BOOL p_fEnable)
 
 	HRESULT hr = m_pac->Enable(p_fEnable);
 	if (SUCCEEDED(hr))
-		m_fBound = p_fEnable;
+		m_fBound = (p_fEnable != FALSE);
 	return hr;
 }
 
-BOOL CCustomAutoComplete::LoadList(LPCTSTR pszFileName)
+bool CCustomAutoComplete::LoadList(LPCTSTR pszFileName)
 {
 	FILE* fp = _tfsopen(pszFileName, _T("rb"), _SH_DENYWR);
 	if (fp == NULL)
-		return FALSE;
+		return false;
 
 	// verify Unicode byte-order mark 0xFEFF
 	WORD wBOM = fgetwc(fp);
 	if (wBOM != 0xFEFF){
 		fclose(fp);
-		return FALSE;
+		return false;
 	}
 
 	TCHAR szItem[256];
@@ -350,21 +344,23 @@ BOOL CCustomAutoComplete::LoadList(LPCTSTR pszFileName)
 		AddItem(strItem, -1);
 	}
 	fclose(fp);
-	return TRUE;
+	return true;
 }
 
-BOOL CCustomAutoComplete::SaveList(LPCTSTR pszFileName)
+bool CCustomAutoComplete::SaveList(LPCTSTR pszFileName)
 {
 	FILE* fp = _tfsopen(pszFileName, _T("wb"), _SH_DENYWR);
 	if (fp == NULL)
-		return FALSE;
+		return false;
 	BOOL ret = (fputwc((wchar_t)0xFEFF, fp) != WEOF); // write Unicode byte-order mark 0xFEFF
 	for (int i = 0; ret && i < m_asList.GetCount(); i++)
 		ret = (_ftprintf(fp, _T("%s\r\n"), (LPCTSTR)m_asList[i]) > 0);
-	return fclose(fp) ? FALSE : ret;
+	return fclose(fp) ? false : ret;
 }
 
-CString CCustomAutoComplete::GetItem(int pos){
-	if (pos>=m_asList.GetCount()) return NULL;
-	else return m_asList.GetAt(pos);
+CString CCustomAutoComplete::GetItem(int pos)
+{
+	if (pos < m_asList.GetCount())
+		return m_asList[pos];
+	return NULL;
 }

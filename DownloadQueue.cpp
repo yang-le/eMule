@@ -1355,7 +1355,7 @@ void CDownloadQueue::MoveCat(UINT from, UINT to)
 UINT CDownloadQueue::GetDownloadingFileCount() const
 {
 	UINT result = 0;
-	for (POSITION pos = filelist.GetHeadPosition();pos != 0;){
+	for (POSITION pos = filelist.GetHeadPosition(); pos != 0;) {
 		UINT uStatus = filelist.GetNext(pos)->GetStatus();
 		if (uStatus == PS_READY || uStatus == PS_EMPTY)
 			result++;
@@ -1366,20 +1366,19 @@ UINT CDownloadQueue::GetDownloadingFileCount() const
 UINT CDownloadQueue::GetPausedFileCount() const
 {
 	UINT result = 0;
-	for (POSITION pos = filelist.GetHeadPosition();pos != 0;){
+	for (POSITION pos = filelist.GetHeadPosition(); pos != 0;)
 		if (filelist.GetNext(pos)->GetStatus() == PS_PAUSED)
 			result++;
-	}
 	return result;
 }
 
-void CDownloadQueue::SetAutoCat(CPartFile* newfile){
-	if(thePrefs.GetCatCount()==1)
+void CDownloadQueue::SetAutoCat(CPartFile* newfile)
+{
+	if (thePrefs.GetCatCount() < 2 || newfile->GetCategory() > 0)
 		return;
-	CString catExt;
 
-	for (int ix=1;ix<thePrefs.GetCatCount();ix++){
-		catExt= thePrefs.GetCategory(ix)->autocat;
+	for (int ix = 1; ix<thePrefs.GetCatCount(); ++ix) {
+		CString catExt = thePrefs.GetCategory(ix)->autocat;
 		if (catExt.IsEmpty())
 			continue;
 
@@ -1389,31 +1388,31 @@ void CDownloadQueue::SetAutoCat(CPartFile* newfile){
 			int curPos = 0;
 			catExt.MakeLower();
 
-			CString fullname = newfile->GetFileName();
+			CString fullname(newfile->GetFileName());
 			fullname.MakeLower();
-			CString cmpExt = catExt.Tokenize(_T("|"), curPos);
 
-			while (!cmpExt.IsEmpty()) {
+			for (CString cmpExt = catExt.Tokenize(_T("|"), curPos); !cmpExt.IsEmpty(); cmpExt = catExt.Tokenize(_T("|"), curPos)) {
 				// HoaX_69: Allow wildcards in autocat string
 				//  thanks to: bluecow, khaos and SlugFiller
-				if(cmpExt.Find(_T("*")) != -1 || cmpExt.Find(_T("?")) != -1){
+				if (cmpExt.Find(_T("*")) != -1 || cmpExt.Find(_T("?")) != -1) {
 					// Use wildcards
-					if(PathMatchSpec(fullname, cmpExt)){
+					if (PathMatchSpec(fullname, cmpExt)) {
 						newfile->SetCategory(ix);
 						return;
 					}
-				}else{
-					if(fullname.Find(cmpExt) != -1){
+				} else {
+					if (fullname.Find(cmpExt) != -1) {
 						newfile->SetCategory(ix);
 						return;
 					}
 				}
-				cmpExt = catExt.Tokenize(_T("|"),curPos);
 			}
 		} else {
 			// regular expression evaluation
-			if (RegularExpressionMatch(catExt,newfile->GetFileName()))
+			if (RegularExpressionMatch(catExt, newfile->GetFileName())) {
 				newfile->SetCategory(ix);
+				return;
+			}
 		}
 	}
 }

@@ -756,9 +756,6 @@ void CxImageGIF::Putword(int32_t w, CxFile *fp )
 ////////////////////////////////////////////////////////////////////////////////
 void CxImageGIF::compressNONE( int32_t init_bits, CxFile* outfile)
 {
-	register int32_t c;
-	register int32_t ent;
-
 	// g_init_bits - initial number of bits
 	// g_outfile   - pointer to output file
 	g_init_bits = init_bits;
@@ -774,12 +771,12 @@ void CxImageGIF::compressNONE( int32_t init_bits, CxFile* outfile)
 	free_ent = (int16_t)(ClearCode + 2);
 
 	a_count=0;
-	ent = GifNextPixel( );
+	register int32_t ent = GifNextPixel( );
 
 	output( (code_int)ClearCode );
 
 	while ( ent != EOF ) {
-		c = GifNextPixel();
+		register int32_t c = GifNextPixel();
 
 		output ( (code_int) ent );
 		ent = c;
@@ -1663,10 +1660,9 @@ void CxImageGIF::compressRLE( int32_t init_bits, CxFile* outfile)
 
 	rle_output(rle.code_clear,&rle);
 
-	int32_t c;
 	for( ;; )
 	{
-		c = GifNextPixel();
+		int32_t c = GifNextPixel();
 		if ((rle.rl_count > 0) && (c != rle.rl_pixel)) rle_flush(&rle);
 		if (c == EOF) break;
 		if (rle.rl_pixel == c){

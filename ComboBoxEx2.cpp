@@ -84,7 +84,7 @@ BOOL CComboBoxEx2::PreTranslateMessage(MSG* pMsg)
 					UINT uTheChar        = (UINT)(_TUCHAR)_totlower((_TINT)((UINT)uChar));
 					if (uFirstCharLower == uTheChar){
 						SetCurSel(i);
-						GetParent()->SendMessage(WM_COMMAND, MAKELONG((WORD)GetWindowLong(m_hWnd, GWL_ID), CBN_SELCHANGE), (LPARAM)m_hWnd);
+						GetParent()->SendMessage(WM_COMMAND, MAKELONG((WORD)GetWindowLongPtr(m_hWnd, GWLP_ID), CBN_SELCHANGE), (LPARAM)m_hWnd);
 						return TRUE;
 					}
 				}
@@ -109,7 +109,7 @@ BOOL CComboBoxEx2::SelectString(LPCTSTR pszText)
 			if (strItem == pszText)
 			{
 				SetCurSel(i);
-				GetParent()->SendMessage(WM_COMMAND, MAKELONG((WORD)GetWindowLong(m_hWnd, GWL_ID), CBN_SELCHANGE), (LPARAM)m_hWnd);
+				GetParent()->SendMessage(WM_COMMAND, MAKELONG((WORD)GetWindowLongPtr(m_hWnd, GWLP_ID), CBN_SELCHANGE), (LPARAM)m_hWnd);
 				return TRUE;
 			}
 		}
@@ -129,7 +129,7 @@ BOOL CComboBoxEx2::SelectItemDataStringA(LPCSTR pszText)
 			if (pvItemData && strcmp((LPCSTR)pvItemData, pszText) == 0)
 			{
 				SetCurSel(i);
-				GetParent()->SendMessage(WM_COMMAND, MAKELONG((WORD)GetWindowLong(m_hWnd, GWL_ID), CBN_SELCHANGE), (LPARAM)m_hWnd);
+				GetParent()->SendMessage(WM_COMMAND, MAKELONG((WORD)GetWindowLongPtr(m_hWnd, GWLP_ID), CBN_SELCHANGE), (LPARAM)m_hWnd);
 				return TRUE;
 			}
 		}

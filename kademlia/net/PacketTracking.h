@@ -60,8 +60,8 @@ namespace Kademlia
 			bool IsOnOutTrackList(uint32 dwIP, uint8 byOpcode, bool bDontRemove = false);
 			bool InTrackListIsAllowedPacket(uint32 uIP, uint8 byOpcode, bool bValidReceiverkey);
 			void InTrackListCleanup();
-			void AddLegacyChallenge(CUInt128 uContactID, CUInt128 uChallengeID, uint32 uIP, uint8 byOpcode);
-			bool IsLegacyChallenge(CUInt128 uChallengeID, uint32 uIP, uint8 byOpcode, CUInt128& ruContactID);
+			void AddLegacyChallenge(const CUInt128& uContactID, const CUInt128& uChallengeID, uint32 uIP, uint8 byOpcode);
+			bool IsLegacyChallenge(const CUInt128& uChallengeID, uint32 uIP, uint8 byOpcode, CUInt128& ruContactID);
 			bool HasActiveLegacyChallenge(uint32 uIP) const;
 
 		private:

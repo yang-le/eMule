@@ -80,7 +80,7 @@ BOOL CDropDownButton::Init(bool bSingleDropDownBtn, bool bWholeDropDown)
 	{
 		TBBUTTON atb[1] = {0};
 		atb[0].iBitmap = -1;
-		atb[0].idCommand = GetWindowLong(m_hWnd, GWL_ID);
+		atb[0].idCommand = GetWindowLongPtr(m_hWnd, GWLP_ID);
 		atb[0].fsState = TBSTATE_ENABLED;
 		atb[0].fsStyle = m_bSingleDropDownBtn ? (bWholeDropDown ? BTNS_WHOLEDROPDOWN : BTNS_DROPDOWN) : BTNS_BUTTON;
 		atb[0].iString = -1;
@@ -96,16 +96,16 @@ void CDropDownButton::SetWindowText(LPCTSTR pszString)
 {
 	int cx = 0;
 	if (!m_bSingleDropDownBtn)
-		cx = GetBtnWidth(GetWindowLong(m_hWnd, GWL_ID));
+		cx = GetBtnWidth(GetWindowLongPtr(m_hWnd, GWLP_ID));
 
 	TBBUTTONINFO tbbi = {0};
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_TEXT;
 	tbbi.pszText = const_cast<LPTSTR>(pszString);
-	SetButtonInfo(GetWindowLong(m_hWnd, GWL_ID), &tbbi);
+	SetButtonInfo(GetWindowLongPtr(m_hWnd, GWLP_ID), &tbbi);
 
 	if (cx)
-		SetBtnWidth(GetWindowLong(m_hWnd, GWL_ID), cx);
+		SetBtnWidth(GetWindowLongPtr(m_hWnd, GWLP_ID), cx);
 }
 
 void CDropDownButton::SetIcon(LPCTSTR pszResourceID)
@@ -125,7 +125,7 @@ void CDropDownButton::SetIcon(LPCTSTR pszResourceID)
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_IMAGE;
 	tbbi.iImage = 0;
-	SetButtonInfo(GetWindowLong(m_hWnd, GWL_ID), &tbbi);
+	SetButtonInfo(GetWindowLongPtr(m_hWnd, GWLP_ID), &tbbi);
 }
 
 void CDropDownButton::ResizeToMaxWidth()
@@ -141,7 +141,7 @@ void CDropDownButton::ResizeToMaxWidth()
 	    tbbi.cbSize = sizeof tbbi;
 	    tbbi.dwMask = TBIF_SIZE;
 	    tbbi.cx = (WORD)rcWnd.Width();
-	    SetButtonInfo(GetWindowLong(m_hWnd, GWL_ID), &tbbi);
+	    SetButtonInfo(GetWindowLongPtr(m_hWnd, GWLP_ID), &tbbi);
 	}
 }
 
@@ -160,14 +160,14 @@ void CDropDownButton::RecalcLayout(bool bForce)
 	// button style(s) and force the toolbar to resize and apply them again.
 	//
 	// TODO: Should be moved to CToolBarCtrlX
-	bool bDropDownBtn = (GetBtnStyle(GetWindowLong(m_hWnd, GWL_ID)) & BTNS_DROPDOWN) != 0;
+	bool bDropDownBtn = (GetBtnStyle(GetWindowLongPtr(m_hWnd, GWLP_ID)) & BTNS_DROPDOWN) != 0;
 	if (bDropDownBtn)
-		RemoveBtnStyle(GetWindowLong(m_hWnd, GWL_ID), BTNS_DROPDOWN);
+		RemoveBtnStyle(GetWindowLongPtr(m_hWnd, GWLP_ID), BTNS_DROPDOWN);
 	if (bDropDownBtn || bForce)
 	{
 		CToolBarCtrlX::RecalcLayout();
 		if (bDropDownBtn)
-			AddBtnStyle(GetWindowLong(m_hWnd, GWL_ID), BTNS_DROPDOWN);
+			AddBtnStyle(GetWindowLongPtr(m_hWnd, GWLP_ID), BTNS_DROPDOWN);
 	}
 }
 

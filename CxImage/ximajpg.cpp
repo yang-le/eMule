@@ -271,11 +271,10 @@ bool CxImageJPG::Decode(CxFile * hFile)
 		// info.nProgress = (int32_t)(100*cinfo.output_scanline/cinfo.output_height);
 		//<DP> Step 6a: CMYK->RGB */ 
 		if ((cinfo.num_components==4)&&(cinfo.quantize_colors==FALSE)){
-			uint8_t k,*dst,*src;
-			dst=iter.GetRow();
-			src=buffer[0];
+			uint8_t *dst = iter.GetRow();
+			uint8_t *src = buffer[0];
 			for(int32_t x3=0,x4=0; x3<(int32_t)info.dwEffWidth && x4<row_stride; x3+=3, x4+=4){
-				k=src[x4+3];
+				uint8_t k = src[x4+3];
 				dst[x3]  =(uint8_t)((k * src[x4+2])/255);
 				dst[x3+1]=(uint8_t)((k * src[x4+1])/255);
 				dst[x3+2]=(uint8_t)((k * src[x4+0])/255);

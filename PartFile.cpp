@@ -3295,40 +3295,31 @@ BOOL CPartFile::PerformFileComplete()
 	free(newfilename);
 
 	bool bFirstTry = true;
-	DWORD dwMoveResult = (uint32)(-1);
-	while (dwMoveResult != ERROR_SUCCESS)
-	{
-		if ((dwMoveResult = MoveCompletedPartFile(strPartfilename, strNewname, this)) != ERROR_SUCCESS)
-		{
-			if (dwMoveResult == ERROR_SHARING_VIOLATION && thePrefs.GetWindowsVersion() < _WINVER_2K_ && bFirstTry)
-			{
-				// The UploadDiskIOThread might have an open handle to this file due to ongoing uploads
-				// On old Windows versions this might result in a sharing violation (for new version we have FILE_SHARE_DELETE)
-				// So wait a few seconds and try again. Due to the lock we set, the UploadThread will close the file ASAP
-				bFirstTry = false;
-				theApp.QueueDebugLogLine(false, _T("Sharing violation while finishing partfile, might be due to ongoing upload. Locked and trying again soon. File %s")
-					, (LPCTSTR)GetFileName());
-				Sleep(5000); // we can sleep here, because we are threaded
-				continue;
-			}
-			else
-			{
-				theApp.QueueLogLine(true,GetResString(IDS_ERR_COMPLETIONFAILED) + _T(" - \"%s\": ") + GetErrorMessage(dwMoveResult), (LPCTSTR)GetFileName(), (LPCTSTR)strNewname);
-				// If the destination file path is too long, the default system error message may not be helpful for user to know what failed.
-				if (strNewname.GetLength() >= MAX_PATH)
-					theApp.QueueLogLine(true,GetResString(IDS_ERR_COMPLETIONFAILED) + _T(" - \"%s\": Path too long"), (LPCTSTR)GetFileName(), (LPCTSTR)strNewname);
+	for (DWORD dwMoveResult = ~ERROR_SUCCESS; dwMoveResult != ERROR_SUCCESS; dwMoveResult = MoveCompletedPartFile(strPartfilename, strNewname, this)) {
+		if (dwMoveResult != ERROR_SHARING_VIOLATION || thePrefs.GetWindowsVersion() >= _WINVER_2K_ || !bFirstTry) {
+			theApp.QueueLogLine(true, GetResString(IDS_ERR_COMPLETIONFAILED) + _T(" - \"%s\": ") + GetErrorMessage(dwMoveResult)
+				, (LPCTSTR)GetFileName(), (LPCTSTR)strNewname);
+			// If the destination file path is too long, the default system error message may not be helpful for user to know what failed.
+			if (strNewname.GetLength() >= MAX_PATH)
+				theApp.QueueLogLine(true, GetResString(IDS_ERR_COMPLETIONFAILED) + _T(" - \"%s\": Path too long")
+					, (LPCTSTR)GetFileName(), (LPCTSTR)strNewname);
 
-				paused = true;
-				stopped = true;
-				SetStatus(PS_ERROR);
-				m_bCompletionError = true;
-				SetFileOp(PFOP_NONE);
-				if (theApp.emuledlg && !theApp.emuledlg->IsClosing())
-					VERIFY( PostMessage(theApp.emuledlg->m_hWnd, TM_FILECOMPLETED, FILE_COMPLETION_THREAD_FAILED, (LPARAM)this) );
-				return FALSE;
-			}
+			paused = true;
+			stopped = true;
+			SetStatus(PS_ERROR);
+			m_bCompletionError = true;
+			SetFileOp(PFOP_NONE);
+			if (theApp.emuledlg && !theApp.emuledlg->IsClosing())
+				VERIFY(PostMessage(theApp.emuledlg->m_hWnd, TM_FILECOMPLETED, FILE_COMPLETION_THREAD_FAILED, (LPARAM)this));
+			return FALSE;
 		}
-		break;
+		// The UploadDiskIOThread might have an open handle to this file due to ongoing uploads
+		// On old Windows versions this might result in a sharing violation (for new version we have FILE_SHARE_DELETE)
+		// So wait a few seconds and try again. Due to the lock we set, the UploadThread will close the file ASAP
+		bFirstTry = false;
+		theApp.QueueDebugLogLine(false, _T("Sharing violation while finishing partfile, might be due to ongoing upload. Locked and trying again soon. File %s")
+			, (LPCTSTR)GetFileName());
+		Sleep(SEC2MS(5)); // we can sleep here, because we are threaded
 	}
 
 	UncompressFile(strNewname, this);
@@ -3349,18 +3340,18 @@ BOOL CPartFile::PerformFileComplete()
 
 	// remove part.met file
 	if (_tremove(m_fullname))
-		theApp.QueueLogLine(true, GetResString(IDS_ERR_DELETEFAILED) + _T(" - ") + CString(_tcserror(errno)), (LPCTSTR)m_fullname);
+		theApp.QueueLogLine(true, (LPCTSTR)(GetResString(IDS_ERR_DELETEFAILED) + _T(" - ") + CString(_tcserror(errno))), (LPCTSTR)m_fullname);
 
 	// remove backup files
 	CString BAKName(m_fullname);
 	BAKName.Append(PARTMET_BAK_EXT);
 	if (_taccess(BAKName, 0) == 0 && !::DeleteFile(BAKName))
-		theApp.QueueLogLine(true,GetResString(IDS_ERR_DELETE) + _T(" - ") + GetErrorMessage(GetLastError()), (LPCTSTR)BAKName);
+		theApp.QueueLogLine(true, (LPCTSTR)(GetResString(IDS_ERR_DELETE) + _T(" - ") + GetErrorMessage(GetLastError())), (LPCTSTR)BAKName);
 
 	BAKName = m_fullname;
 	BAKName.Append(PARTMET_TMP_EXT);
 	if (_taccess(BAKName, 0) == 0 && !::DeleteFile(BAKName))
-		theApp.QueueLogLine(true,GetResString(IDS_ERR_DELETE) + _T(" - ") + GetErrorMessage(GetLastError()), (LPCTSTR)BAKName);
+		theApp.QueueLogLine(true, (LPCTSTR)(GetResString(IDS_ERR_DELETE) + _T(" - ") + GetErrorMessage(GetLastError())), (LPCTSTR)BAKName);
 
 	// initialize 'this' part file for being a 'complete' file, this is to be done *before* releasing the file mutex.
 	m_fullname = strNewname;

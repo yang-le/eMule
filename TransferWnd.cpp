@@ -1493,7 +1493,7 @@ void CTransferWnd::SetWnd1Icon(EWnd1Icon iIcon)
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_IMAGE;
 	tbbi.iImage = iIcon;
-	m_btnWnd1->SetButtonInfo(GetWindowLong(*m_btnWnd1, GWL_ID), &tbbi);
+	m_btnWnd1->SetButtonInfo(GetWindowLongPtr(*m_btnWnd1, GWLP_ID), &tbbi);
 }
 
 void CTransferWnd::SetWnd2Icon(EWnd2Icon iIcon)
@@ -1502,7 +1502,7 @@ void CTransferWnd::SetWnd2Icon(EWnd2Icon iIcon)
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_IMAGE;
 	tbbi.iImage = iIcon;
-	m_btnWnd2->SetButtonInfo(GetWindowLong(*m_btnWnd2, GWL_ID), &tbbi);
+	m_btnWnd2->SetButtonInfo(GetWindowLongPtr(*m_btnWnd2, GWLP_ID), &tbbi);
 }
 
 void CTransferWnd::ShowList(uint32 dwListIDC)

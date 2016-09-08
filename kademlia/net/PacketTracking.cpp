@@ -244,34 +244,32 @@ void CPacketTracking::InTrackListCleanup(){
 	DebugLog(_T("Cleaned up Kad Incoming Requests Tracklist, entries before: %u, after %u"), dbgOldSize, m_liTrackPacketsIn.GetCount());
 }
 
-void CPacketTracking::AddLegacyChallenge(CUInt128 uContactID, CUInt128 uChallengeID, uint32 uIP, uint8 byOpcode){
-	TrackChallenge_Struct sTrack = {uIP, ::GetTickCount(), byOpcode, uContactID, uChallengeID};
+void CPacketTracking::AddLegacyChallenge(const CUInt128& uContactID, const CUInt128& uChallengeID, uint32 uIP, uint8 byOpcode)
+{
+	uint32 dwTick = ::GetTickCount();
+	TrackChallenge_Struct sTrack = {uIP, dwTick, byOpcode, uContactID, uChallengeID};
 	listChallengeRequests.AddHead(sTrack);
-	while (!listChallengeRequests.IsEmpty()){
-		if (::GetTickCount() - listChallengeRequests.GetTail().dwInserted > SEC2MS(180)){
-			DEBUG_ONLY( DebugLog(_T("Challenge timed out, client not verified - %s"), (LPCTSTR)ipstr(ntohl(listChallengeRequests.GetTail().uIP))) );
-			listChallengeRequests.RemoveTail();
-		}
-		else
-			break;
+	dwTick -= SEC2MS(180);
+	while (!listChallengeRequests.IsEmpty() && dwTick > listChallengeRequests.GetTail().dwInserted) {
+		DEBUG_ONLY(DebugLog(_T("Challenge timed out, client not verified - %s"), (LPCTSTR)ipstr(ntohl(listChallengeRequests.GetTail().uIP))));
+		listChallengeRequests.RemoveTail();
 	}
 }
 
-bool CPacketTracking::IsLegacyChallenge(CUInt128 uChallengeID, uint32 uIP, uint8 byOpcode, CUInt128& ruContactID){
+bool CPacketTracking::IsLegacyChallenge(const CUInt128& uChallengeID, uint32 uIP, uint8 byOpcode, CUInt128& ruContactID)
+{
 	bool bDbgWarning = false;
 	for (POSITION pos1 = listChallengeRequests.GetHeadPosition(); pos1 != NULL;) {
 		POSITION pos2 = pos1;
 		const TrackChallenge_Struct& tc = listChallengeRequests.GetNext(pos1);
-		if (tc.uIP == uIP && tc.byOpcode == byOpcode && ::GetTickCount() < tc.dwInserted + SEC2MS(180))
-		{
+		if (tc.uIP == uIP && tc.byOpcode == byOpcode && ::GetTickCount() < tc.dwInserted + SEC2MS(180)) {
 			ASSERT(tc.uChallenge != 0 || byOpcode == KADEMLIA2_PING);
 			if (tc.uChallenge == 0 || tc.uChallenge == uChallengeID) {
 				ruContactID = tc.uContactID;
 				listChallengeRequests.RemoveAt(pos2);
 				return true;
 			}
-			else
-				bDbgWarning = true;
+			bDbgWarning = true;
 		}
 	}
 	if (bDbgWarning)

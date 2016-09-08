@@ -3139,7 +3139,7 @@ HWND ReplaceRichEditCtrl(CWnd* pwndRE, CWnd* pwndParent, CFont* pFont)
 		CString strText;
 		pwndRE->GetWindowText(strText);
 
-		UINT uCtrlID = GetWindowLong(*pwndRE, GWL_ID);
+		UINT uCtrlID = GetWindowLongPtr(*pwndRE, GWLP_ID);
 
 		pwndRE->DestroyWindow();
 

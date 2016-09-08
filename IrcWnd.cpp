@@ -1456,7 +1456,7 @@ void CIrcWnd::OnEnRequestResizeTitle(NMHDR *pNMHDR, LRESULT *pResult)
 	ScreenToClient(&rcTitle);
 
 	CRect rcResizeAdjusted(pReqResize->rc);
-	AdjustWindowRectEx(&rcResizeAdjusted, (DWORD)GetWindowLong(pReqResize->nmhdr.hwndFrom, GWL_STYLE), FALSE, (DWORD)::GetWindowLong(pReqResize->nmhdr.hwndFrom, GWL_EXSTYLE));
+	AdjustWindowRectEx(&rcResizeAdjusted, (DWORD)GetWindowLongPtr(pReqResize->nmhdr.hwndFrom, GWL_STYLE), FALSE, (DWORD)::GetWindowLongPtr(pReqResize->nmhdr.hwndFrom, GWL_EXSTYLE));
 	rcTitle.bottom = rcTitle.top + rcResizeAdjusted.Height() + 1/*!?!*/;
 
 	// Don't allow too large title windows

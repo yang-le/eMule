@@ -738,7 +738,6 @@ UINT UploadBandwidthThrottler::RunInternal() {
 	tempQueueLocker.Unlock();
 
 	sendLocker.Lock();
-
 	m_ControlQueue_list.RemoveAll();
 	m_StandardOrder_list.RemoveAll();
 	sendLocker.Unlock();
@@ -748,16 +747,12 @@ UINT UploadBandwidthThrottler::RunInternal() {
 
 void UploadBandwidthThrottler::NewUploadDataAvailable()
 {
-	sendLocker.Lock();
 	if (doRun)
 		m_eventNewDataAvailable.SetEvent();
-	sendLocker.Unlock();
 }
 
 void UploadBandwidthThrottler::SocketAvailable()
 {
-	sendLocker.Lock();
 	if (doRun)
 		m_eventSocketAvailable.SetEvent();
-	sendLocker.Unlock();
 }

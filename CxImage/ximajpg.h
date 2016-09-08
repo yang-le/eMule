@@ -208,10 +208,9 @@ public:
 
 	static boolean FillInputBuffer(j_decompress_ptr cinfo)
 	{
-		size_t nbytes;
 		CxFileJpg* pSource = (CxFileJpg*)cinfo->src;
-		nbytes = pSource->m_pFile->Read(pSource->m_pBuffer,1,eBufSize);
-		if (nbytes <= 0){
+		size_t nbytes = pSource->m_pFile->Read(pSource->m_pBuffer,1,eBufSize);
+		if (nbytes <= 0) {
 			if (pSource->m_bStartOfFile)	//* Treat empty input file as fatal error 
 				ERREXIT(cinfo, JERR_INPUT_EMPTY);
 			WARNMS(cinfo, JWRN_JPEG_EOF);

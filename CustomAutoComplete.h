@@ -16,7 +16,7 @@ private:
 
 	ULONG m_nCurrentElement;
 	ULONG m_nRefCount;
-	BOOL m_fBound;
+	bool m_fBound;
 	int m_iMaxItemCount;
 
 	// Constructors/destructors
@@ -27,25 +27,25 @@ public:
 
 	// Implementation
 public:
-	BOOL Bind(HWND p_hWndEdit, DWORD p_dwOptions = 0, LPCTSTR p_lpszFormatString = NULL);
-	VOID Unbind();
-	BOOL IsBound() const { return m_fBound; }
+	bool Bind(HWND p_hWndEdit, DWORD p_dwOptions = 0, LPCTSTR p_lpszFormatString = NULL);
+	void Unbind();
+	bool IsBound() const { return m_fBound; }
 
-	BOOL SetList(const CStringArray& p_sItemList);
+	bool SetList(const CStringArray& p_sItemList);
 	const CStringArray& GetList() const;
 	int GetItemCount();
 
-	BOOL AddItem(const CString& p_sItem, int iPos);
-	BOOL RemoveItem(const CString& p_sItem);
-	BOOL RemoveSelectedItem();
+	bool AddItem(const CString& p_sItem, int iPos);
+	bool RemoveItem(const CString& p_sItem);
+	bool RemoveSelectedItem();
 	CString GetItem(int pos);
 
-	BOOL Clear();
-	BOOL Disable();
-	BOOL Enable(VOID);
+	bool Clear();
+	bool Disable();
+	bool Enable(void);
 
-	BOOL LoadList(LPCTSTR pszFileName);
-	BOOL SaveList(LPCTSTR pszFileName);
+	bool LoadList(LPCTSTR pszFileName);
+	bool SaveList(LPCTSTR pszFileName);
 
 public:
 	STDMETHOD_(ULONG,AddRef)();

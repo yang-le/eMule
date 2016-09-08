@@ -2740,7 +2740,7 @@ CString CUpDownClient::GetUploadStateDisplayString() const
 			break;
 		case US_UPLOADING:
 			// GetNumberOfRequestedBlocksInQueue is no longer available and retrieving it would cause quite some extra load
-			// (either due to thread syncing or due to adding redunant extra varts just for this function), so given that
+			// (either due to thread syncing or due to adding redunant extra vars just for this function), so given that
 			// "stalled, waiting for disk" should happen like never, it is removed for now
             if(GetPayloadInBuffer() == 0 && /*GetNumberOfRequestedBlocksInQueue() == 0 &&*/ thePrefs.IsExtControlsEnabled()) {
 				strState = GetResString(IDS_US_STALLEDW4BR);

@@ -691,10 +691,10 @@ void CUDPSocket::OnSend(int nErrorCode)
 			DebugLogError(_T("Error: Server UDP socket: Failed to send packet - %s"), (LPCTSTR)GetErrorMessage(nErrorCode, 1));
 		return;
 	}
-	sendLocker.Lock();
 	m_bWouldBlock = false;
 
 	// ZZ:UploadBandWithThrottler (UDP) -->
+	sendLocker.Lock();
 	if (!controlpacket_queue.IsEmpty())
 		theApp.uploadBandwidthThrottler->QueueForSendingControlPacket(this);
 

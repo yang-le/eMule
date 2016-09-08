@@ -660,12 +660,12 @@ void CChatSelector::ReportConnectionProgress(CUpDownClient* pClient, const CStri
 	ci->log->AppendKeyWord(strProgressDesc, STATUS_MSG_COLOR);
 }
 
-void CChatSelector::ClientObjectChanged(CUpDownClient* pOldClient, CUpDownClient* pNewClient){
+void CChatSelector::ClientObjectChanged(CUpDownClient* pOldClient, CUpDownClient* pNewClient)
+{
 	// the friend has deceided to change the clients objects (because the old doesnt seems to be our friend) during a connectiontry
 	// in order to not close and reopen a new session and loose the prior chat, switch the objects on a existing tab
 	// nothing else changes since the tab is supposed to be still connected to the same friend
 	CChatItem* ci = GetItemByClient(pOldClient);
-	if (!ci)
-		return;
-	ci->client = pNewClient;
+	if (ci)
+		ci->client = pNewClient;
 }

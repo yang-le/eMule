@@ -311,12 +311,11 @@ void CTrayDialog::TraySetMinimizeToTray(bool* pbMinimizeToTray)
 
 void CTrayDialog::TrayMinimizeToTrayChange()
 {
-	if (m_pbMinimizeToTray == NULL)
-		return;
-	if (*m_pbMinimizeToTray)
-		MinTrayBtnHide();
-	else
-		MinTrayBtnShow();
+	if (m_pbMinimizeToTray)
+		if (*m_pbMinimizeToTray || thePrefs.IsRunningAeroGlassTheme()) //there is no easy way to draw in caption
+			MinTrayBtnHide();
+		else
+			MinTrayBtnShow();
 }
 
 void CTrayDialog::OnTrayRButtonUp(CPoint /*pt*/)

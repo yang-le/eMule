@@ -199,13 +199,13 @@ void CCatDialog::OnBnClickedOk()
 	OnOK();
 }
 
-LONG CCatDialog::OnSelChange(UINT lParam, LONG /*wParam*/)
+LRESULT CCatDialog::OnSelChange(UINT lParam, LONG /*wParam*/)
 {
 	if (lParam == CLR_DEFAULT)
 		newcolor = (DWORD)-1;
 	else
 		newcolor = m_ctlColor.GetColor();
-	return TRUE;
+	return 0;
 }
 
 void CCatDialog::OnDDBnClicked()

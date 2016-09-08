@@ -250,10 +250,10 @@ BOOL CTreeOptionsCtrlEx::NotifyParent(UINT uCode, HTREEITEM hItem)
 
 	TREEOPTSCTRLNOTIFY ton;
 	ton.nmhdr.hwndFrom = m_hWnd;
-	ton.nmhdr.idFrom = GetWindowLong(m_hWnd, GWL_ID);
+	ton.nmhdr.idFrom = GetWindowLongPtr(m_hWnd, GWLP_ID);
 	ton.nmhdr.code = uCode;
 	ton.hItem = hItem;
-	return pWnd->SendMessage(UM_TREEOPTSCTRL_NOTIFY, GetWindowLong(m_hWnd, GWL_ID), (LPARAM)&ton);
+	return pWnd->SendMessage(UM_TREEOPTSCTRL_NOTIFY, GetWindowLongPtr(m_hWnd, GWLP_ID), (LPARAM)&ton);
 }
 
 void CTreeOptionsCtrlEx::SetImageListColorFlags(UINT uImageListColorFlags)

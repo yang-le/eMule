@@ -147,8 +147,8 @@ CEMSocket::~CEMSocket()
 	// won't be in the middle of things
 	sendLocker.Lock();
 	byConnected = ES_DISCONNECTED;
-	sendLocker.Unlock();
 	CleanUpOverlappedSendOperation(true);
+	sendLocker.Unlock();
 
 	// now that we know no other method will keep adding to the queue
 	// we can remove ourself from the queue
@@ -578,7 +578,6 @@ void CEMSocket::OnSend(int nErrorCode)
 	//EMTrace("CEMSocket::OnSend linked: %i, controlcount %i, standardcount %i, isbusy: %i",m_bLinkedPackets, controlpacket_queue.GetCount(), standardpacket_queue.GetCount(), IsBusy());
 	CEncryptedStreamSocket::OnSend(0);
 
-	sendLocker.Lock();
 	m_bBusy = false;
 
     // stopped sending here.
@@ -596,7 +595,6 @@ void CEMSocket::OnSend(int nErrorCode)
 
 	if (!m_bOverlappedSending && (!standardpacket_queue.IsEmpty() || sendbuffer != NULL))
 		theApp.uploadBandwidthThrottler->SocketAvailable();
-	sendLocker.Unlock();
 }
 
 //void CEMSocket::StoppedSendSoUpdateStats() {
@@ -1333,21 +1331,18 @@ bool CEMSocket::IsBusyQuickCheck() const
 
 void CEMSocket::CleanUpOverlappedSendOperation(bool bCancelRequestFirst)
 {
-	sendLocker.Lock();
-	if (m_pPendingSendOperation != NULL)
-	{
+//sendLock must locked by the caller!
+	if (m_pPendingSendOperation != NULL) {
 		if (bCancelRequestFirst)
 			CancelIo((HANDLE)GetSocketHandle());
 		delete m_pPendingSendOperation;
 		m_pPendingSendOperation = NULL;
-		for (int i = 0; i < m_aBufferSend.GetCount(); ++i)
-		{
+		for (int i = 0; i < m_aBufferSend.GetCount(); ++i) {
 			WSABUF pDel = m_aBufferSend[i];
 			delete[] pDel.buf;
 		}
 		m_aBufferSend.RemoveAll();
 	}
-	sendLocker.Unlock();
 }
 
 bool CEMSocket::HasQueues(bool bOnlyStandardPackets) const

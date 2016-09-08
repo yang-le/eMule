@@ -586,7 +586,7 @@ void CKademliaWnd::ShowLookupGraph(bool bShow)
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_IMAGE;
 	tbbi.iImage = iIcon;
-	m_pbtnWnd->SetButtonInfo(GetWindowLong(*m_pbtnWnd, GWL_ID), &tbbi);
+	m_pbtnWnd->SetButtonInfo(GetWindowLongPtr(*m_pbtnWnd, GWLP_ID), &tbbi);
 	m_kadLookupGraph->ShowWindow(bShow ? SW_SHOW : SW_HIDE);
 	m_contactListCtrl->ShowWindow(bShow ? SW_HIDE : SW_SHOW);
 	UpdateButtonTitle(bShow);
