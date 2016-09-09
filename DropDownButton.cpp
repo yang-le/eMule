@@ -94,18 +94,17 @@ BOOL CDropDownButton::Init(bool bSingleDropDownBtn, bool bWholeDropDown)
 
 void CDropDownButton::SetWindowText(LPCTSTR pszString)
 {
-	int cx = 0;
-	if (!m_bSingleDropDownBtn)
-		cx = GetBtnWidth(GetWindowLongPtr(m_hWnd, GWLP_ID));
+	LONG_PTR id = GetWindowLongPtr(m_hWnd, GWLP_ID);
+	int cx = m_bSingleDropDownBtn ? 0 : GetBtnWidth(id);
 
 	TBBUTTONINFO tbbi = {0};
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_TEXT;
 	tbbi.pszText = const_cast<LPTSTR>(pszString);
-	SetButtonInfo(GetWindowLongPtr(m_hWnd, GWLP_ID), &tbbi);
+	SetButtonInfo(id, &tbbi);
 
 	if (cx)
-		SetBtnWidth(GetWindowLongPtr(m_hWnd, GWLP_ID), cx);
+		SetBtnWidth(id, cx);
 }
 
 void CDropDownButton::SetIcon(LPCTSTR pszResourceID)
@@ -160,14 +159,14 @@ void CDropDownButton::RecalcLayout(bool bForce)
 	// button style(s) and force the toolbar to resize and apply them again.
 	//
 	// TODO: Should be moved to CToolBarCtrlX
-	bool bDropDownBtn = (GetBtnStyle(GetWindowLongPtr(m_hWnd, GWLP_ID)) & BTNS_DROPDOWN) != 0;
-	if (bDropDownBtn)
-		RemoveBtnStyle(GetWindowLongPtr(m_hWnd, GWLP_ID), BTNS_DROPDOWN);
-	if (bDropDownBtn || bForce)
-	{
+	LONG_PTR id = GetWindowLongPtr(m_hWnd, GWLP_ID);
+	bool bDropDownBtn = (GetBtnStyle(id) & BTNS_DROPDOWN) != 0;
+	if (bDropDownBtn || bForce) {
+		if (bDropDownBtn)
+			RemoveBtnStyle(id, BTNS_DROPDOWN);
 		CToolBarCtrlX::RecalcLayout();
 		if (bDropDownBtn)
-			AddBtnStyle(GetWindowLongPtr(m_hWnd, GWLP_ID), BTNS_DROPDOWN);
+			AddBtnStyle(id, BTNS_DROPDOWN);
 	}
 }
 

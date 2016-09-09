@@ -1268,7 +1268,7 @@ void CHyperTextCtrl::UpdateSize(bool bRepaint){
 	if(m_bDontUpdateSizeInfo)
 		return;
 	m_bDontUpdateSizeInfo = true;
-	DWORD dwStyle = GetWindowLongPtr(m_hWnd,GWL_STYLE);
+	DWORD dwStyle = GetWindowLong(m_hWnd,GWL_STYLE);
 	bool vscrollneeded = false;
 
 	CClientDC dc(this);
@@ -1427,7 +1427,7 @@ void CHyperTextCtrl::UpdateSize(bool bRepaint){
 	dc.SelectObject(hOldFont);
 
 	// Update scroll bars
-	dwStyle = GetWindowLongPtr(m_hWnd,GWL_STYLE);
+	dwStyle = GetWindowLong(m_hWnd,GWL_STYLE);
 	if (check_bits(dwStyle, HTC_AUTO_SCROLL_BARS)){
 		if (vscrollneeded){
 			if (!vscrollon)
@@ -1478,7 +1478,7 @@ void CHyperTextCtrl::UpdateSize(bool bRepaint){
 }
 
 void CHyperTextCtrl::UpdateFonts(){
-	DWORD dwStyle = GetWindowLongPtr(m_hWnd,GWL_STYLE);
+	DWORD dwStyle = GetWindowLong(m_hWnd,GWL_STYLE);
 	m_LinksFont.DeleteObject();
 	m_HoverFont.DeleteObject();
 
@@ -1497,7 +1497,7 @@ void CHyperTextCtrl::UpdateFonts(){
 void CHyperTextCtrl::UpdateVisLines()
 {
 	RestoreLink();
-	DWORD dwStyle = ::GetWindowLongPtr(m_hWnd,GWL_STYLE);
+	DWORD dwStyle = ::GetWindowLong(m_hWnd,GWL_STYLE);
 	int id = 1;
 	if(check_bits(dwStyle, HTC_ENABLE_TOOLTIPS))
 	{

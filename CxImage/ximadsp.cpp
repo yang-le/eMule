@@ -2536,7 +2536,7 @@ bool CxImage::GaussianBlur(float radius /*= 1.0f*/, CxImage* iDst /*= 0*/)
 	double dbScaler = 50.0f/head.biHeight;
 
 	// blur the rows
-    for (y=0;y<head.biHeight;y++)
+	for (y=0;y<head.biHeight;y++)
 	{
 		if (info.nEscape) break;
 		info.nProgress = (int32_t)(y*dbScaler);
@@ -2554,8 +2554,8 @@ bool CxImage::GaussianBlur(float radius /*= 1.0f*/, CxImage* iDst /*= 0*/)
 	CImageIterator itDst(&tmp_y);
 
 	// blur the cols
-    uint8_t* cur_col = (uint8_t*)malloc(bypp*head.biHeight);
-    uint8_t* dest_col = (uint8_t*)malloc(bypp*head.biHeight);
+	uint8_t* cur_col = (uint8_t*)malloc(bypp*head.biHeight);
+	uint8_t* dest_col = (uint8_t*)malloc(bypp*head.biHeight);
 
 	dbScaler = 50.0f/head.biWidth;
 
@@ -2656,6 +2656,8 @@ bool CxImage::SelectiveBlur(float radius, uint8_t threshold, CxImage* iDst)
 	ymin = Tmp.info.rSelectionBox.bottom;
 	ymax = Tmp.info.rSelectionBox.top;
 
+	uint8_t thresh_dw = (uint8_t)max(0, (int32_t)(128 - threshold));
+	uint8_t thresh_up = (uint8_t)min(255, (int32_t)(128 + threshold));
 	//modify the selection where the difference mask is over the threshold
 	for(int32_t y=ymin; y<ymax; y++){
 		info.nProgress = (int32_t)(100*(y-ymin)/(ymax-ymin));
@@ -2838,14 +2840,15 @@ bool CxImage::Lut(uint8_t* pLut)
 		}
 #if CXIMAGE_SUPPORT_SELECTION
 	} else if (pSelection && (head.biBitCount==8) && IsGrayScale()){
-		int32_t xmin,xmax,ymin,ymax;
-		xmin = info.rSelectionBox.left; xmax = info.rSelectionBox.right;
-		ymin = info.rSelectionBox.bottom; ymax = info.rSelectionBox.top;
+		int32_t xmin = info.rSelectionBox.left;
+		int32_t xmax = info.rSelectionBox.right;
+		int32_t ymin = info.rSelectionBox.bottom;
+		int32_t ymax = info.rSelectionBox.top;
 
 		if (xmin==xmax || ymin==ymax)
 			return false;
 
-		dbScaler = 100.0/(ymax-ymin);
+		double dbScaler = 100.0/(ymax-ymin);
 		for(int32_t y=ymin; y<ymax; y++){
 			info.nProgress = (int32_t)((y-ymin)*dbScaler);
 			for(int32_t x=xmin; x<xmax; x++){

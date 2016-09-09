@@ -229,9 +229,9 @@ bool CxImageMNG::Decode(CxFile *hFile)
 
 		// read in the image
 		info.nNumFrames=0;
-		int32_t retval=MNG_NOERROR;
+//		int32_t retval=MNG_NOERROR;
 
-		retval = mng_readdisplay(hmng);
+		int32_t retval = mng_readdisplay(hmng);
 
 		if (retval != MNG_NOERROR && retval != MNG_NEEDTIMERWAIT){
 			mng_store_error(hmng,retval,0,0);

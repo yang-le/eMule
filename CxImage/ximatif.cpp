@@ -370,10 +370,10 @@ bool CxImageTIF::Decode(CxFile * hFile)
 					if (bits16)	{							// + VK +
 #ifdef FIX_16BPP_DARKIMG
 						int32_t the_shift;
-						uint8_t hi_byte, hi_max=0;
+						uint8_t hi_max=0;
 						uint32_t xi;
 						for (xi=0;xi<(uint32)line;xi++) {
-							hi_byte = bits16[xi*2+offset16+1];
+							uint8_t hi_byte = bits16[xi*2+offset16+1];
 							if(hi_byte>hi_max)
 								hi_max = hi_byte;
 						}
@@ -442,28 +442,26 @@ bool CxImageTIF::Decode(CxFile * hFile)
 					uint32 ii=0;
 					int32_t yi=height-ys-nrow+y;
 					RGBQUAD c;
-					int32_t l,a,b,bitsoffset;
-					double p,cx,cy,cz,cr,cg,cb;
 					while (ii</*line*/width){		// * VK
-						bitsoffset = ii*samplesperpixel+offset;
-						l=bits[bitsoffset];
-						a=bits[bitsoffset+1];
-						b=bits[bitsoffset+2];
+						int32_t bitsoffset = ii*samplesperpixel+offset;
+						int32_t l = bits[bitsoffset];
+						int32_t a = bits[bitsoffset+1];
+						int32_t b = bits[bitsoffset+2];
 						if (a>127) a-=256;
 						if (b>127) b-=256;
 						// lab to xyz
-						p = (l/2.55 + 16) / 116.0;
-						cx = pow( p + a * 0.002, 3);
-						cy = pow( p, 3);
-						cz = pow( p - b * 0.005, 3);
+						double p = (l/2.55 + 16) / 116.0;
+						double cx = pow( p + a * 0.002, 3);
+						double cy = pow( p, 3);
+						double cz = pow( p - b * 0.005, 3);
 						// white point
 						cx*=0.95047;
 						//cy*=1.000;
 						cz*=1.0883;
 						// xyz to rgb
-						cr =  3.240479 * cx - 1.537150 * cy - 0.498535 * cz;
-						cg = -0.969256 * cx + 1.875992 * cy + 0.041556 * cz;
-						cb =  0.055648 * cx - 0.204043 * cy + 1.057311 * cz;
+						double cr =  3.240479 * cx - 1.537150 * cy - 0.498535 * cz;
+						double cg = -0.969256 * cx + 1.875992 * cy + 0.041556 * cz;
+						double cb =  0.055648 * cx - 0.204043 * cy + 1.057311 * cz;
 
 						if ( cr > 0.00304 ) cr = 1.055 * pow(cr,0.41667) - 0.055;
 							else            cr = 12.92 * cr;
@@ -694,10 +692,9 @@ bool CxImageTIF::EncodeBody(TIFF *m_tif, bool multipage, int32_t page, int32_t p
 	//prepare the palette struct
 	RGBQUAD pal[256];
 	if (GetPalette()){
-		uint8_t b;
 		memcpy(pal,GetPalette(),GetPaletteSize());
 		for(uint16_t a=0;a<head.biClrUsed;a++){	//swap blue and red components
-			b=pal[a].rgbBlue; pal[a].rgbBlue=pal[a].rgbRed; pal[a].rgbRed=b;
+			uint8_t b = pal[a].rgbBlue; pal[a].rgbBlue=pal[a].rgbRed; pal[a].rgbRed=b;
 		}
 	}
 
@@ -785,14 +782,13 @@ bool CxImageTIF::EncodeBody(TIFF *m_tif, bool multipage, int32_t page, int32_t p
 
 	// read the DIB lines from bottom to top and save them in the TIF
 
-	uint8_t *bits;
 	switch(bitcount) {				
 		case 1 :
 		case 4 :
 		case 8 :
 		{
 			if (samplesperpixel==1){
-				bits = (uint8_t*)malloc(info.dwEffWidth);
+				uint8_t *bits = (uint8_t*)malloc(info.dwEffWidth);
 				if (!bits) return false;
 				for (y = 0; y < height; y++) {
 					memcpy(bits,info.pImage + (height - y - 1)*info.dwEffWidth,info.dwEffWidth);
@@ -805,7 +801,7 @@ bool CxImageTIF::EncodeBody(TIFF *m_tif, bool multipage, int32_t page, int32_t p
 			}
 #if CXIMAGE_SUPPORT_ALPHA
 			else { //8bpp + alpha layer
-				bits = (uint8_t*)malloc(2*width);
+				uint8_t *bits = (uint8_t*)malloc(2*width);
 				if (!bits) return false;
 				for (y = 0; y < height; y++) {
 					for (x=0;x<width;x++){

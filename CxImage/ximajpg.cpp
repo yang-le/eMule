@@ -33,7 +33,7 @@ static void
 ima_jpeg_error_exit (j_common_ptr cinfo)
 {
 	/* cinfo->err really points to a my_error_mgr struct, so coerce pointer */
-	jpg_error_ptr myerr = (jpg_error_ptr) cinfo->err;
+	jpg_error_ptr myerr = static_cast<jpg_error_ptr>(cinfo->err);
 	/* Create the message */
 	myerr->pub.format_message (cinfo, myerr->buffer);
 	/* Send it to stderr, adding a newline */

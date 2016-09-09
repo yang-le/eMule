@@ -595,14 +595,11 @@ void CKademliaWnd::ShowLookupGraph(bool bShow)
 void CKademliaWnd::UpdateButtonTitle(bool bLookupGraph)
 {
 	CString strText;
-	if (bLookupGraph)
-	{
+	if (bLookupGraph) {
+		strText = GetResString(IDS_LOOKUPGRAPH);
 		if (m_kadLookupGraph->HasLookup())
-			strText.Format(_T("%s (%s)"), (LPCTSTR)GetResString(IDS_LOOKUPGRAPH), (LPCTSTR)m_kadLookupGraph->GetCurrentLookupTitle());
-		else
-			strText =  GetResString(IDS_LOOKUPGRAPH);
-	}
-	else
+			strText += _T(" (") + m_kadLookupGraph->GetCurrentLookupTitle() + _T(")");
+	} else
 		strText.Format(_T("%s (%i)"), (LPCTSTR)GetResString(IDS_KADCONTACTLAB), m_contactListCtrl->GetItemCount());
 	m_pbtnWnd->SetWindowText(strText);
 }

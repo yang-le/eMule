@@ -324,7 +324,7 @@ bool CxImage::RotateLeft(CxImage* iDst)
 	if (SelectionIsValid()) imgDest.SelectionCreate();
 #endif
 
-	int32_t x,x2,y;
+	int32_t x,y;
 
 	// Speedy rotate for BW images <Robert Abram>
 	if (head.biBitCount == 1) {
@@ -359,7 +359,7 @@ bool CxImage::RotateLeft(CxImage* iDst)
 #if CXIMAGE_SUPPORT_ALPHA
 		if (AlphaIsValid()) {
 			for (x = 0; x < newWidth; x++){
-				x2=newWidth-x-1;
+				int32_t x2 = newWidth-x-1;
 				for (y = 0; y < newHeight; y++){
 					imgDest.AlphaSet(x,y,BlindAlphaGet(y, x2));
 				}//for y
@@ -374,7 +374,7 @@ bool CxImage::RotateLeft(CxImage* iDst)
 			imgDest.info.rSelectionBox.bottom = info.rSelectionBox.left;
 			imgDest.info.rSelectionBox.top = info.rSelectionBox.right;
 			for (x = 0; x < newWidth; x++){
-				x2=newWidth-x-1;
+				int32_t x2 = newWidth-x-1;
 				for (y = 0; y < newHeight; y++){
 					imgDest.SelectionSet(x,y,BlindSelectionGet(y, x2));
 				}//for y
@@ -399,7 +399,7 @@ bool CxImage::RotateLeft(CxImage* iDst)
 					//RGB24 optimized pixel access:
 					for (x = xs; x < min(newWidth, xs+RBLOCK); x++){    //do rotation
 						info.nProgress = (int32_t)(100*x/newWidth);
-						x2=newWidth-x-1;
+						int32_t x2 = newWidth-x-1;
 						dstPtr = (uint8_t*) imgDest.BlindGetPixelPointer(x,ys);
 						srcPtr = (uint8_t*) BlindGetPixelPointer(ys, x2);
 						for (y = ys; y < min(newHeight, ys+RBLOCK); y++){
@@ -415,7 +415,7 @@ bool CxImage::RotateLeft(CxImage* iDst)
 					//anything else than 24bpp (and 1bpp): palette
 					for (x = xs; x < min(newWidth, xs+RBLOCK); x++){
 						info.nProgress = (int32_t)(100*x/newWidth); //<Anatoly Ivasyuk>
-						x2=newWidth-x-1;
+						int32_t x2 = newWidth-x-1;
 						for (y = ys; y < min(newHeight, ys+RBLOCK); y++){
 							imgDest.SetPixelIndex(x, y, BlindGetPixelIndex(y, x2));
 						}//for y
@@ -424,7 +424,7 @@ bool CxImage::RotateLeft(CxImage* iDst)
 #if CXIMAGE_SUPPORT_ALPHA
 				if (AlphaIsValid()) {
 					for (x = xs; x < min(newWidth, xs+RBLOCK); x++){
-						x2=newWidth-x-1;
+						int32_t x2 = newWidth-x-1;
 						for (y = ys; y < min(newHeight, ys+RBLOCK); y++){
 							imgDest.AlphaSet(x,y,BlindAlphaGet(y, x2));
 						}//for y
@@ -439,7 +439,7 @@ bool CxImage::RotateLeft(CxImage* iDst)
 					imgDest.info.rSelectionBox.bottom = info.rSelectionBox.left;
 					imgDest.info.rSelectionBox.top = info.rSelectionBox.right;
 					for (x = xs; x < min(newWidth, xs+RBLOCK); x++){
-						x2=newWidth-x-1;
+						int32_t x2 = newWidth-x-1;
 						for (y = ys; y < min(newHeight, ys+RBLOCK); y++){
 							imgDest.SelectionSet(x,y,BlindSelectionGet(y, x2));
 						}//for y
@@ -477,7 +477,7 @@ bool CxImage::RotateRight(CxImage* iDst)
 	if (SelectionIsValid()) imgDest.SelectionCreate();
 #endif
 
-	int32_t x,y,y2;
+	int32_t x, y;
 	// Speedy rotate for BW images <Robert Abram>
 	if (head.biBitCount == 1) {
 
@@ -510,7 +510,7 @@ bool CxImage::RotateRight(CxImage* iDst)
 #if CXIMAGE_SUPPORT_ALPHA
 		if (AlphaIsValid()){
 			for (y = 0; y < newHeight; y++){
-				y2=newHeight-y-1;
+				int32_t y2 = newHeight-y-1;
 				for (x = 0; x < newWidth; x++){
 					imgDest.AlphaSet(x,y,BlindAlphaGet(y2, x));
 				}
@@ -525,7 +525,7 @@ bool CxImage::RotateRight(CxImage* iDst)
 			imgDest.info.rSelectionBox.bottom = newHeight-info.rSelectionBox.right;
 			imgDest.info.rSelectionBox.top = newHeight-info.rSelectionBox.left;
 			for (y = 0; y < newHeight; y++){
-				y2=newHeight-y-1;
+				int32_t y2 = newHeight-y-1;
 				for (x = 0; x < newWidth; x++){
 					imgDest.SelectionSet(x,y,BlindSelectionGet(y2, x));
 				}
@@ -543,7 +543,7 @@ bool CxImage::RotateRight(CxImage* iDst)
 					//RGB24 optimized pixel access:
 					for (y = ys; y < min(newHeight, ys+RBLOCK); y++){
 						info.nProgress = (int32_t)(100*y/newHeight); //<Anatoly Ivasyuk>
-						y2=newHeight-y-1;
+						int32_t y2 = newHeight-y-1;
 						dstPtr = (uint8_t*) imgDest.BlindGetPixelPointer(xs,y);
 						srcPtr = (uint8_t*) BlindGetPixelPointer(y2, xs);
 						for (x = xs; x < min(newWidth, xs+RBLOCK); x++){
@@ -559,7 +559,7 @@ bool CxImage::RotateRight(CxImage* iDst)
 					//anything else than BW & RGB24: palette
 					for (y = ys; y < min(newHeight, ys+RBLOCK); y++){
 						info.nProgress = (int32_t)(100*y/newHeight); //<Anatoly Ivasyuk>
-						y2=newHeight-y-1;
+						int32_t y2 = newHeight-y-1;
 						for (x = xs; x < min(newWidth, xs+RBLOCK); x++){
 							imgDest.SetPixelIndex(x, y, BlindGetPixelIndex(y2, x));
 						}//for x
@@ -568,7 +568,7 @@ bool CxImage::RotateRight(CxImage* iDst)
 #if CXIMAGE_SUPPORT_ALPHA
 				if (AlphaIsValid()){
 					for (y = ys; y < min(newHeight, ys+RBLOCK); y++){
-						y2=newHeight-y-1;
+						int32_t y2 = newHeight-y-1;
 						for (x = xs; x < min(newWidth, xs+RBLOCK); x++){
 							imgDest.AlphaSet(x,y,BlindAlphaGet(y2, x));
 						}//for x
@@ -583,7 +583,7 @@ bool CxImage::RotateRight(CxImage* iDst)
 					imgDest.info.rSelectionBox.bottom = newHeight-info.rSelectionBox.right;
 					imgDest.info.rSelectionBox.top = newHeight-info.rSelectionBox.left;
 					for (y = ys; y < min(newHeight, ys+RBLOCK); y++){
-						y2=newHeight-y-1;
+						int32_t y2 = newHeight-y-1;
 						for (x = xs; x < min(newWidth, xs+RBLOCK); x++){
 							imgDest.SelectionSet(x,y,BlindSelectionGet(y2, x));
 						}//for x

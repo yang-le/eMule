@@ -3295,7 +3295,10 @@ BOOL CPartFile::PerformFileComplete()
 	free(newfilename);
 
 	bool bFirstTry = true;
-	for (DWORD dwMoveResult = ~ERROR_SUCCESS; dwMoveResult != ERROR_SUCCESS; dwMoveResult = MoveCompletedPartFile(strPartfilename, strNewname, this)) {
+	for (;;) {
+		DWORD dwMoveResult = MoveCompletedPartFile(strPartfilename, strNewname, this);
+		if (dwMoveResult == ERROR_SUCCESS)
+			break;
 		if (dwMoveResult != ERROR_SHARING_VIOLATION || thePrefs.GetWindowsVersion() >= _WINVER_2K_ || !bFirstTry) {
 			theApp.QueueLogLine(true, GetResString(IDS_ERR_COMPLETIONFAILED) + _T(" - \"%s\": ") + GetErrorMessage(dwMoveResult)
 				, (LPCTSTR)GetFileName(), (LPCTSTR)strNewname);

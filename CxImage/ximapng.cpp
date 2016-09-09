@@ -490,7 +490,9 @@ bool CxImagePNG::Encode(CxFile *hFile)
 	for (int32_t pass = 0; pass < num_pass; pass++){
 		//write image
 		iter.Upset();
+#if CXIMAGE_SUPPORT_ALPHA	// <vho>
 		int32_t ay=head.biHeight-1;
+#endif //CXIMAGE_SUPPORT_ALPHA	// <vho>
 		do	{
 #if CXIMAGE_SUPPORT_ALPHA	// <vho>
 			RGBQUAD c;

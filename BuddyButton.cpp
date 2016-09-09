@@ -45,7 +45,7 @@ static LRESULT CALLBACK BuddyButtonSubClassedProc(HWND hWnd, UINT uMessage, WPAR
 	switch (uMessage)
 	{
 		case WM_NCDESTROY:
-			SetWindowLong(hWnd, GWL_WNDPROC, (LONG)pfnOldWndProc);
+			SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)pfnOldWndProc);
 			VERIFY( RemoveProp(hWnd, s_szPropOldWndProc) != NULL );
 			VERIFY( RemoveProp(hWnd, s_szPropBuddyData) != NULL );
 			delete pBuddyData;
@@ -80,12 +80,12 @@ static LRESULT CALLBACK BuddyButtonSubClassedProc(HWND hWnd, UINT uMessage, WPAR
 
 void AddBuddyButton(HWND hwndEdit, HWND hwndButton)
 {
-	FARPROC lpfnOldWndProc = (FARPROC)SetWindowLong(hwndEdit, GWL_WNDPROC, (LONG)BuddyButtonSubClassedProc);
+	FARPROC lpfnOldWndProc = (FARPROC)SetWindowLongPtr(hwndEdit, GWLP_WNDPROC, (LONG_PTR)BuddyButtonSubClassedProc);
 	ASSERT( lpfnOldWndProc != NULL );
 	VERIFY( SetProp(hwndEdit, s_szPropOldWndProc, (HANDLE)lpfnOldWndProc) );
 
 	// Remove the 'flat' style which my have been set by 'InitWindowStyles'
-	DWORD dwButtonStyle = (DWORD)GetWindowLongPtr(hwndButton, GWL_STYLE);
+	DWORD dwButtonStyle = (DWORD)GetWindowLong(hwndButton, GWL_STYLE);
 	if (dwButtonStyle & BS_FLAT)
 		SetWindowLong(hwndButton, GWL_STYLE, dwButtonStyle & ~BS_FLAT);
 
@@ -116,8 +116,8 @@ bool InitAttachedBrowseButton(HWND hwndButton, HICON &ricoBrowse)
 			return false;
 	}
 
-	DWORD dwStyle = (DWORD)GetWindowLongPtr(hwndButton, GWL_STYLE);
-	SetWindowLongPtr(hwndButton, GWL_STYLE, dwStyle | BS_ICON);
+	DWORD dwStyle = (DWORD)GetWindowLong(hwndButton, GWL_STYLE);
+	SetWindowLong(hwndButton, GWL_STYLE, dwStyle | BS_ICON);
 	SendMessage(hwndButton, BM_SETIMAGE, IMAGE_ICON, (LPARAM)ricoBrowse);
 	return true;
 }

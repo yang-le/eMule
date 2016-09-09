@@ -75,7 +75,7 @@ bool CxImage::SelectionDelete()
 /**
  * Checks if the coordinates are inside the selection.
  */
-bool CxImage::SelectionIsInside(int32_t x, int32_t y)
+bool CxImage::SelectionIsInside(int32_t x, int32_t y) const
 {
 	if (IsInside(x,y)){
 		if (pSelection==NULL) return true;
@@ -88,7 +88,7 @@ bool CxImage::SelectionIsInside(int32_t x, int32_t y)
  * Checks if the coordinates are inside the selection.
  * "blind" version assumes that (x,y) is inside to the image.
  */
-bool CxImage::BlindSelectionIsInside(int32_t x, int32_t y)
+bool CxImage::BlindSelectionIsInside(int32_t x, int32_t y) const
 {
 #ifdef _DEBUG
 	if (!IsInside(x,y))
@@ -380,9 +380,8 @@ bool CxImage::SelectionAddPolygon(POINT *points, int32_t npoints, uint8_t level)
 	}
 
 	//transfer the region
-	int32_t yoffset;
 	for (y=localbox.bottom; y<=localbox.top; y++){
-		yoffset = y * head.biWidth;
+		int32_t yoffset = y * head.biWidth;
 		for (x=localbox.left; x<=localbox.right; x++)
 			if (plocal[x + yoffset]!=1) pSelection[x + yoffset]=level;
 	}
@@ -522,7 +521,7 @@ void CxImage::SelectionSet(const int32_t x,const int32_t y,const uint8_t level)
 /**
  * Gets the Selection level for a single pixel
  */
-uint8_t CxImage::SelectionGet(const int32_t x,const int32_t y)
+uint8_t CxImage::SelectionGet(const int32_t x,const int32_t y) const
 {
 	if (pSelection && IsInside(x,y)) return pSelection[x+y*head.biWidth];
 	return 0;
@@ -584,7 +583,7 @@ void CxImage::SelectionRebuildBox()
  * Gets the Selection level for a single pixel
  * "blind" version assumes that (x,y) is inside to the image.
  */
-uint8_t CxImage::BlindSelectionGet(const int32_t x,const int32_t y)
+uint8_t CxImage::BlindSelectionGet(const int32_t x,const int32_t y) const
 {
 #ifdef _DEBUG
 	if (!IsInside(x,y) || (pSelection==0))

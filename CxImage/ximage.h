@@ -713,11 +713,11 @@ public:
 	bool SelectionAddColor(RGBQUAD c, uint8_t level = 255);
 	bool SelectionAddPixel(int32_t x, int32_t y, uint8_t level = 255);
 	bool SelectionCopy(CxImage &from);
-	bool SelectionIsInside(int32_t x, int32_t y);
+	bool SelectionIsInside(int32_t x, int32_t y) const;
 	void SelectionGetBox(RECT& r);
 	bool SelectionToHRGN(HRGN& region);
 	bool SelectionSplit(CxImage *dest);
-	uint8_t SelectionGet(const int32_t x,const int32_t y);
+	uint8_t SelectionGet(const int32_t x,const int32_t y) const;
 	bool SelectionSet(CxImage &from);
 	void SelectionRebuildBox();
 	uint8_t* SelectionGetPointer(const int32_t x = 0,const int32_t y = 0);
@@ -725,8 +725,8 @@ public:
 
 protected:
 /** \addtogroup Protected */ //@{
-	bool BlindSelectionIsInside(int32_t x, int32_t y);
-	uint8_t BlindSelectionGet(const int32_t x,const int32_t y);
+	bool BlindSelectionIsInside(int32_t x, int32_t y) const;
+	uint8_t BlindSelectionGet(const int32_t x,const int32_t y) const;
 	void SelectionSet(const int32_t x,const int32_t y,const uint8_t level);
 
 public:
