@@ -35,8 +35,8 @@ public:
     bool RemoveFromStandardList(ThrottledFileSocket* socket);
 
     void QueueForSendingControlPacket(ThrottledControlSocket* socket, const bool hasSent = false); // ZZ:UploadBandWithThrottler (UDP)
-    void RemoveFromAllQueuesLocked(ThrottledControlSocket* socket) { RemoveFromAllQueues(socket, true); }; // ZZ:UploadBandWithThrottler (UDP)
     void RemoveFromAllQueues(ThrottledFileSocket* socket);
+	void RemoveFromAllQueuesLocked(ThrottledControlSocket* socket); // ZZ:UploadBandWithThrottler (UDP)
 	void NewUploadDataAvailable();
 	void SocketAvailable();
 	HANDLE GetSocketAvailableEvent()			{ return m_eventSocketAvailable; }
@@ -49,7 +49,7 @@ private:
     static UINT RunProc(LPVOID pParam);
     UINT RunInternal();
 
-    void RemoveFromAllQueues(ThrottledControlSocket* socket, bool lock); // ZZ:UploadBandWithThrottler (UDP)
+    void RemoveFromAllQueuesNoLock(ThrottledControlSocket* socket); // ZZ:UploadBandWithThrottler (UDP)
     bool RemoveFromStandardListNoLock(ThrottledFileSocket* socket);
 
     uint32 CalculateChangeDelta(uint32 numberOfConsecutiveChanges) const;

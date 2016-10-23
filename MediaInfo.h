@@ -117,30 +117,27 @@ struct SMediaInfo
 {
 	SMediaInfo()
 		: ulFileSize(0ull)
+		, strFileFormat()
+		, strMimeType()
+		, strTitle()
+		, strAuthor()
+		, strAlbum()
+		, strVideoFormat()
+		, strAudioFormat()
+		, fFileLengthSec(0.0)
+		, bFileLengthEstimated(false)
+		, iVideoStreams(0)
+		, fVideoLengthSec(0.0)
+		, bVideoLengthEstimated(false)
+		, fVideoFrameRate(0.0)
+		, fVideoAspectRatio(0.0)
+		, iAudioStreams(0)
+		, fAudioLengthSec(0.0)
+		, bAudioLengthEstimated(false)
+		, bOutputFileName(true)
 	{
-		(void)strFileFormat;
-		(void)strMimeType;
-		fFileLengthSec = 0.0;
-		bFileLengthEstimated = false;
-		(void)strTitle;
-		(void)strAuthor;
-		(void)strAlbum;
-
-		iVideoStreams = 0;
-		(void)strVideoFormat;
 		memset(&video, 0, sizeof video);
-		fVideoLengthSec = 0.0;
-		bVideoLengthEstimated = false;
-		fVideoFrameRate = 0.0;
-		fVideoAspectRatio = 0.0;
-
-		iAudioStreams = 0;
-		(void)strAudioFormat;
 		memset(&audio, 0, sizeof audio);
-		fAudioLengthSec = 0.0;
-		bAudioLengthEstimated = false;
-
-		bOutputFileName = true;
 	}
 
 	SMediaInfo& operator=(const SMediaInfo& strm)
@@ -172,6 +169,32 @@ struct SMediaInfo
 		bOutputFileName = strm.bOutputFileName;
 		return *this;
 	}
+
+	SMediaInfo(const SMediaInfo& strm)
+		: strFileFormat(strm.strFileFormat)
+		, strMimeType(strm.strMimeType)
+		, ulFileSize(strm.ulFileSize)
+		, fFileLengthSec(strm.fFileLengthSec)
+		, bFileLengthEstimated(strm.bFileLengthEstimated)
+		, strTitle(strm.strTitle)
+		, strAuthor(strm.strAuthor)
+		, strAlbum(strm.strAlbum)
+		, iVideoStreams(strm.iVideoStreams)
+		, strVideoFormat(strm.strVideoFormat)
+		, video(strm.video)
+		, fVideoLengthSec(strm.fVideoLengthSec)
+		, bVideoLengthEstimated(strm.bVideoLengthEstimated)
+		, fVideoFrameRate(strm.fVideoFrameRate)
+		, fVideoAspectRatio(strm.fVideoAspectRatio)
+		, iAudioStreams(strm.iAudioStreams)
+		, strAudioFormat(strm.strAudioFormat)
+		, audio(strm.audio)
+		, fAudioLengthSec(strm.fAudioLengthSec)
+		, bAudioLengthEstimated(strm.bAudioLengthEstimated)
+		, strAudioLanguage(strm.strAudioLanguage)
+		, strFileName(strm.strFileName)
+		, bOutputFileName(strm.bOutputFileName)
+	{}
 
 	void OutputFileName()
 	{

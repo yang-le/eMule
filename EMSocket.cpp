@@ -1331,16 +1331,14 @@ bool CEMSocket::IsBusyQuickCheck() const
 
 void CEMSocket::CleanUpOverlappedSendOperation(bool bCancelRequestFirst)
 {
-//sendLock must locked by the caller!
+//sendLock must be locked by the caller!
 	if (m_pPendingSendOperation != NULL) {
 		if (bCancelRequestFirst)
 			CancelIo((HANDLE)GetSocketHandle());
 		delete m_pPendingSendOperation;
 		m_pPendingSendOperation = NULL;
-		for (int i = 0; i < m_aBufferSend.GetCount(); ++i) {
-			WSABUF pDel = m_aBufferSend[i];
-			delete[] pDel.buf;
-		}
+		for (int i = 0; i < m_aBufferSend.GetCount(); ++i)
+			delete[] m_aBufferSend[i].buf;
 		m_aBufferSend.RemoveAll();
 	}
 }

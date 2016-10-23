@@ -17,6 +17,7 @@
 #pragma once
 #include "BarShader.h"
 #include "ClientStateDefs.h"
+#include "opcodes.h"
 
 class CClientReqSocket;
 class CPeerCacheDownSocket;
@@ -188,8 +189,8 @@ public:
 	void			SendPublicIPRequest();
 	uint8			GetKadVersion()	const							{ return m_byKadVersion; }
 	bool			SendBuddyPingPong()								{ return m_dwLastBuddyPingPongTime < ::GetTickCount(); }
-	bool			AllowIncomeingBuddyPingPong()					{ return m_dwLastBuddyPingPongTime < (::GetTickCount()-(3*60*1000)); }
-	void			SetLastBuddyPingPongTime()						{ m_dwLastBuddyPingPongTime = (::GetTickCount()+(10*60*1000)); }
+	bool			AllowIncomeingBuddyPingPong()					{ return m_dwLastBuddyPingPongTime < (::GetTickCount()-MIN2MS(3)); }
+	void			SetLastBuddyPingPongTime()						{ m_dwLastBuddyPingPongTime = ::GetTickCount()+MIN2MS(10); }
 	void			ProcessFirewallCheckUDPRequest(CSafeMemFile* data);
 	void			SendSharedDirectories();
 
@@ -690,7 +691,7 @@ protected:
 	bool	DoSwap(CPartFile* SwapTo, bool bRemoveCompletely, LPCTSTR reason); // ZZ:DownloadManager
 	CMap<CPartFile*, CPartFile*, DWORD, DWORD> m_fileReaskTimes; // ZZ:DownloadManager (one resk timestamp for each file)
 	DWORD   m_dwLastTriedToConnect; // ZZ:DownloadManager (one resk timestamp for each file)
-	bool	RecentlySwappedForSourceExchange() { return ::GetTickCount()-lastSwapForSourceExchangeTick < 30*1000; } // ZZ:DownloadManager
+	bool	RecentlySwappedForSourceExchange() { return ::GetTickCount()-lastSwapForSourceExchangeTick < SEC2MS(30); } // ZZ:DownloadManager
 	void	SetSwapForSourceExchangeTick() { lastSwapForSourceExchangeTick = ::GetTickCount(); } // ZZ:DownloadManager
 };
 //#pragma pack()

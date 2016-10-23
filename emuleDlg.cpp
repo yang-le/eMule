@@ -667,9 +667,9 @@ void CemuleDlg::DoVersioncheck(bool manual) {
 		time_t tLast = safe_mktime(last.GetLocalTm(&tmTemp));
 		time_t tNow = safe_mktime(CTime::GetCurrentTime().GetLocalTm(&tmTemp));
 #ifndef _BETA
-		if ( (difftime(tNow,tLast) / 86400) < thePrefs.GetUpdateDays() ){
+		if ( (difftime(tNow,tLast) / DAY2S(1)) < thePrefs.GetUpdateDays() ){
 #else
-		if ( (difftime(tNow,tLast) / 86400) < 3 ){
+		if ( (difftime(tNow,tLast) / DAY2S(1)) < 3 ){
 #endif
 			return;
 		}
@@ -1049,14 +1049,14 @@ CString CemuleDlg::GetConnectionStateString()
 	else if (theApp.serverconnect->IsConnecting())
 		state = _T("eD2K:") + GetResString(IDS_CONNECTING);
 	else
-		state = _T("eD2K:") + GetResString(IDS_NOTCONNECTED);
+		state = _T("eD2K:") + GetResString(IDS_DISCONNECTED);
 
 	if (Kademlia::CKademlia::IsConnected())
 		state += _T("|Kad:") + GetResString(IDS_CONNECTED);
 	else if (Kademlia::CKademlia::IsRunning())
 		state += _T("|Kad:") + GetResString(IDS_CONNECTING);
 	else
-		state += _T("|Kad:") + GetResString(IDS_NOTCONNECTED);
+		state += _T("|Kad:") + GetResString(IDS_DISCONNECTED);
 	return state;
 }
 
@@ -3058,7 +3058,7 @@ void CemuleDlg::DestroySplash()
 	if (!thePrefs.IsFirstStart() && thePrefs.ShouldBetaNag())
 	{
 		thePrefs.SetDidBetaNagging();
-		AfxMessageBox(GetResString(IDS_BETANAG), MB_ICONINFORMATION | MB_OK, 0);
+		AfxMessageBox((UINT)IDS_BETANAG, MB_ICONINFORMATION | MB_OK, 0);
 	}
 #endif
 }

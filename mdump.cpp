@@ -96,6 +96,7 @@ LONG WINAPI CMiniDumper::TopLevelFilter(struct _EXCEPTION_POINTERS* pExceptionIn
 	{
 		if (pfnMiniDumpWriteDump)
 		{
+			time_t tNow = time(NULL); //fix time (of crash)
 			// Ask user if they want to save a dump file
 			// Do *NOT* localize that string (in fact, do not use MFC to load it)!
 			if (MessageBox(NULL, _T("eMule crashed :-(\r\n\r\nA diagnostic file can be created which will help the author to resolve this problem. This file will be saved on your Disk (and not sent).\r\n\r\nDo you want to create this file now?"), m_szAppName, MB_ICONSTOP | MB_YESNO) == IDYES)
@@ -111,7 +112,6 @@ LONG WINAPI CMiniDumper::TopLevelFilter(struct _EXCEPTION_POINTERS* pExceptionIn
 				szBaseName[_countof(szBaseName) - 1] = _T('\0');
 				size_t uBaseNameLen = _tcslen(szBaseName);
 
-				time_t tNow = time(NULL);
 				_tcsftime(szBaseName + uBaseNameLen, _countof(szBaseName) - uBaseNameLen, _T("_%Y%m%d-%H%M%S"), localtime(&tNow));
 				szBaseName[_countof(szBaseName) - 1] = _T('\0');
 

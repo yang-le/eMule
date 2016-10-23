@@ -181,8 +181,8 @@ void CTransferWnd::OnInitialUpdate()
 	UpdateTabToolTips();
 	m_tooltipCats->SetMargin(CRect(4, 4, 4, 4));
 	m_tooltipCats->SendMessage(TTM_SETMAXTIPWIDTH, 0, SHRT_MAX); // recognize \n chars!
-	m_tooltipCats->SetDelayTime(TTDT_AUTOPOP, 20000);
-	m_tooltipCats->SetDelayTime(TTDT_INITIAL, thePrefs.GetToolTipDelay()*1000);
+	m_tooltipCats->SetDelayTime(TTDT_AUTOPOP, SEC2MS(20));
+	m_tooltipCats->SetDelayTime(TTDT_INITIAL, SEC2MS(thePrefs.GetToolTipDelay()));
 	m_tooltipCats->Activate(TRUE);
 
 	VerifyCatTabSize();
@@ -1041,7 +1041,7 @@ BOOL CTransferWnd::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 			theApp.downloadqueue->SetCatStatus(rightclickindex,MP_STOP);
 			break;
 		case MP_CANCEL:
-			if (AfxMessageBox(GetResString(IDS_Q_CANCELDL),MB_ICONQUESTION|MB_YESNO) == IDYES)
+			if (AfxMessageBox((UINT)IDS_Q_CANCELDL, MB_ICONQUESTION|MB_YESNO, 0) == IDYES)
 				theApp.downloadqueue->SetCatStatus(rightclickindex,MP_CANCEL);
 			break;
 		case MP_RESUME:
@@ -1149,7 +1149,7 @@ void CTransferWnd::EditCatTabLabel(int index, CString newlabel)
 			newlabel.Append(_T("!"));
 
 		if (thePrefs.GetCatFilter(index)==18)
-			newlabel.Append( _T("\"") + thePrefs.GetCategory(index)->regexp + _T("\"") );
+			newlabel.Append( _T('\"') + thePrefs.GetCategory(index)->regexp + _T('\"') );
 		else
         	newlabel.Append( GetCatTitle(thePrefs.GetCatFilter(index)));
 

@@ -44,7 +44,8 @@ public:
 	explicit CIni(CIni const& rIni);
 	explicit CIni(CString const& rstrFileName);
 	CIni(CString const& rstrFileName, CString const& rstrSection);
-	virtual ~CIni();
+	virtual ~CIni() {};
+	CIni& operator=(CIni const& rIni);
 
 	void SetFileName(const CString& rstrFileName);
 	void SetSection(const CString& rstrSection);

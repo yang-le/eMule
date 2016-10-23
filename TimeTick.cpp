@@ -59,8 +59,7 @@ __int64 CTimeTick::GetPerformanceFrequency()
 
 	if (QueryPerformanceFrequency(&nPerformanceFrequency))
 		return nPerformanceFrequency.QuadPart;
-	else
-		return 0;
+	return 0;
 }
 
 float CTimeTick::GetTimeInMilliSeconds(__int64 nTime)

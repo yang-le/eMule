@@ -256,7 +256,7 @@ void CStatistics::UpdateConnectionStats(float uploadrate, float downloadrate)
 	if (theStats.serverConnectTime == 0)
 		time_thisServerDuration = 0;
 	else
-		time_thisServerDuration = (GetTickCount() - theStats.serverConnectTime) / 1000;
+		time_thisServerDuration = (GetTickCount() - theStats.serverConnectTime) / SEC2MS(1);
 }
 
 void CStatistics::RecordRate()
@@ -266,8 +266,8 @@ void CStatistics::RecordRate()
 
 	// Accurate datarate Calculation
 	uint32 stick = GetTickCount();
-	TransferredData newitemUP = {(UINT)theStats.sessionSentBytes, stick};
-	TransferredData newitemDN = {(UINT)theStats.sessionReceivedBytes, stick};
+	TransferredData newitemUP = {(uint32)theStats.sessionSentBytes, stick};
+	TransferredData newitemDN = {(uint32)theStats.sessionReceivedBytes, stick};
 
 	downrateHistory.push_front(newitemDN);
 	uprateHistory.push_front(newitemUP);

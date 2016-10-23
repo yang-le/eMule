@@ -79,6 +79,7 @@
       <MkTypLibCompatible>false</MkTypLibCompatible>
     </Midl>
     <ClCompile>
+      <AdditionalOptions>/Wall</AdditionalOptions>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>.;..;id3lib\include;$(VCInstallDir)atl\include;$(WindowsSdkDir_81)Include\um;$(WindowsSdkDir_81)Include\shared;$(WindowsSdkDir_81)Include\winnt;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;ID3LIB_LINKOPTION=1;MINIUPNP_STATICLIB;SUPPORT_LARGE_FILES;_DEBUG;XP_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -120,6 +121,7 @@
       <MkTypLibCompatible>false</MkTypLibCompatible>
     </Midl>
     <ClCompile>
+      <AdditionalOptions>/Wall</AdditionalOptions>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>.;..;id3lib\include;$(VCInstallDir)atl\include;$(WindowsSdkDir_81)Include\um;$(WindowsSdkDir_81)Include\shared;$(WindowsSdkDir_81)Include\winnt;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;ID3LIB_LINKOPTION=1;MINIUPNP_STATICLIB;SUPPORT_LARGE_FILES;_DEBUG;_BOOTSTRAPNODESDAT;XP_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -158,6 +160,7 @@
       <MkTypLibCompatible>false</MkTypLibCompatible>
     </Midl>
     <ClCompile>
+      <AdditionalOptions>/Wall</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>.;..;id3lib\include;$(VCInstallDir)atl\include;$(WindowsSdkDir_81)Include\um;$(WindowsSdkDir_81)Include\shared;$(WindowsSdkDir_81)Include\winnt;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;ID3LIB_LINKOPTION=1;MINIUPNP_STATICLIB;SUPPORT_LARGE_FILES;NDEBUG;XP_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>

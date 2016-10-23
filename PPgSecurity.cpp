@@ -240,7 +240,7 @@ void CPPgSecurity::OnReloadIPFilter()
 void CPPgSecurity::OnEditIPFilter()
 {
 	ShellExecute(NULL, _T("open"), thePrefs.GetTxtEditor(),
-		_T("\"") + thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + DFLT_IPFILTER_FILENAME _T("\""), NULL, SW_SHOW);
+		_T('\"') + thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + DFLT_IPFILTER_FILENAME + _T('\"'), NULL, SW_SHOW);
 }
 
 void CPPgSecurity::OnLoadIPFFromURL()
@@ -448,7 +448,7 @@ void CPPgSecurity::OnLoadIPFFromURL()
 			}
 			else
 			{
-				AfxMessageBox(GetResString(IDS_DWLIPFILTERFAILED), MB_ICONERROR);
+				AfxMessageBox((UINT)IDS_DWLIPFILTERFAILED, MB_ICONERROR, 0);
 			}
 		}
 	}
@@ -558,7 +558,7 @@ BOOL CPPgSecurity::OnHelpInfo(HELPINFO* /*pHelpInfo*/)
 void CPPgSecurity::OnBnClickedRunAsUser()
 {
 	if ( ((CButton*)GetDlgItem(IDC_RUNASUSER))->GetCheck() == BST_CHECKED){
-		if (AfxMessageBox(GetResString(IDS_RAU_WARNING),MB_OKCANCEL | MB_ICONINFORMATION,0) == IDCANCEL)
+		if (AfxMessageBox((UINT)IDS_RAU_WARNING, MB_OKCANCEL | MB_ICONINFORMATION, 0) == IDCANCEL)
 			((CButton*)GetDlgItem(IDC_RUNASUSER))->SetCheck(BST_UNCHECKED);
 	}
 	OnSettingsChange();

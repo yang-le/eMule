@@ -22,6 +22,7 @@
 #include "Preferences.h"
 #include "OtherFunctions.h"
 #include "UserMsgs.h"
+#include "opcodes.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -391,11 +392,11 @@ void COScopeCtrl::InvalidateCtrl(bool deleteGraph)
 		// Lines are always right aligned and the gap scales accordingly to the user horizontal scale.
 		// Intervals of 10 hours are marked with slightly stronger lines that go beyond the bottom border.
 		if (m_nXGrids > 0) {
-			int hourSize = (3600*m_rectPlot.Width())/(3600*m_nXGrids + m_nXPartial); // Size of an hour in pixels
+			int hourSize = HR2S(m_rectPlot.Width())/(HR2S(m_nXGrids) + m_nXPartial); // Size of an hour in pixels
 			int partialSize = m_rectPlot.Width() - hourSize*m_nXGrids;
 			int surplus = 0;
 			if (partialSize >= hourSize) {
-				partialSize = (hourSize*m_nXPartial)/3600; // real partial size
+				partialSize = (hourSize*m_nXPartial)/HR2S(1); // real partial size
 				surplus = m_rectPlot.Width() - hourSize*m_nXGrids - partialSize; // Pixel surplus
 			}
 

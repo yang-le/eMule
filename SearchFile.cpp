@@ -84,9 +84,9 @@ void ConvertED2KTag(CTag*& pTag)
 						UINT nMediaLength = 0;
 						UINT hour = 0, min = 0, sec = 0;
 						if (_stscanf(pTag->GetStr(), _T("%u : %u : %u"), &hour, &min, &sec) == 3)
-							nMediaLength = hour * 3600 + min * 60 + sec;
+							nMediaLength = HR2S(hour) + MIN2S(min) + sec;
 						else if (_stscanf(pTag->GetStr(), _T("%u : %u"), &min, &sec) == 2)
-							nMediaLength = min * 60 + sec;
+							nMediaLength = MIN2S(min) + sec;
 						else if (_stscanf(pTag->GetStr(), _T("%u"), &sec) == 1)
 							nMediaLength = sec;
 

@@ -412,7 +412,7 @@ void CServerWnd::OnBnClickedAddserver()
 	GetDlgItem(IDC_IPADDRESS)->GetWindowText(serveraddr);
 	serveraddr.Trim();
 	if (serveraddr.IsEmpty()) {
-		AfxMessageBox(GetResString(IDS_SRV_ADDR));
+		AfxMessageBox((UINT)IDS_SRV_ADDR, MB_OK, 0);
 		return;
 	}
 
@@ -440,20 +440,20 @@ void CServerWnd::OnBnClickedAddserver()
 	}
 	else{
 		if (!GetDlgItem(IDC_SPORT)->GetWindowTextLength()){
-			AfxMessageBox(GetResString(IDS_SRV_PORT));
+			AfxMessageBox((UINT)IDS_SRV_PORT, MB_OK, 0);
 			return;
 		}
 
 		BOOL bTranslated = FALSE;
 		uPort = (uint16)GetDlgItemInt(IDC_SPORT, &bTranslated, FALSE);
 		if (!bTranslated){
-			AfxMessageBox(GetResString(IDS_SRV_PORT));
+			AfxMessageBox((UINT)IDS_SRV_PORT, MB_OK, 0);
 			return;
 		}
 	}
 
 	if (serveraddr.IsEmpty() || uPort == 0){
-		AfxMessageBox(GetResString(IDS_SRV_ADDR));
+		AfxMessageBox((UINT)IDS_SRV_ADDR, MB_OK, 0);
 		return;
 	}
 
@@ -529,7 +529,7 @@ bool CServerWnd::AddServer(uint16 nPort, const CString& strAddress, CString strN
 		else
 		{
 			if (bShowErrorMB)
-				AfxMessageBox(GetResString(IDS_SRV_NOTADDED));
+				AfxMessageBox((UINT)IDS_SRV_NOTADDED, MB_OK, 0);
 		}
 		delete toadd;
 		return false;

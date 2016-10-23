@@ -136,7 +136,7 @@ void CPPgServer::Localize(void)
 
 void CPPgServer::OnBnClickedEditadr()
 {
-	ShellExecute(NULL, _T("open"), thePrefs.GetTxtEditor(), _T("\"") + thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("addresses.dat\""), NULL, SW_SHOW); 
+	ShellExecute(NULL, _T("open"), thePrefs.GetTxtEditor(), _T('\"') + thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("addresses.dat\""), NULL, SW_SHOW); 
 }
 
 void CPPgServer::OnHelp()

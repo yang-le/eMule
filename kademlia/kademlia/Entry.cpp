@@ -65,9 +65,9 @@ CEntry::~CEntry()
 CEntry* CEntry::Copy()
 {
 	CEntry* pEntry = new CEntry();
-	for (POSITION pos = m_listFileNames.GetHeadPosition(); pos != NULL;){
+	for (POSITION pos = m_listFileNames.GetHeadPosition(); pos != NULL;)
 		pEntry->m_listFileNames.AddTail(m_listFileNames.GetNext(pos));
-	}
+
 	pEntry->m_uIP = m_uIP;
 	pEntry->m_uKeyID.SetValue(m_uKeyID);
 	pEntry->m_tLifetime = m_tLifetime;
@@ -77,10 +77,7 @@ CEntry* CEntry::Copy()
 	pEntry->m_uTCPPort = m_uTCPPort;
 	pEntry->m_uUDPPort = m_uUDPPort;
 	for (TagList::const_iterator itTagList = m_listTag.begin(); itTagList != m_listTag.end(); ++itTagList)
-	{
-		CKadTag* pTag = *itTagList;
-		pEntry->m_listTag.push_back(pTag->Copy());
-	}
+		pEntry->m_listTag.push_back((*itTagList)->Copy());
 	return pEntry;
 }
 
@@ -580,7 +577,7 @@ void CKeyEntry::RecalcualteTrustValue(){
 	// but mostly we say everything below 1 is bad, everything above 1 is good. It is calculated by looking at how many differnt
 	// IPs/24 have published this entry and how many entries each of those IPs have.
 	// Each IP/24 has x (say 3) points. This means if one IP publishs 3 differnt entries without any other IP publishing those entries,
-	// each of those entries will have 3 / 3 = 1 Trustvalue. Thats fine. If it publishes 6 alone, each entry has 3 / 6 = 0.5 trustvalue - not so good
+	// each of those entries will have 3 / 3 = 1 Trustvalue. That's fine. If it publishes 6 alone, each entry has 3 / 6 = 0.5 trustvalue - not so good
 	// However if there is another publisher for entry 5, which only publishes this entry then we have 3/6 + 3/1 = 3.5 trustvalue for this entry
 	//
 	// Whats the point? With this rating we try to avoid getting spammed with entries for a given keyword by a small IP range, which blends out

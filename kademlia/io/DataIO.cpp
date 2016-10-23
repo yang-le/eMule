@@ -313,13 +313,13 @@ void CDataIO::WriteTag(const CKadTag* pTag)
 	try
 	{
 		uint8 uType;
-		if (pTag->m_type == 0xFE)
+		if (pTag->m_type == TAGTYPE_UINT)
 		{
-			if (pTag->GetInt() <= 0xFF)
+			if (pTag->GetInt() <= 0xFFu)
 				uType = TAGTYPE_UINT8;
-			else if (pTag->GetInt() <= 0xFFFF)
+			else if (pTag->GetInt() <= 0xFFFFu)
 				uType = TAGTYPE_UINT16;
-			else if (pTag->GetInt() <= 0xFFFFFFFF)
+			else if (pTag->GetInt() <= 0xFFFFFFFFu)
 				uType = TAGTYPE_UINT32;
 			else
 				uType = TAGTYPE_UINT64;

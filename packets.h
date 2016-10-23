@@ -102,6 +102,7 @@ public:
 	CTag(const CTag& rTag);
 	CTag(CFileDataIO* data, bool bOptUTF8);
 	~CTag();
+	CTag& operator=(const CTag& rTag);
 
 	UINT GetType() const			{ return m_uType; }
 	UINT GetNameID() const			{ return m_uName; }
@@ -126,7 +127,7 @@ public:
 	void SetInt64(uint64 uVal);
 	void SetStr(LPCTSTR pszVal);
 
-	CTag* CloneTag()				{ return new CTag(*this); }
+//	CTag* CloneTag()				{ return new CTag(*this); }
 
 	bool WriteTagToFile(CFileDataIO* file, EUtf8Str eStrEncode = utf8strNone) const;	// old eD2K tags
 	bool WriteNewEd2kTag(CFileDataIO* file, EUtf8Str eStrEncode = utf8strNone) const;	// new eD2K tags
@@ -156,8 +157,9 @@ protected:
 ///////////////////////////////////////////////////////////////////////////////
 // CTag and tag string helpers
 
-__inline int CmpED2KTagName(LPCSTR pszTagName1, LPCSTR pszTagName2){
-	// string compare is independant from any codepage and/or LC_CTYPE setting.
+__inline int CmpED2KTagName(LPCSTR pszTagName1, LPCSTR pszTagName2)
+{
+	// string compare is independent from any codepage and/or LC_CTYPE setting.
 	return __ascii_stricmp(pszTagName1, pszTagName2);
 }
 void ConvertED2KTag(CTag*& pTag);

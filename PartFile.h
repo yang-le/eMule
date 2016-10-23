@@ -163,7 +163,7 @@ public:
 	bool	IsComplete(uint64 start, uint64 end, bool bIgnoreBufferedData) const;
 	bool	IsPureGap(uint64 start, uint64 end) const;
 	bool	IsAlreadyRequested(uint64 start, uint64 end, bool bCheckBuffers = false) const;
-    bool    ShrinkToAvoidAlreadyRequested(uint64& start, uint64& end) const;
+	bool	ShrinkToAvoidAlreadyRequested(uint64& start, uint64& end) const;
 	bool	IsCorruptedPart(UINT partnumber) const;
 	uint64	GetTotalGapSizeInRange(uint64 uRangeStart, uint64 uRangeEnd) const;
 	uint64	GetTotalGapSizeInPart(UINT uPart) const;
@@ -205,7 +205,7 @@ public:
 	UINT	GetNotCurrentSourcesCount() const;
 	int		GetValidSourcesCount() const;
 	bool	IsArchive(bool onlyPreviewable = false) const; // Barry - Also want to preview archives
-    bool    IsPreviewableFileType() const;
+	bool	IsPreviewableFileType() const;
 	time_t	getTimeRemaining() const;
 	time_t	getTimeRemainingSimple() const;
 	uint32	GetDlActiveTime() const;
@@ -309,8 +309,8 @@ public:
 	bool	srcarevisible;				// used for downloadlistctrl
 	bool	m_bMD4HashsetNeeded;
 	uint8	m_TotalSearchesKad;
-    bool    AllowSwapForSourceExchange()					{ return ::GetTickCount()-lastSwapForSourceExchangeTick > 30*1000; } // ZZ:DownloadManager
-    void    SetSwapForSourceExchangeTick()					{ lastSwapForSourceExchangeTick = ::GetTickCount(); } // ZZ:DownloadManager
+	bool	AllowSwapForSourceExchange()					{ return ::GetTickCount()-lastSwapForSourceExchangeTick > SEC2MS(30); } // ZZ:DownloadManager
+	void	SetSwapForSourceExchangeTick()					{ lastSwapForSourceExchangeTick = ::GetTickCount(); } // ZZ:DownloadManager
 
 	UINT	SetPrivateMaxSources(uint32 in)					{ return m_uMaxSources = in; }
 	UINT	GetPrivateMaxSources() const					{ return m_uMaxSources; }
@@ -318,10 +318,10 @@ public:
 	UINT	GetMaxSourcePerFileSoft() const;
 	UINT	GetMaxSourcePerFileUDP() const;
 
-    bool    GetPreviewPrio() const							{ return m_bpreviewprio; }
-	void    SetPreviewPrio(bool in)							{ m_bpreviewprio=in; }
+	bool	GetPreviewPrio() const							{ return m_bpreviewprio; }
+	void	SetPreviewPrio(bool in)							{ m_bpreviewprio=in; }
 
-    static bool RightFileHasHigherPrio(CPartFile* left, CPartFile* right);
+	static bool RightFileHasHigherPrio(CPartFile* left, CPartFile* right);
 
 	CDeadSourceList	m_DeadSourceList;
 
@@ -381,7 +381,7 @@ private:
 	DWORD	m_lastRefreshedDLDisplay;
 	CUpDownClientPtrList m_downloadingSourceList;
 	bool	m_bDeleteAfterAlloc;
-    bool	m_bpreviewprio;
+	bool	m_bpreviewprio;
 	// Barry - Buffered data to be written
 	CTypedPtrList<CPtrList, PartFileBufferedData*> m_BufferedData_list;
 	uint64	m_nTotalBufferData;
@@ -392,12 +392,11 @@ private:
 	uint32	m_nDlActiveTime;
 	uint32	m_tLastModified;	// last file modification time (NT's version of UTC), to be used for stats only!
 	uint32	m_tCreated;			// file creation time (NT's version of UTC), to be used for stats only!
-    uint32	m_random_update_wait;
+	uint32	m_random_update_wait;
 	volatile EPartFileOp m_eFileOp;
 	volatile UINT m_uFileOpProgress;
 	CAICHRecoveryHashSet*	m_pAICHRecoveryHashSet;
 
-    DWORD   lastSwapForSourceExchangeTick; // ZZ:DownloadManaager
-
+	DWORD   lastSwapForSourceExchangeTick; // ZZ:DownloadManaager
 
 };

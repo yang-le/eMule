@@ -54,7 +54,7 @@ public:
 	virtual ~CUDPSocket();
 
 	bool Create();
-    SocketSentBytes SendControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize); // ZZ:UploadBandWithThrottler (UDP)
+	SocketSentBytes SendControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize); // ZZ:UploadBandWithThrottler (UDP)
 	void SendPacket(Packet* packet, CServer* pServer, uint16 nSpecialPort = 0, BYTE* pRawPacket = 0, uint32 nRawLen = 0);
 	void DnsLookupDone(WPARAM wp, LPARAM lp);
 
@@ -75,5 +75,5 @@ private:
 
 	bool m_bWouldBlock;
 	CTypedPtrList<CPtrList, SServerUDPPacket*> controlpacket_queue;
-    CCriticalSection sendLocker; // ZZ:UploadBandWithThrottler (UDP)
+	CCriticalSection sendLocker; // ZZ:UploadBandWithThrottler (UDP)
 };

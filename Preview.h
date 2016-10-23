@@ -69,6 +69,17 @@ public:
 protected:
 	struct SPreviewApp
 	{
+		SPreviewApp() {}
+		SPreviewApp(const SPreviewApp& rCopy)
+		{
+			strTitle = rCopy.strTitle;
+			strCommand = rCopy.strCommand;
+			strCommandArgs = rCopy.strCommandArgs;
+			astrExtensions.Copy(rCopy.astrExtensions);
+			ullMinStartOfFile = rCopy.ullMinStartOfFile;
+			ullMinCompletedSize = rCopy.ullMinCompletedSize;
+		}
+
 		SPreviewApp& operator=(const SPreviewApp& rCopy)
 		{
 			strTitle = rCopy.strTitle;

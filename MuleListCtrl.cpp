@@ -1542,7 +1542,7 @@ void CMuleListCtrl::DoFind(int iStartItem, int iDirection /*1=down, 0 = up*/, BO
 	}
 
 	if (bShowError)
-		AfxMessageBox(GetResString(IDS_SEARCH_NORESULT), MB_ICONINFORMATION);
+		AfxMessageBox((UINT)IDS_SEARCH_NORESULT, MB_ICONINFORMATION, 0);
 	else
 		MessageBeep(MB_OK);
 }

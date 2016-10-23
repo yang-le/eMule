@@ -47,11 +47,12 @@ public:
 
 protected:
 	CFileIdentifierBase();
-	explicit CFileIdentifierBase(const CFileIdentifierBase& rFileIdentifier);
+	CFileIdentifierBase(const CFileIdentifierBase& rFileIdentifier);
+	CFileIdentifierBase& operator=(const CFileIdentifierBase& rFileIdentifier);
 
-	uchar					m_abyMD4Hash[16];
-	CAICHHash				m_AICHFileHash;
-	bool					m_bHasValidAICHHash;
+	uchar			m_abyMD4Hash[16];
+	CAICHHash		m_AICHFileHash;
+	bool			m_bHasValidAICHHash;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////

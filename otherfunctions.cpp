@@ -216,15 +216,15 @@ CString CastSecondsToHM(time_t tSeconds)
 
 	CString buffer;
 	UINT count = tSeconds;
-	if (count < 60)
+	if (count < MIN2S(1))
 		buffer.Format(_T("%u %s"), count, (LPCTSTR)GetResString(IDS_SECS));
-	else if (count < 3600)
-		buffer.Format(_T("%u:%02u %s"), count/60, count - (count/60)*60, (LPCTSTR)GetResString(IDS_MINS));
-	else if (count < 86400)
-		buffer.Format(_T("%u:%02u %s"), count/3600, (count - (count/3600)*3600)/60, (LPCTSTR)GetResString(IDS_HOURS));
+	else if (count < HR2S(1))
+		buffer.Format(_T("%u:%02u %s"), count/MIN2S(1), count - MIN2S(count/MIN2S(1)), (LPCTSTR)GetResString(IDS_MINS));
+	else if (count < DAY2S(1))
+		buffer.Format(_T("%u:%02u %s"), count/HR2S(1), (count - HR2S(count/HR2S(1)))/MIN2S(1), (LPCTSTR)GetResString(IDS_HOURS));
 	else {
-		UINT cntDays = count/86400;
-		UINT cntHrs = (count - cntDays*86400)/3600;
+		UINT cntDays = count/DAY2S(1);
+		UINT cntHrs = (count - DAY2S(cntDays))/HR2S(1);
 		buffer.Format(_T("%u %s %u %s"), cntDays, (LPCTSTR)GetResString(IDS_DAYS), cntHrs, (LPCTSTR)GetResString(IDS_HOURS));
 	}
 	return buffer;
@@ -237,19 +237,19 @@ CString CastSecondsToLngHM(time_t tSeconds)
 
 	CString buffer;
 	UINT count = tSeconds;
-	if (count < 60)
+	if (count < MIN2S(1))
 		buffer.Format(_T("%u %s"), count, (LPCTSTR)GetResString(IDS_LONGSECS));
-	else if (count < 3600)
-		buffer.Format(_T("%u:%02u %s"), count/60, count - (count/60)*60, (LPCTSTR)GetResString(IDS_LONGMINS));
-	else if (count < 86400)
-		buffer.Format(_T("%u:%02u %s"), count/3600, (count - (count/3600)*3600)/60, (LPCTSTR)GetResString(IDS_LONGHRS));
+	else if (count < HR2S(1))
+		buffer.Format(_T("%u:%02u %s"), count/MIN2S(1), count - MIN2S(count/MIN2S(1)), (LPCTSTR)GetResString(IDS_LONGMINS));
+	else if (count < DAY2S(1))
+		buffer.Format(_T("%u:%02u %s"), count/HR2S(1), (count - HR2S(count/HR2S(1)))/MIN2S(1), (LPCTSTR)GetResString(IDS_LONGHRS));
 	else {
-		UINT cntDays = count/86400;
-		UINT cntHrs = (count - cntDays*86400)/3600;
+		UINT cntDays = count/DAY2S(1);
+		UINT cntHrs = (count - DAY2S(cntDays))/HR2S(1);
 		if (cntHrs)
-			buffer.Format(_T("%u %s %u:%02u %s"), cntDays, (LPCTSTR)GetResString(IDS_DAYS2), cntHrs, (count - (cntDays*86400) - (cntHrs*3600))/60, (LPCTSTR)GetResString(IDS_LONGHRS));
+			buffer.Format(_T("%u %s %u:%02u %s"), cntDays, (LPCTSTR)GetResString(IDS_DAYS2), cntHrs, (count - DAY2S(cntDays) - HR2S(cntHrs))/MIN2S(1), (LPCTSTR)GetResString(IDS_LONGHRS));
 		else
-			buffer.Format(_T("%u %s %u %s"), cntDays, (LPCTSTR)GetResString(IDS_DAYS2), (count - (cntDays*86400) - (cntHrs*3600))/60, (LPCTSTR)GetResString(IDS_LONGMINS));
+			buffer.Format(_T("%u %s %u %s"), cntDays, (LPCTSTR)GetResString(IDS_DAYS2), (count - DAY2S(cntDays) - HR2S(cntHrs))/MIN2S(1), (LPCTSTR)GetResString(IDS_LONGMINS));
 	}
 	return buffer;
 }
@@ -528,7 +528,7 @@ bool Ask4RegFix(bool checkOnly, bool dontAsk, bool bAutoTakeCollections)
 		HKEY hkeyCR = thePrefs.GetWindowsVersion() < _WINVER_2K_ ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
 		if (regkey.Create(hkeyCR, _T("Software\\Classes\\ed2k\\shell\\open\\command")) == ERROR_SUCCESS)
 		{
-			if (dontAsk || (AfxMessageBox(GetResString(IDS_ASSIGNED2K), MB_ICONQUESTION|MB_YESNO) == IDYES))
+			if (dontAsk || (AfxMessageBox((UINT)IDS_ASSIGNED2K, MB_ICONQUESTION|MB_YESNO, 0) == IDYES))
 			{
 				VERIFY( regkey.SetStringValue(NULL, regbuffer) == ERROR_SUCCESS );
 
@@ -1138,7 +1138,7 @@ bool CWebServices::RunURL(const CAbstractFile* file, UINT uMenuID)
 
 void CWebServices::Edit()
 {
-	ShellExecute(NULL, _T("open"), thePrefs.GetTxtEditor(), _T("\"") + thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("webservices.dat\""), NULL, SW_SHOW);
+	ShellExecute(NULL, _T("open"), thePrefs.GetTxtEditor(), _T('\"') + thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("webservices.dat\""), NULL, SW_SHOW);
 }
 
 typedef struct
@@ -3154,7 +3154,7 @@ HWND ReplaceRichEditCtrl(CWnd* pwndRE, CWnd* pwndParent, CFont* pFont)
 void InstallSkin(LPCTSTR pszSkinPackage)
 {
 	if (thePrefs.GetMuleDirectory(EMULE_SKINDIR).IsEmpty() || _taccess(thePrefs.GetMuleDirectory(EMULE_SKINDIR), 0) != 0) {
-		AfxMessageBox(GetResString(IDS_INSTALL_SKIN_NODIR), MB_ICONERROR);
+		AfxMessageBox((UINT)IDS_INSTALL_SKIN_NODIR, MB_ICONERROR, 0);
 		return;
 	}
 
@@ -3227,12 +3227,12 @@ void InstallSkin(LPCTSTR pszSkinPackage)
 				}
 			}
 			else {
-				AfxMessageBox(GetResString(IDS_INSTALL_SKIN_PKG_ERROR), MB_ICONERROR);
+				AfxMessageBox((UINT)IDS_INSTALL_SKIN_PKG_ERROR, MB_ICONERROR, 0);
 			}
 			zip.Close();
 		}
 		else {
-			AfxMessageBox(GetResString(IDS_INSTALL_SKIN_PKG_ERROR), MB_ICONERROR);
+			AfxMessageBox((UINT)IDS_INSTALL_SKIN_PKG_ERROR, MB_ICONERROR, 0);
 		}
 	}
 	else if (_tcscmp(szExt, _T(".rar")) == 0)
@@ -3281,7 +3281,7 @@ void InstallSkin(LPCTSTR pszSkinPackage)
 			}
 
 			if (!bError && !bFoundSkinINIFile)
-				AfxMessageBox(GetResString(IDS_INSTALL_SKIN_PKG_ERROR), MB_ICONERROR);
+				AfxMessageBox((UINT)IDS_INSTALL_SKIN_PKG_ERROR, MB_ICONERROR, 0);
 
 			rar.Close();
 		}

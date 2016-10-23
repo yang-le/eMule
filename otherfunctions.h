@@ -409,7 +409,7 @@ bool IsLANIP(uint32 nIP);
 uint8 GetMyConnectOptions(bool bEncryption = true, bool bCallback = true);
 //No longer need separate lowID checks as we now know the servers just give *.*.*.0 users a lowID
 __inline bool IsLowID(uint32 id){
-	return (id < 16777216);
+	return (id < 16777216u);
 }
 CString ipstr(uint32 nIP);
 CString ipstr(uint32 nIP, uint16 nPort);

@@ -161,8 +161,8 @@ const CAICHHashTree* CAICHHashTree::FindExistingHash(uint64 nStartPos, uint64 nS
 		ASSERT(false);
 		return NULL;
 	}
-	uint64 nBlocks = m_nDataSize / GetBaseSize() + ((m_nDataSize % GetBaseSize() != 0)? 1:0);
-	uint64 nLeft = (((m_bIsLeftBranch) ? nBlocks+1:nBlocks) / 2)* GetBaseSize();
+	uint64 nBlocks = m_nDataSize / GetBaseSize() + ((m_nDataSize % GetBaseSize() != 0) ? 1 : 0);
+	uint64 nLeft = ((m_bIsLeftBranch ? nBlocks+1 : nBlocks) / 2) * GetBaseSize();
 	uint64 nRight = m_nDataSize - nLeft;
 	if (nStartPos < nLeft) {
 		if (nStartPos + nSize > nLeft) { // sanity
@@ -768,22 +768,22 @@ bool CAICHRecoveryHashSet::SaveHashSet()
 		}
 
 		// write hashset
-		uint32 nExistingSize = (UINT)file.GetLength();
+		uint32 nExistingSize = (uint32)file.GetLength();
 		file.SeekToEnd();
 		ULONGLONG nHashSetWritePosition = file.GetPosition();
 		m_pHashTree.m_Hash.Write(&file);
-		uint32 nHashCount = (uint32)((PARTSIZE/EMBLOCKSIZE + ((PARTSIZE % EMBLOCKSIZE != 0)? 1 : 0)) * (m_pHashTree.m_nDataSize/PARTSIZE));
+		uint32 nHashCount = (uint32)((PARTSIZE/EMBLOCKSIZE + ((PARTSIZE % EMBLOCKSIZE != 0) ? 1 : 0)) * (m_pHashTree.m_nDataSize/PARTSIZE));
 		if (m_pHashTree.m_nDataSize % PARTSIZE != 0)
 			nHashCount += (uint32)((m_pHashTree.m_nDataSize % PARTSIZE)/EMBLOCKSIZE + (((m_pHashTree.m_nDataSize % PARTSIZE) % EMBLOCKSIZE != 0)? 1 : 0));
 		file.WriteUInt32(nHashCount);
 		if (!m_pHashTree.WriteLowestLevelHashs(&file, 0, true, true)){
-			// thats bad... really
+			// that's bad... really
 			file.SetLength(nExistingSize);
 			theApp.QueueDebugLogLine(true, _T("Failed to save HashSet: WriteLowestLevelHashs() failed!"));
 			return false;
 		}
 		if (file.GetLength() != nExistingSize + (nHashCount+1ull)*HASHSIZE + 4) {
-			// thats even worse
+			// that's even worse
 			file.SetLength(nExistingSize);
 			theApp.QueueDebugLogLine(true, _T("Failed to save HashSet: Calculated and real size of hashset differ!"));
 			return false;

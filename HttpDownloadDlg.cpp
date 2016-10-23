@@ -205,7 +205,7 @@ END_MESSAGE_MAP()
 ULONGLONG CHttpDownloadDlg::sm_ullWinInetVer;
 
 CHttpDownloadDlg::CHttpDownloadDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CHttpDownloadDlg::IDD, pParent)
+	: CDialog(CHttpDownloadDlg::IDD, pParent), m_nPort(0), m_dwServiceType(0)
 {
 	//{{AFX_DATA_INIT(CHttpDownloadDlg)
 	//}}AFX_DATA_INIT

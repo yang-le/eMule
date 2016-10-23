@@ -321,7 +321,7 @@ void CArchivePreviewDlg::OnNMCustomDrawArchiveEntries(NMHDR *pNMHDR, LRESULT *pl
 }
 
 void CArchivePreviewDlg::OnBnExplain() {
-	AfxMessageBox(GetResString(IDS_ARCHPREV_ATTRIBINFO), MB_OK | MB_ICONINFORMATION);
+	AfxMessageBox((UINT)IDS_ARCHPREV_ATTRIBINFO, MB_OK | MB_ICONINFORMATION, 0);
 }
 
 void CArchivePreviewDlg::OnBnClickedRead()

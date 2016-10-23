@@ -145,10 +145,9 @@ int CAICHSyncThread::Run()
 			if (fileid.HasAICHHash()) {
 				bool bFound = false;
 				for (int j = 0; j < aKnown2Hashs.GetCount(); ++j) {
-					CAICHHash current_hash = aKnown2Hashs[j];
-					if (current_hash == fileid.GetAICHHash()) {
+					if (aKnown2Hashs[j] == fileid.GetAICHHash()) {
 						bFound = true;
-						liUsedHashs.AddTail(current_hash);
+						liUsedHashs.AddTail(CAICHHash(aKnown2Hashs[j]));
 						pCurFile->SetAICHRecoverHashSetAvailable(true);
 						// Has the file the proper AICH Parthashset? If not probably upgrading, create it
 						if (!fileid.HasExpectedAICHHashCount()) {

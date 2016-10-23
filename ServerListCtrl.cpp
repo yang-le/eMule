@@ -67,8 +67,8 @@ bool CServerListCtrl::Init()
 	if (tooltip) {
 		m_tooltip->SubclassWindow(*tooltip);
 		tooltip->ModifyStyle(0, TTS_NOPREFIX);
-		tooltip->SetDelayTime(TTDT_AUTOPOP, 20000);
-		//tooltip->SetDelayTime(TTDT_INITIAL, thePrefs.GetToolTipDelay()*1000);
+		tooltip->SetDelayTime(TTDT_AUTOPOP, SEC2MS(20));
+		//tooltip->SetDelayTime(TTDT_INITIAL, SEC2MS(thePrefs.GetToolTipDelay()));
 	}
 
 	InsertColumn(0, GetResString(IDS_SL_SERVERNAME),LVCFMT_LEFT, 150);
@@ -492,7 +492,7 @@ BOOL CServerListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 	}
 
 	case MP_REMOVEALL:
-		if (AfxMessageBox(GetResString(IDS_REMOVEALLSERVERS), MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2) != IDYES)
+		if (AfxMessageBox((UINT)IDS_REMOVEALLSERVERS, MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2, 0) != IDYES)
 			return TRUE;
 		if (theApp.serverconnect->IsConnecting()) {
 			theApp.downloadqueue->StopUDPRequests();
@@ -895,7 +895,7 @@ void CServerListCtrl::OnNmCustomDraw(NMHDR *pNMHDR, LRESULT *plResult)
 		const CServer* pServer = (const CServer*)pnmlvcd->nmcd.lItemlParam;
 		const CServer* pConnectedServer = theApp.serverconnect->GetCurrentServer();
 		// the server which we are connected to always has a valid numerical IP member assigned,
-		// therefor we do not need to call CServer::IsEqual which would be expensive
+		// therefore we do not need to call CServer::IsEqual which would be expensive
 		//if (pConnectedServer && pConnectedServer->IsEqual(pServer))
 		if (pServer && pConnectedServer && pConnectedServer->GetIP() == pServer->GetIP() && pConnectedServer->GetPort() == pServer->GetPort())
 			pnmlvcd->clrText = RGB(32,32,255);

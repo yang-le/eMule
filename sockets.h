@@ -66,9 +66,9 @@ public:
 	uint8	pendingConnects;
 	uint32	m_curuser;
 
-	bool	IsLowID();
+	bool	IsLowID() const;
 	void	SetClientID(uint32 newid);
-	bool	IsLocalServer(uint32 dwIP, uint16 nPort);
+	bool	IsLocalServer(uint32 dwIP, uint16 nPort) const;
 	void	TryAnotherConnectionRequest();
 	bool	IsSingleConnect() const	{ return singleconnecting; }
 	void	InitLocalIP();

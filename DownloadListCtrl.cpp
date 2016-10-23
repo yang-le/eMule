@@ -118,8 +118,8 @@ void CDownloadListCtrl::Init()
 		m_tooltip->SetFileIconToolTip(true);
 		m_tooltip->SubclassWindow(*tooltip);
 		tooltip->ModifyStyle(0, TTS_NOPREFIX);
-		tooltip->SetDelayTime(TTDT_AUTOPOP, 20000);
-		tooltip->SetDelayTime(TTDT_INITIAL, thePrefs.GetToolTipDelay()*1000);
+		tooltip->SetDelayTime(TTDT_AUTOPOP, SEC2MS(20));
+		tooltip->SetDelayTime(TTDT_INITIAL, SEC2MS(thePrefs.GetToolTipDelay()));
 	}
 
 	InsertColumn(0, GetResString(IDS_DL_FILENAME),		LVCFMT_LEFT,  DFLT_FILENAME_COL_WIDTH);
@@ -1758,7 +1758,7 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 				case MPG_F2:
 					if (GetAsyncKeyState(VK_CONTROL) < 0 || selectedCount > 1) {
 						// when ctrl is pressed -> filename cleanup
-						if (IDYES==AfxMessageBox(GetResString(IDS_MANUAL_FILENAMECLEANUP),MB_YESNO))
+						if (IDYES==AfxMessageBox((UINT)IDS_MANUAL_FILENAMECLEANUP, MB_YESNO, 0))
 							while (!selectedList.IsEmpty()){
 								CPartFile *partfile = selectedList.RemoveHead();
 								if (partfile->IsPartFile()) {

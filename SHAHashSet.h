@@ -91,18 +91,18 @@ class CAICHHash
 {
 public:
 
-	~CAICHHash()									{;}
+	~CAICHHash()									{}
 	CAICHHash()										{ ZeroMemory(m_abyBuffer, HASHSIZE); }
 	explicit CAICHHash(CFileDataIO* file)			{ Read(file); }
-	explicit CAICHHash(uchar* data)					{ Read(data); }
-	CAICHHash(const CAICHHash& k1)					{ *this = k1; }
+	explicit CAICHHash(const uchar* data)			{ Read(data); }
+	CAICHHash(const CAICHHash& k1)					{ memcpy(m_abyBuffer, k1.m_abyBuffer, HASHSIZE); }
 	CAICHHash&	operator=(const CAICHHash& k1)		{ memcpy(m_abyBuffer, k1.m_abyBuffer, HASHSIZE); return *this; }
 	friend bool operator==(const CAICHHash& k1,const CAICHHash& k2)	{ return memcmp(k1.m_abyBuffer, k2.m_abyBuffer, HASHSIZE) == 0;}
 	friend bool operator!=(const CAICHHash& k1,const CAICHHash& k2)	{ return !(k1 == k2); }
 	void		Read(CFileDataIO* file);
 	static void	Skip(LONGLONG dist, CFileDataIO* file);
 	void		Write(CFileDataIO* file) const;
-	void		Read(uchar* data)					{ memcpy(m_abyBuffer, data, HASHSIZE); }
+	void		Read(const uchar* data)				{ memcpy(m_abyBuffer, data, HASHSIZE); }
 	CString		GetString() const;
 	uchar*		GetRawHash()						{ return m_abyBuffer; }
 	const uchar* GetRawHashC() const				{ return m_abyBuffer; }
@@ -176,7 +176,9 @@ private:
 ///CAICHUntrustedHashs
 class CAICHUntrustedHash {
 public:
-	CAICHUntrustedHash&	operator=(const CAICHUntrustedHash& k1)		{ m_adwIpsSigning.Copy(k1.m_adwIpsSigning); m_Hash = k1.m_Hash ; return *this; }
+	CAICHUntrustedHash() : m_adwIpsSigning(), m_Hash()	{}
+	CAICHUntrustedHash(const CAICHUntrustedHash& k1)	{ m_adwIpsSigning.Copy(k1.m_adwIpsSigning); m_Hash = k1.m_Hash;	}
+	CAICHUntrustedHash&	operator=(const CAICHUntrustedHash& k1)		{ m_adwIpsSigning.Copy(k1.m_adwIpsSigning); m_Hash = k1.m_Hash; return *this; }
 	bool	AddSigningIP(uint32 dwIP, bool bTestOnly);
 
 	CAICHHash				m_Hash;
@@ -187,7 +189,12 @@ public:
 ///CAICHUntrustedHashs
 class CAICHRequestedData {
 public:
-	CAICHRequestedData()	{m_nPart = 0; m_pPartFile = NULL; m_pClient= NULL;}
+	CAICHRequestedData()
+		: m_nPart(0), m_pPartFile(NULL), m_pClient(NULL)
+	{}
+	CAICHRequestedData(const CAICHRequestedData& k1)
+		: m_nPart(k1.m_nPart), m_pPartFile(k1.m_pPartFile), m_pClient(k1.m_pClient)
+	{}
 	CAICHRequestedData&	operator=(const CAICHRequestedData& k1)		{ m_nPart = k1.m_nPart; m_pPartFile = k1.m_pPartFile; m_pClient = k1.m_pClient; return *this; }
 	uint16			m_nPart;
 	CPartFile*		m_pPartFile;

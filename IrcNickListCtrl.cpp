@@ -99,7 +99,7 @@ void CIrcNickListCtrl::OnContextMenu(CWnd*, CPoint point)
 	int iCurSel = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
 	if (iCurSel == -1)
 		return;
-	const Nick* pNick = (Nick*)GetItemData(iCurSel);
+	const Nick* pNick = reinterpret_cast<Nick *>(GetItemData(iCurSel));
 	if (!pNick)
 		return;
 
@@ -134,7 +134,7 @@ void CIrcNickListCtrl::OnNmDblClk(NMHDR*, LRESULT* pResult)
 	int iNickItem = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
 	if (iNickItem != -1)
 	{
-		const Nick* pNick = (Nick*)GetItemData(iNickItem);
+		const Nick* pNick = reinterpret_cast<Nick *>(GetItemData(iNickItem));
 		if (pNick)
 			OpenPrivateChannel(pNick);
 	}
@@ -394,7 +394,7 @@ bool CIrcNickListCtrl::ChangeAllNick(const CString& sOldNick, const CString& sNe
 		for (int iItem = 0; iItem < m_pParent->m_wndChanSel.GetItemCount(); iItem++)
 		{
 			m_pParent->m_wndChanSel.GetItem(iItem, &item);
-			if ((Channel*)item.lParam == pChannel)
+			if (reinterpret_cast<Channel *>(item.lParam) == pChannel)
 			{
 				item.mask = TCIF_TEXT;
 				CString strTcLabel(sNewNick);
@@ -451,11 +451,11 @@ BOOL CIrcNickListCtrl::OnCommand(WPARAM wParam, LPARAM)
 {
 	int iNickItem = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
 	int iChanItem = m_pParent->m_wndChanSel.GetCurSel();
-	Nick* pNick = (Nick*)GetItemData(iNickItem);
+	Nick* pNick = reinterpret_cast<Nick *>(GetItemData(iNickItem));
 	TCITEM item;
 	item.mask = TCIF_PARAM;
 	m_pParent->m_wndChanSel.GetItem(iChanItem,&item);
-	Channel* pChannel = (Channel*)item.lParam;
+	Channel* pChannel = reinterpret_cast<Channel *>(item.lParam);
 
 	switch (wParam)
 	{

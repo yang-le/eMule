@@ -99,6 +99,21 @@ CHyperLink::CHyperLink(const CHyperLink& Src)
 	m_lParam = Src.m_lParam;
 }
 
+CHyperLink& CHyperLink::operator=(const CHyperLink& Src)
+{
+	m_Type = Src.m_Type;
+	m_iBegin = Src.m_iBegin;
+	m_iEnd = Src.m_iEnd;
+	m_sTitle = Src.m_sTitle;
+	m_sCommand = Src.m_sCommand;
+	m_sDirectory = Src.m_sDirectory;
+	m_hWnd = Src.m_hWnd;
+	m_uMsg = Src.m_uMsg;
+	m_wParam = Src.m_wParam;
+	m_lParam = Src.m_lParam;
+	return *this;
+}
+
 void CHyperLink::Execute(){
 	switch(m_Type)
 	{
@@ -535,26 +550,38 @@ void CPreparedHyperText::PrepareText(const CString& sText)
 		sLink.Delete(i, 1);
 }
 
-CPreparedHyperText::CPreparedHyperText(const CString& sText){
+CPreparedHyperText::CPreparedHyperText(const CString& sText)
+{
 	PrepareText(sText);
 }
 
-CPreparedHyperText::CPreparedHyperText(const CPreparedHyperText& src){
+CPreparedHyperText::CPreparedHyperText(const CPreparedHyperText& src)
+{
 	m_sText = src.m_sText;
 	m_Links.assign(src.m_Links.begin(), src.m_Links.end());
 }
 
-void CPreparedHyperText::Clear(){
+CPreparedHyperText& CPreparedHyperText::operator=(const CPreparedHyperText& src)
+{
+	m_sText = src.m_sText;
+	m_Links.assign(src.m_Links.begin(), src.m_Links.end());
+	return *this;
+}
+
+void CPreparedHyperText::Clear()
+{
 	m_sText.Empty();
 	m_Links.erase(m_Links.begin(), m_Links.end());
 }
 
-void CPreparedHyperText::SetText(const CString& sText){
+void CPreparedHyperText::SetText(const CString& sText)
+{
 	Clear();
 	PrepareText(sText);
 }
 
-void CPreparedHyperText::AppendText(const CString& sText){
+void CPreparedHyperText::AppendText(const CString& sText)
+{
 	int len = m_sText.GetLength();
 	////////////////////////////////////////////////
 	//Top:The Original code didn't check to see if the buffer was full..
@@ -604,13 +631,13 @@ void CPreparedHyperText::AppendText(const CString& sText){
 	//Bottom: May not be the nicest code but it works.
 	////////////////////////////////////////////////
 	CPreparedHyperText ht(sText);
-	m_sText+=sText;
-	for(std::list<CHyperLink>::iterator it = ht.m_Links.begin(); it != ht.m_Links.end(); ++it)
-	{
-		CHyperLink hl = *it;
+	m_sText += sText;
+	while (!ht.m_Links.empty()) {
+		CHyperLink& hl = *(ht.m_Links.begin());
 		hl.m_iBegin += len;
 		hl.m_iEnd += len;
 		m_Links.push_back(hl);
+		ht.m_Links.pop_front();
 	}
 }
 
@@ -782,37 +809,54 @@ void CPreparedHyperText::AppendKeyWord(const CString& sText, COLORREF iColor)
 
 //CLinePartInfo
 
- CLinePartInfo::CLinePartInfo(int iBegin, uint16 iEnd, CHyperLink* pHyperLink, CKeyWord* pKeyWord){
+CLinePartInfo::CLinePartInfo(int iBegin, uint16 iEnd, CHyperLink* pHyperLink, CKeyWord* pKeyWord)
+{
 	m_xBegin = (uint16)iBegin;
 	m_xEnd = iEnd;
 	m_pHyperLink = pHyperLink;
 	m_pKeyWord = pKeyWord;
 }
 
- CLinePartInfo::CLinePartInfo(const CLinePartInfo& Src){
+CLinePartInfo::CLinePartInfo(const CLinePartInfo& Src)
+{
 	m_xBegin = Src.m_xBegin;
 	m_xEnd = Src.m_xEnd;
 	m_pHyperLink = Src.m_pHyperLink;
 	m_pKeyWord = Src.m_pKeyWord;
 }
 
+CLinePartInfo& CLinePartInfo::operator=(const CLinePartInfo& Src)
+{
+	m_xBegin = Src.m_xBegin;
+	m_xEnd = Src.m_xEnd;
+	m_pHyperLink = Src.m_pHyperLink;
+	m_pKeyWord = Src.m_pKeyWord;
+	return *this;
+}
 
 //CLineInfo
 
- CLineInfo::CLineInfo(int iBegin, uint16 iEnd){
-	m_iBegin = iBegin;
-	m_iEnd = iEnd;
+CLineInfo::CLineInfo(int iBegin, uint16 iEnd)
+	: m_iBegin(iBegin), m_iEnd(iEnd)
+{
 }
 
- CLineInfo::CLineInfo(const CLineInfo& Src){
-	m_iBegin = Src.m_iBegin;
-	m_iEnd = Src.m_iEnd;
+CLineInfo::CLineInfo(const CLineInfo& Src)
+	: m_iBegin(Src.m_iBegin), m_iEnd(Src.m_iEnd)
+{
 	assign(Src.begin(), Src.end());
 }
 
+CLineInfo& CLineInfo::operator=(const CLineInfo& Src)
+{
+	m_iBegin = Src.m_iBegin;
+	m_iEnd = Src.m_iEnd;
+	assign(Src.begin(), Src.end());
+	return *this;
+}
 
 //CVisPart
- CVisPart::CVisPart(const CLinePartInfo& LinePartInfo, const CRect& rcBounds, int iRealBegin, uint16 iRealLen,CVisPart* pPrev,CVisPart* pNext) : CLinePartInfo(LinePartInfo)
+CVisPart::CVisPart(const CLinePartInfo& LinePartInfo, const CRect& rcBounds, int iRealBegin, uint16 iRealLen,CVisPart* pPrev,CVisPart* pNext) : CLinePartInfo(LinePartInfo)
 {
 	m_rcBounds = rcBounds;
 	m_iRealBegin = iRealBegin;
@@ -821,7 +865,9 @@ void CPreparedHyperText::AppendKeyWord(const CString& sText, COLORREF iColor)
 	m_pNext = pNext;
 }
 
- CVisPart::CVisPart(const CVisPart& Src) : CLinePartInfo(Src){
+CVisPart::CVisPart(const CVisPart& Src)
+	: CLinePartInfo(Src)
+{
 	m_rcBounds = Src.m_rcBounds;
 	m_iRealBegin = Src.m_iRealBegin;
 	m_iRealLen = Src.m_iRealLen;
@@ -829,7 +875,19 @@ void CPreparedHyperText::AppendKeyWord(const CString& sText, COLORREF iColor)
 	m_pNext = Src.m_pNext;
 }
 
-
+CVisPart& CVisPart::operator=(const CVisPart& Src)
+{
+	m_xBegin = Src.m_xBegin;
+	m_xEnd = Src.m_xEnd;
+	m_pHyperLink = Src.m_pHyperLink;
+	m_pKeyWord = Src.m_pKeyWord;
+	m_rcBounds = Src.m_rcBounds;
+	m_iRealBegin = Src.m_iRealBegin;
+	m_iRealLen = Src.m_iRealLen;
+	m_pPrev = Src.m_pPrev;
+	m_pNext = Src.m_pNext;
+	return *this;
+}
 
 // --------------------------------------------------------------
 // CHyperTextCtrl

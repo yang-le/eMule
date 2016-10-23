@@ -935,9 +935,9 @@ ULONG CSearchParamsWnd::GetSearchAttrLength(const CString& rstrExpr)
 
 	UINT hour = 0, min = 0, sec = 0;
 	if (_stscanf(strExpr, _T("%u : %u : %u"), &hour, &min, &sec) == 3)
-		return hour * 3600 + min * 60 + sec;
+		return HR2S(hour) + MIN2S(min) + sec;
 	if (_stscanf(strExpr, _T("%u : %u"), &min, &sec) == 2)
-		return min * 60 + sec;
+		return MIN2S(min) + sec;
 
 	LPTSTR endptr = NULL;
 	double dbl = _tcstod(strExpr, &endptr);
@@ -950,9 +950,9 @@ ULONG CSearchParamsWnd::GetSearchAttrLength(const CString& rstrExpr)
 		if (chModifier == _T('\0') || chModifier == _T('s'))
 			;
 		else if (chModifier == _T('m'))
-			return (ULONG)(dbl*60 + 0.5);
+			return (ULONG)(MIN2S(dbl) + 0.5);
 		else if (chModifier == _T('h'))
-			return (ULONG)(dbl*60*60 + 0.5);
+			return (ULONG)(HR2S(dbl) + 0.5);
 		else
 			return (ULONG)-1;
 	}
@@ -1090,9 +1090,9 @@ SSearchParams* CSearchParamsWnd::GetParameters()
 			AfxMessageBox(GetResString(IDS_SEARCH_EXPRERROR) + _T("\n\n") + strError, MB_ICONWARNING | MB_HELP, eMule_FAQ_Search - HID_BASE_PROMPT);
 			return NULL;
 		}
-		else if (ulMinLength > 3600*24)
+		else if (ulMinLength > DAY2S(1))
 		{
-			ulMinLength = 3600*24;
+			ulMinLength = DAY2S(1);
 			CString strValue;
 			SecToTimeLength(ulMinLength, strValue);
 			m_ctlOpts.SetItemText(orLength, 1, strValue);

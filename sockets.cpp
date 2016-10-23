@@ -73,12 +73,7 @@ void CServerConnect::TryAnotherConnectionRequest()
 		}
 
 		// Barry - Only auto-connect to static server option
-		if (thePrefs.GetAutoConnectToStaticServersOnly())
-		{
-			if (next_server->IsStaticMember())
-                ConnectToServer(next_server, true, !m_bTryObfuscated);
-		}
-		else
+		if (!thePrefs.GetAutoConnectToStaticServersOnly() || next_server->IsStaticMember())
 			ConnectToServer(next_server, true, !m_bTryObfuscated);
 	}
 }
@@ -161,12 +156,10 @@ void CServerConnect::StopConnectionTry()
 	}
 
 	// close all currenty opened sockets except the one which is connected to our current server
-	for( POSITION pos = m_lstOpenSockets.GetHeadPosition(); pos != NULL; )
-	{
-		CServerSocket* pSck = (CServerSocket*)m_lstOpenSockets.GetNext(pos);
-		if (pSck == connectedsocket)		// don't destroy socket which is connected to server
-			continue;
-		if (!pSck->m_bIsDeleting)	// don't destroy socket if it is going to destroy itself later on
+	for (POSITION pos = m_lstOpenSockets.GetHeadPosition(); pos != NULL; ) {
+		CServerSocket* pSck = static_cast<CServerSocket *>(m_lstOpenSockets.GetNext(pos));
+		if (pSck != connectedsocket 	// don't destroy socket which is connected to server
+			&& !pSck->m_bIsDeleting)	// don't destroy socket if it is going to destroy itself later on
 			DestroySocket(pSck);
 	}
 }
@@ -325,9 +318,6 @@ void CServerConnect::ConnectionFailed(CServerSocket* sender)
 			break;
 		case CS_SERVERFULL:
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FULL), (LPCTSTR)sender->cur_server->GetListName(), sender->cur_server->GetAddress(), sender->cur_server->GetPort());
-			break;
-		case CS_NOTCONNECTED:
-			break;
 	}
 
 	// IMPORTANT: mark this socket not to be deleted in StopConnectionTry(),
@@ -552,12 +542,9 @@ void CServerConnect::DestroySocket(CServerSocket* pSck){
 	delete pSck;
 }
 
-bool CServerConnect::IsLocalServer(uint32 dwIP, uint16 nPort){
-	if (IsConnected()){
-		if (connectedsocket->cur_server->GetIP() == dwIP && connectedsocket->cur_server->GetPort() == nPort)
-			return true;
-	}
-	return false;
+bool CServerConnect::IsLocalServer(uint32 dwIP, uint16 nPort) const
+{
+	return IsConnected() && connectedsocket->cur_server->GetIP() == dwIP && connectedsocket->cur_server->GetPort() == nPort;
 }
 
 void CServerConnect::InitLocalIP()
@@ -620,7 +607,7 @@ void CServerConnect::KeepConnectionAlive()
 	}
 }
 
-bool CServerConnect::IsLowID()
+bool CServerConnect::IsLowID() const
 {
 	return ::IsLowID(clientid);
 }

@@ -859,30 +859,26 @@ CString CWebServer::_GetHeader(ThreadData Data, long lSession)
 	}
 	else if (theApp.serverconnect->IsConnected() && !disconnectissued)
 	{
-		if(!theApp.serverconnect->IsLowID())
-			HTTPConState = _T("high");
-		else
-			HTTPConState = _T("low");
+		HTTPConState = theApp.serverconnect->IsLowID() ? _T("low") : _T("high");
 		CServer* cur_server = theApp.serverlist->GetServerByAddress(
 			theApp.serverconnect->GetCurrentServer()->GetAddress(),
 			theApp.serverconnect->GetCurrentServer()->GetPort() );
 
 		if (cur_server) {
-			if(cur_server->GetListName().GetLength() > SHORT_LENGTH)
-				HTTPConText = cur_server->GetListName().Left(SHORT_LENGTH-3) + _T("...");
-			else
-				HTTPConText = cur_server->GetListName();
+			HTTPConText = cur_server->GetListName();
+			if (HTTPConText.GetLength() > SHORT_LENGTH)
+				HTTPConText = HTTPConText.Left(SHORT_LENGTH-3) + _T("...");
 
-			if (IsSessionAdmin(Data,sSession)) HTTPConText+=_T(" (<a href=\"?ses=") + sSession + _T("&w=server&c=disconnect\">")+_GetPlainResString(IDS_IRC_DISCONNECT)+_T("</a>)");
+			if (IsSessionAdmin(Data,sSession))
+				HTTPConText += _T(" (<a href=\"?ses=") + sSession + _T("&w=server&c=disconnect\">")+_GetPlainResString(IDS_IRC_DISCONNECT)+_T("</a>)");
 
 			HTTPHelpU = CastItoIShort(cur_server->GetUsers());
 			HTTPHelpM = CastItoIShort(cur_server->GetMaxUsers());
 			HTTPHelpF = CastItoIShort(cur_server->GetFiles());
 			if ( cur_server->GetMaxUsers() > 0 )
-				_stprintf(HTTPHeader, _T("%.1f "), (static_cast<double>(cur_server->GetUsers()) / cur_server->GetMaxUsers()) * 100.0);
+				HTTPHelpV.Format(_T("%.1f "), (100.0 * cur_server->GetUsers()) / cur_server->GetMaxUsers());
 			else
-				_stprintf(HTTPHeader, _T("%.1f "), 0.0);
-			HTTPHelpV = HTTPHeader;
+				HTTPHelpV = "0.0 ";
 		}
 
 	}
@@ -926,31 +922,29 @@ CString CWebServer::_GetHeader(ThreadData Data, long lSession)
 	}
 	Out.Replace(_T("[KadConText]"), HTTPConText);
 
-
+//100/1024 equals to 1/10.24
 	if(thePrefs.GetMaxUpload() == UNLIMITED)
-		_stprintf(HTTPHeader, _T("%.1f"), static_cast<double>(100 * theApp.uploadqueue->GetDatarate()) / 1024 / thePrefs.GetMaxGraphUploadRate(true));
+		_stprintf(HTTPHeader, _T("%.1f"), theApp.uploadqueue->GetDatarate() / 10.24 / thePrefs.GetMaxGraphUploadRate(true));
 	else
-		_stprintf(HTTPHeader, _T("%.1f"), static_cast<double>(100 * theApp.uploadqueue->GetDatarate()) / 1024 / thePrefs.GetMaxUpload());
+		_stprintf(HTTPHeader, _T("%.1f"), theApp.uploadqueue->GetDatarate() / 10.24 / thePrefs.GetMaxUpload());
 	Out.Replace(_T("[UploadValue]"), HTTPHeader);
 
 	if(thePrefs.GetMaxDownload() == UNLIMITED)
-		_stprintf(HTTPHeader, _T("%.1f"), static_cast<double>(100 * theApp.downloadqueue->GetDatarate()) / 1024 / thePrefs.GetMaxGraphDownloadRate());
+		_stprintf(HTTPHeader, _T("%.1f"), theApp.downloadqueue->GetDatarate() / 10.24 / thePrefs.GetMaxGraphDownloadRate());
 	else
-		_stprintf(HTTPHeader, _T("%.1f"), static_cast<double>(100 * theApp.downloadqueue->GetDatarate()) / 1024 / thePrefs.GetMaxDownload());
+		_stprintf(HTTPHeader, _T("%.1f"), theApp.downloadqueue->GetDatarate() / 10.24 / thePrefs.GetMaxDownload());
 	Out.Replace(_T("[DownloadValue]"), HTTPHeader);
 
-	_stprintf(HTTPHeader, _T("%.1f"), (static_cast<double>(theApp.listensocket->GetOpenSockets()))/(thePrefs.GetMaxConnections())*100.0);
+	_stprintf(HTTPHeader, _T("%.1f"), (100.0 * theApp.listensocket->GetOpenSockets()) / thePrefs.GetMaxConnections());
 	Out.Replace(_T("[ConnectionValue]"), HTTPHeader);
-	_stprintf(HTTPHeader, _T("%.1f"), (static_cast<double>(theApp.uploadqueue->GetDatarate())/1024.0));
+	_stprintf(HTTPHeader, _T("%.1f"), theApp.uploadqueue->GetDatarate() / 1024.0);
 	Out.Replace(_T("[CurUpload]"), HTTPHeader);
-	_stprintf(HTTPHeader, _T("%.1f"), (static_cast<double>(theApp.downloadqueue->GetDatarate())/1024.0));
+	_stprintf(HTTPHeader, _T("%.1f"), theApp.downloadqueue->GetDatarate() / 1024.0);
 	Out.Replace(_T("[CurDownload]"), HTTPHeader);
-	_stprintf(HTTPHeader, _T("%.0f"), (static_cast<double>(theApp.listensocket->GetOpenSockets())));
+	_stprintf(HTTPHeader, _T("%u.0"), theApp.listensocket->GetOpenSockets());
 	Out.Replace(_T("[CurConnection]"), HTTPHeader);
 
-	uint32		dwMax;
-
-	dwMax = thePrefs.GetMaxUpload();
+	uint32 dwMax = thePrefs.GetMaxUpload();
 	if (dwMax == UNLIMITED)
 		HTTPHelp = GetResString(IDS_PW_UNLIMITED);
 	else

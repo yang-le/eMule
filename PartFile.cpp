@@ -5907,28 +5907,23 @@ void CPartFile::SetFileOpProgress(UINT uProgress)
 
 bool CPartFile::RightFileHasHigherPrio(CPartFile* left, CPartFile* right)
 {
-    if(!right) {
+    if (!right)
         return false;
-    }
 
-    if(!left ||
-       thePrefs.GetCategory(right->GetCategory())->prio > thePrefs.GetCategory(left->GetCategory())->prio ||
-       thePrefs.GetCategory(right->GetCategory())->prio == thePrefs.GetCategory(left->GetCategory())->prio &&
-       (
-           right->GetDownPriority() > left->GetDownPriority() ||
-           right->GetDownPriority() == left->GetDownPriority() &&
-           (
-               right->GetCategory() == left->GetCategory() && right->GetCategory() != 0 &&
-               (thePrefs.GetCategory(right->GetCategory())->downloadInAlphabeticalOrder && thePrefs.IsExtControlsEnabled()) &&
-               right->GetFileName() && left->GetFileName() &&
-               right->GetFileName().CompareNoCase(left->GetFileName()) < 0
-           )
-       )
-    ) {
-        return true;
-    } else {
-        return false;
-    }
+	return (!left ||
+		thePrefs.GetCategory(right->GetCategory())->prio > thePrefs.GetCategory(left->GetCategory())->prio ||
+		thePrefs.GetCategory(right->GetCategory())->prio == thePrefs.GetCategory(left->GetCategory())->prio &&
+		(
+			right->GetDownPriority() > left->GetDownPriority() ||
+			right->GetDownPriority() == left->GetDownPriority() &&
+			(
+				right->GetCategory() == left->GetCategory() && right->GetCategory() != 0 &&
+				(thePrefs.GetCategory(right->GetCategory())->downloadInAlphabeticalOrder && thePrefs.IsExtControlsEnabled()) &&
+				right->GetFileName() && left->GetFileName() &&
+				right->GetFileName().CompareNoCase(left->GetFileName()) < 0
+				)
+			)
+		);
 }
 
 void CPartFile::RequestAICHRecovery(UINT nPart)

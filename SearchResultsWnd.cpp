@@ -1191,7 +1191,7 @@ bool CSearchResultsWnd::StartNewSearch(SSearchParams* pParams)
 		else if (theApp.serverconnect->IsConnected() && (!Kademlia::CKademlia::IsRunning() || !Kademlia::CKademlia::IsConnected()))
 			pParams->eType = SearchTypeEd2kServer;
 		else if (!theApp.serverconnect->IsConnected() && (!Kademlia::CKademlia::IsRunning() || !Kademlia::CKademlia::IsConnected())){
-			AfxMessageBox(GetResString(IDS_NOTCONNECTEDANY), MB_ICONWARNING);
+			AfxMessageBox((UINT)IDS_NOTCONNECTEDANY, MB_ICONWARNING, 0);
 			delete pParams;
 			return false;
 		}
@@ -1220,7 +1220,7 @@ bool CSearchResultsWnd::StartNewSearch(SSearchParams* pParams)
 	if (eSearchType == SearchTypeEd2kServer || eSearchType == SearchTypeEd2kGlobal)
 	{
 		if (!theApp.serverconnect->IsConnected()) {
-			AfxMessageBox(GetResString(IDS_ERR_NOTCONNECTED), MB_ICONWARNING);
+			AfxMessageBox((UINT)IDS_ERR_NOTCONNECTED, MB_ICONWARNING, 0);
 			delete pParams;
 			//if (!theApp.serverconnect->IsConnecting() && !theApp.serverconnect->IsConnected())
 			//	theApp.serverconnect->ConnectToAnyServer();
@@ -1249,7 +1249,7 @@ bool CSearchResultsWnd::StartNewSearch(SSearchParams* pParams)
 	if (eSearchType == SearchTypeKademlia)
 	{
 		if (!Kademlia::CKademlia::IsRunning() || !Kademlia::CKademlia::IsConnected()) {
-			AfxMessageBox(GetResString(IDS_ERR_NOTCONNECTEDKAD), MB_ICONWARNING);
+			AfxMessageBox((UINT)IDS_ERR_NOTCONNECTEDKAD, MB_ICONWARNING, 0);
 			delete pParams;
 			//if (!Kademlia::CKademlia::IsRunning())
 			//	Kademlia::CKademlia::Start();

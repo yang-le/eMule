@@ -48,7 +48,8 @@ namespace Kademlia
 			CContact();
 			CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint16 uTcpPort, uint8 uVersion, CKadUDPKey cUDPKey, bool bIPVerified);
 			CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint16 uTcpPort, const CUInt128 &uTarget, uint8 uVersion, CKadUDPKey cUDPKey, bool bIPVerified);
-			CContact& operator=(const CContact& k1)				{ Copy(k1); return *this; }
+			CContact(const CContact& k1)					{ Copy(k1); }
+			CContact& operator=(const CContact& k1)			{ Copy(k1); return *this; }
 
 			void GetClientID(CUInt128 *puId) const;
 			CUInt128 GetClientID() const;

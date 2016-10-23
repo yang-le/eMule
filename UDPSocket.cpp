@@ -111,13 +111,12 @@ CUDPSocket::CUDPSocket()
 CUDPSocket::~CUDPSocket()
 {
 	theApp.uploadBandwidthThrottler->RemoveFromAllQueuesLocked(this); // ZZ:UploadBandWithThrottler (UDP)
-	sendLocker.Lock();
+
 	while (!controlpacket_queue.IsEmpty()) {
 		const SServerUDPPacket* p = controlpacket_queue.RemoveHead();
 		delete[] p->packet;
 		delete p;
 	}
-	sendLocker.Unlock();
 	m_udpwnd->DestroyWindow();
 
 	while (!m_aDNSReqs.IsEmpty())
@@ -126,16 +125,13 @@ CUDPSocket::~CUDPSocket()
 
 bool CUDPSocket::Create()
 {
-	if (thePrefs.GetServerUDPPort())
-	{
-		VERIFY( m_udpwnd->CreateEx(0, AfxRegisterWndClass(0), _T("eMule Async DNS Resolve Socket Wnd #1"), WS_OVERLAPPED, 0, 0, 0, 0, NULL, NULL));
+	if (thePrefs.GetServerUDPPort()) {
+		VERIFY(m_udpwnd->CreateEx(0, AfxRegisterWndClass(0), _T("eMule Async DNS Resolve Socket Wnd #1"), WS_OVERLAPPED, 0, 0, 0, 0, NULL, NULL));
 		m_hWndResolveMessage = m_udpwnd->m_hWnd;
 		m_udpwnd->m_pOwner = this;
-		if (!CAsyncSocket::Create(thePrefs.GetServerUDPPort()==0xFFFF ? 0 : thePrefs.GetServerUDPPort(), SOCK_DGRAM, FD_READ | FD_WRITE, thePrefs.GetBindAddrW())){
-			LogError(LOG_STATUSBAR, _T("Error: Server UDP socket: Failed to create server UDP socket - %s"), (LPCTSTR)GetErrorMessage(GetLastError()));
-			return false;
-		}
-		return true;
+		if (CAsyncSocket::Create(thePrefs.GetServerUDPPort()==0xFFFF ? 0 : thePrefs.GetServerUDPPort(), SOCK_DGRAM, FD_READ | FD_WRITE, thePrefs.GetBindAddrW()))
+			return true;
+		LogError(LOG_STATUSBAR, _T("Error: Server UDP socket: Failed to create server UDP socket - %s"), (LPCTSTR)GetErrorMessage(GetLastError()));
 	}
 	return false;
 }
@@ -774,7 +770,7 @@ void CUDPSocket::SendPacket(Packet* packet, CServer* pServer, uint16 nSpecialPor
 		while (pos) {
 			POSITION posPrev = pos;
 			SServerDNSRequest* pDNSReq = m_aDNSReqs.GetNext(pos);
-			if (dwNow - pDNSReq->m_dwCreated >= SEC2MS(60*2)) {
+			if (dwNow - pDNSReq->m_dwCreated >= MIN2MS(2)) {
 				delete pDNSReq;
 				m_aDNSReqs.RemoveAt(posPrev);
 			}

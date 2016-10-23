@@ -132,7 +132,7 @@ void CUpDownClient::Init()
 	m_nUserIDHybrid = 0;
 	m_dwServerIP = 0;
 	m_nServerPort = 0;
-    m_iFileListRequested = 0;
+	m_iFileListRequested = 0;
 	m_dwLastUpRequest = 0;
 	m_bEmuleProtocol = false;
 	m_bCompleteSource = false;
@@ -173,7 +173,7 @@ void CUpDownClient::Init()
 	m_cMessagesSent = 0;
 	m_nCurSessionUp = 0;
 	m_nCurSessionDown = 0;
-    m_nCurSessionPayloadDown = 0;
+	m_nCurSessionPayloadDown = 0;
 	m_nSumForAvgDownDataRate = 0;
 	m_clientSoft=SO_UNKNOWN;
 	m_bRemoteQueueFull = false;
@@ -208,9 +208,9 @@ void CUpDownClient::Init()
 	m_fPreviewReqPending = 0;
 	m_fPreviewAnsPending = 0;
 	m_bTransferredDownMini = false;
-    m_addedPayloadQueueSession = 0;
-    m_nCurQueueSessionPayloadUp = 0; // PENDING: Is this necessary? ResetSessionUp()...
-    m_lastRefreshedULDisplay = ::GetTickCount();
+	m_addedPayloadQueueSession = 0;
+	m_nCurQueueSessionPayloadUp = 0; // PENDING: Is this necessary? ResetSessionUp()...
+	m_lastRefreshedULDisplay = ::GetTickCount();
 	m_bGPLEvildoer = false;
 	m_bHelloAnswerPending = false;
 	m_fNoViewSharedFiles = 0;
@@ -229,14 +229,14 @@ void CUpDownClient::Init()
 	m_bPeerCacheDownHit = false;
 	m_bPeerCacheUpHit = false;
 	m_fNeedOurPublicIP = 0;
-    m_random_update_wait = (uint32)(rand()/(RAND_MAX/1000));
-    m_bSourceExchangeSwapped = false; // ZZ:DownloadManager
-    m_dwLastTriedToConnect = ::GetTickCount()-20*60*1000; // ZZ:DownloadManager
+	m_random_update_wait = (uint32)(rand()/(RAND_MAX/1000));
+	m_bSourceExchangeSwapped = false; // ZZ:DownloadManager
+	m_dwLastTriedToConnect = ::GetTickCount()-MIN2MS(20); // ZZ:DownloadManager
 	m_fQueueRankPending = 0;
 	m_fUnaskQueueRankRecv = 0;
 	m_fFailedFileIdReqs = 0;
-    m_slotNumber = 0;
-    lastSwapForSourceExchangeTick = 0;
+	m_slotNumber = 0;
+	lastSwapForSourceExchangeTick = 0;
 	m_pReqFileAICHHash = NULL;
 	m_fSupportsAICH = 0;
 	m_fAICHRequested = 0;
@@ -269,13 +269,13 @@ CUpDownClient::~CUpDownClient(){
 	{
 		if (GetFriend()->IsTryingToConnect())
 			GetFriend()->UpdateFriendConnectionState(FCR_DELETED);
-        m_Friend->SetLinkedClient(NULL);
+		m_Friend->SetLinkedClient(NULL);
 	}
 	ASSERT( m_nConnectingState == CCS_NONE || theApp.emuledlg->IsClosing() );
 	theApp.clientlist->RemoveClient(this, _T("Destructing client object"));
 
 	if (socket){
-		socket->client = 0;
+		socket->client = NULL;
 		socket->Safe_Delete();
 	}
 	if (m_pPCDownSocket){
@@ -317,7 +317,7 @@ CUpDownClient::~CUpDownClient(){
 	DEBUG_ONLY (theApp.listensocket->Debug_ClientDeleted(this));
 	SetUploadFileID(NULL);
 
-    m_fileReaskTimes.RemoveAll(); // ZZ:DownloadManager (one re-ask timestamp for each file)
+	m_fileReaskTimes.RemoveAll(); // ZZ:DownloadManager (one re-ask timestamp for each file)
 
 	delete m_pReqFileAICHHash;
 }
@@ -543,7 +543,7 @@ bool CUpDownClient::ProcessHelloTypePacket(CSafeMemFile* data)
 				if (temptag.IsInt()) {
 					m_fSupportsFileIdent	= (temptag.GetInt() >>  13) & 0x01;
 					m_fDirectUDPCallback	= (temptag.GetInt() >>  12) & 0x01;
-					m_fSupportsCaptcha	    = (temptag.GetInt() >>  11) & 0x01;
+					m_fSupportsCaptcha		= (temptag.GetInt() >>  11) & 0x01;
 					m_fSupportsSourceEx2	= (temptag.GetInt() >>  10) & 0x01;
 					m_fRequiresCryptLayer	= (temptag.GetInt() >>  9) & 0x01;
 					m_fRequestsCryptLayer	= (temptag.GetInt() >>  8) & 0x01;
@@ -918,8 +918,8 @@ void CUpDownClient::ProcessMuleInfoPacket(const uchar* pachPacket, uint32 nSize)
 
 			case ET_FEATURES:
 				// Bits 31- 8: 0 - reserved
-				// Bit	    7: Preview
-				// Bit   6- 0: secure identification
+				// Bit	7: Preview
+				// Bit  6- 0: secure identification
 				if (temptag.IsInt()) {
 					m_bySupportSecIdent = (uint8)((temptag.GetInt()) & 3);
 					m_fSupportsPreview  = (temptag.GetInt() >> 7) & 1;
@@ -1092,7 +1092,7 @@ void CUpDownClient::SendHelloTypePacket(CSafeMemFile* data)
 	const UINT uFileIdentifiers		= 1;
 
 	CTag tagMisOptions2(CT_EMULE_MISCOPTIONS2,
-//				(RESERVED				     )
+//				(RESERVED					 )
 				(uFileIdentifiers		<< 13) |
 				(uDirectUDPCallback		<< 12) |
 				(uSupportsCaptcha		<< 11) |
@@ -1113,7 +1113,7 @@ void CUpDownClient::SendHelloTypePacket(CSafeMemFile* data)
 				(CemuleApp::m_nVersionMjr	<< 17) |
 				(CemuleApp::m_nVersionMin	<< 10) |
 				(CemuleApp::m_nVersionUpd	<<  7)
-//				(RESERVED			     )
+//				(RESERVED				 )
 				);
 	tagMuleVersion.WriteTagToFile(data);
 
@@ -1209,7 +1209,7 @@ bool CUpDownClient::Disconnected(LPCTSTR pszReason, bool bFromSocket)
 	//If this is a KAD client object, just delete it!
 	SetKadState(KS_NONE);
 
-    if (GetUploadState() == US_UPLOADING || GetUploadState() == US_CONNECTING)
+	if (GetUploadState() == US_UPLOADING || GetUploadState() == US_CONNECTING)
 	{
 		// sets US_NONE
 		theApp.uploadqueue->RemoveFromUploadQueue(this, CString(_T("CUpDownClient::Disconnected: ")) + pszReason);
@@ -1227,7 +1227,7 @@ bool CUpDownClient::Disconnected(LPCTSTR pszReason, bool bFromSocket)
 		if (GetDownloadState() == DS_CONNECTED){ // successfully connected, but probably didn't responsed to our filerequest
 			theApp.clientlist->m_globDeadSourceList.AddDeadSource(this);
 			theApp.downloadqueue->RemoveSource(this);
-	    }
+		}
 	}
 
 	// we had still an AICH request pending, handle it
@@ -1236,17 +1236,20 @@ bool CUpDownClient::Disconnected(LPCTSTR pszReason, bool bFromSocket)
 		CAICHRecoveryHashSet::ClientAICHRequestFailed(this);
 	}
 
+	while (!m_WaitingPackets_list.IsEmpty())
+		delete m_WaitingPackets_list.RemoveHead();
+
 	// The remote client does not have to answer with OP_HASHSETANSWER *immediatly*
 	// after we've sent OP_HASHSETREQUEST. It may occur that a (buggy) remote client
 	// is sending use another OP_FILESTATUS which would let us change to DL-state to DS_ONQUEUE.
 	if (m_fHashsetRequestingMD4 && (reqfile != NULL))
-        reqfile->m_bMD4HashsetNeeded = true;
+		reqfile->m_bMD4HashsetNeeded = true;
 	if (m_fHashsetRequestingAICH && (reqfile != NULL))
-        reqfile->SetAICHHashSetNeeded(true);
+		reqfile->SetAICHHashSetNeeded(true);
 
-    if (m_iFileListRequested){
+	if (m_iFileListRequested){
 		LogWarning(LOG_STATUSBAR, GetResString(IDS_SHAREDFILES_FAILED), GetUserName());
-        m_iFileListRequested = 0;
+		m_iFileListRequested = 0;
 	}
 
 	if (m_Friend)
@@ -1364,7 +1367,7 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 	// (* 5) Waiting/Abort
 	//		This check is done outside this function.
 	//		We want to connect for some download related thing (for example re-asking), but the client has a LowID and
-	//		is on our uploadqueue. So we are smart and safing resources by just waiting until he re-asks us, so we don't
+	//		is on our uploadqueue. So we are smart and saving resources by just waiting until he re-asks us, so we don't
 	//		have to do the resource intensive options 6 or 7. *)
 	// 6) Server Callback
 	//		This client is firewalled, but connected to our server. We sent the server a callback request to forward to
@@ -1655,7 +1658,7 @@ void CUpDownClient::ConnectionEstablished()
 
 	// remove the connecting timer and state
 	//if (m_nConnectingState == CCS_NONE) // TODO LOGREMOVE
-	//	DEBUG_ONLY( DebugLog(_T("ConnectionEstablished with CCS_NONE (incoming, thats fine)")) );
+	//	DEBUG_ONLY( DebugLog(_T("ConnectionEstablished with CCS_NONE (incoming, that's fine)")) );
 	m_nConnectingState = CCS_NONE;
 	theApp.clientlist->RemoveConnectingClient(this);
 
@@ -1666,7 +1669,7 @@ void CUpDownClient::ConnectionEstablished()
 	switch(GetKadState())
 	{
 		case KS_CONNECTING_FWCHECK:
-            SetKadState(KS_CONNECTED_FWCHECK);
+			SetKadState(KS_CONNECTED_FWCHECK);
 			break;
 		case KS_CONNECTING_BUDDY:
 		case KS_INCOMING_BUDDY:
@@ -1677,7 +1680,6 @@ void CUpDownClient::ConnectionEstablished()
 			SetKadState(KS_FWCHECK_UDP);
 			DEBUG_ONLY( DebugLog(_T("Set KS_FWCHECK_UDP for client %s"), (LPCTSTR)DbgGetClientInfo()) );
 			SendFirewallCheckUDPRequest();
-			break;
 	}
 
 	if (GetChatState() == MS_CONNECTING || GetChatState() == MS_CHATTING)
@@ -1699,7 +1701,6 @@ void CUpDownClient::ConnectionEstablished()
 			m_bReaskPending = false;
 			SetDownloadState(DS_CONNECTED);
 			SendFileRequest();
-			break;
 	}
 
 	if (m_bReaskPending)
@@ -1730,7 +1731,7 @@ void CUpDownClient::ConnectionEstablished()
 	{
 		if (thePrefs.GetDebugClientTCPLevel() > 0)
 			DebugSend(m_fSharedDirectories ? "OP__AskSharedDirs" : "OP__AskSharedFiles", this);
-        Packet* packet = new Packet(m_fSharedDirectories ? OP_ASKSHAREDDIRS : OP_ASKSHAREDFILES,0);
+		Packet* packet = new Packet(m_fSharedDirectories ? OP_ASKSHAREDDIRS : OP_ASKSHAREDFILES,0);
 		theStats.AddUpDataOverheadOther(packet->size);
 		SendPacket(packet,true);
 	}
@@ -1818,7 +1819,7 @@ void CUpDownClient::InitClientSoftwareVersion()
 			else if (m_clientSoft == SO_LPHANT)
 			{
 				if (nClientMinVersion < 10)
-				    iLen = _sntprintf(szSoftware, ARRSIZE(szSoftware), _T("%s v%u.0%u"), pszSoftware, (nClientMajVersion-1), nClientMinVersion);
+					iLen = _sntprintf(szSoftware, ARRSIZE(szSoftware), _T("%s v%u.0%u"), pszSoftware, (nClientMajVersion-1), nClientMinVersion);
 				else
 					iLen = _sntprintf(szSoftware, ARRSIZE(szSoftware), _T("%s v%u.%u"), pszSoftware, (nClientMajVersion-1), nClientMinVersion);
 			}
@@ -1968,7 +1969,7 @@ void CUpDownClient::RequestSharedFileList()
 {
 	if (m_iFileListRequested == 0){
 		AddLogLine(true, GetResString(IDS_SHAREDFILES_REQUEST), GetUserName());
-    	m_iFileListRequested = 1;
+		m_iFileListRequested = 1;
 		TryToConnect(true);
 	}
 	else{
@@ -1980,7 +1981,7 @@ void CUpDownClient::ProcessSharedFileList(const uchar* pachPacket, uint32 nSize,
 {
 	if (m_iFileListRequested > 0)
 	{
-        m_iFileListRequested--;
+		m_iFileListRequested--;
 		theApp.searchlist->ProcessSearchAnswer(pachPacket,nSize,this,NULL,pszDirectory);
 	}
 }
@@ -2015,7 +2016,7 @@ void CUpDownClient::SendPublicKeyPacket()
 	if (!theApp.clientcredits->CryptoAvailable())
 		return;
 
-    Packet* packet = new Packet(OP_PUBLICKEY,theApp.clientcredits->GetPubKeyLen() + 1,OP_EMULEPROT);
+	Packet* packet = new Packet(OP_PUBLICKEY,theApp.clientcredits->GetPubKeyLen() + 1,OP_EMULEPROT);
 	theStats.AddUpDataOverheadOther(packet->size);
 	memcpy(packet->pBuffer+1,theApp.clientcredits->GetPublicKey(), theApp.clientcredits->GetPubKeyLen());
 	packet->pBuffer[0] = theApp.clientcredits->GetPubKeyLen();
@@ -2379,32 +2380,24 @@ void CUpDownClient::ProcessPreviewAnswer(const uchar* pachPacket, uint32 nSize)
 // !if the functions returns false that client object was deleted because the connection try failed and the object wasn't needed anymore.
 bool CUpDownClient::SafeConnectAndSendPacket(Packet* packet)
 {
-	if (socket != NULL && socket->IsConnected())
-	{
+	if (socket != NULL && socket->IsConnected()) {
 		socket->SendPacket(packet, true, true);
 		return true;
 	}
-	else
-	{
-		m_WaitingPackets_list.AddTail(packet);
-		return TryToConnect(true);
-	}
+	m_WaitingPackets_list.AddTail(packet);
+	return TryToConnect(true);
 }
 
 bool CUpDownClient::SendPacket(Packet* packet, bool bDeletePacket, bool bVerifyConnection)
 {
-	if (socket != NULL && (!bVerifyConnection || socket->IsConnected()))
-	{
+	if (socket != NULL && (!bVerifyConnection || socket->IsConnected())) {
 		socket->SendPacket(packet, bDeletePacket, true);
 		return true;
 	}
-	else
-	{
-		DebugLogError(_T("Outgoing packet (0x%X) discarded because expected socket or connection does not exists %s"), packet->opcode, (LPCTSTR)DbgGetClientInfo());
-		if (bDeletePacket)
-			delete packet;
-		return false;
-	}
+	DebugLogError(_T("Outgoing packet (0x%X) discarded because expected socket or connection does not exists %s"), packet->opcode, (LPCTSTR)DbgGetClientInfo());
+	if (bDeletePacket)
+		delete packet;
+	return false;
 }
 
 #ifdef _DEBUG
@@ -2452,7 +2445,7 @@ void CUpDownClient::AssertValid() const
 	(void)m_dwLastSourceRequest;
 	(void)m_dwLastSourceAnswer;
 	(void)m_dwLastAskedForSources;
-    (void)m_iFileListRequested;
+	(void)m_iFileListRequested;
 	(void)m_byCompatibleClient;
 	m_WaitingPackets_list.AssertValid();
 	m_DontSwap_list.AssertValid();
@@ -2467,13 +2460,13 @@ void CUpDownClient::AssertValid() const
 	(void)m_cAsked;
 	(void)m_dwLastUpRequest;
 	(void)m_nCurSessionUp;
-    (void)m_nCurQueueSessionPayloadUp;
-    (void)m_addedPayloadQueueSession;
+	(void)m_nCurQueueSessionPayloadUp;
+	(void)m_addedPayloadQueueSession;
 	(void)m_nUpPartCount;
 	(void)m_nUpCompleteSourcesCount;
 	(void)s_UpStatusBar;
 	(void)requpfileid;
-    (void)m_lastRefreshedULDisplay;
+	(void)m_lastRefreshedULDisplay;
 	m_AverageUDR_list.AssertValid();
 	m_RequestedFiles_list.AssertValid();
 	ASSERT( m_nDownloadState >= DS_DOWNLOADING && m_nDownloadState <= DS_NONE );
@@ -2481,7 +2474,7 @@ void CUpDownClient::AssertValid() const
 	(void)m_abyPartStatus;
 	(void)m_strClientFilename;
 	(void)m_nTransferredDown;
-    (void)m_nCurSessionPayloadDown;
+	(void)m_nCurSessionPayloadDown;
 	(void)m_dwDownStartTime;
 	(void)m_nLastBlockOffset;
 	(void)m_nDownDatarate;
@@ -2742,15 +2735,15 @@ CString CUpDownClient::GetUploadStateDisplayString() const
 			// GetNumberOfRequestedBlocksInQueue is no longer available and retrieving it would cause quite some extra load
 			// (either due to thread syncing or due to adding redunant extra vars just for this function), so given that
 			// "stalled, waiting for disk" should happen like never, it is removed for now
-            if(GetPayloadInBuffer() == 0 && /*GetNumberOfRequestedBlocksInQueue() == 0 &&*/ thePrefs.IsExtControlsEnabled()) {
+			if(GetPayloadInBuffer() == 0 && /*GetNumberOfRequestedBlocksInQueue() == 0 &&*/ thePrefs.IsExtControlsEnabled()) {
 				strState = GetResString(IDS_US_STALLEDW4BR);
-            /*} else if(GetPayloadInBuffer() == 0 && thePrefs.IsExtControlsEnabled()) {
+			/*} else if(GetPayloadInBuffer() == 0 && thePrefs.IsExtControlsEnabled()) {
 				strState = GetResString(IDS_US_STALLEDREADINGFDISK);*/
-            } else if(GetSlotNumber() <= theApp.uploadqueue->GetActiveUploadsCount()) {
+			} else if(GetSlotNumber() <= theApp.uploadqueue->GetActiveUploadsCount()) {
 				strState = GetResString(IDS_TRANSFERRING);
-            } else {
-                strState = GetResString(IDS_TRICKLING);
-            }
+			} else {
+				strState = GetResString(IDS_TRICKLING);
+			}
 			break;
 	}
 

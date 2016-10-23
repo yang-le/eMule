@@ -252,8 +252,8 @@ void CSearchListCtrl::Init(CSearchList* in_searchlist)
 		m_tooltip->SetFileIconToolTip(true);
 		m_tooltip->SubclassWindow(*tooltip);
 		tooltip->ModifyStyle(0, TTS_NOPREFIX);
-		tooltip->SetDelayTime(TTDT_AUTOPOP, 20000);
-		//tooltip->SetDelayTime(TTDT_INITIAL, thePrefs.GetToolTipDelay()*1000);
+		tooltip->SetDelayTime(TTDT_AUTOPOP, SEC2MS(20));
+		//tooltip->SetDelayTime(TTDT_INITIAL, SEC2MS(thePrefs.GetToolTipDelay()));
 	}
 	searchlist = in_searchlist;
 

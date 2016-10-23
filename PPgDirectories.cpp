@@ -136,7 +136,7 @@ BOOL CPPgDirectories::OnApply()
 		SetDlgItemText(IDC_INCFILES, strIncomingDir);
 	}
 	else if (thePrefs.IsInstallationDirectory(strIncomingDir)){
-		AfxMessageBox(GetResString(IDS_WRN_INCFILE_RESERVED));
+		AfxMessageBox((UINT)IDS_WRN_INCFILE_RESERVED, MB_OK, 0);
 		return FALSE;
 	}
 	else if (strIncomingDir.CompareNoCase(testincdirchanged) != 0 && strIncomingDir.CompareNoCase(thePrefs.GetDefaultDirectory(EMULE_INCOMINGDIR, false)) != 0){
@@ -170,11 +170,8 @@ BOOL CPPgDirectories::OnApply()
 			bExistingFile = true;
 			break;
 		}
-		if (bExistingFile
-			&& AfxMessageBox(GetResString(IDS_WRN_INCFILE_EXISTS), MB_OKCANCEL | MB_ICONINFORMATION) == IDCANCEL)
-		{
+		if (bExistingFile && AfxMessageBox((UINT)IDS_WRN_INCFILE_EXISTS, MB_OKCANCEL | MB_ICONINFORMATION, 0) == IDCANCEL)
 			return FALSE;
-		}
 	}
 
 	// checking specified tempdir(s)
@@ -193,11 +190,11 @@ BOOL CPPgDirectories::OnApply()
 		atmp.Trim();
 		if (!atmp.IsEmpty()) {
 			if (CompareDirectories(strIncomingDir, atmp)==0){
-					AfxMessageBox(GetResString(IDS_WRN_INCTEMP_SAME));
+					AfxMessageBox((UINT)IDS_WRN_INCTEMP_SAME, MB_OK, 0);
 					return FALSE;
 			}
 			if (thePrefs.IsInstallationDirectory(atmp)){
-				AfxMessageBox(GetResString(IDS_WRN_TEMPFILES_RESERVED));
+				AfxMessageBox((UINT)IDS_WRN_TEMPFILES_RESERVED, MB_OK, 0);
 				return FALSE;
 			}
 			bool doubled=false;
@@ -265,7 +262,7 @@ BOOL CPPgDirectories::OnApply()
 
 				if (!dontaskagain) {
 					dontaskagain=true;
-					if (AfxMessageBox(GetResString(IDS_UPDATECATINCOMINGDIRS),MB_YESNO)==IDNO)
+					if (AfxMessageBox((UINT)IDS_UPDATECATINCOMINGDIRS, MB_YESNO, 0)==IDNO)
 						break;
 				}
 				thePrefs.GetCategory(cat)->strIncomingPath = thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR) + oldpath.Mid(testincdirchanged.GetLength());
@@ -276,7 +273,7 @@ BOOL CPPgDirectories::OnApply()
 
 
 	if (testtempdirchanged)
-		AfxMessageBox(GetResString(IDS_SETTINGCHANGED_RESTART));
+		AfxMessageBox((UINT)IDS_SETTINGCHANGED_RESTART, MB_OK, 0);
 
 	theApp.emuledlg->sharedfileswnd->Reload();
 
@@ -330,7 +327,7 @@ void CPPgDirectories::OnBnClickedAddUNC()
 
 	// basic unc-check
 	if (!PathIsUNC(unc)){
-		AfxMessageBox(GetResString(IDS_ERR_BADUNC), MB_ICONERROR);
+		AfxMessageBox((UINT)IDS_ERR_BADUNC, MB_ICONERROR, 0);
 		return;
 	}
 

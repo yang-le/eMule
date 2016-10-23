@@ -61,16 +61,17 @@ Packet::Packet(uint8 protocol){
 	prot = protocol;
 }
 
-Packet::Packet(char* header){
+Packet::Packet(char* header)
+{
 	init();
 	m_bSplitted = false;
 	m_bLastSplitted = false;
 	m_bFromPF = false;
 	pBuffer = 0;
 	completebuffer = 0;
-	size = ((Header_Struct*)header)->packetlength-1;
-	opcode = ((Header_Struct*)header)->command;
-	prot = ((Header_Struct*)header)->eDonkeyID;
+	size = reinterpret_cast<Header_Struct *>(header)->packetlength-1;
+	opcode = reinterpret_cast<Header_Struct *>(header)->command;
+	prot = reinterpret_cast<Header_Struct *>(header)->eDonkeyID;
 }
 
 Packet::Packet(char* pPacketPart, uint32 nSize, bool bLast, bool bFromPartFile){// only used for splitted packets!
@@ -104,16 +105,17 @@ Packet::Packet(uint8 in_opcode, uint32 in_size, uint8 protocol, bool bFromPartFi
 	prot = protocol;
 }
 
-Packet::Packet(CMemFile* datafile, uint8 protocol, uint8 ucOpcode){
+Packet::Packet(CMemFile* datafile, uint8 protocol, uint8 ucOpcode)
+{
 	init();
 	m_bSplitted = false;
 	m_bLastSplitted = false;
 	m_bFromPF = false;
-	size = (UINT)datafile->GetLength();
-	completebuffer = new char[(UINT)datafile->GetLength() + 10];
+	size = static_cast<uint32>(datafile->GetLength());
+	completebuffer = new char[(size_t)datafile->GetLength() + 10];
 	pBuffer = completebuffer+6;
 	BYTE* tmp = datafile->Detach();
-	memcpy(pBuffer,tmp,size);
+	memcpy(pBuffer, tmp, size);
 	free(tmp);
 	opcode = ucOpcode;
 	prot = protocol;
@@ -140,57 +142,55 @@ Packet::~Packet(){
 	delete[] tempbuffer;
 }
 
-char* Packet::GetPacket(){
-	if (completebuffer){
+char* Packet::GetPacket()
+{
+	if (completebuffer) {
 		if (!m_bSplitted)
-			memcpy(completebuffer,GetHeader(),6);
+			memcpy(completebuffer, GetHeader(), 6);
 		return completebuffer;
 	}
-	else{
-		delete[] tempbuffer;
-		tempbuffer = NULL; // 'new' may throw an exception
-		tempbuffer = new char[size+10];
-		memcpy(tempbuffer,GetHeader(),6);
-		memcpy(tempbuffer+6,pBuffer,size);
-		return tempbuffer;
-	}
+	delete[] tempbuffer;
+	tempbuffer = NULL; // 'new' may throw an exception
+	tempbuffer = new char[size+10];
+	memcpy(tempbuffer, GetHeader(), 6);
+	memcpy(tempbuffer+6, pBuffer, size);
+	return tempbuffer;
 }
 
-char* Packet::DetachPacket(){
-	if (completebuffer){
+char* Packet::DetachPacket()
+{
+	if (completebuffer) {
 		if (!m_bSplitted)
-			memcpy(completebuffer,GetHeader(),6);
+			memcpy(completebuffer, GetHeader(), 6);
 		char* result = completebuffer;
 		completebuffer = 0;
 		pBuffer = 0;
 		return result;
 	}
-	else{
-		delete[] tempbuffer;
-		tempbuffer = NULL; // 'new' may throw an exception
-		tempbuffer = new char[size+10];
-		memcpy(tempbuffer,GetHeader(),6);
-		memcpy(tempbuffer+6,pBuffer,size);
-		char* result = tempbuffer;
-		tempbuffer = 0;
-		return result;
-	}
+	delete[] tempbuffer;
+	tempbuffer = NULL; // 'new' may throw an exception
+	tempbuffer = new char[size+10];
+	memcpy(tempbuffer, GetHeader(), 6);
+	memcpy(tempbuffer+6, pBuffer, size);
+	char* result = tempbuffer;
+	tempbuffer = 0;
+	return result;
 }
 
-char* Packet::GetHeader(){
-	ASSERT ( !m_bSplitted );
-	Header_Struct* header = (Header_Struct*) head;
-	header->command = opcode;
-	header->eDonkeyID =  prot;
-	header->packetlength = size+1;
+char* Packet::GetHeader()
+{
+	ASSERT(!m_bSplitted);
+	reinterpret_cast<Header_Struct *>(head)->command = opcode;
+	reinterpret_cast<Header_Struct *>(head)->eDonkeyID = prot;
+	reinterpret_cast<Header_Struct *>(head)->packetlength = size+1;
 	return head;
 }
 
 char* Packet::GetUDPHeader()
 {
 	ASSERT(!m_bSplitted);
-	((UDP_Header_Struct *)head)->command = opcode;
-	((UDP_Header_Struct *)head)->eDonkeyID = prot;
+	reinterpret_cast<UDP_Header_Struct *>(head)->command = opcode;
+	reinterpret_cast<UDP_Header_Struct *>(head)->eDonkeyID = prot;
 	return head;
 }
 
@@ -423,11 +423,11 @@ CTag::CTag(uint8 uName, BYTE* pucAttachData, uint32 nSize)
 }
 
 CTag::CTag(const CTag& rTag)
+	: m_uType(rTag.m_uType)
+	, m_uName(rTag.m_uName)
+	, m_pszName(rTag.m_pszName!=NULL ? nstrdup(rTag.m_pszName) : NULL)
+	, m_nBlobSize(0)
 {
-	m_uType = rTag.m_uType;
-	m_uName = rTag.m_uName;
-	m_pszName = rTag.m_pszName!=NULL ? nstrdup(rTag.m_pszName) : NULL;
-	m_nBlobSize = 0;
 	if (rTag.IsStr())
 		m_pstrVal = new CString(rTag.GetStr());
 	else if (rTag.IsInt())
@@ -442,8 +442,8 @@ CTag::CTag(const CTag& rTag)
 	}
 	else if (rTag.IsBlob()){
 		m_nBlobSize = rTag.GetBlobSize();
-		m_pData = new BYTE[rTag.GetBlobSize()];
-		memcpy(m_pData, rTag.GetBlob(), rTag.GetBlobSize());
+		m_pData = new BYTE[m_nBlobSize];
+		memcpy(m_pData, rTag.GetBlob(), m_nBlobSize);
 	}
 	else{
 		ASSERT(0);
@@ -575,10 +575,37 @@ CTag::~CTag()
 	delete[] m_pszName;
 	if (IsStr())
 		delete m_pstrVal;
-	else if (IsHash())
+	else if (IsHash() || IsBlob())
 		delete[] m_pData;
-	else if (IsBlob())
-		delete[] m_pData;
+}
+
+
+CTag& CTag::operator=(const CTag& rTag)
+{
+	m_uType = rTag.m_uType;
+	m_uName = rTag.m_uName;
+	m_pszName = rTag.m_pszName!=NULL ? nstrdup(rTag.m_pszName) : NULL;
+	m_nBlobSize = 0;
+	if (rTag.IsStr())
+		m_pstrVal = new CString(rTag.GetStr());
+	else if (rTag.IsInt())
+		m_uVal = rTag.GetInt();
+	else if (rTag.IsInt64(false))
+		m_uVal = rTag.GetInt64();
+	else if (rTag.IsFloat())
+		m_fVal = rTag.GetFloat();
+	else if (rTag.IsHash()) {
+		m_pData = new BYTE[16];
+		md4cpy(m_pData, rTag.GetHash());
+	} else if (rTag.IsBlob()) {
+		m_nBlobSize = rTag.GetBlobSize();
+		m_pData = new BYTE[m_nBlobSize];
+		memcpy(m_pData, rTag.GetBlob(), m_nBlobSize);
+	} else {
+		ASSERT(0);
+		m_uVal = 0;
+	}
+	return *this;
 }
 
 bool CTag::WriteNewEd2kTag(CFileDataIO* data, EUtf8Str eStrEncode) const
@@ -763,12 +790,9 @@ bool CTag::WriteTagToFile(CFileDataIO* file, EUtf8Str eStrEncode) const
 		}
 		return true;
 	}
-	else
-	{
-		TRACE("%s; Ignored tag with unknown type=0x%02X\n", __FUNCTION__, m_uType);
-		ASSERT(0);
-		return false;
-	}
+	TRACE("%s; Ignored tag with unknown type=0x%02X\n", __FUNCTION__, m_uType);
+	ASSERT(0);
+	return false;
 }
 
 void CTag::SetInt(uint32 uVal)
@@ -803,23 +827,19 @@ CString CTag::GetFullInfo(CString (*pfnDbgGetFileMetaTagName)(UINT uMetaTagID)) 
 	CString strTag;
 	if (m_pszName)
 	{
-		strTag = _T('\"');
-		strTag += m_pszName;
-		strTag += _T('\"');
+		strTag = _T('\"') + m_pszName + _T('\"');
 	}
 	else
 	{
 		if (pfnDbgGetFileMetaTagName)
-			strTag.Format(_T("\"%s\""), (LPCTSTR)(*pfnDbgGetFileMetaTagName)(m_uName));
+			strTag = _T('\"') + (LPCTSTR)(*pfnDbgGetFileMetaTagName)(m_uName) + _T('\"');
 		else
 			strTag.Format(_T("Tag0x%02X"), m_uName);
 	}
 	strTag += _T("=");
 	if (m_uType == TAGTYPE_STRING)
 	{
-		strTag += _T("\"");
-		strTag += *m_pstrVal;
-		strTag += _T("\"");
+		strTag += _T('\"') + *m_pstrVal + _T('\"');
 	}
 	else if (m_uType >= TAGTYPE_STR1 && m_uType <= TAGTYPE_STR16)
 	{

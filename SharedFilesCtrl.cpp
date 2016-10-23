@@ -298,8 +298,8 @@ void CSharedFilesCtrl::Init()
 		m_pToolTip->SetFileIconToolTip(true);
 		m_pToolTip->SubclassWindow(*tooltip);
 		tooltip->ModifyStyle(0, TTS_NOPREFIX);
-		tooltip->SetDelayTime(TTDT_AUTOPOP, 20000);
-		tooltip->SetDelayTime(TTDT_INITIAL, thePrefs.GetToolTipDelay()*1000);
+		tooltip->SetDelayTime(TTDT_AUTOPOP, SEC2MS(20));
+		tooltip->SetDelayTime(TTDT_INITIAL, SEC2MS(thePrefs.GetToolTipDelay()));
 	}
 
 	m_ShareDropTarget.SetParent(this);
@@ -1015,7 +1015,7 @@ BOOL CSharedFilesCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 				break;
 			case MP_OPENFOLDER:
 				if (file && !file->IsPartFile())
-					ShellExecute(NULL, _T("open"), _T("explorer"), _T("/select,\"") + file->GetFilePath() + _T("\""), NULL, SW_SHOW);
+					ShellExecute(NULL, _T("open"), _T("explorer"), _T("/select,\"") + file->GetFilePath() + _T('\"'), NULL, SW_SHOW);
 				break;
 			case MP_RENAME:
 			case MPG_F2:
@@ -1067,7 +1067,7 @@ BOOL CSharedFilesCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 			case MP_REMOVE:
 			case MPG_DELETE:
 			{
-				if (IDNO == AfxMessageBox(GetResString(IDS_CONFIRM_FILEDELETE),MB_ICONWARNING | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_YESNO))
+				if (IDNO == AfxMessageBox((UINT)IDS_CONFIRM_FILEDELETE, MB_ICONWARNING | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_YESNO, 0))
 					return TRUE;
 
 				SetRedraw(FALSE);

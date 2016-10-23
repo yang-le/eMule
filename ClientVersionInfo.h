@@ -23,7 +23,7 @@
 #define CVI_IGNORED	-1
 // == means same client type, same or ignored version (for example eMule/0.4.* == eMule/0.4.2 )
 // != means different client or different defined version (for example eMule/0.4.2 != SomeClient/0.4.2 )
-// > mean _same client type_ and higher version, which therefor cannot be completely undefined ( for example eMule/1.* > eMule/0.4.2 )
+// > mean _same client type_ and higher version, which therefore cannot be completely undefined ( for example eMule/1.* > eMule/0.4.2 )
 // >= same as > but here the version can be undefined ( for example eMule/* >= eMule/0.4.2 )
 class CClientVersionInfo{
 public:

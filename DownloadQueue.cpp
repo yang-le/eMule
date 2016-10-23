@@ -369,7 +369,7 @@ void CDownloadQueue::Process(){
 	uint32 downspeed = 0;
     uint64 maxDownload = thePrefs.GetMaxDownloadInBytesPerSec(true);
 	if (maxDownload != UNLIMITED*1024 && datarate > 1500){
-		downspeed = (UINT)((maxDownload*100)/(datarate+1));
+		downspeed = (uint32)((maxDownload*100)/(datarate+1));
 		if (downspeed < 50)
 			downspeed = 50;
 		else if (downspeed > 200)
@@ -379,11 +379,10 @@ void CDownloadQueue::Process(){
 	while (!average_dr_list.IsEmpty() && GetTickCount() > average_dr_list.GetHead().timestamp + SEC2MS(10))
 		m_datarateMS-=average_dr_list.RemoveHead().datalen;
 
-	if (average_dr_list.GetCount()>1){
-		datarate = (UINT)(m_datarateMS / average_dr_list.GetCount());
-	} else {
+	if (average_dr_list.GetCount()>1)
+		datarate = (uint32)(m_datarateMS / average_dr_list.GetCount());
+	else
 		datarate = 0;
-	}
 
 	uint32 datarateX=0;
 	udcounter++;
@@ -564,7 +563,7 @@ bool CDownloadQueue::CheckAndAddSource(CPartFile* sender,CUpDownClient* source){
 	}
 	else{
 		// here we know that the client instance 'source' is a new created client instance (see callers)
-		// which is therefor not already in the clientlist, we can avoid the check for duplicate client list entries
+		// which is therefore not already in the clientlist, we can avoid the check for duplicate client list entries
 		// when adding this client
 		theApp.clientlist->AddClient(source,true);
 	}

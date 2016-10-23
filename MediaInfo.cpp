@@ -1090,6 +1090,11 @@ struct SRmFileProp {
 	SRmFileProp(const CStringA& rstrName, const CStringA& rstrValue)
 		: strName(rstrName), strValue(rstrValue)
 	{}
+	SRmFileProp(const SRmFileProp& r)
+	{
+		strName = r.strName;
+		strValue = r.strValue;
+	}
 
 	SRmFileProp& operator=(const SRmFileProp& r)
 	{

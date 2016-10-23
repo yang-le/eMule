@@ -559,7 +559,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_BOOTSTRAP_RES (const byte *pbyPacke
 	uint8 uVersion = fileIO.ReadUInt8();
 	// If we don't know any Contacts yet and try to Bootstrap, we assume that all contacts are verified,
 	// in order to speed up the connecting process. The attackvectors to exploit this are very small with no
-	// major effects, so thats a good trade
+	// major effects, so that's a good trade
 	bool bAssumeVerified = CKademlia::GetRoutingZone()->GetNumContacts() == 0;
 
 	if (CKademlia::s_liBootstrapList.IsEmpty())
@@ -845,7 +845,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_RES (const byte *pbyPacketData, uin
 							// UDP FirewallCheck searches are special. The point is we need an IP which we didn't sent an UDP message yet
 							// (or in the near future), so we do not try to add those contacts to our routingzone and we also don't
 							// deliver them back to the searchmanager (because he would UDP-ask them for further results), but only report
-							// them to to FirewallChecker - this will of course cripple the search but thats not the point, since we only
+							// them to to FirewallChecker - this will of course cripple the search but that's not the point, since we only
 							// care for IPs and not the radom set target
 							CUDPFirewallTester::AddPossibleTestContact(uIDResult, uIPResult, uUDPPortResult, uTCPPortResult, uTarget, uVersion, 0, false);
 						}
@@ -919,7 +919,7 @@ static void TokenizeOptQuotedSearchTerm(LPCTSTR pszString, CStringWArray* lst)
 		{
 			// Search for next delimiter or quote character
 			//
-			size_t nNextDelimiter = _tcscspn(pch, _T(INV_KAD_KEYWORD_CHARS) _T("\""));
+			size_t nNextDelimiter = _tcscspn(pch, _T(INV_KAD_KEYWORD_CHARS));
 			if (nNextDelimiter)
 			{
 				lst->Add(CString(pch, nNextDelimiter));

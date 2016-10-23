@@ -65,7 +65,6 @@ void CUpDownClient::DrawStatusBar(CDC* dc, LPCRECT rect, bool onlygreyrect, bool
 		crNeither = RGB(240, 240, 240);
 	}
 
-	ASSERT(reqfile);
 	if (reqfile) {
 		s_StatusBar.SetFileSize(reqfile->GetFileSize());
 		s_StatusBar.SetHeight(rect->bottom - rect->top);
@@ -126,7 +125,8 @@ void CUpDownClient::DrawStatusBar(CDC* dc, LPCRECT rect, bool onlygreyrect, bool
 			}
 			delete[] pcNextPendingBlks;
 		}
-	}
+	} else
+		ASSERT(0);
 	s_StatusBar.Draw(dc, rect->left, rect->top, bFlat);
 }
 
@@ -727,7 +727,7 @@ void CUpDownClient::SetDownloadState(EDownloadState nNewState, LPCTSTR pszReason
 					case DS_WAITCALLBACKKAD:
 						break;
 					default:
-						m_dwLastTriedToConnect = ::GetTickCount()-20*60*1000;
+						m_dwLastTriedToConnect = ::GetTickCount()-MIN2MS(20);
 						break;
 				}
 				break;*/
@@ -2349,8 +2349,7 @@ void CUpDownClient::ProcessAICHAnswer(const uchar* packet, UINT size)
 				pPartFile->AICHRecoveryDataAvailable(request.m_nPart);
 				return;
 			}
-			else
-				DebugLogError(_T("AICH Packet Answer: Failed to read and validate received recoverydata"));
+			DebugLogError(_T("AICH Packet Answer: Failed to read and validate received recoverydata"));
 		}
 		else
 			AddDebugLogLine(DLP_HIGH, false, _T("AICH Packet Answer: Masterhash differs from packethash or hashset has no trusted Masterhash"));

@@ -262,14 +262,14 @@ LRESULT CTreeOptionsCtrl::OnRepositionChild(WPARAM /*wParam*/, LPARAM /*lParam*/
 
 DWORD CTreeOptionsCtrl::GetUserItemData(HTREEITEM hItem) const
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	return pItemData->m_dwItemData;
 }
 
 BOOL CTreeOptionsCtrl::SetUserItemData(HTREEITEM hItem, DWORD dwData)
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	pItemData->m_dwItemData = dwData;
 	return TRUE;
@@ -295,7 +295,7 @@ BOOL CTreeOptionsCtrl::OnDeleteItem(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 
 	//Free up the memory we had allocated in the item data (if needed)
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(pNMTreeView->itemOld.hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(pNMTreeView->itemOld.hItem));
 	delete pItemData;
 
 	return FALSE;
@@ -309,7 +309,7 @@ void CTreeOptionsCtrl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags )
 		if (GetItemData(hItem) && m_hControlItem != NULL)
 		{
 			// if we have a children and VK_RIGHT -> Focus on it !
-			CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+			CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 			if (pItemData->m_pRuntimeClass1->IsDerivedFrom(RUNTIME_CLASS(CTreeOptionsCombo)))
 			{
 				if (m_pCombo->IsWindowVisible())
@@ -591,7 +591,7 @@ BOOL CTreeOptionsCtrl::IsGroup(HTREEITEM hItem) const
 
 BOOL CTreeOptionsCtrl::IsCheckBox(HTREEITEM hItem) const
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	if (pItemData)
 		return pItemData->m_Type == CTreeOptionsItemData::CheckBox;
 	else
@@ -600,7 +600,7 @@ BOOL CTreeOptionsCtrl::IsCheckBox(HTREEITEM hItem) const
 
 BOOL CTreeOptionsCtrl::IsRadioButton(HTREEITEM hItem) const
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	if (pItemData)
 		return pItemData->m_Type == CTreeOptionsItemData::RadioButton;
 	else
@@ -609,7 +609,7 @@ BOOL CTreeOptionsCtrl::IsRadioButton(HTREEITEM hItem) const
 
 BOOL CTreeOptionsCtrl::IsEditBox(HTREEITEM hItem) const
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	if (pItemData)
 		return pItemData->m_Type == CTreeOptionsItemData::EditBox;
 	else
@@ -618,7 +618,7 @@ BOOL CTreeOptionsCtrl::IsEditBox(HTREEITEM hItem) const
 
 BOOL CTreeOptionsCtrl::IsColorItem(HTREEITEM hItem) const
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	if (pItemData)
 		return pItemData->m_Type == CTreeOptionsItemData::ColorBrowser;
 	else
@@ -627,7 +627,7 @@ BOOL CTreeOptionsCtrl::IsColorItem(HTREEITEM hItem) const
 
 BOOL CTreeOptionsCtrl::IsFontItem(HTREEITEM hItem) const
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	if (pItemData)
 		return pItemData->m_Type == CTreeOptionsItemData::FontBrowser;
 	else
@@ -636,7 +636,7 @@ BOOL CTreeOptionsCtrl::IsFontItem(HTREEITEM hItem) const
 
 BOOL CTreeOptionsCtrl::IsFileItem(HTREEITEM hItem) const
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	if (pItemData)
 		return pItemData->m_Type == CTreeOptionsItemData::FileBrowser;
 	else
@@ -645,7 +645,7 @@ BOOL CTreeOptionsCtrl::IsFileItem(HTREEITEM hItem) const
 
 BOOL CTreeOptionsCtrl::IsFolderItem(HTREEITEM hItem) const
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	if (pItemData)
 		return pItemData->m_Type == CTreeOptionsItemData::FolderBrowser;
 	else
@@ -654,7 +654,7 @@ BOOL CTreeOptionsCtrl::IsFolderItem(HTREEITEM hItem) const
 
 BOOL CTreeOptionsCtrl::IsDateTimeItem(HTREEITEM hItem) const
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	if (pItemData)
 		return pItemData->m_Type == CTreeOptionsItemData::DateTimeCtrl;
 	else
@@ -663,7 +663,7 @@ BOOL CTreeOptionsCtrl::IsDateTimeItem(HTREEITEM hItem) const
 
 BOOL CTreeOptionsCtrl::IsIPAddressItem(HTREEITEM hItem) const
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	if (pItemData)
 		return pItemData->m_Type == CTreeOptionsItemData::IPAddressCtrl;
 	else
@@ -672,7 +672,7 @@ BOOL CTreeOptionsCtrl::IsIPAddressItem(HTREEITEM hItem) const
 
 BOOL CTreeOptionsCtrl::IsOpaqueItem(HTREEITEM hItem) const
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	if (pItemData)
 		return pItemData->m_Type == CTreeOptionsItemData::OpaqueBrowser;
 	else
@@ -1058,7 +1058,7 @@ BOOL CTreeOptionsCtrl::AddComboBox(HTREEITEM hItem, CRuntimeClass* pRuntimeClass
 	ASSERT(pRuntimeClass);
 
 	//Delete the old item data in the item if there is one already
-	CTreeOptionsItemData* pOldItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pOldItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	delete pOldItemData;
 
 	//A pointer to the runtime class is stored in the Item data which itself is an
@@ -1158,7 +1158,7 @@ void CTreeOptionsCtrl::CreateNewChildControl(HTREEITEM hItem)
 	ASSERT(hItem);
 	m_hControlItem = hItem;
 
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 
 	//Make a copy of the current font being used by the control
@@ -1181,7 +1181,7 @@ void CTreeOptionsCtrl::CreateNewChildControl(HTREEITEM hItem)
 		RemoveChildControlText(hItem);
 
 		//Create the new combo box
-		m_pCombo = (CTreeOptionsCombo*) pItemData->m_pRuntimeClass1->CreateObject();
+		m_pCombo = static_cast<CTreeOptionsCombo *>(pItemData->m_pRuntimeClass1->CreateObject());
 		ASSERT(m_pCombo);
 		ASSERT(m_pCombo->IsKindOf(RUNTIME_CLASS(CTreeOptionsCombo)));  //Your class must be derived from CTreeOptionsCombo
 		m_pCombo->SetTreeBuddy(this);
@@ -1196,7 +1196,7 @@ void CTreeOptionsCtrl::CreateNewChildControl(HTREEITEM hItem)
 		RemoveChildControlText(hItem);
 
 		//Create the new edit box
-		m_pEdit = (CTreeOptionsEdit*) pItemData->m_pRuntimeClass1->CreateObject();
+		m_pEdit = static_cast<CTreeOptionsEdit *>(pItemData->m_pRuntimeClass1->CreateObject());
 		ASSERT(m_pEdit);
 		ASSERT(m_pEdit->IsKindOf(RUNTIME_CLASS(CTreeOptionsEdit)));  //Your class must be derived from CTreeOptionsEdit
 		m_pEdit->SetTreeBuddy(this);
@@ -1211,7 +1211,7 @@ void CTreeOptionsCtrl::CreateNewChildControl(HTREEITEM hItem)
 		RemoveChildControlText(hItem);
 
 		//Create the new edit box
-		m_pDateTime = (CTreeOptionsDateCtrl*) pItemData->m_pRuntimeClass1->CreateObject();
+		m_pDateTime = static_cast<CTreeOptionsDateCtrl *>(pItemData->m_pRuntimeClass1->CreateObject());
 		ASSERT(m_pDateTime);
 		ASSERT(m_pDateTime->IsKindOf(RUNTIME_CLASS(CTreeOptionsDateCtrl)));  //Your class must be derived from CTreeOptionsDateCtrl
 		m_pDateTime->SetTreeBuddy(this);
@@ -1226,7 +1226,7 @@ void CTreeOptionsCtrl::CreateNewChildControl(HTREEITEM hItem)
 		RemoveChildControlText(hItem);
 
 		//Create the new edit box
-		m_pIPAddress = (CTreeOptionsIPAddressCtrl*) pItemData->m_pRuntimeClass1->CreateObject();
+		m_pIPAddress = static_cast<CTreeOptionsIPAddressCtrl *>(pItemData->m_pRuntimeClass1->CreateObject());
 		ASSERT(m_pIPAddress);
 		ASSERT(m_pIPAddress->IsKindOf(RUNTIME_CLASS(CTreeOptionsIPAddressCtrl)));  //Your class must be derived from CTreeOptionsIPAddressCtrl
 		m_pIPAddress->SetTreeBuddy(this);
@@ -1241,7 +1241,7 @@ void CTreeOptionsCtrl::CreateNewChildControl(HTREEITEM hItem)
 		GetItemRect(hItem, &rLine, FALSE);
 
 		//Create the new static
-		m_pButton = (CTreeOptionsBrowseButton*) pItemData->m_pRuntimeClass1->CreateObject();
+		m_pButton = static_cast<CTreeOptionsBrowseButton *>(pItemData->m_pRuntimeClass1->CreateObject());
 		ASSERT(m_pButton);
 		ASSERT(m_pButton->IsKindOf(RUNTIME_CLASS(CTreeOptionsBrowseButton)));  //Your class must be derived from CTreeOptionsStatic
 		m_pButton->SetTreeBuddy(this);
@@ -1271,7 +1271,7 @@ void CTreeOptionsCtrl::CreateNewChildControl(HTREEITEM hItem)
 	{
 		if (pItemData->m_pRuntimeClass2->IsDerivedFrom(RUNTIME_CLASS(CTreeOptionsSpinCtrl)))
 		{
-			m_pSpin = (CTreeOptionsSpinCtrl*) pItemData->m_pRuntimeClass2->CreateObject();
+			m_pSpin = static_cast<CTreeOptionsSpinCtrl *>(pItemData->m_pRuntimeClass2->CreateObject());
 			ASSERT(m_pSpin);
 			ASSERT(m_pSpin->IsKindOf(RUNTIME_CLASS(CTreeOptionsSpinCtrl)));  //Your class must be derived from CTreeOptionsSpinCtrl
 			m_pSpin->SetTreeBuddy(this);
@@ -1280,7 +1280,7 @@ void CTreeOptionsCtrl::CreateNewChildControl(HTREEITEM hItem)
 		else
 		{
 			ASSERT(pItemData->m_pRuntimeClass2->IsDerivedFrom(RUNTIME_CLASS(CTreeOptionsBrowseButton)));
-			m_pButton = (CTreeOptionsBrowseButton*) pItemData->m_pRuntimeClass2->CreateObject();
+			m_pButton = static_cast<CTreeOptionsBrowseButton *>(pItemData->m_pRuntimeClass2->CreateObject());
 			ASSERT(m_pButton);
 			ASSERT(m_pButton->IsKindOf(RUNTIME_CLASS(CTreeOptionsBrowseButton)));  //Your class must be derived from CTreeOptionsBrowseButton
 			m_pButton->SetTreeBuddy(this);
@@ -1442,7 +1442,7 @@ void CTreeOptionsCtrl::UpdateTreeControlValueFromChildControl(HTREEITEM hItem)
 	}
 	else if (m_pButton)
 	{
-		CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+		CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 		ASSERT(pItemData);
 		if (pItemData->m_Type == CTreeOptionsItemData::ColorBrowser)
 		{
@@ -1464,7 +1464,7 @@ BOOL CTreeOptionsCtrl::AddEditBox(HTREEITEM hItem, CRuntimeClass* pRuntimeClassE
 	BOOL bSuccess = AddComboBox(hItem, pRuntimeClassEditCtrl, dwItemData);
 
 	//Update the type in the item data
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	pItemData->m_Type = CTreeOptionsItemData::EditBox;
 
@@ -1477,7 +1477,7 @@ BOOL CTreeOptionsCtrl::AddEditBox(HTREEITEM hItem, CRuntimeClass* pRuntimeClassE
 	BOOL bSuccess = AddEditBox(hItem, pRuntimeClassEditCtrl, dwItemData);
 
 	//Add the spin ctrl
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	ASSERT(pItemData->m_pRuntimeClass1);
 	ASSERT(pItemData->m_pRuntimeClass2 == NULL);
@@ -1495,7 +1495,7 @@ BOOL CTreeOptionsCtrl::AddFileEditBox(HTREEITEM hItem, CRuntimeClass* pRuntimeCl
 	BOOL bSuccess = AddEditBox(hItem, pRuntimeClassEditCtrl, dwItemData);
 
 	//Add the browse button
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	ASSERT(pItemData->m_pRuntimeClass1);
 	ASSERT(pItemData->m_pRuntimeClass2 == NULL);
@@ -1512,7 +1512,7 @@ BOOL CTreeOptionsCtrl::AddColorSelector(HTREEITEM hItem, CRuntimeClass* pRuntime
 	BOOL bSuccess = AddEditBox(hItem, pRuntimeClassButton, dwItemData);
 
 	//Setup the browser type
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	pItemData->m_Type = CTreeOptionsItemData::ColorBrowser;
 	pItemData->m_bDrawColorForIcon = bDrawColorForIcon;
@@ -1522,14 +1522,14 @@ BOOL CTreeOptionsCtrl::AddColorSelector(HTREEITEM hItem, CRuntimeClass* pRuntime
 
 COLORREF CTreeOptionsCtrl::GetColor(HTREEITEM hItem) const
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	return pItemData->m_Color;
 }
 
 void CTreeOptionsCtrl::SetColor(HTREEITEM hItem, COLORREF color)
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	pItemData->m_Color = color;
 
@@ -1546,7 +1546,7 @@ BOOL CTreeOptionsCtrl::AddFontSelector(HTREEITEM hItem, CRuntimeClass* pRuntimeC
 	BOOL bSuccess = AddEditBox(hItem, pRuntimeClassButton, dwItemData);
 
 	//Setup the browser type
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	pItemData->m_Type = CTreeOptionsItemData::FontBrowser;
 
@@ -1556,7 +1556,7 @@ BOOL CTreeOptionsCtrl::AddFontSelector(HTREEITEM hItem, CRuntimeClass* pRuntimeC
 void CTreeOptionsCtrl::GetFontItem(HTREEITEM hItem, LOGFONT* pLogFont) const
 {
 	ASSERT(pLogFont);
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	CopyMemory(pLogFont, &pItemData->m_Font, sizeof(LOGFONT));
 }
@@ -1564,7 +1564,7 @@ void CTreeOptionsCtrl::GetFontItem(HTREEITEM hItem, LOGFONT* pLogFont) const
 void CTreeOptionsCtrl::SetFontItem(HTREEITEM hItem, const LOGFONT* pLogFont)
 {
 	ASSERT(pLogFont);
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	CopyMemory(&pItemData->m_Font, pLogFont, sizeof(LOGFONT));
 
@@ -1590,7 +1590,7 @@ BOOL CTreeOptionsCtrl::AddFolderEditBox(HTREEITEM hItem, CRuntimeClass* pRuntime
 	BOOL bSuccess = AddFileEditBox(hItem, pRuntimeClassEditCtrl, pRuntimeClassButton, dwItemData);
 
 	//Setup the correct edit type in the item data
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	pItemData->m_Type = CTreeOptionsItemData::FolderBrowser;
 
 	return bSuccess;
@@ -1732,7 +1732,7 @@ BOOL CTreeOptionsCtrl::OnSelchanged(NMHDR *pNMHDR, LRESULT *pResult)
 		//Create the new control if need be
 		if (pNMTreeView->itemNew.hItem != NULL)
 		{
-			CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(pNMTreeView->itemNew.hItem);
+			CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(pNMTreeView->itemNew.hItem));
 			if (pItemData && pItemData->m_pRuntimeClass1)
 				CreateNewChildControl(pNMTreeView->itemNew.hItem);
 		}
@@ -1777,7 +1777,7 @@ void CTreeOptionsCtrl::MemDeleteAllItems(HTREEITEM hParent)
 		if (ItemHasChildren(hItem))
 			MemDeleteAllItems(GetChildItem(hItem));
 
-		CTreeOptionsItemData* pItem = (CTreeOptionsItemData*)CTreeCtrl::GetItemData(hItem);
+		CTreeOptionsItemData* pItem = reinterpret_cast<CTreeOptionsItemData *>(CTreeCtrl::GetItemData(hItem));
 		delete pItem;
 		SetItemData(hItem, 0);
 
@@ -1850,7 +1850,7 @@ BOOL CTreeOptionsCtrl::OnNmClick(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 	HTREEITEM hItem = HitTest(point, &uFlags);
 	if (hItem)
 	{
-		CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+		CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 		if ((uFlags & TVHT_ONITEM) && pItemData && pItemData->m_pRuntimeClass1 && m_hControlItem == NULL)
 			CreateNewChildControl(hItem);
 
@@ -1929,7 +1929,7 @@ BOOL CTreeOptionsCtrl::OnCustomDraw(NMHDR* pNMHDR, LRESULT* pResult)
 			HTREEITEM hItem = (HTREEITEM) pCustomDraw->nmcd.dwItemSpec;
 
 			BOOL bDrawColor = FALSE;
-			CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+			CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 			if (pItemData && pItemData->m_Type == CTreeOptionsItemData::ColorBrowser && pItemData->m_bDrawColorForIcon)
 				bDrawColor = TRUE;
 
@@ -1969,7 +1969,7 @@ BOOL CTreeOptionsCtrl::AddDateTime(HTREEITEM hItem, CRuntimeClass* pRuntimeClass
 	BOOL bSuccess = AddComboBox(hItem, pRuntimeClassDateTime, dwItemData);
 
 	//Setup the item type
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	pItemData->m_Type = CTreeOptionsItemData::DateTimeCtrl;
 
@@ -1978,19 +1978,19 @@ BOOL CTreeOptionsCtrl::AddDateTime(HTREEITEM hItem, CRuntimeClass* pRuntimeClass
 
 void CTreeOptionsCtrl::GetDateTime(HTREEITEM hItem, SYSTEMTIME& st) const
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	CopyMemory(&st, &pItemData->m_DateTime, sizeof(SYSTEMTIME));
 }
 
 void CTreeOptionsCtrl::SetDateTime(HTREEITEM hItem, const SYSTEMTIME& st)
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	CopyMemory(&pItemData->m_DateTime, &st, sizeof(SYSTEMTIME));
 
 	//Also update the text while we are at it
-	CTreeOptionsDateCtrl* pTempDateTime = (CTreeOptionsDateCtrl*) pItemData->m_pRuntimeClass1->CreateObject();
+	CTreeOptionsDateCtrl* pTempDateTime = static_cast<CTreeOptionsDateCtrl *>(pItemData->m_pRuntimeClass1->CreateObject());
 	ASSERT(pTempDateTime);
 	ASSERT(pTempDateTime->IsKindOf(RUNTIME_CLASS(CTreeOptionsDateCtrl)));  //Your class must be derived from CTreeOptionsDateCtrl
 	CString sDateTime = pTempDateTime->GetDisplayText(st);
@@ -2004,7 +2004,7 @@ BOOL CTreeOptionsCtrl::AddIPAddress(HTREEITEM hItem, CRuntimeClass* pRuntimeClas
 	BOOL bSuccess = AddComboBox(hItem, pRuntimeClassDateTime, dwItemData);
 
 	//Setup the item type
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	pItemData->m_Type = CTreeOptionsItemData::IPAddressCtrl;
 
@@ -2013,19 +2013,19 @@ BOOL CTreeOptionsCtrl::AddIPAddress(HTREEITEM hItem, CRuntimeClass* pRuntimeClas
 
 DWORD CTreeOptionsCtrl::GetIPAddress(HTREEITEM hItem) const
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	return pItemData->m_dwIPAddress;
 }
 
 void CTreeOptionsCtrl::SetIPAddress(HTREEITEM hItem, DWORD dwAddress)
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	pItemData->m_dwIPAddress = dwAddress;
 
 	//Also update the text while we are at it
-	CTreeOptionsIPAddressCtrl* pTempIPAddress = (CTreeOptionsIPAddressCtrl*) pItemData->m_pRuntimeClass1->CreateObject();
+	CTreeOptionsIPAddressCtrl* pTempIPAddress = static_cast<CTreeOptionsIPAddressCtrl *>(pItemData->m_pRuntimeClass1->CreateObject());
 	ASSERT(pTempIPAddress);
 	ASSERT(pTempIPAddress->IsKindOf(RUNTIME_CLASS(CTreeOptionsIPAddressCtrl)));  //Your class must be derived from CTreeOptionsIPAddressCtrl
 	CString sIPAddress = pTempIPAddress->GetDisplayText(dwAddress);
@@ -2039,7 +2039,7 @@ BOOL CTreeOptionsCtrl::AddOpaque(HTREEITEM hItem, CRuntimeClass* pRuntimeClass1,
 	BOOL bSuccess = AddComboBox(hItem, pRuntimeClass1, dwItemData);
 
 	//Add the second class
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	ASSERT(pItemData->m_pRuntimeClass1);
 	ASSERT(pItemData->m_pRuntimeClass2 == NULL);
@@ -2053,14 +2053,14 @@ BOOL CTreeOptionsCtrl::AddOpaque(HTREEITEM hItem, CRuntimeClass* pRuntimeClass1,
 
 DWORD CTreeOptionsCtrl::GetOpaque(HTREEITEM hItem) const
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	return pItemData->m_dwItemData;
 }
 
 void CTreeOptionsCtrl::SetOpaque(HTREEITEM hItem, DWORD dwItemData)
 {
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) GetItemData(hItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
 	pItemData->m_dwItemData = dwItemData;
 }
@@ -2765,7 +2765,7 @@ void CTreeOptionsBrowseButton::OnClicked()
 	ASSERT(hSelItem);
 
 	//Pull out the item data associated with the selected item
-	CTreeOptionsItemData* pItemData = (CTreeOptionsItemData*) m_pTreeCtrl->GetItemData(hSelItem);
+	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(m_pTreeCtrl->GetItemData(hSelItem));
 	ASSERT(pItemData);
 	if (pItemData->m_pRuntimeClass1->IsDerivedFrom(RUNTIME_CLASS(CTreeOptionsEdit)))
 	{
@@ -2927,7 +2927,7 @@ void CTreeOptionsFileDialog::OnInitDone()
 void DDX_TreeCheck(CDataExchange* pDX, int nIDC, HTREEITEM hItem, BOOL& bCheck)
 {
 	HWND hWndCtrl = pDX->PrepareCtrl(nIDC);
-	CTreeOptionsCtrl* pCtrlTreeOptions = (CTreeOptionsCtrl*) CWnd::FromHandlePermanent(hWndCtrl);
+	CTreeOptionsCtrl* pCtrlTreeOptions = static_cast<CTreeOptionsCtrl *>(CWnd::FromHandlePermanent(hWndCtrl));
 	ASSERT(pCtrlTreeOptions);
 	ASSERT(pCtrlTreeOptions->IsKindOf(RUNTIME_CLASS(CTreeOptionsCtrl)));
 
@@ -2946,7 +2946,7 @@ void DDX_TreeCheck(CDataExchange* pDX, int nIDC, HTREEITEM hItem, BOOL& bCheck)
 void DDX_TreeRadio(CDataExchange* pDX, int nIDC, HTREEITEM hParent, int& nIndex)
 {
 	HWND hWndCtrl = pDX->PrepareCtrl(nIDC);
-	CTreeOptionsCtrl* pCtrlTreeOptions = (CTreeOptionsCtrl*) CWnd::FromHandlePermanent(hWndCtrl);
+	CTreeOptionsCtrl* pCtrlTreeOptions = static_cast<CTreeOptionsCtrl *>(CWnd::FromHandlePermanent(hWndCtrl));
 	ASSERT(pCtrlTreeOptions);
 	ASSERT(pCtrlTreeOptions->IsKindOf(RUNTIME_CLASS(CTreeOptionsCtrl)));
 
@@ -2966,7 +2966,7 @@ void DDX_TreeRadio(CDataExchange* pDX, int nIDC, HTREEITEM hParent, int& nIndex)
 void DDX_TreeEdit(CDataExchange* pDX, int nIDC, HTREEITEM hItem, CString& sText)
 {
 	HWND hWndCtrl = pDX->PrepareCtrl(nIDC);
-	CTreeOptionsCtrl* pCtrlTreeOptions = (CTreeOptionsCtrl*) CWnd::FromHandlePermanent(hWndCtrl);
+	CTreeOptionsCtrl* pCtrlTreeOptions = static_cast<CTreeOptionsCtrl *>(CWnd::FromHandlePermanent(hWndCtrl));
 	ASSERT(pCtrlTreeOptions);
 	ASSERT(pCtrlTreeOptions->IsKindOf(RUNTIME_CLASS(CTreeOptionsCtrl)));
 
@@ -2979,7 +2979,7 @@ void DDX_TreeEdit(CDataExchange* pDX, int nIDC, HTREEITEM hItem, CString& sText)
 void DDX_TreeEdit(CDataExchange* pDX, int nIDC, HTREEITEM hItem, int& nValue)
 {
 	HWND hWndCtrl = pDX->PrepareCtrl(nIDC);
-	CTreeOptionsCtrl* pCtrlTreeOptions = (CTreeOptionsCtrl*) CWnd::FromHandlePermanent(hWndCtrl);
+	CTreeOptionsCtrl* pCtrlTreeOptions = static_cast<CTreeOptionsCtrl *>(CWnd::FromHandlePermanent(hWndCtrl));
 	ASSERT(pCtrlTreeOptions);
 	ASSERT(pCtrlTreeOptions->IsKindOf(RUNTIME_CLASS(CTreeOptionsCtrl)));
 
@@ -2999,7 +2999,7 @@ void DDX_TreeEdit(CDataExchange* pDX, int nIDC, HTREEITEM hItem, int& nValue)
 void DDX_TreeCombo(CDataExchange* pDX, int nIDC, HTREEITEM hItem, CString& sText)
 {
 	HWND hWndCtrl = pDX->PrepareCtrl(nIDC);
-	CTreeOptionsCtrl* pCtrlTreeOptions = (CTreeOptionsCtrl*) CWnd::FromHandlePermanent(hWndCtrl);
+	CTreeOptionsCtrl* pCtrlTreeOptions = static_cast<CTreeOptionsCtrl *>(CWnd::FromHandlePermanent(hWndCtrl));
 	ASSERT(pCtrlTreeOptions);
 	ASSERT(pCtrlTreeOptions->IsKindOf(RUNTIME_CLASS(CTreeOptionsCtrl)));
 
@@ -3012,7 +3012,7 @@ void DDX_TreeCombo(CDataExchange* pDX, int nIDC, HTREEITEM hItem, CString& sText
 void DDX_TreeFileEdit(CDataExchange* pDX, int nIDC, HTREEITEM hItem, CString& sText)
 {
 	HWND hWndCtrl = pDX->PrepareCtrl(nIDC);
-	CTreeOptionsCtrl* pCtrlTreeOptions = (CTreeOptionsCtrl*) CWnd::FromHandlePermanent(hWndCtrl);
+	CTreeOptionsCtrl* pCtrlTreeOptions = static_cast<CTreeOptionsCtrl *>(CWnd::FromHandlePermanent(hWndCtrl));
 	ASSERT(pCtrlTreeOptions);
 	ASSERT(pCtrlTreeOptions->IsKindOf(RUNTIME_CLASS(CTreeOptionsCtrl)));
 
@@ -3025,7 +3025,7 @@ void DDX_TreeFileEdit(CDataExchange* pDX, int nIDC, HTREEITEM hItem, CString& sT
 void DDX_TreeFolderEdit(CDataExchange* pDX, int nIDC, HTREEITEM hItem, CString& sText)
 {
 	HWND hWndCtrl = pDX->PrepareCtrl(nIDC);
-	CTreeOptionsCtrl* pCtrlTreeOptions = (CTreeOptionsCtrl*) CWnd::FromHandlePermanent(hWndCtrl);
+	CTreeOptionsCtrl* pCtrlTreeOptions = static_cast<CTreeOptionsCtrl *>(CWnd::FromHandlePermanent(hWndCtrl));
 	ASSERT(pCtrlTreeOptions);
 	ASSERT(pCtrlTreeOptions->IsKindOf(RUNTIME_CLASS(CTreeOptionsCtrl)));
 
@@ -3038,7 +3038,7 @@ void DDX_TreeFolderEdit(CDataExchange* pDX, int nIDC, HTREEITEM hItem, CString& 
 void DDX_TreeColor(CDataExchange* pDX, int nIDC, HTREEITEM hItem, COLORREF& color)
 {
 	HWND hWndCtrl = pDX->PrepareCtrl(nIDC);
-	CTreeOptionsCtrl* pCtrlTreeOptions = (CTreeOptionsCtrl*) CWnd::FromHandlePermanent(hWndCtrl);
+	CTreeOptionsCtrl* pCtrlTreeOptions = static_cast<CTreeOptionsCtrl *>(CWnd::FromHandlePermanent(hWndCtrl));
 	ASSERT(pCtrlTreeOptions);
 	ASSERT(pCtrlTreeOptions->IsKindOf(RUNTIME_CLASS(CTreeOptionsCtrl)));
 
@@ -3051,7 +3051,7 @@ void DDX_TreeColor(CDataExchange* pDX, int nIDC, HTREEITEM hItem, COLORREF& colo
 void DDX_TreeFont(CDataExchange* pDX, int nIDC, HTREEITEM hItem, LOGFONT* pLogFont)
 {
 	HWND hWndCtrl = pDX->PrepareCtrl(nIDC);
-	CTreeOptionsCtrl* pCtrlTreeOptions = (CTreeOptionsCtrl*) CWnd::FromHandlePermanent(hWndCtrl);
+	CTreeOptionsCtrl* pCtrlTreeOptions = static_cast<CTreeOptionsCtrl *>(CWnd::FromHandlePermanent(hWndCtrl));
 	ASSERT(pCtrlTreeOptions);
 	ASSERT(pCtrlTreeOptions->IsKindOf(RUNTIME_CLASS(CTreeOptionsCtrl)));
 
@@ -3064,7 +3064,7 @@ void DDX_TreeFont(CDataExchange* pDX, int nIDC, HTREEITEM hItem, LOGFONT* pLogFo
 void DDX_TreeDateTime(CDataExchange* pDX, int nIDC, HTREEITEM hItem, SYSTEMTIME& st)
 {
 	HWND hWndCtrl = pDX->PrepareCtrl(nIDC);
-	CTreeOptionsCtrl* pCtrlTreeOptions = (CTreeOptionsCtrl*) CWnd::FromHandlePermanent(hWndCtrl);
+	CTreeOptionsCtrl* pCtrlTreeOptions = static_cast<CTreeOptionsCtrl *>(CWnd::FromHandlePermanent(hWndCtrl));
 	ASSERT(pCtrlTreeOptions);
 	ASSERT(pCtrlTreeOptions->IsKindOf(RUNTIME_CLASS(CTreeOptionsCtrl)));
 
@@ -3077,7 +3077,7 @@ void DDX_TreeDateTime(CDataExchange* pDX, int nIDC, HTREEITEM hItem, SYSTEMTIME&
 void DDX_TreeIPAddress(CDataExchange* pDX, int nIDC, HTREEITEM hItem, DWORD& dwAddress)
 {
 	HWND hWndCtrl = pDX->PrepareCtrl(nIDC);
-	CTreeOptionsCtrl* pCtrlTreeOptions = (CTreeOptionsCtrl*) CWnd::FromHandlePermanent(hWndCtrl);
+	CTreeOptionsCtrl* pCtrlTreeOptions = static_cast<CTreeOptionsCtrl *>(CWnd::FromHandlePermanent(hWndCtrl));
 	ASSERT(pCtrlTreeOptions);
 	ASSERT(pCtrlTreeOptions->IsKindOf(RUNTIME_CLASS(CTreeOptionsCtrl)));
 
@@ -3125,7 +3125,7 @@ HTREEITEM CTreeOptionsCtrl::CopyItem(HTREEITEM hItem, HTREEITEM htiNewParent, HT
 	tvstruct.item.cchTextMax = sText.GetLength();
 	tvstruct.item.pszText = sText.GetBuffer(tvstruct.item.cchTextMax);
 	if (tvstruct.item.lParam)
-		tvstruct.item.lParam = (LPARAM)new CTreeOptionsItemData(*((CTreeOptionsItemData *)tvstruct.item.lParam));
+		tvstruct.item.lParam = (LPARAM)new CTreeOptionsItemData(*(reinterpret_cast<CTreeOptionsItemData *>(tvstruct.item.lParam)));
 
 	//Insert the item at the proper location
 	tvstruct.hParent = htiNewParent;

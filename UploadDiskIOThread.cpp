@@ -207,9 +207,9 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* 
 			Requested_Block_Struct* currentblock = pUploadClientStruct->m_BlockRequests_queue.GetHead();
 			if (md4cmp(currentblock->FileID, pUploadClientStruct->m_pClient->GetUploadFileID()) != 0)
 			{
-				// the UploadFileID differs. Thats normally not a problem, we just switch it, but
+				// the UploadFileID differs. That's normally not a problem, we just switch it, but
 				// we don't want to do so in this thread for synchronization issues. so return and wait
-				// until the mainthread who checks the blockrequest periodical does so.
+				// until the mainthread who checks the blockrequest periodically does so.
 				// This should happen very rarely anyway so no problem performance wise
 				theApp.QueueDebugLogLine(false, _T("CUploadDiskIOThread::StartCreateNextBlockPackage: Switched fileid, waiting for mainthread"));
 				return;

@@ -47,6 +47,7 @@ public:
 	CHyperLink(int iBegin, uint16 iEnd, const CString& sTitle, const CString& sCommand, const CString& sDirectory);
 	CHyperLink(int iBegin, uint16 iEnd, const CString& sTitle, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	CHyperLink(const CHyperLink& Src);
+	CHyperLink& operator=(const CHyperLink& Src);
 
 	void Execute();
 	bool operator < (const CHyperLink& Arg) const	{return m_iEnd < Arg.m_iEnd;}
@@ -106,9 +107,10 @@ protected:
 
 class CPreparedHyperText{
 public:
-	CPreparedHyperText()						{}
+	CPreparedHyperText() {}
 	explicit CPreparedHyperText(const CString& sText);
 	explicit CPreparedHyperText(const CPreparedHyperText& src);
+	CPreparedHyperText& operator=(const CPreparedHyperText& src);
 
 	void Clear();
 	void SetText(const CString& sText);
@@ -117,9 +119,9 @@ public:
 	void AppendHyperLink(const CString& sText, const CString& sTitle, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void AppendKeyWord(const CString& sText, COLORREF iColor);
 
-	 CString& GetText()					{return m_sText;}
-	 std::list<CHyperLink>& GetLinks()	{return m_Links;}
-	 std::list<CKeyWord>& GetKeywords()	{return m_KeyWords;}
+	CString& GetText()					{return m_sText;}
+	std::list<CHyperLink>& GetLinks()	{return m_Links;}
+	std::list<CKeyWord>& GetKeywords()	{return m_KeyWords;}
 	//friend class CHyperTextCtrl;
 
 protected:
@@ -142,7 +144,9 @@ public:
 	CKeyWord* m_pKeyWord;
 
 	CLinePartInfo(int iBegin, uint16 iEnd, CHyperLink* pHyperLink = NULL, CKeyWord* pKeyWord = NULL);
+	CLinePartInfo() {}
 	CLinePartInfo(const CLinePartInfo& Src);
+	CLinePartInfo& operator=(const CLinePartInfo& Src);
 	uint16 Begin() const				{return m_xBegin;}
 	uint16 End() const					{return m_xEnd;}
 	uint16 Len() const					{return ((m_xEnd - m_xBegin) + 1);}
@@ -157,6 +161,7 @@ public:
 
 	CLineInfo(int iBegin, uint16 iEnd);
 	CLineInfo(const CLineInfo& Src);
+	CLineInfo& operator=(const CLineInfo& Src);
 	UINT Begin() const					{return m_iBegin;}
 	UINT End() const					{return m_iEnd;}
 	UINT Len() const					{return m_iEnd - m_iBegin + 1;}
@@ -175,10 +180,12 @@ public:
 	CVisPart(const CLinePartInfo& LinePartInfo, const CRect& rcBounds,
 		int iRealBegin, uint16 iRealLen,CVisPart* pPrev,CVisPart* pNext);
 	CVisPart(const CVisPart& Src);
+	CVisPart& operator=(const CVisPart& Src);
 };
 
 class CVisLine : public std::vector<CVisPart>
-{	};
+{
+};
 
 
 // --------------------------------------------------------------

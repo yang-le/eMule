@@ -414,7 +414,7 @@ BOOL CPPgConnection::OnApply()
 	theApp.emuledlg->ShowConnectionState();
 
 	if (bRestartApp)
-		AfxMessageBox(GetResString(IDS_NOPORTCHANGEPOSSIBLE));
+		AfxMessageBox((UINT)IDS_NOPORTCHANGEPOSSIBLE, MB_OK, 0);
 
 	OnEnChangePorts(2); //refresh ports display only
 
@@ -556,13 +556,13 @@ void CPPgConnection::OnBnClickedOpenports()
 		bResult = bResult && theApp.m_pFirewallOpener->OpenPort(thePrefs.GetUDPPort(), NAT_PROTOCOL_UDP, EMULE_DEFAULTRULENAME_UDP, false);
 	if (bResult){
 		if (!bAlreadyExisted)
-			AfxMessageBox(GetResString(IDS_FO_PREF_SUCCCEEDED), MB_ICONINFORMATION | MB_OK);
+			AfxMessageBox((UINT)IDS_FO_PREF_SUCCCEEDED, MB_ICONINFORMATION | MB_OK, 0);
 		else
 			// TODO: actually we could offer the user to remove existing rules
-			AfxMessageBox(GetResString(IDS_FO_PREF_EXISTED), MB_ICONINFORMATION | MB_OK);
+			AfxMessageBox((UINT)IDS_FO_PREF_EXISTED, MB_ICONINFORMATION | MB_OK, 0);
 	}
 	else
-		AfxMessageBox(GetResString(IDS_FO_PREF_FAILED), MB_ICONSTOP | MB_OK);
+		AfxMessageBox((UINT)IDS_FO_PREF_FAILED, MB_ICONSTOP | MB_OK, 0);
 }
 
 void CPPgConnection::OnStartPortTest()

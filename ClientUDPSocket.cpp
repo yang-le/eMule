@@ -58,13 +58,11 @@ CClientUDPSocket::CClientUDPSocket()
 CClientUDPSocket::~CClientUDPSocket()
 {
 	theApp.uploadBandwidthThrottler->RemoveFromAllQueuesLocked(this); // ZZ:UploadBandWithThrottler (UDP)
-	sendLocker.Lock();
 	while (!controlpacket_queue.IsEmpty()) {
 		const UDPPack* p = controlpacket_queue.RemoveHead();
 		delete p->packet;
 		delete p;
 	}
-	sendLocker.Unlock();
 }
 
 void CClientUDPSocket::OnReceive(int nErrorCode)
@@ -75,7 +73,7 @@ void CClientUDPSocket::OnReceive(int nErrorCode)
 			DebugLogError(_T("Error: Client UDP socket, error on receive event: %s"), (LPCTSTR)GetErrorMessage(nErrorCode, 1));
 	}
 
-	BYTE buffer[5000];
+	BYTE buffer[8192]; //5000 could be too low
 	SOCKADDR_IN sockAddr = {0};
 	int iSockAddrLen = sizeof sockAddr;
 	int nRealLen = ReceiveFrom(buffer, sizeof buffer, (SOCKADDR*)&sockAddr, &iSockAddrLen);

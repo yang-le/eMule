@@ -512,7 +512,7 @@ UINT LastCommonRouteFinder::RunInternal() {
 						}
 					}
 
-					if(foundLastCommonHost == false && traceRouteTries >= 3) {
+					if (foundLastCommonHost == false && traceRouteTries >= 3) {
 						theApp.QueueDebugLogLine(false,_T("UploadSpeedSense: Tracerouting failed several times. Waiting a few minutes before trying again."));
 
                         SetUpload(maxUpload);
@@ -521,16 +521,15 @@ UINT LastCommonRouteFinder::RunInternal() {
 						m_state = GetResString(IDS_USS_STATE_WAITING);
 						pingLocker.Unlock();
 
-						prefsEvent->Lock(3*60*1000);
+						prefsEvent->Lock(MIN2MS(3));
 
                         pingLocker.Lock();
 						m_state = GetResString(IDS_USS_STATE_PREPARING);
                         pingLocker.Unlock();
 					}
 
-			        if(m_enabled == false) {
+			        if (m_enabled == false)
 				        enabled = false;
-                    }
 				}
 
                 if(enabled) {

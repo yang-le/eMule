@@ -549,7 +549,7 @@ BOOL CemuleApp::InitInstance()
 	{
 		if (GetProfileInt(_T("eMule"), _T("CheckComctl32"), 1)) // just in case some user's can not install that package and have to survive without it..
 		{
-			if (AfxMessageBox(GetResString(IDS_COMCTRL32_DLL_TOOOLD), MB_ICONSTOP | MB_YESNO) == IDYES)
+			if (AfxMessageBox((UINT)IDS_COMCTRL32_DLL_TOOOLD, MB_ICONSTOP | MB_YESNO, 0) == IDYES)
 				ShellOpenFile(_T("http://www.microsoft.com/downloads/details.aspx?FamilyID=cb2cf3a2-8025-4e8f-8511-9b476a8d35d2"));
 
 			// No need to exit eMule, it will most likely work as expected but it will have some GUI glitches here and there..
@@ -605,7 +605,7 @@ BOOL CemuleApp::InitInstance()
 		memset(&m_wsaData,0,sizeof(WSADATA));
 		if (!AfxSocketInit(&m_wsaData))
 		{
-			AfxMessageBox(GetResString(IDS_SOCKETS_INIT_FAILED));
+			AfxMessageBox((UINT)IDS_SOCKETS_INIT_FAILED, MB_OK, 0);
 			return FALSE;
 		}
 	}
@@ -1822,11 +1822,8 @@ void CemuleApp::SearchClipboard()
 void CemuleApp::PasteClipboard(int cat)
 {
 	CString strLinks = CopyTextFromClipboard();
-	strLinks.Trim();
-	if (strLinks.IsEmpty())
-		return;
-
-	AddEd2kLinksToDownload(strLinks, cat);
+	if (!strLinks.Trim().IsEmpty())
+		AddEd2kLinksToDownload(strLinks, cat);
 }
 
 bool CemuleApp::IsEd2kLinkInClipboard(LPCSTR pszLinkType, int iLinkTypeLen)
@@ -1858,14 +1855,14 @@ bool CemuleApp::IsEd2kLinkInClipboard(LPCSTR pszLinkType, int iLinkTypeLen)
 
 bool CemuleApp::IsEd2kFileLinkInClipboard()
 {
-	static const CHAR _szEd2kFileLink[] = "ed2k://|file|"; // Use the ANSI string
-	return IsEd2kLinkInClipboard(_szEd2kFileLink, _countof(_szEd2kFileLink)-1);
+	static const char _szEd2kFileLink[] = "ed2k://|file|"; // Use the ANSI string
+	return IsEd2kLinkInClipboard(_szEd2kFileLink, (sizeof _szEd2kFileLink) - 1);
 }
 
 bool CemuleApp::IsEd2kServerLinkInClipboard()
 {
-	static const CHAR _szEd2kServerLink[] = "ed2k://|server|"; // Use the ANSI string
-	return IsEd2kLinkInClipboard(_szEd2kServerLink, _countof(_szEd2kServerLink)-1);
+	static const char _szEd2kServerLink[] = "ed2k://|server|"; // Use the ANSI string
+	return IsEd2kLinkInClipboard(_szEd2kServerLink, (sizeof _szEd2kServerLink) - 1);
 }
 
 // Elandal:ThreadSafeLogging -->
@@ -2194,12 +2191,23 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD dwCtrlType)
 	if (thePrefs.GetDebug2Disk()) {
 		static TCHAR szCtrlType[40];
 		LPCTSTR pszCtrlType = NULL;
-		if (dwCtrlType == CTRL_C_EVENT)				pszCtrlType = _T("CTRL_C_EVENT");
-		else if (dwCtrlType == CTRL_BREAK_EVENT)	pszCtrlType = _T("CTRL_BREAK_EVENT");
-		else if (dwCtrlType == CTRL_CLOSE_EVENT)	pszCtrlType = _T("CTRL_CLOSE_EVENT");
-		else if (dwCtrlType == CTRL_LOGOFF_EVENT)	pszCtrlType = _T("CTRL_LOGOFF_EVENT");
-		else if (dwCtrlType == CTRL_SHUTDOWN_EVENT)	pszCtrlType = _T("CTRL_SHUTDOWN_EVENT");
-		else {
+		switch (dwCtrlType) {
+		case CTRL_C_EVENT:
+			pszCtrlType = _T("CTRL_C_EVENT");
+			break;
+		case CTRL_BREAK_EVENT:
+			pszCtrlType = _T("CTRL_BREAK_EVENT");
+			break;
+		case CTRL_CLOSE_EVENT:
+			pszCtrlType = _T("CTRL_CLOSE_EVENT");
+			break;
+		case CTRL_LOGOFF_EVENT:
+			pszCtrlType = _T("CTRL_LOGOFF_EVENT");
+			break;
+		case CTRL_SHUTDOWN_EVENT:
+			pszCtrlType = _T("CTRL_SHUTDOWN_EVENT");
+			break;
+		default:
 			_sntprintf(szCtrlType, _countof(szCtrlType), _T("0x%08lx"), dwCtrlType);
 			szCtrlType[_countof(szCtrlType) - 1] = _T('\0');
 			pszCtrlType = szCtrlType;

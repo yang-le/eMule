@@ -79,17 +79,18 @@ CString CIni::GetDefaultIniFile(bool bModulPath)
 	return strApplName;
 }
 
-CIni::CIni():
-	m_bModulPath(true)
+CIni::CIni()
+	: m_bModulPath(true)
+	, m_chBuffer()
 {
 	m_strFileName = GetDefaultIniFile(m_bModulPath);
 	m_strSection  = GetDefaultSection();
 }
 
-CIni::CIni(CIni const &Ini):
-	m_strFileName(Ini.m_strFileName),
-	m_strSection(Ini.m_strSection),
-	m_bModulPath(Ini.m_bModulPath)
+CIni::CIni(CIni const &Ini)
+	: m_strFileName(Ini.m_strFileName)
+	, m_strSection(Ini.m_strSection)
+	, m_bModulPath(Ini.m_bModulPath)
 	, m_chBuffer()
 {
 	if (m_strFileName.IsEmpty())
@@ -99,9 +100,9 @@ CIni::CIni(CIni const &Ini):
 		m_strSection = GetDefaultSection();
 }
 
-CIni::CIni(CString const &rstrFileName):
-	m_strFileName(rstrFileName),
-	m_bModulPath(true)
+CIni::CIni(CString const &rstrFileName)
+	: m_strFileName(rstrFileName)
+	, m_bModulPath(true)
 {
 	if (m_strFileName.IsEmpty())
 		m_strFileName = GetDefaultIniFile(m_bModulPath);
@@ -109,10 +110,11 @@ CIni::CIni(CString const &rstrFileName):
 	m_strSection = GetDefaultSection();
 }
 
-CIni::CIni(CString const &rstrFileName, CString const &rstrSection):
-	m_strFileName(rstrFileName),
-	m_strSection(rstrSection),
-	m_bModulPath(true)
+CIni::CIni(CString const &rstrFileName, CString const &rstrSection)
+	: m_strFileName(rstrFileName)
+	, m_strSection(rstrSection)
+	, m_bModulPath(true)
+	, m_chBuffer()
 {
 	if (m_strFileName.IsEmpty())
 		m_strFileName = GetDefaultIniFile(m_bModulPath);
@@ -121,8 +123,13 @@ CIni::CIni(CString const &rstrFileName, CString const &rstrSection):
 		m_strSection = GetDefaultSection();
 }
 
-CIni::~CIni()
+CIni& CIni::operator=(CIni const& rIni)
 {
+	m_strFileName = rIni.m_strFileName;
+	m_strSection = rIni.m_strSection;
+	m_bModulPath = rIni.m_bModulPath;
+	memcpy(m_chBuffer, rIni.m_chBuffer, sizeof m_chBuffer);
+	return *this;
 }
 
 void CIni::SetFileName(const CString &rstrFileName)

@@ -477,7 +477,7 @@ void EditTextWithFormat(CDataExchange* pDX, int nIDC, HTREEITEM hItem, LPCTSTR l
 
 	HWND hWndCtrl = pDX->PrepareEditCtrl(nIDC);
 	ASSERT( hWndCtrl != NULL );
-	CTreeOptionsCtrl* pCtrlTreeOptions = (CTreeOptionsCtrl*) CWnd::FromHandlePermanent(hWndCtrl);
+	CTreeOptionsCtrl* pCtrlTreeOptions = static_cast<CTreeOptionsCtrl *>(CWnd::FromHandlePermanent(hWndCtrl));
 	ASSERT(pCtrlTreeOptions);
 	ASSERT(pCtrlTreeOptions->IsKindOf(RUNTIME_CLASS(CTreeOptionsCtrl)));
 
@@ -592,7 +592,7 @@ int CNumTreeOptionsEdit::OnCreate(LPCREATESTRUCT lpCreateStruct)
 void CNumTreeOptionsEdit::OnEnChange()
 {
 	if (!m_bSelf)
-		((CTreeOptionsCtrlEx*)m_pTreeCtrl)->NotifyParent(EN_CHANGE, m_hTreeCtrlItem);
+		static_cast<CTreeOptionsCtrlEx *>(m_pTreeCtrl)->NotifyParent(EN_CHANGE, m_hTreeCtrlItem);
 }
 
 
@@ -619,5 +619,5 @@ int CTreeOptionsEditEx::OnCreate(LPCREATESTRUCT lpCreateStruct)
 void CTreeOptionsEditEx::OnEnChange()
 {
 	if (!m_bSelf)
-		((CTreeOptionsCtrlEx*)m_pTreeCtrl)->NotifyParent(EN_CHANGE, m_hTreeCtrlItem);
+		static_cast<CTreeOptionsCtrlEx *>(m_pTreeCtrl)->NotifyParent(EN_CHANGE, m_hTreeCtrlItem);
 }

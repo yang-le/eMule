@@ -1967,9 +1967,9 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 		if ( (forceUpdate || stattree.IsExpanded(htime_aap)) && timeDiff > 0 )
 		{
 			double avgModifier[3];
-			avgModifier[0] = (double) 86400 / timeDiff; // Days
-			avgModifier[1] = (double) 2628000 / timeDiff; // Months
-			avgModifier[2] = (double) 31536000 / timeDiff; // Years
+			avgModifier[0] = (double) DAY2S(1) / timeDiff; // Days
+			avgModifier[1] = (double) 2629746 / timeDiff; // Months - 1/12 of Gregorian year
+			avgModifier[2] = (double) 31556952 / timeDiff; // Years - Gregorian year in seconds
 			// TIME STATISTICS -> PROJECTED AVERAGES -> TIME PERIODS
 			// This section is completely scalable.  Might add "Week" to it in the future.
 			// For each time period that we are calculating a projected average for...
@@ -3076,8 +3076,8 @@ void CStatisticsDlg::ShowInterval()
 		int shownSecs = plotRect.Width() * thePrefs.GetTrafficOMeterInterval();
 
 		// CB Mod ---> Make Setters
-		m_Statistics.m_nXPartial = m_DownloadOMeter.m_nXPartial = m_UploadOMeter.m_nXPartial = shownSecs % 3600;
-		m_Statistics.m_nXGrids = m_DownloadOMeter.m_nXGrids = m_UploadOMeter.m_nXGrids = shownSecs / 3600;
+		m_Statistics.m_nXPartial = m_DownloadOMeter.m_nXPartial = m_UploadOMeter.m_nXPartial = shownSecs % HR2S(1);
+		m_Statistics.m_nXGrids = m_DownloadOMeter.m_nXGrids = m_UploadOMeter.m_nXGrids = shownSecs / HR2S(1);
 
 		if(shownSecs <= 0)
 		{

@@ -19,6 +19,7 @@
 #include "emuledlg.h"
 #include "otherfunctions.h"
 #include "Preferences.h"
+#include "opcodes.h"
 #include "md5sum.h"
 #pragma warning(push)
 #pragma warning(disable:4516) // access-declarations are deprecated; member using-declarations provide a better alternative
@@ -127,7 +128,7 @@ void CPeerCacheFinder::Init(uint32 dwLastSearch, bool bLastSearchSuccess, bool b
 			struct tm tmTemp;
 			time_t tLast = safe_mktime(last.GetLocalTm(&tmTemp));
 			time_t tNow = safe_mktime(CTime::GetCurrentTime().GetLocalTm(&tmTemp));
-			if ( (difftime(tNow,tLast) / 86400) < RETRYDAYS ){
+			if ( (difftime(tNow,tLast) / DAY2S(1)) < RETRYDAYS ){
 				if (!bLastSearchSuccess){
 					// no retry to find the cache
 					m_PCStatus = PCS_NOTFOUND;

@@ -26,6 +26,7 @@
 #include "TransferDlg.h"
 #include "ServerWnd.h"
 #include "HelpIDs.h"
+#include "opcodes.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -199,7 +200,7 @@ BOOL CPPgDisplay::OnApply()
 		thePrefs.m_iToolDelayTime = MAX_TOOLTIP_DELAY_SEC;
 	else
 		thePrefs.m_iToolDelayTime = _tstoi(buffer);
-	theApp.emuledlg->SetToolTipsDelay(thePrefs.GetToolTipDelay()*1000);
+	theApp.emuledlg->SetToolTipsDelay(SEC2MS(thePrefs.GetToolTipDelay()));
 
 	theApp.emuledlg->transferwnd->GetDownloadList()->SetStyle();
 

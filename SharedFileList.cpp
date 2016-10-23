@@ -861,7 +861,7 @@ void CSharedFileList::SendListToServer(){
 	//   - the min. amount of data needed for one published file is ~100 bytes
 	//   - this function is called once when connecting to a server and when a file becomes shareable - so, it's called rarely.
 	//   - if the compressed size is still >= the original size, we send the uncompressed packet
-	// therefor we always try to compress the packet
+	// therefore we always try to compress the packet
 	if (pCurServer && pCurServer->GetTCPFlags() & SRV_TCPFLG_COMPRESSION){
 		UINT uUncomprSize = packet->size;
 		packet->PackPacket();

@@ -66,7 +66,7 @@ CServerList::~CServerList()
 void CServerList::AutoUpdate()
 {
 	if (thePrefs.addresses_list.IsEmpty()){
-		AfxMessageBox(GetResString(IDS_ERR_EMPTYADRESSESDAT), MB_ICONASTERISK);
+		AfxMessageBox((UINT)IDS_ERR_EMPTYADRESSESDAT, MB_ICONASTERISK, 0);
 		return;
 	}
 

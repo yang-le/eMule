@@ -176,7 +176,7 @@ BOOL CStatisticsTree::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 	switch (wParam) {
 		case MP_STATTREE_RESET:
 			{
-				if(AfxMessageBox(GetResString(IDS_STATS_MBRESET_TXT), MB_YESNO | MB_ICONEXCLAMATION) == IDNO)
+				if(AfxMessageBox((UINT)IDS_STATS_MBRESET_TXT, MB_YESNO | MB_ICONEXCLAMATION, 0) == IDNO)
 					break;
 
 				thePrefs.ResetCumulativeStatistics();
@@ -191,7 +191,7 @@ BOOL CStatisticsTree::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 			}
 		case MP_STATTREE_RESTORE:
 			{
-				if (AfxMessageBox(GetResString(IDS_STATS_MBRESTORE_TXT), MB_YESNO | MB_ICONQUESTION) == IDNO)
+				if (AfxMessageBox((UINT)IDS_STATS_MBRESTORE_TXT, MB_YESNO | MB_ICONQUESTION, 0) == IDNO)
 					break;
 
 				if(!thePrefs.LoadStats(1))
@@ -537,7 +537,7 @@ CString CStatisticsTree::GetHTMLForExport(HTREEITEM theItem, int theItemLevel, b
 			strDivStart = _T("<a href=\"javascript:togglevisible('") + strJ + _T("')\">");
 			strDivEnd = _T("</div>");
 			strDivA = _T("</a>");
-			strName = _T("name=\"I") + strJ + _T("\"");
+			strName = _T("name=\"I") + strJ + _T('\"');
 		}
 		else
 		{

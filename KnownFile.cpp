@@ -1365,15 +1365,15 @@ void SecToTimeLength(unsigned long ulSec, CStringA& rstrTimeLength)
 {
 	// this function creates the content for the "length" ed2k meta tag which was introduced by eDonkeyHybrid
 	// with the data type 'string' :/  to save some bytes we do not format the duration with leading zeros
-	if (ulSec >= 3600){
-		UINT uHours = ulSec/3600;
-		UINT uMin = (ulSec - uHours*3600)/60;
-		UINT uSec = ulSec - uHours*3600 - uMin*60;
+	if (ulSec >= HR2S(1)){
+		UINT uHours = ulSec/HR2S(1);
+		UINT uMin = (ulSec - HR2S(uHours))/MIN2S(1);
+		UINT uSec = ulSec - HR2S(uHours) - MIN2S(uMin);
 		rstrTimeLength.Format("%u:%02u:%02u", uHours, uMin, uSec);
 	}
 	else{
-		UINT uMin = ulSec/60;
-		UINT uSec = ulSec - uMin*60;
+		UINT uMin = ulSec/MIN2S(1);
+		UINT uSec = ulSec - MIN2S(uMin);
 		rstrTimeLength.Format("%u:%02u", uMin, uSec);
 	}
 }
@@ -1382,15 +1382,15 @@ void SecToTimeLength(unsigned long ulSec, CStringW& rstrTimeLength)
 {
 	// this function creates the content for the "length" ed2k meta tag which was introduced by eDonkeyHybrid
 	// with the data type 'string' :/  to save some bytes we do not format the duration with leading zeros
-	if (ulSec >= 3600){
-		UINT uHours = ulSec/3600;
-		UINT uMin = (ulSec - uHours*3600)/60;
-		UINT uSec = ulSec - uHours*3600 - uMin*60;
+	if (ulSec >= HR2S(1)){
+		UINT uHours = ulSec/HR2S(1);
+		UINT uMin = (ulSec - HR2S(uHours))/MIN2S(1);
+		UINT uSec = ulSec - HR2S(uHours) - MIN2S(uMin);
 		rstrTimeLength.Format(L"%u:%02u:%02u", uHours, uMin, uSec);
 	}
 	else{
-		UINT uMin = ulSec/60;
-		UINT uSec = ulSec - uMin*60;
+		UINT uMin = ulSec/MIN2S(1);
+		UINT uSec = ulSec - MIN2S(uMin);
 		rstrTimeLength.Format(L"%u:%02u", uMin, uSec);
 	}
 }

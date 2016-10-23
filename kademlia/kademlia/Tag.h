@@ -18,14 +18,14 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 // Note To Mods //
 /*
-Please do not change anything here and release it..
-There is going to be a new forum created just for the Kademlia side of the client..
+Please do not change anything here and release it.
+There is going to be a new forum created just for the Kademlia side of the client.
 If you feel there is an error or a way to improve something, please
-post it in the forum first and let us look at it.. If it is a real improvement,
-it will be added to the offical client.. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form..
+post it in the forum first and let us look at it. If it is a real improvement,
+it will be added to the offical client. Changing something without knowing
+what all it does can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
-there client on the eMule forum..
+there client on the eMule forum.
 */
 
 #pragma once
@@ -46,28 +46,25 @@ namespace Kademlia
 			CKadTagNameString()
 			{}
 
-			CKadTagNameString(LPCSTR psz)
-					: CStringA(psz)
+			CKadTagNameString(const LPCSTR psz)
+				: CStringA(psz)
 			{}
 
-			CKadTagNameString(LPCSTR psz, int len)
-					: CStringA(psz, len)
+			CKadTagNameString(const LPCSTR psz, int len)
+				: CStringA(psz, len)
 			{}
 
-			virtual ~CKadTagNameString()
-			{}
-
-			// A tag name may include character values >= 0xD0 and therefor also >= 0xF0. to prevent those
+			// A tag name may include character values >= 0xD0 and therefore also >= 0xF0. to prevent those
 			// characters be interpreted as multi byte character sequences we have to ensure that a binary
 			// string compare is performed.
-			int Compare(LPCSTR psz) const throw()
+			int Compare(const LPCSTR psz) const throw()
 			{
 				ATLASSERT( AfxIsValidString(psz) );
-				// Do a binary string compare. (independant from any codepage and/or LC_CTYPE setting.)
+				// Do a binary string compare. (independent from any codepage and/or LC_CTYPE setting.)
 				return strcmp(GetString(), psz);
 			}
 
-			int CompareNoCase(LPCSTR psz) const throw()
+			int CompareNoCase(const LPCSTR psz) const throw()
 			{
 				ATLASSERT( AfxIsValidString(psz) );
 
@@ -76,11 +73,11 @@ namespace Kademlia
 				// NOTE: The current locale category LC_CTYPE *MUST* be set to "C"!
 				//return stricmp(GetString(), psz);
 
-				// Version #2 - independant from any codepage and/or LC_CTYPE setting.
+				// Version #2 - independent from any codepage and/or LC_CTYPE setting.
 				return __ascii_stricmp(GetString(), psz);
 			}
 
-			CKadTagNameString& operator=(LPCSTR pszSrc)
+			CKadTagNameString& operator=(const LPCSTR pszSrc)
 			{
 				CStringA::operator=(pszSrc);
 				return *this;
@@ -131,9 +128,6 @@ namespace Kademlia
 				: CStringW(psz, iLen)
 			{}
 
-			virtual ~CKadTagValueString()
-			{}
-
 			int CompareNoCase(LPCWSTR src) const throw()
 			{
 				return KadTagStrCompareNoCase(GetString(), src);
@@ -175,26 +169,30 @@ namespace Kademlia
 			byte	m_type;
 			CKadTagNameString m_name;
 
-			CKadTag(byte type, LPCSTR name)
-					: m_name(name)
-			{
-				m_type = type;
-			}
+			CKadTag(byte type, const LPCSTR name)
+				: m_type(type), m_name(name)
+			{}
+
 			virtual ~CKadTag()
 			{}
+
 			virtual CKadTag* Copy() = 0;
 
 			bool IsStr()  const
 			{
 				return m_type == TAGTYPE_STRING;
 			}
+			bool IsBool() const
+			{
+				return m_type == TAGTYPE_BOOL;
+			}
 			bool IsNum()  const
 			{
-				return m_type == TAGTYPE_UINT64 || m_type == TAGTYPE_UINT32 || m_type == TAGTYPE_UINT16 || m_type == TAGTYPE_UINT8 || m_type == TAGTYPE_BOOL || m_type == TAGTYPE_FLOAT32 || m_type == 0xFE;
+				return m_type == TAGTYPE_UINT64 || m_type == TAGTYPE_UINT32 || m_type == TAGTYPE_UINT16 || m_type == TAGTYPE_UINT8 || m_type == TAGTYPE_BOOL || m_type == TAGTYPE_FLOAT32 || m_type == TAGTYPE_UINT;
 			}
 			bool IsInt()  const
 			{
-				return m_type == TAGTYPE_UINT64 || m_type == TAGTYPE_UINT32 || m_type == TAGTYPE_UINT16 || m_type == TAGTYPE_UINT8 || m_type == 0xFE;
+				return m_type == TAGTYPE_UINT64 || m_type == TAGTYPE_UINT32 || m_type == TAGTYPE_UINT16 || m_type == TAGTYPE_UINT8 || m_type == TAGTYPE_UINT;
 			}
 			bool IsFloat()const
 			{
@@ -246,42 +244,26 @@ namespace Kademlia
 			}
 
 		protected:
-			CKadTag()
-				: m_type(0)
+			CKadTag() : m_type(0)
 			{}
 	};
-
-
-	class CKadTagUnk : public CKadTag
-	{
-		public:
-			CKadTagUnk(byte type, LPCSTR name)
-					: CKadTag(type, name)
-			{ }
-
-			virtual CKadTagUnk* Copy()
-			{
-				return new CKadTagUnk(*this);
-			}
-	};
-
 
 	class CKadTagStr : public CKadTag
 	{
 		public:
-			CKadTagStr(LPCSTR name, LPCWSTR value, int len)
-					: CKadTag(TAGTYPE_STRING, name)
-					, m_value(value, len)
-			{ }
+			CKadTagStr(const LPCSTR name, const LPCWSTR value, int len)
+				: CKadTag(TAGTYPE_STRING, name)
+				, m_value(value, len)
+			{}
 
-			CKadTagStr(LPCSTR name, const CStringW& rstr)
-					: CKadTag(TAGTYPE_STRING, name)
+			CKadTagStr(const LPCSTR name, const CStringW& rstr)
+				: CKadTag(TAGTYPE_STRING, name)
 					, m_value(rstr)
-			{ }
+			{}
 
 			virtual CKadTagStr* Copy()
 			{
-				return new CKadTagStr(*this);
+				return new CKadTagStr(m_name, m_value);
 			}
 
 			virtual CKadTagValueString GetStr() const
@@ -296,14 +278,14 @@ namespace Kademlia
 	class CKadTagUInt : public CKadTag
 	{
 		public:
-			CKadTagUInt(LPCSTR name, uint64 value)
-					: CKadTag(0xFE, name)
-					, m_value(value)
-			{ }
+			CKadTagUInt(const LPCSTR name, uint64 value)
+				: CKadTag(TAGTYPE_UINT, name)
+				, m_value(value)
+			{}
 
 			virtual CKadTagUInt* Copy()
 			{
-				return new CKadTagUInt(*this);
+				return new CKadTagUInt(m_name, m_value);
 			}
 
 			virtual uint64 GetInt() const
@@ -318,14 +300,14 @@ namespace Kademlia
 	class CKadTagUInt64 : public CKadTag
 	{
 		public:
-			CKadTagUInt64(LPCSTR name, uint64 value)
-					: CKadTag(TAGTYPE_UINT64, name)
-					, m_value(value)
-			{ }
+			CKadTagUInt64(const LPCSTR name, uint64 value)
+				: CKadTag(TAGTYPE_UINT64, name)
+				, m_value(value)
+			{}
 
 			virtual CKadTagUInt64* Copy()
 			{
-				return new CKadTagUInt64(*this);
+				return new CKadTagUInt64(m_name, m_value);
 			}
 
 			virtual uint64 GetInt() const
@@ -340,14 +322,14 @@ namespace Kademlia
 	class CKadTagUInt32 : public CKadTag
 	{
 		public:
-			CKadTagUInt32(LPCSTR name, uint32 value)
-					: CKadTag(TAGTYPE_UINT32, name)
+			CKadTagUInt32(const LPCSTR name, uint32 value)
+				: CKadTag(TAGTYPE_UINT32, name)
 					, m_value(value)
-			{ }
+			{}
 
 			virtual CKadTagUInt32* Copy()
 			{
-				return new CKadTagUInt32(*this);
+				return new CKadTagUInt32(m_name, m_value);
 			}
 
 			virtual uint64 GetInt() const
@@ -363,14 +345,14 @@ namespace Kademlia
 	class CKadTagFloat : public CKadTag
 	{
 		public:
-			CKadTagFloat(LPCSTR name, float value)
-					: CKadTag(TAGTYPE_FLOAT32, name)
-					, m_value(value)
-			{ }
+			CKadTagFloat(const LPCSTR name, float value)
+				: CKadTag(TAGTYPE_FLOAT32, name)
+				, m_value(value)
+			{}
 
 			virtual CKadTagFloat* Copy()
 			{
-				return new CKadTagFloat(*this);
+				return new CKadTagFloat(m_name, m_value);
 			}
 
 			virtual float GetFloat() const
@@ -386,14 +368,14 @@ namespace Kademlia
 	class CKadTagBool : public CKadTag
 	{
 		public:
-			CKadTagBool(LPCSTR name, bool value)
-					: CKadTag(TAGTYPE_BOOL, name)
-					, m_value(value)
-			{ }
+			CKadTagBool(const LPCSTR name, bool value)
+				: CKadTag(TAGTYPE_BOOL, name)
+				, m_value(value)
+			{}
 
 			virtual CKadTagBool* Copy()
 			{
-				return new CKadTagBool(*this);
+				return new CKadTagBool(m_name, m_value);
 			}
 
 			virtual bool GetBool() const
@@ -409,14 +391,14 @@ namespace Kademlia
 	class CKadTagUInt16 : public CKadTag
 	{
 		public:
-			CKadTagUInt16(LPCSTR name, uint16 value)
-					: CKadTag(TAGTYPE_UINT16, name)
-					, m_value(value)
-			{ }
+			CKadTagUInt16(const LPCSTR name, uint16 value)
+				: CKadTag(TAGTYPE_UINT16, name)
+				, m_value(value)
+			{}
 
 			virtual CKadTagUInt16* Copy()
 			{
-				return new CKadTagUInt16(*this);
+				return new CKadTagUInt16(m_name, m_value);
 			}
 
 			virtual uint64 GetInt() const
@@ -432,14 +414,14 @@ namespace Kademlia
 	class CKadTagUInt8 : public CKadTag
 	{
 		public:
-			CKadTagUInt8(LPCSTR name, uint8 value)
-					: CKadTag(TAGTYPE_UINT8, name)
-					, m_value(value)
-			{ }
+			CKadTagUInt8(const LPCSTR name, uint8 value)
+				: CKadTag(TAGTYPE_UINT8, name)
+				, m_value(value)
+			{}
 
 			virtual CKadTagUInt8* Copy()
 			{
-				return new CKadTagUInt8(*this);
+				return new CKadTagUInt8(m_name, m_value);
 			}
 
 			virtual uint64 GetInt() const
@@ -455,20 +437,14 @@ namespace Kademlia
 	class CKadTagBsob : public CKadTag
 	{
 		public:
-			CKadTagBsob(LPCSTR name, const BYTE* value, uint8 nSize)
-					: CKadTag(TAGTYPE_BSOB, name)
+			CKadTagBsob(const LPCSTR name, const BYTE* value, uint8 nSize)
+				: CKadTag(TAGTYPE_BSOB, name)
 			{
 				m_value = new BYTE[nSize];
 				memcpy(m_value, value, nSize);
 				m_size = nSize;
 			}
-			CKadTagBsob(const CKadTagBsob& rTag)
-					: CKadTag(rTag)
-			{
-				m_value = new BYTE[rTag.m_size];
-				memcpy(m_value, rTag.m_value, rTag.m_size);
-				m_size = rTag.m_size;
-			}
+
 			~CKadTagBsob()
 			{
 				delete[] m_value;
@@ -476,7 +452,7 @@ namespace Kademlia
 
 			virtual CKadTagBsob* Copy()
 			{
-				return new CKadTagBsob(*this);
+				return new CKadTagBsob(m_name, m_value, m_size);
 			}
 
 			virtual const BYTE* GetBsob() const
@@ -497,18 +473,13 @@ namespace Kademlia
 	class CKadTagHash : public CKadTag
 	{
 		public:
-			CKadTagHash(LPCSTR name, const BYTE* value)
-					: CKadTag(TAGTYPE_HASH, name)
+			CKadTagHash(const LPCSTR name, const BYTE* value)
+				: CKadTag(TAGTYPE_HASH, name)
 			{
 				m_value = new BYTE[16];
 				md4cpy(m_value, value);
 			}
-			CKadTagHash(const CKadTagHash& rTag)
-					: CKadTag(rTag)
-			{
-				m_value = new BYTE[16];
-				md4cpy(m_value, rTag.m_value);
-			}
+
 			~CKadTagHash()
 			{
 				delete[] m_value;
@@ -516,7 +487,7 @@ namespace Kademlia
 
 			virtual CKadTagHash* Copy()
 			{
-				return new CKadTagHash(*this);
+				return new CKadTagHash(m_name, m_value);
 			}
 
 			virtual const BYTE* GetHash() const

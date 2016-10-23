@@ -75,7 +75,7 @@ CIndexed::CIndexed()
 void CIndexed::ReadFile(void)
 {
 	m_bAbortLoading = false;
-	CLoadDataThread* pLoadDataThread = (CLoadDataThread*) AfxBeginThread(RUNTIME_CLASS(CLoadDataThread), THREAD_PRIORITY_BELOW_NORMAL,0, CREATE_SUSPENDED);
+	CLoadDataThread* pLoadDataThread = static_cast<CLoadDataThread *>(AfxBeginThread(RUNTIME_CLASS(CLoadDataThread), THREAD_PRIORITY_BELOW_NORMAL,0, CREATE_SUSPENDED));
 	pLoadDataThread->SetValues(this);
 	pLoadDataThread->ResumeThread();
 }
@@ -452,7 +452,7 @@ bool CIndexed::AddKeyword(const CUInt128& uKeyID, const CUInt128& uSourceID, Kad
 						break;
 					}
 				}
-				pEntry->MergeIPsAndFilenames(pOldEntry); // pOldEntry can be NULL, thats ok and we still need todo this call in this case
+				pEntry->MergeIPsAndFilenames(pOldEntry); // pOldEntry can be NULL, that's ok and we still need todo this call in this case
 				if (pOldEntry == NULL){
 					m_uTotalIndexKeyword++;
 					DebugLogWarning(_T("Kad: Indexing: Keywords: Multiple sizes published for file %s"), (LPCTSTR)pEntry->m_uSourceID.ToHexString());

@@ -592,7 +592,8 @@ void CPartFileConvertDlg::OnBnClickedOk()
     DestroyWindow();
 }
 
-void CPartFileConvertDlg::OnCancel() {
+void CPartFileConvertDlg::OnCancel()
+{
     DestroyWindow();
 }
 
@@ -630,7 +631,7 @@ void CPartFileConvertDlg::OnAddFolder() {
 			int reply=IDNO;
 
 			if (thePrefs.IsExtControlsEnabled())
-				reply=AfxMessageBox(GetResString(IDS_IMP_DELSRC), MB_YESNOCANCEL | MB_DEFBUTTON2 );
+				reply=AfxMessageBox(IDS_IMP_DELSRC, MB_YESNOCANCEL | MB_DEFBUTTON2, 0);
 
 			if (reply!=IDCANCEL){
 				bool removesrc = (reply==IDYES);

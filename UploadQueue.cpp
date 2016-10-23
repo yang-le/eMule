@@ -1156,12 +1156,11 @@ uint32 CUploadQueue::GetDatarate() const
     return datarate;
 }
 
-uint32 CUploadQueue::GetToNetworkDatarate() {
-    if(datarate > friendDatarate) {
-        return datarate - friendDatarate;
-    } else {
-        return 0;
-    }
+uint32 CUploadQueue::GetToNetworkDatarate()
+{
+	if (datarate > friendDatarate)
+		return datarate - friendDatarate;
+	return 0;
 }
 
 void CUploadQueue::ReSortUploadSlots(bool force) {
@@ -1204,14 +1203,12 @@ uint32 CUploadQueue::GetWaitingUserForFileCount(const CSimpleArray<CObject*>& ra
 
 	m_bStatisticsWaitingListDirty = false;
 	uint32 nResult = 0;
-	for (POSITION pos = waitinglist.GetHeadPosition(); pos != 0; )
+	for (POSITION pos = waitinglist.GetHeadPosition(); pos != NULL; )
 	{
 		const CUpDownClient* cur_client = waitinglist.GetNext(pos);
-		for (int i = 0; i < raFiles.GetSize(); i++)
-		{
+		for (int i = 0; i < raFiles.GetSize(); ++i)
 			if (md4cmp(((CKnownFile*)raFiles[i])->GetFileHash(), cur_client->GetUploadFileID()) == 0)
-				nResult++;
-		}
+				++nResult;
 	}
 	return nResult;
 }

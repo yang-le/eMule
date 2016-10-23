@@ -170,7 +170,7 @@ void CCatDialog::OnBnClickedOk()
 
 	if (!PathFileExists(m_myCat->strIncomingPath)){
 		if (!::CreateDirectory(m_myCat->strIncomingPath, 0)){
-			AfxMessageBox(GetResString(IDS_ERR_BADFOLDER));
+			AfxMessageBox((UINT)IDS_ERR_BADFOLDER, MB_OK, 0);
 			m_myCat->strIncomingPath = oldpath;
 			return;
 		}

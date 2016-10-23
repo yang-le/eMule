@@ -45,14 +45,14 @@
 #define EMULE_GUID				_T("EMULE-{4EADC6FC-516F-4b7c-9066-97D893649570}")
 #endif
 
-#define	SEC2MS(sec)		((sec)*1000)
-#define	MIN2MS(min)		SEC2MS((min)*60)
-#define	HR2MS(hr)		MIN2MS((hr)*60)
-#define DAY2MS(day)		HR2MS((day)*24)
 #define SEC(sec)		(sec)
 #define	MIN2S(min)		((min)*60)
 #define	HR2S(hr)		MIN2S((hr)*60)
 #define DAY2S(day)		HR2S((day)*24)
+#define	SEC2MS(sec)		((sec)*1000)
+#define	MIN2MS(min)		SEC2MS(MIN2S(min))
+#define	HR2MS(hr)		SEC2MS(HR2S(hr))
+#define DAY2MS(day)		SEC2MS(DAY2S(day))
 
 // MOD Note: Do not change this part - Merkur
 #define UDPSEARCHSPEED			SEC2MS(1)	//1 sec - if this value is too low you will miss sources
@@ -417,6 +417,7 @@
 #define TAG_SOURCEIP			"\xFE"	// <uint32>
 #define TAG_SOURCETYPE			"\xFF"	// <uint8>
 
+#define	TAGTYPE_NONE			0x00
 #define	TAGTYPE_HASH			0x01
 #define	TAGTYPE_STRING			0x02
 #define	TAGTYPE_UINT32			0x03
@@ -428,6 +429,7 @@
 #define	TAGTYPE_UINT8			0x09
 #define	TAGTYPE_BSOB			0x0A
 #define	TAGTYPE_UINT64			0x0B
+#define	TAGTYPE_UINT			0xFE //general uint: 8, 16, 32, 64
 
 #define TAGTYPE_STR1			0x11
 #define TAGTYPE_STR2			0x12

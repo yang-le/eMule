@@ -1034,7 +1034,7 @@ bool CRoutingZone::IsAcceptableContact(const CContact* pToCheck) const
 			return false;
 		}
 		else
-			return true; // node exists already in our routing table, thats fine
+			return true; // node exists already in our routing table, that's fine
 	}
 	// if the node is not yet know, check if we out IP limitations would hit
 #ifdef _DEBUG
