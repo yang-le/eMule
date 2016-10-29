@@ -18,7 +18,7 @@
 
   <assemblyIdentity type="win32"
                     name="eMule"
-                    version="0.50.1.24"
+                    version="0.50.1.25"
                     processorArchitecture="x86"
                     publicKeyToken="0000000000000000"
   />

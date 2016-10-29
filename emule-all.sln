@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 2013
+VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "emule", "emule.vcxproj", "{584EA69D-3443-4197-8994-364880FC1B9B}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -61,7 +61,6 @@ Global
 		{0D7BD925-80AE-40C4-98D7-B783A35B7228}._SpecialBootstrapNodes|Win32.ActiveCfg = Debug|Win32
 		{0D7BD925-80AE-40C4-98D7-B783A35B7228}.Debug|Win32.ActiveCfg = Debug|Win32
 		{0D7BD925-80AE-40C4-98D7-B783A35B7228}.Release|Win32.ActiveCfg = Release|Win32
-		{0D7BD925-80AE-40C4-98D7-B783A35B7228}.Release|Win32.Build.0 = Release|Win32
 		{4AACBF8D-B90F-41AD-A5BE-D5E557C668E3}._SpecialBootstrapNodes|Win32.ActiveCfg = Debug|Win32
 		{4AACBF8D-B90F-41AD-A5BE-D5E557C668E3}._SpecialBootstrapNodes|Win32.Build.0 = Debug|Win32
 		{4AACBF8D-B90F-41AD-A5BE-D5E557C668E3}.Debug|Win32.ActiveCfg = Debug|Win32
@@ -83,7 +82,6 @@ Global
 		{58A54F98-FF3F-472F-9282-DA411EE850A2}._SpecialBootstrapNodes|Win32.ActiveCfg = Debug|Win32
 		{58A54F98-FF3F-472F-9282-DA411EE850A2}.Debug|Win32.ActiveCfg = Debug|Win32
 		{58A54F98-FF3F-472F-9282-DA411EE850A2}.Release|Win32.ActiveCfg = Release|Win32
-		{58A54F98-FF3F-472F-9282-DA411EE850A2}.Release|Win32.Build.0 = Release|Win32
 		{86CEC5CB-94DE-4E3C-A1C6-0653D58C0625}._SpecialBootstrapNodes|Win32.ActiveCfg = Debug|Win32
 		{86CEC5CB-94DE-4E3C-A1C6-0653D58C0625}._SpecialBootstrapNodes|Win32.Build.0 = Debug|Win32
 		{86CEC5CB-94DE-4E3C-A1C6-0653D58C0625}.Debug|Win32.ActiveCfg = Debug|Win32

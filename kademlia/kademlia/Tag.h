@@ -46,6 +46,9 @@ namespace Kademlia
 			CKadTagNameString()
 			{}
 
+			virtual ~CKadTagNameString()
+			{}
+
 			CKadTagNameString(const LPCSTR psz)
 				: CStringA(psz)
 			{}
@@ -114,6 +117,9 @@ namespace Kademlia
 	{
 		public:
 			CKadTagValueString()
+			{}
+
+			virtual ~CKadTagValueString()
 			{}
 
 			CKadTagValueString(const CStringW &rstr)
