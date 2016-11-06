@@ -95,7 +95,7 @@ public:
 	CAICHHash()										{ ZeroMemory(m_abyBuffer, HASHSIZE); }
 	explicit CAICHHash(CFileDataIO* file)			{ Read(file); }
 	explicit CAICHHash(const uchar* data)			{ Read(data); }
-	CAICHHash(const CAICHHash& k1)					{ memcpy(m_abyBuffer, k1.m_abyBuffer, HASHSIZE); }
+	CAICHHash(const CAICHHash& k1)					{ *this = k1; }
 	CAICHHash&	operator=(const CAICHHash& k1)		{ memcpy(m_abyBuffer, k1.m_abyBuffer, HASHSIZE); return *this; }
 	friend bool operator==(const CAICHHash& k1,const CAICHHash& k2)	{ return memcmp(k1.m_abyBuffer, k2.m_abyBuffer, HASHSIZE) == 0;}
 	friend bool operator!=(const CAICHHash& k1,const CAICHHash& k2)	{ return !(k1 == k2); }
@@ -177,7 +177,7 @@ private:
 class CAICHUntrustedHash {
 public:
 	CAICHUntrustedHash() : m_adwIpsSigning(), m_Hash()	{}
-	CAICHUntrustedHash(const CAICHUntrustedHash& k1)	{ m_adwIpsSigning.Copy(k1.m_adwIpsSigning); m_Hash = k1.m_Hash;	}
+	CAICHUntrustedHash(const CAICHUntrustedHash& k1)	{ *this = k1; }
 	CAICHUntrustedHash&	operator=(const CAICHUntrustedHash& k1)		{ m_adwIpsSigning.Copy(k1.m_adwIpsSigning); m_Hash = k1.m_Hash; return *this; }
 	bool	AddSigningIP(uint32 dwIP, bool bTestOnly);
 

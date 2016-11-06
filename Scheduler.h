@@ -55,17 +55,17 @@ public:
 	~CScheduler();
 
 	int		AddSchedule(Schedule_Struct* schedule);
-	void	UpdateSchedule(int index, Schedule_Struct* schedule) { if (index<schedulelist.GetCount())schedulelist.SetAt(index,schedule);}
-	Schedule_Struct* GetSchedule(int index) {if (index<schedulelist.GetCount()) return schedulelist.GetAt(index); else return NULL; }
+	void	UpdateSchedule(INT_PTR index, Schedule_Struct* schedule) { if (index<schedulelist.GetCount())schedulelist.SetAt(index,schedule);}
+	Schedule_Struct* GetSchedule(INT_PTR index) {if (index<schedulelist.GetCount()) return schedulelist.GetAt(index); else return NULL; }
 	void	RemoveSchedule(int index);
 	void	RemoveAll();
 	int		LoadFromFile();
 	void	SaveToFile();
 	int		Check(bool forcecheck=false);
-	UINT	GetCount()		{ return schedulelist.GetCount();}
+	INT_PTR	GetCount()		{ return schedulelist.GetCount();}
 	void	SaveOriginals();
 	void	RestoreOriginals();
-	void	ActivateSchedule(int index,bool makedefault=false);
+	void	ActivateSchedule(INT_PTR index,bool makedefault=false);
 
 	uint16	original_upload;
 	uint16	original_download;

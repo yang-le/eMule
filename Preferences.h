@@ -445,7 +445,7 @@ public:
 
 	static	UINT	filterlevel;
 	static	UINT	m_iFileBufferSize;
-	static	UINT	m_iQueueSize;
+	static	INT_PTR	m_iQueueSize;
 	static	int		m_iCommitFiles;
 	static	UINT	m_uFileBufferTimeLimit;
 
@@ -640,7 +640,7 @@ public:
 	static	void	Uninit();
 
 	static	LPCTSTR GetTempDir(int id = 0)				{return (LPCTSTR)tempdir.GetAt((id < tempdir.GetCount()) ? id : 0);}
-	static	int		GetTempDirCount()					{return tempdir.GetCount();}
+	static	INT_PTR	GetTempDirCount()					{return tempdir.GetCount();}
 	static	bool	CanFSHandleLargeFiles(int nForCat);
 	static	LPCTSTR GetConfigFile();
 	static	const CString& GetFileCommentsFilePath()	{return m_strFileCommentsFilePath;}
@@ -941,11 +941,11 @@ public:
 	static	DWORD	GetServerKeepAliveTimeout()			{return m_dwServerKeepAliveTimeout;}
 	static	bool	GetConditionalTCPAccept()			{return m_bConditionalTCPAccept;}
 
-	static	WORD	GetLanguageID();
-	static	void	SetLanguageID(WORD lid);
+	static	LANGID	GetLanguageID();
+	static	void	SetLanguageID(LANGID lid);
 	static	void	GetLanguages(CWordArray& aLanguageIDs);
 	static	void	SetLanguage();
-	static	bool	IsLanguageSupported(LANGID lidSelected, bool bUpdateBefore);
+	static	bool	IsLanguageSupported(LANGID lidSelected);
 	static	CString GetLangDLLNameByID(LANGID lidSelected);
 	static	void	InitThreadLocale();
 	static	void	SetRtlLocale(LCID lcid);
@@ -1073,7 +1073,7 @@ public:
 
 	static	UINT	GetFileBufferSize()					{return m_iFileBufferSize;}
 	static	UINT	GetFileBufferTimeLimit()			{return m_uFileBufferTimeLimit;}
-	static	UINT	GetQueueSize()						{return m_iQueueSize;}
+	static	INT_PTR	GetQueueSize()						{return m_iQueueSize;}
 	static	int		GetCommitFiles()					{return m_iCommitFiles;}
 	static	bool	GetShowCopyEd2kLinkCmd()			{return m_bShowCopyEd2kLinkCmd;}
 
@@ -1149,10 +1149,10 @@ public:
 	static	const CString& GetDateTimeFormat4Lists()	{return m_strDateTimeFormat4Lists;}
 
 	// Download Categories (Ornis)
-	static	int		AddCat(Category_Struct* cat)		{catMap.Add(cat); return catMap.GetCount()-1;}
+	static	INT_PTR	AddCat(Category_Struct* cat)		{catMap.Add(cat); return catMap.GetCount()-1;}
 	static	bool	MoveCat(UINT from, UINT to);
 	static	void	RemoveCat(int index);
-	static	int		GetCatCount()						{return catMap.GetCount();}
+	static	INT_PTR	GetCatCount()						{return catMap.GetCount();}
 	static  bool	SetCatFilter(int index, int filter);
 	static  int		GetCatFilter(int index);
 	static	bool	GetCatFilterNeg(int index);

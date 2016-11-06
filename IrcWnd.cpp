@@ -1254,7 +1254,7 @@ void CIrcWnd::OnBnClickedColour()
 		pParent->SendMessage(UM_CPN_DROPDOWN, (LPARAM)iColor, (WPARAM) GetDlgCtrlID());
 }
 
-LONG CIrcWnd::OnSelEndOK(UINT lParam, LONG /*wParam*/)
+LRESULT CIrcWnd::OnSelEndOK(WPARAM /*wParam*/, LPARAM lParam)
 {
 	if (lParam != CLR_DEFAULT)
 	{
@@ -1357,7 +1357,7 @@ LONG CIrcWnd::OnSelEndOK(UINT lParam, LONG /*wParam*/)
 	return TRUE;
 }
 
-LONG CIrcWnd::OnSelEndCancel(UINT lParam, LONG /*wParam*/)
+LRESULT CIrcWnd::OnSelEndCancel(WPARAM /*wParam*/, LPARAM lParam)
 {
 	CWnd *pParent = GetParent();
 	if(pParent)
@@ -1456,7 +1456,9 @@ void CIrcWnd::OnEnRequestResizeTitle(NMHDR *pNMHDR, LRESULT *pResult)
 	ScreenToClient(&rcTitle);
 
 	CRect rcResizeAdjusted(pReqResize->rc);
-	AdjustWindowRectEx(&rcResizeAdjusted, (DWORD)GetWindowLong(pReqResize->nmhdr.hwndFrom, GWL_STYLE), FALSE, (DWORD)::GetWindowLong(pReqResize->nmhdr.hwndFrom, GWL_EXSTYLE));
+	AdjustWindowRectEx(&rcResizeAdjusted
+		, static_cast<DWORD>(GetWindowLongPtr(pReqResize->nmhdr.hwndFrom, GWL_STYLE)), FALSE
+		, static_cast<DWORD>(GetWindowLongPtr(pReqResize->nmhdr.hwndFrom, GWL_EXSTYLE)));
 	rcTitle.bottom = rcTitle.top + rcResizeAdjusted.Height() + 1/*!?!*/;
 
 	// Don't allow too large title windows

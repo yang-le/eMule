@@ -9,8 +9,8 @@
 #define _T(x)	x
 #endif
 
-#define _chSTR(x)		_T(#x)
-#define chSTR(x)		_chSTR(x)
+#define _chSTR(x)	_T(#x)
+#define chSTR(x)	_chSTR(x)
 
 // *) Specify the version of emule only here with the following defines.
 // *) When changing any of those version nr. defines you also have to rebuild the language DLLs.
@@ -31,7 +31,7 @@
 #define VERSION_MJR		0
 #define VERSION_MIN		50
 #define VERSION_UPDATE	1
-#define VERSION_BUILD	25
+#define VERSION_BUILD	26
 
 // NOTE: Do not forget to update file: res/eMule.manifest
 

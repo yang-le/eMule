@@ -58,10 +58,8 @@ CAbstractFile::CAbstractFile(const CAbstractFile* pAbstractFile)
 	m_bKadCommentSearchRunning = pAbstractFile->m_bKadCommentSearchRunning;
 
 	const CTypedPtrList<CPtrList, Kademlia::CEntry*>& list = pAbstractFile->getNotes();
-	for(POSITION pos = list.GetHeadPosition(); pos != NULL; )
-	{
-			m_kadNotes.AddTail(list.GetNext(pos)->Copy());
-	}
+	for (POSITION pos = list.GetHeadPosition(); pos != NULL;)
+		m_kadNotes.AddTail(list.GetNext(pos)->Copy());
 
 	CopyTags(pAbstractFile->GetTags());
 }
@@ -437,10 +435,10 @@ void CAbstractFile::RefilterKadNotes(bool bUpdate){
 CString CAbstractFile::GetED2kLink(bool bHashset, bool bHTML, bool bHostname, bool bSource, uint32 dwSourceIP) const
 {
 	CString strLink, strBuffer;
-	strLink.Format(_T("ed2k://|file|%s|%I64u|%s|"),
-		(LPCTSTR)EncodeUrlUtf8(StripInvalidFilenameChars(GetFileName())),
-		(uint64)GetFileSize(),
-		(LPCTSTR)EncodeBase16(GetFileHash(), 16));
+	strLink.Format(_T("ed2k://|file|%s|%I64u|%s|")
+		, (LPCTSTR)EncodeUrlUtf8(StripInvalidFilenameChars(GetFileName()))
+		, (uint64)GetFileSize()
+		, (LPCTSTR)EncodeBase16(GetFileHash(), 16));
 
 	if (bHTML)
 		strLink = _T("<a href=\"") + strLink;

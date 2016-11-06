@@ -65,7 +65,7 @@ static int truncate(const char *path, size_t length)
 
   if(INVALID_HANDLE_VALUE != fh)
   {
-    SetFilePointer(fh, length, NULL, FILE_BEGIN);
+    SetFilePointer(fh, static_cast<LONG>(length), NULL, FILE_BEGIN);
     SetEndOfFile(fh);
     CloseHandle(fh);
     result = 0;
@@ -269,9 +269,9 @@ size_t RenderV2ToFile(const ID3_TagImpl& tag, fstream& file)
     char *tmpBuffer[BUFSIZ];
     while (!file.eof())
     {
-      file.read((char *)tmpBuffer, BUFSIZ);
+      file.read(&((*tmpBuffer)[0]), BUFSIZ);
       size_t nBytes = file.gcount();
-      tmpOut.write((char *)tmpBuffer, nBytes);
+      tmpOut.write(&((*tmpBuffer)[0]), nBytes);
     }
 
 #else //((defined(__GNUC__) && __GNUC__ >= 3  ) || !defined(HAVE_MKSTEMP))
@@ -447,7 +447,7 @@ flags_t ID3_TagImpl::Strip(flags_t ulTagFlag)
 #if (defined(__GNUC__) && __GNUC__ == 2)
       size_t nBytesToRead = (size_t)dami::min((unsigned int)(nBytesRemaining - nBytesCopied), (unsigned int)BUFSIZ);
 #else
-      size_t nBytesToRead = min((unsigned int)(nBytesRemaining - nBytesCopied), (unsigned int)BUFSIZ);
+      size_t nBytesToRead = min((nBytesRemaining - nBytesCopied), (size_t)BUFSIZ);
 #endif
       file.read((char *)aucBuffer, nBytesToRead);
       size_t nBytesRead = file.gcount();
@@ -460,7 +460,7 @@ flags_t ID3_TagImpl::Strip(flags_t ulTagFlag)
       }
       if (nBytesRead > 0)
       {
-        long offset = nBytesRead + this->GetPrependedBytes();
+        long offset = static_cast<long>(nBytesRead + this->GetPrependedBytes());
         file.seekp(-offset, ios::cur);
         file.write((char *)aucBuffer, nBytesRead);
         file.seekg(this->GetPrependedBytes(), ios::cur);

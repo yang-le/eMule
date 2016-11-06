@@ -312,7 +312,7 @@ void CPPgStats::OnCbnSelChangeColorSelector()
 	}
 }
 
-LONG CPPgStats::OnColorPopupSelChange(UINT /*lParam*/, LONG /*wParam*/)
+LRESULT CPPgStats::OnColorPopupSelChange(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	int iSel = m_colors.GetCurSel();
 	if (iSel >= 0)

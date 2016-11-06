@@ -128,7 +128,7 @@ void CUpDownClient::Init()
 	m_cAsked = 0;
 	m_cDownAsked = 0;
 	m_nUpDatarate = 0;
-	m_pszUsername = 0;
+	m_pszUsername = NULL;
 	m_nUserIDHybrid = 0;
 	m_dwServerIP = 0;
 	m_nServerPort = 0;
@@ -144,8 +144,8 @@ void CUpDownClient::Init()
 	m_nUserPort = 0;
 	m_nPartCount = 0;
 	m_nUpPartCount = 0;
-	m_abyPartStatus = 0;
-	m_abyUpPartStatus = 0;
+	m_abyPartStatus = NULL;
+	m_abyUpPartStatus = NULL;
 	m_dwUploadTime = 0;
 	m_nTransferredDown = 0;
 	m_nDownDatarate = 0;
@@ -175,21 +175,19 @@ void CUpDownClient::Init()
 	m_nCurSessionDown = 0;
 	m_nCurSessionPayloadDown = 0;
 	m_nSumForAvgDownDataRate = 0;
-	m_clientSoft=SO_UNKNOWN;
+	m_clientSoft = SO_UNKNOWN;
 	m_bRemoteQueueFull = false;
 	md4clr(m_achUserHash);
 	SetBuddyID(NULL);
 	m_nBuddyIP = 0;
 	m_nBuddyPort = 0;
-	if (socket){
+	if (socket) {
 		SOCKADDR_IN sockAddr = {0};
-		int nSockAddrLen = sizeof(sockAddr);
-		socket->GetPeerName((SOCKADDR*)&sockAddr, &nSockAddrLen);
+		int nSockAddrLen = sizeof sockAddr;
+		socket->GetPeerName(reinterpret_cast<SOCKADDR *>(&sockAddr), &nSockAddrLen);
 		SetIP(sockAddr.sin_addr.S_un.S_addr);
-	}
-	else{
+	} else
 		SetIP(0);
-	}
 	m_fHashsetRequestingAICH = 0;
 	m_fHashsetRequestingMD4 = 0;
 	m_fSharedDirectories = 0;
@@ -231,7 +229,7 @@ void CUpDownClient::Init()
 	m_fNeedOurPublicIP = 0;
 	m_random_update_wait = (uint32)(rand()/(RAND_MAX/1000));
 	m_bSourceExchangeSwapped = false; // ZZ:DownloadManager
-	m_dwLastTriedToConnect = ::GetTickCount()-MIN2MS(20); // ZZ:DownloadManager
+	m_dwLastTriedToConnect = ::GetTickCount() - MIN2MS(20); // ZZ:DownloadManager
 	m_fQueueRankPending = 0;
 	m_fUnaskQueueRankRecv = 0;
 	m_fFailedFileIdReqs = 0;
@@ -288,6 +286,7 @@ CUpDownClient::~CUpDownClient(){
 	}
 
 	free(m_pszUsername);
+	m_pszUsername = NULL;
 
 	delete[] m_abyPartStatus;
 	m_abyPartStatus = NULL;
@@ -698,12 +697,11 @@ bool CUpDownClient::ProcessHelloTypePacket(CSafeMemFile* data)
 
 
 	// check for known major gpl breaker
-	CString strBuffer = m_pszUsername;
+	CString strBuffer(m_pszUsername);
 	strBuffer.Remove(_T(' '));
 	strBuffer.MakeUpper();
-	if (strBuffer.Find(_T("EMULE-CLIENT")) != -1 || strBuffer.Find(_T("POWERMULE")) != -1 ){
+	if (strBuffer.Find(_T("EMULE-CLIENT")) != -1 || strBuffer.Find(_T("POWERMULE")) != -1 )
 		m_bGPLEvildoer = true;
-	}
 
 	m_byInfopacketsReceived |= IP_EDONKEYPROTPACK;
 	// check if at least CT_EMULEVERSION was received, all other tags are optional
@@ -1224,14 +1222,14 @@ bool CUpDownClient::Disconnected(LPCTSTR pszReason, bool bFromSocket)
 	else{
 		// ensure that all possible block requests are removed from the partfile
 		ClearDownloadBlockRequests();
-		if (GetDownloadState() == DS_CONNECTED){ // successfully connected, but probably didn't responsed to our filerequest
+		if (GetDownloadState() == DS_CONNECTED){ // successfully connected, but probably didn't respond to our filerequest
 			theApp.clientlist->m_globDeadSourceList.AddDeadSource(this);
 			theApp.downloadqueue->RemoveSource(this);
 		}
 	}
 
 	// we had still an AICH request pending, handle it
-	if (IsAICHReqPending()){
+	if (IsAICHReqPending()) {
 		m_fAICHRequested = FALSE;
 		CAICHRecoveryHashSet::ClientAICHRequestFailed(this);
 	}
@@ -1259,12 +1257,12 @@ bool CUpDownClient::Disconnected(LPCTSTR pszReason, bool bFromSocket)
 
 	//check if this client is needed in any way, if not delete it
 	bool bDelete = true;
-	switch(m_nUploadState){
+	switch(m_nUploadState) {
 		case US_ONUPLOADQUEUE:
 			bDelete = false;
 			break;
 	}
-	switch(m_nDownloadState){
+	switch(m_nDownloadState) {
 		case DS_ONQUEUE:
 		case DS_TOOMANYCONNS:
 		case DS_NONEEDEDPARTS:
@@ -1387,19 +1385,18 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 		DebugLog(_T("TryToConnect: Already Connecting (%s)"), (LPCTSTR)DbgGetClientInfo());// TODO LogRemove
 		return true;
 	}
-	else if (socket != NULL){
+	if (socket != NULL) {
 		if (socket->IsConnected())
 		{
-			if (CheckHandshakeFinished()){
-				DEBUG_ONLY( DebugLog(_T("TryToConnect: Already Connected (%s)"), (LPCTSTR)DbgGetClientInfo()) );// TODO LogRemove
+			if (CheckHandshakeFinished()) {
+				DEBUG_ONLY(DebugLog(_T("TryToConnect: Already Connected (%s)"), (LPCTSTR)DbgGetClientInfo()));// TODO LogRemove
 				ConnectionEstablished();
 			}
 			else
-				DebugLogWarning( _T("TryToConnect found connected socket, but without Handshake finished - %s"), (LPCTSTR)DbgGetClientInfo());
+				DebugLogWarning(_T("TryToConnect found connected socket, but without Handshake finished - %s"), (LPCTSTR)DbgGetClientInfo());
 			return true;
 		}
-		else
-			socket->Safe_Delete();
+		socket->Safe_Delete();
 	}
 	m_nConnectingState = CCS_PRECONDITIONS; // We now officially try to connect :)
 
@@ -1426,8 +1423,7 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 			delete this;
 			return false;
 		}
-		else
-			return true;
+		return true;
 	}
 
 	uint32 uClientIP = (GetIP() != 0) ? GetIP() : GetConnectIP();
@@ -2514,7 +2510,7 @@ void CUpDownClient::Dump(CDumpContext& dc) const
 
 LPCTSTR CUpDownClient::DbgGetDownloadState() const
 {
-	static const LPCTSTR apszState[] =
+	static LPCTSTR apszState[] =
 	{
 		_T("Downloading"),
 		_T("OnQueue"),
@@ -2539,7 +2535,7 @@ LPCTSTR CUpDownClient::DbgGetDownloadState() const
 
 LPCTSTR CUpDownClient::DbgGetUploadState() const
 {
-	static const LPCTSTR apszState[] =
+	static LPCTSTR apszState[] =
 	{
 		_T("Uploading"),
 		_T("OnUploadQueue"),
@@ -2554,7 +2550,7 @@ LPCTSTR CUpDownClient::DbgGetUploadState() const
 
 LPCTSTR CUpDownClient::DbgGetKadState() const
 {
-	static const LPCTSTR apszState[] =
+	static LPCTSTR apszState[] =
 	{
 		_T("None"),
 		_T("FwCheckQueued"),
@@ -2720,32 +2716,33 @@ CString CUpDownClient::GetDownloadStateDisplayString() const
 
 CString CUpDownClient::GetUploadStateDisplayString() const
 {
-	CString strState;
-	switch (GetUploadState()){
-		case US_ONUPLOADQUEUE:
-			strState = GetResString(IDS_ONQUEUE);
-			break;
-		case US_BANNED:
-			strState = GetResString(IDS_BANNED);
-			break;
-		case US_CONNECTING:
-			strState = GetResString(IDS_CONNECTING);
-			break;
-		case US_UPLOADING:
-			// GetNumberOfRequestedBlocksInQueue is no longer available and retrieving it would cause quite some extra load
-			// (either due to thread syncing or due to adding redunant extra vars just for this function), so given that
-			// "stalled, waiting for disk" should happen like never, it is removed for now
-			if(GetPayloadInBuffer() == 0 && /*GetNumberOfRequestedBlocksInQueue() == 0 &&*/ thePrefs.IsExtControlsEnabled()) {
-				strState = GetResString(IDS_US_STALLEDW4BR);
-			/*} else if(GetPayloadInBuffer() == 0 && thePrefs.IsExtControlsEnabled()) {
-				strState = GetResString(IDS_US_STALLEDREADINGFDISK);*/
-			} else if(GetSlotNumber() <= theApp.uploadqueue->GetActiveUploadsCount()) {
-				strState = GetResString(IDS_TRANSFERRING);
-			} else {
-				strState = GetResString(IDS_TRICKLING);
-			}
-			break;
+	RESSTRIDTYPE id = 0;
+	switch (GetUploadState()) {
+	case US_ONUPLOADQUEUE:
+		id = IDS_ONQUEUE;
+		break;
+	case US_BANNED:
+		id = IDS_BANNED;
+		break;
+	case US_CONNECTING:
+		id = IDS_CONNECTING;
+		break;
+	case US_UPLOADING:
+		// GetNumberOfRequestedBlocksInQueue is no longer available and retrieving it would cause quite some extra load
+		// (either due to thread syncing or due to adding redunant extra vars just for this function), so given that
+		// "stalled, waiting for disk" should happen like never, it is removed for now
+		if (GetPayloadInBuffer() == 0 && /*GetNumberOfRequestedBlocksInQueue() == 0 &&*/ thePrefs.IsExtControlsEnabled())
+			id = IDS_US_STALLEDW4BR;
+		/* else if(GetPayloadInBuffer() == 0 && thePrefs.IsExtControlsEnabled())
+			id = IDS_US_STALLEDREADINGFDISK;*/
+		else if (GetSlotNumber() <= theApp.uploadqueue->GetActiveUploadsCount())
+			id = IDS_TRANSFERRING;
+		else
+			id = IDS_TRICKLING;
 	}
+	CString strState;
+	if (id)
+		strState = GetResString(id);
 
 	if (thePrefs.GetPeerCacheShow())
 	{
@@ -2756,7 +2753,6 @@ CString CUpDownClient::GetUploadStateDisplayString() const
 			break;
 		case PCUS_UPLOADING:
 			strState += _T(" Cache");
-			break;
 		}
 		if (m_ePeerCacheUpState != PCUS_NONE && m_bPeerCacheUpHit)
 			strState += _T(" Hit");
@@ -3181,7 +3177,7 @@ void CUpDownClient::SendSharedDirectories()
 
 	// build packet
 	CSafeMemFile tempfile(80);
-	tempfile.WriteUInt32(arFolders.GetCount());
+	tempfile.WriteUInt32(static_cast<uint32>(arFolders.GetCount()));
 	for (int i = 0; i < arFolders.GetCount(); i++)
 		tempfile.WriteString(arFolders.GetAt(i), GetUnicodeSupport());
 

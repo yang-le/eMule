@@ -927,7 +927,7 @@ bool CemuleApp::ProcessCommandline()
 }
 
 BOOL CALLBACK CemuleApp::SearchEmuleWindow(HWND hWnd, LPARAM lParam){
-	DWORD dwMsgResult;
+	DWORD_PTR dwMsgResult;
 	LRESULT res = ::SendMessageTimeout(hWnd,UWM_ARE_YOU_EMULE,0, 0,SMTO_BLOCK |SMTO_ABORTIFHUNG,10000,&dwMsgResult);
 	if(res == 0)
 		return TRUE;
@@ -1123,12 +1123,12 @@ void CemuleApp::OnlineSig() // Added By Bouc7
     CSafeBufferedFile file;
 	CFileException fexp;
 	if (!file.Open(strFullPath, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyWrite | CFile::typeBinary, &fexp)){
-		CString strError = GetResString(IDS_ERROR_SAVEFILE) + _T(" ") + CString(_szFileName);
+		CString strError;
+		strError.Format(_T("%s %s"), (LPCTSTR)GetResString(IDS_ERROR_SAVEFILE), _szFileName);
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
 		GetExceptionMessage(fexp, szError, _countof(szError));
-		strError += _T(" - ");
-		strError += szError;
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+		strError.AppendFormat(_T(" - %s"), szError);
+		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 		return;
     }
 
@@ -1188,12 +1188,13 @@ void CemuleApp::OnlineSig() // Added By Bouc7
 	}
 	catch (CFileException* ex)
 	{
-		CString strError = GetResString(IDS_ERROR_SAVEFILE) + _T(" ") + CString(_szFileName);
+		CString strError;
+		strError.Format(_T("%s %s"), (LPCTSTR)GetResString(IDS_ERROR_SAVEFILE), _szFileName);
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
 		GetExceptionMessage(*ex, szError, _countof(szError));
 		strError += _T(" - ");
 		strError += szError;
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 		ex->Delete();
 	}
 } //End Added By Bouc7
@@ -1272,7 +1273,7 @@ int CemuleApp::GetFileTypeSystemImageIdx(LPCTSTR pszFilePath, int iLength /* = -
 	else{
 		dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
 		// search last '.' character *after* the last '\\' character
-		for (int i = iLength - 1; i >= 0; i--){
+		for (int i = iLength - 1; i >= 0; --i) {
 			if (pszFilePath[i] == _T('\\') || pszFilePath[i] == _T('/'))
 				break;
 			if (pszFilePath[i] == _T('.')) {
@@ -1291,7 +1292,7 @@ int CemuleApp::GetFileTypeSystemImageIdx(LPCTSTR pszFilePath, int iLength /* = -
 		if (!m_aBigExtToSysImgIdx.Lookup(pszCacheExt, vData)){
 			// Get index for the system's big icon image list
 			SHFILEINFO sfi;
-			DWORD dwResult = SHGetFileInfo(pszFilePath, dwFileAttributes, &sfi, sizeof(sfi),
+			DWORD_PTR dwResult = SHGetFileInfo(pszFilePath, dwFileAttributes, &sfi, sizeof(sfi),
 										SHGFI_USEFILEATTRIBUTES | SHGFI_SYSICONINDEX);
 			if (dwResult == 0)
 				return 0;
@@ -1307,7 +1308,7 @@ int CemuleApp::GetFileTypeSystemImageIdx(LPCTSTR pszFilePath, int iLength /* = -
 		if (!m_aExtToSysImgIdx.Lookup(pszCacheExt, vData)){
 			// Get index for the system's small icon image list
 			SHFILEINFO sfi;
-			DWORD dwResult = SHGetFileInfo(pszFilePath, dwFileAttributes, &sfi, sizeof(sfi),
+			DWORD_PTR dwResult = SHGetFileInfo(pszFilePath, dwFileAttributes, &sfi, sizeof(sfi),
 										SHGFI_USEFILEATTRIBUTES | SHGFI_SYSICONINDEX | SHGFI_SMALLICON);
 			if (dwResult == 0)
 				return 0;
@@ -1321,7 +1322,7 @@ int CemuleApp::GetFileTypeSystemImageIdx(LPCTSTR pszFilePath, int iLength /* = -
 	}
 
 	// Return already cached value
-	return (int)vData;
+	return reinterpret_cast<int>(vData);
 }
 
 bool CemuleApp::IsConnected(bool bIgnoreEd2k, bool bIgnoreKad)
@@ -2110,7 +2111,7 @@ const CString &CemuleApp::GetDefaultFontFaceName()
 	if (m_strDefaultFontFaceName.IsEmpty())
 	{
 		OSVERSIONINFO osvi;
-		osvi.dwOSVersionInfoSize = sizeof(osvi);
+		osvi.dwOSVersionInfoSize = sizeof osvi;
 		if (GetVersionEx(&osvi)
 			&& osvi.dwPlatformId == VER_PLATFORM_WIN32_NT
 			&& osvi.dwMajorVersion >= 5) // Win2000/XP or higher
@@ -2129,7 +2130,7 @@ void CemuleApp::CreateBackwardDiagonalBrush()
 	{
 		LOGBRUSH logBrush = {0};
 		logBrush.lbStyle = BS_PATTERN;
-		logBrush.lbHatch = (int)bm.GetSafeHandle();
+		logBrush.lbHatch = (ULONG_PTR)bm.GetSafeHandle();
 		logBrush.lbColor = RGB(0, 0, 0);
 		VERIFY( m_brushBackwardDiagonal.CreateBrushIndirect(&logBrush) );
 	}

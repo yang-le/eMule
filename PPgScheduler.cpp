@@ -108,55 +108,59 @@ void CPPgScheduler::Localize(void)
 		GetDlgItem(IDC_NEW)->SetWindowText(GetResString(IDS_NEW));
 		GetDlgItem(IDC_CHECKNOENDTIME)->SetWindowText(GetResString(IDS_CHECKNOENDTIME));
 
-		while (m_timesel.GetCount()>0) m_timesel.DeleteString(0);
-		for (int i=0;i<11;i++)
+		while (m_timesel.GetCount() > 0)
+			m_timesel.DeleteString(0);
+		for (int i=0; i<11; ++i)
 			m_timesel.AddString(GetDayLabel(i));
 		m_timesel.SetCurSel(0);
-		if (m_list.GetSelectionMark()!=-1) m_timesel.SetCurSel(theApp.scheduler->GetSchedule(m_timesel.GetCurSel())->day);
+		if (m_list.GetSelectionMark() != -1)
+			m_timesel.SetCurSel(theApp.scheduler->GetSchedule(m_timesel.GetCurSel())->day);
 	}
 }
 
 void CPPgScheduler::OnNmClickList(NMHDR* /*pNMHDR*/, LRESULT* /*pResult*/)
 {
-	if (m_list.GetSelectionMark()>-1) LoadSchedule(m_list.GetSelectionMark());
+	if (m_list.GetSelectionMark() > -1)
+		LoadSchedule(m_list.GetSelectionMark());
 }
 
-void CPPgScheduler::LoadSchedule(int index) {
-
-	Schedule_Struct* schedule=theApp.scheduler->GetSchedule(index);
+void CPPgScheduler::LoadSchedule(int index)
+{
+	Schedule_Struct* schedule = theApp.scheduler->GetSchedule(index);
 	GetDlgItem(IDC_S_TITLE)->SetWindowText(schedule->title);
 
 	//time
-	CTime time=time.GetCurrentTime();
-	if (schedule->time>0) time=schedule->time;
+	CTime time = time.GetCurrentTime();
+	if (schedule->time > 0)
+		time = schedule->time;
 	m_time.SetTime(&time);
 
-	CTime time2=time2.GetCurrentTime();
-	if (schedule->time2>0) time2=schedule->time2;
+	CTime time2 = time2.GetCurrentTime();
+	if (schedule->time2 > 0)
+		time2 = schedule->time2;
 	m_timeTo.SetTime(&time2);
 
 	//time kindof (days)
 	m_timesel.SetCurSel(schedule->day);
 
-	CheckDlgButton(IDC_S_ENABLE,(schedule->enabled));
+	CheckDlgButton(IDC_S_ENABLE, (schedule->enabled));
 	CheckDlgButton(IDC_CHECKNOENDTIME, schedule->time2==0);
 
 	OnDisableTime2();
 
 	m_actions.DeleteAllItems();
-	for (int i=0;i<16;i++) {
-		if (schedule->actions[i]==0) break;
-		m_actions.InsertItem(i,GetActionLabel(schedule->actions[i]));
-		m_actions.SetItemText(i,1,schedule->values[i]);
-		m_actions.SetItemData(i,schedule->actions[i]);
+	for (int i = 0; i<16 && !schedule->actions[i]; ++i) {
+		m_actions.InsertItem(i, GetActionLabel(schedule->actions[i]));
+		m_actions.SetItemText(i, 1, schedule->values[i]);
+		m_actions.SetItemData(i, schedule->actions[i]);
 	}
 }
 
-void CPPgScheduler::FillScheduleList() {
-
+void CPPgScheduler::FillScheduleList()
+{
 	m_list.DeleteAllItems();
 
-	for (uint8 index=0;index<theApp.scheduler->GetCount();index++) {
+	for (int index = 0; index<theApp.scheduler->GetCount(); ++index) {
 		const Schedule_Struct *sch = theApp.scheduler->GetSchedule(index);
 		m_list.InsertItem(index, sch->title);
 		CTime time(sch->time);
@@ -248,34 +252,54 @@ BOOL CPPgScheduler::OnApply(){
 	return CPropertyPage::OnApply();
 }
 
-CString CPPgScheduler::GetActionLabel(int index) {
+CString CPPgScheduler::GetActionLabel(int index)
+{
 	switch (index) {
-		case ACTION_SETUPL		: return GetResString(IDS_PW_UPL);
-		case ACTION_SETDOWNL	: return GetResString(IDS_PW_DOWNL);
-		case ACTION_SOURCESL	: return GetResString(IDS_LIMITSOURCES);
-		case ACTION_CON5SEC		: return GetResString(IDS_LIMITCONS5SEC);
-		case ACTION_CATSTOP		: return GetResString(IDS_SCHED_CATSTOP);
-		case ACTION_CATRESUME	: return GetResString(IDS_SCHED_CATRESUME);
-		case ACTION_CONS		: return GetResString(IDS_PW_MAXC);
+	case ACTION_SETUPL:
+		return GetResString(IDS_PW_UPL);
+	case ACTION_SETDOWNL:
+		return GetResString(IDS_PW_DOWNL);
+	case ACTION_SOURCESL:
+		return GetResString(IDS_LIMITSOURCES);
+	case ACTION_CON5SEC:
+		return GetResString(IDS_LIMITCONS5SEC);
+	case ACTION_CATSTOP:
+		return GetResString(IDS_SCHED_CATSTOP);
+	case ACTION_CATRESUME:
+		return GetResString(IDS_SCHED_CATRESUME);
+	case ACTION_CONS:
+		return GetResString(IDS_PW_MAXC);
 	}
-	return NULL;
+	return CString();
 }
 
-CString CPPgScheduler::GetDayLabel(int index) {
+CString CPPgScheduler::GetDayLabel(int index)
+{
 	switch (index) {
-		case DAY_DAYLY : return GetResString(IDS_DAYLY);
-		case DAY_MO		: return GetResString(IDS_MO);
-		case DAY_DI		: return GetResString(IDS_DI);
-		case DAY_MI		: return GetResString(IDS_MI);
-		case DAY_DO		: return GetResString(IDS_DO);
-		case DAY_FR		: return GetResString(IDS_FR);
-		case DAY_SA		: return GetResString(IDS_SA);
-		case DAY_SO		: return GetResString(IDS_SO);
-		case DAY_MO_FR	: return GetResString(IDS_DAY_MO_FR);
-		case DAY_MO_SA	: return GetResString(IDS_DAY_MO_SA);
-		case DAY_SA_SO	: return GetResString(IDS_DAY_SA_SO);
+	case DAY_DAYLY:
+		return GetResString(IDS_DAYLY);
+	case DAY_MO:
+		return GetResString(IDS_MO);
+	case DAY_DI:
+		return GetResString(IDS_DI);
+	case DAY_MI:
+		return GetResString(IDS_MI);
+	case DAY_DO:
+		return GetResString(IDS_DO);
+	case DAY_FR:
+		return GetResString(IDS_FR);
+	case DAY_SA:
+		return GetResString(IDS_SA);
+	case DAY_SO:
+		return GetResString(IDS_SO);
+	case DAY_MO_FR:
+		return GetResString(IDS_DAY_MO_FR);
+	case DAY_MO_SA:
+		return GetResString(IDS_DAY_MO_SA);
+	case DAY_SA_SO:
+		return GetResString(IDS_DAY_SA_SO);
 	}
-	return NULL;
+	return CString();
 }
 
 void CPPgScheduler::OnNmDblClkActionlist(NMHDR* /*pNMHDR*/, LRESULT* pResult)
@@ -375,16 +399,18 @@ BOOL CPPgScheduler::OnCommand(WPARAM wParam, LPARAM lParam)
 				// todo: differen prompts
 				CString prompt;
 				switch (m_actions.GetItemData(item)) {
-					case 1:
-					case 2:
-						prompt=GetResString(IDS_SCHED_ENTERDATARATELIMIT)+_T(" (")+GetResString(IDS_KBYTESPERSEC)+_T(")");
-						break;
-					default: prompt=GetResString(IDS_SCHED_ENTERVAL);
+				case 1:
+				case 2:
+					prompt.Format(_T("%s (%s)"), (LPCTSTR)GetResString(IDS_SCHED_ENTERDATARATELIMIT), (LPCTSTR)GetResString(IDS_KBYTESPERSEC));
+					break;
+				default:
+					prompt = GetResString(IDS_SCHED_ENTERVAL);
 				}
-				inputbox.SetLabels(GetResString(IDS_SCHED_ACTCONFIG),prompt,m_actions.GetItemText(item,1));
+				inputbox.SetLabels(GetResString(IDS_SCHED_ACTCONFIG), prompt, m_actions.GetItemText(item,1));
 				inputbox.DoModal();
-				CString res=inputbox.GetInput();
-				if (!inputbox.WasCancelled()) m_actions.SetItemText(item,1,res);
+				CString res = inputbox.GetInput();
+				if (!inputbox.WasCancelled())
+					m_actions.SetItemText(item,1,res);
 			}
 			break;
         }

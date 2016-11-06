@@ -201,12 +201,14 @@ void CScheduler::RestoreOriginals() {
 	thePrefs.SetMaxSourcesPerFile(original_sources);
 }
 
-void CScheduler::ActivateSchedule(int index,bool makedefault) {
+void CScheduler::ActivateSchedule(INT_PTR index,bool makedefault) {
 	Schedule_Struct* schedule=GetSchedule(index);
 
-	for (int ai=0;ai<16;ai++) {
-		if (schedule->actions[ai]==0) break;
-		if (schedule->values[ai].IsEmpty() /* maybe ignore in some future cases...*/ ) continue;
+	for (int ai=0; ai<16; ++ai) {
+		if (schedule->actions[ai] == 0)
+			break;
+		if (schedule->values[ai].IsEmpty() /* maybe ignore in some future cases...*/ )
+			continue;
 
 		switch (schedule->actions[ai]) {
 			case 1 :
@@ -239,7 +241,6 @@ void CScheduler::ActivateSchedule(int index,bool makedefault) {
 				break;
 			case 7 :
 				theApp.downloadqueue->SetCatStatus(_tstoi(schedule->values[ai]),MP_RESUME);
-				break;
 		}
 	}
 }

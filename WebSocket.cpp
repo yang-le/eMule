@@ -29,7 +29,7 @@ void CWebSocket::SetParent(CWebServer *pParent)
 	m_pParent = pParent;
 }
 
-void CWebSocket::OnRequestReceived(char* pHeader, DWORD dwHeaderLen, char* pData, DWORD dwDataLen, in_addr inad)
+void CWebSocket::OnRequestReceived(const char* pHeader, DWORD dwHeaderLen, const char* pData, DWORD dwDataLen, in_addr inad)
 {
 	CStringA sHeader(pHeader, dwHeaderLen);
 	CStringA sData(pData, dwDataLen);

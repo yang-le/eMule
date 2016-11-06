@@ -54,7 +54,7 @@ public:
   bool Copyrighted() const { return _mp3_header_output->copyrighted; };
   bool Original() const { return _mp3_header_output->original; };
   uint32 Seconds() const { return _mp3_header_output->time; };
-  uint32 DataSize() const { return _mp3_header_output->datasize; };
+  size_t DataSize() const { return _mp3_header_output->datasize; };
 
 private:
 

@@ -467,8 +467,9 @@ void CxImage::SetPalette(rgb_color *rgb,uint32_t nColors)
 ////////////////////////////////////////////////////////////////////////////////
 void CxImage::SetPalette(RGBQUAD* pPal,uint32_t nColors)
 {
-	if ((pPal==NULL)||(pDib==NULL)||(head.biClrUsed==0)) return;
-	memcpy(GetPalette(),pPal,min(GetPaletteSize(),nColors*sizeof(RGBQUAD)));
+	if (pPal==NULL || pDib==NULL || head.biClrUsed==0)
+		return;
+	memcpy(GetPalette(), pPal, min(GetPaletteSize(),nColors*sizeof(RGBQUAD)));
 	info.last_c_isvalid = false;
 }
 ////////////////////////////////////////////////////////////////////////////////

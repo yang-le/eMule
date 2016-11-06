@@ -442,7 +442,7 @@ void EditTextFloatFormat(CDataExchange* pDX, int nIDC, HTREEITEM hItem, void* pD
 
 	HWND hWndCtrl = pDX->PrepareEditCtrl(nIDC);
 	ASSERT( hWndCtrl != NULL );
-	CTreeOptionsCtrl* pCtrlTreeOptions = (CTreeOptionsCtrl*) CWnd::FromHandlePermanent(hWndCtrl);
+	CTreeOptionsCtrl* pCtrlTreeOptions = static_cast<CTreeOptionsCtrl *>(CWnd::FromHandlePermanent(hWndCtrl));
 	ASSERT(pCtrlTreeOptions);
 	ASSERT(pCtrlTreeOptions->IsKindOf(RUNTIME_CLASS(CTreeOptionsCtrl)));
 
@@ -558,7 +558,7 @@ void DDX_Text(CDataExchange* pDX, int nIDC, HTREEITEM hItem, double& value)
 void DDX_Text(CDataExchange* pDX, int nIDC, HTREEITEM hItem, CString& sText)
 {
 	HWND hWndCtrl = pDX->PrepareCtrl(nIDC);
-	CTreeOptionsCtrl* pCtrlTreeOptions = (CTreeOptionsCtrl*) CWnd::FromHandlePermanent(hWndCtrl);
+	CTreeOptionsCtrl* pCtrlTreeOptions = static_cast<CTreeOptionsCtrl *>(CWnd::FromHandlePermanent(hWndCtrl));
 	ASSERT(pCtrlTreeOptions);
 	ASSERT(pCtrlTreeOptions->IsKindOf(RUNTIME_CLASS(CTreeOptionsCtrl)));
 

@@ -31,7 +31,7 @@ enum EPartFileStatus{
 	PS_COMPLETE			= 9
 };
 
-#define PR_VERYLOW			4 // I Had to change this because it didn't save negative number correctly.. Had to modify the sort function for this change..
+#define PR_VERYLOW			4 // I Had to change this because it didn't save negative number correctly. Had to modify the sort function for this change..
 #define PR_LOW				0 //*
 #define PR_NORMAL			1 // Don't change this - needed for edonkey clients and server!
 #define PR_HIGH				2 //*
@@ -184,7 +184,7 @@ public:
 	void	NotifyStatusChange();
 	bool	IsStopped() const												{ return stopped; }
 	bool	GetCompletionError() const										{ return m_bCompletionError; }
-	EMFileSize  GetCompletedSize() const									{ return completedsize; }
+	EMFileSize	GetCompletedSize() const									{ return completedsize; }
 	CString getPartfileStatus() const;
 	int		getPartfileStatusRang() const;
 	void	SetActive(bool bActive);
@@ -195,8 +195,8 @@ public:
 	void	SetAutoDownPriority(bool NewAutoDownPriority)					{ m_bAutoDownPriority = NewAutoDownPriority; }
 	void	UpdateAutoDownPriority();
 
-	UINT	GetSourceCount() const											{ return srclist.GetCount(); }
-	UINT	GetSrcA4AFCount() const											{ return A4AFsrclist.GetCount(); }
+	UINT	GetSourceCount() const											{ return static_cast<UINT>(srclist.GetCount()); }
+	UINT	GetSrcA4AFCount() const											{ return static_cast<UINT>(A4AFsrclist.GetCount()); }
 	UINT	GetSrcStatisticsValue(EDownloadState nDLState) const;
 	UINT	GetTransferringSrcCount() const;
 	uint64	GetTransferred() const											{ return m_uTransferred; }
@@ -208,7 +208,7 @@ public:
 	bool	IsPreviewableFileType() const;
 	time_t	getTimeRemaining() const;
 	time_t	getTimeRemainingSimple() const;
-	uint32	GetDlActiveTime() const;
+	time_t	GetDlActiveTime() const;
 
 	// Barry - Added as replacement for BlockReceived to buffer data before writing to disk
 	uint32	WriteToBuffer(uint64 transize, const BYTE *data, uint64 start, uint64 end, Requested_Block_Struct *block, const CUpDownClient* client);
@@ -243,7 +243,7 @@ public:
 	virtual Packet* CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 byRequestedVersion, uint16 nRequestedOptions) const;
 	void	AddClientSources(CSafeMemFile* sources, uint8 sourceexchangeversion, bool bSourceExchange2, const CUpDownClient* pClient = NULL);
 
-	UINT	GetAvailablePartCount() const									{ return availablePartsCount; }
+	UINT	GetAvailablePartCount() const									{ return (status == PS_COMPLETING || status == PS_COMPLETE) ? GetPartCount() : availablePartsCount; }
 	void	UpdateAvailablePartsCount();
 
 	uint32	GetLastAnsweredTime() const										{ return m_ClientSrcAnswered; }
@@ -302,7 +302,7 @@ public:
 	CFile	m_hpartfile;				// permanent opened handle to avoid write conflicts
 	CMutex 	m_FileCompleteMutex;		// Lord KiRon - Mutex for file completion
 	uint16	src_stats[4];
-	uint16  net_stats[3];
+	uint16	net_stats[3];
 	volatile bool m_bPreviewing;
 	volatile bool m_bRecoveringArchive; // Is archive recovery in progress
 	bool	m_bLocalSrcReqQueued;
@@ -397,6 +397,6 @@ private:
 	volatile UINT m_uFileOpProgress;
 	CAICHRecoveryHashSet*	m_pAICHRecoveryHashSet;
 
-	DWORD   lastSwapForSourceExchangeTick; // ZZ:DownloadManaager
+	DWORD	lastSwapForSourceExchangeTick; // ZZ:DownloadManaager
 
 };

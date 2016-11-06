@@ -41,11 +41,11 @@ public:
 	static CString GetDefaultIniFile(bool bModulPath = true);
 
 	CIni();
-	explicit CIni(CIni const& rIni);
-	explicit CIni(CString const& rstrFileName);
-	CIni(CString const& rstrFileName, CString const& rstrSection);
+	explicit CIni(const CIni& rIni);
+	explicit CIni(const CString& rstrFileName);
+	CIni(const CString& rstrFileName, const CString& rstrSection);
 	virtual ~CIni() {};
-	CIni& operator=(CIni const& rIni);
+	CIni& operator=(const CIni& rIni);
 
 	void SetFileName(const CString& rstrFileName);
 	void SetSection(const CString& rstrSection);

@@ -54,25 +54,19 @@ CStringStream& CStringStream::operator<<(char* psz)
 
 CStringStream& CStringStream::operator<<(UINT uVal)
 {
-	CString strVal;
-	strVal.Format(_T("%u"), uVal);
-	str += strVal;
+	str.AppendFormat(_T("%u"), uVal);
 	return *this;
 }
 
 CStringStream& CStringStream::operator<<(int iVal)
 {
-	CString strVal;
-	strVal.Format(_T("%d"), iVal);
-	str += strVal;
+	str.AppendFormat(_T("%d"), iVal);
 	return *this;
 }
 
 CStringStream& CStringStream::operator<<(double fVal)
 {
-	CString strVal;
-	strVal.Format(_T("%.3f"), fVal);
-	str += strVal;
+	str.AppendFormat(_T("%.3f"), fVal);
 	return *this;
 }
 
@@ -265,7 +259,7 @@ CString GetAudioFormatName(WORD wFormatTag)
 	CString strComment;
 	CString strFormat = GetAudioFormatName(wFormatTag, strComment);
 	if (!strComment.IsEmpty())
-		strFormat += _T(" (") + strComment + _T(")");
+		strFormat.AppendFormat(_T(" (%s)"), (LPCTSTR)strComment);
 	return strFormat;
 }
 
@@ -276,7 +270,7 @@ CString GetAudioFormatCodecId(WORD wFormatTag)
 		if (s_WavFmtTag[i].uFmtTag == wFormatTag)
 			return s_WavFmtTag[i].pszDefine;
 	}
-	return _T("");
+	return CString();
 }
 
 CString GetAudioFormatDisplayName(const CString &strCodecId)
@@ -292,7 +286,7 @@ CString GetAudioFormatDisplayName(const CString &strCodecId)
 			return CString(s_WavFmtTag[i].pszDefine) + _T(" (") + CString(s_WavFmtTag[i].pszComment) + _T(")");
 		}
 	}
-	return _T("");
+	return CString();
 }
 
 BOOL IsEqualFOURCC(FOURCC fccA, FOURCC fccB)
@@ -1169,23 +1163,19 @@ struct SRmCodec {
 
 static int __cdecl CmpRealMediaCodec(const void *p1, const void *p2)
 {
-	const SRmCodec *pCodec1 = (const SRmCodec *)p1;
-	const SRmCodec *pCodec2 = (const SRmCodec *)p2;
+	const SRmCodec *pCodec1 = reinterpret_cast<const SRmCodec *>(p1);
+	const SRmCodec *pCodec2 = reinterpret_cast<const SRmCodec *>(p2);
 	return strncmp(pCodec1->pszID, pCodec2->pszID, 4);
 }
 
 CString GetRealMediaCodecInfo(LPCSTR pszCodecID)
 {
-	CString strInfo(GetFOURCCString(*(DWORD *)pszCodecID));
+	CString strInfo(GetFOURCCString(*reinterpret_cast<const DWORD *>(pszCodecID)));
 	SRmCodec CodecSearch;
 	CodecSearch.pszID = pszCodecID;
-	SRmCodec *pCodecFound = (SRmCodec *)bsearch(&CodecSearch, g_aRealMediaCodecs, _countof(g_aRealMediaCodecs), sizeof(g_aRealMediaCodecs[0]), CmpRealMediaCodec);
+	SRmCodec *pCodecFound = static_cast<SRmCodec *>(bsearch(&CodecSearch, g_aRealMediaCodecs, _countof(g_aRealMediaCodecs), sizeof g_aRealMediaCodecs[0], CmpRealMediaCodec));
 	if (pCodecFound)
-	{
-		strInfo += _T(" (");
-		strInfo += pCodecFound->pszDesc;
-		strInfo += _T(")");
-	}
+		strInfo.AppendFormat(_T(" (%s)"), pCodecFound->pszDesc);
 	return strInfo;
 }
 
@@ -1215,7 +1205,7 @@ BOOL GetRMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsRM, bool bFullI
 		ULONGLONG ullChunkEndFilePos;
 
 		SRmChunkHdr rmChunkHdr;
-		file.Read(&rmChunkHdr, sizeof(rmChunkHdr));
+		file.Read(&rmChunkHdr, sizeof rmChunkHdr);
 		DWORD dwID = _byteswap_ulong(rmChunkHdr.id);
 		if (dwID != '.RMF')
 			return false;
@@ -1228,13 +1218,13 @@ BOOL GetRMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsRM, bool bFullI
 			return false;
 
 		WORD wVersion;
-		file.Read(&wVersion, sizeof(wVersion));
+		file.Read(&wVersion, sizeof wVersion);
 		wVersion = _byteswap_ushort(wVersion);
 		if (wVersion >= 2)
 			return false;
 
 		SRmRMF rmRMF;
-		file.Read(&rmRMF, sizeof(rmRMF));
+		file.Read(&rmRMF, sizeof rmRMF);
 
 		rbIsRM = true;
 		mi->strFileFormat = _T("Real Media");
@@ -1281,23 +1271,23 @@ BOOL GetRMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsRM, bool bFullI
 						if (wVersion == 0)
 						{
 							SRmMDPR rmMDPR;
-							file.Read(&rmMDPR, sizeof(rmMDPR));
+							file.Read(&rmMDPR, sizeof rmMDPR);
 
 							// Read 'Stream Name'
 							BYTE ucLen;
 							CStringA strStreamName;
-							file.Read(&ucLen, sizeof(ucLen));
+							file.Read(&ucLen, sizeof ucLen);
 							file.Read(strStreamName.GetBuffer(ucLen), ucLen);
 							strStreamName.ReleaseBuffer(ucLen);
 
 							// Read 'MIME Type'
 							CStringA strMimeType;
-							file.Read(&ucLen, sizeof(ucLen));
+							file.Read(&ucLen, sizeof ucLen);
 							file.Read(strMimeType.GetBuffer(ucLen), ucLen);
 							strMimeType.ReleaseBuffer(ucLen);
 
 							DWORD dwTypeDataLen;
-							file.Read(&dwTypeDataLen, sizeof(dwTypeDataLen));
+							file.Read(&dwTypeDataLen, sizeof dwTypeDataLen);
 							dwTypeDataLen = _byteswap_ulong(dwTypeDataLen);
 
 							if (strMimeType == "video/x-pn-realvideo")
@@ -2520,121 +2510,123 @@ BOOL GetWMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsWM, bool bFullI
 						CString strDevTempl;
 						if (GetAttribute(pIWMHeaderInfo, wStream, g_wszDeviceConformanceTemplate, strDevTempl))
 						{
+							UINT uStreamType;
 							strStreamInfo = strDevTempl + L": ";
 							if (strDevTempl == L"L")
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
-								strStreamType = GetResString(IDS_AUDIO);
+								uStreamType = IDS_AUDIO;
 								strStreamInfo += L"All bit rates";
 							}
 							else if (strDevTempl == L"L1")
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
-								strStreamType = GetResString(IDS_AUDIO);
+								uStreamType = IDS_AUDIO;
 								strStreamInfo += L"64 - 160 kBit/s";
 							}
 							else if (strDevTempl == L"L2")
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
-								strStreamType = GetResString(IDS_AUDIO);
+								uStreamType = IDS_AUDIO;
 								strStreamInfo += L"<= 160 kBit/s";
 							}
 							else if (strDevTempl == L"L3")
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
-								strStreamType = GetResString(IDS_AUDIO);
+								uStreamType = IDS_AUDIO;
 								strStreamInfo += L"<= 384 kBit/s";
 							}
 							else if (strDevTempl == L"S1")
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
-								strStreamType = GetResString(IDS_AUDIO);
+								uStreamType = IDS_AUDIO;
 								strStreamInfo += L"<= 20 kBit/s";
 							}
 							else if (strDevTempl == L"S2")
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
-								strStreamType = GetResString(IDS_AUDIO);
+								uStreamType = IDS_AUDIO;
 								strStreamInfo += L"<= 20 kBit/s";
 							}
 							else if (strDevTempl == L"M")
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
-								strStreamType = GetResString(IDS_AUDIO);
+								uStreamType = IDS_AUDIO;
 								strStreamInfo += L"All bit rates";
 							}
 							else if (strDevTempl == L"M1")
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
-								strStreamType = GetResString(IDS_AUDIO);
+								uStreamType = IDS_AUDIO;
 								strStreamInfo += L"<= 384 kBit/s, <= 48 kHz";
 							}
 							else if (strDevTempl == L"M2")
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
-								strStreamType = GetResString(IDS_AUDIO);
+								uStreamType = IDS_AUDIO;
 								strStreamInfo += L"<= 768 kBit/s, <= 96 kHz";
 							}
 							else if (strDevTempl == L"M3")
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
-								strStreamType = GetResString(IDS_AUDIO);
+								uStreamType = IDS_AUDIO;
 								strStreamInfo += L"<= 1500 kBit/s, <= 96 kHz";
 							}
 							else if (strDevTempl == L"SP@LL")
 							{
 								streamCodecType = WMT_CODECINFO_VIDEO;
-								strStreamType = GetResString(IDS_VIDEO);
+								uStreamType = IDS_VIDEO;
 								strStreamInfo += L"Simple Profile, Low Level, <= 176 x 144, <= 96 kBit/s";
 							}
 							else if (strDevTempl == L"SP@ML")
 							{
 								streamCodecType = WMT_CODECINFO_VIDEO;
-								strStreamType = GetResString(IDS_VIDEO);
+								uStreamType = IDS_VIDEO;
 								strStreamInfo += L"Simple Profile, Medium Level, <= 352 x 288, <= 384 kBit/s";
 							}
 							else if (strDevTempl == L"MP@LL")
 							{
 								streamCodecType = WMT_CODECINFO_VIDEO;
-								strStreamType = GetResString(IDS_VIDEO);
+								uStreamType = IDS_VIDEO;
 								strStreamInfo += L"Main Profile, Low Level, <= 352 x 288, 2 MBit/s";
 							}
 							else if (strDevTempl == L"MP@ML")
 							{
 								streamCodecType = WMT_CODECINFO_VIDEO;
-								strStreamType = GetResString(IDS_VIDEO);
+								uStreamType = IDS_VIDEO;
 								strStreamInfo += L"Main Profile, Medium Level, <= 720 x 576, 10 MBit/s";
 							}
 							else if (strDevTempl == L"MP@HL")
 							{
 								streamCodecType = WMT_CODECINFO_VIDEO;
-								strStreamType = GetResString(IDS_VIDEO);
+								uStreamType = IDS_VIDEO;
 								strStreamInfo += L"Main Profile, High Level, <= 1920 x 1080, 20 MBit/s";
 							}
 							else if (strDevTempl == L"CP")
 							{
 								streamCodecType = WMT_CODECINFO_VIDEO;
-								strStreamType = GetResString(IDS_VIDEO);
+								uStreamType = IDS_VIDEO;
 								strStreamInfo += L"Complex Profile";
 							}
 							else if (strDevTempl == L"I1")
 							{
 								streamCodecType = WMT_CODECINFO_VIDEO;
-								strStreamType = GetResString(IDS_VIDEO);
+								uStreamType = IDS_VIDEO;
 								strStreamInfo += L"Video Image Level 1, <= 352 x 288, 192 kBit/s";
 							}
 							else if (strDevTempl == L"I2")
 							{
 								streamCodecType = WMT_CODECINFO_VIDEO;
-								strStreamType = GetResString(IDS_VIDEO);
+								uStreamType = IDS_VIDEO;
 								strStreamInfo += L"Video Image Level 2, <= 1024 x 768, 384 kBit/s";
 							}
 							else if (strDevTempl == L"I")
 							{
 								streamCodecType = WMT_CODECINFO_VIDEO;
-								strStreamType = GetResString(IDS_VIDEO);
+								uStreamType = IDS_VIDEO;
 								strStreamInfo += L"Generic Video Image";
 							}
+							strStreamType = GetResString(uStreamType);
 						}
 
 						DWORD dwCodecId = (DWORD)-1;

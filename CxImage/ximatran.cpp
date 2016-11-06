@@ -180,7 +180,7 @@ bool CxImage::GrayScale()
 		ima.AlphaCopy(*this);
 #endif //CXIMAGE_SUPPORT_ALPHA
 		uint8_t *img=ima.GetBits();
-		int32_t l8=ima.GetEffWidth();
+		size_t l8=ima.GetEffWidth();
 		int32_t l=head.biWidth * 3;
 		for(int32_t y=0; y < head.biHeight; y++) {
 			for(int32_t x=0,x8=0; x < l; x+=3,x8++) {

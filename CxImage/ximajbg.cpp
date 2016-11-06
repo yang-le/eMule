@@ -95,7 +95,7 @@ bool CxImageJBG::Decode(CxFile *hFile)
 
   } cx_catch {
 	jbg_dec_free(&jbig_state);
-	if (buffer) free(buffer);
+	free(buffer);
 	if (strcmp(message,"")) strncpy(info.szLastError,message,255);
 	if (info.nEscape == -1 && info.dwType == CXIMAGE_FORMAT_JBG) return true;
 	return false;

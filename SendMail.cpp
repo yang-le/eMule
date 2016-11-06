@@ -138,7 +138,7 @@ public:
 // Print the hash in a format which is similar to CertMgr's..
 CString GetCertHash(const BYTE* pucHash, int iBytes)
 {
-	static const LPCTSTR pszHex = _T("0123456789abcdef");
+	static LPCTSTR pszHex = _T("0123456789abcdef");
 	CString strHash;
 	LPTSTR pszHash = strHash.GetBuffer(iBytes * 3);
 	for (int i = 0; i < iBytes; i++, pucHash++)
@@ -401,51 +401,49 @@ void CemuleDlg::SendNotificationMail(int iMsgType, LPCTSTR pszText)
 		return;
 
 	CString strHostName = thePrefs.GetNotifierMailServer();
-	strHostName.Trim();
-	if (strHostName.IsEmpty())
+	if (strHostName.Trim().IsEmpty())
 		return;
 
 	CString strRecipient = thePrefs.GetNotifierMailReceiver();
-	strRecipient.Trim();
-	if (strRecipient.IsEmpty())
+	if (strRecipient.Trim().IsEmpty())
 		return;
 
 	CString strSender = thePrefs.GetNotifierMailSender();
-	strSender.Trim();
-	if (strSender.IsEmpty())
+	if (strSender.Trim().IsEmpty())
 		return;
 
-	CNotifierMailThread* pThread = (CNotifierMailThread*)AfxBeginThread(RUNTIME_CLASS(CNotifierMailThread), THREAD_PRIORITY_BELOW_NORMAL, 0, CREATE_SUSPENDED);
-	if (pThread)
-	{
+	CNotifierMailThread* pThread = static_cast<CNotifierMailThread *>(AfxBeginThread(RUNTIME_CLASS(CNotifierMailThread), THREAD_PRIORITY_BELOW_NORMAL, 0, CREATE_SUSPENDED));
+	if (pThread) {
 		pThread->m_strHostName = strHostName;
 		pThread->m_strRecipient = strRecipient;
 		pThread->m_strSender = strSender;
 		pThread->m_strEncryptCertName = theApp.GetProfileString(_T("eMule"), _T("NotifierMailEncryptCertName")).Trim();
 		pThread->m_strSubject = GetResString(IDS_EMULENOTIFICATION);
-		switch (iMsgType)
-		{
-			case TBN_CHAT:
-				pThread->m_strSubject +=  _T(": ") + GetResString(IDS_PW_TBN_POP_ALWAYS);
-				break;
-			case TBN_DOWNLOADFINISHED:
-				pThread->m_strSubject +=  _T(": ") + GetResString(IDS_PW_TBN_ONDOWNLOAD);
-				break;
-			case TBN_DOWNLOADADDED:
-				pThread->m_strSubject +=  _T(": ") + GetResString(IDS_TBN_ONNEWDOWNLOAD);
-				break;
-			case TBN_LOG:
-				pThread->m_strSubject += _T(": ") + GetResString(IDS_PW_TBN_ONLOG);
-				break;
-			case TBN_IMPORTANTEVENT:
-				pThread->m_strSubject +=_T(": ") + GetResString(IDS_ERROR);
-				break;
-			case TBN_NEWVERSION:
-				pThread->m_strSubject += _T(": ") + GetResString(IDS_CB_TBN_ONNEWVERSION);
-				break;
-			default:
-				ASSERT(0);
+		UINT sid = 0;
+		switch (iMsgType) {
+		case TBN_CHAT:
+			sid = IDS_PW_TBN_POP_ALWAYS;
+			break;
+		case TBN_DOWNLOADFINISHED:
+			sid = IDS_PW_TBN_ONDOWNLOAD;
+			break;
+		case TBN_DOWNLOADADDED:
+			sid = IDS_TBN_ONNEWDOWNLOAD;
+			break;
+		case TBN_LOG:
+			sid = IDS_PW_TBN_ONLOG;
+			break;
+		case TBN_IMPORTANTEVENT:
+			sid = IDS_ERROR;
+			break;
+		case TBN_NEWVERSION:
+			sid = IDS_CB_TBN_ONNEWVERSION;
+			break;
+		default:
+			ASSERT(0);
 		}
+		if (sid)
+			pThread->m_strSubject.AppendFormat(_T(": %s"), (LPCTSTR)GetResString(sid));
 		pThread->m_strBody = pszText;
 		pThread->ResumeThread();
 	}

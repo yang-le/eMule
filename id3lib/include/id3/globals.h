@@ -222,7 +222,7 @@ ID3_ENUM(ID3_TagType)
 /**
  ** Enumeration of the different types of fields in a frame.
  **/
-ID3_ENUM(ID3_FieldID)
+ID3_ENUM(ID3_FieldID) : size_t
 {
   ID3FN_NOFIELD = 0,       /**< No field */
   ID3FN_TEXTENC,           /**< Text encoding (unicode or ASCII) */
@@ -274,7 +274,7 @@ ID3_ENUM(ID3_FieldID)
 /**
  ** Enumeration of the different types of frames recognized by id3lib
  **/
-ID3_ENUM(ID3_FrameID)
+ID3_ENUM(ID3_FrameID) : size_t
 {
   /* ???? */ ID3FID_NOFRAME = 0,       /**< No known frame */
   /* AENC */ ID3FID_AUDIOCRYPTO,       /**< Audio encryption */
@@ -439,7 +439,7 @@ ID3_ENUM(ID3_Err)
 // below the minimum tag size ( which is 10 bytes for the header, + 7 bytes for a minimal (2.2) frame
 };
 
-ID3_ENUM(ID3_ContentType)
+ID3_ENUM(ID3_ContentType) : size_t
 {
   ID3CT_OTHER = 0,
   ID3CT_LYRICS,
@@ -450,7 +450,7 @@ ID3_ENUM(ID3_ContentType)
   ID3CT_TRIVIA
 };
 
-ID3_ENUM(ID3_PictureType)
+ID3_ENUM(ID3_PictureType) : size_t
 {
   ID3PT_OTHER = 0,
   ID3PT_PNG32ICON = 1,     // 32x32 pixels 'file icon' (PNG only)
@@ -475,7 +475,7 @@ ID3_ENUM(ID3_PictureType)
   ID3PT_PUBLISHERLOGO = 20 // Publisher/Studio logotype
 };
 
-ID3_ENUM(ID3_TimeStampFormat)
+ID3_ENUM(ID3_TimeStampFormat) : size_t
 {
   ID3TSF_FRAME  = 1,
   ID3TSF_MS
@@ -749,7 +749,7 @@ ID3_STRUCT(Mp3_Headerinfo)
   uint32 framesize;
   uint32 frames;                // nr of frames
   uint32 time;                  // nr of seconds in song
-  uint32 datasize;              // size from first sync byte till before the appended tags
+  size_t datasize;              // size from first sync byte till before the appended tags
   bool privatebit;
   bool copyrighted;
   bool original;

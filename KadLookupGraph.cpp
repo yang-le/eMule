@@ -553,10 +553,10 @@ void CKadLookupGraph::UpdateToolTip()
 		int iHotItemRealIdx = hecount - (m_iHotItemIdx + 1);
 		const CLookupHistory::SLookupHistoryEntry* sEntry = he[iHotItemRealIdx];
 		CString strDiscovered;
-		if (sEntry->m_liReceivedFromIdx.GetCount() > 0)
-			strDiscovered.Format(_T("%i %s"), sEntry->m_liReceivedFromIdx.GetCount(), (LPCTSTR)GetResString(IDS_NODES));
-		else
+		if (sEntry->m_liReceivedFromIdx.IsEmpty())
 			strDiscovered = GetResString(IDS_ROUTINGTABLE);
+		else
+			strDiscovered.Format(_T("%i %s"), sEntry->m_liReceivedFromIdx.GetCount(), (LPCTSTR)GetResString(IDS_NODES));
 
 		CString strFoundNodes;
 		if (sEntry->m_dwAskedContactsTime > 0)

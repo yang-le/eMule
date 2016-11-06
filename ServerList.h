@@ -42,8 +42,8 @@ public:
 	void		RemoveDuplicatesByAddress(const CServer* pExceptThis);
 	void		RemoveDuplicatesByIP(const CServer* pExceptThis);
 
-	UINT		GetServerCount() const { return list.GetCount(); }
-	CServer*	GetServerAt(UINT pos) const { return list.GetAt(list.FindIndex(pos)); }
+	INT_PTR		GetServerCount() const { return list.GetCount(); }
+	CServer*	GetServerAt(INT_PTR pos) const { return list.GetAt(list.FindIndex(pos)); }
 	CServer*	GetSuccServer(const CServer* lastserver) const;
 	CServer*	GetNextServer(bool bOnlyObfuscated);
 	CServer*	GetServerByAddress(LPCTSTR address, uint16 port) const;

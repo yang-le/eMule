@@ -33,7 +33,7 @@ CLayeredWindowHelperST::~CLayeredWindowHelperST()
 //
 LONG CLayeredWindowHelperST::AddLayeredStyle(HWND hWnd)
 {
-	return ::SetWindowLong(hWnd, GWL_EXSTYLE, ::GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
+	return SetWindowLongPtr(hWnd, GWL_EXSTYLE, GetWindowLongPtr(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
 } // End of AddLayeredStyle
 
 // This function removes the WS_EX_LAYERED style from the specified window.
@@ -52,7 +52,7 @@ LONG CLayeredWindowHelperST::AddLayeredStyle(HWND hWnd)
 //
 LONG CLayeredWindowHelperST::RemoveLayeredStyle(HWND hWnd)
 {
-	return ::SetWindowLong(hWnd, GWL_EXSTYLE, ::GetWindowLong(hWnd, GWL_EXSTYLE) & ~WS_EX_LAYERED);
+	return ::SetWindowLongPtr(hWnd, GWL_EXSTYLE, ::GetWindowLongPtr(hWnd, GWL_EXSTYLE) & ~WS_EX_LAYERED);
 } // End of RemoveLayeredStyle
 
 // This function sets the opacity and transparency color key of a layered window.
@@ -81,20 +81,12 @@ LONG CLayeredWindowHelperST::RemoveLayeredStyle(HWND hWnd)
 //
 BOOL CLayeredWindowHelperST::SetLayeredWindowAttributes(HWND hWnd, COLORREF crKey, BYTE bAlpha, DWORD dwFlags)
 {
-	BOOL	bRetValue = TRUE;
-
-	if (m_hDll)
-	{
-		lpfnSetLayeredWindowAttributes pFn = NULL;
-		pFn = (lpfnSetLayeredWindowAttributes)GetProcAddress(m_hDll, "SetLayeredWindowAttributes");
+	if (m_hDll) {
+		lpfnSetLayeredWindowAttributes pFn = (lpfnSetLayeredWindowAttributes)GetProcAddress(m_hDll, "SetLayeredWindowAttributes");
 		if (pFn)
-		{
-			bRetValue = pFn(hWnd, crKey, bAlpha, dwFlags);
-		} // if
-		else bRetValue = FALSE;
-	} // if
-
-	return bRetValue;
+			return pFn(hWnd, crKey, bAlpha, dwFlags);
+	}
+	return FALSE;
 } // End of SetLayeredWindowAttributes
 
 // This function sets the percentage of opacity or transparency of a layered window.

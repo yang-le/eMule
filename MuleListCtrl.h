@@ -130,7 +130,7 @@ public:
 	DWORD_PTR GetItemData(int iItem);
 
 	// Retrieves the number of items in the control.
-	int GetItemCount() const { return m_Params.GetCount(); };
+	int GetItemCount() const { return static_cast<int>(m_Params.GetCount()); };
 
 	enum ArrowType {
 		arrowDown		= IDB_DOWN,

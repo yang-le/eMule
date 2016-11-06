@@ -114,11 +114,14 @@ bool CxImage::AlphaCopy(CxImage &from)
  */
 bool CxImage::AlphaSet(CxImage &from)
 {
-	if (!from.IsGrayScale() || head.biWidth != from.head.biWidth || head.biHeight != from.head.biHeight) return false;
-	if (pAlpha==NULL) pAlpha = (uint8_t*)malloc(head.biWidth * head.biHeight);
+	if (!from.IsGrayScale() || head.biWidth != from.head.biWidth || head.biHeight != from.head.biHeight)
+		return false;
+	if (pAlpha==NULL)
+		pAlpha = (uint8_t*)malloc(head.biWidth * head.biHeight);
 	uint8_t* src = from.info.pImage;
 	uint8_t* dst = pAlpha;
-	if (src==NULL || dst==NULL) return false;
+	if (src==NULL || dst==NULL)
+		return false;
 	for (int32_t y=0; y<head.biHeight; y++){
 		memcpy(dst,src,head.biWidth);
 		dst += head.biWidth;

@@ -63,9 +63,10 @@ BOOL PreviewDlg::OnInitDialog()
 		return FALSE;
 	}
 	InitWindowStyles(this);
-	CString title =GetResString(IDS_DL_PREVIEW);
+	CString title(GetResString(IDS_DL_PREVIEW));
 	title.Remove(_T('&'));
-	SetWindowText( title + CString(_T(": ")) + m_pFile->GetFileName());
+	title.AppendFormat(_T(": %s"), (LPCTSTR)m_pFile->GetFileName());
+	SetWindowText(title);
 
 	m_nCurrentImage = 0;
 	ShowImage(0);

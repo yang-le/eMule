@@ -63,7 +63,7 @@ bool CFriendList::LoadList(){
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 		}
 		return false;
 	}
@@ -112,7 +112,7 @@ void CFriendList::SaveList(){
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 		return;
 	}
 	setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
@@ -136,7 +136,7 @@ void CFriendList::SaveList(){
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 		error->Delete();
 	}
 }

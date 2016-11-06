@@ -15,7 +15,7 @@ protected:
 		STDMETHOD(SetSecuritySite)(IInternetSecurityMgrSite*);
 		STDMETHOD(GetSecuritySite)(IInternetSecurityMgrSite**);
 		STDMETHOD(MapUrlToZone)(LPCWSTR,DWORD*, DWORD);
-		STDMETHOD(GetSecurityId)(LPCWSTR,BYTE*, DWORD*, DWORD);
+		STDMETHOD(GetSecurityId)(LPCWSTR,BYTE*, DWORD*, DWORD_PTR);
 		STDMETHOD(ProcessUrlAction)(LPCWSTR pwszUrl, DWORD dwAction, BYTE __RPC_FAR *pPolicy, DWORD cbPolicy, BYTE __RPC_FAR *pContext, DWORD cbContext, DWORD dwFlags, DWORD dwReserved = 0);
 		STDMETHOD(QueryCustomPolicy)(LPCWSTR, REFGUID, BYTE**, DWORD*, BYTE*, DWORD, DWORD);
 		STDMETHOD(SetZoneMapping)(DWORD, LPCWSTR, DWORD);

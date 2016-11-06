@@ -155,15 +155,12 @@ void CPrefs::WriteFile()
 void CPrefs::SetIPAddress(uint32 uVal)
 {
 	//This is our first check on connect, init our IP..
-	if( !uVal || !m_uIPLast )
-	{
-		m_uIP = uVal;
+	if (!uVal || !m_uIPLast)
 		m_uIPLast = uVal;
-	}
 	//If the last check matches this one, reset our current IP.
 	//If the last check does not match, wait for our next incoming IP.
-	//This happens for two reasons.. We just changed our IP, or a client responsed with a bad IP.
-	if( uVal == m_uIPLast )
+	//This happens for two reasons.. We just changed our IP, or a client responded with a bad IP.
+	if (uVal == m_uIPLast)
 		m_uIP = uVal;
 	else
 		m_uIPLast = uVal;
@@ -491,16 +488,14 @@ bool CPrefs::FindExternKadPort(bool bReset)
 {
 	if (!bReset)
 		return  m_anExternPortIPs.GetCount() < EXTERNAL_PORT_ASKIPS && !Kademlia::CKademlia::IsRunningInLANMode();
-	else
-	{
-		m_anExternPortIPs.RemoveAll();
-		m_anExternPorts.RemoveAll();
-		return true;
-	}
+	m_anExternPortIPs.RemoveAll();
+	m_anExternPorts.RemoveAll();
+	return true;
 }
 
 
-uint8 CPrefs::GetMyConnectOptions(bool bEncryption, bool bCallback){
+uint8 CPrefs::GetMyConnectOptions(bool bEncryption, bool bCallback)
+{
 	return ::GetMyConnectOptions(bEncryption, bCallback);
 }
 
@@ -508,18 +503,14 @@ float CPrefs::StatsGetFirewalledRatio(bool bUDP) const
 {
 	// gives an estimated percentage of TCP firewalled clients in the network
 	// will only work once enough > 0.49b nodes have spread and only if we are not UDP firewalled ourself
-	if (bUDP){
+	if (bUDP) {
 		if (m_nStatsUDPFirewalledNodes > 0 && m_nStatsUDPOpenNodes > 10)
 			return ((float)m_nStatsUDPFirewalledNodes / (float)(m_nStatsUDPFirewalledNodes + m_nStatsUDPOpenNodes));
-		else
-			return 0;
+		return 0;
 	}
-	else {
-		if (m_nStatsTCPFirewalledNodes > 0 && m_nStatsTCPOpenNodes > 10)
-			return ((float)m_nStatsTCPFirewalledNodes / (float)(m_nStatsTCPFirewalledNodes + m_nStatsTCPOpenNodes));
-		else
-			return 0;
-	}
+	if (m_nStatsTCPFirewalledNodes > 0 && m_nStatsTCPOpenNodes > 10)
+		return ((float)m_nStatsTCPFirewalledNodes / (float)(m_nStatsTCPFirewalledNodes + m_nStatsTCPOpenNodes));
+	return 0;
 }
 
 void CPrefs::StatsIncUDPFirewalledNodes(bool bFirewalled){

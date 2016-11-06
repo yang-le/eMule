@@ -1143,28 +1143,26 @@ void CTransferWnd::EditCatTabLabel(int index, CString newlabel)
 	if (!index || thePrefs.GetCatFilter(index)>0) {
 
 		if (index)
-			newlabel.Append(_T(" (")) ;
+			newlabel += _T(" (");
 
 		if (thePrefs.GetCatFilterNeg(index))
-			newlabel.Append(_T("!"));
+			newlabel += _T('!');
 
-		if (thePrefs.GetCatFilter(index)==18)
-			newlabel.Append( _T('\"') + thePrefs.GetCategory(index)->regexp + _T('\"') );
+		if (thePrefs.GetCatFilter(index) == 18)
+			newlabel.AppendFormat( _T('\"%s\"'), (LPCTSTR)thePrefs.GetCategory(index)->regexp);
 		else
-        	newlabel.Append( GetCatTitle(thePrefs.GetCatFilter(index)));
+        	newlabel += GetCatTitle(thePrefs.GetCatFilter(index));
 
 		if (index)
-			newlabel.Append( _T(")") );
+			newlabel += _T(')');
 	}
 
 	if (thePrefs.ShowCatTabInfos()) {
 		int count = 0, dwl = 0;
-		for (int i=0;i<theApp.downloadqueue->GetFileCount();i++) {
-			CPartFile *cur_file=theApp.downloadqueue->GetFileByIndex(i);
-			if (cur_file==0) continue;
-			if (cur_file->CheckShowItemInGivenCat(index)) {
-				if (cur_file->GetTransferringSrcCount()>0) ++dwl;
-			}
+		for (int i = 0; i<theApp.downloadqueue->GetFileCount(); ++i) {
+			CPartFile *cur_file = theApp.downloadqueue->GetFileByIndex(i);
+			if (cur_file !=NULL && cur_file->CheckShowItemInGivenCat(index) && cur_file->GetTransferringSrcCount()>0)
+				++dwl;
 		}
 		CString title=newlabel;
 		downloadlistctrl.GetCompleteDownloads(index, count);
@@ -1303,57 +1301,51 @@ CString CTransferWnd::GetTabStatistic(int tab)
 	uint64 size = 0;
 	uint64 trsize = 0;
 	uint64 disksize = 0;
-	for (int i = 0; i < theApp.downloadqueue->GetFileCount(); i++)
-	{
-		/*const*/ CPartFile* cur_file = theApp.downloadqueue->GetFileByIndex(i);
-		if (cur_file == 0)
-			continue;
-		if (cur_file->CheckShowItemInGivenCat(tab))
-		{
-			count++;
+	for (int i = 0; i < theApp.downloadqueue->GetFileCount(); ++i) {
+		CPartFile* cur_file = theApp.downloadqueue->GetFileByIndex(i);
+		if (cur_file != NULL && cur_file->CheckShowItemInGivenCat(tab)) {
+			++count;
 			if (cur_file->GetTransferringSrcCount() > 0)
-				dwl++;
+				++dwl;
 			speed += cur_file->GetDatarate() / 1024.0F;
 			size += (uint64)cur_file->GetFileSize();
 			trsize += (uint64)cur_file->GetCompletedSize();
 			if (!cur_file->IsAllocating())
 				disksize += (uint64)cur_file->GetRealFileSize();
 			if (cur_file->GetStatus() == PS_ERROR)
-				err++;
+				++err;
 			if (cur_file->GetStatus() == PS_PAUSED)
-				paus++;
+				++paus;
 		}
 	}
 
 	int total;
 	int compl = downloadlistctrl.GetCompleteDownloads(tab, total);
 
-    CString prio;
-    switch (thePrefs.GetCategory(tab)->prio)
-	{
-        case PR_LOW:
-            prio = GetResString(IDS_PRIOLOW);
-            break;
-        case PR_HIGH:
-            prio = GetResString(IDS_PRIOHIGH);
-            break;
-        default:
-            prio = GetResString(IDS_PRIONORMAL);
-    }
+	UINT idsprio;
+	switch (thePrefs.GetCategory(tab)->prio) {
+	case PR_LOW:
+		idsprio = IDS_PRIOLOW;
+		break;
+	case PR_HIGH:
+		idsprio = IDS_PRIOHIGH;
+		break;
+	default:
+		idsprio = IDS_PRIONORMAL;
+	}
 
 	CString title;
-	title.Format(_T("%s: %i\n\n%s: %i\n%s: %i\n%s: %i\n%s: %i\n\n%s: %s\n\n%s: %.1f %s\n%s: %s/%s\n%s%s"),
-		(LPCTSTR)GetResString(IDS_FILES), count + compl,
-		(LPCTSTR)GetResString(IDS_DOWNLOADING), dwl,
-		(LPCTSTR)GetResString(IDS_PAUSED), paus,
-		(LPCTSTR)GetResString(IDS_ERRORLIKE), err,
-		(LPCTSTR)GetResString(IDS_DL_TRANSFCOMPL), compl,
-		(LPCTSTR)GetResString(IDS_PRIORITY), (LPCTSTR)prio,
-		(LPCTSTR)GetResString(IDS_DL_SPEED), speed, (LPCTSTR)GetResString(IDS_KBYTESPERSEC),
-		(LPCTSTR)GetResString(IDS_DL_SIZE), (LPCTSTR)CastItoXBytes(trsize, false, false), (LPCTSTR)CastItoXBytes(size, false, false),
-		(LPCTSTR)GetResString(IDS_ONDISK), (LPCTSTR)CastItoXBytes(disksize, false, false));
-	title += TOOLTIP_AUTOFORMAT_SUFFIX_CH;
-	return title;
+	title.Format(_T("%s: %i\n\n%s: %i\n%s: %i\n%s: %i\n%s: %i\n\n%s: %s\n\n%s: %.1f %s\n%s: %s/%s\n%s%s")
+		, (LPCTSTR)GetResString(IDS_FILES), count + compl
+		, (LPCTSTR)GetResString(IDS_DOWNLOADING), dwl
+		, (LPCTSTR)GetResString(IDS_PAUSED), paus
+		, (LPCTSTR)GetResString(IDS_ERRORLIKE), err
+		, (LPCTSTR)GetResString(IDS_DL_TRANSFCOMPL), compl
+		, (LPCTSTR)GetResString(IDS_PRIORITY), (LPCTSTR)GetResString(idsprio)
+		, (LPCTSTR)GetResString(IDS_DL_SPEED), speed, (LPCTSTR)GetResString(IDS_KBYTESPERSEC)
+		, (LPCTSTR)GetResString(IDS_DL_SIZE), (LPCTSTR)CastItoXBytes(trsize, false, false), (LPCTSTR)CastItoXBytes(size, false, false)
+		, (LPCTSTR)GetResString(IDS_ONDISK), (LPCTSTR)CastItoXBytes(disksize, false, false));
+	return title + TOOLTIP_AUTOFORMAT_SUFFIX_CH;
 }
 
 void CTransferWnd::OnDblClickDltab()
@@ -1362,16 +1354,16 @@ void CTransferWnd::OnDblClickDltab()
 	::GetCursorPos(&point);
 	CPoint pt(point);
 	int tab = GetTabUnderMouse(&pt);
-	if (tab < 1)
-		return;
-	rightclickindex = tab;
-	OnCommand(MP_CAT_EDIT, 0);
+	if (tab >= 1) {
+		rightclickindex = tab;
+		OnCommand(MP_CAT_EDIT, 0);
+	}
 }
 
 void CTransferWnd::OnTabMovement(NMHDR* /*pNMHDR*/, LRESULT* /*pResult*/)
 {
-	UINT from=m_dlTab.GetLastMovementSource();
-	UINT to=m_dlTab.GetLastMovementDestionation();
+	UINT from = m_dlTab.GetLastMovementSource();
+	UINT to = m_dlTab.GetLastMovementDestionation();
 
 	if (from==0 || to==0 || from==to-1)
 		return;
@@ -1411,7 +1403,6 @@ void CTransferWnd::VerifyCatTabSize()
 		m_dlTab.GetItemRect(i, &rect);
 		size += rect.Width();
 	}
-	size += 4;
 
 	int right;
 	WINDOWPLACEMENT wp;
@@ -1422,7 +1413,7 @@ void CTransferWnd::VerifyCatTabSize()
 		return;
 	wp.rcNormalPosition.right = right;
 
-	int left = wp.rcNormalPosition.right - size;
+	int left = wp.rcNormalPosition.right - size - 4;
 	CRect rcBtnWnd1;
 	m_btnWnd1->GetWindowRect(rcBtnWnd1);
 	ScreenToClient(rcBtnWnd1);
@@ -1437,26 +1428,14 @@ void CTransferWnd::VerifyCatTabSize()
 
 CString CTransferWnd::GetCatTitle(int catid)
 {
-	switch (catid) {
-		case 0 : return GetResString(IDS_ALL);
-		case 1 : return GetResString(IDS_ALLOTHERS);
-		case 2 : return GetResString(IDS_STATUS_NOTCOMPLETED);
-		case 3 : return GetResString(IDS_DL_TRANSFCOMPL);
-		case 4 : return GetResString(IDS_WAITING);
-		case 5 : return GetResString(IDS_DOWNLOADING);
-		case 6 : return GetResString(IDS_ERRORLIKE);
-		case 7 : return GetResString(IDS_PAUSED);
-		case 8 : return GetResString(IDS_SEENCOMPL);
-		case 10 : return GetResString(IDS_VIDEO);
-		case 11 : return GetResString(IDS_AUDIO);
-		case 12 : return GetResString(IDS_SEARCH_ARC);
-		case 13 : return GetResString(IDS_SEARCH_CDIMG);
-		case 14 : return GetResString(IDS_SEARCH_DOC);
-		case 15 : return GetResString(IDS_SEARCH_PICS);
-		case 16 : return GetResString(IDS_SEARCH_PRG);
-//		case 18 : return GetResString(IDS_REGEXPRESSION);
-	}
-	return _T("?");
+	static const int idscat[19] = {
+		  IDS_ALL, IDS_ALLOTHERS, IDS_STATUS_NOTCOMPLETED, IDS_DL_TRANSFCOMPL, IDS_WAITING
+		, IDS_DOWNLOADING, IDS_ERRORLIKE, IDS_PAUSED, IDS_SEENCOMPL, 0
+		, IDS_VIDEO, IDS_AUDIO, IDS_SEARCH_ARC, IDS_SEARCH_CDIMG, IDS_SEARCH_DOC
+		, IDS_SEARCH_PICS , IDS_SEARCH_PRG, 0, IDS_REGEXPRESSION};
+	if (catid >= 0 && catid < 17)
+		catid = idscat[catid];
+	return catid ? GetResString((UINT)catid) : CString(_T("?"));
 }
 
 void CTransferWnd::OnBnClickedChangeView()

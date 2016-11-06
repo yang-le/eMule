@@ -127,14 +127,13 @@ void CLookupHistory::ContactAskedKad(CContact* pContact)
 	ASSERT( false );
 }
 
-int	CLookupHistory::GetInterestingContactIdxByID(CUInt128 uContact) const
+int	CLookupHistory::GetInterestingContactIdxByID(const CUInt128& uContact) const
 {
-	for (int i = 0; i < m_aIntrestingHistoryEntries.GetCount(); i++)
-	{
+	for (int i = 0; i < m_aIntrestingHistoryEntries.GetCount(); ++i) {
 		if (uContact == m_aIntrestingHistoryEntries[i]->m_uContactID)
 			return i;
 	}
-	ASSERT( false );
+	ASSERT(false);
 	return (-1);
 }
 
@@ -171,28 +170,27 @@ void CLookupHistory::ContactRespondedKeyword(uint32 uContactIP, uint16 uContactU
 
 CString	CLookupHistory::GetTypeName() const
 {
-	switch (m_uType)
-	{
-		case CSearch::FILE:
-			return GetResString(IDS_KAD_SEARCHSRC);
-		case CSearch::KEYWORD:
-			return GetResString(IDS_KAD_SEARCHKW);
-		case CSearch::NODE:
-		case CSearch::NODECOMPLETE:
-		case CSearch::NODESPECIAL:
-		case CSearch::NODEFWCHECKUDP:
-			return GetResString(IDS_KAD_NODE);
-		case CSearch::STOREFILE:
-			return GetResString(IDS_KAD_STOREFILE);
-		case CSearch::STOREKEYWORD:
-			return GetResString(IDS_KAD_STOREKW);
-		case CSearch::FINDBUDDY:
-			return GetResString(IDS_FINDBUDDY);
-		case CSearch::STORENOTES:
-			return GetResString(IDS_STORENOTES);
-		case CSearch::NOTES:
-			return GetResString(IDS_NOTES);
-		default:
-			return GetResString(IDS_KAD_UNKNOWN);
+	switch (m_uType) {
+	case CSearch::FILE:
+		return GetResString(IDS_KAD_SEARCHSRC);
+	case CSearch::KEYWORD:
+		return GetResString(IDS_KAD_SEARCHKW);
+	case CSearch::NODE:
+	case CSearch::NODECOMPLETE:
+	case CSearch::NODESPECIAL:
+	case CSearch::NODEFWCHECKUDP:
+		return GetResString(IDS_KAD_NODE);
+	case CSearch::STOREFILE:
+		return GetResString(IDS_KAD_STOREFILE);
+	case CSearch::STOREKEYWORD:
+		return GetResString(IDS_KAD_STOREKW);
+	case CSearch::FINDBUDDY:
+		return GetResString(IDS_FINDBUDDY);
+	case CSearch::STORENOTES:
+		return GetResString(IDS_STORENOTES);
+	case CSearch::NOTES:
+		return GetResString(IDS_NOTES);
+	default:
+		return GetResString(IDS_KAD_UNKNOWN);
 	}
 }

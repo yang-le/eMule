@@ -104,8 +104,8 @@ protected:
 	afx_msg void OnBnClickedBold();
 	afx_msg void OnBnClickedReset();
 	afx_msg void OnBnClickedSmiley();
-	afx_msg LONG OnSelEndOK(UINT lParam, LONG wParam);
-	afx_msg LONG OnSelEndCancel(UINT lParam, LONG wParam);
+	afx_msg LRESULT OnSelEndOK(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnSelEndCancel(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnEnRequestResizeTitle(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 };

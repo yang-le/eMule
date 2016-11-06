@@ -54,14 +54,10 @@ CUInt128::CUInt128()
 
 CUInt128::CUInt128(bool bFill)
 {
-	if( bFill )
-	{
-		m_uData[0] = (ULONG)-1;
-		m_uData[1] = (ULONG)-1;
-		m_uData[2] = (ULONG)-1;
-		m_uData[3] = (ULONG)-1;
-	}
-	else
+	if (bFill) {
+		m_u64Data[0] = (uint64)-1;
+		m_u64Data[1] = (uint64)-1;
+	} else
 		SetValue(0ul);
 }
 
@@ -93,17 +89,14 @@ CUInt128::CUInt128(const CUInt128 &uValue, UINT uNumBits)
 
 CUInt128& CUInt128::SetValue(const CUInt128 &uValue)
 {
-	m_uData[0] = uValue.m_uData[0];
-	m_uData[1] = uValue.m_uData[1];
-	m_uData[2] = uValue.m_uData[2];
-	m_uData[3] = uValue.m_uData[3];
+	m_u64Data[0] = uValue.m_u64Data[0];
+	m_u64Data[1] = uValue.m_u64Data[1];
 	return *this;
 }
 
 CUInt128& CUInt128::SetValue(ULONG uValue)
 {
-	m_uData[0] = 0;
-	m_uData[1] = 0;
+	m_u64Data[0] = 0;
 	m_uData[2] = 0;
 	m_uData[3] = uValue;
 	return *this;
@@ -128,14 +121,14 @@ CUInt128& CUInt128::SetValueRandom()
 
 CUInt128& CUInt128::SetValueGUID()
 {
-	SetValue(0ul);
 	GUID guid;
-	if (CoCreateGuid(&guid) != S_OK)
-		return *this;
-	m_uData[0] = guid.Data1;
-	m_uData[1] = ((ULONG)guid.Data2) << 16 | guid.Data3;
-	m_uData[2] = ((ULONG)guid.Data4[0]) << 24 | ((ULONG)guid.Data4[1]) << 16 | ((ULONG)guid.Data4[2]) << 8 | ((ULONG)guid.Data4[3]);
-	m_uData[3] = ((ULONG)guid.Data4[4]) << 24 | ((ULONG)guid.Data4[5]) << 16 | ((ULONG)guid.Data4[6]) << 8 | ((ULONG)guid.Data4[7]);
+	if (CoCreateGuid(&guid) == S_OK) {
+		m_uData[0] = guid.Data1;
+		m_uData[1] = ((ULONG)guid.Data2) << 16 | guid.Data3;
+		m_uData[2] = ((ULONG)guid.Data4[0]) << 24 | ((ULONG)guid.Data4[1]) << 16 | ((ULONG)guid.Data4[2]) << 8 | ((ULONG)guid.Data4[3]);
+		m_uData[3] = ((ULONG)guid.Data4[4]) << 24 | ((ULONG)guid.Data4[5]) << 16 | ((ULONG)guid.Data4[6]) << 8 | ((ULONG)guid.Data4[7]);
+	} else
+		SetValue(0ul);
 	return *this;
 }
 
@@ -160,8 +153,8 @@ CUInt128& CUInt128::SetBitNumber(UINT uBit, UINT uValue)
 
 CUInt128& CUInt128::Xor(const CUInt128 &uValue)
 {
-	for (int iIndex=0; iIndex<4; iIndex++)
-		m_uData[iIndex] ^= uValue.m_uData[iIndex];
+	m_u64Data[0] ^= uValue.m_u64Data[0];
+	m_u64Data[1] ^= uValue.m_u64Data[1];
 	return *this;
 }
 
@@ -173,42 +166,29 @@ CUInt128& CUInt128::XorBE(const byte *pbyValueBE)
 void CUInt128::ToHexString(CString *pstr) const
 {
 	pstr->SetString(_T(""));
-	CString sElement;
 	for (int iIndex=0; iIndex<4; iIndex++)
-	{
-		sElement.Format(_T("%08lX"), m_uData[iIndex]);
-		pstr->Append(sElement);
-	}
+		pstr->AppendFormat(_T("%08lX"), m_uData[iIndex]);
 }
 
 CString CUInt128::ToHexString() const
 {
-	CString pstr;
-	CString sElement;
-	for (int iIndex=0; iIndex<4; iIndex++)
-	{
-		sElement.Format(_T("%08lX"), m_uData[iIndex]);
-		pstr.Append(sElement);
-	}
-	return pstr;
+	CString str;
+	ToHexString(&str);
+	return str;
 }
 
 void CUInt128::ToBinaryString(CString *pstr, bool bTrim) const
 {
 	pstr->SetString(_T(""));
-	CString sElement;
-	for (int iIndex=0; iIndex<128; iIndex++)
-	{
+	for (int iIndex = 0; iIndex<128; ++iIndex) {
 		int iBit = GetBitNumber(iIndex);
-		if ((!bTrim) || (iBit != 0))
-		{
-			sElement.Format(_T("%d"), iBit);
-			pstr->Append(sElement);
+		if ((!bTrim) || (iBit != 0)) {
+			*pstr += iBit ? _T('1') : _T('0');
 			bTrim = false;
 		}
 	}
 	if (pstr->IsEmpty())
-		pstr->SetString(_T("0"));
+		*pstr = _T('0');
 }
 
 #if defined(_M_IX86) && (_MSC_FULL_VER > 13009037)
@@ -222,7 +202,6 @@ void CUInt128::ToByteArray(byte *pby) const
 	((uint32*)pby)[2] = _byteswap_ulong(m_uData[2]);
 	((uint32*)pby)[3] = _byteswap_ulong(m_uData[3]);
 #else
-
 	for (int iIndex=0; iIndex<16; iIndex++)
 		pby[iIndex] = (byte)(m_uData[iIndex/4] >> (8*(3-(iIndex%4))));
 #endif
@@ -266,9 +245,8 @@ CUInt128& CUInt128::Add(const CUInt128 &uValue)
 
 CUInt128& CUInt128::Add(ULONG uValue)
 {
-	if (uValue == 0)
-		return *this;
-	Add(CUInt128(uValue));
+	if (uValue)
+		Add(CUInt128(uValue));
 	return *this;
 }
 
@@ -289,9 +267,8 @@ CUInt128& CUInt128::Subtract(const CUInt128 &uValue)
 
 CUInt128& CUInt128::Subtract(ULONG uValue)
 {
-	if (uValue == 0)
-		return *this;
-	Subtract(CUInt128(uValue));
+	if (uValue)
+		Subtract(CUInt128(uValue));
 	return *this;
 }
 

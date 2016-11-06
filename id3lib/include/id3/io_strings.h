@@ -78,7 +78,7 @@ namespace dami
       }
       virtual size_type readChars(char_type buf[], size_type len)
       {
-        size_type size = min((unsigned int)len, (unsigned int)(_string.size() - _cur));
+        size_type size = min(len, (_string.size() - _cur));
         _string.copy(reinterpret_cast<String::value_type *>(buf), size, _cur);
         _cur += size;
         return size;
@@ -115,7 +115,7 @@ namespace dami
 
       virtual size_type skipChars(size_type len)
       {
-        size_type size = min((unsigned int)len, (unsigned int)(_string.size() - _cur));
+        size_type size = min(len, (_string.size() - _cur));
         _cur += size;
         return size;
       }
@@ -148,7 +148,7 @@ namespace dami
       }
       virtual size_type readChars(char_type buf[], size_type len)
       {
-        size_type size = min((unsigned int)len, (unsigned int)(_string.size() - _cur));
+        size_type size = min(len, (_string.size() - _cur));
         _string.copy(reinterpret_cast<BString::value_type *>(buf), size, _cur);
         _cur += size;
         return size;
@@ -185,7 +185,7 @@ namespace dami
 
       virtual size_type skipChars(size_type len)
       {
-        size_type size = min((unsigned int)len,(unsigned int)( _string.size() - _cur));
+        size_type size = min(len,( _string.size() - _cur));
         _cur += size;
         return size;
       }

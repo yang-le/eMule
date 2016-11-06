@@ -128,7 +128,7 @@ ID3_Err id3::v2::render(ID3_Writer& writer, const ID3_TagImpl& tag)
   }
 
   // zero the remainder of the buffer so that our padding bytes are zero
-  luint nPadding = tag.PaddingSize(frmSize);
+  size_t nPadding = tag.PaddingSize(frmSize);
   ID3D_NOTICE( "id3::v2::render(): padding size = " << nPadding );
 
   hdr.SetDataSize(frmSize + tag.GetExtendedBytes() + nPadding);
@@ -191,13 +191,11 @@ size_t ID3_TagImpl::Size() const
 
 size_t ID3_TagImpl::PaddingSize(size_t curSize) const
 {
-  luint newSize = 0;
-
   // if padding is switched off
   if (! _is_padded)
-  {
     return 0;
-  }
+
+  size_t newSize = 0;
 
   // if the old tag was large enough to hold the new tag, then we will simply
   // pad out the difference - that way the new tag can be written without
@@ -210,7 +208,7 @@ size_t ID3_TagImpl::PaddingSize(size_t curSize) const
   }
   else
   {
-    luint tempSize = curSize + ID3_GetDataSize(*this) +
+    size_t tempSize = curSize + ID3_GetDataSize(*this) +
                      this->GetAppendedBytes() + ID3_TagHeader::SIZE;
 
     // this method of automatic padding rounds the COMPLETE FILE up to the

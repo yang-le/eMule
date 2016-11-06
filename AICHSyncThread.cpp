@@ -78,7 +78,7 @@ int CAICHSyncThread::Run()
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 		}
 		return 0;
 	}
@@ -107,7 +107,7 @@ int CAICHSyncThread::Run()
 	}
 	catch(CFileException* error){
 		if (error->m_cause == CFileException::endOfFile){
-			LogError(LOG_STATUSBAR,GetResString(IDS_ERR_MET_BAD), KNOWN2_MET_FILENAME);
+			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_MET_BAD), KNOWN2_MET_FILENAME);
 			// truncate the file to the size to the last verified valid pos
 			try{
 				file.SetLength(nLastVerifiedPos);
@@ -260,7 +260,7 @@ int CAICHSyncThread::Run()
 			else{
 				TCHAR buffer[MAX_CFEXP_ERRORMSG];
 				GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
-				LogError(LOG_STATUSBAR,GetResString(IDS_ERR_SERVERMET_UNKNOWN),buffer);
+				LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_UNKNOWN), buffer);
 			}
 			error->Delete();
 			return 0;
@@ -294,26 +294,26 @@ int CAICHSyncThread::Run()
 
 	lockKnown2Met.Unlock();
 	// warn the user if he just upgraded
-	if (thePrefs.IsFirstStart() && !m_liToHash.IsEmpty() && !bJustCreated){
+	if (thePrefs.IsFirstStart() && !m_liToHash.IsEmpty() && !bJustCreated)
 		LogWarning(GetResString(IDS_AICH_WARNUSER));
-	}
+
 	if (!m_liToHash.IsEmpty()){
 		theApp.QueueLogLine(true, GetResString(IDS_AICH_SYNCTOTAL), m_liToHash.GetCount() );
 		theApp.emuledlg->sharedfileswnd->sharedfilesctrl.SetAICHHashing(m_liToHash.GetCount());
 		// let first all normal hashing be done before starting out synchashing
 		CSingleLock sLock1(&theApp.hashing_mut); // only one filehash at a time
-		while (theApp.sharedfiles->GetHashingCount() != 0){
+		while (theApp.sharedfiles->GetHashingCount() != 0) {
 			Sleep(100);
 			if (CemuleDlg::IsClosing())
 				return 0;
 		}
 		sLock1.Lock();
 		uint32 cDone = 0;
-		for (POSITION pos = m_liToHash.GetHeadPosition();pos != 0; cDone++)
+		for (POSITION pos = m_liToHash.GetHeadPosition(); pos != NULL; ++cDone)
 		{
-			if (CemuleDlg::IsClosing()) { // in case of shutdown while still hashing
+			if (CemuleDlg::IsClosing()) // in case of shutdown while still hashing
 				return 0;
-			}
+
 			theApp.emuledlg->sharedfileswnd->sharedfilesctrl.SetAICHHashing(m_liToHash.GetCount()-cDone);
 			if (theApp.emuledlg->sharedfileswnd->sharedfilesctrl.m_hWnd != NULL)
 				theApp.emuledlg->sharedfileswnd->sharedfilesctrl.ShowFilesCount();
@@ -362,7 +362,7 @@ bool CAICHSyncThread::ConvertToKnown2ToKnown264(CSafeFile* pTargetFile){
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 		}
 		// else -> known2.met also doesn't exists, so nothing to convert
 		return false;
@@ -377,7 +377,7 @@ bool CAICHSyncThread::ConvertToKnown2ToKnown264(CSafeFile* pTargetFile){
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 		}
 		return false;
 	}
@@ -389,9 +389,9 @@ bool CAICHSyncThread::ConvertToKnown2ToKnown264(CSafeFile* pTargetFile){
 		while (oldfile.GetPosition() < oldfile.GetLength()){
 			CAICHHash aichHash(&oldfile);
 			uint32 nHashCount = oldfile.ReadUInt16();
-			if (oldfile.GetPosition() + nHashCount*(ULONGLONG)CAICHHash::GetHashSize() > oldfile.GetLength()) {
+			if (oldfile.GetPosition() + nHashCount*(ULONGLONG)CAICHHash::GetHashSize() > oldfile.GetLength())
 				AfxThrowFileException(CFileException::endOfFile, 0, oldfile.GetFileName());
-			}
+
 			BYTE* buffer = new BYTE[nHashCount*CAICHHash::GetHashSize()];
 			oldfile.Read(buffer, nHashCount*CAICHHash::GetHashSize());
 			pTargetFile->Write(aichHash.GetRawHash(), CAICHHash::GetHashSize());

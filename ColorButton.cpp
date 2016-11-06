@@ -26,7 +26,7 @@ void AFXAPI DDX_ColorButton(CDataExchange *pDX, int nIDC, COLORREF& crColour)
     HWND hWndCtrl = pDX->PrepareCtrl(nIDC);
     ASSERT (hWndCtrl != NULL);
 
-    CColorButton* pColourButton = (CColorButton*) CWnd::FromHandle(hWndCtrl);
+    CColorButton* pColourButton = static_cast<CColorButton *>(CWnd::FromHandlePermanent(hWndCtrl));
     if (pDX->m_bSaveAndValidate)
     {
 		crColour = pColourButton->Color;
@@ -177,7 +177,7 @@ END_MESSAGE_MAP()
 // Method:	CColorButton::OnSelEndOK()
 // Notes:	None.
 //***********************************************************************
-LONG CColorButton::OnSelEndOK(UINT lParam, LONG /*wParam*/)
+LRESULT CColorButton::OnSelEndOK(WPARAM /*wParam*/, LPARAM lParam)
 {
 	m_bPopupActive = FALSE;
 
@@ -204,7 +204,7 @@ LONG CColorButton::OnSelEndOK(UINT lParam, LONG /*wParam*/)
 // Method:	CColorButton::OnSelEndCancel()
 // Notes:	None.
 //***********************************************************************
-LONG CColorButton::OnSelEndCancel(UINT lParam, LONG /*wParam*/)
+LRESULT CColorButton::OnSelEndCancel(WPARAM /*wParam*/, LPARAM lParam)
 {
 	m_bPopupActive = FALSE;
 
@@ -226,7 +226,7 @@ LONG CColorButton::OnSelEndCancel(UINT lParam, LONG /*wParam*/)
 // Method:	CColorButton::OnSelChange()
 // Notes:	None.
 //***********************************************************************
-LONG CColorButton::OnSelChange(UINT lParam, LONG /*wParam*/)
+LRESULT CColorButton::OnSelChange(WPARAM /*wParam*/, LPARAM lParam)
 {
     if (m_bTrackSelection)
 		Color = (COLORREF)lParam;

@@ -45,12 +45,12 @@ using namespace dami;
 /** \brief Sets the value of the field to the specified integer.
  ** \param data The data to assign to this field
  **/
-void ID3_FieldImpl::Set(uint32 val)
+void ID3_FieldImpl::Set(size_t val)
 {
   this->SetInteger(val);
 }
 
-void ID3_FieldImpl::SetInteger(uint32 val)
+void ID3_FieldImpl::SetInteger(size_t val)
 {
   if (this->GetType() == ID3FTY_INTEGER)
   {
@@ -70,19 +70,16 @@ void ID3_FieldImpl::SetInteger(uint32 val)
  **
  ** \return The value of the integer field
  **/
-uint32 ID3_FieldImpl::Get() const
+size_t ID3_FieldImpl::Get() const
 {
   return this->GetInteger();
 }
 
-uint32 ID3_FieldImpl::GetInteger() const
+size_t ID3_FieldImpl::GetInteger() const
 {
-  uint32 val = 0;
-  if (this->GetType() == ID3FTY_INTEGER)
-  {
-    val = _integer;
-  }
-  return val;
+  if (GetType() == ID3FTY_INTEGER)
+    return _integer;
+  return 0;
 }
 
 bool ID3_FieldImpl::ParseInteger(ID3_Reader& reader)

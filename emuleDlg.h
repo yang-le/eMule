@@ -203,11 +203,11 @@ protected:
 
 	// Startup Timer
 	UINT_PTR m_hTimer;
-	static void CALLBACK StartupTimer(HWND hwnd, UINT uiMsg, UINT idEvent, DWORD dwTime);
+	static void CALLBACK StartupTimer(HWND hwnd, UINT uiMsg, UINT_PTR idEvent, DWORD dwTime);
 
 	// UPnP TimeOutTimer
 	UINT_PTR m_hUPnPTimeOutTimer;
-	static void CALLBACK UPnPTimeOutTimer(HWND hwnd, UINT uiMsg, UINT idEvent, DWORD dwTime);
+	static void CALLBACK UPnPTimeOutTimer(HWND hwnd, UINT uiMsg, UINT_PTR idEvent, DWORD dwTime);
 
 	void StartConnection();
 	void CloseConnection();
@@ -257,7 +257,7 @@ protected:
 	afx_msg BOOL OnQueryEndSession();
 	afx_msg void OnEndSession(BOOL bEnding);
 	afx_msg LRESULT OnUserChanged(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT OnKickIdle(UINT nWhy, long lIdleCount);
+	afx_msg LRESULT OnKickIdle(WPARAM nWhy, LPARAM lIdleCount);
 	afx_msg void OnShowWindow( BOOL bShow, UINT nStatus );
 	afx_msg BOOL OnChevronPushed(UINT id, NMHDR *pnm, LRESULT *pResult);
 	afx_msg LRESULT OnPowerBroadcast(WPARAM wParam, LPARAM lParam);

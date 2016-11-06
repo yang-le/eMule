@@ -171,30 +171,9 @@ struct SMediaInfo
 	}
 
 	SMediaInfo(const SMediaInfo& strm)
-		: strFileFormat(strm.strFileFormat)
-		, strMimeType(strm.strMimeType)
-		, ulFileSize(strm.ulFileSize)
-		, fFileLengthSec(strm.fFileLengthSec)
-		, bFileLengthEstimated(strm.bFileLengthEstimated)
-		, strTitle(strm.strTitle)
-		, strAuthor(strm.strAuthor)
-		, strAlbum(strm.strAlbum)
-		, iVideoStreams(strm.iVideoStreams)
-		, strVideoFormat(strm.strVideoFormat)
-		, video(strm.video)
-		, fVideoLengthSec(strm.fVideoLengthSec)
-		, bVideoLengthEstimated(strm.bVideoLengthEstimated)
-		, fVideoFrameRate(strm.fVideoFrameRate)
-		, fVideoAspectRatio(strm.fVideoAspectRatio)
-		, iAudioStreams(strm.iAudioStreams)
-		, strAudioFormat(strm.strAudioFormat)
-		, audio(strm.audio)
-		, fAudioLengthSec(strm.fAudioLengthSec)
-		, bAudioLengthEstimated(strm.bAudioLengthEstimated)
-		, strAudioLanguage(strm.strAudioLanguage)
-		, strFileName(strm.strFileName)
-		, bOutputFileName(strm.bOutputFileName)
-	{}
+	{
+		*this = strm;
+	}
 
 	void OutputFileName()
 	{

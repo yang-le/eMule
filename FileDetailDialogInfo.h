@@ -45,7 +45,7 @@ protected:
 	virtual BOOL OnSetActive();
 
 	DECLARE_MESSAGE_MAP()
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnDestroy();
 	afx_msg LRESULT OnDataChanged(WPARAM, LPARAM);
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);

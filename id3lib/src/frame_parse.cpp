@@ -38,8 +38,8 @@ namespace
 {
   bool parseFields(ID3_Reader& rdr, ID3_FrameImpl& frame)
   {
-    int iLoop;
-    int iFields;
+    size_t iLoop;
+    size_t iFields;
     io::ExitTrigger et(rdr);
     ID3_TextEnc enc = ID3TE_ISO8859_1;  // set the default encoding
     ID3_V2Spec spec = frame.GetSpec();
@@ -115,7 +115,7 @@ namespace
           {
             case ID3FN_BITSSIZE:
             {
-              uint32 _tmp_byte_size_ = fp->Get();
+              size_t _tmp_byte_size_ = fp->Get();
               linked_fixed_size = 0;
 
               for (; _tmp_byte_size_ > 0;) //round to whole bytes: 1 bit will become 1 byte, 7 bits will become 1 byte, 9 bits become 2 bytes, etc
@@ -183,7 +183,7 @@ bool ID3_FrameImpl::Parse(ID3_Reader& reader)
   ID3D_NOTICE( "ID3_FrameImpl::Parse(): window getCur() = " << wr.getCur() );
   ID3D_NOTICE( "ID3_FrameImpl::Parse(): window getEnd() = " << wr.getEnd() );
 
-  unsigned long origSize = 0;
+  size_t origSize = 0;
   if (_hdr.GetCompression())
   {
     origSize = io::readBENumber(reader, sizeof(uint32));

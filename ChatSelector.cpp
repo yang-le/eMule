@@ -302,7 +302,7 @@ bool CChatSelector::SendMessage(const CString& rstrMessage)
 	if (ci->client->GetChatCaptchaState() == CA_CAPTCHARECV)
 		ci->client->SetChatCaptchaState(CA_SOLUTIONSENT);
 	else if (ci->client->GetChatCaptchaState() == CA_SOLUTIONSENT)
-		ASSERT( false ); // we responsed to a captcha but didn't heard from the client afterwards - hopefully its just lag and this message will get through
+		ASSERT( false ); // we responded to a captcha but didn't hear from the client afterwards - hopefully its just lag and this message would get through
 	else
 		ci->client->SetChatCaptchaState(CA_ACCEPTING);
 

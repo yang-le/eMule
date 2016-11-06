@@ -52,33 +52,29 @@ CCBBRecord& CCBBRecord::operator=(const CCBBRecord& cv)
 	return *this;
 }
 
-bool CCBBRecord::Merge(uint64 nStartPos, uint64 nEndPos, uint32 dwIP, EBBRStatus BBRStatus){
-
-	if (m_dwIP == dwIP && m_BBRStatus == BBRStatus && (nStartPos == m_nEndPos + 1 || nEndPos + 1 == m_nStartPos)){
+bool CCBBRecord::Merge(uint64 nStartPos, uint64 nEndPos, uint32 dwIP, EBBRStatus BBRStatus)
+{
+	if (m_dwIP == dwIP && m_BBRStatus == BBRStatus && (nStartPos == m_nEndPos + 1 || nEndPos + 1 == m_nStartPos)) {
 		if (nStartPos == m_nEndPos + 1)
 			m_nEndPos = nEndPos;
 		else if (nEndPos + 1 == m_nStartPos)
 			m_nStartPos = nStartPos;
 		else
-			ASSERT( false );
+			ASSERT(false);
 
 		return true;
 	}
-	else
-		return false;
+	return false;
 }
 
-bool CCBBRecord::CanMerge(uint64 nStartPos, uint64 nEndPos, uint32 dwIP, EBBRStatus BBRStatus) const {
-
-	if (m_dwIP == dwIP && m_BBRStatus == BBRStatus && (nStartPos == m_nEndPos + 1 || nEndPos + 1 == m_nStartPos)){
-		return true;
-	}
-	else
-		return false;
+bool CCBBRecord::CanMerge(uint64 nStartPos, uint64 nEndPos, uint32 dwIP, EBBRStatus BBRStatus) const
+{
+	return (m_dwIP == dwIP && m_BBRStatus == BBRStatus && (nStartPos == m_nEndPos + 1u || nEndPos + 1u == m_nStartPos));
 }
 
-void CCorruptionBlackBox::Init(EMFileSize nFileSize) {
-	m_aaRecords.SetSize((INT_PTR)((uint64)(nFileSize + (uint64)(PARTSIZE - 1)) / (PARTSIZE)));
+void CCorruptionBlackBox::Init(EMFileSize nFileSize)
+{
+	m_aaRecords.SetSize((INT_PTR)(((uint64)nFileSize + (PARTSIZE - 1ull)) / PARTSIZE));
 }
 
 void CCorruptionBlackBox::Free() {

@@ -1284,8 +1284,8 @@ void CSharedFilesCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 int CALLBACK CSharedFilesCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const CShareableFile* item1 = reinterpret_cast<CShareableFile *>(lParam1);
-	const CShareableFile* item2 = reinterpret_cast<CShareableFile *>(lParam2);
+	const CShareableFile* item1 = reinterpret_cast<const CShareableFile *>(lParam1);
+	const CShareableFile* item2 = reinterpret_cast<const CShareableFile *>(lParam2);
 
 	bool bSortAscending;
 	if (lParamSort >= 100)
@@ -1425,9 +1425,11 @@ int CALLBACK CSharedFilesCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM l
 		iResult = -iResult;
 
 	//call secondary sortorder, if this one results in equal
-	int dwNextSort;
-	if (iResult == 0 && (dwNextSort = theApp.emuledlg->sharedfileswnd->sharedfilesctrl.GetNextSortOrder(lParamSort)) != -1)
-		iResult = SortProc(lParam1, lParam2, dwNextSort);
+	if (iResult == 0) {
+		LPARAM dwNextSort = theApp.emuledlg->sharedfileswnd->sharedfilesctrl.GetNextSortOrder(lParamSort);
+		if (dwNextSort != -1)
+			iResult = SortProc(lParam1, lParam2, dwNextSort);
+	}
 
 	return iResult;
 }

@@ -68,9 +68,9 @@ namespace Kademlia
 			CUInt128& Subtract(ULONG uValue);
 			CUInt128& Xor(const CUInt128 &uValue);
 			CUInt128& XorBE(const byte *pbyValueBE);
-			CUInt128& operator+  (const CUInt128 &uValue);
-			CUInt128& operator-  (const CUInt128 &uValue);
-			CUInt128& operator=  (const CUInt128 &uValue);
+			CUInt128& operator+ (const CUInt128 &uValue);
+			CUInt128& operator- (const CUInt128 &uValue);
+			CUInt128& operator= (const CUInt128 &uValue);
 			bool operator<  (const CUInt128 &uValue) const;
 			bool operator>  (const CUInt128 &uValue) const;
 			bool operator<= (const CUInt128 &uValue) const;
@@ -87,6 +87,9 @@ namespace Kademlia
 			bool operator== (ULONG uValue) const;
 			bool operator!= (ULONG uValue) const;
 		private:
-			ULONG		m_uData[4];
+			union {
+				ULONG		m_uData[4];
+				uint64		m_u64Data[2];
+			};
 	};
 }

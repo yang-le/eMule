@@ -86,17 +86,8 @@ CHyperLink::CHyperLink(int iBegin, uint16 iEnd, const CString& sTitle, HWND hWnd
  } // [/i_a]
 
 CHyperLink::CHyperLink(const CHyperLink& Src)
-	: m_Type(Src.m_Type)
 {
-	m_iBegin = Src.m_iBegin;
-	m_iEnd = Src.m_iEnd;
-	m_sTitle = Src.m_sTitle;
-	m_sCommand = Src.m_sCommand;
-	m_sDirectory = Src.m_sDirectory;
-	m_hWnd = Src.m_hWnd;
-	m_uMsg = Src.m_uMsg;
-	m_wParam = Src.m_wParam;
-	m_lParam = Src.m_lParam;
+	*this = Src;
 }
 
 CHyperLink& CHyperLink::operator=(const CHyperLink& Src)
@@ -557,8 +548,7 @@ CPreparedHyperText::CPreparedHyperText(const CString& sText)
 
 CPreparedHyperText::CPreparedHyperText(const CPreparedHyperText& src)
 {
-	m_sText = src.m_sText;
-	m_Links.assign(src.m_Links.begin(), src.m_Links.end());
+	*this = src;
 }
 
 CPreparedHyperText& CPreparedHyperText::operator=(const CPreparedHyperText& src)
@@ -819,10 +809,7 @@ CLinePartInfo::CLinePartInfo(int iBegin, uint16 iEnd, CHyperLink* pHyperLink, CK
 
 CLinePartInfo::CLinePartInfo(const CLinePartInfo& Src)
 {
-	m_xBegin = Src.m_xBegin;
-	m_xEnd = Src.m_xEnd;
-	m_pHyperLink = Src.m_pHyperLink;
-	m_pKeyWord = Src.m_pKeyWord;
+	*this = Src;
 }
 
 CLinePartInfo& CLinePartInfo::operator=(const CLinePartInfo& Src)
@@ -842,9 +829,8 @@ CLineInfo::CLineInfo(int iBegin, uint16 iEnd)
 }
 
 CLineInfo::CLineInfo(const CLineInfo& Src)
-	: m_iBegin(Src.m_iBegin), m_iEnd(Src.m_iEnd)
 {
-	assign(Src.begin(), Src.end());
+	*this = Src;
 }
 
 CLineInfo& CLineInfo::operator=(const CLineInfo& Src)
@@ -1326,7 +1312,7 @@ void CHyperTextCtrl::UpdateSize(bool bRepaint){
 	if(m_bDontUpdateSizeInfo)
 		return;
 	m_bDontUpdateSizeInfo = true;
-	DWORD dwStyle = GetWindowLong(m_hWnd,GWL_STYLE);
+	LONG_PTR dwStyle = GetWindowLongPtr(m_hWnd, GWL_STYLE);
 	bool vscrollneeded = false;
 
 	CClientDC dc(this);
@@ -1485,7 +1471,7 @@ void CHyperTextCtrl::UpdateSize(bool bRepaint){
 	dc.SelectObject(hOldFont);
 
 	// Update scroll bars
-	dwStyle = GetWindowLong(m_hWnd,GWL_STYLE);
+	dwStyle = GetWindowLongPtr(m_hWnd, GWL_STYLE);
 	if (check_bits(dwStyle, HTC_AUTO_SCROLL_BARS)){
 		if (vscrollneeded){
 			if (!vscrollon)
@@ -1535,19 +1521,20 @@ void CHyperTextCtrl::UpdateSize(bool bRepaint){
 	UpdateVisLines();
 }
 
-void CHyperTextCtrl::UpdateFonts(){
-	DWORD dwStyle = GetWindowLong(m_hWnd,GWL_STYLE);
+void CHyperTextCtrl::UpdateFonts()
+{
+	LONG_PTR dwStyle = GetWindowLongPtr(m_hWnd, GWL_STYLE);
 	m_LinksFont.DeleteObject();
 	m_HoverFont.DeleteObject();
 
 	LOGFONT lf;
 	m_Font->GetLogFont(&lf);
-	if(check_bits(dwStyle, HTC_UNDERLINE_LINKS))
+	if (check_bits(dwStyle, HTC_UNDERLINE_LINKS))
 		lf.lfUnderline = TRUE;
 	m_LinksFont.CreateFontIndirect(&lf);
 
 	m_Font->GetLogFont(&lf);
-	if(check_bits(dwStyle, HTC_UNDERLINE_HOVER))
+	if (check_bits(dwStyle, HTC_UNDERLINE_HOVER))
 		lf.lfUnderline = TRUE;
 	m_HoverFont.CreateFontIndirect(&lf);
 }
@@ -1555,14 +1542,12 @@ void CHyperTextCtrl::UpdateFonts(){
 void CHyperTextCtrl::UpdateVisLines()
 {
 	RestoreLink();
-	DWORD dwStyle = ::GetWindowLong(m_hWnd,GWL_STYLE);
+	LONG_PTR dwStyle = ::GetWindowLongPtr(m_hWnd, GWL_STYLE);
 	int id = 1;
-	if(check_bits(dwStyle, HTC_ENABLE_TOOLTIPS))
-	{
+	if (check_bits(dwStyle, HTC_ENABLE_TOOLTIPS)) {
 		for (std::vector<CVisLine>::iterator itv = m_VisLines.begin(); itv != m_VisLines.end(); ++itv)
-			for (CVisLine::iterator jt = itv->begin(); jt != itv->end(); ++jt)
-			{
-				if(jt->m_pHyperLink != NULL)
+			for (CVisLine::iterator jt = itv->begin(); jt != itv->end(); ++jt) {
+				if (jt->m_pHyperLink != NULL)
 					m_tip.DelTool(this, id++);
 			}
 	}
@@ -1572,15 +1557,15 @@ void CHyperTextCtrl::UpdateVisLines()
 	std::vector<CLineInfo>::iterator it = m_Lines.begin();
 	int iVertPos = 0;
 	int iHorzPos = 0;
-	if(check_bits(dwStyle,WS_VSCROLL))
+	if (check_bits(dwStyle, WS_VSCROLL))
 		iVertPos = GetScrollPos(SB_VERT);
-	if(check_bits(dwStyle,WS_HSCROLL))
+	if (check_bits(dwStyle, WS_HSCROLL))
 		iHorzPos = GetScrollPos(SB_HORZ);
 
-	if(iVertPos >= (int)m_Lines.size())
+	if (iVertPos >= (int)m_Lines.size())
 		return;
 
-	it+=iVertPos;
+	it += iVertPos;
 
 	CClientDC dc(this); // device context for painting
 
@@ -1592,8 +1577,7 @@ void CHyperTextCtrl::UpdateVisLines()
 	CRect rcClient;
 	GetClientRect(rcClient);
 
-	for (; it != m_Lines.end(); ++it)
-	{
+	for (; it != m_Lines.end(); ++it) {
 		int XPos = 2;
 		UINT LinePos = it->Begin();
 		UINT Offset = 0;
@@ -1604,20 +1588,16 @@ void CHyperTextCtrl::UpdateVisLines()
 
 		std::vector<CLinePartInfo>::iterator jt;
 
-		for (jt = it->begin(); jt != it->end(); ++jt)
-		{
-			if(jt->Begin() <= (LinePos + iHorzPos) && jt->End() >= (LinePos + iHorzPos))
-			{
+		for (jt = it->begin(); jt != it->end(); ++jt) {
+			if (jt->Begin() <= (LinePos + iHorzPos) && jt->End() >= (LinePos + iHorzPos)) {
 				Offset = LinePos + iHorzPos;
 				Len = jt->Len() - ((LinePos + iHorzPos) - jt->Begin());
 				break;
 			}
 		}
 
-		while(jt != it->end())
-		{
-			if(Len > 0)
-			{
+		while (jt != it->end()) {
+			if (Len > 0) {
 				SIZE sz;
 				::GetTextExtentExPoint(dc, s + Offset, Len, 0, NULL, NULL, &sz);
 
@@ -1630,7 +1610,7 @@ void CHyperTextCtrl::UpdateVisLines()
 				vl.push_back(CVisPart(*jt, rcBounds, Offset, (uint16)Len, NULL, NULL));
 			}
 
-			if(XPos > rcClient.Width())
+			if (XPos > rcClient.Width())
 				break;
 
 			++jt;
@@ -1642,8 +1622,8 @@ void CHyperTextCtrl::UpdateVisLines()
 		}
 
 		m_VisLines.push_back(vl);
-		ypos+=m_iLineHeight;
-		if(ypos>rcClient.bottom)
+		ypos += m_iLineHeight;
+		if (ypos>rcClient.bottom)
 			break;
 	}
 
@@ -1651,20 +1631,18 @@ void CHyperTextCtrl::UpdateVisLines()
 
 	id = 1;
 	for (std::vector<CVisLine>::iterator it2 = m_VisLines.begin(); it2 != m_VisLines.end(); ++it2)
-		for (CVisLine::iterator jt = it2->begin(); jt != it2->end(); ++jt)
-		{
+		for (CVisLine::iterator jt = it2->begin(); jt != it2->end(); ++jt) {
 			pNext = &*jt;
-			if(pPrev != NULL &&
+			if (pPrev != NULL &&
 				pPrev->m_pHyperLink != NULL &&
 				pPrev->m_pHyperLink == pNext->m_pHyperLink &&
-				pPrev != pNext)
-			{
+				pPrev != pNext) {
 				pPrev->m_pNext = pNext;
 				pNext->m_pPrev = pPrev;
 			}
 			pPrev = pNext;
 
-			if(check_bits(dwStyle, HTC_ENABLE_TOOLTIPS) && jt->m_pHyperLink != NULL)
+			if (check_bits(dwStyle, HTC_ENABLE_TOOLTIPS) && jt->m_pHyperLink != NULL)
 				m_tip.AddTool(this, (LPCTSTR)jt->m_pHyperLink->Title(), jt->m_rcBounds, id++);
 		}
 

@@ -587,18 +587,18 @@ BOOL CSharedDirsTreeCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 	// file based
 	if (!selectedList.IsEmpty() && pSelectedDir != NULL)
 	{
-		CShareableFile* file = NULL;
-		if (selectedList.GetCount() == 1)
-			file = selectedList.GetHead();
-
 		CKnownFile* pKnownFile = NULL;
-		if (file != NULL && file->IsKindOf(RUNTIME_CLASS(CKnownFile)))
-			pKnownFile = (CKnownFile*)file;
+		if (selectedList.GetCount() == 1) {
+			CShareableFile *file = selectedList.GetHead();
+			if (file != NULL && file->IsKindOf(RUNTIME_CLASS(CKnownFile)))
+				pKnownFile = static_cast<CKnownFile *>(file);
+		}
+
 		switch (wParam){
 			case MP_GETED2KLINK:{
 				CString str;
 				for (POSITION pos = selectedList.GetHeadPosition(); pos != NULL;) {
-					const CKnownFile *file = (CKnownFile *)selectedList.GetNext(pos);
+					const CKnownFile *file = static_cast<CKnownFile *>(selectedList.GetNext(pos));
 					if (file && file->IsKindOf(RUNTIME_CLASS(CKnownFile))) {
 						if (!str.IsEmpty())
 							str += _T("\r\n");
@@ -666,40 +666,32 @@ BOOL CSharedDirsTreeCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 			case MP_PRIOAUTO:
 			{
 					for (POSITION pos = selectedList.GetHeadPosition(); pos != NULL;) {
-						CKnownFile* file = (CKnownFile*)selectedList.GetNext(pos);
-						if (!file->IsKindOf(RUNTIME_CLASS(CKnownFile)))
-							continue;
-						switch (wParam) {
+						CKnownFile* file = static_cast<CKnownFile *>(selectedList.GetNext(pos));
+						if (file->IsKindOf(RUNTIME_CLASS(CKnownFile))) {
+							file->SetAutoUpPriority(wParam == MP_PRIOAUTO);
+							int pri;
+							switch (wParam) {
 							case MP_PRIOVERYLOW:
-								file->SetAutoUpPriority(false);
-								file->SetUpPriority(PR_VERYLOW);
-								m_pSharedFilesCtrl->UpdateFile(file);
+								pri = PR_VERYLOW;
 								break;
 							case MP_PRIOLOW:
-								file->SetAutoUpPriority(false);
-								file->SetUpPriority(PR_LOW);
-								m_pSharedFilesCtrl->UpdateFile(file);
+								pri = PR_LOW;
 								break;
 							case MP_PRIONORMAL:
-								file->SetAutoUpPriority(false);
-								file->SetUpPriority(PR_NORMAL);
-								m_pSharedFilesCtrl->UpdateFile(file);
+								pri = PR_NORMAL;
 								break;
 							case MP_PRIOHIGH:
-								file->SetAutoUpPriority(false);
-								file->SetUpPriority(PR_HIGH);
-								m_pSharedFilesCtrl->UpdateFile(file);
+								pri = PR_HIGH;
 								break;
 							case MP_PRIOVERYHIGH:
-								file->SetAutoUpPriority(false);
-								file->SetUpPriority(PR_VERYHIGH);
-								m_pSharedFilesCtrl->UpdateFile(file);
+								pri = PR_VERYHIGH;
 								break;
 							case MP_PRIOAUTO:
-								file->SetAutoUpPriority(true);
 								file->UpdateAutoUpPriority();
-								m_pSharedFilesCtrl->UpdateFile(file);
-								break;
+							}
+							if (wParam != MP_PRIOAUTO)
+								file->SetUpPriority(pri);
+							m_pSharedFilesCtrl->UpdateFile(file);
 						}
 					}
 					break;
@@ -725,7 +717,7 @@ void CSharedDirsTreeCtrl::FileSystemTreeCreateTree()
 		drivebuffer[_countof(drivebuffer) - 1] = _T('\0');
 
 		const TCHAR* pos = drivebuffer;
-		while(*pos != _T('\0')){
+		while (*pos != _T('\0')){
 
 			// Copy drive name
 			TCHAR drive[4];
@@ -849,11 +841,7 @@ bool CSharedDirsTreeCtrl::FileSystemTreeHasSubdirectories(CString strDir)
 	while (bWorking)
 	{
 		bWorking = finder.FindNextFile();
-		if (finder.IsDots())
-			continue;
-		if (finder.IsSystem())
-			continue;
-		if (!finder.IsDirectory())
+		if (finder.IsDots() || finder.IsSystem() || !finder.IsDirectory())
 			continue;
 		finder.Close();
 		return true;
@@ -864,9 +852,9 @@ bool CSharedDirsTreeCtrl::FileSystemTreeHasSubdirectories(CString strDir)
 
 bool CSharedDirsTreeCtrl::FileSystemTreeHasSharedSubdirectory(CString strDir, bool bOrFiles)
 {
+	strDir.MakeLower();
 	if (strDir.Right(1) != _T('\\'))
 		strDir += _T('\\');
-	strDir.MakeLower();
 	for (POSITION pos = m_strliSharedDirs.GetHeadPosition(); pos != NULL; )
 	{
 		CString strCurrent = m_strliSharedDirs.GetNext(pos);

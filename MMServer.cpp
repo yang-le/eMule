@@ -226,44 +226,39 @@ void CMMServer::ProcessFileListRequest(CMMSocket* sender, CMMPacket* packet){
 	else
 		packet->WriteByte(MMP_FILELISTANS);
 
-	int nCount = thePrefs.GetCatCount();
+	INT_PTR nCount = thePrefs.GetCatCount();
 	packet->WriteByte((uint8)nCount);
 	for (int i = 0; i != nCount; i++){
 		packet->WriteString(thePrefs.GetCategory(i)->strTitle);
 	}
 
-	nCount = (theApp.downloadqueue->GetFileCount() > m_nMaxDownloads)? m_nMaxDownloads : theApp.downloadqueue->GetFileCount();
+	nCount = (theApp.downloadqueue->GetFileCount() > m_nMaxDownloads) ? m_nMaxDownloads : theApp.downloadqueue->GetFileCount();
 	m_SentFileList.SetSize(nCount);
 	packet->WriteByte((uint8)nCount);
-	for (int i = 0; i != nCount; i++){
+	for (int i = 0; i != nCount; ++i) {
 		// while this is not the fastest method the trace this list, it's not timecritical here
 		CPartFile* cur_file = theApp.downloadqueue->GetFileByIndex(i);
-		if (cur_file == NULL){
+		if (cur_file == NULL) {
 			delete packet;
 			packet = new CMMPacket(MMP_GENERALERROR);
 			sender->SendPacket(packet);
-			ASSERT ( false );
+			ASSERT(false);
 			return;
 		}
 		m_SentFileList[i] = cur_file;
 		if (cur_file->GetStatus(false) == PS_PAUSED)
 			packet->WriteByte(MMT_PAUSED);
-		else{
-			if (cur_file->GetTransferringSrcCount() > 0)
-				packet->WriteByte(MMT_DOWNLOADING);
-			else
-				packet->WriteByte(MMT_WAITING);
-		}
+		else
+			packet->WriteByte(cur_file->GetTransferringSrcCount() > 0 ? MMT_DOWNLOADING : MMT_WAITING);
+
 		packet->WriteString(cur_file->GetFileName());
 		packet->WriteByte((uint8)cur_file->GetCategory());
 
-		if (i < m_nMaxBufDownloads){
+		if (i < m_nMaxBufDownloads) {
 			packet->WriteByte(1);
-			WriteFileInfo(cur_file,packet);
-		}
-		else{
+			WriteFileInfo(cur_file, packet);
+		} else
 			packet->WriteByte(0);
-		}
 	}
 	sender->SendPacket(packet);
 }

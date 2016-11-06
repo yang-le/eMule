@@ -181,7 +181,7 @@ CString _GetResString(RESSTRIDTYPE StringID);
 #else//USE_STRING_IDS
 #define	RESSTRIDTYPE		UINT
 #define	IDS2RESIDTYPE(id)	id
-CString GetResString(RESSTRIDTYPE StringID);
+CString GetResString(const RESSTRIDTYPE StringID);
 #define _GetResString(id)	GetResString(id)
 #endif//!USE_STRING_IDS
 void InitThreadLocale();
@@ -269,38 +269,35 @@ bool		AddIconGrayscaledToImageList(CImageList& rList, HICON hIcon);
 // MD4 helpers
 //
 
-__inline BYTE toHex(const BYTE &x){
-	return x > 9 ? x + ('A'-10): x + '0';
+__inline BYTE toHex(const BYTE &x)
+{
+	return x > 9 ? x+('A'-10) : x+'0';
 }
 
 // md4cmp -- replacement for memcmp(hash1,hash2,16)
 // Like 'memcmp' this function returns 0, if hash1==hash2, and !0, if hash1!=hash2.
 // NOTE: Do *NOT* use that function for determining if hash1<hash2 or hash1>hash2.
-__inline int md4cmp(const void* hash1, const void* hash2) {
-	return !(((uint32*)hash1)[0] == ((uint32*)hash2)[0] &&
-		     ((uint32*)hash1)[1] == ((uint32*)hash2)[1] &&
-		     ((uint32*)hash1)[2] == ((uint32*)hash2)[2] &&
-		     ((uint32*)hash1)[3] == ((uint32*)hash2)[3]);
+__inline int md4cmp(const void* hash1, const void* hash2)
+{
+	return ((uint64*)hash1)[0] != ((uint64*)hash2)[0] || ((uint64*)hash1)[1] != ((uint64*)hash2)[1];
 }
 
-__inline bool isnulmd4(const void* hash) {
-	return  (((uint32*)hash)[0] == 0 &&
-		     ((uint32*)hash)[1] == 0 &&
-		     ((uint32*)hash)[2] == 0 &&
-		     ((uint32*)hash)[3] == 0);
+__inline bool isnulmd4(const void* hash)
+{
+	return !((uint64*)hash)[0] && !((uint64*)hash)[1];
 }
 
 // md4clr -- replacement for memset(hash,0,16)
-__inline void md4clr(const void* hash) {
-	((uint32*)hash)[0] = ((uint32*)hash)[1] = ((uint32*)hash)[2] = ((uint32*)hash)[3] = 0;
+__inline void md4clr(const void* hash)
+{
+	((uint64 *)hash)[0] = ((uint64 *)hash)[1] = 0;
 }
 
 // md4cpy -- replacement for memcpy(dst,src,16)
-__inline void md4cpy(void* dst, const void* src) {
-	((uint32*)dst)[0] = ((uint32*)src)[0];
-	((uint32*)dst)[1] = ((uint32*)src)[1];
-	((uint32*)dst)[2] = ((uint32*)src)[2];
-	((uint32*)dst)[3] = ((uint32*)src)[3];
+__inline void md4cpy(void* dst, const void* src)
+{
+	((uint64*)dst)[0] = ((uint64*)src)[0];
+	((uint64*)dst)[1] = ((uint64*)src)[1];
 }
 
 #define	MAX_HASHSTR_SIZE (16*2+1)

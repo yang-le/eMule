@@ -180,15 +180,9 @@ BOOL CPPgIRC::OnKillActive()
 
 void CPPgIRC::LoadSettings(void)
 {
-	if(thePrefs.m_bIRCUseChannelFilter)
-		CheckDlgButton(IDC_IRC_USECHANFILTER,1);
-	else
-		CheckDlgButton(IDC_IRC_USECHANFILTER,0);
+	CheckDlgButton(IDC_IRC_USECHANFILTER, static_cast<UINT>(thePrefs.m_bIRCUseChannelFilter));
 
-	if(thePrefs.m_bIRCUsePerform)
-		CheckDlgButton(IDC_IRC_USEPERFORM,1);
-	else
-		CheckDlgButton(IDC_IRC_USEPERFORM,0);
+	CheckDlgButton(IDC_IRC_USEPERFORM, static_cast<UINT>(thePrefs.m_bIRCUsePerform));
 
 	GetDlgItem(IDC_IRC_SERVER_BOX)->SetWindowText(thePrefs.m_strIRCServer);
 	GetDlgItem(IDC_IRC_NICK_BOX)->SetWindowText(thePrefs.m_strIRCNick);
@@ -237,13 +231,10 @@ BOOL CPPgIRC::OnApply()
 		thePrefs.m_bIRCUsePerform = false;
 
 	TCHAR buffer[510];
-	if (GetDlgItem(IDC_IRC_NICK_BOX)->GetWindowTextLength())
-	{
+	if (GetDlgItem(IDC_IRC_NICK_BOX)->GetWindowTextLength()) {
 		GetDlgItem(IDC_IRC_NICK_BOX)->GetWindowText(buffer, 20);
-		if (_tcscmp(buffer, thePrefs.m_strIRCNick) != 0)
-		{
-			CString input;
-			input.Format(_T("%s"), buffer);
+		if (_tcscmp(buffer, thePrefs.m_strIRCNick) != 0) {
+			CString input(buffer);
 			input.Trim();
 			input = input.SpanExcluding(_T(" !@#$%^&*():;<>,.?{}~`+=-"));
 			if (!input.IsEmpty()) {

@@ -105,6 +105,7 @@ public:
 	static const UINT	m_nVersionMin;
 	static const UINT	m_nVersionUpd;
 	static const UINT	m_nVersionBld;
+	static const TCHAR*	m_sPlatform;
 	DWORD				m_dwProductVersionMS;
 	DWORD				m_dwProductVersionLS;
 	CString				m_strCurVersionLong;

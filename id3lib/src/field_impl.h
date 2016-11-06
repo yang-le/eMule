@@ -48,12 +48,12 @@ public:
   size_t GetNumTextItems() const;
 
   // integer field functions
-  ID3_Field&    operator= (uint32 val) { this->Set(val); return *this; }
-  void          Set(uint32);
-  uint32        Get() const;
+  ID3_Field&    operator= (size_t val) { this->Set(val); return *this; }
+  void          Set(size_t);
+  size_t        Get() const;
 
-  void          SetInteger(uint32);
-  uint32        GetInteger() const;
+  void          SetInteger(size_t);
+  size_t        GetInteger() const;
 
   // ASCII string field functions
   ID3_Field&    operator= (const char* s) { this->Set(s); return *this; }
@@ -131,7 +131,7 @@ private:
 
   dami::BString       _binary;      // for binary strings
   dami::String        _text;        // for ascii strings
-  uint32              _integer;     // for numbers
+  size_t              _integer;     // for numbers
 
   size_t              _fixed_size;  // for fixed length fields (0 if not)
   size_t              _num_items;   // the number of items in the text string

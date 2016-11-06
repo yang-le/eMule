@@ -61,7 +61,7 @@ public:
 	CMMSocket*	m_pPendingCommandSocket;
 
 protected:
-	static VOID CALLBACK CommandTimer(HWND hWnd, UINT nMsg, UINT nId, DWORD dwTime);
+	static VOID CALLBACK CommandTimer(HWND hWnd, UINT nMsg, UINT_PTR nId, DWORD dwTime);
 	void	DeleteSearchFiles();
 	void	WriteFileInfo(CPartFile* selFile, CMMPacket* packet);
 

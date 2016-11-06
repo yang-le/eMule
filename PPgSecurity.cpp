@@ -91,32 +91,17 @@ void CPPgSecurity::LoadSettings(void)
 
 	CheckDlgButton(IDC_USESECIDENT, thePrefs.m_bUseSecureIdent);
 
-	if ((thePrefs.GetWindowsVersion() == _WINVER_XP_ || thePrefs.GetWindowsVersion() == _WINVER_2K_ || thePrefs.GetWindowsVersion() == _WINVER_2003_)
-		&& thePrefs.m_nCurrentUserDirMode == 2)
-		GetDlgItem(IDC_RUNASUSER)->EnableWindow(TRUE);
-	else
-		GetDlgItem(IDC_RUNASUSER)->EnableWindow(FALSE);
+	GetDlgItem(IDC_RUNASUSER)->EnableWindow(
+		(thePrefs.GetWindowsVersion() == _WINVER_XP_ || thePrefs.GetWindowsVersion() == _WINVER_2K_ || thePrefs.GetWindowsVersion() == _WINVER_2003_)
+		&& thePrefs.m_nCurrentUserDirMode == 2);
 	CheckDlgButton(IDC_RUNASUSER, thePrefs.IsRunAsUserEnabled());
 
-	if (!thePrefs.IsClientCryptLayerSupported()){
-		CheckDlgButton(IDC_DISABLEOBFUSCATION,1);
-		GetDlgItem(IDC_ENABLEOBFUSCATION)->EnableWindow(FALSE);
-		GetDlgItem(IDC_ONLYOBFUSCATED)->EnableWindow(FALSE);
-	}
-	else{
-		CheckDlgButton(IDC_DISABLEOBFUSCATION,0);
-		GetDlgItem(IDC_ENABLEOBFUSCATION)->EnableWindow(TRUE);
-		GetDlgItem(IDC_ONLYOBFUSCATED)->EnableWindow(TRUE);
-	}
+	CheckDlgButton(IDC_DISABLEOBFUSCATION, static_cast<UINT>(!thePrefs.IsClientCryptLayerSupported()));
+	GetDlgItem(IDC_ENABLEOBFUSCATION)->EnableWindow(thePrefs.IsClientCryptLayerSupported());
+	GetDlgItem(IDC_ONLYOBFUSCATED)->EnableWindow(thePrefs.IsClientCryptLayerSupported());
 
-	if (thePrefs.IsClientCryptLayerRequested()){
-		CheckDlgButton(IDC_ENABLEOBFUSCATION,1);
-		GetDlgItem(IDC_ONLYOBFUSCATED)->EnableWindow(TRUE);
-	}
-	else{
-		CheckDlgButton(IDC_ENABLEOBFUSCATION,0);
-		GetDlgItem(IDC_ONLYOBFUSCATED)->EnableWindow(FALSE);
-	}
+	CheckDlgButton(IDC_ENABLEOBFUSCATION, static_cast<UINT>(thePrefs.IsClientCryptLayerRequested()));
+	GetDlgItem(IDC_ONLYOBFUSCATED)->EnableWindow(thePrefs.IsClientCryptLayerRequested());
 
 	CheckDlgButton(IDC_ONLYOBFUSCATED, thePrefs.IsClientCryptLayerRequired());
 	CheckDlgButton(IDC_SEARCHSPAMFILTER, thePrefs.IsSearchSpamFilterEnabled());
@@ -267,7 +252,7 @@ void CPPgSecurity::OnLoadIPFFromURL()
 			(void)_tremove(strTempFilePath);
 			CString strError = GetResString(IDS_DWLIPFILTERFAILED);
 			if (!dlgDownload.GetError().IsEmpty())
-				strError += _T("\r\n\r\n") + dlgDownload.GetError();
+				strError.AppendFormat(_T("\r\n\r\n%s"),  (LPCTSTR)(dlgDownload.GetError()));
 			AfxMessageBox(strError, MB_ICONERROR);
 			return;
 		}
@@ -564,15 +549,13 @@ void CPPgSecurity::OnBnClickedRunAsUser()
 	OnSettingsChange();
 }
 
-void CPPgSecurity::OnObfuscatedDisabledChange(){
-	if (IsDlgButtonChecked(IDC_DISABLEOBFUSCATION) != 0){
-		GetDlgItem(IDC_ENABLEOBFUSCATION)->EnableWindow(FALSE);
+void CPPgSecurity::OnObfuscatedDisabledChange()
+{
+	GetDlgItem(IDC_ENABLEOBFUSCATION)->EnableWindow(IsDlgButtonChecked(IDC_DISABLEOBFUSCATION) == 0);
+	if (IsDlgButtonChecked(IDC_DISABLEOBFUSCATION) != 0) {
 		GetDlgItem(IDC_ONLYOBFUSCATED)->EnableWindow(FALSE);
 		CheckDlgButton(IDC_ENABLEOBFUSCATION, 0);
 		CheckDlgButton(IDC_ONLYOBFUSCATED, 0);
-	}
-	else{
-		GetDlgItem(IDC_ENABLEOBFUSCATION)->EnableWindow(TRUE);
 	}
 	OnSettingsChange();
 }

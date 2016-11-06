@@ -248,7 +248,7 @@ void CCollectionCreateDialog::OnBnClickedOk()
 		m_pCollection->m_bTextFormat = (m_CollectionCreateFormatCheck.GetCheck() == BST_CHECKED);
 
 		CString sFilePath;
-		sFilePath.Format(_T("%s\\%s.emulecollection"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR), (LPCTSTR)m_pCollection->m_sCollectionName);
+		sFilePath.Format(_T("%s\\%s")COLLECTION_FILEEXTENSION, (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR), (LPCTSTR)m_pCollection->m_sCollectionName);
 
 		using namespace CryptoPP;
 		RSASSA_PKCS1v15_SHA_Signer* pSignkey = NULL;

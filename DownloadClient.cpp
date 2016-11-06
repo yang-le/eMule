@@ -869,13 +869,9 @@ void CUpDownClient::CreateBlockRequests(int iMinBlocks, int iMaxBlocks)
 {
 	ASSERT( iMinBlocks >= 1 && iMaxBlocks >= iMinBlocks/*&& iMaxBlocks <= 3*/ );
 
-	uint16 count;
-	if(iMinBlocks > m_PendingBlocks_list.GetCount())
-	{
-		count = (uint16)(iMaxBlocks - m_PendingBlocks_list.GetCount());
-	}
-	else
+	if (iMinBlocks <= m_PendingBlocks_list.GetCount())
 		return;
+	uint16 count = (uint16)(iMaxBlocks - m_PendingBlocks_list.GetCount());
 
 	Requested_Block_Struct** toadd = new Requested_Block_Struct*[count];
 	if (reqfile->GetNextRequestedBlock(this, toadd, &count)){
@@ -1452,20 +1448,18 @@ int CUpDownClient::unzip(Pending_Block_Struct* block, const BYTE* zipped, uint32
 
 uint32 CUpDownClient::CalculateDownloadRate(){
 	// Patch By BadWolf - Accurate datarate Calculation
-	TransferredData newitem = {m_nDownDataRateMS,::GetTickCount()};
-	m_AverageDDR_list.AddTail(newitem);
+	m_AverageDDR_list.AddTail(TransferredData {m_nDownDataRateMS, ::GetTickCount()});
 	m_nSumForAvgDownDataRate += m_nDownDataRateMS;
 	m_nDownDataRateMS = 0;
 
-	while (m_AverageDDR_list.GetCount()>500)
+	while (m_AverageDDR_list.GetCount() > 500)
 		m_nSumForAvgDownDataRate -= m_AverageDDR_list.RemoveHead().datalen;
 
-	if(m_AverageDDR_list.GetCount() > 1){
+	if (m_AverageDDR_list.GetCount() > 1) {
 		DWORD dwDuration = m_AverageDDR_list.GetTail().timestamp - m_AverageDDR_list.GetHead().timestamp;
 		if (dwDuration)
 			m_nDownDatarate = (UINT)(1000U * (ULONGLONG)m_nSumForAvgDownDataRate / dwDuration);
-	}
-	else
+	} else
 		m_nDownDatarate = 0;
 	// END Patch By BadWolf
 	m_cShowDR++;
@@ -1685,7 +1679,7 @@ const bool CUpDownClient::SwapToRightFile(CPartFile* SwapTo, CPartFile* cur_file
 
                 DWORD tempTick = ::GetTickCount();
                 bool rightFileHasHigherPrio = CPartFile::RightFileHasHigherPrio(SwapTo, cur_file);
-                uint32 allNnpReaskTime = FILEREASKTIME*2*(m_OtherNoNeeded_list.GetSize() + ((GetDownloadState() == DS_NONEEDEDPARTS)?1:0)); // wait two re-ask interval for each nnp file before re-asking an nnp file
+                uint32 allNnpReaskTime = FILEREASKTIME*2*(m_OtherNoNeeded_list.GetSize() + ((GetDownloadState() == DS_NONEEDEDPARTS) ? 1 : 0)); // wait two re-ask interval for each nnp file before re-asking an nnp file
 
                 if(!SwapToIsNNPFile && (!curFileisNNPFile || GetLastAskedTime(cur_file) == 0 || tempTick-GetLastAskedTime(cur_file) > allNnpReaskTime) && rightFileHasHigherPrio ||
                    SwapToIsNNPFile && curFileisNNPFile &&
@@ -2321,9 +2315,9 @@ void CUpDownClient::SendAICHRequest(CPartFile* pForFile, uint16 nPart)
 
 void CUpDownClient::ProcessAICHAnswer(const uchar* packet, UINT size)
 {
-	if (m_fAICHRequested == FALSE){
+	if (m_fAICHRequested == FALSE)
 		throw CString(_T("Received unrequested AICH Packet"));
-	}
+
 	m_fAICHRequested = FALSE;
 
 	CSafeMemFile data(packet, size);

@@ -41,5 +41,5 @@ protected:
 	afx_msg void OnBnClickedFilter();
 	afx_msg LRESULT OnDataChanged(WPARAM, LPARAM);
 	afx_msg void OnDestroy();
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };

@@ -105,7 +105,7 @@ public:
 							m_dwUserIP = val;
 							m_nConnectIP = val;
 						}
-	__inline bool	HasLowID() const								{ return (m_nUserIDHybrid < 16777216); }
+	__inline bool	HasLowID() const								{ return (m_nUserIDHybrid < 16777216u); }
 	uint32			GetConnectIP() const							{ return m_nConnectIP; }
 	uint16			GetUserPort() const								{ return m_nUserPort; }
 	void			SetUserPort(uint16 val)							{ m_nUserPort = val; }
@@ -340,7 +340,7 @@ public:
 
 	bool			IsValidSource() const;
 	ESourceFrom		GetSourceFrom() const							{ return (ESourceFrom)m_nSourceFrom; }
-	void			SetSourceFrom(ESourceFrom val)					{ m_nSourceFrom = (_ESourceFrom)val; }
+	void			SetSourceFrom(const ESourceFrom val)			{ m_nSourceFrom = (_ESourceFrom)val; }
 
 	void			SetDownStartTime()								{ m_dwDownStartTime = ::GetTickCount(); }
 	uint32			GetDownTimeDifference(boolean clear = true)	{
@@ -351,7 +351,7 @@ public:
 	bool			GetTransferredDownMini() const					{ return m_bTransferredDownMini; }
 	void			SetTransferredDownMini()						{ m_bTransferredDownMini = true; }
 	void			InitTransferredDownMini()						{ m_bTransferredDownMini = false; }
-	UINT			GetA4AFCount() const							{ return m_OtherRequests_list.GetCount(); }
+	UINT			GetA4AFCount() const							{ return static_cast<UINT>(m_OtherRequests_list.GetCount()); }
 
 	uint16			GetUpCompleteSourcesCount() const				{ return m_nUpCompleteSourcesCount; }
 	void			SetUpCompleteSourcesCount(uint16 n)				{ m_nUpCompleteSourcesCount = n; }
@@ -359,7 +359,7 @@ public:
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Chat
 	EChatState		GetChatState() const							{ return (EChatState)m_nChatstate; }
-	void			SetChatState(EChatState nNewS)					{ m_nChatstate = (_EChatState)nNewS; }
+	void			SetChatState(const EChatState nNewS)			{ m_nChatstate = (_EChatState)nNewS; }
 	EChatCaptchaState GetChatCaptchaState() const					{ return (EChatCaptchaState)m_nChatCaptchaState; }
 	void			SetChatCaptchaState(EChatCaptchaState nNewS)	{ m_nChatCaptchaState = (_EChatCaptchaState)nNewS; }
 	void			ProcessChatMessage(CSafeMemFile* data, uint32 nLength);

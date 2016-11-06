@@ -129,8 +129,8 @@ void CKadSearchListCtrl::Localize()
 	}
 
 	int iItems = GetItemCount();
-	for (int i = 0; i < iItems; i++)
-		SearchRef((Kademlia::CSearch *)GetItemData(i));
+	for (int i = 0; i < iItems; ++i)
+		SearchRef(reinterpret_cast<Kademlia::CSearch *>(GetItemData(i)));
 
 	UpdateKadSearchCount();
 }
@@ -141,65 +141,62 @@ void CKadSearchListCtrl::UpdateSearch(int iItem, const Kademlia::CSearch *search
 	id.Format(_T("%u"), search->GetSearchID());
 	SetItemText(iItem, colNum, id);
 
-	switch (search->GetSearchTypes())
-	{
-		case Kademlia::CSearch::FILE:
-			id = GetResString(IDS_KAD_SEARCHSRC);
-			SetItem(iItem, 0, LVIF_IMAGE, 0, 0, 0, 0, 0, 0);
-			break;
+	UINT sid;
+	switch (search->GetSearchTypes()) {
+	case Kademlia::CSearch::FILE:
+		sid = IDS_KAD_SEARCHSRC;
+		SetItem(iItem, 0, LVIF_IMAGE, 0, 0, 0, 0, 0, 0);
+		break;
 
-		case Kademlia::CSearch::KEYWORD:
-			id = GetResString(IDS_KAD_SEARCHKW);
-			SetItem(iItem, 0, LVIF_IMAGE, 0, 1, 0, 0, 0, 0);
-			break;
+	case Kademlia::CSearch::KEYWORD:
+		sid = IDS_KAD_SEARCHKW;
+		SetItem(iItem, 0, LVIF_IMAGE, 0, 1, 0, 0, 0, 0);
+		break;
 
-		case Kademlia::CSearch::NODE:
-		case Kademlia::CSearch::NODECOMPLETE:
-		case Kademlia::CSearch::NODESPECIAL:
-		case Kademlia::CSearch::NODEFWCHECKUDP:
-			id = GetResString(IDS_KAD_NODE);
-			SetItem(iItem, 0, LVIF_IMAGE, 0, 2, 0, 0, 0, 0);
-			break;
+	case Kademlia::CSearch::NODE:
+	case Kademlia::CSearch::NODECOMPLETE:
+	case Kademlia::CSearch::NODESPECIAL:
+	case Kademlia::CSearch::NODEFWCHECKUDP:
+		sid = IDS_KAD_NODE;
+		SetItem(iItem, 0, LVIF_IMAGE, 0, 2, 0, 0, 0, 0);
+		break;
 
-		case Kademlia::CSearch::STOREFILE:
-			id = GetResString(IDS_KAD_STOREFILE);
-			SetItem(iItem, 0, LVIF_IMAGE, 0, 3, 0, 0, 0, 0);
-			break;
+	case Kademlia::CSearch::STOREFILE:
+		sid = IDS_KAD_STOREFILE;
+		SetItem(iItem, 0, LVIF_IMAGE, 0, 3, 0, 0, 0, 0);
+		break;
 
-		case Kademlia::CSearch::STOREKEYWORD:
-			id = GetResString(IDS_KAD_STOREKW);
-			SetItem(iItem, 0, LVIF_IMAGE, 0, 4, 0, 0, 0, 0);
-			break;
+	case Kademlia::CSearch::STOREKEYWORD:
+		sid = IDS_KAD_STOREKW;
+		SetItem(iItem, 0, LVIF_IMAGE, 0, 4, 0, 0, 0, 0);
+		break;
 
 		//JOHNTODO: -
 		//I also need to understand skinning so the icons are done correctly.
-		case Kademlia::CSearch::FINDBUDDY:
-			id = GetResString(IDS_FINDBUDDY);
-			break;
+	case Kademlia::CSearch::FINDBUDDY:
+		sid = IDS_FINDBUDDY;
+		break;
 
-		case Kademlia::CSearch::STORENOTES:
-			id = GetResString(IDS_STORENOTES);
-			break;
+	case Kademlia::CSearch::STORENOTES:
+		sid = IDS_STORENOTES;
+		break;
 
-		case Kademlia::CSearch::NOTES:
-			id = GetResString(IDS_NOTES);
-			break;
+	case Kademlia::CSearch::NOTES:
+		sid = IDS_NOTES;
+		break;
 
-		default:
-			id = GetResString(IDS_KAD_UNKNOWN);
-			break;
+	default:
+		sid = IDS_KAD_UNKNOWN;
 	}
+	id = GetResString(sid);
 #ifdef _DEBUG
-	CString strTypeNr;
-	strTypeNr.Format(_T(" (%u)"), search->GetSearchTypes());
-	id += strTypeNr;
+	id.AppendFormat(_T(" (%u)"), search->GetSearchTypes());
 #endif
 	SetItemText(iItem, colType, id);
 
 	SetItemText(iItem, colName, search->GetGUIName());
 
-	if (search->GetTarget() != NULL)
-	{
+	if (search->GetTarget() != NULL) {
 		search->GetTarget().ToHexString(&id);
 		SetItemText(iItem, colKey, id);
 	}

@@ -246,7 +246,7 @@ LRESULT CHttpDownloadDlg::OnThreadFinished(WPARAM wParam, LPARAM /*lParam*/)
 	else if (wParam)
 	{
 		if (!m_sError.IsEmpty())
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)m_sError);
+			LogError(LOG_STATUSBAR, (LPCTSTR)m_sError);
 		EndDialog(IDCANCEL);
 	}
 	else
@@ -403,9 +403,7 @@ void CHttpDownloadDlg::SetStatus(const CString& strFmt, LPCTSTR lpsz1)
 
 void CHttpDownloadDlg::SetTransferRate(double KbPerSecond)
 {
-	CString sRate;
-	sRate.Format(_T("%s"), (LPCTSTR)CastItoXBytes(KbPerSecond, true, true));
-	m_ctrlTransferRate.SetWindowText(sRate);
+	m_ctrlTransferRate.SetWindowText(CastItoXBytes(KbPerSecond, true, true));
 }
 
 void CHttpDownloadDlg::PlayAnimation()
@@ -482,11 +480,11 @@ void CHttpDownloadDlg::DownloadThread()
 	if (m_sUserName.GetLength())
 		// Elandal: Assumes sizeof(void*) == sizeof(unsigned long)
 		m_hHttpConnection = ::InternetConnect(m_hInternetSession, m_sServer, m_nPort, m_sUserName,
-                                          m_sPassword, m_dwServiceType, 0, (DWORD) this);
+                                          m_sPassword, m_dwServiceType, 0, reinterpret_cast<const DWORD_PTR>(this));
 	else
 		// Elandal: Assumes sizeof(void*) == sizeof(unsigned long)
 		m_hHttpConnection = ::InternetConnect(m_hInternetSession, m_sServer, m_nPort, NULL,
-                                          NULL, m_dwServiceType, 0, (DWORD) this);
+                                          NULL, m_dwServiceType, 0, reinterpret_cast<const DWORD_PTR>(this));
 	if (m_hHttpConnection == NULL)
 	{
 		TRACE(_T("Failed in call to InternetConnect, Error:%d\n"), ::GetLastError());
@@ -511,7 +509,7 @@ void CHttpDownloadDlg::DownloadThread()
 	ASSERT(m_hHttpFile == NULL);
 	// Elandal: Assumes sizeof(void*) == sizeof(unsigned long)
 	m_hHttpFile = HttpOpenRequest(m_hHttpConnection, NULL, m_sObject, NULL, NULL, ppszAcceptTypes, INTERNET_FLAG_RELOAD |
-								  INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_KEEP_CONNECTION, (DWORD)this);
+								  INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_KEEP_CONNECTION, reinterpret_cast<const DWORD_PTR>(this));
 	if (m_hHttpFile == NULL)
 	{
 		TRACE(_T("Failed in call to HttpOpenRequest, Error:%d\n"), ::GetLastError());
@@ -719,7 +717,7 @@ void CHttpDownloadDlg::UpdateControlsDuringTransfer(DWORD dwStartTicks, DWORD& d
 	}
 }
 
-void CALLBACK CHttpDownloadDlg::_OnStatusCallBack(HINTERNET hInternet, DWORD dwContext, DWORD dwInternetStatus,
+void CALLBACK CHttpDownloadDlg::_OnStatusCallBack(HINTERNET hInternet, DWORD_PTR dwContext, DWORD dwInternetStatus,
                                                   LPVOID lpvStatusInformation, DWORD dwStatusInformationLength)
 {
 	CHttpDownloadDlg* pDlg = (CHttpDownloadDlg*) dwContext;

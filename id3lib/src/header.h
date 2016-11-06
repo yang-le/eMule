@@ -103,7 +103,7 @@ protected:
   ID3_V2Spec      _spec;             // which version of the spec
   size_t          _data_size;        // how big is the data?
   ID3_Flags       _flags;            // header flags
-  Info*     _info;             // header info w.r.t. id3v2 spec
+  Info*           _info;             // header info w.r.t. id3v2 spec
   bool            _changed;          // has the header changed since parsing
 }
 ;

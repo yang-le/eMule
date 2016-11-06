@@ -97,7 +97,7 @@ public:
 	void	Process();
 	void	RemoveSocket(CClientReqSocket* todel);
 	void	AddSocket(CClientReqSocket* toadd);
-	UINT	GetOpenSockets()		{return socket_list.GetCount();}
+	UINT	GetOpenSockets()		{return static_cast<UINT>(socket_list.GetCount());}
 	void	KillAllSockets();
 	bool	TooManySockets(bool bIgnoreInterval = false);
 	uint32	GetMaxConnectionReached()	{return maxconnectionreached;}

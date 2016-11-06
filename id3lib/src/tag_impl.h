@@ -126,7 +126,7 @@ public:
   dami::String GetFileName() const { return _file_name; }
 
   ID3_Frame* Find(ID3_FrameID id) const;
-  ID3_Frame* Find(ID3_FrameID id, ID3_FieldID fld, uint32 data) const;
+  ID3_Frame* Find(ID3_FrameID id, ID3_FieldID fld, size_t data) const;
   ID3_Frame* Find(ID3_FrameID id, ID3_FieldID fld, const dami::String&) const;
   ID3_Frame* Find(ID3_FrameID id, ID3_FieldID fld, const dami::WString&) const;
 

@@ -254,7 +254,7 @@ public:
 			{
 				//Verify parameters
 				ASSERT( hWnd );
-				CAsyncSocketExHelperWindow *pWnd = (CAsyncSocketExHelperWindow *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+				CAsyncSocketExHelperWindow *pWnd = reinterpret_cast<CAsyncSocketExHelperWindow *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 				ASSERT( pWnd );
 
 				if (message < static_cast<UINT>(WM_SOCKETEX_NOTIFY + pWnd->m_nWindowDataSize)) //Index is within socket storage
@@ -330,8 +330,8 @@ public:
 				//Verify parameters, lookup socket and notification message
 				if (!wParam)
 					return 0;
-				CAsyncSocketEx *pSocket = (CAsyncSocketEx *)wParam;
-				CAsyncSocketExLayer::t_LayerNotifyMsg *pMsg = (CAsyncSocketExLayer::t_LayerNotifyMsg *)lParam;
+				CAsyncSocketEx *pSocket = reinterpret_cast<CAsyncSocketEx *>(wParam);
+				CAsyncSocketExLayer::t_LayerNotifyMsg *pMsg = reinterpret_cast<CAsyncSocketExLayer::t_LayerNotifyMsg *>(lParam);
 				if (pSocket->m_SocketData.hSocket == INVALID_SOCKET) {
 					delete pMsg;
 					return 0;
@@ -384,7 +384,7 @@ public:
 
 				//Verify parameters
 				ASSERT( hWnd );
-				CAsyncSocketExHelperWindow *pWnd = (CAsyncSocketExHelperWindow *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+				CAsyncSocketExHelperWindow *pWnd = reinterpret_cast<CAsyncSocketExHelperWindow *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 				ASSERT( pWnd );
 
 				CAsyncSocketEx *pSocket = NULL;
@@ -422,7 +422,7 @@ public:
 					return 0;
 				}
 
-				BOOL res = pSocket->Connect((SOCKADDR*)&sockAddr, sizeof(sockAddr));
+				BOOL res = pSocket->Connect(reinterpret_cast<SOCKADDR *>(&sockAddr), sizeof sockAddr);
 				delete[] pSocket->m_pAsyncGetHostByNameBuffer;
 				pSocket->m_pAsyncGetHostByNameBuffer = 0;
 				pSocket->m_hAsyncGetHostByNameHandle = 0;

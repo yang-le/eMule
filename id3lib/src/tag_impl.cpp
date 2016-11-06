@@ -317,78 +317,39 @@ bool ID3_TagImpl::IsValidFrame(ID3_Frame& frame, bool testlinkedFrames)
     {
       //check for same owner
       tmpField = testframe->GetField(ID3FN_OWNER);
-      if (ValidFrameOwner((char *)tmpField->GetRawText()))
-      {
-        // here the id3v2.4 specification is not clear, it states the content of the frame cannot be the same
-        // do they mean that the there can be only one frame with the same owner?
-        // or that the data field cannot be the same, or both..
-        return true;
-      }
-      return false;
+	  // here the id3v2.4 specification is not clear, it states the content of the frame cannot be the same
+	  // do they mean that the there can be only one frame with the same owner?
+	  // or that the data field cannot be the same, or both..
+	  return ValidFrameOwner((char *)tmpField->GetRawText());
     } //
     case ID3FID_PRODUCEDNOTICE:
-    {
       //should have at least a year and a space
       tmpField = testframe->GetField(ID3FN_TEXT);
-      String tmpText = tmpField->GetText();
-      if (tmpText.size() > 4)
-        return true;
-      return false;
-    } //
+	  return  (tmpField->GetText().size() > 4);
     case ID3FID_COPYRIGHT:
-    {
       //should have at least a year and a space
       tmpField = testframe->GetField(ID3FN_TEXT);
-      String tmpText = tmpField->GetText();
-      if (tmpText.size() > 4)
-        return true;
-      return false;
-    } //
+	  return  (tmpField->GetText().size() > 4);
     case ID3FID_ENCODINGTIME:
-    {
       //should have at least a year, contains a timestamp yyyy[-MM[-dd[THH[:mm[:ss]]]]] (between brackets [] is optional)
       tmpField = testframe->GetField(ID3FN_TEXT);
-      String tmpText = tmpField->GetText();
-      if (tmpText.size() > 3)
-        return true;
-      return false;
-    }
+	  return  (tmpField->GetText().size() > 3);
     case ID3FID_ORIGRELEASETIME:
-    {
       //should have at least a year, contains a timestamp yyyy[-MM[-dd[THH[:mm[:ss]]]]] (between brackets [] is optional)
       tmpField = testframe->GetField(ID3FN_TEXT);
-      String tmpText = tmpField->GetText();
-      if (tmpText.size() > 3)
-        return true;
-      return false;
-    }
+	  return  (tmpField->GetText().size() > 3);
     case ID3FID_RECORDINGTIME:
-    {
       //should have at least a year, contains a timestamp yyyy[-MM[-dd[THH[:mm[:ss]]]]] (between brackets [] is optional)
       tmpField = testframe->GetField(ID3FN_TEXT);
-      String tmpText = tmpField->GetText();
-      if (tmpText.size() > 3)
-        return true;
-      return false;
-    }
+	  return  (tmpField->GetText().size() > 3);
     case ID3FID_RELEASETIME:
-    {
       //should have at least a year, contains a timestamp yyyy[-MM[-dd[THH[:mm[:ss]]]]] (between brackets [] is optional)
       tmpField = testframe->GetField(ID3FN_TEXT);
-      String tmpText = tmpField->GetText();
-      if (tmpText.size() > 3)
-        return true;
-      return false;
-    }
+	  return  (tmpField->GetText().size() > 3);
     case ID3FID_TAGGINGTIME:
-    {
       //should have at least a year, contains a timestamp yyyy[-MM[-dd[THH[:mm[:ss]]]]] (between brackets [] is optional)
       tmpField = testframe->GetField(ID3FN_TEXT);
-      String tmpText = tmpField->GetText();
-      if (tmpText.size() > 3)
-        return true;
-      return false;
-    }
+	  return (tmpField->GetText().size() > 3);
     case ID3FID_CDID:
     {
       //should have at least a 4 + 8*x + 8 bytes (x is nr of tracks), with a minimum of 1 track it's 20 bytes, maximum is 804 bytes (99 tracks)

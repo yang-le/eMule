@@ -65,7 +65,7 @@ namespace Kademlia
 			uint32						GetType() const					{ return m_uType; }
 
 		protected:
-			int				GetInterestingContactIdxByID(CUInt128 uContact) const;
+			int				GetInterestingContactIdxByID(const CUInt128& uContact) const;
 
 		private:
 			CArray<SLookupHistoryEntry*> m_aHistoryEntries;

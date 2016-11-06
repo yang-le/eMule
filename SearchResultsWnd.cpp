@@ -217,7 +217,7 @@ void CSearchResultsWnd::StartSearch(SSearchParams* pParams)
 	}
 }
 
-void CSearchResultsWnd::OnTimer(UINT nIDEvent)
+void CSearchResultsWnd::OnTimer(UINT_PTR nIDEvent)
 {
 	CResizableFormView::OnTimer(nIDEvent);
 
@@ -671,7 +671,7 @@ CString DbgGetFileMetaTagName(LPCSTR pszMetaTagID)
 
 CString DbgGetSearchOperatorName(UINT uOperator)
 {
-	static const LPCTSTR _aszEd2kOps[] =
+	static LPCTSTR _aszEd2kOps[] =
 	{
 		_T("="),
 		_T(">"),
@@ -1790,7 +1790,7 @@ void CSearchResultsWnd::SearchRelatedFiles(CPtrList& listFiles)
 			ASSERT( false );
 	}
 
-	pParams->strSpecialTitle = GetResString(IDS_RELATED) + _T(": ") + strNames;
+	pParams->strSpecialTitle.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_RELATED), (LPCTSTR)strNames);
 	if (pParams->strSpecialTitle.GetLength() > 50)
 		pParams->strSpecialTitle = pParams->strSpecialTitle.Left(50) + _T("...");
 	StartSearch(pParams);

@@ -158,9 +158,9 @@ String msconvert(String data, ID3_TextEnc sourceEnc, ID3_TextEnc targetEnc)
   }
 
   unsigned char* src = (unsigned char*)data.data();
-  UINT srcsize = data.size();
+  UINT srcsize = static_cast<UINT>(data.size());
   unsigned char* dst = LEAKTESTNEW(unsigned char[2 * data.size()]);
-  UINT dstsize = (2 * data.size()) + 2; //big enough for 1 byte to two byte conversion, plus two bytes for byteorder header
+  UINT dstsize = static_cast<UINT>((2u * data.size()) + 2u); //big enough for 1 byte to two byte conversion, plus two bytes for byteorder header
 
   hResult = conv->DoConversion(src, &srcsize, dst, &dstsize);
   if ( hResult != S_OK )
@@ -177,10 +177,10 @@ String msconvert(String data, ID3_TextEnc sourceEnc, ID3_TextEnc targetEnc)
 }
 #endif //defined(HAVE_MS_CONVERT)
 
-size_t dami::renderNumber(uchar *buffer, uint32 val, size_t size)
+size_t dami::renderNumber(uchar *buffer, size_t val, size_t size)
 {
-  uint32 num = val;
-  for (size_t i = 0; i < size; i++)
+  size_t num = val;
+  for (size_t i = 0; i < size; ++i)
   {
     buffer[size - i - 1] = (uchar)(num & MASK8);
     num >>= 8;
@@ -192,7 +192,7 @@ String dami::renderNumber(uint32 val, size_t size)
 {
   String str(size, '\0');
   uint32 num = val;
-  for (size_t i = 0; i < size; i++)
+  for (size_t i = 0; i < size; ++i)
   {
     str[size - i - 1] = (uchar)(num & MASK8);
     num >>= 8;
@@ -460,7 +460,7 @@ ID3_Err dami::openReadableFile(const String& name, ifstream& file)
   return ID3E_NoError;
 }
 
-String dami::toString(uint32 val)
+String dami::toString(size_t val)
 {
   if (val == 0)
   {
@@ -469,10 +469,8 @@ String dami::toString(uint32 val)
   String text;
   while (val > 0)
   {
-    String tmp;
     char ch = (val % 10) + '0';
-    tmp += ch;
-    text = tmp + text;
+    text = ch + text;
     val /= 10;
   }
   return text;

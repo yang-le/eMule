@@ -31,7 +31,7 @@ protected:
 	CCommentListCtrl m_lstComments;
 	bool m_bMergedComment;
 	bool m_bSelf;
-	uint32 m_timer;
+	UINT_PTR m_timer;
 	bool m_bEnabled;
 
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
@@ -49,5 +49,5 @@ protected:
 	afx_msg void OnCbnSelendokRatelist();
 	afx_msg void OnCbnSelchangeRatelist();
 	afx_msg void OnDestroy();
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };

@@ -229,7 +229,7 @@ CString	CPreferences::m_strStatsExpandedTreeItems;
 bool	CPreferences::m_bShowVerticalHourMarkers;
 uint64	CPreferences::totalDownloadedBytes;
 uint64	CPreferences::totalUploadedBytes;
-WORD	CPreferences::m_wLanguageID;
+LANGID	CPreferences::m_wLanguageID;
 bool	CPreferences::transferDoubleclick;
 EViewSharedFilesAccess CPreferences::m_iSeeShares;
 UINT	CPreferences::m_iToolDelayTime;
@@ -360,7 +360,7 @@ bool	CPreferences::m_bUseChatCaptchas;
 UINT	CPreferences::filterlevel;
 UINT	CPreferences::m_iFileBufferSize;
 UINT	CPreferences::m_uFileBufferTimeLimit;
-UINT	CPreferences::m_iQueueSize;
+INT_PTR	CPreferences::m_iQueueSize;
 int		CPreferences::m_iCommitFiles;
 UINT	CPreferences::maxmsgsessions;
 uint32	CPreferences::versioncheckLastAutomatic;
@@ -732,7 +732,7 @@ bool CPreferences::IsTempFile(const CString& rstrDirectory, const CString& rstrN
 	CString strNameLower(rstrName);
 	strNameLower.MakeLower();
 	strNameLower += L"|"; // append an EOS character which we can query for
-	static const LPCTSTR _apszNotSharedExts[] = {
+	static LPCTSTR _apszNotSharedExts[] = {
 		L"%u.part" L"%c",
 		L"%u.part.met" L"%c",
 		L"%u.part.met" PARTMET_BAK_EXT L"%c",
@@ -753,14 +753,14 @@ uint16 CPreferences::GetMaxDownload(){
     return (uint16)(GetMaxDownloadInBytesPerSec()/1024);
 }
 
-uint64 CPreferences::GetMaxDownloadInBytesPerSec(bool dynamic){
+uint64 CPreferences::GetMaxDownloadInBytesPerSec(bool dynamic)
+{
 	//dont be a Lam3r :)
 	UINT maxup;
-	if (dynamic && thePrefs.IsDynUpEnabled() && theApp.uploadqueue->GetWaitingUserCount() != 0 && theApp.uploadqueue->GetDatarate() != 0) {
+	if (dynamic && thePrefs.IsDynUpEnabled() && theApp.uploadqueue->GetWaitingUserCount() > 0 && theApp.uploadqueue->GetDatarate() > 0)
 		maxup = theApp.uploadqueue->GetDatarate();
-	} else {
+	else
 		maxup = GetMaxUpload()*1024u;
-	}
 
 	if (maxup < 4u*1024u)
 		return (((maxup < 10u*1024u) && (3u*(uint64)maxup < maxdownload*1024u)) ? 3u*(uint64)maxup : maxdownload*1024u);
@@ -1421,7 +1421,6 @@ CString CPreferences::GetStatsLastResetStr(bool formatLong)
 	// For example...
 	// true: DateTime format from the .ini
 	// false: DateTime format from the .ini for the log
-	CString	returnStr;
 	if (GetStatsLastResetLng()) {
 		tm *statsReset;
 		TCHAR szDateReset[128];
@@ -1429,12 +1428,11 @@ CString CPreferences::GetStatsLastResetStr(bool formatLong)
 		statsReset = localtime(&lastResetDateTime);
 		if (statsReset){
 			_tcsftime(szDateReset, _countof(szDateReset), formatLong ? (LPCTSTR)GetDateTimeFormat() : _T("%c"), statsReset);
-			returnStr = szDateReset;
+			if (*szDateReset)
+				return CString(szDateReset);
 		}
 	}
-	if (returnStr.IsEmpty())
-		returnStr = GetResString(IDS_UNKNOWN);
-	return returnStr;
+	return GetResString(IDS_UNKNOWN);
 }
 
 // <-----khaos-
@@ -1975,7 +1973,7 @@ void CPreferences::LoadPreferences()
 			if (!doubled) {
 				if (!PathFileExists(atmp)) {
 					CreateDirectory(atmp,NULL);
-					if (PathFileExists(atmp) || tempdir.GetCount()==0)
+					if (PathFileExists(atmp) || tempdir.IsEmpty())
 						tempdir.Add(atmp);
 				}
 				else

@@ -215,28 +215,28 @@ BString io::readBinary(ID3_Reader& reader, size_t len)
   return binary;
 }
 
-uint32 io::readLENumber(ID3_Reader& reader, size_t len)
+size_t io::readLENumber(ID3_Reader& reader, size_t len)
 {
-  uint32 val = 0;
+  size_t val = 0;
   for (size_t i = 0; i < len; i++)
   {
     if (reader.atEnd())
     {
       break;
     }
-    val += (static_cast<uint32>(0xFF & reader.readChar()) << (i * 8));
+    val += (static_cast<size_t>(0xFF & reader.readChar()) << (i * 8));
   }
   return val;
 }
 
-uint32 io::readBENumber(ID3_Reader& reader, size_t len)
+size_t io::readBENumber(ID3_Reader& reader, size_t len)
 {
-  uint32 val = 0;
+  size_t val = 0;
 
   for (ID3_Reader::size_type i = 0; i < len && !reader.atEnd(); ++i)
   {
     val *= 256; // 2^8
-    val += static_cast<uint32>(0xFF & reader.readChar());
+    val += static_cast<size_t>(0xFF & reader.readChar());
   }
   return val;
 }
@@ -264,11 +264,11 @@ String io::readTrailingSpaces(ID3_Reader& reader, size_t len)
   return str;
 }
 
-uint32 io::readUInt28(ID3_Reader& reader)
+size_t io::readUInt28(ID3_Reader& reader)
 {
-  uint32 val = 0;
+  size_t val = 0;
   const unsigned short BITSUSED = 7;
-  const uint32 MAXVAL = MASK(BITSUSED * sizeof(uint32));
+  const size_t MAXVAL = MASK(BITSUSED * sizeof(uint32));
   // For each byte of the first 4 bytes in the string...
   for (size_t i = 0; i < sizeof(uint32); ++i)
   {
@@ -284,7 +284,7 @@ uint32 io::readUInt28(ID3_Reader& reader)
   return min(val, MAXVAL);
 }
 
-size_t io::writeBENumber(ID3_Writer& writer, uint32 val, size_t len)
+size_t io::writeBENumber(ID3_Writer& writer, size_t val, size_t len)
 {
   ID3_Writer::char_type bytes[sizeof(uint32)];
   ID3_Writer::size_type size = min<ID3_Reader::size_type>(len, sizeof(uint32));
@@ -296,7 +296,7 @@ size_t io::writeTrailingSpaces(ID3_Writer& writer, const String& buf, size_t len
 {
   ID3_Writer::pos_type beg = writer.getCur();
   ID3_Writer::size_type strLen = buf.size();
-  ID3_Writer::size_type size = min((unsigned int)len, (unsigned int)strLen);
+  ID3_Writer::size_type size = min(len, strLen);
   writer.writeChars(buf.data(), size);
   for (; size < len; ++size)
   {
@@ -305,11 +305,11 @@ size_t io::writeTrailingSpaces(ID3_Writer& writer, const String& buf, size_t len
   return writer.getCur() - beg;
 }
 
-size_t io::writeUInt28(ID3_Writer& writer, uint32 val)
+size_t io::writeUInt28(ID3_Writer& writer, size_t val)
 {
   uchar data[sizeof(uint32)];
   const unsigned short BITSUSED = 7;
-  const uint32 MAXVAL = MASK(BITSUSED * sizeof(uint32));
+  const size_t MAXVAL = MASK(BITSUSED * sizeof(uint32));
   val = min(val, MAXVAL);
   // This loop renders the value to the character buffer in reverse order, as
   // it is easy to extract the last 7 bits of an integer.  This is why the

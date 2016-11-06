@@ -85,9 +85,9 @@ void AddBuddyButton(HWND hwndEdit, HWND hwndButton)
 	VERIFY( SetProp(hwndEdit, s_szPropOldWndProc, (HANDLE)lpfnOldWndProc) );
 
 	// Remove the 'flat' style which my have been set by 'InitWindowStyles'
-	DWORD dwButtonStyle = (DWORD)GetWindowLong(hwndButton, GWL_STYLE);
+	LONG_PTR dwButtonStyle = GetWindowLongPtr(hwndButton, GWL_STYLE);
 	if (dwButtonStyle & BS_FLAT)
-		SetWindowLong(hwndButton, GWL_STYLE, dwButtonStyle & ~BS_FLAT);
+		SetWindowLongPtr(hwndButton, GWL_STYLE, dwButtonStyle & ~BS_FLAT);
 
 	CRect rcButton;
 	GetWindowRect(hwndButton, rcButton);
@@ -116,8 +116,8 @@ bool InitAttachedBrowseButton(HWND hwndButton, HICON &ricoBrowse)
 			return false;
 	}
 
-	DWORD dwStyle = (DWORD)GetWindowLong(hwndButton, GWL_STYLE);
-	SetWindowLong(hwndButton, GWL_STYLE, dwStyle | BS_ICON);
+	LONG_PTR dwStyle = GetWindowLongPtr(hwndButton, GWL_STYLE);
+	SetWindowLongPtr(hwndButton, GWL_STYLE, dwStyle | BS_ICON);
 	SendMessage(hwndButton, BM_SETIMAGE, IMAGE_ICON, (LPARAM)ricoBrowse);
 	return true;
 }

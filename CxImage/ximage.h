@@ -291,11 +291,11 @@ public:
 /** \addtogroup Attributes */ //@{
 	int32_t	GetSize();
 	uint8_t*	GetBits(uint32_t row = 0);
-	uint8_t	GetColorType() const;
-	void*	GetDIB() const;
+	uint8_t     GetColorType() const;
+	void*       GetDIB() const;
 	uint32_t	GetHeight() const;
 	uint32_t	GetWidth() const;
-	uint32_t	GetEffWidth() const;
+	uint32_t    GetEffWidth() const;
 	uint32_t	GetNumColors() const;
 	uint16_t	GetBpp() const;
 	uint32_t	GetType() const;

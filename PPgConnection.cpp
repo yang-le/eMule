@@ -143,11 +143,9 @@ void CPPgConnection::OnEnChangeUDPDisable()
 		GetDlgItem(IDC_UDPPORT)->SetWindowText(strBuffer);
 	}
 
-	if (thePrefs.networkkademlia && !IsDlgButtonChecked(IDC_UDPDISABLE) != 0) // don't use GetNetworkKademlia here
-		CheckDlgButton(IDC_NETWORK_KADEMLIA, 1);
-	else
-		CheckDlgButton(IDC_NETWORK_KADEMLIA, 0);
-	GetDlgItem(IDC_NETWORK_KADEMLIA)->EnableWindow(IsDlgButtonChecked(IDC_UDPDISABLE) == 0);
+	CheckDlgButton(IDC_NETWORK_KADEMLIA, static_cast<UINT>(thePrefs.networkkademlia && !IsDlgButtonChecked(IDC_UDPDISABLE))); // don't use GetNetworkKademlia here
+
+	GetDlgItem(IDC_NETWORK_KADEMLIA)->EnableWindow(!IsDlgButtonChecked(IDC_UDPDISABLE));
 
 	guardian = false;
 }
@@ -177,7 +175,7 @@ void CPPgConnection::LoadSettings(void)
 
 		strBuffer.Format(_T("%d"), thePrefs.udpport);
 		GetDlgItem(IDC_UDPPORT)->SetWindowText(strBuffer);
-		CheckDlgButton(IDC_UDPDISABLE, (thePrefs.udpport == 0));
+		CheckDlgButton(IDC_UDPDISABLE, !thePrefs.udpport);
 
 		GetDlgItem(IDC_UDPPORT)->EnableWindow(thePrefs.udpport > 0);
 
@@ -215,17 +213,17 @@ void CPPgConnection::LoadSettings(void)
 			GetDlgItem(IDC_MAXSOURCEPERFILE)->SetWindowText(strBuffer);
 		}
 
-		CheckDlgButton(IDC_RECONN, (thePrefs.reconnect ? 1 : 0));
+		CheckDlgButton(IDC_RECONN, static_cast<UINT>(thePrefs.reconnect));
 
-		CheckDlgButton(IDC_SHOWOVERHEAD, (thePrefs.m_bshowoverhead ? 1 : 0));
+		CheckDlgButton(IDC_SHOWOVERHEAD, static_cast<UINT>(thePrefs.m_bshowoverhead));
 
-		CheckDlgButton(IDC_AUTOCONNECT, (thePrefs.autoconnect ? 1 : 0));
+		CheckDlgButton(IDC_AUTOCONNECT, static_cast<UINT>(thePrefs.autoconnect));
 
-		CheckDlgButton(IDC_NETWORK_KADEMLIA, (thePrefs.GetNetworkKademlia() ? 1 : 0));
+		CheckDlgButton(IDC_NETWORK_KADEMLIA, static_cast<UINT>(thePrefs.GetNetworkKademlia()));
 
 		GetDlgItem(IDC_NETWORK_KADEMLIA)->EnableWindow(thePrefs.GetUDPPort() > 0);
 
-		CheckDlgButton(IDC_NETWORK_ED2K, (thePrefs.networked2k ? 1 : 0));
+		CheckDlgButton(IDC_NETWORK_ED2K, static_cast<UINT>(thePrefs.networked2k));
 
 		WORD wv = thePrefs.GetWindowsVersion();
 		// don't try on XP SP2 or higher, not needed there anymore
@@ -235,7 +233,7 @@ void CPPgConnection::LoadSettings(void)
 
 		GetDlgItem(IDC_PREF_UPNPONSTART)->EnableWindow(wv != _WINVER_95_ && wv != _WINVER_98_ && wv != _WINVER_NT4_);
 
-		CheckDlgButton(IDC_PREF_UPNPONSTART, (thePrefs.IsUPnPEnabled() ? 1 : 0));
+		CheckDlgButton(IDC_PREF_UPNPONSTART, static_cast<UINT>(thePrefs.IsUPnPEnabled()));
 
 		ShowLimitValues();
 		OnLimiterChange();
@@ -361,9 +359,9 @@ BOOL CPPgConnection::OnApply()
 		thePrefs.m_bshowoverhead = false;
 	}
 
-	thePrefs.SetNetworkKademlia(IsDlgButtonChecked(IDC_NETWORK_KADEMLIA));
+	thePrefs.SetNetworkKademlia(IsDlgButtonChecked(IDC_NETWORK_KADEMLIA) != 0);
 
-	thePrefs.SetNetworkED2K(IsDlgButtonChecked(IDC_NETWORK_ED2K));
+	thePrefs.SetNetworkED2K(IsDlgButtonChecked(IDC_NETWORK_ED2K) != 0);
 
 	GetDlgItem(IDC_UDPPORT)->EnableWindow(!IsDlgButtonChecked(IDC_UDPDISABLE));
 
@@ -547,10 +545,8 @@ void CPPgConnection::OnBnClickedOpenports()
 	OnApply();
 	theApp.m_pFirewallOpener->RemoveRule(EMULE_DEFAULTRULENAME_UDP);
 	theApp.m_pFirewallOpener->RemoveRule(EMULE_DEFAULTRULENAME_TCP);
-	bool bAlreadyExisted = false;
-	if (theApp.m_pFirewallOpener->DoesRuleExist(thePrefs.GetPort(), NAT_PROTOCOL_TCP) || theApp.m_pFirewallOpener->DoesRuleExist(thePrefs.GetUDPPort(), NAT_PROTOCOL_UDP)){
-		bAlreadyExisted = true;
-	}
+	bool bAlreadyExisted = theApp.m_pFirewallOpener->DoesRuleExist(thePrefs.GetPort(), NAT_PROTOCOL_TCP)
+		|| theApp.m_pFirewallOpener->DoesRuleExist(thePrefs.GetUDPPort(), NAT_PROTOCOL_UDP);
 	bool bResult = theApp.m_pFirewallOpener->OpenPort(thePrefs.GetPort(), NAT_PROTOCOL_TCP, EMULE_DEFAULTRULENAME_TCP, false);
 	if (thePrefs.GetUDPPort() != 0)
 		bResult = bResult && theApp.m_pFirewallOpener->OpenPort(thePrefs.GetUDPPort(), NAT_PROTOCOL_UDP, EMULE_DEFAULTRULENAME_UDP, false);

@@ -79,7 +79,7 @@ public:
 						  CMap<uint32, uint32, uint32, uint32>& clientVersionEDonkeyHybrid,
 						  CMap<uint32, uint32, uint32, uint32>& clientVersionEMule,
 						  CMap<uint32, uint32, uint32, uint32>& clientVersionAMule);
-	uint32	GetClientCount()	{ return list.GetCount();}
+	INT_PTR	GetClientCount()	{ return list.GetCount();}
 	void	DeleteAll();
 	bool	AttachToAlreadyKnown(CUpDownClient** client, CClientReqSocket* sender);
 	CUpDownClient* FindClientByIP(uint32 clientip, UINT port) const;
@@ -94,16 +94,16 @@ public:
 	void	AddBannedClient(uint32 dwIP);
 	bool	IsBannedClient(uint32 dwIP) const;
 	void	RemoveBannedClient(uint32 dwIP);
-	UINT	GetBannedCount() const		{ return m_bannedList.GetCount(); }
+	INT_PTR	GetBannedCount() const		{ return m_bannedList.GetCount(); }
 	void	RemoveAllBannedClients();
 
 	// Tracked clients
 	void	AddTrackClient(CUpDownClient* toadd);
 	bool	ComparePriorUserhash(uint32 dwIP, uint16 nPort, void* pNewHash);
-	UINT	GetClientsFromIP(uint32 dwIP) const;
+	INT_PTR	GetClientsFromIP(uint32 dwIP) const;
 	void	TrackBadRequest(const CUpDownClient* upcClient, int nIncreaseCounter);
 	uint32	GetBadRequests(const CUpDownClient* upcClient) const;
-	UINT	GetTrackedCount() const		{ return m_trackedClientsList.GetCount(); }
+	INT_PTR	GetTrackedCount() const		{ return m_trackedClientsList.GetCount(); }
 	void	RemoveAllTrackedClients();
 
 	// Kad client list, buddy handling

@@ -653,8 +653,8 @@ int CALLBACK CServerListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 {
 	if (lParam1 == 0 || lParam2 == 0)
 		return 0;
-	const CServer* item1 = (CServer*)lParam1;
-	const CServer* item2 = (CServer*)lParam2;
+	const CServer* item1 = reinterpret_cast<const CServer *>(lParam1);
+	const CServer* item2 = reinterpret_cast<const CServer *>(lParam2);
 	int iResult;
 
 	switch (LOWORD(lParamSort))
@@ -750,9 +750,11 @@ int CALLBACK CServerListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 		return iResult - 5;
 
 	//call secondary sortorder, if this one results in equal
-	int dwNextSort;
-	if (iResult == 0 && (dwNextSort = theApp.emuledlg->serverwnd->serverlistctrl.GetNextSortOrder(lParamSort)) != -1)
-		iResult = SortProc(lParam1, lParam2, dwNextSort);
+	if (iResult == 0) {
+		LPARAM dwNextSort = theApp.emuledlg->serverwnd->serverlistctrl.GetNextSortOrder(lParamSort);
+		if (dwNextSort != -1)
+			iResult = SortProc(lParam1, lParam2, dwNextSort);
+	}
 
 	if (HIWORD(lParamSort))
 		iResult = -iResult;

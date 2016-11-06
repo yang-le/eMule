@@ -119,12 +119,12 @@ bool ID3_FrameHeader::Parse(ID3_Reader& reader)
     this->SetFrameID(fid);
   }
 
-  uint32 dataSize = io::readBENumber(reader, _info->frame_bytes_size);
+  size_t dataSize = io::readBENumber(reader, _info->frame_bytes_size);
   ID3D_NOTICE( "ID3_FrameHeader::Parse: dataSize = " << dataSize );
   ID3D_NOTICE( "ID3_FrameHeader::Parse: getCur() = " << reader.getCur() );
   this->SetDataSize(dataSize);
 
-  uint32 flags = io::readBENumber(reader, _info->frame_bytes_flags);
+  size_t flags = io::readBENumber(reader, _info->frame_bytes_flags);
   _flags.add(flags);
 
   ID3D_NOTICE( "ID3_FrameHeader::Parse: flags = " << flags );

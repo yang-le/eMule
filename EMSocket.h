@@ -52,7 +52,7 @@ public:
 	virtual bool HasQueues(bool bOnlyStandardPackets = false) const;
 	virtual bool IsEnoughFileDataQueued(uint32 nMinFilePayloadBytes) const;
 	virtual bool UseBigSendBuffer();
-	int			 DbgGetStdQueueCount() const { return standardpacket_queue.GetCount(); }
+	INT_PTR		 DbgGetStdQueueCount() const { return standardpacket_queue.GetCount(); }
 
 	virtual UINT GetTimeOut() const;
 	virtual void SetTimeOut(UINT uTimeOut);

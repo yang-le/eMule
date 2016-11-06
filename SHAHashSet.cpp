@@ -768,7 +768,7 @@ bool CAICHRecoveryHashSet::SaveHashSet()
 		}
 
 		// write hashset
-		uint32 nExistingSize = (uint32)file.GetLength();
+		ULONGLONG nExistingSize = file.GetLength();
 		file.SeekToEnd();
 		ULONGLONG nHashSetWritePosition = file.GetPosition();
 		m_pHashTree.m_Hash.Write(&file);

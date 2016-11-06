@@ -63,30 +63,11 @@ void CPPgMessages::DoDataExchange(CDataExchange* pDX)
 
 void CPPgMessages::LoadSettings(void)
 {
-	if (thePrefs.msgonlyfriends)
-		CheckDlgButton(IDC_MSGONLYFRIENDS,1);
-	else
-		CheckDlgButton(IDC_MSGONLYFRIENDS,0);
-
-	if (thePrefs.m_bAdvancedSpamfilter)
-		CheckDlgButton(IDC_ADVSPAMFILTER,1);
-	else
-		CheckDlgButton(IDC_ADVSPAMFILTER,0);
-
-	if(thePrefs.indicateratings)
-		CheckDlgButton(IDC_INDICATERATINGS,1);
-	else
-		CheckDlgButton(IDC_INDICATERATINGS,0);
-
-	if(thePrefs.GetMessageEnableSmileys())
-		CheckDlgButton(IDC_MSHOWSMILEYS,1);
-	else
-		CheckDlgButton(IDC_MSHOWSMILEYS,0);
-
-	if(thePrefs.IsChatCaptchaEnabled())
-		CheckDlgButton(IDC_USECAPTCHAS,1);
-	else
-		CheckDlgButton(IDC_USECAPTCHAS,0);
+	CheckDlgButton(IDC_MSGONLYFRIENDS, static_cast<UINT>(thePrefs.msgonlyfriends));
+	CheckDlgButton(IDC_ADVSPAMFILTER, static_cast<UINT>(thePrefs.m_bAdvancedSpamfilter));
+	CheckDlgButton(IDC_INDICATERATINGS, static_cast<UINT>(thePrefs.indicateratings));
+	CheckDlgButton(IDC_MSHOWSMILEYS, static_cast<UINT>(thePrefs.GetMessageEnableSmileys()));
+	CheckDlgButton(IDC_USECAPTCHAS, static_cast<UINT>(thePrefs.IsChatCaptchaEnabled()));
 
 	GetDlgItem(IDC_FILTER)->SetWindowText(thePrefs.messageFilter);
 	GetDlgItem(IDC_COMMENTFILTER)->SetWindowText(thePrefs.commentFilter);

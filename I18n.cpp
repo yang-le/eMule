@@ -136,40 +136,31 @@ static SLanguage s_aLanguages[] =
 	{0, NULL, 0, 0}
 };
 
-static void InitLanguages(const CString& rstrLangDir1, const CString& rstrLangDir2, bool bReInit = false)
+static void InitLanguages(const CString& rstrLangDir1, const CString& rstrLangDir2)
 {
-	static BOOL _bInitialized = FALSE;
-	if (_bInitialized && !bReInit)
-		return;
-	_bInitialized = TRUE;
-
+	bool bFirstDir = rstrLangDir1.CompareNoCase(rstrLangDir2) != 0;
 	CFileFind ff;
 	bool bEnd = !ff.FindFile(rstrLangDir1 + _T("*.dll"), 0);
-	bool bFirstDir = rstrLangDir1.CompareNoCase(rstrLangDir2) != 0;
-	while (!bEnd)
-	{
+	while (!bEnd) {
 		bEnd = !ff.FindNextFile();
 		if (ff.IsDirectory())
 			continue;
 		TCHAR szLandDLLFileName[_MAX_FNAME];
 		_tsplitpath(ff.GetFileName(), NULL, NULL, szLandDLLFileName, NULL);
 
-		SLanguage* pLangs = s_aLanguages;
-		if (pLangs){
-			while (pLangs->lid){
-				if (_tcsicmp(pLangs->pszISOLocale, szLandDLLFileName) == 0){
-					pLangs->bSupported = TRUE;
+		if (s_aLanguages) {
+			for (SLanguage* pLang = s_aLanguages; pLang->lid; ++pLang) {
+				if (_tcsicmp(pLang->pszISOLocale, szLandDLLFileName) == 0) {
+					pLang->bSupported = TRUE;
 					break;
 				}
-				pLangs++;
 			}
 		}
-		if (bEnd && bFirstDir){
+		if (bEnd && bFirstDir) {
 			ff.Close();
 			bEnd = !ff.FindFile(rstrLangDir2 + _T("*.dll"), 0);
 			bFirstDir = false;
 		}
-
 	}
 	ff.Close();
 }
@@ -184,21 +175,19 @@ static void FreeLangDLL()
 
 void CPreferences::GetLanguages(CWordArray& aLanguageIDs)
 {
-	const SLanguage* pLang = s_aLanguages;
-	while (pLang->lid){
+	for (const SLanguage* pLang = s_aLanguages; pLang->lid; ++pLang) {
 		//if (pLang->bSupported)
 		//show all languages, offer download if not supported ones later
 		aLanguageIDs.Add(pLang->lid);
-		pLang++;
 	}
 }
 
-WORD CPreferences::GetLanguageID()
+LANGID CPreferences::GetLanguageID()
 {
 	return m_wLanguageID;
 }
 
-void CPreferences::SetLanguageID(WORD lid)
+void CPreferences::SetLanguageID(LANGID lid)
 {
 	m_wLanguageID = lid;
 }
@@ -232,31 +221,29 @@ static bool CheckLangDLLVersion(const CString& rstrLangDLL)
 
 static bool LoadLangLib(const CString& rstrLangDir1, const CString& rstrLangDir2, LANGID lid)
 {
-	const SLanguage* pLangs = s_aLanguages;
-	if (pLangs){
-		while (pLangs->lid){
-			if (pLangs->bSupported && pLangs->lid == lid){
+	if (s_aLanguages) {
+		for (const SLanguage* pLang = s_aLanguages; pLang->lid; ++pLang) {
+			if (pLang->bSupported && pLang->lid == lid) {
 				FreeLangDLL();
 
 				bool bLoadedLib = false;
-				if (pLangs->lid == LANGID_EN_US){
+				if (pLang->lid == LANGID_EN_US) {
 					s_hLangDLL = NULL;
 					bLoadedLib = true;
-				}
-				else{
+				} else {
 					CString strLangDLL = rstrLangDir1;
-					strLangDLL += pLangs->pszISOLocale;
+					strLangDLL += pLang->pszISOLocale;
 					strLangDLL += _T(".dll");
-					if (CheckLangDLLVersion(strLangDLL)){
+					if (CheckLangDLLVersion(strLangDLL)) {
 						s_hLangDLL = LoadLibrary(strLangDLL);
 						if (s_hLangDLL)
 							bLoadedLib = true;
 					}
-					if (rstrLangDir1.CompareNoCase(rstrLangDir2) != 0){
+					if (rstrLangDir1.CompareNoCase(rstrLangDir2) != 0) {
 						strLangDLL = rstrLangDir2;
-						strLangDLL += pLangs->pszISOLocale;
+						strLangDLL += pLang->pszISOLocale;
 						strLangDLL += _T(".dll");
-						if (CheckLangDLLVersion(strLangDLL)){
+						if (CheckLangDLLVersion(strLangDLL)) {
 							s_hLangDLL = LoadLibrary(strLangDLL);
 							if (s_hLangDLL)
 								bLoadedLib = true;
@@ -267,7 +254,6 @@ static bool LoadLangLib(const CString& rstrLangDir1, const CString& rstrLangDir2
 					return true;
 				break;
 			}
-			pLangs++;
 		}
 	}
 	return false;
@@ -306,46 +292,40 @@ void CPreferences::SetLanguage()
 	InitThreadLocale();
 }
 
-bool CPreferences::IsLanguageSupported(LANGID lidSelected, bool bUpdateBefore){
-	InitLanguages(GetMuleDirectory(EMULE_INSTLANGDIR), GetMuleDirectory(EMULE_ADDLANGDIR, false), bUpdateBefore);
+bool CPreferences::IsLanguageSupported(LANGID lidSelected)
+{
 	if (lidSelected == LANGID_EN_US)
 		return true;
-	const SLanguage* pLang = s_aLanguages;
-	for (;pLang->lid;pLang++){
-		if (pLang->lid == lidSelected && pLang->bSupported){
-			bool bResult = CheckLangDLLVersion(GetMuleDirectory(EMULE_INSTLANGDIR) + CString(pLang->pszISOLocale) + _T(".dll"));
-			return bResult || CheckLangDLLVersion(GetMuleDirectory(EMULE_ADDLANGDIR, false) + CString(pLang->pszISOLocale) + _T(".dll"));
+	InitLanguages(GetMuleDirectory(EMULE_INSTLANGDIR), GetMuleDirectory(EMULE_ADDLANGDIR, false));
+	for (const SLanguage* pLang = s_aLanguages; pLang->lid; ++pLang) {
+		if (pLang->lid == lidSelected && pLang->bSupported) {
+			return CheckLangDLLVersion(GetMuleDirectory(EMULE_INSTLANGDIR) + CString(pLang->pszISOLocale) + _T(".dll"))
+				|| CheckLangDLLVersion(GetMuleDirectory(EMULE_ADDLANGDIR, false) + CString(pLang->pszISOLocale) + _T(".dll"));
 		}
 	}
-	return false; 
+	return false;
 }
 
-CString CPreferences::GetLangDLLNameByID(LANGID lidSelected){
-	const SLanguage* pLang = s_aLanguages;
-	for (;pLang->lid;pLang++){
+CString CPreferences::GetLangDLLNameByID(LANGID lidSelected)
+{
+	for (const SLanguage* pLang = s_aLanguages; pLang->lid; ++pLang) {
 		if (pLang->lid == lidSelected)
-			return CString(pLang->pszISOLocale) + _T(".dll"); 
+			return CString(pLang->pszISOLocale) + _T(".dll");
 	}
-	ASSERT ( false );
-	return CString(_T(""));
+	ASSERT(false);
+	return CString();
 }
 
 void CPreferences::SetRtlLocale(LCID lcid)
 {
-	const SLanguage* pLangs = s_aLanguages;
-	while (pLangs->lid)
-	{
-		if (pLangs->lid == LANGIDFROMLCID(lcid))
-		{
-			if (pLangs->uCodepage)
-			{
-				CString strCodepage;
-				strCodepage.Format(_T(".%u"), pLangs->uCodepage);
-				_tsetlocale(LC_CTYPE, strCodepage);
-			}
-			break;
+	for (const SLanguage* pLang = s_aLanguages; pLang->lid; ++pLang) {
+		if (pLang->lid == LANGIDFROMLCID(lcid)) {
+			if (!pLang->uCodepage)
+				break;
+			CString strCodepage;
+			strCodepage.Format(_T(".%u"), pLang->uCodepage);
+			_tsetlocale(LC_CTYPE, strCodepage);
 		}
-		pLangs++;
 	}
 }
 
@@ -410,32 +390,25 @@ CString GetCodePageNameForLocale(LCID lcid)
 
 CString CPreferences::GetHtmlCharset()
 {
-	ASSERT( m_wLanguageID != 0 );
+	ASSERT(m_wLanguageID != 0);
 
 	LPCTSTR pszHtmlCharset = NULL;
-	const SLanguage* pLangs = s_aLanguages;
-	while (pLangs->lid)
-	{
-		if (pLangs->lid == m_wLanguageID)
-		{
-			pszHtmlCharset = pLangs->pszHtmlCharset;
+	for (const SLanguage* pLang = s_aLanguages; pLang->lid; ++pLang) {
+		if (pLang->lid == m_wLanguageID) {
+			pszHtmlCharset = pLang->pszHtmlCharset;
 			break;
 		}
-		pLangs++;
 	}
 
-	if (pszHtmlCharset == NULL || pszHtmlCharset[0] == _T('\0'))
-	{
+	if (pszHtmlCharset == NULL || pszHtmlCharset[0] == _T('\0')) {
 		ASSERT(0); // should never come here
 
 		// try to get charset from code page
 		LPCTSTR pszLcLocale = _tsetlocale(LC_CTYPE, NULL);
-		if (pszLcLocale)
-		{
+		if (pszLcLocale) {
 			TCHAR szLocaleID[128];
 			UINT uCodepage = 0;
-			if (_stscanf(pszLcLocale, _T("%[a-zA-Z_].%u"), szLocaleID, &uCodepage) == 2 && uCodepage != 0)
-			{
+			if (_stscanf(pszLcLocale, _T("%[a-zA-Z_].%u"), szLocaleID, &uCodepage) == 2 && uCodepage != 0) {
 				CString strHtmlCodepage;
 				strHtmlCodepage.Format(_T("windows-%u"), uCodepage);
 				return strHtmlCodepage;
@@ -457,8 +430,8 @@ LRESULT CALLBACK RTLWindowsLayoutCbtFilterHook(int code, WPARAM wParam, LPARAM l
 		//if ((lpcs->style & WS_CHILD) == 0)
 		//	lpcs->dwExStyle |= WS_EX_LAYOUTRTL;	// doesn't seem to have any effect, but shouldn't hurt
 
-		if ((GetWindowLong((HWND)wParam, GWL_STYLE) & WS_CHILD) == 0)
-			SetWindowLong((HWND)wParam, GWL_EXSTYLE, GetWindowLong((HWND)wParam, GWL_EXSTYLE) | WS_EX_LAYOUTRTL);
+		if ((GetWindowLongPtr((HWND)wParam, GWL_STYLE) & WS_CHILD) == 0)
+			SetWindowLongPtr((HWND)wParam, GWL_EXSTYLE, GetWindowLongPtr((HWND)wParam, GWL_EXSTYLE) | WS_EX_LAYOUTRTL);
 	}
 	return CallNextHookEx(s_hRTLWindowsLayoutOldCbtFilterHook, code, wParam, lParam);
 }

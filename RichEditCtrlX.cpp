@@ -57,7 +57,7 @@ void CRichEditCtrlX::SetDisableSelectOnFocus(bool bDisable)
 	m_bDisableSelectOnFocus = bDisable;
 }
 
-void CRichEditCtrlX::SetSyntaxColoring(const LPCTSTR* ppszKeywords, LPCTSTR pszSeparators)
+void CRichEditCtrlX::SetSyntaxColoring(LPCTSTR* ppszKeywords, LPCTSTR pszSeparators)
 {
 	int i = 0;
 	while (ppszKeywords[i] != NULL)

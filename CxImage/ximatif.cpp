@@ -48,7 +48,6 @@ bool CxImageTIF::Decode(CxFile * hFile)
 	uint16 res_unit; //<Trifon>
 	uint32 x, y;
 	float resolution, offset;
-	BOOL isRGB;
 	uint8_t *bits;		//pointer to source data
 	uint8_t *bits2;	//pointer to destination data
 
@@ -106,7 +105,7 @@ bool CxImageTIF::Decode(CxFile * hFile)
 		TIFFSetField(m_tif, TIFFTAG_ROWSPERSTRIP, rowsperstrip);
 	}
 
-	isRGB = /*(bitspersample >= 8) && (VK: it is possible so for RGB to have < 8 bpp!)*/
+	BOOL isRGB = /*(bitspersample >= 8) && (VK: it is possible so for RGB to have < 8 bpp!)*/
 		(photometric == PHOTOMETRIC_RGB) ||
 		(photometric == PHOTOMETRIC_YCBCR) ||
 		(photometric == PHOTOMETRIC_SEPARATED) ||

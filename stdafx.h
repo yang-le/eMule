@@ -169,7 +169,7 @@
 #endif
 #endif//!defined(_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES) || (_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES==0)
 
-#ifndef _USE_32BIT_TIME_T
+#if !defined(_USE_32BIT_TIME_T) && !defined(_WIN64)
 #define _USE_32BIT_TIME_T
 #endif
 

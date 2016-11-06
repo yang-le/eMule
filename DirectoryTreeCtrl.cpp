@@ -458,7 +458,7 @@ void CDirectoryTreeCtrl::CheckChanged(HTREEITEM hItem, bool bChecked)
 		DelShare(strDir);
 
 	UpdateParentItems(hItem);
-	GetParent()->SendMessage(WM_COMMAND, UM_ITEMSTATECHANGED, (long)m_hWnd);
+	GetParent()->SendMessage(WM_COMMAND, UM_ITEMSTATECHANGED, reinterpret_cast<LPARAM>(m_hWnd));
 }
 
 bool CDirectoryTreeCtrl::IsShared(CString strDir)

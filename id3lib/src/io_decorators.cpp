@@ -205,9 +205,9 @@ io::CompressedReader::CompressedReader(ID3_Reader& reader, size_type newSize)
   BString binary = readBinary(reader, oldSize);
 
   ::uncompress(_uncompressed,
-               reinterpret_cast<luint*>(&newSize),
+               reinterpret_cast<luint *>(&newSize),
                reinterpret_cast<const uchar*>(binary.data()),
-               oldSize);
+               static_cast<uLong>(oldSize));
   this->setBuffer(_uncompressed, newSize);
 }
 
@@ -267,9 +267,9 @@ void io::CompressedWriter::flush()
   // The zlib documentation specifies that the destination size needs to
   // be an unsigned long at least 0.1% larger than the source buffer,
   // plus 12 bytes
-  unsigned long newDataSize = dataSize + (dataSize / 10) + 12;
+  unsigned long newDataSize = static_cast<unsigned long>(dataSize + (dataSize / 10) + 12);
   char_type* newData = LEAKTESTNEW(char_type[newDataSize]);
-  if (::compress(newData, &newDataSize, data, dataSize) != Z_OK)
+  if (::compress(newData, &newDataSize, data, static_cast<uLong>(dataSize)) != Z_OK)
   {
     // log this
     ID3D_WARNING("io::CompressedWriter: error compressing");

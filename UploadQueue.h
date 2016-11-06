@@ -54,8 +54,8 @@ public:
     uint32  GetToNetworkDatarate();
 
 	bool	CheckForTimeOver(const CUpDownClient* client);
-	int		GetWaitingUserCount() const				{return waitinglist.GetCount();}
-	int		GetUploadQueueLength() const			{return uploadinglist.GetCount();}
+	INT_PTR	GetWaitingUserCount() const				{return waitinglist.GetCount();}
+	INT_PTR	GetUploadQueueLength() const			{return uploadinglist.GetCount();}
 	uint32	GetActiveUploadsCount()	const			{return m_MaxActiveClientsShortTime;}
 	uint32	GetWaitingUserForFileCount(const CSimpleArray<CObject*>& raFiles, bool bOnlyIfChanged);
 	uint32	GetDatarateForFile(const CSimpleArray<CObject*>& raFiles) const;
@@ -93,11 +93,11 @@ public:
 protected:
 	void		RemoveFromWaitingQueue(POSITION pos, bool updatewindow);
 	bool		AcceptNewClient(bool addOnNextConnect = false);
-	bool		AcceptNewClient(uint32 curUploadSlots);
+	bool		AcceptNewClient(INT_PTR curUploadSlots);
 	bool		ForceNewClient(bool allowEmptyWaitingQueue = false);
 	bool		AddUpNextClient(LPCTSTR pszReason, CUpDownClient* directadd = 0);
 
-	static VOID CALLBACK UploadTimer(HWND hWnd, UINT nMsg, UINT nId, DWORD dwTime);
+	static VOID CALLBACK UploadTimer(HWND hWnd, UINT nMsg, UINT_PTR nId, DWORD dwTime);
 
 private:
 	void	UpdateMaxClientScore();
@@ -139,7 +139,7 @@ private:
 
     DWORD   m_dwLastCalculatedAverageCombinedFilePrioAndCredit;
     float   m_fAverageCombinedFilePrioAndCredit;
-    uint32  m_iHighestNumberOfFullyActivatedSlotsSinceLastCall;
+    INT_PTR m_iHighestNumberOfFullyActivatedSlotsSinceLastCall;
     uint32  m_MaxActiveClients;
     uint32  m_MaxActiveClientsShortTime;
 

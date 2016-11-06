@@ -193,7 +193,7 @@ STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::MapUrlToZone(
 STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::GetSecurityId(
 										LPCWSTR pwszUrl,
 										BYTE* /*pbSecurityId*/, DWORD* /*pcbSecurityId*/,
-										DWORD dwReserved)
+										DWORD_PTR dwReserved)
 {
 	UNREFERENCED_PARAMETER(pwszUrl);
 	UNREFERENCED_PARAMETER(dwReserved);

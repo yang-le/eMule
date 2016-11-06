@@ -202,8 +202,9 @@ bool CxImage::CreateFromHANDLE(HANDLE hMem)
 	if (!Destroy())
 		return false;
 
-	uint32_t dwSize = GlobalSize(hMem);
-	if (!dwSize) return false;
+	SIZE_T dwSize = GlobalSize(hMem);
+	if (!dwSize)
+		return false;
 
 	uint8_t *lpVoid;						//pointer to the bitmap
 	lpVoid = (uint8_t *)GlobalLock(hMem);
@@ -211,7 +212,7 @@ bool CxImage::CreateFromHANDLE(HANDLE hMem)
 	pHead = (BITMAPINFOHEADER *)lpVoid;
 	if (lpVoid){
 
-		//CxMemFile hFile(lpVoid,dwSize);
+		//CxMemFile hFile(lpVoid,static_cast<uint32_t>(dwSize));
 
 		//copy the bitmap header
 		memcpy(&head,pHead,sizeof(BITMAPINFOHEADER));

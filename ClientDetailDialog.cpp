@@ -119,7 +119,7 @@ BOOL CClientDetailPage::OnSetActive()
 #endif
 		GetDlgItem(IDC_OBFUSCATION_STAT)->SetWindowText(buffer);
 
-		buffer.Format(_T("%s"), (LPCTSTR)GetResString(client->HasLowID() ? IDS_IDLOW : IDS_IDHIGH));
+		buffer = GetResString(client->HasLowID() ? IDS_IDLOW : IDS_IDHIGH);
 		GetDlgItem(IDC_DID)->SetWindowText(buffer);
 
 		if (client->GetServerIP()){
@@ -150,10 +150,10 @@ BOOL CClientDetailPage::OnSetActive()
 
 		GetDlgItem(IDC_DDOWN)->SetWindowText(CastItoXBytes(client->GetTransferredUp(), false, false));
 
-		buffer.Format(_T("%s"), (LPCTSTR)CastItoXBytes(client->GetDownloadDatarate(), false, true));
+		buffer = CastItoXBytes(client->GetDownloadDatarate(), false, true);
 		GetDlgItem(IDC_DAVUR)->SetWindowText(buffer);
 
-		buffer.Format(_T("%s"), (LPCTSTR)CastItoXBytes(client->GetDatarate(), false, true));
+		buffer = CastItoXBytes(client->GetDatarate(), false, true);
 		GetDlgItem(IDC_DAVDR)->SetWindowText(buffer);
 
 		const CClientCredits *clcredits = client->Credits();
@@ -206,11 +206,7 @@ BOOL CClientDetailPage::OnSetActive()
 		else
 			GetDlgItem(IDC_DSCORE)->SetWindowText(_T("-"));
 
-		if (client->GetKadPort() )
-			buffer.Format( _T("%s"), (LPCTSTR)GetResString(IDS_CONNECTED));
-		else
-			buffer.Format( _T("%s"), (LPCTSTR)GetResString(IDS_DISCONNECTED));
-		GetDlgItem(IDC_CLIENTDETAIL_KADCON)->SetWindowText(buffer);
+		GetDlgItem(IDC_CLIENTDETAIL_KADCON)->SetWindowText(GetResString(client->GetKadPort() ? IDS_CONNECTED : IDS_DISCONNECTED));
 
 		m_bDataChanged = false;
 	}

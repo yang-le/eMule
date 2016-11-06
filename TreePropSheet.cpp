@@ -210,21 +210,15 @@ BOOL CTreePropSheet::SetPageIcon(CPropertyPage *pPage, LPCTSTR pszIconId)
 
 BOOL CTreePropSheet::SetPageIcon(CPropertyPage *pPage, UINT unIconId)
 {
-	HICON	hIcon = AfxGetApp()->LoadIcon(unIconId);
-	if (!hIcon)
-		return FALSE;
-
-	return SetPageIcon(pPage, hIcon);
+	const HICON hIcon = AfxGetApp()->LoadIcon(unIconId);
+	return hIcon && SetPageIcon(pPage, hIcon);
 }
 
 
 BOOL CTreePropSheet::SetPageIcon(CPropertyPage *pPage, CImageList &Images, int nImage)
 {
-	HICON	hIcon = Images.ExtractIcon(nImage);
-	if (!hIcon)
-		return FALSE;
-
-	return SetPageIcon(pPage, hIcon);
+	const HICON hIcon = Images.ExtractIcon(nImage);
+	return hIcon && SetPageIcon(pPage, hIcon);
 }
 
 
@@ -412,8 +406,7 @@ HTREEITEM CTreePropSheet::CreatePageTreeItem(LPCTSTR lpszPath, HTREEITEM hParent
 
 	if (strPath.IsEmpty())
 		return hItem;
-	else
-		return CreatePageTreeItem(strPath, hItem);
+	return CreatePageTreeItem(strPath, hItem);
 }
 
 
@@ -524,21 +517,15 @@ HTREEITEM CTreePropSheet::GetPageTreeItem(int nPage, HTREEITEM hRoot /* = TVI_RO
 
 BOOL CTreePropSheet::SelectPageTreeItem(int nPage)
 {
-	HTREEITEM	hItem = GetPageTreeItem(nPage);
-	if (!hItem)
-		return FALSE;
-
-	return m_pwndPageTree->SelectItem(hItem);
+	const HTREEITEM hItem = GetPageTreeItem(nPage);
+	return hItem && m_pwndPageTree->SelectItem(hItem);
 }
 
 
 BOOL CTreePropSheet::SelectCurrentPageTreeItem()
 {
-	CTabCtrl	*pTab = GetTabControl();
-	if (!IsWindow(pTab->GetSafeHwnd()))
-		return FALSE;
-
-	return SelectPageTreeItem(pTab->GetCurSel());
+	const CTabCtrl	*pTab = GetTabControl();
+	return IsWindow(pTab->GetSafeHwnd()) && SelectPageTreeItem(pTab->GetCurSel());
 }
 
 
@@ -975,13 +962,12 @@ void CTreePropSheet::OnPageTreeSelChanging(NMHDR *pNotifyStruct, LRESULT *plResu
 	*plResult = 0;
 	if (m_bPageTreeSelChangedActive)
 		return;
-	else
-		m_bPageTreeSelChangedActive = TRUE;
+	m_bPageTreeSelChangedActive = TRUE;
 
-	NMTREEVIEW	*pTvn = reinterpret_cast<NMTREEVIEW*>(pNotifyStruct);
-	int					nPage = m_pwndPageTree->GetItemData(pTvn->itemNew.hItem);
-	BOOL				bResult;
-	if (nPage<0 || (unsigned)nPage>=m_pwndPageTree->GetCount())
+	NMTREEVIEW *pTvn = reinterpret_cast<NMTREEVIEW *>(pNotifyStruct);
+	int nPage = static_cast<int>(m_pwndPageTree->GetItemData(pTvn->itemNew.hItem));
+	BOOL bResult;
+	if (nPage < 0 || (UINT)nPage >= m_pwndPageTree->GetCount())
 		bResult = KillActiveCurrentPage();
 	else
 		bResult = SetActivePage(nPage);
@@ -994,8 +980,6 @@ void CTreePropSheet::OnPageTreeSelChanging(NMHDR *pNotifyStruct, LRESULT *plResu
 	m_pwndPageTree->SetFocus();
 
 	m_bPageTreeSelChangedActive = FALSE;
-
-	return;
 }
 
 
@@ -1004,36 +988,28 @@ void CTreePropSheet::OnPageTreeSelChanged(NMHDR* /*pNotifyStruct*/, LRESULT* plR
 	*plResult = 0;
 
 	UpdateCaption();
-
-	return;
 }
 
 
 LRESULT CTreePropSheet::OnIsDialogMessage(WPARAM wParam, LPARAM lParam)
 {
-	MSG	*pMsg = reinterpret_cast<MSG*>(lParam);
+	const MSG *pMsg = reinterpret_cast<MSG *>(lParam);
 	if (pMsg->message == WM_KEYDOWN && (GetKeyState(VK_CONTROL) & 0x8000))
-	{
-		// Handle default Windows Common Controls short cuts
-		if (pMsg->wParam == VK_TAB)
-		{
+		// Handle default Windows Common Controls shortcuts
+		switch (pMsg->wParam) {
+		case VK_TAB:
 			if (GetKeyState(VK_SHIFT) & 0x8000)
 				ActivatePreviousPage();			// Ctrl+Shift+Tab
 			else
 				ActivateNextPage();				// Ctrl+Tab
 			return TRUE;
-		}
-		else if (pMsg->wParam == VK_PRIOR)
-		{
+		case VK_PRIOR:
 			ActivatePreviousPage();				// Ctrl+PageUp
 			return TRUE;
-		}
-		else if (pMsg->wParam == VK_NEXT)
-		{
+		case VK_NEXT:
 			ActivateNextPage();					// Ctrl+PageDown
 			return TRUE;
 		}
-	}
 
 	return CPropertySheet::DefWindowProc(PSM_ISDIALOGMESSAGE, wParam, lParam);
 }

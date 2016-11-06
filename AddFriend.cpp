@@ -79,7 +79,7 @@ BOOL CAddFriend::OnInitDialog()
 			CTime t((time_t)m_pShowFriend->m_dwLastSeen);
 			SetDlgItemText(IDC_EDIT2, t.Format(thePrefs.GetDateTimeFormat()));
 		}
-		SetDlgItemText(IDC_AFKADID, m_pShowFriend->HasKadID() ? GetResString(IDS_KNOWN) : GetResString(IDS_UNKNOWN));
+		SetDlgItemText(IDC_AFKADID, GetResString(m_pShowFriend->HasKadID() ? IDS_KNOWN : IDS_UNKNOWN));
 		/*if (m_pShowFriend->m_dwLastChatted){
 			CTime t((time_t)m_pShowFriend->m_dwLastChatted);
 			SetDlgItemText(IDC_LAST_CHATTED, t.Format(thePrefs.GetDateTimeFormat()));
@@ -98,12 +98,12 @@ BOOL CAddFriend::OnInitDialog()
 
 void CAddFriend::Localize()
 {
-	SetWindowText(m_pShowFriend ? GetResString(IDS_DETAILS) : GetResString(IDS_ADDAFRIEND));
+	SetWindowText(GetResString(m_pShowFriend ? IDS_DETAILS : IDS_ADDAFRIEND));
 	GetDlgItem(IDC_INFO1)->SetWindowText(GetResString(IDS_PAF_REQINFO));
 	GetDlgItem(IDC_INFO2)->SetWindowText(GetResString(IDS_PAF_MOREINFO));
 
 	GetDlgItem(IDC_ADD)->SetWindowText(GetResString(IDS_ADD));
-	GetDlgItem(IDCANCEL)->SetWindowText(m_pShowFriend ? GetResString(IDS_FD_CLOSE) : GetResString(IDS_CANCEL));
+	GetDlgItem(IDCANCEL)->SetWindowText(GetResString(m_pShowFriend ? IDS_FD_CLOSE : IDS_CANCEL));
 
 	GetDlgItem(IDC_STATIC31)->SetWindowText(GetResString(IDS_CD_UNAME));
 	GetDlgItem(IDC_STATIC32)->SetWindowText(GetResString(IDS_CD_UHASH));

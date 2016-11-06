@@ -201,12 +201,12 @@ uint32 CUpDownClient::GetScore(bool sysvalue, bool isdownloading, bool onlybasev
 	if (!m_pszUsername)
 		return 0;
 
-	if (credits == 0){
+	if (!credits) {
 		ASSERT ( IsKindOf(RUNTIME_CLASS(CUrlClient)) );
 		return 0;
 	}
-	CKnownFile* currequpfile = theApp.sharedfiles->GetFileByID(requpfileid);
-	if(!currequpfile)
+
+	if (!theApp.sharedfiles->GetFileByID(requpfileid)) //is any file requested?
 		return 0;
 
 	// bad clients (see note in function)
@@ -214,14 +214,13 @@ uint32 CUpDownClient::GetScore(bool sysvalue, bool isdownloading, bool onlybasev
 		return 0;
 	// friend slot
 	if (IsFriend() && GetFriendSlot() && !HasLowID())
-		return 0x0FFFFFFF;
+		return 0x0FFFFFFFu;
 
 	if (IsBanned() || m_bGPLEvildoer)
 		return 0;
 
-	if (sysvalue && HasLowID() && !(socket && socket->IsConnected())){
+	if (sysvalue && HasLowID() && !(socket && socket->IsConnected()))
 		return 0;
-	}
 
     int filepriority = GetFilePrioAsNumber();
 
@@ -230,15 +229,15 @@ uint32 CUpDownClient::GetScore(bool sysvalue, bool isdownloading, bool onlybasev
 	if (onlybasevalue)
 		fBaseValue = 100;
 	else if (!isdownloading)
-		fBaseValue = (float)(::GetTickCount()-GetWaitStartTime())/1000;
+		fBaseValue = (::GetTickCount()-GetWaitStartTime())/SEC2MS(1.0f);
 	else{
 		// we dont want one client to download forever
 		// the first 15 min downloadtime counts as 15 min waitingtime and you get a 15 min bonus while you are in the first 15 min :)
 		// (to avoid 20 sec downloads) after this the score won't raise anymore
-		fBaseValue = (float)(m_dwUploadTime-GetWaitStartTime());
+		fBaseValue = (float)(m_dwUploadTime - GetWaitStartTime());
 		//ASSERT ( m_dwUploadTime-GetWaitStartTime() >= 0 ); //oct 28, 02: changed this from "> 0" to ">= 0" -> // 02-Okt-2006 []: ">=0" is always true!
-		fBaseValue += (float)(::GetTickCount() - m_dwUploadTime > 900000)? 900000:1800000;
-		fBaseValue /= 1000;
+		fBaseValue += (::GetTickCount() - m_dwUploadTime > MIN2MS(15)) ? MIN2MS(15.0f) : MIN2MS(30.0f);
+		fBaseValue /= SEC2MS(1);
 	}
 	if(thePrefs.UseCreditSystem())
 	{
@@ -246,7 +245,7 @@ uint32 CUpDownClient::GetScore(bool sysvalue, bool isdownloading, bool onlybasev
 		fBaseValue *= modif;
 	}
 	if (!onlybasevalue)
-		fBaseValue *= (float(filepriority)/10.0f);
+		fBaseValue *= filepriority/10.0f;
 
 	if( (IsEmuleClient() || this->GetClientSoft() < 10) && m_byEmuleVersion <= 0x19 )
 		fBaseValue *= 0.5f;
@@ -697,8 +696,7 @@ void  CUpDownClient::UnBan()
 	SetUploadState(US_NONE);
 	ClearWaitStartTime();
 	theApp.emuledlg->transferwnd->ShowQueueCount(theApp.uploadqueue->GetWaitingUserCount());
-	for (POSITION pos = m_RequestedFiles_list.GetHeadPosition();pos != 0;)
-	{
+	for (POSITION pos = m_RequestedFiles_list.GetHeadPosition(); pos != NULL;) {
 		Requested_File_Struct* cur_struct = m_RequestedFiles_list.GetNext(pos);
 		cur_struct->badrequests = 0;
 		cur_struct->lastasked = 0;

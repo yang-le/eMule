@@ -79,7 +79,7 @@ public:
 	uint64	GetUploadedTotal() const;
 	uint64	GetDownloadedTotal() const;
 	float	GetScoreRatio(uint32 dwForIP) const;
-	void	SetLastSeen()					{m_pCredits->nLastSeen = time(NULL);}
+	void	SetLastSeen()						{m_pCredits->nLastSeen = static_cast<uint32>(time(NULL));}
 	bool	SetSecureIdent(const uchar* pachIdent, uint8 nIdentLen); // Public key cannot change, use only if there is not public key yet
 	uint32	m_dwCryptRndChallengeFor;
 	uint32	m_dwCryptRndChallengeFrom;

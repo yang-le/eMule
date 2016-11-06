@@ -528,8 +528,8 @@ bool CKnownFile::CreateFromFile(LPCTSTR in_directory, LPCTSTR in_filename, LPVOI
 	}
 
 	// set lastwrite date
-	struct _stat32i64 fileinfo;
-	if (_fstat32i64(_fileno(file), &fileinfo) == 0) {
+	struct _stat64 fileinfo;
+	if (_fstat64(_fileno(file), &fileinfo) == 0) {
 		m_tUtcLastModified = fileinfo.st_mtime;
 		AdjustNTFSDaylightFileTime(m_tUtcLastModified, (LPCTSTR)strFilePath);
 	}
@@ -1868,7 +1868,7 @@ CString CKnownFile::GetInfoSummary(bool bNoFormatCommands) const
 	strTransferred.Format(_T("%s (%s)"), (LPCTSTR)CastItoXBytes(statistic.GetTransferred(), false, false), (LPCTSTR)CastItoXBytes(statistic.GetAllTimeTransferred(), false, false));
 	CString strType = GetFileTypeDisplayStr();
 	if (strType.IsEmpty())
-		strType = _T("-");
+		strType = _T('-');
 	CString dbgInfo;
 #ifdef _DEBUG
 	dbgInfo.Format(_T("\nAICH Part HashSet: %s\nAICH Rec HashSet: %s"), m_FileIdentifier.HasExpectedAICHHashCount() ? _T("Yes") : _T("No")
@@ -1878,7 +1878,7 @@ CString CKnownFile::GetInfoSummary(bool bNoFormatCommands) const
 	CString strHeadFormatCommand = bNoFormatCommands ? _T("") : _T("<br_head>");
 	CString info;
 	info.Format(_T("%s\n")
-		+ CString(_T("eD2K ")) + GetResString(IDS_FD_HASH) + _T(" %s\n")
+		_T("eD2K ") + GetResString(IDS_FD_HASH) + _T(" %s\n")
 		+ GetResString(IDS_AICHHASH) + _T(": %s\n")
 		+ GetResString(IDS_FD_SIZE) + _T(" %s\n") + strHeadFormatCommand + _T("\n")
 		+ GetResString(IDS_TYPE) + _T(": %s\n")
@@ -1904,28 +1904,24 @@ CString CKnownFile::GetInfoSummary(bool bNoFormatCommands) const
 CString CKnownFile::GetUpPriorityDisplayString() const
 {
 	switch (GetUpPriority()) {
-		case PR_VERYLOW :
-			return GetResString(IDS_PRIOVERYLOW);
-		case PR_LOW :
-			if (IsAutoUpPriority())
-				return GetResString(IDS_PRIOAUTOLOW);
-			else
-				return GetResString(IDS_PRIOLOW);
-		case PR_NORMAL :
-			if (IsAutoUpPriority())
-				return GetResString(IDS_PRIOAUTONORMAL);
-			else
-				return GetResString(IDS_PRIONORMAL);
-		case PR_HIGH :
-			if (IsAutoUpPriority())
-				return GetResString(IDS_PRIOAUTOHIGH);
-			else
-				return GetResString(IDS_PRIOHIGH);
-		case PR_VERYHIGH :
-			return GetResString(IDS_PRIORELEASE);
-		default:
-			return _T("");
+	case PR_VERYLOW:
+		return GetResString(IDS_PRIOVERYLOW);
+	case PR_LOW:
+		if (IsAutoUpPriority())
+			return GetResString(IDS_PRIOAUTOLOW);
+		return GetResString(IDS_PRIOLOW);
+	case PR_NORMAL:
+		if (IsAutoUpPriority())
+			return GetResString(IDS_PRIOAUTONORMAL);
+		return GetResString(IDS_PRIONORMAL);
+	case PR_HIGH:
+		if (IsAutoUpPriority())
+			return GetResString(IDS_PRIOAUTOHIGH);
+		return GetResString(IDS_PRIOHIGH);
+	case PR_VERYHIGH:
+		return GetResString(IDS_PRIORELEASE);
 	}
+	return _T("");
 }
 
 bool CKnownFile::ShouldPartiallyPurgeFile() const

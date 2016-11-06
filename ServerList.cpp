@@ -70,28 +70,28 @@ void CServerList::AutoUpdate()
 		return;
 	}
 
-	bool bDownloaded = false;
-	CString servermetdownload;
-	CString servermetbackup;
-	CString servermet;
-	CString strURLToDownload;
-	servermetdownload.Format(_T("%sserver_met.download"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
-	servermetbackup.Format(_T("%sserver_met.old"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
-	servermet.Format(_T("%s") SERVER_MET_FILENAME, (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+	const CString emconf(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+	const CString servermetdownload(emconf + _T("server_met.download"));
+	const CString servermetbackup(emconf + _T("server_met.old"));
+	const CString servermet(emconf + SERVER_MET_FILENAME);
+
 	(void)_tremove(servermetbackup);
 	(void)_tremove(servermetdownload);
 	(void)_trename(servermet, servermetbackup);
 
-	for (POSITION Pos = thePrefs.addresses_list.GetHeadPosition(); !bDownloaded && Pos != NULL;) {
+	CString strURLToDownload;
+	bool bDownloaded = false;
+	for (POSITION Pos = thePrefs.addresses_list.GetHeadPosition(); Pos != NULL;) {
 		CHttpDownloadDlg dlgDownload;
 		dlgDownload.m_strTitle = GetResString(IDS_HTTP_CAPTION);
 		strURLToDownload = thePrefs.addresses_list.GetNext(Pos);
 		dlgDownload.m_sURLToDownload = strURLToDownload;
 		dlgDownload.m_sFileToDownloadInto = servermetdownload;
-		if (dlgDownload.DoModal() == IDOK)
+		if (dlgDownload.DoModal() == IDOK) {
 			bDownloaded = true;
-		else
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FAILEDDOWNLOADMET), (LPCTSTR)strURLToDownload);
+			break;
+		}
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FAILEDDOWNLOADMET), (LPCTSTR)strURLToDownload);
 	}
 
 	if (bDownloaded) {
@@ -111,20 +111,18 @@ bool CServerList::Init()
 		AutoUpdate();
 
 	// Load Metfile
-	CString strPath;
-	strPath.Format(_T("%s") SERVER_MET_FILENAME, (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
-	bool bRes = AddServerMetToList(strPath, false);
+	const CString emconf(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+
+	bool bRes = AddServerMetToList(emconf + SERVER_MET_FILENAME, false);
 	if (thePrefs.GetAutoUpdateServerList())
 	{
-		strPath.Format(_T("%sserver_met.download"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
-		bool bRes2 = AddServerMetToList(strPath, true);
+		bool bRes2 = AddServerMetToList(emconf + _T("server_met.download"), true);
 		if (!bRes && bRes2)
 			bRes = true;
 	}
 
 	// insert static servers from textfile
-	strPath.Format(_T("%sstaticservers.dat"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
-	AddServersFromTextFile(strPath);
+	AddServersFromTextFile(emconf + _T("staticservers.dat"));
 
     theApp.serverlist->GiveServersForTraceRoute();
 
@@ -145,11 +143,9 @@ bool CServerList::AddServerMetToList(const CString& strFile, bool bMerge)
 		if (!bMerge){
 			CString strError(GetResString(IDS_ERR_LOADSERVERMET));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
-				strError += _T(" - ");
-				strError += szError;
-			}
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError)))
+				strError.AppendFormat(_T(" - %s"), szError);
+			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 		}
 		return false;
 	}
@@ -210,13 +206,12 @@ bool CServerList::AddServerMetToList(const CString& strFile, bool bMerge)
 		servermet.Close();
 	}
 	catch(CFileException* error){
-		if (error->m_cause == CFileException::endOfFile){
+		if (error->m_cause == CFileException::endOfFile)
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_BADSERVERLIST));
-		}
-		else{
+		else {
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
 			GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FILEERROR_SERVERMET),buffer);
+			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FILEERROR_SERVERMET), buffer);
 		}
 		error->Delete();
 	}
@@ -299,7 +294,7 @@ void CServerList::ServerStats()
 		ping_server->SetRealLastPingedTime(tNow); // this is not used to calcualte the next ping, but only to ensure a minimum delay for premature pings
 		if (!ping_server->GetCryptPingReplyPending() && (tNow - ping_server->GetLastPingedTime()) >= UDPSERVSTATREASKTIME && theApp.GetPublicIP() != 0 && thePrefs.IsServerCryptLayerUDPEnabled()){
 			// we try a obfsucation ping first and wait 20 seconds for an answer
-			// if it doesn'T get responsed, we don't count it as error but continue with a normal ping
+			// if it doesn't respond, we don't count it as error but continue with a normal ping
 			ping_server->SetCryptPingReplyPending(true);
 			uint32 nPacketLen = 4 + (uint8)(rand() % 16); // max padding 16 bytes
 			BYTE* pRawPacket = new BYTE[nPacketLen];
@@ -633,18 +628,17 @@ bool CServerList::SaveServermetToFile()
 	if (thePrefs.GetLogFileSaving())
 		AddDebugLogLine(false, _T("Saving servers list file \"%s\""), SERVER_MET_FILENAME);
 	m_nLastSaved = ::GetTickCount();
-	CString newservermet(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
-	newservermet += SERVER_MET_FILENAME _T(".new");
+	const CString emconf(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+	const CString newservermet(emconf + SERVER_MET_FILENAME _T(".new"));
+
 	CSafeBufferedFile servermet;
 	CFileException fexp;
 	if (!servermet.Open(newservermet, CFile::modeWrite|CFile::modeCreate|CFile::typeBinary|CFile::shareDenyWrite, &fexp)){
 		CString strError(GetResString(IDS_ERR_SAVESERVERMET));
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
-			strError += _T(" - ");
-			strError += szError;
-		}
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+		if (GetExceptionMessage(fexp, szError, ARRSIZE(szError)))
+			strError.AppendFormat(_T(" - %s"), szError);
+		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 		return false;
 	}
 	setvbuf(servermet.m_pStream, NULL, _IOFBF, 16384);
@@ -652,10 +646,10 @@ bool CServerList::SaveServermetToFile()
 	try{
 		servermet.WriteUInt8(0xE0);
 
-		UINT fservercount = list.GetCount();
+		INT_PTR fservercount = list.GetCount();
 		servermet.WriteUInt32(fservercount);
 
-		for (UINT j = 0; j < fservercount; j++)
+		for (INT_PTR j = 0; j < fservercount; ++j)
 		{
 			const CServer* nextserver = GetServerAt(j);
 
@@ -794,25 +788,21 @@ bool CServerList::SaveServermetToFile()
 		}
 		servermet.Close();
 
-		CString curservermet(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
-		CString oldservermet(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
-		curservermet += SERVER_MET_FILENAME;
-		oldservermet += _T("server_met.old");
+		const CString curservermet(emconf + SERVER_MET_FILENAME);
+		const CString oldservermet(emconf + _T("server_met.old"));
 
 		if (_taccess(oldservermet, 0) == 0)
 			CFile::Remove(oldservermet);
 		if (_taccess(curservermet, 0) == 0)
-			CFile::Rename(curservermet,oldservermet);
-		CFile::Rename(newservermet,curservermet);
+			CFile::Rename(curservermet, oldservermet);
+		CFile::Rename(newservermet, curservermet);
 	}
 	catch(CFileException* error) {
 		CString strError(GetResString(IDS_ERR_SAVESERVERMET2));
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (GetExceptionMessage(*error, szError, ARRSIZE(szError))) {
-			strError += _T(" - ");
-			strError += szError;
-		}
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+		if (GetExceptionMessage(*error, szError, ARRSIZE(szError)))
+			strError.AppendFormat(_T(" - %s"), szError);
+		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 		error->Delete();
 		return false;
 	}
@@ -854,7 +844,7 @@ void CServerList::AddServersFromTextFile(const CString& strFilename) const
 			pos = strLine.Find(_T(','));
 			if (pos == -1)
 				continue;
-			CString strPort = strLine.Left(pos);
+			const CString strPort = strLine.Left(pos);
 			strLine = strLine.Mid(pos+1);
 
 			// Barry - fetch priority
@@ -911,13 +901,11 @@ bool CServerList::SaveStaticServers()
 	}
 
 	// write Unicode byte-order mark 0xFEFF
-	if (fputwc((wchar_t)0xFEFF, fpStaticServers) != _TEOF)
-	{
+	if (fputwc((wchar_t)0xFEFF, fpStaticServers) != _TEOF) {
 		bResult = true;
-		for (POSITION pos = list.GetHeadPosition(); pos;) {
+		for (POSITION pos = list.GetHeadPosition(); pos != NULL;) {
 			const CServer* pServer = list.GetNext(pos);
-			if (pServer->IsStaticMember())
-			{
+			if (pServer->IsStaticMember()) {
 				if (_ftprintf(fpStaticServers, _T("%s:%u,%u,%s\r\n"), pServer->GetAddress(), pServer->GetPort(), pServer->GetPreference(), (LPCTSTR)pServer->GetListName()) == EOF) {
 					bResult = false;
 					break;
@@ -949,11 +937,10 @@ int CServerList::GetPositionOfServer(const CServer* pServer) const
 
 void CServerList::RemoveDuplicatesByAddress(const CServer* pExceptThis)
 {
-	for (POSITION pos = list.GetHeadPosition(); pos;) {
+	for (POSITION pos = list.GetHeadPosition(); pos != NULL;) {
 		const CServer* pServer = list.GetNext(pos);
 		if (pServer != pExceptThis && _tcsicmp(pServer->GetAddress(), pExceptThis->GetAddress()) == 0
-			&& pServer->GetPort() == pExceptThis->GetPort())
-		{
+			&& pServer->GetPort() == pExceptThis->GetPort()) {
 			theApp.emuledlg->serverwnd->serverlistctrl.RemoveServer(pServer);
 			return;
 		}
@@ -962,10 +949,9 @@ void CServerList::RemoveDuplicatesByAddress(const CServer* pExceptThis)
 
 void CServerList::RemoveDuplicatesByIP(const CServer* pExceptThis)
 {
-	for (POSITION pos = list.GetHeadPosition(); pos;) {
+	for (POSITION pos = list.GetHeadPosition(); pos != NULL;) {
 		const CServer* pServer = list.GetNext(pos);
-		if (pServer != pExceptThis && pServer->GetIP() == pExceptThis->GetIP() && pServer->GetPort() == pExceptThis->GetPort())
-		{
+		if (pServer != pExceptThis && pServer->GetIP() == pExceptThis->GetIP() && pServer->GetPort() == pExceptThis->GetPort()) {
 			theApp.emuledlg->serverwnd->serverlistctrl.RemoveServer(pServer);
 			return;
 		}

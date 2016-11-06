@@ -218,7 +218,7 @@ BOOL CKademliaWnd::OnInitDialog()
 			m_pacONBSIPs->LoadList(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + ONBOOTSTRAP_STRINGS_PROFILE);
 	}
 
-	CheckDlgButton(IDC_RADCLIENTS,1);
+	CheckDlgButton(IDC_RADCLIENTS, 1);
 	ShowLookupGraph(false);
 
 	return true;
@@ -598,7 +598,7 @@ void CKademliaWnd::UpdateButtonTitle(bool bLookupGraph)
 	if (bLookupGraph) {
 		strText = GetResString(IDS_LOOKUPGRAPH);
 		if (m_kadLookupGraph->HasLookup())
-			strText += _T(" (") + m_kadLookupGraph->GetCurrentLookupTitle() + _T(")");
+			strText.AppendFormat(_T(" (%s)"), (LPCTSTR)m_kadLookupGraph->GetCurrentLookupTitle());
 	} else
 		strText.Format(_T("%s (%i)"), (LPCTSTR)GetResString(IDS_KADCONTACTLAB), m_contactListCtrl->GetItemCount());
 	m_pbtnWnd->SetWindowText(strText);

@@ -38,13 +38,13 @@ using namespace dami;
 
 namespace
 {
-  uint32 readSeconds(ID3_Reader& reader, size_t len)
+  size_t readSeconds(ID3_Reader& reader, size_t len)
   {
     io::ExitTrigger et(reader);
     io::WindowedReader wr(reader, len);
     ID3_Reader::pos_type beg = wr.getCur();
-    uint32 seconds = 0;
-    uint32 cur = 0;
+    size_t seconds = 0;
+    size_t cur = 0;
     while (!wr.atEnd())
     {
       ID3_Reader::char_type ch = wr.readChar();
@@ -68,7 +68,7 @@ namespace
 
   ID3_Frame* readTextFrame(ID3_Reader& reader, ID3_FrameID id, const String& desc = "")
   {
-    uint32 size = io::readLENumber(reader, 2);
+    size_t size = io::readLENumber(reader, 2);
     ID3D_NOTICE( "readTextFrame: size = " << size );
     if (size == 0)
     {
@@ -156,7 +156,7 @@ bool mm::parse(ID3_TagImpl& tag, ID3_Reader& rdr)
   io::WindowedReader dataWindow(rdr);
   dataWindow.setEnd(rdr.getCur());
 
-  uint32 offsets[5];
+  size_t offsets[5];
 
   io::WindowedReader offsetWindow(rdr, 20);
   for (i = 0; i < 5; ++i)
@@ -274,7 +274,7 @@ bool mm::parse(ID3_TagImpl& tag, ID3_Reader& rdr)
 
   // Parse the image binary at offset 1
   dataWindow.setCur(offsets[1]);
-  uint32 imgSize = io::readLENumber(dataWindow, 4);
+  size_t imgSize = io::readLENumber(dataWindow, 4);
   if (imgSize == 0)
   {
     // no image binary.  don't do anything.
@@ -297,7 +297,7 @@ bool mm::parse(ID3_TagImpl& tag, ID3_Reader& rdr)
         mimetype += imgExt;
         frame->GetField(ID3FN_MIMETYPE)->Set(mimetype.c_str());
         frame->GetField(ID3FN_IMAGEFORMAT)->Set("");
-        frame->GetField(ID3FN_PICTURETYPE)->Set(static_cast<unsigned int>(0));
+        frame->GetField(ID3FN_PICTURETYPE)->Set(static_cast<size_t>(0));
         frame->GetField(ID3FN_DESCRIPTION)->Set("");
         frame->GetField(ID3FN_DATA)->Set(reinterpret_cast<const uchar*>(imgData.data()), imgData.size());
         tag.AttachFrame(frame);
@@ -328,7 +328,7 @@ bool mm::parse(ID3_TagImpl& tag, ID3_Reader& rdr)
   tag.AttachFrame(readTextFrame(dataWindow, ID3FID_COMMENT, "MusicMatch_Serial"));
 
   // 2 bytes for track
-  uint32 trkNum = io::readLENumber(dataWindow, 2);
+  size_t trkNum = io::readLENumber(dataWindow, 2);
   if (trkNum > 0)
   {
     String trkStr = toString(trkNum);

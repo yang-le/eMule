@@ -214,6 +214,8 @@ BOOL CArchivePreviewDlg::OnInitDialog()
 	AddAnchor(IDC_ARCHPROGRESS, BOTTOM_LEFT, BOTTOM_RIGHT);
 	AddAnchor(IDC_FILELIST, TOP_LEFT, BOTTOM_RIGHT);
 
+	AddAllOtherAnchors();
+
 	// Win98: Explicitly set to Unicode to receive Unicode notifications.
 	m_ContentList.SendMessage(CCM_SETUNICODEFORMAT, TRUE);
 	// To support full sorting of the archive entries list we'd need a separate list which
@@ -458,24 +460,24 @@ int CArchivePreviewDlg::ShowAceResults(int succ, archiveScannerThreadParams_s* t
 	// general info / archive attribs
 	CString status;
 	if (statusEncrypted)
-		status+= GetResString(IDS_PASSWPROT);
+		status += GetResString(IDS_PASSWPROT);
 
 	if (tp->ai->ACEhdr) {
 		if (tp->ai->ACEhdr->HEAD_FLAGS & 0x8000){
 			if (!status.IsEmpty()) status+=_T(',');
-			status+= _T("Solid");
+			status += _T("Solid");
 		}
 		if (tp->ai->ACEhdr->HEAD_FLAGS & 0x4000){
 			if (!status.IsEmpty()) status+=_T(',');
-			status+= _T("Locked");
+			status += _T("Locked");
 		}
 		if (tp->ai->ACEhdr->HEAD_FLAGS & 0x2000){
 			if (!status.IsEmpty()) status+=_T(',');
-			status+= _T("RecoveryRec");
+			status += _T("RecoveryRec");
 		}
 		if (tp->ai->ACEhdr->COMMENT_SIZE > 0){
 			if (!status.IsEmpty()) status+=_T(',');
-			status+= GetResString(IDS_COMMENT);
+			status += GetResString(IDS_COMMENT);
 		}
 	}
 
@@ -793,7 +795,7 @@ int CArchivePreviewDlg::ShowRarResults(int succ, archiveScannerThreadParams_s* t
 int CArchivePreviewDlg::ShowZipResults(int succ, archiveScannerThreadParams_s* tp) {
 
 	if (succ==0) {
-		SetDlgItemText(IDC_INFO_STATUS, (LPCTSTR)GetResString(IDS_ARCPREV_INSUFFDATA));
+		SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPREV_INSUFFDATA));
 		return 1;
 	}
 
@@ -802,12 +804,11 @@ int CArchivePreviewDlg::ShowZipResults(int succ, archiveScannerThreadParams_s* t
 	UINT uArchiveFileEntries = 0;
 
 	if (tp->ai->bZipCentralDir)
-		SetDlgItemText(IDC_INFO_STATUS, (LPCTSTR)GetResString(IDS_ARCPREV_DIRSUCCREAD));
+		SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPREV_DIRSUCCREAD));
 	else
-		SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPREV_DIRNOTFOUND)	+ _T(" ") +
-										GetResString(IDS_ARCPARSED)				+ _T(" ") +
-										(tp->ai->centralDirectoryEntries->IsEmpty()?GetResString(IDS_ARCPREV_INSUFFDATA):
-										GetResString(IDS_ARCPREV_LISTMAYBEINCOMPL)) );
+		SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPREV_DIRNOTFOUND) + _T(" ")
+									+	GetResString(IDS_ARCPARSED)	+ _T(" ")
+									+	GetResString(tp->ai->centralDirectoryEntries->IsEmpty() ? IDS_ARCPREV_INSUFFDATA : IDS_ARCPREV_LISTMAYBEINCOMPL) );
 
 	bool statusEncrypted=false;
 	if (!tp->ai->centralDirectoryEntries->IsEmpty())
@@ -993,7 +994,7 @@ void CArchivePreviewDlg::UpdateArchiveDisplay(bool doscan) {
 	if (m_paFiles == NULL || m_paFiles->GetSize() == 0)
 		return;
 
-	CShareableFile* file=STATIC_DOWNCAST(CShareableFile, (*m_paFiles)[0]);
+	CShareableFile* file = STATIC_DOWNCAST(CShareableFile, (*m_paFiles)[0]);
 
 	GetDlgItem(IDC_RESTOREARCH)->EnableWindow( file->IsPartFile()  &&
 		(((CPartFile*)file)->IsArchive(true)) &&
@@ -1016,7 +1017,7 @@ void CArchivePreviewDlg::UpdateArchiveDisplay(bool doscan) {
 			SetDlgItemText(IDC_INFO_TYPE, _T("ISO"));
 			break;
 		default:
-			SetDlgItemText(IDC_INFO_TYPE, (LPCTSTR)GetResString(IDS_ARCPREV_UNKNOWNFORMAT));
+			SetDlgItemText(IDC_INFO_TYPE, GetResString(IDS_ARCPREV_UNKNOWNFORMAT));
 			return;
 	}
 
@@ -1031,8 +1032,8 @@ void CArchivePreviewDlg::UpdateArchiveDisplay(bool doscan) {
 	CTypedPtrList<CPtrList, Gap_Struct*> *filled = new CTypedPtrList<CPtrList, Gap_Struct*>;
 	if (file->IsPartFile()) {
 		((CPartFile*)(file))->GetFilledList(filled);
-		if (filled->GetCount()==0) {
-			SetDlgItemText(IDC_INFO_STATUS, (LPCTSTR)GetResString(IDS_ARCPREV_INSUFFDATA));
+		if (filled->IsEmpty()) {
+			SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPREV_INSUFFDATA));
 			delete filled;
 			delete ai;
 			return;
@@ -1045,7 +1046,7 @@ void CArchivePreviewDlg::UpdateArchiveDisplay(bool doscan) {
 		filled->AddTail(gap);
 	}
 
-	SetDlgItemText(IDC_INFO_STATUS, (LPCTSTR)GetResString(IDS_ARCPREV_PLEASEWAIT));
+	SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPREV_PLEASEWAIT));
 
 	switch(type) {
 		case ARCHIVE_ZIP:
@@ -1062,8 +1063,8 @@ void CArchivePreviewDlg::UpdateArchiveDisplay(bool doscan) {
 	}
 
 	// prepare threadparams
-	archiveScannerThreadParams_s *tp= new archiveScannerThreadParams_s;
-	m_activeTParams=tp;
+	archiveScannerThreadParams_s *tp = new archiveScannerThreadParams_s;
+	m_activeTParams = tp;
 	tp->ai=ai;
 	tp->file=file;
 	tp->filled=filled;
@@ -1075,7 +1076,7 @@ void CArchivePreviewDlg::UpdateArchiveDisplay(bool doscan) {
 	// start scanning thread
 	if (AfxBeginThread(RunArchiveScanner, (LPVOID)tp, THREAD_PRIORITY_BELOW_NORMAL) == NULL) {
 		FreeMemory(tp);
-		SetDlgItemText(IDC_INFO_STATUS, (LPCTSTR)GetResString(IDS_ERROR));
+		SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ERROR));
 	}
 }
 
@@ -1117,7 +1118,7 @@ LRESULT CArchivePreviewDlg::ShowScanResults(WPARAM wParam, LPARAM lParam)
 {
 	CWaitCursor curHourglass;
 
-	int ret = wParam;
+	int ret = static_cast<int>(wParam);
 	archiveScannerThreadParams_s* tp = (archiveScannerThreadParams_s*)lParam;
 	ASSERT( tp->ownerHwnd == m_hWnd );
 
@@ -1126,7 +1127,7 @@ LRESULT CArchivePreviewDlg::ShowScanResults(WPARAM wParam, LPARAM lParam)
 	{
 		m_progressbar.SetPos(0);
 		if (ret == -1) {
-			SetDlgItemText(IDC_INFO_STATUS, (LPCTSTR)GetResString(IDS_IMP_ERR_IO));
+			SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_IMP_ERR_IO));
 		}
 		else if (tp->m_bIsValid) {
 
@@ -1151,19 +1152,18 @@ LRESULT CArchivePreviewDlg::ShowScanResults(WPARAM wParam, LPARAM lParam)
 				m_ContentList.SetColumnWidth(5, 0);
 			}
 
-
 			switch (tp->type) {
-				case ARCHIVE_ZIP:
-					ShowZipResults(ret, tp);
-					break;
-				case ARCHIVE_RAR:
-					ShowRarResults(ret, tp);
-					break;
-				case ARCHIVE_ACE:
-					ShowAceResults(ret, tp);
-					break;
-				case IMAGE_ISO:
-					ShowISOResults(ret,tp);
+			case ARCHIVE_ZIP:
+				ShowZipResults(ret, tp);
+				break;
+			case ARCHIVE_RAR:
+				ShowRarResults(ret, tp);
+				break;
+			case ARCHIVE_ACE:
+				ShowAceResults(ret, tp);
+				break;
+			case IMAGE_ISO:
+				ShowISOResults(ret, tp);
 			}
 		}
 		ASSERT( tp == m_activeTParams );

@@ -20,52 +20,28 @@ class CSearchAttr
 {
 public:
 	CSearchAttr()
-	{
-		m_iTag = FT_FILENAME;
-		(void)m_str;
-		m_uIntegerOperator = ED2K_SEARCH_OP_EQUAL;
-		m_nNum = 0;
-	}
+		: m_iTag(FT_FILENAME), m_str(), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL), m_nNum(0)
+	{}
 
 	CSearchAttr(LPCSTR pszString)
-	{
-		m_iTag = FT_FILENAME;
-		m_str = pszString;
-		m_uIntegerOperator = ED2K_SEARCH_OP_EQUAL;
-		m_nNum = 0;
-	}
+		: m_iTag(FT_FILENAME), m_str(pszString), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL), m_nNum(0)
+	{}
 
 	explicit CSearchAttr(const CStringA* pstrString)
-	{
-		m_iTag = FT_FILENAME;
-		m_str = *pstrString;
-		m_uIntegerOperator = ED2K_SEARCH_OP_EQUAL;
-		m_nNum = 0;
-	}
+		: m_iTag(FT_FILENAME), m_str(*pstrString), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL), m_nNum(0)
+	{}
 
 	CSearchAttr(int iTag, UINT uIntegerOperator, uint64 nSize)
-	{
-		m_iTag = iTag;
-		(void)m_str;
-		m_uIntegerOperator = uIntegerOperator;
-		m_nNum = nSize;
-	}
+		: m_iTag(iTag), m_str(), m_uIntegerOperator(uIntegerOperator), m_nNum(nSize)
+	{}
 
 	CSearchAttr(int iTag, LPCSTR pszString)
-	{
-		m_iTag = iTag;
-		m_str = pszString;
-		m_uIntegerOperator = ED2K_SEARCH_OP_EQUAL;
-		m_nNum = 0;
-	}
+		: m_iTag(iTag), m_str(pszString), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL), m_nNum(0)
+	{}
 
 	CSearchAttr(int iTag, const CStringA* pstrString)
-	{
-		m_iTag = iTag;
-		m_str = *pstrString;
-		m_uIntegerOperator = ED2K_SEARCH_OP_EQUAL;
-		m_nNum = 0;
-	}
+		: m_iTag(iTag), m_str(*pstrString), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL), m_nNum(0)
+	{}
 
 	CString DbgGetAttr() const
 	{
@@ -87,19 +63,19 @@ public:
 			case FT_MEDIA_ALBUM:
 			case FT_MEDIA_ARTIST:
 				ASSERT( m_uIntegerOperator == ED2K_SEARCH_OP_EQUAL );
-				strDbg.AppendFormat(_T("%s=%s"), (LPCTSTR)DbgGetFileMetaTagName(m_iTag), (LPCTSTR)OptUtf8ToStr(m_str));
+				strDbg += DbgGetFileMetaTagName(m_iTag) + _T('=') + OptUtf8ToStr(m_str);
 				break;
 			default:
 				ASSERT( m_iTag == FT_FILENAME );
-				strDbg.AppendFormat(_T("\"%s\""), (LPCTSTR)OptUtf8ToStr(m_str));
+				strDbg += _T('\"') + OptUtf8ToStr(m_str) + _T('\"');
 		}
 		return strDbg;
 	}
 
+	uint64 m_nNum;
 	int m_iTag;
 	CStringA m_str;
 	UINT m_uIntegerOperator;
-	uint64 m_nNum;
 };
 
 
@@ -107,9 +83,8 @@ class CSearchExpr
 {
 public:
 	CSearchExpr()
-	{
-		(void)m_aExpr;
-	}
+		: m_aExpr()
+	{}
 
 	explicit CSearchExpr(const CSearchAttr* pAttr)
 	{

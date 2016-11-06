@@ -62,7 +62,7 @@ CFileDetailDialogName::~CFileDetailDialogName()
 {
 }
 
-void CFileDetailDialogName::OnTimer(UINT /*nIDEvent*/)
+void CFileDetailDialogName::OnTimer(UINT_PTR /*nIDEvent*/)
 {
 	RefreshData();
 }

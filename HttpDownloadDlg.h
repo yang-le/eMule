@@ -57,7 +57,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 	DECLARE_DYNAMIC(CHttpDownloadDlg);
 
-	static void CALLBACK _OnStatusCallBack(HINTERNET hInternet, DWORD dwContext, DWORD dwInternetStatus,
+	static void CALLBACK _OnStatusCallBack(HINTERNET hInternet, DWORD_PTR dwContext, DWORD dwInternetStatus,
 										   LPVOID lpvStatusInformation, DWORD dwStatusInformationLength);
 	void OnStatusCallBack(HINTERNET hInternet, DWORD dwInternetStatus,
 						  LPVOID lpvStatusInformation, DWORD dwStatusInformationLength);

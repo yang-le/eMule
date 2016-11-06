@@ -109,7 +109,7 @@ public:
   ID3_Err    GetLastError();
 
   ID3_Frame* Find(ID3_FrameID) const;
-  ID3_Frame* Find(ID3_FrameID, ID3_FieldID, uint32) const;
+  ID3_Frame* Find(ID3_FrameID, ID3_FieldID, size_t) const;
   ID3_Frame* Find(ID3_FrameID, ID3_FieldID, const char*) const;
   ID3_Frame* Find(ID3_FrameID, ID3_FieldID, const unicode_t*) const;
 

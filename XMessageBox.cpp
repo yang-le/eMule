@@ -380,7 +380,7 @@ public:
 	UINT	GetDefaultButtonId() const			{ return m_nDefId; }
 	void	SetDefaultButtonId(UINT nDefId)		{ m_nDefId = nDefId; }
 	int		GetDefaultButton() const			{ return m_nDefButton; }
-	int		GetReturnValue() const				{ return m_nReturnValue; }
+	INT_PTR	GetReturnValue() const				{ return m_nReturnValue; }
 	BOOL	IsEnded() const						{ return m_bEnded; }
 
 // Operations
@@ -397,7 +397,7 @@ public:
 						CXRect& buttonrow,
 						CXRect& checkboxrect,
 						LPCTSTR lpszButtonCaption);
-	int		Display();
+	INT_PTR		Display();
 
 // Implementation
 protected:
@@ -440,7 +440,7 @@ protected:
 	int			m_nButtonTimeoutExtraWidth;	// timeout button extra width in pixels
 	int			m_nButtonHeight;	// button height in pixels
 	int			m_nDoNotAskAgainHeight;	// checkbox height in pixels
-	int			m_nReturnValue;		// dialog return value
+	INT_PTR		m_nReturnValue;		// dialog return value
 	int			m_nLine;			// line number (for saving DoNotAsk state)
 	UINT		m_nMaxID;			// max control id (one more)
 	UINT		m_nDefId;			// button number of default button
@@ -634,11 +634,11 @@ static LPTSTR encode(LPTSTR str)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-int XMessageBox(HWND hwnd,
-				LPCTSTR lpszMessage,
-				LPCTSTR lpszCaption /*= NULL*/,
-				UINT nStyle /*= MB_OK | MB_ICONEXCLAMATION*/,
-				XMSGBOXPARAMS * pXMB /*= NULL*/)
+INT_PTR XMessageBox(HWND hwnd,
+					LPCTSTR lpszMessage,
+					LPCTSTR lpszCaption /*= NULL*/,
+					UINT nStyle /*= MB_OK | MB_ICONEXCLAMATION*/,
+					XMSGBOXPARAMS * pXMB /*= NULL*/)
 {
 	TRACE(_T("in XMessageBox\n"));
 	_ASSERTE(lpszMessage);
@@ -729,9 +729,7 @@ int XMessageBox(HWND hwnd,
 	if ((nStyle & MB_NOSOUND) == 0)
 		::MessageBeep(nStyle & MB_ICONMASK);
 
-	int rc = dlg.Display();
-
-	return rc;
+	return dlg.Display();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -869,7 +867,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 		{
 			// looks like a resource id
 			if (::LoadString(hInstanceStrings,
-							 LOWORD((DWORD)lpszMessage),
+							 LOWORD(lpszMessage),
 							 m_lpszMessage,
 							 MessageSize-1) == 0)
 				m_lpszMessage[0] = _T('\0');
@@ -890,7 +888,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 		{
 			// looks like a resource id
 			if (::LoadString(hInstanceStrings,
-							 LOWORD((DWORD)lpszCaption),
+							 LOWORD(lpszCaption),
 							 m_lpszCaption,
 							 MessageSize-1) == 0)
 				m_lpszCaption[0] = _T('\0');
@@ -1008,7 +1006,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 	{
 		SIZE size;
 		::GetTextExtentPoint32(hdc, m_szButtonText[button_index],
-			_tcslen(m_szButtonText[button_index]), &size);
+			static_cast<int>(_tcslen(m_szButtonText[button_index])), &size);
 
 		_ASSERTE(size.cx != 0);
 
@@ -1259,7 +1257,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 				break;
 
 			SIZE size;
-			::GetTextExtentPoint32(hdc, cp, _tcslen(cp), &size);	//+++1.7
+			::GetTextExtentPoint32(hdc, cp, static_cast<int>(_tcslen(cp)), &size);	//+++1.7
 
 			int w = size.cx + 20;
 			w = (w > button_width) ? w : button_width;
@@ -1467,7 +1465,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 				break;
 
 			SIZE size;
-			::GetTextExtentPoint32(hdc, cp, _tcslen(cp), &size);	//+++1.7
+			::GetTextExtentPoint32(hdc, cp, static_cast<int>(_tcslen(cp)), &size);	//+++1.7
 
 			int w = size.cx + 20;
 
@@ -2331,7 +2329,7 @@ BOOL CXDialogTemplate::OnKeyDown(HWND hWnd, WPARAM wParam, LPARAM /*lParam*/)
 
 ///////////////////////////////////////////////////////////////////////////////
 // CXDialogTemplate::Display
-int CXDialogTemplate::Display()
+INT_PTR CXDialogTemplate::Display()
 {
 	TRACE(_T("in CXDialogTemplate::Display\n"));
 	// The first step is to allocate memory to define the dialog. The information to be
@@ -2401,7 +2399,7 @@ int CXDialogTemplate::Display()
 		int nItemLength = sizeof(DLGITEMTEMPLATE) + 3 * sizeof(WORD);
 
 #ifdef _UNICODE
-		int nActualChars = _tcslen(m_pDlgItemArray[i]->m_pszCaption) + 1;	//+++1.5;
+		int nActualChars = static_cast<int>(_tcslen(m_pDlgItemArray[i]->m_pszCaption)) + 1;	//+++1.5;
 #else
 		int nActualChars = MultiByteToWideChar(CP_ACP, 0,
 								(LPCSTR)m_pDlgItemArray[i]->m_pszCaption,

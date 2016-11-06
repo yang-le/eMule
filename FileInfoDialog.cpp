@@ -748,22 +748,21 @@ LRESULT CFileInfoDialog::OnMediaInfoResult(WPARAM, LPARAM lParam)
 	CString buffer;
 
 	buffer = ami.strFileFormat;
-	if (!ami.strMimeType.IsEmpty())
-	{
+	if (!ami.strMimeType.IsEmpty()) {
 		if (!buffer.IsEmpty())
 			buffer += _T("; MIME type=");
-		buffer.AppendFormat(_T("%s"), (LPCTSTR)ami.strMimeType);
+		buffer += ami.strMimeType;
 	}
 	SetDlgItemText(IDC_FORMAT, buffer);
 
 	if (uTotalFileSize)
-		SetDlgItemText(IDC_FILESIZE, (LPCTSTR)CastItoXBytes(uTotalFileSize, false, false));
+		SetDlgItemText(IDC_FILESIZE, CastItoXBytes(uTotalFileSize, false, false));
 
 	if (ami.fFileLengthSec) {
 		CString strLength(CastSecondsToHM((time_t)ami.fFileLengthSec));
 		if (ami.bFileLengthEstimated)
-			strLength += _T(" (") + GetResString(IDS_ESTIMATED)+ _T(")");
-		SetDlgItemText(IDC_LENGTH, (LPCTSTR)strLength);
+			strLength.AppendFormat(_T(" (%s)"), (LPCTSTR)GetResString(IDS_ESTIMATED));
+		SetDlgItemText(IDC_LENGTH, strLength);
 	}
 
 	if (ami.iVideoStreams)
@@ -1164,7 +1163,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 						mi->strInfo << _T("   ") << GetResString(IDS_LENGTH) << _T(":\t") << strLength;
 						if (pFile->IsPartFile()){
 							mi->strInfo.SetSelectionCharFormat(mi->strInfo.m_cfRed);
-							mi->strInfo << _T(" (") + GetResString(IDS_ESTIMATED)+ _T(")");
+							mi->strInfo << _T(" (") + GetResString(IDS_ESTIMATED) + _T(")");
 							mi->strInfo.SetSelectionCharFormat(mi->strInfo.m_cfDef);
 						}
 						mi->strInfo << "\n";
@@ -1378,7 +1377,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 					nPicType   = frame->GetField(ID3FN_PICTURETYPE)->Get(),
 					nDataSize  = frame->GetField(ID3FN_DATA)->Size();
 					strFidInfo << _T("(") << sDesc << _T(")[") << sFormat << _T(", ")
-							   << nPicType << _T("]: ") << sMimeType << _T(", ") << nDataSize << _T(" bytes");
+							   << static_cast<UINT>(nPicType) << _T("]: ") << sMimeType << _T(", ") << static_cast<UINT>(nDataSize) << _T(" bytes");
 					delete[] sMimeType;
 					delete[] sDesc;
 					delete[] sFormat;
@@ -1393,7 +1392,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 					size_t
 					nDataSize = frame->GetField(ID3FN_DATA)->Size();
 					strFidInfo << _T("(") << sDesc << _T(")[")
-							   << sFileName << _T("]: ") << sMimeType << _T(", ") << nDataSize << _T(" bytes");
+							   << sFileName << _T("]: ") << sMimeType << _T(", ") << static_cast<UINT>(nDataSize) << _T(" bytes");
 					delete[] sMimeType;
 					delete[] sDesc;
 					delete[] sFileName;
@@ -1403,14 +1402,14 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 				{
 					wchar_t *sOwner = ID3_GetStringW(frame, ID3FN_OWNER);
 					size_t nDataSize = frame->GetField(ID3FN_DATA)->Size();
-					strFidInfo << sOwner << _T(", ") << nDataSize << _T(" bytes");
+					strFidInfo << sOwner << _T(", ") << static_cast<UINT>(nDataSize) << _T(" bytes");
 					delete[] sOwner;
 					break;
 				}
 				case ID3FID_PLAYCOUNTER:
 				{
 					size_t nCounter = frame->GetField(ID3FN_COUNTER)->Get();
-					strFidInfo << nCounter;
+					strFidInfo << static_cast<UINT>(nCounter);
 					break;
 				}
 				case ID3FID_POPULARIMETER:
@@ -1419,7 +1418,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 					size_t
 					nCounter = frame->GetField(ID3FN_COUNTER)->Get(),
 					nRating = frame->GetField(ID3FN_RATING)->Get();
-					strFidInfo << sEmail << _T(", counter=") << nCounter << _T(" rating=") << nRating;
+					strFidInfo << sEmail << _T(", counter=") << static_cast<UINT>(nCounter) << _T(" rating=") << static_cast<UINT>(nRating);
 					delete[] sEmail;
 					break;
 				}
@@ -1430,7 +1429,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 					size_t
 					nSymbol = frame->GetField(ID3FN_ID)->Get(),
 					nDataSize = frame->GetField(ID3FN_DATA)->Size();
-					strFidInfo << _T("(") << nSymbol << _T("): ") << sOwner << _T(", ") << nDataSize << _T(" bytes");
+					strFidInfo << _T("(") << static_cast<UINT>(nSymbol) << _T("): ") << sOwner << _T(", ") << static_cast<UINT>(nDataSize) << _T(" bytes");
 					break;
 				}
 				case ID3FID_SYNCEDLYRICS:
@@ -1550,7 +1549,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 						mi->strFileFormat = theMediaInfoDLL.Get(Handle, Stream_General, 0, _T("Format"), Info_Text, Info_Name);
 						str = theMediaInfoDLL.Get(Handle, Stream_General, 0, _T("Format_String"), Info_Text, Info_Name);
 						if (!str.IsEmpty() && str.Compare(mi->strFileFormat) != 0)
-							mi->strFileFormat += _T(" (") + str + _T(")");
+							mi->strFileFormat.AppendFormat(_T(" (%s)"), (LPCTSTR)str);
 
 						if (szExt[0] == _T('.') && szExt[1] != _T('\0'))
 						{
@@ -1654,7 +1653,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 							}
 							str = theMediaInfoDLL.Get(Handle, Stream_Video, 0, _T("Codec_String"), Info_Text, Info_Name);
 							if (!str.IsEmpty() && str.Compare(mi->strVideoFormat) != 0)
-								mi->strVideoFormat += _T(" (") + str + _T(")");
+								mi->strVideoFormat.AppendFormat(_T(" (%s)"), (LPCTSTR)str);
 
 							str = theMediaInfoDLL.Get(Handle, Stream_Video, 0, _T("Width"), Info_Text, Info_Name);
 							mi->video.bmiHeader.biWidth = _tstoi(str);
@@ -1694,7 +1693,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 								CString strVideoFormat = theMediaInfoDLL.Get(Handle, Stream_Video, s, _T("Codec"), Info_Text, Info_Name);
 								str = theMediaInfoDLL.Get(Handle, Stream_Video, s, _T("Codec_String"), Info_Text, Info_Name);
 								if (!str.IsEmpty() && str.Compare(strVideoFormat) != 0)
-									strVideoFormat += _T(" (") + str + _T(")");
+									strVideoFormat.AppendFormat(_T(" (%s)"), (LPCTSTR)str);
 								if (!strVideoFormat.IsEmpty())
 									mi->strInfo << _T("   ") << GetResString(IDS_CODEC) << _T(":\t") << strVideoFormat << _T("\n");
 
@@ -1751,13 +1750,13 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 								mi->strAudioFormat = str;
 								str = theMediaInfoDLL.Get(Handle, Stream_Audio, 0, _T("Codec_String"), Info_Text, Info_Name);
 								if (!str.IsEmpty() && str.Compare(mi->strAudioFormat) != 0)
-									mi->strAudioFormat += _T(" (") + str + _T(")");
+									mi->strAudioFormat.AppendFormat(_T(" (%s)"), (LPCTSTR)str);
 							}
 							else {
 								mi->strAudioFormat = theMediaInfoDLL.Get(Handle, Stream_Audio, 0, _T("Codec_String"), Info_Text, Info_Name);
 								str = theMediaInfoDLL.Get(Handle, Stream_Audio, 0, _T("Codec_Info"), Info_Text, Info_Name);
 								if (!str.IsEmpty() && str.Compare(mi->strAudioFormat) != 0)
-									mi->strAudioFormat += _T(" (") + str + _T(")");
+									mi->strAudioFormat.AppendFormat(_T(" (%s)"), (LPCTSTR)str);
 							}
 
 							str = theMediaInfoDLL.Get(Handle, Stream_Audio, 0, _T("Channels"), Info_Text, Info_Name);
@@ -1800,13 +1799,13 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 									strAudioFormat = str;
 									str = theMediaInfoDLL.Get(Handle, Stream_Audio, s, _T("Codec_String"), Info_Text, Info_Name);
 									if (!str.IsEmpty() && str.Compare(strAudioFormat) != 0)
-										strAudioFormat += _T(" (") + str + _T(")");
+										strAudioFormat.AppendFormat(_T(" (%s)"), (LPCTSTR)str);
 								}
 								else {
 									strAudioFormat = theMediaInfoDLL.Get(Handle, Stream_Audio, s, _T("Codec_String"), Info_Text, Info_Name);
 									str = theMediaInfoDLL.Get(Handle, Stream_Audio, s, _T("Codec_Info"), Info_Text, Info_Name);
 									if (!str.IsEmpty() && str.Compare(strAudioFormat) != 0)
-										strAudioFormat += _T(" (") + str + _T(")");
+										strAudioFormat.AppendFormat(_T(" (%s)"), (LPCTSTR)str);
 								}
 								if (!strAudioFormat.IsEmpty())
 									mi->strInfo << _T("   ") << GetResString(IDS_CODEC) << _T(":\t") << strAudioFormat << _T("\n");

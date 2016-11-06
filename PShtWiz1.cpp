@@ -26,6 +26,7 @@
 #include "ClientUDPSocket.h"
 #include "UPnPImpl.h"
 #include "UPnPImplWrapper.h"
+#include "opcodes.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -268,7 +269,7 @@ public:
 
 	afx_msg void OnEnChangeUDP();
 	afx_msg void OnEnChangeTCP();
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 
 	BOOL	OnKillActive();
 	void	OnOK();
@@ -383,21 +384,21 @@ void CPPgWiz1Ports::OnStartUPnP() {
 	GetDlgItem(IDC_UPNPSTATUS)->SetWindowText(GetResString(IDS_UPNPSETUP));
 	GetDlgItem(IDC_UPNPSTART)->EnableWindow(FALSE);
 	m_nUPnPTicks = 0;
-	((CProgressCtrl*)GetDlgItem(IDC_UPNPPROGRESS))->SetPos(0);
-	VERIFY( SetTimer(1, 1000, NULL) );
+	static_cast<CProgressCtrl *>(GetDlgItem(IDC_UPNPPROGRESS))->SetPos(0);
+	VERIFY( SetTimer(1, SEC2MS(1), NULL) );
 }
 
-void CPPgWiz1Ports::OnTimer(UINT /*nIDEvent*/){
+void CPPgWiz1Ports::OnTimer(UINT_PTR /*nIDEvent*/){
 	m_nUPnPTicks++;
 	if (theApp.m_pUPnPFinder && theApp.m_pUPnPFinder->GetImplementation()->ArePortsForwarded() == TRIS_UNKNOWN)
 	{
 		if (m_nUPnPTicks < 40){
-			((CProgressCtrl*)GetDlgItem(IDC_UPNPPROGRESS))->SetPos(m_nUPnPTicks);
+			static_cast<CProgressCtrl *>(GetDlgItem(IDC_UPNPPROGRESS))->SetPos(m_nUPnPTicks);
 			return;
 		}
 	}
 	if (theApp.m_pUPnPFinder && theApp.m_pUPnPFinder->GetImplementation()->ArePortsForwarded() == TRIS_TRUE){
-		((CProgressCtrl*)GetDlgItem(IDC_UPNPPROGRESS))->SetPos(40);
+		static_cast<CProgressCtrl *>(GetDlgItem(IDC_UPNPPROGRESS))->SetPos(40);
 		CString strMessage;
 		strMessage.Format(GetResString(IDS_UPNPSUCCESS), GetTCPPort(), GetUDPPort());
 		GetDlgItem(IDC_UPNPSTATUS)->SetWindowText(strMessage);
@@ -405,16 +406,17 @@ void CPPgWiz1Ports::OnTimer(UINT /*nIDEvent*/){
 		thePrefs.m_bEnableUPnP = true;
 	}
 	else{
-		((CProgressCtrl*)GetDlgItem(IDC_UPNPPROGRESS))->SetPos(0);
+		static_cast<CProgressCtrl *>(GetDlgItem(IDC_UPNPPROGRESS))->SetPos(0);
 		GetDlgItem(IDC_UPNPSTATUS)->SetWindowText(GetResString(IDS_UPNPFAILED));
 	}
 	GetDlgItem(IDC_UPNPSTART)->EnableWindow(TRUE);
 	VERIFY( KillTimer(1));
 }
 
-void CPPgWiz1Ports::ResetUPnPProgress(){
+void CPPgWiz1Ports::ResetUPnPProgress()
+{
 	KillTimer(1);
-	((CProgressCtrl*)GetDlgItem(IDC_UPNPPROGRESS))->SetPos(0);
+	static_cast<CProgressCtrl *>(GetDlgItem(IDC_UPNPPROGRESS))->SetPos(0);
 	GetDlgItem(IDC_UPNPSTART)->EnableWindow(TRUE);
 }
 
@@ -451,7 +453,7 @@ BOOL CPPgWiz1Ports::OnInitDialog()
 	CDlgPageWizard::OnInitDialog();
 	CheckDlgButton(IDC_UDPDISABLE, m_sUDP.IsEmpty() || m_sUDP == _T("0"));
 	GetDlgItem(IDC_UDP)->EnableWindow(IsDlgButtonChecked(IDC_UDPDISABLE) == 0);
-	((CProgressCtrl*)GetDlgItem(IDC_UPNPPROGRESS))->SetRange(0, 40);
+	static_cast<CProgressCtrl *>(GetDlgItem(IDC_UPNPPROGRESS))->SetRange(0, 40);
 	InitWindowStyles(this);
 
 	lastudp = m_sUDP;
@@ -680,18 +682,12 @@ BOOL CPPgWiz1Server::OnInitDialog()
 	return TRUE;
 }
 
-BOOL CPPgWiz1Server::OnSetActive(){
-	if (m_pbUDPDisabled != NULL){
+BOOL CPPgWiz1Server::OnSetActive()
+{
+	if (m_pbUDPDisabled != NULL) {
 		m_iKademlia = *m_pbUDPDisabled ? 0 : m_iKademlia;
-		if (*m_pbUDPDisabled){
-			CheckDlgButton(IDC_SHOWOVERHEAD, 0);
-			GetDlgItem(IDC_WIZARD_NETWORK_KADEMLIA)->EnableWindow(FALSE);
-		}
-		else{
-			CheckDlgButton(IDC_SHOWOVERHEAD, m_iKademlia);
-			GetDlgItem(IDC_WIZARD_NETWORK_KADEMLIA)->EnableWindow(TRUE);
-		}
-
+		CheckDlgButton(IDC_SHOWOVERHEAD, m_iKademlia);
+		GetDlgItem(IDC_WIZARD_NETWORK_KADEMLIA)->EnableWindow(!*m_pbUDPDisabled);
 	}
 	return CDlgPageWizard::OnSetActive();
 }

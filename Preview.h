@@ -72,12 +72,7 @@ protected:
 		SPreviewApp() {}
 		SPreviewApp(const SPreviewApp& rCopy)
 		{
-			strTitle = rCopy.strTitle;
-			strCommand = rCopy.strCommand;
-			strCommandArgs = rCopy.strCommandArgs;
-			astrExtensions.Copy(rCopy.astrExtensions);
-			ullMinStartOfFile = rCopy.ullMinStartOfFile;
-			ullMinCompletedSize = rCopy.ullMinCompletedSize;
+			*this = rCopy;
 		}
 
 		SPreviewApp& operator=(const SPreviewApp& rCopy)

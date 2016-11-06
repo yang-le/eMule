@@ -70,6 +70,6 @@ protected:
 	afx_msg void OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNmDblClkList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNmRClickList(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void TakeOver();
 };

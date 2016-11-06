@@ -87,7 +87,7 @@ CIni::CIni()
 	m_strSection  = GetDefaultSection();
 }
 
-CIni::CIni(CIni const &Ini)
+CIni::CIni(const CIni& Ini)
 	: m_strFileName(Ini.m_strFileName)
 	, m_strSection(Ini.m_strSection)
 	, m_bModulPath(Ini.m_bModulPath)
@@ -100,9 +100,10 @@ CIni::CIni(CIni const &Ini)
 		m_strSection = GetDefaultSection();
 }
 
-CIni::CIni(CString const &rstrFileName)
+CIni::CIni(const CString& rstrFileName)
 	: m_strFileName(rstrFileName)
 	, m_bModulPath(true)
+	, m_chBuffer()
 {
 	if (m_strFileName.IsEmpty())
 		m_strFileName = GetDefaultIniFile(m_bModulPath);
@@ -110,7 +111,7 @@ CIni::CIni(CString const &rstrFileName)
 	m_strSection = GetDefaultSection();
 }
 
-CIni::CIni(CString const &rstrFileName, CString const &rstrSection)
+CIni::CIni(const CString& rstrFileName, const CString& rstrSection)
 	: m_strFileName(rstrFileName)
 	, m_strSection(rstrSection)
 	, m_bModulPath(true)
@@ -123,7 +124,7 @@ CIni::CIni(CString const &rstrFileName, CString const &rstrSection)
 		m_strSection = GetDefaultSection();
 }
 
-CIni& CIni::operator=(CIni const& rIni)
+CIni& CIni::operator=(const CIni& rIni)
 {
 	m_strFileName = rIni.m_strFileName;
 	m_strSection = rIni.m_strSection;
@@ -293,12 +294,10 @@ CRect CIni::GetRect(LPCTSTR lpszEntry, CRect rectDefault, LPCTSTR lpszSection)
 
 COLORREF CIni::GetColRef(LPCTSTR lpszEntry, COLORREF crDefault, LPCTSTR lpszSection)
 {
-	int temp[3] = {	GetRValue(crDefault),
-					GetGValue(crDefault),
-					GetBValue(crDefault) };
+	int temp[3] = {	GetRValue(crDefault), GetGValue(crDefault), GetBValue(crDefault) };
 
 	CString strDefault;
-	strDefault.Format(_T("RGB(%hd,%hd,%hd)"), temp[0], temp[1], temp[2]);
+	strDefault.Format(_T("RGB(%d,%d,%d)"), temp[0], temp[1], temp[2]);
 
 	CString strColRef = GetString(lpszEntry, strDefault, lpszSection);
 	if (_stscanf(strColRef, _T("RGB(%d,%d,%d)"), temp, temp+1, temp+2) != 3)

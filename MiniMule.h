@@ -84,6 +84,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnClose();
 	afx_msg void OnDestroy();
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnNcLButtonDblClk(UINT nHitTest, CPoint point);
 };

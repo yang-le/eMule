@@ -75,7 +75,7 @@ public:
 	void	RemoveFile(CPartFile* toremove);
 	void	DeleteAll();
 
-	int		GetFileCount() const { return filelist.GetCount(); }
+	INT_PTR	GetFileCount() const { return filelist.GetCount(); }
 	UINT	GetDownloadingFileCount() const;
 	UINT	GetPausedFileCount() const;
 

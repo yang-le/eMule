@@ -72,7 +72,7 @@ void CCommentDialogLst::OnBnClickedApply()
 	CResizablePage::OnOK();
 }
 
-void CCommentDialogLst::OnTimer(UINT /*nIDEvent*/)
+void CCommentDialogLst::OnTimer(UINT_PTR /*nIDEvent*/)
 {
 	RefreshData(false);
 }
@@ -90,7 +90,7 @@ BOOL CCommentDialogLst::OnInitDialog()
 	Localize();
 
 	// start time for calling 'RefreshData'
-	VERIFY( (m_timer = SetTimer(301, 5000, 0)) != NULL );
+	VERIFY( (m_timer = SetTimer(301, SEC2MS(5), 0)) != NULL );
 
 	return TRUE;
 }

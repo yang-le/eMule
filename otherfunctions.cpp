@@ -64,10 +64,10 @@ extern bool GetDRM(LPCTSTR pszFilePath);
 CWebServices theWebServices;
 
 // Base chars for encode an decode functions
-static byte base16Chars[17] = "0123456789ABCDEF";
-static byte base32Chars[33] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+static const byte base16Chars[17] = "0123456789ABCDEF";
+static const byte base32Chars[33] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 #define BASE16_LOOKUP_MAX 23
-static byte base16Lookup[BASE16_LOOKUP_MAX][2] = {
+static const byte base16Lookup[BASE16_LOOKUP_MAX][2] = {
 	{ '0', 0x0 },
 	{ '1', 0x1 },
 	{ '2', 0x2 },
@@ -502,7 +502,7 @@ bool Ask4RegFix(bool checkOnly, bool dontAsk, bool bAutoTakeCollections)
 	DWORD dwModPathLen = ::GetModuleFileName(NULL, modbuffer, _countof(modbuffer));
 	if (dwModPathLen == 0 || dwModPathLen == _countof(modbuffer))
 		return false;
-	CString strCanonFileName = modbuffer;
+	CString strCanonFileName(modbuffer);
 	strCanonFileName.Replace(_T("%"), _T("%%"));
 	CString regbuffer;
 	regbuffer.Format(_T("\"%s\" \"%%1\""), (LPCTSTR)strCanonFileName);
@@ -1035,7 +1035,7 @@ int CWebServices::ReadAllServices()
 				if (!strUrlTemplate.IsEmpty())
 				{
 					bool bFileMacros = false;
-					static const LPCTSTR _apszMacros[] = {
+					static LPCTSTR _apszMacros[] = {
 						_T("#hashid"),
 						_T("#filesize"),
 						_T("#filename"),
@@ -1083,7 +1083,7 @@ int CWebServices::GetAllMenuEntries(CTitleMenu* pMenu, DWORD dwFlags)
 
 	int iMenuEntries = 0;
 	for (int i = 0; i < m_aServices.GetCount(); ++i) {
-		const SEd2kLinkService& rSvc = m_aServices.GetAt(i);
+		const SEd2kLinkService& rSvc = m_aServices[i];
 		if ((dwFlags & WEBSVC_GEN_URLS) && rSvc.bFileMacros)
 			continue;
 		if ((dwFlags & WEBSVC_FILE_URLS) && !rSvc.bFileMacros)
@@ -1096,9 +1096,9 @@ int CWebServices::GetAllMenuEntries(CTitleMenu* pMenu, DWORD dwFlags)
 
 bool CWebServices::RunURL(const CAbstractFile* file, UINT uMenuID)
 {
-	for (int i = 0; i < m_aServices.GetCount(); i++)
+	for (int i = 0; i < m_aServices.GetCount(); ++i)
 	{
-		const SEd2kLinkService& rSvc = m_aServices.GetAt(i);
+		const SEd2kLinkService& rSvc = m_aServices[i];
 		if (rSvc.uMenuID == uMenuID)
 		{
 			CString strUrlTemplate = rSvc.strUrl;
@@ -1130,7 +1130,7 @@ bool CWebServices::RunURL(const CAbstractFile* file, UINT uMenuID)
 
 			// Open URL
 			TRACE(_T("Starting URL: %s\n"), (LPCTSTR)strUrlTemplate);
-			return (int)ShellExecute(NULL, NULL, strUrlTemplate, NULL, thePrefs.GetMuleDirectory(EMULE_EXECUTEABLEDIR), SW_SHOWDEFAULT) > 32;
+			return ShellExecute(NULL, NULL, strUrlTemplate, NULL, thePrefs.GetMuleDirectory(EMULE_EXECUTEABLEDIR), SW_SHOWDEFAULT) > reinterpret_cast<HINSTANCE>(32);
 		}
 	}
 	return false;
@@ -2153,7 +2153,7 @@ typedef struct tagTHREADNAME_INFO
 		info.dwFlags = 0;
 		__try
 		{
-			RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(DWORD), (DWORD *)&info);
+			RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(DWORD), (const ULONG_PTR *)&info);
 		} __except (EXCEPTION_CONTINUE_EXECUTION) { }
 		delete [] buffer;
 	}
@@ -2627,15 +2627,15 @@ CString DbgGetClientTCPPacket(UINT protocol, UINT opcode, UINT size)
 
 CString DbgGetClientTCPOpcode(UINT protocol, UINT opcode)
 {
+	switch (protocol) {
+	case OP_EDONKEYPROT:
+		return DbgGetDonkeyClientTCPOpcode(opcode);
+	case OP_PACKEDPROT:
+	case OP_EMULEPROT:
+		return DbgGetMuleClientTCPOpcode(opcode);
+	}
 	CString str;
-	if (protocol == OP_EDONKEYPROT)
-		str.Format(_T("%s"), (LPCTSTR)DbgGetDonkeyClientTCPOpcode(opcode));
-	else if (protocol == OP_PACKEDPROT)
-		str.Format(_T("%s"), (LPCTSTR)DbgGetMuleClientTCPOpcode(opcode));
-	else if (protocol == OP_EMULEPROT)
-		str.Format(_T("%s"), (LPCTSTR)DbgGetMuleClientTCPOpcode(opcode));
-	else
-		str.Format(_T("protocol=0x%02x  opcode=0x%02x"), protocol, opcode);
+	str.Format(_T("protocol=0x%02x  opcode=0x%02x"), protocol, opcode);
 	return str;
 }
 
@@ -2810,7 +2810,7 @@ CString StripInvalidFilenameChars(const CString& strText)
 		if ((_TUCHAR)*pszSource>=_T('\x20') && badchar.Find(*pszSource)<0)
 			strDest += *pszSource;
 
-	static const LPCTSTR apszReservedFilenames[] = {
+	static LPCTSTR apszReservedFilenames[] = {
 		_T("NUL"), _T("CON"), _T("PRN"), _T("AUX"), _T("CLOCK$"),
 		_T("COM1"),_T("COM2"),_T("COM3"),_T("COM4"),_T("COM5"),_T("COM6"),_T("COM7"),_T("COM8"),_T("COM9"),
 		_T("LPT1"),_T("LPT2"),_T("LPT3"),_T("LPT4"),_T("LPT5"),_T("LPT6"),_T("LPT7"),_T("LPT8"),_T("LPT9")

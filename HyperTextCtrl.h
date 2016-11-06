@@ -267,7 +267,7 @@ public:
 	 void SetDefaultCursor(HCURSOR DefaultCursor)	{m_DefaultCursor = DefaultCursor;}
 	 void UpdateSize(bool bRepaint);
 protected:
-	bool check_bits(DWORD Value, DWORD Mask)		{return (Value & Mask) == Mask;}
+	bool check_bits(LONG_PTR Value, DWORD Mask)		{return (Value & Mask) == Mask;}
 	void UpdateFonts();
 	void UpdateVisLines();
 	void HighlightLink(CVisPart* Part, const CPoint& MouseCoords);

@@ -59,7 +59,7 @@ CFileDetailDialogInfo::~CFileDetailDialogInfo()
 {
 }
 
-void CFileDetailDialogInfo::OnTimer(UINT /*nIDEvent*/)
+void CFileDetailDialogInfo::OnTimer(UINT_PTR /*nIDEvent*/)
 {
 	RefreshData();
 }
@@ -145,7 +145,7 @@ void CFileDetailDialogInfo::RefreshData()
 		SetDlgItemText(IDC_FILECREATED, str);
 
 		// active download time
-		uint32 nDlActiveTime = file->GetDlActiveTime();
+		time_t nDlActiveTime = file->GetDlActiveTime();
 		if (nDlActiveTime)
 			str = CastSecondsToLngHM(nDlActiveTime);
 		else
@@ -325,9 +325,9 @@ void CFileDetailDialogInfo::RefreshData()
 	str.Format(GetResString(IDS_SOURCESINFO), uSources, uValidSources, uNNPSources, uA4AFSources);
 	SetDlgItemText(IDC_SOURCECOUNT, str);
 
-	SetDlgItemText(IDC_DATARATE, (LPCTSTR)CastItoXBytes(uDataRate, false, true));
+	SetDlgItemText(IDC_DATARATE, CastItoXBytes(uDataRate, false, true));
 
-	SetDlgItemText(IDC_TRANSFERRED, (LPCTSTR)CastItoXBytes(uTransferred, false, false));
+	SetDlgItemText(IDC_TRANSFERRED, CastItoXBytes(uTransferred, false, false));
 
 	str.Format(_T("%s (%.1f%%)"), (LPCTSTR)CastItoXBytes(uCompleted, false, false), uFileSize!=0 ? (uCompleted * 100.0 / uFileSize) : 0.0);
 	SetDlgItemText(IDC_COMPLSIZE, str);

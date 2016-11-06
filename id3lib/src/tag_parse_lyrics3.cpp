@@ -71,15 +71,15 @@ namespace
     return its;
   }
 
-  uint32 readTimeStamp(ID3_Reader& reader)
+  size_t readTimeStamp(ID3_Reader& reader)
   {
     reader.skipChars(1);
-    size_t sec = readIntegerString(reader, 2) * 60;
+    size_t sec = readIntegerString(reader, 2) * 60u;
     reader.skipChars(1);
     sec += readIntegerString(reader, 2);
     reader.skipChars(1);
     ID3D_NOTICE( "readTimeStamp(): timestamp = " << sec );
-    return sec * 1000;
+    return sec * 1000u;
   }
 
   bool findText(ID3_Reader& reader, const String& text)
@@ -229,7 +229,7 @@ bool lyr3::v2::parse(ID3_TagImpl& tag, ID3_Reader& reader)
   }
 
   reader.setCur(end - (6 + 9 + 128));
-  uint32 lyrSize = 0;
+  size_t lyrSize = 0;
 
   ID3_Reader::pos_type beg = reader.getCur();
   lyrSize = readIntegerString(reader, 6);
@@ -269,7 +269,7 @@ bool lyr3::v2::parse(ID3_TagImpl& tag, ID3_Reader& reader)
 
   while (!wr.atEnd())
   {
-    uint32 fldSize;
+    size_t fldSize;
 
     String fldName = io::readText(wr, 3);
     ID3D_NOTICE( "lyr3::v2::parse: fldName = " << fldName );

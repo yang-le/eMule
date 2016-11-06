@@ -40,7 +40,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnCbnSelChangeColorSelector();
-	afx_msg LONG OnColorPopupSelChange(UINT lParam, LONG wParam);
+	afx_msg LRESULT OnColorPopupSelChange(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnEnChangeCGraphScale() { SetModified(); }
 	afx_msg void OnCbnSelChangeCRatio()	{ SetModified(); }
 	afx_msg void OnHelp();

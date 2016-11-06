@@ -254,16 +254,13 @@ void* CxImage::Create(uint32_t dwWidth, uint32_t dwHeight, uint32_t wBpp, uint32
  */
 uint8_t* CxImage::GetBits(uint32_t row)
 {
-	if (pDib){
+	if (pDib) {
 		if (row) {
-			if (row<(uint32_t)head.biHeight){
+			if (row < (uint32_t)head.biHeight)
 				return ((uint8_t*)pDib + *(uint32_t*)pDib + GetPaletteSize() + (info.dwEffWidth * row));
-			} else {
-				return NULL;
-			}
-		} else {
-			return ((uint8_t*)pDib + *(uint32_t*)pDib + GetPaletteSize());
+			return NULL;
 		}
+		return ((uint8_t*)pDib + *(uint32_t*)pDib + GetPaletteSize());
 	}
 	return NULL;
 }

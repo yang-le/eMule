@@ -55,9 +55,9 @@ public:
   virtual size_t GetNumTextItems() const = 0;
 
   // integer field functions
-  virtual ID3_Field&    operator= (uint32 val) = 0;
-  virtual void          Set(uint32) = 0;
-  virtual uint32        Get() const = 0;
+  virtual ID3_Field&    operator= (size_t val) = 0;
+  virtual void          Set(size_t) = 0;
+  virtual size_t        Get() const = 0;
 
   // ASCII string field functions
   virtual ID3_Field&    operator= (const char* s) = 0;
@@ -122,12 +122,12 @@ public:
   char *ShortName(ID3_FrameID frameid);
   char *LongName(ID3_FrameID frameid);
   const char *Description(ID3_FrameID frameid);
-  int MaxFrameID();
-  int NumFields(ID3_FrameID frameid);
-  ID3_FieldID FieldID(ID3_FrameID frameid, int fieldnum);
-  ID3_FieldType FieldType(ID3_FrameID frameid, int fieldnum);
-  size_t FieldSize(ID3_FrameID frameid, int fieldnum);
-  flags_t FieldFlags(ID3_FrameID frameid, int fieldnum);
+  size_t MaxFrameID();
+  size_t NumFields(ID3_FrameID frameid);
+  ID3_FieldID FieldID(ID3_FrameID frameid, size_t fieldnum);
+  ID3_FieldType FieldType(ID3_FrameID frameid, size_t fieldnum);
+  size_t FieldSize(ID3_FrameID frameid, size_t fieldnum);
+  flags_t FieldFlags(ID3_FrameID frameid, size_t fieldnum);
 };
 
 #endif /* _ID3LIB_FIELD_H_ */

@@ -349,7 +349,7 @@ bool CClientUDPSocket::ProcessPacket(const BYTE* packet, UINT size, uint8 opcode
 					DebugRecv("OP_ReaskFilePing", NULL, reqfilehash, ip);
 				// Don't answer him. We probably have him on our queue already, but can't locate him. Force him to establish a TCP connection
 				if (!bSenderMultipleIpUnknown){
-					if (((uint32)theApp.uploadqueue->GetWaitingUserCount() + 50) > thePrefs.GetQueueSize())
+					if (theApp.uploadqueue->GetWaitingUserCount() + 50 > thePrefs.GetQueueSize())
 					{
 						if (thePrefs.GetDebugClientUDPLevel() > 0)
 							DebugSend("OP__QueueFull", NULL);
@@ -505,12 +505,14 @@ SocketSentBytes CClientUDPSocket::SendControlData(uint32 maxNumberOfBytesToSend,
 		UDPPack* cur_packet = controlpacket_queue.RemoveHead();
 		if (GetTickCount() - cur_packet->dwTime < UDPMAXQUEUETIME) {
 			uint32 nLen = cur_packet->packet->size + 2;
-			uchar* sendbuffer = new uchar[nLen];
-			memcpy(sendbuffer, cur_packet->packet->GetUDPHeader(), 2);
-			memcpy(sendbuffer+2, cur_packet->packet->pBuffer, cur_packet->packet->size);
+			int cLen = cur_packet->bEncrypt && (theApp.GetPublicIP() > 0 || cur_packet->bKad)
+				? EncryptOverheadSize(cur_packet->bKad) : 0;
+			uchar* sendbuffer = new uchar[nLen + cLen];
+			memcpy(sendbuffer+cLen, cur_packet->packet->GetUDPHeader(), 2);
+			memcpy(sendbuffer+cLen+2, cur_packet->packet->pBuffer, cur_packet->packet->size);
 
-			if (cur_packet->bEncrypt && (theApp.GetPublicIP() > 0 || cur_packet->bKad)) {
-				nLen = EncryptSendClient(&sendbuffer, nLen, cur_packet->pachTargetClientHashORKadID, cur_packet->bKad, cur_packet->nReceiverVerifyKey, (cur_packet->bKad ? Kademlia::CPrefs::GetUDPVerifyKey(cur_packet->dwIP) : 0u));
+			if (cLen) {
+				nLen = EncryptSendClient(sendbuffer, nLen, cur_packet->pachTargetClientHashORKadID, cur_packet->bKad, cur_packet->nReceiverVerifyKey, (cur_packet->bKad ? Kademlia::CPrefs::GetUDPVerifyKey(cur_packet->dwIP) : 0u));
 				//DEBUG_ONLY(  AddDebugLogLine(DLP_VERYLOW, false, _T("Sent obfuscated UDP packet to clientIP: %s, Kad: %s, ReceiverKey: %u"), (LPCTSTR)ipstr(cur_packet->dwIP), cur_packet->bKad ? _T("Yes") : _T("No"), cur_packet->nReceiverVerifyKey) );
 			}
 			if (SendTo(sendbuffer, nLen, cur_packet->dwIP, cur_packet->nPort) >= 0) {

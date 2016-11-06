@@ -56,31 +56,20 @@ void CIrcNickListCtrl::Init()
 
 int CALLBACK CIrcNickListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const Nick* pItem1 = (Nick*)lParam1;
-	const Nick* pItem2 = (Nick*)lParam2;
 	int iColumn = lParamSort >= 10 ? lParamSort - 10 : lParamSort;
-	int iResult = 0;
-	switch (iColumn)
-	{
-		case 0:
-			if (pItem1->m_iLevel == pItem2->m_iLevel)
-				iResult = pItem1->m_sNick.CompareNoCase(pItem2->m_sNick);
-			else
-			{
-				if (pItem1->m_iLevel == -1)
-					return 1;
-				if (pItem2->m_iLevel == -1)
-					return -1;
-				return pItem1->m_iLevel - pItem2->m_iLevel;
-			}
-			break;
-
-		default:
-			return 0;
+	if (iColumn)
+		return 0;
+	const Nick* pItem1 = reinterpret_cast<const Nick *>(lParam1);
+	const Nick* pItem2 = reinterpret_cast<const Nick *>(lParam2);
+	if (pItem1->m_iLevel != pItem2->m_iLevel) {
+		if (pItem1->m_iLevel == -1)
+			return 1;
+		if (pItem2->m_iLevel == -1)
+			return -1;
+		return pItem1->m_iLevel - pItem2->m_iLevel;
 	}
-	if (lParamSort >= 10)
-		iResult = -iResult;
-	return iResult;
+	int iResult = pItem1->m_sNick.CompareNoCase(pItem2->m_sNick);
+	return (lParamSort >= 10) ? -iResult : iResult;
 }
 
 void CIrcNickListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
@@ -423,12 +412,10 @@ bool CIrcNickListCtrl::ChangeAllNick(const CString& sOldNick, const CString& sNe
 
 void CIrcNickListCtrl::UpdateNickCount()
 {
-	CString sResource;
+	CString sResource(GetResString(IDS_IRC_NICK));
 	int iItemCount = GetItemCount();
 	if (iItemCount)
-		sResource.Format(_T("%s (%d)"), (LPCTSTR)GetResString(IDS_IRC_NICK), iItemCount);
-	else
-		sResource.Format(_T("%s"), (LPCTSTR)GetResString(IDS_IRC_NICK));
+		sResource.AppendFormat(_T(" (%d)"), iItemCount);
 	HDITEM hdi;
 	hdi.mask = HDI_TEXT;
 	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)sResource);
@@ -437,13 +424,11 @@ void CIrcNickListCtrl::UpdateNickCount()
 
 void CIrcNickListCtrl::Localize()
 {
-	CHeaderCtrl* pHeaderCtrl = GetHeaderCtrl();
-	CString sResource;
-	sResource = GetResString(IDS_STATUS);
+	CString sResource(GetResString(IDS_STATUS));
 	HDITEM hdi;
 	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)sResource);
 	hdi.mask = HDI_TEXT;
-	pHeaderCtrl->SetItem(1, &hdi);
+	GetHeaderCtrl()->SetItem(1, &hdi);
 	UpdateNickCount();
 }
 

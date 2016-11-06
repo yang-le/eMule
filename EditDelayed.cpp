@@ -71,7 +71,7 @@ void CEditDelayed::OnDestroy()
 	CEdit::OnDestroy();
 }
 
-void CEditDelayed::OnTimer(UINT nIDEvent)
+void CEditDelayed::OnTimer(UINT_PTR nIDEvent)
 {
 	//ASSERT( nIDEvent == DELAYED_EVALUATE_TIMER_ID );
 	if (nIDEvent == DELAYED_EVALUATE_TIMER_ID)

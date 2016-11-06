@@ -87,7 +87,7 @@ bool CKnownFileList::LoadKnownFiles()
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 		}
 		return false;
 	}
@@ -151,7 +151,7 @@ bool CKnownFileList::LoadCancelledFiles(){
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 		}
 		return false;
 	}
@@ -233,7 +233,7 @@ void CKnownFileList::Save()
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 	}
 	else{
 		setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
@@ -243,18 +243,13 @@ void CKnownFileList::Save()
 			UINT nRecordsNumber = 0;
 			bool bContainsAnyLargeFiles = false;
 			file.WriteUInt32(nRecordsNumber);
-			POSITION pos = m_Files_map.GetStartPosition();
-			while( pos != NULL )
-			{
+			for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
 				CKnownFile* pFile;
 				CCKey key;
-				m_Files_map.GetNextAssoc( pos, key, pFile );
-				if (!thePrefs.IsRememberingDownloadedFiles() && !theApp.sharedfiles->IsFilePtrInList(pFile)){
-					continue;
-				}
-				else{
+				m_Files_map.GetNextAssoc(pos, key, pFile);
+				if (thePrefs.IsRememberingDownloadedFiles() || theApp.sharedfiles->IsFilePtrInList(pFile)) {
 					pFile->WriteToFile(&file);
-					nRecordsNumber++;
+					++nRecordsNumber;
 					if (pFile->IsLargeFile())
 						bContainsAnyLargeFiles = true;
 				}
@@ -277,7 +272,7 @@ void CKnownFileList::Save()
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 			error->Delete();
 		}
 	}
@@ -294,7 +289,7 @@ void CKnownFileList::Save()
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 	}
 	else{
 		setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
@@ -309,12 +304,10 @@ void CKnownFileList::Save()
 			else{
 				UINT nRecordsNumber = m_mapCancelledFiles.GetCount();
 				file.WriteUInt32(nRecordsNumber);
-				POSITION pos = m_mapCancelledFiles.GetStartPosition();
-				while( pos != NULL )
-				{
+				for (POSITION pos = m_mapCancelledFiles.GetStartPosition(); pos != NULL;) {
 					int dwDummy;
 					CSKey key;
-					m_mapCancelledFiles.GetNextAssoc( pos, key, dwDummy );
+					m_mapCancelledFiles.GetNextAssoc(pos, key, dwDummy);
 					file.WriteHash16(key.m_key);
 					file.WriteUInt8(0);
 				}
@@ -334,7 +327,7 @@ void CKnownFileList::Save()
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 			error->Delete();
 		}
 	}

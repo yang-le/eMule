@@ -37,17 +37,17 @@ public:
 	uchar			m_aucHash[16];
 };
 
-template<> inline UINT AFXAPI HashKey(const CDeadSource& ds){
+template<> inline UINT AFXAPI HashKey(const CDeadSource& ds)
+{
 	uint32 hash = 0;
-	if (ds.m_dwID != 0){
+	if (ds.m_dwID != 0) {
 		hash = ds.m_dwID;
 		if (IsLowID(ds.m_dwID))
 			hash ^= ds.m_dwServerIP;
-	}
-	else{
-		ASSERT( isnulmd4(ds.m_aucHash) == 0 );
+	} else {
+		ASSERT(isnulmd4(ds.m_aucHash) == 0);
 		hash++;
-		for (int i = 0;i != 16;i++)
+		for (int i = 0; i != 16; ++i)
 			hash += (ds.m_aucHash[i]+1)*((i*i)+1);
 	}
 	return hash;
@@ -64,7 +64,7 @@ public:
 	void		AddDeadSource(const CUpDownClient* pToAdd);
 	void		RemoveDeadSource(const CUpDownClient* client);
 	bool		IsDeadSource(const CUpDownClient* pToCheck) const;
-	uint32		GetDeadSourcesCount() const { return m_mapDeadSources.GetCount(); }
+	INT_PTR		GetDeadSourcesCount() const { return m_mapDeadSources.GetCount(); }
 	void		Init(bool bGlobalList);
 
 protected:

@@ -402,68 +402,68 @@ void CDownloadClientsCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 int CALLBACK CDownloadClientsCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const CUpDownClient *item1 = (CUpDownClient *)lParam1;
-	const CUpDownClient *item2 = (CUpDownClient *)lParam2;
+	const CUpDownClient *item1 = reinterpret_cast<const CUpDownClient *>(lParam1);
+	const CUpDownClient *item2 = reinterpret_cast<const CUpDownClient *>(lParam2);
 	int iColumn = (lParamSort >= 100) ? lParamSort - 100 : lParamSort;
 	int iResult = 0;
-	switch (iColumn)
-	{
-		case 0:
-			if (item1->GetUserName() && item2->GetUserName())
-				iResult = CompareLocaleStringNoCase(item1->GetUserName(), item2->GetUserName());
-			else if (item1->GetUserName() == NULL)
-				iResult = 1; // place clients with no usernames at bottom
-			else if (item2->GetUserName() == NULL)
-				iResult = -1; // place clients with no usernames at bottom
-			break;
+	switch (iColumn) {
+	case 0: //user name
+		if (item1->GetUserName() && item2->GetUserName())
+			iResult = CompareLocaleStringNoCase(item1->GetUserName(), item2->GetUserName());
+		else if (item1->GetUserName() == NULL)
+			iResult = 1; // place clients with no usernames at bottom
+		else if (item2->GetUserName() == NULL)
+			iResult = -1; // place clients with no usernames at bottom
+		break;
 
-		case 1:
-			if (item1->GetClientSoft() == item2->GetClientSoft())
-			    iResult = item1->GetVersion() - item2->GetVersion();
-		    else
-				iResult = -(item1->GetClientSoft() - item2->GetClientSoft()); // invert result to place eMule's at top
-			break;
+	case 1: //version
+		if (item1->GetClientSoft() == item2->GetClientSoft())
+			iResult = item1->GetVersion() - item2->GetVersion();
+		else
+			iResult = -(item1->GetClientSoft() - item2->GetClientSoft()); // invert result to place eMule's at top
+		break;
 
-		case 2: {
-			const CKnownFile *file1 = item1->GetRequestFile();
-			const CKnownFile *file2 = item2->GetRequestFile();
-			if( (file1 != NULL) && (file2 != NULL))
-				iResult = CompareLocaleStringNoCase(file1->GetFileName(), file2->GetFileName());
-			else if (file1 == NULL)
-				iResult = 1;
-			else
-				iResult = -1;
-			break;
-		}
+	case 2: {
+		const CKnownFile *file1 = item1->GetRequestFile();
+		const CKnownFile *file2 = item2->GetRequestFile();
+		if ((file1 != NULL) && (file2 != NULL))
+			iResult = CompareLocaleStringNoCase(file1->GetFileName(), file2->GetFileName());
+		else if (file1 == NULL)
+			iResult = 1;
+		else
+			iResult = -1;
+		break;
+	}
 
-		case 3:
-			iResult = CompareUnsigned(item1->GetDownloadDatarate(), item2->GetDownloadDatarate());
-			break;
+	case 3: //download rate
+		iResult = CompareUnsigned(item1->GetDownloadDatarate(), item2->GetDownloadDatarate());
+		break;
 
-		case 4:
-			iResult = CompareUnsigned(item1->GetPartCount(), item2->GetPartCount());
-			break;
+	case 4: //part count
+		iResult = CompareUnsigned(item1->GetPartCount(), item2->GetPartCount());
+		break;
 
-		case 5:
-			iResult = CompareUnsigned(item1->GetSessionDown(), item2->GetSessionDown());
-			break;
+	case 5: //download sessions
+		iResult = CompareUnsigned(item1->GetSessionDown(), item2->GetSessionDown());
+		break;
 
-		case 6:
-			iResult = CompareUnsigned(item1->GetSessionUp(), item2->GetSessionUp());
-			break;
+	case 6:
+		iResult = CompareUnsigned(item1->GetSessionUp(), item2->GetSessionUp());
+		break;
 
-		case 7:
-			iResult = item1->GetSourceFrom() - item2->GetSourceFrom();
-			break;
+	case 7:
+		iResult = item1->GetSourceFrom() - item2->GetSourceFrom();
 	}
 
 	if (lParamSort >= 100)
 		iResult = -iResult;
 
 	//call secondary sortorder, if this one results in equal
-	int dwNextSort;
-	if (iResult == 0 && (dwNextSort = theApp.emuledlg->transferwnd->GetDownloadClientsList()->GetNextSortOrder(lParamSort)) != -1)
-		iResult = SortProc(lParam1, lParam2, dwNextSort);
+	if (iResult == 0) {
+		LPARAM dwNextSort = theApp.emuledlg->transferwnd->GetDownloadClientsList()->GetNextSortOrder(lParamSort);
+		if (dwNextSort != -1)
+			iResult = SortProc(lParam1, lParam2, dwNextSort);
+	}
 
 	return iResult;
 }
@@ -537,7 +537,6 @@ BOOL CDownloadClientsCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 			case MP_BOOT:
 				if (client->GetKadPort() && client->GetKadVersion() > 1)
 					Kademlia::CKademlia::Bootstrap(ntohl(client->GetIP()), client->GetKadPort());
-				break;
 		}
 	}
 	return true;

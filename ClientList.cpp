@@ -407,7 +407,7 @@ bool CClientList::ComparePriorUserhash(uint32 dwIP, uint16 nPort, void* pNewHash
 	return true;
 }
 
-UINT CClientList::GetClientsFromIP(uint32 dwIP) const
+INT_PTR CClientList::GetClientsFromIP(uint32 dwIP) const
 {
 	CDeletedClient* pResult;
 	if (m_trackedClientsList.Lookup(dwIP, pResult))
@@ -415,41 +415,40 @@ UINT CClientList::GetClientsFromIP(uint32 dwIP) const
 	return 0;
 }
 
-void CClientList::TrackBadRequest(const CUpDownClient* upcClient, int nIncreaseCounter){
+void CClientList::TrackBadRequest(const CUpDownClient* upcClient, int nIncreaseCounter)
+{
 	CDeletedClient* pResult = NULL;
-	if (upcClient->GetIP() == 0){
-		ASSERT( false );
+	if (upcClient->GetIP() == 0) {
+		ASSERT(false);
 		return;
 	}
-	if (m_trackedClientsList.Lookup(upcClient->GetIP(), pResult)){
+	if (m_trackedClientsList.Lookup(upcClient->GetIP(), pResult)) {
 		pResult->m_dwInserted = ::GetTickCount();
 		pResult->m_cBadRequest += nIncreaseCounter;
-	}
-	else{
+	} else {
 		CDeletedClient* ccToAdd = new CDeletedClient(upcClient);
 		ccToAdd->m_cBadRequest = nIncreaseCounter;
 		m_trackedClientsList.SetAt(upcClient->GetIP(), ccToAdd);
 	}
 }
 
-uint32 CClientList::GetBadRequests(const CUpDownClient* upcClient) const{
+uint32 CClientList::GetBadRequests(const CUpDownClient* upcClient) const
+{
 	CDeletedClient* pResult = NULL;
-	if (upcClient->GetIP() == 0){
-		ASSERT( false );
+	if (upcClient->GetIP() == 0) {
+		ASSERT(false);
 		return 0;
 	}
-	if (m_trackedClientsList.Lookup(upcClient->GetIP(), pResult)){
+	if (m_trackedClientsList.Lookup(upcClient->GetIP(), pResult))
 		return pResult->m_cBadRequest;
-	}
-	else
-		return 0;
+	return 0;
 }
 
-void CClientList::RemoveAllTrackedClients(){
-	POSITION pos = m_trackedClientsList.GetStartPosition();
-	uint32 nKey;
-	CDeletedClient* pResult;
-	while (pos != NULL){
+void CClientList::RemoveAllTrackedClients()
+{
+	for (POSITION pos = m_trackedClientsList.GetStartPosition(); pos != NULL;) {
+		uint32 nKey;
+		CDeletedClient* pResult;
 		m_trackedClientsList.GetNextAssoc(pos, nKey, pResult);
 		m_trackedClientsList.RemoveKey(nKey);
 		delete pResult;
@@ -462,17 +461,14 @@ void CClientList::Process()
 	// Cleanup banned client list
 	//
 	const uint32 cur_tick = ::GetTickCount();
-	if (m_dwLastBannCleanUp + BAN_CLEANUP_TIME < cur_tick)
-	{
+	if (m_dwLastBannCleanUp + BAN_CLEANUP_TIME < cur_tick) {
 		m_dwLastBannCleanUp = cur_tick;
 
-		POSITION pos = m_bannedList.GetStartPosition();
-		uint32 nKey;
-		uint32 dwBantime;
-		while (pos != NULL)
-		{
-			m_bannedList.GetNextAssoc( pos, nKey, dwBantime );
-			if (dwBantime + CLIENTBANTIME < cur_tick )
+		for (POSITION pos = m_bannedList.GetStartPosition(); pos != NULL;) {
+			uint32 nKey;
+			uint32 dwBantime;
+			m_bannedList.GetNextAssoc(pos, nKey, dwBantime);
+			if (dwBantime + CLIENTBANTIME < cur_tick)
 				RemoveBannedClient(nKey);
 		}
 	}
@@ -480,18 +476,15 @@ void CClientList::Process()
 	///////////////////////////////////////////////////////////////////////////
 	// Cleanup tracked client list
 	//
-	if (m_dwLastTrackedCleanUp + TRACKED_CLEANUP_TIME < cur_tick)
-	{
+	if (m_dwLastTrackedCleanUp + TRACKED_CLEANUP_TIME < cur_tick) {
 		m_dwLastTrackedCleanUp = cur_tick;
 		if (thePrefs.GetLogBannedClients())
 			AddDebugLogLine(false, _T("Cleaning up TrackedClientList, %i clients on List..."), m_trackedClientsList.GetCount());
-		POSITION pos = m_trackedClientsList.GetStartPosition();
-		uint32 nKey;
-		CDeletedClient* pResult;
-		while (pos != NULL)
-		{
-			m_trackedClientsList.GetNextAssoc( pos, nKey, pResult );
-			if (pResult->m_dwInserted + KEEPTRACK_TIME < cur_tick ){
+		for (POSITION pos = m_trackedClientsList.GetStartPosition(); pos != NULL;) {
+			uint32 nKey;
+			CDeletedClient* pResult;
+			m_trackedClientsList.GetNextAssoc(pos, nKey, pResult);
+			if (pResult->m_dwInserted + KEEPTRACK_TIME < cur_tick) {
 				m_trackedClientsList.RemoveKey(nKey);
 				delete pResult;
 			}

@@ -39,9 +39,7 @@ CFileIdentifierBase::CFileIdentifierBase()
 
 CFileIdentifierBase::CFileIdentifierBase(const CFileIdentifierBase& rFileIdentifier)
 {
-	md4cpy(m_abyMD4Hash, rFileIdentifier.m_abyMD4Hash);
-	m_bHasValidAICHHash = rFileIdentifier.m_bHasValidAICHHash;
-	m_AICHFileHash = rFileIdentifier.m_AICHFileHash;
+	*this = rFileIdentifier;
 }
 
 CFileIdentifierBase& CFileIdentifierBase::operator=(const CFileIdentifierBase& rFileIdentifier)

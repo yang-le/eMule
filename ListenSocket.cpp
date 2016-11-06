@@ -880,13 +880,12 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 						if (strReqDir == OP_INCOMPLETE_SHARED_FILES)
 						{
 							// get all shared files from download queue
-							int iQueuedFiles = theApp.downloadqueue->GetFileCount();
+							int iQueuedFiles = static_cast<int>(theApp.downloadqueue->GetFileCount());
 							for (int i = 0; i < iQueuedFiles; i++)
 							{
 								CPartFile* pFile = theApp.downloadqueue->GetFileByIndex(i);
-								if (pFile == NULL || pFile->GetStatus(true) != PS_READY || (pFile->IsLargeFile() && !client->SupportsLargeFiles()))
-									continue;
-								list.AddTail(pFile);
+								if (pFile != NULL && pFile->GetStatus(true) == PS_READY && (!pFile->IsLargeFile() || client->SupportsLargeFiles()))
+									list.AddTail(pFile);
 							}
 						}
 						else
@@ -921,11 +920,8 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 						CSafeMemFile tempfile(80);
 						tempfile.WriteString(strOrgReqDir, client->GetUnicodeSupport());
 						tempfile.WriteUInt32(list.GetCount());
-						while (list.GetCount())
-						{
-							theApp.sharedfiles->CreateOfferedFilePacket(list.GetHead(), &tempfile, NULL, client);
-							list.RemoveHead();
-						}
+						while (!list.IsEmpty())
+							theApp.sharedfiles->CreateOfferedFilePacket(list.RemoveHead(), &tempfile, NULL, client);
 
 						if (thePrefs.GetDebugClientTCPLevel() > 0)
 							DebugSend("OP__AskSharedFilesInDirectoryAnswer", client);
@@ -1843,7 +1839,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 					else
 					{
 						if (!bSenderMultipleIpUnknown){
-							if (((uint32)theApp.uploadqueue->GetWaitingUserCount() + 50) > thePrefs.GetQueueSize())
+							if (theApp.uploadqueue->GetWaitingUserCount() + 50 > thePrefs.GetQueueSize())
 							{
 								if (thePrefs.GetDebugClientUDPLevel() > 0)
 									DebugSend("OP__QueueFull", NULL);
@@ -2468,7 +2464,7 @@ void CListenSocket::StopListening()
 static int s_iAcceptConnectionCondRejected;
 
 int CALLBACK AcceptConnectionCond(LPWSABUF lpCallerId, LPWSABUF /*lpCallerData*/, LPQOS /*lpSQOS*/, LPQOS /*lpGQOS*/,
-								  LPWSABUF /*lpCalleeId*/, LPWSABUF /*lpCalleeData*/, GROUP FAR* /*g*/, DWORD /*dwCallbackData*/)
+								  LPWSABUF /*lpCalleeId*/, LPWSABUF /*lpCalleeData*/, GROUP FAR* /*g*/, DWORD_PTR /*dwCallbackData*/)
 {
 	if (lpCallerId && lpCallerId->buf && lpCallerId->len >= sizeof SOCKADDR_IN)
 	{
@@ -2503,8 +2499,7 @@ void CListenSocket::OnAccept(int nErrorCode)
 {
 	if (!nErrorCode)
 	{
-		m_nPendingConnections++;
-		if (m_nPendingConnections < 1){
+		if (++m_nPendingConnections < 1){
 			ASSERT(0);
 			m_nPendingConnections = 1;
 		}

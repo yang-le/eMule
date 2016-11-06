@@ -110,6 +110,7 @@ BOOL CCreditsThread::InitInstance()
 // NT does not like this at all
 void waitvrt(void)
 {
+#ifdef _M_IX86
 	__asm {
 			mov	dx,3dah
 	VRT:
@@ -121,6 +122,7 @@ void waitvrt(void)
 			test	al,8
 			jz		NoVRT
 	}
+#endif
 }
 
 void CCreditsThread::SingleStep()
@@ -430,8 +432,7 @@ void CCreditsThread::InitText()
 	m_arCredits.Add(sTmp);
 
 	m_arCredits.Add(_T("03:00:eMule"));
-	sTmp.Format(_T("02:01:Version %s"), (LPCTSTR)theApp.m_strCurVersionLong);
-	m_arCredits.Add(sTmp);
+	m_arCredits.Add(_T("02:01:Version ") + theApp.m_strCurVersionLong);
 	m_arCredits.Add(_T("01:06:Copyright (C) 2002-2015 Merkur"));
 	m_arCredits.Add(_T("S:50"));
 	m_arCredits.Add(_T("02:04:Developers"));

@@ -67,7 +67,7 @@ namespace Kademlia
 		    info.dwFlags = 0;
 		    __try
 		    {
-		        RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(DWORD), (DWORD *)&info);
+		        RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(DWORD), (const ULONG_PTR *)&info);
 		    } __except (EXCEPTION_CONTINUE_EXECUTION)
 	    { }
 	    delete[] pcharBuffer;
@@ -108,12 +108,12 @@ namespace Kademlia
 		    info.dwFlags = 0;
 		    __try
 		    {
-		        RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(DWORD), (DWORD *)&info);
+		        RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(DWORD), (const ULONG_PTR *)&info);
 		    } __except (EXCEPTION_CONTINUE_EXECUTION)
-	    { }
-	    delete [] pcharBuffer;
-	}
-	__except (EXCEPTION_CONTINUE_EXECUTION)
+		    { }
+		    delete [] pcharBuffer;
+		}
+		__except (EXCEPTION_CONTINUE_EXECUTION)
 		{}
 #else
 

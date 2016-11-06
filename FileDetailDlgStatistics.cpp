@@ -195,7 +195,7 @@ void CFileDetailDlgStatistics::RefreshData()
 		pop_bartrans.SetEmpty(false);
 		pop_bartrans.SetRange32(0, (int)(theApp.knownfiles->transferred/1024));
 		pop_bartrans.SetPos((int)(uTransferred/1024));
-		SetDlgItemText(IDC_STRANSFERRED, (LPCTSTR)CastItoXBytes(uTransferred, false, false));
+		SetDlgItemText(IDC_STRANSFERRED, CastItoXBytes(uTransferred, false, false));
 
 		pop_bar.SetEmpty(false);
 		pop_bar.SetRange32(0, theApp.knownfiles->requested);
@@ -228,7 +228,7 @@ void CFileDetailDlgStatistics::RefreshData()
 		{
 			SetDlgItemInt(IDC_FS_ONQUEUE_VAL, nQueueCount, FALSE);
 		}
-		SetDlgItemText(IDC_FS_UPLOADING_VAL, (LPCTSTR)CastItoXBytes(theApp.uploadqueue->GetDatarateForFile(*m_paFiles), false, true));
+		SetDlgItemText(IDC_FS_UPLOADING_VAL, CastItoXBytes(theApp.uploadqueue->GetDatarateForFile(*m_paFiles), false, true));
 
 
 		if (iFiles == 1)
@@ -310,7 +310,7 @@ void CFileDetailDlgStatistics::OnSysColorChange()
 	CResizablePage::OnSysColorChange();
 }
 
-void CFileDetailDlgStatistics::OnTimer(UINT nIDEvent)
+void CFileDetailDlgStatistics::OnTimer(UINT_PTR nIDEvent)
 {
 	if (nIDEvent == REFRESH_TIMER_ID)
 	{

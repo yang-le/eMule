@@ -199,7 +199,7 @@ void CCatDialog::OnBnClickedOk()
 	OnOK();
 }
 
-LRESULT CCatDialog::OnSelChange(UINT lParam, LONG /*wParam*/)
+LRESULT CCatDialog::OnSelChange(WPARAM /*wParam*/, LPARAM lParam)
 {
 	if (lParam == CLR_DEFAULT)
 		newcolor = (DWORD)-1;

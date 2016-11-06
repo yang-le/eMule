@@ -307,44 +307,44 @@ public:
 	void RestartServer();
 	void AddStatsLine(UpDown line);
 	void ReloadTemplates();
-	UINT GetSessionCount()	{ return m_Params.Sessions.GetCount();}
+	INT_PTR GetSessionCount()	{ return m_Params.Sessions.GetCount();}
 	bool IsRunning() const	{ return m_bServerWorking;}
 	CArray<UpDown>* GetPointsForWeb()	{return &m_Params.PointsForWeb;} // MobileMule
 protected:
-	static void		ProcessURL(ThreadData);
-	static void		ProcessFileReq(ThreadData Data);
+	static void		ProcessURL(const ThreadData& Data);
+	static void		ProcessFileReq(const ThreadData& Data);
 
 private:
-	static CString	_GetHeader(ThreadData, long lSession);
-	static CString	_GetFooter(ThreadData);
-	static CString	_GetServerList(ThreadData);
-	static CString	_GetTransferList(ThreadData);
-	static CString	_GetSharedFilesList(ThreadData);
-	static CString	_GetGraphs(ThreadData);
-	static CString	_GetLog(ThreadData);
-	static CString	_GetServerInfo(ThreadData);
-	static CString	_GetDebugLog(ThreadData);
-	static CString	_GetStats(ThreadData);
-	static CString  _GetKadDlg(ThreadData);
-	static CString	_GetPreferences(ThreadData);
-	static CString	_GetLoginScreen(ThreadData);
-	static CString	_GetConnectedServer(ThreadData);
-	static CString 	_GetAddServerBox(ThreadData Data);
-	static CString	_GetCommentlist(ThreadData Data);
+	static CString	_GetHeader(const ThreadData& Data, long lSession);
+	static CString	_GetFooter(const ThreadData& Data);
+	static CString	_GetServerList(const ThreadData& Data);
+	static CString	_GetTransferList(const ThreadData& Data);
+	static CString	_GetSharedFilesList(const ThreadData& Data);
+	static CString	_GetGraphs(const ThreadData& Data);
+	static CString	_GetLog(const ThreadData& Data);
+	static CString	_GetServerInfo(const ThreadData& Data);
+	static CString	_GetDebugLog(const ThreadData& Data);
+	static CString	_GetStats(const ThreadData& Data);
+	static CString  _GetKadDlg(const ThreadData& Data);
+	static CString	_GetPreferences(const ThreadData& Data);
+	static CString	_GetLoginScreen(const ThreadData& Data);
+	static CString	_GetConnectedServer(const ThreadData& Data);
+	static CString 	_GetAddServerBox(const ThreadData& Data);
+	static CString	_GetCommentlist(const ThreadData& Data);
 	static void		_RemoveServer(const CString& sIP, int nPort);
 	static void		_AddToStatic(const CString& sIP, int nPort);
 	static void		_RemoveFromStatic(const CString& sIP, int nPort);
 	static uchar*	_GetFileHash(const CString& sHash, uchar *FileHash);
 
-	static CString	_GetWebSearch(ThreadData Data);
-	static CString	_GetSearch(ThreadData Data);
+	static CString	_GetWebSearch(const ThreadData& Data);
+	static CString	_GetSearch(const ThreadData& Data);
 
 	static CString	_ParseURL(const CString& URL, const CString& fieldname);
 	static CString	_ParseURLArray(CString& URL, CString fieldname);
 	static void		_ConnectToServer(const CString& sIP, int nPort);
-	static bool		_IsLoggedIn(ThreadData Data, long lSession);
-	static void		_RemoveTimeOuts(ThreadData Data);
-	static bool		_RemoveSession(ThreadData Data, long lSession);
+	static bool		_IsLoggedIn(const ThreadData& Data, long lSession);
+	static void		_RemoveTimeOuts(const ThreadData& Data);
+	static bool		_RemoveSession(const ThreadData& Data, long lSession);
 	static CString	_SpecialChars(CString str, bool noquote = true);
 	static CString	_GetPlainResString(UINT nID, bool noquote = true);
 	static void		_GetPlainResString(CString *pstrOut, UINT nID, bool noquote = true);
@@ -360,7 +360,7 @@ private:
 	static CString  _GetRemoteLinkAddedFailed(const ThreadData& Data);
 	static void		_SetLastUserCat(const ThreadData& Data, long lSession, int cat);
 	static int		_GetLastUserCat(const ThreadData& Data, long lSession);
-	static CString	_CreateTransferList(CString Out, CWebServer *pThis, ThreadData* Data, void* FilesArray, void* UploadArray, bool bAdmin);
+	static CString	_CreateTransferList(CString Out, CWebServer *pThis, const ThreadData& Data, void* FilesArray, void* UploadArray, bool bAdmin);
 
 private:
 	static void		SaveWIConfigArray(BOOL array[], int size, LPCTSTR key);

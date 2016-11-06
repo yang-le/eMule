@@ -545,7 +545,7 @@ void EnsureWindowVisible(const RECT &rcScreen, RECT &rc)
 
 BOOL CToolTipCtrlX::OnTTShow(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	//DebugLog(_T("OnTTShow: rcScreen: %d,%d-%d,%d: styles=%08x  exStyles=%08x"), m_rcScreen, GetStyle(), GetWindowLong(m_hWnd, GWL_EXSTYLE));
+	//DebugLog(_T("OnTTShow: rcScreen: %d,%d-%d,%d: styles=%08x  exStyles=%08x"), m_rcScreen, GetStyle(), GetWindowLongPtr(m_hWnd, GWL_EXSTYLE));
 
 	// Win98/Win2000: The only chance to resize a tooltip window is to do it within the TTN_SHOW notification.
 	if (theApp.m_ullComCtrlVer <= MAKEDLLVERULL(5,81,0,0))
@@ -597,7 +597,7 @@ void CToolTipCtrlX::OnNmCustomDraw(NMHDR *pNMHDR, LRESULT *pResult)
 
 	//if (pNMCD->nmcd.dwDrawStage == CDDS_PREPAINT && pNMCD->uDrawFlags & DT_CALCRECT)
 	//	DebugLog(_T(""));
-	//DebugLog(_T("OnNmCustomDraw: DrawFlags=%08x DrawStage=%08x ItemSpec=%08x ItemState=%08x ItemlParam=%08x rc=%4d,%4d,(%4dx%4d), styles=%08x  exStyles=%08x"), pNMCD->uDrawFlags, pNMCD->nmcd.dwDrawStage, pNMCD->nmcd.dwItemSpec, pNMCD->nmcd.uItemState, pNMCD->nmcd.lItemlParam, pNMCD->nmcd.rc.left, pNMCD->nmcd.rc.top, pNMCD->nmcd.rc.right - pNMCD->nmcd.rc.left, pNMCD->nmcd.rc.bottom - pNMCD->nmcd.rc.top, GetStyle(), GetWindowLong(m_hWnd, GWL_EXSTYLE));
+	//DebugLog(_T("OnNmCustomDraw: DrawFlags=%08x DrawStage=%08x ItemSpec=%08x ItemState=%08x ItemlParam=%08x rc=%4d,%4d,(%4dx%4d), styles=%08x  exStyles=%08x"), pNMCD->uDrawFlags, pNMCD->nmcd.dwDrawStage, pNMCD->nmcd.dwItemSpec, pNMCD->nmcd.uItemState, pNMCD->nmcd.lItemlParam, pNMCD->nmcd.rc.left, pNMCD->nmcd.rc.top, pNMCD->nmcd.rc.right - pNMCD->nmcd.rc.left, pNMCD->nmcd.rc.bottom - pNMCD->nmcd.rc.top, GetStyle(), GetWindowLongPtr(m_hWnd, GWL_EXSTYLE));
 
 	if (theApp.m_ullComCtrlVer <= MAKEDLLVERULL(5,81,0,0))
 	{

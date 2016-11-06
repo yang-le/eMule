@@ -171,7 +171,7 @@ void CClientCreditsList::LoadList()
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 		}
 		return;
 	}
@@ -186,8 +186,7 @@ void CClientCreditsList::LoadList()
 		}
 
 		// everything is ok, lets see if the backup exist...
-		CString strBakFileName;
-		strBakFileName.Format(_T("%s") CLIENTS_MET_FILENAME _T(".bak"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+		CString strBakFileName(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + CLIENTS_MET_FILENAME _T(".bak"));
 
 		BOOL bCreateBackup = TRUE;
 
@@ -222,7 +221,7 @@ void CClientCreditsList::LoadList()
 					strError += _T(" - ");
 					strError += szError;
 				}
-				LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+				LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 				return;
 			}
 			setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
@@ -286,21 +285,19 @@ void CClientCreditsList::SaveList()
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 		return;
 	}
 
-	uint32 count = m_mapClients.GetCount();
-	BYTE* pBuffer = new BYTE[count*sizeof(CreditStruct)];
+	BYTE* pBuffer = new BYTE[m_mapClients.GetCount()*sizeof(CreditStruct)];
 	CClientCredits* cur_credit;
 	CCKey tempkey(0);
-	count = 0;
-	for (POSITION pos = m_mapClients.GetStartPosition(); pos;) {
+	uint32 count = 0;
+	for (POSITION pos = m_mapClients.GetStartPosition(); pos != NULL;) {
 		m_mapClients.GetNextAssoc(pos, tempkey, cur_credit);
-		if (cur_credit->GetUploadedTotal() || cur_credit->GetDownloadedTotal())
-		{
+		if (cur_credit->GetUploadedTotal() || cur_credit->GetDownloadedTotal()) {
 			memcpy(pBuffer+(count*sizeof(CreditStruct)), cur_credit->GetDataStruct(), sizeof(CreditStruct));
-			count++;
+			++count;
 		}
 	}
 
@@ -320,7 +317,7 @@ void CClientCreditsList::SaveList()
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 		error->Delete();
 	}
 

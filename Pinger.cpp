@@ -130,7 +130,7 @@ static char THIS_FILE[] = __FILE__;
  *    "IP_PENDING (11255)"
  */
 #define MAX_ICMP_ERR_STRING  IP_STATUS_BASE + 22
-static const LPCTSTR aszSendEchoErr[] = {
+static LPCTSTR aszSendEchoErr[] = {
     _T("IP_STATUS_BASE (11000)"),
     _T("IP_BUF_TOO_SMALL (11001)"),
     _T("IP_DEST_NET_UNREACHABLE (11002)"),

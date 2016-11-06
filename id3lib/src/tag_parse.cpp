@@ -100,7 +100,7 @@ namespace
           }
           else
           {
-            uint32 newSize = io::readBENumber(mr, sizeof(uint32));
+            size_t newSize = io::readBENumber(mr, sizeof(uint32));
             io::CompressedReader cr(mr, newSize);
             parseFrames(tag, cr);
             if (!cr.atEnd())

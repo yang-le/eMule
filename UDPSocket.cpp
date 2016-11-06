@@ -582,7 +582,7 @@ void CUDPSocket::ProcessPacketError(UINT size, UINT opcode, uint32 nIP, uint16 n
 		CString strName;
 		CServer* pServer = theApp.serverlist->GetServerByIPUDP(nIP, nUDPPort);
 		if (pServer)
-			strName = _T(" (") + pServer->GetListName() + _T(")");
+			strName.AppendFormat(_T(" (%s)"), (LPCTSTR)pServer->GetListName());
 		DebugLogWarning(LOG_DEFAULT, _T("Error: Failed to process server UDP packet from %s:%u%s opcode=0x%02x size=%u - %s"), (LPCTSTR)ipstr(nIP), nUDPPort, (LPCTSTR)strName, opcode, size, pszError);
 	}
 }
@@ -764,16 +764,13 @@ void CUDPSocket::SendPacket(Packet* packet, CServer* pServer, uint16 nSpecialPor
 {
 	// Just for safety.. Ensure that there are no stalled DNS queries and/or packets
 	// hanging endlessly in the queue.
-	POSITION pos = m_aDNSReqs.GetHeadPosition();
-	if (pos) {
-		DWORD dwNow = GetTickCount();
-		while (pos) {
-			POSITION posPrev = pos;
-			SServerDNSRequest* pDNSReq = m_aDNSReqs.GetNext(pos);
-			if (dwNow - pDNSReq->m_dwCreated >= MIN2MS(2)) {
-				delete pDNSReq;
-				m_aDNSReqs.RemoveAt(posPrev);
-			}
+	DWORD dwNow = GetTickCount();
+	for (POSITION pos = m_aDNSReqs.GetHeadPosition(); pos != NULL;) {
+		POSITION posPrev = pos;
+		const SServerDNSRequest* pDNSReq = m_aDNSReqs.GetNext(pos);
+		if (dwNow - pDNSReq->m_dwCreated >= MIN2MS(2)) {
+			delete pDNSReq;
+			m_aDNSReqs.RemoveAt(posPrev);
 		}
 	}
 
@@ -781,18 +778,19 @@ void CUDPSocket::SendPacket(Packet* packet, CServer* pServer, uint16 nSpecialPor
 	BYTE* pRawPacket;
 	UINT uRawPacketSize;
 	uint16 nPort = 0;
-	if (packet != NULL){
-		pRawPacket = new BYTE[packet->size + 2];
-		memcpy(pRawPacket, packet->GetUDPHeader(), 2);
-		memcpy(pRawPacket + 2, packet->pBuffer, packet->size);
+	if (packet != NULL) {
 		uRawPacketSize = packet->size + 2;
-		if (thePrefs.IsServerCryptLayerUDPEnabled() && pServer->GetServerKeyUDP() != 0 && pServer->SupportsObfuscationUDP()){
-			uRawPacketSize = EncryptSendServer(&pRawPacket, uRawPacketSize, pServer->GetServerKeyUDP());
+		int cLen = thePrefs.IsServerCryptLayerUDPEnabled() && pServer->GetServerKeyUDP() && pServer->SupportsObfuscationUDP()
+			? EncryptOverheadSize(false) : 0;
+		pRawPacket = new BYTE[uRawPacketSize + cLen];
+		memcpy(pRawPacket + cLen, packet->GetUDPHeader(), 2);
+		memcpy(pRawPacket + cLen + 2, packet->pBuffer, packet->size);
+		if (cLen) {
+			uRawPacketSize = EncryptSendServer(pRawPacket, uRawPacketSize, pServer->GetServerKeyUDP());
 			if (thePrefs.GetDebugServerUDPLevel() > 0)
 				DEBUG_ONLY(DebugLog(_T("Sending encrypted packet to server %s, UDPKey %u"), (LPCTSTR)pServer->GetListName(), pServer->GetServerKeyUDP()));
 			nPort = pServer->GetObfuscationPortUDP();
-		}
-		else
+		} else
 			nPort = pServer->GetPort() + 4;
 	}
 	else if (pInRawPacket != 0){

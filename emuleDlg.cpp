@@ -684,7 +684,7 @@ void CemuleDlg::DoVersioncheck(bool manual) {
 #endif
 }
 
-void CALLBACK CemuleDlg::StartupTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT /*idEvent*/, DWORD /*dwTime*/)
+void CALLBACK CemuleDlg::StartupTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT_PTR /*idEvent*/, DWORD /*dwTime*/)
 {
 	// NOTE: Always handle all type of MFC exceptions in TimerProcs - otherwise we'll get mem leaks
 	try
@@ -728,7 +728,7 @@ void CALLBACK CemuleDlg::StartupTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT /*idEv
 				if (!theApp.listensocket->StartListening()) {
 					CString strError;
 					strError.Format(GetResString(IDS_MAIN_SOCKETERROR), thePrefs.GetPort());
-					LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+					LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 					if (thePrefs.GetNotifierOnImportantError())
 						theApp.emuledlg->ShowNotifier(strError, TBN_IMPORTANTEVENT);
 					bError = true;
@@ -736,7 +736,7 @@ void CALLBACK CemuleDlg::StartupTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT /*idEv
 				if (!theApp.clientudp->Create()) {
 					CString strError;
 					strError.Format(GetResString(IDS_MAIN_SOCKETERROR), thePrefs.GetUDPPort());
-					LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+					LogError(LOG_STATUSBAR, (LPCTSTR)strError);
 					if (thePrefs.GetNotifierOnImportantError())
 						theApp.emuledlg->ShowNotifier(strError, TBN_IMPORTANTEVENT);
 				}
@@ -1513,8 +1513,7 @@ LRESULT CemuleDlg::OnWMData(WPARAM /*wParam*/, LPARAM lParam)
 		}
 
 		if (clcommand==_T("status")) {
-			CString strBuff;
-			strBuff.Format(_T("%sstatus.log"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGBASEDIR));
+			CString strBuff(thePrefs.GetMuleDirectory(EMULE_CONFIGBASEDIR) + _T("status.log"));
 			FILE* file = _tfsopen(strBuff, _T("wt"), _SH_DENYWR);
 			if (file){
 				if (theApp.serverconnect->IsConnected())
@@ -2074,7 +2073,7 @@ void CemuleDlg::AddSpeedSelectorMenus(CMenu* addToMenu)
 			m_menuUploadCtrl.AppendMenu(MF_STRING, MP_QS_UP10, text);
 		}
 
-		text.Format(_T("%s:"), (LPCTSTR)GetResString(IDS_PW_UPL));
+		text = GetResString(IDS_PW_UPL) + _T(':');
 		addToMenu->AppendMenu(MF_STRING|MF_POPUP, (UINT_PTR)m_menuUploadCtrl.m_hMenu, text);
 	}
 
@@ -2088,7 +2087,7 @@ void CemuleDlg::AddSpeedSelectorMenus(CMenu* addToMenu)
 		text.Format(_T("80%%\t%i %s"),  (uint16)(thePrefs.GetMaxGraphDownloadRate()*0.8), (LPCTSTR)GetResString(IDS_KBYTESPERSEC));	m_menuDownloadCtrl.AppendMenu(MF_STRING|MF_POPUP, MP_QS_D80,  (LPCTSTR)text);
 		text.Format(_T("100%%\t%i %s"), (uint16)(thePrefs.GetMaxGraphDownloadRate()), (LPCTSTR)GetResString(IDS_KBYTESPERSEC));		m_menuDownloadCtrl.AppendMenu(MF_STRING|MF_POPUP, MP_QS_D100, (LPCTSTR)text);
 
-		text.Format(_T("%s:"), (LPCTSTR)GetResString(IDS_PW_DOWNL));
+		text = GetResString(IDS_PW_DOWNL) + _T(':');
 		addToMenu->AppendMenu(MF_STRING|MF_POPUP, (UINT_PTR)m_menuDownloadCtrl.m_hMenu, text);
 	}
 
@@ -2789,8 +2788,8 @@ void CemuleDlg::ShowToolPopup(bool toolsonly)
 	scheduler.AppendMenu(MF_STRING,MP_HM_SCHEDONOFF, schedonoff);
 	if (theApp.scheduler->GetCount()>0) {
 		scheduler.AppendMenu(MF_SEPARATOR);
-		for (UINT i=0; i<theApp.scheduler->GetCount();i++)
-			scheduler.AppendMenu(MF_STRING,MP_SCHACTIONS+i, theApp.scheduler->GetSchedule(i)->title);
+		for (INT_PTR i=0; i<theApp.scheduler->GetCount(); ++i)
+			scheduler.AppendMenu(MF_STRING, MP_SCHACTIONS+i, theApp.scheduler->GetSchedule(i)->title);
 	}
 
 	if (!toolsonly) {
@@ -3105,7 +3104,7 @@ BOOL CemuleApp::IsIdleMessage(MSG *pMsg)
 	return TRUE;		// Request idle processing (will send a WM_KICKIDLE)
 }
 
-LRESULT CemuleDlg::OnKickIdle(UINT /*nWhy*/, long lIdleCount)
+LRESULT CemuleDlg::OnKickIdle(WPARAM /*nWhy*/, LPARAM lIdleCount)
 {
 	LRESULT lResult = 0;
 
@@ -3312,7 +3311,7 @@ void CemuleDlg::HtmlHelp(DWORD_PTR dwData, UINT nCmd)
 			} HH_LAST_ERROR;
 			HH_LAST_ERROR hhLastError = {0};
 			hhLastError.cbStruct = sizeof hhLastError;
-			if (!AfxHtmlHelp(pWnd->m_hWnd, NULL, HH_GET_LAST_ERROR, reinterpret_cast<DWORD>(&hhLastError)))
+			if (!AfxHtmlHelp(pWnd->m_hWnd, NULL, HH_GET_LAST_ERROR, reinterpret_cast<DWORD_PTR>(&hhLastError)))
 			{
 				if (FAILED(hhLastError.hr))
 				{
@@ -3685,7 +3684,7 @@ void CemuleDlg::SetToolTipsDelay(UINT uMilliseconds)
 	sharedfileswnd->SetToolTipsDelay(uMilliseconds);
 }
 
-void CALLBACK CemuleDlg::UPnPTimeOutTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT /*idEvent*/, DWORD /*dwTime*/) {
+void CALLBACK CemuleDlg::UPnPTimeOutTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT_PTR /*idEvent*/, DWORD /*dwTime*/) {
 	::PostMessage(theApp.emuledlg->GetSafeHwnd(), UM_UPNP_RESULT, (WPARAM)CUPnPImpl::UPNP_TIMEOUT, 0);
 }
 

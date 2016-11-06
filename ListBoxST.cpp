@@ -278,9 +278,7 @@ DWORD CListBoxST::OnDrawTextBackground(int /*nIndex*/, CDC* pDC, CRect* /*prcIte
 //
 DWORD CListBoxST::OnDrawIcon(int /*nIndex*/, CDC* pDC, CRect* /*prcItem*/, CRect* prcIcon, int nImage, BOOL bIsDisabled, BOOL /*bIsSelected*/)
 {
-	HICON	hIcon = NULL;
-
-	hIcon = m_pImageList->ExtractIcon(nImage);
+	HICON hIcon = m_pImageList->ExtractIcon(nImage);
 	if (hIcon)
 	{
 		CPoint	Point(prcIcon->left + LBST_CX_BORDER, prcIcon->top + LBST_CY_BORDER);
@@ -324,7 +322,7 @@ void CListBoxST::FreeResources()
 		} // for
 } // End of FreeResources
 
-int CListBoxST::ReplaceItemData(int nIndex, DWORD dwItemData, LPVOID pData, int nImage, DWORD dwFlags, BYTE byMask)
+int CListBoxST::ReplaceItemData(int nIndex, DWORD_PTR dwItemData, LPVOID pData, int nImage, DWORD dwFlags, BYTE byMask)
 {
 	STRUCT_LBDATA*	lpLBData = NULL;
 	int				nRetValue = LB_ERR;
@@ -471,7 +469,7 @@ void CListBoxST::ResetContent()
 	CListBox::ResetContent();
 } // End of ResetContent
 
-// Sets the 32-bit value associated with the list box item.
+// Sets the 32/64-bit value associated with the list box item.
 //
 // Parameters:
 //		[IN]	nIndex
@@ -482,21 +480,21 @@ void CListBoxST::ResetContent()
 // Return value:
 //		LB_ERR if an error occurs.
 //
-int CListBoxST::SetItemData(int nIndex, DWORD dwItemData)
+int CListBoxST::SetItemData(int nIndex, DWORD_PTR dwItemData)
 {
 	return ReplaceItemData(nIndex, dwItemData, NULL, 0, 0, MASK_DWDATA);
 } // End of SetItemData
 
-// Returns the 32-bit value associated with the list box item.
+// Returns the 32/64-bit value associated with the list box item.
 //
 // Parameters:
 //		[IN]	nIndex
 //				Specifies the zero-based index of the item.
 //
 // Return value:
-//		The 32-bit value associated with the item, or LB_ERR if an error occurs.
+//		The value associated with the item, or LB_ERR if an error occurs.
 //
-DWORD CListBoxST::GetItemData(int nIndex)
+DWORD_PTR CListBoxST::GetItemData(int nIndex)
 {
 	STRUCT_LBDATA*	lpLBData = NULL;
 
@@ -504,7 +502,7 @@ DWORD CListBoxST::GetItemData(int nIndex)
 	if (lpLBData != (LPVOID)-1L)
 		return lpLBData->dwItemData;
 
-	return (DWORD)LB_ERR;
+	return (DWORD_PTR)LB_ERR;
 } // End of GetItemData
 
 // Sets a pointer to a list box item.

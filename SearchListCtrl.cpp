@@ -316,29 +316,20 @@ CSearchListCtrl::~CSearchListCtrl()
 
 void CSearchListCtrl::Localize()
 {
+	static const UINT ids[15] =
+		{ IDS_DL_FILENAME, IDS_DL_SIZE, IDS_SEARCHAVAIL, IDS_COMPLSOURCES, IDS_TYPE
+		, IDS_FILEID, IDS_ARTIST, IDS_ALBUM, IDS_TITLE, IDS_LENGTH
+		, IDS_BITRATE, IDS_CODEC, IDS_FOLDER, IDS_KNOWN, IDS_AICHHASH};
+
 	CHeaderCtrl* pHeaderCtrl = GetHeaderCtrl();
 	HDITEM hdi;
 	hdi.mask = HDI_TEXT;
 	CString strRes;
 
-	for (int icol=0;icol<pHeaderCtrl->GetItemCount();icol++) {
-		switch (icol) {
-			case 0: strRes = GetResString(IDS_DL_FILENAME); break;
-			case 1: strRes = GetResString(IDS_DL_SIZE); break;
-			case 2: strRes = GetResString(IDS_SEARCHAVAIL) + (thePrefs.IsExtControlsEnabled() ? _T(" (") + GetResString(IDS_DL_SOURCES) + _T(')') : CString()); break;
-			case 3: strRes = GetResString(IDS_COMPLSOURCES); break;
-			case 4: strRes = GetResString(IDS_TYPE); break;
-			case 5: strRes = GetResString(IDS_FILEID); break;
-			case 6: strRes = GetResString(IDS_ARTIST); break;
-			case 7: strRes = GetResString(IDS_ALBUM); break;
-			case 8: strRes = GetResString(IDS_TITLE); break;
-			case 9: strRes = GetResString(IDS_LENGTH); break;
-			case 10: strRes = GetResString(IDS_BITRATE); break;
-			case 11: strRes = GetResString(IDS_CODEC); break;
-			case 12: strRes = GetResString(IDS_FOLDER); break;
-			case 13: strRes = GetResString(IDS_KNOWN); break;
-			case 14: strRes = GetResString(IDS_AICHHASH); break;
-		}
+	for (int icol = 0; icol<pHeaderCtrl->GetItemCount(); ++icol) {
+		strRes = GetResString(ids[icol]);
+		if (icol == 2 && thePrefs.IsExtControlsEnabled())
+			strRes.AppendFormat(_T(" (%s)"), (LPCTSTR)GetResString(IDS_DL_SOURCES));
 
 		hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
 		pHeaderCtrl->SetItem(icol, &hdi);
@@ -610,8 +601,8 @@ void CSearchListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 int CALLBACK CSearchListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const CSearchFile *item1 = (CSearchFile *)lParam1;
-	const CSearchFile *item2 = (CSearchFile *)lParam2;
+	const CSearchFile *item1 = reinterpret_cast<const CSearchFile *>(lParam1);
+	const CSearchFile *item2 = reinterpret_cast<const CSearchFile *>(lParam2);
 	int orgSort = lParamSort;
 	int sortMod = 1;
 	if (lParamSort >= 100) {
@@ -639,7 +630,7 @@ int CALLBACK CSearchListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 			return sortMod * comp;
 
 		if ((item1->GetListParent()==NULL && item2->GetListParent()!=NULL) || (item2->GetListParent()==NULL && item1->GetListParent()!=NULL)){
-			if (item1->GetListParent()==NULL)
+			if (item1->GetListParent() == NULL)
 				return -1;
 			else
 				return 1;
@@ -648,9 +639,11 @@ int CALLBACK CSearchListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 	}
 
 	//call secondary sortorder, if this one results in equal
-	int dwNextSort;
-	if (comp == 0 && (dwNextSort = theApp.emuledlg->searchwnd->m_pwndResults->searchlistctrl.GetNextSortOrder(orgSort)) != -1)
-		comp = SortProc(lParam1, lParam2, dwNextSort);
+	if (comp == 0) {
+		LPARAM dwNextSort = theApp.emuledlg->searchwnd->m_pwndResults->searchlistctrl.GetNextSortOrder(orgSort);
+		if (dwNextSort != -1)
+			comp = SortProc(lParam1, lParam2, dwNextSort);
+	}
 
 	return comp;
 }
@@ -1092,11 +1085,11 @@ void CSearchListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 							    break;
 						    case 0x13: // remote client's upload file priority (tested with Hybrid 0.47)
 							    if (tag->GetInt() == 0)
-								    strTag = GetResString(IDS_PRIORITY) + _T(": ") + GetResString(IDS_PRIONORMAL);
+								    strTag.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_PRIORITY), (LPCTSTR)GetResString(IDS_PRIONORMAL));
 							    else if (tag->GetInt() == 2)
-								    strTag = GetResString(IDS_PRIORITY) + _T(": ") + GetResString(IDS_PRIOHIGH);
+								    strTag.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_PRIORITY), (LPCTSTR)GetResString(IDS_PRIOHIGH));
 							    else if (tag->GetInt() == (UINT)-2)
-								    strTag = GetResString(IDS_PRIORITY) + _T(": ") + GetResString(IDS_PRIOLOW);
+								    strTag.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_PRIORITY), (LPCTSTR)GetResString(IDS_PRIOLOW));
 						    #ifdef _DEBUG
 							    else
 								    strTag.Format(_T("%s: %u (***Unknown***)"), (LPCTSTR)GetResString(IDS_PRIORITY), tag->GetInt());
@@ -1792,7 +1785,7 @@ void CSearchListCtrl::GetItemDisplayText(const CSearchFile *src, int iSubItem, L
 				strBuffer.Format(_T("%u"), src->GetSourceCount());
 				if (thePrefs.IsExtControlsEnabled()) {
 					if (src->IsKademlia()) {
-						uint32 nKnownPublisher = (src->GetKadPublishInfo() & 0x00FF0000) >> 16;
+						uint32 nKnownPublisher = (src->GetKadPublishInfo() >> 16) & 0xFFu;
 						if (nKnownPublisher > 0)
 							strBuffer.AppendFormat(_T(" (%u)"), nKnownPublisher);
 					}
@@ -1806,10 +1799,10 @@ void CSearchListCtrl::GetItemDisplayText(const CSearchFile *src, int iSubItem, L
 				if (src->GetKadPublishInfo() == 0)
 					strBuffer += _T(" | -");
 				else
-					strBuffer.AppendFormat(_T(" | Names:%u, Pubs:%u, Trust:%0.2f"),
-										   (src->GetKadPublishInfo() & 0xFF000000) >> 24,
-										   (src->GetKadPublishInfo() & 0x00FF0000) >> 16,
-										   (float)(src->GetKadPublishInfo() & 0x0000FFFF) / 100.0f);
+					strBuffer.AppendFormat(_T(" | Names:%u, Pubs:%u, Trust:%0.2f")
+										   , (src->GetKadPublishInfo() >> 24) & 0xFFu
+										   , (src->GetKadPublishInfo() >> 16) & 0xFFu
+										   , (src->GetKadPublishInfo() & 0xFFFFu) / 100.0f);
 			#endif
 				_tcsncpy(pszText, strBuffer, cchTextMax);
 			}
@@ -1849,7 +1842,7 @@ void CSearchListCtrl::GetItemDisplayText(const CSearchFile *src, int iSubItem, L
 
 		case 9:{
 			uint32 nMediaLength = src->GetIntTagValue(FT_MEDIA_LENGTH);
-			if (nMediaLength){
+			if (nMediaLength) {
 				CString buffer;
 				SecToTimeLength(nMediaLength, buffer);
 				_tcsncpy(pszText, buffer, cchTextMax);

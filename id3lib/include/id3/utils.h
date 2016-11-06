@@ -90,10 +90,10 @@ namespace dami
   }
 #endif
 
-  size_t ID3_C_EXPORT renderNumber(uchar *buffer, uint32 val, size_t size = sizeof(uint32));
+  size_t ID3_C_EXPORT renderNumber(uchar *buffer, size_t val, size_t size = sizeof(uint32));
   String ID3_C_EXPORT renderNumber(uint32 val, size_t size = sizeof(uint32));
 
-  String ID3_C_EXPORT toString(uint32 val);
+  String ID3_C_EXPORT toString(size_t val);
   WString ID3_C_EXPORT toWString(const unicode_t[], size_t);
 
   size_t ID3_C_EXPORT ucslen(const unicode_t *unicode);

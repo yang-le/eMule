@@ -48,16 +48,18 @@ enum convstatus{
 };
 
 struct ConvertJob {
+	uint64	size;
+	uint64	spaceneeded;
 	CString folder;
 	CString filename;
 	CString filehash;
 	int     format;
 	int		state;
-	uint64	size;
-	uint64	spaceneeded;
 	uint8	partmettype;
 	bool	removeSource;
-	ConvertJob() {size=0;spaceneeded=0;partmettype=PMT_UNKNOWN;removeSource=true;format=0;state=0;}
+	ConvertJob()
+		: size(0), spaceneeded(0), format(0), state(0), partmettype(PMT_UNKNOWN), removeSource(true)
+	{}
 	//~ConvertJob() {}
 };
 
@@ -619,9 +621,9 @@ void CPartFileConvertDlg::OnAddFolder() {
 		bi.hwndOwner = this->m_hWnd;
 		bi.pidlRoot = NULL;
 		bi.pszDisplayName = buffer;
-		CString title=GetResString(IDS_IMP_SELFOLDER);
+		CString title(GetResString(IDS_IMP_SELFOLDER));
 		bi.lpszTitle = title.GetBuffer(title.GetLength());
-		bi.ulFlags =  BIF_EDITBOX | BIF_NEWDIALOGSTYLE | BIF_NONEWFOLDERBUTTON | BIF_SHAREABLE ;
+		bi.ulFlags = BIF_EDITBOX | BIF_NEWDIALOGSTYLE | BIF_NONEWFOLDERBUTTON | BIF_SHAREABLE ;
 		bi.lpfn = NULL;
 
 		// Now cause the dialog to appear.

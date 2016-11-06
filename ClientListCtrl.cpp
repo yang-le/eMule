@@ -336,8 +336,8 @@ void CClientListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 int CALLBACK CClientListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const CUpDownClient *item1 = (CUpDownClient *)lParam1;
-	const CUpDownClient *item2 = (CUpDownClient *)lParam2;
+	const CUpDownClient *item1 = reinterpret_cast<const CUpDownClient *>(lParam1);
+	const CUpDownClient *item2 = reinterpret_cast<const CUpDownClient *>(lParam2);
 	int iColumn = (lParamSort >= 100) ? lParamSort - 100 : lParamSort;
 	int iResult = 0;
 	switch (iColumn)
@@ -412,9 +412,11 @@ int CALLBACK CClientListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 		iResult = -iResult;
 
 	//call secondary sortorder, if this one results in equal
-	int dwNextSort;
-	if (iResult == 0 && (dwNextSort = theApp.emuledlg->transferwnd->GetClientList()->GetNextSortOrder(lParamSort)) != -1)
-		iResult = SortProc(lParam1, lParam2, dwNextSort);
+	if (iResult == 0) {
+		LPARAM dwNextSort = theApp.emuledlg->transferwnd->GetClientList()->GetNextSortOrder(lParamSort);
+		if (dwNextSort != -1)
+			iResult = SortProc(lParam1, lParam2, dwNextSort);
+	}
 
 	return iResult;
 }

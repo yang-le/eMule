@@ -81,58 +81,23 @@ void CPPgGeneral::LoadSettings(void)
 {
 	GetDlgItem(IDC_NICK)->SetWindowText(thePrefs.GetUserNick());
 
-	for(int i = 0; i < m_language.GetCount(); i++)
-		if(m_language.GetItemData(i) == thePrefs.GetLanguageID())
+	for (int i = 0; i < m_language.GetCount(); ++i)
+		if (m_language.GetItemData(i) == thePrefs.GetLanguageID())
 			m_language.SetCurSel(i);
 
-	if(thePrefs.m_bAutoStart)
-		CheckDlgButton(IDC_STARTWIN,1);
-	else
-		CheckDlgButton(IDC_STARTWIN,0);
+	CheckDlgButton(IDC_STARTWIN, static_cast<UINT>(thePrefs.m_bAutoStart));
+	CheckDlgButton(IDC_STARTMIN, static_cast<UINT>(thePrefs.startMinimized));
+	CheckDlgButton(IDC_ONLINESIG, static_cast<UINT>(thePrefs.onlineSig));
+	CheckDlgButton(IDC_EXIT, static_cast<UINT>(thePrefs.confirmExit));
+	CheckDlgButton(IDC_SPLASHON, static_cast<UINT>(thePrefs.splashscreen));
+	CheckDlgButton(IDC_BRINGTOFOREGROUND, static_cast<UINT>(thePrefs.bringtoforeground));
+	CheckDlgButton(IDC_CHECK4UPDATE, static_cast<UINT>(thePrefs.updatenotify));
+	CheckDlgButton(IDC_MINIMULE, static_cast<UINT>(thePrefs.m_bEnableMiniMule));
 
-	if(thePrefs.startMinimized)
-		CheckDlgButton(IDC_STARTMIN,1);
-	else
-		CheckDlgButton(IDC_STARTMIN,0);
-
-	if (thePrefs.onlineSig)
-		CheckDlgButton(IDC_ONLINESIG,1);
-	else
-		CheckDlgButton(IDC_ONLINESIG,0);
-
-	if(thePrefs.confirmExit)
-		CheckDlgButton(IDC_EXIT,1);
-	else
-		CheckDlgButton(IDC_EXIT,0);
-
-	if(thePrefs.splashscreen)
-		CheckDlgButton(IDC_SPLASHON,1);
-	else
-		CheckDlgButton(IDC_SPLASHON,0);
-
-	if(thePrefs.bringtoforeground)
-		CheckDlgButton(IDC_BRINGTOFOREGROUND,1);
-	else
-		CheckDlgButton(IDC_BRINGTOFOREGROUND,0);
-
-	if(thePrefs.updatenotify)
-		CheckDlgButton(IDC_CHECK4UPDATE,1);
-	else
-		CheckDlgButton(IDC_CHECK4UPDATE,0);
-
-	if(thePrefs.m_bEnableMiniMule)
-		CheckDlgButton(IDC_MINIMULE,1);
-	else
-		CheckDlgButton(IDC_MINIMULE,0);
-
-	if (thePrefs.GetWindowsVersion() != _WINVER_95_){
-		if(thePrefs.GetPreventStandby())
-			CheckDlgButton(IDC_PREVENTSTANDBY,1);
-		else
-			CheckDlgButton(IDC_PREVENTSTANDBY,0);
-	}
-	else{
-		CheckDlgButton(IDC_PREVENTSTANDBY,0);
+	if (thePrefs.GetWindowsVersion() != _WINVER_95_)
+		CheckDlgButton(IDC_PREVENTSTANDBY, static_cast<UINT>(thePrefs.GetPreventStandby()));
+	else {
+		CheckDlgButton(IDC_PREVENTSTANDBY, 0);
 		GetDlgItem(IDC_PREVENTSTANDBY)->EnableWindow(FALSE);
 	}
 
@@ -349,25 +314,25 @@ void CPPgGeneral::OnLangChange()
 {
 #define MIRRORS_URL	_T("http://langmirror%u.emule-project.org/lang/%u%u%u%u/")
 
-	WORD byNewLang = (WORD)m_language.GetItemData(m_language.GetCurSel());
-	if (thePrefs.GetLanguageID() != byNewLang){
-		if	(!thePrefs.IsLanguageSupported(byNewLang, false)){
+	LANGID newLangId = (LANGID)m_language.GetItemData(m_language.GetCurSel());
+	if (thePrefs.GetLanguageID() != newLangId){
+		if	(!thePrefs.IsLanguageSupported(newLangId)){
 			if (AfxMessageBox(GetResString(IDS_ASKDOWNLOADLANGCAP) + _T("\r\n\r\n") + GetResString(IDS_ASKDOWNLOADLANG), MB_ICONQUESTION | MB_YESNO) == IDYES){
 				// download file
 				// create url, use random mirror for load balancing
 				UINT nRand = (rand()/(RAND_MAX/3))+1;
 				CString strUrl;
 				strUrl.Format(MIRRORS_URL, nRand, CemuleApp::m_nVersionMjr, CemuleApp::m_nVersionMin, CemuleApp::m_nVersionUpd, CemuleApp::m_nVersionBld);
-				strUrl += thePrefs.GetLangDLLNameByID(byNewLang);
+				strUrl += thePrefs.GetLangDLLNameByID(newLangId);
 				// safeto
 				CString strFilename = thePrefs.GetMuleDirectory(EMULE_ADDLANGDIR, true);
-				strFilename.Append(thePrefs.GetLangDLLNameByID(byNewLang));
+				strFilename.Append(thePrefs.GetLangDLLNameByID(newLangId));
 				// start
 				CHttpDownloadDlg dlgDownload;
 				dlgDownload.m_strTitle = GetResString(IDS_DOWNLOAD_LANGFILE);
 				dlgDownload.m_sURLToDownload = strUrl;
 				dlgDownload.m_sFileToDownloadInto = strFilename;
-				if (dlgDownload.DoModal() == IDOK && thePrefs.IsLanguageSupported(byNewLang, true))
+				if (dlgDownload.DoModal() == IDOK && thePrefs.IsLanguageSupported(newLangId))
 				{
 					// everything ok, new language downloaded and working
 					OnSettingsChange();
@@ -375,7 +340,7 @@ void CPPgGeneral::OnLangChange()
 				}
 				CString strErr;
 				strErr.Format(GetResString(IDS_ERR_FAILEDDOWNLOADLANG), (LPCTSTR)strUrl);
-				LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strErr);
+				LogError(LOG_STATUSBAR, (LPCTSTR)strErr);
 				AfxMessageBox(strErr, MB_ICONERROR | MB_OK);
 			}
 			// undo change selection

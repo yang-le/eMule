@@ -882,22 +882,22 @@ uint64 CSearchParamsWnd::GetSearchAttrSize(const CString& rstrExpr)
 	strExpr.Trim();
 	LPTSTR endptr = NULL;
 	double dbl = _tcstod(strExpr, &endptr);
-	if (endptr && *endptr != _T('\0'))
-	{
+	if (endptr && *endptr != _T('\0')) {
 		while (*endptr == _T(' '))
-			endptr++;
+			++endptr;
 
-		TCHAR chModifier = _totlower((_TUCHAR)*endptr);
-		if (chModifier == _T('b'))
+		switch (_totlower((_TUCHAR)*endptr)) {
+		case _T('b'): //bytes
 			return (uint64)(dbl + 0.5);
-		else if (chModifier == _T('k'))
+		case _T('k'): //kilobytes
 			return (uint64)(dbl*1024 + 0.5);
-		else if (chModifier == _T('\0') || chModifier == _T('m'))
-			;
-		else if (chModifier == _T('g'))
+		case _T('\0'): //not specified
+		case _T('m'): //megabytes
+			break;
+		case _T('g'): //gigabytes
 			return (uint64)(dbl*1024*1024*1024 + 0.5);
-		else
-			return (uint64)-1;
+		}
+		return (uint64)-1;
 	}
 	return (uint64)(dbl*1024*1024 + 0.5); // Default = MBytes
 }
@@ -908,24 +908,24 @@ ULONG CSearchParamsWnd::GetSearchAttrNumber(const CString& rstrExpr)
 	strExpr.Trim();
 	LPTSTR endptr = NULL;
 	double dbl = _tcstod(strExpr, &endptr);
-	if (endptr && *endptr != _T('\0'))
-	{
+	if (endptr && *endptr != _T('\0')) {
 		while (*endptr == _T(' '))
-			endptr++;
+			++endptr;
 
-		TCHAR chModifier = _totlower((_TUCHAR)*endptr);
-		if (chModifier == _T('\0'))
-			;
-		else if (chModifier == _T('k'))
+		switch (_totlower((_TUCHAR)*endptr)) {
+		case _T('\0'): //not specified
+		case _T('b'): //bytes
+			break;
+		case _T('k'): //kilobytes
 			return (ULONG)(dbl*1000 + 0.5);
-		else if (chModifier == _T('m'))
+		case _T('m'): //megabytes
 			return (ULONG)(dbl*1000*1000 + 0.5);
-		else if (chModifier == _T('g'))
+		case _T('g'): //gigabytes
 			return (ULONG)(dbl*1000*1000*1000 + 0.5);
-		else
-			return (ULONG)-1;
+		}
+		return (ULONG)-1;
 	}
-	return (ULONG)(dbl + 0.5);
+	return (ULONG)(dbl + 0.5); //default is bytes
 }
 
 ULONG CSearchParamsWnd::GetSearchAttrLength(const CString& rstrExpr)
@@ -941,22 +941,22 @@ ULONG CSearchParamsWnd::GetSearchAttrLength(const CString& rstrExpr)
 
 	LPTSTR endptr = NULL;
 	double dbl = _tcstod(strExpr, &endptr);
-	if (endptr && *endptr != _T('\0'))
-	{
+	if (endptr && *endptr != _T('\0')) {
 		while (*endptr == _T(' '))
-			endptr++;
+			++endptr;
 
-		TCHAR chModifier = _totlower((_TUCHAR)*endptr);
-		if (chModifier == _T('\0') || chModifier == _T('s'))
-			;
-		else if (chModifier == _T('m'))
+		switch (_totlower((_TUCHAR)*endptr)) {
+		case _T('\0'): //not specified
+		case _T('s'): //seconds
+			break;
+		case _T('m'): //minutes
 			return (ULONG)(MIN2S(dbl) + 0.5);
-		else if (chModifier == _T('h'))
+		case _T('h'): //hours
 			return (ULONG)(HR2S(dbl) + 0.5);
-		else
-			return (ULONG)-1;
+		}
+		return (ULONG)-1;
 	}
-	return (ULONG)(dbl + 0.5);
+	return (ULONG)(dbl + 0.5); //default is seconds
 }
 
 SSearchParams* CSearchParamsWnd::GetParameters()

@@ -76,7 +76,7 @@ void CCommentDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LST, m_lstComments);
 }
 
-void CCommentDialog::OnTimer(UINT /*nIDEvent*/)
+void CCommentDialog::OnTimer(UINT_PTR /*nIDEvent*/)
 {
 	RefreshData(false);
 }
@@ -90,6 +90,7 @@ BOOL CCommentDialog::OnInitDialog()
 	AddAnchor(IDC_CMT_LQUEST, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_CMT_LAIDE, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_CMT_TEXT, TOP_LEFT, TOP_RIGHT);
+	AddAnchor(IDC_RATELIST, TOP_LEFT);
 	AddAnchor(IDC_RATEQUEST, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_RATEHELP, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_USERCOMMENTS, TOP_LEFT, BOTTOM_RIGHT);
@@ -100,7 +101,7 @@ BOOL CCommentDialog::OnInitDialog()
 	Localize();
 
 	// start time for calling 'RefreshData'
-	VERIFY( (m_timer = SetTimer(301, 5000, 0)) != NULL );
+	VERIFY( (m_timer = SetTimer(301, SEC2MS(5), 0)) != NULL );
 
 	return TRUE;
 }

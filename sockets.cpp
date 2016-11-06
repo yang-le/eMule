@@ -64,7 +64,7 @@ void CServerConnect::TryAnotherConnectionRequest()
 					LogWarning(LOG_STATUSBAR, GetResString(IDS_OUTOFSERVERS));
 					AddLogLine(false, GetResString(IDS_RECONNECT), CS_RETRYCONNECTTIME);
 					m_uStartAutoConnectPos = 0; // default: start at 0
-					VERIFY( (m_idRetryTimer = SetTimer(NULL, 0, 1000*CS_RETRYCONNECTTIME, RetryConnectTimer)) != NULL );
+					VERIFY( (m_idRetryTimer = SetTimer(NULL, 0, SEC2MS(CS_RETRYCONNECTTIME), RetryConnectTimer)) != NULL );
 					if (thePrefs.GetVerbose() && !m_idRetryTimer)
 						DebugLogError(_T("Failed to create 'server connect retry' timer - %s"), (LPCTSTR)GetErrorMessage(GetLastError()));
 				}
@@ -402,7 +402,7 @@ void CServerConnect::ConnectionFailed(CServerSocket* sender)
 	theApp.emuledlg->ShowConnectionState();
 }
 
-VOID CALLBACK CServerConnect::RetryConnectTimer(HWND /*hWnd*/, UINT /*nMsg*/, UINT /*nId*/, DWORD /*dwTime*/)
+VOID CALLBACK CServerConnect::RetryConnectTimer(HWND /*hWnd*/, UINT /*nMsg*/, UINT_PTR /*nId*/, DWORD /*dwTime*/)
 {
 	// NOTE: Always handle all type of MFC exceptions in TimerProcs - otherwise we'll get mem leaks
 	try
@@ -477,7 +477,6 @@ bool CServerConnect::Disconnect()
 
 CServerConnect::CServerConnect()
 	: pendingConnects(0), m_curuser(0), m_bTryObfuscated(false)
-
 {
 	connectedsocket = NULL;
 	max_simcons = (thePrefs.IsSafeServerConnectEnabled()) ? 1 : 2;
@@ -499,26 +498,29 @@ CServerConnect::CServerConnect()
 	InitLocalIP();
 }
 
-CServerConnect::~CServerConnect(){
+CServerConnect::~CServerConnect()
+{
 	// stop all connections
 	StopConnectionTry();
 	// close connected socket, if any
 	DestroySocket(connectedsocket);
 	connectedsocket = NULL;
 	// close udp socket
-	if (udpsocket){
-	    udpsocket->Close();
-	    delete udpsocket;
-    }
+	if (udpsocket) {
+		udpsocket->Close();
+		delete udpsocket;
+	}
 }
 
-CServer* CServerConnect::GetCurrentServer(){
+CServer* CServerConnect::GetCurrentServer()
+{
 	if (IsConnected() && connectedsocket)
 		return connectedsocket->cur_server;
 	return NULL;
 }
 
-void CServerConnect::SetClientID(uint32 newid){
+void CServerConnect::SetClientID(uint32 newid)
+{
 	clientid = newid;
 
 	if (!::IsLowID(newid))
@@ -527,14 +529,15 @@ void CServerConnect::SetClientID(uint32 newid){
 	theApp.emuledlg->ShowConnectionState();
 }
 
-void CServerConnect::DestroySocket(CServerSocket* pSck){
+void CServerConnect::DestroySocket(CServerSocket* pSck)
+{
 	if (pSck == NULL)
 		return;
 	// remove socket from list of opened sockets
 	POSITION pos = m_lstOpenSockets.Find(pSck);
 	if (pos != NULL)
 		m_lstOpenSockets.RemoveAt(pos);
-	if (pSck->m_SocketData.hSocket != INVALID_SOCKET){ // deadlake PROXYSUPPORT - changed to AsyncSocketEx
+	if (pSck->m_SocketData.hSocket != INVALID_SOCKET) { // deadlake PROXYSUPPORT - changed to AsyncSocketEx
 		pSck->AsyncSelect(0);
 		pSck->Close();
 	}

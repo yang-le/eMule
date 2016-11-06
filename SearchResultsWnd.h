@@ -145,7 +145,7 @@ protected:
 	afx_msg LRESULT OnDblClickTab(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnDestroy();
 	afx_msg void OnSysColorChange();
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnBnClickedDownloadSelected();
 	afx_msg void OnBnClickedClearAll();
 	afx_msg void OnClose();

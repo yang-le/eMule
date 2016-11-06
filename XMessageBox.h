@@ -199,11 +199,11 @@ struct XMSGBOXPARAMS
 	//-]UK
 };
 
-int XMessageBox(HWND hwnd, 
-				LPCTSTR lpszMessage,
-				LPCTSTR lpszCaption = NULL, 
-				UINT nStyle = MB_OK | MB_ICONEXCLAMATION,
-				XMSGBOXPARAMS * pXMB = NULL);
+INT_PTR XMessageBox(HWND hwnd, 
+					LPCTSTR lpszMessage,
+					LPCTSTR lpszCaption = NULL, 
+					UINT nStyle = MB_OK | MB_ICONEXCLAMATION,
+					XMSGBOXPARAMS * pXMB = NULL);
 
 
 DWORD XMessageBoxGetCheckBox(LPCTSTR lpszCompanyName, LPCTSTR lpszModule, int nLine);

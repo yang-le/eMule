@@ -402,7 +402,7 @@ void CMiniMule::UpdateContent(UINT uUpDatarate, UINT uDownDatarate)
 	ASSERT( GetCurrentThreadId() == g_uMainThreadId );
 	if (m_bResolveImages)
 	{
-		static const LPCTSTR _apszConnectedImgs[] =
+		static LPCTSTR _apszConnectedImgs[] =
 		{
 			_T("CONNECTEDNOTNOT.GIF"),
 			_T("CONNECTEDNOTLOW.GIF"),
@@ -712,7 +712,7 @@ void CMiniMule::KillAutoCloseTimer()
 	}
 }
 
-void CMiniMule::OnTimer(UINT nIDEvent)
+void CMiniMule::OnTimer(UINT_PTR nIDEvent)
 {
 	ASSERT_VALID(this);
 	ASSERT( GetCurrentThreadId() == g_uMainThreadId );

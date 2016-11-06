@@ -43,14 +43,14 @@ static char THIS_FILE[] = __FILE__;
 
 #define	EMULTB_BASEEXT		_T("eMuleToolbar.kad02")
 
-static const LPCTSTR s_apszTBFiles[] =
+static LPCTSTR s_apszTBFiles[] =
 {
 	_T("*.") EMULTB_BASEEXT _T(".bmp"),
 	_T("*.") EMULTB_BASEEXT _T(".gif"),
 	_T("*.") EMULTB_BASEEXT _T(".png")
 };
 
-static const LPCTSTR s_apszSkinFiles[] =
+static LPCTSTR s_apszSkinFiles[] =
 {
 	_T("*.") EMULSKIN_BASEEXT _T(".ini"),
 };
@@ -257,13 +257,14 @@ void CMuleToolbarCtrl::SetAllButtonsStrings()
 	tbi.dwMask = TBIF_TEXT;
 	tbi.cbSize = sizeof(TBBUTTONINFO);
 
-	CString buffer;
+	UINT sid;
 	if (theApp.serverconnect->IsConnected())
-		buffer = GetResString(IDS_MAIN_BTN_DISCONNECT);
+		sid = IDS_MAIN_BTN_DISCONNECT;
 	else if (theApp.serverconnect->IsConnecting())
-		buffer = GetResString(IDS_MAIN_BTN_CANCEL);
+		sid = IDS_MAIN_BTN_CANCEL;
 	else
-		buffer = GetResString(IDS_MAIN_BTN_CONNECT);
+		sid = IDS_MAIN_BTN_CONNECT;
+	CString buffer = GetResString(sid);
 
 	_sntprintf(TBStrings[0], _countof(TBStrings[0]), _T("%s"), (LPCTSTR)buffer);
 	TBStrings[0][_countof(TBStrings[0]) - 1] = _T('\0');
@@ -717,7 +718,7 @@ BOOL CMuleToolbarCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 		{
 			// we could also load "*.jpg" here, but because of the typical non solid background of JPGs this
 			// doesn't make sense here.
-			CString strFilter=GetResString(IDS_LOADFILTER_EMTOOLBAR)+ _T(" (");
+			CString strFilter(GetResString(IDS_LOADFILTER_EMTOOLBAR)+ _T(" ("));
 			for (unsigned f = 0; f < _countof(s_apszTBFiles); ++f) {
 				if (f > 0)
 					strFilter += _T(';');
@@ -782,7 +783,7 @@ BOOL CMuleToolbarCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 		}
 		case MP_SELECT_SKIN_FILE:
 		{
-			CString strFilter=GetResString(IDS_LOADFILTER_EMSKINFILES) + _T(" (");
+			CString strFilter(GetResString(IDS_LOADFILTER_EMSKINFILES) + _T(" ("));
 			for (unsigned f = 0; f < _countof(s_apszSkinFiles); ++f) {
 				if (f > 0)
 					strFilter += _T(';');

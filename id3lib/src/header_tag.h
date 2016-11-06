@@ -98,7 +98,7 @@ public:
   // ff = flags byte
   // ss = size bytes (less than $80)
   static const char* const ID;
-  enum
+  enum : size_t
   {
     ID_SIZE        = 3,
     MAJOR_OFFSET   = 3,

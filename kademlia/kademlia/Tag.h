@@ -49,25 +49,25 @@ namespace Kademlia
 			virtual ~CKadTagNameString()
 			{}
 
-			CKadTagNameString(const LPCSTR psz)
+			CKadTagNameString(LPCSTR psz)
 				: CStringA(psz)
 			{}
 
-			CKadTagNameString(const LPCSTR psz, int len)
+			CKadTagNameString(LPCSTR psz, int len)
 				: CStringA(psz, len)
 			{}
 
 			// A tag name may include character values >= 0xD0 and therefore also >= 0xF0. to prevent those
 			// characters be interpreted as multi byte character sequences we have to ensure that a binary
 			// string compare is performed.
-			int Compare(const LPCSTR psz) const throw()
+			int Compare(LPCSTR psz) const throw()
 			{
 				ATLASSERT( AfxIsValidString(psz) );
 				// Do a binary string compare. (independent from any codepage and/or LC_CTYPE setting.)
 				return strcmp(GetString(), psz);
 			}
 
-			int CompareNoCase(const LPCSTR psz) const throw()
+			int CompareNoCase(LPCSTR psz) const throw()
 			{
 				ATLASSERT( AfxIsValidString(psz) );
 
@@ -80,7 +80,7 @@ namespace Kademlia
 				return __ascii_stricmp(GetString(), psz);
 			}
 
-			CKadTagNameString& operator=(const LPCSTR pszSrc)
+			CKadTagNameString& operator=(LPCSTR pszSrc)
 			{
 				CStringA::operator=(pszSrc);
 				return *this;
@@ -175,7 +175,7 @@ namespace Kademlia
 			byte	m_type;
 			CKadTagNameString m_name;
 
-			CKadTag(byte type, const LPCSTR name)
+			CKadTag(byte type, LPCSTR name)
 				: m_type(type), m_name(name)
 			{}
 
@@ -257,12 +257,12 @@ namespace Kademlia
 	class CKadTagStr : public CKadTag
 	{
 		public:
-			CKadTagStr(const LPCSTR name, const LPCWSTR value, int len)
+			CKadTagStr(LPCSTR name, LPCWSTR value, int len)
 				: CKadTag(TAGTYPE_STRING, name)
 				, m_value(value, len)
 			{}
 
-			CKadTagStr(const LPCSTR name, const CStringW& rstr)
+			CKadTagStr(LPCSTR name, const CStringW& rstr)
 				: CKadTag(TAGTYPE_STRING, name)
 					, m_value(rstr)
 			{}
@@ -284,7 +284,7 @@ namespace Kademlia
 	class CKadTagUInt : public CKadTag
 	{
 		public:
-			CKadTagUInt(const LPCSTR name, uint64 value)
+			CKadTagUInt(LPCSTR name, uint64 value)
 				: CKadTag(TAGTYPE_UINT, name)
 				, m_value(value)
 			{}
@@ -306,7 +306,7 @@ namespace Kademlia
 	class CKadTagUInt64 : public CKadTag
 	{
 		public:
-			CKadTagUInt64(const LPCSTR name, uint64 value)
+			CKadTagUInt64(LPCSTR name, uint64 value)
 				: CKadTag(TAGTYPE_UINT64, name)
 				, m_value(value)
 			{}
@@ -328,7 +328,7 @@ namespace Kademlia
 	class CKadTagUInt32 : public CKadTag
 	{
 		public:
-			CKadTagUInt32(const LPCSTR name, uint32 value)
+			CKadTagUInt32(LPCSTR name, uint32 value)
 				: CKadTag(TAGTYPE_UINT32, name)
 					, m_value(value)
 			{}
@@ -351,7 +351,7 @@ namespace Kademlia
 	class CKadTagFloat : public CKadTag
 	{
 		public:
-			CKadTagFloat(const LPCSTR name, float value)
+			CKadTagFloat(LPCSTR name, float value)
 				: CKadTag(TAGTYPE_FLOAT32, name)
 				, m_value(value)
 			{}
@@ -374,7 +374,7 @@ namespace Kademlia
 	class CKadTagBool : public CKadTag
 	{
 		public:
-			CKadTagBool(const LPCSTR name, bool value)
+			CKadTagBool(LPCSTR name, bool value)
 				: CKadTag(TAGTYPE_BOOL, name)
 				, m_value(value)
 			{}
@@ -397,7 +397,7 @@ namespace Kademlia
 	class CKadTagUInt16 : public CKadTag
 	{
 		public:
-			CKadTagUInt16(const LPCSTR name, uint16 value)
+			CKadTagUInt16(LPCSTR name, uint16 value)
 				: CKadTag(TAGTYPE_UINT16, name)
 				, m_value(value)
 			{}
@@ -420,7 +420,7 @@ namespace Kademlia
 	class CKadTagUInt8 : public CKadTag
 	{
 		public:
-			CKadTagUInt8(const LPCSTR name, uint8 value)
+			CKadTagUInt8(LPCSTR name, uint8 value)
 				: CKadTag(TAGTYPE_UINT8, name)
 				, m_value(value)
 			{}
@@ -443,7 +443,7 @@ namespace Kademlia
 	class CKadTagBsob : public CKadTag
 	{
 		public:
-			CKadTagBsob(const LPCSTR name, const BYTE* value, uint8 nSize)
+			CKadTagBsob(LPCSTR name, const BYTE* value, uint8 nSize)
 				: CKadTag(TAGTYPE_BSOB, name)
 			{
 				m_value = new BYTE[nSize];
@@ -479,7 +479,7 @@ namespace Kademlia
 	class CKadTagHash : public CKadTag
 	{
 		public:
-			CKadTagHash(const LPCSTR name, const BYTE* value)
+			CKadTagHash(LPCSTR name, const BYTE* value)
 				: CKadTag(TAGTYPE_HASH, name)
 			{
 				m_value = new BYTE[16];

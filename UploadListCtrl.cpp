@@ -392,7 +392,7 @@ void CUploadListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 			const CKnownFile* file = theApp.sharedfiles->GetFileByID(client->GetUploadFileID());
 			if (file)
 			{
-				strInfo += GetResString(IDS_SF_REQUESTED) + _T(' ') + file->GetFileName() + _T('\n');
+				strInfo.AppendFormat(_T("%s %s\n"), (LPCTSTR)GetResString(IDS_SF_REQUESTED), (LPCTSTR)file->GetFileName());
 				strInfo.AppendFormat(GetResString(IDS_FILESTATS_SESSION) + GetResString(IDS_FILESTATS_TOTAL),
 					file->statistic.GetAccepts(), file->statistic.GetRequests(), (LPCTSTR)CastItoXBytes(file->statistic.GetTransferred(), false, false),
 					file->statistic.GetAllTimeAccepts(), file->statistic.GetAllTimeRequests(), (LPCTSTR)CastItoXBytes(file->statistic.GetAllTimeTransferred(), false, false));
@@ -441,8 +441,8 @@ void CUploadListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 int CALLBACK CUploadListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const CUpDownClient *item1 = (CUpDownClient *)lParam1;
-	const CUpDownClient *item2 = (CUpDownClient *)lParam2;
+	const CUpDownClient *item1 = reinterpret_cast<const CUpDownClient *>(lParam1);
+	const CUpDownClient *item2 = reinterpret_cast<const CUpDownClient *>(lParam2);
 	int iColumn = (lParamSort >= 100) ? lParamSort - 100 : lParamSort;
 	int iResult = 0;
 	switch (iColumn)
@@ -499,9 +499,11 @@ int CALLBACK CUploadListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 		iResult = -iResult;
 
 	//call secondary sortorder, if this one results in equal
-	int dwNextSort;
-	if (iResult == 0 && (dwNextSort = theApp.emuledlg->transferwnd->m_pwndTransfer->uploadlistctrl.GetNextSortOrder(lParamSort)) != -1)
-		iResult = SortProc(lParam1, lParam2, dwNextSort);
+	if (iResult == 0) {
+		LPARAM dwNextSort = theApp.emuledlg->transferwnd->m_pwndTransfer->uploadlistctrl.GetNextSortOrder(lParamSort);
+		if (dwNextSort != -1)
+			iResult = SortProc(lParam1, lParam2, dwNextSort);
+	}
 
 	return iResult;
 }

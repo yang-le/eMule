@@ -271,7 +271,7 @@ void CTrayDialog::KillSingleClickTimer()
 	}
 }
 
-void CTrayDialog::OnTimer(UINT nIDEvent)
+void CTrayDialog::OnTimer(UINT_PTR nIDEvent)
 {
 	if (nIDEvent == m_uSingleClickTimer)
 	{

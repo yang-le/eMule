@@ -628,7 +628,7 @@ void CPPgTweaks::OnHScroll(UINT /*nSBCode*/, UINT /*nPos*/, CScrollBar* pScrollB
 	else if (pScrollBar->GetSafeHwnd() == m_ctlQueueSize.m_hWnd)
 	{
 		m_iQueueSize = ((CSliderCtrl*)pScrollBar)->GetPos() * 100;
-		CString temp(GetResString(IDS_QUEUESIZE) + _T(": ") + GetFormatedUInt(m_iQueueSize));
+		CString temp(GetResString(IDS_QUEUESIZE) + _T(": ") + GetFormatedUInt((ULONG)m_iQueueSize));
 		GetDlgItem(IDC_QUEUESIZE_STATIC)->SetWindowText(temp);
 		SetModified(TRUE);
 	}
@@ -700,7 +700,7 @@ void CPPgTweaks::Localize(void)
 
         CString temp(GetResString(IDS_FILEBUFFERSIZE)+_T(": ")+CastItoXBytes(m_iFileBufferSize, false, false));
 		GetDlgItem(IDC_FILEBUFFERSIZE_STATIC)->SetWindowText(temp);
-		temp = GetResString(IDS_QUEUESIZE) + _T(": ") + GetFormatedUInt(m_iQueueSize);
+		temp.AppendFormat(_T("%s: %s"), (LPCTSTR)GetResString(IDS_QUEUESIZE), (LPCTSTR)GetFormatedUInt(m_iQueueSize));
 		GetDlgItem(IDC_QUEUESIZE_STATIC)->SetWindowText(temp);
 	}
 }

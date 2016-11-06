@@ -189,7 +189,7 @@ uint32_t CxImage::GetWidth() const
 }
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * \return uint32_t aligned width of the image.
+ * \return size_t aligned width of the image.
  */
 uint32_t CxImage::GetEffWidth() const
 {
@@ -782,15 +782,17 @@ uint32_t CxImage::DumpSize()
 	n = sizeof(BITMAPINFOHEADER) + sizeof(CXIMAGEINFO) + GetSize();
 
 #if CXIMAGE_SUPPORT_ALPHA
-	if (pAlpha){
+	if (pAlpha)
 		n += 1 + head.biWidth * head.biHeight;
-	} else n++;
+	else
+		++n;
 #endif
 
 #if CXIMAGE_SUPPORT_SELECTION
-	if (pSelection){
+	if (pSelection)
 		n += 1 + head.biWidth * head.biHeight;
-	} else n++;
+	else
+		++n;
 #endif
 
 #if CXIMAGE_SUPPORT_LAYERS
@@ -800,7 +802,8 @@ uint32_t CxImage::DumpSize()
 				n += 1 + GetLayer(m)->DumpSize();
 			}
 		}
-	} else n++;
+	} else
+		++n;
 #endif
 
 	if (ppFrames){
@@ -809,7 +812,8 @@ uint32_t CxImage::DumpSize()
 				n += 1 + GetFrame(m)->DumpSize();
 			}
 		}
-	} else n++;
+	} else
+		++n;
 
 	return n;
 }

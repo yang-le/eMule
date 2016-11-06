@@ -538,7 +538,7 @@ HTREEITEM CTreeOptionsCtrl::InsertGroup(LPCTSTR lpszItem, int nImage, HTREEITEM 
 	pItemData->m_pRuntimeClass1 = NULL;
 	pItemData->m_Type = CTreeOptionsItemData::Normal;
 	pItemData->m_dwItemData = dwItemData;
-	SetItemData(hItem, (DWORD) pItemData);
+	SetItemData(hItem, (DWORD_PTR)pItemData);
 
 	return hItem;
 }
@@ -552,7 +552,7 @@ HTREEITEM CTreeOptionsCtrl::InsertCheckBox(LPCTSTR lpszItem, HTREEITEM hParent, 
 	pItemData->m_pRuntimeClass1 = NULL;
 	pItemData->m_Type = CTreeOptionsItemData::CheckBox;
 	pItemData->m_dwItemData = dwItemData;
-	SetItemData(hItem, (DWORD) pItemData);
+	SetItemData(hItem, (DWORD_PTR)pItemData);
 	BOOL bSuccess = SetCheckBox(hItem, bCheck);
 	ASSERT(bSuccess);
 
@@ -568,7 +568,7 @@ HTREEITEM CTreeOptionsCtrl::InsertRadioButton(LPCTSTR lpszItem, HTREEITEM hParen
 	pItemData->m_pRuntimeClass1 = NULL;
 	pItemData->m_Type = CTreeOptionsItemData::RadioButton;
 	pItemData->m_dwItemData = dwItemData;
-	SetItemData(hItem, (DWORD) pItemData);
+	SetItemData(hItem, (DWORD_PTR)pItemData);
 	if (bCheck)
 	{
 		//if requested to, check the newly added radio button
@@ -592,91 +592,61 @@ BOOL CTreeOptionsCtrl::IsGroup(HTREEITEM hItem) const
 BOOL CTreeOptionsCtrl::IsCheckBox(HTREEITEM hItem) const
 {
 	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
-	if (pItemData)
-		return pItemData->m_Type == CTreeOptionsItemData::CheckBox;
-	else
-		return FALSE;
+	return pItemData && pItemData->m_Type == CTreeOptionsItemData::CheckBox;
 }
 
 BOOL CTreeOptionsCtrl::IsRadioButton(HTREEITEM hItem) const
 {
 	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
-	if (pItemData)
-		return pItemData->m_Type == CTreeOptionsItemData::RadioButton;
-	else
-		return FALSE;
+	return pItemData && pItemData->m_Type == CTreeOptionsItemData::RadioButton;
 }
 
 BOOL CTreeOptionsCtrl::IsEditBox(HTREEITEM hItem) const
 {
 	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
-	if (pItemData)
-		return pItemData->m_Type == CTreeOptionsItemData::EditBox;
-	else
-		return FALSE;
+	return pItemData && pItemData->m_Type == CTreeOptionsItemData::EditBox;
 }
 
 BOOL CTreeOptionsCtrl::IsColorItem(HTREEITEM hItem) const
 {
 	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
-	if (pItemData)
-		return pItemData->m_Type == CTreeOptionsItemData::ColorBrowser;
-	else
-		return FALSE;
+	return pItemData && pItemData->m_Type == CTreeOptionsItemData::ColorBrowser;
 }
 
 BOOL CTreeOptionsCtrl::IsFontItem(HTREEITEM hItem) const
 {
 	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
-	if (pItemData)
-		return pItemData->m_Type == CTreeOptionsItemData::FontBrowser;
-	else
-		return FALSE;
+	return pItemData && pItemData->m_Type == CTreeOptionsItemData::FontBrowser;
 }
 
 BOOL CTreeOptionsCtrl::IsFileItem(HTREEITEM hItem) const
 {
 	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
-	if (pItemData)
-		return pItemData->m_Type == CTreeOptionsItemData::FileBrowser;
-	else
-		return FALSE;
+	return pItemData && pItemData->m_Type == CTreeOptionsItemData::FileBrowser;
 }
 
 BOOL CTreeOptionsCtrl::IsFolderItem(HTREEITEM hItem) const
 {
 	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
-	if (pItemData)
-		return pItemData->m_Type == CTreeOptionsItemData::FolderBrowser;
-	else
-		return FALSE;
+	return pItemData && pItemData->m_Type == CTreeOptionsItemData::FolderBrowser;
 }
 
 BOOL CTreeOptionsCtrl::IsDateTimeItem(HTREEITEM hItem) const
 {
 	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
-	if (pItemData)
-		return pItemData->m_Type == CTreeOptionsItemData::DateTimeCtrl;
-	else
-		return FALSE;
+	return pItemData && pItemData->m_Type == CTreeOptionsItemData::DateTimeCtrl;
 }
 
 BOOL CTreeOptionsCtrl::IsIPAddressItem(HTREEITEM hItem) const
 {
 	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
-	if (pItemData)
-		return pItemData->m_Type == CTreeOptionsItemData::IPAddressCtrl;
-	else
-		return FALSE;
+	return pItemData && pItemData->m_Type == CTreeOptionsItemData::IPAddressCtrl;
 }
 
 BOOL CTreeOptionsCtrl::IsOpaqueItem(HTREEITEM hItem) const
 {
 	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
-	if (pItemData)
-		return pItemData->m_Type == CTreeOptionsItemData::OpaqueBrowser;
-	else
-		return FALSE;
+	return pItemData && pItemData->m_Type == CTreeOptionsItemData::OpaqueBrowser;
 }
 
 BOOL CTreeOptionsCtrl::SetCheckBox(HTREEITEM hItem, BOOL bCheck)
@@ -708,8 +678,7 @@ BOOL CTreeOptionsCtrl::SetEnabledSemiCheckBox(HTREEITEM hItem, BOOL bSemi)
 
 	if (bSemi)
 		return SetItemImage(hItem, 8, 8);
-	else
-		return SetItemImage(hItem, 9, 9);
+	return SetItemImage(hItem, 9, 9);
 }
 
 BOOL CTreeOptionsCtrl::GetCheckBox(HTREEITEM hItem, BOOL& bCheck) const
@@ -1068,7 +1037,7 @@ BOOL CTreeOptionsCtrl::AddComboBox(HTREEITEM hItem, CRuntimeClass* pRuntimeClass
 	pItemData->m_pRuntimeClass1 = pRuntimeClass;
 	pItemData->m_Type = CTreeOptionsItemData::ComboBox;
 
-	return SetItemData(hItem, (DWORD) pItemData);
+	return SetItemData(hItem, (DWORD_PTR)pItemData);
 }
 
 CString CTreeOptionsCtrl::GetComboText(HTREEITEM hItem) const
@@ -1910,7 +1879,7 @@ int CTreeOptionsCtrl::GetIndentPostion(HTREEITEM hItem) const
 
 BOOL CTreeOptionsCtrl::OnCustomDraw(NMHDR* pNMHDR, LRESULT* pResult)
 {
-	NMTVCUSTOMDRAW* pCustomDraw = (NMTVCUSTOMDRAW*) pNMHDR;
+	NMTVCUSTOMDRAW* pCustomDraw = reinterpret_cast<NMTVCUSTOMDRAW *>(pNMHDR);
 	switch (pCustomDraw->nmcd.dwDrawStage)
 	{
 	case CDDS_PREPAINT:
@@ -2203,7 +2172,7 @@ int CALLBACK CTreeOptionsFontNameCombo::_EnumFontProc(CONST LOGFONT* lplf, CONST
 													  DWORD dwType, LPARAM lpData)
 {
 	//Convert from the SDK world to the C++ world
-	CTreeOptionsFontNameCombo* pThis = (CTreeOptionsFontNameCombo*) lpData;
+	CTreeOptionsFontNameCombo* pThis = reinterpret_cast<CTreeOptionsFontNameCombo *>(lpData);
 	ASSERT(pThis);
 	return pThis->EnumFontProc(lplf, lptm, dwType);
 }

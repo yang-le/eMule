@@ -326,11 +326,9 @@ void CSearchFile::StoreToFile(CFileDataIO& rFile) const
 	if (m_FileIdentifier.HasAICHHash())
 		nTagCount++;
 	rFile.WriteUInt32(nTagCount);
-	INT_PTR pos;
-	for (pos = 0; pos < taglist.GetCount(); pos++){
+	for (INT_PTR pos = 0; pos < taglist.GetCount(); pos++) {
 		CTag* tag = taglist[pos];
-		if (tag->GetNameID() == FT_FILERATING && tag->IsInt())
-		{
+		if (tag->GetNameID() == FT_FILERATING && tag->IsInt()) {
 			CTag temp(FT_FILERATING, (tag->GetInt() * (255/5)) & 0xFF);
 			temp.WriteNewEd2kTag(&rFile);
 		} else
@@ -352,7 +350,7 @@ void CSearchFile::UpdateFileRatingCommentAvail(bool bForceUpdate)
 	UINT uRatings = 0;
 	UINT uUserRatings = 0;
 
-	for(POSITION pos = m_kadNotes.GetHeadPosition(); pos != NULL; )
+	for(POSITION pos = m_kadNotes.GetHeadPosition(); pos != NULL;)
 	{
 		Kademlia::CEntry* entry = m_kadNotes.GetNext(pos);
 		if (!m_bHasComment && !entry->GetStrTagValue(TAG_DESCRIPTION).IsEmpty())

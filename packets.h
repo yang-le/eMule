@@ -41,7 +41,7 @@ public:
 //	bool	IsLastSplitted() const				{return m_bLastSplitted;}
 	bool	IsFromPF() const					{return m_bFromPF;}
 	void	PackPacket();
-	bool	UnPackPacket(UINT uMaxDecompressedSize = 50000);
+	bool	UnPackPacket(UINT uMaxDecompressedSize = 50000u);
 
 	char*	pBuffer;
 	uint32	size;
@@ -97,7 +97,7 @@ public:
 	CTag(LPCSTR pszName, const CString& rstrVal);
 	CTag(uint8 uName, const CString& rstrVal);
 	CTag(uint8 uName, const BYTE* pucHash);
-	CTag(uint8 uName, uint32 nSize, const BYTE* pucData); // data gets copied
+	CTag(uint8 uName, size_t nSize, const BYTE* pucData); // data gets copied
 	CTag(uint8 uName, BYTE* pucAttachData, uint32 nSize); // data gets attached (and deleted lateron)
 	CTag(const CTag& rTag);
 	CTag(CFileDataIO* data, bool bOptUTF8);
@@ -151,6 +151,8 @@ protected:
 	  float		m_fVal;
 	  BYTE*		m_pData;
 	};
+private:
+	void cleanup();
 };
 
 

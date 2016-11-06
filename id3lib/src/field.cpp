@@ -1858,45 +1858,42 @@ char *ID3_FrameInfo::ShortName(ID3_FrameID frameid)
 {
   if(frameid > ID3FID_NOFRAME && frameid < ID3FID_LASTFRAMEID)
     return ID3_FrameDefs[frameid-1].sShortTextID;
-  else
-    return NULL;
+  return NULL;
 }
 
 char *ID3_FrameInfo::LongName(ID3_FrameID frameid)
 {
   if(frameid > ID3FID_NOFRAME && frameid < ID3FID_LASTFRAMEID)
     return ID3_FrameDefs[frameid-1].sLongTextID;
-  else
-    return NULL;
+  return NULL;
 }
 
 const char *ID3_FrameInfo::Description(ID3_FrameID frameid)
 {
   if(frameid > ID3FID_NOFRAME && frameid < ID3FID_LASTFRAMEID)
     return ID3_FrameDefs[frameid-1].sDescription;
-  else
-    return NULL;
+  return NULL;
 }
 
-int ID3_FrameInfo::MaxFrameID()
+size_t ID3_FrameInfo::MaxFrameID()
 {
   return ID3FID_LASTFRAMEID-1;
 }
 
-int ID3_FrameInfo::NumFields(ID3_FrameID frameid)
+size_t ID3_FrameInfo::NumFields(ID3_FrameID frameid)
 {
-  int fieldnum=0;
+	size_t fieldnum=0;
 
   if(frameid > ID3FID_NOFRAME && frameid < ID3FID_LASTFRAMEID)
 	while (ID3_FrameDefs[frameid-1].aeFieldDefs[fieldnum]._id != ID3FN_NOFIELD)
 	{
-		fieldnum++;
+		++fieldnum;
 	}
 
   return fieldnum;
 }
 
-ID3_FieldID ID3_FrameInfo::FieldID(ID3_FrameID frameid, int fieldnum)
+ID3_FieldID ID3_FrameInfo::FieldID(ID3_FrameID frameid, size_t fieldnum)
 {
   if(frameid > ID3FID_NOFRAME && frameid < ID3FID_LASTFRAMEID &&
      fieldnum < NumFields(frameid))
@@ -1905,7 +1902,7 @@ ID3_FieldID ID3_FrameInfo::FieldID(ID3_FrameID frameid, int fieldnum)
   return ID3FN_NOFIELD;
 }
 
-ID3_FieldType ID3_FrameInfo::FieldType(ID3_FrameID frameid, int fieldnum)
+ID3_FieldType ID3_FrameInfo::FieldType(ID3_FrameID frameid, size_t fieldnum)
 {
   if(frameid > ID3FID_NOFRAME && frameid < ID3FID_LASTFRAMEID &&
      fieldnum < NumFields(frameid))
@@ -1914,7 +1911,7 @@ ID3_FieldType ID3_FrameInfo::FieldType(ID3_FrameID frameid, int fieldnum)
   return ID3FTY_NONE;
 }
 
-size_t ID3_FrameInfo::FieldSize(ID3_FrameID frameid, int fieldnum)
+size_t ID3_FrameInfo::FieldSize(ID3_FrameID frameid, size_t fieldnum)
 {
   if(frameid > ID3FID_NOFRAME && frameid < ID3FID_LASTFRAMEID &&
      fieldnum < NumFields(frameid))
@@ -1923,7 +1920,7 @@ size_t ID3_FrameInfo::FieldSize(ID3_FrameID frameid, int fieldnum)
   return 0;
 }
 
-flags_t ID3_FrameInfo::FieldFlags(ID3_FrameID frameid, int fieldnum)
+flags_t ID3_FrameInfo::FieldFlags(ID3_FrameID frameid, size_t fieldnum)
 {
   if(frameid > ID3FID_NOFRAME && frameid < ID3FID_LASTFRAMEID &&
      fieldnum < NumFields(frameid))

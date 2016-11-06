@@ -129,7 +129,7 @@ BOOL CServerWnd::OnInitDialog()
 
 		servermsgbox->AppendText(_T("eMule v") + theApp.m_strCurVersionLong + _T("\n"));
 		// MOD Note: Do not remove this part - Merkur
-		m_strClickNewVersion = GetResString(IDS_EMULEW) + _T(" ") + GetResString(IDS_EMULEW3) + _T(" ") + GetResString(IDS_EMULEW2);
+		m_strClickNewVersion.AppendFormat(_T("%s %s %s"), (LPCTSTR)GetResString(IDS_EMULEW), (LPCTSTR)GetResString(IDS_EMULEW3), (LPCTSTR)GetResString(IDS_EMULEW2));
 		servermsgbox->AppendHyperLink(_T(""), _T(""), m_strClickNewVersion, _T(""));
 		// MOD Note: end
 		servermsgbox->AppendText(_T("\n\n"));
@@ -757,13 +757,14 @@ void CServerWnd::OnEnLinkServerBox(NMHDR *pNMHDR, LRESULT *pResult)
 
 void CServerWnd::UpdateControlsState()
 {
-	CString strLabel;
+	UINT sid;
 	if (theApp.serverconnect->IsConnected())
-		strLabel = GetResString(IDS_MAIN_BTN_DISCONNECT);
+		sid = IDS_MAIN_BTN_DISCONNECT;
 	else if (theApp.serverconnect->IsConnecting())
-		strLabel = GetResString(IDS_MAIN_BTN_CANCEL);
+		sid = IDS_MAIN_BTN_CANCEL;
 	else
-		strLabel = GetResString(IDS_MAIN_BTN_CONNECT);
+		sid = IDS_MAIN_BTN_CONNECT;
+	CString strLabel(GetResString(sid));
 	strLabel.Remove(_T('&'));
 	GetDlgItem(IDC_ED2KCONNECT)->SetWindowText(strLabel);
 }

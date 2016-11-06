@@ -77,50 +77,24 @@ void CPPgDisplay::DoDataExchange(CDataExchange* pDX)
 
 void CPPgDisplay::LoadSettings(void)
 {
-	if(thePrefs.mintotray)
-		CheckDlgButton(IDC_MINTRAY,1);
-	else
-		CheckDlgButton(IDC_MINTRAY,0);
-
-	if(thePrefs.transferDoubleclick)
-		CheckDlgButton(IDC_DBLCLICK,1);
-	else
-		CheckDlgButton(IDC_DBLCLICK,0);
-
-	if(thePrefs.showRatesInTitle)
-		CheckDlgButton(IDC_SHOWRATEONTITLE,1);
-	else
-		CheckDlgButton(IDC_SHOWRATEONTITLE,0);
-
-	if(thePrefs.m_bDisableKnownClientList)
-		CheckDlgButton(IDC_DISABLEKNOWNLIST,1);
-	else
-		CheckDlgButton(IDC_DISABLEKNOWNLIST,0);
-
-	if(thePrefs.m_bDisableQueueList)
-		CheckDlgButton(IDC_DISABLEQUEUELIST,1);
-	else
-		CheckDlgButton(IDC_DISABLEQUEUELIST,0);
-
-	if(thePrefs.IsStoringSearchesEnabled())
-		CheckDlgButton(IDC_STORESEARCHES,1);
-	else
-		CheckDlgButton(IDC_STORESEARCHES,0);
-
-	CheckDlgButton(IDC_SHOWCATINFO,(UINT)thePrefs.ShowCatTabInfos());
-	CheckDlgButton(IDC_SHOWDWLPERCENT,(UINT)thePrefs.GetUseDwlPercentage() );
-	CheckDlgButton(IDC_CLEARCOMPL, (uint8)thePrefs.GetRemoveFinishedDownloads());
-	CheckDlgButton(IDC_SHOWTRANSTOOLBAR, (uint8)thePrefs.IsTransToolbarEnabled());
-	CheckDlgButton(IDC_DISABLEHIST, (uint8)thePrefs.GetUseAutocompletion());
+	CheckDlgButton(IDC_MINTRAY, static_cast<UINT>(thePrefs.mintotray));
+	CheckDlgButton(IDC_DBLCLICK, static_cast<UINT>(thePrefs.transferDoubleclick));
+	CheckDlgButton(IDC_SHOWRATEONTITLE, static_cast<UINT>(thePrefs.showRatesInTitle));
+	CheckDlgButton(IDC_DISABLEKNOWNLIST, static_cast<UINT>(thePrefs.m_bDisableKnownClientList));
+	CheckDlgButton(IDC_DISABLEQUEUELIST, static_cast<UINT>(thePrefs.m_bDisableQueueList));
+	CheckDlgButton(IDC_STORESEARCHES, static_cast<UINT>(thePrefs.IsStoringSearchesEnabled()));
+	CheckDlgButton(IDC_SHOWCATINFO, static_cast<UINT>(thePrefs.ShowCatTabInfos()));
+	CheckDlgButton(IDC_SHOWDWLPERCENT, static_cast<UINT>(thePrefs.GetUseDwlPercentage()));
+	CheckDlgButton(IDC_CLEARCOMPL, static_cast<UINT>(thePrefs.GetRemoveFinishedDownloads()));
+	CheckDlgButton(IDC_SHOWTRANSTOOLBAR, static_cast<UINT>(thePrefs.IsTransToolbarEnabled()));
+	CheckDlgButton(IDC_DISABLEHIST, static_cast<UINT>(thePrefs.GetUseAutocompletion()));
 	
-#ifndef HAVE_WIN7_SDK_H
-	GetDlgItem(IDC_WIN7TASKBARGOODIES)->EnableWindow(FALSE);
-#else
+#ifdef HAVE_WIN7_SDK_H
 	if ( thePrefs.GetWindowsVersion() >= _WINVER_7_)
-		CheckDlgButton(IDC_WIN7TASKBARGOODIES, (uint8)thePrefs.IsWin7TaskbarGoodiesEnabled());	
+		CheckDlgButton(IDC_WIN7TASKBARGOODIES, static_cast<UINT>(thePrefs.IsWin7TaskbarGoodiesEnabled()));
 	else
-		GetDlgItem(IDC_WIN7TASKBARGOODIES)->EnableWindow(FALSE);
 #endif
+		GetDlgItem(IDC_WIN7TASKBARGOODIES)->EnableWindow(FALSE);
 
 	SetDlgItemInt(IDC_TOOLTIPDELAY, thePrefs.m_iToolDelayTime, FALSE);
 }
@@ -272,9 +246,9 @@ void CPPgDisplay::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 static LPCFHOOKPROC s_pfnChooseFontHook = NULL;
 static CPPgDisplay* s_pThis = NULL;
 
-UINT CALLBACK CPPgDisplay::ChooseFontHook(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+UINT_PTR CALLBACK CPPgDisplay::ChooseFontHook(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 {
-	UINT uResult;
+	UINT_PTR uResult;
 
 	// Call MFC's common dialog Hook function
 	if (s_pfnChooseFontHook != NULL)

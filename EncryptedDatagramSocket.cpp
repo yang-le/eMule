@@ -126,12 +126,13 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 
-#define CRYPT_HEADER_WITHOUTPADDING		    8
-#define	MAGICVALUE_UDP						91
-#define MAGICVALUE_UDP_SYNC_CLIENT			0x395F2EC1
-#define MAGICVALUE_UDP_SYNC_SERVER			0x13EF24D5
-#define	MAGICVALUE_UDP_SERVERCLIENT			0xA5
-#define	MAGICVALUE_UDP_CLIENTSERVER			0x6B
+#define CRYPT_HEADER_PADDING			0 // padding is disabled for UDP currently
+#define CRYPT_HEADER_WITHOUTPADDING		8
+#define	MAGICVALUE_UDP					91
+#define MAGICVALUE_UDP_SYNC_CLIENT		0x395F2EC1
+#define MAGICVALUE_UDP_SYNC_SERVER		0x13EF24D5
+#define	MAGICVALUE_UDP_SERVERCLIENT		0xA5
+#define	MAGICVALUE_UDP_CLIENTSERVER		0x6B
 
 static CryptoPP::AutoSeededRandomPool cryptRandomGen;
 
@@ -276,23 +277,21 @@ int CEncryptedDatagramSocket::DecryptReceivedClient(BYTE* pbyBufIn, int nBufLen,
 // pachClientHashOrKadID != NULL									-> pachClientHashOrKadID
 // pachClientHashOrKadID == NULL && bKad && nReceiverVerifyKey != 0 -> nReceiverVerifyKey
 // else																-> ASSERT
-int CEncryptedDatagramSocket::EncryptSendClient(uchar** ppbyBuf, int nBufLen, const uchar* pachClientHashOrKadID, bool bKad, uint32 nReceiverVerifyKey, uint32 nSenderVerifyKey)
+int CEncryptedDatagramSocket::EncryptSendClient(uchar* pbyBuf, int nBufLen, const uchar* pachClientHashOrKadID, bool bKad, uint32 nReceiverVerifyKey, uint32 nSenderVerifyKey)
 {
-	ASSERT( theApp.GetPublicIP() != 0 || bKad );
-	ASSERT( thePrefs.IsClientCryptLayerSupported() );
-	ASSERT( pachClientHashOrKadID != NULL || nReceiverVerifyKey != 0 );
-	ASSERT( (nReceiverVerifyKey == 0 && nSenderVerifyKey == 0) || bKad );
+	ASSERT(theApp.GetPublicIP() != 0 || bKad);
+	ASSERT(thePrefs.IsClientCryptLayerSupported());
+	ASSERT(pachClientHashOrKadID != NULL || nReceiverVerifyKey != 0);
+	ASSERT((nReceiverVerifyKey == 0 && nSenderVerifyKey == 0) || bKad);
 
-	uint8 byPadLen = 0;			// padding disabled for UDP currently
-	const uint32 nCryptHeaderLen = byPadLen + CRYPT_HEADER_WITHOUTPADDING + (bKad ? 8 : 0);
+	uint8 byPadLen = CRYPT_HEADER_PADDING;
+	const uint32 nCryptHeaderLen = EncryptOverheadSize(bKad);
 
-	uint32 nCryptedLen = nBufLen + nCryptHeaderLen;
-	uchar* pachCryptedBuffer = new uchar[nCryptedLen];
 	bool bKadRecKeyUsed = false;
 
-	uint16 nRandomKeyPart = (uint16)cryptRandomGen.GenerateWord32(0x0000, 0xFFFF);
+	uint16 nRandomKeyPart = (uint16)cryptRandomGen.GenerateWord32(0x0000, 0xFFFFu);
 	MD5Sum md5;
-	if (bKad){
+	if (bKad) {
 		if ((pachClientHashOrKadID == NULL || isnulmd4(pachClientHashOrKadID)) && nReceiverVerifyKey != 0) {
 			bKadRecKeyUsed = true;
 			uchar achKeyData[6];
@@ -300,21 +299,17 @@ int CEncryptedDatagramSocket::EncryptSendClient(uchar** ppbyBuf, int nBufLen, co
 			PokeUInt16(achKeyData+4, nRandomKeyPart);
 			md5.Calculate(achKeyData, sizeof achKeyData);
 			//DEBUG_ONLY( DebugLog(_T("Creating obfuscated Kad packet encrypted by ReceiverKey (%u)"), nReceiverVerifyKey) );
-		}
-		else if (pachClientHashOrKadID != NULL && !isnulmd4(pachClientHashOrKadID)) {
+		} else if (pachClientHashOrKadID != NULL && !isnulmd4(pachClientHashOrKadID)) {
 			uchar achKeyData[18];
 			md4cpy(achKeyData, pachClientHashOrKadID);
 			PokeUInt16(achKeyData+16, nRandomKeyPart);
 			md5.Calculate(achKeyData, sizeof achKeyData);
 			//DEBUG_ONLY( DebugLog(_T("Creating obfuscated Kad packet encrypted by Hash/NodeID %s"), (LPCTSTR)md4str(pachClientHashOrKadID)) );
-		}
-		else {
-			ASSERT( false );
-			delete[] pachCryptedBuffer;
+		} else {
+			ASSERT(false);
 			return nBufLen;
 		}
-	}
-	else{
+	} else {
 		uchar achKeyData[23];
 		md4cpy(achKeyData, pachClientHashOrKadID);
 		uint32 dwIP = theApp.GetPublicIP();
@@ -329,7 +324,7 @@ int CEncryptedDatagramSocket::EncryptSendClient(uchar** ppbyBuf, int nBufLen, co
 	// create the semi random byte encryption header
 	uint8 bySemiRandomNotProtocolMarker = 0;
 	int i;
-	for (i = 0; i < 128; i++){
+	for (i = 0; i < 128; i++) {
 		bySemiRandomNotProtocolMarker = cryptRandomGen.GenerateByte();
 		if (bKad) {
 			bySemiRandomNotProtocolMarker &= 0xFC;
@@ -339,48 +334,46 @@ int CEncryptedDatagramSocket::EncryptSendClient(uchar** ppbyBuf, int nBufLen, co
 			bySemiRandomNotProtocolMarker |= 0x01; // set the ed2k/kad marker bit
 
 		bool bOk = false;
-		switch (bySemiRandomNotProtocolMarker){ // not allowed values
-			case OP_EMULEPROT:
-			case OP_KADEMLIAPACKEDPROT:
-			case OP_KADEMLIAHEADER:
-			case OP_UDPRESERVEDPROT1:
-			case OP_UDPRESERVEDPROT2:
-			case OP_PACKEDPROT:
-				break;
-			default:
-				bOk = true;
+		switch (bySemiRandomNotProtocolMarker) { // not allowed values
+		case OP_EMULEPROT:
+		case OP_KADEMLIAPACKEDPROT:
+		case OP_KADEMLIAHEADER:
+		case OP_UDPRESERVEDPROT1:
+		case OP_UDPRESERVEDPROT2:
+		case OP_PACKEDPROT:
+			break;
+		default:
+			bOk = true;
 		}
 		if (bOk)
 			break;
 	}
-	if (i >= 128){
+	if (i >= 128) {
 		// either we have _really_ bad luck or the randomgenerator is a bit messed up
-		ASSERT( false );
+		ASSERT(false);
 		bySemiRandomNotProtocolMarker = 0x01;
 	}
 
 	uint32 dwMagicValue = MAGICVALUE_UDP_SYNC_CLIENT;
-	pachCryptedBuffer[0] = bySemiRandomNotProtocolMarker;
-	memcpy(pachCryptedBuffer + 1, &nRandomKeyPart, 2);
-	RC4Crypt((uchar*)&dwMagicValue, pachCryptedBuffer + 3, 4, &keySendKey);
-	RC4Crypt((uchar*)&byPadLen, pachCryptedBuffer + 7, 1, &keySendKey);
+	pbyBuf[0] = bySemiRandomNotProtocolMarker;
+	memcpy(pbyBuf + 1, &nRandomKeyPart, 2);
+	RC4Crypt((uchar*)&dwMagicValue, pbyBuf + 3, 4, &keySendKey);
+	RC4Crypt((uchar*)&byPadLen, pbyBuf + 7, 1, &keySendKey);
 
 	for (int j = 0; j < byPadLen; ++j) {
 		uint8 byRand = (uint8)rand();	// they actually dont really need to be random, but it doesn't hurt either
-		RC4Crypt((uchar*)&byRand, pachCryptedBuffer + CRYPT_HEADER_WITHOUTPADDING + j, 1, &keySendKey);
+		RC4Crypt((uchar*)&byRand, pbyBuf + CRYPT_HEADER_WITHOUTPADDING + j, 1, &keySendKey);
 	}
 
-	if (bKad){
-		RC4Crypt((uchar*)&nReceiverVerifyKey, pachCryptedBuffer + CRYPT_HEADER_WITHOUTPADDING + byPadLen, 4, &keySendKey);
-		RC4Crypt((uchar*)&nSenderVerifyKey, pachCryptedBuffer + CRYPT_HEADER_WITHOUTPADDING + byPadLen + 4, 4, &keySendKey);
+	if (bKad) {
+		RC4Crypt((uchar*)&nReceiverVerifyKey, pbyBuf + CRYPT_HEADER_WITHOUTPADDING + byPadLen, 4, &keySendKey);
+		RC4Crypt((uchar*)&nSenderVerifyKey, pbyBuf + CRYPT_HEADER_WITHOUTPADDING + byPadLen + 4, 4, &keySendKey);
 	}
 
-	RC4Crypt(*ppbyBuf, pachCryptedBuffer + nCryptHeaderLen, nBufLen, &keySendKey);
-	delete[] *ppbyBuf;
-	*ppbyBuf = pachCryptedBuffer;
+	RC4Crypt(pbyBuf + nCryptHeaderLen, pbyBuf + nCryptHeaderLen, nBufLen, &keySendKey);
 
-	theStats.AddUpDataOverheadCrypt(nCryptedLen - nBufLen);
-	return nCryptedLen;
+	theStats.AddUpDataOverheadCrypt(nCryptHeaderLen);
+	return nBufLen + nCryptHeaderLen;
 }
 
 int CEncryptedDatagramSocket::DecryptReceivedServer(BYTE* pbyBufIn, int nBufLen, BYTE** ppbyBufOut, uint32 dwBaseKey, uint32 dbgIP)
@@ -432,16 +425,15 @@ int CEncryptedDatagramSocket::DecryptReceivedServer(BYTE* pbyBufIn, int nBufLen,
 	}
 }
 
-int CEncryptedDatagramSocket::EncryptSendServer(uchar** ppbyBuf, int nBufLen, uint32 dwBaseKey)
+int CEncryptedDatagramSocket::EncryptSendServer(uchar* pbyBuf, int nBufLen, uint32 dwBaseKey)
 {
-	ASSERT( thePrefs.IsServerCryptLayerUDPEnabled() );
-	ASSERT( dwBaseKey != 0 );
+	ASSERT(thePrefs.IsServerCryptLayerUDPEnabled());
+	ASSERT(dwBaseKey != 0);
 
-	uint8 byPadLen = 0;			// padding disabled for UDP currently
-	uint32 nCryptedLen = nBufLen + byPadLen + CRYPT_HEADER_WITHOUTPADDING;
-	uchar* pachCryptedBuffer = new uchar[nCryptedLen];
+	uint8 byPadLen = CRYPT_HEADER_PADDING;
+	const uint32 nCryptHeaderLen = EncryptOverheadSize(false);
 
-	uint16 nRandomKeyPart = (uint16)cryptRandomGen.GenerateWord32(0x0000, 0xFFFF);
+	uint16 nRandomKeyPart = (uint16)cryptRandomGen.GenerateWord32(0x0000, 0xFFFFu);
 
 	uchar achKeyData[7];
 	memcpy(achKeyData, &dwBaseKey, 4);
@@ -459,26 +451,29 @@ int CEncryptedDatagramSocket::EncryptSendServer(uchar** ppbyBuf, int nBufLen, ui
 		if (bySemiRandomNotProtocolMarker != OP_EDONKEYPROT) // not allowed values
 			break;
 	}
-	if (i >= 128){
+	if (i >= 128) {
 		// either we have _real_ bad luck or the randomgenerator is a bit messed up
-		ASSERT( false );
+		ASSERT(false);
 		bySemiRandomNotProtocolMarker = 0x01;
 	}
 
 	uint32 dwMagicValue = MAGICVALUE_UDP_SYNC_SERVER;
-	pachCryptedBuffer[0] = bySemiRandomNotProtocolMarker;
-	memcpy(pachCryptedBuffer + 1, &nRandomKeyPart, 2);
-	RC4Crypt((uchar*)&dwMagicValue, pachCryptedBuffer + 3, 4, &keySendKey);
-	RC4Crypt((uchar*)&byPadLen, pachCryptedBuffer + 7, 1, &keySendKey);
+	pbyBuf[0] = bySemiRandomNotProtocolMarker;
+	memcpy(pbyBuf + 1, &nRandomKeyPart, 2);
+	RC4Crypt((uchar*)&dwMagicValue, pbyBuf + 3, 4, &keySendKey);
+	RC4Crypt((uchar*)&byPadLen, pbyBuf + 7, 1, &keySendKey);
 
-	for (int j = 0; j < byPadLen; j++){
+	for (int j = 0; j < byPadLen; ++j) {
 		uint8 byRand = (uint8)rand();	// they actually dont really need to be random, but it doesn't hurts either
-		RC4Crypt((uchar*)&byRand, pachCryptedBuffer + CRYPT_HEADER_WITHOUTPADDING + j, 1, &keySendKey);
+		RC4Crypt((uchar*)&byRand, pbyBuf + CRYPT_HEADER_WITHOUTPADDING + j, 1, &keySendKey);
 	}
-	RC4Crypt(*ppbyBuf, pachCryptedBuffer + CRYPT_HEADER_WITHOUTPADDING + byPadLen, nBufLen, &keySendKey);
-	delete[] *ppbyBuf;
-	*ppbyBuf = pachCryptedBuffer;
+	RC4Crypt(pbyBuf, pbyBuf + CRYPT_HEADER_WITHOUTPADDING + byPadLen, nBufLen, &keySendKey);
 
-	theStats.AddUpDataOverheadCrypt(nCryptedLen - nBufLen);
-	return nCryptedLen;
+	theStats.AddUpDataOverheadCrypt(nCryptHeaderLen);
+	return nBufLen + nCryptHeaderLen;
+}
+
+int CEncryptedDatagramSocket::EncryptOverheadSize(bool bKad)
+{
+	return CRYPT_HEADER_PADDING + CRYPT_HEADER_WITHOUTPADDING + (bKad ? 8 : 0);
 }

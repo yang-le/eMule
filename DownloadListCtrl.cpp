@@ -666,7 +666,7 @@ void CDownloadListCtrl::GetSourceItemDisplayText(const CtrlItem_Struct *pCtrlIte
 		ASSERT(0);
 		return;
 	}
-	const CUpDownClient *pClient = (CUpDownClient *)pCtrlItem->value;
+	const CUpDownClient *pClient = static_cast<CUpDownClient *>(pCtrlItem->value);
 	pszText[0] = _T('\0');
 	switch (iSubItem)
 	{
@@ -735,27 +735,28 @@ void CDownloadListCtrl::GetSourceItemDisplayText(const CtrlItem_Struct *pCtrlIte
 
 		case 8: {	// status
 			CString strBuffer;
-			if (pCtrlItem->type == AVAILABLE_SOURCE) {
+			if (pCtrlItem->type == AVAILABLE_SOURCE)
 				strBuffer = pClient->GetDownloadStateDisplayString();
-			}
 			else {
 				strBuffer = GetResString(IDS_ASKED4ANOTHERFILE);
 // ZZ:DownloadManager -->
 				if (thePrefs.IsExtControlsEnabled()) {
+					UINT sid = 0;
 					if (pClient->IsInNoNeededList(pCtrlItem->owner))
-						strBuffer += _T(" (") + GetResString(IDS_NONEEDEDPARTS) + _T(')');
+						sid  = IDS_NONEEDEDPARTS;
 					else if (pClient->GetDownloadState() == DS_DOWNLOADING)
-						strBuffer += _T(" (") + GetResString(IDS_TRANSFERRING) + _T(')');
+						sid = IDS_TRANSFERRING;
 					else if (const_cast<CUpDownClient *>(pClient)->IsSwapSuspended(pClient->GetRequestFile()))
-						strBuffer += _T(" (") + GetResString(IDS_SOURCESWAPBLOCKED) + _T(')');
-
+						sid = IDS_SOURCESWAPBLOCKED;
+					if (sid)
+						strBuffer.AppendFormat(_T(" (%s)"), GetResString(sid));
 					if (pClient->GetRequestFile() && pClient->GetRequestFile()->GetFileName())
 						strBuffer.AppendFormat(_T(": \"%s\""), (LPCTSTR)pClient->GetRequestFile()->GetFileName());
 				}
 			}
 
 			if (thePrefs.IsExtControlsEnabled() && !pClient->m_OtherRequests_list.IsEmpty())
-				strBuffer.Append(_T("*"));
+				strBuffer += _T('*');
 // ZZ:DownloadManager <--
 			_tcsncpy(pszText, strBuffer, cchTextMax);
 			break;
@@ -1278,7 +1279,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 				bFirstItem = false;
 			}
 
-			m_FileMenu.EnableMenuItem((UINT_PTR)m_PrioMenu.m_hMenu, iFilesNotDone > 0 ? MF_ENABLED : MF_GRAYED);
+			m_FileMenu.EnableMenuItem((UINT)m_PrioMenu.m_hMenu, iFilesNotDone > 0 ? MF_ENABLED : MF_GRAYED);
 			m_PrioMenu.CheckMenuRadioItem(MP_PRIOLOW, MP_PRIOAUTO, uPrioMenuItem, 0);
 
 			// enable commands if there is at least one item which can be used for the action
@@ -1303,7 +1304,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 				m_PreviewMenu.EnableMenuItem(MP_PREVIEW, (iSelectedItems == 1 && iFilesToPreview == 1) ? MF_ENABLED : MF_GRAYED);
 				m_PreviewMenu.EnableMenuItem(MP_PAUSEONPREVIEW, iFilesCanPauseOnPreview > 0 ? MF_ENABLED : MF_GRAYED);
 				m_PreviewMenu.CheckMenuItem(MP_PAUSEONPREVIEW, (iSelectedItems > 0 && iFilesDoPauseOnPreview == iSelectedItems) ? MF_CHECKED : MF_UNCHECKED);
-				m_FileMenu.EnableMenuItem((UINT_PTR)m_PreviewMenu.m_hMenu, m_PreviewMenu.HasEnabledItems() ? MF_ENABLED : MF_GRAYED);
+				m_FileMenu.EnableMenuItem((UINT)m_PreviewMenu.m_hMenu, m_PreviewMenu.HasEnabledItems() ? MF_ENABLED : MF_GRAYED);
 
 				if (iPreviewMenuEntries > 0 && !thePrefs.GetExtraPreviewWithMenu())
 					m_PreviewMenu.InsertMenu(1, MF_POPUP | MF_BYPOSITION | (iSelectedItems == 1 ? MF_ENABLED : MF_GRAYED), (UINT_PTR)PreviewWithMenu.m_hMenu, GetResString(IDS_PREVIEWWITH));
@@ -1330,7 +1331,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 			m_FileMenu.EnableMenuItem(MP_CLEARCOMPLETED, GetCompleteDownloads(curTab, total) > 0 ? MF_ENABLED : MF_GRAYED);
 
 			if (m_SourcesMenu && thePrefs.IsExtControlsEnabled()) {
-				m_FileMenu.EnableMenuItem((UINT_PTR)m_SourcesMenu.m_hMenu, MF_ENABLED);
+				m_FileMenu.EnableMenuItem((UINT)m_SourcesMenu.m_hMenu, MF_ENABLED);
 				m_SourcesMenu.EnableMenuItem(MP_ADDSOURCE, (iSelectedItems == 1 && iFilesToStop == 1) ? MF_ENABLED : MF_GRAYED);
 				m_SourcesMenu.EnableMenuItem(MP_SETSOURCELIMIT, (iFilesNotDone == iSelectedItems) ? MF_ENABLED : MF_GRAYED);
 			}
@@ -1379,7 +1380,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 		}
 		else
 		{
-			const CUpDownClient* client = content != NULL ? (CUpDownClient*)content->value : NULL;
+			const CUpDownClient* client = content != NULL ? static_cast<CUpDownClient *>(content->value) : NULL;
 			CTitleMenu ClientMenu;
 			ClientMenu.CreatePopupMenu();
 			ClientMenu.AddMenuTitle(GetResString(IDS_CLIENTS), true);
@@ -1416,7 +1417,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	}
 	else{	// nothing selected
 		int total;
-		m_FileMenu.EnableMenuItem((UINT_PTR)m_PrioMenu.m_hMenu, MF_GRAYED);
+		m_FileMenu.EnableMenuItem((UINT)m_PrioMenu.m_hMenu, MF_GRAYED);
 		m_FileMenu.EnableMenuItem(MP_CANCEL, MF_GRAYED);
 		m_FileMenu.EnableMenuItem(MP_PAUSE, MF_GRAYED);
 		m_FileMenu.EnableMenuItem(MP_STOP, MF_GRAYED);
@@ -1424,7 +1425,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 		m_FileMenu.EnableMenuItem(MP_OPEN, MF_GRAYED);
 
 		if (thePrefs.IsExtControlsEnabled()) {
-			m_FileMenu.EnableMenuItem((UINT_PTR)m_PreviewMenu.m_hMenu, MF_GRAYED);
+			m_FileMenu.EnableMenuItem((UINT)m_PreviewMenu.m_hMenu, MF_GRAYED);
 			if (!thePrefs.GetPreviewPrio())
 			{
 				m_PreviewMenu.EnableMenuItem(MP_TRY_TO_GET_PREVIEW_PARTS, MF_GRAYED);
@@ -1443,7 +1444,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 		m_FileMenu.EnableMenuItem(MP_PASTE, theApp.IsEd2kFileLinkInClipboard() ? MF_ENABLED : MF_GRAYED);
 		m_FileMenu.SetDefaultItem((UINT)-1);
 		if (m_SourcesMenu)
-			m_FileMenu.EnableMenuItem((UINT_PTR)m_SourcesMenu.m_hMenu, MF_GRAYED);
+			m_FileMenu.EnableMenuItem((UINT)m_SourcesMenu.m_hMenu, MF_GRAYED);
 		m_FileMenu.EnableMenuItem(MP_SEARCHRELATED, MF_GRAYED);
 		m_FileMenu.EnableMenuItem(MP_FIND, GetItemCount() > 0 ? MF_ENABLED : MF_GRAYED);
 
@@ -2011,8 +2012,8 @@ void CDownloadListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 int CALLBACK CDownloadListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const CtrlItem_Struct *item1 = (CtrlItem_Struct *)lParam1;
-	const CtrlItem_Struct *item2 = (CtrlItem_Struct *)lParam2;
+	const CtrlItem_Struct *item1 = reinterpret_cast<const CtrlItem_Struct *>(lParam1);
+	const CtrlItem_Struct *item2 = reinterpret_cast<const CtrlItem_Struct *>(lParam2);
 
 	int dwOrgSort = lParamSort;
 	int sortMod = 1;
@@ -2057,9 +2058,11 @@ int CALLBACK CDownloadListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM 
 	}
 
 	//call secondary sortorder, if this one results in equal
-	int dwNextSort;
-	if (comp == 0 && (dwNextSort = theApp.emuledlg->transferwnd->GetDownloadList()->GetNextSortOrder(dwOrgSort)) != -1)
-		return SortProc(lParam1, lParam2, dwNextSort);
+	if (comp == 0) {
+		LPARAM dwNextSort = theApp.emuledlg->transferwnd->GetDownloadList()->GetNextSortOrder(dwOrgSort);
+		if (dwNextSort != -1)
+			return SortProc(lParam1, lParam2, dwNextSort);
+	}
 
 	return sortMod * comp;
 }

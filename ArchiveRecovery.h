@@ -20,10 +20,10 @@ class CPartFile;
 class CShareableFile;
 struct Gap_Struct;
 
-#define ZIP_LOCAL_HEADER_MAGIC		0x04034b50
-#define ZIP_LOCAL_HEADER_EXT_MAGIC	0x08074b50
-#define ZIP_CD_MAGIC				0x02014b50
-#define ZIP_END_CD_MAGIC			0x06054b50
+#define ZIP_LOCAL_HEADER_MAGIC		0x04034b50u
+#define ZIP_LOCAL_HEADER_EXT_MAGIC	0x08074b50u
+#define ZIP_CD_MAGIC				0x02014b50u
+#define ZIP_END_CD_MAGIC			0x06054b50u
 #define ZIP_COMMENT					"Recovered by eMule"
 
 #define RAR_HEAD_FILE 0x74
@@ -51,13 +51,9 @@ struct ZIP_Entry
 #pragma pack(1)
 struct ZIP_CentralDirectory
 {
-	ZIP_CentralDirectory() {
-		lenFilename = 0;
-		filename = NULL;
-		lenExtraField = 0;
-		extraField = NULL;
-		lenComment = 0;
-		comment = NULL;
+	ZIP_CentralDirectory()
+	{
+		memset(this, 0, sizeof(ZIP_CentralDirectory));
 	}
 	uint32	header;
 	uint16	versionMadeBy;
@@ -87,8 +83,7 @@ struct RAR_BlockFile
 {
 	RAR_BlockFile()
 	{
-		EXT_DATE = NULL;
-		EXT_DATE_SIZE = 0;
+		memset(this, 0, sizeof(RAR_BlockFile));
 	}
 	~RAR_BlockFile()
 	{
@@ -143,16 +138,15 @@ struct ACE_ARCHIVEHEADER
 	char*	COMMENT;
 	char*	DUMP;
 
-	ACE_ARCHIVEHEADER() {
-		AV=NULL;
-		COMMENT=NULL;
-		DUMP=NULL;
-		COMMENT_SIZE=0;
+	ACE_ARCHIVEHEADER()
+	{
+		memset(this, 0, sizeof(ACE_ARCHIVEHEADER));
 	}
-	~ACE_ARCHIVEHEADER() {
-		if (AV)		{ free(AV);		AV=NULL;}
-		if (COMMENT){ free(COMMENT);COMMENT=NULL;}
-		if (DUMP)	{ free(DUMP);	DUMP=NULL;}
+	~ACE_ARCHIVEHEADER()
+	{
+		free(AV);
+		free(COMMENT);
+		free(DUMP);
 	}
 };
 #pragma pack()
@@ -403,15 +397,15 @@ private:
 	static UINT AFX_CDECL run(LPVOID lpParam);
 	static bool performRecovery(CPartFile *partFile, CTypedPtrList<CPtrList, Gap_Struct*> *filled, bool preview, bool bCreatePartFileCopy = true);
 
-	static bool scanForZipMarker(CFile *input, archiveScannerThreadParams_s* aitp, uint32 marker, uint32 available);
+	static bool scanForZipMarker(CFile *input, archiveScannerThreadParams_s* aitp, uint32 marker, ULONGLONG available);
 	static bool processZipEntry(CFile *zipInput, CFile *zipOutput, uint32 available, CTypedPtrList<CPtrList, ZIP_CentralDirectory*> *centralDirectoryEntries);
 	static bool readZipCentralDirectory(CFile *zipInput, CTypedPtrList<CPtrList, ZIP_CentralDirectory*> *centralDirectoryEntries, CTypedPtrList<CPtrList, Gap_Struct*> *filled);
 
-	static RAR_BlockFile *scanForRarFileHeader(CFile *input, archiveScannerThreadParams_s* aitp, UINT64 available);
+	static RAR_BlockFile *scanForRarFileHeader(CFile *input, archiveScannerThreadParams_s* aitp, ULONGLONG available);
 	static bool validateRarFileBlock(RAR_BlockFile *block);
 	static void writeRarBlock(CFile *input, CFile *output, RAR_BlockFile *block);
 
-	static ACE_BlockFile *scanForAceFileHeader(CFile *input, archiveScannerThreadParams_s* aitp, UINT64 available);
+	static ACE_BlockFile *scanForAceFileHeader(CFile *input, archiveScannerThreadParams_s* aitp, ULONGLONG available);
 	static void writeAceBlock(CFile *input, CFile *output, ACE_BlockFile *block);
 	static void writeAceHeader(CFile *output, ACE_ARCHIVEHEADER* hdr);
 

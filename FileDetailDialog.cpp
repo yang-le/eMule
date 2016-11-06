@@ -61,7 +61,7 @@ void UpdateFileDetailsPages(CListViewPropertySheet *pSheet,
 		if (bNeedArchiveInfoPage)
 		{
 			bool bFound = false;
-			for (int i = 0; !bFound && i < pSheet->GetPages().GetSize(); i++) {
+			for (int i = 0; !bFound && i < pSheet->GetPages().GetSize(); ++i) {
 				if (pSheet->GetPages()[i] == pArchiveInfo)
 					bFound = true;
 			}
@@ -92,7 +92,7 @@ void UpdateFileDetailsPages(CListViewPropertySheet *pSheet,
 		else
 		{
 			bool bFound = false;
-			for (int i = 0; !bFound && i < pSheet->GetPages().GetSize(); i++) {
+			for (int i = 0; !bFound && i < pSheet->GetPages().GetSize(); ++i) {
 				if (pSheet->GetPages()[i] == pMediaInfo)
 					bFound = true;
 			}

@@ -45,7 +45,7 @@ protected:
 	void SetAllIcons();
 	void GetItemDisplayText(const CUpDownClient *pClient, int iSubItem, LPTSTR pszText, int cchTextMax);
 	static int CALLBACK SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
-	static void CALLBACK QueueUpdateTimer(HWND hwnd, UINT uiMsg, UINT idEvent, DWORD dwTime);
+	static void CALLBACK QueueUpdateTimer(HWND hwnd, UINT uiMsg, UINT_PTR idEvent, DWORD dwTime);
 
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 	virtual void DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct);

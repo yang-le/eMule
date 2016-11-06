@@ -888,7 +888,7 @@ int COScopeCtrl::ReCreateGraph(void)
 	return 0;
 }
 
-void COScopeCtrl::OnTimer(UINT nIDEvent)
+void COScopeCtrl::OnTimer(UINT_PTR nIDEvent)
 {
 	if (nIDEvent == m_nRedrawTimer)
 	{

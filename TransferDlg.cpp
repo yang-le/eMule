@@ -195,7 +195,7 @@ void CTransferDlg::ShowToolbar(bool bShow)
 //////////////////////////////////////////////////////////////////////
 // Wrappers
 
-void CTransferDlg::ShowQueueCount(uint32 number)
+void CTransferDlg::ShowQueueCount(INT_PTR number)
 {
 	m_pwndTransfer->ShowQueueCount(number);
 }

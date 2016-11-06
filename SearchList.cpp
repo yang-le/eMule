@@ -180,7 +180,7 @@ UINT CSearchList::ProcessSearchAnswer(const uchar* in_packet, uint32 size,
 									  CUpDownClient* Sender, bool* pbMoreResultsAvailable, LPCTSTR pszDirectory)
 {
 	ASSERT( Sender != NULL );
-	uint32 nSearchID = (uint32)Sender;
+	DWORD nSearchID = (DWORD)Sender;
 	SSearchParams* pParams = new SSearchParams;
 	pParams->strExpression = Sender->GetUserName();
 	pParams->dwSearchID = nSearchID;
@@ -194,7 +194,7 @@ UINT CSearchList::ProcessSearchAnswer(const uchar* in_packet, uint32 size,
 
 	CSafeMemFile packet(in_packet, size);
 	UINT results = packet.ReadUInt32();
-	for (UINT i = 0; i < results; i++){
+	for (UINT i = 0; i < results; ++i){
 		CSearchFile* toadd = new CSearchFile(&packet, Sender ? Sender->GetUnicodeSupport()!=utf8strNone : false, nSearchID, 0, 0, pszDirectory);
 		if (toadd->IsLargeFile() && (Sender == NULL || !Sender->SupportsLargeFiles())){
 			DebugLogWarning(_T("Client offers large file (%s) but doesn't announced support for it - ignoring file"), (LPCTSTR)toadd->GetFileName());
@@ -218,7 +218,7 @@ UINT CSearchList::ProcessSearchAnswer(const uchar* in_packet, uint32 size,
 
 	if (pbMoreResultsAvailable)
 		*pbMoreResultsAvailable = false;
-	int iAddData = (int)(packet.GetLength() - packet.GetPosition());
+	int iAddData = static_cast<int>(packet.GetLength() - packet.GetPosition());
 	if (iAddData == 1){
 		uint8 ucMore = packet.ReadUInt8();
 		if (ucMore == 0x00 || ucMore == 0x01){
@@ -248,7 +248,7 @@ UINT CSearchList::ProcessSearchAnswer(const uchar* in_packet, uint32 size, bool 
 {
 	CSafeMemFile packet(in_packet, size);
 	UINT results = packet.ReadUInt32();
-	for (UINT i = 0; i < results; i++){
+	for (UINT i = 0; i < results; ++i){
 		CSearchFile* toadd = new CSearchFile(&packet, bOptUTF8, m_nCurED2KSearchID);
 		toadd->SetClientServerIP(nServerIP);
 		toadd->SetClientServerPort(nServerPort);
@@ -496,7 +496,7 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 			}
 
 			// get the 'Availability' of the new search result entry
-			UINT uAvail = toadd->GetSourceCount();
+			uint32 uAvail = toadd->GetSourceCount();
 			if (bClientResponse && !uAvail)
 				// If this is a response from a client ("View Shared Files"), we set the "Availability" at least to 1.
 				uAvail = 1;
@@ -1552,48 +1552,39 @@ void CSearchList::SaveSpamFilter(){
 			nCount++;
 		}
 
-		POSITION pos = m_mapKnownSpamHashs.GetStartPosition();
-		while( pos != NULL )
-		{
+		for (POSITION pos = m_mapKnownSpamHashs.GetStartPosition(); pos != NULL;) {
 			bool bSpam;
 			CSKey key;
 			m_mapKnownSpamHashs.GetNextAssoc(pos, key, bSpam);
 			if (bSpam){
 				CTag tag(SP_FILEHASHSPAM, (BYTE*)key.m_key);
 				tag.WriteNewEd2kTag(&file);
-			}
-			else{
+			} else {
 				CTag tag(SP_FILEHASHNOSPAM, (BYTE*)key.m_key);
 				tag.WriteNewEd2kTag(&file);
 			}
-			nCount++;
+			++nCount;
 		}
 
-		pos = m_mapKnownSpamServerIPs.GetStartPosition();
-		while( pos != NULL )
-		{
+		for (POSITION pos = m_mapKnownSpamServerIPs.GetStartPosition(); pos != NULL;) {
 			bool bTmp;
 			uint32 dwIP;
 			m_mapKnownSpamServerIPs.GetNextAssoc(pos, dwIP, bTmp);
 			CTag tag(SP_FILESERVERIP, dwIP);
 			tag.WriteNewEd2kTag(&file);
-			nCount++;
+			++nCount;
 		}
 
-		pos = m_mapKnownSpamSourcesIPs.GetStartPosition();
-		while( pos != NULL )
-		{
+		for (POSITION pos = m_mapKnownSpamSourcesIPs.GetStartPosition(); pos != NULL;) {
 			bool bTmp;
 			uint32 dwIP;
 			m_mapKnownSpamSourcesIPs.GetNextAssoc(pos, dwIP, bTmp);
 			CTag tag(SP_FILESOURCEIP, dwIP);
 			tag.WriteNewEd2kTag(&file);
-			nCount++;
+			++nCount;
 		}
 
-		pos = m_aUDPServerRecords.GetStartPosition();
-		while( pos != NULL )
-		{
+		for (POSITION pos = m_aUDPServerRecords.GetStartPosition(); pos != NULL;) {
 			UDPServerRecord* pRecord;
 			uint32 dwIP;
 			m_aUDPServerRecords.GetNextAssoc(pos, dwIP, pRecord);
@@ -1606,7 +1597,7 @@ void CSearchList::SaveSpamFilter(){
 			nCount++;
 		}
 
-		file.Seek(1, CFile::begin);
+		file.Seek(1ull, CFile::begin);
 		file.WriteUInt32(nCount);
 		file.Close();
 	}
@@ -1620,7 +1611,8 @@ void CSearchList::SaveSpamFilter(){
 	DebugLog(_T("Stored searchspam.met, wrote %u records"), nCount);
 }
 
-void CSearchList::StoreSearches(){
+void CSearchList::StoreSearches()
+{
 	// store open searches on shutdown to restore them on the next startup
 	CString fullpath = thePrefs.GetMuleDirectory(EMULE_CONFIGDIR);
 	fullpath.Append(STOREDSEARCHES_FILENAME);
@@ -1643,8 +1635,7 @@ void CSearchList::StoreSearches(){
 	uint16 nCount = 0;
 	try{
 		file.WriteUInt8(MET_HEADER_I64TAGS);
-		uint8 byVersion = STOREDSEARCHES_VERSION;
-		file.WriteUInt8(byVersion);
+		file.WriteUInt8(STOREDSEARCHES_VERSION);
 		// count how many (if any) open searches we have which are GUI related
 		for (POSITION pos = m_listFileLists.GetHeadPosition(); pos != NULL;) {
 			SearchListsStruct* pSl = m_listFileLists.GetNext(pos);

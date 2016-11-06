@@ -352,7 +352,7 @@ bool CCustomAutoComplete::SaveList(LPCTSTR pszFileName)
 	FILE* fp = _tfsopen(pszFileName, _T("wb"), _SH_DENYWR);
 	if (fp == NULL)
 		return false;
-	BOOL ret = (fputwc((wchar_t)0xFEFF, fp) != WEOF); // write Unicode byte-order mark 0xFEFF
+	bool ret = (fputwc((wchar_t)0xFEFF, fp) != WEOF); // write Unicode byte-order mark 0xFEFF
 	for (int i = 0; ret && i < m_asList.GetCount(); i++)
 		ret = (_ftprintf(fp, _T("%s\r\n"), (LPCTSTR)m_asList[i]) > 0);
 	return fclose(fp) ? false : ret;

@@ -48,7 +48,7 @@ public:
 	void	ConnectToAnyServer(UINT startAt, bool prioSort = false, bool isAuto = true, bool bNoCrypt = false);
 	void	ConnectToServer(CServer* toconnect, bool multiconnect = false, bool bNoCrypt = false);
 	void	StopConnectionTry();
-	static  VOID CALLBACK RetryConnectTimer(HWND hWnd, UINT nMsg, UINT nId, DWORD dwTime);
+	static  VOID CALLBACK RetryConnectTimer(HWND hWnd, UINT nMsg, UINT_PTR nId, DWORD dwTime);
 
 	void	CheckForTimeout();
 	void	DestroySocket(CServerSocket* pSck);	// safe socket closure and destruction

@@ -49,8 +49,8 @@ public:
 	int ReplaceString(int nIndex, LPCTSTR lpszString, int nImage = -1L);
 	void ResetContent();
 
-	int SetItemData(int nIndex, DWORD dwItemData);
-	DWORD GetItemData(int nIndex);
+	int SetItemData(int nIndex, DWORD_PTR dwItemData);
+	DWORD_PTR GetItemData(int nIndex);
 	int SetItemDataPtr(int nIndex, void* pData);
 	void* GetItemDataPtr(int nIndex);
 
@@ -94,13 +94,13 @@ private:
 
 	int Move(int nOldIndex, int nNewIndex, BOOL bSetCurSel);
 	void FreeResources();
-	int ReplaceItemData(int nIndex, DWORD dwItemData, LPVOID pData, int nImage, DWORD dwFlags, BYTE byMask);
+	int ReplaceItemData(int nIndex, DWORD_PTR dwItemData, LPVOID pData, int nImage, DWORD dwFlags, BYTE byMask);
 	void DeleteItemData(int nIndex);
 
 #pragma pack(1)
 	typedef struct _STRUCT_LBDATA
 	{
-		DWORD		dwItemData;	// 32-bit value associated with an item in the list box
+		DWORD_PTR	dwItemData;	// 32-bit value associated with an item in the list box
 		LPVOID		pData;		// Pointer associated with an item in the list box
 		int			nImage;		// Image associated with an item in the list box. -1 if no image.
 		UINT		nFormat;	// Text alignment

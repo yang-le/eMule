@@ -92,7 +92,7 @@ bool CEntry::GetIntTagValue(const CKadTagNameString& strTagName, uint64& rValue,
 {
 	for (TagList::const_iterator itTagList = m_listTag.begin(); itTagList != m_listTag.end(); ++itTagList)
 	{
-		CKadTag* pTag = *itTagList;
+		const CKadTag* pTag = *itTagList;
 		if (pTag->IsInt() && !pTag->m_name.Compare(strTagName)){
 			rValue = pTag->GetInt();
 			return true;
@@ -115,7 +115,7 @@ CKadTagValueString CEntry::GetStrTagValue(const CKadTagNameString& strTagName) c
 {
 	for (TagList::const_iterator itTagList = m_listTag.begin(); itTagList != m_listTag.end(); ++itTagList)
 	{
-		CKadTag* pTag = *itTagList;
+		const CKadTag* pTag = *itTagList;
 		if (!pTag->m_name.Compare(strTagName) && pTag->IsStr())
 			return pTag->GetStr();
 	}
@@ -221,9 +221,9 @@ CKeyEntry::CKeyEntry()
 CKeyEntry::~CKeyEntry()
 {
 	if (m_pliPublishingIPs != NULL){
-		while (!m_pliPublishingIPs->IsEmpty()) {
+		while (!m_pliPublishingIPs->IsEmpty())
 			AdjustGlobalPublishTracking(m_pliPublishingIPs->RemoveHead().m_uIP, false, _T("instance delete"));
-		}
+
 		delete m_pliPublishingIPs;
 		m_pliPublishingIPs = NULL;
 	}
@@ -297,9 +297,9 @@ bool CKeyEntry::SearchTermsMatch(const SSearchTerm* pSearchTerm) const
 		if (pSearchTerm->m_pTag->IsInt()) // meta tags with integer values
 		{
 			uint64 uValue;
-			if (GetIntTagValue(pSearchTerm->m_pTag->m_name, uValue, true)){
+			if (GetIntTagValue(pSearchTerm->m_pTag->m_name, uValue, true))
 				return uValue >= pSearchTerm->m_pTag->GetInt();
-			}
+
 		}
 		else if (pSearchTerm->m_pTag->IsFloat()) // meta tags with float values
 		{
@@ -316,9 +316,9 @@ bool CKeyEntry::SearchTermsMatch(const SSearchTerm* pSearchTerm) const
 		if (pSearchTerm->m_pTag->IsInt()) // meta tags with integer values
 		{
 			uint64 uValue;
-			if (GetIntTagValue(pSearchTerm->m_pTag->m_name, uValue, true)){
+			if (GetIntTagValue(pSearchTerm->m_pTag->m_name, uValue, true))
 				return uValue <= pSearchTerm->m_pTag->GetInt();
-			}
+
 		}
 		else if (pSearchTerm->m_pTag->IsFloat()) // meta tags with float values
 		{
@@ -335,9 +335,9 @@ bool CKeyEntry::SearchTermsMatch(const SSearchTerm* pSearchTerm) const
 		if (pSearchTerm->m_pTag->IsInt()) // meta tags with integer values
 		{
 			uint64 uValue;
-			if (GetIntTagValue(pSearchTerm->m_pTag->m_name, uValue, true)){
+			if (GetIntTagValue(pSearchTerm->m_pTag->m_name, uValue, true))
 				return uValue > pSearchTerm->m_pTag->GetInt();
-			}
+
 		}
 		else if (pSearchTerm->m_pTag->IsFloat()) // meta tags with float values
 		{
@@ -354,9 +354,9 @@ bool CKeyEntry::SearchTermsMatch(const SSearchTerm* pSearchTerm) const
 		if (pSearchTerm->m_pTag->IsInt()) // meta tags with integer values
 		{
 			uint64 uValue;
-			if (GetIntTagValue(pSearchTerm->m_pTag->m_name, uValue, true)){
+			if (GetIntTagValue(pSearchTerm->m_pTag->m_name, uValue, true))
 				return uValue < pSearchTerm->m_pTag->GetInt();
-			}
+
 		}
 		else if (pSearchTerm->m_pTag->IsFloat()) // meta tags with float values
 		{
@@ -373,9 +373,9 @@ bool CKeyEntry::SearchTermsMatch(const SSearchTerm* pSearchTerm) const
 		if (pSearchTerm->m_pTag->IsInt()) // meta tags with integer values
 		{
 			uint64 uValue;
-			if (GetIntTagValue(pSearchTerm->m_pTag->m_name, uValue, true)){
+			if (GetIntTagValue(pSearchTerm->m_pTag->m_name, uValue, true))
 				return uValue == pSearchTerm->m_pTag->GetInt();
-			}
+
 		}
 		else if (pSearchTerm->m_pTag->IsFloat()) // meta tags with float values
 		{
@@ -392,9 +392,9 @@ bool CKeyEntry::SearchTermsMatch(const SSearchTerm* pSearchTerm) const
 		if (pSearchTerm->m_pTag->IsInt()) // meta tags with integer values
 		{
 			uint64 uValue;
-			if (GetIntTagValue(pSearchTerm->m_pTag->m_name, uValue, true)){
+			if (GetIntTagValue(pSearchTerm->m_pTag->m_name, uValue, true))
 				return uValue != pSearchTerm->m_pTag->GetInt();
-			}
+
 		}
 		else if (pSearchTerm->m_pTag->IsFloat()) // meta tags with float values
 		{
@@ -414,9 +414,9 @@ void CKeyEntry::AdjustGlobalPublishTracking(uint32 uIP, bool bIncrease, CString 
 	uint32 nCount = 0;
 	BOOL bFound = s_mapGlobalPublishIPs.Lookup(uIP & 0xFFFFFF00 /* /24 netmask, take care of endian if needed*/, nCount);
 	if (bIncrease)
-		nCount++;
+		++nCount;
 	else
-		nCount--;
+		--nCount;
 	if (bFound || bIncrease)
 		s_mapGlobalPublishIPs.SetAt(uIP & 0xFFFFFF00, nCount);
 	else
@@ -614,23 +614,23 @@ float CKeyEntry::GetTrustValue(){
 	return m_fTrustValue;
 }
 
-void CKeyEntry::CleanUpTrackedPublishers(){
+void CKeyEntry::CleanUpTrackedPublishers()
+{
 	if (m_pliPublishingIPs == NULL)
 		return;
 	time_t now = time(NULL);
 	while (!m_pliPublishingIPs->IsEmpty()) {
 		// entries are ordered, older ones first
 		const structPublishingIP& curEntry = m_pliPublishingIPs->GetHead();
-		if (now > curEntry.m_tLastPublish + KADEMLIAREPUBLISHTIMEK) {
-			AdjustGlobalPublishTracking(curEntry.m_uIP, false, _T("cleanup"));
-			m_pliPublishingIPs->RemoveHead();
-		}
-		else
+		if (now <= curEntry.m_tLastPublish + KADEMLIAREPUBLISHTIMEK)
 			break;
+		AdjustGlobalPublishTracking(curEntry.m_uIP, false, _T("cleanup"));
+		m_pliPublishingIPs->RemoveHead();
 	}
 }
 
-CEntry*	CKeyEntry::Copy(){
+CEntry*	CKeyEntry::Copy()
+{
 	return CEntry::Copy();
 }
 
@@ -767,8 +767,8 @@ void CKeyEntry::DirtyDeletePublishData(){
 
 void CKeyEntry::WriteTagListWithPublishInfo(CDataIO* pData){
 
-	if (m_pliPublishingIPs == NULL || m_pliPublishingIPs->GetCount() == 0){
-		ASSERT( false );
+	if (m_pliPublishingIPs == NULL || m_pliPublishingIPs->IsEmpty()) {
+		ASSERT(false);
 		WriteTagList(pData);
 		return;
 	}
@@ -800,7 +800,7 @@ void CKeyEntry::WriteTagListWithPublishInfo(CDataIO* pData){
 		for (int i = 0; i < m_aAICHHashs.GetCount(); i++)
 		{
 			if (m_anAICHHashPopularity[i] > 0)
-				byCount++;
+				++byCount;
 			// bobs tags in kad are limited to 255 bytes, so no more than 12 AICH hashes can be written
 			// that shouldn't be an issue however, as the normal AICH hash count is 1, if we have more than
 			// 10 for some reason we can't use it most likely anyway
@@ -843,17 +843,14 @@ uint16 CKeyEntry::AddRemoveAICHHash(const CAICHHash& hash, bool bAdd)
 		{
 			if (bAdd)
 			{
-				m_anAICHHashPopularity[i]++;
+				++m_anAICHHashPopularity[i];
 				return (uint16)i;
 			}
-			else
-			{
-				if (m_anAICHHashPopularity[i] >= 1)
-					m_anAICHHashPopularity[i]--;
-//				else
-//					ASSERT( false );
-				return (uint16)i;
-			}
+			if (m_anAICHHashPopularity[i] >= 1)
+				--m_anAICHHashPopularity[i];
+//			else
+//				ASSERT( false );
+			return (uint16)i;
 		}
 	}
 	if (bAdd)
@@ -862,9 +859,6 @@ uint16 CKeyEntry::AddRemoveAICHHash(const CAICHHash& hash, bool bAdd)
 		m_anAICHHashPopularity.Add(1);
 		return (uint16)m_aAICHHashs.GetCount() - 1;
 	}
-	else
-	{
-		ASSERT( false );
-		return _UI16_MAX;
-	}
+	ASSERT( false );
+	return _UI16_MAX;
 }

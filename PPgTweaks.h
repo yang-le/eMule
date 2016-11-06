@@ -16,7 +16,7 @@ public:
 
 protected:
 	UINT m_iFileBufferSize;
-	UINT m_iQueueSize;
+	INT_PTR m_iQueueSize;
 	int m_iMaxConnPerFive;
 	int m_iMaxHalfOpen;
 	bool m_bConditionalTCPAccept;

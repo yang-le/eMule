@@ -111,16 +111,14 @@ BOOL CSharedFilesWnd::OnInitDialog()
 	sharedfilesctrl.GetWindowRect(rcFiles);
 	ScreenToClient(rcFiles);
 	VERIFY( m_dlgDetails.Create(this, DS_CONTROL | DS_SETFONT | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS, WS_EX_CONTROLPARENT) );
-	m_dlgDetails.SetWindowPos(NULL, rcFiles.left - 6, rcFiles.bottom - 2, rcFiles.Width() + 12, rcSpl.bottom + 7 - (rcFiles.bottom - 2), 0);
+	m_dlgDetails.SetWindowPos(NULL, rcFiles.left, rcFiles.bottom + 4, rcFiles.Width() + 2, rcSpl.bottom - (rcFiles.bottom + 3), 0);
 	AddAnchor(m_dlgDetails, BOTTOM_LEFT, BOTTOM_RIGHT);
 
 	rcSpl.left = rcSpl.right + SPLITTER_MARGIN;
 	rcSpl.right = rcSpl.left + SPLITTER_WIDTH;
 	m_wndSplitter.Create(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_SHAREDFILES);
 
-	AddAnchor(IDC_SF_HIDESHOWDETAILS, BOTTOM_RIGHT);
 	AddAnchor(m_wndSplitter, TOP_LEFT);
-	AddAnchor(sharedfilesctrl, TOP_LEFT, BOTTOM_RIGHT);
 	AddAnchor(m_ctlSharedDirTree, TOP_LEFT, BOTTOM_LEFT);
 	AddAnchor(m_ctlFilter, TOP_LEFT);
 	AddAnchor(IDC_FILES_ICO, TOP_LEFT);
@@ -142,9 +140,9 @@ BOOL CSharedFilesWnd::OnInitDialog()
 	}
 
 	GetDlgItem(IDC_SF_HIDESHOWDETAILS)->SetFont(&theApp.m_fontSymbol);
-	GetDlgItem(IDC_SF_HIDESHOWDETAILS)->SetWindowText(_T("6"));
 	GetDlgItem(IDC_SF_HIDESHOWDETAILS)->BringWindowToTop();
 	ShowDetailsPanel(thePrefs.GetShowSharedFilesDetails());
+
 	Localize();
 	return TRUE;
 }
@@ -258,7 +256,7 @@ BOOL CSharedFilesWnd::PreTranslateMessage(MSG* pMsg)
 		sharedfilesctrl.SetItemState(-1, 0, LVIS_SELECTED);
 		sharedfilesctrl.SetItemState(it, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
 		sharedfilesctrl.SetSelectionMark(it);   // display selection mark correctly!
-		sharedfilesctrl.ShowComments((CKnownFile*)sharedfilesctrl.GetItemData(it));
+		sharedfilesctrl.ShowComments(reinterpret_cast<CShareableFile *>(sharedfilesctrl.GetItemData(it)));
 		return TRUE;
 	}
 
@@ -426,33 +424,37 @@ void CSharedFilesWnd::ShowSelectedFilesDetails(bool bForce)
 }
 void CSharedFilesWnd::ShowDetailsPanel(bool bShow)
 {
-	if (bShow == m_bDetailsVisible)
-		return;
+	CWnd& button = *GetDlgItem(IDC_SF_HIDESHOWDETAILS);
 	m_bDetailsVisible = bShow;
 	thePrefs.SetShowSharedFilesDetails(bShow);
 	RemoveAnchor(sharedfilesctrl);
 	RemoveAnchor(IDC_SF_HIDESHOWDETAILS);
 
-	CRect rcFile, rcDetailDlg, rcButton;
-	sharedfilesctrl.GetWindowRect(rcFile);
+	CRect rcSpl, rcFiles, rcDetailDlg, rcButton;
+
+	sharedfilesctrl.GetWindowRect(rcFiles);
+	ScreenToClient(rcFiles);
+
 	m_dlgDetails.GetWindowRect(rcDetailDlg);
-	GetDlgItem(IDC_SF_HIDESHOWDETAILS)->GetWindowRect(rcButton);
-	ScreenToClient(rcButton);
-	const int nOffset = 29;
-	if (!bShow)
-	{
-		sharedfilesctrl.SetWindowPos(NULL, 0, 0, rcFile.Width(), rcFile.Height() + (rcDetailDlg.Height() - nOffset), SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOACTIVATE);
-		GetDlgItem(IDC_SF_HIDESHOWDETAILS)->SetWindowPos(NULL, rcButton.left, rcButton.top + (rcDetailDlg.Height() - nOffset), 0, 0, SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOACTIVATE);
-		m_dlgDetails.ShowWindow(SW_HIDE);
-		GetDlgItem(IDC_SF_HIDESHOWDETAILS)->SetWindowText(_T("5"));
-	}
-	else
-	{
-		sharedfilesctrl.SetWindowPos(NULL, 0, 0, rcFile.Width(), rcFile.Height() - (rcDetailDlg.Height() - nOffset), SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOACTIVATE);
-		GetDlgItem(IDC_SF_HIDESHOWDETAILS)->SetWindowPos(NULL, rcButton.left, rcButton.top - (rcDetailDlg.Height() - nOffset), 0, 0, SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOACTIVATE);
+
+	button.GetWindowRect(rcButton);
+
+	m_ctlSharedDirTree.GetWindowRect(rcSpl);
+	ScreenToClient(rcSpl);
+
+	button.GetWindowRect(rcButton);
+	if (bShow) {
+		sharedfilesctrl.SetWindowPos(NULL, 0, 0, rcFiles.Width(), rcSpl.bottom - rcFiles.top - rcDetailDlg.Height() - 2, SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOACTIVATE);
 		m_dlgDetails.ShowWindow(SW_SHOW);
-		GetDlgItem(IDC_SF_HIDESHOWDETAILS)->SetWindowText(_T("6"));
+		button.SetWindowPos(NULL, rcFiles.right - rcButton.Width() + 1, rcSpl.bottom - rcDetailDlg.Height() + 2, 0, 0, SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOACTIVATE);
+		button.SetWindowText(_T("6"));
+	} else {
+		m_dlgDetails.ShowWindow(SW_HIDE);
+		sharedfilesctrl.SetWindowPos(NULL, 0, 0, rcFiles.Width(), rcSpl.bottom - rcFiles.top - rcButton.Height() + 1, SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOACTIVATE);
+		button.SetWindowPos(NULL, rcFiles.right - rcButton.Width() + 1, rcSpl.bottom - rcButton.Height() + 1, 0, 0, SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOACTIVATE);
+		button.SetWindowText(_T("5"));
 	}
+
 	sharedfilesctrl.SetFocus();
 	AddAnchor(sharedfilesctrl, TOP_LEFT, BOTTOM_RIGHT);
 	AddAnchor(IDC_SF_HIDESHOWDETAILS, BOTTOM_RIGHT);
@@ -489,7 +491,7 @@ END_MESSAGE_MAP()
 int CSharedFileDetailsModelessSheet::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	// skip CResizableSheet::OnCreate because we don't need the styles and stuff which are set there
-//	CreateSizeGrip(FALSE); // create grip but dont show it - do not do this with new library!
+//	CreateSizeGrip(FALSE); // create grip but dont show it <- Do not do this with new library!
 	return CPropertySheet::OnCreate(lpCreateStruct);
 }
 
@@ -580,13 +582,16 @@ BOOL CSharedFileDetailsModelessSheet::OnInitDialog()
 void  CSharedFileDetailsModelessSheet::SetFiles(CTypedPtrList<CPtrList, CShareableFile*>& aFiles)
 {
 	m_aItems.RemoveAll();
-	for (POSITION pos = aFiles.GetHeadPosition(); pos;)
+	for (POSITION pos = aFiles.GetHeadPosition(); pos != NULL;)
 		m_aItems.Add(aFiles.GetNext(pos));
 	ChangedData();
 }
 
 LRESULT CSharedFileDetailsModelessSheet::OnDataChanged(WPARAM, LPARAM)
 {
+//When "Content" tab is visible, it grabs focus from shared files list when data change
+	CWnd *ctl = GetFocus();
 	UpdateFileDetailsPages(this, m_wndArchiveInfo, m_wndMediaInfo);
+	ctl->SetFocus();
 	return 1;
 }

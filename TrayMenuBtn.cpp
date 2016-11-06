@@ -82,7 +82,7 @@ void CTrayMenuBtn::OnLButtonUp(UINT nFlags, CPoint point)
 	{
 		CWnd *pParent = GetParent();
 		if (pParent)
-			pParent->PostMessage(WM_COMMAND, MAKEWPARAM(m_nBtnID, BN_CLICKED), (long)m_hWnd);
+			pParent->PostMessage(WM_COMMAND, MAKEWPARAM(m_nBtnID, BN_CLICKED), reinterpret_cast<LPARAM>(m_hWnd));
 	}
 	else
 	{

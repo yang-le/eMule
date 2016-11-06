@@ -864,7 +864,7 @@ ID3_Frame* ID3_Tag::Find(ID3_FrameID id) const
 }
 
 /// Finds frame with given frame id, fld id, and integer data
-ID3_Frame* ID3_Tag::Find(ID3_FrameID id, ID3_FieldID fld, uint32 data) const
+ID3_Frame* ID3_Tag::Find(ID3_FrameID id, ID3_FieldID fld, size_t data) const
 {
   return _impl->Find(id, fld, data);
 }
@@ -1015,10 +1015,8 @@ void ID3_Tag::AddNewFrame(ID3_Frame* f)
  **/
 void ID3_Tag::AddFrames(const ID3_Frame *frames, size_t numFrames)
 {
-  for (int i = numFrames - 1; i >= 0; i--)
-  {
-    this->AddFrame(frames[i]);
-  }
+  for (size_t i = numFrames; i > 0;)
+    AddFrame(frames[--i]);
 }
 
 size_t ID3_Tag::Link(const char *fileInfo, bool parseID3v1, bool parseLyrics3)
@@ -1088,7 +1086,7 @@ int32 ID3_IsTagHeader(const uchar data[ID3_TAGHEADERSIZE])
     return -1;
   }
 
-  return size - ID3_TagHeader::SIZE;
+  return static_cast<int32>(size - ID3_TagHeader::SIZE);
 }
 
 

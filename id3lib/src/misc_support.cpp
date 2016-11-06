@@ -634,7 +634,7 @@ size_t ID3_RemovePictureType(ID3_Tag* tag, ID3_PictureType pictype)
   {
     if (frame->GetID() == ID3FID_PICTURE)
     {
-      if (frame->GetField(ID3FN_PICTURETYPE)->Get() == (uint32)pictype)
+      if (frame->GetField(ID3FN_PICTURETYPE)->Get() == (size_t)pictype)
         break;
     }
   }
@@ -657,14 +657,14 @@ ID3_Frame* ID3_AddPicture(ID3_Tag *tag, const char *TempPicPath, const char *Mim
   {
     if (replace)
       ID3_RemovePictureType(tag, pictype);
-    if (replace || NULL == tag->Find(ID3FID_PICTURE, ID3FN_PICTURETYPE, (uint32)pictype))
+    if (replace || NULL == tag->Find(ID3FID_PICTURE, ID3FN_PICTURETYPE, pictype))
     {
       frame = LEAKTESTNEW( ID3_Frame(ID3FID_PICTURE));
 //      if (NULL != frame)
       {
         frame->GetField(ID3FN_DATA)->FromFile(TempPicPath);
         frame->GetField(ID3FN_MIMETYPE)->Set(MimeType);
-        frame->GetField(ID3FN_PICTURETYPE)->Set((uint32)pictype);
+        frame->GetField(ID3FN_PICTURETYPE)->Set(pictype);
         frame->GetField(ID3FN_DESCRIPTION)->Set(Description);
         tag->AttachFrame(frame);
       }
@@ -687,7 +687,7 @@ size_t ID3_GetPictureDataOfPicType(ID3_Tag* tag, const char* TempPicPath, ID3_Pi
     {
       if(frame->GetID() == ID3FID_PICTURE)
       {
-        if(frame->GetField(ID3FN_PICTURETYPE)->Get() == (uint32)pictype)
+        if(frame->GetField(ID3FN_PICTURETYPE)->Get() == (size_t)pictype)
           break;
       }
     }
@@ -721,7 +721,7 @@ char* ID3_GetMimeTypeOfPicType(ID3_Tag* tag, ID3_PictureType pictype)
   {
     if(frame->GetID() == ID3FID_PICTURE)
     {
-      if(frame->GetField(ID3FN_PICTURETYPE)->Get() == (uint32)pictype)
+      if(frame->GetField(ID3FN_PICTURETYPE)->Get() == (size_t)pictype)
         break;
     }
   }
@@ -748,7 +748,7 @@ char* ID3_GetDescriptionOfPicType(ID3_Tag* tag, ID3_PictureType pictype)
   {
     if(frame->GetID() == ID3FID_PICTURE)
     {
-      if(frame->GetField(ID3FN_PICTURETYPE)->Get() == (uint32)pictype)
+      if(frame->GetField(ID3FN_PICTURETYPE)->Get() == (size_t)pictype)
         break;
     }
   }
@@ -832,8 +832,8 @@ size_t ID3_GetV1GenreNum(char* sGenre)
 {
   dami::String tmpgenre;
   size_t ulGenre = 0xFF;
-  uint32 iStart = 0;
-  uint32 digits;
+  size_t iStart = 0;
+  size_t digits;
 
   if (strlen(sGenre) < 3)
     return ulGenre;
@@ -925,7 +925,7 @@ bool ID3_HasChars(char* text, char* chars)
 {
   dami::String tmptext;
 //  char* newtext = text;
-  uint32 iStart = 0;
+  size_t iStart = 0;
   size_t lenchars = strlen(chars);
   while (strlen(text) >= lenchars)
   {
@@ -1042,12 +1042,12 @@ ID3_Frame* ID3_AddGenre(ID3_Tag* tag, size_t genreNum, char* genre, bool add_v1_
         else
           if (iCompare == -2)
           {
-            iCompare = strlen(tmpgenre);
-            if (tmpgenre1[iCompare] == ',' || tmpgenre1[iCompare] == ' ' || tmpgenre1[iCompare] == ';' ) //tmpgenre was earlier null terminated
+            size_t i = strlen(tmpgenre);
+            if (tmpgenre1[i] == ',' || tmpgenre1[i] == ' ' || tmpgenre1[i] == ';' ) //tmpgenre was earlier null terminated
             {
-              tmpgenre1 += iCompare;
+              tmpgenre1 += i;
               remainder = tmpgenre1; //remainder now holds the remainder of the string
-              tmpgenre1 -= iCompare; //reset for delete
+              tmpgenre1 -= i; //reset for delete
               break;
             }
           }

@@ -987,7 +987,7 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 					stattree.SetItemText( down_sources[i] , cbuffer );
 					i++;
 
-					cbuffer.Format(_T("%s: %s (%s + %s)"), (LPCTSTR)GetResString(IDS_DEADSOURCES), (LPCTSTR)CastItoIShort(theApp.clientlist->m_globDeadSourceList.GetDeadSourcesCount() + myStats.a[22]), (LPCTSTR)CastItoIShort(theApp.clientlist->m_globDeadSourceList.GetDeadSourcesCount()), (LPCTSTR)CastItoIShort((UINT)myStats.a[22]));
+					cbuffer.Format(_T("%s: %s (%s + %s)"), (LPCTSTR)GetResString(IDS_DEADSOURCES), (LPCTSTR)CastItoIShort(static_cast<uint32>(theApp.clientlist->m_globDeadSourceList.GetDeadSourcesCount() + myStats.a[22])), (LPCTSTR)CastItoIShort(static_cast<uint32>(theApp.clientlist->m_globDeadSourceList.GetDeadSourcesCount())), (LPCTSTR)CastItoIShort(static_cast<uint32>(myStats.a[22])));
 					stattree.SetItemText( down_sources[i] , cbuffer );
 				}
 				// Set Download Sessions
@@ -1426,15 +1426,15 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 				stattree.SetItemText(up_S[1], cbuffer);
 
 				// Set fully Active Uploads
-				cbuffer.Format(GetResString(IDS_STATS_ACTUL_ZZ),theApp.uploadqueue->GetActiveUploadsCount()); //theApp.uploadqueue->GetUploadQueueLength()
+				cbuffer.Format(GetResString(IDS_STATS_ACTUL_ZZ), static_cast<unsigned>(theApp.uploadqueue->GetActiveUploadsCount())); //theApp.uploadqueue->GetUploadQueueLength()
 				stattree.SetItemText(up_S[2], cbuffer);
 
                 // Set Set Total Uploads
-				cbuffer.Format(GetResString(IDS_STATS_TOTALUL),theApp.uploadqueue->GetUploadQueueLength());
+				cbuffer.Format(GetResString(IDS_STATS_TOTALUL), static_cast<unsigned>(theApp.uploadqueue->GetUploadQueueLength()));
 				stattree.SetItemText(up_S[3], cbuffer);
 
 				// Set Queue Length
-				cbuffer.Format(GetResString(IDS_STATS_WAITINGUSERS),theApp.uploadqueue->GetWaitingUserCount());
+				cbuffer.Format(GetResString(IDS_STATS_WAITINGUSERS), static_cast<unsigned>(theApp.uploadqueue->GetWaitingUserCount()));
 				stattree.SetItemText(up_S[4], cbuffer);
 
 				// Set Upload Sessions
@@ -1904,7 +1904,7 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 		{
 			int i = 0;
 			// Run Time
-			time_t sessionRunTime = (GetTickCount() - theStats.starttime) / 1000;
+			time_t sessionRunTime = (GetTickCount() - theStats.starttime) / SEC2MS(1);
 			cbuffer.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_STATS_RUNTIME), (LPCTSTR)CastSecondsToLngHM(sessionRunTime));
 			stattree.SetItemText(tvitime_s[i], cbuffer);
 			i++;
@@ -2114,10 +2114,10 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 						if (forceUpdate || stattree.IsExpanded(time_aap_up[mx][1]))
 						{
 							// Set Successful Upload Sessions
-							if (statGoodSessions>0)
-								percentSessions = (double) 100*statGoodSessions/(statGoodSessions+statBadSessions);
+							if (statGoodSessions > 0)
+								percentSessions = (100.0*statGoodSessions)/(statGoodSessions+statBadSessions);
 							else
-								percentSessions = 0;
+								percentSessions = 0.0;
 							cbuffer.Format(GetResString(IDS_STATS_SUCCUPCOUNT),statGoodSessions,percentSessions);
 							stattree.SetItemText(time_aap_up_s[mx][0], cbuffer);
 							// Set Failed Upload Sessions
@@ -2897,10 +2897,10 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 		uint64 bytesLargestFile = 0;
 		uint64 allsize=theApp.sharedfiles->GetDatasize(bytesLargestFile); // Func returns total share size and sets pointeredd uint64 to largest single filesize
 		CString cbuffer2;
-		if(theApp.sharedfiles->GetCount() != 0)
-			cbuffer2.Format( _T("%s"), (LPCTSTR)CastItoXBytes(allsize/(uint64)theApp.sharedfiles->GetCount(), false, false));
+		if(theApp.sharedfiles->GetCount() > 0)
+			cbuffer2 = CastItoXBytes(allsize/(uint64)theApp.sharedfiles->GetCount(), false, false);
 		else
-			cbuffer2.Format( _T("%s"), (LPCTSTR)CastItoXBytes((uint32)0, false, false) );
+			cbuffer2 = CastItoXBytes((uint32)0, false, false);
 		cbuffer.Format(GetResString(IDS_SF_AVERAGESIZE), (LPCTSTR)cbuffer2);
 		stattree.SetItemText(shar[1], cbuffer);
 		// Set Largest File Size

@@ -50,7 +50,7 @@ public:
 	LPCTSTR GetDirectory() const			{ return m_pszDirectory; }
 
 	uint32	GetClientID() const				{ return m_nClientID; }
-	void	SetClientID(uint32 nClientID)	{ m_nClientID = nClientID; }
+	void	SetClientID(uint32 nClientID)	{ m_nClientID = nClientID; } //client IP
 	uint16	GetClientPort() const			{ return m_nClientPort; }
 	void	SetClientPort(uint16 nPort)		{ m_nClientPort = nPort; }
 	uint32	GetClientServerIP() const		{ return m_nClientServerIP; }
@@ -109,24 +109,21 @@ public:
 	const CSimpleArray<SClient>& GetClients() const { return m_aClients; }
 
 	struct SServer {
-		SServer() {
-			m_nIP = 0;
-			m_nPort = 0;
-			m_uAvail = 0;
-			m_bUDPAnswer = false;
-		}
-		SServer(uint32 nIP, uint16 nPort, bool bUDPAnswer) {
-			m_nIP = nIP;
-			m_nPort = nPort;
-			m_uAvail = 0;
-			m_bUDPAnswer = bUDPAnswer;
-		}
-		friend __inline bool __stdcall operator==(const CSearchFile::SServer& s1, const CSearchFile::SServer& s2) {
+		SServer()
+			: m_nIP(0), m_nPort(0), m_uAvail(0), m_bUDPAnswer(false)
+		{}
+
+		SServer(uint32 nIP, uint16 nPort, bool bUDPAnswer)
+			: m_nIP(nIP), m_nPort(nPort), m_uAvail(0), m_bUDPAnswer(bUDPAnswer)
+		{}
+
+		friend __inline bool __stdcall operator==(const CSearchFile::SServer& s1, const CSearchFile::SServer& s2)
+		{
 			return s1.m_nIP==s2.m_nIP && s1.m_nPort==s2.m_nPort;
 		}
+		UINT   m_uAvail;
 		uint32 m_nIP;
 		uint16 m_nPort;
-		UINT   m_uAvail;
 		bool   m_bUDPAnswer;
 	};
 	void AddServer(const SServer& server) { m_aServers.Add(server); }

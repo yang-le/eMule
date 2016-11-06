@@ -58,10 +58,8 @@ BEGIN_MESSAGE_MAP(CPPgWebServer, CPropertyPage)
 END_MESSAGE_MAP()
 
 CPPgWebServer::CPPgWebServer()
-	: CPropertyPage(CPPgWebServer::IDD), m_bModified(false)
+	: CPropertyPage(CPPgWebServer::IDD), m_bModified(false), bCreated(false), m_icoBrowse(NULL)
 {
-	bCreated = false;
-	m_icoBrowse = NULL;
 }
 
 CPPgWebServer::~CPPgWebServer()
@@ -107,15 +105,8 @@ void CPPgWebServer::LoadSettings(void)
 	strBuffer.Format(_T("%d"), thePrefs.GetWebTimeoutMins());
 	SetDlgItemText(IDC_WSTIMEOUT,strBuffer);
 
-	if(thePrefs.GetWSIsEnabled())
-		CheckDlgButton(IDC_WSENABLED,1);
-	else
-		CheckDlgButton(IDC_WSENABLED,0);
-
-	if(thePrefs.GetWSIsLowUserEnabled())
-		CheckDlgButton(IDC_WSENABLEDLOW,1);
-	else
-		CheckDlgButton(IDC_WSENABLEDLOW,0);
+	CheckDlgButton(IDC_WSENABLED, static_cast<UINT>(thePrefs.GetWSIsEnabled()));
+	CheckDlgButton(IDC_WSENABLEDLOW, static_cast<UINT>(thePrefs.GetWSIsLowUserEnabled()));
 
 
 	CheckDlgButton(IDC_WS_GZIP,(thePrefs.GetWebUseGzip())? 1 : 0);
@@ -246,16 +237,16 @@ void CPPgWebServer::OnBnClickedTmplbrowse()
 {
 	CString strTempl;
 	GetDlgItemText(IDC_TMPLPATH, strTempl);
-	CString buffer;
-	buffer=GetResString(IDS_WS_RELOAD_TMPL)+_T("(*.tmpl)|*.tmpl||");
-    if (DialogBrowseFile(buffer, _T("Template ")+buffer, strTempl)){
+	CString buffer(GetResString(IDS_WS_RELOAD_TMPL)+_T("(*.tmpl)|*.tmpl||"));
+	if (DialogBrowseFile(buffer, _T("Template ")+buffer, strTempl)){
 		GetDlgItem(IDC_TMPLPATH)->SetWindowText(buffer);
 		SetModified();
 	}
 	SetTmplButtonState();
 }
 
-void CPPgWebServer::SetTmplButtonState(){
+void CPPgWebServer::SetTmplButtonState()
+{
 	CString buffer;
 	GetDlgItemText(IDC_TMPLPATH,buffer);
 
