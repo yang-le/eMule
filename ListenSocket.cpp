@@ -2118,7 +2118,7 @@ void CClientReqSocket::PacketToDebugLogLine(LPCTSTR protocol, const uchar* packe
 CString CClientReqSocket::DbgGetClientInfo()
 {
 	CString str;
-	SOCKADDR_IN sockAddr = {0};
+	SOCKADDR_IN sockAddr = {};
 	int nSockAddrLen = sizeof sockAddr;
 	GetPeerName((SOCKADDR*)&sockAddr, &nSockAddrLen);
 	if (sockAddr.sin_addr.S_un.S_addr != 0 && (client == NULL || sockAddr.sin_addr.S_un.S_addr != client->GetIP()))
@@ -2517,7 +2517,7 @@ void CListenSocket::OnAccept(int nErrorCode)
 			m_nPendingConnections--;
 
 			CClientReqSocket* newclient;
-			SOCKADDR_IN SockAddr = {0};
+			SOCKADDR_IN SockAddr = {};
 			int iSockAddrLen = sizeof SockAddr;
 			if (thePrefs.GetConditionalTCPAccept() && !thePrefs.GetProxySettings().UseProxy)
 			{

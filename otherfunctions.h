@@ -136,7 +136,7 @@ void Sort(CStringArray& astr, int (__cdecl *pfnCompare)(const void*, const void*
 int __cdecl CompareCStringPtrPtrLocaleString(const void* p1, const void* p2);
 int __cdecl CompareCStringPtrPtrLocaleStringNoCase(const void* p1, const void* p2);
 void		Sort(CSimpleArray<const CString*>& apstr, int (__cdecl *pfnCompare)(const void*, const void*) = CompareCStringPtrPtrLocaleStringNoCase);
-void		StripTrailingCollon(CString& rstr);
+void		StripTrailingColon(CString& rstr);
 bool		IsUnicodeFile(LPCTSTR pszFilePath);
 UINT64		GetFreeTempSpace(int tempdirindex);
 int			GetPathDriveNumber(const CString& path);
@@ -266,8 +266,10 @@ bool		AddIconGrayscaledToImageList(CImageList& rList, HICON hIcon);
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// MD4 helpers
+// MD4/MD5 helpers
 //
+#define MDX_BLOCK_SIZE	64 //both MD4 and MD5
+#define MDX_DIGEST_SIZE	16
 
 __inline BYTE toHex(const BYTE &x)
 {
@@ -300,7 +302,7 @@ __inline void md4cpy(void* dst, const void* src)
 	((uint64*)dst)[1] = ((uint64*)src)[1];
 }
 
-#define	MAX_HASHSTR_SIZE (16*2+1)
+#define	MAX_HASHSTR_SIZE (MDX_DIGEST_SIZE*2+1)
 CString md4str(const uchar* hash);
 CStringA md4strA(const uchar* hash);
 void md4str(const uchar* hash, TCHAR* pszHash);

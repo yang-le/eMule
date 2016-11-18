@@ -188,7 +188,7 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 			// of finding the (english) version of that font and thus falls back to the standard
 			// system font. At least this would explain why the TTP_STANDARD and TTP_STANDARDTITLE
 			// fonts are *different* on that particular Windows Vista system.
-			LOGFONT lf = {0};
+			LOGFONT lf = {};
 			if (g_xpStyle.GetThemeFont(hTheme, pdc->m_hDC, TTP_STANDARD, TTSS_NORMAL, TMT_FONT, &lf) == S_OK) {
 				VERIFY( m_fontNormal.CreateFontIndirect(&lf) );
 
@@ -550,7 +550,7 @@ BOOL CToolTipCtrlX::OnTTShow(NMHDR *pNMHDR, LRESULT *pResult)
 	// Win98/Win2000: The only chance to resize a tooltip window is to do it within the TTN_SHOW notification.
 	if (theApp.m_ullComCtrlVer <= MAKEDLLVERULL(5,81,0,0))
 	{
-		NMTTCUSTOMDRAW nmttcd = {0};
+		NMTTCUSTOMDRAW nmttcd = {};
 		nmttcd.uDrawFlags = DT_NOPREFIX | DT_CALCRECT | DT_EXTERNALLEADING | DT_EXPANDTABS | DT_WORDBREAK;
 		nmttcd.nmcd.hdr = *pNMHDR;
 		nmttcd.nmcd.dwDrawStage = CDDS_PREPAINT;

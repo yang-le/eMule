@@ -894,7 +894,7 @@ void CSharedFilesCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 		&& (   pSingleSelFile->GetFilePath().Right(ARRSIZE(_szSkinPkgSuffix1)-1).CompareNoCase(_szSkinPkgSuffix1) == 0
 		    || pSingleSelFile->GetFilePath().Right(ARRSIZE(_szSkinPkgSuffix2)-1).CompareNoCase(_szSkinPkgSuffix2) == 0))
 	{
-		MENUITEMINFO mii = {0};
+		MENUITEMINFO mii = {};
 		mii.cbSize = sizeof mii;
 		mii.fMask = MIIM_TYPE | MIIM_STATE | MIIM_ID;
 		mii.fType = MFT_STRING;
@@ -1612,7 +1612,7 @@ void CSharedFilesCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLVGETINFOTIP pGetInfoTip = reinterpret_cast<LPNMLVGETINFOTIP>(pNMHDR);
 	if (pGetInfoTip && pGetInfoTip->iSubItem == 0) {
-		LVHITTESTINFO hti = {0};
+		LVHITTESTINFO hti = {};
 		::GetCursorPos(&hti.pt);
 		ScreenToClient(&hti.pt);
 		if (SubItemHitTest(&hti) == -1 || hti.iItem != pGetInfoTip->iItem || hti.iSubItem != 0){
@@ -1750,7 +1750,7 @@ void CSharedFilesCtrl::AddShareableFiles(const CString& strFromDir)
 				CComPtr<IEnumSTATSTG> pEnumSTATSTG;
 				if (SUCCEEDED(pStorage->EnumElements(0, NULL, 0, &pEnumSTATSTG)))
 				{
-					STATSTG statstg = {0};
+					STATSTG statstg = {};
 					if (pEnumSTATSTG->Next(1, &statstg, 0) == S_OK)
 					{
 						CoTaskMemFree(statstg.pwcsName);

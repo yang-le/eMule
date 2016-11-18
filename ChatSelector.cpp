@@ -155,7 +155,7 @@ CChatItem* CChatSelector::StartSession(CUpDownClient* client, bool show)
 	chatitem->log->ApplySkin();
 	chatitem->log->EnableSmileys(thePrefs.GetMessageEnableSmileys());
 
-	PARAFORMAT pf = {0};
+	PARAFORMAT pf = {};
 	pf.cbSize = sizeof pf;
 	pf.dwMask = PFM_OFFSET;
 	pf.dxOffset = 150;
@@ -602,7 +602,7 @@ BOOL CChatSelector::OnCommand(WPARAM wParam, LPARAM lParam)
 
 void CChatSelector::OnContextMenu(CWnd*, CPoint point)
 {
-	TCHITTESTINFO hti = {0};
+	TCHITTESTINFO hti = {};
 	::GetCursorPos(&hti.pt);
 	ScreenToClient(&hti.pt);
 

@@ -31,8 +31,8 @@ typedef BOOL (WINAPI *MINIDUMPWRITEDUMP)(HANDLE hProcess, DWORD dwPid, HANDLE hF
 										 CONST PMINIDUMP_CALLBACK_INFORMATION CallbackParam);
 
 CMiniDumper theCrashDumper;
-TCHAR CMiniDumper::m_szAppName[MAX_PATH] = {0};
-TCHAR CMiniDumper::m_szDumpDir[MAX_PATH] = {0};
+TCHAR CMiniDumper::m_szAppName[MAX_PATH] = {};
+TCHAR CMiniDumper::m_szDumpDir[MAX_PATH] = {};
 
 void CMiniDumper::Enable(LPCTSTR pszAppName, bool bShowErrors, LPCTSTR pszDumpDir)
 {
@@ -89,7 +89,7 @@ HMODULE CMiniDumper::GetDebugHelperDll(FARPROC* ppfnMiniDumpWriteDump, bool bSho
 LONG WINAPI CMiniDumper::TopLevelFilter(struct _EXCEPTION_POINTERS* pExceptionInfo)
 {
 	LONG lRetValue = EXCEPTION_CONTINUE_SEARCH;
-	TCHAR szResult[MAX_PATH + 1024] = {0};
+	TCHAR szResult[MAX_PATH + 1024] = {};
 	MINIDUMPWRITEDUMP pfnMiniDumpWriteDump = NULL;
 	HMODULE hDll = GetDebugHelperDll((FARPROC*)&pfnMiniDumpWriteDump, true);
 	if (hDll)
@@ -137,7 +137,7 @@ LONG WINAPI CMiniDumper::TopLevelFilter(struct _EXCEPTION_POINTERS* pExceptionIn
 				HANDLE hFile = CreateFile(szDumpPath, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 				if (hFile != INVALID_HANDLE_VALUE)
 				{
-					_MINIDUMP_EXCEPTION_INFORMATION ExInfo = {0};
+					_MINIDUMP_EXCEPTION_INFORMATION ExInfo = {};
 					ExInfo.ThreadId = GetCurrentThreadId();
 					ExInfo.ExceptionPointers = pExceptionInfo;
 					ExInfo.ClientPointers = NULL;

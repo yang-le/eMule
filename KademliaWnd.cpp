@@ -139,7 +139,7 @@ BOOL CKademliaWnd::OnInitDialog()
 	m_pbtnWnd->ModifyStyle((theApp.m_ullComCtrlVer >= MAKEDLLVERULL(6, 16, 0, 0)) ? TBSTYLE_TRANSPARENT : 0, TBSTYLE_TOOLTIPS);
 	m_pbtnWnd->SetExtendedStyle(m_pbtnWnd->GetExtendedStyle() | TBSTYLE_EX_MIXEDBUTTONS);
 
-	TBBUTTON atb1[1+WND1_NUM_BUTTONS] = {0};
+	TBBUTTON atb1[1+WND1_NUM_BUTTONS] = {};
 	atb1[0].iBitmap = 0;
 	atb1[0].idCommand = IDC_KADICO1;
 	atb1[0].fsState = TBSTATE_ENABLED;
@@ -159,7 +159,7 @@ BOOL CKademliaWnd::OnInitDialog()
 	atb1[2].iString = -1;
 	m_pbtnWnd->AddButtons(_countof(atb1), atb1);
 
-	TBBUTTONINFO tbbi = {0};
+	TBBUTTONINFO tbbi = {};
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_SIZE | TBIF_BYINDEX;
 	tbbi.cx = WND1_BUTTON_WIDTH;
@@ -193,20 +193,9 @@ BOOL CKademliaWnd::OnInitDialog()
 	AddAnchor(IDC_KAD_HISTOGRAM, TOP_RIGHT, MIDDLE_RIGHT);
 	AddAnchor(IDC_KADICO2, MIDDLE_LEFT);
 	AddAnchor(IDC_SEARCHLIST, MIDDLE_LEFT, BOTTOM_RIGHT);
-	AddAnchor(IDC_FIREWALLCHECKBUTTON, TOP_RIGHT);
-	AddAnchor(IDC_KADCONNECT, TOP_RIGHT);
 	AddAnchor(IDC_KADSEARCHLAB, MIDDLE_LEFT);
-	AddAnchor(IDC_BSSTATIC, TOP_RIGHT);
-	AddAnchor(IDC_BOOTSTRAPBUTTON, TOP_RIGHT);
-	AddAnchor(IDC_BOOTSTRAPPORT, TOP_RIGHT);
-	AddAnchor(IDC_BOOTSTRAPIP, TOP_RIGHT);
-	AddAnchor(IDC_BOOTSTRAPURL, TOP_RIGHT);
-	AddAnchor(IDC_SSTATIC4, TOP_RIGHT);
-	AddAnchor(IDC_SSTATIC7, TOP_RIGHT);
-	AddAnchor(IDC_NODESDATLABEL, TOP_RIGHT);
-	AddAnchor(IDC_RADCLIENTS, TOP_RIGHT);
-	AddAnchor(IDC_RADIP, TOP_RIGHT);
-	AddAnchor(IDC_RADNODESURL, TOP_RIGHT);
+
+	AddAllOtherAnchors(TOP_RIGHT);
 
 	searchList->UpdateKadSearchCount();
 	m_contactListCtrl->UpdateKadContactCount();
@@ -582,7 +571,7 @@ void CKademliaWnd::ShowLookupGraph(bool bShow)
 		iIcon = 0;
 		m_pbtnWnd->CheckButton(MP_VIEW_KADCONTACTS);
 	}
-	TBBUTTONINFO tbbi = {0};
+	TBBUTTONINFO tbbi = {};
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_IMAGE;
 	tbbi.iImage = iIcon;

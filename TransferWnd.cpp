@@ -297,14 +297,8 @@ void CTransferWnd::UpdateSplitterRange()
 
 LRESULT CTransferWnd::DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
-	switch (message)
-	{
-		case WM_WINDOWPOSCHANGED:
-			if (m_wndSplitter)
-				m_wndSplitter.Invalidate();
-
-			break;
-	}
+	if (message==WM_WINDOWPOSCHANGED && m_wndSplitter)
+		m_wndSplitter.Invalidate();
 
 	return CResizableFormView::DefWindowProc(message, wParam, lParam);
 }
@@ -1468,7 +1462,7 @@ void CTransferWnd::OnBnClickedChangeView()
 
 void CTransferWnd::SetWnd1Icon(EWnd1Icon iIcon)
 {
-	TBBUTTONINFO tbbi = {0};
+	TBBUTTONINFO tbbi = {};
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_IMAGE;
 	tbbi.iImage = iIcon;
@@ -1477,7 +1471,7 @@ void CTransferWnd::SetWnd1Icon(EWnd1Icon iIcon)
 
 void CTransferWnd::SetWnd2Icon(EWnd2Icon iIcon)
 {
-	TBBUTTONINFO tbbi = {0};
+	TBBUTTONINFO tbbi = {};
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_IMAGE;
 	tbbi.iImage = iIcon;
@@ -1743,7 +1737,7 @@ void CTransferWnd::ResetTransToolbar(bool bShowToolbar, bool bResetLists)
 		m_btnWnd1->ModifyStyle((theApp.m_ullComCtrlVer >= MAKEDLLVERULL(6, 16, 0, 0)) ? TBSTYLE_TRANSPARENT : 0, TBSTYLE_TOOLTIPS);
 		m_btnWnd1->SetExtendedStyle(m_btnWnd1->GetExtendedStyle() | TBSTYLE_EX_MIXEDBUTTONS);
 
-		TBBUTTON atb1[1+WND1_NUM_BUTTONS] = {0};
+		TBBUTTON atb1[1+WND1_NUM_BUTTONS] = {};
 		atb1[0].iBitmap = w1iDownloadFiles;
 		atb1[0].idCommand = IDC_DOWNLOAD_ICO;
 		atb1[0].fsState = TBSTATE_ENABLED;
@@ -1787,7 +1781,7 @@ void CTransferWnd::ResetTransToolbar(bool bShowToolbar, bool bResetLists)
 		atb1[6].iString = -1;
 		m_btnWnd1->AddButtons(_countof(atb1), atb1);
 
-		TBBUTTONINFO tbbi = {0};
+		TBBUTTONINFO tbbi = {};
 		tbbi.cbSize = sizeof tbbi;
 		tbbi.dwMask = TBIF_SIZE | TBIF_BYINDEX;
 		tbbi.cx = WND1_BUTTON_WIDTH;
@@ -1817,7 +1811,7 @@ void CTransferWnd::ResetTransToolbar(bool bShowToolbar, bool bResetLists)
 		m_btnWnd2->ModifyStyle((theApp.m_ullComCtrlVer >= MAKEDLLVERULL(6, 16, 0, 0)) ? TBSTYLE_TRANSPARENT : 0, TBSTYLE_TOOLTIPS);
 		m_btnWnd2->SetExtendedStyle(m_btnWnd2->GetExtendedStyle() | TBSTYLE_EX_MIXEDBUTTONS);
 
-		TBBUTTON atb2[1+WND2_NUM_BUTTONS] = {0};
+		TBBUTTON atb2[1+WND2_NUM_BUTTONS] = {};
 		atb2[0].iBitmap = w2iUploading;
 		atb2[0].idCommand = IDC_UPLOAD_ICO;
 		atb2[0].fsState = TBSTATE_ENABLED;

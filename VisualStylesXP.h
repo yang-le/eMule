@@ -13,91 +13,91 @@ public:
 	CVisualStylesXP(void);
 	~CVisualStylesXP(void);
 
-	HTHEME OpenThemeData(HWND hwnd, LPCWSTR pszClassList);
-	HRESULT CloseThemeData(HTHEME hTheme);
-	HRESULT DrawThemeBackground(HTHEME hTheme, HDC hdc,
+	static HTHEME OpenThemeData(HWND hwnd, LPCWSTR pszClassList);
+	static HRESULT CloseThemeData(HTHEME hTheme);
+	static HRESULT DrawThemeBackground(HTHEME hTheme, HDC hdc,
 		int iPartId, int iStateId, const RECT *pRect, const RECT *pClipRect);
-	HRESULT DrawThemeText(HTHEME hTheme, HDC hdc, int iPartId,
+	static HRESULT DrawThemeText(HTHEME hTheme, HDC hdc, int iPartId,
 		int iStateId, LPCWSTR pszText, int iCharCount, DWORD dwTextFlags,
 		DWORD dwTextFlags2, const RECT *pRect);
-	HRESULT GetThemeBackgroundContentRect(HTHEME hTheme, HDC hdc,
+	static HRESULT GetThemeBackgroundContentRect(HTHEME hTheme, HDC hdc,
 		int iPartId, int iStateId, const RECT *pBoundingRect,
 		RECT *pContentRect);
-	HRESULT GetThemeBackgroundExtent(HTHEME hTheme, HDC hdc,
+	static HRESULT GetThemeBackgroundExtent(HTHEME hTheme, HDC hdc,
 		int iPartId, int iStateId, const RECT *pContentRect,
 		RECT *pExtentRect);
-	HRESULT GetThemePartSize(HTHEME hTheme, HDC hdc,
+	static HRESULT GetThemePartSize(HTHEME hTheme, HDC hdc,
 		int iPartId, int iStateId, RECT * pRect, enum THEMESIZE eSize, SIZE *psz);
-	HRESULT GetThemeTextExtent(HTHEME hTheme, HDC hdc,
+	static HRESULT GetThemeTextExtent(HTHEME hTheme, HDC hdc,
 		int iPartId, int iStateId, LPCWSTR pszText, int iCharCount,
 		DWORD dwTextFlags, const RECT *pBoundingRect,
 		RECT *pExtentRect);
-	HRESULT GetThemeTextMetrics(HTHEME hTheme, HDC hdc,
+	static HRESULT GetThemeTextMetrics(HTHEME hTheme, HDC hdc,
 		int iPartId, int iStateId, TEXTMETRIC* ptm);
-	HRESULT GetThemeBackgroundRegion(HTHEME hTheme, HDC hdc,
+	static HRESULT GetThemeBackgroundRegion(HTHEME hTheme, HDC hdc,
 		int iPartId, int iStateId, const RECT *pRect, HRGN *pRegion);
-	HRESULT HitTestThemeBackground(HTHEME hTheme, HDC hdc, int iPartId,
+	static HRESULT HitTestThemeBackground(HTHEME hTheme, HDC hdc, int iPartId,
 		int iStateId, DWORD dwOptions, const RECT *pRect, HRGN hrgn,
 		POINT ptTest, WORD *pwHitTestCode);
-	HRESULT DrawThemeEdge(HTHEME hTheme, HDC hdc, int iPartId, int iStateId,
+	static HRESULT DrawThemeEdge(HTHEME hTheme, HDC hdc, int iPartId, int iStateId,
 		const RECT *pDestRect, UINT uEdge, UINT uFlags, RECT *pContentRect);
-	HRESULT DrawThemeIcon(HTHEME hTheme, HDC hdc, int iPartId,
+	static HRESULT DrawThemeIcon(HTHEME hTheme, HDC hdc, int iPartId,
 		int iStateId, const RECT *pRect, HIMAGELIST himl, int iImageIndex);
-	BOOL IsThemePartDefined(HTHEME hTheme, int iPartId,
+	static BOOL IsThemePartDefined(HTHEME hTheme, int iPartId,
 		int iStateId);
-	BOOL IsThemeBackgroundPartiallyTransparent(HTHEME hTheme,
+	static BOOL IsThemeBackgroundPartiallyTransparent(HTHEME hTheme,
 		int iPartId, int iStateId);
-	HRESULT GetThemeColor(HTHEME hTheme, int iPartId,
+	static HRESULT GetThemeColor(HTHEME hTheme, int iPartId,
 		int iStateId, int iPropId, COLORREF *pColor);
-	HRESULT GetThemeMetric(HTHEME hTheme, HDC hdc, int iPartId,
+	static HRESULT GetThemeMetric(HTHEME hTheme, HDC hdc, int iPartId,
 		int iStateId, int iPropId, int *piVal);
-	HRESULT GetThemeString(HTHEME hTheme, int iPartId,
+	static HRESULT GetThemeString(HTHEME hTheme, int iPartId,
 		int iStateId, int iPropId, LPWSTR pszBuff, int cchMaxBuffChars);
-	HRESULT GetThemeBool(HTHEME hTheme, int iPartId,
+	static HRESULT GetThemeBool(HTHEME hTheme, int iPartId,
 		int iStateId, int iPropId, BOOL *pfVal);
-	HRESULT GetThemeInt(HTHEME hTheme, int iPartId,
+	static HRESULT GetThemeInt(HTHEME hTheme, int iPartId,
 		int iStateId, int iPropId, int *piVal);
-	HRESULT GetThemeEnumValue(HTHEME hTheme, int iPartId,
+	static HRESULT GetThemeEnumValue(HTHEME hTheme, int iPartId,
 		int iStateId, int iPropId, int *piVal);
-	HRESULT GetThemePosition(HTHEME hTheme, int iPartId,
+	static HRESULT GetThemePosition(HTHEME hTheme, int iPartId,
 		int iStateId, int iPropId, POINT *pPoint);
-	HRESULT GetThemeFont(HTHEME hTheme, HDC hdc, int iPartId,
+	static HRESULT GetThemeFont(HTHEME hTheme, HDC hdc, int iPartId,
 		int iStateId, int iPropId, LOGFONT *pFont);
-	HRESULT GetThemeRect(HTHEME hTheme, int iPartId,
+	static HRESULT GetThemeRect(HTHEME hTheme, int iPartId,
 		int iStateId, int iPropId, RECT *pRect);
-	HRESULT GetThemeMargins(HTHEME hTheme, HDC hdc, int iPartId,
+	static HRESULT GetThemeMargins(HTHEME hTheme, HDC hdc, int iPartId,
 		int iStateId, int iPropId, RECT *prc, MARGINS *pMargins);
-	HRESULT GetThemeIntList(HTHEME hTheme, int iPartId,
+	static HRESULT GetThemeIntList(HTHEME hTheme, int iPartId,
 		int iStateId, int iPropId, INTLIST *pIntList);
-	HRESULT GetThemePropertyOrigin(HTHEME hTheme, int iPartId,
+	static HRESULT GetThemePropertyOrigin(HTHEME hTheme, int iPartId,
 		int iStateId, int iPropId, enum PROPERTYORIGIN *pOrigin);
-	HRESULT SetWindowTheme(HWND hwnd, LPCWSTR pszSubAppName,
+	static HRESULT SetWindowTheme(HWND hwnd, LPCWSTR pszSubAppName,
 		LPCWSTR pszSubIdList);
-	HRESULT GetThemeFilename(HTHEME hTheme, int iPartId,
+	static HRESULT GetThemeFilename(HTHEME hTheme, int iPartId,
 		int iStateId, int iPropId, LPWSTR pszThemeFileName, int cchMaxBuffChars);
-	COLORREF GetThemeSysColor(HTHEME hTheme, int iColorId);
-	HBRUSH GetThemeSysColorBrush(HTHEME hTheme, int iColorId);
-	BOOL GetThemeSysBool(HTHEME hTheme, int iBoolId);
+	static COLORREF GetThemeSysColor(HTHEME hTheme, int iColorId);
+	static HBRUSH GetThemeSysColorBrush(HTHEME hTheme, int iColorId);
+	static BOOL GetThemeSysBool(HTHEME hTheme, int iBoolId);
 	static int GetThemeSysSize(HTHEME hTheme, int iSizeId);
-	HRESULT GetThemeSysFont(HTHEME hTheme, int iFontId, LOGFONT *plf);
-	HRESULT GetThemeSysString(HTHEME hTheme, int iStringId,
+	static HRESULT GetThemeSysFont(HTHEME hTheme, int iFontId, LOGFONT *plf);
+	static HRESULT GetThemeSysString(HTHEME hTheme, int iStringId,
 		LPWSTR pszStringBuff, int cchMaxStringChars);
-	HRESULT GetThemeSysInt(HTHEME hTheme, int iIntId, int *piValue);
-	BOOL IsThemeActive();
-	BOOL IsAppThemed();
-	HTHEME GetWindowTheme(HWND hwnd);
-	HRESULT EnableThemeDialogTexture(HWND hwnd, DWORD dwFlags);
-	BOOL IsThemeDialogTextureEnabled(HWND hwnd);
-	DWORD GetThemeAppProperties();
+	static HRESULT GetThemeSysInt(HTHEME hTheme, int iIntId, int *piValue);
+	static BOOL IsThemeActive();
+	static BOOL IsAppThemed();
+	static HTHEME GetWindowTheme(HWND hwnd);
+	static HRESULT EnableThemeDialogTexture(HWND hwnd, DWORD dwFlags);
+	static BOOL IsThemeDialogTextureEnabled(HWND hwnd);
+	static DWORD GetThemeAppProperties();
 	static void SetThemeAppProperties(DWORD dwFlags);
-	HRESULT GetCurrentThemeName(
+	static HRESULT GetCurrentThemeName(
 		LPWSTR pszThemeFileName, int cchMaxNameChars,
 		LPWSTR pszColorBuff, int cchMaxColorChars,
 		LPWSTR pszSizeBuff, int cchMaxSizeChars);
-	HRESULT GetThemeDocumentationProperty(LPCWSTR pszThemeName,
+	static HRESULT GetThemeDocumentationProperty(LPCWSTR pszThemeName,
 		LPCWSTR pszPropertyName, LPWSTR pszValueBuff, int cchMaxValChars);
-	HRESULT DrawThemeParentBackground(HWND hwnd, HDC hdc, RECT* prc);
-	HRESULT EnableTheming(BOOL fEnable);
+	static HRESULT DrawThemeParentBackground(HWND hwnd, HDC hdc, RECT* prc);
+	static HRESULT EnableTheming(BOOL fEnable);
 
 private:
 	static HMODULE m_hThemeDll;

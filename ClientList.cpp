@@ -272,14 +272,13 @@ CUpDownClient* CClientList::FindClientByIP(uint32 clientip, UINT port) const
 CUpDownClient* CClientList::FindClientByUserHash(const uchar* clienthash, uint32 dwIP, uint16 nTCPPort) const
 {
 	CUpDownClient* pFound = NULL;
-	for (POSITION pos = list.GetHeadPosition(); pos != NULL;)
-	{
+	for (POSITION pos = list.GetHeadPosition(); pos != NULL;) {
 		CUpDownClient* cur_client = list.GetNext(pos);
-		if (!md4cmp(cur_client->GetUserHash() ,clienthash)){
+		if (!md4cmp(cur_client->GetUserHash(), clienthash)) {
 			if ((dwIP == 0 || dwIP == cur_client->GetIP()) && (nTCPPort == 0 || nTCPPort == cur_client->GetUserPort()))
 				return cur_client;
-			else
-				pFound = pFound != NULL ? pFound : cur_client;
+			if (pFound == NULL)
+				pFound = cur_client;
 		}
 	}
 	return pFound;
@@ -392,15 +391,15 @@ void CClientList::AddTrackClient(CUpDownClient* toadd){
 
 // true = everything ok, hash didn't changed
 // false = hash changed
-bool CClientList::ComparePriorUserhash(uint32 dwIP, uint16 nPort, void* pNewHash){
-	CDeletedClient* pResult = 0;
-	if (m_trackedClientsList.Lookup(dwIP, pResult)){
-		for (int i = 0; i != pResult->m_ItemsList.GetCount(); i++){
-			if (pResult->m_ItemsList[i].nPort == nPort){
+bool CClientList::ComparePriorUserhash(uint32 dwIP, uint16 nPort, void* pNewHash)
+{
+	CDeletedClient* pResult = NULL;
+	if (m_trackedClientsList.Lookup(dwIP, pResult)) {
+		for (int i = 0; i != pResult->m_ItemsList.GetCount(); ++i) {
+			if (pResult->m_ItemsList[i].nPort == nPort) {
 				if (pResult->m_ItemsList[i].pHash != pNewHash)
 					return false;
-				else
-					break;
+				break;
 			}
 		}
 	}
@@ -583,8 +582,7 @@ void CClientList::Process()
 				//things are working correctly.
 				if( m_nBuddyStatus == Connected )
 					cur_client->SetKadState(KS_NONE);
-				else
-				{
+				else {
 					ASSERT( m_nBuddyStatus == Connecting );
 					buddy = Connecting;
 				}

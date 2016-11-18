@@ -833,7 +833,6 @@ size_t ID3_GetV1GenreNum(char* sGenre)
   dami::String tmpgenre;
   size_t ulGenre = 0xFF;
   size_t iStart = 0;
-  size_t digits;
 
   if (strlen(sGenre) < 3)
     return ulGenre;
@@ -842,7 +841,7 @@ size_t ID3_GetV1GenreNum(char* sGenre)
   // "ddd" is the genre number---get it
   while (1)
   {
-    digits = 0;
+    size_t digits = 0;
     if (sGenre[iStart] == '(')
     {
       char *pCur = &sGenre[iStart + 1];
@@ -913,7 +912,7 @@ size_t ID3_GetV1GenreNum(char* sGenre)
       ++iStart;
     }
   }
-  if (tmpgenre.size() > 0)
+  if (!tmpgenre.empty())
   {
      sprintf(sGenre, tmpgenre.c_str());
   }

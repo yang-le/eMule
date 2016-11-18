@@ -63,10 +63,10 @@ BOOL CNetworkInfoDlg::OnInitDialog()
 	m_info.SetAutoURLDetect();
 	m_info.SetEventMask(m_info.GetEventMask() | ENM_LINK);
 
-	CHARFORMAT cfDef = {0};
-	CHARFORMAT cfBold = {0};
+	CHARFORMAT cfDef = {};
+	CHARFORMAT cfBold = {};
 
-	PARAFORMAT pf = {0};
+	PARAFORMAT pf = {};
 	pf.cbSize = sizeof pf;
 	if (m_info.GetParaFormat(pf)){
 		pf.dwMask |= PFM_TABSTOPS;

@@ -74,24 +74,12 @@ BOOL CFileDetailDlgStatistics::OnInitDialog()
 	CResizablePage::OnInitDialog();
 	InitWindowStyles(this);
 
-	AddAnchor(IDC_FSTATIC4, TOP_LEFT);
-	AddAnchor(IDC_SREQUESTED, TOP_LEFT);
-	AddAnchor(IDC_FSTATIC5, TOP_LEFT);
-	AddAnchor(IDC_SACCEPTED, TOP_LEFT);
-	AddAnchor(IDC_FSTATIC6, TOP_LEFT);
-	AddAnchor(IDC_STRANSFERRED, TOP_LEFT);
 	AddAnchor(pop_bar, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(pop_baraccept, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(pop_bartrans, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(pop_bar2, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(pop_baraccept2, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(pop_bartrans2, TOP_LEFT, TOP_RIGHT);
-	AddAnchor(IDC_SREQUESTED2,TOP_LEFT);
-	AddAnchor(IDC_FSTATIC7,TOP_LEFT);
-	AddAnchor(IDC_FSTATIC8,TOP_LEFT);
-	AddAnchor(IDC_FSTATIC9,TOP_LEFT);
-	AddAnchor(IDC_STRANSFERRED2,TOP_LEFT);
-	AddAnchor(IDC_SACCEPTED2,TOP_LEFT);
 	AddAnchor(IDC_STATISTICS_GB_TOTAL, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_STATISTICS_GB_SESSION, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_FS_POPULARITY_LBL,TOP_RIGHT);
@@ -102,6 +90,8 @@ BOOL CFileDetailDlgStatistics::OnInitDialog()
 	AddAnchor(IDC_FS_UPLOADING_VAL,TOP_RIGHT);
 	AddAnchor(IDC_FS_POPULARITY2_LBL,TOP_RIGHT);
 	AddAnchor(IDC_FS_POPULARITY2_VAL,TOP_RIGHT);
+
+	AddAllOtherAnchors();
 
 	pop_bar.SetGradientColors(RGB(255,255,240),RGB(255,255,0));
 	pop_bar.SetTextColor(RGB(20,70,255));

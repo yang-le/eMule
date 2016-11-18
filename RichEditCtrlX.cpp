@@ -342,7 +342,7 @@ DWORD CALLBACK CRichEditCtrlX::StreamInCallback(DWORD_PTR dwCookie, LPBYTE pbBuf
 void CRichEditCtrlX::SetRTFText(const CStringA& rstrTextA)
 {
 	CMemFile memFile((BYTE*)(LPCSTR)rstrTextA, rstrTextA.GetLength());
-	EDITSTREAM es = {0};
+	EDITSTREAM es = {};
 	es.pfnCallback = StreamInCallback;
 	es.dwCookie = (DWORD_PTR)&memFile;
 	StreamIn(SF_RTF, es);

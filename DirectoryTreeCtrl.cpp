@@ -254,7 +254,7 @@ HTREEITEM CDirectoryTreeCtrl::AddChildItem(HTREEITEM hRoot, CString strText)
 	if (hRoot != NULL && strPath.Right(1) != _T("\\"))
 		strPath += _T("\\");
 	CString strDir = strPath + strText;
-	TVINSERTSTRUCT itInsert = {0};
+	TVINSERTSTRUCT itInsert = {};
 
 	// START: changed by FoRcHa /////
 	WORD wWinVer = thePrefs.GetWindowsVersion();

@@ -42,7 +42,8 @@ CSecRunAsUser::~CSecRunAsUser(void)
 	FreeAPI();
 }
 
-eResult CSecRunAsUser::PrepareUser(){
+eResult CSecRunAsUser::PrepareUser()
+{
 	CoInitialize(NULL);
 	bool bResult = false;
 	if (!LoadAPI())
@@ -110,8 +111,7 @@ eResult CSecRunAsUser::PrepareUser(){
 			CoUninitialize();
 			if (m_bRunningAsEmule)
 				return RES_OK;
-			else
-				return RES_FAILED;
+			return RES_FAILED;
 		}
 		if (bResult || CreateEmuleUser(pUsers) ){
 			bResult = SetDirectoryPermissions();
@@ -130,8 +130,7 @@ eResult CSecRunAsUser::PrepareUser(){
 	FreeAPI();
 	if (bResult)
 		return RES_OK_NEED_RESTART;
-	else
-		return RES_FAILED;
+	return RES_FAILED;
 }
 
 bool CSecRunAsUser::CreateEmuleUser(IADsContainerPtr pUsers){
@@ -158,41 +157,39 @@ bool CSecRunAsUser::CreateEmuleUser(IADsContainerPtr pUsers){
 	return true;
 }
 
-CStringW CSecRunAsUser::CreateRandomPW(){
+CStringW CSecRunAsUser::CreateRandomPW()
+{
 	CStringW strResult;
 	while (strResult.GetLength() < 10){
-		char chRnd = (char)(48 + (rand() % 75)); //'0'..'z'
+		char chRnd = (char)('0' + (rand() % 'z')); //'0'..'z'
 		if (chRnd>='a' && chRnd<='z' || chRnd>='A' && chRnd<='Z' || chRnd>='0' && chRnd<='9' || chRnd=='_')
 				strResult.AppendChar(chRnd);
 	}
 	return strResult;
 }
 
-bool CSecRunAsUser::SetDirectoryPermissions(){
+bool CSecRunAsUser::SetDirectoryPermissions()
+{
 #define FULLACCESS ADS_RIGHT_GENERIC_ALL
 	// shared files list: read permission only
 	// we odnt check for success here, for emule will also run if one dir fails for some reason
 	// if there is a dir which is also an incoming dir, rights will be overwritten below
-	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition();pos != 0;)
-	{
+	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos != NULL;)
 		VERIFY( SetObjectPermission(thePrefs.shareddir_list.GetNext(pos), (DWORD)ADS_RIGHT_GENERIC_READ) );
-	}
 
 	// set special permission for emule account on needed folders
-	bool bSucceeded = true;
-
 
 	// verify permissions on the most important folders. Keep in mind that this is mainly for WinXP-PublicUser-Installs,
 	// and is not really needed for MultiUser or Vista Setups
-	bSucceeded = bSucceeded && SetObjectPermission(thePrefs.GetMuleDirectory(EMULE_CONFIGBASEDIR), FULLACCESS);
+	bool bSucceeded = SetObjectPermission(thePrefs.GetMuleDirectory(EMULE_CONFIGBASEDIR), FULLACCESS);
 	bSucceeded = bSucceeded && SetObjectPermission(thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR), FULLACCESS);
 	bSucceeded = bSucceeded && SetObjectPermission(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR), FULLACCESS);
-	for (int i=0;i<thePrefs.GetTempDirCount();i++)
+	for (int i=0; i<thePrefs.GetTempDirCount(); ++i)
 		bSucceeded = bSucceeded && SetObjectPermission(thePrefs.GetTempDir(i), FULLACCESS);
 
 	int cCats = thePrefs.GetCatCount();
-	for (int i = 0; i < cCats; i++){
-		if (!CString(thePrefs.GetCatPath(i)).IsEmpty())
+	for (int i = 0; i < cCats; ++i) {
+		if (!thePrefs.GetCatPath(i).IsEmpty())
 			bSucceeded = bSucceeded && SetObjectPermission(thePrefs.GetCatPath(i), FULLACCESS);
 	}
 	if (!bSucceeded)
@@ -201,7 +198,8 @@ bool CSecRunAsUser::SetDirectoryPermissions(){
 	return bSucceeded;
 }
 
-bool CSecRunAsUser::SetObjectPermission(CString strDirFile, DWORD lGrantedAccess){
+bool CSecRunAsUser::SetObjectPermission(CString strDirFile, DWORD lGrantedAccess)
+{
 	if (!m_hADVAPI32_DLL){
 		ASSERT ( false );
 		return false;
@@ -344,11 +342,11 @@ eResult CSecRunAsUser::RestartAsUser(){
 	ASSERT ( !m_strPassword.IsEmpty() );
 	BOOL bResult;
 	try{
-		PROCESS_INFORMATION ProcessInfo = {0};
+		PROCESS_INFORMATION ProcessInfo = {};
 		CString strAppName;
 		strAppName.Format(_T("\"%s\""),szAppPath);
 
-		STARTUPINFOW StartInf = {0};
+		STARTUPINFOW StartInf = {};
 		StartInf.cb = sizeof StartInf;
 		StartInf.dwFlags = STARTF_USESHOWWINDOW;
 		StartInf.wShowWindow = SW_NORMAL;
@@ -374,34 +372,33 @@ eResult CSecRunAsUser::RestartAsUser(){
 
 	if (bResult)
 		return RES_OK_NEED_RESTART;
-	else
-		return RES_FAILED;
+	return RES_FAILED;
 }
 
-CStringW CSecRunAsUser::GetCurrentUserW() const {
+CStringW CSecRunAsUser::GetCurrentUserW() const
+{
 	if ( m_strCurrentUser.IsEmpty() )
-		return L"Unknown";
-	else
-		return m_strCurrentUser;
+		return CString(L"Unknown");
+	return m_strCurrentUser;
 }
 
-bool CSecRunAsUser::LoadAPI(){
+bool CSecRunAsUser::LoadAPI()
+{
 	if (m_hADVAPI32_DLL == 0)
 		m_hADVAPI32_DLL = LoadLibrary(_T("Advapi32.dll"));
 	if (m_hACTIVEDS_DLL == 0)
 		m_hACTIVEDS_DLL = LoadLibrary(_T("ActiveDS"));
 
     if (m_hADVAPI32_DLL == 0) {
-        AddDebugLogLine(false,_T("Failed to load Advapi32.dll!"));
+        AddDebugLogLine(false, _T("Failed to load Advapi32.dll!"));
         return false;
     }
     if (m_hACTIVEDS_DLL == 0) {
-        AddDebugLogLine(false,_T("Failed to load ActiveDS.dll!"));
+        AddDebugLogLine(false, _T("Failed to load ActiveDS.dll!"));
         return false;
     }
 
-	bool bSucceeded = true;
-	bSucceeded = bSucceeded && (CreateProcessWithLogonW = (TCreateProcessWithLogonW) GetProcAddress(m_hADVAPI32_DLL,"CreateProcessWithLogonW")) != NULL;
+	bool bSucceeded = (CreateProcessWithLogonW = (TCreateProcessWithLogonW) GetProcAddress(m_hADVAPI32_DLL,"CreateProcessWithLogonW")) != NULL;
 	bSucceeded = bSucceeded && (GetNamedSecurityInfo = (TGetNamedSecurityInfo)GetProcAddress(m_hADVAPI32_DLL,_TWINAPI("GetNamedSecurityInfo"))) != NULL;
 	bSucceeded = bSucceeded && (SetNamedSecurityInfo = (TSetNamedSecurityInfo)GetProcAddress(m_hADVAPI32_DLL,_TWINAPI("SetNamedSecurityInfo"))) != NULL;
 	bSucceeded = bSucceeded && (AddAccessAllowedAceEx = (TAddAccessAllowedAceEx)GetProcAddress(m_hADVAPI32_DLL,"AddAccessAllowedAceEx")) != NULL;
@@ -424,20 +421,20 @@ bool CSecRunAsUser::LoadAPI(){
 	bSucceeded = bSucceeded && (ADsBuildEnumerator = (TADsBuildEnumerator)GetProcAddress(m_hACTIVEDS_DLL,"ADsBuildEnumerator")) != NULL;
 	bSucceeded = bSucceeded && (ADsEnumerateNext = (TADsEnumerateNext)GetProcAddress(m_hACTIVEDS_DLL,"ADsEnumerateNext")) != NULL;
 
-	if (!bSucceeded){
-		AddDebugLogLine(false,_T("Failed to load all functions from Advapi32.dll!"));
+	if (!bSucceeded) {
+		AddDebugLogLine(false, _T("Failed to load all functions from Advapi32.dll!"));
 		FreeAPI();
-		return false;
 	}
-	return true;
+	return bSucceeded;
 }
 
-void CSecRunAsUser::FreeAPI(){
-	if (m_hADVAPI32_DLL != 0){
+void CSecRunAsUser::FreeAPI()
+{
+	if (m_hADVAPI32_DLL != 0) {
 		FreeLibrary(m_hADVAPI32_DLL);
 		m_hADVAPI32_DLL = 0;
 	}
-	if (m_hACTIVEDS_DLL != 0){
+	if (m_hACTIVEDS_DLL != 0) {
 		FreeLibrary(m_hACTIVEDS_DLL);
 		m_hACTIVEDS_DLL = 0;
 	}
@@ -496,7 +493,7 @@ eResult CSecRunAsUser::RestartAsRestricted(){
 		}
 
 		// do the starting job
-		PROCESS_INFORMATION ProcessInfo = {0};
+		PROCESS_INFORMATION ProcessInfo = {};
 		TCHAR szAppPath[MAX_PATH];
 		DWORD dwModPathLen = GetModuleFileName(NULL, szAppPath, _countof(szAppPath));
 		if (dwModPathLen == 0 || dwModPathLen == _countof(szAppPath))
@@ -504,7 +501,7 @@ eResult CSecRunAsUser::RestartAsRestricted(){
 		CString strAppName;
 		strAppName.Format(_T("\"%s\""),szAppPath);
 
-		STARTUPINFO StartInf = {0};
+		STARTUPINFO StartInf = {};
 		StartInf.cb = sizeof StartInf;
 		StartInf.dwFlags = STARTF_USESHOWWINDOW;
 		StartInf.wShowWindow = SW_NORMAL;
@@ -536,27 +533,25 @@ eResult CSecRunAsUser::RestartAsRestricted(){
 		if (pstructUserToken != NULL)
 			HeapFree(GetProcessHeap(), 0, (LPVOID)pstructUserToken);
 
-
 		theApp.QueueDebugLogLine(false, _T("SecureShellExecute exception: %s!"), (LPCTSTR)strError);
 		if (m_bRunningRestricted)
 			return RES_OK;
-		else
-			return RES_FAILED;
+		return RES_FAILED;
 	}
 	return RES_OK_NEED_RESTART;
 }
 
-eResult CSecRunAsUser::RestartSecure(){
-
+eResult CSecRunAsUser::RestartSecure()
+{
 	eResult res;
 
-	if (!thePrefs.IsPreferingRestrictedOverUser()){
+	if (!thePrefs.IsPreferingRestrictedOverUser()) {
 		res = PrepareUser();
-		if (res == RES_OK){
+		if (res == RES_OK) {
 			theApp.QueueLogLine(false, GetResString(IDS_RAU_RUNNING), EMULEACCOUNTW);
 			return RES_OK;
 		}
-		else if (res == RES_OK_NEED_RESTART){
+		if (res == RES_OK_NEED_RESTART) {
 			res = RestartAsUser();
 			if (res != RES_FAILED)
 				return res;
@@ -564,9 +559,8 @@ eResult CSecRunAsUser::RestartSecure(){
 	}
 
 	res = RestartAsRestricted();
-	if (res == RES_OK){
+	if (res == RES_OK)
 		theApp.QueueLogLine(false, GetResString(IDS_RUNNINGRESTRICTED));
-	}
 
 	return res;
 }

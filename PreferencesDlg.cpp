@@ -189,7 +189,7 @@ void CPreferencesDlg::OnHelp()
 		CPropertyPage* pPage = GetPage(iCurSel);
 		if (pPage)
 		{
-			HELPINFO hi = {0};
+			HELPINFO hi = {};
 			hi.cbSize = sizeof hi;
 			hi.iContextType = HELPINFO_WINDOW;
 			hi.iCtrlId = 0;

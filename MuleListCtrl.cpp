@@ -458,7 +458,7 @@ void CMuleListCtrl::SetColors()
 	SetTextColor(m_crWindowText);
 
 	// Must explicitly set a NULL watermark bitmap, to clear any already set watermark bitmap.
-	LVBKIMAGE lvimg = {0};
+	LVBKIMAGE lvimg = {};
 	lvimg.ulFlags = LVBKIF_TYPE_WATERMARK;
 	SetBkImage(&lvimg);
 
@@ -505,7 +505,7 @@ void CMuleListCtrl::SetColors()
 		HBITMAP hbm = LoadImageAsPARGB(szFullResPath);
 		if (hbm)
 		{
-			LVBKIMAGE lvbkimg = {0};
+			LVBKIMAGE lvbkimg = {};
 			lvbkimg.ulFlags = LVBKIF_TYPE_WATERMARK;
 			lvbkimg.ulFlags |= LVBKIF_FLAG_ALPHABLEND;
 			lvbkimg.hbm = hbm;
@@ -1698,7 +1698,7 @@ void CMuleListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 	LPNMLVGETINFOTIP pGetInfoTip = reinterpret_cast<LPNMLVGETINFOTIP>(pNMHDR);
 	if (pGetInfoTip->iSubItem == 0)
 	{
-		LVHITTESTINFO hti = {0};
+		LVHITTESTINFO hti = {};
 		::GetCursorPos(&hti.pt);
 		ScreenToClient(&hti.pt);
 		if (SubItemHitTest(&hti) == -1 || hti.iItem != pGetInfoTip->iItem || hti.iSubItem != 0)

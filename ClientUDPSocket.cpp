@@ -74,7 +74,7 @@ void CClientUDPSocket::OnReceive(int nErrorCode)
 	}
 
 	BYTE buffer[8192]; //5000 could be too low
-	SOCKADDR_IN sockAddr = {0};
+	SOCKADDR_IN sockAddr = {};
 	int iSockAddrLen = sizeof sockAddr;
 	int nRealLen = ReceiveFrom(buffer, sizeof buffer, (SOCKADDR*)&sockAddr, &iSockAddrLen);
 	if (!(theApp.ipfilter->IsFiltered(sockAddr.sin_addr.S_un.S_addr) || theApp.clientlist->IsBannedClient(sockAddr.sin_addr.S_un.S_addr)))

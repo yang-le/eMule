@@ -125,7 +125,7 @@ BOOL CMuleSystrayDlg::OnInitDialog()
 	m_ctrlDownArrow.SetIcon(m_hDownArrow); 
     		
 	bool	bValidFont = false;
-	LOGFONT lfStaticFont = {0};
+	LOGFONT lfStaticFont = {};
 
 	p = GetDlgItem(IDC_SPEED);
 	if(p)

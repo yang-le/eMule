@@ -213,7 +213,7 @@ CPublishKeyword* CPublishKeywordList::FindKeyword(const CStringW& rstrKeyword, P
 void CPublishKeywordList::AddKeywords(CKnownFile* pFile)
 {
 	const Kademlia::WordList& wordlist = pFile->GetKadKeywords();
-	//ASSERT( wordlist.size() > 0 );
+	//ASSERT( !wordlist.empty() );
 	Kademlia::WordList::const_iterator it;
 	for (it = wordlist.begin(); it != wordlist.end(); ++it)
 	{
@@ -239,7 +239,7 @@ void CPublishKeywordList::AddKeywords(CKnownFile* pFile)
 void CPublishKeywordList::RemoveKeywords(CKnownFile* pFile)
 {
 	const Kademlia::WordList& wordlist = pFile->GetKadKeywords();
-	//ASSERT( wordlist.size() > 0 );
+	//ASSERT( !wordlist.empty() );
 	Kademlia::WordList::const_iterator it;
 	for (it = wordlist.begin(); it != wordlist.end(); ++it)
 	{
@@ -1673,7 +1673,7 @@ void CSharedFileList::CheckAndAddSingleFile(const CFileFind& ff)
 			CComPtr<IEnumSTATSTG> pEnumSTATSTG;
 			if (SUCCEEDED(pStorage->EnumElements(0, NULL, 0, &pEnumSTATSTG)))
 			{
-				STATSTG statstg = {0};
+				STATSTG statstg = {};
 				if (pEnumSTATSTG->Next(1, &statstg, 0) == S_OK)
 				{
 					CoTaskMemFree(statstg.pwcsName);

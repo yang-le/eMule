@@ -42,7 +42,7 @@ CComboBoxEx2::~CComboBoxEx2()
 
 int CComboBoxEx2::AddItem(LPCTSTR pszText, int iImage)
 {
-	COMBOBOXEXITEM cbi = {0};
+	COMBOBOXEXITEM cbi = {};
 	cbi.mask = CBEIF_TEXT;
 	cbi.iItem = -1;
 	cbi.pszText = (LPTSTR)pszText;

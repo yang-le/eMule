@@ -544,7 +544,7 @@ static BOOL IsVistaOrLater()
 {
 	BOOL rc = FALSE;
 
-	OSVERSIONINFO osvi = { 0 };
+	OSVERSIONINFO osvi = {};
 	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	if (GetVersionEx(&osvi))
 	{
@@ -1454,7 +1454,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 	{
 		// process custom buttons
 
-		TCHAR szCustomButtons[MAX_PATH] = { 0 };
+		TCHAR szCustomButtons[MAX_PATH] = {};
 		_tcsncpy(szCustomButtons, m_szCustomButtons, countof(szCustomButtons)-1);
 
 		int i = 0;
@@ -1915,7 +1915,7 @@ INT_PTR CALLBACK CXDialogTemplate::MsgBoxDlgProc(HWND hwnd,
 
 				case IdExHelp:
 				{
-					TCHAR szBuf[_MAX_PATH*2] = { 0 };
+					TCHAR szBuf[_MAX_PATH*2] = {};
 					::GetModuleFileName(NULL, szBuf, countof(szBuf) - 1);
 					if (*szBuf != '\0') {
 						TCHAR *cp = _tcsrchr(szBuf, _T('.'));
@@ -2665,7 +2665,7 @@ static DWORD ReadRegistry(LPCTSTR lpszCompanyName, LPCTSTR lpszKey)
 
 	TCHAR * szRegPath = _T("Software\\");
 
-	TCHAR szKey[_MAX_PATH*2] = { 0 };
+	TCHAR szKey[_MAX_PATH*2] = {};
 	_tcscpy(szKey, szRegPath);
 
 	if (lpszCompanyName && lpszCompanyName[0] != _T('\0'))
@@ -2674,7 +2674,7 @@ static DWORD ReadRegistry(LPCTSTR lpszCompanyName, LPCTSTR lpszKey)
 		_tcscat(szKey, _T("\\"));
 	}
 
-	TCHAR szPathName[_MAX_PATH*2] = { 0 };
+	TCHAR szPathName[_MAX_PATH*2] = {};
 	::GetModuleFileName(NULL, szPathName, MAX_PATH*2-2);
 
 	TCHAR *cp = _tcsrchr(szPathName, _T('\\'));
@@ -2727,7 +2727,7 @@ static void WriteRegistry(LPCTSTR lpszCompanyName, LPCTSTR lpszKey, DWORD dwData
 
 	TCHAR * szRegPath = _T("Software\\");
 
-	TCHAR szKey[_MAX_PATH*2] = { 0 };
+	TCHAR szKey[_MAX_PATH*2] = {};
 	_tcscpy(szKey, szRegPath);
 
 	if (lpszCompanyName && lpszCompanyName[0] != _T('\0'))
@@ -2736,7 +2736,7 @@ static void WriteRegistry(LPCTSTR lpszCompanyName, LPCTSTR lpszKey, DWORD dwData
 		_tcscat(szKey, _T("\\"));
 	}
 
-	TCHAR szPathName[_MAX_PATH*2] = { 0 };
+	TCHAR szPathName[_MAX_PATH*2] = {};
 	::GetModuleFileName(NULL, szPathName, MAX_PATH*2-2);
 
 	TCHAR *cp = _tcsrchr(szPathName, _T('\\'));

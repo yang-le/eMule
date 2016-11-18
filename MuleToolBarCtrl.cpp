@@ -209,7 +209,7 @@ void CMuleToolbarCtrl::Init(void)
 			iBitmap += 1;
 	}
 
-	TBBUTTON sepButton = {0};
+	TBBUTTON sepButton = {};
 	sepButton.idCommand = 0;
 	sepButton.fsStyle = TBSTYLE_SEP;
 	sepButton.fsState = TBSTATE_ENABLED;
@@ -646,7 +646,7 @@ void CMuleToolbarCtrl::ChangeToolbarBitmap(const CString& path, bool bRefresh)
 	CEnBitmap Bitmap;
 	if (!path.IsEmpty() && Bitmap.LoadImage(path))
 	{
-		BITMAP bm = {0};
+		BITMAP bm = {};
 		Bitmap.GetObject(sizeof bm, &bm);
 		if (bm.bmWidth == NUM_BUTTON_BITMAPS*m_sizBtnBmp.cx && bm.bmHeight == m_sizBtnBmp.cy)
 		{
@@ -846,7 +846,7 @@ void CMuleToolbarCtrl::ChangeTextLabelStyle(EToolbarLabelType eLabelType, bool b
 
 		for (int i = 0; i < m_buttoncount; i++)
 		{
-			TBBUTTONINFO tbbi = {0};
+			TBBUTTONINFO tbbi = {};
 			tbbi.cbSize = sizeof tbbi;
 			tbbi.dwMask = TBIF_STYLE;
 			GetButtonInfo(IDC_TOOLBARBUTTON + i, &tbbi);
@@ -872,7 +872,7 @@ void CMuleToolbarCtrl::Refresh()
 	{
 	    theApp.emuledlg->RemoveAnchor(theApp.emuledlg->m_ctlMainTopReBar.m_hWnd);
 
-	    REBARBANDINFO rbbi = {0};
+	    REBARBANDINFO rbbi = {};
 	    CSize sizeBar;
 	    GetMaxSize(&sizeBar);
 		ASSERT( sizeBar.cx != 0 && sizeBar.cy != 0 );
@@ -1056,7 +1056,7 @@ void CMuleToolbarCtrl::UpdateIdealSize()
 		GetMaxSize(&sizeBar);
 		ASSERT( sizeBar.cx != 0 && sizeBar.cy != 0 );
 
-	    REBARBANDINFO rbbi = {0};
+	    REBARBANDINFO rbbi = {};
 	    rbbi.cbSize = sizeof rbbi;
 	    rbbi.fMask = RBBIM_IDEALSIZE;
 		rbbi.cxIdeal = sizeBar.cx;
@@ -1132,7 +1132,7 @@ void CMuleToolbarCtrl::Dump()
 	for (int i = 0; i < iButtons; i++)
 	{
 		TCHAR szLabel[256];
-		TBBUTTONINFO tbi = {0};
+		TBBUTTONINFO tbi = {};
 		tbi.cbSize = sizeof tbi;
 		tbi.dwMask |= TBIF_BYINDEX | TBIF_COMMAND | TBIF_IMAGE | TBIF_LPARAM | TBIF_SIZE | TBIF_STATE | TBIF_STYLE | TBIF_TEXT;
 		tbi.cchText = _countof(szLabel);
@@ -1186,7 +1186,7 @@ void CMuleToolbarCtrl::UpdateBackground()
 		HBITMAP hbmp = theApp.LoadImage(_T("MainToolBarBk"), _T("BMP"));
 		if (hbmp)
 		{
-			REBARBANDINFO rbbi = {0};
+			REBARBANDINFO rbbi = {};
 			rbbi.cbSize = sizeof rbbi;
 			rbbi.fMask = RBBIM_STYLE;
 			if (theApp.emuledlg->m_ctlMainTopReBar.GetBandInfo(MULE_TOOLBAR_BAND_NR, &rbbi))
@@ -1207,7 +1207,7 @@ void CMuleToolbarCtrl::UpdateBackground()
 		}
 		else
 		{
-			REBARBANDINFO rbbi = {0};
+			REBARBANDINFO rbbi = {};
 			rbbi.cbSize = sizeof rbbi;
 			rbbi.fMask = RBBIM_STYLE;
 			if (theApp.emuledlg->m_ctlMainTopReBar.GetBandInfo(MULE_TOOLBAR_BAND_NR, &rbbi))

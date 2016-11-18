@@ -148,7 +148,7 @@ void CUDPSocket::OnReceive(int nErrorCode)
 
 	BYTE buffer[5000];
 	BYTE* pBuffer = buffer;
-	SOCKADDR_IN sockAddr = {0};
+	SOCKADDR_IN sockAddr = {};
 	int iSockAddrLen = sizeof sockAddr;
 	int length = ReceiveFrom(buffer, sizeof buffer, (SOCKADDR*)&sockAddr, &iSockAddrLen);
 	if (length != SOCKET_ERROR)

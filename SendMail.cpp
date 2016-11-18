@@ -170,7 +170,7 @@ PCCERT_CONTEXT GetCertificate(HCERTSTORE hCertStore, DWORD dwFindType, LPCWSTR p
 	{
 		DebugLog(LOG_DONTNOTIFY, _T("E-Mail Encryption: Found certificate"));
 
-		TCHAR szString[512] = {0};
+		TCHAR szString[512] = {};
 		PCERT_INFO pCertInfo = pCertContext->pCertInfo;
 		if (pCertInfo)
 		{
@@ -188,12 +188,12 @@ PCCERT_CONTEXT GetCertificate(HCERTSTORE hCertStore, DWORD dwFindType, LPCWSTR p
 			if (CertGetNameString(pCertContext, CERT_NAME_SIMPLE_DISPLAY_TYPE, CERT_NAME_DISABLE_IE4_UTF8_FLAG, szOID_COMMON_NAME, szString, ARRSIZE(szString)))
 				DebugLog(LOG_DONTNOTIFY, _T("E-Mail Encryption: Name: %s"), szString);
 
-			BYTE md5[16] = {0};
+			BYTE md5[16] = {};
 			DWORD cb = sizeof md5;
 			if (CertGetCertificateContextProperty(pCertContext, CERT_MD5_HASH_PROP_ID, md5, &cb) && cb == sizeof md5)
 				DebugLog(LOG_DONTNOTIFY, _T("E-Mail Encryption: MD5 hash: %s"), (LPCTSTR)GetCertHash(md5, cb));
 
-			BYTE sha1[20] = {0};
+			BYTE sha1[20] = {};
 			cb = sizeof sha1;
 			if (CertGetCertificateContextProperty(pCertContext, CERT_SHA1_HASH_PROP_ID, sha1, &cb) && cb == sizeof sha1)
 				DebugLog(LOG_DONTNOTIFY, _T("E-Mail Encryption: SHA1 hash: %s"), (LPCTSTR)GetCertHash(sha1, cb));
@@ -227,13 +227,13 @@ bool Encrypt(const CStringA& rstrContentA, CByteArray& raEncrypted, LPCWSTR pwsz
 		PCCERT_CONTEXT pRecipientCert = GetCertificate(hStoreHandle, CERT_FIND_SUBJECT_STR, pwszCertSubject);
 		if (pRecipientCert)
 		{
-			PCCERT_CONTEXT RecipientCertArray[1] = {0};
+			PCCERT_CONTEXT RecipientCertArray[1] = {};
 			RecipientCertArray[0] = pRecipientCert;
 
-			CRYPT_ALGORITHM_IDENTIFIER EncryptAlgorithm = {0};
+			CRYPT_ALGORITHM_IDENTIFIER EncryptAlgorithm = {};
 			EncryptAlgorithm.pszObjId = szOID_RSA_DES_EDE3_CBC;
 
-			CRYPT_ENCRYPT_MESSAGE_PARA EncryptParams = {0};
+			CRYPT_ENCRYPT_MESSAGE_PARA EncryptParams = {};
 			EncryptParams.cbSize = sizeof EncryptParams;
 			EncryptParams.dwMsgEncodingType = PKCS_7_ASN_ENCODING | X509_ASN_ENCODING;
 			EncryptParams.hCryptProv = hCryptProv;

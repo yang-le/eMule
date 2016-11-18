@@ -663,7 +663,7 @@ BOOL GetRIFFHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsAVI, bool bFu
 					case listtypeSTREAMHEADER:
 					{
 						BOOL bStreamRes;
-						STREAMHEADER strmhdr = {0};
+						STREAMHEADER strmhdr = {};
 						if ((bStreamRes = ParseStreamHeader(hAviFile, dwLength, &strmhdr)) != FALSE)
 						{
 							double fSamplesSec = (strmhdr.hdr.dwScale != 0) ? (double)strmhdr.hdr.dwRate / (double)strmhdr.hdr.dwScale : 0.0F;
@@ -947,7 +947,7 @@ BOOL GetRIFFHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsAVI, bool bFu
 			case mmioFOURCC('f', 'm', 't', ' '):
 				if (fccMain == mmioFOURCC('W', 'A', 'V', 'E'))
 				{
-					STREAMHEADER strmhdr = {0};
+					STREAMHEADER strmhdr = {};
 					if (dwLength > 4096) // expect corrupt data
 						goto inv_format;
 					try {

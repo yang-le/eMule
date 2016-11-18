@@ -152,15 +152,11 @@ extern "C"
   ID3Tag_Parse(ID3Tag *tag, const uchar header[ ID3_TAGHEADERSIZE ],
                const uchar *buffer)
   {
-    size_t size = 0;
-    ID3_Err err = ID3E_NoError;
-    if (tag)
-    {
-      ID3_CATCH(size = reinterpret_cast<ID3_Tag *>(tag)->Parse(header, buffer));
-      ID3_CATCH(err = reinterpret_cast<ID3_Tag *>(tag)->GetLastError());
-    }
-    else
+    if (!tag)
       return ID3E_InvalidTag;
+    ID3_Err err = ID3E_NoError;
+    ID3_CATCH((void)reinterpret_cast<ID3_Tag *>(tag)->Parse(header, buffer));
+    ID3_CATCH(err = reinterpret_cast<ID3_Tag *>(tag)->GetLastError());
     return err;
   }
 
@@ -189,44 +185,33 @@ extern "C"
   ID3_C_EXPORT ID3_Err CCONV
   ID3Tag_Update(ID3Tag *tag)
   {
-    flags_t flags = 0;
-    ID3_Err err = ID3E_NoError;
-    if (tag)
-    {
-      ID3_CATCH(flags = reinterpret_cast<ID3_Tag *>(tag)->Update());
-      ID3_CATCH(err = reinterpret_cast<ID3_Tag *>(tag)->GetLastError());
-    }
-    else
+    if (!tag)
       return ID3E_InvalidTag;
+    ID3_Err err = ID3E_NoError;
+    ID3_CATCH((void)reinterpret_cast<ID3_Tag *>(tag)->Update());
+    ID3_CATCH(err = reinterpret_cast<ID3_Tag *>(tag)->GetLastError());
     return err;
   }
 
   ID3_C_EXPORT ID3_Err CCONV
   ID3Tag_UpdateByTagType(ID3Tag *tag, flags_t tag_type)
   {
-    flags_t flags = 0;
-    ID3_Err err = ID3E_NoError;
-    if (tag)
-    {
-      ID3_CATCH(flags = reinterpret_cast<ID3_Tag *>(tag)->Update(tag_type));
-      ID3_CATCH(err = reinterpret_cast<ID3_Tag *>(tag)->GetLastError());
-    }
-    else
+    if (!tag)
       return ID3E_InvalidTag;
+    ID3_Err err = ID3E_NoError;
+    ID3_CATCH((void)reinterpret_cast<ID3_Tag *>(tag)->Update(tag_type));
+    ID3_CATCH(err = reinterpret_cast<ID3_Tag *>(tag)->GetLastError());
     return err;
   }
 
   ID3_C_EXPORT ID3_Err CCONV
   ID3Tag_Strip(ID3Tag *tag, flags_t ulTagFlags)
   {
-    ID3_Err err = ID3E_NoError;
-    if (tag)
-    {
-      ID3_CATCH(reinterpret_cast<ID3_Tag *>(tag)->Strip(ulTagFlags));
-      ID3_CATCH(err = reinterpret_cast<ID3_Tag *>(tag)->GetLastError());
-    }
-    else
+    if (!tag)
       return ID3E_InvalidTag;
+    ID3_Err err = ID3E_NoError;
+    ID3_CATCH(reinterpret_cast<ID3_Tag *>(tag)->Strip(ulTagFlags));
+    ID3_CATCH(err = reinterpret_cast<ID3_Tag *>(tag)->GetLastError());
     return err;
   }
 

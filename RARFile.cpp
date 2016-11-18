@@ -77,7 +77,7 @@ bool CRARFile::Open(LPCTSTR pszArchiveFilePath)
 	Close();
 
 	m_strArchiveFilePath = pszArchiveFilePath;
-	RAROpenArchiveDataEx OpenArchiveData = {0};
+	RAROpenArchiveDataEx OpenArchiveData = {};
 	OpenArchiveData.ArcNameW = const_cast<LPWSTR>((LPCWSTR)m_strArchiveFilePath);
 	OpenArchiveData.OpenMode = RAR_OM_EXTRACT;
 	try{
@@ -119,7 +119,7 @@ bool CRARFile::GetNextFile(CString& strFile) const
 		return false;
 	}
 
-	struct RARHeaderDataEx HeaderData = {0};
+	struct RARHeaderDataEx HeaderData = {};
 	int iReadHeaderResult;
 	try {
 		iReadHeaderResult = (*m_pfnRARReadHeaderEx)(m_hArchive, &HeaderData);

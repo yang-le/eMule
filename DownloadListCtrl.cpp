@@ -151,7 +151,7 @@ void CDownloadListCtrl::Init()
 		if (thePrefs.GetUseSystemFontForMainControls())
 		{
 			CFont *pFont = GetFont();
-			LOGFONT lfFont = {0};
+			LOGFONT lfFont = {};
 			pFont->GetLogFont(&lfFont);
 			lfFont.lfWeight = FW_BOLD;
 			m_fontBold.CreateFontIndirect(&lfFont);
@@ -1867,14 +1867,13 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 					}
 					break;
 				}
-				case MP_ADDSOURCE: {
-					if (selectedCount > 1)
-						break;
-					CAddSourceDlg as;
-					as.SetFile(file);
-					as.DoModal();
+				case MP_ADDSOURCE:
+					if (selectedCount == 1) {
+						CAddSourceDlg as;
+						as.SetFile(file);
+						as.DoModal();
+					}
 					break;
-				}
 				default:
 					if (wParam>=MP_WEBURL && wParam<=MP_WEBURL+99){
 						theWebServices.RunURL(file, wParam);
@@ -2713,7 +2712,7 @@ void CDownloadListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 	LPNMLVGETINFOTIP pGetInfoTip = reinterpret_cast<LPNMLVGETINFOTIP>(pNMHDR);
 	if (pGetInfoTip && pGetInfoTip->iSubItem == 0)
 	{
-		LVHITTESTINFO hti = {0};
+		LVHITTESTINFO hti = {};
 		::GetCursorPos(&hti.pt);
 		ScreenToClient(&hti.pt);
 		if (SubItemHitTest(&hti) == -1 || hti.iItem != pGetInfoTip->iItem || hti.iSubItem != 0){

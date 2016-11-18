@@ -92,6 +92,7 @@ static const byte base16Lookup[BASE16_LOOKUP_MAX][2] = {
 	{ 'E', 0xE },
 	{ 'F', 0xF }
 };
+static const CString badchar(_T("\"*<>?|\\/:")); // lots of invalid chars for filenames in windows :=)
 
 CString CastItoXBytes(uint16 count, bool isK, bool isPerSec, uint32 decimal){
 	return CastItoXBytes((double)count, isK, isPerSec, decimal);
@@ -122,13 +123,11 @@ CString CastItoXBytes(double count, bool isK, bool isPerSec, uint32 decimal){
 		{
 			if (thePrefs.GetForceSpeedsToKB())
 				return _T("0 ") + GetResString(IDS_KBYTESPERSEC);
-			else
-				return _T("0 ") + GetResString(IDS_BYTESPERSEC);
+			return _T("0 ") + GetResString(IDS_BYTESPERSEC);
 		}
-		else
-			return _T("0 ") + GetResString(IDS_BYTES);
+		return _T("0 ") + GetResString(IDS_BYTES);
 	}
-	else if( isK )
+	if( isK )
 	{
 		if( count >  1.7E+300 )
 			count =  1.7E+300;
@@ -167,11 +166,13 @@ CString CastItoXBytes(double count, bool isK, bool isPerSec, uint32 decimal){
 	return buffer;
 }
 
-CString CastItoIShort(uint16 count, bool isK, uint32 decimal){
+CString CastItoIShort(uint16 count, bool isK, uint32 decimal)
+{
 	return CastItoIShort((double)count, isK, decimal);
 }
 
-CString CastItoIShort(uint32 count, bool isK, uint32 decimal){
+CString CastItoIShort(uint32 count, bool isK, uint32 decimal)
+{
 	return CastItoIShort((double)count, isK, decimal);
 }
 
@@ -290,7 +291,7 @@ bool ShellDeleteFile(LPCTSTR pszFilePath)
 	memset(todel, 0, sizeof todel);
 	_tcsncpy(todel, pszFilePath, _countof(todel) - 2);
 
-	SHFILEOPSTRUCT fp = {0};
+	SHFILEOPSTRUCT fp = {};
 	fp.wFunc = FO_DELETE;
 	fp.hwnd = theApp.emuledlg->m_hWnd;
 	fp.pFrom = todel;
@@ -355,32 +356,34 @@ CString ShellGetFolderPath(int iCSIDL)
 }
 
 namespace {
-	bool IsHexDigit(int c) {
+	bool IsHexDigit(int c)
+	{
 		switch (c) {
-		case '0': return true;
-		case '1': return true;
-		case '2': return true;
-		case '3': return true;
-		case '4': return true;
-		case '5': return true;
-		case '6': return true;
-		case '7': return true;
-		case '8': return true;
-		case '9': return true;
-		case 'A': return true;
-		case 'B': return true;
-		case 'C': return true;
-		case 'D': return true;
-		case 'E': return true;
-		case 'F': return true;
-		case 'a': return true;
-		case 'b': return true;
-		case 'c': return true;
-		case 'd': return true;
-		case 'e': return true;
-		case 'f': return true;
-		default: return false;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+		case 'A':
+		case 'B':
+		case 'C':
+		case 'D':
+		case 'E':
+		case 'F':
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+		case 'f':
+			return true;
 		}
+		return false;
 	}
 }
 
@@ -390,7 +393,7 @@ CString URLDecode(const CString& inStr, bool bKeepNewLine)
 	CString res;
 	for (int x = 0; x < inStr.GetLength(); x++)
 	{
-		if (inStr.GetAt(x) == _T('%') && x + 2 < inStr.GetLength() && IsHexDigit(inStr.GetAt(x+1)) && IsHexDigit(inStr.GetAt(x+2)))
+		if (inStr[x] == _T('%') && x + 2 < inStr.GetLength() && IsHexDigit(inStr[x+1]) && IsHexDigit(inStr[x+2]))
 		{
 			TCHAR hexstr[3];
 			_tcsncpy(hexstr, inStr.Mid(x+1, 2), 2);
@@ -400,12 +403,9 @@ CString URLDecode(const CString& inStr, bool bKeepNewLine)
 			// Convert the hex to ASCII
 			TCHAR ch = (TCHAR)_tcstoul(hexstr, NULL, 16);
 			if (ch > '\x1F' || (bKeepNewLine && ch == '\x0A')) // filter control chars
-				res.AppendChar(ch);
-		}
-		else
-		{
-			res.AppendChar(inStr.GetAt(x));
-		}
+				res += ch;
+		} else
+			res += inStr[x];
 	}
 	return res;
 }
@@ -621,27 +621,27 @@ void RevertReg(void)
 		ASSERT(0);
 }
 
-int GetMaxWindowsTCPConnections() {
-	OSVERSIONINFOEX osvi;
-	ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
+int GetMaxWindowsTCPConnections()
+{
+	OSVERSIONINFOEX osvi = {};
 	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 
-	if(!GetVersionEx((OSVERSIONINFO*)&osvi)) {
+	if (!GetVersionEx((OSVERSIONINFO*)&osvi)) {
 		//if OSVERSIONINFOEX doesn't work, try OSVERSIONINFO
-		osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
-		if(!GetVersionEx((OSVERSIONINFO*)&osvi))
+		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+		if (!GetVersionEx((OSVERSIONINFO*)&osvi))
 			return -1;  //shouldn't ever happen
 	}
 
-	if(osvi.dwPlatformId == VER_PLATFORM_WIN32_NT) // Windows NT product family
+	if (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT) // Windows NT product family
 		return -1;  //no limits
 
-	if(osvi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) { // Windows 95 product family
+	if (osvi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) { // Windows 95 product family
 
 		if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 0) { //old school 95
 			HKEY hKey;
 			DWORD dwValue;
-			DWORD dwLength = sizeof(dwValue);
+			DWORD dwLength = sizeof dwValue;
 			LONG lResult;
 
 			RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("System\\CurrentControlSet\\Services\\VxD\\MSTCP"),
@@ -650,7 +650,7 @@ int GetMaxWindowsTCPConnections() {
 				(LPBYTE)&dwValue, &dwLength);
 			RegCloseKey(hKey);
 
-			if(lResult != ERROR_SUCCESS || lResult < 1)
+			if (lResult != ERROR_SUCCESS || lResult < 1)
 				return 100;  //the default for 95 is 100
 
 			return dwValue;
@@ -658,7 +658,7 @@ int GetMaxWindowsTCPConnections() {
 		} else { //98 or ME
 			HKEY hKey;
 			TCHAR szValue[32];
-			DWORD dwLength = sizeof(szValue);
+			DWORD dwLength = sizeof szValue;
 			LONG lResult;
 
 			RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("System\\CurrentControlSet\\Services\\VxD\\MSTCP"),
@@ -668,7 +668,7 @@ int GetMaxWindowsTCPConnections() {
 			RegCloseKey(hKey);
 
 			LONG lMaxConnections;
-			if(lResult != ERROR_SUCCESS || (lMaxConnections = _tstoi(szValue)) < 1)
+			if (lResult != ERROR_SUCCESS || (lMaxConnections = _tstoi(szValue)) < 1)
 				return 100;  //the default for 98/ME is 100
 
 			return lMaxConnections;
@@ -680,164 +680,137 @@ int GetMaxWindowsTCPConnections() {
 
 WORD DetectWinVersion()
 {
-	OSVERSIONINFOEX osvi;
-	ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
+	OSVERSIONINFOEX osvi = {};
 	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	if (!GetVersionEx((OSVERSIONINFO*)&osvi))
-	{
+	if (!GetVersionEx((OSVERSIONINFO*)&osvi)) {
 		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 		if (!GetVersionEx((OSVERSIONINFO*)&osvi))
 			return FALSE;
 	}
 
-	switch (osvi.dwPlatformId)
-	{
-		case VER_PLATFORM_WIN32_NT:
-			if (osvi.dwMajorVersion <= 4)
-				return _WINVER_NT4_;
-			if (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 0)
-				return _WINVER_2K_;
-			if (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 1)
-				return _WINVER_XP_;
-			if (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 2)
-				return _WINVER_2003_;
-			if (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 0)
-				return _WINVER_VISTA_;
-			if (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 1)
-				return _WINVER_7_;
-			if (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 2)
-				return _WINVER_8_;
-			if (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 3)
-				return _WINVER_8_1_;
-			if (osvi.dwMajorVersion == 10 && osvi.dwMinorVersion == 0)
-				return _WINVER_10_;
-			return _WINVER_7_; // never return Win95 if we get the info about a NT system
+	switch (osvi.dwPlatformId) {
+	case VER_PLATFORM_WIN32_NT:
+		if (osvi.dwMajorVersion <= 4)
+			return _WINVER_NT4_;
+		if (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 0)
+			return _WINVER_2K_;
+		if (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 1)
+			return _WINVER_XP_;
+		if (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 2)
+			return _WINVER_2003_;
+		if (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 0)
+			return _WINVER_VISTA_;
+		if (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 1)
+			return _WINVER_7_;
+		if (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 2)
+			return _WINVER_8_;
+		if (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 3)
+			return _WINVER_8_1_;
+		if (osvi.dwMajorVersion == 10 && osvi.dwMinorVersion == 0)
+			return _WINVER_10_;
+		return _WINVER_7_; // never return Win95 if we get the info about a NT system
 
-		case VER_PLATFORM_WIN32_WINDOWS:
-			if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 0)
-				return _WINVER_95_;
-			if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 10)
-				return _WINVER_98_;
-			if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 90)
-				return _WINVER_ME_;
-			break;
+	case VER_PLATFORM_WIN32_WINDOWS:
+		if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 0)
+			return _WINVER_95_;
+		if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 10)
+			return _WINVER_98_;
+		if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 90)
+			return _WINVER_ME_;
+		break;
 	}
 
 	return _WINVER_95_;		// there shouldn't be anything lower than this
 }
 
-int IsRunningXPSP2(){
-	OSVERSIONINFOEX osvi;
-	ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
+int IsRunningXPSP2()
+{
+	OSVERSIONINFOEX osvi = {};
 	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	if(!GetVersionEx((OSVERSIONINFO*)&osvi))
-	{
+	if (!GetVersionEx((OSVERSIONINFO*)&osvi)) {
 		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-		if(!GetVersionEx((OSVERSIONINFO*)&osvi))
+		if (!GetVersionEx((OSVERSIONINFO*)&osvi))
 			return 0;
 	}
 
-	if (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT && osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 1){
+	if (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT && osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 1) {
 		if (osvi.wServicePackMajor >= 2)
 			return 1;
 	}
 	return 0;
 }
 
-int IsRunningXPSP2OrHigher(){
-	switch(thePrefs.GetWindowsVersion()){
-		case _WINVER_95_:
-		case _WINVER_98_:
-		case _WINVER_NT4_:
-		case _WINVER_2K_:
-		case _WINVER_ME_:
-			return 0;
-		case _WINVER_XP_:
-			return IsRunningXPSP2();
-		default:
-			return 1;
+int IsRunningXPSP2OrHigher()
+{
+	switch (thePrefs.GetWindowsVersion()) {
+	case _WINVER_95_:
+	case _WINVER_98_:
+	case _WINVER_NT4_:
+	case _WINVER_2K_:
+	case _WINVER_ME_:
+		return 0;
+	case _WINVER_XP_:
+		return IsRunningXPSP2();
 	}
+	return 1;
 }
 
 uint64 GetFreeDiskSpaceX(LPCTSTR pDirectory)
 {
 	extern bool g_bUnicoWS;
 	static BOOL _bInitialized = FALSE;
-	static BOOL (WINAPI *_pfnGetDiskFreeSpaceEx)(LPCTSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER) = NULL;
-	static BOOL (WINAPI *_pfnGetDiskFreeSpaceExA)(LPCSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER) = NULL;
+	static BOOL(WINAPI *_pfnGetDiskFreeSpaceEx)(LPCTSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER) = NULL;
+	static BOOL(WINAPI *_pfnGetDiskFreeSpaceExA)(LPCSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER) = NULL;
 
-	if (!_bInitialized)
-	{
+	if (!_bInitialized) {
 		_bInitialized = TRUE;
-		if (g_bUnicoWS)
-		{
+		if (g_bUnicoWS) {
 			(FARPROC&)_pfnGetDiskFreeSpaceExA = GetProcAddress(GetModuleHandle(_T("kernel32")), "GetDiskFreeSpaceExA");
-		}
-		else
-		{
+		} else {
 			(FARPROC&)_pfnGetDiskFreeSpaceEx = GetProcAddress(GetModuleHandle(_T("kernel32")), _TWINAPI("GetDiskFreeSpaceEx"));
 		}
 	}
 
-	if (_pfnGetDiskFreeSpaceEx)
-	{
+	if (_pfnGetDiskFreeSpaceEx) {
 		ULARGE_INTEGER nFreeDiskSpace;
 		ULARGE_INTEGER dummy;
-		if ( (*_pfnGetDiskFreeSpaceEx)(pDirectory, &nFreeDiskSpace, &dummy, &dummy))
+		if ((*_pfnGetDiskFreeSpaceEx)(pDirectory, &nFreeDiskSpace, &dummy, &dummy))
 			return nFreeDiskSpace.QuadPart;
 		return 0;
 	}
-	else if (_pfnGetDiskFreeSpaceExA)
-	{
+	if (_pfnGetDiskFreeSpaceExA) {
 		ULARGE_INTEGER nFreeDiskSpace;
 		ULARGE_INTEGER dummy;
 		if ((*_pfnGetDiskFreeSpaceExA)(CT2CA(pDirectory), &nFreeDiskSpace, &dummy, &dummy))
 			return nFreeDiskSpace.QuadPart;
 		return 0;
 	}
-	else
-	{
-		TCHAR cDrive[MAX_PATH];
-		const TCHAR *p = _tcschr(pDirectory, _T('\\'));
-		if (p)
-		{
-			size_t uChars = p - pDirectory;
-			if (uChars >= _countof(cDrive))
-				return 0;
-			memcpy(cDrive, pDirectory, uChars * sizeof(TCHAR));
-			cDrive[uChars] = _T('\0');
-		}
-		else
-		{
-			if (_tcslen(pDirectory) >= _countof(cDrive))
-				return 0;
-			_tcscpy(cDrive, pDirectory);
-		}
-		DWORD dwSectPerClust, dwBytesPerSect, dwFreeClusters, dwDummy;
-		if (GetDiskFreeSpace(cDrive, &dwSectPerClust, &dwBytesPerSect, &dwFreeClusters, &dwDummy))
-			return (ULONGLONG)dwFreeClusters * (ULONGLONG)dwSectPerClust * (ULONGLONG)dwBytesPerSect;
-		else
+	TCHAR cDrive[MAX_PATH];
+	const TCHAR *p = _tcschr(pDirectory, _T('\\'));
+	if (p) {
+		size_t uChars = p - pDirectory;
+		if (uChars >= _countof(cDrive))
 			return 0;
+		memcpy(cDrive, pDirectory, uChars * sizeof(TCHAR));
+		cDrive[uChars] = _T('\0');
+	} else {
+		if (_tcslen(pDirectory) >= _countof(cDrive))
+			return 0;
+		_tcscpy(cDrive, pDirectory);
 	}
+	DWORD dwSectPerClust, dwBytesPerSect, dwFreeClusters, dwDummy;
+	if (GetDiskFreeSpace(cDrive, &dwSectPerClust, &dwBytesPerSect, &dwFreeClusters, &dwDummy))
+			return dwFreeClusters * (uint64)dwSectPerClust * (uint64)dwBytesPerSect;
+	return 0;
 }
 
 CString GetRateString(UINT rate)
 {
-	switch (rate){
-	case 0:
-		return GetResString(IDS_CMT_NOTRATED);
-	case 1:
-		return GetResString(IDS_CMT_FAKE);
-	case 2:
-		return GetResString(IDS_CMT_POOR);
-	case 3:
-		return GetResString(IDS_CMT_FAIR);
-	case 4:
-		return GetResString(IDS_CMT_GOOD);
-	case 5:
-		return GetResString(IDS_CMT_EXCELLENT);
-	}
-	return GetResString(IDS_CMT_NOTRATED);
+	static const UINT ids[6] =
+	{IDS_CMT_NOTRATED, IDS_CMT_FAKE, IDS_CMT_POOR, IDS_CMT_FAIR, IDS_CMT_GOOD, IDS_CMT_EXCELLENT};
+	if (rate > 5)
+		rate = 0;
+	return GetResString(ids[rate]);
 }
 
 // Returns a BASE32 encoded byte array
@@ -890,13 +863,14 @@ CString EncodeBase32(const unsigned char* buffer, unsigned int bufLen)
 CString EncodeBase16(const unsigned char* buffer, unsigned int bufLen)
 {
 	CString Base16Buff;
-
-	for(unsigned int i = 0; i < bufLen; i++) {
-		Base16Buff += base16Chars[buffer[i] >> 4];
-		Base16Buff += base16Chars[buffer[i] & 0xf];
+	LPBYTE p = const_cast<LPBYTE>(buffer);
+	LPTSTR bp = Base16Buff.GetBuffer(bufLen * 2);
+	for (unsigned i = 0; i < bufLen; ++i) {
+		*bp++ = (TCHAR)base16Chars[*p >> 4];
+		*bp++ = (TCHAR)base16Chars[*p++ & 0xf];
 	}
-
-    return Base16Buff;
+	Base16Buff.ReleaseBuffer(bufLen * 2);
+	return Base16Buff;
 }
 
 // Decodes a BASE16 string into a byte array
@@ -1025,7 +999,7 @@ int CWebServices::ReadAllServices()
 			sbuffer = buffer;
 
 			// ignore comments & too short lines
-			if (sbuffer.GetAt(0) == _T('#') || sbuffer.GetAt(0) == _T('/') || sbuffer.GetLength() < 5)
+			if (sbuffer[0] == _T('#') || sbuffer[0] == _T('/') || sbuffer.GetLength() < 5)
 				continue;
 
 			int iPos = sbuffer.Find(_T(','));
@@ -1170,12 +1144,12 @@ bool SelectDir(HWND hWnd, LPTSTR pszPath, LPCTSTR pszTitle, LPCTSTR pszDlgTitle)
 	LPMALLOC pShlMalloc;
 	if (SHGetMalloc(&pShlMalloc) == NOERROR)
 	{
-		BROWSEINFO BrsInfo = {0};
+		BROWSEINFO BrsInfo = {};
 		BrsInfo.hwndOwner = hWnd;
 		BrsInfo.lpszTitle = (pszTitle != NULL) ? pszTitle : pszDlgTitle;
 		BrsInfo.ulFlags = BIF_VALIDATE | BIF_NEWDIALOGSTYLE | BIF_RETURNONLYFSDIRS | BIF_SHAREABLE | BIF_DONTGOBELOWDOMAIN;
 
-		BROWSEINIT BrsInit = {0};
+		BROWSEINIT BrsInit = {};
 		if (pszPath != NULL || pszTitle != NULL || pszDlgTitle != NULL){
 			// Need the 'BrowseCallbackProc' to set those strings
 			BrsInfo.lpfn = BrowseCallbackProc;
@@ -1228,10 +1202,10 @@ BOOL DialogBrowseFile(CString& rstrPath, LPCTSTR pszFilters, LPCTSTR pszDefaultF
 
 void md4str(const uchar* hash, TCHAR* pszHash)
 {
-    static const TCHAR _acHexDigits[] = _T("0123456789ABCDEF");
-    for (int i = 0; i < 16; i++){
-		*pszHash++ = _acHexDigits[hash[i] >> 4];
-		*pszHash++ = _acHexDigits[hash[i] & 0xf];
+	uchar *p = const_cast<uchar *>(hash);
+	for (int i = 0; i < MDX_DIGEST_SIZE; ++i) {
+		*pszHash++ = (TCHAR)base16Chars[*p >> 4];
+		*pszHash++ = (TCHAR)base16Chars[*p++ & 0xf];
 	}
 	*pszHash = _T('\0');
 }
@@ -1245,10 +1219,10 @@ CString md4str(const uchar* hash)
 
 void md4strA(const uchar* hash, CHAR* pszHash)
 {
-    static const CHAR _acHexDigits[] = "0123456789ABCDEF";
-    for (int i = 0; i < 16; i++){
-		*pszHash++ = _acHexDigits[hash[i] >> 4];
-		*pszHash++ = _acHexDigits[hash[i] & 0xf];
+	uchar *p = const_cast<uchar *>(hash);
+	for (int i = 0; i < MDX_DIGEST_SIZE; i++){
+		*pszHash++ = base16Chars[*p >> 4];
+		*pszHash++ = base16Chars[*p++ & 0xf];
 	}
 	*pszHash = '\0';
 }
@@ -1262,13 +1236,9 @@ CStringA md4strA(const uchar* hash)
 
 bool strmd4(const char* pszHash, uchar* hash)
 {
-	memset(hash, 0, 16);
-	for (int i = 0; i < 16; i++)
-	{
-		char byte[3];
-		byte[0] = pszHash[i*2+0];
-		byte[1] = pszHash[i*2+1];
-		byte[2] = '\0';
+	memset(hash, 0, MDX_DIGEST_SIZE);
+	for (int i = 0; i < MDX_DIGEST_SIZE; ++i) {
+		char byte[3] = {pszHash[i*2+0], pszHash[i*2+1], '\0'};
 
 		UINT b;
 		if (sscanf(byte, "%x", &b) != 1)
@@ -1280,16 +1250,12 @@ bool strmd4(const char* pszHash, uchar* hash)
 
 bool strmd4(const CString& rstr, uchar* hash)
 {
-	memset(hash, 0, 16);
-	if (rstr.GetLength() != 16*2)
+	memset(hash, 0, MDX_DIGEST_SIZE);
+	if (rstr.GetLength() != MDX_DIGEST_SIZE*sizeof(TCHAR))
 		return false;
-	for (int i = 0; i < 16; i++)
+	for (int i = 0; i < MDX_DIGEST_SIZE; i++)
 	{
-		char byte[3];
-		byte[0] = (char)rstr[i*2+0];
-		byte[1] = (char)rstr[i*2+1];
-		byte[2] = '\0';
-
+		char byte[3] = {(char)rstr[i*2+0], (char)rstr[i*2+1], '\0'};
 		UINT b;
 		if (sscanf(byte, "%x", &b) != 1)
 			return false;
@@ -1298,35 +1264,25 @@ bool strmd4(const CString& rstr, uchar* hash)
 	return true;
 }
 
-void StripTrailingCollon(CString& rstr)
+void StripTrailingColon(CString& rstr)
 {
-	if (!rstr.IsEmpty())
-	{
-		if (rstr[rstr.GetLength() - 1] == _T(':'))
-			rstr = rstr.Left(rstr.GetLength() - 1);
-	}
+	int i = rstr.GetLength() - 1;
+	if (i >= 0 && rstr[i] == _T(':'))
+		rstr.Truncate(i);
 }
 
 CString ValidFilename(CString filename)
 {
 	filename = URLDecode(filename);
 
-	if(filename.GetLength() > 100)
-		filename = filename.Left(100);
+	if (filename.GetLength() > 100)
+		filename.Truncate(100);
 
 	// remove invalid filename characters
-	filename.Remove(_T('\\'));
-	filename.Remove(_T('\"'));
-	filename.Remove(_T('/'));
-	filename.Remove(_T(':'));
-	filename.Remove(_T('*'));
-	filename.Remove(_T('?'));
-	filename.Remove(_T('<'));
-	filename.Remove(_T('>'));
-	filename.Remove(_T('|'));
+	for (TCHAR *p = (TCHAR *)&badchar; *p; )
+		filename.Remove(*p++);
 
-	filename.Trim();
-	return filename;
+	return filename.Trim();
 }
 
 CString CleanupFilename(CString filename, bool bExtension)
@@ -1352,9 +1308,9 @@ CString CleanupFilename(CString filename, bool bExtension)
 	{
 		for (int i = 0; i < extpos; i++)
 		{
-			if (filename.GetAt(i) != _T('.'))
+			if (filename[i] != _T('.'))
 				continue;
-			if (i > 0 && i < filename.GetLength()-1 && _istdigit((_TUCHAR)filename.GetAt(i-1)) && _istdigit((_TUCHAR)filename.GetAt(i+1)))
+			if (i > 0 && i < filename.GetLength()-1 && _istdigit((_TUCHAR)filename[i-1]) && _istdigit((_TUCHAR)filename[i+1]))
 				continue;
 			filename.SetAt(i, _T(' '));
 		}
@@ -1366,18 +1322,9 @@ CString CleanupFilename(CString filename, bool bExtension)
 	filename.Replace(_T('='), _T(' '));
 
 	// remove invalid filename characters
-	filename.Remove(_T('\\'));
-	filename.Remove(_T('\"'));
-	filename.Remove(_T('/'));
-	filename.Remove(_T(':'));
-	filename.Remove(_T('*'));
-	filename.Remove(_T('?'));
-	filename.Remove(_T('<'));
-	filename.Remove(_T('>'));
-	filename.Remove(_T('|'));
-
+	for (TCHAR *p = (TCHAR *)&badchar; *p; )
+		filename.Remove(*p++);
 	// remove [AD]
-	CString tempStr;
 	int pos1 = -1;
 	for (;;)
 	{
@@ -1389,12 +1336,12 @@ CString CleanupFilename(CString filename, bool bExtension)
 		{
 			if (pos2 - pos1 > 1)
 			{
-				tempStr = filename.Mid(pos1+1, pos2-pos1-1);
+				CString tempStr = filename.Mid(pos1+1, pos2-pos1-1);
 				int numcount = 0;
 				for (int i = 0; i < tempStr.GetLength(); i++)
 				{
-					if (_istdigit((_TUCHAR)tempStr.GetAt(i)))
-						numcount++;
+					if (_istdigit((_TUCHAR)tempStr[i]))
+						++numcount;
 				}
 				if (numcount > tempStr.GetLength()/2)
 					continue;
@@ -1409,26 +1356,22 @@ CString CleanupFilename(CString filename, bool bExtension)
 	// Make leading Caps
 	if (filename.GetLength() > 1)
 	{
-		tempStr = filename.GetAt(0);
-		tempStr.MakeUpper();
-		filename.SetAt(0, tempStr.GetAt(0));
+		filename.SetAt(0, _totupper(filename[0]));
 
 		int topos = filename.ReverseFind(_T('.')) - 1;
 		if (topos < 0)
 			topos = filename.GetLength() - 1;
 
-		for (int ix = 0; ix < topos; ix++)
+		for (int ix = 0; ix < topos; ++ix)
 		{
-			if (!_istalpha((_TUCHAR)filename.GetAt(ix)))
+			if (!_istalpha((_TUCHAR)filename[ix]))
 			{
-				if (	(ix < filename.GetLength()-2 && _istdigit((_TUCHAR)filename.GetAt(ix+2))) ||
-						filename.GetAt(ix)==_T('\'')
+				if (	(ix < filename.GetLength()-2 && _istdigit((_TUCHAR)filename[ix+2])) ||
+						filename[ix]==_T('\'')
 					)
 					continue;
 
-				tempStr = filename.GetAt(ix+1);
-				tempStr.MakeUpper();
-				filename.SetAt(ix+1, tempStr.GetAt(0));
+				filename.SetAt(ix+1, _totupper(filename[ix+1]));
 			}
 		}
 	}
@@ -1444,8 +1387,7 @@ CString CleanupFilename(CString filename, bool bExtension)
 	filename.Replace(_T(" }"), _T("}"));
 	filename.Replace(_T("{}"), _T(""));
 
-	filename.Trim();
-	return filename;
+	return filename.Trim();
 }
 
 struct SED2KFileType
@@ -2185,9 +2127,9 @@ int CompareDirectories(const CString& rstrDir1, const CString& rstrDir2)
 	PathRemoveBackslash(strDir2.GetBuffer());	// remove any available backslash
 	strDir2.ReleaseBuffer();
 	// remove backslash from root drives like "C:\" - PathRemoveBackslash wonn't do this
-	if (strDir1.GetLength() == 3 && strDir1.GetAt(2) == '\\')
+	if (strDir1.GetLength() == 3 && strDir1[2] == '\\')
 		strDir1.Truncate(2);
-	if (strDir2.GetLength() == 3 && strDir2.GetAt(2) == '\\')
+	if (strDir2.GetLength() == 3 && strDir2[2] == '\\')
 		strDir2.Truncate(2);
 	return strDir1.CompareNoCase(strDir2);		// compare again
 }
@@ -2707,7 +2649,7 @@ void DebugHttpHeaders(const CStringAArray& astrHeaders)
 {
 	for (int i = 0; i < astrHeaders.GetCount(); i++)
 	{
-		const CStringA& rstrHdr = astrHeaders.GetAt(i);
+		const CStringA& rstrHdr = astrHeaders[i];
 		Debug(_T("<%hs\n"), (LPCSTR)rstrHdr);
 	}
 }
@@ -2804,7 +2746,6 @@ time_t safe_mktime(struct tm* ptm)
 CString StripInvalidFilenameChars(const CString& strText)
 {
 	CString strDest;
-	static const CString badchar(_T("\"*<>?|\\/:")); // lots of invalid chars for filenames in windows :=)
 
 	for (LPCTSTR pszSource = strText; *pszSource > 0; ++pszSource)
 		if ((_TUCHAR)*pszSource>=_T('\x20') && badchar.Find(*pszSource)<0)
@@ -3450,7 +3391,7 @@ bool CreatePointFontIndirect(CFont &rFont, const LOGFONT *lpLogFont)
 
 bool CreatePointFont(CFont &rFont, int nPointSize, LPCTSTR lpszFaceName)
 {
-	LOGFONT logFont = {0};
+	LOGFONT logFont = {};
 	logFont.lfCharSet = DEFAULT_CHARSET;
 	logFont.lfHeight = nPointSize;
 	lstrcpyn(logFont.lfFaceName, lpszFaceName, _countof(logFont.lfFaceName));
@@ -3930,7 +3871,7 @@ uint32 LevenshteinDistance(const CString& str1, const CString& str2)
 		{
 			uint32 d_del = p[j] + 1;
 			uint32 d_ins = q[j-1] + 1;
-			uint32 d_sub = p[j-1] + (str1.GetAt(i-1) == str2.GetAt(j-1) ? 0 : 1);
+			uint32 d_sub = p[j-1] + (str1[i-1] == str2[j-1] ? 0 : 1);
 			q[j] = min(min(d_del, d_ins), d_sub);
 		}
 		r = p;

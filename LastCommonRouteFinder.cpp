@@ -391,7 +391,7 @@ UINT LastCommonRouteFinder::RunInternal() {
 						bool failedThisTtl = false;
 						for (POSITION pos = hostsToTraceRoute.GetStartPosition(); doRun && enabled && !failed && !failedThisTtl
 								&& pos != NULL && (lastDestinationAddress == 0 || lastDestinationAddress == curHost);) { // || pingStatus.success == false && pingStatus.error == IP_REQ_TIMED_OUT ))
-							PingStatus pingStatus = {0};
+							PingStatus pingStatus = {};
 
 							hostsToTraceRouteCounter++;
 

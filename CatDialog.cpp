@@ -143,7 +143,7 @@ void CCatDialog::Localize()
 
 void CCatDialog::OnBnClickedBrowse()
 {
-	TCHAR buffer[MAX_PATH] = {0};
+	TCHAR buffer[MAX_PATH] = {};
 	GetDlgItemText(IDC_INCOMING, buffer, _countof(buffer));
 	if (SelectDir(GetSafeHwnd(), buffer,GetResString(IDS_SELECT_INCOMINGDIR)))
 		GetDlgItem(IDC_INCOMING)->SetWindowText(buffer);

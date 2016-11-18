@@ -2824,7 +2824,7 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 		cbuffer.Format(_T("%s: %i (%1.1f%%)"), (LPCTSTR)GetResString(IDS_STATS_PROBLEMATIC), myStats[6], (double)100*myStats[6]/totalclient);
 		stattree.SetItemText(cligen[0], cbuffer);
 
-		cbuffer.Format(_T("%s: %u"), (LPCTSTR)GetResString(IDS_BANNED), theApp.clientlist->GetBannedCount());
+		cbuffer.Format(_T("%s: %i"), (LPCTSTR)GetResString(IDS_BANNED), (int)theApp.clientlist->GetBannedCount());
 		stattree.SetItemText(cligen[1], cbuffer);
 
 		cbuffer.Format(GetResString(IDS_STATS_FILTEREDCLIENTS), theStats.filteredclients);

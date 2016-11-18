@@ -196,28 +196,17 @@ BOOL CServerWnd::OnInitDialog()
 	AddAnchor(IDC_SERVLST_ICO, TOP_LEFT);
 	AddAnchor(IDC_SERVLIST_TEXT, TOP_LEFT);
 	AddAnchor(serverlistctrl, TOP_LEFT, MIDDLE_RIGHT);
-	AddAnchor(m_ctrlNewServerFrm, TOP_RIGHT);
-	AddAnchor(IDC_SSTATIC4, TOP_RIGHT);
-	AddAnchor(IDC_SSTATIC7, TOP_RIGHT);
-	AddAnchor(IDC_IPADDRESS, TOP_RIGHT);
-	AddAnchor(IDC_SSTATIC3, TOP_RIGHT);
-	AddAnchor(IDC_SNAME, TOP_RIGHT);
-	AddAnchor(IDC_ADDSERVER, TOP_RIGHT);
-	AddAnchor(IDC_SSTATIC5, TOP_RIGHT);
 	AddAnchor(m_ctrlMyInfoFrm, TOP_RIGHT, BOTTOM_RIGHT);
 	AddAnchor(m_MyInfo, TOP_RIGHT, BOTTOM_RIGHT);
-	AddAnchor(IDC_SPORT, TOP_RIGHT);
-	AddAnchor(m_ctrlUpdateServerFrm, TOP_RIGHT);
-	AddAnchor(IDC_SERVERMETURL, TOP_RIGHT);
 	AddAnchor(IDC_UPDATESERVERMETFROMURL, TOP_RIGHT);
 	AddAnchor(StatusSelector, MIDDLE_LEFT, BOTTOM_RIGHT);
 	AddAnchor(IDC_LOGRESET, MIDDLE_RIGHT); // avoid resizing GUI glitches with the tab control by adding this control as the last one (Z-order)
-	AddAnchor(IDC_ED2KCONNECT, TOP_RIGHT);
-	AddAnchor(IDC_DD, TOP_RIGHT);
 	// The resizing of those log controls (rich edit controls) works 'better' when added as last anchors (?)
 	AddAnchor(*servermsgbox, MIDDLE_LEFT, BOTTOM_RIGHT);
 	AddAnchor(*logbox, MIDDLE_LEFT, BOTTOM_RIGHT);
 	AddAnchor(*debuglog, MIDDLE_LEFT, BOTTOM_RIGHT);
+
+	AddAllOtherAnchors(TOP_RIGHT);
 
 	// Set the tab control to the bottom of the z-order. This solves a lot of strange repainting problems with
 	// the rich edit controls (the log panes).
@@ -248,7 +237,7 @@ BOOL CServerWnd::OnInitDialog()
 	m_MyInfo.SetAutoURLDetect();
 	m_MyInfo.SetEventMask(m_MyInfo.GetEventMask() | ENM_LINK);
 
-	PARAFORMAT pf = {0};
+	PARAFORMAT pf = {};
 	pf.cbSize = sizeof pf;
 	if (m_MyInfo.GetParaFormat(pf)){
 		pf.dwMask |= PFM_TABSTOPS;

@@ -484,7 +484,7 @@ void CKnownFileList::AddCancelledFileID(const uchar* hash){
 		uchar pachSeedHash[20];
 		PokeUInt32(pachSeedHash, m_dwCancelledFilesSeed);
 		md4cpy(pachSeedHash + 4, hash);
-		MD5Sum md5(pachSeedHash, sizeof(pachSeedHash));
+		MD5Sum md5(pachSeedHash, sizeof pachSeedHash);
 		md4cpy(pachSeedHash, md5.GetRawHash());
 		m_mapCancelledFiles.SetAt(CSKey(pachSeedHash), 1);
 	}
@@ -496,7 +496,7 @@ bool CKnownFileList::IsCancelledFileByID(const uchar* hash) const
 		uchar pachSeedHash[20];
 		PokeUInt32(pachSeedHash, m_dwCancelledFilesSeed);
 		md4cpy(pachSeedHash + 4, hash);
-		MD5Sum md5(pachSeedHash, sizeof(pachSeedHash));
+		MD5Sum md5(pachSeedHash, sizeof pachSeedHash);
 		md4cpy(pachSeedHash, md5.GetRawHash());
 
 		int dwDummy;

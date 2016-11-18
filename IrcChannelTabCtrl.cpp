@@ -188,7 +188,7 @@ Channel* CIrcChannelTabCtrl::NewChannel(const CString& sName, Channel::EType eTy
 
 		if (eType == Channel::ctNormal || eType == Channel::ctPrivate)
 		{
-			PARAFORMAT pf = {0};
+			PARAFORMAT pf = {};
 			pf.cbSize = sizeof pf;
 			pf.dwMask = PFM_OFFSET;
 			pf.dxOffset = 150;

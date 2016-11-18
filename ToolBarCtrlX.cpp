@@ -46,7 +46,7 @@ void CToolBarCtrlX::DeleteAllButtons()
 
 DWORD CToolBarCtrlX::GetBtnStyle(int id)
 {
-	TBBUTTONINFO tbbi = {0};
+	TBBUTTONINFO tbbi = {};
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_STYLE;
 	(void)GetButtonInfo(id, &tbbi);
@@ -55,7 +55,7 @@ DWORD CToolBarCtrlX::GetBtnStyle(int id)
 
 DWORD CToolBarCtrlX::AddBtnStyle(int id, DWORD dwStyle)
 {
-	TBBUTTONINFO tbbi = {0};
+	TBBUTTONINFO tbbi = {};
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_STYLE;
 	(void)GetButtonInfo(id, &tbbi);
@@ -67,7 +67,7 @@ DWORD CToolBarCtrlX::AddBtnStyle(int id, DWORD dwStyle)
 
 DWORD CToolBarCtrlX::RemoveBtnStyle(int id, DWORD dwStyle)
 {
-	TBBUTTONINFO tbbi = {0};
+	TBBUTTONINFO tbbi = {};
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_STYLE;
 	(void)GetButtonInfo(id, &tbbi);
@@ -79,7 +79,7 @@ DWORD CToolBarCtrlX::RemoveBtnStyle(int id, DWORD dwStyle)
 
 int CToolBarCtrlX::GetBtnWidth(int nID)
 {
-	TBBUTTONINFO tbbi = {0};
+	TBBUTTONINFO tbbi = {};
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_SIZE;
 	(void)GetButtonInfo(nID, &tbbi);
@@ -88,7 +88,7 @@ int CToolBarCtrlX::GetBtnWidth(int nID)
 
 void CToolBarCtrlX::SetBtnWidth(int nID, int iWidth)
 {
-	TBBUTTONINFO tbbi = {0};
+	TBBUTTONINFO tbbi = {};
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_SIZE;
 	tbbi.cx = (WORD)iWidth;
@@ -98,7 +98,7 @@ void CToolBarCtrlX::SetBtnWidth(int nID, int iWidth)
 CString CToolBarCtrlX::GetBtnText(int nID)
 {
 	TCHAR szString[512];
-	TBBUTTONINFO tbbi = {0};
+	TBBUTTONINFO tbbi = {};
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_TEXT;
 	tbbi.pszText = szString;
@@ -110,7 +110,7 @@ CString CToolBarCtrlX::GetBtnText(int nID)
 
 void CToolBarCtrlX::SetBtnText(int nID, LPCTSTR pszString)
 {
-	TBBUTTONINFO tbbi = {0};
+	TBBUTTONINFO tbbi = {};
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_TEXT;
 	tbbi.pszText = const_cast<LPTSTR>(pszString);
@@ -147,7 +147,7 @@ void CToolBarCtrlX::AdjustFont(int iMaxPointSize, CSize sizButton)
 	CFont* pFont = GetFont();
 	if (pFont)
 	{
-		LOGFONT lf = {0};
+		LOGFONT lf = {};
 		if (pFont->GetLogFont(&lf) > 0)
 		{
 			HDC hDC = ::GetDC(HWND_DESKTOP);

@@ -426,8 +426,7 @@ void CWebServer::ProcessURL(const ThreadData& Data)
 
 	if (_ParseURL(Data.sURL, _T("w")) == _T("password"))
 	{
-		(void)MD5Sum(_ParseURL(Data.sURL, _T("p"))).GetHash();
-		CString ip=ipstr(Data.inadr);
+		CString ip = ipstr(Data.inadr);
 
         if (!_ParseURL(Data.sURL, _T("c")).IsEmpty()) {
             // just sent password to add link remotely. Don't start a session.
@@ -2750,7 +2749,7 @@ CString CWebServer::_CreateTransferList(CString Out, CWebServer *pThis, const Th
 	HTTPTemp.Format(_T("%8.2f"), fTotalSpeed/1024.0);
 	Out.Replace(_T("[TotalDownSpeed]"), HTTPTemp);
 
-	HTTPTemp.Format(_T("%s: %i"), (LPCTSTR)GetResString(IDS_SF_FILE), FilesArray->GetCount());
+	HTTPTemp.Format(_T("%s: %i"), (LPCTSTR)GetResString(IDS_SF_FILE), (int)FilesArray->GetCount());
 	Out.Replace(_T("[TotalFiles]"), HTTPTemp);
 
 	HTTPTemp.Format(_T("%i"),pThis->m_Templates.iProgressbarWidth);
@@ -3551,7 +3550,7 @@ CString CWebServer::_GetSharedFilesList(const ThreadData& Data)
 		fname.Replace(_T("'"),_T("&#8217;"));
 
 		bool downloadable = false;
-		uchar fileid[16] = {0};
+		uchar fileid[16] = {};
 		if (hash.GetLength()==32 && DecodeBase16(hash, hash.GetLength(), fileid, ARRSIZE(fileid)))
 		{
 			HTTPProcessData.Replace(_T("[hash]"), hash);
@@ -4130,7 +4129,7 @@ CString CWebServer::_GetLoginScreen(const ThreadData& Data)
 int CWebServer::_GzipCompress(Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen, int level)
 {
 	static const int gz_magic[2] = {0x1f, 0x8b}; // gzip magic header
-	z_stream stream = {0};
+	z_stream stream = {};
 	stream.zalloc = (alloc_func)0;
 	stream.zfree = (free_func)0;
 	stream.opaque = (voidpf)0;
@@ -5018,8 +5017,8 @@ CString CWebServer::GetClientSummary(CUpDownClient* client) {
 
 	// transfered data (up,down,global,session)
 	buffer.AppendFormat(_T("%s (%s):\n"), (LPCTSTR)GetResString(IDS_FD_TRANS), (LPCTSTR)GetResString(IDS_STATS_SESSION));
-	buffer.AppendFormat(_T(".....^s: %s (%s )\n"), (LPCTSTR)GetResString(IDS_PW_CON_UPLBL), (LPCTSTR)CastItoXBytes(client->GetTransferredUp()), (LPCTSTR)CastItoXBytes(client->GetSessionUp()));
-	buffer.AppendFormat(_T(".....^s: %s (%s )\n"), (LPCTSTR)GetResString(IDS_DOWNLOAD), (LPCTSTR)CastItoXBytes(client->GetTransferredDown()), (LPCTSTR)CastItoXBytes(client->GetSessionDown()));
+	buffer.AppendFormat(_T(".....%s: %s (%s )\n"), (LPCTSTR)GetResString(IDS_PW_CON_UPLBL), (LPCTSTR)CastItoXBytes(client->GetTransferredUp()), (LPCTSTR)CastItoXBytes(client->GetSessionUp()));
+	buffer.AppendFormat(_T(".....%s: %s (%s )\n"), (LPCTSTR)GetResString(IDS_DOWNLOAD), (LPCTSTR)CastItoXBytes(client->GetTransferredDown()), (LPCTSTR)CastItoXBytes(client->GetSessionDown()));
 
 	return buffer;
 }

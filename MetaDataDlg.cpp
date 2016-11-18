@@ -194,7 +194,7 @@ CString GetTagNameByID(UINT id)
 CString GetMetaTagName(UINT uTagID)
 {
 	CString strName = GetTagNameByID(uTagID);
-	StripTrailingCollon(strName);
+	StripTrailingColon(strName);
 	return strName;
 }
 
@@ -205,7 +205,7 @@ CString GetName(const CTag* pTag)
 		strName = GetTagNameByID(pTag->GetNameID());
 	else
 		strName = pTag->GetName();
-	StripTrailingCollon(strName);
+	StripTrailingColon(strName);
 	return strName;
 }
 
@@ -216,7 +216,7 @@ CString GetName(const Kademlia::CKadTag* pTag)
 		strName = GetTagNameByID((BYTE)pTag->m_name[0]);
 	else
 		strName = (LPCSTR)pTag->m_name;
-	StripTrailingCollon(strName);
+	StripTrailingColon(strName);
 	return strName;
 }
 
@@ -321,7 +321,7 @@ void CMetaDataDlg::RefreshData()
 			lvi.iItem = INT_MAX;
 			lvi.iSubItem = META_DATA_COL_NAME;
 			strBuff = GetResString(IDS_FD_HASH);
-			StripTrailingCollon(strBuff);
+			StripTrailingColon(strBuff);
 			lvi.pszText = const_cast<LPTSTR>((LPCTSTR)strBuff);
 			int iItem = m_tags.InsertItem(&lvi);
 			if (iItem >= 0)

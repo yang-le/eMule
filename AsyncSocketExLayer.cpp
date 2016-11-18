@@ -284,7 +284,7 @@ BOOL CAsyncSocketExLayer::ConnectNext(LPCSTR lpszHostAddress, UINT nHostPort)
 		res = m_pNextLayer->Connect(lpszHostAddress, nHostPort);
 	else
 	{
-		SOCKADDR_IN sockAddr = {0};
+		SOCKADDR_IN sockAddr = {};
 		sockAddr.sin_addr.s_addr = inet_addr(lpszHostAddress);
 		if (sockAddr.sin_addr.s_addr == INADDR_NONE)
 		{
@@ -338,8 +338,8 @@ BOOL CAsyncSocketExLayer::GetPeerNameNext( CString& rPeerAddress, UINT& rPeerPor
 	else
 	{
 		ASSERT(m_pOwnerSocket);
-		SOCKADDR_IN sockAddr = {0};
-		int nSockAddrLen = sizeof(sockAddr);
+		SOCKADDR_IN sockAddr = {};
+		int nSockAddrLen = sizeof sockAddr;
 		if (!getpeername(m_pOwnerSocket->GetSocketHandle(), (SOCKADDR*)&sockAddr, &nSockAddrLen))
 		{
 			rPeerPort = ntohs(sockAddr.sin_port);

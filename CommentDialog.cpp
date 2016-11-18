@@ -90,12 +90,13 @@ BOOL CCommentDialog::OnInitDialog()
 	AddAnchor(IDC_CMT_LQUEST, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_CMT_LAIDE, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_CMT_TEXT, TOP_LEFT, TOP_RIGHT);
-	AddAnchor(IDC_RATELIST, TOP_LEFT);
 	AddAnchor(IDC_RATEQUEST, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_RATEHELP, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_USERCOMMENTS, TOP_LEFT, BOTTOM_RIGHT);
 	AddAnchor(IDC_RESET, TOP_RIGHT);
 	AddAnchor(IDC_SEARCHKAD, BOTTOM_RIGHT);
+
+	AddAllOtherAnchors();
 
 	m_lstComments.Init();
 	Localize();

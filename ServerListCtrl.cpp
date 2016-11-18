@@ -791,7 +791,7 @@ void CServerListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 	LPNMLVGETINFOTIP pGetInfoTip = reinterpret_cast<LPNMLVGETINFOTIP>(pNMHDR);
 	if (pGetInfoTip->iSubItem == 0)
 	{
-		LVHITTESTINFO hti = {0};
+		LVHITTESTINFO hti = {};
 		::GetCursorPos(&hti.pt);
 		ScreenToClient(&hti.pt);
 		bool bOverMainItem = (SubItemHitTest(&hti) != -1 && hti.iItem == pGetInfoTip->iItem && hti.iSubItem == 0);

@@ -537,7 +537,7 @@ bool CKademlia::FindIPByNodeID(CKadClientSearcher& rRequester, const uchar* pach
 	CContact* pContact;
 	if ((pContact = GetRoutingZone()->GetContact(CUInt128(pachNodeID))) != NULL){
 		// make sure that this entry is not too old, otherwise just do a search to be sure
-		if (pContact->GetLastSeen() != 0 && time(NULL) - pContact->GetLastSeen() < 1800){
+		if (pContact->GetLastSeen() != 0 && time(NULL) - pContact->GetLastSeen() < MIN2S(30)) {
 			rRequester.KadSearchIPByNodeIDResult(KCSR_SUCCEEDED, ntohl(pContact->GetIPAddress()), pContact->GetTCPPort());
 			return true;
 		}

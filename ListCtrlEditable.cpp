@@ -322,7 +322,7 @@ void CEditableListCtrl::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	CListCtrl::OnLButtonDown(nFlags, point);
 
-	LVHITTESTINFO hti = {0};
+	LVHITTESTINFO hti = {};
 	hti.pt = point;
 	if (SubItemHitTest(&hti) == -1)
 		return;

@@ -99,7 +99,7 @@ BOOL CPreviewThread::Run()
 		srcFile.Close();
 		m_pPartfile->m_bPreviewing = false;
 
-		SHELLEXECUTEINFO SE = {0};
+		SHELLEXECUTEINFO SE = {};
 		SE.fMask = SEE_MASK_NOCLOSEPROCESS;
 
 		CString strCommand;

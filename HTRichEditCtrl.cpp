@@ -839,10 +839,10 @@ void CHTRichEditCtrl::SetFont(CFont* pFont, BOOL bRedraw)
 	else
 		bAtEndOfScroll = true;
 
-	LOGFONT lf = {0};
+	LOGFONT lf = {};
 	pFont->GetLogFont(&lf);
 
-	CHARFORMAT cf = {0};
+	CHARFORMAT cf = {};
 	cf.cbSize = sizeof cf;
 
 	cf.dwMask |= CFM_BOLD;
@@ -1421,7 +1421,7 @@ bool CHTRichEditCtrl::InsertSmiley(LPCTSTR pszSmileyID)
 		return false;
 	OleSetContainedObject(pIOleObject, TRUE);
 
-	REOBJECT reobject = {0};
+	REOBJECT reobject = {};
 	reobject.cbStruct = sizeof reobject;
 	if (pIOleObject->GetUserClassID(&reobject.clsid) != S_OK)
 		return false;
@@ -1487,7 +1487,7 @@ bool CHTRichEditCtrl::AddCaptcha(HBITMAP hbmp)
 		return false;
 	OleSetContainedObject(pIOleObject, TRUE);
 
-	REOBJECT reobject = {0};
+	REOBJECT reobject = {};
 	reobject.cbStruct = sizeof reobject;
 	if (pIOleObject->GetUserClassID(&reobject.clsid) != S_OK)
 		return false;

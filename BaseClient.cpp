@@ -163,9 +163,9 @@ void CUpDownClient::Init()
 	m_byCompatibleClient = 0;
 	m_nSourceFrom = SF_SERVER;
 	m_bIsHybrid = false;
-	m_bIsML=false;
+	m_bIsML = false;
 	m_Friend = NULL;
-	m_uFileRating=0;
+	m_uFileRating = 0;
 	(void)m_strFileComment;
 	m_fMessageFiltered = 0;
 	m_fIsSpammer = 0;
@@ -182,7 +182,7 @@ void CUpDownClient::Init()
 	m_nBuddyIP = 0;
 	m_nBuddyPort = 0;
 	if (socket) {
-		SOCKADDR_IN sockAddr = {0};
+		SOCKADDR_IN sockAddr = {};
 		int nSockAddrLen = sizeof sockAddr;
 		socket->GetPeerName(reinterpret_cast<SOCKADDR *>(&sockAddr), &nSockAddrLen);
 		SetIP(sockAddr.sin_addr.S_un.S_addr);
@@ -201,7 +201,7 @@ void CUpDownClient::Init()
 	m_bySupportSecIdent = 0;
 	m_byInfopacketsReceived = IP_NONE;
 	m_lastPartAsked = (uint16)-1;
-	m_nUpCompleteSourcesCount= 0;
+	m_nUpCompleteSourcesCount = 0;
 	m_fSupportsPreview = 0;
 	m_fPreviewReqPending = 0;
 	m_fPreviewAnsPending = 0;
@@ -254,7 +254,6 @@ void CUpDownClient::Init()
 	m_fSupportsFileIdent = 0;
 	m_uReqStart = 0ull;
 	m_uReqEnd = 0ull;
-
 }
 
 CUpDownClient::~CUpDownClient(){
@@ -630,7 +629,7 @@ bool CUpDownClient::ProcessHelloTypePacket(CSafeMemFile* data)
 			m_strHelloInfo.AppendFormat(_T("\n  ***AddData: %u bytes"), uAddHelloDataSize);
 	}
 
-	SOCKADDR_IN sockAddr = {0};
+	SOCKADDR_IN sockAddr = {};
 	int nSockAddrLen = sizeof(sockAddr);
 	socket->GetPeerName((SOCKADDR*)&sockAddr, &nSockAddrLen);
 	SetIP(sockAddr.sin_addr.S_un.S_addr);
@@ -1636,7 +1635,7 @@ void CUpDownClient::Connect()
 
 	//Try to always tell the socket to WaitForOnConnect before you call Connect.
 	socket->WaitForOnConnect();
-	SOCKADDR_IN sockAddr = {0};
+	SOCKADDR_IN sockAddr = {};
 	sockAddr.sin_family = AF_INET;
 	sockAddr.sin_port = htons(GetUserPort());
 	sockAddr.sin_addr.S_un.S_addr = GetConnectIP();
@@ -2278,7 +2277,7 @@ void CUpDownClient::SendPreviewAnswer(const CKnownFile* pForFile, CxImage** imgF
 		data.WriteHash16(pForFile->GetFileHash());
 	}
 	else{
-		static const uchar _aucZeroHash[16] = {0};
+		static const uchar _aucZeroHash[16] = {};
 		data.WriteHash16(_aucZeroHash);
 	}
 	data.WriteUInt8(nCount);
@@ -2649,63 +2648,56 @@ void CUpDownClient::OnSocketConnected(int /*nErrorCode*/)
 
 CString CUpDownClient::GetDownloadStateDisplayString() const
 {
-	CString strState;
-	switch (GetDownloadState())
-	{
-		case DS_CONNECTING:
-			strState = GetResString(IDS_CONNECTING);
-			break;
-		case DS_CONNECTED:
-			strState = GetResString(IDS_ASKING);
-			break;
-		case DS_WAITCALLBACK:
-			strState = GetResString(IDS_CONNVIASERVER);
-			break;
-		case DS_ONQUEUE:
-			if (IsRemoteQueueFull())
-				strState = GetResString(IDS_QUEUEFULL);
-			else
-				strState = GetResString(IDS_ONQUEUE);
-			break;
-		case DS_DOWNLOADING:
-			strState = GetResString(IDS_TRANSFERRING);
-			break;
-		case DS_REQHASHSET:
-			strState = GetResString(IDS_RECHASHSET);
-			break;
-		case DS_NONEEDEDPARTS:
-			strState = GetResString(IDS_NONEEDEDPARTS);
-			break;
-		case DS_LOWTOLOWIP:
-			strState = GetResString(IDS_NOCONNECTLOW2LOW);
-			break;
-		case DS_TOOMANYCONNS:
-			strState = GetResString(IDS_TOOMANYCONNS);
-			break;
-		case DS_ERROR:
-			strState = GetResString(IDS_ERROR);
-			break;
-		case DS_WAITCALLBACKKAD:
-			strState = GetResString(IDS_KAD_WAITCBK);
-			break;
-		case DS_TOOMANYCONNSKAD:
-			strState = GetResString(IDS_KAD_TOOMANDYKADLKPS);
-			break;
+	UINT sid;
+	switch (GetDownloadState()) {
+	case DS_CONNECTING:
+		sid = IDS_CONNECTING;
+		break;
+	case DS_CONNECTED:
+		sid = IDS_ASKING;
+		break;
+	case DS_WAITCALLBACK:
+		sid = IDS_CONNVIASERVER;
+		break;
+	case DS_ONQUEUE:
+		sid = IsRemoteQueueFull() ? IDS_QUEUEFULL : IDS_ONQUEUE;
+		break;
+	case DS_DOWNLOADING:
+		sid = IDS_TRANSFERRING;
+		break;
+	case DS_REQHASHSET:
+		sid = IDS_RECHASHSET;
+		break;
+	case DS_NONEEDEDPARTS:
+		sid = IDS_NONEEDEDPARTS;
+		break;
+	case DS_LOWTOLOWIP:
+		sid = IDS_NOCONNECTLOW2LOW;
+		break;
+	case DS_TOOMANYCONNS:
+		sid = IDS_TOOMANYCONNS;
+		break;
+	case DS_ERROR:
+		sid = IDS_ERROR;
+		break;
+	case DS_WAITCALLBACKKAD:
+		sid = IDS_KAD_WAITCBK;
+		break;
+	case DS_TOOMANYCONNSKAD:
+		sid = IDS_KAD_TOOMANDYKADLKPS;
 	}
 
-	if (thePrefs.GetPeerCacheShow())
-	{
-		switch (m_ePeerCacheDownState)
-		{
+	CString strState(GetResString(sid));
+	if (thePrefs.GetPeerCacheShow()) {
+		switch (m_ePeerCacheDownState) {
 		case PCDS_WAIT_CLIENT_REPLY:
-			strState += _T(" ")+GetResString(IDS_PCDS_CLIENTWAIT);
+			strState += _T(' ')+GetResString(IDS_PCDS_CLIENTWAIT);
 			break;
 		case PCDS_WAIT_CACHE_REPLY:
-			strState += _T(" ")+GetResString(IDS_PCDS_CACHEWAIT);
+			strState += _T(' ')+GetResString(IDS_PCDS_CACHEWAIT);
 			break;
 		case PCDS_DOWNLOADING:
-			strState += _T(" ")+GetResString(IDS_CACHE);
-			break;
+			strState += _T(' ')+GetResString(IDS_CACHE);
 		}
 		if (m_ePeerCacheDownState != PCDS_NONE && m_bPeerCacheDownHit)
 			strState += _T(" Hit");

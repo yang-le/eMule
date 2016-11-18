@@ -54,7 +54,7 @@ COLORREF CMeterIcon::GetMeterColor(int nLevel) const
 HICON CMeterIcon::CreateMeterIcon(const int *pBarData)
 // the returned icon must be cleaned up using DestroyIcon()
 {// begin CreateMeterIcon
-	ICONINFO iiNewIcon={0};
+	ICONINFO iiNewIcon={};
 	iiNewIcon.fIcon = true;	// set that it is an icon
 
 	// create DC's

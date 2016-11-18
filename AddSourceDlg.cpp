@@ -43,9 +43,8 @@ END_MESSAGE_MAP()
 
 CAddSourceDlg::CAddSourceDlg(CWnd* pParent /*=NULL*/)
 	: CResizableDialog(CAddSourceDlg::IDD, pParent)
-	, m_nSourceType(0)
+	, m_nSourceType(0), m_pFile(NULL)
 {
-	m_pFile = NULL;
 }
 
 CAddSourceDlg::~CAddSourceDlg()
@@ -73,6 +72,8 @@ BOOL CAddSourceDlg::OnInitDialog()
 	AddAnchor(IDOK, BOTTOM_RIGHT);
 	AddAnchor(IDC_BUTTON1, BOTTOM_RIGHT);
 	AddAnchor(IDCANCEL, BOTTOM_RIGHT);
+
+	AddAllOtherAnchors();
 
 	if (m_pFile)
 		SetWindowText(m_pFile->GetFileName());
@@ -163,7 +164,7 @@ void CAddSourceDlg::OnBnClickedButton1()
 				TCHAR szUserName[INTERNET_MAX_USER_NAME_LENGTH];
 				TCHAR szPassword[INTERNET_MAX_PASSWORD_LENGTH];
 				TCHAR szExtraInfo[INTERNET_MAX_URL_LENGTH];
-				URL_COMPONENTS Url = {0};
+				URL_COMPONENTS Url = {};
 				Url.dwStructSize = sizeof Url;
 				Url.lpszScheme = szScheme;
 				Url.dwSchemeLength = ARRSIZE(szScheme);

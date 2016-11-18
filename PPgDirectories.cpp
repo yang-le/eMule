@@ -109,7 +109,7 @@ void CPPgDirectories::LoadSettings(void)
 
 void CPPgDirectories::OnBnClickedSelincdir()
 {
-	TCHAR buffer[MAX_PATH] = {0};
+	TCHAR buffer[MAX_PATH] = {};
 	GetDlgItemText(IDC_INCFILES, buffer, _countof(buffer));
 	if(SelectDir(GetSafeHwnd(),buffer,GetResString(IDS_SELECT_INCOMINGDIR)))
 		GetDlgItem(IDC_INCFILES)->SetWindowText(buffer);
@@ -117,7 +117,7 @@ void CPPgDirectories::OnBnClickedSelincdir()
 
 void CPPgDirectories::OnBnClickedSeltempdir()
 {
-	TCHAR buffer[MAX_PATH] = {0};
+	TCHAR buffer[MAX_PATH] = {};
 	GetDlgItemText(IDC_TEMPFILES, buffer, _countof(buffer));
 	if(SelectDir(GetSafeHwnd(),buffer,GetResString(IDS_SELECT_TEMPDIR)))
 		GetDlgItem(IDC_TEMPFILES)->SetWindowText(buffer);
@@ -372,7 +372,7 @@ void CPPgDirectories::OnBnClickedSeltempdiradd()
 	CString paths;
 	GetDlgItemText(IDC_TEMPFILES, paths);
 
-	TCHAR buffer[MAX_PATH] = {0};
+	TCHAR buffer[MAX_PATH] = {};
 	//GetDlgItemText(IDC_TEMPFILES, buffer, _countof(buffer));
 
 	if(SelectDir(GetSafeHwnd(),buffer,GetResString(IDS_SELECT_TEMPDIR))) {

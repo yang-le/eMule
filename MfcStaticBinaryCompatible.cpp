@@ -196,15 +196,15 @@ void Mfc_IdleFreeTempMaps()
 
 #define CHECK_MAP_STATE(map, member) \
 		static int s_iOld_##map##member = 0; \
-		if (!bDumpMaps && ((_CHandleMap*)(pState->map))->member.GetCount() != s_iOld_##map##member) { \
+		if (!bDumpMaps && (reinterpret_cast<_CHandleMap*>(pState->map))->member.GetCount() != s_iOld_##map##member) { \
 			bDumpMaps = true; \
 		}
 
 #define DUMP_MAP_STATE(map, member) \
-		TRACE(chSTR(map) "->" chSTR(member) ": %d", ((_CHandleMap*)(pState->map))->member.GetCount()); \
-		if (((_CHandleMap*)(pState->map))->member.GetCount() != s_iOld_##map##member) { \
-			TRACE("  (%d)", ((_CHandleMap*)(pState->map))->member.GetCount() - s_iOld_##map##member); \
-			s_iOld_##map##member = ((_CHandleMap*)(pState->map))->member.GetCount(); \
+		TRACE(chSTR(map) "->" chSTR(member) ": %d", reinterpret_cast<_CHandleMap *>(pState->map)->member.GetCount()); \
+		if (reinterpret_cast<_CHandleMap *>(pState->map)->member.GetCount() != s_iOld_##map##member) { \
+			TRACE("  (%d)", reinterpret_cast<_CHandleMap *>(pState->map)->member.GetCount() - s_iOld_##map##member); \
+			s_iOld_##map##member = reinterpret_cast<_CHandleMap *>(pState->map)->member.GetCount(); \
 		} \
 		TRACE("\n");
 

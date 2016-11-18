@@ -527,7 +527,7 @@ int CGetMediaInfoThread::Run()
 		CRichEditStream re;
 		re.Attach(hwndRE);
 		re.LimitText(afxIsWin95() ? 0xFFFF : 0x7FFFFFFF);
-		PARAFORMAT pf = {0};
+		PARAFORMAT pf = {};
 		pf.cbSize = sizeof pf;
 		if (re.GetParaFormat(pf)) {
 			pf.dwMask |= PFM_TABSTOPS;
@@ -1591,7 +1591,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 						CString strDate = theMediaInfoDLL.Get(Handle, Stream_General, 0, _T("Date"), Info_Text, Info_Name);
 						if (strDate.IsEmpty())
 							strDate = theMediaInfoDLL.Get(Handle, Stream_General, 0, _T("Encoded_Date"), Info_Text, Info_Name);
-						struct tm tmUtc = {0};
+						struct tm tmUtc = {};
 						if (_stscanf(strDate, _T("UTC %u-%u-%u %u:%u:%u"), &tmUtc.tm_year, &tmUtc.tm_mon, &tmUtc.tm_mday, &tmUtc.tm_hour, &tmUtc.tm_min, &tmUtc.tm_sec) == 6)
 						{
 							tmUtc.tm_mon -= 1;
@@ -2025,7 +2025,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 												mi->strInfo << GetResString(IDS_VIDEO) << _T(" #") << mi->iVideoStreams << _T("\n");
 											}
 
-											AM_MEDIA_TYPE mt = {0};
+											AM_MEDIA_TYPE mt = {};
 											if (SUCCEEDED(hr = pMediaDet->get_StreamMediaType(&mt)))
 											{
 												if (mt.formattype == FORMAT_VideoInfo)
@@ -2096,7 +2096,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 												mi->strInfo << GetResString(IDS_AUDIO) << _T(" #") << mi->iAudioStreams << _T("\n");
 											}
 
-											AM_MEDIA_TYPE mt = {0};
+											AM_MEDIA_TYPE mt = {};
 											if (SUCCEEDED(hr = pMediaDet->get_StreamMediaType(&mt)))
 											{
 												if (mt.formattype == FORMAT_WaveFormatEx)

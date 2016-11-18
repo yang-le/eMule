@@ -55,7 +55,7 @@ BOOL CSplashScreen::OnInitDialog()
 	VERIFY( m_imgSplash.Attach(theApp.LoadImage(_T("ABOUT"), _T("JPG"))) );
 	if (m_imgSplash.GetSafeHandle())
 	{
-		BITMAP bmp = {0};
+		BITMAP bmp = {};
 		if (m_imgSplash.GetBitmap(&bmp) > 0)
 		{
 			WINDOWPLACEMENT wp;
@@ -107,7 +107,7 @@ void CSplashScreen::OnPaint()
 			CRect rc(0, BM.bmHeight * 65/100, BM.bmWidth, BM.bmHeight);
 			dc.FillSolidRect(rc.left+1, rc.top+1, rc.Width()-2, rc.Height()-2, RGB(255,255,255));
 
-			LOGFONT lf = {0};
+			LOGFONT lf = {};
 #if defined(_DEBUG) && (defined(_BETA) || defined(_DEVBUILD))
 			lf.lfHeight = 28;
 #else

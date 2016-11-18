@@ -283,7 +283,7 @@ int CEncryptedStreamSocket::Receive(void* lpBuf, int nBufLen, int nFlags){
 					// only exception is the .ini option ClientCryptLayerRequiredStrict which will even ignore test connections
 					// Update: New server now support encrypted callbacks
 
-					SOCKADDR_IN sockAddr = {0};
+					SOCKADDR_IN sockAddr = {};
 					int nSockAddrLen = sizeof sockAddr;
 					GetPeerName((SOCKADDR*)&sockAddr, &nSockAddrLen);
 					if (thePrefs.IsClientCryptLayerRequiredStrict() || (!theApp.serverconnect->AwaitingTestFromIP(sockAddr.sin_addr.S_un.S_addr)
@@ -489,10 +489,10 @@ int CEncryptedStreamSocket::Negotiate(const uchar* pBuffer, uint32 nLen)
 					achKeyData[16] = MAGICVALUE_REQUESTER;
 					m_pfiReceiveBuffer->Read(achKeyData + 17, 4); // random key part sent from remote client
 
-					MD5Sum md5(achKeyData, sizeof(achKeyData));
+					MD5Sum md5(achKeyData, sizeof achKeyData);
 					m_pRC4ReceiveKey = RC4CreateKey(md5.GetRawHash(), 16, NULL);
 					achKeyData[16] = MAGICVALUE_SERVER;
-					md5.Calculate(achKeyData, sizeof(achKeyData));
+					md5.Calculate(achKeyData, sizeof achKeyData);
 					m_pRC4SendKey = RC4CreateKey(md5.GetRawHash(), 16, NULL);
 
 					m_NegotiatingState = ONS_BASIC_CLIENTA_MAGICVALUE;
@@ -533,7 +533,7 @@ int CEncryptedStreamSocket::Negotiate(const uchar* pBuffer, uint32 nLen)
 					const uint8 bySelectedEncryptionMethod = ENM_OBFUSCATION; // we do not support any further encryption in this version, so no need to look which the other client preferred
 					fileResponse.WriteUInt8(bySelectedEncryptionMethod);
 
-					SOCKADDR_IN sockAddr = {0};
+					SOCKADDR_IN sockAddr = {};
 					int nSockAddrLen = sizeof sockAddr;
 					GetPeerName((SOCKADDR*)&sockAddr, &nSockAddrLen);
 					const uint8 byPaddingLen = theApp.serverconnect->AwaitingTestFromIP(sockAddr.sin_addr.S_un.S_addr) ? 16 : (thePrefs.GetCryptTCPPaddingLength() + 1);
@@ -731,7 +731,7 @@ int CEncryptedStreamSocket::SendNegotiatingData(const void* lpBuf, uint32 nBufLe
 }
 
 CString	CEncryptedStreamSocket::DbgGetIPString(){
-	SOCKADDR_IN sockAddr = {0};
+	SOCKADDR_IN sockAddr = {};
 	int nSockAddrLen = sizeof sockAddr;
 	GetPeerName((SOCKADDR*)&sockAddr, &nSockAddrLen);
 	return ipstr(sockAddr.sin_addr.S_un.S_addr);

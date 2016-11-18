@@ -78,7 +78,7 @@ BOOL CDropDownButton::Init(bool bSingleDropDownBtn, bool bWholeDropDown)
 	}
 	if (m_bSingleDropDownBtn)
 	{
-		TBBUTTON atb[1] = {0};
+		TBBUTTON atb[1] = {};
 		atb[0].iBitmap = -1;
 		atb[0].idCommand = GetWindowLongPtr(m_hWnd, GWLP_ID);
 		atb[0].fsState = TBSTATE_ENABLED;
@@ -97,7 +97,7 @@ void CDropDownButton::SetWindowText(LPCTSTR pszString)
 	LONG_PTR id = GetWindowLongPtr(m_hWnd, GWLP_ID);
 	int cx = m_bSingleDropDownBtn ? 0 : GetBtnWidth(id);
 
-	TBBUTTONINFO tbbi = {0};
+	TBBUTTONINFO tbbi = {};
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_TEXT;
 	tbbi.pszText = const_cast<LPTSTR>(pszString);
@@ -120,7 +120,7 @@ void CDropDownButton::SetIcon(LPCTSTR pszResourceID)
 	if (pImlOld)
 		pImlOld->DeleteImageList();
 
-	TBBUTTONINFO tbbi = {0};
+	TBBUTTONINFO tbbi = {};
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_IMAGE;
 	tbbi.iImage = 0;
@@ -136,7 +136,7 @@ void CDropDownButton::ResizeToMaxWidth()
 	GetWindowRect(&rcWnd);
 	if (rcWnd.Width() > 0)
 	{
-	    TBBUTTONINFO tbbi = {0};
+	    TBBUTTONINFO tbbi = {};
 	    tbbi.cbSize = sizeof tbbi;
 	    tbbi.dwMask = TBIF_SIZE;
 	    tbbi.cx = (WORD)rcWnd.Width();

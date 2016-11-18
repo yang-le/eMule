@@ -1534,8 +1534,8 @@ HICON CemuleApp::LoadIcon(LPCTSTR lpszResourceName, int cx, int cy, UINT uFlags)
 
 				if (hIcon == NULL)
 				{
-					HICON aIconsLarge[1] = {0};
-					HICON aIconsSmall[1] = {0};
+					HICON aIconsLarge[1] = {};
+					HICON aIconsSmall[1] = {};
 					int iExtractedIcons = ExtractIconEx(strFullResPath, iIconIndex, aIconsLarge, aIconsSmall, 1);
 					if (iExtractedIcons > 0) // 'iExtractedIcons' is 2(!) if we get a large and a small icon
 					{
@@ -2128,7 +2128,7 @@ void CemuleApp::CreateBackwardDiagonalBrush()
 	CBitmap bm;
 	if (bm.CreateBitmap(8, 8, 1, 1, awBackwardDiagonalBrushPattern))
 	{
-		LOGBRUSH logBrush = {0};
+		LOGBRUSH logBrush = {};
 		logBrush.lbStyle = BS_PATTERN;
 		logBrush.lbHatch = (ULONG_PTR)bm.GetSafeHandle();
 		logBrush.lbColor = RGB(0, 0, 0);

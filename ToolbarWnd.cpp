@@ -76,7 +76,7 @@ void CToolbarWnd::FillToolbar()
 {
 	m_btnBar->DeleteAllButtons();
 
-	TBBUTTON atb1[DTOOLBAR_NUM_BUTTONS] = {0};
+	TBBUTTON atb1[DTOOLBAR_NUM_BUTTONS] = {};
 
 	atb1[0].iBitmap = 0;
 	atb1[0].idCommand = MP_PRIOLOW;
@@ -456,7 +456,7 @@ BOOL CToolbarWnd::OnHelpInfo(HELPINFO* /*pHelpInfo*/)
 
 void CToolbarWnd::OnAvailableCommandsChanged(CList<int>* liCommands)
 {
-	TBBUTTONINFO tbbi = {0};
+	TBBUTTONINFO tbbi = {};
 	tbbi.cbSize = sizeof tbbi;
 
 	for (int i = 0; i < m_btnBar->GetButtonCount(); i++)

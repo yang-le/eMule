@@ -106,7 +106,7 @@ DWORD CALLBACK CRichEditStream::StreamOutCallback(DWORD_PTR dwCookie, LPBYTE pbB
 
 void CRichEditStream::GetRTFText(CStringA& rstrText)
 {
-	EDITSTREAM es = {0};
+	EDITSTREAM es = {};
 	es.pfnCallback = StreamOutCallback;
 	es.dwCookie = (DWORD_PTR)&rstrText;
 	StreamOut(SF_RTF, es);

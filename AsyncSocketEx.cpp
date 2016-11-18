@@ -409,7 +409,7 @@ public:
 					return 0;
 				}
 
-				SOCKADDR_IN sockAddr = {0};
+				SOCKADDR_IN sockAddr = {};
 				sockAddr.sin_family = AF_INET;
 				sockAddr.sin_addr.s_addr = ((LPIN_ADDR)((LPHOSTENT)pSocket->m_pAsyncGetHostByNameBuffer)->h_addr)->s_addr;
 				sockAddr.sin_port = htons((u_short)pSocket->m_nAsyncGetHostByNamePort);
@@ -579,7 +579,7 @@ BOOL CAsyncSocketEx::OnHostNameResolved(const SOCKADDR_IN * /*pSockAddr*/)
 
 BOOL CAsyncSocketEx::Bind(UINT nSocketPort, LPCSTR lpszSocketAddress)
 {
-	SOCKADDR_IN sockAddr = {0};
+	SOCKADDR_IN sockAddr = {};
 	if (lpszSocketAddress == NULL)
 		sockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	else
@@ -787,7 +787,7 @@ BOOL CAsyncSocketEx::Connect(LPCSTR lpszHostAddress, UINT nHostPort)
 	if (m_pFirstLayer)
 		return m_pFirstLayer->Connect(lpszHostAddress, nHostPort);
 #endif //NOLAYERS
-	SOCKADDR_IN sockAddr = {0};
+	SOCKADDR_IN sockAddr = {};
 	sockAddr.sin_addr.s_addr = inet_addr(lpszHostAddress);
 	if (sockAddr.sin_addr.s_addr == INADDR_NONE) {
 		m_pAsyncGetHostByNameBuffer = new char[MAXGETHOSTSTRUCT];
@@ -820,7 +820,7 @@ BOOL CAsyncSocketEx::GetPeerName(CString& rPeerAddress, UINT& rPeerPort)
 		return m_pFirstLayer->GetPeerName(rPeerAddress, rPeerPort);
 #endif //NOLAYERS
 
-	SOCKADDR_IN sockAddr = {0};
+	SOCKADDR_IN sockAddr = {};
 	int nSockAddrLen = sizeof(sockAddr);
 	BOOL bResult = GetPeerName((SOCKADDR*)&sockAddr, &nSockAddrLen);
 	if (bResult)
@@ -847,7 +847,7 @@ BOOL CAsyncSocketEx::GetPeerName(SOCKADDR* lpSockAddr, int* lpSockAddrLen)
 #ifdef _AFX
 BOOL CAsyncSocketEx::GetSockName(CString& rSocketAddress, UINT& rSocketPort)
 {
-	SOCKADDR_IN sockAddr = {0};
+	SOCKADDR_IN sockAddr = {};
 	int nSockAddrLen = sizeof(sockAddr);
 	BOOL bResult = GetSockName((SOCKADDR*)&sockAddr, &nSockAddrLen);
 	if (bResult)

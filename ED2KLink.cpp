@@ -288,7 +288,7 @@ CED2KFileLink::CED2KFileLink(const TCHAR* pszName, const TCHAR* pszSize, const T
 				TCHAR szUserName[INTERNET_MAX_USER_NAME_LENGTH];
 				TCHAR szPassword[INTERNET_MAX_PASSWORD_LENGTH];
 				TCHAR szExtraInfo[INTERNET_MAX_URL_LENGTH];
-				URL_COMPONENTS Url = {0};
+				URL_COMPONENTS Url = {};
 				Url.dwStructSize = sizeof Url;
 				Url.lpszScheme = szScheme;
 				Url.dwSchemeLength = ARRSIZE(szScheme);

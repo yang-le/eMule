@@ -38,8 +38,8 @@ public:
 	CLayeredWindowHelperST();
 	virtual ~CLayeredWindowHelperST();
 
-	LONG AddLayeredStyle(HWND hWnd);
-	LONG RemoveLayeredStyle(HWND hWnd);
+	static LONG AddLayeredStyle(HWND hWnd);
+	static LONG RemoveLayeredStyle(HWND hWnd);
 	BOOL SetLayeredWindowAttributes(HWND hWnd, COLORREF crKey, BYTE bAlpha, DWORD dwFlags);
 	BOOL SetTransparentPercentage(HWND hWnd, UINT byPercentage);
 

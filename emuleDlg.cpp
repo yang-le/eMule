@@ -419,7 +419,7 @@ BOOL CemuleDlg::OnInitDialog()
 		    {
 			    CSize sizeBar;
 			    VERIFY( toolbar->GetMaxSize(&sizeBar) );
-			    REBARBANDINFO rbbi = {0};
+			    REBARBANDINFO rbbi = {};
 			    rbbi.cbSize = sizeof rbbi;
 				rbbi.fMask = RBBIM_STYLE | RBBIM_SIZE | RBBIM_CHILD | RBBIM_CHILDSIZE | RBBIM_IDEALSIZE | RBBIM_ID;
 			    rbbi.fStyle = RBBS_NOGRIPPER | RBBS_BREAK | RBBS_USECHEVRON;
@@ -559,7 +559,7 @@ BOOL CemuleDlg::OnInitDialog()
 	///////////////////////////////////////////////////////////////////////////
 	// Restore saved window placement
 	//
-	WINDOWPLACEMENT wp = {0};
+	WINDOWPLACEMENT wp = {};
 	wp.length = sizeof wp;
 	wp = thePrefs.GetEmuleWindowPlacement();
 	if (m_bStartMinimized)
@@ -3220,7 +3220,7 @@ int CemuleDlg::GetNextWindowToolbarButton(int iButtonID, int iDirection) const
 				else if (iButtonIdx >= iButtonCount)
 					iButtonIdx = 0;
 
-				TBBUTTON tbbt = {0};
+				TBBUTTON tbbt = {};
 				if (toolbar->GetButton(iButtonIdx, &tbbt))
 				{
 					if (IsWindowToolbarButton(tbbt.idCommand))
@@ -3309,7 +3309,7 @@ void CemuleDlg::HtmlHelp(DWORD_PTR dwData, UINT nCmd)
 				HRESULT  hr;
 				BSTR     description;
 			} HH_LAST_ERROR;
-			HH_LAST_ERROR hhLastError = {0};
+			HH_LAST_ERROR hhLastError = {};
 			hhLastError.cbStruct = sizeof hhLastError;
 			if (!AfxHtmlHelp(pWnd->m_hWnd, NULL, HH_GET_LAST_ERROR, reinterpret_cast<DWORD_PTR>(&hhLastError)))
 			{
@@ -3420,7 +3420,7 @@ BOOL CemuleDlg::OnChevronPushed(UINT id, NMHDR* pNMHDR, LRESULT* plResult)
 	{
 		TCHAR szString[256];
 		szString[0] = _T('\0');
-		TBBUTTONINFO tbbi = {0};
+		TBBUTTONINFO tbbi = {};
 		tbbi.cbSize = sizeof tbbi;
 		tbbi.dwMask = TBIF_BYINDEX | TBIF_COMMAND | TBIF_STYLE | TBIF_STATE | TBIF_TEXT;
 		tbbi.cchText = _countof(szString);

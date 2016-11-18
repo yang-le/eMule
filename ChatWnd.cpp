@@ -216,7 +216,7 @@ BOOL CChatWnd::OnInitDialog()
 	// Vista: Remove the TBSTYLE_TRANSPARENT to avoid flickering (can be done only after the toolbar was initially created with TBSTYLE_TRANSPARENT !?)
 	m_wndFormat.ModifyStyle((theApp.m_ullComCtrlVer >= MAKEDLLVERULL(6, 16, 0, 0)) ? TBSTYLE_TRANSPARENT : 0, TBSTYLE_TOOLTIPS);
 	m_wndFormat.SetExtendedStyle(m_wndFormat.GetExtendedStyle() | TBSTYLE_EX_MIXEDBUTTONS);
-	TBBUTTON atb[1] = {0};
+	TBBUTTON atb[1] = {};
 	atb[0].iBitmap = 0;
 	atb[0].idCommand = IDC_SMILEY;
 	atb[0].fsState = TBSTATE_ENABLED;
@@ -296,9 +296,7 @@ void CChatWnd::DoResize(int iDelta)
 	RemoveAnchor(chatselector);
 	AddAnchor(chatselector, TOP_LEFT, BOTTOM_RIGHT);
 	RemoveAnchor(IDC_MESSAGES_LBL);
-	AddAnchor(IDC_MESSAGES_LBL, TOP_LEFT);
 	RemoveAnchor(IDC_MESSAGEICON);
-	AddAnchor(IDC_MESSAGEICON, TOP_LEFT);
 	RemoveAnchor(IDC_FRIENDS_NAME_EDIT);
 	AddAnchor(IDC_FRIENDS_NAME_EDIT, BOTTOM_LEFT);
 	RemoveAnchor(IDC_FRIENDS_USERHASH_EDIT);
@@ -321,6 +319,8 @@ void CChatWnd::DoResize(int iDelta)
 	AddAnchor(m_wndSend, BOTTOM_RIGHT);
 	RemoveAnchor(m_wndClose);
 	AddAnchor(m_wndClose, BOTTOM_RIGHT);
+
+	AddAllOtherAnchors();
 
 	CRect rcWnd;
 	GetWindowRect(rcWnd);
@@ -464,7 +464,7 @@ void CChatWnd::Localize()
 
 LRESULT CChatWnd::OnCloseTab(WPARAM wParam, LPARAM /*lParam*/)
 {
-	TCITEM item = {0};
+	TCITEM item = {};
 	item.mask = TCIF_PARAM;
 	if (chatselector.GetItem((int)wParam, &item))
 		chatselector.EndSession(((CChatItem*)item.lParam)->client);

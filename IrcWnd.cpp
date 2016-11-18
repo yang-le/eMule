@@ -179,7 +179,7 @@ BOOL CIrcWnd::OnInitDialog()
 	m_wndFormat.ModifyStyle((theApp.m_ullComCtrlVer >= MAKEDLLVERULL(6, 16, 0, 0)) ? TBSTYLE_TRANSPARENT : 0, TBSTYLE_TOOLTIPS);
 	m_wndFormat.SetExtendedStyle(m_wndFormat.GetExtendedStyle() | TBSTYLE_EX_MIXEDBUTTONS);
 
-	TBBUTTON atb[5] = {0};
+	TBBUTTON atb[5] = {};
 	atb[0].iBitmap = 0;
 	atb[0].idCommand = IDC_SMILEY;
 	atb[0].fsState = TBSTATE_ENABLED;
@@ -870,7 +870,7 @@ void CIrcWnd::AddColorLine(const CString& line, CHTRichEditCtrl &wnd, COLORREF c
 				wnd.AppendColoredText(text, cr, bgcr, dwMask);
 				text.Empty();
 			}
-			index++;
+			++index;
 			if (line[index] >= _T('0') && line[index] <= _T('9')) {
 				int iColour = (int)(line[index] - _T('0'));
 				if (iColour == 1 && line[index + 1] >= _T('0') && line[index + 1] <= _T('5')) //is there a second digit
@@ -1030,35 +1030,29 @@ CString CIrcWnd::StripMessageOfFontCodes(CString sTemp)
 CString CIrcWnd::StripMessageOfColorCodes(CString sTemp)
 {
 	if (!sTemp.IsEmpty()) {
-		CString sTemp1, sTemp2;
 		int iTest = sTemp.Find(_T('\003'));
 		if (iTest != -1) {
 			int iTestLength = sTemp.GetLength() - iTest;
 			if (iTestLength < 2)
 				return sTemp;
-			sTemp1 = sTemp.Left(iTest);
-			sTemp2 = sTemp.Mid(iTest + 2);
+			CString sTemp1 = sTemp.Left(iTest);
+			CString sTemp2 = sTemp.Mid(iTest + 2);
 			if (iTestLength < 4)
 				return sTemp1 + sTemp2;
 			if (sTemp2[0] == _T(',') && sTemp2.GetLength() > 2) {
 				sTemp2 = sTemp2.Mid(2);
-				for (TCHAR iIndex = _T('0'); iIndex <= _T('9'); iIndex++)
-					if (sTemp2[0] == iIndex)
+				while (sTemp2[0] >= _T('0') && sTemp2[0] <= _T('9'))
 						sTemp2 = sTemp2.Mid(1);
 			} else
-				for (TCHAR iIndex = _T('0'); iIndex <= _T('9'); iIndex++)
-					if (sTemp2[0] == iIndex) {
-						sTemp2 = sTemp2.Mid(1);
-						if (sTemp2[0] == _T(',') && sTemp2.GetLength() > 2) {
-							sTemp2 = sTemp2.Mid(2);
-							for (TCHAR jIndex = _T('0'); jIndex <= _T('9'); ++jIndex)
-								if (sTemp2[0] == jIndex)
-									sTemp2 = sTemp2.Mid(1);
-
-						}
+				while (sTemp2[0] >= _T('0') && sTemp2[0]<= _T('9')) {
+					sTemp2 = sTemp2.Mid(1);
+					if (sTemp2[0] == _T(',') && sTemp2.GetLength() > 2) {
+						sTemp2 = sTemp2.Mid(2);
+						while (sTemp2[0] >= _T('0') && sTemp2[0] <= _T('9'))
+							sTemp2 = sTemp2.Mid(1);
 					}
-			sTemp = sTemp1 + sTemp2;
-			sTemp = StripMessageOfColorCodes(sTemp);
+				}
+			sTemp = StripMessageOfColorCodes(sTemp1 + sTemp2);
 		}
 	}
 	return sTemp;
@@ -1191,23 +1185,13 @@ LRESULT CIrcWnd::OnCloseTab(WPARAM wparam, LPARAM)
 
 LRESULT CIrcWnd::OnQueryTab(WPARAM wParam, LPARAM)
 {
-	int iItem = (int)wParam;
-
 	TCITEM item;
 	item.mask = TCIF_PARAM;
-	m_wndChanSel.GetItem(iItem, &item);
-	Channel* pPartChannel = (Channel*)item.lParam;
-	if (pPartChannel)
-	{
-		if (pPartChannel->m_eType == Channel::ctNormal && m_bConnected)
-		{
-			return 0;
-		}
-		else if (pPartChannel->m_eType == Channel::ctNormal || pPartChannel->m_eType == Channel::ctPrivate)
-		{
-			return 0;
-		}
-	}
+	m_wndChanSel.GetItem((int)wParam, &item);
+	const Channel* pPartChannel = reinterpret_cast<Channel *>(item.lParam);
+	if (pPartChannel && pPartChannel->m_eType == Channel::ctNormal
+	  && (m_bConnected || pPartChannel->m_eType == Channel::ctPrivate))
+		return 0;
 	return 1;
 }
 
@@ -1365,7 +1349,7 @@ LRESULT CIrcWnd::OnSelEndCancel(WPARAM /*wParam*/, LPARAM lParam)
 		pParent->SendMessage(UM_CPN_CLOSEUP, lParam, (WPARAM) GetDlgCtrlID());
 		pParent->SendMessage(UM_CPN_SELENDCANCEL, lParam, (WPARAM) GetDlgCtrlID());
 	}
-	return TRUE;
+	return 1;
 }
 
 void CIrcWnd::OnBnClickedUnderline()

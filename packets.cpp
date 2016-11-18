@@ -56,8 +56,8 @@ Packet::Packet(uint8 protocol)
 	m_bLastSplitted = false;
 	m_bFromPF = false;
 	size = 0;
-	pBuffer = 0;
-	completebuffer = 0;
+	pBuffer = NULL;
+	completebuffer = NULL;
 	opcode = 0x00;
 	prot = protocol;
 }
@@ -68,8 +68,8 @@ Packet::Packet(char* header)
 	m_bSplitted = false;
 	m_bLastSplitted = false;
 	m_bFromPF = false;
-	pBuffer = 0;
-	completebuffer = 0;
+	pBuffer = NULL;
+	completebuffer = NULL;
 	size = reinterpret_cast<Header_Struct *>(header)->packetlength-1;
 	opcode = reinterpret_cast<Header_Struct *>(header)->command;
 	prot = reinterpret_cast<Header_Struct *>(header)->eDonkeyID;
@@ -81,7 +81,7 @@ Packet::Packet(char* pPacketPart, uint32 nSize, bool bLast, bool bFromPartFile) 
 	m_bFromPF = bFromPartFile;
 	m_bSplitted = true;
 	m_bLastSplitted = bLast;
-	pBuffer = 0;
+	pBuffer = NULL;
 	completebuffer = pPacketPart;
 	size = nSize-6;
 	opcode = 0x00;
@@ -100,8 +100,8 @@ Packet::Packet(uint8 in_opcode, uint32 in_size, uint8 protocol, bool bFromPartFi
 		memset(completebuffer,0,in_size+10);
 	}
 	else{
-		pBuffer = 0;
-		completebuffer = 0;
+		pBuffer = NULL;
+		completebuffer = NULL;
 	}
 	opcode = in_opcode;
 	size = in_size;
@@ -168,34 +168,29 @@ char* Packet::DetachPacket()
 		if (!m_bSplitted)
 			memcpy(completebuffer, GetHeader(), 6);
 		char* result = completebuffer;
-		completebuffer = 0;
-		pBuffer = 0;
+		completebuffer = NULL;
+		pBuffer = NULL;
 		return result;
 	}
 	delete[] tempbuffer;
-	tempbuffer = NULL; // 'new' may throw an exception
-	tempbuffer = new char[size+10];
-	memcpy(tempbuffer, GetHeader(), 6);
-	memcpy(tempbuffer+6, pBuffer, size);
-	char* result = tempbuffer;
-	tempbuffer = 0;
+	tempbuffer = NULL;
+	char* result = new char[size+10]; // 'new' may throw an exception
+	memcpy(result, GetHeader(), 6);
+	memcpy(result+6, pBuffer, size);
 	return result;
 }
 
 char* Packet::GetHeader()
 {
 	ASSERT(!m_bSplitted);
-	reinterpret_cast<Header_Struct *>(head)->command = opcode;
-	reinterpret_cast<Header_Struct *>(head)->eDonkeyID = prot;
-	reinterpret_cast<Header_Struct *>(head)->packetlength = size+1;
+	*reinterpret_cast<Header_Struct *>(head) = Header_Struct{prot, size+1, opcode};
 	return head;
 }
 
 char* Packet::GetUDPHeader()
 {
 	ASSERT(!m_bSplitted);
-	reinterpret_cast<UDP_Header_Struct *>(head)->command = opcode;
-	reinterpret_cast<UDP_Header_Struct *>(head)->eDonkeyID = prot;
+	*reinterpret_cast<UDP_Header_Struct *>(head) = UDP_Header_Struct{prot, opcode};
 	return head;
 }
 
@@ -810,7 +805,7 @@ CString CTag::GetFullInfo(CString (*pfnDbgGetFileMetaTagName)(UINT uMetaTagID)) 
 	CString strTag;
 	if (m_pszName)
 	{
-		strTag.Format(_T("\"%s\""), m_pszName);
+		strTag = _T('\"') + m_pszName + _T('\"');
 	}
 	else
 	{

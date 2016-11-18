@@ -759,7 +759,7 @@ void CUPnPImplWinServ::DeleteExistingPortMappings(ServicePointer pService)
 	//int nAttempts = 10;
 
 	// ICS returns computer name instead of IP, thus we need to compare not IPs
-	TCHAR szComputerName[ MAX_COMPUTERNAME_LENGTH + 1] = {0};
+	TCHAR szComputerName[ MAX_COMPUTERNAME_LENGTH + 1] = {};
 	DWORD nMaxLen = MAX_COMPUTERNAME_LENGTH + 1;
 	GetComputerName( szComputerName, &nMaxLen );
 

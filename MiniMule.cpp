@@ -469,7 +469,7 @@ void CMiniMule::_OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* /*Fl
 
 	// No external links allowed!
 	TCHAR szScheme[INTERNET_MAX_SCHEME_LENGTH];
-	URL_COMPONENTS Url = {0};
+	URL_COMPONENTS Url = {};
 	Url.dwStructSize = sizeof Url;
 	Url.lpszScheme = szScheme;
 	Url.dwSchemeLength = ARRSIZE(szScheme);
@@ -603,7 +603,7 @@ UINT GetTaskbarPos(HWND hwndTaskbar)
 		// means that the sending thread will process incoming nonqueued messages while waiting for its message to be processed.
 		// In other words, while processing 'SHAppBarMessage' our thread will receive incoming messages.
 		//
-		APPBARDATA abd = {0};
+		APPBARDATA abd = {};
 		abd.cbSize = sizeof abd;
 		abd.hWnd = hwndTaskbar;
 		SHAppBarMessage(ABM_GETTASKBARPOS, &abd);

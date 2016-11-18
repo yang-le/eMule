@@ -278,7 +278,7 @@ BOOL CTitleMenu::InsertMenu(UINT nPosition, UINT nFlags, UINT_PTR nIDNewItem, LP
 static HBITMAP Create32BitHBITMAP(HDC hdc, int cx, int cy, void **ppvBits = NULL)
 {
 	HBITMAP hBmp = NULL;
-	BITMAPINFO bmi = {0};
+	BITMAPINFO bmi = {};
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biCompression = BI_RGB;
@@ -375,7 +375,7 @@ void CTitleMenu::SetMenuBitmap(UINT nFlags, UINT_PTR nIDNewItem, LPCTSTR /*lpszN
 
 			if (hBmp)
 			{
-				MENUITEMINFOEX info = {0};
+				MENUITEMINFOEX info = {};
 				info.fMask = MIIM_BITMAP;
 				info.hbmpItem = hBmp;
 				info.cbSize = sizeof info;
@@ -426,7 +426,7 @@ void CTitleMenu::SetMenuBitmap(UINT nFlags, UINT_PTR nIDNewItem, LPCTSTR /*lpszN
 								m_ImageList.Draw(&dcMem, nPos, CPoint(0,0), ILD_TRANSPARENT);
 								dcMem.SelectObject(pBmpOld);
 
-								MENUITEMINFO mii = {0};
+								MENUITEMINFO mii = {};
 								mii.cbSize = sizeof mii;
 								mii.fMask = MIIM_CHECKMARKS;
 								mii.hbmpChecked = (HBITMAP)bmpCheckmark.Detach(); // resource leak

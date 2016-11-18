@@ -118,12 +118,10 @@ BOOL CSharedFilesWnd::OnInitDialog()
 	rcSpl.right = rcSpl.left + SPLITTER_WIDTH;
 	m_wndSplitter.Create(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_SHAREDFILES);
 
-	AddAnchor(m_wndSplitter, TOP_LEFT);
 	AddAnchor(m_ctlSharedDirTree, TOP_LEFT, BOTTOM_LEFT);
-	AddAnchor(m_ctlFilter, TOP_LEFT);
-	AddAnchor(IDC_FILES_ICO, TOP_LEFT);
 	AddAnchor(IDC_RELOADSHAREDFILES, TOP_RIGHT);
-	AddAnchor(IDC_TRAFFIC_TEXT, TOP_LEFT);
+
+	AddAllOtherAnchors();
 
 	int iPosStatInit = rcSpl.left;
 	int iPosStatNew = thePrefs.GetSplitterbarPositionShared();

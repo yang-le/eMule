@@ -352,7 +352,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 					if (ip == 0)
 					{
 						// No IP returned, use the IP of the proxy server
-						SOCKADDR SockAddr = {0};
+						SOCKADDR SockAddr = {};
 						int SockAddrLen = sizeof(SockAddr);
 						if (GetPeerName(&SockAddr, &SockAddrLen)) {
 							ip = ((LPSOCKADDR_IN)&SockAddr)->sin_addr.S_un.S_addr;
@@ -700,7 +700,7 @@ BOOL CAsyncProxySocketLayer::Connect(LPCSTR lpszHostAddress, UINT nHostPort)
 		return ConnectNext(lpszHostAddress, nHostPort);
 
 	//Translate the host address
-	SOCKADDR_IN sockAddr = {0};
+	SOCKADDR_IN sockAddr = {};
 	sockAddr.sin_addr.s_addr = inet_addr(lpszHostAddress);
 	if (sockAddr.sin_addr.s_addr == INADDR_NONE)
 	{

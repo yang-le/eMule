@@ -480,7 +480,7 @@ bool CArchiveRecovery::processZipEntry(CFile *zipInput, CFile *zipOutput, uint32
 		if (readUInt32(zipInput) != ZIP_LOCAL_HEADER_MAGIC)
 			return false;
 
-		ZIP_Entry entry = {0};
+		ZIP_Entry entry = {};
 		entry.versionToExtract		= readUInt16(zipInput);
 		entry.generalPurposeFlag	= readUInt16(zipInput);
 		entry.compressionMethod		= readUInt16(zipInput);
@@ -690,8 +690,8 @@ bool CArchiveRecovery::recoverRar(CFile *rarInput, CFile *rarOutput, archiveScan
 		//
 		bool bValidFileHeader = false;
 		bool bValidMainHeader = false;
-		BYTE fileHeader[7] = {0};
-		RARMAINHDR mainHeader = {0};
+		BYTE fileHeader[7] = {};
+		RARMAINHDR mainHeader = {};
 		if (rarInput->Read(fileHeader, sizeof fileHeader) == sizeof fileHeader)
 		{
 			bool bOldFormat = false;

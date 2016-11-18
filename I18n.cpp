@@ -378,7 +378,7 @@ CString GetCodePageNameForLocale(LCID lcid)
 		UINT uCodePage = _tcstoul(strCodePage, NULL, 10);
 		if (uCodePage != ULONG_MAX)
 		{
-			CPINFOEXW CPInfoEx = {0};
+			CPINFOEXW CPInfoEx = {};
 			BOOL (WINAPI *pfnGetCPInfoEx)(UINT, DWORD, LPCPINFOEXW);
 			(FARPROC&)pfnGetCPInfoEx = GetProcAddress(GetModuleHandle(_T("kernel32")), "GetCPInfoExW");
 			if (pfnGetCPInfoEx&& (*pfnGetCPInfoEx)(uCodePage, 0, &CPInfoEx))

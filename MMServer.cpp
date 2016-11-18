@@ -130,7 +130,7 @@ void CMMServer::ProcessHelloPacket(CMMData* data, CMMSocket* sender){
 			return;
 		}
 		CString plainPW = data->ReadString();
-		CString testValue =MD5Sum(plainPW).GetHash();
+		CString testValue = MD5Sum(plainPW).GetHash();
 		if (testValue != thePrefs.GetMMPass() || plainPW.IsEmpty()) {
 			m_dwBlocked = 0;
 			packet->WriteByte(MMT_WRONGPASSWORD);

@@ -1021,33 +1021,32 @@ void CKnownFile::CreateHash(CFile* pFile, uint64 Length, uchar* pMd4HashOut, CAI
 	if (pShaHashOut != NULL)
 		pHashAlg = CAICHRecoveryHashSet::GetNewHashAlgo();
 
-	while (Required >= 64){
-        uint32 len;
-        if ((Required / 64) > sizeof(X)/(64 * sizeof(X[0])))
-			len = sizeof(X)/(64 * sizeof(X[0]));
+	while (Required >= 64) {
+		uint32 len = sizeof X/sizeof X[0];
+		if (Required > len)
+			len /= 64;
 		else
-			len = (uint32)Required / 64;
+			len = (uint32)(Required / 64);
 		pFile->Read(X, len*64);
 
 		// SHA hash needs 180KB blocks
-		if (pShaHashOut != NULL && pHashAlg != NULL){
+		if (pShaHashOut != NULL && pHashAlg != NULL) {
 			if (nIACHPos + len*64ull >= EMBLOCKSIZE) {
 				uint32 nToComplete = (uint32)(EMBLOCKSIZE - nIACHPos);
 				pHashAlg->Add(X, nToComplete);
-				ASSERT( nIACHPos + nToComplete == EMBLOCKSIZE );
+				ASSERT(nIACHPos + nToComplete == EMBLOCKSIZE);
 				pShaHashOut->SetBlockHash(EMBLOCKSIZE, posCurrentEMBlock, pHashAlg);
 				posCurrentEMBlock += EMBLOCKSIZE;
 				pHashAlg->Reset();
-				pHashAlg->Add(X+nToComplete,(len*64) - nToComplete);
+				pHashAlg->Add(X+nToComplete, (len*64) - nToComplete);
 				nIACHPos = (len*64ull) - nToComplete;
-			}
-			else{
+			} else {
 				pHashAlg->Add(X, len*64);
 				nIACHPos += len*64ull;
 			}
 		}
 
-		if (pMd4HashOut != NULL){
+		if (pMd4HashOut != NULL) {
 			md4.Add(X, len*64);
 		}
 		Required -= len*64ull;

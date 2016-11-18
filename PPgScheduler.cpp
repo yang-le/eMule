@@ -382,7 +382,7 @@ BOOL CPPgScheduler::OnCommand(WPARAM wParam, LPARAM lParam)
 	else if (wParam>=MP_SCHACTIONS+20 && wParam<=MP_SCHACTIONS+80)
 	{
 		CString newval;
-		newval.Format(_T("%u"),wParam-MP_SCHACTIONS-22);
+		newval.Format(_T("%u"), (unsigned)(wParam-MP_SCHACTIONS-22));
 		m_actions.SetItemText(item,1,newval);
 	}
 	else if (wParam == ID_HELP)

@@ -611,7 +611,7 @@ bool CUpDownClient::SendHttpBlockRequests()
 	}
 
 	ASSERT( !m_pPCDownSocket->IsConnected() );
-	SOCKADDR_IN sockAddr = {0};
+	SOCKADDR_IN sockAddr = {};
 	sockAddr.sin_family = AF_INET;
 	sockAddr.sin_port = htons( theApp.m_pPeerCache->GetCachePort() );
 	sockAddr.sin_addr.S_un.S_addr = theApp.m_pPeerCache->GetCacheIP();
@@ -626,19 +626,19 @@ bool CUpDownClient::SendHttpBlockRequests()
 	m_uReqEnd = pending->block->EndOffset;
 	m_nUrlStartPos = (uint64)-1;
 
-	CStringA strPCRequest;
-	strPCRequest.AppendFormat("GET http://%s/.ed2khash=%s HTTP/1.0\r\n", (LPCSTR)ipstrA(m_uPeerCacheRemoteIP), (LPCSTR)md4strA(reqfile->GetFileHash()));
-	strPCRequest.AppendFormat("X-ED2K-PushId: %u\r\n", m_uPeerCacheDownloadPushId);
-	strPCRequest.AppendFormat("Range: bytes=%I64u-%I64u\r\n", m_uReqStart, m_uReqEnd);
-	strPCRequest.AppendFormat("User-Agent: eMule/%ls\r\n", (LPCTSTR)theApp.m_strCurVersionLong);
-	strPCRequest.AppendFormat("X-Network: eDonkey,Kademlia\r\n");
-	strPCRequest.AppendFormat("\r\n");
+	CString strPCRequest;
+	strPCRequest.AppendFormat(_T("GET http://%s/.ed2khash=%s HTTP/1.0\r\n"), (LPCTSTR)ipstr(m_uPeerCacheRemoteIP), (LPCTSTR)md4str(reqfile->GetFileHash()));
+	strPCRequest.AppendFormat(_T("X-ED2K-PushId: %u\r\n"), m_uPeerCacheDownloadPushId);
+	strPCRequest.AppendFormat(_T("Range: bytes=%I64u-%I64u\r\n"), m_uReqStart, m_uReqEnd);
+	strPCRequest.AppendFormat(_T("User-Agent: eMule/%s\r\n"), (LPCTSTR)theApp.m_strCurVersionLong);
+	strPCRequest.AppendFormat(_T("X-Network: eDonkey,Kademlia\r\n"));
+	strPCRequest.AppendFormat(_T("\r\n"));
 
 	if (thePrefs.GetDebugClientTCPLevel() > 0){
 		DebugSend("PeerCache-GET", this, reqfile->GetFileHash());
-		Debug(_T("  %hs\n"), (LPCSTR)strPCRequest);
+		Debug(_T("  %hs\n"), (LPCTSTR)strPCRequest);
 	}
-	CRawPacket* pHttpPacket = new CRawPacket(strPCRequest);
+	CRawPacket* pHttpPacket = new CRawPacket((CStringA)strPCRequest);
 	theStats.AddUpDataOverheadFileRequest(pHttpPacket->size);
 	m_pPCDownSocket->SendPacket(pHttpPacket);
 	m_pPCDownSocket->SetHttpState(HttpStateRecvExpected);
@@ -803,7 +803,7 @@ bool CUpDownClient::ProcessPeerCacheQuery(const uchar* packet, UINT size)
 	m_pPCUpSocket->SetTimeOut(GetPeerCacheSocketUploadTimeout());
 	m_pPCUpSocket->Create();
 
-	SOCKADDR_IN sockAddr = {0};
+	SOCKADDR_IN sockAddr = {};
 	sockAddr.sin_family = AF_INET;
 	sockAddr.sin_port = htons(uCachePort);
 	sockAddr.sin_addr.S_un.S_addr = uCacheIP;
