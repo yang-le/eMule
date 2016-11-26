@@ -728,7 +728,7 @@ void CALLBACK CemuleDlg::StartupTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT_PTR /*
 				if (!theApp.listensocket->StartListening()) {
 					CString strError;
 					strError.Format(GetResString(IDS_MAIN_SOCKETERROR), thePrefs.GetPort());
-					LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+					LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 					if (thePrefs.GetNotifierOnImportantError())
 						theApp.emuledlg->ShowNotifier(strError, TBN_IMPORTANTEVENT);
 					bError = true;
@@ -736,7 +736,7 @@ void CALLBACK CemuleDlg::StartupTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT_PTR /*
 				if (!theApp.clientudp->Create()) {
 					CString strError;
 					strError.Format(GetResString(IDS_MAIN_SOCKETERROR), thePrefs.GetUDPPort());
-					LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+					LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 					if (thePrefs.GetNotifierOnImportantError())
 						theApp.emuledlg->ShowNotifier(strError, TBN_IMPORTANTEVENT);
 				}

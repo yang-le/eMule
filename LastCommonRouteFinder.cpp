@@ -885,10 +885,8 @@ uint32 LastCommonRouteFinder::Median(UInt32Clist& list) {
         uint32* arr = new uint32[size];
 
         uint32 counter = 0;
-        for(POSITION pos = list.GetHeadPosition(); pos;) {
-            arr[counter] =  list.GetNext(pos);
-            counter++;
-        }
+        for(POSITION pos = list.GetHeadPosition(); pos != NULL;)
+            arr[counter++] =  list.GetNext(pos);
 
         std::sort(arr, arr+size);
 

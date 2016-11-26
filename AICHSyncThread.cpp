@@ -78,7 +78,7 @@ int CAICHSyncThread::Run()
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
 		return 0;
 	}
@@ -123,7 +123,7 @@ int CAICHSyncThread::Run()
 		else{
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
 			GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
-			LogError(LOG_STATUSBAR,GetResString(IDS_ERR_SERVERMET_UNKNOWN),buffer);
+			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_UNKNOWN), buffer);
 		}
 		error->Delete();
 		return 0;
@@ -268,7 +268,7 @@ int CAICHSyncThread::Run()
 	}
 	else
 	{
-		// remember (/index) all hashs which are stored in the file for faster checking lateron
+		// remember (/index) all hashs which are stored in the file for faster checking later on
 		for (int i = 0; i < aKnown2Hashs.GetCount(); i++)
 		{
 			CAICHRecoveryHashSet::AddStoredAICHHash(aKnown2Hashs[i], aKnown2HashsFilePos[i]);
@@ -276,18 +276,16 @@ int CAICHSyncThread::Run()
 	}
 
 #ifdef _DEBUG
-	for (POSITION pos = liUsedHashs.GetHeadPosition();pos != 0;)
-	{
+	for (POSITION pos = liUsedHashs.GetHeadPosition(); pos != NULL;) {
 		CKnownFile* pCurFile = theApp.sharedfiles->GetFileByAICH(liUsedHashs.GetNext(pos));
-		if (pCurFile == NULL)
-		{
-			ASSERT( false );
+		if (pCurFile == NULL) {
+			ASSERT(false);
 			continue;
 		}
 		CAICHRecoveryHashSet* pTempHashSet = new CAICHRecoveryHashSet(pCurFile);
 		pTempHashSet->SetFileSize(pCurFile->GetFileSize());
 		pTempHashSet->SetMasterHash(pCurFile->GetFileIdentifier().GetAICHHash(), AICH_HASHSETCOMPLETE);
-		ASSERT( pTempHashSet->LoadHashSet() );
+		ASSERT(pTempHashSet->LoadHashSet());
 		delete pTempHashSet;
 	}
 #endif
@@ -362,7 +360,7 @@ bool CAICHSyncThread::ConvertToKnown2ToKnown264(CSafeFile* pTargetFile){
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
 		// else -> known2.met also doesn't exists, so nothing to convert
 		return false;
@@ -377,7 +375,7 @@ bool CAICHSyncThread::ConvertToKnown2ToKnown264(CSafeFile* pTargetFile){
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
 		return false;
 	}
@@ -410,7 +408,7 @@ bool CAICHSyncThread::ConvertToKnown2ToKnown264(CSafeFile* pTargetFile){
 		else{
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
 			GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
-			LogError(LOG_STATUSBAR,GetResString(IDS_ERR_SERVERMET_UNKNOWN),buffer);
+			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_UNKNOWN), buffer);
 		}
 		error->Delete();
 		theApp.QueueLogLine(false, GetResString(IDS_CONVERTINGKNOWN2FAILED));

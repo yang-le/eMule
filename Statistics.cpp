@@ -266,11 +266,8 @@ void CStatistics::RecordRate()
 
 	// Accurate datarate Calculation
 	uint32 stick = GetTickCount();
-	TransferredData newitemUP = {(uint32)theStats.sessionSentBytes, stick};
-	TransferredData newitemDN = {(uint32)theStats.sessionReceivedBytes, stick};
-
-	downrateHistory.push_front(newitemDN);
-	uprateHistory.push_front(newitemUP);
+	downrateHistory.push_front(TransferredData{(uint32)theStats.sessionReceivedBytes, stick});
+	uprateHistory.push_front(TransferredData{(uint32)theStats.sessionSentBytes, stick});
 
 	// limit to maxmins
 	UINT uAverageMilliseconds = MIN2MS(thePrefs.GetStatsAverageMinutes());
@@ -347,8 +344,7 @@ float CStatistics::GetAvgUploadRate(int averageType)
 
 void CStatistics::CompDownDatarateOverhead()
 {
-	TransferredData newitem = {m_nDownDataRateMSOverhead, GetTickCount()};
-	m_AverageDDRO_list.AddTail(newitem);
+	m_AverageDDRO_list.AddTail(TransferredData{m_nDownDataRateMSOverhead, GetTickCount()});
 	m_sumavgDDRO += m_nDownDataRateMSOverhead;
 	m_nDownDataRateMSOverhead = 0;
 
@@ -359,7 +355,7 @@ void CStatistics::CompDownDatarateOverhead()
 	{
 		DWORD dwDuration = m_AverageDDRO_list.GetTail().timestamp - m_AverageDDRO_list.GetHead().timestamp;
 		if (dwDuration)
-			m_nDownDatarateOverhead = 1000 * (m_sumavgDDRO - m_AverageDDRO_list.GetHead().datalen) / dwDuration;
+			m_nDownDatarateOverhead = SEC2MS(1) * (m_sumavgDDRO - m_AverageDDRO_list.GetHead().datalen) / dwDuration;
 	}
 	else
 		m_nDownDatarateOverhead = 0;
@@ -367,8 +363,7 @@ void CStatistics::CompDownDatarateOverhead()
 
 void CStatistics::CompUpDatarateOverhead()
 {
-	TransferredData newitem = {m_nUpDataRateMSOverhead, GetTickCount()};
-	m_AverageUDRO_list.AddTail(newitem);
+	m_AverageUDRO_list.AddTail(TransferredData{m_nUpDataRateMSOverhead, GetTickCount()});
 	m_sumavgUDRO += m_nUpDataRateMSOverhead;
 	m_nUpDataRateMSOverhead = 0;
 
@@ -379,7 +374,7 @@ void CStatistics::CompUpDatarateOverhead()
 	{
 		DWORD dwDuration = m_AverageUDRO_list.GetTail().timestamp - m_AverageUDRO_list.GetHead().timestamp;
 		if (dwDuration)
-			m_nUpDatarateOverhead = 1000 * (m_sumavgUDRO - m_AverageUDRO_list.GetHead().datalen) / dwDuration;
+			m_nUpDatarateOverhead = SEC2MS(1) * (m_sumavgUDRO - m_AverageUDRO_list.GetHead().datalen) / dwDuration;
 	}
 	else
 		m_nUpDatarateOverhead = 0;

@@ -305,7 +305,7 @@ void CEMSocket::OnReceive(int nErrorCode){
     }
 
 	// Remark: an overflow can not occur here
-	uint32 readMax = sizeof(GlobalReadBuffer) - pendingHeaderSize;
+	uint32 readMax = (sizeof GlobalReadBuffer) - pendingHeaderSize;
 	if (downloadLimitEnable && readMax > downloadLimit) {
 		readMax = downloadLimit;
 	}
@@ -385,7 +385,7 @@ void CEMSocket::OnReceive(int nErrorCode){
 			}
 
 			// Security: Check for buffer overflow (2MB)
-			if(pendingPacket->size > sizeof(GlobalReadBuffer)) {
+			if(pendingPacket->size > sizeof GlobalReadBuffer) {
 				delete pendingPacket;
 				pendingPacket = NULL;
 				OnError(ERR_TOOBIG);
@@ -1278,12 +1278,12 @@ bool CEMSocket::UseBigSendBuffer()
 		m_bUsesBigSendBuffers = true;
 		int val = BIGSIZE;
 		int oldval = 0;
-		int vallen = sizeof(oldval);
+		int vallen = sizeof oldval;
 		GetSockOpt(SO_SNDBUF, &oldval, &vallen);
 		if (val > oldval) {
-			SetSockOpt(SO_SNDBUF, &val, sizeof(val));
+			SetSockOpt(SO_SNDBUF, &val, sizeof val);
 			val = 0;
-			vallen = sizeof(val);
+			vallen = sizeof val;
 			GetSockOpt(SO_SNDBUF, &val, &vallen);
 			m_bUsesBigSendBuffers = (val >= BIGSIZE);
 #if defined(_DEBUG) || defined(_BETA) || defined(_DEVBUILD)

@@ -87,7 +87,7 @@ bool CKnownFileList::LoadKnownFiles()
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
 		return false;
 	}
@@ -151,7 +151,7 @@ bool CKnownFileList::LoadCancelledFiles(){
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
 		return false;
 	}
@@ -196,7 +196,7 @@ bool CKnownFileList::LoadCancelledFiles(){
 				uchar pachSeedHash[20];
 				PokeUInt32(pachSeedHash, m_dwCancelledFilesSeed);
 				md4cpy(pachSeedHash + 4, ucHash);
-				MD5Sum md5(pachSeedHash, sizeof(pachSeedHash));
+				MD5Sum md5(pachSeedHash, sizeof pachSeedHash);
 				md4cpy(ucHash, md5.GetRawHash());
 			}
 			m_mapCancelledFiles.SetAt(CSKey(ucHash), 1);
@@ -233,7 +233,7 @@ void CKnownFileList::Save()
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 	}
 	else{
 		setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
@@ -272,7 +272,7 @@ void CKnownFileList::Save()
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 			error->Delete();
 		}
 	}
@@ -289,7 +289,7 @@ void CKnownFileList::Save()
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 	}
 	else{
 		setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
@@ -327,7 +327,7 @@ void CKnownFileList::Save()
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 			error->Delete();
 		}
 	}
@@ -428,9 +428,7 @@ CKnownFile* CKnownFileList::FindKnownFile(LPCTSTR filename, uint32 date, uint64 
 
 CKnownFile* CKnownFileList::FindKnownFileByPath(const CString& sFilePath) const
 {
-	POSITION pos = m_Files_map.GetStartPosition();
-	while (pos != NULL)
-	{
+	for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
 		CKnownFile* cur_file;
 		CCKey key;
 		m_Files_map.GetNextAssoc(pos, key, cur_file);
@@ -507,31 +505,24 @@ bool CKnownFileList::IsCancelledFileByID(const uchar* hash) const
 	return false;
 }
 
-void CKnownFileList::CopyKnownFileMap(CMap<CCKey,const CCKey&,CKnownFile*,CKnownFile*> &Files_Map)
+void CKnownFileList::CopyKnownFileMap(CMap<CCKey, const CCKey&, CKnownFile*, CKnownFile*> &Files_Map)
 {
-	if (!m_Files_map.IsEmpty())
-	{
-		POSITION pos = m_Files_map.GetStartPosition();
-		while (pos)
-		{
-			CCKey key;
-			CKnownFile* cur_file;
-			m_Files_map.GetNextAssoc(pos, key, cur_file);
-			Files_Map.SetAt(key, cur_file);
-		}
+	for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
+		CCKey key;
+		CKnownFile* cur_file;
+		m_Files_map.GetNextAssoc(pos, key, cur_file);
+		Files_Map.SetAt(key, cur_file);
 	}
 }
 
 bool CKnownFileList::ShouldPurgeAICHHashset(const CAICHHash& rAICHHash) const
 {
 	const CKnownFile* pFile = NULL;
-	if (m_mapKnownFilesByAICH.Lookup(rAICHHash, pFile))
-	{
+	if (m_mapKnownFilesByAICH.Lookup(rAICHHash, pFile)) {
 		if (!pFile->ShouldPartiallyPurgeFile())
 			return false;
 	}
-	else
-		ASSERT( false );
+	ASSERT(false);
 	return true;
 }
 

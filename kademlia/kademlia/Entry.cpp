@@ -119,16 +119,16 @@ CKadTagValueString CEntry::GetStrTagValue(const CKadTagNameString& strTagName) c
 		if (!pTag->m_name.Compare(strTagName) && pTag->IsStr())
 			return pTag->GetStr();
 	}
-	return L"";
+	return CKadTagValueString();
 }
 
-void CEntry::SetFileName(CKadTagValueString strName){
-	if (!m_listFileNames.IsEmpty()){
+void CEntry::SetFileName(CKadTagValueString strName)
+{
+	if (!m_listFileNames.IsEmpty()) {
 		ASSERT( false );
 		m_listFileNames.RemoveAll();
 	}
-	structFileNameEntry structFN = {strName, 1};
-	m_listFileNames.AddHead(structFN);
+	m_listFileNames.AddHead(structFileNameEntry{strName, 1});
 }
 
 CKadTagValueString CEntry::GetCommonFileName() const
@@ -146,7 +146,7 @@ CKadTagValueString CEntry::GetCommonFileName() const
 			sResult = &rCur.m_fileName;
 		}
 	}
-	CKadTagValueString strResult(sResult != NULL ? *sResult : CString());
+	CKadTagValueString strResult(sResult != NULL ? *sResult : CKadTagValueString());
 	ASSERT( !strResult.IsEmpty() || m_listFileNames.IsEmpty() );
 	return strResult;
 }

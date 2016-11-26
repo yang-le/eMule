@@ -228,14 +228,15 @@ void CSharedDirsTreeCtrl::InitalizeStandardItems(){
 	m_pRootUnsharedDirectries->m_htItem = InsertItem(TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN, GetResString(IDS_ALLDIRECTORIES), 4, 4, 0, 0, (LPARAM)m_pRootUnsharedDirectries, TVI_ROOT, TVI_LAST);
 }
 
-bool CSharedDirsTreeCtrl::FilterTreeIsSubDirectory(CString& strDir, CString& strRoot, const CStringList& liDirs) {
+bool CSharedDirsTreeCtrl::FilterTreeIsSubDirectory(CString& strDir, CString& strRoot, const CStringList& liDirs)
+{
 	strRoot.MakeLower();
 	strDir.MakeLower();
 	if (strDir.Right(1) != _T("\\"))
 		strDir += _T('\\');
 	if (strRoot.Right(1) != _T("\\"))
 		strRoot += _T('\\');
-	for (POSITION pos = liDirs.GetHeadPosition(); pos;) {
+	for (POSITION pos = liDirs.GetHeadPosition(); pos != NULL;) {
 		CString strCurrent = liDirs.GetNext(pos);
 		strCurrent.MakeLower();
 		if (strCurrent.Right(1) != _T("\\"))
@@ -275,22 +276,23 @@ CString GetFolderLabel(const CString &strFolderPath, bool bTopFolder, bool bAcce
 	return strLabel;
 }
 
-void CSharedDirsTreeCtrl::FilterTreeAddSubDirectories(CDirectoryItem* pDirectory, const CStringList& liDirs,
-													  int nLevel, bool &rbShowWarning, bool bParentAccessible){
+void CSharedDirsTreeCtrl::FilterTreeAddSubDirectories(CDirectoryItem* pDirectory, const CStringList& liDirs
+													 , int nLevel, bool &rbShowWarning, bool bParentAccessible)
+{
 	// just some sanity check against too deep shared dirs
 	// shouldnt be needed, but never trust the filesystem or a recursive function ;)
-	if (nLevel > 14){
-		ASSERT( false );
+	if (nLevel > 14) {
+		ASSERT(false);
 		return;
 	}
 	CString strDirectoryPath = pDirectory->m_strFullPath;
 	strDirectoryPath.MakeLower();
-	for (POSITION pos = liDirs.GetHeadPosition(); pos;) {
+	for (POSITION pos = liDirs.GetHeadPosition(); pos != NULL;) {
 		CString strCurrent = liDirs.GetNext(pos);
 		CString strCurrentLow = strCurrent;
 		strCurrentLow.MakeLower();
-		if ( (strDirectoryPath.IsEmpty() || strCurrentLow.Find(strDirectoryPath + _T("\\"), 0) == 0) && strCurrentLow != strDirectoryPath){
-			if (!FilterTreeIsSubDirectory(strCurrentLow, strDirectoryPath, liDirs)){
+		if ((strDirectoryPath.IsEmpty() || strCurrentLow.Find(strDirectoryPath + _T("\\"), 0) == 0) && strCurrentLow != strDirectoryPath) {
+			if (!FilterTreeIsSubDirectory(strCurrentLow, strDirectoryPath, liDirs)) {
 				bool bAccessible = !bParentAccessible ? false : (_taccess(strCurrent, 00) == 0);
 				CString strName = GetFolderLabel(strCurrent, nLevel == 0, bAccessible);
 				CDirectoryItem* pNewItem = new CDirectoryItem(strCurrent);
@@ -1037,7 +1039,7 @@ void CSharedDirsTreeCtrl::EditSharedDirectories(const CDirectoryItem* pDir, bool
 	// sync with the preferences list
 	thePrefs.shareddir_list.RemoveAll();
 	// copy list
-	for (POSITION pos = m_strliSharedDirs.GetHeadPosition(); pos;) {
+	for (POSITION pos = m_strliSharedDirs.GetHeadPosition(); pos != NULL;) {
 		CString strPath = m_strliSharedDirs.GetNext(pos);
 		if (strPath.Right(1) != _T("\\"))
 			strPath += _T('\\');
@@ -1113,10 +1115,11 @@ void CSharedDirsTreeCtrl::Reload(bool bForce){
 	}
 }
 
-void CSharedDirsTreeCtrl::FetchSharedDirsList(){
+void CSharedDirsTreeCtrl::FetchSharedDirsList()
+{
 	m_strliSharedDirs.RemoveAll();
 	// copy list
-	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos;) {
+	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos != NULL;) {
 		CString strPath = thePrefs.shareddir_list.GetNext(pos);
 		if (strPath.Right(1) == _T("\\"))
 			strPath.Truncate(strPath.GetLength() - 1);

@@ -92,7 +92,7 @@ class CAICHHash
 public:
 
 	~CAICHHash()									{}
-	CAICHHash()										{ ZeroMemory(m_abyBuffer, HASHSIZE); }
+	CAICHHash()	: m_abyBuffer()						{}
 	explicit CAICHHash(CFileDataIO* file)			{ Read(file); }
 	explicit CAICHHash(const uchar* data)			{ Read(data); }
 	CAICHHash(const CAICHHash& k1)					{ *this = k1; }

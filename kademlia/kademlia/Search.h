@@ -113,7 +113,7 @@ namespace Kademlia
 			uint32 m_uSearchID;
 			uint32 m_uSearchTermsDataSize;
 			LPBYTE m_pucSearchTermsData;
-			SSearchTerm* m_pSearchTerm; // cached from m_pucSearchTermsData, used for verifying results lateron
+			SSearchTerm* m_pSearchTerm; // cached from m_pucSearchTermsData, used for verifying results later on
 			CKadClientSearcher* pNodeSpecialSearchRequester; // used to callback on result for NODESPECIAL searches
 			CUInt128 m_uTarget;
 			WordList m_listWords;

@@ -1128,7 +1128,7 @@ void CemuleApp::OnlineSig() // Added By Bouc7
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
 		GetExceptionMessage(fexp, szError, _countof(szError));
 		strError.AppendFormat(_T(" - %s"), szError);
-		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		return;
     }
 
@@ -1194,7 +1194,7 @@ void CemuleApp::OnlineSig() // Added By Bouc7
 		GetExceptionMessage(*ex, szError, _countof(szError));
 		strError += _T(" - ");
 		strError += szError;
-		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		ex->Delete();
 	}
 } //End Added By Bouc7

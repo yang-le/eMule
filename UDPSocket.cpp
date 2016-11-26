@@ -593,7 +593,7 @@ void CUDPSocket::DnsLookupDone(WPARAM wp, LPARAM lp)
 	// task handle.
 	SServerDNSRequest* pDNSReq = NULL;
 	HANDLE hDNSTask = (HANDLE)wp;
-	for (POSITION pos = m_aDNSReqs.GetHeadPosition(); pos;) {
+	for (POSITION pos = m_aDNSReqs.GetHeadPosition(); pos != NULL;) {
 		POSITION posPrev = pos;
 		SServerDNSRequest* pCurDNSReq = m_aDNSReqs.GetNext(pos);
 		if (pCurDNSReq->m_hDNSTask == hDNSTask) {
@@ -815,7 +815,7 @@ void CUDPSocket::SendPacket(Packet* packet, CServer* pServer, uint16 nSpecialPor
 		// If there is already a DNS query ongoing or queued for this server, append the
 		// current packet to this DNS query. The packet(s) will be sent later after the DNS
 		// query has completed.
-		for (POSITION reqpos = m_aDNSReqs.GetHeadPosition(); reqpos;) {
+		for (POSITION reqpos = m_aDNSReqs.GetHeadPosition(); reqpos != NULL;) {
 			SServerDNSRequest* pDNSReq = m_aDNSReqs.GetNext(reqpos);
 			if (_stricmp(CStringA(pDNSReq->m_pServer->GetAddress()), pszHostAddressA) == 0) {
 				SRawServerPacket* pServerPacket = new SRawServerPacket(pRawPacket, uRawPacketSize, nPort);

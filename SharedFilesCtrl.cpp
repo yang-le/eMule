@@ -111,7 +111,7 @@ CSharedFileDetailsSheet::CSharedFileDetailsSheet(CTypedPtrList<CPtrList, CSharea
 	: CListViewWalkerPropertySheet(pListCtrl)
 {
 	m_uPshInvokePage = uPshInvokePage;
-	for (POSITION pos = aFiles.GetHeadPosition(); pos;)
+	for (POSITION pos = aFiles.GetHeadPosition(); pos != NULL;)
 		m_aItems.Add(aFiles.GetNext(pos));
 	m_psh.dwFlags &= ~PSH_HASHELP;
 

@@ -116,53 +116,49 @@ bool CMMServer::PreProcessPacket(char* pPacket, uint32 nSize, CMMSocket* sender)
 	return false;
 }
 
-void CMMServer::ProcessHelloPacket(CMMData* data, CMMSocket* sender){
+void CMMServer::ProcessHelloPacket(CMMData* data, CMMSocket* sender)
+{
 	CMMPacket* packet = new CMMPacket(MMP_HELLOANS);
-	if (data->ReadByte() != MM_VERSION){
+	if (data->ReadByte() != MM_VERSION) {
 		packet->WriteByte(MMT_WRONGVERSION);
 		sender->SendPacket(packet);
 		return;
 	}
-	else{
-		if(m_dwBlocked && m_dwBlocked > ::GetTickCount()){
-			packet->WriteByte(MMT_WRONGPASSWORD);
-			sender->SendPacket(packet);
-			return;
+	if (m_dwBlocked && m_dwBlocked > ::GetTickCount()) {
+		packet->WriteByte(MMT_WRONGPASSWORD);
+		sender->SendPacket(packet);
+		return;
+	}
+	CString plainPW = data->ReadString();
+	CString testValue = MD5Sum(plainPW).GetHash();
+	if (testValue != thePrefs.GetMMPass() || plainPW.IsEmpty()) {
+		m_dwBlocked = 0;
+		packet->WriteByte(MMT_WRONGPASSWORD);
+		sender->SendPacket(packet);
+		m_cPWFailed++;
+		if (m_cPWFailed == 3) {
+			AddLogLine(false, GetResString(IDS_MM_BLOCK));
+			m_cPWFailed = 0;
+			m_dwBlocked = ::GetTickCount() + MMS_BLOCKTIME;
 		}
-		CString plainPW = data->ReadString();
-		CString testValue = MD5Sum(plainPW).GetHash();
-		if (testValue != thePrefs.GetMMPass() || plainPW.IsEmpty()) {
-			m_dwBlocked = 0;
-			packet->WriteByte(MMT_WRONGPASSWORD);
-			sender->SendPacket(packet);
-			m_cPWFailed++;
-			if (m_cPWFailed == 3){
-				AddLogLine(false, GetResString(IDS_MM_BLOCK));
-				m_cPWFailed = 0;
-				m_dwBlocked = ::GetTickCount() + MMS_BLOCKTIME;
-			}
-			return;
-		}
-		else{
-			m_bUseFakeContent = (data->ReadByte() != 0);
-			m_nMaxDownloads = data->ReadShort();
-			m_nMaxBufDownloads = data->ReadShort();
-			m_bGrabListLogin = (data->ReadByte() != 0);
-
-			// everything ok, new sessionid
-			AddLogLine(false, GetResString(IDS_MM_NEWUSER));
-			packet->WriteByte(MMT_OK);
-			m_nSessionID = (uint16)rand();
-			packet->WriteShort(m_nSessionID);
-			packet->WriteString(thePrefs.GetUserNick());
-			packet->WriteShort((uint16)((thePrefs.GetMaxUpload() >= UNLIMITED) ? 0 : thePrefs.GetMaxUpload()));
-			packet->WriteShort((uint16)((thePrefs.GetMaxDownload() >= UNLIMITED) ? 0 : (uint16)thePrefs.GetMaxDownload()));
-			ProcessStatusRequest(sender,packet);
-			//sender->SendPacket(packet);
-		}
-
+		return;
 	}
 
+	m_bUseFakeContent = (data->ReadByte() != 0);
+	m_nMaxDownloads = data->ReadShort();
+	m_nMaxBufDownloads = data->ReadShort();
+	m_bGrabListLogin = (data->ReadByte() != 0);
+
+	// everything ok, new sessionid
+	AddLogLine(false, GetResString(IDS_MM_NEWUSER));
+	packet->WriteByte(MMT_OK);
+	m_nSessionID = (uint16)rand();
+	packet->WriteShort(m_nSessionID);
+	packet->WriteString(thePrefs.GetUserNick());
+	packet->WriteShort((uint16)((thePrefs.GetMaxUpload() >= UNLIMITED) ? 0 : thePrefs.GetMaxUpload()));
+	packet->WriteShort((uint16)((thePrefs.GetMaxDownload() >= UNLIMITED) ? 0 : (uint16)thePrefs.GetMaxDownload()));
+	ProcessStatusRequest(sender, packet);
+	//sender->SendPacket(packet);
 }
 
 void CMMServer::ProcessStatusRequest(CMMSocket* sender, CMMPacket* packet){
@@ -213,8 +209,6 @@ void CMMServer::ProcessStatusRequest(CMMSocket* sender, CMMPacket* packet){
 			packet->WriteByte(0);
 			packet->WriteInt(0);
 	}
-
-
 
 	sender->SendPacket(packet);
 }

@@ -340,7 +340,7 @@ void CPPgGeneral::OnLangChange()
 				}
 				CString strErr;
 				strErr.Format(GetResString(IDS_ERR_FAILEDDOWNLOADLANG), (LPCTSTR)strUrl);
-				LogError(LOG_STATUSBAR, (LPCTSTR)strErr);
+				LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strErr);
 				AfxMessageBox(strErr, MB_ICONERROR | MB_OK);
 			}
 			// undo change selection

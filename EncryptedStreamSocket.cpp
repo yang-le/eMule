@@ -591,10 +591,10 @@ int CEncryptedStreamSocket::Negotiate(const uchar* pBuffer, uint32 nLen)
 					// create the keys
 					cryptResult.Encode(aBuffer, PRIMESIZE_BYTES);
 					aBuffer[PRIMESIZE_BYTES] = MAGICVALUE_REQUESTER;
-					MD5Sum md5(aBuffer, sizeof(aBuffer));
+					MD5Sum md5(aBuffer, sizeof aBuffer);
 					m_pRC4SendKey = RC4CreateKey(md5.GetRawHash(), 16, NULL);
 					aBuffer[PRIMESIZE_BYTES] = MAGICVALUE_SERVER;
-					md5.Calculate(aBuffer, sizeof(aBuffer));
+					md5.Calculate(aBuffer, sizeof aBuffer);
 					m_pRC4ReceiveKey = RC4CreateKey(md5.GetRawHash(), 16, NULL);
 
 					m_NegotiatingState = ONS_BASIC_SERVER_MAGICVALUE;

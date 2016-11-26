@@ -365,9 +365,9 @@ private:
 private:
 	static void		SaveWIConfigArray(BOOL array[], int size, LPCTSTR key);
 	static CString	GetWebImageNameForFileType(const CString& filename);
-	static CString  GetClientSummary(CUpDownClient* client);
+	static CString  GetClientSummary(const CUpDownClient* client);
 	static CString	_GetMyInfo(const ThreadData& Data);
-	static CString	GetClientversionImage(CUpDownClient* client);
+	static CString	GetClientversionImage(const CUpDownClient* client);
 
 
 // Common data

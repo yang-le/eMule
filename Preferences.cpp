@@ -1470,9 +1470,9 @@ bool CPreferences::Save(){
 		try{
 			// write Unicode byte-order mark 0xFEFF
 			WORD wBOM = 0xFEFF;
-			sdirfile.Write(&wBOM, sizeof(wBOM));
+			sdirfile.Write(&wBOM, sizeof wBOM);
 
-			for (POSITION pos = shareddir_list.GetHeadPosition();pos != 0;){
+			for (POSITION pos = shareddir_list.GetHeadPosition(); pos != NULL;) {
 				sdirfile.WriteString(shareddir_list.GetNext(pos));
 				sdirfile.Write(L"\r\n", sizeof(TCHAR)*2);
 			}

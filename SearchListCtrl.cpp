@@ -105,7 +105,7 @@ CSearchResultFileDetailSheet::CSearchResultFileDetailSheet(CTypedPtrList<CPtrLis
 	: CListViewWalkerPropertySheet(pListCtrl)
 {
 	m_uPshInvokePage = uPshInvokePage;
-	for (POSITION pos = paFiles.GetHeadPosition(); pos;)
+	for (POSITION pos = paFiles.GetHeadPosition(); pos != NULL;)
 		m_aItems.Add(paFiles.GetNext(pos));
 	m_psh.dwFlags &= ~PSH_HASHELP;
 	m_psh.dwFlags |= PSH_NOAPPLYNOW;
@@ -1226,7 +1226,7 @@ void CSearchListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 		{
 			int iSelected = 0;
 			ULONGLONG ulTotalSize = 0;
-			for (POSITION pos = GetFirstSelectedItemPosition(); pos;) {
+			for (POSITION pos = GetFirstSelectedItemPosition(); pos != NULL;) {
 				const CSearchFile* pFile = (CSearchFile*)GetItemData(GetNextSelectedItem(pos));
 				if (pFile)
 				{

@@ -145,7 +145,7 @@ bool CServerList::AddServerMetToList(const CString& strFile, bool bMerge)
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
 			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError)))
 				strError.AppendFormat(_T(" - %s"), szError);
-			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
 		return false;
 	}
@@ -385,12 +385,11 @@ void CServerList::GetStatus(uint32& total, uint32& failed,
 
 	uint32 maxuserknownmax = 0;
 	uint32 totaluserknownmax = 0;
-	for (POSITION pos = list.GetHeadPosition(); pos != 0; ){
+	for (POSITION pos = list.GetHeadPosition(); pos != NULL;) {
 		const CServer* curr = list.GetNext(pos);
-		if (curr->GetFailedCount()){
+		if (curr->GetFailedCount())
 			failed++;
-		}
-		else{
+		else {
 			user += curr->GetUsers();
 			file += curr->GetFiles();
 			lowiduser += curr->GetLowIDUsers();
@@ -398,7 +397,7 @@ void CServerList::GetStatus(uint32& total, uint32& failed,
 		totaluser += curr->GetUsers();
 		totalfile += curr->GetFiles();
 
-		if (curr->GetMaxUsers()){
+		if (curr->GetMaxUsers()) {
 			totaluserknownmax += curr->GetUsers(); // total users on servers with known maximum
 			maxuserknownmax += curr->GetMaxUsers();
 		}
@@ -415,12 +414,11 @@ void CServerList::GetAvgFile(uint32& average) const
 	//average user shares..
 	uint32 totaluser = 0;
 	uint32 totalfile = 0;
-	for (POSITION pos = list.GetHeadPosition(); pos != 0; ){
+	for (POSITION pos = list.GetHeadPosition(); pos != NULL;) {
 		const CServer* curr = list.GetNext(pos);
 		//If this server has reported Users/Files and doesn't limit it's files too much
 		//use this in the calculation..
-		if( curr->GetUsers() && curr->GetFiles() && curr->GetSoftFiles() > 1000 )
-		{
+		if (curr->GetUsers() && curr->GetFiles() && curr->GetSoftFiles() > 1000) {
 			totaluser += curr->GetUsers();
 			totalfile += curr->GetFiles();
 		}
@@ -440,9 +438,9 @@ void CServerList::GetUserFileStatus(uint32& user, uint32& file) const
 {
 	user = 0;
 	file = 0;
-	for (POSITION pos = list.GetHeadPosition(); pos != 0; ){
+	for (POSITION pos = list.GetHeadPosition(); pos != NULL;) {
 		const CServer* curr = list.GetNext(pos);
-		if( !curr->GetFailedCount() ){
+		if (!curr->GetFailedCount()) {
 			user += curr->GetUsers();
 			file += curr->GetFiles();
 		}
@@ -489,7 +487,7 @@ void CServerList::GetUserSortedServers()
 void CServerList::Dump()
 {
 	int i = 0;
-	for (POSITION pos = list.GetHeadPosition(); pos;) {
+	for (POSITION pos = list.GetHeadPosition(); pos != NULL;) {
 		const CServer* pServer = list.GetNext(pos);
 		TRACE(_T("%3u: Pri=%s \"%s\"\n"), ++i, pServer->GetPreference() == SRV_PR_HIGH ? _T("Hi") : (pServer->GetPreference() == SRV_PR_LOW ? _T("Lo") : _T("No")), (LPCTSTR)pServer->GetListName());
 	}
@@ -584,9 +582,9 @@ CServer* CServerList::GetSuccServer(const CServer* lastserver) const
 
 CServer* CServerList::GetServerByAddress(LPCTSTR address, uint16 port) const
 {
-	for (POSITION pos = list.GetHeadPosition();pos != 0;){
-        CServer* s = list.GetNext(pos);
-        if ((port == s->GetPort() || port == 0) && !_tcscmp(s->GetAddress(), address))
+	for (POSITION pos = list.GetHeadPosition(); pos != NULL;) {
+		CServer* s = list.GetNext(pos);
+		if ((port == s->GetPort() || port == 0) && !_tcscmp(s->GetAddress(), address))
 			return s;
 	}
 	return NULL;
@@ -594,8 +592,8 @@ CServer* CServerList::GetServerByAddress(LPCTSTR address, uint16 port) const
 
 CServer* CServerList::GetServerByIP(uint32 nIP) const
 {
-	for (POSITION pos = list.GetHeadPosition();pos != 0;){
-        CServer* s = list.GetNext(pos);
+	for (POSITION pos = list.GetHeadPosition(); pos != NULL;) {
+		CServer* s = list.GetNext(pos);
 		if (s->GetIP() == nIP)
 			return s;
 	}
@@ -604,8 +602,8 @@ CServer* CServerList::GetServerByIP(uint32 nIP) const
 
 CServer* CServerList::GetServerByIPTCP(uint32 nIP, uint16 nTCPPort) const
 {
-	for (POSITION pos = list.GetHeadPosition();pos != 0;){
-        CServer* s = list.GetNext(pos);
+	for (POSITION pos = list.GetHeadPosition(); pos != NULL;) {
+		CServer* s = list.GetNext(pos);
 		if (s->GetIP() == nIP && s->GetPort() == nTCPPort)
 			return s;
 	}
@@ -614,8 +612,8 @@ CServer* CServerList::GetServerByIPTCP(uint32 nIP, uint16 nTCPPort) const
 
 CServer* CServerList::GetServerByIPUDP(uint32 nIP, uint16 nUDPPort, bool bObfuscationPorts) const
 {
-	for (POSITION pos = list.GetHeadPosition();pos != 0;){
-        CServer* s = list.GetNext(pos);
+	for (POSITION pos = list.GetHeadPosition(); pos != NULL;) {
+		CServer* s = list.GetNext(pos);
 		if (s->GetIP() == nIP && (s->GetPort() == nUDPPort-4 ||
 			(bObfuscationPorts && (s->GetObfuscationPortUDP() == nUDPPort) || (s->GetPort() == nUDPPort - 12))))
 			return s;
@@ -638,7 +636,7 @@ bool CServerList::SaveServermetToFile()
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
 		if (GetExceptionMessage(fexp, szError, ARRSIZE(szError)))
 			strError.AppendFormat(_T(" - %s"), szError);
-		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		return false;
 	}
 	setvbuf(servermet.m_pStream, NULL, _IOFBF, 16384);
@@ -802,7 +800,7 @@ bool CServerList::SaveServermetToFile()
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
 		if (GetExceptionMessage(*error, szError, ARRSIZE(szError)))
 			strError.AppendFormat(_T(" - %s"), szError);
-		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		error->Delete();
 		return false;
 	}
@@ -970,7 +968,7 @@ void CServerList::CheckForExpiredUDPKeys() {
 	const uint32 tNow = (uint32)time(NULL);
 	ASSERT( dwIP != 0 );
 
-	for (POSITION pos = list.GetHeadPosition();pos != 0;){
+	for (POSITION pos = list.GetHeadPosition();pos != NULL;){
         CServer* pServer = list.GetNext(pos);
 		if (pServer->SupportsObfuscationUDP() && pServer->GetServerKeyUDP(true) != 0 && pServer->GetServerKeyUDPIP() != dwIP){
 			cKeysTotal++;

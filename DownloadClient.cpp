@@ -95,10 +95,10 @@ void CUpDownClient::DrawStatusBar(CDC* dc, LPCRECT rect, bool onlygreyrect, bool
 			}
 
 			char* pcNextPendingBlks = NULL;
-			if (m_nDownloadState == DS_DOWNLOADING){
+			if (m_nDownloadState == DS_DOWNLOADING) {
 				pcNextPendingBlks = new char[m_nPartCount];
 				memset(pcNextPendingBlks, 'N', m_nPartCount); // do not use '_strnset' for uninitialized memory!
-				for (POSITION pos = m_PendingBlocks_list.GetHeadPosition(); pos != 0; ){
+				for (POSITION pos = m_PendingBlocks_list.GetHeadPosition(); pos != NULL;) {
 					UINT uPart = (UINT)(m_PendingBlocks_list.GetNext(pos)->block->StartOffset / PARTSIZE);
 					if (uPart < m_nPartCount)
 						pcNextPendingBlks[uPart] = 'Y';
@@ -222,8 +222,8 @@ bool CUpDownClient::AskForDownload()
 	{
 		m_nFailedUDPPackets++;
 		theApp.downloadqueue->AddFailedUDPFileReasks();
+		m_bUDPPending = false;
 	}
-	m_bUDPPending = false;
 	if (!(socket && socket->IsConnected())) // already connected, skip all the special checks
 	{
 		if (theApp.listensocket->TooManySockets())
@@ -1807,7 +1807,7 @@ bool CUpDownClient::SwapToAnotherFile(LPCTSTR reason, bool bIgnoreNoNeeded, bool
         if(printDebug)
             AddDebugLogLine(DLP_VERYLOW, false, _T("ooo Debug: m_OtherRequests_list"));
 
-		for (POSITION pos = m_OtherRequests_list.GetHeadPosition(); pos != 0;) {
+		for (POSITION pos = m_OtherRequests_list.GetHeadPosition(); pos != NULL;) {
 			POSITION pos2 = pos;
 			CPartFile* cur_file = m_OtherRequests_list.GetNext(pos);
 
@@ -1882,7 +1882,7 @@ bool CUpDownClient::SwapToAnotherFile(LPCTSTR reason, bool bIgnoreNoNeeded, bool
 	if(printDebug)
 		AddDebugLogLine(DLP_VERYLOW, false, _T("ooo Debug: m_OtherNoNeeded_list"));
 
-	for (POSITION pos = m_OtherNoNeeded_list.GetHeadPosition(); pos != 0;) {
+	for (POSITION pos = m_OtherNoNeeded_list.GetHeadPosition(); pos != NULL;) {
 		POSITION pos2 = pos;
 		CPartFile* cur_file = m_OtherNoNeeded_list.GetNext(pos);
 
@@ -2056,14 +2056,14 @@ void CUpDownClient::DontSwapTo(/*const*/ CPartFile* file)
 {
 	DWORD dwNow = ::GetTickCount();
 
-	for (POSITION pos = m_DontSwap_list.GetHeadPosition(); pos != 0;) {
+	for (POSITION pos = m_DontSwap_list.GetHeadPosition(); pos != NULL;) {
 		PartFileStamp& pfs = m_DontSwap_list.GetNext(pos);
 		if (pfs.file == file) {
 			pfs.timestamp = dwNow;
 			return;
 		}
 	}
-	PartFileStamp newfs = {file, dwNow };
+	PartFileStamp newfs = {file, dwNow};
 	m_DontSwap_list.AddHead(newfs);
 }
 
@@ -2088,8 +2088,7 @@ bool CUpDownClient::IsSwapSuspended(const CPartFile* file, const bool allowShort
 				m_DontSwap_list.RemoveAt(pos2);
 				return false;
 			}
-			else
-				return true;
+			return true;
 		}
 		else if (pfs.file == NULL) // in which cases should this happen?
 			m_DontSwap_list.RemoveAt(pos2);

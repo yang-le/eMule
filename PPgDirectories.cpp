@@ -245,7 +245,7 @@ BOOL CPPgDirectories::OnApply()
 		thePrefs.shareddir_list.AddTail(m_ctlUncPaths.GetItemText(i, 0));
 
 	// check shared directories for reserved folder names
-	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos;) {
+	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos != NULL;) {
 		POSITION posLast = pos;
 		if (!thePrefs.IsShareableDirectory(thePrefs.shareddir_list.GetNext(pos)))
 			thePrefs.shareddir_list.RemoveAt(posLast);
@@ -309,8 +309,7 @@ void CPPgDirectories::FillUncList(void)
 {
 	m_ctlUncPaths.DeleteAllItems();
 
-	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos != 0; )
-	{
+	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos != NULL;) {
 		CString folder = thePrefs.shareddir_list.GetNext(pos);
 		if (PathIsUNC(folder))
 			m_ctlUncPaths.InsertItem(0, folder);
@@ -334,14 +333,13 @@ void CPPgDirectories::OnBnClickedAddUNC()
 	if (unc.Right(1) == _T("\\"))
 		unc.Truncate(unc.GetLength()-1);
 
-	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition();pos != 0;){
+	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos != NULL;)
 		if (unc.CompareNoCase(thePrefs.shareddir_list.GetNext(pos))==0)
 			return;
-	}
-	for (int posi = 0; posi < m_ctlUncPaths.GetItemCount(); posi++){
-		if (unc.CompareNoCase(m_ctlUncPaths.GetItemText(posi, 0)) == 0)
+
+	for (int ipos = 0; ipos < m_ctlUncPaths.GetItemCount(); ++ipos)
+		if (unc.CompareNoCase(m_ctlUncPaths.GetItemText(ipos, 0)) == 0)
 			return;
-	}
 
 	m_ctlUncPaths.InsertItem(m_ctlUncPaths.GetItemCount(), unc);
 	SetModified();

@@ -36,13 +36,15 @@
 #pragma once
 #include "shahashset.h"
 
-typedef struct
-{
-	BYTE	b[20];
-} SHA1;
-
 #define SHA1_BLOCK_SIZE		64
 #define SHA1_DIGEST_SIZE	20
+
+
+typedef struct
+{
+	BYTE	b[SHA1_DIGEST_SIZE];
+} SHA1;
+
 
 class CSHA : public CAICHHashAlgo
 {
@@ -81,10 +83,10 @@ public:
 
 inline bool operator==(const SHA1& sha1a, const SHA1& sha1b)
 {
-    return memcmp( &sha1a, &sha1b, 20 ) == 0;
+	return memcmp(&sha1a, &sha1b, SHA1_DIGEST_SIZE) == 0;
 }
 
 inline bool operator!=(const SHA1& sha1a, const SHA1& sha1b)
 {
-    return memcmp( &sha1a, &sha1b, 20 ) != 0;
+	return memcmp(&sha1a, &sha1b, SHA1_DIGEST_SIZE) != 0;
 }

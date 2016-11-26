@@ -69,7 +69,7 @@ void CArchiveRecovery::recover(CPartFile *partFile, bool preview, bool bCreatePa
 	{
 		int i = 0;
 		TRACE("%s: filled\n", __FUNCTION__);
-		for (POSITION pos = filled->GetHeadPosition(); pos;) {
+		for (POSITION pos = filled->GetHeadPosition(); pos != NULL;) {
 			const Gap_Struct* gap = filled->GetNext(pos);
 			TRACE("%3u: %10u  %10u  (%u)\n", i++, gap->start, gap->end, gap->end - gap->start + 1);
 		}

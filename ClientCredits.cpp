@@ -150,7 +150,7 @@ CClientCreditsList::~CClientCreditsList()
 	SaveList();
 	CClientCredits* cur_credit;
 	CCKey tmpkey(0);
-	for (POSITION pos = m_mapClients.GetStartPosition(); pos;) {
+	for (POSITION pos = m_mapClients.GetStartPosition(); pos != NULL;) {
 		m_mapClients.GetNextAssoc(pos, tmpkey, cur_credit);
 		delete cur_credit;
 	}
@@ -171,7 +171,7 @@ void CClientCreditsList::LoadList()
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
 		return;
 	}
@@ -221,7 +221,7 @@ void CClientCreditsList::LoadList()
 					strError += _T(" - ");
 					strError += szError;
 				}
-				LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+				LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 				return;
 			}
 			setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
@@ -285,7 +285,7 @@ void CClientCreditsList::SaveList()
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		return;
 	}
 
@@ -317,7 +317,7 @@ void CClientCreditsList::SaveList()
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		error->Delete();
 	}
 

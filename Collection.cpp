@@ -434,7 +434,5 @@ CString	CCollection::GetAuthorKeyHashString()
 	if (m_pabyCollectionAuthorKey == NULL)
 		return CString();
 	MD5Sum md5(m_pabyCollectionAuthorKey, m_nKeySize);
-	CString strResult = md5.GetHash();
-	strResult.MakeUpper();
-	return strResult;
+	return md5.GetHash().MakeUpper();
 }

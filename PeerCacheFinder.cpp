@@ -108,7 +108,7 @@ void CPeerCacheFinder::Init(uint32 dwLastSearch, bool bLastSearchSuccess, bool b
 		m_PCStatus = PCS_DISABLED;
 	}
 	else{
-		if (bLastSearchSuccess){ // sanitycheck
+		if (bLastSearchSuccess){ // sanity check
 			bool bOK = false;
 			for (unsigned i = 0; i < _countof(anPeerCachPorts); ++i) {
 				if(anPeerCachPorts[i] == nPort)
@@ -117,7 +117,7 @@ void CPeerCacheFinder::Init(uint32 dwLastSearch, bool bLastSearchSuccess, bool b
 			if (!bOK){
 				dwLastSearch = 0;
 				bLastSearchSuccess = false;
-				DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("Sanitycheck for PeerCache-Port '%u' failed"), nPort));
+				DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("Sanity check for PeerCache-Port '%u' failed"), nPort));
 			}
 			else
 				m_nPCPort = nPort;

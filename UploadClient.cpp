@@ -54,7 +54,7 @@ CBarShader CUpDownClient::s_UpStatusBar(16);
 
 void CUpDownClient::DrawUpStatusBar(CDC* dc, RECT* rect, bool onlygreyrect, bool  bFlat) const
 {
-    COLORREF crNeither;
+	COLORREF crNeither;
 	COLORREF crNextSending;
 	COLORREF crBoth;
 	COLORREF crSending;
@@ -351,7 +351,7 @@ void CUpDownClient::SetUploadFileID(CKnownFile* newreqfile)
 static INT_PTR dbgLastQueueCount = 0;
 void CUpDownClient::AddReqBlock(Requested_Block_Struct* reqblock, bool bSignalIOThread)
 {
-	// do _all_ sanitychecks on the requested block here, than put it on the blocklsit for the client
+	// do _all_ sanity checks on the requested block here, than put it on the blocklsit for the client
 	// UploadDiskIPThread will handle those later on
 
 	if (reqblock != NULL)
@@ -428,18 +428,18 @@ void CUpDownClient::AddReqBlock(Requested_Block_Struct* reqblock, bool bSignalIO
 			return;
 		}
 
-		for (POSITION pos = pUploadingClientStruct->m_DoneBlocks_list.GetHeadPosition(); pos != 0; ){
+		for (POSITION pos = pUploadingClientStruct->m_DoneBlocks_list.GetHeadPosition(); pos != NULL;) {
 			const Requested_Block_Struct* cur_reqblock = pUploadingClientStruct->m_DoneBlocks_list.GetNext(pos);
 			if (reqblock->StartOffset == cur_reqblock->StartOffset && reqblock->EndOffset == cur_reqblock->EndOffset
-					&& !md4cmp(reqblock->FileID, cur_reqblock->FileID)) {
+				&& !md4cmp(reqblock->FileID, cur_reqblock->FileID)) {
 				delete reqblock;
 				return;
 			}
 		}
-		for (POSITION pos = pUploadingClientStruct->m_BlockRequests_queue.GetHeadPosition(); pos != 0; ){
+		for (POSITION pos = pUploadingClientStruct->m_BlockRequests_queue.GetHeadPosition(); pos != NULL;) {
 			const Requested_Block_Struct* cur_reqblock = pUploadingClientStruct->m_BlockRequests_queue.GetNext(pos);
 			if (reqblock->StartOffset == cur_reqblock->StartOffset && reqblock->EndOffset == cur_reqblock->EndOffset
-					&& !md4cmp(reqblock->FileID, cur_reqblock->FileID)) {
+				&& !md4cmp(reqblock->FileID, cur_reqblock->FileID)) {
 				delete reqblock;
 				return;
 			}
@@ -460,42 +460,42 @@ void CUpDownClient::AddReqBlock(Requested_Block_Struct* reqblock, bool bSignalIO
 
 uint32 CUpDownClient::UpdateUploadingStatisticsData()
 {
-    DWORD curTick = ::GetTickCount();
+	DWORD curTick = ::GetTickCount();
 
-    uint64 sentBytesCompleteFile = 0;
-    uint64 sentBytesPartFile = 0;
+	uint64 sentBytesCompleteFile = 0;
+	uint64 sentBytesPartFile = 0;
 
-    if (GetFileUploadSocket() && (m_ePeerCacheUpState != PCUS_WAIT_CACHE_REPLY))
+	if (GetFileUploadSocket() && (m_ePeerCacheUpState != PCUS_WAIT_CACHE_REPLY))
 	{
 		CEMSocket* s = GetFileUploadSocket();
 		UINT uUpStatsPort;
-        if (m_pPCUpSocket && IsUploadingToPeerCache())
+		if (m_pPCUpSocket && IsUploadingToPeerCache())
 		{
 			uUpStatsPort = (UINT)-1;
 
-            // Check if filedata has been sent via the normal socket since last call.
-            uint64 sentBytesCompleteFileNormalSocket = socket->GetSentBytesCompleteFileSinceLastCallAndReset();
-            uint64 sentBytesPartFileNormalSocket = socket->GetSentBytesPartFileSinceLastCallAndReset();
+			// Check if filedata has been sent via the normal socket since last call.
+			uint64 sentBytesCompleteFileNormalSocket = socket->GetSentBytesCompleteFileSinceLastCallAndReset();
+			uint64 sentBytesPartFileNormalSocket = socket->GetSentBytesPartFileSinceLastCallAndReset();
 
 			if(thePrefs.GetVerbose() && (sentBytesCompleteFileNormalSocket + sentBytesPartFileNormalSocket > 0)) {
-                AddDebugLogLine(false, _T("Sent file data via normal socket when in PC mode. Bytes: %I64i."), sentBytesCompleteFileNormalSocket + sentBytesPartFileNormalSocket);
+				AddDebugLogLine(false, _T("Sent file data via normal socket when in PC mode. Bytes: %I64i."), sentBytesCompleteFileNormalSocket + sentBytesPartFileNormalSocket);
 			}
-        }
+		}
 		else
 			uUpStatsPort = GetUserPort();
 
-	    // Extended statistics information based on which client software and which port we sent this data to...
-	    // This also updates the grand total for sent bytes, etc.  And where this data came from.
-        sentBytesCompleteFile = s->GetSentBytesCompleteFileSinceLastCallAndReset();
-        sentBytesPartFile = s->GetSentBytesPartFileSinceLastCallAndReset();
+		// Extended statistics information based on which client software and which port we sent this data to...
+		// This also updates the grand total for sent bytes, etc.  And where this data came from.
+		sentBytesCompleteFile = s->GetSentBytesCompleteFileSinceLastCallAndReset();
+		sentBytesPartFile = s->GetSentBytesPartFileSinceLastCallAndReset();
 		thePrefs.Add2SessionTransferData(GetClientSoft(), uUpStatsPort, false, true, (UINT)sentBytesCompleteFile, (IsFriend() && GetFriendSlot()));
 		thePrefs.Add2SessionTransferData(GetClientSoft(), uUpStatsPort, true, true, (UINT)sentBytesPartFile, (IsFriend() && GetFriendSlot()));
 
 		m_nTransferredUp = (UINT)(m_nTransferredUp + sentBytesCompleteFile + sentBytesPartFile);
-        credits->AddUploaded((UINT)(sentBytesCompleteFile + sentBytesPartFile), GetIP());
+		credits->AddUploaded((UINT)(sentBytesCompleteFile + sentBytesPartFile), GetIP());
 
-        uint64 sentBytesPayload = s->GetSentPayloadSinceLastCall(true);
-        m_nCurQueueSessionPayloadUp = (UINT)(m_nCurQueueSessionPayloadUp + sentBytesPayload);
+		uint64 sentBytesPayload = s->GetSentPayloadSinceLastCall(true);
+		m_nCurQueueSessionPayloadUp = (UINT)(m_nCurQueueSessionPayloadUp + sentBytesPayload);
 
 		// on some rare cases (namely switching uploadfilees while still data is in the sendqueue), we count some bytes for
 		// the wrong file, but fixing it (and not counting data only based on what was put into the queue and not sent yet) isn't really worth it
@@ -509,41 +509,41 @@ uint32 CUpDownClient::UpdateUploadingStatisticsData()
 		// its better to do it here because we can access the clients downloadrate which the trottler cant
 		if (GetDatarate() > 100 * 1024)
 			s->UseBigSendBuffer();
-    }
+	}
 
-    if(sentBytesCompleteFile + sentBytesPartFile > 0 ||
+	if(sentBytesCompleteFile + sentBytesPartFile > 0 ||
 		m_AverageUDR_list.IsEmpty() || curTick > m_AverageUDR_list.GetTail().timestamp + SEC2MS(1)) {
-        // Store how much data we've transferred this round,
-        // to be able to calculate average speed later
-        // keep sum of all values in list up to date
-        TransferredData newitem = {(UINT)(sentBytesCompleteFile + sentBytesPartFile), curTick};
-        m_AverageUDR_list.AddTail(newitem);
-        m_nSumForAvgUpDataRate = (UINT)(m_nSumForAvgUpDataRate + sentBytesCompleteFile + sentBytesPartFile);
-    }
+		// Store how much data we've transferred this round,
+		// to be able to calculate average speed later
+		// keep sum of all values in list up to date
+		TransferredData newitem = {(UINT)(sentBytesCompleteFile + sentBytesPartFile), curTick};
+		m_AverageUDR_list.AddTail(newitem);
+		m_nSumForAvgUpDataRate = (UINT)(m_nSumForAvgUpDataRate + sentBytesCompleteFile + sentBytesPartFile);
+	}
 
-    // remove to old values in list
+	// remove to old values in list
 	while (!m_AverageUDR_list.IsEmpty() && curTick > m_AverageUDR_list.GetHead().timestamp + SEC2MS(10)) {
-        // keep sum of all values in list up to date
-        m_nSumForAvgUpDataRate -= m_AverageUDR_list.RemoveHead().datalen;
-    }
+		// keep sum of all values in list up to date
+		m_nSumForAvgUpDataRate -= m_AverageUDR_list.RemoveHead().datalen;
+	}
 
-    // Calculate average speed for this slot
+	// Calculate average speed for this slot
 	if (!m_AverageUDR_list.IsEmpty() && curTick > m_AverageUDR_list.GetHead().timestamp && GetUpStartTimeDelay() > SEC2MS(2)) {
 		m_nUpDatarate = (UINT)(((ULONGLONG)m_nSumForAvgUpDataRate*SEC2MS(1)) / (curTick - m_AverageUDR_list.GetHead().timestamp));
-    } else {
-        // not enough values to calculate trustworthy speed. Use -1 to tell this
-        m_nUpDatarate = 0; //-1;
-    }
+	} else {
+		// not enough values to calculate trustworthy speed. Use -1 to tell this
+		m_nUpDatarate = 0; //-1;
+	}
 
-    // Check if it's time to update the display.
+	// Check if it's time to update the display.
 	if (curTick > m_lastRefreshedULDisplay + MINWAIT_BEFORE_ULDISPLAY_WINDOWUPDATE+(uint32)(rand()*800/RAND_MAX)) {
-        // Update display
-        theApp.emuledlg->transferwnd->GetUploadList()->RefreshClient(this);
-        theApp.emuledlg->transferwnd->GetClientList()->RefreshClient(this);
-        m_lastRefreshedULDisplay = curTick;
-    }
+		// Update display
+		theApp.emuledlg->transferwnd->GetUploadList()->RefreshClient(this);
+		theApp.emuledlg->transferwnd->GetClientList()->RefreshClient(this);
+		m_lastRefreshedULDisplay = curTick;
+	}
 
-    return (UINT)(sentBytesCompleteFile + sentBytesPartFile);
+	return (UINT)(sentBytesCompleteFile + sentBytesPartFile);
 }
 
 void CUpDownClient::SendOutOfPartReqsAndAddToWaitingQueue()
@@ -560,15 +560,15 @@ void CUpDownClient::SendOutOfPartReqsAndAddToWaitingQueue()
 	theStats.AddUpDataOverheadFileRequest(pPacket->size);
 	SendPacket(pPacket, true);
 	m_fSentOutOfPartReqs = 1;
-    theApp.uploadqueue->AddClientToQueue(this, true);
+	theApp.uploadqueue->AddClientToQueue(this, true);
 }
 
 /**
  * See description for CEMSocket::TruncateQueues().
  */
 void CUpDownClient::FlushSendBlocks(){ // call this when you stop upload, or the socket might be not able to send
-    if (socket)      //socket may be NULL...
-        socket->TruncateQueues();
+	if (socket) //socket may be NULL...
+		socket->TruncateQueues();
 }
 
 void CUpDownClient::SendHashsetPacket(const uchar* pData, uint32 nSize, bool bFileIdentifiers)
@@ -664,17 +664,15 @@ void CUpDownClient::SendCommentInfo(/*const*/ CKnownFile *file)
 
 void CUpDownClient::AddRequestCount(const uchar* fileid)
 {
-	for (POSITION pos = m_RequestedFiles_list.GetHeadPosition(); pos != 0; ){
+	for (POSITION pos = m_RequestedFiles_list.GetHeadPosition(); pos != NULL;) {
 		Requested_File_Struct* cur_struct = m_RequestedFiles_list.GetNext(pos);
-		if (!md4cmp(cur_struct->fileid,fileid)){
-			if (::GetTickCount() - cur_struct->lastasked < MIN_REQUESTTIME && !GetFriendSlot()){
+		if (!md4cmp(cur_struct->fileid, fileid)) {
+			if (::GetTickCount() - cur_struct->lastasked < MIN_REQUESTTIME && !GetFriendSlot()) {
 				if (GetDownloadState() != DS_DOWNLOADING)
 					cur_struct->badrequests++;
-				if (cur_struct->badrequests == BADCLIENTBAN){
+				if (cur_struct->badrequests == BADCLIENTBAN)
 					Ban();
-				}
-			}
-			else{
+			} else {
 				if (cur_struct->badrequests)
 					cur_struct->badrequests--;
 			}

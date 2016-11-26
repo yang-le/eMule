@@ -886,7 +886,7 @@ void CSearchList::KademliaSearchKeyword(uint32 searchID, const Kademlia::CUInt12
 	{
 		CSearchFile* tempFile = new CSearchFile(temp, eStrEncode == utf8strRaw, searchID, 0, 0, 0, true);
 		tempFile->SetKadPublishInfo(uKadPublishInfo);
-		// About the AICH hash: We received a list of possible AICH Hashs for this file and now have to deceide what to do
+		// About the AICH hash: We received a list of possible AICH Hashs for this file and now have to decide what to do
 		// If it wasn't for backwards compability, the choice would be easy: Each different md4+aich+size is its own result,
 		// but we can'T do this alone for the fact that for the next years we will always have publishers which don'T report
 		// the AICH hash at all (which would mean ahving a different entry, which leads to double files in searchresults). So here is what we do for now:
@@ -1674,14 +1674,15 @@ void CSearchList::StoreSearches()
 	DebugLog(_T("Stored %u open search for restoring on next start"), nCount);
 }
 
-void CSearchList::LoadSearches(){
-	ASSERT( m_listFileLists.IsEmpty() );
+void CSearchList::LoadSearches()
+{
+	ASSERT(m_listFileLists.IsEmpty());
 	CString fullpath = thePrefs.GetMuleDirectory(EMULE_CONFIGDIR);
 	fullpath.Append(STOREDSEARCHES_FILENAME);
 	CSafeBufferedFile file;
 	CFileException fexp;
-	if (!file.Open(fullpath,CFile::modeRead|CFile::osSequentialScan|CFile::typeBinary|CFile::shareDenyWrite, &fexp)){
-		if (fexp.m_cause != CFileException::fileNotFound){
+	if (!file.Open(fullpath, CFile::modeRead|CFile::osSequentialScan|CFile::typeBinary|CFile::shareDenyWrite, &fexp)) {
+		if (fexp.m_cause != CFileException::fileNotFound) {
 			CString strError(_T("Failed to load ") STOREDSEARCHES_FILENAME _T(" file"));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
 			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
@@ -1696,13 +1697,13 @@ void CSearchList::LoadSearches(){
 
 	try {
 		uint8 header = file.ReadUInt8();
-		if (header != MET_HEADER_I64TAGS){
+		if (header != MET_HEADER_I64TAGS) {
 			file.Close();
 			DebugLogError(_T("Failed to load %s, invalid first byte"), STOREDSEARCHES_FILENAME);
 			return;
 		}
 		uint8 byVersion = file.ReadUInt8();
-		if (byVersion != STOREDSEARCHES_VERSION){
+		if (byVersion != STOREDSEARCHES_VERSION) {
 			file.Close();
 			return;
 		}
@@ -1710,7 +1711,7 @@ void CSearchList::LoadSearches(){
 		uint32 nHighestKadSearchID = 0xFFFFFFFF;
 		uint32 nHighestEd2kSearchID = 0xFFFFFFFF;
 		uint16 nCount = file.ReadUInt16();
-		for (int i = 0; i < nCount; i++){
+		for (int i = 0; i < nCount; i++) {
 			SSearchParams* pParams = new SSearchParams(file);
 			uint32 nFileCount = file.ReadUInt32();
 
@@ -1720,12 +1721,11 @@ void CSearchList::LoadSearches(){
 			else if (pParams->eType == SearchTypeEd2kGlobal && pParams->dwSearchID < 0x80000000)
 				pParams->eType = SearchTypeKademlia;
 
-			if (pParams->eType == SearchTypeKademlia && (nHighestKadSearchID == 0xFFFFFFFF || nHighestKadSearchID < pParams->dwSearchID)){
+			if (pParams->eType == SearchTypeKademlia && (nHighestKadSearchID == 0xFFFFFFFF || nHighestKadSearchID < pParams->dwSearchID)) {
 				//ASSERT( pParams->dwSearchID < 0x80000000 );
 				nHighestKadSearchID = pParams->dwSearchID;
-			}
-			else if (pParams->eType != SearchTypeKademlia && (nHighestEd2kSearchID == 0xFFFFFFFF || nHighestEd2kSearchID < pParams->dwSearchID)){
-//				ASSERT( pParams->dwSearchID >= 0x80000000 );
+			} else if (pParams->eType != SearchTypeKademlia && (nHighestEd2kSearchID == 0xFFFFFFFF || nHighestEd2kSearchID < pParams->dwSearchID)) {
+				//				ASSERT( pParams->dwSearchID >= 0x80000000 );
 				nHighestEd2kSearchID = pParams->dwSearchID;
 			}
 
@@ -1736,13 +1736,12 @@ void CSearchList::LoadSearches(){
 			NewSearch(NULL, strResultType, pParams->dwSearchID, pParams->eType, pParams->strExpression, false);
 
 			bool bDeleteParams = false;
-			if (theApp.emuledlg->searchwnd->CreateNewTab(pParams, false)){
+			if (theApp.emuledlg->searchwnd->CreateNewTab(pParams, false)) {
 				m_foundFilesCount.SetAt(pParams->dwSearchID, 0);
 				m_foundSourcesCount.SetAt(pParams->dwSearchID, 0);
-			}
-			else{
+			} else {
 				bDeleteParams = true;
-				ASSERT( false );
+				ASSERT(false);
 			}
 
 			// fill the list with stored results
@@ -1750,7 +1749,7 @@ void CSearchList::LoadSearches(){
 				CSearchFile* toadd = new CSearchFile(&file, true, pParams->dwSearchID, 0, 0, NULL, pParams->eType == SearchTypeKademlia);
 				AddToList(toadd, pParams->bClientSharedFiles);
 			}
-			if (bDeleteParams){
+			if (bDeleteParams) {
 				delete pParams;
 				pParams = NULL;
 			}
@@ -1761,11 +1760,10 @@ void CSearchList::LoadSearches(){
 			Kademlia::CSearchManager::SetNextSearchID(nHighestKadSearchID + 1);
 		if (nHighestEd2kSearchID != 0xFFFFFFFF)
 			theApp.emuledlg->searchwnd->SetNextSearchID(max(nHighestEd2kSearchID + 1, 0x80000000));
-	}
-	catch(CFileException* error){
+	} catch (CFileException* error) {
 		if (error->m_cause == CFileException::endOfFile)
 			DebugLogError(_T("Failed to load %s, corrupt"), STOREDSEARCHES_FILENAME);
-		else{
+		else {
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
 			GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
 			DebugLogError(_T("Failed to load %s, %s"), STOREDSEARCHES_FILENAME, buffer);

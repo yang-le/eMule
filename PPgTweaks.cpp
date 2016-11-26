@@ -55,7 +55,7 @@ END_MESSAGE_MAP()
 
 CPPgTweaks::CPPgTweaks()
 	: CPropertyPage(CPPgTweaks::IDD)
-	, m_ctrlTreeOptions(theApp.m_iDfltImageListColorFlags)
+	, m_ctrlTreeOptions(theApp.m_iDfltImageListColorFlags), m_sYourHostname()
 	, m_iDynUpPingToleranceMilliseconds(0), m_iDynUpRadioPingTolerance(0), m_htiExtractMetaDataNever(NULL), m_htiExtractMetaDataID3Lib(NULL)
 {
 	m_iFileBufferSize = 0;
@@ -84,16 +84,15 @@ CPPgTweaks::CPPgTweaks()
 	m_bFullAlloc = false;
 	m_bCheckDiskspace = false;
 	m_fMinFreeDiskSpaceMB = 0.0F;
-	(void)m_sYourHostname;
 	m_bFirewallStartup = false;
 	m_iLogLevel = 0;
-    m_bDynUpEnabled = false;
-    m_iDynUpMinUpload = 0;
-    m_iDynUpPingTolerance = 0;
-    m_iDynUpGoingUpDivider = 0;
-    m_iDynUpGoingDownDivider = 0;
-    m_iDynUpNumberOfPings = 0;
-    m_bA4AFSaveCpu = false;
+	m_bDynUpEnabled = false;
+	m_iDynUpMinUpload = 0;
+	m_iDynUpPingTolerance = 0;
+	m_iDynUpGoingUpDivider = 0;
+	m_iDynUpGoingDownDivider = 0;
+	m_iDynUpNumberOfPings = 0;
+	m_bA4AFSaveCpu = false;
 	m_iExtractMetaData = 0;
 	m_bAutoArchDisable = true;
 	m_bCloseUPnPOnExit = true;
@@ -101,7 +100,6 @@ CPPgTweaks::CPPgTweaks()
 	m_bSkipWANPPPSetup = false;
 	m_iShareeMule = 0;
 	m_bResolveShellLinks = false;
-
 	bShowedWarning = false;
 	m_bInitializedTreeOpts = false;
 	m_htiTCPGroup = NULL;
@@ -135,18 +133,18 @@ CPPgTweaks::CPPgTweaks()
 	m_htiYourHostname = NULL;
 	m_htiFirewallStartup = NULL;
 	m_htiLogLevel = NULL;
-    m_htiDynUp = NULL;
+	m_htiDynUp = NULL;
 	m_htiDynUpEnabled = NULL;
-    m_htiDynUpMinUpload = NULL;
-    m_htiDynUpPingTolerance = NULL;
-    m_htiDynUpPingToleranceMilliseconds = NULL;
-    m_htiDynUpPingToleranceGroup = NULL;
-    m_htiDynUpRadioPingTolerance = NULL;
-    m_htiDynUpRadioPingToleranceMilliseconds = NULL;
-    m_htiDynUpGoingUpDivider = NULL;
-    m_htiDynUpGoingDownDivider = NULL;
-    m_htiDynUpNumberOfPings = NULL;
-    m_htiA4AFSaveCpu = NULL;
+	m_htiDynUpMinUpload = NULL;
+	m_htiDynUpPingTolerance = NULL;
+	m_htiDynUpPingToleranceMilliseconds = NULL;
+	m_htiDynUpPingToleranceGroup = NULL;
+	m_htiDynUpRadioPingTolerance = NULL;
+	m_htiDynUpRadioPingToleranceMilliseconds = NULL;
+	m_htiDynUpGoingUpDivider = NULL;
+	m_htiDynUpGoingDownDivider = NULL;
+	m_htiDynUpNumberOfPings = NULL;
+	m_htiA4AFSaveCpu = NULL;
 	m_htiLogA4AF = NULL;
 	m_htiExtractMetaData = NULL;
 	m_htiAutoArch = NULL;
@@ -171,26 +169,25 @@ void CPPgTweaks::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_FILEBUFFERSIZE, m_ctlFileBuffSize);
 	DDX_Control(pDX, IDC_QUEUESIZE, m_ctlQueueSize);
 	DDX_Control(pDX, IDC_EXT_OPTS, m_ctrlTreeOptions);
-	if (!m_bInitializedTreeOpts)
-	{
+	if (!m_bInitializedTreeOpts) {
 		int iImgBackup = 8; // default icon
 		int iImgLog = 8;
 		int iImgDynyp = 8;
 		int iImgConnection = 8;
-//		int iImgA4AF = 8;
+		//		int iImgA4AF = 8;
 		int iImgMetaData = 8;
 		int iImgUPnP = 8;
 		int iImgShareeMule = 8;
-        CImageList* piml = m_ctrlTreeOptions.GetImageList(TVSIL_NORMAL);
-		if (piml){
-			iImgBackup =	piml->Add(CTempIconLoader(_T("Harddisk")));
-			iImgLog =		piml->Add(CTempIconLoader(_T("Log")));
-			iImgDynyp =		piml->Add(CTempIconLoader(_T("upload")));
-			iImgConnection=	piml->Add(CTempIconLoader(_T("connection")));
-//			iImgA4AF =		piml->Add(CTempIconLoader(_T("Download")));
-			iImgMetaData =	piml->Add(CTempIconLoader(_T("MediaInfo")));
-			iImgUPnP =		piml->Add(CTempIconLoader(_T("connectedhighhigh")));
-			iImgShareeMule =piml->Add(CTempIconLoader(_T("viewfiles")));
+		CImageList* piml = m_ctrlTreeOptions.GetImageList(TVSIL_NORMAL);
+		if (piml) {
+			iImgBackup = piml->Add(CTempIconLoader(_T("Harddisk")));
+			iImgLog = piml->Add(CTempIconLoader(_T("Log")));
+			iImgDynyp = piml->Add(CTempIconLoader(_T("upload")));
+			iImgConnection = piml->Add(CTempIconLoader(_T("connection")));
+			//			iImgA4AF =		piml->Add(CTempIconLoader(_T("Download")));
+			iImgMetaData = piml->Add(CTempIconLoader(_T("MediaInfo")));
+			iImgUPnP = piml->Add(CTempIconLoader(_T("connectedhighhigh")));
+			iImgShareeMule = piml->Add(CTempIconLoader(_T("viewfiles")));
 		}
 
 		/////////////////////////////////////////////////////////////////////////////
@@ -213,8 +210,8 @@ void CPPgTweaks::DoDataExchange(CDataExchange* pDX)
 		m_htiFirewallStartup = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_FO_PREF_STARTUP), TVI_ROOT, m_bFirewallStartup);
 		m_htiFilterLANIPs = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_PW_FILTER), TVI_ROOT, m_bFilterLANIPs);
 		m_htiExtControls = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_SHOWEXTSETTINGS), TVI_ROOT, m_bExtControls);
-        m_htiA4AFSaveCpu = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_A4AF_SAVE_CPU), TVI_ROOT, m_bA4AFSaveCpu); // ZZ:DownloadManager
-		m_htiAutoArch  = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_DISABLE_AUTOARCHPREV), TVI_ROOT, m_bAutoArchDisable);
+		m_htiA4AFSaveCpu = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_A4AF_SAVE_CPU), TVI_ROOT, m_bA4AFSaveCpu); // ZZ:DownloadManager
+		m_htiAutoArch = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_DISABLE_AUTOARCHPREV), TVI_ROOT, m_bAutoArchDisable);
 		m_htiYourHostname = m_ctrlTreeOptions.InsertItem(GetResString(IDS_YOURHOSTNAME), TREEOPTSCTRLIMG_EDIT, TREEOPTSCTRLIMG_EDIT, TVI_ROOT);
 		m_ctrlTreeOptions.AddEditBox(m_htiYourHostname, RUNTIME_CLASS(CTreeOptionsEditEx));
 
@@ -240,8 +237,7 @@ void CPPgTweaks::DoDataExchange(CDataExchange* pDX)
 		// Logging group
 		//
 		m_htiLog2Disk = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_LOG2DISK), TVI_ROOT, m_bLog2Disk);
-		if (thePrefs.GetEnableVerboseOptions())
-		{
+		if (thePrefs.GetEnableVerboseOptions()) {
 			m_htiVerboseGroup = m_ctrlTreeOptions.InsertGroup(GetResString(IDS_VERBOSE), iImgLog, TVI_ROOT);
 			m_htiVerbose = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_ENABLED), m_htiVerboseGroup, m_bVerbose);
 			m_htiLogLevel = m_ctrlTreeOptions.InsertItem(GetResString(IDS_LOG_LEVEL), TREEOPTSCTRLIMG_EDIT, TREEOPTSCTRLIMG_EDIT, m_htiVerboseGroup);
@@ -260,28 +256,28 @@ void CPPgTweaks::DoDataExchange(CDataExchange* pDX)
 		/////////////////////////////////////////////////////////////////////////////
 		// USS group
 		//
-        m_htiDynUp = m_ctrlTreeOptions.InsertGroup(GetResString(IDS_DYNUP), iImgDynyp, TVI_ROOT);
+		m_htiDynUp = m_ctrlTreeOptions.InsertGroup(GetResString(IDS_DYNUP), iImgDynyp, TVI_ROOT);
 		m_htiDynUpEnabled = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_DYNUPENABLED), m_htiDynUp, m_bDynUpEnabled);
-        m_htiDynUpMinUpload = m_ctrlTreeOptions.InsertItem(GetResString(IDS_DYNUP_MINUPLOAD), TREEOPTSCTRLIMG_EDIT, TREEOPTSCTRLIMG_EDIT, m_htiDynUp);
+		m_htiDynUpMinUpload = m_ctrlTreeOptions.InsertItem(GetResString(IDS_DYNUP_MINUPLOAD), TREEOPTSCTRLIMG_EDIT, TREEOPTSCTRLIMG_EDIT, m_htiDynUp);
 		m_ctrlTreeOptions.AddEditBox(m_htiDynUpMinUpload, RUNTIME_CLASS(CNumTreeOptionsEdit));
-        m_htiDynUpPingTolerance = m_ctrlTreeOptions.InsertItem(GetResString(IDS_DYNUP_PINGTOLERANCE), TREEOPTSCTRLIMG_EDIT, TREEOPTSCTRLIMG_EDIT, m_htiDynUp);
+		m_htiDynUpPingTolerance = m_ctrlTreeOptions.InsertItem(GetResString(IDS_DYNUP_PINGTOLERANCE), TREEOPTSCTRLIMG_EDIT, TREEOPTSCTRLIMG_EDIT, m_htiDynUp);
 		m_ctrlTreeOptions.AddEditBox(m_htiDynUpPingTolerance, RUNTIME_CLASS(CNumTreeOptionsEdit));
-        m_htiDynUpPingToleranceMilliseconds = m_ctrlTreeOptions.InsertItem(GetResString(IDS_DYNUP_PINGTOLERANCE_MS), TREEOPTSCTRLIMG_EDIT, TREEOPTSCTRLIMG_EDIT, m_htiDynUp);
-        m_ctrlTreeOptions.AddEditBox(m_htiDynUpPingToleranceMilliseconds, RUNTIME_CLASS(CNumTreeOptionsEdit));
-        m_htiDynUpPingToleranceGroup = m_ctrlTreeOptions.InsertGroup(GetResString(IDS_DYNUP_RADIO_PINGTOLERANCE_HEADER), iImgDynyp, m_htiDynUp);
-        m_htiDynUpRadioPingTolerance = m_ctrlTreeOptions.InsertRadioButton(GetResString(IDS_DYNUP_RADIO_PINGTOLERANCE_PERCENT), m_htiDynUpPingToleranceGroup, m_iDynUpRadioPingTolerance == 0);
-        m_htiDynUpRadioPingToleranceMilliseconds = m_ctrlTreeOptions.InsertRadioButton(GetResString(IDS_DYNUP_RADIO_PINGTOLERANCE_MS), m_htiDynUpPingToleranceGroup, m_iDynUpRadioPingTolerance == 1);
-        m_htiDynUpGoingUpDivider = m_ctrlTreeOptions.InsertItem(GetResString(IDS_DYNUP_GOINGUPDIVIDER), TREEOPTSCTRLIMG_EDIT, TREEOPTSCTRLIMG_EDIT, m_htiDynUp);
+		m_htiDynUpPingToleranceMilliseconds = m_ctrlTreeOptions.InsertItem(GetResString(IDS_DYNUP_PINGTOLERANCE_MS), TREEOPTSCTRLIMG_EDIT, TREEOPTSCTRLIMG_EDIT, m_htiDynUp);
+		m_ctrlTreeOptions.AddEditBox(m_htiDynUpPingToleranceMilliseconds, RUNTIME_CLASS(CNumTreeOptionsEdit));
+		m_htiDynUpPingToleranceGroup = m_ctrlTreeOptions.InsertGroup(GetResString(IDS_DYNUP_RADIO_PINGTOLERANCE_HEADER), iImgDynyp, m_htiDynUp);
+		m_htiDynUpRadioPingTolerance = m_ctrlTreeOptions.InsertRadioButton(GetResString(IDS_DYNUP_RADIO_PINGTOLERANCE_PERCENT), m_htiDynUpPingToleranceGroup, m_iDynUpRadioPingTolerance == 0);
+		m_htiDynUpRadioPingToleranceMilliseconds = m_ctrlTreeOptions.InsertRadioButton(GetResString(IDS_DYNUP_RADIO_PINGTOLERANCE_MS), m_htiDynUpPingToleranceGroup, m_iDynUpRadioPingTolerance == 1);
+		m_htiDynUpGoingUpDivider = m_ctrlTreeOptions.InsertItem(GetResString(IDS_DYNUP_GOINGUPDIVIDER), TREEOPTSCTRLIMG_EDIT, TREEOPTSCTRLIMG_EDIT, m_htiDynUp);
 		m_ctrlTreeOptions.AddEditBox(m_htiDynUpGoingUpDivider, RUNTIME_CLASS(CNumTreeOptionsEdit));
-        m_htiDynUpGoingDownDivider = m_ctrlTreeOptions.InsertItem(GetResString(IDS_DYNUP_GOINGDOWNDIVIDER), TREEOPTSCTRLIMG_EDIT, TREEOPTSCTRLIMG_EDIT, m_htiDynUp);
+		m_htiDynUpGoingDownDivider = m_ctrlTreeOptions.InsertItem(GetResString(IDS_DYNUP_GOINGDOWNDIVIDER), TREEOPTSCTRLIMG_EDIT, TREEOPTSCTRLIMG_EDIT, m_htiDynUp);
 		m_ctrlTreeOptions.AddEditBox(m_htiDynUpGoingDownDivider, RUNTIME_CLASS(CNumTreeOptionsEdit));
-        m_htiDynUpNumberOfPings = m_ctrlTreeOptions.InsertItem(GetResString(IDS_DYNUP_NUMBEROFPINGS), TREEOPTSCTRLIMG_EDIT, TREEOPTSCTRLIMG_EDIT, m_htiDynUp);
+		m_htiDynUpNumberOfPings = m_ctrlTreeOptions.InsertItem(GetResString(IDS_DYNUP_NUMBEROFPINGS), TREEOPTSCTRLIMG_EDIT, TREEOPTSCTRLIMG_EDIT, m_htiDynUp);
 		m_ctrlTreeOptions.AddEditBox(m_htiDynUpNumberOfPings, RUNTIME_CLASS(CNumTreeOptionsEdit));
 
 		/////////////////////////////////////////////////////////////////////////////
 		// UPnP group
 		//
-        m_htiUPnP = m_ctrlTreeOptions.InsertGroup(GetResString(IDS_UPNP), iImgUPnP, TVI_ROOT);
+		m_htiUPnP = m_ctrlTreeOptions.InsertGroup(GetResString(IDS_UPNP), iImgUPnP, TVI_ROOT);
 		m_htiCloseUPnPPorts = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_UPNPCLOSEONEXIT), m_htiUPnP, m_bCloseUPnPOnExit);
 		m_htiSkipWANIPSetup = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_UPNPSKIPWANIP), m_htiUPnP, m_bSkipWANIPSetup);
 		m_htiSkipWANPPPSetup = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_UPNPSKIPWANPPP), m_htiUPnP, m_bSkipWANPPPSetup);
@@ -295,18 +291,18 @@ void CPPgTweaks::DoDataExchange(CDataExchange* pDX)
 		m_htiShareeMuleOldStyle = m_ctrlTreeOptions.InsertRadioButton(GetResString(IDS_SHAREEMULEOLD), m_htiShareeMule, m_iShareeMule == 2);
 
 
-	    m_ctrlTreeOptions.Expand(m_htiTCPGroup, TVE_EXPAND);
-        if (m_htiVerboseGroup)
-		    m_ctrlTreeOptions.Expand(m_htiVerboseGroup, TVE_EXPAND);
+		m_ctrlTreeOptions.Expand(m_htiTCPGroup, TVE_EXPAND);
+		if (m_htiVerboseGroup)
+			m_ctrlTreeOptions.Expand(m_htiVerboseGroup, TVE_EXPAND);
 		m_ctrlTreeOptions.Expand(m_htiCommit, TVE_EXPAND);
 		m_ctrlTreeOptions.Expand(m_htiCheckDiskspace, TVE_EXPAND);
 		m_ctrlTreeOptions.Expand(m_htiDynUp, TVE_EXPAND);
-        m_ctrlTreeOptions.Expand(m_htiDynUpPingToleranceGroup, TVE_EXPAND);
+		m_ctrlTreeOptions.Expand(m_htiDynUpPingToleranceGroup, TVE_EXPAND);
 		m_ctrlTreeOptions.Expand(m_htiExtractMetaData, TVE_EXPAND);
 		m_ctrlTreeOptions.Expand(m_htiUPnP, TVE_EXPAND);
 		m_ctrlTreeOptions.Expand(m_htiShareeMule, TVE_EXPAND);
-        m_ctrlTreeOptions.SendMessage(WM_VSCROLL, SB_TOP);
-        m_bInitializedTreeOpts = true;
+		m_ctrlTreeOptions.SendMessage(WM_VSCROLL, SB_TOP);
+		m_bInitializedTreeOpts = true;
 	}
 
 	/////////////////////////////////////////////////////////////////////////////
@@ -328,7 +324,7 @@ void CPPgTweaks::DoDataExchange(CDataExchange* pDX)
 	m_ctrlTreeOptions.SetCheckBoxEnable(m_htiFirewallStartup, thePrefs.GetWindowsVersion() == _WINVER_XP_ && IsRunningXPSP2() == 0);
 	DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiFilterLANIPs, m_bFilterLANIPs);
 	DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiExtControls, m_bExtControls);
-    DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiA4AFSaveCpu, m_bA4AFSaveCpu);
+	DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiA4AFSaveCpu, m_bA4AFSaveCpu);
 	DDX_TreeEdit(pDX, IDC_EXT_OPTS, m_htiYourHostname, m_sYourHostname);
 	DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiAutoArch, m_bAutoArchDisable);
 
@@ -349,7 +345,7 @@ void CPPgTweaks::DoDataExchange(CDataExchange* pDX)
 	// Logging group
 	//
 	DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiLog2Disk, m_bLog2Disk);
-	if (m_htiLogLevel){
+	if (m_htiLogLevel) {
 		DDX_TreeEdit(pDX, IDC_EXT_OPTS, m_htiLogLevel, m_iLogLevel);
 		DDV_MinMaxInt(pDX, m_iLogLevel, 1, 5);
 	}
@@ -395,19 +391,19 @@ void CPPgTweaks::DoDataExchange(CDataExchange* pDX)
 	/////////////////////////////////////////////////////////////////////////////
 	// USS group
 	//
-    DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiDynUpEnabled, m_bDynUpEnabled);
-    DDX_TreeEdit(pDX, IDC_EXT_OPTS, m_htiDynUpMinUpload, m_iDynUpMinUpload);
+	DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiDynUpEnabled, m_bDynUpEnabled);
+	DDX_TreeEdit(pDX, IDC_EXT_OPTS, m_htiDynUpMinUpload, m_iDynUpMinUpload);
 	DDV_MinMaxInt(pDX, m_iDynUpMinUpload, 1, INT_MAX);
-    DDX_TreeEdit(pDX, IDC_EXT_OPTS, m_htiDynUpPingTolerance, m_iDynUpPingTolerance);
+	DDX_TreeEdit(pDX, IDC_EXT_OPTS, m_htiDynUpPingTolerance, m_iDynUpPingTolerance);
 	DDV_MinMaxInt(pDX, m_iDynUpPingTolerance, 100, INT_MAX);
-    DDX_TreeEdit(pDX, IDC_EXT_OPTS, m_htiDynUpPingToleranceMilliseconds, m_iDynUpPingToleranceMilliseconds);
+	DDX_TreeEdit(pDX, IDC_EXT_OPTS, m_htiDynUpPingToleranceMilliseconds, m_iDynUpPingToleranceMilliseconds);
 	DDV_MinMaxInt(pDX, m_iDynUpPingTolerance, 1, INT_MAX);
-    DDX_TreeRadio(pDX, IDC_EXT_OPTS, m_htiDynUpPingToleranceGroup, m_iDynUpRadioPingTolerance);
-    DDX_TreeEdit(pDX, IDC_EXT_OPTS, m_htiDynUpGoingUpDivider, m_iDynUpGoingUpDivider);
+	DDX_TreeRadio(pDX, IDC_EXT_OPTS, m_htiDynUpPingToleranceGroup, m_iDynUpRadioPingTolerance);
+	DDX_TreeEdit(pDX, IDC_EXT_OPTS, m_htiDynUpGoingUpDivider, m_iDynUpGoingUpDivider);
 	DDV_MinMaxInt(pDX, m_iDynUpGoingUpDivider, 1, INT_MAX);
-    DDX_TreeEdit(pDX, IDC_EXT_OPTS, m_htiDynUpGoingDownDivider, m_iDynUpGoingDownDivider);
+	DDX_TreeEdit(pDX, IDC_EXT_OPTS, m_htiDynUpGoingDownDivider, m_iDynUpGoingDownDivider);
 	DDV_MinMaxInt(pDX, m_iDynUpGoingDownDivider, 1, INT_MAX);
-    DDX_TreeEdit(pDX, IDC_EXT_OPTS, m_htiDynUpNumberOfPings, m_iDynUpNumberOfPings);
+	DDX_TreeEdit(pDX, IDC_EXT_OPTS, m_htiDynUpNumberOfPings, m_iDynUpNumberOfPings);
 	DDV_MinMaxInt(pDX, m_iDynUpNumberOfPings, 1, INT_MAX);
 
 	/////////////////////////////////////////////////////////////////////////////
@@ -430,8 +426,7 @@ BOOL CPPgTweaks::OnInitDialog()
 	m_iMaxHalfOpen = thePrefs.GetMaxHalfConnections();
 	m_bConditionalTCPAccept = thePrefs.GetConditionalTCPAccept();
 	m_bAutoTakeEd2kLinks = thePrefs.AutoTakeED2KLinks();
-	if (thePrefs.GetEnableVerboseOptions())
-	{
+	if (thePrefs.GetEnableVerboseOptions()) {
 		m_bVerbose = thePrefs.m_bVerbose;
 		m_bDebug2Disk = thePrefs.debug2disk;							// do *not* use the according 'Get...' function here!
 		m_bDebugSourceExchange = thePrefs.m_bDebugSourceExchange;		// do *not* use the according 'Get...' function here!
@@ -440,7 +435,7 @@ BOOL CPPgTweaks::OnInitDialog()
 		m_bLogSecureIdent = thePrefs.m_bLogSecureIdent;					// do *not* use the according 'Get...' function here!
 		m_bLogFilteredIPs = thePrefs.m_bLogFilteredIPs;					// do *not* use the according 'Get...' function here!
 		m_bLogFileSaving = thePrefs.m_bLogFileSaving;					// do *not* use the according 'Get...' function here!
-        m_bLogA4AF = thePrefs.m_bLogA4AF;                   		    // do *not* use the according 'Get...' function here! // ZZ:DownloadManager
+		m_bLogA4AF = thePrefs.m_bLogA4AF;                   		    // do *not* use the according 'Get...' function here! // ZZ:DownloadManager
 		m_bLogUlDlEvents = thePrefs.m_bLogUlDlEvents;
 		m_iLogLevel = 5 - thePrefs.m_byLogLevel;
 	}
@@ -452,7 +447,7 @@ BOOL CPPgTweaks::OnInitDialog()
 	m_bExtControls = thePrefs.m_bExtControls;
 	m_uServerKeepAliveTimeout = thePrefs.m_dwServerKeepAliveTimeout / 60000;
 	m_bSparsePartFiles = thePrefs.GetSparsePartFiles();
-	m_bFullAlloc= thePrefs.m_bAllocFull;
+	m_bFullAlloc = thePrefs.m_bAllocFull;
 	m_bCheckDiskspace = thePrefs.checkDiskspace;
 	m_bResolveShellLinks = thePrefs.GetResolveSharedShellLinks();
 	m_fMinFreeDiskSpaceMB = (float)(thePrefs.m_uMinFreeDiskSpace / (1024.0 * 1024.0));
@@ -460,14 +455,14 @@ BOOL CPPgTweaks::OnInitDialog()
 	m_bFirewallStartup = ((thePrefs.GetWindowsVersion() == _WINVER_XP_) ? thePrefs.m_bOpenPortsOnStartUp : 0);
 	m_bAutoArchDisable = !thePrefs.m_bAutomaticArcPreviewStart;
 
-    m_bDynUpEnabled = thePrefs.m_bDynUpEnabled;
-    m_iDynUpMinUpload = thePrefs.GetMinUpload();
-    m_iDynUpPingTolerance = thePrefs.GetDynUpPingTolerance();
-    m_iDynUpPingToleranceMilliseconds = thePrefs.GetDynUpPingToleranceMilliseconds();
-    m_iDynUpRadioPingTolerance = thePrefs.IsDynUpUseMillisecondPingTolerance()?1:0;
-    m_iDynUpGoingUpDivider = thePrefs.GetDynUpGoingUpDivider();
-    m_iDynUpGoingDownDivider = thePrefs.GetDynUpGoingDownDivider();
-    m_iDynUpNumberOfPings = thePrefs.GetDynUpNumberOfPings();
+	m_bDynUpEnabled = thePrefs.m_bDynUpEnabled;
+	m_iDynUpMinUpload = thePrefs.GetMinUpload();
+	m_iDynUpPingTolerance = thePrefs.GetDynUpPingTolerance();
+	m_iDynUpPingToleranceMilliseconds = thePrefs.GetDynUpPingToleranceMilliseconds();
+	m_iDynUpRadioPingTolerance = thePrefs.IsDynUpUseMillisecondPingTolerance()?1:0;
+	m_iDynUpGoingUpDivider = thePrefs.GetDynUpGoingUpDivider();
+	m_iDynUpGoingDownDivider = thePrefs.GetDynUpGoingDownDivider();
+	m_iDynUpNumberOfPings = thePrefs.GetDynUpNumberOfPings();
 
 	m_bCloseUPnPOnExit = thePrefs.CloseUPnPOnExit();
 	m_bSkipWANIPSetup = thePrefs.GetSkipWANIPSetup();
@@ -475,10 +470,10 @@ BOOL CPPgTweaks::OnInitDialog()
 
 	m_iShareeMule = thePrefs.m_nCurrentUserDirMode;
 
-    m_bA4AFSaveCpu = thePrefs.GetA4AFSaveCpu();
+	m_bA4AFSaveCpu = thePrefs.GetA4AFSaveCpu();
 
 	m_ctrlTreeOptions.SetImageListColorFlags(theApp.m_iDfltImageListColorFlags);
-    CPropertyPage::OnInitDialog();
+	CPropertyPage::OnInitDialog();
 	InitWindowStyles(this);
 	m_ctrlTreeOptions.SetItemHeight(m_ctrlTreeOptions.GetItemHeight() + 2);
 
@@ -526,8 +521,7 @@ BOOL CPPgTweaks::OnApply()
 	thePrefs.SetMaxHalfConnections(m_iMaxHalfOpen ? m_iMaxHalfOpen : DFLT_MAXHALFOPEN);
 	thePrefs.m_bConditionalTCPAccept = m_bConditionalTCPAccept;
 
-	if (thePrefs.AutoTakeED2KLinks() != m_bAutoTakeEd2kLinks)
-	{
+	if (thePrefs.AutoTakeED2KLinks() != m_bAutoTakeEd2kLinks) {
 		thePrefs.autotakeed2klinks = m_bAutoTakeEd2kLinks;
 		if (thePrefs.AutoTakeED2KLinks())
 			Ask4RegFix(false, true, false);
@@ -541,8 +535,7 @@ BOOL CPPgTweaks::OnApply()
 		theLog.Close();
 	thePrefs.log2disk = m_bLog2Disk;
 
-	if (thePrefs.GetEnableVerboseOptions())
-	{
+	if (thePrefs.GetEnableVerboseOptions()) {
 		if (!thePrefs.GetDebug2Disk() && m_bVerbose && m_bDebug2Disk)
 			theVerboseLog.Open();
 		else if (thePrefs.GetDebug2Disk() && (!m_bVerbose || !m_bDebug2Disk))
@@ -555,7 +548,7 @@ BOOL CPPgTweaks::OnApply()
 		thePrefs.m_bLogSecureIdent = m_bLogSecureIdent;
 		thePrefs.m_bLogFilteredIPs = m_bLogFilteredIPs;
 		thePrefs.m_bLogFileSaving = m_bLogFileSaving;
-        thePrefs.m_bLogA4AF = m_bLogA4AF;
+		thePrefs.m_bLogA4AF = m_bLogA4AF;
 		thePrefs.m_bLogUlDlEvents = m_bLogUlDlEvents;
 		thePrefs.m_byLogLevel = 5 - m_iLogLevel;
 
@@ -576,7 +569,7 @@ BOOL CPPgTweaks::OnApply()
 	}
 	thePrefs.m_dwServerKeepAliveTimeout = m_uServerKeepAliveTimeout * 60000;
 	thePrefs.m_bSparsePartFiles = m_bSparsePartFiles;
-	thePrefs.m_bAllocFull= m_bFullAlloc;
+	thePrefs.m_bAllocFull = m_bFullAlloc;
 	thePrefs.checkDiskspace = m_bCheckDiskspace;
 	thePrefs.m_bResolveSharedShellLinks = m_bResolveShellLinks;
 	thePrefs.m_uMinFreeDiskSpace = (UINT)(m_fMinFreeDiskSpaceMB * (1024 * 1024));
@@ -586,14 +579,14 @@ BOOL CPPgTweaks::OnApply()
 	}
 	thePrefs.m_bOpenPortsOnStartUp = m_bFirewallStartup;
 
-    thePrefs.m_bDynUpEnabled = m_bDynUpEnabled;
-    thePrefs.minupload = (uint16)m_iDynUpMinUpload;
-    thePrefs.m_iDynUpPingTolerance = m_iDynUpPingTolerance;
-    thePrefs.m_iDynUpPingToleranceMilliseconds = m_iDynUpPingToleranceMilliseconds;
-    thePrefs.m_bDynUpUseMillisecondPingTolerance = (m_iDynUpRadioPingTolerance == 1);
-    thePrefs.m_iDynUpGoingUpDivider = m_iDynUpGoingUpDivider;
-    thePrefs.m_iDynUpGoingDownDivider = m_iDynUpGoingDownDivider;
-    thePrefs.m_iDynUpNumberOfPings = m_iDynUpNumberOfPings;
+	thePrefs.m_bDynUpEnabled = m_bDynUpEnabled;
+	thePrefs.minupload = (uint16)m_iDynUpMinUpload;
+	thePrefs.m_iDynUpPingTolerance = m_iDynUpPingTolerance;
+	thePrefs.m_iDynUpPingToleranceMilliseconds = m_iDynUpPingToleranceMilliseconds;
+	thePrefs.m_bDynUpUseMillisecondPingTolerance = (m_iDynUpRadioPingTolerance == 1);
+	thePrefs.m_iDynUpGoingUpDivider = m_iDynUpGoingUpDivider;
+	thePrefs.m_iDynUpGoingDownDivider = m_iDynUpGoingDownDivider;
+	thePrefs.m_iDynUpNumberOfPings = m_iDynUpNumberOfPings;
 	thePrefs.m_bAutomaticArcPreviewStart = !m_bAutoArchDisable;
 
 	thePrefs.m_bCloseUPnPOnExit = m_bCloseUPnPOnExit;
@@ -602,11 +595,10 @@ BOOL CPPgTweaks::OnApply()
 
 	thePrefs.ChangeUserDirMode(m_iShareeMule);
 
-    thePrefs.m_bA4AFSaveCpu = m_bA4AFSaveCpu;
+	thePrefs.m_bA4AFSaveCpu = m_bA4AFSaveCpu;
 
-	if (thePrefs.GetEnableVerboseOptions())
-	{
-	    theApp.emuledlg->serverwnd->ToggleDebugWindow();
+	if (thePrefs.GetEnableVerboseOptions()) {
+		theApp.emuledlg->serverwnd->ToggleDebugWindow();
 		theApp.emuledlg->serverwnd->UpdateLogTabSelection();
 	}
 	theApp.downloadqueue->CheckDiskspace();
@@ -617,18 +609,16 @@ BOOL CPPgTweaks::OnApply()
 
 void CPPgTweaks::OnHScroll(UINT /*nSBCode*/, UINT /*nPos*/, CScrollBar* pScrollBar)
 {
-	if (pScrollBar->GetSafeHwnd() == m_ctlFileBuffSize.m_hWnd)
-	{
+	if (pScrollBar->GetSafeHwnd() == m_ctlFileBuffSize.m_hWnd) {
 		m_iFileBufferSize = m_ctlFileBuffSize.GetPos() * 1024;
-        CString temp;
+		CString temp;
 		temp.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_FILEBUFFERSIZE), (LPCTSTR)CastItoXBytes(m_iFileBufferSize, false, false));
 		GetDlgItem(IDC_FILEBUFFERSIZE_STATIC)->SetWindowText(temp);
 		SetModified(TRUE);
-	}
-	else if (pScrollBar->GetSafeHwnd() == m_ctlQueueSize.m_hWnd)
-	{
+	} else if (pScrollBar->GetSafeHwnd() == m_ctlQueueSize.m_hWnd) {
 		m_iQueueSize = ((CSliderCtrl*)pScrollBar)->GetPos() * 100;
-		CString temp(GetResString(IDS_QUEUESIZE) + _T(": ") + GetFormatedUInt((ULONG)m_iQueueSize));
+		CString temp;
+		temp.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_QUEUESIZE), (LPCTSTR)GetFormatedUInt((ULONG)m_iQueueSize));
 		GetDlgItem(IDC_QUEUESIZE_STATIC)->SetWindowText(temp);
 		SetModified(TRUE);
 	}
@@ -636,8 +626,7 @@ void CPPgTweaks::OnHScroll(UINT /*nSBCode*/, UINT /*nPos*/, CScrollBar* pScrollB
 
 void CPPgTweaks::Localize(void)
 {
-	if(m_hWnd)
-	{
+	if (m_hWnd) {
 		SetWindowText(GetResString(IDS_PW_TWEAK));
 		GetDlgItem(IDC_WARNING)->SetWindowText(GetResString(IDS_TWEAKS_WARNING));
 		GetDlgItem(IDC_PREFINI_STATIC)->SetWindowText(GetResString(IDS_PW_TWEAK));
@@ -678,17 +667,17 @@ void CPPgTweaks::Localize(void)
 		if (m_htiMinFreeDiskSpace) m_ctrlTreeOptions.SetEditLabel(m_htiMinFreeDiskSpace, GetResString(IDS_MINFREEDISKSPACE));
 		if (m_htiYourHostname) m_ctrlTreeOptions.SetEditLabel(m_htiYourHostname, GetResString(IDS_YOURHOSTNAME));	// itsonlyme: hostnameSource
 		if (m_htiFirewallStartup) m_ctrlTreeOptions.SetItemText(m_htiFirewallStartup, GetResString(IDS_FO_PREF_STARTUP));
-        if (m_htiDynUp) m_ctrlTreeOptions.SetItemText(m_htiDynUp, GetResString(IDS_DYNUP));
+		if (m_htiDynUp) m_ctrlTreeOptions.SetItemText(m_htiDynUp, GetResString(IDS_DYNUP));
 		if (m_htiDynUpEnabled) m_ctrlTreeOptions.SetItemText(m_htiDynUpEnabled, GetResString(IDS_DYNUPENABLED));
-        if (m_htiDynUpMinUpload) m_ctrlTreeOptions.SetEditLabel(m_htiDynUpMinUpload, GetResString(IDS_DYNUP_MINUPLOAD));
-        if (m_htiDynUpPingTolerance) m_ctrlTreeOptions.SetEditLabel(m_htiDynUpPingTolerance, GetResString(IDS_DYNUP_PINGTOLERANCE));
-        if (m_htiDynUpGoingUpDivider) m_ctrlTreeOptions.SetEditLabel(m_htiDynUpGoingUpDivider, GetResString(IDS_DYNUP_GOINGUPDIVIDER));
-        if (m_htiDynUpGoingDownDivider) m_ctrlTreeOptions.SetEditLabel(m_htiDynUpGoingDownDivider, GetResString(IDS_DYNUP_GOINGDOWNDIVIDER));
-        if (m_htiDynUpNumberOfPings) m_ctrlTreeOptions.SetEditLabel(m_htiDynUpNumberOfPings, GetResString(IDS_DYNUP_NUMBEROFPINGS));
-        if (m_htiA4AFSaveCpu) m_ctrlTreeOptions.SetItemText(m_htiA4AFSaveCpu, GetResString(IDS_A4AF_SAVE_CPU));
-        if (m_htiFullAlloc) m_ctrlTreeOptions.SetItemText(m_htiFullAlloc, GetResString(IDS_FULLALLOC));
+		if (m_htiDynUpMinUpload) m_ctrlTreeOptions.SetEditLabel(m_htiDynUpMinUpload, GetResString(IDS_DYNUP_MINUPLOAD));
+		if (m_htiDynUpPingTolerance) m_ctrlTreeOptions.SetEditLabel(m_htiDynUpPingTolerance, GetResString(IDS_DYNUP_PINGTOLERANCE));
+		if (m_htiDynUpGoingUpDivider) m_ctrlTreeOptions.SetEditLabel(m_htiDynUpGoingUpDivider, GetResString(IDS_DYNUP_GOINGUPDIVIDER));
+		if (m_htiDynUpGoingDownDivider) m_ctrlTreeOptions.SetEditLabel(m_htiDynUpGoingDownDivider, GetResString(IDS_DYNUP_GOINGDOWNDIVIDER));
+		if (m_htiDynUpNumberOfPings) m_ctrlTreeOptions.SetEditLabel(m_htiDynUpNumberOfPings, GetResString(IDS_DYNUP_NUMBEROFPINGS));
+		if (m_htiA4AFSaveCpu) m_ctrlTreeOptions.SetItemText(m_htiA4AFSaveCpu, GetResString(IDS_A4AF_SAVE_CPU));
+		if (m_htiFullAlloc) m_ctrlTreeOptions.SetItemText(m_htiFullAlloc, GetResString(IDS_FULLALLOC));
 		if (m_htiAutoArch) m_ctrlTreeOptions.SetItemText(m_htiAutoArch, GetResString(IDS_DISABLE_AUTOARCHPREV));
-        if (m_htiUPnP) m_ctrlTreeOptions.SetItemText(m_htiUPnP, GetResString(IDS_UPNP));
+		if (m_htiUPnP) m_ctrlTreeOptions.SetItemText(m_htiUPnP, GetResString(IDS_UPNP));
 		if (m_htiCloseUPnPPorts) m_ctrlTreeOptions.SetItemText(m_htiCloseUPnPPorts, GetResString(IDS_UPNPCLOSEONEXIT));
 		if (m_htiSkipWANIPSetup) m_ctrlTreeOptions.SetItemText(m_htiSkipWANIPSetup, GetResString(IDS_UPNPSKIPWANIP));
 		if (m_htiSkipWANPPPSetup) m_ctrlTreeOptions.SetItemText(m_htiSkipWANPPPSetup, GetResString(IDS_UPNPSKIPWANPPP));
@@ -698,9 +687,10 @@ void CPPgTweaks::Localize(void)
 		if (m_htiShareeMuleOldStyle) m_ctrlTreeOptions.SetItemText(m_htiShareeMuleOldStyle, GetResString(IDS_SHAREEMULEOLD));
 		if (m_htiResolveShellLinks) m_ctrlTreeOptions.SetItemText(m_htiResolveShellLinks, GetResString(IDS_RESOLVELINKS));
 
-        CString temp(GetResString(IDS_FILEBUFFERSIZE)+_T(": ")+CastItoXBytes(m_iFileBufferSize, false, false));
+		CString temp;
+		temp.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_FILEBUFFERSIZE), (LPCTSTR)CastItoXBytes(m_iFileBufferSize, false, false));
 		GetDlgItem(IDC_FILEBUFFERSIZE_STATIC)->SetWindowText(temp);
-		temp.AppendFormat(_T("%s: %s"), (LPCTSTR)GetResString(IDS_QUEUESIZE), (LPCTSTR)GetFormatedUInt(m_iQueueSize));
+		temp.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_QUEUESIZE), (LPCTSTR)GetFormatedUInt(m_iQueueSize));
 		GetDlgItem(IDC_QUEUESIZE_STATIC)->SetWindowText(temp);
 	}
 }
@@ -723,7 +713,7 @@ void CPPgTweaks::OnDestroy()
 	m_htiLogSecureIdent = NULL;
 	m_htiLogFilteredIPs = NULL;
 	m_htiLogFileSaving = NULL;
-    m_htiLogA4AF = NULL;
+	m_htiLogA4AF = NULL;
 	m_htiLogLevel = NULL;
 	m_htiLogUlDlEvents = NULL;
 	m_htiCreditSystem = NULL;
@@ -742,18 +732,18 @@ void CPPgTweaks::OnDestroy()
 	m_htiMinFreeDiskSpace = NULL;
 	m_htiYourHostname = NULL;
 	m_htiFirewallStartup = NULL;
-    m_htiDynUp = NULL;
+	m_htiDynUp = NULL;
 	m_htiDynUpEnabled = NULL;
-    m_htiDynUpMinUpload = NULL;
-    m_htiDynUpPingTolerance = NULL;
-    m_htiDynUpPingToleranceMilliseconds = NULL;
-    m_htiDynUpPingToleranceGroup = NULL;
-    m_htiDynUpRadioPingTolerance = NULL;
-    m_htiDynUpRadioPingToleranceMilliseconds = NULL;
-    m_htiDynUpGoingUpDivider = NULL;
-    m_htiDynUpGoingDownDivider = NULL;
-    m_htiDynUpNumberOfPings = NULL;
-    m_htiA4AFSaveCpu = NULL;
+	m_htiDynUpMinUpload = NULL;
+	m_htiDynUpPingTolerance = NULL;
+	m_htiDynUpPingToleranceMilliseconds = NULL;
+	m_htiDynUpPingToleranceGroup = NULL;
+	m_htiDynUpRadioPingTolerance = NULL;
+	m_htiDynUpRadioPingToleranceMilliseconds = NULL;
+	m_htiDynUpGoingUpDivider = NULL;
+	m_htiDynUpGoingDownDivider = NULL;
+	m_htiDynUpNumberOfPings = NULL;
+	m_htiA4AFSaveCpu = NULL;
 	m_htiExtractMetaData = NULL;
 	m_htiExtractMetaDataNever = NULL;
 	m_htiExtractMetaDataID3Lib = NULL;
@@ -769,7 +759,7 @@ void CPPgTweaks::OnDestroy()
 	//m_htiExtractMetaDataMediaDet = NULL;
 	m_htiResolveShellLinks = NULL;
 
-    CPropertyPage::OnDestroy();
+	CPropertyPage::OnDestroy();
 }
 
 LRESULT CPPgTweaks::OnTreeOptsCtrlNotify(WPARAM wParam, LPARAM lParam)

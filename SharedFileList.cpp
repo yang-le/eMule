@@ -197,11 +197,10 @@ void CPublishKeywordList::ResetNextKeyword()
 
 CPublishKeyword* CPublishKeywordList::FindKeyword(const CStringW& rstrKeyword, POSITION* ppos) const
 {
-	for (POSITION pos = m_lstKeywords.GetHeadPosition(); pos;) {
+	for (POSITION pos = m_lstKeywords.GetHeadPosition(); pos != NULL;) {
 		POSITION posLast = pos;
 		CPublishKeyword* pPubKw = m_lstKeywords.GetNext(pos);
-		if (pPubKw->GetKeyword() == rstrKeyword)
-		{
+		if (pPubKw->GetKeyword() == rstrKeyword) {
 			if (ppos)
 				*ppos = posLast;
 			return pPubKw;
@@ -270,17 +269,16 @@ void CPublishKeywordList::RemoveAllKeywords()
 
 void CPublishKeywordList::RemoveAllKeywordReferences()
 {
-	for (POSITION pos = m_lstKeywords.GetHeadPosition(); pos;)
+	for (POSITION pos = m_lstKeywords.GetHeadPosition(); pos != NULL;)
 		m_lstKeywords.GetNext(pos)->RemoveAllReferences();
 }
 
 void CPublishKeywordList::PurgeUnreferencedKeywords()
 {
-	for (POSITION pos = m_lstKeywords.GetHeadPosition(); pos;) {
+	for (POSITION pos = m_lstKeywords.GetHeadPosition(); pos != NULL;) {
 		POSITION posLast = pos;
 		const CPublishKeyword* pPubKw = m_lstKeywords.GetNext(pos);
-		if (pPubKw->GetRefCount() == 0)
-		{
+		if (pPubKw->GetRefCount() == 0) {
 			if (posLast == m_posNextKeyword)
 				m_posNextKeyword = pos;
 			m_lstKeywords.RemoveAt(posLast);
@@ -294,7 +292,7 @@ void CPublishKeywordList::PurgeUnreferencedKeywords()
 void CPublishKeywordList::Dump()
 {
 	int i = 0;
-	for (POSITION pos = m_lstKeywords.GetHeadPosition(); pos;) {
+	for (POSITION pos = m_lstKeywords.GetHeadPosition(); pos != NULL;) {
 		CPublishKeyword* pPubKw = m_lstKeywords.GetNext(pos);
 		TRACE(_T("%3u: %-10ls  ref=%u  %s\n"), i, (LPCTSTR)pPubKw->GetKeyword(), pPubKw->GetRefCount(), (LPCTSTR)CastSecondsToHM(pPubKw->GetNextPublishTime()));
 		i++;
@@ -433,18 +431,13 @@ CSharedFileList::~CSharedFileList(){
 #endif
 }
 
-void CSharedFileList::CopySharedFileMap(CMap<CCKey,const CCKey&,CKnownFile*,CKnownFile*> &Files_Map)
+void CSharedFileList::CopySharedFileMap(CMap<CCKey, const CCKey&, CKnownFile*, CKnownFile*> &Files_Map)
 {
-	if (!m_Files_map.IsEmpty())
-	{
-		POSITION pos = m_Files_map.GetStartPosition();
-		while (pos)
-		{
-			CCKey key;
-			CKnownFile* cur_file;
-			m_Files_map.GetNextAssoc(pos, key, cur_file);
-			Files_Map.SetAt(key, cur_file);
-		}
+	for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
+		CCKey key;
+		CKnownFile* cur_file;
+		m_Files_map.GetNextAssoc(pos, key, cur_file);
+		Files_Map.SetAt(key, cur_file);
 	}
 }
 
@@ -454,7 +447,7 @@ void CSharedFileList::FindSharedFiles()
 	{
 		CSingleLock listlock(&m_mutWriteList);
 
-		for (POSITION pos = m_Files_map.GetStartPosition(); pos;) {
+		for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
 			CCKey key;
 			CKnownFile* cur_file;
 			m_Files_map.GetNextAssoc(pos, key, cur_file);
@@ -526,16 +519,15 @@ void CSharedFileList::FindSharedFiles()
 		}
 	}
 
-	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition();pos != 0;)
-	{
+	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos != NULL;) {
 		tempDir = thePrefs.shareddir_list.GetNext(pos);
 		if (tempDir.Right(1)!=_T("\\"))
 			tempDir += _T('\\');
-		ltempDir= tempDir;
+		ltempDir = tempDir;
 		ltempDir.MakeLower();
 
-		if( l_sAdded.Find( ltempDir ) ==NULL ) {
-			l_sAdded.AddHead( ltempDir );
+		if (l_sAdded.Find(ltempDir) ==NULL) {
+			l_sAdded.AddHead(ltempDir);
 			AddFilesFromDirectory(tempDir);
 		}
 	}
@@ -883,9 +875,8 @@ void CSharedFileList::ClearED2KPublishInfo()
 	CKnownFile* cur_file;
 	CCKey bufKey;
 	m_lastPublishED2KFlag = true;
-	for (POSITION pos = m_Files_map.GetStartPosition();pos != 0;)
-	{
-		m_Files_map.GetNextAssoc(pos,bufKey,cur_file);
+	for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
+		m_Files_map.GetNextAssoc(pos, bufKey, cur_file);
 		cur_file->SetPublishedED2K(false);
 	}
 }
@@ -894,10 +885,9 @@ void CSharedFileList::ClearKadSourcePublishInfo()
 {
 	CKnownFile* cur_file;
 	CCKey bufKey;
-	for (POSITION pos = m_Files_map.GetStartPosition();pos != 0;)
-	{
-		m_Files_map.GetNextAssoc(pos,bufKey,cur_file);
-		cur_file->SetLastPublishTimeKadSrc(0,0);
+	for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
+		m_Files_map.GetNextAssoc(pos, bufKey, cur_file);
+		cur_file->SetLastPublishTimeKadSrc(0, 0);
 	}
 }
 
@@ -1145,8 +1135,8 @@ uint64 CSharedFileList::GetDatasize(uint64 &pbytesLargest) const
 
 	CCKey bufKey;
 	CKnownFile* cur_file;
-	for (POSITION pos = m_Files_map.GetStartPosition();pos != 0;){
-		m_Files_map.GetNextAssoc(pos,bufKey,cur_file);
+	for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
+		m_Files_map.GetNextAssoc(pos, bufKey, cur_file);
 		fsize += (uint64)cur_file->GetFileSize();
 		// -khaos--+++> If this file is bigger than all the others...well duh.
 		if (cur_file->GetFileSize() > pbytesLargest)
@@ -1184,12 +1174,12 @@ CKnownFile* CSharedFileList::GetFileByIdentifier(const CFileIdentifierBase& rFil
 
 CKnownFile* CSharedFileList::GetFileByIndex(int index) const // slow
 {
-	int count=0;
+	int count = 0;
 	CKnownFile* cur_file;
 	CCKey bufKey;
 
-	for (POSITION pos = m_Files_map.GetStartPosition();pos != 0;){
-		m_Files_map.GetNextAssoc(pos,bufKey,cur_file);
+	for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
+		m_Files_map.GetNextAssoc(pos, bufKey, cur_file);
 		if (index==count)
 			return cur_file;
 		count++;
@@ -1202,8 +1192,8 @@ CKnownFile* CSharedFileList::GetFileByAICH(const CAICHHash& rHash) const // slow
 	CKnownFile* cur_file;
 	CCKey bufKey;
 
-	for (POSITION pos = m_Files_map.GetStartPosition();pos != 0;){
-		m_Files_map.GetNextAssoc(pos,bufKey,cur_file);
+	for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
+		m_Files_map.GetNextAssoc(pos, bufKey, cur_file);
 		if (cur_file->GetFileIdentifierC().HasAICHHash() && cur_file->GetFileIdentifierC().GetAICHHash() == rHash)
 			return cur_file;
 	}
@@ -1248,13 +1238,14 @@ void CSharedFileList::HashNextFile(){
 }
 
 // SLUGFILLER: SafeHash
-bool CSharedFileList::IsHashing(const CString& rstrDirectory, const CString& rstrName){
-	for (POSITION pos = waitingforhash_list.GetHeadPosition(); pos != 0; ){
+bool CSharedFileList::IsHashing(const CString& rstrDirectory, const CString& rstrName)
+{
+	for (POSITION pos = waitingforhash_list.GetHeadPosition(); pos != NULL;) {
 		const UnknownFile_Struct* pFile = waitingforhash_list.GetNext(pos);
 		if (!pFile->strName.CompareNoCase(rstrName) && !CompareDirectories(pFile->strDirectory, rstrDirectory))
 			return true;
 	}
-	for (POSITION pos = currentlyhashing_list.GetHeadPosition(); pos != 0; ){
+	for (POSITION pos = currentlyhashing_list.GetHeadPosition(); pos != NULL;) {
 		const UnknownFile_Struct* pFile = currentlyhashing_list.GetNext(pos);
 		if (!pFile->strName.CompareNoCase(rstrName) && !CompareDirectories(pFile->strDirectory, rstrDirectory))
 			return true;
@@ -1262,11 +1253,12 @@ bool CSharedFileList::IsHashing(const CString& rstrDirectory, const CString& rst
 	return false;
 }
 
-void CSharedFileList::RemoveFromHashing(CKnownFile* hashed){
-	for (POSITION pos = currentlyhashing_list.GetHeadPosition(); pos != 0; ){
+void CSharedFileList::RemoveFromHashing(CKnownFile* hashed)
+{
+	for (POSITION pos = currentlyhashing_list.GetHeadPosition(); pos != NULL;) {
 		POSITION posLast = pos;
 		const UnknownFile_Struct* pFile = currentlyhashing_list.GetNext(pos);
-		if (!pFile->strName.CompareNoCase(hashed->GetFileName()) && !CompareDirectories(pFile->strDirectory, hashed->GetPath())){
+		if (!pFile->strName.CompareNoCase(hashed->GetFileName()) && !CompareDirectories(pFile->strDirectory, hashed->GetPath())) {
 			currentlyhashing_list.RemoveAt(posLast);
 			delete pFile;
 			HashNextFile();			// start next hash if possible, but only if a previous hash finished
@@ -1275,11 +1267,12 @@ void CSharedFileList::RemoveFromHashing(CKnownFile* hashed){
 	}
 }
 
-void CSharedFileList::HashFailed(UnknownFile_Struct* hashed){
-	for (POSITION pos = currentlyhashing_list.GetHeadPosition(); pos != 0; ){
+void CSharedFileList::HashFailed(UnknownFile_Struct* hashed)
+{
+	for (POSITION pos = currentlyhashing_list.GetHeadPosition(); pos != NULL;) {
 		POSITION posLast = pos;
 		const UnknownFile_Struct* pFile = currentlyhashing_list.GetNext(pos);
-		if (!pFile->strName.CompareNoCase(hashed->strName) && !CompareDirectories(pFile->strDirectory, hashed->strDirectory)){
+		if (!pFile->strName.CompareNoCase(hashed->strName) && !CompareDirectories(pFile->strDirectory, hashed->strDirectory)) {
 			currentlyhashing_list.RemoveAt(posLast);
 			delete pFile;
 			HashNextFile();			// start next hash if possible, but only if a previous hash finished
@@ -1496,11 +1489,9 @@ bool CSharedFileList::ShouldBeShared(const CString& strPath, const CString& strF
 	if (CompareDirectories(strPath, thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR)) == 0)
 		return true;
 
-	for (int ix=1;ix<thePrefs.GetCatCount();ix++)
-	{
+	for (int ix=1; ix<thePrefs.GetCatCount(); ++ix)
 		if (CompareDirectories(strPath, thePrefs.GetCatPath(ix)) == 0)
 			return true;
-	}
 
 	if (bMustBeShared)
 		return false;
@@ -1508,23 +1499,20 @@ bool CSharedFileList::ShouldBeShared(const CString& strPath, const CString& strF
 	// check if this file is explicit unshared
 	if (!strFilePath.IsEmpty())
 	{
-		for (POSITION pos = m_liSingleExcludedFiles.GetHeadPosition(); pos != NULL;) {
+		for (POSITION pos = m_liSingleExcludedFiles.GetHeadPosition(); pos != NULL;)
 			if (strFilePath.CompareNoCase(m_liSingleExcludedFiles.GetNext(pos)) == 0)
 				return false;
-		}
 
 		// check if this file is explicit shared
-		for (POSITION pos = m_liSingleSharedFiles.GetHeadPosition(); pos != NULL;) {
+		for (POSITION pos = m_liSingleSharedFiles.GetHeadPosition(); pos != NULL;)
 			if (strFilePath.CompareNoCase(m_liSingleSharedFiles.GetNext(pos)) == 0)
 				return true;
-		}
 	}
 
-	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition();pos != 0;)
-	{
+	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos != NULL;)
 		if (CompareDirectories(strPath, thePrefs.shareddir_list.GetNext(pos)) == 0)
 			return true;
-	}
+
 	return false;
 }
 
@@ -1750,11 +1738,11 @@ void CSharedFileList::Save() const
 			WORD wBOM = 0xFEFF;
 			sdirfile.Write(&wBOM, sizeof(wBOM));
 
-			for (POSITION pos = m_liSingleSharedFiles.GetHeadPosition();pos != 0;){
+			for (POSITION pos = m_liSingleSharedFiles.GetHeadPosition(); pos != NULL;) {
 				sdirfile.WriteString(m_liSingleSharedFiles.GetNext(pos));
 				sdirfile.Write(L"\r\n", sizeof(TCHAR)*2);
 			}
-			for (POSITION pos = m_liSingleExcludedFiles.GetHeadPosition();pos != 0;){
+			for (POSITION pos = m_liSingleExcludedFiles.GetHeadPosition(); pos != NULL;) {
 				sdirfile.WriteString(_T("-") + m_liSingleExcludedFiles.GetNext(pos)); // a '-' prefix means excluded
 				sdirfile.Write(L"\r\n", sizeof(TCHAR)*2);
 			}
@@ -1939,17 +1927,15 @@ bool CSharedFileList::GetPopularityRank(const CKnownFile* pFile, uint32& rnOutSe
 {
 	rnOutSession = 0;
 	rnOutTotal = 0;
-	if (GetFileByIdentifier(pFile->GetFileIdentifierC()) == NULL)
-	{
-		ASSERT( false );
+	if (GetFileByIdentifier(pFile->GetFileIdentifierC()) == NULL) {
+		ASSERT(false);
 		return false;
 	}
 	// cycle all files, each file which has more request than the given files lowers the rank
 	CKnownFile* cur_file;
 	CCKey bufKey;
-	for (POSITION pos = m_Files_map.GetStartPosition(); pos != 0; )
-	{
-		m_Files_map.GetNextAssoc(pos,bufKey,cur_file);
+	for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
+		m_Files_map.GetNextAssoc(pos, bufKey, cur_file);
 		if (cur_file == pFile)
 			continue;
 		if (cur_file->statistic.GetAllTimeRequests() > pFile->statistic.GetAllTimeRequests())

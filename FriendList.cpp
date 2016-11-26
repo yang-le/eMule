@@ -63,7 +63,7 @@ bool CFriendList::LoadList(){
 				strError += _T(" - ");
 				strError += szError;
 			}
-			LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
 		return false;
 	}
@@ -112,7 +112,7 @@ void CFriendList::SaveList(){
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		return;
 	}
 	setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
@@ -120,7 +120,7 @@ void CFriendList::SaveList(){
 	try{
 		file.WriteUInt8(MET_HEADER);
 		file.WriteUInt32(m_listFriends.GetCount());
-		for (POSITION pos = m_listFriends.GetHeadPosition();pos != 0;)
+		for (POSITION pos = m_listFriends.GetHeadPosition(); pos != NULL;)
 			m_listFriends.GetNext(pos)->WriteToFile(&file);
 		if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.emuledlg->IsClosing())) {
 			file.Flush(); // flush file stream buffers to disk buffers
@@ -136,23 +136,22 @@ void CFriendList::SaveList(){
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		error->Delete();
 	}
 }
 
 CFriend* CFriendList::SearchFriend(const uchar* abyUserHash, uint32 dwIP, uint16 nPort) const
 {
-	for (POSITION pos = m_listFriends.GetHeadPosition(); pos;) {
+	for (POSITION pos = m_listFriends.GetHeadPosition(); pos != NULL;) {
 		CFriend* cur_friend = m_listFriends.GetNext(pos);
 		// to avoid that unwanted clients become a friend, we have to distinguish between friends with
 		// a userhash and of friends which are identified by IP+port only.
-		if (abyUserHash != NULL && cur_friend->HasUserhash()){
+		if (abyUserHash != NULL && cur_friend->HasUserhash()) {
 			// check for a friend which has the same userhash as the specified one
 			if (!md4cmp(cur_friend->m_abyUserhash, abyUserHash))
 				return cur_friend;
-		}
-		else{
+		} else {
 			if (cur_friend->m_dwLastUsedIP == dwIP && dwIP != 0 && cur_friend->m_nLastUsedPort == nPort && nPort != 0)
 				return cur_friend;
 		}
@@ -165,13 +164,14 @@ void CFriendList::RefreshFriend(CFriend* torefresh) const {
 		m_wndOutput->RefreshFriend(torefresh);
 }
 
-void CFriendList::ShowFriends() const {
-	if (!m_wndOutput){
-		ASSERT ( false );
+void CFriendList::ShowFriends() const
+{
+	if (!m_wndOutput) {
+		ASSERT(false);
 		return;
 	}
 	m_wndOutput->DeleteAllItems();
-	for (POSITION pos = m_listFriends.GetHeadPosition();pos != 0;)
+	for (POSITION pos = m_listFriends.GetHeadPosition(); pos != NULL;)
 		m_wndOutput->AddFriend(m_listFriends.GetNext(pos));
 	m_wndOutput->UpdateList();
 }
@@ -195,7 +195,7 @@ bool CFriendList::AddFriend(const uchar* abyUserhash, uint32 dwLastSeen, uint32 
 
 bool CFriendList::IsAlreadyFriend(const CString& strUserHash) const
 {
-	for (POSITION pos = m_listFriends.GetHeadPosition();pos != 0;){
+	for (POSITION pos = m_listFriends.GetHeadPosition(); pos != NULL;) {
 		const CFriend* cur_friend = m_listFriends.GetNext(pos);
 		if (cur_friend->HasUserhash() && strUserHash.Compare(md4str(cur_friend->m_abyUserhash)) == 0)
 			return true;
@@ -244,7 +244,7 @@ void CFriendList::RemoveFriend(CFriend* todel){
 
 void CFriendList::RemoveAllFriendSlots()
 {
-	for (POSITION pos = m_listFriends.GetHeadPosition();pos != 0;)
+	for (POSITION pos = m_listFriends.GetHeadPosition(); pos != NULL;)
 		m_listFriends.GetNext(pos)->SetFriendSlot(false);
 }
 

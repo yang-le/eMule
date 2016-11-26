@@ -234,17 +234,18 @@ CString CSHA::HashToHexString(const SHA1* pHashIn, BOOL bURN)
 
 	LPBYTE pHash = (LPBYTE)pHashIn;
 	CString strHash;
-	LPTSTR pszHash = strHash.GetBuffer( 40 );
+	LPTSTR pszHash = strHash.GetBuffer(SHA1_DIGEST_SIZE*sizeof(TCHAR));
 
-	for ( int nByte = 0 ; nByte < 20 ; nByte++, pHash++ )
+	for ( int nByte = 0 ; nByte < SHA1_DIGEST_SIZE ; ++nByte, ++pHash )
 	{
 		*pszHash++ = pszHex[ *pHash >> 4 ];
 		*pszHash++ = pszHex[ *pHash & 15 ];
 	}
 
-	strHash.ReleaseBuffer( 40 );
+	strHash.ReleaseBuffer(SHA1_DIGEST_SIZE*sizeof(TCHAR));
 
-	if ( bURN ) strHash = _T("urn:sha1:") + strHash;
+	if ( bURN )
+		strHash = _T("urn:sha1:") + strHash;
 
 	return strHash;
 }
@@ -295,8 +296,9 @@ BOOL CSHA::HashFromString(LPCTSTR pszHash, SHA1* pHashIn)
 
 BOOL CSHA::HashFromURN(LPCTSTR pszHash, SHA1* pHashIn)
 {
-	if ( pszHash == NULL ) return FALSE;
-	int nLen = _tcslen( pszHash );
+	if (pszHash == NULL)
+		return FALSE;
+	size_t nLen = _tcslen( pszHash );
 
 	if ( nLen >= 41 && _tcsnicmp( pszHash, _T("urn:sha1:"), 9 ) == 0 )
 	{
@@ -321,9 +323,9 @@ BOOL CSHA::HashFromURN(LPCTSTR pszHash, SHA1* pHashIn)
 
 BOOL CSHA::IsNull(SHA1* pHash)
 {
-	SHA1 Blank;
+	static SHA1 Blank = {};
 
-	ZeroMemory( &Blank, sizeof(SHA1) );
+//	ZeroMemory( &Blank, sizeof(SHA1) );
 
 	if ( *pHash == Blank ) return TRUE;
 

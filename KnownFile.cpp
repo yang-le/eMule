@@ -249,14 +249,11 @@ void CKnownFile::UpdatePartsInfo()
 	CArray<uint16, uint16> count;
 	if (flag)
 		count.SetSize(0, m_ClientUploadList.GetSize());
-	for (POSITION pos = m_ClientUploadList.GetHeadPosition(); pos != 0; )
-	{
+	for (POSITION pos = m_ClientUploadList.GetHeadPosition(); pos != NULL;) {
 		CUpDownClient* cur_src = m_ClientUploadList.GetNext(pos);
 		//This could be a partfile that just completed.. Many of these clients will not have this information.
-		if (cur_src->m_abyUpPartStatus && cur_src->GetUpPartCount() == partcount)
-		{
-			for (UINT i = 0; i < partcount; i++)
-			{
+		if (cur_src->m_abyUpPartStatus && cur_src->GetUpPartCount() == partcount) {
+			for (UINT i = 0; i < partcount; ++i) {
 				if (cur_src->IsUpPartAvailable(i))
 					m_AvailPartFrequency[i] += 1;
 			}
@@ -1168,8 +1165,7 @@ Packet*	CKnownFile::CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 by
 	data.WriteHash16(forClient->GetUploadFileID());
 	data.WriteUInt16(nCount);
 	uint32 cDbgNoSrc = 0;
-	for (POSITION pos = m_ClientUploadList.GetHeadPosition(); pos != 0; )
-	{
+	for (POSITION pos = m_ClientUploadList.GetHeadPosition(); pos != NULL;) {
 		/*const*/ CUpDownClient* cur_src = m_ClientUploadList.GetNext(pos);
 
 		// some rare issue seen in a crashdumps, hopefully fixed already, but to be sure we double check here
@@ -1302,14 +1298,13 @@ Packet*	CKnownFile::CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 by
 
 void CKnownFile::SetFileComment(LPCTSTR pszComment)
 {
-	if (m_strComment.Compare(pszComment) != 0)
-	{
+	if (m_strComment.Compare(pszComment) != 0) {
 		SetLastPublishTimeKadNotes(0);
 		CIni ini(thePrefs.GetFileCommentsFilePath(), md4str(GetFileHash()));
 		ini.WriteStringUTF8(_T("Comment"), pszComment);
 		m_strComment = pszComment;
 
-		for (POSITION pos = m_ClientUploadList.GetHeadPosition();pos != 0;)
+		for (POSITION pos = m_ClientUploadList.GetHeadPosition(); pos != NULL;)
 			m_ClientUploadList.GetNext(pos)->SetCommentDirty();
 	}
 }
@@ -1323,7 +1318,7 @@ void CKnownFile::SetFileRating(UINT uRating)
 		ini.WriteInt(_T("Rate"), uRating);
 		m_uRating = uRating;
 
-		for (POSITION pos = m_ClientUploadList.GetHeadPosition();pos != 0;)
+		for (POSITION pos = m_ClientUploadList.GetHeadPosition(); pos != NULL;)
 			m_ClientUploadList.GetNext(pos)->SetCommentDirty();
 	}
 }

@@ -95,7 +95,7 @@ CDownloadListCtrl::~CDownloadListCtrl()
 		VERIFY( m_PreviewMenu.DestroyMenu() );
 	if (m_PrioMenu)
 		VERIFY( m_PrioMenu.DestroyMenu() );
-    if (m_SourcesMenu)
+	if (m_SourcesMenu)
 		VERIFY( m_SourcesMenu.DestroyMenu() );
 	if (m_FileMenu)
 		VERIFY( m_FileMenu.DestroyMenu() );
@@ -287,12 +287,12 @@ void CDownloadListCtrl::Localize()
 void CDownloadListCtrl::AddFile(CPartFile* toadd)
 {
 	// Create new Item
-    CtrlItem_Struct* newitem = new CtrlItem_Struct;
-    int itemnr = GetItemCount();
-    newitem->owner = NULL;
-    newitem->type = FILE_TYPE;
-    newitem->value = toadd;
-    newitem->parent = NULL;
+	CtrlItem_Struct* newitem = new CtrlItem_Struct;
+	int itemnr = GetItemCount();
+	newitem->owner = NULL;
+	newitem->type = FILE_TYPE;
+	newitem->value = toadd;
+	newitem->parent = NULL;
 	newitem->dwUpdated = 0;
 
 	// The same file shall be added only once
@@ -308,10 +308,10 @@ void CDownloadListCtrl::AddFile(CPartFile* toadd)
 void CDownloadListCtrl::AddSource(CPartFile* owner, CUpDownClient* source, bool notavailable)
 {
 	// Create new Item
-    CtrlItem_Struct* newitem = new CtrlItem_Struct;
-    newitem->owner = owner;
-    newitem->type = (notavailable) ? UNAVAILABLE_SOURCE : AVAILABLE_SOURCE;
-    newitem->value = source;
+	CtrlItem_Struct* newitem = new CtrlItem_Struct;
+	newitem->owner = owner;
+	newitem->type = (notavailable) ? UNAVAILABLE_SOURCE : AVAILABLE_SOURCE;
+	newitem->value = source;
 	newitem->dwUpdated = 0;
 
 	// Update cross link to the owner
@@ -1225,8 +1225,8 @@ void CDownloadListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 			int iFilesToStop = 0;
 			int iFilesToResume = 0;
 			int iFilesToOpen = 0;
-            int iFilesGetPreviewParts = 0;
-            int iFilesPreviewType = 0;
+			int iFilesGetPreviewParts = 0;
+			int iFilesPreviewType = 0;
 			int iFilesToPreview = 0;
 			int iFilesToCancel = 0;
 			int iFilesCanPauseOnPreview = 0;
@@ -1252,8 +1252,8 @@ void CDownloadListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 				iFilesToPause += pFile->CanPauseFile() ? 1 : 0;
 				iFilesToResume += pFile->CanResumeFile() ? 1 : 0;
 				iFilesToOpen += pFile->CanOpenFile() ? 1 : 0;
-                iFilesGetPreviewParts += pFile->GetPreviewPrio() ? 1 : 0;
-                iFilesPreviewType += pFile->IsPreviewableFileType() ? 1 : 0;
+				iFilesGetPreviewParts += pFile->GetPreviewPrio() ? 1 : 0;
+				iFilesPreviewType += pFile->IsPreviewableFileType() ? 1 : 0;
 				iFilesToPreview += pFile->IsReadyForPreview() ? 1 : 0;
 				iFilesCanPauseOnPreview += (pFile->IsPreviewableFileType() && !pFile->IsReadyForPreview() && pFile->CanPauseFile()) ? 1 : 0;
 				iFilesDoPauseOnPreview += (pFile->IsPausingOnPreview()) ? 1 : 0;
@@ -1271,9 +1271,9 @@ void CDownloadListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 				else
 					ASSERT(0);
 
-                if (bFirstItem)
+				if (bFirstItem)
 					uPrioMenuItem = uCurPrioMenuItem;
-                else if (uPrioMenuItem != uCurPrioMenuItem)
+				else if (uPrioMenuItem != uCurPrioMenuItem)
 					uPrioMenuItem = 0;
 
 				bFirstItem = false;
@@ -1310,7 +1310,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 					m_PreviewMenu.InsertMenu(1, MF_POPUP | MF_BYPOSITION | (iSelectedItems == 1 ? MF_ENABLED : MF_GRAYED), (UINT_PTR)PreviewWithMenu.m_hMenu, GetResString(IDS_PREVIEWWITH));
 				else if (iPreviewMenuEntries > 0)
 					m_FileMenu.InsertMenu(MP_METINFO, MF_POPUP | MF_BYCOMMAND | (iSelectedItems == 1 ? MF_ENABLED : MF_GRAYED), (UINT_PTR)PreviewWithMenu.m_hMenu, GetResString(IDS_PREVIEWWITH));
-            }
+			}
 			else {
 				m_FileMenu.EnableMenuItem(MP_PREVIEW, (iSelectedItems == 1 && iFilesToPreview == 1) ? MF_ENABLED : MF_GRAYED);
 				if (iPreviewMenuEntries)
@@ -1399,9 +1399,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 // ZZ:DownloadManager -->
 #ifdef _DEBUG
 				if (content && content->type == UNAVAILABLE_SOURCE)
-				{
-                    A4AFMenu.AppendMenu(MF_STRING,MP_A4AF_CHECK_THIS_NOW,GetResString(IDS_A4AF_CHECK_THIS_NOW));
-                }
+					A4AFMenu.AppendMenu(MF_STRING,MP_A4AF_CHECK_THIS_NOW,GetResString(IDS_A4AF_CHECK_THIS_NOW));
 # endif
 // <-- ZZ:DownloadManager
 				if (A4AFMenu.GetMenuItemCount()>0)
@@ -1433,7 +1431,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 			}
 			m_PreviewMenu.EnableMenuItem(MP_PREVIEW, MF_GRAYED);
 			m_PreviewMenu.EnableMenuItem(MP_PAUSEONPREVIEW, MF_GRAYED);
-        }
+		}
 		else {
 			m_FileMenu.EnableMenuItem(MP_PREVIEW, MF_GRAYED);
 		}
@@ -1589,14 +1587,10 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 			//for multiple selections
 			UINT selectedCount = 0;
 			CTypedPtrList<CPtrList, CPartFile*> selectedList;
-			POSITION pos = GetFirstSelectedItemPosition();
-			while(pos != NULL)
-			{
+			for (POSITION pos = GetFirstSelectedItemPosition(); pos != NULL;) {
 				int index = GetNextSelectedItem(pos);
-				if(index > -1)
-				{
-					if (((const CtrlItem_Struct*)GetItemData(index))->type == FILE_TYPE)
-					{
+				if (index > -1) {
+					if (((const CtrlItem_Struct*)GetItemData(index))->type == FILE_TYPE) {
 						selectedCount++;
 						selectedList.AddTail((CPartFile*)((const CtrlItem_Struct*)GetItemData(index))->value);
 					}
@@ -1617,18 +1611,16 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 						bool removecompl = false;
 						int cFiles = 0;
 						const int iMaxDisplayFiles = 10;
-						for (pos = selectedList.GetHeadPosition(); pos != 0; )
-						{
+						for (POSITION pos = selectedList.GetHeadPosition(); pos != NULL;) {
 							CPartFile* cur_file = selectedList.GetNext(pos);
-							if (cur_file->GetStatus() != PS_COMPLETING && (cur_file->GetStatus() != PS_COMPLETE || wParam == MP_CANCEL)){
+							if (cur_file->GetStatus() != PS_COMPLETING && (cur_file->GetStatus() != PS_COMPLETE || wParam == MP_CANCEL)) {
 								validdelete = true;
 								cFiles++;
 								if (cFiles < iMaxDisplayFiles)
 									fileList.Append(_T("\n") + CString(cur_file->GetFileName()));
-								else if(cFiles == iMaxDisplayFiles && pos != NULL)
+								else if (cFiles == iMaxDisplayFiles && pos != NULL)
 									fileList.Append(_T("\n..."));
-							}
-							else if (cur_file->GetStatus() == PS_COMPLETE)
+							} else if (cur_file->GetStatus() == PS_COMPLETE)
 								removecompl = true;
 						}
 						CString quest;
@@ -1809,32 +1801,27 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 					break;
 				case MP_OPEN:
 				case IDA_ENTER:
-					if (selectedCount > 1)
-						break;
-					if (file->CanOpenFile())
+					if (selectedCount == 1 && file->CanOpenFile())
 						file->OpenFile();
 					break;
 				case MP_OPENFOLDER:
-					if (selectedCount != 1)
-						break;
-					ShellOpenFile(file->GetPath(), _T("open"));
+					if (selectedCount == 1)
+						ShellOpenFile(file->GetPath(), _T("open"));
 					break;
 				case MP_TRY_TO_GET_PREVIEW_PARTS:
-					if (selectedCount > 1)
-						break;
-                    file->SetPreviewPrio(!file->GetPreviewPrio());
-                    break;
+					if (selectedCount == 1)
+						file->SetPreviewPrio(!file->GetPreviewPrio());
+					break;
 				case MP_PREVIEW:
-					if (selectedCount > 1)
-						break;
-					file->PreviewFile();
+					if (selectedCount == 1)
+						file->PreviewFile();
 					break;
 				case MP_PAUSEONPREVIEW:
 				{
 					bool bAllPausedOnPreview = true;
-					for (pos = selectedList.GetHeadPosition(); pos != 0; )
+					for (POSITION pos = selectedList.GetHeadPosition(); pos != NULL;)
 						bAllPausedOnPreview = ((CPartFile*)selectedList.GetNext(pos))->IsPausingOnPreview() && bAllPausedOnPreview;
-					while (!selectedList.IsEmpty()){
+					while (!selectedList.IsEmpty()) {
 						CPartFile* pPartFile = selectedList.RemoveHead();
 						if (pPartFile->IsPreviewableFileType() && !pPartFile->IsReadyForPreview())
 							pPartFile->SetPauseOnPreview(!bAllPausedOnPreview);
@@ -1855,11 +1842,10 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 					CString title = GetResString(IDS_SETPFSLIMIT);
 					inputbox.SetLabels(title, GetResString(IDS_SETPFSLIMITEXPLAINED), temp );
 
-					if (inputbox.DoModal() == IDOK)
-					{
+					if (inputbox.DoModal() == IDOK) {
 						temp = inputbox.GetInput();
 						int newlimit = _tstoi(temp);
-						while (!selectedList.IsEmpty()){
+						while (!selectedList.IsEmpty()) {
 							CPartFile *partfile = selectedList.RemoveHead();
 							partfile->SetPrivateMaxSources(newlimit);
 							partfile->UpdateDisplayedInfo(true);
@@ -2394,7 +2380,7 @@ void CDownloadListCtrl::CreateMenues()
 		m_PreviewMenu.AppendMenu(MF_STRING, MP_PREVIEW, GetResString(IDS_DL_PREVIEW), _T("PREVIEW"));
 		m_PreviewMenu.AppendMenu(MF_STRING, MP_PAUSEONPREVIEW, GetResString(IDS_PAUSEONPREVIEW));
 		if (!thePrefs.GetPreviewPrio())
-    		m_PreviewMenu.AppendMenu(MF_STRING, MP_TRY_TO_GET_PREVIEW_PARTS, GetResString(IDS_DL_TRY_TO_GET_PREVIEW_PARTS));
+			m_PreviewMenu.AppendMenu(MF_STRING, MP_TRY_TO_GET_PREVIEW_PARTS, GetResString(IDS_DL_TRY_TO_GET_PREVIEW_PARTS));
 		m_FileMenu.AppendMenu(MF_STRING|MF_POPUP, (UINT_PTR)m_PreviewMenu.m_hMenu, GetResString(IDS_DL_PREVIEW), _T("PREVIEW"));
 	}
 	else
@@ -2501,9 +2487,9 @@ void CDownloadListCtrl::ShowSelectedFileDetails()
 	POINT point;
 	::GetCursorPos(&point);
 	CPoint pt = point;
-    ScreenToClient(&pt);
-    int it = HitTest(pt);
-    if (it == -1)
+	ScreenToClient(&pt);
+	int it = HitTest(pt);
+	if (it == -1)
 		return;
 
 	SetItemState(-1, 0, LVIS_SELECTED);
@@ -2704,7 +2690,7 @@ void CDownloadListCtrl::OnLvnGetDispInfo(NMHDR *pNMHDR, LRESULT *pResult)
 			}
 		}
 	}
-    *pResult = 0;
+	*pResult = 0;
 }
 
 void CDownloadListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
@@ -2764,11 +2750,11 @@ void CDownloadListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 					else
 					{	// client asked twice
 						info += GetResString(IDS_ASKEDFAF);
-                        if (client->GetRequestFile() && client->GetRequestFile()->GetFileName())
-                            info.AppendFormat(_T(": %s"), (LPCTSTR)client->GetRequestFile()->GetFileName());
+						if (client->GetRequestFile() && client->GetRequestFile()->GetFileName())
+							info.AppendFormat(_T(": %s"), (LPCTSTR)client->GetRequestFile()->GetFileName());
 					}
 
-                    if (thePrefs.IsExtControlsEnabled() && !client->m_OtherRequests_list.IsEmpty())
+					if (thePrefs.IsExtControlsEnabled() && !client->m_OtherRequests_list.IsEmpty())
 					{
 						CSimpleArray<const CString*> apstrFileNames;
 						for (POSITION pos = client->m_OtherRequests_list.GetHeadPosition(); pos != NULL;)
@@ -2792,7 +2778,7 @@ void CDownloadListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 								info += _T("\n:");
 							info += *pstrFileName;
 						}
-                    }
+					}
 				}
 				else
 				{
@@ -3030,8 +3016,8 @@ bool CDownloadListCtrl::ReportAvailableCommands(CList<int>& liAvailableCommands)
 			int iFilesToStop = 0;
 			int iFilesToResume = 0;
 			int iFilesToOpen = 0;
-//            int iFilesGetPreviewParts = 0;
-//            int iFilesPreviewType = 0;
+//			int iFilesGetPreviewParts = 0;
+//			int iFilesPreviewType = 0;
 			int iFilesToPreview = 0;
 			int iFilesToCancel = 0;
 			POSITION pos = GetFirstSelectedItemPosition();
@@ -3050,8 +3036,8 @@ bool CDownloadListCtrl::ReportAvailableCommands(CList<int>& liAvailableCommands)
 				iFilesToPause += pFile->CanPauseFile() ? 1 : 0;
 				iFilesToResume += pFile->CanResumeFile() ? 1 : 0;
 				iFilesToOpen += pFile->CanOpenFile() ? 1 : 0;
-//                iFilesGetPreviewParts += pFile->GetPreviewPrio() ? 1 : 0;
-//                iFilesPreviewType += pFile->IsPreviewableFileType() ? 1 : 0;
+//				iFilesGetPreviewParts += pFile->GetPreviewPrio() ? 1 : 0;
+//				iFilesPreviewType += pFile->IsPreviewableFileType() ? 1 : 0;
 				iFilesToPreview += pFile->IsReadyForPreview() ? 1 : 0;
 			}
 

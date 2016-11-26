@@ -65,7 +65,7 @@ int32_t GetDIBits(
   HBITMAP hbmp,      // handle to bitmap
   uint32_t uStartScan,   // first scan line to set
   uint32_t cScanLines,   // number of scan lines to copy
-  LPVOID lpvBits,    // array for bitmap bits
+  LPVOID *lpvBits,    // array for bitmap bits
   LPBITMAPINFO lpbi, // bitmap data buffer
   uint32_t uUsage        // RGB or palette index
 )
@@ -146,7 +146,7 @@ int32_t GetDIBits(
 	// 4. Bytes in one point are BGR (blue, green, red) not RGB
 	// 5. Don't delete pBuffer, it will be automatically deleted
 	//    when delete hTargetBitmap
-	lpvBits = pBuffer;
+	*lpvBits = pBuffer;
 
 	DeleteObject(hbmp);
 	//DeleteObject(hTargetBitmap);

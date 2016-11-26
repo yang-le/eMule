@@ -38,7 +38,8 @@ CUPnPImplWrapper::CUPnPImplWrapper(){
 	Init();
 }
 
-CUPnPImplWrapper::~CUPnPImplWrapper(){
+CUPnPImplWrapper::~CUPnPImplWrapper()
+{
 	while (!m_liAvailable.IsEmpty())
 		delete m_liAvailable.RemoveHead();
 	while (!m_liUsed.IsEmpty())
@@ -46,11 +47,12 @@ CUPnPImplWrapper::~CUPnPImplWrapper(){
 	m_pActiveImpl = NULL;
 }
 
-void CUPnPImplWrapper::Init(){
-	ASSERT( !m_liAvailable.IsEmpty() );
+void CUPnPImplWrapper::Init()
+{
+	ASSERT(!m_liAvailable.IsEmpty());
 	m_pActiveImpl = NULL;
 
-	for (POSITION pos = m_liAvailable.GetHeadPosition(); pos != 0;) {
+	for (POSITION pos = m_liAvailable.GetHeadPosition(); pos != NULL;) {
 		POSITION pos2 = pos;
 		CUPnPImpl *tmp = m_liAvailable.GetNext(pos);
 		if (tmp->GetImplementationID() == thePrefs.GetLastWorkingUPnPImpl()) {

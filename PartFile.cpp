@@ -304,7 +304,7 @@ void CPartFile::Init()
 	m_eFileOp = PFOP_NONE;
 	m_uFileOpProgress = 0;
 	m_bpreviewprio = false;
-	m_random_update_wait = (uint32)(rand()/(RAND_MAX/1000));
+	m_random_update_wait = (uint32)(rand()/(RAND_MAX/SEC2MS(1)));
 	lastSwapForSourceExchangeTick = lastpurgetime;
 	m_DeadSourceList.Init(false);
 	m_bPauseOnPreview = false;
@@ -317,7 +317,7 @@ CPartFile::~CPartFile()
 		if (m_AllocateThread != NULL){
 			HANDLE hThread = m_AllocateThread->m_hThread;
 			// 2 minutes to let the thread finish
-			if (WaitForSingleObject(hThread, 120000) == WAIT_TIMEOUT)
+			if (WaitForSingleObject(hThread, MIN2MS(2)) == WAIT_TIMEOUT)
 				TerminateThread(hThread, 100);
 		}
 
@@ -536,7 +536,7 @@ EPartFileLoadResult CPartFile::ImportShareazaTempfile(LPCTSTR in_directory,LPCTS
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, _T("%s"), strError);
 		return PLR_FAILED_METFILE_NOACCESS;
 	}
 	//	setvbuf(sdFile.m_pStream, NULL, _IOFBF, 16384);
@@ -777,7 +777,7 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, _T("%s"), strError);
 		return PLR_FAILED_METFILE_NOACCESS;
 	}
 	setvbuf(metFile.m_pStream, NULL, _IOFBF, 16384);
@@ -1127,7 +1127,7 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 	}
 
 	// verify corrupted parts list
-	for (POSITION posCorruptedPart = corrupted_list.GetHeadPosition(); posCorruptedPart;) {
+	for (POSITION posCorruptedPart = corrupted_list.GetHeadPosition(); posCorruptedPart != NULL;) {
 		POSITION posLast = posCorruptedPart;
 		UINT uCorruptedPart = corrupted_list.GetNext(posCorruptedPart);
 		if (IsComplete(uCorruptedPart*PARTSIZE, (uCorruptedPart+1)*PARTSIZE-1, true))
@@ -1150,7 +1150,7 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		return PLR_FAILED_OTHER;
 	}
 
@@ -1214,7 +1214,7 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 			catch(CException* ex){
 				ex->Delete();
 			}
-			uint32 fdate = (UINT)filestatus.m_mtime.GetTime();
+			uint32 fdate = (uint32)filestatus.m_mtime.GetTime();
 			if (fdate == 0)
 				fdate = (uint32)-1;
 			if (fdate == (uint32)-1) {
@@ -1250,7 +1250,7 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 			strError += _T(" - ");
 			strError += szError;
 		}
-		LogError(LOG_STATUSBAR, (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		error->Delete();
 		return PLR_FAILED_OTHER;
 	}
@@ -1500,23 +1500,22 @@ bool CPartFile::SavePartFile(bool bDontOverrideBak)
 		char namebuffer[10];
 		char* number = &namebuffer[1];
 		UINT i_pos = 0;
-		for (POSITION pos = gaplist.GetHeadPosition(); pos != 0; )
-		{
+		for (POSITION pos = gaplist.GetHeadPosition(); pos != NULL;) {
 			const Gap_Struct* gap = gaplist.GetNext(pos);
 			_itoa(i_pos, number, 10);
 			namebuffer[0] = FT_GAPSTART;
-			CTag gapstarttag(namebuffer,gap->start, IsLargeFile());
+			CTag gapstarttag(namebuffer, gap->start, IsLargeFile());
 			gapstarttag.WriteTagToFile(&file);
-			uTagCount++;
+			++uTagCount;
 
 			// gap start = first missing byte but gap ends = first non-missing byte in edonkey
 			// but I think its easier to user the real limits
 			namebuffer[0] = FT_GAPEND;
-			CTag gapendtag(namebuffer,gap->end+1, IsLargeFile());
+			CTag gapendtag(namebuffer, gap->end+1, IsLargeFile());
 			gapendtag.WriteTagToFile(&file);
-			uTagCount++;
+			++uTagCount;
 
-			i_pos++;
+			++i_pos;
 		}
 		// Add buffered data as gap too - at the time of writing this file, this data does not exists on
 		// the disk, so not addding it as gaps leads to inconsistencies which causes problems in case of
@@ -1760,8 +1759,7 @@ bool CPartFile::IsComplete(uint64 start, uint64 end, bool bIgnoreBufferedData) c
 
 	if (end >= m_nFileSize)
 		end = m_nFileSize-(uint64)1;
-	for (POSITION pos = gaplist.GetHeadPosition();pos != 0;)
-	{
+	for (POSITION pos = gaplist.GetHeadPosition();pos != NULL;) {
 		const Gap_Struct* cur_gap = gaplist.GetNext(pos);
 		if (   (cur_gap->start >= start          && cur_gap->end   <= end)
 			|| (cur_gap->start >= start          && cur_gap->start <= end)
@@ -1773,9 +1771,8 @@ bool CPartFile::IsComplete(uint64 start, uint64 end, bool bIgnoreBufferedData) c
 		}
 	}
 
-	if (bIgnoreBufferedData){
-		for (POSITION pos = m_BufferedData_list.GetHeadPosition();pos != 0;)
-		{
+	if (bIgnoreBufferedData)
+		for (POSITION pos = m_BufferedData_list.GetHeadPosition(); pos != NULL;) {
 			const PartFileBufferedData* cur_gap = m_BufferedData_list.GetNext(pos);
 			if (   (cur_gap->start >= start          && cur_gap->end   <= end)
 				|| (cur_gap->start >= start          && cur_gap->start <= end)
@@ -1786,21 +1783,20 @@ bool CPartFile::IsComplete(uint64 start, uint64 end, bool bIgnoreBufferedData) c
 				return false;
 			}
 		}
-	}
+
 	return true;
 }
 
 bool CPartFile::IsPureGap(uint64 start, uint64 end) const
 {
-	ASSERT( start <= end );
+	ASSERT(start <= end);
 
 	if (end >= m_nFileSize)
 		end = m_nFileSize-(uint64)1;
-	for (POSITION pos = gaplist.GetHeadPosition();pos != 0;){
+	for (POSITION pos = gaplist.GetHeadPosition(); pos != NULL;) {
 		const Gap_Struct* cur_gap = gaplist.GetNext(pos);
-		if (start >= cur_gap->start  && end <= cur_gap->end ){
+		if (start >= cur_gap->start  && end <= cur_gap->end)
 			return true;
-		}
 	}
 	return false;
 }
@@ -1930,20 +1926,17 @@ bool CPartFile::GetNextEmptyBlockInPart(UINT partNumber, Requested_Block_Struct 
 	uint64 partEnd = PARTSIZE * (partNumber + 1) - 1;
 	if (partEnd >= GetFileSize())
 		partEnd = GetFileSize() - (uint64)1;
-	ASSERT( partStart <= partEnd );
+	ASSERT(partStart <= partEnd);
 
 	// Loop until find a suitable gap and return true, or no more gaps and return false
-	for (;;)
-	{
+	for (;;) {
 		firstGap = NULL;
 
 		// Find the first gap from the start position
-		for (POSITION pos = gaplist.GetHeadPosition(); pos != 0; )
-		{
+		for (POSITION pos = gaplist.GetHeadPosition(); pos != NULL;) {
 			currentGap = gaplist.GetNext(pos);
 			// Want gaps that overlap start<->partEnd
-			if ((currentGap->start <= partEnd) && (currentGap->end >= start))
-			{
+			if ((currentGap->start <= partEnd) && (currentGap->end >= start)) {
 				// Is this the first gap?
 				if ((firstGap == NULL) || (currentGap->start < firstGap->start))
 					firstGap = currentGap;
@@ -1971,11 +1964,9 @@ bool CPartFile::GetNextEmptyBlockInPart(UINT partNumber, Requested_Block_Struct 
 			end = partEnd;
 
 		// If this gap has not already been requested, we have found a valid entry
-		if (!IsAlreadyRequested(start, end, true))
-		{
+		if (!IsAlreadyRequested(start, end, true)) {
 			// Was this block to be returned
-			if (result != NULL)
-			{
+			if (result != NULL) {
 				result->StartOffset = start;
 				result->EndOffset = end;
 				md4cpy(result->FileID, GetFileHash());
@@ -1983,28 +1974,23 @@ bool CPartFile::GetNextEmptyBlockInPart(UINT partNumber, Requested_Block_Struct 
 			}
 			return true;
 		}
-		else
-		{
-        	uint64 tempStart = start;
-        	uint64 tempEnd = end;
+		uint64 tempStart = start;
+		uint64 tempEnd = end;
+		bool shrinkSucceeded = ShrinkToAvoidAlreadyRequested(tempStart, tempEnd);
+		if (shrinkSucceeded) {
+			AddDebugLogLine(false, _T("Shrunk interval to prevent collision with already requested block: Old interval %I64u-%I64u. New interval: %I64u-%I64u. File %s."), start, end, tempStart, tempEnd, (LPCTSTR)GetFileName());
 
-            bool shrinkSucceeded = ShrinkToAvoidAlreadyRequested(tempStart, tempEnd);
-            if(shrinkSucceeded) {
-                AddDebugLogLine(false, _T("Shrunk interval to prevent collision with already requested block: Old interval %I64u-%I64u. New interval: %I64u-%I64u. File %s."), start, end, tempStart, tempEnd, (LPCTSTR)GetFileName());
-
-                // Was this block to be returned
-			    if (result != NULL)
-			    {
-				    result->StartOffset = tempStart;
-				    result->EndOffset = tempEnd;
-				    md4cpy(result->FileID, GetFileHash());
-				    result->transferred = 0;
-			    }
-			    return true;
-            }
-			// Reposition to end of that gap
-			start = end + 1;
+			// Was this block to be returned
+			if (result != NULL) {
+				result->StartOffset = tempStart;
+				result->EndOffset = tempEnd;
+				md4cpy(result->FileID, GetFileHash());
+				result->transferred = 0;
+			}
+			return true;
 		}
+		// Reposition to end of that gap
+		start = end + 1;
 
 		// If tried all gaps then break out of the loop
 		if (end == partEnd)
@@ -2211,11 +2197,11 @@ void CPartFile::DrawStatusBar(CDC* dc, LPCRECT rect, bool bFlat) /*const*/
 		    uint64 gapstart = cur_gap->start;
 		    uint64 gapend = cur_gap->end;
 		    for (UINT i = 0; i < GetPartCount(); i++){
-			    if (gapstart >= i*PARTSIZE && gapstart <= (i+1)*PARTSIZE - 1){ // is in this part?
+				if (gapstart >= i*PARTSIZE && gapstart <= (i+1)*PARTSIZE - 1){ // is in this part?
 					if (gapend <= (i+1)*PARTSIZE - 1)
-					    gapdone = true;
-				    else
-					    gapend = (i+1)*PARTSIZE - 1; // and next part
+						gapdone = true;
+				else
+					gapend = (i+1)*PARTSIZE - 1; // and next part
 
 				    // paint
 				    COLORREF color;
@@ -2888,17 +2874,14 @@ void CPartFile::UpdatePartsInfo()
 	CArray<uint16, uint16> acount;
 	if (flag)
 		acount.SetSize(0, srclist.GetSize());
-	for (POSITION pos = srclist.GetHeadPosition(); pos != 0; )
-	{
+	for (POSITION pos = srclist.GetHeadPosition(); pos != NULL;) {
 		const CUpDownClient* cur_src = srclist.GetNext(pos);
-		if( cur_src->GetPartStatus() )
-		{
-			for (UINT i = 0; i < partcount; i++)
-			{
+		if (cur_src->GetPartStatus()) {
+			for (UINT i = 0; i < partcount; ++i)
 				if (cur_src->IsPartAvailable(i))
-					m_SrcpartFrequency[i] += 1;
-			}
-			if ( flag )
+					++m_SrcpartFrequency[i];
+
+			if (flag)
 				acount.Add(cur_src->GetUpCompleteSourcesCount());
 		}
 	}
@@ -3517,7 +3500,7 @@ bool CPartFile::HashSinglePart(UINT partnumber, bool* pbAICHReportedOK)
 			const CAICHHashTree* pPartTree = m_pAICHRecoveryHashSet->FindPartHash((uint16)partnumber);
 			if (pPartTree != NULL)
 			{
-				// use a new part tree, so we don't overwrite any existing recovery data which we might still need lateron
+				// use a new part tree, so we don't overwrite any existing recovery data which we might still need later on
 				phtAICHPartHash = new CAICHHashTree(pPartTree->m_nDataSize,pPartTree->m_bIsLeftBranch, pPartTree->GetBaseSize());
 			}
 			else
@@ -3880,28 +3863,15 @@ time_t CPartFile::getTimeRemainingSimple() const
 
 time_t CPartFile::getTimeRemaining() const
 {
-	uint64 completesize = (uint64)GetCompletedSize();
-	time_t simple = (time_t)((GetDatarate() > 0) ? ((uint64)GetFileSize() - completesize) / GetDatarate() : -1);
-	time_t estimate = (time_t)((GetDlActiveTime() && completesize >= 512000ull)
-		? ((uint64)GetFileSize() - completesize) / ((double)completesize / GetDlActiveTime()) : -1);
+	uint64 completedsize = (uint64)GetCompletedSize();
+	time_t simple = (time_t)((GetDatarate() > 0) ? ((uint64)GetFileSize() - completedsize) / GetDatarate() : -1);
+	time_t estimate = (time_t)((GetDlActiveTime() && completedsize >= 512000ull)
+		? ((uint64)GetFileSize() - completedsize) / ((double)completedsize / GetDlActiveTime()) : -1);
 
-	if (simple == -1) {
-		//We are not transferring at the moment.
-		if (estimate == -1)
-			//We also don't have enough data to guess
-			return -1;
-		if (estimate > DAY2S(15))
-			//The estimate is too high
-			return -1;
-		return estimate;
-	}
-	if (estimate == -1)
-		//We are transferring but estimate doesn't have enough data to guess
-		return simple;
-	if (simple < estimate)
-		return simple;
+	if (estimate == -1 || simple != -1 && simple < estimate)
+		return simple; //estimate doesn't have enough data to guess; no matter if we are transferring or not
 	if (estimate > DAY2S(15))
-		//The estimate is too high..
+		//The estimate is too high.
 		return -1;
 	return estimate;
 }
@@ -4116,7 +4086,7 @@ Packet* CPartFile::CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 byR
 	data.WriteUInt16((uint16)nCount);
 
 	const uint8* reqstatus = forClient->GetUpPartStatus();
-	for (POSITION pos = srclist.GetHeadPosition();pos != 0;){
+	for (POSITION pos = srclist.GetHeadPosition(); pos != NULL;) {
 		bool bNeeded = false;
 		const CUpDownClient* cur_src = srclist.GetNext(pos);
 		if (cur_src->HasLowID() || !cur_src->IsValidSource())

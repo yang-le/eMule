@@ -2256,7 +2256,7 @@ CString CWebServer::_GetTransferList(const ThreadData& Data)
 
 	// Sorting (simple bubble sort, we don't have tons of data here)
 	bool bSorted = true;
-	for(int nMax = 0;bSorted && nMax < FilesArray.GetCount()*2; nMax++)
+	for(int nMax = 0; bSorted && nMax < FilesArray.GetCount()*2; ++nMax)
 	{
 		bSorted = false;
 		for(int i = 0; i < FilesArray.GetCount() - 1; i++)
@@ -2307,38 +2307,29 @@ CString CWebServer::_GetTransferList(const ThreadData& Data)
 	}
 
 
-
-
 //	uint32	dwClientSoft;
 	CArray<UploadUsers> UploadArray;
 
-	CUpDownClient* cur_client;
-
-	for (POSITION pos = theApp.uploadqueue->GetFirstFromUploadList();
-		pos != 0;theApp.uploadqueue->GetNextFromUploadList(pos))
-	{
-		cur_client = theApp.uploadqueue->GetQueueClientAt(pos);
+	for (POSITION pos = theApp.uploadqueue->GetFirstFromUploadList(); pos != NULL;) {
+		const CUpDownClient *cur_client = theApp.uploadqueue->GetNextFromUploadList(pos);
 
 		UploadUsers dUser;
 		CString sTemp;
 		dUser.sUserHash = md4str(cur_client->GetUserHash());
-		if (cur_client->GetDatarate() > 0)
-		{
+		if (cur_client->GetDatarate() > 0) {
 			dUser.sActive = _T("downloading");
 			dUser.sClientState = _T("uploading");
-		}
-		else
-		{
+		} else {
 			dUser.sActive = _T("waiting");
 			dUser.sClientState = _T("connecting");
 		}
 
-		dUser.sFileInfo = _SpecialChars(GetClientSummary(cur_client),false);
-		dUser.sFileInfo.Replace(_T("\\"),_T("\\\\"));
+		dUser.sFileInfo = _SpecialChars(GetClientSummary(cur_client), false);
+		dUser.sFileInfo.Replace(_T("\\"), _T("\\\\"));
 		dUser.sFileInfo.Replace(_T("\n"), _T("<br />"));
-		dUser.sFileInfo.Replace(_T("'"),_T("&#8217;"));
+		dUser.sFileInfo.Replace(_T("'"), _T("&#8217;"));
 
-		sTemp= GetClientversionImage(cur_client) ;
+		sTemp = GetClientversionImage(cur_client);
 		dUser.sClientSoft = sTemp;
 
 		if (cur_client->IsBanned())
@@ -2353,10 +2344,10 @@ CString CWebServer::_GetTransferList(const ThreadData& Data)
 		dUser.sUserName = _SpecialChars(cur_client->GetUserName());
 
 		CString cun(cur_client->GetUserName());
-		if(cun.GetLength() > SHORT_LENGTH_MIN)
+		if (cun.GetLength() > SHORT_LENGTH_MIN)
 			dUser.sUserName = _SpecialChars(cun.Left(SHORT_LENGTH_MIN-3)) + _T("...");
 
-		CKnownFile* file = theApp.sharedfiles->GetFileByID(cur_client->GetUploadFileID() );
+		CKnownFile* file = theApp.sharedfiles->GetFileByID(cur_client->GetUploadFileID());
 		if (file)
 			dUser.sFileName = _SpecialChars(file->GetFileName());
 		else
@@ -2371,7 +2362,7 @@ CString CWebServer::_GetTransferList(const ThreadData& Data)
 
 	// Sorting (simple bubble sort, we don't have tons of data here)
 	bSorted = true;
-	for(int nMax = 0;bSorted && nMax < UploadArray.GetCount()*2; nMax++)
+	for(int nMax = 0; bSorted && nMax < UploadArray.GetCount()*2; ++nMax)
 	{
 		bSorted = false;
 		for(int i = 0; i < UploadArray.GetCount() - 1; i++)
@@ -4995,7 +4986,7 @@ CString CWebServer::GetWebImageNameForFileType(const CString& filename)
 	}
 }
 
-CString CWebServer::GetClientSummary(CUpDownClient* client) {
+CString CWebServer::GetClientSummary(const CUpDownClient* client) {
 
 	// name
 	CString buffer(GetResString(IDS_CD_UNAME) + _T(" ") + client->GetUserName() + _T("\n"));
@@ -5023,7 +5014,7 @@ CString CWebServer::GetClientSummary(CUpDownClient* client) {
 	return buffer;
 }
 
-CString CWebServer::GetClientversionImage(CUpDownClient* client)
+CString CWebServer::GetClientversionImage(const CUpDownClient* client)
 {
 	switch (client->GetClientSoft()) {
 	case SO_EMULE:

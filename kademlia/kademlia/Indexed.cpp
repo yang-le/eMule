@@ -419,67 +419,63 @@ bool CIndexed::AddKeyword(const CUInt128& uKeyID, const CUInt128& uSourceID, Kad
 		m_uTotalIndexKeyword++;
 		return true;
 	}
+	uint32 uIndexTotal = pCurrKeyHash->mapSource.GetCount();
+	if ( uIndexTotal > KADEMLIAMAXINDEX )
+	{
+		uLoad = 100;
+		//Too many entries for this Keyword..
+		return false;
+	}
+	Source* pCurrSource;
+	if(pCurrKeyHash->mapSource.Lookup(CCKey(uSourceID.GetData()), pCurrSource))
+	{
+		if (!pCurrSource->ptrlEntryList.IsEmpty())
+		{
+			if( uIndexTotal > KADEMLIAMAXINDEX - 5000 )
+			{
+				uLoad = 100;
+				//We are in a hot node.. If we continued to update all the publishes
+				//while this index is full, popular files will be the only thing you index.
+				return false;
+			}
+			// also check for size match
+			CKeyEntry* pOldEntry = NULL;
+			for (POSITION pos = pCurrSource->ptrlEntryList.GetHeadPosition(); pos != NULL;) {
+				POSITION pos1 = pos;
+				CKeyEntry* pCurEntry = (CKeyEntry*)pCurrSource->ptrlEntryList.GetNext(pos);
+				ASSERT( pCurEntry->IsKeyEntry() );
+				if (pCurEntry->m_uSize == pEntry->m_uSize){
+					pOldEntry = pCurEntry;
+					pCurrSource->ptrlEntryList.RemoveAt(pos1);
+					break;
+				}
+			}
+			pEntry->MergeIPsAndFilenames(pOldEntry); // pOldEntry can be NULL, that's ok and we still need todo this call in this case
+			if (pOldEntry == NULL){
+				m_uTotalIndexKeyword++;
+				DebugLogWarning(_T("Kad: Indexing: Keywords: Multiple sizes published for file %s"), (LPCTSTR)pEntry->m_uSourceID.ToHexString());
+			}
+			DEBUG_ONLY( AddDebugLogLine(DLP_VERYLOW, false, _T("Indexed file %s"), (LPCTSTR)pEntry->m_uSourceID.ToHexString()) );
+			delete pOldEntry;
+		}
+		else{
+			m_uTotalIndexKeyword++;
+			pEntry->MergeIPsAndFilenames(NULL); //IpTracking init
+		}
+		uLoad = (uint8)((uIndexTotal*100)/KADEMLIAMAXINDEX);
+		pCurrSource->ptrlEntryList.AddHead(pEntry);
+	}
 	else
 	{
-		uint32 uIndexTotal = pCurrKeyHash->mapSource.GetCount();
-		if ( uIndexTotal > KADEMLIAMAXINDEX )
-		{
-			uLoad = 100;
-			//Too many entries for this Keyword..
-			return false;
-		}
-		Source* pCurrSource;
-		if(pCurrKeyHash->mapSource.Lookup(CCKey(uSourceID.GetData()), pCurrSource))
-		{
-			if (!pCurrSource->ptrlEntryList.IsEmpty())
-			{
-				if( uIndexTotal > KADEMLIAMAXINDEX - 5000 )
-				{
-					uLoad = 100;
-					//We are in a hot node.. If we continued to update all the publishes
-					//while this index is full, popular files will be the only thing you index.
-					return false;
-				}
-				// also check for size match
-				CKeyEntry* pOldEntry = NULL;
-				for (POSITION pos = pCurrSource->ptrlEntryList.GetHeadPosition(); pos != NULL;) {
-					POSITION pos1 = pos;
-					CKeyEntry* pCurEntry = (CKeyEntry*)pCurrSource->ptrlEntryList.GetNext(pos);
-					ASSERT( pCurEntry->IsKeyEntry() );
-					if (pCurEntry->m_uSize == pEntry->m_uSize){
-						pOldEntry = pCurEntry;
-						pCurrSource->ptrlEntryList.RemoveAt(pos1);
-						break;
-					}
-				}
-				pEntry->MergeIPsAndFilenames(pOldEntry); // pOldEntry can be NULL, that's ok and we still need todo this call in this case
-				if (pOldEntry == NULL){
-					m_uTotalIndexKeyword++;
-					DebugLogWarning(_T("Kad: Indexing: Keywords: Multiple sizes published for file %s"), (LPCTSTR)pEntry->m_uSourceID.ToHexString());
-				}
-				DEBUG_ONLY( AddDebugLogLine(DLP_VERYLOW, false, _T("Indexed file %s"), (LPCTSTR)pEntry->m_uSourceID.ToHexString()) );
-				delete pOldEntry;
-			}
-			else{
-				m_uTotalIndexKeyword++;
-				pEntry->MergeIPsAndFilenames(NULL); //IpTracking init
-			}
-			uLoad = (uint8)((uIndexTotal*100)/KADEMLIAMAXINDEX);
-			pCurrSource->ptrlEntryList.AddHead(pEntry);
-			return true;
-		}
-		else
-		{
-			pCurrSource = new Source;
-			pCurrSource->uSourceID.SetValue(uSourceID);
-			pEntry->MergeIPsAndFilenames(NULL); //IpTracking init
-			pCurrSource->ptrlEntryList.AddHead(pEntry);
-			pCurrKeyHash->mapSource.SetAt(CCKey(pCurrSource->uSourceID.GetData()), pCurrSource);
-			m_uTotalIndexKeyword++;
-			uLoad = (uint8)((uIndexTotal*100)/KADEMLIAMAXINDEX);
-			return true;
-		}
+		pCurrSource = new Source;
+		pCurrSource->uSourceID.SetValue(uSourceID);
+		pEntry->MergeIPsAndFilenames(NULL); //IpTracking init
+		pCurrSource->ptrlEntryList.AddHead(pEntry);
+		pCurrKeyHash->mapSource.SetAt(CCKey(pCurrSource->uSourceID.GetData()), pCurrSource);
+		m_uTotalIndexKeyword++;
+		uLoad = (uint8)((uIndexTotal*100)/KADEMLIAMAXINDEX);
 	}
+	return true;
 }
 
 bool CIndexed::AddSources(const CUInt128& uKeyID, const CUInt128& uSourceID, Kademlia::CEntry* pEntry, uint8& uLoad, bool bIgnoreThreadLock)

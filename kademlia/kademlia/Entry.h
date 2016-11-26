@@ -35,7 +35,7 @@ namespace Kademlia
 	class CEntry
 	{
 		protected:
-			struct structFileNameEntry{
+			struct structFileNameEntry {
 				CKadTagValueString	m_fileName;
 				uint32				m_uPopularityIndex;
 			};

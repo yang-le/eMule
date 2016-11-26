@@ -801,9 +801,8 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 					{
 						CCKey bufKey;
 						CKnownFile* cur_file;
-						for (POSITION pos = theApp.sharedfiles->m_Files_map.GetStartPosition();pos != 0;)
-						{
-							theApp.sharedfiles->m_Files_map.GetNextAssoc(pos,bufKey,cur_file);
+						for (POSITION pos = theApp.sharedfiles->m_Files_map.GetStartPosition(); pos != NULL;) {
+							theApp.sharedfiles->m_Files_map.GetNextAssoc(pos, bufKey, cur_file);
 							if (!cur_file->IsLargeFile() || client->SupportsLargeFiles())
 								list.AddTail((void*&)cur_file);
 						}
@@ -896,16 +895,14 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 							if (!strReqDir.IsEmpty())
 							{
 								// get all shared files from requested directory
-								for (POSITION pos = theApp.sharedfiles->m_Files_map.GetStartPosition();pos != 0;)
-								{
+								for (POSITION pos = theApp.sharedfiles->m_Files_map.GetStartPosition(); pos != NULL;) {
 									CCKey bufKey;
 									CKnownFile* cur_file;
 									theApp.sharedfiles->m_Files_map.GetNextAssoc(pos, bufKey, cur_file);
 
 									// all files which are not within a shared directory have to be single shared files
 									if (((!bSingleSharedFiles && CompareDirectories(strReqDir, cur_file->GetSharedDirectory()) == 0) || (bSingleSharedFiles && !theApp.sharedfiles->ShouldBeShared(cur_file->GetSharedDirectory(), _T(""), false)))
-										&& (!cur_file->IsLargeFile() || client->SupportsLargeFiles()))
-									{
+										&& (!cur_file->IsLargeFile() || client->SupportsLargeFiles())) {
 										list.AddTail(cur_file);
 									}
 

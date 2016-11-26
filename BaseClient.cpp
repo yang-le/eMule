@@ -1566,7 +1566,7 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 		theApp.serverconnect->SendPacket(packet);
 		return true;
 	}
-	else if (HasValidBuddyID() && Kademlia::CKademlia::IsConnected() && ((GetBuddyIP() && GetBuddyPort()) || reqfile != NULL))
+	if (HasValidBuddyID() && Kademlia::CKademlia::IsConnected() && ((GetBuddyIP() && GetBuddyPort()) || reqfile != NULL))
 	{
 		if( GetBuddyIP() && GetBuddyPort())
 		{
@@ -1614,13 +1614,11 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 				ASSERT(0);
 			}
 		}
-		return true;
-	}
-	else {
+	} else {
 		ASSERT( false );
 		DebugLogError(_T("TryToConnect: Bug: No Callback available despite prechecks"));
-		return true;
 	}
+	return true;
 }
 
 void CUpDownClient::Connect()
@@ -1983,11 +1981,10 @@ void CUpDownClient::ProcessSharedFileList(const uchar* pachPacket, uint32 nSize,
 
 void CUpDownClient::SetUserHash(const uchar* pucUserHash)
 {
-	if( pucUserHash == NULL ){
+	if (pucUserHash == NULL)
 		md4clr(m_achUserHash);
-		return;
-	}
-	md4cpy(m_achUserHash, pucUserHash);
+	else
+		md4cpy(m_achUserHash, pucUserHash);
 }
 
 void CUpDownClient::SetBuddyID(const uchar* pucBuddyID)
@@ -1995,10 +1992,10 @@ void CUpDownClient::SetBuddyID(const uchar* pucBuddyID)
 	if( pucBuddyID == NULL ){
 		md4clr(m_achBuddyID);
 		m_bBuddyIDValid = false;
-		return;
+	} else {
+		m_bBuddyIDValid = true;
+		md4cpy(m_achBuddyID, pucBuddyID);
 	}
-	m_bBuddyIDValid = true;
-	md4cpy(m_achBuddyID, pucBuddyID);
 }
 
 void CUpDownClient::SendPublicKeyPacket()
@@ -2229,9 +2226,8 @@ void CUpDownClient::InfoPacketsReceived()
 	ASSERT ( m_byInfopacketsReceived == IP_BOTH );
 	m_byInfopacketsReceived = IP_NONE;
 
-	if (m_bySupportSecIdent){
+	if (m_bySupportSecIdent)
 		SendSecIdentStatePacket();
-	}
 }
 
 void CUpDownClient::ResetFileStatusInfo()
@@ -2815,11 +2811,11 @@ void  CUpDownClient::SetMessageFiltered(bool bVal)	{
 	m_fMessageFiltered = bVal ? 1 : 0;
 }
 
-bool  CUpDownClient::IsObfuscatedConnectionEstablished() const {
+bool  CUpDownClient::IsObfuscatedConnectionEstablished() const
+{
 	if (socket != NULL && socket->IsConnected())
 		return socket->IsObfusicating();
-	else
-		return false;
+	return false;
 }
 
 bool CUpDownClient::ShouldReceiveCryptUDPPackets() const {
@@ -3069,11 +3065,11 @@ bool CUpDownClient::HasPassedSecureIdent(bool bPassIfUnavailable) const
 void CUpDownClient::SendFirewallCheckUDPRequest()
 {
 	ASSERT( GetKadState() == KS_FWCHECK_UDP );
-	if (!Kademlia::CKademlia::IsRunning()){
+	if (!Kademlia::CKademlia::IsRunning()) {
 		SetKadState(KS_NONE);
 		return;
 	}
-	else if (GetUploadState() != US_NONE || GetDownloadState() != DS_NONE || GetChatState() != MS_NONE
+	if (GetUploadState() != US_NONE || GetDownloadState() != DS_NONE || GetChatState() != MS_NONE
 		|| GetKadVersion() <= KADEMLIA_VERSION5_48a || GetKadPort() == 0)
 	{
 		Kademlia::CUDPFirewallTester::SetUDPFWCheckResult(false, true, ntohl(GetIP()), 0); // inform the tester that this test was cancelled
@@ -3089,22 +3085,20 @@ void CUpDownClient::SendFirewallCheckUDPRequest()
 	SafeConnectAndSendPacket(packet);
 }
 
-void CUpDownClient::ProcessFirewallCheckUDPRequest(CSafeMemFile* data){
-	if (!Kademlia::CKademlia::IsRunning() || Kademlia::CKademlia::GetUDPListener() == NULL){
+void CUpDownClient::ProcessFirewallCheckUDPRequest(CSafeMemFile* data)
+{
+	if (!Kademlia::CKademlia::IsRunning() || Kademlia::CKademlia::GetUDPListener() == NULL) {
 		DebugLogWarning(_T("Ignored Kad Firewallrequest UDP because Kad is not running (%s)"), (LPCTSTR)DbgGetClientInfo());
 		return;
 	}
 	// first search if we know this IP already, if so the result might be biased and we need tell the requester
-	bool bErrorAlreadyKnown = false;
-	if (GetUploadState() != US_NONE || GetDownloadState() != DS_NONE || GetChatState() != MS_NONE)
-		bErrorAlreadyKnown = true;
-	else if (Kademlia::CKademlia::GetRoutingZone()->GetContact(ntohl(GetConnectIP()), 0, false) != NULL)
-		bErrorAlreadyKnown = true;
+	bool bErrorAlreadyKnown = GetUploadState() != US_NONE || GetDownloadState() != DS_NONE || GetChatState() != MS_NONE
+		|| (Kademlia::CKademlia::GetRoutingZone()->GetContact(ntohl(GetConnectIP()), 0, false) != NULL);
 
 	uint16 nRemoteInternPort = data->ReadUInt16();
 	uint16 nRemoteExternPort = data->ReadUInt16();
 	uint32 dwSenderKey = data->ReadUInt32();
-	if (nRemoteInternPort == 0){
+	if (nRemoteInternPort == 0) {
 		DebugLogError(_T("UDP Firewallcheck requested with Intern Port == 0 (%s)"), (LPCTSTR)DbgGetClientInfo());
 		return;
 	}
@@ -3120,7 +3114,7 @@ void CUpDownClient::ProcessFirewallCheckUDPRequest(CSafeMemFile* data){
 		, nRemoteInternPort, Kademlia::CKadUDPKey(dwSenderKey, theApp.GetPublicIP(false)), NULL);
 
 	// if the client has a router with PAT (and therefore a different extern port than intern), test this port too
-	if (nRemoteExternPort != 0 && nRemoteExternPort != nRemoteInternPort){
+	if (nRemoteExternPort != 0 && nRemoteExternPort != nRemoteInternPort) {
 		CSafeMemFile fileTestPacket2;
 		fileTestPacket2.WriteUInt8(bErrorAlreadyKnown ? 1 : 0);
 		fileTestPacket2.WriteUInt16(nRemoteExternPort);
@@ -3146,7 +3140,7 @@ void CUpDownClient::SendSharedDirectories()
 	// add shared directories
 	CString strDir;
 	CStringArray arFolders;
-	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos;) {
+	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos != NULL;) {
 		strDir = theApp.sharedfiles->GetPseudoDirName(thePrefs.shareddir_list.GetNext(pos));
 		if (!strDir.IsEmpty())
 			arFolders.Add(strDir);

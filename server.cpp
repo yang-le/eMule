@@ -271,8 +271,7 @@ LPCTSTR CServer::GetAddress() const
 {
 	if (!m_strDynIP.IsEmpty())
 		return m_strDynIP;
-	else
-		return ipfull;
+	return ipfull;
 }
 
 void CServer::SetIP(uint32 newip)

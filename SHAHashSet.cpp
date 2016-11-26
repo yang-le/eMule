@@ -1045,36 +1045,37 @@ void CAICHRecoveryHashSet::ClientAICHRequestFailed(CUpDownClient* pClient){
 	}
 }
 
-void CAICHRecoveryHashSet::RemoveClientAICHRequest(const CUpDownClient* pClient){
-	for (POSITION pos = m_liRequestedData.GetHeadPosition(); pos != 0;) {
+void CAICHRecoveryHashSet::RemoveClientAICHRequest(const CUpDownClient* pClient)
+{
+	for (POSITION pos = m_liRequestedData.GetHeadPosition(); pos != NULL;) {
 		POSITION pos2 = pos;
 		if (m_liRequestedData.GetNext(pos).m_pClient == pClient) {
 			m_liRequestedData.RemoveAt(pos2);
 			return;
 		}
 	}
-	ASSERT( false );
+	ASSERT(false);
 }
 
-bool CAICHRecoveryHashSet::IsClientRequestPending(const CPartFile* pForFile, uint16 nPart){
-	for (POSITION pos = m_liRequestedData.GetHeadPosition(); pos != 0;) {
+bool CAICHRecoveryHashSet::IsClientRequestPending(const CPartFile* pForFile, uint16 nPart)
+{
+	for (POSITION pos = m_liRequestedData.GetHeadPosition(); pos != NULL;) {
 		const CAICHRequestedData& rd = m_liRequestedData.GetNext(pos);
-		if (rd.m_pPartFile == pForFile && rd.m_nPart == nPart) {
+		if (rd.m_pPartFile == pForFile && rd.m_nPart == nPart)
 			return true;
-		}
 	}
 	return false;
 }
 
-CAICHRequestedData CAICHRecoveryHashSet::GetAICHReqDetails(const  CUpDownClient* pClient){
-	for (POSITION pos = m_liRequestedData.GetHeadPosition(); pos != 0;) {
+CAICHRequestedData CAICHRecoveryHashSet::GetAICHReqDetails(const  CUpDownClient* pClient)
+{
+	for (POSITION pos = m_liRequestedData.GetHeadPosition(); pos != NULL;) {
 		const CAICHRequestedData& rd = m_liRequestedData.GetNext(pos);
 		if (rd.m_pClient == pClient)
 			return rd;
 	}
-	ASSERT( false );
-	CAICHRequestedData empty;
-	return empty;
+	ASSERT(false);
+	return CAICHRequestedData();
 }
 
 void CAICHRecoveryHashSet::AddStoredAICHHash(CAICHHash Hash, ULONGLONG nFilePos)
@@ -1089,17 +1090,17 @@ void CAICHRecoveryHashSet::AddStoredAICHHash(CAICHHash Hash, ULONGLONG nFilePos)
 	m_mapAICHHashsStored.SetAt(Hash, nFilePos);
 }
 
-bool CAICHRecoveryHashSet::IsPartDataAvailable(uint64 nPartStartPos){
-	if (!(m_eStatus == AICH_VERIFIED || m_eStatus == AICH_TRUSTED || m_eStatus == AICH_HASHSETCOMPLETE) ){
-		ASSERT( false );
+bool CAICHRecoveryHashSet::IsPartDataAvailable(uint64 nPartStartPos)
+{
+	if (!(m_eStatus == AICH_VERIFIED || m_eStatus == AICH_TRUSTED || m_eStatus == AICH_HASHSETCOMPLETE)) {
+		ASSERT(false);
 		return false;
 	}
 	uint32 nPartSize = (uint32)(mini(PARTSIZE, (uint64)m_pOwner->GetFileSize()-nPartStartPos));
-	for (uint64 nPartPos = 0; nPartPos < nPartSize; nPartPos += EMBLOCKSIZE){
+	for (uint64 nPartPos = 0; nPartPos < nPartSize; nPartPos += EMBLOCKSIZE) {
 		const CAICHHashTree* phtToCheck = m_pHashTree.FindExistingHash(nPartStartPos+nPartPos, min(EMBLOCKSIZE, nPartSize-nPartPos));
-		if (phtToCheck == NULL || !phtToCheck->m_bHashValid){
+		if (phtToCheck == NULL || !phtToCheck->m_bHashValid)
 			return false;
-		}
 	}
 	return true;
 }

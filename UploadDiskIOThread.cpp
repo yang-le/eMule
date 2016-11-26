@@ -116,8 +116,8 @@ UINT CUploadDiskIOThread::RunInternal()
 			DWORD dwRead;
 			if (GetOverlappedResult(pCurPendingIO->pFileStruct->hFile, &pCurPendingIO->oOverlap, &dwRead, FALSE)) {
 				m_listPendingIO.RemoveAt(pos2);
-				// we add it to a list instead of processing it directly because we need to know how many finished
-				// IOs we have to deceide if we can use compression or need to speedup lateron
+				// we add it to a list instead of processing it directly because we need to know how many finished IOs
+				// we have to decide if we can use compression or need to speedup later on
 				pCurPendingIO->dwRead = dwRead;
 				m_listFinishedIO.AddTail(pCurPendingIO);
 			}
@@ -178,7 +178,7 @@ UINT CUploadDiskIOThread::RunInternal()
 void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* pUploadClientStruct)
 {
 	// when calling this function we already have a lock to the uploadlist (so pUploadClientStruct and its members are safe in terms of not getting deleted/changed)
-    // now also get a lock to the Block lists
+	// now also get a lock to the Block lists
 	CSingleLock lockBlockLists(&pUploadClientStruct->m_csBlockListsLock, TRUE);
 	// See if we can do an early return. There may be no new blocks to load from disk and add to buffer, or buffer may be large enough allready.
 
@@ -194,15 +194,15 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* 
 	const uint32 nBufferLimit = bFastUpload ? ((5 * EMBLOCKSIZE) + 1) : (EMBLOCKSIZE + 1);
 
 	if(pUploadClientStruct->m_BlockRequests_queue.IsEmpty() || // There are no new blocks requested
-       (addedPayloadQueueSession > nCurQueueSessionPayloadUp && addedPayloadQueueSession - nCurQueueSessionPayloadUp > nBufferLimit))
+	   (addedPayloadQueueSession > nCurQueueSessionPayloadUp && addedPayloadQueueSession - nCurQueueSessionPayloadUp > nBufferLimit))
 	{ // the buffered data is large enough already
 		return;
-    }
+	}
 
 	try{
-        // Buffer new data if current buffer is less than nBufferLimit Bytes
-        while (!pUploadClientStruct->m_BlockRequests_queue.IsEmpty() &&
-               (addedPayloadQueueSession <= nCurQueueSessionPayloadUp || addedPayloadQueueSession - nCurQueueSessionPayloadUp < nBufferLimit))
+		// Buffer new data if current buffer is less than nBufferLimit Bytes
+		while (!pUploadClientStruct->m_BlockRequests_queue.IsEmpty() &&
+			   (addedPayloadQueueSession <= nCurQueueSessionPayloadUp || addedPayloadQueueSession - nCurQueueSessionPayloadUp < nBufferLimit))
 		{
 			Requested_Block_Struct* currentblock = pUploadClientStruct->m_BlockRequests_queue.GetHead();
 			if (md4cmp(currentblock->FileID, pUploadClientStruct->m_pClient->GetUploadFileID()) != 0)
@@ -236,7 +236,7 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* 
 			else
 				fullname.Format(_T("%s\\%s"), (LPCTSTR)srcfile->GetPath(), (LPCTSTR)srcfile->GetFileName());
 
-			// we have done all important sanitychecks for the blockrequest in the mainthread when adding it already, just redo some quick important ones
+			// we have done all important sanity checks for the blockrequest in the mainthread when adding it already, just redo some quick important ones
 			uint64 i64uTogo = currentblock->EndOffset - currentblock->StartOffset;
 			if (currentblock->StartOffset >= currentblock->EndOffset || currentblock->EndOffset > srcfile->GetFileSize())
 				throw _T("Invalid Block Offsets");
@@ -259,7 +259,7 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* 
 			if (pOpenOvFileStruct == NULL)
 			{
 				HANDLE hFile;
-				// regardless if partfile or sharedfile, we acquire a new filehandle to read the data lateron
+				// regardless if partfile or sharedfile, we acquire a new filehandle to read the data later on
 				DWORD dwShare; // FILE_SHARE_DELETE allows the user to delete files (or complete partfiles) even while we still have our read handle (which stays valid of course)
 				if (thePrefs.GetWindowsVersion() >= _WINVER_2K_) // might work on NT4 too, but i cant test and who is using it still anyway ;), so lets go the safe way
 					dwShare = FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE;
@@ -496,13 +496,14 @@ bool CUploadDiskIOThread::ReleaseOvOpenFile(OpenOvFile_Struct* pOpenOvFileStruct
 
 bool CUploadDiskIOThread::ShouldCompressBasedOnFilename(CString strFileName)
 {
+	int pos = strFileName.ReverseFind(_T('.')) + 1;
+	if (pos <= 0)
+		return true;
+	strFileName = strFileName.Mid(pos);
 	strFileName.MakeLower();
-	int pos = strFileName.ReverseFind(_T('.'));
-	if (pos>-1)
-		strFileName = strFileName.Mid(pos);
-	if (strFileName==_T(".avi") && thePrefs.GetDontCompressAvi())
-		return false;
-	return (strFileName!=_T(".zip") && strFileName!=_T(".cbz") && strFileName!=_T(".rar") && strFileName!=_T(".cbr") && strFileName!=_T(".ace") && strFileName!=_T(".ogm"));
+	if (strFileName==_T("avi"))
+		return !thePrefs.GetDontCompressAvi();
+	return strFileName!=_T("zip") && strFileName!=_T("7z") && strFileName!=_T("rar") && strFileName!=_T("cbz") && strFileName!=_T("cbr") && strFileName!=_T("ace") && strFileName!=_T("ogm");
 }
 
 void CUploadDiskIOThread::CreateStandardPackets(byte* pbyData, uint64 uStartOffset, uint64 uEndOffset, bool bFromPF, CPacketList& rOutPacketList, const uchar* pucMD4FileHash, const CString& strDbgClientInfo)
@@ -561,17 +562,17 @@ void CUploadDiskIOThread::CreatePackedPackets(byte* pbyData, uint64 uStartOffset
 		return;
 	}
 	CMemFile memfile(output,newsize);
-    uint32 oldSize = togo;
+	uint32 oldSize = togo;
 	togo = newsize;
 	uint32 nPacketSize;
-    if (togo > 10240)
-        nPacketSize = togo/(uint32)(togo/10240);
-    else
-        nPacketSize = togo;
+	if (togo > 10240)
+		nPacketSize = togo/(uint32)(togo/10240);
+	else
+		nPacketSize = togo;
 
-    uint32 totalPayloadSize = 0;
+	uint32 totalPayloadSize = 0;
 
-    while (togo){
+	while (togo){
 		if (togo < nPacketSize*2)
 			nPacketSize = togo;
 		ASSERT( nPacketSize );
@@ -597,13 +598,13 @@ void CUploadDiskIOThread::CreatePackedPackets(byte* pbyData, uint64 uStartOffset
 			Debug(_T(">>> %-20hs to   %s; %s\n"), _T("OP__CompressedPart"), (LPCTSTR)strDbgClientInfo, (LPCTSTR)md4str(pucMD4FileHash));
 			Debug(_T("  Start=%I64u  BlockSize=%u  Size=%u\n"), statpos, newsize, nPacketSize);
 		}
-        // approximate payload size
-        uint32 payloadSize = nPacketSize*oldSize/newsize;
+		// approximate payload size
+		uint32 payloadSize = nPacketSize*oldSize/newsize;
 
-        if(togo == 0 && totalPayloadSize+payloadSize < oldSize) {
-            payloadSize = oldSize-totalPayloadSize;
-        }
-        totalPayloadSize += payloadSize;
+		if(togo == 0 && totalPayloadSize+payloadSize < oldSize) {
+			payloadSize = oldSize-totalPayloadSize;
+		}
+		totalPayloadSize += payloadSize;
 
 		theStats.AddUpDataOverheadFileRequest(24);
 		packet->uStatsPayLoad = payloadSize;

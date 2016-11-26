@@ -432,7 +432,7 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 					Debug(_T("ServerMsg - OP_ServerIdent\n"));
 				if (size<16+4+2+4){
 					if (thePrefs.GetVerbose())
-						DebugLogError(_T("%s"), (LPCTSTR)GetResString(IDS_ERR_KNOWNSERVERINFOREC));
+						DebugLogError((LPCTSTR)GetResString(IDS_ERR_KNOWNSERVERINFOREC));
 					break;// throw "Invalid server info received";
 				}
 
@@ -537,7 +537,7 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 				}
 				catch(CFileException* error){
 					if (thePrefs.GetVerbose())
-						DebugLogError(_T("%s"), (LPCTSTR)GetResString(IDS_ERR_BADSERVERLISTRECEIVED));
+						DebugLogError((LPCTSTR)GetResString(IDS_ERR_BADSERVERLISTRECEIVED));
 					error->Delete();
 				}
 				break;

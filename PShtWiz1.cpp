@@ -563,9 +563,8 @@ class CPPgWiz1Upload : public CDlgPageWizard
 public:
 	CPPgWiz1Upload();
 	CPPgWiz1Upload(UINT nIDTemplate, LPCTSTR pszCaption = NULL, LPCTSTR pszHeaderTitle = NULL, LPCTSTR pszHeaderSubTitle = NULL)
-		: CDlgPageWizard(nIDTemplate, pszCaption, pszHeaderTitle, pszHeaderSubTitle)
+		: CDlgPageWizard(nIDTemplate, pszCaption, pszHeaderTitle, pszHeaderSubTitle), m_iObfuscation(0)
 	{
-		m_iObfuscation = 0;
 	}
 	virtual ~CPPgWiz1Upload();
 	virtual BOOL OnInitDialog();
@@ -587,9 +586,8 @@ BEGIN_MESSAGE_MAP(CPPgWiz1Upload, CDlgPageWizard)
 END_MESSAGE_MAP()
 
 CPPgWiz1Upload::CPPgWiz1Upload()
-	: CDlgPageWizard(CPPgWiz1Upload::IDD)
+	: CDlgPageWizard(CPPgWiz1Upload::IDD), m_iObfuscation(0)
 {
-	m_iObfuscation = 0;
 }
 
 CPPgWiz1Upload::~CPPgWiz1Upload()
@@ -833,7 +831,7 @@ BOOL FirstTimeWizard()
 	page3.m_sUDP.Format(_T("%u"), thePrefs.GetUDPPort());
 	page4.m_iDAP = 1;
 	page4.m_iUAP = 1;
-	page5.m_iObfuscation = thePrefs.IsClientCryptLayerRequested() ? 1 : 0;
+	page5.m_iObfuscation = thePrefs.IsClientCryptLayerSupported() ? 1 : 0; //was Requested()
 	page6.m_iSafeServerConnect = 0;
 	page6.m_iKademlia = 1;
 	page6.m_iED2K = 1;

@@ -29,13 +29,12 @@ public:
 	explicit MD5Sum(const CString& sSource);
 	MD5Sum(const unsigned char* pachSource, uint32 nLen);
 
-	CString Calculate(const CString& sSource);
-	CString Calculate(const unsigned char* pachSource, uint32 nLen);
+	void Calculate(const CString& sSource);
+	void Calculate(const unsigned char* pachSource, uint32 nLen);
 
 	CString GetHash() const;
 	const unsigned char* GetRawHash() const { return m_rawHash; }
 
 private:
-	CString			m_sHash;
 	unsigned char	m_rawHash[16];
 };

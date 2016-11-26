@@ -659,8 +659,8 @@ bool CxImage::LoadResource(HRSRC hRes, uint32_t imagetype, HMODULE hModule)
 		char* lpVoid=(char*)LockResource(hMem);
 		if (lpVoid){
 			// FILE* fTmp=tmpfile(); doesn't work with network
-			/*char tmpPath[MAX_PATH] = {0};
-			char tmpFile[MAX_PATH] = {0};
+			/*char tmpPath[MAX_PATH] = {};
+			char tmpFile[MAX_PATH] = {};
 			GetTempPath(MAX_PATH,tmpPath);
 			GetTempFileName(tmpPath,"IMG",0,tmpFile);
 			FILE* fTmp=fopen(tmpFile,"w+b");
