@@ -33,59 +33,51 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-
-CFriend::CFriend(void)
-	: m_strName()
+void	CFriend::init()
 {
-	m_dwLastSeen = 0;
-	m_dwLastUsedIP = 0;
-	m_nLastUsedPort = 0;
-	m_dwLastChatted = 0;
-	m_LinkedClient = 0;
-	md4clr(m_abyUserhash);
 	md4clr(m_abyKadID);
-	m_FriendConnectState = FCS_NONE;
+	m_friendSlot = false;
 	m_dwLastKadSearch = 0;
+	m_FriendConnectState = FCS_NONE;
+	m_LinkedClient = NULL;
+}
 
-    m_friendSlot = false;
+
+CFriend::CFriend()
+	: m_strName(), m_abyUserhash(), m_dwLastSeen(0), m_dwLastUsedIP(0), m_nLastUsedPort(0), m_dwLastChatted(0)
+{
+	init();
 }
 
 //Added this to work with the IRC.. Probably a better way to do it.. But wanted this in the release..
-CFriend::CFriend(const uchar* abyUserhash, uint32 dwLastSeen, uint32 dwLastUsedIP, uint16 nLastUsedPort,
-				 uint32 dwLastChatted, LPCTSTR pszName, uint32 dwHasHash){
+CFriend::CFriend(const uchar* abyUserhash, time_t dwLastSeen, uint32 dwLastUsedIP, uint16 nLastUsedPort
+				, uint32 dwLastChatted, LPCTSTR pszName, uint32 dwHasHash)
+{
+	init();
 	m_dwLastSeen = dwLastSeen;
 	m_dwLastUsedIP = dwLastUsedIP;
 	m_nLastUsedPort = nLastUsedPort;
 	m_dwLastChatted = dwLastChatted;
-	if(dwHasHash && abyUserhash){
-		md4cpy(m_abyUserhash,abyUserhash);
-	}
+	if (dwHasHash && abyUserhash)
+		md4cpy(m_abyUserhash, abyUserhash);
 	else
 		md4clr(m_abyUserhash);
-	md4clr(m_abyKadID);
 	m_strName = pszName;
-	m_LinkedClient = 0;
-    m_friendSlot = false;
-	m_FriendConnectState = FCS_NONE;
-	m_dwLastKadSearch = 0;
 }
 
-CFriend::CFriend(CUpDownClient* client){
+CFriend::CFriend(CUpDownClient* client)
+{
 	ASSERT ( client );
+	init();
 	m_dwLastSeen = time(NULL);
 	m_dwLastUsedIP = client->GetIP();
 	m_nLastUsedPort = client->GetUserPort();
 	m_dwLastChatted = 0;
-    m_LinkedClient = NULL;
-    m_friendSlot = false;
-	m_FriendConnectState = FCS_NONE;
-	m_dwLastKadSearch = 0;
-	md4clr(m_abyKadID);
 	md4cpy(m_abyUserhash, client->GetUserHash());
     SetLinkedClient(client);
 }
 
-CFriend::~CFriend(void)
+CFriend::~CFriend()
 {
     if(GetLinkedClient(true) != NULL) {
         m_LinkedClient->SetFriendSlot(false);
@@ -105,24 +97,18 @@ void CFriend::LoadFromFile(CFileDataIO* file)
 	m_dwLastSeen = file->ReadUInt32();
 	m_dwLastChatted = file->ReadUInt32();
 
-	UINT tagcount = file->ReadUInt32();
-	for (UINT j = 0; j < tagcount; j++){
-		CTag* newtag = new CTag(file, false);
-		switch (newtag->GetNameID()){
-			case FF_NAME:{
-				ASSERT( newtag->IsStr() );
-				if (newtag->IsStr()){
-					if (m_strName.IsEmpty())
-						m_strName = newtag->GetStr();
-				}
-				break;
-			}
-			case FF_KADID:{
-				ASSERT( newtag->IsHash() );
-				if (newtag->IsHash())
-					md4cpy(m_abyKadID, newtag->GetHash());
-				break;
-			}
+	for (uint32 tagcount = file->ReadUInt32(); tagcount-- > 0;) {
+		const CTag* newtag = new CTag(file, false);
+		switch (newtag->GetNameID()) {
+		case FF_NAME:
+			ASSERT(newtag->IsStr());
+			if (newtag->IsStr() && m_strName.IsEmpty())
+				m_strName = newtag->GetStr();
+			break;
+		case FF_KADID:
+			ASSERT(newtag->IsHash());
+			if (newtag->IsHash())
+				md4cpy(m_abyKadID, newtag->GetHash());
 		}
 		delete newtag;
 	}

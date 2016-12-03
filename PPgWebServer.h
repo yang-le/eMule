@@ -11,14 +11,14 @@ public:
 
 	enum { IDD = IDD_PPG_WEBSRV };
 
-	void Localize(void);
+	void Localize();
 
 protected:
 	BOOL m_bModified;
 	bool bCreated;
 	HICON m_icoBrowse;
 
-	void LoadSettings(void);
+	void LoadSettings();
 
 	virtual void DoDataExchange(CDataExchange* pDX);
 	virtual BOOL OnInitDialog();

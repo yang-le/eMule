@@ -409,10 +409,8 @@ public:
 					return 0;
 				}
 
-				SOCKADDR_IN sockAddr = {};
-				sockAddr.sin_family = AF_INET;
+				SOCKADDR_IN sockAddr = {AF_INET, htons((u_short)pSocket->m_nAsyncGetHostByNamePort)};
 				sockAddr.sin_addr.s_addr = ((LPIN_ADDR)((LPHOSTENT)pSocket->m_pAsyncGetHostByNameBuffer)->h_addr)->s_addr;
-				sockAddr.sin_port = htons((u_short)pSocket->m_nAsyncGetHostByNamePort);
 
 				if (!pSocket->OnHostNameResolved(&sockAddr)) {
 					// Do *NOT* access 'pSocket', it may already have been deleted (CServerConnect)
@@ -579,19 +577,16 @@ BOOL CAsyncSocketEx::OnHostNameResolved(const SOCKADDR_IN * /*pSockAddr*/)
 
 BOOL CAsyncSocketEx::Bind(UINT nSocketPort, LPCSTR lpszSocketAddress)
 {
-	SOCKADDR_IN sockAddr = {};
+	SOCKADDR_IN sockAddr = {AF_INET, htons((u_short)nSocketPort)};
 	if (lpszSocketAddress == NULL)
 		sockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	else
-	{
+	else {
 		sockAddr.sin_addr.s_addr = inet_addr(lpszSocketAddress);
 		if (sockAddr.sin_addr.s_addr == INADDR_NONE) {
 			WSASetLastError(WSAEINVAL);
 			return FALSE;
 		}
 	}
-	sockAddr.sin_family = AF_INET;
-	sockAddr.sin_port = htons((u_short)nSocketPort);
 	return Bind((SOCKADDR*)&sockAddr, sizeof(sockAddr));
 }
 
@@ -781,13 +776,13 @@ int CAsyncSocketEx::Send(const void* lpBuf, int nBufLen, int nFlags /*=0*/)
 
 BOOL CAsyncSocketEx::Connect(LPCSTR lpszHostAddress, UINT nHostPort)
 {
-	ASSERT( lpszHostAddress != NULL );
+	ASSERT(lpszHostAddress != NULL);
 
 #ifndef NOLAYERS
 	if (m_pFirstLayer)
 		return m_pFirstLayer->Connect(lpszHostAddress, nHostPort);
 #endif //NOLAYERS
-	SOCKADDR_IN sockAddr = {};
+	SOCKADDR_IN sockAddr = {AF_INET, htons((u_short)nHostPort)};
 	sockAddr.sin_addr.s_addr = inet_addr(lpszHostAddress);
 	if (sockAddr.sin_addr.s_addr == INADDR_NONE) {
 		m_pAsyncGetHostByNameBuffer = new char[MAXGETHOSTSTRUCT];
@@ -798,8 +793,6 @@ BOOL CAsyncSocketEx::Connect(LPCSTR lpszHostAddress, UINT nHostPort)
 		WSASetLastError(WSAEWOULDBLOCK);
 		return TRUE;
 	}
-	sockAddr.sin_family = AF_INET;
-	sockAddr.sin_port = htons((u_short)nHostPort);
 	return CAsyncSocketEx::Connect((SOCKADDR*)&sockAddr, sizeof sockAddr);
 }
 

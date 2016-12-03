@@ -108,7 +108,7 @@ BOOL CCreditsThread::InitInstance()
 // wait for vertical retrace
 // makes scrolling smoother, especially at fast speeds
 // NT does not like this at all
-void waitvrt(void)
+void waitvrt()
 {
 #ifdef _M_IX86
 	__asm {

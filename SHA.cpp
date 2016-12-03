@@ -45,124 +45,39 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-
-///////////////////////////////////////////////////////////////////////////////
-// Sanity checks for external assembler implemention
-//
-extern "C" DWORD SHA_asm_m_nCount0;
-extern "C" DWORD SHA_asm_m_nCount1;
-extern "C" DWORD SHA_asm_m_nHash0;
-extern "C" DWORD SHA_asm_m_nHash1;
-extern "C" DWORD SHA_asm_m_nHash2;
-extern "C" DWORD SHA_asm_m_nHash3;
-extern "C" DWORD SHA_asm_m_nHash4;
-extern "C" DWORD SHA_asm_m_nBuffer;
-
-bool CSHA::VerifyImplementation()
-{
-	if (SHA_asm_m_nCount0 != offsetof(CSHA, m_nCount[0]) ||
-	    SHA_asm_m_nCount1 != offsetof(CSHA, m_nCount[1]) ){
-		ASSERT(0);
-		return false;
-	}
-
-	if (SHA_asm_m_nHash0 != offsetof(CSHA, m_nHash[0]) ||
-	    SHA_asm_m_nHash1 != offsetof(CSHA, m_nHash[1]) ||
-	    SHA_asm_m_nHash2 != offsetof(CSHA, m_nHash[2]) ||
-	    SHA_asm_m_nHash3 != offsetof(CSHA, m_nHash[3]) ||
-	    SHA_asm_m_nHash4 != offsetof(CSHA, m_nHash[4]) ){
-		ASSERT(0);
-		return false;
-	}
-
-	if (SHA_asm_m_nBuffer != offsetof(CSHA, m_nBuffer)){
-		ASSERT(0);
-		return false;
-	}
-
-	return true;
-}
-
-
-// This detects ICL and makes necessary changes for proper compilation
-#if __INTEL_COMPILER > 0
-#define asm_m_nCount CSHA.m_nCount
-#else
-#define asm_m_nCount m_nCount
-#endif
-
-extern "C" void SHA_Add_p5(CSHA *, LPCVOID pData, DWORD nLength);
-
-static unsigned char SHA_PADDING[64] = {
-	0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // CSHA
 //
 
 CSHA::CSHA()
-	: m_nBuffer()
 {
 	CSHA::Reset();
 }
 
-CSHA::~CSHA()
-{
-}
-
 void CSHA::Reset()
 {
-    m_nCount[0] = m_nCount[1] = 0;
-    m_nHash[0] = 0x67452301;
-    m_nHash[1] = 0xefcdab89;
-    m_nHash[2] = 0x98badcfe;
-    m_nHash[3] = 0x10325476;
-    m_nHash[4] = 0xc3d2e1f0;
+	m_hash = SHA1();
+	m_sha.Restart();
 }
 
 void CSHA::GetHash(SHA1* pHash) const
 {
-    /* extract the hash value as bytes in case the hash buffer is   */
-    /* misaligned for 32-bit words                                  */
-    for(unsigned i = 0; i < SHA1_DIGEST_SIZE; ++i)
-        pHash->b[i] = (unsigned char)(m_nHash[i >> 2] >> 8 * (~i & 3));
+	*pHash = m_hash;
 }
 
 void CSHA::Add(LPCVOID pData, DWORD nLength)
 {
-	SHA_Add_p5(this, pData, nLength);
+	m_sha.Update((const byte *)pData, nLength);
 }
 
 void CSHA::Finish()
 {
-	unsigned int bits[2], index = 0;
-	// Save number of bits
-	_asm
-	{
-		mov		ecx, this
-		mov		eax, [ecx+asm_m_nCount]
-		mov		edx, [ecx+asm_m_nCount+4]
-		shld	edx, eax, 3
-		shl		eax, 3
-		bswap	edx
-		bswap	eax
-		mov		bits, edx
-		mov		bits+4, eax
-	}
-	// Pad out to 56 mod 64.
-	index = (unsigned int)(m_nCount[0] & 0x3f);
-	SHA_Add_p5(this, SHA_PADDING, (index < 56) ? (56 - index) : (120 - index) );
-	// Append length (before padding)
-	SHA_Add_p5(this, bits, 8 );
+	m_sha.Final(m_hash.b);
 }
 
 void CSHA::GetHash(CAICHHash& rHash)
 {
-	ASSERT( rHash.GetHashSize() == sizeof(SHA1) );
+	ASSERT(rHash.GetHashSize() == sizeof(SHA1));
 	GetHash((SHA1*)rHash.GetRawHash());
 }
 
@@ -301,33 +216,22 @@ BOOL CSHA::HashFromURN(LPCTSTR pszHash, SHA1* pHashIn)
 	size_t nLen = _tcslen( pszHash );
 
 	if ( nLen >= 41 && _tcsnicmp( pszHash, _T("urn:sha1:"), 9 ) == 0 )
-	{
 		return HashFromString( pszHash + 9, pHashIn );
-	}
-	else if ( nLen >= 37 && _tcsnicmp( pszHash, _T("sha1:"), 5 ) == 0 )
-	{
+
+	if ( nLen >= 37 && _tcsnicmp( pszHash, _T("sha1:"), 5 ) == 0 )
 		return HashFromString( pszHash + 5, pHashIn );
-	}
-	else if ( nLen >= 85 && _tcsnicmp( pszHash, _T("urn:bitprint:"), 13 ) == 0 )
-	{
+
+	if ( nLen >= 85 && _tcsnicmp( pszHash, _T("urn:bitprint:"), 13 ) == 0 )
 		// 13 + 32 + 1 + 39
 		return HashFromString( pszHash + 13, pHashIn );
-	}
-	else if ( nLen >= 81 && _tcsnicmp( pszHash, _T("bitprint:"), 9 ) == 0 )
-	{
+
+	if ( nLen >= 81 && _tcsnicmp( pszHash, _T("bitprint:"), 9 ) == 0 )
 		return HashFromString( pszHash + 9, pHashIn );
-	}
 
 	return FALSE;
 }
 
 BOOL CSHA::IsNull(SHA1* pHash)
 {
-	static SHA1 Blank = {};
-
-//	ZeroMemory( &Blank, sizeof(SHA1) );
-
-	if ( *pHash == Blank ) return TRUE;
-
-	return FALSE;
+	return (*pHash == SHA1()) ? TRUE : FALSE;
 }

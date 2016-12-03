@@ -90,7 +90,7 @@ BOOL CPPgScheduler::OnInitDialog()
 	// EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CPPgScheduler::Localize(void)
+void CPPgScheduler::Localize()
 {
 	if(m_hWnd)
 	{

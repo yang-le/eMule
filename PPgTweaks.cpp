@@ -624,7 +624,7 @@ void CPPgTweaks::OnHScroll(UINT /*nSBCode*/, UINT /*nPos*/, CScrollBar* pScrollB
 	}
 }
 
-void CPPgTweaks::Localize(void)
+void CPPgTweaks::Localize()
 {
 	if (m_hWnd) {
 		SetWindowText(GetResString(IDS_PW_TWEAK));

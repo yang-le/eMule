@@ -33,104 +33,38 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-
-///////////////////////////////////////////////////////////////////////////////
-// Sanity checks for external assembler implemention
-//
-extern "C" DWORD MD4_asm_m_nCount0;
-extern "C" DWORD MD4_asm_m_nCount1;
-extern "C" DWORD MD4_asm_m_nState0;
-extern "C" DWORD MD4_asm_m_nState1;
-extern "C" DWORD MD4_asm_m_nState2;
-extern "C" DWORD MD4_asm_m_nState3;
-extern "C" DWORD MD4_asm_m_nBuffer;
-
-bool CMD4::VerifyImplementation()
-{
-	if (MD4_asm_m_nCount0 != offsetof(CMD4, m_nCount[0]) ||
-	    MD4_asm_m_nCount1 != offsetof(CMD4, m_nCount[1]) ){
-		ASSERT(0);
-		return false;
-	}
-
-	if (MD4_asm_m_nState0 != offsetof(CMD4, m_nState[0]) ||
-	    MD4_asm_m_nState1 != offsetof(CMD4, m_nState[1]) ||
-	    MD4_asm_m_nState2 != offsetof(CMD4, m_nState[2]) ||
-	    MD4_asm_m_nState3 != offsetof(CMD4, m_nState[3]) ){
-		ASSERT(0);
-		return false;
-	}
-
-	if (MD4_asm_m_nBuffer != offsetof(CMD4, m_nBuffer)){
-		ASSERT(0);
-		return false;
-	}
-
-	return true;
-}
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // CMD4
 //
 
 CMD4::CMD4()
-	: m_nBuffer()
 {
 	Reset();
 }
 
-CMD4::~CMD4()
-{
-}
-
-static unsigned char MD4_PADDING[64] = {
-	0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-
-extern "C" void MD4_Add_p5(CMD4*, LPCVOID pData, DWORD nLength);
-
 // MD4 initialization. Begins an MD4 operation, writing a new context
-
 void CMD4::Reset()
 {
-	// Clear counts
-	m_nCount[0] = m_nCount[1] = 0;
-	// Load magic initialization constants
-	m_nState[0] = 0x67452301;
-	m_nState[1] = 0xefcdab89;
-	m_nState[2] = 0x98badcfe;
-	m_nState[3] = 0x10325476;
-}
-
-// Fetch hash
-void CMD4::GetHash(MD4* pHash)
-{
-	memcpy(pHash->b, m_nState, 16);
+	m_hash = MD4();
+	m_md4.Restart();
 }
 
 // MD4 block update operation. Continues an MD4 message-digest
 //     operation, processing another message block, and updating the
 //     context
-void CMD4::Add(LPCVOID pData, DWORD nLength)
+void CMD4::Add(LPCVOID pData, size_t nLength)
 {
-	MD4_Add_p5(this, pData, nLength);
+	m_md4.Update((const byte *)pData, nLength);
 }
 
 // MD4 finalization. Ends an MD4 message-digest operation, writing the
 //     the message digest and zeroizing the context.
-
 void CMD4::Finish()
 {
-	unsigned int bits[2], index = 0;
-	// Save number of bits
-	bits[1] = ( m_nCount[1] << 3 ) + ( m_nCount[0] >> 29);
-	bits[0] = m_nCount[0] << 3;
-	// Pad out to 56 mod 64.
-	index = (unsigned int)(m_nCount[0] & 0x3f);
-	MD4_Add_p5(this, MD4_PADDING, (index < 56) ? (56 - index) : (120 - index) );
-	// Append length (before padding)
-	MD4_Add_p5(this, bits, 8 );
+	m_md4.Final(m_hash.b);
+}
+
+const byte *CMD4::GetHash() const
+{
+	return (const byte*)m_hash.b;
 }

@@ -46,7 +46,7 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNCREATE(CUploadDiskIOThread, CWinThread)
 
-CUploadDiskIOThread::CUploadDiskIOThread(void)
+CUploadDiskIOThread::CUploadDiskIOThread()
 	:m_eventAsyncIOFinished(FALSE, TRUE)
 {
 	m_bRun = false;
@@ -57,7 +57,7 @@ CUploadDiskIOThread::CUploadDiskIOThread(void)
 	m_bSignalThrottler = false;
 }
 
-CUploadDiskIOThread::~CUploadDiskIOThread(void)
+CUploadDiskIOThread::~CUploadDiskIOThread()
 {
 	ASSERT( !m_bRun );
 	delete m_eventThreadEnded;
@@ -315,27 +315,21 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* 
 					delete[] pstructOverlappedEx->pBuffer;
 					delete pstructOverlappedEx;
 
-					if (dwError == ERROR_INVALID_USER_BUFFER || dwError == ERROR_NOT_ENOUGH_MEMORY)
-					{
+					if (dwError == ERROR_INVALID_USER_BUFFER || dwError == ERROR_NOT_ENOUGH_MEMORY) {
 						theApp.QueueDebugLogLineEx(LOG_WARNING, _T("ReadFile failed, possibly too many pending requests, trying again later"));
 						return; // make this a recoverable error, as it might just be that we have too many requests in which case we just need to wait
 					}
-					else
-						throw _T("ReadFileEx Error: ") + GetErrorMessage(GetLastError());
+					throw _T("ReadFileEx Error: ") + GetErrorMessage(GetLastError());
 				}
-				else
-				{
-					m_listPendingIO.AddTail(pstructOverlappedEx);
-					dbgDataReadPending += togo;
-				}
+				m_listPendingIO.AddTail(pstructOverlappedEx);
 			}
 			else
 			{
 				// read succeeded immediatly without an async operation
 				pstructOverlappedEx->dwRead = dwRead;
 				m_listFinishedIO.AddTail(pstructOverlappedEx);
-				dbgDataReadPending += togo;
 			}
+			dbgDataReadPending += togo;
 
 			addedPayloadQueueSession += togo;
 			pUploadClientStruct->m_pClient->SetQueueSessionUploadAdded(addedPayloadQueueSession);
@@ -346,7 +340,6 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* 
 	{
 		theApp.QueueDebugLogLineEx(LOG_ERROR, GetResString(IDS_ERR_CLIENTERRORED), pUploadClientStruct->m_pClient->GetUserName(), (LPCTSTR)error);
 		pUploadClientStruct->m_bIOError = true; // will let the mainthread remove this client from the list
-		return;
 	}
 	catch(CFileException* e)
 	{
@@ -355,7 +348,6 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* 
 		theApp.QueueDebugLogLineEx(LOG_ERROR, _T("Failed to create upload package for %s - %s"), pUploadClientStruct->m_pClient->GetUserName(), szError);
 		e->Delete();
 		pUploadClientStruct->m_bIOError = true; // will let the mainthread remove this client from the list
-		return;
 	}
 }
 
@@ -525,7 +517,7 @@ void CUploadDiskIOThread::CreateStandardPackets(byte* pbyData, uint64 uStartOffs
 		uint64 endpos = (uEndOffset - togo);
 
 		Packet* packet;
-		if (statpos > 0xFFFFFFFF || endpos > 0xFFFFFFFF){
+		if (statpos > UINT32_MAX || endpos > UINT32_MAX){
 			packet = new Packet(OP_SENDINGPART_I64,nPacketSize+32, OP_EMULEPROT, bFromPF);
 			md4cpy(&packet->pBuffer[0], pucMD4FileHash);
 			PokeUInt64(&packet->pBuffer[16], statpos);
@@ -579,7 +571,7 @@ void CUploadDiskIOThread::CreatePackedPackets(byte* pbyData, uint64 uStartOffset
 		togo -= nPacketSize;
 		uint64 statpos = uStartOffset;
 		Packet* packet;
-		if (uStartOffset > 0xFFFFFFFF || uEndOffset > 0xFFFFFFFF){
+		if (uStartOffset > UINT32_MAX || uEndOffset > UINT32_MAX){
 			packet = new Packet(OP_COMPRESSEDPART_I64,nPacketSize+28,OP_EMULEPROT,bFromPF);
 			md4cpy(&packet->pBuffer[0], pucMD4FileHash);
 			PokeUInt64(&packet->pBuffer[16], statpos);

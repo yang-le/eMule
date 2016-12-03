@@ -1761,10 +1761,10 @@ void CSharedFilesCtrl::AddShareableFiles(const CString& strFromDir)
 			}
 		}
 
-		uint32 fdate = (uint32)tFoundFileTime.GetTime();
+		time_t fdate = (time_t)tFoundFileTime.GetTime();
 		if (fdate == 0)
-			fdate = (uint32)-1;
-		if (fdate == (uint32)-1) {
+			fdate = (time_t)-1;
+		if (fdate == (time_t)-1) {
 			if (thePrefs.GetVerbose())
 				AddDebugLogLine(false, _T("Failed to get file date of \"%s\""), (LPCTSTR)strFoundFilePath);
 		}

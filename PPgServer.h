@@ -11,10 +11,10 @@ public:
 	// Dialog Data
 	enum { IDD = IDD_PPG_SERVER };
 
-	void Localize(void);
+	void Localize();
 
 protected:
-	void LoadSettings(void);
+	void LoadSettings();
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	virtual BOOL OnInitDialog();

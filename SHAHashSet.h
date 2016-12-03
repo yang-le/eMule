@@ -207,7 +207,7 @@ class CAICHRecoveryHashSet
 {
 public:
 	explicit CAICHRecoveryHashSet(CKnownFile* pOwner, EMFileSize nSize = 0ull);
-	~CAICHRecoveryHashSet(void);
+	~CAICHRecoveryHashSet();
 	bool			CreatePartRecoveryData(uint64 nPartStartPos, CFileDataIO* fileDataOut, bool bDbgDontLoad = false);
 	bool			ReadRecoveryData(uint64 nPartStartPos, CSafeMemFile* fileDataIn);
 	bool			ReCalculateHash(bool bDontReplace = false);

@@ -29,7 +29,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 
-CSecRunAsUser::CSecRunAsUser(void)
+CSecRunAsUser::CSecRunAsUser()
 {
 	m_bRunningAsEmule = false;
 	m_bRunningRestricted = false;
@@ -37,7 +37,7 @@ CSecRunAsUser::CSecRunAsUser(void)
 	m_hACTIVEDS_DLL = 0;
 }
 
-CSecRunAsUser::~CSecRunAsUser(void)
+CSecRunAsUser::~CSecRunAsUser()
 {
 	FreeAPI();
 }

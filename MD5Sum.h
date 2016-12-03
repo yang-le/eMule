@@ -21,20 +21,30 @@ without express or implied warranty of any kind.
 These notices must be retained in any copies of any part of this
 documentation and/or software.
  */
+#define CRYPTOPP_ENABLE_NAMESPACE_WEAK 1
+#include "cryptopp/md5.h"
+
+#define MD5_BLOCK_SIZE	64
+#define MD5_DIGEST_SIZE	16
+
+typedef struct
+{
+	byte	b[MD5_DIGEST_SIZE];
+} MD5;
 
 class MD5Sum
 {
 public:
 	MD5Sum();
 	explicit MD5Sum(const CString& sSource);
-	MD5Sum(const unsigned char* pachSource, uint32 nLen);
+	MD5Sum(const byte* pachSource, size_t nLength);
 
 	void Calculate(const CString& sSource);
-	void Calculate(const unsigned char* pachSource, uint32 nLen);
+	void Calculate(const byte* pachSource, size_t nLength);
 
-	CString GetHash() const;
-	const unsigned char* GetRawHash() const { return m_rawHash; }
+	CString GetHashString() const;
+	const byte* GetRawHash() const { return m_hash.b; }
 
 private:
-	unsigned char	m_rawHash[16];
+	MD5 m_hash;
 };

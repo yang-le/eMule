@@ -33,7 +33,7 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(CCollectionFile, CAbstractFile)
 
-CCollectionFile::CCollectionFile(void)
+CCollectionFile::CCollectionFile()
 {
 }
 
@@ -158,7 +158,7 @@ bool CCollectionFile::InitFromLink(const CString& sLink)
 	return true;
 }
 
-CCollectionFile::~CCollectionFile(void)
+CCollectionFile::~CCollectionFile()
 {
 }
 

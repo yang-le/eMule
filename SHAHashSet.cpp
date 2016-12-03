@@ -530,7 +530,7 @@ CAICHRecoveryHashSet::CAICHRecoveryHashSet(CKnownFile* pOwner, EMFileSize nSize)
 		SetFileSize(nSize);
 }
 
-CAICHRecoveryHashSet::~CAICHRecoveryHashSet(void)
+CAICHRecoveryHashSet::~CAICHRecoveryHashSet()
 {
 	FreeHashSet();
 }

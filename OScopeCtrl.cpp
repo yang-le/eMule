@@ -849,7 +849,7 @@ void COScopeCtrl::Reset()
 	InvalidateCtrl();
 }
 
-int COScopeCtrl::ReCreateGraph(void)
+int COScopeCtrl::ReCreateGraph()
 {
 	for (int i = 0; i < m_NTrends; i++)
 	{

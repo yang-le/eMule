@@ -18,7 +18,7 @@ public:
 	CMuleStatusBarCtrl();
 	virtual ~CMuleStatusBarCtrl();
 
-	void Init(void);
+	void Init();
 
 protected:
 	int GetPaneAtPosition(CPoint& point) const;

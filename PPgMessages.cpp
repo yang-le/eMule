@@ -61,7 +61,7 @@ void CPPgMessages::DoDataExchange(CDataExchange* pDX)
 	CPropertyPage::DoDataExchange(pDX);
 }
 
-void CPPgMessages::LoadSettings(void)
+void CPPgMessages::LoadSettings()
 {
 	CheckDlgButton(IDC_MSGONLYFRIENDS, static_cast<UINT>(thePrefs.msgonlyfriends));
 	CheckDlgButton(IDC_ADVSPAMFILTER, static_cast<UINT>(thePrefs.m_bAdvancedSpamfilter));
@@ -124,7 +124,7 @@ BOOL CPPgMessages::OnApply()
 	return CPropertyPage::OnApply();
 }
 
-void CPPgMessages::Localize(void)
+void CPPgMessages::Localize()
 {
 	if (m_hWnd)
 	{

@@ -11,8 +11,8 @@ public:
 // Dialog Data
 	enum { IDD = IDD_PPG_CONNECTION };
 
-	void Localize(void);
-	void LoadSettings(void);
+	void Localize();
+	void LoadSettings();
 
 protected:
 	bool guardian;

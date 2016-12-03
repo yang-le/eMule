@@ -29,7 +29,7 @@ public:
 	void InvalidateCtrl(bool deleteGraph = true);
 	void DrawPoint();
 	void Reset();
-	int ReCreateGraph(void);
+	int ReCreateGraph();
 
 	bool ready;
 	bool drawBars;

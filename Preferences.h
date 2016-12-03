@@ -952,8 +952,8 @@ public:
 	static	CString GetHtmlCharset();
 
 	static	bool	IsDoubleClickEnabled()				{return transferDoubleclick;}
-	static	EViewSharedFilesAccess CanSeeShares(void)	{return m_iSeeShares;}
-	static	UINT	GetToolTipDelay(void)				{return m_iToolDelayTime;}
+	static	EViewSharedFilesAccess CanSeeShares()	{return m_iSeeShares;}
+	static	UINT	GetToolTipDelay()				{return m_iToolDelayTime;}
 	static	bool	IsBringToFront()					{return bringtoforeground;}
 
 	static	UINT	GetSplitterbarPosition()			{return splitterbarPosition;}

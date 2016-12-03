@@ -182,9 +182,7 @@ void CButtonST::FreeResources(BOOL bCheckForNULL)
 
 void CButtonST::PreSubclassWindow()
 {
-	UINT nBS;
-
-	nBS = GetButtonStyle();
+	UINT nBS = GetButtonStyle();
 
 	// Set initial control type
 	m_nTypeStyle = nBS & BS_TYPEMASK;
@@ -660,28 +658,21 @@ void CButtonST::PaintBk(CDC* pDC)
 
 HBITMAP CButtonST::CreateBitmapMask(HBITMAP hSourceBitmap, DWORD dwWidth, DWORD dwHeight, COLORREF crTransColor)
 {
-	HBITMAP		hMask		= NULL;
-	HDC			hdcSrc		= NULL;
-	HDC			hdcDest		= NULL;
-	HBITMAP		hbmSrcT		= NULL;
-	HBITMAP		hbmDestT	= NULL;
-	COLORREF	crSaveBk;
-	COLORREF	crSaveDestText;
+	HBITMAP hMask = ::CreateBitmap(dwWidth, dwHeight, 1, 1, NULL);
+	if (hMask == NULL)
+		return NULL;
 
-	hMask = ::CreateBitmap(dwWidth, dwHeight, 1, 1, NULL);
-	if (hMask == NULL)	return NULL;
+	HDC hdcSrc = ::CreateCompatibleDC(NULL);
+	HDC hdcDest	= ::CreateCompatibleDC(NULL);
 
-	hdcSrc	= ::CreateCompatibleDC(NULL);
-	hdcDest	= ::CreateCompatibleDC(NULL);
+	HBITMAP hbmSrcT = (HBITMAP)::SelectObject(hdcSrc, hSourceBitmap);
+	HBITMAP hbmDestT = (HBITMAP)::SelectObject(hdcDest, hMask);
 
-	hbmSrcT = (HBITMAP)::SelectObject(hdcSrc, hSourceBitmap);
-	hbmDestT = (HBITMAP)::SelectObject(hdcDest, hMask);
-
-	crSaveBk = ::SetBkColor(hdcSrc, crTransColor);
+	COLORREF crSaveBk = ::SetBkColor(hdcSrc, crTransColor);
 
 	::BitBlt(hdcDest, 0, 0, dwWidth, dwHeight, hdcSrc, 0, 0, SRCCOPY);
 
-	crSaveDestText = ::SetTextColor(hdcSrc, RGB(255, 255, 255));
+	COLORREF crSaveDestText = ::SetTextColor(hdcSrc, RGB(255, 255, 255));
 	::SetBkColor(hdcSrc,RGB(0, 0, 0));
 
 	::BitBlt(hdcSrc, 0, 0, dwWidth, dwHeight, hdcDest, 0, 0, SRCAND);
@@ -805,37 +796,26 @@ void CButtonST::DrawTheIcon(CDC* pDC, BOOL bHasTitle, RECT* rpItem, CRect* rpCap
 
 void CButtonST::DrawTheBitmap(CDC* pDC, BOOL bHasTitle, RECT* rpItem, CRect* rpCaption, BOOL bIsPressed, BOOL bIsDisabled)
 {
-	HDC			hdcBmpMem	= NULL;
-	HBITMAP		hbmOldBmp	= NULL;
-	HDC			hdcMem		= NULL;
-	HBITMAP		hbmT		= NULL;
-
-	BYTE		byIndex		= 0;
-
 	// Select the bitmap to use
-	if ((m_bIsCheckBox && bIsPressed) || (!m_bIsCheckBox && (bIsPressed || m_bMouseOnButton)))
-		byIndex = 0;
-	else
-		byIndex = (m_csBitmaps[1].hBitmap == NULL ? 0 : 1);
+	const STRUCT_BITMAPS& bmp = m_csBitmaps[
+		((m_bIsCheckBox && bIsPressed) || (!m_bIsCheckBox && (bIsPressed || m_bMouseOnButton)) || m_csBitmaps[1].hBitmap == NULL)
+		? 0 : 1];
 
 	CRect	rImage;
-	PrepareImageRect(bHasTitle, rpItem, rpCaption, bIsPressed, m_csBitmaps[byIndex].dwWidth, m_csBitmaps[byIndex].dwHeight, &rImage);
+	PrepareImageRect(bHasTitle, rpItem, rpCaption, bIsPressed, bmp.dwWidth, bmp.dwHeight, &rImage);
 
-	hdcBmpMem = ::CreateCompatibleDC(pDC->m_hDC);
+	HDC hdcBmpMem = ::CreateCompatibleDC(pDC->m_hDC);
 
-	hbmOldBmp = (HBITMAP)::SelectObject(hdcBmpMem, m_csBitmaps[byIndex].hBitmap);
+	HBITMAP hbmOldBmp = (HBITMAP)::SelectObject(hdcBmpMem, bmp.hBitmap);
 
-	hdcMem = ::CreateCompatibleDC(NULL);
+	HDC hdcMem = ::CreateCompatibleDC(NULL);
 
-	hbmT = (HBITMAP)::SelectObject(hdcMem, m_csBitmaps[byIndex].hMask);
+	HBITMAP hbmT = (HBITMAP)::SelectObject(hdcMem, bmp.hMask);
 
 	if (bIsDisabled && m_bShowDisabledBitmap)
 	{
-		HDC		hDC = NULL;
-		HBITMAP	hBitmap = NULL;
-
-		hDC = ::CreateCompatibleDC(pDC->m_hDC);
-		hBitmap = ::CreateCompatibleBitmap(pDC->m_hDC, m_csBitmaps[byIndex].dwWidth, m_csBitmaps[byIndex].dwHeight);
+		HDC hDC = ::CreateCompatibleDC(pDC->m_hDC);
+		HBITMAP hBitmap = ::CreateCompatibleBitmap(pDC->m_hDC, bmp.dwWidth, bmp.dwHeight);
 		HBITMAP	hOldBmp2 = (HBITMAP)::SelectObject(hDC, hBitmap);
 
 		RECT	rRect;
@@ -847,24 +827,24 @@ void CButtonST::DrawTheBitmap(CDC* pDC, BOOL bHasTitle, RECT* rpItem, CRect* rpC
 
 		COLORREF crOldColor = ::SetBkColor(hDC, RGB(255,255,255));
 
-		::BitBlt(hDC, 0, 0, m_csBitmaps[byIndex].dwWidth, m_csBitmaps[byIndex].dwHeight, hdcMem, 0, 0, SRCAND);
-		::BitBlt(hDC, 0, 0, m_csBitmaps[byIndex].dwWidth, m_csBitmaps[byIndex].dwHeight, hdcBmpMem, 0, 0, SRCPAINT);
+		::BitBlt(hDC, 0, 0, bmp.dwWidth, bmp.dwHeight, hdcMem, 0, 0, SRCAND);
+		::BitBlt(hDC, 0, 0, bmp.dwWidth, bmp.dwHeight, hdcBmpMem, 0, 0, SRCPAINT);
 
 		::SetBkColor(hDC, crOldColor);
 		::SelectObject(hDC, hOldBmp2);
 		::DeleteDC(hDC);
 
 		pDC->DrawState(	CPoint(rImage.left/*+1*/, rImage.top),
-						CSize(m_csBitmaps[byIndex].dwWidth, m_csBitmaps[byIndex].dwHeight),
+						CSize(bmp.dwWidth, bmp.dwHeight),
 						hBitmap, DST_BITMAP | DSS_DISABLED);
 
 		VERIFY( ::DeleteObject(hBitmap) );
 	} // if
 	else
 	{
-		::BitBlt(pDC->m_hDC, rImage.left, rImage.top, m_csBitmaps[byIndex].dwWidth, m_csBitmaps[byIndex].dwHeight, hdcMem, 0, 0, SRCAND);
+		::BitBlt(pDC->m_hDC, rImage.left, rImage.top, bmp.dwWidth, bmp.dwHeight, hdcMem, 0, 0, SRCAND);
 
-		::BitBlt(pDC->m_hDC, rImage.left, rImage.top, m_csBitmaps[byIndex].dwWidth, m_csBitmaps[byIndex].dwHeight, hdcBmpMem, 0, 0, SRCPAINT);
+		::BitBlt(pDC->m_hDC, rImage.left, rImage.top, bmp.dwWidth, bmp.dwHeight, hdcBmpMem, 0, 0, SRCPAINT);
 	} // else
 
 	::SelectObject(hdcMem, hbmT);
@@ -1027,11 +1007,10 @@ HICON CButtonST::CreateGrayscaleIcon(HICON hIcon)
 //
 DWORD CButtonST::SetIcon(LPCTSTR pszIconIn, LPCTSTR pszIconOut)
 {
-	HICON		hIconIn			= NULL;
 	HICON		hIconOut		= NULL;
 
 	// Set icon when the mouse is IN the button
-	hIconIn = theApp.LoadIcon(pszIconIn, 16, 16);
+	HICON hIconIn = theApp.LoadIcon(pszIconIn, 16, 16);
 
   	// Set icon when the mouse is OUT the button
 	if (pszIconOut)
@@ -1064,7 +1043,7 @@ DWORD CButtonST::SetIcon(LPCTSTR pszIconIn, LPCTSTR pszIconOut)
 //
 DWORD CButtonST::SetIcon(HICON hIconIn, HICON hIconOut)
 {
-	ICONINFO	ii;
+	ICONINFO	ii = {};
 
 	// Free any loaded resource
 	FreeResources();
@@ -1074,7 +1053,6 @@ DWORD CButtonST::SetIcon(HICON hIconIn, HICON hIconOut)
 		// Icon when mouse over button?
 		m_csIcons[0].hIcon = hIconIn;
 		// Get icon dimension
-		::ZeroMemory(&ii, sizeof(ICONINFO));
 		if (!::GetIconInfo(hIconIn, &ii))
 		{
 			FreeResources();
@@ -1140,15 +1118,13 @@ DWORD CButtonST::SetIcon(HICON hIconIn, HICON hIconOut)
 //
 DWORD CButtonST::SetBitmaps(int nBitmapIn, COLORREF crTransColorIn, int nBitmapOut, COLORREF crTransColorOut)
 {
-	HBITMAP		hBitmapIn		= NULL;
-	HBITMAP		hBitmapOut		= NULL;
-	HINSTANCE	hInstResource	= NULL;
+	HBITMAP hBitmapOut = HBITMAP();
 
 	// Find correct resource handle
-	hInstResource = AfxFindResourceHandle(MAKEINTRESOURCE(nBitmapIn), RT_BITMAP);
+	HINSTANCE hInstResource = AfxFindResourceHandle(MAKEINTRESOURCE(nBitmapIn), RT_BITMAP);
 
 	// Load bitmap In
-	hBitmapIn = (HBITMAP)::LoadImage(hInstResource, MAKEINTRESOURCE(nBitmapIn), IMAGE_BITMAP, 0, 0, 0);
+	HBITMAP hBitmapIn = (HBITMAP)::LoadImage(hInstResource, MAKEINTRESOURCE(nBitmapIn), IMAGE_BITMAP, 0, 0, 0);
 
 	// Load bitmap Out
 	if (nBitmapOut)
@@ -1477,21 +1453,19 @@ DWORD CButtonST::GetColor(BYTE byColorIndex, COLORREF* crpColor)
 //
 DWORD CButtonST::OffsetColor(BYTE byColorIndex, short shOffset, BOOL bRepaint)
 {
-	BYTE	byRed = 0;
-	BYTE	byGreen = 0;
-	BYTE	byBlue = 0;
+	if (byColorIndex >= BTNST_MAX_COLORS)
+		return BTNST_INVALIDINDEX;
+	if (shOffset < -255 || shOffset > 255)
+		return BTNST_BADPARAM;
+
+	// Get RGB components of specified color
+	BYTE byRed = GetRValue(m_crColors[byColorIndex]);
+	BYTE byGreen = GetGValue(m_crColors[byColorIndex]);
+	BYTE byBlue = GetBValue(m_crColors[byColorIndex]);
+
 	short	shOffsetR = shOffset;
 	short	shOffsetG = shOffset;
 	short	shOffsetB = shOffset;
-
-	if (byColorIndex >= BTNST_MAX_COLORS)	return BTNST_INVALIDINDEX;
-	if (shOffset < -255 || shOffset > 255)	return BTNST_BADPARAM;
-
-	// Get RGB components of specified color
-	byRed = GetRValue(m_crColors[byColorIndex]);
-	byGreen = GetGValue(m_crColors[byColorIndex]);
-	byBlue = GetBValue(m_crColors[byColorIndex]);
-
 	// Calculate max. allowed real offset
 	if (shOffset > 0)
 	{

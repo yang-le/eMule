@@ -43,7 +43,7 @@ CMMSocket::CMMSocket(CMMServer* pOwner)
 	m_dwTimedShutdown = 0;
 }
 
-CMMSocket::~CMMSocket(void)
+CMMSocket::~CMMSocket()
 {
 	delete[] m_pBuf;
 	while (!m_PacketQueue.IsEmpty()){
@@ -329,7 +329,7 @@ CListenMMSocket::CListenMMSocket(CMMServer* pOwner)
 	m_pOwner = pOwner;
 }
 
-CListenMMSocket::~CListenMMSocket(void)
+CListenMMSocket::~CListenMMSocket()
 {
 	while(!m_socket_list.IsEmpty())
 		delete m_socket_list.RemoveHead();

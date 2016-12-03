@@ -1214,10 +1214,10 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 			catch(CException* ex){
 				ex->Delete();
 			}
-			uint32 fdate = (uint32)filestatus.m_mtime.GetTime();
+			time_t fdate = filestatus.m_mtime.GetTime();
 			if (fdate == 0)
-				fdate = (uint32)-1;
-			if (fdate == (uint32)-1) {
+				fdate = (time_t)-1;
+			if (fdate == (time_t)-1) {
 				if (thePrefs.GetVerbose())
 					AddDebugLogLine(false, _T("Failed to get file date of \"%s\" (%s)"), filestatus.m_szFullName, (LPCTSTR)GetFileName());
 			}
@@ -2989,7 +2989,7 @@ bool CPartFile::IsInRequestedBlockList(const Requested_Block_Struct* block) cons
 	return requestedblocks_list.Find(const_cast<Requested_Block_Struct*>(block)) != NULL;
 }
 
-void CPartFile::RemoveAllRequestedBlocks(void)
+void CPartFile::RemoveAllRequestedBlocks()
 {
 	requestedblocks_list.RemoveAll();
 }
@@ -3099,7 +3099,7 @@ IZoneIdentifier : public IUnknown
 public:
     virtual HRESULT STDMETHODCALLTYPE GetId(DWORD *pdwZone) = 0;
     virtual HRESULT STDMETHODCALLTYPE SetId(DWORD dwZone) = 0;
-    virtual HRESULT STDMETHODCALLTYPE Remove(void) = 0;
+    virtual HRESULT STDMETHODCALLTYPE Remove() = 0;
 };
 #endif //__IZoneIdentifier_INTERFACE_DEFINED__
 
@@ -3863,10 +3863,10 @@ time_t CPartFile::getTimeRemainingSimple() const
 
 time_t CPartFile::getTimeRemaining() const
 {
-	uint64 completedsize = (uint64)GetCompletedSize();
-	time_t simple = (time_t)((GetDatarate() > 0) ? ((uint64)GetFileSize() - completedsize) / GetDatarate() : -1);
-	time_t estimate = (time_t)((GetDlActiveTime() && completedsize >= 512000ull)
-		? ((uint64)GetFileSize() - completedsize) / ((double)completedsize / GetDlActiveTime()) : -1);
+	uint64 completesize = (uint64)GetCompletedSize();
+	time_t simple = (time_t)((GetDatarate() > 0) ? ((uint64)GetFileSize() - completesize) / GetDatarate() : -1);
+	time_t estimate = (time_t)((GetDlActiveTime() && completesize >= 512000ull)
+		? ((uint64)GetFileSize() - completesize) / ((double)completesize / GetDlActiveTime()) : -1);
 
 	if (estimate == -1 || simple != -1 && simple < estimate)
 		return simple; //estimate doesn't have enough data to guess; no matter if we are transferring or not

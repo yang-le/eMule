@@ -186,7 +186,7 @@ void CTransferWnd::OnInitialUpdate()
 	m_tooltipCats->Activate(TRUE);
 
 	VerifyCatTabSize();
-    Localize();
+	Localize();
 }
 
 void CTransferWnd::ShowQueueCount(uint32 number)
@@ -743,13 +743,13 @@ void CTransferWnd::OnNmRClickDltab(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 
 	CMenu PrioMenu;
 	PrioMenu.CreateMenu();
-    Category_Struct* category_Struct = thePrefs.GetCategory(rightclickindex);
+	Category_Struct* category_Struct = thePrefs.GetCategory(rightclickindex);
 	PrioMenu.AppendMenu(MF_STRING,MP_PRIOLOW,GetResString(IDS_PRIOLOW));
-    PrioMenu.CheckMenuItem(MP_PRIOLOW, category_Struct && category_Struct->prio == PR_LOW ? MF_CHECKED : MF_UNCHECKED);
+	PrioMenu.CheckMenuItem(MP_PRIOLOW, category_Struct && category_Struct->prio == PR_LOW ? MF_CHECKED : MF_UNCHECKED);
 	PrioMenu.AppendMenu(MF_STRING,MP_PRIONORMAL,GetResString(IDS_PRIONORMAL));
-    PrioMenu.CheckMenuItem(MP_PRIONORMAL, category_Struct && category_Struct->prio != PR_LOW && category_Struct->prio != PR_HIGH ? MF_CHECKED : MF_UNCHECKED);
+	PrioMenu.CheckMenuItem(MP_PRIONORMAL, category_Struct && category_Struct->prio != PR_LOW && category_Struct->prio != PR_HIGH ? MF_CHECKED : MF_UNCHECKED);
 	PrioMenu.AppendMenu(MF_STRING,MP_PRIOHIGH, GetResString(IDS_PRIOHIGH));
-    PrioMenu.CheckMenuItem(MP_PRIOHIGH, category_Struct && category_Struct->prio == PR_HIGH ? MF_CHECKED : MF_UNCHECKED);
+	PrioMenu.CheckMenuItem(MP_PRIOHIGH, category_Struct && category_Struct->prio == PR_HIGH ? MF_CHECKED : MF_UNCHECKED);
 
 	CTitleMenu menu;
 	menu.CreatePopupMenu();
@@ -812,10 +812,10 @@ void CTransferWnd::OnNmRClickDltab(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 	menu.AppendMenu(MF_STRING,MP_PAUSE, GetResString(IDS_DL_PAUSE), _T("PAUSE"));
 	menu.AppendMenu(MF_STRING,MP_RESUME, GetResString(IDS_DL_RESUME), _T("RESUME"));
 	menu.AppendMenu(MF_STRING,MP_RESUMENEXT, GetResString(IDS_DL_RESUMENEXT), _T("RESUME"));
-    if(rightclickindex != 0 && thePrefs.IsExtControlsEnabled()) {
-        menu.AppendMenu(MF_STRING,MP_DOWNLOAD_ALPHABETICAL, GetResString(IDS_DOWNLOAD_ALPHABETICAL));
-        menu.CheckMenuItem(MP_DOWNLOAD_ALPHABETICAL, category_Struct && category_Struct->downloadInAlphabeticalOrder ? MF_CHECKED : MF_UNCHECKED);
-    }
+	if(rightclickindex != 0 && thePrefs.IsExtControlsEnabled()) {
+		menu.AppendMenu(MF_STRING,MP_DOWNLOAD_ALPHABETICAL, GetResString(IDS_DOWNLOAD_ALPHABETICAL));
+		menu.CheckMenuItem(MP_DOWNLOAD_ALPHABETICAL, category_Struct && category_Struct->downloadInAlphabeticalOrder ? MF_CHECKED : MF_UNCHECKED);
+	}
 	menu.AppendMenu(MF_SEPARATOR);
 	menu.AppendMenu(MF_STRING,MP_HM_OPENINC, GetResString(IDS_OPENINC), _T("Incoming") );
 
@@ -836,7 +836,7 @@ void CTransferWnd::OnNmRClickDltab(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 
 void CTransferWnd::OnLvnBeginDragDownloadList(NMHDR *pNMHDR, LRESULT *pResult)
 {
-    int iSel = downloadlistctrl.GetSelectionMark();
+	int iSel = downloadlistctrl.GetSelectionMark();
 	if (iSel == -1)
 		return;
 	if (((CtrlItem_Struct *)downloadlistctrl.GetItemData(iSel))->type != FILE_TYPE)
@@ -863,8 +863,8 @@ void CTransferWnd::OnLvnBeginDragDownloadList(NMHDR *pNMHDR, LRESULT *pResult)
 		m_pDragImage->Add(CTempIconLoader(_T("AllFiles")));
 	}
 
-    m_pDragImage->BeginDrag(0, pt);
-    m_pDragImage->DragEnter(GetDesktopWindow(), pNMLV->ptAction);
+	m_pDragImage->BeginDrag(0, pt);
+	m_pDragImage->DragEnter(GetDesktopWindow(), pNMLV->ptAction);
 
 	m_bIsDragging = true;
 	m_nDropIndex = -1;
@@ -906,7 +906,7 @@ void CTransferWnd::OnLButtonUp(UINT /*nFlags*/, CPoint /*point*/)
 
 		if (   m_nDropIndex > -1
 			&& (   downloadlistctrl.curTab == 0
-			    || (downloadlistctrl.curTab > 0 && (UINT)m_nDropIndex != downloadlistctrl.curTab)))
+				|| (downloadlistctrl.curTab > 0 && (UINT)m_nDropIndex != downloadlistctrl.curTab)))
 		{
 			// for multiselections
 			CTypedPtrList<CPtrList, CPartFile *> selectedList;
@@ -1016,15 +1016,15 @@ BOOL CTransferWnd::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 		}
 
 		case MP_PRIOLOW:
-            thePrefs.GetCategory(rightclickindex)->prio = PR_LOW;
+			thePrefs.GetCategory(rightclickindex)->prio = PR_LOW;
 			thePrefs.SaveCats();
 			break;
 		case MP_PRIONORMAL:
-            thePrefs.GetCategory(rightclickindex)->prio = PR_NORMAL;
+			thePrefs.GetCategory(rightclickindex)->prio = PR_NORMAL;
 			thePrefs.SaveCats();
 			break;
 		case MP_PRIOHIGH:
-            thePrefs.GetCategory(rightclickindex)->prio = PR_HIGH;
+			thePrefs.GetCategory(rightclickindex)->prio = PR_HIGH;
 			thePrefs.SaveCats();
 			break;
 
@@ -1046,14 +1046,14 @@ BOOL CTransferWnd::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 			break;
 
 		case MP_DOWNLOAD_ALPHABETICAL: {
-            bool newSetting = !thePrefs.GetCategory(rightclickindex)->downloadInAlphabeticalOrder;
-            thePrefs.GetCategory(rightclickindex)->downloadInAlphabeticalOrder = newSetting;
+			bool newSetting = !thePrefs.GetCategory(rightclickindex)->downloadInAlphabeticalOrder;
+			thePrefs.GetCategory(rightclickindex)->downloadInAlphabeticalOrder = newSetting;
 			thePrefs.SaveCats();
-            if(newSetting) {
-                // any auto prio files will be set to normal now.
-                theApp.downloadqueue->RemoveAutoPrioInCat(rightclickindex, PR_NORMAL);
-            }
-            break;
+			if(newSetting) {
+				// any auto prio files will be set to normal now.
+				theApp.downloadqueue->RemoveAutoPrioInCat(rightclickindex, PR_NORMAL);
+			}
+			break;
 		}
 
 		case IDC_UPLOAD_ICO:
@@ -1143,9 +1143,9 @@ void CTransferWnd::EditCatTabLabel(int index, CString newlabel)
 			newlabel += _T('!');
 
 		if (thePrefs.GetCatFilter(index) == 18)
-			newlabel.AppendFormat( _T('\"%s\"'), (LPCTSTR)thePrefs.GetCategory(index)->regexp);
+			newlabel.AppendFormat( _T("\"%s\""), (LPCTSTR)thePrefs.GetCategory(index)->regexp);
 		else
-        	newlabel += GetCatTitle(thePrefs.GetCatFilter(index));
+			newlabel += GetCatTitle(thePrefs.GetCatFilter(index));
 
 		if (index)
 			newlabel += _T(')');
@@ -1180,7 +1180,7 @@ int CTransferWnd::AddCategory(const CString& newtitle, const CString& newincomin
 	newcat->regexp.Empty();
 	newcat->ac_regexpeval=false;
 	newcat->autocat=newautocat;
-    newcat->downloadInAlphabeticalOrder = FALSE;
+	newcat->downloadInAlphabeticalOrder = FALSE;
 	newcat->filter=0;
 	newcat->filterNeg=false;
 	newcat->care4all=false;

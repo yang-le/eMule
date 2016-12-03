@@ -1365,10 +1365,8 @@ HBITMAP CHTRichEditCtrl::GetSmileyBitmap(LPCTSTR pszSmileyID)
 	// the builtin icons because we know their sizes, but if there is a skin active, the
 	// icons (which can also be GIF images) can have any size.
 	HBITMAP hBitmap = IconToBitmap(hIcon, m_crBackground, 0, 0);
-	if (hBitmap == NULL)
-		return (HBITMAP)NULL;
-
-	sm_aSmileyBitmaps.SetAt(pszSmileyID, hBitmap);
+	if (hBitmap != NULL)
+		sm_aSmileyBitmaps.SetAt(pszSmileyID, hBitmap);
 	return hBitmap;
 }
 
@@ -1432,10 +1430,7 @@ bool CHTRichEditCtrl::InsertSmiley(LPCTSTR pszSmileyID)
 	reobject.pstg = sm_pIStorageSmileys;
 	reobject.dwFlags = REO_BELOWBASELINE;
 
-	if (pIRichEditOle->InsertObject(&reobject) != S_OK)
-		return false;
-
-	return true;
+	return pIRichEditOle->InsertObject(&reobject) == S_OK;
 }
 
 bool CHTRichEditCtrl::AddCaptcha(HBITMAP hbmp)

@@ -162,7 +162,7 @@ LRESULT CED2kLinkDlg::OnDataChanged(WPARAM, LPARAM)
 	return 1;
 }
 
-void CED2kLinkDlg::Localize(void)
+void CED2kLinkDlg::Localize()
 {
 	GetDlgItem(IDC_LD_LINKGROUP)->SetWindowText(GetResString(IDS_SW_LINK));
 	GetDlgItem(IDC_LD_CLIPBOARDBUT)->SetWindowText(GetResString(IDS_LD_COPYCLIPBOARD));

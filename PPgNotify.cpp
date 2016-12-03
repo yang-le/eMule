@@ -157,7 +157,7 @@ void CPPgNotify::UpdateControls()
 	GetDlgItem(IDC_EDIT_SENDER)->EnableWindow(IsDlgButtonChecked(IDC_CB_ENABLENOTIFICATIONS));
 }
 
-void CPPgNotify::Localize(void)
+void CPPgNotify::Localize()
 {
 	if (m_hWnd)
 	{

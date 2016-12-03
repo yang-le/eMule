@@ -170,8 +170,8 @@ void CFileDetailDialogInfo::RefreshData()
 			// 'Last Modified' sometimes is up to 2 seconds greater than the current time ???
 			// If it's related to the FAT32 seconds time resolution the max. failure should still be only 1 sec.
 			// Happens at least on FAT32 with very high download speed.
-			uint32 tLastModified = file->GetFileDate();
-			uint32 tNow = time(NULL);
+			time_t tLastModified = file->GetFileDate();
+			time_t tNow = time(NULL);
 			uint32 tAgo;
 			if (tNow >= tLastModified)
 				tAgo = tNow - tLastModified;

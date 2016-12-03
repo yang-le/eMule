@@ -59,8 +59,8 @@ class CUpDownClient;
 class CDeadSourceList
 {
 public:
-	CDeadSourceList(void);
-	~CDeadSourceList(void);
+	CDeadSourceList();
+	~CDeadSourceList();
 	void		AddDeadSource(const CUpDownClient* pToAdd);
 	void		RemoveDeadSource(const CUpDownClient* client);
 	bool		IsDeadSource(const CUpDownClient* pToCheck) const;

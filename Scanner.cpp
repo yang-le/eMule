@@ -1265,7 +1265,7 @@ YY_RULE_SETUP
 							if (pFileLink)
 							{
 								yylval.pstr = new CStringA;
-								yylval.pstr->Format("ed2k::%s", (LPCSTR)md4strA(pFileLink->GetHashKey()));
+								yylval.pstr->Format("ed2k::%s", (LPCSTR)CStringA(md4str(pFileLink->GetHashKey())));
 								delete pLink;
 								return TOK_ED2K_LINK;
 							}

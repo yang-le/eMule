@@ -47,7 +47,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 
-CMMServer::CMMServer(void)
+CMMServer::CMMServer()
 	: m_byPendingCommand(0), m_bUseFakeContent(false)
 {
 	m_SendSearchList.SetSize(0);
@@ -62,7 +62,7 @@ CMMServer::CMMServer(void)
 	m_bGrabListLogin =false;
 }
 
-CMMServer::~CMMServer(void)
+CMMServer::~CMMServer()
 {
 	DeleteSearchFiles();
 	delete m_pSocket;
@@ -130,7 +130,7 @@ void CMMServer::ProcessHelloPacket(CMMData* data, CMMSocket* sender)
 		return;
 	}
 	CString plainPW = data->ReadString();
-	CString testValue = MD5Sum(plainPW).GetHash();
+	CString testValue = MD5Sum(plainPW).GetHashString();
 	if (testValue != thePrefs.GetMMPass() || plainPW.IsEmpty()) {
 		m_dwBlocked = 0;
 		packet->WriteByte(MMT_WRONGPASSWORD);

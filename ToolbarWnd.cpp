@@ -50,7 +50,7 @@ BEGIN_MESSAGE_MAP(CToolbarWnd, CDialogBar)
 END_MESSAGE_MAP()
 
 
-CToolbarWnd::CToolbarWnd(void)
+CToolbarWnd::CToolbarWnd()
 {
 	m_szFloat.SetSize(0,0);
 	m_szMRU.SetSize(0,0);
@@ -60,7 +60,7 @@ CToolbarWnd::CToolbarWnd(void)
 	m_pCommandTargetWnd = NULL;
 }
 
-CToolbarWnd::~CToolbarWnd(void)
+CToolbarWnd::~CToolbarWnd()
 {
 	delete m_btnBar;
 }

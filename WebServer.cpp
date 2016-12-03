@@ -76,7 +76,7 @@ static BOOL	WSsharedColumnHidden[7];
 static BOOL	WSserverColumnHidden[10];
 static BOOL	WSsearchColumnHidden[4];
 
-CWebServer::CWebServer(void)
+CWebServer::CWebServer()
 	: m_ulCurIP(0), m_Templates()
 {
 	m_Params.sLastModified.Empty();
@@ -116,7 +116,7 @@ CWebServer::CWebServer(void)
 	m_Params.SharedSort =	(SharedSort)ini.GetInt(_T("SharedSort"),SHARED_SORT_NAME);
 }
 
-CWebServer::~CWebServer(void)
+CWebServer::~CWebServer()
 {
 	// save layout settings
 	CIni ini( thePrefs.GetConfigFile(), _T("WebServer"));
@@ -154,7 +154,7 @@ void CWebServer::ReloadTemplates()
 	_tsetlocale(LC_TIME, _T("English"));
 	CTime t = CTime::GetCurrentTime();
 	m_Params.sLastModified = t.FormatGmt("%a, %d %b %Y %H:%M:%S GMT");
-	m_Params.sETag = MD5Sum(m_Params.sLastModified).GetHash();
+	m_Params.sETag = MD5Sum(m_Params.sLastModified).GetHashString();
 	_tsetlocale(LC_TIME, sPrevLocale);
 
 	CString sFile = thePrefs.GetTemplate();
@@ -281,7 +281,7 @@ void CWebServer::RestartServer()
 		StartSockets(this);
 }
 
-void CWebServer::StartServer(void)
+void CWebServer::StartServer()
 {
 
 	if(m_bServerWorking != thePrefs.GetWSIsEnabled())
@@ -433,7 +433,7 @@ void CWebServer::ProcessURL(const ThreadData& Data)
             justAddLink = true;
         }
 
-		if(MD5Sum(_ParseURL(Data.sURL, _T("p"))).GetHash() == thePrefs.GetWSPass())
+		if(MD5Sum(_ParseURL(Data.sURL, _T("p"))).GetHashString() == thePrefs.GetWSPass())
 		{
 	        if (!justAddLink)
 	        {
@@ -451,7 +451,7 @@ void CWebServer::ProcessURL(const ThreadData& Data)
 			AddLogLine(true, GetResString(IDS_WEB_ADMINLOGIN)+_T(" (%s)"), (LPCTSTR)ip);
 			login=true;
 		}
-		else if(thePrefs.GetWSIsLowUserEnabled() && !thePrefs.GetWSLowPass().IsEmpty() && MD5Sum(_ParseURL(Data.sURL, _T("p"))).GetHash() == thePrefs.GetWSLowPass())
+		else if(thePrefs.GetWSIsLowUserEnabled() && !thePrefs.GetWSLowPass().IsEmpty() && MD5Sum(_ParseURL(Data.sURL, _T("p"))).GetHashString() == thePrefs.GetWSLowPass())
 		{
 			Session ses;
 			ses.admin=false;

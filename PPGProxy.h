@@ -12,7 +12,7 @@ public:
 	// Dialog Data
 	enum { IDD = IDD_PPG_PROXY };
 
-	void Localize(void);
+	void Localize();
 
 protected:
 	ProxySettings proxy;

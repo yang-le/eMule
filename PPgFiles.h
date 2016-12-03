@@ -11,13 +11,13 @@ public:
 // Dialog Data
 	enum { IDD = IDD_PPG_FILES };
 
-	void Localize(void);
+	void Localize();
 
 protected:
 	CListBox m_uncfolders;
 	HICON m_icoBrowse;
 
-	void LoadSettings(void);
+	void LoadSettings();
 	void OnSettingsChangeCat(uint8 index);
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support

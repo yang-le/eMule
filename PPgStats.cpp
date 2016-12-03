@@ -205,7 +205,7 @@ BOOL CPPgStats::OnApply()
 	return CPropertyPage::OnApply();
 }
 
-void CPPgStats::Localize(void)
+void CPPgStats::Localize()
 {
 	if (m_hWnd)
 	{

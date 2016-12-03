@@ -37,12 +37,12 @@ CVisualStylesXP g_xpStyle;
 
 HMODULE CVisualStylesXP::m_hThemeDll = NULL;
 
-CVisualStylesXP::CVisualStylesXP(void)
+CVisualStylesXP::CVisualStylesXP()
 {
 	m_hThemeDll = LoadLibrary(_T("UxTheme.dll"));
 }
 
-CVisualStylesXP::~CVisualStylesXP(void)
+CVisualStylesXP::~CVisualStylesXP()
 {
 	if (m_hThemeDll != NULL)
 		VERIFY( FreeLibrary(m_hThemeDll) );

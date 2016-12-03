@@ -228,21 +228,20 @@ void CClientCreditsList::LoadList()
 			file.Seek(1, CFile::begin); //set filepointer behind file version byte
 		}
 
-		UINT count = file.ReadUInt32();
+		uint32 count = file.ReadUInt32();
 		m_mapClients.InitHashTable(count+5000); // TODO: should be prime number... and 20% larger
 
-		const uint32 dwExpired = time(NULL) - 12960000; // today - 150 day
+		const time_t dwExpired = time(NULL) - DAY2S(150); // today - 150 day
 		uint32 cDeleted = 0;
-		for (UINT i = 0; i < count; i++){
-			CreditStruct* newcstruct = new CreditStruct;
-			memset(newcstruct, 0, sizeof(CreditStruct));
+		for (uint32 i = 0; i < count; ++i){
+			CreditStruct* newcstruct = new CreditStruct();
 			if (version == CREDITFILE_VERSION_29)
 				file.Read(newcstruct, sizeof(CreditStruct_29a));
 			else
 				file.Read(newcstruct, sizeof(CreditStruct));
 
 			if (newcstruct->nLastSeen < dwExpired){
-				cDeleted++;
+				++cDeleted;
 				delete newcstruct;
 				continue;
 			}
@@ -253,7 +252,7 @@ void CClientCreditsList::LoadList()
 		file.Close();
 
 		if (cDeleted>0)
-			AddLogLine(false, GetResString(IDS_CREDITFILELOADED) + GetResString(IDS_CREDITSEXPIRED), count-cDeleted,cDeleted);
+			AddLogLine(false, GetResString(IDS_CREDITFILELOADED) + GetResString(IDS_CREDITSEXPIRED), count-cDeleted, cDeleted);
 		else
 			AddLogLine(false, GetResString(IDS_CREDITFILELOADED), count);
 	}

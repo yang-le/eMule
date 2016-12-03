@@ -31,13 +31,13 @@ static char THIS_FILE[] = __FILE__;
 
 #define RETURN_ON_FAIL(x)	if (!SUCCEEDED(x)) return false;
 
-CFirewallOpener::CFirewallOpener(void)
+CFirewallOpener::CFirewallOpener()
 {
 	m_bInited = false;
 	m_pINetSM = NULL;
 }
 
-CFirewallOpener::~CFirewallOpener(void)
+CFirewallOpener::~CFirewallOpener()
 {
 	UnInit();
 }

@@ -49,7 +49,7 @@ CMuleStatusBarCtrl::~CMuleStatusBarCtrl()
 {
 }
 
-void CMuleStatusBarCtrl::Init(void)
+void CMuleStatusBarCtrl::Init()
 {
 	EnableToolTips();
 }

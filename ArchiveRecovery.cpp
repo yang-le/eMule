@@ -344,8 +344,8 @@ bool CArchiveRecovery::recoverZip(CFile *zipInput, CFile *zipOutput, archiveScan
 			writeUInt16(zipOutput, 0); // Number of the disk with the start of the central directory
 			writeUInt16(zipOutput, (uint16)fileCount);
 			writeUInt16(zipOutput, (uint16)fileCount);
-			writeUInt32(zipOutput, endOffset - startOffset);
-			writeUInt32(zipOutput, startOffset);
+			writeUInt32(zipOutput, (uint32)(endOffset - startOffset));
+			writeUInt32(zipOutput, (uint32)startOffset);
 			writeUInt16(zipOutput, (uint16)strlen(ZIP_COMMENT));
 			zipOutput->Write(ZIP_COMMENT, strlen(ZIP_COMMENT));
 
@@ -579,7 +579,7 @@ bool CArchiveRecovery::processZipEntry(CFile *zipInput, CFile *zipOutput, uint32
 			cdEntry->diskNumberStart = 0;
 			cdEntry->internalFileAttributes = 1;
 			cdEntry->externalFileAttributes = 0x81B60020;
-			cdEntry->relativeOffsetOfLocalHeader = startOffset;
+			cdEntry->relativeOffsetOfLocalHeader = (uint32)startOffset;
 			cdEntry->filename = entry.filename;
 
 			if (entry.lenExtraField > 0)
@@ -789,8 +789,8 @@ bool CArchiveRecovery::recoverRar(CFile *rarInput, CFile *rarOutput, archiveScan
 					// Don't include directories in file count
 					if ((block->HEAD_FLAGS & 0xE0) != 0xE0)
 						fileCount++;
-					if (rarOutput)
-						writeRarBlock(rarInput, rarOutput, block);
+//					if (rarOutput)
+					writeRarBlock(rarInput, rarOutput, block);
 				}
 				else
 				{
@@ -1209,7 +1209,7 @@ void CArchiveRecovery::writeRarBlock(CFile *input, CFile *output, RAR_BlockFile 
 #define CRC_MASK 0xFFFFFFFFL
 #define CRCPOLY  0xEDB88320L
 static ULONG crctable[256];
-void make_crctable(void)   // initializes CRC table
+void make_crctable()   // initializes CRC table
 {
    ULONG r,i,j;
 

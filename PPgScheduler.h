@@ -11,7 +11,7 @@ public:
 	// Dialog Data
 	enum { IDD = IDD_PPG_SCHEDULER };
 
-	void Localize(void);
+	void Localize();
 
 // Dialog Data
 protected:

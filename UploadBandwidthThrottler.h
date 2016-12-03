@@ -22,8 +22,8 @@ class UploadBandwidthThrottler :
 	public CWinThread
 {
 public:
-	UploadBandwidthThrottler(void);
-	~UploadBandwidthThrottler(void);
+	UploadBandwidthThrottler();
+	~UploadBandwidthThrottler();
 
 	uint64 GetNumberOfSentBytesSinceLastCallAndReset();
 	uint64 GetNumberOfSentBytesOverheadSinceLastCallAndReset();

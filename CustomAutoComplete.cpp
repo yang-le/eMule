@@ -194,7 +194,7 @@ bool CCustomAutoComplete::Disable()
 	return SUCCEEDED(EnDisable(FALSE));
 }
 
-bool CCustomAutoComplete::Enable(void)
+bool CCustomAutoComplete::Enable()
 {
 	if (!m_pac || m_fBound)
 		return false;
@@ -289,7 +289,7 @@ STDMETHODIMP CCustomAutoComplete::Skip(ULONG celt)
 	return S_OK;
 }
 
-STDMETHODIMP CCustomAutoComplete::Reset(void)
+STDMETHODIMP CCustomAutoComplete::Reset()
 {
 	m_nCurrentElement = 0;
 	return S_OK;

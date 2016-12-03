@@ -178,7 +178,7 @@ BOOL CPPgIRC::OnKillActive()
 	return CPropertyPage::OnKillActive();
 }
 
-void CPPgIRC::LoadSettings(void)
+void CPPgIRC::LoadSettings()
 {
 	CheckDlgButton(IDC_IRC_USECHANFILTER, static_cast<UINT>(thePrefs.m_bIRCUseChannelFilter));
 
@@ -262,7 +262,7 @@ BOOL CPPgIRC::OnApply()
 	return CPropertyPage::OnApply();
 }
 
-void CPPgIRC::Localize(void)
+void CPPgIRC::Localize()
 {
 	if(m_hWnd)
 	{

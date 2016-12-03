@@ -87,7 +87,7 @@ BOOL CPPgFiles::OnInitDialog()
 				  // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CPPgFiles::LoadSettings(void)
+void CPPgFiles::LoadSettings()
 {
 	CheckDlgButton(IDC_ADDNEWFILESPAUSED, static_cast<UINT>(thePrefs.addnewfilespaused));
 	CheckDlgButton(IDC_PF_TIMECALC, static_cast<UINT>(!thePrefs.m_bUseOldTimeRemaining));
@@ -162,7 +162,7 @@ BOOL CPPgFiles::OnApply()
 	return CPropertyPage::OnApply();
 }
 
-void CPPgFiles::Localize(void)
+void CPPgFiles::Localize()
 {
 	if (m_hWnd)
 	{

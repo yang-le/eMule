@@ -229,8 +229,8 @@ void DebugHttpHeaders(const CStringAArray& astrHeaders);
 // Win32 specifics
 //
 bool Ask4RegFix(bool checkOnly, bool dontAsk = false, bool bAutoTakeCollections = false); // Barry - Allow forced update without prompt
-void BackupReg(void); // Barry - Store previous values
-void RevertReg(void); // Barry - Restore previous values
+void BackupReg(); // Barry - Store previous values
+void RevertReg(); // Barry - Restore previous values
 bool DoCollectionRegFix(bool checkOnly);
 void AddAutoStart();
 void RemAutoStart();
@@ -281,7 +281,7 @@ __inline BYTE toHex(const BYTE &x)
 // NOTE: Do *NOT* use that function for determining if hash1<hash2 or hash1>hash2.
 __inline int md4cmp(const void* hash1, const void* hash2)
 {
-	return ((uint64*)hash1)[0] != ((uint64*)hash2)[0] || ((uint64*)hash1)[1] != ((uint64*)hash2)[1];
+	return memcmp(hash1, hash2, MDX_DIGEST_SIZE);
 }
 
 __inline bool isnulmd4(const void* hash)
@@ -292,23 +292,20 @@ __inline bool isnulmd4(const void* hash)
 // md4clr -- replacement for memset(hash,0,16)
 __inline void md4clr(const void* hash)
 {
-	((uint64 *)hash)[0] = ((uint64 *)hash)[1] = 0;
+	memset(const_cast<void *>(hash), 0, MDX_DIGEST_SIZE);
 }
 
 // md4cpy -- replacement for memcpy(dst,src,16)
 __inline void md4cpy(void* dst, const void* src)
 {
-	((uint64*)dst)[0] = ((uint64*)src)[0];
-	((uint64*)dst)[1] = ((uint64*)src)[1];
+	memcpy(dst, src, MDX_DIGEST_SIZE);
 }
 
 #define	MAX_HASHSTR_SIZE (MDX_DIGEST_SIZE*2+1)
-CString md4str(const uchar* hash);
-CStringA md4strA(const uchar* hash);
-void md4str(const uchar* hash, TCHAR* pszHash);
-void md4strA(const uchar* hash, CHAR* pszHash);
-bool strmd4(const char* pszHash, uchar* hash);
-bool strmd4(const CString& rstr, uchar* hash);
+CString md4str(const byte* hash);
+void md4str(const byte* hash, TCHAR* pszHash);
+bool strmd4(const char* pszHash, byte *hash);
+bool strmd4(const CString& rstr, byte *hash);
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -427,7 +424,7 @@ __inline CStringA ipstrA(in_addr nIP){
 // Date/Time
 //
 time_t safe_mktime(struct tm* ptm);
-bool AdjustNTFSDaylightFileTime(uint32& ruFileDate, LPCTSTR pszFilePath);
+bool AdjustNTFSDaylightFileTime(time_t& ruFileDate, LPCTSTR pszFilePath);
 
 
 ///////////////////////////////////////////////////////////////////////////////

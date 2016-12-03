@@ -79,8 +79,8 @@ public:
 class CFirewallOpener
 {
 public:
-	CFirewallOpener(void);
-	~CFirewallOpener(void);
+	CFirewallOpener();
+	~CFirewallOpener();
 	bool			OpenPort(const CICSRuleInfo& riPortRule);
 	bool			OpenPort(const uint16 nPortNumber,const uint8 byProtocol,const CString& strRuleName, const bool bRemoveOnExit = false);
 	bool			RemoveRule(const CString& strName);

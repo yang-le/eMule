@@ -19,8 +19,8 @@ class CIrcSocket;
 class CIrcMain
 {
 public:
-	CIrcMain(void);
-	~CIrcMain(void);
+	CIrcMain();
+	~CIrcMain();
 
 	void ParseMessage(CString sMessage);
 	void PreParseMessage(const char *pszBufferA);

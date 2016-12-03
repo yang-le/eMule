@@ -77,7 +77,7 @@ void CPPgGeneral::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LANGS, m_language);
 }
 
-void CPPgGeneral::LoadSettings(void)
+void CPPgGeneral::LoadSettings()
 {
 	GetDlgItem(IDC_NICK)->SetWindowText(thePrefs.GetUserNick());
 
@@ -267,7 +267,7 @@ void CPPgGeneral::OnBnClickedEd2kfix()
 	GetDlgItem(IDC_ED2KFIX)->EnableWindow(Ask4RegFix(true));
 }
 
-void CPPgGeneral::Localize(void)
+void CPPgGeneral::Localize()
 {
 	if(m_hWnd)
 	{

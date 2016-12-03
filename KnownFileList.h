@@ -37,7 +37,7 @@ public:
 	void	Clear();
 	void	Process();
 
-	CKnownFile* FindKnownFile(LPCTSTR filename, uint32 date, uint64 size) const;
+	CKnownFile* FindKnownFile(LPCTSTR filename, time_t date, uint64 size) const;
 	CKnownFile* FindKnownFileByID(const uchar* hash) const;
 	CKnownFile* FindKnownFileByPath(const CString& sFilePath) const;
 	bool	IsKnownFile(const CKnownFile* file) const;

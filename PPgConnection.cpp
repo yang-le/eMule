@@ -164,7 +164,7 @@ BOOL CPPgConnection::OnInitDialog()
 				  // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CPPgConnection::LoadSettings(void)
+void CPPgConnection::LoadSettings()
 {
 	if (m_hWnd)
 	{
@@ -419,7 +419,7 @@ BOOL CPPgConnection::OnApply()
 	return CPropertyPage::OnApply();
 }
 
-void CPPgConnection::Localize(void)
+void CPPgConnection::Localize()
 {
 	if (m_hWnd)
 	{

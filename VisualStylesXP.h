@@ -10,8 +10,8 @@
 class CVisualStylesXP
 {
 public:
-	CVisualStylesXP(void);
-	~CVisualStylesXP(void);
+	CVisualStylesXP();
+	~CVisualStylesXP();
 
 	static HTHEME OpenThemeData(HWND hwnd, LPCWSTR pszClassList);
 	static HRESULT CloseThemeData(HTHEME hTheme);

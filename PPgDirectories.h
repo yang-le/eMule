@@ -12,15 +12,15 @@ public:
 // Dialog Data
 	enum { IDD = IDD_PPG_DIRECTORIES };
 
-	void Localize(void);
+	void Localize();
 
 protected:
 	CDirectoryTreeCtrl m_ShareSelector;
 	CListCtrl m_ctlUncPaths;
 	HICON m_icoBrowse;
 
-	void LoadSettings(void);
-	void FillUncList(void);
+	void LoadSettings();
+	void FillUncList();
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	virtual BOOL OnInitDialog();

@@ -94,7 +94,7 @@ CMuleToolbarCtrl::~CMuleToolbarCtrl()
 		VERIFY( m_bmpBack.DeleteObject() );
 }
 
-void CMuleToolbarCtrl::Init(void)
+void CMuleToolbarCtrl::Init()
 {
 	m_astrToolbarPaths.RemoveAll();
 
@@ -280,7 +280,7 @@ void CMuleToolbarCtrl::SetAllButtonsStrings()
 	}
 }
 
-void CMuleToolbarCtrl::Localize(void)
+void CMuleToolbarCtrl::Localize()
 {
 	if (m_hWnd)
 	{

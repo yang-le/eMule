@@ -105,7 +105,7 @@ void CCollectionCreateDialog::SetCollection(CCollection* pCollection, bool creat
 	m_bCreatemode = create;
 }
 
-BOOL CCollectionCreateDialog::OnInitDialog(void)
+BOOL CCollectionCreateDialog::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	InitWindowStyles(this);
@@ -172,7 +172,7 @@ BOOL CCollectionCreateDialog::OnInitDialog(void)
 	return TRUE;
 }
 
-void CCollectionCreateDialog::AddSelectedFiles(void)
+void CCollectionCreateDialog::AddSelectedFiles()
 {
 	CTypedPtrList<CPtrList, CKnownFile*> knownFileList;
 	POSITION pos = m_CollectionAvailListCtrl.GetFirstSelectedItemPosition();
@@ -198,7 +198,7 @@ void CCollectionCreateDialog::AddSelectedFiles(void)
 	GetDlgItem(IDC_CCOLL_SAVE)->EnableWindow(m_CollectionListCtrl.GetItemCount() > 0);
 }
 
-void CCollectionCreateDialog::RemoveSelectedFiles(void)
+void CCollectionCreateDialog::RemoveSelectedFiles()
 {
 	CTypedPtrList<CPtrList, CCollectionFile*> collectionFileList;
 	POSITION pos = m_CollectionListCtrl.GetFirstSelectedItemPosition();
@@ -335,7 +335,7 @@ void CCollectionCreateDialog::OnBnClickedOk()
 	}
 }
 
-void CCollectionCreateDialog::UpdateAvailFiles(void)
+void CCollectionCreateDialog::UpdateAvailFiles()
 {
 	m_CollectionAvailListCtrl.DeleteAllItems();
 

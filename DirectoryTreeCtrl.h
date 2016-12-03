@@ -11,7 +11,7 @@ class CDirectoryTreeCtrl : public CTreeCtrl
 
 public:
 	// initialize control
-	void Init(void);
+	void Init();
 	// get all shared directories
 	void GetSharedDirectories(CStringList* list);
 	// set shared directories

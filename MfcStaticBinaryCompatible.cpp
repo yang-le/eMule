@@ -245,8 +245,8 @@ void Mfc_IdleFreeTempMaps()
 
 
 #define SAVE_MAP_STATE(map, member) \
-		((_CHandleMap*)(pState->map))->member.AssertValid(); \
-		int iOld_##map##member = ((_CHandleMap*)(pState->map))->member.GetCount();
+		(reinterpret_cast<_CHandleMap *>(pState->map))->member.AssertValid(); \
+		int iOld_##map##member = (reinterpret_cast<_CHandleMap *>(pState->map))->member.GetCount();
 
 		SAVE_MAP_STATE(m_pmapHWND, m_permanentMap);
 		SAVE_MAP_STATE(m_pmapHWND, m_temporaryMap);
@@ -270,7 +270,7 @@ void Mfc_IdleFreeTempMaps()
 
 #ifdef _DEBUG
 #define CMP_MAP_STATE(map, member) \
-		int iNew_##map##member = ((_CHandleMap*)(pState->map))->member.GetCount(); \
+		int iNew_##map##member = (reinterpret_cast<_CHandleMap *>(pState->map))->member.GetCount(); \
 		if (iNew_##map##member != iOld_##map##member) \
 			TRACE(chSTR(map) "->" chSTR(member) ": %d\n", iNew_##map##member - iOld_##map##member);
 

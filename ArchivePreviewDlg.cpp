@@ -284,7 +284,7 @@ LRESULT CArchivePreviewDlg::OnDataChanged(WPARAM, LPARAM)
 	return 1;
 }
 
-void CArchivePreviewDlg::Localize(void)
+void CArchivePreviewDlg::Localize()
 {
 	if (!m_bReducedDlg)
 	{

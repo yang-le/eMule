@@ -80,7 +80,7 @@ CPeerCacheFinder::CPeerCacheFinder()
 	m_nPCPort = 0;
 }
 
-CPeerCacheFinder::~CPeerCacheFinder(void)
+CPeerCacheFinder::~CPeerCacheFinder()
 {
 }
 

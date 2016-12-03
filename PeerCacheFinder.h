@@ -50,7 +50,7 @@ class CPeerCacheFinder
 	friend class CPCValditeThread;
 public:
 	CPeerCacheFinder();
-	~CPeerCacheFinder(void);
+	~CPeerCacheFinder();
 
 	void	Init(uint32 dwLastSearch, bool bLastSearchSuccess, bool bEnabled, uint16 nPort);
 	void	Save();

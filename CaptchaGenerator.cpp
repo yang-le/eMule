@@ -41,7 +41,7 @@ CCaptchaGenerator::CCaptchaGenerator(uint32 nLetterCount)
 	ReGenerateCaptcha(nLetterCount);
 }
 
-CCaptchaGenerator::~CCaptchaGenerator(void)
+CCaptchaGenerator::~CCaptchaGenerator()
 {
 	Clear();
 }

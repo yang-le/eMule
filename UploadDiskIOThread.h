@@ -49,8 +49,8 @@ class CUploadDiskIOThread: public CWinThread
 {
 	DECLARE_DYNCREATE(CUploadDiskIOThread)
 public:
-	CUploadDiskIOThread(void);
-	~CUploadDiskIOThread(void);
+	CUploadDiskIOThread();
+	~CUploadDiskIOThread();
 
 	void NewBlockRequestsAvailable();
 	void SocketNeedsMoreData();

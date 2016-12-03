@@ -21,7 +21,7 @@ public:
 	CPPgNotify();
 	virtual ~CPPgNotify();	
 
-	void Localize(void);
+	void Localize();
 
 // Dialog Data
 	enum { IDD = IDD_PPG_NOTIFY };

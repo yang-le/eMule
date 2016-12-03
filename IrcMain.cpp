@@ -58,7 +58,7 @@ static char THIS_FILE[] = __FILE__;
 #define Irc_Version				_T("(SMIRCv00.69)")
 
 
-CIrcMain::CIrcMain(void)
+CIrcMain::CIrcMain()
 {
 	m_pIRCSocket = NULL;
 	m_pwndIRC = 0;
@@ -67,7 +67,7 @@ CIrcMain::CIrcMain(void)
 	m_dwLastRequest = 0;
 }
 
-CIrcMain::~CIrcMain(void)
+CIrcMain::~CIrcMain()
 {
 }
 

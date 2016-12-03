@@ -91,7 +91,7 @@ BOOL CPPgDirectories::OnInitDialog()
 				  // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CPPgDirectories::LoadSettings(void)
+void CPPgDirectories::LoadSettings()
 {
 	GetDlgItem(IDC_INCFILES)->SetWindowText(thePrefs.m_strIncomingDir);
 
@@ -293,7 +293,7 @@ BOOL CPPgDirectories::OnCommand(WPARAM wParam, LPARAM lParam)
 	return CPropertyPage::OnCommand(wParam, lParam);
 }
 
-void CPPgDirectories::Localize(void)
+void CPPgDirectories::Localize()
 {
 	if(m_hWnd)
 	{
@@ -305,7 +305,7 @@ void CPPgDirectories::Localize(void)
 	}
 }
 
-void CPPgDirectories::FillUncList(void)
+void CPPgDirectories::FillUncList()
 {
 	m_ctlUncPaths.DeleteAllItems();
 

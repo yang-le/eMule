@@ -298,12 +298,12 @@ class CWebServer
 	friend class CWebSocket;
 
 public:
-	CWebServer(void);
-	~CWebServer(void);
+	CWebServer();
+	~CWebServer();
 
 	inline void SetIP(ULONG ip) { m_ulCurIP = ip; }
 	int	 UpdateSessionCount();
-	void StartServer(void);
+	void StartServer();
 	void RestartServer();
 	void AddStatsLine(UpDown line);
 	void ReloadTemplates();

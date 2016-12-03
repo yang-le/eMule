@@ -84,7 +84,7 @@ class CMMSocket: public CAsyncSocket
 {
 public:
 	explicit CMMSocket(CMMServer* pOwner);
-	~CMMSocket(void);
+	~CMMSocket();
 	bool	SendPacket(CMMPacket* packet, bool bQueueFirst = false);
 	bool	m_bClosed;
 	uint32	m_dwTimedShutdown;
@@ -114,7 +114,7 @@ class CListenMMSocket: public CAsyncSocket
 {
 public:
 	explicit CListenMMSocket(CMMServer* pOwner);
-	~CListenMMSocket(void);
+	~CListenMMSocket();
 	bool	Create();
 	void	Process();
 	virtual void OnAccept(int nErrorCode);

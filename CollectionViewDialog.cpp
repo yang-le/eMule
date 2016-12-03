@@ -79,7 +79,7 @@ void CCollectionViewDialog::SetCollection(CCollection* pCollection)
 	m_pCollection = pCollection;
 }
 
-BOOL CCollectionViewDialog::OnInitDialog(void)
+BOOL CCollectionViewDialog::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	InitWindowStyles(this);
@@ -152,7 +152,7 @@ void CCollectionViewDialog::OnNmDblClkCollectionList(NMHDR* /*pNMHDR*/, LRESULT*
 	*pResult = 0;
 }
 
-void CCollectionViewDialog::DownloadSelected(void)
+void CCollectionViewDialog::DownloadSelected()
 {
 	int iNewIndex = 0;
 	for (int iIndex = 1; iIndex < thePrefs.GetCatCount(); iIndex++)

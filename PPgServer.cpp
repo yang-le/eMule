@@ -73,7 +73,7 @@ BOOL CPPgServer::OnInitDialog()
 				  // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CPPgServer::LoadSettings(void)
+void CPPgServer::LoadSettings()
 {
 	SetDlgItemInt(IDC_SERVERRETRIES, thePrefs.m_uDeadServerRetries, FALSE);
 	CheckDlgButton(IDC_AUTOSERVER, thePrefs.m_bAutoUpdateServerList);
@@ -113,7 +113,7 @@ BOOL CPPgServer::OnApply()
 	return CPropertyPage::OnApply();
 }
 
-void CPPgServer::Localize(void)
+void CPPgServer::Localize()
 {
 	if (m_hWnd)
 	{

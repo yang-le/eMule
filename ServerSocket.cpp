@@ -739,7 +739,7 @@ bool CServerSocket::PacketReceived(Packet* packet)
 			uint32 uComprSize = packet->size;
 			if (!packet->UnPackPacket(250000)){
 				if (thePrefs.GetVerbose())
-					DebugLogError(_T("Failed to decompress server TCP packet: protocol=0x%02x  opcode=0x%02x  size=%u"), packet ? packet->prot : 0, packet ? packet->opcode : 0, packet ? packet->size : 0);
+					DebugLogError(_T("Failed to decompress server TCP packet: protocol=0x%02x  opcode=0x%02x  size=%u"), packet->prot, packet->opcode, packet->size);
 				return true;
 			}
 			packet->prot = OP_EDONKEYPROT;

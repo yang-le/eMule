@@ -49,10 +49,10 @@ const int g_ciArrowSizeY = 2 ;
 IMPLEMENT_DYNCREATE(CColorButton, CButton)
 
 //***********************************************************************
-// Method:	CColorButton::CColorButton(void)
+// Method:	CColorButton::CColorButton()
 // Notes:	Default Constructor.
 //***********************************************************************
-CColorButton::CColorButton(void):
+CColorButton::CColorButton():
 	_Inherited(),
 	m_Color(CLR_DEFAULT),
 	m_DefaultColor(::GetSysColor(COLOR_APPWORKSPACE)),
@@ -64,10 +64,10 @@ CColorButton::CColorButton(void):
 }
 
 //***********************************************************************
-// Method:	CColorButton::~CColorButton(void)
+// Method:	CColorButton::~CColorButton()
 // Notes:	Destructor.
 //***********************************************************************
-CColorButton::~CColorButton(void)
+CColorButton::~CColorButton()
 {
 }
 
@@ -75,7 +75,7 @@ CColorButton::~CColorButton(void)
 // Method:	CColorButton::GetColor()
 // Notes:	None.
 //***********************************************************************
-COLORREF CColorButton::GetColor(void) const
+COLORREF CColorButton::GetColor() const
 {
 	return m_Color;
 }
@@ -98,7 +98,7 @@ void CColorButton::SetColor(COLORREF dwColor)
 // Method:	CColorButton::GetDefaultColor()
 // Notes:	None.
 //***********************************************************************
-COLORREF CColorButton::GetDefaultColor(void) const
+COLORREF CColorButton::GetDefaultColor() const
 {
 	return m_DefaultColor;
 }
@@ -144,7 +144,7 @@ void CColorButton::SetTrackSelection(BOOL bTrack)
 // Method:	CColorButton::GetTrackSelection()
 // Notes:	None.
 //***********************************************************************
-BOOL CColorButton::GetTrackSelection(void) const
+BOOL CColorButton::GetTrackSelection() const
 {
 	return m_bTrackSelection;
 }

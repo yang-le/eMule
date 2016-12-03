@@ -28,7 +28,7 @@ public:
 	// Return:		None.	
 	// Notes:		None.
 	//***********************************************************************
-	CColorButton(void);
+	CColorButton();
 
 	//***********************************************************************
 	// Name:		CColorButton
@@ -37,7 +37,7 @@ public:
 	// Return:		None.		
 	// Notes:		None.
 	//***********************************************************************
-	virtual ~CColorButton(void);
+	virtual ~CColorButton();
 
 	//***********************************************************************
 	//**                        Property Accessors                         **
@@ -55,7 +55,7 @@ public:
 	// Return:		COLORREF 
 	// Notes:		None.
 	//***********************************************************************
-	COLORREF GetColor(void) const;
+	COLORREF GetColor() const;
 
 	//***********************************************************************
 	// Name:		SetColor
@@ -74,7 +74,7 @@ public:
 	// Return:		COLORREF 
 	// Notes:		None.
 	//***********************************************************************
-	COLORREF GetDefaultColor(void) const;
+	COLORREF GetDefaultColor() const;
 
 	//***********************************************************************
 	// Name:		SetDefaultColor
@@ -125,7 +125,7 @@ public:
 	// Return:		BOOL 
 	// Notes:		None.
 	//***********************************************************************
-	BOOL GetTrackSelection(void) const;
+	BOOL GetTrackSelection() const;
 
 	//{{AFX_VIRTUAL(CColorButton)
 public:

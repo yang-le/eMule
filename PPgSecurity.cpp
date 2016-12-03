@@ -81,7 +81,7 @@ void CPPgSecurity::DoDataExchange(CDataExchange* pDX)
 	CPropertyPage::DoDataExchange(pDX);
 }
 
-void CPPgSecurity::LoadSettings(void)
+void CPPgSecurity::LoadSettings()
 {
 	CString strBuffer;
 
@@ -182,7 +182,7 @@ BOOL CPPgSecurity::OnApply()
 	return CPropertyPage::OnApply();
 }
 
-void CPPgSecurity::Localize(void)
+void CPPgSecurity::Localize()
 {
 	if (m_hWnd)
 	{

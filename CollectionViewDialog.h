@@ -54,9 +54,9 @@ protected:
 	HICON m_icoWnd;
 	HICON m_icoColl;
 
-	void DownloadSelected(void);
+	void DownloadSelected();
 
-	virtual BOOL OnInitDialog(void);
+	virtual BOOL OnInitDialog();
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
 	DECLARE_MESSAGE_MAP()

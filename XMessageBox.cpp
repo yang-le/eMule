@@ -540,19 +540,11 @@ struct CXDialogTemplate::ButtonInfo CXDialogTemplate::g_ButtonText[] =
 #ifdef XMESSAGEBOX_AUTO_VISTA_STYLE
 ///////////////////////////////////////////////////////////////////////////////
 // IsVistaOrLater
-static BOOL IsVistaOrLater()
+static bool IsVistaOrLater()
 {
-	BOOL rc = FALSE;
+	OSVERSIONINFO osvi = {sizeof(OSVERSIONINFO)};
 
-	OSVERSIONINFO osvi = {};
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	if (GetVersionEx(&osvi))
-	{
-		if (osvi.dwMajorVersion >= 6)
-			rc = TRUE;
-	}
-
-	return rc;
+	return GetVersionEx(&osvi) && (osvi.dwMajorVersion >= 6);
 }
 #endif // XMESSAGEBOX_AUTO_VISTA_STYLE
 

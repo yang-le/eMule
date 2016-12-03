@@ -20,7 +20,7 @@ class CTreeOptionsCtrlEx :
 {
 public:
 	explicit CTreeOptionsCtrlEx(UINT uImageListColorFlags = ILC_COLOR);
-	virtual ~CTreeOptionsCtrlEx(void);
+	virtual ~CTreeOptionsCtrlEx();
 
 	void SetEditLabel(HTREEITEM hItem, const CString& rstrLabel);
 	void UpdateCheckBoxGroup(HTREEITEM hItem);

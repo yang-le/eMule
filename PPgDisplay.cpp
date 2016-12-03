@@ -75,7 +75,7 @@ void CPPgDisplay::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_PREVIEW, m_3DPreview);
 }
 
-void CPPgDisplay::LoadSettings(void)
+void CPPgDisplay::LoadSettings()
 {
 	CheckDlgButton(IDC_MINTRAY, static_cast<UINT>(thePrefs.mintotray));
 	CheckDlgButton(IDC_DBLCLICK, static_cast<UINT>(thePrefs.transferDoubleclick));
@@ -199,7 +199,7 @@ BOOL CPPgDisplay::OnApply()
 	return CPropertyPage::OnApply();
 }
 
-void CPPgDisplay::Localize(void)
+void CPPgDisplay::Localize()
 {
 	if(m_hWnd)
 	{

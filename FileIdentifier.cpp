@@ -50,7 +50,7 @@ CFileIdentifierBase& CFileIdentifierBase::operator=(const CFileIdentifierBase& r
 	return *this;
 }
 
-CFileIdentifierBase::~CFileIdentifierBase(void)
+CFileIdentifierBase::~CFileIdentifierBase()
 {
 
 }
@@ -149,7 +149,7 @@ CFileIdentifier::CFileIdentifier(const CFileIdentifier& rFileIdentifier, EMFileS
 		m_aAICHPartHashSet.Add(rFileIdentifier.m_aAICHPartHashSet[i]);
 }
 
-CFileIdentifier::~CFileIdentifier(void)
+CFileIdentifier::~CFileIdentifier()
 {
 	DeleteMD4Hashset();
 }

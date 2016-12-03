@@ -671,7 +671,7 @@ BOOL CSharedDirsTreeCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 						CKnownFile* file = static_cast<CKnownFile *>(selectedList.GetNext(pos));
 						if (file->IsKindOf(RUNTIME_CLASS(CKnownFile))) {
 							file->SetAutoUpPriority(wParam == MP_PRIOAUTO);
-							int pri;
+							uint8 pri;
 							switch (wParam) {
 							case MP_PRIOVERYLOW:
 								pri = PR_VERYLOW;

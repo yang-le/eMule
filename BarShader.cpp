@@ -38,7 +38,8 @@ CBarShader::CBarShader(uint32 height, uint32 width)
 	m_bIsPreview=false;
 }
 
-CBarShader::~CBarShader(void) {
+CBarShader::~CBarShader()
+{
 	delete[] m_Modifiers;
 }
 

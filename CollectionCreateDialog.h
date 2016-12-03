@@ -65,12 +65,12 @@ protected:
 	CStatic m_CollectionSourceListIcon;
 	CButton m_CollectionCreateSignNameKeyCheck;
 
-	void AddSelectedFiles(void);
-	void RemoveSelectedFiles(void);
-	void UpdateAvailFiles(void);
+	void AddSelectedFiles();
+	void RemoveSelectedFiles();
+	void UpdateAvailFiles();
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	virtual BOOL OnInitDialog(void);
+	virtual BOOL OnInitDialog();
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnBnClickedCollectionAdd();

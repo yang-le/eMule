@@ -426,7 +426,7 @@ int AFX_CDECL AfxNewHandler(size_t /* nSize */)
 
 _PNH _afxNewHandler = &AfxNewHandler;
 
-_PNH AFXAPI AfxGetNewHandler(void)
+_PNH AFXAPI AfxGetNewHandler()
 {
 	return _afxNewHandler;
 }

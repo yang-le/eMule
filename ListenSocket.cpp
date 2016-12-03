@@ -204,26 +204,19 @@ void CClientReqSocket::OnClose(int nErrorCode){
 
 void CClientReqSocket::Disconnect(LPCTSTR pszReason)
 {
-	AsyncSelect(0);
 	byConnected = ES_DISCONNECTED;
-	if (!client)
-		Safe_Delete();
-	else
-		if (client->Disconnected(CString(_T("CClientReqSocket::Disconnect(): ")) + pszReason, true)) {
-			CUpDownClient* temp = client;
-			client->socket = NULL;
-			client = NULL;
-			delete temp;
-			Safe_Delete();
-		} else {
-			client = NULL;
-			Safe_Delete();
-		}
+	AsyncSelect(0);
+	if (client && client->Disconnected(CString(_T("CClientReqSocket::Disconnect(): ")) + pszReason, true)) {
+		client->socket = NULL;
+		delete client;
+	}
+	client = NULL;
+	Safe_Delete();
 }
 
 void CClientReqSocket::Delete_Timed()
 {
-// it seems that MFC Sockets call socketfunctions after they are deleted, even if the socket is closed
+// it seems that MFC Sockets call socket functions after they are deleted, even if the socket is closed
 // and select(0) is set. So we need to wait some time to make sure this doesn't happens
 // we currently also trust on this for multithreading, rework snychronization if this ever changes
 	if (::GetTickCount() - deltimer > SEC2MS(10))
@@ -233,15 +226,15 @@ void CClientReqSocket::Delete_Timed()
 void CClientReqSocket::Safe_Delete()
 {
 	ASSERT (theApp.listensocket->IsValidSocket(this));
+	byConnected = ES_DISCONNECTED;
 	AsyncSelect(0);
 	deltimer = ::GetTickCount();
 	if (m_SocketData.hSocket != INVALID_SOCKET) // deadlake PROXYSUPPORT - changed to AsyncSocketEx
 		ShutDown(SD_BOTH);
 	if (client) {
-		client->socket = 0;
-		client = 0;
+		client->socket = NULL;
+		client = NULL;
 	}
-	byConnected = ES_DISCONNECTED;
 	deletethis = true;
 }
 
@@ -2649,13 +2642,13 @@ void CListenSocket::RecalculateStats()
 	for (POSITION pos = socket_list.GetHeadPosition(); pos != NULL;) {
 		switch (socket_list.GetNext(pos)->GetConState()) {
 		case ES_DISCONNECTED:
-			m_ConnectionStates[0]++;
+			++m_ConnectionStates[0];
 			break;
 		case ES_NOTCONNECTED:
-			m_ConnectionStates[1]++;
+			++m_ConnectionStates[1];
 			break;
 		case ES_CONNECTED:
-			m_ConnectionStates[2]++;
+			++m_ConnectionStates[2];
 		}
 	}
 }
@@ -2690,11 +2683,9 @@ void CListenSocket::AddConnection()
 
 bool CListenSocket::TooManySockets(bool bIgnoreInterval)
 {
-	if (   GetOpenSockets() > thePrefs.GetMaxConnections()
+	return	(  GetOpenSockets() > thePrefs.GetMaxConnections()
 		|| (m_OpenSocketsInterval > (thePrefs.GetMaxConperFive() * GetMaxConperFiveModifier()) && !bIgnoreInterval)
-		|| (m_nHalfOpen >= thePrefs.GetMaxHalfConnections() && !bIgnoreInterval))
-		return true;
-	return false;
+		|| (m_nHalfOpen >= thePrefs.GetMaxHalfConnections() && !bIgnoreInterval));
 }
 
 bool CListenSocket::IsValidSocket(CClientReqSocket* totest)

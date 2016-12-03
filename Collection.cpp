@@ -36,7 +36,7 @@ static char THIS_FILE[] = __FILE__;
 #define COLLECTION_FILE_VERSION1_INITIAL		0x01
 #define COLLECTION_FILE_VERSION2_LARGEFILES		0x02
 
-CCollection::CCollection(void)
+CCollection::CCollection()
 : m_sCollectionName(_T(""))
 , m_sCollectionAuthorName(_T(""))
 , m_bTextFormat(false)
@@ -72,7 +72,7 @@ CCollection::CCollection(const CCollection* pCollection)
 	}
 }
 
-CCollection::~CCollection(void)
+CCollection::~CCollection()
 {
 	delete[] m_pabyCollectionAuthorKey;
 	for (POSITION pos = m_CollectionFilesMap.GetStartPosition(); pos != NULL;) {
@@ -434,5 +434,5 @@ CString	CCollection::GetAuthorKeyHashString()
 	if (m_pabyCollectionAuthorKey == NULL)
 		return CString();
 	MD5Sum md5(m_pabyCollectionAuthorKey, m_nKeySize);
-	return md5.GetHash().MakeUpper();
+	return md5.GetHashString().MakeUpper();
 }

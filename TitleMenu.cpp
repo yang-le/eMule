@@ -279,12 +279,12 @@ static HBITMAP Create32BitHBITMAP(HDC hdc, int cx, int cy, void **ppvBits = NULL
 {
 	HBITMAP hBmp = NULL;
 	BITMAPINFO bmi = {};
-    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biCompression = BI_RGB;
-    bmi.bmiHeader.biWidth = cx;
-    bmi.bmiHeader.biHeight = cy;
-    bmi.bmiHeader.biBitCount = 32;
+ 	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmi.bmiHeader.biWidth = cx;
+	bmi.bmiHeader.biHeight = cy;
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biBitCount = 32;
+	bmi.bmiHeader.biCompression = BI_RGB;
 
     HDC hdcUsed = hdc ? hdc : GetDC(NULL);
     if (hdcUsed)

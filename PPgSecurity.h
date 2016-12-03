@@ -13,13 +13,13 @@ public:
 // Dialog Data
 	enum { IDD = IDD_PPG_SECURITY };
 
-	void Localize(void);
+	void Localize();
 	void DeleteDDB();
 
 protected:
 	CCustomAutoComplete* m_pacIPFilterURL;
 
-	void LoadSettings(void);
+	void LoadSettings();
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	virtual BOOL OnInitDialog();

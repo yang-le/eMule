@@ -414,7 +414,7 @@ VOID CALLBACK CServerConnect::RetryConnectTimer(HWND /*hWnd*/, UINT /*nMsg*/, UI
 			_this->StopConnectionTry();
 			if (_this->IsConnected())
 				return;
-			if (_this->m_uStartAutoConnectPos >= theApp.serverlist->GetServerCount())
+			if (_this->m_uStartAutoConnectPos >= (UINT)theApp.serverlist->GetServerCount())
 				_this->m_uStartAutoConnectPos = 0;
 			_this->ConnectToAnyServer(_this->m_uStartAutoConnectPos, true, true);
 		}

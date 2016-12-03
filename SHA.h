@@ -34,36 +34,29 @@
  stored in memory. It runs at 22 cycles per byte on a Pentium P4 processor
 */
 #pragma once
+#define CRYPTOPP_ENABLE_NAMESPACE_WEAK 1 //suppress deprecation warning
 #include "shahashset.h"
-
-#define SHA1_BLOCK_SIZE		64
+#include "cryptopp/sha.h"
+//byte sizes
+#define SHA1_BLOCK_SIZE	64
 #define SHA1_DIGEST_SIZE	20
-
 
 typedef struct
 {
 	BYTE	b[SHA1_DIGEST_SIZE];
 } SHA1;
 
-
 class CSHA : public CAICHHashAlgo
 {
-// Construction
-public:
-	CSHA();
-	virtual ~CSHA();
-
-	static bool VerifyImplementation();
-
 // Attributes
-protected:
-	// NOTE: if you change this, modify the offsets in SHA_ASM.ASM accordingly
-	DWORD	m_nCount[2];
-	DWORD	m_nHash[5];
-	DWORD	m_nBuffer[16];
+	// netfinity: Use cryptlib for non X86 platforms
+	CryptoPP::SHA1 m_sha;
+	SHA1 m_hash;
 
 // Operations
 public:
+	// Construction
+	CSHA();
 	// CAICHHashAlgo interface
 	virtual void	Reset();
 	virtual void	Add(LPCVOID pData, DWORD nLength);
@@ -88,5 +81,5 @@ inline bool operator==(const SHA1& sha1a, const SHA1& sha1b)
 
 inline bool operator!=(const SHA1& sha1a, const SHA1& sha1b)
 {
-	return memcmp(&sha1a, &sha1b, SHA1_DIGEST_SIZE) != 0;
+	return !(sha1a == sha1b);
 }

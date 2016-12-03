@@ -38,7 +38,7 @@ public:
 	static void Localize();
 
 private:
-	CPartFileConvert(void); // Just use static recover method
+	CPartFileConvert(); // Just use static recover method
 
 	static int performConvertToeMule(CString folder);
 	static UINT AFX_CDECL run(LPVOID lpParam);

@@ -140,12 +140,12 @@ public:
 
 	// last file modification time (NT's version of UTC), to be used for stats only!
 	CTime	GetCFileDate() const { return CTime(m_tLastModified); }
-	uint32	GetFileDate() const { return m_tLastModified; }
-	uint32	GetLastReceptionDate() const { return (m_uTransferred > 0 && m_tLastModified > 0) ? m_tLastModified : (UINT)-1; }
+	time_t	GetFileDate() const { return m_tLastModified; }
+	time_t	GetLastReceptionDate() const { return (m_uTransferred > 0 && m_tLastModified > 0) ? m_tLastModified : (time_t)-1; }
 
 	// file creation time (NT's version of UTC), to be used for stats only!
 	CTime	GetCrCFileDate() const { return CTime(m_tCreated); }
-	uint32	GetCrFileDate() const { return m_tCreated; }
+	time_t	GetCrFileDate() const { return m_tCreated; }
 
 	void	InitializeFromLink(CED2KFileLink* fileLink, UINT cat = 0);
 	uint32	Process(uint32 reducedownload, UINT icounter);
@@ -191,7 +191,7 @@ public:
 
 	uint8	GetDownPriority() const											{ return m_iDownPriority; }
 	void	SetDownPriority(uint8 iNewDownPriority, bool resort = true);
-	bool	IsAutoDownPriority(void) const									{ return m_bAutoDownPriority; }
+	bool	IsAutoDownPriority() const									{ return m_bAutoDownPriority; }
 	void	SetAutoDownPriority(bool NewAutoDownPriority)					{ m_bAutoDownPriority = NewAutoDownPriority; }
 	void	UpdateAutoDownPriority();
 
@@ -218,7 +218,7 @@ public:
 	void	GetFilledList(CTypedPtrList<CPtrList, Gap_Struct*> *filled) const;
 
 	// Barry - Added to prevent list containing deleted blocks on shutdown
-	void	RemoveAllRequestedBlocks(void);
+	void	RemoveAllRequestedBlocks();
 	bool	RemoveBlockFromList(uint64 start, uint64 end);
 	bool	IsInRequestedBlockList(const Requested_Block_Struct* block) const;
 	void	RemoveAllSources(bool bTryToSwap);
@@ -346,7 +346,7 @@ private:
 	CCorruptionBlackBox	m_CorruptionBlackBox;
 	static CBarShader s_LoadBar;
 	static CBarShader s_ChunkBar;
-	uint32	m_iLastPausePurge;
+	time_t	m_iLastPausePurge;
 	uint16	count;
 	UINT	m_anStates[STATES_COUNT];
 	EMFileSize	completedsize;
@@ -389,9 +389,9 @@ private:
 	UINT	m_category;
 	DWORD	m_dwFileAttributes;
 	time_t	m_tActivated;
-	uint32	m_nDlActiveTime;
-	uint32	m_tLastModified;	// last file modification time (NT's version of UTC), to be used for stats only!
-	uint32	m_tCreated;			// file creation time (NT's version of UTC), to be used for stats only!
+	time_t	m_nDlActiveTime;
+	time_t	m_tLastModified;	// last file modification time (NT's version of UTC), to be used for stats only!
+	time_t	m_tCreated;			// file creation time (NT's version of UTC), to be used for stats only!
 	uint32	m_random_update_wait;
 	volatile EPartFileOp m_eFileOp;
 	volatile UINT m_uFileOpProgress;

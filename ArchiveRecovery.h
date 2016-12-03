@@ -392,7 +392,7 @@ public:
 	static bool recoverISO(CFile *aceInput, CFile *aceOutput, archiveScannerThreadParams_s* ai, CTypedPtrList<CPtrList, Gap_Struct*> *filled);
 
 private:
-	CArchiveRecovery(void); // Just use static recover method
+	CArchiveRecovery(); // Just use static recover method
 
 	static UINT AFX_CDECL run(LPVOID lpParam);
 	static bool performRecovery(CPartFile *partFile, CTypedPtrList<CPtrList, Gap_Struct*> *filled, bool preview, bool bCreatePartFileCopy = true);

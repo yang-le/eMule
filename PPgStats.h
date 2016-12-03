@@ -12,7 +12,7 @@ public:
 	// Dialog Data
 	enum { IDD = IDD_PPG_STATS };
 
-	void Localize(void);
+	void Localize();
 
 protected:
 	int m_iStatsColors;

@@ -12,7 +12,7 @@ public:
 // Dialog Data
 	enum { IDD = IDD_PPG_TWEAKS };
 
-	void Localize(void);
+	void Localize();
 
 protected:
 	UINT m_iFileBufferSize;

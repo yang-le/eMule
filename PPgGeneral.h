@@ -11,11 +11,11 @@ public:
 // Dialog Data
 	enum { IDD = IDD_PPG_GENERAL };
 
-	void Localize(void);
+	void Localize();
 
 protected:
 	CComboBox m_language;
-	void LoadSettings(void);
+	void LoadSettings();
 	void UpdateEd2kLinkFixCtrl();
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -31,7 +31,7 @@ protected:
 	afx_msg void OnBnClickedEditWebservices();
 	afx_msg void OnLangChange();
 	afx_msg void OnBnClickedCheck4Update();
-	afx_msg void OnCbnCloseupLangs();
+//	afx_msg void OnCbnCloseupLangs();
 	afx_msg void OnHelp();
 	afx_msg BOOL OnHelpInfo(HELPINFO* pHelpInfo);
 };

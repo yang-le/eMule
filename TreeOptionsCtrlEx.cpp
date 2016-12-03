@@ -37,7 +37,7 @@ CTreeOptionsCtrlEx::CTreeOptionsCtrlEx(UINT uImageListColorFlags)
 	SetToggleOverIconOnly(TRUE);
 }
 
-CTreeOptionsCtrlEx::~CTreeOptionsCtrlEx(void)
+CTreeOptionsCtrlEx::~CTreeOptionsCtrlEx()
 {
 }
 

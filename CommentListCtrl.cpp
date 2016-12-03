@@ -44,7 +44,7 @@ CCommentListCtrl::~CCommentListCtrl()
 {
 }
 
-void CCommentListCtrl::Init(void)
+void CCommentListCtrl::Init()
 {
 	SetPrefsKey(_T("CommentListCtrl"));
 	ASSERT( (GetStyle() & LVS_SINGLESEL) == 0 );

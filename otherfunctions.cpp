@@ -556,7 +556,7 @@ bool Ask4RegFix(bool checkOnly, bool dontAsk, bool bAutoTakeCollections)
 	return false;
 }
 
-void BackupReg(void)
+void BackupReg()
 {
 	// TODO: This function needs to be changed in at least 2 regards
 	//	1)	It must follow the rules: reading from HKCR and writing into HKCU. What we are currently doing
@@ -593,7 +593,7 @@ void BackupReg(void)
 }
 
 // Barry - Restore previous values
-void RevertReg(void)
+void RevertReg()
 {
 	HKEY hkeyCR = thePrefs.GetWindowsVersion() < _WINVER_2K_ ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
 	// restore previous ed2k links before being assigned to emule
@@ -623,8 +623,7 @@ void RevertReg(void)
 
 int GetMaxWindowsTCPConnections()
 {
-	OSVERSIONINFOEX osvi = {};
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+	OSVERSIONINFOEX osvi = {sizeof(OSVERSIONINFOEX)};
 
 	if (!GetVersionEx((OSVERSIONINFO*)&osvi)) {
 		//if OSVERSIONINFOEX doesn't work, try OSVERSIONINFO
@@ -680,8 +679,8 @@ int GetMaxWindowsTCPConnections()
 
 WORD DetectWinVersion()
 {
-	OSVERSIONINFOEX osvi = {};
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+	OSVERSIONINFOEX osvi = {sizeof(OSVERSIONINFOEX)};
+
 	if (!GetVersionEx((OSVERSIONINFO*)&osvi)) {
 		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 		if (!GetVersionEx((OSVERSIONINFO*)&osvi))
@@ -725,8 +724,8 @@ WORD DetectWinVersion()
 
 int IsRunningXPSP2()
 {
-	OSVERSIONINFOEX osvi = {};
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+	OSVERSIONINFOEX osvi = {sizeof(OSVERSIONINFOEX)};
+
 	if (!GetVersionEx((OSVERSIONINFO*)&osvi)) {
 		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 		if (!GetVersionEx((OSVERSIONINFO*)&osvi))
@@ -1200,9 +1199,9 @@ BOOL DialogBrowseFile(CString& rstrPath, LPCTSTR pszFilters, LPCTSTR pszDefaultF
 	return TRUE;
 }
 
-void md4str(const uchar* hash, TCHAR* pszHash)
+void md4str(const byte* hash, TCHAR* pszHash)
 {
-	uchar *p = const_cast<uchar *>(hash);
+	byte *p = const_cast<byte *>(hash);
 	for (int i = 0; i < MDX_DIGEST_SIZE; ++i) {
 		*pszHash++ = (TCHAR)base16Chars[*p >> 4];
 		*pszHash++ = (TCHAR)base16Chars[*p++ & 0xf];
@@ -1210,56 +1209,38 @@ void md4str(const uchar* hash, TCHAR* pszHash)
 	*pszHash = _T('\0');
 }
 
-CString md4str(const uchar* hash)
+CString md4str(const byte* hash)
 {
 	TCHAR szHash[MAX_HASHSTR_SIZE];
 	md4str(hash, szHash);
 	return CString(szHash);
 }
 
-void md4strA(const uchar* hash, CHAR* pszHash)
-{
-	uchar *p = const_cast<uchar *>(hash);
-	for (int i = 0; i < MDX_DIGEST_SIZE; i++){
-		*pszHash++ = base16Chars[*p >> 4];
-		*pszHash++ = base16Chars[*p++ & 0xf];
-	}
-	*pszHash = '\0';
-}
-
-CStringA md4strA(const uchar* hash)
-{
-	CHAR szHash[MAX_HASHSTR_SIZE];
-	md4strA(hash, szHash);
-	return CStringA(szHash);
-}
-
-bool strmd4(const char* pszHash, uchar* hash)
+bool strmd4(const char* pszHash, byte* hash)
 {
 	memset(hash, 0, MDX_DIGEST_SIZE);
 	for (int i = 0; i < MDX_DIGEST_SIZE; ++i) {
-		char byte[3] = {pszHash[i*2+0], pszHash[i*2+1], '\0'};
+		char str[3] = {pszHash[i*2+0], pszHash[i*2+1], '\0'};
 
 		UINT b;
-		if (sscanf(byte, "%x", &b) != 1)
+		if (sscanf(str, "%x", &b) != 1)
 			return false;
-		hash[i] = (char)b;
+		hash[i] = (byte)b;
 	}
 	return true;
 }
 
-bool strmd4(const CString& rstr, uchar* hash)
+bool strmd4(const CString& rstr, byte* hash)
 {
 	memset(hash, 0, MDX_DIGEST_SIZE);
 	if (rstr.GetLength() != MDX_DIGEST_SIZE*sizeof(TCHAR))
 		return false;
-	for (int i = 0; i < MDX_DIGEST_SIZE; i++)
-	{
-		char byte[3] = {(char)rstr[i*2+0], (char)rstr[i*2+1], '\0'};
+	for (int i = 0; i < MDX_DIGEST_SIZE; i++) {
+		char str[3] = {(char)rstr[i*2+0], (char)rstr[i*2+1], '\0'};
 		UINT b;
-		if (sscanf(byte, "%x", &b) != 1)
+		if (sscanf(str, "%x", &b) != 1)
 			return false;
-		hash[i] = (char)b;
+		hash[i] = (byte)b;
 	}
 	return true;
 }
@@ -2962,11 +2943,11 @@ bool IsAutoDaylightTimeSetActive()
 	return true; // default to 'Automatically adjust clock for daylight saving changes'
 }
 
-bool AdjustNTFSDaylightFileTime(uint32& ruFileDate, LPCTSTR pszFilePath)
+bool AdjustNTFSDaylightFileTime(time_t& ruFileDate, LPCTSTR pszFilePath)
 {
 	if (!thePrefs.GetAdjustNTFSDaylightFileTime())
 		return false;
-	if (ruFileDate == 0 || ruFileDate == (uint32)-1)
+	if (ruFileDate == 0 || ruFileDate == (time_t)-1)
 		return false;
 
 	// See also KB 129574

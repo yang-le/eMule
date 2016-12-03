@@ -25,8 +25,8 @@ class CToolbarWnd: public CDialogBar
 	DECLARE_DYNAMIC(CToolbarWnd);
 
 public:
-	CToolbarWnd(void);
-	virtual ~CToolbarWnd(void);
+	CToolbarWnd();
+	virtual ~CToolbarWnd();
 
 // Dialog Data
 	enum { IDD = IDD_DOWNLOAD_TOOLBARS };

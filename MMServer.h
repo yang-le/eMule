@@ -31,8 +31,8 @@ class CPartFile;
 class CMMServer
 {
 public:
-	CMMServer(void);
-	~CMMServer(void);
+	CMMServer();
+	~CMMServer();
 	void	Init();
 	void	StopServer();
 	// packet processing

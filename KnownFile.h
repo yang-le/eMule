@@ -49,7 +49,7 @@ public:
 	// last file modification time in (DST corrected, if NTFS) real UTC format
 	// NOTE: this value can *not* be compared with NT's version of the UTC time
 	CTime	GetUtcCFileDate() const										{ return CTime(m_tUtcLastModified); }
-	uint32	GetUtcFileDate() const										{ return m_tUtcLastModified; }
+	time_t	GetUtcFileDate() const										{ return m_tUtcLastModified; }
 
 	// Did we not see this file for a long time so that some information should be purged?
 	bool	ShouldPartiallyPurgeFile() const;
@@ -64,9 +64,9 @@ public:
 	__inline uint16 GetED2KPartCount() const { return m_iED2KPartCount; }
 
 	// file upload priority
-	uint8	GetUpPriority(void) const									{ return m_iUpPriority; }
+	uint8	GetUpPriority() const									{ return m_iUpPriority; }
 	void	SetUpPriority(uint8 iNewUpPriority, bool bSave = true);
-	bool	IsAutoUpPriority(void) const								{ return m_bAutoUpPriority; }
+	bool	IsAutoUpPriority() const								{ return m_bAutoUpPriority; }
 	void	SetAutoUpPriority(bool NewAutoUpPriority)					{ m_bAutoUpPriority = NewAutoUpPriority; }
 	void	UpdateAutoUpPriority();
 
@@ -128,7 +128,7 @@ public:
 
 	// last file modification time in (DST corrected, if NTFS) real UTC format
 	// NOTE: this value can *not* be compared with NT's version of the UTC time
-	uint32	m_tUtcLastModified;
+	time_t	m_tUtcLastModified;
 
 	CStatisticFile statistic;
 	time_t m_nCompleteSourcesTime;

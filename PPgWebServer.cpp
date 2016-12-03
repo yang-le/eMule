@@ -90,7 +90,7 @@ BOOL CPPgWebServer::OnInitDialog()
 	return TRUE;
 }
 
-void CPPgWebServer::LoadSettings(void)
+void CPPgWebServer::LoadSettings()
 {
 	CString strBuffer;
 
@@ -179,7 +179,7 @@ BOOL CPPgWebServer::OnApply()
 	return CPropertyPage::OnApply();
 }
 
-void CPPgWebServer::Localize(void)
+void CPPgWebServer::Localize()
 {
 	if(m_hWnd){
 		SetWindowText(GetResString(IDS_PW_WS));

@@ -13,7 +13,7 @@ public:
 // Dialog Data
 	enum { IDD = IDD_PPG_DISPLAY };
 
-	void Localize(void);
+	void Localize();
 
 protected:
 	enum ESelectFont
@@ -21,7 +21,7 @@ protected:
 		sfServer,
 		sfLog
 	} m_eSelectFont;
-	void LoadSettings(void);
+	void LoadSettings();
 
 	void DrawPreview();		//Cax2 - aqua bar
 	C3DPreviewControl	m_3DPreview;

@@ -12,7 +12,7 @@ public:
 // Dialog Data
 	enum { IDD = IDD_PPG_IRC };
 
-	void Localize(void);
+	void Localize();
 
 protected:
 	bool m_bTimeStamp;
@@ -49,7 +49,7 @@ protected:
 	HTREEITEM m_htiChannelsOnConnect;
 	HTREEITEM m_htiSmileys;
 
-	void LoadSettings(void);
+	void LoadSettings();
 	void UpdateControls();
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support

@@ -148,7 +148,7 @@ static void InitLanguages(const CString& rstrLangDir1, const CString& rstrLangDi
 		TCHAR szLandDLLFileName[_MAX_FNAME];
 		_tsplitpath(ff.GetFileName(), NULL, NULL, szLandDLLFileName, NULL);
 
-		if (s_aLanguages) {
+		if (sizeof s_aLanguages > 0) {
 			for (SLanguage* pLang = s_aLanguages; pLang->lid; ++pLang) {
 				if (_tcsicmp(pLang->pszISOLocale, szLandDLLFileName) == 0) {
 					pLang->bSupported = TRUE;
@@ -221,7 +221,7 @@ static bool CheckLangDLLVersion(const CString& rstrLangDLL)
 
 static bool LoadLangLib(const CString& rstrLangDir1, const CString& rstrLangDir2, LANGID lid)
 {
-	if (s_aLanguages) {
+	if (sizeof s_aLanguages > 0) {
 		for (const SLanguage* pLang = s_aLanguages; pLang->lid; ++pLang) {
 			if (pLang->bSupported && pLang->lid == lid) {
 				FreeLangDLL();

@@ -60,16 +60,16 @@ class CFriend : public Kademlia::CKadClientSearcher
 public:
 	CFriend();
 	explicit CFriend(CUpDownClient* client);
-	CFriend(const uchar* abyUserhash, uint32 dwLastSeen, uint32 dwLastUsedIP, uint16 nLastUsedPort,
+	CFriend(const uchar* abyUserhash, time_t dwLastSeen, uint32 dwLastUsedIP, uint16 nLastUsedPort,
             uint32 dwLastChatted, LPCTSTR pszName, uint32 dwHasHash);
 	~CFriend();
 
 	uchar	m_abyUserhash[16];
 
-	uint32	m_dwLastSeen;
+	time_t	m_dwLastSeen;
 	uint32	m_dwLastUsedIP;
 	uint16	m_nLastUsedPort;
-	uint32	m_dwLastChatted;
+	time_t	m_dwLastChatted;
 	CString m_strName;
 
     CUpDownClient*	GetLinkedClient(bool bValidCheck = false) const;
@@ -103,4 +103,5 @@ private:
 	EFriendConnectState			m_FriendConnectState;
 	CTypedPtrList<CPtrList, CFriendConnectionListener*> m_liConnectionReport;
 	CUpDownClient*				m_LinkedClient;
+	void	init();
 };

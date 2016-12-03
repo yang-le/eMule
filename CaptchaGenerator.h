@@ -24,7 +24,7 @@ class CCaptchaGenerator
 {
 public:
 	explicit CCaptchaGenerator(uint32 nLetterCount = 4);
-	~CCaptchaGenerator(void);
+	~CCaptchaGenerator();
 
 	void	ReGenerateCaptcha(uint32 nLetterCount = 4);
 	void	Clear();

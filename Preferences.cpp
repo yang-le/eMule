@@ -2717,17 +2717,17 @@ void CPreferences::UpdateLastVC()
 
 void CPreferences::SetWSPass(const CString& strNewPass)
 {
-	m_strWebPassword = MD5Sum(strNewPass).GetHash();
+	m_strWebPassword = MD5Sum(strNewPass).GetHashString();
 }
 
 void CPreferences::SetWSLowPass(const CString& strNewPass)
 {
-	m_strWebLowPassword = MD5Sum(strNewPass).GetHash();
+	m_strWebLowPassword = MD5Sum(strNewPass).GetHashString();
 }
 
 void CPreferences::SetMMPass(const CString& strNewPass)
 {
-	m_strMMPassword = MD5Sum(strNewPass).GetHash();
+	m_strMMPassword = MD5Sum(strNewPass).GetHashString();
 }
 
 void CPreferences::SetMaxUpload(UINT in)

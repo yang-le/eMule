@@ -121,7 +121,7 @@ void CCommentDialogLst::OnDestroy()
 	}
 }
 
-void CCommentDialogLst::Localize(void)
+void CCommentDialogLst::Localize()
 {
 	GetDlgItem(IDC_SEARCHKAD)->SetWindowText(GetResString(IDS_SEARCHKAD));
 	GetDlgItem(IDC_EDITCOMMENTFILTER)->SetWindowText(GetResString(IDS_EDITSPAMFILTER));

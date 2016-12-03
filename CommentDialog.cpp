@@ -195,7 +195,7 @@ BOOL CCommentDialog::OnApply()
 	return CResizablePage::OnApply();
 }
 
-void CCommentDialog::Localize(void)
+void CCommentDialog::Localize()
 {
 	GetDlgItem(IDC_RESET)->SetWindowText(GetResString(IDS_PW_RESET));
 

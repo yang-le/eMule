@@ -84,7 +84,7 @@ namespace {
 
 IMPLEMENT_DYNAMIC(CEMSocket, CEncryptedStreamSocket)
 
-CEMSocket::CEMSocket(void)
+CEMSocket::CEMSocket()
 	: lastFinishedStandard(0), pendingHeader()
 {
 	byConnected = ES_NOTCONNECTED;
@@ -288,12 +288,10 @@ void CEMSocket::OnReceive(int nErrorCode){
 	}
 
 	// Check current connection state
-	if(byConnected == ES_DISCONNECTED){
+	if (byConnected == ES_DISCONNECTED)
 		return;
-	}
-	else {
-		byConnected = ES_CONNECTED; // ES_DISCONNECTED, ES_NOTCONNECTED, ES_CONNECTED
-	}
+
+	byConnected = ES_CONNECTED; // ES_DISCONNECTED, ES_NOTCONNECTED, ES_CONNECTED
 
     // CPU load improvement
     if (downloadLimitEnable && downloadLimit == 0){
@@ -305,7 +303,7 @@ void CEMSocket::OnReceive(int nErrorCode){
     }
 
 	// Remark: an overflow can not occur here
-	uint32 readMax = (sizeof GlobalReadBuffer) - pendingHeaderSize;
+	uint32 readMax = sizeof GlobalReadBuffer - pendingHeaderSize;
 	if (downloadLimitEnable && readMax > downloadLimit) {
 		readMax = downloadLimit;
 	}
@@ -1176,15 +1174,16 @@ int CEMSocket::OnLayerCallback(const CAsyncSocketExLayer *pLayer, int nType, int
  * This method keeps in standard queue only those packets that must be sent (rest of split packet), and removes everything
  * after it. The method doesn't touch the control packet queue.
  */
-void CEMSocket::TruncateQueues() {
-    sendLocker.Lock();
+void CEMSocket::TruncateQueues()
+{
+	sendLocker.Lock();
 
-    // Clear the standard queue totally
-    // Please note! There may still be a standardpacket in the sendbuffer variable!
+	// Clear the standard queue totally
+	// Please note! There may still be a standardpacket in the sendbuffer variable!
 	while (!standardpacket_queue.IsEmpty())
 		delete standardpacket_queue.RemoveHead().packet;
 
-    sendLocker.Unlock();
+	sendLocker.Unlock();
 }
 
 #ifdef _DEBUG

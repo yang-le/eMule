@@ -25,10 +25,10 @@ class CCollectionFile : public CAbstractFile
 	DECLARE_DYNAMIC(CCollectionFile)
 
 public:
-	explicit CCollectionFile(void);
+	explicit CCollectionFile();
 	explicit CCollectionFile(CFileDataIO* in_data);
 	explicit CCollectionFile(CAbstractFile* copyfrom);
-	virtual ~CCollectionFile(void);
+	virtual ~CCollectionFile();
 
 	bool	InitFromLink(const CString& sLink);
 	void	WriteCollectionInfo(CFileDataIO* out_data);

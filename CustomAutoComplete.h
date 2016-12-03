@@ -42,7 +42,7 @@ public:
 
 	bool Clear();
 	bool Disable();
-	bool Enable(void);
+	bool Enable();
 
 	bool LoadList(LPCTSTR pszFileName);
 	bool SaveList(LPCTSTR pszFileName);

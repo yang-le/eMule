@@ -100,7 +100,7 @@
 #define MAX_IP_STATUS IP_GENERAL_FAILURE
 #define IP_PENDING (IP_STATUS_BASE + 255)
 
-typedef HANDLE WINAPI IcmpCreateFile(VOID); /* INVALID_HANDLE_VALUE on error */
+typedef HANDLE WINAPI IcmpCreateFile(); /* INVALID_HANDLE_VALUE on error */
 typedef BOOL WINAPI IcmpCloseHandle(HANDLE IcmpHandle); /* FALSE on error */
 
 /* Note 2: For the most part, you can refer to RFC 791 for detials
