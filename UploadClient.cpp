@@ -543,7 +543,7 @@ uint32 CUpDownClient::UpdateUploadingStatisticsData()
 		m_lastRefreshedULDisplay = curTick;
 	}
 
-	return (UINT)(sentBytesCompleteFile + sentBytesPartFile);
+	return (uint32)(sentBytesCompleteFile + sentBytesPartFile);
 }
 
 void CUpDownClient::SendOutOfPartReqsAndAddToWaitingQueue()
@@ -552,7 +552,7 @@ void CUpDownClient::SendOutOfPartReqsAndAddToWaitingQueue()
 	//The main reason for this is that if we put the client back on queue and it goes
 	//back to the upload before the socket times out... We get a situation where the
 	//downloader thinks it already sent the requested blocks and the uploader thinks
-	//the downloader didn't send any request blocks. Then the connection times out..
+	//the downloader didn't send any block requests. Then the connection times out..
 	//I did some tests with eDonkey also and it seems to work well with them also..
 	if (thePrefs.GetDebugClientTCPLevel() > 0)
 		DebugSend("OP__OutOfPartReqs", this);
@@ -566,7 +566,8 @@ void CUpDownClient::SendOutOfPartReqsAndAddToWaitingQueue()
 /**
  * See description for CEMSocket::TruncateQueues().
  */
-void CUpDownClient::FlushSendBlocks(){ // call this when you stop upload, or the socket might be not able to send
+void CUpDownClient::FlushSendBlocks() // call this when you stop upload, or the socket might be not able to send
+{
 	if (socket) //socket may be NULL...
 		socket->TruncateQueues();
 }
@@ -740,18 +741,16 @@ uint32 CUpDownClient::GetWaitStartTime() const
 	return dwResult;
 }
 
-void CUpDownClient::SetWaitStartTime(){
-	if (credits == NULL){
-		return;
-	}
-	credits->SetSecWaitStartTime(GetIP());
+void CUpDownClient::SetWaitStartTime()
+{
+	if (credits != NULL)
+		credits->SetSecWaitStartTime(GetIP());
 }
 
-void CUpDownClient::ClearWaitStartTime(){
-	if (credits == NULL){
-		return;
-	}
-	credits->ClearWaitStartTime();
+void CUpDownClient::ClearWaitStartTime()
+{
+	if (credits != NULL)
+		credits->ClearWaitStartTime();
 }
 
 bool CUpDownClient::GetFriendSlot() const
@@ -769,21 +768,18 @@ bool CUpDownClient::GetFriendSlot() const
 
 CEMSocket* CUpDownClient::GetFileUploadSocket(bool bLog)
 {
-    if (m_pPCUpSocket && (IsUploadingToPeerCache() || m_ePeerCacheUpState == PCUS_WAIT_CACHE_REPLY))
-	{
-        if (bLog && thePrefs.GetVerbose())
-            AddDebugLogLine(false, _T("%s got peercache socket."), (LPCTSTR)DbgGetClientInfo());
-        return m_pPCUpSocket;
-    }
-	else
-	{
-        if (bLog && thePrefs.GetVerbose())
-            AddDebugLogLine(false, _T("%s got normal socket."), (LPCTSTR)DbgGetClientInfo());
-        return socket;
-    }
+	if (m_pPCUpSocket && (IsUploadingToPeerCache() || m_ePeerCacheUpState == PCUS_WAIT_CACHE_REPLY)) {
+		if (bLog && thePrefs.GetVerbose())
+			AddDebugLogLine(false, _T("%s got peercache socket."), (LPCTSTR)DbgGetClientInfo());
+		return m_pPCUpSocket;
+	}
+	if (bLog && thePrefs.GetVerbose())
+		AddDebugLogLine(false, _T("%s got normal socket."), (LPCTSTR)DbgGetClientInfo());
+	return socket;
 }
 
-void CUpDownClient::SetCollectionUploadSlot(bool bValue){
-	ASSERT( !IsDownloading() || bValue == m_bCollectionUploadSlot );
+void CUpDownClient::SetCollectionUploadSlot(bool bValue)
+{
+	ASSERT(!IsDownloading() || bValue == m_bCollectionUploadSlot);
 	m_bCollectionUploadSlot = bValue;
 }

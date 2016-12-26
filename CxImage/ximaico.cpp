@@ -193,8 +193,7 @@ bool CxImageICO::Decode(CxFile *hFile)
 							// find a color index, which is not used in the image
 							// it is almost sure to find one, bcs. nobody uses all possible colors for an icon
 
-							uint8_t colorsUsed[256];
-							memset(colorsUsed, 0, sizeof(colorsUsed));
+							uint8_t colorsUsed[256] = {};
 
 							for (y = 0; y < head.biHeight; y++){
 								for (x = 0; x < head.biWidth; x++){

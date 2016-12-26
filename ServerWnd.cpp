@@ -127,7 +127,7 @@ BOOL CServerWnd::OnInitDialog()
 		servermsgbox->ApplySkin();
 		servermsgbox->SetTitle(GetResString(IDS_SV_SERVERINFO));
 
-		servermsgbox->AppendText(_T("eMule v") + theApp.m_strCurVersionLong + _T("\n"));
+		servermsgbox->AppendText(_T("eMule v") + theApp.m_strCurVersionLong + _T('\n'));
 		// MOD Note: Do not remove this part - Merkur
 		m_strClickNewVersion.AppendFormat(_T("%s %s %s"), (LPCTSTR)GetResString(IDS_EMULEW), (LPCTSTR)GetResString(IDS_EMULEW3), (LPCTSTR)GetResString(IDS_EMULEW2));
 		servermsgbox->AppendHyperLink(_T(""), _T(""), m_strClickNewVersion, _T(""));

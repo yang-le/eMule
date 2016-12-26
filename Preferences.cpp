@@ -511,7 +511,7 @@ LPCTSTR CPreferences::GetConfigFile()
 
 void CPreferences::Init()
 {
-	srand((uint32)time(0)); // we need random numbers sometimes
+	srand((unsigned int)time(0)); // we need random numbers sometimes
 
 	prefsExt = new Preferences_Ext_Struct;
 	memset(prefsExt, 0, sizeof *prefsExt);
@@ -3193,7 +3193,7 @@ CString CPreferences::GetDefaultDirectory(EDefaultDirectory eDirectory, bool bCr
 
 		/*CString strDebug;
 		for (int i = 0; i < 12; i++)
-			strDebug += m_astrDefaultDirs[i] + _T("\n");
+			strDebug += m_astrDefaultDirs[i] + _T('\n');
 		AfxMessageBox(strDebug, MB_ICONINFORMATION);*/
 	}
 	if (bCreate && !m_abDefaultDirsCreated[eDirectory]){

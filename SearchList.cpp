@@ -465,7 +465,7 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 		}
 		if (!bFound){
 			if (!strNameWithoutKeyword.IsEmpty())
-				strNameWithoutKeyword += _T(" ");
+				strNameWithoutKeyword += _T(' ');
 			strNameWithoutKeyword += strToken;
 		}
 		strToken = strName.Tokenize(_T(".[]()!-'_ "), nPos);

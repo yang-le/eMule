@@ -32,9 +32,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // CFileIdentifierBase
 CFileIdentifierBase::CFileIdentifierBase()
+	: m_abyMD4Hash(), m_bHasValidAICHHash(false)
 {
-	md4clr(m_abyMD4Hash);
-	m_bHasValidAICHHash = false;
 }
 
 CFileIdentifierBase::CFileIdentifierBase(const CFileIdentifierBase& rFileIdentifier)

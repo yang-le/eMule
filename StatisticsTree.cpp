@@ -370,7 +370,7 @@ CString CStatisticsTree::GetHTML(bool onlyVisible, HTREEITEM theItem, int theIte
 		for (int i = 0; i < theItemLevel; i++)
 			strBuffer += _T("&nbsp;&nbsp;&nbsp;");
 		if (theItemLevel == 0)
-			strBuffer.Append(_T("\n"));
+			strBuffer += _T('\n');
 		strBuffer += strItem + _T("<br />");
 		if (ItemHasChildren(hCurrent) && (!onlyVisible || IsExpanded(hCurrent)))
 			strBuffer += GetHTML(onlyVisible, GetChildItem(hCurrent), theItemLevel+1, false);
@@ -527,17 +527,17 @@ CString CStatisticsTree::GetHTMLForExport(HTREEITEM theItem, int theItemLevel, b
 			if (IsExpanded(hCurrent))
 			{
 				strChild = _T("visible");
-				strDiv = _T("<div id=\"T") + strJ + _T("\" style=\"margin-left:18px\">");
+				strDiv.Format(_T("<div id=\"T%s\" style=\"margin-left:18px\">"), (LPCTSTR)strJ);
 			}
 			else
 			{
 				strChild = _T("hidden");
-				strDiv = _T("<div id=\"T") + strJ + _T("\" style=\"margin-left:18px; visibility:hidden; position:absolute\">");
+				strDiv.Format(_T("<div id=\"T%s\" style=\"margin-left:18px; visibility:hidden; position:absolute\">"), (LPCTSTR)strJ);
 			}
-			strDivStart = _T("<a href=\"javascript:togglevisible('") + strJ + _T("')\">");
+			strDivStart.Format(_T("<a href=\"javascript:togglevisible('%s')\">"), (LPCTSTR)strJ);
 			strDivEnd = _T("</div>");
 			strDivA = _T("</a>");
-			strName = _T("name=\"I") + strJ + _T('\"');
+			strName.Format(_T("name=\"I%s\""), (LPCTSTR)strJ);
 		}
 		else
 		{
@@ -547,12 +547,12 @@ CString CStatisticsTree::GetHTMLForExport(HTREEITEM theItem, int theItemLevel, b
 			strDivEnd.Empty();
 			strName.Empty();
 		}
-		strBuffer += _T("\n");
+		strBuffer += _T('\n');
 		for (int i = 0; i < theItemLevel; i++)
-			strBuffer += _T("\t");
+			strBuffer += _T('\t');
 
 		strItem += strDivStart;
-		strItem += _T("<img ") + strName + _T("src=\"stats_") + strChild + _T(".gif\" align=\"middle\">&nbsp;");
+		strItem.AppendFormat(_T("<img %ssrc=\"stats_%s.gif\" align=\"middle\">&nbsp;"), (LPCTSTR)strName, (LPCTSTR)strChild);
 		strItem += strDivA;
 
 		if (GetItemImage(hCurrent, nImage, nSelectedImage))
@@ -560,23 +560,24 @@ CString CStatisticsTree::GetHTMLForExport(HTREEITEM theItem, int theItemLevel, b
 		else
 			strImage.Format(_T("%u"),0);
 
-		strItem += _T("<img src=\"stats_") + strImage + _T(".gif\" align=\"middle\">&nbsp;");
+		strItem.AppendFormat(_T("<img src=\"stats_%s.gif\" align=\"middle\">&nbsp;"), (LPCTSTR)strImage);
 
 		if (IsBold(hCurrent))
-			strItem += _T("<b>") + GetItemText(hCurrent) + _T("</b>");
+			strItem.AppendFormat(_T("<b>%s</b>"), (LPCTSTR)GetItemText(hCurrent));
 		else
 			strItem += GetItemText(hCurrent);
 
-		if (theItemLevel==0) strBuffer.Append(_T("\n"));
+		if (theItemLevel==0)
+			strBuffer += _T('\n');
 		strBuffer += strItem + _T("<br />");
 
 		if (ItemHasChildren(hCurrent))
 		{
-			strTab = _T("\n");
+			strTab = _T('\n');
 			for (int i = 0; i < theItemLevel; i++)
-				strTab += _T("\t");
+				strTab += _T('\t');
 			strBuffer += strTab + strDiv;
-			strBuffer += strTab + _T("\t") + GetHTMLForExport(GetChildItem(hCurrent), theItemLevel+1, false);
+			strBuffer += strTab + _T('\t') + GetHTMLForExport(GetChildItem(hCurrent), theItemLevel+1, false);
 			strBuffer += strTab + strDivEnd;
 		}
 		hCurrent = GetNextItem(hCurrent, TVGN_NEXT);
@@ -656,8 +657,8 @@ void CStatisticsTree::ExportHTML()
 			_T("stats_14.gif"), _T("stats_15.gif"), _T("stats_16.gif"), _T("stats_17.gif"),
 			_T("stats_hidden.gif"), _T("stats_space.gif"), _T("stats_visible.gif")
 		};
-		CString		strDst = saveAsDlg.GetPathName().Left(saveAsDlg.GetPathName().GetLength() - saveAsDlg.GetFileName().GetLength());// EC - what if directory name == filename? this should fix this
-		CString		strSrc = thePrefs.GetMuleDirectory(EMULE_WEBSERVERDIR);
+		CString strDst = saveAsDlg.GetPathName().Left(saveAsDlg.GetPathName().GetLength() - saveAsDlg.GetFileName().GetLength());// EC - what if directory name == filename? this should fix this
+		CString strSrc = thePrefs.GetMuleDirectory(EMULE_WEBSERVERDIR);
 
 		for (unsigned ui = 0; ui < ARRSIZE(s_apcFileNames); ui++)
 			::CopyFile(strSrc + s_apcFileNames[ui], strDst + s_apcFileNames[ui], false);
@@ -737,9 +738,9 @@ CString CStatisticsTree::GetExpandedMask(HTREEITEM theItem)
 	{
 		if (ItemHasChildren(hCurrent) && IsBold(hCurrent)) {
 			if (IsExpanded(hCurrent))
-				tempMask += _T("1");
+				tempMask += _T('1');
 			if (!IsExpanded(hCurrent))
-				tempMask += _T("0");
+				tempMask += _T('0');
 			tempMask += GetExpandedMask(GetChildItem(hCurrent));
 		}
 		hCurrent = GetNextItem(hCurrent, TVGN_NEXT);
@@ -751,7 +752,7 @@ CString CStatisticsTree::GetExpandedMask(HTREEITEM theItem)
 // collapsed state of the tree items.
 int CStatisticsTree::ApplyExpandedMask(const CString& theMask, HTREEITEM theItem, int theStringIndex)
 {
-	HTREEITEM	hCurrent;
+	HTREEITEM hCurrent;
 
 	if (theItem == NULL) {
 		hCurrent = GetRootItem();

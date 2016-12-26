@@ -287,7 +287,7 @@ void CreateNetworkInfo(CRichEditCtrlX& rCtrl, CHARFORMAT& rcfDef, CHARFORMAT& rc
 		if (Kademlia::CKademlia::IsRunningInLANMode())
 			rCtrl << _T(" (") << GetResString(IDS_LANMODE) << _T(")");
 		rCtrl << _T("\r\n");
-		rCtrl << _T("UDP ") + GetResString(IDS_STATUS) << _T(":\t");
+		rCtrl << _T("UDP ") << GetResString(IDS_STATUS) << _T(":\t");
 		if(Kademlia::CUDPFirewallTester::IsFirewalledUDP(true))
 			rCtrl << GetResString(IDS_FIREWALLED);
 		else if (Kademlia::CUDPFirewallTester::IsVerified())
@@ -295,7 +295,7 @@ void CreateNetworkInfo(CRichEditCtrlX& rCtrl, CHARFORMAT& rcfDef, CHARFORMAT& rc
 		else{
 			CString strTmp = GetResString(IDS_UNVERIFIED);
 			strTmp.MakeLower();
-			rCtrl << GetResString(IDS_KADOPEN) + _T(" (") + strTmp + _T(")");
+			rCtrl << GetResString(IDS_KADOPEN) << _T(" (") << strTmp << _T(")");
 		}
 		rCtrl << _T("\r\n");
 

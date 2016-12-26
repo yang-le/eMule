@@ -479,7 +479,7 @@ CServerConnect::CServerConnect()
 	: pendingConnects(0), m_curuser(0), m_bTryObfuscated(false)
 {
 	connectedsocket = NULL;
-	max_simcons = (thePrefs.IsSafeServerConnectEnabled()) ? 1 : 2;
+	max_simcons = thePrefs.IsSafeServerConnectEnabled() ? 1 : 2;
 	connecting = false;
 	connected = false;
 	clientid = 0;

@@ -133,7 +133,7 @@ Packet::Packet(const CStringA& str, uint8 ucProtocol, uint8 ucOpcode)
 	size = str.GetLength();
 	completebuffer = new char[size+10];
 	pBuffer = completebuffer+6;
-	memcpy(pBuffer,(LPCSTR)str,size);
+	memcpy(pBuffer, (LPCSTR)str, size);
 	opcode = ucOpcode;
 	prot = ucProtocol;
 }
@@ -814,10 +814,10 @@ CString CTag::GetFullInfo(CString (*pfnDbgGetFileMetaTagName)(UINT uMetaTagID)) 
 		else
 			strTag.Format(_T("Tag0x%02X"), m_uName);
 	}
-	strTag += _T("=");
+	strTag += _T('=');
 	if (m_uType == TAGTYPE_STRING)
 	{
-		strTag.Format(_T("\"%s\""), (LPCTSTR)*m_pstrVal);
+		strTag.AppendFormat(_T("\"%s\""), (LPCTSTR)*m_pstrVal);
 	}
 	else if (m_uType >= TAGTYPE_STR1 && m_uType <= TAGTYPE_STR16)
 	{

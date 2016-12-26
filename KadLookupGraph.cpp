@@ -623,7 +623,7 @@ void CKadLookupGraph::UpdateToolTip()
 CString CKadLookupGraph::GetCurrentLookupTitle() const
 {
 	if (m_pLookupHistory == NULL)
-		return _T("");
+		return CString();
 
 	if (!m_pLookupHistory->GetGUIName().IsEmpty())
 		return _T('\"') + m_pLookupHistory->GetGUIName() + _T('\"');

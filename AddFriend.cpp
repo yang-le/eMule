@@ -107,11 +107,11 @@ void CAddFriend::Localize()
 
 	GetDlgItem(IDC_STATIC31)->SetWindowText(GetResString(IDS_CD_UNAME));
 	GetDlgItem(IDC_STATIC32)->SetWindowText(GetResString(IDS_CD_UHASH));
-	GetDlgItem(IDC_STATIC34)->SetWindowText(m_pShowFriend ? GetResString(IDS_USERID)+_T(":") : GetResString(IDS_CD_UIP));
-	GetDlgItem(IDC_STATIC35)->SetWindowText(GetResString(IDS_PORT)+_T(":"));
-	SetDlgItemText(IDC_LAST_SEEN_LABEL, GetResString(IDS_LASTSEEN)+_T(":"));
-	SetDlgItemText(IDC_AFKADIDLABEL, GetResString(IDS_KADID)+_T(":"));
-	//SetDlgItemText(IDC_LAST_CHATTED_LABEL, GetResString(IDS_LASTCHATTED)+_T(":"));
+	GetDlgItem(IDC_STATIC34)->SetWindowText(m_pShowFriend ? GetResString(IDS_USERID)+_T(':') : GetResString(IDS_CD_UIP));
+	GetDlgItem(IDC_STATIC35)->SetWindowText(GetResString(IDS_PORT)+_T(':'));
+	SetDlgItemText(IDC_LAST_SEEN_LABEL, GetResString(IDS_LASTSEEN)+_T(':'));
+	SetDlgItemText(IDC_AFKADIDLABEL, GetResString(IDS_KADID)+_T(':'));
+	//SetDlgItemText(IDC_LAST_CHATTED_LABEL, GetResString(IDS_LASTCHATTED)+_T(':'));
 }
 
 void CAddFriend::OnAddBtn()

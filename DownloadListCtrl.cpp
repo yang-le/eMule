@@ -1617,7 +1617,7 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 								validdelete = true;
 								cFiles++;
 								if (cFiles < iMaxDisplayFiles)
-									fileList.Append(_T("\n") + CString(cur_file->GetFileName()));
+									fileList += _T('\n') + cur_file->GetFileName();
 								else if (cFiles == iMaxDisplayFiles && pos != NULL)
 									fileList.Append(_T("\n..."));
 							} else if (cur_file->GetStatus() == PS_COMPLETE)
@@ -2361,7 +2361,7 @@ void CDownloadListCtrl::CreateMenues()
 	m_PrioMenu.AppendMenu(MF_STRING, MP_PRIONORMAL, GetResString(IDS_PRIONORMAL));
 	m_PrioMenu.AppendMenu(MF_STRING, MP_PRIOHIGH, GetResString(IDS_PRIOHIGH));
 	m_PrioMenu.AppendMenu(MF_STRING, MP_PRIOAUTO, GetResString(IDS_PRIOAUTO));
-	m_FileMenu.AppendMenu(MF_STRING|MF_POPUP, (UINT_PTR)m_PrioMenu.m_hMenu, GetResString(IDS_PRIORITY) + _T(" (") + GetResString(IDS_DOWNLOAD) + _T(")"), _T("FILEPRIORITY"));
+	m_FileMenu.AppendMenu(MF_STRING|MF_POPUP, (UINT_PTR)m_PrioMenu.m_hMenu, GetResString(IDS_PRIORITY) + _T(" (") + GetResString(IDS_DOWNLOAD) + _T(')'), _T("FILEPRIORITY"));
 
 	// Add file commands
 	//

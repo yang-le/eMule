@@ -281,7 +281,7 @@ void CKademliaWnd::OnBnClickedBootstrapbutton()
 			return;
 
 		if (m_pacONBSIPs && m_pacONBSIPs->IsBound())
-			m_pacONBSIPs->AddItem(strIP + _T(":") + strPort, 0);
+			m_pacONBSIPs->AddItem(strIP + _T(':') + strPort, 0);
 		if( !Kademlia::CKademlia::IsRunning() )
 		{
 			Kademlia::CKademlia::Start();
@@ -317,9 +317,7 @@ void CKademliaWnd::OnBnClickedFirewallcheckbutton()
 
 void CKademliaWnd::OnBnConnect()
 {
-	if (Kademlia::CKademlia::IsConnected())
-		Kademlia::CKademlia::Stop();
-	else if (Kademlia::CKademlia::IsRunning())
+	if (Kademlia::CKademlia::IsConnected() || Kademlia::CKademlia::IsRunning())
 		Kademlia::CKademlia::Stop();
 	else
 		Kademlia::CKademlia::Start();
@@ -356,8 +354,8 @@ void CKademliaWnd::Localize()
 {
 	m_ctrlBootstrap.SetWindowText(GetResString(IDS_BOOTSTRAP));
 	GetDlgItem(IDC_BOOTSTRAPBUTTON)->SetWindowText(GetResString(IDS_BOOTSTRAP));
-	GetDlgItem(IDC_SSTATIC4)->SetWindowText(GetResString(IDS_SV_ADDRESS) + _T(":"));
-	GetDlgItem(IDC_SSTATIC7)->SetWindowText(GetResString(IDS_SV_PORT) + _T(":"));
+	GetDlgItem(IDC_SSTATIC4)->SetWindowText(GetResString(IDS_SV_ADDRESS) + _T(':'));
+	GetDlgItem(IDC_SSTATIC7)->SetWindowText(GetResString(IDS_SV_PORT) + _T(':'));
 	GetDlgItem(IDC_NODESDATLABEL)->SetWindowText(GetResString(IDS_BOOTSRAPNODESDAT));
 	GetDlgItem(IDC_FIREWALLCHECKBUTTON)->SetWindowText(GetResString(IDS_KAD_RECHECKFW));
 
@@ -376,16 +374,17 @@ void CKademliaWnd::Localize()
 
 void CKademliaWnd::UpdateControlsState()
 {
-	CString strLabel;
+	UINT sid;
 	if (Kademlia::CKademlia::IsConnected())
-		strLabel = GetResString(IDS_MAIN_BTN_DISCONNECT);
+		sid = IDS_MAIN_BTN_DISCONNECT;
 	else if (Kademlia::CKademlia::IsRunning())
-		strLabel = GetResString(IDS_MAIN_BTN_CANCEL);
+		sid = IDS_MAIN_BTN_CANCEL;
 	else
-		strLabel = GetResString(IDS_MAIN_BTN_CONNECT);
+		sid = IDS_MAIN_BTN_CONNECT;
+	CString strLabel(GetResString(sid));
 	strLabel.Remove(_T('&'));
 	GetDlgItem(IDC_KADCONNECT)->SetWindowText(strLabel);
-	GetDlgItem(IDC_KADCONNECT)->EnableWindow(theApp.emuledlg->IsRunning());
+	GetDlgItem(IDC_KADCONNECT)->EnableWindow(theApp.emuledlg->IsRunning() && thePrefs.GetNetworkKademlia());
 	GetDlgItem(IDC_FIREWALLCHECKBUTTON)->EnableWindow(Kademlia::CKademlia::IsConnected());
 
 	CString strBootstrapIP;
@@ -396,7 +395,8 @@ void CKademliaWnd::UpdateControlsState()
 	GetDlgItemText(IDC_BOOTSTRAPURL, strBootstrapUrl);
 
 	GetDlgItem(IDC_BOOTSTRAPBUTTON)->EnableWindow(
-		!Kademlia::CKademlia::IsConnected()
+		thePrefs.GetNetworkKademlia()
+		&& !Kademlia::CKademlia::IsConnected()
 		&& (  (IsDlgButtonChecked(IDC_RADIP)>0 && !strBootstrapIP.IsEmpty()
 				&& (strBootstrapIP.Find(_T(':')) != -1 || !strBootstrapPort.IsEmpty()))
 		    || IsDlgButtonChecked(IDC_RADCLIENTS) != 0

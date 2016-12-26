@@ -109,7 +109,7 @@ namespace Kademlia
 			uint32 m_uKadPacketSent; //Used for gui reasons.. May not be needed later..
 			uint32 m_uTotalLoad;
 			uint32 m_uTotalLoadResponses;
-			uint32 m_uLastResponse;
+			time_t m_uLastResponse;
 			uint32 m_uSearchID;
 			uint32 m_uSearchTermsDataSize;
 			LPBYTE m_pucSearchTermsData;

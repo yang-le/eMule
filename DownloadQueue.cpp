@@ -335,7 +335,7 @@ void CDownloadQueue::AddDownload(CPartFile* newfile,bool paused) {
 	theApp.emuledlg->transferwnd->GetDownloadList()->AddFile(newfile);
 	AddLogLine(true, GetResString(IDS_NEWDOWNLOAD), (LPCTSTR)newfile->GetFileName());
 	CString msgTemp;
-	msgTemp.Format(GetResString(IDS_NEWDOWNLOAD) + _T("\n"), (LPCTSTR)newfile->GetFileName());
+	msgTemp.Format(GetResString(IDS_NEWDOWNLOAD) + _T('\n'), (LPCTSTR)newfile->GetFileName());
 	theApp.emuledlg->ShowNotifier(msgTemp, TBN_DOWNLOADADDED);
 	ExportPartMetFilesOverview();
 }
@@ -1375,7 +1375,7 @@ void CDownloadQueue::SetAutoCat(CPartFile* newfile)
 			for (CString cmpExt = catExt.Tokenize(_T("|"), curPos); !cmpExt.IsEmpty(); cmpExt = catExt.Tokenize(_T("|"), curPos)) {
 				// HoaX_69: Allow wildcards in autocat string
 				//  thanks to: bluecow, khaos and SlugFiller
-				if (cmpExt.Find(_T("*")) != -1 || cmpExt.Find(_T("?")) != -1) {
+				if (cmpExt.Find(_T('*')) != -1 || cmpExt.Find(_T('?')) != -1) {
 					// Use wildcards
 					if (PathMatchSpec(fullname, cmpExt)) {
 						newfile->SetCategory(ix);

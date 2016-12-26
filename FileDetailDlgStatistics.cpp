@@ -279,14 +279,14 @@ void CFileDetailDlgStatistics::Localize()
 	GetDlgItem(IDC_STATISTICS_GB_TOTAL)->SetWindowText(GetResString(IDS_SF_TOTAL));
 	GetDlgItem(IDC_FSTATIC6)->SetWindowText(GetResString(IDS_SF_TRANS));
 	GetDlgItem(IDC_FSTATIC5)->SetWindowText(GetResString(IDS_SF_ACCEPTED));
-	GetDlgItem(IDC_FSTATIC4)->SetWindowText(GetResString(IDS_SF_REQUESTS)+_T(":"));
+	GetDlgItem(IDC_FSTATIC4)->SetWindowText(GetResString(IDS_SF_REQUESTS)+_T(':'));
 	GetDlgItem(IDC_FSTATIC9)->SetWindowText(GetResString(IDS_SF_TRANS));
 	GetDlgItem(IDC_FSTATIC8)->SetWindowText(GetResString(IDS_SF_ACCEPTED));
-	GetDlgItem(IDC_FSTATIC7)->SetWindowText(GetResString(IDS_SF_REQUESTS)+_T(":"));
-	GetDlgItem(IDC_FS_POPULARITY_LBL)->SetWindowText(GetResString(IDS_POPULARITY) + _T(":"));
-	GetDlgItem(IDC_FS_POPULARITY2_LBL)->SetWindowText(GetResString(IDS_POPULARITY) + _T(":"));
-	GetDlgItem(IDC_FS_ONQUEUE_LBL)->SetWindowText(GetResString(IDS_ONQUEUE) + _T(":"));
-	GetDlgItem(IDC_FS_UPLOADING_LBL)->SetWindowText(GetResString(IDS_UPLOADING) + _T(":"));
+	GetDlgItem(IDC_FSTATIC7)->SetWindowText(GetResString(IDS_SF_REQUESTS)+_T(':'));
+	GetDlgItem(IDC_FS_POPULARITY_LBL)->SetWindowText(GetResString(IDS_POPULARITY) + _T(':'));
+	GetDlgItem(IDC_FS_POPULARITY2_LBL)->SetWindowText(GetResString(IDS_POPULARITY) + _T(':'));
+	GetDlgItem(IDC_FS_ONQUEUE_LBL)->SetWindowText(GetResString(IDS_ONQUEUE) + _T(':'));
+	GetDlgItem(IDC_FS_UPLOADING_LBL)->SetWindowText(GetResString(IDS_UPLOADING) + _T(':'));
 }
 
 void CFileDetailDlgStatistics::OnSysColorChange()

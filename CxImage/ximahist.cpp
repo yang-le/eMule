@@ -84,8 +84,7 @@ bool CxImage::HistogramStretch(int32_t method, double threshold)
 
   if ((head.biBitCount==8) && IsGrayScale()){
 
-	double p[256];
-	memset(p,  0, 256*sizeof(double));
+	double p[256] = {};
 	for (y=0; y<head.biHeight; y++)
 	{
 		info.nProgress = (int32_t)(y*dbScaler);
@@ -123,9 +122,8 @@ bool CxImage::HistogramStretch(int32_t method, double threshold)
   } else {
 	switch(method){
 	case 1:
-	  { // <nipper>
-		double p[256];
-		memset(p,  0, 256*sizeof(double));
+	{ // <nipper>
+		double p[256] = {};
 		for (y=0; y<head.biHeight; y++)
 		{
 			info.nProgress = (int32_t)(y*dbScaler);
@@ -174,12 +172,9 @@ bool CxImage::HistogramStretch(int32_t method, double threshold)
 		break;
 	case 2:
 	  { // <nipper>
-		double pR[256];
-		memset(pR,  0, 256*sizeof(double));
-		double pG[256];
-		memset(pG,  0, 256*sizeof(double));
-		double pB[256];
-		memset(pB,  0, 256*sizeof(double));
+		double pR[256] = {};
+		double pG[256] = {};
+		double pB[256] = {};
 		for (y=0; y<head.biHeight; y++)
 		{
 			info.nProgress = (int32_t)(y*dbScaler);
@@ -262,8 +257,7 @@ bool CxImage::HistogramStretch(int32_t method, double threshold)
 		break;
 	default:
 	  { // <dave>
-		double p[256];
-		memset(p,  0, 256*sizeof(double));
+		double p[256] = {};
 		for (y=0; y<head.biHeight; ++y)
 		{
 			info.nProgress = (int32_t)(y*dbScaler);
@@ -313,19 +307,15 @@ bool CxImage::HistogramEqualize()
 {
 	if (!pDib) return false;
 
-    int32_t histogram[256];
-	int32_t map[256];
-	int32_t equalize_map[256];
-    int32_t x, y, i, j;
+	int32_t histogram[256] = {};
+	int32_t map[256] = {};
+	int32_t equalize_map[256] = {};
+	int32_t x, y, i, j;
 	RGBQUAD color;
 	RGBQUAD	yuvClr;
 	uint32_t YVal, high, low;
 
-	memset(histogram, 0, sizeof histogram);
-	memset(map, 0, sizeof map);
-	memset(equalize_map, 0, sizeof equalize_map);
-
-     // form histogram
+	// form histogram
 	for(y=0; y < head.biHeight; y++){
 		info.nProgress = (int32_t)(50*y/head.biHeight);
 		if (info.nEscape) break;
@@ -387,17 +377,14 @@ bool CxImage::HistogramNormalize()
 {
 	if (!pDib) return false;
 
-	int32_t histogram[256];
+	int32_t histogram[256] = {};
 	int32_t threshold_intensity, intense;
 	int32_t x, y, i;
-	uint32_t normalize_map[256];
+	uint32_t normalize_map[256] = {};
 	uint32_t high, low, YVal;
 
 	RGBQUAD color;
 	RGBQUAD	yuvClr;
-
-	memset(histogram, 0, sizeof histogram);
-	memset(normalize_map, 0, sizeof normalize_map);
 
      // form histogram
 	for(y=0; y < head.biHeight; y++){

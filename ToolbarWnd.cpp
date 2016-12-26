@@ -82,7 +82,7 @@ void CToolbarWnd::FillToolbar()
 	atb1[0].idCommand = MP_PRIOLOW;
 	atb1[0].fsState = TBSTATE_WRAP;
 	atb1[0].fsStyle = BTNS_DROPDOWN  | BTNS_AUTOSIZE;
-	atb1[0].iString = m_btnBar->AddString(GetResString(IDS_PRIORITY) + _T(" (") + GetResString(IDS_DOWNLOAD) + _T(")"));
+	atb1[0].iString = m_btnBar->AddString(GetResString(IDS_PRIORITY) + _T(" (") + GetResString(IDS_DOWNLOAD) + _T(')'));
 
 	atb1[1].iBitmap = 1;
 	atb1[1].idCommand = MP_PAUSE;

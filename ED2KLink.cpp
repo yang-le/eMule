@@ -148,7 +148,7 @@ CED2KServerLink::CED2KServerLink(const TCHAR* ip, const TCHAR* port)
 	m_port = static_cast<uint16>(ul);
 	m_defaultName = _T("Server ");
 	m_defaultName += ip;
-	m_defaultName += _T(":");
+	m_defaultName += _T(':');
 	m_defaultName += port;
 }
 
@@ -482,9 +482,9 @@ void CED2KFileLink::GetLink(CString& lnk) const
 {
 	lnk = _T("ed2k://|file|");
 	lnk += EncodeUrlUtf8(m_name);
-	lnk += _T("|");
+	lnk += _T('|');
 	lnk += m_size;
-	lnk += _T("|");
+	lnk += _T('|');
 	for (int idx=0; idx != 16 ; ++idx ) {
 		unsigned int ui1 = m_hash[idx] / 16;
 		unsigned int ui2 = m_hash[idx] % 16;

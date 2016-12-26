@@ -17,8 +17,7 @@ CxImageJPG::CxExifInfo::CxExifInfo(EXIFINFO* info)
 		m_exifinfo = info;
 		freeinfo = false;
 	} else {
-		m_exifinfo = new EXIFINFO;
-		memset(m_exifinfo,0,sizeof(EXIFINFO));
+		m_exifinfo = new EXIFINFO();
 		freeinfo = true;
 	}
 
@@ -830,11 +829,8 @@ bool CxImageJPG::CxExifInfo::EncodeExif(CxFile * hFile)
 ////////////////////////////////////////////////////////////////////////////////
 void CxImageJPG::CxExifInfo::DiscardAllButExif()
 {
-    Section_t ExifKeeper;
-    Section_t CommentKeeper;
-
-    memset(&ExifKeeper, 0, sizeof(ExifKeeper));
-    memset(&CommentKeeper, 0, sizeof(ExifKeeper));
+    Section_t ExifKeeper = {};
+    Section_t CommentKeeper = {};
 
     for (int32_t a=0; a<SectionsRead; ++a) {
         if (Sections[a].Type == M_EXIF && ExifKeeper.Type == 0){

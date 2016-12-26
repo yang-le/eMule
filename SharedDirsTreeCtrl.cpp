@@ -267,7 +267,7 @@ CString GetFolderLabel(const CString &strFolderPath, bool bTopFolder, bool bAcce
 			CString strParentFolder(strFolder);
 			PathRemoveFileSpec(strParentFolder.GetBuffer());
 			strParentFolder.ReleaseBuffer();
-			strLabel += _T("  (") + strParentFolder + _T(")");
+			strLabel += _T("  (") + strParentFolder + _T(')');
 		}
 	}
 	if (!bAccessible && bTopFolder)
@@ -291,7 +291,7 @@ void CSharedDirsTreeCtrl::FilterTreeAddSubDirectories(CDirectoryItem* pDirectory
 		CString strCurrent = liDirs.GetNext(pos);
 		CString strCurrentLow = strCurrent;
 		strCurrentLow.MakeLower();
-		if ((strDirectoryPath.IsEmpty() || strCurrentLow.Find(strDirectoryPath + _T("\\"), 0) == 0) && strCurrentLow != strDirectoryPath) {
+		if ((strDirectoryPath.IsEmpty() || strCurrentLow.Find(strDirectoryPath + _T('\\'), 0) == 0) && strCurrentLow != strDirectoryPath) {
 			if (!FilterTreeIsSubDirectory(strCurrentLow, strDirectoryPath, liDirs)) {
 				bool bAccessible = !bParentAccessible ? false : (_taccess(strCurrent, 00) == 0);
 				CString strName = GetFolderLabel(strCurrent, nLevel == 0, bAccessible);
@@ -427,7 +427,7 @@ void CSharedDirsTreeCtrl::CreateMenues()
 	m_SharedFilesMenu.AppendMenu(MF_STRING, MP_OPENFOLDER, GetResString(IDS_OPENFOLDER), _T("OPENFOLDER"));
 	m_SharedFilesMenu.AppendMenu(MF_STRING, MP_REMOVE, GetResString(IDS_DELETE), _T("DELETE"));
 	m_SharedFilesMenu.AppendMenu(MF_STRING | MF_SEPARATOR);
-	m_SharedFilesMenu.AppendMenu(MF_STRING | MF_POPUP, (UINT_PTR)m_PrioMenu.m_hMenu, GetResString(IDS_PRIORITY) + _T(" (") + GetResString(IDS_PW_CON_UPLBL) + _T(")"), _T("FILEPRIORITY"));
+	m_SharedFilesMenu.AppendMenu(MF_STRING | MF_POPUP, (UINT_PTR)m_PrioMenu.m_hMenu, GetResString(IDS_PRIORITY) + _T(" (") + GetResString(IDS_PW_CON_UPLBL) + _T(')'), _T("FILEPRIORITY"));
 	m_SharedFilesMenu.AppendMenu(MF_STRING | MF_SEPARATOR);
 	m_SharedFilesMenu.AppendMenu(MF_STRING, MP_DETAIL, GetResString(IDS_SHOWDETAILS), _T("FILEINFO"));
 	m_SharedFilesMenu.AppendMenu(MF_STRING, MP_CMT, GetResString(IDS_CMT_ADD), _T("FILECOMMENTS"));

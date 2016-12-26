@@ -132,7 +132,7 @@ BOOL CCollectionCreateDialog::OnInitDialog()
 	m_CancelButton.SetWindowText(GetResString(IDS_CANCEL));
 	m_CollectionCreateSignNameKeyCheck.SetWindowText(GetResString(IDS_COLL_SIGN));
 	m_CollectionCreateFormatCheck.SetWindowText(GetResString(IDS_COLL_TEXTFORMAT));
-	SetDlgItemText(IDC_CCOLL_STATIC_NAME, GetResString(IDS_SW_NAME) + _T(":"));
+	SetDlgItemText(IDC_CCOLL_STATIC_NAME, GetResString(IDS_SW_NAME) + _T(':'));
 	SetDlgItemText(IDC_CCOLL_BASICOPTIONS, GetResString(IDS_LD_BASICOPT));
 	SetDlgItemText(IDC_CCOLL_ADVANCEDOPTIONS, GetResString(IDS_LD_ADVANCEDOPT));
 

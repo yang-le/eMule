@@ -192,7 +192,7 @@ void CTransferWnd::OnInitialUpdate()
 void CTransferWnd::ShowQueueCount(uint32 number)
 {
 	TCHAR buffer[100];
-	_sntprintf(buffer, _countof(buffer), _T("%u (%u ") + GetResString(IDS_BANNED).MakeLower() + _T(")"), number, theApp.clientlist->GetBannedCount());
+	_sntprintf(buffer, _countof(buffer), _T("%u (%u ") + GetResString(IDS_BANNED).MakeLower() + _T(')'), number, theApp.clientlist->GetBannedCount());
 	buffer[_countof(buffer) - 1] = _T('\0');
 	GetDlgItem(IDC_QUEUECOUNT)->SetWindowText(buffer);
 }
@@ -754,7 +754,7 @@ void CTransferWnd::OnNmRClickDltab(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 	CTitleMenu menu;
 	menu.CreatePopupMenu();
 	if (rightclickindex)
-		menu.AddMenuTitle(GetResString(IDS_CAT) + _T(" (") + thePrefs.GetCategory(rightclickindex)->strTitle + _T(")"), true);
+		menu.AddMenuTitle(GetResString(IDS_CAT) + _T(" (") + thePrefs.GetCategory(rightclickindex)->strTitle + _T(')'), true);
 	else
 		menu.AddMenuTitle(GetResString(IDS_CAT),true);
 

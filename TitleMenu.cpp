@@ -279,21 +279,20 @@ static HBITMAP Create32BitHBITMAP(HDC hdc, int cx, int cy, void **ppvBits = NULL
 {
 	HBITMAP hBmp = NULL;
 	BITMAPINFO bmi = {};
- 	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	bmi.bmiHeader.biWidth = cx;
 	bmi.bmiHeader.biHeight = cy;
 	bmi.bmiHeader.biPlanes = 1;
 	bmi.bmiHeader.biBitCount = 32;
 	bmi.bmiHeader.biCompression = BI_RGB;
 
-    HDC hdcUsed = hdc ? hdc : GetDC(NULL);
-    if (hdcUsed)
-    {
-        hBmp = CreateDIBSection(hdcUsed, &bmi, DIB_RGB_COLORS, ppvBits, NULL, 0);
-        if (hdc != hdcUsed)
-            ReleaseDC(NULL, hdcUsed);
-    }
-    return hBmp;
+	HDC hdcUsed = hdc ? hdc : GetDC(NULL);
+	if (hdcUsed) {
+		hBmp = CreateDIBSection(hdcUsed, &bmi, DIB_RGB_COLORS, ppvBits, NULL, 0);
+		if (hdc != hdcUsed)
+			ReleaseDC(NULL, hdcUsed);
+	}
+	return hBmp;
 }
 
 static HBITMAP IconToBitmap32(HICON hIcon, int cx, int cy)

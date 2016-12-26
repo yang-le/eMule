@@ -93,8 +93,8 @@ namespace Kademlia
 			uint32 m_uTotalIndexLoad;
 
 		private:
-			void ReadFile(void);
-			void Clean(void);
+			void ReadFile();
+			void Clean();
 			time_t m_tLastClean;
 			CKeyHashMap m_mapKeyword;
 			CSrcHashMap m_mapSources;

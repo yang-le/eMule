@@ -252,7 +252,7 @@ bool CCollection::InitCollectionFromFile(const CString& sFilePath, CString sFile
 				{
 					//Ignore all lines that start with #.
 					//These lines can be used for future features..
-					if(sLink.Find(_T("#")) != 0)
+					if(sLink.Find(_T('#')) != 0)
 					{
 						try
 						{

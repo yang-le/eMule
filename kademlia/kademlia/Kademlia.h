@@ -74,7 +74,7 @@ namespace Kademlia
 			static void	RemoveEvent(CRoutingZone *pZone);
 			static void	Process();
 			static bool	InitUnicode(HMODULE hInst);
-			static void StatsAddClosestDistance(CUInt128 uDist);
+			static void StatsAddClosestDistance(const CUInt128& uDist);
 			static bool IsRunningInLANMode();
 
 			static bool	FindNodeIDByIP(CKadClientSearcher& rRequester, uint32 dwIP, uint16 nTCPPort, uint16 nUDPPort);

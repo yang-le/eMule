@@ -747,7 +747,7 @@ void CALLBACK CemuleDlg::StartupTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT_PTR /*
 				theApp.m_app_state = APP_STATE_RUNNING; //initialization completed
 				theApp.emuledlg->toolbar->EnableButton(TBBTN_CONNECT, true);
 				theApp.emuledlg->m_SysMenuOptions.EnableMenuItem(MP_CONNECT, MF_ENABLED);
-				theApp.emuledlg->serverwnd->GetDlgItem(IDC_ED2KCONNECT)->EnableWindow(true);
+				theApp.emuledlg->serverwnd->GetDlgItem(IDC_ED2KCONNECT)->EnableWindow(thePrefs.GetNetworkED2K());
 				theApp.emuledlg->kademliawnd->UpdateControlsState(); //application state change is not tracked - force update
 
 				if (thePrefs.DoAutoConnect())

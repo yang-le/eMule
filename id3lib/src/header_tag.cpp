@@ -153,7 +153,7 @@ void ID3_TagHeader::ParseExtended(ID3_Reader& reader)
     // skip over header size, we are not using it anyway, we calculate it
     reader.setCur(reader.getCur()+4); //Extended header size
     //io::readBENumber(reader, 4); //Extended header size
-    uint16 tmpval = io::readBENumber(reader, 2); //Extended Flags
+    uint16 tmpval = (uint16)io::readBENumber(reader, 2); //Extended Flags
     // skip over padding size, we are not using it anyway
     reader.setCur(reader.getCur()+4); //Size of padding
     // io::readBENumber(reader, 4); //Size of padding

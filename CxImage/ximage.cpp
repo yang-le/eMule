@@ -17,8 +17,8 @@ void CxImage::Startup(uint32_t imagetype)
 	pDib = pSelection = pAlpha = NULL;
 	ppLayers = ppFrames = NULL;
 	//init structures
-	memset(&head,0,sizeof(BITMAPINFOHEADER));
-	memset(&info,0,sizeof(CXIMAGEINFO));
+	head = BITMAPINFOHEADER();
+	info = CXIMAGEINFO();
 	//init default attributes
     info.dwType = imagetype;
 	info.fQuality = 90.0f;
@@ -318,8 +318,8 @@ bool CxImage::Transfer(CxImage &from, bool bTransferFrames /*=true*/)
 	pAlpha = from.pAlpha;
 	ppLayers = from.ppLayers;
 
-	memset(&from.head,0,sizeof(BITMAPINFOHEADER));
-	memset(&from.info,0,sizeof(CXIMAGEINFO));
+	from.head = BITMAPINFOHEADER();
+	from.info = CXIMAGEINFO();
 	from.pDib = from.pSelection = from.pAlpha = NULL;
 	from.ppLayers = NULL;
 

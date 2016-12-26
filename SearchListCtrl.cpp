@@ -998,7 +998,7 @@ void CSearchListCtrl::CreateMenues()
 	m_SearchFileMenu.AddMenuTitle(GetResString(IDS_FILE), true);
 	m_SearchFileMenu.AppendMenu(MF_STRING, MP_RESUME, GetResString(IDS_DOWNLOAD), _T("Resume"));
 	if (thePrefs.IsExtControlsEnabled())
-		m_SearchFileMenu.AppendMenu(MF_STRING, MP_RESUMEPAUSED, GetResString(IDS_DOWNLOAD) + _T(" (") + GetResString(IDS_PAUSED) + _T(")"));
+		m_SearchFileMenu.AppendMenu(MF_STRING, MP_RESUMEPAUSED, GetResString(IDS_DOWNLOAD) + _T(" (") + GetResString(IDS_PAUSED) + _T(')'));
 	if (thePrefs.IsExtControlsEnabled())
 		m_SearchFileMenu.AppendMenu(MF_STRING, MP_DETAIL, GetResString(IDS_SHOWDETAILS), _T("FileInfo"));
 	m_SearchFileMenu.AppendMenu(MF_STRING, MP_CMT, GetResString(IDS_CMT_ADD), _T("FILECOMMENTS"));
@@ -1924,10 +1924,10 @@ CString	CSearchListCtrl::FormatFileSize(ULONGLONG ullFileSize) const
 {
 	if (m_eFileSizeFormat == fsizeKByte) {
 		// Always rond up to next KB (this is same as Windows Explorer is doing)
-		return GetFormatedUInt64((ullFileSize + 1024 - 1) / 1024) + _T(" ") + GetResString(IDS_KBYTES);
+		return GetFormatedUInt64((ullFileSize + 1024 - 1) / 1024) + _T(' ') + GetResString(IDS_KBYTES);
 	}
 	else if (m_eFileSizeFormat == fsizeMByte) {
-		//return GetFormatedUInt64((ullFileSize + 1024*1024 - 1) / (1024*1024)) + _T(" ") + GetResString(IDS_MBYTES);
+		//return GetFormatedUInt64((ullFileSize + 1024*1024 - 1) / (1024*1024)) + _T(' ') + GetResString(IDS_MBYTES);
 		double fFileSize = (double)ullFileSize / (1024.0*1024.0);
 		if (fFileSize < 0.01)
 			fFileSize = 0.01;
@@ -1950,7 +1950,7 @@ CString	CSearchListCtrl::FormatFileSize(ULONGLONG ullFileSize) const
 		strVal.ReleaseBuffer();
 		if (iResult == 0)
 			strVal = szVal;
-		return strVal + _T(" ") + GetResString(IDS_MBYTES);
+		return strVal + _T(' ') + GetResString(IDS_MBYTES);
 	}
 	else
 		return CastItoXBytes(ullFileSize);

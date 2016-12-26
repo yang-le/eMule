@@ -293,7 +293,7 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 					} else {
 						//Not on a server.
 						sIP = _T("0.0.0.0");
-						sPort = _T("0");
+						sPort = _T('0');
 					}
 					//Create our response.
 					CString sBuild;
@@ -658,7 +658,7 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 				case 313:
 				case 317:
 					if (uCommand == 317) {
-						CString s = sRawMessage.Tokenize(_T(" "),iIndex)+_T(" ");
+						CString s = sRawMessage.Tokenize(_T(" "),iIndex)+_T(' ');
 						CTimeSpan idle(_tstoi64(sRawMessage.Tokenize(_T(" "), iIndex)));
 						if (idle.GetHours() > 0)
 							s += idle.Format("%Hhrs %Mmins %Ssecs");

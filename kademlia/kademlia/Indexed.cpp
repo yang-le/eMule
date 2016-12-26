@@ -72,7 +72,7 @@ CIndexed::CIndexed()
 	ReadFile();
 }
 
-void CIndexed::ReadFile(void)
+void CIndexed::ReadFile()
 {
 	m_bAbortLoading = false;
 	CLoadDataThread* pLoadDataThread = static_cast<CLoadDataThread *>(AfxBeginThread(RUNTIME_CLASS(CLoadDataThread), THREAD_PRIORITY_BELOW_NORMAL,0, CREATE_SUSPENDED));
@@ -278,101 +278,85 @@ CIndexed::~CIndexed()
 	}
 }
 
-void CIndexed::Clean(void)
+void CIndexed::Clean()
 {
-
-	try
-	{
-		if( m_tLastClean > time(NULL) )
+	try {
+		time_t tNow = time(NULL);
+		if (m_tLastClean > tNow)
 			return;
+		m_tLastClean = tNow + HR2S(1); //prevent re-entry
 
 		uint32 uRemovedKey = 0;
 		uint32 uRemovedSource = 0;
 		uint32 uTotalSource = 0;
 		uint32 uTotalKey = 0;
-		time_t tNow = time(NULL);
 
-		{
-			for (POSITION pos1 = m_mapKeyword.GetStartPosition(); pos1 != NULL;) {
-				CCKey key1;
-				KeyHash* pCurrKeyHash;
-				m_mapKeyword.GetNextAssoc( pos1, key1, pCurrKeyHash );
-				for (POSITION pos2 = pCurrKeyHash->mapSource.GetStartPosition(); pos2 != NULL;) {
-					CCKey key2;
-					Source* pCurrSource;
-					pCurrKeyHash->mapSource.GetNextAssoc( pos2, key2, pCurrSource );
-					for(POSITION pos3 = pCurrSource->ptrlEntryList.GetHeadPosition(); pos3 != NULL; )
-					{
-						POSITION pos4 = pos3;
-						CKeyEntry* pCurrName = (CKeyEntry*)pCurrSource->ptrlEntryList.GetNext(pos3);
-						ASSERT( pCurrName->IsKeyEntry() );
-						uTotalKey++;
-						if( !pCurrName->m_bSource && pCurrName->m_tLifetime < tNow)
-						{
-							uRemovedKey++;
-							pCurrSource->ptrlEntryList.RemoveAt(pos4);
-							delete pCurrName;
-						}
-						else if (pCurrName->m_bSource)
-							ASSERT( false );
-						else
-							pCurrName->CleanUpTrackedPublishers(); // intern cleanup
-					}
-					if( pCurrSource->ptrlEntryList.IsEmpty())
-					{
-						pCurrKeyHash->mapSource.RemoveKey(key2);
-						delete pCurrSource;
-					}
+		for (POSITION pos1 = m_mapKeyword.GetStartPosition(); pos1 != NULL;) {
+			CCKey key1;
+			KeyHash* pCurrKeyHash;
+			m_mapKeyword.GetNextAssoc(pos1, key1, pCurrKeyHash);
+			for (POSITION pos2 = pCurrKeyHash->mapSource.GetStartPosition(); pos2 != NULL;) {
+				CCKey key2;
+				Source* pCurrSource;
+				pCurrKeyHash->mapSource.GetNextAssoc(pos2, key2, pCurrSource);
+				for (POSITION pos3 = pCurrSource->ptrlEntryList.GetHeadPosition(); pos3 != NULL;) {
+					POSITION pos4 = pos3;
+					CKeyEntry* pCurrName = (CKeyEntry*)pCurrSource->ptrlEntryList.GetNext(pos3);
+					ASSERT(pCurrName->IsKeyEntry());
+					++uTotalKey;
+					if (!pCurrName->m_bSource && pCurrName->m_tLifetime < tNow) {
+						++uRemovedKey;
+						pCurrSource->ptrlEntryList.RemoveAt(pos4);
+						delete pCurrName;
+					} else if (pCurrName->m_bSource)
+						ASSERT(false);
+					else
+						pCurrName->CleanUpTrackedPublishers(); // intern cleanup
 				}
-				if( pCurrKeyHash->mapSource.IsEmpty())
-				{
-					m_mapKeyword.RemoveKey(key1);
-					delete pCurrKeyHash;
+				if (pCurrSource->ptrlEntryList.IsEmpty()) {
+					pCurrKeyHash->mapSource.RemoveKey(key2);
+					delete pCurrSource;
 				}
 			}
+			if (pCurrKeyHash->mapSource.IsEmpty()) {
+				m_mapKeyword.RemoveKey(key1);
+				delete pCurrKeyHash;
+			}
 		}
-		{
-			for (POSITION pos1 = m_mapSources.GetStartPosition(); pos1 != NULL;) {
-				CCKey key1;
-				SrcHash* pCurrSrcHash;
-				m_mapSources.GetNextAssoc( pos1, key1, pCurrSrcHash );
-				for(POSITION pos2 = pCurrSrcHash->ptrlistSource.GetHeadPosition(); pos2 != NULL; )
-				{
-					POSITION pos3 = pos2;
-					Source* pCurrSource = pCurrSrcHash->ptrlistSource.GetNext(pos2);
-					for(POSITION pos4 = pCurrSource->ptrlEntryList.GetHeadPosition(); pos4 != NULL; )
-					{
-						POSITION pos5 = pos4;
-						CEntry* pCurrName = pCurrSource->ptrlEntryList.GetNext(pos4);
-						uTotalSource++;
-						if( pCurrName->m_tLifetime < tNow)
-						{
-							uRemovedSource++;
-							pCurrSource->ptrlEntryList.RemoveAt(pos5);
-							delete pCurrName;
-						}
-					}
-					if( pCurrSource->ptrlEntryList.IsEmpty())
-					{
-						pCurrSrcHash->ptrlistSource.RemoveAt(pos3);
-						delete pCurrSource;
+
+		for (POSITION pos1 = m_mapSources.GetStartPosition(); pos1 != NULL;) {
+			CCKey key1;
+			SrcHash* pCurrSrcHash;
+			m_mapSources.GetNextAssoc(pos1, key1, pCurrSrcHash);
+			for (POSITION pos2 = pCurrSrcHash->ptrlistSource.GetHeadPosition(); pos2 != NULL; ) {
+				POSITION pos3 = pos2;
+				Source* pCurrSource = pCurrSrcHash->ptrlistSource.GetNext(pos2);
+				for (POSITION pos4 = pCurrSource->ptrlEntryList.GetHeadPosition(); pos4 != NULL; ) {
+					POSITION pos5 = pos4;
+					CEntry* pCurrName = pCurrSource->ptrlEntryList.GetNext(pos4);
+					++uTotalSource;
+					if (pCurrName->m_tLifetime < tNow) {
+						++uRemovedSource;
+						pCurrSource->ptrlEntryList.RemoveAt(pos5);
+						delete pCurrName;
 					}
 				}
-				if( pCurrSrcHash->ptrlistSource.IsEmpty())
-				{
-					m_mapSources.RemoveKey(key1);
-					delete pCurrSrcHash;
+				if (pCurrSource->ptrlEntryList.IsEmpty()) {
+					pCurrSrcHash->ptrlistSource.RemoveAt(pos3);
+					delete pCurrSource;
 				}
+			}
+			if (pCurrSrcHash->ptrlistSource.IsEmpty()) {
+				m_mapSources.RemoveKey(key1);
+				delete pCurrSrcHash;
 			}
 		}
 
 		m_uTotalIndexSource = uTotalSource - uRemovedSource;
 		m_uTotalIndexKeyword = uTotalKey - uRemovedKey;
-		AddDebugLogLine( false, _T("Removed %u keyword out of %u and %u source out of %u"), uRemovedKey, uTotalKey, uRemovedSource, uTotalSource);
+		AddDebugLogLine(false, _T("Removed %u keyword out of %u and %u source out of %u"), uRemovedKey, uTotalKey, uRemovedSource, uTotalSource);
 		m_tLastClean = time(NULL) + MIN2S(30);
-	}
-	catch(...)
-	{
+	} catch (...) {
 		AddDebugLogLine(false, _T("Exception in CIndexed::clean"));
 		ASSERT(0);
 	}
@@ -692,13 +676,11 @@ void CIndexed::SendValidKeywordResult(const CUInt128& uKeyID, const SSearchTerm*
 		// on very hot keywords
 		bool bOnlyTrusted = true;
 		do{
-			POSITION pos1 = pCurrKeyHash->mapSource.GetStartPosition();
-			while( pos1 != NULL )
-			{
+			for (POSITION pos1 = pCurrKeyHash->mapSource.GetStartPosition(); pos1 != NULL;) {
 				CCKey key1;
 				Source* pCurrSource;
 				pCurrKeyHash->mapSource.GetNextAssoc( pos1, key1, pCurrSource );
-				for(POSITION pos2 = pCurrSource->ptrlEntryList.GetHeadPosition(); pos2 != NULL; )
+				for(POSITION pos2 = pCurrSource->ptrlEntryList.GetHeadPosition(); pos2 != NULL;)
 				{
 					CKeyEntry* pCurrName = (CKeyEntry*)pCurrSource->ptrlEntryList.GetNext(pos2);
 					ASSERT( pCurrName->IsKeyEntry() );
@@ -798,7 +780,7 @@ void CIndexed::SendValidSourceResult(const CUInt128& uKeyID, uint32 uIP, uint16 
 
 		uint16 uMaxResults = 300;
 		int iCount = 0-uStartPosition;
-		for(POSITION pos1 = pCurrSrcHash->ptrlistSource.GetHeadPosition(); pos1 != NULL; )
+		for(POSITION pos1 = pCurrSrcHash->ptrlistSource.GetHeadPosition(); pos1 != NULL;)
 		{
 			Source* pCurrSource = pCurrSrcHash->ptrlistSource.GetNext(pos1);
 			if (!pCurrSource->ptrlEntryList.IsEmpty()) {

@@ -1293,7 +1293,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_KEY_REQ (const byte *pbyPac
 			pEntry->m_uUDPPort = uUDPPort;
 			pEntry->m_uKeyID.SetValue(uFile);
 			pEntry->m_uSourceID.SetValue(uTarget);
-			pEntry->m_tLifetime = (uint32)time(NULL)+KADEMLIAREPUBLISHTIMEK;
+			pEntry->m_tLifetime = time(NULL)+KADEMLIAREPUBLISHTIMEK;
 			pEntry->m_bSource = false;
 			for (unsigned uTags = byteIO.ReadByte(); uTags > 0; uTags--)
 			{
@@ -1417,7 +1417,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_SOURCE_REQ (const byte *pby
 		pEntry->m_uKeyID.SetValue(uFile);
 		pEntry->m_uSourceID.SetValue(uTarget);
 		pEntry->m_bSource = false;
-		pEntry->m_tLifetime = (uint32)time(NULL)+KADEMLIAREPUBLISHTIMES;
+		pEntry->m_tLifetime = time(NULL)+KADEMLIAREPUBLISHTIMES;
 		bool bAddUDPPortTag = true;
 		for (unsigned uTags = byteIO.ReadByte(); uTags > 0; uTags--)
 		{

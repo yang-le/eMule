@@ -572,7 +572,8 @@ void KadGetKeywordHash(const Kademlia::CKadTagValueString& rstrKeywordW, Kademli
 	KadGetKeywordHash(KadGetKeywordBytes(rstrKeywordW), pKadID);
 }
 
-void CKademlia::StatsAddClosestDistance(CUInt128 uDist){
+void CKademlia::StatsAddClosestDistance(const CUInt128& uDist)
+{
 	if (uDist.Get32BitChunk(0) > 0){
 		uint32 nToAdd = (0xFFFFFFFF / uDist.Get32BitChunk(0)) / 2;
 		if (m_liStatsEstUsersProbes.Find(nToAdd) == NULL)

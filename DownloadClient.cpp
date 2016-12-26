@@ -892,21 +892,21 @@ void CUpDownClient::SendBlockRequests()
 	if (!reqfile)
 		return;
 
-    // prevent locking of too many blocks when we are on a slow (probably standby/trickle) slot
-    int blockCount = 3; // max pending block requests
+	// prevent locking of too many blocks when we are on a slow (probably standby/trickle) slot
+	int blockCount = 3; // max pending block requests
 	int maxBlockDelta = 1; // blockcount - maxBlockDelta = minPendingBlockRequests
-    if(IsEmuleClient() && m_byCompatibleClient==0 && reqfile->GetFileSize()-reqfile->GetCompletedSize() <= (uint64)PARTSIZE*4) {
-        // if there's less than two chunks left, request fewer blocks for
-        // slow downloads, so they don't lock blocks from faster clients.
-        // Only trust eMule clients to be able to handle less blocks than three
-        if(GetDownloadDatarate() < 600 || GetSessionPayloadDown() < 40*1024) {
-            blockCount = 1;
+	if(IsEmuleClient() && m_byCompatibleClient==0 && reqfile->GetFileSize()-reqfile->GetCompletedSize() <= (uint64)PARTSIZE*4) {
+		// if there's less than two chunks left, request fewer blocks for
+		// slow downloads, so they don't lock blocks from faster clients.
+		// Only trust eMule clients to be able to handle less blocks than three
+ 		if(GetDownloadDatarate() < 600 || GetSessionPayloadDown() < 40*1024) {
+			blockCount = 1;
 			maxBlockDelta = 0;
-        } else if(GetDownloadDatarate() < 1200) {
-            blockCount = 2;
+		} else if(GetDownloadDatarate() < 1200) {
+			blockCount = 2;
 			maxBlockDelta = 0;
-        }
-    }
+		}
+	}
 	else if (GetDownloadDatarate() > 1024*75)
 	{
 		blockCount = 6;
@@ -923,8 +923,7 @@ void CUpDownClient::SendBlockRequests()
 
 	CTypedPtrList<CPtrList, Pending_Block_Struct*>	listToRequest;
 	bool bI64Offsets = false;
-	for (POSITION pos = m_PendingBlocks_list.GetHeadPosition(); pos != NULL; )
-	{
+	for (POSITION pos = m_PendingBlocks_list.GetHeadPosition(); pos != NULL;) {
 		Pending_Block_Struct* pending = m_PendingBlocks_list.GetNext(pos);
 		if (pending->fQueued)
 			continue;

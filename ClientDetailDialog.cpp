@@ -244,7 +244,7 @@ void CClientDetailPage::Localize()
 	GetDlgItem(IDC_STATIC52)->SetWindowText(GetResString(IDS_CD_RATING));
 	GetDlgItem(IDC_STATIC53)->SetWindowText(GetResString(IDS_CD_USCORE));
 	GetDlgItem(IDC_STATIC133x)->SetWindowText(GetResString(IDS_CD_IDENT));
-	GetDlgItem(IDC_CLIENTDETAIL_KAD)->SetWindowText(GetResString(IDS_KADEMLIA) + _T(":"));
+	GetDlgItem(IDC_CLIENTDETAIL_KAD)->SetWindowText(GetResString(IDS_KADEMLIA) + _T(':'));
 }
 
 

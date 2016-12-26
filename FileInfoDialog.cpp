@@ -1097,7 +1097,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 				default:
 					break;
 				}
-				mi->strAudioFormat += _T(" ");
+				mi->strAudioFormat += _T(' ');
 
 				switch (mp3info->layer)
 				{
@@ -1163,7 +1163,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 						mi->strInfo << _T("   ") << GetResString(IDS_LENGTH) << _T(":\t") << strLength;
 						if (pFile->IsPartFile()){
 							mi->strInfo.SetSelectionCharFormat(mi->strInfo.m_cfRed);
-							mi->strInfo << _T(" (") + GetResString(IDS_ESTIMATED) + _T(")");
+							mi->strInfo << _T(" (") << GetResString(IDS_ESTIMATED) << _T(")");
 							mi->strInfo.SetSelectionCharFormat(mi->strInfo.m_cfDef);
 						}
 						mi->strInfo << "\n";
@@ -2071,7 +2071,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 													mi->strInfo << _T("   ") << GetResString(IDS_LENGTH) << _T(":\t") << strLength;
 													if (pFile->IsPartFile()){
 														mi->strInfo.SetSelectionCharFormat(mi->strInfo.m_cfRed);
-														mi->strInfo << _T(" (") + GetResString(IDS_ESTIMATED)+ _T(")");
+														mi->strInfo << _T(" (") << GetResString(IDS_ESTIMATED) << _T(")");
 														mi->strInfo.SetSelectionCharFormat(mi->strInfo.m_cfDef);
 													}
 													mi->strInfo << _T("\n");
@@ -2170,7 +2170,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 													mi->strInfo << _T("   ") << GetResString(IDS_LENGTH) << _T(":\t") << strLength;
 													if (pFile->IsPartFile()){
 														mi->strInfo.SetSelectionCharFormat(mi->strInfo.m_cfRed);
-														mi->strInfo << _T(" (") + GetResString(IDS_ESTIMATED)+ _T(")");
+														mi->strInfo << _T(" (") << GetResString(IDS_ESTIMATED) << _T(")");
 														mi->strInfo.SetSelectionCharFormat(mi->strInfo.m_cfDef);
 													}
 													mi->strInfo << _T("\n");
@@ -2198,7 +2198,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 												mi->strInfo << _T("   ") << GetResString(IDS_LENGTH) << _T(":\t") << strLength;
 												if (pFile->IsPartFile()) {
 													mi->strInfo.SetSelectionCharFormat(mi->strInfo.m_cfRed);
-													mi->strInfo << _T(" (") + GetResString(IDS_ESTIMATED)+ _T(")");
+													mi->strInfo << _T(" (") << GetResString(IDS_ESTIMATED) << _T(")");
 													mi->strInfo.SetSelectionCharFormat(mi->strInfo.m_cfDef);
 												}
 												mi->strInfo << _T("\n");
@@ -2254,20 +2254,20 @@ void CFileInfoDialog::DoDataExchange(CDataExchange* pDX)
 void CFileInfoDialog::Localize()
 {
 	GetDlgItem(IDC_GENERAL)->SetWindowText(GetResString(IDS_FD_GENERAL));
-	GetDlgItem(IDC_FD_XI2)->SetWindowText(GetResString(IDS_LENGTH)+_T(":"));
+	GetDlgItem(IDC_FD_XI2)->SetWindowText(GetResString(IDS_LENGTH)+_T(':'));
 	GetDlgItem(IDC_FD_XI3)->SetWindowText(GetResString(IDS_VIDEO));
 	GetDlgItem(IDC_FD_XI4)->SetWindowText(GetResString(IDS_AUDIO));
-	GetDlgItem(IDC_FD_XI5)->SetWindowText(GetResString(IDS_CODEC)+_T(":"));
-	GetDlgItem(IDC_FD_XI6)->SetWindowText(GetResString(IDS_CODEC)+_T(":"));
-	GetDlgItem(IDC_FD_XI7)->SetWindowText(GetResString(IDS_BITRATE)+_T(":"));
-	GetDlgItem(IDC_FD_XI8)->SetWindowText(GetResString(IDS_BITRATE)+_T(":"));
-	GetDlgItem(IDC_FD_XI9)->SetWindowText(GetResString(IDS_WIDTH)+_T(" x ")+GetResString(IDS_HEIGHT)+_T(":"));
-	GetDlgItem(IDC_FD_XI13)->SetWindowText(GetResString(IDS_FPS)+_T(":"));
-	GetDlgItem(IDC_FD_XI10)->SetWindowText(GetResString(IDS_CHANNELS)+_T(":"));
-	GetDlgItem(IDC_FD_XI12)->SetWindowText(GetResString(IDS_SAMPLERATE)+_T(":"));
-	GetDlgItem(IDC_STATICFI)->SetWindowText(GetResString(IDS_FILEFORMAT)+_T(":"));
-	GetDlgItem(IDC_FD_XI14)->SetWindowText(GetResString(IDS_ASPECTRATIO)+_T(":"));
-	GetDlgItem(IDC_STATIC_LANGUAGE)->SetWindowText(GetResString(IDS_PW_LANG)+_T(":"));
+	GetDlgItem(IDC_FD_XI5)->SetWindowText(GetResString(IDS_CODEC)+_T(':'));
+	GetDlgItem(IDC_FD_XI6)->SetWindowText(GetResString(IDS_CODEC)+_T(':'));
+	GetDlgItem(IDC_FD_XI7)->SetWindowText(GetResString(IDS_BITRATE)+_T(':'));
+	GetDlgItem(IDC_FD_XI8)->SetWindowText(GetResString(IDS_BITRATE)+_T(':'));
+	GetDlgItem(IDC_FD_XI9)->SetWindowText(GetResString(IDS_WIDTH)+_T(" x ")+GetResString(IDS_HEIGHT)+_T(':'));
+	GetDlgItem(IDC_FD_XI13)->SetWindowText(GetResString(IDS_FPS)+_T(':'));
+	GetDlgItem(IDC_FD_XI10)->SetWindowText(GetResString(IDS_CHANNELS)+_T(':'));
+	GetDlgItem(IDC_FD_XI12)->SetWindowText(GetResString(IDS_SAMPLERATE)+_T(':'));
+	GetDlgItem(IDC_STATICFI)->SetWindowText(GetResString(IDS_FILEFORMAT)+_T(':'));
+	GetDlgItem(IDC_FD_XI14)->SetWindowText(GetResString(IDS_ASPECTRATIO)+_T(':'));
+	GetDlgItem(IDC_STATIC_LANGUAGE)->SetWindowText(GetResString(IDS_PW_LANG)+_T(':'));
 	if (!m_bReducedDlg)
 		GetDlgItem(IDC_FD_XI1)->SetWindowText(GetResString(IDS_FD_SIZE));
 

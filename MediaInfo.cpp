@@ -283,7 +283,7 @@ CString GetAudioFormatDisplayName(const CString &strCodecId)
 				break;
 			if (s_WavFmtTag[i].pszDefine[0] == _T('\0') || s_WavFmtTag[i].pszComment[0] == _T('\0'))
 				break;
-			return CString(s_WavFmtTag[i].pszDefine) + _T(" (") + CString(s_WavFmtTag[i].pszComment) + _T(")");
+			return CString(s_WavFmtTag[i].pszDefine) + _T(" (") + CString(s_WavFmtTag[i].pszComment) + _T(')');
 		}
 	}
 	return CString();
@@ -859,8 +859,8 @@ BOOL GetRIFFHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsAVI, bool bFu
 											ck.Seek(ckLen, CFile::current);
 											strValue.Empty();
 										}
-										strValue.Replace(_T("\r"), _T(" "));
-										strValue.Replace(_T("\n"), _T(" "));
+										strValue.Replace(_T('\r'), _T(' '));
+										strValue.Replace(_T('\n'), _T(' '));
 										switch (ckId)
 										{
 											case mmioFOURCC('I', 'N', 'A', 'M'):

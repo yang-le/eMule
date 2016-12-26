@@ -1444,7 +1444,7 @@ bool CPartFile::SavePartFile(bool bDontOverrideBak)
 			{
 				UINT uCorruptedPart = corrupted_list.GetNext(posCorruptedPart);
 				if (!strCorruptedParts.IsEmpty())
-					strCorruptedParts += _T(",");
+					strCorruptedParts += _T(',');
 				strCorruptedParts.AppendFormat(_T("%u"), (UINT)uCorruptedPart);
 			}
 			ASSERT( !strCorruptedParts.IsEmpty() );
@@ -3105,7 +3105,7 @@ public:
 
 #ifdef CLSID_PersistentZoneIdentifier
 EXTERN_C const IID CLSID_PersistentZoneIdentifier;
-#else
+#elif _WIN32_WINNT<_WIN32_WINNT_VISTA
 const GUID CLSID_PersistentZoneIdentifier = { 0x0968E258, 0x16C7, 0x4DBA, { 0xAA, 0x86, 0x46, 0x2D, 0xD6, 0x1E, 0x31, 0xA3 } };
 #endif
 #endif
@@ -5626,7 +5626,7 @@ CString CPartFile::GetInfoSummary(bool bNoFormatCommands) const
 	sourcesinfo.Format(GetResString(IDS_DL_SOURCES) + _T(": ") + GetResString(IDS_SOURCESINFO) + _T('\n'), GetSourceCount(), GetValidSourcesCount(), GetSrcStatisticsValue(DS_NONEEDEDPARTS), GetSrcA4AFCount());
 
 	// always show space on disk
-	CString sod = _T("  (") + GetResString(IDS_ONDISK) + CastItoXBytes(GetRealFileSize(), false, false) + _T(")");
+	CString sod = _T("  (") + GetResString(IDS_ONDISK) + CastItoXBytes(GetRealFileSize(), false, false) + _T(')');
 
 	CString state;
 	if (GetTransferringSrcCount() > 0)
@@ -5638,7 +5638,7 @@ CString CPartFile::GetInfoSummary(bool bNoFormatCommands) const
 	CString info;
 	info.Format(_T("%s\n")
 		+ GetResString(IDS_FD_HASH) + _T(" %s\n")
-		+ GetResString(IDS_FD_SIZE) + _T(" %s  %s\n") + strHeadFormatCommand + _T("\n")
+		+ GetResString(IDS_FD_SIZE) + _T(" %s  %s\n") + strHeadFormatCommand + _T('\n')
 		+ GetResString(IDS_FD_MET)+ _T(" %s\n")
 		+ GetResString(IDS_STATUS) + _T(": ") + state
 		+ _T("%s")

@@ -351,7 +351,7 @@ CString CDirectoryTreeCtrl::GetFullPath(HTREEITEM hItem)
 			strSearchItemDir = pti->strPath;
 		else
 			strSearchItemDir = GetItemText(hSearchItem);
-		strDir = strSearchItemDir + _T("\\") + strDir;
+		strDir = strSearchItemDir + _T('\\') + strDir;
 		hSearchItem = GetParentItem(hSearchItem);
 	}
 	return strDir;

@@ -49,8 +49,7 @@ void CLookupHistory::SetSearchDeleted()
 {
 	ASSERT( m_uRefCount );
 	m_bSearchDeleted = true;
-	m_uRefCount--;
-	if (m_uRefCount == 0)
+	if (--m_uRefCount == 0)
 		delete this;
 }
 

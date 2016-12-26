@@ -89,7 +89,7 @@ void CDirectDownloadDlg::OnOK()
 	while (!strTok.IsEmpty())
 	{
 		if (strTok.Right(1) != _T("/"))
-			strTok += _T("/");
+			strTok += _T('/');
 		try
 		{
 			CED2KLink* pLink = CED2KLink::CreateLinkFromUrl(strTok);
@@ -146,7 +146,7 @@ BOOL CDirectDownloadDlg::OnInitDialog()
 	m_ctrlDirectDlFrm.SetWindowText(GetResString(IDS_SW_DIRECTDOWNLOAD));
     GetDlgItem(IDOK)->SetWindowText(GetResString(IDS_DOWNLOAD));
 	GetDlgItem(IDC_FSTATIC2)->SetWindowText(GetResString(IDS_SW_LINK));
-	GetDlgItem(IDC_CATLABEL)->SetWindowText(GetResString(IDS_CAT)+_T(":"));
+	GetDlgItem(IDC_CATLABEL)->SetWindowText(GetResString(IDS_CAT)+_T(':'));
 
 	GetDlgItem(IDOK)->SetWindowText(GetResString(IDS_DOWNLOAD));
 	GetDlgItem(IDCANCEL)->SetWindowText(GetResString(IDS_CANCEL));

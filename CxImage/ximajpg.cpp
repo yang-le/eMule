@@ -45,7 +45,7 @@ CxImageJPG::CxImageJPG(): CxImage(CXIMAGE_FORMAT_JPG)
 {
 #if CXIMAGEJPG_SUPPORT_EXIF
 	m_exif = NULL;
-	memset(&info.ExifInfo, 0, sizeof(EXIFINFO));
+	info.ExifInfo = {};
 #endif
 }
 ////////////////////////////////////////////////////////////////////////////////

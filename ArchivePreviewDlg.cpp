@@ -290,9 +290,9 @@ void CArchivePreviewDlg::Localize()
 	{
 		SetDlgItemText(IDC_READARCH,	GetResString(IDS_SV_UPDATE) );
 		SetDlgItemText(IDC_RESTOREARCH, GetResString(IDS_AP_CREATEPREVCOPY) );
-		SetDlgItemText(IDC_ARCP_TYPE ,	GetResString(IDS_ARCHTYPE)+_T(":") );
-		SetDlgItemText(IDC_ARCP_STATUS,	GetResString(IDS_STATUS)+_T(":") );
-		SetDlgItemText(IDC_ARCP_ATTRIBS,GetResString(IDS_INFO)+_T(":")  );
+		SetDlgItemText(IDC_ARCP_TYPE ,	GetResString(IDS_ARCHTYPE)+_T(':') );
+		SetDlgItemText(IDC_ARCP_STATUS,	GetResString(IDS_STATUS)+_T(':') );
+		SetDlgItemText(IDC_ARCP_ATTRIBS,GetResString(IDS_INFO)+_T(':')  );
 	}
 }
 
@@ -358,7 +358,7 @@ int CArchivePreviewDlg::ShowAceResults(int succ, archiveScannerThreadParams_s* t
 	CString temp;
 	UINT uArchiveFileEntries = 0;
 
-	SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPARSED) + _T(" ") +
+	SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPARSED) + _T(' ') +
 		(tp->ai->ACEdir->IsEmpty()?GetResString(IDS_ARCPREV_INSUFFDATA):
 		(tp->file->IsPartFile()?GetResString(IDS_ARCPREV_LISTMAYBEINCOMPL):CString())) );
 
@@ -506,7 +506,7 @@ int CArchivePreviewDlg::ShowISOResults(int succ, archiveScannerThreadParams_s* t
 	}
 
 	// file content into list
-	SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPARSED) + _T(" ") +
+	SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPARSED) + _T(' ') +
 		(tp->ai->ISOdir->IsEmpty()?GetResString(IDS_ARCPREV_INSUFFDATA):
 		(tp->file->IsPartFile()?GetResString(IDS_ARCPREV_LISTMAYBEINCOMPL):CString())) );
 
@@ -596,20 +596,20 @@ int CArchivePreviewDlg::ShowISOResults(int succ, archiveScannerThreadParams_s* t
 	if (tp->ai->isoInfos.type & ISOtype_9660)
 	{
 		if (!temp.IsEmpty())
-			temp.Append(_T(","));
+			temp += _T(',');
 		temp.Append(_T("ISO9660"));
 	}
 	if (tp->ai->isoInfos.type & ISOtype_joliet)
 	{
 		if (!temp.IsEmpty())
-			temp.Append(_T(","));
+			temp += _T(',');
 		temp.Append(_T("Joliet"));
 	}
 	if (tp->ai->isoInfos.type & ISOtype_UDF_nsr02 || tp->ai->isoInfos.type & ISOtype_UDF_nsr03)
 	{
 		if (!temp.IsEmpty())
-			temp.Append(_T(","));
-		temp.Append(_T("UDF (") + GetResString(IDS_UNSUPPORTEDIMAGE) + _T(")"));
+			temp += _T(',');
+		temp.Append(_T("UDF (") + GetResString(IDS_UNSUPPORTEDIMAGE) + _T(')'));
 	}
 
 
@@ -640,7 +640,7 @@ int CArchivePreviewDlg::ShowRarResults(int succ, archiveScannerThreadParams_s* t
 		statusEncrypted=true;
 	}
 	else
-		SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPARSED) + _T(" ") +
+		SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPARSED) + _T(' ') +
 			(tp->ai->RARdir->IsEmpty()?GetResString(IDS_ARCPREV_INSUFFDATA):
 				(tp->file->IsPartFile()?GetResString(IDS_ARCPREV_LISTMAYBEINCOMPL):CString())) );
 
@@ -806,8 +806,8 @@ int CArchivePreviewDlg::ShowZipResults(int succ, archiveScannerThreadParams_s* t
 	if (tp->ai->bZipCentralDir)
 		SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPREV_DIRSUCCREAD));
 	else
-		SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPREV_DIRNOTFOUND) + _T(" ")
-									+	GetResString(IDS_ARCPARSED)	+ _T(" ")
+		SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPREV_DIRNOTFOUND) + _T(' ')
+									+	GetResString(IDS_ARCPARSED)	+ _T(' ')
 									+	GetResString(tp->ai->centralDirectoryEntries->IsEmpty() ? IDS_ARCPREV_INSUFFDATA : IDS_ARCPREV_LISTMAYBEINCOMPL) );
 
 	bool statusEncrypted=false;

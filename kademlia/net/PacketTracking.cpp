@@ -153,7 +153,7 @@ bool CPacketTracking::InTrackListIsAllowedPacket(uint32 uIP, uint8 byOpcode, boo
 			// not any request packets, so its a response packet - no further checks on this point
 			return true;
 	}
-	const uint32 iSecondsPerPacket = 60 / iAllowedPacketsPerMinute;
+	const uint32 iSecondsPerPacket = MIN2S(1) / iAllowedPacketsPerMinute;
 	const uint32 dwCurrentTick = ::GetTickCount();
 	// time for cleaning up?
 	if (dwCurrentTick - dwLastTrackInCleanup > MIN2MS(12))

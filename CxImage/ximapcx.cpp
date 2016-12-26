@@ -175,8 +175,7 @@ bool CxImagePCX::Encode(CxFile * hFile)
 
   cx_try
   {
-	PCXHEADER pcxHeader;
-	memset(&pcxHeader,0,sizeof(pcxHeader));
+	PCXHEADER pcxHeader = {};
 	pcxHeader.Manufacturer = PCX_MAGIC;
 	pcxHeader.Version = 5;
 	pcxHeader.Encoding = 1;

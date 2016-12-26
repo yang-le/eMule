@@ -145,7 +145,7 @@ static mng_bool mymngerror(mng_handle mng, mng_int32 code, mng_int8 severity, mn
 CxImageMNG::CxImageMNG(): CxImage(CXIMAGE_FORMAT_MNG)
 {
 	hmng = NULL;
-	memset(&mnginfo,0,sizeof(mngstuff));
+	mnginfo = {};
 	mnginfo.nBkgndIndex = -1;
 	mnginfo.speed = 1.0f;
 }

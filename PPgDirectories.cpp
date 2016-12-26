@@ -99,7 +99,7 @@ void CPPgDirectories::LoadSettings()
 	for (int i=0;i<thePrefs.tempdir.GetCount();i++) {
 		tempfolders.Append(thePrefs.GetTempDir(i));
 		if (i+1<thePrefs.tempdir.GetCount())
-			tempfolders.Append(_T("|") );
+			tempfolders += _T('|');
 	}
 	GetDlgItem(IDC_TEMPFILES)->SetWindowText(tempfolders);
 
@@ -374,8 +374,8 @@ void CPPgDirectories::OnBnClickedSeltempdiradd()
 	//GetDlgItemText(IDC_TEMPFILES, buffer, _countof(buffer));
 
 	if(SelectDir(GetSafeHwnd(),buffer,GetResString(IDS_SELECT_TEMPDIR))) {
-		paths.Append(_T("|"));
-		paths.Append(buffer);
+		paths += _T('|');
+		paths += buffer;
 		SetDlgItemText(IDC_TEMPFILES, paths);
 	}
 }

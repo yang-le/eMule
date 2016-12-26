@@ -331,12 +331,12 @@ bool CUDPSocket::ProcessPacket(const BYTE* packet, UINT size, UINT opcode, uint3
 						Debug(_T("***NOTE: Received unexpected challenge %08x (waiting on packet with challenge %08x)\n"), challenge, pServer->GetChallenge());
 					return true;
 				}
-				if (pServer != NULL){
-					pServer->SetChallenge(0);
-					pServer->SetCryptPingReplyPending(false);
-					uint32 tNow = (uint32)time(NULL);
-					pServer->SetLastPingedTime(tNow - (rand() % HR2S(1))); // if we used Obfuscated ping, we still need to reset the time properly
-				}
+
+				pServer->SetChallenge(0);
+				pServer->SetCryptPingReplyPending(false);
+				uint32 tNow = (uint32)time(NULL);
+				pServer->SetLastPingedTime(tNow - (rand() % HR2S(1))); // if we used Obfuscated ping, we still need to reset the time properly
+
 				uint32 cur_user = PeekUInt32(packet+4);
 				uint32 cur_files = PeekUInt32(packet+8);
 				uint32 cur_maxusers = 0;
@@ -389,8 +389,7 @@ bool CUDPSocket::ProcessPacket(const BYTE* packet, UINT size, UINT opcode, uint3
 					nUDPObfuscationPort = PeekUInt16(packet+32);
 					nTCPObfuscationPort = PeekUInt16(packet+34);
 					dwServerUDPKey = PeekUInt32(packet+36);
-					if (pServer != NULL)
-						DEBUG_ONLY(DebugLog(_T("New UDP key for server %s: UDPKey %u - Old Key %u"), (LPCTSTR)pServer->GetListName(), dwServerUDPKey, pServer->GetServerKeyUDP()));
+					DEBUG_ONLY(DebugLog(_T("New UDP key for server %s: UDPKey %u - Old Key %u"), (LPCTSTR)pServer->GetListName(), dwServerUDPKey, pServer->GetServerKeyUDP()));
 				}
 				if (thePrefs.GetDebugServerUDPLevel() > 0){
 					if (size > 40){
@@ -399,55 +398,51 @@ bool CUDPSocket::ProcessPacket(const BYTE* packet, UINT size, UINT opcode, uint3
 							DbgGetHexDump(packet+32, size-32);
 					}
 				}
-				if (pServer){
-					pServer->SetPing(::GetTickCount() - pServer->GetLastPinged());
-					pServer->SetUserCount(cur_user);
-					pServer->SetFileCount(cur_files);
-					pServer->SetMaxUsers(cur_maxusers);
-					pServer->SetSoftFiles(cur_softfiles);
-					pServer->SetHardFiles(cur_hardfiles);
-					pServer->SetServerKeyUDP(dwServerUDPKey);
-					pServer->SetObfuscationPortTCP(nTCPObfuscationPort);
-					pServer->SetObfuscationPortUDP(nUDPObfuscationPort);
-					// if the received UDP flags do not match any already stored UDP flags,
-					// reset the server version string because the version (which was determined by last connecting to
-					// that server) is most likely not accurat any longer.
-					// this may also give 'false' results because we don't know the UDP flags when connecting to a server
-					// with TCP.
-					//if (pServer->GetUDPFlags() != uUDPFlags)
-					//	pServer->SetVersion(_T(""));
-					pServer->SetUDPFlags(uUDPFlags);
-					pServer->SetLowIDUsers(uLowIDUsers);
-					theApp.emuledlg->serverwnd->serverlistctrl.RefreshServer(pServer);
 
-					pServer->SetLastDescPingedCount(false);
-					if (pServer->GetLastDescPingedCount() < 2)
-					{
-						// eserver 16.45+ supports a new OP_SERVER_DESC_RES answer, if the OP_SERVER_DESC_REQ contains a uint32
-						// challenge, the server returns additional info with OP_SERVER_DESC_RES. To properly distinguish the
-						// old and new OP_SERVER_DESC_RES answer, the challenge has to be selected carefully. The first 2 bytes
-						// of the challenge (in network byte order) MUST NOT be a valid string-len-int16!
-						Packet* packet1 = new Packet(OP_SERVER_DESC_REQ, 4);
-						uint32 uDescReqChallenge = ((uint32)GetRandomUInt16() << 16) + INV_SERV_DESC_LEN; // 0xF0FF = an 'invalid' string length.
-						pServer->SetDescReqChallenge(uDescReqChallenge);
-						PokeUInt32(packet1->pBuffer, uDescReqChallenge);
-						theStats.AddUpDataOverheadServer(packet1->size);
-						if (thePrefs.GetDebugServerUDPLevel() > 0)
-							Debug(_T(">>> Sending OP__ServDescReq     to server %s:%u, challenge %08x\n"), pServer->GetAddress(), pServer->GetPort(), uDescReqChallenge);
-						theApp.serverconnect->SendUDPPacket(packet1, pServer, true);
-					}
-					else
-					{
-						pServer->SetLastDescPingedCount(true);
-					}
-				}
+				pServer->SetPing(::GetTickCount() - pServer->GetLastPinged());
+				pServer->SetUserCount(cur_user);
+				pServer->SetFileCount(cur_files);
+				pServer->SetMaxUsers(cur_maxusers);
+				pServer->SetSoftFiles(cur_softfiles);
+				pServer->SetHardFiles(cur_hardfiles);
+				pServer->SetServerKeyUDP(dwServerUDPKey);
+				pServer->SetObfuscationPortTCP(nTCPObfuscationPort);
+				pServer->SetObfuscationPortUDP(nUDPObfuscationPort);
+				// if the received UDP flags do not match any already stored UDP flags,
+				// reset the server version string because the version (which was determined by last connecting to
+				// that server) is most likely not accurat any longer.
+				// this may also give 'false' results because we don't know the UDP flags when connecting to a server
+				// with TCP.
+				//if (pServer->GetUDPFlags() != uUDPFlags)
+				//	pServer->SetVersion(_T(""));
+				pServer->SetUDPFlags(uUDPFlags);
+				pServer->SetLowIDUsers(uLowIDUsers);
+				theApp.emuledlg->serverwnd->serverlistctrl.RefreshServer(pServer);
+
+				pServer->SetLastDescPingedCount(false);
+				if (pServer->GetLastDescPingedCount() < 2)
+				{
+					// eserver 16.45+ supports a new OP_SERVER_DESC_RES answer, if the OP_SERVER_DESC_REQ contains a uint32
+					// challenge, the server returns additional info with OP_SERVER_DESC_RES. To properly distinguish the
+					// old and new OP_SERVER_DESC_RES answer, the challenge has to be selected carefully. The first 2 bytes
+					// of the challenge (in network byte order) MUST NOT be a valid string-len-int16!
+					Packet* packet1 = new Packet(OP_SERVER_DESC_REQ, 4);
+					uint32 uDescReqChallenge = ((uint32)GetRandomUInt16() << 16) + INV_SERV_DESC_LEN; // 0xF0FF = an 'invalid' string length.
+					pServer->SetDescReqChallenge(uDescReqChallenge);
+					PokeUInt32(packet1->pBuffer, uDescReqChallenge);
+					theStats.AddUpDataOverheadServer(packet1->size);
+					if (thePrefs.GetDebugServerUDPLevel() > 0)
+						Debug(_T(">>> Sending OP__ServDescReq     to server %s:%u, challenge %08x\n"), pServer->GetAddress(), pServer->GetPort(), uDescReqChallenge);
+					theApp.serverconnect->SendUDPPacket(packet1, pServer, true);
+				} else
+					pServer->SetLastDescPingedCount(true);
 				break;
 			}
 
  			case OP_SERVER_DESC_RES:{
 				if (thePrefs.GetDebugServerUDPLevel() > 0)
 					Debug(_T("ServerUDPMessage from %-21s - OP_ServerDescRes\n"), (LPCTSTR)ipstr(nIP, nUDPPort-4));
-				if (!pServer)
+				if (pServer == NULL)
 					return true;
 
 				// old packet: <name_len 2><name name_len><desc_len 2 desc_en>

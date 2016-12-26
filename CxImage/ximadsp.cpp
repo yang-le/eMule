@@ -3272,8 +3272,7 @@ int32_t  CxImage::OptimalThreshold(int32_t method, RECT * pBox, CxImage* pContra
 	if (xmin>=xmax || ymin>=ymax)
 		return -1;
 
-	double p[256];
-	memset(p,  0, 256*sizeof(double));
+	double p[256] = {};
 	//build histogram
 	for (int32_t y = ymin; y<ymax; y++){
 		uint8_t* pGray = GetBits(y) + xmin;

@@ -39,7 +39,7 @@ CString	CShareableFile::GetInfoSummary(bool bNoFormatCommands) const
 	CString strHeadFormatCommand = bNoFormatCommands ? _T("") : _T("<br_head>");
 	CString info;
 	info.Format(_T("%s\n")
-		+ GetResString(IDS_FD_SIZE) + _T(" %s\n") + strHeadFormatCommand + _T("\n")
+		+ GetResString(IDS_FD_SIZE) + _T(" %s\n") + strHeadFormatCommand + _T('\n')
 		+ GetResString(IDS_TYPE) + _T(": %s\n")
 		+ GetResString(IDS_FOLDER) + _T(": %s"),
 		(LPCTSTR)GetFileName(),

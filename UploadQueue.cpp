@@ -812,7 +812,7 @@ bool CUploadQueue::RemoveFromUploadQueue(CUpDownClient* client, LPCTSTR pszReaso
 			result = true;
 		} else {
 			curClientStruct->m_pClient->SetSlotNumber(slotCounter);
-			slotCounter++;
+			++slotCounter;
 		}
 	}
 	return result;
@@ -865,17 +865,15 @@ bool CUploadQueue::CheckForTimeOver(const CUpDownClient* client)
 	if ( waitinglist.IsEmpty() || client->GetFriendSlot() )
 		return false;
 
-	if(client->HasCollectionUploadSlot()){
-		CKnownFile* pDownloadingFile = theApp.sharedfiles->GetFileByID(client->requpfileid);
-		if(pDownloadingFile == NULL)
+	if (client->HasCollectionUploadSlot()) {
+		const CKnownFile* pDownloadingFile = theApp.sharedfiles->GetFileByID(client->requpfileid);
+		if (pDownloadingFile == NULL)
 			return true;
 		if (CCollection::HasCollectionExtention(pDownloadingFile->GetFileName()) && pDownloadingFile->GetFileSize() < (uint64)MAXPRIORITYCOLL_SIZE)
 			return false;
-		else{
-			if (thePrefs.GetLogUlDlEvents())
-				AddDebugLogLine(DLP_HIGH, false, _T("%s: Upload session ended - client with Collection Slot tried to request blocks from another file"), client->GetUserName());
-			return true;
-		}
+		if (thePrefs.GetLogUlDlEvents())
+			AddDebugLogLine(DLP_HIGH, false, _T("%s: Upload session ended - client with Collection Slot tried to request blocks from another file"), client->GetUserName());
+		return true;
 	}
 
 	if (!thePrefs.TransferFullChunks()){

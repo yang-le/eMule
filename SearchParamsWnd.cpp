@@ -556,7 +556,7 @@ void CSearchParamsWnd::InitMethodsCtrl()
 	VERIFY( m_ctlMethod.AddItem(GetResString(IDS_AUTOMATIC), 0) == SearchTypeAutomatic );
 	VERIFY( m_ctlMethod.AddItem(GetResString(IDS_SERVER), 1) == SearchTypeEd2kServer );
 	VERIFY( m_ctlMethod.AddItem(GetResString(IDS_GLOBALSEARCH), 2) == SearchTypeEd2kGlobal );
-	VERIFY( m_ctlMethod.AddItem(GetResString(IDS_KADEMLIA) + _T(" ") + GetResString(IDS_NETWORK), 3) == SearchTypeKademlia );
+	VERIFY( m_ctlMethod.AddItem(GetResString(IDS_KADEMLIA) + _T(' ') + GetResString(IDS_NETWORK), 3) == SearchTypeKademlia );
 	VERIFY( m_ctlMethod.AddItem(_T("ContentDB (Web)"), 4) == SearchTypeContentDB );
 	UpdateHorzExtent(m_ctlMethod, 16); // adjust dropped width to ensure all strings are fully visible
 	m_ctlMethod.SetCurSel(iMethod != CB_ERR ? iMethod : SearchTypeAutomatic);

@@ -192,26 +192,22 @@ int CEncryptedStreamSocket::Send(const void* lpBuf, int nBufLen, int nFlags)
 
 int CEncryptedStreamSocket::SendOv(CArray<WSABUF>& raBuffer, DWORD& dwBytesSent, LPWSAOVERLAPPED lpOverlapped)
 {
-	if (!IsEncryptionLayerReady()){
-		ASSERT( false ); // must be a bug
+	if (!IsEncryptionLayerReady()) {
+		ASSERT(false); // must be a bug
 		return -1;
 	}
-	if (m_bServerCrypt && m_StreamCryptState == ECS_ENCRYPTING && m_pfiSendBuffer != NULL){
-		ASSERT( m_NegotiatingState == ONS_BASIC_SERVER_DELAYEDSENDING );
+	if (m_bServerCrypt && m_StreamCryptState == ECS_ENCRYPTING && m_pfiSendBuffer != NULL) {
+		ASSERT(m_NegotiatingState == ONS_BASIC_SERVER_DELAYEDSENDING);
 		// handshakedata was delayed to put it into one frame with the first paypload to the server
 		// attach it now to the sendbuffer
-		WSABUF pCurBuf;
-		pCurBuf.len = (ULONG)m_pfiSendBuffer->GetLength();
-		pCurBuf.buf = reinterpret_cast<CHAR*>(m_pfiSendBuffer->Detach());
-		raBuffer.InsertAt(0, pCurBuf);
+		raBuffer.InsertAt(0, WSABUF{(ULONG)m_pfiSendBuffer->GetLength(), (CHAR *)m_pfiSendBuffer->Detach()});
 		m_NegotiatingState = ONS_COMPLETE;
 		delete m_pfiSendBuffer;
 		m_pfiSendBuffer = NULL;
-	}
-	else if (m_NegotiatingState == ONS_BASIC_SERVER_DELAYEDSENDING)
-		ASSERT( false );
+	} else
+		ASSERT(m_NegotiatingState != ONS_BASIC_SERVER_DELAYEDSENDING);
 
-	if (m_StreamCryptState == ECS_UNKNOWN){
+	if (m_StreamCryptState == ECS_UNKNOWN) {
 		//this happens when the encryption option was not set on an outgoing connection
 		//or if we try to send before receiving on an incoming connection - both shouldn't happen
 		m_StreamCryptState = ECS_NONE;

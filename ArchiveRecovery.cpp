@@ -789,7 +789,6 @@ bool CArchiveRecovery::recoverRar(CFile *rarInput, CFile *rarOutput, archiveScan
 					// Don't include directories in file count
 					if ((block->HEAD_FLAGS & 0xE0) != 0xE0)
 						fileCount++;
-//					if (rarOutput)
 					writeRarBlock(rarInput, rarOutput, block);
 				}
 				else
@@ -1660,7 +1659,7 @@ void CArchiveRecovery::ISOReadDirectory(archiveScannerThreadParams_s* aitp, UINT
 		{
 			// store dir entry
 			CString pathNew;
-			pathNew = currentDirName + filename + _T("\\");
+			pathNew = currentDirName + filename + _T('\\');
 			free(file->name);
 			file->name = _tcsdup(pathNew);
 			aitp->ai->ISOdir->AddTail(file);

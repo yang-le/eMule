@@ -225,11 +225,10 @@ void CHTRichEditCtrl::FlushBuffer()
 void CHTRichEditCtrl::AddEntry(LPCTSTR pszMsg)
 {
 	CString strLine(pszMsg);
-	strLine += _T("\n");
-	if (m_hWnd == NULL){
+	strLine += _T('\n');
+	if (m_hWnd == NULL)
 		m_astrBuff.Add(strLine);
-	}
-	else{
+	else {
 		FlushBuffer();
 		AddLine(strLine, strLine.GetLength());
 	}

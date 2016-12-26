@@ -721,7 +721,7 @@ void CIrcWnd::AddMessage(const CString& sChannelName, const CString& sTargetName
 			pUpdateChannel = m_wndChanSel.NewChannel(sChannelName, Channel::ctNormal);
 		else
 			pUpdateChannel = m_wndChanSel.NewChannel(sChannelName, Channel::ctPrivate);
-	AddColorLine(cs+_T("<") + sTargetName + _T("> ")+sLine+_T("\r\n"), pUpdateChannel->m_wndLog);
+	AddColorLine(cs+_T('<') + sTargetName + _T("> ")+sLine+_T("\r\n"), pUpdateChannel->m_wndLog);
 	if (m_wndChanSel.m_pCurrentChannel != pUpdateChannel)
 		m_wndChanSel.SetActivity(pUpdateChannel, true);
 }
@@ -1008,7 +1008,7 @@ void CIrcWnd::NoticeMessage(const CString& sSource, const CString& sTarget, cons
 		}
 	}
 	if (!bFlag) {
-		CString cs = make_time_stamp()+_T("-")+sSource+_T("- ")+sMessage+_T("\r\n");
+		CString cs = make_time_stamp()+_T('-')+sSource+_T("- ")+sMessage+_T("\r\n");
 		Channel* pStatusChannel = m_wndChanSel.m_lstChannels.GetHead();
 		if (pStatusChannel)
 			AddColorLine(cs, pStatusChannel->m_wndLog, INFO_MSG_COLOR);

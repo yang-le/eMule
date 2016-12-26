@@ -228,20 +228,18 @@ void CContact::CheckingType()
 
 void CContact::UpdateType()
 {
-	uint32 uHours = (time(NULL)-m_tCreated)/HR2S(1);
-	switch(uHours)
-	{
-		case 0:
-			m_byType = 2;
-			m_tExpires = time(NULL) + HR2S(1);
-			break;
-		case 1:
-			m_byType = 1;
-			m_tExpires = time(NULL) + (unsigned)HR2S(1.5);
-			break;
-		default:
-			m_byType = 0;
-			m_tExpires = time(NULL) + HR2S(2);
+	switch ((time(NULL)-m_tCreated)/HR2S(1)) { //hours
+	case 0:
+		m_byType = 2;
+		m_tExpires = time(NULL) + HR2S(1);
+		break;
+	case 1:
+		m_byType = 1;
+		m_tExpires = time(NULL) + (unsigned)HR2S(1.5);
+		break;
+	default:
+		m_byType = 0;
+		m_tExpires = time(NULL) + HR2S(2);
 	}
 	theApp.emuledlg->kademliawnd->ContactRef(this);
 }

@@ -356,15 +356,13 @@ HENHMETAFILE CxImageWMF::ConvertWmfFiletoEmf(CxFile *fp, METAFILEHEADER *metafil
 
 	// scale the metafile (pixels/inch of metafile => pixels/inch of display)
 
-	METAFILEPICT	mfp;
+	METAFILEPICT	mfp = {};
 	int32_t cx1, cy1;
 	HDC hDC;
 
 	hDC = ::GetDC(0);
 	cx1 = ::GetDeviceCaps(hDC, LOGPIXELSX);
 	cy1 = ::GetDeviceCaps(hDC, LOGPIXELSY);
-
-	memset(&mfp, 0, sizeof(mfp));
 
 	mfp.mm = MM_ANISOTROPIC;
 	mfp.xExt = 10000; //(metafileheader->bbox.right - metafileheader->bbox.left) * cx1 / metafileheader->inch;

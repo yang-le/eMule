@@ -710,13 +710,13 @@ void CKeyEntry::ReadPublishTrackingDataFromFile(CDataIO* pData, bool bIncludesAI
 	ASSERT( m_pliPublishingIPs == NULL );
 	m_pliPublishingIPs = new CList<structPublishingIP>();
 	uint32 nIPCount = pData->ReadUInt32();
-	uint32 nDbgLastTime = 0;
+	time_t nDbgLastTime = 0;
 	for (uint32 i = 0; i < nIPCount; i++){
 		structPublishingIP sToAdd;
 		sToAdd.m_uIP = pData->ReadUInt32();
 		ASSERT( sToAdd.m_uIP != 0 );
 		sToAdd.m_tLastPublish = pData->ReadUInt32();
-		ASSERT( nDbgLastTime <= (uint32)sToAdd.m_tLastPublish ); // should always be sorted oldest first
+		ASSERT( nDbgLastTime <= sToAdd.m_tLastPublish ); // should always be sorted oldest first
 		nDbgLastTime = sToAdd.m_tLastPublish;
 		// read hash index and update popularity index
 		if (bIncludesAICH)
@@ -774,14 +774,13 @@ void CKeyEntry::WriteTagListWithPublishInfo(CDataIO* pData){
 	}
 
 
-	uint32 nAdditionalTags = 1;
-	if (!m_aAICHHashs.IsEmpty())
-		nAdditionalTags++;
-	WriteTagListInc(pData, nAdditionalTags); // write the standard taglist but increase the tagcount by the count we wan to add
+	uint32 nAdditionalTags = m_aAICHHashs.IsEmpty() ? 1 : 2;
+
+	WriteTagListInc(pData, nAdditionalTags); // write the standard taglist but increase the tagcount by the count we want to add
 
 	// here we add a tag including how many publishers this entry has, the trustvalue and how many different names are known
 	// this is supposed to get used in later versions as an indicator for the user how valid this result is (of course this tag
-	// alone cannt be trusted 100%, because we could be a bad node, but its a part of the puzzle)
+	// alone cannot be trusted 100%, because we could be a bad node, but its a part of the puzzle)
 	uint32 uTrust = (uint16)(GetTrustValue() * 100);
 	uint32 uPublishers = m_pliPublishingIPs->GetCount() % 256;
 	uint32 uNames = m_listFileNames.GetCount() % 256;

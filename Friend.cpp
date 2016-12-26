@@ -291,7 +291,7 @@ void CFriend::UpdateFriendConnectionState(EFriendConnectReport eEvent)
 				// nothing todo, just report about it
 				for (POSITION pos = m_liConnectionReport.GetHeadPosition(); pos != NULL;) {
 					CFriendConnectionListener *flistener = m_liConnectionReport.GetNext(pos);
-					flistener->ReportConnectionProgress(GetLinkedClient(), _T(" ...") + GetResString(IDS_TREEOPTIONS_OK) + _T("\n"), true);
+					flistener->ReportConnectionProgress(GetLinkedClient(), _T(" ...") + GetResString(IDS_TREEOPTIONS_OK) + _T('\n'), true);
 					flistener->ReportConnectionProgress(GetLinkedClient(), _T("*** ") + CString(_T("Authenticating friend")) /*to stringlist*/, false);
 				}
 				if (m_FriendConnectState == FCS_CONNECTING)
@@ -314,7 +314,7 @@ void CFriend::UpdateFriendConnectionState(EFriendConnectReport eEvent)
 					m_dwLastKadSearch = ::GetTickCount();
 					for (POSITION pos = m_liConnectionReport.GetHeadPosition(); pos != NULL;) {
 						CFriendConnectionListener *flistener = m_liConnectionReport.GetNext(pos);
-						flistener->ReportConnectionProgress(GetLinkedClient(), _T(" ...") + GetResString(IDS_FAILED) + _T("\n"), true);
+						flistener->ReportConnectionProgress(GetLinkedClient(), _T(" ...") + GetResString(IDS_FAILED) + _T('\n'), true);
 						flistener->ReportConnectionProgress(GetLinkedClient(), _T("*** ") + GetResString(IDS_SEARCHINGFRIENDKAD), false);
 					}
 					Kademlia::CKademlia::FindIPByNodeID(*this, m_abyKadID);
@@ -413,7 +413,7 @@ void CFriend::KadSearchIPByNodeIDResult(Kademlia::EKadClientSearchRes eStatus, u
 				// retry to connect with our new found IP
 				for (POSITION pos = m_liConnectionReport.GetHeadPosition(); pos != NULL;) {
 					CFriendConnectionListener *flistener = m_liConnectionReport.GetNext(pos);
-					flistener->ReportConnectionProgress(GetLinkedClient(), _T(" ...") + GetResString(IDS_FOUND) + _T("\n"), true);
+					flistener->ReportConnectionProgress(GetLinkedClient(), _T(" ...") + GetResString(IDS_FOUND) + _T('\n'), true);
 					flistener->ReportConnectionProgress(m_LinkedClient, _T("*** ") + GetResString(IDS_CONNECTING), false);
 				}
 				m_FriendConnectState = FCS_CONNECTING;

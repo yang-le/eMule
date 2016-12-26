@@ -52,7 +52,7 @@ CKadContactHistogramCtrl::~CKadContactHistogramCtrl()
 
 void CKadContactHistogramCtrl::Localize()
 {
-	m_strXaxis = GetResString(IDS_KADEMLIA) + _T(" ") + GetResString(IDS_NETWORK);
+	m_strXaxis = GetResString(IDS_KADEMLIA) + _T(' ') + GetResString(IDS_NETWORK);
 	m_strYaxis = GetResString(IDS_KADCONTACTLAB);
 	if (m_hWnd)
 		Invalidate();

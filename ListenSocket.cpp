@@ -249,7 +249,7 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 				theStats.AddDownDataOverheadOther(size);
 				throw GetResString(IDS_ERR_NOHELLO);
 			}
-			else if (client && opcode != OP_HELLO && opcode != OP_HELLOANSWER)
+			if (client && opcode != OP_HELLO && opcode != OP_HELLOANSWER)
 				client->CheckHandshakeFinished();
 			switch(opcode)
 			{

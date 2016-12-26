@@ -1169,14 +1169,14 @@ bool CxImage::Resample(int32_t newx, int32_t newy, int32_t mode, CxImage* iDst)
 			int32_t i,j; // index for faValue
 			int32_t x,y; // coordinates in  source image
 			uint8_t* pDest = newImage.info.pImage;
-			int32_t* naAccu  = new int32_t[3 * newx + 3];
-			int32_t* naCarry = new int32_t[3 * newx + 3];
+			int32_t* naAccu  = new int32_t[3 * (newx + 1)];
+			int32_t* naCarry = new int32_t[3 * (newx + 1)];
 			int32_t* naTemp;
 			int32_t  nWeightX,nWeightY;
 			int32_t nScale = (int32_t)(ACCURACY * xScale * yScale);
 
-			memset(naAccu,  0, sizeof(int32_t) * 3 * newx);
-			memset(naCarry, 0, sizeof(int32_t) * 3 * newx);
+			memset(naAccu,  0, sizeof(int32_t) * 3 * (newx + 1));
+			memset(naCarry, 0, sizeof(int32_t) * 3 * (newx + 1));
 
 			int32_t v = 0; // coordinates in dest image
 			float fEndY = yScale - 1.0f;

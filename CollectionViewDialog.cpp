@@ -99,8 +99,8 @@ BOOL CCollectionViewDialog::OnInitDialog()
 	m_CollectionViewListIcon.SetIcon(m_icoColl = theApp.LoadIcon(_T("AABCollectionFileType")));
 	m_CollectionDownload.SetWindowText(GetResString(IDS_DOWNLOAD));
 	m_CollectionExit.SetWindowText(GetResString(IDS_CW_CLOSE));
-	SetDlgItemText(IDC_COLLECTIONVIEWAUTHORLABEL, GetResString(IDS_AUTHOR) + _T(":"));
-	SetDlgItemText(IDC_COLLECTIONVIEWAUTHORKEYLABEL, GetResString(IDS_AUTHORKEY) + _T(":"));
+	SetDlgItemText(IDC_COLLECTIONVIEWAUTHORLABEL, GetResString(IDS_AUTHOR) + _T(':'));
+	SetDlgItemText(IDC_COLLECTIONVIEWAUTHORKEYLABEL, GetResString(IDS_AUTHORKEY) + _T(':'));
 	SetDlgItemText(IDC_COLLECTIONVIEWCATEGORYCHECK, GetResString(IDS_COLL_ADDINCAT));
 	SetDlgItemText(IDC_VCOLL_DETAILS, GetResString(IDS_DETAILS));
 	SetDlgItemText(IDC_VCOLL_OPTIONS, GetResString(IDS_OPTIONS));

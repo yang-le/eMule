@@ -683,7 +683,7 @@ void CreateItemReport(CListCtrl& lv, CString& rstrReport)
 		rstrReport += strLine;
 		rstrReport += _T("\r\n");
 		for (int i = 0; i < strLine.GetLength(); i++)
-			rstrReport += _T("-");
+			rstrReport += _T('-');
 	}
 
 	for (int iItem = 0; iItem < iItems; iItem++)

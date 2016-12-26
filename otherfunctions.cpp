@@ -413,29 +413,24 @@ CString URLDecode(const CString& inStr, bool bKeepNewLine)
 CString URLEncode(const CString& sInT)
 {
 	CStringA sIn(sInT);
-    LPCSTR pInBuf = sIn;
+	LPCSTR pInBuf = sIn;
 
-    CString sOut;
-    LPTSTR pOutBuf = sOut.GetBuffer(sIn.GetLength() * 3);
-    if(pOutBuf)
-    {
-		// do encoding
-		while (*pInBuf)
-		{
-			if (_ismbcalnum((BYTE)*pInBuf))
-				*pOutBuf++ = (BYTE)*pInBuf;
-			else
-			{
-				*pOutBuf++ = _T('%');
-				*pOutBuf++ = toHex((BYTE)*pInBuf >> 4);
-				*pOutBuf++ = toHex((BYTE)*pInBuf & 0xf);
-			}
-			pInBuf++;
+	CString sOut;
+	LPTSTR pOutBuf = sOut.GetBuffer(sIn.GetLength() * 3);
+	// do encoding
+	while (*pInBuf) {
+		if (_ismbcalnum((BYTE)*pInBuf))
+			*pOutBuf++ = (BYTE)*pInBuf;
+		else {
+			*pOutBuf++ = _T('%');
+			*pOutBuf++ = toHex((BYTE)*pInBuf >> 4);
+			*pOutBuf++ = toHex((BYTE)*pInBuf & 0xf);
 		}
-		*pOutBuf = _T('\0');
-		sOut.ReleaseBuffer();
-    }
-    return sOut;
+		pInBuf++;
+	}
+	*pOutBuf = _T('\0');
+	sOut.ReleaseBuffer();
+	return sOut;
 }
 
 CString EncodeURLQueryParam(const CString& sInT)
@@ -453,26 +448,21 @@ CString EncodeURLQueryParam(const CString& sInT)
 
     CString sOut;
     LPTSTR pOutBuf = sOut.GetBuffer(sIn.GetLength() * 3);
-    if (pOutBuf)
-    {
 		// do encoding
-		while (*pInBuf)
-		{
-			if (_ismbcalnum((BYTE)*pInBuf))
-				*pOutBuf++ = (BYTE)*pInBuf;
-			else if (_ismbcspace((BYTE)*pInBuf))
-				*pOutBuf++ = _T('+');
-			else
-			{
-				*pOutBuf++ = _T('%');
-				*pOutBuf++ = toHex((BYTE)*pInBuf >> 4);
-				*pOutBuf++ = toHex((BYTE)*pInBuf & 0xf);
-			}
-			pInBuf++;
+	while (*pInBuf) {
+		if (_ismbcalnum((BYTE)*pInBuf))
+			*pOutBuf++ = (BYTE)*pInBuf;
+		else if (_ismbcspace((BYTE)*pInBuf))
+			*pOutBuf++ = _T('+');
+		else {
+			*pOutBuf++ = _T('%');
+			*pOutBuf++ = toHex((BYTE)*pInBuf >> 4);
+			*pOutBuf++ = toHex((BYTE)*pInBuf & 0xf);
 		}
-		*pOutBuf = _T('\0');
-		sOut.ReleaseBuffer();
-    }
+		pInBuf++;
+	}
+	*pOutBuf = _T('\0');
+	sOut.ReleaseBuffer();
     return sOut;
 }
 
@@ -2024,15 +2014,12 @@ int GetAppImageListColorFlag()
 CString DbgGetHexDump(const uint8* data, UINT size)
 {
 	CString buffer;
-	buffer.Format(_T("Size=%u"), size);
-	buffer += _T(", Data=[");
+	buffer.Format(_T("Size=%u, Data=["), size);
 	UINT i = 0;
 	for(; i < size && i < 50; i++){
 		if (i > 0)
-			buffer += _T(" ");
-		TCHAR temp[3];
-		_stprintf(temp, _T("%02x"), data[i]);
-		buffer += temp;
+			buffer += _T(' ');
+		buffer.AppendFormat(_T("%02x"), data[i]);
 	}
 	buffer += (i == size) ? _T("]") : _T("..]");
 	return buffer;

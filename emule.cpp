@@ -1759,7 +1759,7 @@ void CemuleApp::AddEd2kLinksToDownload(CString strLinks, int cat)
 	while (!strTok.IsEmpty())
 	{
 		if (strTok.Right(1) != _T("/"))
-			strTok += _T("/");
+			strTok += _T('/');
 		try
 		{
 			CED2KLink* pLink = CED2KLink::CreateLinkFromUrl(strTok);

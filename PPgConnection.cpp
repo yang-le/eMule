@@ -134,7 +134,7 @@ void CPPgConnection::OnEnChangeUDPDisable()
 	else
 		buffer[0] = _T('\0');
 
-	if (IsDlgButtonChecked(IDC_UDPDISABLE) || (!IsDlgButtonChecked(IDC_UDPDISABLE) && tempVal == 0))
+	if (IsDlgButtonChecked(IDC_UDPDISABLE) || tempVal == 0)
 	{
 		tempVal = (uint16)_tstoi(buffer) ? (uint16)(_tstoi(buffer)+10) : (uint16)(thePrefs.port+10);
 		if (IsDlgButtonChecked(IDC_UDPDISABLE))
@@ -188,7 +188,7 @@ void CPPgConnection::LoadSettings()
 		if (thePrefs.maxGraphUploadRate != UNLIMITED)
 			strBuffer.Format(_T("%d"), thePrefs.maxGraphUploadRate);
 		else
-			strBuffer = _T("0");
+			strBuffer = _T('0');
 		GetDlgItem(IDC_UPLOAD_CAP)->SetWindowText(strBuffer);
 
 		m_ctlMaxUp.SetRange(1, thePrefs.GetMaxGraphUploadRate(true));

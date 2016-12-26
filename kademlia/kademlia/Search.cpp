@@ -222,45 +222,44 @@ void CSearch::Go()
 void CSearch::PrepareToStop()
 {
 	// Check if already stoping..
-	if( m_bStoping )
+	if (m_bStoping)
 		return;
 
 	// Set basetime by search type.
 	uint32 uBaseTime;
-	switch(m_uType)
-	{
-		case NODE:
-		case NODECOMPLETE:
-		case NODESPECIAL:
-		case NODEFWCHECKUDP:
-			uBaseTime = SEARCHNODE_LIFETIME;
-			break;
-		case FILE:
-			uBaseTime = SEARCHFILE_LIFETIME;
-			break;
-		case KEYWORD:
-			uBaseTime = SEARCHKEYWORD_LIFETIME;
-			break;
-		case NOTES:
-			uBaseTime = SEARCHNOTES_LIFETIME;
-			break;
-		case STOREFILE:
-			uBaseTime = SEARCHSTOREFILE_LIFETIME;
-			break;
-		case STOREKEYWORD:
-			uBaseTime = SEARCHSTOREKEYWORD_LIFETIME;
-			break;
-		case STORENOTES:
-			uBaseTime = SEARCHSTORENOTES_LIFETIME;
-			break;
-		case FINDBUDDY:
-			uBaseTime = SEARCHFINDBUDDY_LIFETIME;
-			break;
-		case FINDSOURCE:
-			uBaseTime = SEARCHFINDSOURCE_LIFETIME;
-			break;
-		default:
-			uBaseTime = SEARCH_LIFETIME;
+	switch (m_uType) {
+	case NODE:
+	case NODECOMPLETE:
+	case NODESPECIAL:
+	case NODEFWCHECKUDP:
+		uBaseTime = SEARCHNODE_LIFETIME;
+		break;
+	case FILE:
+		uBaseTime = SEARCHFILE_LIFETIME;
+		break;
+	case KEYWORD:
+		uBaseTime = SEARCHKEYWORD_LIFETIME;
+		break;
+	case NOTES:
+		uBaseTime = SEARCHNOTES_LIFETIME;
+		break;
+	case STOREFILE:
+		uBaseTime = SEARCHSTOREFILE_LIFETIME;
+		break;
+	case STOREKEYWORD:
+		uBaseTime = SEARCHSTOREKEYWORD_LIFETIME;
+		break;
+	case STORENOTES:
+		uBaseTime = SEARCHSTORENOTES_LIFETIME;
+		break;
+	case FINDBUDDY:
+		uBaseTime = SEARCHFINDBUDDY_LIFETIME;
+		break;
+	case FINDSOURCE:
+		uBaseTime = SEARCHFINDSOURCE_LIFETIME;
+		break;
+	default:
+		uBaseTime = SEARCH_LIFETIME;
 	}
 
 	// Adjust created time so that search will delete within 15 seconds.
@@ -270,14 +269,16 @@ void CSearch::PrepareToStop()
 
 	//Update search within GUI.
 	theApp.emuledlg->kademliawnd->searchList->SearchRef(this);
-	m_pLookupHistory->SetSearchStopped();
-	theApp.emuledlg->kademliawnd->UpdateSearchGraph(m_pLookupHistory);
+	if (m_pLookupHistory == NULL) {
+		m_pLookupHistory->SetSearchStopped();
+		theApp.emuledlg->kademliawnd->UpdateSearchGraph(m_pLookupHistory);
+	}
 }
 
 void CSearch::JumpStart()
 {
 	// If we had a response within the last 3 seconds, no need to jumpstart the search.
-	if (m_uLastResponse + SEC(3) > (uint32)time(NULL))
+	if (m_uLastResponse + SEC(3) > time(NULL))
 		return;
 
 	// If we ran out of contacts, stop search.
@@ -1755,7 +1756,7 @@ void CSearch::UpdateNodeLoad( uint8 uLoad )
 {
 	// Since all nodes do not return a load value, keep track of total responses and total load.
 	m_uTotalLoad += uLoad;
-	m_uTotalLoadResponses++;
+	++m_uTotalLoadResponses;
 }
 
 void CSearch::SetSearchTermData( uint32 uSearchTermDataSize, LPBYTE pucSearchTermsData )

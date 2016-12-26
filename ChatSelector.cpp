@@ -163,7 +163,7 @@ CChatItem* CChatSelector::StartSession(CUpDownClient* client, bool show)
 
 	if (thePrefs.GetIRCAddTimeStamp())
 		AddTimeStamp(chatitem);
-	chatitem->log->AppendKeyWord(GetResString(IDS_CHAT_START) + client->GetUserName() + _T("\n"), STATUS_MSG_COLOR);
+	chatitem->log->AppendKeyWord(GetResString(IDS_CHAT_START) + client->GetUserName() + _T('\n'), STATUS_MSG_COLOR);
 	client->SetChatState(MS_CHATTING);
 
 	CString name;
@@ -237,8 +237,7 @@ void CChatSelector::ProcessMessage(CUpDownClient* sender, const CString& message
 	if (thePrefs.GetIRCAddTimeStamp())
 		AddTimeStamp(ci);
 	ci->log->AppendKeyWord(sender->GetUserName(), RECV_SOURCE_MSG_COLOR);
-	ci->log->AppendText(_T(": "));
-	ci->log->AppendText(message + _T("\n"));
+	ci->log->AppendText(_T(": ") + message + _T('\n'));
 	int iTabItem = GetTabByClient(sender);
 	if (GetCurSel() == iTabItem && GetParent()->IsWindowVisible())
 	{
@@ -254,7 +253,7 @@ void CChatSelector::ProcessMessage(CUpDownClient* sender, const CString& message
 	{
 		ci->notify = true;
         if (isNewChatWindow || thePrefs.GetNotifierOnEveryChatMsg())
-			theApp.emuledlg->ShowNotifier(GetResString(IDS_TBN_NEWCHATMSG) + _T(" ") + CString(sender->GetUserName()) + _T(":'") + message + _T("'\n"), TBN_CHAT);
+			theApp.emuledlg->ShowNotifier(GetResString(IDS_TBN_NEWCHATMSG) + _T(' ') + CString(sender->GetUserName()) + _T(":'") + message + _T("'\n"), TBN_CHAT);
 	}
 }
 
@@ -278,7 +277,7 @@ void CChatSelector::ShowCaptchaResult(CUpDownClient* sender, const CString& strR
 	{
 		if (thePrefs.GetIRCAddTimeStamp())
 			AddTimeStamp(ci);
-		ci->log->AppendKeyWord(_T("*** ") + strResult + _T("\n"), STATUS_MSG_COLOR);
+		ci->log->AppendKeyWord(_T("*** ") + strResult + _T('\n'), STATUS_MSG_COLOR);
 	}
 }
 
@@ -317,7 +316,7 @@ bool CChatSelector::SendMessage(const CString& rstrMessage)
 		if (thePrefs.GetIRCAddTimeStamp())
 			AddTimeStamp(ci);
 		ci->log->AppendKeyWord(thePrefs.GetUserNick(), SENT_TARGET_MSG_COLOR);
-		ci->log->AppendText(_T(": ") + rstrMessage + _T("\n"));
+		ci->log->AppendText(_T(": ") + rstrMessage + _T('\n'));
 	}
 	else if (ci->client->GetFriend() != NULL)
 	{
@@ -350,24 +349,24 @@ void CChatSelector::ConnectingResult(CUpDownClient* sender, bool success)
 	ci->client->SetChatState(MS_CHATTING);
 	if (!success){
 		if (!ci->strMessagePending.IsEmpty()){
-			ci->log->AppendKeyWord(_T(" ...") + GetResString(IDS_FAILED) + _T("\n"), STATUS_MSG_COLOR);
+			ci->log->AppendKeyWord(_T(" ...") + GetResString(IDS_FAILED) + _T('\n'), STATUS_MSG_COLOR);
 			ci->strMessagePending.Empty();
 		}
 		else{
 			if (thePrefs.GetIRCAddTimeStamp())
 				AddTimeStamp(ci);
-			ci->log->AppendKeyWord(GetResString(IDS_CHATDISCONNECTED) + _T("\n"), STATUS_MSG_COLOR);
+			ci->log->AppendKeyWord(GetResString(IDS_CHATDISCONNECTED) + _T('\n'), STATUS_MSG_COLOR);
 		}
 	}
 	else if (!ci->strMessagePending.IsEmpty()){
-		ci->log->AppendKeyWord(_T(" ...") + GetResString(IDS_TREEOPTIONS_OK) + _T("\n"), STATUS_MSG_COLOR);
+		ci->log->AppendKeyWord(_T(" ...") + GetResString(IDS_TREEOPTIONS_OK) + _T('\n'), STATUS_MSG_COLOR);
 		ci->client->SendChatMessage(ci->strMessagePending);
 
 		if (thePrefs.GetIRCAddTimeStamp())
 			AddTimeStamp(ci);
 		ci->log->AppendKeyWord(thePrefs.GetUserNick(), SENT_TARGET_MSG_COLOR);
 		ci->log->AppendText(_T(": "));
-		ci->log->AppendText(ci->strMessagePending + _T("\n"));
+		ci->log->AppendText(ci->strMessagePending + _T('\n'));
 
 		ci->strMessagePending.Empty();
 	}

@@ -65,13 +65,13 @@ public:
 
 	void	Finish();
 	void	GetHash(SHA1* pHash) const;
-	CString	GetHashString(BOOL bURN = FALSE) const;
+	CString	GetHashString(bool bURN = false) const;
 
-	static CString	HashToString(const SHA1* pHash, BOOL bURN = FALSE);
-	static CString	HashToHexString(const SHA1* pHash, BOOL bURN = FALSE);
-	static BOOL		HashFromString(LPCTSTR pszHash, SHA1* pHash);
-	static BOOL		HashFromURN(LPCTSTR pszHash, SHA1* pHash);
-	static BOOL		IsNull(SHA1* pHash);
+	static CString	HashToString(const SHA1* pHash, bool bURN = false);
+	static CString	HashToHexString(const SHA1* pHash, bool bURN = false);
+	static bool		HashFromString(LPCTSTR pszHash, SHA1* pHash);
+	static bool		HashFromURN(LPCTSTR pszHash, SHA1* pHash);
+	static bool		IsNull(SHA1* pHash);
 };
 
 inline bool operator==(const SHA1& sha1a, const SHA1& sha1b)

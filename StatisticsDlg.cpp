@@ -3299,7 +3299,7 @@ void CStatisticsDlg::CreateMyTree()
 	hcliport = stattree.InsertItem(GetResString(IDS_PORT),h_clients);						// Client Port Section
 	for(unsigned i = 0; i<2; ++i)
 		cliport[i] = stattree.InsertItem(GetResString(IDS_FSTAT_WAITING), hcliport);
-	hclifirewalled = stattree.InsertItem(GetResString(IDS_FIREWALLED) + _T(" (") + GetResString(IDS_KADEMLIA) + _T(")"),h_clients);
+	hclifirewalled = stattree.InsertItem(GetResString(IDS_FIREWALLED) + _T(" (") + GetResString(IDS_KADEMLIA) + _T(')'),h_clients);
 	for (unsigned i = 0; i < 2; ++i)
 		clifirewalled[i] = stattree.InsertItem(GetResString(IDS_FSTAT_WAITING), hclifirewalled);
 	cligen[4] = stattree.InsertItem(GetResString(IDS_FSTAT_WAITING), h_clients);
