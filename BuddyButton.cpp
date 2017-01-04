@@ -39,7 +39,7 @@ static LRESULT CALLBACK BuddyButtonSubClassedProc(HWND hWnd, UINT uMessage, WPAR
 	WNDPROC	pfnOldWndProc = (WNDPROC)GetProp(hWnd, s_szPropOldWndProc);
 	ASSERT( pfnOldWndProc != NULL );
 
-	SBuddyData *pBuddyData = (SBuddyData *)GetProp(hWnd, s_szPropBuddyData);
+	SBuddyData *pBuddyData = static_cast<SBuddyData *>(GetProp(hWnd, s_szPropBuddyData));
 	ASSERT( pBuddyData != NULL );
 
 	switch (uMessage)

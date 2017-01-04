@@ -224,6 +224,7 @@ BOOL CMuleSystrayDlg::OnInitDialog()
 		}	
 	}
 	
+	bool bconnect = thePrefs.GetNetworkED2K() || thePrefs.GetNetworkKademlia();
 	p = GetDlgItem(IDC_CONNECT);
 	if(p)
 	{
@@ -234,6 +235,7 @@ BOOL CMuleSystrayDlg::OnInitDialog()
 		//p->GetWindowText(m_ctrlConnect.m_strText);
 		m_ctrlConnect.m_strText = GetResString(IDS_MAIN_BTN_CONNECT);
 		m_ctrlConnect.m_strText.Remove(_T('&'));
+		m_ctrlConnect.EnableWindow(bconnect);
 
 		m_ctrlConnect.m_bUseIcon = true;
 		m_ctrlConnect.m_sIcon.cx = 16;
@@ -254,6 +256,7 @@ BOOL CMuleSystrayDlg::OnInitDialog()
 		//p->GetWindowText(m_ctrlDisconnect.m_strText);
 		m_ctrlDisconnect.m_strText = GetResString(IDS_MAIN_BTN_DISCONNECT);
 		m_ctrlDisconnect.m_strText.Remove(_T('&'));
+		m_ctrlDisconnect.EnableWindow(bconnect);
 
 		m_ctrlDisconnect.m_bUseIcon = true;
 		m_ctrlDisconnect.m_sIcon.cx = 16;
@@ -328,15 +331,15 @@ BOOL CMuleSystrayDlg::OnInitDialog()
 	UINT winver = thePrefs.GetWindowsVersion();
 	if (winver == _WINVER_95_ || winver == _WINVER_NT4_ || g_bLowColorDesktop)
 	{
-		m_ctrlSidebar.SetColors(GetSysColor(COLOR_CAPTIONTEXT), 
-								GetSysColor(COLOR_ACTIVECAPTION), 
-								GetSysColor(COLOR_ACTIVECAPTION));
+		m_ctrlSidebar.SetColors( GetSysColor(COLOR_CAPTIONTEXT)
+								,GetSysColor(COLOR_ACTIVECAPTION)
+								,GetSysColor(COLOR_ACTIVECAPTION));
 	}
 	else
 	{
-		m_ctrlSidebar.SetColors(GetSysColor(COLOR_CAPTIONTEXT), 
-								GetSysColor(COLOR_ACTIVECAPTION), 
-								GetSysColor(COLOR_GRADIENTACTIVECAPTION));
+		m_ctrlSidebar.SetColors( GetSysColor(COLOR_CAPTIONTEXT)
+								,GetSysColor(COLOR_ACTIVECAPTION)
+								,GetSysColor(COLOR_GRADIENTACTIVECAPTION));
 	}
 
 	m_ctrlSidebar.SetHorizontal(false);

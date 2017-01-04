@@ -773,7 +773,7 @@ bool CDownloadQueue::SendGlobGetSourcesUDPPacket(CSafeMemFile* data, bool bExt2P
 			packet.opcode = OP_GLOBGETSOURCES;
 		}
 		if (thePrefs.GetDebugServerUDPLevel() > 0)
-			Debug(_T(">>> Sending %s to server %-21s (%3u of %3u); FileIDs=%u(%u large)\n"), (packet.opcode == OP_GLOBGETSOURCES2) ? _T("OP__GlobGetSources2") : _T("OP__GlobGetSources1"), (LPCTSTR)ipstr(cur_udpserver->GetAddress(), cur_udpserver->GetPort()), m_iSearchedServers + 1, theApp.serverlist->GetServerCount(), nFiles, nIncludedLargeFiles);
+			Debug(_T(">>> Sending %s to server %-21s (%3i of %3u); FileIDs=%u(%u large)\n"), (packet.opcode == OP_GLOBGETSOURCES2) ? _T("OP__GlobGetSources2") : _T("OP__GlobGetSources1"), (LPCTSTR)ipstr(cur_udpserver->GetAddress(), cur_udpserver->GetPort()), m_iSearchedServers + 1, (unsigned)theApp.serverlist->GetServerCount(), nFiles, nIncludedLargeFiles);
 
 		theStats.AddUpDataOverheadServer(packet.size);
 		theApp.serverconnect->SendUDPPacket(&packet, cur_udpserver, false);
@@ -869,7 +869,7 @@ bool CDownloadQueue::SendNextUDPPacket()
 						if (cur_udpserver == NULL) {
 							// finished asking all servers for all files
 							if (thePrefs.GetDebugServerUDPLevel() > 0 && thePrefs.GetDebugServerSourcesLevel() > 0)
-								Debug(_T("Finished UDP search processing for all servers (%u)\n"), theApp.serverlist->GetServerCount());
+								Debug(_T("Finished UDP search processing for all servers (%u)\n"), (unsigned)theApp.serverlist->GetServerCount());
 							StopUDPRequests();
 							return false; // finished (processed all file & all servers)
 						}
@@ -919,7 +919,7 @@ bool CDownloadQueue::SendNextUDPPacket()
 			}
 			iFiles++;
 			if (thePrefs.GetDebugServerUDPLevel() > 0 && thePrefs.GetDebugServerSourcesLevel() > 0)
-				Debug(_T(">>> Queued  %s to server %-21s (%3u of %3u); Buff  %u(%u)=%s\n"), bGetSources2Packet ? _T("OP__GlobGetSources2") : _T("OP__GlobGetSources1"), (LPCTSTR)ipstr(cur_udpserver->GetAddress(), cur_udpserver->GetPort()), m_iSearchedServers + 1, theApp.serverlist->GetServerCount(), iFiles, iLargeFiles, (LPCTSTR)DbgGetFileInfo(nextfile->GetFileHash()));
+				Debug(_T(">>> Queued  %s to server %-21s (%3i of %3u); Buff  %u(%u)=%s\n"), bGetSources2Packet ? _T("OP__GlobGetSources2") : _T("OP__GlobGetSources1"), (LPCTSTR)ipstr(cur_udpserver->GetAddress(), cur_udpserver->GetPort()), m_iSearchedServers + 1, (unsigned)theApp.serverlist->GetServerCount(), iFiles, iLargeFiles, (LPCTSTR)DbgGetFileInfo(nextfile->GetFileHash()));
 		}
 	}
 
@@ -952,7 +952,7 @@ bool CDownloadQueue::SendNextUDPPacket()
 		m_cRequestsSentToServer = 0;
 		if (cur_udpserver == NULL) {
 			if (thePrefs.GetDebugServerUDPLevel() > 0 && thePrefs.GetDebugServerSourcesLevel() > 0)
-				Debug(_T("Finished UDP search processing for all servers (%u)\n"), theApp.serverlist->GetServerCount());
+				Debug(_T("Finished UDP search processing for all servers (%u)\n"), (unsigned)theApp.serverlist->GetServerCount());
 			StopUDPRequests();
 			return false; // finished (processed all file & all servers)
 		}

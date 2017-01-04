@@ -284,7 +284,7 @@ void CSearchResultsWnd::OnTimer(UINT_PTR nIDEvent)
 					theApp.serverconnect->SendUDPPacket(pExtSearchPacket, toask, true);
 					bRequestSent = true;
 					if (thePrefs.GetDebugServerUDPLevel() > 0)
-						Debug(_T(">>> Sending %s  to server %-21s (%3u of %3u)\n"), _T("OP__GlobSearchReq3"), (LPCTSTR)ipstr(toask->GetAddress(), toask->GetPort()), servercount, theApp.serverlist->GetServerCount());
+						Debug(_T(">>> Sending %s  to server %-21s (%3u of %3u)\n"), _T("OP__GlobSearchReq3"), (LPCTSTR)ipstr(toask->GetAddress(), toask->GetPort()), (unsigned)servercount, (unsigned)theApp.serverlist->GetServerCount());
 
 				}
 				else if (toask->GetUDPFlags() & SRV_UDPFLG_EXT_GETFILES)
@@ -292,14 +292,14 @@ void CSearchResultsWnd::OnTimer(UINT_PTR nIDEvent)
 					if (!m_b64BitSearchPacket || toask->SupportsLargeFilesUDP()){
 						searchpacket->opcode = OP_GLOBSEARCHREQ2;
 						if (thePrefs.GetDebugServerUDPLevel() > 0)
-							Debug(_T(">>> Sending %s  to server %-21s (%3u of %3u)\n"), _T("OP__GlobSearchReq2"), (LPCTSTR)ipstr(toask->GetAddress(), toask->GetPort()), servercount, theApp.serverlist->GetServerCount());
+							Debug(_T(">>> Sending %s  to server %-21s (%3u of %3u)\n"), _T("OP__GlobSearchReq2"), (LPCTSTR)ipstr(toask->GetAddress(), toask->GetPort()), (unsigned)servercount, (unsigned)theApp.serverlist->GetServerCount());
 						theStats.AddUpDataOverheadServer(searchpacket->size);
 						theApp.serverconnect->SendUDPPacket(searchpacket, toask, false);
 						bRequestSent = true;
 					}
 					else{
 						if (thePrefs.GetDebugServerUDPLevel() > 0)
-							Debug(_T(">>> Skipped UDP search on server %-21s (%3u of %3u): No large file support\n"), (LPCTSTR)ipstr(toask->GetAddress(), toask->GetPort()), servercount, theApp.serverlist->GetServerCount());
+							Debug(_T(">>> Skipped UDP search on server %-21s (%3u of %3u): No large file support\n"), (LPCTSTR)ipstr(toask->GetAddress(), toask->GetPort()), (unsigned)servercount, (unsigned)theApp.serverlist->GetServerCount());
 					}
 				}
 				else
@@ -307,14 +307,14 @@ void CSearchResultsWnd::OnTimer(UINT_PTR nIDEvent)
 					if (!m_b64BitSearchPacket || toask->SupportsLargeFilesUDP()){
 						searchpacket->opcode = OP_GLOBSEARCHREQ;
 						if (thePrefs.GetDebugServerUDPLevel() > 0)
-							Debug(_T(">>> Sending %s  to server %-21s (%3u of %3u)\n"), _T("OP__GlobSearchReq1"), (LPCTSTR)ipstr(toask->GetAddress(), toask->GetPort()), servercount, theApp.serverlist->GetServerCount());
+							Debug(_T(">>> Sending %s  to server %-21s (%3u of %3u)\n"), _T("OP__GlobSearchReq1"), (LPCTSTR)ipstr(toask->GetAddress(), toask->GetPort()), (unsigned)servercount, (unsigned)theApp.serverlist->GetServerCount());
 						theStats.AddUpDataOverheadServer(searchpacket->size);
 						theApp.serverconnect->SendUDPPacket(searchpacket, toask, false);
 						bRequestSent = true;
 					}
 					else{
 						if (thePrefs.GetDebugServerUDPLevel() > 0)
-							Debug(_T(">>> Skipped UDP search on server %-21s (%3u of %3u): No large file support\n"), (LPCTSTR)ipstr(toask->GetAddress(), toask->GetPort()), servercount, theApp.serverlist->GetServerCount());
+							Debug(_T(">>> Skipped UDP search on server %-21s (%3u of %3u): No large file support\n"), (LPCTSTR)ipstr(toask->GetAddress(), toask->GetPort()), (unsigned)servercount, (unsigned)theApp.serverlist->GetServerCount());
 					}
 				}
 				if (bRequestSent)
@@ -1694,9 +1694,7 @@ void CSearchResultsWnd::ShowSearchSelector(bool visible)
 	else
 		wpSearchWinPos.rcNormalPosition.top = wpSelectWinPos.rcNormalPosition.top;
 	searchselect.ShowWindow(visible ? SW_SHOW : SW_HIDE);
-	RemoveAnchor(searchlistctrl);
 	searchlistctrl.SetWindowPlacement(&wpSearchWinPos);
-	AddAnchor(searchlistctrl, TOP_LEFT, BOTTOM_RIGHT);
 	GetDlgItem(IDC_CLEARALL)->ShowWindow(visible ? SW_SHOW : SW_HIDE);
 	m_ctlFilter.ShowWindow(visible ? SW_SHOW : SW_HIDE);
 }
@@ -1707,9 +1705,8 @@ void CSearchResultsWnd::OnDestroy()
 	for (int i = 0; i < iTabItems; i++){
 		TCITEM tci;
 		tci.mask = TCIF_PARAM;
-		if (searchselect.GetItem(i, &tci) && tci.lParam != NULL){
+		if (searchselect.GetItem(i, &tci) && tci.lParam != NULL)
 			delete (SSearchParams*)tci.lParam;
-		}
 	}
 
 	CResizableFormView::OnDestroy();

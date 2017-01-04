@@ -400,21 +400,18 @@ int CSearchFile::IsComplete() const
 
 int CSearchFile::IsComplete(UINT uSources, UINT uCompleteSources) const
 {
-	if (IsKademlia()) {
-		return -1;		// unknown
-	}
-	else if (GetDirectory() != NULL && uSources == 1 && uCompleteSources == 0) {
+	if (IsKademlia())
+		return -1;	// unknown
+
+	if (GetDirectory() != NULL && uSources == 1 && uCompleteSources == 0) {
 		// If this 'search' result is from a remote client 'View Shared Files' answer, we don't yet have
 		// any 'complete' information (could though be implemented some day) -> don't show the file as
 		// incomplete though. Treat it as 'unknown'.
-		return -1;		// unknown
+		return -1;	// unknown
 	}
-	else if (uSources > 0 && uCompleteSources > 0) {
-		return 1;		// complete
-	}
-	else {
-		return 0;		// not complete
-	}
+	if (uSources > 0 && uCompleteSources > 0)
+		return 1;	// complete
+	return 0;		// not complete
 }
 
 time_t CSearchFile::GetLastSeenComplete() const

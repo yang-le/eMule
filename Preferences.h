@@ -1289,6 +1289,7 @@ public:
 
 	static	CString	GetHomepageBaseURL()				{return GetHomepageBaseURLForLevel(GetWebMirrorAlertLevel());}
 	static	CString	GetVersionCheckBaseURL();
+	static	CString	GetVersionCheckURL();
 	static	void	SetWebMirrorAlertLevel(uint8 newValue){m_nWebMirrorAlertLevel = newValue;}
 	static	bool	IsDefaultNick(const CString& strCheck);
 	static	UINT	GetWebMirrorAlertLevel();

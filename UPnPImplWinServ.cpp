@@ -1113,7 +1113,7 @@ INT_PTR CUPnPImplWinServ::CreateVarFromString(const CString& strArgs, VARIANT***
 // from OUT variant returned by service.
 // Returns: number of arguments or -1 if not applicable.
 
-INT_PTR	CUPnPImplWinServ::GetStringFromOutArgs(const VARIANT* pvaOutArgs, CString& strArgs)
+LONG CUPnPImplWinServ::GetStringFromOutArgs(const VARIANT* pvaOutArgs, CString& strArgs)
 {
 	LONG nLBound = 0L, nUBound = 0L;
 	HRESULT hr = GetSafeArrayBounds( pvaOutArgs->parray, &nLBound, &nUBound );
@@ -1162,7 +1162,8 @@ INT_PTR	CUPnPImplWinServ::GetStringFromOutArgs(const VARIANT* pvaOutArgs, CStrin
 		} // For loop
 	}
 
-	if ( bInvalid || nLBound > nUBound ) return -1;
+	if ( bInvalid || nLBound > nUBound )
+		return -1;
 
 	strArgs = strResult;
 	return  nUBound - nLBound + 1;
@@ -1171,13 +1172,10 @@ INT_PTR	CUPnPImplWinServ::GetStringFromOutArgs(const VARIANT* pvaOutArgs, CStrin
 // Get SafeArray bounds
 HRESULT CUPnPImplWinServ::GetSafeArrayBounds(SAFEARRAY* psa, LONG* pLBound, LONG* pUBound)
 {
-	ASSERT( psa != NULL );
+	ASSERT(psa != NULL);
 
-	HRESULT hr = SafeArrayGetLBound( psa, 1, pLBound );
-	if ( FAILED( hr ) )
-		return hr;
-
-	return SafeArrayGetUBound( psa, 1, pUBound );
+	HRESULT hr = SafeArrayGetLBound(psa, 1, pLBound);
+	return FAILED(hr) ? hr : SafeArrayGetUBound(psa, 1, pUBound);
 }
 
 // Get Variant Element
@@ -1291,10 +1289,10 @@ HRESULT __stdcall CServiceCallback::StateVariableChanged(IUPnPService* pService,
 	m_instance.m_tLastEvent = GetTickCount();
 
 	HRESULT hr = pService->get_Id( &bsServiceId );
-	if ( FAILED( hr ) )
-		return UPnPMessage( hr );
-	if ( FAILED( hr = VariantChangeType( &varValue, &varValue, VARIANT_ALPHABOOL, VT_BSTR ) ) )
-		return UPnPMessage( hr );
+	if (!FAILED(hr))
+		hr = VariantChangeType(&varValue, &varValue, VARIANT_ALPHABOOL, VT_BSTR);
+	if (FAILED(hr))
+		return UPnPMessage(hr);
 
 	CString strValue( varValue.bstrVal );
 
@@ -1353,11 +1351,13 @@ HRESULT __stdcall CServiceCallback::QueryInterface(REFIID iid, LPVOID* ppvObject
 	return hr;
 };
 
-ULONG __stdcall CServiceCallback::AddRef() {
+ULONG __stdcall CServiceCallback::AddRef()
+{
 	return ::InterlockedIncrement(&m_lRefCount);
 };
 
-ULONG __stdcall CServiceCallback::Release() {
+ULONG __stdcall CServiceCallback::Release()
+{
 	LONG lRefCount = ::InterlockedDecrement(&m_lRefCount);
 	if(0 == lRefCount)
 		delete this;

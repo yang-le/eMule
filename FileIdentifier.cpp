@@ -138,13 +138,13 @@ CFileIdentifier::CFileIdentifier(EMFileSize& rFileSize)
 CFileIdentifier::CFileIdentifier(const CFileIdentifier& rFileIdentifier, EMFileSize& rFileSize)
 	: CFileIdentifierBase(rFileIdentifier), m_rFileSize(rFileSize)
 {
-	for (int i = 0; i < rFileIdentifier.m_aMD4HashSet.GetCount(); i++)
+	for (INT_PTR i = 0; i < rFileIdentifier.m_aMD4HashSet.GetCount(); ++i)
 	{
 		uchar* pucHashSetPart = new uchar[16];
 		md4cpy(pucHashSetPart, rFileIdentifier.m_aMD4HashSet[i]);
 		m_aMD4HashSet.Add(pucHashSetPart);
 	}
-	for (int i = 0; i < rFileIdentifier.m_aAICHPartHashSet.GetCount(); i++)
+	for (INT_PTR i = 0; i < rFileIdentifier.m_aAICHPartHashSet.GetCount(); ++i)
 		m_aAICHPartHashSet.Add(rFileIdentifier.m_aAICHPartHashSet[i]);
 }
 

@@ -27,8 +27,8 @@ protected:
 	HCURSOR m_hArrowCursor;
 	CStringArray m_astrKeywords;
 	CString m_strSeparators;
-	CHARFORMAT m_cfDef;
-	CHARFORMAT m_cfKeyword;
+	CHARFORMAT2 m_cfDef;
+	CHARFORMAT2 m_cfKeyword;
 
 	void UpdateSyntaxColoring();
 	static DWORD CALLBACK StreamInCallback(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb);

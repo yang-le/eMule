@@ -124,5 +124,4 @@ private:
 	CSafeMemFile*		m_pfiSendBuffer;
 	uint32				m_nRandomKeyPart;
 	CryptoPP::Integer	m_cryptDHA;
-
 };

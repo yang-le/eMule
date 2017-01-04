@@ -46,6 +46,8 @@ CRichEditCtrlX::CRichEditCtrlX()
 	m_bSelfUpdate = false;
 	m_bForceArrowCursor = false;
 	m_hArrowCursor = ::LoadCursor(NULL, IDC_ARROW);
+	m_cfDef.cbSize = sizeof m_cfDef;
+	m_cfKeyword.cbSize = sizeof m_cfKeyword;
 }
 
 CRichEditCtrlX::~CRichEditCtrlX()

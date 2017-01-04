@@ -259,9 +259,6 @@ LRESULT CToolbarWnd::OnInitDialog(WPARAM /*wParam*/, LPARAM /*lParam*/)
 	if (pImlOld)
 		pImlOld->DeleteImageList();
 
-
-
-
 	m_btnBar->ModifyStyle((theApp.m_ullComCtrlVer >= MAKEDLLVERULL(6, 16, 0, 0)) ? TBSTYLE_TRANSPARENT : 0, 0);
 	m_btnBar->SetMaxTextRows(0);
 
@@ -459,16 +456,11 @@ void CToolbarWnd::OnAvailableCommandsChanged(CList<int>* liCommands)
 	TBBUTTONINFO tbbi = {};
 	tbbi.cbSize = sizeof tbbi;
 
-	for (int i = 0; i < m_btnBar->GetButtonCount(); i++)
-	{
+	for (int i = 0; i < m_btnBar->GetButtonCount(); ++i) {
 		tbbi.dwMask = TBIF_COMMAND | TBIF_BYINDEX | TBIF_STATE | TBIF_STYLE;
 		m_btnBar->GetButtonInfo(i, &tbbi);
-		if ((tbbi.fsStyle & BTNS_SEP) != 0)
-			continue;
-		if (liCommands->Find(tbbi.idCommand) != NULL)
-			m_btnBar->EnableButton(tbbi.idCommand, TRUE);
-		else
-			m_btnBar->EnableButton(tbbi.idCommand, FALSE);
+		if ((tbbi.fsStyle & BTNS_SEP) == 0)
+			m_btnBar->EnableButton(tbbi.idCommand, (liCommands->Find(tbbi.idCommand) != NULL) ? TRUE : FALSE);
 	}
 }
 

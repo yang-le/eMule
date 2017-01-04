@@ -169,7 +169,7 @@ BOOL CPPgStats::OnApply()
 				thePrefs.SetStatsMax(thePrefs.GetMaxConnections() + 5);
 				bInvalidateGraphs = true;
 			}
-			_sntprintf(buffer, _countof(buffer), _T("%d"), thePrefs.GetStatsMax());
+			_sntprintf(buffer, _countof(buffer), _T("%u"), thePrefs.GetStatsMax());
 			buffer[_countof(buffer) - 1] = _T('\0');
 			GetDlgItem(IDC_CGRAPHSCALE)->SetWindowText(buffer);
 		}

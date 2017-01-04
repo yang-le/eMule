@@ -768,10 +768,6 @@ CString CWebServer::_GetHeader(const ThreadData& Data, long lSession)
 
 	strDummyNumber.Format(_T("%d"), rand());
 
-	CString strVersionCheck;
-	strVersionCheck.Format(_T("/en/version_check.php?version=%u&language=%i"),theApp.m_uCurVersionCheck,thePrefs.GetLanguageID());
-	strVersionCheck = thePrefs.GetVersionCheckBaseURL()+strVersionCheck;
-
 	Out.Replace(_T("[admin]"), (bAdmin && thePrefs.GetWebAdminAllowedHiLevFunc() ) ? _T("admin") : _T(""));
 	Out.Replace(_T("[Session]"), sSession);
 	Out.Replace(_T("[RefreshVal]"), sRefresh);
@@ -800,7 +796,7 @@ CString CWebServer::_GetHeader(const ThreadData& Data, long lSession)
 	Out.Replace(_T("[Download]"), _GetPlainResString(IDS_SW_DOWNLOAD));
 	Out.Replace(_T("[Start]"), _GetPlainResString(IDS_SW_START));
 	Out.Replace(_T("[Version]"), _GetPlainResString(IDS_VERSION));
-	Out.Replace(_T("[VersionCheck]"), strVersionCheck);
+	Out.Replace(_T("[VersionCheck]"), thePrefs.GetVersionCheckURL());
 	Out.Replace(_T("[Kad]"), _GetPlainResString(IDS_KADEMLIA));
 
 	Out.Replace(_T("[FileIsHashing]"), _GetPlainResString(IDS_HASHING));

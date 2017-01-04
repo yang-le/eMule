@@ -478,7 +478,7 @@ void CClientList::Process()
 	if (m_dwLastTrackedCleanUp + TRACKED_CLEANUP_TIME < cur_tick) {
 		m_dwLastTrackedCleanUp = cur_tick;
 		if (thePrefs.GetLogBannedClients())
-			AddDebugLogLine(false, _T("Cleaning up TrackedClientList, %i clients on List..."), m_trackedClientsList.GetCount());
+			AddDebugLogLine(false, _T("Cleaning up TrackedClientList, %u clients on List..."), (unsigned)m_trackedClientsList.GetCount());
 		for (POSITION pos = m_trackedClientsList.GetStartPosition(); pos != NULL;) {
 			uint32 nKey;
 			CDeletedClient* pResult;
@@ -489,7 +489,7 @@ void CClientList::Process()
 			}
 		}
 		if (thePrefs.GetLogBannedClients())
-			AddDebugLogLine(false, _T("...done, %i clients left on list"), m_trackedClientsList.GetCount());
+			AddDebugLogLine(false, _T("...done, %u clients left on list"), (unsigned)m_trackedClientsList.GetCount());
 	}
 
 	///////////////////////////////////////////////////////////////////////////

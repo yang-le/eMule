@@ -745,8 +745,9 @@ void CALLBACK CemuleDlg::StartupTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT_PTR /*
 					AddLogLine(true, GetResString(IDS_MAIN_READY), (LPCTSTR)theApp.m_strCurVersionLong);
 
 				theApp.m_app_state = APP_STATE_RUNNING; //initialization completed
-				theApp.emuledlg->toolbar->EnableButton(TBBTN_CONNECT, true);
-				theApp.emuledlg->m_SysMenuOptions.EnableMenuItem(MP_CONNECT, MF_ENABLED);
+				bool bconnect = thePrefs.GetNetworkED2K() || thePrefs.GetNetworkKademlia();
+				theApp.emuledlg->toolbar->EnableButton(TBBTN_CONNECT, bconnect);
+				theApp.emuledlg->m_SysMenuOptions.EnableMenuItem(MP_CONNECT, bconnect ? MF_ENABLED : MF_DISABLED);
 				theApp.emuledlg->serverwnd->GetDlgItem(IDC_ED2KCONNECT)->EnableWindow(thePrefs.GetNetworkED2K());
 				theApp.emuledlg->kademliawnd->UpdateControlsState(); //application state change is not tracked - force update
 
@@ -1513,19 +1514,18 @@ LRESULT CemuleDlg::OnWMData(WPARAM /*wParam*/, LPARAM lParam)
 		}
 
 		if (clcommand==_T("status")) {
-			CString strBuff(thePrefs.GetMuleDirectory(EMULE_CONFIGBASEDIR) + _T("status.log"));
-			FILE* file = _tfsopen(strBuff, _T("wt"), _SH_DENYWR);
-			if (file){
+			FILE* file = _tfsopen(thePrefs.GetMuleDirectory(EMULE_CONFIGBASEDIR) + _T("status.log"), _T("wt"), _SH_DENYWR);
+			if (file) {
+				UINT sid;
 				if (theApp.serverconnect->IsConnected())
-					strBuff = GetResString(IDS_CONNECTED);
+					sid = IDS_CONNECTED;
 				else if (theApp.serverconnect->IsConnecting())
-					strBuff = GetResString(IDS_CONNECTING);
+					sid = IDS_CONNECTING;
 				else
-					strBuff = GetResString(IDS_DISCONNECTED);
-				_ftprintf(file, _T("%s\n"), (LPCTSTR)strBuff);
-
-				strBuff.Format(GetResString(IDS_UPDOWNSMALL), (float)theApp.uploadqueue->GetDatarate()/1024, (float)theApp.downloadqueue->GetDatarate()/1024);
-				_ftprintf(file, _T("%s"), (LPCTSTR)strBuff); // next string (getTextList) is already prefixed with '\n'!
+					sid = IDS_DISCONNECTED;
+				_ftprintf(file, _T("%s\n"), (LPCTSTR)GetResString(sid));
+				_ftprintf(file, (LPCTSTR)GetResString(IDS_UPDOWNSMALL), theApp.uploadqueue->GetDatarate()/1024.0f, theApp.downloadqueue->GetDatarate()/1024.0f);
+				// next string (getTextList) is already prefixed with '\n'!
 				_ftprintf(file, _T("%s\n"), (LPCTSTR)transferwnd->GetDownloadList()->getTextList());
 
 				fclose(file);
@@ -2378,13 +2378,7 @@ LRESULT CemuleDlg::OnTaskbarNotifierClicked(WPARAM /*wParam*/, LPARAM lParam)
 			break;
 
 		case TBN_NEWVERSION:
-		{
-			CString theUrl;
-			theUrl.Format(_T("/en/version_check.php?version=%u&language=%u"),theApp.m_uCurVersionCheck,thePrefs.GetLanguageID());
-			theUrl = thePrefs.GetVersionCheckBaseURL()+theUrl;
-			ShellExecute(NULL, NULL, theUrl, NULL, thePrefs.GetMuleDirectory(EMULE_EXECUTEABLEDIR), SW_SHOWDEFAULT);
-			break;
-		}
+			ShellExecute(NULL, NULL, thePrefs.GetVersionCheckURL(), NULL, thePrefs.GetMuleDirectory(EMULE_EXECUTEABLEDIR), SW_SHOWDEFAULT);
 	}
     return 0;
 }
@@ -2686,12 +2680,9 @@ BOOL CemuleDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 		case MP_HM_LINK2:
 			ShellExecute(NULL, NULL, thePrefs.GetHomepageBaseURL()+ CString(_T("/faq/")), NULL, thePrefs.GetMuleDirectory(EMULE_EXECUTEABLEDIR), SW_SHOWDEFAULT);
 			break;
-		case MP_HM_LINK3: {
-			CString theUrl;
-			theUrl.Format( thePrefs.GetVersionCheckBaseURL() + CString(_T("/en/version_check.php?version=%i&language=%i")),theApp.m_uCurVersionCheck,thePrefs.GetLanguageID());
-			ShellExecute(NULL, NULL, theUrl, NULL, thePrefs.GetMuleDirectory(EMULE_EXECUTEABLEDIR), SW_SHOWDEFAULT);
+		case MP_HM_LINK3:
+			ShellExecute(NULL, NULL, thePrefs.GetVersionCheckURL(), NULL, thePrefs.GetMuleDirectory(EMULE_EXECUTEABLEDIR), SW_SHOWDEFAULT);
 			break;
-		}
 		case MP_WEBSVC_EDIT:
 			theWebServices.Edit();
 			break;
@@ -2881,19 +2872,19 @@ void StraightWindowStyles(CWnd* pWnd)
 		pWndChild = pWndChild->GetNextWindow();
 	}
 
-	CHAR szClassName[MAX_PATH];
-	if (::GetClassNameA(*pWnd, szClassName, _countof(szClassName)))
+	TCHAR szClassName[MAX_PATH];
+	if (::GetClassName(*pWnd, szClassName, _countof(szClassName)))
 	{
-		if (__ascii_stricmp(szClassName, "Button") == 0)
+		if (_tcsicmp(szClassName, _T("Button")) == 0)
 			pWnd->ModifyStyle(BS_FLAT, 0);
-		else if (   (__ascii_stricmp(szClassName, "EDIT") == 0 && (pWnd->GetExStyle() & WS_EX_STATICEDGE))
-			     || __ascii_stricmp(szClassName, "SysListView32") == 0
-			     || __ascii_stricmp(szClassName, "msctls_trackbar32") == 0
+		else if (   (_tcsicmp(szClassName, _T("EDIT")) == 0 && (pWnd->GetExStyle() & WS_EX_STATICEDGE))
+			     || _tcsicmp(szClassName,_T( "SysListView32")) == 0
+			     || _tcsicmp(szClassName, _T("msctls_trackbar32")) == 0
 			    )
 		{
 			pWnd->ModifyStyleEx(WS_EX_STATICEDGE, WS_EX_CLIENTEDGE);
 		}
-		//else if (__ascii_stricmp(szClassName, "SysTreeView32") == 0)
+		//else if (_tcsicmp(szClassName, _T("SysTreeView32")) == 0)
 		//{
 		//	pWnd->ModifyStyleEx(WS_EX_STATICEDGE, WS_EX_CLIENTEDGE);
 		//}
@@ -2909,11 +2900,11 @@ void ApplySystemFont(CWnd* pWnd)
 		pWndChild = pWndChild->GetNextWindow();
 	}
 
-	CHAR szClassName[MAX_PATH];
-	if (::GetClassNameA(*pWnd, szClassName, _countof(szClassName)))
+	TCHAR szClassName[MAX_PATH];
+	if (::GetClassName(*pWnd, szClassName, _countof(szClassName)))
 	{
-		if (   __ascii_stricmp(szClassName, "SysListView32") == 0
-			|| __ascii_stricmp(szClassName, "SysTreeView32") == 0)
+		if (_tcsicmp(szClassName, _T("SysListView32")) == 0
+			|| _tcsicmp(szClassName, _T("SysTreeView32")) == 0)
 		{
 			pWnd->SendMessage(WM_SETFONT, NULL, FALSE);
 		}
@@ -2931,19 +2922,19 @@ void FlatWindowStyles(CWnd* pWnd)
 		pWndChild = pWndChild->GetNextWindow();
 	}
 
-	CHAR szClassName[MAX_PATH];
-	if (::GetClassNameA(*pWnd, szClassName, _countof(szClassName)))
+	TCHAR szClassName[MAX_PATH];
+	if (::GetClassName(*pWnd, szClassName, _countof(szClassName)))
 	{
-		if (__ascii_stricmp(szClassName, "Button") == 0)
+		if (_tcsicmp(szClassName, _T("Button")) == 0)
 		{
 			if (!s_bIsXPStyle || (pWnd->GetStyle() & BS_ICON) == 0)
 				pWnd->ModifyStyle(0, BS_FLAT);
 		}
-		else if (__ascii_stricmp(szClassName, "SysListView32") == 0)
+		else if (_tcsicmp(szClassName, _T("SysListView32")) == 0)
 		{
 			pWnd->ModifyStyleEx(WS_EX_CLIENTEDGE, WS_EX_STATICEDGE);
 		}
-		else if (__ascii_stricmp(szClassName, "SysTreeView32") == 0)
+		else if (_tcsicmp(szClassName, _T("SysTreeView32")) == 0)
 		{
 			pWnd->ModifyStyleEx(WS_EX_CLIENTEDGE, WS_EX_STATICEDGE);
 		}
@@ -2986,20 +2977,14 @@ LRESULT CemuleDlg::OnVersionCheckResponse(WPARAM /*wParam*/, LPARAM lParam)
 					Log(LOG_SUCCESS|LOG_STATUSBAR,GetResString(IDS_NEWVERSIONAVL));
 					ShowNotifier(GetResString(IDS_NEWVERSIONAVLPOPUP), TBN_NEWVERSION);
 					thePrefs.UpdateLastVC();
-					if (!thePrefs.GetNotifierOnNewVersion()){
-						if (AfxMessageBox(GetResString(IDS_NEWVERSIONAVL)+GetResString(IDS_VISITVERSIONCHECK),MB_YESNO)==IDYES) {
-							CString theUrl;
-							theUrl.Format(_T("/en/version_check.php?version=%u&language=%u"),theApp.m_uCurVersionCheck,thePrefs.GetLanguageID());
-							theUrl = thePrefs.GetVersionCheckBaseURL()+theUrl;
-							ShellExecute(NULL, NULL, theUrl, NULL, thePrefs.GetMuleDirectory(EMULE_EXECUTEABLEDIR), SW_SHOWDEFAULT);
-						}
+					if (!thePrefs.GetNotifierOnNewVersion()) {
+						if (AfxMessageBox(GetResString(IDS_NEWVERSIONAVL)+GetResString(IDS_VISITVERSIONCHECK), MB_YESNO) == IDYES)
+							ShellExecute(NULL, NULL, thePrefs.GetVersionCheckURL(), NULL, thePrefs.GetMuleDirectory(EMULE_EXECUTEABLEDIR), SW_SHOWDEFAULT);
 					}
 #else
 					Log(LOG_SUCCESS|LOG_STATUSBAR,GetResString(IDS_NEWVERSIONAVLBETA));
 					if (AfxMessageBox(GetResString(IDS_NEWVERSIONAVLBETA)+GetResString(IDS_VISITVERSIONCHECK),MB_OK)==IDOK) {
-						CString theUrl;
-						theUrl = _T("/beta");
-						theUrl = thePrefs.GetVersionCheckBaseURL()+theUrl;
+						CString theUrl = thePrefs.GetVersionCheckBaseURL() + _T("/beta");
 						ShellExecute(NULL, NULL, theUrl, NULL, thePrefs.GetMuleDirectory(EMULE_EXECUTEABLEDIR), SW_SHOWDEFAULT);
 					}
 #endif
@@ -3872,57 +3857,48 @@ BOOL CemuleDlg::OnDeviceChange(UINT nEventType, DWORD_PTR dwData)
 
 #ifdef HAVE_WIN7_SDK_H
 // update thumbbarbutton structs and add/update the GUI thumbbar
-void CemuleDlg::UpdateThumbBarButtons(bool initialAddToDlg) {
-
+void CemuleDlg::UpdateThumbBarButtons(bool initialAddToDlg)
+{
 	if (!m_pTaskbarList)
 		return;
 
 	THUMBBUTTONMASK dwMask = THB_ICON | THB_FLAGS;
-	for (int i=TBB_FIRST; i<=TBB_LAST;i++) {
+	for (int i = TBB_FIRST; i<=TBB_LAST; ++i) {
 		m_thbButtons[i].dwMask = dwMask;
 		m_thbButtons[i].iId = i;
 		m_thbButtons[i].iBitmap = 0;
 		m_thbButtons[i].dwFlags = THBF_DISMISSONCLICK;
 		CString tooltip;
 
-		switch(i) {
-			case TBB_CONNECT:
-				{
-					m_thbButtons[i].hIcon   =  theApp.LoadIcon(_T("CONNECT"), 16, 16);
-					tooltip = GetResString(IDS_MAIN_BTN_CONNECT);
-					if (theApp.IsConnected())
-						m_thbButtons[i].dwFlags |= THBF_DISABLED;
-					break;
-				}
-			case TBB_DISCONNECT:
-				{
-					m_thbButtons[i].hIcon   = theApp.LoadIcon(_T("DISCONNECT"), 16, 16);
-					tooltip = GetResString(IDS_MAIN_BTN_DISCONNECT);
-					if (!theApp.IsConnected())
-						m_thbButtons[i].dwFlags |= THBF_DISABLED;
-					break;
-				}
-			case TBB_THROTTLE:
-				{
-					m_thbButtons[i].hIcon   = theApp.LoadIcon(_T("SPEEDMIN"), 16, 16);
-					tooltip = GetResString(IDS_PW_PA);
-					break;
-				}
-			case TBB_UNTHROTTLE:
-				{
-					m_thbButtons[i].hIcon   =  theApp.LoadIcon(_T("SPEEDMAX"), 16, 16);
-					tooltip = GetResString(IDS_PW_UA);
-					break;
-				}
-			case TBB_PREFERENCES:
-				m_thbButtons[i].hIcon   =  theApp.LoadIcon(_T("PREFERENCES"), 16, 16);
-				tooltip = GetResString(IDS_EM_PREFS);
-				break;
+		switch (i) {
+		case TBB_CONNECT:
+			m_thbButtons[i].hIcon = theApp.LoadIcon(_T("CONNECT"), 16, 16);
+			tooltip = GetResString(IDS_MAIN_BTN_CONNECT);
+			if (theApp.IsConnected() || !thePrefs.GetNetworkED2K() && !thePrefs.GetNetworkKademlia())
+				m_thbButtons[i].dwFlags |= THBF_DISABLED;
+			break;
+		case TBB_DISCONNECT:
+			m_thbButtons[i].hIcon = theApp.LoadIcon(_T("DISCONNECT"), 16, 16);
+			tooltip = GetResString(IDS_MAIN_BTN_DISCONNECT);
+			if (!theApp.IsConnected())
+				m_thbButtons[i].dwFlags |= THBF_DISABLED;
+			break;
+		case TBB_THROTTLE:
+			m_thbButtons[i].hIcon = theApp.LoadIcon(_T("SPEEDMIN"), 16, 16);
+			tooltip = GetResString(IDS_PW_PA);
+			break;
+		case TBB_UNTHROTTLE:
+			m_thbButtons[i].hIcon = theApp.LoadIcon(_T("SPEEDMAX"), 16, 16);
+			tooltip = GetResString(IDS_PW_UA);
+			break;
+		case TBB_PREFERENCES:
+			m_thbButtons[i].hIcon = theApp.LoadIcon(_T("PREFERENCES"), 16, 16);
+			tooltip = GetResString(IDS_EM_PREFS);
 		}
 		// set tooltips in widechar
 		if (!tooltip.IsEmpty()) {
 			tooltip.Remove('&');
-			wcscpy(m_thbButtons[i].szTip,tooltip);
+			wcscpy(m_thbButtons[i].szTip, tooltip);
 			m_thbButtons[i].dwMask |= THB_TOOLTIP;
 		}
 	}
@@ -3933,30 +3909,28 @@ void CemuleDlg::UpdateThumbBarButtons(bool initialAddToDlg) {
 		m_pTaskbarList->ThumbBarUpdateButtons(m_hWnd, ARRAYSIZE(m_thbButtons), m_thbButtons);
 
 	// clean up icons, they were copied in the previous call
-	for (int i=TBB_FIRST; i<=TBB_LAST;i++) {
+	for (int i = TBB_FIRST; i<=TBB_LAST; ++i)
 		DestroyIcon(m_thbButtons[i].hIcon);
-	}
 }
 
 // Handle pressed thumbbar button
 void CemuleDlg::OnTBBPressed(UINT id)
 {
 	switch (id) {
-		case TBB_CONNECT:
-			OnBnClickedConnect();
-			break;
-		case TBB_DISCONNECT:
-			CloseConnection();
-			break;
-		case TBB_THROTTLE:
-			QuickSpeedOther(MP_QS_PA);
-			break;
-		case TBB_UNTHROTTLE:
-			QuickSpeedOther(MP_QS_UA);
-			break;
-		case TBB_PREFERENCES:
-			ShowPreferences();
-			break;
+	case TBB_CONNECT:
+		OnBnClickedConnect();
+		break;
+	case TBB_DISCONNECT:
+		CloseConnection();
+		break;
+	case TBB_THROTTLE:
+		QuickSpeedOther(MP_QS_PA);
+		break;
+	case TBB_UNTHROTTLE:
+		QuickSpeedOther(MP_QS_UA);
+		break;
+	case TBB_PREFERENCES:
+		ShowPreferences();
 	}
 }
 

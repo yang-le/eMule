@@ -537,9 +537,9 @@ void CSharedFileList::FindSharedFiles()
 
 	// khaos::kmod-
 	if (waitingforhash_list.IsEmpty())
-		AddLogLine(false,GetResString(IDS_SHAREDFOUND), m_Files_map.GetCount());
+		AddLogLine(false, GetResString(IDS_SHAREDFOUND), (unsigned)m_Files_map.GetCount());
 	else
-		AddLogLine(false,GetResString(IDS_SHAREDFOUNDHASHING), m_Files_map.GetCount(), waitingforhash_list.GetCount());
+		AddLogLine(false, GetResString(IDS_SHAREDFOUNDHASHING), (unsigned)m_Files_map.GetCount(), (unsigned)waitingforhash_list.GetCount());
 
 	HashNextFile();
 }

@@ -500,7 +500,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 				if (m_nProxyPeerIP) {
 					pcReq[iReqLen++] = 1;
 					*(u_long*)&pcReq[iReqLen] = m_nProxyPeerIP;
-					iReqLen += 4;
+					iReqLen += sizeof(u_long);
 				}
 				else {
 					pcReq[iReqLen++] = 3;

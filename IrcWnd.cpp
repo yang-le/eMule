@@ -797,7 +797,7 @@ void CIrcWnd::AddColorLine(const CString& line, CHTRichEditCtrl &wnd, COLORREF c
 		TCHAR aChar = line[index];
 
 		// find any hyperlinks
-		if (index == linkfoundat) //only run the link finding code once it a line with no links
+		if (index == linkfoundat) //only run the link finding code once in a line with no links
 		{
 			for (unsigned iScheme = 0; iScheme < _countof(s_apszSchemes);) {
 				CString strLeft = line.Right(line.GetLength() - index);//make a string of what we have left

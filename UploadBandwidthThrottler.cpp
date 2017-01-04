@@ -641,7 +641,7 @@ UINT UploadBandwidthThrottler::RunInternal()
 						}
 					}
 				} else
-					theApp.QueueDebugLogLine(false, _T("There was a NULL socket in the UploadBandwidthThrottler Standard list (trickle)! Prevented usage. Index: %i Size: %i"), slotCounter, GetStandardListSize());
+					theApp.QueueDebugLogLine(false, _T("There was a NULL socket in the UploadBandwidthThrottler Standard list (trickle)! Prevented usage. Index: %u Size: %u"), (unsigned)slotCounter, (unsigned)GetStandardListSize());
 			}
 
 			// Equal bandwidth for all slots
@@ -667,7 +667,7 @@ UINT UploadBandwidthThrottler::RunInternal()
 						spentOverhead += socketSentBytes.sentBytesControlPackets;
 					}
 				} else
-					theApp.QueueDebugLogLine(false, _T("There was a NULL socket in the UploadBandwidthThrottler Standard list (equal-for-all)! Prevented usage. Index: %i Size: %i"), rememberedSlotCounter, GetStandardListSize());
+					theApp.QueueDebugLogLine(false, _T("There was a NULL socket in the UploadBandwidthThrottler Standard list (equal-for-all)! Prevented usage. Index: %u Size: %u"), (unsigned)rememberedSlotCounter, (unsigned)GetStandardListSize());
 
 				++rememberedSlotCounter;
 			}
@@ -692,7 +692,7 @@ UINT UploadBandwidthThrottler::RunInternal()
 						}
 					}
 				} else
-					theApp.QueueDebugLogLine(false, _T("There was a NULL socket in the UploadBandwidthThrottler Standard list (fully activated)! Prevented usage. Index: %i Size: %i"), slotCounter, GetStandardListSize());
+					theApp.QueueDebugLogLine(false, _T("There was a NULL socket in the UploadBandwidthThrottler Standard list (fully activated)! Prevented usage. Index: %u Size: %u"), (unsigned)slotCounter, (unsigned)GetStandardListSize());
 			}
 			realBytesToSpend -= spentBytes*1000;
 

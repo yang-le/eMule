@@ -331,14 +331,15 @@ void CArchivePreviewDlg::OnBnClickedRead()
 	UpdateArchiveDisplay(true);
 }
 
-void CArchivePreviewDlg::OnBnClickedCreateRestored() {
+void CArchivePreviewDlg::OnBnClickedCreateRestored()
+{
 	if (!STATIC_DOWNCAST(CShareableFile, (*m_paFiles)[0])->IsPartFile())
 		return;
 
-	CPartFile* file=STATIC_DOWNCAST(CPartFile, (*m_paFiles)[0]);
+	CPartFile* file = STATIC_DOWNCAST(CPartFile, (*m_paFiles)[0]);
 
 	if (!file->m_bRecoveringArchive && !file->m_bPreviewing)
-			CArchiveRecovery::recover((CPartFile*)file, true, thePrefs.GetPreviewCopiedArchives());
+		CArchiveRecovery::recover(file, true, thePrefs.GetPreviewCopiedArchives());
 }
 
 // ###########################################################################
@@ -925,7 +926,7 @@ int CArchivePreviewDlg::ShowZipResults(int succ, archiveScannerThreadParams_s* t
 // ##################################################################
 static void FreeMemory(void* arg) {
 
-	archiveScannerThreadParams_s* tp=(archiveScannerThreadParams_s*)arg;
+	archiveScannerThreadParams_s* tp = static_cast<archiveScannerThreadParams_s *>(arg);
 
 	while (!tp->filled->IsEmpty())
 		delete tp->filled->RemoveHead();
@@ -996,11 +997,9 @@ void CArchivePreviewDlg::UpdateArchiveDisplay(bool doscan) {
 
 	CShareableFile* file = STATIC_DOWNCAST(CShareableFile, (*m_paFiles)[0]);
 
-	GetDlgItem(IDC_RESTOREARCH)->EnableWindow( file->IsPartFile()  &&
-		(((CPartFile*)file)->IsArchive(true)) &&
-		(((CPartFile*)file)->IsReadyForPreview() )	);
-
-
+	GetDlgItem(IDC_RESTOREARCH)->EnableWindow( file->IsPartFile()
+		&& (((CPartFile*)file)->IsArchive(true))
+		&& (((CPartFile*)file)->IsReadyForPreview() )	);
 
 	EFileType type=GetFileTypeEx(file);
 	switch(type) {
@@ -1084,7 +1083,7 @@ UINT AFX_CDECL CArchivePreviewDlg::RunArchiveScanner(LPVOID pParam) {
 	DbgSetThreadName("ArchiveScanner");
 	//InitThreadLocale();
 
-	archiveScannerThreadParams_s *tp=(archiveScannerThreadParams_s *)pParam;
+	archiveScannerThreadParams_s *tp = static_cast<archiveScannerThreadParams_s *>(pParam);
 
 	int ret=0;
 	CFile inFile;
@@ -1119,7 +1118,7 @@ LRESULT CArchivePreviewDlg::ShowScanResults(WPARAM wParam, LPARAM lParam)
 	CWaitCursor curHourglass;
 
 	int ret = static_cast<int>(wParam);
-	archiveScannerThreadParams_s* tp = (archiveScannerThreadParams_s*)lParam;
+	archiveScannerThreadParams_s* tp = reinterpret_cast<archiveScannerThreadParams_s *>(lParam);
 	ASSERT( tp->ownerHwnd == m_hWnd );
 
 	// We may receive 'stopped' archive thread results here, just ignore them (but free the memory)

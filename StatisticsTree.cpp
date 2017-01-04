@@ -558,7 +558,7 @@ CString CStatisticsTree::GetHTMLForExport(HTREEITEM theItem, int theItemLevel, b
 		if (GetItemImage(hCurrent, nImage, nSelectedImage))
 			strImage.Format(_T("%i"),nImage);
 		else
-			strImage.Format(_T("%u"),0);
+			strImage.Format(_T("%i"),0);
 
 		strItem.AppendFormat(_T("<img src=\"stats_%s.gif\" align=\"middle\">&nbsp;"), (LPCTSTR)strImage);
 

@@ -72,15 +72,15 @@ BEGIN_MESSAGE_MAP(CServerWnd, CResizableDialog)
 END_MESSAGE_MAP()
 
 CServerWnd::CServerWnd(CWnd* pParent /*=NULL*/)
-	: CResizableDialog(CServerWnd::IDD, pParent), debug(false)
+	: CResizableDialog(CServerWnd::IDD, pParent), debug(false), m_cfDef(), m_cfBold()
 {
 	servermsgbox = new CHTRichEditCtrl;
 	logbox = new CHTRichEditCtrl;
 	debuglog = new CHTRichEditCtrl;
-	m_pacServerMetURL=NULL;
+	m_pacServerMetURL = NULL;
 	icon_srvlist = NULL;
-	memset(&m_cfDef, 0, sizeof m_cfDef);
-	memset(&m_cfBold, 0, sizeof m_cfBold);
+	m_cfDef.cbSize = sizeof m_cfDef;
+	m_cfBold.cbSize = sizeof m_cfBold;
 	StatusSelector.m_bCloseable = false;
 }
 
@@ -129,7 +129,7 @@ BOOL CServerWnd::OnInitDialog()
 
 		servermsgbox->AppendText(_T("eMule v") + theApp.m_strCurVersionLong + _T('\n'));
 		// MOD Note: Do not remove this part - Merkur
-		m_strClickNewVersion.AppendFormat(_T("%s %s %s"), (LPCTSTR)GetResString(IDS_EMULEW), (LPCTSTR)GetResString(IDS_EMULEW3), (LPCTSTR)GetResString(IDS_EMULEW2));
+		m_strClickNewVersion.Format(_T("%s %s %s"), (LPCTSTR)GetResString(IDS_EMULEW), (LPCTSTR)GetResString(IDS_EMULEW3), (LPCTSTR)GetResString(IDS_EMULEW2));
 		servermsgbox->AppendHyperLink(_T(""), _T(""), m_strClickNewVersion, _T(""));
 		// MOD Note: end
 		servermsgbox->AppendText(_T("\n\n"));
@@ -735,8 +735,7 @@ void CServerWnd::OnEnLinkServerBox(NMHDR *pNMHDR, LRESULT *pResult)
 		servermsgbox->GetTextRange(pEnLink->chrg.cpMin, pEnLink->chrg.cpMax, strUrl);
 		if (strUrl == m_strClickNewVersion){
 			// MOD Note: Do not remove this part - Merkur
-			strUrl.Format(_T("/en/version_check.php?version=%u&language=%u"),theApp.m_uCurVersionCheck,thePrefs.GetLanguageID());
-			strUrl = thePrefs.GetVersionCheckBaseURL()+strUrl;
+			strUrl = thePrefs.GetVersionCheckURL();
 			// MOD Note: end
 		}
 		ShellExecute(NULL, NULL, strUrl, NULL, NULL, SW_SHOWDEFAULT);

@@ -122,17 +122,19 @@ CSearch::~CSearch()
 	theApp.emuledlg->kademliawnd->searchList->SearchRem(this);
 
 	// delete/deref searchhistory (will delete itself if not used by the GUI)
-	m_pLookupHistory->SetSearchDeleted();
-	m_pLookupHistory = NULL;
+	if (m_pLookupHistory != NULL) {
+		m_pLookupHistory->SetSearchDeleted();
+		m_pLookupHistory = NULL;
+	}
 	theApp.emuledlg->kademliawnd->UpdateSearchGraph(NULL);
 
 	// Check if a source search is currently being done.
 	CPartFile* pPartFile = theApp.downloadqueue->GetFileByKadFileSearchID(GetSearchID());
 
 	// Reset the searchID if a source search is currently being done.
-	if(pPartFile){
+	if(pPartFile)
 		pPartFile->SetKadFileSearchID(0);
-	}
+
 	if (m_uType == NOTES){
 		CAbstractFile* pAbstractFile = theApp.knownfiles->FindKnownFileByID(CUInt128(GetTarget().GetData()).GetData());
 		if (pAbstractFile != NULL)
@@ -194,12 +196,7 @@ void CSearch::Go()
 		ASSERT(m_mapPossible.size() == m_mapInUse.size());
 
 		// Take top ALPHA_QUERY to start search with.
-		int iCount;
-
-		if(m_uType == NODE)
-			iCount = 1;
-		else
-			iCount = mini(ALPHA_QUERY, (int)m_mapPossible.size());
+		int iCount = (m_uType == NODE) ? 1 : mini(ALPHA_QUERY, (int)m_mapPossible.size());
 
 		ContactMap::iterator itContactMap2 = m_mapPossible.begin();
 		// Send initial packets to start the search.
@@ -269,7 +266,7 @@ void CSearch::PrepareToStop()
 
 	//Update search within GUI.
 	theApp.emuledlg->kademliawnd->searchList->SearchRef(this);
-	if (m_pLookupHistory == NULL) {
+	if (m_pLookupHistory != NULL) {
 		m_pLookupHistory->SetSearchStopped();
 		theApp.emuledlg->kademliawnd->UpdateSearchGraph(m_pLookupHistory);
 	}

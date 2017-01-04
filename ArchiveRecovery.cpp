@@ -93,7 +93,7 @@ void CArchiveRecovery::recover(CPartFile *partFile, bool preview, bool bCreatePa
 
 UINT AFX_CDECL CArchiveRecovery::run(LPVOID lpParam)
 {
-	ThreadParam *tp = (ThreadParam *)lpParam;
+	ThreadParam *tp = static_cast<ThreadParam *>(lpParam);
 	DbgSetThreadName("ArchiveRecovery");
 	InitThreadLocale();
 
@@ -1232,20 +1232,19 @@ ULONG getcrc(ULONG crc, UCHAR * addr, INT len)
 bool CArchiveRecovery::recoverAce(CFile *aceInput, CFile *aceOutput, archiveScannerThreadParams_s* aitp,
 								  CTypedPtrList<CPtrList, Gap_Struct*> *filled)
 {
-	UINT64 filesearchstart=0;
-	bool retVal=false;
-	ACE_ARCHIVEHEADER* acehdr=NULL;
+	bool retVal = false;
 
 	make_crctable();
 
 	try
 	{
+		UINT64 filesearchstart = 0;
+		ACE_ARCHIVEHEADER* acehdr = NULL;
 		// Try to get file header and main header
 		if (IsFilled(0,32,filled)) {
 			static const char ACE_ID[]	= { 0x2A, 0x2A, 0x41, 0x43, 0x45, 0x2A, 0x2A };
 			acehdr=new ACE_ARCHIVEHEADER;
 
-			LONG headcrc;
 			UINT hdrread=0;
 
 			hdrread+=aceInput->Read((void*)acehdr, sizeof(ACE_ARCHIVEHEADER) - (3*sizeof(char*)) - sizeof(uint16) );
@@ -1260,7 +1259,7 @@ bool CArchiveRecovery::recoverAce(CFile *aceInput, CFile *aceOutput, archiveScan
 			}else {
 
 				hdrread-= 2*sizeof(uint16);		// care for the size that is specified with HEADER_SIZE
-				headcrc = getcrc(CRC_MASK, (BYTE*)&acehdr->HEAD_TYPE, hdrread );
+				LONG headcrc = getcrc(CRC_MASK, (BYTE*)&acehdr->HEAD_TYPE, hdrread );
 
 				if (acehdr->AVSIZE) {
 					acehdr->AV=(char*)calloc(acehdr->AVSIZE+1,1);
@@ -1366,19 +1365,18 @@ ACE_BlockFile *CArchiveRecovery::scanForAceFileHeader(CFile *input, archiveScann
 	static char blockmem[MAXACEHEADERSIZE];
 
 	BYTE chunk[TESTCHUNKSIZE];
-	UINT lenChunk;
 	BYTE *foundPos = NULL;
-	ULONGLONG foundOffset;
-	ULONGLONG chunkOffset;
-	ULONGLONG chunkstart;
-	uint16 headCRC,headSize;
+//	ULONGLONG foundOffset;
+//	ULONGLONG chunkOffset;
+//	ULONGLONG chunkstart;
+	uint16 headCRC, headSize;
 
 	try
 	{
 		while (available > 0)
 		{
-			chunkstart=input->GetPosition();
-			lenChunk = input->Read(chunk, (UINT)(min(available, TESTCHUNKSIZE)) );
+			ULONGLONG chunkstart = input->GetPosition();
+			UINT lenChunk = input->Read(chunk, (UINT)(min(available, TESTCHUNKSIZE)) );
 			if (lenChunk == 0)
 				break;
 
@@ -1397,15 +1395,14 @@ ACE_BlockFile *CArchiveRecovery::scanForAceFileHeader(CFile *input, archiveScann
 				if (foundPos == NULL)
 					break;
 
-				chunkOffset = foundPos - (&chunk[0]);
-				foundOffset = chunkstart + chunkOffset;
+				ULONGLONG chunkOffset = foundPos - (&chunk[0]);
+				ULONGLONG foundOffset = chunkstart + chunkOffset;
 
 				if (chunkOffset<4)
 					continue;
 
-				if (aitp) {
+				if (aitp)
 					ProcessProgress(aitp,foundOffset);
-				}
 
 
 				// Move back 4 bytes to get crc,size and read block

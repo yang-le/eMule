@@ -87,13 +87,14 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
+      <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>ADSIId.lib;crypt32.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;$(MSBuildProjectDirectory)\..\cryptopp\$(Configuration)\cryptlib.lib;$(MSBuildProjectDirectory)\cximage\$(Configuration)\cximage.lib;$(MSBuildProjectDirectory)\id3lib\libprj\$(Configuration)\id3lib.lib;$(MSBuildProjectDirectory)\..\libpng\projects\visualc\$(Configuration)\libpng.lib;$(MSBuildProjectDirectory)\..\miniupnpc\msvc\$(Configuration)\miniupnpc.lib;$(MSBuildProjectDirectory)\..\resizablelib\$(Configuration)\resizablelib.lib;$(MSBuildProjectDirectory)\..\zlib\contrib\vstudio\vc\$(Configuration)\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ADSIId.lib;crypt32.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;$(MSBuildProjectDirectory)\..\cryptopp\$(Configuration)\cryptlib.lib;$(MSBuildProjectDirectory)\cximage\$(Configuration)\cximage.lib;$(MSBuildProjectDirectory)\id3lib\libprj\$(Configuration)\id3lib.lib;$(MSBuildProjectDirectory)\..\libpng\projects\visualc\$(Configuration)\libpng.lib;$(MSBuildProjectDirectory)\..\miniupnpc\msvc\$(Configuration)\miniupnpc.lib;$(MSBuildProjectDirectory)\..\resizablelib\$(Configuration)\resizablelib.lib;$(MSBuildProjectDirectory)\..\zlib\contrib\vstudio\vc\$(Platform)\$(Configuration)\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>oleacc.dll;gdiplus.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
@@ -111,6 +112,9 @@
       <AdditionalManifestFiles>res/$(TargetName).manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
     </Manifest>
+    <Link>
+      <AdditionalDependencies>ADSIId.lib;crypt32.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;$(MSBuildProjectDirectory)\..\cryptopp\$(Configuration)\cryptlib.lib;$(MSBuildProjectDirectory)\cximage\$(Configuration)\cximage.lib;$(MSBuildProjectDirectory)\id3lib\libprj\$(Configuration)\id3lib.lib;$(MSBuildProjectDirectory)\..\libpng\projects\visualc\$(Configuration)\libpng.lib;$(MSBuildProjectDirectory)\..\miniupnpc\msvc\$(Configuration)\miniupnpc.lib;$(MSBuildProjectDirectory)\..\resizablelib\$(Configuration)\resizablelib.lib;$(MSBuildProjectDirectory)\..\zlib\contrib\vstudio\vc\$(Platform)\$(Configuration)\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='_SpecialBootstrapNodes|Win32'">
     <Midl>
@@ -128,13 +132,14 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
+      <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>ADSIId.lib;crypt32.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;$(MSBuildProjectDirectory)\..\cryptopp\Debug\cryptlib.lib;$(MSBuildProjectDirectory)\cximage\Debug\cximage.lib;$(MSBuildProjectDirectory)\id3lib\libprj\Debug\id3lib.lib;$(MSBuildProjectDirectory)\..\libpng\projects\visualc\Debug\libpng.lib;$(MSBuildProjectDirectory)\..\miniupnpc\msvc\Debug\miniupnpc.lib;$(MSBuildProjectDirectory)\..\resizablelib\Debug\resizablelib.lib;$(MSBuildProjectDirectory)\..\zlib\contrib\vstudio\vc\Debug\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ADSIId.lib;crypt32.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;$(MSBuildProjectDirectory)\..\cryptopp\Debug\cryptlib.lib;$(MSBuildProjectDirectory)\cximage\Debug\cximage.lib;$(MSBuildProjectDirectory)\id3lib\libprj\Debug\id3lib.lib;$(MSBuildProjectDirectory)\..\libpng\projects\visualc\Debug\libpng.lib;$(MSBuildProjectDirectory)\..\miniupnpc\msvc\Debug\miniupnpc.lib;$(MSBuildProjectDirectory)\..\resizablelib\Debug\resizablelib.lib;$(MSBuildProjectDirectory)\..\zlib\contrib\vstudio\vc\$(Platform)\Debug\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>oleacc.dll;gdiplus.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
@@ -163,6 +168,7 @@
       <PreprocessorDefinitions>WIN32;_WINDOWS;ID3LIB_LINKOPTION=1;MINIUPNP_STATICLIB;SUPPORT_LARGE_FILES;NDEBUG;XP_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
+      <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_UNICODE;UNICODE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -170,7 +176,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/safeseh</AdditionalOptions>
-      <AdditionalDependencies>ADSIId.lib;crypt32.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;$(MSBuildProjectDirectory)\..\cryptopp\$(Configuration)\cryptlib.lib;$(MSBuildProjectDirectory)\cximage\$(Configuration)\cximage.lib;$(MSBuildProjectDirectory)\id3lib\libprj\$(Configuration)\id3lib.lib;$(MSBuildProjectDirectory)\..\libpng\projects\visualc\$(Configuration)\libpng.lib;$(MSBuildProjectDirectory)\..\miniupnpc\msvc\$(Configuration)\miniupnpc.lib;$(MSBuildProjectDirectory)\..\resizablelib\$(Configuration)\resizablelib.lib;$(MSBuildProjectDirectory)\..\zlib\contrib\vstudio\vc\$(Configuration)\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ADSIId.lib;crypt32.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;$(MSBuildProjectDirectory)\..\cryptopp\$(Configuration)\cryptlib.lib;$(MSBuildProjectDirectory)\cximage\$(Configuration)\cximage.lib;$(MSBuildProjectDirectory)\id3lib\libprj\$(Configuration)\id3lib.lib;$(MSBuildProjectDirectory)\..\libpng\projects\visualc\$(Configuration)\libpng.lib;$(MSBuildProjectDirectory)\..\miniupnpc\msvc\$(Configuration)\miniupnpc.lib;$(MSBuildProjectDirectory)\..\resizablelib\$(Configuration)\resizablelib.lib;$(MSBuildProjectDirectory)\..\zlib\contrib\vstudio\vc\$(Platform)\$(Configuration)\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>mpr.lib;rasapi32.lib;secur32.lib;sensapi.lib;vfw32.lib;winmm.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <DelayLoadDLLs>oleacc.dll;gdiplus.dll;ws2_32.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>true</GenerateDebugInformation>

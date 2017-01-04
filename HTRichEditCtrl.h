@@ -9,6 +9,7 @@ class CHTRichEditCtrl : public CRichEditCtrl
 public:
 	CHTRichEditCtrl();
 	virtual ~CHTRichEditCtrl();
+	BOOL Create(DWORD dwStyle, const RECT& rect, CWnd *parent, UINT nID);
 
 	void Init(LPCTSTR pszTitle, LPCTSTR pszSkinKey = NULL);
 	void SetProfileSkinKey(LPCTSTR pszSkinKey);
@@ -55,7 +56,7 @@ protected:
 	CString m_strTitle;
 	CString m_strSkinKey;
 	bool m_bRestoreFormat;
-	CHARFORMAT m_cfDefault;
+	CHARFORMAT2 m_cfDefault;
 	bool m_bForceArrowCursor;
 	HCURSOR m_hArrowCursor;
 	bool m_bEnableSmileys;

@@ -119,7 +119,8 @@ static CryptoPP::AutoSeededRandomPool cryptRandomGen;
 
 IMPLEMENT_DYNAMIC(CEncryptedStreamSocket, CAsyncSocketEx)
 
-CEncryptedStreamSocket::CEncryptedStreamSocket(){
+CEncryptedStreamSocket::CEncryptedStreamSocket()
+{
 	m_StreamCryptState = thePrefs.IsClientCryptLayerSupported() ? ECS_UNKNOWN : ECS_NONE;
 	m_NegotiatingState = ONS_NONE;
 	m_pRC4ReceiveKey = NULL;
@@ -137,7 +138,8 @@ CEncryptedStreamSocket::CEncryptedStreamSocket(){
 	m_bServerCrypt = false;
 };
 
-CEncryptedStreamSocket::~CEncryptedStreamSocket(){
+CEncryptedStreamSocket::~CEncryptedStreamSocket()
+{
 	delete m_pRC4ReceiveKey;
 	delete m_pRC4SendKey;
 	if (m_pfiReceiveBuffer != NULL)
@@ -146,7 +148,8 @@ CEncryptedStreamSocket::~CEncryptedStreamSocket(){
 	delete m_pfiSendBuffer;
 };
 
-void CEncryptedStreamSocket::CryptPrepareSendData(uchar* pBuffer, uint32 nLen){
+void CEncryptedStreamSocket::CryptPrepareSendData(uchar* pBuffer, uint32 nLen)
+{
 	if (!IsEncryptionLayerReady()){
 		ASSERT( false ); // must be a bug
 		return;
@@ -198,10 +201,14 @@ int CEncryptedStreamSocket::SendOv(CArray<WSABUF>& raBuffer, DWORD& dwBytesSent,
 	}
 	if (m_bServerCrypt && m_StreamCryptState == ECS_ENCRYPTING && m_pfiSendBuffer != NULL) {
 		ASSERT(m_NegotiatingState == ONS_BASIC_SERVER_DELAYEDSENDING);
-		// handshakedata was delayed to put it into one frame with the first paypload to the server
+		// handshakedata was delayed to put it into one frame with the first payload to the server
 		// attach it now to the sendbuffer
-		raBuffer.InsertAt(0, WSABUF{(ULONG)m_pfiSendBuffer->GetLength(), (CHAR *)m_pfiSendBuffer->Detach()});
+		WSABUF wbuf = {(ULONG)m_pfiSendBuffer->GetLength()};
+		wbuf.buf = new CHAR[wbuf.len];
+		memcpy(wbuf.buf, m_pfiSendBuffer->GetBuffer(), wbuf.len);
+		raBuffer.InsertAt(0, wbuf);
 		m_NegotiatingState = ONS_COMPLETE;
+		free(m_pfiSendBuffer->Detach());
 		delete m_pfiSendBuffer;
 		m_pfiSendBuffer = NULL;
 	} else
@@ -224,13 +231,14 @@ bool CEncryptedStreamSocket::IsEncryptionLayerReady()
 }
 
 
-int CEncryptedStreamSocket::Receive(void* lpBuf, int nBufLen, int nFlags){
+int CEncryptedStreamSocket::Receive(void* lpBuf, int nBufLen, int nFlags)
+{
 	m_nObfuscationBytesReceived = CAsyncSocketEx::Receive(lpBuf, nBufLen, nFlags);
 	m_bFullReceive = m_nObfuscationBytesReceived == (uint32)nBufLen;
 
-	if(m_nObfuscationBytesReceived == (uint32)SOCKET_ERROR || m_nObfuscationBytesReceived <= 0) {
+	if(m_nObfuscationBytesReceived == (uint32)SOCKET_ERROR || m_nObfuscationBytesReceived <= 0)
 		return m_nObfuscationBytesReceived;
-	}
+
 	switch (m_StreamCryptState) {
 		case ECS_NONE: // disabled, just pass it through
 			return m_nObfuscationBytesReceived;
@@ -328,7 +336,8 @@ int CEncryptedStreamSocket::Receive(void* lpBuf, int nBufLen, int nFlags){
 	}
 }
 
-void CEncryptedStreamSocket::SetConnectionEncryption(bool bEnabled, const uchar* pTargetClientHash, bool bServerConnection){
+void CEncryptedStreamSocket::SetConnectionEncryption(bool bEnabled, const uchar* pTargetClientHash, bool bServerConnection)
+{
 	if (m_StreamCryptState != ECS_UNKNOWN && m_StreamCryptState != ECS_NONE){
 		if (!m_StreamCryptState == ECS_NONE || bEnabled)
 			ASSERT( false );
@@ -366,7 +375,8 @@ void CEncryptedStreamSocket::SetConnectionEncryption(bool bEnabled, const uchar*
 	}
 }
 
-void CEncryptedStreamSocket::OnSend(int){
+void CEncryptedStreamSocket::OnSend(int)
+{
 	// if the socket just connected and this is outgoing, we might want to start the handshake here
 	if (m_StreamCryptState == ECS_PENDING || m_StreamCryptState == ECS_PENDING_SERVER){
 		StartNegotiation(true);
@@ -379,7 +389,8 @@ void CEncryptedStreamSocket::OnSend(int){
 	}
 }
 
-void CEncryptedStreamSocket::StartNegotiation(bool bOutgoing){
+void CEncryptedStreamSocket::StartNegotiation(bool bOutgoing)
+{
 
 	if (!bOutgoing){
 		m_NegotiatingState = ONS_BASIC_CLIENTA_RANDOMPART;
@@ -666,7 +677,8 @@ int CEncryptedStreamSocket::Negotiate(const uchar* pBuffer, uint32 nLen)
 
 }
 
-int CEncryptedStreamSocket::SendNegotiatingData(const void* lpBuf, uint32 nBufLen, uint32 nStartCryptFromByte, bool bDelaySend){
+int CEncryptedStreamSocket::SendNegotiatingData(const void* lpBuf, uint32 nBufLen, uint32 nStartCryptFromByte, bool bDelaySend)
+{
 	ASSERT( m_StreamCryptState == ECS_NEGOTIATING || m_StreamCryptState == ECS_ENCRYPTING );
 	ASSERT( nStartCryptFromByte <= nBufLen );
 	ASSERT( m_NegotiatingState == ONS_BASIC_SERVER_DELAYEDSENDING || !bDelaySend );
@@ -713,47 +725,34 @@ int CEncryptedStreamSocket::SendNegotiatingData(const void* lpBuf, uint32 nBufLe
 	if (result == (uint32)SOCKET_ERROR || bDelaySend){
 		m_pfiSendBuffer = new CSafeMemFile(128);
 		m_pfiSendBuffer->Write(pBuffer, nBufLen);
-		free(pBuffer);
-		return result;
-    }
-	else {
+    } else {
 		if (result < nBufLen){
 			m_pfiSendBuffer = new CSafeMemFile(128);
 			m_pfiSendBuffer->Write(pBuffer + result, nBufLen - result);
 		}
-		free(pBuffer);
-		return result;
 	}
+	free(pBuffer);
+	return result;
 }
 
-CString	CEncryptedStreamSocket::DbgGetIPString(){
+CString	CEncryptedStreamSocket::DbgGetIPString()
+{
 	SOCKADDR_IN sockAddr = {};
 	int nSockAddrLen = sizeof sockAddr;
 	GetPeerName((SOCKADDR*)&sockAddr, &nSockAddrLen);
 	return ipstr(sockAddr.sin_addr.S_un.S_addr);
 }
 
-uint8 CEncryptedStreamSocket::GetSemiRandomNotProtocolMarker() const{
-	uint8 bySemiRandomNotProtocolMarker = 0;
-	int i;
-	for (i = 0; i < 128; i++){
-		bySemiRandomNotProtocolMarker = cryptRandomGen.GenerateByte();
-		bool bOk = false;
-		switch (bySemiRandomNotProtocolMarker){ // not allowed values
-				case OP_EDONKEYPROT:
-				case OP_PACKEDPROT:
-				case OP_EMULEPROT:
-					break;
-				default:
-					bOk = true;
-		}
-		if (bOk)
-			break;
+uint8 CEncryptedStreamSocket::GetSemiRandomNotProtocolMarker() const
+{
+	for (int i = 128; --i >= 0;) {
+		uint8 bySemiRandomNotProtocolMarker = cryptRandomGen.GenerateByte();
+		if ( bySemiRandomNotProtocolMarker != OP_EDONKEYPROT // not allowed values
+		  && bySemiRandomNotProtocolMarker != OP_PACKEDPROT
+		  && bySemiRandomNotProtocolMarker != OP_EMULEPROT)
+			return bySemiRandomNotProtocolMarker;
 	}
-	if (i >= 128){
-		// either we have _real_ bad luck or the randomgenerator is a bit messed up
-		ASSERT( false );
-		bySemiRandomNotProtocolMarker = 0x01;
-	}
-	return bySemiRandomNotProtocolMarker;
+	// either we have _real_ bad luck or the randomgenerator is a bit messed up
+	ASSERT(false);
+	return 0x01;
 }

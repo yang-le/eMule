@@ -78,6 +78,7 @@ BOOL CClientDetailPage::OnInitDialog()
 	AddAnchor(IDC_UPLOADING, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_OBFUSCATION_STAT, TOP_LEFT, TOP_RIGHT);
 
+	AddAllOtherAnchors();
 	Localize();
 	return TRUE;
 }

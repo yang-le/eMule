@@ -377,8 +377,7 @@ void CUpDownClient::ProcessHttpBlockPacket(const BYTE* pucData, UINT uSize)
 		credits->AddDownloaded(uSize, GetIP());
 	nEndPos--;
 
-	for (POSITION pos = m_PendingBlocks_list.GetHeadPosition(); pos != NULL; )
-	{
+	for (POSITION pos = m_PendingBlocks_list.GetHeadPosition(); pos != NULL;) {
 		POSITION posLast = pos;
 		Pending_Block_Struct *cur_block = m_PendingBlocks_list.GetNext(pos);
 		if (cur_block->block->StartOffset <= nStartPos && nStartPos <= cur_block->block->EndOffset)
@@ -386,7 +385,7 @@ void CUpDownClient::ProcessHttpBlockPacket(const BYTE* pucData, UINT uSize)
 			if (thePrefs.GetDebugClientTCPLevel() > 0){
 				// NOTE: 'Left' is only accurate in case we have one(!) request block!
 				void* p = m_pPCDownSocket ? (void*)m_pPCDownSocket : (void*)socket;
-				Debug(_T("%08x  Start=%I64u  End=%I64u  Size=%u  Left=%I64u  %s\n"), p, nStartPos, nEndPos, uSize, cur_block->block->EndOffset - (nStartPos + uSize) + 1, (LPCTSTR)DbgGetFileInfo(reqfile->GetFileHash()));
+				Debug(_T("%p  Start=%I64u  End=%I64u  Size=%u  Left=%I64u  %s\n"), p, nStartPos, nEndPos, uSize, cur_block->block->EndOffset - (nStartPos + uSize) + 1, (LPCTSTR)DbgGetFileInfo(reqfile->GetFileHash()));
 			}
 
 			m_nLastBlockOffset = nStartPos;

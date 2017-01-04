@@ -119,7 +119,7 @@ void CChatSelector::UpdateFonts(CFont* pFont)
 	item.mask = TCIF_PARAM;
 	int i = 0;
 	while (GetItem(i++, &item)){
-		CChatItem* ci = (CChatItem*)item.lParam;
+		CChatItem* ci = reinterpret_cast<CChatItem *>(item.lParam);
 		ci->log->SetFont(pFont);
 	}
 }

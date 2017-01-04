@@ -287,7 +287,7 @@ float CStatistics::GetAvgDownloadRate(int averageType)
 		if (theStats.transferStarttime > 0) {
 			running = (GetTickCount() - theStats.transferStarttime) / SEC2MS(1);
 			if (running >= 5)
-				return (float)theStats.sessionReceivedBytes / 1024 / running;
+				return theStats.sessionReceivedBytes / 1024.0f / running;
 		}
 		return 0.0F;
 
@@ -295,7 +295,7 @@ float CStatistics::GetAvgDownloadRate(int averageType)
 		if (theStats.transferStarttime > 0) {
 			running = (GetTickCount() - theStats.transferStarttime) / SEC2MS(1);
 			if (running >= 5)
-				return ((float)theStats.sessionReceivedBytes / 1024 / running + thePrefs.GetConnAvgDownRate()) / 2.0F;
+				return (theStats.sessionReceivedBytes / 1024.0f / running + thePrefs.GetConnAvgDownRate()) / 2.0F;
 		}
 		return thePrefs.GetConnAvgDownRate();
 
@@ -303,7 +303,7 @@ float CStatistics::GetAvgDownloadRate(int averageType)
 		if (!downrateHistory.empty()) {
 			running = (downrateHistory.front().timestamp - downrateHistory.back().timestamp) / SEC2MS(1);
 			if (running > 0)
-				return (float)(downrateHistory.front().datalen - downrateHistory.back().datalen) / 1024 / running;
+				return (downrateHistory.front().datalen - downrateHistory.back().datalen) / 1024.0f / running;
 		}
 	default:
 		return 0.0F;
@@ -319,7 +319,7 @@ float CStatistics::GetAvgUploadRate(int averageType)
 		if (theStats.transferStarttime) {
 			running = (GetTickCount() - theStats.transferStarttime) / SEC2MS(1);
 			if (running >= 5)
-				return (float)theStats.sessionSentBytes / 1024 / running;
+				return theStats.sessionSentBytes / 1024.0f / running;
 		}
 		return 0.0F;
 
@@ -327,7 +327,7 @@ float CStatistics::GetAvgUploadRate(int averageType)
 		if (theStats.transferStarttime > 0) {
 			running = (GetTickCount() - theStats.transferStarttime) / SEC2MS(1);
 			if (running >= 5)
-				return ((float)theStats.sessionSentBytes / 1024 / running + thePrefs.GetConnAvgUpRate()) / 2.0F;
+				return (theStats.sessionSentBytes / 1024.0f / running + thePrefs.GetConnAvgUpRate()) / 2.0F;
 		}
 		return thePrefs.GetConnAvgUpRate();
 
@@ -335,7 +335,7 @@ float CStatistics::GetAvgUploadRate(int averageType)
 		if (!uprateHistory.empty()) {
 			running = (uprateHistory.front().timestamp - uprateHistory.back().timestamp) / SEC2MS(1);
 			if (running > 0)
-				return (float)(uprateHistory.front().datalen - uprateHistory.back().datalen) / 1024 / running;
+				return (uprateHistory.front().datalen - uprateHistory.back().datalen) / 1024.0f / running;
 		}
 	default:
 		return 0.0F;

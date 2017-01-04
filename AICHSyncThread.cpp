@@ -144,7 +144,7 @@ int CAICHSyncThread::Run()
 			CFileIdentifier& fileid = pCurFile->GetFileIdentifier();
 			if (fileid.HasAICHHash()) {
 				bool bFound = false;
-				for (int j = 0; j < aKnown2Hashs.GetCount(); ++j) {
+				for (INT_PTR j = 0; j < aKnown2Hashs.GetCount(); ++j) {
 					if (aKnown2Hashs[j] == fileid.GetAICHHash()) {
 						bFound = true;
 						liUsedHashs.AddTail(CAICHHash(aKnown2Hashs[j]));
@@ -268,11 +268,10 @@ int CAICHSyncThread::Run()
 	}
 	else
 	{
-		// remember (/index) all hashs which are stored in the file for faster checking later on
-		for (int i = 0; i < aKnown2Hashs.GetCount(); i++)
-		{
+		// remember (/index) all hashes which are stored in the file for faster checking later on
+		for (INT_PTR i = 0; i < aKnown2Hashs.GetCount(); ++i)
 			CAICHRecoveryHashSet::AddStoredAICHHash(aKnown2Hashs[i], aKnown2HashsFilePos[i]);
-		}
+
 	}
 
 #ifdef _DEBUG

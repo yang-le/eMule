@@ -1502,9 +1502,9 @@ void CSearchList::LoadSpamFilter(){
 		return;
 	}
 
-	DebugLog(_T("Loaded search Spam Filter. Entries - ServerIPs: %u, SourceIPs, %u, Hashs: %u, PositiveHashs: %u, FileSizes: %u, FullNames: %u, SimilarNames: %u")
-		, m_mapKnownSpamSourcesIPs.GetCount(), m_mapKnownSpamServerIPs.GetCount(), m_mapKnownSpamHashs.GetCount() - nDbgFileHashPos, nDbgFileHashPos
-		, m_aui64KnownSpamSizes.GetCount(), m_astrKnownSpamNames.GetCount(), m_astrKnownSimilarSpamNames.GetCount());
+	DebugLog(_T("Loaded search Spam Filter. Entries - ServerIPs: %u, SourceIPs, %u, Hashs: %u, PositiveHashs: %i, FileSizes: %u, FullNames: %u, SimilarNames: %u")
+		, (unsigned)m_mapKnownSpamSourcesIPs.GetCount(), (unsigned)m_mapKnownSpamServerIPs.GetCount(), (unsigned)m_mapKnownSpamHashs.GetCount() - nDbgFileHashPos, nDbgFileHashPos
+		, (unsigned)m_aui64KnownSpamSizes.GetCount(), (unsigned)m_astrKnownSpamNames.GetCount(), (unsigned)m_astrKnownSimilarSpamNames.GetCount());
 }
 
 void CSearchList::SaveSpamFilter(){

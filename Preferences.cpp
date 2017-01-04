@@ -2772,7 +2772,8 @@ CString CPreferences::GetHomepageBaseURLForLevel(int nLevel){
 	return tmp;
 }
 
-CString CPreferences::GetVersionCheckBaseURL(){
+CString CPreferences::GetVersionCheckBaseURL()
+{
 	CString tmp;
 	UINT nWebMirrorAlertLevel = GetWebMirrorAlertLevel();
 	if (nWebMirrorAlertLevel < 100)
@@ -2788,6 +2789,14 @@ CString CPreferences::GetVersionCheckBaseURL(){
 	else
 		tmp = L"http://vcheck.emule-project.net";
 	return tmp;
+}
+
+CString	CPreferences::GetVersionCheckURL()
+{
+	CString theUrl;
+	theUrl.Format(_T("%s/en/version_check.php?version=%u&language=%u")
+		, thePrefs.GetVersionCheckBaseURL(), theApp.m_uCurVersionCheck, thePrefs.GetLanguageID());
+	return theUrl;
 }
 
 bool CPreferences::IsDefaultNick(const CString& strCheck) {

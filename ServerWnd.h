@@ -78,8 +78,8 @@ private:
 	HICON icon_srvlist;
 	bool	debug;
 	CRichEditCtrlX m_MyInfo;
-	CHARFORMAT m_cfDef;
-	CHARFORMAT m_cfBold;
+	CHARFORMAT2 m_cfDef;
+	CHARFORMAT2 m_cfBold;
 	CCustomAutoComplete* m_pacServerMetURL;
 	CString m_strClickNewVersion;
 

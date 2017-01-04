@@ -46,6 +46,7 @@ static char THIS_FILE[] = __FILE__;
 #define	WND_SPLITTER_YOFF	10
 #define	WND_SPLITTER_HEIGHT	4
 
+#define	WND1_BUTTON_YOFF	5
 #define	WND1_BUTTON_XOFF	8
 #define	WND1_BUTTON_WIDTH	170
 #define	WND1_BUTTON_HEIGHT	22	// don't set the height to something different than 22 unless you know exactly what you are doing!
@@ -131,28 +132,27 @@ void CTransferWnd::OnInitialUpdate()
 	AddAnchor(IDC_QUEUECOUNT, BOTTOM_LEFT);
 	AddAnchor(IDC_QUEUECOUNT_LABEL, BOTTOM_LEFT);
 	AddAnchor(IDC_QUEUE_REFRESH_BUTTON, BOTTOM_RIGHT);
-	AddAnchor(IDC_DLTAB, TOP_CENTER, TOP_RIGHT);
+	AddAnchor(IDC_DLTAB, TOP_RIGHT);
 
 	switch (thePrefs.GetTransferWnd1()) {
-		default:
-		case 0: {
-			m_dwShowListIDC = IDC_DOWNLOADLIST + IDC_UPLOADLIST;
-			break;
-		}
-		case 1:
-			m_dwShowListIDC = IDC_DOWNLOADLIST;
-			break;
-		case 2:
-			m_dwShowListIDC = IDC_UPLOADLIST;
-			break;
-		case 3:
-			m_dwShowListIDC = IDC_QUEUELIST;
-			break;
-		case 4:
-			m_dwShowListIDC = IDC_DOWNLOADCLIENTS;
-			break;
-		case 5:
-			m_dwShowListIDC = IDC_CLIENTLIST;
+	default:
+	case 0:
+		m_dwShowListIDC = IDC_DOWNLOADLIST + IDC_UPLOADLIST;
+		break;
+	case 1:
+		m_dwShowListIDC = IDC_DOWNLOADLIST;
+		break;
+	case 2:
+		m_dwShowListIDC = IDC_UPLOADLIST;
+		break;
+	case 3:
+		m_dwShowListIDC = IDC_QUEUELIST;
+		break;
+	case 4:
+		m_dwShowListIDC = IDC_DOWNLOADCLIENTS;
+		break;
+	case 5:
+		m_dwShowListIDC = IDC_CLIENTLIST;
 	}
 
 	//cats
@@ -171,7 +171,7 @@ void CTransferWnd::OnInitialUpdate()
 	cat0->strIncomingPath = thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR);
 	cat0->care4all = true;
 
-	for (int ix=0;ix<thePrefs.GetCatCount();ix++)
+	for (int ix=0; ix<thePrefs.GetCatCount(); ++ix)
 		m_dlTab.InsertItem(ix,thePrefs.GetCategory(ix)->strTitle);
 
 	// create tooltip control for download categories
@@ -192,7 +192,7 @@ void CTransferWnd::OnInitialUpdate()
 void CTransferWnd::ShowQueueCount(uint32 number)
 {
 	TCHAR buffer[100];
-	_sntprintf(buffer, _countof(buffer), _T("%u (%u ") + GetResString(IDS_BANNED).MakeLower() + _T(')'), number, theApp.clientlist->GetBannedCount());
+	_sntprintf(buffer, _countof(buffer), _T("%u (%u ") + GetResString(IDS_BANNED).MakeLower() + _T(')'), number, (unsigned)theApp.clientlist->GetBannedCount());
 	buffer[_countof(buffer) - 1] = _T('\0');
 	GetDlgItem(IDC_QUEUECOUNT)->SetWindowText(buffer);
 }
@@ -1174,20 +1174,21 @@ int CTransferWnd::AddCategory(const CString& newtitle, const CString& newincomin
 {
 	Category_Struct* newcat = new Category_Struct;
 	newcat->strTitle = newtitle;
-	newcat->prio=PR_NORMAL;
+	newcat->prio = PR_NORMAL;
 	newcat->strIncomingPath = newincoming;
 	newcat->strComment = newcomment;
 	newcat->regexp.Empty();
-	newcat->ac_regexpeval=false;
-	newcat->autocat=newautocat;
+	newcat->ac_regexpeval = false;
+	newcat->autocat = newautocat;
 	newcat->downloadInAlphabeticalOrder = FALSE;
-	newcat->filter=0;
-	newcat->filterNeg=false;
-	newcat->care4all=false;
-	newcat->color= (DWORD)-1;
+	newcat->filter = 0;
+	newcat->filterNeg = false;
+	newcat->care4all = false;
+	newcat->color = (DWORD)-1;
 
-	int index=thePrefs.AddCat(newcat);
-	if (addTab) m_dlTab.InsertItem(index,newtitle);
+	int index = thePrefs.AddCat(newcat);
+	if (addTab)
+		m_dlTab.InsertItem(index, newtitle);
 	VerifyCatTabSize();
 
 	return index;
@@ -1256,10 +1257,10 @@ void CTransferWnd::UpdateTabToolTips(int tab)
 {
 	if (tab == -1)
 	{
-		for (int i = 0; i < m_tooltipCats->GetToolCount(); i++)
-			m_tooltipCats->DelTool(&m_dlTab, i + 1);
+		for (int i = 0; i < m_tooltipCats->GetToolCount();)
+			m_tooltipCats->DelTool(&m_dlTab, ++i);
 
-		for (int i = 0; i < m_dlTab.GetItemCount(); i++)
+		for (int i = 0; i < m_dlTab.GetItemCount(); ++i)
 		{
 			CRect r;
 			m_dlTab.GetItemRect(i, &r);
@@ -1379,7 +1380,7 @@ void CTransferWnd::OnTabMovement(NMHDR* /*pNMHDR*/, LRESULT* /*pResult*/)
 	UpdateCatTabTitles();
 	theApp.emuledlg->searchwnd->UpdateCatTabs();
 
-	if (to>from)
+	if (to > from)
 		--to;
 	m_dlTab.SetCurSel(to);
 	downloadlistctrl.ChangeCategory(to);
@@ -1391,7 +1392,7 @@ void CTransferWnd::VerifyCatTabSize()
 		return;
 
 	int size = 0;
-	for (int i = 0; i < m_dlTab.GetItemCount(); i++)
+	for (int i = 0; i < m_dlTab.GetItemCount(); ++i)
 	{
 		CRect rect;
 		m_dlTab.GetItemRect(i, &rect);
@@ -1487,8 +1488,8 @@ void CTransferWnd::ShowList(uint32 dwListIDC)
 	CRect rcDown;
 	GetDlgItem(dwListIDC)->GetWindowRect(rcDown);
 	ScreenToClient(rcDown);
+	rcDown.top = WND1_BUTTON_YOFF + WND1_BUTTON_HEIGHT + 1;
 	rcDown.bottom = rcWnd.bottom - 20;
-	rcDown.top = 28;
 	m_wndSplitter.DestroyWindow();
 	RemoveAnchor(dwListIDC);
 	m_btnWnd2->ShowWindow(SW_HIDE);
@@ -1569,6 +1570,7 @@ void CTransferWnd::ShowSplitWindow(bool bReDraw)
 	CRect rcDown;
 	downloadlistctrl.GetWindowRect(rcDown);
 	ScreenToClient(rcDown);
+	rcDown.top = WND1_BUTTON_YOFF + WND1_BUTTON_HEIGHT + 1;
 	rcDown.bottom = splitpos - 5; // Magic constant '5'..
 	downloadlistctrl.MoveWindow(rcDown);
 
@@ -1577,27 +1579,10 @@ void CTransferWnd::ShowSplitWindow(bool bReDraw)
 	rcDown.right = rcWnd.right - 7;
 	rcDown.bottom = rcWnd.bottom - 20;
 	rcDown.top = splitpos + 20;
+
 	uploadlistctrl.MoveWindow(rcDown);
-
-	queuelistctrl.GetWindowRect(rcDown);
-	ScreenToClient(rcDown);
-	rcDown.right = rcWnd.right - 7;
-	rcDown.bottom = rcWnd.bottom - 20;
-	rcDown.top = splitpos + 20;
 	queuelistctrl.MoveWindow(rcDown);
-
-	clientlistctrl.GetWindowRect(rcDown);
-	ScreenToClient(rcDown);
-	rcDown.right = rcWnd.right - 7;
-	rcDown.bottom = rcWnd.bottom - 20;
-	rcDown.top = splitpos + 20;
 	clientlistctrl.MoveWindow(rcDown);
-
-	downloadclientsctrl.GetWindowRect(rcDown);
-	ScreenToClient(rcDown);
-	rcDown.right = rcWnd.right - 7;
-	rcDown.bottom = rcWnd.bottom - 20;
-	rcDown.top = splitpos + 20;
 	downloadclientsctrl.MoveWindow(rcDown);
 
 	CRect rcBtn2;
@@ -1635,6 +1620,7 @@ void CTransferWnd::ShowSplitWindow(bool bReDraw)
 	AddAnchor(IDC_QUEUELIST, ANCHOR(0, thePrefs.GetSplitterbarPosition()), BOTTOM_RIGHT);
 	AddAnchor(IDC_CLIENTLIST, ANCHOR(0, thePrefs.GetSplitterbarPosition()), BOTTOM_RIGHT);
 	AddAnchor(IDC_DOWNLOADCLIENTS, ANCHOR(0, thePrefs.GetSplitterbarPosition()), BOTTOM_RIGHT);
+	VerifyCatTabSize(); //properly positions tab control
 
 	downloadlistctrl.ShowWindow(SW_SHOW);
 	uploadlistctrl.ShowWindow((m_uWnd2 == wnd2Uploading) ? SW_SHOW : SW_HIDE);
@@ -1713,7 +1699,7 @@ void CTransferWnd::ResetTransToolbar(bool bShowToolbar, bool bResetLists)
 		RemoveAnchor(*m_btnWnd2);
 
 	CRect rcBtn1;
-	rcBtn1.top = 5;
+	rcBtn1.top = WND1_BUTTON_YOFF;
 	rcBtn1.left = WND1_BUTTON_XOFF;
 	rcBtn1.right = rcBtn1.left + WND1_BUTTON_WIDTH + (bShowToolbar ? WND1_NUM_BUTTONS*DFLT_TOOLBAR_BTN_WIDTH : 0);
 	rcBtn1.bottom = rcBtn1.top + WND1_BUTTON_HEIGHT;
@@ -1889,7 +1875,6 @@ void CTransferWnd::ResetTransToolbar(bool bShowToolbar, bool bResetLists)
 	{
 		LocalizeToolbars();
 		ShowSplitWindow(true);
-		VerifyCatTabSize();
 		ShowWnd2(m_uWnd2);
 	}
 }

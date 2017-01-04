@@ -3034,8 +3034,8 @@ HWND ReplaceRichEditCtrl(CWnd* pwndRE, CWnd* pwndParent, CFont* pFont)
 	ASSERT( pwndRE );
 	if (pwndRE)
 	{
-		CHAR szClassName[MAX_PATH];
-		if (GetClassNameA(*pwndRE, szClassName, _countof(szClassName)) && __ascii_stricmp(szClassName, "RichEdit20W")==0)
+		TCHAR szClassName[MAX_PATH];
+		if (GetClassName(pwndRE->m_hWnd, szClassName, _countof(szClassName)) && _tcsicmp(szClassName, _T("RichEdit20W"))==0)
 			return NULL;
 
 		CRect rcWnd;

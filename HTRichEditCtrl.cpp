@@ -50,13 +50,13 @@ BEGIN_MESSAGE_MAP(CHTRichEditCtrl, CRichEditCtrl)
 END_MESSAGE_MAP()
 
 CHTRichEditCtrl::CHTRichEditCtrl()
-	: m_iLimitText(0)
+	: m_iLimitText(0), m_cfDefault()
 {
 	m_bAutoScroll = true;
 	m_bNoPaint = false;
 	m_bEnErrSpace = false;
 	m_bRestoreFormat = false;
-	memset(&m_cfDefault, 0, sizeof m_cfDefault);
+	m_cfDefault.cbSize = sizeof(CHARFORMAT2);
 	m_bForceArrowCursor = false;
 	m_hArrowCursor = ::LoadCursor(NULL, IDC_ARROW);
 	m_bEnableSmileys = false;
@@ -71,6 +71,11 @@ CHTRichEditCtrl::CHTRichEditCtrl()
 CHTRichEditCtrl::~CHTRichEditCtrl()
 {
 	EnableSmileys(false);
+}
+
+BOOL CHTRichEditCtrl::Create(DWORD dwStyle, const RECT & rect, CWnd *parent, UINT nID)
+{
+	return ((CWnd *)this)->Create(RICHEDIT_CLASS, NULL, dwStyle, rect, parent, nID);
 }
 
 void CHTRichEditCtrl::Localize()
@@ -125,9 +130,7 @@ void CHTRichEditCtrl::EnableSmileys(bool bEnable)
 
 void CHTRichEditCtrl::PurgeSmileyCaches()
 {
-	POSITION pos = sm_aSmileyBitmaps.GetStartPosition();
-	while (pos)
-	{
+	for (POSITION pos = sm_aSmileyBitmaps.GetStartPosition(); pos != NULL;) {
 		CString strKey;
 		void *pValue;
 		sm_aSmileyBitmaps.GetNextAssoc(pos, strKey, pValue);
@@ -366,8 +369,8 @@ void CHTRichEditCtrl::AddString(int nPos, LPCTSTR pszString, bool bLink, COLORRE
 	SetSel(nPos, nPos);
 	if (bLink)
 	{
-		CHARFORMAT2 cf;
-		memset(&cf, 0, sizeof cf);
+		CHARFORMAT2 cf = {};
+		cf.cbSize = (UINT)sizeof cf;
 		GetSelectionCharFormat(cf);
 		cf.dwMask |= CFM_LINK;
 		cf.dwEffects |= CFE_LINK;
@@ -375,8 +378,8 @@ void CHTRichEditCtrl::AddString(int nPos, LPCTSTR pszString, bool bLink, COLORRE
 	}
 	else if (cr != CLR_DEFAULT || bk != CLR_DEFAULT || (mask & (CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE)) != 0)
 	{
-		CHARFORMAT2 cf;
-		memset(&cf, 0, sizeof(cf));
+		CHARFORMAT2 cf = {};
+		cf.cbSize = (UINT)sizeof cf;
 		GetSelectionCharFormat(cf);
 
 		cf.dwMask |= CFM_COLOR;

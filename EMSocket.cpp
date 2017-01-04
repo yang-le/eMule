@@ -141,7 +141,7 @@ CEMSocket::CEMSocket()
 
 CEMSocket::~CEMSocket()
 {
-	EMTrace("CEMSocket::~CEMSocket() on %d", (SOCKET)this);
+	EMTrace("CEMSocket::~CEMSocket() on %u", (SOCKET)this);
 
 	// need to be locked here to know that the other methods
 	// won't be in the middle of things
@@ -215,7 +215,7 @@ void CEMSocket::InitProxySupport()
 
 void CEMSocket::ClearQueues()
 {
-	EMTrace("CEMSocket::ClearQueues on %d",(SOCKET)this);
+	EMTrace("CEMSocket::ClearQueues on %u",(SOCKET)this);
 
 	sendLocker.Lock();
 	while (!controlpacket_queue.IsEmpty())
@@ -1050,44 +1050,44 @@ int CEMSocket::Receive(void* lpBuf, int nBufLen, int nFlags)
 			break;
 		case WSAENETDOWN:
 			ASSERT(true);
-			EMTrace("CEMSocket::OnReceive:The socket %d received a net down error",(SOCKET)this);
+			EMTrace("CEMSocket::OnReceive:The socket %u received a net down error",(SOCKET)this);
 			break;
 		case WSAENOTCONN: // The socket is not connected.
-			EMTrace("CEMSocket::OnReceive:The socket %d is not connected",(SOCKET)this);
+			EMTrace("CEMSocket::OnReceive:The socket %u is not connected",(SOCKET)this);
 			break;
 		case WSAEINPROGRESS:   // A blocking Windows Sockets operation is in progress.
-			EMTrace("CEMSocket::OnReceive:The socket %d is blocked",(SOCKET)this);
+			EMTrace("CEMSocket::OnReceive:The socket %u is blocked",(SOCKET)this);
 			break;
 		case WSAEWOULDBLOCK:   // The socket is marked as nonblocking and the Receive operation would block.
-			EMTrace("CEMSocket::OnReceive:The socket %d would block",(SOCKET)this);
+			EMTrace("CEMSocket::OnReceive:The socket %u would block",(SOCKET)this);
 			break;
 		case WSAENOTSOCK:   // The descriptor is not a socket.
-			EMTrace("CEMSocket::OnReceive:The descriptor %d is not a socket (may have been closed or never created)",(SOCKET)this);
+			EMTrace("CEMSocket::OnReceive:The descriptor %u is not a socket (may have been closed or never created)",(SOCKET)this);
 			break;
 		case WSAEOPNOTSUPP:  // MSG_OOB was specified, but the socket is not of type SOCK_STREAM.
 			break;
 		case WSAESHUTDOWN:   // The socket has been shut down; it is not possible to call Receive on a socket after ShutDown has been invoked with nHow set to 0 or 2.
-			EMTrace("CEMSocket::OnReceive:The socket %d has been shut down",(SOCKET)this);
+			EMTrace("CEMSocket::OnReceive:The socket %u has been shut down",(SOCKET)this);
 			break;
 		case WSAEMSGSIZE:   // The datagram was too large to fit into the specified buffer and was truncated.
-			EMTrace("CEMSocket::OnReceive:The datagram was too large to fit and was truncated (socket %d)",(SOCKET)this);
+			EMTrace("CEMSocket::OnReceive:The datagram was too large to fit and was truncated (socket %u)",(SOCKET)this);
 			break;
 		case WSAEINVAL:   // The socket has not been bound with Bind.
-			EMTrace("CEMSocket::OnReceive:The socket %d has not been bound",(SOCKET)this);
+			EMTrace("CEMSocket::OnReceive:The socket %u has not been bound",(SOCKET)this);
 			break;
 		case WSAECONNABORTED:   // The virtual circuit was aborted due to timeout or other failure.
-			EMTrace("CEMSocket::OnReceive:The socket %d has not been bound",(SOCKET)this);
+			EMTrace("CEMSocket::OnReceive:The socket %u has not been bound",(SOCKET)this);
 			break;
 		case WSAECONNRESET:   // The virtual circuit was reset by the remote side.
-			EMTrace("CEMSocket::OnReceive:The socket %d has not been bound",(SOCKET)this);
+			EMTrace("CEMSocket::OnReceive:The socket %u has not been bound",(SOCKET)this);
 			break;
 		default:
-			EMTrace("CEMSocket::OnReceive:Unexpected socket error %x on socket %d",GetLastError(),(SOCKET)this);
+			EMTrace("CEMSocket::OnReceive:Unexpected socket error %x on socket %u", GetLastError(), (SOCKET)this);
 			break;
 		}
 		break;
 	default:
-//		EMTrace("CEMSocket::OnReceive on %d, receivedSize=%d",(SOCKET)this,recvRetCode);
+//		EMTrace("CEMSocket::OnReceive on %u, receivedSize=%d",(SOCKET)this,recvRetCode);
 		return recvRetCode;
 	}
 	return SOCKET_ERROR;

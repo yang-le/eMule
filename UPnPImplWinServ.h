@@ -150,7 +150,7 @@ protected:
 	// Utility functions
 	HRESULT CreateSafeArray(const VARTYPE vt, const ULONG nArgs, SAFEARRAY** ppsa);
 	INT_PTR CreateVarFromString(const CString& strArgs, VARIANT*** pppVars);
-	INT_PTR	GetStringFromOutArgs(const VARIANT* pvaOutArgs, CString& strArgs);
+	LONG GetStringFromOutArgs(const VARIANT* pvaOutArgs, CString& strArgs);
 	static void	DestroyVars(const INT_PTR nCount, VARIANT*** pppVars);
 	HRESULT GetSafeArrayBounds(SAFEARRAY* psa, LONG* pLBound, LONG* pUBound);
 	HRESULT GetVariantElement(SAFEARRAY* psa, LONG pos, VARIANT* pvar);
