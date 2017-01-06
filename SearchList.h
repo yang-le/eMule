@@ -59,7 +59,7 @@ public:
 	~CSearchList();
 
 	void	Clear();
-	void	NewSearch(CSearchListCtrl* in_wnd, const CStringA& strResultFileType, uint32 nSearchID, ESearchType eType, CString& strSearchExpression, bool bMobilMuleSearch = false);
+	void	NewSearch(CSearchListCtrl* in_wnd, const CStringA& strResultFileType, uint32 nSearchID, ESearchType eType, CString strSearchExpression, bool bMobilMuleSearch = false);
 	UINT	ProcessSearchAnswer(const uchar* packet, uint32 size, CUpDownClient* Sender, bool* pbMoreResultsAvailable, LPCTSTR pszDirectory = NULL);
 	UINT	ProcessSearchAnswer(const uchar* packet, uint32 size, bool bOptUTF8, uint32 nServerIP, uint16 nServerPort, bool* pbMoreResultsAvailable);
 	UINT	ProcessUDPSearchAnswer(CFileDataIO& packet, bool bOptUTF8, uint32 nServerIP, uint16 nServerPort);

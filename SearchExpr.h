@@ -21,27 +21,33 @@ class CSearchAttr
 public:
 	CSearchAttr()
 		: m_iTag(FT_FILENAME), m_str(), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL), m_nNum(0)
-	{}
+	{
+	}
 
 	CSearchAttr(LPCSTR pszString)
 		: m_iTag(FT_FILENAME), m_str(pszString), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL), m_nNum(0)
-	{}
+	{
+	}
 
 	explicit CSearchAttr(const CStringA* pstrString)
 		: m_iTag(FT_FILENAME), m_str(*pstrString), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL), m_nNum(0)
-	{}
+	{
+	}
 
 	CSearchAttr(int iTag, UINT uIntegerOperator, uint64 nSize)
 		: m_iTag(iTag), m_str(), m_uIntegerOperator(uIntegerOperator), m_nNum(nSize)
-	{}
+	{
+	}
 
 	CSearchAttr(int iTag, LPCSTR pszString)
 		: m_iTag(iTag), m_str(pszString), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL), m_nNum(0)
-	{}
+	{
+	}
 
 	CSearchAttr(int iTag, const CStringA* pstrString)
 		: m_iTag(iTag), m_str(*pstrString), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL), m_nNum(0)
-	{}
+	{
+	}
 
 	CString DbgGetAttr() const
 	{
@@ -54,7 +60,7 @@ public:
 			case FT_FILERATING:
 			case FT_MEDIA_BITRATE:
 			case FT_MEDIA_LENGTH:
-				strDbg.AppendFormat(_T("%s%s%I64u"), (LPCTSTR)DbgGetFileMetaTagName(m_iTag), (LPCTSTR)DbgGetSearchOperatorName(m_uIntegerOperator), m_nNum);
+				strDbg.Format(_T("%s%s%I64u"), (LPCTSTR)DbgGetFileMetaTagName(m_iTag), (LPCTSTR)DbgGetSearchOperatorName(m_uIntegerOperator), m_nNum);
 				break;
 			case FT_FILETYPE:
 			case FT_FILEFORMAT:
@@ -63,19 +69,19 @@ public:
 			case FT_MEDIA_ALBUM:
 			case FT_MEDIA_ARTIST:
 				ASSERT( m_uIntegerOperator == ED2K_SEARCH_OP_EQUAL );
-				strDbg += DbgGetFileMetaTagName(m_iTag) + _T('=') + OptUtf8ToStr(m_str);
+				strDbg.Format(_T("%s=%s"), DbgGetFileMetaTagName(m_iTag), OptUtf8ToStr(m_str));
 				break;
 			default:
 				ASSERT( m_iTag == FT_FILENAME );
-				strDbg += _T('\"') + OptUtf8ToStr(m_str) + _T('\"');
+				strDbg.Format(_T("\"%s\""), OptUtf8ToStr(m_str));
 		}
 		return strDbg;
 	}
 
-	uint64 m_nNum;
 	int m_iTag;
 	CStringA m_str;
 	UINT m_uIntegerOperator;
+	uint64 m_nNum;
 };
 
 
@@ -84,13 +90,14 @@ class CSearchExpr
 public:
 	CSearchExpr()
 		: m_aExpr()
-	{}
+	{
+	}
 
 	explicit CSearchExpr(const CSearchAttr* pAttr)
 	{
 		m_aExpr.Add(*pAttr);
 	}
-
+	
 	void Add(ESearchOperators eOperator)
 	{
 		if (eOperator == SEARCHOP_OR)

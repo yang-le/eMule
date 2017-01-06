@@ -1036,25 +1036,22 @@ bool GetSearchPacket(CSafeMemFile* pData, SSearchParams* pParams, bool bTargetSu
 	//TRACE(_T("  %s\n"), (LPCTSTR)DbgGetHexDump((uchar*)(LPCTSTR)pParams->strBooleanExpr, pParams->strBooleanExpr.GetLength()*sizeof(TCHAR)));
 	g_astrParserErrors.RemoveAll();
 	s_SearchExpr.m_aExpr.RemoveAll();
-	if (!pParams->strBooleanExpr.IsEmpty())
-	{
-	    LexInit(pParams->strBooleanExpr, true);
-	    int iParseResult = yyparse();
-	    LexFree();
-	    if (g_astrParserErrors.GetSize() > 0)
-		{
-		    s_SearchExpr.m_aExpr.RemoveAll();
+	if (!pParams->strBooleanExpr.IsEmpty()) {
+		LexInit(pParams->strBooleanExpr, true);
+		int iParseResult = yyparse();
+		LexFree();
+		if (g_astrParserErrors.GetSize() > 0) {
+			s_SearchExpr.m_aExpr.RemoveAll();
 			CString strError(GetResString(IDS_SEARCH_EXPRERROR) + _T("\n\n") + g_astrParserErrors[g_astrParserErrors.GetSize() - 1]);
-		    throw new CMsgBoxException(strError, MB_ICONWARNING | MB_HELP, eMule_FAQ_Search - HID_BASE_PROMPT);
-	    }
-	    else if (iParseResult != 0)
-		{
-		    s_SearchExpr.m_aExpr.RemoveAll();
+			throw new CMsgBoxException(strError, MB_ICONWARNING | MB_HELP, eMule_FAQ_Search - HID_BASE_PROMPT);
+		}
+		if (iParseResult != 0) {
+			s_SearchExpr.m_aExpr.RemoveAll();
 			CString strError(GetResString(IDS_SEARCH_EXPRERROR) + _T("\n\n") + GetResString(IDS_SEARCH_GENERALERROR));
-		    throw new CMsgBoxException(strError, MB_ICONWARNING | MB_HELP, eMule_FAQ_Search - HID_BASE_PROMPT);
-	    }
-		if (pParams->eType == SearchTypeKademlia && s_strCurKadKeywordA != StrToUtf8(pParams->strKeyword))
-		{
+			throw new CMsgBoxException(strError, MB_ICONWARNING | MB_HELP, eMule_FAQ_Search - HID_BASE_PROMPT);
+		}
+
+		if (pParams->eType == SearchTypeKademlia && s_strCurKadKeywordA != StrToUtf8(pParams->strKeyword)) {
 			DebugLog(_T("KadSearch: Keyword was rearranged, using %s instead of %s"), (LPCTSTR)OptUtf8ToStr(s_strCurKadKeywordA), (LPCTSTR)pParams->strKeyword);
 			pParams->strKeyword = OptUtf8ToStr(s_strCurKadKeywordA);
 		}

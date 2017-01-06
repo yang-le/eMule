@@ -79,7 +79,7 @@ bool CKnownFileList::LoadKnownFiles()
 	fullpath.Append(KNOWN_MET_FILENAME);
 	CSafeBufferedFile file;
 	CFileException fexp;
-	if (!file.Open(fullpath,CFile::modeRead|CFile::osSequentialScan|CFile::typeBinary|CFile::shareDenyWrite, &fexp)){
+	if (!file.Open(fullpath,CFile::modeRead|CFile::osSequentialScan|CFile::typeBinary|CFile::shareDenyWrite, &fexp)) {
 		if (fexp.m_cause != CFileException::fileNotFound){
 			CString strError(_T("Failed to load ") KNOWN_MET_FILENAME _T(" file"));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
@@ -96,7 +96,7 @@ bool CKnownFileList::LoadKnownFiles()
 	CKnownFile* pRecord = NULL;
 	try {
 		uint8 header = file.ReadUInt8();
-		if (header != MET_HEADER && header != MET_HEADER_I64TAGS){
+		if (header != MET_HEADER && header != MET_HEADER_I64TAGS) {
 			file.Close();
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_BAD));
 			return false;
@@ -111,10 +111,8 @@ bool CKnownFileList::LoadKnownFiles()
 					(LPCTSTR)pRecord->GetFileName(), (LPCTSTR)md4str(pRecord->GetFileHash()), (uint64)pRecord->GetFileSize()
 					, pRecord->GetFileIdentifier().GetAvailableMD4PartHashCount(), pRecord->GetFileIdentifier().GetTheoreticalMD4PartHashCount());
 				delete pRecord;
-				pRecord = NULL;
-				continue;
-			}
-			SafeAddKFile(pRecord);
+			} else
+				SafeAddKFile(pRecord);
 			pRecord = NULL;
 		}
 		file.Close();
@@ -122,7 +120,7 @@ bool CKnownFileList::LoadKnownFiles()
 	catch(CFileException* error){
 		if (error->m_cause == CFileException::endOfFile)
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_BAD));
-		else{
+		else {
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
 			GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_UNKNOWN),buffer);
@@ -135,7 +133,8 @@ bool CKnownFileList::LoadKnownFiles()
 	return true;
 }
 
-bool CKnownFileList::LoadCancelledFiles(){
+bool CKnownFileList::LoadCancelledFiles()
+{
 // cancelled.met Format: <Header 1 = CANCELLED_HEADER><Version 1 = CANCELLED_VERSION><Seed 4><Count 4>[<HashHash 16><TagCount 1>[Tags TagCount] Count]
 	if (!thePrefs.IsRememberingCancelledFiles())
 		return true;
@@ -160,11 +159,10 @@ bool CKnownFileList::LoadCancelledFiles(){
 		bool bOldVersion = false;
 		uint8 header = file.ReadUInt8();
 		if (header != CANCELLED_HEADER){
-			if (header == CANCELLED_HEADER_OLD){
+			if (header == CANCELLED_HEADER_OLD) {
 				bOldVersion = true;
 				DebugLog(_T("Deprecated version of cancelled.met found, converting to new version"));
-			}
-			else{
+			} else {
 				file.Close();
 				return false;
 			}
@@ -188,10 +186,10 @@ bool CKnownFileList::LoadCancelledFiles(){
 			file.ReadHash16(ucHash);
 			uint8 nCount = file.ReadUInt8();
 			// for compatibility with future versions which may add more data than just the hash
-			for (UINT j = 0; j < nCount; j++) {
+			for (UINT j = 0; j < nCount; j++)
 				CTag tag(&file, false);
-			}
-			if (bOldVersion){
+
+			if (bOldVersion) {
 				// convert old real hash to new hashash
 				uchar pachSeedHash[20];
 				PokeUInt32(pachSeedHash, m_dwCancelledFilesSeed);
@@ -203,10 +201,10 @@ bool CKnownFileList::LoadCancelledFiles(){
 		}
 		file.Close();
 	}
-	catch(CFileException* error){
+	catch(CFileException* error) {
 		if (error->m_cause == CFileException::endOfFile)
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_CONFIGCORRUPT), CANCELLED_MET_FILENAME);
-		else{
+		else {
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
 			GetExceptionMessage(*error, buffer, ARRSIZE(buffer));
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FAILEDTOLOAD), CANCELLED_MET_FILENAME, buffer);

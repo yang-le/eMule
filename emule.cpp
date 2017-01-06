@@ -599,10 +599,10 @@ BOOL CemuleApp::InitInstance()
 
 	CWinApp::InitInstance();
 
-	memset(&m_wsaData,0,sizeof(WSADATA));
+	m_wsaData = WSADATA();
 	if (!InitWinsock2(&m_wsaData))
 	{
-		memset(&m_wsaData,0,sizeof(WSADATA));
+		m_wsaData = WSADATA();
 		if (!AfxSocketInit(&m_wsaData))
 		{
 			AfxMessageBox((UINT)IDS_SOCKETS_INIT_FAILED, MB_OK, 0);
@@ -792,9 +792,8 @@ int CemuleApp::ExitInstance()
 {
 	AddDebugLogLine(DLP_VERYLOW, _T("%hs"), __FUNCTION__);
 
-	if (m_wTimerRes != 0) {
-        timeEndPeriod(m_wTimerRes);
-    }
+	if (m_wTimerRes != 0)
+		timeEndPeriod(m_wTimerRes);
 
 	return CWinApp::ExitInstance();
 }
@@ -1327,11 +1326,12 @@ int CemuleApp::GetFileTypeSystemImageIdx(LPCTSTR pszFilePath, int iLength /* = -
 
 bool CemuleApp::IsConnected(bool bIgnoreEd2k, bool bIgnoreKad)
 {
-	return ( (theApp.serverconnect->IsConnected() && !bIgnoreEd2k) || (Kademlia::CKademlia::IsConnected() && !bIgnoreKad));
+	return (theApp.serverconnect->IsConnected() && !bIgnoreEd2k) || (Kademlia::CKademlia::IsConnected() && !bIgnoreKad);
 }
 
-bool CemuleApp::IsPortchangeAllowed() {
-	return ( theApp.clientlist->GetClientCount()==0 && !IsConnected() );
+bool CemuleApp::IsPortchangeAllowed()
+{
+	return theApp.clientlist->GetClientCount()==0 && !IsConnected();
 }
 
 uint32 CemuleApp::GetID(){

@@ -136,7 +136,7 @@ void CSearchList::RemoveResult(CSearchFile* todel)
 	}
 }
 
-void CSearchList::NewSearch(CSearchListCtrl* pWnd, const CStringA& strResultFileType, uint32 nSearchID, ESearchType eSearchType, CString& strSearchExpression, bool bMobilMuleSearch)
+void CSearchList::NewSearch(CSearchListCtrl* pWnd, const CStringA& strResultFileType, uint32 nSearchID, ESearchType eSearchType, CString strSearchExpression, bool bMobilMuleSearch)
 {
 	if (pWnd)
 		outputwnd = pWnd;
@@ -173,7 +173,6 @@ void CSearchList::NewSearch(CSearchListCtrl* pWnd, const CStringA& strResultFile
 			strToken = strSearchExpression.Tokenize(_T(".[]()!-'_ "), nPos);
 		}
 	}
-
 }
 
 UINT CSearchList::ProcessSearchAnswer(const uchar* in_packet, uint32 size,
@@ -453,7 +452,7 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 	strName.MakeLower();
 	int nPos = 0;
 	CString strToken = strName.Tokenize(_T(".[]()!-'_ "), nPos);
-	while (!strToken.IsEmpty()){
+	while (!strToken.IsEmpty()) {
 		bool bFound = false;
 		if (!bClientResponse && toadd->GetSearchID() == m_nCurED2KSearchID){
 			for (int i = 0; i < m_astrSpamCheckCurSearchExp.GetCount(); i++){

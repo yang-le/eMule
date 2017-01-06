@@ -183,7 +183,8 @@ bool CClientReqSocket::CheckTimeOut()
 	return false;
 }
 
-void CClientReqSocket::OnClose(int nErrorCode){
+void CClientReqSocket::OnClose(int nErrorCode)
+{
 	ASSERT (theApp.listensocket->IsValidSocket(this));
 	CEMSocket::OnClose(nErrorCode);
 
@@ -206,11 +207,14 @@ void CClientReqSocket::Disconnect(LPCTSTR pszReason)
 {
 	byConnected = ES_DISCONNECTED;
 	AsyncSelect(0);
-	if (client && client->Disconnected(CString(_T("CClientReqSocket::Disconnect(): ")) + pszReason, true)) {
-		client->socket = NULL;
-		delete client;
-	}
-	client = NULL;
+	if (client)
+		if (client->Disconnected(CString(_T("CClientReqSocket::Disconnect(): ")) + pszReason, true)) {
+			CUpDownClient* temp = client;
+			client->socket = NULL;
+			client = NULL;
+			delete temp;
+		} else
+			client = NULL;
 	Safe_Delete();
 }
 
@@ -361,11 +365,10 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 						uchar reqfilehash[16];
 						data_in.ReadHash16(reqfilehash);
 
-						CKnownFile* reqfile;
-						if ( (reqfile = theApp.sharedfiles->GetFileByID(reqfilehash)) == NULL ){
-							if ( !((reqfile = theApp.downloadqueue->GetFileByID(reqfilehash)) != NULL
-								   && reqfile->GetFileSize() > (uint64)PARTSIZE) )
-							{
+						CKnownFile* reqfile = theApp.sharedfiles->GetFileByID(reqfilehash);
+						if (reqfile == NULL) {
+							reqfile = theApp.downloadqueue->GetFileByID(reqfilehash);
+							if (reqfile == NULL || (uint64)reqfile->GetFileSize() <= PARTSIZE) {
 								client->CheckFailedFileIdReqs(reqfilehash);
 								break;
 							}
@@ -2683,9 +2686,9 @@ void CListenSocket::AddConnection()
 
 bool CListenSocket::TooManySockets(bool bIgnoreInterval)
 {
-	return	(  GetOpenSockets() > thePrefs.GetMaxConnections()
-		|| (m_OpenSocketsInterval > (thePrefs.GetMaxConperFive() * GetMaxConperFiveModifier()) && !bIgnoreInterval)
-		|| (m_nHalfOpen >= thePrefs.GetMaxHalfConnections() && !bIgnoreInterval));
+	return GetOpenSockets() > thePrefs.GetMaxConnections()
+		|| m_OpenSocketsInterval > (thePrefs.GetMaxConperFive() * GetMaxConperFiveModifier()) && !bIgnoreInterval
+		|| m_nHalfOpen >= thePrefs.GetMaxHalfConnections() && !bIgnoreInterval;
 }
 
 bool CListenSocket::IsValidSocket(CClientReqSocket* totest)
