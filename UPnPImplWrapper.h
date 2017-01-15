@@ -25,15 +25,18 @@ public:
 	CUPnPImplWrapper();
 	~CUPnPImplWrapper();
 
-	CUPnPImpl*		GetImplementation() const					{ return m_pActiveImpl; }
-	bool			SwitchImplentation();
-	void			Reset();
+	CUPnPImpl *GetImplementation() const
+	{
+		return m_pActiveImpl;
+	}
+	bool SwitchImplentation();
+	void Reset();
 
 protected:
-	void			Init();
+	void Init();
 
 private:
-	CUPnPImpl*		m_pActiveImpl;
+	CUPnPImpl *m_pActiveImpl;
 	CTypedPtrList<CPtrList, CUPnPImpl*> m_liAvailable;
 	CTypedPtrList<CPtrList, CUPnPImpl*> m_liUsed;
 };

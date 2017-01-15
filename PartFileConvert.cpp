@@ -634,9 +634,9 @@ void CPartFileConvertDlg::OnAddFolder() {
 			int reply=IDNO;
 
 			if (thePrefs.IsExtControlsEnabled())
-				reply=AfxMessageBox(IDS_IMP_DELSRC, MB_YESNOCANCEL | MB_DEFBUTTON2, 0);
+				reply = LocMessageBox(IDS_IMP_DELSRC, MB_YESNOCANCEL | MB_DEFBUTTON2, 0);
 
-			if (reply!=IDCANCEL){
+			if (reply != IDCANCEL) {
 				bool removesrc = (reply==IDYES);
 
 				//

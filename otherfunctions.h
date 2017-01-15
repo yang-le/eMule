@@ -185,7 +185,7 @@ CString GetResString(const RESSTRIDTYPE StringID);
 #define _GetResString(id)	GetResString(id)
 #endif//!USE_STRING_IDS
 void InitThreadLocale();
-
+int LocMessageBox(int uId, UINT nType = MB_OK, UINT nIDHelp = 0); //localize and call AfxMessageBox(UINT, UINT, UINT)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Error strings, Debugging, Logging
@@ -418,7 +418,7 @@ __inline CString ipstr(in_addr nIP){
 __inline CStringA ipstrA(in_addr nIP){
 	return ipstrA(*(uint32*)&nIP);
 }
-
+ULONG GetBestInterfaceIP(const ULONG dest_addr);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Date/Time

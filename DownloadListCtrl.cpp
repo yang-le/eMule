@@ -1623,11 +1623,7 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 							} else if (cur_file->GetStatus() == PS_COMPLETE)
 								removecompl = true;
 						}
-						CString quest;
-						if (selectedCount == 1)
-							quest = GetResString(IDS_Q_CANCELDL2);
-						else
-							quest = GetResString(IDS_Q_CANCELDL);
+						CString quest(GetResString(selectedCount == 1 ? IDS_Q_CANCELDL2 : IDS_Q_CANCELDL));
 						if ((removecompl && !validdelete) || (validdelete && AfxMessageBox(quest + fileList, MB_DEFBUTTON2 | MB_ICONQUESTION | MB_YESNO) == IDYES))
 						{
 							bool bRemovedItems = !selectedList.IsEmpty();
@@ -1648,7 +1644,7 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 												theApp.sharedfiles->RemoveFile(partfile, true);
 											else{
 												CString strError;
-												strError.Format( GetResString(IDS_ERR_DELFILE) + _T("\r\n\r\n%s"), (LPCTSTR)partfile->GetFilePath(), (LPCTSTR)GetErrorMessage(GetLastError()));
+												strError.Format(GetResString(IDS_ERR_DELFILE) + _T("\r\n\r\n%s"), (LPCTSTR)partfile->GetFilePath(), (LPCTSTR)GetErrorMessage(GetLastError()));
 												AfxMessageBox(strError);
 											}
 										}
@@ -1751,12 +1747,11 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 				case MPG_F2:
 					if (GetAsyncKeyState(VK_CONTROL) < 0 || selectedCount > 1) {
 						// when ctrl is pressed -> filename cleanup
-						if (IDYES==AfxMessageBox((UINT)IDS_MANUAL_FILENAMECLEANUP, MB_YESNO, 0))
-							while (!selectedList.IsEmpty()){
+						if (IDYES == LocMessageBox(IDS_MANUAL_FILENAMECLEANUP, MB_YESNO, 0))
+							while (!selectedList.IsEmpty()) {
 								CPartFile *partfile = selectedList.RemoveHead();
-								if (partfile->IsPartFile()) {
+								if (partfile->IsPartFile())
 									partfile->SetFileName(CleanupFilename(partfile->GetFileName()));
-								}
 							}
 					} else {
 						if (file->GetStatus() != PS_COMPLETE && file->GetStatus() != PS_COMPLETING)

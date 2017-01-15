@@ -614,7 +614,7 @@ BOOL CSharedDirsTreeCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 			case MP_REMOVE:
 			case MPG_DELETE:
 			{
-				if (IDNO == AfxMessageBox((UINT)IDS_CONFIRM_FILEDELETE, MB_ICONWARNING | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_YESNO, 0))
+				if (IDNO == LocMessageBox(IDS_CONFIRM_FILEDELETE, MB_ICONWARNING | MB_DEFBUTTON2 | MB_YESNO, 0))
 					return TRUE;
 
 				m_pSharedFilesCtrl->SetRedraw(FALSE);

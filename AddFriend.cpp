@@ -125,7 +125,7 @@ void CAddFriend::OnAddBtn()
 		if (_stscanf(strBuff, _T("%u.%u.%u.%u:%u"), &u1, &u2, &u3, &u4, &uPort) != 5 || u1 > 255 || u2 > 255 || u3 > 255 || u4 > 255 || uPort > 65535){
 			uPort = 0;
 			if (_stscanf(strBuff, _T("%u.%u.%u.%u"), &u1, &u2, &u3, &u4) != 4 || u1 > 255 || u2 > 255 || u3 > 255 || u4 > 255){
-				AfxMessageBox((UINT)IDS_ERR_NOVALIDFRIENDINFO, MB_OK, 0);
+				LocMessageBox(IDS_ERR_NOVALIDFRIENDINFO, MB_OK, 0);
 				GetDlgItem(IDC_IP)->SetFocus();
 				return;
 			}
@@ -141,7 +141,7 @@ void CAddFriend::OnAddBtn()
 		{
 			GetDlgItemText(IDC_PORT, strBuff);
 			if (_stscanf(strBuff, _T("%u"), &uPort) != 1){
-				AfxMessageBox((UINT)IDS_ERR_NOVALIDFRIENDINFO, MB_OK, 0);
+				LocMessageBox(IDS_ERR_NOVALIDFRIENDINFO, MB_OK, 0);
 				GetDlgItem(IDC_PORT)->SetFocus();
 				return;
 			}
@@ -156,7 +156,7 @@ void CAddFriend::OnAddBtn()
 		;
 
 		if (!theApp.friendlist->AddFriend(NULL, 0, ip, (uint16)uPort, 0, strUserName, 0)){
-			AfxMessageBox((UINT)IDS_WRN_FRIENDDUPLIPPORT, MB_OK, 0);
+			LocMessageBox(IDS_WRN_FRIENDDUPLIPPORT, MB_OK, 0);
 			GetDlgItem(IDC_IP)->SetFocus();
 			return;
 		}

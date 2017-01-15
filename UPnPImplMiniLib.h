@@ -20,49 +20,56 @@
 struct UPNPUrls;
 struct IGDdatas;
 
-class CUPnPImplMiniLib: public CUPnPImpl
+class CUPnPImplMiniLib : public CUPnPImpl
 {
 public:
 	CUPnPImplMiniLib();
 	virtual ~CUPnPImplMiniLib();
 
-	virtual void	StartDiscovery(uint16 nTCPPort, uint16 nUDPPort, uint16 nTCPWebPort);
-	virtual bool	CheckAndRefresh();
-	virtual void	StopAsyncFind();
-	virtual void	DeletePorts();
-	virtual bool	IsReady();
-	virtual int		GetImplementationID()									{ return UPNP_IMPL_MINIUPNPLIB; }
+	virtual void StartDiscovery(uint16 nTCPPort, uint16 nUDPPort, uint16 nTCPWebPort);
+	virtual bool CheckAndRefresh();
+	virtual void StopAsyncFind();
+	virtual void DeletePorts();
+	virtual bool IsReady();
+	virtual int GetImplementationID()
+	{
+		return UPNP_IMPL_MINIUPNPLIB;
+	}
 
 	class CStartDiscoveryThread : public CWinThread
 	{
 		DECLARE_DYNCREATE(CStartDiscoveryThread)
-	protected:
+protected:
 		CStartDiscoveryThread();
-		bool	OpenPort(uint16 nPort, bool bTCP, char* pachLANIP, bool bCheckAndRefresh);
+		bool OpenPort(uint16 nPort, bool bTCP, char *pachLANIP, bool bCheckAndRefresh);
 
-	public:
+public:
 		virtual BOOL InitInstance();
-		virtual int	Run();
-		void	SetValues(CUPnPImplMiniLib* pOwner)		{ m_pOwner = pOwner; }
+		virtual int Run();
+		void SetValues(CUPnPImplMiniLib *pOwner)
+		{
+			m_pOwner = pOwner;
+		}
 
-	private:
-		CUPnPImplMiniLib*	m_pOwner;
+private:
+		CUPnPImplMiniLib *m_pOwner;
 	};
 
 protected:
-	void			DeletePorts(bool bSkipLock);
+	void DeletePorts(bool bSkipLock);
 
 private:
-	uint16	m_nOldUDPPort;
-	uint16	m_nOldTCPPort;
-	uint16	m_nOldTCPWebPort;
-	bool	m_bSucceededOnce;
-	char	m_achLanIP[16];
+	void StartThread();
+	uint16 m_nOldUDPPort;
+	uint16 m_nOldTCPPort;
+	uint16 m_nOldTCPWebPort;
+	bool m_bSucceededOnce;
+	char m_achLanIP[16];
 
-	UPNPUrls*	m_pURLs;
-	IGDdatas*	m_pIGDData;
-	HANDLE		m_hThreadHandle;
-	
-	static CMutex	m_mutBusy;
-	volatile bool	m_bAbortDiscovery;
+	UPNPUrls *m_pURLs;
+	IGDdatas *m_pIGDData;
+	HANDLE m_hThreadHandle;
+
+	static CMutex m_mutBusy;
+	volatile bool m_bAbortDiscovery;
 };

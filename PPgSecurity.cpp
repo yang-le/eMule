@@ -433,7 +433,7 @@ void CPPgSecurity::OnLoadIPFFromURL()
 			}
 			else
 			{
-				AfxMessageBox((UINT)IDS_DWLIPFILTERFAILED, MB_ICONERROR, 0);
+				LocMessageBox(IDS_DWLIPFILTERFAILED, MB_ICONERROR, 0);
 			}
 		}
 	}
@@ -543,7 +543,7 @@ BOOL CPPgSecurity::OnHelpInfo(HELPINFO* /*pHelpInfo*/)
 void CPPgSecurity::OnBnClickedRunAsUser()
 {
 	if ( ((CButton*)GetDlgItem(IDC_RUNASUSER))->GetCheck() == BST_CHECKED){
-		if (AfxMessageBox((UINT)IDS_RAU_WARNING, MB_OKCANCEL | MB_ICONINFORMATION, 0) == IDCANCEL)
+		if (LocMessageBox(IDS_RAU_WARNING, MB_OKCANCEL | MB_ICONINFORMATION, 0) == IDCANCEL)
 			((CButton*)GetDlgItem(IDC_RUNASUSER))->SetCheck(BST_UNCHECKED);
 	}
 	OnSettingsChange();

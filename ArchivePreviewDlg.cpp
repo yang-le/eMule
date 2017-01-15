@@ -322,8 +322,9 @@ void CArchivePreviewDlg::OnNMCustomDrawArchiveEntries(NMHDR *pNMHDR, LRESULT *pl
 	*plResult = CDRF_DODEFAULT;
 }
 
-void CArchivePreviewDlg::OnBnExplain() {
-	AfxMessageBox((UINT)IDS_ARCHPREV_ATTRIBINFO, MB_OK | MB_ICONINFORMATION, 0);
+void CArchivePreviewDlg::OnBnExplain()
+{
+	LocMessageBox(IDS_ARCHPREV_ATTRIBINFO, MB_OK | MB_ICONINFORMATION, 0);
 }
 
 void CArchivePreviewDlg::OnBnClickedRead()

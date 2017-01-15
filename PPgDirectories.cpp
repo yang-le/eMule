@@ -136,7 +136,7 @@ BOOL CPPgDirectories::OnApply()
 		SetDlgItemText(IDC_INCFILES, strIncomingDir);
 	}
 	else if (thePrefs.IsInstallationDirectory(strIncomingDir)){
-		AfxMessageBox((UINT)IDS_WRN_INCFILE_RESERVED, MB_OK, 0);
+		LocMessageBox(IDS_WRN_INCFILE_RESERVED, MB_OK, 0);
 		return FALSE;
 	}
 	else if (strIncomingDir.CompareNoCase(testincdirchanged) != 0 && strIncomingDir.CompareNoCase(thePrefs.GetDefaultDirectory(EMULE_INCOMINGDIR, false)) != 0){
@@ -170,7 +170,7 @@ BOOL CPPgDirectories::OnApply()
 			bExistingFile = true;
 			break;
 		}
-		if (bExistingFile && AfxMessageBox((UINT)IDS_WRN_INCFILE_EXISTS, MB_OKCANCEL | MB_ICONINFORMATION, 0) == IDCANCEL)
+		if (bExistingFile && LocMessageBox(IDS_WRN_INCFILE_EXISTS, MB_OKCANCEL | MB_ICONINFORMATION, 0) == IDCANCEL)
 			return FALSE;
 	}
 
@@ -189,17 +189,17 @@ BOOL CPPgDirectories::OnApply()
 	{
 		atmp.Trim();
 		if (!atmp.IsEmpty()) {
-			if (CompareDirectories(strIncomingDir, atmp)==0){
-					AfxMessageBox((UINT)IDS_WRN_INCTEMP_SAME, MB_OK, 0);
-					return FALSE;
+			if (CompareDirectories(strIncomingDir, atmp) == 0) {
+				LocMessageBox(IDS_WRN_INCTEMP_SAME, MB_OK, 0);
+				return FALSE;
 			}
 			if (thePrefs.IsInstallationDirectory(atmp)){
-				AfxMessageBox((UINT)IDS_WRN_TEMPFILES_RESERVED, MB_OK, 0);
+				LocMessageBox(IDS_WRN_TEMPFILES_RESERVED, MB_OK, 0);
 				return FALSE;
 			}
 			bool doubled=false;
-			for (int i=0;i<temptempfolders.GetCount();i++)	// avoid double tempdirs
-				if (temptempfolders.GetAt(i).CompareNoCase(atmp)==0) {
+			for (int i=0; i<temptempfolders.GetCount(); ++i)	// avoid double tempdirs
+				if (temptempfolders[i].CompareNoCase(atmp)==0) {
 					doubled=true;
 					break;
 				}
@@ -225,7 +225,7 @@ BOOL CPPgDirectories::OnApply()
 	if (testtempdirchanged) {
 		thePrefs.tempdir.RemoveAll();
 		for (int i=0;i<temptempfolders.GetCount();i++) {
-			CString toadd=temptempfolders.GetAt(i);
+			CString toadd=temptempfolders[i];
 			MakeFoldername(toadd);
 			if (!PathFileExists(toadd))
 				CreateDirectory(toadd,NULL);
@@ -262,7 +262,7 @@ BOOL CPPgDirectories::OnApply()
 
 				if (!dontaskagain) {
 					dontaskagain=true;
-					if (AfxMessageBox((UINT)IDS_UPDATECATINCOMINGDIRS, MB_YESNO, 0)==IDNO)
+					if (LocMessageBox(IDS_UPDATECATINCOMINGDIRS, MB_YESNO, 0)==IDNO)
 						break;
 				}
 				thePrefs.GetCategory(cat)->strIncomingPath = thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR) + oldpath.Mid(testincdirchanged.GetLength());
@@ -273,7 +273,7 @@ BOOL CPPgDirectories::OnApply()
 
 
 	if (testtempdirchanged)
-		AfxMessageBox((UINT)IDS_SETTINGCHANGED_RESTART, MB_OK, 0);
+		LocMessageBox(IDS_SETTINGCHANGED_RESTART, MB_OK, 0);
 
 	theApp.emuledlg->sharedfileswnd->Reload();
 
@@ -326,7 +326,7 @@ void CPPgDirectories::OnBnClickedAddUNC()
 
 	// basic unc-check
 	if (!PathIsUNC(unc)){
-		AfxMessageBox((UINT)IDS_ERR_BADUNC, MB_ICONERROR, 0);
+		LocMessageBox(IDS_ERR_BADUNC, MB_ICONERROR, 0);
 		return;
 	}
 

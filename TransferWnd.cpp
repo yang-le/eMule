@@ -1035,7 +1035,7 @@ BOOL CTransferWnd::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 			theApp.downloadqueue->SetCatStatus(rightclickindex,MP_STOP);
 			break;
 		case MP_CANCEL:
-			if (AfxMessageBox((UINT)IDS_Q_CANCELDL, MB_ICONQUESTION|MB_YESNO, 0) == IDYES)
+			if (LocMessageBox(IDS_Q_CANCELDL, MB_ICONQUESTION|MB_YESNO, 0) == IDYES)
 				theApp.downloadqueue->SetCatStatus(rightclickindex,MP_CANCEL);
 			break;
 		case MP_RESUME:

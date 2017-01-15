@@ -166,7 +166,7 @@ void CUDPSocket::OnReceive(int nErrorCode)
 				dwKey = pServer->GetServerKeyUDP();
 
 			ASSERT( dwKey != 0 );
-			nPayLoadLen = DecryptReceivedServer(buffer, length, &pBuffer, dwKey,sockAddr.sin_addr.S_un.S_addr);
+			nPayLoadLen = DecryptReceivedServer(buffer, length, &pBuffer, dwKey, sockAddr.sin_addr.S_un.S_addr);
 			if (nPayLoadLen == length)
 				DebugLogWarning(_T("Expected encrypted packet, but received unencrytped from server %s, UDPKey %u, Challenge: %u"), (LPCTSTR)pServer->GetListName(), pServer->GetServerKeyUDP(), pServer->GetChallenge());
 			else if (thePrefs.GetDebugServerUDPLevel() > 0)

@@ -527,7 +527,7 @@ BOOL CemuleApp::InitInstance()
 
 	pstrPendingLink = NULL;
 	if (ProcessCommandline())
-		return false;
+		return FALSE;
 
 	///////////////////////////////////////////////////////////////////////////
 	// Common Controls initialization
@@ -549,7 +549,7 @@ BOOL CemuleApp::InitInstance()
 	{
 		if (GetProfileInt(_T("eMule"), _T("CheckComctl32"), 1)) // just in case some user's can not install that package and have to survive without it..
 		{
-			if (AfxMessageBox((UINT)IDS_COMCTRL32_DLL_TOOOLD, MB_ICONSTOP | MB_YESNO, 0) == IDYES)
+			if (LocMessageBox(IDS_COMCTRL32_DLL_TOOOLD, MB_ICONSTOP | MB_YESNO, 0) == IDYES)
 				ShellOpenFile(_T("http://www.microsoft.com/downloads/details.aspx?FamilyID=cb2cf3a2-8025-4e8f-8511-9b476a8d35d2"));
 
 			// No need to exit eMule, it will most likely work as expected but it will have some GUI glitches here and there..
@@ -605,7 +605,7 @@ BOOL CemuleApp::InitInstance()
 		m_wsaData = WSADATA();
 		if (!AfxSocketInit(&m_wsaData))
 		{
-			AfxMessageBox((UINT)IDS_SOCKETS_INIT_FAILED, MB_OK, 0);
+			LocMessageBox(IDS_SOCKETS_INIT_FAILED, MB_OK, 0);
 			return FALSE;
 		}
 	}
@@ -615,12 +615,10 @@ BOOL CemuleApp::InitInstance()
 #error "You are using an MFC version which may require a special version of the above function!"
 #endif
 	AfxEnableControlContainer();
-	if (!AfxInitRichEdit2()){
-		if (!AfxInitRichEdit())
-			AfxMessageBox(_T("Fatal Error: No Rich Edit control library found!")); // should never happen..
-	}
+	if (!AfxInitRichEdit2() && !AfxInitRichEdit())
+		AfxMessageBox(_T("Fatal Error: No Rich Edit control library found!")); // should never happen..
 
-	if (!Kademlia::CKademlia::InitUnicode(AfxGetInstanceHandle())){
+	if (!Kademlia::CKademlia::InitUnicode(AfxGetInstanceHandle())) {
 		AfxMessageBox(_T("Fatal Error: Failed to load Unicode character tables for Kademlia!")); // should never happen..
 		return FALSE; // DO *NOT* START !!!
 	}
@@ -634,15 +632,14 @@ BOOL CemuleApp::InitInstance()
 	theStats.Init();
 
 	// check if we have to restart eMule as Secure user
-	if (thePrefs.IsRunAsUserEnabled()){
+	if (thePrefs.IsRunAsUserEnabled()) {
 		CSecRunAsUser rau;
 		eResult res = rau.RestartSecure();
 		if (res == RES_OK_NEED_RESTART)
 			return FALSE; // emule restart as secure user, kill this instance
-		else if (res == RES_FAILED){
+		if (res == RES_FAILED)
 			// something went wrong
 			theApp.QueueLogLine(false, GetResString(IDS_RAU_FAILED), (LPCTSTR)rau.GetCurrentUserW());
-		}
 	}
 
 	if (thePrefs.GetRTLWindowsLayout())

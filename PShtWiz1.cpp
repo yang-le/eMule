@@ -433,7 +433,7 @@ void CPPgWiz1Ports::OnStartConTest() {
 	if ( (tcp!=theApp.listensocket->GetConnectedPort() || udp!=theApp.clientudp->GetConnectedPort() ) ) {
 
 		if (!theApp.IsPortchangeAllowed()) {
-			AfxMessageBox((UINT)IDS_NOPORTCHANGEPOSSIBLE, MB_OK, 0);
+			LocMessageBox(IDS_NOPORTCHANGEPOSSIBLE, MB_OK, 0);
 			return;
 		}
 
@@ -885,7 +885,7 @@ BOOL FirstTimeWizard()
 		thePrefs.udpport = thePrefs.GetRandomUDPPort();
 	if ( (thePrefs.port!=theApp.listensocket->GetConnectedPort()) || (thePrefs.udpport!=theApp.clientudp->GetConnectedPort()) )
 		if (!theApp.IsPortchangeAllowed())
-			AfxMessageBox((UINT)IDS_NOPORTCHANGEPOSSIBLE, MB_OK, 0);
+			LocMessageBox(IDS_NOPORTCHANGEPOSSIBLE, MB_OK, 0);
 		else {
 			theApp.listensocket->Rebind() ;
 			theApp.clientudp->Rebind();

@@ -308,7 +308,7 @@ void CCollectionCreateDialog::OnBnClickedOk()
 		}
 		else
 		{
-			if (AfxMessageBox((UINT)IDS_COLL_REPLACEEXISTING, MB_ICONWARNING | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_YESNO, 0) == IDNO)
+			if (LocMessageBox(IDS_COLL_REPLACEEXISTING, MB_ICONWARNING | MB_DEFBUTTON2 | MB_YESNO, 0) == IDNO)
 				return;
 
 			bool bDeleteSuccessful = ShellDeleteFile(sFilePath);
@@ -325,7 +325,7 @@ void CCollectionCreateDialog::OnBnClickedOk()
 			}
 			else
 			{
-				AfxMessageBox((UINT)IDS_COLL_ERR_DELETING,MB_ICONWARNING | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_YESNO, 0);
+				LocMessageBox(IDS_COLL_ERR_DELETING, MB_ICONWARNING | MB_DEFBUTTON2 | MB_YESNO, 0);
 			}
 		}
 

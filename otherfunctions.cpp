@@ -51,6 +51,7 @@
 #include "kademlia/kademlia/UDPFirewallTester.h"
 #include "Log.h"
 #include "CxImage/xImage.h"
+#include "Netioapi.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -518,7 +519,7 @@ bool Ask4RegFix(bool checkOnly, bool dontAsk, bool bAutoTakeCollections)
 		HKEY hkeyCR = thePrefs.GetWindowsVersion() < _WINVER_2K_ ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
 		if (regkey.Create(hkeyCR, _T("Software\\Classes\\ed2k\\shell\\open\\command")) == ERROR_SUCCESS)
 		{
-			if (dontAsk || (AfxMessageBox((UINT)IDS_ASSIGNED2K, MB_ICONQUESTION|MB_YESNO, 0) == IDYES))
+			if (dontAsk || (LocMessageBox(IDS_ASSIGNED2K, MB_ICONQUESTION|MB_YESNO, 0) == IDYES))
 			{
 				VERIFY( regkey.SetStringValue(NULL, regbuffer) == ERROR_SUCCESS );
 
@@ -2759,24 +2760,6 @@ bool operator==(const CSKey& k1,const CSKey& k2)
 	return !md4cmp(k1.m_key, k2.m_key);
 }
 
-CString ipstr(uint32 nIP)
-{
-	// following gives the same string as 'inet_ntoa(*(in_addr*)&nIP)' but is not restricted to ASCII strings
-	const BYTE* pucIP = (BYTE*)&nIP;
-	CString strIP;
-	strIP.ReleaseBuffer(_stprintf(strIP.GetBuffer(3+1+3+1+3+1+3), _T("%u.%u.%u.%u"), pucIP[0], pucIP[1], pucIP[2], pucIP[3]));
-	return strIP;
-}
-
-CString ipstr(uint32 nIP, uint16 nPort)
-{
-	// following gives the same string as 'inet_ntoa(*(in_addr*)&nIP)' but is not restricted to ASCII strings
-	const BYTE* pucIP = (BYTE*)&nIP;
-	CString strIP;
-	strIP.ReleaseBuffer(_stprintf(strIP.GetBuffer(3+1+3+1+3+1+3+1+5), _T("%u.%u.%u.%u:%u"), pucIP[0], pucIP[1], pucIP[2], pucIP[3], nPort));
-	return strIP;
-}
-
 CString ipstr(LPCTSTR pszAddress, uint16 nPort)
 {
 	CString strIPPort;
@@ -2784,12 +2767,19 @@ CString ipstr(LPCTSTR pszAddress, uint16 nPort)
 	return strIPPort;
 }
 
+CString ipstr(uint32 nIP, uint16 nPort)
+{
+	return ipstr((LPCTSTR)ipstr(nIP), nPort);
+}
+
+CString ipstr(uint32 nIP)
+{
+	return CString(inet_ntoa(*(in_addr*)&nIP));
+}
+
 CStringA ipstrA(uint32 nIP)
 {
-	const BYTE* pucIP = (BYTE*)&nIP;
-	CStringA strIP;
-	strIP.ReleaseBuffer(sprintf(strIP.GetBuffer(3+1+3+1+3+1+3), "%u.%u.%u.%u", pucIP[0], pucIP[1], pucIP[2], pucIP[3]));
-	return strIP;
+	return CStringA(inet_ntoa(*(in_addr*)&nIP));
 }
 
 void ipstrA(CHAR* pszAddress, int iMaxAddress, uint32 nIP)
@@ -3063,7 +3053,7 @@ HWND ReplaceRichEditCtrl(CWnd* pwndRE, CWnd* pwndParent, CFont* pFont)
 void InstallSkin(LPCTSTR pszSkinPackage)
 {
 	if (thePrefs.GetMuleDirectory(EMULE_SKINDIR).IsEmpty() || _taccess(thePrefs.GetMuleDirectory(EMULE_SKINDIR), 0) != 0) {
-		AfxMessageBox((UINT)IDS_INSTALL_SKIN_NODIR, MB_ICONERROR, 0);
+		LocMessageBox(IDS_INSTALL_SKIN_NODIR, MB_ICONERROR, 0);
 		return;
 	}
 
@@ -3136,12 +3126,12 @@ void InstallSkin(LPCTSTR pszSkinPackage)
 				}
 			}
 			else {
-				AfxMessageBox((UINT)IDS_INSTALL_SKIN_PKG_ERROR, MB_ICONERROR, 0);
+				LocMessageBox(IDS_INSTALL_SKIN_PKG_ERROR, MB_ICONERROR, 0);
 			}
 			zip.Close();
 		}
 		else {
-			AfxMessageBox((UINT)IDS_INSTALL_SKIN_PKG_ERROR, MB_ICONERROR, 0);
+			LocMessageBox(IDS_INSTALL_SKIN_PKG_ERROR, MB_ICONERROR, 0);
 		}
 	}
 	else if (_tcscmp(szExt, _T(".rar")) == 0)
@@ -3190,7 +3180,7 @@ void InstallSkin(LPCTSTR pszSkinPackage)
 			}
 
 			if (!bError && !bFoundSkinINIFile)
-				AfxMessageBox((UINT)IDS_INSTALL_SKIN_PKG_ERROR, MB_ICONERROR, 0);
+				LocMessageBox(IDS_INSTALL_SKIN_PKG_ERROR, MB_ICONERROR, 0);
 
 			rar.Close();
 		}
@@ -3926,4 +3916,31 @@ bool AddIconGrayscaledToImageList(CImageList& rList, HICON hIcon)
 		DeleteObject(iinfo.hbmMask);
 	}
 	return bResult;
+}
+
+ULONG GetBestInterfaceIP(const ULONG dest_addr)
+{
+	ULONG bestInterfaceIP = INADDR_NONE;
+	if (DetectWinVersion() >= _WINVER_VISTA_) {
+		SOCKADDR_INET saBestInterfaceAddress = {};
+		SOCKADDR_INET saDestinationAddress = {};
+		MIB_IPFORWARD_ROW2 rowBestRoute = {};
+		DWORD dwBestIfIndex;
+
+		saDestinationAddress.Ipv4.sin_family = AF_INET;
+		saDestinationAddress.Ipv4.sin_addr.S_un.S_addr = dest_addr;
+
+		if (dest_addr != INADDR_NONE) {
+			DWORD dwError = GetBestInterface(dest_addr, &dwBestIfIndex);
+			if (dwError == NO_ERROR) {
+				dwError = GetBestRoute2(nullptr, dwBestIfIndex, nullptr, &saDestinationAddress, 0, &rowBestRoute, &saBestInterfaceAddress);
+				if (dwError == NO_ERROR)
+					bestInterfaceIP = saBestInterfaceAddress.Ipv4.sin_addr.S_un.S_addr;
+				else
+					DebugLogError(_T(__FUNCTION__) _T(": Failed to retrieve best route source ip address to destination %s: %s"), ipstr(dest_addr), GetErrorMessage(dwError, 1));
+			} else
+				DebugLogError(_T(__FUNCTION__) _T(": Failed to retrieve best interface index for destination %s: %s"), ipstr(dest_addr), GetErrorMessage(dwError, 1));
+		}
+	}
+	return bestInterfaceIP;
 }

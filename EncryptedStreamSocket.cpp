@@ -179,7 +179,7 @@ int CEncryptedStreamSocket::Send(const void* lpBuf, int nBufLen, int nFlags)
 		int nRes = SendNegotiatingData(lpBuf, nBufLen, nBufLen);
 		ASSERT( nRes != SOCKET_ERROR );
 		(void)nRes;
-		return nBufLen;	// report a full send, even if we didn't for some reason - the data is know in our buffer and will be handled later
+		return nBufLen;	// report a full send, even if we didn't for some reason - the data is in our buffer and will be handled later
 	}
 	if (m_NegotiatingState == ONS_BASIC_SERVER_DELAYEDSENDING)
 		ASSERT( false );
@@ -205,10 +205,10 @@ int CEncryptedStreamSocket::SendOv(CArray<WSABUF>& raBuffer, DWORD& dwBytesSent,
 		// attach it now to the sendbuffer
 		WSABUF wbuf = {(ULONG)m_pfiSendBuffer->GetLength()};
 		wbuf.buf = new CHAR[wbuf.len];
-		memcpy(wbuf.buf, m_pfiSendBuffer->GetBuffer(), wbuf.len);
+		m_pfiSendBuffer->SeekToBegin();
+		m_pfiSendBuffer->Read(wbuf.buf, wbuf.len);
 		raBuffer.InsertAt(0, wbuf);
 		m_NegotiatingState = ONS_COMPLETE;
-		free(m_pfiSendBuffer->Detach());
 		delete m_pfiSendBuffer;
 		m_pfiSendBuffer = NULL;
 	} else
@@ -223,13 +223,11 @@ int CEncryptedStreamSocket::SendOv(CArray<WSABUF>& raBuffer, DWORD& dwBytesSent,
 	return WSASend(GetSocketHandle(), raBuffer.GetData(), raBuffer.GetCount(), &dwBytesSent, 0, lpOverlapped, NULL);
 }
 
-
 bool CEncryptedStreamSocket::IsEncryptionLayerReady()
 {
 	return ( (m_StreamCryptState == ECS_NONE || m_StreamCryptState == ECS_ENCRYPTING || m_StreamCryptState == ECS_UNKNOWN )
 		&& (m_pfiSendBuffer == NULL || (m_bServerCrypt && m_NegotiatingState == ONS_BASIC_SERVER_DELAYEDSENDING)) );
 }
-
 
 int CEncryptedStreamSocket::Receive(void* lpBuf, int nBufLen, int nFlags)
 {
@@ -679,13 +677,13 @@ int CEncryptedStreamSocket::Negotiate(const uchar* pBuffer, uint32 nLen)
 
 int CEncryptedStreamSocket::SendNegotiatingData(const void* lpBuf, uint32 nBufLen, uint32 nStartCryptFromByte, bool bDelaySend)
 {
-	ASSERT( m_StreamCryptState == ECS_NEGOTIATING || m_StreamCryptState == ECS_ENCRYPTING );
-	ASSERT( nStartCryptFromByte <= nBufLen );
-	ASSERT( m_NegotiatingState == ONS_BASIC_SERVER_DELAYEDSENDING || !bDelaySend );
+	ASSERT(m_StreamCryptState == ECS_NEGOTIATING || m_StreamCryptState == ECS_ENCRYPTING);
+	ASSERT(nStartCryptFromByte <= nBufLen);
+	ASSERT(m_NegotiatingState == ONS_BASIC_SERVER_DELAYEDSENDING || !bDelaySend);
 
 	BYTE* pBuffer = NULL;
-	bool bProcess = false;
-	if (lpBuf != NULL){
+	bool bProcess = (lpBuf == NULL);
+	if (!bProcess) {
 		pBuffer = (BYTE*)malloc(nBufLen);
 		if (pBuffer == NULL)
 			AfxThrowMemoryException();
@@ -693,12 +691,12 @@ int CEncryptedStreamSocket::SendNegotiatingData(const void* lpBuf, uint32 nBufLe
 			memcpy(pBuffer, lpBuf, nStartCryptFromByte);
 		if (nBufLen > nStartCryptFromByte)
 			RC4Crypt((uchar*)lpBuf + nStartCryptFromByte, pBuffer + nStartCryptFromByte, nBufLen - nStartCryptFromByte, m_pRC4SendKey);
-		if (m_pfiSendBuffer != NULL){
+		if (m_pfiSendBuffer != NULL) {
 			// we already have data pending. Attach it and try to send
 			if (m_NegotiatingState == ONS_BASIC_SERVER_DELAYEDSENDING)
 				m_NegotiatingState = ONS_COMPLETE;
 			else
-				ASSERT( false );
+				ASSERT(false);
 			m_pfiSendBuffer->SeekToEnd();
 			m_pfiSendBuffer->Write(pBuffer, nBufLen);
 			free(pBuffer);
@@ -707,10 +705,10 @@ int CEncryptedStreamSocket::SendNegotiatingData(const void* lpBuf, uint32 nBufLe
 			bProcess = true; // we want to try to send it right now
 		}
 	}
-	if (lpBuf == NULL || bProcess){
+	if (bProcess) {
 		// this call is for processing pending data
-		if (m_pfiSendBuffer == NULL || nStartCryptFromByte != 0){
-			ASSERT( false );
+		if (m_pfiSendBuffer == NULL || nStartCryptFromByte != 0) {
+			ASSERT(false);
 			return 0;							// or not
 		}
 		nBufLen = (uint32)m_pfiSendBuffer->GetLength();
@@ -718,15 +716,13 @@ int CEncryptedStreamSocket::SendNegotiatingData(const void* lpBuf, uint32 nBufLe
 		delete m_pfiSendBuffer;
 		m_pfiSendBuffer = NULL;
 	}
-    ASSERT( m_pfiSendBuffer == NULL );
-	uint32 result = 0;
-	if (!bDelaySend)
-		result = CAsyncSocketEx::Send(pBuffer, nBufLen);
-	if (result == (uint32)SOCKET_ERROR || bDelaySend){
+	ASSERT(m_pfiSendBuffer == NULL);
+	uint32 result = bDelaySend ? 0 : CAsyncSocketEx::Send(pBuffer, nBufLen);
+	if (result == (uint32)SOCKET_ERROR || bDelaySend) {
 		m_pfiSendBuffer = new CSafeMemFile(128);
 		m_pfiSendBuffer->Write(pBuffer, nBufLen);
-    } else {
-		if (result < nBufLen){
+	} else {
+		if (result < nBufLen) {
 			m_pfiSendBuffer = new CSafeMemFile(128);
 			m_pfiSendBuffer->Write(pBuffer + result, nBufLen - result);
 		}

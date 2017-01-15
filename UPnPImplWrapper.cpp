@@ -28,7 +28,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-CUPnPImplWrapper::CUPnPImplWrapper(){
+CUPnPImplWrapper::CUPnPImplWrapper()
+{
 	if (!thePrefs.IsWinServUPnPImplDisabled())
 		m_liAvailable.AddTail(new CUPnPImplWinServ());
 	if (!thePrefs.IsMinilibUPnPImplDisabled())
@@ -37,7 +38,6 @@ CUPnPImplWrapper::CUPnPImplWrapper(){
 		m_liAvailable.AddTail(new CUPnPImplNone());
 	Init();
 }
-
 CUPnPImplWrapper::~CUPnPImplWrapper()
 {
 	while (!m_liAvailable.IsEmpty())
@@ -46,7 +46,6 @@ CUPnPImplWrapper::~CUPnPImplWrapper()
 		delete m_liUsed.RemoveHead();
 	m_pActiveImpl = NULL;
 }
-
 void CUPnPImplWrapper::Init()
 {
 	ASSERT(!m_liAvailable.IsEmpty());
@@ -66,14 +65,14 @@ void CUPnPImplWrapper::Init()
 		m_pActiveImpl = m_liAvailable.RemoveHead();
 	m_liUsed.AddTail(m_pActiveImpl);
 }
-
-void CUPnPImplWrapper::Reset(){
+void CUPnPImplWrapper::Reset()
+{
 	while (!m_liUsed.IsEmpty())
 		m_liAvailable.AddTail(m_liUsed.RemoveHead());
 	Init();
 }
-
-bool CUPnPImplWrapper::SwitchImplentation(){
+bool CUPnPImplWrapper::SwitchImplentation()
+{
 	if (m_liAvailable.IsEmpty())
 		return false;
 	else {

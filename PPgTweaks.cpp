@@ -793,7 +793,7 @@ LRESULT CPPgTweaks::OnTreeOptsCtrlNotify(WPARAM wParam, LPARAM lParam)
 				m_ctrlTreeOptions.GetRadioButton(m_htiShareeMule, nIndex, tmp);
 				if (nIndex != thePrefs.m_nCurrentUserDirMode){
 					// TODO offer cancel option
-					AfxMessageBox((UINT)IDS_SHAREEMULEWARNING, MB_ICONINFORMATION | MB_OK, 0);
+					LocMessageBox(IDS_SHAREEMULEWARNING, MB_ICONINFORMATION | MB_OK, 0);
 					bShowedWarning = true;
 				}
 			}

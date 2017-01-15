@@ -505,7 +505,7 @@ void CIPFilterDlg::OnBnClickedDelete()
 {
 	if (m_ipfilter.GetSelectedCount() == 0)
 		return;
-	if (AfxMessageBox((UINT)IDS_DELETEIPFILTERS, MB_YESNOCANCEL, 0) != IDYES)
+	if (LocMessageBox(IDS_DELETEIPFILTERS, MB_YESNOCANCEL, 0) != IDYES)
 		return;
 
 	CWaitCursor curWait;

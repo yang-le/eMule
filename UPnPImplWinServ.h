@@ -36,33 +36,33 @@
 #include <functional>
 
 
-typedef _com_ptr_t<_com_IIID<IUPnPDeviceFinder,&IID_IUPnPDeviceFinder> >	FinderPointer;
-typedef _com_ptr_t<_com_IIID<IUPnPDevice,&IID_IUPnPDevice>	>				DevicePointer;
-typedef _com_ptr_t<_com_IIID<IUPnPService,&IID_IUPnPService> >				ServicePointer;
-typedef	_com_ptr_t<_com_IIID<IUPnPDeviceFinderCallback,&IID_IUPnPDeviceFinderCallback> > DeviceFinderCallback;
-typedef	_com_ptr_t<_com_IIID<IUPnPServiceCallback,&IID_IUPnPServiceCallback> >			 ServiceCallback;
-typedef _com_ptr_t<_com_IIID<IEnumUnknown,&IID_IEnumUnknown> >				EnumUnknownPtr;
-typedef _com_ptr_t<_com_IIID<IUnknown,&IID_IUnknown> >						UnknownPtr;
+typedef _com_ptr_t<_com_IIID<IUPnPDeviceFinder, &IID_IUPnPDeviceFinder> > FinderPointer;
+typedef _com_ptr_t<_com_IIID<IUPnPDevice, &IID_IUPnPDevice> > DevicePointer;
+typedef _com_ptr_t<_com_IIID<IUPnPService, &IID_IUPnPService> > ServicePointer;
+typedef _com_ptr_t<_com_IIID<IUPnPDeviceFinderCallback, &IID_IUPnPDeviceFinderCallback> > DeviceFinderCallback;
+typedef _com_ptr_t<_com_IIID<IUPnPServiceCallback, &IID_IUPnPServiceCallback> > ServiceCallback;
+typedef _com_ptr_t<_com_IIID<IEnumUnknown, &IID_IEnumUnknown> > EnumUnknownPtr;
+typedef _com_ptr_t<_com_IIID<IUnknown, &IID_IUnknown> > UnknownPtr;
 
-typedef DWORD (WINAPI* TGetBestInterface) (
-  IPAddr dwDestAddr,
-  PDWORD pdwBestIfIndex
-);
+typedef DWORD (WINAPI * TGetBestInterface)(
+	IPAddr dwDestAddr,
+	PDWORD pdwBestIfIndex
+	);
 
-typedef DWORD (WINAPI* TGetIpAddrTable) (
-  PMIB_IPADDRTABLE pIpAddrTable,
-  PULONG pdwSize,
-  BOOL bOrder
-);
+typedef DWORD (WINAPI * TGetIpAddrTable)(
+	PMIB_IPADDRTABLE pIpAddrTable,
+	PULONG pdwSize,
+	BOOL bOrder
+	);
 
-typedef DWORD (WINAPI* TGetIfEntry) (
-  PMIB_IFROW pIfRow
-);
+typedef DWORD (WINAPI * TGetIfEntry)(
+	PMIB_IFROW pIfRow
+	);
 
 CString translateUPnPResult(HRESULT hr);
 HRESULT UPnPMessage(HRESULT hr);
 
-class CUPnPImplWinServ: public CUPnPImpl
+class CUPnPImplWinServ : public CUPnPImpl
 {
 	friend class CDeviceFinderCallback;
 	friend class CServiceCallback;
@@ -71,115 +71,125 @@ public:
 	virtual ~CUPnPImplWinServ();
 	CUPnPImplWinServ();
 
-	virtual void	StartDiscovery(uint16 nTCPPort, uint16 nUDPPort, uint16 nTCPWebPort)		{ StartDiscovery(nTCPPort, nUDPPort, nTCPWebPort, false); }
-	virtual void	StopAsyncFind();
-	virtual void	DeletePorts();
-	virtual bool	IsReady();
-	virtual int		GetImplementationID()									{ return UPNP_IMPL_WINDOWSERVICE; }
+	virtual void StartDiscovery(uint16 nTCPPort, uint16 nUDPPort, uint16 nTCPWebPort)
+	{
+		StartDiscovery(nTCPPort, nUDPPort, nTCPWebPort, false);
+	}
+	virtual void StopAsyncFind();
+	virtual void DeletePorts();
+	virtual bool IsReady();
+	virtual int GetImplementationID()
+	{
+		return UPNP_IMPL_WINDOWSERVICE;
+	}
 
 	// No Support for Refreshing on this  (fallback) implementation yet - in many cases where it would be needed (router reset etc)
 	// the windows side of the implementation tends to get bugged until reboot anyway. Still might get added later
-	virtual bool	CheckAndRefresh()										{ return false; };
+	virtual bool CheckAndRefresh()
+	{
+		return false;
+	}
 
 protected:
-	void	StartDiscovery(uint16 nTCPPort, uint16 nUDPPort, uint16 nTCPWebPort, bool bSecondTry);
-	void	AddDevice(DevicePointer pDevice, bool bAddChilds, int nLevel = 0);
-	void	RemoveDevice(CComBSTR bsUDN);
-	bool	OnSearchComplete();
-	void	Init();
+	void StartDiscovery(uint16 nTCPPort, uint16 nUDPPort, uint16 nTCPWebPort, bool bSecondTry);
+	void AddDevice(DevicePointer pDevice, bool bAddChilds, int nLevel = 0);
+	void RemoveDevice(CComBSTR bsUDN);
+	bool OnSearchComplete();
+	void Init();
 
 	inline bool IsAsyncFindRunning()
 	{
-		if ( m_pDeviceFinder != NULL && m_bAsyncFindRunning && GetTickCount() - m_tLastEvent > 10000 )
-		{
-			m_pDeviceFinder->CancelAsyncFind( m_nAsyncFindHandle );
+		if (m_pDeviceFinder != NULL && m_bAsyncFindRunning && GetTickCount() - m_tLastEvent > 10000) {
+			m_pDeviceFinder->CancelAsyncFind(m_nAsyncFindHandle);
 			m_bAsyncFindRunning = false;
 		}
 		MSG msg;
-		while ( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) )
-		{
-			TranslateMessage( &msg );
-			DispatchMessage( &msg );
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
 		}
 		return m_bAsyncFindRunning;
 	}
-
-	TRISTATE			m_bUPnPDeviceConnected;
+	TRISTATE m_bUPnPDeviceConnected;
 
 // Implementation
 	// API functions
-	SC_HANDLE (WINAPI *m_pfnOpenSCManager)(LPCTSTR, LPCTSTR, DWORD);
-	SC_HANDLE (WINAPI *m_pfnOpenService)(SC_HANDLE, LPCTSTR, DWORD);
-	BOOL (WINAPI *m_pfnQueryServiceStatusEx)(SC_HANDLE, SC_STATUS_TYPE, LPBYTE, DWORD, LPDWORD);
-	BOOL (WINAPI *m_pfnCloseServiceHandle)(SC_HANDLE);
-	BOOL (WINAPI *m_pfnStartService)(SC_HANDLE, DWORD, LPCTSTR*);
-	BOOL (WINAPI *m_pfnControlService)(SC_HANDLE, DWORD, LPSERVICE_STATUS);
+	SC_HANDLE(WINAPI * m_pfnOpenSCManager)(LPCTSTR, LPCTSTR, DWORD);
+	SC_HANDLE(WINAPI * m_pfnOpenService)(SC_HANDLE, LPCTSTR, DWORD);
+	BOOL(WINAPI * m_pfnQueryServiceStatusEx)(SC_HANDLE, SC_STATUS_TYPE, LPBYTE, DWORD, LPDWORD);
+	BOOL(WINAPI * m_pfnCloseServiceHandle)(SC_HANDLE);
+	BOOL(WINAPI * m_pfnStartService)(SC_HANDLE, DWORD, LPCTSTR*);
+	BOOL(WINAPI * m_pfnControlService)(SC_HANDLE, DWORD, LPSERVICE_STATUS);
 
-	TGetBestInterface		m_pfGetBestInterface;
-	TGetIpAddrTable			m_pfGetIpAddrTable;
-	TGetIfEntry				m_pfGetIfEntry;
+	TGetBestInterface m_pfGetBestInterface;
+	TGetIpAddrTable m_pfGetIpAddrTable;
+	TGetIfEntry m_pfGetIfEntry;
 
 	static FinderPointer CreateFinderInstance();
-	struct FindDevice : private std::unary_function< DevicePointer, bool >
+	struct FindDevice : private std::unary_function<DevicePointer, bool>
 	{
-		explicit FindDevice(const CComBSTR& udn) : m_udn( udn ) {}
+		explicit FindDevice(const CComBSTR& udn)
+			: m_udn(udn)
+		{
+		}
 		result_type operator()(argument_type device) const
 		{
 			CComBSTR deviceName;
-			HRESULT hr = device->get_UniqueDeviceName( &deviceName );
+			HRESULT hr = device->get_UniqueDeviceName(&deviceName);
 
-			if ( FAILED( hr ) )
-				return UPnPMessage( hr ), false;
-
-			return wcscmp( deviceName.m_str, m_udn ) == 0;
+			if (FAILED(hr)) {
+				UPnPMessage(hr);
+				return false;
+			}
+			return wcscmp(deviceName.m_str, m_udn) == 0;
 		}
 		CComBSTR m_udn;
 	};
 
-	void	ProcessAsyncFind(CComBSTR bsSearchType);
-	HRESULT	GetDeviceServices(DevicePointer pDevice);
-	void	StartPortMapping();
-	HRESULT	MapPort(const ServicePointer& service);
-	void	DeleteExistingPortMappings(ServicePointer pService);
-	void	CreatePortMappings(ServicePointer pService);
+	void ProcessAsyncFind(CComBSTR bsSearchType);
+	HRESULT GetDeviceServices(DevicePointer pDevice);
+	void StartPortMapping();
+	HRESULT MapPort(const ServicePointer& service);
+	void DeleteExistingPortMappings(ServicePointer pService);
+	void CreatePortMappings(ServicePointer pService);
 	HRESULT SaveServices(EnumUnknownPtr pEU, const LONG nTotalItems);
 	HRESULT InvokeAction(ServicePointer pService, CComBSTR action,
-		LPCTSTR pszInArgString, CString& strResult);
-	void	StopUPnPService();
+	                     LPCTSTR pszInArgString, CString& strResult);
+	void StopUPnPService();
 
 	// Utility functions
-	HRESULT CreateSafeArray(const VARTYPE vt, const ULONG nArgs, SAFEARRAY** ppsa);
-	INT_PTR CreateVarFromString(const CString& strArgs, VARIANT*** pppVars);
-	LONG GetStringFromOutArgs(const VARIANT* pvaOutArgs, CString& strArgs);
-	static void	DestroyVars(const INT_PTR nCount, VARIANT*** pppVars);
-	HRESULT GetSafeArrayBounds(SAFEARRAY* psa, LONG* pLBound, LONG* pUBound);
-	HRESULT GetVariantElement(SAFEARRAY* psa, LONG pos, VARIANT* pvar);
-	CString	GetLocalRoutableIP(ServicePointer pService);
+	HRESULT CreateSafeArray(const VARTYPE vt, const ULONG nArgs, SAFEARRAY **ppsa);
+	INT_PTR CreateVarFromString(const CString& strArgs, VARIANT ***pppVars);
+	LONG GetStringFromOutArgs(const VARIANT *pvaOutArgs, CString& strArgs);
+	static void DestroyVars(const INT_PTR nCount, VARIANT ***pppVars);
+	HRESULT GetSafeArrayBounds(SAFEARRAY *psa, LONG *pLBound, LONG *pUBound);
+	HRESULT GetVariantElement(SAFEARRAY *psa, LONG pos, VARIANT *pvar);
+	CString GetLocalRoutableIP(ServicePointer pService);
 
 // Private members
 private:
-	DWORD	m_tLastEvent;	// When the last event was received?
-	std::vector< DevicePointer >  m_pDevices;
-	std::vector< ServicePointer > m_pServices;
-	FinderPointer			m_pDeviceFinder;
-	DeviceFinderCallback	m_pDeviceFinderCallback;
-	ServiceCallback			m_pServiceCallback;
+	DWORD m_tLastEvent;	// When the last event was received?
+	std::vector<DevicePointer> m_pDevices;
+	std::vector<ServicePointer> m_pServices;
+	FinderPointer m_pDeviceFinder;
+	DeviceFinderCallback m_pDeviceFinderCallback;
+	ServiceCallback m_pServiceCallback;
 
-	LONG	m_nAsyncFindHandle;
-	bool	m_bCOM;
-	bool	m_bPortIsFree;
+	LONG m_nAsyncFindHandle;
+	bool m_bCOM;
+	bool m_bPortIsFree;
 	CString m_sLocalIP;
 	CString m_sExternalIP;
-	bool	m_bADSL;		// Is the device ADSL?
-	bool	m_ADSLFailed;	// Did port mapping failed for the ADSL device?
-	bool	m_bInited;
-	bool	m_bAsyncFindRunning;
+	bool m_bADSL;	// Is the device ADSL?
+	bool m_ADSLFailed;	// Did port mapping failed for the ADSL device?
+	bool m_bInited;
+	bool m_bAsyncFindRunning;
 	HMODULE m_hADVAPI32_DLL;
-	HMODULE	m_hIPHLPAPI_DLL;
-	bool	m_bSecondTry;
-	bool	m_bServiceStartedByEmule;
-	bool	m_bDisableWANIPSetup;
-	bool	m_bDisableWANPPPSetup;
+	HMODULE m_hIPHLPAPI_DLL;
+	bool m_bSecondTry;
+	bool m_bServiceStartedByEmule;
+	bool m_bDisableWANIPSetup;
+	bool m_bDisableWANPPPSetup;
 
 };
 
@@ -189,16 +199,17 @@ class CDeviceFinderCallback
 {
 public:
 	explicit CDeviceFinderCallback(CUPnPImplWinServ& instance)
-		: m_instance( instance )
-	{ m_lRefCount = 0; }
+		: m_instance(instance), m_lRefCount(0)
+	{
+	}
 
-   STDMETHODIMP QueryInterface(REFIID iid, LPVOID* ppvObject);
-   STDMETHODIMP_(ULONG) AddRef();
-   STDMETHODIMP_(ULONG) Release();
+	STDMETHODIMP QueryInterface(REFIID iid, LPVOID *ppvObject);
+	STDMETHODIMP_(ULONG) AddRef();
+	STDMETHODIMP_(ULONG) Release();
 
 // implementation
 private:
-	HRESULT __stdcall DeviceAdded(LONG nFindData, IUPnPDevice* pDevice);
+	HRESULT __stdcall DeviceAdded(LONG nFindData, IUPnPDevice * pDevice);
 	HRESULT __stdcall DeviceRemoved(LONG nFindData, BSTR bsUDN);
 	HRESULT __stdcall SearchComplete(LONG nFindData);
 
@@ -213,17 +224,18 @@ class CServiceCallback
 {
 public:
 	explicit CServiceCallback(CUPnPImplWinServ& instance)
-		: m_instance( instance )
-	{ m_lRefCount = 0; }
+		: m_instance(instance), m_lRefCount(0)
+	{
+	}
 
-   STDMETHODIMP QueryInterface(REFIID iid, LPVOID* ppvObject);
-   STDMETHODIMP_(ULONG) AddRef();
-   STDMETHODIMP_(ULONG) Release();
+	STDMETHODIMP QueryInterface(REFIID iid, LPVOID *ppvObject);
+	STDMETHODIMP_(ULONG) AddRef();
+	STDMETHODIMP_(ULONG) Release();
 
 // implementation
 private:
-	HRESULT __stdcall StateVariableChanged(IUPnPService* pService, LPCWSTR pszStateVarName, VARIANT varValue);
-	HRESULT __stdcall ServiceInstanceDied(IUPnPService* pService);
+	HRESULT __stdcall StateVariableChanged(IUPnPService * pService, LPCWSTR pszStateVarName, VARIANT varValue);
+	HRESULT __stdcall ServiceInstanceDied(IUPnPService * pService);
 
 private:
 	CUPnPImplWinServ& m_instance;

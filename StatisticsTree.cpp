@@ -176,7 +176,7 @@ BOOL CStatisticsTree::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 	switch (wParam) {
 		case MP_STATTREE_RESET:
 			{
-				if(AfxMessageBox((UINT)IDS_STATS_MBRESET_TXT, MB_YESNO | MB_ICONEXCLAMATION, 0) == IDNO)
+				if(LocMessageBox(IDS_STATS_MBRESET_TXT, MB_YESNO | MB_ICONEXCLAMATION, 0) == IDNO)
 					break;
 
 				thePrefs.ResetCumulativeStatistics();
@@ -191,7 +191,7 @@ BOOL CStatisticsTree::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 			}
 		case MP_STATTREE_RESTORE:
 			{
-				if (AfxMessageBox((UINT)IDS_STATS_MBRESTORE_TXT, MB_YESNO | MB_ICONQUESTION, 0) == IDNO)
+				if (LocMessageBox(IDS_STATS_MBRESTORE_TXT, MB_YESNO | MB_ICONQUESTION, 0) == IDNO)
 					break;
 
 				if(!thePrefs.LoadStats(1))

@@ -163,6 +163,7 @@ void CSearchResultsWnd::OnInitialUpdate()
 	searchprogress.SetStep(1);
 	global_search_timer = 0;
 	globsearch = false;
+	ShowSearchSelector(false);
 
 	AddAnchor(*m_btnSearchListMenu, TOP_LEFT);
 	AddAnchor(IDC_FILTER, TOP_RIGHT);
@@ -175,9 +176,7 @@ void CSearchResultsWnd::OnInitialUpdate()
 	AddAnchor(IDC_STATIC_DLTOof, BOTTOM_LEFT);
 	AddAnchor(*m_cattabs, BOTTOM_LEFT, BOTTOM_RIGHT);
 
-	ShowSearchSelector(false);
-
-	if (theApp.m_fontSymbol.m_hObject){
+	if (theApp.m_fontSymbol.m_hObject) {
 		GetDlgItem(IDC_STATIC_DLTOof)->SetFont(&theApp.m_fontSymbol);
 		GetDlgItem(IDC_STATIC_DLTOof)->SetWindowText(GetExStyle() & WS_EX_LAYOUTRTL ? _T("3") : _T("4")); // show a right-arrow
 	}
@@ -1188,7 +1187,7 @@ bool CSearchResultsWnd::StartNewSearch(SSearchParams* pParams)
 		else if (theApp.serverconnect->IsConnected() && (!Kademlia::CKademlia::IsRunning() || !Kademlia::CKademlia::IsConnected()))
 			pParams->eType = SearchTypeEd2kServer;
 		else if (!theApp.serverconnect->IsConnected() && (!Kademlia::CKademlia::IsRunning() || !Kademlia::CKademlia::IsConnected())){
-			AfxMessageBox((UINT)IDS_NOTCONNECTEDANY, MB_ICONWARNING, 0);
+			LocMessageBox(IDS_NOTCONNECTEDANY, MB_ICONWARNING, 0);
 			delete pParams;
 			return false;
 		}
@@ -1217,7 +1216,7 @@ bool CSearchResultsWnd::StartNewSearch(SSearchParams* pParams)
 	if (eSearchType == SearchTypeEd2kServer || eSearchType == SearchTypeEd2kGlobal)
 	{
 		if (!theApp.serverconnect->IsConnected()) {
-			AfxMessageBox((UINT)IDS_ERR_NOTCONNECTED, MB_ICONWARNING, 0);
+			LocMessageBox(IDS_ERR_NOTCONNECTED, MB_ICONWARNING, 0);
 			delete pParams;
 			//if (!theApp.serverconnect->IsConnecting() && !theApp.serverconnect->IsConnected())
 			//	theApp.serverconnect->ConnectToAnyServer();
@@ -1246,7 +1245,7 @@ bool CSearchResultsWnd::StartNewSearch(SSearchParams* pParams)
 	if (eSearchType == SearchTypeKademlia)
 	{
 		if (!Kademlia::CKademlia::IsRunning() || !Kademlia::CKademlia::IsConnected()) {
-			AfxMessageBox((UINT)IDS_ERR_NOTCONNECTEDKAD, MB_ICONWARNING, 0);
+			LocMessageBox(IDS_ERR_NOTCONNECTEDKAD, MB_ICONWARNING, 0);
 			delete pParams;
 			//if (!Kademlia::CKademlia::IsRunning())
 			//	Kademlia::CKademlia::Start();

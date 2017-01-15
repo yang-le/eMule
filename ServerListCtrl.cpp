@@ -486,13 +486,12 @@ BOOL CServerListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 		return TRUE;
 
 	case MP_REMOVE:
-	case MPG_DELETE: {
+	case MPG_DELETE:
 		DeleteSelectedServers();
 		return TRUE;
-	}
 
 	case MP_REMOVEALL:
-		if (AfxMessageBox((UINT)IDS_REMOVEALLSERVERS, MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2, 0) != IDYES)
+		if (LocMessageBox(IDS_REMOVEALLSERVERS, MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2, 0) != IDYES)
 			return TRUE;
 		if (theApp.serverconnect->IsConnecting()) {
 			theApp.downloadqueue->StopUDPRequests();

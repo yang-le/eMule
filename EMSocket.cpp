@@ -435,23 +435,23 @@ void CEMSocket::OnReceive(int nErrorCode)
 	}
 }
 
-void CEMSocket::SetDownloadLimit(uint32 limit){
+void CEMSocket::SetDownloadLimit(uint32 limit)
+{
 	downloadLimit = limit;
 	downloadLimitEnable = true;
 
 	// CPU load improvement
-	if (limit > 0 && pendingOnReceive) {
+	if (limit > 0 && pendingOnReceive)
 		OnReceive(0);
-	}
 }
 
-void CEMSocket::DisableDownloadLimit(){
+void CEMSocket::DisableDownloadLimit()
+{
 	downloadLimitEnable = false;
 
 	// CPU load improvement
-	if (pendingOnReceive) {
+	if (pendingOnReceive)
 		OnReceive(0);
-	}
 }
 
 /**
@@ -947,6 +947,7 @@ SocketSentBytes CEMSocket::SendOv(uint32 maxNumberOfBytesToSend, uint32 minFragS
 				if (nError != WSA_IO_PENDING) {
 					anErrorHasOccured = true;
 					theApp.QueueDebugLogLineEx(ERROR, _T("WSASend() Error: %u, %s"), nError, (LPCTSTR)GetErrorMessage(nError));
+					CleanUpOverlappedSendOperation(false);
 				}
 			}
 		}

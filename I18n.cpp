@@ -33,6 +33,11 @@ CString GetResString(UINT uStringID)
 	return resString;
 }
 
+int LocMessageBox(int uId, UINT nType, UINT nIDHelp)
+{
+	return AfxMessageBox(GetResString((UINT)uId), nType, nIDHelp);
+}
+
 struct SLanguage {
 	LANGID	lid;
 	LPCTSTR pszLocale;
@@ -276,8 +281,7 @@ void CPreferences::SetLanguage()
 		if (!bFoundLang){
 			LoadLangLib(GetMuleDirectory(EMULE_INSTLANGDIR), GetMuleDirectory(EMULE_ADDLANGDIR, false), LANGID_EN_US);
 			m_wLanguageID = LANGID_EN_US;
-			CString strLngEnglish = GetResString(IDS_MB_LANGUAGEINFO);
-			AfxMessageBox(strLngEnglish, MB_ICONASTERISK);
+			LocMessageBox(IDS_MB_LANGUAGEINFO, MB_ICONASTERISK);
 		}
 		else
 			m_wLanguageID = lidLocale;
@@ -308,10 +312,10 @@ bool CPreferences::IsLanguageSupported(LANGID lidSelected)
 
 CString CPreferences::GetLangDLLNameByID(LANGID lidSelected)
 {
-	for (const SLanguage* pLang = s_aLanguages; pLang->lid; ++pLang) {
+	for (const SLanguage* pLang = s_aLanguages; pLang->lid; ++pLang)
 		if (pLang->lid == lidSelected)
 			return CString(pLang->pszISOLocale) + _T(".dll");
-	}
+
 	ASSERT(false);
 	return CString();
 }

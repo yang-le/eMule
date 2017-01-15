@@ -164,10 +164,7 @@ void CIni::Init(LPCTSTR lpszFileName, LPCTSTR lpszSection)
 
 CString CIni::GetString(LPCTSTR lpszEntry, LPCTSTR lpszDefault, LPCTSTR lpszSection)
 {
-	if (lpszDefault == NULL)
-		return GetLPCSTR(lpszEntry, lpszSection, _T(""));
-	else
-		return GetLPCSTR(lpszEntry, lpszSection, lpszDefault);
+	return GetLPCSTR(lpszEntry, lpszSection, (lpszDefault == NULL ? _T("") : lpszDefault));
 }
 
 CString CIni::GetStringLong(LPCTSTR lpszEntry, LPCTSTR lpszDefault, LPCTSTR lpszSection)
@@ -410,11 +407,7 @@ TCHAR* CIni::GetLPCSTR(LPCTSTR lpszEntry, LPCTSTR lpszSection, LPCTSTR lpszDefau
 	if (lpszSection != NULL)
 		m_strSection = lpszSection;
 
-	CString strTemp;
-	if (lpszDefault == NULL)
-		strTemp = Read(m_strFileName, m_strSection, lpszEntry, CString());
-	else
-		strTemp = Read(m_strFileName, m_strSection, lpszEntry, lpszDefault);
+	CString strTemp = Read(m_strFileName, m_strSection, lpszEntry, lpszDefault == NULL ? _T("") : lpszDefault);
 
 	return (TCHAR *)memcpy(m_chBuffer, (LPCTSTR)strTemp, (strTemp.GetLength() + 1)*sizeof(TCHAR));
 }

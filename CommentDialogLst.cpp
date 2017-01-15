@@ -190,7 +190,7 @@ void CCommentDialogLst::OnBnClickedSearchKad()
 			}
 		}
 		if (bSkipped)
-			AfxMessageBox((UINT)IDS_KADSEARCHALREADY, MB_OK | MB_ICONINFORMATION, 0);
+			LocMessageBox(IDS_KADSEARCHALREADY, MB_OK | MB_ICONINFORMATION, 0);
 	}
 	RefreshData();
 }
