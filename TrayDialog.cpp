@@ -59,7 +59,7 @@ CTrayDialog::CTrayDialog(UINT uIDD,CWnd* pParent /*=NULL*/)
 	m_pbMinimizeToTray = NULL;
 	m_nDefaultMenuItem = 0;
 	m_hPrevIconDelete = NULL;
-    m_bCurIconDelete = false;
+	m_bCurIconDelete = false;
 	m_bLButtonDblClk = false;
 	m_bLButtonDown = false;
 	m_uSingleClickTimer = 0;
@@ -151,21 +151,21 @@ BOOL CTrayDialog::TrayHide()
 
 BOOL CTrayDialog::TrayUpdate()
 {
-    BOOL bSuccess = FALSE;
-    if (m_bTrayIconVisible)
-    {
-        bSuccess = Shell_NotifyIcon(NIM_MODIFY, &m_nidIconData);
-        if (!bSuccess) {
+	BOOL bSuccess = FALSE;
+	if (m_bTrayIconVisible)
+	{
+		bSuccess = Shell_NotifyIcon(NIM_MODIFY, &m_nidIconData);
+		if (!bSuccess) {
 			//ASSERT(0);
-            return FALSE; // don't delete 'm_hPrevIconDelete' because it's still attached to the tray
-        }
-    }
+			return FALSE; // don't delete 'm_hPrevIconDelete' because it's still attached to the tray
+		}
+	}
 
-    if (m_hPrevIconDelete != NULL)
-    {
-        VERIFY( ::DestroyIcon(m_hPrevIconDelete) );
-        m_hPrevIconDelete = NULL;
-    }
+	if (m_hPrevIconDelete != NULL)
+	{
+		VERIFY( ::DestroyIcon(m_hPrevIconDelete) );
+		m_hPrevIconDelete = NULL;
+	}
 
 	return bSuccess;
 }
@@ -192,13 +192,13 @@ BOOL CTrayDialog::TraySetMenu(HMENU hMenu)
 
 LRESULT CTrayDialog::OnTrayNotify(WPARAM wParam, LPARAM lParam)
 {
-    UINT uID = (UINT)wParam;
+	UINT uID = (UINT)wParam;
  	if (uID != 1)
 		return 0;
 
 	CPoint pt;
-    UINT uMsg = (UINT)lParam;
-    switch (uMsg)
+	UINT uMsg = (UINT)lParam;
+	switch (uMsg)
 	{
 		case WM_MOUSEMOVE:
 			GetCursorPos(&pt);

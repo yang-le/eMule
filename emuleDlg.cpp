@@ -1145,37 +1145,34 @@ void CemuleDlg::ShowTransferStateIcon()
 CString CemuleDlg::GetUpDatarateString(UINT uUpDatarate)
 {
 	m_uUpDatarate = uUpDatarate != (UINT)-1 ? uUpDatarate : theApp.uploadqueue->GetDatarate();
-	TCHAR szBuff[128];
+	CString szBuff;
 	if (thePrefs.ShowOverhead())
-		_sntprintf(szBuff, _countof(szBuff), _T("%.1f (%.1f)"), m_uUpDatarate/1024.0, theStats.GetUpDatarateOverhead()/1024.0);
+		szBuff.Format(_T("%.1f (%.1f)"), m_uUpDatarate/1024.0, theStats.GetUpDatarateOverhead()/1024.0);
 	else
-		_sntprintf(szBuff, _countof(szBuff), _T("%.1f"), m_uUpDatarate/1024.0);
-	szBuff[_countof(szBuff) - 1] = _T('\0');
+		szBuff.Format(_T("%.1f"), m_uUpDatarate/1024.0);
 	return szBuff;
 }
 
 CString CemuleDlg::GetDownDatarateString(UINT uDownDatarate)
 {
 	m_uDownDatarate = uDownDatarate != (UINT)-1 ? uDownDatarate : theApp.downloadqueue->GetDatarate();
-	TCHAR szBuff[128];
+	CString szBuff;
 	if (thePrefs.ShowOverhead())
-		_sntprintf(szBuff, _countof(szBuff), _T("%.1f (%.1f)"), m_uDownDatarate/1024.0, theStats.GetDownDatarateOverhead()/1024.0);
+		szBuff.Format(_T("%.1f (%.1f)"), m_uDownDatarate/1024.0, theStats.GetDownDatarateOverhead()/1024.0);
 	else
-		_sntprintf(szBuff, _countof(szBuff), _T("%.1f"), m_uDownDatarate/1024.0);
-	szBuff[_countof(szBuff) - 1] = _T('\0');
+		szBuff.Format(_T("%.1f"), m_uDownDatarate/1024.0);
 	return szBuff;
 }
 
 CString CemuleDlg::GetTransferRateString()
 {
-	TCHAR szBuff[128];
+	CString szBuff;
 	if (thePrefs.ShowOverhead())
-		_sntprintf(szBuff, _countof(szBuff), GetResString(IDS_UPDOWN)
+		szBuff.Format(GetResString(IDS_UPDOWN)
 			       , m_uUpDatarate/1024.0, theStats.GetUpDatarateOverhead()/1024.0
 			       , m_uDownDatarate/1024.0, theStats.GetDownDatarateOverhead()/1024.0);
 	else
-		_sntprintf(szBuff, _countof(szBuff), GetResString(IDS_UPDOWNSMALL), m_uUpDatarate/1024.0, m_uDownDatarate/1024.0);
-	szBuff[_countof(szBuff) - 1] = _T('\0');
+		szBuff.Format(GetResString(IDS_UPDOWNSMALL), m_uUpDatarate/1024.0, m_uDownDatarate/1024.0);
 	return szBuff;
 }
 
@@ -1189,27 +1186,22 @@ void CemuleDlg::ShowTransferRate(bool bForceAll)
 
 	CString strTransferRate = GetTransferRateString();
 	if (TrayIsVisible() || bForceAll) {
-		TCHAR buffer2[64];
 		// set trayicon-icon
 		int iDownRateProcent = (int)ceil((m_uDownDatarate/10.24) / thePrefs.GetMaxGraphDownloadRate());
 		if (iDownRateProcent > 100)
 			iDownRateProcent = 100;
 		UpdateTrayIcon(iDownRateProcent);
 
-		_sntprintf(buffer2, _countof(buffer2), _T("eMule v%s (%s)\r\n%s")
+		CString buffer2;
+		buffer2.Format(_T("eMule v%s (%s)\r\n%s")
 				  , (LPCTSTR)theApp.m_strCurVersionLong
 				  , (LPCTSTR)GetResString(theApp.IsConnected() ? IDS_CONNECTED : IDS_DISCONNECTED)
 				  , (LPCTSTR)strTransferRate);
-		buffer2[_countof(buffer2) - 1] = _T('\0');
 
 		// Win98: '\r\n' is not displayed correctly in tooltip
 		if (afxIsWin95()) {
-			LPTSTR psz = buffer2;
-			while (*psz) {
-				if (*psz == _T('\r') || *psz == _T('\n'))
-					*psz = _T(' ');
-				psz++;
-			}
+			buffer2.Replace(_T('\r'), _T(' '));
+			buffer2.Replace(_T('\n'), _T(' '));
 		}
 		TraySetToolTip(buffer2);
 	}
@@ -1219,9 +1211,8 @@ void CemuleDlg::ShowTransferRate(bool bForceAll)
 		ShowTransferStateIcon();
 	}
 	if (IsWindowVisible() && thePrefs.ShowRatesOnTitle()) {
-		TCHAR szBuff[128];
-		_sntprintf(szBuff, _countof(szBuff), _T("(U:%.1f D:%.1f) eMule v%s"), m_uUpDatarate/1024.0, m_uDownDatarate/1024.0, (LPCTSTR)theApp.m_strCurVersionLong);
-		szBuff[_countof(szBuff) - 1] = _T('\0');
+		CString szBuff;
+		szBuff.Format(_T("(U:%.1f D:%.1f) eMule v%s"), m_uUpDatarate/1024.0, m_uDownDatarate/1024.0, (LPCTSTR)theApp.m_strCurVersionLong);
 		SetWindowText(szBuff);
 	}
 	if (m_pMiniMule && m_pMiniMule->m_hWnd && m_pMiniMule->IsWindowVisible() && !m_pMiniMule->GetAutoClose() && !m_pMiniMule->IsInInitDialog())

@@ -36,8 +36,8 @@ public:
 
 protected:
 	bool* m_pbMinimizeToTray;
-    bool m_bCurIconDelete;
-    HICON m_hPrevIconDelete;
+	bool m_bCurIconDelete;
+	HICON m_hPrevIconDelete;
 	bool m_bLButtonDblClk;
 	bool m_bLButtonDown;
 	BOOL m_bTrayIconVisible;
