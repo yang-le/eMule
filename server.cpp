@@ -262,9 +262,9 @@ void CServer::SetListName(LPCTSTR newname)
 	m_strName = newname;
 }
 
-void CServer::SetDescription(LPCTSTR newname)
+void CServer::SetDescription(LPCTSTR newdescription)
 {
-	m_strDescription = newname;
+	m_strDescription = newdescription;
 }
 
 LPCTSTR CServer::GetAddress() const

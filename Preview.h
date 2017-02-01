@@ -55,7 +55,7 @@ public:
 	void RemoveAllApps();
 
 	int GetAllMenuEntries(CMenu& rMenu, const CPartFile* file);
-	void RunApp(CPartFile* file, UINT uMenuID);
+	void RunApp(CPartFile* file, UINT uMenuID) const;
 
 	enum ECanPreviewRes{
 		NotHandled,

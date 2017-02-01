@@ -77,7 +77,7 @@ void CPrefs::Init(LPCTSTR szFilename)
 	m_uTotalNotes = 0;
 	m_uTotalStoreNotes = 0;
 	m_bPublish = false;
-	m_uClientHash.SetValue((uchar*)thePrefs.GetUserHash());
+	m_uClientHash.SetValue(CUInt128(thePrefs.GetUserHash()));
 	m_uIP = 0;
 	m_uIPLast = 0;
 	m_bFindBuddy = false;

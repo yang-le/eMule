@@ -65,7 +65,7 @@ public:
 	void Init();
 	void Localize();
 	Channel* FindChannelByName(const CString& sName);
-	Channel* NewChannel(const CString& sName, Channel::EType uType);
+	Channel* NewChannel(const CString& sName, Channel::EType eType);
 	void RemoveChannel(const CString& sChannel);
 	void SelectChannel(const Channel *pChannel);
 	void DeleteAllChannels();

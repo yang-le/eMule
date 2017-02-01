@@ -192,7 +192,7 @@ int CChatSelector::GetTabByClient(CUpDownClient* client)
 	for (int i = 0; i < GetItemCount(); i++){
 		TCITEM cur_item;
 		cur_item.mask = TCIF_PARAM;
-		if (GetItem(i, &cur_item) && ((CChatItem*)cur_item.lParam)->client == client)
+		if (GetItem(i, &cur_item) && reinterpret_cast<CChatItem *>(cur_item.lParam)->client == client)
 			return i;
 	}
 	return -1;
@@ -205,7 +205,7 @@ CChatItem* CChatSelector::GetItemByIndex(int index)
 	if (!GetItem(index, &item))
 		return NULL;
 
-    return (CChatItem*)item.lParam;
+    return reinterpret_cast<CChatItem *>(item.lParam);
 }
 
 CChatItem* CChatSelector::GetItemByClient(CUpDownClient* client)
@@ -213,8 +213,8 @@ CChatItem* CChatSelector::GetItemByClient(CUpDownClient* client)
 	for (int i = 0; i < GetItemCount(); i++){
 		TCITEM cur_item;
 		cur_item.mask = TCIF_PARAM;
-		if (GetItem(i, &cur_item) && ((CChatItem*)cur_item.lParam)->client == client)
-			return (CChatItem*)cur_item.lParam;
+		if (GetItem(i, &cur_item) && reinterpret_cast<CChatItem *>(cur_item.lParam)->client == client)
+			return reinterpret_cast<CChatItem *>(cur_item.lParam);
 	}
 	return NULL;
 }
@@ -383,7 +383,7 @@ void CChatSelector::DeleteAllItems()
 		TCITEM cur_item;
 		cur_item.mask = TCIF_PARAM;
 		if (GetItem(i, &cur_item))
-			delete (CChatItem*)cur_item.lParam;
+			delete reinterpret_cast<CChatItem *>(cur_item.lParam);
 	}
 }
 
@@ -399,7 +399,7 @@ void CChatSelector::OnTimer(UINT_PTR /*nIDEvent*/)
 			break;
 
 		cur_item.mask = TCIF_IMAGE;
-		if (((CChatItem*)cur_item.lParam)->notify){
+		if (reinterpret_cast<CChatItem *>(cur_item.lParam)->notify){
 			cur_item.iImage = (m_blinkstate) ? 1 : 2;
 			SetItem(i, &cur_item);
 			HighlightItem(i, TRUE);
@@ -433,7 +433,7 @@ CChatItem* CChatSelector::GetCurrentChatItem()
 	if (!GetItem(iCurSel, &cur_item))
 		return NULL;
 
-	return (CChatItem*)cur_item.lParam;
+	return reinterpret_cast<CChatItem *>(cur_item.lParam);
 }
 
 void CChatSelector::ShowChat()
@@ -456,7 +456,7 @@ void CChatSelector::ShowChat()
 	item.mask = TCIF_PARAM;
 	int i = 0;
 	while (GetItem(i++, &item)){
-		CChatItem* ci2 = (CChatItem*)item.lParam;
+		CChatItem* ci2 = reinterpret_cast<CChatItem *>(item.lParam);
 		if (ci2 != ci)
 			ci2->log->ShowWindow(SW_HIDE);
 	}
@@ -498,7 +498,7 @@ void CChatSelector::EndSession(CUpDownClient* client)
 	item.mask = TCIF_PARAM;
 	if (!GetItem(iCurSel, &item) || item.lParam == 0)
 		return;
-	CChatItem* ci = (CChatItem*)item.lParam;
+	CChatItem* ci = reinterpret_cast<CChatItem *>(item.lParam);
 	ci->client->SetChatState(MS_NONE);
 	ci->client->SetChatCaptchaState(CA_NONE);
 
@@ -541,7 +541,7 @@ void CChatSelector::OnSize(UINT nType, int cx, int cy)
 	item.mask = TCIF_PARAM;
 	int i = 0;
 	while (GetItem(i++, &item)){
-		CChatItem* ci = (CChatItem*)item.lParam;
+		CChatItem* ci = reinterpret_cast<CChatItem *>(item.lParam);
 		ci->log->SetWindowPos(NULL, rcChat.left, rcChat.top, rcChat.Width(), rcChat.Height(), SWP_NOZORDER);
 	}
 }
@@ -614,7 +614,7 @@ void CChatSelector::OnContextMenu(CWnd*, CPoint point)
 	item.mask = TCIF_PARAM;
 	GetItem(m_iContextIndex, &item);
 
-	const CChatItem* ci = (CChatItem*)item.lParam;
+	const CChatItem* ci = reinterpret_cast<CChatItem *>(item.lParam);
 	if (ci == NULL)
 		return;
 
@@ -644,8 +644,8 @@ void CChatSelector::EnableSmileys(bool bEnable)
 	for (int i = 0; i < GetItemCount(); i++){
 		TCITEM cur_item;
 		cur_item.mask = TCIF_PARAM;
-		if (GetItem(i, &cur_item) && ((CChatItem*)cur_item.lParam)->log)
-			((CChatItem*)cur_item.lParam)->log->EnableSmileys(bEnable);
+		if (GetItem(i, &cur_item) && reinterpret_cast<CChatItem *>(cur_item.lParam)->log)
+			reinterpret_cast<CChatItem *>(cur_item.lParam)->log->EnableSmileys(bEnable);
 	}
 }
 

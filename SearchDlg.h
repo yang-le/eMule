@@ -24,7 +24,7 @@ public:
 	void Localize();
 	void CreateMenus();
 
-	void RemoveResult(const CSearchFile* toremove);
+	void RemoveResult(const CSearchFile* pFile);
 
 	bool DoNewEd2kSearch(SSearchParams* pParams);
 	bool DoNewKadSearch(SSearchParams* pParams);
@@ -37,25 +37,25 @@ public:
 	void SearchRelatedFiles(CPtrList& listFiles);
 
 	void DownloadSelected();
-	void DownloadSelected(bool paused);
+	void DownloadSelected(bool bPaused);
 
 	bool CanDeleteSearch(uint32 nSearchID) const;
 	bool CanDeleteAllSearches() const;
 	void DeleteSearch(uint32 nSearchID);
 	void DeleteAllSearches();
 
-	void LocalEd2kSearchEnd(UINT count, bool bMoreResultsAvailable);
-	void AddGlobalEd2kSearchResults(UINT count);
+	void LocalEd2kSearchEnd(UINT nCount, bool bMoreResultsAvailable);
+	void AddGlobalEd2kSearchResults(UINT nCount);
 
 	bool CreateNewTab(SSearchParams* pParams, bool bActiveIcon = true);
 	SSearchParams* GetSearchParamsBySearchID(uint32 nSearchID);
-	void ShowSearchSelector(bool visible);
+//	void ShowSearchSelector(bool visible);
 	CClosableTabCtrl& GetSearchSelector();
 
 	int GetSelectedCat();
 	void UpdateCatTabs();
 	void SaveAllSettings();
-	BOOL SaveSearchStrings();
+//	BOOL SaveSearchStrings();
 	void ResetHistory();
 
 	void SetToolTipsDelay(UINT uDelay);

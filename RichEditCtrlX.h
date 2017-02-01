@@ -18,7 +18,7 @@ public:
 	CRichEditCtrlX& operator<<(int iVal);
 	CRichEditCtrlX& operator<<(double fVal);
 
-	void SetRTFText(const CStringA& rstrText);
+	void SetRTFText(const CStringA& rstrTextA);
 
 protected:
 	bool m_bDisableSelectOnFocus;

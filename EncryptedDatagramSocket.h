@@ -27,7 +27,7 @@ protected:
 	static int EncryptSendClient(uchar* pbyBuf, int nBufLen, const uchar* pachClientHashOrKadID, bool bKad, uint32 nReceiverVerifyKey, uint32 nSenderVerifyKey);
 
 	static int DecryptReceivedServer(BYTE* pbyBufIn, int nBufLen, BYTE** ppbyBufOut, uint32 dwBaseKey, uint32 dbgIP);
-	static int EncryptSendServer(uchar* ppbyBuf, int nBufLen, uint32 dwBaseKey);
+	static int EncryptSendServer(uchar* pbyBuf, int nBufLen, uint32 dwBaseKey);
 
 	static int EncryptOverheadSize(bool bKad);
 };

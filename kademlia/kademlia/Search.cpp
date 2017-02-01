@@ -379,7 +379,7 @@ void CSearch::ProcessResponse(uint32 uFromIP, uint16 uFromPort, ContactList *pli
 	if (m_uType == NODEFWCHECKUDP){
 		m_uAnswers++;
 		// Results are not passed to the search and not much point in changing this, but make sure we show on the graph that the contact responded
-		m_pLookupHistory->ContactReceived(NULL, pFromContact, 0ul, true);
+		m_pLookupHistory->ContactReceived(NULL, pFromContact, CUInt128(0ul), true);
 		theApp.emuledlg->kademliawnd->UpdateSearchGraph(m_pLookupHistory);
 		delete plistResults;
 		// Update search on the GUI.
@@ -1192,11 +1192,11 @@ void CSearch::ProcessResultNotes(const CUInt128 &uAnswer, TagList *plistInfo)
 	bool bFlag = theApp.searchlist->AddNotes(pEntry, ucharFileid);
 
 	// Check if this hash is in our shared files..
-	CAbstractFile* pFile = (CAbstractFile*)theApp.sharedfiles->GetFileByID(ucharFileid);
+	CAbstractFile* pFile = static_cast<CAbstractFile *>(theApp.sharedfiles->GetFileByID(ucharFileid));
 
 	// If we didn't find a file in the shares check if it's in our download queue.
 	if(!pFile)
-		pFile = (CAbstractFile*)theApp.downloadqueue->GetFileByID(ucharFileid);
+		pFile = static_cast<CAbstractFile *>(theApp.downloadqueue->GetFileByID(ucharFileid));
 
 	// If we found a file try to add the Note to the file.
 	if( pFile && pFile->AddNote(pEntry) )

@@ -92,7 +92,7 @@ public:
 
 protected:
 	void StartDiscovery(uint16 nTCPPort, uint16 nUDPPort, uint16 nTCPWebPort, bool bSecondTry);
-	void AddDevice(DevicePointer pDevice, bool bAddChilds, int nLevel = 0);
+	void AddDevice(DevicePointer device, bool bAddChilds, int nLevel = 0);
 	void RemoveDevice(CComBSTR bsUDN);
 	bool OnSearchComplete();
 	void Init();
@@ -158,12 +158,12 @@ protected:
 	void StopUPnPService();
 
 	// Utility functions
-	HRESULT CreateSafeArray(const VARTYPE vt, const ULONG nArgs, SAFEARRAY **ppsa);
-	INT_PTR CreateVarFromString(const CString& strArgs, VARIANT ***pppVars);
-	LONG GetStringFromOutArgs(const VARIANT *pvaOutArgs, CString& strArgs);
+	static HRESULT CreateSafeArray(const VARTYPE vt, const ULONG nArgs, SAFEARRAY **ppsa);
+	static INT_PTR CreateVarFromString(const CString& strArgs, VARIANT ***pppVars);
+	static LONG GetStringFromOutArgs(const VARIANT *pvaOutArgs, CString& strArgs);
 	static void DestroyVars(const INT_PTR nCount, VARIANT ***pppVars);
-	HRESULT GetSafeArrayBounds(SAFEARRAY *psa, LONG *pLBound, LONG *pUBound);
-	HRESULT GetVariantElement(SAFEARRAY *psa, LONG pos, VARIANT *pvar);
+	static HRESULT GetSafeArrayBounds(SAFEARRAY *psa, LONG *pLBound, LONG *pUBound);
+	static HRESULT GetVariantElement(SAFEARRAY *psa, LONG pos, VARIANT *pvar);
 	CString GetLocalRoutableIP(ServicePointer pService);
 
 // Private members

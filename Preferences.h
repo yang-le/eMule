@@ -639,7 +639,7 @@ public:
 	static	void	Init();
 	static	void	Uninit();
 
-	static	LPCTSTR GetTempDir(int id = 0)				{return (LPCTSTR)tempdir.GetAt((id < tempdir.GetCount()) ? id : 0);}
+	static	LPCTSTR GetTempDir(int id = 0)				{return (LPCTSTR)tempdir[(id < tempdir.GetCount()) ? id : 0];}
 	static	INT_PTR	GetTempDirCount()					{return tempdir.GetCount();}
 	static	bool	CanFSHandleLargeFiles(int nForCat);
 	static	LPCTSTR GetConfigFile();

@@ -45,7 +45,7 @@ public:
 	bool InitCollectionFromFile(const CString& sFilePath, CString sFileName);
 	CCollectionFile* AddFileToCollection(CAbstractFile* pAbstractFile, bool bCreateClone);
 	void RemoveFileFromCollection(CAbstractFile* pAbstractFile);
-	void WriteToFileAddShared(CryptoPP::RSASSA_PKCS1v15_SHA_Signer* pSignkey = NULL);
+	void WriteToFileAddShared(CryptoPP::RSASSA_PKCS1v15_SHA_Signer* pSignKey = NULL);
 	void SetCollectionAuthorKey(const byte* abyCollectionAuthorKey, uint32 nSize);
 	CString GetCollectionAuthorKeyString();
 	static bool HasCollectionExtention(const CString& sFileName);

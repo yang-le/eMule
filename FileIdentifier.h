@@ -90,7 +90,7 @@ public:
 	bool			LoadAICHHashsetFromFile(CFileDataIO* pFile, bool bVerify = true); // only set verify to false if you call VerifyAICHHashSet yourself immediately after
 	void			WriteAICHHashsetToFile(CFileDataIO* pFile) const;
 
-	bool			SetAICHHashSet(const CAICHRecoveryHashSet& rSourceHashSet);
+	bool			SetAICHHashSet(const CAICHRecoveryHashSet& sourceHashSet);
 	bool			SetAICHHashSet(const CFileIdentifier& rSourceHashSet);
 
 	bool			VerifyAICHHashSet();
@@ -111,7 +111,7 @@ private:
 class CFileIdentifierSA : public CFileIdentifierBase
 {
 public:
-	CFileIdentifierSA(const uchar* pucFileHash, EMFileSize FileSize, const CAICHHash& rHash, bool bAICHHashValid);
+	CFileIdentifierSA(const uchar* pucFileHash, EMFileSize nFileSize, const CAICHHash& rHash, bool bAICHHashValid);
 	CFileIdentifierSA();
 
 	virtual ~CFileIdentifierSA()											{ }
@@ -124,17 +124,14 @@ private:
 };
 
 // Compare Helper for lists
-__inline int CompareAICHHash(const CFileIdentifier& ident1,const CFileIdentifier& ident2, bool bSortAscending)
+__inline int CompareAICHHash(const CFileIdentifier& ident1, const CFileIdentifier& ident2, bool bSortAscending)
 {
-	if (ident1.HasAICHHash())
-	{
+	if (ident1.HasAICHHash()) {
 		if (ident2.HasAICHHash())
-			return memcmp(ident1.GetAICHHash().GetRawHashC(),ident2.GetAICHHash().GetRawHashC(), CAICHHash::GetHashSize());
-		else
-			return bSortAscending ? 1 : -1;
+			return memcmp(ident1.GetAICHHash().GetRawHashC(), ident2.GetAICHHash().GetRawHashC(), CAICHHash::GetHashSize());
+		return bSortAscending ? 1 : -1;
 	}
-	else if (ident2.HasAICHHash())
+	if (ident2.HasAICHHash())
 		return bSortAscending ? -1 : 1;
-	else
-		return 0;
+	return 0;
 }

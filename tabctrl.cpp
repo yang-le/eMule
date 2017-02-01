@@ -510,12 +510,12 @@ void TabControl::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 	}
 }
 
-void TabControl::SetTabTextColor(int index, DWORD color) {
+void TabControl::SetTabTextColor(int index, DWORD color)
+{
 	TCITEM tab;
 	tab.mask = TCIF_PARAM;
-	if (GetItem(index,&tab)==FALSE)
-		return;
-
-	tab.lParam=color;
-	SetItem(index,&tab);
+	if (GetItem(index, &tab)) {
+		tab.lParam = color;
+		SetItem(index, &tab);
+	}
 }

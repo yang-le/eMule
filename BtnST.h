@@ -105,7 +105,7 @@ public:
 	// ClassWizard generated virtual function overrides
     //{{AFX_VIRTUAL(CButtonST)
 	public:
-	virtual void DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct);
+	virtual void DrawItem(LPDRAWITEMSTRUCT lpDIS);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	protected:
 	virtual void PreSubclassWindow();
@@ -131,7 +131,7 @@ public:
 
 	void SetTooltipText(int nText, BOOL bActivate = TRUE);
 	void SetTooltipText(LPCTSTR lpszText, BOOL bActivate = TRUE);
-	void ActivateTooltip(BOOL bEnable = TRUE);
+	void ActivateTooltip(BOOL bActivate = TRUE);
 	void Repaint() {Invalidate();}
 
 	DWORD SetBtnCursor(int nCursorId = NULL, BOOL bRepaint = TRUE);
@@ -144,7 +144,7 @@ public:
 	DWORD DrawFlatFocus(BOOL bDrawFlatFocus, BOOL bRepaint = TRUE);
 
 	DWORD SetIcon(HICON hIconIn, HICON hIconOut = NULL);
-	DWORD SetIcon(LPCTSTR hIconIn, LPCTSTR hIconOut = NULL);
+	DWORD SetIcon(LPCTSTR pszIconIn, LPCTSTR pszIconOut);
 
 	DWORD SetBitmaps(int nBitmapIn, COLORREF crTransColorIn, int nBitmapOut = NULL, COLORREF crTransColorOut = 0);
 	DWORD SetBitmaps(HBITMAP hBitmapIn, COLORREF crTransColorIn, HBITMAP hBitmapOut = NULL, COLORREF crTransColorOut = 0);

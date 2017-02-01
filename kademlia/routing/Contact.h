@@ -53,7 +53,7 @@ namespace Kademlia
 
 			void GetClientID(CUInt128 *puId) const;
 			CUInt128 GetClientID() const;
-			void GetClientID(CString *puId) const;
+			void GetClientID(CString *psId) const;
 			void SetClientID(const CUInt128 &uClientID);
 			void GetDistance(CUInt128 *puDistance) const;
 			void GetDistance(CString *psDistance) const;
@@ -66,7 +66,7 @@ namespace Kademlia
 			void SetTCPPort(uint16 uPort);
 			uint16 GetUDPPort() const;
 			void GetUDPPort(CString *psPort) const;
-			void SetUDPPort(uint16 sPort);
+			void SetUDPPort(uint16 uPort);
 			byte GetType() const;
 			void UpdateType();
 			void CheckingType();

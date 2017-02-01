@@ -403,9 +403,9 @@ void CDataIO::WriteTag(LPCSTR szName, uint8 uValue)
 	WriteTag(&tag);
 }
 
-void CDataIO::WriteTag(LPCSTR szName, float uValue)
+void CDataIO::WriteTag(LPCSTR szName, float fValue)
 {
-	CKadTagFloat tag(szName, uValue);
+	CKadTagFloat tag(szName, fValue);
 	WriteTag(&tag);
 }
 

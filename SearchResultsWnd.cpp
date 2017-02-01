@@ -163,12 +163,11 @@ void CSearchResultsWnd::OnInitialUpdate()
 	searchprogress.SetStep(1);
 	global_search_timer = 0;
 	globsearch = false;
-	ShowSearchSelector(false);
+	ShowSearchSelector(false); //sets anchor for IDC_SEARCHLIST
 
 	AddAnchor(*m_btnSearchListMenu, TOP_LEFT);
 	AddAnchor(IDC_FILTER, TOP_RIGHT);
 	AddAnchor(IDC_SDOWNLOAD, BOTTOM_LEFT);
-	AddAnchor(IDC_SEARCHLIST, TOP_LEFT, BOTTOM_RIGHT);
 	AddAnchor(IDC_PROGRESS1, BOTTOM_LEFT, BOTTOM_RIGHT);
 	AddAnchor(IDC_CLEARALL, BOTTOM_RIGHT);
 	AddAnchor(IDC_OPEN_PARAMS_WND, TOP_RIGHT);
@@ -1373,7 +1372,7 @@ bool CSearchResultsWnd::DoNewKadSearch(SSearchParams* pParams)
 	{
 		// remove leading and possibly trailing quotes, if they terminate properly (otherwise the keyword is later handled as invalid)
 		// (quotes are still kept in search expr and matched against the result, so everything is fine)
-		if (pParams->strKeyword.GetLength() > 1 && pParams->strKeyword.Right(1)[0] == _T('\"'))
+		if (pParams->strKeyword.GetLength() > 1 && pParams->strKeyword.Right(1) == _T("\""))
 			pParams->strKeyword = pParams->strKeyword.Mid(1, pParams->strKeyword.GetLength() - 2);
 		else if (pParams->strExpression.Find(_T('\"'), 1) > pParams->strKeyword.GetLength())
 			pParams->strKeyword = pParams->strKeyword.Mid(1, pParams->strKeyword.GetLength() - 1);
@@ -1690,7 +1689,9 @@ void CSearchResultsWnd::ShowSearchSelector(bool visible)
 	else
 		wpSearchWinPos.rcNormalPosition.top = wpSelectWinPos.rcNormalPosition.top;
 	searchselect.ShowWindow(visible ? SW_SHOW : SW_HIDE);
+	RemoveAnchor(searchlistctrl);
 	searchlistctrl.SetWindowPlacement(&wpSearchWinPos);
+	AddAnchor(searchlistctrl, TOP_LEFT, BOTTOM_RIGHT);
 	GetDlgItem(IDC_CLEARALL)->ShowWindow(visible ? SW_SHOW : SW_HIDE);
 	m_ctlFilter.ShowWindow(visible ? SW_SHOW : SW_HIDE);
 }

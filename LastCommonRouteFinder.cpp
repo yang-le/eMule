@@ -293,7 +293,7 @@ void LastCommonRouteFinder::EndThread() {
 UINT AFX_CDECL LastCommonRouteFinder::RunProc(LPVOID pParam) {
 	DbgSetThreadName("LastCommonRouteFinder");
 	InitThreadLocale();
-	LastCommonRouteFinder* lastCommonRouteFinder = (LastCommonRouteFinder*)pParam;
+	LastCommonRouteFinder* lastCommonRouteFinder = static_cast<LastCommonRouteFinder *>(pParam);
 
 	return lastCommonRouteFinder->RunInternal();
 }

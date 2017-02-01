@@ -1177,9 +1177,9 @@ void CIrcWnd::ParseChangeMode(const CString& sChannel, const CString& sChanger, 
 	}
 }
 
-LRESULT CIrcWnd::OnCloseTab(WPARAM wparam, LPARAM)
+LRESULT CIrcWnd::OnCloseTab(WPARAM wParam, LPARAM)
 {
-	OnBnClickedCloseChannel((int)wparam);
+	OnBnClickedCloseChannel((int)wParam);
 	return TRUE;
 }
 

@@ -12,7 +12,7 @@ protected:
 	void InternalInit();
 
 	virtual void PreSubclassWindow();
-	virtual void DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct);
+	virtual void DrawItem(LPDRAWITEMSTRUCT lpDIS);
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);

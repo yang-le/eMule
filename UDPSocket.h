@@ -55,7 +55,7 @@ public:
 
 	bool Create();
 	SocketSentBytes SendControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize); // ZZ:UploadBandWithThrottler (UDP)
-	void SendPacket(Packet* packet, CServer* pServer, uint16 nSpecialPort = 0, BYTE* pRawPacket = 0, uint32 nRawLen = 0);
+	void SendPacket(Packet* packet, CServer* pServer, uint16 nSpecialPort = 0, BYTE* pInRawPacket = 0, uint32 nRawLen = 0);
 	void DnsLookupDone(WPARAM wp, LPARAM lp);
 
 protected:

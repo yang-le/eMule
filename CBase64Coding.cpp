@@ -81,7 +81,7 @@ CBase64Coding::~CBase64Coding()
 {
 }
 
-BOOL CBase64Coding::Encode( const char * source, int len, char * destination_string )
+BOOL CBase64Coding::Encode(const char * source, int len, char * destination_string)
 {
 
    const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

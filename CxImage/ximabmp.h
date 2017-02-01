@@ -38,11 +38,11 @@ class CxImageBMP: public CxImage
 public:
 	CxImageBMP(): CxImage(CXIMAGE_FORMAT_BMP) {};
 
-	bool Decode(CxFile * hFile);
+	bool Decode(CxFile *hFile);
 	bool Decode(FILE *hFile) { CxIOFile file(hFile); return Decode(&file); }
 
 #if CXIMAGE_SUPPORT_ENCODE
-	bool Encode(CxFile * hFile);
+	bool Encode(CxFile *hFile);
 	bool Encode(FILE *hFile) { CxIOFile file(hFile); return Encode(&file); }
 #endif // CXIMAGE_SUPPORT_ENCODE
 

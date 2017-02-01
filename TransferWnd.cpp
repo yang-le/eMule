@@ -709,8 +709,8 @@ void CTransferWnd::LocalizeToolbars()
 
 void CTransferWnd::OnBnClickedQueueRefreshButton()
 {
-	for (CUpDownClient* update = theApp.uploadqueue->GetNextClient(NULL); update; update = theApp.uploadqueue->GetNextClient(update))
-		queuelistctrl.RefreshClient( update);
+	for (CUpDownClient* update = theApp.uploadqueue->GetNextClient(NULL); update != NULL; update = theApp.uploadqueue->GetNextClient(update))
+		queuelistctrl.RefreshClient(update);
 }
 
 void CTransferWnd::OnHoverUploadList(NMHDR* /*pNMHDR*/, LRESULT* pResult)
@@ -1117,9 +1117,9 @@ void CTransferWnd::UpdateCatTabTitles(bool force)
 	}
 }
 
-void CTransferWnd::EditCatTabLabel(int i)
+void CTransferWnd::EditCatTabLabel(int index)
 {
-	EditCatTabLabel(i,/*(i==0)? GetCatTitle( thePrefs.GetAllcatType() ):*/thePrefs.GetCategory(i)->strTitle);
+	EditCatTabLabel(index,/*(index==0)? GetCatTitle( thePrefs.GetAllcatType() ):*/thePrefs.GetCategory(index)->strTitle);
 }
 
 void CTransferWnd::EditCatTabLabel(int index, CString newlabel)
@@ -1620,7 +1620,7 @@ void CTransferWnd::ShowSplitWindow(bool bReDraw)
 	AddAnchor(IDC_QUEUELIST, ANCHOR(0, thePrefs.GetSplitterbarPosition()), BOTTOM_RIGHT);
 	AddAnchor(IDC_CLIENTLIST, ANCHOR(0, thePrefs.GetSplitterbarPosition()), BOTTOM_RIGHT);
 	AddAnchor(IDC_DOWNLOADCLIENTS, ANCHOR(0, thePrefs.GetSplitterbarPosition()), BOTTOM_RIGHT);
-	VerifyCatTabSize(); //properly positions tab control
+	VerifyCatTabSize(); //properly position tab control
 
 	downloadlistctrl.ShowWindow(SW_SHOW);
 	uploadlistctrl.ShowWindow((m_uWnd2 == wnd2Uploading) ? SW_SHOW : SW_HIDE);

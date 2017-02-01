@@ -76,7 +76,7 @@ int CSearchDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	context.m_pCurrentDoc = NULL;
 	context.m_pNewViewClass = RUNTIME_CLASS(CSearchResultsWnd);
 	context.m_pNewDocTemplate = NULL;
-	m_pwndResults = (CSearchResultsWnd*)CreateView(&context);
+	m_pwndResults = static_cast<CSearchResultsWnd *>(CreateView(&context));
 	m_pwndParams->m_searchdlg = m_pwndResults;
 	m_pwndResults->ModifyStyle(WS_BORDER, 0);
 	m_pwndResults->ModifyStyleEx(WS_EX_CLIENTEDGE, WS_EX_STATICEDGE);

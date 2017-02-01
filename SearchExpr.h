@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Opcodes.h"
+#include "StringConversion.h"
 
 enum ESearchOperators
 {
@@ -13,9 +14,6 @@ enum ESearchOperators
 #define	SEARCHOPTOK_OR	"\255OR"
 #define	SEARCHOPTOK_NOT	"\255NOT"
 
-CString OptUtf8ToStr(const CStringA& rastr);
-
-
 class CSearchAttr
 {
 public:
@@ -24,7 +22,7 @@ public:
 	{
 	}
 
-	CSearchAttr(LPCSTR pszString)
+	explicit CSearchAttr(LPCSTR pszString)
 		: m_iTag(FT_FILENAME), m_str(pszString), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL), m_nNum(0)
 	{
 	}
@@ -101,12 +99,12 @@ public:
 	void Add(ESearchOperators eOperator)
 	{
 		if (eOperator == SEARCHOP_OR)
-			m_aExpr.Add(SEARCHOPTOK_OR);
+			m_aExpr.Add(CSearchAttr(SEARCHOPTOK_OR));
 		else if (eOperator == SEARCHOP_NOT)
-			m_aExpr.Add(SEARCHOPTOK_NOT);
+			m_aExpr.Add(CSearchAttr(SEARCHOPTOK_NOT));
 		else {
 			ASSERT( eOperator == SEARCHOP_AND );
-			m_aExpr.Add(SEARCHOPTOK_AND);
+			m_aExpr.Add(CSearchAttr(SEARCHOPTOK_AND));
 		}
 	}
 

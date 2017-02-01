@@ -73,7 +73,7 @@ public:
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CListBoxST)
 	//}}AFX_VIRTUAL
-	virtual void DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct);
+	virtual void DrawItem(LPDRAWITEMSTRUCT lpDIStruct);
 
 protected:
 	virtual DWORD OnDrawTextBackground(int nIndex, CDC* pDC, CRect* prcItem, CRect* prcText, BOOL bIsDisabled, BOOL bIsSelected, COLORREF crSuggestedColor);

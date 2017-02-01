@@ -58,19 +58,19 @@ protected:
 	CSmileySelector *m_pwndSmileySel;
 
 	void SetAllIcons();
-	void DoResize(int delta);
+	void DoResize(int iDelta);
 	void ShowFriendMsgDetails(CFriend* pFriend);
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	virtual BOOL OnInitDialog();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
-	virtual LRESULT DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam);
+	virtual LRESULT DefWindowProc(UINT uMessage, WPARAM wParam, LPARAM lParam);
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg BOOL OnHelpInfo(HELPINFO* pHelpInfo);
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
-	afx_msg LRESULT OnCloseTab(WPARAM wparam, LPARAM lparam);
+	afx_msg LRESULT OnCloseTab(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnBnClickedClose();
 	afx_msg void OnBnClickedSend();
 	afx_msg void OnBnClickedSmiley();

@@ -63,7 +63,7 @@ protected:
 		int m_iOrigin;	// 0=eD2K, 1=Kad
 	};
 	void AddComment(const SComment* pComment);
-	int FindClientComment(const void* pCookie);
+	int FindClientComment(const void* pClientCookie);
 
 	static int CALLBACK SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);

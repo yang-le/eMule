@@ -32,7 +32,7 @@ protected:
 	uint64 m_nLastDnOH;
 	uint64 m_nLastUpOH;
 
-	void WriteSamples(UINT nCurDn, UINT nCurUp, UINT nCurDnOH, UINT uCurUpOH);
+	void WriteSamples(UINT nCurDn, UINT nCurUp, UINT nCurDnOH, UINT nCurUpOH);
 };
 
 extern CPerfLog thePerfLog;

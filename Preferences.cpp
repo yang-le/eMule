@@ -605,8 +605,8 @@ void CPreferences::Init()
 					}
 				}
 
-				if (toadd.Right(1) != L'\\')
-					toadd.Append(L"\\");
+				if (toadd.Right(1) != _T("\\"))
+					toadd += _T('\\');
 				shareddir_list.AddHead(toadd);
 			}
 			sdirfile->Close();
@@ -3088,13 +3088,13 @@ CString CPreferences::GetDefaultDirectory(EDefaultDirectory eDirectory, bool bCr
 							CString strPublicDownloads = pszPublicDownloads;
 							CString strProgrammData = pszProgrammData;
 							if (strLocalAppData.Right(1) != _T("\\"))
-								strLocalAppData += _T("\\");
+								strLocalAppData += _T('\\');
 							if (strPersonalDownloads.Right(1) != _T("\\"))
-								strPersonalDownloads += _T("\\");
+								strPersonalDownloads += _T('\\');
 							if (strPublicDownloads.Right(1) != _T("\\"))
-								strPublicDownloads += _T("\\");
+								strPublicDownloads += _T('\\');
 							if (strProgrammData.Right(1) != _T("\\"))
-								strProgrammData += _T("\\");
+								strProgrammData += _T('\\');
 
 							if (nRegistrySetting == (DWORD)-1) {
 								// no registry default, check if we find a preferences.ini to use
@@ -3151,9 +3151,9 @@ CString CPreferences::GetDefaultDirectory(EDefaultDirectory eDirectory, bool bCr
 					{
 						if (strAppData.GetLength() < MAX_PATH - 30 && strPersonal.GetLength() < MAX_PATH - 40){
 							if (strPersonal.Right(1) != _T("\\"))
-								strPersonal += _T("\\");
+								strPersonal += _T('\\');
 							if (strAppData.Right(1) != _T("\\"))
-								strAppData += _T("\\");
+								strAppData += _T('\\');
 							if (nRegistrySetting == 0){
 								// registry setting overwrites, use these folders
 								strSelectedDataBaseDirectory = strPersonal + _T("eMule Downloads\\");

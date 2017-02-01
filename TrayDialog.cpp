@@ -131,9 +131,7 @@ void CTrayDialog::TraySetToolTip(LPCTSTR lpszToolTip)
 
 BOOL CTrayDialog::TrayShow()
 {
-	BOOL bSuccess = FALSE;
-
-	bSuccess = Shell_NotifyIcon(NIM_ADD, &m_nidIconData);
+	BOOL bSuccess = Shell_NotifyIcon(NIM_ADD, &m_nidIconData);
 	if (bSuccess)
 		m_bTrayIconVisible = TRUE;
 	return bSuccess;
@@ -141,9 +139,7 @@ BOOL CTrayDialog::TrayShow()
 
 BOOL CTrayDialog::TrayHide()
 {
-	BOOL bSuccess = FALSE;
-
-	bSuccess = Shell_NotifyIcon(NIM_DELETE, &m_nidIconData);
+	BOOL bSuccess = Shell_NotifyIcon(NIM_DELETE, &m_nidIconData);
 	if (bSuccess)
 		m_bTrayIconVisible = FALSE;
 	return bSuccess;

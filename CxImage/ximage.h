@@ -652,7 +652,7 @@ public:
 	bool TextBlur(uint8_t threshold = 100, uint8_t decay = 2, uint8_t max_depth = 5, bool bBlurHorizontal = true, bool bBlurVertical = true, CxImage* iDst = 0);
 	bool SelectiveBlur(float radius = 1.0f, uint8_t threshold = 25, CxImage* iDst = 0);
 	bool Solarize(uint8_t level = 128, bool bLinkedChannels = true);
-	bool FloodFill(const int32_t xStart, const int32_t yStart, const RGBQUAD& cFillColor, const uint8_t tolerance = 0,
+	bool FloodFill(const int32_t xStart, const int32_t yStart, const RGBQUAD& cFillColor, const uint8_t nTolerance = 0,
 					uint8_t nOpacity = 255, const bool bSelectFilledArea = false, const uint8_t nSelectionLevel = 255);
 	bool Saturate(const int32_t saturation, const int32_t colorspace = 1);
 	bool ConvertColorSpace(const int32_t dstColorSpace, const int32_t srcColorSpace);

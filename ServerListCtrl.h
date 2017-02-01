@@ -16,19 +16,19 @@ public:
 	bool	AddServer(const CServer* pServer, bool bAddToList = true, bool bRandom = false);
 	void	RemoveServer(const CServer* pServer);
 	bool	AddServerMetToList(const CString& strFile);
-	void	RefreshServer(const CServer* pServer);
+	void	RefreshServer(const CServer* server);
 	void	RemoveAllDeadServers();
 	void	RemoveAllFilteredServers();
 	void	Hide()		{ ShowWindow(SW_HIDE); }
 	void	Visable()	{ ShowWindow(SW_SHOW); }
 	void	Localize();
 	void	ShowServerCount();
-	bool	StaticServerFileAppend(CServer* pServer);
-	bool	StaticServerFileRemove(CServer* pServer);
+	bool	StaticServerFileAppend(CServer* server);
+	bool	StaticServerFileRemove(CServer* server);
 
 private:
-	static int Undefined_at_bottom(const uint32 u0, const uint32 u1);
-	static int Undefined_at_bottom(const CString& s0, const CString& s1);
+	static int Undefined_at_bottom(const uint32 i1, const uint32 i2);
+	static int Undefined_at_bottom(const CString& s1, const CString& s2);
 
 protected:
 	CToolTipCtrlX*	m_tooltip;

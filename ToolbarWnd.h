@@ -35,7 +35,7 @@ public:
 	void OnAvailableCommandsChanged(CList<int>* liCommands);
 	void SetCommandTargetWnd(CDownloadListCtrl* pWnd)					{ m_pCommandTargetWnd = pWnd; }
 
-	virtual CSize CalcDynamicLayout(int, DWORD nMode);
+	virtual CSize CalcDynamicLayout(int nLength, DWORD dwMode);
 	virtual void OnUpdateCmdUI(CFrameWnd* pTarget, BOOL bDisableIfNoHndler);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 
@@ -46,7 +46,7 @@ protected:
 	CToolBarCtrlX* m_btnBar;
 	CDownloadListCtrl* m_pCommandTargetWnd;
 
-	void SetAllIcons();
+//	void SetAllIcons();
 	void FillToolbar();
 	virtual void DoDataExchange(CDataExchange* pDX);
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);

@@ -315,7 +315,7 @@ int CPreviewApps::GetAllMenuEntries(CMenu& rMenu, const CPartFile* file)
 	return m_aApps.GetCount();
 }
 
-void CPreviewApps::RunApp(CPartFile* file, UINT uMenuID)
+void CPreviewApps::RunApp(CPartFile* file, UINT uMenuID) const
 {
 	const SPreviewApp& svc = m_aApps[uMenuID - MP_PREVIEW_APP_MIN];
 	::ExecutePartFile(file, svc.strCommand, svc.strCommandArgs);

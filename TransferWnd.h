@@ -98,11 +98,11 @@ protected:
 	CToolTipCtrlX* m_tooltipCats;
 	bool		m_bLayoutInited;
 
-	void	ShowWnd2(EWnd2 uList);
+	void	ShowWnd2(EWnd2 uWnd2);
 	void	SetWnd2(EWnd2 uWnd2);
 	void	DoResize(int delta);
 	void	UpdateSplitterRange();
-	void	DoSplitResize(int delta);
+//	void	DoSplitResize(int delta);
 	void	SetAllIcons();
 	void	SetWnd1Icons();
 	void	SetWnd2Icons();

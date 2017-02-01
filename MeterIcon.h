@@ -34,7 +34,7 @@ protected:
 	int* m_pLimits;
 	COLORREF* m_pColors;
 
-	bool DrawIconMeter(HDC destDC, HDC destDCMask, int nLevel, int nPos);
+	bool DrawIconMeter(HDC hDestDC, HDC hDestDCMask, int nLevel, int nPos);
 	HICON CreateMeterIcon(const int* pBarData);
 	COLORREF GetMeterColor(int nLevel) const;
 };

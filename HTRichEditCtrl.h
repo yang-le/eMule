@@ -20,7 +20,7 @@ public:
 
 	void AddEntry(LPCTSTR pszMsg);
 	void Add(LPCTSTR pszMsg, int iLen = -1);
-	void AddTyped(LPCTSTR pszMsg, int iLen, UINT uFlags);
+	void AddTyped(LPCTSTR pszMsg, int iLen, UINT eMsgType);
 	void AddLine(LPCTSTR pszMsg, int iLen = -1, bool bLink = false, COLORREF cr = CLR_DEFAULT, COLORREF bk = CLR_DEFAULT, DWORD mask = 0);
 	bool AddCaptcha(HBITMAP hbmp);
 	void Reset();
@@ -30,7 +30,7 @@ public:
 
 	void AppendText(const CString& sText);
 	void AppendHyperLink(const CString& sText, const CString& sTitle, const CString& sCommand, const CString& sDirectory);
-	void AppendKeyWord(const CString& sText, COLORREF cr);
+	void AppendKeyWord(const CString& str, COLORREF cr);
 	void AppendColoredText(LPCTSTR pszText, COLORREF cr, COLORREF bk = CLR_DEFAULT, DWORD mask = 0);
 	COLORREF GetForegroundColor() const { return m_crForeground; }
 	COLORREF GetBackgroundColor() const { return m_crBackground; }
@@ -74,7 +74,7 @@ protected:
 	void SelectAllItems();
 	void CopySelectedItems();
 //	int GetMaxSize();
-	void SafeAddLine(int nPos, LPCTSTR pszLine, int iLen, long& nStartChar, long& nEndChar, bool bLink, COLORREF cr, COLORREF bk, DWORD mask);
+	void SafeAddLine(int nPos, LPCTSTR pszLine, int iLen, long& lStartChar, long& lEndChar, bool bLink, COLORREF cr, COLORREF bk, DWORD mask);
 	void FlushBuffer();
 	void AddString(int nPos, LPCTSTR pszString, bool bLink, COLORREF cr, COLORREF bk, DWORD mask);
 	bool InsertSmiley(LPCTSTR pszSmileyID);

@@ -50,10 +50,10 @@ public:
 	void AddInfoMessageF(const CString& sChannelName, const CString sLine, ...);
 	void AddInfoMessageC(const CString& sChannelName, const COLORREF& msgcolour, const CString& sLine);
 	void AddInfoMessageCF(const CString& sChannelName, const COLORREF& msgcolour, const CString sLine, ...);
-	void AddMessage(const CString& sChannelName, const CString& sTargetname, const CString& sLine);
-	void AddMessageF(const CString& sChannelName, const CString& sTargetname, const CString sLine, ...);
+	void AddMessage(const CString& sChannelName, const CString& sTargetName, const CString& sLine);
+	void AddMessageF(const CString& sChannelName, const CString& sTargetName, const CString sLine, ...);
 	void AddColorLine(const CString& line, CHTRichEditCtrl& wnd, COLORREF crForeground = CLR_DEFAULT);
-	void SetConnectStatus(bool bConnected);
+	void SetConnectStatus(bool bFlag);
 	void NoticeMessage(const CString& sSource, const CString& sTarget, const CString& sMessage);
 	CString StripMessageOfFontCodes(CString sTemp);
 	CString StripMessageOfColorCodes(CString sTemp);
@@ -85,7 +85,7 @@ protected:
 	void SetAllIcons();
 
 	virtual BOOL OnInitDialog();
-	virtual void OnSize(UINT iType, int iCx, int iCy);
+	virtual void OnSize(UINT uType, int iCx, int iCy);
 	virtual int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	virtual BOOL OnCommand(WPARAM wParam,LPARAM lParam );

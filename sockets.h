@@ -46,7 +46,7 @@ public:
 
 	void	ConnectToAnyServer() { ConnectToAnyServer(0, true, true); }
 	void	ConnectToAnyServer(UINT startAt, bool prioSort = false, bool isAuto = true, bool bNoCrypt = false);
-	void	ConnectToServer(CServer* toconnect, bool multiconnect = false, bool bNoCrypt = false);
+	void	ConnectToServer(CServer* server, bool multiconnect = false, bool bNoCrypt = false);
 	void	StopConnectionTry();
 	static  VOID CALLBACK RetryConnectTimer(HWND hWnd, UINT nMsg, UINT_PTR nId, DWORD dwTime);
 

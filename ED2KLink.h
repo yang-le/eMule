@@ -32,7 +32,7 @@ struct SUnresolvedHostname
 class CED2KLink
 {
 public:
-	static CED2KLink* CreateLinkFromUrl(const TCHAR* url);
+	static CED2KLink* CreateLinkFromUrl(const TCHAR* uri);
 	virtual ~CED2KLink();
 
 	typedef enum { kServerList, kServer , kFile , kNodesList, kSearch, kInvalid } LinkType;
@@ -50,7 +50,7 @@ public:
 class CED2KServerLink : public CED2KLink
 {
 public:
-	CED2KServerLink(const TCHAR* ip,const TCHAR* port);
+	CED2KServerLink(const TCHAR* ip, const TCHAR* port);
 	virtual ~CED2KServerLink();
 
 	virtual LinkType GetKind() const;
@@ -79,7 +79,7 @@ private:
 class CED2KFileLink : public CED2KLink
 {
 public:
-	CED2KFileLink(const TCHAR* pszName, const TCHAR* pszSize, const TCHAR* pszHash, const CStringArray& param, const TCHAR* pszSources);
+	CED2KFileLink(const TCHAR* pszName, const TCHAR* pszSize, const TCHAR* pszHash, const CStringArray& astrParams, const TCHAR* pszSources);
 	virtual ~CED2KFileLink();
 
 	virtual LinkType GetKind() const;
@@ -118,7 +118,7 @@ private:
 class CED2KServerListLink : public CED2KLink
 {
 public:
-	explicit CED2KServerListLink(const TCHAR* pszAddress);
+	explicit CED2KServerListLink(const TCHAR* address);
 	virtual ~CED2KServerListLink();
 
 	virtual LinkType GetKind() const;
@@ -139,7 +139,7 @@ private:
 class CED2KNodesListLink : public CED2KLink
 {
 public:
-	explicit CED2KNodesListLink(const TCHAR* pszAddress);
+	explicit CED2KNodesListLink(const TCHAR* address);
 	virtual ~CED2KNodesListLink();
 
 	virtual LinkType GetKind() const;

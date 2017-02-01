@@ -181,7 +181,7 @@ CString _GetResString(RESSTRIDTYPE StringID);
 #else//USE_STRING_IDS
 #define	RESSTRIDTYPE		UINT
 #define	IDS2RESIDTYPE(id)	id
-CString GetResString(const RESSTRIDTYPE StringID);
+CString GetResString(const RESSTRIDTYPE uStringID);
 #define _GetResString(id)	GetResString(id)
 #endif//!USE_STRING_IDS
 void InitThreadLocale();

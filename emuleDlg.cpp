@@ -268,9 +268,9 @@ CemuleDlg::~CemuleDlg()
 	DestroyMiniMule();
 	if (m_icoSysTrayCurrent) VERIFY( DestroyIcon(m_icoSysTrayCurrent) );
 	if (m_hIcon) VERIFY( ::DestroyIcon(m_hIcon) );
-	for (unsigned i = 0; i < _countof(connicons); ++i) {
+	for (unsigned i = 0; i < _countof(connicons); ++i)
 		if (connicons[i]) VERIFY( ::DestroyIcon(connicons[i]) );
-	}
+
 	if (transicons[0]) VERIFY( ::DestroyIcon(transicons[0]) );
 	if (transicons[1]) VERIFY( ::DestroyIcon(transicons[1]) );
 	if (transicons[2]) VERIFY( ::DestroyIcon(transicons[2]) );
@@ -2071,36 +2071,30 @@ void CemuleDlg::AddSpeedSelectorMenus(CMenu* addToMenu)
 
 void CemuleDlg::StartConnection()
 {
-	if (   (!theApp.serverconnect->IsConnecting() && !theApp.serverconnect->IsConnected())
-		|| !Kademlia::CKademlia::IsRunning())
-	{
+	if ((!theApp.serverconnect->IsConnecting() && !theApp.serverconnect->IsConnected())
+	  || !Kademlia::CKademlia::IsRunning()) {
 		// UPnP is still trying to open the ports. In order to not get a LowID by connecting to the servers / kad before
 		// the ports are opened we delay the connection until UPnP gets a result or the timeout is reached
 		// If the user clicks two times on the button, let him have his will and connect regardless
-		if (m_hUPnPTimeOutTimer != 0 && !m_bConnectRequestDelayedForUPnP){
+		m_bConnectRequestDelayedForUPnP = m_hUPnPTimeOutTimer != 0 && !m_bConnectRequestDelayedForUPnP;
+		if (m_bConnectRequestDelayedForUPnP) {
 			AddLogLine(false, GetResString(IDS_DELAYEDBYUPNP));
 			AddLogLine(true, GetResString(IDS_DELAYEDBYUPNP2));
-			m_bConnectRequestDelayedForUPnP = true;
 			return;
 		}
-		else{
-			m_bConnectRequestDelayedForUPnP = false;
-			if (m_hUPnPTimeOutTimer != 0){
-				VERIFY( ::KillTimer(NULL, m_hUPnPTimeOutTimer) );
-				m_hUPnPTimeOutTimer = 0;
-			}
-			AddLogLine(true, GetResString(IDS_CONNECTING));
-
-			// ed2k
-			if ((thePrefs.GetNetworkED2K() || m_bEd2kSuspendDisconnect) && !theApp.serverconnect->IsConnecting() && !theApp.serverconnect->IsConnected()) {
-				theApp.serverconnect->ConnectToAnyServer();
-			}
-
-			// kad
-			if ((thePrefs.GetNetworkKademlia() || m_bKadSuspendDisconnect) && !Kademlia::CKademlia::IsRunning()) {
-				Kademlia::CKademlia::Start();
-			}
+		if (m_hUPnPTimeOutTimer != 0) {
+			VERIFY(::KillTimer(NULL, m_hUPnPTimeOutTimer));
+			m_hUPnPTimeOutTimer = 0;
 		}
+		AddLogLine(true, GetResString(IDS_CONNECTING));
+
+		// ed2k
+		if ((thePrefs.GetNetworkED2K() || m_bEd2kSuspendDisconnect) && !theApp.serverconnect->IsConnecting() && !theApp.serverconnect->IsConnected())
+			theApp.serverconnect->ConnectToAnyServer();
+
+		// kad
+		if ((thePrefs.GetNetworkKademlia() || m_bKadSuspendDisconnect) && !Kademlia::CKademlia::IsRunning())
+			Kademlia::CKademlia::Start();
 
 		ShowConnectionState();
 	}
@@ -2110,13 +2104,12 @@ void CemuleDlg::StartConnection()
 
 void CemuleDlg::CloseConnection()
 {
-	if (theApp.serverconnect->IsConnected()){
+	if (theApp.serverconnect->IsConnected())
 		theApp.serverconnect->Disconnect();
-	}
 
-	if (theApp.serverconnect->IsConnecting()){
+	if (theApp.serverconnect->IsConnecting())
 		theApp.serverconnect->StopConnectionTry();
-	}
+
 	Kademlia::CKademlia::Stop();
 	theApp.OnlineSig(); // Added By Bouc7
 	ShowConnectionState();

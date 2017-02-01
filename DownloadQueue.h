@@ -84,7 +84,7 @@ public:
 
 	CPartFile* GetFileByID(const uchar* filehash) const;
 	CPartFile* GetFileByIndex(int index) const;
-	CPartFile* GetFileByKadFileSearchID(uint32 ID) const;
+	CPartFile* GetFileByKadFileSearchID(uint32 id) const;
 
     void    StartNextFileIfPrefs(int cat);
 	void	StartNextFile(int cat=-1,bool force=false);
@@ -105,7 +105,7 @@ public:
 		unsigned a[23];
 	} SDownloadStats;
 	void	GetDownloadSourcesStats(SDownloadStats& results);
-	int		GetDownloadFilesStats(uint64 &ui64TotalFileSize, uint64 &ui64TotalLeftToTransfer, uint64 &ui64TotalAdditionalNeededSpace);
+	int		GetDownloadFilesStats(uint64 &rui64TotalFileSize, uint64 &rui64TotalLeftToTransfer, uint64 &rui64TotalAdditionalNeededSpace);
 	uint32	GetDatarate() const	{return datarate;}
 
 	void	AddUDPFileReasks()								{m_nUDPFileReasks++;}
@@ -129,7 +129,7 @@ public:
 	// searching in Kad
 	void	SetLastKademliaFileRequest()				{lastkademliafilerequest = ::GetTickCount();}
 	bool	DoKademliaFileRequest();
-	void	KademliaSearchFile(uint32 searchID, const Kademlia::CUInt128* pcontactID, const Kademlia::CUInt128* pkadID, uint8 type, uint32 ip, uint16 tcp, uint16 udp, uint32 dwBuddyIP, uint16 dwBuddyPort, uint8 byCryptOptions);
+	void	KademliaSearchFile(uint32 searchID, const Kademlia::CUInt128* pcontactID, const Kademlia::CUInt128* pbuddyID, uint8 type, uint32 ip, uint16 tcp, uint16 udp, uint32 dwBuddyIP, uint16 dwBuddyPort, uint8 byCryptOptions);
 
 	// searching on global servers
 	void	StopUDPRequests();

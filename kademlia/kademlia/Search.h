@@ -62,7 +62,7 @@ namespace Kademlia
 			void		SetSearchTermData( uint32 uSearchTermDataSize, LPBYTE pucSearchTermsData );
 
 			void		AddFileID(const CUInt128& uID);
-			static void	PreparePacketForTags( CByteIO* pbyPacket, CKnownFile* pFile, uint8 byTargetKadVersion );
+			static void	PreparePacketForTags(CByteIO* byIO, CKnownFile* pFile, uint8 byTargetKadVersion);
 			bool		Stoping() const;
 			void		UpdateNodeLoad( uint8 uLoad );
 
@@ -91,10 +91,10 @@ namespace Kademlia
 		private:
 			void Go();
 			void ProcessResponse(uint32 uFromIP, uint16 uFromPort, ContactList *plistResults);
-			void ProcessResult(const CUInt128 &uAnswer, TagList *listInfo, uint32 uFromIP, uint16 uFromPort);
-			void ProcessResultFile(const CUInt128 &uAnswer, TagList *listInfo);
-			void ProcessResultKeyword(const CUInt128 &uAnswer, TagList *listInfo, uint32 uFromIP, uint16 uFromPort);
-			void ProcessResultNotes(const CUInt128 &uAnswer, TagList *listInfo);
+			void ProcessResult(const CUInt128 &uAnswer, TagList *plistInfo, uint32 uFromIP, uint16 uFromPort);
+			void ProcessResultFile(const CUInt128 &uAnswer, TagList *plistInfo);
+			void ProcessResultKeyword(const CUInt128 &uAnswer, TagList *plistInfo, uint32 uFromIP, uint16 uFromPort);
+			void ProcessResultNotes(const CUInt128 &uAnswer, TagList *plistInfo);
 			void JumpStart();
 			void SendFindValue(CContact* pContact, bool bReAskMore = false);
 			void PrepareToStop();

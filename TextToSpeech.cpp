@@ -44,7 +44,7 @@ public:
 	bool CreateTTS();
 	void ReleaseTTS();
 	bool IsActive() const { return m_pISpVoice != NULL; }
-	bool Speak(LPCTSTR psz);
+	bool Speak(LPCTSTR pwsz);
 
 protected:
 	long m_lTTSLangID;
@@ -64,16 +64,11 @@ CTextToSpeech::~CTextToSpeech()
 
 bool CTextToSpeech::CreateTTS()
 {
-	bool bResult = FALSE;
-	if (m_pISpVoice == NULL)
-	{
-		if (SUCCEEDED(m_pISpVoice.CoCreateInstance(CLSID_SpVoice)))
-		{
-			m_lTTSLangID = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL);
-			bResult = TRUE;
-		}
+	if (m_pISpVoice == NULL && SUCCEEDED(m_pISpVoice.CoCreateInstance(CLSID_SpVoice))) {
+		m_lTTSLangID = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL);
+		return true;
 	}
-	return bResult;
+	return false;
 }
 
 void CTextToSpeech::ReleaseTTS()
@@ -84,13 +79,7 @@ void CTextToSpeech::ReleaseTTS()
 
 bool CTextToSpeech::Speak(LPCTSTR pwsz)
 {
-	bool bResult = false;
-	if (m_pISpVoice)
-	{
-		if (SUCCEEDED(m_pISpVoice->Speak(pwsz, SPF_ASYNC | SPF_IS_NOT_XML, NULL)))
-			bResult = true;
-	}
-	return bResult;
+	return IsActive() && SUCCEEDED(m_pISpVoice->Speak(pwsz, SPF_ASYNC | SPF_IS_NOT_XML, NULL));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

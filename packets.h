@@ -75,7 +75,7 @@ public:
 	virtual char*	GetHeader();
 	virtual char*	GetUDPHeader();
 	virtual char*	GetPacket()					{return pBuffer; }
-	virtual void	AttachPacket(char* pcData, UINT uSize, bool bFromPartFile = false);
+	virtual void	AttachPacket(char* pPacketData, UINT uPacketSize, bool bFromPartFile = false);
 	virtual char*	DetachPacket();
 	virtual uint32	GetRealPacketSize() const	{return size;}
 };
@@ -130,7 +130,7 @@ public:
 //	CTag* CloneTag()				{ return new CTag(*this); }
 
 	bool WriteTagToFile(CFileDataIO* file, EUtf8Str eStrEncode = utf8strNone) const;	// old eD2K tags
-	bool WriteNewEd2kTag(CFileDataIO* file, EUtf8Str eStrEncode = utf8strNone) const;	// new eD2K tags
+	bool WriteNewEd2kTag(CFileDataIO* data, EUtf8Str eStrEncode = utf8strNone) const;	// new eD2K tags
 
 	CString GetFullInfo(CString (*pfnDbgGetFileMetaTagName)(UINT uMetaTagID) = NULL) const;
 

@@ -320,7 +320,7 @@ public:
 	TCHAR * m_pszCaption;	//+++1.5
 
 public:
-	CXDialogItem(Econtroltype cType);	// default constructor will fill in default values
+	explicit CXDialogItem(Econtroltype cType);	// default constructor will fill in default values
 	CXDialogItem() : m_dlgItemTemplate(), m_controltype(), m_pszCaption(NULL) {}	// default constructor, not to be called directly
 	virtual ~CXDialogItem();			//+++1.5
 

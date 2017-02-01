@@ -156,15 +156,14 @@ CString GetCertHash(const BYTE* pucHash, int iBytes)
 CString GetCertInteger(const BYTE* pucBlob, int cbBlob)
 {
 	CString strInteger;
-	for (int i = cbBlob - 1; i >= 0; i--)
-		strInteger.AppendFormat(_T("%02x "), pucBlob[i]);
-	return strInteger;
+	while (--cbBlob >= 0)
+		strInteger.AppendFormat(_T("%02x "), pucBlob[cbBlob]);
+	return strInteger.TrimRight();
 }
 
 PCCERT_CONTEXT GetCertificate(HCERTSTORE hCertStore, DWORD dwFindType, LPCWSTR pszCertName)
 {
-	PCCERT_CONTEXT pCertContext = NULL;
-	pCertContext = CertFindCertificateInStore(hCertStore, PKCS_7_ASN_ENCODING | X509_ASN_ENCODING, 0,
+	PCCERT_CONTEXT pCertContext = CertFindCertificateInStore(hCertStore, PKCS_7_ASN_ENCODING | X509_ASN_ENCODING, 0,
 											  dwFindType, pszCertName, NULL);
 	if (thePrefs.GetVerbose() && pCertContext)
 	{

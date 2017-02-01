@@ -42,7 +42,7 @@ CIrcSocket::~CIrcSocket()
 	CIrcSocket::RemoveAllLayers();
 }
 
-BOOL CIrcSocket::Create(UINT uSocketPort, int uSocketType, long lEvent, LPCSTR lpszSocketAddress)
+BOOL CIrcSocket::Create(UINT uSocketPort, int iSocketType, long lEvent, LPCSTR lpszSocketAddress)
 {
 	const ProxySettings& proxy = thePrefs.GetProxySettings();
 	if (proxy.UseProxy && proxy.type != PROXYTYPE_NOPROXY)
@@ -68,7 +68,7 @@ BOOL CIrcSocket::Create(UINT uSocketPort, int uSocketType, long lEvent, LPCSTR l
 		AddLayer(m_pProxyLayer);
 	}
 
-	return CAsyncSocketEx::Create(uSocketPort, uSocketType, lEvent, lpszSocketAddress);
+	return CAsyncSocketEx::Create(uSocketPort, iSocketType, lEvent, lpszSocketAddress);
 }
 
 void CIrcSocket::Connect()

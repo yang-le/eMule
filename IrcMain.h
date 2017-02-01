@@ -22,7 +22,7 @@ public:
 	CIrcMain();
 	~CIrcMain();
 
-	void ParseMessage(CString sMessage);
+	void ParseMessage(CString sRawMessage);
 	void PreParseMessage(const char *pszBufferA);
 	void SendLogin();
 	void Connect();
@@ -31,9 +31,9 @@ public:
 	void SetIRCWnd(CIrcWnd *pwndIRC);
 	int SendString(const CString& sSend);
 	void ParsePerform();
-	void ProcessLink(const CString& sED2KLink);
+	static void ProcessLink(const CString& sED2KLink);
 	uint32 SetVerify();
-	CString GetNick();
+	CString GetNick() const;
 
 protected:
 	CIrcSocket *m_pIRCSocket;

@@ -83,7 +83,7 @@ namespace Kademlia
 			bool		GetUseExternKadPort() const;
 			void		SetUseExternKadPort(bool bVal);
 			uint16		GetExternalKadPort() const;
-			void		SetExternKadPort(uint16 uVal, uint32 nFromIP);
+			void		SetExternKadPort(uint16 uVal, uint32 uFromIP);
 			bool		FindExternKadPort(bool bReset = false);
 			static uint16	GetInternKadPort();
 			uint8		GetMyConnectOptions(bool bEncryption = true, bool bCallback = true);

@@ -100,7 +100,7 @@ public:
 	friend bool operator==(const CAICHHash& k1,const CAICHHash& k2)	{ return memcmp(k1.m_abyBuffer, k2.m_abyBuffer, HASHSIZE) == 0;}
 	friend bool operator!=(const CAICHHash& k1,const CAICHHash& k2)	{ return !(k1 == k2); }
 	void		Read(CFileDataIO* file);
-	static void	Skip(LONGLONG dist, CFileDataIO* file);
+	static void	Skip(LONGLONG distance, CFileDataIO* file);
 	void		Write(CFileDataIO* file) const;
 	void		Read(const uchar* data)				{ memcpy(m_abyBuffer, data, HASHSIZE); }
 	CString		GetString() const;

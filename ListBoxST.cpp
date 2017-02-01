@@ -66,29 +66,25 @@ void CListBoxST::MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct)
 	ReleaseDC(pDC);
 } // End of MeasureItem
 
-void CListBoxST::DrawItem(LPDRAWITEMSTRUCT pDIStruct)
+void CListBoxST::DrawItem(LPDRAWITEMSTRUCT lpDIStruct)
 {
-	CDC*			pDC = CDC::FromHandle(pDIStruct->hDC);
-	BOOL			bIsSelected = FALSE;
-	BOOL			bIsFocused = FALSE;
-	BOOL			bIsDisabled = FALSE;
+	STRUCT_LBDATA*	lpLBData = (STRUCT_LBDATA*)CListBox::GetItemDataPtr(lpDIStruct->itemID);
+	if (lpLBData == NULL || lpLBData == (LPVOID)-1)
+		return;
+
+	CDC*			pDC = CDC::FromHandle(lpDIStruct->hDC);
 	COLORREF		crNormal = GetSysColor(COLOR_WINDOW);
 	COLORREF		crSelected = GetSysColor(COLOR_HIGHLIGHT);
 	COLORREF		crText = GetSysColor(COLOR_WINDOWTEXT);
 	COLORREF		crColor = RGB(0, 0, 0);
 	CString			sText;					// List box item text
-	STRUCT_LBDATA*	lpLBData = NULL;
+	BOOL bIsSelected = (lpDIStruct->itemState & ODS_SELECTED);
+	BOOL bIsFocused = (lpDIStruct->itemState & ODS_FOCUS);
+	BOOL bIsDisabled = ((lpDIStruct->itemState & ODS_DISABLED) || ((lpLBData->dwFlags & TEST_BIT0) == TEST_BIT0));
 
-	lpLBData = (STRUCT_LBDATA*)CListBox::GetItemDataPtr(pDIStruct->itemID);
-	if (lpLBData == NULL || lpLBData == (LPVOID)-1L)	return;
-
-	bIsSelected = (pDIStruct->itemState & ODS_SELECTED);
-	bIsFocused = (pDIStruct->itemState & ODS_FOCUS);
-	bIsDisabled = ((pDIStruct->itemState & ODS_DISABLED) || ((lpLBData->dwFlags & TEST_BIT0) == TEST_BIT0));
-
-	CRect rcItem = pDIStruct->rcItem;
-	CRect rcIcon = pDIStruct->rcItem;
-	CRect rcText = pDIStruct->rcItem;
+	CRect rcItem = lpDIStruct->rcItem;
+	CRect rcIcon = lpDIStruct->rcItem;
+	CRect rcText = lpDIStruct->rcItem;
 
 	pDC->SetBkMode(TRANSPARENT);
 
@@ -109,7 +105,7 @@ void CListBoxST::DrawItem(LPDRAWITEMSTRUCT pDIStruct)
 
 	// Calculate rcCenteredText
 	// Get list box item text
-	CListBox::GetText(pDIStruct->itemID, sText);
+	CListBox::GetText(lpDIStruct->itemID, sText);
 	CRect rcCenteredText = rcText;
 	pDC->DrawText(sText, -1, rcCenteredText, DT_WORDBREAK | DT_EXPANDTABS| DT_CALCRECT | lpLBData->nFormat);
 	rcCenteredText.OffsetRect(0, (rcText.Height() - rcCenteredText.Height())/2);
@@ -122,7 +118,7 @@ void CListBoxST::DrawItem(LPDRAWITEMSTRUCT pDIStruct)
 		else
 			crColor = crNormal;
 
-		OnDrawIconBackground(pDIStruct->itemID, pDC, &rcItem, &rcIcon, bIsDisabled, bIsSelected, crColor);
+		OnDrawIconBackground(lpDIStruct->itemID, pDC, &rcItem, &rcIcon, bIsDisabled, bIsSelected, crColor);
 	} // if
 
 	// Draw rcText/rcCenteredText background
@@ -147,14 +143,14 @@ void CListBoxST::DrawItem(LPDRAWITEMSTRUCT pDIStruct)
 
 	if (m_byRowSelect == ST_TEXTSELECT)
 		//pDC->FillSolidRect(&rcCenteredText, crColor);
-		OnDrawTextBackground(pDIStruct->itemID, pDC, &rcItem, &rcCenteredText, bIsDisabled, bIsSelected, crColor);
+		OnDrawTextBackground(lpDIStruct->itemID, pDC, &rcItem, &rcCenteredText, bIsDisabled, bIsSelected, crColor);
 	else
 		//pDC->FillSolidRect(&rcText, crColor);
-		OnDrawTextBackground(pDIStruct->itemID, pDC, &rcItem, &rcText, bIsDisabled, bIsSelected, crColor);
+		OnDrawTextBackground(lpDIStruct->itemID, pDC, &rcItem, &rcText, bIsDisabled, bIsSelected, crColor);
 
 	// Draw the icon (if any)
 	if (m_pImageList)
-		OnDrawIcon(pDIStruct->itemID, pDC, &rcItem, &rcIcon, lpLBData->nImage, bIsDisabled, bIsSelected);
+		OnDrawIcon(lpDIStruct->itemID, pDC, &rcItem, &rcIcon, lpLBData->nImage, bIsDisabled, bIsSelected);
 
 	// Draw text
 	pDC->DrawText(sText, -1, rcCenteredText, DT_WORDBREAK | DT_EXPANDTABS | lpLBData->nFormat);
@@ -324,11 +320,10 @@ void CListBoxST::FreeResources()
 
 int CListBoxST::ReplaceItemData(int nIndex, DWORD_PTR dwItemData, LPVOID pData, int nImage, DWORD dwFlags, BYTE byMask)
 {
-	STRUCT_LBDATA*	lpLBData = NULL;
-	int				nRetValue = LB_ERR;
+	int nRetValue = LB_ERR;
 
 	// Get pointer to associated datas (if any)
-	lpLBData = (STRUCT_LBDATA*)CListBox::GetItemDataPtr(nIndex);
+	STRUCT_LBDATA *lpLBData = (STRUCT_LBDATA*)CListBox::GetItemDataPtr(nIndex);
 	// If no datas exist create a new one
 	if (lpLBData == NULL)
 	{

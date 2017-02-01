@@ -381,14 +381,12 @@ void CButtonST::CancelHover()
 
 void CButtonST::OnMouseMove(UINT nFlags, CPoint point)
 {
-	CWnd*				wndUnderMouse = NULL;
 	CWnd*				wndActive = this;
-	TRACKMOUSEEVENT		csTME;
 
 	CButton::OnMouseMove(nFlags, point);
 
 	ClientToScreen(&point);
-	wndUnderMouse = WindowFromPoint(point);
+	CWnd* wndUnderMouse = WindowFromPoint(point);
 
 	// If the mouse enter the button with the left button pressed then do nothing
 	if (nFlags & MK_LBUTTON && m_bMouseOnButton == FALSE) return;
@@ -412,6 +410,7 @@ void CButtonST::OnMouseMove(UINT nFlags, CPoint point)
 				::PlaySound(m_csSounds[0].lpszSound, m_csSounds[0].hMod, m_csSounds[0].dwFlags);
 #endif
 
+			TRACKMOUSEEVENT		csTME;
 			csTME.cbSize = sizeof(csTME);
 			csTME.dwFlags = TME_LEAVE;
 			csTME.hwndTrack = m_hWnd;

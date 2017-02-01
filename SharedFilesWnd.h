@@ -88,7 +88,7 @@ private:
 
 protected:
 	void SetAllIcons();
-	void DoResize(int delta);
+	void DoResize(int iDelta);
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	virtual BOOL OnInitDialog();

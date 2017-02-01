@@ -34,7 +34,7 @@ public:
 	virtual void Safe_Delete();
 
 protected:
-	CPeerCacheSocket(CUpDownClient* pClient = NULL);
+	explicit CPeerCacheSocket(CUpDownClient* pClient = NULL);
 	virtual ~CPeerCacheSocket();
 	virtual void DetachFromClient();
 
@@ -58,7 +58,7 @@ class CPeerCacheDownSocket : public CPeerCacheSocket
 	DECLARE_DYNCREATE(CPeerCacheDownSocket)
 
 public:
-	CPeerCacheDownSocket(CUpDownClient* pClient = NULL);
+	explicit CPeerCacheDownSocket(CUpDownClient* pClient = NULL);
 
 protected:
 	virtual ~CPeerCacheDownSocket();
@@ -67,7 +67,7 @@ protected:
 	virtual void OnClose(int nErrorCode);
 
 	virtual bool ProcessHttpResponse();
-	virtual bool ProcessHttpResponseBody(const BYTE* pucData, UINT size);
+	virtual bool ProcessHttpResponseBody(const BYTE* pucData, UINT uSize);
 	virtual bool ProcessHttpRequest();
 };
 
@@ -80,7 +80,7 @@ class CPeerCacheUpSocket : public CPeerCacheSocket
 	DECLARE_DYNCREATE(CPeerCacheUpSocket)
 
 public:
-	CPeerCacheUpSocket(CUpDownClient* pClient = NULL);
+	explicit CPeerCacheUpSocket(CUpDownClient* pClient = NULL);
 
 protected:
 	virtual ~CPeerCacheUpSocket();

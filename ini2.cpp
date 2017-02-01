@@ -153,14 +153,14 @@ const CString& CIni::GetSection() const
 {
 	return m_strSection;
 }
-
-void CIni::Init(LPCTSTR lpszFileName, LPCTSTR lpszSection)
+/*
+void CIni::Init(LPCTSTR lpszIniFile, LPCTSTR lpszSection)
 {
 	if (lpszSection != NULL)
 		m_strSection = lpszSection;
-	if (lpszFileName != NULL)
-		m_strFileName = lpszFileName;
-}
+	if (lpszIniFile != NULL)
+		m_strFileName = lpszIniFile;
+}*/
 
 CString CIni::GetString(LPCTSTR lpszEntry, LPCTSTR lpszDefault, LPCTSTR lpszSection)
 {
@@ -612,7 +612,7 @@ void CIni::SerGet(bool bGet, float *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR l
 	}
 }
 
-void CIni::SerGet(bool bGet, int *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection, int iDefault)
+void CIni::SerGet(bool bGet, BYTE *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection, BYTE nDefault)
 {
 	if (nCount > 0) {
 		CString strBuffer;
@@ -623,9 +623,9 @@ void CIni::SerGet(bool bGet, int *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lps
 			for (int i = 0; i < nCount; i++) {
 				nOffset = Parse(strBuffer, nOffset, strTemp);
 				if (strTemp.IsEmpty())
-					ar[i] = iDefault;
+					ar[i] = nDefault;
 				else
-					ar[i] = _tstoi(strTemp);
+					ar[i] = (BYTE)_tstoi(strTemp);
 			}
 		} else {
 			CString strTemp;
@@ -640,7 +640,7 @@ void CIni::SerGet(bool bGet, int *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lps
 	}
 }
 
-void CIni::SerGet(bool bGet, unsigned char *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection, unsigned char ucDefault)
+void CIni::SerGet(bool bGet, int *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection, int iDefault)
 {
 	if (nCount > 0) {
 		CString strBuffer;
@@ -651,9 +651,9 @@ void CIni::SerGet(bool bGet, unsigned char *ar, int nCount, LPCTSTR lpszEntry, L
 			for (int i = 0; i < nCount; i++) {
 				nOffset = Parse(strBuffer, nOffset, strTemp);
 				if (strTemp.IsEmpty())
-					ar[i] = ucDefault;
+					ar[i] = iDefault;
 				else
-					ar[i] = (unsigned char)_tstoi(strTemp);
+					ar[i] = _tstoi(strTemp);
 			}
 		} else {
 			CString strTemp;
@@ -752,7 +752,7 @@ void CIni::SerGet(bool bGet, WORD *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lp
 	}
 }
 
-void CIni::SerGet(bool bGet, CPoint * ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection, const CPoint& ptDefault)
+void CIni::SerGet(bool bGet, CPoint *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection, const CPoint& ptDefault)
 {
 	CString strBuffer;
 	for (int i = 0; i < nCount; i++)
@@ -830,7 +830,7 @@ bool CIni::GetBinary(LPCTSTR lpszEntry, BYTE** ppData, UINT* pBytes, LPCTSTR psz
 		return false;
 	ASSERT(str.GetLength()%2 == 0);
 	INT_PTR nLen = str.GetLength();
-	*pBytes = UINT(nLen)/2;
+	*pBytes = UINT(nLen/2);
 	*ppData = new BYTE[*pBytes];
 	for (int i=0;i<nLen;i+=2)
 	{
@@ -839,25 +839,24 @@ bool CIni::GetBinary(LPCTSTR lpszEntry, BYTE** ppData, UINT* pBytes, LPCTSTR psz
 	return true;
 }
 
-bool CIni::WriteBinary(LPCTSTR lpszEntry, LPBYTE pData, UINT nBytes, LPCTSTR pszSection)
+bool CIni::WriteBinary(LPCTSTR lpszEntry, LPBYTE pData, UINT nBytes, LPCTSTR lpszSection)
 {
 	// convert to string and write out
 	LPTSTR lpsz = new TCHAR[nBytes*2+1];
 	UINT i;
-	for (i = 0; i < nBytes; i++)
-	{
+	for (i = 0; i < nBytes; ++i) {
 		lpsz[i*2] = (TCHAR)((pData[i] & 0x0F) + 'A'); //low nibble
 		lpsz[i*2+1] = (TCHAR)(((pData[i] >> 4) & 0x0F) + 'A'); //high nibble
 	}
 	lpsz[i*2] = 0;
 
 
-	WriteString(lpszEntry, lpsz, pszSection);
+	WriteString(lpszEntry, lpsz, lpszSection);
 	delete[] lpsz;
 	return true;
 }
 
-void CIni::DeleteKey(LPCTSTR pszKey)
+void CIni::DeleteKey(LPCTSTR lpszKey)
 {
-	WritePrivateProfileString(m_strSection, pszKey, NULL, m_strFileName);
+	WritePrivateProfileString(m_strSection, lpszKey, NULL, m_strFileName);
 }

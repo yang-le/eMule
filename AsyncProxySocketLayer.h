@@ -133,7 +133,7 @@ public:
 // Überschreibungen
 public:
 	virtual void Close();
-	virtual BOOL Connect(LPCSTR lpHostAddress, UINT nHostPort);
+	virtual BOOL Connect(LPCSTR lpszHostAddress, UINT nHostPort);
 	virtual BOOL Connect(const SOCKADDR* lpSockAddr, int nSockAddrLen);
 	virtual BOOL Listen(int nConnectionBacklog);
 

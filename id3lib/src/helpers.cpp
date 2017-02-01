@@ -284,18 +284,19 @@ ID3_Frame* id3::v2::setComment(ID3_TagImpl& tag, const String& text, const Strin
   {
     ID3D_NOTICE( "id3::v2::setComment: creating new comment frame" );
     frame = LEAKTESTNEW( ID3_Frame(ID3FID_COMMENT));
-    if(!tag.AttachFrame(frame)) return NULL;
+    if(!tag.AttachFrame(frame))
+		return NULL;
   }
-  if (!frame)
-  {
-    ID3D_WARNING( "id3::v2::setComment: ack! no frame" );
-  }
-  else
-  {
-    frame->GetField(ID3FN_LANGUAGE)->Set(lang.c_str());
-    frame->GetField(ID3FN_DESCRIPTION)->Set(desc.c_str());
-    frame->GetField(ID3FN_TEXT)->Set(text.c_str());
-  }
+//  if (!frame)
+//  {
+//    ID3D_WARNING( "id3::v2::setComment: ack! no frame" );
+//  }
+//  else
+//  {
+  frame->GetField(ID3FN_LANGUAGE)->Set(lang.c_str());
+  frame->GetField(ID3FN_DESCRIPTION)->Set(desc.c_str());
+  frame->GetField(ID3FN_TEXT)->Set(text.c_str());
+//  }
 
   return frame;
 }

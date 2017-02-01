@@ -31,8 +31,8 @@ public:
 	void		GetUserSortedServers();
 	void		MoveServerDown(const CServer* pServer);
 	static void	AutoUpdate();
-	bool		AddServerMetToList(const CString& rstrFile, bool bMerge);
-	void		AddServersFromTextFile(const CString& rstrFilename) const;
+	bool		AddServerMetToList(const CString& strFile, bool bMerge);
+	void		AddServersFromTextFile(const CString& strFilename) const;
 	bool		SaveServermetToFile();
 	bool		SaveStaticServers();
 

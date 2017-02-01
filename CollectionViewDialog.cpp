@@ -176,7 +176,7 @@ void CCollectionViewDialog::DownloadSelected()
 	{
 		int index = m_CollectionViewList.GetNextSelectedItem(pos);
 		if (index >= 0)
-			collectionFileList.AddTail((CCollectionFile*)m_CollectionViewList.GetItemData(index));
+			collectionFileList.AddTail(reinterpret_cast<CCollectionFile *>(m_CollectionViewList.GetItemData(index)));
 	}
 
 	while (!collectionFileList.IsEmpty())

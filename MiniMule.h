@@ -64,9 +64,9 @@ protected:
 	virtual BOOL CreateControlSite(COleControlContainer* pContainer, COleControlSite** ppSite, UINT nID, REFCLSID clsid);
 	virtual void PostNcDestroy();
 
-	virtual void OnBeforeNavigate(LPDISPATCH pDisp, LPCTSTR szUrl);
-	virtual void OnNavigateComplete(LPDISPATCH pDisp, LPCTSTR szUrl);
-	virtual void OnDocumentComplete(LPDISPATCH pDisp, LPCTSTR szUrl);
+	virtual void OnBeforeNavigate(LPDISPATCH pDisp, LPCTSTR pszUrl);
+	virtual void OnNavigateComplete(LPDISPATCH pDisp, LPCTSTR pszUrl);
+	virtual void OnDocumentComplete(LPDISPATCH pDisp, LPCTSTR pszUrl);
 
 	STDMETHOD(GetOptionKeyPath)(LPOLESTR *pchKey, DWORD dw);
 	STDMETHOD(TranslateUrl)(DWORD dwTranslate, OLECHAR* pchURLIn, OLECHAR** ppchURLOut);

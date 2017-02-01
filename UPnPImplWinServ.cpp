@@ -39,7 +39,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 CUPnPImplWinServ::CUPnPImplWinServ()
-	:       m_pDevices(),
+	: m_pDevices(),
 	m_pServices(),
 	m_bCOM(false),
 	m_pDeviceFinder(NULL),
@@ -67,10 +67,10 @@ CUPnPImplWinServ::CUPnPImplWinServ()
 	m_pfGetIfEntry(NULL),
 	m_hIPHLPAPI_DLL(NULL),
 	m_bServiceStartedByEmule(false),
-	m_pfnControlService(NULL)
+	m_pfnControlService(NULL),
+	m_bDisableWANIPSetup(thePrefs.GetSkipWANIPSetup()),
+	m_bDisableWANPPPSetup(thePrefs.GetSkipWANPPPSetup())
 {
-	m_bDisableWANIPSetup = thePrefs.GetSkipWANIPSetup();
-	m_bDisableWANPPPSetup = thePrefs.GetSkipWANPPPSetup();
 }
 void CUPnPImplWinServ::Init()
 {
@@ -278,9 +278,8 @@ void CUPnPImplWinServ::StartDiscovery(uint16 nTCPPort, uint16 nUDPPort, uint16 n
 		return;
 
 	Init();
-	if (!bSecondTry) {
+	if (!bSecondTry)
 		m_bCheckAndRefresh = false;
-	}
 
 	// On tests, in some cases the search for WANConnectionDevice had no results and only a search for InternetGatewayDevice
 	// showed up the UPnP root Device which contained the WANConnectionDevice as a child. I'm not sure if there are cases
@@ -384,7 +383,7 @@ void CUPnPImplWinServ::AddDevice(DevicePointer device, bool bAddChilds, int nLev
 			VariantClear(&var);
 			hr = pEnum->Next(1, &var, &lFetch);
 		}
-		;
+
 		pEnum->Release();
 	}
 }
@@ -505,6 +504,7 @@ HRESULT CUPnPImplWinServ::SaveServices(EnumUnknownPtr pEU, const LONG nTotalItem
 
 	return hr;
 }
+
 HRESULT CUPnPImplWinServ::MapPort(const ServicePointer& service)
 {
 	CComBSTR bsServiceId;
@@ -606,11 +606,10 @@ void CUPnPImplWinServ::DeletePorts()
 {
 	if (!m_bInited)
 		return;
-	std::vector<ServicePointer>::iterator Iter;
-	for (Iter = m_pServices.begin(); Iter != m_pServices.end(); ++Iter) {
-		if ((ServicePointer) * Iter != NULL)
+
+	for (std::vector<ServicePointer>::iterator Iter = m_pServices.begin(); Iter != m_pServices.end(); ++Iter)
+		if ((ServicePointer)*Iter != NULL)
 			DeleteExistingPortMappings(*Iter);
-	}
 }
 // Finds a local IP address routable from UPnP device
 CString CUPnPImplWinServ::GetLocalRoutableIP(ServicePointer pService)
@@ -862,10 +861,12 @@ HRESULT CUPnPImplWinServ::InvokeAction(ServicePointer pService,
 	LONG nPos = 0;
 
 	INT_PTR nArgs = CreateVarFromString(strInArgs, &ppVars);
-	if (nArgs < 0) return E_FAIL;
+	if (nArgs < 0)
+		return E_FAIL;
 
 	hr = CreateSafeArray(VT_VARIANT, (ULONG)nArgs, &psaArgs);
-	if (FAILED(hr)) return hr;
+	if (FAILED(hr))
+		return hr;
 
 	vaArray.vt = VT_VARIANT | VT_ARRAY | VT_BYREF;
 	vaArray.pparray = &psaArgs;
@@ -932,7 +933,8 @@ HRESULT CUPnPImplWinServ::CreateSafeArray(const VARTYPE vt, const ULONG nArgs, S
 
 	*ppsa = SafeArrayCreate(vt, 1, aDim);
 
-	if (NULL == *ppsa) return E_OUTOFMEMORY;
+	if (NULL == *ppsa)
+		return E_OUTOFMEMORY;
 	return S_OK;
 }
 // Creates argument variants from the string

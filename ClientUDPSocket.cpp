@@ -324,7 +324,7 @@ bool CClientUDPSocket::ProcessPacket(const BYTE* packet, UINT size, uint8 opcode
 					if(sender->GetUDPVersion() > 3)
 					{
 						if (reqfile->IsPartFile())
-							((CPartFile*)reqfile)->WritePartStatus(&data_out);
+							static_cast<CPartFile *>(reqfile)->WritePartStatus(&data_out);
 						else
 							data_out.WriteUInt16(0);
 					}

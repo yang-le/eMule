@@ -231,7 +231,7 @@ public:
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Upload
 	EUploadState	GetUploadState() const							{ return (EUploadState)m_nUploadState; }
-	void			SetUploadState(EUploadState news);
+	void			SetUploadState(EUploadState eNewState);
 	uint32			GetWaitStartTime() const;
 	void 			SetWaitStartTime();
 	void 			ClearWaitStartTime();
@@ -278,7 +278,7 @@ public:
 	UINT			GetPayloadInBuffer() const						{ return m_addedPayloadQueueSession - m_nCurQueueSessionPayloadUp; }
 	void			SetQueueSessionUploadAdded(UINT uVal)			{ m_addedPayloadQueueSession = uVal; }
 
-	bool			ProcessExtendedInfo(CSafeMemFile* packet, CKnownFile* tempreqfile);
+	bool			ProcessExtendedInfo(CSafeMemFile* data, CKnownFile* tempreqfile);
 	uint16			GetUpPartCount() const							{ return m_nUpPartCount; }
 	void			DrawUpStatusBar(CDC* dc, RECT* rect, bool onlygreyrect, bool  bFlat) const;
 	bool			IsUpPartAvailable(UINT iPart) const {
@@ -447,7 +447,7 @@ public:
 
 	void			SetSlotNumber(UINT newValue)					{ m_slotNumber = newValue; }
 	UINT			GetSlotNumber() const							{ return m_slotNumber; }
-	CEMSocket*		GetFileUploadSocket(bool log = false);
+	CEMSocket*		GetFileUploadSocket(bool bLog = false);
 
 	///////////////////////////////////////////////////////////////////////////
 	// PeerCache client

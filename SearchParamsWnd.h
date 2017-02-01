@@ -46,7 +46,7 @@ public:
 	void SetParameters(const SSearchParams* pParams);
 	void ProcessEd2kSearchLinkRequest(const CString& strSearchTerm);
 
-	virtual CSize CalcDynamicLayout(int, DWORD nMode);
+	virtual CSize CalcDynamicLayout(int nLength, DWORD dwMode);
 	virtual void OnUpdateCmdUI(CFrameWnd* pTarget, BOOL bDisableIfNoHndler);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 

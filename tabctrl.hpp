@@ -10,7 +10,7 @@ public:
 	UINT GetLastMovementDestionation() const	{ return m_nDstTab; }
 
 	BOOL ReorderTab(unsigned int nSrcTab, unsigned int nDstTab);
-	void SetTabTextColor(int i, DWORD color);
+	void SetTabTextColor(int index, DWORD color);
 
 protected:
 	bool  m_bDragging;     // Specifies that whether drag 'n drop is in progress.

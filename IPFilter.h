@@ -58,8 +58,8 @@ public:
 	int LoadFromDefaultFile(bool bShowResponse = true);
 	void SaveToDefaultFile();
 
-	bool IsFiltered(uint32 IP) /*const*/;
-	bool IsFiltered(uint32 IP, UINT level) /*const*/;
+	bool IsFiltered(uint32 ip) /*const*/;
+	bool IsFiltered(uint32 ip, UINT level) /*const*/;
 	CString GetLastHit() const;
 	const CIPFilterArray& GetIPFilter() const;
 
@@ -68,6 +68,6 @@ private:
 	CIPFilterArray m_iplist;
 	bool m_bModified;
 
-	static bool ParseFilterLine1(const CStringA& rstrBuffer, uint32& ip1, uint32& ip2, UINT& level, CStringA& rstrDesc);
-	static bool ParseFilterLine2(const CStringA& rstrBuffer, uint32& ip1, uint32& ip2, UINT& level, CStringA& rstrDesc);
+	static bool ParseFilterLine1(const CStringA& sbuffer, uint32& ip1, uint32& ip2, UINT& level, CStringA& desc);
+	static bool ParseFilterLine2(const CStringA& sbuffer, uint32& ip1, uint32& ip2, UINT& level, CStringA& desc);
 };

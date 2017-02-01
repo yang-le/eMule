@@ -26,8 +26,8 @@ public:
 	CIrcChannelListCtrl();
 	virtual ~CIrcChannelListCtrl();
 
-	void ResetServerChannelList(bool bShutdown = false);
-	bool AddChannelToList(const CString& sName, const CString& sUser, const CString& sDescription);
+	void ResetServerChannelList(bool bShutDown = false);
+	bool AddChannelToList(const CString& sName, const CString& sUsers, const CString& sDesc);
 	void JoinChannels();
 	void Localize();
 	void Init();

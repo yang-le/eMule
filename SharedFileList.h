@@ -58,7 +58,7 @@ public:
 	bool	SafeAddKFile(CKnownFile* toadd, bool bOnlyAdd = false);
 	void	RepublishFile(CKnownFile* pFile);
 	void	SetOutputCtrl(CSharedFilesCtrl* in_ctrl);
-	bool	RemoveFile(CKnownFile* toremove, bool bDeleted = false);	// removes a specific shared file from the list
+	bool	RemoveFile(CKnownFile* pFile, bool bDeleted = false);	// removes a specific shared file from the list
 	void	UpdateFile(CKnownFile* toupdate);
 	void	AddFileFromNewlyCreatedCollection(const CString& rstrFilePath)		{ CheckAndAddSingleFile(rstrFilePath); }
 
@@ -72,7 +72,7 @@ public:
 
 	void	CopySharedFileMap(CMap<CCKey,const CCKey&,CKnownFile*,CKnownFile*> &Files_Map);
 
-	CKnownFile* GetFileByID(const uchar* filehash) const;
+	CKnownFile* GetFileByID(const uchar* hash) const;
 	CKnownFile* GetFileByIdentifier(const CFileIdentifierBase& rFileIdent, bool bStrict = false) const;
 	CKnownFile*	GetFileByIndex(int index) const; // slow
 	CKnownFile* GetFileByAICH(const CAICHHash& rHash) const; // slow

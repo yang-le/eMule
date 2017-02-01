@@ -358,7 +358,7 @@ UINT AFX_CDECL UploadBandwidthThrottler::RunProc(LPVOID pParam)
 {
 	DbgSetThreadName("UploadBandwidthThrottler");
 	InitThreadLocale();
-	UploadBandwidthThrottler* uploadBandwidthThrottler = (UploadBandwidthThrottler*)pParam;
+	UploadBandwidthThrottler* uploadBandwidthThrottler = static_cast<UploadBandwidthThrottler *>(pParam);
 
 	return uploadBandwidthThrottler->RunInternal();
 }

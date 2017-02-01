@@ -38,7 +38,7 @@ class CShareableFile;
 
 class CDirectoryItem{
 public:
-	CDirectoryItem(CString strFullPath, HTREEITEM htItem = TVI_ROOT, ESpecialDirectoryItems eItemType = SDI_NO, int m_nCatFilter = -1);
+	explicit CDirectoryItem(const CString& strFullPath, HTREEITEM htItem = TVI_ROOT, ESpecialDirectoryItems eItemType = SDI_NO, int nCatFilter = -1);
 	~CDirectoryItem();
 	CDirectoryItem*		CloneContent() { return new CDirectoryItem(m_strFullPath, 0, m_eItemType, m_nCatFilter); }
 	HTREEITEM			FindItem(CDirectoryItem* pContentToFind) const;
@@ -68,7 +68,7 @@ public:
 	bool			IsCreatingTree() const		{return m_bCreatingTree;};
 	void			Localize();
 	void			EditSharedDirectories(const CDirectoryItem* pDir, bool bAdd, bool bSubDirectories);
-	void			Reload(bool bFore = false);
+	void			Reload(bool bForce = false);
 	void			OnVolumesChanged();
 	void			FileSystemTreeUpdateBoldState(const CDirectoryItem* pDir = NULL);
 	bool			ShowFileSystemDirectory(const CString& strDir);
@@ -121,11 +121,10 @@ private:
 
 	void	FileSystemTreeUpdateShareState(const CDirectoryItem* pDir = NULL);
 	void	FileSystemTreeSetShareState(const CDirectoryItem* pDir, bool bSubDirectories);
-	void	FilterTreeAddSharedDirectory(CDirectoryItem* pDir, bool bRefresh);
+//	void	FilterTreeAddSharedDirectory(CDirectoryItem* pDir, bool bRefresh);
 	void	FilterTreeAddSubDirectories(CDirectoryItem* pDirectory, const CStringList& liDirs, int nLevel, bool &rbShowWarning, bool bParentAccessible);
-	bool	FilterTreeIsSubDirectory(CString& strDir, CString& strRoot, const CStringList& liDirs);
+	bool	FilterTreeIsSubDirectory(CString strDir, CString strRoot, const CStringList& liDirs);
 	void	FilterTreeReloadTree();
-
 
 	bool			m_bCreatingTree;
 	bool			m_bUseIcons;

@@ -31,7 +31,7 @@ public:
 	void		SaveList();
 	bool		LoadList();
 	void		RefreshFriend(CFriend* torefresh) const;
-	CFriend*	SearchFriend(const uchar* achUserHash, uint32 dwIP, uint16 nPort) const;
+	CFriend*	SearchFriend(const uchar* abyUserHash, uint32 dwIP, uint16 nPort) const;
 	void		SetWindow(CFriendListCtrl* NewWnd)	{ m_wndOutput = NewWnd; }
 	void		ShowFriends() const;
 	bool		AddFriend(CUpDownClient* toadd);

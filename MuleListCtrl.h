@@ -161,7 +161,7 @@ public:
 		direct,
 		none
 	};
-	enum EUpdateMode SetUpdateMode(enum EUpdateMode eMode);
+	enum EUpdateMode SetUpdateMode(enum EUpdateMode eUpdateMode);
 	void SetAutoSizeWidth(int iAutoSizeWidth);
 
 	int InsertColumn(int nCol, LPCTSTR lpszColumnHeading, int nFormat = LVCFMT_LEFT, int nWidth = -1, int nSubItem = -1, bool bHiddenByDefault = false);

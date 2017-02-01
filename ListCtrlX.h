@@ -43,7 +43,7 @@ void ReadColumnStats(int iColumns, LCX_COLUMN_INIT* pColumns, LPCTSTR pszSection
 void WriteColumnStats(CListCtrl& lv, int iColumns, const LCX_COLUMN_INIT* pColumns, LPCTSTR pszSection, LPCTSTR pszPrefix);
 
 void InitColumnOrders(CListCtrl& lv, int iColumns, const LCX_COLUMN_INIT* pColumns);
-void SetItemFocus(CListCtrl& lv);
+void SetItemFocus(CListCtrl& ctl);
 void UpdateHdrImageList(CListCtrl& lv, CImageList& imlHdr, UINT uIDHdrImgList, CSize sizeHdrImgListIcon, int iHdrImgListImages);
 void CreateItemReport(CListCtrl& lv, CString& rstrReport);
 

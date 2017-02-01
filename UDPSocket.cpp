@@ -348,14 +348,14 @@ bool CUDPSocket::ProcessPacket(const BYTE* packet, UINT size, UINT opcode, uint3
 				uint16 nTCPObfuscationPort = 0;
 				uint16 nUDPObfuscationPort = 0;
 
-				if (size >= 16){
+				if (size >= 16)
 					cur_maxusers = PeekUInt32(packet+12);
-				}
-				if (size >= 24){
+
+				if (size >= 24) {
 					cur_softfiles = PeekUInt32(packet+16);
 					cur_hardfiles = PeekUInt32(packet+20);
 				}
-				if (size >= 28){
+				if (size >= 28) {
 					uUDPFlags = PeekUInt32(packet+24);
 					if (thePrefs.GetDebugServerUDPLevel() > 0){
 						CString strInfo;

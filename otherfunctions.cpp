@@ -3436,7 +3436,8 @@ int GetPathDriveNumber(const CString& path)
 	return tolower(path[0]) - 'a'; //97, lowercase 'a'
 }
 
-UINT64 GetFreeTempSpace(int tempdirindex){
+UINT64 GetFreeTempSpace(int tempdirindex)
+{
 	ASSERT(tempdirindex<thePrefs.tempdir.GetCount() && tempdirindex>=-1);
 	if (tempdirindex>=thePrefs.tempdir.GetCount() || tempdirindex<-1)
 		return 0;
@@ -3444,25 +3445,24 @@ UINT64 GetFreeTempSpace(int tempdirindex){
 	if (tempdirindex>=0)
 		return GetFreeDiskSpaceX(thePrefs.GetTempDir(tempdirindex));
 
-	bool toadd;
 	CArray<int> hist;
-	UINT64 sum=0;
-	for (int  i=0;i<thePrefs.tempdir.GetCount();i++) {
-		int pdn=GetPathDriveNumber(thePrefs.GetTempDir(i));
-		toadd=true;
+	UINT64 sum = 0;
+	for (int i = 0; i<thePrefs.tempdir.GetCount(); ++i) {
+		int pdn = GetPathDriveNumber(thePrefs.GetTempDir(i));
+		bool toadd = true;
 
-		if (pdn>=0)
-			for (int j=0; j<hist.GetCount(); ++j) {
+		if (pdn >= 0)
+			for (int j = 0; j<hist.GetCount(); ++j) {
 				if (hist[j] == pdn) {
-					toadd=false;
+					toadd = false;
 					break;
 				}
 			}
-		if (!toadd)
-			continue;
 
-		sum+=GetFreeDiskSpaceX(thePrefs.GetTempDir(i));
-		hist.Add(pdn);
+		if (toadd) {
+			sum += GetFreeDiskSpaceX(thePrefs.GetTempDir(i));
+			hist.Add(pdn);
+		}
 	}
 
 	return sum;

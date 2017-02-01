@@ -78,7 +78,7 @@ int CTransferDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	context.m_pCurrentDoc = NULL;
 	context.m_pNewViewClass = RUNTIME_CLASS(CTransferWnd);
 	context.m_pNewDocTemplate = NULL;
-	m_pwndTransfer = (CTransferWnd*)CreateView(&context);
+	m_pwndTransfer = static_cast<CTransferWnd *>(CreateView(&context));
 	m_pwndTransfer->ModifyStyle(WS_BORDER, 0);
 	m_pwndTransfer->ModifyStyleEx(WS_EX_CLIENTEDGE, WS_EX_STATICEDGE);
 

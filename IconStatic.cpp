@@ -44,15 +44,15 @@ CIconStatic::~CIconStatic()
 	m_MemBMP.DeleteObject();
 }
 
-void CIconStatic::SetWindowText(LPCTSTR pszText)
+void CIconStatic::SetWindowText(LPCTSTR lpszText)
 {
-	m_strText = pszText;
+	m_strText = lpszText;
 	SetIcon(m_strIconID);
 }
 
-void CIconStatic::SetIcon(LPCTSTR pszIconID)
+void CIconStatic::SetIcon(LPCTSTR lpszIconID)
 {
-	m_strIconID = pszIconID;
+	m_strIconID = lpszIconID;
 
 	// If this function is called for the first time and we did not yet call 'SetWindowText', we take
 	// the window label which is already specified for the window (the label which comes from the resource)

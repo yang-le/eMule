@@ -1025,10 +1025,10 @@ RAR_BlockFile *CArchiveRecovery::scanForRarFileHeader(CFile *input, archiveScann
 					}
 				}
 
-				crc = crc32(0, checkCRC, sizeof(*hdr));
+				crc = crc32(0, checkCRC, sizeof *hdr);
 				crc = crc32(crc, fileName, lenFileName);
-				if (checkCRCsize > sizeof(*hdr))
-					crc = crc32(crc, &checkCRC[sizeof(*hdr)], checkCRCsize - sizeof(*hdr));
+				if (checkCRCsize > sizeof *hdr)
+					crc = crc32(crc, &checkCRC[sizeof *hdr], (checkCRCsize - sizeof *hdr));
 				if ((crc & 0xFFFF) == headCRC)
 				{
 					// Found valid crc, build block and return
@@ -1247,7 +1247,7 @@ bool CArchiveRecovery::recoverAce(CFile *aceInput, CFile *aceOutput, archiveScan
 
 			UINT hdrread=0;
 
-			hdrread+=aceInput->Read((void*)acehdr, sizeof(ACE_ARCHIVEHEADER) - (3*sizeof(char*)) - sizeof(uint16) );
+			hdrread += aceInput->Read((void*)acehdr, sizeof(ACE_ARCHIVEHEADER) - (3*sizeof(char*)) - sizeof(uint16) );
 
 			if (memcmp(acehdr->HEAD_SIGN , ACE_ID, sizeof(ACE_ID) )!=0 || acehdr->HEAD_TYPE!=0 ||
 				IsFilled(0,acehdr->HEAD_SIZE,filled)==false ) {
@@ -1595,9 +1595,9 @@ void CArchiveRecovery::ISOReadDirectory(archiveScannerThreadParams_s* aitp, UINT
 	{
 		ISO_FileFolderEntry *file = new ISO_FileFolderEntry;
 
-		UINT32 blocksize = isoInput->Read(file, sizeof(ISO_FileFolderEntry)-sizeof(file->name));
+		UINT32 blocksize = isoInput->Read(file, (sizeof(ISO_FileFolderEntry)-sizeof file->name));
 
-		if (file->lenRecord==0) {
+		if (file->lenRecord == 0) {
 			delete file;
 
 			// do we continue at next sector?

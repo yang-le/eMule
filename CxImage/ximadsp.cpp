@@ -720,7 +720,7 @@ float CxImage::Mean()
 	CxImage tmp(*this,true);
 	if (!tmp.IsValid()){
 		strcpy(info.szLastError,tmp.GetLastError());
-		return false;
+		return 0;
 	}
 
 	tmp.GrayScale();
@@ -739,12 +739,11 @@ float CxImage::Mean()
 	uint8_t *iSrc=tmp.info.pImage;
 	iSrc += tmp.info.dwEffWidth*ymin; // necessary for selections <Admir Hodzic>
 
-	for(int32_t y=ymin; y<ymax; y++){
+	for (int32_t y = ymin; y<ymax; ++y) {
 		info.nProgress = (int32_t)(100*(y-ymin)/(ymax-ymin)); //<zhanghk><Anatoly Ivasyuk>
-		for(int32_t x=xmin; x<xmax; x++){
-			sum+=iSrc[x];
-		}
-		iSrc+=tmp.info.dwEffWidth;
+		for (int32_t x = xmin; x<xmax; ++x)
+			sum += iSrc[x];
+		iSrc += tmp.info.dwEffWidth;
 	}
 	return sum/(xmax-xmin)/(ymax-ymin);
 }

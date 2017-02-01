@@ -1180,22 +1180,20 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory,LPCTSTR in_file
 		// SLUGFILLER: SafeHash
 
 		m_SrcpartFrequency.SetSize(GetPartCount());
-		for (UINT i = 0; i < GetPartCount();i++)
+		for (UINT i = 0; i < GetPartCount(); ++i)
 			m_SrcpartFrequency[i] = 0;
 		SetStatus(PS_EMPTY);
-		// check hashcount, filesatus etc
+		// check hashcount, filestatus etc
 		if (!m_FileIdentifier.HasExpectedMD4HashCount()){
 			ASSERT( m_FileIdentifier.GetRawMD4HashSet().GetSize() == 0 );
 			m_bMD4HashsetNeeded = true;
 			return PLR_LOADSUCCESS;
 		}
-		else {
-			m_bMD4HashsetNeeded = false;
-			for (UINT i = 0; i < (UINT)m_FileIdentifier.GetAvailableMD4PartHashCount(); i++){
-				if (i < GetPartCount() && IsComplete(i*PARTSIZE, (i + 1)*PARTSIZE - 1, true)) {
-					SetStatus(PS_READY);
-					break;
-				}
+		m_bMD4HashsetNeeded = false;
+		for (UINT i = 0; i < (UINT)m_FileIdentifier.GetAvailableMD4PartHashCount(); ++i) {
+			if (i < GetPartCount() && IsComplete(i*PARTSIZE, (i + 1)*PARTSIZE - 1, true)) {
+				SetStatus(PS_READY);
+				break;
 			}
 		}
 

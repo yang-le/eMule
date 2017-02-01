@@ -44,7 +44,7 @@ public:
 	void ClearHttpHeaders();
 
 protected:
-	CHttpClientReqSocket(CUpDownClient* pclient = NULL);
+	explicit CHttpClientReqSocket(CUpDownClient* pclient = NULL);
 	virtual ~CHttpClientReqSocket();
 
 	virtual void DataReceived(const BYTE* pucData, UINT uSize);
@@ -55,7 +55,7 @@ protected:
 	CStringAArray		m_astrHttpHeaders;
 	int					m_iHttpHeadersSize;
 
-	bool ProcessHttpPacket(const BYTE* packet, UINT size);
+	bool ProcessHttpPacket(const BYTE* pucData, UINT uSize);
 	void ProcessHttpHeaderPacket(const char* packet, UINT size, LPBYTE& pBody, int& iSizeBody);
 
 	virtual bool ProcessHttpResponse();
@@ -72,7 +72,7 @@ class CHttpClientDownSocket : public CHttpClientReqSocket
 	DECLARE_DYNCREATE(CHttpClientDownSocket)
 
 public:
-	CHttpClientDownSocket(CUpDownClient* client = NULL);
+	explicit CHttpClientDownSocket(CUpDownClient* pclient = NULL);
 
 protected:
 	virtual ~CHttpClientDownSocket();

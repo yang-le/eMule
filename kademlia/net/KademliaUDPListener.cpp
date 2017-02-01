@@ -598,7 +598,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_HELLO_REQ (const byte *pbyPacketDat
 
 	if (bAddedOrUpdated && !bValidReceiverKey && byContactVersion == KADEMLIA_VERSION7_49a && !HasActiveLegacyChallenge(uIP)){
 		// Kad Version 7 doesnt supports HELLO_RES_ACK, but sender/receiver keys, so send a ping to validate
-		AddLegacyChallenge(uContactID, 0ul, uIP, KADEMLIA2_PING);
+		AddLegacyChallenge(uContactID, CUInt128(0ul), uIP, KADEMLIA2_PING);
 		SendNullPacket(KADEMLIA2_PING, uIP, uUDPPort, senderUDPKey, NULL);
 #ifdef _DEBUG
 		CContact* pContact = CKademlia::GetRoutingZone()->GetContact(uContactID);
@@ -1958,7 +1958,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_PONG (const byte* pbyPacketData, ui
 
 	// is this one of our legacy challenge packets?
 	CUInt128 uContactID;
-	if (IsLegacyChallenge(0ul, uIP, KADEMLIA2_PING, uContactID)) {
+	if (IsLegacyChallenge(CUInt128(0ul), uIP, KADEMLIA2_PING, uContactID)) {
 		// yup it is, set the contact as verified
 		if (!CKademlia::GetRoutingZone()->VerifyContact(uContactID, uIP)){
 			DebugLogWarning(_T("Kad: KADEMLIA2_PONG: Unable to find valid sender in routing table (sender: %s)"), (LPCTSTR)ipstr(ntohl(uIP)));

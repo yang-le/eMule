@@ -439,7 +439,8 @@ bool CxImage::GetPaletteColor(uint8_t i, uint8_t* r, uint8_t* g, uint8_t* b) con
 ////////////////////////////////////////////////////////////////////////////////
 void CxImage::SetPalette(uint32_t n, uint8_t *r, uint8_t *g, uint8_t *b)
 {
-	if ((!r)||(pDib==NULL)||(head.biClrUsed==0)) return;
+	if ((!r)||(pDib==NULL)||(head.biClrUsed==0))
+		return;
 	if (!g) g = r;
 	if (!b) b = g;
 	RGBQUAD* ppal=GetPalette();
@@ -454,7 +455,8 @@ void CxImage::SetPalette(uint32_t n, uint8_t *r, uint8_t *g, uint8_t *b)
 ////////////////////////////////////////////////////////////////////////////////
 void CxImage::SetPalette(rgb_color *rgb,uint32_t nColors)
 {
-	if ((!rgb)||(pDib==NULL)||(head.biClrUsed==0)) return;
+	if ((!rgb)||(pDib==NULL)||(head.biClrUsed==0))
+		return;
 	RGBQUAD* ppal=GetPalette();
 	uint32_t m=min(nColors,head.biClrUsed);
 	for (uint32_t i=0; i<m;i++){
@@ -480,7 +482,8 @@ void CxImage::SetPalette(RGBQUAD* pPal,uint32_t nColors)
  */
 void CxImage::SetGrayPalette() const
 {
-	if ((pDib==NULL)||(head.biClrUsed==0)) return;
+	if ((pDib==NULL)||(head.biClrUsed==0))
+		return;
 	RGBQUAD* pal=GetPalette();
 	for (uint32_t ni=0;ni<head.biClrUsed;ni++)
 		pal[ni].rgbBlue=pal[ni].rgbGreen = pal[ni].rgbRed = (uint8_t)(ni*(255/(head.biClrUsed-1)));

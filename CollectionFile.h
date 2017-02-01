@@ -27,7 +27,7 @@ class CCollectionFile : public CAbstractFile
 public:
 	explicit CCollectionFile();
 	explicit CCollectionFile(CFileDataIO* in_data);
-	explicit CCollectionFile(CAbstractFile* copyfrom);
+	explicit CCollectionFile(CAbstractFile* pAbstractFile);
 	virtual ~CCollectionFile();
 
 	bool	InitFromLink(const CString& sLink);

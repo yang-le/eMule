@@ -302,12 +302,12 @@ void CArchivePreviewDlg::OnLvnDeleteAllItemsArchiveEntries(NMHDR *, LRESULT *pRe
 	*pResult = TRUE;
 }
 
-void CArchivePreviewDlg::OnNMCustomDrawArchiveEntries(NMHDR *pNMHDR, LRESULT *plResult)
+void CArchivePreviewDlg::OnNMCustomDrawArchiveEntries(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLVCUSTOMDRAW pnmlvcd = (LPNMLVCUSTOMDRAW)pNMHDR;
 
 	if (pnmlvcd->nmcd.dwDrawStage == CDDS_PREPAINT) {
-		*plResult = CDRF_NOTIFYITEMDRAW;
+		*pResult = CDRF_NOTIFYITEMDRAW;
 		return;
 	}
 
@@ -319,7 +319,7 @@ void CArchivePreviewDlg::OnNMCustomDrawArchiveEntries(NMHDR *pNMHDR, LRESULT *pl
 		}
 	}
 
-	*plResult = CDRF_DODEFAULT;
+	*pResult = CDRF_DODEFAULT;
 }
 
 void CArchivePreviewDlg::OnBnExplain()
@@ -999,8 +999,8 @@ void CArchivePreviewDlg::UpdateArchiveDisplay(bool doscan) {
 	CShareableFile* file = STATIC_DOWNCAST(CShareableFile, (*m_paFiles)[0]);
 
 	GetDlgItem(IDC_RESTOREARCH)->EnableWindow( file->IsPartFile()
-		&& (((CPartFile*)file)->IsArchive(true))
-		&& (((CPartFile*)file)->IsReadyForPreview() )	);
+		&& static_cast<CPartFile *>(file)->IsArchive(true)
+		&& static_cast<CPartFile *>(file)->IsReadyForPreview());
 
 	EFileType type=GetFileTypeEx(file);
 	switch(type) {
@@ -1031,7 +1031,7 @@ void CArchivePreviewDlg::UpdateArchiveDisplay(bool doscan) {
 	// get filled area list
 	CTypedPtrList<CPtrList, Gap_Struct*> *filled = new CTypedPtrList<CPtrList, Gap_Struct*>;
 	if (file->IsPartFile()) {
-		((CPartFile*)(file))->GetFilledList(filled);
+		static_cast<CPartFile *>(file)->GetFilledList(filled);
 		if (filled->IsEmpty()) {
 			SetDlgItemText(IDC_INFO_STATUS, GetResString(IDS_ARCPREV_INSUFFDATA));
 			delete filled;

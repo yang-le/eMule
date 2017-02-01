@@ -1721,10 +1721,10 @@ void CSearchList::LoadSearches()
 				pParams->eType = SearchTypeKademlia;
 
 			if (pParams->eType == SearchTypeKademlia && (nHighestKadSearchID == 0xFFFFFFFF || nHighestKadSearchID < pParams->dwSearchID)) {
-				//ASSERT( pParams->dwSearchID < 0x80000000 );
+//				ASSERT( pParams->dwSearchID < 0x80000000 );
 				nHighestKadSearchID = pParams->dwSearchID;
 			} else if (pParams->eType != SearchTypeKademlia && (nHighestEd2kSearchID == 0xFFFFFFFF || nHighestEd2kSearchID < pParams->dwSearchID)) {
-				//				ASSERT( pParams->dwSearchID >= 0x80000000 );
+//				ASSERT( pParams->dwSearchID >= 0x80000000 );
 				nHighestEd2kSearchID = pParams->dwSearchID;
 			}
 

@@ -33,7 +33,7 @@ private:
 	bool HasSharedSubdirectory(CString strDir);
 	// when sharing a directory, make all parent directories bold
 	void UpdateParentItems(HTREEITEM hChild);
-	void ShareSubDirTree(HTREEITEM hItem, BOOL bShare);
+	void ShareSubDirTree(HTREEITEM hItem, BOOL bRecurse);
 
 	// share list access
 	bool IsShared(CString strDir);

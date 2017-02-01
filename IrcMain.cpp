@@ -1614,7 +1614,7 @@ uint32 CIrcMain::SetVerify()
 	return m_uVerify;
 }
 
-CString CIrcMain::GetNick()
+CString CIrcMain::GetNick() const
 {
 	return m_sNick;
 }

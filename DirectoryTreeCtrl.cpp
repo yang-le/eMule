@@ -207,10 +207,9 @@ void CDirectoryTreeCtrl::Init()
 	if (wWinVer != _WINVER_95_ && wWinVer != _WINVER_NT4_)
 	{
 		SHFILEINFO shFinfo;
-		HIMAGELIST hImgList = NULL;
 
 		// Get the system image list using a "path" which is available on all systems. [patch by bluecow]
-		hImgList = (HIMAGELIST)SHGetFileInfo(_T("."), 0, &shFinfo, sizeof(shFinfo),
+		HIMAGELIST hImgList = (HIMAGELIST)SHGetFileInfo(_T("."), 0, &shFinfo, sizeof(shFinfo),
 											 SHGFI_SYSICONINDEX | SHGFI_SMALLICON);
 		if(!hImgList)
 		{
@@ -252,7 +251,7 @@ HTREEITEM CDirectoryTreeCtrl::AddChildItem(HTREEITEM hRoot, CString strText)
 {
 	CString strPath = GetFullPath(hRoot);
 	if (hRoot != NULL && strPath.Right(1) != _T("\\"))
-		strPath += _T("\\");
+		strPath += _T('\\');
 	CString strDir = strPath + strText;
 	TVINSERTSTRUCT itInsert = {};
 
@@ -289,7 +288,7 @@ HTREEITEM CDirectoryTreeCtrl::AddChildItem(HTREEITEM hRoot, CString strText)
 	{
 		CString strTemp = strDir;
 		if(strTemp.Right(1) != _T("\\"))
-			strTemp += _T("\\");
+			strTemp += _T('\\');
 
 		UINT nType = GetDriveType(strTemp);
 		if(DRIVE_REMOVABLE <= nType && nType <= DRIVE_RAMDISK)
@@ -360,30 +359,24 @@ CString CDirectoryTreeCtrl::GetFullPath(HTREEITEM hItem)
 void CDirectoryTreeCtrl::AddSubdirectories(HTREEITEM hRoot, CString strDir)
 {
 	if (strDir.Right(1) != _T("\\"))
-		strDir += _T("\\");
+		strDir += _T('\\');
 	CFileFind finder;
-	BOOL bWorking = finder.FindFile(strDir+_T("*.*"));
-	while (bWorking)
-	{
+	BOOL bWorking = finder.FindFile(strDir + _T("*.*"));
+	while (bWorking) {
 		bWorking = finder.FindNextFile();
-		if (finder.IsDots())
-			continue;
-		if (finder.IsSystem())
-			continue;
-		if (!finder.IsDirectory())
-			continue;
-
-		CString strFilename = finder.GetFileName();
-		if (strFilename.ReverseFind(_T('\\')) != -1)
-			strFilename = strFilename.Mid(strFilename.ReverseFind(_T('\\')) + 1);
-		AddChildItem(hRoot, strFilename);
+		if (!finder.IsDots() && !finder.IsSystem() && finder.IsDirectory()) {
+			CString strFilename = finder.GetFileName();
+			if (strFilename.ReverseFind(_T('\\')) != -1)
+				strFilename = strFilename.Mid(strFilename.ReverseFind(_T('\\')) + 1);
+			AddChildItem(hRoot, strFilename);
+		}
 	}
 	finder.Close();
 }
 
 bool CDirectoryTreeCtrl::HasSubdirectories(CString strDir)
 {
-	if (strDir.Right(1) != _T('\\'))
+	if (strDir.Right(1) != _T("\\"))
 		strDir += _T('\\');
 	// Never try to enumerate the files of a drive and thus physically access the drive, just
 	// for the information whether the drive has sub directories in the root folder. Depending
@@ -423,23 +416,23 @@ void CDirectoryTreeCtrl::SetSharedDirectories(CStringList* list)
 {
 	m_lstShared.RemoveAll();
 
-	for (POSITION pos = list->GetHeadPosition(); pos != NULL; )
-	{
+	for (POSITION pos = list->GetHeadPosition(); pos != NULL; ) {
 		CString str = list->GetNext(pos);
-		if (str.Left(2)==_T("\\\\")) continue;
-		if (str.Right(1) != _T('\\'))
-			str += _T('\\');
-		m_lstShared.AddTail(str);
+		if (str.Left(2) != _T("\\\\")) {
+			if (str.Right(1) != _T("\\"))
+				str += _T('\\');
+			m_lstShared.AddTail(str);
+		}
 	}
 	Init();
 }
 
 bool CDirectoryTreeCtrl::HasSharedSubdirectory(CString strDir)
 {
-	if (strDir.Right(1) != _T('\\'))
+	if (strDir.Right(1) != _T("\\"))
 		strDir += _T('\\');
 	strDir.MakeLower();
-	for (POSITION pos = m_lstShared.GetHeadPosition(); pos != NULL; )
+	for (POSITION pos = m_lstShared.GetHeadPosition(); pos != NULL;)
 	{
 		CString str = m_lstShared.GetNext(pos);
 		str.MakeLower();
@@ -463,12 +456,12 @@ void CDirectoryTreeCtrl::CheckChanged(HTREEITEM hItem, bool bChecked)
 
 bool CDirectoryTreeCtrl::IsShared(CString strDir)
 {
-	if (strDir.Right(1) != _T('\\'))
+	if (strDir.Right(1) != _T("\\"))
 		strDir += _T('\\');
 	for (POSITION pos = m_lstShared.GetHeadPosition(); pos != NULL; )
 	{
 		CString str = m_lstShared.GetNext(pos);
-		if (str.Right(1) != _T('\\'))
+		if (str.Right(1) != _T("\\"))
 			str += _T('\\');
 		if (str.CompareNoCase(strDir) == 0)
 			return true;
@@ -478,7 +471,7 @@ bool CDirectoryTreeCtrl::IsShared(CString strDir)
 
 void CDirectoryTreeCtrl::AddShare(CString strDir)
 {
-	if (strDir.Right(1) != _T('\\'))
+	if (strDir.Right(1) != _T("\\"))
 		strDir += _T('\\');
 
 	if (IsShared(strDir) || !strDir.CompareNoCase(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR)))
@@ -489,7 +482,7 @@ void CDirectoryTreeCtrl::AddShare(CString strDir)
 
 void CDirectoryTreeCtrl::DelShare(CString strDir)
 {
-	if (strDir.Right(1) != _T('\\'))
+	if (strDir.Right(1) != _T("\\"))
 		strDir += _T('\\');
 	for (POSITION pos = m_lstShared.GetHeadPosition(); pos != NULL; )
 	{

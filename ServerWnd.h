@@ -43,7 +43,7 @@ public:
 	void UpdateControlsState();
 	void ResetHistory();
 	void PasteServerFromClipboard();
-	bool AddServer(uint16 uPort, const CString& strAddress, CString strName = _T(""), bool bShowErrorMB = true);
+	bool AddServer(uint16 nPort, const CString& strAddress, CString strName = _T(""), bool bShowErrorMB = true);
 	CString GetMyInfoString();
 
 // Dialog Data

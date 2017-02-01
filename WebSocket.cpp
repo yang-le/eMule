@@ -284,9 +284,9 @@ UINT AFX_CDECL WebSocketAcceptedFunc(LPVOID pD)
 	srand(time(NULL));
 	InitThreadLocale();
 
-	SocketData *pData = (SocketData *)pD;
+	SocketData *pData = static_cast<SocketData *>(pD);
 	SOCKET hSocket = pData->hSocket;
-	CWebServer *pThis = (CWebServer *)pData->pThis;
+	CWebServer *pThis = static_cast<CWebServer *>(pData->pThis);
 	in_addr ad=pData->incomingaddr;
 
 	delete pData;

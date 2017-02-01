@@ -101,7 +101,7 @@ public:
 	CString getTextList();
 	void	ShowSelectedFileDetails();
 	void	HideFile(CPartFile* tohide);
-	void	ShowFile(CPartFile* tohide);
+	void	ShowFile(CPartFile* toshow);
 	void	ExpandCollapseItem(int iItem, int iAction, bool bCollapseSource = false);
 	void	HideSources(CPartFile* toCollapse);
 	void	GetDisplayedFiles(CArray<CPartFile*, CPartFile*>* list);

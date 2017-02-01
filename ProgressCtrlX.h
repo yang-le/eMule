@@ -128,7 +128,7 @@ protected:
 
 	virtual void DrawMultiGradient(const CDrawInfo& info, const CRect &rcGrad, const CRect &rcClip);
 	virtual void DrawGradient(const CDrawInfo& info, const CRect &rcGrad, const CRect &rcClip, COLORREF clrStart, COLORREF clrEnd);
-	virtual void DrawText(const CDrawInfo& info, const CRect &rcMax, const CRect &rcGrad);
+	virtual void DrawText(const CDrawInfo& info, const CRect &rcMax, const CRect &rcBar);
 	virtual void DrawClippedText(const CDrawInfo& info, const CRect& rcClip, CString& sText, const CPoint& ptWndOrg);
 	CRect ConvertToReal(const CDrawInfo& info, const CRect& rcVirt);
 	virtual BOOL SetSnakePos(int& nOldPos, int nNewPos, BOOL fIncrement = FALSE);

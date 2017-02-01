@@ -10,8 +10,8 @@ public:
 	CIconStatic();
 	virtual ~CIconStatic();
 
-	void SetIcon(LPCTSTR pszIconID);
-	void SetWindowText(LPCTSTR lpszString);
+	void SetIcon(LPCTSTR lpszIconID);
+	void SetWindowText(LPCTSTR lpszText);
 
 protected:
 	CStatic m_wndPicture;

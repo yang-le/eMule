@@ -36,9 +36,9 @@ namespace Kademlia
 	{
 		public:
 			CUInt128();
-			CUInt128(bool bFill);
-			CUInt128(ULONG uValue);
-			CUInt128(const byte *pbyValueBE);
+			explicit CUInt128(bool bFill);
+			explicit CUInt128(ULONG uValue);
+			explicit CUInt128(const byte *pbyValueBE);
 			//Generates a new number, copying the most significant 'numBits' bits from 'value'.
 			//The remaining bits are randomly generated.
 			CUInt128(const CUInt128 &uValue, UINT uNumBits = 128);

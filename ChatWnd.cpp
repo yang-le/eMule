@@ -102,7 +102,7 @@ void CChatWnd::UpdateSelectedFriendMsgDetails()
 {
 	int iSel = m_FriendListCtrl.GetSelectionMark();
 	if (iSel != -1) {
-		CFriend* pFriend = (CFriend*)m_FriendListCtrl.GetItemData(iSel);
+		CFriend* pFriend = reinterpret_cast<CFriend *>(m_FriendListCtrl.GetItemData(iSel));
 		ShowFriendMsgDetails(pFriend);
 	}
 	else
@@ -467,7 +467,7 @@ LRESULT CChatWnd::OnCloseTab(WPARAM wParam, LPARAM /*lParam*/)
 	TCITEM item = {};
 	item.mask = TCIF_PARAM;
 	if (chatselector.GetItem((int)wParam, &item))
-		chatselector.EndSession(((CChatItem*)item.lParam)->client);
+		chatselector.EndSession(reinterpret_cast<CChatItem *>(item.lParam)->client);
 	return TRUE;
 }
 

@@ -60,17 +60,17 @@ public:
 	// CAICHHashAlgo interface
 	virtual void	Reset();
 	virtual void	Add(LPCVOID pData, DWORD nLength);
-	virtual void	Finish(CAICHHash& Hash);
-	virtual void	GetHash(CAICHHash& Hash);
+	virtual void	Finish(CAICHHash& rHash);
+	virtual void	GetHash(CAICHHash& rHash);
 
 	void	Finish();
 	void	GetHash(SHA1* pHash) const;
 	CString	GetHashString(bool bURN = false) const;
 
-	static CString	HashToString(const SHA1* pHash, bool bURN = false);
-	static CString	HashToHexString(const SHA1* pHash, bool bURN = false);
-	static bool		HashFromString(LPCTSTR pszHash, SHA1* pHash);
-	static bool		HashFromURN(LPCTSTR pszHash, SHA1* pHash);
+	static CString	HashToString(const SHA1* pHashIn, bool bURN = false);
+	static CString	HashToHexString(const SHA1* pHashIn, bool bURN = false);
+	static bool		HashFromString(LPCTSTR pszHash, SHA1* pHashIn);
+	static bool		HashFromURN(LPCTSTR pszHash, SHA1* pHashIn);
 	static bool		IsNull(SHA1* pHash);
 };
 

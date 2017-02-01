@@ -107,7 +107,7 @@ public:
 	void	SetLastPinged(uint32 in_lastpinged)		{lastpinged = in_lastpinged;}
 
 	UINT	GetLastDescPingedCount() const			{return lastdescpingedcout;}
-	void	SetLastDescPingedCount(bool reset);
+	void	SetLastDescPingedCount(bool bReset);
 
 	bool	IsStaticMember() const					{return staticservermember;}
 	void	SetIsStaticMember(bool in)				{staticservermember = in;}

@@ -881,13 +881,13 @@ int CServerListCtrl::Undefined_at_bottom(const CString& s1, const CString& s2)
 	return sgn(s1.CompareNoCase(s2));
 }
 
-void CServerListCtrl::OnNmCustomDraw(NMHDR *pNMHDR, LRESULT *plResult)
+void CServerListCtrl::OnNmCustomDraw(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLVCUSTOMDRAW pnmlvcd = (LPNMLVCUSTOMDRAW)pNMHDR;
 
 	if (pnmlvcd->nmcd.dwDrawStage == CDDS_PREPAINT)
 	{
-		*plResult = CDRF_NOTIFYITEMDRAW;
+		*pResult = CDRF_NOTIFYITEMDRAW;
 		return;
 	}
 
@@ -906,5 +906,5 @@ void CServerListCtrl::OnNmCustomDraw(NMHDR *pNMHDR, LRESULT *plResult)
 			pnmlvcd->clrText = RGB(128,128,128);
 	}
 
-	*plResult = CDRF_DODEFAULT;
+	*pResult = CDRF_DODEFAULT;
 }

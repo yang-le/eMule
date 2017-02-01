@@ -397,20 +397,16 @@ void CSharedFilesWnd::ShowSelectedFilesDetails(bool bForce)
 {
 	CTypedPtrList<CPtrList, CShareableFile*> selectedList;
 	bool m_bChanged = false;
-	if (m_bDetailsVisible)
-	{
-		POSITION pos = sharedfilesctrl.GetFirstSelectedItemPosition();
+	if (m_bDetailsVisible) {
 		int i = 0;
-		while (pos != NULL){
+		for (POSITION pos = sharedfilesctrl.GetFirstSelectedItemPosition(); pos != NULL;) {
 			int index = sharedfilesctrl.GetNextSelectedItem(pos);
-			if (index >= 0)
-			{
-				CShareableFile* file = (CShareableFile*)sharedfilesctrl.GetItemData(index);
-				if (file != NULL)
-				{
+			if (index >= 0) {
+				CShareableFile* file = reinterpret_cast<CShareableFile *>(sharedfilesctrl.GetItemData(index));
+				if (file != NULL) {
 					selectedList.AddTail(file);
 					m_bChanged |= m_dlgDetails.GetItems().GetSize() <= i || m_dlgDetails.GetItems()[i] != file;
-					i++;
+					++i;
 				}
 			}
 		}

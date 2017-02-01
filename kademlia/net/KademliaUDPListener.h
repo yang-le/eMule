@@ -52,7 +52,7 @@ namespace Kademlia
 			friend class CSearch;
 		public:
 			~CKademliaUDPListener();
-			void Bootstrap(LPCTSTR uIP, uint16 uUDPPort);
+			void Bootstrap(LPCTSTR szHost, uint16 uUDPPort);
 			void Bootstrap(uint32 uIP, uint16 uUDPPort, uint8 byKadVersion = 0, const CUInt128* uCryptTargetID = NULL);
 			void FirewalledCheck(uint32 uIP, uint16 uUDPPort, CKadUDPKey senderUDPKey, uint8 byKadVersion);
 			void SendMyDetails(byte byOpcode, uint32 uIP, uint16 uUDPPort, uint8 byKadVersion, CKadUDPKey targetUDPKey, const CUInt128* uCryptTargetID, bool bRequestAckPackage);
@@ -61,7 +61,7 @@ namespace Kademlia
 			virtual void ProcessPacket(const byte* pbyData, uint32 uLenData, uint32 uIP, uint16 uUDPPort, bool bValidReceiverKey, CKadUDPKey senderUDPKey);
 			void SendPacket(const byte* pbyData, uint32 uLenData, uint32 uDestinationHost, uint16 uDestinationPort, CKadUDPKey targetUDPKey, const CUInt128* uCryptTargetID);
 			void SendPacket(const byte *pbyData, uint32 uLenData, byte byOpcode, uint32 uDestinationHost, uint16 uDestinationPort, CKadUDPKey targetUDPKey, const CUInt128* uCryptTargetID);
-			void SendPacket(CSafeMemFile* pfileData, byte byOpcode, uint32 uDestinationHost, uint16 uDestinationPort, CKadUDPKey targetUDPKey, const CUInt128* uCryptTargetID);
+			void SendPacket(CSafeMemFile* pbyData, byte byOpcode, uint32 uDestinationHost, uint16 uDestinationPort, CKadUDPKey targetUDPKey, const CUInt128* uCryptTargetID);
 
 			bool FindNodeIDByIP(CKadClientSearcher* pRequester, uint32 dwIP, uint16 nTCPPort, uint16 nUDPPort);
 			void ExpireClientSearch(CKadClientSearcher* pExpireImmediately = NULL);

@@ -1335,8 +1335,8 @@ int CALLBACK CSharedFilesCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM l
 			iResult = 1;
 		else if (item1->IsKindOf(RUNTIME_CLASS(CKnownFile)) && item2->IsKindOf(RUNTIME_CLASS(CKnownFile)))
 		{
-			const CKnownFile* kitem1 = (CKnownFile *)item1;
-			const CKnownFile* kitem2 = (CKnownFile *)item2;
+			const CKnownFile* kitem1 = static_cast<const CKnownFile *>(item1);
+			const CKnownFile* kitem2 = static_cast<const CKnownFile *>(item2);
 
 			switch (iColumn) {
 				case 3: {//prio

@@ -386,10 +386,10 @@ class CArchiveRecovery
 {
 public:
 	static void recover(CPartFile *partFile, bool preview = false, bool bCreatePartFileCopy = true);
-	static bool recoverZip(CFile *zipInput, CFile *zipOutput, archiveScannerThreadParams_s* ai, CTypedPtrList<CPtrList, Gap_Struct*> *filled, bool fullSize);
-	static bool recoverRar(CFile *rarInput, CFile *rarOutput, archiveScannerThreadParams_s* ai, CTypedPtrList<CPtrList, Gap_Struct*> *filled);
-	static bool recoverAce(CFile *aceInput, CFile *aceOutput, archiveScannerThreadParams_s* ai, CTypedPtrList<CPtrList, Gap_Struct*> *filled);
-	static bool recoverISO(CFile *aceInput, CFile *aceOutput, archiveScannerThreadParams_s* ai, CTypedPtrList<CPtrList, Gap_Struct*> *filled);
+	static bool recoverZip(CFile *zipInput, CFile *zipOutput, archiveScannerThreadParams_s* aitp, CTypedPtrList<CPtrList, Gap_Struct*> *filled, bool fullSize);
+	static bool recoverRar(CFile *rarInput, CFile *rarOutput, archiveScannerThreadParams_s* aitp, CTypedPtrList<CPtrList, Gap_Struct*> *filled);
+	static bool recoverAce(CFile *aceInput, CFile *aceOutput, archiveScannerThreadParams_s* aitp, CTypedPtrList<CPtrList, Gap_Struct*> *filled);
+	static bool recoverISO(CFile *isoInput, CFile *isoOutput, archiveScannerThreadParams_s* aitp, CTypedPtrList<CPtrList, Gap_Struct*> *filled);
 
 private:
 	CArchiveRecovery(); // Just use static recover method

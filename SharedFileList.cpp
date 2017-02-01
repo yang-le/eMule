@@ -420,8 +420,8 @@ CSharedFileList::~CSharedFileList(){
 #if defined(_BETA) || defined(_DEVBUILD)
 	// On Beta builds we created a testfile, delete it when closing eMule
 	CString tempDir = thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR);
-	if (tempDir.Right(1)!=_T("\\"))
-		tempDir+=_T("\\");
+	if (tempDir.Right(1) != _T("\\"))
+		tempDir += _T('\\');
 	CString strBetaFileName;
 	strBetaFileName.Format(_T("eMule%u.%u%c.%u Beta Testfile "), CemuleApp::m_nVersionMjr,
 		CemuleApp::m_nVersionMin, _T('a') + CemuleApp::m_nVersionUpd, CemuleApp::m_nVersionBld);
@@ -468,11 +468,10 @@ void CSharedFileList::FindSharedFiles()
 
 	// khaos::kmod+ Fix: Shared files loaded multiple times.
 	CStringList l_sAdded;
-	CString tempDir;
 	CString ltempDir;
-	tempDir = thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR);
-	if (tempDir.Right(1)!=_T("\\"))
-		tempDir+=_T("\\");
+	CString tempDir = thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR);
+	if (tempDir.Right(1) != _T("\\"))
+		tempDir += _T('\\');
 
 #if defined(_BETA) || defined(_DEVBUILD)
 	// In Betaversion we create a testfile which is published in order to make testing easier
@@ -505,12 +504,12 @@ void CSharedFileList::FindSharedFiles()
 	tempDir.MakeLower();
 	l_sAdded.AddHead( tempDir );
 
-	for (int ix=1;ix<thePrefs.GetCatCount();ix++)
+	for (int ix=1; ix<thePrefs.GetCatCount(); ++ix)
 	{
 		tempDir=CString( thePrefs.GetCatPath(ix) );
-		if (tempDir.Right(1)!=_T("\\"))
+		if (tempDir.Right(1) != _T("\\"))
 			tempDir += _T('\\');
-		ltempDir=tempDir;
+		ltempDir = tempDir;
 		ltempDir.MakeLower();
 
 		if( l_sAdded.Find( ltempDir ) ==NULL ) {
@@ -521,7 +520,7 @@ void CSharedFileList::FindSharedFiles()
 
 	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos != NULL;) {
 		tempDir = thePrefs.shareddir_list.GetNext(pos);
-		if (tempDir.Right(1)!=_T("\\"))
+		if (tempDir.Right(1) != _T("\\"))
 			tempDir += _T('\\');
 		ltempDir = tempDir;
 		ltempDir.MakeLower();
@@ -1230,7 +1229,7 @@ void CSharedFileList::HashNextFile(){
 		return;
 	UnknownFile_Struct* nextfile = waitingforhash_list.RemoveHead();
 	currentlyhashing_list.AddTail(nextfile);	// SLUGFILLER: SafeHash - keep track
-	CAddFileThread* addfilethread = (CAddFileThread*) AfxBeginThread(RUNTIME_CLASS(CAddFileThread), THREAD_PRIORITY_BELOW_NORMAL,0, CREATE_SUSPENDED);
+	CAddFileThread* addfilethread = static_cast<CAddFileThread *>(AfxBeginThread(RUNTIME_CLASS(CAddFileThread), THREAD_PRIORITY_BELOW_NORMAL,0, CREATE_SUSPENDED));
 	addfilethread->SetValues(this, nextfile->strDirectory, nextfile->strName, nextfile->strSharedDirectory);
 	addfilethread->ResumeThread();
 	// SLUGFILLER: SafeHash - nextfile deleting handled elsewhere
@@ -1518,8 +1517,8 @@ bool CSharedFileList::ShouldBeShared(const CString& strPath, const CString& strF
 
 bool CSharedFileList::ContainsSingleSharedFiles(CString strDirectory) const
 {
-	if (strDirectory.Right(1) != '\\')
-		strDirectory += '\\';
+	if (strDirectory.Right(1) != _T("\\"))
+		strDirectory += _T('\\');
 	for (POSITION pos = m_liSingleSharedFiles.GetHeadPosition(); pos != NULL;) {
 		if (strDirectory.CompareNoCase(m_liSingleSharedFiles.GetNext(pos).Left(strDirectory.GetLength())) == 0)
 			return true;
@@ -1822,9 +1821,9 @@ void CSharedFileList::LoadSingleSharedFilesList()
 
 bool CSharedFileList::AddSingleSharedDirectory(const CString& rstrFilePath, bool bNoUpdate)
 {
-	ASSERT( rstrFilePath.Right(1) == _T('\\') );
+	ASSERT( rstrFilePath.Right(1) == _T("\\") );
 	// check if we share this dir already or are not allowed to
-	if (ShouldBeShared(rstrFilePath, _T(""), false) || !thePrefs.IsShareableDirectory(rstrFilePath))
+	if (ShouldBeShared(rstrFilePath, CString(), false) || !thePrefs.IsShareableDirectory(rstrFilePath))
 		return false;
 	thePrefs.shareddir_list.AddTail(rstrFilePath); // adds the new directory as shared, GUI updates need to be done by the caller
 
@@ -1863,7 +1862,7 @@ CString CSharedFileList::GetPseudoDirName(const CString& strDirectoryName)
 
 	// create a new Pseudoname
 	CString strDirectoryTmp = strDirectoryName;
-	if (strDirectoryTmp.Right(1) == _T('\\'))
+	if (strDirectoryTmp.Right(1) == _T("\\"))
 		strDirectoryTmp.Truncate(strDirectoryTmp.GetLength() - 1);
 
 	CString strPseudoName;

@@ -48,7 +48,7 @@ public:
 	virtual ~CTaskbarNotifier();
 
 	int Create(CWnd *pWndParent);
-	BOOL LoadConfiguration(LPCTSTR pszFileName);
+	BOOL LoadConfiguration(LPCTSTR pszFilePath);
 	void Show(LPCTSTR pszCaption, int nMsgType, LPCTSTR pszLink, BOOL bAutoClose = TRUE);
 	void ShowLastHistoryMessage();
 	int GetMessageType();

@@ -24,7 +24,7 @@ protected:
 	bool SetDefaultContextMenuPos();
 
 	virtual void PreSubclassWindow();
-	virtual void DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct);
+	virtual void DrawItem(LPDRAWITEMSTRUCT lpDIS);
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 
 	DECLARE_MESSAGE_MAP()

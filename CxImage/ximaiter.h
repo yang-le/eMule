@@ -42,8 +42,8 @@ protected:
 	CxImage *ima;
 public:
 	// Constructors
-	CImageIterator ( void );
-	explicit CImageIterator ( CxImage *image );
+	CImageIterator();
+	explicit CImageIterator(CxImage *imageImpl);
 	operator CxImage* () const;
 
 	// Iterators
@@ -74,7 +74,7 @@ public:
 
 /////////////////////////////////////////////////////////////////////
 inline
-CImageIterator::CImageIterator(void)
+CImageIterator::CImageIterator()
 {
 	ima = 0;
 	IterImage = 0;

@@ -52,10 +52,10 @@ protected:
 
 	void Localize();
 	void UpdateArchiveDisplay(bool doscan);
-	int ShowISOResults(int ret, archiveScannerThreadParams_s* tp);
-	int ShowZipResults(int ret, archiveScannerThreadParams_s* tp);
-	int ShowRarResults(int ret, archiveScannerThreadParams_s* tp);
-	int ShowAceResults(int ret, archiveScannerThreadParams_s* tp);
+	int ShowISOResults(int succ, archiveScannerThreadParams_s* tp);
+	int ShowZipResults(int succ, archiveScannerThreadParams_s* tp);
+	int ShowRarResults(int succ, archiveScannerThreadParams_s* tp);
+	int ShowAceResults(int succ, archiveScannerThreadParams_s* tp);
 	LRESULT ShowScanResults(WPARAM, LPARAM lParam);
 
 	static UINT RunArchiveScanner(LPVOID pParam);

@@ -88,4 +88,4 @@ struct SSearchParams
 	}
 };
 
-bool GetSearchPacket(CSafeMemFile* data, SSearchParams* pParams, bool bTargetSupports64Bit, bool* pbPacketUsing64Bit);
+bool GetSearchPacket(CSafeMemFile* pData, SSearchParams* pParams, bool bTargetSupports64Bit, bool* pbPacketUsing64Bit);

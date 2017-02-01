@@ -54,7 +54,7 @@ protected:
 	CStringArray m_astrSkinPaths;
 	CBitmap		m_bmpBack;
 
-	void ChangeToolbarBitmap(const CString& rstrPath, bool bRefresh);
+	void ChangeToolbarBitmap(const CString& path, bool bRefresh);
 	void ChangeTextLabelStyle(EToolbarLabelType eLabelType, bool bRefresh, bool bForceUpdateButtons = false);
 	void UpdateIdealSize();
 	void SetAllButtonsStrings();

@@ -22,21 +22,21 @@ enum EDebugLogPriority: int {
 #define	LOG_DONTNOTIFY	0x40
 
 
-void Log(LPCTSTR pszLine, ...);
-void LogError(LPCTSTR pszLine, ...);
-void LogWarning(LPCTSTR pszLine, ...);
+void Log(LPCTSTR pszFmt, ...);
+void LogError(LPCTSTR pszFmt, ...);
+void LogWarning(LPCTSTR pszFmt, ...);
 
-void Log(UINT uFlags, LPCTSTR pszLine, ...);
-void LogError(UINT uFlags, LPCTSTR pszLine, ...);
-void LogWarning(UINT uFlags, LPCTSTR pszLine, ...);
+void Log(UINT uFlags, LPCTSTR pszFmt, ...);
+void LogError(UINT uFlags, LPCTSTR pszFmt, ...);
+void LogWarning(UINT uFlags, LPCTSTR pszFmt, ...);
 
-void DebugLog(LPCTSTR pszLine, ...);
-void DebugLogError(LPCTSTR pszLine, ...);
-void DebugLogWarning(LPCTSTR pszLine, ...);
+void DebugLog(LPCTSTR pszFmt, ...);
+void DebugLogError(LPCTSTR pszFmt, ...);
+void DebugLogWarning(LPCTSTR pszFmt, ...);
 
-void DebugLog(UINT uFlags, LPCTSTR pszLine, ...);
-void DebugLogError(UINT uFlags, LPCTSTR pszLine, ...);
-void DebugLogWarning(UINT uFlags, LPCTSTR pszLine, ...);
+void DebugLog(UINT uFlags, LPCTSTR pszFmt, ...);
+void DebugLogError(UINT uFlags, LPCTSTR pszFmt, ...);
+void DebugLogWarning(UINT uFlags, LPCTSTR pszFmt, ...);
 
 void LogV(UINT uFlags, LPCTSTR pszFmt, va_list argp);
 
@@ -44,7 +44,7 @@ void AddLogLine(bool bAddToStatusBar, LPCTSTR pszLine, ...);
 void AddDebugLogLine(bool bAddToStatusBar, LPCTSTR pszLine, ...);
 void AddDebugLogLine(EDebugLogPriority Priority, bool bAddToStatusBar, LPCTSTR pszLine, ...);
 
-void AddLogTextV(UINT uFlags, EDebugLogPriority dlpPriority, LPCTSTR pszLine, va_list argp);
+void AddLogTextV(UINT uFlags, EDebugLogPriority dlpPriority, LPCTSTR pszLine, va_list argptr);
 
 
 ///////////////////////////////////////////////////////////////////////////////

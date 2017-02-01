@@ -542,7 +542,7 @@ public:
 	void     SetDateTime(HTREEITEM hItem, const SYSTEMTIME& st);
 
 	//Adding an IP Address selector to an item
-	BOOL     AddIPAddress(HTREEITEM hItem, CRuntimeClass* pRuntimeClassIPAddress, DWORD dwItemData = (DWORD)-1);
+	BOOL     AddIPAddress(HTREEITEM hItem, CRuntimeClass* pRuntimeClassDateTime, DWORD dwItemData = (DWORD)-1);
 	DWORD    GetIPAddress(HTREEITEM hItem) const;
 	void     SetIPAddress(HTREEITEM hItem, DWORD dwAddress);
 

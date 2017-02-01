@@ -399,7 +399,7 @@ void CUpDownClient::AddReqBlock(Requested_Block_Struct* reqblock, bool bSignalIO
 			return;
 		}
 
-		if (srcfile->IsPartFile() && !((CPartFile*)srcfile)->IsComplete(reqblock->StartOffset,reqblock->EndOffset-1, true))
+		if (srcfile->IsPartFile() && !static_cast<CPartFile *>(srcfile)->IsComplete(reqblock->StartOffset,reqblock->EndOffset-1, true))
 		{
 			DebugLogWarning(_T("AddReqBlock: %s, %s"), (LPCTSTR)GetResString(IDS_ERR_INCOMPLETEBLOCK), (LPCTSTR)DbgGetClientInfo(), (LPCTSTR)srcfile->GetFileName());
 			delete reqblock;
