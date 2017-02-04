@@ -583,9 +583,10 @@ void  CSharedFileDetailsModelessSheet::SetFiles(CTypedPtrList<CPtrList, CShareab
 
 LRESULT CSharedFileDetailsModelessSheet::OnDataChanged(WPARAM, LPARAM)
 {
-//When "Content" tab is visible, it grabs focus from shared files list when data change
-	CWnd *ctl = GetFocus();
+//When using up/down keys in shared files list, "Content" tab grabs focus on archives
+	CWnd* pWndFocus = GetFocus();
 	UpdateFileDetailsPages(this, m_wndArchiveInfo, m_wndMediaInfo);
-	ctl->SetFocus();
+	if (pWndFocus) //try to stay in file list
+		pWndFocus->SetFocus();
 	return 1;
 }

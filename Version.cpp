@@ -28,4 +28,3 @@ const UINT CemuleApp::m_nVersionMjr = VERSION_MJR;
 const UINT CemuleApp::m_nVersionMin = VERSION_MIN;
 const UINT CemuleApp::m_nVersionUpd = VERSION_UPDATE;
 const UINT CemuleApp::m_nVersionBld = VERSION_BUILD;
-

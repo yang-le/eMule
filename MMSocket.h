@@ -50,32 +50,31 @@ class CMMData: public CSafeMemFile
 public:
 	CMMData(char* pData,uint32 nSize):CSafeMemFile((BYTE*)pData,nSize)	{}
 
-	uint8	ReadByte(){
+	uint8	ReadByte() {
 		uint8 buf;
 		Read(&buf,1);
 		return buf;
 	}
-	uint16	ReadShort(){
+	uint16	ReadShort() {
 		uint16 buf;
 		Read(&buf,2);
 		return buf;
 	}
-	uint32	ReadInt(){
+	uint32 ReadInt() {
 		uint32 buf;
 		Read(&buf,4);
 		return buf;
 	}
-	uint64	ReadInt64(){
+	uint64 ReadInt64() {
 		uint64 buf;
 		Read(&buf,8);
 		return buf;
 	}
-	CString ReadString(){
-		uint8 buf;
+	CString ReadString() {
 		char str[256];
-		buf = ReadByte();
-		Read(str,buf);
-		return CString(str,buf);
+		uint8 buf = ReadByte();
+		Read(str, buf);
+		return CString(str, buf);
 	}
 };
 

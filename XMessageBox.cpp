@@ -1744,8 +1744,8 @@ INT_PTR CALLBACK CXDialogTemplate::MsgBoxDlgProc(HWND hwnd,
 
 				// next fill message background
 				rect.bottom = Me->m_msgrect.bottom;
-				if (Me->m_hBackgroundBrush)
-					::FillRect(hdc, &rect, Me->m_hBackgroundBrush);
+
+				::FillRect(hdc, &rect, Me->m_hBackgroundBrush);
 
 				return TRUE;
 			}

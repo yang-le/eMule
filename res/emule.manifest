@@ -4,7 +4,7 @@
                     name="eMule"
                     processorArchitecture="x86"
                     publicKeyToken="0000000000000000"
-                    version="0.50.1.35"
+                    version="0.50.1.36"
   />
   <description>eMule by http://www.emule-project.net</description>
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">

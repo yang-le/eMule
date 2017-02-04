@@ -123,7 +123,7 @@ public:
 	uint32	GetBlobSize() const		{ ASSERT(IsBlob());		return m_nBlobSize; }
 	const	BYTE* GetBlob() const	{ ASSERT(IsBlob());		return m_pData; }
 
-	void SetInt(UINT uVal);
+	void SetInt(uint32 uVal);
 	void SetInt64(uint64 uVal);
 	void SetStr(LPCTSTR pszVal);
 

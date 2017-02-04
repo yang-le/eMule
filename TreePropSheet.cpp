@@ -337,14 +337,10 @@ void CTreePropSheet::RefillPageTree()
 		// Get title and image of the page
 		CString	strPagePath;
 
-		TCITEM	ti;
-		ZeroMemory(&ti, sizeof(ti));
+		TCITEM ti = {};
 		ti.mask = TCIF_TEXT|TCIF_IMAGE;
 		ti.cchTextMax = MAX_PATH;
 		ti.pszText = strPagePath.GetBuffer(ti.cchTextMax);
-		ASSERT(ti.pszText);
-		if (!ti.pszText)
-			return;
 
 		pTabCtrl->GetItem(nPage, &ti);
 		ti.pszText[ti.cchTextMax - 1] = _T('\0');
@@ -936,11 +932,10 @@ LRESULT CTreePropSheet::OnRemovePage(WPARAM wParam, LPARAM lParam)
 LRESULT CTreePropSheet::OnSetCurSel(WPARAM wParam, LPARAM lParam)
 {
 	LRESULT	lResult = DefWindowProc(PSM_SETCURSEL, wParam, lParam);
-	if (!m_bTreeViewMode)
-		return lResult;
-
-	SelectCurrentPageTreeItem();
-	UpdateCaption();
+	if (m_bTreeViewMode) {
+		SelectCurrentPageTreeItem();
+		UpdateCaption();
+	}
 	return lResult;
 }
 
@@ -948,11 +943,10 @@ LRESULT CTreePropSheet::OnSetCurSel(WPARAM wParam, LPARAM lParam)
 LRESULT CTreePropSheet::OnSetCurSelId(WPARAM wParam, LPARAM lParam)
 {
 	LRESULT	lResult = DefWindowProc(PSM_SETCURSEL, wParam, lParam);
-	if (!m_bTreeViewMode)
-		return lResult;
-
-	SelectCurrentPageTreeItem();
-	UpdateCaption();
+	if (m_bTreeViewMode) {
+		SelectCurrentPageTreeItem();
+		UpdateCaption();
+	}
 	return lResult;
 }
 

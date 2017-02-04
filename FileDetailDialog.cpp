@@ -51,75 +51,42 @@ bool NeedArchiveInfoPage(const CSimpleArray<CObject*>* paItems)
 }
 
 void UpdateFileDetailsPages(CListViewPropertySheet *pSheet,
-							CResizablePage *pArchiveInfo, CResizablePage *pMediaInfo)
+	CResizablePage *pArchiveInfo, CResizablePage *pMediaInfo)
 {
-	if (pSheet->GetItems().GetSize() == 1)
-	{
-		bool bUpdateWindow = false;
+	if (pSheet->GetItems().GetSize() == 1) {
 		CPropertyPage *pActivePage = pSheet->GetActivePage();
-		bool bNeedArchiveInfoPage = NeedArchiveInfoPage(&pSheet->GetItems());
-		if (bNeedArchiveInfoPage)
-		{
-			bool bFound = false;
-			for (int i = 0; !bFound && i < pSheet->GetPages().GetSize(); ++i) {
-				if (pSheet->GetPages()[i] == pArchiveInfo)
-					bFound = true;
-			}
-
-			int iMediaInfoPage = pSheet->GetPageIndex(pMediaInfo);
-			bool bMediaInfoPageWasActive = false;
-			if (iMediaInfoPage >= 0) {
-				if (pActivePage == pMediaInfo)
-					bMediaInfoPageWasActive = true;
-				if (!bUpdateWindow) {
-					pSheet->SetRedraw(FALSE);
-					bUpdateWindow = true;
-				}
-				pSheet->RemovePage(pMediaInfo);
-			}
-
-			if (!bFound) {
-				ASSERT( iMediaInfoPage >= 0 );
-				if (!bUpdateWindow) {
-					pSheet->SetRedraw(FALSE);
-					bUpdateWindow = true;
-				}
-				pSheet->InsertPage(iMediaInfoPage, pArchiveInfo);
-				if (bMediaInfoPageWasActive)
-					pSheet->SetActivePage(iMediaInfoPage);
-			}
+		CResizablePage *pToShow, *pToHide;
+		if (NeedArchiveInfoPage(&pSheet->GetItems())) {
+			pToHide = pMediaInfo;
+			pToShow = pArchiveInfo;
+		} else {
+			pToHide = pArchiveInfo;
+			pToShow = pMediaInfo;
 		}
-		else
-		{
-			bool bFound = false;
-			for (int i = 0; !bFound && i < pSheet->GetPages().GetSize(); ++i) {
-				if (pSheet->GetPages()[i] == pMediaInfo)
-					bFound = true;
-			}
 
-			int iArchiveInfoPage = pSheet->GetPageIndex(pArchiveInfo);
-			bool bArchiveInfoPageWasActive = false;
-			if (iArchiveInfoPage >= 0) {
-				if (pActivePage == pArchiveInfo)
-					bArchiveInfoPageWasActive = true;
-				if (!bUpdateWindow) {
-					pSheet->SetRedraw(FALSE);
-					bUpdateWindow = true;
-				}
-				pSheet->RemovePage(pArchiveInfo);
-			}
-
-			if (!bFound) {
-				ASSERT( iArchiveInfoPage >= 0 );
-				if (!bUpdateWindow) {
-					pSheet->SetRedraw(FALSE);
-					bUpdateWindow = true;
-				}
-				pSheet->InsertPage(iArchiveInfoPage, pMediaInfo);
-				if (bArchiveInfoPageWasActive)
-					pSheet->SetActivePage(pMediaInfo);
-			}
+		int iPage = pSheet->GetPageIndex(pToHide);
+		bool bUpdateWindow = (iPage >= 0);
+		if (bUpdateWindow) {
+			pSheet->SetRedraw(FALSE);
+			pSheet->RemovePage(pToHide);
 		}
+
+		bool bFound = false;
+		for (int i = 0; !bFound && i < pSheet->GetPages().GetSize(); ++i)
+			if (pSheet->GetPages()[i] == pToShow)
+				bFound = true;
+
+		if (!bFound) {
+			ASSERT(iPage >= 0);
+			if (!bUpdateWindow) {
+				pSheet->SetRedraw(FALSE);
+				bUpdateWindow = true;
+			}
+			pSheet->InsertPage(iPage, pToShow);
+			if (pActivePage == pToHide)
+				pSheet->SetActivePage(iPage);
+		}
+
 		if (bUpdateWindow) {
 			pSheet->SetRedraw(TRUE);
 			pSheet->Invalidate();

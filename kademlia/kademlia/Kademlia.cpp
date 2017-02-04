@@ -511,31 +511,32 @@ bool CKademlia::IsRunning()
 	return m_bRunning;
 }
 
-bool CKademlia::FindNodeIDByIP(CKadClientSearcher& rRequester, uint32 dwIP, uint16 nTCPPort, uint16 nUDPPort) {
-	if (!IsRunning() || m_pInstance == NULL || GetUDPListener() == NULL || GetRoutingZone() == NULL){
-		ASSERT( false );
+bool CKademlia::FindNodeIDByIP(CKadClientSearcher& rRequester, uint32 dwIP, uint16 nTCPPort, uint16 nUDPPort)
+{
+	if (!IsRunning() || m_pInstance == NULL || GetUDPListener() == NULL || GetRoutingZone() == NULL) {
+		ASSERT(false);
 		return false;
 	}
 	// first search our known contacts if we can deliver a result without asking, otherwise forward the request
 	CContact* pContact;
-	if ((pContact = GetRoutingZone()->GetContact(ntohl(dwIP), nTCPPort, true)) != NULL){
+	if ((pContact = GetRoutingZone()->GetContact(ntohl(dwIP), nTCPPort, true)) != NULL) {
 		uchar uchID[16];
 		pContact->GetClientID().ToByteArray(uchID);
 		rRequester.KadSearchNodeIDByIPResult(KCSR_SUCCEEDED, uchID);
 		return true;
 	}
-	else
-		return GetUDPListener()->FindNodeIDByIP(&rRequester, ntohl(dwIP), nTCPPort, nUDPPort);
+	return GetUDPListener()->FindNodeIDByIP(&rRequester, ntohl(dwIP), nTCPPort, nUDPPort);
 }
 
-bool CKademlia::FindIPByNodeID(CKadClientSearcher& rRequester, const uchar* pachNodeID){
-	if (!IsRunning() || m_pInstance == NULL || GetUDPListener() == NULL){
-		ASSERT( false );
+bool CKademlia::FindIPByNodeID(CKadClientSearcher& rRequester, const uchar* pachNodeID)
+{
+	if (!IsRunning() || m_pInstance == NULL || GetUDPListener() == NULL) {
+		ASSERT(false);
 		return false;
 	}
 	// first search our known contacts if we can deliver a result without asking, otherwise forward the request
-	CContact* pContact;
-	if ((pContact = GetRoutingZone()->GetContact(CUInt128(pachNodeID))) != NULL){
+	CContact* pContact = GetRoutingZone()->GetContact(CUInt128(pachNodeID));
+	if (pContact != NULL) {
 		// make sure that this entry is not too old, otherwise just do a search to be sure
 		if (pContact->GetLastSeen() != 0 && time(NULL) - pContact->GetLastSeen() < MIN2S(30)) {
 			rRequester.KadSearchIPByNodeIDResult(KCSR_SUCCEEDED, ntohl(pContact->GetIPAddress()), pContact->GetTCPPort());
@@ -545,9 +546,10 @@ bool CKademlia::FindIPByNodeID(CKadClientSearcher& rRequester, const uchar* pach
 	return CSearchManager::FindNodeSpecial(CUInt128(pachNodeID), &rRequester);
 }
 
-void CKademlia::CancelClientSearch(CKadClientSearcher& rFromRequester){
-	if (m_pInstance == NULL || GetUDPListener() == NULL){
-		ASSERT( false );
+void CKademlia::CancelClientSearch(CKadClientSearcher& rFromRequester)
+{
+	if (m_pInstance == NULL || GetUDPListener() == NULL) {
+		ASSERT(false);
 		return;
 	}
 	GetUDPListener()->ExpireClientSearch(&rFromRequester);

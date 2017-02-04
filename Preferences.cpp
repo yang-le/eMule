@@ -731,12 +731,12 @@ bool CPreferences::IsTempFile(const CString& rstrDirectory, const CString& rstrN
 	// do not share a file from the temp directory, if it matches one of the following patterns
 	CString strNameLower(rstrName);
 	strNameLower.MakeLower();
-	strNameLower += L"|"; // append an EOS character which we can query for
+	strNameLower += _T("|"); // append an EOS character which we can query for
 	static LPCTSTR _apszNotSharedExts[] = {
-		L"%u.part" L"%c",
-		L"%u.part.met" L"%c",
-		L"%u.part.met" PARTMET_BAK_EXT L"%c",
-		L"%u.part.met" PARTMET_TMP_EXT L"%c"
+		_T("%u.part") _T("%c"),
+		_T("%u.part.met") _T("%c"),
+		_T("%u.part.met") PARTMET_BAK_EXT _T("%c"),
+		_T("%u.part.met") PARTMET_TMP_EXT _T("%c")
 	};
 	for (unsigned i = 0; i < _countof(_apszNotSharedExts); ++i) {
 		UINT uNum;

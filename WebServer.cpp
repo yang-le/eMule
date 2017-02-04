@@ -362,7 +362,7 @@ void CWebServer::ProcessURL(const ThreadData& Data)
 		return;
 
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
+	if (pThis == NULL)
 		return;
 
 	SetThreadLocale(thePrefs.GetLanguageID());
@@ -396,21 +396,17 @@ void CWebServer::ProcessURL(const ThreadData& Data)
 	// check for being banned
 	int myfaults=0;
 	for (int i = 0; i<pThis->m_Params.badlogins.GetSize(); ++i) {
-		if (pThis->m_Params.badlogins[i].timestamp < now-MIN2MS(15)) {
+		if (pThis->m_Params.badlogins[i].timestamp < now-MIN2MS(15))
 			pThis->m_Params.badlogins.RemoveAt(i);	// remove outdated entries
-			continue;
-		}
-
-		if (pThis->m_Params.badlogins[i].datalen == myip)
-			++myfaults;
+		else
+			if (pThis->m_Params.badlogins[i].datalen == myip)
+				++myfaults;
 	}
-	if (myfaults>4) {
+	if (myfaults > 4) {
 		Data.pSocket->SendContent(CT2CA(HTTPInit), _GetPlainResString(IDS_ACCESSDENIED));
 		CoUninitialize();
 		return;
 	}
-
-
 
 	justAddLink=false;
 	long lSession = 0;
@@ -442,12 +438,12 @@ void CWebServer::ProcessURL(const ThreadData& Data)
 			SendMessage(theApp.emuledlg->m_hWnd,WEB_GUI_INTERACTION,WEBGUIIA_UPDATEMYINFO,0);
 
 			AddLogLine(true, GetResString(IDS_WEB_ADMINLOGIN)+_T(" (%s)"), (LPCTSTR)ip);
-			login=true;
+			login = true;
 		}
 		else if(thePrefs.GetWSIsLowUserEnabled() && !thePrefs.GetWSLowPass().IsEmpty() && MD5Sum(_ParseURL(Data.sURL, _T("p"))).GetHashString() == thePrefs.GetWSLowPass())
 		{
 			Session ses;
-			ses.admin=false;
+			ses.admin = false;
 			ses.startTime = CTime::GetCurrentTime();
 			ses.lSession = lSession = GetRandomUInt32();
 			pThis->m_Params.Sessions.Add(ses);
@@ -500,7 +496,8 @@ void CWebServer::ProcessURL(const ThreadData& Data)
 			CoUninitialize();
 			return;
 		}
-		else if (_ParseURL(Data.sURL, _T("w")) == _T("shutdown") && IsSessionAdmin(Data,sSession))
+
+		if (_ParseURL(Data.sURL, _T("w")) == _T("shutdown") && IsSessionAdmin(Data,sSession))
 		{
 			_RemoveSession(Data, lSession);
 			// send answer ...
@@ -511,9 +508,9 @@ void CWebServer::ProcessURL(const ThreadData& Data)
 
 			CoUninitialize();
 			return;
-
 		}
-		else if (_ParseURL(Data.sURL, _T("w")) == _T("reboot") && IsSessionAdmin(Data,sSession))
+
+		if (_ParseURL(Data.sURL, _T("w")) == _T("reboot") && IsSessionAdmin(Data,sSession))
 		{
 			_RemoveSession(Data, lSession);
 
@@ -526,7 +523,8 @@ void CWebServer::ProcessURL(const ThreadData& Data)
 			CoUninitialize();
 			return;
 		}
-		else if (_ParseURL(Data.sURL, _T("w")) == _T("commentlist"))
+
+		if (_ParseURL(Data.sURL, _T("w")) == _T("commentlist"))
 		{
 			CString Out1 = _GetCommentlist(Data);
 
@@ -548,47 +546,40 @@ void CWebServer::ProcessURL(const ThreadData& Data)
 					CoUninitialize();
 					return;
 				}
-				else {
-					CFile file;
-					if(file.Open(kf->GetFilePath(), CFile::modeRead|CFile::shareDenyWrite|CFile::typeBinary))
-					{
-						EMFileSize filesize= kf->GetFileSize();
 
-						#define SENDFILEBUFSIZE 2048
-						char* buffer=(char*)malloc(SENDFILEBUFSIZE);
-						if (!buffer) {
-							Data.pSocket->SendReply( "HTTP/1.1 500 Internal Server Error\r\n" );
-							CoUninitialize();
-							return;
-						}
+				CFile file;
+				if(file.Open(kf->GetFilePath(), CFile::modeRead|CFile::shareDenyWrite|CFile::typeBinary)) {
+					EMFileSize filesize = kf->GetFileSize();
 
-						char szBuf[512];
-						int nLen = _snprintf(szBuf, _countof(szBuf), "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Description: \"%s\"\r\nContent-Disposition: attachment; filename=\"%s\";\r\nContent-Transfer-Encoding: binary\r\nContent-Length: %I64u\r\n\r\n",
-							(LPCSTR)CT2CA(kf->GetFileName()),
-							(LPCSTR)CT2CA(kf->GetFileName()),
-							(uint64)filesize);
-						Data.pSocket->SendData(szBuf, nLen);
-
-						DWORD r=1;
-						while (filesize > 0ull && r) {
-							r=file.Read(buffer,SENDFILEBUFSIZE);
-							filesize -= (uint64)r;
-							Data.pSocket->SendData(buffer, r);
-						}
-						file.Close();
-
-						free(buffer);
+					#define SENDFILEBUFSIZE 2048
+					char* buffer = (char*)malloc(SENDFILEBUFSIZE);
+					if (!buffer) {
+						Data.pSocket->SendReply("HTTP/1.1 500 Internal Server Error\r\n");
 						CoUninitialize();
 						return;
 					}
-					else {
-						Data.pSocket->SendReply( "HTTP/1.1 404 File not found\r\n" );
-						CoUninitialize();
-						return;
+
+					char szBuf[512];
+					LPCSTR fname = (LPCSTR)CT2CA(kf->GetFileName());
+					int nLen = _snprintf(szBuf, _countof(szBuf),
+										"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Description: \"%s\"\r\nContent-Disposition: attachment; filename=\"%s\";\r\nContent-Transfer-Encoding: binary\r\nContent-Length: %I64u\r\n\r\n",
+										fname, fname, (uint64)filesize);
+					Data.pSocket->SendData(szBuf, nLen);
+
+					UINT r = 1;
+					while (filesize > 0ull && r) {
+						r = file.Read(buffer, SENDFILEBUFSIZE);
+						filesize -= r;
+						Data.pSocket->SendData(buffer, r);
 					}
-				}
+					file.Close();
+
+					free(buffer);
+				} else
+					Data.pSocket->SendReply( "HTTP/1.1 404 File not found\r\n" );
+				CoUninitialize();
+				return;
 			}
-
 		}
 
 		Out += _GetHeader(Data, lSession);
@@ -630,9 +621,8 @@ void CWebServer::ProcessURL(const ThreadData& Data)
 			bool bOk = false;
 			try
 			{
-				const CStringA* pstrOutA;
 				CStringA strA(wc2utf8(Out));
-				pstrOutA = &strA;
+				const CStringA* pstrOutA = &strA;
 				uLongf destLen = pstrOutA->GetLength() + 1024;
 				gzipOut = new TCHAR[destLen];
 				if(_GzipCompress((Bytef*)gzipOut, &destLen, (const Bytef*)(LPCSTR)*pstrOutA, pstrOutA->GetLength(), Z_DEFAULT_COMPRESSION) == Z_OK)
@@ -667,8 +657,6 @@ void CWebServer::ProcessURL(const ThreadData& Data)
 			Out += _GetLoginScreen(Data);
 	}
 
-
-
 	// send answer ...
 	if(!isUseGzip)
 		Data.pSocket->SendContent(CT2CA(HTTPInit), Out);
@@ -678,8 +666,7 @@ void CWebServer::ProcessURL(const ThreadData& Data)
 	delete[] gzipOut;
 
 #ifndef _DEBUG
-	}
-	catch(...){
+	} catch(...) {
 		AddDebugLogLine( DLP_VERYHIGH, false, _T("*** Unknown exception in CWebServer::ProcessURL") );
 		ASSERT(0);
 	}
@@ -725,9 +712,8 @@ CString CWebServer::_ParseURL(const CString& URL, const CString& fieldname)
 		}
 		if (findPos > -1) {
 			Parameter = Parameter.Mid(findPos + findLength, Parameter.GetLength());
-			if (Parameter.Find(_T('&')) > -1) {
+			if (Parameter.Find(_T('&')) > -1)
 				Parameter = Parameter.Mid(0, Parameter.Find(_T('&')));
-			}
 
 			value = Parameter;
 
@@ -746,7 +732,7 @@ CString CWebServer::_GetHeader(const ThreadData& Data, long lSession)
 {
 	const CWebServer *pThis = (CWebServer *)Data.pThis;
 	if (pThis == NULL)
-		return _T("");
+		return CString();
 
 	CString sSession; sSession.Format(_T("%ld"), lSession);
 
@@ -976,7 +962,7 @@ CString CWebServer::_GetFooter(const ThreadData& Data)
 {
 	const CWebServer *pThis = (CWebServer *)Data.pThis;
 	if (pThis == NULL)
-		return _T("");
+		return CString();
 
 	return pThis->m_Templates.sFooter;
 }
@@ -984,8 +970,8 @@ CString CWebServer::_GetFooter(const ThreadData& Data)
 CString CWebServer::_GetServerList(const ThreadData& Data)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
-		return _T("");
+	if (pThis == NULL)
+		CString();
 
 	CString sSession = _ParseURL(Data.sURL, _T("ses"));
 	bool bAdmin = IsSessionAdmin(Data,sSession);
@@ -1575,7 +1561,7 @@ CString CWebServer::_GetTransferList(const ThreadData& Data)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
 	if (pThis == NULL)
-		return _T("");
+		return CString();
 
 	CString HTTPTemp;
 	CString sSession = _ParseURL(Data.sURL, _T("ses"));
@@ -3030,7 +3016,7 @@ CString CWebServer::_GetSharedFilesList(const ThreadData& Data)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
 	if (pThis == NULL)
-		return _T("");
+		return CString();
 
 	CString	sSession = _ParseURL(Data.sURL, _T("ses"));
 	bool	bAdmin = IsSessionAdmin(Data,sSession);
@@ -3636,7 +3622,7 @@ CString CWebServer::_GetGraphs(const ThreadData& Data)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
 	if (pThis == NULL)
-		return _T("");
+		return CString();
 
 	CString Out = pThis->m_Templates.sGraphs;
 
@@ -3669,7 +3655,7 @@ CString CWebServer::_GetGraphs(const ThreadData& Data)
 	Out.Replace(_T("[GraphConnections]"), strGraphCons);
 
 	Out.Replace(_T("[TxtDownload]"), _GetPlainResString(IDS_TW_DOWNLOADS));
-		Out.Replace(_T("[TxtUpload]"), _GetPlainResString(IDS_TW_UPLOADS));
+	Out.Replace(_T("[TxtUpload]"), _GetPlainResString(IDS_TW_UPLOADS));
 	Out.Replace(_T("[TxtTime]"), _GetPlainResString(IDS_TIME));
 	Out.Replace(_T("[KByteSec]"), _GetPlainResString(IDS_KBYTESPERSEC));
 	Out.Replace(_T("[TxtConnections]"), _GetPlainResString(IDS_SP_ACTCON));
@@ -3690,13 +3676,13 @@ CString CWebServer::_GetGraphs(const ThreadData& Data)
 CString CWebServer::_GetAddServerBox(const ThreadData& Data)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
-		return _T("");
+	if (pThis == NULL)
+		return CString();
 
 	CString sSession = _ParseURL(Data.sURL, _T("ses"));
 
 	if (!IsSessionAdmin(Data,sSession))
-		return _T("");
+		return CString();
 
 	CString resultlog = _SpecialChars(theApp.emuledlg->GetLastLogEntry() ); //Pick-up last line of the log
 
@@ -3743,7 +3729,7 @@ CString CWebServer::_GetAddServerBox(const ThreadData& Data)
 	}
 	else if(_ParseURL(Data.sURL, _T("updateservermetfromurl")) == _T("true"))
 	{
-		CString url=_ParseURL(Data.sURL, _T("servermeturl"));
+		CString url = _ParseURL(Data.sURL, _T("servermeturl"));
 		const TCHAR* urlbuf=url;
 		SendMessage(theApp.emuledlg->m_hWnd, WEB_GUI_INTERACTION, WEBGUIIA_UPDATESERVERMETFROMURL, (LPARAM)urlbuf);
 
@@ -3782,8 +3768,8 @@ CString CWebServer::_GetAddServerBox(const ThreadData& Data)
 CString CWebServer::_GetLog(const ThreadData& Data)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
-		return _T("");
+	if (pThis == NULL)
+		return CString();
 
 
 	CString sSession = _ParseURL(Data.sURL, _T("ses"));
@@ -3794,7 +3780,7 @@ CString CWebServer::_GetLog(const ThreadData& Data)
 		theApp.emuledlg->ResetLog();
 
 	Out.Replace(_T("[Clear]"), _GetPlainResString(IDS_PW_RESET));
-	Out.Replace(_T("[Log]"), _SpecialChars(theApp.emuledlg->GetAllLogEntries(),false)+ _T("<br /><a name=\"end\"></a>") );
+	Out.Replace(_T("[Log]"), _SpecialChars(theApp.emuledlg->GetAllLogEntries(), false)+ _T("<br /><a name=\"end\"></a>") );
 	Out.Replace(_T("[Session]"), sSession);
 
 	return Out;
@@ -3804,8 +3790,8 @@ CString CWebServer::_GetLog(const ThreadData& Data)
 CString CWebServer::_GetServerInfo(const ThreadData& Data)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
-		return _T("");
+	if (pThis == NULL)
+		return CString();
 
 	CString sSession = _ParseURL(Data.sURL, _T("ses"));
 
@@ -3824,8 +3810,8 @@ CString CWebServer::_GetServerInfo(const ThreadData& Data)
 CString CWebServer::_GetDebugLog(const ThreadData& Data)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
-		return _T("");
+	if (pThis == NULL)
+		return CString();
 
 	CString sSession = _ParseURL(Data.sURL, _T("ses"));
 
@@ -3844,8 +3830,8 @@ CString CWebServer::_GetDebugLog(const ThreadData& Data)
 CString CWebServer::_GetMyInfo(const ThreadData& Data)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
-		return _T("");
+	if (pThis == NULL)
+		return CString();
 
 	_ParseURL(Data.sURL, _T("ses"));
 	CString Out = pThis->m_Templates.sMyInfoLog;
@@ -3858,8 +3844,8 @@ CString CWebServer::_GetMyInfo(const ThreadData& Data)
 CString CWebServer::_GetKadDlg(const ThreadData& Data)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
-		return _T("");
+	if (pThis == NULL)
+		return CString();
 
 	//if (!thePrefs.GetNetworkKademlia()) {
 	//	CString buffer;
@@ -3943,8 +3929,8 @@ CString CWebServer::_GetKadDlg(const ThreadData& Data)
 CString CWebServer::_GetStats(const ThreadData& Data)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
-		return _T("");
+	if (pThis == NULL)
+		return CString();
 
 	(void)_ParseURL(Data.sURL, _T("ses"));
 
@@ -3961,8 +3947,8 @@ CString CWebServer::_GetStats(const ThreadData& Data)
 CString CWebServer::_GetPreferences(const ThreadData& Data)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
-		return _T("");
+	if (pThis == NULL)
+		return CString();
 
 	CString sSession = _ParseURL(Data.sURL, _T("ses"));
 
@@ -4080,8 +4066,8 @@ CString CWebServer::_GetPreferences(const ThreadData& Data)
 CString CWebServer::_GetLoginScreen(const ThreadData& Data)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
-		return _T("");
+	if (pThis == NULL)
+		return CString();
 
 	(void)_ParseURL(Data.sURL, _T("ses"));
 
@@ -4157,7 +4143,7 @@ int CWebServer::_GzipCompress(Bytef *dest, uLongf *destLen, const Bytef *source,
 bool CWebServer::_IsLoggedIn(const ThreadData& Data, long lSession)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
+	if (pThis == NULL)
 		return false;
 
 	_RemoveTimeOuts(Data);
@@ -4269,13 +4255,13 @@ void CWebServer::_GetPlainResString(CString *pstrOut, UINT nID, bool noquote)
 CString CWebServer::_GetDownloadGraph(const ThreadData& Data, const CString& filehash)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
-		return _T("");
+	if (pThis == NULL)
+		return CString();
 
 	CPartFile* pPartFile;
 	uchar fileid[16];
 	if (filehash.GetLength()!=32 || !DecodeBase16(filehash, filehash.GetLength(), fileid, ARRSIZE(fileid)))
-		return _T("");
+		return CString();
 
 	CString Out;
 	CString progresscolor[12];
@@ -4354,8 +4340,8 @@ CString CWebServer::_GetDownloadGraph(const ThreadData& Data, const CString& fil
 CString	CWebServer::_GetSearch(const ThreadData& Data)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
-		return _T("");
+	if (pThis == NULL)
+		return CString();
 
 	int cat=_tstoi(_ParseURL(Data.sURL, _T("cat")));
 	CString sSession = _ParseURL(Data.sURL, _T("ses"));
@@ -4828,8 +4814,8 @@ CString CWebServer::_GetRemoteLinkAddedOk(const ThreadData& Data)
 {
 
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
-		return _T("");
+	if (pThis == NULL)
+		return CString();
 
 	CString Out = _T("");
 
@@ -4850,8 +4836,8 @@ CString CWebServer::_GetRemoteLinkAddedFailed(const ThreadData& Data)
 {
 
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
-		return _T("");
+	if (pThis == NULL)
+		return CString();
 
 	CString Out = _T("");
 
@@ -4865,7 +4851,7 @@ CString CWebServer::_GetRemoteLinkAddedFailed(const ThreadData& Data)
 void CWebServer::_SetLastUserCat(const ThreadData& Data, long lSession, int cat)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
+	if (pThis == NULL)
 		return;
 
 	_RemoveTimeOuts(Data);
@@ -4886,7 +4872,7 @@ void CWebServer::_SetLastUserCat(const ThreadData& Data, long lSession, int cat)
 int CWebServer::_GetLastUserCat(const ThreadData& Data, long lSession)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if(pThis == NULL)
+	if (pThis == NULL)
 		return 0;
 
 	_RemoveTimeOuts(Data);
@@ -5034,7 +5020,7 @@ CString CWebServer::_GetCommentlist(const ThreadData& Data)
 	uchar FileHash[16];
 	CPartFile* pPartFile = theApp.downloadqueue->GetFileByID(_GetFileHash(_ParseURL(Data.sURL, _T("filehash")), FileHash) );
 	if (!pPartFile)
-		return _T("");
+		return CString();
 
 	CWebServer *pThis = (CWebServer *)Data.pThis;
 	CString Out = pThis->m_Templates.sCommentList;

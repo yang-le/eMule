@@ -1649,31 +1649,27 @@ const bool CUpDownClient::SwapToRightFile(CPartFile* SwapTo, CPartFile* cur_file
         AddDebugLogLine(DLP_LOW, false, _T("oooo Debug: doAgressiveSwapping: %s"), doAgressiveSwapping?_T("true"):_T("false"));
     }
 
-    if (!SwapTo) {
+    if (!SwapTo)
         return true;
-    }
 
-    if(!curFileisNNPFile && cur_file->GetSourceCount() < cur_file->GetMaxSources() ||
-        curFileisNNPFile && cur_file->GetSourceCount() < cur_file->GetMaxSources()*.8) {
+    if (!curFileisNNPFile && cur_file->GetSourceCount() < cur_file->GetMaxSources()
+		|| curFileisNNPFile && cur_file->GetSourceCount() < cur_file->GetMaxSources()*.8) {
 
-            if(printDebug)
+            if (printDebug)
                 AddDebugLogLine(DLP_VERYLOW, false, _T("oooo Debug: cur_file does probably not have too many sources."));
 
-            if(SwapTo->GetSourceCount() > SwapTo->GetMaxSources() ||
-               SwapTo->GetSourceCount() >= SwapTo->GetMaxSources()*.8 &&
-               SwapTo == reqfile &&
-               (
-                GetDownloadState() == DS_LOWTOLOWIP ||
-                GetDownloadState() == DS_REMOTEQUEUEFULL
-               )
+            if (SwapTo->GetSourceCount() > SwapTo->GetMaxSources()
+				||	SwapTo->GetSourceCount() >= SwapTo->GetMaxSources()*.8
+					&& SwapTo == reqfile
+					&& (GetDownloadState() == DS_LOWTOLOWIP || GetDownloadState() == DS_REMOTEQUEUEFULL)
               ) {
-                if(printDebug)
+                if (printDebug)
                     AddDebugLogLine(DLP_VERYLOW, false, _T("oooo Debug: SwapTo is about to be deleted due to too many sources on that file, so we can steal it."));
                 return true;
             }
 
             if(ignoreSuspensions  || !IsSwapSuspended(cur_file, doAgressiveSwapping, curFileisNNPFile)) {
-                if(printDebug)
+                if (printDebug)
                     AddDebugLogLine(DLP_VERYLOW, false, _T("oooo Debug: No suspend block."));
 
                 DWORD tempTick = ::GetTickCount();

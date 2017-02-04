@@ -1430,7 +1430,7 @@ ACE_BlockFile *CArchiveRecovery::scanForAceFileHeader(CFile *input, archiveScann
 
 				memcpy(&newblock->HEAD_TYPE,
 					mempos,
-					sizeof(ACE_BlockFile)- 4- (2*sizeof(newblock->COMMENT)) - sizeof(newblock->COMM_SIZE) - sizeof(newblock->data_offset) );
+					sizeof(ACE_BlockFile) - 4 - (2*sizeof(newblock->COMMENT)) - sizeof(newblock->COMM_SIZE) - sizeof(newblock->data_offset) );
 
 				mempos+=sizeof(ACE_BlockFile)-sizeof(newblock->HEAD_CRC)-sizeof(newblock->HEAD_SIZE) - (2*sizeof(newblock->COMMENT)) - sizeof(newblock->COMM_SIZE) - sizeof(newblock->data_offset);
 
@@ -1440,8 +1440,12 @@ ACE_BlockFile *CArchiveRecovery::scanForAceFileHeader(CFile *input, archiveScann
 					continue;
 				}
 
-				if (newblock->FNAME_SIZE>0) {
+				if (newblock->FNAME_SIZE > 0) {
 					newblock->FNAME = (char*)calloc(newblock->FNAME_SIZE+1,1);
+					if (newblock->FNAME == NULL) {
+						delete newblock;
+						continue;
+					}
 					memcpy(newblock->FNAME, mempos,newblock->FNAME_SIZE);
 					mempos+=newblock->FNAME_SIZE;
 				}
@@ -1450,10 +1454,14 @@ ACE_BlockFile *CArchiveRecovery::scanForAceFileHeader(CFile *input, archiveScann
 
 				if (mempos < &blockmem[0] + newblock->HEAD_SIZE) {
 					memcpy(&newblock->COMM_SIZE, mempos, sizeof(newblock->COMM_SIZE));
-					mempos+=sizeof(newblock->COMM_SIZE);
+					mempos += sizeof(newblock->COMM_SIZE);
 
 					if (newblock->COMM_SIZE) {
 						newblock->COMMENT = (char*)calloc(newblock->COMM_SIZE,1);
+						if (newblock->COMMENT == NULL) {
+							delete newblock;
+							continue;
+						}
 						memcpy(newblock->COMMENT, mempos,newblock->COMM_SIZE);
 						mempos+=newblock->COMM_SIZE;
 					}
@@ -1631,16 +1639,16 @@ void CArchiveRecovery::ISOReadDirectory(archiveScannerThreadParams_s* aitp, UINT
 		ProcessProgress(aitp, pos2);
 
 		// selfdir, parentdir ( "." && ".." ) handling
-		if ((file->fileFlags & ISO_DIRECTORY) && file->nameLen==1 && (file->name[0]==0x00 || file->name[0]==0x01 ) )
+		if ((file->fileFlags & ISO_DIRECTORY) && file->nameLen==1 && (file->name[0] == 0x00 || file->name[0] == 0x01 ) )
 		{
 			// get size of directory and calculate how many sectors are spanned
-			if (file->name[0]==0x00)
+			if (file->name[0] == 0x00)
 				iSecsOfDirectoy = (int)(file->dataSize / aitp->ai->isoInfos.secSize);
 			delete file;
 			continue;
 		}
 
-		if (aitp->ai->isoInfos.iJolietUnicode){
+		if (aitp->ai->isoInfos.iJolietUnicode) {
 			for (unsigned int i = 0; i < file->nameLen/sizeof(uint16); i++)
 				file->name[i] = _byteswap_ushort(file->name[i]);
 		}
@@ -1655,8 +1663,7 @@ void CArchiveRecovery::ISOReadDirectory(archiveScannerThreadParams_s* aitp, UINT
 		if (file->fileFlags & ISO_DIRECTORY)
 		{
 			// store dir entry
-			CString pathNew;
-			pathNew = currentDirName + filename + _T('\\');
+			CString pathNew = currentDirName + filename + _T('\\');
 			free(file->name);
 			file->name = _tcsdup(pathNew);
 			aitp->ai->ISOdir->AddTail(file);
@@ -1669,8 +1676,7 @@ void CArchiveRecovery::ISOReadDirectory(archiveScannerThreadParams_s* aitp, UINT
 		else
 		{
 			// store file entry
-			CString fullpath;
-			fullpath = currentDirName + filename;
+			CString fullpath = currentDirName + filename;
 			free(file->name);
 			file->name = _tcsdup(fullpath);
 			aitp->ai->ISOdir->AddTail(file);
