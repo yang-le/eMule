@@ -610,10 +610,7 @@ void CIrcChannelTabCtrl::SetActivity(Channel *pChannel, bool bFlag)
 			}
 		}
 	}
-	if (bFlag)
-		HighlightItem(iIndex, TRUE);
-	else
-		HighlightItem(iIndex, FALSE);
+	HighlightItem(iIndex, bFlag ? TRUE : FALSE);
 }
 
 void CIrcChannelTabCtrl::ChatSend(CString sSend)
@@ -727,7 +724,7 @@ void CIrcChannelTabCtrl::ChatSend(CString sSend)
 		return;
 	}
 
-	sBuild = _T("PRIVMSG ") + m_pCurrentChannel->m_sName + _T(" :") + sSend;
+	sBuild.Format(_T("PRIVMSG %s :%s"), (LPCTSTR)m_pCurrentChannel->m_sName, (LPCTSTR)sSend);
 	m_pParent->m_pIrcMain->SendString(sBuild);
 	m_pParent->AddMessageF(m_pCurrentChannel->m_sName, m_pParent->m_pIrcMain->GetNick(), _T("%s"), (LPCTSTR)sSend);
 }
@@ -780,7 +777,7 @@ LRESULT CIrcChannelTabCtrl::OnQueryTab(WPARAM wParam, LPARAM /*lParam*/)
 	TCITEM item;
 	item.mask = TCIF_PARAM;
 	GetItem(iItem, &item);
-	Channel* pPartChannel = (Channel*)item.lParam;
+	const Channel* pPartChannel = reinterpret_cast<Channel *>(item.lParam);
 	if (pPartChannel && (pPartChannel->m_eType == Channel::ctNormal || pPartChannel->m_eType == Channel::ctPrivate))
 		return 0;
 	return 1;

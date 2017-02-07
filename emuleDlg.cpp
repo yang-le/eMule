@@ -741,7 +741,7 @@ void CALLBACK CemuleDlg::StartupTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT_PTR /*
 				theApp.emuledlg->serverwnd->GetDlgItem(IDC_ED2KCONNECT)->EnableWindow(thePrefs.GetNetworkED2K());
 				theApp.emuledlg->kademliawnd->UpdateControlsState(); //application state change is not tracked - force update
 
-				if (thePrefs.DoAutoConnect())
+				if (bconnect && thePrefs.DoAutoConnect())
 					theApp.emuledlg->OnBnClickedConnect();
 
 #ifdef HAVE_WIN7_SDK_H
@@ -875,19 +875,18 @@ HCURSOR CemuleDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-void CemuleDlg::OnBnClickedConnect(){
+void CemuleDlg::OnBnClickedConnect()
+{
 	if (!theApp.IsConnected())
 		//connect if not currently connected
-		if (!theApp.serverconnect->IsConnecting() && !Kademlia::CKademlia::IsRunning() ){
+		if (!theApp.serverconnect->IsConnecting() && !Kademlia::CKademlia::IsRunning()) {
 			StartConnection();
-		}
-		else {
+		} else {
+			CloseConnection();
+		} else {
+			//disconnect if currently connected
 			CloseConnection();
 		}
-	else{
-		//disconnect if currently connected
-		CloseConnection();
-	}
 }
 
 void CemuleDlg::ResetServerInfo(){
@@ -1447,47 +1446,49 @@ LRESULT CemuleDlg::OnWMData(WPARAM /*wParam*/, LPARAM lParam)
 
 		if (clcommand==_T("connect")) {
 			StartConnection();
-			return true;
+			return TRUE;
 		}
 		if (clcommand==_T("disconnect")) {
 			theApp.serverconnect->Disconnect();
-			return true;
+			return TRUE;
 		}
 		if (clcommand==_T("resume")) {
 			theApp.downloadqueue->StartNextFile();
-			return true;
+			return TRUE;
 		}
 		if (clcommand==_T("exit"))
 		{
 			theApp.m_app_state = APP_STATE_SHUTTINGDOWN; // do no ask to close
 			OnClose();
-			return true;
+			return TRUE;
 		}
 		if (clcommand==_T("restore")) {
 			RestoreWindow();
-			return true;
+			return TRUE;
 		}
 		if (clcommand==_T("reloadipf")) {
 			theApp.ipfilter->LoadFromDefaultFile();
-			return true;
+			return TRUE;
 		}
-		if (clcommand.Left(7).MakeLower()==_T("limits=") && clcommand.GetLength()>8) {
+		if (clcommand.Left(7)==_T("limits=") && clcommand.GetLength()>8) {
 			CString down;
-			CString up=clcommand.Mid(7);
-			int pos=up.Find(_T(','));
-			if (pos>0) {
-				down=up.Mid(pos+1);
-				up=up.Left(pos);
+			CString up = clcommand.Mid(7);
+			int pos = up.Find(_T(','));
+			if (pos > 0) {
+				down = up.Mid(pos+1);
+				up = up.Left(pos);
 			}
-			if (!down.IsEmpty()) thePrefs.SetMaxDownload(_tstoi(down));
-			if (!up.IsEmpty()) thePrefs.SetMaxUpload(_tstoi(up));
+			if (!down.IsEmpty())
+				thePrefs.SetMaxDownload(_tstoi(down));
+			if (!up.IsEmpty())
+				thePrefs.SetMaxUpload(_tstoi(up));
 
-			return true;
+			return TRUE;
 		}
 
 		if (clcommand==_T("help") || clcommand==_T("/?")) {
 			// show usage
-			return true;
+			return TRUE;
 		}
 
 		if (clcommand==_T("status")) {
@@ -1507,11 +1508,11 @@ LRESULT CemuleDlg::OnWMData(WPARAM /*wParam*/, LPARAM lParam)
 
 				fclose(file);
 			}
-			return true;
+			return TRUE;
 		}
 		// show "unknown command";
 	}
-	return true;
+	return TRUE;
 }
 
 LRESULT CemuleDlg::OnFileHashed(WPARAM wParam, LPARAM lParam)
@@ -2071,7 +2072,7 @@ void CemuleDlg::AddSpeedSelectorMenus(CMenu* addToMenu)
 
 void CemuleDlg::StartConnection()
 {
-	if ((!theApp.serverconnect->IsConnecting() && !theApp.serverconnect->IsConnected())
+	if (!theApp.serverconnect->IsConnecting() && !theApp.serverconnect->IsConnected()
 	  || !Kademlia::CKademlia::IsRunning()) {
 		// UPnP is still trying to open the ports. In order to not get a LowID by connecting to the servers / kad before
 		// the ports are opened we delay the connection until UPnP gets a result or the timeout is reached

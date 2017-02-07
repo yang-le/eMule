@@ -64,33 +64,30 @@ struct ConvertJob {
 };
 
 
-int CPartFileConvert::ScanFolderToAdd(const CString& folder,bool deletesource) {
-	int count=0;
+int CPartFileConvert::ScanFolderToAdd(const CString& folder,bool deletesource)
+{
 	CFileFind finder;
-	BOOL bWorking;
-
-	bWorking = finder.FindFile(folder+_T("\\*.part.met"));
+	int count = 0;
+	BOOL bWorking = finder.FindFile(folder+_T("\\*.part.met"));
 	while (bWorking) {
-		bWorking=finder.FindNextFile();
-		ConvertToeMule(finder.GetFilePath(),deletesource);
-		count++;
+		bWorking = finder.FindNextFile();
+		ConvertToeMule(finder.GetFilePath(), deletesource);
+		++count;
 	}
 	// Shareaza
 	bWorking = finder.FindFile(folder+_T("\\*.sd"));
 	while (bWorking) {
-		bWorking=finder.FindNextFile();
-		ConvertToeMule(finder.GetFilePath(),deletesource);
-		count++;
+		bWorking = finder.FindNextFile();
+		ConvertToeMule(finder.GetFilePath(), deletesource);
+		++count;
 	}
-
 
 	bWorking = finder.FindFile(folder+_T("\\*.*"));
 	while (bWorking) {
         bWorking = finder.FindNextFile();
-		if (finder.IsDirectory() && finder.GetFileName()[0]!=_T('.'))
-			count += ScanFolderToAdd(finder.GetFilePath(),deletesource);
+		if (finder.IsDirectory() && finder.GetFileName().Left(1) != _T("."))
+			count += ScanFolderToAdd(finder.GetFilePath(), deletesource);
 	}
-
 	return count;
 }
 
@@ -101,7 +98,7 @@ void CPartFileConvert::ConvertToeMule(const CString& folder, bool deletesource)
 
 	//if ( folder.Left(strlen(thePrefs.GetTempDir())).CompareNoCase(thePrefs.GetTempDir()) ==0 ) return;
 
-	ConvertJob* newjob=new ConvertJob ();
+	ConvertJob* newjob = new ConvertJob();
 	newjob->folder=folder;
 	newjob->removeSource=deletesource;
 	newjob->state=CONV_QUEUE;
@@ -113,9 +110,10 @@ void CPartFileConvert::ConvertToeMule(const CString& folder, bool deletesource)
 	StartThread();
 }
 
-void CPartFileConvert::StartThread() {
-	if (convertPfThread==NULL)
-		convertPfThread=AfxBeginThread(run, NULL);
+void CPartFileConvert::StartThread()
+{
+	if (convertPfThread == NULL)
+		convertPfThread = AfxBeginThread(run, NULL);
 }
 
 UINT AFX_CDECL CPartFileConvert::run(LPVOID /*lpParam*/)
@@ -123,28 +121,29 @@ UINT AFX_CDECL CPartFileConvert::run(LPVOID /*lpParam*/)
 	DbgSetThreadName("Partfile-Converter");
 	InitThreadLocale();
 
-	int imported=0;
+	int imported = 0;
 
-	for (;;)
-	{
+	for (;;) {
 		// search next queued job and start it
-		pfconverting=NULL;
+		pfconverting = NULL;
 		for (POSITION pos = m_jobs.GetHeadPosition(); pos != NULL;) {
 			pfconverting = m_jobs.GetNext(pos);
-			if (pfconverting->state==CONV_QUEUE) break; else pfconverting=NULL;
+			if (pfconverting->state == CONV_QUEUE)
+				break;
+			else
+				pfconverting = NULL;
 		}
-		if (pfconverting!=NULL) {
-			pfconverting->state=CONV_INPROGRESS;
-			UpdateGUI(pfconverting);
-			pfconverting->state=performConvertToeMule(pfconverting->folder);
-
-			if (pfconverting->state==CONV_OK)
-				++imported;
-
-			UpdateGUI(pfconverting);
-			AddLogLine(true,GetResString(IDS_IMP_STATUS), (LPCTSTR)pfconverting->folder, (LPCTSTR)GetReturncodeText(pfconverting->state));
-		} else
+		if (pfconverting == NULL)
 			break;// nothing more to do now
+		pfconverting->state = CONV_INPROGRESS;
+		UpdateGUI(pfconverting);
+		pfconverting->state = performConvertToeMule(pfconverting->folder);
+
+		if (pfconverting->state == CONV_OK)
+			++imported;
+
+		UpdateGUI(pfconverting);
+		AddLogLine(true, GetResString(IDS_IMP_STATUS), (LPCTSTR)pfconverting->folder, (LPCTSTR)GetReturncodeText(pfconverting->state));
 	}
 
 	// clean up
@@ -153,7 +152,7 @@ UINT AFX_CDECL CPartFileConvert::run(LPVOID /*lpParam*/)
 	if (imported)
 		theApp.sharedfiles->PublishNextTurn();
 
-	convertPfThread=NULL;
+	convertPfThread = NULL;
 	return 0;
 }
 
@@ -403,33 +402,32 @@ int CPartFileConvert::performConvertToeMule(CString folder)
 	return CONV_OK;
 }
 
-void CPartFileConvert::UpdateGUI(float percent, const CString& text, bool fullinfo) {
-
-	if (m_convertgui==NULL) return;
+void CPartFileConvert::UpdateGUI(float percent, const CString& text, bool fullinfo)
+{
+	if (m_convertgui == NULL)
+		return;
 
 	m_convertgui->pb_current.SetPos((int)percent);
 	CString buffer;
-	buffer.Format(_T("%.2f %%"),percent);
-	m_convertgui->SetDlgItemText(IDC_CONV_PROZENT,buffer);
+	buffer.Format(_T("%.2f %%"), percent);
+	m_convertgui->SetDlgItemText(IDC_CONV_PROZENT, buffer);
 
 	if (!text.IsEmpty())
-		m_convertgui->SetDlgItemText(IDC_CONV_PB_LABEL,text);
+		m_convertgui->SetDlgItemText(IDC_CONV_PB_LABEL, text);
 
-	if (fullinfo) {
-		m_convertgui->SetDlgItemText(IDC_CURJOB,pfconverting->folder);
-	}
+	if (fullinfo)
+		m_convertgui->SetDlgItemText(IDC_CURJOB, pfconverting->folder);
 }
 
-void CPartFileConvert::UpdateGUI(ConvertJob* job){
-
-	if (m_convertgui==NULL) return;
-
-	m_convertgui->UpdateJobInfo(job);
+void CPartFileConvert::UpdateGUI(ConvertJob* job)
+{
+	if (m_convertgui != NULL)
+		m_convertgui->UpdateJobInfo(job);
 }
 
 
-void CPartFileConvert::ShowGUI(){
-
+void CPartFileConvert::ShowGUI()
+{
 	if (m_convertgui)
 		m_convertgui->SetForegroundWindow();
 	else {
@@ -456,7 +454,7 @@ void CPartFileConvert::ShowGUI(){
 
 		if (!pfconverting==NULL)  {
 			UpdateGUI(pfconverting);
-			UpdateGUI(50,GetResString(IDS_IMP_FETCHSTATUS),true);
+			UpdateGUI(50, GetResString(IDS_IMP_FETCHSTATUS), true);
 		}
 
 		Localize();
@@ -470,7 +468,8 @@ void CPartFileConvert::ShowGUI(){
 	}
 }
 
-void CPartFileConvert::Localize() {
+void CPartFileConvert::Localize()
+{
 	if (!m_convertgui)
 		return;
 
@@ -490,16 +489,16 @@ void CPartFileConvert::Localize() {
 	m_convertgui->SetWindowText(GetResString(IDS_IMPORTSPLPF));
 }
 
-void CPartFileConvert::CloseGUI(){
-
-	if (m_convertgui==NULL) return;
-
-	m_convertgui->DestroyWindow();
-	ClosedGUI();
-
+void CPartFileConvert::CloseGUI()
+{
+	if (m_convertgui !=NULL) {
+		m_convertgui->DestroyWindow();
+		ClosedGUI();
+	}
 }
 
-void CPartFileConvert::ClosedGUI() {
+void CPartFileConvert::ClosedGUI()
+{
 	m_convertgui=NULL;
 }
 
@@ -538,19 +537,41 @@ void CPartFileConvert::RemoveAllSuccJobs()
 	}
 }
 
-CString CPartFileConvert::GetReturncodeText(int ret) {
+CString CPartFileConvert::GetReturncodeText(int ret)
+{
+	UINT sid;
 	switch (ret) {
-		case CONV_OK				: return GetResString(IDS_DL_TRANSFCOMPL);
-		case CONV_INPROGRESS		: return GetResString(IDS_IMP_INPROGR);
-		case CONV_OUTOFDISKSPACE	: return GetResString(IDS_IMP_ERR_DISKSP);
-		case CONV_PARTMETNOTFOUND	: return GetResString(IDS_IMP_ERR_PARTMETIO);
-		case CONV_IOERROR			: return GetResString(IDS_IMP_ERR_IO);
-		case CONV_FAILED			: return GetResString(IDS_IMP_ERR_FAILED);
-		case CONV_QUEUE				: return GetResString(IDS_IMP_STATUSQUEUED);
-		case CONV_ALREADYEXISTS		: return GetResString(IDS_IMP_ALRDWL);
-		case CONV_BADFORMAT			: return GetResString(IDS_IMP_ERR_BADFORMAT);
-		default: return _T("?");
+	case CONV_OK:
+		sid = IDS_DL_TRANSFCOMPL;
+		break;
+	case CONV_INPROGRESS:
+		sid = IDS_IMP_INPROGR;
+		break;
+	case CONV_OUTOFDISKSPACE:
+		sid = IDS_IMP_ERR_DISKSP;
+		break;
+	case CONV_PARTMETNOTFOUND:
+		sid = IDS_IMP_ERR_PARTMETIO;
+		break;
+	case CONV_IOERROR:
+		sid = IDS_IMP_ERR_IO;
+		break;
+	case CONV_FAILED:
+		sid = IDS_IMP_ERR_FAILED;
+		break;
+	case CONV_QUEUE:
+		sid = IDS_IMP_STATUSQUEUED;
+		break;
+	case CONV_ALREADYEXISTS:
+		sid = IDS_IMP_ALRDWL;
+		break;
+	case CONV_BADFORMAT:
+		sid = IDS_IMP_ERR_BADFORMAT;
+		break;
+	default:
+		return CString(_T("?"));
 	}
+	return GetResString(sid); 
 }
 
 
@@ -608,9 +629,9 @@ void CPartFileConvertDlg::PostNcDestroy()
 	delete this;
 }
 
-void CPartFileConvertDlg::OnAddFolder() {
+void CPartFileConvertDlg::OnAddFolder()
+{
 	// browse...
-
 	LPMALLOC pMalloc = NULL;
 	if (SHGetMalloc(&pMalloc) == NOERROR)
 	{
@@ -660,15 +681,13 @@ void CPartFileConvertDlg::OnAddFolder() {
 
 void CPartFileConvertDlg::UpdateJobInfo(ConvertJob* job)
 {
-	if (job==NULL) {
+	if (job == NULL) {
 		SetDlgItemText(IDC_CURJOB, GetResString(IDS_FSTAT_WAITING) );
 		SetDlgItemText(IDC_CONV_PROZENT, _T(""));
 		pb_current.SetPos(0);
-		SetDlgItemText(IDC_CONV_PB_LABEL,_T(""));
+		SetDlgItemText(IDC_CONV_PB_LABEL, _T(""));
 		return;
 	}
-
-	CString buffer;
 
 	// search jobitem in listctrl
 	LVFINDINFO find;
@@ -678,17 +697,18 @@ void CPartFileConvertDlg::UpdateJobInfo(ConvertJob* job)
 	if (itemnr != -1) {
 		joblist.SetItemText(itemnr,0, job->filename.IsEmpty()?job->folder:job->filename  );
 		joblist.SetItemText(itemnr,1, CPartFileConvert::GetReturncodeText(job->state) );
-		buffer.Empty();
+		CString buffer;
 		if (job->size>0)
 			buffer.Format(GetResString(IDS_IMP_SIZE), (LPCTSTR)CastItoXBytes(job->size, false, false), (LPCTSTR)CastItoXBytes(job->spaceneeded, false, false));
-		joblist.SetItemText(itemnr,2, buffer );
+		joblist.SetItemText(itemnr,2, buffer);
 		joblist.SetItemText(itemnr,3, job->filehash);
 //	} else {
 //		AddJob(job);	why???
 	}
 }
 
-void CPartFileConvertDlg::RemoveJob(ConvertJob* job) {
+void CPartFileConvertDlg::RemoveJob(ConvertJob* job)
+{
 	// search jobitem in listctrl
 	LVFINDINFO find;
 	find.flags = LVFI_PARAM;
@@ -698,22 +718,21 @@ void CPartFileConvertDlg::RemoveJob(ConvertJob* job) {
 		joblist.DeleteItem(itemnr);
 }
 
-void CPartFileConvertDlg::AddJob(ConvertJob* job) {
-    int ix=joblist.InsertItem(LVIF_TEXT|LVIF_PARAM,joblist.GetItemCount(),job->folder,0,0,0,(LPARAM)job);
-	joblist.SetItemText(ix,1,CPartFileConvert::GetReturncodeText(job->state));
+void CPartFileConvertDlg::AddJob(ConvertJob* job)
+{
+	int ix = joblist.InsertItem(LVIF_TEXT|LVIF_PARAM, joblist.GetItemCount(), job->folder, 0, 0, 0, (LPARAM)job);
+	joblist.SetItemText(ix, 1, CPartFileConvert::GetReturncodeText(job->state));
 }
 
-void CPartFileConvertDlg::RemoveSel() {
-	if (joblist.GetSelectedCount()==0) return;
+void CPartFileConvertDlg::RemoveSel()
+{
+	if (joblist.GetSelectedCount() == 0)
+		return;
 
-	ConvertJob* job;
-	POSITION pos = joblist.GetFirstSelectedItemPosition();
-	while(pos != NULL)
-	{
+	for (POSITION pos = joblist.GetFirstSelectedItemPosition(); pos != NULL;) {
 		int index = joblist.GetNextSelectedItem(pos);
-		if(index > -1)
-		{
-			job=(ConvertJob*)joblist.GetItemData(index);
+		if (index > -1) {
+			ConvertJob *job = (ConvertJob*)joblist.GetItemData(index);
 			if (job->state != CONV_INPROGRESS) {
 				RemoveJob(job); // from list
 				CPartFileConvert::RemoveJob(job);
@@ -723,21 +742,18 @@ void CPartFileConvertDlg::RemoveSel() {
 	}
 }
 
-void CPartFileConvertDlg::RetrySel(){
+void CPartFileConvertDlg::RetrySel()
+{
+	if (joblist.GetSelectedCount()==0)
+		return;
 
-	if (joblist.GetSelectedCount()==0) return;
-
-	ConvertJob* job;
-	POSITION pos = joblist.GetFirstSelectedItemPosition();
-	while(pos != NULL)
-	{
+	for (POSITION pos = joblist.GetFirstSelectedItemPosition(); pos != NULL;) {
 		int index = joblist.GetNextSelectedItem(pos);
-		if(index > -1)
-		{
-			job=(ConvertJob*)joblist.GetItemData(index);
+		if (index > -1) {
+			ConvertJob* job = (ConvertJob*)joblist.GetItemData(index);
 			if (job->state != CONV_OK && job->state !=CONV_INPROGRESS) {
 				UpdateJobInfo(job);
-				job->state=CONV_QUEUE;
+				job->state = CONV_QUEUE;
 			}
 		}
 	}

@@ -105,11 +105,11 @@ CColourPopup::CColourPopup()
 	Initialise();
 }
 
-CColourPopup::CColourPopup(CPoint p, COLORREF crColour, CWnd* pParentWnd,
-                           LPCTSTR szDefaultText /* = NULL */,
-                           LPCTSTR szCustomText  /* = NULL */,
-                           COLORREF* colourArray /* = NULL*/,
-                           int NumberOfColours /* = 0*/ )
+CColourPopup::CColourPopup(CPoint p, COLORREF crColour, CWnd* pParentWnd
+                          ,LPCTSTR szDefaultText /* = NULL */
+                          ,LPCTSTR szCustomText  /* = NULL */
+                          ,COLORREF* colourArray /* = NULL*/
+                          ,int NumberOfColours /* = 0*/ )
 {
 	colourArrayPassed = colourArray;//copy the pointer to the array of colours we will be using
 	if(colourArray && NumberOfColours)
@@ -121,8 +121,8 @@ CColourPopup::CColourPopup(CPoint p, COLORREF crColour, CWnd* pParentWnd,
 
 	m_crColour       = m_crInitialColour = crColour;
 	m_pParent        = pParentWnd;
-	m_strDefaultText = (szDefaultText)? szDefaultText : _T("");
-	m_strCustomText  = (szCustomText)?  szCustomText  : _T("");
+	m_strDefaultText = szDefaultText ? szDefaultText : _T("");
+	m_strCustomText  = szCustomText ?  szCustomText  : _T("");
 
 	CColourPopup::Create(p, crColour, pParentWnd, szDefaultText, szCustomText);
 }
@@ -275,8 +275,8 @@ BOOL CColourPopup::PreTranslateMessage(MSG* pMsg)
 // If an arrow key is pressed, then move the selection
 void CColourPopup::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
-	int row = GetRow(m_nCurrentSel),
-	          col = GetColumn(m_nCurrentSel);
+	int row = GetRow(m_nCurrentSel);
+	int col = GetColumn(m_nCurrentSel);
 
 	if (nChar == VK_DOWN)
 	{
@@ -518,41 +518,35 @@ int CColourPopup::GetIndex(int row, int col) const
 {
 	if ((row == CUSTOM_BOX_VALUE || col == CUSTOM_BOX_VALUE) && m_strCustomText.GetLength())
 		return CUSTOM_BOX_VALUE;
-	else if ((row == DEFAULT_BOX_VALUE || col == DEFAULT_BOX_VALUE) && m_strDefaultText.GetLength())
+	if ((row == DEFAULT_BOX_VALUE || col == DEFAULT_BOX_VALUE) && m_strDefaultText.GetLength())
 		return DEFAULT_BOX_VALUE;
-	else if (row < 0 || col < 0 || row >= m_nNumRows || col >= m_nNumColumns)
+	if (row < 0 || col < 0 || row >= m_nNumRows || col >= m_nNumColumns)
 		return INVALID_COLOUR;
-	else
-	{
-		if (row*m_nNumColumns + col >= m_nNumColours)
-			return INVALID_COLOUR;
-		else
-			return row*m_nNumColumns + col;
-	}
+	if (row*m_nNumColumns + col >= m_nNumColours)
+		return INVALID_COLOUR;
+	return row*m_nNumColumns + col;
 }
 
 int CColourPopup::GetRow(int nIndex) const
 {
 	if (nIndex == CUSTOM_BOX_VALUE && m_strCustomText.GetLength())
 		return CUSTOM_BOX_VALUE;
-	else if (nIndex == DEFAULT_BOX_VALUE && m_strDefaultText.GetLength())
+	if (nIndex == DEFAULT_BOX_VALUE && m_strDefaultText.GetLength())
 		return DEFAULT_BOX_VALUE;
-	else if (nIndex < 0 || nIndex >= m_nNumColours)
+	if (nIndex < 0 || nIndex >= m_nNumColours)
 		return INVALID_COLOUR;
-	else
-		return nIndex / m_nNumColumns;
+	return nIndex / m_nNumColumns;
 }
 
 int CColourPopup::GetColumn(int nIndex) const
 {
 	if (nIndex == CUSTOM_BOX_VALUE && m_strCustomText.GetLength())
 		return CUSTOM_BOX_VALUE;
-	else if (nIndex == DEFAULT_BOX_VALUE && m_strDefaultText.GetLength())
+	if (nIndex == DEFAULT_BOX_VALUE && m_strDefaultText.GetLength())
 		return DEFAULT_BOX_VALUE;
-	else if (nIndex < 0 || nIndex >= m_nNumColours)
+	if (nIndex < 0 || nIndex >= m_nNumColours)
 		return INVALID_COLOUR;
-	else
-		return nIndex % m_nNumColumns;
+	return nIndex % m_nNumColumns;
 }
 
 void CColourPopup::FindCellFromColour(COLORREF crColour)
@@ -563,7 +557,7 @@ void CColourPopup::FindCellFromColour(COLORREF crColour)
 		return;
 	}
 
-	for (int i = 0; i < m_nNumColours; i++)
+	for (int i = 0; i < m_nNumColours; ++i)
 	{
 		if (GetColour(i) == crColour)
 		{
@@ -572,10 +566,10 @@ void CColourPopup::FindCellFromColour(COLORREF crColour)
 		}
 	}
 
-	if (m_strCustomText.GetLength())
-		m_nChosenColourSel = CUSTOM_BOX_VALUE;
-	else
+	if (m_strCustomText.IsEmpty())
 		m_nChosenColourSel = INVALID_COLOUR;
+	else
+		m_nChosenColourSel = CUSTOM_BOX_VALUE;
 }
 
 // Gets the dimensions of the colour cell given by (row,col)
@@ -749,16 +743,16 @@ void CColourPopup::ChangeSelection(int nIndex)
 
 	// Store the current colour
 	if (m_nCurrentSel == CUSTOM_BOX_VALUE)
-		m_pParent->SendMessage(UM_CPN_SELCHANGE, (WPARAM) m_crInitialColour, 0);
+		m_pParent->SendMessage(UM_CPN_SELCHANGE, (WPARAM)m_crInitialColour, 0);
 	else if (m_nCurrentSel == DEFAULT_BOX_VALUE)
 	{
 		m_crColour = CLR_DEFAULT;
-		m_pParent->SendMessage(UM_CPN_SELCHANGE, (WPARAM) CLR_DEFAULT, 0);
+		m_pParent->SendMessage(UM_CPN_SELCHANGE, (WPARAM)CLR_DEFAULT, 0);
 	}
 	else
 	{
 		m_crColour = GetColour(m_nCurrentSel);
-		m_pParent->SendMessage(UM_CPN_SELCHANGE, (WPARAM) m_crColour, 0);
+		m_pParent->SendMessage(UM_CPN_SELCHANGE, (WPARAM)m_crColour, 0);
 	}
 }
 
@@ -784,7 +778,7 @@ void CColourPopup::EndSelection(int nMessage)
 	if (nMessage == UM_CPN_SELENDCANCEL)
 		m_crColour = m_crInitialColour;
 
-	m_pParent->SendMessage(nMessage, (WPARAM) m_crColour, 0);
+	m_pParent->SendMessage(nMessage, (WPARAM)m_crColour, 0);
 
 	// Kill focus bug fixed by Martin Wawrusch
 	if (!m_bChildWindowVisible)

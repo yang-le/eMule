@@ -266,7 +266,7 @@ CUpDownClient* CClientList::FindClientByIP(uint32 clientip, UINT port) const
 		if (cur_client->GetIP() == clientip && cur_client->GetUserPort() == port)
 			return cur_client;
 	}
-	return 0;
+	return NULL;
 }
 
 CUpDownClient* CClientList::FindClientByUserHash(const uchar* clienthash, uint32 dwIP, uint16 nTCPPort) const
@@ -292,7 +292,7 @@ CUpDownClient* CClientList::FindClientByIP(uint32 clientip) const
 		if (cur_client->GetIP() == clientip)
 			return cur_client;
 	}
-	return 0;
+	return NULL;
 }
 
 CUpDownClient* CClientList::FindClientByIP_UDP(uint32 clientip, UINT nUDPport) const
@@ -303,7 +303,7 @@ CUpDownClient* CClientList::FindClientByIP_UDP(uint32 clientip, UINT nUDPport) c
 		if (cur_client->GetIP() == clientip && cur_client->GetUDPPort() == nUDPport)
 			return cur_client;
 	}
-	return 0;
+	return NULL;
 }
 
 CUpDownClient* CClientList::FindClientByUserID_KadPort(uint32 clientID, uint16 kadPort) const
@@ -314,7 +314,7 @@ CUpDownClient* CClientList::FindClientByUserID_KadPort(uint32 clientID, uint16 k
 		if (cur_client->GetUserIDHybrid() == clientID && cur_client->GetKadPort() == kadPort)
 			return cur_client;
 	}
-	return 0;
+	return NULL;
 }
 
 CUpDownClient* CClientList::FindClientByIP_KadPort(uint32 ip, uint16 port) const
@@ -325,7 +325,7 @@ CUpDownClient* CClientList::FindClientByIP_KadPort(uint32 ip, uint16 port) const
 		if (cur_client->GetIP() == ip && cur_client->GetKadPort() == port)
 			return cur_client;
 	}
-	return 0;
+	return NULL;
 }
 
 CUpDownClient* CClientList::FindClientByServerID(uint32 uServerIP, uint32 uED2KUserID) const
@@ -337,14 +337,15 @@ CUpDownClient* CClientList::FindClientByServerID(uint32 uServerIP, uint32 uED2KU
 		if (cur_client->GetServerIP() == uServerIP && cur_client->GetUserIDHybrid() == uHybridUserID)
 			return cur_client;
 	}
-	return 0;
+	return NULL;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Banned clients
 
-void CClientList::AddBannedClient(uint32 dwIP){
+void CClientList::AddBannedClient(uint32 dwIP)
+{
 	m_bannedList.SetAt(dwIP, ::GetTickCount());
 }
 
@@ -358,11 +359,13 @@ bool CClientList::IsBannedClient(uint32 dwIP) const
 	return false;
 }
 
-void CClientList::RemoveBannedClient(uint32 dwIP){
+void CClientList::RemoveBannedClient(uint32 dwIP)
+{
 	m_bannedList.RemoveKey(dwIP);
 }
 
-void CClientList::RemoveAllBannedClients(){
+void CClientList::RemoveAllBannedClients()
+{
 	m_bannedList.RemoveAll();
 }
 

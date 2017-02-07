@@ -588,5 +588,5 @@ LRESULT CSharedFileDetailsModelessSheet::OnDataChanged(WPARAM, LPARAM)
 	UpdateFileDetailsPages(this, m_wndArchiveInfo, m_wndMediaInfo);
 	if (pWndFocus) //try to stay in file list
 		pWndFocus->SetFocus();
-	return 1;
+	return TRUE;
 }

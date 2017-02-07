@@ -177,26 +177,22 @@ END_MESSAGE_MAP()
 // Method:	CColorButton::OnSelEndOK()
 // Notes:	None.
 //***********************************************************************
-LRESULT CColorButton::OnSelEndOK(WPARAM /*wParam*/, LPARAM lParam)
+LRESULT CColorButton::OnSelEndOK(WPARAM wParam, LPARAM /*lParam*/)
 {
 	m_bPopupActive = FALSE;
 
-    COLORREF OldColor = m_Color;
+	COLORREF OldColor = m_Color;
+	Color = (COLORREF)wParam;
 
-	Color = (COLORREF)lParam;
+	CWnd *pParent = GetParent();
+	if (pParent) {
+		pParent->SendMessage(UM_CPN_CLOSEUP, wParam, (LPARAM)GetDlgCtrlID());
+		pParent->SendMessage(UM_CPN_SELENDOK, wParam, (LPARAM)GetDlgCtrlID());
+	}
 
-    CWnd *pParent = GetParent();
-
-    if (pParent)
-	{
-        pParent->SendMessage(UM_CPN_CLOSEUP, lParam, (WPARAM) GetDlgCtrlID());
-        pParent->SendMessage(UM_CPN_SELENDOK, lParam, (WPARAM) GetDlgCtrlID());
-    }
-
-    if (OldColor != m_Color)
-		if (pParent) pParent->SendMessage(UM_CPN_SELCHANGE, (m_Color!=CLR_DEFAULT)? m_Color:m_DefaultColor, (WPARAM) GetDlgCtrlID());
-
-    return TRUE;
+	if (OldColor != m_Color)
+		if (pParent) pParent->SendMessage(UM_CPN_SELCHANGE, (m_Color!=CLR_DEFAULT)? m_Color:m_DefaultColor, (LPARAM)GetDlgCtrlID());
+	return TRUE;
 }
 
 
@@ -204,21 +200,18 @@ LRESULT CColorButton::OnSelEndOK(WPARAM /*wParam*/, LPARAM lParam)
 // Method:	CColorButton::OnSelEndCancel()
 // Notes:	None.
 //***********************************************************************
-LRESULT CColorButton::OnSelEndCancel(WPARAM /*wParam*/, LPARAM lParam)
+LRESULT CColorButton::OnSelEndCancel(WPARAM wParam, LPARAM /*lParam*/)
 {
 	m_bPopupActive = FALSE;
 
-	Color = (COLORREF)lParam;
+	Color = (COLORREF)wParam;
 
-    CWnd *pParent = GetParent();
-
-    if (pParent)
-	{
-        pParent->SendMessage(UM_CPN_CLOSEUP, lParam, (WPARAM) GetDlgCtrlID());
-        pParent->SendMessage(UM_CPN_SELENDCANCEL, lParam, (WPARAM) GetDlgCtrlID());
-    }
-
-    return TRUE;
+	CWnd *pParent = GetParent();
+	if (pParent) {
+		pParent->SendMessage(UM_CPN_CLOSEUP, wParam, (LPARAM)GetDlgCtrlID());
+		pParent->SendMessage(UM_CPN_SELENDCANCEL, wParam, (LPARAM)GetDlgCtrlID());
+	}
+	return TRUE;
 }
 
 
@@ -226,16 +219,15 @@ LRESULT CColorButton::OnSelEndCancel(WPARAM /*wParam*/, LPARAM lParam)
 // Method:	CColorButton::OnSelChange()
 // Notes:	None.
 //***********************************************************************
-LRESULT CColorButton::OnSelChange(WPARAM /*wParam*/, LPARAM lParam)
+LRESULT CColorButton::OnSelChange(WPARAM wParam, LPARAM /*lParam*/)
 {
-    if (m_bTrackSelection)
-		Color = (COLORREF)lParam;
+	if (m_bTrackSelection)
+		Color = (COLORREF)wParam;
 
-    CWnd *pParent = GetParent();
-
-    if (pParent) pParent->SendMessage(UM_CPN_SELCHANGE, (m_Color!=CLR_DEFAULT)? m_Color:m_DefaultColor, (WPARAM) GetDlgCtrlID());	//Cax2 defaultcol fix
-
-    return TRUE;
+	CWnd *pParent = GetParent();
+	if (pParent)
+		pParent->SendMessage(UM_CPN_SELCHANGE, (m_Color!=CLR_DEFAULT)? m_Color:m_DefaultColor, (LPARAM)GetDlgCtrlID());	//Cax2 defaultcol fix
+	return TRUE;
 }
 
 //***********************************************************************
@@ -270,7 +262,7 @@ BOOL CColorButton::OnClicked()
     CWnd *pParent = GetParent();
 
     if (pParent)
-        pParent->SendMessage(UM_CPN_DROPDOWN, (LPARAM)m_Color, (WPARAM) GetDlgCtrlID());
+        pParent->SendMessage(UM_CPN_DROPDOWN, (WPARAM)m_Color, (LPARAM)GetDlgCtrlID());
 
     return TRUE;
 }

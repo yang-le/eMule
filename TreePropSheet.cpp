@@ -906,12 +906,10 @@ void CTreePropSheet::OnDestroy()
 LRESULT CTreePropSheet::OnAddPage(WPARAM wParam, LPARAM lParam)
 {
 	LRESULT	lResult = DefWindowProc(PSM_ADDPAGE, wParam, lParam);
-	if (!m_bTreeViewMode)
-		return lResult;
-
-	RefillPageTree();
-	SelectCurrentPageTreeItem();
-
+	if (m_bTreeViewMode) {
+		RefillPageTree();
+		SelectCurrentPageTreeItem();
+	}
 	return lResult;
 }
 
@@ -919,12 +917,10 @@ LRESULT CTreePropSheet::OnAddPage(WPARAM wParam, LPARAM lParam)
 LRESULT CTreePropSheet::OnRemovePage(WPARAM wParam, LPARAM lParam)
 {
 	LRESULT	lResult = DefWindowProc(PSM_REMOVEPAGE, wParam, lParam);
-	if (!m_bTreeViewMode)
-		return lResult;
-
-	RefillPageTree();
-	SelectCurrentPageTreeItem();
-
+	if (m_bTreeViewMode) {
+		RefillPageTree();
+		SelectCurrentPageTreeItem();
+	}
 	return lResult;
 }
 

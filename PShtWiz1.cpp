@@ -259,7 +259,7 @@ public:
 	{
 	}
 
-	void ValidateShownPorts();
+//	void ValidateShownPorts();
 
 	virtual ~CPPgWiz1Ports();
 	virtual BOOL OnInitDialog();
@@ -366,18 +366,21 @@ BOOL CPPgWiz1Ports::OnKillActive(){
 	return CDlgPageWizard::OnKillActive();
 }
 
-void CPPgWiz1Ports::OnOK(){
+void CPPgWiz1Ports::OnOK()
+{
 	ResetUPnPProgress();
 	CDlgPageWizard::OnOK();
 }
 
-void CPPgWiz1Ports::OnCancel(){
+void CPPgWiz1Ports::OnCancel()
+{
 	ResetUPnPProgress();
 	CDlgPageWizard::OnCancel();
 }
 
 // ** UPnP Button stuff
-void CPPgWiz1Ports::OnStartUPnP() {
+void CPPgWiz1Ports::OnStartUPnP()
+{
 	CDlgPageWizard::OnApply();
 	theApp.emuledlg->StartUPnP(true, GetTCPPort(), GetUDPPort());
 
@@ -385,7 +388,7 @@ void CPPgWiz1Ports::OnStartUPnP() {
 	GetDlgItem(IDC_UPNPSTART)->EnableWindow(FALSE);
 	m_nUPnPTicks = 0;
 	static_cast<CProgressCtrl *>(GetDlgItem(IDC_UPNPPROGRESS))->SetPos(0);
-	VERIFY( SetTimer(1, SEC2MS(1), NULL) );
+	VERIFY(SetTimer(1, SEC2MS(1), NULL));
 }
 
 void CPPgWiz1Ports::OnTimer(UINT_PTR /*nIDEvent*/){

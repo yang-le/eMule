@@ -48,7 +48,7 @@ CCatDialog::CCatDialog(int index)
 	m_myCat = thePrefs.GetCategory(index);
 	if (m_myCat == NULL)
 		return;
-	m_pacRegExp=NULL;
+	m_pacRegExp = NULL;
 	newcolor = (DWORD)-1;
 }
 
@@ -179,8 +179,8 @@ void CCatDialog::OnBnClickedOk()
 	if (m_myCat->strIncomingPath.CompareNoCase(oldpath)!=0)
 		theApp.sharedfiles->Reload();
 
-	m_myCat->color=newcolor;
-    m_myCat->prio=m_prio.GetCurSel();
+	m_myCat->color = newcolor;
+    m_myCat->prio = m_prio.GetCurSel();
 	GetDlgItem(IDC_AUTOCATEXT)->GetWindowText(m_myCat->autocat);
 
 	GetDlgItemText(IDC_REGEXP,m_myCat->regexp);
@@ -199,9 +199,9 @@ void CCatDialog::OnBnClickedOk()
 	OnOK();
 }
 
-LRESULT CCatDialog::OnSelChange(WPARAM /*wParam*/, LPARAM lParam)
+LRESULT CCatDialog::OnSelChange(WPARAM wParam, LPARAM lParam)
 {
-	if (lParam == CLR_DEFAULT)
+	if (wParam == CLR_DEFAULT)
 		newcolor = (DWORD)-1;
 	else
 		newcolor = m_ctlColor.GetColor();

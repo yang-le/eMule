@@ -1189,10 +1189,9 @@ LRESULT CIrcWnd::OnQueryTab(WPARAM wParam, LPARAM)
 	item.mask = TCIF_PARAM;
 	m_wndChanSel.GetItem((int)wParam, &item);
 	const Channel* pPartChannel = reinterpret_cast<Channel *>(item.lParam);
-	if (pPartChannel && pPartChannel->m_eType == Channel::ctNormal
-	  && (m_bConnected || pPartChannel->m_eType == Channel::ctPrivate))
-		return 0;
-	return 1;
+	if (pPartChannel && (pPartChannel->m_eType == Channel::ctNormal || pPartChannel->m_eType == Channel::ctPrivate))
+		return FALSE;
+	return TRUE;
 }
 
 bool CIrcWnd::GetLoggedIn()
@@ -1225,17 +1224,17 @@ void CIrcWnd::OnBnClickedColour()
 	CRect rDraw;
 	int iColor = 0;
 	m_wndFormat.GetWindowRect(rDraw);
-	new CColourPopup(CPoint(rDraw.left+1, rDraw.bottom-92),	// Point to display popup
-	                 iColor,	 				            // Selected colour
-	                 this,									// parent
-	                 GetResString(IDS_DEFAULT),				// "Default" text area
-	                 NULL,                                  // Custom Text
-	                 (COLORREF *)s_aColors,                 // Pointer to a COLORREF array
-	                 16);                                   // Size of the array
+	new CColourPopup(CPoint(rDraw.left+1, rDraw.bottom-92) 	// Point to display popup
+	                ,iColor 	 				            // Selected colour
+	                ,this 									// parent
+	                ,GetResString(IDS_DEFAULT) 				// "Default" text area
+	                ,NULL                                   // Custom Text
+	                ,(COLORREF *)s_aColors                  // Pointer to a COLORREF array
+	                ,16);                                   // Size of the array
 
 	CWnd *pParent = GetParent();
 	if (pParent)
-		pParent->SendMessage(UM_CPN_DROPDOWN, (LPARAM)iColor, (WPARAM) GetDlgCtrlID());
+		pParent->SendMessage(UM_CPN_DROPDOWN, (WPARAM) GetDlgCtrlID(), (LPARAM)iColor);
 }
 
 LRESULT CIrcWnd::OnSelEndOK(WPARAM /*wParam*/, LPARAM lParam)

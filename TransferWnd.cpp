@@ -1108,12 +1108,12 @@ void CTransferWnd::UpdateCatTabTitles(bool force)
 {
 	CPoint pt;
 	::GetCursorPos(&pt);
-	if (!force && GetTabUnderMouse(&pt)!=-1)		// avoid cat tooltip jumping
+	if (!force && GetTabUnderMouse(&pt) != -1)	// avoid cat tooltip jumping
 		return;
 
-	for (int i = 0; i < m_dlTab.GetItemCount(); i++){
+	for (int i = 0; i < m_dlTab.GetItemCount(); i++) {
 		EditCatTabLabel(i,/*(i==0)? GetCatTitle( thePrefs.GetCategory(0)->filter ):*/thePrefs.GetCategory(i)->strTitle);
-		m_dlTab.SetTabTextColor(i, thePrefs.GetCatColor(i) );
+		m_dlTab.SetTabTextColor(i, thePrefs.GetCatColor(i));
 	}
 }
 
@@ -1152,13 +1152,14 @@ void CTransferWnd::EditCatTabLabel(int index, CString newlabel)
 	}
 
 	if (thePrefs.ShowCatTabInfos()) {
-		int count = 0, dwl = 0;
+		int dwl = 0;
 		for (int i = 0; i<theApp.downloadqueue->GetFileCount(); ++i) {
 			CPartFile *cur_file = theApp.downloadqueue->GetFileByIndex(i);
 			if (cur_file !=NULL && cur_file->CheckShowItemInGivenCat(index) && cur_file->GetTransferringSrcCount()>0)
 				++dwl;
 		}
-		CString title=newlabel;
+		CString title(newlabel);
+		int count = 0;
 		downloadlistctrl.GetCompleteDownloads(index, count);
 		newlabel.Format(_T("%s %i/%i"), (LPCTSTR)title, dwl, count);
 	}
@@ -1399,10 +1400,9 @@ void CTransferWnd::VerifyCatTabSize()
 		size += rect.Width();
 	}
 
-	int right;
 	WINDOWPLACEMENT wp;
 	downloadlistctrl.GetWindowPlacement(&wp);
-	right = wp.rcNormalPosition.right;
+	int right = wp.rcNormalPosition.right;
 	m_dlTab.GetWindowPlacement(&wp);
 	if (wp.rcNormalPosition.right < 0)
 		return;

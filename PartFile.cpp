@@ -5188,17 +5188,16 @@ EMFileSize CPartFile::GetRealFileSize() const
 	return ::GetDiskFileSize(GetFilePath());
 }
 
-uint8* CPartFile::MMCreatePartStatus(){
+uint8* CPartFile::MMCreatePartStatus()
+{
 	// create partstatus + info in mobilemule protocol specs
 	// result needs to be deleted[] | slow, but not timecritical
 	uint8* result = new uint8[GetPartCount()+1];
 	for (UINT i = 0; i < GetPartCount(); i++){
-		result[i] = 0;
-		if (IsComplete(i*PARTSIZE, ((i+1)*PARTSIZE)-1, false)) {
+		if (IsComplete(i*PARTSIZE, ((i+1)*PARTSIZE)-1, false))
 			result[i] = 1;
-			continue;
-		}
-		else{
+		else {
+			result[i] = 0;
 			if (IsComplete(i*PARTSIZE + (0*(PARTSIZE/3)), ((i*PARTSIZE)+(1*(PARTSIZE/3)))-1, false))
 				result[i] += 2;
 			if (IsComplete(i*PARTSIZE+ (1*(PARTSIZE/3)), ((i*PARTSIZE)+(2*(PARTSIZE/3)))-1, false))
@@ -5206,16 +5205,15 @@ uint8* CPartFile::MMCreatePartStatus(){
 			if (IsComplete(i*PARTSIZE+ (2*(PARTSIZE/3)), ((i*PARTSIZE)+(3*(PARTSIZE/3)))-1, false))
 				result[i] += 8;
 			uint8 freq;
-			if (m_SrcpartFrequency.GetCount() > (signed)i)
+			if (m_SrcpartFrequency.GetCount() > (int)i)
 				freq = (uint8)m_SrcpartFrequency[i];
 			else
 				freq = 0;
 
 			if (freq > 44)
 				freq = 44;
-			freq = (uint8)ceilf((float)freq/3);
-			freq = (uint8)(freq << 4);
-			result[i] = (uint8)(result[i] + freq);
+			freq = (uint8)(((freq + 2u)/3u) << 4);
+			result[i] += freq;
 		}
 
 	}

@@ -1701,8 +1701,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 
 						uint32 ip = data.ReadUInt32();
 						uint16 tcp = data.ReadUInt16();
-						CUpDownClient* callback;
-						callback = theApp.clientlist->FindClientByIP(ntohl(ip), tcp);
+						CUpDownClient* callback = theApp.clientlist->FindClientByIP(ntohl(ip), tcp);
 						if( callback == NULL )
 						{
 							callback = new CUpDownClient(NULL,tcp,ip,0,0);
@@ -2474,7 +2473,8 @@ int CALLBACK AcceptConnectionCond(LPWSABUF lpCallerId, LPWSABUF /*lpCallerData*/
 		if (theApp.clientlist->IsBannedClient(pSockAddr->sin_addr.S_un.S_addr)){
 			if (thePrefs.GetLogBannedClients()){
 				CUpDownClient* pClient = theApp.clientlist->FindClientByIP(pSockAddr->sin_addr.S_un.S_addr);
-				AddDebugLogLine(false, _T("Rejecting connection attempt of banned client %s %s"), (LPCTSTR)ipstr(pSockAddr->sin_addr.S_un.S_addr), (LPCTSTR)pClient->DbgGetClientInfo());
+				if (pClient != NULL)
+					AddDebugLogLine(false, _T("Rejecting connection attempt of banned client %s %s"), (LPCTSTR)ipstr(pSockAddr->sin_addr.S_un.S_addr), (LPCTSTR)pClient->DbgGetClientInfo());
 			}
 			s_iAcceptConnectionCondRejected = 2;
 			return CF_REJECT;
