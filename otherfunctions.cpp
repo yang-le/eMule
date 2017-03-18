@@ -3352,7 +3352,7 @@ bool CreatePointFont(CFont &rFont, int nPointSize, LPCTSTR lpszFaceName)
 	LOGFONT logFont = {};
 	logFont.lfCharSet = DEFAULT_CHARSET;
 	logFont.lfHeight = nPointSize;
-	lstrcpyn(logFont.lfFaceName, lpszFaceName, _countof(logFont.lfFaceName));
+	_tcsncpy(logFont.lfFaceName, lpszFaceName, _countof(logFont.lfFaceName));
 	return CreatePointFontIndirect(rFont, &logFont);
 }
 
@@ -3452,12 +3452,11 @@ UINT64 GetFreeTempSpace(int tempdirindex)
 		bool toadd = true;
 
 		if (pdn >= 0)
-			for (int j = 0; j<hist.GetCount(); ++j) {
+			for (int j = 0; j<hist.GetCount(); ++j)
 				if (hist[j] == pdn) {
 					toadd = false;
 					break;
 				}
-			}
 
 		if (toadd) {
 			sum += GetFreeDiskSpaceX(thePrefs.GetTempDir(i));

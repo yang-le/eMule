@@ -435,14 +435,12 @@ public:
 
 	//Methods
 	CTreeOptionsItemData()
-		: m_Type(Unknown)
+		: m_Type(Unknown), m_Font(), m_DateTime()
 	{
 		m_pRuntimeClass1 = NULL;
 		m_pRuntimeClass2 = NULL;
 		m_dwItemData = (DWORD) -1;
 		m_Color = RGB(255, 0, 0);
-		ZeroMemory(&m_Font, sizeof(LOGFONT));
-		ZeroMemory(&m_DateTime, sizeof(SYSTEMTIME));
 		m_dwIPAddress = 0;
 		m_bDrawColorForIcon = TRUE;
 	}

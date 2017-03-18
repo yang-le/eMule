@@ -442,8 +442,7 @@ void CTitleMenu::SetMenuBitmap(UINT nFlags, UINT_PTR nIDNewItem, LPCTSTR /*lpszN
 
 		if (nPos != -1)
 		{
-			MENUITEMINFOEX info;
-			ZeroMemory(&info, sizeof(info));
+			MENUITEMINFOEX info = {};
 			info.fMask = MIIM_BITMAP;
 			info.hbmpItem = HBMMENU_CALLBACK;
 			info.cbSize = sizeof(info);

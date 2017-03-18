@@ -288,8 +288,8 @@ void CPartFile::Init()
 	m_category = 0;
 	m_lastRefreshedDLDisplay = 0;
 	m_bLocalSrcReqQueued = false;
-	memset(src_stats, 0, sizeof(src_stats));
-	memset(net_stats, 0, sizeof(net_stats));
+	memset(src_stats, 0, sizeof src_stats);
+	memset(net_stats, 0, sizeof net_stats);
 	m_nCompleteSourcesTime = m_iLastPausePurge;
 	m_nCompleteSourcesCount = 0;
 	m_nCompleteSourcesCountLo = 0;
@@ -2442,9 +2442,9 @@ uint32 CPartFile::Process(uint32 reducedownload, UINT icounter/*in percent*/)
 	{
 		bool downloadingbefore=m_anStates[DS_DOWNLOADING]>0;
 		// -khaos--+++> Moved this here, otherwise we were setting our permanent variables to 0 every tenth of a second...
-		memset(m_anStates,0,sizeof(m_anStates));
-		memset(src_stats,0,sizeof(src_stats));
-		memset(net_stats,0,sizeof(net_stats));
+		memset(m_anStates, 0, sizeof m_anStates);
+		memset(src_stats, 0, sizeof src_stats);
+		memset(net_stats, 0, sizeof net_stats);
 
 		for (POSITION pos = srclist.GetHeadPosition(); pos != NULL;)
 		{
@@ -3633,8 +3633,13 @@ void CPartFile::OpenFile() const
 
 bool CPartFile::CanStopFile() const
 {
-	bool bFileDone = (GetStatus()==PS_COMPLETE || GetStatus()==PS_COMPLETING);
-	return (!IsStopped() && GetStatus()!=PS_ERROR && !bFileDone);
+	switch (GetStatus()) {
+	case PS_ERROR:
+	case PS_COMPLETE:
+	case PS_COMPLETING:
+		return false;
+	}
+	return !IsStopped();
 }
 
 void CPartFile::StopFile(bool bCancel, bool resort)
@@ -3648,9 +3653,9 @@ void CPartFile::StopFile(bool bCancel, bool resort)
 	stopped = true;
 	insufficient = false;
 	datarate = 0;
-	memset(m_anStates,0,sizeof(m_anStates));
-	memset(src_stats,0,sizeof(src_stats));	//Xman Bugfix
-	memset(net_stats,0,sizeof(net_stats));	//Xman Bugfix
+	memset(m_anStates, 0, sizeof m_anStates);
+	memset(src_stats, 0, sizeof src_stats);	//Xman Bugfix
+	memset(net_stats, 0, sizeof net_stats);	//Xman Bugfix
 
 	if (!bCancel)
 		FlushBuffer(true);
@@ -3665,7 +3670,7 @@ void CPartFile::StopPausedFile()
 {
 	//Once an hour, remove any sources for files which are no longer active downloads
 	EPartFileStatus uState = GetStatus();
-	if( (uState==PS_PAUSED || uState==PS_INSUFFICIENT || uState==PS_ERROR) && !stopped && time(NULL) - m_iLastPausePurge > (60*60) )
+	if( (uState==PS_PAUSED || uState==PS_INSUFFICIENT || uState==PS_ERROR) && !stopped && time(NULL) - m_iLastPausePurge > HR2S(1) )
 		StopFile();
 	else
 		if (m_bDeleteAfterAlloc && m_AllocateThread==NULL)
@@ -3674,8 +3679,14 @@ void CPartFile::StopPausedFile()
 
 bool CPartFile::CanPauseFile() const
 {
-	bool bFileDone = (GetStatus()==PS_COMPLETE || GetStatus()==PS_COMPLETING);
-	return (GetStatus()!=PS_PAUSED && GetStatus()!=PS_ERROR && !bFileDone);
+	switch (GetStatus()) {
+	case PS_PAUSED:
+	case PS_ERROR:
+	case PS_COMPLETE:
+	case PS_COMPLETING:
+		return false;
+	}
+	return true;
 }
 
 void CPartFile::PauseFile(bool bInsufficient, bool resort)
@@ -3701,17 +3712,13 @@ void CPartFile::PauseFile(bool bInsufficient, bool resort)
 	if (status==PS_COMPLETE || status==PS_COMPLETING)
 		return;
 
-	Packet* packet = new Packet(OP_CANCELTRANSFER,0);
-	for( POSITION pos = srclist.GetHeadPosition(); pos != NULL; )
-	{
+	for (POSITION pos = srclist.GetHeadPosition(); pos != NULL; ) {
 		CUpDownClient* cur_src = srclist.GetNext(pos);
-		if (cur_src->GetDownloadState() == DS_DOWNLOADING)
-		{
-			cur_src->SendCancelTransfer(packet);
+		if (cur_src->GetDownloadState() == DS_DOWNLOADING) {
+			cur_src->SendCancelTransfer();
 			cur_src->SetDownloadState(DS_ONQUEUE, _T("You cancelled the download. Sending OP_CANCELTRANSFER"));
 		}
 	}
-	delete packet;
 
 	if (bInsufficient)
 	{
@@ -3804,17 +3811,13 @@ CString CPartFile::getPartfileStatus() const
 			return GetResString(IDS_COMPLETE);
 
 		case PS_PAUSED:
-			if (stopped)
-				return GetResString(IDS_STOPPED);
-			return GetResString(IDS_PAUSED);
+			return GetResString(stopped ? IDS_STOPPED : IDS_PAUSED);
 
 		case PS_INSUFFICIENT:
 			return GetResString(IDS_INSUFFICIENT);
 
 		case PS_ERROR:
-			if (m_bCompletionError)
-				return GetResString(IDS_INSUFFICIENT);
-			return GetResString(IDS_ERRORLIKE);
+			return GetResString(m_bCompletionError ? IDS_INSUFFICIENT : IDS_ERRORLIKE);
 	}
 
 	if (GetSrcStatisticsValue(DS_DOWNLOADING) > 0)
@@ -3826,26 +3829,24 @@ CString CPartFile::getPartfileStatus() const
 int CPartFile::getPartfileStatusRang() const
 {
 	switch (GetStatus()) {
-		case PS_HASHING:
-		case PS_WAITINGFORHASH:
-			return 7;
+	case PS_HASHING:
+	case PS_WAITINGFORHASH:
+		return 7;
 
-		case PS_COMPLETING:
-			return 1;
+	case PS_COMPLETING:
+		return 1;
 
-		case PS_COMPLETE:
-			return 0;
+	case PS_COMPLETE:
+		return 0;
 
-		case PS_PAUSED:
-			if (IsStopped())
-				return 6;
-			else
-				return 5;
-		case PS_INSUFFICIENT:
-			return 4;
+	case PS_PAUSED:
+		return IsStopped() ? 6 : 5;
 
-		case PS_ERROR:
-			return 8;
+	case PS_INSUFFICIENT:
+		return 4;
+
+	case PS_ERROR:
+		return 8;
 	}
 	if (GetSrcStatisticsValue(DS_DOWNLOADING) == 0)
 		return 3; // waiting?
@@ -3922,7 +3923,7 @@ bool CPartFile::IsReadyForPreview() const
 			return false;
 
 		// check part file size(s)
-		if (GetFileSize() < (uint64)1024 || GetCompletedSize() < (uint64)1024)
+		if ((uint64)GetFileSize() < 1024ull || (uint64)GetCompletedSize() < 1024ull)
 			return false;
 
 		// check if we already trying to recover an archive file from this part file

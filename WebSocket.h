@@ -38,7 +38,7 @@ public:
 
 	void OnReceived(void* pData, DWORD dwSize, in_addr inad); // must be implemented
 	void SendData(const void* pData, DWORD dwDataSize);
-	void SendData(LPCSTR szText) { SendData(szText, lstrlenA(szText)); }
+	void SendData(LPCSTR szText) { SendData(szText, strlen(szText)); }
 	void SendContent(LPCSTR szStdResponse, const void* pContent, DWORD dwContentSize);
 	void SendContent(LPCSTR szStdResponse, const CString& rstr);
 	void SendReply(LPCSTR szReply);

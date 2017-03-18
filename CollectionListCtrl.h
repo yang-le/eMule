@@ -30,7 +30,7 @@ public:
 	virtual ~CCollectionListCtrl();
 
 	void Init(const CString& strNameAdd);
-	void Localize();
+//	void Localize();
 
 	void AddFileToList(CAbstractFile* pAbstractFile);
 	void RemoveFileFromList(CAbstractFile* pAbstractFile);
@@ -45,8 +45,7 @@ private:
 
 protected:
 	static int CALLBACK SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
-
-	void SetAllIcons();
+//	void SetAllIcons();
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult);

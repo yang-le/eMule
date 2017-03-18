@@ -1829,7 +1829,7 @@ void CTransferWnd::ResetTransToolbar(bool bShowToolbar, bool bResetLists)
 		atb2[4].iString = -1;
 		m_btnWnd2->AddButtons(_countof(atb2), atb2);
 
-		memset(&tbbi, 0, sizeof(tbbi));
+		memset(&tbbi, 0, sizeof tbbi);
 		tbbi.cbSize = sizeof tbbi;
 		tbbi.dwMask = TBIF_SIZE | TBIF_BYINDEX;
 		tbbi.cx = WND2_BUTTON_WIDTH;

@@ -513,8 +513,7 @@ void CPreferences::Init()
 {
 	srand((unsigned int)time(0)); // we need random numbers sometimes
 
-	prefsExt = new Preferences_Ext_Struct;
-	memset(prefsExt, 0, sizeof *prefsExt);
+	prefsExt = new Preferences_Ext_Struct();
 
 	m_strFileCommentsFilePath = GetMuleDirectory(EMULE_CONFIGDIR) + L"fileinfo.ini";
 
@@ -1880,8 +1879,8 @@ void CPreferences::ResetStatsColor(int index)
 
 void CPreferences::GetAllStatsColors(int iCount, LPDWORD pdwColors)
 {
-	memset(pdwColors, 0, sizeof(*pdwColors) * iCount);
-	memcpy(pdwColors, m_adwStatsColors, sizeof(*pdwColors) * mini(_countof(m_adwStatsColors), (size_t)iCount));
+	memset(pdwColors, 0, (sizeof *pdwColors) * iCount);
+	memcpy(pdwColors, m_adwStatsColors, (sizeof *pdwColors) * mini(_countof(m_adwStatsColors), (size_t)iCount));
 }
 
 bool CPreferences::SetAllStatsColors(int iCount, const DWORD* pdwColors)

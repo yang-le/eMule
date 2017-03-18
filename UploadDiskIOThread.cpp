@@ -64,12 +64,13 @@ CUploadDiskIOThread::~CUploadDiskIOThread()
 }
 
 
-UINT AFX_CDECL CUploadDiskIOThread::RunProc(LPVOID pParam) {
+UINT AFX_CDECL CUploadDiskIOThread::RunProc(LPVOID pParam)
+{
 	DbgSetThreadName("UploadDiskIOThread");
 	InitThreadLocale();
-	if (pParam != NULL)
-		return ((CUploadDiskIOThread*)pParam)->RunInternal();
-	return 1;
+	if (pParam == NULL)
+		return 1;
+	return static_cast<CUploadDiskIOThread *>(pParam)->RunInternal();
 }
 
 
@@ -123,13 +124,13 @@ UINT CUploadDiskIOThread::RunInternal()
 			}
 			else
 			{
-				int nError = GetLastError();
+				DWORD nError = GetLastError();
 				if (nError != ERROR_IO_PENDING && nError != ERROR_IO_INCOMPLETE)
 				{
 					theApp.QueueDebugLogLineEx(LOG_ERROR, _T("IO Error: GetOverlappedResult: %s"), (LPCTSTR)GetErrorMessage(nError));
 					m_listPendingIO.RemoveAt(pos2);
 					// calling it with an error will cause it to clean up the mess
-					ReadCompletetionRoutine(nError != 0 ? nError : (-1), dwRead, pCurPendingIO);
+					ReadCompletetionRoutine(1, dwRead, pCurPendingIO);
 				}
 			}
 		}
@@ -291,9 +292,8 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(UploadingToClient_Struct* 
 			srcfile = NULL; // not safe anymore
 
 			// now for the actual reading
-			OverlappedEx_Struct* pstructOverlappedEx = new OverlappedEx_Struct;
+			OverlappedEx_Struct* pstructOverlappedEx = new OverlappedEx_Struct();
 			ASSERT( sizeof(pstructOverlappedEx->oOverlap) == sizeof(OVERLAPPED) );
-			ZeroMemory(&pstructOverlappedEx->oOverlap, sizeof(pstructOverlappedEx->oOverlap));
 			pstructOverlappedEx->oOverlap.Offset = LODWORD(currentblock->StartOffset);
 			pstructOverlappedEx->oOverlap.OffsetHigh = HIDWORD(currentblock->StartOffset);
 			pstructOverlappedEx->oOverlap.hEvent = m_eventAsyncIOFinished;
@@ -545,8 +545,8 @@ void CUploadDiskIOThread::CreateStandardPackets(byte* pbyData, uint64 uStartOffs
 void CUploadDiskIOThread::CreatePackedPackets(byte* pbyData, uint64 uStartOffset, uint64 uEndOffset, bool bFromPF, CPacketList& rOutPacketList, const uchar* pucMD4FileHash, const CString& strDbgClientInfo)
 {
 	uint32 togo = (uint32)(uEndOffset - uStartOffset);
-	BYTE* output = new BYTE[togo+300];
 	uLongf newsize = togo+300;
+	BYTE* output = new BYTE[newsize];
 	UINT result = compress2(output, &newsize, pbyData, togo, 9);
 	if (result != Z_OK || togo <= newsize){
 		delete[] output;
@@ -557,28 +557,27 @@ void CUploadDiskIOThread::CreatePackedPackets(byte* pbyData, uint64 uStartOffset
 	uint32 oldSize = togo;
 	togo = newsize;
 	uint32 nPacketSize;
-	if (togo > 10240)
-		nPacketSize = togo/(uint32)(togo/10240);
+	if (togo > 10240u)
+		nPacketSize = togo/(uint32)(togo/10240u);
 	else
 		nPacketSize = togo;
 
 	uint32 totalPayloadSize = 0;
 
-	while (togo){
+	while (togo) {
 		if (togo < nPacketSize*2)
 			nPacketSize = togo;
 		ASSERT( nPacketSize );
 		togo -= nPacketSize;
 		uint64 statpos = uStartOffset;
 		Packet* packet;
-		if (uStartOffset > UINT32_MAX || uEndOffset > UINT32_MAX){
+		if (uStartOffset > UINT32_MAX || uEndOffset > UINT32_MAX) {
 			packet = new Packet(OP_COMPRESSEDPART_I64,nPacketSize+28,OP_EMULEPROT,bFromPF);
 			md4cpy(&packet->pBuffer[0], pucMD4FileHash);
 			PokeUInt64(&packet->pBuffer[16], statpos);
 			PokeUInt32(&packet->pBuffer[24], newsize);
 			memfile.Read(&packet->pBuffer[28],nPacketSize);
-		}
-		else{
+		} else {
 			packet = new Packet(OP_COMPRESSEDPART,nPacketSize+24,OP_EMULEPROT,bFromPF);
 			md4cpy(&packet->pBuffer[0], pucMD4FileHash);
 			PokeUInt32(&packet->pBuffer[16], (uint32)statpos);
@@ -586,16 +585,16 @@ void CUploadDiskIOThread::CreatePackedPackets(byte* pbyData, uint64 uStartOffset
 			memfile.Read(&packet->pBuffer[24],nPacketSize);
 		}
 
-		if (thePrefs.GetDebugClientTCPLevel() > 0){
+		if (thePrefs.GetDebugClientTCPLevel() > 0) {
 			Debug(_T(">>> %-20hs to   %s; %s\n"), _T("OP__CompressedPart"), (LPCTSTR)strDbgClientInfo, (LPCTSTR)md4str(pucMD4FileHash));
 			Debug(_T("  Start=%I64u  BlockSize=%u  Size=%u\n"), statpos, newsize, nPacketSize);
 		}
 		// approximate payload size
 		uint32 payloadSize = nPacketSize*oldSize/newsize;
 
-		if(togo == 0 && totalPayloadSize+payloadSize < oldSize) {
+		if (togo == 0 && totalPayloadSize+payloadSize < oldSize)
 			payloadSize = oldSize-totalPayloadSize;
-		}
+
 		totalPayloadSize += payloadSize;
 
 		theStats.AddUpDataOverheadFileRequest(24);

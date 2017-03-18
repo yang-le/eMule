@@ -2150,7 +2150,7 @@ void CUpDownClient::StartDownload()
 	SendBlockRequests();
 }
 
-void CUpDownClient::SendCancelTransfer(Packet* packet)
+void CUpDownClient::SendCancelTransfer()
 {
 	if (socket == NULL || !IsEd2kClient()){
 		ASSERT(0);
@@ -2162,21 +2162,10 @@ void CUpDownClient::SendCancelTransfer(Packet* packet)
 		if (thePrefs.GetDebugClientTCPLevel() > 0)
 			DebugSend("OP__CancelTransfer", this);
 
-		bool bDeletePacket;
-		Packet* pCancelTransferPacket;
-		if (packet)
-		{
-			pCancelTransferPacket = packet;
-			bDeletePacket = false;
-		}
-		else
-		{
-			pCancelTransferPacket = new Packet(OP_CANCELTRANSFER, 0);
-			bDeletePacket = true;
-		}
+		Packet* pCancelTransferPacket = new Packet(OP_CANCELTRANSFER, 0);
 		theStats.AddUpDataOverheadFileRequest(pCancelTransferPacket->size);
-		socket->SendPacket(pCancelTransferPacket,bDeletePacket,true);
-		SetSentCancelTransfer(1);
+		socket->SendPacket(pCancelTransferPacket);
+		SetSentCancelTransfer(true);
 	}
 
 	if (m_pPCDownSocket)

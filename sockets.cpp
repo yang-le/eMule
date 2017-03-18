@@ -261,24 +261,24 @@ void CServerConnect::ConnectionEstablished(CServerSocket* sender)
 	theApp.emuledlg->ShowConnectionState();
 }
 
-bool CServerConnect::SendPacket(Packet* packet,bool delpacket, CServerSocket* to){
-	if (!to){
-		if (connected){
-			connectedsocket->SendPacket(packet,delpacket,true);
-		}
-		else{
+bool CServerConnect::SendPacket(Packet* packet, bool delpacket, CServerSocket* to)
+{
+	if (!to) {
+		if (connected) {
+			connectedsocket->SendPacket(packet, delpacket, true);
+		} else {
 			if (delpacket)
 				delete packet;
 			return false;
 		}
-	}
-	else{
-		to->SendPacket(packet,delpacket,true);
-	}
+	} else
+		to->SendPacket(packet, delpacket, true);
+
 	return true;
 }
 
-bool CServerConnect::SendUDPPacket(Packet* packet, CServer* host, bool delpacket, uint16 nSpecialPort, BYTE* pRawPacket, uint32 nLen){
+bool CServerConnect::SendUDPPacket(Packet* packet, CServer* host, bool delpacket, uint16 nSpecialPort, BYTE* pRawPacket, uint32 nLen)
+{
 	if (theApp.IsConnected()){
 		if (udpsocket != NULL)
 			udpsocket->SendPacket(packet, host, nSpecialPort, pRawPacket, nLen);

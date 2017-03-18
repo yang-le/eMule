@@ -83,8 +83,8 @@ CMuleToolbarCtrl::CMuleToolbarCtrl()
 	m_iPreviousHeight = 0;
 	m_iLastPressedButton = -1;
 	m_buttoncount = 0;
-	memset(TBButtons, 0, sizeof(TBButtons));
-	memset(TBStrings, 0, sizeof(TBStrings));
+	memset(TBButtons, 0, sizeof TBButtons);
+	memset(TBStrings, 0, sizeof TBStrings);
 	m_eLabelType = NoLabels;
 }
 

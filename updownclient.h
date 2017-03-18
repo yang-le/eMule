@@ -86,7 +86,7 @@ public:
 
 	void			StartDownload();
 	virtual void	CheckDownloadTimeout();
-	virtual void	SendCancelTransfer(Packet* packet = NULL);
+	virtual void	SendCancelTransfer();
 	virtual bool	IsEd2kClient() const							{ return true; }
 	virtual bool	Disconnected(LPCTSTR pszReason, bool bFromSocket = false);
 	virtual bool	TryToConnect(bool bIgnoreMaxCon = false, bool bNoCallbacks = false, CRuntimeClass* pClassSocket = NULL);

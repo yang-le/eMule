@@ -295,8 +295,7 @@ CString ReverseDnsLookup(DWORD dwIP)
 			// WinXP: We explicitly need to pass the DNS servers to be used to DnsQuery,
 			// otherwise that function will never query a DNS server for the *local* host name.
 			IP4_ARRAY* pDnsServers = NULL;
-			BYTE aucBuff[16384];
-			memset(aucBuff, 0, sizeof aucBuff);
+			BYTE aucBuff[16384] = {};
 			DWORD dwSize = sizeof aucBuff;
 			DNS_STATUS nDnsState = (*pfnDnsQueryConfig)(DnsConfigDnsServerList, FALSE, NULL, NULL, aucBuff, &dwSize);
 			if (nDnsState == 0)

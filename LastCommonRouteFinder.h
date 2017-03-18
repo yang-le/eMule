@@ -23,10 +23,10 @@ typedef CTypedPtrList<CPtrList, CUpDownClient*> CUpDownClientPtrList;
 struct CurrentPingStruct 
 {
 	//uint32	datalen;
-    CString state;
+	CString state;
 	uint32	latency;
 	uint32	lowest;
-    uint32  currentLimit;
+	uint32  currentLimit;
 };
 
 class LastCommonRouteFinder :
@@ -38,7 +38,6 @@ public:
 
 	void EndThread();
 
-    bool AddHostToCheck(uint32 ip);
 	bool AddHostsToCheck(CTypedPtrList<CPtrList, CServer*> &list);
 	bool AddHostsToCheck(CUpDownClientPtrList &list);
 
@@ -47,7 +46,7 @@ public:
 	bool AcceptNewClient();
 
 	void SetPrefs(bool pEnabled, uint32 pCurUpload, uint32 pMinUpload, uint32 pMaxUpload, bool pUseMillisecondPingTolerance, double pPingTolerance, uint32 pPingToleranceMilliseconds, uint32 pGoingUpDivider, uint32 pGoingDownDivider, uint32 pNumberOfPingsForAverage, uint64 pLowestInitialPingAllowed);
-    void InitiateFastReactionPeriod();
+	void InitiateFastReactionPeriod();
 
 	uint32 GetUpload();
 private:
@@ -55,10 +54,11 @@ private:
 	UINT RunInternal();
 
 	void SetUpload(uint32 newValue);
-    bool AddHostToCheckNoLock(uint32 ip);
+	bool AddHostToCheck(uint32 ip);
+	bool AddHostToCheckNoLock(uint32 ip);
 
 	typedef CList<uint32,uint32> UInt32Clist;        
-    uint32 Median(UInt32Clist& list);
+	uint32 Median(UInt32Clist& list);
 
 	bool doRun;
 	bool acceptNewClient;
@@ -76,7 +76,7 @@ private:
 
 	CMap<uint32,uint32,uint32,uint32> hostsToTraceRoute;
 
-    UInt32Clist pingDelays;
+	UInt32Clist pingDelays;
 
 	uint64 pingDelaysTotal;
 
@@ -96,7 +96,7 @@ private:
 	uint32 m_lowestPing;
 	uint64 m_LowestInitialPingAllowed;
 
-    bool m_initiateFastReactionPeriod;
+	bool m_initiateFastReactionPeriod;
 
 	CString m_state;
 };

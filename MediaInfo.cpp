@@ -1977,7 +1977,7 @@ public:
     {
 		UNREFERENCED_PARAMETER(grfStatFlag);
 		ASSERT( grfStatFlag == STATFLAG_NONAME );
-		memset(pstatstg, 0, sizeof(*pstatstg));
+		memset(pstatstg, 0, sizeof *pstatstg);
 		BY_HANDLE_FILE_INFORMATION fileInfo;
 		if (!GetFileInformationByHandle(m_hFile, &fileInfo))
 			return HRESULT_FROM_WIN32(GetLastError());

@@ -169,25 +169,25 @@ void CClientList::AddClient(CUpDownClient* toadd, bool bSkipDupTest)
 	// skipping the check for duplicate list entries is only to be done for optimization purposes, if the calling
 	// function has ensured that this client instance is not already within the list -> there are never duplicate
 	// client instances in this list.
-	if (!bSkipDupTest){
-		if(list.Find(toadd))
-			return;
+	if (bSkipDupTest || list.Find(toadd) == NULL) {
+		theApp.emuledlg->transferwnd->GetClientList()->AddClient(toadd);
+		list.AddTail(toadd);
 	}
-	theApp.emuledlg->transferwnd->GetClientList()->AddClient(toadd);
-	list.AddTail(toadd);
 }
 
 // ZZ:UploadSpeedSense -->
-bool CClientList::GiveClientsForTraceRoute() {
+bool CClientList::GiveClientsForTraceRoute()
+{
     // this is a host that lastCommonRouteFinder can use to traceroute
     return theApp.lastCommonRouteFinder->AddHostsToCheck(list);
 }
 // ZZ:UploadSpeedSense <--
 
-void CClientList::RemoveClient(CUpDownClient* toremove, LPCTSTR pszReason){
+void CClientList::RemoveClient(CUpDownClient* toremove, LPCTSTR pszReason)
+{
 	POSITION pos = list.Find(toremove);
-	if (pos){
-        theApp.uploadqueue->RemoveFromUploadQueue(toremove, CString(_T("CClientList::RemoveClient: ")) + pszReason);
+	if (pos) {
+		theApp.uploadqueue->RemoveFromUploadQueue(toremove, CString(_T("CClientList::RemoveClient: ")) + pszReason);
 		theApp.uploadqueue->RemoveFromWaitingQueue(toremove);
 		theApp.downloadqueue->RemoveSource(toremove);
 		theApp.emuledlg->transferwnd->GetClientList()->RemoveClient(toremove);
@@ -197,7 +197,8 @@ void CClientList::RemoveClient(CUpDownClient* toremove, LPCTSTR pszReason){
 	RemoveConnectingClient(toremove);
 }
 
-void CClientList::DeleteAll(){
+void CClientList::DeleteAll()
+{
 	theApp.uploadqueue->DeleteAll();
 	theApp.downloadqueue->DeleteAll();
 	while (!list.IsEmpty())
@@ -210,10 +211,10 @@ bool CClientList::AttachToAlreadyKnown(CUpDownClient** client, CClientReqSocket*
 	CUpDownClient* found_client2 = NULL;
 	for (POSITION pos = list.GetHeadPosition(); pos != NULL;) {
 		CUpDownClient* cur_client = list.GetNext(pos);
-		if (tocheck->Compare(cur_client,false)){ //matching userhash
+		if (tocheck->Compare(cur_client,false)) //matching userhash
 			found_client2 = cur_client;
-		}
-		if (tocheck->Compare(cur_client,true)){	 //matching IP
+
+		if (tocheck->Compare(cur_client,true)) { //matching IP
 			found_client = cur_client;
 			break;
 		}

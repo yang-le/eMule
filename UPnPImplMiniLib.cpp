@@ -245,13 +245,11 @@ int CUPnPImplMiniLib::CStartDiscoveryThread::Run()
 			}
 
 			DebugLog(_T("List of UPNP devices found on the network:"));
-			for (UPNPDev *pDevice = structDeviceList; pDevice != NULL; pDevice = pDevice->pNext) {
+			for (UPNPDev *pDevice = structDeviceList; pDevice != NULL; pDevice = pDevice->pNext)
 				DebugLog(_T("Desc: %S, st: %S"), pDevice->descURL, pDevice->st);
-			}
-			m_pOwner->m_pURLs = new UPNPUrls;
-			ZeroMemory(m_pOwner->m_pURLs, sizeof(UPNPUrls));
-			m_pOwner->m_pIGDData = new IGDdatas;
-			ZeroMemory(m_pOwner->m_pIGDData, sizeof(IGDdatas));
+
+			m_pOwner->m_pURLs = new UPNPUrls();
+			m_pOwner->m_pIGDData = new IGDdatas();
 
 			m_pOwner->m_achLanIP[0] = 0;
 			int iResult = UPNP_GetValidIGD(structDeviceList, m_pOwner->m_pURLs, m_pOwner->m_pIGDData, m_pOwner->m_achLanIP, sizeof(m_pOwner->m_achLanIP));

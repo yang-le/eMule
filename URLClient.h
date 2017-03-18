@@ -44,7 +44,7 @@ public:
 	virtual void SendBlockRequests();
 	virtual bool SendHttpBlockRequests();
 	virtual void SendFileRequest();
-	virtual void SendCancelTransfer(Packet* packet);
+	virtual void SendCancelTransfer();
 	
 	bool ProcessHttpDownResponse(const CStringAArray& astrHeaders);
 

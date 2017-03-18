@@ -381,32 +381,27 @@ void CDataIO::WriteTag(const CKadTag* pTag)
 
 void CDataIO::WriteTag(LPCSTR szName, uint64 uValue)
 {
-	CKadTagUInt64 tag(szName, uValue);
-	WriteTag(&tag);
+	WriteTag(&CKadTagUInt64(szName, uValue));
 }
 
 void CDataIO::WriteTag(LPCSTR szName, uint32 uValue)
 {
-	CKadTagUInt32 tag(szName, uValue);
-	WriteTag(&tag);
+	WriteTag(&CKadTagUInt32(szName, uValue));
 }
 
 void CDataIO::WriteTag(LPCSTR szName, uint16 uValue)
 {
-	CKadTagUInt16 tag(szName, uValue);
-	WriteTag(&tag);
+	WriteTag(&CKadTagUInt16(szName, uValue));
 }
 
 void CDataIO::WriteTag(LPCSTR szName, uint8 uValue)
 {
-	CKadTagUInt8 tag(szName, uValue);
-	WriteTag(&tag);
+	WriteTag(&CKadTagUInt8(szName, uValue));
 }
 
 void CDataIO::WriteTag(LPCSTR szName, float fValue)
 {
-	CKadTagFloat tag(szName, fValue);
-	WriteTag(&tag);
+	WriteTag(&CKadTagFloat(szName, fValue));
 }
 
 void CDataIO::WriteTagList(const TagList& tagList)
@@ -418,7 +413,8 @@ void CDataIO::WriteTagList(const TagList& tagList)
 		WriteTag(*itTagList);
 }
 
-void CDataIO::WriteString(const CStringW& strVal){
+void CDataIO::WriteString(const CStringW& strVal)
+{
 	CUnicodeToUTF8 utf8(strVal);
 	WriteUInt16((uint16)utf8.GetLength());
 	WriteArray(utf8, utf8.GetLength());

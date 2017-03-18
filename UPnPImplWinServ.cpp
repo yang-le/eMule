@@ -638,8 +638,7 @@ CString CUPnPImplWinServ::GetLocalRoutableIP(ServicePointer pService)
 	if (ip == INADDR_NONE || hrRes != NO_ERROR)
 		return CString();
 
-	MIB_IFROW ifRow;
-	ZeroMemory(&ifRow, sizeof(MIB_IFROW));
+	MIB_IFROW ifRow = {};
 	ifRow.dwIndex = nInterfaceIndex;
 	hrRes = (HRESULT)-1;
 	if (m_pfGetIfEntry != NULL) {
@@ -676,7 +675,7 @@ CString CUPnPImplWinServ::GetLocalRoutableIP(ServicePointer pService)
 	for (DWORD nIf = 0; nIf < nCount; nIf++) {
 		if (ipAddr->table[nIf].dwIndex == nInterfaceIndex) {
 			ip = ipAddr->table[nIf].dwAddr;
-			strLocalIP.Format(L"%u.%u.%u.%u", (ip & 0xff),
+			strLocalIP.Format(L"%lu.%lu.%lu.%lu", (ip & 0xff),
 			                  ((ip >> 8) & 0xff), ((ip >> 16) & 0xff),
 			                  (ip >> 24));
 			break;

@@ -330,7 +330,7 @@ UINT AFX_CDECL WebSocketAcceptedFunc(LPVOID pD)
 							for (;;)
 							{
 								char pBuf[0x1000];
-								int nRes = recv(hSocket, pBuf, sizeof(pBuf), 0);
+								int nRes = recv(hSocket, pBuf, sizeof pBuf, 0);
 								if (nRes <= 0)
 								{
 									if (!nRes)
@@ -423,7 +423,7 @@ UINT AFX_CDECL WebSocketListeningFunc(LPVOID pThis)
 		else
 			stAddr.sin_addr.S_un.S_addr = INADDR_ANY;
 
-		if (!bind(hSocket, (sockaddr*)&stAddr, sizeof(stAddr)) && !listen(hSocket, SOMAXCONN))
+		if (!bind(hSocket, (sockaddr*)&stAddr, sizeof stAddr) && !listen(hSocket, SOMAXCONN))
 		{
 			HANDLE hEvent = CreateEvent(NULL, FALSE, TRUE, NULL);
 			if (hEvent)

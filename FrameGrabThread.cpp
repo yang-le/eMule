@@ -179,8 +179,7 @@ UINT CFrameGrabThread::GrabFrames(){
 				long nFullBufferLen = sizeof( BITMAPFILEHEADER ) + size;
 				char* buffer = new char[nFullBufferLen];
 
-				BITMAPFILEHEADER bfh;
-				memset( &bfh, 0, sizeof( bfh ) );
+				BITMAPFILEHEADER bfh = {};
 				bfh.bfType = 'MB';
 				bfh.bfSize = nFullBufferLen;
 				bfh.bfOffBits = sizeof( BITMAPINFOHEADER ) + sizeof( BITMAPFILEHEADER );

@@ -53,8 +53,7 @@ CClientCredits::CClientCredits(CreditStruct* in_credits)
 
 CClientCredits::CClientCredits(const uchar* key)
 {
-	m_pCredits = new CreditStruct;
-	memset(m_pCredits, 0, sizeof(CreditStruct));
+	m_pCredits = new CreditStruct();
 	md4cpy(m_pCredits->abyKey, key);
 	InitalizeIdent();
 	m_dwUnSecureWaitTime = ::GetTickCount();
@@ -344,7 +343,7 @@ void CClientCreditsList::Process()
 void CClientCredits::InitalizeIdent()
 {
 	if (m_pCredits->nKeySize == 0 ){
-		memset(m_abyPublicKey,0,80); // for debugging
+		memset(m_abyPublicKey, 0, 80); // for debugging
 		m_nPublicKeyLen = 0;
 		IdentState = IS_NOTAVAILABLE;
 	}
@@ -407,7 +406,7 @@ using namespace CryptoPP;
 void CClientCreditsList::InitalizeCrypting()
 {
 	m_nMyPublicKeyLen = 0;
-	memset(m_abyMyPublicKey,0,80); // not really needed; better for debugging tho
+	memset(m_abyMyPublicKey, 0, 80); // not really needed; better for debugging tho
 	m_pSignkey = NULL;
 	if (!thePrefs.IsSecureIdentEnabled())
 		return;
@@ -604,20 +603,16 @@ bool CClientCreditsList::Debug_CheckCrypting()
 	asink.MessageEnd();
 	uint32 challenge = rand();
 	// create fake client which pretends to be this emule
-	CreditStruct* newcstruct = new CreditStruct;
-	memset(newcstruct, 0, sizeof(CreditStruct));
+	CreditStruct* newcstruct = new CreditStruct();
 	CClientCredits* newcredits = new CClientCredits(newcstruct);
 	newcredits->SetSecureIdent(m_abyMyPublicKey,m_nMyPublicKeyLen);
 	newcredits->m_dwCryptRndChallengeFrom = challenge;
 	// create signature with fake priv key
-	uchar pachSignature[200];
-	memset(pachSignature,0,200);
+	uchar pachSignature[200] = {};
 	uint8 sigsize = CreateSignature(newcredits,pachSignature,200,0,0, &priv);
 
-
 	// next fake client uses the random created public key
-	CreditStruct* newcstruct2 = new CreditStruct;
-	memset(newcstruct2, 0, sizeof(CreditStruct));
+	CreditStruct* newcstruct2 = new CreditStruct();
 	CClientCredits* newcredits2 = new CClientCredits(newcstruct2);
 	newcredits2->m_dwCryptRndChallengeFor = challenge;
 

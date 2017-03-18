@@ -739,7 +739,7 @@ float CxImage::Mean()
 	uint8_t *iSrc=tmp.info.pImage;
 	iSrc += tmp.info.dwEffWidth*ymin; // necessary for selections <Admir Hodzic>
 
-	for (int32_t y = ymin; y<ymax; ++y) {
+	for (int32_t y=ymin; y<ymax; ++y) {
 		info.nProgress = (int32_t)(100*(y-ymin)/(ymax-ymin)); //<zhanghk><Anatoly Ivasyuk>
 		for (int32_t x = xmin; x<xmax; ++x)
 			sum += iSrc[x];
@@ -1576,7 +1576,7 @@ bool CxImage::FFT2(CxImage* srcReal, CxImage* srcImag, CxImage* dstReal, CxImage
 	_complex **grid;
 	//double mean = tmpReal->Mean();
 	/* Allocate memory for the grid */
-	grid = (_complex **)malloc(w * sizeof(_complex));
+	grid = (_complex **)malloc(w * sizeof(_complex *));
 	for (k=0;k<w;k++) {
 		grid[k] = (_complex *)malloc(h * sizeof(_complex));
 	}

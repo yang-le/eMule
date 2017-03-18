@@ -117,13 +117,16 @@ CButtonST::~CButtonST()
 	FreeResources();
 
 	// Destroy the cursor (if any)
-	if (m_hCursor) ::DestroyCursor(m_hCursor);
+	if (m_hCursor)
+		::DestroyCursor(m_hCursor);
 
 	// Destroy the menu (if any)
 #ifdef	BTNST_USE_BCMENU
-	if (m_menuPopup.m_hMenu)	VERIFY( m_menuPopup.DestroyMenu() );
+	if (m_menuPopup.m_hMenu)
+		VERIFY( m_menuPopup.DestroyMenu() );
 #else
-	if (m_hMenu)	VERIFY( ::DestroyMenu(m_hMenu) );
+	if (m_hMenu)
+		VERIFY( ::DestroyMenu(m_hMenu) );
 #endif
 } // End of ~CButtonST
 
@@ -477,9 +480,7 @@ BOOL CButtonST::OnClicked()
 			// Handle the URL (if any)
 			if (*m_szURL != _T('\0'))
 			{
-				SHELLEXECUTEINFO	csSEI;
-
-				memset(&csSEI, 0, sizeof(csSEI));
+				SHELLEXECUTEINFO csSEI = {};
 				csSEI.cbSize = sizeof(SHELLEXECUTEINFO);
 				csSEI.fMask = SEE_MASK_FLAG_NO_UI;
 				csSEI.lpVerb = _T("open");

@@ -361,7 +361,7 @@ bool CUDPSocket::ProcessPacket(const BYTE* packet, UINT size, UINT opcode, uint3
 						CString strInfo;
 						const DWORD dwKnownBits = SRV_UDPFLG_EXT_GETSOURCES | SRV_UDPFLG_EXT_GETFILES | SRV_UDPFLG_NEWTAGS | SRV_UDPFLG_UNICODE | SRV_UDPFLG_EXT_GETSOURCES2 | SRV_UDPFLG_LARGEFILES | SRV_UDPFLG_UDPOBFUSCATION | SRV_UDPFLG_TCPOBFUSCATION;
 						if (uUDPFlags & ~dwKnownBits)
-							strInfo.AppendFormat(_T("  ***UnkUDPFlags=0x%08x"), uUDPFlags & ~dwKnownBits);
+							strInfo.AppendFormat(_T("  ***UnkUDPFlags=0x%08lx"), uUDPFlags & ~dwKnownBits);
 						if (uUDPFlags & SRV_UDPFLG_EXT_GETSOURCES)
 							strInfo.AppendFormat(_T("  ExtGetSources=1"));
 						if (uUDPFlags & SRV_UDPFLG_EXT_GETSOURCES2)

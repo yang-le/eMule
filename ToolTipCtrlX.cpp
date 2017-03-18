@@ -42,7 +42,7 @@ END_MESSAGE_MAP()
 
 CToolTipCtrlX::CToolTipCtrlX()
 {
-	memset(&m_lfNormal, 0, sizeof(m_lfNormal));
+	memset(&m_lfNormal, 0, sizeof m_lfNormal);
 	m_bCol1Bold = true;
 	m_bShowFileIcon = false;
 	ResetSystemMetrics();
@@ -79,9 +79,9 @@ void CToolTipCtrlX::ResetSystemMetrics()
 	m_fontBold.DeleteObject();
 	m_fontNormal.DeleteObject();
 
-	memset(&m_lfNormal, 0, sizeof(m_lfNormal));
-    NONCLIENTMETRICS ncm;
-    ncm.cbSize = sizeof(NONCLIENTMETRICS);
+	memset(&m_lfNormal, 0, sizeof m_lfNormal);
+	NONCLIENTMETRICS ncm;
+	ncm.cbSize = sizeof(NONCLIENTMETRICS);
 	if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0))
 		memcpy(&m_lfNormal, &ncm.lfStatusFont, sizeof(m_lfNormal));
 
@@ -193,7 +193,7 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 				VERIFY( m_fontNormal.CreateFontIndirect(&lf) );
 
 				if (m_bCol1Bold && m_fontBold.m_hObject == NULL) {
-					memset(&lf, 0, sizeof(lf));
+					memset(&lf, 0, sizeof lf);
 					if (g_xpStyle.GetThemeFont(hTheme, pdc->m_hDC, TTP_STANDARDTITLE, TTSS_NORMAL, TMT_FONT, &lf) == S_OK)
 						VERIFY( m_fontBold.CreateFontIndirect(&lf) );
 				}

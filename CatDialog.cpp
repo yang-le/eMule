@@ -180,7 +180,7 @@ void CCatDialog::OnBnClickedOk()
 		theApp.sharedfiles->Reload();
 
 	m_myCat->color = newcolor;
-    m_myCat->prio = m_prio.GetCurSel();
+	m_myCat->prio = m_prio.GetCurSel();
 	GetDlgItem(IDC_AUTOCATEXT)->GetWindowText(m_myCat->autocat);
 
 	GetDlgItemText(IDC_REGEXP,m_myCat->regexp);

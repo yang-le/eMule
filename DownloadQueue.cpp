@@ -1581,7 +1581,7 @@ void CSourceHostnameResolveWnd::AddToResolve(const uchar* fileid, LPCSTR pszHost
 	if (bResolving)
 		return;
 
-	memset(m_aucHostnameBuffer, 0, sizeof(m_aucHostnameBuffer));
+	memset(m_aucHostnameBuffer, 0, sizeof m_aucHostnameBuffer);
 	if (WSAAsyncGetHostByName(m_hWnd, WM_HOSTNAMERESOLVED, entry->strHostname, m_aucHostnameBuffer, sizeof m_aucHostnameBuffer) != 0)
 		return;
 	m_toresolve.RemoveHead();
@@ -1628,7 +1628,7 @@ LRESULT CSourceHostnameResolveWnd::OnHostnameResolved(WPARAM /*wParam*/, LPARAM 
 	while (!m_toresolve.IsEmpty())
 	{
 		Hostname_Entry* entry = m_toresolve.GetHead();
-		memset(m_aucHostnameBuffer, 0, sizeof(m_aucHostnameBuffer));
+		memset(m_aucHostnameBuffer, 0, sizeof m_aucHostnameBuffer);
 		if (WSAAsyncGetHostByName(m_hWnd, WM_HOSTNAMERESOLVED, entry->strHostname, m_aucHostnameBuffer, sizeof m_aucHostnameBuffer) != 0)
 			return TRUE;
 		m_toresolve.RemoveHead();

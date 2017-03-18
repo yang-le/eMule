@@ -119,11 +119,11 @@ struct XMSGBOXPARAMS
 		crText                        = CLR_INVALID;	//+++1.8
 		crBackground                  = CLR_INVALID;	//+++1.8
 
-		memset(szIcon, 0, sizeof(szIcon));
-		memset(szCustomButtons, 0, sizeof(szCustomButtons));
-		memset(szReportButtonCaption, 0, sizeof(szReportButtonCaption));
-		memset(szCompanyName, 0, sizeof(szCompanyName));
-		memset(&UserDefinedButtonCaptions, 0, sizeof(UserDefinedButtonCaptions));	//+++1.5
+		memset(szIcon, 0, sizeof szIcon);
+		memset(szCustomButtons, 0, sizeof szCustomButtons);
+		memset(szReportButtonCaption, 0, sizeof szReportButtonCaption);
+		memset(szCompanyName, 0, sizeof szCompanyName);
+		memset(&UserDefinedButtonCaptions, 0, sizeof UserDefinedButtonCaptions);	//+++1.5
 	}
 
 	UINT		nIdHelp;						// help context ID for message;

@@ -618,14 +618,14 @@ void CreateItemReport(CListCtrl& lv, CString& rstrReport)
 	// Get max. chars per column
 	int* paiColWidths;
 	try {
-		paiColWidths = new int[iCols];
+		paiColWidths = new int[iCols]();
 	} catch (...) {
 		return;
 	}
 	TCHAR szItem[512];
 	int iItems = lv.GetItemCount();
 
-	memset(paiColWidths, 0, sizeof(*paiColWidths) * iCols);
+//	memset(paiColWidths, 0, (sizeof *paiColWidths) * iCols);
 	for (int iCol = 0; iCol < iCols; iCol++)
 	{
 		LVCOLUMN lvc;

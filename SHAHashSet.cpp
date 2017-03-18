@@ -732,11 +732,10 @@ bool CAICHRecoveryHashSet::SaveHashSet()
 		return false;
 	}
 	CSingleLock lockKnown2Met(&m_mutKnown2File);
-	if (!lockKnown2Met.Lock(5000))
+	if (!lockKnown2Met.Lock(SEC2MS(5)))
 		return false;
 
-	CString fullpath = thePrefs.GetMuleDirectory(EMULE_CONFIGDIR);
-	fullpath.Append(KNOWN2_MET_FILENAME);
+	CString fullpath = thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + KNOWN2_MET_FILENAME;
 	CSafeFile file;
 	CFileException fexp;
 	if (!file.Open(fullpath,CFile::modeCreate|CFile::modeReadWrite|CFile::modeNoTruncate|CFile::osSequentialScan|CFile::typeBinary|CFile::shareDenyNone, &fexp)){

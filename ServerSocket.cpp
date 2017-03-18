@@ -267,7 +267,7 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 				if (size < sizeof(LoginAnswer_Struct)){
 					throw GetResString(IDS_ERR_BADSERVERREPLY);
 				}
-				LoginAnswer_Struct* la = (LoginAnswer_Struct*)packet;
+				LoginAnswer_Struct* la = (LoginAnswer_Struct *)packet;
 
 				// save TCP flags in 'cur_server'
 				CServer* pServer = NULL;
@@ -277,10 +277,10 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 						DWORD dwFlags = *((uint32*)(packet + sizeof(LoginAnswer_Struct)));
 						if (thePrefs.GetDebugServerTCPLevel() > 0){
 							CString strInfo;
-							strInfo.AppendFormat(_T("  TCP Flags=0x%08x"), dwFlags);
+							strInfo.AppendFormat(_T("  TCP Flags=0x%08lx"), dwFlags);
 							const DWORD dwKnownBits = SRV_TCPFLG_COMPRESSION | SRV_TCPFLG_NEWTAGS | SRV_TCPFLG_UNICODE | SRV_TCPFLG_RELATEDSEARCH | SRV_TCPFLG_TYPETAGINTEGER | SRV_TCPFLG_LARGEFILES | SRV_TCPFLG_TCPOBFUSCATION;
 							if (dwFlags & ~dwKnownBits)
-								strInfo.AppendFormat(_T("  ***UnkBits=0x%08x"), dwFlags & ~dwKnownBits);
+								strInfo.AppendFormat(_T("  ***UnkBits=0x%08lx"), dwFlags & ~dwKnownBits);
 							if (dwFlags & SRV_TCPFLG_COMPRESSION)
 								strInfo.AppendFormat(_T("  Compression=1"));
 							if (dwFlags & SRV_TCPFLG_NEWTAGS)
@@ -784,18 +784,20 @@ void CServerSocket::OnClose(int /*nErrorCode*/)
 	serverconnect->DestroySocket(this);
 }
 
-void CServerSocket::SetConnectionState(int newstate){
+void CServerSocket::SetConnectionState(int newstate)
+{
 	connectionstate = newstate;
-	if (newstate < 1){
+	if (newstate < 1) {
 		serverconnect->ConnectionFailed(this);
 	}
-	else if (newstate == CS_CONNECTED || newstate == CS_WAITFORLOGIN){
+	else if (newstate == CS_CONNECTED || newstate == CS_WAITFORLOGIN) {
 		if (serverconnect)
 			serverconnect->ConnectionEstablished(this);
 	}
 }
 
-void CServerSocket::SendPacket(Packet* packet, bool delpacket, bool controlpacket, uint32 actualPayloadSize, bool bForceImmediateSend){
+void CServerSocket::SendPacket(Packet* packet, bool delpacket, bool controlpacket, uint32 actualPayloadSize, bool bForceImmediateSend)
+{
 	m_dwLastTransmission = GetTickCount();
 	CEMSocket::SendPacket(packet, delpacket, controlpacket, actualPayloadSize, bForceImmediateSend);
 }

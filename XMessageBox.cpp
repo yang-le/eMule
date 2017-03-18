@@ -827,23 +827,19 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 	}
 
 	// store company name to use for saving checkbox state in registry
-	memset(m_szCompanyName, 0, sizeof(m_szCompanyName));
+	memset(m_szCompanyName, 0, sizeof m_szCompanyName);
 	_tcscpy(m_szCompanyName, pXMB->szCompanyName);
 
 	// m_szDefaultButton is used to save text for timeout option
-	memset(m_szDefaultButton, 0, sizeof(m_szDefaultButton));
+	memset(m_szDefaultButton, 0, sizeof m_szDefaultButton);
 
 	///////////////////////////////////////////////////////////////////////////
 	// allocate buffers for message and caption - buffers must be allocated
 	// (instead of just using pointers) because we may need to load the strings
 	// from resources
-	m_lpszMessage = new TCHAR [MessageSize];
-	m_lpszMessage[0] = _T('\0');
-	memset(m_lpszMessage, 0, MessageSize*sizeof(TCHAR));
+	m_lpszMessage = new TCHAR[MessageSize]();
 
-	m_lpszCaption = new TCHAR [MessageSize];
-	m_lpszCaption[0] = _T('\0');
-	memset(m_lpszCaption, 0, MessageSize*sizeof(TCHAR));
+	m_lpszCaption = new TCHAR[MessageSize]();
 
 	///////////////////////////////////////////////////////////////////////////
 	// set instance handle for strings
@@ -895,7 +891,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 
 	///////////////////////////////////////////////////////////////////////////
 	// load custom buttons from resource or string
-	memset(m_szCustomButtons, 0, sizeof(m_szCustomButtons));
+	memset(m_szCustomButtons, 0, sizeof m_szCustomButtons);
 
 	if (pXMB->nIdCustomButtons)
 	{
@@ -2500,8 +2496,7 @@ INT_PTR CXDialogTemplate::Display()
 		// disable owner - this is a modal dialog
 		::EnableWindow(m_hWndOwner, FALSE);
 
-		MSG msg;
-		memset(&msg, 0, sizeof(msg));
+		MSG msg = {};
 
 		// message loop for dialog
 

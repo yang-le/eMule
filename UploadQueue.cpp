@@ -521,7 +521,7 @@ bool CUploadQueue::ForceNewClient(bool allowEmptyWaitingQueue)
 		if ( curUploadSlots < nMaxSlots )
 			return true;
 	}
-
+/*
 	if(m_iHighestNumberOfFullyActivatedSlotsSinceLastCall > uploadinglist.GetSize()) {
 		// uploadThrottler requests another slot. If throttler says it needs another slot, we will allow more slots
 		// than what we require ourself. Never allow more slots than to give each slot high enough average transfer speed, though (checked above).
@@ -532,6 +532,8 @@ bool CUploadQueue::ForceNewClient(bool allowEmptyWaitingQueue)
 
 	//nope
 	return false;
+*/
+	return m_iHighestNumberOfFullyActivatedSlotsSinceLastCall > uploadinglist.GetSize();
 }
 
 CUpDownClient* CUploadQueue::GetWaitingClientByIP_UDP(uint32 dwIP, uint16 nUDPPort, bool bIgnorePortOnUniqueIP, bool* pbMultipleIPs)

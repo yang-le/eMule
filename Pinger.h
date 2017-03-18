@@ -219,7 +219,7 @@ public:
     static void PIcmpErr(int nICMPErr);
 
 private:
-    void DisplayErr(int nWSAErr);
+//    void DisplayErr(int nWSAErr);
 
     bool udpStarted;
 

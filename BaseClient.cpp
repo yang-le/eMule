@@ -723,7 +723,8 @@ bool CUpDownClient::ProcessHelloTypePacket(CSafeMemFile* data)
 	return bIsMule;
 }
 
-void CUpDownClient::SendHelloPacket(){
+void CUpDownClient::SendHelloPacket()
+{
 	if (socket == NULL){
 		ASSERT(0);
 		return;
@@ -740,7 +741,6 @@ void CUpDownClient::SendHelloPacket(){
 	SendPacket(packet, true);
 
 	m_bHelloAnswerPending = true;
-	return;
 }
 
 void CUpDownClient::SendMuleInfoPacket(bool bAnswer){
@@ -986,10 +986,7 @@ void CUpDownClient::SendHelloAnswer(){
 void CUpDownClient::SendHelloTypePacket(CSafeMemFile* data)
 {
 	data->WriteHash16(thePrefs.GetUserHash());
-	uint32 clientid;
-	clientid = theApp.GetID();
-
-	data->WriteUInt32(clientid);
+	data->WriteUInt32(theApp.GetID());
 	data->WriteUInt16(thePrefs.GetPort());
 
 	uint32 tagcount = 6;
@@ -1580,7 +1577,7 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 			packet->opcode = KADEMLIA_CALLBACK_REQ;
 			theStats.AddUpDataOverheadKad(packet->size);
 			m_nConnectingState = CCS_KADCALLBACK;
-			// FIXME: We dont know which kadversion the buddy has, so we need to send unencrypted
+			// FIXME: We dont know which kad version the buddy has, so we need to send unencrypted
 			theApp.clientudp->SendPacket(packet, GetBuddyIP(), GetBuddyPort(), false, NULL, true, 0);
 			SetDownloadState(DS_WAITCALLBACKKAD);
 		}
@@ -2749,7 +2746,8 @@ CString CUpDownClient::GetUploadStateDisplayString() const
 	return strState;
 }
 
-void CUpDownClient::SendPublicIPRequest(){
+void CUpDownClient::SendPublicIPRequest()
+{
 	if (socket && socket->IsConnected()){
 		if (thePrefs.GetDebugClientTCPLevel() > 0)
 			DebugSend("OP__PublicIPReq", this);
@@ -2760,7 +2758,8 @@ void CUpDownClient::SendPublicIPRequest(){
 	}
 }
 
-void CUpDownClient::ProcessPublicIPAnswer(const BYTE* pbyData, UINT uSize){
+void CUpDownClient::ProcessPublicIPAnswer(const BYTE* pbyData, UINT uSize)
+{
 	if (uSize != 4)
 		throw GetResString(IDS_ERR_WRONGPACKAGESIZE);
 	uint32 dwIP = PeekUInt32(pbyData);
@@ -2807,7 +2806,8 @@ void CUpDownClient::SetSpammer(bool bVal){
 	m_fIsSpammer = bVal ? 1 : 0;
 }
 
-void  CUpDownClient::SetMessageFiltered(bool bVal)	{
+void  CUpDownClient::SetMessageFiltered(bool bVal)
+{
 	m_fMessageFiltered = bVal ? 1 : 0;
 }
 
@@ -2818,7 +2818,8 @@ bool  CUpDownClient::IsObfuscatedConnectionEstablished() const
 	return false;
 }
 
-bool CUpDownClient::ShouldReceiveCryptUDPPackets() const {
+bool CUpDownClient::ShouldReceiveCryptUDPPackets() const
+{
 	return (thePrefs.IsClientCryptLayerSupported() && SupportsCryptLayer() && theApp.GetPublicIP() != 0
 		&& HasValidHash() && (thePrefs.IsClientCryptLayerRequested() || RequestsCryptLayer()) );
 }

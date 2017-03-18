@@ -171,16 +171,17 @@ BOOL CDirectDownloadDlg::OnInitDialog()
 				  // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CDirectDownloadDlg::UpdateCatTabs() {
-	int oldsel=m_cattabs.GetCurSel();
+void CDirectDownloadDlg::UpdateCatTabs()
+{
+	int oldsel = m_cattabs.GetCurSel();
 	m_cattabs.DeleteAllItems();
-	for (int ix=0;ix<thePrefs.GetCatCount();ix++) {
-		CString label=(ix==0)?GetResString(IDS_ALL):thePrefs.GetCategory(ix)->strTitle;
-		label.Replace(_T("&"),_T("&&"));
-		m_cattabs.InsertItem(ix,label);
+	for (int ix = 0; ix<thePrefs.GetCatCount(); ++ix) {
+		CString label = (ix==0) ? GetResString(IDS_ALL) : thePrefs.GetCategory(ix)->strTitle;
+		label.Replace(_T("&"), _T("&&"));
+		m_cattabs.InsertItem(ix, label);
 	}
 	if (oldsel>=m_cattabs.GetItemCount() || oldsel==-1)
-		oldsel=0;
+		oldsel = 0;
 
 	m_cattabs.SetCurSel(oldsel);
 }

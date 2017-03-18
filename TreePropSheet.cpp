@@ -567,8 +567,7 @@ void CTreePropSheet::UpdateCaption()
 		CImageList	*pImages = pTabCtrl->GetImageList();
 		if (pImages)
 		{
-			TCITEM	ti;
-			ZeroMemory(&ti, sizeof(ti));
+			TCITEM	ti = {};
 			ti.mask = TCIF_IMAGE;
 
 			HICON	hIcon = NULL;

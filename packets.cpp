@@ -95,9 +95,8 @@ Packet::Packet(uint8 in_opcode, uint32 in_size, uint8 protocol, bool bFromPartFi
 	m_bSplitted = false;
 	m_bLastSplitted = false;
 	if (in_size) {
-		completebuffer = new char[in_size+10];
+		completebuffer = new char[in_size+10]();
 		pBuffer = completebuffer+6;
-		memset(completebuffer,0,in_size+10);
 	}
 	else{
 		pBuffer = NULL;

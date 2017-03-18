@@ -422,11 +422,10 @@ void CUpDownClient::ProcessHttpBlockPacket(const BYTE* pucData, UINT uSize)
 	TRACE("%s - Dropping packet\n", __FUNCTION__);
 }
 
-void CUrlClient::SendCancelTransfer(Packet* /*packet*/)
+void CUrlClient::SendCancelTransfer()
 {
-	if (socket)
-	{
-		STATIC_DOWNCAST(CHttpClientDownSocket, socket)->SetHttpState(HttpStateUnknown);
+	if (socket) {
+		static_cast<CHttpClientDownSocket *>(socket)->SetHttpState(HttpStateUnknown);
 		socket->Safe_Delete();
 	}
 }

@@ -242,12 +242,9 @@ Pinger::~Pinger() {
     FreeLibrary(hICMP_DLL);
 }
 
-PingStatus Pinger::Ping(uint32 lAddr, uint32 ttl, bool doLog, bool useUdp) {
-    if(useUdp && udpStarted) {
-        return PingUDP(lAddr, ttl, doLog);
-    } else {
-        return PingICMP(lAddr, ttl, doLog);
-    }
+PingStatus Pinger::Ping(uint32 lAddr, uint32 ttl, bool doLog, bool useUdp)
+{
+	return (useUdp && udpStarted) ? PingUDP(lAddr, ttl, doLog) : PingICMP(lAddr, ttl, doLog);
 }
 
 PingStatus Pinger::PingUDP(uint32 lAddr, uint32 ttl, bool doLog) {
@@ -494,8 +491,7 @@ void Pinger::PIcmpErr(int nICMPErr)
 {
 	int  nErrIndex = nICMPErr - IP_STATUS_BASE;
 
-	if ((nICMPErr > MAX_ICMP_ERR_STRING) ||
-		(nICMPErr < IP_STATUS_BASE+1)) {
+	if (nICMPErr > MAX_ICMP_ERR_STRING || nICMPErr < IP_STATUS_BASE+1) {
 
 		// Error value is out of range, display normally
 		theApp.QueueDebugLogLine(false, _T("Pinger: %s"), (LPCTSTR)GetErrorMessage(nICMPErr, 1));
