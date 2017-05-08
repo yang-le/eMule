@@ -2434,7 +2434,7 @@ INT_PTR CXDialogTemplate::Display()
 	memset(pchCaption, 0, nTitleLen*sizeof(WCHAR) + 2);
 
 #ifdef _UNICODE
-	memcpy(pchCaption, szTitle, nTitleLen * sizeof(TCHAR));
+	memcpy(pchCaption, szTitle, nTitleLen*sizeof(TCHAR));
 	int nActualChars = nTitleLen + 1;
 #else
 	int nActualChars = MultiByteToWideChar(CP_ACP, 0,
@@ -2466,7 +2466,7 @@ INT_PTR CXDialogTemplate::Display()
 
 #ifdef _UNICODE
 		memset(pchCaption, 0, nChars*sizeof(TCHAR) + 2);
-		memcpy(pchCaption, m_pDlgItemArray[i]->m_pszCaption, nChars * sizeof(TCHAR));	//+++1.5
+		memcpy(pchCaption, m_pDlgItemArray[i]->m_pszCaption, nChars*sizeof(TCHAR));	//+++1.5
 /*		int */ nActualChars = nChars;
 #else
 /*		int */ nActualChars = MultiByteToWideChar(CP_ACP, 0,
@@ -2487,8 +2487,8 @@ INT_PTR CXDialogTemplate::Display()
 
 	TRACE(_T("calling CreateDialogIndirectParam\n"));
 
-	HWND hDlg = ::CreateDialogIndirectParam(hInstance, (LPCDLGTEMPLATE) pBuffer,
-		m_hWndOwner, MsgBoxDlgProc, (LPARAM) this);
+	HWND hDlg = ::CreateDialogIndirectParam(hInstance, (LPCDLGTEMPLATE)pBuffer,
+		m_hWndOwner, MsgBoxDlgProc, (LPARAM)this);
 	_ASSERTE(hDlg);
 
 	if (hDlg)

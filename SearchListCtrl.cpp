@@ -675,12 +675,11 @@ int CSearchListCtrl::Compare(const CSearchFile *item1, const CSearchFile *item2,
 {
 	if (thePrefs.IsSearchSpamFilterEnabled())
 	{
-		// files makred as spam are always put to the bottom of the list (maybe as option later)
+		// files marked as spam are always put to the bottom of the list (maybe as option later)
 		if (item1->IsConsideredSpam() ^ item2->IsConsideredSpam()) {
 			if (bSortAscending)
 				return item1->IsConsideredSpam() ? 1 : -1;
-			else
-				return item1->IsConsideredSpam() ? -1 : 1;
+			return item1->IsConsideredSpam() ? -1 : 1;
 		}
 	}
 

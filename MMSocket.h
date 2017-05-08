@@ -25,6 +25,7 @@ class CMMPacket
 public:
 	explicit CMMPacket(const uint8 byOpcode)	{m_pBuffer = new CMemFile; m_pBuffer->Write(&byOpcode,1); m_bSpecialHeader = false;}
 	~CMMPacket()				{delete m_pBuffer;}
+	CMMPacket(const CMMPacket&) = delete;
 	void	WriteByte(const uint8 write) { m_pBuffer->Write(&write, 1); }
 	void	WriteShort(const uint16 write) { m_pBuffer->Write(&write, 2); }
 	void	WriteInt(const uint32 write) { m_pBuffer->Write(&write, 4); }
@@ -37,8 +38,7 @@ public:
 	}
 	void	WriteString(const CString& write)
 	{
-		CStringA strA(write);
-		WriteString(strA);
+		WriteString(CStringA(write));
 	}
 	CMemFile* m_pBuffer;
 	bool	  m_bSpecialHeader;

@@ -104,20 +104,15 @@ UINT GetMSCodePage(ID3_TextEnc enc)
   {
     case ID3TE_ISO8859_1:
       return ID3_MSCODEPAGE_ISO8859_1;
-      break;
     case ID3TE_UTF16: //id3lib strips the byte order, hence the actual string becomes ID3TE_UTF16BE
       return ID3_MSCODEPAGE_UTF16BE; // this would be used if it had a unicode two byte byteorder: ID3_MSCODEPAGE_UTF16;
-      break;
     case ID3TE_UTF16BE:
       return ID3_MSCODEPAGE_UTF16BE;
-      break;
     case ID3TE_UTF8:
       return ID3_MSCODEPAGE_UTF8;
-      break;
-    default:
-      return 0;
-      break;
+//    default:
   }
+   return 0;
 }
 
 String msconvert(String data, ID3_TextEnc sourceEnc, ID3_TextEnc targetEnc)

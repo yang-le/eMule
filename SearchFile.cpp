@@ -39,13 +39,14 @@ static char THIS_FILE[] = __FILE__;
 
 bool IsValidSearchResultClientIPPort(uint32 nIP, uint16 nPort)
 {
-	return	   nIP != 0
+	return	(nIP & 0xFF) && nPort;
+/*	return	   nIP != 0
 			&& nPort != 0
 			&& (ntohl(nIP) != nPort)		// this filters most of the false data
 			&& ((nIP & 0x000000FF) != 0)
 			&& ((nIP & 0x0000FF00) != 0)
 			&& ((nIP & 0x00FF0000) != 0)
-			&& ((nIP & 0xFF000000) != 0);
+			&& ((nIP & 0xFF000000) != 0);*/
 }
 
 void ConvertED2KTag(CTag*& pTag)
@@ -169,7 +170,7 @@ CSearchFile::CSearchFile(CFileDataIO* in_data, bool bOptUTF8,
 	m_FileIdentifier.SetMD4Hash(in_data);
 	m_nClientID = in_data->ReadUInt32();
 	m_nClientPort = in_data->ReadUInt16();
-	if ((m_nClientID || m_nClientPort) && !IsValidSearchResultClientIPPort(m_nClientID, m_nClientPort)){
+	if (!IsValidSearchResultClientIPPort(m_nClientID, m_nClientPort)){
 		if (thePrefs.GetDebugServerSearchesLevel() > 1)
 			Debug(_T("Filtered source from search result %s:%u\n"), (LPCTSTR)DbgGetClientID(m_nClientID), m_nClientPort);
 		m_nClientID = 0;

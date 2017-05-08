@@ -1938,12 +1938,11 @@ int CUpDownClient::GetHashType() const
 {
 	if (m_achUserHash[5] == 13 && m_achUserHash[14] == 110)
 		return SO_OLDEMULE;
-	else if (m_achUserHash[5] == 14 && m_achUserHash[14] == 111)
+	if (m_achUserHash[5] == 14 && m_achUserHash[14] == 111)
 		return SO_EMULE;
- 	else if (m_achUserHash[5] == 'M' && m_achUserHash[14] == 'L')
+ 	if (m_achUserHash[5] == 'M' && m_achUserHash[14] == 'L')
 		return SO_MLDONKEY;
-	else
-		return SO_UNKNOWN;
+	return SO_UNKNOWN;
 }
 
 void CUpDownClient::SetUserName(LPCTSTR pszNewName)
@@ -2678,6 +2677,9 @@ CString CUpDownClient::GetDownloadStateDisplayString() const
 		break;
 	case DS_TOOMANYCONNSKAD:
 		sid = IDS_KAD_TOOMANDYKADLKPS;
+		break;
+	default:
+		sid = 0;
 	}
 
 	CString strState(GetResString(sid));

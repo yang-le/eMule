@@ -120,89 +120,26 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
-// Visual Studio 2012
+// Visual Studio 2012, 2013, 2015, 2017
 //////////////////////////////////////////////////////////////////////////////
-#if _MSC_VER==1700
+//  VS2012==1700, VS2013==1800, VS2015==1900, VS2017==1910
+#if _MSC_VER>=1700
 
-#define HAVE_VISTA_SDK		// VS2008 is already shipped with a Vista SDK
-#define HAVE_WMF_SDK		// WMF SDK is part of the Vista SDK
+#define HAVE_VISTA_SDK		// shipped with Windows SDK
+#define HAVE_WMF_SDK		// WMF SDK is part of the Windows SDK
 #define HAVE_DIRECTX_SDK	// DirectX 9(!) SDK
 
-// 'sapi.h' is shipped with VS2012 as part of the Vista SDK
+// 'sapi.h' is shipped as part of the Windows SDK
 #ifndef HAVE_VISTA_SDK
 #undef HAVE_SAPI_H
 #endif//HAVE_VISTA_SDK
 
-// 'qedit.h' file is shipped with VS2008 as part of the Vista SDK, but it needs
-// an additional file ('ddraw.h') which is only shipped with the DirectX 9 SDK.
-// You need to install the DirectX 9 SDK to enable this feature.
+// 'qedit.h' file is not shipped after VS200
 #if !defined(HAVE_VISTA_SDK) || !defined(HAVE_DIRECTX_SDK)
 #undef HAVE_QEDIT_H
 #endif//!defined(HAVE_VISTA_SDK) || !defined(HAVE_DIRECTX_SDK)
 
-// 'wmsdk.h' is shipped with VS2008 as part of the Vista SDK
-#if !defined(HAVE_VISTA_SDK) && !defined(HAVE_WMF_SDK)
-#undef HAVE_WMSDK_H
-#endif//!defined(HAVE_VISTA_SDK) && !defined(HAVE_WMF_SDK)
-
-#include <sdkddkver.h>
-
-#endif
-
-//////////////////////////////////////////////////////////////////////////////
-// Visual Studio 2013
-//////////////////////////////////////////////////////////////////////////////
-#if _MSC_VER==1800
-
-#define HAVE_VISTA_SDK		// VS2013 is already shipped with a Vista SDK
-#define HAVE_WIN7_SDK_H		// VS2013 is already shipped with a Windows 7 SDK
-#define HAVE_WMF_SDK		// WMF SDK is part of the Vista SDK
-#define HAVE_DIRECTX_SDK	// DirectX 9(!) SDK
-
-// 'sapi.h' is shipped with VS2013 as part of the Vista SDK
-#ifndef HAVE_VISTA_SDK
-#undef HAVE_SAPI_H
-#endif//HAVE_VISTA_SDK
-
-// 'qedit.h' file is shipped with VS2013 as part of the Vista SDK, but it needs
-// an additional file ('ddraw.h') which is only shipped with the DirectX 9 SDK.
-// You need to install the DirectX 9 SDK to enable this feature.
-#if !defined(HAVE_VISTA_SDK) || !defined(HAVE_DIRECTX_SDK)
-#undef HAVE_QEDIT_H
-#endif//!defined(HAVE_VISTA_SDK) || !defined(HAVE_DIRECTX_SDK)
-
-// 'wmsdk.h' is shipped with VS2013 as part of the Vista SDK
-#if !defined(HAVE_VISTA_SDK) && !defined(HAVE_WMF_SDK)
-#undef HAVE_WMSDK_H
-#endif//!defined(HAVE_VISTA_SDK) && !defined(HAVE_WMF_SDK)
-
-#include <sdkddkver.h>
-
-#endif
-
-//////////////////////////////////////////////////////////////////////////////
-// Visual Studio 2015
-//////////////////////////////////////////////////////////////////////////////
-#if _MSC_VER==1900
-
-#define HAVE_VISTA_SDK		// VS2015 is already shipped with a Vista SDK
-#define HAVE_WIN7_SDK_H		// VS2015 is already shipped with a Windows 7 SDK
-#define HAVE_WMF_SDK		// WMF SDK is part of the Vista SDK
-#define HAVE_DIRECTX_SDK	// DirectX 9(!) SDK
-
-// 'sapi.h' is shipped with VS2015 as part of the Vista SDK
-#ifndef HAVE_VISTA_SDK
-#undef HAVE_SAPI_H
-#endif//HAVE_VISTA_SDK
-
-// 'qedit.h' file is shipped with VS2015 as part of the Vista SDK, but it needs
-// an additional file ('ddraw.h') which is only shipped with the DirectX 9 SDK.
-// You need to install the DirectX 9 SDK to enable this feature.
-#if !defined(HAVE_VISTA_SDK) || !defined(HAVE_DIRECTX_SDK)
-#undef HAVE_QEDIT_H
-#endif//!defined(HAVE_VISTA_SDK) || !defined(HAVE_DIRECTX_SDK)
-
-// 'wmsdk.h' is shipped with VS2015 as part of the Vista SDK
+// 'wmsdk.h' is shipped as part of the Windows SDK
 #if !defined(HAVE_VISTA_SDK) && !defined(HAVE_WMF_SDK)
 #undef HAVE_WMSDK_H
 #endif//!defined(HAVE_VISTA_SDK) && !defined(HAVE_WMF_SDK)

@@ -1427,7 +1427,7 @@ LRESULT CemuleDlg::OnWMData(WPARAM /*wParam*/, LPARAM lParam)
 
 		CCollection* pCollection = new CCollection();
 		CString strPath = CString((LPCTSTR)data->lpData);
-		if (pCollection->InitCollectionFromFile(strPath, strPath.Right((strPath.GetLength()-1)-strPath.ReverseFind('\\')))){
+		if (pCollection->InitCollectionFromFile(strPath, strPath.Right((strPath.GetLength()-1)-strPath.ReverseFind(_T('\\'))))){
 			CCollectionViewDialog dialog;
 			dialog.SetCollection(pCollection);
 			dialog.DoModal();
@@ -3461,7 +3461,7 @@ LRESULT CemuleDlg::OnWebServerClearCompleted(WPARAM wParam, LPARAM lParam)
 		uchar* pFileHash = reinterpret_cast<uchar*>(lParam);
 		CKnownFile* file = theApp.knownfiles->FindKnownFileByID(pFileHash);
 		if (file)
-			transferwnd->GetDownloadList()->RemoveFile(reinterpret_cast<CPartFile *>(file));
+			transferwnd->GetDownloadList()->RemoveFile(static_cast<CPartFile *>(file));
 		delete[] pFileHash;
 	}
 

@@ -164,14 +164,14 @@ int CPartFileConvert::performConvertToeMule(CString folder)
 	CFileFind finder;
 
 	CString partfile=folder;
-	folder.Delete(folder.ReverseFind('\\'),folder.GetLength());
-	partfile=partfile.Mid(partfile.ReverseFind('\\')+1,partfile.GetLength());
+	folder.Delete(folder.ReverseFind(_T('\\')),folder.GetLength());
+	partfile = partfile.Mid(partfile.ReverseFind(_T('\\'))+1, partfile.GetLength());
 
 
 	UpdateGUI(0,GetResString(IDS_IMP_STEPREADPF),true);
 
-	filepartindex=partfile.Left(partfile.Find('.'));
-	//int pos=filepartindex.ReverseFind('\\');
+	filepartindex=partfile.Left(partfile.Find(_T('.')));
+	//int pos=filepartindex.ReverseFind(_T('\\'));
 	//if (pos>-1) filepartindex=filepartindex.Mid(pos+1,filepartindex.GetLength()-pos);
 
 	UpdateGUI(4,GetResString(IDS_IMP_STEPBASICINF));

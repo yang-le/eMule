@@ -205,7 +205,6 @@ CString DbgGetFileInfo(const uchar* hash);
 CString DbgGetFileStatus(UINT nPartCount, CSafeMemFile* data);
 LPCTSTR DbgGetHashTypeString(const uchar* hash);
 CString DbgGetClientID(uint32 nClientID);
-int GetHashType(const uchar* hash);
 CString DbgGetDonkeyClientTCPOpcode(UINT opcode);
 CString DbgGetMuleClientTCPOpcode(UINT opcode);
 CString DbgGetClientTCPOpcode(UINT protocol, UINT opcode);
@@ -286,7 +285,12 @@ __inline int md4cmp(const void* hash1, const void* hash2)
 
 __inline bool isnulmd4(const void* hash)
 {
-	return !((uint64*)hash)[0] && !((uint64*)hash)[1];
+	return !((const uint64*)hash)[0] && !((const uint64*)hash)[1];
+}
+
+__inline bool isbadhash(const void* hash)
+{
+	return !(((const uint64*)hash)[0]&0xffff00ffffffffffull) && !(((const uint64*)hash)[1]&0xff00ffffffffffffull);
 }
 
 // md4clr -- replacement for memset(hash,0,16)

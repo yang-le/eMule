@@ -734,10 +734,10 @@ void CUPnPImplWinServ::DeleteExistingPortMappings(ServicePointer pService)
 
 			CArray<CString> oTokens;
 			int nPos = 0;
-			CString strToken = strActionResult.Tokenize(L"|", nPos);
+			CString strToken = strActionResult.Tokenize(_T("|"), nPos);
 			while (!strToken.IsEmpty()) {
 				oTokens.Add(strToken);
-				strToken = strActionResult.Tokenize(L"|", nPos);
+				strToken = strActionResult.Tokenize(_T("|"), nPos);
 			}
 
 			if (oTokens.GetCount() != 8) {

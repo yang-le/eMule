@@ -202,10 +202,13 @@ public:
 	{
 		m_aT = new T[nCount];
 	}
+
 	~Array()
 	{
 		delete[] m_aT;
 	}
+
+	Array(const Array&) = delete;
 
 	operator T* () const
 	{

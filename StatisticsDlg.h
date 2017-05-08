@@ -44,7 +44,7 @@ public:
 	void RepaintMeters();
 
 	void	UpdateConnectionsGraph();
-	void	DoTreeMenu();
+//	void	DoTreeMenu();
 	void	CreateMyTree();
 	// -khaos--+++> New class for our humble little tree.
 	CStatisticsTree stattree;

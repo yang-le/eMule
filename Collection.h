@@ -42,6 +42,7 @@ public:
 	CCollection();
 	explicit CCollection(const CCollection* pCollection);
 	~CCollection();
+	CCollection(const CCollection&) = delete;
 	bool InitCollectionFromFile(const CString& sFilePath, CString sFileName);
 	CCollectionFile* AddFileToCollection(CAbstractFile* pAbstractFile, bool bCreateClone);
 	void RemoveFileFromCollection(CAbstractFile* pAbstractFile);

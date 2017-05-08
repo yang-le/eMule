@@ -170,6 +170,8 @@ public:
 		}
 	}
 
+	CAsyncSocketExHelperWindow(const CAsyncSocketExHelperWindow&) = delete;
+
 	//Adds a socket to the list of attached sockets
 	BOOL AddSocket(CAsyncSocketEx *pSocket, int &nSocketIndex)
 	{
@@ -432,8 +434,8 @@ public:
 			}
 			return DefWindowProc(hWnd, message, wParam, lParam);
 #if !NO_USE_CLIENT_TCP_CATCH_ALL_HANDLER
-		}
-		catch(CException* e){
+		} catch(CException* e) {
+#ifndef NDEBUG
 			TCHAR szError[1024];
 			GetExceptionMessage(*e, szError, ARRSIZE(szError));
 			const CRuntimeClass* pRuntimeClass = e->GetRuntimeClass();
@@ -441,6 +443,7 @@ public:
 			if (!pszClassName)
 				pszClassName = "CException";
 			TRACE(_T("*** Unknown %hs exception in CAsyncSocketExHelperWindow::WindowProc - %s\n"), pszClassName, szError);
+#endif // !NDEBUG
 			e->Delete();
 		}
 		catch (...) {

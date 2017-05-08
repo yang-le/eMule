@@ -3098,19 +3098,9 @@ void CStatisticsDlg::ShowInterval()
 void CStatisticsDlg::SetARange(bool SetDownload, int maxValue)
 {
 	if (SetDownload)
-	{
-		m_DownloadOMeter.SetRange(0, maxValue, 0);
-		m_DownloadOMeter.SetRange(0, maxValue, 1);
-		m_DownloadOMeter.SetRange(0, maxValue, 2);
-	}
+		m_DownloadOMeter.SetRanges(0, maxValue);
 	else
-	{
-		m_UploadOMeter.SetRange(0, maxValue, 0) ;
-		m_UploadOMeter.SetRange(0, maxValue, 1);
-		m_UploadOMeter.SetRange(0, maxValue, 2);
-		m_UploadOMeter.SetRange(0, maxValue, 3);
-		m_UploadOMeter.SetRange(0, maxValue, 4);
-	}
+		m_UploadOMeter.SetRanges(0, maxValue);
 }
 
 // Various changes in Localize() and a new button event...

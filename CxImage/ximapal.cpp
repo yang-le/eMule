@@ -64,7 +64,7 @@ void CxImage::SetPaletteColor(uint8_t idx, COLORREF cr)
  */
 RGBQUAD* CxImage::GetPalette() const
 {
-	if ((pDib)&&(head.biClrUsed))
+	if (pDib && head.biClrUsed)
 		return (RGBQUAD*)((uint8_t*)pDib + sizeof(BITMAPINFOHEADER));
 	return NULL;
 }
@@ -439,11 +439,13 @@ bool CxImage::GetPaletteColor(uint8_t i, uint8_t* r, uint8_t* g, uint8_t* b) con
 ////////////////////////////////////////////////////////////////////////////////
 void CxImage::SetPalette(uint32_t n, uint8_t *r, uint8_t *g, uint8_t *b)
 {
-	if ((!r)||(pDib==NULL)||(head.biClrUsed==0))
+	if (!r)
+		return;
+	RGBQUAD* ppal = GetPalette();
+	if (!ppal)
 		return;
 	if (!g) g = r;
 	if (!b) b = g;
-	RGBQUAD* ppal=GetPalette();
 	uint32_t m=min(n,head.biClrUsed);
 	for (uint32_t i=0; i<m;i++){
 		ppal[i].rgbRed=r[i];
@@ -455,9 +457,11 @@ void CxImage::SetPalette(uint32_t n, uint8_t *r, uint8_t *g, uint8_t *b)
 ////////////////////////////////////////////////////////////////////////////////
 void CxImage::SetPalette(rgb_color *rgb,uint32_t nColors)
 {
-	if ((!rgb)||(pDib==NULL)||(head.biClrUsed==0))
+	if (!rgb)
 		return;
 	RGBQUAD* ppal=GetPalette();
+	if (!ppal)
+		return;
 	uint32_t m=min(nColors,head.biClrUsed);
 	for (uint32_t i=0; i<m;i++){
 		ppal[i].rgbRed=rgb[i].r;
@@ -469,9 +473,12 @@ void CxImage::SetPalette(rgb_color *rgb,uint32_t nColors)
 ////////////////////////////////////////////////////////////////////////////////
 void CxImage::SetPalette(RGBQUAD* pPal,uint32_t nColors)
 {
-	if (pPal==NULL || pDib==NULL || head.biClrUsed==0)
+	if (!pPal)
 		return;
-	memcpy(GetPalette(), pPal, min(GetPaletteSize(),nColors*sizeof(RGBQUAD)));
+	RGBQUAD* pal = GetPalette();
+	if (!pal)
+		return;
+	memcpy(pal, pPal, min(GetPaletteSize(),nColors*sizeof(RGBQUAD)));
 	info.last_c_isvalid = false;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -482,9 +489,9 @@ void CxImage::SetPalette(RGBQUAD* pPal,uint32_t nColors)
  */
 void CxImage::SetGrayPalette() const
 {
-	if ((pDib==NULL)||(head.biClrUsed==0))
+	RGBQUAD* pal = GetPalette();
+	if (!pal)
 		return;
-	RGBQUAD* pal=GetPalette();
 	for (uint32_t ni=0;ni<head.biClrUsed;ni++)
 		pal[ni].rgbBlue=pal[ni].rgbGreen = pal[ni].rgbRed = (uint8_t)(ni*(255/(head.biClrUsed-1)));
 }
@@ -495,15 +502,15 @@ void CxImage::SetGrayPalette() const
  */
 void CxImage::BlendPalette(COLORREF cr,int32_t perc) const
 {
-	if ((pDib==NULL)||(head.biClrUsed==0)) return;
-	uint8_t* iDst = (uint8_t*)(pDib) + sizeof(BITMAPINFOHEADER);
-	uint32_t i,r,g,b;
-	RGBQUAD* pPal=(RGBQUAD*)iDst;
-	r = GetRValue(cr);
-	g = GetGValue(cr);
-	b = GetBValue(cr);
-	if (perc>100) perc=100;
-	for(i=0;i<head.biClrUsed;i++){
+	RGBQUAD* pPal = GetPalette();
+	if (!pPal)
+		return;
+	uint32_t r = GetRValue(cr);
+	uint32_t g = GetGValue(cr);
+	uint32_t b = GetBValue(cr);
+	if (perc > 100)
+		perc=100;
+	for (uint32_t i=0; i<head.biClrUsed; ++i) {
 		pPal[i].rgbBlue=(uint8_t)((pPal[i].rgbBlue*(100-perc)+b*perc)/100);
 		pPal[i].rgbGreen =(uint8_t)((pPal[i].rgbGreen*(100-perc)+g*perc)/100);
 		pPal[i].rgbRed =(uint8_t)((pPal[i].rgbRed*(100-perc)+r*perc)/100);
@@ -516,10 +523,11 @@ void CxImage::BlendPalette(COLORREF cr,int32_t perc) const
 bool CxImage::IsGrayScale() const
 {
 	RGBQUAD* ppal=GetPalette();
-	if(!(pDib && ppal && head.biClrUsed)) return false;
-	for(uint32_t i=0;i<head.biClrUsed;i++){
-		if (ppal[i].rgbBlue!=i || ppal[i].rgbGreen!=i || ppal[i].rgbRed!=i) return false;
-	}
+	if (!ppal)
+		return false;
+	for (uint32_t i=0;i<head.biClrUsed;i++)
+		if (ppal[i].rgbBlue!=i || ppal[i].rgbGreen!=i || ppal[i].rgbRed!=i)
+			return false;
 	return true;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -529,7 +537,8 @@ bool CxImage::IsGrayScale() const
 void CxImage::SwapIndex(uint8_t idx1, uint8_t idx2)
 {
 	RGBQUAD* ppal=GetPalette();
-	if(!(pDib && ppal)) return;
+	if (!pDib || !ppal)
+		return;
 	//swap the colors
 	RGBQUAD tempRGB=GetPaletteColor(idx1);
 	SetPaletteColor(idx1,GetPaletteColor(idx2));
@@ -663,7 +672,6 @@ void CxImage::SetClrImportant(uint32_t ncolors)
 		break;
 	case 8:
 		head.biClrImportant = ncolors;
-		break;
 	}
 	return;
 }

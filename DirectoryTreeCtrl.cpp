@@ -553,12 +553,11 @@ void CDirectoryTreeCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 
 	// add all shared directories
 	int iCnt = 0;
-	for (POSITION pos = m_lstShared.GetHeadPosition(); pos != NULL; iCnt++)
-	{
+	for (POSITION pos = m_lstShared.GetHeadPosition(); pos != NULL; ++iCnt) {
 		CString strDisplayPath(m_lstShared.GetNext(pos));
 		PathRemoveBackslash(strDisplayPath.GetBuffer(strDisplayPath.GetLength()));
 		strDisplayPath.ReleaseBuffer();
-		SharedMenu.AppendMenu(MF_STRING,MP_SHAREDFOLDERS_FIRST+iCnt, GetResString(IDS_VIEW1) + strDisplayPath);
+		SharedMenu.AppendMenu(MF_STRING, MP_SHAREDFOLDERS_FIRST+iCnt, GetResString(IDS_VIEW1) + strDisplayPath);
 		bMenuIsEmpty = false;
 	}
 

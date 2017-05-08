@@ -781,7 +781,7 @@ uint64 GetFreeDiskSpaceX(LPCTSTR pDirectory)
 		size_t uChars = p - pDirectory;
 		if (uChars >= _countof(cDrive))
 			return 0;
-		memcpy(cDrive, pDirectory, uChars * sizeof(TCHAR));
+		memcpy(cDrive, pDirectory, uChars*sizeof(TCHAR));
 		cDrive[uChars] = _T('\0');
 	} else {
 		if (_tcslen(pDirectory) >= _countof(cDrive))
@@ -2378,39 +2378,25 @@ CString DbgGetBlockFileInfo(const Requested_Block_Struct* block, const CPartFile
 	return strInfo;
 }
 
-int GetHashType(const uchar* hash)
-{
-	if (hash[5] == 13 && hash[14] == 110)
-		return SO_OLDEMULE;
-	else if (hash[5] == 14 && hash[14] == 111)
-		return SO_EMULE;
- 	else if (hash[5] == 'M' && hash[14] == 'L')
-		return SO_MLDONKEY;
-	else
-		return SO_UNKNOWN;
-}
-
 LPCTSTR DbgGetHashTypeString(const uchar* hash)
 {
-	int iHashType = GetHashType(hash);
-	if (iHashType == SO_EMULE)
-		return _T("eMule");
-	if (iHashType == SO_MLDONKEY)
-		return _T("MLdonkey");
-	if (iHashType == SO_OLDEMULE)
+	if (hash[5] == 13 && hash[14] == 110)
 		return _T("Old eMule");
-	ASSERT( iHashType == SO_UNKNOWN );
+	if (hash[5] == 14 && hash[14] == 111)
+		return _T("eMule");
+	if (hash[5] == 'M' && hash[14] == 'L')
+		return _T("MLdonkey");
 	return _T("Unknown");
 }
 
 CString DbgGetClientID(uint32 nClientID)
 {
-	CString strClientID;
-	if (IsLowID(nClientID))
+	if (IsLowID(nClientID)) {
+		CString strClientID;
 		strClientID.Format(_T("LowID=%u"), nClientID);
-	else
-		strClientID = ipstr(nClientID);
-	return strClientID;
+		return strClientID;
+	}
+	return ipstr(nClientID);
 }
 
 #define _STRVAL(o)	{_T(#o), o}
@@ -2739,9 +2725,7 @@ CString StripInvalidFilenameChars(const CString& strText)
 			else if (strDest[nPrefixLen] == _T('.')) {
 				// Filename starts with a reserved file name followed by a '.' character:
 				// Replace that ',' character with an '_' character.
-				LPTSTR pszDest = strDest.GetBuffer(strDest.GetLength());
-				pszDest[nPrefixLen] = _T('_');
-				strDest.ReleaseBuffer(strDest.GetLength());
+				strDest.SetAt(nPrefixLen, _T('_'));
 				break;
 			}
 		}

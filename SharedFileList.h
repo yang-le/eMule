@@ -41,6 +41,7 @@ class CSharedFileList
 public:
 	explicit CSharedFileList(CServerConnect* in_server);
 	~CSharedFileList();
+	CSharedFileList(const CSharedFileList&) = delete;
 
 	void	SendListToServer();
 	void	Reload();
@@ -85,7 +86,7 @@ public:
 	CString GetDirNameByPseudo(const CString& strPseudoName) const;
 
 	uint64	GetDatasize(uint64 &pbytesLargest) const;
-	int		GetCount()	{return static_cast<int>(m_Files_map.GetCount()); }
+	int		GetCount()															{return static_cast<int>(m_Files_map.GetCount()); }
 	int		GetHashingCount()													{ return waitingforhash_list.GetCount()+currentlyhashing_list.GetCount(); }
 	bool	ProbablyHaveSingleSharedFiles() const								{ return bHaveSingleSharedFiles && !m_liSingleSharedFiles.IsEmpty(); } // might not be always up-to-date, could give false "true"s, not a problem currently
 

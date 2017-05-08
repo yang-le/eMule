@@ -105,7 +105,6 @@ protected:
   ID3_Flags       _flags;            // header flags
   Info*           _info;             // header info w.r.t. id3v2 spec
   bool            _changed;          // has the header changed since parsing
-}
-;
+};
 
 #endif /* _ID3LIB_HEADER_H */

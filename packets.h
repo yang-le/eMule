@@ -31,6 +31,7 @@ public:
 	Packet(uint8 in_opcode, uint32 in_size, uint8 protocol = OP_EDONKEYPROT, bool bFromPartFile = true);
 	Packet(char* pPacketPart,uint32 nSize,bool bLast,bool bFromPartFile = true); // only used for splitted packets!
 	virtual ~Packet();
+	Packet(const Packet&) = delete;
 
 	virtual char* GetHeader();
 	virtual char* GetUDPHeader();

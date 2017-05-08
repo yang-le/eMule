@@ -144,18 +144,18 @@ void CFriend::WriteToFile(CFileDataIO* file)
 
 bool CFriend::HasUserhash() const
 {
-	return isnulmd4(m_abyUserhash) == 0;
+	return !isnulmd4(m_abyUserhash); //isbadhash()
 }
 
 bool CFriend::HasKadID() const
 {
-	return isnulmd4(m_abyKadID) == 0;
+	return !isnulmd4(m_abyKadID);
 }
 
-void CFriend::SetFriendSlot(bool newValue) {
-    if(GetLinkedClient() != NULL) {
+void CFriend::SetFriendSlot(bool newValue)
+{
+    if(GetLinkedClient() != NULL)
         m_LinkedClient->SetFriendSlot(newValue);
-    }
 
     m_friendSlot = newValue;
 }

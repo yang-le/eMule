@@ -952,8 +952,8 @@ public:
 	static	CString GetHtmlCharset();
 
 	static	bool	IsDoubleClickEnabled()				{return transferDoubleclick;}
-	static	EViewSharedFilesAccess CanSeeShares()	{return m_iSeeShares;}
-	static	UINT	GetToolTipDelay()				{return m_iToolDelayTime;}
+	static	EViewSharedFilesAccess CanSeeShares()		{return m_iSeeShares;}
+	static	UINT	GetToolTipDelay()					{return m_iToolDelayTime;}
 	static	bool	IsBringToFront()					{return bringtoforeground;}
 
 	static	UINT	GetSplitterbarPosition()			{return splitterbarPosition;}
@@ -1123,7 +1123,7 @@ public:
 	static	void	SetSparsePartFiles(bool bEnable)	{m_bSparsePartFiles = bEnable;}
 	static	bool	GetResolveSharedShellLinks()		{return m_bResolveSharedShellLinks;}
 	static  bool	IsShowUpDownIconInTaskbar()			{return m_bShowUpDownIconInTaskbar;}
-	static  bool	IsWin7TaskbarGoodiesEnabled()				{return m_bShowWin7TaskbarGoodies;}
+	static  bool	IsWin7TaskbarGoodiesEnabled()		{return m_bShowWin7TaskbarGoodies;}
 	static  void    SetWin7TaskbarGoodiesEnabled(bool flag)	{m_bShowWin7TaskbarGoodies = flag;}
 
 	static	void	SetMaxUpload(UINT in);

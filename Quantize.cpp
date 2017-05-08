@@ -28,11 +28,8 @@ CQuantizer::~CQuantizer	()
 /////////////////////////////////////////////////////////////////////////////
 BOOL CQuantizer::ProcessImage (HANDLE hImage)
 {
-	BYTE r,	g, b;
-	int	i, j;
-
 	BITMAPINFOHEADER ds;
-	memcpy(&ds,hImage, sizeof(ds));
+	memcpy(&ds, hImage, sizeof ds);
 	int effwdt = ((((ds.biBitCount * ds.biWidth ) + 31) / 32) * 4);
 
 	int	nPad = effwdt - (((ds.biWidth *	ds.biBitCount) + 7) / 8);
@@ -44,14 +41,14 @@ BOOL CQuantizer::ProcessImage (HANDLE hImage)
 	case 1:	// 1-bit DIB
 	case 4:	// 4-bit DIB
 	case 8:	// 8-bit DIB
-		for	(i=0; i<ds.biHeight;	i++) {
-			for	(j=0; j<ds.biWidth; j++)	{
+		for (int i=0; i<ds.biHeight; ++i) {
+			for (int j=0; j<ds.biWidth; ++j)	{
 				BYTE idx=GetPixelIndex(j,i,ds.biBitCount,effwdt,pbBits);
 				BYTE* pal = (BYTE*)(hImage) + sizeof(BITMAPINFOHEADER);
 				long ldx = idx*sizeof(RGBQUAD);
-				b = pal[ldx++];
-				g = pal[ldx++];
-				r = pal[ldx];
+				BYTE b = pal[ldx++];
+				BYTE g = pal[ldx++];
+				BYTE r = pal[ldx];
 				AddColor (&m_pTree,	r, g, b, m_nColorBits, 0, &m_nLeafCount,
 					m_pReducibleNodes);
 				while (m_nLeafCount	> m_nMaxColors)
@@ -59,14 +56,13 @@ BOOL CQuantizer::ProcessImage (HANDLE hImage)
 						m_pReducibleNodes);
 			}
 		}
-
-		break;
+		return TRUE;
 	case 24: //	24-bit DIB
-		for	(i=0; i<ds.biHeight;	i++) {
-			for	(j=0; j<ds.biWidth; j++)	{
-				b =	*pbBits++;
-				g =	*pbBits++;
-				r =	*pbBits++;
+		for (int i=0; i<ds.biHeight; ++i) {
+			for (int j=0; j<ds.biWidth; ++j)	{
+				BYTE b = *pbBits++;
+				BYTE g = *pbBits++;
+				BYTE r = *pbBits++;
 				AddColor (&m_pTree,	r, g, b, m_nColorBits, 0, &m_nLeafCount,
 					m_pReducibleNodes);
 				while (m_nLeafCount	> m_nMaxColors)
@@ -74,12 +70,10 @@ BOOL CQuantizer::ProcessImage (HANDLE hImage)
 			}
 			pbBits += nPad;
 		}
-		break;
-
-	default: //	Unrecognized color format
-		return FALSE;
+		return TRUE;
 	}
-	return TRUE;
+
+	return FALSE; // 	Unrecognized color format
 }
 /////////////////////////////////////////////////////////////////////////////
 void CQuantizer::AddColor (NODE** ppNode, BYTE r, BYTE g, BYTE b,
@@ -115,7 +109,8 @@ void* CQuantizer::CreateNode (UINT nLevel, UINT	nColorBits,	UINT* pLeafCount,
 	if (pNode== NULL) return NULL;
 
 	pNode->bIsLeaf = (nLevel ==	nColorBits)	? TRUE : FALSE;
-	if (pNode->bIsLeaf) (*pLeafCount)++;
+	if (pNode->bIsLeaf)
+		(*pLeafCount)++;
 	else {
 		pNode->pNext = pReducibleNodes[nLevel];
 		pReducibleNodes[nLevel]	= pNode;
@@ -160,9 +155,10 @@ void CQuantizer::ReduceTree	(UINT nColorBits, UINT*	pLeafCount,
 /////////////////////////////////////////////////////////////////////////////
 void CQuantizer::DeleteTree	(NODE**	ppNode)
 {
-	for	(int i=0; i<8; i++)	{
-		if ((*ppNode)->pChild[i] !=	NULL) DeleteTree (&((*ppNode)->pChild[i]));
-	}
+	for	(int i=0; i<8; ++i)
+		if ((*ppNode)->pChild[i] !=	NULL)
+			DeleteTree (&((*ppNode)->pChild[i]));
+
 	free(*ppNode);
 	*ppNode	= NULL;
 }
@@ -198,20 +194,19 @@ void CQuantizer::SetColorTable (RGBQUAD* prgb)
 /////////////////////////////////////////////////////////////////////////////
 BYTE CQuantizer::GetPixelIndex(long x, long y, int nbit, long effwdt, BYTE *pimage)
 {
-	if (nbit==8){
+	if (nbit == 8)
 		return pimage[y*effwdt + x];
-	} else {
-		BYTE pos;
-		BYTE iDst= pimage[y*effwdt + (x*nbit >> 3)];
-		if (nbit==4){
-			pos = (BYTE)(4*(1-x%2));
-			iDst &= (0x0F<<pos);
-			return iDst >> pos;
-		} else if (nbit==1){
-			pos = (BYTE)(7-x%8);
-			iDst &= (0x01<<pos);
-			return iDst >> pos;
-		}
+
+	BYTE iDst = pimage[y*effwdt + (x*nbit >> 3)];
+	if (nbit == 4) {
+		BYTE pos = (BYTE)(4*(1-x%2));
+		iDst &= (0x0F<<pos);
+		return iDst >> pos;
+	}
+	if (nbit == 1) {
+		BYTE pos = (BYTE)(7-x%8);
+		iDst &= (0x01<<pos);
+		return iDst >> pos;
 	}
 	return 0;
 }

@@ -84,7 +84,6 @@ protected:
 private:
   ID3_FrameDef*       _frame_def;
   bool                _dyn_frame_def;
-}
-;
+};
 
 #endif /* _ID3LIB_HEADER_FRAME_ */

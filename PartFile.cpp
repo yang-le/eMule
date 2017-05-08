@@ -577,26 +577,26 @@ EPartFileLoadResult CPartFile::ImportShareazaTempfile(LPCTSTR in_directory,LPCTS
 		SetFileSize(nSize);
 
 		// Get the ed2k hash
-		BOOL bSHA1, bTiger, bMD5, bED2K, Trusted; bMD5 = false; bED2K = false;
+		BOOL bSHA1, bTiger, bMD5 = false, bED2K = false, Trusted = false;
 		BYTE pSHA1[20];
 		BYTE pTiger[24];
 		BYTE pMD5[16];
 		BYTE pED2K[16];
 
 		ar >> bSHA1;
-		if ( bSHA1 ) ar.Read( pSHA1, sizeof(pSHA1) );
+		if ( bSHA1 ) ar.Read(pSHA1, sizeof pSHA1);
 		if ( nVersion >= 31 ) ar >> Trusted;
 
 		ar >> bTiger;
-		if ( bTiger ) ar.Read( pTiger, sizeof(pTiger) );
+		if ( bTiger ) ar.Read(pTiger, sizeof pTiger);
 		if ( nVersion >= 31 ) ar >> Trusted;
 
 		if ( nVersion >= 22 ) ar >> bMD5;
-		if ( bMD5 ) ar.Read( pMD5, sizeof(pMD5) );
+		if ( bMD5 ) ar.Read(pMD5, sizeof pMD5);
 		if ( nVersion >= 31 ) ar >> Trusted;
 
 		if ( nVersion >= 13 ) ar >> bED2K;
-		if ( bED2K ) ar.Read( pED2K, sizeof(pED2K) );
+		if ( bED2K ) ar.Read(pED2K, sizeof pED2K);
 		if ( nVersion >= 31 ) ar >> Trusted;
 
 		ar.Close();
@@ -2726,7 +2726,7 @@ void CPartFile::AddSources(CSafeMemFile* sources, uint32 serverip, uint16 server
 		uint8 byCryptOptions = 0;
 		if (bWithObfuscationAndHash){
 			byCryptOptions = sources->ReadUInt8();
-			if ((byCryptOptions & 0x80) > 0)
+			if ((byCryptOptions & 0x80) != 0)
 				sources->ReadHash16(achUserHash);
 
 			if ((thePrefs.IsClientCryptLayerRequested() && (byCryptOptions & 0x01/*supported*/) > 0 && (byCryptOptions & 0x80) == 0)

@@ -132,8 +132,8 @@ protected:
   bool        _SetID(ID3_FrameID);
   bool        _ClearFields();
   void        _InitFields();
-  void        _InitFieldBits();
-  void        _UpdateFieldDeps();
+//  void        _InitFieldBits();
+//  void        _UpdateFieldDeps();
 
 private:
   mutable bool        _changed;    // frame changed since last parse/render?
@@ -142,7 +142,6 @@ private:
   ID3_FrameHeader _hdr;            //
   uchar       _encryption_id;      // encryption id
   uchar       _grouping_id;        // grouping id
-}
-;
+};
 
 #endif /* _ID3LIB_FRAME_IMPL_H_ */

@@ -528,7 +528,7 @@ int CArchivePreviewDlg::ShowISOResults(int succ, archiveScannerThreadParams_s* t
 
 		temp = CString(file->name);
 		// remove separator extentions
-		int sep = temp.ReverseFind(';');
+		int sep = temp.ReverseFind(_T(';'));
 		if (sep>=0)
 			temp.Delete(sep, temp.GetLength()-sep);
 

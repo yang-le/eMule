@@ -49,7 +49,7 @@ namespace Kademlia
 			uint32		GetSearchID() const;
 			uint32		GetSearchTypes() const;
 			void		SetSearchTypes( uint32 uVal );
-			void		SetTargetID( CUInt128 uVal );
+			void		SetTargetID(const CUInt128& uVal);
 			CUInt128	GetTarget() const;
 			uint32		GetAnswers() const;
 			uint32		GetKadPacketSent() const;
@@ -87,6 +87,7 @@ namespace Kademlia
 
 			CSearch();
 			~CSearch();
+			CSearch(const CSearch&) = delete;
 
 		private:
 			void Go();

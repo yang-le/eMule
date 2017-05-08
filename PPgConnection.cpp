@@ -580,30 +580,22 @@ void CPPgConnection::SetRateSliderTicks(CSliderCtrl& rRate)
 	int iMin = 0, iMax = 0;
 	rRate.GetRange(iMin, iMax);
 	int iDiff = iMax - iMin;
-	if (iDiff > 0)
-	{
+	if (iDiff > 0) {
 		CRect rc;
 		rRate.GetWindowRect(&rc);
-		if (rc.Width() > 0)
-		{
+		if (rc.Width() > 0) {
 			int iTic;
 			int iPixels = rc.Width() / iDiff;
 			if (iPixels >= 6)
 				iTic = 1;
-			else
-			{
+			else {
 				iTic = 10;
 				while (rc.Width() / (iDiff / iTic) < 8)
 					iTic *= 10;
 			}
 			if (iTic)
-			{
-				for (int i = ((iMin+(iTic-1))/iTic)*iTic; i < iMax; /**/)
-				{
+				for (int i = ((iMin+(iTic-1))/iTic)*iTic; i < iMax; i += iTic)
 					rRate.SetTic(i);
-					i += iTic;
-				}
-			}
 			rRate.SetPageSize(iTic);
 		}
 	}

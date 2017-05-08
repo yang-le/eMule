@@ -1705,7 +1705,7 @@ void CSearch::SetSearchTypes( uint32 uVal )
 	m_uType = uVal;
 	m_pLookupHistory->SetSearchType(uVal);
 }
-void CSearch::SetTargetID( CUInt128 uVal )
+void CSearch::SetTargetID(const CUInt128& uVal)
 {
 	m_uTarget = uVal;
 }

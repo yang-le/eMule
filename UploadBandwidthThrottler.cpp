@@ -532,15 +532,15 @@ UINT UploadBandwidthThrottler::RunInternal()
 
 #define TIME_BETWEEN_UPLOAD_LOOPS 1
 		uint32 sleepTime;
-		if (allowedDataRate == _UI32_MAX || realBytesToSpend >= 1000 || allowedDataRate == 0 && nEstiminatedLimit == 0) {
+		if (allowedDataRate == _UI32_MAX || realBytesToSpend >= 1000 || allowedDataRate == 0 && nEstiminatedLimit == 0)
 			// we could send at once, but sleep a while to not suck up all cpu
 			sleepTime = 0;
-		} else if (allowedDataRate == 0) {
+		else if (allowedDataRate == 0)
 			sleepTime = (uint32)ceil((doubleSendSize*1000.0)/nEstiminatedLimit);
-		} else {
+		else
 			// sleep for just as long as we need to get back to having one byte to send
 			sleepTime = (uint32)ceil((-realBytesToSpend + 1000.0)/allowedDataRate);
-		}
+
 		sleepTime = max(sleepTime, TIME_BETWEEN_UPLOAD_LOOPS);
 
 		if (timeSinceLastLoop < sleepTime) {

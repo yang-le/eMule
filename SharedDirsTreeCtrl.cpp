@@ -686,6 +686,8 @@ BOOL CSharedDirsTreeCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 							case MP_PRIOVERYHIGH:
 								pri = PR_VERYHIGH;
 								break;
+							default:
+								wParam = MP_PRIOAUTO;
 							case MP_PRIOAUTO:
 								file->UpdateAutoUpPriority();
 							}

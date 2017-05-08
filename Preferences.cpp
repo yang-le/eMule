@@ -515,19 +515,19 @@ void CPreferences::Init()
 
 	prefsExt = new Preferences_Ext_Struct();
 
-	m_strFileCommentsFilePath = GetMuleDirectory(EMULE_CONFIGDIR) + L"fileinfo.ini";
+	const CString& confdir(GetMuleDirectory(EMULE_CONFIGDIR));
+	m_strFileCommentsFilePath = confdir + _T("fileinfo.ini");
 
 	///////////////////////////////////////////////////////////////////////////
 	// Move *.log files from application directory into 'log' directory
 	//
 	CFileFind ff;
-	BOOL bFoundFile = ff.FindFile(GetMuleDirectory(EMULE_EXECUTEABLEDIR) + L"eMule*.log", 0);
+	BOOL bFoundFile = ff.FindFile(GetMuleDirectory(EMULE_EXECUTEABLEDIR) + _T("eMule*.log"), 0);
 	while (bFoundFile)
 	{
 		bFoundFile = ff.FindNextFile();
-		if (ff.IsDots() || ff.IsSystem() || ff.IsDirectory() || ff.IsHidden())
-			continue;
-		MoveFile(ff.GetFilePath(), GetMuleDirectory(EMULE_LOGDIR) + ff.GetFileName());
+		if (!ff.IsDots() && !ff.IsSystem() && !ff.IsDirectory() && !ff.IsHidden())
+			MoveFile(ff.GetFilePath(), GetMuleDirectory(EMULE_LOGDIR) + ff.GetFileName());
 	}
 	ff.Close();
 
@@ -535,40 +535,36 @@ void CPreferences::Init()
 	// Move 'downloads.txt/bak' files from application and/or data-base directory
 	// into 'config' directory
 	//
-	if (PathFileExists(GetMuleDirectory(EMULE_DATABASEDIR) + L"downloads.txt"))
-		MoveFile(GetMuleDirectory(EMULE_DATABASEDIR) + L"downloads.txt", GetMuleDirectory(EMULE_CONFIGDIR) + L"downloads.txt");
-	if (PathFileExists(GetMuleDirectory(EMULE_DATABASEDIR) + L"downloads.bak"))
-		MoveFile(GetMuleDirectory(EMULE_DATABASEDIR) + L"downloads.bak", GetMuleDirectory(EMULE_CONFIGDIR) + L"downloads.bak");
-	if (PathFileExists(GetMuleDirectory(EMULE_EXECUTEABLEDIR) + L"downloads.txt"))
-		MoveFile(GetMuleDirectory(EMULE_EXECUTEABLEDIR) + L"downloads.txt", GetMuleDirectory(EMULE_CONFIGDIR) + L"downloads.txt");
-	if (PathFileExists(GetMuleDirectory(EMULE_EXECUTEABLEDIR) + L"downloads.bak"))
-		MoveFile(GetMuleDirectory(EMULE_EXECUTEABLEDIR) + L"downloads.bak", GetMuleDirectory(EMULE_CONFIGDIR) + L"downloads.bak");
-
-	CreateUserHash();
+	CString sdir = GetMuleDirectory(EMULE_DATABASEDIR);
+	if (PathFileExists(sdir + _T("downloads.txt")))
+		MoveFile(sdir + _T("downloads.txt"), confdir + _T("downloads.txt"));
+	if (PathFileExists(sdir + _T("downloads.bak")))
+		MoveFile(sdir + _T("downloads.bak"), confdir + _T("downloads.bak"));
+	sdir = GetMuleDirectory(EMULE_EXECUTEABLEDIR);
+	if (PathFileExists(sdir + _T("downloads.txt")))
+		MoveFile(sdir + _T("downloads.txt"), confdir + _T("downloads.txt"));
+	if (PathFileExists(sdir + _T("downloads.bak")))
+		MoveFile(sdir + _T("downloads.bak"), confdir + _T("downloads.bak"));
 
 	// load preferences.dat or set standard values
-	CString strFullPath;
-	strFullPath = GetMuleDirectory(EMULE_CONFIGDIR) + L"preferences.dat";
-	FILE* preffile = _tfsopen(strFullPath, L"rb", _SH_DENYWR);
+	CString strFullPath = confdir + _T("preferences.dat");
+	FILE* preffile = _tfsopen(strFullPath, _T("rb"), _SH_DENYWR);
 
 	LoadPreferences();
 
-	if (!preffile){
+	if (!preffile || fread(prefsExt,sizeof(Preferences_Ext_Struct),1,preffile) != 1 || ferror(preffile))
 		SetStandardValues();
-	}
-	else{
-		if (fread(prefsExt,sizeof(Preferences_Ext_Struct),1,preffile) != 1 || ferror(preffile))
-			SetStandardValues();
-
+	else {
 		md4cpy(userhash, prefsExt->userhash);
 		EmuleWindowPlacement = prefsExt->EmuleWindowPlacement;
 
 		fclose(preffile);
 		smartidstate = 0;
 	}
+	CreateUserHash();
 
 	// shared directories
-	strFullPath = GetMuleDirectory(EMULE_CONFIGDIR) + L"shareddir.dat";
+	strFullPath = confdir + _T("shareddir.dat");
 	CStdioFile* sdirfile = new CStdioFile();
 	bool bIsUnicodeFile = IsUnicodeFile(strFullPath); // check for BOM
 	// open the text file either in ANSI (text) or Unicode (binary), this way we can read old and new files
@@ -577,12 +573,12 @@ void CPreferences::Init()
 	{
 		try {
 			if (bIsUnicodeFile)
-				sdirfile->Seek(sizeof(WORD), SEEK_CUR); // skip BOM
+				sdirfile->Seek(sizeof WORD, SEEK_SET); // skip BOM
 
 			CString toadd;
 			while (sdirfile->ReadString(toadd))
 			{
-				toadd.Trim(L" \t\r\n"); // need to trim '\r' in binary mode
+				toadd.Trim(_T(" \t\r\n")); // need to trim '\r' in binary mode
 				if (toadd.IsEmpty())
 					continue;
 
@@ -596,7 +592,7 @@ void CPreferences::Init()
 				// Skip non-existing directories from fixed disks only
 				int iDrive = PathGetDriveNumber(toadd);
 				if (iDrive >= 0 && iDrive <= 25) {
-					WCHAR szRootPath[4] = L" :\\";
+					WCHAR szRootPath[4] = _T(" :\\");
 					szRootPath[0] = (WCHAR)(L'A' + iDrive);
 					if (GetDriveType(szRootPath) == DRIVE_FIXED && !m_bKeepUnavailableFixedSharedDirs) {
 						if (_taccess(toadd, 0) != 0)
@@ -619,26 +615,25 @@ void CPreferences::Init()
 
 	// serverlist addresses
 	// filename update to reasonable name
-	const CString& confdir(GetMuleDirectory(EMULE_CONFIGDIR));
-	if (PathFileExists(confdir + L"adresses.dat")) {
-		if (PathFileExists(confdir + L"addresses.dat"))
-			DeleteFile(confdir + L"adresses.dat");
+	if (PathFileExists(confdir + _T("adresses.dat"))) {
+		if (PathFileExists(confdir + _T("addresses.dat")))
+			DeleteFile(confdir + _T("adresses.dat"));
 		else
-			MoveFile(confdir + L"adresses.dat", confdir + L"addresses.dat");
+			MoveFile(confdir + _T("adresses.dat"), confdir + _T("addresses.dat"));
 	}
 
-	strFullPath = confdir + L"addresses.dat";
+	strFullPath = confdir + _T("addresses.dat");
 	sdirfile = new CStdioFile();
 	bIsUnicodeFile = IsUnicodeFile(strFullPath);
 	if (sdirfile->Open(strFullPath, CFile::modeRead | CFile::shareDenyWrite | (bIsUnicodeFile ? CFile::typeBinary : 0)))
 	{
 		try {
 			if (bIsUnicodeFile)
-				sdirfile->Seek(sizeof(WORD), SEEK_CUR); // skip BOM
+				sdirfile->Seek(sizeof WORD, SEEK_CUR); // skip BOM
 
 			CString toadd;
 			while (sdirfile->ReadString(toadd)) {
-				toadd.Trim(L" \t\r\n"); // need to trim '\r' in binary mode
+				toadd.Trim(_T(" \t\r\n")); // need to trim '\r' in binary mode
 				if (!toadd.IsEmpty())
 					addresses_list.AddTail(toadd);
 			}
@@ -650,9 +645,6 @@ void CPreferences::Init()
 		sdirfile->Close();
 	}
 	delete sdirfile;
-
-	userhash[5] = 14;
-	userhash[14] = 111;
 
 	// Explicitly inform the user about errors with incoming/temp folders!
 	if (!PathFileExists(GetMuleDirectory(EMULE_INCOMINGDIR)) && !::CreateDirectory(GetMuleDirectory(EMULE_INCOMINGDIR),0)) {
@@ -687,10 +679,6 @@ void CPreferences::Init()
 	if (!PathFileExists(GetMuleDirectory(EMULE_TOOLBARDIR)) && !CreateDirectory(GetMuleDirectory(EMULE_TOOLBARDIR), 0)) {
 		m_sToolbarBitmapFolder = GetDefaultDirectory(EMULE_TOOLBARDIR, true); // will also try to create it if needed;
 	}
-
-
-	if (isnulmd4(userhash))
-		CreateUserHash();
 }
 
 void CPreferences::Uninit()
@@ -704,17 +692,15 @@ void CPreferences::Uninit()
 
 void CPreferences::SetStandardValues()
 {
-	CreateUserHash();
-
 	WINDOWPLACEMENT defaultWPM;
 	defaultWPM.length = sizeof(WINDOWPLACEMENT);
-	defaultWPM.rcNormalPosition.left=10;defaultWPM.rcNormalPosition.top=10;
-	defaultWPM.rcNormalPosition.right=700;defaultWPM.rcNormalPosition.bottom=500;
+	defaultWPM.rcNormalPosition.left=10;
+	defaultWPM.rcNormalPosition.top=10;
+	defaultWPM.rcNormalPosition.right=700;
+	defaultWPM.rcNormalPosition.bottom=500;
 	defaultWPM.showCmd=0;
 	EmuleWindowPlacement=defaultWPM;
 	versioncheckLastAutomatic=0;
-
-//	Save();
 }
 
 bool CPreferences::IsTempFile(const CString& rstrDirectory, const CString& rstrName)
@@ -730,7 +716,7 @@ bool CPreferences::IsTempFile(const CString& rstrDirectory, const CString& rstrN
 	// do not share a file from the temp directory, if it matches one of the following patterns
 	CString strNameLower(rstrName);
 	strNameLower.MakeLower();
-	strNameLower += _T("|"); // append an EOS character which we can query for
+	strNameLower += _T('|'); // append an EOS character which we can query for
 	static LPCTSTR _apszNotSharedExts[] = {
 		_T("%u.part") _T("%c"),
 		_T("%u.part.met") _T("%c"),
@@ -741,7 +727,7 @@ bool CPreferences::IsTempFile(const CString& rstrDirectory, const CString& rstrN
 		UINT uNum;
 		TCHAR iChar;
 		// "misuse" the 'scanf' function for a very simple pattern scanning.
-		if (_stscanf(strNameLower, _apszNotSharedExts[i], &uNum, &iChar) == 2 && iChar == L'|')
+		if (_stscanf(strNameLower, _apszNotSharedExts[i], &uNum, &iChar) == 2 && iChar == _T('|'))
 			return true;
 	}
 
@@ -776,156 +762,156 @@ void CPreferences::SaveStats(int bBackUp){
 
 	CString strFullPath(GetMuleDirectory(EMULE_CONFIGDIR));
 	if (bBackUp == 1)
-		strFullPath += L"statbkup.ini";
+		strFullPath += _T("statbkup.ini");
 	else if (bBackUp == 2)
-		strFullPath += L"statbkuptmp.ini";
+		strFullPath += _T("statbkuptmp.ini");
 	else
-		strFullPath += L"statistics.ini";
+		strFullPath += _T("statistics.ini");
 
-	CIni ini(strFullPath, L"Statistics");
+	CIni ini(strFullPath, _T("Statistics"));
 
 	// Save cumulative statistics to preferences.ini, going in order as they appear in CStatisticsDlg::ShowStatistics.
 	// We do NOT SET the values in prefs struct here.
 
     // Save Cum Down Data
-	ini.WriteUInt64(L"TotalDownloadedBytes", theStats.sessionReceivedBytes + GetTotalDownloaded());
-	ini.WriteInt(L"DownSuccessfulSessions", cumDownSuccessfulSessions);
-	ini.WriteInt(L"DownFailedSessions", cumDownFailedSessions);
-	ini.WriteInt(L"DownAvgTime", (GetDownC_AvgTime() + GetDownS_AvgTime()) / 2);
-	ini.WriteUInt64(L"LostFromCorruption", cumLostFromCorruption + sesLostFromCorruption);
-	ini.WriteUInt64(L"SavedFromCompression", sesSavedFromCompression + cumSavedFromCompression);
-	ini.WriteInt(L"PartsSavedByICH", cumPartsSavedByICH + sesPartsSavedByICH);
+	ini.WriteUInt64(_T("TotalDownloadedBytes"), theStats.sessionReceivedBytes + GetTotalDownloaded());
+	ini.WriteInt(_T("DownSuccessfulSessions"), cumDownSuccessfulSessions);
+	ini.WriteInt(_T("DownFailedSessions"), cumDownFailedSessions);
+	ini.WriteInt(_T("DownAvgTime"), (GetDownC_AvgTime() + GetDownS_AvgTime()) / 2);
+	ini.WriteUInt64(_T("LostFromCorruption"), cumLostFromCorruption + sesLostFromCorruption);
+	ini.WriteUInt64(_T("SavedFromCompression"), sesSavedFromCompression + cumSavedFromCompression);
+	ini.WriteInt(_T("PartsSavedByICH"), cumPartsSavedByICH + sesPartsSavedByICH);
 
-	ini.WriteUInt64(L"DownData_EDONKEY", GetCumDownData_EDONKEY());
-	ini.WriteUInt64(L"DownData_EDONKEYHYBRID", GetCumDownData_EDONKEYHYBRID());
-	ini.WriteUInt64(L"DownData_EMULE", GetCumDownData_EMULE());
-	ini.WriteUInt64(L"DownData_MLDONKEY", GetCumDownData_MLDONKEY());
-	ini.WriteUInt64(L"DownData_LMULE", GetCumDownData_EMULECOMPAT());
-	ini.WriteUInt64(L"DownData_AMULE", GetCumDownData_AMULE());
-	ini.WriteUInt64(L"DownData_SHAREAZA", GetCumDownData_SHAREAZA());
-	ini.WriteUInt64(L"DownData_URL", GetCumDownData_URL());
-	ini.WriteUInt64(L"DownDataPort_4662", GetCumDownDataPort_4662());
-	ini.WriteUInt64(L"DownDataPort_OTHER", GetCumDownDataPort_OTHER());
-	ini.WriteUInt64(L"DownDataPort_PeerCache", GetCumDownDataPort_PeerCache());
+	ini.WriteUInt64(_T("DownData_EDONKEY"), GetCumDownData_EDONKEY());
+	ini.WriteUInt64(_T("DownData_EDONKEYHYBRID"), GetCumDownData_EDONKEYHYBRID());
+	ini.WriteUInt64(_T("DownData_EMULE"), GetCumDownData_EMULE());
+	ini.WriteUInt64(_T("DownData_MLDONKEY"), GetCumDownData_MLDONKEY());
+	ini.WriteUInt64(_T("DownData_LMULE"), GetCumDownData_EMULECOMPAT());
+	ini.WriteUInt64(_T("DownData_AMULE"), GetCumDownData_AMULE());
+	ini.WriteUInt64(_T("DownData_SHAREAZA"), GetCumDownData_SHAREAZA());
+	ini.WriteUInt64(_T("DownData_URL"), GetCumDownData_URL());
+	ini.WriteUInt64(_T("DownDataPort_4662"), GetCumDownDataPort_4662());
+	ini.WriteUInt64(_T("DownDataPort_OTHER"), GetCumDownDataPort_OTHER());
+	ini.WriteUInt64(_T("DownDataPort_PeerCache"), GetCumDownDataPort_PeerCache());
 
-	ini.WriteUInt64(L"DownOverheadTotal",theStats.GetDownDataOverheadFileRequest() +
+	ini.WriteUInt64(_T("DownOverheadTotal"),theStats.GetDownDataOverheadFileRequest() +
 										theStats.GetDownDataOverheadSourceExchange() +
 										theStats.GetDownDataOverheadServer() +
 										theStats.GetDownDataOverheadKad() +
 										theStats.GetDownDataOverheadOther() +
 										GetDownOverheadTotal());
-	ini.WriteUInt64(L"DownOverheadFileReq", theStats.GetDownDataOverheadFileRequest() + GetDownOverheadFileReq());
-	ini.WriteUInt64(L"DownOverheadSrcEx", theStats.GetDownDataOverheadSourceExchange() + GetDownOverheadSrcEx());
-	ini.WriteUInt64(L"DownOverheadServer", theStats.GetDownDataOverheadServer() + GetDownOverheadServer());
-	ini.WriteUInt64(L"DownOverheadKad", theStats.GetDownDataOverheadKad() + GetDownOverheadKad());
+	ini.WriteUInt64(_T("DownOverheadFileReq"), theStats.GetDownDataOverheadFileRequest() + GetDownOverheadFileReq());
+	ini.WriteUInt64(_T("DownOverheadSrcEx"), theStats.GetDownDataOverheadSourceExchange() + GetDownOverheadSrcEx());
+	ini.WriteUInt64(_T("DownOverheadServer"), theStats.GetDownDataOverheadServer() + GetDownOverheadServer());
+	ini.WriteUInt64(_T("DownOverheadKad"), theStats.GetDownDataOverheadKad() + GetDownOverheadKad());
 
-	ini.WriteUInt64(L"DownOverheadTotalPackets", theStats.GetDownDataOverheadFileRequestPackets() +
+	ini.WriteUInt64(_T("DownOverheadTotalPackets"), theStats.GetDownDataOverheadFileRequestPackets() +
 												theStats.GetDownDataOverheadSourceExchangePackets() +
 												theStats.GetDownDataOverheadServerPackets() +
 												theStats.GetDownDataOverheadKadPackets() +
 												theStats.GetDownDataOverheadOtherPackets() +
 												GetDownOverheadTotalPackets());
-	ini.WriteUInt64(L"DownOverheadFileReqPackets", theStats.GetDownDataOverheadFileRequestPackets() + GetDownOverheadFileReqPackets());
-	ini.WriteUInt64(L"DownOverheadSrcExPackets", theStats.GetDownDataOverheadSourceExchangePackets() + GetDownOverheadSrcExPackets());
-	ini.WriteUInt64(L"DownOverheadServerPackets", theStats.GetDownDataOverheadServerPackets() + GetDownOverheadServerPackets());
-	ini.WriteUInt64(L"DownOverheadKadPackets", theStats.GetDownDataOverheadKadPackets() + GetDownOverheadKadPackets());
+	ini.WriteUInt64(_T("DownOverheadFileReqPackets"), theStats.GetDownDataOverheadFileRequestPackets() + GetDownOverheadFileReqPackets());
+	ini.WriteUInt64(_T("DownOverheadSrcExPackets"), theStats.GetDownDataOverheadSourceExchangePackets() + GetDownOverheadSrcExPackets());
+	ini.WriteUInt64(_T("DownOverheadServerPackets"), theStats.GetDownDataOverheadServerPackets() + GetDownOverheadServerPackets());
+	ini.WriteUInt64(_T("DownOverheadKadPackets"), theStats.GetDownDataOverheadKadPackets() + GetDownOverheadKadPackets());
 
 	// Save Cumulative Upline Statistics
-	ini.WriteUInt64(L"TotalUploadedBytes", theStats.sessionSentBytes + GetTotalUploaded());
-	ini.WriteInt(L"UpSuccessfulSessions", theApp.uploadqueue->GetSuccessfullUpCount() + GetUpSuccessfulSessions());
-	ini.WriteInt(L"UpFailedSessions", theApp.uploadqueue->GetFailedUpCount() + GetUpFailedSessions());
-	ini.WriteInt(L"UpAvgTime", (theApp.uploadqueue->GetAverageUpTime() + GetUpAvgTime())/2);
-	ini.WriteUInt64(L"UpData_EDONKEY", GetCumUpData_EDONKEY());
-	ini.WriteUInt64(L"UpData_EDONKEYHYBRID", GetCumUpData_EDONKEYHYBRID());
-	ini.WriteUInt64(L"UpData_EMULE", GetCumUpData_EMULE());
-	ini.WriteUInt64(L"UpData_MLDONKEY", GetCumUpData_MLDONKEY());
-	ini.WriteUInt64(L"UpData_LMULE", GetCumUpData_EMULECOMPAT());
-	ini.WriteUInt64(L"UpData_AMULE", GetCumUpData_AMULE());
-	ini.WriteUInt64(L"UpData_SHAREAZA", GetCumUpData_SHAREAZA());
-	ini.WriteUInt64(L"UpDataPort_4662", GetCumUpDataPort_4662());
-	ini.WriteUInt64(L"UpDataPort_OTHER", GetCumUpDataPort_OTHER());
-	ini.WriteUInt64(L"UpDataPort_PeerCache", GetCumUpDataPort_PeerCache());
-	ini.WriteUInt64(L"UpData_File", GetCumUpData_File());
-	ini.WriteUInt64(L"UpData_Partfile", GetCumUpData_Partfile());
+	ini.WriteUInt64(_T("TotalUploadedBytes"), theStats.sessionSentBytes + GetTotalUploaded());
+	ini.WriteInt(_T("UpSuccessfulSessions"), theApp.uploadqueue->GetSuccessfullUpCount() + GetUpSuccessfulSessions());
+	ini.WriteInt(_T("UpFailedSessions"), theApp.uploadqueue->GetFailedUpCount() + GetUpFailedSessions());
+	ini.WriteInt(_T("UpAvgTime"), (theApp.uploadqueue->GetAverageUpTime() + GetUpAvgTime())/2);
+	ini.WriteUInt64(_T("UpData_EDONKEY"), GetCumUpData_EDONKEY());
+	ini.WriteUInt64(_T("UpData_EDONKEYHYBRID"), GetCumUpData_EDONKEYHYBRID());
+	ini.WriteUInt64(_T("UpData_EMULE"), GetCumUpData_EMULE());
+	ini.WriteUInt64(_T("UpData_MLDONKEY"), GetCumUpData_MLDONKEY());
+	ini.WriteUInt64(_T("UpData_LMULE"), GetCumUpData_EMULECOMPAT());
+	ini.WriteUInt64(_T("UpData_AMULE"), GetCumUpData_AMULE());
+	ini.WriteUInt64(_T("UpData_SHAREAZA"), GetCumUpData_SHAREAZA());
+	ini.WriteUInt64(_T("UpDataPort_4662"), GetCumUpDataPort_4662());
+	ini.WriteUInt64(_T("UpDataPort_OTHER"), GetCumUpDataPort_OTHER());
+	ini.WriteUInt64(_T("UpDataPort_PeerCache"), GetCumUpDataPort_PeerCache());
+	ini.WriteUInt64(_T("UpData_File"), GetCumUpData_File());
+	ini.WriteUInt64(_T("UpData_Partfile"), GetCumUpData_Partfile());
 
-	ini.WriteUInt64(L"UpOverheadTotal", theStats.GetUpDataOverheadFileRequest() +
+	ini.WriteUInt64(_T("UpOverheadTotal"), theStats.GetUpDataOverheadFileRequest() +
 										theStats.GetUpDataOverheadSourceExchange() +
 										theStats.GetUpDataOverheadServer() +
 										theStats.GetUpDataOverheadKad() +
 										theStats.GetUpDataOverheadOther() +
 										GetUpOverheadTotal());
-	ini.WriteUInt64(L"UpOverheadFileReq", theStats.GetUpDataOverheadFileRequest() + GetUpOverheadFileReq());
-	ini.WriteUInt64(L"UpOverheadSrcEx", theStats.GetUpDataOverheadSourceExchange() + GetUpOverheadSrcEx());
-	ini.WriteUInt64(L"UpOverheadServer", theStats.GetUpDataOverheadServer() + GetUpOverheadServer());
-	ini.WriteUInt64(L"UpOverheadKad", theStats.GetUpDataOverheadKad() + GetUpOverheadKad());
+	ini.WriteUInt64(_T("UpOverheadFileReq"), theStats.GetUpDataOverheadFileRequest() + GetUpOverheadFileReq());
+	ini.WriteUInt64(_T("UpOverheadSrcEx"), theStats.GetUpDataOverheadSourceExchange() + GetUpOverheadSrcEx());
+	ini.WriteUInt64(_T("UpOverheadServer"), theStats.GetUpDataOverheadServer() + GetUpOverheadServer());
+	ini.WriteUInt64(_T("UpOverheadKad"), theStats.GetUpDataOverheadKad() + GetUpOverheadKad());
 
-	ini.WriteUInt64(L"UpOverheadTotalPackets", theStats.GetUpDataOverheadFileRequestPackets() +
+	ini.WriteUInt64(_T("UpOverheadTotalPackets"), theStats.GetUpDataOverheadFileRequestPackets() +
 										theStats.GetUpDataOverheadSourceExchangePackets() +
 										theStats.GetUpDataOverheadServerPackets() +
 										theStats.GetUpDataOverheadKadPackets() +
 										theStats.GetUpDataOverheadOtherPackets() +
 										GetUpOverheadTotalPackets());
-	ini.WriteUInt64(L"UpOverheadFileReqPackets", theStats.GetUpDataOverheadFileRequestPackets() + GetUpOverheadFileReqPackets());
-	ini.WriteUInt64(L"UpOverheadSrcExPackets", theStats.GetUpDataOverheadSourceExchangePackets() + GetUpOverheadSrcExPackets());
-	ini.WriteUInt64(L"UpOverheadServerPackets", theStats.GetUpDataOverheadServerPackets() + GetUpOverheadServerPackets());
-	ini.WriteUInt64(L"UpOverheadKadPackets", theStats.GetUpDataOverheadKadPackets() + GetUpOverheadKadPackets());
+	ini.WriteUInt64(_T("UpOverheadFileReqPackets"), theStats.GetUpDataOverheadFileRequestPackets() + GetUpOverheadFileReqPackets());
+	ini.WriteUInt64(_T("UpOverheadSrcExPackets"), theStats.GetUpDataOverheadSourceExchangePackets() + GetUpOverheadSrcExPackets());
+	ini.WriteUInt64(_T("UpOverheadServerPackets"), theStats.GetUpDataOverheadServerPackets() + GetUpOverheadServerPackets());
+	ini.WriteUInt64(_T("UpOverheadKadPackets"), theStats.GetUpDataOverheadKadPackets() + GetUpOverheadKadPackets());
 
 	// Save Cumulative Connection Statistics
 
 	// Download Rate Average
 	float tempRate = theStats.GetAvgDownloadRate(AVG_TOTAL);
-	ini.WriteFloat(L"ConnAvgDownRate", tempRate);
+	ini.WriteFloat(_T("ConnAvgDownRate"), tempRate);
 
 	// Max Download Rate Average
 	if (tempRate > GetConnMaxAvgDownRate())
 		SetConnMaxAvgDownRate(tempRate);
-	ini.WriteFloat(L"ConnMaxAvgDownRate", GetConnMaxAvgDownRate());
+	ini.WriteFloat(_T("ConnMaxAvgDownRate"), GetConnMaxAvgDownRate());
 
 	// Max Download Rate
-	tempRate = (float)theApp.downloadqueue->GetDatarate() / 1024;
+	tempRate = theApp.downloadqueue->GetDatarate() / 1024.0f;
 	if (tempRate > GetConnMaxDownRate())
 		SetConnMaxDownRate(tempRate);
-	ini.WriteFloat(L"ConnMaxDownRate", GetConnMaxDownRate());
+	ini.WriteFloat(_T("ConnMaxDownRate"), GetConnMaxDownRate());
 
 	// Upload Rate Average
 	tempRate = theStats.GetAvgUploadRate(AVG_TOTAL);
-	ini.WriteFloat(L"ConnAvgUpRate", tempRate);
+	ini.WriteFloat(_T("ConnAvgUpRate"), tempRate);
 
 	// Max Upload Rate Average
 	if (tempRate > GetConnMaxAvgUpRate())
 		SetConnMaxAvgUpRate(tempRate);
-	ini.WriteFloat(L"ConnMaxAvgUpRate", GetConnMaxAvgUpRate());
+	ini.WriteFloat(_T("ConnMaxAvgUpRate"), GetConnMaxAvgUpRate());
 
 	// Max Upload Rate
-	tempRate = (float)theApp.uploadqueue->GetDatarate() / 1024;
+	tempRate = theApp.uploadqueue->GetDatarate() / 1024.0f;
 	if (tempRate > GetConnMaxUpRate())
 		SetConnMaxUpRate(tempRate);
-	ini.WriteFloat(L"ConnMaxUpRate", GetConnMaxUpRate());
+	ini.WriteFloat(_T("ConnMaxUpRate"), GetConnMaxUpRate());
 
 	// Overall Run Time
-	ini.WriteInt(L"ConnRunTime", (UINT)((GetTickCount() - theStats.starttime)/1000 + GetConnRunTime()));
+	ini.WriteInt(_T("ConnRunTime"), (UINT)((GetTickCount() - theStats.starttime)/1000 + GetConnRunTime()));
 
 	// Number of Reconnects
-	ini.WriteInt(L"ConnNumReconnects", (theStats.reconnects>0) ? (theStats.reconnects - 1 + GetConnNumReconnects()) : GetConnNumReconnects());
+	ini.WriteInt(_T("ConnNumReconnects"), (theStats.reconnects>0) ? (theStats.reconnects - 1 + GetConnNumReconnects()) : GetConnNumReconnects());
 
 	// Average Connections
 	if (theApp.serverconnect->IsConnected())
-		ini.WriteInt(L"ConnAvgConnections", (UINT)((theApp.listensocket->GetAverageConnections() + cumConnAvgConnections)/2));
+		ini.WriteInt(_T("ConnAvgConnections"), (UINT)((theApp.listensocket->GetAverageConnections() + cumConnAvgConnections)/2));
 
 	// Peak Connections
 	if (theApp.listensocket->GetPeakConnections() > cumConnPeakConnections)
 		cumConnPeakConnections = theApp.listensocket->GetPeakConnections();
-	ini.WriteInt(L"ConnPeakConnections", cumConnPeakConnections);
+	ini.WriteInt(_T("ConnPeakConnections"), cumConnPeakConnections);
 
 	// Max Connection Limit Reached
 	if (theApp.listensocket->GetMaxConnectionReached() + cumConnMaxConnLimitReached > cumConnMaxConnLimitReached)
-		ini.WriteInt(L"ConnMaxConnLimitReached", theApp.listensocket->GetMaxConnectionReached() + cumConnMaxConnLimitReached);
+		ini.WriteInt(_T("ConnMaxConnLimitReached"), theApp.listensocket->GetMaxConnectionReached() + cumConnMaxConnLimitReached);
 
 	// Time Stuff...
-	ini.WriteInt(L"ConnTransferTime", GetConnTransferTime() + theStats.GetTransferTime());
-	ini.WriteInt(L"ConnUploadTime", GetConnUploadTime() + theStats.GetUploadTime());
-	ini.WriteInt(L"ConnDownloadTime", GetConnDownloadTime() + theStats.GetDownloadTime());
-	ini.WriteInt(L"ConnServerDuration", GetConnServerDuration() + theStats.GetServerDuration());
+	ini.WriteInt(_T("ConnTransferTime"), GetConnTransferTime() + theStats.GetTransferTime());
+	ini.WriteInt(_T("ConnUploadTime"), GetConnUploadTime() + theStats.GetUploadTime());
+	ini.WriteInt(_T("ConnDownloadTime"), GetConnDownloadTime() + theStats.GetDownloadTime());
+	ini.WriteInt(_T("ConnServerDuration"), GetConnServerDuration() + theStats.GetServerDuration());
 
 	// Compare and Save Server Records
 	uint32 servtotal, servfail, servuser, servfile, servlowiduser, servtuser, servtfile;
@@ -934,29 +920,29 @@ void CPreferences::SaveStats(int bBackUp){
 
 	if (servtotal - servfail > cumSrvrsMostWorkingServers)
 		cumSrvrsMostWorkingServers = servtotal - servfail;
-	ini.WriteInt(L"SrvrsMostWorkingServers", cumSrvrsMostWorkingServers);
+	ini.WriteInt(_T("SrvrsMostWorkingServers"), cumSrvrsMostWorkingServers);
 
 	if (servtuser > cumSrvrsMostUsersOnline)
 		cumSrvrsMostUsersOnline = servtuser;
-	ini.WriteInt(L"SrvrsMostUsersOnline", cumSrvrsMostUsersOnline);
+	ini.WriteInt(_T("SrvrsMostUsersOnline"), cumSrvrsMostUsersOnline);
 
 	if (servtfile > cumSrvrsMostFilesAvail)
 		cumSrvrsMostFilesAvail = servtfile;
-	ini.WriteInt(L"SrvrsMostFilesAvail", cumSrvrsMostFilesAvail);
+	ini.WriteInt(_T("SrvrsMostFilesAvail"), cumSrvrsMostFilesAvail);
 
 	// Compare and Save Shared File Records
 	if ((UINT)theApp.sharedfiles->GetCount() > cumSharedMostFilesShared)
 		cumSharedMostFilesShared = theApp.sharedfiles->GetCount();
-	ini.WriteInt(L"SharedMostFilesShared", cumSharedMostFilesShared);
+	ini.WriteInt(_T("SharedMostFilesShared"), cumSharedMostFilesShared);
 
 	uint64 bytesLargestFile = 0;
 	uint64 allsize = theApp.sharedfiles->GetDatasize(bytesLargestFile);
 	if (allsize > cumSharedLargestShareSize)
 		cumSharedLargestShareSize = allsize;
-	ini.WriteUInt64(L"SharedLargestShareSize", cumSharedLargestShareSize);
+	ini.WriteUInt64(_T("SharedLargestShareSize"), cumSharedLargestShareSize);
 	if (bytesLargestFile > cumSharedLargestFileSize)
 		cumSharedLargestFileSize = bytesLargestFile;
-	ini.WriteUInt64(L"SharedLargestFileSize", cumSharedLargestFileSize);
+	ini.WriteUInt64(_T("SharedLargestFileSize"), cumSharedLargestFileSize);
 
 	if (theApp.sharedfiles->GetCount() != 0) {
 		uint64 tempint = allsize/theApp.sharedfiles->GetCount();
@@ -964,8 +950,8 @@ void CPreferences::SaveStats(int bBackUp){
 			cumSharedLargestAvgFileSize = tempint;
 	}
 
-	ini.WriteUInt64(L"SharedLargestAvgFileSize", cumSharedLargestAvgFileSize);
-	ini.WriteInt(L"statsDateTimeLastReset", stat_datetimeLastReset);
+	ini.WriteUInt64(_T("SharedLargestAvgFileSize"), cumSharedLargestAvgFileSize);
+	ini.WriteInt(_T("statsDateTimeLastReset"), stat_datetimeLastReset);
 
 	// If we are saving a back-up or a temporary back-up, return now.
 	if (bBackUp != 0)
@@ -1004,16 +990,16 @@ void CPreferences::SetRecordStructMembers() {
 	}
 } // SetRecordStructMembers()
 
-void CPreferences::SaveCompletedDownloadsStat(){
-
+void CPreferences::SaveCompletedDownloadsStat()
+{
 	// This function saves the values for the completed
 	// download members to INI.  It is called from
 	// CPartfile::PerformFileComplete ...   - Khaos
 
-	CIni ini(GetMuleDirectory(EMULE_CONFIGDIR) + L"statistics.ini", L"Statistics" );
+	CIni ini(GetMuleDirectory(EMULE_CONFIGDIR) + _T("statistics.ini"), _T("Statistics"));
 
-	ini.WriteInt(L"DownCompletedFiles",			GetDownCompletedFiles());
-	ini.WriteInt(L"DownSessionCompletedFiles",	GetDownSessionCompletedFiles());
+	ini.WriteInt(_T("DownCompletedFiles"),			GetDownCompletedFiles());
+	ini.WriteInt(_T("DownSessionCompletedFiles"),	GetDownSessionCompletedFiles());
 } // SaveCompletedDownloadsStat()
 
 void CPreferences::Add2SessionTransferData(UINT uClientID, UINT uClientPort, BOOL bFromPF,
@@ -1203,7 +1189,7 @@ bool CPreferences::LoadStats(int loadBackUp)
 
 	switch (loadBackUp) {
 	case 1:
-		sINI += L"statbkup.ini";
+		sINI += _T("statbkup.ini");
 		if (!findBackUp.FindFile(sINI))
 			return false;
 		SaveStats(2); // Save our temp backup of current values to statbkuptmp.ini, we will be renaming it at the end of this function.
@@ -1211,143 +1197,143 @@ bool CPreferences::LoadStats(int loadBackUp)
 	case 0:
 	default:
 		// for transition...
-		if (PathFileExists(sINI + L"statistics.ini"))
-			sINI += L"statistics.ini";
+		if (PathFileExists(sINI + _T("statistics.ini")))
+			sINI += _T("statistics.ini");
 		else
-			sINI += L"preferences.ini";
+			sINI += _T("preferences.ini");
 	}
 
 	BOOL fileex = PathFileExists(sINI);
-	CIni ini(sINI, L"Statistics");
+	CIni ini(sINI, _T("Statistics"));
 
-	totalDownloadedBytes			= ini.GetUInt64(L"TotalDownloadedBytes");
-	totalUploadedBytes				= ini.GetUInt64(L"TotalUploadedBytes");
+	totalDownloadedBytes			= ini.GetUInt64(_T("TotalDownloadedBytes"));
+	totalUploadedBytes				= ini.GetUInt64(_T("TotalUploadedBytes"));
 
 	// Load stats for cumulative downline overhead
-	cumDownOverheadTotal			= ini.GetUInt64(L"DownOverheadTotal");
-	cumDownOverheadFileReq			= ini.GetUInt64(L"DownOverheadFileReq");
-	cumDownOverheadSrcEx			= ini.GetUInt64(L"DownOverheadSrcEx");
-	cumDownOverheadServer			= ini.GetUInt64(L"DownOverheadServer");
-	cumDownOverheadKad				= ini.GetUInt64(L"DownOverheadKad");
-	cumDownOverheadTotalPackets		= ini.GetUInt64(L"DownOverheadTotalPackets");
-	cumDownOverheadFileReqPackets	= ini.GetUInt64(L"DownOverheadFileReqPackets");
-	cumDownOverheadSrcExPackets		= ini.GetUInt64(L"DownOverheadSrcExPackets");
-	cumDownOverheadServerPackets	= ini.GetUInt64(L"DownOverheadServerPackets");
-	cumDownOverheadKadPackets		= ini.GetUInt64(L"DownOverheadKadPackets");
+	cumDownOverheadTotal			= ini.GetUInt64(_T("DownOverheadTotal"));
+	cumDownOverheadFileReq			= ini.GetUInt64(_T("DownOverheadFileReq"));
+	cumDownOverheadSrcEx			= ini.GetUInt64(_T("DownOverheadSrcEx"));
+	cumDownOverheadServer			= ini.GetUInt64(_T("DownOverheadServer"));
+	cumDownOverheadKad				= ini.GetUInt64(_T("DownOverheadKad"));
+	cumDownOverheadTotalPackets		= ini.GetUInt64(_T("DownOverheadTotalPackets"));
+	cumDownOverheadFileReqPackets	= ini.GetUInt64(_T("DownOverheadFileReqPackets"));
+	cumDownOverheadSrcExPackets		= ini.GetUInt64(_T("DownOverheadSrcExPackets"));
+	cumDownOverheadServerPackets	= ini.GetUInt64(_T("DownOverheadServerPackets"));
+	cumDownOverheadKadPackets		= ini.GetUInt64(_T("DownOverheadKadPackets"));
 
 	// Load stats for cumulative upline overhead
-	cumUpOverheadTotal				= ini.GetUInt64(L"UpOverHeadTotal");
-	cumUpOverheadFileReq			= ini.GetUInt64(L"UpOverheadFileReq");
-	cumUpOverheadSrcEx				= ini.GetUInt64(L"UpOverheadSrcEx");
-	cumUpOverheadServer				= ini.GetUInt64(L"UpOverheadServer");
-	cumUpOverheadKad				= ini.GetUInt64(L"UpOverheadKad");
-	cumUpOverheadTotalPackets		= ini.GetUInt64(L"UpOverHeadTotalPackets");
-	cumUpOverheadFileReqPackets		= ini.GetUInt64(L"UpOverheadFileReqPackets");
-	cumUpOverheadSrcExPackets		= ini.GetUInt64(L"UpOverheadSrcExPackets");
-	cumUpOverheadServerPackets		= ini.GetUInt64(L"UpOverheadServerPackets");
-	cumUpOverheadKadPackets			= ini.GetUInt64(L"UpOverheadKadPackets");
+	cumUpOverheadTotal				= ini.GetUInt64(_T("UpOverHeadTotal"));
+	cumUpOverheadFileReq			= ini.GetUInt64(_T("UpOverheadFileReq"));
+	cumUpOverheadSrcEx				= ini.GetUInt64(_T("UpOverheadSrcEx"));
+	cumUpOverheadServer				= ini.GetUInt64(_T("UpOverheadServer"));
+	cumUpOverheadKad				= ini.GetUInt64(_T("UpOverheadKad"));
+	cumUpOverheadTotalPackets		= ini.GetUInt64(_T("UpOverHeadTotalPackets"));
+	cumUpOverheadFileReqPackets		= ini.GetUInt64(_T("UpOverheadFileReqPackets"));
+	cumUpOverheadSrcExPackets		= ini.GetUInt64(_T("UpOverheadSrcExPackets"));
+	cumUpOverheadServerPackets		= ini.GetUInt64(_T("UpOverheadServerPackets"));
+	cumUpOverheadKadPackets			= ini.GetUInt64(_T("UpOverheadKadPackets"));
 
 	// Load stats for cumulative upline data
-	cumUpSuccessfulSessions			= ini.GetInt(L"UpSuccessfulSessions");
-	cumUpFailedSessions				= ini.GetInt(L"UpFailedSessions");
-	cumUpAvgTime					= ini.GetInt(L"UpAvgTime");
+	cumUpSuccessfulSessions			= ini.GetInt(_T("UpSuccessfulSessions"));
+	cumUpFailedSessions				= ini.GetInt(_T("UpFailedSessions"));
+	cumUpAvgTime					= ini.GetInt(_T("UpAvgTime"));
 
 	// Load cumulative client breakdown stats for sent bytes
-	cumUpData_EDONKEY				= ini.GetUInt64(L"UpData_EDONKEY");
-	cumUpData_EDONKEYHYBRID			= ini.GetUInt64(L"UpData_EDONKEYHYBRID");
-	cumUpData_EMULE					= ini.GetUInt64(L"UpData_EMULE");
-	cumUpData_MLDONKEY				= ini.GetUInt64(L"UpData_MLDONKEY");
-	cumUpData_EMULECOMPAT			= ini.GetUInt64(L"UpData_LMULE");
-	cumUpData_AMULE					= ini.GetUInt64(L"UpData_AMULE");
-	cumUpData_SHAREAZA				= ini.GetUInt64(L"UpData_SHAREAZA");
+	cumUpData_EDONKEY				= ini.GetUInt64(_T("UpData_EDONKEY"));
+	cumUpData_EDONKEYHYBRID			= ini.GetUInt64(_T("UpData_EDONKEYHYBRID"));
+	cumUpData_EMULE					= ini.GetUInt64(_T("UpData_EMULE"));
+	cumUpData_MLDONKEY				= ini.GetUInt64(_T("UpData_MLDONKEY"));
+	cumUpData_EMULECOMPAT			= ini.GetUInt64(_T("UpData_LMULE"));
+	cumUpData_AMULE					= ini.GetUInt64(_T("UpData_AMULE"));
+	cumUpData_SHAREAZA				= ini.GetUInt64(_T("UpData_SHAREAZA"));
 
 	// Load cumulative port breakdown stats for sent bytes
-	cumUpDataPort_4662				= ini.GetUInt64(L"UpDataPort_4662");
-	cumUpDataPort_OTHER				= ini.GetUInt64(L"UpDataPort_OTHER");
-	cumUpDataPort_PeerCache			= ini.GetUInt64(L"UpDataPort_PeerCache");
+	cumUpDataPort_4662				= ini.GetUInt64(_T("UpDataPort_4662"));
+	cumUpDataPort_OTHER				= ini.GetUInt64(_T("UpDataPort_OTHER"));
+	cumUpDataPort_PeerCache			= ini.GetUInt64(_T("UpDataPort_PeerCache"));
 
 	// Load cumulative source breakdown stats for sent bytes
-	cumUpData_File					= ini.GetUInt64(L"UpData_File");
-	cumUpData_Partfile				= ini.GetUInt64(L"UpData_Partfile");
+	cumUpData_File					= ini.GetUInt64(_T("UpData_File"));
+	cumUpData_Partfile				= ini.GetUInt64(_T("UpData_Partfile"));
 
 	// Load stats for cumulative downline data
-	cumDownCompletedFiles			= ini.GetInt(L"DownCompletedFiles");
-	cumDownSuccessfulSessions		= ini.GetInt(L"DownSuccessfulSessions");
-	cumDownFailedSessions			= ini.GetInt(L"DownFailedSessions");
-	cumDownAvgTime					= ini.GetInt(L"DownAvgTime");
+	cumDownCompletedFiles			= ini.GetInt(_T("DownCompletedFiles"));
+	cumDownSuccessfulSessions		= ini.GetInt(_T("DownSuccessfulSessions"));
+	cumDownFailedSessions			= ini.GetInt(_T("DownFailedSessions"));
+	cumDownAvgTime					= ini.GetInt(_T("DownAvgTime"));
 
 	// Cumulative statistics for saved due to compression/lost due to corruption
-	cumLostFromCorruption			= ini.GetUInt64(L"LostFromCorruption");
-	cumSavedFromCompression			= ini.GetUInt64(L"SavedFromCompression");
-	cumPartsSavedByICH				= ini.GetInt(L"PartsSavedByICH");
+	cumLostFromCorruption			= ini.GetUInt64(_T("LostFromCorruption"));
+	cumSavedFromCompression			= ini.GetUInt64(_T("SavedFromCompression"));
+	cumPartsSavedByICH				= ini.GetInt(_T("PartsSavedByICH"));
 
 	// Load cumulative client breakdown stats for received bytes
-	cumDownData_EDONKEY				= ini.GetUInt64(L"DownData_EDONKEY");
-	cumDownData_EDONKEYHYBRID		= ini.GetUInt64(L"DownData_EDONKEYHYBRID");
-	cumDownData_EMULE				= ini.GetUInt64(L"DownData_EMULE");
-	cumDownData_MLDONKEY			= ini.GetUInt64(L"DownData_MLDONKEY");
-	cumDownData_EMULECOMPAT			= ini.GetUInt64(L"DownData_LMULE");
-	cumDownData_AMULE				= ini.GetUInt64(L"DownData_AMULE");
-	cumDownData_SHAREAZA			= ini.GetUInt64(L"DownData_SHAREAZA");
-	cumDownData_URL					= ini.GetUInt64(L"DownData_URL");
+	cumDownData_EDONKEY				= ini.GetUInt64(_T("DownData_EDONKEY"));
+	cumDownData_EDONKEYHYBRID		= ini.GetUInt64(_T("DownData_EDONKEYHYBRID"));
+	cumDownData_EMULE				= ini.GetUInt64(_T("DownData_EMULE"));
+	cumDownData_MLDONKEY			= ini.GetUInt64(_T("DownData_MLDONKEY"));
+	cumDownData_EMULECOMPAT			= ini.GetUInt64(_T("DownData_LMULE"));
+	cumDownData_AMULE				= ini.GetUInt64(_T("DownData_AMULE"));
+	cumDownData_SHAREAZA			= ini.GetUInt64(_T("DownData_SHAREAZA"));
+	cumDownData_URL					= ini.GetUInt64(_T("DownData_URL"));
 
 	// Load cumulative port breakdown stats for received bytes
-	cumDownDataPort_4662			= ini.GetUInt64(L"DownDataPort_4662");
-	cumDownDataPort_OTHER			= ini.GetUInt64(L"DownDataPort_OTHER");
-	cumDownDataPort_PeerCache		= ini.GetUInt64(L"DownDataPort_PeerCache");
+	cumDownDataPort_4662			= ini.GetUInt64(_T("DownDataPort_4662"));
+	cumDownDataPort_OTHER			= ini.GetUInt64(_T("DownDataPort_OTHER"));
+	cumDownDataPort_PeerCache		= ini.GetUInt64(_T("DownDataPort_PeerCache"));
 
 	// Load stats for cumulative connection data
-	cumConnAvgDownRate				= ini.GetFloat(L"ConnAvgDownRate");
-	cumConnMaxAvgDownRate			= ini.GetFloat(L"ConnMaxAvgDownRate");
-	cumConnMaxDownRate				= ini.GetFloat(L"ConnMaxDownRate");
-	cumConnAvgUpRate				= ini.GetFloat(L"ConnAvgUpRate");
-	cumConnMaxAvgUpRate				= ini.GetFloat(L"ConnMaxAvgUpRate");
-	cumConnMaxUpRate				= ini.GetFloat(L"ConnMaxUpRate");
-	cumConnRunTime					= ini.GetInt(L"ConnRunTime");
-	cumConnTransferTime				= ini.GetInt(L"ConnTransferTime");
-	cumConnDownloadTime				= ini.GetInt(L"ConnDownloadTime");
-	cumConnUploadTime				= ini.GetInt(L"ConnUploadTime");
-	cumConnServerDuration			= ini.GetInt(L"ConnServerDuration");
-	cumConnNumReconnects			= ini.GetInt(L"ConnNumReconnects");
-	cumConnAvgConnections			= ini.GetInt(L"ConnAvgConnections");
-	cumConnMaxConnLimitReached		= ini.GetInt(L"ConnMaxConnLimitReached");
-	cumConnPeakConnections			= ini.GetInt(L"ConnPeakConnections");
+	cumConnAvgDownRate				= ini.GetFloat(_T("ConnAvgDownRate"));
+	cumConnMaxAvgDownRate			= ini.GetFloat(_T("ConnMaxAvgDownRate"));
+	cumConnMaxDownRate				= ini.GetFloat(_T("ConnMaxDownRate"));
+	cumConnAvgUpRate				= ini.GetFloat(_T("ConnAvgUpRate"));
+	cumConnMaxAvgUpRate				= ini.GetFloat(_T("ConnMaxAvgUpRate"));
+	cumConnMaxUpRate				= ini.GetFloat(_T("ConnMaxUpRate"));
+	cumConnRunTime					= ini.GetInt(_T("ConnRunTime"));
+	cumConnTransferTime				= ini.GetInt(_T("ConnTransferTime"));
+	cumConnDownloadTime				= ini.GetInt(_T("ConnDownloadTime"));
+	cumConnUploadTime				= ini.GetInt(_T("ConnUploadTime"));
+	cumConnServerDuration			= ini.GetInt(_T("ConnServerDuration"));
+	cumConnNumReconnects			= ini.GetInt(_T("ConnNumReconnects"));
+	cumConnAvgConnections			= ini.GetInt(_T("ConnAvgConnections"));
+	cumConnMaxConnLimitReached		= ini.GetInt(_T("ConnMaxConnLimitReached"));
+	cumConnPeakConnections			= ini.GetInt(_T("ConnPeakConnections"));
 
 	// Load date/time of last reset
-	stat_datetimeLastReset			= ini.GetInt(L"statsDateTimeLastReset");
+	stat_datetimeLastReset			= ini.GetInt(_T("statsDateTimeLastReset"));
 
 	// Smart Load For Restores - Don't overwrite records that are greater than the backed up ones
 	if (loadBackUp == 1)
 	{
 		// Load records for servers / network
-		if ((uint32)ini.GetInt(L"SrvrsMostWorkingServers") > cumSrvrsMostWorkingServers)
-			cumSrvrsMostWorkingServers = ini.GetInt(L"SrvrsMostWorkingServers");
+		if ((uint32)ini.GetInt(_T("SrvrsMostWorkingServers")) > cumSrvrsMostWorkingServers)
+			cumSrvrsMostWorkingServers = ini.GetInt(_T("SrvrsMostWorkingServers"));
 
-		if ((uint32)ini.GetInt(L"SrvrsMostUsersOnline") > cumSrvrsMostUsersOnline)
-			cumSrvrsMostUsersOnline = ini.GetInt(L"SrvrsMostUsersOnline");
+		if ((uint32)ini.GetInt(_T("SrvrsMostUsersOnline")) > cumSrvrsMostUsersOnline)
+			cumSrvrsMostUsersOnline = ini.GetInt(_T("SrvrsMostUsersOnline"));
 
-		if ((uint32)ini.GetInt(L"SrvrsMostFilesAvail") > cumSrvrsMostFilesAvail)
-			cumSrvrsMostFilesAvail = ini.GetInt(L"SrvrsMostFilesAvail");
+		if ((uint32)ini.GetInt(_T("SrvrsMostFilesAvail")) > cumSrvrsMostFilesAvail)
+			cumSrvrsMostFilesAvail = ini.GetInt(_T("SrvrsMostFilesAvail"));
 
 		// Load records for shared files
-		if ((uint32)ini.GetInt(L"SharedMostFilesShared") > cumSharedMostFilesShared)
-			cumSharedMostFilesShared =	ini.GetInt(L"SharedMostFilesShared");
+		if ((uint32)ini.GetInt(_T("SharedMostFilesShared")) > cumSharedMostFilesShared)
+			cumSharedMostFilesShared =	ini.GetInt(_T("SharedMostFilesShared"));
 
-		uint64 temp64 = ini.GetUInt64(L"SharedLargestShareSize");
+		uint64 temp64 = ini.GetUInt64(_T("SharedLargestShareSize"));
 		if (temp64 > cumSharedLargestShareSize)
 			cumSharedLargestShareSize = temp64;
 
-		temp64 = ini.GetUInt64(L"SharedLargestAvgFileSize");
+		temp64 = ini.GetUInt64(_T("SharedLargestAvgFileSize"));
 		if (temp64 > cumSharedLargestAvgFileSize)
 			cumSharedLargestAvgFileSize = temp64;
 
-		temp64 = ini.GetUInt64(L"SharedLargestFileSize");
+		temp64 = ini.GetUInt64(_T("SharedLargestFileSize"));
 		if (temp64 > cumSharedLargestFileSize)
 			cumSharedLargestFileSize = temp64;
 
 		// Check to make sure the backup of the values we just overwrote exists.  If so, rename it to the backup file.
 		// This allows us to undo a restore, so to speak, just in case we don't like the restored values...
-		CString sINIBackUp(GetMuleDirectory(EMULE_CONFIGDIR) + L"statbkuptmp.ini");
+		CString sINIBackUp(GetMuleDirectory(EMULE_CONFIGDIR) + _T("statbkuptmp.ini"));
 		if (findBackUp.FindFile(sINIBackUp)){
 			::DeleteFile(sINI);				// Remove the backup that we just restored from
 			::MoveFile(sINIBackUp, sINI);	// Rename our temporary backup to the normal statbkup.ini filename.
@@ -1361,15 +1347,15 @@ bool CPreferences::LoadStats(int loadBackUp)
 	else
 	{
 		// Load records for servers / network
-		cumSrvrsMostWorkingServers	= ini.GetInt(L"SrvrsMostWorkingServers");
-		cumSrvrsMostUsersOnline		= ini.GetInt(L"SrvrsMostUsersOnline");
-		cumSrvrsMostFilesAvail		= ini.GetInt(L"SrvrsMostFilesAvail");
+		cumSrvrsMostWorkingServers	= ini.GetInt(_T("SrvrsMostWorkingServers"));
+		cumSrvrsMostUsersOnline		= ini.GetInt(_T("SrvrsMostUsersOnline"));
+		cumSrvrsMostFilesAvail		= ini.GetInt(_T("SrvrsMostFilesAvail"));
 
 		// Load records for shared files
-		cumSharedMostFilesShared	= ini.GetInt(L"SharedMostFilesShared");
-		cumSharedLargestShareSize	= ini.GetUInt64(L"SharedLargestShareSize");
-		cumSharedLargestAvgFileSize = ini.GetUInt64(L"SharedLargestAvgFileSize");
-		cumSharedLargestFileSize	= ini.GetUInt64(L"SharedLargestFileSize");
+		cumSharedMostFilesShared	= ini.GetInt(_T("SharedMostFilesShared"));
+		cumSharedLargestShareSize	= ini.GetUInt64(_T("SharedLargestShareSize"));
+		cumSharedLargestAvgFileSize = ini.GetUInt64(_T("SharedLargestAvgFileSize"));
+		cumSharedLargestFileSize	= ini.GetUInt64(_T("SharedLargestFileSize"));
 
 		// Initialize new session statistic variables...
 		sesDownCompletedFiles		= 0;
@@ -1436,60 +1422,48 @@ CString CPreferences::GetStatsLastResetStr(bool formatLong)
 
 // <-----khaos-
 
-bool CPreferences::Save(){
-
+bool CPreferences::Save()
+{
+	static const TCHAR *stmp = _T(".tmp");
 	bool error = false;
-	CString strFullPath;
-	strFullPath = GetMuleDirectory(EMULE_CONFIGDIR) + L"preferences.dat";
+	CString strFullPath = GetMuleDirectory(EMULE_CONFIGDIR) + _T("preferences.dat");
 
-	FILE* preffile = _tfsopen(strFullPath, L"wb", _SH_DENYWR);
-	prefsExt->version = PREFFILE_VERSION;
-	if (preffile){
-		prefsExt->version=PREFFILE_VERSION;
-		prefsExt->EmuleWindowPlacement=EmuleWindowPlacement;
+	FILE* preffile = _tfsopen(strFullPath + stmp, _T("wb"), _SH_DENYWR); //keep contents
+	if (preffile) {
+		prefsExt->version = PREFFILE_VERSION;
 		md4cpy(prefsExt->userhash, userhash);
-
-		error = fwrite(prefsExt,sizeof(Preferences_Ext_Struct),1,preffile)!=1;
-		if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.emuledlg->IsClosing())) {
-			fflush(preffile); // flush file stream buffers to disk buffers
-			(void)_commit(_fileno(preffile)); // commit disk buffers to disk
-		}
-		fclose(preffile);
-	}
-	else
+		prefsExt->EmuleWindowPlacement = EmuleWindowPlacement;
+		error = (fwrite(prefsExt, sizeof(Preferences_Ext_Struct), 1, preffile) != 1);
+		error |= (fclose(preffile) != 0);
+		if (!error)
+			error = MoveFileEx(strFullPath + stmp, strFullPath, MOVEFILE_REPLACE_EXISTING);
+	} else
 		error = true;
 
 	SavePreferences();
 	SaveStats();
 
-	strFullPath = GetMuleDirectory(EMULE_CONFIGDIR) + L"shareddir.dat";
+	strFullPath = GetMuleDirectory(EMULE_CONFIGDIR) + _T("shareddir.dat");
 	CStdioFile sdirfile;
-	if (sdirfile.Open(strFullPath, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyWrite | CFile::typeBinary))
-	{
-		try{
+	if (sdirfile.Open(strFullPath + stmp, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyWrite | CFile::typeBinary)) {
+		try {
 			// write Unicode byte-order mark 0xFEFF
-			WORD wBOM = 0xFEFF;
+			WORD wBOM = 0xFEFFu;
 			sdirfile.Write(&wBOM, sizeof wBOM);
-
 			for (POSITION pos = shareddir_list.GetHeadPosition(); pos != NULL;) {
 				sdirfile.WriteString(shareddir_list.GetNext(pos));
-				sdirfile.Write(L"\r\n", sizeof(TCHAR)*2);
-			}
-			if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.emuledlg->IsClosing())) {
-				sdirfile.Flush(); // flush file stream buffers to disk buffers
-				if (_commit(_fileno(sdirfile.m_pStream)) != 0) // commit disk buffers to disk
-					AfxThrowFileException(CFileException::hardIO, GetLastError(), sdirfile.GetFileName());
+				sdirfile.Write(_T("\r\n"), 2*sizeof(TCHAR));
 			}
 			sdirfile.Close();
+			MoveFileEx(strFullPath + stmp, strFullPath, MOVEFILE_REPLACE_EXISTING);
 		} catch (CFileException* ferror) {
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
 			GetExceptionMessage(*ferror, buffer, _countof(buffer));
 			if (thePrefs.GetVerbose())
-				AddDebugLogLine(true, L"Failed to save %s - %s", (LPCTSTR)strFullPath, buffer);
+				AddDebugLogLine(true, _T("Failed to save %s - %s"), (LPCTSTR)strFullPath, buffer);
 			ferror->Delete();
 		}
-	}
-	else
+	} else
 		error = true;
 
 	::CreateDirectory(GetMuleDirectory(EMULE_INCOMINGDIR), 0);
@@ -1499,14 +1473,17 @@ bool CPreferences::Save(){
 
 void CPreferences::CreateUserHash()
 {
-	CryptoPP::AutoSeededRandomPool rng;
-	rng.GenerateBlock(userhash, 16);
-	// mark as emule client. that will be need in later version
+	while (isbadhash(userhash)) {
+		CryptoPP::AutoSeededRandomPool rng;
+		rng.GenerateBlock(userhash, sizeof userhash);
+	}
+	// mark as emule client. that will be needed in later version
 	userhash[5] = 14;
 	userhash[14] = 111;
 }
 
-int CPreferences::GetRecommendedMaxConnections() {
+int CPreferences::GetRecommendedMaxConnections()
+{
 	int iRealMax = ::GetMaxWindowsTCPConnections();
 	if(iRealMax == -1 || iRealMax > 520)
 		return 500;
@@ -1524,334 +1501,334 @@ void CPreferences::SavePreferences()
 {
 	CString buffer;
 
-	CIni ini(GetConfigFile(), L"eMule");
+	CIni ini(GetConfigFile(), _T("eMule"));
 	//---
-	ini.WriteString(L"AppVersion", theApp.m_strCurVersionLong);
+	ini.WriteString(_T("AppVersion"), theApp.m_strCurVersionLong);
 	//---
 #ifdef _BETA
 	if (m_bBetaNaggingDone)
-		ini.WriteString(L"BetaVersionNotified", theApp.m_strCurVersionLong);
+		ini.WriteString(_T("BetaVersionNotified"), theApp.m_strCurVersionLong);
 #endif
 #ifdef _DEBUG
-	ini.WriteInt(L"DebugHeap", m_iDbgHeap);
+	ini.WriteInt(_T("DebugHeap"), m_iDbgHeap);
 #endif
 
-	ini.WriteStringUTF8(L"Nick", strNick);
-	ini.WriteString(L"IncomingDir", m_strIncomingDir);
+	ini.WriteStringUTF8(_T("Nick"), strNick);
+	ini.WriteString(_T("IncomingDir"), m_strIncomingDir);
 
-	ini.WriteString(L"TempDir", tempdir.GetAt(0));
+	ini.WriteString(_T("TempDir"), tempdir.GetAt(0));
 
 	CString tempdirs;
-	for (int i=1;i<tempdir.GetCount();i++) {
-		tempdirs.Append(tempdir.GetAt(i) );
-		if (i+1<tempdir.GetCount())
-			tempdirs.Append(L"|");
+	for (int i=1; i<tempdir.GetCount(); ++i) {
+		tempdirs += tempdir[i];
+		if (i+1 < tempdir.GetCount())
+			tempdirs += _T("|");
 	}
-	ini.WriteString(L"TempDirs", tempdirs);
+	ini.WriteString(_T("TempDirs"), tempdirs);
 
-    ini.WriteInt(L"MinUpload", minupload);
-	ini.WriteInt(L"MaxUpload",maxupload);
-	ini.WriteInt(L"MaxDownload",maxdownload);
-	ini.WriteInt(L"MaxConnections",maxconnections);
-	ini.WriteInt(L"MaxHalfConnections",maxhalfconnections);
-	ini.WriteBool(L"ConditionalTCPAccept", m_bConditionalTCPAccept);
-	ini.WriteInt(L"Port",port);
-	ini.WriteInt(L"UDPPort",udpport);
-	ini.WriteInt(L"ServerUDPPort", nServerUDPPort);
-	ini.WriteInt(L"MaxSourcesPerFile",maxsourceperfile );
-	ini.WriteWORD(L"Language",m_wLanguageID);
-	ini.WriteInt(L"SeeShare",m_iSeeShares);
-	ini.WriteInt(L"ToolTipDelay",m_iToolDelayTime);
-	ini.WriteInt(L"StatGraphsInterval",trafficOMeterInterval);
-	ini.WriteInt(L"StatsInterval",statsInterval);
-	ini.WriteBool(L"StatsFillGraphs",m_bFillGraphs);
-	ini.WriteInt(L"DownloadCapacity",maxGraphDownloadRate);
-	ini.WriteInt(L"UploadCapacityNew",maxGraphUploadRate);
-	ini.WriteInt(L"DeadServerRetry",m_uDeadServerRetries);
-	ini.WriteInt(L"ServerKeepAliveTimeout",m_dwServerKeepAliveTimeout);
-	ini.WriteInt(L"SplitterbarPosition",splitterbarPosition);
-	ini.WriteInt(L"SplitterbarPositionServer",splitterbarPositionSvr);
-	ini.WriteInt(L"SplitterbarPositionStat",splitterbarPositionStat+1);
-	ini.WriteInt(L"SplitterbarPositionStat_HL",splitterbarPositionStat_HL+1);
-	ini.WriteInt(L"SplitterbarPositionStat_HR",splitterbarPositionStat_HR+1);
-	ini.WriteInt(L"SplitterbarPositionFriend",splitterbarPositionFriend);
-	ini.WriteInt(L"SplitterbarPositionIRC",splitterbarPositionIRC);
-	ini.WriteInt(L"SplitterbarPositionShared",splitterbarPositionShared);
-	ini.WriteInt(L"TransferWnd1",m_uTransferWnd1);
-	ini.WriteInt(L"TransferWnd2",m_uTransferWnd2);
-	ini.WriteInt(L"VariousStatisticsMaxValue",statsMax);
-	ini.WriteInt(L"StatsAverageMinutes",statsAverageMinutes);
-	ini.WriteInt(L"MaxConnectionsPerFiveSeconds",MaxConperFive);
-	ini.WriteInt(L"Check4NewVersionDelay",versioncheckdays);
+    ini.WriteInt(_T("MinUpload"), minupload);
+	ini.WriteInt(_T("MaxUpload"),maxupload);
+	ini.WriteInt(_T("MaxDownload"),maxdownload);
+	ini.WriteInt(_T("MaxConnections"),maxconnections);
+	ini.WriteInt(_T("MaxHalfConnections"),maxhalfconnections);
+	ini.WriteBool(_T("ConditionalTCPAccept"), m_bConditionalTCPAccept);
+	ini.WriteInt(_T("Port"),port);
+	ini.WriteInt(_T("UDPPort"),udpport);
+	ini.WriteInt(_T("ServerUDPPort"), nServerUDPPort);
+	ini.WriteInt(_T("MaxSourcesPerFile"),maxsourceperfile );
+	ini.WriteWORD(_T("Language"),m_wLanguageID);
+	ini.WriteInt(_T("SeeShare"),m_iSeeShares);
+	ini.WriteInt(_T("ToolTipDelay"),m_iToolDelayTime);
+	ini.WriteInt(_T("StatGraphsInterval"),trafficOMeterInterval);
+	ini.WriteInt(_T("StatsInterval"),statsInterval);
+	ini.WriteBool(_T("StatsFillGraphs"),m_bFillGraphs);
+	ini.WriteInt(_T("DownloadCapacity"),maxGraphDownloadRate);
+	ini.WriteInt(_T("UploadCapacityNew"),maxGraphUploadRate);
+	ini.WriteInt(_T("DeadServerRetry"),m_uDeadServerRetries);
+	ini.WriteInt(_T("ServerKeepAliveTimeout"),m_dwServerKeepAliveTimeout);
+	ini.WriteInt(_T("SplitterbarPosition"),splitterbarPosition);
+	ini.WriteInt(_T("SplitterbarPositionServer"),splitterbarPositionSvr);
+	ini.WriteInt(_T("SplitterbarPositionStat"),splitterbarPositionStat+1);
+	ini.WriteInt(_T("SplitterbarPositionStat_HL"),splitterbarPositionStat_HL+1);
+	ini.WriteInt(_T("SplitterbarPositionStat_HR"),splitterbarPositionStat_HR+1);
+	ini.WriteInt(_T("SplitterbarPositionFriend"),splitterbarPositionFriend);
+	ini.WriteInt(_T("SplitterbarPositionIRC"),splitterbarPositionIRC);
+	ini.WriteInt(_T("SplitterbarPositionShared"),splitterbarPositionShared);
+	ini.WriteInt(_T("TransferWnd1"),m_uTransferWnd1);
+	ini.WriteInt(_T("TransferWnd2"),m_uTransferWnd2);
+	ini.WriteInt(_T("VariousStatisticsMaxValue"),statsMax);
+	ini.WriteInt(_T("StatsAverageMinutes"),statsAverageMinutes);
+	ini.WriteInt(_T("MaxConnectionsPerFiveSeconds"),MaxConperFive);
+	ini.WriteInt(_T("Check4NewVersionDelay"),versioncheckdays);
 
-	ini.WriteBool(L"Reconnect",reconnect);
-	ini.WriteBool(L"Scoresystem",m_bUseServerPriorities);
-	ini.WriteBool(L"Serverlist",m_bAutoUpdateServerList);
-	ini.WriteBool(L"UpdateNotifyTestClient",updatenotify);
+	ini.WriteBool(_T("Reconnect"),reconnect);
+	ini.WriteBool(_T("Scoresystem"),m_bUseServerPriorities);
+	ini.WriteBool(_T("Serverlist"),m_bAutoUpdateServerList);
+	ini.WriteBool(_T("UpdateNotifyTestClient"),updatenotify);
 	if (IsRunningAeroGlassTheme())
-		ini.WriteBool(L"MinToTray_Aero",mintotray);
+		ini.WriteBool(_T("MinToTray_Aero"),mintotray);
 	else
-		ini.WriteBool(L"MinToTray",mintotray);
-	ini.WriteBool(L"PreventStandby", m_bPreventStandby);
-	ini.WriteBool(L"StoreSearches", m_bStoreSearches);
-	ini.WriteBool(L"AddServersFromServer",m_bAddServersFromServer);
-	ini.WriteBool(L"AddServersFromClient",m_bAddServersFromClients);
-	ini.WriteBool(L"Splashscreen",splashscreen);
-	ini.WriteBool(L"BringToFront",bringtoforeground);
-	ini.WriteBool(L"TransferDoubleClick",transferDoubleclick);
-	ini.WriteBool(L"ConfirmExit",confirmExit);
-	ini.WriteBool(L"FilterBadIPs",filterLANIPs);
-    ini.WriteBool(L"Autoconnect",autoconnect);
-	ini.WriteBool(L"OnlineSignature",onlineSig);
-	ini.WriteBool(L"StartupMinimized",startMinimized);
-	ini.WriteBool(L"AutoStart",m_bAutoStart);
-	ini.WriteInt(L"LastMainWndDlgID",m_iLastMainWndDlgID);
-	ini.WriteInt(L"LastLogPaneID",m_iLastLogPaneID);
-	ini.WriteBool(L"SafeServerConnect",m_bSafeServerConnect);
-	ini.WriteBool(L"ShowRatesOnTitle",showRatesInTitle);
-	ini.WriteBool(L"IndicateRatings",indicateratings);
-	ini.WriteBool(L"WatchClipboard4ED2kFilelinks",watchclipboard);
-	ini.WriteInt(L"SearchMethod",m_iSearchMethod);
-	ini.WriteBool(L"CheckDiskspace",checkDiskspace);
-	ini.WriteInt(L"MinFreeDiskSpace",m_uMinFreeDiskSpace);
-	ini.WriteBool(L"SparsePartFiles",m_bSparsePartFiles);
-	ini.WriteBool(L"ResolveSharedShellLinks",m_bResolveSharedShellLinks);
-	ini.WriteString(L"YourHostname",m_strYourHostname);
-	ini.WriteBool(L"CheckFileOpen",m_bCheckFileOpen);
-	ini.WriteBool(L"ShowWin7TaskbarGoodies", m_bShowWin7TaskbarGoodies );
+		ini.WriteBool(_T("MinToTray"),mintotray);
+	ini.WriteBool(_T("PreventStandby"), m_bPreventStandby);
+	ini.WriteBool(_T("StoreSearches"), m_bStoreSearches);
+	ini.WriteBool(_T("AddServersFromServer"),m_bAddServersFromServer);
+	ini.WriteBool(_T("AddServersFromClient"),m_bAddServersFromClients);
+	ini.WriteBool(_T("Splashscreen"),splashscreen);
+	ini.WriteBool(_T("BringToFront"),bringtoforeground);
+	ini.WriteBool(_T("TransferDoubleClick"),transferDoubleclick);
+	ini.WriteBool(_T("ConfirmExit"),confirmExit);
+	ini.WriteBool(_T("FilterBadIPs"),filterLANIPs);
+    ini.WriteBool(_T("Autoconnect"),autoconnect);
+	ini.WriteBool(_T("OnlineSignature"),onlineSig);
+	ini.WriteBool(_T("StartupMinimized"),startMinimized);
+	ini.WriteBool(_T("AutoStart"),m_bAutoStart);
+	ini.WriteInt(_T("LastMainWndDlgID"),m_iLastMainWndDlgID);
+	ini.WriteInt(_T("LastLogPaneID"),m_iLastLogPaneID);
+	ini.WriteBool(_T("SafeServerConnect"),m_bSafeServerConnect);
+	ini.WriteBool(_T("ShowRatesOnTitle"),showRatesInTitle);
+	ini.WriteBool(_T("IndicateRatings"),indicateratings);
+	ini.WriteBool(_T("WatchClipboard4ED2kFilelinks"),watchclipboard);
+	ini.WriteInt(_T("SearchMethod"),m_iSearchMethod);
+	ini.WriteBool(_T("CheckDiskspace"),checkDiskspace);
+	ini.WriteInt(_T("MinFreeDiskSpace"),m_uMinFreeDiskSpace);
+	ini.WriteBool(_T("SparsePartFiles"),m_bSparsePartFiles);
+	ini.WriteBool(_T("ResolveSharedShellLinks"),m_bResolveSharedShellLinks);
+	ini.WriteString(_T("YourHostname"),m_strYourHostname);
+	ini.WriteBool(_T("CheckFileOpen"),m_bCheckFileOpen);
+	ini.WriteBool(_T("ShowWin7TaskbarGoodies"), m_bShowWin7TaskbarGoodies );
 
 	// Barry - New properties...
-    ini.WriteBool(L"AutoConnectStaticOnly", m_bAutoConnectToStaticServersOnly);
-	ini.WriteBool(L"AutoTakeED2KLinks", autotakeed2klinks);
-    ini.WriteBool(L"AddNewFilesPaused", addnewfilespaused);
-    ini.WriteInt (L"3DDepth", depth3D);
-	ini.WriteBool(L"MiniMule", m_bEnableMiniMule);
+    ini.WriteBool(_T("AutoConnectStaticOnly"), m_bAutoConnectToStaticServersOnly);
+	ini.WriteBool(_T("AutoTakeED2KLinks"), autotakeed2klinks);
+    ini.WriteBool(_T("AddNewFilesPaused"), addnewfilespaused);
+    ini.WriteInt (_T("3DDepth"), depth3D);
+	ini.WriteBool(_T("MiniMule"), m_bEnableMiniMule);
 
-	ini.WriteString(L"NotifierConfiguration", notifierConfiguration);
-	ini.WriteBool(L"NotifyOnDownload", notifierOnDownloadFinished);
-	ini.WriteBool(L"NotifyOnNewDownload", notifierOnNewDownload);
-	ini.WriteBool(L"NotifyOnChat", notifierOnChat);
-	ini.WriteBool(L"NotifyOnLog", notifierOnLog);
-	ini.WriteBool(L"NotifyOnImportantError", notifierOnImportantError);
-	ini.WriteBool(L"NotifierPopEveryChatMessage", notifierOnEveryChatMsg);
-	ini.WriteBool(L"NotifierPopNewVersion", notifierOnNewVersion);
-	ini.WriteInt(L"NotifierUseSound", (int)notifierSoundType);
-	ini.WriteString(L"NotifierSoundPath", notifierSoundFile);
+	ini.WriteString(_T("NotifierConfiguration"), notifierConfiguration);
+	ini.WriteBool(_T("NotifyOnDownload"), notifierOnDownloadFinished);
+	ini.WriteBool(_T("NotifyOnNewDownload"), notifierOnNewDownload);
+	ini.WriteBool(_T("NotifyOnChat"), notifierOnChat);
+	ini.WriteBool(_T("NotifyOnLog"), notifierOnLog);
+	ini.WriteBool(_T("NotifyOnImportantError"), notifierOnImportantError);
+	ini.WriteBool(_T("NotifierPopEveryChatMessage"), notifierOnEveryChatMsg);
+	ini.WriteBool(_T("NotifierPopNewVersion"), notifierOnNewVersion);
+	ini.WriteInt(_T("NotifierUseSound"), (int)notifierSoundType);
+	ini.WriteString(_T("NotifierSoundPath"), notifierSoundFile);
 
-	ini.WriteString(L"TxtEditor",m_strTxtEditor);
-	ini.WriteString(L"VideoPlayer",m_strVideoPlayer);
-	ini.WriteString(L"VideoPlayerArgs",m_strVideoPlayerArgs);
-	ini.WriteString(L"MessageFilter",messageFilter);
-	ini.WriteString(L"CommentFilter",commentFilter);
-	ini.WriteString(L"DateTimeFormat",GetDateTimeFormat());
-	ini.WriteString(L"DateTimeFormat4Log",GetDateTimeFormat4Log());
-	ini.WriteString(L"WebTemplateFile",m_strTemplateFile);
-	ini.WriteString(L"FilenameCleanups",filenameCleanups);
-	ini.WriteInt(L"ExtractMetaData",m_iExtractMetaData);
+	ini.WriteString(_T("TxtEditor"),m_strTxtEditor);
+	ini.WriteString(_T("VideoPlayer"),m_strVideoPlayer);
+	ini.WriteString(_T("VideoPlayerArgs"),m_strVideoPlayerArgs);
+	ini.WriteString(_T("MessageFilter"),messageFilter);
+	ini.WriteString(_T("CommentFilter"),commentFilter);
+	ini.WriteString(_T("DateTimeFormat"),GetDateTimeFormat());
+	ini.WriteString(_T("DateTimeFormat4Log"),GetDateTimeFormat4Log());
+	ini.WriteString(_T("WebTemplateFile"),m_strTemplateFile);
+	ini.WriteString(_T("FilenameCleanups"),filenameCleanups);
+	ini.WriteInt(_T("ExtractMetaData"),m_iExtractMetaData);
 
-	ini.WriteString(L"DefaultIRCServerNew", m_strIRCServer);
-	ini.WriteString(L"IRCNick", m_strIRCNick);
-	ini.WriteBool(L"IRCAddTimestamp", m_bIRCAddTimeStamp);
-	ini.WriteString(L"IRCFilterName", m_strIRCChannelFilter);
-	ini.WriteInt(L"IRCFilterUser", m_uIRCChannelUserFilter);
-	ini.WriteBool(L"IRCUseFilter", m_bIRCUseChannelFilter);
-	ini.WriteString(L"IRCPerformString", m_strIRCPerformString);
-	ini.WriteBool(L"IRCUsePerform", m_bIRCUsePerform);
-	ini.WriteBool(L"IRCListOnConnect", m_bIRCGetChannelsOnConnect);
-	ini.WriteBool(L"IRCAcceptLink", m_bIRCAcceptLinks);
-	ini.WriteBool(L"IRCAcceptLinkFriends", m_bIRCAcceptLinksFriendsOnly);
-	ini.WriteBool(L"IRCSoundEvents", m_bIRCPlaySoundEvents);
-	ini.WriteBool(L"IRCIgnoreMiscMessages", m_bIRCIgnoreMiscMessages);
-	ini.WriteBool(L"IRCIgnoreJoinMessages", m_bIRCIgnoreJoinMessages);
-	ini.WriteBool(L"IRCIgnorePartMessages", m_bIRCIgnorePartMessages);
-	ini.WriteBool(L"IRCIgnoreQuitMessages", m_bIRCIgnoreQuitMessages);
-	ini.WriteBool(L"IRCIgnoreEmuleAddFriendMsgs", m_bIRCIgnoreEmuleAddFriendMsgs);
-	ini.WriteBool(L"IRCAllowEmuleAddFriend", m_bIRCAllowEmuleAddFriend);
-	ini.WriteBool(L"IRCIgnoreEmuleSendLinkMsgs", m_bIRCIgnoreEmuleSendLinkMsgs);
-	ini.WriteBool(L"IRCHelpChannel", m_bIRCJoinHelpChannel);
-	ini.WriteBool(L"IRCEnableSmileys",m_bIRCEnableSmileys);
-	ini.WriteBool(L"MessageEnableSmileys",m_bMessageEnableSmileys);
+	ini.WriteString(_T("DefaultIRCServerNew"), m_strIRCServer);
+	ini.WriteString(_T("IRCNick"), m_strIRCNick);
+	ini.WriteBool(_T("IRCAddTimestamp"), m_bIRCAddTimeStamp);
+	ini.WriteString(_T("IRCFilterName"), m_strIRCChannelFilter);
+	ini.WriteInt(_T("IRCFilterUser"), m_uIRCChannelUserFilter);
+	ini.WriteBool(_T("IRCUseFilter"), m_bIRCUseChannelFilter);
+	ini.WriteString(_T("IRCPerformString"), m_strIRCPerformString);
+	ini.WriteBool(_T("IRCUsePerform"), m_bIRCUsePerform);
+	ini.WriteBool(_T("IRCListOnConnect"), m_bIRCGetChannelsOnConnect);
+	ini.WriteBool(_T("IRCAcceptLink"), m_bIRCAcceptLinks);
+	ini.WriteBool(_T("IRCAcceptLinkFriends"), m_bIRCAcceptLinksFriendsOnly);
+	ini.WriteBool(_T("IRCSoundEvents"), m_bIRCPlaySoundEvents);
+	ini.WriteBool(_T("IRCIgnoreMiscMessages"), m_bIRCIgnoreMiscMessages);
+	ini.WriteBool(_T("IRCIgnoreJoinMessages"), m_bIRCIgnoreJoinMessages);
+	ini.WriteBool(_T("IRCIgnorePartMessages"), m_bIRCIgnorePartMessages);
+	ini.WriteBool(_T("IRCIgnoreQuitMessages"), m_bIRCIgnoreQuitMessages);
+	ini.WriteBool(_T("IRCIgnoreEmuleAddFriendMsgs"), m_bIRCIgnoreEmuleAddFriendMsgs);
+	ini.WriteBool(_T("IRCAllowEmuleAddFriend"), m_bIRCAllowEmuleAddFriend);
+	ini.WriteBool(_T("IRCIgnoreEmuleSendLinkMsgs"), m_bIRCIgnoreEmuleSendLinkMsgs);
+	ini.WriteBool(_T("IRCHelpChannel"), m_bIRCJoinHelpChannel);
+	ini.WriteBool(_T("IRCEnableSmileys"),m_bIRCEnableSmileys);
+	ini.WriteBool(_T("MessageEnableSmileys"),m_bMessageEnableSmileys);
 
-	ini.WriteBool(L"SmartIdCheck", m_bSmartServerIdCheck);
-	ini.WriteBool(L"Verbose", m_bVerbose);
-	ini.WriteBool(L"DebugSourceExchange", m_bDebugSourceExchange);	// do *not* use the according 'Get...' function here!
-	ini.WriteBool(L"LogBannedClients", m_bLogBannedClients);			// do *not* use the according 'Get...' function here!
-	ini.WriteBool(L"LogRatingDescReceived", m_bLogRatingDescReceived);// do *not* use the according 'Get...' function here!
-	ini.WriteBool(L"LogSecureIdent", m_bLogSecureIdent);				// do *not* use the according 'Get...' function here!
-	ini.WriteBool(L"LogFilteredIPs", m_bLogFilteredIPs);				// do *not* use the according 'Get...' function here!
-	ini.WriteBool(L"LogFileSaving", m_bLogFileSaving);				// do *not* use the according 'Get...' function here!
-    ini.WriteBool(L"LogA4AF", m_bLogA4AF);                           // do *not* use the according 'Get...' function here!
-	ini.WriteBool(L"LogUlDlEvents", m_bLogUlDlEvents);
+	ini.WriteBool(_T("SmartIdCheck"), m_bSmartServerIdCheck);
+	ini.WriteBool(_T("Verbose"), m_bVerbose);
+	ini.WriteBool(_T("DebugSourceExchange"), m_bDebugSourceExchange);	// do *not* use the according 'Get...' function here!
+	ini.WriteBool(_T("LogBannedClients"), m_bLogBannedClients);			// do *not* use the according 'Get...' function here!
+	ini.WriteBool(_T("LogRatingDescReceived"), m_bLogRatingDescReceived);// do *not* use the according 'Get...' function here!
+	ini.WriteBool(_T("LogSecureIdent"), m_bLogSecureIdent);				// do *not* use the according 'Get...' function here!
+	ini.WriteBool(_T("LogFilteredIPs"), m_bLogFilteredIPs);				// do *not* use the according 'Get...' function here!
+	ini.WriteBool(_T("LogFileSaving"), m_bLogFileSaving);				// do *not* use the according 'Get...' function here!
+    ini.WriteBool(_T("LogA4AF"), m_bLogA4AF);                           // do *not* use the according 'Get...' function here!
+	ini.WriteBool(_T("LogUlDlEvents"), m_bLogUlDlEvents);
 #if defined(_DEBUG) || defined(USE_DEBUG_DEVICE)
 	// following options are for debugging or when using an external debug device viewer only.
-	ini.WriteInt(L"DebugServerTCP",m_iDebugServerTCPLevel);
-	ini.WriteInt(L"DebugServerUDP",m_iDebugServerUDPLevel);
-	ini.WriteInt(L"DebugServerSources",m_iDebugServerSourcesLevel);
-	ini.WriteInt(L"DebugServerSearches",m_iDebugServerSearchesLevel);
-	ini.WriteInt(L"DebugClientTCP",m_iDebugClientTCPLevel);
-	ini.WriteInt(L"DebugClientUDP",m_iDebugClientUDPLevel);
-	ini.WriteInt(L"DebugClientKadUDP",m_iDebugClientKadUDPLevel);
+	ini.WriteInt(_T("DebugServerTCP"),m_iDebugServerTCPLevel);
+	ini.WriteInt(_T("DebugServerUDP"),m_iDebugServerUDPLevel);
+	ini.WriteInt(_T("DebugServerSources"),m_iDebugServerSourcesLevel);
+	ini.WriteInt(_T("DebugServerSearches"),m_iDebugServerSearchesLevel);
+	ini.WriteInt(_T("DebugClientTCP"),m_iDebugClientTCPLevel);
+	ini.WriteInt(_T("DebugClientUDP"),m_iDebugClientUDPLevel);
+	ini.WriteInt(_T("DebugClientKadUDP"),m_iDebugClientKadUDPLevel);
 #endif
-	ini.WriteBool(L"PreviewPrio", m_bpreviewprio);
-	ini.WriteBool(L"ManualHighPrio", m_bManualAddedServersHighPriority);
-	ini.WriteBool(L"FullChunkTransfers", m_btransferfullchunks);
-	ini.WriteBool(L"ShowOverhead", m_bshowoverhead);
-	ini.WriteBool(L"VideoPreviewBackupped", moviePreviewBackup);
-	ini.WriteInt(L"StartNextFile", m_istartnextfile);
+	ini.WriteBool(_T("PreviewPrio"), m_bpreviewprio);
+	ini.WriteBool(_T("ManualHighPrio"), m_bManualAddedServersHighPriority);
+	ini.WriteBool(_T("FullChunkTransfers"), m_btransferfullchunks);
+	ini.WriteBool(_T("ShowOverhead"), m_bshowoverhead);
+	ini.WriteBool(_T("VideoPreviewBackupped"), moviePreviewBackup);
+	ini.WriteInt(_T("StartNextFile"), m_istartnextfile);
 
-	ini.DeleteKey(L"FileBufferSizePref"); // delete old 'file buff size' setting
-	ini.WriteInt(L"FileBufferSize", m_iFileBufferSize);
+	ini.DeleteKey(_T("FileBufferSizePref")); // delete old 'file buff size' setting
+	ini.WriteInt(_T("FileBufferSize"), m_iFileBufferSize);
 
-	ini.DeleteKey(L"QueueSizePref"); // delete old 'queue size' setting
-	ini.WriteInt(L"QueueSize", m_iQueueSize);
+	ini.DeleteKey(_T("QueueSizePref")); // delete old 'queue size' setting
+	ini.WriteInt(_T("QueueSize"), m_iQueueSize);
 
-	ini.WriteInt(L"CommitFiles", m_iCommitFiles);
-	ini.WriteBool(L"DAPPref", m_bDAP);
-	ini.WriteBool(L"UAPPref", m_bUAP);
-	ini.WriteBool(L"FilterServersByIP",filterserverbyip);
-	ini.WriteBool(L"DisableKnownClientList",m_bDisableKnownClientList);
-	ini.WriteBool(L"DisableQueueList",m_bDisableQueueList);
-	ini.WriteBool(L"UseCreditSystem",m_bCreditSystem);
-	ini.WriteBool(L"SaveLogToDisk",log2disk);
-	ini.WriteBool(L"SaveDebugToDisk",debug2disk);
-	ini.WriteBool(L"EnableScheduler",scheduler);
-	ini.WriteBool(L"MessagesFromFriendsOnly",msgonlyfriends);
-	ini.WriteBool(L"MessageUseCaptchas", m_bUseChatCaptchas);
-	ini.WriteBool(L"ShowInfoOnCatTabs",showCatTabInfos);
-	ini.WriteBool(L"AutoFilenameCleanup",autofilenamecleanup);
-	ini.WriteBool(L"ShowExtControls",m_bExtControls);
-	ini.WriteBool(L"UseAutocompletion",m_bUseAutocompl);
-	ini.WriteBool(L"NetworkKademlia",networkkademlia);
-	ini.WriteBool(L"NetworkED2K",networked2k);
-	ini.WriteBool(L"AutoClearCompleted",m_bRemoveFinishedDownloads);
-	ini.WriteBool(L"TransflstRemainOrder",m_bTransflstRemain);
-	ini.WriteBool(L"UseSimpleTimeRemainingcomputation",m_bUseOldTimeRemaining);
-	ini.WriteBool(L"AllocateFullFile",m_bAllocFull);
-	ini.WriteBool(L"ShowSharedFilesDetails", m_bShowSharedFilesDetails);
-	ini.WriteBool(L"AutoShowLookups", m_bAutoShowLookups);
+	ini.WriteInt(_T("CommitFiles"), m_iCommitFiles);
+	ini.WriteBool(_T("DAPPref"), m_bDAP);
+	ini.WriteBool(_T("UAPPref"), m_bUAP);
+	ini.WriteBool(_T("FilterServersByIP"),filterserverbyip);
+	ini.WriteBool(_T("DisableKnownClientList"),m_bDisableKnownClientList);
+	ini.WriteBool(_T("DisableQueueList"),m_bDisableQueueList);
+	ini.WriteBool(_T("UseCreditSystem"),m_bCreditSystem);
+	ini.WriteBool(_T("SaveLogToDisk"),log2disk);
+	ini.WriteBool(_T("SaveDebugToDisk"),debug2disk);
+	ini.WriteBool(_T("EnableScheduler"),scheduler);
+	ini.WriteBool(_T("MessagesFromFriendsOnly"),msgonlyfriends);
+	ini.WriteBool(_T("MessageUseCaptchas"), m_bUseChatCaptchas);
+	ini.WriteBool(_T("ShowInfoOnCatTabs"),showCatTabInfos);
+	ini.WriteBool(_T("AutoFilenameCleanup"),autofilenamecleanup);
+	ini.WriteBool(_T("ShowExtControls"),m_bExtControls);
+	ini.WriteBool(_T("UseAutocompletion"),m_bUseAutocompl);
+	ini.WriteBool(_T("NetworkKademlia"),networkkademlia);
+	ini.WriteBool(_T("NetworkED2K"),networked2k);
+	ini.WriteBool(_T("AutoClearCompleted"),m_bRemoveFinishedDownloads);
+	ini.WriteBool(_T("TransflstRemainOrder"),m_bTransflstRemain);
+	ini.WriteBool(_T("UseSimpleTimeRemainingcomputation"),m_bUseOldTimeRemaining);
+	ini.WriteBool(_T("AllocateFullFile"),m_bAllocFull);
+	ini.WriteBool(_T("ShowSharedFilesDetails"), m_bShowSharedFilesDetails);
+	ini.WriteBool(_T("AutoShowLookups"), m_bAutoShowLookups);
 
-	ini.WriteInt(L"VersionCheckLastAutomatic", versioncheckLastAutomatic);
-	ini.WriteInt(L"FilterLevel",filterlevel);
+	ini.WriteInt(_T("VersionCheckLastAutomatic"), versioncheckLastAutomatic);
+	ini.WriteInt(_T("FilterLevel"),filterlevel);
 
-	ini.WriteBool(L"SecureIdent", m_bUseSecureIdent);// change the name in future version to enable it by default
-	ini.WriteBool(L"AdvancedSpamFilter",m_bAdvancedSpamfilter);
-	ini.WriteBool(L"ShowDwlPercentage",m_bShowDwlPercentage);
-	ini.WriteBool(L"RemoveFilesToBin",m_bRemove2bin);
-	//ini.WriteBool(L"ShowCopyEd2kLinkCmd",m_bShowCopyEd2kLinkCmd);
-	ini.WriteBool(L"AutoArchivePreviewStart", m_bAutomaticArcPreviewStart);
+	ini.WriteBool(_T("SecureIdent"), m_bUseSecureIdent);// change the name in future version to enable it by default
+	ini.WriteBool(_T("AdvancedSpamFilter"),m_bAdvancedSpamfilter);
+	ini.WriteBool(_T("ShowDwlPercentage"),m_bShowDwlPercentage);
+	ini.WriteBool(_T("RemoveFilesToBin"),m_bRemove2bin);
+	//ini.WriteBool(_T("ShowCopyEd2kLinkCmd"),m_bShowCopyEd2kLinkCmd);
+	ini.WriteBool(_T("AutoArchivePreviewStart"), m_bAutomaticArcPreviewStart);
 
 	// Toolbar
-	ini.WriteString(L"ToolbarSetting", m_sToolbarSettings);
-	ini.WriteString(L"ToolbarBitmap", m_sToolbarBitmap );
-	ini.WriteString(L"ToolbarBitmapFolder", m_sToolbarBitmapFolder);
-	ini.WriteInt(L"ToolbarLabels", m_nToolbarLabels);
-	ini.WriteInt(L"ToolbarIconSize", m_sizToolbarIconSize.cx);
-	ini.WriteString(L"SkinProfile", m_strSkinProfile);
-	ini.WriteString(L"SkinProfileDir", m_strSkinProfileDir);
+	ini.WriteString(_T("ToolbarSetting"), m_sToolbarSettings);
+	ini.WriteString(_T("ToolbarBitmap"), m_sToolbarBitmap );
+	ini.WriteString(_T("ToolbarBitmapFolder"), m_sToolbarBitmapFolder);
+	ini.WriteInt(_T("ToolbarLabels"), m_nToolbarLabels);
+	ini.WriteInt(_T("ToolbarIconSize"), m_sizToolbarIconSize.cx);
+	ini.WriteString(_T("SkinProfile"), m_strSkinProfile);
+	ini.WriteString(_T("SkinProfileDir"), m_strSkinProfileDir);
 
-	ini.WriteBinary(L"HyperTextFont", (LPBYTE)&m_lfHyperText, sizeof m_lfHyperText);
-	ini.WriteBinary(L"LogTextFont", (LPBYTE)&m_lfLogText, sizeof m_lfLogText);
+	ini.WriteBinary(_T("HyperTextFont"), (LPBYTE)&m_lfHyperText, sizeof m_lfHyperText);
+	ini.WriteBinary(_T("LogTextFont"), (LPBYTE)&m_lfLogText, sizeof m_lfLogText);
 
 	// ZZ:UploadSpeedSense -->
-    ini.WriteBool(L"USSEnabled", m_bDynUpEnabled);
-    ini.WriteBool(L"USSUseMillisecondPingTolerance", m_bDynUpUseMillisecondPingTolerance);
-    ini.WriteInt(L"USSPingTolerance", m_iDynUpPingTolerance);
-	ini.WriteInt(L"USSPingToleranceMilliseconds", m_iDynUpPingToleranceMilliseconds); // EastShare - Add by TAHO, USS limit
-    ini.WriteInt(L"USSGoingUpDivider", m_iDynUpGoingUpDivider);
-    ini.WriteInt(L"USSGoingDownDivider", m_iDynUpGoingDownDivider);
-    ini.WriteInt(L"USSNumberOfPings", m_iDynUpNumberOfPings);
+    ini.WriteBool(_T("USSEnabled"), m_bDynUpEnabled);
+    ini.WriteBool(_T("USSUseMillisecondPingTolerance"), m_bDynUpUseMillisecondPingTolerance);
+    ini.WriteInt(_T("USSPingTolerance"), m_iDynUpPingTolerance);
+	ini.WriteInt(_T("USSPingToleranceMilliseconds"), m_iDynUpPingToleranceMilliseconds); // EastShare - Add by TAHO, USS limit
+    ini.WriteInt(_T("USSGoingUpDivider"), m_iDynUpGoingUpDivider);
+    ini.WriteInt(_T("USSGoingDownDivider"), m_iDynUpGoingDownDivider);
+    ini.WriteInt(_T("USSNumberOfPings"), m_iDynUpNumberOfPings);
 	// ZZ:UploadSpeedSense <--
 
-    ini.WriteBool(L"A4AFSaveCpu", m_bA4AFSaveCpu); // ZZ:DownloadManager
-    ini.WriteBool(L"HighresTimer", m_bHighresTimer);
-	ini.WriteInt(L"WebMirrorAlertLevel", m_nWebMirrorAlertLevel);
-	ini.WriteBool(L"RunAsUnprivilegedUser", m_bRunAsUser);
-	ini.WriteBool(L"OpenPortsOnStartUp", m_bOpenPortsOnStartUp);
-	ini.WriteInt(L"DebugLogLevel", m_byLogLevel);
-	ini.WriteInt(L"WinXPSP2OrHigher", IsRunningXPSP2OrHigher());
-	ini.WriteBool(L"RememberCancelledFiles", m_bRememberCancelledFiles);
-	ini.WriteBool(L"RememberDownloadedFiles", m_bRememberDownloadedFiles);
+    ini.WriteBool(_T("A4AFSaveCpu"), m_bA4AFSaveCpu); // ZZ:DownloadManager
+    ini.WriteBool(_T("HighresTimer"), m_bHighresTimer);
+	ini.WriteInt(_T("WebMirrorAlertLevel"), m_nWebMirrorAlertLevel);
+	ini.WriteBool(_T("RunAsUnprivilegedUser"), m_bRunAsUser);
+	ini.WriteBool(_T("OpenPortsOnStartUp"), m_bOpenPortsOnStartUp);
+	ini.WriteInt(_T("DebugLogLevel"), m_byLogLevel);
+	ini.WriteInt(_T("WinXPSP2OrHigher"), IsRunningXPSP2OrHigher());
+	ini.WriteBool(_T("RememberCancelledFiles"), m_bRememberCancelledFiles);
+	ini.WriteBool(_T("RememberDownloadedFiles"), m_bRememberDownloadedFiles);
 
-	ini.WriteBool(L"NotifierSendMail", m_bNotifierSendMail);
-	ini.WriteString(L"NotifierMailSender", m_strNotifierMailSender);
-	ini.WriteString(L"NotifierMailServer", m_strNotifierMailServer);
-	ini.WriteString(L"NotifierMailRecipient", m_strNotifierMailReceiver);
+	ini.WriteBool(_T("NotifierSendMail"), m_bNotifierSendMail);
+	ini.WriteString(_T("NotifierMailSender"), m_strNotifierMailSender);
+	ini.WriteString(_T("NotifierMailServer"), m_strNotifierMailServer);
+	ini.WriteString(_T("NotifierMailRecipient"), m_strNotifierMailReceiver);
 
-	ini.WriteBool(L"WinaTransToolbar", m_bWinaTransToolbar);
-	ini.WriteBool(L"ShowDownloadToolbar", m_bShowDownloadToolbar);
+	ini.WriteBool(_T("WinaTransToolbar"), m_bWinaTransToolbar);
+	ini.WriteBool(_T("ShowDownloadToolbar"), m_bShowDownloadToolbar);
 
-	ini.WriteBool(L"CryptLayerRequested", m_bCryptLayerRequested);
-	ini.WriteBool(L"CryptLayerRequired", m_bCryptLayerRequired);
-	ini.WriteBool(L"CryptLayerSupported", m_bCryptLayerSupported);
-	ini.WriteInt(L"KadUDPKey", m_dwKadUDPKey);
+	ini.WriteBool(_T("CryptLayerRequested"), m_bCryptLayerRequested);
+	ini.WriteBool(_T("CryptLayerRequired"), m_bCryptLayerRequired);
+	ini.WriteBool(_T("CryptLayerSupported"), m_bCryptLayerSupported);
+	ini.WriteInt(_T("KadUDPKey"), m_dwKadUDPKey);
 
-	ini.WriteBool(L"EnableSearchResultSpamFilter", m_bEnableSearchResultFilter);
+	ini.WriteBool(_T("EnableSearchResultSpamFilter"), m_bEnableSearchResultFilter);
 
 
 	///////////////////////////////////////////////////////////////////////////
 	// Section: "Proxy"
 	//
-	ini.WriteBool(L"ProxyEnablePassword",proxy.EnablePassword,L"Proxy");
-	ini.WriteBool(L"ProxyEnableProxy",proxy.UseProxy,L"Proxy");
-	ini.WriteString(L"ProxyName",CStringW(proxy.name),L"Proxy");
-	ini.WriteString(L"ProxyPassword",CStringW(proxy.password),L"Proxy");
-	ini.WriteString(L"ProxyUser",CStringW(proxy.user),L"Proxy");
-	ini.WriteInt(L"ProxyPort",proxy.port,L"Proxy");
-	ini.WriteInt(L"ProxyType",proxy.type,L"Proxy");
+	ini.WriteBool(_T("ProxyEnablePassword"),proxy.EnablePassword,_T("Proxy"));
+	ini.WriteBool(_T("ProxyEnableProxy"),proxy.UseProxy,_T("Proxy"));
+	ini.WriteString(_T("ProxyName"),CStringW(proxy.name),_T("Proxy"));
+	ini.WriteString(_T("ProxyPassword"),CStringW(proxy.password),_T("Proxy"));
+	ini.WriteString(_T("ProxyUser"),CStringW(proxy.user),_T("Proxy"));
+	ini.WriteInt(_T("ProxyPort"),proxy.port,_T("Proxy"));
+	ini.WriteInt(_T("ProxyType"),proxy.type,_T("Proxy"));
 
 
 	///////////////////////////////////////////////////////////////////////////
 	// Section: "Statistics"
 	//
-	ini.WriteInt(L"statsConnectionsGraphRatio", statsConnectionsGraphRatio,L"Statistics");
-	ini.WriteString(L"statsExpandedTreeItems", m_strStatsExpandedTreeItems);
+	ini.WriteInt(_T("statsConnectionsGraphRatio"), statsConnectionsGraphRatio,_T("Statistics"));
+	ini.WriteString(_T("statsExpandedTreeItems"), m_strStatsExpandedTreeItems);
 	CString buffer2;
 	for (int i=0; i<15; ++i) {
-		buffer.Format(L"0x%06lx",GetStatsColor(i));
-		buffer2.Format(L"StatColor%i",i);
-		ini.WriteString(buffer2,buffer,L"Statistics" );
+		buffer.Format(_T("0x%06lx"),GetStatsColor(i));
+		buffer2.Format(_T("StatColor%i"),i);
+		ini.WriteString(buffer2,buffer,_T("Statistics") );
 	}
-	ini.WriteBool(L"HasCustomTaskIconColor", bHasCustomTaskIconColor, L"Statistics");
+	ini.WriteBool(_T("HasCustomTaskIconColor"), bHasCustomTaskIconColor, _T("Statistics"));
 
 
 	///////////////////////////////////////////////////////////////////////////
 	// Section: "WebServer"
 	//
-	ini.WriteString(L"Password", GetWSPass(), L"WebServer");
-	ini.WriteString(L"PasswordLow", GetWSLowPass());
-	ini.WriteInt(L"Port", m_nWebPort);
-	ini.WriteBool(L"WebUseUPnP", m_bWebUseUPnP);
-	ini.WriteBool(L"Enabled", m_bWebEnabled);
-	ini.WriteBool(L"UseGzip", m_bWebUseGzip);
-	ini.WriteInt(L"PageRefreshTime", m_nWebPageRefresh);
-	ini.WriteBool(L"UseLowRightsUser", m_bWebLowEnabled);
-	ini.WriteBool(L"AllowAdminHiLevelFunc",m_bAllowAdminHiLevFunc);
-	ini.WriteInt(L"WebTimeoutMins", m_iWebTimeoutMins);
+	ini.WriteString(_T("Password"), GetWSPass(), _T("WebServer"));
+	ini.WriteString(_T("PasswordLow"), GetWSLowPass());
+	ini.WriteInt(_T("Port"), m_nWebPort);
+	ini.WriteBool(_T("WebUseUPnP"), m_bWebUseUPnP);
+	ini.WriteBool(_T("Enabled"), m_bWebEnabled);
+	ini.WriteBool(_T("UseGzip"), m_bWebUseGzip);
+	ini.WriteInt(_T("PageRefreshTime"), m_nWebPageRefresh);
+	ini.WriteBool(_T("UseLowRightsUser"), m_bWebLowEnabled);
+	ini.WriteBool(_T("AllowAdminHiLevelFunc"),m_bAllowAdminHiLevFunc);
+	ini.WriteInt(_T("WebTimeoutMins"), m_iWebTimeoutMins);
 
 
 	///////////////////////////////////////////////////////////////////////////
 	// Section: "MobileMule"
 	//
-	ini.WriteString(L"Password", GetMMPass(), L"MobileMule");
-	ini.WriteBool(L"Enabled", m_bMMEnabled);
-	ini.WriteInt(L"Port", m_nMMPort);
+	ini.WriteString(_T("Password"), GetMMPass(), _T("MobileMule"));
+	ini.WriteBool(_T("Enabled"), m_bMMEnabled);
+	ini.WriteInt(_T("Port"), m_nMMPort);
 
 
 	///////////////////////////////////////////////////////////////////////////
 	// Section: "PeerCache"
 	//
-	ini.WriteInt(L"LastSearch", m_uPeerCacheLastSearch, L"PeerCache");
-	ini.WriteBool(L"Found", m_bPeerCacheWasFound);
-	ini.WriteInt(L"PCPort", m_nPeerCachePort);
+	ini.WriteInt(_T("LastSearch"), m_uPeerCacheLastSearch, _T("PeerCache"));
+	ini.WriteBool(_T("Found"), m_bPeerCacheWasFound);
+	ini.WriteInt(_T("PCPort"), m_nPeerCachePort);
 
 	///////////////////////////////////////////////////////////////////////////
 	// Section: "UPnP"
 	//
-	ini.WriteBool(L"EnableUPnP", m_bEnableUPnP, L"UPnP");
-	ini.WriteBool(L"SkipWANIPSetup", m_bSkipWANIPSetup);
-	ini.WriteBool(L"SkipWANPPPSetup", m_bSkipWANPPPSetup);
-	ini.WriteBool(L"CloseUPnPOnExit", m_bCloseUPnPOnExit);
-	ini.WriteInt(L"LastWorkingImplementation", m_nLastWorkingImpl);
+	ini.WriteBool(_T("EnableUPnP"), m_bEnableUPnP, _T("UPnP"));
+	ini.WriteBool(_T("SkipWANIPSetup"), m_bSkipWANIPSetup);
+	ini.WriteBool(_T("SkipWANPPPSetup"), m_bSkipWANPPPSetup);
+	ini.WriteBool(_T("CloseUPnPOnExit"), m_bCloseUPnPOnExit);
+	ini.WriteInt(_T("LastWorkingImplementation"), m_nLastWorkingImpl);
 
 }
 
@@ -1902,62 +1879,62 @@ bool CPreferences::SetAllStatsColors(int iCount, const DWORD* pdwColors)
 
 void CPreferences::IniCopy(const CString& si, const CString& di)
 {
-	CIni ini(GetConfigFile(), L"eMule");
+	CIni ini(GetConfigFile(), _T("eMule"));
 	CString s = ini.GetString(si);
 	// Do NOT write empty settings, this will mess up reading of default settings in case
 	// there were no settings (fresh emule install) at all available!
 	if (!s.IsEmpty())
 	{
-		ini.SetSection(L"ListControlSetup");
+		ini.SetSection(_T("ListControlSetup"));
 		ini.WriteString(di,s);
 	}
 }
 
 void CPreferences::LoadPreferences()
 {
-	CIni ini(GetConfigFile(), L"eMule");
-	ini.SetSection(L"eMule");
+	CIni ini(GetConfigFile(), _T("eMule"));
+	ini.SetSection(_T("eMule"));
 
 	CString strCurrVersion, strPrefsVersion;
 
 	strCurrVersion = theApp.m_strCurVersionLong;
-	strPrefsVersion = ini.GetString(L"AppVersion");
+	strPrefsVersion = ini.GetString(_T("AppVersion"));
 
 	m_bFirstStart = strPrefsVersion.IsEmpty();
 
 #ifdef _BETA
-	CString strBetaNotified = ini.GetString(L"BetaVersionNotified", L"");
+	CString strBetaNotified = ini.GetString(_T("BetaVersionNotified"), _T(""));
 	m_bBetaNaggingDone = strBetaNotified.Compare(strCurrVersion) == 0;
 #endif
 
 #ifdef _DEBUG
-	m_iDbgHeap = ini.GetInt(L"DebugHeap", 1);
+	m_iDbgHeap = ini.GetInt(_T("DebugHeap"), 1);
 #else
 	m_iDbgHeap = 0;
 #endif
 
-	m_nWebMirrorAlertLevel = ini.GetInt(L"WebMirrorAlertLevel",0);
-	updatenotify=ini.GetBool(L"UpdateNotifyTestClient",true);
+	m_nWebMirrorAlertLevel = ini.GetInt(_T("WebMirrorAlertLevel"),0);
+	updatenotify=ini.GetBool(_T("UpdateNotifyTestClient"),true);
 
-	SetUserNick(ini.GetStringUTF8(L"Nick", DEFAULT_NICK));
+	SetUserNick(ini.GetStringUTF8(_T("Nick"), DEFAULT_NICK));
 	if (strNick.IsEmpty() || IsDefaultNick(strNick))
 		SetUserNick(DEFAULT_NICK);
 
-	m_strIncomingDir = ini.GetString(L"IncomingDir", _T(""));
+	m_strIncomingDir = ini.GetString(_T("IncomingDir"), _T(""));
 	if (m_strIncomingDir.IsEmpty()) // We want GetDefaultDirectory to also create the folder, so we have to know if we use the default or not
 		m_strIncomingDir = GetDefaultDirectory(EMULE_INCOMINGDIR, true);
 	MakeFoldername(m_strIncomingDir);
 
 	// load tempdir(s) setting
 	CString tempdirs;
-	tempdirs = ini.GetString(L"TempDir", _T(""));
+	tempdirs = ini.GetString(_T("TempDir"), _T(""));
 	if (tempdirs.IsEmpty()) // We want GetDefaultDirectory to also create the folder, so we have to know if we use the default or not
 		tempdirs = GetDefaultDirectory(EMULE_TEMPDIR, true);
-	tempdirs += L"|" + ini.GetString(L"TempDirs");
+	tempdirs += _T('|') + ini.GetString(_T("TempDirs"));
 
 	int curPos=0;
 	bool doubled;
-	CString atmp=tempdirs.Tokenize(L"|", curPos);
+	CString atmp=tempdirs.Tokenize(_T("|"), curPos);
 	while (!atmp.IsEmpty())
 	{
 		atmp.Trim();
@@ -1979,44 +1956,44 @@ void CPreferences::LoadPreferences()
 					tempdir.Add(atmp);
 			}
 		}
-		atmp = tempdirs.Tokenize(L"|", curPos);
+		atmp = tempdirs.Tokenize(_T("|"), curPos);
 	}
 
-	maxGraphDownloadRate=ini.GetInt(L"DownloadCapacity",96);
+	maxGraphDownloadRate=ini.GetInt(_T("DownloadCapacity"),96);
 	if (maxGraphDownloadRate==0)
 		maxGraphDownloadRate=96;
 
-	maxGraphUploadRate = ini.GetInt(L"UploadCapacityNew",-1);
+	maxGraphUploadRate = ini.GetInt(_T("UploadCapacityNew"),-1);
 	if (maxGraphUploadRate == 0)
 		maxGraphUploadRate = UNLIMITED;
 	else if (maxGraphUploadRate == -1){
 		// converting value from prior versions
-		int nOldUploadCapacity = ini.GetInt(L"UploadCapacity", 16);
-		if (nOldUploadCapacity == 16 && ini.GetInt(L"MaxUpload",12) == 12){
+		int nOldUploadCapacity = ini.GetInt(_T("UploadCapacity"), 16);
+		if (nOldUploadCapacity == 16 && ini.GetInt(_T("MaxUpload"),12) == 12){
 			// either this is a complete new install, or the prior version used the default value
 			// in both cases, set the new default values to unlimited
 			maxGraphUploadRate = UNLIMITED;
-			ini.WriteInt(L"MaxUpload",UNLIMITED, L"eMule");
+			ini.WriteInt(_T("MaxUpload"),UNLIMITED, _T("eMule"));
 		}
 		else
 			maxGraphUploadRate = nOldUploadCapacity; // use old custoum value
 	}
 
-	minupload=(uint16)ini.GetInt(L"MinUpload", 1);
-	maxupload=(uint16)ini.GetInt(L"MaxUpload",UNLIMITED);
+	minupload=(uint16)ini.GetInt(_T("MinUpload"), 1);
+	maxupload=(uint16)ini.GetInt(_T("MaxUpload"),UNLIMITED);
 	if (maxupload > maxGraphUploadRate && maxupload != UNLIMITED)
 		maxupload = (uint16)(maxGraphUploadRate * .8);
 
-	maxdownload=(uint16)ini.GetInt(L"MaxDownload", UNLIMITED);
+	maxdownload=(uint16)ini.GetInt(_T("MaxDownload"), UNLIMITED);
 	if (maxdownload > maxGraphDownloadRate && maxdownload != UNLIMITED)
 		maxdownload = (uint16)(maxGraphDownloadRate * .8);
-	maxconnections=ini.GetInt(L"MaxConnections",GetRecommendedMaxConnections());
-	maxhalfconnections=ini.GetInt(L"MaxHalfConnections",9);
-	m_bOverlappedSockets = ini.GetBool(L"OverlappedSockets", true);
-	m_bConditionalTCPAccept = ini.GetBool(L"ConditionalTCPAccept", false);
+	maxconnections=ini.GetInt(_T("MaxConnections"),GetRecommendedMaxConnections());
+	maxhalfconnections=ini.GetInt(_T("MaxHalfConnections"),9);
+	m_bOverlappedSockets = ini.GetBool(_T("OverlappedSockets"), true);
+	m_bConditionalTCPAccept = ini.GetBool(_T("ConditionalTCPAccept"), false);
 
 	// reset max halfopen to a default if OS changed to SP2 (or higher) or away
-	int dwSP2OrHigher = ini.GetInt(L"WinXPSP2OrHigher", -1);
+	int dwSP2OrHigher = ini.GetInt(_T("WinXPSP2OrHigher"), -1);
 	int dwCurSP2OrHigher = IsRunningXPSP2OrHigher();
 	if (dwSP2OrHigher != dwCurSP2OrHigher){
 		if (dwCurSP2OrHigher == 0)
@@ -2025,177 +2002,177 @@ void CPreferences::LoadPreferences()
 			maxhalfconnections = 9;
 	}
 
-	m_strBindAddrW = ini.GetString(L"BindAddr");
+	m_strBindAddrW = ini.GetString(_T("BindAddr"));
 	m_strBindAddrW.Trim();
 	m_pszBindAddrW = m_strBindAddrW.IsEmpty() ? NULL : (LPCWSTR)m_strBindAddrW;
 	m_strBindAddrA = m_strBindAddrW;
 	m_pszBindAddrA = m_strBindAddrA.IsEmpty() ? NULL : (LPCSTR)m_strBindAddrA;
 
-	port = (uint16)ini.GetInt(L"Port", 0);
+	port = (uint16)ini.GetInt(_T("Port"), 0);
 	if (port == 0)
 		port = thePrefs.GetRandomTCPPort();
 
 	// 0 is a valid value for the UDP port setting, as it is used for disabling it.
-	int iPort = ini.GetInt(L"UDPPort", INT_MAX/*invalid port value*/);
+	int iPort = ini.GetInt(_T("UDPPort"), INT_MAX/*invalid port value*/);
 	if (iPort == INT_MAX)
 		udpport = thePrefs.GetRandomUDPPort();
 	else
 		udpport = (uint16)iPort;
 
-	nServerUDPPort = (uint16)ini.GetInt(L"ServerUDPPort", -1); // 0 = Don't use UDP port for servers, -1 = use a random port (for backward compatibility)
-	maxsourceperfile=ini.GetInt(L"MaxSourcesPerFile",400 );
-	m_wLanguageID=ini.GetWORD(L"Language",0);
-	m_iSeeShares=(EViewSharedFilesAccess)ini.GetInt(L"SeeShare",vsfaNobody);
-	m_iToolDelayTime=ini.GetInt(L"ToolTipDelay",1);
-	trafficOMeterInterval=ini.GetInt(L"StatGraphsInterval",3);
-	statsInterval=ini.GetInt(L"statsInterval",5);
-	m_bFillGraphs=ini.GetBool(L"StatsFillGraphs");
-	dontcompressavi=ini.GetBool(L"DontCompressAvi",false);
+	nServerUDPPort = (uint16)ini.GetInt(_T("ServerUDPPort"), -1); // 0 = Don't use UDP port for servers, -1 = use a random port (for backward compatibility)
+	maxsourceperfile=ini.GetInt(_T("MaxSourcesPerFile"),400 );
+	m_wLanguageID=ini.GetWORD(_T("Language"),0);
+	m_iSeeShares=(EViewSharedFilesAccess)ini.GetInt(_T("SeeShare"),vsfaNobody);
+	m_iToolDelayTime=ini.GetInt(_T("ToolTipDelay"),1);
+	trafficOMeterInterval=ini.GetInt(_T("StatGraphsInterval"),3);
+	statsInterval=ini.GetInt(_T("statsInterval"),5);
+	m_bFillGraphs=ini.GetBool(_T("StatsFillGraphs"));
+	dontcompressavi=ini.GetBool(_T("DontCompressAvi"),false);
 
-	m_uDeadServerRetries=ini.GetInt(L"DeadServerRetry",1);
+	m_uDeadServerRetries=ini.GetInt(_T("DeadServerRetry"),1);
 	if (m_uDeadServerRetries > MAX_SERVERFAILCOUNT)
 		m_uDeadServerRetries = MAX_SERVERFAILCOUNT;
-	m_dwServerKeepAliveTimeout=ini.GetInt(L"ServerKeepAliveTimeout",0);
-	splitterbarPosition=ini.GetInt(L"SplitterbarPosition",75);
+	m_dwServerKeepAliveTimeout=ini.GetInt(_T("ServerKeepAliveTimeout"),0);
+	splitterbarPosition=ini.GetInt(_T("SplitterbarPosition"),75);
 	if (splitterbarPosition < 9)
 		splitterbarPosition = 9;
 	else if (splitterbarPosition > 93)
 		splitterbarPosition = 93;
-	splitterbarPositionStat=ini.GetInt(L"SplitterbarPositionStat",30);
-	splitterbarPositionStat_HL=ini.GetInt(L"SplitterbarPositionStat_HL",66);
-	splitterbarPositionStat_HR=ini.GetInt(L"SplitterbarPositionStat_HR",33);
+	splitterbarPositionStat=ini.GetInt(_T("SplitterbarPositionStat"),30);
+	splitterbarPositionStat_HL=ini.GetInt(_T("SplitterbarPositionStat_HL"),66);
+	splitterbarPositionStat_HR=ini.GetInt(_T("SplitterbarPositionStat_HR"),33);
 	if (splitterbarPositionStat_HR+1>=splitterbarPositionStat_HL){
 		splitterbarPositionStat_HL = 66;
 		splitterbarPositionStat_HR = 33;
 	}
-	splitterbarPositionFriend=ini.GetInt(L"SplitterbarPositionFriend",170);
-	splitterbarPositionShared=ini.GetInt(L"SplitterbarPositionShared",179);
-	splitterbarPositionIRC=ini.GetInt(L"SplitterbarPositionIRC",170);
-	splitterbarPositionSvr=ini.GetInt(L"SplitterbarPositionServer",75);
+	splitterbarPositionFriend=ini.GetInt(_T("SplitterbarPositionFriend"),170);
+	splitterbarPositionShared=ini.GetInt(_T("SplitterbarPositionShared"),179);
+	splitterbarPositionIRC=ini.GetInt(_T("SplitterbarPositionIRC"),170);
+	splitterbarPositionSvr=ini.GetInt(_T("SplitterbarPositionServer"),75);
 	if (splitterbarPositionSvr>90 || splitterbarPositionSvr<10)
 		splitterbarPositionSvr=75;
 
-	m_uTransferWnd1 = ini.GetInt(L"TransferWnd1",0);
-	m_uTransferWnd2 = ini.GetInt(L"TransferWnd2",1);
+	m_uTransferWnd1 = ini.GetInt(_T("TransferWnd1"),0);
+	m_uTransferWnd2 = ini.GetInt(_T("TransferWnd2"),1);
 
-	statsMax=ini.GetInt(L"VariousStatisticsMaxValue",100);
-	statsAverageMinutes=ini.GetInt(L"StatsAverageMinutes",5);
-	MaxConperFive=ini.GetInt(L"MaxConnectionsPerFiveSeconds",GetDefaultMaxConperFive());
+	statsMax=ini.GetInt(_T("VariousStatisticsMaxValue"),100);
+	statsAverageMinutes=ini.GetInt(_T("StatsAverageMinutes"),5);
+	MaxConperFive=ini.GetInt(_T("MaxConnectionsPerFiveSeconds"),GetDefaultMaxConperFive());
 
-	reconnect = ini.GetBool(L"Reconnect", true);
-	m_bUseServerPriorities = ini.GetBool(L"Scoresystem", true);
-	m_bUseUserSortedServerList = ini.GetBool(L"UserSortedServerList", false);
-	ICH = ini.GetBool(L"ICH", true);
-	m_bAutoUpdateServerList = ini.GetBool(L"Serverlist", false);
+	reconnect = ini.GetBool(_T("Reconnect"), true);
+	m_bUseServerPriorities = ini.GetBool(_T("Scoresystem"), true);
+	m_bUseUserSortedServerList = ini.GetBool(_T("UserSortedServerList"), false);
+	ICH = ini.GetBool(_T("ICH"), true);
+	m_bAutoUpdateServerList = ini.GetBool(_T("Serverlist"), false);
 
 	// since the minimize to tray button is not working under Aero (at least not at this point),
 	// we enable map the minimize to tray on the minimize button by default if Aero is running
 	if (IsRunningAeroGlassTheme())
-		mintotray=ini.GetBool(L"MinToTray_Aero", true);
+		mintotray=ini.GetBool(_T("MinToTray_Aero"), true);
 	else
-		mintotray=ini.GetBool(L"MinToTray", false);
+		mintotray=ini.GetBool(_T("MinToTray"), false);
 
-	m_bPreventStandby = ini.GetBool(L"PreventStandby", false);
-	m_bStoreSearches = ini.GetBool(L"StoreSearches", true);
-	m_bAddServersFromServer=ini.GetBool(L"AddServersFromServer",false);
-	m_bAddServersFromClients=ini.GetBool(L"AddServersFromClient",false);
-	splashscreen=ini.GetBool(L"Splashscreen",true);
-	bringtoforeground=ini.GetBool(L"BringToFront",true);
-	transferDoubleclick=ini.GetBool(L"TransferDoubleClick",true);
-	beepOnError=ini.GetBool(L"BeepOnError",true);
-	confirmExit=ini.GetBool(L"ConfirmExit",true);
-	filterLANIPs=ini.GetBool(L"FilterBadIPs",true);
-	m_bAllocLocalHostIP=ini.GetBool(L"AllowLocalHostIP",false);
-	autoconnect=ini.GetBool(L"Autoconnect",false);
-	showRatesInTitle=ini.GetBool(L"ShowRatesOnTitle",false);
-	m_bIconflashOnNewMessage=ini.GetBool(L"IconflashOnNewMessage",false);
+	m_bPreventStandby = ini.GetBool(_T("PreventStandby"), false);
+	m_bStoreSearches = ini.GetBool(_T("StoreSearches"), true);
+	m_bAddServersFromServer=ini.GetBool(_T("AddServersFromServer"),false);
+	m_bAddServersFromClients=ini.GetBool(_T("AddServersFromClient"),false);
+	splashscreen=ini.GetBool(_T("Splashscreen"),true);
+	bringtoforeground=ini.GetBool(_T("BringToFront"),true);
+	transferDoubleclick=ini.GetBool(_T("TransferDoubleClick"),true);
+	beepOnError=ini.GetBool(_T("BeepOnError"),true);
+	confirmExit=ini.GetBool(_T("ConfirmExit"),true);
+	filterLANIPs=ini.GetBool(_T("FilterBadIPs"),true);
+	m_bAllocLocalHostIP=ini.GetBool(_T("AllowLocalHostIP"),false);
+	autoconnect=ini.GetBool(_T("Autoconnect"),false);
+	showRatesInTitle=ini.GetBool(_T("ShowRatesOnTitle"),false);
+	m_bIconflashOnNewMessage=ini.GetBool(_T("IconflashOnNewMessage"),false);
 
-	onlineSig=ini.GetBool(L"OnlineSignature",false);
-	startMinimized=ini.GetBool(L"StartupMinimized",false);
-	m_bAutoStart=ini.GetBool(L"AutoStart",false);
-	m_bRestoreLastMainWndDlg=ini.GetBool(L"RestoreLastMainWndDlg",false);
-	m_iLastMainWndDlgID=ini.GetInt(L"LastMainWndDlgID",0);
-	m_bRestoreLastLogPane=ini.GetBool(L"RestoreLastLogPane",false);
-	m_iLastLogPaneID=ini.GetInt(L"LastLogPaneID",0);
-	m_bSafeServerConnect =ini.GetBool(L"SafeServerConnect",false);
+	onlineSig=ini.GetBool(_T("OnlineSignature"),false);
+	startMinimized=ini.GetBool(_T("StartupMinimized"),false);
+	m_bAutoStart=ini.GetBool(_T("AutoStart"),false);
+	m_bRestoreLastMainWndDlg=ini.GetBool(_T("RestoreLastMainWndDlg"),false);
+	m_iLastMainWndDlgID=ini.GetInt(_T("LastMainWndDlgID"),0);
+	m_bRestoreLastLogPane=ini.GetBool(_T("RestoreLastLogPane"),false);
+	m_iLastLogPaneID=ini.GetInt(_T("LastLogPaneID"),0);
+	m_bSafeServerConnect =ini.GetBool(_T("SafeServerConnect"),false);
 
-	m_bTransflstRemain =ini.GetBool(L"TransflstRemainOrder",false);
-	filterserverbyip=ini.GetBool(L"FilterServersByIP",false);
-	filterlevel=ini.GetInt(L"FilterLevel",127);
-	checkDiskspace=ini.GetBool(L"CheckDiskspace",false);
-	m_uMinFreeDiskSpace=ini.GetInt(L"MinFreeDiskSpace",20*1024*1024);
-	m_bSparsePartFiles=ini.GetBool(L"SparsePartFiles",false);
-	m_bResolveSharedShellLinks=ini.GetBool(L"ResolveSharedShellLinks",false);
-	m_bKeepUnavailableFixedSharedDirs = ini.GetBool(L"KeepUnavailableFixedSharedDirs", false);
-	m_strYourHostname=ini.GetString(L"YourHostname", L"");
+	m_bTransflstRemain =ini.GetBool(_T("TransflstRemainOrder"),false);
+	filterserverbyip=ini.GetBool(_T("FilterServersByIP"),false);
+	filterlevel=ini.GetInt(_T("FilterLevel"),127);
+	checkDiskspace=ini.GetBool(_T("CheckDiskspace"),false);
+	m_uMinFreeDiskSpace=ini.GetInt(_T("MinFreeDiskSpace"),20*1024*1024);
+	m_bSparsePartFiles=ini.GetBool(_T("SparsePartFiles"),false);
+	m_bResolveSharedShellLinks=ini.GetBool(_T("ResolveSharedShellLinks"),false);
+	m_bKeepUnavailableFixedSharedDirs = ini.GetBool(_T("KeepUnavailableFixedSharedDirs"), false);
+	m_strYourHostname=ini.GetString(_T("YourHostname"), _T(""));
 
 	// Barry - New properties...
-	m_bAutoConnectToStaticServersOnly = ini.GetBool(L"AutoConnectStaticOnly",false);
-	autotakeed2klinks = ini.GetBool(L"AutoTakeED2KLinks",true);
-	addnewfilespaused = ini.GetBool(L"AddNewFilesPaused",false);
-	depth3D = ini.GetInt(L"3DDepth", 5);
-	m_bEnableMiniMule = ini.GetBool(L"MiniMule", true);
+	m_bAutoConnectToStaticServersOnly = ini.GetBool(_T("AutoConnectStaticOnly"),false);
+	autotakeed2klinks = ini.GetBool(_T("AutoTakeED2KLinks"),true);
+	addnewfilespaused = ini.GetBool(_T("AddNewFilesPaused"),false);
+	depth3D = ini.GetInt(_T("3DDepth"), 5);
+	m_bEnableMiniMule = ini.GetBool(_T("MiniMule"), true);
 
 	// Notifier
-	notifierConfiguration = ini.GetString(L"NotifierConfiguration", GetMuleDirectory(EMULE_CONFIGDIR) + L"Notifier.ini");
-    notifierOnDownloadFinished = ini.GetBool(L"NotifyOnDownload");
-	notifierOnNewDownload = ini.GetBool(L"NotifyOnNewDownload");
-    notifierOnChat = ini.GetBool(L"NotifyOnChat");
-    notifierOnLog = ini.GetBool(L"NotifyOnLog");
-	notifierOnImportantError = ini.GetBool(L"NotifyOnImportantError");
-	notifierOnEveryChatMsg = ini.GetBool(L"NotifierPopEveryChatMessage");
-	notifierOnNewVersion = ini.GetBool(L"NotifierPopNewVersion");
-    notifierSoundType = (ENotifierSoundType)ini.GetInt(L"NotifierUseSound", ntfstNoSound);
-	notifierSoundFile = ini.GetString(L"NotifierSoundPath");
+	notifierConfiguration = ini.GetString(_T("NotifierConfiguration"), GetMuleDirectory(EMULE_CONFIGDIR) + _T("Notifier.ini"));
+    notifierOnDownloadFinished = ini.GetBool(_T("NotifyOnDownload"));
+	notifierOnNewDownload = ini.GetBool(_T("NotifyOnNewDownload"));
+    notifierOnChat = ini.GetBool(_T("NotifyOnChat"));
+    notifierOnLog = ini.GetBool(_T("NotifyOnLog"));
+	notifierOnImportantError = ini.GetBool(_T("NotifyOnImportantError"));
+	notifierOnEveryChatMsg = ini.GetBool(_T("NotifierPopEveryChatMessage"));
+	notifierOnNewVersion = ini.GetBool(_T("NotifierPopNewVersion"));
+    notifierSoundType = (ENotifierSoundType)ini.GetInt(_T("NotifierUseSound"), ntfstNoSound);
+	notifierSoundFile = ini.GetString(_T("NotifierSoundPath"));
 
-	m_strDateTimeFormat = ini.GetString(L"DateTimeFormat", L"%A, %c");
-	m_strDateTimeFormat4Log = ini.GetString(L"DateTimeFormat4Log", L"%c");
-	m_strDateTimeFormat4Lists = ini.GetString(L"DateTimeFormat4Lists", L"%c");
+	m_strDateTimeFormat = ini.GetString(_T("DateTimeFormat"), _T("%A, %c"));
+	m_strDateTimeFormat4Log = ini.GetString(_T("DateTimeFormat4Log"), _T("%c"));
+	m_strDateTimeFormat4Lists = ini.GetString(_T("DateTimeFormat4Lists"), _T("%c"));
 
-	m_strIRCServer = ini.GetString(L"DefaultIRCServerNew", L"ircchat.emule-project.net");
-	m_strIRCNick = ini.GetString(L"IRCNick");
-	m_bIRCAddTimeStamp = ini.GetBool(L"IRCAddTimestamp", true);
-	m_bIRCUseChannelFilter = ini.GetBool(L"IRCUseFilter", true);
-	m_strIRCChannelFilter = ini.GetString(L"IRCFilterName", L"");
+	m_strIRCServer = ini.GetString(_T("DefaultIRCServerNew"), _T("ircchat.emule-project.net"));
+	m_strIRCNick = ini.GetString(_T("IRCNick"));
+	m_bIRCAddTimeStamp = ini.GetBool(_T("IRCAddTimestamp"), true);
+	m_bIRCUseChannelFilter = ini.GetBool(_T("IRCUseFilter"), true);
+	m_strIRCChannelFilter = ini.GetString(_T("IRCFilterName"), _T(""));
 	if (m_strIRCChannelFilter.IsEmpty())
 		m_bIRCUseChannelFilter = false;
-	m_uIRCChannelUserFilter = ini.GetInt(L"IRCFilterUser", 0);
-	m_strIRCPerformString = ini.GetString(L"IRCPerformString");
-	m_bIRCUsePerform = ini.GetBool(L"IRCUsePerform", false);
-	m_bIRCGetChannelsOnConnect = ini.GetBool(L"IRCListOnConnect", true);
-	m_bIRCAcceptLinks = ini.GetBool(L"IRCAcceptLink", true);
-	m_bIRCAcceptLinksFriendsOnly = ini.GetBool(L"IRCAcceptLinkFriends", true);
-	m_bIRCPlaySoundEvents = ini.GetBool(L"IRCSoundEvents", false);
-	m_bIRCIgnoreMiscMessages = ini.GetBool(L"IRCIgnoreMiscMessages", false);
-	m_bIRCIgnoreJoinMessages = ini.GetBool(L"IRCIgnoreJoinMessages", true);
-	m_bIRCIgnorePartMessages = ini.GetBool(L"IRCIgnorePartMessages", true);
-	m_bIRCIgnoreQuitMessages = ini.GetBool(L"IRCIgnoreQuitMessages", true);
-	m_bIRCIgnoreEmuleAddFriendMsgs = ini.GetBool(L"IRCIgnoreEmuleAddFriendMsgs", false);
-	m_bIRCAllowEmuleAddFriend = ini.GetBool(L"IRCAllowEmuleAddFriend", true);
-	m_bIRCIgnoreEmuleSendLinkMsgs = ini.GetBool(L"IRCIgnoreEmuleSendLinkMsgs", false);
-	m_bIRCJoinHelpChannel = ini.GetBool(L"IRCHelpChannel", true);
-	m_bIRCEnableSmileys = ini.GetBool(L"IRCEnableSmileys", true);
-	m_bMessageEnableSmileys = ini.GetBool(L"MessageEnableSmileys", true);
+	m_uIRCChannelUserFilter = ini.GetInt(_T("IRCFilterUser"), 0);
+	m_strIRCPerformString = ini.GetString(_T("IRCPerformString"));
+	m_bIRCUsePerform = ini.GetBool(_T("IRCUsePerform"), false);
+	m_bIRCGetChannelsOnConnect = ini.GetBool(_T("IRCListOnConnect"), true);
+	m_bIRCAcceptLinks = ini.GetBool(_T("IRCAcceptLink"), true);
+	m_bIRCAcceptLinksFriendsOnly = ini.GetBool(_T("IRCAcceptLinkFriends"), true);
+	m_bIRCPlaySoundEvents = ini.GetBool(_T("IRCSoundEvents"), false);
+	m_bIRCIgnoreMiscMessages = ini.GetBool(_T("IRCIgnoreMiscMessages"), false);
+	m_bIRCIgnoreJoinMessages = ini.GetBool(_T("IRCIgnoreJoinMessages"), true);
+	m_bIRCIgnorePartMessages = ini.GetBool(_T("IRCIgnorePartMessages"), true);
+	m_bIRCIgnoreQuitMessages = ini.GetBool(_T("IRCIgnoreQuitMessages"), true);
+	m_bIRCIgnoreEmuleAddFriendMsgs = ini.GetBool(_T("IRCIgnoreEmuleAddFriendMsgs"), false);
+	m_bIRCAllowEmuleAddFriend = ini.GetBool(_T("IRCAllowEmuleAddFriend"), true);
+	m_bIRCIgnoreEmuleSendLinkMsgs = ini.GetBool(_T("IRCIgnoreEmuleSendLinkMsgs"), false);
+	m_bIRCJoinHelpChannel = ini.GetBool(_T("IRCHelpChannel"), true);
+	m_bIRCEnableSmileys = ini.GetBool(_T("IRCEnableSmileys"), true);
+	m_bMessageEnableSmileys = ini.GetBool(_T("MessageEnableSmileys"), true);
 
-	m_bSmartServerIdCheck = ini.GetBool(L"SmartIdCheck",true);
-	log2disk = ini.GetBool(L"SaveLogToDisk",false);
-	uMaxLogFileSize = ini.GetInt(L"MaxLogFileSize", 1024*1024);
-	iMaxLogBuff = ini.GetInt(L"MaxLogBuff",64) * 1024;
-	m_iLogFileFormat = (ELogFileFormat)ini.GetInt(L"LogFileFormat", Unicode);
-	m_bEnableVerboseOptions=ini.GetBool(L"VerboseOptions", true);
+	m_bSmartServerIdCheck = ini.GetBool(_T("SmartIdCheck"),true);
+	log2disk = ini.GetBool(_T("SaveLogToDisk"),false);
+	uMaxLogFileSize = ini.GetInt(_T("MaxLogFileSize"), 1024*1024);
+	iMaxLogBuff = ini.GetInt(_T("MaxLogBuff"),64) * 1024;
+	m_iLogFileFormat = (ELogFileFormat)ini.GetInt(_T("LogFileFormat"), Unicode);
+	m_bEnableVerboseOptions=ini.GetBool(_T("VerboseOptions"), true);
 	if (m_bEnableVerboseOptions)
 	{
-		m_bVerbose=ini.GetBool(L"Verbose",false);
-		m_bFullVerbose=ini.GetBool(L"FullVerbose",false);
-		debug2disk=ini.GetBool(L"SaveDebugToDisk",false);
-		m_bDebugSourceExchange=ini.GetBool(L"DebugSourceExchange",false);
-		m_bLogBannedClients=ini.GetBool(L"LogBannedClients", true);
-		m_bLogRatingDescReceived=ini.GetBool(L"LogRatingDescReceived",true);
-		m_bLogSecureIdent=ini.GetBool(L"LogSecureIdent",true);
-		m_bLogFilteredIPs=ini.GetBool(L"LogFilteredIPs",true);
-		m_bLogFileSaving=ini.GetBool(L"LogFileSaving",false);
-        m_bLogA4AF=ini.GetBool(L"LogA4AF",false); // ZZ:DownloadManager
-		m_bLogUlDlEvents=ini.GetBool(L"LogUlDlEvents",true);
+		m_bVerbose=ini.GetBool(_T("Verbose"),false);
+		m_bFullVerbose=ini.GetBool(_T("FullVerbose"),false);
+		debug2disk=ini.GetBool(_T("SaveDebugToDisk"),false);
+		m_bDebugSourceExchange=ini.GetBool(_T("DebugSourceExchange"),false);
+		m_bLogBannedClients=ini.GetBool(_T("LogBannedClients"), true);
+		m_bLogRatingDescReceived=ini.GetBool(_T("LogRatingDescReceived"),true);
+		m_bLogSecureIdent=ini.GetBool(_T("LogSecureIdent"),true);
+		m_bLogFilteredIPs=ini.GetBool(_T("LogFilteredIPs"),true);
+		m_bLogFileSaving=ini.GetBool(_T("LogFileSaving"),false);
+        m_bLogA4AF=ini.GetBool(_T("LogA4AF"),false); // ZZ:DownloadManager
+		m_bLogUlDlEvents=ini.GetBool(_T("LogUlDlEvents"),true);
 	}
 	else
 	{
@@ -2204,14 +2181,14 @@ void CPreferences::LoadPreferences()
 	}
 #if defined(_DEBUG) || defined(USE_DEBUG_DEVICE)
 	// following options are for debugging or when using an external debug device viewer only.
-	m_iDebugServerTCPLevel = ini.GetInt(L"DebugServerTCP", 0);
-	m_iDebugServerUDPLevel = ini.GetInt(L"DebugServerUDP", 0);
-	m_iDebugServerSourcesLevel = ini.GetInt(L"DebugServerSources", 0);
-	m_iDebugServerSearchesLevel = ini.GetInt(L"DebugServerSearches", 0);
-	m_iDebugClientTCPLevel = ini.GetInt(L"DebugClientTCP", 0);
-	m_iDebugClientUDPLevel = ini.GetInt(L"DebugClientUDP", 0);
-	m_iDebugClientKadUDPLevel = ini.GetInt(L"DebugClientKadUDP", 0);
-	m_iDebugSearchResultDetailLevel = ini.GetInt(L"DebugSearchResultDetailLevel", 0);
+	m_iDebugServerTCPLevel = ini.GetInt(_T("DebugServerTCP"), 0);
+	m_iDebugServerUDPLevel = ini.GetInt(_T("DebugServerUDP"), 0);
+	m_iDebugServerSourcesLevel = ini.GetInt(_T("DebugServerSources"), 0);
+	m_iDebugServerSearchesLevel = ini.GetInt(_T("DebugServerSearches"), 0);
+	m_iDebugClientTCPLevel = ini.GetInt(_T("DebugClientTCP"), 0);
+	m_iDebugClientUDPLevel = ini.GetInt(_T("DebugClientUDP"), 0);
+	m_iDebugClientKadUDPLevel = ini.GetInt(_T("DebugClientKadUDP"), 0);
+	m_iDebugSearchResultDetailLevel = ini.GetInt(_T("DebugSearchResultDetailLevel"), 0);
 #else
 	// for normal release builds ensure that those options are all turned off
 	m_iDebugServerTCPLevel = 0;
@@ -2224,129 +2201,129 @@ void CPreferences::LoadPreferences()
 	m_iDebugSearchResultDetailLevel = 0;
 #endif
 
-	m_bpreviewprio=ini.GetBool(L"PreviewPrio",false);
-	m_bupdatequeuelist=ini.GetBool(L"UpdateQueueListPref",false);
-	m_bManualAddedServersHighPriority=ini.GetBool(L"ManualHighPrio",false);
-	m_btransferfullchunks=ini.GetBool(L"FullChunkTransfers",true);
-	m_istartnextfile=ini.GetInt(L"StartNextFile",0);
-	m_bshowoverhead=ini.GetBool(L"ShowOverhead",false);
-	moviePreviewBackup=ini.GetBool(L"VideoPreviewBackupped",true);
-	m_iPreviewSmallBlocks=ini.GetInt(L"PreviewSmallBlocks", 0);
-	m_bPreviewCopiedArchives=ini.GetBool(L"PreviewCopiedArchives", true);
-	m_iInspectAllFileTypes=ini.GetInt(L"InspectAllFileTypes", 0);
-	m_bAllocFull=ini.GetBool(L"AllocateFullFile",0);
-	m_bAutomaticArcPreviewStart=ini.GetBool(L"AutoArchivePreviewStart", true);
-	m_bShowSharedFilesDetails = ini.GetBool(L"ShowSharedFilesDetails", true);
-	m_bAutoShowLookups = ini.GetBool(L"AutoShowLookups", true);
-	m_bShowUpDownIconInTaskbar = ini.GetBool(L"ShowUpDownIconInTaskbar", false );
-	m_bShowWin7TaskbarGoodies  = ini.GetBool(L"ShowWin7TaskbarGoodies", true);
-	m_bForceSpeedsToKB = ini.GetBool(L"ForceSpeedsToKB", false);
-	m_bExtraPreviewWithMenu = ini.GetBool(L"ExtraPreviewWithMenu", false);
+	m_bpreviewprio=ini.GetBool(_T("PreviewPrio"),false);
+	m_bupdatequeuelist=ini.GetBool(_T("UpdateQueueListPref"),false);
+	m_bManualAddedServersHighPriority=ini.GetBool(_T("ManualHighPrio"),false);
+	m_btransferfullchunks=ini.GetBool(_T("FullChunkTransfers"),true);
+	m_istartnextfile=ini.GetInt(_T("StartNextFile"),0);
+	m_bshowoverhead=ini.GetBool(_T("ShowOverhead"),false);
+	moviePreviewBackup=ini.GetBool(_T("VideoPreviewBackupped"),true);
+	m_iPreviewSmallBlocks=ini.GetInt(_T("PreviewSmallBlocks"), 0);
+	m_bPreviewCopiedArchives=ini.GetBool(_T("PreviewCopiedArchives"), true);
+	m_iInspectAllFileTypes=ini.GetInt(_T("InspectAllFileTypes"), 0);
+	m_bAllocFull=ini.GetBool(_T("AllocateFullFile"),0);
+	m_bAutomaticArcPreviewStart=ini.GetBool(_T("AutoArchivePreviewStart"), true);
+	m_bShowSharedFilesDetails = ini.GetBool(_T("ShowSharedFilesDetails"), true);
+	m_bAutoShowLookups = ini.GetBool(_T("AutoShowLookups"), true);
+	m_bShowUpDownIconInTaskbar = ini.GetBool(_T("ShowUpDownIconInTaskbar"), false );
+	m_bShowWin7TaskbarGoodies  = ini.GetBool(_T("ShowWin7TaskbarGoodies"), true);
+	m_bForceSpeedsToKB = ini.GetBool(_T("ForceSpeedsToKB"), false);
+	m_bExtraPreviewWithMenu = ini.GetBool(_T("ExtraPreviewWithMenu"), false);
 
 	// read file buffer size (with backward compatibility)
-	m_iFileBufferSize=ini.GetInt(L"FileBufferSizePref",0); // old setting
+	m_iFileBufferSize=ini.GetInt(_T("FileBufferSizePref"),0); // old setting
 	if (m_iFileBufferSize == 0)
 		m_iFileBufferSize = 256*1024;
 	else
 		m_iFileBufferSize = ((m_iFileBufferSize*15000 + 512)/1024)*1024;
-	m_iFileBufferSize=ini.GetInt(L"FileBufferSize",m_iFileBufferSize);
-	m_uFileBufferTimeLimit = SEC2MS(ini.GetInt(L"FileBufferTimeLimit", 60));
+	m_iFileBufferSize=ini.GetInt(_T("FileBufferSize"),m_iFileBufferSize);
+	m_uFileBufferTimeLimit = SEC2MS(ini.GetInt(_T("FileBufferTimeLimit"), 60));
 
 	// read queue size (with backward compatibility)
-	m_iQueueSize=ini.GetInt(L"QueueSizePref",0); // old setting
+	m_iQueueSize=ini.GetInt(_T("QueueSizePref"),0); // old setting
 	if (m_iQueueSize == 0)
 		m_iQueueSize = 50*100;
 	else
 		m_iQueueSize = m_iQueueSize*100;
-	m_iQueueSize=ini.GetInt(L"QueueSize",m_iQueueSize);
+	m_iQueueSize=ini.GetInt(_T("QueueSize"),m_iQueueSize);
 
-	m_iCommitFiles=ini.GetInt(L"CommitFiles", 1); // 1 = "commit" on application shut down; 2 = "commit" on each file saveing
-	versioncheckdays=ini.GetInt(L"Check4NewVersionDelay",5);
-	m_bDAP=ini.GetBool(L"DAPPref",true);
-	m_bUAP=ini.GetBool(L"UAPPref",true);
-	m_bPreviewOnIconDblClk=ini.GetBool(L"PreviewOnIconDblClk",false);
-	m_bCheckFileOpen=ini.GetBool(L"CheckFileOpen",true);
-	indicateratings=ini.GetBool(L"IndicateRatings",true);
-	watchclipboard=ini.GetBool(L"WatchClipboard4ED2kFilelinks",false);
-	m_iSearchMethod=ini.GetInt(L"SearchMethod",0);
+	m_iCommitFiles=ini.GetInt(_T("CommitFiles"), 1); // 1 = "commit" on application shut down; 2 = "commit" on each file saveing
+	versioncheckdays=ini.GetInt(_T("Check4NewVersionDelay"),5);
+	m_bDAP=ini.GetBool(_T("DAPPref"),true);
+	m_bUAP=ini.GetBool(_T("UAPPref"),true);
+	m_bPreviewOnIconDblClk=ini.GetBool(_T("PreviewOnIconDblClk"),false);
+	m_bCheckFileOpen=ini.GetBool(_T("CheckFileOpen"),true);
+	indicateratings=ini.GetBool(_T("IndicateRatings"),true);
+	watchclipboard=ini.GetBool(_T("WatchClipboard4ED2kFilelinks"),false);
+	m_iSearchMethod=ini.GetInt(_T("SearchMethod"),0);
 
-	showCatTabInfos=ini.GetBool(L"ShowInfoOnCatTabs",false);
-//	resumeSameCat=ini.GetBool(L"ResumeNextFromSameCat",false);
-	dontRecreateGraphs =ini.GetBool(L"DontRecreateStatGraphsOnResize",false);
-	m_bExtControls =ini.GetBool(L"ShowExtControls",false);
+	showCatTabInfos=ini.GetBool(_T("ShowInfoOnCatTabs"),false);
+//	resumeSameCat=ini.GetBool(_T("ResumeNextFromSameCat"),false);
+	dontRecreateGraphs =ini.GetBool(_T("DontRecreateStatGraphsOnResize"),false);
+	m_bExtControls =ini.GetBool(_T("ShowExtControls"),false);
 
-	versioncheckLastAutomatic=ini.GetInt(L"VersionCheckLastAutomatic",0);
-	m_bDisableKnownClientList=ini.GetBool(L"DisableKnownClientList",false);
-	m_bDisableQueueList=ini.GetBool(L"DisableQueueList",false);
-	m_bCreditSystem=ini.GetBool(L"UseCreditSystem",true);
-	scheduler=ini.GetBool(L"EnableScheduler",false);
-	msgonlyfriends=ini.GetBool(L"MessagesFromFriendsOnly",false);
-	msgsecure=ini.GetBool(L"MessageFromValidSourcesOnly",true);
-	m_bUseChatCaptchas = ini.GetBool(L"MessageUseCaptchas", true);
-	autofilenamecleanup=ini.GetBool(L"AutoFilenameCleanup",false);
-	m_bUseAutocompl=ini.GetBool(L"UseAutocompletion",true);
-	m_bShowDwlPercentage=ini.GetBool(L"ShowDwlPercentage",false);
-	networkkademlia=ini.GetBool(L"NetworkKademlia",true);
-	networked2k=ini.GetBool(L"NetworkED2K",true);
-	m_bRemove2bin=ini.GetBool(L"RemoveFilesToBin",true);
-	m_bShowCopyEd2kLinkCmd=ini.GetBool(L"ShowCopyEd2kLinkCmd",false);
+	versioncheckLastAutomatic=ini.GetInt(_T("VersionCheckLastAutomatic"),0);
+	m_bDisableKnownClientList=ini.GetBool(_T("DisableKnownClientList"),false);
+	m_bDisableQueueList=ini.GetBool(_T("DisableQueueList"),false);
+	m_bCreditSystem=ini.GetBool(_T("UseCreditSystem"),true);
+	scheduler=ini.GetBool(_T("EnableScheduler"),false);
+	msgonlyfriends=ini.GetBool(_T("MessagesFromFriendsOnly"),false);
+	msgsecure=ini.GetBool(_T("MessageFromValidSourcesOnly"),true);
+	m_bUseChatCaptchas = ini.GetBool(_T("MessageUseCaptchas"), true);
+	autofilenamecleanup=ini.GetBool(_T("AutoFilenameCleanup"),false);
+	m_bUseAutocompl=ini.GetBool(_T("UseAutocompletion"),true);
+	m_bShowDwlPercentage=ini.GetBool(_T("ShowDwlPercentage"),false);
+	networkkademlia=ini.GetBool(_T("NetworkKademlia"),true);
+	networked2k=ini.GetBool(_T("NetworkED2K"),true);
+	m_bRemove2bin=ini.GetBool(_T("RemoveFilesToBin"),true);
+	m_bShowCopyEd2kLinkCmd=ini.GetBool(_T("ShowCopyEd2kLinkCmd"),false);
 
-	m_iMaxChatHistory=ini.GetInt(L"MaxChatHistoryLines",100);
+	m_iMaxChatHistory=ini.GetInt(_T("MaxChatHistoryLines"),100);
 	if (m_iMaxChatHistory < 1)
 		m_iMaxChatHistory = 100;
-	maxmsgsessions=ini.GetInt(L"MaxMessageSessions",50);
-	m_bShowActiveDownloadsBold = ini.GetBool(L"ShowActiveDownloadsBold", false);
+	maxmsgsessions=ini.GetInt(_T("MaxMessageSessions"),50);
+	m_bShowActiveDownloadsBold = ini.GetBool(_T("ShowActiveDownloadsBold"), false);
 
-	m_strTxtEditor = ini.GetString(L"TxtEditor", L"notepad.exe");
-	m_strVideoPlayer = ini.GetString(L"VideoPlayer", L"");
-	m_strVideoPlayerArgs = ini.GetString(L"VideoPlayerArgs",L"");
+	m_strTxtEditor = ini.GetString(_T("TxtEditor"), _T("notepad.exe"));
+	m_strVideoPlayer = ini.GetString(_T("VideoPlayer"), _T(""));
+	m_strVideoPlayerArgs = ini.GetString(_T("VideoPlayerArgs"), _T(""));
 
-	m_strTemplateFile = ini.GetString(L"WebTemplateFile", GetMuleDirectory(EMULE_EXECUTEABLEDIR) + L"eMule.tmpl");
+	m_strTemplateFile = ini.GetString(_T("WebTemplateFile"), GetMuleDirectory(EMULE_EXECUTEABLEDIR) + _T("eMule.tmpl"));
 	// if emule is using the default, check if the file is in the config folder, as it used to be in prior version
 	// and might be wanted by the user when switching to a personalized template
-	if (m_strTemplateFile.Compare(GetMuleDirectory(EMULE_EXECUTEABLEDIR) + L"eMule.tmpl") == 0) {
+	if (m_strTemplateFile.Compare(GetMuleDirectory(EMULE_EXECUTEABLEDIR) + _T("eMule.tmpl")) == 0) {
 		CFileFind ff;
-		if (ff.FindFile(GetMuleDirectory(EMULE_CONFIGDIR) + L"eMule.tmpl"))
-			m_strTemplateFile = GetMuleDirectory(EMULE_CONFIGDIR) + L"eMule.tmpl";
+		if (ff.FindFile(GetMuleDirectory(EMULE_CONFIGDIR) + _T("eMule.tmpl")))
+			m_strTemplateFile = GetMuleDirectory(EMULE_CONFIGDIR) + _T("eMule.tmpl");
 		ff.Close();
 	}
 
-	messageFilter=ini.GetStringLong(L"MessageFilter",L"fastest download speed|fastest eMule");
-	commentFilter = ini.GetStringLong(L"CommentFilter",L"http://|https://|ftp://|www.|ftp.");
+	messageFilter=ini.GetStringLong(_T("MessageFilter"),_T("fastest download speed|fastest eMule"));
+	commentFilter = ini.GetStringLong(_T("CommentFilter"),_T("http://|https://|ftp://|www.|ftp."));
 	commentFilter.MakeLower();
-	filenameCleanups=ini.GetStringLong(L"FilenameCleanups",L"http|www.|.com|.de|.org|.net|shared|powered|sponsored|sharelive|filedonkey|");
-	m_iExtractMetaData = ini.GetInt(L"ExtractMetaData", 1); // 0=disable, 1=mp3, 2=MediaDet
+	filenameCleanups=ini.GetStringLong(_T("FilenameCleanups"),_T("http|www.|.com|.de|.org|.net|shared|powered|sponsored|sharelive|filedonkey|"));
+	m_iExtractMetaData = ini.GetInt(_T("ExtractMetaData"), 1); // 0=disable, 1=mp3, 2=MediaDet
 	if (m_iExtractMetaData > 1)
 		m_iExtractMetaData = 1;
-	m_bAdjustNTFSDaylightFileTime = ini.GetBool(L"AdjustNTFSDaylightFileTime", false);
-	m_bRearrangeKadSearchKeywords = ini.GetBool(L"RearrangeKadSearchKeywords", true);
+	m_bAdjustNTFSDaylightFileTime = ini.GetBool(_T("AdjustNTFSDaylightFileTime"), false);
+	m_bRearrangeKadSearchKeywords = ini.GetBool(_T("RearrangeKadSearchKeywords"), true);
 
-	m_bUseSecureIdent=ini.GetBool(L"SecureIdent",true);
-	m_bAdvancedSpamfilter=ini.GetBool(L"AdvancedSpamFilter",true);
-	m_bRemoveFinishedDownloads=ini.GetBool(L"AutoClearCompleted",false);
-	m_bUseOldTimeRemaining= ini.GetBool(L"UseSimpleTimeRemainingcomputation",false);
+	m_bUseSecureIdent=ini.GetBool(_T("SecureIdent"),true);
+	m_bAdvancedSpamfilter=ini.GetBool(_T("AdvancedSpamFilter"),true);
+	m_bRemoveFinishedDownloads=ini.GetBool(_T("AutoClearCompleted"),false);
+	m_bUseOldTimeRemaining= ini.GetBool(_T("UseSimpleTimeRemainingcomputation"),false);
 
 	// Toolbar
-	m_sToolbarSettings = ini.GetString(L"ToolbarSetting", strDefaultToolbar);
-	m_sToolbarBitmap = ini.GetString(L"ToolbarBitmap", L"");
-	m_sToolbarBitmapFolder = ini.GetString(L"ToolbarBitmapFolder", _T(""));
+	m_sToolbarSettings = ini.GetString(_T("ToolbarSetting"), strDefaultToolbar);
+	m_sToolbarBitmap = ini.GetString(_T("ToolbarBitmap"), _T(""));
+	m_sToolbarBitmapFolder = ini.GetString(_T("ToolbarBitmapFolder"), _T(""));
 	if (m_sToolbarBitmapFolder.IsEmpty()) // We want GetDefaultDirectory to also create the folder, so we have to know if we use the default or not
 		m_sToolbarBitmapFolder = GetDefaultDirectory(EMULE_TOOLBARDIR, true);
-	m_nToolbarLabels = (EToolbarLabelType)ini.GetInt(L"ToolbarLabels", CMuleToolbarCtrl::GetDefaultLabelType());
-	m_bReBarToolbar = ini.GetBool(L"ReBarToolbar", 1);
-	m_sizToolbarIconSize.cx = m_sizToolbarIconSize.cy = ini.GetInt(L"ToolbarIconSize", 32);
-	m_iStraightWindowStyles=ini.GetInt(L"StraightWindowStyles",0);
-	m_bUseSystemFontForMainControls=ini.GetBool(L"UseSystemFontForMainControls",0);
-	m_bRTLWindowsLayout = ini.GetBool(L"RTLWindowsLayout");
-	m_strSkinProfile = ini.GetString(L"SkinProfile", L"");
-	m_strSkinProfileDir = ini.GetString(L"SkinProfileDir", _T(""));
+	m_nToolbarLabels = (EToolbarLabelType)ini.GetInt(_T("ToolbarLabels"), CMuleToolbarCtrl::GetDefaultLabelType());
+	m_bReBarToolbar = ini.GetBool(_T("ReBarToolbar"), 1);
+	m_sizToolbarIconSize.cx = m_sizToolbarIconSize.cy = ini.GetInt(_T("ToolbarIconSize"), 32);
+	m_iStraightWindowStyles=ini.GetInt(_T("StraightWindowStyles"),0);
+	m_bUseSystemFontForMainControls=ini.GetBool(_T("UseSystemFontForMainControls"),0);
+	m_bRTLWindowsLayout = ini.GetBool(_T("RTLWindowsLayout"));
+	m_strSkinProfile = ini.GetString(_T("SkinProfile"), _T(""));
+	m_strSkinProfileDir = ini.GetString(_T("SkinProfileDir"), _T(""));
 	if (m_strSkinProfileDir.IsEmpty()) // We want GetDefaultDirectory to also create the folder, so we have to know if we use the default or not
 		m_strSkinProfileDir = GetDefaultDirectory(EMULE_SKINDIR, true);
 
 
 	LPBYTE pData = NULL;
 	UINT uSize = sizeof m_lfHyperText;
-	if (ini.GetBinary(L"HyperTextFont", &pData, &uSize) && uSize == sizeof m_lfHyperText)
+	if (ini.GetBinary(_T("HyperTextFont"), &pData, &uSize) && uSize == sizeof m_lfHyperText)
 		memcpy(&m_lfHyperText, pData, sizeof m_lfHyperText);
 	else
 		memset(&m_lfHyperText, 0, sizeof m_lfHyperText);
@@ -2354,91 +2331,91 @@ void CPreferences::LoadPreferences()
 
 	pData = NULL;
 	uSize = sizeof m_lfLogText;
-	if (ini.GetBinary(L"LogTextFont", &pData, &uSize) && uSize == sizeof m_lfLogText)
+	if (ini.GetBinary(_T("LogTextFont"), &pData, &uSize) && uSize == sizeof m_lfLogText)
 		memcpy(&m_lfLogText, pData, sizeof m_lfLogText);
 	else
 		memset(&m_lfLogText, 0, sizeof m_lfLogText);
 	delete[] pData;
 
-	m_crLogError = ini.GetColRef(L"LogErrorColor", m_crLogError);
-	m_crLogWarning = ini.GetColRef(L"LogWarningColor", m_crLogWarning);
-	m_crLogSuccess = ini.GetColRef(L"LogSuccessColor", m_crLogSuccess);
+	m_crLogError = ini.GetColRef(_T("LogErrorColor"), m_crLogError);
+	m_crLogWarning = ini.GetColRef(_T("LogWarningColor"), m_crLogWarning);
+	m_crLogSuccess = ini.GetColRef(_T("LogSuccessColor"), m_crLogSuccess);
 
 	if (statsAverageMinutes < 1)
 		statsAverageMinutes = 5;
 
 	// ZZ:UploadSpeedSense -->
-    m_bDynUpEnabled = ini.GetBool(L"USSEnabled", false);
-    m_bDynUpUseMillisecondPingTolerance = ini.GetBool(L"USSUseMillisecondPingTolerance", false);
-    m_iDynUpPingTolerance = ini.GetInt(L"USSPingTolerance", 500);
-	m_iDynUpPingToleranceMilliseconds = ini.GetInt(L"USSPingToleranceMilliseconds", 200);
+    m_bDynUpEnabled = ini.GetBool(_T("USSEnabled"), false);
+    m_bDynUpUseMillisecondPingTolerance = ini.GetBool(_T("USSUseMillisecondPingTolerance"), false);
+    m_iDynUpPingTolerance = ini.GetInt(_T("USSPingTolerance"), 500);
+	m_iDynUpPingToleranceMilliseconds = ini.GetInt(_T("USSPingToleranceMilliseconds"), 200);
 	if( minupload < 1 )
 		minupload = 1;
-	m_iDynUpGoingUpDivider = ini.GetInt(L"USSGoingUpDivider", 1000);
-    m_iDynUpGoingDownDivider = ini.GetInt(L"USSGoingDownDivider", 1000);
-    m_iDynUpNumberOfPings = ini.GetInt(L"USSNumberOfPings", 1);
+	m_iDynUpGoingUpDivider = ini.GetInt(_T("USSGoingUpDivider"), 1000);
+    m_iDynUpGoingDownDivider = ini.GetInt(_T("USSGoingDownDivider"), 1000);
+    m_iDynUpNumberOfPings = ini.GetInt(_T("USSNumberOfPings"), 1);
 	// ZZ:UploadSpeedSense <--
 
-    m_bA4AFSaveCpu = ini.GetBool(L"A4AFSaveCpu", false); // ZZ:DownloadManager
-    m_bHighresTimer = ini.GetBool(L"HighresTimer", false);
-	m_bRunAsUser = ini.GetBool(L"RunAsUnprivilegedUser", false);
-	m_bPreferRestrictedOverUser = ini.GetBool(L"PreferRestrictedOverUser", false);
-	m_bOpenPortsOnStartUp = ini.GetBool(L"OpenPortsOnStartUp", false);
-	m_byLogLevel = ini.GetInt(L"DebugLogLevel", DLP_VERYLOW);
-	m_bTrustEveryHash = ini.GetBool(L"AICHTrustEveryHash", false);
-	m_bRememberCancelledFiles = ini.GetBool(L"RememberCancelledFiles", true);
-	m_bRememberDownloadedFiles = ini.GetBool(L"RememberDownloadedFiles", true);
-	m_bPartiallyPurgeOldKnownFiles = ini.GetBool(L"PartiallyPurgeOldKnownFiles", true);
+    m_bA4AFSaveCpu = ini.GetBool(_T("A4AFSaveCpu"), false); // ZZ:DownloadManager
+    m_bHighresTimer = ini.GetBool(_T("HighresTimer"), false);
+	m_bRunAsUser = ini.GetBool(_T("RunAsUnprivilegedUser"), false);
+	m_bPreferRestrictedOverUser = ini.GetBool(_T("PreferRestrictedOverUser"), false);
+	m_bOpenPortsOnStartUp = ini.GetBool(_T("OpenPortsOnStartUp"), false);
+	m_byLogLevel = ini.GetInt(_T("DebugLogLevel"), DLP_VERYLOW);
+	m_bTrustEveryHash = ini.GetBool(_T("AICHTrustEveryHash"), false);
+	m_bRememberCancelledFiles = ini.GetBool(_T("RememberCancelledFiles"), true);
+	m_bRememberDownloadedFiles = ini.GetBool(_T("RememberDownloadedFiles"), true);
+	m_bPartiallyPurgeOldKnownFiles = ini.GetBool(_T("PartiallyPurgeOldKnownFiles"), true);
 
-	m_bNotifierSendMail = ini.GetBool(L"NotifierSendMail", false);
+	m_bNotifierSendMail = ini.GetBool(_T("NotifierSendMail"), false);
 #if _ATL_VER >= 0x0710
 	if (!IsRunningXPSP2OrHigher())
 		m_bNotifierSendMail = false;
 #endif
-	m_strNotifierMailSender = ini.GetString(L"NotifierMailSender", L"");
-	m_strNotifierMailServer = ini.GetString(L"NotifierMailServer", L"");
-	m_strNotifierMailReceiver = ini.GetString(L"NotifierMailRecipient", L"");
+	m_strNotifierMailSender = ini.GetString(_T("NotifierMailSender"), _T(""));
+	m_strNotifierMailServer = ini.GetString(_T("NotifierMailServer"), _T(""));
+	m_strNotifierMailReceiver = ini.GetString(_T("NotifierMailRecipient"), _T(""));
 
-	m_bWinaTransToolbar = ini.GetBool(L"WinaTransToolbar", true);
-	m_bShowDownloadToolbar = ini.GetBool(L"ShowDownloadToolbar", true);
+	m_bWinaTransToolbar = ini.GetBool(_T("WinaTransToolbar"), true);
+	m_bShowDownloadToolbar = ini.GetBool(_T("ShowDownloadToolbar"), true);
 
-	m_bCryptLayerRequested = ini.GetBool(L"CryptLayerRequested", false);
-	m_bCryptLayerRequired = ini.GetBool(L"CryptLayerRequired", false);
-	m_bCryptLayerSupported = ini.GetBool(L"CryptLayerSupported", true);
-	m_dwKadUDPKey = ini.GetInt(L"KadUDPKey", GetRandomUInt32());
+	m_bCryptLayerRequested = ini.GetBool(_T("CryptLayerRequested"), false);
+	m_bCryptLayerRequired = ini.GetBool(_T("CryptLayerRequired"), false);
+	m_bCryptLayerSupported = ini.GetBool(_T("CryptLayerSupported"), true);
+	m_dwKadUDPKey = ini.GetInt(_T("KadUDPKey"), GetRandomUInt32());
 
-	uint32 nTmp = ini.GetInt(L"CryptTCPPaddingLength", 128);
+	uint32 nTmp = ini.GetInt(_T("CryptTCPPaddingLength"), 128);
 	m_byCryptTCPPaddingLength = (uint8)min(nTmp, 254);
 
-	m_bEnableSearchResultFilter = ini.GetBool(L"EnableSearchResultSpamFilter", true);
+	m_bEnableSearchResultFilter = ini.GetBool(_T("EnableSearchResultSpamFilter"), true);
 
 	///////////////////////////////////////////////////////////////////////////
 	// Section: "Proxy"
 	//
-	proxy.EnablePassword = ini.GetBool(L"ProxyEnablePassword",false,L"Proxy");
-	proxy.UseProxy = ini.GetBool(L"ProxyEnableProxy",false,L"Proxy");
-	proxy.name = CStringA(ini.GetString(L"ProxyName", L"", L"Proxy"));
-	proxy.user = CStringA(ini.GetString(L"ProxyUser", L"", L"Proxy"));
-	proxy.password = CStringA(ini.GetString(L"ProxyPassword", L"", L"Proxy"));
-	proxy.port = (uint16)ini.GetInt(L"ProxyPort",1080,L"Proxy");
-	proxy.type = (uint16)ini.GetInt(L"ProxyType",PROXYTYPE_NOPROXY,L"Proxy");
+	proxy.EnablePassword = ini.GetBool(_T("ProxyEnablePassword"),false,_T("Proxy"));
+	proxy.UseProxy = ini.GetBool(_T("ProxyEnableProxy"),false,_T("Proxy"));
+	proxy.name = CStringA(ini.GetString(_T("ProxyName"), _T(""), _T("Proxy")));
+	proxy.user = CStringA(ini.GetString(_T("ProxyUser"), _T(""), _T("Proxy")));
+	proxy.password = CStringA(ini.GetString(_T("ProxyPassword"), _T(""), _T("Proxy")));
+	proxy.port = (uint16)ini.GetInt(_T("ProxyPort"),1080,_T("Proxy"));
+	proxy.type = (uint16)ini.GetInt(_T("ProxyType"),PROXYTYPE_NOPROXY,_T("Proxy"));
 
 
 	///////////////////////////////////////////////////////////////////////////
 	// Section: "Statistics"
 	//
-	statsSaveInterval = ini.GetInt(L"SaveInterval", 60, L"Statistics");
-	statsConnectionsGraphRatio = ini.GetInt(L"statsConnectionsGraphRatio", 3, L"Statistics");
-	m_strStatsExpandedTreeItems = ini.GetString(L"statsExpandedTreeItems",L"111000000100000110000010000011110000010010",L"Statistics");
+	statsSaveInterval = ini.GetInt(_T("SaveInterval"), 60, _T("Statistics"));
+	statsConnectionsGraphRatio = ini.GetInt(_T("statsConnectionsGraphRatio"), 3, _T("Statistics"));
+	m_strStatsExpandedTreeItems = ini.GetString(_T("statsExpandedTreeItems"),_T("111000000100000110000010000011110000010010"),_T("Statistics"));
 	CString buffer2;
 	for (unsigned i = 0; i < _countof(m_adwStatsColors); ++i) {
-		buffer2.Format(L"StatColor%i", i);
+		buffer2.Format(_T("StatColor%i"), i);
 		m_adwStatsColors[i] = 0;
-		if (_stscanf(ini.GetString(buffer2, L"", L"Statistics"), L"%li", &m_adwStatsColors[i]) != 1)
+		if (_stscanf(ini.GetString(buffer2, _T(""), _T("Statistics")), _T("%li"), &m_adwStatsColors[i]) != 1)
 			ResetStatsColor(i);
 	}
-	bHasCustomTaskIconColor = ini.GetBool(L"HasCustomTaskIconColor",false, L"Statistics");
-	m_bShowVerticalHourMarkers = ini.GetBool(L"ShowVerticalHourMarkers", true, L"Statistics");
+	bHasCustomTaskIconColor = ini.GetBool(_T("HasCustomTaskIconColor"),false, _T("Statistics"));
+	m_bShowVerticalHourMarkers = ini.GetBool(_T("ShowVerticalHourMarkers"), true, _T("Statistics"));
 
 	// -khaos--+++> Load Stats
 	// I changed this to a separate function because it is now also used
@@ -2449,54 +2426,54 @@ void CPreferences::LoadPreferences()
 	///////////////////////////////////////////////////////////////////////////
 	// Section: "WebServer"
 	//
-	m_strWebPassword = ini.GetString(L"Password", L"", L"WebServer");
-	m_strWebLowPassword = ini.GetString(L"PasswordLow", L"");
-	m_nWebPort=(uint16)ini.GetInt(L"Port", 4711);
-	m_bWebUseUPnP = ini.GetBool(L"WebUseUPnP", false);
-	m_bWebEnabled=ini.GetBool(L"Enabled", false);
-	m_bWebUseGzip=ini.GetBool(L"UseGzip", true);
-	m_bWebLowEnabled=ini.GetBool(L"UseLowRightsUser", false);
-	m_nWebPageRefresh=ini.GetInt(L"PageRefreshTime", 120);
-	m_iWebTimeoutMins=ini.GetInt(L"WebTimeoutMins", 5 );
-	m_iWebFileUploadSizeLimitMB=ini.GetInt(L"MaxFileUploadSizeMB", 5 );
-	m_bAllowAdminHiLevFunc=ini.GetBool(L"AllowAdminHiLevelFunc", false);
-	buffer2 = ini.GetString(L"AllowedIPs");
+	m_strWebPassword = ini.GetString(_T("Password"), _T(""), _T("WebServer"));
+	m_strWebLowPassword = ini.GetString(_T("PasswordLow"), _T(""));
+	m_nWebPort=(uint16)ini.GetInt(_T("Port"), 4711);
+	m_bWebUseUPnP = ini.GetBool(_T("WebUseUPnP"), false);
+	m_bWebEnabled=ini.GetBool(_T("Enabled"), false);
+	m_bWebUseGzip=ini.GetBool(_T("UseGzip"), true);
+	m_bWebLowEnabled=ini.GetBool(_T("UseLowRightsUser"), false);
+	m_nWebPageRefresh=ini.GetInt(_T("PageRefreshTime"), 120);
+	m_iWebTimeoutMins=ini.GetInt(_T("WebTimeoutMins"), 5 );
+	m_iWebFileUploadSizeLimitMB=ini.GetInt(_T("MaxFileUploadSizeMB"), 5 );
+	m_bAllowAdminHiLevFunc=ini.GetBool(_T("AllowAdminHiLevelFunc"), false);
+	buffer2 = ini.GetString(_T("AllowedIPs"));
 	int iPos = 0;
-	CString strIP = buffer2.Tokenize(L";", iPos);
+	CString strIP = buffer2.Tokenize(_T(";"), iPos);
 	while (!strIP.IsEmpty())
 	{
 		u_long nIP = inet_addr(CStringA(strIP));
 		if (nIP != INADDR_ANY && nIP != INADDR_NONE)
 			m_aAllowedRemoteAccessIPs.Add(nIP);
-		strIP = buffer2.Tokenize(L";", iPos);
+		strIP = buffer2.Tokenize(_T(";"), iPos);
 	}
 
 	///////////////////////////////////////////////////////////////////////////
 	// Section: "MobileMule"
 	//
-	m_strMMPassword = ini.GetString(L"Password", L"", L"MobileMule");
-	m_bMMEnabled = ini.GetBool(L"Enabled", false);
-	m_nMMPort = (uint16)ini.GetInt(L"Port", 80);
+	m_strMMPassword = ini.GetString(_T("Password"), _T(""), _T("MobileMule"));
+	m_bMMEnabled = ini.GetBool(_T("Enabled"), false);
+	m_nMMPort = (uint16)ini.GetInt(_T("Port"), 80);
 
 	///////////////////////////////////////////////////////////////////////////
 	// Section: "PeerCache"
 	//
-	m_uPeerCacheLastSearch = ini.GetInt(L"LastSearch", 0, L"PeerCache");
-	m_bPeerCacheWasFound = ini.GetBool(L"Found", false);
-	m_bPeerCacheEnabled = ini.GetBool(L"EnabledDeprecated", false);
-	m_nPeerCachePort = (uint16)ini.GetInt(L"PCPort", 0);
-	m_bPeerCacheShow = ini.GetBool(L"Show", false);
+	m_uPeerCacheLastSearch = ini.GetInt(_T("LastSearch"), 0, _T("PeerCache"));
+	m_bPeerCacheWasFound = ini.GetBool(_T("Found"), false);
+	m_bPeerCacheEnabled = ini.GetBool(_T("EnabledDeprecated"), false);
+	m_nPeerCachePort = (uint16)ini.GetInt(_T("PCPort"), 0);
+	m_bPeerCacheShow = ini.GetBool(_T("Show"), false);
 
 	///////////////////////////////////////////////////////////////////////////
 	// Section: "UPnP"
 	//
-	m_bEnableUPnP = ini.GetBool(L"EnableUPnP", false, L"UPnP");
-	m_bSkipWANIPSetup = ini.GetBool(L"SkipWANIPSetup", false);
-	m_bSkipWANPPPSetup = ini.GetBool(L"SkipWANPPPSetup", false);
-	m_bCloseUPnPOnExit = ini.GetBool(L"CloseUPnPOnExit", true);
-	m_nLastWorkingImpl = ini.GetInt(L"LastWorkingImplementation", 1 /*MiniUPnPLib*/);
-	m_bIsMinilibImplDisabled = ini.GetBool(L"DisableMiniUPNPLibImpl", false);
-	m_bIsWinServImplDisabled = ini.GetBool(L"DisableWinServImpl", false);
+	m_bEnableUPnP = ini.GetBool(_T("EnableUPnP"), false, _T("UPnP"));
+	m_bSkipWANIPSetup = ini.GetBool(_T("SkipWANIPSetup"), false);
+	m_bSkipWANPPPSetup = ini.GetBool(_T("SkipWANPPPSetup"), false);
+	m_bCloseUPnPOnExit = ini.GetBool(_T("CloseUPnPOnExit"), true);
+	m_nLastWorkingImpl = ini.GetInt(_T("LastWorkingImplementation"), 1 /*MiniUPnPLib*/);
+	m_bIsMinilibImplDisabled = ini.GetBool(_T("DisableMiniUPNPLibImpl"), false);
+	m_bIsWinServImplDisabled = ini.GetBool(_T("DisableWinServImpl"), false);
 
 	LoadCats();
 	SetLanguage();
@@ -2534,51 +2511,51 @@ UINT CPreferences::GetDefaultMaxConperFive(){
 void CPreferences::SaveCats()
 {
 	CString strCatIniFilePath;
-	strCatIniFilePath.Format(L"%sCategory.ini", (LPCTSTR)GetMuleDirectory(EMULE_CONFIGDIR));
+	strCatIniFilePath.Format(_T("%sCategory.ini"), (LPCTSTR)GetMuleDirectory(EMULE_CONFIGDIR));
 	(void)_tremove(strCatIniFilePath);
 	CIni ini(strCatIniFilePath);
-	ini.WriteInt(L"Count", catMap.GetCount() - 1, L"General");
+	ini.WriteInt(_T("Count"), catMap.GetCount() - 1, _T("General"));
 	for (int i = 0; i < catMap.GetCount(); ++i)
 	{
 		CString strSection;
-		strSection.Format(L"Cat#%i", i);
+		strSection.Format(_T("Cat#%i"), i);
 		ini.SetSection(strSection);
 
 		const Category_Struct* cmap = catMap[i];
 
-		ini.WriteStringUTF8(L"Title", cmap->strTitle);
-		ini.WriteStringUTF8(L"Incoming", cmap->strIncomingPath);
-		ini.WriteStringUTF8(L"Comment", cmap->strComment);
-		ini.WriteStringUTF8(L"RegularExpression", cmap->regexp);
-		ini.WriteInt(L"Color", cmap->color);
-		ini.WriteInt(L"a4afPriority", cmap->prio); // ZZ:DownloadManager
-		ini.WriteStringUTF8(L"AutoCat", cmap->autocat);
-		ini.WriteInt(L"Filter", cmap->filter);
-		ini.WriteBool(L"FilterNegator", cmap->filterNeg);
-		ini.WriteBool(L"AutoCatAsRegularExpression", cmap->ac_regexpeval);
-		ini.WriteBool(L"downloadInAlphabeticalOrder", cmap->downloadInAlphabeticalOrder!=FALSE);
-		ini.WriteBool(L"Care4All", cmap->care4all);
+		ini.WriteStringUTF8(_T("Title"), cmap->strTitle);
+		ini.WriteStringUTF8(_T("Incoming"), cmap->strIncomingPath);
+		ini.WriteStringUTF8(_T("Comment"), cmap->strComment);
+		ini.WriteStringUTF8(_T("RegularExpression"), cmap->regexp);
+		ini.WriteInt(_T("Color"), cmap->color);
+		ini.WriteInt(_T("a4afPriority"), cmap->prio); // ZZ:DownloadManager
+		ini.WriteStringUTF8(_T("AutoCat"), cmap->autocat);
+		ini.WriteInt(_T("Filter"), cmap->filter);
+		ini.WriteBool(_T("FilterNegator"), cmap->filterNeg);
+		ini.WriteBool(_T("AutoCatAsRegularExpression"), cmap->ac_regexpeval);
+		ini.WriteBool(_T("downloadInAlphabeticalOrder"), cmap->downloadInAlphabeticalOrder!=FALSE);
+		ini.WriteBool(_T("Care4All"), cmap->care4all);
 	}
 }
 
 void CPreferences::LoadCats()
 {
 	CString strCatIniFilePath;
-	strCatIniFilePath.Format(L"%sCategory.ini", (LPCTSTR)GetMuleDirectory(EMULE_CONFIGDIR));
+	strCatIniFilePath.Format(_T("%sCategory.ini"), (LPCTSTR)GetMuleDirectory(EMULE_CONFIGDIR));
 	CIni ini(strCatIniFilePath);
-	int iNumCategories = ini.GetInt(L"Count", 0, L"General");
+	int iNumCategories = ini.GetInt(_T("Count"), 0, _T("General"));
 	for (int i = 0; i <= iNumCategories; i++)
 	{
 		CString strSection;
-		strSection.Format(L"Cat#%i", i);
+		strSection.Format(_T("Cat#%i"), i);
 		ini.SetSection(strSection);
 
 		Category_Struct* newcat = new Category_Struct;
 		newcat->filter = 0;
-		newcat->strTitle = ini.GetStringUTF8(L"Title");
+		newcat->strTitle = ini.GetStringUTF8(_T("Title"));
 		if (i != 0) // All category
 		{
-			newcat->strIncomingPath = ini.GetStringUTF8(L"Incoming");
+			newcat->strIncomingPath = ini.GetStringUTF8(_T("Incoming"));
 			MakeFoldername(newcat->strIncomingPath);
 			if (!IsShareableDirectory(newcat->strIncomingPath)
 				|| (!PathFileExists(newcat->strIncomingPath) && !::CreateDirectory(newcat->strIncomingPath, 0)))
@@ -2589,16 +2566,16 @@ void CPreferences::LoadCats()
 		}
 		else
 			newcat->strIncomingPath.Empty();
-		newcat->strComment = ini.GetStringUTF8(L"Comment");
-		newcat->prio = ini.GetInt(L"a4afPriority", PR_NORMAL); // ZZ:DownloadManager
-		newcat->filter = ini.GetInt(L"Filter", 0);
-		newcat->filterNeg = ini.GetBool(L"FilterNegator", FALSE);
-		newcat->ac_regexpeval = ini.GetBool(L"AutoCatAsRegularExpression", FALSE);
-		newcat->care4all = ini.GetBool(L"Care4All", FALSE);
-		newcat->regexp = ini.GetStringUTF8(L"RegularExpression");
-		newcat->autocat = ini.GetStringUTF8(L"Autocat");
-        newcat->downloadInAlphabeticalOrder = ini.GetBool(L"downloadInAlphabeticalOrder", FALSE); // ZZ:DownloadManager
-		newcat->color = (DWORD)ini.GetInt(L"Color", -1);
+		newcat->strComment = ini.GetStringUTF8(_T("Comment"));
+		newcat->prio = ini.GetInt(_T("a4afPriority"), PR_NORMAL); // ZZ:DownloadManager
+		newcat->filter = ini.GetInt(_T("Filter"), 0);
+		newcat->filterNeg = ini.GetBool(_T("FilterNegator"), FALSE);
+		newcat->ac_regexpeval = ini.GetBool(_T("AutoCatAsRegularExpression"), FALSE);
+		newcat->care4all = ini.GetBool(_T("Care4All"), FALSE);
+		newcat->regexp = ini.GetStringUTF8(_T("RegularExpression"));
+		newcat->autocat = ini.GetStringUTF8(_T("Autocat"));
+        newcat->downloadInAlphabeticalOrder = ini.GetBool(_T("downloadInAlphabeticalOrder"), FALSE); // ZZ:DownloadManager
+		newcat->color = (DWORD)ini.GetInt(_T("Color"), -1);
 		AddCat(newcat);
 	}
 }
@@ -2749,25 +2726,25 @@ void CPreferences::SetNetworkKademlia(bool val)
 CString CPreferences::GetHomepageBaseURLForLevel(int nLevel){
 	CString tmp;
 	if (nLevel == 0)
-		tmp = L"http://emule-project.net";
+		tmp = _T("http://emule-project.net");
 	else if (nLevel == 1)
-		tmp = L"http://www.emule-project.org";
+		tmp = _T("http://www.emule-project.org");
 	else if (nLevel == 2)
-		tmp = L"http://www.emule-project.com";
+		tmp = _T("http://www.emule-project.com");
 	else if (nLevel < 100)
-		tmp.Format(L"http://www%i.emule-project.net",nLevel-2);
+		tmp.Format(_T("http://www%i.emule-project.net"),nLevel-2);
 	else if (nLevel < 150)
-		tmp.Format(L"http://www%i.emule-project.org",nLevel);
+		tmp.Format(_T("http://www%i.emule-project.org"),nLevel);
 	else if (nLevel < 200)
-		tmp.Format(L"http://www%i.emule-project.com",nLevel);
+		tmp.Format(_T("http://www%i.emule-project.com"),nLevel);
 	else if (nLevel == 200)
-		tmp = L"http://emule.sf.net";
+		tmp = _T("http://emule.sf.net");
 	else if (nLevel == 201)
-		tmp = L"http://www.emuleproject.net";
+		tmp = _T("http://www.emuleproject.net");
 	else if (nLevel == 202)
-		tmp = L"http://sourceforge.net/projects/emule/";
+		tmp = _T("http://sourceforge.net/projects/emule/");
 	else
-		tmp = L"http://www.emule-project.net";
+		tmp = _T("http://www.emule-project.net");
 	return tmp;
 }
 
@@ -2776,17 +2753,17 @@ CString CPreferences::GetVersionCheckBaseURL()
 	CString tmp;
 	UINT nWebMirrorAlertLevel = GetWebMirrorAlertLevel();
 	if (nWebMirrorAlertLevel < 100)
-		tmp = L"http://vcheck.emule-project.net";
+		tmp = _T("http://vcheck.emule-project.net");
 	else if (nWebMirrorAlertLevel < 150)
-		tmp.Format(L"http://vcheck%u.emule-project.org", nWebMirrorAlertLevel);
+		tmp.Format(_T("http://vcheck%u.emule-project.org"), nWebMirrorAlertLevel);
 	else if (nWebMirrorAlertLevel < 200)
-		tmp.Format(L"http://vcheck%u.emule-project.com", nWebMirrorAlertLevel);
+		tmp.Format(_T("http://vcheck%u.emule-project.com"), nWebMirrorAlertLevel);
 	else if (nWebMirrorAlertLevel == 200)
-		tmp = L"http://emule.sf.net";
+		tmp = _T("http://emule.sf.net");
 	else if (nWebMirrorAlertLevel == 201)
-		tmp = L"http://www.emuleproject.net";
+		tmp = _T("http://www.emuleproject.net");
 	else
-		tmp = L"http://vcheck.emule-project.net";
+		tmp = _T("http://vcheck.emule-project.net");
 	return tmp;
 }
 
@@ -2804,7 +2781,7 @@ bool CPreferences::IsDefaultNick(const CString& strCheck) {
 		if (GetHomepageBaseURLForLevel(i) == strCheck)
 			return true;
 	}
-	return ( strCheck == L"http://emule-project.net" );
+	return ( strCheck == _T("http://emule-project.net") );
 }
 
 void CPreferences::SetUserNick(LPCTSTR pszNick)
@@ -3226,19 +3203,20 @@ CString CPreferences::GetDefaultDirectory(EDefaultDirectory eDirectory, bool bCr
 	return m_astrDefaultDirs[eDirectory];
 }
 
-CString	CPreferences::GetMuleDirectory(EDefaultDirectory eDirectory, bool bCreate){
-	switch (eDirectory){
-		case EMULE_INCOMINGDIR:
-			return m_strIncomingDir;
-		case EMULE_TEMPDIR:
-			ASSERT( false ); // use GetTempDir() instead! This function can only return the first tempdirectory
-			return GetTempDir(0);
-		case EMULE_SKINDIR:
-			return m_strSkinProfileDir;
-		case EMULE_TOOLBARDIR:
-			return m_sToolbarBitmapFolder;
-		default:
-			return GetDefaultDirectory(eDirectory, bCreate);
+CString	CPreferences::GetMuleDirectory(EDefaultDirectory eDirectory, bool bCreate)
+{
+	switch (eDirectory) {
+	case EMULE_INCOMINGDIR:
+		return m_strIncomingDir;
+	case EMULE_TEMPDIR:
+		ASSERT(false); // use GetTempDir() instead! This function can only return the first tempdirectory
+		return GetTempDir(0);
+	case EMULE_SKINDIR:
+		return m_strSkinProfileDir;
+	case EMULE_TOOLBARDIR:
+		return m_sToolbarBitmapFolder;
+	default:
+		return GetDefaultDirectory(eDirectory, bCreate);
 	}
 }
 

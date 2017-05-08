@@ -382,7 +382,6 @@ void CColorButton::DrawArrow(CDC* pDC,
 	switch (iDirection)
 	{
 		case 0 : // Down
-		{
 			ptsArrow[0].x = pRect->left;
 			ptsArrow[0].y = pRect->top;
 			ptsArrow[1].x = pRect->right;
@@ -390,10 +389,8 @@ void CColorButton::DrawArrow(CDC* pDC,
 			ptsArrow[2].x = (pRect->left + pRect->right)/2;
 			ptsArrow[2].y = pRect->bottom;
 			break;
-		}
 
 		case 1 : // Up
-		{
 			ptsArrow[0].x = pRect->left;
 			ptsArrow[0].y = pRect->bottom;
 			ptsArrow[1].x = pRect->right;
@@ -401,10 +398,8 @@ void CColorButton::DrawArrow(CDC* pDC,
 			ptsArrow[2].x = (pRect->left + pRect->right)/2;
 			ptsArrow[2].y = pRect->top;
 			break;
-		}
 
 		case 2 : // Left
-		{
 			ptsArrow[0].x = pRect->right;
 			ptsArrow[0].y = pRect->top;
 			ptsArrow[1].x = pRect->right;
@@ -412,10 +407,8 @@ void CColorButton::DrawArrow(CDC* pDC,
 			ptsArrow[2].x = pRect->left;
 			ptsArrow[2].y = (pRect->top + pRect->bottom)/2;
 			break;
-		}
 
 		case 3 : // Right
-		{
 			ptsArrow[0].x = pRect->left;
 			ptsArrow[0].y = pRect->top;
 			ptsArrow[1].x = pRect->left;
@@ -423,11 +416,13 @@ void CColorButton::DrawArrow(CDC* pDC,
 			ptsArrow[2].x = pRect->right;
 			ptsArrow[2].y = (pRect->top + pRect->bottom)/2;
 			break;
-		}
+
+		default:
+			return;
 	}
 
 	CBrush brsArrow(clrArrow);
-	CPen penArrow(PS_SOLID, 1 , clrArrow);
+	CPen penArrow(PS_SOLID, 1, clrArrow);
 
 	CBrush* pOldBrush = pDC->SelectObject(&brsArrow);
 	CPen*   pOldPen   = pDC->SelectObject(&penArrow);

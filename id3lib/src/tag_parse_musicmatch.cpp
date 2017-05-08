@@ -42,7 +42,7 @@ namespace
   {
     io::ExitTrigger et(reader);
     io::WindowedReader wr(reader, len);
-    ID3_Reader::pos_type beg = wr.getCur();
+    /*ID3_Reader::pos_type beg =*/ wr.getCur();
     size_t seconds = 0;
     size_t cur = 0;
     while (!wr.atEnd())

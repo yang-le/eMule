@@ -176,7 +176,7 @@ void CWebServer::ReloadTemplates()
 				CString buffer;
 				buffer.Format(GetResString(IDS_WS_ERR_LOADTEMPLATE), (LPCTSTR)sFile);
 				AddLogLine(true, buffer);
-				AfxMessageBox(buffer ,MB_OK);
+				AfxMessageBox(buffer, MB_OK);
 			}
 			if (m_bServerWorking)
 				StopSockets();
@@ -1319,16 +1319,15 @@ CString CWebServer::_GetServerList(const ThreadData& Data)
 		if (inet_addr(CStringA(Entry.sServerIP)) != INADDR_NONE)
 		{
 			int counter=0;
-			CString temp,newip;
-			for(int j=0; j<4; j++)
-			{
-				temp = Entry.sServerIP.Tokenize(_T("."),counter);
+			CString newip;
+			for (int j=0; j<4; ++j) {
+				CString temp = Entry.sServerIP.Tokenize(_T("."),counter);
 				if (temp.GetLength() == 1)
-					newip.AppendFormat(_T("00") + temp);
+					newip += _T("00") + temp;
 				else if (temp.GetLength() == 2)
-					newip.AppendFormat(_T("0") + temp);
+					newip += _T('0') + temp;
 				else if (temp.GetLength() == 3)
-					newip.AppendFormat(_T("") + temp);
+					newip  += temp;
 			}
 			Entry.sServerFullIP = newip;
 		}
@@ -4352,9 +4351,8 @@ CString	CWebServer::_GetSearch(const ThreadData& Data)
 	{
 		CString downloads=_ParseURLArray(const_cast<CString &>(Data.sURL),_T("downloads"));
 
-		CString resToken;
-		int curPos=0;
-		resToken= downloads.Tokenize(_T("|"),curPos);
+		int curPos = 0;
+		CString resToken = downloads.Tokenize(_T("|"),curPos);
 
 		while (!resToken.IsEmpty())
 		{
@@ -4900,13 +4898,13 @@ uchar* CWebServer::_GetFileHash(const CString& sHash, uchar *FileHash)
 void CWebServer::ProcessFileReq(const ThreadData& Data)
 {
 	CWebServer *pThis = (CWebServer *)Data.pThis;
-	if (pThis == NULL) return;
-
+	if (pThis == NULL)
+		return;
 	CString filename(Data.sURL);
 	CString contenttype;
 
 	CString ext = filename.Right(5).MakeLower();
-	int i = ext.ReverseFind('.');
+	int i = ext.ReverseFind(_T('.'));
 	ext.Delete(0, i);
 	if (i>=0  && ext.GetLength()>2) {
 		ext.Delete(0, 1);

@@ -64,7 +64,7 @@ int ID3_strncasecmp (const char *s1, const char *s2, int n)
     else if (c1 == 0 && c2 == 0)
       return 0; // strings are equal
   }
-  return -1; //should not reach here
+//  return -1; //should not reach here
 }
 
 
@@ -500,13 +500,11 @@ size_t ID3_TagImpl::GetExtendedBytes() const
     ID3_V2Spec spec2use = this->GetSpec(); //this is set in tag_file.cpp right before RenderV2ToFile
     if (spec2use == ID3V2_4_0)
       return 6; //minimal ID3v2.4 ext header size
-    else if (spec2use == ID3V2_3_0)
+    if (spec2use == ID3V2_3_0)
       return 10; //minimal ID3v2.3 ext header size
-    else
-      return 0; //not implemented
+//    return 0; //not implemented
   }
-  else
-    return 0;;
+  return 0;
 }
 
 bool ID3_TagImpl::SetPadding(bool pad)

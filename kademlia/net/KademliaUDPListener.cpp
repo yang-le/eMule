@@ -500,10 +500,9 @@ bool CKademliaUDPListener::AddContact_KADEMLIA2(const byte* pbyData, uint32 uLen
 
 	if (!bUDPFirewalled) // do not add (or update) UDP firewalled sources to our routing table
 		return CKademlia::GetRoutingZone()->Add(uID, uIP, uUDPPort, uTCPPort, uVersion, cUDPKey, rbIPVerified, bUpdate, false, true);
-	else{
-		//DEBUG_ONLY( AddDebugLogLine(DLP_LOW, false, _T("Kad: Not adding firewalled client to routing table (%s)"), (LPCTSTR)ipstr(ntohl(uIP))) );
-		return false;
-	}
+
+	//DEBUG_ONLY( AddDebugLogLine(DLP_LOW, false, _T("Kad: Not adding firewalled client to routing table (%s)"), (LPCTSTR)ipstr(ntohl(uIP))) );
+	return false;
 }
 
 // Used only for Kad2.0
@@ -632,12 +631,12 @@ void CKademliaUDPListener::Process_KADEMLIA2_HELLO_RES_ACK (const byte *pbyPacke
 		strError.Format(_T("***NOTE: Received wrong size (%u) packet in %hs"), uLenPacket, __FUNCTION__);
 		throw strError;
 	}
-	else if (!IsOnOutTrackList(uIP, KADEMLIA2_HELLO_RES)){
+	if (!IsOnOutTrackList(uIP, KADEMLIA2_HELLO_RES)){
 		CString strError;
 		strError.Format(_T("***NOTE: Received unrequested response packet, size (%u) in %hs"), uLenPacket, __FUNCTION__);
 		throw strError;
 	}
-	else if (!bValidReceiverKey){
+	if (!bValidReceiverKey){
 		DebugLogWarning(_T("Kad: Process_KADEMLIA2_HELLO_RES_ACK: Receiver key is invalid! (sender: %s)"), (LPCTSTR)ipstr(ntohl(uIP)));
 		return;
 	}
@@ -645,9 +644,8 @@ void CKademliaUDPListener::Process_KADEMLIA2_HELLO_RES_ACK (const byte *pbyPacke
 	CSafeMemFile fileIO( pbyPacketData, uLenPacket);
 	CUInt128 uRemoteID;
 	fileIO.ReadUInt128(&uRemoteID);
-	if (!CKademlia::GetRoutingZone()->VerifyContact(uRemoteID, uIP)){
+	if (!CKademlia::GetRoutingZone()->VerifyContact(uRemoteID, uIP))
 		DebugLogWarning(_T("Kad: Process_KADEMLIA2_HELLO_RES_ACK: Unable to find valid sender in routing table (sender: %s)"), (LPCTSTR)ipstr(ntohl(uIP)));
-	}
 	//else
 	//	DEBUG_ONLY( AddDebugLogLine(DLP_LOW, false, _T("Verified contact (%s) by HELLO_RES_ACK"), (LPCTSTR)ipstr(ntohl(uIP))) );
 }
@@ -680,7 +678,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_HELLO_RES (const byte *pbyPacketDat
 			CSafeMemFile fileIO(17);
 			CUInt128 uID(CKademlia::GetPrefs()->GetKadID());
 			fileIO.WriteUInt128(&uID);
-			fileIO.WriteUInt8(0); // na tags at this time
+			fileIO.WriteUInt8(0); // no tags at this time
 			if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 				DebugSend("KADEMLIA2_HELLO_RES_ACK", uIP, uUDPPort);
 			SendPacket(&fileIO, KADEMLIA2_HELLO_RES_ACK, uIP, uUDPPort, senderUDPKey, NULL);
@@ -790,9 +788,8 @@ void CKademliaUDPListener::Process_KADEMLIA2_RES (const byte *pbyPacketData, uin
 	CUInt128 uContactID;
 	if (IsLegacyChallenge(uTarget, uIP, KADEMLIA2_REQ, uContactID)){
 		// yup it is, set the contact as verified
-		if (!CKademlia::GetRoutingZone()->VerifyContact(uContactID, uIP)){
+		if (!CKademlia::GetRoutingZone()->VerifyContact(uContactID, uIP))
 			DebugLogWarning(_T("Kad: KADEMLIA2_RES: Unable to find valid sender in routing table (sender: %s)"), (LPCTSTR)ipstr(ntohl(uIP)));
-		}
 		else
 			DEBUG_ONLY( AddDebugLogLine(DLP_VERYLOW, false, _T("Verified contact with legacy challenge (KADEMLIA2_REQ) - %s"), (LPCTSTR)ipstr(ntohl(uIP))) );
 		return; // we do not actually care for its other content

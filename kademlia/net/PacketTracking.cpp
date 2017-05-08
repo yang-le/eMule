@@ -32,24 +32,27 @@ static char THIS_FILE[] = __FILE__;
 
 using namespace Kademlia;
 
-CPacketTracking::CPacketTracking(){
+CPacketTracking::CPacketTracking()
+{
 	dwLastTrackInCleanup = 0;
 }
 
-CPacketTracking::~CPacketTracking(){
+CPacketTracking::~CPacketTracking()
+{
 	m_mapTrackPacketsIn.RemoveAll();
 	while (!m_liTrackPacketsIn.IsEmpty())
 		delete m_liTrackPacketsIn.RemoveHead();
 }
 
-void CPacketTracking::AddTrackedOutPacket(uint32 dwIP, uint8 byOpcode){
+void CPacketTracking::AddTrackedOutPacket(uint32 dwIP, uint8 byOpcode)
+{
 	// this tracklist tacks _outgoing_ request packets, to make sure incoming answer packets were requested
 	// only track packets which we actually check for later
 	if (!IsTrackedOutListRequestPacket(byOpcode))
 		return;
 	TrackPackets_Struct sTrack = {dwIP, ::GetTickCount(), byOpcode};
 	listTrackedRequests.AddHead(sTrack);
-	while (!listTrackedRequests.IsEmpty()){
+	while (!listTrackedRequests.IsEmpty()) {
 		if (::GetTickCount() - listTrackedRequests.GetTail().dwInserted > SEC2MS(180))
 			listTrackedRequests.RemoveTail();
 		else
@@ -80,7 +83,8 @@ bool CPacketTracking::IsTrackedOutListRequestPacket(uint8 byOpcode)
 
 }
 
-bool CPacketTracking::IsOnOutTrackList(uint32 dwIP, uint8 byOpcode, bool bDontRemove){
+bool CPacketTracking::IsOnOutTrackList(uint32 dwIP, uint8 byOpcode, bool bDontRemove)
+{
 #ifdef _DEBUG
 	if (!IsTrackedOutListRequestPacket(byOpcode))
 		ASSERT( false ); // code error / bug
@@ -97,7 +101,8 @@ bool CPacketTracking::IsOnOutTrackList(uint32 dwIP, uint8 byOpcode, bool bDontRe
 	return false;
 }
 
-bool CPacketTracking::InTrackListIsAllowedPacket(uint32 uIP, uint8 byOpcode, bool /*bValidSenderkey*/){
+bool CPacketTracking::InTrackListIsAllowedPacket(uint32 uIP, uint8 byOpcode, bool /*bValidSenderkey*/)
+{
 	// this tracklist tacks _incoming_ request packets and acts as a general flood protection by dropping
 	// too frequent requests from a single IP, avoiding response floods, processing time DOS attacks and slowing down
 	// other possible attacks/behavior (scanning indexed files, fake publish floods, etc)
@@ -228,14 +233,15 @@ bool CPacketTracking::InTrackListIsAllowedPacket(uint32 uIP, uint8 byOpcode, boo
 	return true;
 }
 
-void CPacketTracking::InTrackListCleanup(){
+void CPacketTracking::InTrackListCleanup()
+{
 	const uint32 dwCurrentTick = ::GetTickCount();
 	const uint32 dbgOldSize = m_liTrackPacketsIn.GetCount();
 	dwLastTrackInCleanup = dwCurrentTick;
 	for (POSITION pos1 = m_liTrackPacketsIn.GetHeadPosition(); pos1 != NULL;) {
 		POSITION pos2 = pos1;
 		const TrackPacketsIn_Struct *curEntry = m_liTrackPacketsIn.GetNext(pos1);
-		if (curEntry->m_dwLastExpire < dwCurrentTick){
+		if (curEntry->m_dwLastExpire < dwCurrentTick) {
 			VERIFY(m_mapTrackPacketsIn.RemoveKey(curEntry->m_uIP));
 			m_liTrackPacketsIn.RemoveAt(pos2);
 			delete curEntry;

@@ -121,16 +121,15 @@ float CClientCredits::GetScoreRatio(uint32 dwForIP) const
 
 	// linear calcualtion of the max multiplicator based on uploaded data for the first chunk (1MB = 1.01, 9.2MB = 3.34)
 	float result3 = 10.0F;
-	if (GetDownloadedTotal() < 9646899){
+	if (GetDownloadedTotal() < 9646899)
 		result3 = (((float)(GetDownloadedTotal() - 1048576) / 8598323.0F) * 2.34F) + 1.0F;
-	}
 
 	// take the smallest result
 	result = min(result, min(result2, result3));
 
 	if (result < 1.0F)
 		return 1.0F;
-	else if (result > 10.0F)
+	if (result > 10.0F)
 		return 10.0F;
 	return result;
 }
@@ -162,7 +161,7 @@ void CClientCreditsList::LoadList()
 	const int iOpenFlags = CFile::modeRead|CFile::osSequentialScan|CFile::typeBinary|CFile::shareDenyWrite;
 	CSafeBufferedFile file;
 	CFileException fexp;
-	if (!file.Open(strFileName, iOpenFlags, &fexp)){
+	if (!file.Open(strFileName, iOpenFlags, &fexp)) {
 		if (fexp.m_cause != CFileException::fileNotFound){
 			CString strError(GetResString(IDS_ERR_LOADCREDITFILE));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];

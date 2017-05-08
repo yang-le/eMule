@@ -2365,7 +2365,7 @@ void CTreeOptionsIPAddressCtrl::OnKillFocus(CWnd* pNewWnd)
 CString CTreeOptionsIPAddressCtrl::GetDisplayText(DWORD dwAddress)
 {
 	CString sAddress;
-	sAddress.Format(_T("%u.%u.%u.%u"), (dwAddress >> 24) & 0xFF,
+	sAddress.Format(_T("%lu.%lu.%lu.%lu"), (dwAddress >> 24) & 0xFF,
 		(dwAddress >> 16) & 0xFF, (dwAddress >> 8) & 0xFF,
 		(dwAddress & 0xFF));
 	return sAddress;

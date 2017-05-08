@@ -266,12 +266,12 @@ size_t RenderV2ToFile(const ID3_TagImpl& tag, fstream& file)
 
     tmpOut.write(tagData, tagSize);
     file.seekg(tag.GetPrependedBytes(), ios::beg);
-    char *tmpBuffer[BUFSIZ];
     while (!file.eof())
     {
-      file.read(&((*tmpBuffer)[0]), BUFSIZ);
+      char tmpBuffer[BUFSIZ];
+      file.read(tmpBuffer, BUFSIZ);
       size_t nBytes = file.gcount();
-      tmpOut.write(&((*tmpBuffer)[0]), nBytes);
+      tmpOut.write(tmpBuffer, nBytes);
     }
 
 #else //((defined(__GNUC__) && __GNUC__ >= 3  ) || !defined(HAVE_MKSTEMP))

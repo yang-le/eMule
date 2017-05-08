@@ -1721,7 +1721,7 @@ void CSharedFilesCtrl::AddShareableFiles(const CString& strFromDir)
 
 		CString strFoundFileName(ff.GetFileName());
 		CString strFoundFilePath(ff.GetFilePath());
-		CString strFoundDirectory(strFoundFilePath.Left(ff.GetFilePath().ReverseFind('\\') + 1));
+		CString strFoundDirectory(strFoundFilePath.Left(ff.GetFilePath().ReverseFind(_T('\\')) + 1));
 		ULONGLONG ullFoundFileSize = ff.GetLength();
 		CTime tFoundFileTime;
 		try{
@@ -1989,7 +1989,7 @@ BOOL CSharedFilesCtrl::CShareDropTarget::OnDrop(CWnd* /*pWnd*/, COleDataObject* 
 							|| (!ff.IsDirectory() && (ff.GetLength()==0 || ff.GetLength()>MAX_EMULE_FILE_SIZE))
 							|| (ff.IsDirectory() && !thePrefs.IsShareableDirectory(ffpath + _T('\\')))
 							|| (ff.IsDirectory() && theApp.sharedfiles->ShouldBeShared(ffpath+ _T('\\'), _T(""), false))
-							|| (!ff.IsDirectory() && theApp.sharedfiles->ShouldBeShared(ffpath, ffpath.Left(ffpath.ReverseFind('\\') + 1), false)) )
+							|| (!ff.IsDirectory() && theApp.sharedfiles->ShouldBeShared(ffpath, ffpath.Left(ffpath.ReverseFind(_T('\\')) + 1), false)) )
 						{
 							DebugLog(_T("Drag&Drop'ed shared File ignored (%s)"), (LPCTSTR)ffpath);
 							ff.Close();
@@ -1997,7 +1997,7 @@ BOOL CSharedFilesCtrl::CShareDropTarget::OnDrop(CWnd* /*pWnd*/, COleDataObject* 
 						}
 						if (ff.IsDirectory())
 						{
-							DEBUG_ONLY( DebugLog(_T("Drag'n'Drop'ed directory: %s"), (LPCTSTR)(ffpath + CString('\\')))  );
+							DEBUG_ONLY( DebugLog(_T("Drag'n'Drop'ed directory: %s"), (LPCTSTR)(ffpath + _T('\\'))) );
 							liToAddDirs.AddTail(ffpath + _T('\\'));
 						}
 						else
@@ -2007,8 +2007,8 @@ BOOL CSharedFilesCtrl::CShareDropTarget::OnDrop(CWnd* /*pWnd*/, COleDataObject* 
 							if (bFromSingleDirectory)
 							{
 								if (strSingleDirectory.IsEmpty())
-									strSingleDirectory = ffpath.Left(ffpath.ReverseFind('\\') + 1);
-								else if (strSingleDirectory.CompareNoCase(ffpath.Left(ffpath.ReverseFind('\\') + 1)) != NULL)
+									strSingleDirectory = ffpath.Left(ffpath.ReverseFind(_T('\\')) + 1);
+								else if (strSingleDirectory.CompareNoCase(ffpath.Left(ffpath.ReverseFind(_T('\\')) + 1)) != NULL)
 									bFromSingleDirectory = false;
 							}
 						}

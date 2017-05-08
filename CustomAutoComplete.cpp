@@ -332,7 +332,7 @@ bool CCustomAutoComplete::LoadList(LPCTSTR pszFileName)
 
 	// verify Unicode byte-order mark 0xFEFF
 	WORD wBOM = fgetwc(fp);
-	if (wBOM != 0xFEFF){
+	if (wBOM != 0xFEFFu){
 		fclose(fp);
 		return false;
 	}

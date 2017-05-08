@@ -130,13 +130,15 @@ void CxImage::Copy(const CxImage &src, bool copypixels, bool copyselection, bool
 	if (copyselection && src.pSelection){
 		free(pSelection);
 		pSelection = (uint8_t*)malloc(nSize);
-		memcpy(pSelection,src.pSelection,nSize);
+		if (pSelection)
+			memcpy(pSelection,src.pSelection,nSize);
 	}
 	//copy the alpha channel
 	if (copyalpha && src.pAlpha){
 		free(pAlpha);
 		pAlpha = (uint8_t*)malloc(nSize);
-		memcpy(pAlpha,src.pAlpha,nSize);
+		if (pAlpha)
+			memcpy(pAlpha,src.pAlpha,nSize);
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -368,17 +370,15 @@ void CxImage::Bitfield2RGB(uint8_t *src, uint32_t redmask, uint32_t greenmask, u
 		ns[1]+=ns[0]; ns[2]+=ns[1];	ns[0]=8-ns[0]; ns[1]-=8; ns[2]-=8;
 		// dword aligned width for 16 bit image
 		int32_t effwidth2=(((head.biWidth + 1) / 2) * 4);
-		uint16_t w;
-		int32_t y2,y3,x2,x3;
 		uint8_t *p=info.pImage;
 		// scan the buffer in reverse direction to avoid reallocations
 		for (int32_t y=head.biHeight-1; y>=0; y--){
-			y2=effwidth2*y;
-			y3=info.dwEffWidth*y;
+			int32_t y2=effwidth2*y;
+			int32_t y3=info.dwEffWidth*y;
 			for (int32_t x=head.biWidth-1; x>=0; x--){
-				x2 = 2*x+y2;
-				x3 = 3*x+y3;
-				w = (uint16_t)(src[x2]+256*src[1+x2]);
+				int32_t x2 = 2*x+y2;
+				int32_t x3 = 3*x+y3;
+				int16_t w = (uint16_t)(src[x2]+256*src[1+x2]);
 				p[  x3]=(uint8_t)((w & bluemask)<<ns[0]);
 				p[1+x3]=(uint8_t)((w & greenmask)>>ns[1]);
 				p[2+x3]=(uint8_t)((w & redmask)>>ns[2]);
@@ -397,15 +397,14 @@ void CxImage::Bitfield2RGB(uint8_t *src, uint32_t redmask, uint32_t greenmask, u
 		}
 		// dword aligned width for 32 bit image
 		int32_t effwidth4 = head.biWidth * 4;
-		int32_t y4,y3,x4,x3;
 		uint8_t *p=info.pImage;
 		// scan the buffer in reverse direction to avoid reallocations
 		for (int32_t y=head.biHeight-1; y>=0; y--){
-			y4=effwidth4*y;
-			y3=info.dwEffWidth*y;
+			int32_t y4=effwidth4*y;
+			int32_t y3=info.dwEffWidth*y;
 			for (int32_t x=head.biWidth-1; x>=0; x--){
-				x4 = 4*x+y4;
-				x3 = 3*x+y3;
+				int32_t x4 = 4*x+y4;
+				int32_t x3 = 3*x+y3;
 				p[  x3]=src[ns[2]+x4];
 				p[1+x3]=src[ns[1]+x4];
 				p[2+x3]=src[ns[0]+x4];
@@ -441,11 +440,9 @@ bool CxImage::CreateFromArray(uint8_t* pArray,uint32_t dwWidth,uint32_t dwHeight
 	if (dwBitsperpixel==32) AlphaCreate();
 #endif //CXIMAGE_SUPPORT_ALPHA
 
-	uint8_t *dst,*src;
-
 	for (uint32_t y = 0; y<dwHeight; y++) {
-		dst = info.pImage + (bFlipImage?(dwHeight-1-y):y) * info.dwEffWidth;
-		src = pArray + y * dwBytesperline;
+		uint8_t *dst = info.pImage + (bFlipImage?(dwHeight-1-y):y) * info.dwEffWidth;
+		uint8_t *src = pArray + y * dwBytesperline;
 		if (dwBitsperpixel==32){
 			for(uint32_t x=0;x<dwWidth;x++){
 				*dst++=src[0];
@@ -480,11 +477,9 @@ bool CxImage::CreateFromMatrix(uint8_t** ppMatrix,uint32_t dwWidth,uint32_t dwHe
 	if (dwBitsperpixel==32) AlphaCreate();
 #endif //CXIMAGE_SUPPORT_ALPHA
 
-	uint8_t *dst,*src;
-
 	for (uint32_t y = 0; y<dwHeight; y++) {
-		dst = info.pImage + (bFlipImage?(dwHeight-1-y):y) * info.dwEffWidth;
-		src = ppMatrix[y];
+		uint8_t *dst = info.pImage + (bFlipImage?(dwHeight-1-y):y) * info.dwEffWidth;
+		uint8_t *src = ppMatrix[y];
 		if (src){
 			if (dwBitsperpixel==32){
 				for(uint32_t x=0;x<dwWidth;x++){

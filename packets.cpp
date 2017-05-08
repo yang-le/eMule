@@ -114,7 +114,7 @@ Packet::Packet(CMemFile* datafile, uint8 protocol, uint8 ucOpcode)
 	m_bLastSplitted = false;
 	m_bFromPF = false;
 	size = static_cast<uint32>(datafile->GetLength());
-	completebuffer = new char[(size_t)datafile->GetLength() + 10];
+	completebuffer = new char[size + 10];
 	pBuffer = completebuffer+6;
 	BYTE* tmp = datafile->Detach();
 	memcpy(pBuffer, tmp, size);

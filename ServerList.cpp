@@ -70,10 +70,10 @@ void CServerList::AutoUpdate()
 		return;
 	}
 
-	const CString emconf(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
-	const CString servermetdownload(emconf + _T("server_met.download"));
-	const CString servermetbackup(emconf + _T("server_met.old"));
-	const CString servermet(emconf + SERVER_MET_FILENAME);
+	const CString confdir(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+	const CString servermetdownload(confdir + _T("server_met.download"));
+	const CString servermetbackup(confdir + _T("server_met.old"));
+	const CString servermet(confdir + SERVER_MET_FILENAME);
 
 	(void)_tremove(servermetbackup);
 	(void)_tremove(servermetdownload);
@@ -111,18 +111,18 @@ bool CServerList::Init()
 		AutoUpdate();
 
 	// Load Metfile
-	const CString emconf(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+	const CString confdir(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
 
-	bool bRes = AddServerMetToList(emconf + SERVER_MET_FILENAME, false);
+	bool bRes = AddServerMetToList(confdir + SERVER_MET_FILENAME, false);
 	if (thePrefs.GetAutoUpdateServerList())
 	{
-		bool bRes2 = AddServerMetToList(emconf + _T("server_met.download"), true);
+		bool bRes2 = AddServerMetToList(confdir + _T("server_met.download"), true);
 		if (!bRes && bRes2)
 			bRes = true;
 	}
 
 	// insert static servers from textfile
-	AddServersFromTextFile(emconf + _T("staticservers.dat"));
+	AddServersFromTextFile(confdir + _T("staticservers.dat"));
 
     theApp.serverlist->GiveServersForTraceRoute();
 
@@ -626,8 +626,9 @@ bool CServerList::SaveServermetToFile()
 	if (thePrefs.GetLogFileSaving())
 		AddDebugLogLine(false, _T("Saving servers list file \"%s\""), SERVER_MET_FILENAME);
 	m_nLastSaved = ::GetTickCount();
-	const CString emconf(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
-	const CString newservermet(emconf + SERVER_MET_FILENAME _T(".new"));
+	const CString confdir(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+	const CString curservermet(confdir + SERVER_MET_FILENAME);
+	const CString newservermet(curservermet + _T(".new"));
 
 	CSafeBufferedFile servermet;
 	CFileException fexp;
@@ -786,14 +787,8 @@ bool CServerList::SaveServermetToFile()
 		}
 		servermet.Close();
 
-		const CString curservermet(emconf + SERVER_MET_FILENAME);
-		const CString oldservermet(emconf + _T("server_met.old"));
-
-		if (_taccess(oldservermet, 0) == 0)
-			CFile::Remove(oldservermet);
-		if (_taccess(curservermet, 0) == 0)
-			CFile::Rename(curservermet, oldservermet);
-		CFile::Rename(newservermet, curservermet);
+		MoveFileEx(curservermet, confdir + _T("server_met.old"), MOVEFILE_REPLACE_EXISTING);
+		MoveFileEx(newservermet, curservermet, MOVEFILE_REPLACE_EXISTING);
 	}
 	catch(CFileException* error) {
 		CString strError(GetResString(IDS_ERR_SAVESERVERMET2));

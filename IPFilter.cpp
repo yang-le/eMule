@@ -163,10 +163,10 @@ int CIPFilter::AddFromFile(LPCTSTR pszFilePath, bool bShowResponse)
 				{
 					iLine++;
 					sbuffer = szBuffer;
+					sbuffer.Trim(" \t\r\n");
 
 					// ignore comments & too short lines
 					if (sbuffer[0] == '#' || sbuffer[0] == '/' || sbuffer.GetLength() < 15) {
-						sbuffer.Trim(" \t\r\n");
 						DEBUG_ONLY( (!sbuffer.IsEmpty()) ? TRACE("IP filter: ignored line %u\n", iLine) : (void)0 );
 						continue;
 					}
@@ -203,16 +203,11 @@ int CIPFilter::AddFromFile(LPCTSTR pszFilePath, bool bShowResponse)
 						bValid = ParseFilterLine2(sbuffer, start, end, level, desc);
 
 					// add a filter
-					if (bValid)
-					{
+					if (bValid) {
 						AddIPRange(start, end, level, desc);
 						iFoundRanges++;
-					}
-					else
-					{
-						sbuffer.Trim(" \t\r\n");
+					} else
 						DEBUG_ONLY( (!sbuffer.IsEmpty()) ? TRACE("IP filter: ignored line %u\n", iLine) : (void)0 );
-					}
 				}
 			}
 		} catch (...) {

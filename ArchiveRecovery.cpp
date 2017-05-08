@@ -872,23 +872,14 @@ bool CArchiveRecovery::scanForZipMarker(CFile *input, archiveScannerThreadParams
 					break;
 				}
 
-				if (aitp) {
-					ProcessProgress(aitp, input->GetPosition() );
-				}
-
+				if (aitp)
+					ProcessProgress(aitp, input->GetPosition());
 
 				// Check for other bytes
-				if (chunk[pos + 1] == ((marker >> 8) & 0xFF))
-				{
-					if (chunk[pos + 2] == ((marker >> 16) & 0xFF))
-					{
-						if (chunk[pos + 3] == ((marker >> 24) & 0xFF))
-						{
-							// Found it
-							input->Seek(pos - lenChunk, CFile::current);
-							return true;
-						}
-					}
+				if (*((uint32 *)&chunk[pos]) == marker) {
+					// Found it
+					input->Seek(pos - lenChunk, CFile::current);
+					return true;
 				}
 			}
 		}

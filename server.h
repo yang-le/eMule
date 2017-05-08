@@ -161,6 +161,7 @@ public:
 	bool	IsEqual(const CServer* pServer) const;
 
 private:
+	void	init();
 	uint32		challenge;
 	uint32		m_uDescReqChallenge;
 	uint32		lastpinged; //This is to get the ping delay.

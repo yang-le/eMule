@@ -2510,7 +2510,7 @@ BOOL GetWMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsWM, bool bFullI
 						CString strDevTempl;
 						if (GetAttribute(pIWMHeaderInfo, wStream, g_wszDeviceConformanceTemplate, strDevTempl))
 						{
-							UINT uStreamType;
+							UINT uStreamType = 0;
 							strStreamInfo = strDevTempl + L": ";
 							if (strDevTempl == L"L")
 							{

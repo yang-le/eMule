@@ -306,10 +306,10 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 				}
 				if (sRawMessage.Mid(iIndex, 11) == _T(":\001REPFRIEND")) {
 					iIndex += 11;
-/*					CString sVersion =*/ (void)sRawMessage.Tokenize(_T("|"), iIndex);
+					/*CString sVersion =*/ (void)sRawMessage.Tokenize(_T("|"), iIndex);
 					CString sVerify = sRawMessage.Tokenize(_T("|"), iIndex);
 					//Make sure we requested this!
-					if (m_uVerify != (UINT)_tstoi(sVerify))
+					if (m_uVerify != (uint32)_tstoi(sVerify))
 						return;
 					//Pick a new random verify.
 					SetVerify();

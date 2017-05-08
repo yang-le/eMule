@@ -205,7 +205,7 @@ io::CompressedReader::CompressedReader(ID3_Reader& reader, size_type newSize)
   BString binary = readBinary(reader, oldSize);
 
   ::uncompress(_uncompressed,
-               reinterpret_cast<luint *>(&newSize),
+               reinterpret_cast<uLong *>(&newSize),
                reinterpret_cast<const uchar*>(binary.data()),
                static_cast<uLong>(oldSize));
   this->setBuffer(_uncompressed, newSize);

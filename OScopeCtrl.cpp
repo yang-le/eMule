@@ -148,8 +148,8 @@ COScopeCtrl::COScopeCtrl(int NTrends)
 	m_crGridColor = RGB(0, 255, 255);  // see also SetGridColor
 
 	// public member variables, can be set directly
-	m_str.XUnits.Format(_T("Samples"));  // can also be set with SetXUnits
-	m_str.YUnits.Format(_T("Y units"));  // can also be set with SetYUnits
+	m_str.XUnits = _T("Samples");  // can also be set with SetXUnits
+	m_str.YUnits = _T("Y units");  // can also be set with SetYUnits
 
 	// G.Hayduk: configurable number of grids init
 	// you are free to change those between contructing the object
@@ -211,11 +211,11 @@ BOOL COScopeCtrl::Create(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT
 // iRatio is 1 by default (No change in scale of data for this trend)
 // This function now borrows a bit from eMule Plus v1
 //
-void COScopeCtrl::SetTrendRatio(int iTrend, UINT iRatio)
+void COScopeCtrl::SetTrendRatio(int iTrend, unsigned iRatio)
 {
 	ASSERT(iTrend < m_NTrends && iRatio > 0);	// iTrend must be a valid trend in this plot.
 
-	if (iRatio != (UINT)m_PlotData[iTrend].iTrendRatio) {
+	if (iRatio != (unsigned)m_PlotData[iTrend].iTrendRatio) {
 		double dTrendModifier = (double)m_PlotData[iTrend].iTrendRatio / iRatio;
 		m_PlotData[iTrend].iTrendRatio = iRatio;
 
@@ -249,7 +249,7 @@ void COScopeCtrl::SetRange(double dLower, double dUpper, int iTrend)
 	m_PlotData[iTrend].dLowerLimit     = dLower;
 	m_PlotData[iTrend].dUpperLimit     = dUpper;
 	m_PlotData[iTrend].dRange          = m_PlotData[iTrend].dUpperLimit - m_PlotData[iTrend].dLowerLimit;
-	m_PlotData[iTrend].dVerticalFactor = (double)m_nPlotHeight / m_PlotData[iTrend].dRange;
+	m_PlotData[iTrend].dVerticalFactor = m_nPlotHeight / m_PlotData[iTrend].dRange;
 	InvalidateCtrl();
 }
 
@@ -257,13 +257,11 @@ void COScopeCtrl::SetRanges(double dLower, double dUpper)
 {
 	ASSERT( dUpper > dLower );
 
-	int iTrend;
-	for (iTrend = 0; iTrend < m_NTrends; iTrend ++)
-	{
+	for (int iTrend = 0; iTrend < m_NTrends; ++iTrend) {
 		m_PlotData[iTrend].dLowerLimit     = dLower;
 		m_PlotData[iTrend].dUpperLimit     = dUpper;
 		m_PlotData[iTrend].dRange          = m_PlotData[iTrend].dUpperLimit - m_PlotData[iTrend].dLowerLimit;
-		m_PlotData[iTrend].dVerticalFactor = (double)m_nPlotHeight / m_PlotData[iTrend].dRange;
+		m_PlotData[iTrend].dVerticalFactor = m_nPlotHeight / m_PlotData[iTrend].dRange;
 	}
 	InvalidateCtrl();
 }
@@ -311,7 +309,7 @@ void COScopeCtrl::SetBackgroundColor(COLORREF color)
 
 void COScopeCtrl::InvalidateCtrl(bool deleteGraph)
 {
-	int i, j, GridPos;
+	int GridPos;
 	CPen *oldPen;
 	CPen solidPen(PS_SOLID, 0, m_crGridColor);
 	CFont yUnitFont, *oldFont;
@@ -350,7 +348,7 @@ void COScopeCtrl::InvalidateCtrl(bool deleteGraph)
 	// fill the grid background
 	m_dcGrid.FillSolidRect(m_rectClient, crLabelBk);
 
-	m_rectPlot.left = m_rectClient.left + 8*7+4;
+	m_rectPlot.left = m_rectClient.left + 8*8+4;
 	m_nPlotWidth    = m_rectPlot.Width();
 
 	// draw the plot rectangle
@@ -378,10 +376,10 @@ void COScopeCtrl::InvalidateCtrl(bool deleteGraph)
 
 	// draw the dotted lines,
 	// use SetPixel instead of a dotted pen - this allows for a finer dotted line and a more "technical" look
-	for (j = 1; j < m_nYGrids + 1; j++)
+	for (int j = 1; j < m_nYGrids + 1; ++j)
 	{
 		GridPos = m_rectPlot.Height() * j / (m_nYGrids + 1) + m_rectPlot.top;
-		for (i = m_rectPlot.left; i < m_rectPlot.right; i += 4)
+		for (int i = m_rectPlot.left; i < m_rectPlot.right; i += 4)
 			m_dcGrid.SetPixel(i, GridPos, m_crGridColor);
 	}
 
@@ -401,7 +399,7 @@ void COScopeCtrl::InvalidateCtrl(bool deleteGraph)
 			}
 
 			GridPos = 0;
-			for(j = 1; j <= m_nXGrids; j++) {
+			for (int j = 1; j <= m_nXGrids; ++j) {
 				int extra = 0;
 				if (surplus) {
 					surplus--;
@@ -409,10 +407,10 @@ void COScopeCtrl::InvalidateCtrl(bool deleteGraph)
 				}
 				GridPos += (hourSize+extra);
 				if ((m_nXGrids - j + 1) % 10 == 0) {
-					for(i = m_rectPlot.top; i < m_rectPlot.bottom; i += 2)
+					for (int i = m_rectPlot.top; i < m_rectPlot.bottom; i += 2)
 						m_dcGrid.SetPixel(m_rectPlot.left + GridPos - hourSize + partialSize, i, m_crGridColor);
 				} else {
-					for(i = m_rectPlot.top; i < m_rectPlot.bottom; i += 4)
+					for (int i = m_rectPlot.top; i < m_rectPlot.bottom; i += 4)
 						m_dcGrid.SetPixel(m_rectPlot.left + GridPos - hourSize + partialSize, i, m_crGridColor);
 				}
 			}
@@ -444,7 +442,7 @@ void COScopeCtrl::InvalidateCtrl(bool deleteGraph)
 	m_dcGrid.TextOut(m_rectPlot.left - 4, m_rectPlot.top - 7, strTemp);
 
     if (m_rectPlot.Height() / (m_nYGrids + 1) >= 14) {
-	    for (j = 1; j < (m_nYGrids + 1); j++) {
+	    for (int j = 1; j < (m_nYGrids + 1); ++j) {
 		    GridPos = m_rectPlot.Height() * j / (m_nYGrids + 1) + m_rectPlot.top;
     	    strTemp.Format(_T("%.*lf"), m_nYDecimals, m_PlotData[0].dUpperLimit * (m_nYGrids - j + 1) / (m_nYGrids + 1));
     	    m_dcGrid.TextOut(m_rectPlot.left - 4, GridPos - 7, strTemp);
@@ -474,9 +472,9 @@ void COScopeCtrl::InvalidateCtrl(bool deleteGraph)
 
 	CRect rText(0,0,0,0);
 	m_dcGrid.DrawText(m_str.YUnits, rText, DT_CALCRECT);
-	m_dcGrid.TextOut((m_rectClient.left + m_rectPlot.left - 8) / 2 - rText.Height() / 2,
-					 (m_rectPlot.bottom + m_rectPlot.top) / 2 - rText.Height() / 2,
-					 m_str.YUnits );
+	m_dcGrid.TextOut((m_rectClient.left + 2 + rText.Height())
+					,(m_rectPlot.bottom + m_rectPlot.top) / 2 - rText.Height() / 2
+					,m_str.YUnits );
 	m_dcGrid.SelectObject(oldFont);
 
 	oldFont = m_dcGrid.SelectObject(&sm_fontAxis);
@@ -484,8 +482,7 @@ void COScopeCtrl::InvalidateCtrl(bool deleteGraph)
 
 	int xpos = m_rectPlot.left + 2;
 	int ypos = m_rectPlot.bottom + 3;
-	for (i = 0; i < m_NTrends; i++)
-	{
+	for (int i = 0; i < m_NTrends; ++i) {
 		CSize sizeLabel = m_dcGrid.GetTextExtent(m_PlotData[i].LegendLabel);
 		if (xpos + 12 + sizeLabel.cx + 12 > m_rectPlot.right) {
 			xpos = m_rectPlot.left + 2;

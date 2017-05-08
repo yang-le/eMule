@@ -76,10 +76,10 @@ protected:
 	void	SetConState(SocketState val);
 
 	uint32	timeout_timer;
-	bool	deletethis;
 	uint32	deltimer;
-	bool	m_bPortTestCon;
 	uint32	m_nOnConnect;
+	bool	deletethis;
+	bool	m_bPortTestCon;
 };
 
 

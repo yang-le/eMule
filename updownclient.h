@@ -18,6 +18,7 @@
 #include "BarShader.h"
 #include "ClientStateDefs.h"
 #include "opcodes.h"
+#include "OtherFunctions.h"
 
 class CClientReqSocket;
 class CPeerCacheDownSocket;
@@ -117,10 +118,7 @@ public:
 	void			SetServerPort(uint16 nPort)						{ m_nServerPort = nPort; }
 	const uchar*	GetUserHash() const								{ return (uchar*)m_achUserHash; }
 	void			SetUserHash(const uchar* pUserHash);
-	bool			HasValidHash() const
-						{
-							return ((const uint32*)m_achUserHash)[0] != 0 || ((const uint32*)m_achUserHash)[1] != 0 || ((const uint32*)m_achUserHash)[2] != 0 || ((const uint32*)m_achUserHash)[3] != 0;
-						}
+	bool			HasValidHash() const							{ return !isnulmd4(m_achUserHash); }
 	int				GetHashType() const;
 	const uchar*	GetBuddyID() const								{ return (uchar*)m_achBuddyID; }
 	void			SetBuddyID(const uchar* m_achTempBuddyID);

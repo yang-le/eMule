@@ -134,6 +134,8 @@ public:
 			delete[] m_psz;
 	}
 
+	TUnicodeToUTF8(const TUnicodeToUTF8&) = delete;
+
 	operator LPCSTR() const
 	{
 		return m_psz;
@@ -188,6 +190,8 @@ public:
 			delete[] m_psz;
 	}
 
+	TUnicodeToBOMUTF8(const TUnicodeToBOMUTF8&) = delete;
+
 	operator LPCSTR() const
 	{
 		return m_psz;
@@ -238,6 +242,8 @@ public:
 		if (m_psz != m_acBuff)
 			delete[] m_psz;
 	}
+
+	TUnicodeToMultiByte(const TUnicodeToMultiByte&) = delete;
 
 	operator LPCSTR() const
 	{

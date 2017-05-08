@@ -40,6 +40,7 @@ class CServerConnect
 public:
 	CServerConnect();
 	~CServerConnect();
+	CServerConnect(const CServerConnect&) = delete;
 
 	void	ConnectionFailed(CServerSocket* sender);
 	void	ConnectionEstablished(CServerSocket* sender);

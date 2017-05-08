@@ -205,7 +205,8 @@ void CClientList::DeleteAll()
 		delete list.RemoveHead(); // recursive: this will call RemoveClient
 }
 
-bool CClientList::AttachToAlreadyKnown(CUpDownClient** client, CClientReqSocket* sender){
+bool CClientList::AttachToAlreadyKnown(CUpDownClient** client, CClientReqSocket* sender)
+{
 	CUpDownClient* tocheck = (*client);
 	CUpDownClient* found_client = NULL;
 	CUpDownClient* found_client2 = NULL;

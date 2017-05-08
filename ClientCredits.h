@@ -68,6 +68,7 @@ public:
 	explicit CClientCredits(CreditStruct* in_credits);
 	explicit CClientCredits(const uchar* key);
 	~CClientCredits();
+	CClientCredits(const CClientCredits&) = delete;
 
 	const uchar* GetKey() const					{return m_pCredits->abyKey;}
 	uchar*	GetSecureIdent()					{return m_abyPublicKey;}

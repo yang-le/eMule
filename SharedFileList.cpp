@@ -583,7 +583,7 @@ bool CSharedFileList::AddSingleSharedFile(const CString& rstrFilePath, bool bNoU
 	}
 
 	// check if we share this file in general
-	bShared = ShouldBeShared(rstrFilePath.Left(rstrFilePath.ReverseFind('\\') + 1), rstrFilePath, false);
+	bShared = ShouldBeShared(rstrFilePath.Left(rstrFilePath.ReverseFind(_T('\\')) + 1), rstrFilePath, false);
 
 	if (bShared && !bExclude){
 		// we should share this file already
@@ -1541,14 +1541,14 @@ bool CSharedFileList::ExcludeFile(CString strFilePath)
 	}
 
 	// check if we implicity share this file
-	bShared |= ShouldBeShared(strFilePath.Left(strFilePath.ReverseFind('\\') + 1), strFilePath, false);
+	bShared |= ShouldBeShared(strFilePath.Left(strFilePath.ReverseFind(_T('\\')) + 1), strFilePath, false);
 
 	if (!bShared)
 	{
 		// we don't actually share this file, can't be excluded
 		return false;
 	}
-	else if (ShouldBeShared(strFilePath.Left(strFilePath.ReverseFind('\\') + 1), strFilePath, true))
+	else if (ShouldBeShared(strFilePath.Left(strFilePath.ReverseFind(_T('\\')) + 1), strFilePath, true))
 	{
 		// we cannot unshare this file (incoming directories)
 		ASSERT( false ); // checks should be done earlier already
@@ -1581,7 +1581,7 @@ void CSharedFileList::CheckAndAddSingleFile(const CFileFind& ff)
 
 	CString strFoundFileName(ff.GetFileName());
 	CString strFoundFilePath(ff.GetFilePath());
-	CString strFoundDirectory(strFoundFilePath.Left(ff.GetFilePath().ReverseFind('\\') + 1));
+	CString strFoundDirectory(strFoundFilePath.Left(ff.GetFilePath().ReverseFind(_T('\\')) + 1));
 	CString strShellLinkDir;
 	ULONGLONG ullFoundFileSize = ff.GetLength();
 
@@ -1739,11 +1739,11 @@ void CSharedFileList::Save() const
 
 			for (POSITION pos = m_liSingleSharedFiles.GetHeadPosition(); pos != NULL;) {
 				sdirfile.WriteString(m_liSingleSharedFiles.GetNext(pos));
-				sdirfile.Write(L"\r\n", sizeof(TCHAR)*2);
+				sdirfile.Write(_T("\r\n"), 2*sizeof(TCHAR));
 			}
 			for (POSITION pos = m_liSingleExcludedFiles.GetHeadPosition(); pos != NULL;) {
 				sdirfile.WriteString(_T("-") + m_liSingleExcludedFiles.GetNext(pos)); // a '-' prefix means excluded
-				sdirfile.Write(L"\r\n", sizeof(TCHAR)*2);
+				sdirfile.Write(_T("\r\n"), 2*sizeof(TCHAR));
 			}
 			if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.emuledlg->IsClosing())) {
 				sdirfile.Flush(); // flush file stream buffers to disk buffers

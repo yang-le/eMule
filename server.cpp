@@ -27,11 +27,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-
-CServer::CServer(const ServerMet_Struct* in_data)
+void CServer::init()
 {
-	port = in_data->port;
-	ip = in_data->ip;
 	_tcscpy(ipfull, (LPCTSTR)ipstr(ip));
 	files = 0;
 	users = 0;
@@ -58,6 +55,13 @@ CServer::CServer(const ServerMet_Struct* in_data)
 	m_dwRealLastPingedTime = 0;
 }
 
+CServer::CServer(const ServerMet_Struct* in_data)
+{
+	port = in_data->port;
+	ip = in_data->ip;
+	init();
+}
+
 CServer::CServer(uint16 in_port, LPCTSTR i_addr)
 {
 	port = in_port;
@@ -65,30 +69,7 @@ CServer::CServer(uint16 in_port, LPCTSTR i_addr)
 		m_strDynIP = i_addr;
 		ip = 0;
 	}
-	_tcscpy(ipfull, (LPCTSTR)ipstr(ip));
-	files = 0;
-	users = 0;
-	m_uPreference = 0;
-	ping = 0;
-	failedcount = 0;
-	lastpinged = 0;
-	lastpingedtime = 0;
-	staticservermember = false;
-	maxusers = 0;
-	softfiles = 0;
-	hardfiles = 0;
-	lastdescpingedcout = 0;
-	m_uTCPFlags = 0;
-	m_uUDPFlags = 0;
-	m_uDescReqChallenge = 0;
-	m_uLowIDUsers = 0;
-	challenge = 0;
-	m_dwServerKeyUDP = 0;
-	m_bCryptPingReplyPending = false;
-	m_dwIPServerKeyUDP = 0;
-	m_nObfuscationPortTCP = 0;
-	m_nObfuscationPortUDP = 0;
-	m_dwRealLastPingedTime = 0;
+	init();
 }
 
 CServer::CServer(const CServer* pOld)

@@ -59,20 +59,17 @@ static char THIS_FILE[] = __FILE__;
 IMPLEMENT_DYNCREATE(CClientReqSocket, CEMSocket)
 
 CClientReqSocket::CClientReqSocket(CUpDownClient* in_client)
+	: m_bPortTestCon(false), deletethis(false), deltimer(0), m_nOnConnect(SS_Other)
 {
 	SetClient(in_client);
 	theApp.listensocket->AddSocket(this);
 	ResetTimeOutTimer();
-	deletethis = false;
-	deltimer = 0;
-	m_bPortTestCon=false;
-	m_nOnConnect=SS_Other;
 }
 
 void CClientReqSocket::SetConState( SocketState val )
 {
 	//If no change, do nothing..
-	if( (UINT)val == m_nOnConnect )
+	if ((uint32)val == m_nOnConnect)
 		return;
 	//Decrease count of old state..
 	switch( m_nOnConnect )
@@ -120,7 +117,8 @@ void CClientReqSocket::SetClient(CUpDownClient* pClient)
 		client->socket = this;
 }
 
-void CClientReqSocket::ResetTimeOutTimer(){
+void CClientReqSocket::ResetTimeOutTimer()
+{
 	timeout_timer = ::GetTickCount();
 }
 
@@ -578,7 +576,7 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 						DebugRecv("OP_AcceptUploadReq", client, (size >= 16) ? packet : NULL);
 						if (size > 0)
 							Debug(_T("  ***NOTE: Packet contains %u additional bytes\n"), size);
-						Debug(_T("  QR=%d\n"), client->IsRemoteQueueFull() ? (UINT)-1 : (UINT)client->GetRemoteQueueRank());
+						Debug(_T("  QR=%d\n"), client->IsRemoteQueueFull() ? (UINT)-1 : client->GetRemoteQueueRank());
 					}
 					theStats.AddDownDataOverheadFileRequest(size);
 					client->ProcessAcceptUpload();

@@ -11,7 +11,7 @@ public:
 
 	virtual BOOL Create(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID = NULL);
 
-	void SetTrendRatio(int iTrend, unsigned int iRatio = 1);
+	void SetTrendRatio(int iTrend, unsigned iRatio = 1);
 	void SetLegendLabel(const CString& string, int iTrend);
 	void SetBarsPlot(bool BarsPlot,int iTrend);
 	void SetRange(double dLower, double dUpper, int iTrend = 0);
@@ -57,7 +57,7 @@ protected:
 
 	struct CustShiftStruct  // when m_nTrendPoints > 0, this structure will contain needed vars
 	{
-		int m_nRmndr;		// reminder after dividing m_nWidthToDo/m_nPointsToDo
+		int m_nRmndr;		// remainder after dividing m_nWidthToDo/m_nPointsToDo
 		int m_nWidthToDo;
 		int m_nPointsToDo;
 	} CustShift;
