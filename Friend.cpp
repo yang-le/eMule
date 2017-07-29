@@ -52,6 +52,7 @@ CFriend::CFriend()
 //Added this to work with the IRC.. Probably a better way to do it.. But wanted this in the release..
 CFriend::CFriend(const uchar* abyUserhash, time_t dwLastSeen, uint32 dwLastUsedIP, uint16 nLastUsedPort
 				, uint32 dwLastChatted, LPCTSTR pszName, uint32 dwHasHash)
+	: m_strName(pszName)
 {
 	init();
 	m_dwLastSeen = dwLastSeen;
@@ -62,7 +63,6 @@ CFriend::CFriend(const uchar* abyUserhash, time_t dwLastSeen, uint32 dwLastUsedI
 		md4cpy(m_abyUserhash, abyUserhash);
 	else
 		md4clr(m_abyUserhash);
-	m_strName = pszName;
 }
 
 CFriend::CFriend(CUpDownClient* client)

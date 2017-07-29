@@ -68,7 +68,7 @@ public:
 private:
 	CED2KServerLink();
 	CED2KServerLink(const CED2KServerLink&);
-	CED2KServerLink& operator=(const CED2KServerLink&);
+	CED2KServerLink& operator=(const CED2KServerLink&) = delete;
 
 	CString m_strAddress;
 	uint16 m_port;

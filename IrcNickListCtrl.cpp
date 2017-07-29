@@ -39,7 +39,7 @@ END_MESSAGE_MAP()
 CIrcNickListCtrl::CIrcNickListCtrl()
 {
 	m_pParent = NULL;
-	SetSkinKey(L"IRCNicksLv");
+	SetSkinKey(_T("IRCNicksLv"));
 }
 
 void CIrcNickListCtrl::Init()

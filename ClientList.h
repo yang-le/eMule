@@ -74,7 +74,7 @@ public:
 	// Clients
 	void	AddClient(CUpDownClient* toadd,bool bSkipDupTest = false);
 	void	RemoveClient(CUpDownClient* toremove, LPCTSTR pszReason = NULL);
-	void	GetStatistics(uint32& totalclient, int stats[NUM_CLIENTLIST_STATS],
+	void	GetStatistics(uint32& ruTotalClients, int stats[NUM_CLIENTLIST_STATS],
 						  CMap<uint32, uint32, uint32, uint32>& clientVersionEDonkey,
 						  CMap<uint32, uint32, uint32, uint32>& clientVersionEDonkeyHybrid,
 						  CMap<uint32, uint32, uint32, uint32>& clientVersionEMule,
@@ -86,7 +86,7 @@ public:
 	CUpDownClient* FindClientByUserHash(const uchar* clienthash, uint32 dwIP = 0, uint16 nTCPPort = 0) const;
 	CUpDownClient* FindClientByIP(uint32 clientip) const;
 	CUpDownClient* FindClientByIP_UDP(uint32 clientip, UINT nUDPport) const;
-	CUpDownClient* FindClientByServerID(uint32 uServerIP, uint32 uUserID) const;
+	CUpDownClient* FindClientByServerID(uint32 uServerIP, uint32 uED2KUserID) const;
 	CUpDownClient* FindClientByUserID_KadPort(uint32 clientID,uint16 kadPort) const;
 	CUpDownClient* FindClientByIP_KadPort(uint32 ip, uint16 port) const;
 

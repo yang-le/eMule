@@ -257,18 +257,18 @@ void CMMServer::ProcessFileListRequest(CMMSocket* sender, CMMPacket* packet){
 	sender->SendPacket(packet);
 }
 
-void CMMServer::ProcessFinishedListRequest(CMMSocket* sender){
+void CMMServer::ProcessFinishedListRequest(CMMSocket* sender)
+{
 	CMMPacket* packet = new CMMPacket(MMP_FINISHEDANS);
 	int nCount = thePrefs.GetCatCount();
 	packet->WriteByte((uint8)nCount);
-	for (int i = 0; i != nCount; i++){
+	for (int i = 0; i < nCount; ++i)
 		packet->WriteString(thePrefs.GetCategory(i)->strTitle);
-	}
 
 	nCount = (m_SentFinishedList.GetCount() > 30)? 30 : m_SentFinishedList.GetCount();
 	packet->WriteByte((uint8)nCount);
-	for (int i = 0; i != nCount; i++){
-		CKnownFile* cur_file = m_SentFinishedList[i];
+	for (int i = 0; i != nCount; ++i) {
+		const CKnownFile* cur_file = m_SentFinishedList[i];
 		packet->WriteByte(0xFF);
 		packet->WriteString(cur_file->GetFileName());
 		if (cur_file->IsPartFile())
@@ -712,23 +712,23 @@ void  CMMServer::ProcessStatisticsRequest(CMMData* data, CMMSocket* sender)
 	sender->SendPacket(packet);
 }
 
-void CMMServer::WriteFileInfo(CPartFile* selFile, CMMPacket* packet){
+void CMMServer::WriteFileInfo(CPartFile* selFile, CMMPacket* packet)
+{
 	packet->WriteInt64( selFile->GetFileSize() );
 	packet->WriteInt64( selFile->GetTransferred() );
 	packet->WriteInt64( selFile->GetCompletedSize() );
 	packet->WriteShort((uint16)(selFile->GetDatarate()/100));
 	packet->WriteShort((uint16)(selFile->GetSourceCount()));
 	packet->WriteShort((uint16)(selFile->GetTransferringSrcCount()));
-	if (selFile->IsAutoDownPriority()){
+	if (selFile->IsAutoDownPriority())
 		packet->WriteByte(4);
-	}
-	else{
+	else
 		packet->WriteByte(selFile->GetDownPriority());
-	}
+
 	uint8* parts = selFile->MMCreatePartStatus();
 	packet->WriteShort((uint16)selFile->GetPartCount());
-	for (UINT i = 0; i < selFile->GetPartCount(); i++){
+	for (UINT i = 0; i < selFile->GetPartCount(); ++i)
 		packet->WriteByte(parts[i]);
-	}
+
 	delete[] parts;
 }

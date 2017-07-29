@@ -1317,7 +1317,7 @@ bool CPreferences::LoadStats(int loadBackUp)
 
 		// Load records for shared files
 		if ((uint32)ini.GetInt(_T("SharedMostFilesShared")) > cumSharedMostFilesShared)
-			cumSharedMostFilesShared =	ini.GetInt(_T("SharedMostFilesShared"));
+			cumSharedMostFilesShared = ini.GetInt(_T("SharedMostFilesShared"));
 
 		uint64 temp64 = ini.GetUInt64(_T("SharedLargestShareSize"));
 		if (temp64 > cumSharedLargestShareSize)
@@ -1780,13 +1780,13 @@ void CPreferences::SavePreferences()
 	///////////////////////////////////////////////////////////////////////////
 	// Section: "Statistics"
 	//
-	ini.WriteInt(_T("statsConnectionsGraphRatio"), statsConnectionsGraphRatio,_T("Statistics"));
+	ini.WriteInt(_T("statsConnectionsGraphRatio"), statsConnectionsGraphRatio, _T("Statistics"));
 	ini.WriteString(_T("statsExpandedTreeItems"), m_strStatsExpandedTreeItems);
 	CString buffer2;
 	for (int i=0; i<15; ++i) {
-		buffer.Format(_T("0x%06lx"),GetStatsColor(i));
-		buffer2.Format(_T("StatColor%i"),i);
-		ini.WriteString(buffer2,buffer,_T("Statistics") );
+		buffer.Format(_T("0x%06lx"), GetStatsColor(i));
+		buffer2.Format(_T("StatColor%i"), i);
+		ini.WriteString(buffer2, buffer, _T("Statistics"));
 	}
 	ini.WriteBool(_T("HasCustomTaskIconColor"), bHasCustomTaskIconColor, _T("Statistics"));
 
@@ -2409,12 +2409,12 @@ void CPreferences::LoadPreferences()
 	m_strStatsExpandedTreeItems = ini.GetString(_T("statsExpandedTreeItems"),_T("111000000100000110000010000011110000010010"),_T("Statistics"));
 	CString buffer2;
 	for (unsigned i = 0; i < _countof(m_adwStatsColors); ++i) {
-		buffer2.Format(_T("StatColor%i"), i);
+		buffer2.Format(_T("StatColor%u"), i);
 		m_adwStatsColors[i] = 0;
-		if (_stscanf(ini.GetString(buffer2, _T(""), _T("Statistics")), _T("%li"), &m_adwStatsColors[i]) != 1)
+		if (_stscanf(ini.GetString(buffer2, _T(""), _T("Statistics")), _T("%li"), (long *)&m_adwStatsColors[i]) != 1) //must be "%li", not "%lu"
 			ResetStatsColor(i);
 	}
-	bHasCustomTaskIconColor = ini.GetBool(_T("HasCustomTaskIconColor"),false, _T("Statistics"));
+	bHasCustomTaskIconColor = ini.GetBool(_T("HasCustomTaskIconColor"), false, _T("Statistics"));
 	m_bShowVerticalHourMarkers = ini.GetBool(_T("ShowVerticalHourMarkers"), true, _T("Statistics"));
 
 	// -khaos--+++> Load Stats
@@ -2771,7 +2771,7 @@ CString	CPreferences::GetVersionCheckURL()
 {
 	CString theUrl;
 	theUrl.Format(_T("%s/en/version_check.php?version=%u&language=%u")
-		, thePrefs.GetVersionCheckBaseURL(), theApp.m_uCurVersionCheck, thePrefs.GetLanguageID());
+		, (LPCTSTR)thePrefs.GetVersionCheckBaseURL(), theApp.m_uCurVersionCheck, thePrefs.GetLanguageID());
 	return theUrl;
 }
 

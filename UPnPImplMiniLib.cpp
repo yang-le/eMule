@@ -185,7 +185,7 @@ bool CUPnPImplMiniLib::CheckAndRefresh()
 	}
 //>>> WiZaRd
 	if (!IsReady()) {
-		DebugLog(L"Not refreshing UPnP ports because they are already in the process of being refreshed");
+		DebugLog(_T("Not refreshing UPnP ports because they are already in the process of being refreshed"));
 		return false;
 	}
 //<<< WiZaRd

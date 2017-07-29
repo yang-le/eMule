@@ -570,8 +570,9 @@ public:
 		: m_pszItemData(NULL), m_iImage(0)
 	{}
 #endif
-	SFileTypeCbEntry(const CString& strLabel, LPCSTR pszItemData, int iImage) {
-		m_strLabel = strLabel;
+	SFileTypeCbEntry(const CString& strLabel, LPCSTR pszItemData, int iImage)
+		: m_strLabel(strLabel)
+	{
 		m_pszItemData = pszItemData;
 		m_iImage = iImage;
 	}

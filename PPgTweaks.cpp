@@ -174,7 +174,7 @@ void CPPgTweaks::DoDataExchange(CDataExchange* pDX)
 		int iImgLog = 8;
 		int iImgDynyp = 8;
 		int iImgConnection = 8;
-		//		int iImgA4AF = 8;
+		//	int iImgA4AF = 8;
 		int iImgMetaData = 8;
 		int iImgUPnP = 8;
 		int iImgShareeMule = 8;
@@ -184,7 +184,7 @@ void CPPgTweaks::DoDataExchange(CDataExchange* pDX)
 			iImgLog = piml->Add(CTempIconLoader(_T("Log")));
 			iImgDynyp = piml->Add(CTempIconLoader(_T("upload")));
 			iImgConnection = piml->Add(CTempIconLoader(_T("connection")));
-			//			iImgA4AF =		piml->Add(CTempIconLoader(_T("Download")));
+			//	iImgA4AF = piml->Add(CTempIconLoader(_T("Download")));
 			iImgMetaData = piml->Add(CTempIconLoader(_T("MediaInfo")));
 			iImgUPnP = piml->Add(CTempIconLoader(_T("connectedhighhigh")));
 			iImgShareeMule = piml->Add(CTempIconLoader(_T("viewfiles")));

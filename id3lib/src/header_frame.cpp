@@ -41,7 +41,6 @@ void ID3_FrameHeader::SetUnknownFrame(const char* id)
   Clear();
   try {
     _frame_def = LEAKTESTNEW(ID3_FrameDef);
-//  if (NULL == _frame_def)
   } catch (...) {
     // log this;
     return;
@@ -53,13 +52,13 @@ void ID3_FrameHeader::SetUnknownFrame(const char* id)
   _frame_def->sDescription = NULL;
   if (strlen(id) <= 3)
   {
-    strcpy(_frame_def->sShortTextID, id);
-    strcpy(_frame_def->sLongTextID, "");
+    strcpy_s(_frame_def->sShortTextID, _countof(_frame_def->sShortTextID), id);
+    *_frame_def->sLongTextID = '\0';
   }
   else
   {
-    strcpy(_frame_def->sLongTextID, id);
-    strcpy(_frame_def->sShortTextID, "");
+    strcpy_s(_frame_def->sLongTextID, _countof(_frame_def->sLongTextID), id);
+    *_frame_def->sShortTextID = '\0';
   }
   _dyn_frame_def = true;
 }

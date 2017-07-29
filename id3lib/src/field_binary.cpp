@@ -142,22 +142,20 @@ void ID3_FieldImpl::FromFile(const char *info //< Source filename
     return;
   }
 
-  FILE* temp_file = ::fopen(info, "rb");
-  if (temp_file != NULL)
+  FILE* temp_file;
+  if (!::fopen_s(&temp_file, info, "rb"))
   {
     ::fseek(temp_file, 0, SEEK_END);
     size_t fileSize = ::ftell(temp_file);
     ::fseek(temp_file, 0, SEEK_SET);
 
     uchar* buffer = LEAKTESTNEW(uchar[fileSize]);
-//    if (buffer != NULL)
-    {
-      ::fread(buffer, 1, fileSize, temp_file);
 
-      this->Set(buffer, fileSize);
+    ::fread(buffer, 1, fileSize, temp_file);
 
-      delete [] buffer;
-    }
+    this->Set(buffer, fileSize);
+
+    delete [] buffer;
 
     ::fclose(temp_file);
   }
@@ -181,15 +179,13 @@ void ID3_FieldImpl::ToFile(const char *info //< Destination filename
   size_t size = this->Size();
   if (size > 0)
   {
-    FILE* temp_file = ::fopen(info, "wb");
-    if (temp_file != NULL)
+    FILE* temp_file;
+    if (!::fopen_s(&temp_file, info, "wb"))
     {
       ::fwrite(_binary.data(), 1, size, temp_file);
       ::fclose(temp_file);
     }
   }
-
-  return ;
 }
 
 
@@ -205,4 +201,3 @@ void ID3_FieldImpl::RenderBinary(ID3_Writer& writer) const
 {
   writer.writeChars(this->GetRawBinary(), this->Size());
 }
-

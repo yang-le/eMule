@@ -61,11 +61,11 @@ struct Preferences_Ext_Struct{
 
 // deadlake PROXYSUPPORT
 struct ProxySettings{
-	uint16		type;
-	uint16		port;
 	CStringA	name;
 	CStringA	user;
 	CStringA	password;
+	uint16		type;
+	uint16		port;
 	bool		EnablePassword;
 	bool		UseProxy;
 };
@@ -649,7 +649,7 @@ public:
 	static	void	ChangeUserDirMode(int nNewMode);
 
 	static	bool	IsTempFile(const CString& rstrDirectory, const CString& rstrName);
-	static	bool	IsShareableDirectory(const CString& rstrDirectory);
+	static	bool	IsShareableDirectory(const CString& rstrDir);
 	static	bool	IsInstallationDirectory(const CString& rstrDir);
 
 	static	bool	Save();

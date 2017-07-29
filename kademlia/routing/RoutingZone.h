@@ -79,7 +79,7 @@ namespace Kademlia
 			void		GetClosestTo(uint32 uMaxType, const CUInt128 &uTarget, const CUInt128 &uDistance, uint32 uMaxRequired, ContactMap *plistResult, bool bEmptyFirst = true, bool bSetInUse = false) const;
 			// Ideally: Returns all contacts that are in buckets of common range between us and the asker.
 			// In practice: returns the contacts from the top (2^{logBase+1}) buckets.
-			UINT		GetBootstrapContacts(ContactList *plistResult, UINT uMaxRequired);
+			uint32		GetBootstrapContacts(ContactList *plistResult, uint32 uMaxRequired);
 			uint32		EstimateCount();
 			bool		HasOnlyLANNodes() const;
 			time_t m_tNextBigTimer;

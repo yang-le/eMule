@@ -42,7 +42,7 @@ END_MESSAGE_MAP()
 CKadContactListCtrl::CKadContactListCtrl()
 {
 	SetGeneralPurposeFind(true);
-	SetSkinKey(L"KadContactsLv");
+	SetSkinKey(_T("KadContactsLv"));
 }
 
 CKadContactListCtrl::~CKadContactListCtrl()

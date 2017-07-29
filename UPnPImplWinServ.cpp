@@ -169,7 +169,7 @@ bool CUPnPImplWinServ::IsReady()
 		if (schSCManager == NULL)
 			return false;
 
-		schService = m_pfnOpenService(schSCManager, L"upnphost", GENERIC_READ);
+		schService = m_pfnOpenService(schSCManager, _T("upnphost"), GENERIC_READ);
 		if (schService == NULL) {
 			m_pfnCloseServiceHandle(schSCManager);
 			return false;
@@ -186,7 +186,7 @@ bool CUPnPImplWinServ::IsReady()
 		m_pfnCloseServiceHandle(schService);
 
 		if (!bResult) {
-			schService = m_pfnOpenService(schSCManager, L"upnphost", SERVICE_START);
+			schService = m_pfnOpenService(schSCManager, _T("upnphost"), SERVICE_START);
 			if (schService) {
 				// Power users have only right to start service, thus try to start it here
 				if (m_pfnStartService(schService, 0, NULL)) {
@@ -222,7 +222,7 @@ void CUPnPImplWinServ::StopUPnPService()
 		if (schSCManager == NULL)
 			return;
 
-		schService = m_pfnOpenService(schSCManager, L"upnphost", SERVICE_STOP);
+		schService = m_pfnOpenService(schSCManager, _T("upnphost"), SERVICE_STOP);
 		if (schService) {
 			SERVICE_STATUS structServiceStatus;
 			if (m_pfnControlService(schService, SERVICE_CONTROL_STOP, &structServiceStatus) != 0) {
@@ -285,8 +285,8 @@ void CUPnPImplWinServ::StartDiscovery(uint16 nTCPPort, uint16 nUDPPort, uint16 n
 	// showed up the UPnP root Device which contained the WANConnectionDevice as a child. I'm not sure if there are cases
 	// where search for InternetGatewayDevice only would have similar bad effects, but to be sure we do "normal" search first
 	// and one for InternetGateWayDevice as fallback
-	static const CString strDeviceType1(L"urn:schemas-upnp-org:device:WANConnectionDevice:1");
-	static const CString strDeviceType2(L"urn:schemas-upnp-org:device:InternetGatewayDevice:1");
+	static const CString strDeviceType1(_T("urn:schemas-upnp-org:device:WANConnectionDevice:1"));
+	static const CString strDeviceType2(_T("urn:schemas-upnp-org:device:InternetGatewayDevice:1"));
 
 	if (nTCPPort != 0) {
 		m_nTCPPort = nTCPPort;
@@ -391,19 +391,19 @@ void CUPnPImplWinServ::AddDevice(DevicePointer device, bool bAddChilds, int nLev
 // This is called by the devicefinder callback object (DeviceRemoved func)
 void CUPnPImplWinServ::RemoveDevice(CComBSTR bsUDN)
 {
-	DebugLog(_T("Finder asked to remove: %s"), bsUDN);
+	DebugLog(_T("Finder asked to remove: %ls"), (LPCWSTR)bsUDN);
 
 	std::vector<DevicePointer>::iterator device
 	        = std::find_if(m_pDevices.begin(), m_pDevices.end(), FindDevice(bsUDN));
 
 	if (device != m_pDevices.end()) {
-		DebugLog(_T("Device removed: %s"), bsUDN);
+		DebugLog(_T("Device removed: %ls"), (LPCWSTR)bsUDN);
 		m_pDevices.erase(device);
 	}
 }
 bool CUPnPImplWinServ::OnSearchComplete()
 {
-	ATLTRACE2(atlTraceCOM, 1, L"CUPnPImplWinServ(%p)->OnSearchComplete\n", this);
+	ATLTRACE2(atlTraceCOM, 1, _T("CUPnPImplWinServ(%p)->OnSearchComplete\n"), this);
 
 	if (m_pDevices.empty()) {
 		if (m_bSecondTry) {
@@ -497,7 +497,7 @@ HRESULT CUPnPImplWinServ::SaveServices(EnumUnknownPtr pEU, const LONG nTotalItem
 		if (FAILED(hr = pService->get_Id(&bsServiceId)))
 			return UPnPMessage(hr), hr;
 
-		DebugLog(_T("Found UPnP service: %s"), bsServiceId);
+		DebugLog(_T("Found UPnP service: %ls"), (LPCWSTR)bsServiceId);
 		m_pServices.push_back(pService);
 		bsServiceId.Empty();
 	}
@@ -533,12 +533,12 @@ HRESULT CUPnPImplWinServ::MapPort(const ServicePointer& service)
 	// The problem is that it's unclear if the order of services is always the same...
 	// But looks like it is.
 	if (!m_bADSL) {
-		m_bADSL = !(strServiceId.Find(L"urn:upnp-org:serviceId:WANEthLinkC") == -1) ||
-		          !(strServiceId.Find(L"urn:upnp-org:serviceId:WANDSLLinkC") == -1);
+		m_bADSL = !(strServiceId.Find(_T("urn:upnp-org:serviceId:WANEthLinkC")) == -1) ||
+		          !(strServiceId.Find(_T("urn:upnp-org:serviceId:WANDSLLinkC")) == -1);
 	}
 
-	bool bPPP = stristr(strServiceId, L"urn:upnp-org:serviceId:WANPPPC") != NULL;
-	bool bIP = stristr(strServiceId, L"urn:upnp-org:serviceId:WANIPC") != NULL;
+	bool bPPP = stristr(strServiceId, _T("urn:upnp-org:serviceId:WANPPPC")) != NULL;
+	bool bIP = stristr(strServiceId, _T("urn:upnp-org:serviceId:WANIPC")) != NULL;
 
 	if (((thePrefs.GetSkipWANPPPSetup() || m_bDisableWANPPPSetup) && bPPP) ||
 	    ((thePrefs.GetSkipWANIPSetup() || m_bDisableWANIPSetup) && bIP) ||
@@ -551,14 +551,14 @@ HRESULT CUPnPImplWinServ::MapPort(const ServicePointer& service)
 	//		|ConnectionStatus|LastConnectionError|Uptime|
 
 	CString strResult;
-	hr = InvokeAction(service, L"GetStatusInfo", NULL, strResult);
+	hr = InvokeAction(service, _T("GetStatusInfo"), NULL, strResult);
 
 	if (strResult.IsEmpty())
 		return hr;
 
 	DebugLog(_T("Got status info from the service %s: %s"), (LPCTSTR)strServiceId, (LPCTSTR)strResult);
 
-	if (stristr(strResult, L"|VT_BSTR=Connected|") != NULL) {
+	if (stristr(strResult, _T("|VT_BSTR=Connected|")) != NULL) {
 		// Add a callback to detect device status changes
 		// ??? How it will work if two devices are active ???
 		hr = service->AddCallback(m_pServiceCallback);
@@ -574,12 +574,12 @@ HRESULT CUPnPImplWinServ::MapPort(const ServicePointer& service)
 			CreatePortMappings(service);
 			m_bUPnPDeviceConnected = TRIS_TRUE;
 		}
-	} else if (stristr(strResult, L"|VT_BSTR=Disconnected|") != NULL && m_bADSL && bPPP) {
+	} else if (stristr(strResult, _T("|VT_BSTR=Disconnected|")) != NULL && m_bADSL && bPPP) {
 		DebugLog(_T("Disconnected PPP service in ADSL device..."));
 		m_bDisableWANIPSetup = false;
 		m_bDisableWANPPPSetup = true;
 		m_ADSLFailed = true;
-	} else if (stristr(strResult, L"|VT_BSTR=Disconnected|") != NULL && m_bADSL && bIP) {
+	} else if (stristr(strResult, _T("|VT_BSTR=Disconnected|")) != NULL && m_bADSL && bIP) {
 		DebugLog(_T("Disconnected IP service in ADSL device..."));
 		m_bDisableWANIPSetup = true;
 		m_bDisableWANPPPSetup = false;
@@ -615,7 +615,7 @@ void CUPnPImplWinServ::DeletePorts()
 CString CUPnPImplWinServ::GetLocalRoutableIP(ServicePointer pService)
 {
 	CString strExternalIP;
-	HRESULT hr = InvokeAction(pService, L"GetExternalIPAddress", NULL, strExternalIP);
+	HRESULT hr = InvokeAction(pService, _T("GetExternalIPAddress"), NULL, strExternalIP);
 	int nEqualPos = strExternalIP.Find('=');
 	strExternalIP = strExternalIP.Mid(nEqualPos + 1).Trim('|');
 
@@ -672,12 +672,12 @@ CString CUPnPImplWinServ::GetLocalRoutableIP(ServicePointer pService)
 
 	// Look for IP associated with the interface in the address table
 	// Loopback addresses are functional for ICS? (at least Windows maps them fine)
-	for (DWORD nIf = 0; nIf < nCount; nIf++) {
+	for (DWORD nIf = 0; nIf < nCount; ++nIf) {
 		if (ipAddr->table[nIf].dwIndex == nInterfaceIndex) {
 			ip = ipAddr->table[nIf].dwAddr;
-			strLocalIP.Format(L"%lu.%lu.%lu.%lu", (ip & 0xff),
-			                  ((ip >> 8) & 0xff), ((ip >> 16) & 0xff),
-			                  (ip >> 24));
+			strLocalIP.Format(_T("%lu.%lu.%lu.%lu")
+							 ,(ip & 0xff), ((ip >> 8) & 0xff)
+							 ,((ip >> 16) & 0xff), (ip >> 24));
 			break;
 		}
 	}
@@ -693,13 +693,12 @@ CString CUPnPImplWinServ::GetLocalRoutableIP(ServicePointer pService)
 // this member will be used to determine if we have to create new port maps.
 void CUPnPImplWinServ::DeleteExistingPortMappings(ServicePointer pService)
 {
+	if (m_sLocalIP.IsEmpty())
+		return;
 	// Port mappings are numbered starting from 0 without gaps between;
 	// So, we will loop until we get an empty string or failure as a result.
 	CString strInArgs;
 	USHORT nEntry = 0;	// PortMappingNumberOfEntries is of type VT_UI2
-	if (m_sLocalIP.IsEmpty())
-		return;
-
 	HRESULT hr = S_OK;
 	//int nAttempts = 10;
 
@@ -712,8 +711,7 @@ void CUPnPImplWinServ::DeleteExistingPortMappings(ServicePointer pService)
 	do {
 		HRESULT hrDel = (HRESULT)-1;
 		strInArgs.Format(_T("|VT_UI2=%hu|"), nEntry);
-		hr = InvokeAction(pService,
-		                  L"GetGenericPortMappingEntry", strInArgs, strActionResult);
+		hr = InvokeAction(pService, _T("GetGenericPortMappingEntry"), strInArgs, strActionResult);
 
 		if (SUCCEEDED(hr) && !strActionResult.IsEmpty()) {
 			// It returned in the following format and order:
@@ -745,8 +743,8 @@ void CUPnPImplWinServ::DeleteExistingPortMappings(ServicePointer pService)
 				break;
 			}
 
-			if (stristr(strActionResult, L"|VT_BSTR=eMule TCP|") != NULL ||
-			    stristr(strActionResult, L"|VT_BSTR=eMule UDP|") != NULL) {
+			if (stristr(strActionResult, _T("|VT_BSTR=eMule TCP|")) != NULL ||
+			    stristr(strActionResult, _T("|VT_BSTR=eMule UDP|")) != NULL) {
 
 
 				strHost = _T('|') + oTokens[0];
@@ -754,15 +752,15 @@ void CUPnPImplWinServ::DeleteExistingPortMappings(ServicePointer pService)
 				strProtocol = _T('|') + oTokens[2] + _T('|');
 
 				// verify types
-				if (stristr(strHost, L"VT_BSTR") == NULL
-				    || stristr(strPort, L"VT_UI2") == NULL
-				    || stristr(strProtocol, L"VT_BSTR") == NULL)
+				if (stristr(strHost, _T("VT_BSTR")) == NULL
+				    || stristr(strPort, _T("VT_UI2")) == NULL
+				    || stristr(strProtocol, _T("VT_BSTR")) == NULL)
 					break;
 
 				if (_tcsstr(oTokens[4], m_sLocalIP) != NULL ||
 				    stristr(oTokens[4], szComputerName) != NULL) {
 					CString str;
-					hrDel = InvokeAction(pService, L"DeletePortMapping",
+					hrDel = InvokeAction(pService, _T("DeletePortMapping"),
 					                     strHost + strPort + strProtocol, str);
 					if (FAILED(hrDel)) {
 						UPnPMessage(hrDel);
@@ -804,30 +802,30 @@ void CUPnPImplWinServ::CreatePortMappings(ServicePointer pService)
 
 	CString strPortTCP, strPortTCPWeb, strPortUDP, strInArgs, strFormatString, strResult;
 
-	strFormatString = L"|VT_BSTR=|VT_UI2=%s|VT_BSTR=%s|VT_UI2=%s|VT_BSTR=%s|"
-	                  L"VT_BOOL=True|VT_BSTR=eMule %s|VT_UI4=0|";
+	strFormatString = _T("|VT_BSTR=|VT_UI2=%s|VT_BSTR=%s|VT_UI2=%s|VT_BSTR=%s|")
+	                  _T("VT_BOOL=True|VT_BSTR=eMule %s|VT_UI4=0|");
 
-	strPortTCP.Format(L"%hu", m_nTCPPort);
-	strPortTCPWeb.Format(L"%hu", m_nTCPWebPort);
-	strPortUDP.Format(L"%hu", m_nUDPPort);
+	strPortTCP.Format(_T("%hu"), m_nTCPPort);
+	strPortTCPWeb.Format(_T("%hu"), m_nTCPWebPort);
+	strPortUDP.Format(_T("%hu"), m_nUDPPort);
 
 	// First map UDP if some buggy router overwrites TCP on top
 	HRESULT hr;
 	if (m_nUDPPort != 0) {
-		strInArgs.Format(strFormatString, (LPCTSTR)strPortUDP, L"UDP", (LPCTSTR)strPortUDP, (LPCTSTR)m_sLocalIP, L"UDP");
-		hr = InvokeAction(pService, L"AddPortMapping", strInArgs, strResult);
+		strInArgs.Format(strFormatString, (LPCTSTR)strPortUDP, _T("UDP"), (LPCTSTR)strPortUDP, (LPCTSTR)m_sLocalIP, _T("UDP"));
+		hr = InvokeAction(pService, _T("AddPortMapping"), strInArgs, strResult);
 		if (FAILED(hr))
 			return (void)UPnPMessage(hr);
 	}
 
-	strInArgs.Format(strFormatString, (LPCTSTR)strPortTCP, L"TCP", (LPCTSTR)strPortTCP, (LPCTSTR)m_sLocalIP, L"TCP");
-	hr = InvokeAction(pService, L"AddPortMapping", strInArgs, strResult);
+	strInArgs.Format(strFormatString, (LPCTSTR)strPortTCP, _T("TCP"), (LPCTSTR)strPortTCP, (LPCTSTR)m_sLocalIP, _T("TCP"));
+	hr = InvokeAction(pService, _T("AddPortMapping"), strInArgs, strResult);
 	if (FAILED(hr))
 		return (void)UPnPMessage(hr);
 
 	if (m_nTCPWebPort != 0) {
-		strInArgs.Format(strFormatString, (LPCTSTR)strPortTCPWeb, L"TCP", (LPCTSTR)strPortTCPWeb, (LPCTSTR)m_sLocalIP, L"TCP");
-		hr = InvokeAction(pService, L"AddPortMapping", strInArgs, strResult);
+		strInArgs.Format(strFormatString, (LPCTSTR)strPortTCPWeb, _T("TCP"), (LPCTSTR)strPortTCPWeb, (LPCTSTR)m_sLocalIP, _T("TCP"));
+		hr = InvokeAction(pService, _T("AddPortMapping"), strInArgs, strResult);
 		if (FAILED(hr))
 			DebugLogWarning(_T("UPnP: WinServImpl: Mapping Port for Webinterface failed, continuing anyway"));
 	}
@@ -887,13 +885,13 @@ HRESULT CUPnPImplWinServ::InvokeAction(ServicePointer pService,
 			bool bInvalid = false;
 
 			if (vaRet.vt == VT_BSTR)
-				strResult = L"|VT_BSTR=";
+				strResult = _T("|VT_BSTR=");
 			else if (vaRet.vt == VT_UI2)
-				strResult = L"|VT_UI2=";
+				strResult = _T("|VT_UI2=");
 			else if (vaRet.vt == VT_UI4)
-				strResult = L"|VT_UI4=";
+				strResult = _T("|VT_UI4=");
 			else if (vaRet.vt == VT_BOOL)
-				strResult = L"|VT_BOOL=";
+				strResult = _T("|VT_BOOL=");
 			else
 				bInvalid = true;
 
@@ -902,7 +900,7 @@ HRESULT CUPnPImplWinServ::InvokeAction(ServicePointer pService,
 				if (SUCCEEDED(hr)) {
 					CString str(vaRet.bstrVal);
 					strResult += str;
-					strResult += L"|";
+					strResult += _T('|');
 				} else strResult.Empty();
 			}
 		} else
@@ -1041,13 +1039,13 @@ LONG CUPnPImplWinServ::GetStringFromOutArgs(const VARIANT *pvaOutArgs, CString& 
 
 			if (SUCCEEDED(hr)) {
 				if (vaOutElement.vt == VT_BSTR)
-					strToken = L"VT_BSTR=";
+					strToken = _T("VT_BSTR=");
 				else if (vaOutElement.vt == VT_UI2)
-					strToken = L"VT_UI2=";
+					strToken = _T("VT_UI2=");
 				else if (vaOutElement.vt == VT_UI4)
-					strToken = L"VT_UI4=";
+					strToken = _T("VT_UI4=");
 				else if (vaOutElement.vt == VT_BOOL)
-					strToken = L"VT_BOOL=";
+					strToken = _T("VT_BOOL=");
 				else {
 					bInvalid = true;
 					break;
@@ -1058,7 +1056,7 @@ LONG CUPnPImplWinServ::GetStringFromOutArgs(const VARIANT *pvaOutArgs, CString& 
 				if (SUCCEEDED(hr)) {
 					CString str(vaOutElement.bstrVal);
 					strToken += str;
-					strToken += L"|";
+					strToken += _T('|');
 					strResult += strToken;
 				} else bInvalid = true;
 			} else
@@ -1114,7 +1112,7 @@ void CUPnPImplWinServ::DestroyVars(const INT_PTR nCount, VARIANT ***pppVars)
 // nFindData--AsyncFindHandle; pDevice--COM interface pointer of the device being added
 HRESULT __stdcall CDeviceFinderCallback::DeviceAdded(LONG /*nFindData*/, IUPnPDevice * pDevice)
 {
-	ATLTRACE2(atlTraceCOM, 1, L"Device Added\n");
+	ATLTRACE2(atlTraceCOM, 1, _T("Device Added\n"));
 	m_instance.AddDevice(pDevice, true);
 	return S_OK;
 }
@@ -1123,7 +1121,7 @@ HRESULT __stdcall CDeviceFinderCallback::DeviceAdded(LONG /*nFindData*/, IUPnPDe
 // nFindData--AsyncFindHandle; bsUDN--UDN of the device being removed
 HRESULT __stdcall CDeviceFinderCallback::DeviceRemoved(LONG /*nFindData*/, BSTR bsUDN)
 {
-	ATLTRACE2(atlTraceCOM, 1, "Device Removed: %s\n", bsUDN);
+	ATLTRACE2(atlTraceCOM, 1, _T("Device Removed: %s\n"), bsUDN);
 	m_instance.RemoveDevice(bsUDN);
 	return S_OK;
 }
@@ -1181,7 +1179,7 @@ HRESULT __stdcall CServiceCallback::StateVariableChanged(IUPnPService * pService
                                                          LPCWSTR pszStateVarName, VARIANT varValue)
 {
 	CComBSTR bsServiceId;
-	m_instance.m_tLastEvent = GetTickCount();
+	m_instance.m_tLastEvent = ::GetTickCount();
 
 	HRESULT hr = pService->get_Id(&bsServiceId);
 	if (!FAILED(hr))
@@ -1195,16 +1193,16 @@ HRESULT __stdcall CServiceCallback::StateVariableChanged(IUPnPService * pService
 	// We are not interested in the initial values; we will request them explicitly
 	if (!m_instance.IsAsyncFindRunning()) {
 		if (_wcsicmp(pszStateVarName, L"ConnectionStatus") == 0) {
-			m_instance.m_bUPnPDeviceConnected = strValue.CompareNoCase(L"Disconnected") == 0
+			m_instance.m_bUPnPDeviceConnected = strValue.CompareNoCase(_T("Disconnected")) == 0
 			                                    ? TRIS_FALSE
-							    : (strValue.CompareNoCase(L"Connected") == 0)
+							    : (strValue.CompareNoCase(_T("Connected")) == 0)
 			                                    ? TRIS_TRUE
 							    : TRIS_UNKNOWN;
 		}
 	}
 
 	DebugLog(_T("UPnP device state variable %s changed to %s in %s"),
-	         pszStateVarName, strValue.IsEmpty() ? L"NULL" : strValue.GetString(), bsServiceId.m_str);
+	         pszStateVarName, strValue.IsEmpty() ? _T("NULL") : strValue.GetString(), bsServiceId.m_str);
 
 	return hr;
 }
@@ -1216,7 +1214,7 @@ HRESULT __stdcall CServiceCallback::ServiceInstanceDied(IUPnPService * pService)
 
 	HRESULT hr = pService->get_Id(&bsServiceId);
 	if (SUCCEEDED(hr)) {
-		DebugLogError(_T("UPnP service %s died"), bsServiceId);
+		DebugLogError(_T("UPnP service %ls died"), (LPCWSTR)bsServiceId);
 		return hr;
 	}
 

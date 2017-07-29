@@ -732,7 +732,7 @@ void CPartFileConvertDlg::RemoveSel()
 	for (POSITION pos = joblist.GetFirstSelectedItemPosition(); pos != NULL;) {
 		int index = joblist.GetNextSelectedItem(pos);
 		if (index > -1) {
-			ConvertJob *job = (ConvertJob*)joblist.GetItemData(index);
+			ConvertJob *job = reinterpret_cast<ConvertJob *>(joblist.GetItemData(index));
 			if (job->state != CONV_INPROGRESS) {
 				RemoveJob(job); // from list
 				CPartFileConvert::RemoveJob(job);
@@ -750,7 +750,7 @@ void CPartFileConvertDlg::RetrySel()
 	for (POSITION pos = joblist.GetFirstSelectedItemPosition(); pos != NULL;) {
 		int index = joblist.GetNextSelectedItem(pos);
 		if (index > -1) {
-			ConvertJob* job = (ConvertJob*)joblist.GetItemData(index);
+			ConvertJob* job = reinterpret_cast<ConvertJob *>(joblist.GetItemData(index));
 			if (job->state != CONV_OK && job->state !=CONV_INPROGRESS) {
 				UpdateJobInfo(job);
 				job->state = CONV_QUEUE;

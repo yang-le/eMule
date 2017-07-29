@@ -235,7 +235,8 @@ void CIPFilterDlg::InitIPFilters()
 {
 	CWaitCursor curWait;
 
-	m_uIPFilterItems = 0;
+//	m_uIPFilterItems = 0;
+	m_ulFilteredIPs = 0;
 	free(m_ppIPFilterItems);
 	m_ppIPFilterItems = NULL;
 
@@ -244,14 +245,12 @@ void CIPFilterDlg::InitIPFilters()
 	m_ppIPFilterItems = (const SIPFilter**)malloc(sizeof(*m_ppIPFilterItems) * m_uIPFilterItems);
 	if (m_ppIPFilterItems == NULL)
 		m_uIPFilterItems = 0;
-
-	m_ulFilteredIPs = 0;
-	for (UINT i = 0; i < m_uIPFilterItems; i++)
-	{
-		const SIPFilter* pFilter = ipfilter[i];
-		m_ppIPFilterItems[i] = pFilter;
-		m_ulFilteredIPs += pFilter->end - pFilter->start + 1;
-	}
+	else
+		for (UINT i = 0; i < m_uIPFilterItems; ++i) {
+			const SIPFilter* pFilter = ipfilter[i];
+			m_ppIPFilterItems[i] = pFilter;
+			m_ulFilteredIPs += pFilter->end - pFilter->start + 1;
+		}
 	SortIPFilterItems();
 	m_ipfilter.SetItemCount(m_uIPFilterItems);
 	SetDlgItemText(IDC_TOTAL_IPFILTER, GetFormatedUInt(m_uIPFilterItems));

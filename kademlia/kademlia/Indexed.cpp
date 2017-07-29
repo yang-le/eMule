@@ -1007,7 +1007,7 @@ int CIndexed::CLoadDataThread::Run()
 	try
 	{
 		uint32 uTotalLoad = 0;
-		uint32 uTotalSource = 0;
+//		uint32 uTotalSource = 0;
 		uint32 uTotalKeyword = 0;
 		CUInt128 uKeyID, uID, uSourceID;
 
@@ -1124,6 +1124,7 @@ int CIndexed::CLoadDataThread::Run()
 			{
 				setvbuf(fileSource.m_pStream, NULL, _IOFBF, 32768);
 
+				uint32 uTotalSource = 0;
 				uint32 uVersion = fileSource.ReadUInt32();
 				if( uVersion < 3 )
 				{

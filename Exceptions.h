@@ -44,10 +44,8 @@ class CMsgBoxException : public CException
 	DECLARE_DYNAMIC(CMsgBoxException)
 public:
 	explicit CMsgBoxException(LPCTSTR pszMsg, UINT uType = MB_ICONWARNING, UINT uHelpID = 0)
+		: m_strMsg(pszMsg), m_uType(uType), m_uHelpID(uHelpID)
 	{
-		m_strMsg = pszMsg;
-		m_uType = uType;
-		m_uHelpID = uHelpID;
 	}
 
 	CString m_strMsg;
@@ -60,9 +58,8 @@ class CClientException : public CException
 	DECLARE_DYNAMIC(CClientException)
 public:
 	CClientException(LPCTSTR pszMsg, bool bDelete)
+		: m_strMsg(pszMsg), m_bDelete(bDelete)
 	{
-		m_strMsg = pszMsg;
-		m_bDelete = bDelete;
 	}
 
 	CString m_strMsg;

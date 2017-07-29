@@ -82,7 +82,7 @@ public:
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Base
 	explicit CUpDownClient(CClientReqSocket* sender = 0);
-	CUpDownClient(CPartFile* in_reqfile, uint16 in_port, uint32 in_userid, uint32 in_serverup, uint16 in_serverport, bool ed2kID = false);
+	CUpDownClient(CPartFile* in_reqfile, uint16 in_port, uint32 in_userid, uint32 in_serverip, uint16 in_serverport, bool ed2kID = false);
 	virtual ~CUpDownClient();
 
 	void			StartDownload();
@@ -117,11 +117,11 @@ public:
 	uint16			GetServerPort() const							{ return m_nServerPort; }
 	void			SetServerPort(uint16 nPort)						{ m_nServerPort = nPort; }
 	const uchar*	GetUserHash() const								{ return (uchar*)m_achUserHash; }
-	void			SetUserHash(const uchar* pUserHash);
+	void			SetUserHash(const uchar* pucUserHash);
 	bool			HasValidHash() const							{ return !isnulmd4(m_achUserHash); }
 	int				GetHashType() const;
 	const uchar*	GetBuddyID() const								{ return (uchar*)m_achBuddyID; }
-	void			SetBuddyID(const uchar* m_achTempBuddyID);
+	void			SetBuddyID(const uchar* pucBuddyID);
 	bool			HasValidBuddyID() const							{ return m_bBuddyIDValid; }
 	void			SetBuddyIP( uint32 val )						{ m_nBuddyIP = val; }
 	uint32			GetBuddyIP() const								{ return m_nBuddyIP; }
@@ -154,17 +154,17 @@ public:
 	void			SetKadPort(uint16 nPort)						{ m_nKadPort = nPort; }
 	uint8			GetExtendedRequestsVersion() const				{ return m_byExtendedRequestsVer; }
 	void			RequestSharedFileList();
-	void			ProcessSharedFileList(const uchar* pachPacket, UINT nSize, LPCTSTR pszDirectory = NULL);
+	void			ProcessSharedFileList(const uchar* pachPacket, uint32 nSize, LPCTSTR pszDirectory = NULL);
 	EConnectingState GetConnectingState() const						{ return (EConnectingState)m_nConnectingState; }
 
 	void			ClearHelloProperties();
-	bool			ProcessHelloAnswer(const uchar* pachPacket, UINT nSize);
-	bool			ProcessHelloPacket(const uchar* pachPacket, UINT nSize);
+	bool			ProcessHelloAnswer(const uchar* pachPacket, uint32 nSize);
+	bool			ProcessHelloPacket(const uchar* pachPacket, uint32 nSize);
 	void			SendHelloAnswer();
 	virtual void	SendHelloPacket();
 	void			SendMuleInfoPacket(bool bAnswer);
-	void			ProcessMuleInfoPacket(const uchar* pachPacket, UINT nSize);
-	void			ProcessMuleCommentPacket(const uchar* pachPacket, UINT nSize);
+	void			ProcessMuleInfoPacket(const uchar* pachPacket, uint32 nSize);
+	void			ProcessMuleCommentPacket(const uchar* pachPacket, uint32 nSize);
 	void			ProcessEmuleQueueRank(const uchar* packet, UINT size);
 	void			ProcessEdonkeyQueueRank(const uchar* packet, UINT size);
 	void			CheckQueueRankFlood();
@@ -195,19 +195,19 @@ public:
 	// secure ident
 	void			SendPublicKeyPacket();
 	void			SendSignaturePacket();
-	void			ProcessPublicKeyPacket(const uchar* pachPacket, UINT nSize);
-	void			ProcessSignaturePacket(const uchar* pachPacket, UINT nSize);
+	void			ProcessPublicKeyPacket(const uchar* pachPacket, uint32 nSize);
+	void			ProcessSignaturePacket(const uchar* pachPacket, uint32 nSize);
 	uint8			GetSecureIdentState() const						{ return (uint8)m_SecureIdentState; }
 	void			SendSecIdentStatePacket();
-	void			ProcessSecIdentStatePacket(const uchar* pachPacket, UINT nSize);
+	void			ProcessSecIdentStatePacket(const uchar* pachPacket, uint32 nSize);
 	uint8			GetInfoPacketsReceived() const					{ return m_byInfopacketsReceived; }
 	void			InfoPacketsReceived();
 	bool			HasPassedSecureIdent(bool bPassIfUnavailable) const;
 	// preview
 	void			SendPreviewRequest(const CAbstractFile* pForFile);
 	void			SendPreviewAnswer(const CKnownFile* pForFile, CxImage** imgFrames, uint8 nCount);
-	void			ProcessPreviewReq(const uchar* pachPacket, UINT nSize);
-	void			ProcessPreviewAnswer(const uchar* pachPacket, UINT nSize);
+	void			ProcessPreviewReq(const uchar* pachPacket, uint32 nSize);
+	void			ProcessPreviewAnswer(const uchar* pachPacket, uint32 nSize);
 	bool			GetPreviewSupport() const						{ return m_fSupportsPreview && GetViewSharedFilesSupport(); }
 	bool			GetViewSharedFilesSupport() const				{ return m_fNoViewSharedFiles==0; }
 	bool			SafeConnectAndSendPacket(Packet* packet);
@@ -311,19 +311,19 @@ public:
 	void			SendStartupLoadReq();
 	void			ProcessFileInfo(CSafeMemFile* data, CPartFile* file);
 	void			ProcessFileStatus(bool bUdpPacket, CSafeMemFile* data, CPartFile* file);
-	void			ProcessHashSet(const uchar* data, UINT size, bool bFileIdentifiers);
+	void			ProcessHashSet(const uchar* packet, uint32 size, bool bFileIdentifiers);
 	void			ProcessAcceptUpload();
 	bool			AddRequestForAnotherFile(CPartFile* file);
 	void			CreateBlockRequests(int iMinBlocks, int iMaxBlocks);
 	virtual void	SendBlockRequests();
 	virtual bool	SendHttpBlockRequests();
-	virtual void	ProcessBlockPacket(const uchar* packet, UINT size, bool packed, bool bI64Offsets);
+	virtual void	ProcessBlockPacket(const uchar* packet, uint32 size, bool packed, bool bI64Offsets);
 	virtual void	ProcessHttpBlockPacket(const BYTE* pucData, UINT uSize);
 	void			ClearDownloadBlockRequests();
 	void			SendOutOfPartReqsAndAddToWaitingQueue();
 	UINT			CalculateDownloadRate();
 	uint16			GetAvailablePartCount() const;
-	bool			SwapToAnotherFile(LPCTSTR pszReason, bool bIgnoreNoNeeded, bool ignoreSuspensions, bool bRemoveCompletely, CPartFile* toFile = NULL, bool allowSame = true, bool isAboutToAsk = false, bool debug = false); // ZZ:DownloadManager
+	bool			SwapToAnotherFile(LPCTSTR reason, bool bIgnoreNoNeeded, bool ignoreSuspensions, bool bRemoveCompletely, CPartFile* toFile = NULL, bool allowSame = true, bool isAboutToAsk = false, bool debug = false); // ZZ:DownloadManager
 	void			DontSwapTo(/*const*/ CPartFile* file);
 	bool			IsSwapSuspended(const CPartFile* file, const bool allowShortReaskTime = false, const bool fileIsNNP = false) /*const*/; // ZZ:DownloadManager
 	uint32			GetTimeUntilReask() const;
@@ -391,7 +391,7 @@ public:
 	void			SetFileRating(uint8 uRating)					{ m_uFileRating = uRating; }
 
 	// Barry - Process zip file as it arrives, don't need to wait until end of block
-	int				unzip(Pending_Block_Struct *block, const BYTE *zipped, UINT lenZipped, BYTE **unzipped, UINT *lenUnzipped, int iRecursion = 0);
+	int				unzip(Pending_Block_Struct *block, const BYTE *zipped, uint32 lenZipped, BYTE **unzipped, uint32 *lenUnzipped, int iRecursion = 0);
 	void			UpdateDisplayedInfo(bool force = false);
 	int				GetFileListRequested() const					{ return m_iFileListRequested; }
 	void			SetFileListRequested(int iFileListRequested)	{ m_iFileListRequested = iFileListRequested; }
@@ -424,8 +424,9 @@ public:
 
 // ZZ:DownloadManager -->
 	const bool		IsInNoNeededList(const CPartFile* fileToCheck) const;
-	const bool		SwapToRightFile(CPartFile* SwapTo, CPartFile* cur_file, bool ignoreSuspensions, bool SwapToIsNNPFile, bool isNNPFile, bool& wasSkippedDueToSourceExchange, bool doAgressiveSwapping = false, bool debug = false);
-	const DWORD		getLastTriedToConnectTime() { return m_dwLastTriedToConnect; }
+	const bool		SwapToRightFile(CPartFile* SwapTo, CPartFile* cur_file, bool ignoreSuspensions, bool SwapToIsNNPFile, bool curFileisNNPFile, bool& wasSkippedDueToSourceExchange, bool doAgressiveSwapping = false, bool debug = false);
+	const DWORD		getLastTriedToConnectTime() const { return m_dwLastTriedToConnect; }
+	void			setLastTriedToConnectTime() { m_dwLastTriedToConnect = ::GetTickCount(); }
 // <-- ZZ:DownloadManager
 
 #ifdef _DEBUG
@@ -688,7 +689,7 @@ protected:
 	DWORD   lastSwapForSourceExchangeTick; // ZZ:DownloadManaager
 	bool	DoSwap(CPartFile* SwapTo, bool bRemoveCompletely, LPCTSTR reason); // ZZ:DownloadManager
 	CMap<CPartFile*, CPartFile*, DWORD, DWORD> m_fileReaskTimes; // ZZ:DownloadManager (one resk timestamp for each file)
-	DWORD   m_dwLastTriedToConnect; // ZZ:DownloadManager (one resk timestamp for each file)
+	DWORD   m_dwLastTriedToConnect; // ZZ:DownloadManager (one reask timestamp for each file)
 	bool	RecentlySwappedForSourceExchange() { return ::GetTickCount()-lastSwapForSourceExchangeTick < SEC2MS(30); } // ZZ:DownloadManager
 	void	SetSwapForSourceExchangeTick() { lastSwapForSourceExchangeTick = ::GetTickCount(); } // ZZ:DownloadManager
 };

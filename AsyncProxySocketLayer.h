@@ -189,11 +189,11 @@ private:
 	u_long m_nProxyPeerIP;	//IP of the server you are connected to, retrieve via GetPeerName
 	typedef struct
 	{
-		int			nProxyType;
 		CStringA	strProxyHost;
-		int			nProxyPort;
 		CStringA	strProxyUser;
 		CStringA	strProxyPass;
+		int			nProxyType;
+		int			nProxyPort;
 		BOOL		bUseLogon;
 	} t_proxydata;			//This structure will be used to hold the proxy details
 	t_proxydata m_ProxyData;//Structure to hold the data set by SetProxy

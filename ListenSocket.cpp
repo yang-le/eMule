@@ -2220,10 +2220,10 @@ int FilterSE(DWORD dwExCode, LPEXCEPTION_POINTERS pExPtrs, CClientReqSocket* req
 		CString strExError;
 		if (pExPtrs){
 			const EXCEPTION_RECORD* er = pExPtrs->ExceptionRecord;
-			strExError.Format(_T("Error: Unknown exception %08x in CClientReqSocket::PacketReceived at %p"), er->ExceptionCode, er->ExceptionAddress);
+			strExError.Format(_T("Error: Unknown exception %08lx in CClientReqSocket::PacketReceived at %p"), er->ExceptionCode, er->ExceptionAddress);
 		}
 		else
-			strExError.Format(_T("Error: Unknown exception %08x in CClientReqSocket::PacketReceived"), dwExCode);
+			strExError.Format(_T("Error: Unknown exception %08lx in CClientReqSocket::PacketReceived"), dwExCode);
 
 		// we already had an unknown exception, better be prepared for dealing with invalid data -> use another exception handler
 		try{
@@ -2234,7 +2234,7 @@ int FilterSE(DWORD dwExCode, LPEXCEPTION_POINTERS pExPtrs, CClientReqSocket* req
 		}
 		catch(...){
 			ASSERT(0);
-			DebugLogError(_T("%s"), strExError);
+			DebugLogError(_T("%s"), (LPCTSTR)strExError);
 		}
 	}
 

@@ -721,9 +721,9 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 	// If a section is not expanded, don't waste CPU cycles updating it.
 	if (forceUpdate || stattree.IsExpanded(h_transfer))
 	{
-		uint32	statGoodSessions =				0;
-		uint32	statBadSessions =				0;
-		double	percentSessions =				0;
+		uint32	statGoodSessions =	0;
+		uint32	statBadSessions =	0;
+		double	percentSessions =	0;
 		// Transfer Ratios
 		if ( theStats.sessionReceivedBytes>0 && theStats.sessionSentBytes>0 )
 		{
@@ -803,8 +803,8 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 					if (forceUpdate || stattree.IsExpanded(hdown_scb))
 					{
 						int i = 0;
-						uint64 DownDataTotal =		thePrefs.GetDownSessionClientData();
-						uint64 DownDataClient =		thePrefs.GetDownData_EMULE();
+						uint64 DownDataTotal =	thePrefs.GetDownSessionClientData();
+						uint64 DownDataClient =	thePrefs.GetDownData_EMULE();
 						double percentClientTransferred = 0;
 						if ( DownDataTotal!=0 && DownDataClient!=0 )
 							percentClientTransferred = 100.0 * DownDataClient / DownDataTotal;
@@ -1084,8 +1084,8 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 					if (forceUpdate || stattree.IsExpanded(hdown_tcb))
 					{
 						int i = 0;
-						uint64 DownDataTotal =		thePrefs.GetDownTotalClientData();
-						uint64 DownDataClient =		thePrefs.GetCumDownData_EMULE();
+						uint64 DownDataTotal =	thePrefs.GetDownTotalClientData();
+						uint64 DownDataClient =	thePrefs.GetCumDownData_EMULE();
 						double percentClientTransferred = 0;
 						if ( DownDataTotal!=0 && DownDataClient!=0 )
 							percentClientTransferred = 100.0 * DownDataClient / DownDataTotal;
@@ -1303,8 +1303,8 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 					if (forceUpdate || stattree.IsExpanded(hup_scb))
 					{
 						int i = 0;
-						uint64 UpDataTotal =		thePrefs.GetUpSessionClientData();
-						uint64 UpDataClient =		thePrefs.GetUpData_EMULE();
+						uint64 UpDataTotal =	thePrefs.GetUpSessionClientData();
+						uint64 UpDataClient =	thePrefs.GetUpData_EMULE();
 						double percentClientTransferred = 0;
 						if ( UpDataTotal!=0 && UpDataClient!=0 )
 							percentClientTransferred = 100.0 * UpDataClient / UpDataTotal;
@@ -1402,7 +1402,7 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 						int i = 0;
 						uint64	DataSourceFile =	thePrefs.GetUpData_File();
 						uint64	DataSourcePF =		thePrefs.GetUpData_Partfile();
-						uint64	DataSourceTotal =		thePrefs.GetUpSessionDataFile();
+						uint64	DataSourceTotal =	thePrefs.GetUpSessionDataFile();
 						double	percentFileTransferred = 0;
 
 						if ( DataSourceTotal!=0 && DataSourceFile!=0 )
@@ -1521,8 +1521,8 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 					if (forceUpdate || stattree.IsExpanded(hup_tcb))
 					{
 						int i = 0;
-						uint64 UpDataTotal =		thePrefs.GetUpTotalClientData();
-						uint64 UpDataClient =		thePrefs.GetCumUpData_EMULE();
+						uint64 UpDataTotal =	thePrefs.GetUpTotalClientData();
+						uint64 UpDataClient =	thePrefs.GetCumUpData_EMULE();
 						double percentClientTransferred = 0;
 						if ( UpDataTotal!=0 && UpDataClient!=0 )
 							percentClientTransferred = 100.0 * UpDataClient / UpDataTotal;
@@ -1764,7 +1764,7 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 				}
 				else if( m_itemp == 0 )
 				{
-					cbuffer.Format(_T("%s: %i"), (LPCTSTR)GetResString(IDS_SF_MAXCONLIMITREACHED), m_itemp);
+					cbuffer.Format(_T("%s: %u"), (LPCTSTR)GetResString(IDS_SF_MAXCONLIMITREACHED), m_itemp);
 					stattree.SetItemText(conn_sg[i], cbuffer);
 				}
 			} // - End Connection -> Session -> General Section
@@ -2107,11 +2107,10 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 						// Upload Sessions
 						uint32 statGoodSessions = (uint32)((theApp.uploadqueue->GetSuccessfullUpCount() + thePrefs.GetUpSuccessfulSessions() + theApp.uploadqueue->GetUploadQueueLength()) * avgModifier[mx]);
 						uint32 statBadSessions = (uint32)((theApp.uploadqueue->GetFailedUpCount() + thePrefs.GetUpFailedSessions()) * avgModifier[mx]);
-						double percentSessions;
 						cbuffer.Format(_T("%s: %u"), (LPCTSTR)GetResString(IDS_STATS_ULSES), statGoodSessions + statBadSessions);
 						stattree.SetItemText(time_aap_up[mx][1], cbuffer);
-						if (forceUpdate || stattree.IsExpanded(time_aap_up[mx][1]))
-						{
+						if (forceUpdate || stattree.IsExpanded(time_aap_up[mx][1])) {
+							double percentSessions;
 							// Set Successful Upload Sessions
 							if (statGoodSessions > 0)
 								percentSessions = (100.0*statGoodSessions)/(statGoodSessions+statBadSessions);

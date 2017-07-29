@@ -29,7 +29,7 @@ void CInputBox::OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/)
 // CMuleSystrayDlg dialog
 
 CMuleSystrayDlg::CMuleSystrayDlg(CWnd* pParent, CPoint pt, int iMaxUp, int iMaxDown, int iCurUp, int iCurDown)
-	: CDialog(CMuleSystrayDlg::IDD, pParent)
+	: CDialog(CMuleSystrayDlg::IDD, pParent), m_ptInitialPosition(pt)
 {
 	if(iCurDown == UNLIMITED)
 		iCurDown = 0;
@@ -43,7 +43,6 @@ CMuleSystrayDlg::CMuleSystrayDlg(CWnd* pParent, CPoint pt, int iMaxUp, int iMaxD
 
 	m_iMaxUp = iMaxUp;
 	m_iMaxDown = iMaxDown;
-	m_ptInitialPosition = pt;
 
 	m_hUpArrow = NULL;
 	m_hDownArrow = NULL;

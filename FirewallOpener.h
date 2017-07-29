@@ -51,11 +51,9 @@ public:
 	CICSRuleInfo() : m_nPortNumber(0), m_byProtocol(0), m_bRemoveOnExit(false)	{}
 	CICSRuleInfo(const CICSRuleInfo& ri)		{*this = ri;}
 	CICSRuleInfo(uint16 nPortNumber, uint8 byProtocol, const CString& strRuleName, bool bRemoveOnExit = false)
+		: m_nPortNumber(nPortNumber), m_byProtocol(byProtocol)
+		, m_strRuleName(strRuleName), m_bRemoveOnExit(bRemoveOnExit)
 	{
-		m_nPortNumber = nPortNumber;
-		m_byProtocol = byProtocol;
-		m_strRuleName = strRuleName;
-		m_bRemoveOnExit = bRemoveOnExit;
 	}
 
 	CICSRuleInfo& operator=(const CICSRuleInfo& ri)

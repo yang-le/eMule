@@ -46,7 +46,7 @@ END_MESSAGE_MAP()
 CKadSearchListCtrl::CKadSearchListCtrl()
 {
 	SetGeneralPurposeFind(true);
-	SetSkinKey(L"KadActionsLv");
+	SetSkinKey(_T("KadActionsLv"));
 }
 
 CKadSearchListCtrl::~CKadSearchListCtrl()

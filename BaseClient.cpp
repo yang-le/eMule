@@ -403,15 +403,12 @@ bool CUpDownClient::ProcessHelloTypePacket(CSafeMemFile* data)
 					free(m_pszUsername);
 					m_pszUsername = _tcsdup(temptag.GetStr());
 					if (bDbgInfo) {
-						if (m_pszUsername) {//filter username for bad chars
-							TCHAR* psz = m_pszUsername;
-							while (*psz != _T('\0')) {
+						if (m_pszUsername) { //filter username for bad chars
+							for (TCHAR* psz = m_pszUsername; *psz != _T('\0'); ++psz)
 								if (*psz == _T('\n') || *psz == _T('\r'))
 									*psz = _T(' ');
-								psz++;
-							}
+							m_strHelloInfo.AppendFormat(_T("\n  Name='%s'"), m_pszUsername);
 						}
-						m_strHelloInfo.AppendFormat(_T("\n  Name='%s'"), m_pszUsername);
 					}
 				}
 				else if (bDbgInfo)

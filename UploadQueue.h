@@ -49,9 +49,9 @@ public:
 	bool	IsOnUploadQueue(CUpDownClient* client)	const {return (waitinglist.Find(client) != 0);}
 	bool	IsDownloading(const CUpDownClient* client)	const {return (GetUploadingClientStructByClient(client) != NULL);}
 
-    void    UpdateDatarates();
+	void	UpdateDatarates();
 	uint32	GetDatarate() const;
-    uint32  GetToNetworkDatarate();
+	uint32  GetToNetworkDatarate() const;
 
 	bool	CheckForTimeOver(const CUpDownClient* client);
 	INT_PTR	GetWaitingUserCount() const				{return waitinglist.GetCount();}
@@ -71,7 +71,7 @@ public:
 
 	CUpDownClient*	GetWaitingClientByIP_UDP(uint32 dwIP, uint16 nUDPPort, bool bIgnorePortOnUniqueIP, bool* pbMultipleIPs = NULL);
 	CUpDownClient*	GetWaitingClientByIP(uint32 dwIP);
-	CUpDownClient*	GetNextClient(const CUpDownClient* update);
+	CUpDownClient*	GetNextClient(const CUpDownClient* lastclient);
 
 	UploadingToClient_Struct* GetUploadingClientStructByClient(const CUpDownClient* pClient) const;
 
@@ -83,17 +83,17 @@ public:
 
 	uint32	GetSuccessfullUpCount() const			{return successfullupcount;}
 	uint32	GetFailedUpCount() const				{return failedupcount;}
-	uint32	GetAverageUpTime();
+	uint32	GetAverageUpTime() const;
 
-    CUpDownClient* FindBestClientInQueue();
-    void ReSortUploadSlots(bool force = false);
+	CUpDownClient* FindBestClientInQueue();
+	void ReSortUploadSlots(bool force = false);
 
 	CUpDownClientPtrList waitinglist;
 
 protected:
 	void		RemoveFromWaitingQueue(POSITION pos, bool updatewindow);
-	bool		AcceptNewClient(bool addOnNextConnect = false);
-	bool		AcceptNewClient(INT_PTR curUploadSlots);
+	bool		AcceptNewClient(bool addOnNextConnect = false) const;
+	bool		AcceptNewClient(INT_PTR curUploadSlots) const;
 	bool		ForceNewClient(bool allowEmptyWaitingQueue = false);
 	bool		AddUpNextClient(LPCTSTR pszReason, CUpDownClient* directadd = 0);
 
@@ -102,11 +102,11 @@ protected:
 private:
 	void	UpdateMaxClientScore();
 	uint32	GetMaxClientScore() const				{return m_imaxscore;}
-    void    UpdateActiveClientsInfo(DWORD curTick);
+	void	UpdateActiveClientsInfo(DWORD curTick);
 
 	void InsertInUploadingList(CUpDownClient* newclient, bool bNoLocking = false);
-    void InsertInUploadingList(UploadingToClient_Struct* pNewClientUploadStruct, bool bNoLocking = false);
-    float GetAverageCombinedFilePrioAndCredit();
+	void InsertInUploadingList(UploadingToClient_Struct* pNewClientUploadStruct, bool bNoLocking = false);
+	float GetAverageCombinedFilePrioAndCredit();
 
 
 	// By BadWolf - Accurate Speed Measurement
@@ -120,12 +120,12 @@ private:
 	CCriticalSection		m_csUploadListMainThrdWriteOtherThrdsRead; // don't acquire other locks while having this one in any thread other than UploadDiskIOThread or make sure deadlocks are impossible
 
 	CList<uint64> average_dr_list;
-    CList<uint64> average_friend_dr_list;
+	CList<uint64> average_friend_dr_list;
 	CList<DWORD,DWORD> average_tick_list;
 	CList<int,int> activeClients_list;
-    CList<DWORD,DWORD> activeClients_tick_list;
+	CList<DWORD,DWORD> activeClients_tick_list;
 	uint32	datarate;   //datarate sent to network (including friends)
-    uint32  friendDatarate; // datarate of sent to friends (included in above total)
+	uint32  friendDatarate; // datarate of sent to friends (included in above total)
 	// By BadWolf - Accurate Speed Measurement
 
 	UINT_PTR h_timer;
@@ -137,15 +137,15 @@ private:
 
 	uint32	m_imaxscore;
 
-    DWORD   m_dwLastCalculatedAverageCombinedFilePrioAndCredit;
-    float   m_fAverageCombinedFilePrioAndCredit;
-    INT_PTR m_iHighestNumberOfFullyActivatedSlotsSinceLastCall;
-    uint32  m_MaxActiveClients;
-    uint32  m_MaxActiveClientsShortTime;
+	DWORD   m_dwLastCalculatedAverageCombinedFilePrioAndCredit;
+	float   m_fAverageCombinedFilePrioAndCredit;
+	INT_PTR m_iHighestNumberOfFullyActivatedSlotsSinceLastCall;
+	uint32  m_MaxActiveClients;
+	uint32  m_MaxActiveClientsShortTime;
 
-    DWORD   m_lastCalculatedDataRateTick;
-    uint64  m_average_dr_sum;
+	DWORD   m_lastCalculatedDataRateTick;
+	uint64  m_average_dr_sum;
 
-    DWORD   m_dwLastResortedUploadSlots;
+	DWORD   m_dwLastResortedUploadSlots;
 	bool	m_bStatisticsWaitingListDirty;
 };

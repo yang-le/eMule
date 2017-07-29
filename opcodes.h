@@ -23,12 +23,13 @@
 #define KADEMLIA_VERSION1_46c			0x01 /*45b - 46c*/
 #define KADEMLIA_VERSION2_47a			0x02 /*47a*/
 #define KADEMLIA_VERSION3_47b			0x03 /*47b*/
+#define KADEMLIA_VERSION4_47c			0x04 /*47c*/
 #define KADEMLIA_VERSION5_48a			0x05 // -0.48a
 #define KADEMLIA_VERSION6_49aBETA		0x06 // -0.49aBETA1, needs to support: OP_FWCHECKUDPREQ (!), obfuscation, direct callbacks, source type 6, UDP firewallcheck
 #define KADEMLIA_VERSION7_49a			0x07 // -0.49a needs to support OP_KAD_FWTCPCHECK_ACK, KADEMLIA_FIREWALLED2_REQ
 #define KADEMLIA_VERSION8_49b			0x08 // TAG_KADMISCOPTIONS, KADEMLIA2_HELLO_RES_ACK
 #define KADEMLIA_VERSION9_50a			0x09 // handling AICH hashes on keyword storage
-#define KADEMLIA_VERSION				0x09 // Change CT_EMULE_MISCOPTIONS2 if Kadversion becomes >= 15 (0x0F)
+#define KADEMLIA_VERSION				0x0a // Change CT_EMULE_MISCOPTIONS2 if Kadversion becomes >= 15 (0x0F)
 #define PREFFILE_VERSION				0x14	//<<-- last change: reduced .dat, by using .ini
 #define PARTFILE_VERSION				0xe0
 #define PARTFILE_SPLITTEDVERSION		0xe1

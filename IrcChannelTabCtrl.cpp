@@ -198,11 +198,11 @@ Channel* CIrcChannelTabCtrl::NewChannel(const CString& sName, Channel::EType eTy
 #ifdef DEBUG_IRC_TEXT
 		if (eType == Channel::ctStatus){
 			//pChannel->m_wndLog.AddLine(_T(":) debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug debug"));
-			m_pParent->AddColorLine(L"normal\002bold\002normal\r\n", pChannel->m_wndLog);
-			m_pParent->AddColorLine(L"\0034red\002bold\002red\r\n", pChannel->m_wndLog);
-			m_pParent->AddColorLine(L"normal\r\n", pChannel->m_wndLog);
-			m_pParent->AddColorLine(L"\0032,4red\002bold\002red\r\n", pChannel->m_wndLog);
-			m_pParent->AddColorLine(L"\017normal\r\n", pChannel->m_wndLog);
+			m_pParent->AddColorLine(_T("normal\002bold\002normal\r\n"), pChannel->m_wndLog);
+			m_pParent->AddColorLine(_T("\0034red\002bold\002red\r\n"), pChannel->m_wndLog);
+			m_pParent->AddColorLine(_T("normal\r\n"), pChannel->m_wndLog);
+			m_pParent->AddColorLine(_T("\0032,4red\002bold\002red\r\n"), pChannel->m_wndLog);
+			m_pParent->AddColorLine(_T("\017normal\r\n"), pChannel->m_wndLog);
 
 			LPCWSTR log = L"C:\\Programme\\mIRC 2\\channels\\MindForge_Sorted_X.txt";
 			FILE *fp = _wfopen(log, L"rt");

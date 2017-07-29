@@ -328,7 +328,7 @@ private:
 	static CString  _GetKadDlg(const ThreadData& Data);
 	static CString	_GetPreferences(const ThreadData& Data);
 	static CString	_GetLoginScreen(const ThreadData& Data);
-	static CString	_GetConnectedServer(const ThreadData& Data);
+//	static CString	_GetConnectedServer(const ThreadData& Data);
 	static CString 	_GetAddServerBox(const ThreadData& Data);
 	static CString	_GetCommentlist(const ThreadData& Data);
 	static void		_RemoveServer(const CString& sIP, int nPort);
@@ -336,7 +336,7 @@ private:
 	static void		_RemoveFromStatic(const CString& sIP, int nPort);
 	static uchar*	_GetFileHash(const CString& sHash, uchar *FileHash);
 
-	static CString	_GetWebSearch(const ThreadData& Data);
+//	static CString	_GetWebSearch(const ThreadData& Data);
 	static CString	_GetSearch(const ThreadData& Data);
 
 	static CString	_ParseURL(const CString& URL, const CString& fieldname);
@@ -349,13 +349,13 @@ private:
 	static CString	_GetPlainResString(UINT nID, bool noquote = true);
 	static void		_GetPlainResString(CString *pstrOut, UINT nID, bool noquote = true);
 	static int		_GzipCompress(Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen, int level);
-	CString			_LoadTemplate(const CString& sAll, const CString& sTemplateName);
+	static CString	_LoadTemplate(const CString& sAll, const CString& sTemplateName);
 	static Session	GetSessionByID(ThreadData Data,long sessionID);
 	static bool		IsSessionAdmin(ThreadData Data, const CString &strSsessionID);
 	static CString	GetPermissionDenied();
 	static CString	_GetDownloadGraph(const ThreadData& Data,const CString& filehash);
 	static void		InsertCatBox(CString &Out, int preselect, const CString& boxlabel, bool jump, bool extraCats, const CString& sSession, const CString& sFileHash, bool ed2kbox = false);
-	static CString	GetSubCatLabel(int iCat);
+	static CString	GetSubCatLabel(int cat);
 	static CString  _GetRemoteLinkAddedOk(const ThreadData& Data);
 	static CString  _GetRemoteLinkAddedFailed(const ThreadData& Data);
 	static void		_SetLastUserCat(const ThreadData& Data, long lSession, int cat);

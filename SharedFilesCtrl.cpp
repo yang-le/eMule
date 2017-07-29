@@ -242,7 +242,7 @@ CSharedFilesCtrl::CSharedFilesCtrl()
 	m_pDirectoryFilter = NULL;
 	SetGeneralPurposeFind(true);
 	m_pToolTip = new CToolTipCtrlX;
-	SetSkinKey(L"SharedFilesLv");
+	SetSkinKey(_T("SharedFilesLv"));
 	m_pHighlightedItem = NULL;
 }
 
@@ -1646,24 +1646,17 @@ bool CSharedFilesCtrl::IsFilteredItem(const CShareableFile* pFile) const
 	GetItemDisplayText(pFile, theApp.emuledlg->sharedfileswnd->GetFilterColumn(),
 					   szFilterTarget, _countof(szFilterTarget));
 
-	bool bItemFiltered = false;
-	for (int i = 0; i < rastrFilter.GetSize(); i++)
-	{
-		const CString& rstrExpr = rastrFilter[i];
-		bool bAnd = true;
-		LPCTSTR pszText = (LPCTSTR)rstrExpr;
-		if (pszText[0] == _T('-')) {
-			pszText += 1;
-			bAnd = false;
-		}
+	for (int i = 0; i < rastrFilter.GetSize(); ++i) {
+		LPCTSTR pszText = (LPCTSTR)rastrFilter[i];
+		bool bAnd = (pszText[0] != _T('-'));
+		if (!bAnd)
+			++pszText;
 
 		bool bFound = (stristr(szFilterTarget, pszText) != NULL);
-		if ((bAnd && !bFound) || (!bAnd && bFound)) {
-			bItemFiltered = true;
-			break;
-		}
+		if (bAnd != bFound)
+			return true;
 	}
-	return bItemFiltered;
+	return false;
 }
 
 void CSharedFilesCtrl::SetToolTipsDelay(DWORD dwDelay)

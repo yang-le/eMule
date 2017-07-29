@@ -97,9 +97,8 @@ private:
 	HTREEITEM h_total_size_left_on_drive;
 	HTREEITEM h_total_size_needed;
 
-	void SetupLegend( int ResIdx, int ElmtIdx, int legendNr);
-	void SetStatsRanges(int min, int max);
-
+//	void SetupLegend( int ResIdx, int ElmtIdx, int legendNr);
+//	void SetStatsRanges(int min, int max);
 
 	int		m_oldcx;
 	int		m_oldcy;

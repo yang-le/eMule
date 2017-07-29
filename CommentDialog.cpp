@@ -271,12 +271,12 @@ void CCommentDialog::RefreshData(bool deleteOld)
 	bool kadsearchable = true;
     for (int i = 0; i < m_paFiles->GetSize(); i++)
     {
-		CAbstractFile* file = STATIC_DOWNCAST(CAbstractFile, (*m_paFiles)[i]);
+		CAbstractFile* file = static_cast<CAbstractFile *>((*m_paFiles)[i]);
 		if (file->IsPartFile())
 		{
-			for (POSITION pos = ((CPartFile*)file)->srclist.GetHeadPosition(); pos != NULL; )
+			for (POSITION pos = static_cast<CPartFile *>(file)->srclist.GetHeadPosition(); pos != NULL; )
 			{
-				CUpDownClient* cur_src = ((CPartFile*)file)->srclist.GetNext(pos);
+				CUpDownClient* cur_src = static_cast<CPartFile *>(file)->srclist.GetNext(pos);
 				if (cur_src->HasFileRating() || !cur_src->GetFileComment().IsEmpty())
 					m_lstComments.AddItem(cur_src);
 			}

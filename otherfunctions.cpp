@@ -3920,9 +3920,9 @@ ULONG GetBestInterfaceIP(const ULONG dest_addr)
 				if (dwError == NO_ERROR)
 					bestInterfaceIP = saBestInterfaceAddress.Ipv4.sin_addr.S_un.S_addr;
 				else
-					DebugLogError(_T(__FUNCTION__) _T(": Failed to retrieve best route source ip address to destination %s: %s"), ipstr(dest_addr), GetErrorMessage(dwError, 1));
+					DebugLogError(_T(__FUNCTION__) _T(": Failed to retrieve best route source ip address to destination %s: %s"), (LPCTSTR)ipstr(dest_addr), (LPCTSTR)GetErrorMessage(dwError, 1));
 			} else
-				DebugLogError(_T(__FUNCTION__) _T(": Failed to retrieve best interface index for destination %s: %s"), ipstr(dest_addr), GetErrorMessage(dwError, 1));
+				DebugLogError(_T(__FUNCTION__) _T(": Failed to retrieve best interface index for destination %s: %s"), (LPCTSTR)ipstr(dest_addr), (LPCTSTR)GetErrorMessage(dwError, 1));
 		}
 	}
 	return bestInterfaceIP;

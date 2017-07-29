@@ -24,7 +24,7 @@ class PreviewDlg : public CDialog
 	DECLARE_DYNAMIC(PreviewDlg)
 
 public:
-	PreviewDlg(CWnd* pParent = NULL);   // standard constructor
+	explicit PreviewDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~PreviewDlg();
 
 	void	SetFile(const CSearchFile* pFile) { m_pFile = pFile; Show(); }

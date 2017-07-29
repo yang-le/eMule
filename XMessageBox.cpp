@@ -1846,7 +1846,7 @@ INT_PTR CALLBACK CXDialogTemplate::MsgBoxDlgProc(HWND hwnd,
 				::GetWindowRect(::GetParent(hwnd), &mainRect);
 				::GetWindowRect(hwnd, &dlgRect);
 				int x = (mainRect.right  + mainRect.left)/2 - dlgRect.Width()/2;
-				int y =	(mainRect.bottom + mainRect.top) /2 - dlgRect.Height()/2;
+				int y = (mainRect.bottom + mainRect.top) /2 - dlgRect.Height()/2;
 				::MoveWindow(hwnd, x, y, dlgRect.Width(), dlgRect.Height(), TRUE);
 			}
 

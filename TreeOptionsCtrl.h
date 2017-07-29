@@ -103,7 +103,7 @@ protected:
 
 	//Misc Methods
 	virtual DWORD GetWindowStyle();
-	int EnumFontProc(CONST LOGFONT* lplf, CONST TEXTMETRIC* lptm, DWORD dwType);
+	int EnumFontProc(CONST LOGFONT* lplf, CONST TEXTMETRIC* /*lptm*/, DWORD /*dwType*/);
 	static int CALLBACK _EnumFontProc(CONST LOGFONT* lplf, CONST TEXTMETRIC* lptm, DWORD dwType, LPARAM lpData);
 };
 

@@ -76,7 +76,8 @@ void CWebSocket::OnReceived(void* pData, DWORD dwSize, in_addr inad)
 		// reallocate
 		char* pNewBuf;
 		try {
-			pNewBuf = new char[m_dwBufSize = dwSize + m_dwRecv + SIZE_PRESERVE];
+			m_dwBufSize = dwSize + m_dwRecv + SIZE_PRESERVE;
+			pNewBuf = new char[m_dwBufSize];
 		} catch (...)
 		{
 			m_bValid = false; // internal problem

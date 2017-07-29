@@ -892,7 +892,7 @@ void CSharedDirsTreeCtrl::OnTvnItemexpanding(NMHDR *pNMHDR, LRESULT *pResult)
 	SetRedraw(FALSE);
 
 	LPNMTREEVIEW pNMTreeView = reinterpret_cast<LPNMTREEVIEW>(pNMHDR);
-	CDirectoryItem* pExpanded = (CDirectoryItem*)pNMTreeView->itemNew.lParam;
+	CDirectoryItem* pExpanded = reinterpret_cast<CDirectoryItem *>(pNMTreeView->itemNew.lParam);
 	if (pExpanded != NULL){
 		if (pExpanded->m_eItemType == SDI_UNSHAREDDIRECTORY && !pExpanded->m_strFullPath.IsEmpty()){
 			// remove all subitems

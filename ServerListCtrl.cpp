@@ -55,7 +55,7 @@ CServerListCtrl::CServerListCtrl()
 {
 	SetGeneralPurposeFind(true);
 	m_tooltip = new CToolTipCtrlX;
-	SetSkinKey(L"ServersLv");
+	SetSkinKey(_T("ServersLv"));
 }
 
 bool CServerListCtrl::Init()

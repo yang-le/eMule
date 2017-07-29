@@ -11,7 +11,7 @@
 class CTimeTick
 {
 	CTimeTick(const CTimeTick& d);
-	CTimeTick& operator=(const CTimeTick& d);
+	CTimeTick& operator=(const CTimeTick& d) = delete;
 
 public:
 	CTimeTick();

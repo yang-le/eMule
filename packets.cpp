@@ -566,31 +566,31 @@ CTag::~CTag()
 
 CTag& CTag::operator=(const CTag& rTag)
 {
-	cleanup();
-	m_nBlobSize = 0;
-	m_uType = rTag.m_uType;
-	m_uName = rTag.m_uName;
-	m_pszName = rTag.m_pszName != NULL ? nstrdup(rTag.m_pszName) : NULL;
-	if (rTag.IsStr())
-		m_pstrVal = new CString(rTag.GetStr());
-	else if (rTag.IsInt())
-		m_uVal = rTag.GetInt();
-	else if (rTag.IsInt64(false))
-		m_uVal = rTag.GetInt64();
-	else if (rTag.IsFloat())
-		m_fVal = rTag.GetFloat();
-	else if (rTag.IsHash()) {
-		m_pData = new BYTE[16];
-		md4cpy(m_pData, rTag.GetHash());
-	}
-	else if (rTag.IsBlob()) {
-		m_nBlobSize = rTag.GetBlobSize();
-		m_pData = new BYTE[m_nBlobSize];
-		memcpy(m_pData, rTag.GetBlob(), m_nBlobSize);
-	}
-	else {
-		ASSERT(0);
-		m_uVal = 0;
+	if (this != &rTag) {
+		cleanup();
+		m_nBlobSize = 0;
+		m_uType = rTag.m_uType;
+		m_uName = rTag.m_uName;
+		m_pszName = rTag.m_pszName != NULL ? nstrdup(rTag.m_pszName) : NULL;
+		if (rTag.IsStr())
+			m_pstrVal = new CString(rTag.GetStr());
+		else if (rTag.IsInt())
+			m_uVal = rTag.GetInt();
+		else if (rTag.IsInt64(false))
+			m_uVal = rTag.GetInt64();
+		else if (rTag.IsFloat())
+			m_fVal = rTag.GetFloat();
+		else if (rTag.IsHash()) {
+			m_pData = new BYTE[16];
+			md4cpy(m_pData, rTag.GetHash());
+		} else if (rTag.IsBlob()) {
+			m_nBlobSize = rTag.GetBlobSize();
+			m_pData = new BYTE[m_nBlobSize];
+			memcpy(m_pData, rTag.GetBlob(), m_nBlobSize);
+		} else {
+			ASSERT(0);
+			m_uVal = 0;
+		}
 	}
 	return *this;
 }

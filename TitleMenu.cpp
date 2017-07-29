@@ -52,7 +52,7 @@ typedef struct tagMENUITEMINFOWEX
     HBITMAP  hbmpChecked;   // used if MIIM_CHECKMARKS
     HBITMAP  hbmpUnchecked; // used if MIIM_CHECKMARKS
     ULONG_PTR dwItemData;   // used if MIIM_DATA
-    LPWSTR   dwTypeData;    // used if MIIM_TYPE (4.0) or MIIM_STRING (>4.0)
+    LPTSTR   dwTypeData;    // used if MIIM_TYPE (4.0) or MIIM_STRING (>4.0)
     UINT     cch;           // used if MIIM_TYPE (4.0) or MIIM_STRING (>4.0)
     HBITMAP  hbmpItem;      // used if MIIM_BITMAP
 }   MENUITEMINFOEX, FAR *LPMENUITEMINFOEX;
@@ -167,9 +167,9 @@ void CTitleMenu::EnableIcons()
 }
 
 // NOTE: This function is no longer used for Vista!
-void CTitleMenu::MeasureItem(LPMEASUREITEMSTRUCT mi)
+void CTitleMenu::MeasureItem(LPMEASUREITEMSTRUCT lpMIS)
 {
-	if (mi->itemID == MP_TITLE)
+	if (lpMIS->itemID == MP_TITLE)
 	{
 		CDC dc;
 		dc.Attach(::GetDC(HWND_DESKTOP));
@@ -180,40 +180,40 @@ void CTitleMenu::MeasureItem(LPMEASUREITEMSTRUCT mi)
 		::ReleaseDC(NULL, dc.Detach());
 
 		const int nBorderSize = 2;
-		mi->itemWidth = size.cx + nBorderSize;
-		mi->itemHeight = size.cy + nBorderSize;
+		lpMIS->itemWidth = size.cx + nBorderSize;
+		lpMIS->itemHeight = size.cy + nBorderSize;
 	}
 	else
 	{
-		CMenu::MeasureItem(mi);
+		CMenu::MeasureItem(lpMIS);
 		if (m_bIconMenu)
 		{
-			mi->itemHeight = max(mi->itemHeight, 16);
-			mi->itemWidth += 18;
+			lpMIS->itemHeight = max(lpMIS->itemHeight, 16);
+			lpMIS->itemWidth += 18;
 		}
 	}
 }
 
 // NOTE: This function is no longer used for Vista!
-void CTitleMenu::DrawItem(LPDRAWITEMSTRUCT di)
+void CTitleMenu::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 {
-	if (di->itemID == MP_TITLE)
+	if (lpDIS->itemID == MP_TITLE)
 	{
-		COLORREF crOldBk = ::SetBkColor(di->hDC, m_clLeft);
+		COLORREF crOldBk = ::SetBkColor(lpDIS->hDC, m_clLeft);
 
 		if (!g_bLowColorDesktop && m_pfnGradientFill && (m_clLeft != m_clRight))
 		{
  			TRIVERTEX rcVertex[2];
-			di->rcItem.right--; // exclude this point, like FillRect does
-			di->rcItem.bottom--;
-			rcVertex[0].x = di->rcItem.left;
-			rcVertex[0].y = di->rcItem.top;
+			lpDIS->rcItem.right--; // exclude this point, like FillRect does
+			lpDIS->rcItem.bottom--;
+			rcVertex[0].x = lpDIS->rcItem.left;
+			rcVertex[0].y = lpDIS->rcItem.top;
 			rcVertex[0].Red = GetRValue(m_clLeft) << 8;	// color values from 0x0000 to 0xff00 !!!!
 			rcVertex[0].Green = GetGValue(m_clLeft) << 8;
 			rcVertex[0].Blue = GetBValue(m_clLeft) << 8;
 			rcVertex[0].Alpha = 0x0000;
-			rcVertex[1].x = di->rcItem.right;
-			rcVertex[1].y = di->rcItem.bottom;
+			rcVertex[1].x = lpDIS->rcItem.right;
+			rcVertex[1].y = lpDIS->rcItem.bottom;
 			rcVertex[1].Red = GetRValue(m_clRight) << 8;
 			rcVertex[1].Green = GetGValue(m_clRight) << 8;
 			rcVertex[1].Blue = GetBValue(m_clRight) << 8;
@@ -221,41 +221,41 @@ void CTitleMenu::DrawItem(LPDRAWITEMSTRUCT di)
 			GRADIENT_RECT rect;
 			rect.UpperLeft = 0;
 			rect.LowerRight = 1;
-			(*m_pfnGradientFill)(di->hDC,rcVertex, 2, &rect, 1, GRADIENT_FILL_RECT_H);
+			(*m_pfnGradientFill)(lpDIS->hDC,rcVertex, 2, &rect, 1, GRADIENT_FILL_RECT_H);
 		}
 		else
 		{
-			::ExtTextOut(di->hDC, 0, 0, ETO_OPAQUE, &di->rcItem, NULL, 0, NULL);
+			::ExtTextOut(lpDIS->hDC, 0, 0, ETO_OPAQUE, &lpDIS->rcItem, NULL, 0, NULL);
 		}
 		if (m_bDrawEdge)
-			::DrawEdge(di->hDC, &di->rcItem, m_uEdgeFlags, BF_RECT);
+			::DrawEdge(lpDIS->hDC, &lpDIS->rcItem, m_uEdgeFlags, BF_RECT);
 
-		int modeOld = ::SetBkMode(di->hDC, TRANSPARENT);
-		COLORREF crOld = ::SetTextColor(di->hDC, m_clText);
-		HFONT hfontOld = (HFONT)SelectObject(di->hDC, (HFONT)theApp.m_fontDefaultBold);
-		di->rcItem.left += GetSystemMetrics(SM_CXMENUCHECK) + 8;
-		::DrawText(di->hDC, m_strTitle, -1, &di->rcItem, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
-		::SelectObject(di->hDC, hfontOld);
-		::SetTextColor(di->hDC, crOld);
-		::SetBkMode(di->hDC, modeOld);
+		int modeOld = ::SetBkMode(lpDIS->hDC, TRANSPARENT);
+		COLORREF crOld = ::SetTextColor(lpDIS->hDC, m_clText);
+		HFONT hfontOld = (HFONT)SelectObject(lpDIS->hDC, (HFONT)theApp.m_fontDefaultBold);
+		lpDIS->rcItem.left += GetSystemMetrics(SM_CXMENUCHECK) + 8;
+		::DrawText(lpDIS->hDC, m_strTitle, -1, &lpDIS->rcItem, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
+		::SelectObject(lpDIS->hDC, hfontOld);
+		::SetTextColor(lpDIS->hDC, crOld);
+		::SetBkMode(lpDIS->hDC, modeOld);
 
-		::SetBkColor(di->hDC, crOldBk);
+		::SetBkColor(lpDIS->hDC, crOldBk);
 	}
 	else
 	{
-		CDC* dc = CDC::FromHandle(di->hDC);
-		int posY = di->rcItem.top + ((di->rcItem.bottom - di->rcItem.top) - ICONSIZE) / 2;
+		CDC* dc = CDC::FromHandle(lpDIS->hDC);
+		int posY = lpDIS->rcItem.top + ((lpDIS->rcItem.bottom - lpDIS->rcItem.top) - ICONSIZE) / 2;
 		int nIconPos;
-		if (!m_mapMenuIdToIconIdx.Lookup(di->itemID, nIconPos))
+		if (!m_mapMenuIdToIconIdx.Lookup(lpDIS->itemID, nIconPos))
 			return;
 
-		if ((di->itemState & ODS_GRAYED) != 0) {
-			DrawMonoIcon(nIconPos, CPoint(di->rcItem.left, posY), dc);
+		if ((lpDIS->itemState & ODS_GRAYED) != 0) {
+			DrawMonoIcon(nIconPos, CPoint(lpDIS->rcItem.left, posY), dc);
 			return;
 		}
 
 		// Draw the bitmap on the menu.
-		m_ImageList.Draw(dc, nIconPos, CPoint(di->rcItem.left,posY), ILD_TRANSPARENT);
+		m_ImageList.Draw(dc, nIconPos, CPoint(lpDIS->rcItem.left,posY), ILD_TRANSPARENT);
 	}
 }
 
@@ -440,13 +440,12 @@ void CTitleMenu::SetMenuBitmap(UINT nFlags, UINT_PTR nIDNewItem, LPCTSTR /*lpszN
 			}
 		}
 
-		if (nPos != -1)
-		{
+		if (nPos != -1) {
 			MENUITEMINFOEX info = {};
+			info.cbSize = sizeof info;
 			info.fMask = MIIM_BITMAP;
 			info.hbmpItem = HBMMENU_CALLBACK;
-			info.cbSize = sizeof(info);
-			VERIFY( SetMenuItemInfo(nIDNewItem, (MENUITEMINFO*)&info, FALSE) );
+			VERIFY( SetMenuItemInfo(nIDNewItem, (MENUITEMINFO *)&info, FALSE) );
 		}
 	}
 }
@@ -535,14 +534,11 @@ bool CTitleMenu::LoadAPI()
 		return (SetMenuInfo!=0 && GetMenuInfo!=0);
 	m_bInitializedAPI = true;
 	HMODULE hModUser32 = GetModuleHandle(_T("user32"));
-	bool bSucceeded = true;
-	bSucceeded = bSucceeded && (SetMenuInfo != NULL || (SetMenuInfo = (TSetMenuInfo)GetProcAddress(hModUser32, "SetMenuInfo")) != NULL);
-	bSucceeded = bSucceeded && (GetMenuInfo != NULL || (GetMenuInfo = (TGetMenuInfo)GetProcAddress(hModUser32, "GetMenuInfo")) != NULL);
-	if (!bSucceeded){
+	bool bSucceeded = (SetMenuInfo != NULL || (SetMenuInfo = (TSetMenuInfo)GetProcAddress(hModUser32, "SetMenuInfo")) != NULL)
+					 && (GetMenuInfo != NULL || (GetMenuInfo = (TGetMenuInfo)GetProcAddress(hModUser32, "GetMenuInfo")) != NULL);
+	if (!bSucceeded)
 		FreeAPI();
-		return false;
-	}
-	return true;
+	return bSucceeded;
 }
 
 void CTitleMenu::FreeAPI()

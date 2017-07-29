@@ -53,7 +53,7 @@ CClientListCtrl::CClientListCtrl()
 	: CListCtrlItemWalk(this)
 {
 	SetGeneralPurposeFind(true);
-	SetSkinKey(L"ClientsLv");
+	SetSkinKey(_T("ClientsLv"));
 }
 
 void CClientListCtrl::Init()
@@ -163,7 +163,7 @@ void CClientListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	CRect cur_rec(lpDrawItemStruct->rcItem);
 	CRect rcClient;
 	GetClientRect(&rcClient);
-	const CUpDownClient *client = (CUpDownClient *)lpDrawItemStruct->itemData;
+	const CUpDownClient *client = reinterpret_cast<CUpDownClient *>(lpDrawItemStruct->itemData);
 
 	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
 	int iCount = pHeaderCtrl->GetItemCount();
@@ -425,7 +425,7 @@ void CClientListCtrl::OnNmDblClk(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
 	int iSel = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
 	if (iSel != -1) {
-		CUpDownClient* client = (CUpDownClient*)GetItemData(iSel);
+		CUpDownClient* client = reinterpret_cast<CUpDownClient *>(GetItemData(iSel));
 		if (client){
 			CClientDetailDialog dialog(client, this);
 			dialog.DoModal();
@@ -437,18 +437,19 @@ void CClientListCtrl::OnNmDblClk(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 void CClientListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 {
 	int iSel = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
-	const CUpDownClient* client = (iSel != -1) ? (CUpDownClient*)GetItemData(iSel) : NULL;
+	const CUpDownClient* client = (iSel != -1) ? reinterpret_cast<CUpDownClient *>(GetItemData(iSel)) : NULL;
+	const bool is_ed2k = client && client->IsEd2kClient();
 
 	CTitleMenu ClientMenu;
 	ClientMenu.CreatePopupMenu();
 	ClientMenu.AddMenuTitle(GetResString(IDS_CLIENTS), true);
 	ClientMenu.AppendMenu(MF_STRING | (client ? MF_ENABLED : MF_GRAYED), MP_DETAIL, GetResString(IDS_SHOWDETAILS), _T("CLIENTDETAILS"));
 	ClientMenu.SetDefaultItem(MP_DETAIL);
-	ClientMenu.AppendMenu(MF_STRING | ((client && client->IsEd2kClient() && !client->IsFriend()) ? MF_ENABLED : MF_GRAYED), MP_ADDFRIEND, GetResString(IDS_ADDFRIEND), _T("ADDFRIEND"));
-	ClientMenu.AppendMenu(MF_STRING | ((client && client->IsEd2kClient()) ? MF_ENABLED : MF_GRAYED), MP_MESSAGE, GetResString(IDS_SEND_MSG), _T("SENDMESSAGE"));
-	ClientMenu.AppendMenu(MF_STRING | ((client && client->IsEd2kClient() && client->GetViewSharedFilesSupport()) ? MF_ENABLED : MF_GRAYED), MP_SHOWLIST, GetResString(IDS_VIEWFILES), _T("VIEWFILES"));
+	ClientMenu.AppendMenu(MF_STRING | ((is_ed2k && !client->IsFriend()) ? MF_ENABLED : MF_GRAYED), MP_ADDFRIEND, GetResString(IDS_ADDFRIEND), _T("ADDFRIEND"));
+	ClientMenu.AppendMenu(MF_STRING | (is_ed2k ? MF_ENABLED : MF_GRAYED), MP_MESSAGE, GetResString(IDS_SEND_MSG), _T("SENDMESSAGE"));
+	ClientMenu.AppendMenu(MF_STRING | ((is_ed2k && client->GetViewSharedFilesSupport()) ? MF_ENABLED : MF_GRAYED), MP_SHOWLIST, GetResString(IDS_VIEWFILES), _T("VIEWFILES"));
 	if (Kademlia::CKademlia::IsRunning() && !Kademlia::CKademlia::IsConnected())
-		ClientMenu.AppendMenu(MF_STRING | ((client && client->IsEd2kClient() && client->GetKadPort()!=0 && client->GetKadVersion() > 1) ? MF_ENABLED : MF_GRAYED), MP_BOOT, GetResString(IDS_BOOTSTRAP));
+		ClientMenu.AppendMenu(MF_STRING | ((is_ed2k && client->GetKadPort() && client->GetKadVersion() > 1) ? MF_ENABLED : MF_GRAYED), MP_BOOT, GetResString(IDS_BOOTSTRAP));
 	ClientMenu.AppendMenu(MF_STRING | (GetItemCount() > 0 ? MF_ENABLED : MF_GRAYED), MP_FIND, GetResString(IDS_FIND), _T("Search"));
 	GetPopupMenuPos(*this, point);
 	ClientMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
@@ -467,7 +468,7 @@ BOOL CClientListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 
 	int iSel = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
 	if (iSel != -1){
-		CUpDownClient* client = (CUpDownClient*)GetItemData(iSel);
+		CUpDownClient* client = reinterpret_cast<CUpDownClient *>(GetItemData(iSel));
 		switch (wParam){
 			case MP_SHOWLIST:
 				client->RequestSharedFileList();
@@ -559,7 +560,7 @@ void CClientListCtrl::ShowSelectedUserDetails()
 	SetItemState(it, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
 	SetSelectionMark(it);   // display selection mark correctly!
 
-	CUpDownClient* client = (CUpDownClient*)GetItemData(GetSelectionMark());
+	CUpDownClient* client = reinterpret_cast<CUpDownClient *>(GetItemData(GetSelectionMark()));
 	if (client){
 		CClientDetailDialog dialog(client, this);
 		dialog.DoModal();

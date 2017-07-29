@@ -275,4 +275,4 @@ private:
 	CList<int> m_liDefaultHiddenColumns;
 };
 
-void GetContextMenuPosition(CListCtrl& lv, CPoint& point);
+//void GetContextMenuPosition(CListCtrl& lv, CPoint& point);

@@ -506,12 +506,12 @@ ID3_Frame* ID3_AddTrack(ID3_Tag *tag, uchar trk, uchar ttl, bool replace)
         if (0 == ttl)
         {
           sTrack = LEAKTESTNEW(char[4]);
-          sprintf(sTrack, "%lu", (luint) trk);
+          sprintf(sTrack, "%lu", (luint)trk);
         }
         else
         {
           sTrack = LEAKTESTNEW(char[8]);
-          sprintf(sTrack, "%lu/%lu", (luint) trk, (luint) ttl);
+          sprintf(sTrack, "%lu/%lu", (luint)trk, (luint)ttl);
         }
 
         frame->GetField(ID3FN_TEXT)->Set(sTrack);

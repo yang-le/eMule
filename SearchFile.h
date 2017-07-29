@@ -31,7 +31,7 @@ public:
 	CSearchFile(CFileDataIO* in_data, bool bOptUTF8, uint32 nSearchID,
 				uint32 nServerIP=0, uint16 nServerPort=0,
 				LPCTSTR pszDirectory = NULL,
-				bool nKademlia = false, bool bServerUDPAnswer = false);
+				bool bKademlia = false, bool bServerUDPAnswer = false);
 	explicit CSearchFile(const CSearchFile* copyfrom);
 	virtual ~CSearchFile();
 

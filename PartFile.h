@@ -111,7 +111,7 @@ class CPartFile : public CKnownFile
 
 	friend class CPartFileConvert;
 public:
-	explicit CPartFile(UINT cat = 0);
+	explicit CPartFile(UINT ucat = 0);
 	CPartFile(CSearchFile* searchresult, UINT cat = 0);
 	CPartFile(CString edonkeylink, UINT cat = 0);
 	CPartFile(class CED2KFileLink* fileLink, UINT cat = 0);
@@ -134,7 +134,7 @@ public:
 	bool	IsNormalFile() const { return (m_dwFileAttributes & (FILE_ATTRIBUTE_COMPRESSED | FILE_ATTRIBUTE_SPARSE_FILE)) == 0; }
 	const bool	IsAllocating() const { return m_AllocateThread != NULL; }
 	EMFileSize	GetRealFileSize() const;
-	void	GetLeftToTransferAndAdditionalNeededSpace(uint64 &ui64LeftToTransfer, uint64 &pui32AdditionalNeededSpace) const;
+	void	GetLeftToTransferAndAdditionalNeededSpace(uint64 &rui64LeftToTransfer, uint64 &rui64AdditionalNeededSpace) const;
 	uint64	GetNeededSpace() const;
 	virtual void SetFileSize(EMFileSize nFileSize);
 
@@ -149,7 +149,7 @@ public:
 
 	void	InitializeFromLink(CED2KFileLink* fileLink, UINT cat = 0);
 	uint32	Process(uint32 reducedownload, UINT icounter);
-	EPartFileLoadResult	LoadPartFile(LPCTSTR in_directory, LPCTSTR filename, EPartFileFormat* pOutCheckFileFormat = NULL); //filename = *.part.met
+	EPartFileLoadResult	LoadPartFile(LPCTSTR in_directory, LPCTSTR in_filename, EPartFileFormat* pOutCheckFileFormat = NULL); //filename = *.part.met
 	EPartFileLoadResult	ImportShareazaTempfile(LPCTSTR in_directory,LPCTSTR in_filename, EPartFileFormat* pOutCheckFileFormat = NULL);
 
 	bool	SavePartFile(bool bDontOverrideBak = false);
@@ -190,7 +190,7 @@ public:
 	void	SetActive(bool bActive);
 
 	uint8	GetDownPriority() const											{ return m_iDownPriority; }
-	void	SetDownPriority(uint8 iNewDownPriority, bool resort = true);
+	void	SetDownPriority(uint8 NewPriority, bool resort = true);
 	bool	IsAutoDownPriority() const									{ return m_bAutoDownPriority; }
 	void	SetAutoDownPriority(bool NewAutoDownPriority)					{ m_bAutoDownPriority = NewAutoDownPriority; }
 	void	UpdateAutoDownPriority();
@@ -241,7 +241,7 @@ public:
 	void	SetPauseOnPreview(bool bVal)									{ m_bPauseOnPreview = bVal; }
 
 	virtual Packet* CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 byRequestedVersion, uint16 nRequestedOptions) const;
-	void	AddClientSources(CSafeMemFile* sources, uint8 sourceexchangeversion, bool bSourceExchange2, const CUpDownClient* pClient = NULL);
+	void	AddClientSources(CSafeMemFile* sources, uint8 uClientSXVersion, bool bSourceExchange2, const CUpDownClient* pClient = NULL);
 
 	UINT	GetAvailablePartCount() const									{ return (status == PS_COMPLETING || status == PS_COMPLETE) ? GetPartCount() : availablePartsCount; }
 	void	UpdateAvailablePartsCount();
@@ -332,8 +332,8 @@ public:
 #endif
 
 protected:
-	bool	GetNextEmptyBlockInPart(UINT partnumber, Requested_Block_Struct* result) const;
-	void	CompleteFile(bool hashingdone);
+	bool	GetNextEmptyBlockInPart(UINT partNumber, Requested_Block_Struct* result) const;
+	void	CompleteFile(bool bIsHashingDone);
 	void	CreatePartFile(UINT cat = 0);
 	void	Init();
 

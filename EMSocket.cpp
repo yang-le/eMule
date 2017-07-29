@@ -1232,26 +1232,24 @@ void CEMSocket::SetTimeOut(UINT uTimeOut)
 	m_uTimeOut = uTimeOut;
 }
 
-CString CEMSocket::GetFullErrorMessage(DWORD nErrorCode)
+CString CEMSocket::GetFullErrorMessage(DWORD dwError)
 {
 	CString strError;
 
 	// Proxy error
-	if (!GetLastProxyError().IsEmpty())
-	{
+	if (!GetLastProxyError().IsEmpty()) {
 		strError = GetLastProxyError();
 		// If we had a proxy error and the socket error is WSAECONNABORTED, we just 'aborted'
 		// the TCP connection ourself - no need to show that self-created error too.
-		if (nErrorCode == WSAECONNABORTED)
+		if (dwError == WSAECONNABORTED)
 			return strError;
 	}
 
 	// Winsock error
-	if (nErrorCode)
-	{
+	if (dwError) {
 		if (!strError.IsEmpty())
 			strError += _T(": ");
-		strError += GetErrorMessage(nErrorCode, 1);
+		strError += GetErrorMessage(dwError, 1);
 	}
 
 	return strError;

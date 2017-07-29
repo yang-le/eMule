@@ -53,7 +53,7 @@ END_MESSAGE_MAP()
 CIrcChannelListCtrl::CIrcChannelListCtrl()
 {
 	m_pParent = NULL;
-	SetSkinKey(L"IRCChannelsLv");
+	SetSkinKey(_T("IRCChannelsLv"));
 }
 
 CIrcChannelListCtrl::~CIrcChannelListCtrl()

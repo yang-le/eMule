@@ -368,10 +368,9 @@ void CServerConnect::ConnectionFailed(CServerSocket* sender)
 			break;
 		}
 		case CS_ERROR:
-		case CS_NOTCONNECTED:{
-			if (!connecting)
-				break;
-		}
+		case CS_NOTCONNECTED:
+//			if (!connecting)
+//				break;
 		case CS_SERVERDEAD:
 		case CS_SERVERFULL:{
 			if (!connecting)

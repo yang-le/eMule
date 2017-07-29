@@ -345,7 +345,7 @@ CString CDirectoryTreeCtrl::GetFullPath(HTREEITEM hItem)
 	while(hSearchItem != NULL)
 	{
 		CString strSearchItemDir;
-		STreeItem* pti = (STreeItem*)GetItemData(hSearchItem);
+		STreeItem* pti = reinterpret_cast<STreeItem *>(GetItemData(hSearchItem));
 		if (pti)
 			strSearchItemDir = pti->strPath;
 		else
@@ -609,6 +609,6 @@ void CDirectoryTreeCtrl::OnTvnDeleteItem(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMTREEVIEW pNMTreeView = reinterpret_cast<LPNMTREEVIEW>(pNMHDR);
 	if (pNMTreeView->itemOld.lParam)
-		delete (STreeItem*)pNMTreeView->itemOld.lParam;
+		delete reinterpret_cast<STreeItem *>(pNMTreeView->itemOld.lParam);
 	*pResult = 0;
 }

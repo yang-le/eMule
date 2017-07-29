@@ -367,7 +367,7 @@ void CUpDownClient::SendFileRequest()
 			    if (GetLastAskedForSources() == 0)
 				    Debug(_T("  first source request\n"));
 			    else
-				    Debug(_T("  last source request was before %s\n"), (LPCTSTR)CastSecondsToHM((GetTickCount() - GetLastAskedForSources())/SEC2MS(1)));
+				    Debug(_T("  last source request was before %s\n"), (LPCTSTR)CastSecondsToHM((::GetTickCount() - GetLastAskedForSources())/SEC2MS(1)));
 			}
 			if (SupportsSourceExchange2()){
 				dataFileReq.WriteUInt8(OP_REQUESTSOURCES2);
@@ -446,7 +446,7 @@ void CUpDownClient::SendFileRequest()
 			    if (GetLastAskedForSources() == 0)
 				    Debug(_T("  first source request\n"));
 			    else
-				    Debug(_T("  last source request was before %s\n"), (LPCTSTR)CastSecondsToHM((GetTickCount() - GetLastAskedForSources())/SEC2MS(1)));
+				    Debug(_T("  last source request was before %s\n"), (LPCTSTR)CastSecondsToHM((::GetTickCount() - GetLastAskedForSources())/SEC2MS(1)));
 		    }
 			reqfile->SetLastAnsweredTimeTimeout();
 
@@ -1475,7 +1475,7 @@ void CUpDownClient::CheckDownloadTimeout()
 	if (IsDownloadingFromPeerCache() && m_pPCDownSocket && m_pPCDownSocket->IsConnected())
 	{
 		ASSERT( DOWNLOADTIMEOUT < m_pPCDownSocket->GetTimeOut() );
-		if (GetTickCount() > m_dwLastBlockReceived + DOWNLOADTIMEOUT)
+		if (::GetTickCount() > m_dwLastBlockReceived + DOWNLOADTIMEOUT)
 		{
 			OnPeerCacheDownSocketTimeout();
 		}

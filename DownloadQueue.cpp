@@ -417,17 +417,17 @@ void CDownloadQueue::Process(){
 
 	if (udcounter == 5) {
 		if (theApp.serverconnect->IsUDPSocketAvailable()) {
-		    if ((!lastudpstattime) || (::GetTickCount() - lastudpstattime) > UDPSERVERSTATTIME){
-			    lastudpstattime = ::GetTickCount();
-			    theApp.serverlist->ServerStats();
-		    }
-	    }
+			if (!lastudpstattime || ::GetTickCount() > lastudpstattime + UDPSERVERSTATTIME) {
+				lastudpstattime = ::GetTickCount();
+				theApp.serverlist->ServerStats();
+			}
+		}
 	}
 
-	if (udcounter == 10){
+	if (udcounter >= 10) {
 		udcounter = 0;
-		if (theApp.serverconnect->IsUDPSocketAvailable()){
-			if ((!lastudpsearchtime) || (::GetTickCount() - lastudpsearchtime) > UDPSERVERREASKTIME)
+		if (theApp.serverconnect->IsUDPSocketAvailable()) {
+			if (!lastudpsearchtime || ::GetTickCount() > lastudpsearchtime + UDPSERVERREASKTIME)
 				SendNextUDPPacket();
 		}
 	}
@@ -435,7 +435,7 @@ void CDownloadQueue::Process(){
 	CheckDiskspaceTimed();
 
 // ZZ:DownloadManager -->
-    if((!m_dwLastA4AFtime) || (::GetTickCount() - m_dwLastA4AFtime) > MIN2MS(8)) {
+    if(!m_dwLastA4AFtime || ::GetTickCount() > m_dwLastA4AFtime + MIN2MS(8)) {
         theApp.clientlist->ProcessA4AFClients();
         m_dwLastA4AFtime = ::GetTickCount();
     }
@@ -472,7 +472,7 @@ CPartFile* CDownloadQueue::GetFileByKadFileSearchID(uint32 id) const
 
 bool CDownloadQueue::IsPartFile(const CKnownFile* file) const
 {
-	return filelist.Find((CPartFile *)file) != NULL;
+	return filelist.Find((void *)file) != NULL;
 }
 
 bool CDownloadQueue::CheckAndAddSource(CPartFile* sender, CUpDownClient* source)
@@ -523,11 +523,10 @@ bool CDownloadQueue::CheckAndAddSource(CPartFile* sender, CUpDownClient* source)
 				// if this file has not this source already, set request for this source
 				if (cur_file != sender && cur_client->AddRequestForAnotherFile(sender)) {
 					theApp.emuledlg->transferwnd->GetDownloadList()->AddSource(sender, cur_client, true);
-					delete source;
 					if (cur_client->GetDownloadState() != DS_CONNECTED)
 						cur_client->SwapToAnotherFile(_T("New A4AF source found. CDownloadQueue::CheckAndAddSource()"), false, false, false, NULL, true, false); // ZZ:DownloadManager
-				} else
-					delete source;
+				}
+				delete source;
 				return false;
 			}
 		}
@@ -1203,7 +1202,7 @@ CUpDownClient* CDownloadQueue::GetDownloadClientByIP_UDP(uint32 dwIP, uint16 nUD
 bool CDownloadQueue::IsInList(const CUpDownClient* client) const
 {
 	for (POSITION pos = filelist.GetHeadPosition(); pos != NULL;)
-		if (filelist.GetNext(pos)->srclist.Find((CUpDownClient *)client))
+		if (filelist.GetNext(pos)->srclist.Find(const_cast<CUpDownClient *>(client)))
 			return true;
 	return false;
 }
@@ -1489,11 +1488,10 @@ void CDownloadQueue::ProcessLocalRequests()
 				else
 					byOpcode = OP_GETSOURCES;
 
-				Packet* packet = new Packet(&smPacket, OP_EDONKEYPROT, byOpcode);
+				Packet packet(&smPacket, OP_EDONKEYPROT, byOpcode);
 				if (thePrefs.GetDebugServerTCPLevel() > 0)
 					Debug(_T(">>> Sending OP__GetSources%s(%2u/%2u); %s\n"), (byOpcode == OP_GETSOURCES) ? _T("") : _T("_OBFU"), iFiles, iMaxFilesPerTcpFrame, (LPCTSTR)DbgGetFileInfo(cur_file->GetFileHash()));
-				dataTcpFrame.Write(packet->GetPacket(), packet->GetRealPacketSize());
-				delete packet;
+				dataTcpFrame.Write(packet.GetPacket(), packet.GetRealPacketSize());
 
 				if (thePrefs.GetDebugSourceExchange())
 					AddDebugLogLine(false, _T("SXSend: Local server source request; File=\"%s\""), (LPCTSTR)cur_file->GetFileName());
@@ -1582,10 +1580,10 @@ void CSourceHostnameResolveWnd::AddToResolve(const uchar* fileid, LPCSTR pszHost
 		return;
 
 	memset(m_aucHostnameBuffer, 0, sizeof m_aucHostnameBuffer);
-	if (WSAAsyncGetHostByName(m_hWnd, WM_HOSTNAMERESOLVED, entry->strHostname, m_aucHostnameBuffer, sizeof m_aucHostnameBuffer) != 0)
-		return;
-	m_toresolve.RemoveHead();
-	delete entry;
+	if (!WSAAsyncGetHostByName(m_hWnd, WM_HOSTNAMERESOLVED, entry->strHostname, m_aucHostnameBuffer, sizeof m_aucHostnameBuffer)) {
+		m_toresolve.RemoveHead();
+		delete entry;
+	}
 }
 
 LRESULT CSourceHostnameResolveWnd::OnHostnameResolved(WPARAM /*wParam*/, LPARAM lParam)

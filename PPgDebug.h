@@ -1,4 +1,6 @@
 #pragma once
+#include "stdafx.h"
+#include "emule.h"
 #include "TreeOptionsCtrlEx.h"
 
 #define	MAX_DETAIL_ITEMS	7

@@ -76,8 +76,8 @@ void CCommentListCtrl::Init()
 
 int CALLBACK CCommentListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const SComment *item1 = (SComment *)lParam1;
-	const SComment *item2 = (SComment *)lParam2;
+	const SComment *item1 = reinterpret_cast<const SComment *>(lParam1);
+	const SComment *item2 = reinterpret_cast<const SComment *>(lParam2);
 	if (item1 == NULL || item2 == NULL)
 		return 0;
 
@@ -187,7 +187,7 @@ int CCommentListCtrl::FindClientComment(const void* pClientCookie)
 	int iItems = GetItemCount();
 	for (int i = 0; i < iItems; i++)
 	{
-		const SComment* pComment = (SComment*)GetItemData(i);
+		const SComment* pComment = reinterpret_cast<const SComment *>(GetItemData(i));
 		if (pComment && pComment->m_pClientCookie == pClientCookie)
 			return i;
 	}
@@ -230,6 +230,6 @@ void CCommentListCtrl::AddItem(const Kademlia::CEntry* entry)
 void CCommentListCtrl::OnLvnDeleteItem(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
-	delete (SComment*)pNMLV->lParam;
+	delete reinterpret_cast<SComment *>(pNMLV->lParam);
 	*pResult = 0;
 }

@@ -39,7 +39,7 @@ there client on the eMule forum..
 namespace Kademlia
 {
 #define SEARCHTOLERANCE				16777216
-#define K							10
+#define K							10u
 #define KBASE						4
 #define KK							5
 #define ALPHA_QUERY					3

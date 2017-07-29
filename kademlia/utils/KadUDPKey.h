@@ -21,7 +21,7 @@ namespace Kademlia
 {
 	class CKadUDPKey {
 	public:
-		CKadUDPKey(uint32 uZero = 0)										{ASSERT(uZero == 0); m_dwKey = uZero; m_dwIP = 0;}
+		explicit CKadUDPKey(uint32 uZero = 0)								{ASSERT(uZero == 0); m_dwKey = uZero; m_dwIP = 0;}
 		CKadUDPKey(uint32 dwKey, uint32 dwIP)								{m_dwKey = dwKey; m_dwIP = dwIP;}
 		CKadUDPKey(const CKadUDPKey& k1)									{ *this = k1; }
 		explicit CKadUDPKey(CFileDataIO& file)								{ReadFromFile(file);}

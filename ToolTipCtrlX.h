@@ -52,5 +52,5 @@ protected:
 	afx_msg BOOL OnTTShow(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnSysColorChange();
 	afx_msg void OnSettingChange(UINT uFlags, LPCTSTR lpszSection);
-	afx_msg void OnWindowPosChanging(WINDOWPOS* lpwndpos);
+//	afx_msg void OnWindowPosChanging(WINDOWPOS* lpwndpos);
 };

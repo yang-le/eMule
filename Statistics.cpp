@@ -170,12 +170,12 @@ CStatistics::CStatistics()
 
 void CStatistics::Init()
 {
-	maxcumDown =			thePrefs.GetConnMaxDownRate();
-	cumUpavg =				thePrefs.GetConnAvgUpRate();
-	maxcumDownavg =			thePrefs.GetConnMaxAvgDownRate();
-	cumDownavg =			thePrefs.GetConnAvgDownRate();
-	maxcumUpavg =			thePrefs.GetConnMaxAvgUpRate();
-	maxcumUp =				thePrefs.GetConnMaxUpRate();
+	maxcumDown =	thePrefs.GetConnMaxDownRate();
+	cumUpavg =		thePrefs.GetConnAvgUpRate();
+	maxcumDownavg =	thePrefs.GetConnMaxAvgDownRate();
+	cumDownavg =	thePrefs.GetConnAvgDownRate();
+	maxcumUpavg =	thePrefs.GetConnMaxAvgUpRate();
+	maxcumUp =		thePrefs.GetConnMaxUpRate();
 }
 
 // This function is going to basically calculate and save a bunch of averages.

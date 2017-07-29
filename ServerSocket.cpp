@@ -217,8 +217,8 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 						bOutputMessage = false;
 					}
 
-					if (message.Find(_T("[emDynIP: ")) != -1 && message.Find(_T("]")) != -1 && message.Find(_T("[emDynIP: ")) < message.Find(_T("]"))){
-						CString dynip = message.Mid(message.Find(_T("[emDynIP: ")) + 10, message.Find(_T("]")) - (message.Find(_T("[emDynIP: ")) + 10));
+					if (message.Find(_T("[emDynIP: ")) != -1 && message.Find(_T(']')) != -1 && message.Find(_T("[emDynIP: ")) < message.Find(_T(']'))){
+						CString dynip = message.Mid(message.Find(_T("[emDynIP: ")) + 10, message.Find(_T(']')) - (message.Find(_T("[emDynIP: ")) + 10));
 						dynip.Trim();
 						if (dynip.GetLength() && dynip.GetLength() < 51){
 							// Verify that we really received a DN.

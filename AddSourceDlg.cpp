@@ -141,8 +141,8 @@ void CAddSourceDlg::OnBnClickedButton1()
 					return;
 			}
 
-			uint32 ip;
-			if ((ip = inet_addr(CT2CA(sip))) == INADDR_NONE && _tcscmp(sip, _T("255.255.255.255")) != 0)
+			uint32 ip = inet_addr(CT2CA(sip));
+			if (ip == INADDR_NONE && _tcscmp(sip, _T("255.255.255.255")) != 0)
 				ip = 0;
 			if (IsGoodIPPort(ip, port))
 			{

@@ -49,10 +49,10 @@ public:
 	CKnownFile* fileParent;
 
 private:
-	uint32 requested;
-	uint32 accepted;
+	uint64 alltimetransferred;
 	uint64 transferred;
 	uint32 alltimerequested;
-	uint64 alltimetransferred;
+	uint32 requested;
 	uint32 alltimeaccepted;
+	uint32 accepted;
 };

@@ -30,7 +30,7 @@ protected:
 	afx_msg void OnDestroy();
 	afx_msg void OnEnKillFocus();
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
-	afx_msg void OnKeydown(NMHDR *pNMHDR, LRESULT *pResult);
+//	afx_msg void OnKeydown(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLvnBeginScroll(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult);

@@ -33,7 +33,7 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnDestroy();
-	afx_msg void OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/);
+//	afx_msg void OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/);
 	afx_msg void OnLvnColumnClickIPFilter(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnLvnKeyDownIPFilter(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedAppend();

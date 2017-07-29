@@ -42,8 +42,8 @@ private:
 
 	static int performConvertToeMule(CString folder);
 	static UINT AFX_CDECL run(LPVOID lpParam);
-	static void	ReConvertNewEDPartfile(CString folder);
-	static UINT	PFConvertThread(LPVOID param);
+//	static void	ReConvertNewEDPartfile(CString folder);
+//	static UINT	PFConvertThread(LPVOID param);
 };
 
 

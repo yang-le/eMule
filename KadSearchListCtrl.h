@@ -67,6 +67,6 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnNmDblClk(NMHDR *pNMHDR, LRESULT *pResult);
+//	afx_msg void OnNmDblClk(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnSysColorChange();
 };

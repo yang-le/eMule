@@ -346,7 +346,7 @@ bool CArchiveRecovery::recoverZip(CFile *zipInput, CFile *zipOutput, archiveScan
 			writeUInt32(zipOutput, (uint32)(endOffset - startOffset));
 			writeUInt32(zipOutput, (uint32)startOffset);
 			writeUInt16(zipOutput, (uint16)strlen(ZIP_COMMENT));
-			zipOutput->Write(ZIP_COMMENT, strlen(ZIP_COMMENT));
+			zipOutput->Write(ZIP_COMMENT, (UINT)strlen(ZIP_COMMENT));
 
 			centralDirectoryEntries->RemoveAll();
 		}
@@ -1582,9 +1582,8 @@ void CArchiveRecovery::ISOReadDirectory(archiveScannerThreadParams_s* aitp, UINT
 	// read directory entries
 	int iSecsOfDirectoy = -1;
 
-	if (!aitp || !aitp->ai ||
-		!IsFilled(startSec * aitp->ai->isoInfos.secSize, (startSec * aitp->ai->isoInfos.secSize) + aitp->ai->isoInfos.secSize,
-		aitp->filled))
+	if (!aitp || !aitp->ai
+	    || !IsFilled(startSec * aitp->ai->isoInfos.secSize, (startSec * aitp->ai->isoInfos.secSize) + aitp->ai->isoInfos.secSize, aitp->filled))
 		return;
 
 	isoInput->Seek(startSec * (LONGLONG)aitp->ai->isoInfos.secSize, FILE_BEGIN);
@@ -1601,18 +1600,20 @@ void CArchiveRecovery::ISOReadDirectory(archiveScannerThreadParams_s* aitp, UINT
 			// do we continue at next sector?
 			if (iSecsOfDirectoy-- > 1) {
 				startSec++;
-				if (!IsFilled( startSec * aitp->ai->isoInfos.secSize, (startSec * aitp->ai->isoInfos.secSize) + aitp->ai->isoInfos.secSize,
-					aitp->filled))
-						break;
+				if (!IsFilled( startSec * aitp->ai->isoInfos.secSize, (startSec * aitp->ai->isoInfos.secSize) + aitp->ai->isoInfos.secSize, aitp->filled))
+					break;
 
 				isoInput->Seek(startSec * (LONGLONG)aitp->ai->isoInfos.secSize, FILE_BEGIN);
 				continue;
-			} else
-				break; // folder end
+			}
+			break; // folder end
 		}
 
 		file->name = (TCHAR*)calloc(file->nameLen+2, sizeof(TCHAR));
-
+		if (!file->name) {
+			delete file;
+			return;
+		}
 		blocksize += isoInput->Read(file->name, file->nameLen);
 
 		if (!(file->nameLen & 1))
@@ -1769,7 +1770,7 @@ bool CArchiveRecovery::recoverISO(CFile *isoInput, CFile *isoOutput, archiveScan
 
 		// read root directory of iso and recursive
 		ISO_FileFolderEntry rootdir;
-		memcpy(&rootdir, svd.descr_type!=0xff?svd.rootdir:pvd.rootdir, 33);
+		memcpy(&rootdir.lenRecord, svd.descr_type!=0xff ? svd.rootdir : pvd.rootdir, 33);
 
 		ISOReadDirectory(aitp, LODWORD(rootdir.sector1OfExtension), isoInput, _T("") );
 	}

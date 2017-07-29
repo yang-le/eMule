@@ -66,8 +66,8 @@ public:
 private:
 	void	DoResize(int delta);
 	void	UpdateSplitterRange();
-	void	DoSplitResize(int delta);
-	void	ShowSplitWindow(bool bReDraw = false);
+//	void	DoSplitResize(int delta);
+//	void	ShowSplitWindow(bool bReDraw = false);
 	void	InitSplitter();
 	void	ReattachAnchors();
 

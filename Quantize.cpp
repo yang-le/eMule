@@ -89,10 +89,10 @@ void CQuantizer::AddColor (NODE** ppNode, BYTE r, BYTE g, BYTE b,
 	if ((*ppNode)->bIsLeaf)	{
 		(*ppNode)->nPixelCount++;
 		(*ppNode)->nRedSum += r;
-		(*ppNode)->nGreenSum +=	g;
+		(*ppNode)->nGreenSum += g;
 		(*ppNode)->nBlueSum	+= b;
 	} else {	// Recurse a level deeper if the node is not a leaf.
-		int	shift =	7 -	nLevel;
+		int	shift = 7 -	nLevel;
 		int	nIndex =(((r & mask[nLevel]) >> shift) << 2) |
 					(((g & mask[nLevel]) >>	shift) << 1) |
 					(( b & mask[nLevel]) >> shift);
@@ -108,7 +108,7 @@ void* CQuantizer::CreateNode (UINT nLevel, UINT	nColorBits,	UINT* pLeafCount,
 
 	if (pNode== NULL) return NULL;
 
-	pNode->bIsLeaf = (nLevel ==	nColorBits)	? TRUE : FALSE;
+	pNode->bIsLeaf = (nLevel == nColorBits)	? TRUE : FALSE;
 	if (pNode->bIsLeaf)
 		(*pLeafCount)++;
 	else {
@@ -131,14 +131,14 @@ void CQuantizer::ReduceTree	(UINT nColorBits, UINT*	pLeafCount,
 
 	UINT nRedSum = 0;
 	UINT nGreenSum = 0;
-	UINT nBlueSum =	0;
+	UINT nBlueSum = 0;
 	UINT nChildren = 0;
 
 	for	(i=0; i<8; i++)	{
-		if (pNode->pChild[i] !=	NULL) {
+		if (pNode->pChild[i] != NULL) {
 			nRedSum	+= pNode->pChild[i]->nRedSum;
 			nGreenSum += pNode->pChild[i]->nGreenSum;
-			nBlueSum +=	pNode->pChild[i]->nBlueSum;
+			nBlueSum += pNode->pChild[i]->nBlueSum;
 			pNode->nPixelCount += pNode->pChild[i]->nPixelCount;
 			free(pNode->pChild[i]);
 			pNode->pChild[i] = NULL;
@@ -156,7 +156,7 @@ void CQuantizer::ReduceTree	(UINT nColorBits, UINT*	pLeafCount,
 void CQuantizer::DeleteTree	(NODE**	ppNode)
 {
 	for	(int i=0; i<8; ++i)
-		if ((*ppNode)->pChild[i] !=	NULL)
+		if ((*ppNode)->pChild[i] != NULL)
 			DeleteTree (&((*ppNode)->pChild[i]));
 
 	free(*ppNode);
@@ -170,11 +170,11 @@ void CQuantizer::GetPaletteColors (NODE* pTree,	RGBQUAD* prgb, UINT* pIndex)
 			prgb[*pIndex].rgbRed = (BYTE)((pTree->nRedSum)/(pTree->nPixelCount));
 			prgb[*pIndex].rgbGreen = (BYTE)((pTree->nGreenSum)/(pTree->nPixelCount));
 			prgb[*pIndex].rgbBlue = (BYTE)((pTree->nBlueSum)/(pTree->nPixelCount));
-			prgb[*pIndex].rgbReserved =	0;
+			prgb[*pIndex].rgbReserved = 0;
 			(*pIndex)++;
 		} else {
 			for	(int i=0; i<8; i++)	{
-				if (pTree->pChild[i] !=	NULL)
+				if (pTree->pChild[i] != NULL)
 					GetPaletteColors (pTree->pChild[i],	prgb, pIndex);
 			}
 		}

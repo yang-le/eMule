@@ -69,7 +69,7 @@ protected:
 	Returns TRUE if Windows XP theme support is available, FALSE 
 	otherwise.
 	*/
-	BOOL ThemeSupport() const;
+//	BOOL ThemeSupport() const;
 
 protected:
 	//{{AFX_VIRTUAL(CPropPageFrameDefault)

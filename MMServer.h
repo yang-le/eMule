@@ -38,17 +38,17 @@ public:
 	// packet processing
 	bool	PreProcessPacket(char* pPacket, uint32 nSize, CMMSocket* sender);
 	void	ProcessHelloPacket(CMMData* data, CMMSocket* sender);
-	void	ProcessStatusRequest(CMMSocket* sender, CMMPacket* usePacket = NULL);
-	void	ProcessFileListRequest(CMMSocket* sender, CMMPacket* usePacket = NULL);
+	static void	ProcessStatusRequest(CMMSocket* sender, CMMPacket* packet = NULL);
+	void	ProcessFileListRequest(CMMSocket* sender, CMMPacket* packet = NULL);
 	void	ProcessFileCommand(CMMData* data, CMMSocket* sender);
-	void	ProcessDetailRequest(CMMData* data, CMMSocket* socket);
+	void	ProcessDetailRequest(CMMData* data, CMMSocket* sender);
 	void	ProcessCommandRequest(CMMData* data, CMMSocket* sender);
 	void	ProcessSearchRequest(CMMData* data, CMMSocket* sender);
 	void	ProcessPreviewRequest(CMMData* data, CMMSocket* sender);
 	void	ProcessDownloadRequest(CMMData* data, CMMSocket* sender);
-	void	ProcessChangeLimitRequest(CMMData* data, CMMSocket* sender);
+	static void	ProcessChangeLimitRequest(CMMData* data, CMMSocket* sender);
 	void	ProcessFinishedListRequest(CMMSocket* sender);
-	void	ProcessStatisticsRequest(CMMData* data, CMMSocket* sender);
+	static void	ProcessStatisticsRequest(CMMData* data, CMMSocket* sender);
 	// other
 	void	SearchFinished(bool bTimeOut);
 	void	PreviewFinished(CxImage** imgFrames, uint8 nCount);
@@ -57,24 +57,24 @@ public:
 	CStringA GetContentType() const;
 
 	UINT_PTR h_timer;
-	uint8	m_byPendingCommand;
 	CMMSocket*	m_pPendingCommandSocket;
+	uint8	m_byPendingCommand;
 
 protected:
 	static VOID CALLBACK CommandTimer(HWND hWnd, UINT nMsg, UINT_PTR nId, DWORD dwTime);
 	void	DeleteSearchFiles();
-	void	WriteFileInfo(CPartFile* selFile, CMMPacket* packet);
+	static void	WriteFileInfo(CPartFile* selFile, CMMPacket* packet);
 
 private:
 	CListenMMSocket*	m_pSocket;
-	uint16				m_nSessionID;
 	CArray<CPartFile*,CPartFile*>		m_SentFileList;
 	CArray<CSearchFile*, CSearchFile*>	m_SendSearchList;
 	CArray<CKnownFile*,CKnownFile*>		m_SentFinishedList;
-	uint8				m_cPWFailed;
 	uint32				m_dwBlocked;
-	bool				m_bUseFakeContent;
+	uint16				m_nSessionID;
 	uint16				m_nMaxDownloads;
 	uint16				m_nMaxBufDownloads;
+	uint8				m_cPWFailed;
+	bool				m_bUseFakeContent;
 	bool				m_bGrabListLogin;
 };

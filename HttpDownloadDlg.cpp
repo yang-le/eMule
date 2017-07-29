@@ -246,7 +246,7 @@ LRESULT CHttpDownloadDlg::OnThreadFinished(WPARAM wParam, LPARAM /*lParam*/)
 	else if (wParam)
 	{
 		if (!m_sError.IsEmpty())
-			LogError(LOG_STATUSBAR, _T("%s"), m_sError);
+			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)m_sError);
 		EndDialog(IDCANCEL);
 	}
 	else

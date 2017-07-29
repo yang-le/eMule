@@ -206,7 +206,7 @@ void CRoutingBin::GetNumContacts(uint32& nInOutContacts, uint32& nInOutFilteredC
 
 UINT CRoutingBin::GetRemaining() const
 {
-	return (UINT)K - m_listEntries.size();
+	return (UINT)(K - m_listEntries.size());
 }
 
 void CRoutingBin::GetEntries(ContactList *plistResult, bool bEmptyFirst)

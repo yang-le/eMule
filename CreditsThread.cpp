@@ -43,9 +43,8 @@ BEGIN_MESSAGE_MAP(CCreditsThread, CGDIThread)
 END_MESSAGE_MAP()
 
 CCreditsThread::CCreditsThread(CWnd* pWnd, HDC hDC, CRect rectScreen)
-    : CGDIThread(pWnd,hDC)
+    : CGDIThread(pWnd, hDC), m_rectScreen(rectScreen)
 {
-	m_rectScreen = rectScreen;
 	m_rgnScreen.CreateRectRgnIndirect(m_rectScreen);
 	m_nScrollPos = 0;
 	m_pbmpOldBk = NULL;

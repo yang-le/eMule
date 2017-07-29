@@ -156,7 +156,7 @@ COScopeCtrl::COScopeCtrl(int NTrends)
 	// and calling Create
 	m_nXGrids = 6;
 	m_nYGrids = 5;
-	m_nTrendPoints = -1;
+//	m_nTrendPoints = -1; already 0
 	m_nXPartial = 0;
 
 	m_bDoUpdate = true;

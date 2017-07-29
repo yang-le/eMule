@@ -211,17 +211,17 @@ void CFileDetailDialogInfo::RefreshData()
 			ext.MakeUpper();
 		}
 
-		EFileType bycontent = GetFileTypeEx((CKnownFile *)file, false, true);
+		EFileType bycontent = GetFileTypeEx((CShareableFile *)file, false, true);
 		if (bycontent != FILETYPE_UNKNOWN) {
-			str.Format(_T("%s  (%s)"), GetFileTypeName(bycontent), GetResString(IDS_VERIFIED));
+			str.Format(_T("%s  (%s)"), (LPCTSTR)GetFileTypeName(bycontent), (LPCTSTR)GetResString(IDS_VERIFIED));
 
 			switch (IsExtensionTypeOf(bycontent, ext)) {
 			case -1:
 				showwarning = true;
-				str.AppendFormat(_T(" - %s: %s"), GetResString(IDS_INVALIDFILEEXT), ext);
+				str.AppendFormat(_T(" - %s: %s"), (LPCTSTR)GetResString(IDS_INVALIDFILEEXT), (LPCTSTR)ext);
 				break;
 			case 0:
-				str.AppendFormat(_T(" - %s: %s"), GetResString(IDS_UNKNOWNFILEEXT), ext);
+				str.AppendFormat(_T(" - %s: %s"), (LPCTSTR)GetResString(IDS_UNKNOWNFILEEXT), (LPCTSTR)ext);
 			}
 		}
 		else {
@@ -229,7 +229,7 @@ void CFileDetailDialogInfo::RefreshData()
 			if (pos != -1) {
 				str = fname.Mid(pos + 1);
 				str.MakeUpper();
-				str.AppendFormat(_T("  (%s)"),  GetResString(IDS_UNVERIFIED));
+				str.AppendFormat(_T("  (%s)"), (LPCTSTR)GetResString(IDS_UNVERIFIED));
 			}
 			else
 				str = GetResString(IDS_UNKNOWN);

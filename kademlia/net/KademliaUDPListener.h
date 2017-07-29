@@ -100,7 +100,7 @@ namespace Kademlia
 			static void Process_KADEMLIA2_FIREWALLUDP(const byte *pbyPacketData, uint32 uLenPacket,uint32 uIP, CKadUDPKey senderUDPKey);
 
 			CList<FetchNodeID_Struct> listFetchNodeIDRequests;
-			uint32	m_nOpenHellos;
-			uint32	m_nFirewalledHellos;
+//			uint32	m_nOpenHellos;
+//			uint32	m_nFirewalledHellos;
 	};
 }

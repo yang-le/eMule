@@ -48,18 +48,17 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 
-CClientList::CClientList(){
-	m_dwLastBannCleanUp = 0;
-	m_dwLastTrackedCleanUp = 0;
-	m_dwLastClientCleanUp = 0;
-	m_nBuddyStatus = Disconnected;
+CClientList::CClientList()
+	: m_nBuddyStatus(Disconnected), m_pBuddy(NULL)
+{
+	m_dwLastBannCleanUp = m_dwLastTrackedCleanUp = m_dwLastClientCleanUp = ::GetTickCount();
 	m_bannedList.InitHashTable(331);
 	m_trackedClientsList.InitHashTable(2011);
 	m_globDeadSourceList.Init(true);
-	m_pBuddy = NULL;
 }
 
-CClientList::~CClientList(){
+CClientList::~CClientList()
+{
 	RemoveAllTrackedClients();
 }
 
@@ -70,7 +69,7 @@ void CClientList::GetStatistics(uint32 &ruTotalClients, int stats[NUM_CLIENTLIST
 								CMap<uint32, uint32, uint32, uint32>& clientVersionAMule)
 {
 	ruTotalClients = list.GetCount();
-	memset(stats, 0, sizeof(stats[0]) * NUM_CLIENTLIST_STATS);
+	memset(stats, 0, NUM_CLIENTLIST_STATS*sizeof stats[0]);
 
 	for (POSITION pos = list.GetHeadPosition(); pos != NULL; )
 	{
@@ -138,14 +137,10 @@ void CClientList::GetStatistics(uint32 &ruTotalClients, int stats[NUM_CLIENTLIST
 		if (cur_client->GetDownloadState()==DS_ERROR)
 			stats[6]++; // Error
 
-		switch (cur_client->GetUserPort())
-		{
-			case 4662:
-				stats[8]++; // Default Port
-				break;
-			default:
-				stats[9]++; // Other Port
-		}
+		if (cur_client->GetUserPort() == 4662)
+			++stats[8]; // Default Port
+		else
+			++stats[9]; // Other Port
 
 		// Network client stats
 		if (cur_client->GetServerIP() && cur_client->GetServerPort())
@@ -335,7 +330,7 @@ CUpDownClient* CClientList::FindClientByServerID(uint32 uServerIP, uint32 uED2KU
 	uint32 uHybridUserID = ntohl(uED2KUserID);
 	for (POSITION pos = list.GetHeadPosition(); pos != NULL;)
 	{
-		CUpDownClient* cur_client =	list.GetNext(pos);
+		CUpDownClient* cur_client = list.GetNext(pos);
 		if (cur_client->GetServerIP() == uServerIP && cur_client->GetUserIDHybrid() == uHybridUserID)
 			return cur_client;
 	}
@@ -354,11 +349,7 @@ void CClientList::AddBannedClient(uint32 dwIP)
 bool CClientList::IsBannedClient(uint32 dwIP) const
 {
 	uint32 dwBantime;
-	if (m_bannedList.Lookup(dwIP, dwBantime)){
-		if (dwBantime + CLIENTBANTIME > ::GetTickCount())
-			return true;
-	}
-	return false;
+	return m_bannedList.Lookup(dwIP, dwBantime) && (dwBantime + CLIENTBANTIME > ::GetTickCount());
 }
 
 void CClientList::RemoveBannedClient(uint32 dwIP)
@@ -546,7 +537,7 @@ void CClientList::Process()
 				else {
 					if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 						DebugSend("KADEMLIA_FIREWALLED_ACK_RES", cur_client->GetIP(), cur_client->GetKadPort());
-					Kademlia::CKademlia::GetUDPListener()->SendNullPacket(KADEMLIA_FIREWALLED_ACK_RES, ntohl(cur_client->GetIP()), cur_client->GetKadPort(), 0, NULL);
+					Kademlia::CKademlia::GetUDPListener()->SendNullPacket(KADEMLIA_FIREWALLED_ACK_RES, ntohl(cur_client->GetIP()), cur_client->GetKadPort(), Kademlia::CKadUDPKey(0), NULL);
 				}
 				//We are done with this client. Set Kad status to KS_NONE and it will be removed in the next cycle.
 				if (cur_client != NULL)
@@ -698,15 +689,13 @@ void CClientList::Process()
 void CClientList::Debug_SocketDeleted(CClientReqSocket* deleted) const
 {
 	for (POSITION pos = list.GetHeadPosition(); pos != NULL;){
-		CUpDownClient* cur_client =	list.GetNext(pos);
-		if (!AfxIsValidAddress(cur_client, sizeof(CUpDownClient))) {
+		CUpDownClient* cur_client = list.GetNext(pos);
+		if (!AfxIsValidAddress(cur_client, sizeof CUpDownClient))
 			AfxDebugBreak();
-		}
 		if (thePrefs.m_iDbgHeap >= 2)
 			ASSERT_VALID(cur_client);
-		if (cur_client->socket == deleted){
+		if (cur_client->socket == deleted)
 			AfxDebugBreak();
-		}
 	}
 }
 #endif
@@ -785,11 +774,11 @@ bool CClientList::IncomingBuddy(Kademlia::CContact* contact, Kademlia::CUInt128*
 	//Although the odds of this happening is very small, it could still happen.
 	if (FindClientByIP(nContactIP, contact->GetTCPPort()))
 		return false;
-	else if (IsKadFirewallCheckIP(nContactIP)){ // doing a kad firewall check with this IP, abort
+	if (IsKadFirewallCheckIP(nContactIP)) { // doing a kad firewall check with this IP, abort
 		DEBUG_ONLY( DebugLogWarning(_T("KAD tcp Firewallcheck / Buddy request collosion for IP %s"), (LPCTSTR)ipstr(nContactIP)) );
 		return false;
 	}
-	else if (theApp.serverconnect->GetLocalIP() == nContactIP && thePrefs.GetPort() == contact->GetTCPPort())
+	if (theApp.serverconnect->GetLocalIP() == nContactIP && thePrefs.GetPort() == contact->GetTCPPort())
 		return false; // don't connect ourself
 
 	//Add client to the lists to be processed.
@@ -819,15 +808,10 @@ void CClientList::RemoveFromKadList(CUpDownClient* torem){
 	}
 }
 
-void CClientList::AddToKadList(CUpDownClient* toadd){
-	if(!toadd)
-		return;
-	POSITION pos = m_KadList.Find(toadd);
-	if(pos)
-	{
-		return;
-	}
-	m_KadList.AddTail(toadd);
+void CClientList::AddToKadList(CUpDownClient* toadd)
+{
+	if (toadd && !m_KadList.Find(toadd))
+		m_KadList.AddTail(toadd);
 }
 
 bool CClientList::DoRequestFirewallCheckUDP(const Kademlia::CContact& contact){
@@ -920,22 +904,20 @@ void CClientList::ProcessA4AFClients() const {
 }
 // <-- ZZ:DownloadManager
 
-void CClientList::AddKadFirewallRequest(uint32 dwIP){
-	IPANDTICS add = {dwIP, ::GetTickCount()};
-	listFirewallCheckRequests.AddHead(add);
-	while (!listFirewallCheckRequests.IsEmpty()){
-		if (::GetTickCount() - listFirewallCheckRequests.GetTail().dwInserted > SEC2MS(180))
-			listFirewallCheckRequests.RemoveTail();
-		else
-			break;
-	}
+void CClientList::AddKadFirewallRequest(uint32 dwIP)
+{
+	DWORD tick = ::GetTickCount();
+	listFirewallCheckRequests.AddHead(IPANDTICS{dwIP, tick});
+	while (!listFirewallCheckRequests.IsEmpty() && tick > listFirewallCheckRequests.GetTail().dwInserted+SEC2MS(180))
+		listFirewallCheckRequests.RemoveTail();
 }
 
-bool CClientList::IsKadFirewallCheckIP(uint32 dwIP) const{
-	const DWORD tick = ::GetTickCount() - SEC2MS(180);
+bool CClientList::IsKadFirewallCheckIP(uint32 dwIP) const
+{
+	const DWORD tick = ::GetTickCount();
 	for (POSITION pos = listFirewallCheckRequests.GetHeadPosition(); pos != NULL;) {
 		const IPANDTICS& iptick = listFirewallCheckRequests.GetNext(pos);
-		if (iptick.dwIP == dwIP && tick < iptick.dwInserted)
+		if (iptick.dwIP == dwIP && tick < iptick.dwInserted+SEC2MS(180))
 			return true;
 	}
 	return false;
@@ -979,23 +961,20 @@ void CClientList::RemoveConnectingClient(CUpDownClient* pToRemove){
 	}
 }
 
-void CClientList::AddTrackCallbackRequests(uint32 dwIP){
-	IPANDTICS add = {dwIP, ::GetTickCount()};
-	listDirectCallbackRequests.AddHead(add);
-	while (!listDirectCallbackRequests.IsEmpty()){
-		if (add.dwInserted > listDirectCallbackRequests.GetTail().dwInserted + MIN2MS(3))
-			listDirectCallbackRequests.RemoveTail();
-		else
-			break;
-	}
+void CClientList::AddTrackCallbackRequests(uint32 dwIP)
+{
+	DWORD tick = ::GetTickCount();
+	listDirectCallbackRequests.AddHead(IPANDTICS{dwIP, tick});
+	while (!listDirectCallbackRequests.IsEmpty() && tick > listDirectCallbackRequests.GetTail().dwInserted+SEC2MS(180))
+		listDirectCallbackRequests.RemoveTail();
 }
 
 bool CClientList::AllowCalbackRequest(uint32 dwIP) const
 {
-	const DWORD tick = ::GetTickCount() - MIN2MS(3);
+	const DWORD tick = ::GetTickCount();
 	for (POSITION pos = listDirectCallbackRequests.GetHeadPosition(); pos != NULL;) {
 		const IPANDTICS& iptick = listDirectCallbackRequests.GetNext(pos);
-		if (iptick.dwIP == dwIP && tick < iptick.dwInserted)
+		if (iptick.dwIP == dwIP && tick < iptick.dwInserted+SEC2MS(180))
 			return false;
 	}
 	return true;

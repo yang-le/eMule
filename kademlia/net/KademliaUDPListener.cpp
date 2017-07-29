@@ -97,9 +97,9 @@ void CKademliaUDPListener::Bootstrap(uint32 uIP, uint16 uUDPPort, uint8 byKadVer
 		DebugSend("KADEMLIA2_BOOTSTRAP_REQ", uIP, uUDPPort);
 	CSafeMemFile fileIO(0);
 	if (byKadVersion >= KADEMLIA_VERSION6_49aBETA)
-		SendPacket(&fileIO, KADEMLIA2_BOOTSTRAP_REQ, uIP, uUDPPort, 0, uCryptTargetID);
+		SendPacket(&fileIO, KADEMLIA2_BOOTSTRAP_REQ, uIP, uUDPPort, CKadUDPKey(0), uCryptTargetID);
 	else
-		SendPacket(&fileIO, KADEMLIA2_BOOTSTRAP_REQ, uIP, uUDPPort, 0, NULL);
+		SendPacket(&fileIO, KADEMLIA2_BOOTSTRAP_REQ, uIP, uUDPPort, CKadUDPKey(0), NULL);
 }
 
 // Used by Kad1.0 and Kad 2.0
@@ -154,7 +154,7 @@ void CKademliaUDPListener::SendMyDetails(byte byOpcode, uint32 uIP, uint16 uUDPP
 				SendPacket(byPacket, uLen,  uIP, uUDPPort, targetUDPKey, uCryptTargetID);
 		}
 		else{
-			SendPacket(byPacket, uLen,  uIP, uUDPPort, 0, NULL);
+			SendPacket(byPacket, uLen,  uIP, uUDPPort, CKadUDPKey(0), NULL);
 			ASSERT( targetUDPKey.IsEmpty() );
 		}
 	}
@@ -230,7 +230,7 @@ void CKademliaUDPListener::SendPublishSourcePacket(CContact* pContact, const CUI
 		SendPacket(byPacket, uLen,  pContact->GetIPAddress(), pContact->GetUDPPort(), pContact->GetUDPKey(), &uClientID);
 	}
 	else
-		SendPacket(byPacket, uLen,  pContact->GetIPAddress(), pContact->GetUDPPort(), 0, NULL);
+		SendPacket(byPacket, uLen,  pContact->GetIPAddress(), pContact->GetUDPPort(), CKadUDPKey(0), NULL);
 }
 
 void CKademliaUDPListener::ProcessPacket(const byte* pbyData, uint32 uLenData, uint32 uIP, uint16 uUDPPort, bool bValidReceiverKey, CKadUDPKey senderUDPKey)
@@ -573,7 +573,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_BOOTSTRAP_RES (const byte *pbyPacke
 		uTCPPort = fileIO.ReadUInt16();
 		uVersion = fileIO.ReadUInt8();
 		bool bVerified = bAssumeVerified;
-		pRoutingZone->Add(uContactID, uIP, uUDPPort, uTCPPort, uVersion, 0, bVerified, false, false, false);
+		pRoutingZone->Add(uContactID, uIP, uUDPPort, uTCPPort, uVersion, CKadUDPKey(0), bVerified, false, false, false);
 	}
 }
 
@@ -844,12 +844,12 @@ void CKademliaUDPListener::Process_KADEMLIA2_RES (const byte *pbyPacketData, uin
 							// deliver them back to the searchmanager (because he would UDP-ask them for further results), but only report
 							// them to to FirewallChecker - this will of course cripple the search but that's not the point, since we only
 							// care for IPs and not the radom set target
-							CUDPFirewallTester::AddPossibleTestContact(uIDResult, uIPResult, uUDPPortResult, uTCPPortResult, uTarget, uVersion, 0, false);
+							CUDPFirewallTester::AddPossibleTestContact(uIDResult, uIPResult, uUDPPortResult, uTCPPortResult, uTarget, uVersion, CKadUDPKey(0), false);
 						}
 						else {
 							bool bVerified = false;
-							bool bWasAdded = pRoutingZone->AddUnfiltered(uIDResult, uIPResult, uUDPPortResult, uTCPPortResult, uVersion, 0, bVerified, false, false, false);
-							CContact* pTemp = new CContact(uIDResult, uIPResult, uUDPPortResult, uTCPPortResult, uTarget, uVersion, 0, false);
+							bool bWasAdded = pRoutingZone->AddUnfiltered(uIDResult, uIPResult, uUDPPortResult, uTCPPortResult, uVersion, CKadUDPKey(0), bVerified, false, false, false);
+							CContact* pTemp = new CContact(uIDResult, uIPResult, uUDPPortResult, uTCPPortResult, uTarget, uVersion, CKadUDPKey(0), false);
 							if (bWasAdded || pRoutingZone->IsAcceptableContact(pTemp))
 								pResults->push_back(pTemp);
 							else
@@ -2061,7 +2061,7 @@ bool CKademliaUDPListener::FindNodeIDByIP(CKadClientSearcher* pRequester, uint32
 	DebugLog(_T("FindNodeIDByIP: Requesting NodeID from %s by sending KADEMLIA2_HELLO_REQ"), (LPCTSTR)ipstr(ntohl(dwIP)));
 	if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 		DebugSend("KADEMLIA2_HELLO_REQ", dwIP, nUDPPort);
-	SendMyDetails(KADEMLIA2_HELLO_REQ, dwIP, nUDPPort, 1, 0, NULL, false); // todo: we send this unobfuscated, which is not perfect, see this can be avoided in the future
+	SendMyDetails(KADEMLIA2_HELLO_REQ, dwIP, nUDPPort, 1, CKadUDPKey(0), NULL, false); // todo: we send this unobfuscated, which is not perfect, see this can be avoided in the future
 	FetchNodeID_Struct sRequest = { dwIP, nTCPPort, ::GetTickCount() + SEC2MS(60), pRequester};
 	listFetchNodeIDRequests.AddTail(sRequest);
 	return true;
@@ -2111,7 +2111,7 @@ void CKademliaUDPListener::SendLegacyChallenge(uint32 uIP, uint16 uUDPPort, cons
 	// Add the ID of the contact we are contacting for sanity checks on the other end.
 	fileIO.WriteUInt128(&uContactID);
 	// those versions we send those requests to don't support encryption / obfuscation
-	CKademlia::GetUDPListener()->SendPacket(&fileIO, KADEMLIA2_REQ, uIP, uUDPPort, 0, NULL);
+	CKademlia::GetUDPListener()->SendPacket(&fileIO, KADEMLIA2_REQ, uIP, uUDPPort, CKadUDPKey(0), NULL);
 	if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 		DebugSend("KADEMLIA2_REQ(SendLegacyChallenge)", uIP, uUDPPort);
 	AddLegacyChallenge(uContactID, uChallenge, uIP, KADEMLIA2_REQ);

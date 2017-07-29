@@ -70,7 +70,7 @@ CContact::CContact()
 }
 
 CContact::CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint16 uTcpPort, uint8 uVersion, CKadUDPKey cUDPKey, bool bIPVerified)
-	: m_uClientID(uClientID)
+	: m_uClientID(uClientID), m_cUDPKey(cUDPKey)
 {
 	CKademlia::GetPrefs()->GetKadID(&m_uDistance);
 	m_uDistance.Xor(uClientID);
@@ -78,13 +78,12 @@ CContact::CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint1
 	m_uUdpPort = uUdpPort;
 	m_uTcpPort = uTcpPort;
 	m_uVersion = uVersion;
-	m_cUDPKey = cUDPKey;
 	m_bIPVerified = bIPVerified;
 	InitContact();
 }
 
 CContact::CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint16 uTcpPort, const CUInt128 &uTarget, uint8 uVersion, CKadUDPKey cUDPKey, bool bIPVerified)
-	: m_uClientID(uClientID)
+	: m_uClientID(uClientID), m_cUDPKey(cUDPKey)
 {
 	m_uDistance.SetValue(uTarget);
 	m_uDistance.Xor(uClientID);
@@ -92,7 +91,6 @@ CContact::CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint1
 	m_uUdpPort = uUdpPort;
 	m_uTcpPort = uTcpPort;
 	m_uVersion = uVersion;
-	m_cUDPKey = cUDPKey;
 	m_bIPVerified = bIPVerified;
 	InitContact();
 }
@@ -186,7 +184,7 @@ uint16 CContact::GetTCPPort() const
 
 void CContact::GetTCPPort(CString *psPort) const
 {
-	psPort->Format(_T("%ld"), m_uTcpPort);
+	psPort->Format(_T("%hu"), m_uTcpPort);
 }
 
 void CContact::SetTCPPort(uint16 uPort)
@@ -201,7 +199,7 @@ uint16 CContact::GetUDPPort() const
 
 void CContact::GetUDPPort(CString *psPort) const
 {
-	psPort->Format(_T("%ld"), m_uUdpPort);
+	psPort->Format(_T("%hu"), m_uUdpPort);
 }
 
 void CContact::SetUDPPort(uint16 uPort)

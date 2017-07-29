@@ -922,13 +922,12 @@ bool CemuleApp::ProcessCommandline()
     return (maininst || bAlreadyRunning);
 }
 
-BOOL CALLBACK CemuleApp::SearchEmuleWindow(HWND hWnd, LPARAM lParam){
+BOOL CALLBACK CemuleApp::SearchEmuleWindow(HWND hWnd, LPARAM lParam)
+{
 	DWORD_PTR dwMsgResult;
 	LRESULT res = ::SendMessageTimeout(hWnd,UWM_ARE_YOU_EMULE,0, 0,SMTO_BLOCK |SMTO_ABORTIFHUNG,10000,&dwMsgResult);
-	if(res == 0)
-		return TRUE;
-	if(dwMsgResult == UWM_ARE_YOU_EMULE){
-		HWND * target = (HWND *)lParam;
+	if (res != 0 && dwMsgResult == UWM_ARE_YOU_EMULE) {
+		HWND *target = reinterpret_cast<HWND *>(lParam);
 		*target = hWnd;
 		return FALSE;
 	}
@@ -936,24 +935,25 @@ BOOL CALLBACK CemuleApp::SearchEmuleWindow(HWND hWnd, LPARAM lParam){
 }
 
 
-void CemuleApp::UpdateReceivedBytes(uint32 bytesToAdd) {
+void CemuleApp::UpdateReceivedBytes(uint32 bytesToAdd)
+{
 	SetTimeOnTransfer();
 	theStats.sessionReceivedBytes+=bytesToAdd;
 }
 
-void CemuleApp::UpdateSentBytes(uint32 bytesToAdd, bool sentToFriend) {
+void CemuleApp::UpdateSentBytes(uint32 bytesToAdd, bool sentToFriend)
+{
 	SetTimeOnTransfer();
-	theStats.sessionSentBytes+=bytesToAdd;
+	theStats.sessionSentBytes += bytesToAdd;
 
-    if(sentToFriend == true) {
+    if (sentToFriend)
 	    theStats.sessionSentBytesToFriend += bytesToAdd;
-    }
 }
 
-void CemuleApp::SetTimeOnTransfer() {
-	if (theStats.transferStarttime>0) return;
-
-	theStats.transferStarttime=GetTickCount();
+void CemuleApp::SetTimeOnTransfer()
+{
+	if (theStats.transferStarttime <= 0)
+		theStats.transferStarttime = GetTickCount();
 }
 
 CString CemuleApp::CreateKadSourceLink(const CAbstractFile* f)
@@ -1078,10 +1078,8 @@ CString CemuleApp::CopyTextFromClipboard()
 		}
 	}
 
-	if (!IsClipboardFormatAvailable(CF_TEXT))
-		return _T("");
-	if (!OpenClipboard(NULL))
-		return _T("");
+	if (!IsClipboardFormatAvailable(CF_TEXT) || !OpenClipboard(NULL))
+		return CString();
 
 	CString	retstring;
 	HGLOBAL	hglb = GetClipboardData(CF_TEXT);
@@ -1105,7 +1103,7 @@ void CemuleApp::OnlineSig() // Added By Bouc7
 		return;
 
 	static const TCHAR _szFileName[] = _T("onlinesig.dat");
-	CString strFullPath =  thePrefs.GetMuleDirectory(EMULE_CONFIGBASEDIR);
+	CString strFullPath(thePrefs.GetMuleDirectory(EMULE_CONFIGBASEDIR));
 	strFullPath += _szFileName;
 
 	// The 'onlinesig.dat' is potentially read by other applications at more or less frequent intervals.
@@ -1700,16 +1698,12 @@ CString CemuleApp::GetSkinFileItem(LPCTSTR lpszResourceName, LPCTSTR pszResource
 bool CemuleApp::LoadSkinColor(LPCTSTR pszKey, COLORREF& crColor) const
 {
 	LPCTSTR pszSkinProfile = thePrefs.GetSkinProfile();
-	if (pszSkinProfile != NULL && pszSkinProfile[0] != _T('\0'))
-	{
+	if (pszSkinProfile != NULL && pszSkinProfile[0] != _T('\0')) {
 		TCHAR szColor[MAX_PATH];
 		GetPrivateProfileString(_T("Colors"), pszKey, _T(""), szColor, _countof(szColor), pszSkinProfile);
-		if (szColor[0] != _T('\0'))
-		{
+		if (szColor[0] != _T('\0')) {
 			UINT red, grn, blu;
-			int iVals = _stscanf(szColor, _T("%i , %i , %i"), &red, &grn, &blu);
-			if (iVals == 3)
-			{
+			if (_stscanf(szColor, _T("%i , %i , %i"), &red, &grn, &blu) == 3) {
 				crColor = RGB(red, grn, blu);
 				return true;
 			}
@@ -1720,9 +1714,7 @@ bool CemuleApp::LoadSkinColor(LPCTSTR pszKey, COLORREF& crColor) const
 
 bool CemuleApp::LoadSkinColorAlt(LPCTSTR pszKey, LPCTSTR pszAlternateKey, COLORREF& crColor) const
 {
-	if (LoadSkinColor(pszKey, crColor))
-		return true;
-	return LoadSkinColor(pszAlternateKey, crColor);
+	return LoadSkinColor(pszKey, crColor) || LoadSkinColor(pszAlternateKey, crColor);
 }
 
 void CemuleApp::ApplySkin(LPCTSTR pszSkinProfile)

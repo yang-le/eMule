@@ -95,8 +95,8 @@ namespace Kademlia
 			static uint32 GetUDPVerifyKey(uint32 dwTargetIP);
 		private:
 			void Init(LPCTSTR szFilename);
-			void Reset();
-			void SetDefaults();
+//			void Reset();
+//			void SetDefaults();
 			void ReadFile();
 			void WriteFile();
 			CString	m_sFilename;

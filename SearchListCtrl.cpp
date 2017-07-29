@@ -203,7 +203,7 @@ CSearchListCtrl::CSearchListCtrl()
 	SetGeneralPurposeFind(true);
 	m_tooltip = new CToolTipCtrlX;
 	m_eFileSizeFormat = (EFileSizeFormat)theApp.GetProfileInt(_T("eMule"), _T("SearchResultsFileSizeFormat"), fsizeDefault);
-	SetSkinKey(L"SearchResultsLv");
+	SetSkinKey(_T("SearchResultsLv"));
 }
 
 void CSearchListCtrl::OnDestroy()
@@ -1976,18 +1976,14 @@ bool CSearchListCtrl::IsFilteredItem(const CSearchFile* pSearchFile) const
 	GetItemDisplayText(pSearchFile, theApp.emuledlg->searchwnd->m_pwndResults->GetFilterColumn(),
 					   szFilterTarget, _countof(szFilterTarget));
 
-	for (int i = 0; i < rastrFilter.GetSize(); i++)
-	{
-		const CString& rstrExpr = rastrFilter[i];
-		bool bAnd = true;
-		LPCTSTR pszText = (LPCTSTR)rstrExpr;
-		if (pszText[0] == _T('-')) {
-			pszText += 1;
-			bAnd = false;
-		}
+	for (int i = 0; i < rastrFilter.GetSize(); ++i) {
+		LPCTSTR pszText = (LPCTSTR)rastrFilter[i];
+		bool bAnd = (pszText[0] != _T('-'));
+		if (!bAnd)
+			++pszText;
 
 		bool bFound = (stristr(szFilterTarget, pszText) != NULL);
-		if ((bAnd && !bFound) || (!bAnd && bFound))
+		if (bAnd != bFound)
 			return true;
 	}
 	return false;

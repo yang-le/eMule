@@ -1755,12 +1755,12 @@ void CSharedFileList::Save() const
 		catch(CFileException* error){
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
 			GetExceptionMessage(*error, buffer, _countof(buffer));
-			DebugLogError(L"Failed to save %s - %s", (LPCTSTR)strFullPath, buffer);
+			DebugLogError(_T("Failed to save %s - %s"), (LPCTSTR)strFullPath, buffer);
 			error->Delete();
 		}
 	}
 	else
-		DebugLogError(L"Failed to save %s", (LPCTSTR)strFullPath);
+		DebugLogError(_T("Failed to save %s"), (LPCTSTR)strFullPath);
 }
 
 void CSharedFileList::LoadSingleSharedFilesList()
@@ -1777,7 +1777,7 @@ void CSharedFileList::LoadSingleSharedFilesList()
 			CString toadd;
 			while (sdirfile->ReadString(toadd))
 			{
-				toadd.Trim(L" \t\r\n"); // need to trim '\r' in binary mode
+				toadd.Trim(_T(" \t\r\n")); // need to trim '\r' in binary mode
 				if (toadd.IsEmpty())
 					continue;
 
@@ -1810,12 +1810,12 @@ void CSharedFileList::LoadSingleSharedFilesList()
 		catch(CFileException* error){
 			TCHAR buffer[MAX_CFEXP_ERRORMSG];
 			GetExceptionMessage(*error, buffer, _countof(buffer));
-			DebugLogError(L"Failed to load %s - %s", (LPCTSTR)strFullPath, buffer);
+			DebugLogError(_T("Failed to load %s - %s"), (LPCTSTR)strFullPath, buffer);
 			error->Delete();
 		}
 	}
 	else
-		DebugLogError(L"Failed to load %s", (LPCTSTR)strFullPath);
+		DebugLogError(_T("Failed to load %s"), (LPCTSTR)strFullPath);
 	delete sdirfile;
 }
 

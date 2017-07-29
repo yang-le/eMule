@@ -90,7 +90,7 @@ void CSearchList::RemoveResults(uint32 nSearchID)
 	for (POSITION pos = m_listFileLists.GetHeadPosition(); pos != NULL;)
 	{
 		POSITION posLast = pos;
-		SearchListsStruct* listCur =	m_listFileLists.GetNext(pos);
+		SearchListsStruct* listCur = m_listFileLists.GetNext(pos);
 		if (listCur->m_nSearchID == nSearchID)
 		{
 			while (!listCur->m_listSearchFiles.IsEmpty())
@@ -182,34 +182,31 @@ UINT CSearchList::ProcessSearchAnswer(const uchar* in_packet, uint32 size,
 	pParams->strExpression = Sender->GetUserName();
 	pParams->dwSearchID = nSearchID;
 	pParams->bClientSharedFiles = true;
-	if (theApp.emuledlg->searchwnd->CreateNewTab(pParams)){
+	if (theApp.emuledlg->searchwnd->CreateNewTab(pParams)) {
 		m_foundFilesCount.SetAt(nSearchID, 0);
 		m_foundSourcesCount.SetAt(nSearchID, 0);
-	}
-	else
+	} else
 		delete pParams;
 
 	CSafeMemFile packet(in_packet, size);
-	UINT results = packet.ReadUInt32();
-	for (UINT i = 0; i < results; ++i){
-		CSearchFile* toadd = new CSearchFile(&packet, Sender ? Sender->GetUnicodeSupport()!=utf8strNone : false, nSearchID, 0, 0, pszDirectory);
-		if (toadd->IsLargeFile() && (Sender == NULL || !Sender->SupportsLargeFiles())){
+	uint32 results = packet.ReadUInt32();
+	for (uint32 i = 0; i < results; ++i){
+		CSearchFile* toadd = new CSearchFile(&packet, Sender->GetUnicodeSupport()!=utf8strNone, nSearchID, 0, 0, pszDirectory);
+		if (toadd->IsLargeFile() && !Sender->SupportsLargeFiles()) {
 			DebugLogWarning(_T("Client offers large file (%s) but doesn't announced support for it - ignoring file"), (LPCTSTR)toadd->GetFileName());
 			delete toadd;
 			continue;
 		}
-		if (Sender){
-			toadd->SetClientID(Sender->GetIP());
-			toadd->SetClientPort(Sender->GetUserPort());
-			toadd->SetClientServerIP(Sender->GetServerIP());
-			toadd->SetClientServerPort(Sender->GetServerPort());
-			if (Sender->GetServerIP() && Sender->GetServerPort()){
-				CSearchFile::SServer server(Sender->GetServerIP(), Sender->GetServerPort(), false);
-				server.m_uAvail = 1;
-				toadd->AddServer(server);
-			}
-			toadd->SetPreviewPossible( Sender->GetPreviewSupport() && ED2KFT_VIDEO == GetED2KFileTypeID(toadd->GetFileName()) );
+		toadd->SetClientID(Sender->GetIP());
+		toadd->SetClientPort(Sender->GetUserPort());
+		toadd->SetClientServerIP(Sender->GetServerIP());
+		toadd->SetClientServerPort(Sender->GetServerPort());
+		if (Sender->GetServerIP() && Sender->GetServerPort()) {
+			CSearchFile::SServer server(Sender->GetServerIP(), Sender->GetServerPort(), false);
+			server.m_uAvail = 1;
+			toadd->AddServer(server);
 		}
+		toadd->SetPreviewPossible(Sender->GetPreviewSupport() && ED2KFT_VIDEO == GetED2KFileTypeID(toadd->GetFileName()));
 		AddToList(toadd, true);
 	}
 
@@ -218,7 +215,7 @@ UINT CSearchList::ProcessSearchAnswer(const uchar* in_packet, uint32 size,
 	int iAddData = static_cast<int>(packet.GetLength() - packet.GetPosition());
 	if (iAddData == 1){
 		uint8 ucMore = packet.ReadUInt8();
-		if (ucMore == 0x00 || ucMore == 0x01){
+		if (ucMore <= 0x01) {
 			if (pbMoreResultsAvailable)
 				*pbMoreResultsAvailable = ucMore!=0;
 			if (thePrefs.GetDebugClientTCPLevel() > 0)
@@ -768,7 +765,7 @@ void CSearchList::AddResultCount(uint32 nSearchID, const uchar* hash, UINT nCoun
 		+ ( (bSpam && thePrefs.IsSearchSpamFilterEnabled()) ? min(nCount, 5) : nCount) );
 }
 // FIXME LARGE FILES
-void CSearchList::KademliaSearchKeyword( uint32 searchID, const Kademlia::CUInt128* fileID, LPCTSTR name
+void CSearchList::KademliaSearchKeyword( uint32 searchID, const Kademlia::CUInt128* pFileID, LPCTSTR name
 									   , uint64 size, LPCTSTR type, UINT uKadPublishInfo
 									   , CArray<CAICHHash>& raAICHHashs, CArray<uint8>& raAICHHashPopularity
 									   , SSearchTerm* pQueriedSearchTerm,  UINT numProperties, ...)
@@ -780,9 +777,9 @@ void CSearchList::KademliaSearchKeyword( uint32 searchID, const Kademlia::CUInt1
 	CSafeMemFile* temp = new CSafeMemFile(250);
 	Kademlia::CKeyEntry verifierEntry;
 
-	verifierEntry.m_uKeyID.SetValue(*fileID);
+	verifierEntry.m_uKeyID.SetValue(*pFileID);
 	uchar fileid[16];
-	fileID->ToByteArray(fileid);
+	pFileID->ToByteArray(fileid);
 	temp->WriteHash16(fileid);
 
 

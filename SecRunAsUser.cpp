@@ -378,7 +378,7 @@ eResult CSecRunAsUser::RestartAsUser(){
 CStringW CSecRunAsUser::GetCurrentUserW() const
 {
 	if ( m_strCurrentUser.IsEmpty() )
-		return CString(L"Unknown");
+		return CString(_T("Unknown"));
 	return m_strCurrentUser;
 }
 

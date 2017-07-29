@@ -17,13 +17,13 @@ public:
 	BOOL TraySetMenu(HMENU hMenu);
 	BOOL TraySetMenu(LPCTSTR lpszMenuName);
 	BOOL TrayUpdate();
-	BOOL TrayShow();
-	BOOL TrayHide();
+	bool TrayShow();
+	bool TrayHide();
 	void TraySetToolTip(LPCTSTR lpszToolTip);
 	void TraySetIcon(HICON hIcon, bool bDelete = false);
 	void TraySetIcon(UINT nResourceID);
 	void TraySetIcon(LPCTSTR lpszResourceName);
-	BOOL TrayIsVisible();
+	bool TrayIsVisible();
 
 	virtual void TrayMinimizeToTrayChange();
 	virtual void RestoreWindow();
@@ -35,17 +35,19 @@ public:
 	virtual void OnTrayMouseMove(CPoint pt);
 
 protected:
+
 	bool* m_pbMinimizeToTray;
-	bool m_bCurIconDelete;
 	HICON m_hPrevIconDelete;
+	CMenu m_mnuTrayMenu;
+	NOTIFYICONDATA m_nidIconData;
+	UINT m_uSingleClickTimer;
+	bool m_bCurIconDelete;
 	bool m_bLButtonDblClk;
 	bool m_bLButtonDown;
-	BOOL m_bTrayIconVisible;
-	NOTIFYICONDATA m_nidIconData;
-	CMenu m_mnuTrayMenu;
-	UINT m_nDefaultMenuItem;
-	UINT m_uSingleClickTimer;
+	bool m_bTrayIconVisible;
+//	UINT m_nDefaultMenuItem;
 
+private:
 	void KillSingleClickTimer();
 
 	DECLARE_MESSAGE_MAP()	

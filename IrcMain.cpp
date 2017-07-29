@@ -661,15 +661,15 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 						CString s = sRawMessage.Tokenize(_T(" "),iIndex)+_T(' ');
 						CTimeSpan idle(_tstoi64(sRawMessage.Tokenize(_T(" "), iIndex)));
 						if (idle.GetHours() > 0)
-							s += idle.Format("%Hhrs %Mmins %Ssecs");
+							s += idle.Format(_T("%Hhrs %Mmins %Ssecs"));
 						else if (idle.GetMinutes() > 0)
-							s += idle.Format("%Mmins %Ssecs");
+							s += idle.Format(_T("%Mmins %Ssecs"));
 						else
-							s += idle.Format("%Ssecs" );
-						s += " idle";
+							s += idle.Format(_T("%Ssecs"));
+						s += _T(" idle");
 						CTime signon(_tstoi64(sRawMessage.Tokenize(_T(" "), iIndex)));
 						if (signon != 0)
-							s += signon.Format(", signed on %a %b %d %H:%M:%S");
+							s += signon.Format(_T(", signed on %a %b %d %H:%M:%S"));
 						m_pwndIRC->AddStatus(s);
 						return;
 					}

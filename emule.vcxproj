@@ -388,7 +388,6 @@
     <ClCompile Include="GDIThread.cpp" />
     <ClCompile Include="HTRichEditCtrl.cpp" />
     <ClCompile Include="HttpDownloadDlg.cpp" />
-    <ClCompile Include="HyperTextCtrl.cpp" />
     <ClCompile Include="IconStatic.cpp" />
     <ClCompile Include="IESecurity.cpp" />
     <ClCompile Include="InputBox.cpp" />
@@ -697,7 +696,6 @@
     <ClInclude Include="HighColorTab.hpp" />
     <ClInclude Include="HTRichEditCtrl.h" />
     <ClInclude Include="HttpDownloadDlg.h" />
-    <ClInclude Include="HyperTextCtrl.h" />
     <ClInclude Include="IconStatic.h" />
     <ClInclude Include="IESecurity.h" />
     <ClInclude Include="InputBox.h" />

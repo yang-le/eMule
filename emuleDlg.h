@@ -73,7 +73,7 @@ public:
 	void ShowMessageState(UINT iconnr);
 	void SetActiveDialog(CWnd* dlg);
 	CWnd* GetActiveDialog() const																{ return activewnd; }
-	void ShowTransferRate(bool forceAll=false);
+	void ShowTransferRate(bool bForceAll=false);
     void ShowPing();
 	void Localize();
 
@@ -96,7 +96,7 @@ public:
 
 	// Logging
 	void AddLogText(UINT uFlags, LPCTSTR pszText);
-	void AddServerMessageLine(UINT uFlags, LPCTSTR pszText);
+	void AddServerMessageLine(UINT uFlags, LPCTSTR pszLine);
 	void ResetLog();
 	void ResetDebugLog();
 	void ResetServerInfo();
@@ -121,7 +121,7 @@ public:
 	int ShowPreferences(UINT uStartPageID = (UINT)-1);
 	bool IsPreferencesDlgOpen() const;
 	bool IsTrayIconToFlash()	{ return m_iMsgIcon!=0; }
-	void SetToolTipsDelay(UINT uDelay);
+	void SetToolTipsDelay(UINT uMilliseconds);
 	void StartUPnP(bool bReset = true, uint16 nForceTCPPort = 0, uint16 nForceUDPPort = 0);
 	void RefreshUPnP(bool bRequestAnswer = false);
 	HBRUSH GetCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
@@ -259,7 +259,7 @@ protected:
 	afx_msg LRESULT OnUserChanged(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnKickIdle(WPARAM nWhy, LPARAM lIdleCount);
 	afx_msg void OnShowWindow( BOOL bShow, UINT nStatus );
-	afx_msg BOOL OnChevronPushed(UINT id, NMHDR *pnm, LRESULT *pResult);
+	afx_msg BOOL OnChevronPushed(UINT id, NMHDR *pNMHDR, LRESULT *plResult);
 	afx_msg LRESULT OnPowerBroadcast(WPARAM wParam, LPARAM lParam);
 
 	// quick-speed changer -- based on xrmb

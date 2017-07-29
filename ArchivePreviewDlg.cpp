@@ -733,8 +733,9 @@ int CArchivePreviewDlg::ShowRarResults(int succ, archiveScannerThreadParams_s* t
 				temp+=_T('M');
 			}
 
-			if (!temp.IsEmpty()) temp+=_T(", ");
-			temp.AppendFormat(_T("L%i"),block->METHOD-0x30);
+			if (!temp.IsEmpty())
+				temp+=_T(", ");
+			temp.AppendFormat(_T("L%u"),block->METHOD-0x30u);
 
 			m_ContentList.SetItemText(iItem,uSubId++,temp);
 

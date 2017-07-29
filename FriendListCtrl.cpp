@@ -48,7 +48,7 @@ END_MESSAGE_MAP()
 CFriendListCtrl::CFriendListCtrl()
 {
 	SetGeneralPurposeFind(true);
-	SetSkinKey(L"FriendsLv");
+	SetSkinKey(_T("FriendsLv"));
 }
 
 CFriendListCtrl::~CFriendListCtrl()
@@ -93,17 +93,15 @@ void CFriendListCtrl::SetAllIcons()
 void CFriendListCtrl::Localize()
 {
 	CHeaderCtrl* pHeaderCtrl = GetHeaderCtrl();
+	CString strRes(GetResString(IDS_QL_USERNAME));
 	HDITEM hdi;
 	hdi.mask = HDI_TEXT;
-	CString strRes;
-
-	strRes = GetResString(IDS_QL_USERNAME);
 	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
 	pHeaderCtrl->SetItem(0, &hdi);
 
 	int iItems = GetItemCount();
-	for (int i = 0; i < iItems; i++)
-		UpdateFriend(i, (CFriend*)GetItemData(i));
+	for (int i = 0; i < iItems; ++i)
+		UpdateFriend(i, reinterpret_cast<CFriend *>(GetItemData(i)));
 }
 
 void CFriendListCtrl::UpdateFriend(int iItem, const CFriend* pFriend)
@@ -158,7 +156,7 @@ void CFriendListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	const CFriend* cur_friend = NULL;
 	int iSel = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
 	if (iSel != -1) {
-		cur_friend = (CFriend*)GetItemData(iSel);
+		cur_friend = reinterpret_cast<CFriend *>(GetItemData(iSel));
 		ClientMenu.AppendMenu(MF_STRING,MP_DETAIL, GetResString(IDS_SHOWDETAILS), _T("CLIENTDETAILS"));
 		ClientMenu.SetDefaultItem(MP_DETAIL);
 	}
@@ -166,7 +164,7 @@ void CFriendListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	ClientMenu.AppendMenu(MF_STRING, MP_ADDFRIEND, GetResString(IDS_ADDAFRIEND), _T("ADDFRIEND"));
 	ClientMenu.AppendMenu(MF_STRING | (cur_friend ? MF_ENABLED : MF_GRAYED), MP_REMOVEFRIEND, GetResString(IDS_REMOVEFRIEND), _T("DELETEFRIEND"));
 	ClientMenu.AppendMenu(MF_STRING | (cur_friend ? MF_ENABLED : MF_GRAYED), MP_MESSAGE, GetResString(IDS_SEND_MSG), _T("SENDMESSAGE"));
-	ClientMenu.AppendMenu(MF_STRING | ((cur_friend==NULL || (cur_friend && cur_friend->GetLinkedClient(true) && !cur_friend->GetLinkedClient(true)->GetViewSharedFilesSupport())) ? MF_GRAYED : MF_ENABLED), MP_SHOWLIST, GetResString(IDS_VIEWFILES) , _T("VIEWFILES"));
+	ClientMenu.AppendMenu(MF_STRING | ((cur_friend==NULL || cur_friend->GetLinkedClient(true) && !cur_friend->GetLinkedClient(true)->GetViewSharedFilesSupport()) ? MF_GRAYED : MF_ENABLED), MP_SHOWLIST, GetResString(IDS_VIEWFILES) , _T("VIEWFILES"));
 	ClientMenu.AppendMenu(MF_STRING, MP_FRIENDSLOT, GetResString(IDS_FRIENDSLOT), _T("FRIENDSLOT"));
 	ClientMenu.AppendMenu(MF_STRING | (GetItemCount() > 0 ? MF_ENABLED : MF_GRAYED), MP_FIND, GetResString(IDS_FIND), _T("Search"));
 
@@ -181,10 +179,8 @@ BOOL CFriendListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 {
 	wParam = LOWORD(wParam);
 
-	CFriend* cur_friend = NULL;
 	int iSel = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
-	if (iSel != -1)
-		cur_friend = (CFriend*)GetItemData(iSel);
+	CFriend* cur_friend = (iSel != -1) ? reinterpret_cast<CFriend *>(GetItemData(iSel)) : NULL;
 
 	switch (wParam)
 	{
@@ -251,7 +247,7 @@ void CFriendListCtrl::OnNmDblClk(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
 	int iSel = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
 	if (iSel != -1)
-		ShowFriendDetails((CFriend*)GetItemData(iSel));
+		ShowFriendDetails(reinterpret_cast<CFriend *>(GetItemData(iSel)));
 	*pResult = 0;
 }
 
@@ -275,10 +271,11 @@ void CFriendListCtrl::ShowFriendDetails(const CFriend* pFriend)
 
 BOOL CFriendListCtrl::PreTranslateMessage(MSG* pMsg)
 {
-	if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_DELETE)
-		PostMessage(WM_COMMAND, MP_REMOVEFRIEND, 0);
-	else if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_INSERT)
-		PostMessage(WM_COMMAND, MP_ADDFRIEND, 0);
+	if (pMsg->message == WM_KEYDOWN)
+		if (pMsg->wParam == VK_DELETE)
+			PostMessage(WM_COMMAND, MP_REMOVEFRIEND, 0);
+		else if (pMsg->wParam == VK_INSERT)
+			PostMessage(WM_COMMAND, MP_ADDFRIEND, 0);
 
 	return CMuleListCtrl::PreTranslateMessage(pMsg);
 }
@@ -304,8 +301,8 @@ void CFriendListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 int CALLBACK CFriendListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const CFriend *item1 = (CFriend *)lParam1;
-	const CFriend *item2 = (CFriend *)lParam2;
+	const CFriend *item1 = reinterpret_cast<CFriend *>(lParam1);
+	const CFriend *item2 = reinterpret_cast<CFriend *>(lParam2);
 	if (item1 == NULL || item2 == NULL)
 		return 0;
 
@@ -327,5 +324,5 @@ int CALLBACK CFriendListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 void CFriendListCtrl::UpdateList()
 {
 	theApp.emuledlg->chatwnd->UpdateFriendlistCount(theApp.friendlist->GetCount());
-	SortItems(SortProc, MAKELONG(GetSortItem(), (GetSortAscending() ? 0 : 0x0001)));
+	SortItems(SortProc, MAKELONG(GetSortItem(), (GetSortAscending() ? 0 : 1)));
 }

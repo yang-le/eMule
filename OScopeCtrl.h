@@ -64,24 +64,24 @@ protected:
 
 	typedef struct PlotDataStruct
 	{
+		CList<double> lstPoints;
 		COLORREF crPlotColor;       // data plot color
 		CPen   penPlot;
+		CString LegendLabel;
 		double dCurrentPosition;    // current position
 		double dPreviousPosition;   // previous position
-		int	nPrevY;
 		double dLowerLimit;         // lower bounds
 		double dUpperLimit;         // upper bounds
 		double dRange;				// = UpperLimit - LowerLimit
 		double dVerticalFactor;
+		int	nPrevY;
 		// Optional variable to set a ratio for a given "trend".
 		// The purpose here is to better implement the customizable
 		// active connections ratio, so that points are redrawn correctly
 		// when the ratio is changed, rather than having all previous points
 		// no longer match up with the new ratio.
 		int		iTrendRatio;
-		CString LegendLabel;
 		bool BarsPlot;
-		CList<double> lstPoints;
 	} PlotData_t;
 	PlotData_t* m_PlotData;
 

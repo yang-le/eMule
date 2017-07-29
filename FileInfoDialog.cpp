@@ -1592,7 +1592,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 						if (strDate.IsEmpty())
 							strDate = theMediaInfoDLL.Get(Handle, Stream_General, 0, _T("Encoded_Date"), Info_Text, Info_Name);
 						struct tm tmUtc = {};
-						if (_stscanf(strDate, _T("UTC %u-%u-%u %u:%u:%u"), &tmUtc.tm_year, &tmUtc.tm_mon, &tmUtc.tm_mday, &tmUtc.tm_hour, &tmUtc.tm_min, &tmUtc.tm_sec) == 6)
+						if (_stscanf(strDate, _T("UTC %i-%i-%i %i:%i:%i"), &tmUtc.tm_year, &tmUtc.tm_mon, &tmUtc.tm_mday, &tmUtc.tm_hour, &tmUtc.tm_min, &tmUtc.tm_sec) == 6)
 						{
 							tmUtc.tm_mon -= 1;
 							tmUtc.tm_year -= 1900;

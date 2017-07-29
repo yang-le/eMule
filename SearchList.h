@@ -59,9 +59,9 @@ public:
 	~CSearchList();
 
 	void	Clear();
-	void	NewSearch(CSearchListCtrl* in_wnd, const CStringA& strResultFileType, uint32 nSearchID, ESearchType eType, CString strSearchExpression, bool bMobilMuleSearch = false);
-	UINT	ProcessSearchAnswer(const uchar* packet, uint32 size, CUpDownClient* Sender, bool* pbMoreResultsAvailable, LPCTSTR pszDirectory = NULL);
-	UINT	ProcessSearchAnswer(const uchar* packet, uint32 size, bool bOptUTF8, uint32 nServerIP, uint16 nServerPort, bool* pbMoreResultsAvailable);
+	void	NewSearch(CSearchListCtrl* pWnd, const CStringA& strResultFileType, uint32 nSearchID, ESearchType eSearchType, CString strSearchExpression, bool bMobilMuleSearch = false);
+	UINT	ProcessSearchAnswer(const uchar* in_packet, uint32 size, CUpDownClient* Sender, bool* pbMoreResultsAvailable, LPCTSTR pszDirectory = NULL);
+	UINT	ProcessSearchAnswer(const uchar* in_packet, uint32 size, bool bOptUTF8, uint32 nServerIP, uint16 nServerPort, bool* pbMoreResultsAvailable);
 	UINT	ProcessUDPSearchAnswer(CFileDataIO& packet, bool bOptUTF8, uint32 nServerIP, uint16 nServerPort);
 	UINT	GetED2KResultCount() const;
 	UINT	GetResultCount(uint32 nSearchID) const;
@@ -75,7 +75,7 @@ public:
 	void	AddFileToDownloadByHash(const uchar* hash, int cat);
 	bool	AddToList(CSearchFile* toadd, bool bClientResponse = false, uint32 dwFromUDPServerIP = 0);
 	CSearchFile* GetSearchFileByHash(const uchar* hash) const;
-	void	KademliaSearchKeyword(uint32 searchID, const Kademlia::CUInt128* pfileID, LPCTSTR name, uint64 size, LPCTSTR type, UINT uKadPublishInfo, CArray<CAICHHash>& raAICHHashs, CArray<uint8>& raAICHHashPopularity, SSearchTerm* pQueriedSearchTerm, UINT numProperties, ...);
+	void	KademliaSearchKeyword(uint32 searchID, const Kademlia::CUInt128* pFileID, LPCTSTR name, uint64 size, LPCTSTR type, UINT uKadPublishInfo, CArray<CAICHHash>& raAICHHashs, CArray<uint8>& raAICHHashPopularity, SSearchTerm* pQueriedSearchTerm, UINT numProperties, ...);
 	bool	AddNotes(Kademlia::CEntry* entry, const uchar* hash);
 	void	SetNotesSearchStatus(const uchar* pFileHash, bool bSearchRunning);
 	void	SentUDPRequestNotification(uint32 nSearchID, uint32 dwServerIP);
@@ -83,7 +83,7 @@ public:
 	void	StoreSearches();
 	void	LoadSearches();
 
-	void	DoSpamRating(CSearchFile* pSearchFile, bool bIsClientFile = false, bool bMarkAsNoSpam = false, bool bRecalculateAll = false, bool bUpdateAll = false, uint32 dwFromUDPServerIP = 0);
+	void	DoSpamRating(CSearchFile* pSearchFile, bool bIsClientFile = false, bool bMarkAsNoSpam = false, bool bRecalculateAll = false, bool bUpdate = false, uint32 dwFromUDPServerIP = 0);
 	void	MarkFileAsSpam(CSearchFile* pSpamFile, bool bRecalculateAll = false, bool bUpdate = false);
 	void	MarkFileAsNotSpam(CSearchFile* pSpamFile, bool bRecalculateAll = false, bool bUpdate = false)	{ DoSpamRating(pSpamFile, false, true, bRecalculateAll, bUpdate); }
 	void	RecalculateSpamRatings(uint32 nSearchID, bool bExpectHigher, bool bExpectLower, bool bUpdate);

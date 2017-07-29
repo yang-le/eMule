@@ -60,8 +60,8 @@ static uint32 counter, sec, statsave;
 static UINT s_uSaveStatistics = 0;
 static uint32 igraph, istats, i2Secs;
 
-#define HIGHSPEED_UPLOADRATE_START 500*1024
-#define HIGHSPEED_UPLOADRATE_END   300*1024
+#define HIGHSPEED_UPLOADRATE_START	500*1024
+#define HIGHSPEED_UPLOADRATE_END	300*1024
 
 
 CUploadQueue::CUploadQueue()
@@ -222,14 +222,11 @@ bool CUploadQueue::AddUpNextClient(LPCTSTR pszReason, CUpDownClient* directadd){
 	}
 
 	// tell the client that we are now ready to upload
-	if (!newclient->socket || !newclient->socket->IsConnected())
-	{
+	if (!newclient->socket || !newclient->socket->IsConnected() || !newclient->CheckHandshakeFinished()) {
 		newclient->SetUploadState(US_CONNECTING);
 		if (!newclient->TryToConnect(true))
 			return false;
-	}
-	else
-	{
+	} else {
 		if (thePrefs.GetDebugClientTCPLevel() > 0)
 			DebugSend("OP__AcceptUploadReq", newclient);
 		Packet* packet = new Packet(OP_ACCEPTUPLOADREQ,0);
@@ -401,13 +398,13 @@ void CUploadQueue::Process() {
 
 	// don't save more than 30 secs of data
 	while(average_tick_list.GetCount() > 3 && !average_friend_dr_list.IsEmpty() && ::GetTickCount()-average_tick_list.GetHead() > SEC2MS(30)) {
-   		m_average_dr_sum -= average_dr_list.RemoveHead();
+		m_average_dr_sum -= average_dr_list.RemoveHead();
 		average_friend_dr_list.RemoveHead();
 		average_tick_list.RemoveHead();
 	}
 };
 
-bool CUploadQueue::AcceptNewClient(bool addOnNextConnect)
+bool CUploadQueue::AcceptNewClient(bool addOnNextConnect) const
 {
 	INT_PTR curUploadSlots = uploadinglist.GetCount();
 
@@ -420,7 +417,7 @@ bool CUploadQueue::AcceptNewClient(bool addOnNextConnect)
 	return AcceptNewClient(curUploadSlots);
 }
 
-bool CUploadQueue::AcceptNewClient(INT_PTR curUploadSlots)
+bool CUploadQueue::AcceptNewClient(INT_PTR curUploadSlots) const
 {
 	// check if we can allow a new client to start downloading from us
 
@@ -457,11 +454,11 @@ uint32 CUploadQueue::GetTargetClientDataRate(bool bMinDatarate) const
 	INT_PTR nOpenSlots = GetUploadQueueLength();
 	uint32 nResult;
 	if (nOpenSlots <= 3)
-		nResult = 3 * 1204; // 3KB/s for 3 slots or less
+		nResult = 3 * 1024; // 3KB/s for 3 slots or less
 	else if (nOpenSlots >= 40)
 		nResult = UPLOAD_CLIENT_MAXDATARATE; //for 40 slots and more
 	else
-		nResult = min(UPLOAD_CLIENT_MAXDATARATE, (uint32) ((float)nOpenSlots * 1.25f * 1024)); // linear increase in between
+		nResult = min(UPLOAD_CLIENT_MAXDATARATE, (uint32)(nOpenSlots * 1.25f * 1024)); // linear increase in between
 
 	if (bMinDatarate)
 		nResult = (uint32)(nResult * 0.75f);
@@ -820,11 +817,9 @@ bool CUploadQueue::RemoveFromUploadQueue(CUpDownClient* client, LPCTSTR pszReaso
 	return result;
 }
 
-uint32 CUploadQueue::GetAverageUpTime()
+uint32 CUploadQueue::GetAverageUpTime() const
 {
-	if (successfullupcount)
-		return totaluploadtime/successfullupcount;
-	return 0;
+	return successfullupcount ? totaluploadtime/successfullupcount : 0;
 }
 
 bool CUploadQueue::RemoveFromWaitingQueue(CUpDownClient* client, bool updatewindow)
@@ -889,13 +884,13 @@ bool CUploadQueue::CheckForTimeOver(const CUpDownClient* client)
 		const uint32 score = client->GetScore(true, true);
 
 		// Check if another client has a bigger score
-		if (score < GetMaxClientScore() && m_dwRemovedClientByScore < GetTickCount()) {
+		if (score < GetMaxClientScore() && m_dwRemovedClientByScore < ::GetTickCount()) {
 			if (thePrefs.GetLogUlDlEvents())
 				AddDebugLogLine(DLP_VERYLOW, false, _T("%s: Upload session ended due to score."), client->GetUserName());
 			//Set timer to prevent to many uploadslot getting kick do to score.
 			//Upload slots are delayed by a min of 1 sec and the maxscore is reset every 5 sec.
 			//So, I choose 6 secs to make sure the maxscore it updated before doing this again.
-			m_dwRemovedClientByScore = GetTickCount()+SEC2MS(6);
+			m_dwRemovedClientByScore = ::GetTickCount()+SEC2MS(6);
 			return true;
 		}
 	}
@@ -1130,19 +1125,19 @@ CUpDownClient* CUploadQueue::GetNextClient(const CUpDownClient* lastclient){
 		return waitinglist.GetHead();
 	}
 	waitinglist.GetNext(pos);
-	if (!pos)
-		return NULL;
-	return waitinglist.GetAt(pos);
+	return pos ? waitinglist.GetAt(pos) : NULL;
 }
 
-void CUploadQueue::UpdateDatarates() {
+void CUploadQueue::UpdateDatarates()
+{
 	// Calculate average datarate
-	if(::GetTickCount()-m_lastCalculatedDataRateTick > 500) {
-		m_lastCalculatedDataRateTick = ::GetTickCount();
+	DWORD tick = ::GetTickCount();
+	if(tick - m_lastCalculatedDataRateTick > 500) {
+		m_lastCalculatedDataRateTick = tick;
 
 		if(average_dr_list.GetSize() >= 2 && (average_tick_list.GetTail() > average_tick_list.GetHead())) {
-			datarate = (UINT)(((m_average_dr_sum - average_dr_list.GetHead())*SEC2MS(1)) / (average_tick_list.GetTail() - average_tick_list.GetHead()));
-			friendDatarate = (UINT)(((average_friend_dr_list.GetTail() - average_friend_dr_list.GetHead())*SEC2MS(1)) / (average_tick_list.GetTail() - average_tick_list.GetHead()));
+			datarate = (uint32)(((m_average_dr_sum - average_dr_list.GetHead())*SEC2MS(1)) / (average_tick_list.GetTail() - average_tick_list.GetHead()));
+			friendDatarate = (uint32)(((average_friend_dr_list.GetTail() - average_friend_dr_list.GetHead())*SEC2MS(1)) / (average_tick_list.GetTail() - average_tick_list.GetHead()));
 		}
 	}
 }
@@ -1152,11 +1147,9 @@ uint32 CUploadQueue::GetDatarate() const
 	return datarate;
 }
 
-uint32 CUploadQueue::GetToNetworkDatarate()
+uint32 CUploadQueue::GetToNetworkDatarate() const
 {
-	if (datarate > friendDatarate)
-		return datarate - friendDatarate;
-	return 0;
+	return (datarate > friendDatarate) ? datarate - friendDatarate : 0;
 }
 
 void CUploadQueue::ReSortUploadSlots(bool force) {

@@ -117,8 +117,8 @@ protected:
 private:
 
 	// Disable copying
-	CSelect& operator=(const CSelect& d);
-	CSelect(const CSelect &);
+	CSelect& operator=(const CSelect& d) = delete;
+	CSelect(const CSelect &) = delete;
 };
 
 //******************************************************************

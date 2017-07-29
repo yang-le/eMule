@@ -319,7 +319,7 @@ void CKademlia::Process()
 		}
 	}
 
-	if(!IsConnected() && !s_liBootstrapList.IsEmpty()
+	if (!IsConnected() && !s_liBootstrapList.IsEmpty()
 		&& (tNow - m_tBootstrap > 15 || (GetRoutingZone()->GetNumContacts() == 0 && tNow - m_tBootstrap >= 2)))
 	{
 		CContact* pContact = s_liBootstrapList.RemoveHead();
@@ -333,7 +333,6 @@ void CKademlia::Process()
 		// failed to bootstrap
 		m_bootstrapping = false;
 		AddLogLine(true, GetResString(IDS_BOOTSTRAPFAILED));
-		theApp.emuledlg->kademliawnd->StopUpdateContacts();
 	}
 
 	if (GetUDPListener() != NULL)
@@ -518,8 +517,8 @@ bool CKademlia::FindNodeIDByIP(CKadClientSearcher& rRequester, uint32 dwIP, uint
 		return false;
 	}
 	// first search our known contacts if we can deliver a result without asking, otherwise forward the request
-	CContact* pContact;
-	if ((pContact = GetRoutingZone()->GetContact(ntohl(dwIP), nTCPPort, true)) != NULL) {
+	CContact* pContact = GetRoutingZone()->GetContact(ntohl(dwIP), nTCPPort, true);
+	if (pContact != NULL) {
 		uchar uchID[16];
 		pContact->GetClientID().ToByteArray(uchID);
 		rRequester.KadSearchNodeIDByIPResult(KCSR_SUCCEEDED, uchID);
@@ -530,7 +529,7 @@ bool CKademlia::FindNodeIDByIP(CKadClientSearcher& rRequester, uint32 dwIP, uint
 
 bool CKademlia::FindIPByNodeID(CKadClientSearcher& rRequester, const uchar* pachNodeID)
 {
-	if (!IsRunning() || m_pInstance == NULL || GetUDPListener() == NULL) {
+	if (!IsRunning() || m_pInstance == NULL || GetRoutingZone() == NULL) {
 		ASSERT(false);
 		return false;
 	}
@@ -585,7 +584,8 @@ void CKademlia::StatsAddClosestDistance(const CUInt128& uDist)
 		m_liStatsEstUsersProbes.RemoveTail();
 }
 
-uint32 CKademlia::CalculateKadUsersNew(){
+uint32 CKademlia::CalculateKadUsersNew()
+{
 	// the idea of calculating the user count with this method is simple:
 	// whenever we do search for any NodeID (except in certain cases were the result is not usable),
 	// we remember the distance of the closest node we found. Because we assume all NodeIDs are distributed
@@ -634,14 +634,18 @@ uint32 CKademlia::CalculateKadUsersNew(){
 	// Modify count by 40% for >= 0.49b if we are firewalled outself (the actual Firewalled count at this date on kad is 35-55%)
 	const float fFirewalledModifyOld = 1.20F;
 	float fFirewalledModifyNew = 0;
+	float fNewRatio = 0;
+	float fFirewalledModifyTotal = 0;
 	if (CUDPFirewallTester::IsFirewalledUDP(true))
 		fFirewalledModifyNew = 1.40F; // we are firewalled and get get the real statistic, assume 40% firewalled >=0.49b nodes
-	else if (GetPrefs()->StatsGetFirewalledRatio(true) > 0) {
-		fFirewalledModifyNew = 1.0F + (CKademlia::GetPrefs()->StatsGetFirewalledRatio(true)); // apply the firewalled ratio to the modify
-		ASSERT( fFirewalledModifyNew > 1.0F && fFirewalledModifyNew < 1.90F );
+	else {
+		CPrefs *pPrefs = GetPrefs();
+		if (pPrefs && pPrefs->StatsGetFirewalledRatio(true) > 0) {
+			fFirewalledModifyNew = 1.0F + (pPrefs->StatsGetFirewalledRatio(true)); // apply the firewalled ratio to the modify
+			fNewRatio = pPrefs->StatsGetKadV8Ratio();
+			ASSERT(fFirewalledModifyNew > 1.0F && fFirewalledModifyNew < 1.90F);
+		}
 	}
-	float fNewRatio = CKademlia::GetPrefs()->StatsGetKadV8Ratio();
-	float fFirewalledModifyTotal = 0;
 	if (fNewRatio > 0 && fFirewalledModifyNew > 0) // weigth the old and the new modifier based on how many new contacts we have
 		fFirewalledModifyTotal = (fNewRatio * fFirewalledModifyNew) + ((1 - fNewRatio) * fFirewalledModifyOld);
 	else
@@ -653,7 +657,7 @@ uint32 CKademlia::CalculateKadUsersNew(){
 
 bool CKademlia::IsRunningInLANMode()
 {
-	if (thePrefs.FilterLANIPs() || !IsRunning())
+	if (thePrefs.FilterLANIPs() || !IsRunning() || GetRoutingZone() == NULL)
 		return false;
 	if (m_tLANModeCheck + 10 <= time(NULL))
 	{

@@ -872,7 +872,7 @@ bool CAICHRecoveryHashSet::LoadHashSet(){
 				CurrentHash.Read(&file);
 			if (m_pHashTree.m_Hash == CurrentHash){
 				// found Hashset
-				uint32 nExpectedCount =	(uint32)((PARTSIZE/EMBLOCKSIZE + ((PARTSIZE % EMBLOCKSIZE != 0)? 1 : 0)) * (m_pHashTree.m_nDataSize/PARTSIZE));
+				uint32 nExpectedCount = (uint32)((PARTSIZE/EMBLOCKSIZE + ((PARTSIZE % EMBLOCKSIZE != 0)? 1 : 0)) * (m_pHashTree.m_nDataSize/PARTSIZE));
 				if (m_pHashTree.m_nDataSize % PARTSIZE != 0)
 					nExpectedCount += (uint32)((m_pHashTree.m_nDataSize % PARTSIZE)/EMBLOCKSIZE + (((m_pHashTree.m_nDataSize % PARTSIZE) % EMBLOCKSIZE != 0)? 1 : 0));
 				nHashCount = file.ReadUInt32();

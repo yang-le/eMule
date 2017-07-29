@@ -40,7 +40,7 @@ public:
 		inline File() {};
 		CZIPFile*	m_pZIP;
 	public:
-		CBuffer*	Decompress();
+//		CBuffer*	Decompress();
 		BOOL		Extract(LPCTSTR pszFile);
 	public:
 		CString		m_sName;

@@ -61,8 +61,8 @@ CED2KLink::~CED2KLink()
 // CED2KServerListLink implementation
 /////////////////////////////////////////////
 CED2KServerListLink::CED2KServerListLink(const TCHAR* address)
+	: m_address(address)
 {
-	m_address = address;
 }
 
 CED2KServerListLink::~CED2KServerListLink()
@@ -98,8 +98,8 @@ CED2KLink::LinkType CED2KServerListLink::GetKind() const
 // CED2KNodesListLink implementation
 /////////////////////////////////////////////
 CED2KNodesListLink::CED2KNodesListLink(const TCHAR* address)
+	: m_address(address)
 {
-	m_address = address;
 }
 
 CED2KNodesListLink::~CED2KNodesListLink()
@@ -140,8 +140,8 @@ CED2KLink::LinkType CED2KNodesListLink::GetKind() const
 // CED2KServerLink implementation
 /////////////////////////////////////////////
 CED2KServerLink::CED2KServerLink(const TCHAR* ip, const TCHAR* port)
+	: m_strAddress(ip)
 {
-	m_strAddress = ip;
 	unsigned long ul = _tcstoul(port, 0, 10);
 	if (ul > 0xFFFF)
 		throw GetResString(IDS_ERR_BADPORT);
@@ -376,6 +376,8 @@ CED2KFileLink::CED2KFileLink(const TCHAR* pszName, const TCHAR* pszSize, const T
 	if (pszSources)
 	{
 		TCHAR* pNewString = _tcsdup(pszSources);
+		if (!pNewString)
+			throw CString(_T("No memory"));
 		autoFree liberator(pNewString);
 		TCHAR* pCh = pNewString;
 		TCHAR* pEnd;

@@ -584,7 +584,7 @@ BOOL CemuleDlg::OnInitDialog()
 
 			// to get properly restored from tray bar (after attempt #3) we have to use a patched 'restore' window cmd..
 			m_wpFirstRestore = thePrefs.GetEmuleWindowPlacement();
-			m_wpFirstRestore.length = sizeof(m_wpFirstRestore);
+			m_wpFirstRestore.length = sizeof m_wpFirstRestore;
 			if (m_wpFirstRestore.showCmd != SW_SHOWMAXIMIZED)
 				m_wpFirstRestore.showCmd = SW_SHOWNORMAL;
 		}
@@ -2802,24 +2802,24 @@ void CemuleDlg::ShowToolPopup(bool toolsonly)
 }
 
 
-void CemuleDlg::ApplyHyperTextFont(LPLOGFONT plf)
+void CemuleDlg::ApplyHyperTextFont(LPLOGFONT pFont)
 {
 	theApp.m_fontHyperText.DeleteObject();
-	if (theApp.m_fontHyperText.CreateFontIndirect(plf))
+	if (theApp.m_fontHyperText.CreateFontIndirect(pFont))
 	{
-		thePrefs.SetHyperTextFont(plf);
+		thePrefs.SetHyperTextFont(pFont);
 		serverwnd->servermsgbox->SetFont(&theApp.m_fontHyperText);
 		chatwnd->chatselector.UpdateFonts(&theApp.m_fontHyperText);
 		ircwnd->UpdateFonts(&theApp.m_fontHyperText);
 	}
 }
 
-void CemuleDlg::ApplyLogFont(LPLOGFONT plf)
+void CemuleDlg::ApplyLogFont(LPLOGFONT pFont)
 {
 	theApp.m_fontLog.DeleteObject();
-	if (theApp.m_fontLog.CreateFontIndirect(plf))
+	if (theApp.m_fontLog.CreateFontIndirect(pFont))
 	{
-		thePrefs.SetLogFont(plf);
+		thePrefs.SetLogFont(pFont);
 		serverwnd->logbox->SetFont(&theApp.m_fontLog);
 		serverwnd->debuglog->SetFont(&theApp.m_fontLog);
 	}

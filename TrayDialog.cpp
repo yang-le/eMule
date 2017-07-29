@@ -28,8 +28,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-
-#define	NOTIFYICONDATA_V1_TIP_SIZE	64
+//#define	NOTIFYICONDATA_V1_TIP_SIZE	64
+#define	NOTIFYICONDATA_TIP_SIZE		128 //for Windows 2K and above
 
 /////////////////////////////////////////////////////////////////////////////
 // CTrayDialog dialog
@@ -48,16 +48,16 @@ END_MESSAGE_MAP()
 CTrayDialog::CTrayDialog(UINT uIDD,CWnd* pParent /*=NULL*/)
 	: CTrayDialogBase(uIDD, pParent)
 {
-	m_nidIconData.cbSize = NOTIFYICONDATA_V1_SIZE;
+	m_nidIconData.cbSize = NOTIFYICONDATA_V2_SIZE; //for Windows 2K and above
 	m_nidIconData.hWnd = 0;
 	m_nidIconData.uID = 1;
 	m_nidIconData.uCallbackMessage = UM_TRAY_ICON_NOTIFY_MESSAGE;
 	m_nidIconData.hIcon = 0;
 	m_nidIconData.szTip[0] = _T('\0');
 	m_nidIconData.uFlags = NIF_MESSAGE;
-	m_bTrayIconVisible = FALSE;
+	m_bTrayIconVisible = false;
 	m_pbMinimizeToTray = NULL;
-	m_nDefaultMenuItem = 0;
+//	m_nDefaultMenuItem = 0;
 	m_hPrevIconDelete = NULL;
 	m_bCurIconDelete = false;
 	m_bLButtonDblClk = false;
@@ -88,7 +88,7 @@ void CTrayDialog::OnDestroy()
 	}
 }
 
-BOOL CTrayDialog::TrayIsVisible()
+bool CTrayDialog::TrayIsVisible()
 {
 	return m_bTrayIconVisible;
 }
@@ -121,27 +121,25 @@ void CTrayDialog::TraySetIcon(LPCTSTR lpszResourceName)
 
 void CTrayDialog::TraySetToolTip(LPCTSTR lpszToolTip)
 {
-	ASSERT( *lpszToolTip != '\0' && _tcslen(lpszToolTip) < NOTIFYICONDATA_V1_TIP_SIZE );
-	_tcsncpy(m_nidIconData.szTip, lpszToolTip, NOTIFYICONDATA_V1_TIP_SIZE);
-	m_nidIconData.szTip[NOTIFYICONDATA_V1_TIP_SIZE - 1] = _T('\0');
+	ASSERT( *lpszToolTip != '\0' && _tcslen(lpszToolTip) < NOTIFYICONDATA_TIP_SIZE );
+	_tcsncpy(m_nidIconData.szTip, lpszToolTip, NOTIFYICONDATA_TIP_SIZE);
+	m_nidIconData.szTip[NOTIFYICONDATA_TIP_SIZE - 1] = _T('\0');
 	m_nidIconData.uFlags |= NIF_TIP;
 
 	Shell_NotifyIcon(NIM_MODIFY, &m_nidIconData);
 }
 
-BOOL CTrayDialog::TrayShow()
+bool CTrayDialog::TrayShow()
 {
-	BOOL bSuccess = Shell_NotifyIcon(NIM_ADD, &m_nidIconData);
-	if (bSuccess)
-		m_bTrayIconVisible = TRUE;
-	return bSuccess;
+	m_bTrayIconVisible = Shell_NotifyIcon(NIM_ADD, &m_nidIconData) != 0;
+	return m_bTrayIconVisible;
 }
 
-BOOL CTrayDialog::TrayHide()
+bool CTrayDialog::TrayHide()
 {
 	BOOL bSuccess = Shell_NotifyIcon(NIM_DELETE, &m_nidIconData);
 	if (bSuccess)
-		m_bTrayIconVisible = FALSE;
+		m_bTrayIconVisible = false;
 	return bSuccess;
 }
 
@@ -224,11 +222,8 @@ LRESULT CTrayDialog::OnTrayNotify(WPARAM wParam, LPARAM lParam)
 			}
 			else if (m_bLButtonDown)
 			{
-				if (m_uSingleClickTimer == 0)
-				{
-					if (!IsWindowVisible())
-						m_uSingleClickTimer = SetTimer(IDT_SINGLE_CLICK, 300, NULL);
-				}
+				if (!m_uSingleClickTimer && !IsWindowVisible())
+					m_uSingleClickTimer = SetTimer(IDT_SINGLE_CLICK, 300, NULL);
 				m_bLButtonDown = false;
 			}
 			break;
@@ -342,12 +337,9 @@ void CTrayDialog::OnTrayMouseMove(CPoint /*pt*/)
 
 LRESULT CTrayDialog::OnTaskBarCreated(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
+	Shell_NotifyIcon(NIM_DELETE, &m_nidIconData); //fix for DPI change as it keeps icon
 	if (m_bTrayIconVisible)
-	{
-		BOOL bResult = Shell_NotifyIcon(NIM_ADD, &m_nidIconData);
-		if (!bResult)
-			m_bTrayIconVisible = false;
-	}
+		TrayShow();
 	return 0;
 }
 
