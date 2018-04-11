@@ -34,9 +34,10 @@ struct Requested_Block_Struct;
 class CSafeMemFile;
 class CEMSocket;
 class CAICHHash;
-enum EUtf8Str: int;
+enum EUtf8Str : uint8;
 
-struct Pending_Block_Struct{
+struct Pending_Block_Struct
+{
 	Pending_Block_Struct()
 	{
 		block = NULL;
@@ -55,14 +56,16 @@ struct Pending_Block_Struct{
 };
 
 #pragma pack(1)
-struct Requested_File_Struct {
+struct Requested_File_Struct
+{
 	uchar	  fileid[16];
 	uint32	  lastasked;
 	uint8	  badrequests;
 };
 #pragma pack()
 
-struct PartFileStamp{
+struct PartFileStamp
+{
 	CPartFile*	file;
 	DWORD		timestamp;
 };
@@ -70,7 +73,6 @@ struct PartFileStamp{
 #define	MAKE_CLIENT_VERSION(mjr, min, upd) \
 	((UINT)(mjr)*100U*10U*100U + (UINT)(min)*100U*10U + (UINT)(upd)*100U)
 
-//#pragma pack(2)
 class CUpDownClient : public CObject
 {
 	DECLARE_DYNAMIC(CUpDownClient)
@@ -106,7 +108,7 @@ public:
 							m_dwUserIP = val;
 							m_nConnectIP = val;
 						}
-	__inline bool	HasLowID() const								{ return (m_nUserIDHybrid < 16777216u); }
+	inline bool		HasLowID() const								{ return (m_nUserIDHybrid < 16777216u); }
 	uint32			GetConnectIP() const							{ return m_nConnectIP; }
 	uint16			GetUserPort() const								{ return m_nUserPort; }
 	void			SetUserPort(uint16 val)							{ m_nUserPort = val; }
@@ -127,7 +129,7 @@ public:
 	uint32			GetBuddyIP() const								{ return m_nBuddyIP; }
 	void			SetBuddyPort( uint16 val )						{ m_nBuddyPort = val; }
 	uint16			GetBuddyPort() const							{ return m_nBuddyPort; }
-	EClientSoftware	GetClientSoft() const							{ return (EClientSoftware)m_clientSoft; }
+	EClientSoftware	GetClientSoft() const							{ return m_clientSoft; }
 	const CString&	GetClientSoftVer() const						{ return m_strClientSoftware; }
 	const CString&	GetClientModVer() const							{ return m_strModVersion; }
 	void			InitClientSoftwareVersion();
@@ -155,7 +157,7 @@ public:
 	uint8			GetExtendedRequestsVersion() const				{ return m_byExtendedRequestsVer; }
 	void			RequestSharedFileList();
 	void			ProcessSharedFileList(const uchar* pachPacket, uint32 nSize, LPCTSTR pszDirectory = NULL);
-	EConnectingState GetConnectingState() const						{ return (EConnectingState)m_nConnectingState; }
+	EConnectingState GetConnectingState() const						{ return m_nConnectingState; }
 
 	void			ClearHelloProperties();
 	bool			ProcessHelloAnswer(const uchar* pachPacket, uint32 nSize);
@@ -186,8 +188,8 @@ public:
 	void			ProcessPublicIPAnswer(const BYTE* pbyData, UINT uSize);
 	void			SendPublicIPRequest();
 	uint8			GetKadVersion()	const							{ return m_byKadVersion; }
-	bool			SendBuddyPingPong()								{ return m_dwLastBuddyPingPongTime < ::GetTickCount(); }
-	bool			AllowIncomeingBuddyPingPong()					{ return m_dwLastBuddyPingPongTime < (::GetTickCount()-MIN2MS(3)); }
+	bool			SendBuddyPingPong()								{ return ::GetTickCount() >= m_dwLastBuddyPingPongTime; }
+	bool			AllowIncomeingBuddyPingPong()					{ return ::GetTickCount() >= m_dwLastBuddyPingPongTime + MIN2MS(3); }
 	void			SetLastBuddyPingPongTime()						{ m_dwLastBuddyPingPongTime = ::GetTickCount()+MIN2MS(10); }
 	void			ProcessFirewallCheckUDPRequest(CSafeMemFile* data);
 	void			SendSharedDirectories();
@@ -218,17 +220,17 @@ public:
 	bool			RequestsCryptLayer() const						{ return SupportsCryptLayer() && m_fRequestsCryptLayer; }
 	bool			RequiresCryptLayer() const						{ return RequestsCryptLayer() && m_fRequiresCryptLayer; }
 	bool			SupportsDirectUDPCallback() const				{ return m_fDirectUDPCallback != 0 && HasValidHash() && GetKadPort() != 0; }
-	void			SetCryptLayerSupport(bool bVal)					{ m_fSupportsCryptLayer = bVal ? 1 : 0; }
-	void			SetCryptLayerRequest(bool bVal)					{ m_fRequestsCryptLayer = bVal ? 1 : 0; }
-	void			SetCryptLayerRequires(bool bVal)				{ m_fRequiresCryptLayer = bVal ? 1 : 0; }
-	void			SetDirectUDPCallbackSupport(bool bVal)			{ m_fDirectUDPCallback = bVal ? 1 : 0; }
+	void			SetCryptLayerSupport(bool bVal)					{ m_fSupportsCryptLayer = static_cast<UINT>(bVal); }
+	void			SetCryptLayerRequest(bool bVal)					{ m_fRequestsCryptLayer = static_cast<UINT>(bVal); }
+	void			SetCryptLayerRequires(bool bVal)				{ m_fRequiresCryptLayer = static_cast<UINT>(bVal); }
+	void			SetDirectUDPCallbackSupport(bool bVal)			{ m_fDirectUDPCallback = static_cast<UINT>(bVal); }
 	void			SetConnectOptions(uint8 byOptions, bool bEncryption = true, bool bCallback = true); // shortcut, sets crypt, callback etc based from the tagvalue we recieve
 	bool			IsObfuscatedConnectionEstablished() const;
 	bool			ShouldReceiveCryptUDPPackets() const;
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Upload
-	EUploadState	GetUploadState() const							{ return (EUploadState)m_nUploadState; }
+	EUploadState	GetUploadState() const							{ return m_nUploadState; }
 	void			SetUploadState(EUploadState eNewState);
 	uint32			GetWaitStartTime() const;
 	void 			SetWaitStartTime();
@@ -291,9 +293,9 @@ public:
 	UINT			GetAskedCountDown() const						{ return m_cDownAsked; }
 	void			AddAskedCountDown()								{ m_cDownAsked++; }
 	void			SetAskedCountDown(UINT cInDownAsked)			{ m_cDownAsked = cInDownAsked; }
-	EDownloadState	GetDownloadState() const						{ return (EDownloadState)m_nDownloadState; }
+	EDownloadState	GetDownloadState() const						{ return m_nDownloadState; }
 	void			SetDownloadState(EDownloadState nNewState, LPCTSTR pszReason = _T("Unspecified"));
-	uint32			GetLastAskedTime(const CPartFile* partFile = NULL) const;
+	DWORD			GetLastAskedTime(const CPartFile* partFile = NULL) const;
 	void			SetLastAskedTime()								{ m_fileReaskTimes.SetAt(reqfile, ::GetTickCount()); }
 	bool			IsPartAvailable(UINT iPart) const {
 						return (iPart >= m_nPartCount || !m_abyPartStatus) ? false : m_abyPartStatus[iPart] != 0;
@@ -337,8 +339,8 @@ public:
 	bool			IsSourceRequestAllowed(CPartFile* partfile, bool sourceExchangeCheck = false) const; // ZZ:DownloadManager
 
 	bool			IsValidSource() const;
-	ESourceFrom		GetSourceFrom() const							{ return (ESourceFrom)m_nSourceFrom; }
-	void			SetSourceFrom(const ESourceFrom val)			{ m_nSourceFrom = (_ESourceFrom)val; }
+	ESourceFrom		GetSourceFrom() const							{ return m_nSourceFrom; }
+	void			SetSourceFrom(const ESourceFrom val)			{ m_nSourceFrom = val; }
 
 	void			SetDownStartTime()								{ m_dwDownStartTime = ::GetTickCount(); }
 	uint32			GetDownTimeDifference(boolean clear = true)	{
@@ -356,10 +358,10 @@ public:
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Chat
-	EChatState		GetChatState() const							{ return (EChatState)m_nChatstate; }
-	void			SetChatState(const EChatState nNewS)			{ m_nChatstate = (_EChatState)nNewS; }
-	EChatCaptchaState GetChatCaptchaState() const					{ return (EChatCaptchaState)m_nChatCaptchaState; }
-	void			SetChatCaptchaState(EChatCaptchaState nNewS)	{ m_nChatCaptchaState = (_EChatCaptchaState)nNewS; }
+	EChatState		GetChatState() const							{ return m_nChatstate; }
+	void			SetChatState(const EChatState nNewS)			{ m_nChatstate = nNewS; }
+	EChatCaptchaState GetChatCaptchaState() const					{ return m_nChatCaptchaState; }
+	void			SetChatCaptchaState(const EChatCaptchaState nNewS)	{ m_nChatCaptchaState = nNewS; }
 	void			ProcessChatMessage(CSafeMemFile* data, uint32 nLength);
 	void			SendChatMessage(const CString& strMessage);
 	void			ProcessCaptchaRequest(CSafeMemFile* data);
@@ -378,8 +380,8 @@ public:
 
 
 	//KadIPCheck
-	EKadState		GetKadState() const								{ return (EKadState)m_nKadState; }
-	void			SetKadState(EKadState nNewS)					{ m_nKadState = (_EKadState)nNewS; }
+	EKadState		GetKadState() const								{ return m_nKadState; }
+	void			SetKadState(const EKadState nNewS)				{ m_nKadState = nNewS; }
 
 	//File Comment
 	bool			HasFileComment() const							{ return !m_strFileComment.IsEmpty(); }
@@ -426,7 +428,7 @@ public:
 	const bool		IsInNoNeededList(const CPartFile* fileToCheck) const;
 	const bool		SwapToRightFile(CPartFile* SwapTo, CPartFile* cur_file, bool ignoreSuspensions, bool SwapToIsNNPFile, bool curFileisNNPFile, bool& wasSkippedDueToSourceExchange, bool doAgressiveSwapping = false, bool debug = false);
 	const DWORD		getLastTriedToConnectTime() const { return m_dwLastTriedToConnect; }
-	void			setLastTriedToConnectTime() { m_dwLastTriedToConnect = ::GetTickCount(); }
+	void			setLastTriedToConnectTime()						{ m_dwLastTriedToConnect = ::GetTickCount(); }
 // <-- ZZ:DownloadManager
 
 #ifdef _DEBUG
@@ -559,15 +561,15 @@ protected:
 
 
 	// States
-	_EClientSoftware	m_clientSoft;
-	_EChatState			m_nChatstate;
-	_EKadState			m_nKadState;
-	_ESecureIdentState	m_SecureIdentState;
-	_EUploadState		m_nUploadState;
-	_EDownloadState		m_nDownloadState;
-	_ESourceFrom		m_nSourceFrom;
-	_EChatCaptchaState	m_nChatCaptchaState;
-	_EConnectingState	m_nConnectingState;
+	EClientSoftware		m_clientSoft;
+	EChatState			m_nChatstate;
+	EKadState			m_nKadState;
+	ESecureIdentState	m_SecureIdentState;
+	EUploadState		m_nUploadState;
+	EDownloadState		m_nDownloadState;
+	ESourceFrom			m_nSourceFrom;
+	EChatCaptchaState	m_nChatCaptchaState;
+	EConnectingState	m_nConnectingState;
 
 	CTypedPtrList<CPtrList, Packet*> m_WaitingPackets_list;
 	CList<PartFileStamp> m_DontSwap_list;
@@ -591,7 +593,8 @@ protected:
 	UINT		m_slotNumber;
 	bool		m_bCollectionUploadSlot;
 
-	typedef struct {
+	typedef struct
+	{
 		UINT	datalen;
 		DWORD	timestamp;
 	} TransferredData;
@@ -690,7 +693,6 @@ protected:
 	bool	DoSwap(CPartFile* SwapTo, bool bRemoveCompletely, LPCTSTR reason); // ZZ:DownloadManager
 	CMap<CPartFile*, CPartFile*, DWORD, DWORD> m_fileReaskTimes; // ZZ:DownloadManager (one resk timestamp for each file)
 	DWORD   m_dwLastTriedToConnect; // ZZ:DownloadManager (one reask timestamp for each file)
-	bool	RecentlySwappedForSourceExchange() { return ::GetTickCount()-lastSwapForSourceExchangeTick < SEC2MS(30); } // ZZ:DownloadManager
-	void	SetSwapForSourceExchangeTick() { lastSwapForSourceExchangeTick = ::GetTickCount(); } // ZZ:DownloadManager
+	bool	RecentlySwappedForSourceExchange()					{ return ::GetTickCount() < lastSwapForSourceExchangeTick + SEC2MS(30); } // ZZ:DownloadManager
+	void	SetSwapForSourceExchangeTick()						{ lastSwapForSourceExchangeTick = ::GetTickCount(); } // ZZ:DownloadManager
 };
-//#pragma pack()

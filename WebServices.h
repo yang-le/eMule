@@ -11,7 +11,7 @@ public:
 	CWebServices();
 
 	CString GetDefaultServicesFile() const;
-	int ReadAllServices();
+	INT_PTR ReadAllServices();
 	void RemoveAllServices();
 
 	int GetFileMenuEntries(CTitleMenu* pMenu) { return GetAllMenuEntries(pMenu, WEBSVC_FILE_URLS); }
@@ -23,9 +23,9 @@ public:
 protected:
 	struct SEd2kLinkService
 	{
-		UINT uMenuID;
 		CString strMenuLabel;
 		CString strUrl;
+		UINT uMenuID;
 		BOOL bFileMacros;
 	};
 	CArray<SEd2kLinkService> m_aServices;

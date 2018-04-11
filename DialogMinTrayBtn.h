@@ -20,11 +20,11 @@ public:
     // methods
     void MinTrayBtnShow();
     void MinTrayBtnHide();
-	__inline BOOL MinTrayBtnIsVisible() const { return m_bMinTrayBtnVisible; }
+	inline BOOL MinTrayBtnIsVisible() const { return m_bMinTrayBtnVisible; }
 
     void MinTrayBtnEnable();
     void MinTrayBtnDisable();
-	__inline BOOL MinTrayBtnIsEnabled() const { return m_bMinTrayBtnEnabled; }
+	inline BOOL MinTrayBtnIsEnabled() const { return m_bMinTrayBtnEnabled; }
 
 	void SetWindowText(LPCTSTR lpszString);
 
@@ -50,15 +50,15 @@ private:
     // internal methods
     void MinTrayBtnInit();
     void MinTrayBtnDraw();
-    BOOL MinTrayBtnHitTest(CPoint point) const;
+    BOOL MinTrayBtnHitTest(CPoint ptScreen) const;
     void MinTrayBtnUpdatePosAndSize();
 
     void MinTrayBtnSetUp();
     void MinTrayBtnSetDown();
 
-	__inline const CPoint &MinTrayBtnGetPos() const { return m_MinTrayBtnPos; }
-	__inline const CSize &MinTrayBtnGetSize() const { return m_MinTrayBtnSize; }
-	__inline CRect MinTrayBtnGetRect() const { return CRect(MinTrayBtnGetPos(), MinTrayBtnGetSize()); }
+	inline const CPoint &MinTrayBtnGetPos() const { return m_MinTrayBtnPos; }
+	inline const CSize &MinTrayBtnGetSize() const { return m_MinTrayBtnSize; }
+	inline CRect MinTrayBtnGetRect() const { return CRect(MinTrayBtnGetPos(), MinTrayBtnGetSize()); }
 
     BOOL IsWindowsClassicStyle() const;
 	INT GetVisualStylesXPColor() const;

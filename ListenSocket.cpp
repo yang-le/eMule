@@ -59,7 +59,7 @@ static char THIS_FILE[] = __FILE__;
 IMPLEMENT_DYNCREATE(CClientReqSocket, CEMSocket)
 
 CClientReqSocket::CClientReqSocket(CUpDownClient* in_client)
-	: m_bPortTestCon(false), deletethis(false), deltimer(0), m_nOnConnect(SS_Other)
+	: deltimer(0), m_nOnConnect(SS_Other), deletethis(false), m_bPortTestCon(false)
 {
 	SetClient(in_client);
 	theApp.listensocket->AddSocket(this);
@@ -149,7 +149,7 @@ bool CClientReqSocket::CheckTimeOut()
 		//if this socket is actually failing, or if this socket is just queued in SP2's new
 		//protection queue. Therefore we give the socket a chance to either finally report
 		//the connection error, or finally make it through SP2's new queued socket system..
-		if (::GetTickCount() - timeout_timer > CEMSocket::GetTimeOut()*4){
+		if (::GetTickCount() >= timeout_timer + CEMSocket::GetTimeOut()*4){
 			timeout_timer = ::GetTickCount();
 			CString str;
 			str.Format(_T("Timeout: State:%u = SS_Half"), m_nOnConnect);
@@ -171,7 +171,7 @@ bool CClientReqSocket::CheckTimeOut()
 			uTimeout += CONNECTION_TIMEOUT;
 		}
 	}
-	if (::GetTickCount() - timeout_timer > uTimeout){
+	if (::GetTickCount() >= timeout_timer + uTimeout){
 		timeout_timer = ::GetTickCount();
 		CString str;
 		str.Format(_T("Timeout: State:%u (0 = SS_Other, 1 = SS_Half, 2 = SS_Complete"), m_nOnConnect);
@@ -221,7 +221,7 @@ void CClientReqSocket::Delete_Timed()
 // it seems that MFC Sockets call socket functions after they are deleted, even if the socket is closed
 // and select(0) is set. So we need to wait some time to make sure this doesn't happens
 // we currently also trust on this for multithreading, rework snychronization if this ever changes
-	if (::GetTickCount() - deltimer > SEC2MS(10))
+	if (::GetTickCount() >= deltimer + SEC2MS(10))
 		delete this;
 }
 
@@ -313,10 +313,10 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 					// be attached to the known client, the new client will be deleted
 					// and the var. "client" will point to the known client.
 					// if not we keep our new-constructed client ;)
-					if (theApp.clientlist->AttachToAlreadyKnown(&client,this))
+					if (theApp.clientlist->AttachToAlreadyKnown(&client, this))
 					{
 						// update the old client informations
-						bIsMuleHello = client->ProcessHelloPacket(packet,size);
+						bIsMuleHello = client->ProcessHelloPacket(packet, size);
 					}
 					else
 					{
@@ -680,16 +680,16 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 					if (creqfile && !creqfile->IsStopped() && (creqfile->GetStatus()==PS_READY || creqfile->GetStatus()==PS_EMPTY))
 					{
 						client->ProcessBlockPacket(packet, size, false, false);
-						if (creqfile)
-						{
+						//if (creqfile)
+						//{
 							if (creqfile->IsStopped() || creqfile->GetStatus()==PS_PAUSED || creqfile->GetStatus()==PS_ERROR)
 							{
 								client->SendCancelTransfer();
 								client->SetDownloadState(creqfile->IsStopped() ? DS_NONE : DS_ONQUEUE);
 							}
-						}
-						else
-							ASSERT( false );
+						//}
+						//else
+						//	ASSERT( false );
 					}
 					else
 					{
@@ -808,14 +808,10 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 					}
 
 					// now create the memfile for the packet
-					uint32 iTotalCount = list.GetCount();
 					CSafeMemFile tempfile(80);
-					tempfile.WriteUInt32(iTotalCount);
-					while (list.GetCount())
-					{
-						theApp.sharedfiles->CreateOfferedFilePacket((CKnownFile*)list.GetHead(), &tempfile, NULL, client);
-						list.RemoveHead();
-					}
+					tempfile.WriteUInt32((uint32)list.GetCount());
+					while (!list.IsEmpty())
+						theApp.sharedfiles->CreateOfferedFilePacket((CKnownFile*)list.RemoveHead(), &tempfile, NULL, client);
 
 					// create a packet and send it
 					if (thePrefs.GetDebugClientTCPLevel() > 0)
@@ -864,12 +860,12 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 
 					CSafeMemFile data(packet, size);
                     CString strReqDir = data.ReadString(client->GetUnicodeSupport()!=utf8strNone);
-					CString strOrgReqDir = strReqDir;
                     if (thePrefs.CanSeeShares()==vsfaEverybody || (thePrefs.CanSeeShares()==vsfaFriends && client->IsFriend()))
 					{
 						AddLogLine(true, GetResString(IDS_SHAREDREQ2), (LPCTSTR)client->GetUserName(), client->GetUserIDHybrid(), (LPCTSTR)strReqDir, (LPCTSTR)GetResString(IDS_ACCEPTED));
                         ASSERT( data.GetPosition() == data.GetLength() );
                         CTypedPtrList<CPtrList, CKnownFile*> list;
+						CString strOrgReqDir = strReqDir;
 						if (strReqDir == OP_INCOMPLETE_SHARED_FILES)
 						{
 							// get all shared files from download queue
@@ -910,7 +906,7 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 						// Because of this we also have to send an empty shared files list..
 						CSafeMemFile tempfile(80);
 						tempfile.WriteString(strOrgReqDir, client->GetUnicodeSupport());
-						tempfile.WriteUInt32(list.GetCount());
+						tempfile.WriteUInt32((uint32)list.GetCount());
 						while (!list.IsEmpty())
 							theApp.sharedfiles->CreateOfferedFilePacket(list.RemoveHead(), &tempfile, NULL, client);
 
@@ -978,7 +974,7 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
                     if (client->GetFileListRequested() > 0)
 					{
 						AddLogLine(true, GetResString(IDS_SHAREDINFO1), client->GetUserName(), client->GetUserIDHybrid(), (LPCTSTR)strDir);
-						client->ProcessSharedFileList(packet + (UINT)data.GetPosition(), (UINT)(size - data.GetPosition()), strDir);
+						client->ProcessSharedFileList(packet + data.GetPosition(), (uint32)(size - data.GetPosition()), strDir);
 						if (client->GetFileListRequested() == 0)
 							AddLogLine(true, GetResString(IDS_SHAREDINFO2), client->GetUserName(), client->GetUserIDHybrid());
                     }
@@ -1218,7 +1214,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 
 								uint8 byRequestedVersion = 0;
 								uint16 byRequestedOptions = 0;
-								if (opcode_in == OP_REQUESTSOURCES2){ // SX2 requests contains additional data
+								if (opcode_in == OP_REQUESTSOURCES2) { // SX2 requests contains additional data
 									byRequestedVersion = data_in.ReadUInt8();
 									byRequestedOptions = data_in.ReadUInt16();
 								}
@@ -1232,9 +1228,9 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 										(    reqfile->IsPartFile()
 										  && (bNeverAskedBefore || dwTimePassed > SOURCECLIENTREASKS)
 										  && ((CPartFile*)reqfile)->GetSourceCount() <= RARE_FILE
-										) ||
+										)
 										//OR if file is not rare or if file is complete
-										(bNeverAskedBefore || dwTimePassed > SOURCECLIENTREASKS * MINCOMMONPENALTY)
+										|| bNeverAskedBefore || dwTimePassed > SOURCECLIENTREASKS * MINCOMMONPENALTY
 									   )
 									{
 										client->SetLastSrcReqTime();
@@ -1971,16 +1967,16 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 					if (creqfile && !creqfile->IsStopped() && (creqfile->GetStatus()==PS_READY || creqfile->GetStatus()==PS_EMPTY))
 					{
 						client->ProcessBlockPacket(packet, size, (opcode == OP_COMPRESSEDPART || opcode == OP_COMPRESSEDPART_I64), (opcode == OP_SENDINGPART_I64 || opcode == OP_COMPRESSEDPART_I64));
-						if (creqfile)
-						{
+						//if (creqfile)
+						//{
 							if (creqfile->IsStopped() || creqfile->GetStatus()==PS_PAUSED || creqfile->GetStatus()==PS_ERROR)
 							{
 								client->SendCancelTransfer();
 								client->SetDownloadState(creqfile->IsStopped() ? DS_NONE : DS_ONQUEUE);
 							}
-						}
-						else
-							ASSERT( false );
+						//}
+						//else
+						//	ASSERT( false );
 					}
 					else
 					{
@@ -2110,9 +2106,9 @@ CString CClientReqSocket::DbgGetClientInfo()
 	CString str;
 	SOCKADDR_IN sockAddr = {};
 	int nSockAddrLen = sizeof sockAddr;
-	GetPeerName((SOCKADDR*)&sockAddr, &nSockAddrLen);
+	GetPeerName((LPSOCKADDR)&sockAddr, &nSockAddrLen);
 	if (sockAddr.sin_addr.S_un.S_addr != 0 && (client == NULL || sockAddr.sin_addr.S_un.S_addr != client->GetIP()))
-		str.AppendFormat(_T("IP=%s"), (LPCTSTR)ipstr(sockAddr.sin_addr));
+		str.Format(_T("IP=%s"), (LPCTSTR)ipstr(sockAddr.sin_addr));
 	if (client){
 		if (!str.IsEmpty())
 			str += _T("; ");
@@ -2182,34 +2178,28 @@ void CClientReqSocket::OnError(int nErrorCode)
 
 bool CClientReqSocket::PacketReceivedCppEH(Packet* packet)
 {
-	bool bResult;
 	UINT uRawSize = packet->size;
-	switch (packet->prot){
-		case OP_EDONKEYPROT:
-			bResult = ProcessPacket((const BYTE*)packet->pBuffer, packet->size, packet->opcode);
-			break;
-		case OP_PACKEDPROT:
-			if (!packet->UnPackPacket()){
-				if (thePrefs.GetVerbose())
-					DebugLogError(_T("Failed to decompress client TCP packet; %s; %s"), (LPCTSTR)DbgGetClientTCPPacket(packet->prot, packet->opcode, packet->size), (LPCTSTR)DbgGetClientInfo());
-				bResult = false;
-				break;
-			}
-		case OP_EMULEPROT:
-			bResult = ProcessExtPacket((const BYTE*)packet->pBuffer, packet->size, packet->opcode, uRawSize);
-			break;
-		default:{
-			theStats.AddDownDataOverheadOther(uRawSize);
+	switch (packet->prot) {
+	case OP_EDONKEYPROT:
+		return ProcessPacket((const BYTE*)packet->pBuffer, uRawSize, packet->opcode);
+	case OP_PACKEDPROT:
+		if (!packet->UnPackPacket()) {
 			if (thePrefs.GetVerbose())
-				DebugLogWarning(_T("Received unknown client TCP packet; %s; %s"), (LPCTSTR)DbgGetClientTCPPacket(packet->prot, packet->opcode, packet->size), (LPCTSTR)DbgGetClientInfo());
-
-			if (client)
-				client->SetDownloadState(DS_ERROR, _T("Unknown protocol"));
-			Disconnect(_T("Unknown protocol"));
-			bResult = false;
+				DebugLogError(_T("Failed to decompress client TCP packet; %s; %s"), (LPCTSTR)DbgGetClientTCPPacket(packet->prot, packet->opcode, packet->size), (LPCTSTR)DbgGetClientInfo());
+			return false;
 		}
+	case OP_EMULEPROT:
+		return ProcessExtPacket((const BYTE*)packet->pBuffer, packet->size, packet->opcode, uRawSize);
+	default:
+		theStats.AddDownDataOverheadOther(uRawSize);
+		if (thePrefs.GetVerbose())
+			DebugLogWarning(_T("Received unknown client TCP packet; %s; %s"), (LPCTSTR)DbgGetClientTCPPacket(packet->prot, packet->opcode, packet->size), (LPCTSTR)DbgGetClientInfo());
+
+		if (client)
+			client->SetDownloadState(DS_ERROR, _T("Unknown protocol"));
+		Disconnect(_T("Unknown protocol"));
 	}
-	return bResult;
+	return false;
 }
 
 #if !NO_USE_CLIENT_TCP_CATCH_ALL_HANDLER
@@ -2256,36 +2246,30 @@ int FilterSE(DWORD dwExCode, LPEXCEPTION_POINTERS pExPtrs, CClientReqSocket* req
 #if !NO_USE_CLIENT_TCP_CATCH_ALL_HANDLER
 int CClientReqSocket::PacketReceivedSEH(Packet* packet)
 {
-	int iResult;
 	// this function is only here to get a chance of determining the crash address via SEH
-	__try{
-		iResult = PacketReceivedCppEH(packet);
+	__try {
+		return PacketReceivedCppEH(packet);
 	}
-	__except(FilterSE(GetExceptionCode(), GetExceptionInformation(), this, packet)){
-		iResult = -1;
-	}
-	return iResult;
+	__except(FilterSE(GetExceptionCode(), GetExceptionInformation(), this, packet))
+	{}
+	return -1;
 }
 #endif//!NO_USE_CLIENT_TCP_CATCH_ALL_HANDLER
 
 bool CClientReqSocket::PacketReceived(Packet* packet)
 {
-	bool bResult;
 #if !NO_USE_CLIENT_TCP_CATCH_ALL_HANDLER
 	int iResult = PacketReceivedSEH(packet);
-	if (iResult < 0)
-	{
+	if (iResult < 0) {
 		if (client)
 			client->SetDownloadState(DS_ERROR, _T("Unknown Exception"));
 		Disconnect(_T("Unknown Exception"));
-		bResult = false;
+		return false;
 	}
-	else
-		bResult = iResult!=0;
+	return iResult!=0;
 #else//!NO_USE_CLIENT_TCP_CATCH_ALL_HANDLER
-	bResult = PacketReceivedCppEH(packet);
+	return PacketReceivedCppEH(packet);
 #endif//!NO_USE_CLIENT_TCP_CATCH_ALL_HANDLER
-	return bResult;
 }
 
 void CClientReqSocket::OnReceive(int nErrorCode)
@@ -2297,7 +2281,7 @@ void CClientReqSocket::OnReceive(int nErrorCode)
 bool CClientReqSocket::Create()
 {
 	theApp.listensocket->AddConnection();
-	return (CAsyncSocketEx::Create(0, SOCK_STREAM, FD_WRITE | FD_READ | FD_CLOSE | FD_CONNECT, thePrefs.GetBindAddrA()) != FALSE);
+	return (CAsyncSocketEx::Create(0, SOCK_STREAM, FD_WRITE | FD_READ | FD_CLOSE | FD_CONNECT, thePrefs.GetBindAddr()) != FALSE);
 }
 
 SocketSentBytes CClientReqSocket::SendControlData(uint32 maxNumberOfBytesToSend, uint32 overchargeMaxBytesToSend)
@@ -2384,7 +2368,7 @@ bool CListenSocket::StartListening()
 	// socket is already used by some other application (e.g. a 2nd emule), we though bind
 	// to that socket leading to the situation that 2 applications are listening at the same
 	// port!
-	if (!Create(thePrefs.GetPort(), SOCK_STREAM, FD_ACCEPT, thePrefs.GetBindAddrA(), FALSE/*bReuseAddr*/))
+	if (!Create(thePrefs.GetPort(), SOCK_STREAM, FD_ACCEPT, thePrefs.GetBindAddr(), AF_INET))
 		return false;
 
 	// Rejecting a connection with conditional WSAAccept and not using SO_CONDITIONAL_ACCEPT
@@ -2454,7 +2438,7 @@ void CListenSocket::StopListening()
 static int s_iAcceptConnectionCondRejected;
 
 int CALLBACK AcceptConnectionCond(LPWSABUF lpCallerId, LPWSABUF /*lpCallerData*/, LPQOS /*lpSQOS*/, LPQOS /*lpGQOS*/,
-								  LPWSABUF /*lpCalleeId*/, LPWSABUF /*lpCalleeData*/, GROUP FAR* /*g*/, DWORD_PTR /*dwCallbackData*/)
+								  LPWSABUF /*lpCalleeId*/, LPWSABUF /*lpCalleeData*/, GROUP FAR* /*g*/, DWORD_PTR /*dwCallbackData*/) noexcept
 {
 	if (lpCallerId && lpCallerId->buf && lpCallerId->len >= sizeof SOCKADDR_IN)
 	{
@@ -2513,7 +2497,7 @@ void CListenSocket::OnAccept(int nErrorCode)
 			if (thePrefs.GetConditionalTCPAccept() && !thePrefs.GetProxySettings().UseProxy)
 			{
 				s_iAcceptConnectionCondRejected = 0;
-				SOCKET sNew = WSAAccept(m_SocketData.hSocket, (SOCKADDR*)&SockAddr, &iSockAddrLen, AcceptConnectionCond, 0);
+				SOCKET sNew = WSAAccept(m_SocketData.hSocket, (LPSOCKADDR)&SockAddr, &iSockAddrLen, AcceptConnectionCond, 0);
 				if (sNew == INVALID_SOCKET){
 				    DWORD nError = GetLastError();
 				    if (nError == WSAEWOULDBLOCK){
@@ -2545,14 +2529,14 @@ void CListenSocket::OnAccept(int nErrorCode)
 				newclient = new CClientReqSocket;
 				VERIFY( newclient->InitAsyncSocketExInstance() );
 				newclient->m_SocketData.hSocket = sNew;
-				newclient->AttachHandle(sNew);
+				newclient->AttachHandle();
 
 				AddConnection();
 			}
 			else
 			{
 				newclient = new CClientReqSocket;
-			    if (!Accept(*newclient, (SOCKADDR*)&SockAddr, &iSockAddrLen)){
+			    if (!Accept(*newclient, (LPSOCKADDR)&SockAddr, &iSockAddrLen)){
 				    newclient->Safe_Delete();
 				    DWORD nError = GetLastError();
 				    if (nError == WSAEWOULDBLOCK){
@@ -2583,7 +2567,7 @@ void CListenSocket::OnAccept(int nErrorCode)
 			    if (SockAddr.sin_addr.S_un.S_addr == 0) // for safety..
 			    {
 				    iSockAddrLen = sizeof SockAddr;
-				    newclient->GetPeerName((SOCKADDR*)&SockAddr, &iSockAddrLen);
+				    newclient->GetPeerName((LPSOCKADDR)&SockAddr, &iSockAddrLen);
 				    DebugLogWarning(_T("SockAddr.sin_addr.S_un.S_addr == 0;  GetPeerName returned %s"), (LPCTSTR)ipstr(SockAddr.sin_addr.S_un.S_addr));
 			    }
 
@@ -2679,14 +2663,14 @@ void CListenSocket::KillAllSockets()
 
 void CListenSocket::AddConnection()
 {
-	m_OpenSocketsInterval++;
+	++m_OpenSocketsInterval;
 }
 
 bool CListenSocket::TooManySockets(bool bIgnoreInterval)
 {
 	return GetOpenSockets() > thePrefs.GetMaxConnections()
-		|| m_OpenSocketsInterval > (thePrefs.GetMaxConperFive() * GetMaxConperFiveModifier()) && !bIgnoreInterval
-		|| m_nHalfOpen >= thePrefs.GetMaxHalfConnections() && !bIgnoreInterval;
+		|| (m_OpenSocketsInterval > thePrefs.GetMaxConperFive() * GetMaxConperFiveModifier() && !bIgnoreInterval)
+		|| (m_nHalfOpen >= thePrefs.GetMaxHalfConnections() && !bIgnoreInterval);
 }
 
 bool CListenSocket::IsValidSocket(CClientReqSocket* totest)

@@ -4,12 +4,11 @@ class CPPgServer : public CPropertyPage
 {
 	DECLARE_DYNAMIC(CPPgServer)
 
+	enum { IDD = IDD_PPG_SERVER };
+
 public:
 	CPPgServer();
 	virtual ~CPPgServer();
-
-	// Dialog Data
-	enum { IDD = IDD_PPG_SERVER };
 
 	void Localize();
 

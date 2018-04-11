@@ -26,13 +26,13 @@ public:
 	explicit CMMPacket(const uint8 byOpcode)	{m_pBuffer = new CMemFile; m_pBuffer->Write(&byOpcode,1); m_bSpecialHeader = false;}
 	~CMMPacket()				{delete m_pBuffer;}
 	CMMPacket(const CMMPacket&) = delete;
-	void	WriteByte(const uint8 write) { m_pBuffer->Write(&write, 1); }
-	void	WriteShort(const uint16 write) { m_pBuffer->Write(&write, 2); }
-	void	WriteInt(const uint32 write) { m_pBuffer->Write(&write, 4); }
-	void	WriteInt64(const uint64 write) { m_pBuffer->Write(&write, 8); }
+	void	WriteByte(const uint8 write) { m_pBuffer->Write(&write, sizeof write); }
+	void	WriteShort(const uint16 write) { m_pBuffer->Write(&write, sizeof write); }
+	void	WriteInt(const uint32 write) { m_pBuffer->Write(&write, sizeof write); }
+	void	WriteInt64(const uint64 write) { m_pBuffer->Write(&write, sizeof write); }
 	void	WriteString(const CStringA& write)
 	{
-		uint8 len = (write.GetLength() > 255) ? (uint8)255 : (uint8)write.GetLength();
+		uint8 len = (uint8)(write.GetLength() > 255 ? 255 : write.GetLength());
 		WriteByte(len);
 		m_pBuffer->Write(const_cast<LPSTR>((LPCSTR)write), len);
 	}

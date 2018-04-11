@@ -56,6 +56,8 @@ class CSharedFilesWnd : public CResizableDialog
 {
 	DECLARE_DYNAMIC(CSharedFilesWnd)
 
+	enum { IDD = IDD_FILES };
+
 public:
 	explicit CSharedFilesWnd(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CSharedFilesWnd();
@@ -68,9 +70,6 @@ public:
 	void OnSingleFileShareStatusChanged()		{ m_ctlSharedDirTree.FileSystemTreeUpdateBoldState(NULL); }
 	void ShowSelectedFilesDetails(bool bForce = false);
 	void ShowDetailsPanel(bool bShow);
-
-// Dialog Data
-	enum { IDD = IDD_FILES };
 
 	CSharedFilesCtrl sharedfilesctrl;
 	CStringArray m_astrFilter;

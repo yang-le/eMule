@@ -28,10 +28,10 @@
 //  <major>.<minor>.<update> is used for the displayed version (GUI) and the version check number
 //	<major>.<minor>			 is used for the protocol(!) version
 //
-#define VERSION_MJR		0
-#define VERSION_MIN		50
-#define VERSION_UPDATE	1
-#define VERSION_BUILD	40
+#define VERSION_MJR	0
+#define VERSION_MIN	51
+#define VERSION_UPDATE	0
+#define VERSION_BUILD	7
 
 // NOTE: Do not forget to update file: res/eMule.manifest
 

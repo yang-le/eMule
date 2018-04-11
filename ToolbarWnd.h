@@ -24,12 +24,11 @@ class CToolbarWnd: public CDialogBar
 {
 	DECLARE_DYNAMIC(CToolbarWnd);
 
+	enum { IDD = IDD_DOWNLOAD_TOOLBARS };
+
 public:
 	CToolbarWnd();
 	virtual ~CToolbarWnd();
-
-// Dialog Data
-	enum { IDD = IDD_DOWNLOAD_TOOLBARS };
 
 	void Localize();
 	void OnAvailableCommandsChanged(CList<int>* liCommands);

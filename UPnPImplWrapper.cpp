@@ -65,19 +65,20 @@ void CUPnPImplWrapper::Init()
 		m_pActiveImpl = m_liAvailable.RemoveHead();
 	m_liUsed.AddTail(m_pActiveImpl);
 }
+
 void CUPnPImplWrapper::Reset()
 {
 	while (!m_liUsed.IsEmpty())
 		m_liAvailable.AddTail(m_liUsed.RemoveHead());
 	Init();
 }
+
 bool CUPnPImplWrapper::SwitchImplentation()
 {
 	if (m_liAvailable.IsEmpty())
 		return false;
-	else {
-		m_pActiveImpl = m_liAvailable.RemoveHead();
-		m_liUsed.AddTail(m_pActiveImpl);
-		return true;
-	}
+
+	m_pActiveImpl = m_liAvailable.RemoveHead();
+	m_liUsed.AddTail(m_pActiveImpl);
+	return true;
 }

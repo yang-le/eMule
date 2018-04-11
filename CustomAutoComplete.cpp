@@ -209,22 +209,20 @@ const CStringArray& CCustomAutoComplete::GetList() const
 //
 //	IUnknown implementation
 //
-STDMETHODIMP_(ULONG) CCustomAutoComplete::AddRef()
+STDMETHODIMP_(ULONG) CCustomAutoComplete::AddRef() noexcept
 {
-	ULONG nCount = ::InterlockedIncrement(reinterpret_cast<LONG*>(&m_nRefCount));
-	return nCount;
+	return static_cast<ULONG>(InterlockedIncrement(&m_nRefCount));
 }
 
-STDMETHODIMP_(ULONG) CCustomAutoComplete::Release()
+STDMETHODIMP_(ULONG) CCustomAutoComplete::Release() noexcept
 {
-	ULONG nCount = 0;
-	nCount = (ULONG) ::InterlockedDecrement(reinterpret_cast<LONG*>(&m_nRefCount));
+	LONG nCount = InterlockedDecrement(&m_nRefCount);
 	if (nCount == 0)
 		delete this;
-	return nCount;
+	return static_cast<ULONG>(nCount);
 }
 
-STDMETHODIMP CCustomAutoComplete::QueryInterface(REFIID riid, void** ppvObject)
+STDMETHODIMP CCustomAutoComplete::QueryInterface(REFIID riid, void** ppvObject) noexcept
 {
 	HRESULT hr = E_NOINTERFACE;
 	if (ppvObject != NULL)
@@ -251,7 +249,7 @@ STDMETHODIMP CCustomAutoComplete::QueryInterface(REFIID riid, void** ppvObject)
 //
 //	IEnumString implementation
 //
-STDMETHODIMP CCustomAutoComplete::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
+STDMETHODIMP CCustomAutoComplete::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched) noexcept
 {
 	HRESULT hr = S_FALSE;
 
@@ -280,7 +278,7 @@ STDMETHODIMP CCustomAutoComplete::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pcelt
 	return hr;
 }
 
-STDMETHODIMP CCustomAutoComplete::Skip(ULONG celt)
+STDMETHODIMP CCustomAutoComplete::Skip(ULONG celt) noexcept
 {
 	m_nCurrentElement += celt;
 	if (m_nCurrentElement > (ULONG)m_asList.GetSize())
@@ -289,13 +287,13 @@ STDMETHODIMP CCustomAutoComplete::Skip(ULONG celt)
 	return S_OK;
 }
 
-STDMETHODIMP CCustomAutoComplete::Reset()
+STDMETHODIMP CCustomAutoComplete::Reset() noexcept
 {
 	m_nCurrentElement = 0;
 	return S_OK;
 }
 
-STDMETHODIMP CCustomAutoComplete::Clone(IEnumString** ppenum)
+STDMETHODIMP CCustomAutoComplete::Clone(IEnumString** ppenum) noexcept
 {
 	if (!ppenum)
 		return E_POINTER;

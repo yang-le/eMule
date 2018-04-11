@@ -156,7 +156,7 @@ void CProgressCtrlX::OnPaint()
 
 void CProgressCtrlX::DrawMultiGradient(const CDrawInfo& info, const CRect &rcGrad, const CRect &rcClip)
 {
-	int nSteps = m_ardwGradColors.GetSize()-1;
+	INT_PTR nSteps = m_ardwGradColors.GetSize()-1;
 	float nWidthPerStep = (float)rcGrad.Width() / nSteps;
 	CRect rcGradBand(rcGrad);
 	for (int i = 0; i < nSteps; i++)
@@ -277,7 +277,6 @@ void CProgressCtrlX::DrawText(const CDrawInfo& info, const CRect &rcMax, const C
 
 	CFont* pFont = GetFont();
 	CSelFont sf(pDC, pFont);
-	CSelTextColor tc(pDC, m_clrTextOnBar);
 	CSelBkMode bm(pDC, TRANSPARENT);
 	CSelTextAlign	ta(pDC, TA_BOTTOM|TA_CENTER);
   CPoint ptOrg = pDC->GetWindowOrg();
@@ -301,9 +300,9 @@ void CProgressCtrlX::DrawText(const CDrawInfo& info, const CRect &rcMax, const C
 	CPoint pt = pDC->GetViewportOrg();
 	if(info.dwStyle&PBS_TIED_TEXT)
 	{
-		CRect rcFill(ConvertToReal(info, rcBar));
 		if((fVert ? y : x) <= rcBar.Width())
 		{
+			CRect rcFill(ConvertToReal(info, rcBar));
 			pDC->SetViewportOrg(rcFill.left + (rcFill.Width() + dx)/2,
 													rcFill.top + (rcFill.Height() + dy)/2);
 			DrawClippedText(info, rcBar, sText, ptOrg);
@@ -324,6 +323,7 @@ void CProgressCtrlX::DrawText(const CDrawInfo& info, const CRect &rcMax, const C
 			if(rcBar.left != rcBar.right)
 				DrawClippedText(info, rcBar, sText, ptOrg);
 
+			CSelTextColor tc(pDC, m_clrTextOnBar);
 			// draw text out of gradient
 			if(rcMax.right > rcBar.right)
 			{
@@ -358,27 +358,27 @@ void CProgressCtrlX::DrawClippedText(const CDrawInfo& info, const CRect& rcClip,
 
 LRESULT CProgressCtrlX::OnSetBarColor(WPARAM clrEnd, LPARAM clrStart)
 {
-	SetGradientColors(clrStart, clrEnd ? clrEnd : clrStart);
+	SetGradientColors((COLORREF)clrStart, (COLORREF)(clrEnd ? clrEnd : clrStart));
 
 	return (LRESULT)CLR_DEFAULT;
 }
 
 LRESULT CProgressCtrlX::OnSetBkColor(WPARAM, LPARAM clrBk)
 {
-	m_clrBk = clrBk;
+	m_clrBk = (COLORREF)clrBk;
 	return (LRESULT)CLR_DEFAULT;
 }
 
 LRESULT CProgressCtrlX::OnSetStep(WPARAM nStepInc, LPARAM)
 {
-	m_nStep = nStepInc;
+	m_nStep = (int)nStepInc;
 	return Default();
 }
 
 LRESULT CProgressCtrlX::OnSetPos(WPARAM newPos, LPARAM)
 {
 	int nOldPos;
-	if(SetSnakePos(nOldPos, newPos))
+	if(SetSnakePos(nOldPos, (int)newPos))
 		return nOldPos;
 
 	return Default();
@@ -387,7 +387,7 @@ LRESULT CProgressCtrlX::OnSetPos(WPARAM newPos, LPARAM)
 LRESULT CProgressCtrlX::OnDeltaPos(WPARAM nIncrement, LPARAM)
 {
 	int nOldPos;
-	if(SetSnakePos(nOldPos, nIncrement, TRUE))
+	if(SetSnakePos(nOldPos, (int)nIncrement, TRUE))
 		return nOldPos;
 
 	return Default();
@@ -440,7 +440,7 @@ BOOL CProgressCtrlX::SetSnakePos(int& nOldPos, int nNewPos, BOOL fIncrement)
 	if(m_nTail < nLower)
 		m_nTail = nLower;
 
-	nOldPos = DefWindowProc(PBM_SETPOS, nNewPos, 0);
+	nOldPos = (int)DefWindowProc(PBM_SETPOS, nNewPos, 0);
 	return TRUE;
 }
 

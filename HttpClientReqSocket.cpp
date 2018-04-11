@@ -231,7 +231,7 @@ void SplitHeaders(LPCSTR pszHeaders, CStringArray& astrHeaders)
 	const char* pCrLf;
 	while ((pCrLf = strstr(p, "\r\n")) != NULL)
 	{
-		int iLineLen = pCrLf - p;
+		int iLineLen = (int)(pCrLf - p);
 		const char* pLine = p;
 		p = pCrLf + 2;
 		ASSERT( iLineLen >= 0 );
@@ -256,7 +256,7 @@ void CHttpClientReqSocket::ProcessHttpHeaderPacket(const char* packet, UINT size
 		if (pszNl)
 		{
 			// append current (partial) line to any already received partial line
-			int iLineLen = pszNl - p;
+			int iLineLen = (int)(pszNl - p);
 			ASSERT( iLineLen >= 0 );
 			if (iLineLen > 0)
 				m_strHttpCurHdrLine += CStringA(p, iLineLen - 1); // do not copy the '\r' character

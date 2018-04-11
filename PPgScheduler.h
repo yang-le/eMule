@@ -4,16 +4,14 @@ class CPPgScheduler : public CPropertyPage
 {
 	DECLARE_DYNAMIC(CPPgScheduler)
 
+	enum { IDD = IDD_PPG_SCHEDULER };
+
 public:
 	CPPgScheduler();
 	virtual ~CPPgScheduler();
 
-	// Dialog Data
-	enum { IDD = IDD_PPG_SCHEDULER };
-
 	void Localize();
 
-// Dialog Data
 protected:
 	CComboBox m_timesel;
 	CDateTimeCtrl m_time;

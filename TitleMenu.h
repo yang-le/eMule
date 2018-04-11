@@ -83,5 +83,5 @@ protected:
 	static TSetMenuInfo SetMenuInfo;
 	static TGetMenuInfo GetMenuInfo;
 	void DrawMonoIcon(int nIconPos, CPoint nDrawPos, CDC *dc);
-	void SetMenuBitmap(UINT nFlags, UINT_PTR nIDNewItem, LPCTSTR lpszNewItem, LPCTSTR lpszIconName);
+	void SetMenuBitmap(UINT nFlags, UINT nIDNewItem, LPCTSTR lpszNewItem, LPCTSTR lpszIconName);
 };

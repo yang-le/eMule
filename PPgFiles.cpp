@@ -107,8 +107,8 @@ void CPPgFiles::LoadSettings()
 	} else
 		CheckDlgButton(IDC_STARTNEXTFILE, 0);
 
-	GetDlgItem(IDC_VIDEOPLAYER)->SetWindowText(thePrefs.m_strVideoPlayer);
-	GetDlgItem(IDC_VIDEOPLAYER_ARGS)->SetWindowText(thePrefs.m_strVideoPlayerArgs);
+	SetDlgItemText(IDC_VIDEOPLAYER, thePrefs.m_strVideoPlayer);
+	SetDlgItemText(IDC_VIDEOPLAYER_ARGS, thePrefs.m_strVideoPlayerArgs);
 
 	CheckDlgButton(IDC_VIDEOBACKUP, static_cast<UINT>(thePrefs.moviePreviewBackup));
 	CheckDlgButton(IDC_FNCLEANUP, static_cast<UINT>(thePrefs.AutoFilenameCleanup()));
@@ -151,9 +151,9 @@ BOOL CPPgFiles::OnApply()
 	thePrefs.autofilenamecleanup = IsDlgButtonChecked(IDC_FNCLEANUP)!=0;
 	thePrefs.m_bUseOldTimeRemaining = IsDlgButtonChecked(IDC_PF_TIMECALC)==0;
 
-	GetDlgItem(IDC_VIDEOPLAYER)->GetWindowText(thePrefs.m_strVideoPlayer);
+	GetDlgItemText(IDC_VIDEOPLAYER, thePrefs.m_strVideoPlayer);
 	thePrefs.m_strVideoPlayer.Trim();
-	GetDlgItem(IDC_VIDEOPLAYER_ARGS)->GetWindowText(thePrefs.m_strVideoPlayerArgs);
+	GetDlgItemText(IDC_VIDEOPLAYER_ARGS, thePrefs.m_strVideoPlayerArgs);
 	thePrefs.m_strVideoPlayerArgs.Trim();
 	thePrefs.moviePreviewBackup = IsDlgButtonChecked(IDC_VIDEOBACKUP)!=0;
 
@@ -167,26 +167,26 @@ void CPPgFiles::Localize()
 	if (m_hWnd)
 	{
 		SetWindowText(GetResString(IDS_PW_FILES));
-		GetDlgItem(IDC_LBL_MISC)->SetWindowText(GetResString(IDS_PW_MISC));
-		GetDlgItem(IDC_PF_TIMECALC)->SetWindowText(GetResString(IDS_PF_ADVANCEDCALC));
-		GetDlgItem(IDC_UAP)->SetWindowText(GetResString(IDS_PW_UAP));
-		GetDlgItem(IDC_DAP)->SetWindowText(GetResString(IDS_PW_DAP));
-		GetDlgItem(IDC_PREVIEWPRIO)->SetWindowText(GetResString(IDS_DOWNLOADMOVIECHUNKS));
-		GetDlgItem(IDC_ADDNEWFILESPAUSED)->SetWindowText(GetResString(IDS_ADDNEWFILESPAUSED));
-		GetDlgItem(IDC_WATCHCB)->SetWindowText(GetResString(IDS_PF_WATCHCB));
-		GetDlgItem(IDC_FULLCHUNKTRANS)->SetWindowText(GetResString(IDS_FULLCHUNKTRANS));
-		GetDlgItem(IDC_STARTNEXTFILE)->SetWindowText(GetResString(IDS_STARTNEXTFILE));
-		GetDlgItem(IDC_STARTNEXTFILECAT)->SetWindowText(GetResString(IDS_PREF_STARTNEXTFILECAT));
-		GetDlgItem(IDC_STARTNEXTFILECAT2)->SetWindowText(GetResString(IDS_PREF_STARTNEXTFILECATONLY));
-		GetDlgItem(IDC_FNC)->SetWindowText(GetResString(IDS_EDIT));
-		GetDlgItem(IDC_ONND)->SetWindowText(GetResString(IDS_ONNEWDOWNLOAD));
-		GetDlgItem(IDC_FNCLEANUP)->SetWindowText(GetResString(IDS_AUTOCLEANUPFN));
-		GetDlgItem(IDC_STATICVIDEOPLAYER)->SetWindowText(GetResString(IDS_PW_VIDEOPLAYER));
-		GetDlgItem(IDC_VIDEOPLAYER_CMD_LBL)->SetWindowText(GetResString(IDS_COMMAND));
-		GetDlgItem(IDC_VIDEOPLAYER_ARGS_LBL)->SetWindowText(GetResString(IDS_ARGUMENTS));
-		GetDlgItem(IDC_VIDEOBACKUP)->SetWindowText(GetResString(IDS_VIDEOBACKUP));
-		GetDlgItem(IDC_REMEMBERDOWNLOADED)->SetWindowText(GetResString(IDS_PW_REMEMBERDOWNLOADED));
-		GetDlgItem(IDC_REMEMBERCANCELLED)->SetWindowText(GetResString(IDS_PW_REMEMBERCANCELLED));
+		SetDlgItemText(IDC_LBL_MISC, GetResString(IDS_PW_MISC));
+		SetDlgItemText(IDC_PF_TIMECALC, GetResString(IDS_PF_ADVANCEDCALC));
+		SetDlgItemText(IDC_UAP, GetResString(IDS_PW_UAP));
+		SetDlgItemText(IDC_DAP, GetResString(IDS_PW_DAP));
+		SetDlgItemText(IDC_PREVIEWPRIO, GetResString(IDS_DOWNLOADMOVIECHUNKS));
+		SetDlgItemText(IDC_ADDNEWFILESPAUSED, GetResString(IDS_ADDNEWFILESPAUSED));
+		SetDlgItemText(IDC_WATCHCB, GetResString(IDS_PF_WATCHCB));
+		SetDlgItemText(IDC_FULLCHUNKTRANS, GetResString(IDS_FULLCHUNKTRANS));
+		SetDlgItemText(IDC_STARTNEXTFILE, GetResString(IDS_STARTNEXTFILE));
+		SetDlgItemText(IDC_STARTNEXTFILECAT, GetResString(IDS_PREF_STARTNEXTFILECAT));
+		SetDlgItemText(IDC_STARTNEXTFILECAT2, GetResString(IDS_PREF_STARTNEXTFILECATONLY));
+		SetDlgItemText(IDC_FNC, GetResString(IDS_EDIT));
+		SetDlgItemText(IDC_ONND, GetResString(IDS_ONNEWDOWNLOAD));
+		SetDlgItemText(IDC_FNCLEANUP, GetResString(IDS_AUTOCLEANUPFN));
+		SetDlgItemText(IDC_STATICVIDEOPLAYER, GetResString(IDS_PW_VIDEOPLAYER));
+		SetDlgItemText(IDC_VIDEOPLAYER_CMD_LBL, GetResString(IDS_COMMAND));
+		SetDlgItemText(IDC_VIDEOPLAYER_ARGS_LBL, GetResString(IDS_ARGUMENTS));
+		SetDlgItemText(IDC_VIDEOBACKUP, GetResString(IDS_VIDEOBACKUP));
+		SetDlgItemText(IDC_REMEMBERDOWNLOADED, GetResString(IDS_PW_REMEMBERDOWNLOADED));
+		SetDlgItemText(IDC_REMEMBERCANCELLED, GetResString(IDS_PW_REMEMBERCANCELLED));
 	}
 }
 
@@ -206,7 +206,7 @@ void CPPgFiles::BrowseVideoplayer()
 	CFileDialog dlgFile(TRUE, _T("exe"), strPlayerPath, OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY, _T("Executable (*.exe)|*.exe||"), NULL, 0);
 	if (dlgFile.DoModal() == IDOK)
 	{
-		GetDlgItem(IDC_VIDEOPLAYER)->SetWindowText(dlgFile.GetPathName());
+		SetDlgItemText(IDC_VIDEOPLAYER, dlgFile.GetPathName());
 		SetModified();
 	}
 }

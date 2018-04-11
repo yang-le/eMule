@@ -18,6 +18,7 @@
 #include "emule.h"
 #include "emuledlg.h"
 #include "DropTarget.h"
+#include "OtherFunctions.h"
 #include <intshcut.h>
 
 #ifdef _DEBUG
@@ -26,34 +27,14 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-
-#define	FILETYPE_INETSHRTCUT	_T("Internet Shortcut File")
-#define FILEEXT_INETSHRTCUTA	 "url"					 // ANSI string
-#define FILEEXT_INETSHRTCUTW	L"url"					 // Unicode string
+#define FILEEXT_INETSHRTCUTA	 "url"						// ANSI string
+#define FILEEXT_INETSHRTCUTW	L"url"						// Unicode string
 #define FILEEXT_INETSHRTCUT		_T(FILEEXT_INETSHRTCUTA)
-#define FILEEXTDOT_INETSHRTCUTA	   "."  FILEEXT_INETSHRTCUTA // ANSI string
-#define FILEEXTDOT_INETSHRTCUTW	  L"."  FILEEXT_INETSHRTCUTW // Unicode string
+#define FILEEXTDOT_INETSHRTCUTA	   "." FILEEXT_INETSHRTCUTA	// ANSI string
+#define FILEEXTDOT_INETSHRTCUTW	  L"." FILEEXT_INETSHRTCUTW	// Unicode string
 #define FILEEXTDOT_INETSHRTCUT	_T(".") FILEEXT_INETSHRTCUT
-#define FILEFLT_INETSHRTCUT		FILETYPE_INETSHRTCUT _T("s (*") FILEEXTDOT_INETSHRTCUT _T(")|*") FILEEXTDOT_INETSHRTCUT _T("|")
-
-BOOL IsUrlSchemeSupportedA(LPCSTR pszUrl)
-{
-	static const struct SCHEME
-	{
-		LPCSTR pszPrefix;
-		int iLen;
-	} _aSchemes[] =
-	{
-#define SCHEME_ENTRY(prefix)	{ prefix, ARRSIZE(prefix)-1 }
-		SCHEME_ENTRY("ed2k://")
-#undef SCHEME_ENTRY
-	};
-
-	for (unsigned i = 0; i < ARRSIZE(_aSchemes); ++i)
-		if (strncmp(pszUrl, _aSchemes[i].pszPrefix, _aSchemes[i].iLen) == 0)
-			return TRUE;
-	return FALSE;
-}
+//#define	FILETYPE_INETSHRTCUT	_T("Internet Shortcut File")
+//#define FILEFLT_INETSHRTCUT		FILETYPE_INETSHRTCUT _T("s (*") FILEEXTDOT_INETSHRTCUT _T(")|*") FILEEXTDOT_INETSHRTCUT _T("|")
 
 BOOL IsUrlSchemeSupportedW(LPCWSTR pszUrl)
 {
@@ -64,7 +45,8 @@ BOOL IsUrlSchemeSupportedW(LPCWSTR pszUrl)
 	} _aSchemes[] =
 	{
 #define SCHEME_ENTRY(prefix)	{ prefix, ARRSIZE(prefix)-1 }
-		SCHEME_ENTRY(L"ed2k://")
+		SCHEME_ENTRY(L"ed2k://"),
+		SCHEME_ENTRY(L"magnet:?")
 #undef SCHEME_ENTRY
 	};
 
@@ -82,7 +64,7 @@ LPCSTR GetFileExtA(LPCSTR pszPathA, int iLen /*= -1*/)
 {
 	// Just search the last '.'-character which comes after an optionally
 	// available last '\'-char.
-	int iPos = iLen >= 0 ? iLen : strlen(pszPathA);
+	int iPos = iLen >= 0 ? iLen : (int)strlen(pszPathA);
 	while (iPos-- > 0)
 	{
 		if (pszPathA[iPos] == '.')
@@ -102,7 +84,7 @@ LPCWSTR GetFileExtW(LPCWSTR pszPathW, int iLen /*= -1*/)
 {
 	// Just search the last '.'-character which comes after an optionally
 	// available last '\'-char.
-	int iPos = iLen >= 0 ? iLen : wcslen(pszPathW);
+	int iPos = iLen >= 0 ? iLen : (int)wcslen(pszPathW);
 	while (iPos-- > 0)
 	{
 		if (pszPathW[iPos] == L'.')
@@ -272,7 +254,7 @@ HRESULT CMainFrameDropTarget::PasteHTMLDocument(IHTMLDocument2* doc, PASTEURLDAT
 						LPCWSTR pwszEnd = pwsz;
 						while (*pwszEnd != L'\0' && !iswspace(*pwszEnd)) // Search next white space (end of current string)
 							pwszEnd++;
-						int iLen = pwszEnd - pwsz;
+						int iLen = (int)(pwszEnd - pwsz);
 						if (iLen > 0)
 						{
 							CString strURL(pwsz, iLen);
@@ -353,17 +335,17 @@ HRESULT CMainFrameDropTarget::PasteHTML(PASTEURLDATA* pPaste)
 HRESULT CMainFrameDropTarget::PasteHTML(COleDataObject& data)
 {
 	HRESULT hrPasteResult = E_FAIL;
-	HGLOBAL hMem;
-	if ((hMem = data.GetGlobalData(m_cfHTML)) != NULL)
+	HGLOBAL hMem = data.GetGlobalData(m_cfHTML);
+	if (hMem != NULL)
 	{
-		LPCSTR pszClipboard;
-		if ((pszClipboard = (LPCSTR)GlobalLock(hMem)) != NULL)
+		LPCSTR pszClipboard = (LPCSTR)GlobalLock(hMem);
+		if (pszClipboard != NULL)
 		{
 			hrPasteResult = S_FALSE; // default: nothing was pasted
 			LPCSTR pszHTML = strchr(pszClipboard, '<');
 			if (pszHTML != NULL)
 			{
-				CComBSTR bstrHTMLText((LPCOLESTR)CA2W(pszHTML));
+				CComBSTR bstrHTMLText(pszHTML);
 				PASTEURLDATA Paste(bstrHTMLText);
 				hrPasteResult = PasteHTML(&Paste);
 			}
@@ -377,18 +359,18 @@ HRESULT CMainFrameDropTarget::PasteHTML(COleDataObject& data)
 HRESULT CMainFrameDropTarget::PasteText(CLIPFORMAT cfData, COleDataObject& data)
 {
 	HRESULT hrPasteResult = E_FAIL;
-	HANDLE hMem;
-	if ((hMem = data.GetGlobalData(cfData)) != NULL)
+	HANDLE hMem = data.GetGlobalData(cfData);
+	if (hMem != NULL)
 	{
-		LPCSTR pszUrlA;
-		if ((pszUrlA = (LPCSTR)GlobalLock(hMem)) != NULL)
+		LPCSTR pszUrlA = (LPCSTR)GlobalLock(hMem);
+		if (pszUrlA != NULL)
 		{
 			// skip white space
-			while (isspace((unsigned char)*pszUrlA))
+			while (isspace(*pszUrlA))
 				pszUrlA++;
 
 			hrPasteResult = S_FALSE; // default: nothing was pasted
-			if (_strnicmp(pszUrlA, "ed2k://|", 8) == 0)
+			if (_strnicmp(pszUrlA, "ed2k://|", 8) == 0 || _strnicmp(pszUrlA, "magnet:?", 8) == 0)
 			{
 				CString strData(pszUrlA);
 				int iPos = 0;
@@ -412,9 +394,7 @@ HRESULT CMainFrameDropTarget::AddUrlFileContents(LPCTSTR pszFileName)
 {
 	HRESULT hrResult = S_FALSE;
 
-	TCHAR szExt[_MAX_EXT];
-	_tsplitpath(pszFileName, NULL, NULL, NULL, szExt);
-	if (_tcsicmp(szExt, FILEEXTDOT_INETSHRTCUT) == 0)
+	if (ExtensionIs(pszFileName, FILEEXTDOT_INETSHRTCUT))
 	{
 		CComPtr<IUniformResourceLocatorW> pIUrl;
 		if (SUCCEEDED(hrResult = CoCreateInstance(CLSID_InternetShortcut, NULL, CLSCTX_INPROC_SERVER, IID_IUniformResourceLocatorW, (void**)&pIUrl)))
@@ -445,11 +425,11 @@ HRESULT CMainFrameDropTarget::AddUrlFileContents(LPCTSTR pszFileName)
 HRESULT CMainFrameDropTarget::PasteHDROP(COleDataObject &data)
 {
 	HRESULT hrPasteResult = E_FAIL;
-	HANDLE hMem;
-	if ((hMem = data.GetGlobalData(CF_HDROP)) != NULL)
+	HANDLE hMem = data.GetGlobalData(CF_HDROP);
+	if (hMem != NULL)
 	{
-		LPDROPFILES lpDrop;
-		if ((lpDrop = (LPDROPFILES)GlobalLock(hMem)) != NULL)
+		LPDROPFILES lpDrop = (LPDROPFILES)GlobalLock(hMem);
+		if (lpDrop != NULL)
 		{
 			if (lpDrop->fWide)
 			{
@@ -498,23 +478,22 @@ BOOL CMainFrameDropTarget::IsSupportedDropData(COleDataObject* pDataObject)
 		// If the data is in 'UniformResourceLocator', there is no need to check the contents.
 		bResult = TRUE;
 	}
-	else if (pDataObject->IsDataAvailable(CF_TEXT))
+	else if (pDataObject->IsDataAvailable(CF_UNICODETEXT))
 	{
 		//
 		// Check text data
 		//
 		bResult = FALSE;
-
-		HANDLE hMem;
-		if ((hMem = pDataObject->GetGlobalData(CF_TEXT)) != NULL)
+		HANDLE hMem = pDataObject->GetGlobalData(CF_UNICODETEXT);
+		if (hMem != NULL)
 		{
-			LPCSTR lpszUrl;
-			if ((lpszUrl = (LPCSTR)GlobalLock(hMem)) != NULL)
+			LPCWSTR lpszUrl = (LPCWSTR)GlobalLock(hMem);
+			if (lpszUrl != NULL)
 			{
 				// skip white space
-				while (isspace((unsigned char)*lpszUrl))
+				while (isspace(*lpszUrl))
 					lpszUrl++;
-				bResult = IsUrlSchemeSupportedA(lpszUrl);
+				bResult = IsUrlSchemeSupportedW(lpszUrl);
 				GlobalUnlock(hMem);
 			}
 			GlobalFree(hMem);
@@ -527,11 +506,11 @@ BOOL CMainFrameDropTarget::IsSupportedDropData(COleDataObject* pDataObject)
 		//
 		bResult = FALSE;
 
-		HANDLE hMem;
-		if ((hMem = pDataObject->GetGlobalData(CF_HDROP)) != NULL)
+		HANDLE hMem = pDataObject->GetGlobalData(CF_HDROP);
+		if (hMem != NULL)
 		{
-			LPDROPFILES lpDrop;
-			if ((lpDrop = (LPDROPFILES)GlobalLock(hMem)) != NULL)
+			LPDROPFILES lpDrop = (LPDROPFILES)GlobalLock(hMem);
+			if (lpDrop != NULL)
 			{
 				// Just check, if there's at least one file we can import
 				if (lpDrop->fWide)
@@ -539,7 +518,7 @@ BOOL CMainFrameDropTarget::IsSupportedDropData(COleDataObject* pDataObject)
 					LPCWSTR pszFileW = (LPCWSTR)((LPBYTE)lpDrop + lpDrop->pFiles);
 					while (*pszFileW != L'\0')
 					{
-						int iLen = wcslen(pszFileW);
+						int iLen = (int)wcslen(pszFileW);
 						LPCWSTR pszExtW = GetFileExtW(pszFileW, iLen);
 						if (pszExtW != NULL && _wcsicmp(pszExtW, FILEEXTDOT_INETSHRTCUTW) == 0)
 						{
@@ -554,7 +533,7 @@ BOOL CMainFrameDropTarget::IsSupportedDropData(COleDataObject* pDataObject)
 					LPCSTR pszFileA = (LPCSTR)((LPBYTE)lpDrop + lpDrop->pFiles);
 					while (*pszFileA != '\0')
 					{
-						int iLen = strlen(pszFileA);
+						int iLen = (int)strlen(pszFileA);
 						LPCSTR pszExtA = GetFileExtA(pszFileA, iLen);
 						if (pszExtA != NULL && _stricmp(pszExtA, FILEEXTDOT_INETSHRTCUTA) == 0)
 						{
@@ -591,7 +570,6 @@ DROPEFFECT CMainFrameDropTarget::OnDragOver(CWnd*, COleDataObject*, DWORD, CPoin
 
 BOOL CMainFrameDropTarget::OnDrop(CWnd*, COleDataObject* pDataObject, DROPEFFECT /*dropEffect*/, CPoint /*point*/)
 {
-	BOOL bResult = FALSE;
 	if (m_bDropDataValid)
 	{
 		if (m_cfHTML && pDataObject->IsDataAvailable(m_cfHTML))
@@ -610,9 +588,9 @@ BOOL CMainFrameDropTarget::OnDrop(CWnd*, COleDataObject* pDataObject, DROPEFFECT
 		{
 			return PasteHDROP(*pDataObject) == S_OK;
 		}
-		bResult = TRUE;
+		return TRUE;
 	}
-	return bResult;
+	return FALSE;
 }
 
 void CMainFrameDropTarget::OnDragLeave(CWnd*)

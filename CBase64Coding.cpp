@@ -84,19 +84,15 @@ CBase64Coding::~CBase64Coding()
 BOOL CBase64Coding::Encode(const char * source, int len, char * destination_string)
 {
 
-   const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+   static const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-   int loop_index                = 0;
    int number_of_bytes_to_encode = len;
-
-   BYTE byte_2      = 0;
-   BYTE byte_3      = 0;
 
    char * destination = destination_string;
 
    DWORD number_of_bytes_encoded = 0;
 
-   while( loop_index < number_of_bytes_to_encode )
+   for (int loop_index = 0; loop_index < number_of_bytes_to_encode;)
    {
       // Output the first byte
 
@@ -108,6 +104,7 @@ BOOL CBase64Coding::Encode(const char * source, int len, char * destination_stri
 
       loop_index++;
 
+      BYTE byte_2;
       if ( loop_index >= number_of_bytes_to_encode )
       {
          // We're at the end of the data to encode
@@ -118,10 +115,10 @@ BOOL CBase64Coding::Encode(const char * source, int len, char * destination_stri
          destination[ number_of_bytes_encoded ] = byte_to_add;
          number_of_bytes_encoded++;
 
-         destination[ number_of_bytes_encoded ] =  END_OF_BASE64_ENCODED_DATA;
+         destination[ number_of_bytes_encoded ] = END_OF_BASE64_ENCODED_DATA;
          number_of_bytes_encoded++;
 
-         destination[ number_of_bytes_encoded ] =  END_OF_BASE64_ENCODED_DATA;
+         destination[ number_of_bytes_encoded ] = END_OF_BASE64_ENCODED_DATA;
 
          // 1999-09-01
          // Thanks go to Yurong Lin (ylin@dial.pipex.com) for finding a bug here.
@@ -143,6 +140,7 @@ BOOL CBase64Coding::Encode(const char * source, int len, char * destination_stri
 
       loop_index++;
 
+      BYTE byte_3;
       if ( loop_index >= number_of_bytes_to_encode )
       {
          // We ran out of bytes, we need to add the last half of byte_2 and pad
@@ -203,7 +201,7 @@ BOOL CBase64Coding::Encode(const char * source, int len, char * destination_stri
 
 // End of source
 
-#if 0
+/* -- begin description --
 <HTML>
 
 <HEAD>
@@ -272,4 +270,4 @@ $Modtime: 5/12/00 3:39p $
 </BODY>
 
 </HTML>
-#endif
+-- end description -- */

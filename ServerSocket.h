@@ -36,7 +36,7 @@ protected:
 	virtual void OnConnect(int nErrorCode);
 	virtual void OnReceive(int nErrorCode);
 	virtual void OnError(int nErrorCode);
-	virtual BOOL OnHostNameResolved(const SOCKADDR_IN *pSockAddr);
+	virtual bool OnHostNameResolved(const SOCKADDR_IN *pSockAddr);
 	bool PacketReceived(Packet* packet);
 	void ProcessPacketError(UINT size, UINT opcode, LPCTSTR pszError);
 

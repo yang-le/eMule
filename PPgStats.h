@@ -5,12 +5,11 @@ class CPPgStats : public CPropertyPage
 {
 	DECLARE_DYNAMIC(CPPgStats)
 
+	enum { IDD = IDD_PPG_STATS };
+
 public:
 	CPPgStats();
 	virtual ~CPPgStats();
-
-	// Dialog Data
-	enum { IDD = IDD_PPG_STATS };
 
 	void Localize();
 

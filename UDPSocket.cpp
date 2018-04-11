@@ -69,8 +69,9 @@ struct SRawServerPacket
 
 struct SServerDNSRequest
 {
-	SServerDNSRequest(HANDLE hDNSTask, CServer* pServer) {
-		m_dwCreated = GetTickCount();
+	SServerDNSRequest(HANDLE hDNSTask, CServer* pServer)
+	{
+		m_dwCreated = ::GetTickCount();
 		m_hDNSTask = hDNSTask;
 		memset(m_DnsHostBuffer, 0, sizeof m_DnsHostBuffer);
 		m_pServer = pServer;
@@ -150,7 +151,7 @@ void CUDPSocket::OnReceive(int nErrorCode)
 	BYTE* pBuffer = buffer;
 	SOCKADDR_IN sockAddr = {};
 	int iSockAddrLen = sizeof sockAddr;
-	int length = ReceiveFrom(buffer, sizeof buffer, (SOCKADDR*)&sockAddr, &iSockAddrLen);
+	int length = ReceiveFrom(buffer, sizeof buffer, (LPSOCKADDR)&sockAddr, &iSockAddrLen);
 	if (length != SOCKET_ERROR)
 	{
 		int nPayLoadLen = length;
@@ -197,7 +198,7 @@ void CUDPSocket::OnReceive(int nErrorCode)
 
 			// If we are not currently pinging this server, increase the failure counter
 			CServer* pServer = theApp.serverlist->GetServerByIPUDP(sockAddr.sin_addr.S_un.S_addr, ntohs(sockAddr.sin_port), true);
-			if (pServer && !pServer->GetCryptPingReplyPending() && GetTickCount() - pServer->GetLastPinged() >= SEC2MS(30))
+			if (pServer && !pServer->GetCryptPingReplyPending() && ::GetTickCount() >= pServer->GetLastPinged() + SEC2MS(30))
 			{
 				pServer->AddFailedCount();
 				theApp.emuledlg->serverwnd->serverlistctrl.RefreshServer(pServer);
@@ -684,7 +685,7 @@ void CUDPSocket::OnSend(int nErrorCode)
 	}
 	m_bWouldBlock = false;
 
-	// ZZ:UploadBandWithThrottler (UDP) -->
+// ZZ:UploadBandWithThrottler (UDP) -->
 	sendLocker.Lock();
 	if (!controlpacket_queue.IsEmpty())
 		theApp.uploadBandwidthThrottler->QueueForSendingControlPacket(this);
@@ -759,11 +760,11 @@ void CUDPSocket::SendPacket(Packet* packet, CServer* pServer, uint16 nSpecialPor
 {
 	// Just for safety.. Ensure that there are no stalled DNS queries and/or packets
 	// hanging endlessly in the queue.
-	DWORD dwNow = GetTickCount();
+	DWORD dwNow = ::GetTickCount();
 	for (POSITION pos = m_aDNSReqs.GetHeadPosition(); pos != NULL;) {
 		POSITION posPrev = pos;
 		const SServerDNSRequest* pDNSReq = m_aDNSReqs.GetNext(pos);
-		if (dwNow - pDNSReq->m_dwCreated >= MIN2MS(2)) {
+		if (dwNow >= pDNSReq->m_dwCreated + MIN2MS(2)) {
 			delete pDNSReq;
 			m_aDNSReqs.RemoveAt(posPrev);
 		}
@@ -803,7 +804,7 @@ void CUDPSocket::SendPacket(Packet* packet, CServer* pServer, uint16 nSpecialPor
 	ASSERT( nPort != 0 );
 
 	// Do we need to resolve the DN of this server?
-	CT2CA pszHostAddressA(pServer->GetAddress());
+	CStringA pszHostAddressA(pServer->GetAddress());
 	uint32 nIP = inet_addr(pszHostAddressA);
 	if (nIP == INADDR_NONE)
 	{
@@ -812,7 +813,7 @@ void CUDPSocket::SendPacket(Packet* packet, CServer* pServer, uint16 nSpecialPor
 		// query has completed.
 		for (POSITION reqpos = m_aDNSReqs.GetHeadPosition(); reqpos != NULL;) {
 			SServerDNSRequest* pDNSReq = m_aDNSReqs.GetNext(reqpos);
-			if (_stricmp(CStringA(pDNSReq->m_pServer->GetAddress()), pszHostAddressA) == 0) {
+			if (_tcsicmp(pDNSReq->m_pServer->GetAddress(), pServer->GetAddress()) == 0) {
 				SRawServerPacket* pServerPacket = new SRawServerPacket(pRawPacket, uRawPacketSize, nPort);
 				pDNSReq->m_aPackets.AddTail(pServerPacket);
 				return;
@@ -825,7 +826,7 @@ void CUDPSocket::SendPacket(Packet* packet, CServer* pServer, uint16 nSpecialPor
 								pszHostAddressA, pDNSReq->m_DnsHostBuffer, sizeof pDNSReq->m_DnsHostBuffer);
 		if (pDNSReq->m_hDNSTask == NULL) {
 			if (thePrefs.GetVerbose())
-				DebugLogWarning(_T("Error: Server UDP socket: Failed to resolve address for '%hs' - %s"), (LPCSTR)pszHostAddressA, (LPCTSTR)GetErrorMessage(GetLastError(), 1));
+				DebugLogWarning(_T("Error: Server UDP socket: Failed to resolve address for '%s' - %s"), (LPCSTR)pServer->GetAddress(), (LPCTSTR)GetErrorMessage(GetLastError(), 1));
 			delete pDNSReq;
 			delete[] pRawPacket;
 			return;

@@ -48,7 +48,7 @@ public:
 	void SetPrefs(bool pEnabled, uint32 pCurUpload, uint32 pMinUpload, uint32 pMaxUpload, bool pUseMillisecondPingTolerance, double pPingTolerance, uint32 pPingToleranceMilliseconds, uint32 pGoingUpDivider, uint32 pGoingDownDivider, uint32 pNumberOfPingsForAverage, uint64 pLowestInitialPingAllowed);
 	void InitiateFastReactionPeriod();
 
-	uint32 GetUpload();
+	uint32 GetUpload() const;
 private:
 	static UINT RunProc(LPVOID pParam);
 	UINT RunInternal();
@@ -58,16 +58,15 @@ private:
 	bool AddHostToCheckNoLock(uint32 ip);
 
 	typedef CList<uint32,uint32> UInt32Clist;        
-	uint32 Median(UInt32Clist& list);
+	static uint32 Median(const UInt32Clist& list);
 
-	bool doRun;
+	volatile bool doRun;
 	bool acceptNewClient;
 	bool m_enabled;
 	bool needMoreHosts;
 
 	CCriticalSection addHostLocker;
 	CCriticalSection prefsLocker;
-	CCriticalSection uploadLocker;
 	CCriticalSection pingLocker;
 
 	CEvent* threadEndedEvent;

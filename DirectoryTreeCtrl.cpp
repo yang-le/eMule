@@ -585,7 +585,7 @@ void CDirectoryTreeCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 
 void CDirectoryTreeCtrl::OnRButtonDown(UINT /*nFlags*/, CPoint /*point*/)
 {
-	// catch WM_RBUTTONDOWN and do not route it the default way.. otherwise we won't get a WM_CONTEXTMENU.
+	// catch WM_RBUTTONDOWN and do not route it the default way... otherwise we won't get a WM_CONTEXTMENU.
 	//CTreeCtrl::OnRButtonDown(nFlags, point);
 }
 

@@ -89,7 +89,7 @@ CRichEditCtrlX& CRichEditCtrlX::operator<<(LPCTSTR psz)
 
 CRichEditCtrlX& CRichEditCtrlX::operator<<(char* psz)
 {
-	ReplaceSel(CA2T(psz));
+	ReplaceSel(CA2CT(psz));
 	return *this;
 }
 
@@ -299,8 +299,8 @@ void CRichEditCtrlX::UpdateSyntaxColoring()
 				int iKwLen = rstrKeyword.GetLength();
 				if (_tcsncmp(psz, rstrKeyword, iKwLen)==0 && (psz[iKwLen]==_T('\0') || _tcschr(m_strSeparators, psz[iKwLen])!=NULL))
 				{
-					int iStart = psz - pszStart;
-					int iEnd = iStart + iKwLen;
+					long iStart = (long)(psz - pszStart);
+					long iEnd = iStart + iKwLen;
 					GetSel(lCurSelStart, lCurSelEnd);
 					SetSel(iStart, iEnd);
 					SetSelectionCharFormat(m_cfKeyword);

@@ -119,7 +119,7 @@ bool CUrlClient::SetUrl(LPCTSTR pszUrl, uint32 nIP)
 	if (nIP)
 		m_nConnectIP = nIP;
 	else
-		m_nConnectIP = inet_addr(CT2A(szHostName));
+		m_nConnectIP = inet_addr(CStringA(szHostName));
 //	if (m_nConnectIP == INADDR_NONE)
 //		m_nConnectIP = 0;
 	m_nUserIDHybrid = htonl(m_nConnectIP);
@@ -186,7 +186,7 @@ bool CUrlClient::SendHttpBlockRequests()
 	CRawPacket* pHttpPacket = new CRawPacket(strHttpRequest);
 	theStats.AddUpDataOverheadFileRequest(pHttpPacket->size);
 	socket->SendPacket(pHttpPacket);
-	STATIC_DOWNCAST(CHttpClientDownSocket, socket)->SetHttpState(HttpStateRecvExpected);
+	static_cast<CHttpClientDownSocket *>(socket)->SetHttpState(HttpStateRecvExpected);
 	return true;
 }
 
@@ -197,14 +197,13 @@ bool CUrlClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntimeCla
 
 void CUrlClient::Connect()
 {
-	if (GetConnectIP() != 0 && GetConnectIP() != INADDR_NONE){
+	if (GetConnectIP() != 0 && GetConnectIP() != INADDR_NONE)
 		CUpDownClient::Connect();
-		return;
+	else {
+		//Try to always tell the socket to WaitForOnConnect before you call Connect.
+		socket->WaitForOnConnect();
+		socket->Connect(CString(m_strHostA), m_nUserPort);
 	}
-	//Try to always tell the socket to WaitForOnConnect before you call Connect.
-	socket->WaitForOnConnect();
-	socket->Connect(m_strHostA, m_nUserPort);
-	return;
 }
 
 void CUrlClient::OnSocketConnected(int nErrorCode)
@@ -235,12 +234,12 @@ void CUrlClient::SendFileRequest()
 
 bool CUrlClient::Disconnected(LPCTSTR pszReason, bool bFromSocket)
 {
-	CHttpClientDownSocket* s = STATIC_DOWNCAST(CHttpClientDownSocket, socket);
+	CHttpClientDownSocket* s = static_cast<CHttpClientDownSocket *>(socket);
 
 	TRACE(_T("%hs: HttpState=%u, Reason=%s\n"), __FUNCTION__, s==NULL ? -1 : s->GetHttpState(), pszReason);
 	// TODO: This is a mess..
 	if (s && (s->GetHttpState() == HttpStateRecvExpected || s->GetHttpState() == HttpStateRecvBody))
-        m_fileReaskTimes.RemoveKey(reqfile); // ZZ:DownloadManager (one resk timestamp for each file)
+        m_fileReaskTimes.RemoveKey(reqfile); // ZZ:DownloadManager (one reask timestamp for each file)
 	return CUpDownClient::Disconnected(CString(_T("CUrlClient::Disconnected")) + pszReason, bFromSocket);
 }
 
@@ -368,7 +367,7 @@ void CUpDownClient::ProcessHttpBlockPacket(const BYTE* pucData, UINT uSize)
 
 	m_dwLastBlockReceived = ::GetTickCount();
 
-	if (nEndPos == nStartPos || uSize != nEndPos - nStartPos)
+	if (nEndPos <= nStartPos)
 		throw CString(_T("Failed to process HTTP data block - Invalid block start/end offsets"));
 
 	thePrefs.Add2SessionTransferData(GetClientSoft(), (GetClientSoft()==SO_URL) ? (UINT)-2 : (UINT)-1, false, false, uSize);

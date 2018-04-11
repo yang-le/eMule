@@ -1,11 +1,11 @@
-/*CAsyncSocketEx by Tim Kosse (Tim.Kosse@gmx.de)
-            Version 1.2 (2003-03-28)
+/*CAsyncSocketEx by Tim Kosse (tim.kosse@filezilla-project.org)
+            Version 1.3 (2003-04-26)
 --------------------------------------------------------
 
 Introduction:
 -------------
 
-CAsyncSocketEx is a replacement for the MFC class CAsyncSocket.
+CAsyncSocketEx used to be a replacement for the MFC class CAsyncSocket.
 This class was written because CAsyncSocket is not the fastest WinSock
 wrapper and it's very hard to add new functionality to CAsyncSocket
 derived classes. This class offers the same functionality as CAsyncSocket.
@@ -14,7 +14,7 @@ CAsyncSocket without some tricks.
 
 How do I use it?
 ----------------
-Basically exactly like CAsyncSocket.
+Basically similar to CAsyncSocket.
 To use CAsyncSocketEx, just replace all occurrences of CAsyncSocket in your
 code with CAsyncSocketEx. If you did not enhance CAsyncSocket yourself in
 any way, you won't have to change anything else in your code.
@@ -58,11 +58,19 @@ License
 Feel free to use this class, as long as you don't claim that you wrote it
 and this copyright notice stays intact in the source files.
 If you use this class in commercial applications, please send a short message
-to tim.kosse@gmx.de
+to tim.kosse@filezilla-project.org
 */
-#pragma once
 
-#define FD_FORCEREAD (1 << 15)
+#pragma once
+#if _MSC_VER <= 1800 //for VS 2013
+#define THREADLOCAL __declspec(thread)
+#else
+#define THREADLOCAL thread_local
+#endif
+
+#define FD_FORCEREAD (1<<15)
+
+#include <list>
 
 #if defined(_AFXDLL) && (_MFC_VER==0x0700)
 // See also: KB article Q316312 - BUG: Mfc70.lib Does Not Export AfxGetModuleThreadState
@@ -75,19 +83,39 @@ to tim.kosse@gmx.de
 
 class CAsyncSocketExHelperWindow;
 
-#define WM_SOCKETEX_TRIGGER		(WM_USER + 0x101 + 0)				// 0x0501
-#define WM_SOCKETEX_GETHOST		(WM_USER + 0x101 + 1)				// 0x0502
-#define WM_SOCKETEX_NOTIFY		(WM_USER + 0x101 + 2)				// 0x0503
+#define WM_SOCKETEX_TRIGGER		(WM_USER + 0x101 + 0)				// 0x0501 event sent by a layer
+#define WM_SOCKETEX_GETHOST		(WM_USER + 0x101 + 1)				// 0x0502 WSAAsyncGetHostByName reply
+#define WM_SOCKETEX_CALLBACK	(WM_USER + 0x101 + 2)				// 0x0503
+#define WM_SOCKETEX_NOTIFY		(WM_USER + 0x101 + 3)				// 0x0504 socket notification message
 #define MAX_SOCKETS				(0xBFFF - WM_SOCKETEX_NOTIFY + 1)	// 0xBAFD 47869d
 
-
-#ifndef NOLAYERS
 class CAsyncSocketExLayer;
-#endif //NOLAYERS
-class CCriticalSectionWrapper;
+
+struct t_callbackMsg
+{
+	CAsyncSocketExLayer* pLayer;
+	char* str;
+	WPARAM wParam;
+	LPARAM lParam;
+	int nType;
+};
+
+enum AsyncSocketExState
+{
+	notsock,
+	unconnected,
+	connecting,
+	listening,
+	connected,
+	closed,
+	aborted,
+	attached
+};
+
 class CAsyncSocketEx : public CObject
 {
 	DECLARE_DYNAMIC(CAsyncSocketEx)
+	friend CAsyncSocketExHelperWindow;
 public:
 	///////////////////////////////////////
 	//Functions that imitate CAsyncSocket//
@@ -101,10 +129,12 @@ public:
 	virtual ~CAsyncSocketEx();
 
 	//Creates a socket.
-	BOOL Create(UINT nSocketPort = 0, int nSocketType = SOCK_STREAM,
-				long lEvent = FD_READ | FD_WRITE | FD_OOB | FD_ACCEPT |	FD_CONNECT | FD_CLOSE,
-				LPCSTR lpszSocketAddress = NULL, BOOL bReuseAddr = FALSE);
-
+	bool Create(UINT nSocketPort = 0
+			, int nSocketType = SOCK_STREAM
+			, long lEvent = FD_READ | FD_WRITE | FD_OOB | FD_ACCEPT | FD_CONNECT | FD_CLOSE
+			, const CString& sSocketAddress = NULL
+			, ADDRESS_FAMILY nFamily = AF_INET
+			, bool reusable = false);
 
 	//Attributes
 	//----------
@@ -119,16 +149,12 @@ public:
 	static int GetLastError();
 
 	//Gets the address of the peer socket to which the socket is connected.
-#ifdef _AFX
-	BOOL GetPeerName(CString& rPeerAddress, UINT& rPeerPort);
-#endif
-	BOOL GetPeerName(SOCKADDR* lpSockAddr, int* lpSockAddrLen);
+	bool GetPeerName(CString& rPeerAddress, UINT& rPeerPort);
+	BOOL GetPeerName(LPSOCKADDR lpSockAddr, int* lpSockAddrLen);
 
 	//Gets the local name for a socket.
-#ifdef _AFX
-	BOOL GetSockName(CString& rSocketAddress, UINT& rSocketPort);
-#endif
-	BOOL GetSockName(SOCKADDR* lpSockAddr, int* lpSockAddrLen);
+	bool GetSockName(CString& rSocketAddress, UINT& rSocketPort);
+	BOOL GetSockName(LPSOCKADDR lpSockAddr, int* lpSockAddrLen);
 
 	//Retrieves a socket option.
 	BOOL GetSockOpt(int nOptionName, void* lpOptionValue, int* lpOptionLen, int nLevel = SOL_SOCKET);
@@ -136,26 +162,31 @@ public:
 	//Sets a socket option.
 	BOOL SetSockOpt(int nOptionName, const void* lpOptionValue, int nOptionLen, int nLevel = SOL_SOCKET);
 
+	//Gets the socket family
+	ADDRESS_FAMILY GetFamily() const;
+
+	//Sets the socket family
+	bool SetFamily(ADDRESS_FAMILY nFamily);
 
 	//Operations
 	//----------
 
 	//Accepts a connection on the socket.
-	virtual BOOL Accept(CAsyncSocketEx& rConnectedSocket, SOCKADDR* lpSockAddr = NULL, int* lpSockAddrLen = NULL);
+	virtual BOOL Accept(CAsyncSocketEx& rConnectedSocket, LPSOCKADDR lpSockAddr = NULL, int* lpSockAddrLen = NULL);
 
 	//Requests event notification for the socket.
 	BOOL AsyncSelect(long lEvent = FD_READ | FD_WRITE | FD_OOB | FD_ACCEPT | FD_CONNECT | FD_CLOSE);
 
 	//Associates a local address with the socket.
-	BOOL Bind(UINT nSocketPort, LPCSTR lpszSocketAddress);
-	BOOL Bind(const SOCKADDR* lpSockAddr, int nSockAddrLen);
+	bool Bind(UINT nSocketPort, const CString& sSocketAddress = CString());
+	BOOL Bind(const LPSOCKADDR lpSockAddr, int nSockAddrLen);
 
 	//Closes the socket.
 	virtual void Close();
 
 	//Establishes a connection to a peer socket.
-	virtual BOOL Connect(LPCSTR lpszHostAddress, UINT nHostPort);
-	virtual BOOL Connect(const SOCKADDR* lpSockAddr, int nSockAddrLen);
+	virtual bool Connect(const CString& sHostAddress, UINT nHostPort);
+	virtual BOOL Connect(const LPSOCKADDR lpSockAddr, int nSockAddrLen);
 
 	//Controls the mode of the socket.
 	BOOL IOCtl(long lCommand, DWORD* lpArgument);
@@ -170,8 +201,8 @@ public:
 	virtual int Send(const void* lpBuf, int nBufLen, int nFlags = 0);
 
 	//Disables Send and/or Receive calls on the socket.
+	enum { receives = 0, sends = 1, both = 2 }; // winsock2 extensions: SD_RECEIVE, SD_SEND, SD_BOTH 
 	BOOL ShutDown(int nHow = sends);
-	enum { receives = 0, sends = 1, both = 2 };
 
 	//Overridable Notification Functions
 	//----------------------------------
@@ -191,19 +222,20 @@ public:
 	//Notifies a socket that it can send data by calling Send.
 	virtual void OnSend(int nErrorCode);
 
-	virtual BOOL OnHostNameResolved(const SOCKADDR_IN *pSockAddr);
+	virtual bool OnHostNameResolved(const SOCKADDR_IN *pSockAddr);
 
 	////////////////////////
 	//Additional functions//
 	////////////////////////
 
-#ifndef NOLAYERS
 	//Resets layer chain.
 	virtual void RemoveAllLayers();
 
 	//Attaches a new layer to the socket.
 	BOOL AddLayer(CAsyncSocketExLayer *pLayer);
-#endif //NOLAYERS
+
+	//Is a layer attached to the socket?
+	bool IsLayerAttached() const;
 
 	//Returns the handle of the socket.
 	SOCKET GetSocketHandle();
@@ -222,8 +254,11 @@ protected:
 	//Strucure to hold the socket data
 	struct t_AsyncSocketExData
 	{
+		addrinfo *addrInfo, *nextAddr; // Iterate through protocols on connect failure
 		SOCKET hSocket; //Socket handle
 		int nSocketIndex; //Index of socket, required by CAsyncSocketExHelperWindow
+		ADDRESS_FAMILY nFamily;
+		bool onCloseCalled; // Set to true on first received OnClose event
 	} m_SocketData;
 
 	//If using layers, only the events specified with m_lEvent will send to the event handlers.
@@ -232,42 +267,51 @@ protected:
 	//AsyncGetHostByName
 	char *m_pAsyncGetHostByNameBuffer; //Buffer for hostend structure
 	HANDLE m_hAsyncGetHostByNameHandle; //TaskHandle
-	int m_nAsyncGetHostByNamePort; //Port to connect to
+	USHORT m_nAsyncGetHostByNamePort; //Port to connect to
 
 	//Returns the handle of the helper window
 	HWND GetHelperWindowHandle();
 
 	//Attaches socket handle to helper window
-	void AttachHandle(SOCKET hSocket);
+	void AttachHandle(/*SOCKET hSocket*/);
 
-	//Detaches socket handle to helper window
-	void DetachHandle(SOCKET hSocket);
-
-	//Critical section for thread synchronization
-	static CCriticalSectionWrapper m_sGlobalCriticalSection;
+	//Detaches socket handle from helper window
+	void DetachHandle();
 
 	//Pointer to the data of the local thread
 	struct t_AsyncSocketExThreadData
 	{
 		CAsyncSocketExHelperWindow *m_pHelperWindow;
+		std::list<CAsyncSocketEx*> layerCloseNotify;
 		int nInstanceCount;
-		DWORD nThreadId;
 	} *m_pLocalAsyncSocketExThreadData;
 
 	//List of the data structures for all threads
-	static struct t_AsyncSocketExThreadDataList
-	{
-		t_AsyncSocketExThreadDataList *pNext;
-		t_AsyncSocketExThreadData *pThreadData;
-	} *m_spAsyncSocketExThreadDataList;
+	static THREADLOCAL t_AsyncSocketExThreadData* thread_local_data;
 
 	//Initializes Thread data and helper window, fills m_pLocalAsyncSocketExThreadData
-	BOOL InitAsyncSocketExInstance();
+	bool InitAsyncSocketExInstance();
 
 	//Destroys helper window after last instance of CAsyncSocketEx in current thread has been closed
 	void FreeAsyncSocketExInstance();
 
-#ifndef NOLAYERS
+	// Iterate through protocols on failure
+	bool TryNextProtocol();
+
+	void ResendCloseNotify();
+
+	// Add a new notification to the list of pending callbacks
+	void AddCallbackNotification(const t_callbackMsg& msg);
+
+#ifndef NOSOCKETSTATES
+	int m_nPendingEvents;
+
+	int GetState() const;
+	void SetState(int nState);
+
+	int m_nState;
+#endif //NOSOCKETSTATES
+
 	//Layer chain
 	CAsyncSocketExLayer *m_pFirstLayer;
 	CAsyncSocketExLayer *m_pLastLayer;
@@ -275,13 +319,26 @@ protected:
 	friend CAsyncSocketExLayer;
 
 	//Called by the layers to notify application of some events
-	virtual int OnLayerCallback(const CAsyncSocketExLayer *pLayer, int nType, int nCode, WPARAM wParam, LPARAM lParam);
-#endif //NOLAYERS
+	virtual int OnLayerCallback(std::list<t_callbackMsg>& callbacks);
 
-	friend CAsyncSocketExHelperWindow;
+	// Used by Bind with AF_UNSPEC sockets
+	UINT m_nSocketPort;
+	CString m_sSocketAddress;
+
+	// Pending callbacks
+	std::list<t_callbackMsg> m_pendingCallbacks;
 };
 
-#ifndef NOLAYERS
-#define LAYERCALLBACK_STATECHANGE	0
-#define LAYERCALLBACK_LAYERSPECIFIC	1
-#endif //NOLAYERS
+#define LAYERCALLBACK_STATECHANGE 0
+#define LAYERCALLBACK_LAYERSPECIFIC 1
+
+inline CString Inet6AddrToString(in6_addr& addr)
+{
+	CString buf;
+	buf.Format(_T("%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x")
+		, addr.s6_bytes[0], addr.s6_bytes[1], addr.s6_bytes[2], addr.s6_bytes[3]
+		, addr.s6_bytes[4], addr.s6_bytes[5], addr.s6_bytes[6], addr.s6_bytes[7]
+		, addr.s6_bytes[8], addr.s6_bytes[9], addr.s6_bytes[10], addr.s6_bytes[11]
+		, addr.s6_bytes[12], addr.s6_bytes[13], addr.s6_bytes[14], addr.s6_bytes[15]);
+	return buf;
+}

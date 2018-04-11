@@ -24,14 +24,14 @@ http://kademlia.scs.cs.nyu.edu
 
 // Note To Mods //
 /*
-Please do not change anything here and release it..
-There is going to be a new forum created just for the Kademlia side of the client..
+Please do not change anything here and release it.
+There is going to be a new forum created just for the Kademlia side of the client.
 If you feel there is an error or a way to improve something, please
-post it in the forum first and let us look at it.. If it is a real improvement,
-it will be added to the offical client.. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form..
+post it in the forum first and let us look at it. If it is a real improvement,
+it will be added to the offical client. Changing something without knowing
+what all it does can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
-there client on the eMule forum..
+there client on the eMule forum.
 */
 
 #include "stdafx.h"
@@ -59,13 +59,8 @@ CContact::~CContact()
 }
 
 CContact::CContact()
-	: m_uClientID(0ul), m_cUDPKey(0, 0)
+	: m_uClientID(0ul), m_cUDPKey(0, 0), m_uIp(0), m_uTcpPort(0), m_uUdpPort(0), m_uVersion(0), m_bIPVerified(false)
 {
-	m_uIp = 0;
-	m_uUdpPort = 0;
-	m_uTcpPort = 0;
-	m_uVersion = 0;
-	m_bIPVerified = false;
 	InitContact();
 }
 
@@ -75,8 +70,8 @@ CContact::CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint1
 	CKademlia::GetPrefs()->GetKadID(&m_uDistance);
 	m_uDistance.Xor(uClientID);
 	m_uIp = uIp;
-	m_uUdpPort = uUdpPort;
 	m_uTcpPort = uTcpPort;
+	m_uUdpPort = uUdpPort;
 	m_uVersion = uVersion;
 	m_bIPVerified = bIPVerified;
 	InitContact();
@@ -95,7 +90,8 @@ CContact::CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint1
 	InitContact();
 }
 
-void CContact::Copy(const CContact& fromContact){
+void CContact::Copy(const CContact& fromContact)
+{
 	ASSERT(!fromContact.m_bGuiRefs); // don't do this, if this is needed at some point, the code has to be adjusted before
 	m_uClientID = fromContact.m_uClientID;
 	m_uDistance = fromContact.m_uDistance;
@@ -119,10 +115,9 @@ void CContact::InitContact()
 {
 	m_byType = 3;
 	m_tExpires = 0;
-	m_tLastTypeSet = time(NULL);
+	m_tCreated = m_tLastTypeSet = time(NULL);
 	m_bGuiRefs = false;
 	m_uInUse = 0;
-	m_tCreated = time(NULL);
 	m_bReceivedHelloPacket = false;
 	m_bBootstrapContact = false;
 }
@@ -171,7 +166,7 @@ void CContact::GetIPAddress(CString *psIp) const
 
 void CContact::SetIPAddress(uint32 uIp)
 {
-	if (m_uIp != uIp){
+	if (m_uIp != uIp) {
 		SetIpVerified(false); // clear the verified flag since it is no longer valid for a different IP
 		m_uIp = uIp;
 	}
@@ -214,30 +209,29 @@ byte CContact::GetType() const
 
 void CContact::CheckingType()
 {
-	if(time(NULL) - m_tLastTypeSet < 10 || m_byType == 4)
-		return;
-
-	m_tLastTypeSet = time(NULL);
-
-	m_tExpires = time(NULL) + MIN2S(2);
-	m_byType++;
-	theApp.emuledlg->kademliawnd->ContactRef(this);
+	if (time(NULL) - m_tLastTypeSet >= 10 && m_byType < 4) {
+		m_tLastTypeSet = time(NULL);
+		m_tExpires = m_tLastTypeSet + MIN2S(2);
+		++m_byType;
+		theApp.emuledlg->kademliawnd->ContactRef(this);
+	}
 }
 
 void CContact::UpdateType()
 {
-	switch ((time(NULL)-m_tCreated)/HR2S(1)) { //hours
+	time_t tNow = time(NULL);
+	switch ((tNow - m_tCreated)/HR2S(1)) { //hours
 	case 0:
 		m_byType = 2;
-		m_tExpires = time(NULL) + HR2S(1);
+		m_tExpires = tNow + HR2S(1);
 		break;
 	case 1:
 		m_byType = 1;
-		m_tExpires = time(NULL) + (unsigned)HR2S(1.5);
+		m_tExpires = tNow + (unsigned)HR2S(1.5);
 		break;
 	default:
 		m_byType = 0;
-		m_tExpires = time(NULL) + HR2S(2);
+		m_tExpires = tNow + HR2S(2);
 	}
 	theApp.emuledlg->kademliawnd->ContactRef(this);
 }
@@ -246,14 +240,22 @@ time_t CContact::GetLastSeen() const
 {
 	// calculating back from expire time, so we don't need an additional field.
 	// might result in wrong values if doing CheckingType() for example, so don't use for important timing stuff
-	if (m_tExpires != 0) {
-		switch(m_byType) {
-			case 2: return m_tExpires - HR2S(1);
-			case 1: return m_tExpires - (unsigned)HR2S(1.5);
-			case 0: return m_tExpires - HR2S(2);
+	if (m_tExpires > 0)
+		switch (m_byType) {
+		case 2:
+			return m_tExpires - HR2S(1);
+		case 1:
+			return m_tExpires - (unsigned)HR2S(1.5);
+		case 0:
+			return m_tExpires - HR2S(2);
 		}
-	}
 	return 0;
+}
+
+void Kademlia::CContact::Expire() //mark contact for removal
+{
+	m_byType = 4;
+	m_tExpires = 1; //the smallest non-zero
 }
 
 CUInt128 CContact::GetClientID() const
@@ -283,8 +285,8 @@ void CContact::IncUse()
 
 void CContact::DecUse()
 {
-	if(m_uInUse)
-		m_uInUse--;
+	if (m_uInUse)
+		--m_uInUse;
 	else
 		ASSERT(0);
 }
@@ -314,7 +316,7 @@ void CContact::SetVersion(uint8 uVersion)
 	m_uVersion = uVersion;
 }
 
-CKadUDPKey CContact::GetUDPKey()	const
+CKadUDPKey CContact::GetUDPKey() const
 {
 	return m_cUDPKey;
 }
@@ -324,12 +326,12 @@ void CContact::SetUDPKey(CKadUDPKey cUDPKey)
 	m_cUDPKey = cUDPKey;
 }
 
-bool CContact::IsIpVerified()	const
+bool CContact::IsIpVerified() const
 {
 	return m_bIPVerified;
 }
 
 void CContact::SetIpVerified(bool bIPVerified)
 {
-	 m_bIPVerified =  bIPVerified;
+	 m_bIPVerified = bIPVerified;
 }

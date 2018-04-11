@@ -193,7 +193,7 @@ void CButtonsTabCtrl::InternalInit()
 
 LRESULT CButtonsTabCtrl::_OnThemeChanged()
 {
-	// Owner drawn tab control seems to have troubles with updating itself due to an XP theme change..
+	// Owner drawn tab control seems to have troubles with updating itself due to an XP theme change.
 	bool bIsOwnerDrawn = (GetStyle() & TCS_OWNERDRAWFIXED) != 0;
 	if (bIsOwnerDrawn)
 		ModifyStyle(TCS_OWNERDRAWFIXED, 0);	// Reset control style to not-owner drawn

@@ -39,39 +39,40 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 CUPnPImplWinServ::CUPnPImplWinServ()
-	: m_pDevices(),
-	m_pServices(),
-	m_bCOM(false),
-	m_pDeviceFinder(NULL),
-	m_nAsyncFindHandle(0),
-	m_bAsyncFindRunning(false),
-	m_bADSL(false),
-	m_ADSLFailed(false),
-	m_bPortIsFree(true),
-	m_sLocalIP(),
-	m_sExternalIP(),
-	m_tLastEvent(GetTickCount()),
-	m_pDeviceFinderCallback(NULL),
-	m_pServiceCallback(NULL),
-	m_bUPnPDeviceConnected(TRIS_FALSE),
-	m_bInited(false),
-	m_hADVAPI32_DLL(0),
-	m_pfnOpenSCManager(0),
-	m_pfnOpenService(0),
-	m_pfnQueryServiceStatusEx(0),
-	m_pfnCloseServiceHandle(0),
-	m_pfnStartService(0),
-	m_bSecondTry(false),
-	m_pfGetBestInterface(NULL),
-	m_pfGetIpAddrTable(NULL),
-	m_pfGetIfEntry(NULL),
-	m_hIPHLPAPI_DLL(NULL),
-	m_bServiceStartedByEmule(false),
-	m_pfnControlService(NULL),
-	m_bDisableWANIPSetup(thePrefs.GetSkipWANIPSetup()),
-	m_bDisableWANPPPSetup(thePrefs.GetSkipWANPPPSetup())
+	: m_bUPnPDeviceConnected(TRIS_FALSE)
+	, m_pfnOpenSCManager(0)
+	, m_pfnOpenService(0)
+	, m_pfnQueryServiceStatusEx(0)
+	, m_pfnCloseServiceHandle(0)
+	, m_pfnStartService(0)
+	, m_pfnControlService(NULL)
+	, m_pfGetBestInterface(NULL)
+	, m_pfGetIpAddrTable(NULL)
+	, m_pfGetIfEntry(NULL)
+	, m_tLastEvent(::GetTickCount())
+	, m_pDevices()
+	, m_pServices()
+	, m_pDeviceFinder(NULL)
+	, m_pDeviceFinderCallback(NULL)
+	, m_pServiceCallback(NULL)
+	, m_nAsyncFindHandle(0)
+	, m_bCOM(false)
+	, m_bPortIsFree(true)
+	, m_sLocalIP()
+	, m_sExternalIP()
+	, m_bADSL(false)
+	, m_ADSLFailed(false)
+	, m_bInited(false)
+	, m_bAsyncFindRunning(false)
+	, m_hADVAPI32_DLL(0)
+	, m_hIPHLPAPI_DLL(NULL)
+	, m_bSecondTry(false)
+	, m_bServiceStartedByEmule(false)
+	, m_bDisableWANIPSetup(thePrefs.GetSkipWANIPSetup())
+	, m_bDisableWANPPPSetup(thePrefs.GetSkipWANPPPSetup())
 {
 }
+
 void CUPnPImplWinServ::Init()
 {
 	if (!m_bInited) {
@@ -103,11 +104,12 @@ void CUPnPImplWinServ::Init()
 		m_bInited = true;
 	}
 }
+
 FinderPointer CUPnPImplWinServ::CreateFinderInstance()
 {
 	void *pNewDeviceFinder = NULL;
 	if (FAILED(CoCreateInstance(CLSID_UPnPDeviceFinder, NULL, CLSCTX_INPROC_SERVER,
-	                            IID_IUPnPDeviceFinder, &pNewDeviceFinder))) {
+		IID_IUPnPDeviceFinder, &pNewDeviceFinder))) {
 		// Should we ask to disable auto-detection?
 		DebugLogWarning(_T("UPnP discovery is not supported or not installed - CreateFinderInstance() failed"));
 
@@ -115,6 +117,7 @@ FinderPointer CUPnPImplWinServ::CreateFinderInstance()
 	}
 	return FinderPointer(static_cast<IUPnPDeviceFinder*>(pNewDeviceFinder), false);
 }
+
 CUPnPImplWinServ::~CUPnPImplWinServ()
 {
 	if (m_hADVAPI32_DLL != 0) {
@@ -131,6 +134,7 @@ CUPnPImplWinServ::~CUPnPImplWinServ()
 	if (m_bCOM)
 		CoUninitialize();
 }
+
 // Helper function to check if UPnP Device Host service is healthy
 // Although SSPD service is dependent on this service but sometimes it may lock up.
 // This will result in application lockup when we call any methods of IUPnPDeviceFinder.
@@ -155,13 +159,10 @@ bool CUPnPImplWinServ::IsReady()
 	Init();
 
 	bool bResult = false;
-	if (m_pfnOpenSCManager && m_pfnOpenService &&
-	    m_pfnQueryServiceStatusEx && m_pfnCloseServiceHandle && m_pfnStartService) {
-		SC_HANDLE schSCManager;
-		SC_HANDLE schService;
-
+	if (m_pfnOpenSCManager && m_pfnOpenService
+		&& m_pfnQueryServiceStatusEx && m_pfnCloseServiceHandle && m_pfnStartService) {
 		// Open a handle to the Service Control Manager database
-		schSCManager = m_pfnOpenSCManager(
+		SC_HANDLE schSCManager = m_pfnOpenSCManager(
 			NULL,	// local machine
 			NULL,	// ServicesActive database
 			GENERIC_READ);	// for enumeration and status lookup
@@ -169,7 +170,7 @@ bool CUPnPImplWinServ::IsReady()
 		if (schSCManager == NULL)
 			return false;
 
-		schService = m_pfnOpenService(schSCManager, _T("upnphost"), GENERIC_READ);
+		SC_HANDLE schService = m_pfnOpenService(schSCManager, _T("upnphost"), GENERIC_READ);
 		if (schService == NULL) {
 			m_pfnCloseServiceHandle(schSCManager);
 			return false;
@@ -179,7 +180,7 @@ bool CUPnPImplWinServ::IsReady()
 		DWORD nBytesNeeded;
 
 		if (m_pfnQueryServiceStatusEx(schService, SC_STATUS_PROCESS_INFO,
-		                              (LPBYTE)&ssStatus, sizeof(SERVICE_STATUS_PROCESS), &nBytesNeeded)) {
+			(LPBYTE)&ssStatus, sizeof(SERVICE_STATUS_PROCESS), &nBytesNeeded)) {
 			if (ssStatus.dwCurrentState == SERVICE_RUNNING)
 				bResult = true;
 		}
@@ -199,22 +200,20 @@ bool CUPnPImplWinServ::IsReady()
 		m_pfnCloseServiceHandle(schSCManager);
 	}
 
-	if (!bResult) {
+	if (!bResult)
 		Log(GetResString(IDS_UPNP_NOSERVICE));
-	}
 
 	return bResult;
 }
+
 void CUPnPImplWinServ::StopUPnPService()
 {
 	ASSERT(m_bServiceStartedByEmule);
 	if (m_bInited && m_pfnOpenService && m_pfnCloseServiceHandle && m_pfnControlService && m_pfnOpenSCManager) {
-		SC_HANDLE schSCManager;
-		SC_HANDLE schService;
 		m_bServiceStartedByEmule = false;
 
 		// Open a handle to the Service Control Manager database
-		schSCManager = m_pfnOpenSCManager(
+		SC_HANDLE schSCManager = m_pfnOpenSCManager(
 			NULL,	// local machine
 			NULL,	// ServicesActive database
 			GENERIC_READ);	// for enumeration and status lookup
@@ -222,20 +221,21 @@ void CUPnPImplWinServ::StopUPnPService()
 		if (schSCManager == NULL)
 			return;
 
-		schService = m_pfnOpenService(schSCManager, _T("upnphost"), SERVICE_STOP);
+		SC_HANDLE schService = m_pfnOpenService(schSCManager, _T("upnphost"), SERVICE_STOP);
 		if (schService) {
 			SERVICE_STATUS structServiceStatus;
-			if (m_pfnControlService(schService, SERVICE_CONTROL_STOP, &structServiceStatus) != 0) {
+			if (m_pfnControlService(schService, SERVICE_CONTROL_STOP, &structServiceStatus) != 0)
 				DebugLog(_T("Shutting down UPnP Service: Succeeded"));
-			} else {
+			else
 				DebugLogWarning(_T("Shutting down UPnP Service: Failed, ErrorCode: %u"), GetLastError());
-			}
+
 			m_pfnCloseServiceHandle(schService);
 		} else
 			DebugLogWarning(_T("Shutting down UPnP Service: Unable to open service"));
 		m_pfnCloseServiceHandle(schSCManager);
 	}
 }
+
 // Helper function for processing the AsyncFind search
 void CUPnPImplWinServ::ProcessAsyncFind(CComBSTR bsSearchType)
 {
@@ -248,7 +248,7 @@ void CUPnPImplWinServ::ProcessAsyncFind(CComBSTR bsSearchType)
 		return DebugLogError(_T("CreateAsyncFind failed in UPnP finder."));
 
 	m_bAsyncFindRunning = true;
-	m_tLastEvent = GetTickCount();
+	m_tLastEvent = ::GetTickCount();
 
 	if (FAILED(m_pDeviceFinder->StartAsyncFind(m_nAsyncFindHandle))) {
 		if (FAILED(m_pDeviceFinder->CancelAsyncFind(m_nAsyncFindHandle)))
@@ -258,6 +258,7 @@ void CUPnPImplWinServ::ProcessAsyncFind(CComBSTR bsSearchType)
 		return;
 	}
 }
+
 // Helper function for stopping the async find if proceeding
 void CUPnPImplWinServ::StopAsyncFind()
 {
@@ -271,6 +272,7 @@ void CUPnPImplWinServ::StopAsyncFind()
 
 	m_bAsyncFindRunning = false;
 }
+
 // Start the discovery of the UPnP gateway devices
 void CUPnPImplWinServ::StartDiscovery(uint16 nTCPPort, uint16 nUDPPort, uint16 nTCPWebPort, bool bSecondTry)
 {
@@ -308,6 +310,7 @@ void CUPnPImplWinServ::StartDiscovery(uint16 nTCPPort, uint16 nUDPPort, uint16 n
 	// We should not release the device finder object
 	return;
 }
+
 // Helper function for adding devices to the list
 // This is called by the devicefinder callback object (DeviceAdded func)
 void CUPnPImplWinServ::AddDevice(DevicePointer device, bool bAddChilds, int nLevel)
@@ -319,7 +322,7 @@ void CUPnPImplWinServ::AddDevice(DevicePointer device, bool bAddChilds, int nLev
 	//We are going to add a device
 	CComBSTR bsFriendlyName, bsUniqueName;
 
-	m_tLastEvent = GetTickCount();
+	m_tLastEvent = ::GetTickCount();
 	HRESULT hr = device->get_FriendlyName(&bsFriendlyName);
 
 	if (FAILED(hr)) {
@@ -335,8 +338,8 @@ void CUPnPImplWinServ::AddDevice(DevicePointer device, bool bAddChilds, int nLev
 	}
 
 	// Add the item at the end of the device list if not found
-	std::vector<DevicePointer>::iterator deviceSet
-	        = std::find_if(m_pDevices.begin(), m_pDevices.end(), FindDevice(bsUniqueName));
+	std::vector<DevicePointer>::const_iterator deviceSet
+		= std::find_if(m_pDevices.begin(), m_pDevices.end(), FindDevice(bsUniqueName));
 
 	if (deviceSet == m_pDevices.end()) {
 		m_pDevices.push_back(device);
@@ -387,20 +390,22 @@ void CUPnPImplWinServ::AddDevice(DevicePointer device, bool bAddChilds, int nLev
 		pEnum->Release();
 	}
 }
+
 // Helper function for removing device from the list
 // This is called by the devicefinder callback object (DeviceRemoved func)
 void CUPnPImplWinServ::RemoveDevice(CComBSTR bsUDN)
 {
 	DebugLog(_T("Finder asked to remove: %ls"), (LPCWSTR)bsUDN);
 
-	std::vector<DevicePointer>::iterator device
-	        = std::find_if(m_pDevices.begin(), m_pDevices.end(), FindDevice(bsUDN));
+	std::vector<DevicePointer>::const_iterator device
+		= std::find_if(m_pDevices.begin(), m_pDevices.end(), FindDevice(bsUDN));
 
 	if (device != m_pDevices.end()) {
 		DebugLog(_T("Device removed: %ls"), (LPCWSTR)bsUDN);
 		m_pDevices.erase(device);
 	}
 }
+
 bool CUPnPImplWinServ::OnSearchComplete()
 {
 	ATLTRACE2(atlTraceCOM, 1, _T("CUPnPImplWinServ(%p)->OnSearchComplete\n"), this);
@@ -437,22 +442,25 @@ bool CUPnPImplWinServ::OnSearchComplete()
 	}
 	return true;
 }
+
 // Function to populate the service list for the device
 HRESULT CUPnPImplWinServ::GetDeviceServices(DevicePointer pDevice)
 {
 	if (pDevice == NULL)
 		return E_POINTER;
 
-	HRESULT hr = S_OK;
-
 	m_pServices.clear();
-	_com_ptr_t<_com_IIID<IUPnPServices, & IID_IUPnPServices> > pServices_ = NULL;
-	if (FAILED(hr = pDevice->get_Services(&pServices_)))
-		return UPnPMessage(hr), hr;
-	_com_ptr_t<_com_IIID<IUPnPServices, & IID_IUPnPServices> > pServices(pServices_);
+	_com_ptr_t<_com_IIID<IUPnPServices, &IID_IUPnPServices> > pServices = NULL;
+
+	HRESULT hr = pDevice->get_Services(&pServices);
+	if (FAILED(hr)) {
+		UPnPMessage(hr);
+		return hr;
+	}
 
 	LONG nCount = 0;
-	if (FAILED(hr = pServices->get_Count(&nCount)))
+	hr = pServices->get_Count(&nCount);
+	if (FAILED(hr))
 		return UPnPMessage(hr), hr;
 
 	if (nCount == 0) {
@@ -463,39 +471,41 @@ HRESULT CUPnPImplWinServ::GetDeviceServices(DevicePointer pDevice)
 
 	UnknownPtr pEU_ = NULL;
 	// We have to get a IEnumUnknown pointer
-	if (FAILED(hr = pServices->get__NewEnum(&pEU_)))
-		return UPnPMessage(hr), hr;
-
-	EnumUnknownPtr pEU(pEU_);
-	if (pEU == NULL)
-		return hr;
-
-	hr = SaveServices(pEU, nCount);
-
+	hr = pServices->get__NewEnum(&pEU_);
+	if (FAILED(hr))
+		UPnPMessage(hr);
+	else {
+		EnumUnknownPtr pEU(pEU_);
+		if (pEU != NULL)
+			hr = SaveServices(pEU, nCount);
+	}
 	return hr;
 }
+
 // Saves services from enumeration to member m_pServices
 HRESULT CUPnPImplWinServ::SaveServices(EnumUnknownPtr pEU, const LONG nTotalItems)
 {
 	HRESULT hr = S_OK;
 	CComBSTR bsServiceId;
 
-	for (LONG nIndex = 0; nIndex < nTotalItems; nIndex++) {
-		UnknownPtr punkService_ = NULL;
-		hr = pEU->Next(1, &punkService_, NULL);
-		UnknownPtr punkService(punkService_);
-
+	for (LONG nIndex = 0; nIndex < nTotalItems; ++nIndex) {
+		UnknownPtr punkService = NULL;
+		hr = pEU->Next(1, &punkService, NULL);
 		if (FAILED(hr)) {
 			// Happens with MS ICS sometimes when the device is disconnected, reboot fixes that
 			DebugLogError(_T("Traversing the service list of UPnP device failed."));
-			return UPnPMessage(hr), hr;
+			UPnPMessage(hr);
+			break;
 		}
 
 		// Get a IUPnPService pointer to the service just got
 		ServicePointer pService(punkService);
 
-		if (FAILED(hr = pService->get_Id(&bsServiceId)))
-			return UPnPMessage(hr), hr;
+		hr = pService->get_Id(&bsServiceId);
+		if (FAILED(hr)) {
+			UPnPMessage(hr);
+			break;
+		}
 
 		DebugLog(_T("Found UPnP service: %ls"), (LPCWSTR)bsServiceId);
 		m_pServices.push_back(pService);
@@ -533,18 +543,18 @@ HRESULT CUPnPImplWinServ::MapPort(const ServicePointer& service)
 	// The problem is that it's unclear if the order of services is always the same...
 	// But looks like it is.
 	if (!m_bADSL) {
-		m_bADSL = !(strServiceId.Find(_T("urn:upnp-org:serviceId:WANEthLinkC")) == -1) ||
-		          !(strServiceId.Find(_T("urn:upnp-org:serviceId:WANDSLLinkC")) == -1);
+		m_bADSL = (strServiceId.Find(_T("urn:upnp-org:serviceId:WANEthLinkC")) != -1)
+			|| (strServiceId.Find(_T("urn:upnp-org:serviceId:WANDSLLinkC")) != -1);
 	}
 
 	bool bPPP = stristr(strServiceId, _T("urn:upnp-org:serviceId:WANPPPC")) != NULL;
 	bool bIP = stristr(strServiceId, _T("urn:upnp-org:serviceId:WANIPC")) != NULL;
 
-	if (((thePrefs.GetSkipWANPPPSetup() || m_bDisableWANPPPSetup) && bPPP) ||
-	    ((thePrefs.GetSkipWANIPSetup() || m_bDisableWANIPSetup) && bIP) ||
-	    !bPPP && !bIP)
+	if ((thePrefs.GetSkipWANPPPSetup() || m_bDisableWANPPPSetup) && bPPP
+		|| (thePrefs.GetSkipWANIPSetup() || m_bDisableWANIPSetup) && bIP
+		|| !bPPP && !bIP) {
 		return S_OK;
-
+	}
 	// For ICS we can query variables, for router devices we need to use
 	// actions to get the ConnectionStatus state variable; recommended to use actions
 	// "GetStatusInfo" returns state variables:
@@ -589,8 +599,7 @@ HRESULT CUPnPImplWinServ::MapPort(const ServicePointer& service)
 }
 void CUPnPImplWinServ::StartPortMapping()
 {
-	std::vector<ServicePointer>::iterator Iter;
-	for (Iter = m_pServices.begin(); Iter != m_pServices.end(); ++Iter)
+	for (std::vector<ServicePointer>::const_iterator Iter = m_pServices.begin(); Iter != m_pServices.end(); ++Iter)
 		MapPort(*Iter);
 
 	if (m_bADSL && !m_ADSLFailed && m_bUPnPPortsForwarded == TRIS_UNKNOWN && !thePrefs.GetSkipWANIPSetup()) {
@@ -598,7 +607,7 @@ void CUPnPImplWinServ::StartPortMapping()
 		DebugLog(_T("ADSL device configuration failed. Retrying with WANIPConn setup..."));
 		m_bDisableWANIPSetup = false;
 		m_bDisableWANPPPSetup = true;
-		for (Iter = m_pServices.begin(); Iter != m_pServices.end(); ++Iter)
+		for (std::vector<ServicePointer>::const_iterator Iter = m_pServices.begin(); Iter != m_pServices.end(); ++Iter)
 			MapPort(*Iter);
 	}
 }
@@ -607,10 +616,11 @@ void CUPnPImplWinServ::DeletePorts()
 	if (!m_bInited)
 		return;
 
-	for (std::vector<ServicePointer>::iterator Iter = m_pServices.begin(); Iter != m_pServices.end(); ++Iter)
+	for (std::vector<ServicePointer>::const_iterator Iter = m_pServices.begin(); Iter != m_pServices.end(); ++Iter)
 		if ((ServicePointer)*Iter != NULL)
 			DeleteExistingPortMappings(*Iter);
 }
+
 // Finds a local IP address routable from UPnP device
 CString CUPnPImplWinServ::GetLocalRoutableIP(ServicePointer pService)
 {
@@ -622,48 +632,47 @@ CString CUPnPImplWinServ::GetLocalRoutableIP(ServicePointer pService)
 	if (FAILED(hr) || strExternalIP.IsEmpty())
 		return CString();
 
-	CT2CA pszExternalIP(strExternalIP);
 	DWORD nInterfaceIndex = 0;
-	DWORD ip = inet_addr(pszExternalIP);
+	DWORD ip = inet_addr(CStringA(strExternalIP));
 
 	// Get the interface through which the UPnP device has a route
 	HRESULT hrRes = (HRESULT)-1;
-	if (m_pfGetBestInterface != NULL) {
-		try {	// just to be sure; another call from iphlpapi used earlier in eMule seemed to crash on some systems according to dumps
+	if (m_pfGetBestInterface != NULL)
+		try { // just to be sure; another call from iphlpapi used earlier in eMule seemed to crash on some systems according to dumps
 			hrRes = m_pfGetBestInterface(ip, &nInterfaceIndex);
 		} catch (...) {
 			ASSERT(false);
 		}
-	}
+
 	if (ip == INADDR_NONE || hrRes != NO_ERROR)
 		return CString();
 
 	MIB_IFROW ifRow = {};
 	ifRow.dwIndex = nInterfaceIndex;
 	hrRes = (HRESULT)-1;
-	if (m_pfGetIfEntry != NULL) {
+	if (m_pfGetIfEntry != NULL)
 		try {	// just to be sure; another call from iphlpapi used earlier in eMule seemed to crash on some systems according to dumps
 			hrRes = m_pfGetIfEntry(&ifRow);
 		} catch (...) {
 			ASSERT(false);
 		}
-	}
+
 	if (hrRes != NO_ERROR)
 		return CString();
 
 	// Take an IP address table
 	char mib[sizeof(MIB_IPADDRTABLE) + 32 * sizeof(MIB_IPADDRROW)];
-	ULONG nSize = sizeof(mib);
+	ULONG nSize = sizeof mib;
 	PMIB_IPADDRTABLE ipAddr = (PMIB_IPADDRTABLE)mib;
 
 	hrRes = (HRESULT)-1;
-	if (m_pfGetIpAddrTable != NULL) {
+	if (m_pfGetIpAddrTable != NULL)
 		try {	// just to be sure; another call from iphlpapi used earlier in eMule seemed to crash on some systems according to dumps
 			hrRes = m_pfGetIpAddrTable(ipAddr, &nSize, FALSE);
 		} catch (...) {
 			ASSERT(false);
 		}
-	}
+
 	if (hrRes != NO_ERROR)
 		return CString();
 
@@ -676,8 +685,7 @@ CString CUPnPImplWinServ::GetLocalRoutableIP(ServicePointer pService)
 		if (ipAddr->table[nIf].dwIndex == nInterfaceIndex) {
 			ip = ipAddr->table[nIf].dwAddr;
 			strLocalIP.Format(_T("%lu.%lu.%lu.%lu")
-							 ,(ip & 0xff), ((ip >> 8) & 0xff)
-							 ,((ip >> 16) & 0xff), (ip >> 24));
+				, (ip & 0xff), ((ip >> 8) & 0xff), ((ip >> 16) & 0xff), (ip >> 24));
 			break;
 		}
 	}
@@ -687,6 +695,7 @@ CString CUPnPImplWinServ::GetLocalRoutableIP(ServicePointer pService)
 
 	return strLocalIP;
 }
+
 // Walks through all port mappings and searches for "eMule" string.
 // Deletes when it has the same IP as local, otherwise quits and sets
 // m_bPortIsFree to false after 10 attempts to use a random port;
@@ -744,29 +753,26 @@ void CUPnPImplWinServ::DeleteExistingPortMappings(ServicePointer pService)
 			}
 
 			if (stristr(strActionResult, _T("|VT_BSTR=eMule TCP|")) != NULL ||
-			    stristr(strActionResult, _T("|VT_BSTR=eMule UDP|")) != NULL) {
+				stristr(strActionResult, _T("|VT_BSTR=eMule UDP|")) != NULL) {
 
-
-				strHost = _T('|') + oTokens[0];
-				strPort = _T('|') + oTokens[1];
-				strProtocol = _T('|') + oTokens[2] + _T('|');
+				strHost.Format(_T("|%s"), (LPCTSTR)oTokens[0]);
+				strPort.Format(_T("|%s"), (LPCTSTR)oTokens[1]);
+				strProtocol.Format(_T("|%s|"), (LPCTSTR)oTokens[2]);
 
 				// verify types
 				if (stristr(strHost, _T("VT_BSTR")) == NULL
-				    || stristr(strPort, _T("VT_UI2")) == NULL
-				    || stristr(strProtocol, _T("VT_BSTR")) == NULL)
+					|| stristr(strPort, _T("VT_UI2")) == NULL
+					|| stristr(strProtocol, _T("VT_BSTR")) == NULL)
 					break;
 
-				if (_tcsstr(oTokens[4], m_sLocalIP) != NULL ||
-				    stristr(oTokens[4], szComputerName) != NULL) {
+				if (_tcsstr(oTokens[4], m_sLocalIP) != NULL || stristr(oTokens[4], szComputerName) != NULL) {
 					CString str;
 					hrDel = InvokeAction(pService, _T("DeletePortMapping"),
-					                     strHost + strPort + strProtocol, str);
-					if (FAILED(hrDel)) {
+						strHost + strPort + strProtocol, str);
+					if (FAILED(hrDel))
 						UPnPMessage(hrDel);
-					} else {
+					else
 						DebugLog(_T("Old port mapping deleted: %s%s"), (LPCTSTR)strPort, (LPCTSTR)strProtocol);
-					}
 				} else {// different IP found in the port mapping entry
 					DebugLog(_T("Port %s is used by %s"), (LPCTSTR)oTokens[1], (LPCTSTR)oTokens[4]);
 					CString strUDPPort, strTCPPort, strTCPWebPort;
@@ -774,8 +780,8 @@ void CUPnPImplWinServ::DeleteExistingPortMappings(ServicePointer pService)
 					strTCPPort.Format(_T("|VT_UI2=%u"), m_nTCPPort);
 					strTCPWebPort.Format(_T("|VT_UI2=%u"), m_nTCPWebPort);
 					if ((strTCPPort.CompareNoCase(strPort) == 0 && strProtocol.CompareNoCase(_T("|VT_BSTR=TCP|")) == 0)
-					    || (strUDPPort.CompareNoCase(strPort) == 0 && strProtocol.CompareNoCase(_T("|VT_BSTR=UDP|")) == 0)
-					    || (strTCPWebPort.CompareNoCase(strPort) == 0 && strProtocol.CompareNoCase(_T("|VT_BSTR=TCP|")) == 0)) {
+						|| (strUDPPort.CompareNoCase(strPort) == 0 && strProtocol.CompareNoCase(_T("|VT_BSTR=UDP|")) == 0)
+						|| (strTCPWebPort.CompareNoCase(strPort) == 0 && strProtocol.CompareNoCase(_T("|VT_BSTR=TCP|")) == 0)) {
 						m_bPortIsFree = false;
 					}
 				}
@@ -783,7 +789,7 @@ void CUPnPImplWinServ::DeleteExistingPortMappings(ServicePointer pService)
 		}
 
 		if (FAILED(hrDel))
-			nEntry++;	// Entries are pushed from bottom to top after success
+			++nEntry;	// Entries are pushed from bottom to top after success
 
 		if (nEntry > 30) {
 			// FIXME for next release
@@ -794,6 +800,7 @@ void CUPnPImplWinServ::DeleteExistingPortMappings(ServicePointer pService)
 		}
 	} while (SUCCEEDED(hr) && !strActionResult.IsEmpty());
 }
+
 // Creates TCP and UDP port mappings
 void CUPnPImplWinServ::CreatePortMappings(ServicePointer pService)
 {
@@ -803,7 +810,7 @@ void CUPnPImplWinServ::CreatePortMappings(ServicePointer pService)
 	CString strPortTCP, strPortTCPWeb, strPortUDP, strInArgs, strFormatString, strResult;
 
 	strFormatString = _T("|VT_BSTR=|VT_UI2=%s|VT_BSTR=%s|VT_UI2=%s|VT_BSTR=%s|")
-	                  _T("VT_BOOL=True|VT_BSTR=eMule %s|VT_UI4=0|");
+		_T("VT_BOOL=True|VT_BSTR=eMule %s|VT_UI4=0|");
 
 	strPortTCP.Format(_T("%hu"), m_nTCPPort);
 	strPortTCPWeb.Format(_T("%hu"), m_nTCPWebPort);
@@ -838,30 +845,27 @@ void CUPnPImplWinServ::CreatePortMappings(ServicePointer pService)
 
 	m_bAsyncFindRunning = false;
 }
+
 // Invoke the action for the selected service.
 // OUT arguments or return value is packed in strResult.
 HRESULT CUPnPImplWinServ::InvokeAction(ServicePointer pService,
-                                       CComBSTR action, LPCTSTR pszInArgString, CString& strResult)
+	CComBSTR action, LPCTSTR pszInArgString, CString& strResult)
 {
 	if (pService == NULL || action == NULL)
 		return E_POINTER;
 
-	m_tLastEvent = GetTickCount();
-	CString strInArgs;
-	strInArgs.SetString(pszInArgString ? pszInArgString : _T(""));
-
-	HRESULT hr = S_OK;
+	m_tLastEvent = ::GetTickCount();
+	CString strInArgs(pszInArgString ? pszInArgString : _T(""));
 
 	CComVariant vaActionArgs, vaArray, vaOutArgs, vaRet;
 	VARIANT **ppVars = NULL;
 	SAFEARRAY *psaArgs = NULL;
-	LONG nPos = 0;
 
 	INT_PTR nArgs = CreateVarFromString(strInArgs, &ppVars);
 	if (nArgs < 0)
 		return E_FAIL;
 
-	hr = CreateSafeArray(VT_VARIANT, (ULONG)nArgs, &psaArgs);
+	HRESULT hr = CreateSafeArray(VT_VARIANT, (ULONG)nArgs, &psaArgs);
 	if (FAILED(hr))
 		return hr;
 
@@ -871,8 +875,8 @@ HRESULT CUPnPImplWinServ::InvokeAction(ServicePointer pService,
 	vaActionArgs.vt = VT_VARIANT | VT_BYREF;
 	vaActionArgs.pvarVal = &vaArray;
 
-	for (INT_PTR nArg = 0; nArg < nArgs; nArg++) {
-		nPos = nArg + 1;
+	for (LONG  nArg = 0; nArg < nArgs; ++nArg) {
+		LONG nPos = nArg + 1;
 		(void)SafeArrayPutElement(psaArgs, &nPos, ppVars[nArg]);
 	}
 
@@ -897,21 +901,23 @@ HRESULT CUPnPImplWinServ::InvokeAction(ServicePointer pService,
 
 			if (!bInvalid) {
 				hr = VariantChangeType(&vaRet, &vaRet, VARIANT_ALPHABOOL, VT_BSTR);
-				if (SUCCEEDED(hr)) {
-					CString str(vaRet.bstrVal);
-					strResult += str;
-					strResult += _T('|');
-				} else strResult.Empty();
+				if (SUCCEEDED(hr))
+					strResult.AppendFormat(_T("%s|"), vaRet.bstrVal);
+				else
+					strResult.Empty();
 			}
 		} else
 			GetStringFromOutArgs(&vaOutArgs, strResult);
 	}
 
-	if (ppVars != NULL) DestroyVars(nArgs, &ppVars);
-	if (psaArgs != NULL) SafeArrayDestroy(psaArgs);
+	if (ppVars != NULL)
+		DestroyVars(nArgs, &ppVars);
+	if (psaArgs != NULL)
+		SafeArrayDestroy(psaArgs);
 
 	return hr;
 }
+
 // Creates a SafeArray
 // vt--VariantType
 // nArgs--Number of Arguments
@@ -934,12 +940,12 @@ HRESULT CUPnPImplWinServ::CreateSafeArray(const VARTYPE vt, const ULONG nArgs, S
 		return E_OUTOFMEMORY;
 	return S_OK;
 }
+
 // Creates argument variants from the string
 // The string format is "|variant_type1=value1|variant_type2=value2|"
 // The most common types used for UPnP values are:
 //		VT_BSTR, VT_UI2, VT_UI4, VT_BOOL
 // Returns: number of arguments or -1 if invalid string/values.
-
 INT_PTR CUPnPImplWinServ::CreateVarFromString(const CString& strArgs, VARIANT ***pppVars)
 {
 	if (strArgs.IsEmpty()) {
@@ -967,11 +973,12 @@ INT_PTR CUPnPImplWinServ::CreateVarFromString(const CString& strArgs, VARIANT **
 
 		// Malformatted string test
 		if (nEqualPos == -1) {
-			bInvalid = TRUE; break;
+			bInvalid = TRUE;
+			break;
 		}
 
-		strType.SetString(strToken.Left(nEqualPos).Trim());
-		strValue.SetString(strToken.Mid(nEqualPos + 1).Trim());
+		strType = strToken.Left(nEqualPos).Trim();
+		strValue = strToken.Mid(nEqualPos + 1).Trim();
 
 		(*pppVars)[nArg] = new VARIANT;
 		VariantInit((*pppVars)[nArg]);
@@ -981,33 +988,36 @@ INT_PTR CUPnPImplWinServ::CreateVarFromString(const CString& strArgs, VARIANT **
 			(*pppVars)[nArg]->vt = VT_BSTR;
 			(*pppVars)[nArg]->bstrVal = strValue.AllocSysString();
 		} else if (strType == _T("VT_UI2")) {
-			USHORT nValue = 0;
+			USHORT nValue;
 			bInvalid = _stscanf(strValue, _T("%hu"), &nValue) != 1;
-			if (bInvalid) break;
+			if (bInvalid)
+				break;
 
 			(*pppVars)[nArg]->vt = VT_UI2;
 			(*pppVars)[nArg]->uiVal = nValue;
 		} else if (strType == _T("VT_UI4")) {
-			ULONG nValue = 0;
+			ULONG nValue;
 			bInvalid = _stscanf(strValue, _T("%lu"), &nValue) != 1;
-			if (bInvalid) break;
+			if (bInvalid)
+				break;
 
 			(*pppVars)[nArg]->vt = VT_UI4;
 			(*pppVars)[nArg]->ulVal = nValue;
 		} else if (strType == _T("VT_BOOL")) {
-			VARIANT_BOOL va = 1;
+			VARIANT_BOOL va;
 			if (strValue.CompareNoCase(_T("true")) == 0)
 				va = VARIANT_TRUE;
 			else if (strValue.CompareNoCase(_T("false")) == 0)
 				va = VARIANT_FALSE;
-			else
+			else {
 				bInvalid = TRUE;
-			if (bInvalid) break;
+				break;
+			}
 
 			(*pppVars)[nArg]->vt = VT_BOOL;
 			(*pppVars)[nArg]->boolVal = va;
 		} else {
-			bInvalid = TRUE;// no other types are supported
+			bInvalid = TRUE; //no other types are supported
 			break;
 		}
 	}
@@ -1018,16 +1028,16 @@ INT_PTR CUPnPImplWinServ::CreateVarFromString(const CString& strArgs, VARIANT **
 	}
 	return nArgs;
 }
+
 // Creates a string in format "|variant_type1=value1|variant_type2=value2|"
 // from OUT variant returned by service.
 // Returns: number of arguments or -1 if not applicable.
-
 LONG CUPnPImplWinServ::GetStringFromOutArgs(const VARIANT *pvaOutArgs, CString& strArgs)
 {
 	LONG nLBound = 0L, nUBound = 0L;
 	HRESULT hr = GetSafeArrayBounds(pvaOutArgs->parray, &nLBound, &nUBound);
 	bool bInvalid = FAILED(hr);
-	CString strResult, strToken;
+	CString strResult;
 
 	if (!bInvalid) {// We have got the bounds of the arguments
 		CComVariant vaOutElement;
@@ -1038,27 +1048,26 @@ LONG CUPnPImplWinServ::GetStringFromOutArgs(const VARIANT *pvaOutArgs, CString& 
 			hr = GetVariantElement(pvaOutArgs->parray, nIndex, &vaOutElement);
 
 			if (SUCCEEDED(hr)) {
+				LPCTSTR pToken;
 				if (vaOutElement.vt == VT_BSTR)
-					strToken = _T("VT_BSTR=");
+					pToken = _T("VT_BSTR=");
 				else if (vaOutElement.vt == VT_UI2)
-					strToken = _T("VT_UI2=");
+					pToken = _T("VT_UI2=");
 				else if (vaOutElement.vt == VT_UI4)
-					strToken = _T("VT_UI4=");
+					pToken = _T("VT_UI4=");
 				else if (vaOutElement.vt == VT_BOOL)
-					strToken = _T("VT_BOOL=");
+					pToken = _T("VT_BOOL=");
 				else {
 					bInvalid = true;
 					break;
 				}
 
 				hr = VariantChangeType(&vaOutElement, &vaOutElement,
-				                       VARIANT_ALPHABOOL, VT_BSTR);
-				if (SUCCEEDED(hr)) {
-					CString str(vaOutElement.bstrVal);
-					strToken += str;
-					strToken += _T('|');
-					strResult += strToken;
-				} else bInvalid = true;
+					VARIANT_ALPHABOOL, VT_BSTR);
+				if (SUCCEEDED(hr))
+					strResult.AppendFormat(_T("%s|%s"), vaOutElement.bstrVal, pToken);
+				else
+					bInvalid = true;
 			} else
 				bInvalid = true;
 		}	// For loop
@@ -1070,6 +1079,7 @@ LONG CUPnPImplWinServ::GetStringFromOutArgs(const VARIANT *pvaOutArgs, CString& 
 	strArgs = strResult;
 	return nUBound - nLBound + 1;
 }
+
 // Get SafeArray bounds
 HRESULT CUPnPImplWinServ::GetSafeArrayBounds(SAFEARRAY *psa, LONG *pLBound, LONG *pUBound)
 {
@@ -1078,6 +1088,7 @@ HRESULT CUPnPImplWinServ::GetSafeArrayBounds(SAFEARRAY *psa, LONG *pLBound, LONG
 	HRESULT hr = SafeArrayGetLBound(psa, 1, pLBound);
 	return FAILED(hr) ? hr : SafeArrayGetUBound(psa, 1, pUBound);
 }
+
 // Get Variant Element
 // psa--SafeArray; nPosition--Position in the array; pvar--Variant Element being set
 HRESULT CUPnPImplWinServ::GetVariantElement(SAFEARRAY *psa, LONG pos, VARIANT *pvar)
@@ -1086,6 +1097,7 @@ HRESULT CUPnPImplWinServ::GetVariantElement(SAFEARRAY *psa, LONG pos, VARIANT *p
 
 	return SafeArrayGetElement(psa, &pos, pvar);
 }
+
 // Destroys argument variants
 void CUPnPImplWinServ::DestroyVars(const INT_PTR nCount, VARIANT ***pppVars)
 {
@@ -1104,6 +1116,7 @@ void CUPnPImplWinServ::DestroyVars(const INT_PTR nCount, VARIANT ***pppVars)
 	delete[] *pppVars;
 	*pppVars = NULL;
 }
+
 ///////////////////////////////////////////////////////////////////
 //   CDeviceFinderCallback
 ///////////////////////////////////////////////////////////////////
@@ -1139,7 +1152,8 @@ HRESULT __stdcall CDeviceFinderCallback::SearchComplete(LONG /*nFindData*/)
 	return S_OK;
 }
 
-HRESULT __stdcall CDeviceFinderCallback::QueryInterface(REFIID iid, LPVOID * ppvObject){
+HRESULT __stdcall CDeviceFinderCallback::QueryInterface(REFIID iid, LPVOID * ppvObject)
+{
 	HRESULT hr = S_OK;
 	if (NULL == ppvObject) {
 		hr = E_POINTER;
@@ -1156,11 +1170,13 @@ HRESULT __stdcall CDeviceFinderCallback::QueryInterface(REFIID iid, LPVOID * ppv
 	return hr;
 };
 
-ULONG __stdcall CDeviceFinderCallback::AddRef(){
+ULONG __stdcall CDeviceFinderCallback::AddRef()
+{
 	return ::InterlockedIncrement(&m_lRefCount);
 };
 
-ULONG __stdcall CDeviceFinderCallback::Release(){
+ULONG __stdcall CDeviceFinderCallback::Release()
+{
 	LONG lRefCount = ::InterlockedDecrement(&m_lRefCount);
 	if (0 == lRefCount)
 		delete this;
@@ -1176,7 +1192,7 @@ ULONG __stdcall CDeviceFinderCallback::Release(){
 //! \arg pszStateVarName State Variable Name;
 //! \arg varValue        State Variable Value
 HRESULT __stdcall CServiceCallback::StateVariableChanged(IUPnPService * pService,
-                                                         LPCWSTR pszStateVarName, VARIANT varValue)
+	LPCWSTR pszStateVarName, VARIANT varValue)
 {
 	CComBSTR bsServiceId;
 	m_instance.m_tLastEvent = ::GetTickCount();
@@ -1194,15 +1210,15 @@ HRESULT __stdcall CServiceCallback::StateVariableChanged(IUPnPService * pService
 	if (!m_instance.IsAsyncFindRunning()) {
 		if (_wcsicmp(pszStateVarName, L"ConnectionStatus") == 0) {
 			m_instance.m_bUPnPDeviceConnected = strValue.CompareNoCase(_T("Disconnected")) == 0
-			                                    ? TRIS_FALSE
-							    : (strValue.CompareNoCase(_T("Connected")) == 0)
-			                                    ? TRIS_TRUE
-							    : TRIS_UNKNOWN;
+				? TRIS_FALSE
+				: (strValue.CompareNoCase(_T("Connected")) == 0)
+				? TRIS_TRUE
+				: TRIS_UNKNOWN;
 		}
 	}
 
 	DebugLog(_T("UPnP device state variable %s changed to %s in %s"),
-	         pszStateVarName, strValue.IsEmpty() ? _T("NULL") : strValue.GetString(), bsServiceId.m_str);
+		pszStateVarName, strValue.IsEmpty() ? _T("NULL") : strValue.GetString(), bsServiceId.m_str);
 
 	return hr;
 }
@@ -1223,33 +1239,30 @@ HRESULT __stdcall CServiceCallback::ServiceInstanceDied(IUPnPService * pService)
 
 HRESULT __stdcall CServiceCallback::QueryInterface(REFIID iid, LPVOID * ppvObject)
 {
-	HRESULT hr = S_OK;
-	if (NULL == ppvObject) {
-		hr = E_POINTER;
-	} else
-		*ppvObject = NULL;
+	if (NULL == ppvObject)
+		return E_POINTER;
 
-	if (SUCCEEDED(hr)) {
-		if (IsEqualIID(iid, IID_IUnknown) || IsEqualIID(iid, IID_IUPnPServiceCallback)) {
-			*ppvObject = static_cast<IUPnPServiceCallback*>(this);
-			AddRef();
-		} else
-			hr = E_NOINTERFACE;
-	}
-	return hr;
+	*ppvObject = NULL;
+
+	if (!IsEqualIID(iid, IID_IUnknown) && !IsEqualIID(iid, IID_IUPnPServiceCallback))
+		return E_NOINTERFACE;
+
+	*ppvObject = static_cast<IUPnPServiceCallback *>(this);
+	AddRef();
+	return S_OK;
 };
 
 ULONG __stdcall CServiceCallback::AddRef()
 {
-	return ::InterlockedIncrement(&m_lRefCount);
+	return static_cast<ULONG>(InterlockedIncrement(&m_lRefCount));
 };
 
 ULONG __stdcall CServiceCallback::Release()
 {
-	LONG lRefCount = ::InterlockedDecrement(&m_lRefCount);
+	LONG lRefCount = InterlockedDecrement(&m_lRefCount);
 	if (0 == lRefCount)
 		delete this;
-	return lRefCount;
+	return static_cast<ULONG>(lRefCount);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1257,39 +1270,81 @@ ULONG __stdcall CServiceCallback::Release()
 
 CString translateUPnPResult(HRESULT hr)
 {
-	static std::map<HRESULT, std::string> messages;
-
 	if (hr >= UPNP_E_ACTION_SPECIFIC_BASE && hr <= UPNP_E_ACTION_SPECIFIC_MAX)
-		return _T("Action Specific Error");
-
-	messages[0].clear();
-	messages[UPNP_E_ROOT_ELEMENT_EXPECTED] = "Root Element Expected";
-	messages[UPNP_E_DEVICE_ELEMENT_EXPECTED] = "Device Element Expected";
-	messages[UPNP_E_SERVICE_ELEMENT_EXPECTED] = "Service Element Expected";
-	messages[UPNP_E_SERVICE_NODE_INCOMPLETE] = "Service Node Incomplete";
-	messages[UPNP_E_DEVICE_NODE_INCOMPLETE] = "Device Node Incomplete";
-	messages[UPNP_E_ICON_ELEMENT_EXPECTED] = "Icon Element Expected";
-	messages[UPNP_E_ICON_NODE_INCOMPLETE] = "Icon Node Incomplete";
-	messages[UPNP_E_INVALID_ACTION] = "Invalid Action";
-	messages[UPNP_E_INVALID_ARGUMENTS] = "Invalid Arguments";
-	messages[UPNP_E_OUT_OF_SYNC] = "Out of Sync";
-	messages[UPNP_E_ACTION_REQUEST_FAILED] = "Action Request Failed";
-	messages[UPNP_E_TRANSPORT_ERROR] = "Transport Error";
-	messages[UPNP_E_VARIABLE_VALUE_UNKNOWN] = "Variable Value Unknown";
-	messages[UPNP_E_INVALID_VARIABLE] = "Invalid Variable";
-	messages[UPNP_E_DEVICE_ERROR] = "Device Error";
-	messages[UPNP_E_PROTOCOL_ERROR] = "Protocol Error";
-	messages[UPNP_E_ERROR_PROCESSING_RESPONSE] = "Error Processing Response";
-	messages[UPNP_E_DEVICE_TIMEOUT] = "Device Timeout";
-	messages[UPNP_E_INVALID_DOCUMENT] = "Invalid Document";
-	messages[UPNP_E_EVENT_SUBSCRIPTION_FAILED] = "Event Subscription Failed";
-	messages[E_FAIL] = "Generic failure";
-
-	return CString(messages[hr].c_str());
+		return CString(_T("Action Specific Error"));
+	TCHAR *p;
+	switch (hr) {
+	case UPNP_E_ROOT_ELEMENT_EXPECTED:
+		p = _T("Root Element Expected");
+		break;
+	case UPNP_E_DEVICE_ELEMENT_EXPECTED:
+		p = _T("Device Element Expected");
+		break;
+	case UPNP_E_SERVICE_ELEMENT_EXPECTED:
+		p = _T("Service Element Expected");
+		break;
+	case UPNP_E_SERVICE_NODE_INCOMPLETE:
+		p = _T("Service Node Incomplete");
+		break;
+	case UPNP_E_DEVICE_NODE_INCOMPLETE:
+		p = _T("Device Node Incomplete");
+		break;
+	case UPNP_E_ICON_ELEMENT_EXPECTED:
+		p = _T("Icon Element Expected");
+		break;
+	case UPNP_E_ICON_NODE_INCOMPLETE:
+		p = _T("Icon Node Incomplete");
+		break;
+	case UPNP_E_INVALID_ACTION:
+		p = _T("Invalid Action");
+		break;
+	case UPNP_E_INVALID_ARGUMENTS:
+		p = _T("Invalid Arguments");
+		break;
+	case UPNP_E_OUT_OF_SYNC:
+		p = _T("Out of Sync");
+		break;
+	case UPNP_E_ACTION_REQUEST_FAILED:
+		p = _T("Action Request Failed");
+		break;
+	case UPNP_E_TRANSPORT_ERROR:
+		p = _T("Transport Error");
+		break;
+	case UPNP_E_VARIABLE_VALUE_UNKNOWN:
+		p = _T("Variable Value Unknown");
+		break;
+	case UPNP_E_INVALID_VARIABLE:
+		p = _T("Invalid Variable");
+		break;
+	case UPNP_E_DEVICE_ERROR:
+		p = _T("Device Error");
+		break;
+	case UPNP_E_PROTOCOL_ERROR:
+		p = _T("Protocol Error");
+		break;
+	case UPNP_E_ERROR_PROCESSING_RESPONSE:
+		p = _T("Error Processing Response");
+		break;
+	case UPNP_E_DEVICE_TIMEOUT:
+		p = _T("Device Timeout");
+		break;
+	case UPNP_E_INVALID_DOCUMENT:
+		p = _T("Invalid Document");
+		break;
+	case UPNP_E_EVENT_SUBSCRIPTION_FAILED:
+		p = _T("Event Subscription Failed");
+		break;
+	case E_FAIL:
+		p = _T("Generic failure");
+		break;
+	default:
+		p = _T("");
+	}
+	return CString(p);
 }
 HRESULT UPnPMessage(HRESULT hr)
 {
-	CString strError = translateUPnPResult(hr);
+	CString strError(translateUPnPResult(hr));
 	if (!strError.IsEmpty())
 		DebugLogWarning(_T("upnp: ") + strError);
 	return hr;

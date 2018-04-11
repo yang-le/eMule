@@ -48,7 +48,7 @@ static char THIS_FILE[] = __FILE__;
 #define MAX_COLOURS      100
 
 
-ColourTableEntry CColourPopup::m_crColours[] =
+const ColourTableEntry CColourPopup::m_crColours[] =
     {
         { RGB(0x00, 0x00, 0x00),    _T("Black")             },
         { RGB(0xA5, 0x2A, 0x00),    _T("Brown")             },
@@ -106,18 +106,18 @@ CColourPopup::CColourPopup()
 }
 
 CColourPopup::CColourPopup(CPoint p, COLORREF crColour, CWnd* pParentWnd
-                          ,LPCTSTR szDefaultText /* = NULL */
-                          ,LPCTSTR szCustomText  /* = NULL */
-                          ,COLORREF* colourArray /* = NULL*/
-                          ,int NumberOfColours /* = 0*/ )
+						 , LPCTSTR szDefaultText /* = NULL */
+						 , LPCTSTR szCustomText  /* = NULL */
+						 , const LPCOLORREF colourArray /* = NULL*/
+						 , int NumberOfColours /* = 0*/ )
 {
-	colourArrayPassed = colourArray;//copy the pointer to the array of colours we will be using
+	colourArrayPassed = colourArray; //copy the pointer to the array of colours we will be using
 	if(colourArray && NumberOfColours)
 		m_nNumColours = NumberOfColours;
 	else
 		colourArrayPassed = NULL; //if an array is passed without a size parameter ignore it and use the defaults
 
-	Initialise();//If not a custom palette intialise as NORMAL!
+	Initialise(); //If not a custom palette intialise as NORMAL!
 
 	m_crColour       = m_crInitialColour = crColour;
 	m_pParent        = pParentWnd;
@@ -130,8 +130,8 @@ CColourPopup::CColourPopup(CPoint p, COLORREF crColour, CWnd* pParentWnd
 void CColourPopup::Initialise()
 {
 	//set size if it has not been set already
-	if(colourArrayPassed==NULL)
-		m_nNumColours = sizeof(m_crColours)/sizeof(ColourTableEntry);
+	if (colourArrayPassed == NULL)
+		m_nNumColours = (sizeof m_crColours)/sizeof(ColourTableEntry);
 
 	ASSERT(m_nNumColours <= MAX_COLOURS);
 	if (m_nNumColours > MAX_COLOURS)
@@ -163,27 +163,21 @@ void CColourPopup::Initialise()
 	{
 		LOGPALETTE    LogPalette;
 		PALETTEENTRY  PalEntry[MAX_COLOURS];
-	}
-	pal;
+	} pal;
 
-	LOGPALETTE* pLogPalette = (LOGPALETTE*) &pal;
-	pLogPalette->palVersion    = 0x300;
-	pLogPalette->palNumEntries = (WORD) m_nNumColours;
+	LOGPALETTE* pLogPalette = (LOGPALETTE*)&pal;
+	pLogPalette->palVersion = 0x300;
+	pLogPalette->palNumEntries = (WORD)m_nNumColours;
 
-	if(colourArrayPassed==NULL)
-	{//use default array
-		for (int i = 0; i < m_nNumColours; i++)
-		{
+	if (colourArrayPassed == NULL) { //use default array
+		for (int i = 0; i < m_nNumColours; ++i) {
 			pLogPalette->palPalEntry[i].peRed   = GetRValue(m_crColours[i].crColour);
 			pLogPalette->palPalEntry[i].peGreen = GetGValue(m_crColours[i].crColour);
 			pLogPalette->palPalEntry[i].peBlue  = GetBValue(m_crColours[i].crColour);
 			pLogPalette->palPalEntry[i].peFlags = 0;
 		}
-	}
-	else
-	{//if an array has been passed use it
-		for(int i=0;i<m_nNumColours;i++)
-		{
+	} else { //if an array has been passed use it
+		for(int i = 0; i < m_nNumColours; ++i) {
 			pLogPalette->palPalEntry[i].peRed   = GetRValue(colourArrayPassed[i]);
 			pLogPalette->palPalEntry[i].peGreen = GetGValue(colourArrayPassed[i]);
 			pLogPalette->palPalEntry[i].peBlue  = GetBValue(colourArrayPassed[i]);
@@ -744,14 +738,8 @@ void CColourPopup::ChangeSelection(int nIndex)
 	// Store the current colour
 	if (m_nCurrentSel == CUSTOM_BOX_VALUE)
 		m_pParent->SendMessage(UM_CPN_SELCHANGE, (WPARAM)m_crInitialColour, 0);
-	else if (m_nCurrentSel == DEFAULT_BOX_VALUE)
-	{
-		m_crColour = CLR_DEFAULT;
-		m_pParent->SendMessage(UM_CPN_SELCHANGE, (WPARAM)CLR_DEFAULT, 0);
-	}
-	else
-	{
-		m_crColour = GetColour(m_nCurrentSel);
+	else {
+		m_crColour = (m_nCurrentSel == DEFAULT_BOX_VALUE) ? CLR_DEFAULT : GetColour(m_nCurrentSel);
 		m_pParent->SendMessage(UM_CPN_SELCHANGE, (WPARAM)m_crColour, 0);
 	}
 }
@@ -844,7 +832,7 @@ void CColourPopup::DrawCell(CDC* pDC, int nIndex)
 
 		// Draw thin line around text
 		CRect LineRect = TextButtonRect;
-		LineRect.DeflateRect(2*m_nMargin,2*m_nMargin);
+		LineRect.DeflateRect(2*m_nMargin, 2*m_nMargin);
 		CPen pen(PS_SOLID, 1, ::GetSysColor(COLOR_3DSHADOW));
 		CPen* pOldPen = pDC->SelectObject(&pen);
 		pDC->SelectStockObject(NULL_BRUSH);
@@ -871,13 +859,12 @@ void CColourPopup::DrawCell(CDC* pDC, int nIndex)
 		return;
 
 	// Select and realize the palette
-	CPalette* pOldPalette = NULL;
-	if (pDC->GetDeviceCaps(RASTERCAPS) & RC_PALETTE)
-	{
+	CPalette* pOldPalette;
+	if (pDC->GetDeviceCaps(RASTERCAPS) & RC_PALETTE) {
 		pOldPalette = pDC->SelectPalette(&m_Palette, FALSE);
 		pDC->RealizePalette();
-	}
-
+	} else
+		pOldPalette = NULL;
 	// fill background
 	if (m_nChosenColourSel == nIndex && m_nCurrentSel != nIndex)
 		pDC->FillSolidRect(rect, ::GetSysColor(COLOR_3DHILIGHT));

@@ -131,7 +131,7 @@ typedef unsigned int flex_uint32_t;
 #define YYSTATE YY_START
 
 /* Action number for EOF rule of a given start state. */
-#define YY_STATE_EOF(state) (YY_END_OF_BUFFER + state + 1)
+#define YY_STATE_EOF(state) (YY_END_OF_BUFFER + (state) + 1)
 
 /* Special action meaning "start processing a new file". */
 #define YY_NEW_FILE yyrestart(yyin  )
@@ -1258,7 +1258,7 @@ YY_RULE_SETUP
 					CString strError;
 					try
 					{
-						CED2KLink* pLink = CED2KLink::CreateLinkFromUrl(CA2T(yytext));
+						CED2KLink* pLink = CED2KLink::CreateLinkFromUrl(CA2CT(yytext));
 						if (pLink && pLink->GetKind() == CED2KLink::kFile)
 						{
 							CED2KFileLink* pFileLink = pLink->GetFileLink();

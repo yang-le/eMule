@@ -56,29 +56,31 @@ public:
 	void ShowColumn(int iColumn);
 
 	// Check to see if the column is hidden
-	bool IsColumnHidden(int iColumn) const {
+	bool IsColumnHidden(int iColumn) const
+	{
 		if (iColumn < 1 || iColumn >= m_iColumnsTracked)
 			return false;
 		return m_aColumns[iColumn].bHidden;
 	}
 
 	// Get the correct column width even if column is hidden
-	int GetColumnWidth(int iColumn) const {
+	int GetColumnWidth(int iColumn) const
+	{
 		if (iColumn < 0 || iColumn >= m_iColumnsTracked)
 			return 0;
 		if (m_aColumns[iColumn].bHidden)
 			return m_aColumns[iColumn].iWidth;
-		else
-			return CListCtrl::GetColumnWidth(iColumn);
+		return CListCtrl::GetColumnWidth(iColumn);
 	}
 
 	// Get the column width and the alignment flags for 'DrawText'
-	int GetColumnWidth(int iColumn, UINT &uDrawTextAlignment) const {
+	int GetColumnWidth(int iColumn, UINT &uDrawTextAlignment) const
+	{
 		if (iColumn < 0 || iColumn >= m_iColumnsTracked) {
 			uDrawTextAlignment = DT_LEFT;
 			return 0;
 		}
-		ASSERT( !m_aColumns[iColumn].bHidden );
+		ASSERT(!m_aColumns[iColumn].bHidden);
 		LVCOLUMN lvcol;
 		lvcol.mask = LVCF_FMT | LVCF_WIDTH;
 		if (!CListCtrl::GetColumn(iColumn, &lvcol)) {
@@ -86,27 +88,26 @@ public:
 			return 0;
 		}
 		switch (lvcol.fmt & LVCFMT_JUSTIFYMASK) {
-			default:
-			case LVCFMT_LEFT:
-				uDrawTextAlignment = DT_LEFT;
-				break;
-			case LVCFMT_RIGHT:
-				uDrawTextAlignment = DT_RIGHT;
-				break;
-			case LVCFMT_CENTER:
-				uDrawTextAlignment = DT_CENTER;
-				break;
+		default:
+		case LVCFMT_LEFT:
+			uDrawTextAlignment = DT_LEFT;
+			break;
+		case LVCFMT_RIGHT:
+			uDrawTextAlignment = DT_RIGHT;
+			break;
+		case LVCFMT_CENTER:
+			uDrawTextAlignment = DT_CENTER;
 		}
 		return lvcol.cx;
 	}
 
 	// Call SetRedraw to allow changes to be redrawn or to prevent changes from being redrawn.
-	void SetRedraw(BOOL bRedraw = TRUE) {
+	void SetRedraw(BOOL bRedraw = TRUE)
+	{
 		if (bRedraw) {
 			if (m_iRedrawCount > 0 && --m_iRedrawCount == 0)
 				CListCtrl::SetRedraw(TRUE);
-		}
-		else {
+		} else {
 			if (m_iRedrawCount++ == 0)
 				CListCtrl::SetRedraw(FALSE);
 		}
@@ -195,7 +196,7 @@ protected:
 	void DrawFocusRect(CDC *pDC, const CRect &rcItem, BOOL bItemFocused, BOOL bCtrlFocused, BOOL bItemSelected);
 	void InitItemMemDC(CMemoryDC *dc, LPDRAWITEMSTRUCT lpDrawItemStruct, BOOL &bCtrlFocused);
 
-	static __inline bool HaveIntersection(const CRect &rc1, const CRect &rc2) {
+	static inline bool HaveIntersection(const CRect &rc1, const CRect &rc2) {
         return (rc1.left   < rc2.right  &&
                 rc1.right  > rc2.left   &&
                 rc1.top    < rc2.bottom &&

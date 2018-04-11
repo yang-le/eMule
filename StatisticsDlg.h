@@ -29,11 +29,12 @@
 class CStatisticsDlg : public CResizableDialog
 {
 	DECLARE_DYNAMIC(CStatisticsDlg)
+
+	enum { IDD = IDD_STATISTICS };
+
 public:
 	explicit CStatisticsDlg(CWnd* pParent = NULL);   // standard constructor
 	~CStatisticsDlg();
-	enum { IDD = IDD_STATISTICS };
-
 	void Localize();
 	void SetCurrentRate(float uploadrate, float downloadrate);
 	void ShowInterval();

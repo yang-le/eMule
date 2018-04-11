@@ -123,7 +123,7 @@ CString CMuleStatusBarCtrl::GetPaneToolTipText(EStatusBarPane iPane) const
 
 INT_PTR CMuleStatusBarCtrl::OnToolHitTest(CPoint point, TOOLINFO* pTI) const
 {
-	int iHit = CWnd::OnToolHitTest(point, pTI);
+	INT_PTR iHit = CWnd::OnToolHitTest(point, pTI);
 	if (iHit == -1 && pTI != NULL && pTI->cbSize >= sizeof(AFX_OLDTOOLINFO))
 	{
 		int iPane = GetPaneAtPosition(point);
@@ -133,7 +133,7 @@ INT_PTR CMuleStatusBarCtrl::OnToolHitTest(CPoint point, TOOLINFO* pTI) const
 			if (!strToolTipText.IsEmpty())
 			{
 				pTI->hwnd = m_hWnd;
-				pTI->uId = (UINT_PTR)iPane;
+				pTI->uId = iPane;
 				pTI->uFlags &= ~TTF_IDISHWND;
 				pTI->uFlags |= TTF_NOTBUTTON|TTF_ALWAYSTIP;
 				pTI->lpszText = _tcsdup(strToolTipText); // gets freed by MFC

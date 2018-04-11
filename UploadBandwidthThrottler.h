@@ -73,5 +73,5 @@ private:
 	uint64 m_SentBytesSinceLastCallOverhead;
 	INT_PTR m_highestNumberOfFullyActivatedSlots;
 
-	bool doRun;
+	volatile bool doRun;
 };

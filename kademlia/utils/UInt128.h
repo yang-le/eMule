@@ -77,9 +77,9 @@ namespace Kademlia
 			bool operator>= (const CUInt128 &uValue) const;
 			bool operator== (const CUInt128 &uValue) const;
 			bool operator!= (const CUInt128 &uValue) const;
-			CUInt128& operator+  (ULONG uValue);
-			CUInt128& operator-  (ULONG uValue);
-			CUInt128& operator=  (ULONG uValue);
+			CUInt128& operator+ (ULONG uValue);
+			CUInt128& operator- (ULONG uValue);
+			CUInt128& operator= (ULONG uValue);
 			bool operator<  (ULONG uValue) const;
 			bool operator>  (ULONG uValue) const;
 			bool operator<= (ULONG uValue) const;

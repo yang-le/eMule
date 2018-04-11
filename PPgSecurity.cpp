@@ -45,7 +45,7 @@ bool GetMimeType(LPCTSTR pszFilePath, CString& rstrMimeType);
 IMPLEMENT_DYNAMIC(CPPgSecurity, CPropertyPage)
 
 BEGIN_MESSAGE_MAP(CPPgSecurity, CPropertyPage)
-	ON_BN_CLICKED(IDC_FILTERSERVERBYIPFILTER , OnSettingsChange)
+	ON_BN_CLICKED(IDC_FILTERSERVERBYIPFILTER, OnSettingsChange)
 	ON_BN_CLICKED(IDC_RELOADFILTER, OnReloadIPFilter)
 	ON_BN_CLICKED(IDC_EDITFILTER, OnEditIPFilter)
 	ON_EN_CHANGE(IDC_FILTERLEVEL, OnSettingsChange)
@@ -83,10 +83,7 @@ void CPPgSecurity::DoDataExchange(CDataExchange* pDX)
 
 void CPPgSecurity::LoadSettings()
 {
-	CString strBuffer;
-
-	strBuffer.Format(_T("%u"), thePrefs.filterlevel);
-	GetDlgItem(IDC_FILTERLEVEL)->SetWindowText(strBuffer);
+	SetDlgItemInt(IDC_FILTERLEVEL, thePrefs.filterlevel);
 	CheckDlgButton(IDC_FILTERSERVERBYIPFILTER, thePrefs.filterserverbyip);
 
 	CheckDlgButton(IDC_USESECIDENT, thePrefs.m_bUseSecureIdent);
@@ -131,7 +128,7 @@ BOOL CPPgSecurity::OnInitDialog()
 		SetDlgItemText(IDC_UPDATEURL,m_pacIPFilterURL->GetItem(0));
 		if (theApp.m_fontSymbol.m_hObject) {
 			GetDlgItem(IDC_DD)->SetFont(&theApp.m_fontSymbol);
-			GetDlgItem(IDC_DD)->SetWindowText(_T("6")); // show a down-arrow
+			SetDlgItemText(IDC_DD, _T("6")); // show a down-arrow
 		}
 	}
 	else
@@ -145,15 +142,12 @@ BOOL CPPgSecurity::OnApply()
 {
 	bool bIPFilterSettingsChanged = false;
 
-	if (GetDlgItem(IDC_FILTERLEVEL)->GetWindowTextLength()) {
-		TCHAR buffer[510];
-		GetDlgItem(IDC_FILTERLEVEL)->GetWindowText(buffer, 4);
-		int iNewFilterLevel = _tstoi(buffer);
-		if (iNewFilterLevel >= 0 && (UINT)iNewFilterLevel != thePrefs.filterlevel) {
-			thePrefs.filterlevel = iNewFilterLevel;
-			bIPFilterSettingsChanged = IsDlgButtonChecked(IDC_FILTERSERVERBYIPFILTER)!=0;
-		}
+	UINT iNewFilterLevel = GetDlgItemInt(IDC_FILTERLEVEL, NULL, FALSE);
+	if (iNewFilterLevel != thePrefs.filterlevel) {
+		thePrefs.filterlevel = iNewFilterLevel;
+		bIPFilterSettingsChanged = IsDlgButtonChecked(IDC_FILTERSERVERBYIPFILTER)!=0;
 	}
+
 	if (!thePrefs.filterserverbyip && IsDlgButtonChecked(IDC_FILTERSERVERBYIPFILTER)!=0)
 		bIPFilterSettingsChanged = true;
 	thePrefs.filterserverbyip = IsDlgButtonChecked(IDC_FILTERSERVERBYIPFILTER)!=0;
@@ -187,30 +181,30 @@ void CPPgSecurity::Localize()
 	if (m_hWnd)
 	{
 		SetWindowText(GetResString(IDS_SECURITY));
-		GetDlgItem(IDC_STATIC_IPFILTER)->SetWindowText(GetResString(IDS_IPFILTER));
-		GetDlgItem(IDC_RELOADFILTER)->SetWindowText(GetResString(IDS_SF_RELOAD));
-		GetDlgItem(IDC_EDITFILTER)->SetWindowText(GetResString(IDS_EDIT));
-		GetDlgItem(IDC_STATIC_FILTERLEVEL)->SetWindowText(GetResString(IDS_FILTERLEVEL)+_T(':'));
-		GetDlgItem(IDC_FILTERSERVERBYIPFILTER)->SetWindowText(GetResString(IDS_FILTERSERVERBYIPFILTER));
+		SetDlgItemText(IDC_STATIC_IPFILTER, GetResString(IDS_IPFILTER));
+		SetDlgItemText(IDC_RELOADFILTER, GetResString(IDS_SF_RELOAD));
+		SetDlgItemText(IDC_EDITFILTER, GetResString(IDS_EDIT));
+		SetDlgItemText(IDC_STATIC_FILTERLEVEL, GetResString(IDS_FILTERLEVEL)+_T(':'));
+		SetDlgItemText(IDC_FILTERSERVERBYIPFILTER, GetResString(IDS_FILTERSERVERBYIPFILTER));
 
-		GetDlgItem(IDC_SEC_MISC)->SetWindowText(GetResString(IDS_PW_MISC));
-		GetDlgItem(IDC_USESECIDENT)->SetWindowText(GetResString(IDS_USESECIDENT));
+		SetDlgItemText(IDC_SEC_MISC, GetResString(IDS_PW_MISC));
+		SetDlgItemText(IDC_USESECIDENT, GetResString(IDS_USESECIDENT));
 		SetDlgItemText(IDC_RUNASUSER,GetResString(IDS_RUNASUSER));
 
 		SetDlgItemText(IDC_STATIC_UPDATEFROM,GetResString(IDS_UPDATEFROM));
 		SetDlgItemText(IDC_LOADURL,GetResString(IDS_LOADURL));
 
-		GetDlgItem(IDC_SEEMYSHARE_FRM)->SetWindowText(GetResString(IDS_PW_SHARE));
-		GetDlgItem(IDC_SEESHARE1)->SetWindowText(GetResString(IDS_PW_EVER));
-		GetDlgItem(IDC_SEESHARE2)->SetWindowText(GetResString(IDS_FSTATUS_FRIENDSONLY));
-		GetDlgItem(IDC_SEESHARE3)->SetWindowText(GetResString(IDS_PW_NOONE));
+		SetDlgItemText(IDC_SEEMYSHARE_FRM, GetResString(IDS_PW_SHARE));
+		SetDlgItemText(IDC_SEESHARE1, GetResString(IDS_PW_EVER));
+		SetDlgItemText(IDC_SEESHARE2, GetResString(IDS_FSTATUS_FRIENDSONLY));
+		SetDlgItemText(IDC_SEESHARE3, GetResString(IDS_PW_NOONE));
 
-		GetDlgItem(IDC_DISABLEOBFUSCATION)->SetWindowText(GetResString(IDS_DISABLEOBFUSCATION));
-		GetDlgItem(IDC_ONLYOBFUSCATED)->SetWindowText(GetResString(IDS_ONLYOBFUSCATED));
-		GetDlgItem(IDC_ENABLEOBFUSCATION)->SetWindowText(GetResString(IDS_ENABLEOBFUSCATION));
-		GetDlgItem(IDC_SEC_OBFUSCATIONBOX)->SetWindowText(GetResString(IDS_PROTOCOLOBFUSCATION));
-		GetDlgItem(IDC_SEARCHSPAMFILTER)->SetWindowText(GetResString(IDS_SEARCHSPAMFILTER));
-		GetDlgItem(IDC_CHECK_FILE_OPEN)->SetWindowText(GetResString(IDS_CHECK_FILE_OPEN));
+		SetDlgItemText(IDC_DISABLEOBFUSCATION, GetResString(IDS_DISABLEOBFUSCATION));
+		SetDlgItemText(IDC_ONLYOBFUSCATED, GetResString(IDS_ONLYOBFUSCATED));
+		SetDlgItemText(IDC_ENABLEOBFUSCATION, GetResString(IDS_ENABLEOBFUSCATION));
+		SetDlgItemText(IDC_SEC_OBFUSCATIONBOX, GetResString(IDS_PROTOCOLOBFUSCATION));
+		SetDlgItemText(IDC_SEARCHSPAMFILTER, GetResString(IDS_SEARCHSPAMFILTER));
+		SetDlgItemText(IDC_CHECK_FILE_OPEN, GetResString(IDS_CHECK_FILE_OPEN));
 	}
 }
 
@@ -405,7 +399,7 @@ void CPPgSecurity::OnLoadIPFFromURL()
 			if (fp)
 			{
 				char szBuff[16384];
-				int iRead = fread(szBuff, 1, _countof(szBuff)-1, fp);
+				size_t iRead = fread(szBuff, 1, _countof(szBuff)-1, fp);
 				if (iRead <= 0)
 					bValidIPFilterFile = false;
 				else
@@ -489,10 +483,10 @@ BOOL CPPgSecurity::PreTranslateMessage(MSG* pMsg)
 			if (pMsg->hwnd == GetDlgItem(IDC_UPDATEURL)->m_hWnd){
 				if (m_pacIPFilterURL && m_pacIPFilterURL->IsBound() ){
 					CString strText;
-					GetDlgItem(IDC_UPDATEURL)->GetWindowText(strText);
+					GetDlgItemText(IDC_UPDATEURL, strText);
 					if (!strText.IsEmpty()){
-						GetDlgItem(IDC_UPDATEURL)->SetWindowText(_T("")); // this seems to be the only chance to let the dropdown list to disapear
-						GetDlgItem(IDC_UPDATEURL)->SetWindowText(strText);
+						SetDlgItemText(IDC_UPDATEURL, _T("")); // this seems to be the only chance to let the dropdown list to disapear
+						SetDlgItemText(IDC_UPDATEURL, strText);
 						((CEdit*)GetDlgItem(IDC_UPDATEURL))->SetSel(strText.GetLength(), strText.GetLength());
 					}
 				}

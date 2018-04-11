@@ -28,16 +28,15 @@ class CChatWnd : public CResizableDialog
 {
 	DECLARE_DYNAMIC(CChatWnd)
 
+	enum { IDD = IDD_CHAT };
+
 public:
 	explicit CChatWnd(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CChatWnd();
 
-// Dialog Data
-	enum { IDD = IDD_CHAT };
-
 	void StartSession(CUpDownClient* client);
 	void Localize();
-	void UpdateFriendlistCount(UINT count);
+	void UpdateFriendlistCount(INT_PTR count);
 	void UpdateSelectedFriendMsgDetails();
 	void ScrollHistory(bool down);
 	void EnableSmileys(bool bEnable)						{ chatselector.EnableSmileys(bEnable); }

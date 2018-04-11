@@ -38,10 +38,12 @@ public:
 	Nick* FindNickByName(const CString& sChannel, const CString& sName);
 	Nick* FindNickByName(const Channel* pChannel, const CString& sName);
 	Nick* NewNick(const CString& sChannel, const CString& sNick);
+	void RefreshNickList(const Channel *pChannel);
 	void RefreshNickList(const CString& sChannel);
 	bool RemoveNick(const CString& sChannel, const CString& sNick);
+	void DeleteAllNick(Channel *pChannel);
 	void DeleteAllNick(const CString& sChannel);
-	void DeleteNickInAll (const CString& sNick, const CString& sMessage);
+	void DeleteNickInAll(const CString& sNick, const CString& sMessage);
 	bool ChangeNick(const CString& sChannel, const CString& sOldNick, const CString& sNewNick);
 	bool ChangeNickMode(const CString& sChannel, const CString& sNick, const CString& sMode);
 	bool ChangeAllNick(const CString& sOldNick, const CString& sNewNick);

@@ -24,15 +24,14 @@ class CFileDetailDlgStatistics : public CResizablePage
 {
 	DECLARE_DYNAMIC(CFileDetailDlgStatistics)
 
+	enum { IDD = IDD_FILESTATISTICS };
+
 public:
 	CFileDetailDlgStatistics();
 	virtual ~CFileDetailDlgStatistics();
 
 	void SetFiles(const CSimpleArray<CObject*>* paFiles) { m_paFiles = paFiles; m_bDataChanged = true; }
 	void Localize();
-
-// Dialog Data
-	enum { IDD = IDD_FILESTATISTICS };
 
 protected:
 	const CSimpleArray<CObject*>* m_paFiles;

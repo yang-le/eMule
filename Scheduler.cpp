@@ -76,22 +76,20 @@ int CScheduler::LoadFromFile(){
 	return count;
 }
 
-void CScheduler::SaveToFile(){
-
-	CString temp;
-
+void CScheduler::SaveToFile()
+{
 	CIni ini(thePrefs.GetConfigFile(), _T("Scheduler"));
-	ini.WriteInt(_T("Count"), GetCount());
+	ini.WriteInt(_T("Count"), (int)GetCount());
 
-	for (uint8 i=0; i<GetCount();i++) {
+	for (int i=0; i<GetCount(); ++i) {
 		Schedule_Struct *schedule = theApp.scheduler->GetSchedule(i);
-
-		temp.Format(_T("Schedule#%i"),i);
-		ini.WriteString(_T("Title"),schedule->title,temp);
-		ini.WriteInt(_T("Day"),schedule->day);
-		ini.WriteInt(_T("StartTime"),schedule->time);
-		ini.WriteInt(_T("EndTime"),schedule->time2);
-		ini.WriteBool(_T("Enabled"),schedule->enabled);
+		CString temp;
+		temp.Format(_T("Schedule#%i"), i);
+		ini.WriteString(_T("Title"), schedule->title,temp);
+		ini.WriteInt(_T("Day"), schedule->day);
+		ini.WriteInt(_T("StartTime"), (int)schedule->time);
+		ini.WriteInt(_T("EndTime"), (int)schedule->time2);
+		ini.WriteBool(_T("Enabled"), schedule->enabled);
 
 		ini.SerGet(false, schedule->actions,
 			ARRSIZE(schedule->actions), _T("Actions"));
@@ -100,41 +98,46 @@ void CScheduler::SaveToFile(){
 	}
 }
 
-void CScheduler::RemoveSchedule(int index)
+void CScheduler::RemoveSchedule(INT_PTR index)
 {
-	if (index < schedulelist.GetCount()) {
-		const Schedule_Struct* todel = schedulelist[index];
-		delete todel;
+	if (index < GetCount()) {
+		delete schedulelist[index];
 		schedulelist.RemoveAt(index);
 	}
 }
 
-void CScheduler::RemoveAll(){
+void CScheduler::RemoveAll()
+{
 	while (!schedulelist.IsEmpty())
 		RemoveSchedule(0);
 }
 
-int CScheduler::AddSchedule(Schedule_Struct* schedule) {
+INT_PTR CScheduler::AddSchedule(Schedule_Struct* schedule)
+{
 	schedulelist.Add(schedule);
-	return schedulelist.GetCount()-1;
+	return GetCount()-1;
 }
 
 int CScheduler::Check(bool forcecheck){
 	if (!thePrefs.IsSchedulerEnabled()
 		|| theApp.scheduler->GetCount()==0
-		|| theApp.emuledlg->IsClosing()) return -1;
-
+		|| theApp.emuledlg->IsClosing())
+	{
+		return -1;
+	}
 	struct tm tmTemp;
 	CTime tNow = CTime(safe_mktime(CTime::GetCurrentTime().GetLocalTm(&tmTemp)));
 
-	if (!forcecheck && tNow.GetMinute()==m_iLastCheckedMinute) return -1;
+	if (!forcecheck && tNow.GetMinute()==m_iLastCheckedMinute)
+		return -1;
 
 	m_iLastCheckedMinute=tNow.GetMinute();
 	theApp.scheduler->RestoreOriginals();
 
-	for (uint8 si=0;si<theApp.scheduler->GetCount();si++) {
+	for (int si=0; si<theApp.scheduler->GetCount(); ++si) {
 		Schedule_Struct *schedule = theApp.scheduler->GetSchedule(si);
-		if (schedule->actions[0]==0 || !schedule->enabled) continue;
+		if (schedule->actions[0]==0 || !schedule->enabled)
+			continue;
 
 		// check day of week
 		if (schedule->day!=DAY_DAYLY) {
@@ -161,31 +164,28 @@ int CScheduler::Check(bool forcecheck){
 				case DAY_SA_SO : if (dow>=2 && dow<=6) continue;
 			}
 		}
-
 		//check time
-		UINT h1,h2,m1,m2;
-		CTime t1=CTime(schedule->time);
-		CTime t2=CTime(schedule->time2);
-		h1=t1.GetHour();	h2=t2.GetHour();
-		m1=t1.GetMinute();	m2=t2.GetMinute();
-		int it1,it2, itn;
-		it1=h1*60 + m1;
-		it2=h2*60 + m2;
-		itn=tNow.GetHour()*60 + tNow.GetMinute();
-		if (it1<=it2) { // normal timespan
-			if ( !(itn>=it1 && itn<it2) ) continue;
+		CTime t1 = CTime(schedule->time);
+		CTime t2 = CTime(schedule->time2);
+		int it1 = t1.GetHour()*60 + t1.GetMinute();
+		int it2 = t2.GetHour()*60 + t2.GetMinute();
+		int itn = tNow.GetHour()*60 + tNow.GetMinute();
+		if (it1 <= it2) { // normal timespan
+			if (itn<it1 || itn>=it2)
+				continue;
 		} else {		   // reversed timespan (23:30 to 5:10)  now 10
-			if ( !(itn>=it1 || itn<it2)) continue;
+			if (itn<it1 && itn>=it2)
+				continue;
 		}
-
 		// ok, lets do the actions of this schedule
-		ActivateSchedule(si,schedule->time2==0);
+		ActivateSchedule(si, schedule->time2==0);
 	}
 
 	return -1;
 }
 
-void CScheduler::SaveOriginals() {
+void CScheduler::SaveOriginals()
+{
 	original_upload=thePrefs.GetMaxUpload();
 	original_download=thePrefs.GetMaxDownload();
 	original_connections=thePrefs.GetMaxConnections();
@@ -193,7 +193,8 @@ void CScheduler::SaveOriginals() {
 	original_sources=thePrefs.GetMaxSourcePerFileDefault();
 }
 
-void CScheduler::RestoreOriginals() {
+void CScheduler::RestoreOriginals()
+{
 	thePrefs.SetMaxUpload(original_upload);
 	thePrefs.SetMaxDownload(original_download);
 	thePrefs.SetMaxConnections(original_connections);
@@ -201,8 +202,9 @@ void CScheduler::RestoreOriginals() {
 	thePrefs.SetMaxSourcesPerFile(original_sources);
 }
 
-void CScheduler::ActivateSchedule(INT_PTR index,bool makedefault) {
-	Schedule_Struct* schedule=GetSchedule(index);
+void CScheduler::ActivateSchedule(INT_PTR index,bool makedefault)
+{
+	Schedule_Struct* schedule = GetSchedule(index);
 
 	for (int ai=0; ai<16; ++ai) {
 		if (schedule->actions[ai] == 0)
@@ -214,33 +216,33 @@ void CScheduler::ActivateSchedule(INT_PTR index,bool makedefault) {
 			case 1 :
 				thePrefs.SetMaxUpload(_tstoi(schedule->values[ai]));
 				if (makedefault)
-					original_upload=(uint16)_tstoi(schedule->values[ai]);
+					original_upload = (uint16)_tstoi(schedule->values[ai]);
 				break;
 			case 2 :
 				thePrefs.SetMaxDownload(_tstoi(schedule->values[ai]));
 				if (makedefault)
-					original_download=(uint16)_tstoi(schedule->values[ai]);
+					original_download = (uint16)_tstoi(schedule->values[ai]);
 				break;
 			case 3 :
 				thePrefs.SetMaxSourcesPerFile(_tstoi(schedule->values[ai]));
 				if (makedefault)
-					original_sources=_tstoi(schedule->values[ai]);
+					original_sources = _tstoi(schedule->values[ai]);
 				break;
 			case 4 :
 				thePrefs.SetMaxConsPerFive(_tstoi(schedule->values[ai]));
 				if (makedefault)
-					original_cons5s=_tstoi(schedule->values[ai]);
+					original_cons5s = _tstoi(schedule->values[ai]);
 				break;
 			case 5 :
 				thePrefs.SetMaxConnections(_tstoi(schedule->values[ai]));
 				if (makedefault)
-					original_connections=_tstoi(schedule->values[ai]);
+					original_connections = _tstoi(schedule->values[ai]);
 				break;
 			case 6 :
-				theApp.downloadqueue->SetCatStatus(_tstoi(schedule->values[ai]),MP_STOP);
+				theApp.downloadqueue->SetCatStatus(_tstoi(schedule->values[ai]), MP_STOP);
 				break;
 			case 7 :
-				theApp.downloadqueue->SetCatStatus(_tstoi(schedule->values[ai]),MP_RESUME);
+				theApp.downloadqueue->SetCatStatus(_tstoi(schedule->values[ai]), MP_RESUME);
 		}
 	}
 }

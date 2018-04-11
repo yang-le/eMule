@@ -365,7 +365,7 @@ void UpdateHdrImageList(CListCtrl& lv, CImageList& imlHdr, UINT uIDHdrImgList,
 						ImageList_Destroy(himlHeaderOld);
 
 				#if defined(HDM_GETBITMAPMARGIN) && defined(HDM_SETBITMAPMARGIN)
-					int iBmpMargin = pHdrCtrl->SendMessage(HDM_GETBITMAPMARGIN); // Win2000: default us '6' (3*GetSystemMetrics(SM_CXEDGE))
+					int iBmpMargin = (int)pHdrCtrl->SendMessage(HDM_GETBITMAPMARGIN); // Win2000: default us '6' (3*GetSystemMetrics(SM_CXEDGE))
 					// Use same bitmap margin as Windows (W2K) Explorer -- this saves some pixels which
 					// may be required for rather small column titles!
 					int iNewBmpMargin = GetSystemMetrics(SM_CXEDGE) + GetSystemMetrics(SM_CXEDGE)/2;
@@ -635,7 +635,7 @@ void CreateItemReport(CListCtrl& lv, CString& rstrReport)
 		if (lv.GetColumn(iCol, &lvc) && lvc.cx > 0)
 		{
 			szItem[_countof(szItem) - 1] = _T('\0');
-			int iLen = _tcslen(lvc.pszText);
+			int iLen = (int)_tcslen(lvc.pszText);
 			if (iLen > paiColWidths[iCol])
 				paiColWidths[iCol] = iLen;
 
@@ -650,7 +650,7 @@ void CreateItemReport(CListCtrl& lv, CString& rstrReport)
 				if (lv.GetItem(&lvi))
 				{
 					szItem[_countof(szItem) - 1] = _T('\0');
-					iLen = _tcslen(lvi.pszText);
+					iLen = (int)_tcslen(lvi.pszText);
 					if (iLen > paiColWidths[iCol])
 						paiColWidths[iCol] = iLen;
 				}

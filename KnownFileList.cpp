@@ -45,7 +45,7 @@ static char THIS_FILE[] = __FILE__;
 #define CANCELLED_MET_FILENAME	_T("cancelled.met")
 
 #define CANCELLED_HEADER_OLD	MET_HEADER
-#define CANCELLED_HEADER		MET_HEADER + 0x01
+#define CANCELLED_HEADER		(MET_HEADER + 0x01)
 #define CANCELLED_VERSION		0x01
 
 CKnownFileList::CKnownFileList()
@@ -83,10 +83,8 @@ bool CKnownFileList::LoadKnownFiles()
 		if (fexp.m_cause != CFileException::fileNotFound){
 			CString strError(_T("Failed to load ") KNOWN_MET_FILENAME _T(" file"));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
-				strError += _T(" - ");
-				strError += szError;
-			}
+			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError)))
+				strError.AppendFormat(_T(" - %s"), szError);
 			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
 		return false;
@@ -146,10 +144,8 @@ bool CKnownFileList::LoadCancelledFiles()
 		if (fexp.m_cause != CFileException::fileNotFound){
 			CString strError(_T("Failed to load ") CANCELLED_MET_FILENAME _T(" file"));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
-				strError += _T(" - ");
-				strError += szError;
-			}
+			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError)))
+				strError.AppendFormat(_T(" - %s"), szError);
 			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
 		return false;
@@ -227,10 +223,8 @@ void CKnownFileList::Save()
 	if (!file.Open(fullpath, CFile::modeWrite|CFile::modeCreate|CFile::typeBinary|CFile::shareDenyWrite, &fexp)){
 		CString strError(_T("Failed to save ") KNOWN_MET_FILENAME _T(" file"));
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
-			strError += _T(" - ");
-			strError += szError;
-		}
+		if (GetExceptionMessage(fexp, szError, ARRSIZE(szError)))
+			strError.AppendFormat(_T(" - %s"), szError);
 		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 	}
 	else{
@@ -266,10 +260,8 @@ void CKnownFileList::Save()
 		catch(CFileException* error){
 			CString strError(_T("Failed to save ") KNOWN_MET_FILENAME _T(" file"));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(*error, szError, ARRSIZE(szError))) {
-				strError += _T(" - ");
-				strError += szError;
-			}
+			if (GetExceptionMessage(*error, szError, ARRSIZE(szError)))
+				strError.AppendFormat(_T(" - %s"), szError);
 			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 			error->Delete();
 		}
@@ -283,25 +275,21 @@ void CKnownFileList::Save()
 	if (!file.Open(fullpath, CFile::modeWrite|CFile::modeCreate|CFile::typeBinary|CFile::shareDenyWrite, &fexp)){
 		CString strError(_T("Failed to save ") CANCELLED_MET_FILENAME _T(" file"));
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
-			strError += _T(" - ");
-			strError += szError;
-		}
+		if (GetExceptionMessage(fexp, szError, ARRSIZE(szError)))
+			strError.AppendFormat(_T(" - %s"), szError);
 		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 	}
-	else{
+	else {
 		setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 
 		try{
 			file.WriteUInt8(CANCELLED_HEADER);
 			file.WriteUInt8(CANCELLED_VERSION);
 			file.WriteUInt32(m_dwCancelledFilesSeed);
-			if (!thePrefs.IsRememberingCancelledFiles()){
+			if (!thePrefs.IsRememberingCancelledFiles())
 				file.WriteUInt32(0);
-			}
-			else{
-				UINT nRecordsNumber = m_mapCancelledFiles.GetCount();
-				file.WriteUInt32(nRecordsNumber);
+			else {
+				file.WriteUInt32((uint32)m_mapCancelledFiles.GetCount());
 				for (POSITION pos = m_mapCancelledFiles.GetStartPosition(); pos != NULL;) {
 					int dwDummy;
 					CSKey key;
@@ -318,13 +306,11 @@ void CKnownFileList::Save()
 			}
 			file.Close();
 		}
-		catch(CFileException* error){
+		catch(CFileException* error) {
 			CString strError(_T("Failed to save ") CANCELLED_MET_FILENAME _T(" file"));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(*error, szError, ARRSIZE(szError))) {
-				strError += _T(" - ");
-				strError += szError;
-			}
+			if (GetExceptionMessage(*error, szError, ARRSIZE(szError)))
+				strError.AppendFormat(_T(" - %s"), szError);
 			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 			error->Delete();
 		}
@@ -338,14 +324,14 @@ void CKnownFileList::Clear()
 		CKnownFile* pFile;
 		CCKey key;
 		m_Files_map.GetNextAssoc( pos, key, pFile );
-	    delete pFile;
+		delete pFile;
 	}
 	m_Files_map.RemoveAll();
 }
 
 void CKnownFileList::Process()
 {
-	if (::GetTickCount() - m_nLastSaved > MIN2MS(11))
+	if (::GetTickCount() >= m_nLastSaved + MIN2MS(11))
 		Save();
 }
 
@@ -365,9 +351,9 @@ bool CKnownFileList::SafeAddKFile(CKnownFile* toadd)
 
 		m_Files_map.RemoveKey(CCKey(pFileInMap->GetFileHash()));
 		m_mapKnownFilesByAICH.RemoveKey(pFileInMap->GetFileIdentifier().GetAICHHash());
-		//This can happen in a couple situations..
-		//File was renamed outside of eMule..
-		//A user decided to redownload a file he has downloaded and unshared..
+		//This can happen in a couple of situations.
+		//File was renamed outside of eMule.
+		//A user decided to redownload a file he has downloaded and unshared.
 		if (theApp.sharedfiles)
 		{
 			// This solves the problem with dangl. ptr in shared files ctrl,
@@ -385,7 +371,7 @@ bool CKnownFileList::SafeAddKFile(CKnownFile* toadd)
 			ASSERT( !theApp.sharedfiles->IsFilePtrInList(pFileInMap) );
 		}
 		//Double check to make sure this is the same file as it's possible that a two files have the same hash.
-		//Maybe in the furture we can change the client to not just use Hash as a key throughout the entire client..
+		//Maybe in the furture we can change the client to not just use Hash as a key throughout the entire client.
 		ASSERT( toadd->GetFileSize() == pFileInMap->GetFileSize() );
 		ASSERT( toadd != pFileInMap );
 		if (toadd->GetFileSize() == pFileInMap->GetFileSize())
@@ -397,7 +383,7 @@ bool CKnownFileList::SafeAddKFile(CKnownFile* toadd)
 		// Quick fix: If we downloaded already downloaded files again and if those files all had the same file names
 		// and were renamed during file completion, we have a pending ptr in transfer window.
 		if (theApp.emuledlg && theApp.emuledlg->transferwnd && theApp.emuledlg->transferwnd->GetDownloadList()->m_hWnd)
-			theApp.emuledlg->transferwnd->GetDownloadList()->RemoveFile((CPartFile*)pFileInMap);
+			theApp.emuledlg->transferwnd->GetDownloadList()->RemoveFile(reinterpret_cast<CPartFile *>(pFileInMap));
 		// Make sure the file is not used in out sharedfilesctrl anymore
 		if (theApp.emuledlg && theApp.emuledlg->sharedfileswnd && theApp.emuledlg->sharedfileswnd->sharedfilesctrl.m_hWnd)
 			theApp.emuledlg->sharedfileswnd->sharedfilesctrl.RemoveFile(pFileInMap, true);
@@ -438,8 +424,7 @@ CKnownFile* CKnownFileList::FindKnownFileByPath(const CString& sFilePath) const
 
 CKnownFile* CKnownFileList::FindKnownFileByID(const uchar* hash) const
 {
-	if (hash)
-	{
+	if (hash) {
 		CKnownFile* found_file;
 		CCKey key(hash);
 		if (m_Files_map.Lookup(key, found_file))
@@ -450,33 +435,28 @@ CKnownFile* CKnownFileList::FindKnownFileByID(const uchar* hash) const
 
 bool CKnownFileList::IsKnownFile(const CKnownFile* file) const
 {
-	if (file)
-		return FindKnownFileByID(file->GetFileHash()) != NULL;
-	return false;
+	return file && (FindKnownFileByID(file->GetFileHash()) != NULL);
 }
 
 bool CKnownFileList::IsFilePtrInList(const CKnownFile* file) const
 {
 	if (file)
-	{
-		POSITION pos = m_Files_map.GetStartPosition();
-		while (pos)
-		{
+		for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
 			CCKey key;
 			CKnownFile* cur_file;
 			m_Files_map.GetNextAssoc(pos, key, cur_file);
 			if (file == cur_file)
 				return true;
 		}
-	}
 	return false;
 }
 
-void CKnownFileList::AddCancelledFileID(const uchar* hash){
-	if (thePrefs.IsRememberingCancelledFiles()){
-		if (m_dwCancelledFilesSeed == 0) {
+void CKnownFileList::AddCancelledFileID(const uchar* hash)
+{
+	if (thePrefs.IsRememberingCancelledFiles()) {
+		if (m_dwCancelledFilesSeed == 0)
 			m_dwCancelledFilesSeed = (GetRandomUInt32() % 0xFFFFFFFE) + 1;
-		}
+
 		uchar pachSeedHash[20];
 		PokeUInt32(pachSeedHash, m_dwCancelledFilesSeed);
 		md4cpy(pachSeedHash + 4, hash);
@@ -488,7 +468,7 @@ void CKnownFileList::AddCancelledFileID(const uchar* hash){
 
 bool CKnownFileList::IsCancelledFileByID(const uchar* hash) const
 {
-	if (thePrefs.IsRememberingCancelledFiles()){
+	if (thePrefs.IsRememberingCancelledFiles()) {
 		uchar pachSeedHash[20];
 		PokeUInt32(pachSeedHash, m_dwCancelledFilesSeed);
 		md4cpy(pachSeedHash + 4, hash);
@@ -496,9 +476,8 @@ bool CKnownFileList::IsCancelledFileByID(const uchar* hash) const
 		md4cpy(pachSeedHash, md5.GetRawHash());
 
 		int dwDummy;
-		if (m_mapCancelledFiles.Lookup(CSKey(pachSeedHash), dwDummy)){
+		if (m_mapCancelledFiles.Lookup(CSKey(pachSeedHash), dwDummy))
 			return true;
-		}
 	}
 	return false;
 }
@@ -515,12 +494,12 @@ void CKnownFileList::CopyKnownFileMap(CMap<CCKey, const CCKey&, CKnownFile*, CKn
 
 bool CKnownFileList::ShouldPurgeAICHHashset(const CAICHHash& rAICHHash) const
 {
-	const CKnownFile* pFile = NULL;
+	const CKnownFile* pFile;
 	if (m_mapKnownFilesByAICH.Lookup(rAICHHash, pFile)) {
 		if (!pFile->ShouldPartiallyPurgeFile())
 			return false;
-	}
-	ASSERT(false);
+	} else
+		ASSERT(false);
 	return true;
 }
 

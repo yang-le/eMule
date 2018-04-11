@@ -10,7 +10,6 @@
 #include "DialogMinTrayBtn.h"
 #include "VisualStylesXP.h"
 #include "ResizableLib\ResizableDialog.h"
-#include "AfxBeginMsgMapTemplate.h"
 #include "OtherFunctions.h"
 #include "MenuCmds.h"
 #undef SCHEMADEF_H
@@ -94,37 +93,39 @@ TEMPLATE const TCHAR *CDialogMinTrayBtn<BASE>::m_pszMinTrayBtnBmpName[] = { BMP_
 	},
 #endif
 
-
-BEGIN_MESSAGE_MAP_TEMPLATE(TEMPLATE, CDialogMinTrayBtn<BASE>, CDialogMinTrayBtn, BASE)
-    ON_WM_NCPAINT()
-    ON_WM_NCACTIVATE()
-    ON_WM_NCHITTEST()
-    ON_WM_NCLBUTTONDOWN()
-    ON_WM_NCRBUTTONDOWN()
-    ON_WM_LBUTTONUP()
-    ON_WM_MOUSEMOVE()
-    ON_WM_TIMER()
+BEGIN_TEMPLATE_MESSAGE_MAP(CDialogMinTrayBtn, BASE, BASE)
+	ON_WM_NCPAINT()
+	ON_WM_NCACTIVATE()
+	ON_WM_NCHITTEST()
+	ON_WM_NCLBUTTONDOWN()
+	ON_WM_NCRBUTTONDOWN()
+	ON_WM_LBUTTONUP()
+	ON_WM_MOUSEMOVE()
+	ON_WM_TIMER()
 	_ON_WM_THEMECHANGED()
 END_MESSAGE_MAP()
 
 
-TEMPLATE CDialogMinTrayBtn<BASE>::CDialogMinTrayBtn() :
-    m_MinTrayBtnPos(0,0), m_MinTrayBtnSize(0,0), m_bMinTrayBtnEnabled(TRUE), m_bMinTrayBtnVisible(TRUE),
-    m_bMinTrayBtnUp(TRUE), m_bMinTrayBtnCapture(FALSE), m_bMinTrayBtnActive(FALSE), m_bMinTrayBtnHitTest(FALSE)
+TEMPLATE CDialogMinTrayBtn<BASE>::CDialogMinTrayBtn()
+	: BASE()
+	, m_MinTrayBtnPos(0,0), m_MinTrayBtnSize(0,0), m_bMinTrayBtnVisible(TRUE), m_bMinTrayBtnEnabled(TRUE)
+	, m_bMinTrayBtnUp(TRUE), m_bMinTrayBtnCapture(FALSE), m_bMinTrayBtnActive(FALSE), m_bMinTrayBtnHitTest(FALSE)
 {
     MinTrayBtnInit();
 }
 
-TEMPLATE CDialogMinTrayBtn<BASE>::CDialogMinTrayBtn(LPCTSTR lpszTemplateName, CWnd* pParentWnd) : BASE(lpszTemplateName, pParentWnd),
-    m_MinTrayBtnPos(0,0), m_MinTrayBtnSize(0,0), m_bMinTrayBtnEnabled(TRUE), m_bMinTrayBtnVisible(TRUE),
-    m_bMinTrayBtnUp(TRUE), m_bMinTrayBtnCapture(FALSE), m_bMinTrayBtnActive(FALSE), m_bMinTrayBtnHitTest(FALSE)
+TEMPLATE CDialogMinTrayBtn<BASE>::CDialogMinTrayBtn(LPCTSTR lpszTemplateName, CWnd* pParentWnd)
+	: BASE(lpszTemplateName, pParentWnd)
+	, m_MinTrayBtnPos(0,0), m_MinTrayBtnSize(0,0), m_bMinTrayBtnVisible(TRUE), m_bMinTrayBtnEnabled(TRUE)
+	, m_bMinTrayBtnUp(TRUE), m_bMinTrayBtnCapture(FALSE), m_bMinTrayBtnActive(FALSE), m_bMinTrayBtnHitTest(FALSE)
 {
     MinTrayBtnInit();
 }
 
-TEMPLATE CDialogMinTrayBtn<BASE>::CDialogMinTrayBtn(UINT nIDTemplate, CWnd* pParentWnd) : BASE(nIDTemplate, pParentWnd),
-    m_MinTrayBtnPos(0,0), m_MinTrayBtnSize(0,0), m_bMinTrayBtnEnabled(TRUE), m_bMinTrayBtnVisible(TRUE),
-    m_bMinTrayBtnUp(TRUE), m_bMinTrayBtnCapture(FALSE), m_bMinTrayBtnActive(FALSE), m_bMinTrayBtnHitTest(FALSE)
+TEMPLATE CDialogMinTrayBtn<BASE>::CDialogMinTrayBtn(UINT nIDTemplate, CWnd* pParentWnd)
+	: BASE(nIDTemplate, pParentWnd)
+	, m_MinTrayBtnPos(0,0), m_MinTrayBtnSize(0,0), m_bMinTrayBtnVisible(TRUE), m_bMinTrayBtnEnabled(TRUE)
+	, m_bMinTrayBtnUp(TRUE), m_bMinTrayBtnCapture(FALSE), m_bMinTrayBtnActive(FALSE), m_bMinTrayBtnHitTest(FALSE)
 {
     MinTrayBtnInit();
 }
@@ -277,9 +278,6 @@ TEMPLATE void CDialogMinTrayBtn<BASE>::MinTrayBtnUpdatePosAndSize()
     if (cyCaption < CAPTION_MINHEIGHT)
 		cyCaption = CAPTION_MINHEIGHT;
 
-    CSize borderfixed(-GetSystemMetrics(SM_CXFIXEDFRAME), GetSystemMetrics(SM_CYFIXEDFRAME));
-    CSize bordersize(-GetSystemMetrics(SM_CXSIZEFRAME), GetSystemMetrics(SM_CYSIZEFRAME));
-
     CRect rcWnd;
     GetWindowRect(&rcWnd);
 
@@ -308,12 +306,14 @@ TEMPLATE void CDialogMinTrayBtn<BASE>::MinTrayBtnUpdatePosAndSize()
     if ((dwStyle & WS_THICKFRAME) != 0)
     {
         // resizable window
-        m_MinTrayBtnPos += bordersize;
+		CSize bordersize(-GetSystemMetrics(SM_CXSIZEFRAME), GetSystemMetrics(SM_CYSIZEFRAME));
+		m_MinTrayBtnPos += bordersize;
     }
     else
     {
         // fixed window
-        m_MinTrayBtnPos += borderfixed;
+		CSize borderfixed(-GetSystemMetrics(SM_CXFIXEDFRAME), GetSystemMetrics(SM_CYFIXEDFRAME));
+		m_MinTrayBtnPos += borderfixed;
     }
 
     if ( ((dwExStyle & WS_EX_TOOLWINDOW) == 0) && (((dwStyle & WS_MINIMIZEBOX) != 0) || ((dwStyle & WS_MAXIMIZEBOX) != 0)) )
@@ -463,13 +463,13 @@ TEMPLATE BOOL CDialogMinTrayBtn<BASE>::MinTrayBtnHitTest(CPoint ptScreen) const
 	CRect rcWnd;
 	GetWindowRect(&rcWnd);
 	// adjust 'ptScreen' with possible RTL window layout
-	CRect rcWndOrg(rcWnd);
-	CPoint ptScreenOrg(ptScreen);
 	if (::MapWindowPoints(HWND_DESKTOP, m_hWnd, &rcWnd.TopLeft(), 2) == 0 ||
 		::MapWindowPoints(HWND_DESKTOP, m_hWnd, &ptScreen, 1) == 0)
 	{
 		// several bug reports about not working on NT SP6 (?). in case of any problems with
 		// 'MapWindowPoints' we fall back to old code (does not work for RTL window layout though)
+		CRect rcWndOrg(rcWnd);
+		CPoint ptScreenOrg(ptScreen);
 		rcWnd = rcWndOrg;
 		ptScreen = ptScreenOrg;
 	}

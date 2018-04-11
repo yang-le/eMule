@@ -5,12 +5,11 @@ class CPPgIRC : public CPropertyPage
 {
 	DECLARE_DYNAMIC(CPPgIRC)
 
+	enum { IDD = IDD_PPG_IRC };
+
 public:
 	CPPgIRC();
 	virtual ~CPPgIRC();
-
-// Dialog Data
-	enum { IDD = IDD_PPG_IRC };
 
 	void Localize();
 
@@ -21,6 +20,7 @@ protected:
 	bool m_bJoinMessage;
 	bool m_bPartMessage;
 	bool m_bQuitMessage;
+	bool m_bPingPongMessage;
 	bool m_bEmuleAddFriend;
 	bool m_bEmuleAllowAddFriend;
 	bool m_bEmuleSendLink;
@@ -29,6 +29,7 @@ protected:
 	bool m_bHelpChannel;
 	bool m_bChannelsOnConnect;
 	bool m_bIRCEnableSmileys;
+	bool m_bIRCEnableUTF8;
 
 	CTreeOptionsCtrlEx m_ctrlTreeOptions;
 	bool m_bInitializedTreeOpts;
@@ -39,6 +40,7 @@ protected:
 	HTREEITEM m_htiJoinMessage;
 	HTREEITEM m_htiPartMessage;
 	HTREEITEM m_htiQuitMessage;
+	HTREEITEM m_htiPingPongMessage;
 	HTREEITEM m_htiEmuleProto;
 	HTREEITEM m_htiEmuleAddFriend;
 	HTREEITEM m_htiEmuleAllowAddFriend;
@@ -48,6 +50,7 @@ protected:
 	HTREEITEM m_htiHelpChannel;
 	HTREEITEM m_htiChannelsOnConnect;
 	HTREEITEM m_htiSmileys;
+	HTREEITEM m_htiUTF8;
 
 	void LoadSettings();
 	void UpdateControls();

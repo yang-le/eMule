@@ -119,7 +119,7 @@ bool CxImageWMF::Decode(CxFile *hFile, int32_t nForceWidth, int32_t nForceHeight
 		//
 		//hDC = ::GetDC(0);
 		//float hscale = (float)GetDeviceCaps(hDC, HORZRES)/(100.0f * GetDeviceCaps(hDC, HORZSIZE));
-		//float vscale  =  (float)GetDeviceCaps(hDC, VERTRES)/(100.0f * GetDeviceCaps(hDC, VERTSIZE));
+		//float vscale = (float)GetDeviceCaps(hDC, VERTRES)/(100.0f * GetDeviceCaps(hDC, VERTSIZE));
 		//::ReleaseDC(0, hDC);
 		//cx = (int32_t)((emh.rclFrame.right - emh.rclFrame.left) * hscale);
 		//cy = (int32_t)((emh.rclFrame.bottom - emh.rclFrame.top) * vscale);

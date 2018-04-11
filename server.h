@@ -162,6 +162,11 @@ public:
 
 private:
 	void	init();
+	TCHAR		ipfull[3+1+3+1+3+1+3+1]; // 16
+	CString		m_strDescription;
+	CString		m_strName;
+	CString		m_strDynIP;
+	CString		m_strVersion;
 	uint32		challenge;
 	uint32		m_uDescReqChallenge;
 	uint32		lastpinged; //This is to get the ping delay.
@@ -174,16 +179,7 @@ private:
 	uint32		hardfiles;
 	UINT		m_uPreference;
 	uint32		ping;
-	CString		m_strDescription;
-	CString		m_strName;
-	CString		m_strDynIP;
-	TCHAR		ipfull[3+1+3+1+3+1+3+1]; // 16
-	uint32		ip;
-	uint16		port;
-	bool		staticservermember;
-	bool		m_bCryptPingReplyPending;
 	uint32		failedcount;
-	CString		m_strVersion;
 	uint32		m_uTCPFlags;
 	uint32		m_uUDPFlags;
 	uint32		m_uLowIDUsers;
@@ -192,4 +188,8 @@ private:
 	uint16		m_nObfuscationPortTCP;
 	uint16		m_nObfuscationPortUDP;
 	uint32		m_dwRealLastPingedTime;
+	uint32		ip;
+	uint16		port;
+	bool		staticservermember;
+	bool		m_bCryptPingReplyPending;
 };

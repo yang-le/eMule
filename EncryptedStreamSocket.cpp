@@ -220,7 +220,7 @@ int CEncryptedStreamSocket::SendOv(CArray<WSABUF>& raBuffer, DWORD& dwBytesSent,
 		m_StreamCryptState = ECS_NONE;
 		DebugLogError(_T("CEncryptedStreamSocket: Overwriting State ECS_UNKNOWN with ECS_NONE because of premature Send() (%s)"), (LPCTSTR)DbgGetIPString());
 	}
-	return WSASend(GetSocketHandle(), raBuffer.GetData(), raBuffer.GetCount(), &dwBytesSent, 0, lpOverlapped, NULL);
+	return WSASend(GetSocketHandle(), raBuffer.GetData(), (DWORD)raBuffer.GetCount(), &dwBytesSent, 0, lpOverlapped, NULL);
 }
 
 bool CEncryptedStreamSocket::IsEncryptionLayerReady()
@@ -287,7 +287,7 @@ int CEncryptedStreamSocket::Receive(void* lpBuf, int nBufLen, int nFlags)
 
 					SOCKADDR_IN sockAddr = {};
 					int nSockAddrLen = sizeof sockAddr;
-					GetPeerName((SOCKADDR*)&sockAddr, &nSockAddrLen);
+					GetPeerName((LPSOCKADDR)&sockAddr, &nSockAddrLen);
 					if (thePrefs.IsClientCryptLayerRequiredStrict() || (!theApp.serverconnect->AwaitingTestFromIP(sockAddr.sin_addr.S_un.S_addr)
 						&& !theApp.clientlist->IsKadFirewallCheckIP(sockAddr.sin_addr.S_un.S_addr)) )
 					{
@@ -337,8 +337,7 @@ int CEncryptedStreamSocket::Receive(void* lpBuf, int nBufLen, int nFlags)
 void CEncryptedStreamSocket::SetConnectionEncryption(bool bEnabled, const uchar* pTargetClientHash, bool bServerConnection)
 {
 	if (m_StreamCryptState != ECS_UNKNOWN && m_StreamCryptState != ECS_NONE){
-		if (!m_StreamCryptState == ECS_NONE || bEnabled)
-			ASSERT( false );
+		ASSERT(m_StreamCryptState == ECS_NONE || bEnabled);
 		return;
 	}
 	ASSERT( m_pRC4SendKey == NULL );
@@ -467,7 +466,7 @@ int CEncryptedStreamSocket::Negotiate(const uchar* pBuffer, uint32 nLen)
 					AfxThrowMemoryException();
 				m_pfiReceiveBuffer = new CSafeMemFile(pReceiveBuffer, 512);
 			}
-			const uint32 nToRead =  min(nLen - nRead, m_nReceiveBytesWanted);
+			const uint32 nToRead = min(nLen - nRead, m_nReceiveBytesWanted);
 			m_pfiReceiveBuffer->Write(pBuffer + nRead, nToRead);
 			nRead += nToRead;
 			m_nReceiveBytesWanted -= nToRead;
@@ -540,7 +539,7 @@ int CEncryptedStreamSocket::Negotiate(const uchar* pBuffer, uint32 nLen)
 
 					SOCKADDR_IN sockAddr = {};
 					int nSockAddrLen = sizeof sockAddr;
-					GetPeerName((SOCKADDR*)&sockAddr, &nSockAddrLen);
+					GetPeerName((LPSOCKADDR)&sockAddr, &nSockAddrLen);
 					const uint8 byPaddingLen = theApp.serverconnect->AwaitingTestFromIP(sockAddr.sin_addr.S_un.S_addr) ? 16 : (thePrefs.GetCryptTCPPaddingLength() + 1);
 					uint8 byPadding = (uint8)(cryptRandomGen.GenerateByte() % byPaddingLen);
 
@@ -590,7 +589,7 @@ int CEncryptedStreamSocket::Negotiate(const uchar* pBuffer, uint32 nLen)
 					CryptoPP::Integer cryptResult = CryptoPP::a_exp_b_mod_c(cryptDHAnswer, m_cryptDHA, cryptDHPrime);
 
 					m_cryptDHA = 0;
-					DEBUG_ONLY( ZeroMemory(aBuffer, sizeof(aBuffer)) );
+					DEBUG_ONLY(memset(aBuffer, 0, sizeof aBuffer));
 					ASSERT( cryptResult.MinEncodedSize() <= PRIMESIZE_BYTES );
 
 					// create the keys
@@ -724,18 +723,18 @@ int CEncryptedStreamSocket::SendNegotiatingData(const void* lpBuf, uint32 nBufLe
 	} else {
 		if (result < nBufLen) {
 			m_pfiSendBuffer = new CSafeMemFile(128);
-			m_pfiSendBuffer->Write(pBuffer + result, nBufLen - result);
+			m_pfiSendBuffer->Write(&pBuffer[result], nBufLen - result);
 		}
 	}
 	free(pBuffer);
 	return result;
 }
 
-CString	CEncryptedStreamSocket::DbgGetIPString()
+CString CEncryptedStreamSocket::DbgGetIPString()
 {
 	SOCKADDR_IN sockAddr = {};
 	int nSockAddrLen = sizeof sockAddr;
-	GetPeerName((SOCKADDR*)&sockAddr, &nSockAddrLen);
+	GetPeerName((LPSOCKADDR)&sockAddr, &nSockAddrLen);
 	return ipstr(sockAddr.sin_addr.S_un.S_addr);
 }
 

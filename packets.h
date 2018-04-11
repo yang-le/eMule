@@ -142,16 +142,16 @@ public:
 #endif
 
 protected:
-	uint8	m_uType;
-	uint8	m_uName;
-	LPSTR	m_pszName;
-	uint32	m_nBlobSize;
-	union{
+	union {
 	  CString*	m_pstrVal;
 	  uint64	m_uVal;
 	  float		m_fVal;
 	  BYTE*		m_pData;
 	};
+	LPSTR	m_pszName;
+	uint32	m_nBlobSize;
+	uint8	m_uType;
+	uint8	m_uName;
 private:
 	void cleanup();
 };
@@ -160,7 +160,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 // CTag and tag string helpers
 
-__inline int CmpED2KTagName(LPCSTR pszTagName1, LPCSTR pszTagName2)
+inline int CmpED2KTagName(LPCSTR pszTagName1, LPCSTR pszTagName2)
 {
 	// string compare is independent from any codepage and/or LC_CTYPE setting.
 	return __ascii_stricmp(pszTagName1, pszTagName2);

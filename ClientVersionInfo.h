@@ -29,7 +29,7 @@ class CClientVersionInfo{
 public:
 	explicit CClientVersionInfo(CString strPCEncodedVersion)
 	{
-		init((UINT)CVI_IGNORED, (UINT)CVI_IGNORED, (UINT)CVI_IGNORED, (UINT)CVI_IGNORED, SO_UNKNOWN, SO_UNKNOWN);
+		init((uint32)CVI_IGNORED, (uint32)CVI_IGNORED, (uint32)CVI_IGNORED, (uint32)CVI_IGNORED, SO_UNKNOWN, SO_UNKNOWN);
 
 		int posSeparator = strPCEncodedVersion.Find('/', 1);
 		if (posSeparator < 0 || strPCEncodedVersion.GetLength() - posSeparator < 2) {
@@ -85,7 +85,7 @@ public:
 		UINT nClientMajVersion = (dwTagVersionInfo >> 17) & 0x7f;
 		UINT nClientMinVersion = (dwTagVersionInfo>> 10) & 0x7f;
 		UINT nClientUpVersion = (dwTagVersionInfo >>  7) & 0x07;
-		init(nClientMajVersion, nClientMinVersion, nClientUpVersion, (UINT)CVI_IGNORED, nClientMajor, SO_UNKNOWN);
+		init(nClientMajVersion, nClientMinVersion, nClientUpVersion, (uint32)CVI_IGNORED, nClientMajor, SO_UNKNOWN);
 	}
 
 	CClientVersionInfo(uint32 nVerMajor, uint32 nVerMinor, uint32 nVerUpdate, uint32 nVerBuild, uint32 ClientTypeMajor, uint32 ClientTypeMinor = SO_UNKNOWN) {
@@ -94,7 +94,7 @@ public:
 
 	CClientVersionInfo()
 	{
-		init((UINT)CVI_IGNORED, (UINT)CVI_IGNORED, (UINT)CVI_IGNORED, (UINT)CVI_IGNORED, SO_UNKNOWN, SO_UNKNOWN);
+		init((uint32)CVI_IGNORED, (uint32)CVI_IGNORED, (uint32)CVI_IGNORED, (uint32)CVI_IGNORED, SO_UNKNOWN, SO_UNKNOWN);
 	}
 
 	CClientVersionInfo(const CClientVersionInfo& cv)

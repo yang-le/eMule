@@ -18,32 +18,32 @@ class CSearchAttr
 {
 public:
 	CSearchAttr()
-		: m_iTag(FT_FILENAME), m_str(), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL), m_nNum(0)
+		: m_nNum(0), m_str(), m_iTag(FT_FILENAME), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL)
 	{
 	}
 
 	explicit CSearchAttr(LPCSTR pszString)
-		: m_iTag(FT_FILENAME), m_str(pszString), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL), m_nNum(0)
+		: m_nNum(0), m_str(pszString), m_iTag(FT_FILENAME), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL)
 	{
 	}
 
 	explicit CSearchAttr(const CStringA* pstrString)
-		: m_iTag(FT_FILENAME), m_str(*pstrString), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL), m_nNum(0)
+		: m_nNum(0), m_str(*pstrString), m_iTag(FT_FILENAME), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL)
 	{
 	}
 
 	CSearchAttr(int iTag, UINT uIntegerOperator, uint64 nSize)
-		: m_iTag(iTag), m_str(), m_uIntegerOperator(uIntegerOperator), m_nNum(nSize)
+		: m_nNum(nSize), m_str(), m_iTag(iTag), m_uIntegerOperator(uIntegerOperator)
 	{
 	}
 
 	CSearchAttr(int iTag, LPCSTR pszString)
-		: m_iTag(iTag), m_str(pszString), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL), m_nNum(0)
+		: m_nNum(0), m_str(pszString), m_iTag(iTag), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL)
 	{
 	}
 
 	CSearchAttr(int iTag, const CStringA* pstrString)
-		: m_iTag(iTag), m_str(*pstrString), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL), m_nNum(0)
+		: m_nNum(0), m_str(*pstrString), m_iTag(iTag), m_uIntegerOperator(ED2K_SEARCH_OP_EQUAL)
 	{
 	}
 
@@ -76,10 +76,10 @@ public:
 		return strDbg;
 	}
 
-	int m_iTag;
-	CStringA m_str;
-	UINT m_uIntegerOperator;
 	uint64 m_nNum;
+	CStringA m_str;
+	int m_iTag;
+	UINT m_uIntegerOperator;
 };
 
 

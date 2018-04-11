@@ -156,7 +156,7 @@ void UploadBandwidthThrottler::AddToStandardList(INT_PTR index, ThrottledFileSoc
  * Remove a socket from the list of sockets that have upload slots.
  *
  * If the socket has mistakenly been added several times to the list, this method
- * will return all of the entries for the socket.
+ * will remove all of the entries for the socket.
  *
  * @param socket the address of the socket that should be removed from the list. If this socket
  *			   does not exist in the list, this method will do nothing.
@@ -185,14 +185,12 @@ bool UploadBandwidthThrottler::RemoveFromStandardListNoLock(ThrottledFileSocket*
 {
 	// Find the slot
 	bool foundSocket = false;
-	for (INT_PTR slotCounter = 0; slotCounter < GetStandardListSize() && !foundSocket;) {
+	for (INT_PTR slotCounter = GetStandardListSize(); --slotCounter >= 0;)
 		if (m_StandardOrder_list[slotCounter] == socket) {
 			// Remove the slot
 			m_StandardOrder_list.RemoveAt(slotCounter);
 			foundSocket = true;
-		} else
-			++slotCounter;
-	}
+		}
 
 	if (foundSocket && m_highestNumberOfFullyActivatedSlots > GetStandardListSize())
 		m_highestNumberOfFullyActivatedSlots = GetStandardListSize();
@@ -344,7 +342,7 @@ uint32 UploadBandwidthThrottler::CalculateChangeDelta(uint32 numberOfConsecutive
 	static const uint32 deltas[9] =
 		{ 50u, 50u, 128u, 256u, 512u
 		, 512u+256u, 1024u, 1024u+256u, 1024u+512u};
-	return deltas[min(numberOfConsecutiveChanges, _countof(deltas)-1)]; //for anything above 7 return 1024u+512u
+	return deltas[min(numberOfConsecutiveChanges, _countof(deltas)-1)]; //return 1024u+512u for 8 and above
 }
 
 /**
@@ -444,12 +442,13 @@ UINT UploadBandwidthThrottler::RunInternal()
 			if (nUploadStartTime == 0) {
 				if (GetStandardListSize() >= 3)
 					nUploadStartTime = timeGetTime();
-			} else if (timeGetTime()- nUploadStartTime > SEC2MS(60)) {
+			} else if (timeGetTime() >= nUploadStartTime + SEC2MS(60)) {
 				if (theApp.uploadqueue) {
 					if (nEstiminatedLimit == 0) { // no autolimit was set yet
 						if (nSlotsBusyLevel >= 250) { // sockets indicated that the BW limit has been reached
 							nEstiminatedLimit = theApp.uploadqueue->GetDatarate();
-							allowedDataRate = min(nEstiminatedLimit, allowedDataRate);
+							if (nEstiminatedLimit < allowedDataRate)
+								allowedDataRate = nEstiminatedLimit;
 							nSlotsBusyLevel = -200;
 							if (thePrefs.GetVerbose() && estimateChangedLog)
 								theApp.QueueDebugLogLine(false, _T("Throttler: Set inital estimated limit to %0.5f changesCount: %i loopsCount: %i"), (float)nEstiminatedLimit/1024.00f, changesCount, loopsCount);
@@ -458,44 +457,37 @@ UINT UploadBandwidthThrottler::RunInternal()
 						}
 					} else {
 						if (nSlotsBusyLevel > 250) {
-							if (changesCount > 500 || changesCount > 300 && loopsCount > 1000 || loopsCount > 2000) {
+							if (changesCount > 500 || (changesCount > 300 && loopsCount > 1000) || loopsCount > 2000)
 								numberOfConsecutiveDownChanges = 0;
-							}
-							numberOfConsecutiveDownChanges++;
+
+							++numberOfConsecutiveDownChanges;
 							uint32 changeDelta = CalculateChangeDelta(numberOfConsecutiveDownChanges);
 
 							// Don't lower speed below 1 KBytes/s
-							if (nEstiminatedLimit < changeDelta + 1024) {
-								if (nEstiminatedLimit > 1024) {
-									changeDelta = nEstiminatedLimit - 1024;
-								} else {
-									changeDelta = 0;
-								}
-							}
+							if (nEstiminatedLimit < changeDelta + 1024)
+								changeDelta = (nEstiminatedLimit > 1024) ? nEstiminatedLimit - 1024 : 0;
+
 							ASSERT(nEstiminatedLimit >= changeDelta + 1024);
 							nEstiminatedLimit -= changeDelta;
 
-							if (thePrefs.GetVerbose() && estimateChangedLog) theApp.QueueDebugLogLine(false, _T("Throttler: REDUCED limit #%i with %i bytes to: %0.5f changesCount: %i loopsCount: %i"), numberOfConsecutiveDownChanges, changeDelta, (float)nEstiminatedLimit/1024.00f, changesCount, loopsCount);
+							if (thePrefs.GetVerbose() && estimateChangedLog)
+								theApp.QueueDebugLogLine(false, _T("Throttler: REDUCED limit #%i with %i bytes to: %0.5f changesCount: %i loopsCount: %i"), numberOfConsecutiveDownChanges, changeDelta, (float)nEstiminatedLimit/1024.00f, changesCount, loopsCount);
 
 							numberOfConsecutiveUpChanges = 0;
 							nSlotsBusyLevel = 0;
 							changesCount = 0;
 							loopsCount = 0;
-						} else if (nSlotsBusyLevel < (-250)) {
-							if (changesCount > 500 || changesCount > 300 && loopsCount > 1000 || loopsCount > 2000) {
+						} else if (nSlotsBusyLevel < -250) {
+							if (changesCount > 500 || (changesCount > 300 && loopsCount > 1000) || loopsCount > 2000)
 								numberOfConsecutiveUpChanges = 0;
-							}
-							numberOfConsecutiveUpChanges++;
+
+							++numberOfConsecutiveUpChanges;
 							uint32 changeDelta = CalculateChangeDelta(numberOfConsecutiveUpChanges);
 
 							// Don't raise speed unless we are under current allowedDataRate
-							if (nEstiminatedLimit+changeDelta > allowedDataRate) {
-								if (nEstiminatedLimit < allowedDataRate) {
-									changeDelta = allowedDataRate - nEstiminatedLimit;
-								} else {
-									changeDelta = 0;
-								}
-							}
+							if (nEstiminatedLimit+changeDelta > allowedDataRate)
+								changeDelta = (nEstiminatedLimit < allowedDataRate) ? allowedDataRate - nEstiminatedLimit : 0;
+
 							ASSERT(nEstiminatedLimit < allowedDataRate && nEstiminatedLimit+changeDelta <= allowedDataRate || nEstiminatedLimit >= allowedDataRate && changeDelta == 0);
 							nEstiminatedLimit += changeDelta;
 
@@ -508,7 +500,8 @@ UINT UploadBandwidthThrottler::RunInternal()
 							loopsCount = 0;
 						}
 
-						allowedDataRate = min(nEstiminatedLimit, allowedDataRate);
+						if (nEstiminatedLimit < allowedDataRate)
+							allowedDataRate = nEstiminatedLimit;
 					}
 				}
 			}
@@ -532,14 +525,14 @@ UINT UploadBandwidthThrottler::RunInternal()
 
 #define TIME_BETWEEN_UPLOAD_LOOPS 1
 		uint32 sleepTime;
-		if (allowedDataRate == _UI32_MAX || realBytesToSpend >= 1000 || allowedDataRate == 0 && nEstiminatedLimit == 0)
+		if (allowedDataRate == _UI32_MAX || realBytesToSpend >= 1000 || (allowedDataRate == 0 && nEstiminatedLimit == 0))
 			// we could send at once, but sleep a while to not suck up all cpu
 			sleepTime = 0;
 		else if (allowedDataRate == 0)
 			sleepTime = (uint32)ceil((doubleSendSize*1000.0)/nEstiminatedLimit);
 		else
 			// sleep for just as long as we need to get back to having one byte to send
-			sleepTime = (uint32)ceil((-realBytesToSpend + 1000.0)/allowedDataRate);
+			sleepTime = (uint32)ceil((1000.0 - realBytesToSpend)/allowedDataRate);
 
 		sleepTime = max(sleepTime, TIME_BETWEEN_UPLOAD_LOOPS);
 
@@ -574,7 +567,6 @@ UINT UploadBandwidthThrottler::RunInternal()
 				}
 
 				realBytesToSpend += allowedDataRate*(uint64)timeSinceLastLoop;
-
 				bytesToSpend = realBytesToSpend/1000;
 			} else {
 				realBytesToSpend = _I64_MAX;
@@ -625,7 +617,7 @@ UINT UploadBandwidthThrottler::RunInternal()
 				ThrottledFileSocket* socket = m_StandardOrder_list[slotCounter];
 
 				if (socket != NULL) {
-					if (!socket->IsBusyQuickCheck() && thisLoopTick-socket->GetLastCalledSend() > SEC2MS(1)) {
+					if (!socket->IsBusyQuickCheck() && thisLoopTick >= socket->GetLastCalledSend() + SEC2MS(1)) {
 						// trickle
 						uint32 neededBytes = socket->GetNeededBytes();
 
@@ -634,7 +626,7 @@ UINT UploadBandwidthThrottler::RunInternal()
 							uint32 lastSpentBytes = socketSentBytes.sentBytesControlPackets + socketSentBytes.sentBytesStandardPackets;
 							spentBytes += lastSpentBytes;
 							spentOverhead += socketSentBytes.sentBytesControlPackets;
-							if (socketSentBytes.sentBytesStandardPackets > 0 && socket->IsEnoughFileDataQueued(EMBLOCKSIZE))
+							if (socketSentBytes.sentBytesStandardPackets > 0 && !socket->IsEnoughFileDataQueued(EMBLOCKSIZE))
 								bNeedMoreData = true;
 							if (lastSpentBytes > 0 && slotCounter < m_highestNumberOfFullyActivatedSlots)
 								m_highestNumberOfFullyActivatedSlots = slotCounter;
@@ -661,10 +653,10 @@ UINT UploadBandwidthThrottler::RunInternal()
 					if (!socket->IsBusyQuickCheck()) {
 						SocketSentBytes socketSentBytes = socket->SendFileAndControlData((uint32)mini(maxi((uint64)doubleSendSize, (uint64)bytesToSpend/maxSlot), (uint64)bytesToSpend-spentBytes), doubleSendSize);
 						uint32 lastSpentBytes = socketSentBytes.sentBytesControlPackets + socketSentBytes.sentBytesStandardPackets;
-						if (socketSentBytes.sentBytesStandardPackets > 0 && !socket->IsEnoughFileDataQueued(EMBLOCKSIZE))
-							bNeedMoreData = true;
 						spentBytes += lastSpentBytes;
 						spentOverhead += socketSentBytes.sentBytesControlPackets;
+						if (socketSentBytes.sentBytesStandardPackets > 0 && !socket->IsEnoughFileDataQueued(EMBLOCKSIZE))
+							bNeedMoreData = true;
 					}
 				} else
 					theApp.QueueDebugLogLine(false, _T("There was a NULL socket in the UploadBandwidthThrottler Standard list (equal-for-all)! Prevented usage. Index: %u Size: %u"), (unsigned)rememberedSlotCounter, (unsigned)GetStandardListSize());
@@ -680,16 +672,14 @@ UINT UploadBandwidthThrottler::RunInternal()
 					if (!socket->IsBusyQuickCheck()) {
 						uint32 bytesToSpendTemp = (uint32)(bytesToSpend-spentBytes);
 						SocketSentBytes socketSentBytes = socket->SendFileAndControlData(max(bytesToSpendTemp, doubleSendSize), doubleSendSize);
-						if (socketSentBytes.sentBytesStandardPackets > 0 && !socket->IsEnoughFileDataQueued(EMBLOCKSIZE))
-							bNeedMoreData = true;
 						uint32 lastSpentBytes = socketSentBytes.sentBytesControlPackets + socketSentBytes.sentBytesStandardPackets;
-
 						spentBytes += lastSpentBytes;
 						spentOverhead += socketSentBytes.sentBytesControlPackets;
+						if (socketSentBytes.sentBytesStandardPackets > 0 && !socket->IsEnoughFileDataQueued(EMBLOCKSIZE))
+							bNeedMoreData = true;
 
-						if (slotCounter+1 > m_highestNumberOfFullyActivatedSlots && (lastSpentBytes < bytesToSpendTemp || lastSpentBytes >= doubleSendSize)) { // || lastSpentBytes > 0 && spentBytes == bytesToSpend )) {
+						if (slotCounter+1 > m_highestNumberOfFullyActivatedSlots && (lastSpentBytes < bytesToSpendTemp || lastSpentBytes >= doubleSendSize)) // || lastSpentBytes > 0 && spentBytes == bytesToSpend ))
 							m_highestNumberOfFullyActivatedSlots = slotCounter+1;
-						}
 					}
 				} else
 					theApp.QueueDebugLogLine(false, _T("There was a NULL socket in the UploadBandwidthThrottler Standard list (fully activated)! Prevented usage. Index: %u Size: %u"), (unsigned)slotCounter, (unsigned)GetStandardListSize());

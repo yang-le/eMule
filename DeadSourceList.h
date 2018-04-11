@@ -39,15 +39,14 @@ public:
 
 template<> inline UINT AFXAPI HashKey(const CDeadSource& ds)
 {
-	uint32 hash = 0;
-	if (ds.m_dwID != 0) {
-		hash = ds.m_dwID;
-		if (IsLowID(ds.m_dwID))
+	uint32 hash = ds.m_dwID;
+	if (hash != 0) {
+		if (IsLowID(hash))
 			hash ^= ds.m_dwServerIP;
 	} else {
-		ASSERT(isnulmd4(ds.m_aucHash) == 0);
-		hash++;
-		for (int i = 0; i != 16; ++i)
+		ASSERT(!isnulmd4(ds.m_aucHash));
+		hash = 1;
+		for (unsigned i = 0; i < 16; ++i)
 			hash += (ds.m_aucHash[i]+1)*((i*i)+1);
 	}
 	return hash;

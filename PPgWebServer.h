@@ -4,13 +4,14 @@ class CPPgWebServer : public CPropertyPage
 {
 	DECLARE_DYNAMIC(CPPgWebServer)
 
+	enum { IDD = IDD_PPG_WEBSRV };
+
 public:
 	CPPgWebServer();
 	virtual ~CPPgWebServer();
 
-	enum { IDD = IDD_PPG_WEBSRV };
-
 	void Localize();
+	void SetUPnPState();
 
 protected:
 	BOOL m_bModified;
@@ -23,18 +24,22 @@ protected:
 	virtual BOOL OnInitDialog();
 	virtual BOOL OnApply();
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
-	void SetModified(BOOL bChanged = TRUE){
+	void SetModified(BOOL bChanged = TRUE)
+	{
 		m_bModified = bChanged;
 		CPropertyPage::SetModified(bChanged);
 	}
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnEnChangeWSEnabled();
+	afx_msg void OnChangeHTTPS();
 	afx_msg void OnReloadTemplates();
 	afx_msg void OnBnClickedTmplbrowse();
+	afx_msg void OnBnClickedCertbrowse();
+	afx_msg void OnBnClickedKeybrowse();
 	afx_msg void OnHelp();
 	afx_msg void SetTmplButtonState();
 	afx_msg BOOL OnHelpInfo(HELPINFO* pHelpInfo);
-	afx_msg void OnDataChange()				{SetModified(); SetTmplButtonState(); }
+	afx_msg void OnDataChange();
 	afx_msg void OnDestroy();
 };

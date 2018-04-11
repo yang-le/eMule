@@ -35,68 +35,72 @@ public:
 	explicit CSearchFile(const CSearchFile* copyfrom);
 	virtual ~CSearchFile();
 
-	bool	IsKademlia() const				{ return m_bKademlia; }
-	bool	IsServerUDPAnswer() const		{ return m_bServerUDPAnswer; }
+	bool	IsKademlia() const					{ return m_bKademlia; }
+	bool	IsServerUDPAnswer() const			{ return m_bServerUDPAnswer; }
 	uint32	AddSources(uint32 count);
-	uint32	GetSourceCount() const			{ return m_nSources; }
-	void	SetSourceCount(uint32 count)	{ m_nSources = count; }
+	uint32	GetSourceCount() const				{ return m_nSources; }
+	void	SetSourceCount(uint32 count)		{ m_nSources = count; }
 	uint32	AddCompleteSources(uint32 count);
-	uint32	GetCompleteSourceCount() const	{ return m_nCompleteSources; }
+	uint32	GetCompleteSourceCount() const		{ return m_nCompleteSources; }
 	void	SetCompleteSourceCount(uint32 count) { m_nCompleteSources = count; }
 	int		IsComplete() const;
 	int		IsComplete(UINT uSources, UINT uCompleteSources) const;
 	time_t	GetLastSeenComplete() const;
-	uint32	GetSearchID() const				{ return m_nSearchID; }
-	LPCTSTR GetDirectory() const			{ return m_pszDirectory; }
+	uint32	GetSearchID() const					{ return m_nSearchID; }
+	LPCTSTR GetDirectory() const				{ return m_pszDirectory; }
 
-	uint32	GetClientID() const				{ return m_nClientID; }
-	void	SetClientID(uint32 nClientID)	{ m_nClientID = nClientID; } //client IP
-	uint16	GetClientPort() const			{ return m_nClientPort; }
-	void	SetClientPort(uint16 nPort)		{ m_nClientPort = nPort; }
-	uint32	GetClientServerIP() const		{ return m_nClientServerIP; }
-	void	SetClientServerIP(uint32 uIP)   { m_nClientServerIP = uIP; }
-	uint16	GetClientServerPort() const		{ return m_nClientServerPort; }
-	void	SetClientServerPort(uint16 nPort) { m_nClientServerPort = nPort; }
-	int		GetClientsCount() const			{ return ((GetClientID() && GetClientPort()) ? 1 : 0) + m_aClients.GetSize(); }
-	void	SetKadPublishInfo(uint32 dwVal)	{ m_nKadPublishInfo = dwVal; }
-	uint32	GetKadPublishInfo() const		{ return m_nKadPublishInfo; } // == TAG_PUBLISHINFO
-	bool	DidFoundMultipleAICH() const	{ return m_bMultipleAICHFound; }
-	void	SetFoundMultipleAICH()			{ m_bMultipleAICHFound = true; }
+	uint32	GetClientID() const					{ return m_nClientID; }
+	void	SetClientID(uint32 nClientID)		{ m_nClientID = nClientID; } //client IP
+	uint16	GetClientPort() const				{ return m_nClientPort; }
+	void	SetClientPort(uint16 nPort)			{ m_nClientPort = nPort; }
+	uint32	GetClientServerIP() const			{ return m_nClientServerIP; }
+	void	SetClientServerIP(uint32 uIP)		{ m_nClientServerIP = uIP; }
+	uint16	GetClientServerPort() const			{ return m_nClientServerPort; }
+	void	SetClientServerPort(uint16 nPort)	{ m_nClientServerPort = nPort; }
+	int		GetClientsCount() const				{ return static_cast<int>(GetClientID() && GetClientPort()) + m_aClients.GetSize(); }
+	uint32	GetKadPublishInfo() const			{ return m_nKadPublishInfo; } // == TAG_PUBLISHINFO
+	void	SetKadPublishInfo(uint32 dwVal)		{ m_nKadPublishInfo = dwVal; }
+	bool	DidFoundMultipleAICH() const		{ return m_bMultipleAICHFound; }
+	void	SetFoundMultipleAICH()				{ m_bMultipleAICHFound = true; }
 
 	// Spamfilter
+	CString	GetNameWithoutKeyword()	const		{ return m_strNameWithoutKeywords; }
 	void	SetNameWithoutKeyword(const CString& strName)	{ m_strNameWithoutKeywords = strName; }
-	CString	GetNameWithoutKeyword()	const			{ return m_strNameWithoutKeywords; }
-	void	SetSpamRating(uint32 nRating)			{ m_nSpamRating = nRating; }
-	uint32	GetSpamRating() const					{ return m_nSpamRating; }
+	uint32	GetSpamRating() const				{ return m_nSpamRating; }
+	void	SetSpamRating(uint32 nRating)		{ m_nSpamRating = nRating; }
 	bool	IsConsideredSpam() const;
 
 	virtual void	UpdateFileRatingCommentAvail(bool bForceUpdate = false);
 
 	// GUI helpers
-	CSearchFile* GetListParent() const		{ return m_list_parent; }
+	CSearchFile* GetListParent() const			{ return m_list_parent; }
 	void		 SetListParent(CSearchFile* parent) { m_list_parent = parent; }
-	UINT		 GetListChildCount() const	{ return m_list_childcount; }
-	void		 SetListChildCount(int cnt)	{ m_list_childcount = cnt; }
-	void		 AddListChildCount(int cnt) { m_list_childcount += cnt; }
-	bool		 IsListExpanded() const		{ return m_list_bExpanded; }
-	void		 SetListExpanded(bool val)	{ m_list_bExpanded = val; }
+	UINT		 GetListChildCount() const		{ return m_list_childcount; }
+	void		 SetListChildCount(int cnt)		{ m_list_childcount = cnt; }
+	void		 AddListChildCount(int cnt)		{ m_list_childcount += cnt; }
+	bool		 IsListExpanded() const			{ return m_list_bExpanded; }
+	void		 SetListExpanded(bool val)		{ m_list_bExpanded = val; }
 
 	void		 StoreToFile(CFileDataIO& rFile) const;
 
-	struct SClient {
-		SClient() {
+	struct SClient
+	{
+		SClient()
+		{
 			m_nIP = 0;
 			m_nPort = 0;
 			m_nServerIP = 0;
 			m_nServerPort = 0;
 		}
-		SClient(uint32 nIP, uint16 nPort, uint32 nServerIP, uint16 nServerPort) {
+		SClient(uint32 nIP, uint16 nPort, uint32 nServerIP, uint16 nServerPort)
+		{
 			m_nIP = nIP;
 			m_nPort = nPort;
 			m_nServerIP = nServerIP;
 			m_nServerPort = nServerPort;
 		}
-		friend __inline bool __stdcall operator==(const CSearchFile::SClient& c1, const CSearchFile::SClient& c2) {
+		friend inline bool __stdcall operator==(const CSearchFile::SClient& c1, const CSearchFile::SClient& c2)
+		{
 			return c1.m_nIP==c2.m_nIP && c1.m_nPort==c2.m_nPort &&
 				   c1.m_nServerIP==c2.m_nServerIP && c1.m_nServerPort==c2.m_nServerPort;
 		}
@@ -105,19 +109,19 @@ public:
 		uint16 m_nPort;
 		uint16 m_nServerPort;
 	};
-	void AddClient(const SClient& client) { m_aClients.Add(client); }
+	void AddClient(const SClient& client)		{ m_aClients.Add(client); }
 	const CSimpleArray<SClient>& GetClients() const { return m_aClients; }
 
 	struct SServer {
 		SServer()
-			: m_nIP(0), m_nPort(0), m_uAvail(0), m_bUDPAnswer(false)
+			: m_uAvail(0), m_nIP(0), m_nPort(0), m_bUDPAnswer(false)
 		{}
 
 		SServer(uint32 nIP, uint16 nPort, bool bUDPAnswer)
-			: m_nIP(nIP), m_nPort(nPort), m_uAvail(0), m_bUDPAnswer(bUDPAnswer)
+			: m_uAvail(0), m_nIP(nIP), m_nPort(nPort), m_bUDPAnswer(bUDPAnswer)
 		{}
 
-		friend __inline bool __stdcall operator==(const CSearchFile::SServer& s1, const CSearchFile::SServer& s2)
+		friend inline bool __stdcall operator==(const CSearchFile::SServer& s1, const CSearchFile::SServer& s2)
 		{
 			return s1.m_nIP==s2.m_nIP && s1.m_nPort==s2.m_nPort;
 		}
@@ -126,14 +130,14 @@ public:
 		uint16 m_nPort;
 		bool   m_bUDPAnswer;
 	};
-	void AddServer(const SServer& server) { m_aServers.Add(server); }
+	void AddServer(const SServer& server)		{ m_aServers.Add(server); }
 	const CSimpleArray<SServer>& GetServers() const { return m_aServers; }
-	SServer& GetServerAt(int iServer) { return m_aServers[iServer]; }
+	SServer& GetServerAt(int iServer)			{ return m_aServers[iServer]; }
 
-	void	AddPreviewImg(CxImage* img)	{	m_listImages.Add(img); }
+	void	AddPreviewImg(CxImage* img)			{ m_listImages.Add(img); }
 	const CSimpleArray<CxImage*>& GetPreviews() const { return m_listImages; }
-	bool	IsPreviewPossible() const { return m_bPreviewPossible;}
-	void	SetPreviewPossible(bool in)	{ m_bPreviewPossible = in; }
+	bool	IsPreviewPossible() const			{ return m_bPreviewPossible;}
+	void	SetPreviewPossible(bool in)			{ m_bPreviewPossible = in; }
 
 	enum EKnownType
 	{
@@ -152,7 +156,11 @@ private:
 	bool	m_bMultipleAICHFound;
 	bool	m_bKademlia;
 	bool	m_bServerUDPAnswer;
-	byte	m_flags; //bit: #0 - do not show in list; #1 - do not write to file
+	struct
+	{
+		byte noshow : 1; //bit #0 - do not display in lists
+		byte nowrite : 1; //bit #1 - do not save this entry
+	} m_flags;
 	uint32	m_nSources;
 	uint32	m_nCompleteSources;
 	uint32	m_nClientID;
@@ -166,7 +174,7 @@ private:
 	CSimpleArray<CxImage*> m_listImages;
 	LPTSTR m_pszDirectory;
 	// spamfilter
-	CString	m_strNameWithoutKeywords;
+	CString m_strNameWithoutKeywords;
 	uint32	m_nSpamRating;
 
 	// GUI helpers

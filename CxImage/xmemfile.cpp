@@ -197,7 +197,7 @@ bool CxMemFile::Alloc(uint32_t dwNewLen)
 
 		// allocate new buffer
 		uint8_t* n_pBuffer = (uint8_t*)realloc(m_pBuffer, dwNewBufferSize);
-		if (!n_pBuffer && m_pBuffer) {
+		if (!n_pBuffer) {
 			free(m_pBuffer);
 			m_Edge = 0;
 		} else

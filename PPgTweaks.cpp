@@ -55,8 +55,8 @@ END_MESSAGE_MAP()
 
 CPPgTweaks::CPPgTweaks()
 	: CPropertyPage(CPPgTweaks::IDD)
-	, m_ctrlTreeOptions(theApp.m_iDfltImageListColorFlags), m_sYourHostname()
-	, m_iDynUpPingToleranceMilliseconds(0), m_iDynUpRadioPingTolerance(0), m_htiExtractMetaDataNever(NULL), m_htiExtractMetaDataID3Lib(NULL)
+	, m_sYourHostname(), m_iDynUpPingToleranceMilliseconds(0), m_iDynUpRadioPingTolerance(0)
+	, m_ctrlTreeOptions(theApp.m_iDfltImageListColorFlags), m_htiExtractMetaDataNever(NULL), m_htiExtractMetaDataID3Lib(NULL)
 {
 	m_iFileBufferSize = 0;
 	m_iQueueSize = 0;
@@ -459,7 +459,7 @@ BOOL CPPgTweaks::OnInitDialog()
 	m_iDynUpMinUpload = thePrefs.GetMinUpload();
 	m_iDynUpPingTolerance = thePrefs.GetDynUpPingTolerance();
 	m_iDynUpPingToleranceMilliseconds = thePrefs.GetDynUpPingToleranceMilliseconds();
-	m_iDynUpRadioPingTolerance = thePrefs.IsDynUpUseMillisecondPingTolerance()?1:0;
+	m_iDynUpRadioPingTolerance = static_cast<int>(thePrefs.IsDynUpUseMillisecondPingTolerance());
 	m_iDynUpGoingUpDivider = thePrefs.GetDynUpGoingUpDivider();
 	m_iDynUpGoingDownDivider = thePrefs.GetDynUpGoingDownDivider();
 	m_iDynUpNumberOfPings = thePrefs.GetDynUpNumberOfPings();
@@ -489,7 +489,7 @@ BOOL CPPgTweaks::OnInitDialog()
 
 	m_iQueueSize = thePrefs.m_iQueueSize;
 	m_ctlQueueSize.SetRange(20, 100, TRUE);
-	m_ctlQueueSize.SetPos(m_iQueueSize/100);
+	m_ctlQueueSize.SetPos((int)(m_iQueueSize/100));
 	m_ctlQueueSize.SetTicFreq(10);
 	m_ctlQueueSize.SetPageSize(10);
 
@@ -613,13 +613,13 @@ void CPPgTweaks::OnHScroll(UINT /*nSBCode*/, UINT /*nPos*/, CScrollBar* pScrollB
 		m_iFileBufferSize = m_ctlFileBuffSize.GetPos() * 1024;
 		CString temp;
 		temp.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_FILEBUFFERSIZE), (LPCTSTR)CastItoXBytes(m_iFileBufferSize, false, false));
-		GetDlgItem(IDC_FILEBUFFERSIZE_STATIC)->SetWindowText(temp);
+		SetDlgItemText(IDC_FILEBUFFERSIZE_STATIC, temp);
 		SetModified(TRUE);
 	} else if (pScrollBar->GetSafeHwnd() == m_ctlQueueSize.m_hWnd) {
 		m_iQueueSize = ((CSliderCtrl*)pScrollBar)->GetPos() * 100;
 		CString temp;
 		temp.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_QUEUESIZE), (LPCTSTR)GetFormatedUInt((ULONG)m_iQueueSize));
-		GetDlgItem(IDC_QUEUESIZE_STATIC)->SetWindowText(temp);
+		SetDlgItemText(IDC_QUEUESIZE_STATIC, temp);
 		SetModified(TRUE);
 	}
 }
@@ -628,9 +628,9 @@ void CPPgTweaks::Localize()
 {
 	if (m_hWnd) {
 		SetWindowText(GetResString(IDS_PW_TWEAK));
-		GetDlgItem(IDC_WARNING)->SetWindowText(GetResString(IDS_TWEAKS_WARNING));
-		GetDlgItem(IDC_PREFINI_STATIC)->SetWindowText(GetResString(IDS_PW_TWEAK));
-		GetDlgItem(IDC_OPENPREFINI)->SetWindowText(GetResString(IDS_OPENPREFINI));
+		SetDlgItemText(IDC_WARNING, GetResString(IDS_TWEAKS_WARNING));
+		SetDlgItemText(IDC_PREFINI_STATIC, GetResString(IDS_PW_TWEAK));
+		SetDlgItemText(IDC_OPENPREFINI, GetResString(IDS_OPENPREFINI));
 
 		if (m_htiTCPGroup) m_ctrlTreeOptions.SetItemText(m_htiTCPGroup, GetResString(IDS_TCPIP_CONNS));
 		if (m_htiMaxCon5Sec) m_ctrlTreeOptions.SetEditLabel(m_htiMaxCon5Sec, GetResString(IDS_MAXCON5SECLABEL));
@@ -689,9 +689,9 @@ void CPPgTweaks::Localize()
 
 		CString temp;
 		temp.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_FILEBUFFERSIZE), (LPCTSTR)CastItoXBytes(m_iFileBufferSize, false, false));
-		GetDlgItem(IDC_FILEBUFFERSIZE_STATIC)->SetWindowText(temp);
-		temp.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_QUEUESIZE), (LPCTSTR)GetFormatedUInt(m_iQueueSize));
-		GetDlgItem(IDC_QUEUESIZE_STATIC)->SetWindowText(temp);
+		SetDlgItemText(IDC_FILEBUFFERSIZE_STATIC, temp);
+		temp.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_QUEUESIZE), (LPCTSTR)GetFormatedUInt((ULONG)m_iQueueSize));
+		SetDlgItemText(IDC_QUEUESIZE_STATIC, temp);
 	}
 }
 

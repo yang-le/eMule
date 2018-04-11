@@ -18,6 +18,8 @@ All rights reserved.
 
 class CHttpDownloadDlg : public CDialog
 {
+	enum { IDD = IDD_HTTPDOWNLOAD };
+
 public:
 //Constructors / Destructors
 	explicit CHttpDownloadDlg(CWnd* pParent = NULL);
@@ -33,7 +35,6 @@ public:
 
 protected:
 	//{{AFX_DATA(CHttpDownloadDlg)
-	enum { IDD = IDD_HTTPDOWNLOAD };
 	CStatic m_ctrlStatus;
 	CStatic m_ctrlTransferRate;
 	CStatic m_ctrlTimeLeft;
@@ -57,8 +58,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 	DECLARE_DYNAMIC(CHttpDownloadDlg);
 
-	static void CALLBACK _OnStatusCallBack(HINTERNET hInternet, DWORD_PTR dwContext, DWORD dwInternetStatus,
-										   LPVOID lpvStatusInformation, DWORD dwStatusInformationLength);
+	static void CALLBACK _OnStatusCallBack(HINTERNET hInternet, DWORD_PTR dwContext, DWORD dwInternetStatus
+										  ,LPVOID lpvStatusInformation, DWORD dwStatusInformationLength) noexcept;
 	void OnStatusCallBack(HINTERNET hInternet, DWORD dwInternetStatus,
 						  LPVOID lpvStatusInformation, DWORD dwStatusInformationLength);
 	CString GetStatusInfo(LPVOID lpvStatusInformation, DWORD dwStatusInformationLength);
@@ -77,18 +78,18 @@ protected:
 	void UpdateControlsDuringTransfer(DWORD dwStartTicks, DWORD& dwCurrentTicks, DWORD dwTotalBytesRead, DWORD& dwLastTotalBytes,
 									  DWORD& dwLastPercentage, BOOL bGotFileSize, DWORD dwFileSize);
 
-	CString		m_sError;
-	CString		m_sServer;
-	CString		m_sObject;
-	CString		m_sFilename;
-	INTERNET_PORT m_nPort;
-	DWORD		m_dwServiceType;
-	HINTERNET	m_hInternetSession;
-	HINTERNET	m_hHttpConnection;
-	HINTERNET	m_hHttpFile;
-	BOOL		m_bAbort;
-	BOOL		m_bSafeToClose;
-	CFile		m_FileToWrite;
-	CWinThread*	m_pThread;
+	CString			m_sError;
+	CString			m_sServer;
+	CString			m_sObject;
+	CString			m_sFilename;
+	INTERNET_PORT	m_nPort;
+	DWORD			m_dwServiceType;
+	HINTERNET		m_hInternetSession;
+	HINTERNET		m_hHttpConnection;
+	HINTERNET		m_hHttpFile;
+	volatile BOOL	m_bAbort;
+	BOOL			m_bSafeToClose;
+	CFile			m_FileToWrite;
+	CWinThread*		m_pThread;
 	static ULONGLONG sm_ullWinInetVer;
 };

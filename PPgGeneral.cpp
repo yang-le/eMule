@@ -53,7 +53,7 @@ BEGIN_MESSAGE_MAP(CPPgGeneral, CPropertyPage)
 	ON_BN_CLICKED(IDC_BRINGTOFOREGROUND, OnSettingsChange)
 	ON_CBN_SELCHANGE(IDC_LANGS, OnLangChange)
 	ON_BN_CLICKED(IDC_ED2KFIX, OnBnClickedEd2kfix)
-	ON_BN_CLICKED(IDC_WEBSVEDIT , OnBnClickedEditWebservices)
+	ON_BN_CLICKED(IDC_WEBSVEDIT, OnBnClickedEditWebservices)
 	ON_BN_CLICKED(IDC_ONLINESIG, OnSettingsChange)
 	ON_BN_CLICKED(IDC_CHECK4UPDATE, OnBnClickedCheck4Update)
 	ON_BN_CLICKED(IDC_MINIMULE, OnSettingsChange)
@@ -79,7 +79,7 @@ void CPPgGeneral::DoDataExchange(CDataExchange* pDX)
 
 void CPPgGeneral::LoadSettings()
 {
-	GetDlgItem(IDC_NICK)->SetWindowText(thePrefs.GetUserNick());
+	SetDlgItemText(IDC_NICK, thePrefs.GetUserNick());
 
 	for (int i = 0; i < m_language.GetCount(); ++i)
 		if (m_language.GetItemData(i) == thePrefs.GetLanguageID())
@@ -102,8 +102,8 @@ void CPPgGeneral::LoadSettings()
 	}
 
 	CString strBuffer;
-	strBuffer.Format(_T("%u %s"),thePrefs.versioncheckdays, (LPCTSTR)GetResString(IDS_DAYS2));
-	GetDlgItem(IDC_DAYS)->SetWindowText(strBuffer);
+	strBuffer.Format(_T("%u %s"), thePrefs.versioncheckdays, (LPCTSTR)GetResString(IDS_DAYS2));
+	SetDlgItemText(IDC_DAYS, strBuffer);
 }
 
 BOOL CPPgGeneral::OnInitDialog()
@@ -115,36 +115,36 @@ BOOL CPPgGeneral::OnInitDialog()
 
 	CWordArray aLanguageIDs;
 	thePrefs.GetLanguages(aLanguageIDs);
-	for (int i = 0; i < aLanguageIDs.GetSize(); i++){
+	for (int i = 0; i < aLanguageIDs.GetSize(); i++) {
 		TCHAR szLang[128];
-		int ret=GetLocaleInfo(aLanguageIDs[i], LOCALE_SLANGUAGE, szLang, ARRSIZE(szLang));
+		int ret = GetLocaleInfo(aLanguageIDs[i], LOCALE_SLANGUAGE, szLang, ARRSIZE(szLang));
 
-		if (ret==0)
-			switch(aLanguageIDs[i]) {
-				case LANGID_UG_CN:
-					_tcscpy(szLang,_T("Uyghur") );
-					break;
-				case LANGID_GL_ES:
-					_tcscpy(szLang,_T("Galician") );
-					break;
-				case LANGID_FR_BR:
-					_tcscpy(szLang,_T("Breton (Brezhoneg)") );
-					break;
-				case LANGID_MT_MT:
-					_tcscpy(szLang,_T("Maltese") );
-					break;
-				case LANGID_ES_AS:
-					_tcscpy(szLang,_T("Asturian") );
-					break;
-				case LANGID_VA_ES:
-					_tcscpy(szLang,_T("Valencian") );
-					break;
-				case LANGID_VA_ES_RACV:
-					_tcscpy(szLang, _T("Valencian (RACV)"));
-					break;
-				default:
-					ASSERT(0);
-					_tcscpy(szLang,_T("?(unknown language)?") );
+		if (ret == 0)
+			switch (aLanguageIDs[i]) {
+			case LANGID_UG_CN:
+				_tcscpy(szLang, _T("Uyghur"));
+				break;
+			case LANGID_GL_ES:
+				_tcscpy(szLang, _T("Galician"));
+				break;
+			case LANGID_FR_BR:
+				_tcscpy(szLang, _T("Breton (Brezhoneg)"));
+				break;
+			case LANGID_MT_MT:
+				_tcscpy(szLang, _T("Maltese"));
+				break;
+			case LANGID_ES_AS:
+				_tcscpy(szLang, _T("Asturian"));
+				break;
+			case LANGID_VA_ES:
+				_tcscpy(szLang, _T("Valencian"));
+				break;
+			case LANGID_VA_ES_RACV:
+				_tcscpy(szLang, _T("Valencian (RACV)"));
+				break;
+			default:
+				ASSERT(0);
+				_tcscpy(szLang, _T("?(unknown language)?"));
 			}
 
 		m_language.SetItemData(m_language.AddString(szLang), aLanguageIDs[i]);
@@ -158,8 +158,8 @@ BOOL CPPgGeneral::OnInitDialog()
 
 	LoadSettings();
 	Localize();
-	GetDlgItem(IDC_CHECKDAYS)->ShowWindow( IsDlgButtonChecked(IDC_CHECK4UPDATE) ? SW_SHOW : SW_HIDE );
-	GetDlgItem(IDC_DAYS)->ShowWindow( IsDlgButtonChecked(IDC_CHECK4UPDATE) ? SW_SHOW : SW_HIDE );
+	GetDlgItem(IDC_CHECKDAYS)->ShowWindow(IsDlgButtonChecked(IDC_CHECK4UPDATE) ? SW_SHOW : SW_HIDE);
+	GetDlgItem(IDC_DAYS)->ShowWindow(IsDlgButtonChecked(IDC_CHECK4UPDATE) ? SW_SHOW : SW_HIDE);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
@@ -168,45 +168,39 @@ BOOL CPPgGeneral::OnInitDialog()
 void ModifyAllWindowStyles(CWnd* pWnd, DWORD dwRemove, DWORD dwAdd)
 {
 	CWnd* pWndChild = pWnd->GetWindow(GW_CHILD);
-	while (pWndChild)
-	{
+	while (pWndChild) {
 		ModifyAllWindowStyles(pWndChild, dwRemove, dwAdd);
 		pWndChild = pWndChild->GetNextWindow();
 	}
 
-	if (pWnd->ModifyStyleEx(dwRemove, dwAdd, SWP_FRAMECHANGED))
-	{
+	if (pWnd->ModifyStyleEx(dwRemove, dwAdd, SWP_FRAMECHANGED)) {
 		pWnd->Invalidate();
-//		pWnd->UpdateWindow();
+		//		pWnd->UpdateWindow();
 	}
 }
 
 BOOL CPPgGeneral::OnApply()
 {
 	CString strNick;
-	GetDlgItem(IDC_NICK)->GetWindowText(strNick);
+	GetDlgItemText(IDC_NICK, strNick);
 	strNick.Trim();
 	if (!IsValidEd2kString(strNick))
 		strNick.Empty();
-	if (strNick.IsEmpty())
-	{
+	if (strNick.IsEmpty()) {
 		strNick = DEFAULT_NICK;
-		GetDlgItem(IDC_NICK)->SetWindowText(strNick);
+		SetDlgItemText(IDC_NICK, strNick);
 	}
 	thePrefs.SetUserNick(strNick);
 
-	if (m_language.GetCurSel() != CB_ERR)
-	{
+	if (m_language.GetCurSel() != CB_ERR) {
 		WORD wNewLang = (WORD)m_language.GetItemData(m_language.GetCurSel());
-		if (thePrefs.GetLanguageID() != wNewLang)
-		{
+		if (thePrefs.GetLanguageID() != wNewLang) {
 			thePrefs.SetLanguageID(wNewLang);
 			thePrefs.SetLanguage();
 
 #ifdef _DEBUG
 			// Can't yet be switched on-the-fly, too much unresolved issues..
-			if (thePrefs.GetRTLWindowsLayout())
-			{
+			if (thePrefs.GetRTLWindowsLayout()) {
 				ModifyAllWindowStyles(theApp.emuledlg, WS_EX_LAYOUTRTL | WS_EX_RTLREADING | WS_EX_RIGHT | WS_EX_LEFTSCROLLBAR, 0);
 				ModifyAllWindowStyles(theApp.emuledlg->preferenceswnd, WS_EX_LAYOUTRTL | WS_EX_RTLREADING | WS_EX_RIGHT | WS_EX_LEFTSCROLLBAR, 0);
 				theApp.DisableRTLWindowsLayout();
@@ -229,17 +223,17 @@ BOOL CPPgGeneral::OnApply()
 		}
 	}
 
-	thePrefs.startMinimized = IsDlgButtonChecked(IDC_STARTMIN)!=0;
-	thePrefs.m_bAutoStart = IsDlgButtonChecked(IDC_STARTWIN)!=0;
-	if( thePrefs.m_bAutoStart )
+	thePrefs.startMinimized = IsDlgButtonChecked(IDC_STARTMIN) != 0;
+	thePrefs.m_bAutoStart = IsDlgButtonChecked(IDC_STARTWIN) != 0;
+	if (thePrefs.m_bAutoStart)
 		AddAutoStart();
 	else
 		RemAutoStart();
-	thePrefs.confirmExit = IsDlgButtonChecked(IDC_EXIT)!=0;
-	thePrefs.splashscreen = IsDlgButtonChecked(IDC_SPLASHON)!=0;
-	thePrefs.bringtoforeground = IsDlgButtonChecked(IDC_BRINGTOFOREGROUND)!=0;
-	thePrefs.updatenotify = IsDlgButtonChecked(IDC_CHECK4UPDATE)!=0;
-	thePrefs.onlineSig = IsDlgButtonChecked(IDC_ONLINESIG)!=0;
+	thePrefs.confirmExit = IsDlgButtonChecked(IDC_EXIT) != 0;
+	thePrefs.splashscreen = IsDlgButtonChecked(IDC_SPLASHON) != 0;
+	thePrefs.bringtoforeground = IsDlgButtonChecked(IDC_BRINGTOFOREGROUND) != 0;
+	thePrefs.updatenotify = IsDlgButtonChecked(IDC_CHECK4UPDATE) != 0;
+	thePrefs.onlineSig = IsDlgButtonChecked(IDC_ONLINESIG) != 0;
 	thePrefs.versioncheckdays = ((CSliderCtrl*)GetDlgItem(IDC_CHECKDAYS))->GetPos();
 	thePrefs.m_bEnableMiniMule = IsDlgButtonChecked(IDC_MINIMULE) != 0;
 	thePrefs.m_bPreventStandby = IsDlgButtonChecked(IDC_PREVENTSTANDBY) != 0;
@@ -269,24 +263,23 @@ void CPPgGeneral::OnBnClickedEd2kfix()
 
 void CPPgGeneral::Localize()
 {
-	if(m_hWnd)
-	{
+	if (m_hWnd) {
 		SetWindowText(GetResString(IDS_PW_GENERAL));
-		GetDlgItem(IDC_NICK_FRM)->SetWindowText(GetResString(IDS_QL_USERNAME));
-		GetDlgItem(IDC_LANG_FRM)->SetWindowText(GetResString(IDS_PW_LANG));
-		GetDlgItem(IDC_MISC_FRM)->SetWindowText(GetResString(IDS_PW_MISC));
-		GetDlgItem(IDC_EXIT)->SetWindowText(GetResString(IDS_PW_PROMPT));
-		GetDlgItem(IDC_SPLASHON)->SetWindowText(GetResString(IDS_PW_SPLASH));
-		GetDlgItem(IDC_BRINGTOFOREGROUND)->SetWindowText(GetResString(IDS_PW_FRONT));
-		GetDlgItem(IDC_ONLINESIG)->SetWindowText(GetResString(IDS_PREF_ONLINESIG));
-		GetDlgItem(IDC_STARTMIN)->SetWindowText(GetResString(IDS_PREF_STARTMIN));
-		GetDlgItem(IDC_WEBSVEDIT)->SetWindowText(GetResString(IDS_WEBSVEDIT));
-		GetDlgItem(IDC_ED2KFIX)->SetWindowText(GetResString(IDS_ED2KLINKFIX));
-		GetDlgItem(IDC_CHECK4UPDATE)->SetWindowText(GetResString(IDS_CHECK4UPDATE));
-		GetDlgItem(IDC_STARTUP)->SetWindowText(GetResString(IDS_STARTUP));
-		GetDlgItem(IDC_STARTWIN)->SetWindowText(GetResString(IDS_STARTWITHWINDOWS));
-		GetDlgItem(IDC_MINIMULE)->SetWindowText(GetResString(IDS_ENABLEMINIMULE));
-		GetDlgItem(IDC_PREVENTSTANDBY)->SetWindowText(GetResString(IDS_PREVENTSTANDBY));
+		SetDlgItemText(IDC_NICK_FRM, GetResString(IDS_QL_USERNAME));
+		SetDlgItemText(IDC_LANG_FRM, GetResString(IDS_PW_LANG));
+		SetDlgItemText(IDC_MISC_FRM, GetResString(IDS_PW_MISC));
+		SetDlgItemText(IDC_EXIT, GetResString(IDS_PW_PROMPT));
+		SetDlgItemText(IDC_SPLASHON, GetResString(IDS_PW_SPLASH));
+		SetDlgItemText(IDC_BRINGTOFOREGROUND, GetResString(IDS_PW_FRONT));
+		SetDlgItemText(IDC_ONLINESIG, GetResString(IDS_PREF_ONLINESIG));
+		SetDlgItemText(IDC_STARTMIN, GetResString(IDS_PREF_STARTMIN));
+		SetDlgItemText(IDC_WEBSVEDIT, GetResString(IDS_WEBSVEDIT));
+		SetDlgItemText(IDC_ED2KFIX, GetResString(IDS_ED2KLINKFIX));
+		SetDlgItemText(IDC_CHECK4UPDATE, GetResString(IDS_CHECK4UPDATE));
+		SetDlgItemText(IDC_STARTUP, GetResString(IDS_STARTUP));
+		SetDlgItemText(IDC_STARTWIN, GetResString(IDS_STARTWITHWINDOWS));
+		SetDlgItemText(IDC_MINIMULE, GetResString(IDS_ENABLEMINIMULE));
+		SetDlgItemText(IDC_PREVENTSTANDBY, GetResString(IDS_PREVENTSTANDBY));
 	}
 }
 
@@ -294,11 +287,11 @@ void CPPgGeneral::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	SetModified(TRUE);
 
-	if (pScrollBar==GetDlgItem(IDC_CHECKDAYS)) {
-		CSliderCtrl* slider =(CSliderCtrl*)pScrollBar;
+	if (pScrollBar == GetDlgItem(IDC_CHECKDAYS)) {
+		const CSliderCtrl* slider = (CSliderCtrl*)pScrollBar;
 		CString text;
-		text.Format(_T("%i %s"),slider->GetPos(), (LPCTSTR)GetResString(IDS_DAYS2));
-		GetDlgItem(IDC_DAYS)->SetWindowText(text);
+		text.Format(_T("%i %s"), slider->GetPos(), (LPCTSTR)GetResString(IDS_DAYS2));
+		SetDlgItemText(IDC_DAYS, text);
 	}
 
 	UpdateData(false);
@@ -315,12 +308,12 @@ void CPPgGeneral::OnLangChange()
 #define MIRRORS_URL	_T("http://langmirror%u.emule-project.org/lang/%u%u%u%u/")
 
 	LANGID newLangId = (LANGID)m_language.GetItemData(m_language.GetCurSel());
-	if (thePrefs.GetLanguageID() != newLangId){
-		if	(!thePrefs.IsLanguageSupported(newLangId)){
-			if (AfxMessageBox(GetResString(IDS_ASKDOWNLOADLANGCAP) + _T("\r\n\r\n") + GetResString(IDS_ASKDOWNLOADLANG), MB_ICONQUESTION | MB_YESNO) == IDYES){
+	if (thePrefs.GetLanguageID() != newLangId) {
+		if (!thePrefs.IsLanguageSupported(newLangId)) {
+			if (AfxMessageBox(GetResString(IDS_ASKDOWNLOADLANGCAP) + _T("\r\n\r\n") + GetResString(IDS_ASKDOWNLOADLANG), MB_ICONQUESTION | MB_YESNO) == IDYES) {
 				// download file
 				// create url, use random mirror for load balancing
-				UINT nRand = (rand()/(RAND_MAX/3))+1;
+				UINT nRand = (rand() / (RAND_MAX / 3)) + 1;
 				CString strUrl;
 				strUrl.Format(MIRRORS_URL, nRand, CemuleApp::m_nVersionMjr, CemuleApp::m_nVersionMin, CemuleApp::m_nVersionUpd, CemuleApp::m_nVersionBld);
 				strUrl += thePrefs.GetLangDLLNameByID(newLangId);
@@ -332,8 +325,7 @@ void CPPgGeneral::OnLangChange()
 				dlgDownload.m_strTitle = GetResString(IDS_DOWNLOAD_LANGFILE);
 				dlgDownload.m_sURLToDownload = strUrl;
 				dlgDownload.m_sFileToDownloadInto = strFilename;
-				if (dlgDownload.DoModal() == IDOK && thePrefs.IsLanguageSupported(newLangId))
-				{
+				if (dlgDownload.DoModal() == IDOK && thePrefs.IsLanguageSupported(newLangId)) {
 					// everything ok, new language downloaded and working
 					OnSettingsChange();
 					return;
@@ -344,11 +336,10 @@ void CPPgGeneral::OnLangChange()
 				AfxMessageBox(strErr, MB_ICONERROR | MB_OK);
 			}
 			// undo change selection
-			for(int i = 0; i < m_language.GetCount(); i++)
-				if(m_language.GetItemData(i) == thePrefs.GetLanguageID())
+			for (int i = 0; i < m_language.GetCount(); i++)
+				if (m_language.GetItemData(i) == thePrefs.GetLanguageID())
 					m_language.SetCurSel(i);
-		}
-		else
+		} else
 			OnSettingsChange();
 	}
 }
@@ -356,8 +347,8 @@ void CPPgGeneral::OnLangChange()
 void CPPgGeneral::OnBnClickedCheck4Update()
 {
 	SetModified();
-	GetDlgItem(IDC_CHECKDAYS)->ShowWindow( IsDlgButtonChecked(IDC_CHECK4UPDATE)?SW_SHOW:SW_HIDE );
-	GetDlgItem(IDC_DAYS)->ShowWindow( IsDlgButtonChecked(IDC_CHECK4UPDATE)?SW_SHOW:SW_HIDE );
+	GetDlgItem(IDC_CHECKDAYS)->ShowWindow(IsDlgButtonChecked(IDC_CHECK4UPDATE) ? SW_SHOW : SW_HIDE);
+	GetDlgItem(IDC_DAYS)->ShowWindow(IsDlgButtonChecked(IDC_CHECK4UPDATE) ? SW_SHOW : SW_HIDE);
 }
 
 void CPPgGeneral::OnHelp()
@@ -367,8 +358,7 @@ void CPPgGeneral::OnHelp()
 
 BOOL CPPgGeneral::OnCommand(WPARAM wParam, LPARAM lParam)
 {
-	if (wParam == ID_HELP)
-	{
+	if (wParam == ID_HELP) {
 		OnHelp();
 		return TRUE;
 	}

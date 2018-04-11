@@ -27,6 +27,7 @@
 #include "MenuCmds.h"
 #include "IESecurity.h"
 #include "UserMsgs.h"
+#include "opcodes.h"
 
 #if (WINVER < 0x0500)
 /* AnimateWindow() Commands */
@@ -120,7 +121,7 @@ CMiniMule::~CMiniMule()
 	ASSERT( m_iInInitDialog == 0);
 }
 
-STDMETHODIMP CMiniMule::GetOptionKeyPath(LPOLESTR* /*pchKey*/, DWORD /*dw*/)
+STDMETHODIMP CMiniMule::GetOptionKeyPath(LPOLESTR* /*pchKey*/, DWORD /*dw*/) noexcept
 {
 	ASSERT( GetCurrentThreadId() == g_uMainThreadId );
 	TRACE(_T("%hs\n"), __FUNCTION__);
@@ -425,10 +426,10 @@ void CMiniMule::UpdateContent(UINT uUpDatarate, UINT uDownDatarate)
 		DWORD dwModPathLen = GetModuleFileName(AfxGetResourceHandle(), szModulePath, _countof(szModulePath));
 		if (dwModPathLen != 0 && dwModPathLen < _countof(szModulePath))
 		{
-			CString strFilePathUrl(CreateFilePathUrl(szModulePath, INTERNET_SCHEME_RES));
 			CComPtr<IHTMLImgElement> elm;
 			GetElementInterface(_T("connectedImg"), &elm);
 			if (elm) {
+				CString strFilePathUrl(CreateFilePathUrl(szModulePath, INTERNET_SCHEME_RES));
 				CString strResourceURL;
 				strResourceURL.Format(_T("%s/%s"), (LPCTSTR)strFilePathUrl, _apszConnectedImgs[uIconIdx]);
 				elm->put_src(CComBSTR(strResourceURL));
@@ -450,7 +451,7 @@ void CMiniMule::UpdateContent(UINT uUpDatarate, UINT uDownDatarate)
 	SetElementHtml(_T("freeSpace"), CComBSTR(CastItoXBytes(GetFreeTempSpace(-1), false, false)));
 }
 
-STDMETHODIMP CMiniMule::TranslateUrl(DWORD /*dwTranslate*/, OLECHAR* pchURLIn, OLECHAR** ppchURLOut)
+STDMETHODIMP CMiniMule::TranslateUrl(DWORD /*dwTranslate*/, OLECHAR* pchURLIn, OLECHAR** ppchURLOut) noexcept
 {
 	ASSERT_VALID(this);
 	ASSERT( GetCurrentThreadId() == g_uMainThreadId );
@@ -698,7 +699,7 @@ void CMiniMule::CreateAutoCloseTimer()
 	ASSERT_VALID(this);
 	ASSERT( GetCurrentThreadId() == g_uMainThreadId );
 	if (m_uAutoCloseTimer == 0)
-		m_uAutoCloseTimer = SetTimer(IDT_AUTO_CLOSE_TIMER, 3000, NULL);
+		m_uAutoCloseTimer = SetTimer(IDT_AUTO_CLOSE_TIMER, SEC2MS(3), NULL);
 }
 
 void CMiniMule::KillAutoCloseTimer()
@@ -801,7 +802,7 @@ HRESULT CMiniMule::OnOptions(IHTMLElement* /*pElement*/)
 	return S_OK;
 }
 
-STDMETHODIMP CMiniMule::ShowContextMenu(DWORD /*dwID*/, POINT* /*ppt*/, IUnknown* /*pcmdtReserved*/, IDispatch* /*pdispReserved*/)
+STDMETHODIMP CMiniMule::ShowContextMenu(DWORD /*dwID*/, POINT* /*ppt*/, IUnknown* /*pcmdtReserved*/, IDispatch* /*pdispReserved*/) noexcept
 {
 	ASSERT_VALID(this);
 	ASSERT( GetCurrentThreadId() == g_uMainThreadId );
@@ -811,7 +812,7 @@ STDMETHODIMP CMiniMule::ShowContextMenu(DWORD /*dwID*/, POINT* /*ppt*/, IUnknown
 	return S_OK;	// S_OK = Host displayed its own user interface (UI). MSHTML will not attempt to display its UI.
 }
 
-STDMETHODIMP CMiniMule::TranslateAccelerator(LPMSG lpMsg, const GUID* /*pguidCmdGroup*/, DWORD /*nCmdID*/)
+STDMETHODIMP CMiniMule::TranslateAccelerator(LPMSG lpMsg, const GUID* /*pguidCmdGroup*/, DWORD /*nCmdID*/) noexcept
 {
 	ASSERT_VALID(this);
 	ASSERT( GetCurrentThreadId() == g_uMainThreadId );

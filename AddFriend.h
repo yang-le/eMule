@@ -24,11 +24,12 @@ class CAddFriend : public CDialog
 {
 	DECLARE_DYNAMIC(CAddFriend)
 
+	enum { IDD = IDD_ADDFRIEND };
+
 public:
 	CAddFriend();   // standard constructor
 	virtual ~CAddFriend();
 
-	enum { IDD = IDD_ADDFRIEND };
 	CFriend* m_pShowFriend;
 
 	void Localize();

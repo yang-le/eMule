@@ -9,7 +9,7 @@
 /**
  * returns the palette dimension in byte
  */
-uint32_t CxImage::GetPaletteSize() const
+size_t CxImage::GetPaletteSize() const
 {
 	return (head.biClrUsed * sizeof(RGBQUAD));
 }
@@ -394,13 +394,15 @@ uint8_t CxImage::GetNearestIndex(RGBQUAD c)
  * \param buffer : pointer to the pixels
  * \param length : number of bytes to swap. lenght may not exceed the scan line.
  */
-void CxImage::RGBtoBGR(uint8_t *buffer, int32_t length) const
+void CxImage::RGBtoBGR(uint8_t *buffer, size_t length) const
 {
-	if (buffer && (head.biClrUsed==0)){
-		length = min(length,(int32_t)info.dwEffWidth);
-		length = min(length,(int32_t)(3*head.biWidth));
-		for (int32_t i=0;i<length;i+=3){
-			uint8_t temp = buffer[i]; buffer[i] = buffer[i+2]; buffer[i+2] = temp;
+	if (buffer && (head.biClrUsed==0)) {
+		length = min(length, (size_t)info.dwEffWidth);
+		length = min(length, (size_t)(3*head.biWidth));
+		for (size_t i=0; i<length; i+=3) {
+			uint8_t temp = buffer[i];
+			buffer[i] = buffer[i+2];
+			buffer[i+2] = temp;
 		}
 	}
 }
@@ -813,7 +815,7 @@ bool CxImage::SetRectColor(int32_t left, int32_t top, int32_t right, int32_t bot
 	case 8:
 	{
 		uint8_t n = GetNearestIndex(color);
-		int32_t linelen = (endx - startx) * head.biBitCount >> 3;
+		int32_t linelen = ((endx - startx) * head.biBitCount) >> 3;
 		uint8_t* pDest = info.pImage + starty * info.dwEffWidth + (startx*head.biBitCount >> 3);
 		for(int32_t y=starty; y<endy; y++){
 			info.nProgress = (int32_t)(100*(y-starty)/(endy-starty));
@@ -824,7 +826,7 @@ bool CxImage::SetRectColor(int32_t left, int32_t top, int32_t right, int32_t bot
 	}
 	case 24:
 	{
-		int32_t linelen = (endx - startx) * head.biBitCount >> 3;
+		int32_t linelen = ((endx - startx) * head.biBitCount) >> 3;
 		uint8_t* pSrc = (uint8_t*)malloc(linelen);
 		if (0 == pSrc) return false;
 		for(int32_t x=0; x<linelen;){
@@ -862,11 +864,12 @@ bool CxImage::SetRectColor(int32_t left, int32_t top, int32_t right, int32_t bot
  */
 void CxImage::SetStdPalette()
 {
-	if (!pDib) return;
+	if (!pDib || !head.biClrUsed) //GetPalette() must be non-NULL
+		return;
 	switch (head.biBitCount){
 	case 8:
 		{
-			const uint8_t pal256[1024] = {0,0,0,0,0,0,128,0,0,128,0,0,0,128,128,0,128,0,0,0,128,0,128,0,128,128,0,0,192,192,192,0,
+			static const uint8_t pal256[1024] = {0,0,0,0,0,0,128,0,0,128,0,0,0,128,128,0,128,0,0,0,128,0,128,0,128,128,0,0,192,192,192,0,
 			192,220,192,0,240,202,166,0,212,240,255,0,177,226,255,0,142,212,255,0,107,198,255,0,
 			72,184,255,0,37,170,255,0,0,170,255,0,0,146,220,0,0,122,185,0,0,98,150,0,0,74,115,0,0,
 			50,80,0,212,227,255,0,177,199,255,0,142,171,255,0,107,143,255,0,72,115,255,0,37,87,255,0,0,
@@ -904,14 +907,14 @@ void CxImage::SetStdPalette()
 		}
 	case 4:
 		{
-			const uint8_t pal16[64]={0,0,0,0,0,0,128,0,0,128,0,0,0,128,128,0,128,0,0,0,128,0,128,0,128,128,0,0,192,192,192,0,
+			static const uint8_t pal16[64]={0,0,0,0,0,0,128,0,0,128,0,0,0,128,128,0,128,0,0,0,128,0,128,0,128,128,0,0,192,192,192,0,
 								128,128,128,0,0,0,255,0,0,255,0,0,0,255,255,0,255,0,0,0,255,0,255,0,255,255,0,0,255,255,255,0};
 			memcpy(GetPalette(),pal16,64);
 			break;
 		}
 	case 1:
 		{
-			const uint8_t pal2[8]={0,0,0,0,255,255,255,0};
+			static const uint8_t pal2[8]={0,0,0,0,255,255,255,0};
 			memcpy(GetPalette(),pal2,8);
 			break;
 		}

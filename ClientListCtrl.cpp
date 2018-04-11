@@ -86,36 +86,18 @@ void CClientListCtrl::Localize()
 	HDITEM hdi;
 	hdi.mask = HDI_TEXT;
 
-	CString strRes;
-	strRes = GetResString(IDS_QL_USERNAME);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(0, &hdi);
+	static const UINT uids[7] = {
+		IDS_QL_USERNAME, IDS_CL_UPLOADSTATUS, IDS_CL_TRANSFUP, IDS_CL_DOWNLSTATUS
+		, IDS_CL_TRANSFDOWN, IDS_CD_CSOFT, IDS_CONNECTED
+	};
 
-	strRes = GetResString(IDS_CL_UPLOADSTATUS);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(1, &hdi);
+	for (int i = 0; i < _countof(uids); ++i) {
+		CString strRes(GetResString(uids[i]));
+		hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
+		pHeaderCtrl->SetItem(i, &hdi);
+	}
 
-	strRes = GetResString(IDS_CL_TRANSFUP);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(2, &hdi);
-
-	strRes = GetResString(IDS_CL_DOWNLSTATUS);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(3, &hdi);
-
-	strRes = GetResString(IDS_CL_TRANSFDOWN);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(4, &hdi);
-
-	strRes = GetResString(IDS_CD_CSOFT);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(5, &hdi);
-
-	strRes = GetResString(IDS_CONNECTED);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(6, &hdi);
-
-	strRes = GetResString(IDS_CD_UHASH);
+	CString strRes = GetResString(IDS_CD_UHASH);
 	strRes.Remove(_T(':'));
 	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
 	pHeaderCtrl->SetItem(7, &hdi);
@@ -336,9 +318,9 @@ void CClientListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 int CALLBACK CClientListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const CUpDownClient *item1 = reinterpret_cast<const CUpDownClient *>(lParam1);
-	const CUpDownClient *item2 = reinterpret_cast<const CUpDownClient *>(lParam2);
-	int iColumn = (lParamSort >= 100) ? lParamSort - 100 : lParamSort;
+	const CUpDownClient *item1 = reinterpret_cast<CUpDownClient *>(lParam1);
+	const CUpDownClient *item2 = reinterpret_cast<CUpDownClient *>(lParam2);
+	LONG_PTR iColumn = (lParamSort >= 100) ? lParamSort - 100 : lParamSort;
 	int iResult = 0;
 	switch (iColumn)
 	{
@@ -413,7 +395,7 @@ int CALLBACK CClientListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 
 	//call secondary sortorder, if this one results in equal
 	if (iResult == 0) {
-		LPARAM dwNextSort = theApp.emuledlg->transferwnd->GetClientList()->GetNextSortOrder(lParamSort);
+		int dwNextSort = theApp.emuledlg->transferwnd->GetClientList()->GetNextSortOrder((int)lParamSort);
 		if (dwNextSort != -1)
 			iResult = SortProc(lParam1, lParam2, dwNextSort);
 	}

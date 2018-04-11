@@ -33,7 +33,7 @@ void CIni::AddModulPath(CString &rstrFileName, bool bModulPath)
 			// fix by "cpp@world-online.no"
 			strModule.TrimRight(_T('\\'));
 			strModule.TrimRight(_T('/'));
-			strModule += _T("\\");
+			strModule += _T('\\');
 		}
 		_tsplitpath(strModule, drive, dir, fname, ext);
 		strModule = drive;
@@ -73,7 +73,7 @@ CString CIni::GetDefaultIniFile(bool bModulPath)
 		strApplName.ReleaseBuffer((dwCurDirLen == 0 || dwCurDirLen >= MAX_PATH) ? 0 : -1);
 		strApplName.TrimRight(_T('\\'));
 		strApplName.TrimRight(_T('/'));
-		strApplName += _T("\\");
+		strApplName += _T('\\');
 		strApplName += strTemp;
 	}
 	return strApplName;
@@ -88,10 +88,10 @@ CIni::CIni()
 }
 
 CIni::CIni(const CIni& Ini)
-	: m_strFileName(Ini.m_strFileName)
-	, m_strSection(Ini.m_strSection)
-	, m_bModulPath(Ini.m_bModulPath)
+	: m_bModulPath(Ini.m_bModulPath)
 	, m_chBuffer()
+	, m_strFileName(Ini.m_strFileName)
+	, m_strSection(Ini.m_strSection)
 {
 	if (m_strFileName.IsEmpty())
 		m_strFileName = GetDefaultIniFile(m_bModulPath);
@@ -101,9 +101,9 @@ CIni::CIni(const CIni& Ini)
 }
 
 CIni::CIni(const CString& rstrFileName)
-	: m_strFileName(rstrFileName)
-	, m_bModulPath(true)
+	: m_bModulPath(true)
 	, m_chBuffer()
+	, m_strFileName(rstrFileName)
 {
 	if (m_strFileName.IsEmpty())
 		m_strFileName = GetDefaultIniFile(m_bModulPath);
@@ -112,10 +112,10 @@ CIni::CIni(const CString& rstrFileName)
 }
 
 CIni::CIni(const CString& rstrFileName, const CString& rstrSection)
-	: m_strFileName(rstrFileName)
-	, m_strSection(rstrSection)
-	, m_bModulPath(true)
+	: m_bModulPath(true)
 	, m_chBuffer()
+	, m_strFileName(rstrFileName)
+	, m_strSection(rstrSection)
 {
 	if (m_strFileName.IsEmpty())
 		m_strFileName = GetDefaultIniFile(m_bModulPath);
@@ -194,8 +194,8 @@ CString CIni::GetStringUTF8(LPCTSTR lpszEntry, LPCTSTR lpszDefault, LPCTSTR lpsz
 		m_strSection = lpszSection;
 
 	CStringA strUTF8;
-	GetPrivateProfileStringA(CT2CA(m_strSection), CT2CA(lpszEntry), CT2CA(lpszDefault),
-							 strUTF8.GetBufferSetLength(MAX_INI_BUFFER), MAX_INI_BUFFER, CT2CA(m_strFileName));
+	GetPrivateProfileStringA(CStringA(m_strSection), CStringA(lpszEntry), CStringA(lpszDefault),
+							 strUTF8.GetBufferSetLength(MAX_INI_BUFFER), MAX_INI_BUFFER, CStringA(m_strFileName));
 	strUTF8.ReleaseBuffer();
 	return OptUtf8ToStr(strUTF8);
 }
@@ -314,8 +314,7 @@ void CIni::WriteStringUTF8(LPCTSTR lpszEntry, LPCTSTR lpsz, LPCTSTR lpszSection)
 {
 	if (lpszSection != NULL)
 		m_strSection = lpszSection;
-	CString str(lpsz);
-	WritePrivateProfileStringA(CT2CA(m_strSection), CT2CA(lpszEntry), StrToUtf8(str), CT2CA(m_strFileName));
+	WritePrivateProfileStringA(CStringA(m_strSection), CStringA(lpszEntry), StrToUtf8(CString(lpsz)), CStringA(m_strFileName));
 }
 
 void CIni::WriteDouble(LPCTSTR lpszEntry, double f, LPCTSTR lpszSection)
@@ -540,16 +539,16 @@ void CIni::SerGet(bool bGet, CString *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR
 		if (bGet) {
 			strBuffer = GetString(lpszEntry, _T(""), lpszSection);
 			int nOffset = 0;
-			for (int i = 0; i < nCount; i++) {
+			for (int i = 0; i < nCount; ++i) {
 				nOffset = Parse(strBuffer, nOffset, ar[i]);
 				if (ar[i].IsEmpty())
 					ar[i] = lpszDefault;
 			}
 		} else {
 			strBuffer = ar[0];
-			for (int i = 1; i < nCount; i++) {
-				strBuffer.AppendChar(_T(','));
-				strBuffer.Append(ar[i]);
+			for (int i = 1; i < nCount; ++i) {
+				strBuffer += _T(',');
+				strBuffer += ar[i];
 			}
 			WriteString(lpszEntry, strBuffer, lpszSection);
 		}
@@ -564,21 +563,14 @@ void CIni::SerGet(bool bGet, double *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR 
 			strBuffer = GetString(lpszEntry, _T(""), lpszSection);
 			CString strTemp;
 			int nOffset = 0;
-			for (int i = 0; i < nCount; i++) {
+			for (int i = 0; i < nCount; ++i) {
 				nOffset = Parse(strBuffer, nOffset, strTemp);
-				if (strTemp.IsEmpty())
-					ar[i] = fDefault;
-				else
-					ar[i] = _tstof(strTemp);
+				ar[i] = strTemp.IsEmpty() ? fDefault : _tstof(strTemp);
 			}
 		} else {
-			CString strTemp;
 			strBuffer.Format(_T("%g"), ar[0]);
-			for (int i = 1; i < nCount; i++) {
-				strTemp.Format(_T("%g"), ar[i]);
-				strBuffer.AppendChar(_T(','));
-				strBuffer.Append(strTemp);
-			}
+			for (int i = 1; i < nCount; ++i)
+				strBuffer.AppendFormat(_T(",%g"), ar[i]);
 			WriteString(lpszEntry, strBuffer, lpszSection);
 		}
 	}
@@ -592,21 +584,14 @@ void CIni::SerGet(bool bGet, float *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR l
 			strBuffer = GetString(lpszEntry, _T(""), lpszSection);
 			CString strTemp;
 			int nOffset = 0;
-			for (int i = 0; i < nCount; i++) {
+			for (int i = 0; i < nCount; ++i) {
 				nOffset = Parse(strBuffer, nOffset, strTemp);
-				if (strTemp.IsEmpty())
-					ar[i] = fDefault;
-				else
-					ar[i] = (float)_tstof(strTemp);
+				ar[i] = strTemp.IsEmpty() ? fDefault : (float)_tstof(strTemp);
 			}
 		} else {
-			CString strTemp;
 			strBuffer.Format(_T("%g"), ar[0]);
-			for (int i = 1; i < nCount; i++) {
-				strTemp.Format(_T("%g"), ar[i]);
-				strBuffer.AppendChar(_T(','));
-				strBuffer.Append(strTemp);
-			}
+			for (int i = 1; i < nCount; ++i)
+				strBuffer.AppendFormat(_T(",%g"), ar[i]);
 			WriteString(lpszEntry, strBuffer, lpszSection);
 		}
 	}
@@ -620,21 +605,14 @@ void CIni::SerGet(bool bGet, BYTE *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lp
 			strBuffer = GetString(lpszEntry, _T(""), lpszSection);
 			CString strTemp;
 			int nOffset = 0;
-			for (int i = 0; i < nCount; i++) {
+			for (int i = 0; i < nCount; ++i) {
 				nOffset = Parse(strBuffer, nOffset, strTemp);
-				if (strTemp.IsEmpty())
-					ar[i] = nDefault;
-				else
-					ar[i] = (BYTE)_tstoi(strTemp);
+				ar[i] = strTemp.IsEmpty() ? nDefault : (BYTE)_tstoi(strTemp);
 			}
 		} else {
-			CString strTemp;
 			strBuffer.Format(_T("%d"), ar[0]);
-			for (int i = 1; i < nCount; i++) {
-				strTemp.Format(_T("%d"), ar[i]);
-				strBuffer.AppendChar(_T(','));
-				strBuffer.Append(strTemp);
-			}
+			for (int i = 1; i < nCount; ++i)
+				strBuffer.AppendFormat(_T(",%d"), ar[i]);
 			WriteString(lpszEntry, strBuffer, lpszSection);
 		}
 	}
@@ -648,21 +626,14 @@ void CIni::SerGet(bool bGet, int *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lps
 			strBuffer = GetString(lpszEntry, _T(""), lpszSection);
 			CString strTemp;
 			int nOffset = 0;
-			for (int i = 0; i < nCount; i++) {
+			for (int i = 0; i < nCount; ++i) {
 				nOffset = Parse(strBuffer, nOffset, strTemp);
-				if (strTemp.IsEmpty())
-					ar[i] = iDefault;
-				else
-					ar[i] = _tstoi(strTemp);
+				ar[i] = strTemp.IsEmpty() ? iDefault : _tstoi(strTemp);
 			}
 		} else {
-			CString strTemp;
 			strBuffer.Format(_T("%d"), ar[0]);
-			for (int i = 1; i < nCount; i++) {
-				strTemp.Format(_T("%d"), ar[i]);
-				strBuffer.AppendChar(_T(','));
-				strBuffer.Append(strTemp);
-			}
+			for (int i = 1; i < nCount; ++i)
+				strBuffer.AppendFormat(_T(",%d"), ar[i]);
 			WriteString(lpszEntry, strBuffer, lpszSection);
 		}
 	}
@@ -676,21 +647,14 @@ void CIni::SerGet(bool bGet, short *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR l
 			strBuffer = GetString(lpszEntry, _T(""), lpszSection);
 			CString strTemp;
 			int nOffset = 0;
-			for (int i = 0; i < nCount; i++) {
+			for (int i = 0; i < nCount; ++i) {
 				nOffset = Parse(strBuffer, nOffset, strTemp);
-				if (strTemp.IsEmpty())
-					ar[i] = (short)iDefault;
-				else
-					ar[i] = (short)_tstoi(strTemp);
+				ar[i] = (short)(strTemp.IsEmpty() ? iDefault : _tstoi(strTemp));
 			}
 		} else {
-			CString strTemp;
 			strBuffer.Format(_T("%d"), ar[0]);
-			for (int i = 1; i < nCount; i++) {
-				strTemp.Format(_T("%d"), ar[i]);
-				strBuffer.AppendChar(_T(','));
-				strBuffer.Append(strTemp);
-			}
+			for (int i = 1; i < nCount; ++i)
+				strBuffer.AppendFormat(_T(",%d"), ar[i]);
 			WriteString(lpszEntry, strBuffer, lpszSection);
 		}
 	}
@@ -704,21 +668,14 @@ void CIni::SerGet(bool bGet, DWORD *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR l
 			strBuffer = GetString(lpszEntry, _T(""), lpszSection);
 			CString strTemp;
 			int nOffset = 0;
-			for (int i = 0; i < nCount; i++) {
+			for (int i = 0; i < nCount; ++i) {
 				nOffset = Parse(strBuffer, nOffset, strTemp);
-				if(strTemp.IsEmpty())
-					ar[i] = dwDefault;
-				else
-					ar[i] = (DWORD)_tstoi(strTemp);
+				ar[i] = strTemp.IsEmpty() ? dwDefault : (DWORD)_tstoi(strTemp);
 			}
 		} else {
-			CString strTemp;
 			strBuffer.Format(_T("%lu"), ar[0]);
-			for (int i = 1; i < nCount; i++) {
-				strTemp.Format(_T("%lu"), ar[i]);
-				strBuffer.AppendChar(_T(','));
-				strBuffer.Append(strTemp);
-			}
+			for (int i = 1; i < nCount; ++i)
+				strBuffer.AppendFormat(_T(",%lu"), ar[i]);
 			WriteString(lpszEntry, strBuffer, lpszSection);
 		}
 	}
@@ -732,21 +689,14 @@ void CIni::SerGet(bool bGet, WORD *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lp
 			strBuffer = GetString(lpszEntry, _T(""), lpszSection);
 			CString strTemp;
 			int nOffset = 0;
-			for (int i = 0; i < nCount; i++) {
+			for (int i = 0; i < nCount; ++i) {
 				nOffset = Parse(strBuffer, nOffset, strTemp);
-				if (strTemp.IsEmpty())
-					ar[i] = (WORD)dwDefault;
-				else
-					ar[i] = (WORD)_tstoi(strTemp);
+				ar[i] = (WORD)(strTemp.IsEmpty() ? dwDefault : _tstoi(strTemp));
 			}
 		} else {
-			CString strTemp;
 			strBuffer.Format(_T("%d"), ar[0]);
-			for (int i = 1; i < nCount; i++) {
-				strTemp.Format(_T("%d"), ar[i]);
-				strBuffer.AppendChar(_T(','));
-				strBuffer.Append(strTemp);
-			}
+			for (int i = 1; i < nCount; ++i)
+				strBuffer.AppendFormat(_T(",%d"), ar[i]);
 			WriteString(lpszEntry, strBuffer, lpszSection);
 		}
 	}
@@ -755,10 +705,8 @@ void CIni::SerGet(bool bGet, WORD *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lp
 void CIni::SerGet(bool bGet, CPoint *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection, const CPoint& ptDefault)
 {
 	CString strBuffer;
-	for (int i = 0; i < nCount; i++)
-	{
-		strBuffer.Format(_T("_%i"), i);
-		strBuffer = lpszEntry + strBuffer;
+	for (int i = 0; i < nCount; ++i) {
+		strBuffer.Format(_T("%s_%i"), lpszEntry, i);
 		SerGet(bGet, ar[i], strBuffer, lpszSection, ptDefault);
 	}
 }
@@ -766,10 +714,8 @@ void CIni::SerGet(bool bGet, CPoint *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR 
 void CIni::SerGet(bool bGet, CRect *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR lpszSection, const CRect& rcDefault)
 {
 	CString strBuffer;
-	for (int i = 0; i < nCount; i++)
-	{
-		strBuffer.Format(_T("_%i"), i);
-		strBuffer = lpszEntry + strBuffer;
+	for (int i = 0; i < nCount; ++i) {
+		strBuffer.Format(_T("%s_%i"), lpszEntry, i);
 		SerGet(bGet, ar[i], strBuffer, lpszSection, rcDefault);
 	}
 }
@@ -781,12 +727,12 @@ int CIni::Parse(const CString &strIn, int nOffset, CString &strOut)
 
 	if (nOffset < nLength) {
 		if (nOffset != 0 && strIn[nOffset] == _T(','))
-			nOffset++;
+			++nOffset;
 
 		while (nOffset < nLength) {
-			if (!_istspace((_TUCHAR)strIn[nOffset]))
+			if (!_istspace(strIn[nOffset]))
 				break;
-			nOffset++;
+			++nOffset;
 		}
 
 		while (nOffset < nLength) {
@@ -802,22 +748,22 @@ int CIni::Parse(const CString &strIn, int nOffset, CString &strOut)
 CString CIni::Read(LPCTSTR lpszFileName, LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTSTR lpszDefault)
 {
 	CString strReturn;
-	GetPrivateProfileString(lpszSection,
-							lpszEntry,
-							lpszDefault,
-							strReturn.GetBufferSetLength(MAX_INI_BUFFER),
-							MAX_INI_BUFFER,
-							lpszFileName);
+	GetPrivateProfileString(lpszSection
+							,lpszEntry
+							,lpszDefault
+							,strReturn.GetBufferSetLength(MAX_INI_BUFFER)
+							,MAX_INI_BUFFER
+							,lpszFileName);
 	strReturn.ReleaseBuffer();
 	return strReturn;
 }
 
 void CIni::Write(LPCTSTR lpszFileName, LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTSTR lpszValue)
 {
-	WritePrivateProfileString(lpszSection,
-							  lpszEntry,
-							  lpszValue,
-							  lpszFileName);
+	WritePrivateProfileString(lpszSection
+							 ,lpszEntry
+							 ,lpszValue
+							 ,lpszFileName);
 }
 
 bool CIni::GetBinary(LPCTSTR lpszEntry, BYTE** ppData, UINT* pBytes, LPCTSTR pszSection)
@@ -826,16 +772,15 @@ bool CIni::GetBinary(LPCTSTR lpszEntry, BYTE** ppData, UINT* pBytes, LPCTSTR psz
 	*pBytes = 0;
 
 	CString str = GetString(lpszEntry, NULL, pszSection);
-	if (str.IsEmpty())
+	int nLen = str.GetLength();
+	ASSERT(nLen % 2 == 0);
+	if (nLen <= 1)
 		return false;
-	ASSERT(str.GetLength()%2 == 0);
-	INT_PTR nLen = str.GetLength();
-	*pBytes = UINT(nLen/2);
-	*ppData = new BYTE[*pBytes];
-	for (int i=0;i<nLen;i+=2)
-	{
-		(*ppData)[i/2] = (BYTE)(((str[i+1] - 'A') << 4) + (str[i] - 'A'));
-	}
+	BYTE *pb = new BYTE[nLen / 2];
+	*ppData = pb;
+	*pBytes = UINT(nLen / 2);
+	for (int i = 0; i < nLen; i += 2)
+		*pb++ = (BYTE)(((str[i+1] - 'A') << 4) + (str[i] - 'A'));
 	return true;
 }
 
@@ -843,13 +788,12 @@ bool CIni::WriteBinary(LPCTSTR lpszEntry, LPBYTE pData, UINT nBytes, LPCTSTR lps
 {
 	// convert to string and write out
 	LPTSTR lpsz = new TCHAR[nBytes*2+1];
-	UINT i;
-	for (i = 0; i < nBytes; ++i) {
-		lpsz[i*2] = (TCHAR)((pData[i] & 0x0F) + 'A'); //low nibble
-		lpsz[i*2+1] = (TCHAR)(((pData[i] >> 4) & 0x0F) + 'A'); //high nibble
+	LPTSTR p = lpsz;
+	for (UINT i = 0; i < nBytes; ++i) {
+		*p++ = (TCHAR)((*pData & 0x0F) + 'A'); //low nibble
+		*p++ = (TCHAR)(((*pData++ >> 4) & 0x0F) + 'A'); //high nibble
 	}
-	lpsz[i*2] = 0;
-
+	*p = 0;
 
 	WriteString(lpszEntry, lpsz, lpszSection);
 	delete[] lpsz;

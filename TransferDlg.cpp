@@ -180,15 +180,12 @@ BOOL CTransferDlg::OnHelpInfo(HELPINFO* /*pHelpInfo*/)
 
 void CTransferDlg::ShowToolbar(bool bShow)
 {
-	if ((m_pwndToolbar->IsVisible() ? true : false) != bShow)
+	if (static_cast<bool>(m_pwndToolbar->IsVisible()) != bShow)
 	{
 		if (thePrefs.IsDownloadToolbarEnabled() || !bShow)
-			ShowControlBar(m_pwndToolbar, bShow ? TRUE : FALSE, TRUE);
+			ShowControlBar(m_pwndToolbar, static_cast<BOOL>(bShow), TRUE);
 	}
 }
-
-
-
 
 
 
@@ -215,7 +212,7 @@ void CTransferDlg::VerifyCatTabSize()
 	m_pwndTransfer->VerifyCatTabSize();
 }
 
-int	 CTransferDlg::AddCategoryInteractive()
+int CTransferDlg::AddCategoryInteractive()
 {
 	return m_pwndTransfer->AddCategoryInteractive();
 }
@@ -245,7 +242,7 @@ void CTransferDlg::UpdateListCount(EWnd2 listindex, int iCount)
 	m_pwndTransfer->UpdateListCount((CTransferWnd::EWnd2)listindex, iCount);
 }
 
-int	CTransferDlg::AddCategory(const CString& newtitle, const CString& newincoming, const CString& newcomment, const CString& newautocat, bool addTab)
+int CTransferDlg::AddCategory(const CString& newtitle, const CString& newincoming, const CString& newcomment, const CString& newautocat, bool addTab)
 {
 	return m_pwndTransfer->AddCategory(newtitle, newincoming, newcomment, newautocat, addTab);
 }

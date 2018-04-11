@@ -169,7 +169,7 @@ LRESULT CSearchResultFileDetailSheet::OnDataChanged(WPARAM, LPARAM)
 void CSearchResultFileDetailSheet::UpdateTitle()
 {
 	if (m_aItems.GetSize() == 1)
-		SetWindowText(GetResString(IDS_DETAILS) + _T(": ") + STATIC_DOWNCAST(CSearchFile, m_aItems[0])->GetFileName());
+		SetWindowText(GetResString(IDS_DETAILS) + _T(": ") + static_cast<CSearchFile *>(m_aItems[0])->GetFileName());
 	else
 		SetWindowText(GetResString(IDS_DETAILS));
 }
@@ -316,10 +316,11 @@ CSearchListCtrl::~CSearchListCtrl()
 
 void CSearchListCtrl::Localize()
 {
-	static const UINT ids[15] =
-		{ IDS_DL_FILENAME, IDS_DL_SIZE, IDS_SEARCHAVAIL, IDS_COMPLSOURCES, IDS_TYPE
+	static const UINT ids[15] =	{
+		IDS_DL_FILENAME, IDS_DL_SIZE, IDS_SEARCHAVAIL, IDS_COMPLSOURCES, IDS_TYPE
 		, IDS_FILEID, IDS_ARTIST, IDS_ALBUM, IDS_TITLE, IDS_LENGTH
-		, IDS_BITRATE, IDS_CODEC, IDS_FOLDER, IDS_KNOWN, IDS_AICHHASH};
+		, IDS_BITRATE, IDS_CODEC, IDS_FOLDER, IDS_KNOWN, IDS_AICHHASH
+	};
 
 	CHeaderCtrl* pHeaderCtrl = GetHeaderCtrl();
 	HDITEM hdi;
@@ -354,7 +355,7 @@ void CSearchListCtrl::AddResult(const CSearchFile* toshow)
 		{
 			if (searchselect.GetItem(iItem, &ti) && ti.lParam != NULL)
 			{
-				const SSearchParams* pSearchParams = (SSearchParams*)ti.lParam;
+				const SSearchParams* pSearchParams = reinterpret_cast<SSearchParams *>(ti.lParam);
 				if (pSearchParams->dwSearchID == toshow->GetSearchID())
 				{
 					UINT iAvailResults = searchlist->GetFoundFiles(toshow->GetSearchID());
@@ -601,9 +602,9 @@ void CSearchListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 int CALLBACK CSearchListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const CSearchFile *item1 = reinterpret_cast<const CSearchFile *>(lParam1);
-	const CSearchFile *item2 = reinterpret_cast<const CSearchFile *>(lParam2);
-	int orgSort = lParamSort;
+	const CSearchFile *item1 = reinterpret_cast<CSearchFile *>(lParam1);
+	const CSearchFile *item2 = reinterpret_cast<CSearchFile *>(lParam2);
+	int orgSort = (int)lParamSort;
 	int sortMod = 1;
 	if (lParamSort >= 100) {
 		sortMod = -1;
@@ -629,18 +630,17 @@ int CALLBACK CSearchListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 		if (comp != 0)
 			return sortMod * comp;
 
-		if ((item1->GetListParent()==NULL && item2->GetListParent()!=NULL) || (item2->GetListParent()==NULL && item1->GetListParent()!=NULL)){
+		if ((item1->GetListParent()==NULL && item2->GetListParent()!=NULL) || (item2->GetListParent()==NULL && item1->GetListParent()!=NULL)) {
 			if (item1->GetListParent() == NULL)
 				return -1;
-			else
-				return 1;
+			return 1;
 		}
 		comp = CompareChild(item1, item2, lParamSort);
 	}
 
 	//call secondary sortorder, if this one results in equal
 	if (comp == 0) {
-		LPARAM dwNextSort = theApp.emuledlg->searchwnd->m_pwndResults->searchlistctrl.GetNextSortOrder(orgSort);
+		int dwNextSort = theApp.emuledlg->searchwnd->m_pwndResults->searchlistctrl.GetNextSortOrder(orgSort);
 		if (dwNextSort != -1)
 			comp = SortProc(lParam1, lParam2, dwNextSort);
 	}
@@ -650,24 +650,21 @@ int CALLBACK CSearchListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 
 int CSearchListCtrl::CompareChild(const CSearchFile *item1, const CSearchFile *item2, LPARAM lParamSort)
 {
-	int iColumn = lParamSort >= 100 ? lParamSort - 100 : lParamSort;
+	LPARAM iColumn = lParamSort >= 100 ? lParamSort - 100 : lParamSort;
 	int iResult = 0;
-	switch (iColumn)
-	{
-		case 0:		//filename
-			iResult = CompareLocaleStringNoCase(item1->GetFileName(), item2->GetFileName());
-			break;
-
-		case 14: // AICH Hash
-			iResult = CompareAICHHash(item1->GetFileIdentifierC(), item2->GetFileIdentifierC(), true);
-			break;
-		default:
-			// always sort by descending availability
-			iResult = -CompareUnsigned(item1->GetSourceCount(), item2->GetSourceCount());
-			break;
+	switch (iColumn) {
+	case 0:		//filename
+		iResult = CompareLocaleStringNoCase(item1->GetFileName(), item2->GetFileName());
+		break;
+	case 14: // AICH Hash
+		iResult = CompareAICHHash(item1->GetFileIdentifierC(), item2->GetFileIdentifierC(), true);
+		break;
+	default:
+		// always sort by descending availability
+		iResult = -CompareUnsigned(item1->GetSourceCount(), item2->GetSourceCount());
 	}
 	if (lParamSort >= 100)
-		iResult = -iResult;
+		return -iResult;
 	return iResult;
 }
 
@@ -907,16 +904,15 @@ BOOL CSearchListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 				return TRUE;
 			}
 			case MP_PREVIEW:
-				if (file){
-					if (file->GetPreviews().GetSize() > 0){
+				if (file) {
+					if (file->GetPreviews().GetSize() > 0) {
 						// already have previews
 						(new PreviewDlg())->SetFile(file);
-					}
-					else{
-						CUpDownClient* newclient = new CUpDownClient(NULL, file->GetClientPort(),file->GetClientID(),file->GetClientServerIP(),file->GetClientServerPort(), true);
-						if (!theApp.clientlist->AttachToAlreadyKnown(&newclient,NULL)){
+					} else {
+						CUpDownClient* newclient = new CUpDownClient(NULL, file->GetClientPort(), file->GetClientID(), file->GetClientServerIP(), file->GetClientServerPort(), true);
+						if (!theApp.clientlist->AttachToAlreadyKnown(&newclient, NULL))
 							theApp.clientlist->AddClient(newclient);
-						}
+
 						newclient->SendPreviewRequest(file);
 						// add to res - later
 						AddLogLine(true, _T("Preview Requested - Please wait"));
@@ -960,7 +956,7 @@ BOOL CSearchListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 			}
 			default:
 				if (wParam>=MP_WEBURL && wParam<=MP_WEBURL+256){
-					theWebServices.RunURL(file, wParam);
+					theWebServices.RunURL(file, (UINT)wParam);
 					return TRUE;
 				}
 				break;
@@ -1056,10 +1052,10 @@ void CSearchListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 		    const CSearchFile* file = (CSearchFile*)GetItemData(pGetInfoTip->iItem);
 			if (file && pGetInfoTip->pszText && pGetInfoTip->cchTextMax > 0){
 			    CString strInfo, strHead;
-				strHead.Format(_T("%s\n")
-							   + GetResString(IDS_FD_HASH) + _T(" %s\n")
-							   + GetResString(IDS_FD_SIZE) + _T(" %s\n<br_head>\n"),
-							   (LPCTSTR)file->GetFileName(), (LPCTSTR)md4str(file->GetFileHash()), (LPCTSTR)CastItoXBytes(file->GetFileSize(), false, false));
+				strHead.Format(_T("%s\n") _T("%s %s\n") _T("%s %s\n<br_head>\n")
+					, (LPCTSTR)file->GetFileName()
+					, (LPCTSTR)GetResString(IDS_FD_HASH), (LPCTSTR)md4str(file->GetFileHash())
+					, (LPCTSTR)GetResString(IDS_FD_SIZE), (LPCTSTR)CastItoXBytes(file->GetFileSize(), false, false));
 
 				const CArray<CTag*,CTag*>& tags = file->GetTags();
 			    for (int i = 0; i < tags.GetSize(); i++){
@@ -1138,21 +1134,22 @@ void CSearchListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 										szBuff[_countof(szBuff) - 1] = _T('\0');
 									    strTag += szBuff;
 								    }
-								    else if (!bSkipTag){
-								    #ifdef _DEBUG
+								    else //!bSkipTag always true
+#ifdef _DEBUG
+									{
 									    CString strBuff;
 									    strBuff.Format(_T("Unknown value type=#%02X"), tag->GetType());
 									    strTag += strBuff;
-								    #else
+									}
+#else
 									    strTag.Empty();
-								    #endif
-								    }
+#endif
 							    }
 						    }
 					    }
 					    if (!strTag.IsEmpty()){
 						    if (!strInfo.IsEmpty())
-								strInfo += _T("\n");
+								strInfo += _T('\n');
 						    strInfo += strTag;
 						    if (strInfo.GetLength() >= pGetInfoTip->cchTextMax)
 							    break;
@@ -1175,7 +1172,7 @@ void CSearchListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 						    (uint8)uClientIP,(uint8)(uClientIP>>8),(uint8)(uClientIP>>16),(uint8)(uClientIP>>24), file->GetClientPort(),
 						    (uint8)uServerIP,(uint8)(uServerIP>>8),(uint8)(uServerIP>>16),(uint8)(uServerIP>>24), file->GetClientServerPort());
 					    if (!strInfo.IsEmpty())
-						    strInfo += _T("\n");
+						    strInfo += _T('\n');
 					    strInfo += strSource;
 				    }
 
@@ -1192,7 +1189,7 @@ void CSearchListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 						    (uint8)uClientIP,(uint8)(uClientIP>>8),(uint8)(uClientIP>>16),(uint8)(uClientIP>>24), aClients[i].m_nPort,
 						    (uint8)uServerIP,(uint8)(uServerIP>>8),(uint8)(uServerIP>>16),(uint8)(uServerIP>>24), aClients[i].m_nServerPort);
 					    if (!strInfo.IsEmpty())
-						    strInfo += _T("\n");
+						    strInfo += _T('\n');
 					    strInfo += strSource;
 					    if (strInfo.GetLength() >= pGetInfoTip->cchTextMax)
 						    break;
@@ -1209,15 +1206,16 @@ void CSearchListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 						strServer.AppendFormat(_T(": %u.%u.%u.%u:%u  Avail: %u"),
 						    (uint8)uServerIP,(uint8)(uServerIP>>8),(uint8)(uServerIP>>16),(uint8)(uServerIP>>24), aServers[i].m_nPort, aServers[i].m_uAvail);
 					    if (!strInfo.IsEmpty())
-						    strInfo += _T("\n");
+						    strInfo += _T('\n');
 					    strInfo += strServer;
 					    if (strInfo.GetLength() >= pGetInfoTip->cchTextMax)
 						    break;
 				    }
 			    }
     #endif
-				strInfo = strHead + strInfo + TOOLTIP_AUTOFORMAT_SUFFIX_CH;
-			    _tcsncpy(pGetInfoTip->pszText, strInfo, pGetInfoTip->cchTextMax);
+				strInfo = strHead + strInfo;
+				strInfo += TOOLTIP_AUTOFORMAT_SUFFIX_CH;
+				_tcsncpy(pGetInfoTip->pszText, strInfo, pGetInfoTip->cchTextMax);
 			    pGetInfoTip->pszText[pGetInfoTip->cchTextMax-1] = _T('\0');
 		    }
 	    }
@@ -1237,8 +1235,11 @@ void CSearchListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 			if (iSelected > 0)
 			{
 				CString strInfo;
-				strInfo.Format(_T("%s: %i\r\n%s: %s"), (LPCTSTR)GetResString(IDS_FILES), iSelected, (LPCTSTR)GetResString(IDS_DL_SIZE), (LPCTSTR)FormatFileSize(ulTotalSize));
-				strInfo += TOOLTIP_AUTOFORMAT_SUFFIX_CH;
+				strInfo.Format(_T("%s: %i\r\n%s: %s%c")
+					, (LPCTSTR)GetResString(IDS_FILES), iSelected
+					, (LPCTSTR)GetResString(IDS_DL_SIZE), (LPCTSTR)FormatFileSize(ulTotalSize)
+					, TOOLTIP_AUTOFORMAT_SUFFIX_CH
+					);
 				_tcsncpy(pGetInfoTip->pszText, strInfo, pGetInfoTip->cchTextMax);
 				pGetInfoTip->pszText[pGetInfoTip->cchTextMax-1] = _T('\0');
 			}
@@ -1799,9 +1800,9 @@ void CSearchListCtrl::GetItemDisplayText(const CSearchFile *src, int iSubItem, L
 					strBuffer += _T(" | -");
 				else
 					strBuffer.AppendFormat(_T(" | Names:%u, Pubs:%u, Trust:%0.2f")
-										   , (src->GetKadPublishInfo() >> 24) & 0xFFu
-										   , (src->GetKadPublishInfo() >> 16) & 0xFFu
-										   , (src->GetKadPublishInfo() & 0xFFFFu) / 100.0f);
+										 , (src->GetKadPublishInfo() >> 24) & 0xFFu
+										 , (src->GetKadPublishInfo() >> 16) & 0xFFu
+										 , (src->GetKadPublishInfo() & 0xFFFFu) / 100.0f);
 			#endif
 				_tcsncpy(pszText, strBuffer, cchTextMax);
 			}
@@ -1866,16 +1867,23 @@ void CSearchListCtrl::GetItemDisplayText(const CSearchFile *src, int iSubItem, L
 			break;
 
 		case 13:
-			if (src->m_eKnown == CSearchFile::Shared)
-				_tcsncpy(pszText, GetResString(IDS_SHARED), cchTextMax);
-			else if (src->m_eKnown == CSearchFile::Downloading)
-				_tcsncpy(pszText, GetResString(IDS_DOWNLOADING), cchTextMax);
-			else if (src->m_eKnown == CSearchFile::Downloaded)
-				_tcsncpy(pszText, GetResString(IDS_DOWNLOADED), cchTextMax);
-			else if (src->m_eKnown == CSearchFile::Cancelled)
-				_tcsncpy(pszText, GetResString(IDS_CANCELLED), cchTextMax);
-			else if (src->IsConsideredSpam() && thePrefs.IsSearchSpamFilterEnabled())
-				_tcsncpy(pszText, GetResString(IDS_SPAM), cchTextMax);
+			{
+				UINT uid;
+				if (src->m_eKnown == CSearchFile::Shared)
+					uid = IDS_SHARED;
+				else if (src->m_eKnown == CSearchFile::Downloading)
+					uid = IDS_DOWNLOADING;
+				else if (src->m_eKnown == CSearchFile::Downloaded)
+					uid = IDS_DOWNLOADED;
+				else if (src->m_eKnown == CSearchFile::Cancelled)
+					uid = IDS_CANCELLED;
+				else if (src->IsConsideredSpam() && thePrefs.IsSearchSpamFilterEnabled())
+					uid = IDS_SPAM;
+				else
+					uid = 0;
+				if (uid)
+					_tcsncpy(pszText, GetResString(uid), cchTextMax);
+			}
 #ifdef _DEBUG
 			{
 				pszText[cchTextMax - 1] = _T('\0');
@@ -1887,7 +1895,7 @@ void CSearchListCtrl::GetItemDisplayText(const CSearchFile *src, int iSubItem, L
 			}
 #endif
 			break;
-		case 14:
+		case 14:	//AICH hash
 			if (src->GetFileIdentifierC().HasAICHHash())
 				_tcsncpy(pszText, src->GetFileIdentifierC().GetAICHHash().GetString(), cchTextMax);
 			break;
@@ -1919,20 +1927,18 @@ void CSearchListCtrl::OnLvnGetDispInfo(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
-CString	CSearchListCtrl::FormatFileSize(ULONGLONG ullFileSize) const
+CString CSearchListCtrl::FormatFileSize(ULONGLONG ullFileSize) const
 {
-	if (m_eFileSizeFormat == fsizeKByte) {
+	if (m_eFileSizeFormat == fsizeKByte)
 		// Always rond up to next KB (this is same as Windows Explorer is doing)
 		return GetFormatedUInt64((ullFileSize + 1024 - 1) / 1024) + _T(' ') + GetResString(IDS_KBYTES);
-	}
-	else if (m_eFileSizeFormat == fsizeMByte) {
+
+	if (m_eFileSizeFormat == fsizeMByte) {
 		//return GetFormatedUInt64((ullFileSize + 1024*1024 - 1) / (1024*1024)) + _T(' ') + GetResString(IDS_MBYTES);
-		double fFileSize = (double)ullFileSize / (1024.0*1024.0);
+		double fFileSize = ullFileSize / (1024.0*1024.0);
 		if (fFileSize < 0.01)
 			fFileSize = 0.01;
-		TCHAR szVal[40];
-		_sntprintf(szVal, _countof(szVal), _T("%.2f"), fFileSize);
-		szVal[_countof(szVal) - 1] = _T('\0');
+
 		static NUMBERFMT nf;
 		if (nf.Grouping == 0) {
 			nf.NumDigits = 2;
@@ -1943,16 +1949,14 @@ CString	CSearchListCtrl::FormatFileSize(ULONGLONG ullFileSize) const
 			nf.lpThousandSep = _T(",");
 			nf.NegativeOrder = 0;
 		}
-		CString strVal;
-		const int iBuffSize = _countof(szVal)*2;
-		int iResult = GetNumberFormat(LOCALE_SYSTEM_DEFAULT, 0, szVal, &nf, strVal.GetBuffer(iBuffSize), iBuffSize);
+		CString sVal, strVal;
+		sVal.Format(_T("%.2f"), fFileSize);
+		int iResult = GetNumberFormat(LOCALE_SYSTEM_DEFAULT, 0, sVal, &nf, strVal.GetBuffer(80), 80);
 		strVal.ReleaseBuffer();
-		if (iResult == 0)
-			strVal = szVal;
-		return strVal + _T(' ') + GetResString(IDS_MBYTES);
+		return (iResult ? strVal : sVal) + _T(' ') + GetResString(IDS_MBYTES);
 	}
-	else
-		return CastItoXBytes(ullFileSize);
+
+	return CastItoXBytes(ullFileSize);
 }
 
 void CSearchListCtrl::SetFileSizeFormat(EFileSizeFormat eFormat)
@@ -1964,7 +1968,7 @@ void CSearchListCtrl::SetFileSizeFormat(EFileSizeFormat eFormat)
 
 bool CSearchListCtrl::IsFilteredItem(const CSearchFile* pSearchFile) const
 {
-	if (pSearchFile->m_flags & 1) //do not show
+	if (pSearchFile->m_flags.noshow) //do not show
 		return true;
 	const CStringArray& rastrFilter = theApp.emuledlg->searchwnd->m_pwndResults->m_astrFilter;
 	if (rastrFilter.GetSize() == 0)

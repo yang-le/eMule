@@ -23,15 +23,14 @@ class PreviewDlg : public CDialog
 {
 	DECLARE_DYNAMIC(PreviewDlg)
 
+	enum { IDD = IDD_PREVIEWDIALOG };
+
 public:
 	explicit PreviewDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~PreviewDlg();
 
 	void	SetFile(const CSearchFile* pFile) { m_pFile = pFile; Show(); }
 	void	Show();	
-// Dialog Data
-	enum { IDD = IDD_PREVIEWDIALOG };
-
 protected:
 	const CSearchFile* m_pFile;
 	int m_nCurrentImage;

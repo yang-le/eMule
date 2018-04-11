@@ -79,7 +79,7 @@ void CKadSearchListCtrl::UpdateKadSearchCount()
 {
 	CString id;
 	id.Format(_T("%s (%i)"), (LPCTSTR)GetResString(IDS_KADSEARCHLAB), GetItemCount());
-	theApp.emuledlg->kademliawnd->GetDlgItem(IDC_KADSEARCHLAB)->SetWindowText(id);
+	theApp.emuledlg->kademliawnd->SetDlgItemText(IDC_KADSEARCHLAB, id);
 }
 
 void CKadSearchListCtrl::OnSysColorChange()
@@ -128,8 +128,7 @@ void CKadSearchListCtrl::Localize()
 		pHeaderCtrl->SetItem(icol, &hdi);
 	}
 
-	int iItems = GetItemCount();
-	for (int i = 0; i < iItems; ++i)
+	for (int i = GetItemCount(); --i >= 0;)
 		SearchRef(reinterpret_cast<Kademlia::CSearch *>(GetItemData(i)));
 
 	UpdateKadSearchCount();
@@ -141,15 +140,15 @@ void CKadSearchListCtrl::UpdateSearch(int iItem, const Kademlia::CSearch *search
 	id.Format(_T("%u"), search->GetSearchID());
 	SetItemText(iItem, colNum, id);
 
-	UINT sid;
+	UINT uid;
 	switch (search->GetSearchTypes()) {
 	case Kademlia::CSearch::FILE:
-		sid = IDS_KAD_SEARCHSRC;
+		uid = IDS_KAD_SEARCHSRC;
 		SetItem(iItem, 0, LVIF_IMAGE, 0, 0, 0, 0, 0, 0);
 		break;
 
 	case Kademlia::CSearch::KEYWORD:
-		sid = IDS_KAD_SEARCHKW;
+		uid = IDS_KAD_SEARCHKW;
 		SetItem(iItem, 0, LVIF_IMAGE, 0, 1, 0, 0, 0, 0);
 		break;
 
@@ -157,38 +156,38 @@ void CKadSearchListCtrl::UpdateSearch(int iItem, const Kademlia::CSearch *search
 	case Kademlia::CSearch::NODECOMPLETE:
 	case Kademlia::CSearch::NODESPECIAL:
 	case Kademlia::CSearch::NODEFWCHECKUDP:
-		sid = IDS_KAD_NODE;
+		uid = IDS_KAD_NODE;
 		SetItem(iItem, 0, LVIF_IMAGE, 0, 2, 0, 0, 0, 0);
 		break;
 
 	case Kademlia::CSearch::STOREFILE:
-		sid = IDS_KAD_STOREFILE;
+		uid = IDS_KAD_STOREFILE;
 		SetItem(iItem, 0, LVIF_IMAGE, 0, 3, 0, 0, 0, 0);
 		break;
 
 	case Kademlia::CSearch::STOREKEYWORD:
-		sid = IDS_KAD_STOREKW;
+		uid = IDS_KAD_STOREKW;
 		SetItem(iItem, 0, LVIF_IMAGE, 0, 4, 0, 0, 0, 0);
 		break;
 
 		//JOHNTODO: -
 		//I also need to understand skinning so the icons are done correctly.
 	case Kademlia::CSearch::FINDBUDDY:
-		sid = IDS_FINDBUDDY;
+		uid = IDS_FINDBUDDY;
 		break;
 
 	case Kademlia::CSearch::STORENOTES:
-		sid = IDS_STORENOTES;
+		uid = IDS_STORENOTES;
 		break;
 
 	case Kademlia::CSearch::NOTES:
-		sid = IDS_NOTES;
+		uid = IDS_NOTES;
 		break;
 
 	default:
-		sid = IDS_KAD_UNKNOWN;
+		uid = IDS_KAD_UNKNOWN;
 	}
-	id = GetResString(sid);
+	id = GetResString(uid);
 #ifdef _DEBUG
 	id.AppendFormat(_T(" (%u)"), search->GetSearchTypes());
 #endif

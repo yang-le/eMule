@@ -104,7 +104,7 @@ protected:
 	//Misc Methods
 	virtual DWORD GetWindowStyle();
 	int EnumFontProc(CONST LOGFONT* lplf, CONST TEXTMETRIC* /*lptm*/, DWORD /*dwType*/);
-	static int CALLBACK _EnumFontProc(CONST LOGFONT* lplf, CONST TEXTMETRIC* lptm, DWORD dwType, LPARAM lpData);
+	static int CALLBACK _EnumFontProc(CONST LOGFONT* lplf, CONST TEXTMETRIC* lptm, DWORD dwType, LPARAM lpData) noexcept;
 };
 
 
@@ -304,8 +304,8 @@ protected:
 	void SetTreeItem(HTREEITEM hItem) { m_hTreeCtrlItem = hItem; };
 	virtual DWORD GetWindowStyle();
 	virtual BOOL IsRelatedWnd(CWnd* pChild);
-	void GetDateTime(SYSTEMTIME& st) const { CopyMemory(&st, &m_SystemTime, sizeof(SYSTEMTIME)); };
-	void SetDateTime(const SYSTEMTIME& st) { CopyMemory(&m_SystemTime, &st, sizeof(SYSTEMTIME)); };
+	void GetDateTime(SYSTEMTIME& st) const { memcpy(&st, &m_SystemTime, sizeof(SYSTEMTIME)); };
+	void SetDateTime(const SYSTEMTIME& st) { memcpy(&m_SystemTime, &st, sizeof(SYSTEMTIME)); };
 
 	//{{AFX_VIRTUAL(CTreeOptionsDateCtrl)
 	//}}AFX_VIRTUAL

@@ -122,11 +122,8 @@ BOOL CFileDetailDlgStatistics::OnSetActive()
 	if (!CResizablePage::OnSetActive())
 		return FALSE;
 	if (m_hRefreshTimer == 0)
-	{
-		m_hRefreshTimer = SetTimer(REFRESH_TIMER_ID, 3000, NULL);
-	}
-	if (m_bDataChanged)
-	{
+		m_hRefreshTimer = SetTimer(REFRESH_TIMER_ID, SEC2MS(3), NULL);
+	if (m_bDataChanged) {
 		RefreshData();
 		m_bDataChanged = false;
 	}
@@ -275,18 +272,18 @@ void CFileDetailDlgStatistics::OnDestroy()
 
 void CFileDetailDlgStatistics::Localize()
 {
-	GetDlgItem(IDC_STATISTICS_GB_SESSION)->SetWindowText(GetResString(IDS_SF_CURRENT));
-	GetDlgItem(IDC_STATISTICS_GB_TOTAL)->SetWindowText(GetResString(IDS_SF_TOTAL));
-	GetDlgItem(IDC_FSTATIC6)->SetWindowText(GetResString(IDS_SF_TRANS));
-	GetDlgItem(IDC_FSTATIC5)->SetWindowText(GetResString(IDS_SF_ACCEPTED));
-	GetDlgItem(IDC_FSTATIC4)->SetWindowText(GetResString(IDS_SF_REQUESTS)+_T(':'));
-	GetDlgItem(IDC_FSTATIC9)->SetWindowText(GetResString(IDS_SF_TRANS));
-	GetDlgItem(IDC_FSTATIC8)->SetWindowText(GetResString(IDS_SF_ACCEPTED));
-	GetDlgItem(IDC_FSTATIC7)->SetWindowText(GetResString(IDS_SF_REQUESTS)+_T(':'));
-	GetDlgItem(IDC_FS_POPULARITY_LBL)->SetWindowText(GetResString(IDS_POPULARITY) + _T(':'));
-	GetDlgItem(IDC_FS_POPULARITY2_LBL)->SetWindowText(GetResString(IDS_POPULARITY) + _T(':'));
-	GetDlgItem(IDC_FS_ONQUEUE_LBL)->SetWindowText(GetResString(IDS_ONQUEUE) + _T(':'));
-	GetDlgItem(IDC_FS_UPLOADING_LBL)->SetWindowText(GetResString(IDS_UPLOADING) + _T(':'));
+	SetDlgItemText(IDC_STATISTICS_GB_SESSION, GetResString(IDS_SF_CURRENT));
+	SetDlgItemText(IDC_STATISTICS_GB_TOTAL, GetResString(IDS_SF_TOTAL));
+	SetDlgItemText(IDC_FSTATIC6, GetResString(IDS_SF_TRANS));
+	SetDlgItemText(IDC_FSTATIC5, GetResString(IDS_SF_ACCEPTED));
+	SetDlgItemText(IDC_FSTATIC4, GetResString(IDS_SF_REQUESTS)+_T(':'));
+	SetDlgItemText(IDC_FSTATIC9, GetResString(IDS_SF_TRANS));
+	SetDlgItemText(IDC_FSTATIC8, GetResString(IDS_SF_ACCEPTED));
+	SetDlgItemText(IDC_FSTATIC7, GetResString(IDS_SF_REQUESTS)+_T(':'));
+	SetDlgItemText(IDC_FS_POPULARITY_LBL, GetResString(IDS_POPULARITY) + _T(':'));
+	SetDlgItemText(IDC_FS_POPULARITY2_LBL, GetResString(IDS_POPULARITY) + _T(':'));
+	SetDlgItemText(IDC_FS_ONQUEUE_LBL, GetResString(IDS_ONQUEUE) + _T(':'));
+	SetDlgItemText(IDC_FS_UPLOADING_LBL, GetResString(IDS_UPLOADING) + _T(':'));
 }
 
 void CFileDetailDlgStatistics::OnSysColorChange()

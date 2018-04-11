@@ -279,68 +279,68 @@ void CDownloadClientsCtrl::GetItemDisplayText(const CUpDownClient *client, int i
 		return;
 	}
 	pszText[0] = _T('\0');
-	switch (iSubItem)
-	{
-		case 0:
-			if (client->GetUserName() == NULL)
-				_sntprintf(pszText, cchTextMax, _T("(%s)"), (LPCTSTR)GetResString(IDS_UNKNOWN));
-			else
-				_tcsncpy(pszText, client->GetUserName(), cchTextMax);
-			break;
+	switch (iSubItem) {
+	case 0:
+		if (client->GetUserName() == NULL)
+			_sntprintf(pszText, cchTextMax, _T("(%s)"), (LPCTSTR)GetResString(IDS_UNKNOWN));
+		else
+			_tcsncpy(pszText, client->GetUserName(), cchTextMax);
+		break;
 
-		case 1:
-			_tcsncpy(pszText, client->GetClientSoftVer(), cchTextMax);
-			break;
+	case 1:
+		_tcsncpy(pszText, client->GetClientSoftVer(), cchTextMax);
+		break;
 
-		case 2:
-			_tcsncpy(pszText, client->GetRequestFile()->GetFileName(), cchTextMax);
-			break;
+	case 2:
+		_tcsncpy(pszText, client->GetRequestFile()->GetFileName(), cchTextMax);
+		break;
 
-		case 3:
-			_tcsncpy(pszText, (LPCTSTR)CastItoXBytes((float)client->GetDownloadDatarate(), false, true), cchTextMax);
-			break;
+	case 3:
+		_tcsncpy(pszText, (LPCTSTR)CastItoXBytes((float)client->GetDownloadDatarate(), false, true), cchTextMax);
+		break;
 
-		case 4:
-			_tcsncpy(pszText, GetResString(IDS_AVAILABLEPARTS), cchTextMax);
-			break;
+	case 4:
+		_tcsncpy(pszText, GetResString(IDS_AVAILABLEPARTS), cchTextMax);
+		break;
 
-		case 5:
-			if (client->credits && client->GetSessionDown() < client->credits->GetDownloadedTotal())
-				_sntprintf(pszText, cchTextMax, _T("%s (%s)"), (LPCTSTR)CastItoXBytes(client->GetSessionDown()), (LPCTSTR)CastItoXBytes(client->credits->GetDownloadedTotal()));
-			else
-				_tcsncpy(pszText, (LPCTSTR)CastItoXBytes(client->GetSessionDown()), cchTextMax);
-			break;
+	case 5:
+		if (client->credits && client->GetSessionDown() < client->credits->GetDownloadedTotal())
+			_sntprintf(pszText, cchTextMax, _T("%s (%s)"), (LPCTSTR)CastItoXBytes(client->GetSessionDown()), (LPCTSTR)CastItoXBytes(client->credits->GetDownloadedTotal()));
+		else
+			_tcsncpy(pszText, (LPCTSTR)CastItoXBytes(client->GetSessionDown()), cchTextMax);
+		break;
 
-		case 6:
-			if (client->credits && client->GetSessionUp() < client->credits->GetUploadedTotal())
-				_sntprintf(pszText, cchTextMax, _T("%s (%s)"), (LPCTSTR)CastItoXBytes(client->GetSessionUp()), (LPCTSTR)CastItoXBytes(client->credits->GetUploadedTotal()));
-			else
-				_tcsncpy(pszText, (LPCTSTR)CastItoXBytes(client->GetSessionUp()), cchTextMax);
-			break;
+	case 6:
+		if (client->credits && client->GetSessionUp() < client->credits->GetUploadedTotal())
+			_sntprintf(pszText, cchTextMax, _T("%s (%s)"), (LPCTSTR)CastItoXBytes(client->GetSessionUp()), (LPCTSTR)CastItoXBytes(client->credits->GetUploadedTotal()));
+		else
+			_tcsncpy(pszText, (LPCTSTR)CastItoXBytes(client->GetSessionUp()), cchTextMax);
+		break;
 
-		case 7:
-			switch (client->GetSourceFrom())
-			{
-				case SF_SERVER:
-					_tcsncpy(pszText, _T("eD2K Server"), cchTextMax);
-					break;
-				case SF_KADEMLIA:
-					_tcsncpy(pszText, GetResString(IDS_KADEMLIA), cchTextMax);
-					break;
-				case SF_SOURCE_EXCHANGE:
-					_tcsncpy(pszText, GetResString(IDS_SE), cchTextMax);
-					break;
-				case SF_PASSIVE:
-					_tcsncpy(pszText, GetResString(IDS_PASSIVE), cchTextMax);
-					break;
-				case SF_LINK:
-					_tcsncpy(pszText, GetResString(IDS_SW_LINK), cchTextMax);
-					break;
-				default:
-					_tcsncpy(pszText, GetResString(IDS_UNKNOWN), cchTextMax);
-					break;
+	case 7:
+		{
+			UINT uid;
+			switch (client->GetSourceFrom()) {
+			case SF_SERVER:
+				uid = IDS_ED2KSERVER;
+				break;
+			case SF_KADEMLIA:
+				uid = IDS_KADEMLIA;
+				break;
+			case SF_SOURCE_EXCHANGE:
+				uid = IDS_SE;
+				break;
+			case SF_PASSIVE:
+				uid = IDS_PASSIVE;
+				break;
+			case SF_LINK:
+				uid = IDS_SW_LINK;
+				break;
+			default:
+				uid = IDS_UNKNOWN;
 			}
-			break;
+			_tcsncpy(pszText, GetResString(uid), cchTextMax);
+		}
 	}
 	pszText[cchTextMax - 1] = _T('\0');
 }
@@ -402,9 +402,9 @@ void CDownloadClientsCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 int CALLBACK CDownloadClientsCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const CUpDownClient *item1 = reinterpret_cast<const CUpDownClient *>(lParam1);
-	const CUpDownClient *item2 = reinterpret_cast<const CUpDownClient *>(lParam2);
-	int iColumn = (lParamSort >= 100) ? lParamSort - 100 : lParamSort;
+	const CUpDownClient *item1 = reinterpret_cast<CUpDownClient *>(lParam1);
+	const CUpDownClient *item2 = reinterpret_cast<CUpDownClient *>(lParam2);
+	LPARAM iColumn = (lParamSort >= 100) ? lParamSort - 100 : lParamSort;
 	int iResult = 0;
 	switch (iColumn) {
 	case 0: //user name
@@ -460,7 +460,7 @@ int CALLBACK CDownloadClientsCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPAR
 
 	//call secondary sortorder, if this one results in equal
 	if (iResult == 0) {
-		LPARAM dwNextSort = theApp.emuledlg->transferwnd->GetDownloadClientsList()->GetNextSortOrder(lParamSort);
+		int dwNextSort = theApp.emuledlg->transferwnd->GetDownloadClientsList()->GetNextSortOrder((int)lParamSort);
 		if (dwNextSort != -1)
 			iResult = SortProc(lParam1, lParam2, dwNextSort);
 	}

@@ -48,32 +48,32 @@ public:
 
 	// last file modification time in (DST corrected, if NTFS) real UTC format
 	// NOTE: this value can *not* be compared with NT's version of the UTC time
-	CTime	GetUtcCFileDate() const										{ return CTime(m_tUtcLastModified); }
-	time_t	GetUtcFileDate() const										{ return m_tUtcLastModified; }
+	CTime	GetUtcCFileDate() const							{ return CTime(m_tUtcLastModified); }
+	time_t	GetUtcFileDate() const							{ return m_tUtcLastModified; }
 
 	// Did we not see this file for a long time so that some information should be purged?
 	bool	ShouldPartiallyPurgeFile() const;
-	void	SetLastSeen()												{ m_timeLastSeen = time(NULL); }
+	void	SetLastSeen()									{ m_timeLastSeen = time(NULL); }
 
 	virtual void	SetFileSize(EMFileSize nFileSize);
 
 	// nr. of 9MB parts (file data)
-	__inline uint16 GetPartCount() const								{ return m_iPartCount; }
+	inline uint16 GetPartCount() const					{ return m_iPartCount; }
 
 	// nr. of 9MB parts according the file size wrt ED2K protocol (OP_FILESTATUS)
-	__inline uint16 GetED2KPartCount() const { return m_iED2KPartCount; }
+	inline uint16 GetED2KPartCount() const { return m_iED2KPartCount; }
 
 	// file upload priority
-	uint8	GetUpPriority() const									{ return m_iUpPriority; }
+	uint8	GetUpPriority() const							{ return m_iUpPriority; }
 	void	SetUpPriority(uint8 iNewUpPriority, bool bSave = true);
-	bool	IsAutoUpPriority() const								{ return m_bAutoUpPriority; }
-	void	SetAutoUpPriority(bool NewAutoUpPriority)					{ m_bAutoUpPriority = NewAutoUpPriority; }
+	bool	IsAutoUpPriority() const						{ return m_bAutoUpPriority; }
+	void	SetAutoUpPriority(bool NewAutoUpPriority)		{ m_bAutoUpPriority = NewAutoUpPriority; }
 	void	UpdateAutoUpPriority();
 
-	// This has lost it's meaning here.. This is the total clients we know that want this file..
-	// Right now this number is used for auto priorities..
-	// This may be replaced with total complete source known in the network..
-	INT_PTR	GetQueuedCount() { return m_ClientUploadList.GetCount();}
+	// This has lost its meaning here. This is the total clients we know that want this file..
+	// Right now this number is used for auto priorities.
+	// This may be replaced with total complete source known in the network.
+	INT_PTR	GetQueuedCount()								{ return m_ClientUploadList.GetCount();}
 
 	void	AddUploadingClient(CUpDownClient* client);
 	void	RemoveUploadingClient(CUpDownClient* client);
@@ -85,26 +85,26 @@ public:
 
 	void	SetFileRating(UINT uRating);
 
-	bool	GetPublishedED2K() const { return m_PublishedED2K; }
+	bool	GetPublishedED2K() const						{ return m_PublishedED2K; }
 	void	SetPublishedED2K(bool val);
 
-	uint32	GetKadFileSearchID() const { return kadFileSearchID; }
-	void	SetKadFileSearchID(uint32 id) { kadFileSearchID = id; } //Don't use this unless you know what your are DOING!! (Hopefully I do.. :)
+	uint32	GetKadFileSearchID() const						{ return kadFileSearchID; }
+	void	SetKadFileSearchID(uint32 id)					{ kadFileSearchID = id; } //Don't use this unless you know what your are DOING!! (Hopefully I do.. :)
 
-	const Kademlia::WordList& GetKadKeywords() const { return wordlist; }
+	const Kademlia::WordList& GetKadKeywords() const		{ return wordlist; }
 
-	uint32	GetLastPublishTimeKadSrc() const { return m_lastPublishTimeKadSrc; }
-	void	SetLastPublishTimeKadSrc(uint32 time, uint32 buddyip) { m_lastPublishTimeKadSrc = time; m_lastBuddyIP = buddyip;}
-	uint32	GetLastPublishBuddy() const { return m_lastBuddyIP; }
-	void	SetLastPublishTimeKadNotes(uint32 time) {m_lastPublishTimeKadNotes = time;}
-	uint32	GetLastPublishTimeKadNotes() const { return m_lastPublishTimeKadNotes; }
+	time_t	GetLastPublishTimeKadSrc() const				{ return m_lastPublishTimeKadSrc; }
+	void	SetLastPublishTimeKadSrc(time_t time, uint32 buddyip)	{ m_lastPublishTimeKadSrc = time; m_lastBuddyIP = buddyip;}
+	uint32	GetLastPublishBuddy() const						{ return m_lastBuddyIP; }
+	void	SetLastPublishTimeKadNotes(time_t time)			{m_lastPublishTimeKadNotes = time;}
+	time_t	GetLastPublishTimeKadNotes() const				{ return m_lastPublishTimeKadNotes; }
 
 	bool	PublishSrc();
 	bool	PublishNotes();
 
 	// file sharing
 	virtual Packet* CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 byRequestedVersion, uint16 nRequestedOptions) const;
-	UINT	GetMetaDataVer() const { return m_uMetaDataVer; }
+	UINT	GetMetaDataVer() const							{ return m_uMetaDataVer; }
 	void	UpdateMetaDataTags();
 	void	RemoveMetaDataTags(UINT uTagType = 0);
 	void	RemoveBrokenUnicodeMetaDataTags();
@@ -119,8 +119,8 @@ public:
 	CString			GetUpPriorityDisplayString() const;
 
 	//aich
-	void	SetAICHRecoverHashSetAvailable(bool bVal)			{ m_bAICHRecoverHashSetAvailable = bVal; }
-	bool	IsAICHRecoverHashSetAvailable() const				{ return m_bAICHRecoverHashSetAvailable; }
+	void	SetAICHRecoverHashSetAvailable(bool bVal)		{ m_bAICHRecoverHashSetAvailable = bVal; }
+	bool	IsAICHRecoverHashSetAvailable() const			{ return m_bAICHRecoverHashSetAvailable; }
 
 	static bool	CreateHash(const uchar* pucData, uint32 uSize, uchar* pucHash, CAICHHashTree* pShaHashOut = NULL);
 
@@ -162,8 +162,8 @@ private:
 	bool	m_bAutoUpPriority;
 	bool	m_PublishedED2K;
 	uint32	kadFileSearchID;
-	uint32	m_lastPublishTimeKadSrc;
-	uint32	m_lastPublishTimeKadNotes;
+	time_t	m_lastPublishTimeKadSrc;
+	time_t	m_lastPublishTimeKadNotes;
 	uint32	m_lastBuddyIP;
 	Kademlia::WordList wordlist;
 	UINT	m_uMetaDataVer;

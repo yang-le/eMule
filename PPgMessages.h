@@ -21,12 +21,11 @@ class CPPgMessages : public CPropertyPage
 {
 	DECLARE_DYNAMIC(CPPgMessages)
 
+	enum { IDD = IDD_PPG_MESSAGES };
+
 public:
 	CPPgMessages();
 	virtual ~CPPgMessages();
-
-// Dialog Data
-	enum { IDD = IDD_PPG_MESSAGES };
 
 	void Localize();
 

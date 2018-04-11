@@ -35,7 +35,8 @@ struct ChannelName
 {
 	ChannelName(const CString& sName, UINT uUsers, const CString& sDesc)
 		: m_sName(sName), m_uUsers(uUsers), m_sDesc(sDesc)
-	{ }
+	{
+	}
 	CString m_sName;
 	UINT m_uUsers;
 	CString m_sDesc;
@@ -66,9 +67,9 @@ void CIrcChannelListCtrl::Init()
 	SetPrefsKey(_T("IrcChannelListCtrl"));
 	SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
-	InsertColumn(0, GetResString(IDS_IRC_NAME),		LVCFMT_LEFT,  200);
-	InsertColumn(1, GetResString(IDS_UUSERS),		LVCFMT_RIGHT,  50);
-	InsertColumn(2, GetResString(IDS_DESCRIPTION),	LVCFMT_LEFT,  350);
+	InsertColumn(0, GetResString(IDS_IRC_NAME), LVCFMT_LEFT, 200);
+	InsertColumn(1, GetResString(IDS_UUSERS), LVCFMT_RIGHT, 50);
+	InsertColumn(2, GetResString(IDS_DESCRIPTION), LVCFMT_LEFT, 350);
 
 	LoadSettings();
 	SetSortArrow();
@@ -80,9 +81,8 @@ void CIrcChannelListCtrl::Localize()
 	CHeaderCtrl* pHeaderCtrl = GetHeaderCtrl();
 	HDITEM hdi;
 	hdi.mask = HDI_TEXT;
-	CString strRes;
 
-	strRes = GetResString(IDS_IRC_NAME);
+	CString strRes = GetResString(IDS_IRC_NAME);
 	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
 	pHeaderCtrl->SetItem(0, &hdi);
 
@@ -102,19 +102,17 @@ void CIrcChannelListCtrl::GetItemDisplayText(const ChannelName *pChannel, int iS
 		return;
 	}
 	pszText[0] = _T('\0');
-	switch (iSubItem)
-	{
-		case 0:
-			_tcsncpy(pszText, pChannel->m_sName, cchTextMax);
-			break;
+	switch (iSubItem) {
+	case 0:
+		_tcsncpy(pszText, pChannel->m_sName, cchTextMax);
+		break;
 
-		case 1:
-			_sntprintf(pszText, cchTextMax, _T("%u"), pChannel->m_uUsers);
-			break;
+	case 1:
+		_sntprintf(pszText, cchTextMax, _T("%u"), pChannel->m_uUsers);
+		break;
 
-		case 2:
-			_tcsncpy(pszText, pChannel->m_sDesc, cchTextMax);
-			break;
+	case 2:
+		_tcsncpy(pszText, pChannel->m_sDesc, cchTextMax);
 	}
 	pszText[cchTextMax - 1] = _T('\0');
 }
@@ -135,7 +133,7 @@ void CIrcChannelListCtrl::OnLvnGetDispInfo(NMHDR *pNMHDR, LRESULT *pResult)
 		//
 		NMLVDISPINFO *pDispInfo = reinterpret_cast<NMLVDISPINFO*>(pNMHDR);
 		if (pDispInfo->item.mask & LVIF_TEXT) {
-			const ChannelName *pChannel = (ChannelName *)pDispInfo->item.lParam;
+			const ChannelName *pChannel = reinterpret_cast<ChannelName *>(pDispInfo->item.lParam);
 			if (pChannel != NULL)
 				GetItemDisplayText(pChannel, pDispInfo->item.iSubItem, pDispInfo->item.pszText, pDispInfo->item.cchTextMax);
 		}
@@ -156,26 +154,22 @@ void CIrcChannelListCtrl::OnLvnColumnClick(NMHDR* pNMHDR, LRESULT* pResult)
 
 int CALLBACK CIrcChannelListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const ChannelName* pItem1 = (ChannelName*)lParam1;
-	const ChannelName* pItem2 = (ChannelName*)lParam2;
-	int iColumn = lParamSort >= 10 ? lParamSort - 10 : lParamSort;
+	const ChannelName* pItem1 = reinterpret_cast<ChannelName *>(lParam1);
+	const ChannelName* pItem2 = reinterpret_cast<ChannelName *>(lParam2);
+	LPARAM iColumn = lParamSort >= 10 ? lParamSort - 10 : lParamSort;
 	int iResult = 0;
-	switch (iColumn)
-	{
-		case 0:
-			iResult = pItem1->m_sName.CompareNoCase(pItem2->m_sName);
-			break;
-
-		case 1:
-			iResult = CompareUnsigned(pItem1->m_uUsers, pItem2->m_uUsers);
-			break;
-
-		case 2:
-			iResult = pItem1->m_sDesc.CompareNoCase(pItem2->m_sDesc);
-			break;
-
-		default:
-			return 0;
+	switch (iColumn) {
+	case 0:
+		iResult = pItem1->m_sName.CompareNoCase(pItem2->m_sName);
+		break;
+	case 1:
+		iResult = CompareUnsigned(pItem1->m_uUsers, pItem2->m_uUsers);
+		break;
+	case 2:
+		iResult = pItem1->m_sDesc.CompareNoCase(pItem2->m_sDesc);
+		break;
+	default:
+		return 0;
 	}
 	if (lParamSort >= 10)
 		iResult = -iResult;
@@ -195,21 +189,20 @@ void CIrcChannelListCtrl::OnContextMenu(CWnd*, CPoint point)
 	menuChannel.CreatePopupMenu();
 	menuChannel.AddMenuTitle(GetResString(IDS_IRC_CHANNEL));
 	menuChannel.AppendMenu(MF_STRING, Irc_Join, GetResString(IDS_IRC_JOIN));
-	if (iCurSel == -1)
+	if (iCurSel == -1 || !m_pParent->GetLoggedIn())
 		menuChannel.EnableMenuItem(Irc_Join, MF_GRAYED);
 	GetPopupMenuPos(*this, point);
 	menuChannel.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
-	VERIFY( menuChannel.DestroyMenu() );
+	VERIFY(menuChannel.DestroyMenu());
 }
 
 BOOL CIrcChannelListCtrl::OnCommand(WPARAM wParam, LPARAM)
 {
-	switch (wParam)
-	{
-		case Irc_Join:
-			//Pressed the join button.
-			JoinChannels();
-			return TRUE;
+	switch (wParam) {
+	case Irc_Join:
+		//Pressed the join button.
+		JoinChannels();
+		return TRUE;
 	}
 	return TRUE;
 }
@@ -217,17 +210,8 @@ BOOL CIrcChannelListCtrl::OnCommand(WPARAM wParam, LPARAM)
 bool CIrcChannelListCtrl::AddChannelToList(const CString& sName, const CString& sUsers, const CString& sDesc)
 {
 	UINT uUsers = _tstoi(sUsers);
-	if (thePrefs.GetIRCUseChannelFilter())
-	{
-		if (uUsers < thePrefs.GetIRCChannelUserFilter())
-			return false;
-		// was already filtered with "/LIST" command
-		//if (!thePrefs.GetIRCChannelFilter().IsEmpty())
-		//{
-		//	if (stristr(sName, thePrefs.GetIRCChannelFilter()) == NULL)
-		//		return false;
-		//}
-	}
+	if (thePrefs.GetIRCUseChannelFilter() && uUsers < thePrefs.GetIRCChannelUserFilter())
+		return false;
 
 	ChannelName* pChannel = new ChannelName(sName, uUsers, m_pParent->StripMessageOfFontCodes(sDesc));
 	m_lstChannelNames.AddTail(pChannel);
@@ -249,10 +233,9 @@ void CIrcChannelListCtrl::ResetServerChannelList(bool bShutDown)
 
 void CIrcChannelListCtrl::JoinChannels()
 {
-	if (!m_pParent->IsConnected())
+	if (!m_pParent->GetLoggedIn())
 		return;
-	for (POSITION pos = GetFirstSelectedItemPosition(); pos != NULL;)
-	{
+	for (POSITION pos = GetFirstSelectedItemPosition(); pos != NULL;) {
 		int iIndex = GetNextSelectedItem(pos);
 		if (iIndex >= 0)
 			m_pParent->m_pIrcMain->SendString(_T("JOIN ") + GetItemText(iIndex, 0));

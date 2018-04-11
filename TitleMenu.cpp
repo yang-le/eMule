@@ -157,8 +157,8 @@ void CTitleMenu::EnableIcons()
 		if (LoadAPI())
 		{
 			MENUINFO mi;
-			mi.fMask = MIM_STYLE;
 			mi.cbSize = sizeof(mi);
+			mi.fMask = MIM_STYLE;
 			GetMenuInfo(m_hMenu, &mi);
 			mi.dwStyle |= MNS_CHECKORBMP;
 			SetMenuInfo(m_hMenu, &mi);
@@ -263,7 +263,7 @@ BOOL CTitleMenu::AppendMenu(UINT nFlags, UINT_PTR nIDNewItem, LPCTSTR lpszNewIte
 {
 	BOOL bResult = CMenu::AppendMenu(nFlags, nIDNewItem, lpszNewItem);
 	if (bResult)
-		SetMenuBitmap(nFlags, nIDNewItem, lpszNewItem, lpszIconName);
+		SetMenuBitmap(nFlags, (UINT)nIDNewItem, lpszNewItem, lpszIconName);
 	return bResult;
 }
 
@@ -271,7 +271,7 @@ BOOL CTitleMenu::InsertMenu(UINT nPosition, UINT nFlags, UINT_PTR nIDNewItem, LP
 {
 	BOOL bResult = CMenu::InsertMenu(nPosition, nFlags, nIDNewItem, lpszNewItem);
 	if (bResult)
-		SetMenuBitmap(nFlags, nIDNewItem, lpszNewItem, lpszIconName);
+		SetMenuBitmap(nFlags, (UINT)nIDNewItem, lpszNewItem, lpszIconName);
 	return bResult;
 }
 
@@ -329,7 +329,7 @@ static HBITMAP IconToBitmap32(HICON hIcon, int cx, int cy)
 	return hBmp;
 }
 
-void CTitleMenu::SetMenuBitmap(UINT nFlags, UINT_PTR nIDNewItem, LPCTSTR /*lpszNewItem*/, LPCTSTR lpszIconName)
+void CTitleMenu::SetMenuBitmap(UINT nFlags, UINT nIDNewItem, LPCTSTR /*lpszNewItem*/, LPCTSTR lpszIconName)
 {
 	if (!m_bIconMenu || (nFlags & MF_SEPARATOR) != 0 || !(thePrefs.GetWindowsVersion() >= _WINVER_2K_ )) {
 		if (m_bIconMenu && lpszIconName != NULL)
@@ -406,7 +406,7 @@ void CTitleMenu::SetMenuBitmap(UINT nFlags, UINT_PTR nIDNewItem, LPCTSTR /*lpszN
 						m_mapIconNameToIconIdx.SetAt(strIconLower, (void *)nPos);
 						m_mapMenuIdToIconIdx.SetAt(nIDNewItem, nPos);
 
-						// It doesn't work to use API checkmark bitmaps in an sufficient way. The size
+						// It doesn't work to use API checkmark bitmaps in a sufficient way. The size
 						// of those bitmaps is limited and smaller than our menu item bitmaps.
 						/*if (nFlags & MF_CHECKED)
 						{

@@ -109,7 +109,7 @@ static mng_ptr mymnggetalphaline( mng_handle mng, mng_uint32 line )
 // timer
 static mng_uint32 mymnggetticks(mng_handle mng)
 {
-#ifdef WIN32
+#ifdef _WIN32
 	return (mng_uint32)GetTickCount();
 #else
   return 0;
@@ -186,7 +186,7 @@ void CxImageMNG::SetCallbacks(mng_handle mng)
 // can't use the CxImage implementation because it looses mnginfo
 bool CxImageMNG::Load(const TCHAR * imageFileName){
 	FILE* hFile;	//file handle to read the image
-#ifdef WIN32
+#ifdef _WIN32
 	if ((hFile=_tfopen(imageFileName,_T("rb")))==NULL)  return false;	// For UNICODE support
 #else
 	if ((hFile=fopen(imageFileName,"rb"))==NULL)  return false;

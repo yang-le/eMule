@@ -60,7 +60,7 @@ BOOL CPreviewThread::InitInstance()
 
 BOOL CPreviewThread::Run()
 {
-	ASSERT (m_pPartfile) ;
+	ASSERT (m_pPartfile);
 	CFile destFile;
 	CFile srcFile;
 	if (!srcFile.Open(m_pPartfile->GetFilePath(), CFile::modeRead | CFile::shareDenyNone))
@@ -184,7 +184,7 @@ void CPreviewApps::RemoveAllApps()
 	m_tDefAppsFileLastModified = 0;
 }
 
-int CPreviewApps::ReadAllApps()
+INT_PTR CPreviewApps::ReadAllApps()
 {
 	RemoveAllApps();
 
@@ -218,7 +218,7 @@ int CPreviewApps::ReadAllApps()
 					LPTSTR pszCommandArgs = PathGetArgs(pszCommandLine);
 					CString strCommand; //, strCommandArgs;
 					if (pszCommandArgs)
-						strCommand = strCommandLine.Left(pszCommandArgs - pszCommandLine);
+						strCommand = strCommandLine.Left((int)(pszCommandArgs - pszCommandLine));
 					else
 						strCommand = strCommandLine;
 					strCommand.Trim(_T(" \t\""));
@@ -273,9 +273,9 @@ int CPreviewApps::ReadAllApps()
 		}
 		fclose(readFile);
 
-		struct _stat st;
-		if (_tstat(strFilePath, &st) == 0)
-			m_tDefAppsFileLastModified = st.st_mtime;
+		struct _stat64 st;
+		if (statUTC(strFilePath, st) == 0)
+			m_tDefAppsFileLastModified = (time_t)st.st_mtime;
 	}
 
 	return m_aApps.GetCount();
@@ -289,8 +289,8 @@ void CPreviewApps::UpdateApps()
 	}
 	else
 	{
-		struct _stat st;
-		if (_tstat(GetDefaultAppsFile(), &st) == 0 && st.st_mtime > m_tDefAppsFileLastModified)
+		struct _stat64 st;
+		if (statUTC(GetDefaultAppsFile(), st) == 0 && st.st_mtime > m_tDefAppsFileLastModified)
 			ReadAllApps();
 	}
 }
@@ -312,7 +312,7 @@ int CPreviewApps::GetAllMenuEntries(CMenu& rMenu, const CPartFile* file)
 		}
 		rMenu.AppendMenu(MF_STRING | (bEnabled ? MF_ENABLED : MF_GRAYED), MP_PREVIEW_APP_MIN + i, rSvc.strTitle);
 	}
-	return m_aApps.GetCount();
+	return (int)m_aApps.GetCount();
 }
 
 void CPreviewApps::RunApp(CPartFile* file, UINT uMenuID) const
@@ -370,7 +370,7 @@ void ExecutePartFile(CPartFile* file, LPCTSTR pszCommand, LPCTSTR pszCommandArgs
 	TRACE(_T("  Command =%s\n"), (LPCTSTR)strCommand);
 	TRACE(_T("  Args    =%s\n"), (LPCTSTR)strArgs);
 	TRACE(_T("  Dir     =%s\n"), (LPCTSTR)strCommandDir);
-	DWORD_PTR dwError = (DWORD_PTR)ShellExecute(NULL, pszVerb, strCommand, strArgs.IsEmpty() ? NULL : (LPCTSTR)strArgs, strCommandDir.IsEmpty() ? NULL : (LPCTSTR)strCommandDir, SW_SHOWNORMAL);
+	DWORD dwError = (DWORD)ShellExecute(NULL, pszVerb, strCommand, strArgs.IsEmpty() ? NULL : (LPCTSTR)strArgs, strCommandDir.IsEmpty() ? NULL : (LPCTSTR)strCommandDir, SW_SHOWNORMAL);
 	if (dwError <= 32)
 	{
 		//
@@ -414,7 +414,7 @@ int CPreviewApps::GetPreviewApp(const CPartFile* file)
 		const SPreviewApp& rApp = m_aApps[i];
 		for (int j = 0; j < rApp.astrExtensions.GetCount(); j++)
 		{
-			if (rApp.astrExtensions.GetAt(j).CompareNoCase(pszExt) == 0) {
+			if (rApp.astrExtensions[j].CompareNoCase(pszExt) == 0) {
 				iApp = i;
 				break;
 			}

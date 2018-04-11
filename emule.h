@@ -199,7 +199,7 @@ public:
 protected:
 	bool ProcessCommandline();
 	void SetTimeOnTransfer();
-	static BOOL CALLBACK SearchEmuleWindow(HWND hWnd, LPARAM lParam);
+	static BOOL CALLBACK SearchEmuleWindow(HWND hWnd, LPARAM lParam) noexcept;
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnHelp();

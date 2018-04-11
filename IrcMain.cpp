@@ -17,7 +17,7 @@
 
 //A lot of documentation for the IRC protocol within this code came
 //directly from http://www.irchelp.org/irchelp/rfc/rfc2812.txt
-//Much of it may never be used, but it's here just in case..
+//Much of it may never be used, but it's here just in case.
 #include "stdafx.h"
 #define MMNODRV			// mmsystem: Installable driver support
 //#define MMNOSOUND		// mmsystem: Sound support
@@ -57,12 +57,11 @@ static char THIS_FILE[] = __FILE__;
 
 #define Irc_Version				_T("(SMIRCv00.69)")
 
-
 CIrcMain::CIrcMain()
 {
 	m_pIRCSocket = NULL;
 	m_pwndIRC = 0;
-	srand( (unsigned)time( NULL ) );
+	srand((unsigned)time(NULL));
 	SetVerify();
 	m_dwLastRequest = 0;
 }
@@ -86,9 +85,11 @@ void CIrcMain::PreParseMessage(const char *pszBufferA)
 			else
 				ASSERT(0);
 			TRACE(_T("%s\n"), (LPCTSTR)CString(pszRawMessageA, iRawMessageLen));
-			ParseMessage(CString(pszRawMessageA, iRawMessageLen));
-
-			m_sPreParseBufferA = m_sPreParseBufferA.Mid(iIndex + 1);
+			if (thePrefs.GetIRCEnableUTF8())
+				ParseMessage(OptUtf8ToStr(pszRawMessageA, iRawMessageLen));
+			else
+				ParseMessage(CString(pszRawMessageA, iRawMessageLen));
+			m_sPreParseBufferA.Delete(0, iIndex + 1);
 			iIndex = m_sPreParseBufferA.Find('\n');
 		}
 	}
@@ -152,16 +153,17 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 		if (sRawMessage.GetLength() < 6)
 		{
 			//TODO : We probably should disconnect here as I don't know of anything that should
-			//come from the server this small..
+			//come from the server this small.
 			return;
 		}
 		if (_tcsncmp(sRawMessage, _T("PING :"), 6) == 0)
 		{
-			//If the server pinged us, we must pong back or get disconnected..
-			//Anything after the ":" must be sent back or it will fail..
+			//If the server pinged us, we must pong back or get disconnected.
+			//Anything after the ":" must be sent back or it will fail.
 			sRawMessage.Replace(_T("PING :"), _T("PONG "));
 			m_pIRCSocket->SendString(sRawMessage);
-			m_pwndIRC->AddStatus(_T("PING?/PONG"), false);
+			if (!thePrefs.GetIRCIgnorePingPongMessages())
+				m_pwndIRC->AddStatus(_T("Ping? Pong!"), false);
 			return;
 		}
 		if (_tcsncmp(sRawMessage, _T("ERROR"), 5) == 0)
@@ -180,10 +182,10 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 		else {
 			sServername = sRawMessage.Tokenize(_T(" "), iIndex);
 			sServername.Remove(_T(':'));
-			int iPos;
-			if ((iPos = sServername.Find(_T('!'))) != -1) {
+			int iPos = sServername.Find(_T('!'));
+			if (iPos != -1) {
 				sNickname = sServername.Left(iPos);
-				sServername = sServername.Mid(iPos + 1);
+				sServername.Delete(0, iPos + 1);
 				iPos = sServername.Find(_T('@'));
 				if (iPos != -1) {
 					sUser = sServername.Left(iPos);
@@ -195,26 +197,26 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 		}
 
 		if (sCommand.IsEmpty())
-			throw CString(_T("SMIRC Error: Received a message had no command."));
+			throw CString(_T("SMIRC Error: Received a message with no command."));
 
 		if (sRawMessage.IsEmpty())
-			throw CString(_T("SMIRC Errow: Received a message with no target or message."));
+			throw CString(_T("SMIRC Errow: Received a message with no target or empty."));
 
 		if (sCommand == _T("PRIVMSG")) {
 			CString sTarget = sRawMessage.Tokenize(_T(" "), iIndex);
 
 			// Channel and Private message were merged into this one if statement, this check allows that to happen.
-			if (!sTarget.IsEmpty() && sTarget[0] != _T('#'))
+			if (sTarget[0] != _T('#'))
 				sTarget = sNickname;
 
-			//If this is a special message.. Find out what kind..
+			//If this is a special message. Find out what kind.
 			if (sRawMessage.Mid(iIndex, 2) == _T(":\001")) {
-				//Check if this is a ACTION message..
-				if (sRawMessage.Mid(iIndex, 8) == _T(":\001ACTION")) {
-					iIndex += 8;
+				//Check if this is an ACTION message.
+				if (sRawMessage.Mid(iIndex, 9) == _T(":\001ACTION ")) {
+					iIndex += 9;
 					CString sMessage = sRawMessage.Mid(iIndex);
 					sMessage.Remove(_T('\001'));
-					//Channel Action..
+					//Channel Action.
 					m_pwndIRC->AddInfoMessageCF(sTarget, RGB(156, 0, 156), _T("* %s %s"), (LPCTSTR)sNickname, (LPCTSTR)sMessage);
 					return;
 				}
@@ -243,7 +245,7 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 				}
 				//Check if this was a VERSION message.
 				if (sRawMessage.Mid(iIndex, 9) == _T(":\001VERSION")) {
-					if (::GetTickCount() - m_dwLastRequest < 1000) { // excess flood protection
+					if (::GetTickCount() < m_dwLastRequest + SEC2MS(1)) { // excess flood protection
 						m_dwLastRequest = ::GetTickCount();
 						return;
 					}
@@ -306,7 +308,7 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 				}
 				if (sRawMessage.Mid(iIndex, 11) == _T(":\001REPFRIEND")) {
 					iIndex += 11;
-					/*CString sVersion =*/ (void)sRawMessage.Tokenize(_T("|"), iIndex);
+					(void)sRawMessage.Tokenize(_T("|"), iIndex); /*CString sVersion =*/ 
 					CString sVerify = sRawMessage.Tokenize(_T("|"), iIndex);
 					//Make sure we requested this!
 					if (m_uVerify != (uint32)_tstoi(sVerify))
@@ -352,36 +354,38 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 					return;
 				}
 			} else {
-				//This is a normal channel message..
-				if (iIndex < sRawMessage.GetLength() && sRawMessage[iIndex] == _T(':'))
+				//This is a normal channel message.
+				if (iIndex < sRawMessage.GetLength() && sRawMessage.Mid(iIndex, 1) == _T(":"))
 					iIndex++;
 				m_pwndIRC->AddMessage(sTarget, sNickname, sRawMessage.Mid(iIndex));
-				return;
 			}
+			return;
 		}
 		if (sCommand == _T("JOIN")) {
 			//Channel join
 			CString sChannel = sRawMessage.Tokenize(_T(":"), iIndex);
-			//If this was you, just add a message to create a new channel..
+			//If this was you, just add a message to create a new channel.
 			//The list of Nicks received from the server will include you, so don't
 			//add yourself here.
-			if (sNickname == m_sNick) {
+			if (!thePrefs.GetIRCIgnoreJoinMessages() || sNickname == m_sNick) {
+				if (sNickname == m_sNick) {
+					Channel* pChannel = m_pwndIRC->m_wndChanSel.FindChannelByName(sChannel);
+					if (pChannel && pChannel->m_bDetached)
+						m_pwndIRC->m_wndChanSel.RemoveChannel(pChannel);
+				}
 				m_pwndIRC->AddInfoMessageF(sChannel, GetResString(IDS_IRC_HASJOINED), (LPCTSTR)sNickname, (LPCTSTR)sChannel);
-				return;
+				if (sNickname == m_sNick)
+					return;
 			}
-
-			if (!thePrefs.GetIRCIgnoreJoinMessages() || sNickname == m_sNick)
-				m_pwndIRC->AddInfoMessageF(sChannel, GetResString(IDS_IRC_HASJOINED), (LPCTSTR)sNickname, (LPCTSTR)sChannel);
 			//Add new nick to your channel.
 			m_pwndIRC->m_wndNicks.NewNick(sChannel, sNickname);
 			return;
-
 		}
 		if (sCommand == _T("PART")) {
 			//Part message
 			CString sChannel = sRawMessage.Tokenize(_T(" "), iIndex);
 			if (sRawMessage.Mid(iIndex, 1) == _T(":"))
-				iIndex++;
+				++iIndex;
 			if (sNickname == m_sNick) {
 				//This was you, so remove channel.
 				m_pwndIRC->m_wndChanSel.RemoveChannel(sChannel);
@@ -397,63 +401,63 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 		if (sCommand == _T("TOPIC")) {
 			CString sChannel = sRawMessage.Tokenize(_T(" "), iIndex);
 			if (sRawMessage.Mid(iIndex, 1) == _T(":"))
-				iIndex++;
+				++iIndex;
 			CString sMessage = sRawMessage.Mid(iIndex);
 			m_pwndIRC->AddInfoMessageF(sChannel, _T("* %s changes topic to '%s'"), (LPCTSTR)sNickname, (LPCTSTR)sMessage);
-			m_pwndIRC->SetTitle(sChannel, sMessage);
+			m_pwndIRC->SetTopic(sChannel, sMessage);
 			return;
 		}
 
 		if (sCommand == _T("QUIT")) {
 			if (sRawMessage.Mid(iIndex, 1) == _T(":"))
-				iIndex++;
+				++iIndex;
 			CString sMessage = sRawMessage.Mid(iIndex);
-			//This user left the network.. Remove from all Channels..
+			//This user left the network. Remove from all Channels.
 			m_pwndIRC->m_wndNicks.DeleteNickInAll(sNickname, sMessage);
 			return;
 		}
 
 		if (sCommand == _T("NICK")) {
-			// Someone changed a nick..
+			// Someone changed a nick.
 			if (sRawMessage.Mid(iIndex, 1) == _T(":"))
-				iIndex++;
+				++iIndex;
 			bool bOwnNick = false;
 			CString sNewNick = sRawMessage.Tokenize(_T(" "), iIndex);
 			if (sNickname == m_sNick) {
-				// It was you.. Update!
+				// It was you. Update!
 				m_sNick = sNewNick;
 				thePrefs.SetIRCNick(m_sNick);
 				bOwnNick = true;
 			}
-			// Update new nick in all channels..
+			// Update new nick in all channels.
 			if (!m_pwndIRC->m_wndNicks.ChangeAllNick(sNickname, sNewNick) && bOwnNick)
 				m_pwndIRC->AddStatusF(GetResString(IDS_IRC_NOWKNOWNAS), (LPCTSTR)sNickname, (LPCTSTR)sNewNick);
 			return;
 		}
 
 		if (sCommand == _T("KICK")) {
-			//Someone was kicked from a channel..
+			//Someone was kicked from a channel.
 			CString sChannel = sRawMessage.Tokenize(_T(" "), iIndex);
 			CString sNick = sRawMessage.Tokenize(_T(" "), iIndex);
 			if (sRawMessage.Mid(iIndex, 1) == _T(":"))
-				iIndex++;
+				++iIndex;
 
-			if (sNick == m_sNick) {
-				//It was you!
-				m_pwndIRC->m_wndChanSel.RemoveChannel(sChannel);
-				m_pwndIRC->AddStatusF(GetResString(IDS_IRC_WASKICKEDBY), (LPCTSTR)sNick, (LPCTSTR)sNickname, (LPCTSTR)sRawMessage.Mid(iIndex));
-				return;
-			}
-			if (!thePrefs.GetIRCIgnoreMiscMessages())
+			if (!thePrefs.GetIRCIgnoreMiscMessages() || sNick == m_sNick) {
+				if (sNick == m_sNick) { //It was you!
+					m_pwndIRC->m_wndChanSel.DetachChannel(sChannel);
+					m_pwndIRC->AddStatusF(GetResString(IDS_IRC_WASKICKEDBY), (LPCTSTR)sNick, (LPCTSTR)sNickname, (LPCTSTR)sRawMessage.Mid(iIndex)); //is it needed?
+				}
 				m_pwndIRC->AddInfoMessageF(sChannel, GetResString(IDS_IRC_WASKICKEDBY), (LPCTSTR)sNick, (LPCTSTR)sNickname, (LPCTSTR)sRawMessage.Mid(iIndex));
+			}
 			//Remove nick from your channel.
-			m_pwndIRC->m_wndNicks.RemoveNick(sChannel, sNick);
+			if (sNick != m_sNick)
+				m_pwndIRC->m_wndNicks.RemoveNick(sChannel, sNick);
 			return;
 		}
 		if (sCommand == _T("MODE")) {
-			//A mode was set..
+			//A mode was set.
 			CString sTarget = sRawMessage.Tokenize(_T(" "), iIndex);
-			if (sTarget.Left(1) == _T("#")) {
+			if (sTarget[0] == _T('#')) {
 				CString sCommands = sRawMessage.Tokenize(_T(" "), iIndex);
 
 				if (sCommand.IsEmpty())
@@ -463,12 +467,11 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 				if (sNickname.IsEmpty())
 					sNickname = sServername;
 				m_pwndIRC->ParseChangeMode(sTarget, sNickname, sCommands, sParams);
-				return;
 			} else {
 				//The server just set a server user mode that relates to no channels!
 				//Atm, we do not handle these modes.
-				return;
 			}
+			return;
 		}
 		if (sCommand == _T("NOTICE")) {
 			CString sTarget = sRawMessage.Tokenize(_T(" "), iIndex);
@@ -481,8 +484,8 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 			return;
 		}
 
-		//TODO: Double and trible check this.. I don't know of any 3 letter commands
-		//So I'm currently assuming it's a numberical command..
+		//TODO: Double and trible check this. I don't know of any 3 letter commands
+		//So I'm currently assuming it's a numberical command.
 		if (sCommand.GetLength() == 3)
 		{
 			/*CString */sUser = sRawMessage.Tokenize(_T(" "), iIndex);
@@ -528,9 +531,9 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 					//005    RPL_BOUNCE
 					//"Try server <server name>, port <port number>"
 
-					//005 is actually confusing.. Different sites say different things?
+					//005 is actually confusing. Different sites say different things?
 					//It appears this is also RPL_ISUPPORT which tells you what modes are
-					//availabile to this server..
+					//availabile to this server.
 				case 5:
 					{
 						//This get our viable user modes
@@ -587,7 +590,10 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 						iIndex++;
 					m_pwndIRC->AddStatus(sRawMessage.Mid(iIndex), true, uCommand);
 					// clear nick and enter the IRC-nick message box on next connect
-					thePrefs.SetIRCNick(_T(""));
+					if (!m_pwndIRC->GetLoggedIn()) {
+						thePrefs.SetIRCNick(_T(""));
+						Disconnect();
+					}
 					return;
 
 					//- Reply format used by USERHOST to list replies to
@@ -626,6 +632,10 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 				case 301:
 				case 305:
 				case 306:
+					if (sRawMessage.Mid(iIndex, 1) == _T(":"))
+						iIndex++;
+					m_pwndIRC->AddStatus((uCommand == 303 ? _T("ison: ") : _T("")) + sRawMessage.Mid(iIndex));
+					return;
 
 					//- Replies 311 - 313, 317 - 319 are all replies
 					//generated in response to a WHOIS message.  Given that
@@ -670,7 +680,7 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 						CTime signon(_tstoi64(sRawMessage.Tokenize(_T(" "), iIndex)));
 						if (signon != 0)
 							s += signon.Format(_T(", signed on %a %b %d %H:%M:%S"));
-						m_pwndIRC->AddStatus(s);
+						m_pwndIRC->AddCurrent(s);
 						return;
 					}
 				case 318:
@@ -690,7 +700,7 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 				case 369:
 					if (sRawMessage.Mid(iIndex, 1) == _T(":"))
 						iIndex++;
-					m_pwndIRC->AddStatus(sRawMessage.Mid(iIndex));
+					m_pwndIRC->AddCurrent(sRawMessage.Mid(iIndex));
 					return;
 
 					//- Replies RPL_LIST, RPL_LISTEND mark the actual replies
@@ -704,21 +714,24 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 					//323    RPL_LISTEND
 					//":End of LIST"
 				case 321:
-					//Although it says this is obsolete, so far every server has sent it, so I use it.. :/
+					//Although it says this is obsolete, so far every server has sent it, so I use it. :/
 					m_pwndIRC->AddStatus(_T("Start of /LIST"));
-					m_pwndIRC->m_wndChanList.ResetServerChannelList();
+					if (m_pwndIRC->m_wndChanSel.m_pChanList == NULL)
+						m_pwndIRC->m_wndChanSel.m_pChanList = m_pwndIRC->m_wndChanSel.NewChannel(GetResString(IDS_IRC_CHANNELLIST), Channel::ctChannelList);
+					else
+						m_pwndIRC->m_wndChanList.ResetServerChannelList();
 					return;
-
-				case 322: {
-					CString sChannel = sRawMessage.Tokenize(_T(" "), iIndex);
-					if (!sChannel.IsEmpty() && sChannel[0] != _T('#'))
+				case 322:
+					{
+						CString sChannel = sRawMessage.Tokenize(_T(" "), iIndex);
+						if (sChannel[0] == _T('#')) {
+							CString sChanNum = sRawMessage.Tokenize(_T(" "), iIndex);
+							iIndex++;
+							if (m_pwndIRC->m_wndChanList.AddChannelToList(sChannel, sChanNum, sRawMessage.Mid(iIndex)))
+								m_pwndIRC->m_wndChanSel.SetActivity(m_pwndIRC->m_wndChanSel.m_pChanList, true);
+						}
 						return;
-					CString sChanNum = sRawMessage.Tokenize(_T(" "), iIndex);
-					iIndex++;
-					if (m_pwndIRC->m_wndChanList.AddChannelToList(sChannel, sChanNum, sRawMessage.Mid(iIndex)))
-						m_pwndIRC->m_wndChanSel.SetActivity(m_pwndIRC->m_wndChanSel.m_pChanList, true);
-					return;
-				}
+					}
 				case 323:
 
 					//- When sending a TOPIC message to determine the
@@ -734,33 +747,29 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 					//332    RPL_TOPIC
 					//"<channel> :<topic>"
 				case 325:
-					if (sRawMessage.Mid(iIndex, 1) == _T(":"))
-						iIndex++;
-					m_pwndIRC->AddStatus(sRawMessage.Mid(iIndex));
-					return;
-
-				case 324: {
-					//A mode was set..
-					CString sChannel = sRawMessage.Tokenize(_T(" "), iIndex);
-					CString sCommands = sRawMessage.Tokenize(_T(" "), iIndex);
-					m_pwndIRC->ParseChangeMode( sChannel, sNickname, sCommands, sRawMessage.Mid(iIndex) );
-					return;
-				}
 				case 331:
 					if (sRawMessage.Mid(iIndex, 1) == _T(":"))
 						iIndex++;
 					m_pwndIRC->AddStatus(sRawMessage.Mid(iIndex));
 					return;
 
+				case 324: {
+					//A mode was set.
+					CString sChannel = sRawMessage.Tokenize(_T(" "), iIndex);
+					CString sCommands = sRawMessage.Tokenize(_T(" "), iIndex);
+					m_pwndIRC->ParseChangeMode( sChannel, sNickname, sCommands, sRawMessage.Mid(iIndex) );
+					return;
+				}
+
 				case 332: {
 					//Set Channel Topic
 					CString sChannel = sRawMessage.Tokenize(_T(" "), iIndex);
-					if (!sChannel.IsEmpty() && sChannel[0] != _T('#'))
-						return;
-					if (sRawMessage.Mid(iIndex, 1) == _T(":"))
-						iIndex++;
-					m_pwndIRC->SetTitle(sChannel, sRawMessage.Mid(iIndex));
-					m_pwndIRC->AddInfoMessageF(sChannel, _T("* Channel Title: %s"), (LPCTSTR)sRawMessage.Mid(iIndex));
+					if (sChannel[0] == _T('#')) {
+						if (sRawMessage.Mid(iIndex, 1) == _T(":"))
+							iIndex++;
+						m_pwndIRC->SetTopic(sChannel, sRawMessage.Mid(iIndex));
+						m_pwndIRC->AddInfoMessageF(sChannel, _T("* Channel Topic: %s"), (LPCTSTR)sRawMessage.Mid(iIndex));
+					}
 					return;
 				}
 
@@ -829,12 +838,10 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 					//"<name> :End of WHO list"
 				case 352:
 				case 315:
-					{
-						if(sRawMessage.Mid(iIndex, 1) == _T(":"))
-							iIndex++;
-						m_pwndIRC->AddStatus(sRawMessage.Mid(iIndex));
-						return;
-					}
+					if(sRawMessage.Mid(iIndex, 1) == _T(":"))
+						iIndex++;
+					m_pwndIRC->AddStatus(sRawMessage.Mid(iIndex));
+					return;
 
 					//- To reply to a NAMES message, a reply pair consisting
 					//of RPL_NAMREPLY and RPL_ENDOFNAMES is sent by the
@@ -854,15 +861,17 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 					//"<channel> :End of NAMES list"
 				case 353: {
 					m_pwndIRC->m_wndNicks.ShowWindow(SW_HIDE);
-/*					CString sChannelType =*/ (void)sRawMessage.Tokenize(_T(" "), iIndex);
-					CString sChannel = sRawMessage.Tokenize(_T(" "), iIndex);
-					if (!sChannel.IsEmpty() && sChannel[0] != _T('#'))
-						return;
-					iIndex++;
-					CString sNewNick = sRawMessage.Tokenize(_T(" "), iIndex);
-					while (!sNewNick.IsEmpty()) {
-						m_pwndIRC->m_wndNicks.NewNick(sChannel, sNewNick);
-						sNewNick = sRawMessage.Tokenize(_T(" "), iIndex);
+					(void)sRawMessage.Tokenize(_T(" "), iIndex); /*CString sChannelType =*/ 
+					const CString sChannel = sRawMessage.Tokenize(_T(" "), iIndex);
+					if (sChannel[0] == _T('#')) {
+						iIndex++;
+						m_pwndIRC->m_wndNicks.DeleteAllNick(sChannel);
+						CString sNewNick = sRawMessage.Tokenize(_T(" "), iIndex);
+						while (!sNewNick.IsEmpty()) {
+							m_pwndIRC->m_wndNicks.NewNick(sChannel, sNewNick);
+							sNewNick = sRawMessage.Tokenize(_T(" "), iIndex);
+						}
+						m_pwndIRC->m_wndNicks.RefreshNickList(sChannel);
 					}
 					return;
 				}
@@ -1479,74 +1488,18 @@ void CIrcMain::ParsePerform()
 	//We need to do the perform first and separate from the help option.
 	//This allows you to do all your passwords and stuff before joining the
 	//help channel and to keep both options from interfering with each other.
-	try
-	{
-		if (thePrefs.GetIRCUsePerform())
-		{
-			CString sUserPerform = thePrefs.GetIRCPerformString();
-			sUserPerform.Trim();
-			if (!sUserPerform.IsEmpty())
-			{
-				int iPos = 0;
-				CString sCommand = sUserPerform.Tokenize(_T("|"), iPos);
-				sCommand.Trim();
-				while (!sCommand.IsEmpty())
-				{
-					if (sCommand[0] == _T('/'))
-						sCommand = sCommand.Mid(1);
-					if (sCommand.Left(3) == _T("msg"))
-						sCommand = _T("PRIVMSG") + sCommand.Mid(3);
-					if (sCommand.Left(16).CompareNoCase(_T("PRIVMSG nickserv")) == 0)
-						sCommand = _T("ns") + sCommand.Mid(16);
-					if (sCommand.Left(16).CompareNoCase(_T("PRIVMSG chanserv")) == 0)
-						sCommand = _T("cs") + sCommand.Mid(16);
-					m_pIRCSocket->SendString(sCommand);
-					sCommand = sUserPerform.Tokenize(_T("|"), iPos);
-					sCommand.Trim();
-				}
-			}
-		}
-	}
-	CATCH_DFLT_EXCEPTIONS(_T(__FUNCTION__))
-	CATCH_DFLT_ALL(_T(__FUNCTION__))
+	if (thePrefs.GetIRCUsePerform())
+			PerformString(thePrefs.GetIRCPerformString());
 
-	try
-	{
-		if (thePrefs.GetIRCJoinHelpChannel())
-		{
-			// NOTE: putting this IRC command string into the language resource file is not a good idea. most
-			// translators do not know that this resource string does NOT have to be translated.
+	// NOTE: putting this IRC command string into the language resource file is not a good idea. Most
+	// translators do not know that this resource string does NOT have to be translated.
 
-			// Well, I meant to make this option a static perform string within the language so the default help could
-			// be change to what ever channel by just changing the language.. I will just have to check these strings
-			// before release.
-			// This also allows the help string to do more then join one channel. It could add other features later.
-			CString sJoinHelpChannel = GetResString(IDS_IRC_HELPCHANNELPERFORM);
-			sJoinHelpChannel.Trim();
-			if (!sJoinHelpChannel.IsEmpty())
-			{
-				int iPos = 0;
-				CString sCommand = sJoinHelpChannel.Tokenize(_T("|"), iPos);
-				sCommand.Trim();
-				while (!sCommand.IsEmpty())
-				{
-					if (sCommand[0] == _T('/'))
-						sCommand = sCommand.Mid(1);
-					if (sCommand.Left(3) == _T("msg"))
-						sCommand = _T("PRIVMSG") + sCommand.Mid(3);
-					if (sCommand.Left(16).CompareNoCase(_T("PRIVMSG nickserv")) == 0)
-						sCommand = _T("ns") + sCommand.Mid(16);
-					if (sCommand.Left(16).CompareNoCase(_T("PRIVMSG chanserv")) == 0)
-						sCommand = _T("cs") + sCommand.Mid(16);
-					m_pIRCSocket->SendString(sCommand);
-					sCommand = sJoinHelpChannel.Tokenize(_T("|"), iPos);
-					sCommand.Trim();
-				}
-			}
-		}
-	}
-	CATCH_DFLT_EXCEPTIONS(_T(__FUNCTION__))
-	CATCH_DFLT_ALL(_T(__FUNCTION__))
+	// Well, I meant to make this option a static perform string within the language so the default help could
+	// be changed to whatever channel by just changing the language. I will just have to check these strings
+	// before release.
+	// This also allows the help string to do more then join one channel. It could add other features later.
+	if (thePrefs.GetIRCJoinHelpChannel())
+		PerformString(GetResString(IDS_IRC_HELPCHANNELPERFORM));
 }
 
 void CIrcMain::Connect()
@@ -1617,4 +1570,26 @@ uint32 CIrcMain::SetVerify()
 CString CIrcMain::GetNick() const
 {
 	return m_sNick;
+}
+
+void CIrcMain::PerformString(const CString& sPerform)
+{
+	try {
+		int iPos = 0;
+		CString sCommand = sPerform.Tokenize(_T("|"), iPos);
+		while (!sCommand.Trim().IsEmpty()) {
+			if (sCommand[0] == _T('/'))
+				sCommand.Delete(0, 1);
+			if (sCommand.Left(3) == _T("msg"))
+				sCommand = _T("PRIVMSG") + sCommand.Mid(3);
+			if (sCommand.Left(16).CompareNoCase(_T("PRIVMSG nickserv")) == 0)
+				sCommand = _T("ns") + sCommand.Mid(16);
+			if (sCommand.Left(16).CompareNoCase(_T("PRIVMSG chanserv")) == 0)
+				sCommand = _T("cs") + sCommand.Mid(16);
+			m_pIRCSocket->SendString(sCommand);
+			sCommand = sPerform.Tokenize(_T("|"), iPos);
+		}
+	}
+	CATCH_DFLT_EXCEPTIONS(_T(__FUNCTION__))
+	CATCH_DFLT_ALL(_T(__FUNCTION__))
 }

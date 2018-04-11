@@ -99,16 +99,16 @@ BOOL CAddFriend::OnInitDialog()
 void CAddFriend::Localize()
 {
 	SetWindowText(GetResString(m_pShowFriend ? IDS_DETAILS : IDS_ADDAFRIEND));
-	GetDlgItem(IDC_INFO1)->SetWindowText(GetResString(IDS_PAF_REQINFO));
-	GetDlgItem(IDC_INFO2)->SetWindowText(GetResString(IDS_PAF_MOREINFO));
+	SetDlgItemText(IDC_INFO1, GetResString(IDS_PAF_REQINFO));
+	SetDlgItemText(IDC_INFO2, GetResString(IDS_PAF_MOREINFO));
 
-	GetDlgItem(IDC_ADD)->SetWindowText(GetResString(IDS_ADD));
-	GetDlgItem(IDCANCEL)->SetWindowText(GetResString(m_pShowFriend ? IDS_FD_CLOSE : IDS_CANCEL));
+	SetDlgItemText(IDC_ADD, GetResString(IDS_ADD));
+	SetDlgItemText(IDCANCEL, GetResString(m_pShowFriend ? IDS_FD_CLOSE : IDS_CANCEL));
 
-	GetDlgItem(IDC_STATIC31)->SetWindowText(GetResString(IDS_CD_UNAME));
-	GetDlgItem(IDC_STATIC32)->SetWindowText(GetResString(IDS_CD_UHASH));
-	GetDlgItem(IDC_STATIC34)->SetWindowText(m_pShowFriend ? GetResString(IDS_USERID)+_T(':') : GetResString(IDS_CD_UIP));
-	GetDlgItem(IDC_STATIC35)->SetWindowText(GetResString(IDS_PORT)+_T(':'));
+	SetDlgItemText(IDC_STATIC31, GetResString(IDS_CD_UNAME));
+	SetDlgItemText(IDC_STATIC32, GetResString(IDS_CD_UHASH));
+	SetDlgItemText(IDC_STATIC34, (m_pShowFriend ? GetResString(IDS_USERID)+_T(':') : GetResString(IDS_CD_UIP)));
+	SetDlgItemText(IDC_STATIC35, GetResString(IDS_PORT)+_T(':'));
 	SetDlgItemText(IDC_LAST_SEEN_LABEL, GetResString(IDS_LASTSEEN)+_T(':'));
 	SetDlgItemText(IDC_AFKADIDLABEL, GetResString(IDS_KADID)+_T(':'));
 	//SetDlgItemText(IDC_LAST_CHATTED_LABEL, GetResString(IDS_LASTCHATTED)+_T(':'));
@@ -149,8 +149,7 @@ void CAddFriend::OnAddBtn()
 		
 		CString strUserName;
 		GetDlgItemText(IDC_USERNAME, strUserName);
-		strUserName.Trim();
-		strUserName = strUserName.Left(thePrefs.GetMaxUserNickLength());
+		strUserName = strUserName.Trim().Left(thePrefs.GetMaxUserNickLength());
 
 		// why did we offer an edit control for entering the userhash but did not store it?
 		;

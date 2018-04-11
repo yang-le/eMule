@@ -64,7 +64,7 @@ static const uchar achVerify_Key[256] = {
     0x77, 0x45, 0xD7, 0xBE, 0x9B, 0x55, 0x0F, 0x2E, 0xC9, 0xD5, 0x85, 0x8F, 0xB5, 0xF9, 0xF0, 0x49,
     0xF6, 0x85, 0x24, 0x7A, 0xA8, 0x74, 0x64, 0xB1, 0x8B, 0x71, 0x63, 0xFC, 0x1F, 0x1B, 0x5E, 0x26,
     0xF5,
-} ;
+};
 
 CPeerCacheFinder::CPeerCacheFinder()
 	: m_PCStatus(PCS_NOINIT), m_PCLUState(LUS_NONE)
@@ -103,7 +103,7 @@ void CPeerCacheFinder::Save(){
 	}
 }
 
-void CPeerCacheFinder::Init(uint32 dwLastSearch, bool bLastSearchSuccess, bool bEnabled, uint16 nPort){
+void CPeerCacheFinder::Init(time_t dwLastSearch, bool bLastSearchSuccess, bool bEnabled, uint16 nPort){
 	if (!bEnabled){
 		m_PCStatus = PCS_DISABLED;
 	}
@@ -347,20 +347,23 @@ CString ReverseDnsLookup(DWORD dwIP)
 	return strHostName;
 }
 
-void CPeerCacheFinder::DoReverseLookUp(uint32 dwIP){
-	CPCReverseDnsThread* pThread = (CPCReverseDnsThread*)AfxBeginThread(RUNTIME_CLASS(CPCReverseDnsThread), THREAD_PRIORITY_BELOW_NORMAL, 0, CREATE_SUSPENDED);
+void CPeerCacheFinder::DoReverseLookUp(uint32 dwIP)
+{
+	CPCReverseDnsThread* pThread = static_cast<CPCReverseDnsThread *>(AfxBeginThread(RUNTIME_CLASS(CPCReverseDnsThread), THREAD_PRIORITY_BELOW_NORMAL, 0, CREATE_SUSPENDED));
 	pThread->m_dwIP = dwIP;
 	pThread->m_hwndAsyncResult = theApp.emuledlg->m_hWnd;
 	pThread->ResumeThread();
 }
 
-void CPeerCacheFinder::ValditeDescriptorFile(){
-	CPCValditeThread* pValditeThread = (CPCValditeThread*) AfxBeginThread(RUNTIME_CLASS(CPCValditeThread), THREAD_PRIORITY_BELOW_NORMAL,0, CREATE_SUSPENDED);
+void CPeerCacheFinder::ValditeDescriptorFile()
+{
+	CPCValditeThread* pValditeThread = static_cast<CPCValditeThread *>(AfxBeginThread(RUNTIME_CLASS(CPCValditeThread), THREAD_PRIORITY_BELOW_NORMAL,0, CREATE_SUSPENDED));
 	pValditeThread->SetValues(this, m_dwPCIP, m_dwMyIP);
 	pValditeThread->ResumeThread();
 }
 
-void	CPeerCacheFinder::AddBannedVersion(CClientVersionInfo cviVersion){
+void CPeerCacheFinder::AddBannedVersion(CClientVersionInfo cviVersion)
+{
 	// Thread safe, due to logic this is not really needed at this time
 	// (because noone will access the list while the ValditeThread is running),
 	// but better to be on the safe side in case the code changes
@@ -368,12 +371,14 @@ void	CPeerCacheFinder::AddBannedVersion(CClientVersionInfo cviVersion){
 	liBannedVersions.Add(cviVersion);
 }
 
-void CPeerCacheFinder::AddAllowedVersion(CClientVersionInfo cviVersion){
+void CPeerCacheFinder::AddAllowedVersion(CClientVersionInfo cviVersion)
+{
 	CSingleLock lock(&m_SettingsMutex, TRUE);
 	liAllowedVersions.Add(cviVersion);
 }
 
-bool CPeerCacheFinder::IsClientPCCompatible(uint32 dwTagVersionInfo, UINT nClientSoft){
+bool CPeerCacheFinder::IsClientPCCompatible(uint32 dwTagVersionInfo, UINT nClientSoft)
+{
 	return IsClientPCCompatible(CClientVersionInfo(dwTagVersionInfo, nClientSoft));
 }
 
@@ -391,8 +396,9 @@ bool CPeerCacheFinder::IsClientPCCompatible(const CClientVersionInfo& cviToCheck
 	return true;
 }
 
-void CPeerCacheFinder::DownloadAttemptFailed(){
-	m_nFailedDownloads++;
+void CPeerCacheFinder::DownloadAttemptFailed()
+{
+	++m_nFailedDownloads;
 	if(m_nDownloadAttempts > 20 && m_nFailedDownloads > 0){
 		DEBUG_ONLY(AddDebugLogLine(DLP_LOW, false, _T("PeerCache fail value: %0.2f"), (float)(m_nDownloadAttempts/m_nFailedDownloads)));
 		if (m_nDownloadAttempts/m_nFailedDownloads < 2)
@@ -406,7 +412,7 @@ void CPeerCacheFinder::DownloadAttemptFailed(){
 IMPLEMENT_DYNCREATE(CPCValditeThread, CWinThread)
 
 CPCValditeThread::CPCValditeThread()
-	: m_dwMyIP(0), m_dwPCIP(0), m_pOwner(NULL), m_nPCPort(0)
+	: m_dwPCIP(0), m_dwMyIP(0), m_pOwner(NULL), m_nPCPort(0)
 {
 }
 
@@ -528,7 +534,7 @@ bool CPCValditeThread::Valdite(){
 					bool bDateCheckFailed = true;
 
 					if (strContent.GetLength() == 8){
-						uint32 nYear =  atol(strContent.Mid(0,4));
+						uint32 nYear = atol(strContent.Mid(0,4));
 						uint32 nMonth = atol(strContent.Mid(4,2));
 						uint32 nDay = atol(strContent.Mid(6,2));
 						if (nYear <= 3000 && nMonth <= 12 && nDay <= 31){

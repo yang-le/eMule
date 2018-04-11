@@ -18,13 +18,15 @@
 #pragma once
 #include <exception>
 
-enum TRISTATE {
+enum TRISTATE
+{
 	TRIS_FALSE,
 	TRIS_UNKNOWN,
 	TRIS_TRUE
 };
 
-enum UPNP_IMPLEMENTATION {
+enum UPNP_IMPLEMENTATION
+{
 	UPNP_IMPL_WINDOWSERVICE = 0,
 	UPNP_IMPL_MINIUPNPLIB,
 	UPNP_IMPL_NONE	/*last*/
@@ -36,8 +38,9 @@ class CUPnPImpl
 public:
 	CUPnPImpl();
 	virtual ~CUPnPImpl();
-	struct UPnPError : public std::exception {};
-	enum {
+	struct UPnPError : public std::exception	{};
+	enum
+	{
 		UPNP_OK,
 		UPNP_FAILED,
 		UPNP_TIMEOUT
@@ -50,7 +53,7 @@ public:
 	virtual bool IsReady() = 0;
 	virtual int GetImplementationID() = 0;
 
-	void LateEnableWebServerPort(uint16 nPort);	// Add Webserverport on already installed portmapping
+	void LateEnableWebServerPort(uint16 nPort);	// Add WebServer port to already installed port mapping
 
 	void SetMessageOnResult(HWND hWindow, UINT nMessageID);
 	TRISTATE ArePortsForwarded() const
@@ -65,20 +68,26 @@ public:
 	{
 		return m_nUDPPort;
 	}
+	uint16 GetUsedTCPWebPort() const
+	{
+		return m_nTCPWebPort;
+	}
 
 // Implementation
 protected:
-	volatile TRISTATE m_bUPnPPortsForwarded;
 	void SendResultMessage();
-	uint16 m_nUDPPort;
+	volatile TRISTATE m_bUPnPPortsForwarded;
+	uint16 m_nOldTCPPort;
+	uint16 m_nOldTCPWebPort;
+	uint16 m_nOldUDPPort;
 	uint16 m_nTCPPort;
 	uint16 m_nTCPWebPort;
+	uint16 m_nUDPPort;
 	bool m_bCheckAndRefresh;
 
 private:
 	HWND m_hResultMessageWindow;
 	UINT m_nResultMessageID;
-
 };
 
 // Dummy Implementation to be used when no other implementation is available

@@ -40,7 +40,7 @@ protected:
 	HICON m_hPrevIconDelete;
 	CMenu m_mnuTrayMenu;
 	NOTIFYICONDATA m_nidIconData;
-	UINT m_uSingleClickTimer;
+	UINT_PTR	m_uSingleClickTimer;
 	bool m_bCurIconDelete;
 	bool m_bLButtonDblClk;
 	bool m_bLButtonDown;

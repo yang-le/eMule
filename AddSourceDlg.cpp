@@ -43,7 +43,7 @@ END_MESSAGE_MAP()
 
 CAddSourceDlg::CAddSourceDlg(CWnd* pParent /*=NULL*/)
 	: CResizableDialog(CAddSourceDlg::IDD, pParent)
-	, m_nSourceType(0), m_pFile(NULL)
+	, m_pFile(NULL), m_nSourceType(0)
 {
 }
 
@@ -86,7 +86,7 @@ BOOL CAddSourceDlg::OnInitDialog()
 	SetDlgItemText(IDC_RURL,GetResString(IDS_SV_URL));
 	SetDlgItemText(IDC_UIP,GetResString(IDS_USERSIP));
 	SetDlgItemText(IDC_PORT,GetResString(IDS_PORT));
-	GetDlgItem(IDOK)->SetWindowText(GetResString(IDS_TREEOPTIONS_OK));
+	SetDlgItemText(IDOK, GetResString(IDS_TREEOPTIONS_OK));
 
 
 	EnableSaveRestore(_T("AddSourceDlg"));
@@ -123,7 +123,7 @@ void CAddSourceDlg::OnBnClickedButton1()
 		case 0:
 		{
 			CString sip;
-			GetDlgItem(IDC_EDIT2)->GetWindowText(sip);
+			GetDlgItemText(IDC_EDIT2, sip);
 			if (sip.IsEmpty())
 				return;
 
@@ -141,7 +141,7 @@ void CAddSourceDlg::OnBnClickedButton1()
 					return;
 			}
 
-			uint32 ip = inet_addr(CT2CA(sip));
+			uint32 ip = inet_addr(CStringA(sip));
 			if (ip == INADDR_NONE && _tcscmp(sip, _T("255.255.255.255")) != 0)
 				ip = 0;
 			if (IsGoodIPPort(ip, port))
@@ -155,9 +155,7 @@ void CAddSourceDlg::OnBnClickedButton1()
 		case 1:
 		{
 			CString strURL;
-			GetDlgItem(IDC_EDIT10)->GetWindowText(strURL);
-			if (!strURL.IsEmpty())
-			{
+			if (GetDlgItemText(IDC_EDIT10, strURL)) {
 				TCHAR szScheme[INTERNET_MAX_SCHEME_LENGTH];
 				TCHAR szHostName[INTERNET_MAX_HOST_NAME_LENGTH];
 				TCHAR szUrlPath[INTERNET_MAX_PATH_LENGTH];
@@ -178,8 +176,7 @@ void CAddSourceDlg::OnBnClickedButton1()
 				Url.dwUrlPathLength = ARRSIZE(szUrlPath);
 				Url.lpszExtraInfo = szExtraInfo;
 				Url.dwExtraInfoLength = ARRSIZE(szExtraInfo);
-				if (InternetCrackUrl(strURL, 0, 0, &Url) && Url.dwHostNameLength > 0 && Url.dwHostNameLength < INTERNET_MAX_HOST_NAME_LENGTH)
-				{
+				if (InternetCrackUrl(strURL, 0, 0, &Url) && Url.dwHostNameLength > 0 && Url.dwHostNameLength < INTERNET_MAX_HOST_NAME_LENGTH) {
 					SUnresolvedHostname* hostname = new SUnresolvedHostname;
 					hostname->strURL = strURL;
 					hostname->strHostname = szHostName;

@@ -331,12 +331,11 @@ void CCreditsThread::InitFonts()
 	CFont* pOldFont;
 	int nTextHeight;
 
-	LOGFONT lf;
+	LOGFONT lf = {};
 
 	// font 0
 	// SMALL ARIAL
 	CFont* font0 = new CFont;
-	memset((void*)&lf, 0, sizeof lf);
 	lf.lfHeight = 12;
 	lf.lfWeight = 500;
 	lf.lfQuality = NONANTIALIASED_QUALITY;
@@ -400,15 +399,15 @@ void CCreditsThread::InitColors()
 {
 	// define each color we'll be using
 
-	m_arColors.Add(PALETTERGB(0, 0, 0));	// 0 = BLACK
-	m_arColors.Add(PALETTERGB(90, 90, 90));	// 1 = very dark gray
-	m_arColors.Add(PALETTERGB(128, 128, 128));		// 2 = DARK GRAY
+	m_arColors.Add(PALETTERGB(0, 0, 0));		// 0 = BLACK
+	m_arColors.Add(PALETTERGB(90, 90, 90));		// 1 = very dark gray
+	m_arColors.Add(PALETTERGB(128, 128, 128));	// 2 = DARK GRAY
 	m_arColors.Add(PALETTERGB(192, 192, 192));	// 3 = LIGHT GRAY
 	m_arColors.Add(PALETTERGB(200, 50, 50));	// 4 = very light gray
-	m_arColors.Add(PALETTERGB(255, 255, 128));	// 5 white
-	m_arColors.Add(PALETTERGB(0, 0, 128));	// 6 dark blue
-	m_arColors.Add(PALETTERGB(128, 128, 255));	// 7 light blue
-	m_arColors.Add(PALETTERGB(0, 106, 0));	// 8 dark green
+	m_arColors.Add(PALETTERGB(255, 255, 128));	// 5 = light yellow
+	m_arColors.Add(PALETTERGB(0, 0, 128));		// 6 = dark blue
+	m_arColors.Add(PALETTERGB(128, 128, 255));	// 7 = light blue
+	m_arColors.Add(PALETTERGB(0, 106, 0));		// 8 = dark green
 }
 
 void CCreditsThread::InitText()
@@ -422,7 +421,7 @@ void CCreditsThread::InitText()
 
 	/*
 		You may NOT modify this copyright message. You may add your name, if you
-		changed or improved this code, but you mot not delete any part of this message,
+		changed or improved this code, but you may not delete any part of this message,
 		make it invisible etc.
 	*/
 
@@ -572,7 +571,7 @@ void CCreditsThread::InitText()
 	m_arCredits.Add(_T("S:05"));
 	m_arCredits.Add(_T("01:06:Russian: T-Mac, BRMAIL"));
 	m_arCredits.Add(_T("S:05"));
-	m_arCredits.Add(_T("01:06:Slowenian: Rok Kralj"));
+	m_arCredits.Add(_T("01:06:Slovenian: Rok Kralj"));
 	m_arCredits.Add(_T("S:05"));
 	m_arCredits.Add(_T("01:06:Spanish Castellano: Azuredraco, Javier L., |_Hell_|"));
 	m_arCredits.Add(_T("S:05"));
@@ -611,7 +610,7 @@ int CCreditsThread::CalcCreditsHeight()
 			// it's a bitmap
 
 			CBitmap bmp;
-			if (! bmp.LoadBitmap(cs.Mid(2)))
+			if (!bmp.LoadBitmap(cs.Mid(2)))
 			{
 				AfxMessageBox(_T("Could not find bitmap resource \"") + cs.Mid(2) + _T("\". Be sure to assign the bitmap a QUOTED resource name"));
 				return -1;

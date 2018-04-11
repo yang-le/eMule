@@ -139,7 +139,7 @@ bool CServerList::AddServerMetToList(const CString& strFile, bool bMerge)
 
 	CSafeBufferedFile servermet;
 	CFileException fexp;
-	if (!servermet.Open(strFile ,CFile::modeRead|CFile::osSequentialScan|CFile::typeBinary|CFile::shareDenyWrite, &fexp)){
+	if (!servermet.Open(strFile, CFile::modeRead|CFile::osSequentialScan|CFile::typeBinary|CFile::shareDenyWrite, &fexp)){
 		if (!bMerge){
 			CString strError(GetResString(IDS_ERR_LOADSERVERMET));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
@@ -170,7 +170,7 @@ bool CServerList::AddServerMetToList(const CString& strFile, bool bMerge)
 			CServer* newserver = new CServer(&sbuffer);
 
 			// add tags
-			for (UINT i = 0; i < sbuffer.tagcount; i++)
+			for (uint32 i = 0; i < sbuffer.tagcount; ++i)
 				newserver->AddTagFromFile(&servermet);
 
 			if (bMerge) {
@@ -216,7 +216,7 @@ bool CServerList::AddServerMetToList(const CString& strFile, bool bMerge)
 		error->Delete();
 	}
 	theApp.emuledlg->serverwnd->serverlistctrl.SetRedraw(TRUE);
-	theApp.emuledlg->serverwnd->serverlistctrl.Visable();
+	theApp.emuledlg->serverwnd->serverlistctrl.Visible();
 	return true;
 }
 
@@ -306,7 +306,7 @@ void CServerList::ServerStats()
 				pRawPacket[i] = (uint8)rand();
 
 			ping_server->SetChallenge(dwChallenge);
-			ping_server->SetLastPinged(GetTickCount());
+			ping_server->SetLastPinged(::GetTickCount());
 			ping_server->SetLastPingedTime((tNow - (uint32)UDPSERVSTATREASKTIME) + 20); // give it 20 seconds to respond
 
 			if (thePrefs.GetDebugServerUDPLevel() > 0)
@@ -328,7 +328,7 @@ void CServerList::ServerStats()
 			uint32 uChallenge = 0x55AA0000 + GetRandomUInt16();
 			ping_server->SetChallenge(uChallenge);
 			PokeUInt32(packet->pBuffer, uChallenge);
-			ping_server->SetLastPinged(GetTickCount());
+			ping_server->SetLastPinged(::GetTickCount());
 			ping_server->SetLastPingedTime(tNow - (rand() % HR2S(1)));
 			ping_server->AddFailedCount();
 			theApp.emuledlg->serverwnd->serverlistctrl.RefreshServer(ping_server);
@@ -374,7 +374,7 @@ void CServerList::GetStatus(uint32& total, uint32& failed,
 							uint32& totaluser, uint32& totalfile,
 							float& occ) const
 {
-	total = list.GetCount();
+	total = (uint32)list.GetCount();
 	failed = 0;
 	user = 0;
 	file = 0;
@@ -458,8 +458,8 @@ void CServerList::MoveServerDown(const CServer* pServer)
 
 void CServerList::Sort()
 {
-	int i = list.GetCount();
-	for (POSITION pos1 = list.GetHeadPosition(); pos1 != NULL && i > 0; i--) {
+	INT_PTR i = list.GetCount();
+	for (POSITION pos1 = list.GetHeadPosition(); pos1 != NULL && i > 0; --i) {
 		POSITION pos2 = pos1;
 		CServer* cur_server = list.GetNext(pos1);
 		if (cur_server->GetPreference() == SRV_PR_HIGH) {
@@ -479,8 +479,8 @@ void CServerList::GetUserSortedServers()
 	ASSERT( serverListCtrl.GetItemCount() == list.GetCount() );
 	list.RemoveAll();
 	int iServers = serverListCtrl.GetItemCount();
-	for (int i = 0; i < iServers; i++)
-		list.AddTail((CServer*)serverListCtrl.GetItemData(i));
+	for (int i = 0; i < iServers; ++i)
+		list.AddTail(reinterpret_cast<CServer *>(serverListCtrl.GetItemData(i)));
 }
 
 #ifdef _DEBUG
@@ -508,17 +508,15 @@ CServer* CServerList::GetNextServer(bool bOnlyObfuscated)
 		return NULL;
 
 	CServer* nextserver = NULL;
-	int i = 0;
-	while (!nextserver && i < list.GetCount()){
+	for (int i = 0; !nextserver && i < list.GetCount(); ++i) {
 		POSITION posIndex = list.FindIndex(serverpos);
 		if (posIndex == NULL) {	// check if search position is still valid (could be corrupted by server delete operation)
 			posIndex = list.GetHeadPosition();
 			serverpos = 0;
 		}
 
-		serverpos++;
-		i++;
-		if (!bOnlyObfuscated || ((CServer*)list.GetAt(posIndex))->SupportsObfuscationTCP())
+		++serverpos;
+		if (!bOnlyObfuscated || reinterpret_cast<CServer *>(list.GetAt(posIndex))->SupportsObfuscationTCP())
 			nextserver = list.GetAt(posIndex);
 		else if (serverpos >= (UINT)list.GetCount())
 			return NULL;
@@ -529,17 +527,14 @@ CServer* CServerList::GetNextServer(bool bOnlyObfuscated)
 CServer* CServerList::GetNextSearchServer()
 {
 	CServer* nextserver = NULL;
-	int i = 0;
-	while (!nextserver && i < list.GetCount()){
+	for (int i = 0; !nextserver && i < list.GetCount(); ++i) {
 		POSITION posIndex = list.FindIndex(searchserverpos);
 		if (posIndex == NULL) {	// check if search position is still valid (could be corrupted by server delete operation)
 			posIndex = list.GetHeadPosition();
 			searchserverpos = 0;
 		}
 		nextserver = list.GetAt(posIndex);
-		searchserverpos++;
-		i++;
-		if (searchserverpos == (UINT)list.GetCount())
+		if (++searchserverpos >= (UINT)list.GetCount())
 			searchserverpos = 0;
 	}
 	return nextserver;
@@ -548,17 +543,14 @@ CServer* CServerList::GetNextSearchServer()
 CServer* CServerList::GetNextStatServer()
 {
 	CServer* nextserver = NULL;
-	int i = 0;
-	while (!nextserver && i < list.GetCount()){
+	for (int i = 0; !nextserver && i < list.GetCount(); ++i) {
 		POSITION posIndex = list.FindIndex(statserverpos);
 		if (posIndex == NULL) {	// check if search position is still valid (could be corrupted by server delete operation)
 			posIndex = list.GetHeadPosition();
 			statserverpos = 0;
 		}
 		nextserver = list.GetAt(posIndex);
-		statserverpos++;
-		i++;
-		if (statserverpos == (UINT)list.GetCount())
+		if (++statserverpos >= (UINT)list.GetCount())
 			statserverpos = 0;
 	}
 	return nextserver;
@@ -646,7 +638,7 @@ bool CServerList::SaveServermetToFile()
 		servermet.WriteUInt8(0xE0);
 
 		INT_PTR fservercount = list.GetCount();
-		servermet.WriteUInt32(fservercount);
+		servermet.WriteUInt32((uint32)fservercount);
 
 		for (INT_PTR j = 0; j < fservercount; ++j)
 		{
@@ -657,7 +649,7 @@ bool CServerList::SaveServermetToFile()
 			servermet.WriteUInt16(nextserver->GetPort());
 
 			UINT uTagCount = 0;
-			ULONG uTagCountFilePos = (ULONG)servermet.GetPosition();
+			ULONGLONG uTagCountFilePos = servermet.GetPosition();
 			servermet.WriteUInt32(uTagCount);
 
 			if (!nextserver->GetListName().IsEmpty()){
@@ -821,7 +813,7 @@ void CServerList::AddServersFromTextFile(const CString& strFilename) const
 			// format is host:port,priority,Name
 			if (strLine.GetLength() < 5)
 				continue;
-			if (strLine.GetAt(0) == _T('#') || strLine.GetAt(0) == _T('/'))
+			if (strLine[0] == _T('#') || strLine[0] == _T('/'))
 				continue;
 
 			// fetch host
@@ -832,13 +824,13 @@ void CServerList::AddServersFromTextFile(const CString& strFilename) const
 					continue;
 			}
 			CString strHost = strLine.Left(pos);
-			strLine = strLine.Mid(pos+1);
+			strLine.Delete(0, pos+1);
 			// fetch  port
 			pos = strLine.Find(_T(','));
 			if (pos == -1)
 				continue;
 			const CString strPort = strLine.Left(pos);
-			strLine = strLine.Mid(pos+1);
+			strLine.Delete(0, pos+1);
 
 			// Barry - fetch priority
 			pos = strLine.Find(_T(','));
@@ -849,7 +841,7 @@ void CServerList::AddServersFromTextFile(const CString& strFilename) const
 				priority = _tstoi(strPriority);
 				if (priority < 0 || priority > 2)
 					priority = SRV_PR_HIGH;
-				strLine = strLine.Mid(pos+1);
+				strLine.Delete(0, pos+1);
 			}
 
 			// fetch name
@@ -913,7 +905,7 @@ bool CServerList::SaveStaticServers()
 
 void CServerList::Process()
 {
-	if (::GetTickCount() - m_nLastSaved > MIN2MS(17))
+	if (::GetTickCount() >= m_nLastSaved + MIN2MS(17))
 		SaveServermetToFile();
 }
 

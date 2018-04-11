@@ -19,6 +19,7 @@ All rights reserved.
 #include "stdafx.h"
 #include "emule.h"
 #include "HttpDownloadDlg.h"
+#include "opcodes.h"
 #include "OtherFunctions.h"
 #include "Log.h"
 
@@ -53,61 +54,61 @@ static int gz_magic[2] = {0x1f, 0x8b}; /* gzip magic header */
 #define COMMENT      0x10 /* bit 4 set: file comment present */
 #define RESERVED     0xE0 /* bits 5..7: reserved */
 
-static int get_byte(HINTERNET m_hHttpFile) {
+static int get_byte(HINTERNET m_hHttpFile)
+{
 	unsigned char c;
 	DWORD dwBytesRead;
 	BOOL b = ::InternetReadFile(m_hHttpFile, &c, 1, &dwBytesRead);
 	if(!b)
 		return EOF;
-	else
-		return c;
+	return c;
 }
 
-static int check_header(z_stream *stream, HINTERNET m_hHttpFile) {
-	int method; /* method byte */
-	int flags;  /* flags byte */
-	uInt len;
+static int check_header(z_stream *stream, HINTERNET m_hHttpFile)
+{
 	int c;
-
 	/* Check the gzip magic header */
-	for(len = 0; len < 2; len++) {
+	for (uInt len = 0; len < 2; ++len) {
 		c = get_byte(m_hHttpFile);
-		if(c != gz_magic[len]) {
+		if (c != gz_magic[len]) {
 			if (len != 0) {
 				++stream->avail_in;
 				--stream->next_in;
 			}
-			if(c != EOF) {
-				stream->avail_in++, stream->next_in--;
+			if (c != EOF) {
+				++stream->avail_in;
+				--stream->next_in;
 				//do not support transparent streams
 				return stream->avail_in != 0 ? Z_DATA_ERROR : Z_STREAM_END;
 			}
 			return stream->avail_in != 0 ? Z_OK : Z_STREAM_END;
 		}
 	}
-	method = get_byte(m_hHttpFile);
-	flags = get_byte(m_hHttpFile);
-	if(method != Z_DEFLATED || (flags & RESERVED) != 0)
+	int method = get_byte(m_hHttpFile);	//method byte
+	int flags = get_byte(m_hHttpFile);	//flags byte
+	if (method != Z_DEFLATED || (flags & RESERVED) != 0)
 		return Z_DATA_ERROR;
 
-	/* Discard time, xflags and OS code: */
-	for(len = 0; len < 6; len++) (void)get_byte(m_hHttpFile);
+	//Discard time, xflags and OS code:
+	for (uInt len = 0; len < 6; ++len)
+		(void)get_byte(m_hHttpFile);
 
-	if((flags & EXTRA_FIELD) != 0) { /* skip the extra field */
-		len  =  (uInt)get_byte(m_hHttpFile);
+	if ((flags & EXTRA_FIELD) != 0) { //skip the extra field
+		uInt len = (uInt)get_byte(m_hHttpFile);
 		len += ((uInt)get_byte(m_hHttpFile))<<8;
 		/* len is garbage if EOF but the loop below will quit anyway */
-		while(len-- != 0 && get_byte(m_hHttpFile) != EOF) ;
+		while (len-- != 0 && get_byte(m_hHttpFile) != EOF);
 	}
-	if((flags & ORIG_NAME) != 0) { /* skip the original file name */
-		while((c = get_byte(m_hHttpFile)) != 0 && c != EOF) ;
-	}
-	if((flags & COMMENT) != 0) {   /* skip the .gz file comment */
-		while((c = get_byte(m_hHttpFile)) != 0 && c != EOF) ;
-	}
-	if((flags & HEAD_CRC) != 0) {  /* skip the header crc */
-		for(len = 0; len < 2; len++) (void)get_byte(m_hHttpFile);
-	}
+	if ((flags & ORIG_NAME) != 0)	//skip the original file name
+		while ((c = get_byte(m_hHttpFile)) != 0 && c != EOF);
+
+	if ((flags & COMMENT) != 0)		//skip the .gz file comment
+		while ((c = get_byte(m_hHttpFile)) != 0 && c != EOF);
+
+	if ((flags & HEAD_CRC) != 0)	//skip the header crc
+		for (uInt len = 0; len < 2; ++len)
+			(void)get_byte(m_hHttpFile);
+
 	//return Z_DATA_ERROR if we hit EOF?
 	return Z_OK;
 }
@@ -239,7 +240,7 @@ LRESULT CHttpDownloadDlg::OnThreadFinished(WPARAM wParam, LPARAM /*lParam*/)
 
 	//Stop the animation
 	m_ctrlAnimate.Stop();
-	Sleep(1000);
+	Sleep(SEC2MS(1));
 	//If an error occured display the message box
 	if (m_bAbort)
 		EndDialog(IDCANCEL);
@@ -259,7 +260,7 @@ BOOL CHttpDownloadDlg::OnInitDialog()
 {
 	CString cap;
 	cap = GetResString(IDS_CANCEL);
-	GetDlgItem(IDCANCEL)->SetWindowText(cap);
+	SetDlgItemText(IDCANCEL, cap);
 
 	if (!m_strTitle.IsEmpty())
 		SetWindowText(m_strTitle);
@@ -352,7 +353,7 @@ UINT AFX_CDECL CHttpDownloadDlg::_DownloadThread(LPVOID pParam)
 	DbgSetThreadName("HttpDownload");
 	InitThreadLocale();
 	//Convert from the SDK world to the C++ world
-	CHttpDownloadDlg* pDlg = (CHttpDownloadDlg*) pParam;
+	CHttpDownloadDlg* pDlg = reinterpret_cast<CHttpDownloadDlg *>(pParam);
 	ASSERT(pDlg);
 	ASSERT(pDlg->IsKindOf(RUNTIME_CLASS(CHttpDownloadDlg)));
 	pDlg->DownloadThread();
@@ -480,11 +481,11 @@ void CHttpDownloadDlg::DownloadThread()
 	if (m_sUserName.GetLength())
 		// Elandal: Assumes sizeof(void*) == sizeof(unsigned long)
 		m_hHttpConnection = ::InternetConnect(m_hInternetSession, m_sServer, m_nPort, m_sUserName,
-                                          m_sPassword, m_dwServiceType, 0, reinterpret_cast<const DWORD_PTR>(this));
+                                          m_sPassword, m_dwServiceType, 0, reinterpret_cast<DWORD_PTR>(this));
 	else
 		// Elandal: Assumes sizeof(void*) == sizeof(unsigned long)
 		m_hHttpConnection = ::InternetConnect(m_hInternetSession, m_sServer, m_nPort, NULL,
-                                          NULL, m_dwServiceType, 0, reinterpret_cast<const DWORD_PTR>(this));
+                                          NULL, m_dwServiceType, 0, reinterpret_cast<DWORD_PTR>(this));
 	if (m_hHttpConnection == NULL)
 	{
 		TRACE(_T("Failed in call to InternetConnect, Error:%d\n"), ::GetLastError());
@@ -509,7 +510,7 @@ void CHttpDownloadDlg::DownloadThread()
 	ASSERT(m_hHttpFile == NULL);
 	// Elandal: Assumes sizeof(void*) == sizeof(unsigned long)
 	m_hHttpFile = HttpOpenRequest(m_hHttpConnection, NULL, m_sObject, NULL, NULL, ppszAcceptTypes, INTERNET_FLAG_RELOAD |
-								  INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_KEEP_CONNECTION, reinterpret_cast<const DWORD_PTR>(this));
+								  INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_KEEP_CONNECTION, reinterpret_cast<DWORD_PTR>(this));
 	if (m_hHttpFile == NULL)
 	{
 		TRACE(_T("Failed in call to HttpOpenRequest, Error:%d\n"), ::GetLastError());
@@ -693,9 +694,9 @@ void CHttpDownloadDlg::UpdateControlsDuringTransfer(DWORD dwStartTicks, DWORD& d
 	}
 
 	//Update the transfer rate amd estimated time left every second
-	DWORD dwNowTicks = GetTickCount();
+	DWORD dwNowTicks = ::GetTickCount();
 	DWORD dwTimeTaken = dwNowTicks - dwCurrentTicks;
-	if (dwTimeTaken > 1000)
+	if (dwTimeTaken > SEC2MS(1))
 	{
 		double KbPerSecond = ((double)(dwTotalBytesRead) - (double)(dwLastTotalBytes)) / ((double)(dwTimeTaken));
 		SetTransferRate(KbPerSecond);
@@ -717,10 +718,10 @@ void CHttpDownloadDlg::UpdateControlsDuringTransfer(DWORD dwStartTicks, DWORD& d
 	}
 }
 
-void CALLBACK CHttpDownloadDlg::_OnStatusCallBack(HINTERNET hInternet, DWORD_PTR dwContext, DWORD dwInternetStatus,
-                                                  LPVOID lpvStatusInformation, DWORD dwStatusInformationLength)
+void CALLBACK CHttpDownloadDlg::_OnStatusCallBack(HINTERNET hInternet, DWORD_PTR dwContext, DWORD dwInternetStatus
+                                                 ,LPVOID lpvStatusInformation, DWORD dwStatusInformationLength) noexcept
 {
-	CHttpDownloadDlg* pDlg = (CHttpDownloadDlg*) dwContext;
+	CHttpDownloadDlg* pDlg = reinterpret_cast<CHttpDownloadDlg *>(dwContext);
 	ASSERT(pDlg);
 	ASSERT(pDlg->IsKindOf(RUNTIME_CLASS(CHttpDownloadDlg)));
 	pDlg->OnStatusCallBack(hInternet, dwInternetStatus, lpvStatusInformation, dwStatusInformationLength);

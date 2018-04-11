@@ -85,7 +85,7 @@ BOOL CFileDetailDialogInfo::OnInitDialog()
 	;
 
 	// start time for calling 'RefreshData'
-	VERIFY( (m_timer = SetTimer(301, 5000, 0)) != NULL );
+	VERIFY( (m_timer = SetTimer(301, SEC2MS(5), 0)) != NULL );
 
 	return TRUE;
 }
@@ -114,12 +114,12 @@ void CFileDetailDialogInfo::RefreshData()
 
 	if (m_paFiles->GetSize() == 1)
 	{
-		const CPartFile* file = STATIC_DOWNCAST(CPartFile, (*m_paFiles)[0]);
+		CPartFile* file = static_cast<CPartFile *>((*m_paFiles)[0]);
 		const CString& fname(file->GetFileName());
 
 		// if file is completed, we output the 'file path' and not the 'part.met file path'
 		if (file->GetStatus(true) == PS_COMPLETE)
-			GetDlgItem(IDC_FD_X2)->SetWindowText(GetResString(IDS_DL_FILENAME));
+			SetDlgItemText(IDC_FD_X2, GetResString(IDS_DL_FILENAME));
 
 		SetDlgItemText(IDC_FNAME, fname);
 		SetDlgItemText(IDC_METFILE, file->GetFullName());
@@ -131,7 +131,7 @@ void CFileDetailDialogInfo::RefreshData()
 			str = file->getPartfileStatus();
 		SetDlgItemText(IDC_PFSTATUS, str);
 
-		str.Format(_T("%u;  %s: %u (%.1f%%)"), file->GetPartCount(), (LPCTSTR)GetResString(IDS_AVAILABLE) , file->GetAvailablePartCount(), (file->GetAvailablePartCount()*100.0)/file->GetPartCount());
+		str.Format(_T("%u;  %s: %u (%.1f%%)"), file->GetPartCount(), (LPCTSTR)GetResString(IDS_AVAILABLE), file->GetAvailablePartCount(), (file->GetAvailablePartCount()*100.0)/file->GetPartCount());
 		SetDlgItemText(IDC_PARTCOUNT, str);
 
 		// date created
@@ -146,16 +146,13 @@ void CFileDetailDialogInfo::RefreshData()
 
 		// active download time
 		time_t nDlActiveTime = file->GetDlActiveTime();
-		if (nDlActiveTime)
-			str = CastSecondsToLngHM(nDlActiveTime);
-		else
-			str = GetResString(IDS_UNKNOWN);
+		str = nDlActiveTime ? CastSecondsToLngHM(nDlActiveTime) : GetResString(IDS_UNKNOWN);
 		SetDlgItemText(IDC_DL_ACTIVE_TIME, str);
 
 		// last seen complete
 		struct tm tmTemp;
 		struct tm* ptimLastSeenComplete = file->lastseencomplete.GetLocalTm(&tmTemp);
-		if (file->lastseencomplete == NULL || ptimLastSeenComplete == NULL)
+		if (file->lastseencomplete == 0 || ptimLastSeenComplete == NULL)
 			str.Format(GetResString(IDS_NEVER));
 		else {
 			str.Format(_T("%s   ") + GetResString(IDS_TIMEBEFORE),
@@ -172,7 +169,7 @@ void CFileDetailDialogInfo::RefreshData()
 			// Happens at least on FAT32 with very high download speed.
 			time_t tLastModified = file->GetFileDate();
 			time_t tNow = time(NULL);
-			uint32 tAgo;
+			time_t tAgo;
 			if (tNow >= tLastModified)
 				tAgo = tNow - tLastModified;
 			else{
@@ -211,7 +208,7 @@ void CFileDetailDialogInfo::RefreshData()
 			ext.MakeUpper();
 		}
 
-		EFileType bycontent = GetFileTypeEx((CShareableFile *)file, false, true);
+		EFileType bycontent = GetFileTypeEx(static_cast<CShareableFile *>(file), false, true);
 		if (bycontent != FILETYPE_UNKNOWN) {
 			str.Format(_T("%s  (%s)"), (LPCTSTR)GetFileTypeName(bycontent), (LPCTSTR)GetResString(IDS_VERIFIED));
 
@@ -270,7 +267,7 @@ void CFileDetailDialogInfo::RefreshData()
 	UINT uA4AFSources = 0;
 	for (int i = 0; i < m_paFiles->GetSize(); i++)
 	{
-		CPartFile* file = STATIC_DOWNCAST(CPartFile, (*m_paFiles)[i]);
+		CPartFile* file = static_cast<CPartFile *>((*m_paFiles)[i]);
 
 		uFileSize += (uint64)file->GetFileSize();
 		uRealFileSize += (uint64)file->GetRealFileSize();
@@ -280,8 +277,8 @@ void CFileDetailDialogInfo::RefreshData()
 		uCompression += file->GetCompressionGain();
 		uDataRate += file->GetDatarate();
 		uCompleted += (uint64)file->GetCompletedSize();
-		iMD4HashsetAvailable += (file->GetFileIdentifier().HasExpectedMD4HashCount()) ? 1 : 0;
-		iAICHHashsetAvailable += (file->GetFileIdentifier().HasExpectedAICHHashCount()) ? 1 : 0;
+		iMD4HashsetAvailable += static_cast<int>(file->GetFileIdentifier().HasExpectedMD4HashCount());
+		iAICHHashsetAvailable += static_cast<int>(file->GetFileIdentifier().HasExpectedAICHHashCount());
 
 		if (file->IsPartFile())
 		{
@@ -341,7 +338,7 @@ void CFileDetailDialogInfo::RefreshData()
 
 void CFileDetailDialogInfo::OnDestroy()
 {
-	if (m_timer){
+	if (m_timer) {
 		KillTimer(m_timer);
 		m_timer = 0;
 	}
@@ -349,28 +346,28 @@ void CFileDetailDialogInfo::OnDestroy()
 
 void CFileDetailDialogInfo::Localize()
 {
-	GetDlgItem(IDC_FD_X0)->SetWindowText(GetResString(IDS_FD_GENERAL));
-	GetDlgItem(IDC_FD_X1)->SetWindowText(GetResString(IDS_SW_NAME)+_T(':'));
-	GetDlgItem(IDC_FD_X2)->SetWindowText(GetResString(IDS_FD_MET));
-	GetDlgItem(IDC_FD_X3)->SetWindowText(GetResString(IDS_FD_HASH));
-	GetDlgItem(IDC_FD_X4)->SetWindowText(GetResString(IDS_DL_SIZE)+_T(':'));
-	GetDlgItem(IDC_FD_X9)->SetWindowText(GetResString(IDS_FD_PARTS)+_T(':'));
-	GetDlgItem(IDC_FD_X5)->SetWindowText(GetResString(IDS_STATUS)+_T(':'));
-	GetDlgItem(IDC_FD_X6)->SetWindowText(GetResString(IDS_FD_TRANSFER));
-	GetDlgItem(IDC_FD_X7)->SetWindowText(GetResString(IDS_DL_SOURCES)+_T(':'));
-	GetDlgItem(IDC_FD_X14)->SetWindowText(GetResString(IDS_FD_TRANS));
-	GetDlgItem(IDC_FD_X12)->SetWindowText(GetResString(IDS_FD_COMPSIZE));
-	GetDlgItem(IDC_FD_X13)->SetWindowText(GetResString(IDS_FD_DATARATE));
-	GetDlgItem(IDC_FD_X15)->SetWindowText(GetResString(IDS_LASTSEENCOMPL));
-	GetDlgItem(IDC_FD_LASTCHANGE)->SetWindowText(GetResString(IDS_FD_LASTCHANGE));
-	GetDlgItem(IDC_FD_X8)->SetWindowText(GetResString(IDS_FD_TIMEDATE));
-	GetDlgItem(IDC_FD_X16)->SetWindowText(GetResString(IDS_FD_DOWNLOADSTARTED));
-	GetDlgItem(IDC_DL_ACTIVE_TIME_LBL)->SetWindowText(GetResString(IDS_DL_ACTIVE_TIME)+_T(':'));
-	GetDlgItem(IDC_HSAV)->SetWindowText(GetResString(IDS_HSAV)+_T(':'));
-	GetDlgItem(IDC_FD_CORR)->SetWindowText(GetResString(IDS_FD_CORR)+_T(':'));
-	GetDlgItem(IDC_FD_RECOV)->SetWindowText(GetResString(IDS_FD_RECOV)+_T(':'));
-	GetDlgItem(IDC_FD_COMPR)->SetWindowText(GetResString(IDS_FD_COMPR)+_T(':'));
-	GetDlgItem(IDC_FD_XAICH)->SetWindowText(GetResString(IDS_AICHHASH)+_T(':'));
+	SetDlgItemText(IDC_FD_X0, GetResString(IDS_FD_GENERAL));
+	SetDlgItemText(IDC_FD_X1, GetResString(IDS_SW_NAME)+_T(':'));
+	SetDlgItemText(IDC_FD_X2, GetResString(IDS_FD_MET));
+	SetDlgItemText(IDC_FD_X3, GetResString(IDS_FD_HASH));
+	SetDlgItemText(IDC_FD_X4, GetResString(IDS_DL_SIZE)+_T(':'));
+	SetDlgItemText(IDC_FD_X9, GetResString(IDS_FD_PARTS)+_T(':'));
+	SetDlgItemText(IDC_FD_X5, GetResString(IDS_STATUS)+_T(':'));
+	SetDlgItemText(IDC_FD_X6, GetResString(IDS_FD_TRANSFER));
+	SetDlgItemText(IDC_FD_X7, GetResString(IDS_DL_SOURCES)+_T(':'));
+	SetDlgItemText(IDC_FD_X14, GetResString(IDS_FD_TRANS));
+	SetDlgItemText(IDC_FD_X12, GetResString(IDS_FD_COMPSIZE));
+	SetDlgItemText(IDC_FD_X13, GetResString(IDS_FD_DATARATE));
+	SetDlgItemText(IDC_FD_X15, GetResString(IDS_LASTSEENCOMPL));
+	SetDlgItemText(IDC_FD_LASTCHANGE, GetResString(IDS_FD_LASTCHANGE));
+	SetDlgItemText(IDC_FD_X8, GetResString(IDS_FD_TIMEDATE));
+	SetDlgItemText(IDC_FD_X16, GetResString(IDS_FD_DOWNLOADSTARTED));
+	SetDlgItemText(IDC_DL_ACTIVE_TIME_LBL, GetResString(IDS_DL_ACTIVE_TIME)+_T(':'));
+	SetDlgItemText(IDC_HSAV, GetResString(IDS_HSAV)+_T(':'));
+	SetDlgItemText(IDC_FD_CORR, GetResString(IDS_FD_CORR)+_T(':'));
+	SetDlgItemText(IDC_FD_RECOV, GetResString(IDS_FD_RECOV)+_T(':'));
+	SetDlgItemText(IDC_FD_COMPR, GetResString(IDS_FD_COMPR)+_T(':'));
+	SetDlgItemText(IDC_FD_XAICH, GetResString(IDS_AICHHASH)+_T(':'));
 	SetDlgItemText(IDC_REMAINING_TEXT, GetResString(IDS_DL_REMAINS)+_T(':'));
 	SetDlgItemText(IDC_FD_X10, GetResString(IDS_TYPE)+_T(':') );
 }

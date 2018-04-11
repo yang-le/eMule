@@ -12,21 +12,20 @@ class CCommentDialogLst : public CResizablePage
 { 
 	DECLARE_DYNAMIC(CCommentDialogLst) 
 
-public: 
+	enum { IDD = IDD_COMMENTLST };
+
+public:
 	CCommentDialogLst(); 
 	virtual ~CCommentDialogLst(); 
 
 	void SetFiles(const CSimpleArray<CObject*>* paFiles) { m_paFiles = paFiles; m_bDataChanged = true; }
-
-// Dialog Data 
-	enum { IDD = IDD_COMMENTLST }; 
 
 protected: 
 	CString m_strCaption;
 	CCommentListCtrl m_lstComments;
 	const CSimpleArray<CObject*>* m_paFiles;
 	bool m_bDataChanged;
-	uint32 m_timer;
+	UINT_PTR m_timer;
 
 	void Localize();
 	void RefreshData(bool deleteOld = true);

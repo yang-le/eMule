@@ -830,7 +830,7 @@ BOOL GetRIFFHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsAVI, bool bFu
 						{
 							bool bError = false;
 							BYTE* pChunk = new BYTE[dwLength];
-							if ((UINT)_read(hAviFile, pChunk, dwLength) == dwLength)
+							if ((DWORD)_read(hAviFile, pChunk, dwLength) == dwLength)
 							{
 								CSafeMemFile ck(pChunk, dwLength);
 								try {
@@ -1137,31 +1137,31 @@ struct SRmCodec {
 	LPCSTR	pszID;
 	LPCTSTR pszDesc;
 } g_aRealMediaCodecs[] = {
-{ "14.4", _T("Real Audio 1 (14.4)") },
-{ "14_4", _T("Real Audio 1 (14.4)") },
-{ "28.8", _T("Real Audio 2 (28.8)") },
-{ "28_8", _T("Real Audio 2 (28.8)") },
-{ "RV10", _T("Real Video 5") },
-{ "RV13", _T("Real Video 5") },
-{ "RV20", _T("Real Video G2") },
-{ "RV30", _T("Real Video 8") },
-{ "RV40", _T("Real Video 9") },
-{ "atrc", _T("Real & Sony Atrac3 Codec") },
-{ "cook", _T("Real Audio G2/7 Cook (Low Bitrate)") },
-{ "dnet", _T("Real Audio 3/4/5 Music (DNET)") },
-{ "lpcJ", _T("Real Audio 1 (14.4)") },
-{ "raac", _T("Real Audio 10 AAC (RAAC)") },
-{ "racp", _T("Real Audio 10 AAC+ (RACP)") },
-{ "ralf", _T("Real Audio Lossless Format") },
-{ "rtrc", _T("Real Audio 8 (RTRC)") },
-{ "rv10", _T("Real Video 5") },
-{ "rv20", _T("Real Video G2") },
-{ "rv30", _T("Real Video 8") },
-{ "rv40", _T("Real Video 9") },
-{ "sipr", _T("Real Audio 4 (Sipro)") },
+	{ "14.4", _T("Real Audio 1 (14.4)") },
+	{ "14_4", _T("Real Audio 1 (14.4)") },
+	{ "28.8", _T("Real Audio 2 (28.8)") },
+	{ "28_8", _T("Real Audio 2 (28.8)") },
+	{ "RV10", _T("Real Video 5") },
+	{ "RV13", _T("Real Video 5") },
+	{ "RV20", _T("Real Video G2") },
+	{ "RV30", _T("Real Video 8") },
+	{ "RV40", _T("Real Video 9") },
+	{ "atrc", _T("Real & Sony Atrac3 Codec") },
+	{ "cook", _T("Real Audio G2/7 Cook (Low Bitrate)") },
+	{ "dnet", _T("Real Audio 3/4/5 Music (DNET)") },
+	{ "lpcJ", _T("Real Audio 1 (14.4)") },
+	{ "raac", _T("Real Audio 10 AAC (RAAC)") },
+	{ "racp", _T("Real Audio 10 AAC+ (RACP)") },
+	{ "ralf", _T("Real Audio Lossless Format") },
+	{ "rtrc", _T("Real Audio 8 (RTRC)") },
+	{ "rv10", _T("Real Video 5") },
+	{ "rv20", _T("Real Video G2") },
+	{ "rv30", _T("Real Video 8") },
+	{ "rv40", _T("Real Video 9") },
+	{ "sipr", _T("Real Audio 4 (Sipro)") },
 };
 
-static int __cdecl CmpRealMediaCodec(const void *p1, const void *p2)
+static int __cdecl CmpRealMediaCodec(const void *p1, const void *p2) noexcept
 {
 	const SRmCodec *pCodec1 = reinterpret_cast<const SRmCodec *>(p1);
 	const SRmCodec *pCodec2 = reinterpret_cast<const SRmCodec *>(p2);
@@ -1173,7 +1173,7 @@ CString GetRealMediaCodecInfo(LPCSTR pszCodecID)
 	CString strInfo(GetFOURCCString(*reinterpret_cast<const DWORD *>(pszCodecID)));
 	SRmCodec CodecSearch;
 	CodecSearch.pszID = pszCodecID;
-	SRmCodec *pCodecFound = static_cast<SRmCodec *>(bsearch(&CodecSearch, g_aRealMediaCodecs, _countof(g_aRealMediaCodecs), sizeof g_aRealMediaCodecs[0], CmpRealMediaCodec));
+	const SRmCodec *pCodecFound = static_cast<SRmCodec *>(bsearch(&CodecSearch, g_aRealMediaCodecs, _countof(g_aRealMediaCodecs), sizeof g_aRealMediaCodecs[0], CmpRealMediaCodec));
 	if (pCodecFound)
 		strInfo.AppendFormat(_T(" (%s)"), pCodecFound->pszDesc);
 	return strInfo;
@@ -1647,7 +1647,7 @@ bool GetAttribute(IWMHeaderInfo *pIWMHeaderInfo, WORD wStream, LPCWSTR pwszName,
 	// SDK states that MP3 files could contain a BOM - never seen
 	if ( *(const WORD *)(LPCWSTR)strValue == (WORD)0xFFFE || *(const WORD *)(LPCWSTR)strValue == (WORD)0xFEFF) {
 		ASSERT(0);
-		strValue = strValue.Mid(1);
+		strValue.Delete(0, 1);
 	}
 
 	return true;
@@ -1804,7 +1804,7 @@ bool GetAttributeEx(IWMHeaderInfo3 *pIWMHeaderInfo, WORD wStream, LPCWSTR pwszNa
 	// SDK states that MP3 files could contain a BOM - never seen
 	if ( *(const WORD *)(LPCWSTR)strValue == (WORD)0xFFFE || *(const WORD *)(LPCWSTR)strValue == (WORD)0xFEFF) {
 		ASSERT(0);
-		strValue = strValue.Mid(1);
+		strValue.Delete(0, 1);
 	}
 
 	return true;
@@ -1844,15 +1844,15 @@ public:
 
     STDMETHODIMP_(ULONG) AddRef()
     {
-        return (ULONG)InterlockedIncrement(&m_lRefCount);
+        return static_cast<ULONG>(InterlockedIncrement(&m_lRefCount));
     }
 
     STDMETHODIMP_(ULONG) Release()
     {
-        ULONG ulRefCount = (ULONG)InterlockedDecrement(&m_lRefCount);
-        if (ulRefCount == 0)
+        LONG lRefCount = InterlockedDecrement(&m_lRefCount);
+        if (lRefCount == 0)
             delete this;
-        return ulRefCount;
+        return static_cast<ULONG>(lRefCount);
     }
 
 	///////////////////////////////////////////////////////////////////////////
@@ -2130,7 +2130,7 @@ BOOL GetWMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsWM, bool bFullI
 				// Although it is not following any logic, using "IWMHeaderInfo3" instead of "IWMHeaderInfo"
 				// gives a few more (important) stream properties !?
 				//
-				// NOTE: The existance of 'IWMHeaderInfo3' does not automatically mean that one will also
+				// NOTE: The existence of 'IWMHeaderInfo3' does not automatically mean that one will also
 				// get 'WM/StreamTypeInfo'.
 				//
 				// Windows Vista SP1; WMP 11.0.6001.7000
@@ -2254,8 +2254,8 @@ BOOL GetWMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsWM, bool bFullI
 												mi->strInfo << GetResString(IDS_FD_GENERAL) << _T("\n");
 											}
 											CString strName(wszName);
-											if (wcsncmp(strName, L"WM/", 3) == 0)
-												strName = strName.Mid(3);
+											if (strName.Left(3).Compare(_T("WM/")) == 0)
+												strName.Delete(0, 3);
 											mi->strInfo << _T("   ") << strName << _T(":\t") << strValue << _T("\n");
 										}
 									}
@@ -2275,8 +2275,8 @@ BOOL GetWMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsWM, bool bFullI
 											mi->strInfo << GetResString(IDS_FD_GENERAL) << _T("\n");
 										}
 										CString strName(wszName);
-										if (wcsncmp(strName, L"WM/", 3) == 0)
-											strName = strName.Mid(3);
+										if (strName.Left(3).Compare(_T("WM/")) == 0)
+											strName.Delete(0, 3);
 
 										bool bWarnInRed = wcscmp(wszName, g_wszWMProtected) == 0;
 										if (bWarnInRed)
@@ -2792,7 +2792,7 @@ BOOL GetWMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsWM, bool bFullI
 				}
 
 				// 'IWMHeaderInfo3' may not have returned any 'WM/StreamTypeInfo' attributes. If the WM file
-				// indicates the existance of Audio/Video streams, try to query for the codec info.
+				// indicates the existence of Audio/Video streams, try to query for the codec info.
 				//
 				if (mi->iAudioStreams == 0 && mi->iVideoStreams == 0)
 				{

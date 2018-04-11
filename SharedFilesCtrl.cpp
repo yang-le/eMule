@@ -63,8 +63,8 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 bool NeedArchiveInfoPage(const CSimpleArray<CObject*>* paItems);
-void UpdateFileDetailsPages(CListViewPropertySheet *pSheet,
-							CResizablePage *pArchiveInfo, CResizablePage *pMediaInfo);
+void UpdateFileDetailsPages(CListViewPropertySheet *pSheet
+	, CResizablePage *pArchiveInfo, CResizablePage *pMediaInfo, CResizablePage *pFileLink);
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -187,14 +187,14 @@ BOOL CSharedFileDetailsSheet::OnInitDialog()
 LRESULT CSharedFileDetailsSheet::OnDataChanged(WPARAM, LPARAM)
 {
 	UpdateTitle();
-	UpdateFileDetailsPages(this, &m_wndArchiveInfo, &m_wndMediaInfo);
+	UpdateFileDetailsPages(this, &m_wndArchiveInfo, &m_wndMediaInfo, &m_wndFileLink);
 	return 1;
 }
 
 void CSharedFileDetailsSheet::UpdateTitle()
 {
 	if (m_aItems.GetSize() == 1)
-		SetWindowText(GetResString(IDS_DETAILS) + _T(": ") + STATIC_DOWNCAST(CAbstractFile, m_aItems[0])->GetFileName());
+		SetWindowText(GetResString(IDS_DETAILS) + _T(": ") + static_cast<CAbstractFile *>(m_aItems[0])->GetFileName());
 	else
 		SetWindowText(GetResString(IDS_DETAILS));
 }
@@ -236,8 +236,8 @@ END_MESSAGE_MAP()
 
 CSharedFilesCtrl::CSharedFilesCtrl()
 	: CListCtrlItemWalk(this)
+	, m_aSortBySecondValue()
 {
-	memset(m_aSortBySecondValue, 0, sizeof(m_aSortBySecondValue));
 	nAICHHashing = 0;
 	m_pDirectoryFilter = NULL;
 	SetGeneralPurposeFind(true);
@@ -337,87 +337,26 @@ void CSharedFilesCtrl::SetAllIcons()
 
 void CSharedFilesCtrl::Localize()
 {
+	static const UINT uids[18] = {
+		IDS_DL_FILENAME, IDS_DL_SIZE, IDS_TYPE, IDS_PRIORITY, IDS_FILEID
+		, IDS_SF_REQUESTS, IDS_SF_ACCEPTS, IDS_SF_TRANSFERRED, IDS_SHARED_STATUS, IDS_FOLDER
+		, IDS_COMPLSOURCES, IDS_SHAREDTITLE, IDS_ARTIST, IDS_ALBUM, IDS_TITLE
+		, IDS_LENGTH, IDS_BITRATE, IDS_CODEC
+	};
+
 	CHeaderCtrl* pHeaderCtrl = GetHeaderCtrl();
 	HDITEM hdi;
 	hdi.mask = HDI_TEXT;
-	CString strRes;
 
-	strRes = GetResString(IDS_DL_FILENAME);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(0, &hdi);
-
-	strRes = GetResString(IDS_DL_SIZE);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(1, &hdi);
-
-	strRes = GetResString(IDS_TYPE);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(2, &hdi);
-
-	strRes = GetResString(IDS_PRIORITY);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(3, &hdi);
-
-	strRes = GetResString(IDS_FILEID);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(4, &hdi);
-
-	strRes = GetResString(IDS_SF_REQUESTS);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(5, &hdi);
-
-	strRes = GetResString(IDS_SF_ACCEPTS);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(6, &hdi);
-
-	strRes = GetResString(IDS_SF_TRANSFERRED);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(7, &hdi);
-
-	strRes = GetResString(IDS_SHARED_STATUS);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(8, &hdi);
-
-	strRes = GetResString(IDS_FOLDER);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(9, &hdi);
-
-	strRes = GetResString(IDS_COMPLSOURCES);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(10, &hdi);
-
-	strRes = GetResString(IDS_SHAREDTITLE);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(11, &hdi);
-
-	strRes = GetResString(IDS_ARTIST);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(12, &hdi);
-
-	strRes = GetResString(IDS_ALBUM);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(13, &hdi);
-
-	strRes = GetResString(IDS_TITLE);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(14, &hdi);
-
-	strRes = GetResString(IDS_LENGTH);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(15, &hdi);
-
-	strRes = GetResString(IDS_BITRATE);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(16, &hdi);
-
-	strRes = GetResString(IDS_CODEC);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(17, &hdi);
+	for (int i = 0; i < _countof(uids); ++i) {
+		CString strRes(GetResString(uids[i]));
+		hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
+		pHeaderCtrl->SetItem(i, &hdi);
+	}
 
 	CreateMenues();
 
-	int iItems = GetItemCount();
-	for (int i = 0; i < iItems; i++)
+	for (int i = GetItemCount(); --i >= 0;)
 		Update(i);
 
 	ShowFilesCount();
@@ -541,7 +480,7 @@ void CSharedFilesCtrl::UpdateFile(const CShareableFile* file, bool bUpdateFileSu
 	{
 		Update(iItem);
 		if (bUpdateFileSummary && GetItemState(iItem, LVIS_SELECTED))
-			theApp.emuledlg->sharedfileswnd->ShowSelectedFilesDetails();
+			theApp.emuledlg->sharedfileswnd->ShowSelectedFilesDetails(true); //force update
 	}
 }
 
@@ -577,11 +516,11 @@ void CSharedFilesCtrl::ReloadFileList()
 void CSharedFilesCtrl::ShowFilesCount()
 {
 	CString str;
-	if (theApp.sharedfiles->GetHashingCount() + nAICHHashing)
-		str.Format(_T(" (%i, %s %u)"), theApp.sharedfiles->GetCount(), (LPCTSTR)GetResString(IDS_HASHING), theApp.sharedfiles->GetHashingCount() + nAICHHashing);
+	if (theApp.sharedfiles->GetHashingCount() + nAICHHashing > 0)
+		str.Format(_T(" (%i, %s %i)"), (int)theApp.sharedfiles->GetCount(), (LPCTSTR)GetResString(IDS_HASHING), (int)(theApp.sharedfiles->GetHashingCount() + nAICHHashing));
 	else
-		str.Format(_T(" (%i)"), theApp.sharedfiles->GetCount());
-	theApp.emuledlg->sharedfileswnd->GetDlgItem(IDC_TRAFFIC_TEXT)->SetWindowText(GetResString(IDS_SF_FILES) + str);
+		str.Format(_T(" (%i)"), (int)theApp.sharedfiles->GetCount());
+	theApp.emuledlg->sharedfileswnd->SetDlgItemText(IDC_TRAFFIC_TEXT, GetResString(IDS_SF_FILES) + str);
 }
 
 void CSharedFilesCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
@@ -881,7 +820,7 @@ void CSharedFilesCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 		bFirstItem = false;
 	}
 
-	m_SharedFilesMenu.EnableMenuItem((UINT_PTR)m_PrioMenu.m_hMenu, (!bContainsShareableFiles && iSelectedItems > 0) ? MF_ENABLED : MF_GRAYED);
+	m_SharedFilesMenu.EnableMenuItem((UINT)m_PrioMenu.m_hMenu, (!bContainsShareableFiles && iSelectedItems > 0) ? MF_ENABLED : MF_GRAYED);
 	m_PrioMenu.CheckMenuRadioItem(MP_PRIOVERYLOW, MP_PRIOAUTO, uPrioMenuItem, 0);
 
 	bool bSingleCompleteFileSelected = (iSelectedItems == 1 && (iCompleteFileSelected == 1 || bContainsOnlyShareableFile));
@@ -1049,7 +988,7 @@ BOOL CSharedFilesCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 						if (pKnownFile->IsKindOf(RUNTIME_CLASS(CPartFile)))
 						{
 							pKnownFile->SetFileName(newname);
-							STATIC_DOWNCAST(CPartFile, pKnownFile)->SetFullName(newpath);
+							static_cast<CPartFile *>(pKnownFile)->SetFullName(newpath);
 						}
 						else
 						{
@@ -1224,8 +1163,7 @@ BOOL CSharedFilesCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 					break;
 			default:
 				if (file && wParam>=MP_WEBURL && wParam<=MP_WEBURL+256)
-					theWebServices.RunURL(file, wParam);
-				break;
+					theWebServices.RunURL(file, (UINT)wParam);
 		}
 	}
 	return TRUE;
@@ -1284,15 +1222,15 @@ void CSharedFilesCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 int CALLBACK CSharedFilesCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const CShareableFile* item1 = reinterpret_cast<const CShareableFile *>(lParam1);
-	const CShareableFile* item2 = reinterpret_cast<const CShareableFile *>(lParam2);
+	const CShareableFile* item1 = reinterpret_cast<CShareableFile *>(lParam1);
+	const CShareableFile* item2 = reinterpret_cast<CShareableFile *>(lParam2);
 
 	bool bSortAscending;
 	if (lParamSort >= 100)
 		bSortAscending = lParamSort < 120;
 	else
 		bSortAscending = lParamSort < 20;
-	int iColumn = bSortAscending ? lParamSort : lParamSort - 20;
+	LPARAM iColumn = bSortAscending ? lParamSort : lParamSort - 20;
 
 	int iResult = 0;
 	bool bExtColumn = false;
@@ -1412,9 +1350,9 @@ int CALLBACK CSharedFilesCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM l
 					break;
 
 				case 111: { //kad shared
-					uint32 tNow = time(NULL);
-					int i1 = (tNow < kitem1->GetLastPublishTimeKadSrc()) ? 1 : 0;
-					int i2 = (tNow < kitem2->GetLastPublishTimeKadSrc()) ? 1 : 0;
+					time_t tNow = time(NULL);
+					int i2 = static_cast<int>(tNow < kitem2->GetLastPublishTimeKadSrc());
+					int i1 = static_cast<int>(tNow < kitem1->GetLastPublishTimeKadSrc());
 					iResult = i1 - i2;
 				}
 			}
@@ -1426,7 +1364,7 @@ int CALLBACK CSharedFilesCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM l
 
 	//call secondary sortorder, if this one results in equal
 	if (iResult == 0) {
-		LPARAM dwNextSort = theApp.emuledlg->sharedfileswnd->sharedfilesctrl.GetNextSortOrder(lParamSort);
+		int dwNextSort = theApp.emuledlg->sharedfileswnd->sharedfilesctrl.GetNextSortOrder((int)lParamSort);
 		if (dwNextSort != -1)
 			iResult = SortProc(lParam1, lParam2, dwNextSort);
 	}
@@ -1502,10 +1440,10 @@ void CSharedFilesCtrl::CreateMenues()
 		m_SharedFilesMenu.AppendMenu(MF_STRING,Irc_SetSendLink,GetResString(IDS_IRC_ADDLINKTOIRC), _T("IRCCLIPBOARD"));
 
 	m_SharedFilesMenu.AppendMenu(MF_STRING|MF_SEPARATOR);
-	m_SharedFilesMenu.AppendMenu(MF_STRING|MF_POPUP,(UINT_PTR)m_PrioMenu.m_hMenu, GetResString(IDS_PRIORITY) + _T(" (") + GetResString(IDS_PW_CON_UPLBL) + _T(')'), _T("FILEPRIORITY"));
+	m_SharedFilesMenu.AppendMenu(MF_STRING|MF_POPUP, (UINT_PTR)m_PrioMenu.m_hMenu, GetResString(IDS_PRIORITY) + _T(" (") + GetResString(IDS_PW_CON_UPLBL) + _T(')'), _T("FILEPRIORITY"));
 	m_SharedFilesMenu.AppendMenu(MF_STRING|MF_SEPARATOR);
 
-	m_SharedFilesMenu.AppendMenu(MF_STRING|MF_POPUP,(UINT_PTR)m_CollectionsMenu.m_hMenu, GetResString(IDS_META_COLLECTION), _T("AABCollectionFileType"));
+	m_SharedFilesMenu.AppendMenu(MF_STRING|MF_POPUP, (UINT_PTR)m_CollectionsMenu.m_hMenu, GetResString(IDS_META_COLLECTION), _T("AABCollectionFileType"));
 	m_SharedFilesMenu.AppendMenu(MF_STRING|MF_SEPARATOR);
 
 	m_SharedFilesMenu.AppendMenu(MF_STRING,MP_DETAIL, GetResString(IDS_SHOWDETAILS), _T("FILEINFO"));
@@ -1669,7 +1607,7 @@ void CSharedFilesCtrl::SetToolTipsDelay(DWORD dwDelay)
 bool CSharedFilesCtrl::IsSharedInKad(const CKnownFile *file) const
 {
 	bool bSharedInKad;
-	if ((uint32)time(NULL) < file->GetLastPublishTimeKadSrc()) {
+	if (time(NULL) < file->GetLastPublishTimeKadSrc()) {
 		if (theApp.IsFirewalled() && theApp.IsConnected()) {
 			if ((theApp.clientlist->GetBuddy() && (file->GetLastPublishBuddy() == theApp.clientlist->GetBuddy()->GetIP()))
 				|| (Kademlia::CKademlia::IsRunning() && !Kademlia::CUDPFirewallTester::IsFirewalledUDP(true) && Kademlia::CUDPFirewallTester::IsVerified()))
@@ -1695,7 +1633,7 @@ void CSharedFilesCtrl::AddShareableFiles(const CString& strFromDir)
 	CString strSearchPath(strFromDir);
 	PathAddBackslash(strSearchPath.GetBuffer(strFromDir.GetLength() + 1));
 	strSearchPath.ReleaseBuffer();
-	strSearchPath += _T("*");
+	strSearchPath += _T('*');
 	CFileFind ff;
 	bool end = !ff.FindFile(strSearchPath, 0);
 	if (end) {
@@ -1716,20 +1654,13 @@ void CSharedFilesCtrl::AddShareableFiles(const CString& strFromDir)
 		CString strFoundFilePath(ff.GetFilePath());
 		CString strFoundDirectory(strFoundFilePath.Left(ff.GetFilePath().ReverseFind(_T('\\')) + 1));
 		ULONGLONG ullFoundFileSize = ff.GetLength();
-		CTime tFoundFileTime;
-		try{
-			ff.GetLastWriteTime(tFoundFileTime);
-		}
-		catch(CException* ex){
-			ex->Delete();
-		}
 
+		FILETIME tFoundFileTime;
+		ff.GetLastWriteTime(&tFoundFileTime);
 		// ignore real(!) LNK files
-		TCHAR szExt[_MAX_EXT];
-		_tsplitpath(strFoundFileName, NULL, NULL, NULL, szExt);
-		if (_tcsicmp(szExt, _T(".lnk")) == 0) {
+		if (ExtensionIs(strFoundFileName, _T(".lnk"))) {
 			SHFILEINFO info;
-			if (SHGetFileInfo(strFoundFilePath, 0, &info, sizeof(info), SHGFI_ATTRIBUTES) && (info.dwAttributes & SFGAO_LINK))
+			if (SHGetFileInfo(strFoundFilePath, 0, &info, sizeof info, SHGFI_ATTRIBUTES) && (info.dwAttributes & SFGAO_LINK))
 				continue;
 		}
 
@@ -1754,16 +1685,14 @@ void CSharedFilesCtrl::AddShareableFiles(const CString& strFromDir)
 			}
 		}
 
-		time_t fdate = (time_t)tFoundFileTime.GetTime();
+		time_t fdate = (time_t)FileTimeToUnixTime(tFoundFileTime);
 		if (fdate == 0)
 			fdate = (time_t)-1;
 		if (fdate == (time_t)-1) {
 			if (thePrefs.GetVerbose())
 				AddDebugLogLine(false, _T("Failed to get file date of \"%s\""), (LPCTSTR)strFoundFilePath);
-		}
-		else
+		} else
 			AdjustNTFSDaylightFileTime(fdate, strFoundFilePath);
-
 
 		CKnownFile* toadd = theApp.knownfiles->FindKnownFile(strFoundFileName, fdate, ullFoundFileSize);
 		if (toadd != NULL && theApp.sharedfiles->GetFileByID(toadd->GetFileHash()) != NULL) // check for shared
@@ -1783,8 +1712,7 @@ void CSharedFilesCtrl::AddShareableFiles(const CString& strFromDir)
 			pNewTempFile->SetFileName(strFoundFileName);
 			pNewTempFile->SetPath(strFoundDirectory);
 			pNewTempFile->SetFileSize(ullFoundFileSize);
-			uchar aucMD4[16];
-			md4clr(aucMD4);
+			uchar aucMD4[16] = {};
 			pNewTempFile->SetFileHash(aucMD4);
 			liTempShareableFilesInDir.AddTail(pNewTempFile);
 			AddFile(pNewTempFile);
@@ -1796,23 +1724,21 @@ void CSharedFilesCtrl::AddShareableFiles(const CString& strFromDir)
 
 BOOL CSharedFilesCtrl::OnNMClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	if (CheckBoxesEnabled()) // do we have checkboxes?
-	{
+	if (CheckBoxesEnabled()) { // do we have checkboxes?
 		NMLISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
 
 		int iItem = HitTest(pNMListView->ptAction);
-		if (iItem != -1){
+		if (iItem != -1) {
 			// determine if the checkbox was clicked
 			CRect recItem;
-			if(GetItemRect(iItem, recItem, LVIR_BOUNDS))
-			{
+			if (GetItemRect(iItem, recItem, LVIR_BOUNDS)) {
 				CPoint pointHit = pNMListView->ptAction;
-				ASSERT( recItem.PtInRect(pointHit) );
+				ASSERT(recItem.PtInRect(pointHit));
 				recItem.left += sm_iIconOffset;
 				recItem.right = recItem.left + 16;
 				recItem.top += (recItem.Height() > 16) ? ((recItem.Height() - 16) / 2) : 0;
 				recItem.bottom = recItem.top + 16;
-				if (recItem.PtInRect(pointHit)){
+				if (recItem.PtInRect(pointHit)) {
 					// user clicked on the checkbox
 					CheckBoxClicked(iItem);
 				}
@@ -1912,49 +1838,36 @@ CSharedFilesCtrl::CShareDropTarget::CShareDropTarget()
 {
 	m_piDropHelper = NULL;
 	m_pParent = NULL;
-    m_bUseDnDHelper = SUCCEEDED(CoCreateInstance(CLSID_DragDropHelper, NULL, CLSCTX_INPROC_SERVER, IID_IDropTargetHelper, (void**) &m_piDropHelper));
+	m_bUseDnDHelper = SUCCEEDED(CoCreateInstance(CLSID_DragDropHelper, NULL, CLSCTX_INPROC_SERVER, IID_IDropTargetHelper, (void**) &m_piDropHelper));
 }
 
 CSharedFilesCtrl::CShareDropTarget::~CShareDropTarget()
 {
-    if (m_piDropHelper != NULL)
-        m_piDropHelper->Release();
+	if (m_piDropHelper != NULL)
+		m_piDropHelper->Release();
 }
 
 DROPEFFECT CSharedFilesCtrl::CShareDropTarget::OnDragEnter(CWnd* pWnd, COleDataObject* pDataObject, DWORD /*dwKeyState*/, CPoint point)
 {
-	DROPEFFECT dwEffect = DROPEFFECT_NONE;
-
-	if (pDataObject->IsDataAvailable(CF_HDROP))
-		dwEffect = DROPEFFECT_COPY;
-
-    if (m_bUseDnDHelper)
-    {
-        IDataObject* piDataObj = pDataObject->GetIDataObject(FALSE);
-        m_piDropHelper->DragEnter (pWnd->GetSafeHwnd(), piDataObj, &point, dwEffect);
-    }
-
-    return dwEffect;
+	DROPEFFECT dwEffect = pDataObject->IsDataAvailable(CF_HDROP) ? DROPEFFECT_COPY : DROPEFFECT_NONE;
+	if (m_bUseDnDHelper) {
+		IDataObject* piDataObj = pDataObject->GetIDataObject(FALSE);
+		m_piDropHelper->DragEnter (pWnd->GetSafeHwnd(), piDataObj, &point, dwEffect);
+	}
+	return dwEffect;
 }
 
 DROPEFFECT CSharedFilesCtrl::CShareDropTarget::OnDragOver(CWnd* /*pWnd*/, COleDataObject* pDataObject, DWORD /*dwKeyState*/, CPoint point)
 {
-	DROPEFFECT dwEffect = DROPEFFECT_NONE;
-
-	if (pDataObject->IsDataAvailable(CF_HDROP))
-		dwEffect = DROPEFFECT_COPY;
-
-    if (m_bUseDnDHelper)
-    {
+	DROPEFFECT dwEffect = pDataObject->IsDataAvailable(CF_HDROP) ? DROPEFFECT_COPY : DROPEFFECT_NONE;
+	if (m_bUseDnDHelper)
 		m_piDropHelper->DragOver(&point, dwEffect);
-    }
-
-    return dwEffect;
+	return dwEffect;
 }
 
 BOOL CSharedFilesCtrl::CShareDropTarget::OnDrop(CWnd* /*pWnd*/, COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point)
 {
-    HGLOBAL hGlobal = pDataObject->GetGlobalData(CF_HDROP);
+	HGLOBAL hGlobal = pDataObject->GetGlobalData(CF_HDROP);
 	if (hGlobal != NULL)
 	{
 		HDROP hDrop = (HDROP)GlobalLock(hGlobal);
@@ -1965,9 +1878,9 @@ BOOL CSharedFilesCtrl::CShareDropTarget::OnDrop(CWnd* /*pWnd*/, COleDataObject* 
 			CStringList liToAddFiles; // all files too add
 			CStringList liToAddDirs; // all directories to add
 			bool bFromSingleDirectory = true; // are all files from within the same directory
-			CString strSingleDirectory = _T(""); // which would be this one
+			CString strSingleDirectory; // which would be this one
 
-			UINT nFileCount = DragQueryFile(hDrop, (UINT)(-1), NULL, 0);
+			UINT nFileCount = DragQueryFile(hDrop, (UINT)-1, NULL, 0);
 			for (UINT nFile = 0; nFile < nFileCount; nFile++ )
 			{
 				if (DragQueryFile(hDrop, nFile, strFilePath.GetBuffer(MAX_PATH), MAX_PATH) > 0 )
@@ -1997,8 +1910,7 @@ BOOL CSharedFilesCtrl::CShareDropTarget::OnDrop(CWnd* /*pWnd*/, COleDataObject* 
 						{
 							DEBUG_ONLY( DebugLog(_T("Drag'n'Drop'ed file: %s"), (LPCTSTR)ffpath) );
 							liToAddFiles.AddTail(ffpath);
-							if (bFromSingleDirectory)
-							{
+							if (bFromSingleDirectory) {
 								if (strSingleDirectory.IsEmpty())
 									strSingleDirectory = ffpath.Left(ffpath.ReverseFind(_T('\\')) + 1);
 								else if (strSingleDirectory.CompareNoCase(ffpath.Left(ffpath.ReverseFind(_T('\\')) + 1)) != NULL)

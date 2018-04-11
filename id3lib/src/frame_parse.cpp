@@ -118,18 +118,12 @@ namespace
               size_t _tmp_byte_size_ = fp->Get();
               linked_fixed_size = 0;
 
-              for (; _tmp_byte_size_ > 0;) //round to whole bytes: 1 bit will become 1 byte, 7 bits will become 1 byte, 9 bits become 2 bytes, etc
+              while (_tmp_byte_size_ > 0) //round to whole bytes: 1 bit will become 1 byte, 7 bits will become 1 byte, 9 bits become 2 bytes, etc
               {
-                if (_tmp_byte_size_ < 8 && _tmp_byte_size_ != 0)
-                {
-                  ++linked_fixed_size;
+                ++linked_fixed_size;
+                if (_tmp_byte_size_ < 8)
                   break;
-                }
-                else if (_tmp_byte_size_ >= 8)
-                {
-                  ++linked_fixed_size;
-                  _tmp_byte_size_ -= 8;
-                }
+                _tmp_byte_size_ -= 8;
               }
               ID3D_NOTICE( "parseFields(): found linked_fixed_size = " << linked_fixed_size );
               break;
@@ -216,7 +210,7 @@ bool ID3_FrameImpl::Parse(ID3_Reader& reader)
   }
   else
   {
-    io::CompressedReader csr(wr, origSize);
+    io::CompressedReader csr(wr, static_cast<uLong>(origSize));
 /*    success =*/ parseFields(csr, *this);
   }
   et.setExitPos(wr.getCur());

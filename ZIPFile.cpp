@@ -143,19 +143,15 @@ CZIPFile::File* CZIPFile::GetFile(LPCTSTR pszFile, BOOL bPartial) const
 {
 	File* pFile = m_pFile;
 
-	for ( int nFile = m_nFile ; nFile ; nFile--, pFile++ )
-	{
-		if ( bPartial )
-		{
-			LPCTSTR pszName = _tcsrchr( pFile->m_sName, '/' );
+	for (int nFile = m_nFile; nFile; --nFile, pFile++)
+		if (bPartial) {
+			LPCTSTR pszName = _tcsrchr(pFile->m_sName, '/');
 			pszName = pszName ? pszName + 1 : (LPCTSTR)pFile->m_sName;
-			if ( _tcsicoll( pszName, pszFile ) == 0 ) return pFile;
-		}
-		else
-		{
-			if ( _tcsicoll( pFile->m_sName, pszFile ) == 0 ) return pFile;
-		}
-	}
+			if (_tcsicoll(pszName, pszFile) == 0)
+				return pFile;
+		} else
+			if (_tcsicoll(pFile->m_sName, pszFile) == 0)
+				return pFile;
 
 	return NULL;
 }
@@ -188,18 +184,17 @@ BOOL CZIPFile::LocateCentralDirectory()
 
 	ZIP_DIRECTORY_LOC* pLoc = NULL;
 
-	for ( DWORD nScan = 4 ; nScan < nBuffer ; nScan++ )
-	{
-		DWORD* pnSignature = (DWORD*)( pBuffer + nBuffer - nScan  );
+	for (DWORD nScan = 4; nScan < nBuffer; ++nScan) {
+		DWORD* pnSignature = (DWORD*)(pBuffer + nBuffer - nScan);
 
-		if ( *pnSignature == 0x06054b50 )
-		{
+		if (*pnSignature == 0x06054b50) {
 			pLoc = (ZIP_DIRECTORY_LOC*)pnSignature;
 			break;
 		}
 	}
 
-	if ( pLoc == NULL ) return FALSE;
+	if (pLoc == NULL)
+		return FALSE;
 	ASSERT( pLoc->nSignature == 0x06054b50 );
 
 	if ( GetFileSize( m_hFile, NULL ) < pLoc->nDirectorySize ) return FALSE;
@@ -256,7 +251,7 @@ typedef struct
 
 BOOL CZIPFile::ParseCentralDirectory(BYTE* pDirectory, DWORD nDirectory)
 {
-	for ( int nFile = 0 ; nFile < m_nFile ; nFile++ )
+	for (int nFile = 0; nFile < m_nFile; ++nFile)
 	{
 		ZIP_CENTRAL_FILE* pRecord = (ZIP_CENTRAL_FILE*)pDirectory;
 
@@ -277,10 +272,10 @@ BOOL CZIPFile::ParseCentralDirectory(BYTE* pDirectory, DWORD nDirectory)
 
 		LPTSTR pszName = m_pFile[ nFile ].m_sName.GetBuffer( pRecord->nNameLen );
 
-		for ( WORD nChar = 0 ; nChar < pRecord->nNameLen ; nChar++ )
-		{
-			pszName[ nChar ] = (TCHAR)pDirectory[ nChar ];
-			if ( pszName[ nChar ] == '\\' ) pszName[ nChar ] = '/';
+		for (WORD nChar = 0; nChar < pRecord->nNameLen; nChar++) {
+			pszName[nChar] = (TCHAR)pDirectory[nChar];
+			if (pszName[nChar] == '\\')
+				pszName[nChar] = '/';
 		}
 
 		m_pFile[ nFile ].m_sName.ReleaseBuffer( pRecord->nNameLen );
@@ -341,17 +336,14 @@ BOOL CZIPFile::SeekToFile(File* pFile)
 
 BOOL CZIPFile::File::PrepareToDecompress(LPVOID pStream)
 {
-	ZeroMemory( pStream, sizeof(z_stream) );
+	memset( pStream, 0, sizeof(z_stream) );
 
-	if ( ! m_pZIP->SeekToFile( this ) ) return FALSE;
+	if (m_pZIP->SeekToFile(this)) {
+		if (m_nCompression == 0)
+			return (m_nSize == m_nCompressedSize);
 
-	if ( m_nCompression == 0 )
-	{
-		return ( m_nSize == m_nCompressedSize );
-	}
-	else if (m_nCompression == Z_DEFLATED)
-	{
-		return Z_OK == inflateInit2( (z_stream*)pStream, -MAX_WBITS );
+		if (m_nCompression == Z_DEFLATED)
+			return Z_OK == inflateInit2((z_stream*)pStream, -MAX_WBITS);
 	}
 	return FALSE;
 }

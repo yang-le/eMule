@@ -20,8 +20,8 @@
 #include "HTRichEditCtrl.h"
 #include "SplitterControl.h"
 
-#define	IRC_TITLE_WND_DFLT_HEIGHT	36	// min. space for 2 lines with "MS Sans Serif" or "Verdana" at 10pt
-#define	IRC_TITLE_WND_MIN_HEIGHT	(IRC_TITLE_WND_DFLT_HEIGHT/2)
+#define	IRC_TITLE_WND_MIN_HEIGHT	18	// min. space for 1 line with "MS Sans Serif" or "Verdana" at 10pt
+#define	IRC_TITLE_WND_DFLT_HEIGHT	IRC_TITLE_WND_MIN_HEIGHT	// default is 1 line
 #define	IRC_TITLE_WND_MAX_HEIGHT	(IRC_TITLE_WND_MIN_HEIGHT*6)
 #define	IRC_CHANNEL_SPLITTER_HEIGHT	4
 
@@ -34,16 +34,20 @@ struct Channel
 	CString m_sModesB;
 	CString m_sModesC;
 	CString m_sModesD;
-	CHTRichEditCtrl m_wndTitle;
+	CHTRichEditCtrl m_wndTopic;
 	CSplitterControl m_wndSplitter;
 	CHTRichEditCtrl m_wndLog;
 	CString m_sTitle;
 	CTypedPtrList<CPtrList, Nick*> m_lstNicks;
 	CStringArray m_astrHistory;
 	int m_iHistoryPos;
-	// Type is mainly so that we can use this for IRC and the eMule Messages..
+	CString m_sTyped; //autocomplete: user input only
+	CString m_sTabd; //autocomplete: user input + autocompletion
+	bool m_bDetached;
+	// Type is mainly so that we can use this for IRC and the eMule Messages.
 	// 1-Status, 2-Channel list, 4-Channel, 5-Private Channel, 6-eMule Message(Add later)
-	enum EType {
+	enum EType
+	{
 		ctStatus = 1,
 		ctChannelList = 2,
 		ctNormal = 4,
@@ -64,16 +68,21 @@ public:
 
 	void Init();
 	void Localize();
-	Channel* FindChannelByName(const CString& sName);
-	Channel* NewChannel(const CString& sName, Channel::EType eType);
+	Channel* FindChannelByName(const CString& sChannel);
+	Channel* FindOrCreateChannel(const CString& sChannel);
+	Channel* NewChannel(const CString& sChannel, Channel::EType eType);
+	void DetachChannel(Channel *pChannel);
+	void DetachChannel(const CString& sChannel);
+	void RemoveChannel(Channel *pChannel);
 	void RemoveChannel(const CString& sChannel);
 	void SelectChannel(const Channel *pChannel);
 	void DeleteAllChannels();
-	bool ChangeChanMode(const CString& sChannel, const CString& sParam, const CString& sDir, const CString& sCommand);
+	bool ChangeChanMode(const CString& sChannel, const CString& /*sParam*/, const CString& sDir, const CString& sCommand);
 	void ScrollHistory(bool bDown);
 	void ChatSend(CString sSend);
 	void SetActivity(Channel *pChannel, bool bFlag);
 	void EnableSmileys(bool bEnable);
+	void SetInput(const CString& rStr);
 
 	CString m_sChannelModeSettingsTypeA;
 	CString m_sChannelModeSettingsTypeB;
@@ -90,8 +99,9 @@ protected:
 	CIrcWnd* m_pParent;
 	CImageList m_imlistIRC;
 
+	void AutoComplete();
 	void SetAllIcons();
-	int FindChannel(const Channel *pChannel);
+	int FindTabIndex(const Channel *pChannel);
 	void SelectChannel(int iItem);
 
 	DECLARE_MESSAGE_MAP()

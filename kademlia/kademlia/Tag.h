@@ -36,472 +36,493 @@ there client on the eMule forum.
 // forward declarations
 namespace Kademlia { class CKadTagValueString; }
 void KadTagStrMakeLower(Kademlia::CKadTagValueString &rstr);
-int KadTagStrCompareNoCase(LPCWSTR dst, LPCWSTR src) throw();
+int KadTagStrCompareNoCase(LPCWSTR dst, LPCWSTR src) noexcept;
 
 namespace Kademlia
 {
 	class CKadTagNameString : protected CStringA
 	{
-		public:
-			CKadTagNameString()
-			{}
+	public:
+		CKadTagNameString()
+		{
+		}
 
-			virtual ~CKadTagNameString()
-			{}
+		virtual ~CKadTagNameString()
+		{
+		}
 
-			CKadTagNameString(LPCSTR psz)
-				: CStringA(psz)
-			{}
+		CKadTagNameString(LPCSTR psz)
+			: CStringA(psz)
+		{
+		}
 
-			CKadTagNameString(LPCSTR psz, int len)
-				: CStringA(psz, len)
-			{}
+		CKadTagNameString(LPCSTR psz, int len)
+			: CStringA(psz, len)
+		{
+		}
 
-			// A tag name may include character values >= 0xD0 and therefore also >= 0xF0. to prevent those
-			// characters be interpreted as multi byte character sequences we have to ensure that a binary
-			// string compare is performed.
-			int Compare(LPCSTR psz) const throw()
-			{
-				ATLASSERT( AfxIsValidString(psz) );
-				// Do a binary string compare. (independent from any codepage and/or LC_CTYPE setting.)
-				return strcmp(GetString(), psz);
-			}
+	   // A tag name may include character values >= 0xD0 and therefore also >= 0xF0. to prevent those
+	   // characters be interpreted as multi byte character sequences we have to ensure that a binary
+	   // string compare is performed.
+		int Compare(LPCSTR psz) const noexcept
+		{
+			ATLASSERT(AfxIsValidString(psz));
+			// Do a binary string compare. (independent from any codepage and/or LC_CTYPE setting.)
+			return strcmp(GetString(), psz);
+		}
 
-			int CompareNoCase(LPCSTR psz) const throw()
-			{
-				ATLASSERT( AfxIsValidString(psz) );
+		int CompareNoCase(LPCSTR psz) const noexcept
+		{
+			ATLASSERT(AfxIsValidString(psz));
 
-				// Version #1
-				// Do a case-insensitive ASCII string compare.
-				// NOTE: The current locale category LC_CTYPE *MUST* be set to "C"!
-				//return stricmp(GetString(), psz);
+			// Version #1
+			// Do a case-insensitive ASCII string compare.
+			// NOTE: The current locale category LC_CTYPE *MUST* be set to "C"!
+			//return stricmp(GetString(), psz);
 
-				// Version #2 - independent from any codepage and/or LC_CTYPE setting.
-				return __ascii_stricmp(GetString(), psz);
-			}
+			// Version #2 - independent from any codepage and/or LC_CTYPE setting.
+			return __ascii_stricmp(GetString(), psz);
+		}
 
-			CKadTagNameString& operator=(LPCSTR pszSrc)
-			{
-				CStringA::operator=(pszSrc);
-				return *this;
-			}
+		CKadTagNameString& operator=(LPCSTR pszSrc)
+		{
+			CStringA::operator=(pszSrc);
+			return *this;
+		}
 
-			operator PCXSTR() const throw()
-			{
-				return CStringA::operator PCXSTR();
-			}
+		operator PCXSTR() const noexcept
+		{
+			return CStringA::operator PCXSTR();
+		}
 
-			XCHAR operator[]( int iChar ) const throw()
-			{
-				return CStringA::operator [](iChar);
-			}
+		XCHAR operator[](int iChar) const noexcept
+		{
+			return CStringA::operator [](iChar);
+		}
 
-			PXSTR GetBuffer()
-			{
-				return CStringA::GetBuffer();
-			}
+		PXSTR GetBuffer()
+		{
+			return CStringA::GetBuffer();
+		}
 
-			PXSTR GetBuffer(int nMinBufferLength)
-			{
-				return CStringA::GetBuffer(nMinBufferLength);
-			}
+		PXSTR GetBuffer(int nMinBufferLength)
+		{
+			return CStringA::GetBuffer(nMinBufferLength);
+		}
 
-			int GetLength() const throw()
-			{
-				return CStringA::GetLength();
-			}
+		int GetLength() const noexcept
+		{
+			return CStringA::GetLength();
+		}
 	};
 
 
 	class CKadTagValueString : public CStringW
 	{
-		public:
-			CKadTagValueString()
-			{}
+	public:
+		CKadTagValueString()
+		{
+		}
 
-			virtual ~CKadTagValueString()
-			{}
+		virtual ~CKadTagValueString()
+		{
+		}
 
-			CKadTagValueString(const CStringW &rstr)
-				: CStringW(rstr)
-			{}
+		CKadTagValueString(const CStringW &rstr)
+			: CStringW(rstr)
+		{
+		}
 
-			CKadTagValueString(const wchar_t *psz)
-				: CStringW(psz)
-			{}
+		CKadTagValueString(const wchar_t *psz)
+			: CStringW(psz)
+		{
+		}
 
-			CKadTagValueString(const wchar_t *psz, int iLen)
-				: CStringW(psz, iLen)
-			{}
+		CKadTagValueString(const wchar_t *psz, int iLen)
+			: CStringW(psz, iLen)
+		{
+		}
 
-			int CompareNoCase(LPCWSTR src) const throw()
-			{
-				return KadTagStrCompareNoCase(GetString(), src);
-			}
+		int CompareNoCase(LPCWSTR src) const noexcept
+		{
+			return KadTagStrCompareNoCase(GetString(), src);
+		}
 
-			int Collate(PCXSTR psz) const throw()
-			{
-				// One *MUST NOT* call this function (see comments in 'KadTagStrMakeLower')
-				ASSERT(0);
-				return __super::Collate(psz);
-			}
+		int Collate(PCXSTR psz) const noexcept
+		{
+			// One *MUST NOT* call this function (see comments in 'KadTagStrMakeLower')
+			ASSERT(0);
+			return __super::Collate(psz);
+		}
 
-			int CollateNoCase(PCXSTR psz) const throw()
-			{
-				// One *MUST NOT* call this function (see comments in 'KadTagStrMakeLower')
-				ASSERT(0);
-				return __super::CollateNoCase(psz);
-			}
+		int CollateNoCase(PCXSTR psz) const noexcept
+		{
+			// One *MUST NOT* call this function (see comments in 'KadTagStrMakeLower')
+			ASSERT(0);
+			return __super::CollateNoCase(psz);
+		}
 
-			CKadTagValueString& MakeLower()
-			{
-				KadTagStrMakeLower(*this);
-				return *this;
-			}
+		CKadTagValueString& MakeLower()
+		{
+			KadTagStrMakeLower(*this);
+			return *this;
+		}
 
-			CKadTagValueString& MakeUpper()
-			{
-				// One *MUST NOT* call this function (see comments in 'KadTagStrMakeLower')
-				ASSERT(0);
-				__super::MakeUpper();
-				return *this;
-			}
+		CKadTagValueString& MakeUpper()
+		{
+			// One *MUST NOT* call this function (see comments in 'KadTagStrMakeLower')
+			ASSERT(0);
+			__super::MakeUpper();
+			return *this;
+		}
 	};
 
 
 	class CKadTag
 	{
-		public:
-			byte	m_type;
-			CKadTagNameString m_name;
+	public:
+		byte	m_type;
+		CKadTagNameString m_name;
 
-			CKadTag(byte type, LPCSTR name)
-				: m_type(type), m_name(name)
-			{}
+		CKadTag(byte type, LPCSTR name)
+			: m_type(type), m_name(name)
+		{
+		}
 
-			virtual ~CKadTag()
-			{}
+		virtual ~CKadTag()
+		{
+		}
 
-			virtual CKadTag* Copy() = 0;
+		virtual CKadTag* Copy() = 0;
 
-			bool IsStr()  const
-			{
-				return m_type == TAGTYPE_STRING;
-			}
-			bool IsBool() const
-			{
-				return m_type == TAGTYPE_BOOL;
-			}
-			bool IsNum()  const
-			{
-				return m_type == TAGTYPE_UINT64 || m_type == TAGTYPE_UINT32 || m_type == TAGTYPE_UINT16 || m_type == TAGTYPE_UINT8 || m_type == TAGTYPE_BOOL || m_type == TAGTYPE_FLOAT32 || m_type == TAGTYPE_UINT;
-			}
-			bool IsInt()  const
-			{
-				return m_type == TAGTYPE_UINT64 || m_type == TAGTYPE_UINT32 || m_type == TAGTYPE_UINT16 || m_type == TAGTYPE_UINT8 || m_type == TAGTYPE_UINT;
-			}
-			bool IsFloat()const
-			{
-				return m_type == TAGTYPE_FLOAT32;
-			}
-			bool IsBsob() const
-			{
-				return m_type == TAGTYPE_BSOB;
-			}
-			bool IsHash() const
-			{
-				return m_type == TAGTYPE_HASH;
-			}
+		bool IsStr() const
+		{
+			return m_type == TAGTYPE_STRING;
+		}
+		bool IsBool() const
+		{
+			return m_type == TAGTYPE_BOOL;
+		}
+		bool IsNum() const
+		{
+			return m_type == TAGTYPE_UINT64 || m_type == TAGTYPE_UINT32 || m_type == TAGTYPE_UINT16 || m_type == TAGTYPE_UINT8 || m_type == TAGTYPE_BOOL || m_type == TAGTYPE_FLOAT32 || m_type == TAGTYPE_UINT;
+		}
+		bool IsInt() const
+		{
+			return m_type == TAGTYPE_UINT64 || m_type == TAGTYPE_UINT32 || m_type == TAGTYPE_UINT16 || m_type == TAGTYPE_UINT8 || m_type == TAGTYPE_UINT;
+		}
+		bool IsFloat() const
+		{
+			return m_type == TAGTYPE_FLOAT32;
+		}
+		bool IsBsob() const
+		{
+			return m_type == TAGTYPE_BSOB;
+		}
+		bool IsHash() const
+		{
+			return m_type == TAGTYPE_HASH;
+		}
 
-			virtual CKadTagValueString GetStr() const
-			{
-				ASSERT(0);
-				return L"";
-			}
-			virtual uint64 GetInt() const
-			{
-				ASSERT(0);
-				return 0;
-			}
-			virtual float GetFloat() const
-			{
-				ASSERT(0);
-				return 0.0F;
-			}
-			virtual const BYTE* GetBsob() const
-			{
-				ASSERT(0);
-				return NULL;
-			}
-			virtual uint8 GetBsobSize() const
-			{
-				ASSERT(0);
-				return 0;
-			}
-			virtual bool GetBool() const
-			{
-				ASSERT(0);
-				return false;
-			}
-			virtual const BYTE* GetHash() const
-			{
-				ASSERT(0);
-				return NULL;
-			}
+		virtual CKadTagValueString GetStr() const
+		{
+			ASSERT(0);
+			return L"";
+		}
+		virtual uint64 GetInt() const
+		{
+			ASSERT(0);
+			return 0;
+		}
+		virtual float GetFloat() const
+		{
+			ASSERT(0);
+			return 0.0F;
+		}
+		virtual const BYTE* GetBsob() const
+		{
+			ASSERT(0);
+			return NULL;
+		}
+		virtual uint8 GetBsobSize() const
+		{
+			ASSERT(0);
+			return 0;
+		}
+		virtual bool GetBool() const
+		{
+			ASSERT(0);
+			return false;
+		}
+		virtual const BYTE* GetHash() const
+		{
+			ASSERT(0);
+			return NULL;
+		}
 
-		protected:
-			CKadTag() : m_type(0)
-			{}
+	protected:
+		CKadTag() : m_type(0)
+		{
+		}
 	};
 
 	class CKadTagStr : public CKadTag
 	{
-		public:
-			CKadTagStr(LPCSTR name, LPCWSTR value, int len)
-				: CKadTag(TAGTYPE_STRING, name)
-				, m_value(value, len)
-			{}
+	public:
+		CKadTagStr(LPCSTR name, LPCWSTR value, int len)
+			: CKadTag(TAGTYPE_STRING, name)
+			, m_value(value, len)
+		{
+		}
 
-			CKadTagStr(LPCSTR name, const CStringW& rstr)
-				: CKadTag(TAGTYPE_STRING, name)
-					, m_value(rstr)
-			{}
+		CKadTagStr(LPCSTR name, const CStringW& rstr)
+			: CKadTag(TAGTYPE_STRING, name)
+			, m_value(rstr)
+		{
+		}
 
-			virtual CKadTagStr* Copy()
-			{
-				return new CKadTagStr(m_name, m_value);
-			}
+		virtual CKadTagStr* Copy()
+		{
+			return new CKadTagStr(m_name, m_value);
+		}
 
-			virtual CKadTagValueString GetStr() const
-			{
-				return m_value;
-			}
+		virtual CKadTagValueString GetStr() const
+		{
+			return m_value;
+		}
 
-		protected:
-			CKadTagValueString m_value;
+	protected:
+		CKadTagValueString m_value;
 	};
 
 	class CKadTagUInt : public CKadTag
 	{
-		public:
-			CKadTagUInt(LPCSTR name, uint64 value)
-				: CKadTag(TAGTYPE_UINT, name)
-				, m_value(value)
-			{}
+	public:
+		CKadTagUInt(LPCSTR name, uint64 value)
+			: CKadTag(TAGTYPE_UINT, name)
+			, m_value(value)
+		{
+		}
 
-			virtual CKadTagUInt* Copy()
-			{
-				return new CKadTagUInt(m_name, m_value);
-			}
+		virtual CKadTagUInt* Copy()
+		{
+			return new CKadTagUInt(m_name, m_value);
+		}
 
-			virtual uint64 GetInt() const
-			{
-				return m_value;
-			}
+		virtual uint64 GetInt() const
+		{
+			return m_value;
+		}
 
-		protected:
-			uint64 m_value;
+	protected:
+		uint64 m_value;
 	};
 
 	class CKadTagUInt64 : public CKadTag
 	{
-		public:
-			CKadTagUInt64(LPCSTR name, uint64 value)
-				: CKadTag(TAGTYPE_UINT64, name)
-				, m_value(value)
-			{}
+	public:
+		CKadTagUInt64(LPCSTR name, uint64 value)
+			: CKadTag(TAGTYPE_UINT64, name)
+			, m_value(value)
+		{
+		}
 
-			virtual CKadTagUInt64* Copy()
-			{
-				return new CKadTagUInt64(m_name, m_value);
-			}
+		virtual CKadTagUInt64* Copy()
+		{
+			return new CKadTagUInt64(m_name, m_value);
+		}
 
-			virtual uint64 GetInt() const
-			{
-				return m_value;
-			}
+		virtual uint64 GetInt() const
+		{
+			return m_value;
+		}
 
-		protected:
-			uint64 m_value;
+	protected:
+		uint64 m_value;
 	};
 
 	class CKadTagUInt32 : public CKadTag
 	{
-		public:
-			CKadTagUInt32(LPCSTR name, uint32 value)
-				: CKadTag(TAGTYPE_UINT32, name)
-					, m_value(value)
-			{}
+	public:
+		CKadTagUInt32(LPCSTR name, uint32 value)
+			: CKadTag(TAGTYPE_UINT32, name)
+			, m_value(value)
+		{
+		}
 
-			virtual CKadTagUInt32* Copy()
-			{
-				return new CKadTagUInt32(m_name, m_value);
-			}
+		virtual CKadTagUInt32* Copy()
+		{
+			return new CKadTagUInt32(m_name, m_value);
+		}
 
-			virtual uint64 GetInt() const
-			{
-				return m_value;
-			}
+		virtual uint64 GetInt() const
+		{
+			return m_value;
+		}
 
-		protected:
-			uint32 m_value;
+	protected:
+		uint32 m_value;
 	};
 
 
 	class CKadTagFloat : public CKadTag
 	{
-		public:
-			CKadTagFloat(LPCSTR name, float value)
-				: CKadTag(TAGTYPE_FLOAT32, name)
-				, m_value(value)
-			{}
+	public:
+		CKadTagFloat(LPCSTR name, float value)
+			: CKadTag(TAGTYPE_FLOAT32, name)
+			, m_value(value)
+		{
+		}
 
-			virtual CKadTagFloat* Copy()
-			{
-				return new CKadTagFloat(m_name, m_value);
-			}
+		virtual CKadTagFloat* Copy()
+		{
+			return new CKadTagFloat(m_name, m_value);
+		}
 
-			virtual float GetFloat() const
-			{
-				return m_value;
-			}
+		virtual float GetFloat() const
+		{
+			return m_value;
+		}
 
-		protected:
-			float m_value;
+	protected:
+		float m_value;
 	};
 
 
 	class CKadTagBool : public CKadTag
 	{
-		public:
-			CKadTagBool(LPCSTR name, bool value)
-				: CKadTag(TAGTYPE_BOOL, name)
-				, m_value(value)
-			{}
+	public:
+		CKadTagBool(LPCSTR name, bool value)
+			: CKadTag(TAGTYPE_BOOL, name)
+			, m_value(value)
+		{
+		}
 
-			virtual CKadTagBool* Copy()
-			{
-				return new CKadTagBool(m_name, m_value);
-			}
+		virtual CKadTagBool* Copy()
+		{
+			return new CKadTagBool(m_name, m_value);
+		}
 
-			virtual bool GetBool() const
-			{
-				return m_value;
-			}
+		virtual bool GetBool() const
+		{
+			return m_value;
+		}
 
-		protected:
-			bool m_value;
+	protected:
+		bool m_value;
 	};
 
 
 	class CKadTagUInt16 : public CKadTag
 	{
-		public:
-			CKadTagUInt16(LPCSTR name, uint16 value)
-				: CKadTag(TAGTYPE_UINT16, name)
-				, m_value(value)
-			{}
+	public:
+		CKadTagUInt16(LPCSTR name, uint16 value)
+			: CKadTag(TAGTYPE_UINT16, name)
+			, m_value(value)
+		{
+		}
 
-			virtual CKadTagUInt16* Copy()
-			{
-				return new CKadTagUInt16(m_name, m_value);
-			}
+		virtual CKadTagUInt16* Copy()
+		{
+			return new CKadTagUInt16(m_name, m_value);
+		}
 
-			virtual uint64 GetInt() const
-			{
-				return m_value;
-			}
+		virtual uint64 GetInt() const
+		{
+			return m_value;
+		}
 
-		protected:
-			uint16 m_value;
+	protected:
+		uint16 m_value;
 	};
 
 
 	class CKadTagUInt8 : public CKadTag
 	{
-		public:
-			CKadTagUInt8(LPCSTR name, uint8 value)
-				: CKadTag(TAGTYPE_UINT8, name)
-				, m_value(value)
-			{}
+	public:
+		CKadTagUInt8(LPCSTR name, uint8 value)
+			: CKadTag(TAGTYPE_UINT8, name)
+			, m_value(value)
+		{
+		}
 
-			virtual CKadTagUInt8* Copy()
-			{
-				return new CKadTagUInt8(m_name, m_value);
-			}
+		virtual CKadTagUInt8* Copy()
+		{
+			return new CKadTagUInt8(m_name, m_value);
+		}
 
-			virtual uint64 GetInt() const
-			{
-				return m_value;
-			}
+		virtual uint64 GetInt() const
+		{
+			return m_value;
+		}
 
-		protected:
-			uint8 m_value;
+	protected:
+		uint8 m_value;
 	};
 
 
 	class CKadTagBsob : public CKadTag
 	{
-		public:
-			CKadTagBsob(LPCSTR name, const BYTE* value, uint8 nSize)
-				: CKadTag(TAGTYPE_BSOB, name)
-			{
-				m_value = new BYTE[nSize];
-				memcpy(m_value, value, nSize);
-				m_size = nSize;
-			}
+	public:
+		CKadTagBsob(LPCSTR name, const BYTE* value, uint8 nSize)
+			: CKadTag(TAGTYPE_BSOB, name)
+		{
+			m_value = new BYTE[nSize];
+			memcpy(m_value, value, nSize);
+			m_size = nSize;
+		}
 
-			~CKadTagBsob()
-			{
-				delete[] m_value;
-			}
+		~CKadTagBsob()
+		{
+			delete[] m_value;
+		}
 
-			virtual CKadTagBsob* Copy()
-			{
-				return new CKadTagBsob(m_name, m_value, m_size);
-			}
+		virtual CKadTagBsob* Copy()
+		{
+			return new CKadTagBsob(m_name, m_value, m_size);
+		}
 
-			virtual const BYTE* GetBsob() const
-			{
-				return m_value;
-			}
-			virtual uint8 GetBsobSize() const
-			{
-				return m_size;
-			}
+		virtual const BYTE* GetBsob() const
+		{
+			return m_value;
+		}
+		virtual uint8 GetBsobSize() const
+		{
+			return m_size;
+		}
 
-		protected:
-			BYTE* m_value;
-			uint8 m_size;
+	protected:
+		BYTE * m_value;
+		uint8 m_size;
 	};
 
 
 	class CKadTagHash : public CKadTag
 	{
-		public:
-			CKadTagHash(LPCSTR name, const BYTE* value)
-				: CKadTag(TAGTYPE_HASH, name)
-			{
-				m_value = new BYTE[16];
-				md4cpy(m_value, value);
-			}
+	public:
+		CKadTagHash(LPCSTR name, const BYTE* value)
+			: CKadTag(TAGTYPE_HASH, name)
+		{
+			m_value = new BYTE[16];
+			md4cpy(m_value, value);
+		}
 
-			~CKadTagHash()
-			{
-				delete[] m_value;
-			}
+		~CKadTagHash()
+		{
+			delete[] m_value;
+		}
 
-			virtual CKadTagHash* Copy()
-			{
-				return new CKadTagHash(m_name, m_value);
-			}
+		virtual CKadTagHash* Copy()
+		{
+			return new CKadTagHash(m_name, m_value);
+		}
 
-			virtual const BYTE* GetHash() const
-			{
-				return m_value;
-			}
+		virtual const BYTE* GetHash() const
+		{
+			return m_value;
+		}
 
-		protected:
-			BYTE* m_value;
+	protected:
+		BYTE * m_value;
 	};
 }

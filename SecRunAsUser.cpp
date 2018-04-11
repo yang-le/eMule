@@ -136,7 +136,7 @@ eResult CSecRunAsUser::PrepareUser()
 bool CSecRunAsUser::CreateEmuleUser(IADsContainerPtr pUsers){
 
 	IDispatchPtr pDisp=NULL;
-	if ( !SUCCEEDED(pUsers->Create(CComBSTR(L"user"),CString(EMULEACCOUNTW).AllocSysString() ,&pDisp )) )
+	if (!SUCCEEDED(pUsers->Create(CComBSTR(L"user"), CString(EMULEACCOUNTW).AllocSysString(), &pDisp)))
 		return false;
 
 	IADsUserPtr pUser;
@@ -187,7 +187,7 @@ bool CSecRunAsUser::SetDirectoryPermissions()
 	for (int i=0; i<thePrefs.GetTempDirCount(); ++i)
 		bSucceeded = bSucceeded && SetObjectPermission(thePrefs.GetTempDir(i), FULLACCESS);
 
-	int cCats = thePrefs.GetCatCount();
+	INT_PTR cCats = thePrefs.GetCatCount();
 	for (int i = 0; i < cCats; ++i) {
 		if (!thePrefs.GetCatPath(i).IsEmpty())
 			bSucceeded = bSucceeded && SetObjectPermission(thePrefs.GetCatPath(i), FULLACCESS);
@@ -215,7 +215,7 @@ bool CSecRunAsUser::SetObjectPermission(CString strDirFile, DWORD lGrantedAccess
 	BOOL fAPISuccess;
 
 	try {
-		// get user sid
+		// get user SID
 		DWORD cbDomain = 0;
 		DWORD cbUserSID = 0;
 		fAPISuccess = LookupAccountName(NULL, EMULEACCOUNTW, pUserSID, &cbUserSID, szDomain, &cbDomain, &snuType);
@@ -442,7 +442,8 @@ void CSecRunAsUser::FreeAPI()
 }
 
 
-eResult CSecRunAsUser::RestartAsRestricted(){
+eResult CSecRunAsUser::RestartAsRestricted()
+{
 	if (m_bRunningRestricted || m_bRunningAsEmule)
 		return RES_OK;
 	if (!LoadAPI())
@@ -458,15 +459,15 @@ eResult CSecRunAsUser::RestartAsRestricted(){
 			throw(CString(_T("Failed to retrieve access token from process")));
 		}
 
-		// there is no easy way to check if we have already restircted token when not using the restricted sid list
+		// there is no easy way to check if we have already restircted token when not using the restricted SID list
 		// so just check if we set the SANDBOX_INERT flag and hope noone else did
 		// (which isunlikely tho because afaik you would only set it when using CreateRestirctedToken) :)
 		DWORD dwLen = 0;
 		DWORD dwInertFlag;
-		if (!GetTokenInformation(hProcessToken, TokenSandBoxInert, &dwInertFlag, sizeof(dwInertFlag), &dwLen)){
+		if (!GetTokenInformation(hProcessToken, TokenSandBoxInert, &dwInertFlag, sizeof(dwInertFlag), &dwLen))
 			throw(CString(_T("Failed to Flag-Status from AccessToken")));
-		}
-		if (dwInertFlag != 0){
+
+		if (dwInertFlag != 0) {
 			m_bRunningRestricted = true;
 			throw(CString(_T("Already using a restricted Token it seems (everything is fine!)")));
 		}
@@ -483,23 +484,24 @@ eResult CSecRunAsUser::RestartAsRestricted(){
 		if (pstructUserToken == NULL)
 			throw(CString(_T("Failed to retrieve UserSID from AccessToken")));
 
-		// disabling our primary token would make sense from an Security POV, but this would cause file acces conflicts
+		// disabling our primary token would make sense from a Security POV, but this would cause file acces conflicts
 		// in the default settings (since we cannot access files we created ourself if they don't have the write flag for the group "users")
 		// so it stays enabled for now and we only reduce privileges
 
 		// create the new token
-		if(!CreateRestrictedToken(hProcessToken, DISABLE_MAX_PRIVILEGE | SANDBOX_INERT, 0 /*disabled*/, &pstructUserToken->User, 0, NULL, 0, NULL, &hRestrictedToken ) ){
+		if (!CreateRestrictedToken(hProcessToken, DISABLE_MAX_PRIVILEGE | SANDBOX_INERT, 0 /*disabled*/, &pstructUserToken->User, 0, NULL, 0, NULL, &hRestrictedToken ))
 			throw(CString(_T("Failed to create Restricted Token")));
-		}
 
 		// do the starting job
-		PROCESS_INFORMATION ProcessInfo = {};
-		TCHAR szAppPath[MAX_PATH];
-		DWORD dwModPathLen = GetModuleFileName(NULL, szAppPath, _countof(szAppPath));
-		if (dwModPathLen == 0 || dwModPathLen == _countof(szAppPath))
+		TCHAR szAppPath[MAX_PATH + 2];
+		DWORD dwModPathLen = GetModuleFileName(NULL, &szAppPath[1], MAX_PATH);
+		if (dwModPathLen == 0 || dwModPathLen >= MAX_PATH)
 			throw CString(_T("Failed to get module file path"));
-		CString strAppName;
-		strAppName.Format(_T("\"%s\""),szAppPath);
+		szAppPath[0] = _T('"');
+		szAppPath[++dwModPathLen] = _T('"');
+		szAppPath[++dwModPathLen] = _T('\0');
+		//CString strAppName;
+		//strAppName.Format(_T("\"%s\""), szAppPath);
 
 		STARTUPINFO StartInf = {};
 		StartInf.cb = sizeof StartInf;
@@ -510,12 +512,12 @@ eResult CSecRunAsUser::RestartAsRestricted(){
 		// in the rare case CreateProcessWithLogonW fails, this will allow mult. instances, but if that function fails we have other problems anyway
 		::CloseHandle(theApp.m_hMutexOneInstance);
 
-		if(!CreateProcessAsUser(hRestrictedToken, NULL, strAppName.GetBuffer(), NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &StartInf, &ProcessInfo) ){
+		PROCESS_INFORMATION ProcessInfo = {};
+		if (!CreateProcessAsUser(hRestrictedToken, NULL, szAppPath, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &StartInf, &ProcessInfo)) {
 			CString e;
 			GetErrorMessage(GetLastError(), e, 0);
-			throw(CString(_T("CreateProcessAsUser failed")));
+			throw (_T("CreateProcessAsUser failed: ") + e);
 		}
-		strAppName.ReleaseBuffer();
 		CloseHandle(ProcessInfo.hProcess);
 		CloseHandle(ProcessInfo.hThread);
 

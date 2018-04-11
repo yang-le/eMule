@@ -126,7 +126,7 @@ void CLookupHistory::ContactAskedKad(CContact* pContact)
 	ASSERT( false );
 }
 
-int	CLookupHistory::GetInterestingContactIdxByID(const CUInt128& uContact) const
+int CLookupHistory::GetInterestingContactIdxByID(const CUInt128& uContact) const
 {
 	for (int i = 0; i < m_aIntrestingHistoryEntries.GetCount(); ++i) {
 		if (uContact == m_aIntrestingHistoryEntries[i]->m_uContactID)
@@ -167,7 +167,7 @@ void CLookupHistory::ContactRespondedKeyword(uint32 uContactIP, uint16 uContactU
 	//ASSERT( false );
 }
 
-CString	CLookupHistory::GetTypeName() const
+CString CLookupHistory::GetTypeName() const
 {
 	switch (m_uType) {
 	case CSearch::FILE:

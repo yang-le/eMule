@@ -42,11 +42,11 @@ BEGIN_MESSAGE_MAP(CED2kLinkDlg, CResizablePage)
 END_MESSAGE_MAP()
 
 CED2kLinkDlg::CED2kLinkDlg()
-   : CResizablePage(CED2kLinkDlg::IDD, IDS_CMT_READALL)
+	: CResizablePage(CED2kLinkDlg::IDD, IDS_CMT_READALL)
+	, m_strCaption(GetResString(IDS_SW_LINK))
 {
 	m_paFiles = NULL;
 	m_bDataChanged = false;
-	m_strCaption = GetResString(IDS_SW_LINK);
 	m_psp.pszTitle = m_strCaption;
 	m_psp.dwFlags |= PSP_USETITLE;
 	m_bReducedDlg = false;
@@ -66,8 +66,6 @@ BOOL CED2kLinkDlg::OnInitDialog()
 {
 	CResizablePage::OnInitDialog();
 	InitWindowStyles(this);
-
-
 
 	if (!m_bReducedDlg)
 	{
@@ -135,7 +133,7 @@ BOOL CED2kLinkDlg::OnSetActive()
 			if (!(*m_paFiles)[i]->IsKindOf(RUNTIME_CLASS(CKnownFile)))
 				continue;
 			bShowHTML = TRUE;
-			const CFileIdentifier& fileid = STATIC_DOWNCAST(CKnownFile, (*m_paFiles)[i])->GetFileIdentifier();
+			const CFileIdentifier& fileid = static_cast<CKnownFile *>((*m_paFiles)[i])->GetFileIdentifier();
 			if (fileid.GetAvailableMD4PartHashCount() > 0 && fileid.HasExpectedMD4HashCount())
 				bShowHashset = TRUE;
 			if (fileid.HasAICHHash())
@@ -164,16 +162,16 @@ LRESULT CED2kLinkDlg::OnDataChanged(WPARAM, LPARAM)
 
 void CED2kLinkDlg::Localize()
 {
-	GetDlgItem(IDC_LD_LINKGROUP)->SetWindowText(GetResString(IDS_SW_LINK));
-	GetDlgItem(IDC_LD_CLIPBOARDBUT)->SetWindowText(GetResString(IDS_LD_COPYCLIPBOARD));
+	SetDlgItemText(IDC_LD_LINKGROUP, GetResString(IDS_SW_LINK));
+	SetDlgItemText(IDC_LD_CLIPBOARDBUT, GetResString(IDS_LD_COPYCLIPBOARD));
 	if (!m_bReducedDlg)
 	{
-		GetDlgItem(IDC_LD_BASICGROUP)->SetWindowText(GetResString(IDS_LD_BASICOPT));
-		GetDlgItem(IDC_LD_SOURCECHE)->SetWindowText(GetResString(IDS_LD_ADDSOURCE));
-		GetDlgItem(IDC_LD_ADVANCEDGROUP)->SetWindowText(GetResString(IDS_LD_ADVANCEDOPT));
-		GetDlgItem(IDC_LD_HTMLCHE)->SetWindowText(GetResString(IDS_LD_ADDHTML));
-		GetDlgItem(IDC_LD_HASHSETCHE)->SetWindowText(GetResString(IDS_LD_ADDHASHSET));
-		GetDlgItem(IDC_LD_HOSTNAMECHE)->SetWindowText(GetResString(IDS_LD_HOSTNAME));
+		SetDlgItemText(IDC_LD_BASICGROUP, GetResString(IDS_LD_BASICOPT));
+		SetDlgItemText(IDC_LD_SOURCECHE, GetResString(IDS_LD_ADDSOURCE));
+		SetDlgItemText(IDC_LD_ADVANCEDGROUP, GetResString(IDS_LD_ADVANCEDOPT));
+		SetDlgItemText(IDC_LD_HTMLCHE, GetResString(IDS_LD_ADDHTML));
+		SetDlgItemText(IDC_LD_HASHSETCHE, GetResString(IDS_LD_ADDHASHSET));
+		SetDlgItemText(IDC_LD_HOSTNAMECHE, GetResString(IDS_LD_HOSTNAME));
 	}
 }
 
@@ -194,7 +192,7 @@ void CED2kLinkDlg::UpdateLink()
 		if (!strLinks.IsEmpty())
 			strLinks += _T("\r\n\r\n");
 
-		CKnownFile* file = STATIC_DOWNCAST(CKnownFile, (*m_paFiles)[i]);
+		const CKnownFile* file = static_cast<CKnownFile *>((*m_paFiles)[i]);
 		strLinks += file->GetED2kLink(bHashset, bHTML, bHostname, bSource, theApp.GetPublicIP());
 	}
 	m_ctrlLinkEdit.SetWindowText(strLinks);
@@ -216,6 +214,6 @@ void CED2kLinkDlg::OnSettingsChange()
 BOOL CED2kLinkDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	if (LOWORD(wParam) == IDCANCEL)
-		return ::SendMessage(::GetParent(m_hWnd), WM_COMMAND, wParam, lParam);
+		return ::SendMessage(::GetParent(m_hWnd), WM_COMMAND, wParam, lParam) != 0;
 	return CResizablePage::OnCommand(wParam, lParam);
 }

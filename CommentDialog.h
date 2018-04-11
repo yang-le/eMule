@@ -12,14 +12,13 @@ class CCommentDialog : public CResizablePage
 {
 	DECLARE_DYNAMIC(CCommentDialog)
 
+	enum { IDD = IDD_COMMENT };
+
 public:
 	CCommentDialog();	// standard constructor
 	virtual ~CCommentDialog();
 
 	void SetFiles(const CSimpleArray<CObject*>* paFiles) { m_paFiles = paFiles; m_bDataChanged = true; }
-
-	// Dialog Data
-	enum { IDD = IDD_COMMENT };
 
 	void Localize();
 

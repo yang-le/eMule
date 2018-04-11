@@ -50,7 +50,7 @@ BEGIN_MESSAGE_MAP(CHTRichEditCtrl, CRichEditCtrl)
 END_MESSAGE_MAP()
 
 CHTRichEditCtrl::CHTRichEditCtrl()
-	: m_iLimitText(0), m_cfDefault()
+	: m_cfDefault(), m_iLimitText(0)
 {
 	m_bAutoScroll = true;
 	m_bNoPaint = false;
@@ -98,8 +98,8 @@ void CHTRichEditCtrl::Init(LPCTSTR pszTitle, LPCTSTR pszSkinKey)
 	VERIFY( GetSelectionCharFormat(m_cfDefault) );
 
 	// prevent the RE control to change the font height within single log lines (may happen with some Unicode chars)
-	DWORD dwLangOpts = SendMessage(EM_GETLANGOPTIONS);
-	SendMessage(EM_SETLANGOPTIONS, 0, dwLangOpts & ~(IMF_AUTOFONT /*| IMF_AUTOFONTSIZEADJUST*/));
+	LRESULT dwLangOpts = SendMessage(EM_GETLANGOPTIONS);
+	SendMessage(EM_SETLANGOPTIONS, 0, (WPARAM)(dwLangOpts & ~(IMF_AUTOFONT /*| IMF_AUTOFONTSIZEADJUST*/)));
 	//SendMessage(EM_SETEDITSTYLE, SES_EMULATESYSEDIT, SES_EMULATESYSEDIT);
 }
 
@@ -215,8 +215,8 @@ void CHTRichEditCtrl::FlushBuffer()
 			const CString& rstrLine = m_astrBuff[i];
 			if (!rstrLine.IsEmpty())
 			{
-				if ((_TUCHAR)rstrLine[0] < 8)
-					AddLine((LPCTSTR)rstrLine + 1, rstrLine.GetLength() - 1, false, GetLogLineColor((_TUCHAR)rstrLine[0]));
+				if ((UINT)rstrLine[0] < 8)
+					AddLine((LPCTSTR)rstrLine + 1, rstrLine.GetLength() - 1, false, GetLogLineColor((UINT)rstrLine[0]));
 				else
 					AddLine((LPCTSTR)rstrLine, rstrLine.GetLength());
 			}
@@ -267,7 +267,7 @@ void CHTRichEditCtrl::AddTyped(LPCTSTR pszMsg, int iLen, UINT eMsgType)
 
 void CHTRichEditCtrl::AddLine(LPCTSTR pszMsg, int iLen, bool bLink, COLORREF cr, COLORREF bk, DWORD mask)
 {
-	int iMsgLen = (iLen == -1) ? _tcslen(pszMsg) : iLen;
+	int iMsgLen = (iLen == -1) ? (int)_tcslen(pszMsg) : iLen;
 	if (iMsgLen == 0)
 		return;
 
@@ -590,7 +590,7 @@ void CHTRichEditCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	menu.AppendMenu(MF_STRING | (lSelEnd > lSelStart ? MF_ENABLED : MF_GRAYED), MP_COPYSELECTED, GetResString(IDS_COPY));
 	menu.AppendMenu(MF_SEPARATOR);
 	menu.AppendMenu(MF_STRING | (iTextLen > 0 ? MF_ENABLED : MF_GRAYED), MP_SELECTALL, GetResString(IDS_SELECTALL));
-	menu.AppendMenu(MF_STRING | (iTextLen > 0 ? MF_ENABLED : MF_GRAYED), MP_REMOVEALL , GetResString(IDS_PW_RESET));
+	menu.AppendMenu(MF_STRING | (iTextLen > 0 ? MF_ENABLED : MF_GRAYED), MP_REMOVEALL, GetResString(IDS_PW_RESET));
 	menu.AppendMenu(MF_STRING | (iTextLen > 0 ? MF_ENABLED : MF_GRAYED), MP_SAVELOG, GetResString(IDS_SAVELOG) + _T("..."));
 	menu.AppendMenu(MF_SEPARATOR);
 	menu.AppendMenu(MF_STRING | (m_bAutoScroll ? MF_CHECKED : MF_UNCHECKED), MP_AUTOSCROLL, GetResString(IDS_AUTOSCROLL));
@@ -638,7 +638,8 @@ BOOL CHTRichEditCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 bool CHTRichEditCtrl::SaveLog(LPCTSTR pszDefName)
 {
 	bool bResult = false;
-	CFileDialog dlg(FALSE, _T("log"), pszDefName ? pszDefName : (LPCTSTR)m_strTitle, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, _T("Log Files (*.log)|*.log||"), this, 0);
+	CString fname = pszDefName ? CString(pszDefName) : m_strTitle;
+	CFileDialog dlg(FALSE, _T("log"), (LPCTSTR)ValidFilename(fname), OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, _T("Log Files (*.log)|*.log||"), this, 0);
 	if (dlg.DoModal() == IDOK)
 	{
 		FILE* fp = _tfsopen(dlg.GetPathName(), _T("wb"), _SH_DENYWR);
@@ -714,26 +715,11 @@ void CHTRichEditCtrl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	else if (nChar == VK_ESCAPE)
 	{
 		// dont minimize CHTRichEditCtrl
-		return ;
+		return;
 	}
 
 	CRichEditCtrl::OnKeyDown(nChar, nRepCnt, nFlags);
 }
-
-static const struct
-{
-	LPCTSTR pszScheme;
-	int iLen;
-} s_apszSchemes[] =
-{
-    { _T("ed2k://"),  7 },
-    { _T("http://"),  7 },
-    { _T("https://"), 8 },
-    { _T("ftp://"),   6 },
-    { _T("www."),     4 },
-    { _T("ftp."),     4 },
-    { _T("mailto:"),  7 }
-};
 
 void CHTRichEditCtrl::AppendText(const CString& sText)
 {
@@ -748,12 +734,12 @@ void CHTRichEditCtrl::AppendText(const CString& sText)
 			{
 				// output everything before the URL
 				if (psz - pszStart > 0){
-					CString str(pszStart, psz - pszStart);
+					CString str(pszStart, (int)(psz - pszStart));
 					AddLine(str, str.GetLength());
 				}
 
 				// search next space or EOL
-				int iLen = _tcscspn(psz, _T(" \t\r\n"));
+				int iLen = (int)_tcscspn(psz, _T(" \t\r\n"));
 				if (iLen == 0){
 					AddLine(psz, -1, true);
 					psz += _tcslen(psz);
@@ -841,7 +827,7 @@ void CHTRichEditCtrl::SetFont(CFont* pFont, BOOL bRedraw)
 	else
 		bAtEndOfScroll = true;
 
-	LOGFONT lf = {};
+	LOGFONT lf;
 	pFont->GetLogFont(&lf);
 
 	CHARFORMAT cf = {};
@@ -870,7 +856,7 @@ void CHTRichEditCtrl::SetFont(CFont* pFont, BOOL bRedraw)
 	_tcsncpy(cf.szFaceName, lf.lfFaceName, _countof(cf.szFaceName));
 	cf.szFaceName[_countof(cf.szFaceName) - 1] = _T('\0');
 
-	// although this should work correctly (according SDK) it may give false results (e.g. the "click here..." text
+	// although this should work correctly (according to SDK) it may give false results (e.g. the "click here..." text
 	// which is shown in the server info window may not be entirely used as a hyperlink???)
 	//	cf.dwMask |= CFM_CHARSET;
 	//	cf.bCharSet = lf.lfCharSet;
@@ -1037,25 +1023,25 @@ CBitmapDataObject::~CBitmapDataObject()
 #pragma warning(disable:4100) // unreferenced paramter
 #pragma warning(disable:4555) // expression has no effect; expected expression with side-effect (because of the 'METHOD_PROLOGUE' macro)
 
-STDMETHODIMP CBitmapDataObject::XDataObject::QueryInterface(REFIID riid, void** ppvObj)
+STDMETHODIMP CBitmapDataObject::XDataObject::QueryInterface(REFIID riid, void** ppvObj) noexcept
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 	return (HRESULT)pThis->ExternalQueryInterface(&riid, ppvObj);
 }
 
-STDMETHODIMP_(ULONG) CBitmapDataObject::XDataObject::AddRef()
+STDMETHODIMP_(ULONG) CBitmapDataObject::XDataObject::AddRef() noexcept
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 	return pThis->ExternalAddRef();
 }
 
-STDMETHODIMP_(ULONG) CBitmapDataObject::XDataObject::Release()
+STDMETHODIMP_(ULONG) CBitmapDataObject::XDataObject::Release() noexcept
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 	return pThis->ExternalRelease();
 }
 
-STDMETHODIMP CBitmapDataObject::XDataObject::GetData(FORMATETC *pformatetcIn, STGMEDIUM *pmedium)
+STDMETHODIMP CBitmapDataObject::XDataObject::GetData(FORMATETC *pformatetcIn, STGMEDIUM *pmedium) noexcept
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 #ifdef USE_METAFILE
@@ -1069,49 +1055,49 @@ STDMETHODIMP CBitmapDataObject::XDataObject::GetData(FORMATETC *pformatetcIn, ST
 	return S_OK;
 }
 
-STDMETHODIMP CBitmapDataObject::XDataObject::GetDataHere(FORMATETC *pformatetc, STGMEDIUM *pmedium)
+STDMETHODIMP CBitmapDataObject::XDataObject::GetDataHere(FORMATETC *pformatetc, STGMEDIUM *pmedium) noexcept
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 	return E_NOTIMPL;
 }
 
-STDMETHODIMP CBitmapDataObject::XDataObject::QueryGetData(FORMATETC *pformatetc)
+STDMETHODIMP CBitmapDataObject::XDataObject::QueryGetData(FORMATETC *pformatetc) noexcept
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 	return E_NOTIMPL;
 }
 
-STDMETHODIMP CBitmapDataObject::XDataObject::GetCanonicalFormatEtc(FORMATETC *pformatectIn, FORMATETC *pformatetcOut)
+STDMETHODIMP CBitmapDataObject::XDataObject::GetCanonicalFormatEtc(FORMATETC *pformatectIn, FORMATETC *pformatetcOut) noexcept
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 	return E_NOTIMPL;
 }
 
-STDMETHODIMP CBitmapDataObject::XDataObject::SetData(FORMATETC *pformatetc, STGMEDIUM *pmedium, BOOL fRelease)
+STDMETHODIMP CBitmapDataObject::XDataObject::SetData(FORMATETC *pformatetc, STGMEDIUM *pmedium, BOOL fRelease) noexcept
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 	return E_NOTIMPL;
 }
 
-STDMETHODIMP CBitmapDataObject::XDataObject::EnumFormatEtc(DWORD dwDirection, IEnumFORMATETC **ppenumFormatEtc)
+STDMETHODIMP CBitmapDataObject::XDataObject::EnumFormatEtc(DWORD dwDirection, IEnumFORMATETC **ppenumFormatEtc) noexcept
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 	return E_NOTIMPL;
 }
 
-STDMETHODIMP CBitmapDataObject::XDataObject::DAdvise(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection)
+STDMETHODIMP CBitmapDataObject::XDataObject::DAdvise(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection) noexcept
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 	return E_NOTIMPL;
 }
 
-STDMETHODIMP CBitmapDataObject::XDataObject::DUnadvise(DWORD dwConnection)
+STDMETHODIMP CBitmapDataObject::XDataObject::DUnadvise(DWORD dwConnection) noexcept
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 	return E_NOTIMPL;
 }
 
-STDMETHODIMP CBitmapDataObject::XDataObject::EnumDAdvise(IEnumSTATDATA **ppenumAdvise)
+STDMETHODIMP CBitmapDataObject::XDataObject::EnumDAdvise(IEnumSTATDATA **ppenumAdvise) noexcept
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 	return E_NOTIMPL;
@@ -1214,24 +1200,24 @@ static const struct
 void CHTRichEditCtrl::AddSmileys(LPCTSTR pszLine)
 {
 	int iPos = 0;
-	LPCTSTR psz = pszLine;
-	LPCTSTR pszStart = psz;
-	while (*psz != _T('\0'))
-	{
+	LPCTSTR pszStart = pszLine;
+	for (LPCTSTR psz = pszLine; *psz != _T('\0');) {
 		bool bFoundSmiley = false;
-		if (iPos == 0 || psz[-1] == _T(' ') || psz[-1] == _T('.'))
-		{
-			for (unsigned i = 0; i < _countof(s_apszSmileys); ++i)
-			{
+		if (iPos == 0 || psz[-1] == _T(' ') || psz[-1] == _T('.')) {
+			for (unsigned i = 0; i < _countof(s_apszSmileys); ++i) {
 				if (_tcsncmp(psz, s_apszSmileys[i].pszSmiley, s_apszSmileys[i].iLen) == 0
-					&& (   psz[s_apszSmileys[i].iLen] == _T('\0')
+					&& (psz[s_apszSmileys[i].iLen] == _T('\0')
 						|| psz[s_apszSmileys[i].iLen] == _T('\r')
 						|| psz[s_apszSmileys[i].iLen] == _T('\n')
-					    || psz[s_apszSmileys[i].iLen] == _T(' ')))
+						|| psz[s_apszSmileys[i].iLen] == _T(' '))) //
 				{
 					if (psz - pszStart > 0)
-						ReplaceSel(CString(pszStart, psz - pszStart));
-					if (!InsertSmiley(s_apszSmileys[i].pszID))
+						ReplaceSel(CString(pszStart, (int)(psz - pszStart)));
+					CHARFORMAT2 cf = {};
+					cf.cbSize = (UINT)sizeof cf;
+					cf.dwMask = CFM_COLOR;
+					COLORREF bk = (GetSelectionCharFormat(cf) & CFM_BACKCOLOR) ? cf.crBackColor : m_crBackground;
+					if (!InsertSmiley(s_apszSmileys[i].pszID, bk))
 						ReplaceSel(s_apszSmileys[i].pszSmiley);
 					psz += s_apszSmileys[i].iLen;
 					iPos += s_apszSmileys[i].iLen;
@@ -1241,10 +1227,9 @@ void CHTRichEditCtrl::AddSmileys(LPCTSTR pszLine)
 				}
 			}
 		}
-		if (!bFoundSmiley)
-		{
+		if (!bFoundSmiley) {
 			psz = _tcsinc(psz);
-			iPos++;
+			++iPos;
 		}
 	}
 	if (*pszStart != _T('\0'))
@@ -1325,10 +1310,12 @@ HBITMAP IconToBitmap(HICON hIcon, COLORREF crBackground, int cx = 16, int cy = 1
 	return hBitmap;
 }
 
-HBITMAP CHTRichEditCtrl::GetSmileyBitmap(LPCTSTR pszSmileyID)
+HBITMAP CHTRichEditCtrl::GetSmileyBitmap(LPCTSTR pszSmileyID, COLORREF bk)
 {
+	CString sSmileyID;
+	sSmileyID.Format(_T("%s%08lx"), pszSmileyID, bk);
 	void *pvData;
-	if (sm_aSmileyBitmaps.Lookup(pszSmileyID, pvData))
+	if (sm_aSmileyBitmaps.Lookup(sSmileyID, pvData))
 		return (HBITMAP)pvData;
 
 	int cx = 16, cy = 16;
@@ -1357,24 +1344,23 @@ HBITMAP CHTRichEditCtrl::GetSmileyBitmap(LPCTSTR pszSmileyID)
 			cx = cy = 32;
 	}
 
-	CString strResourceName(_T("Smiley_"));
-	strResourceName += pszSmileyID;
-	HICON hIcon = theApp.LoadIcon(strResourceName, cx, cy, LR_DEFAULTCOLOR);
+	static const CString strResourceName(_T("Smiley_"));
+	HICON hIcon = theApp.LoadIcon(strResourceName + pszSmileyID, cx, cy, LR_DEFAULTCOLOR);
 	if (hIcon == NULL)
 		return (HBITMAP)NULL;
 
 	// Don't specify an icon size for the bitmap creation, we could use 'cx' and 'cy' only for
 	// the builtin icons because we know their sizes, but if there is a skin active, the
 	// icons (which can also be GIF images) can have any size.
-	HBITMAP hBitmap = IconToBitmap(hIcon, m_crBackground, 0, 0);
+	HBITMAP hBitmap = IconToBitmap(hIcon, bk, 0, 0);
 	if (hBitmap != NULL)
-		sm_aSmileyBitmaps.SetAt(pszSmileyID, hBitmap);
+		sm_aSmileyBitmaps.SetAt(sSmileyID, hBitmap);
 	return hBitmap;
 }
 
-bool CHTRichEditCtrl::InsertSmiley(LPCTSTR pszSmileyID)
+bool CHTRichEditCtrl::InsertSmiley(LPCTSTR pszSmileyID, COLORREF bk)
 {
-	HBITMAP hbmp = GetSmileyBitmap(pszSmileyID);
+	HBITMAP hbmp = GetSmileyBitmap(pszSmileyID, bk);
 	if (hbmp == NULL)
 		return false;
 

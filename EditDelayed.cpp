@@ -74,13 +74,11 @@ void CEditDelayed::OnDestroy()
 void CEditDelayed::OnTimer(UINT_PTR nIDEvent)
 {
 	//ASSERT( nIDEvent == DELAYED_EVALUATE_TIMER_ID );
-	if (nIDEvent == DELAYED_EVALUATE_TIMER_ID)
-	{
-		DWORD dwElapsed = GetTickCount() - m_dwLastModified;
-		if (dwElapsed >= 400)
-		{
+	if (nIDEvent == DELAYED_EVALUATE_TIMER_ID) {
+		DWORD dwTick = ::GetTickCount();
+		if (dwTick >= m_dwLastModified + 400) {
 			DoDelayedEvalute();
-			m_dwLastModified = GetTickCount();
+			m_dwLastModified = dwTick;
 		}
 	}
 
@@ -111,7 +109,7 @@ void CEditDelayed::OnKillFocus(CWnd* pNewWnd)
 		VERIFY( KillTimer(DELAYED_EVALUATE_TIMER_ID) );
 		m_uTimerResult = 0;
 
-		// If there was something modified since the last evaluation..
+		// If there was something modified since the last evaluation.
 		DoDelayedEvalute();
 
 		if (GetWindowTextLength() == 0)
@@ -126,7 +124,7 @@ void CEditDelayed::OnEnChange()
 	if (m_uTimerResult != 0) {
 		// Edit control contents were changed while the control was active (had focus)
 		ASSERT( GetFocus() == this );
-		m_dwLastModified = GetTickCount();
+		m_dwLastModified = ::GetTickCount();
 	}
 	else {
 		// Edit control contents were changed while the control was not active (e.g.
@@ -187,7 +185,7 @@ void CEditDelayed::OnInit(CHeaderCtrl* pColumnHeader, CArray<int, int>* paIgnore
 	pImageList->Add(CTempIconLoader(_T("FILTERCLEAR1")));
 	pImageList->Add(CTempIconLoader(_T("FILTERCLEAR2")));
 	m_iwReset.SetImageList(pImageList);
-	m_iwReset.Create(_T(""), WS_CHILD , CRect(0, 0, ICON_LEFTSPACE, rectWindow.bottom), this, 1);
+	m_iwReset.Create(_T(""), WS_CHILD, CRect(0, 0, ICON_LEFTSPACE, rectWindow.bottom), this, 1);
 
 	if (paIgnoredColums != NULL)
 		m_aIgnoredColums.Copy(*paIgnoredColums);
@@ -333,7 +331,7 @@ void CEditDelayed::ShowColumnText(bool bShow)
 		else
 			SetWindowText(m_strAlternateText);
 	}
-	else if (!bShow && m_bShowsColumnText)
+	else if (m_bShowsColumnText)
 	{
 		m_bShowsColumnText = false;
 		SetWindowText(_T(""));
@@ -356,7 +354,7 @@ BOOL CEditDelayed::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 	{
 		if (m_nCurrentColumnIdx != (int)wParam - MP_FILTERCOLUMNS)
 		{
-			m_nCurrentColumnIdx = wParam - MP_FILTERCOLUMNS;
+			m_nCurrentColumnIdx = (int)wParam - MP_FILTERCOLUMNS;
 			if (m_bShowsColumnText)
 				ShowColumnText(true);
 			else if (GetWindowTextLength() != 0)

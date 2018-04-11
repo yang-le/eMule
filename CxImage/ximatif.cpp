@@ -15,8 +15,8 @@
 
 #define CVT(x)			(((x) * 255L) / ((1L<<16)-1))
 #define	SCALE(x)		(((x)*((1L<<16)-1))/255)
-#define CalculateLine(width,bitdepth)	(((width * bitdepth) + 7) / 8)
-#define CalculatePitch(line)	(line + 3 & ~3)
+#define CalculateLine(width,bitdepth)	((((width) * (bitdepth)) + 7) / 8)
+#define CalculatePitch(line)	((line) + 3 & ~3)
 
 extern "C" TIFF* _TIFFOpenEx(CxFile* stream, const char* mode);
 

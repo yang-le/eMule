@@ -68,7 +68,7 @@ static char THIS_FILE[] = __FILE__;
 IMPLEMENT_DYNCREATE(CFrameGrabThread, CWinThread)
 
 CFrameGrabThread::CFrameGrabThread()
-	: nFramesToGrab(0), imgResults(NULL), dStartTime(0), bReduceColor(0), pOwner(NULL), nMaxWidth(0), pSender(NULL)
+	: nFramesToGrab(0), imgResults(NULL), dStartTime(0), bReduceColor(0), nMaxWidth(0), pOwner(NULL), pSender(NULL)
 {
 }
 

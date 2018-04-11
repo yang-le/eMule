@@ -25,7 +25,8 @@ class CPartFile;
 class CSafeMemFile;
 class CShareableFile;
 
-enum EFileType: int {
+enum EFileType: uint8
+{
 		FILETYPE_UNKNOWN,
 		FILETYPE_EXECUTABLE,
 		ARCHIVE_ZIP,
@@ -42,6 +43,21 @@ enum EFileType: int {
 		DOCUMENT_PDF
 };
 
+static const struct
+{
+	LPCTSTR pszScheme;
+	int iLen;
+} s_apszSchemes[] =
+{
+	{ _T("ed2k://"),  7 },
+	{ _T("http://"),  7 },
+	{ _T("https://"), 8 },
+	{ _T("ftp://"),   6 },
+	{ _T("www."),     4 },
+	{ _T("ftp."),     4 },
+	{ _T("mailto:"),  7 },
+	{ _T("magnet:?"), 8 }
+};
 
 #define ROUND(x) (floor((float)(x)+0.5f))
 
@@ -63,7 +79,8 @@ template <typename T> inline static const int sgn(const T& val)
 ///////////////////////////////////////////////////////////////////////////////
 // Low level str
 //
-__inline char* nstrdup(const char* todup){
+inline char* nstrdup(const char* todup)
+{
    size_t len = strlen(todup) + 1;
    return (char*)memcpy(new char[len], todup, len);
 }
@@ -142,6 +159,7 @@ UINT64		GetFreeTempSpace(int tempdirindex);
 int			GetPathDriveNumber(const CString& path);
 EFileType	GetFileTypeEx(CShareableFile* kfile, bool checkextention=true, bool checkfileheader=true, bool nocached=false);
 CString		GetFileTypeName(EFileType ftype);
+bool		ExtensionIs(LPCTSTR pszFilePath, LPCTSTR pszExt);
 int			IsExtensionTypeOf(EFileType type, CString ext);
 uint32		LevenshteinDistance(const CString& str1, const CString& str2);
 bool		_tmakepathlimit(TCHAR *path, const TCHAR *drive, const TCHAR *dir, const TCHAR *fname, const TCHAR *ext);
@@ -270,7 +288,7 @@ bool		AddIconGrayscaledToImageList(CImageList& rList, HICON hIcon);
 #define MDX_BLOCK_SIZE	64 //both MD4 and MD5
 #define MDX_DIGEST_SIZE	16
 
-__inline BYTE toHex(const BYTE &x)
+inline BYTE toHex(const BYTE &x)
 {
 	return x > 9 ? x+('A'-10) : x+'0';
 }
@@ -278,29 +296,29 @@ __inline BYTE toHex(const BYTE &x)
 // md4cmp -- replacement for memcmp(hash1,hash2,16)
 // Like 'memcmp' this function returns 0, if hash1==hash2, and !0, if hash1!=hash2.
 // NOTE: Do *NOT* use that function for determining if hash1<hash2 or hash1>hash2.
-__inline int md4cmp(const void* hash1, const void* hash2)
+inline int md4cmp(const void* hash1, const void* hash2)
 {
 	return memcmp(hash1, hash2, MDX_DIGEST_SIZE);
 }
 
-__inline bool isnulmd4(const void* hash)
+inline bool isnulmd4(const void* hash)
 {
 	return !((const uint64*)hash)[0] && !((const uint64*)hash)[1];
 }
 
-__inline bool isbadhash(const void* hash)
+inline bool isbadhash(const void* hash)
 {
 	return !(((const uint64*)hash)[0]&0xffff00ffffffffffull) && !(((const uint64*)hash)[1]&0xff00ffffffffffffull);
 }
 
 // md4clr -- replacement for memset(hash,0,16)
-__inline void md4clr(const void* hash)
+inline void md4clr(const void* hash)
 {
 	memset(const_cast<void *>(hash), 0, MDX_DIGEST_SIZE);
 }
 
 // md4cpy -- replacement for memcpy(dst,src,16)
-__inline void md4cpy(void* dst, const void* src)
+inline void md4cpy(void* dst, const void* src)
 {
 	memcpy(dst, src, MDX_DIGEST_SIZE);
 }
@@ -315,7 +333,7 @@ bool strmd4(const CString& rstr, byte *hash);
 ///////////////////////////////////////////////////////////////////////////////
 // Compare helpers
 //
-__inline int CompareUnsigned(uint32 uSize1, uint32 uSize2)
+inline int CompareUnsigned(uint32 uSize1, uint32 uSize2)
 {
 	if (uSize1 < uSize2)
 		return -1;
@@ -324,7 +342,7 @@ __inline int CompareUnsigned(uint32 uSize1, uint32 uSize2)
 	return 0;
 }
 
-__inline int CompareUnsignedUndefinedAtBottom(uint32 uSize1, uint32 uSize2, bool bSortAscending)
+inline int CompareUnsignedUndefinedAtBottom(uint32 uSize1, uint32 uSize2, bool bSortAscending)
 {
 	if (uSize1 == 0 && uSize2 == 0)
 		return 0;
@@ -335,7 +353,7 @@ __inline int CompareUnsignedUndefinedAtBottom(uint32 uSize1, uint32 uSize2, bool
 	return CompareUnsigned(uSize1, uSize2);
 }
 
-__inline int CompareUnsigned64(uint64 uSize1, uint64 uSize2)
+inline int CompareUnsigned64(uint64 uSize1, uint64 uSize2)
 {
 	if (uSize1 < uSize2)
 		return -1;
@@ -344,7 +362,7 @@ __inline int CompareUnsigned64(uint64 uSize1, uint64 uSize2)
 	return 0;
 }
 
-__inline int CompareFloat(float uSize1, float uSize2)
+/*inline int CompareFloat(float uSize1, float uSize2)
 {
 	if (uSize1 < uSize2)
 		return -1;
@@ -352,8 +370,8 @@ __inline int CompareFloat(float uSize1, float uSize2)
 		return 1;
 	return 0;
 }
-
-__inline int CompareOptLocaleStringNoCase(LPCTSTR psz1, LPCTSTR psz2)
+*/
+inline int CompareOptLocaleStringNoCase(LPCTSTR psz1, LPCTSTR psz2)
 {
 	if (psz1 && psz2)
 		return CompareLocaleStringNoCase(psz1, psz2);
@@ -364,7 +382,7 @@ __inline int CompareOptLocaleStringNoCase(LPCTSTR psz1, LPCTSTR psz2)
 	return 0;
 }
 
-__inline int CompareOptLocaleStringNoCaseUndefinedAtBottom(const CString &str1, const CString &str2, bool bSortAscending)
+inline int CompareOptLocaleStringNoCaseUndefinedAtBottom(const CString &str1, const CString &str2, bool bSortAscending)
 {
 	if (str1.IsEmpty() && str2.IsEmpty())
 		return 0;
@@ -408,7 +426,8 @@ bool IsGoodIPPort(uint32 nIP, uint16 nPort);
 bool IsLANIP(uint32 nIP);
 uint8 GetMyConnectOptions(bool bEncryption = true, bool bCallback = true);
 //No longer need separate lowID checks as we now know the servers just give *.*.*.0 users a lowID
-__inline bool IsLowID(uint32 id){
+inline bool IsLowID(uint32 id)
+{
 	return (id < 16777216u);
 }
 CString ipstr(uint32 nIP);
@@ -416,20 +435,26 @@ CString ipstr(uint32 nIP, uint16 nPort);
 CString ipstr(LPCTSTR pszAddress, uint16 nPort);
 CStringA ipstrA(uint32 nIP);
 void ipstrA(CHAR* pszAddress, int iMaxAddress, uint32 nIP);
-__inline CString ipstr(in_addr nIP){
+inline CString ipstr(in_addr nIP)
+{
 	return ipstr(*(uint32*)&nIP);
 }
-__inline CStringA ipstrA(in_addr nIP){
+
+inline CStringA ipstrA(in_addr nIP)
+{
 	return ipstrA(*(uint32*)&nIP);
 }
-ULONG GetBestInterfaceIP(const ULONG dest_addr);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Date/Time
 //
 time_t safe_mktime(struct tm* ptm);
 bool AdjustNTFSDaylightFileTime(time_t& ruFileDate, LPCTSTR pszFilePath);
-
+//MS have broken stat functions in XP builds of VS 2015+, and refused to fix it properly.
+//Return file attirbutes data in _stat64 structure; all time stamps would be in UTC.
+__time64_t FileTimeToUnixTime(const FILETIME& ft);
+int statUTC(LPCTSTR pname, struct _stat64& ft);
+int statUTC(int ifile, struct _stat64& ft);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Random Numbers
@@ -440,7 +465,8 @@ uint32 GetRandomUInt32();
 ///////////////////////////////////////////////////////////////////////////////
 // RC4 Encryption
 //
-struct RC4_Key_Struct{
+struct RC4_Key_Struct
+{
 	uint8 abyState[256];
 	uint8 byX;
 	uint8 byY;

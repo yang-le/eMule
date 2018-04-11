@@ -94,7 +94,7 @@
 #define UDPMAXQUEUETIME			SEC2MS(30)	//30 Seconds
 #define RSAKEYSIZE				384			//384 bits
 #define	MAX_SOURCES_FILE_SOFT	750
-#define	MAX_SOURCES_FILE_UDP	50
+#define	MAX_SOURCES_FILE_UDP	50u
 #define SESSIONMAXTRANS			(PARTSIZE+20*1024) // "Try to send complete chunks" always sends this amount of data
 #define SESSIONMAXTIME			HR2MS(1)	//1 hour
 #define	MAXFILECOMMENTLEN		128
@@ -106,7 +106,7 @@
 #define CONFIGFOLDER			_T("config\\")
 #define MAXCONPER5SEC			20
 #define MAXCON5WIN9X			10
-#define	UPLOAD_CLIENT_MAXDATARATE	25*1024	// max. target uploadspeed per client
+#define	UPLOAD_CLIENT_MAXDATARATE	(25*1024)	// max. target uploadspeed per client
 #define	MAX_UP_CLIENTS_ALLOWED	100			// max. clients allowed regardless of any other factors.
 #define	MIN_UP_CLIENTS_ALLOWED	2			// min. clients allowed to download regardless of any other factors. Don't set this too high
 #define DOWNLOADTIMEOUT			SEC2MS(100)
@@ -117,15 +117,15 @@
 #define	MAX_PURGEQUEUETIME		HR2MS(1)
 #define PURGESOURCESWAPSTOP		MIN2MS(15)	// (15 mins), how long forbid swapping a source to a certain file (NNP,...)
 #define CONNECTION_LATENCY		22050		// latency for responces
-#define MINWAIT_BEFORE_DLDISPLAY_WINDOWUPDATE   1000
-#define MINWAIT_BEFORE_ULDISPLAY_WINDOWUPDATE   1000
+#define MINWAIT_BEFORE_DLDISPLAY_WINDOWUPDATE   SEC2MS(1)
+#define MINWAIT_BEFORE_ULDISPLAY_WINDOWUPDATE   SEC2MS(1)
 #define CLIENTBANTIME			HR2MS(2)	// 2h
 #define TRACKED_CLEANUP_TIME	HR2MS(1)	// 1 hour
 #define KEEPTRACK_TIME			HR2MS(2)	// 2h	//how long to keep track of clients which were once in the uploadqueue
 #define LOCALSERVERREQUESTS		20000		// only one local src request during this timespan (WHERE IS THIS USED?)
 #define DISKSPACERECHECKTIME	MIN2MS(15)
 #define CLIENTLIST_CLEANUP_TIME	MIN2MS(34)	// 34 min
-#define MAXPRIORITYCOLL_SIZE	50*1024		// max file size for collection file which are allowed to bypass the queue
+#define MAXPRIORITYCOLL_SIZE	(50*1024)		// max file size for collection file which are allowed to bypass the queue
 #define SEARCH_SPAM_THRESHOLD	60
 #define OLDFILES_PARTIALLYPURGE DAY2S(31)	// time after which some data about a know file in the known.met and known2.met is deleted
 

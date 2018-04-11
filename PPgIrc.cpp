@@ -48,7 +48,7 @@ END_MESSAGE_MAP()
 
 CPPgIRC::CPPgIRC()
 	: CPropertyPage(CPPgIRC::IDD)
-	, m_ctrlTreeOptions(theApp.m_iDfltImageListColorFlags), m_bIRCEnableSmileys(false)
+	, m_ctrlTreeOptions(theApp.m_iDfltImageListColorFlags)
 {
 	m_bTimeStamp = false;
 	m_bSoundEvents = false;
@@ -56,6 +56,7 @@ CPPgIRC::CPPgIRC()
 	m_bJoinMessage = false;
 	m_bPartMessage = false;
 	m_bQuitMessage = false;
+	m_bPingPongMessage = false;
 	m_bEmuleAllowAddFriend = false;
 	m_bEmuleAddFriend = false;
 	m_bEmuleSendLink = false;
@@ -64,6 +65,8 @@ CPPgIRC::CPPgIRC()
 	m_bHelpChannel = false;
 	m_bChannelsOnConnect = false;
 	m_bInitializedTreeOpts = false;
+	m_bIRCEnableSmileys = false;
+	m_bIRCEnableUTF8 = false;
 	m_htiTimeStamp = NULL;
 	m_htiSoundEvents = NULL;
 	m_htiInfoMessage = NULL;
@@ -71,6 +74,7 @@ CPPgIRC::CPPgIRC()
 	m_htiJoinMessage = NULL;
 	m_htiPartMessage = NULL;
 	m_htiQuitMessage = NULL;
+	m_htiPingPongMessage = NULL;
 	m_htiEmuleProto = NULL;
 	m_htiEmuleAddFriend = NULL;
 	m_htiEmuleAllowAddFriend = NULL;
@@ -80,6 +84,7 @@ CPPgIRC::CPPgIRC()
 	m_htiHelpChannel = NULL;
 	m_htiChannelsOnConnect = NULL;
 	m_htiSmileys = NULL;
+	m_htiUTF8 = NULL;
 }
 
 CPPgIRC::~CPPgIRC()
@@ -100,6 +105,8 @@ void CPPgIRC::DoDataExchange(CDataExchange* pDX)
 		m_htiJoinMessage = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_IRC_IGNOREJOINMESSAGE), m_htiInfoMessage, m_bJoinMessage);
 		m_htiPartMessage = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_IRC_IGNOREPARTMESSAGE), m_htiInfoMessage, m_bPartMessage);
 		m_htiQuitMessage = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_IRC_IGNOREQUITMESSAGE), m_htiInfoMessage, m_bQuitMessage);
+		m_htiPingPongMessage = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_IRC_IGNOREPINGPONGMESSAGE), m_htiInfoMessage, m_bPingPongMessage);
+		thePrefs.m_bIRCIgnorePingPongMessages = m_bPingPongMessage;
 		m_htiEmuleProto = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_IRC_EMULEPROTO_IGNOREINFOMESSAGE), TVI_ROOT, FALSE);
 		m_htiEmuleAddFriend = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_IRC_EMULEPROTO_IGNOREADDFRIEND), m_htiEmuleProto, m_bEmuleAddFriend);
 		m_htiEmuleSendLink = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_IRC_EMULEPROTO_IGNORESENDLINK), m_htiEmuleProto, m_bEmuleSendLink);
@@ -108,6 +115,7 @@ void CPPgIRC::DoDataExchange(CDataExchange* pDX)
 		m_htiAcceptLinksFriends = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_IRC_ACCEPTLINKSFRIENDS), TVI_ROOT, m_bIRCAcceptLinksFriendsOnly);
 		m_htiSmileys = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_SHOWSMILEYS), TVI_ROOT, m_bIRCEnableSmileys);
 		m_htiSoundEvents = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_IRC_SOUNDEVENTS), TVI_ROOT, m_bSoundEvents);
+		m_htiUTF8 = m_ctrlTreeOptions.InsertCheckBox(GetResString(IDS_IRC_ENABLEUTF8), TVI_ROOT, m_bIRCEnableUTF8);
 
 		m_ctrlTreeOptions.Expand(m_htiInfoMessage, TVE_EXPAND);
 		m_ctrlTreeOptions.Expand(m_htiEmuleProto, TVE_EXPAND);
@@ -122,6 +130,7 @@ void CPPgIRC::DoDataExchange(CDataExchange* pDX)
 	DDX_TreeCheck(pDX, IDC_MISC_IRC, m_htiJoinMessage, m_bJoinMessage);
 	DDX_TreeCheck(pDX, IDC_MISC_IRC, m_htiPartMessage, m_bPartMessage);
 	DDX_TreeCheck(pDX, IDC_MISC_IRC, m_htiQuitMessage, m_bQuitMessage);
+	DDX_TreeCheck(pDX, IDC_MISC_IRC, m_htiPingPongMessage, m_bPingPongMessage);
 	DDX_TreeCheck(pDX, IDC_MISC_IRC, m_htiEmuleAddFriend, m_bEmuleAddFriend);
 	DDX_TreeCheck(pDX, IDC_MISC_IRC, m_htiEmuleAllowAddFriend, m_bEmuleAllowAddFriend);
 	DDX_TreeCheck(pDX, IDC_MISC_IRC, m_htiEmuleSendLink, m_bEmuleSendLink);
@@ -130,6 +139,7 @@ void CPPgIRC::DoDataExchange(CDataExchange* pDX)
 	DDX_TreeCheck(pDX, IDC_MISC_IRC, m_htiHelpChannel, m_bHelpChannel);
 	DDX_TreeCheck(pDX, IDC_MISC_IRC, m_htiChannelsOnConnect, m_bChannelsOnConnect);
 	DDX_TreeCheck(pDX, IDC_MISC_IRC, m_htiSmileys, m_bIRCEnableSmileys);
+	DDX_TreeCheck(pDX, IDC_MISC_IRC, m_htiUTF8, m_bIRCEnableUTF8);
 
 	m_ctrlTreeOptions.UpdateCheckBoxGroup(m_htiEmuleProto);
 	m_ctrlTreeOptions.UpdateCheckBoxGroup(m_htiInfoMessage);
@@ -144,6 +154,7 @@ BOOL CPPgIRC::OnInitDialog()
 	m_bJoinMessage = thePrefs.GetIRCIgnoreJoinMessages();
 	m_bPartMessage = thePrefs.GetIRCIgnorePartMessages();
 	m_bQuitMessage = thePrefs.GetIRCIgnoreQuitMessages();
+	m_bPingPongMessage = thePrefs.GetIRCIgnorePingPongMessages();
 	m_bEmuleAddFriend = thePrefs.GetIRCIgnoreEmuleAddFriendMsgs();
 	m_bEmuleAllowAddFriend = thePrefs.GetIRCAllowEmuleAddFriend();
 	m_bEmuleSendLink = thePrefs.GetIRCIgnoreEmuleSendLinkMsgs();
@@ -152,12 +163,13 @@ BOOL CPPgIRC::OnInitDialog()
 	m_bHelpChannel = thePrefs.GetIRCJoinHelpChannel();
 	m_bChannelsOnConnect = thePrefs.GetIRCGetChannelsOnConnect();
 	m_bIRCEnableSmileys = thePrefs.GetIRCEnableSmileys();
+	m_bIRCEnableUTF8 = thePrefs.GetIRCEnableUTF8();
 
 	m_ctrlTreeOptions.SetImageListColorFlags(theApp.m_iDfltImageListColorFlags);
 	CPropertyPage::OnInitDialog();
 	InitWindowStyles(this);
 	((CEdit*)GetDlgItem(IDC_IRC_NICK_BOX))->SetLimitText(20);
-	((CEdit*)GetDlgItem(IDC_IRC_MINUSER_BOX))->SetLimitText(6);
+	((CEdit*)GetDlgItem(IDC_IRC_MINUSER_BOX))->SetLimitText(5);
 	((CEdit*)GetDlgItem(IDC_IRC_SERVER_BOX))->SetLimitText(40);
 	((CEdit*)GetDlgItem(IDC_IRC_NAME_BOX))->SetLimitText(40);
 	((CEdit*)GetDlgItem(IDC_IRC_PERFORM_BOX))->SetLimitText(250);
@@ -181,16 +193,13 @@ BOOL CPPgIRC::OnKillActive()
 void CPPgIRC::LoadSettings()
 {
 	CheckDlgButton(IDC_IRC_USECHANFILTER, static_cast<UINT>(thePrefs.m_bIRCUseChannelFilter));
-
 	CheckDlgButton(IDC_IRC_USEPERFORM, static_cast<UINT>(thePrefs.m_bIRCUsePerform));
 
-	GetDlgItem(IDC_IRC_SERVER_BOX)->SetWindowText(thePrefs.m_strIRCServer);
-	GetDlgItem(IDC_IRC_NICK_BOX)->SetWindowText(thePrefs.m_strIRCNick);
-	GetDlgItem(IDC_IRC_NAME_BOX)->SetWindowText(thePrefs.m_strIRCChannelFilter);
-	GetDlgItem(IDC_IRC_PERFORM_BOX)->SetWindowText(thePrefs.m_strIRCPerformString);
-	CString strBuffer;
-	strBuffer.Format(_T("%u"), thePrefs.m_uIRCChannelUserFilter);
-	GetDlgItem(IDC_IRC_MINUSER_BOX)->SetWindowText(strBuffer);
+	SetDlgItemText(IDC_IRC_SERVER_BOX, thePrefs.m_strIRCServer);
+	SetDlgItemText(IDC_IRC_NICK_BOX, thePrefs.m_strIRCNick);
+	SetDlgItemText(IDC_IRC_NAME_BOX, thePrefs.m_strIRCChannelFilter);
+	SetDlgItemText(IDC_IRC_PERFORM_BOX, thePrefs.m_strIRCPerformString);
+	SetDlgItemInt(IDC_IRC_MINUSER_BOX, thePrefs.m_uIRCChannelUserFilter);
 }
 
 BOOL CPPgIRC::OnApply()
@@ -208,6 +217,7 @@ BOOL CPPgIRC::OnApply()
 	thePrefs.m_bIRCIgnoreJoinMessages = m_bJoinMessage;
 	thePrefs.m_bIRCIgnorePartMessages = m_bPartMessage;
 	thePrefs.m_bIRCIgnoreQuitMessages = m_bQuitMessage;
+	thePrefs.m_bIRCIgnorePingPongMessages = m_bPingPongMessage;
 	thePrefs.m_bIRCIgnoreEmuleAddFriendMsgs = m_bEmuleAddFriend;
 	thePrefs.m_bIRCAllowEmuleAddFriend = m_bEmuleAllowAddFriend;
 	thePrefs.m_bIRCIgnoreEmuleSendLinkMsgs = m_bEmuleSendLink;
@@ -217,45 +227,34 @@ BOOL CPPgIRC::OnApply()
 	thePrefs.m_bIRCGetChannelsOnConnect = m_bChannelsOnConnect;
 	bool bOldSmileys = thePrefs.GetIRCEnableSmileys();
 	thePrefs.m_bIRCEnableSmileys = m_bIRCEnableSmileys;
+	thePrefs.m_bIRCEnableUTF8 = m_bIRCEnableUTF8;
+
 	if (bOldSmileys != thePrefs.GetIRCEnableSmileys())
 		theApp.emuledlg->ircwnd->EnableSmileys(thePrefs.GetIRCEnableSmileys());
 
-	if(IsDlgButtonChecked(IDC_IRC_USECHANFILTER))
-		thePrefs.m_bIRCUseChannelFilter = true;
-	else
-		thePrefs.m_bIRCUseChannelFilter = false;
+	thePrefs.m_bIRCUseChannelFilter = IsDlgButtonChecked(IDC_IRC_USECHANFILTER) != 0;
 
-	if(IsDlgButtonChecked(IDC_IRC_USEPERFORM))
-		thePrefs.m_bIRCUsePerform = true;
-	else
-		thePrefs.m_bIRCUsePerform = false;
+	thePrefs.m_bIRCUsePerform = IsDlgButtonChecked(IDC_IRC_USEPERFORM) != 0;
 
-	TCHAR buffer[510];
-	if (GetDlgItem(IDC_IRC_NICK_BOX)->GetWindowTextLength()) {
-		GetDlgItem(IDC_IRC_NICK_BOX)->GetWindowText(buffer, 20);
-		if (_tcscmp(buffer, thePrefs.m_strIRCNick) != 0) {
-			CString input(buffer);
-			input.Trim();
-			input = input.SpanExcluding(_T(" !@#$%^&*():;<>,.?{}~`+=-"));
-			if (!input.IsEmpty()) {
-				theApp.emuledlg->ircwnd->SendString(_T("NICK ") + input);
-				thePrefs.m_strIRCNick = input;
-			}
+	CString input;
+	GetDlgItemText(IDC_IRC_NICK_BOX, input);
+	if (input != thePrefs.m_strIRCNick) {
+		input = input.Trim().SpanExcluding(sBadCharsIRC);
+		if (input[0] < _T('A')) { //names cannot begin with '-' or digit
+			if (!theApp.emuledlg->ircwnd->IsConnected())
+				thePrefs.m_strIRCNick.Empty();
+		} else {
+			thePrefs.m_strIRCNick = input;
+			theApp.emuledlg->ircwnd->SendString(_T("NICK ") + input);
 		}
 	}
 
 	if (GetDlgItem(IDC_IRC_SERVER_BOX)->GetWindowTextLength())
-		GetDlgItem(IDC_IRC_SERVER_BOX)->GetWindowText(thePrefs.m_strIRCServer);
-	GetDlgItem(IDC_IRC_NAME_BOX)->GetWindowText(thePrefs.m_strIRCChannelFilter);
-	GetDlgItem(IDC_IRC_PERFORM_BOX)->GetWindowText(thePrefs.m_strIRCPerformString);
+		GetDlgItemText(IDC_IRC_SERVER_BOX, thePrefs.m_strIRCServer);
+	GetDlgItemText(IDC_IRC_NAME_BOX, thePrefs.m_strIRCChannelFilter);
+	GetDlgItemText(IDC_IRC_PERFORM_BOX, thePrefs.m_strIRCPerformString);
 
-	if(GetDlgItem(IDC_IRC_MINUSER_BOX)->GetWindowTextLength())
-	{
-		GetDlgItem(IDC_IRC_MINUSER_BOX)->GetWindowText(buffer,6);
-		thePrefs.m_uIRCChannelUserFilter = _tstoi(buffer);
-	}
-	else
-		thePrefs.m_uIRCChannelUserFilter = 0;
+	thePrefs.m_uIRCChannelUserFilter = GetDlgItemInt(IDC_IRC_MINUSER_BOX, NULL, FALSE);
 
 	LoadSettings();
 	SetModified(FALSE);
@@ -266,15 +265,15 @@ void CPPgIRC::Localize()
 {
 	if(m_hWnd)
 	{
-		GetDlgItem(IDC_IRC_SERVER_FRM)->SetWindowText(GetResString(IDS_PW_SERVER));
-		GetDlgItem(IDC_IRC_MISC_FRM)->SetWindowText(GetResString(IDS_PW_MISC));
-		GetDlgItem(IDC_IRC_NICK_FRM)->SetWindowText(GetResString(IDS_PW_NICK));
-		GetDlgItem(IDC_IRC_NAME_TEXT)->SetWindowText(GetResString(IDS_IRC_NAME));
-		GetDlgItem(IDC_IRC_MINUSER_TEXT)->SetWindowText(GetResString(IDS_UUSERS));
-		GetDlgItem(IDC_IRC_FILTER_FRM)->SetWindowText(GetResString(IDS_IRC_CHANNELLIST));
-		GetDlgItem(IDC_IRC_USECHANFILTER)->SetWindowText(GetResString(IDS_IRC_USEFILTER));
-		GetDlgItem(IDC_IRC_PERFORM_FRM)->SetWindowText(GetResString(IDS_IRC_PERFORM));
-		GetDlgItem(IDC_IRC_USEPERFORM)->SetWindowText(GetResString(IDS_IRC_USEPERFORM));
+		SetDlgItemText(IDC_IRC_SERVER_FRM, GetResString(IDS_PW_SERVER));
+		SetDlgItemText(IDC_IRC_MISC_FRM, GetResString(IDS_PW_MISC));
+		SetDlgItemText(IDC_IRC_NICK_FRM, GetResString(IDS_PW_NICK));
+		SetDlgItemText(IDC_IRC_NAME_TEXT, GetResString(IDS_IRC_NAME));
+		SetDlgItemText(IDC_IRC_MINUSER_TEXT, GetResString(IDS_UUSERS));
+		SetDlgItemText(IDC_IRC_FILTER_FRM, GetResString(IDS_IRC_CHANNELLIST));
+		SetDlgItemText(IDC_IRC_USECHANFILTER, GetResString(IDS_IRC_USEFILTER));
+		SetDlgItemText(IDC_IRC_PERFORM_FRM, GetResString(IDS_IRC_PERFORM));
+		SetDlgItemText(IDC_IRC_USEPERFORM, GetResString(IDS_IRC_USEPERFORM));
 
 		if (m_htiSoundEvents) m_ctrlTreeOptions.SetItemText(m_htiSoundEvents, GetResString(IDS_IRC_SOUNDEVENTS));
 		if (m_htiTimeStamp) m_ctrlTreeOptions.SetItemText(m_htiTimeStamp, GetResString(IDS_IRC_ADDTIMESTAMP));
@@ -283,6 +282,7 @@ void CPPgIRC::Localize()
 		if (m_htiJoinMessage) m_ctrlTreeOptions.SetItemText(m_htiJoinMessage, GetResString(IDS_IRC_IGNOREJOINMESSAGE));
 		if (m_htiPartMessage) m_ctrlTreeOptions.SetItemText(m_htiPartMessage, GetResString(IDS_IRC_IGNOREPARTMESSAGE));
 		if (m_htiQuitMessage) m_ctrlTreeOptions.SetItemText(m_htiQuitMessage, GetResString(IDS_IRC_IGNOREQUITMESSAGE));
+		if (m_htiPingPongMessage) m_ctrlTreeOptions.SetItemText(m_htiPingPongMessage, GetResString(IDS_IRC_IGNOREPINGPONGMESSAGE));
 		if (m_htiEmuleProto) m_ctrlTreeOptions.SetItemText(m_htiEmuleProto, GetResString(IDS_IRC_EMULEPROTO_IGNOREINFOMESSAGE));
 		if (m_htiEmuleAddFriend) m_ctrlTreeOptions.SetItemText(m_htiEmuleAddFriend, GetResString(IDS_IRC_EMULEPROTO_IGNOREADDFRIEND));
 		if (m_htiEmuleAllowAddFriend) m_ctrlTreeOptions.SetItemText(m_htiEmuleAllowAddFriend, GetResString(IDS_IRC_EMULEPROTO_ALLOWADDFRIEND));
@@ -327,6 +327,7 @@ void CPPgIRC::OnDestroy()
 	m_htiJoinMessage = NULL;
 	m_htiPartMessage = NULL;
 	m_htiQuitMessage = NULL;
+	m_htiPingPongMessage = NULL;
 	m_htiSmileys = NULL;
 	m_htiTimeStamp = NULL;
     CPropertyPage::OnDestroy();

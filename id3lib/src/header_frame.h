@@ -59,6 +59,7 @@ public:
   const char*         GetTextID() const;
   const ID3_FrameDef* GetFrameDef() const;
   /* */ bool          Clear();
+  ID3_FrameHeader(const ID3_FrameHeader&);
   ID3_FrameHeader&    operator=(const ID3_FrameHeader&);
 
   bool SetCompression(bool b) { return this->SetFlags(COMPRESSION, b); }

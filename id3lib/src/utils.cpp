@@ -47,14 +47,14 @@
 #    undef HAVE_ICONV_H
 #  endif
 #else
-#  if (defined(WIN32) && ((defined(_MSC_VER) && _MSC_VER > 1000) || (defined(__BORLANDC__) && __BORLANDC__  >= 0x0520)))
+#  if (defined(_WIN32) && ((defined(_MSC_VER) && _MSC_VER > 1000) || (defined(__BORLANDC__) && __BORLANDC__  >= 0x0520)))
 #    include <mlang.h>
 #    define HAVE_MS_CONVERT
 #    define ID3_MSCODEPAGE_UTF16BE   1201  //"Unicode (Big-Endian)", "unicodeFFFE", 1201
 #    define ID3_MSCODEPAGE_UTF16     1200  //"Unicode", "unicode", 1200
 #    define ID3_MSCODEPAGE_UTF8      65001 //"Unicode (UTF-8)", "utf-8", 65001
 #    define ID3_MSCODEPAGE_ISO8859_1 28591 //"Western European (ISO)", "iso-8859-1", 28591
-#  endif //if (defined(WIN32) && defined (_MSC_VER) && _MSC_VER > 1000)
+#  endif //if (defined(_WIN32) && defined (_MSC_VER) && _MSC_VER > 1000)
 #endif //#if defined HAVE_ICONV_H
 
 using namespace dami;

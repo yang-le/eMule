@@ -29,13 +29,13 @@ class CClientDetailPage : public CResizablePage
 {
 	DECLARE_DYNAMIC(CClientDetailPage)
 
+	enum { IDD = IDD_SOURCEDETAILWND };
+
 public:
 	CClientDetailPage();   // standard constructor
 	virtual ~CClientDetailPage();
 
 	void SetClients(const CSimpleArray<CObject*>* paClients) { m_paClients = paClients; m_bDataChanged = true; }
-
-	enum { IDD = IDD_SOURCEDETAILWND };
 
 protected:
 	const CSimpleArray<CObject*>* m_paClients;

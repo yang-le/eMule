@@ -124,7 +124,7 @@ void CMMServer::ProcessHelloPacket(CMMData* data, CMMSocket* sender)
 		sender->SendPacket(packet);
 		return;
 	}
-	if (m_dwBlocked && m_dwBlocked > ::GetTickCount()) {
+	if (::GetTickCount() < m_dwBlocked) {
 		packet->WriteByte(MMT_WRONGPASSWORD);
 		sender->SendPacket(packet);
 		return;
@@ -135,8 +135,7 @@ void CMMServer::ProcessHelloPacket(CMMData* data, CMMSocket* sender)
 		m_dwBlocked = 0;
 		packet->WriteByte(MMT_WRONGPASSWORD);
 		sender->SendPacket(packet);
-		m_cPWFailed++;
-		if (m_cPWFailed == 3) {
+		if (++m_cPWFailed >= 3) {
 			AddLogLine(false, GetResString(IDS_MM_BLOCK));
 			m_cPWFailed = 0;
 			m_dwBlocked = ::GetTickCount() + MMS_BLOCKTIME;
@@ -161,7 +160,8 @@ void CMMServer::ProcessHelloPacket(CMMData* data, CMMSocket* sender)
 	//sender->SendPacket(packet);
 }
 
-void CMMServer::ProcessStatusRequest(CMMSocket* sender, CMMPacket* packet){
+void CMMServer::ProcessStatusRequest(CMMSocket* sender, CMMPacket* packet)
+{
 	if (packet == NULL)
 		packet = new CMMPacket(MMP_STATUSANSWER);
 	else
@@ -230,7 +230,7 @@ void CMMServer::ProcessFileListRequest(CMMSocket* sender, CMMPacket* packet){
 	m_SentFileList.SetSize(nCount);
 	packet->WriteByte((uint8)nCount);
 	for (int i = 0; i != nCount; ++i) {
-		// while this is not the fastest method the trace this list, it's not timecritical here
+		// while this is not the fastest method the trace this list, it's not time-critical here
 		CPartFile* cur_file = theApp.downloadqueue->GetFileByIndex(i);
 		if (cur_file == NULL) {
 			delete packet;
@@ -260,14 +260,14 @@ void CMMServer::ProcessFileListRequest(CMMSocket* sender, CMMPacket* packet){
 void CMMServer::ProcessFinishedListRequest(CMMSocket* sender)
 {
 	CMMPacket* packet = new CMMPacket(MMP_FINISHEDANS);
-	int nCount = thePrefs.GetCatCount();
+	INT_PTR nCount = thePrefs.GetCatCount();
 	packet->WriteByte((uint8)nCount);
 	for (int i = 0; i < nCount; ++i)
 		packet->WriteString(thePrefs.GetCategory(i)->strTitle);
 
 	nCount = (m_SentFinishedList.GetCount() > 30)? 30 : m_SentFinishedList.GetCount();
 	packet->WriteByte((uint8)nCount);
-	for (int i = 0; i != nCount; ++i) {
+	for (int i = 0; i < nCount; ++i) {
 		const CKnownFile* cur_file = m_SentFinishedList[i];
 		packet->WriteByte(0xFF);
 		packet->WriteString(cur_file->GetFileName());
@@ -348,7 +348,7 @@ void  CMMServer::ProcessCommandRequest(CMMData* data, CMMSocket* sender){
 	switch(byCommand){
 		case MMT_SDEMULE:
 		case MMT_SDPC:
-			h_timer = SetTimer(0,0,5000,CommandTimer);
+			h_timer = ::SetTimer(0, 0, SEC2MS(5), CommandTimer);
 			if (h_timer)
 				bSuccess = true;
 			bQueueCommand = true;
@@ -372,37 +372,41 @@ void  CMMServer::ProcessCommandRequest(CMMData* data, CMMSocket* sender){
 	}
 }
 
-void  CMMServer::ProcessSearchRequest(CMMData* data, CMMSocket* sender){
+void  CMMServer::ProcessSearchRequest(CMMData* data, CMMSocket* sender)
+{
 	DeleteSearchFiles();
 	SSearchParams Params;
 	Params.strExpression = data->ReadString();
 	uint8 byType = data->ReadByte();
-	switch(byType){
-		case 0:
-			Params.strFileType.Empty();
-			break;
-		case 1:
-			Params.strFileType = ED2KFTSTR_ARCHIVE;
-			break;
-		case 2:
-			Params.strFileType = ED2KFTSTR_AUDIO;
-			break;
-		case 3:
-			Params.strFileType = ED2KFTSTR_CDIMAGE;
-			break;
-		case 4:
-			Params.strFileType = ED2KFTSTR_PROGRAM;
-			break;
-		case 5:
-			Params.strFileType = ED2KFTSTR_VIDEO;
-			break;
-		case 6:
-			Params.strFileType = ED2KFTSTR_EMULECOLLECTION;
-			break;
-		default:
-			ASSERT ( false );
-			Params.strFileType.Empty();
+	const char *p;
+	switch (byType) {
+	default:
+		ASSERT(false);
+	case 0:
+		p = NULL;
+		break;
+	case 1:
+		p = ED2KFTSTR_ARCHIVE;
+		break;
+	case 2:
+		p = ED2KFTSTR_AUDIO;
+		break;
+	case 3:
+		p = ED2KFTSTR_CDIMAGE;
+		break;
+	case 4:
+		p = ED2KFTSTR_PROGRAM;
+		break;
+	case 5:
+		p = ED2KFTSTR_VIDEO;
+		break;
+	case 6:
+		p = ED2KFTSTR_EMULECOLLECTION;
 	}
+	if (p)
+		Params.strFileType = p;
+	else
+		Params.strFileType.Empty();
 
 	bool bServerError = false;
 
@@ -430,7 +434,7 @@ void  CMMServer::ProcessSearchRequest(CMMData* data, CMMSocket* sender){
 		bServerError = true;
 	}
 	else{
-		h_timer = SetTimer(0,0,20000,CommandTimer);
+		h_timer = ::SetTimer(0, 0, SEC2MS(20), CommandTimer);
 		if (!h_timer){
 			bServerError = true;
 		}
@@ -469,7 +473,8 @@ void  CMMServer::ProcessChangeLimitRequest(CMMData* data, CMMSocket* sender){
 }
 
 
-void CMMServer::SearchFinished(bool bTimeOut){
+void CMMServer::SearchFinished(bool bTimeOut)
+{
 #define MAXRESULTS	20
 	if (h_timer != 0){
 		KillTimer(0,h_timer);
@@ -511,82 +516,68 @@ void CMMServer::SearchFinished(bool bTimeOut){
 	m_pPendingCommandSocket = NULL;
 }
 
-void  CMMServer::ProcessDownloadRequest(CMMData* data, CMMSocket* sender){
+void  CMMServer::ProcessDownloadRequest(CMMData* data, CMMSocket* sender)
+{
 	uint8 byFileIndex = data->ReadByte();
-	if (byFileIndex >= m_SendSearchList.GetSize() )
-	{
+	if (byFileIndex >= m_SendSearchList.GetSize()) {
 		CMMPacket* packet = new CMMPacket(MMP_GENERALERROR);
 		sender->SendPacket(packet);
-		ASSERT ( false );
+		ASSERT(false);
 		return;
 	}
 	CSearchFile* todownload = m_SendSearchList[byFileIndex];
 	theApp.downloadqueue->AddSearchToDownload(todownload, 2, 0);
 	CMMPacket* packet = new CMMPacket(MMP_DOWNLOADANS);
-	if (theApp.downloadqueue->GetFileByID(todownload->GetFileHash()) != NULL){
+	if (theApp.downloadqueue->GetFileByID(todownload->GetFileHash()) != NULL)
 		packet->WriteByte(MMT_OK);
-	}
-	else{
+	else
 		packet->WriteByte(MMT_FAILED);
-	}
+
 	sender->SendPacket(packet);
 }
 
-void  CMMServer::ProcessPreviewRequest(CMMData* data, CMMSocket* sender){
+void  CMMServer::ProcessPreviewRequest(CMMData* data, CMMSocket* sender)
+{
 	uint8 byFileType = data->ReadByte();
 	uint8 byFileIndex = data->ReadByte();
 	uint16 nDisplayWidth = data->ReadShort();
 	uint8 nNumber = data->ReadByte();
-	CKnownFile* knownfile = NULL;
-	bool bError = false;
 
-	if (byFileType == MMT_PARTFILFE){
-		if (byFileIndex >= m_SentFileList.GetSize()
-		|| !theApp.downloadqueue->IsPartFile(m_SentFileList[byFileIndex]))
-		{
-			bError = true;
-		}
-		else
+	CKnownFile* knownfile = NULL;
+	if (byFileType == MMT_PARTFILFE) {
+		if (byFileIndex < m_SentFileList.GetSize() && theApp.downloadqueue->IsPartFile(m_SentFileList[byFileIndex]))
 			knownfile = m_SentFileList[byFileIndex];
-	}
-	else if (byFileType == MMT_FINISHEDFILE){
-		if (byFileIndex >= m_SentFinishedList.GetSize()
-		|| !theApp.knownfiles->IsKnownFile(m_SentFinishedList[byFileIndex]))
-		{
-			bError = true;
-		}
-		else
+	} else if (byFileType == MMT_FINISHEDFILE) {
+		if (byFileIndex < m_SentFinishedList.GetSize() && theApp.knownfiles->IsKnownFile(m_SentFinishedList[byFileIndex]))
 			knownfile = m_SentFinishedList[byFileIndex];
 	}
 
-	if (!bError){
+	if (knownfile)
 		if (h_timer != 0)
-			bError = true;
-		else{
-			h_timer = SetTimer(0,0,20000,CommandTimer);
-			if (!h_timer){
-				bError = true;
-			}
-			else{
+			knownfile = NULL;
+		else {
+			h_timer = ::SetTimer(0, 0, SEC2MS(20), CommandTimer);
+			if (!h_timer)
+				knownfile = NULL;
+			else {
 				if (nDisplayWidth > 140)
 					nDisplayWidth = 140;
 				m_byPendingCommand = MMT_PREVIEW;
 				m_pPendingCommandSocket = sender;
-				if (!knownfile->GrabImage(1,(nNumber+1)*50.0,true,nDisplayWidth,this))
-					PreviewFinished(NULL,0);
+				if (!knownfile->GrabImage(1, (nNumber + 1)*50.0, true, nDisplayWidth, this))
+					PreviewFinished(NULL, 0);
 			}
 		}
-	}
 
-	if (bError){
+	if (knownfile == NULL) {
 		CMMPacket* packet = new CMMPacket(MMP_GENERALERROR);
 		sender->SendPacket(packet);
-		ASSERT ( false );
-		return;
+		ASSERT(false);
 	}
 }
 
-void CMMServer::PreviewFinished(CxImage** imgFrames, uint8 nCount){
+void CMMServer::PreviewFinished(CxImage** imgFrames, uint8 nCount)
+{
 	if (h_timer != 0){
 		KillTimer(0,h_timer);
 		h_timer = 0;
@@ -638,7 +629,7 @@ CStringA CMMServer::GetContentType() const
 	return CStringA("application/octet-stream");
 }
 
-VOID CALLBACK CMMServer::CommandTimer(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEvent*/, DWORD /*dwTime*/)
+VOID CALLBACK CMMServer::CommandTimer(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEvent*/, DWORD /*dwTime*/) noexcept
 {
 	// NOTE: Always handle all type of MFC exceptions in TimerProcs - otherwise we'll get mem leaks
 	try
@@ -681,7 +672,7 @@ void  CMMServer::ProcessStatisticsRequest(CMMData* data, CMMSocket* sender)
 {
 	uint16 nWidth = data->ReadShort();
 	CArray<UpDown>* rawData = theApp.webserver->GetPointsForWeb();
-	int nRawDataSize = rawData->GetSize();
+	int nRawDataSize = (int)rawData->GetSize();
 	int nCompressEvery = (nRawDataSize > nWidth) ? nRawDataSize / nWidth : 1;
 	int nPos = (nRawDataSize > nWidth) ? (nRawDataSize % nWidth) : 0;
 	ASSERT (nPos + nCompressEvery * nWidth == nRawDataSize || (nPos == 0 && nRawDataSize < nWidth));

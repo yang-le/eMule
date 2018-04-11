@@ -140,13 +140,13 @@ typedef DWORD WINAPI IcmpSendEcho(
     DWORD Timeout 	/* time in milliseconds to wait for reply */
 );
 
-struct PingStatus {
+struct PingStatus
+{
     bool success;
     DWORD status;
     float delay;
     uint32 destinationAddress;
     uint32 ttl;
-
     DWORD error;
 };
 
@@ -168,7 +168,8 @@ struct PingStatus {
 #endif
 
 // The IP header
-struct IPHeader {
+struct IPHeader
+{
     BYTE h_len:4;           // Length of the header in dwords
     BYTE version:4;         // Version of IP
     BYTE tos;               // Type of service
@@ -183,7 +184,8 @@ struct IPHeader {
 };
 
 // ICMP header for DEST_UNREACH and TTL_EXPIRE replys
-struct ICMPHeader {
+struct ICMPHeader
+{
     BYTE type;          // ICMP packet type
     BYTE code;          // Type sub code
     USHORT checksum;
@@ -216,12 +218,10 @@ public:
 
     PingStatus Ping(uint32 lAddr, uint32 ttl = DEFAULT_TTL, bool doLog = false, bool useUdp = false);
 
-    static void PIcmpErr(int nICMPErr);
+    static void PIcmpErr(DWORD nICMPErr);
 
 private:
 //    void DisplayErr(int nWSAErr);
-
-    bool udpStarted;
 
     IcmpCreateFile* lpfnIcmpCreateFile;
     IcmpCloseHandle* lpfnIcmpCloseHandle;
@@ -235,4 +235,6 @@ private:
 
     SOCKET us;          // UDP socket to send requests
     SOCKET is;          // raw ICMP socket to catch responses
+
+	bool udpStarted;
 };

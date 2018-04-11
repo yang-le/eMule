@@ -45,6 +45,7 @@ public:
   bool   clear()             { return this->set(0); }
   bool   set(TYPE f, bool b) { if (b) return this->add(f); return this->remove(f); }
 
+  ID3_Flags(const ID3_Flags&) = delete;
   ID3_Flags& operator=(const ID3_Flags& f)
   { if (this != &f) { this->set(f.get()); } return *this; }
 

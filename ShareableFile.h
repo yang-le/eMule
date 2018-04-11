@@ -20,7 +20,7 @@
 
 // A file we know on the filesystem we could share, but don't do so yet
 
-enum EFileType: int;
+enum EFileType: uint8;
 
 class CShareableFile : public CAbstractFile
 {
@@ -29,10 +29,10 @@ class CShareableFile : public CAbstractFile
 public:
 	CShareableFile();
 	virtual ~CShareableFile()						{};
-	virtual void UpdateFileRatingCommentAvail(bool /*bForceUpdate = false*/)		{ ASSERT( false ); }
+	virtual void UpdateFileRatingCommentAvail(bool /*bForceUpdate = false*/)	{ ASSERT( false ); }
 
-	EFileType GetVerifiedFileType() { return m_verifiedFileType; }
-	void	  SetVerifiedFileType(EFileType in) { m_verifiedFileType=in; }
+	EFileType	GetVerifiedFileType() const			{ return m_verifiedFileType; }
+	void SetVerifiedFileType(EFileType in) { m_verifiedFileType=in; }
 
 	const CString& GetPath() const					{ return m_strDirectory; }
 	void SetPath(LPCTSTR path)						{ m_strDirectory = path; }
@@ -48,9 +48,9 @@ public:
 	virtual CString	GetInfoSummary(bool bNoFormatCommands = false) const;
 
 protected:
-	CString					m_strDirectory;
-	CString					m_strFilePath;
-	CString					m_strSharedDirectory;
-	EFileType				m_verifiedFileType;
+	CString		m_strDirectory;
+	CString		m_strFilePath;
+	CString		m_strSharedDirectory;
+	EFileType	m_verifiedFileType;
 
 };

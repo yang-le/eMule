@@ -287,7 +287,7 @@ bool CChatSelector::SendMessage(const CString& rstrMessage)
 	if (!ci)
 		return false;
 
-	if ((UINT)ci->history.GetCount() == thePrefs.GetMaxChatHistoryLines())
+	if (ci->history.GetCount() == thePrefs.GetMaxChatHistoryLines())
 		ci->history.RemoveAt(0);
 	ci->history.Add(rstrMessage);
 	ci->history_pos = ci->history.GetCount();

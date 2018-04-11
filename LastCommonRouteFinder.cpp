@@ -110,7 +110,7 @@ bool LastCommonRouteFinder::AddHostsToCheck(CTypedPtrList<CPtrList, CServer*> &l
 		addHostLocker.Lock();
 
 		if (needMoreHosts) {
-			int cnt = list.GetCount(); //index must be in the range [0, count-1]
+			int cnt = (int)list.GetCount(); //index must be in the range [0, count-1]
 			if (cnt > 0) {
 				POSITION pos = list.FindIndex(rand() / (RAND_MAX / min(cnt, 100)));
 				if (pos == NULL)
@@ -139,7 +139,7 @@ bool LastCommonRouteFinder::AddHostsToCheck(CUpDownClientPtrList &list)
 		addHostLocker.Lock();
 
 		if (needMoreHosts) {
-			int cnt = list.GetCount(); //index must be in the range [0, count-1]
+			int cnt = (int)list.GetCount(); //index must be in the range [0, count-1]
 			if (cnt > 0) {
 				POSITION pos = list.FindIndex(rand() / (RAND_MAX / min(cnt, 100)));
 				if (pos == NULL)
@@ -231,13 +231,10 @@ void LastCommonRouteFinder::SetPrefs(bool pEnabled, uint32 pCurUpload, uint32 pM
 	m_iNumberOfPingsForAverage = pNumberOfPingsForAverage;
 	m_LowestInitialPingAllowed = pLowestInitialPingAllowed;
 
-	uploadLocker.Lock();
+	prefsLocker.Unlock();
 
 	if (m_upload > maxUpload || !pEnabled)
 		m_upload = maxUpload;
-
-	uploadLocker.Unlock();
-	prefsLocker.Unlock();
 
 	if (sendEvent)
 		prefsEvent->SetEvent();
@@ -252,26 +249,14 @@ void LastCommonRouteFinder::InitiateFastReactionPeriod()
 	prefsLocker.Unlock();
 }
 
-uint32 LastCommonRouteFinder::GetUpload()
+uint32 LastCommonRouteFinder::GetUpload() const
 {
-	uint32 returnValue;
-
-	uploadLocker.Lock();
-
-	returnValue = m_upload;
-
-	uploadLocker.Unlock();
-
-	return returnValue;
+	return m_upload;
 }
 
 void LastCommonRouteFinder::SetUpload(uint32 newValue)
 {
-	uploadLocker.Lock();
-
 	m_upload = newValue;
-
-	uploadLocker.Unlock();
 }
 
 /**
@@ -321,7 +306,7 @@ UINT LastCommonRouteFinder::RunInternal()
 
 		bool enabled = m_enabled;
 
-		// retry loop. enabled will be set to false in end of this loop, if to many failures (tries too large)
+		// retry loop. enabled will be set to false in the end of this loop, if too many failures (too many tries)
 		while (doRun && enabled) {
 			bool foundLastCommonHost = false;
 			uint32 lastCommonHost = 0;
@@ -345,7 +330,7 @@ UINT LastCommonRouteFinder::RunInternal()
 
 			while (doRun && enabled && !foundLastCommonHost) {
 				uint32 traceRouteTries = 0;
-				while (doRun && enabled && !foundLastCommonHost && (traceRouteTries < 5 || hasSucceededAtLeastOnce && traceRouteTries < _UI32_MAX) && (hostsToTraceRoute.GetCount() < 10 || hasSucceededAtLeastOnce)) {
+				while (doRun && enabled && !foundLastCommonHost && (traceRouteTries < 5 || (hasSucceededAtLeastOnce && traceRouteTries < _UI32_MAX)) && (hostsToTraceRoute.GetCount() < 10 || hasSucceededAtLeastOnce)) {
 					++traceRouteTries;
 
 					lastCommonHost = 0;
@@ -411,10 +396,10 @@ UINT LastCommonRouteFinder::RunInternal()
 							hostsToTraceRoute.GetNextAssoc(pos, curAddress, dummy);
 
 							pingStatus.success = false;
-							for (int cnt = 0; doRun && enabled && cnt < 2 && (!pingStatus.success || pingStatus.status != IP_SUCCESS && pingStatus.status != IP_TTL_EXPIRED_TRANSIT); ++cnt) {
+							for (int cnt = 0; doRun && enabled && cnt < 2 && (!pingStatus.success || (pingStatus.status != IP_SUCCESS && pingStatus.status != IP_TTL_EXPIRED_TRANSIT)); ++cnt) {
 								pingStatus = pinger.Ping(curAddress, ttl, true, useUdp);
 								if (doRun && enabled
-									&& (!pingStatus.success || pingStatus.status != IP_SUCCESS && pingStatus.status != IP_TTL_EXPIRED_TRANSIT)
+									&& (!pingStatus.success || (pingStatus.status != IP_SUCCESS && pingStatus.status != IP_TTL_EXPIRED_TRANSIT))
 									&& cnt < 3-1)
 								{
 									IN_ADDR stDestAddr;
@@ -699,21 +684,21 @@ UINT LastCommonRouteFinder::RunInternal()
 					initTime = ::GetTickCount();
 				}
 
-				DWORD tempTick = ::GetTickCount();
+				DWORD diffTick = ::GetTickCount() - initTime;
 
-				if (tempTick - initTime < SEC2MS(20)) {
+				if (diffTick < SEC2MS(20)) {
 					goingUpDivider = 1;
 					goingDownDivider = 1;
-				} else if (tempTick - initTime < SEC2MS(30)) {
+				} else if (diffTick < SEC2MS(30)) {
 					goingUpDivider = (uint32)(goingUpDivider * 0.25);
 					goingDownDivider = (uint32)(goingDownDivider * 0.25);
-				} else if (tempTick - initTime < SEC2MS(40)) {
+				} else if (diffTick < SEC2MS(40)) {
 					goingUpDivider = (uint32)(goingUpDivider * 0.5);
 					goingDownDivider = (uint32)(goingDownDivider * 0.5);
-				} else if (tempTick - initTime < SEC2MS(60)) {
+				} else if (diffTick < SEC2MS(60)) {
 					goingUpDivider = (uint32)(goingUpDivider * 0.75);
 					goingDownDivider = (uint32)(goingDownDivider * 0.75);
-				} else if (tempTick - initTime < SEC2MS(61)) {
+				} else if (diffTick < SEC2MS(61)) {
 					prefsLocker.Lock();
 					upload = m_CurUpload;
 					prefsLocker.Unlock();
@@ -865,9 +850,9 @@ UINT LastCommonRouteFinder::RunInternal()
 	return 0;
 }
 
-uint32 LastCommonRouteFinder::Median(UInt32Clist& list)
+uint32 LastCommonRouteFinder::Median(const UInt32Clist& list)
 {
-	uint32 size = list.GetCount();
+	UINT_PTR size = list.GetCount();
 
 	if (size == 1)
 		return list.GetHead();

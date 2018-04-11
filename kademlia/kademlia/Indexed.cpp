@@ -150,8 +150,8 @@ CIndexed::~CIndexed()
 				setvbuf(fileLoad.m_pStream, NULL, _IOFBF, 32768);
 				uint32 uVersion = 1;
 				fileLoad.WriteUInt32(uVersion);
-				fileLoad.WriteUInt32(time(NULL));
-				fileLoad.WriteUInt32(m_mapLoad.GetCount());
+				fileLoad.WriteUInt32((uint32)time(NULL));
+				fileLoad.WriteUInt32((uint32)m_mapLoad.GetCount());
 				for (POSITION pos1 = m_mapLoad.GetStartPosition(); pos1 != NULL;) {
 					Load* pLoad;
 					CCKey key1;
@@ -172,23 +172,23 @@ CIndexed::~CIndexed()
 				setvbuf(fileSource.m_pStream, NULL, _IOFBF, 32768);
 				uint32 uVersion = 2;
 				fileSource.WriteUInt32(uVersion);
-				fileSource.WriteUInt32(time(NULL)+KADEMLIAREPUBLISHTIMES);
-				fileSource.WriteUInt32(m_mapSources.GetCount());
+				fileSource.WriteUInt32((uint32)(time(NULL)+KADEMLIAREPUBLISHTIMES));
+				fileSource.WriteUInt32((uint32)m_mapSources.GetCount());
 				for (POSITION pos1 = m_mapSources.GetStartPosition(); pos1 != NULL;) {
 					CCKey key1;
 					SrcHash* pCurrSrcHash;
 					m_mapSources.GetNextAssoc( pos1, key1, pCurrSrcHash );
 					fileSource.WriteUInt128(pCurrSrcHash->uKeyID);
 					CKadSourcePtrList* keyHashSrcMap = &pCurrSrcHash->ptrlistSource;
-					fileSource.WriteUInt32(keyHashSrcMap->GetCount());
+					fileSource.WriteUInt32((uint32)keyHashSrcMap->GetCount());
 					while (!keyHashSrcMap->IsEmpty()) {
 						Source* pCurrSource = keyHashSrcMap->RemoveHead();
 						fileSource.WriteUInt128(pCurrSource->uSourceID);
 						CKadEntryPtrList* srcEntryList = &pCurrSource->ptrlEntryList;
-						fileSource.WriteUInt32(srcEntryList->GetCount());
+						fileSource.WriteUInt32((uint32)srcEntryList->GetCount());
 						while (!srcEntryList->IsEmpty()) {
 							CEntry* pCurrName = srcEntryList->RemoveHead();
-							fileSource.WriteUInt32(pCurrName->m_tLifetime);
+							fileSource.WriteUInt32((uint32)pCurrName->m_tLifetime);
 							pCurrName->WriteTagList(&fileSource);
 							delete pCurrName;
 							uTotalSource++;
@@ -208,27 +208,27 @@ CIndexed::~CIndexed()
 				setvbuf(fileKey.m_pStream, NULL, _IOFBF, 32768);
 				uint32 uVersion = 4;
 				fileKey.WriteUInt32(uVersion);
-				fileKey.WriteUInt32(time(NULL)+KADEMLIAREPUBLISHTIMEK);
+				fileKey.WriteUInt32((uint32)(time(NULL)+KADEMLIAREPUBLISHTIMEK));
 				fileKey.WriteUInt128(Kademlia::CKademlia::GetPrefs()->GetKadID());
-				fileKey.WriteUInt32(m_mapKeyword.GetCount());
+				fileKey.WriteUInt32((uint32)m_mapKeyword.GetCount());
 				for (POSITION pos1 = m_mapKeyword.GetStartPosition(); pos1 != NULL;) {
 					CCKey key1;
 					KeyHash* pCurrKeyHash;
 					m_mapKeyword.GetNextAssoc( pos1, key1, pCurrKeyHash );
 					fileKey.WriteUInt128(pCurrKeyHash->uKeyID);
 					CSourceKeyMap* keySrcKeyMap = &pCurrKeyHash->mapSource;
-					fileKey.WriteUInt32(keySrcKeyMap->GetCount());
+					fileKey.WriteUInt32((uint32)keySrcKeyMap->GetCount());
 					for (POSITION pos2 = keySrcKeyMap->GetStartPosition(); pos2 != NULL;) {
 						Source* pCurrSource;
 						CCKey key2;
 						keySrcKeyMap->GetNextAssoc( pos2, key2, pCurrSource );
 						fileKey.WriteUInt128(pCurrSource->uSourceID);
 						CKadEntryPtrList* srcEntryList = &pCurrSource->ptrlEntryList;
-						fileKey.WriteUInt32(srcEntryList->GetCount());
+						fileKey.WriteUInt32((uint32)srcEntryList->GetCount());
 						while (!srcEntryList->IsEmpty()) {
 							CKeyEntry* pCurrName = (CKeyEntry*)srcEntryList->RemoveHead();
 							ASSERT( pCurrName->IsKeyEntry() );
-							fileKey.WriteUInt32(pCurrName->m_tLifetime);
+							fileKey.WriteUInt32((uint32)pCurrName->m_tLifetime);
 							pCurrName->WritePublishTrackingDataToFile(&fileKey);
 							pCurrName->WriteTagList(&fileKey);
 							pCurrName->DirtyDeletePublishData();
@@ -280,11 +280,11 @@ CIndexed::~CIndexed()
 
 void CIndexed::Clean()
 {
+	static LONG cleaning = 0;
+	if (InterlockedCompareExchange(&cleaning, 1, 0))
+		return; //already cleaning
 	try {
 		time_t tNow = time(NULL);
-		if (m_tLastClean > tNow)
-			return;
-		m_tLastClean = tNow + HR2S(1); //prevent re-entry
 
 		uint32 uRemovedKey = 0;
 		uint32 uRemovedSource = 0;
@@ -304,7 +304,7 @@ void CIndexed::Clean()
 					CKeyEntry* pCurrName = (CKeyEntry*)pCurrSource->ptrlEntryList.GetNext(pos3);
 					ASSERT(pCurrName->IsKeyEntry());
 					++uTotalKey;
-					if (!pCurrName->m_bSource && pCurrName->m_tLifetime < tNow) {
+					if (!pCurrName->m_bSource && tNow >= pCurrName->m_tLifetime) {
 						++uRemovedKey;
 						pCurrSource->ptrlEntryList.RemoveAt(pos4);
 						delete pCurrName;
@@ -335,7 +335,7 @@ void CIndexed::Clean()
 					POSITION pos5 = pos4;
 					CEntry* pCurrName = pCurrSource->ptrlEntryList.GetNext(pos4);
 					++uTotalSource;
-					if (pCurrName->m_tLifetime < tNow) {
+					if (tNow >= pCurrName->m_tLifetime) {
 						++uRemovedSource;
 						pCurrSource->ptrlEntryList.RemoveAt(pos5);
 						delete pCurrName;
@@ -360,6 +360,7 @@ void CIndexed::Clean()
 		AddDebugLogLine(false, _T("Exception in CIndexed::clean"));
 		ASSERT(0);
 	}
+	InterlockedExchange(&cleaning, 0);
 }
 
 bool CIndexed::AddKeyword(const CUInt128& uKeyID, const CUInt128& uSourceID, Kademlia::CKeyEntry* pEntry, uint8& uLoad, bool bIgnoreThreadLock)
@@ -403,7 +404,7 @@ bool CIndexed::AddKeyword(const CUInt128& uKeyID, const CUInt128& uSourceID, Kad
 		m_uTotalIndexKeyword++;
 		return true;
 	}
-	uint32 uIndexTotal = pCurrKeyHash->mapSource.GetCount();
+	INT_PTR uIndexTotal = pCurrKeyHash->mapSource.GetCount();
 	if ( uIndexTotal > KADEMLIAMAXINDEX )
 	{
 		uLoad = 100;
@@ -492,7 +493,7 @@ bool CIndexed::AddSources(const CUInt128& uKeyID, const CUInt128& uSourceID, Kad
 	}
 	else
 	{
-		uint32 uSize = pCurrSrcHash->ptrlistSource.GetSize();
+		INT_PTR uSize = pCurrSrcHash->ptrlistSource.GetSize();
 		for(POSITION pos1 = pCurrSrcHash->ptrlistSource.GetHeadPosition(); pos1 != NULL; )
 		{
 			Source* pCurrSource = pCurrSrcHash->ptrlistSource.GetNext(pos1);
@@ -570,7 +571,7 @@ bool CIndexed::AddNotes(const CUInt128& uKeyID, const CUInt128& uSourceID, Kadem
 	}
 	else
 	{
-		uint32 uSize = pCurrNoteHash->ptrlistSource.GetSize();
+		INT_PTR uSize = pCurrNoteHash->ptrlistSource.GetSize();
 		for(POSITION pos1 = pCurrNoteHash->ptrlistSource.GetHeadPosition(); pos1 != NULL; )
 		{
 			Source* pCurrNote = pCurrNoteHash->ptrlistSource.GetNext(pos1);
@@ -669,13 +670,12 @@ void CIndexed::SendValidKeywordResult(const CUInt128& uKeyID, const SSearchTerm*
 		const uint16 uMaxResults = 300;
 		int iCount = 0-uStartPosition;
 		int iUnsentCount = 0;
-		CByteIO byIOTmp(bySmallBuffer, sizeof(bySmallBuffer));
+		CByteIO byIOTmp(bySmallBuffer, sizeof bySmallBuffer);
 		// we do 2 loops: In the first one we ignore all results which have a trustvalue below 1
 		// in the second one we then also consider those. That way we make sure our 300 max results are not full
 		// of spam entries. We could also sort by trustvalue, but we would risk to only send popular files this way
 		// on very hot keywords
-		bool bOnlyTrusted = true;
-		do{
+		for (bool bOnlyTrusted = true; ;) {
 			for (POSITION pos1 = pCurrKeyHash->mapSource.GetStartPosition(); pos1 != NULL;) {
 				CCKey key1;
 				Source* pCurrSource;
@@ -726,11 +726,10 @@ void CIndexed::SendValidKeywordResult(const CUInt128& uKeyID, const SSearchTerm*
 					}
 				}
 			}
-			if (bOnlyTrusted && iCount < (int)uMaxResults)
-				bOnlyTrusted = false;
-			else
-				break;
-		} while (!bOnlyTrusted);
+			if (!bOnlyTrusted || iCount >= (int)uMaxResults)
+					break;
+			bOnlyTrusted = false;
+		};
 
 		// LOGTODO: Remove Log
 		//DebugLog(_T("Kad Keyword search Result Request: Send %u trusted and %u untrusted results"), dbgResultsTrusted, dbgResultsUntrusted);
@@ -776,7 +775,7 @@ void CIndexed::SendValidSourceResult(const CUInt128& uKeyID, uint32 uIP, uint16 
 		byIO.WriteUInt16(0);
 
 		int iUnsentCount = 0;
-		CByteIO byIOTmp(bySmallBuffer, sizeof(bySmallBuffer));
+		CByteIO byIOTmp(bySmallBuffer, sizeof bySmallBuffer);
 
 		uint16 uMaxResults = 300;
 		int iCount = 0-uStartPosition;
@@ -866,7 +865,7 @@ void CIndexed::SendValidNoteResult(const CUInt128& uKeyID, uint32 uIP, uint16 uP
 			byIO.WriteUInt16(0);
 
 			int iUnsentCount = 0;
-			CByteIO byIOTmp(bySmallBuffer, sizeof(bySmallBuffer));
+			CByteIO byIOTmp(bySmallBuffer, sizeof bySmallBuffer);
 			uint16 uMaxResults = 150;
 			uint16 uCount = 0;
 			for(POSITION pos1 = pCurrNoteHash->ptrlistSource.GetHeadPosition(); pos1 != NULL; )
@@ -940,16 +939,12 @@ bool CIndexed::SendStoreRequest(const CUInt128& uKeyID)
 	}
 
 	Load* pLoad;
-	if(m_mapLoad.Lookup(CCKey(uKeyID.GetData()), pLoad))
-	{
-		if(pLoad->uTime < (uint32)time(NULL))
-		{
-			m_mapLoad.RemoveKey(CCKey(uKeyID.GetData()));
-			m_uTotalIndexLoad--;
-			delete pLoad;
-			return true;
-		}
-		return false;
+	if (m_mapLoad.Lookup(CCKey(uKeyID.GetData()), pLoad)) {
+		if(pLoad->uTime >= (uint32)time(NULL))
+			return false;
+		m_mapLoad.RemoveKey(CCKey(uKeyID.GetData()));
+		m_uTotalIndexLoad--;
+		delete pLoad;
 	}
 	return true;
 }
@@ -961,16 +956,12 @@ uint32 CIndexed::GetFileKeyCount()
 		DEBUG_ONLY( DebugLogWarning(_T("CIndexed Memberfunction call failed because the dataloading still in progress")) );
 		return 0;
 	}
-
-	return m_mapKeyword.GetCount();
+	return (uint32)m_mapKeyword.GetCount();
 }
 
 SSearchTerm::SSearchTerm()
-	: m_type(AND), m_pastr(NULL)
+	: m_type(AND), m_pTag(NULL), m_pastr(NULL), m_pLeft(NULL), m_pRight(NULL)
 {
-	m_pTag = NULL;
-	m_pLeft = NULL;
-	m_pRight = NULL;
 }
 
 SSearchTerm::~SSearchTerm()
@@ -1020,14 +1011,12 @@ int CIndexed::CLoadDataThread::Run()
 				uint32 uVersion = fileLoad.ReadUInt32();
 				if(uVersion<2)
 				{
-					/*time_t tSaveTime = */fileLoad.ReadUInt32();
-					uint32 uNumLoad = fileLoad.ReadUInt32();
-					while(uNumLoad && !m_pOwner->m_bAbortLoading)
-					{
+//					time_t tSaveTime = fileLoad.ReadUInt32();
+					fileLoad.Seek(sizeof(uint32), SEEK_CUR);
+					for (uint32 uNumLoad = fileLoad.ReadUInt32(); uNumLoad && !m_pOwner->m_bAbortLoading; --uNumLoad) {
 						fileLoad.ReadUInt128(&uKeyID);
 						if(m_pOwner->AddLoad(uKeyID, fileLoad.ReadUInt32(), true))
-							uTotalLoad++;
-						uNumLoad--;
+							++uTotalLoad;
 					}
 				}
 				fileLoad.Close();

@@ -18,12 +18,11 @@ class CKademliaWnd : public CResizableDialog
 {
 	DECLARE_DYNAMIC(CKademliaWnd)
 
+	enum { IDD = IDD_KADEMLIAWND };
+
 public:
 	explicit CKademliaWnd(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CKademliaWnd();
-
-	// Dialog Data
-	enum { IDD = IDD_KADEMLIAWND };
 
 	// Contacts
 	UINT GetContactCount() const;

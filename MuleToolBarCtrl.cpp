@@ -112,7 +112,7 @@ void CMuleToolbarCtrl::Init()
 
 	// add button-text:
 	TCHAR cButtonStrings[2000];
-	int lLen, lLen2;
+	size_t lLen, lLen2;
 	m_buttoncount = 0;
 
 	_tcscpy(cButtonStrings, (LPCTSTR)GetResString(IDS_MAIN_BTN_CONNECT));
@@ -257,14 +257,14 @@ void CMuleToolbarCtrl::SetAllButtonsStrings()
 	tbi.dwMask = TBIF_TEXT;
 	tbi.cbSize = sizeof(TBBUTTONINFO);
 
-	UINT sid;
+	UINT uid;
 	if (theApp.serverconnect->IsConnected())
-		sid = IDS_MAIN_BTN_DISCONNECT;
+		uid = IDS_MAIN_BTN_DISCONNECT;
 	else if (theApp.serverconnect->IsConnecting())
-		sid = IDS_MAIN_BTN_CANCEL;
+		uid = IDS_MAIN_BTN_CANCEL;
 	else
-		sid = IDS_MAIN_BTN_CONNECT;
-	CString buffer = GetResString(sid);
+		uid = IDS_MAIN_BTN_CONNECT;
+	CString buffer = GetResString(uid);
 
 	_sntprintf(TBStrings[0], _countof(TBStrings[0]), _T("%s"), (LPCTSTR)buffer);
 	TBStrings[0][_countof(TBStrings[0]) - 1] = _T('\0');
@@ -313,7 +313,7 @@ void CMuleToolbarCtrl::SetAllButtonsWidth()
 
 		// calculate the max. possible button-size
 		int iCalcSize = 0;
-		for (int i = 0; i < m_buttoncount ; i++)
+		for (int i = 0; i < m_buttoncount; ++i)
 		{
 			if (!IsButtonHidden(IDC_TOOLBARBUTTON + i))
 			{
@@ -432,7 +432,7 @@ void CMuleToolbarCtrl::OnNmRClick(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 		for (unsigned f = 0; f < _countof(s_apszTBFiles); ++f)
 		{
 			WIN32_FIND_DATA FileData;
-			HANDLE hSearch = FindFirstFile(thePrefs.GetMuleDirectory(EMULE_TOOLBARDIR) + CString(_T("\\")) + s_apszTBFiles[f], &FileData);
+			HANDLE hSearch = FindFirstFile(thePrefs.GetMuleDirectory(EMULE_TOOLBARDIR) + _T('\\') + s_apszTBFiles[f], &FileData);
 			if (hSearch != INVALID_HANDLE_VALUE)
 			{
 				do {
@@ -446,17 +446,17 @@ void CMuleToolbarCtrl::OnNmRClick(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 		if (!astrToolbarFiles.IsEmpty())
 		{
 			Sort(astrToolbarFiles);
-			for (int f = 0; f < astrToolbarFiles.GetCount(); f++)
+			for (int f = 0; f < astrToolbarFiles.GetCount(); ++f)
 			{
-				const CString& bitmapFileName = astrToolbarFiles.GetAt(f);
+				const CString& bitmapFileName = astrToolbarFiles[f];
 				CString bitmapBaseName;
 				LPCTSTR pszTbBaseExt = stristr(bitmapFileName, EMULTB_BASEEXT);
 				if (pszTbBaseExt)
-					bitmapBaseName = bitmapFileName.Left(pszTbBaseExt - (LPCTSTR)bitmapFileName - 1);
+					bitmapBaseName = bitmapFileName.Left((int)(pszTbBaseExt - (LPCTSTR)bitmapFileName - 1));
 				else
 					bitmapBaseName = bitmapFileName;
 				menuBitmaps.AppendMenu(MF_STRING, MP_TOOLBARBITMAP + i, bitmapBaseName);
-				m_astrToolbarPaths.Add(thePrefs.GetMuleDirectory(EMULE_TOOLBARDIR) + CString(_T("\\")) + bitmapFileName);
+				m_astrToolbarPaths.Add(thePrefs.GetMuleDirectory(EMULE_TOOLBARDIR) + _T('\\') + bitmapFileName);
 				if (!checked && currentBitmapSettings.CompareNoCase(m_astrToolbarPaths[i]) == 0)
 				{
 					menuBitmaps.CheckMenuItem(MP_TOOLBARBITMAP + i, MF_CHECKED);
@@ -504,7 +504,7 @@ void CMuleToolbarCtrl::OnNmRClick(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 		for (unsigned f = 0; f < _countof(s_apszSkinFiles); ++f)
 		{
 			WIN32_FIND_DATA FileData;
-			HANDLE hSearch = FindFirstFile(thePrefs.GetMuleDirectory(EMULE_SKINDIR, false) + CString(_T("\\")) + s_apszSkinFiles[f], &FileData);
+			HANDLE hSearch = FindFirstFile(thePrefs.GetMuleDirectory(EMULE_SKINDIR, false) + _T('\\') + s_apszSkinFiles[f], &FileData);
 			if (hSearch != INVALID_HANDLE_VALUE)
 			{
 				do {
@@ -518,17 +518,17 @@ void CMuleToolbarCtrl::OnNmRClick(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 		if (!astrSkinFiles.IsEmpty())
 		{
 			Sort(astrSkinFiles);
-			for (int f = 0; f < astrSkinFiles.GetCount(); f++)
+			for (int f = 0; f < astrSkinFiles.GetCount(); ++f)
 			{
-				const CString& skinFileName = astrSkinFiles.GetAt(f);
+				const CString& skinFileName = astrSkinFiles[f];
 				CString skinBaseName;
 				LPCTSTR pszSkinBaseExt = stristr(skinFileName, _T(".") EMULSKIN_BASEEXT _T(".ini"));
 				if (pszSkinBaseExt)
-					skinBaseName = skinFileName.Left(pszSkinBaseExt - (LPCTSTR)skinFileName);
+					skinBaseName = skinFileName.Left((int)(pszSkinBaseExt - (LPCTSTR)skinFileName));
 				else
 					skinBaseName = skinFileName;
 				menuSkins.AppendMenu(MF_STRING, MP_SKIN_PROFILE + i, skinBaseName);
-				m_astrSkinPaths.Add(thePrefs.GetMuleDirectory(EMULE_SKINDIR, false) + CString(_T("\\")) + skinFileName);
+				m_astrSkinPaths.Add(thePrefs.GetMuleDirectory(EMULE_SKINDIR, false) + _T('\\') + skinFileName);
 				if (!checked && currentSkin.CompareNoCase(m_astrSkinPaths[i]) == 0)
 				{
 					menuSkins.CheckMenuItem(MP_SKIN_PROFILE + i, MF_CHECKED);
@@ -933,11 +933,11 @@ void CMuleToolbarCtrl::OnTbnReset(NMHDR* /*pNMHDR*/, LRESULT* /*pResult*/)
 {
 	// First get rid of old buttons
 	// while saving their states
-	for (int i = GetButtonCount()-1; i >= 0; i--)
+	for (int i = GetButtonCount()-1; i >= 0; --i)
 	{
 		TBBUTTON Button;
 		GetButton(i, &Button);
-		for (int j = 0; j < m_buttoncount ; j++)
+		for (int j = 0; j < m_buttoncount; ++j)
 		{
 			if (TBButtons[j].idCommand == Button.idCommand)
 			{

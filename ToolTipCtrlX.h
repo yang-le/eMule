@@ -16,6 +16,7 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #pragma once
 
+#define TOOLTIP_AUTOFORMAT_SUFFIX _T("\a")
 #define TOOLTIP_AUTOFORMAT_SUFFIX_CH	_T('\a')
 
 class CToolTipCtrlX : public CToolTipCtrl
@@ -31,17 +32,17 @@ public:
 	BOOL SubclassWindow(HWND hWnd);
 
 protected:
-	bool m_bCol1Bold;
-	bool m_bShowFileIcon;
+	LOGFONT m_lfNormal;
+	CFont m_fontBold;
+	CFont m_fontNormal;
 	CRect m_rcScreen;
-	int m_iScreenWidth4;
 	COLORREF m_crTooltipBkColor;
 	COLORREF m_crTooltipTextColor;
 	DWORD m_dwCol1DrawTextFlags;
 	DWORD m_dwCol2DrawTextFlags;
-	LOGFONT m_lfNormal;
-	CFont m_fontBold;
-	CFont m_fontNormal;
+	int m_iScreenWidth4;
+	bool m_bCol1Bold;
+	bool m_bShowFileIcon;
 
 	void ResetSystemMetrics();
 	void CustomPaint(LPNMTTCUSTOMDRAW);

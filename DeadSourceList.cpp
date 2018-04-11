@@ -29,8 +29,8 @@ static char THIS_FILE[] = __FILE__;
 
 #define	CLEANUPTIME			MIN2MS(60)
 
-#define BLOCKTIME		(::GetTickCount() + (m_bGlobalList ? MIN2MS(15):MIN2MS(45)))
-#define BLOCKTIMEFW		(::GetTickCount() + (m_bGlobalList ? MIN2MS(30):MIN2MS(45)))
+#define BLOCKTIME		(::GetTickCount() + (m_bGlobalList ? MIN2MS(15) : MIN2MS(45)))
+#define BLOCKTIMEFW		(::GetTickCount() + (m_bGlobalList ? MIN2MS(30) : MIN2MS(45)))
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //// CDeadSource
@@ -90,15 +90,14 @@ bool CDeadSourceList::IsDeadSource(const CUpDownClient* pToCheck) const
 	uint32 dwExpTime;
 //	bool bDbgCheck = false;
 	if (!pToCheck->HasLowID() || pToCheck->GetServerIP() != 0) {
-		if (m_mapDeadSources.Lookup(CDeadSource(pToCheck->GetUserIDHybrid(), pToCheck->GetUserPort(), pToCheck->GetServerIP(), pToCheck->GetKadPort()), dwExpTime)) {
-			if (dwExpTime > ::GetTickCount())
-				return true;
-		}
+		if (m_mapDeadSources.Lookup(CDeadSource(pToCheck->GetUserIDHybrid(), pToCheck->GetUserPort(), pToCheck->GetServerIP(), pToCheck->GetKadPort()), dwExpTime))
+			if (::GetTickCount() < dwExpTime)
+					return true;
 //		bDbgCheck = true;
 	}
 	if (((pToCheck->HasValidBuddyID() || pToCheck->SupportsDirectUDPCallback()) && !isnulmd4(pToCheck->GetUserHash())) || (pToCheck->HasLowID() && pToCheck->GetServerIP() == 0)) {
 		if (m_mapDeadSources.Lookup(CDeadSource(pToCheck->GetUserHash()), dwExpTime)) {
-			if (dwExpTime > ::GetTickCount())
+			if (::GetTickCount() < dwExpTime)
 				return true;
 		}
 //		bDbgCheck = true;
@@ -127,7 +126,7 @@ void CDeadSourceList::AddDeadSource(const CUpDownClient* pToAdd)
 		}
 //		ASSERT( bDbgCheck );
 	}
-	if (::GetTickCount() - m_dwLastCleanUp  > CLEANUPTIME)
+	if (::GetTickCount() >= m_dwLastCleanUp + CLEANUPTIME)
 		CleanUp();
 }
 
@@ -146,16 +145,16 @@ void CDeadSourceList::RemoveDeadSource(const CUpDownClient* client)
 
 void CDeadSourceList::CleanUp()
 {
-	m_dwLastCleanUp = ::GetTickCount();
+	const uint32 dwTick = ::GetTickCount();
+	m_dwLastCleanUp = dwTick;
 	//if (thePrefs.GetLogFilteredIPs())
 	//	AddDebugLogLine(DLP_VERYLOW, false, _T("Cleaning up DeadSourceList (%s), %i clients on List..."),  m_bGlobalList ? _T("Global") : _T("Local"), m_mapDeadSources.GetCount());
 
-	uint32 dwTick = ::GetTickCount();
 	for (POSITION pos = m_mapDeadSources.GetStartPosition(); pos != NULL;) {
 		CDeadSource dsKey;
 		uint32 dwExpTime;
-		m_mapDeadSources.GetNextAssoc( pos, dsKey, dwExpTime );
-		if (dwExpTime < dwTick)
+		m_mapDeadSources.GetNextAssoc(pos, dsKey, dwExpTime);
+		if (dwTick >= dwExpTime)
 			m_mapDeadSources.RemoveKey(dsKey);
 	}
 	//if (thePrefs.GetLogFilteredIPs())

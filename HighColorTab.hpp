@@ -16,7 +16,7 @@
 
 #if _MSC_VER>=1400
 #pragma warning(push)
-#pragma warning(disable:4350) // behavior change: 'std::auto_ptr<_Ty>::auto_ptr(std::auto_ptr_ref<_Ty>) throw()' called instead of 'std::auto_ptr<_Ty>::auto_ptr(std::auto_ptr<_Ty> &) throw()'
+#pragma warning(disable:4350) // behavior change: 'std::auto_ptr<_Ty>::auto_ptr(std::auto_ptr_ref<_Ty>) noexcept' called instead of 'std::auto_ptr<_Ty>::auto_ptr(std::auto_ptr<_Ty> &) noexcept'
 #endif
 
 namespace HighColorTab
@@ -37,14 +37,7 @@ namespace HighColorTab
     static std::auto_ptr<CImageList> CreateImageList()
     {
       std::auto_ptr<CImageList> apILNew( new CImageList() );
-      if( NULL == apILNew.get() )
-      {
-        // ASSERT: The CImageList object creation failed.
-        ASSERT( FALSE );
-        return std::auto_ptr<CImageList>();
-      }
-
-      if( 0 == apILNew->Create( 16, 16, theApp.m_iDfltImageListColorFlags | ILC_MASK, 0, 1 ) )
+      if( FALSE == apILNew->Create( 16, 16, theApp.m_iDfltImageListColorFlags | ILC_MASK, 0, 1 ) )
       {
         // ASSERT: The image list (Win32) creation failed.
         ASSERT( FALSE );
@@ -74,59 +67,40 @@ namespace HighColorTab
 	  if (!IsWindow(pTab->GetSafeHwnd()))
 	  {
       // ASSERT: Tab control could not be retrieved or it is not a valid window.
-      ASSERT( FALSE );
-		  return false;
+		ASSERT( FALSE );
+		return false;
 	  }
 
     // Create the replacement image list via policy.
     std::auto_ptr<CImageList> apILNew( TListCreator::CreateImageList() );
 
-    bool bSuccess = (NULL != apILNew.get() );
-
     // Reload the icons from the property pages.
     int nTotalPageCount = rSheet.GetPageCount();
-    for(int nCurrentPage = 0; nCurrentPage < nTotalPageCount && bSuccess; ++nCurrentPage )
+    for(int nCurrentPage = 0; nCurrentPage < nTotalPageCount; ++nCurrentPage )
     {
       // Get the page.
       CPropertyPage* pPage = rSheet.GetPage( nCurrentPage );
       ASSERT( pPage );
       // Set the icon in the image list from the page properties.
       if( pPage && ( pPage->m_psp.dwFlags & PSP_USEHICON ) )
-      {
-        /*bSuccess &=*/ ( -1 != apILNew->Add( pPage->m_psp.hIcon ) );
-      }
+        apILNew->Add(pPage->m_psp.hIcon);
 
       if( pPage && ( pPage->m_psp.dwFlags & PSP_USEICONID ) )
       {
 		  HICON hIcon = theApp.LoadIcon( pPage->m_psp.pszIcon, 16, 16 );
 		  if (hIcon)
 		  {
-			/*bSuccess &=*/ ( -1 != apILNew->Add( hIcon ) );
+			apILNew->Add(hIcon);
 			DestroyIcon(hIcon);
 		  }
       }
-    }
-
-    if( !bSuccess )
-    {
-      // This ASSERT because either the image list could not be created or icon insertion failed.
-      ASSERT( FALSE );
-      // Cleanup what we have in the new image list.
-      if( apILNew.get() )
-      {
-        apILNew->DeleteImageList();
-      }
-
-      return false;
     }
 
     // Replace the image list from the tab control.
     CImageList* pilOld = pTab->SetImageList( CImageList::FromHandle( apILNew->Detach() ) );
     // Clean the old image list if there was one.
     if( pilOld )
-    {
       pilOld->DeleteImageList();
-    }
 
     return true;
   };

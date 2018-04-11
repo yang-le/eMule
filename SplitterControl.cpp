@@ -326,7 +326,7 @@ void CSplitterControl::SetRange(int nMin, int nMax)
 
 // Set splitter range from (nRoot - nSubtraction) to (nRoot + nAddition)
 // If (nRoot < 0)
-//		nRoot =  <current position of the splitter>
+//		nRoot = <current position of the splitter>
 void CSplitterControl::SetRange(int nSubtraction, int nAddition, int nRoot)
 {
 	if (nRoot < 0)

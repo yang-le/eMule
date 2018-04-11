@@ -65,7 +65,6 @@ protected:
 	typedef struct PlotDataStruct
 	{
 		CList<double> lstPoints;
-		COLORREF crPlotColor;       // data plot color
 		CPen   penPlot;
 		CString LegendLabel;
 		double dCurrentPosition;    // current position
@@ -74,6 +73,7 @@ protected:
 		double dUpperLimit;         // upper bounds
 		double dRange;				// = UpperLimit - LowerLimit
 		double dVerticalFactor;
+		COLORREF crPlotColor;       // data plot color
 		int	nPrevY;
 		// Optional variable to set a ratio for a given "trend".
 		// The purpose here is to better implement the customizable
@@ -102,10 +102,10 @@ protected:
 	static CFont	sm_fontAxis;
 	static LOGFONT	sm_logFontAxis;
 
-	bool m_bDoUpdate;
-	UINT m_nRedrawTimer;
-	UINT m_uLastMouseFlags;
+	UINT_PTR m_nRedrawTimer;
 	CPoint m_ptLastMousePos;
+	UINT m_uLastMouseFlags;
+	bool m_bDoUpdate;
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnPaint();

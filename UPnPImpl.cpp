@@ -25,8 +25,10 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 CUPnPImpl::CUPnPImpl()
-	: m_bUPnPPortsForwarded(TRIS_FALSE), m_hResultMessageWindow(0),	m_nResultMessageID(0)
-	, m_nUDPPort(0), m_nTCPPort(0), m_nTCPWebPort(0), m_bCheckAndRefresh(false)
+	: m_bUPnPPortsForwarded(TRIS_FALSE)
+	, m_nOldTCPPort(0), m_nOldTCPWebPort(0), m_nOldUDPPort(0)
+	, m_nTCPPort(0), m_nTCPWebPort(0), m_nUDPPort(0)
+	, m_bCheckAndRefresh(false), m_hResultMessageWindow(0),	m_nResultMessageID(0)
 {
 }
 
@@ -43,7 +45,7 @@ void CUPnPImpl::SetMessageOnResult(HWND hWindow, UINT nMessageID)
 void CUPnPImpl::SendResultMessage()
 {
 	if (m_hResultMessageWindow != 0 && m_nResultMessageID != 0) {
-		PostMessage(m_hResultMessageWindow, m_nResultMessageID, (WPARAM)(m_bUPnPPortsForwarded == TRIS_TRUE ? UPNP_OK : UPNP_FAILED), m_bCheckAndRefresh ? 1 : 0);
+		PostMessage(m_hResultMessageWindow, m_nResultMessageID, (WPARAM)(m_bUPnPPortsForwarded == TRIS_TRUE ? UPNP_OK : UPNP_FAILED), (LPARAM)m_bCheckAndRefresh);
 		m_nResultMessageID = 0;
 		m_hResultMessageWindow = 0;
 	}
@@ -51,7 +53,8 @@ void CUPnPImpl::SendResultMessage()
 
 void CUPnPImpl::LateEnableWebServerPort(uint16 nPort)
 {
-	if (m_nTCPWebPort == 0 && ArePortsForwarded() == TRIS_TRUE && IsReady()) {
+	if (ArePortsForwarded() == TRIS_TRUE && IsReady()) {
+		m_nOldTCPWebPort = (m_nTCPWebPort == nPort ? 0 : m_nTCPWebPort);
 		m_nTCPWebPort = nPort;
 		CheckAndRefresh();
 	}

@@ -40,8 +40,8 @@ struct Schedule_Struct{
    CString			title;
    bool				enabled;
    UINT				day;
-   uint32			time;
-   uint32			time2;
+   time_t			time;
+   time_t			time2;
    CString			values[16];
    int				actions[16];
    void ResetActions()	{for (uint8 index=0;index<16;++index) {actions[index]=0;values[index].Empty();}}
@@ -54,10 +54,10 @@ public:
 	CScheduler();
 	~CScheduler();
 
-	int		AddSchedule(Schedule_Struct* schedule);
-	void	UpdateSchedule(INT_PTR index, Schedule_Struct* schedule) { if (index<schedulelist.GetCount())schedulelist.SetAt(index,schedule);}
-	Schedule_Struct* GetSchedule(INT_PTR index) {if (index<schedulelist.GetCount()) return schedulelist.GetAt(index); else return NULL; }
-	void	RemoveSchedule(int index);
+	INT_PTR	AddSchedule(Schedule_Struct* schedule);
+	void	UpdateSchedule(INT_PTR index, Schedule_Struct* schedule) { if (index<GetCount())schedulelist[index]=schedule;}
+	Schedule_Struct* GetSchedule(INT_PTR index) { return (index<GetCount()) ? schedulelist[index] : NULL; }
+	void	RemoveSchedule(INT_PTR index);
 	void	RemoveAll();
 	int		LoadFromFile();
 	void	SaveToFile();

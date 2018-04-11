@@ -460,7 +460,7 @@ void CToolbarWnd::OnAvailableCommandsChanged(CList<int>* liCommands)
 		tbbi.dwMask = TBIF_COMMAND | TBIF_BYINDEX | TBIF_STATE | TBIF_STYLE;
 		m_btnBar->GetButtonInfo(i, &tbbi);
 		if ((tbbi.fsStyle & BTNS_SEP) == 0)
-			m_btnBar->EnableButton(tbbi.idCommand, (liCommands->Find(tbbi.idCommand) != NULL) ? TRUE : FALSE);
+			m_btnBar->EnableButton(tbbi.idCommand, static_cast<BOOL>(liCommands->Find(tbbi.idCommand) != NULL));
 	}
 }
 

@@ -215,7 +215,7 @@ RGBQUAD CxImage::GetPixelColorInterpolated(
       if ((xi+1)<head.biWidth && xi>=0 && (yi+1)<head.biHeight && yi>=0 && head.biClrUsed==0) {
         //all pixels are inside RGB24 image... optimize reading (and use fixed point arithmetic)
         uint16_t wt1=(uint16_t)((x-xi)*256.0f), wt2=(uint16_t)((y-yi)*256.0f);
-        uint16_t wd=wt1*wt2>>8;
+        uint16_t wd=(wt1*wt2)>>8;
         uint16_t wb=wt1-wd;
         uint16_t wc=wt2-wd;
         uint16_t wa=256-wt1-wc;

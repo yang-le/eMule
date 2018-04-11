@@ -27,15 +27,14 @@ class CFileInfoDialog : public CResizablePage
 {
 	DECLARE_DYNAMIC(CFileInfoDialog)
 
+	enum { IDD = IDD_FILEINFO };
+
 public:
 	CFileInfoDialog();   // standard constructor
 	virtual ~CFileInfoDialog();
 
 	void SetFiles(const CSimpleArray<CObject*>* paFiles) { m_paFiles = paFiles; m_bDataChanged = true; }
 	void SetReducedDialog()								 { m_bReducedDlg = true; }
-
-// Dialog Data
-	enum { IDD = IDD_FILEINFO };
 
 protected:
 	CString m_strCaption;

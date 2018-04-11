@@ -10,9 +10,9 @@ static char THIS_FILE[] = __FILE__;
 static UINT g_uResNumber;
 static UINT g_uTotalSize;
 
-static BOOL CALLBACK EnumResNameProc(HMODULE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG_PTR /*lParam*/)
+static BOOL CALLBACK EnumResNameProc(HMODULE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG_PTR /*lParam*/) noexcept
 {
-	g_uResNumber++;
+	++g_uResNumber;
 	UINT uSize = 0;
 	HRSRC hResInfo = FindResource(hModule, lpszName, lpszType);
 	if (hResInfo)

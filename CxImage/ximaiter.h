@@ -50,8 +50,8 @@ public:
 	BOOL ItOK() const;
 	void Reset ();
 	void Upset ();
-	void SetRow(uint8_t *buf, int32_t n);
-	void GetRow(uint8_t *buf, int32_t n);
+	void SetRow(uint8_t *buf, size_t n);
+	void GetRow(uint8_t *buf, size_t n);
 	uint8_t GetByte( ) const { return IterImage[Itx]; }
 	void SetByte(uint8_t b) { IterImage[Itx] = b; }
 	uint8_t* GetRow(void);
@@ -138,18 +138,18 @@ inline void CImageIterator::SetY(int32_t y)
 	IterImage = ima->GetBits() + ima->GetEffWidth()*y;
 }
 /////////////////////////////////////////////////////////////////////
-inline void CImageIterator::SetRow(uint8_t *buf, int32_t n)
+inline void CImageIterator::SetRow(uint8_t *buf, size_t n)
 {
-	if (n < 0)
-		n = ima->GetEffWidth();
-	else
+//	if (n < 0)
+//		n = ima->GetEffWidth();
+//	else
 		n = min(n, ima->GetEffWidth());
 
 	if ((IterImage!=NULL) && (buf!=NULL) && (n>0))
 		memcpy(IterImage, buf, n);
 }
 /////////////////////////////////////////////////////////////////////
-inline void CImageIterator::GetRow(uint8_t *buf, int32_t n)
+inline void CImageIterator::GetRow(uint8_t *buf, size_t n)
 {
 	if ((IterImage!=NULL) && (buf!=NULL) && (n>0))
 		memcpy(buf, IterImage, min(n, ima->GetEffWidth()));

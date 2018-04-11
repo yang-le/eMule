@@ -31,15 +31,14 @@ class CArchivePreviewDlg : public CResizablePage
 {
 	DECLARE_DYNAMIC(CArchivePreviewDlg)
 
+	enum { IDD = IDD_ARCHPREV };
+
 public:
 	CArchivePreviewDlg();
 	virtual ~CArchivePreviewDlg();
 
 	void SetFiles(const CSimpleArray<CObject*>* paFiles) { m_paFiles = paFiles; m_bDataChanged = true;	}
 	void SetReducedDialog()								 { m_bReducedDlg = true; }
-
-// Dialog Data
-	enum { IDD = IDD_ARCHPREV };
 
 protected:
 	const CSimpleArray<CObject*>* m_paFiles;

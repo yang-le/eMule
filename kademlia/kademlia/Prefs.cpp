@@ -329,7 +329,7 @@ void CPrefs::SetLastContact()
 	m_tLastContact = time(NULL);
 }
 
-uint32 CPrefs::GetLastContact() const
+time_t CPrefs::GetLastContact() const
 {
 	return m_tLastContact;
 }

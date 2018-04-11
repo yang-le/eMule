@@ -52,7 +52,7 @@ CRichEditStream& CRichEditStream::operator<<(LPCTSTR psz)
 
 CRichEditStream& CRichEditStream::operator<<(char* psz)
 {
-	ReplaceSel(CA2T(psz));
+	ReplaceSel(CA2CT(psz));
 	return *this;
 }
 

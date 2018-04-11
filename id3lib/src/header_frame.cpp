@@ -177,6 +177,12 @@ const char* ID3_FrameHeader::GetTextID() const
   return (const char*)textID;
 }
 
+ID3_FrameHeader::ID3_FrameHeader(const ID3_FrameHeader& hdr)
+{
+	if (this != &hdr)
+		*this = hdr;
+}
+
 ID3_FrameHeader& ID3_FrameHeader::operator=(const ID3_FrameHeader& hdr)
 {
   if (this != &hdr)
@@ -198,8 +204,8 @@ ID3_FrameHeader& ID3_FrameHeader::operator=(const ID3_FrameHeader& hdr)
       _frame_def->bTagDiscard = hdr._frame_def->bTagDiscard;
       _frame_def->bFileDiscard = hdr._frame_def->bFileDiscard;
       _frame_def->aeFieldDefs = hdr._frame_def->aeFieldDefs;
-      strcpy(_frame_def->sShortTextID, hdr._frame_def->sShortTextID);
-      strcpy(_frame_def->sLongTextID, hdr._frame_def->sLongTextID);
+      strcpy_s(_frame_def->sShortTextID, sizeof _frame_def->sShortTextID, hdr._frame_def->sShortTextID);
+      strcpy_s(_frame_def->sLongTextID, sizeof _frame_def->sLongTextID, hdr._frame_def->sLongTextID);
       _dyn_frame_def = true;
     }
   }
@@ -238,4 +244,3 @@ bool ID3_FrameHeader::Clear()
   }
   return changed;
 }
-

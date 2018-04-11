@@ -55,7 +55,7 @@ namespace Kademlia
 			bool		HasHadContact() const;
 			void		SetLastContact();
 			bool		HasLostConnection() const;
-			uint32		GetLastContact() const;
+			time_t		GetLastContact() const;
 			bool		GetFirewalled() const;
 			void		SetFirewalled();
 			void		IncFirewalled();

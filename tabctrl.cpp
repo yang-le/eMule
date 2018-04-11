@@ -33,7 +33,7 @@ END_MESSAGE_MAP()
 // 'TabControl::TabControl'
 //
 TabControl::TabControl()
-	: m_bDragging(false), m_InsertPosRect(0,0,0,0), m_pSpinCtrl(0), m_bHotTracking(false), m_nSrcTab(0), m_nDstTab(0)
+	: m_bDragging(false), m_nSrcTab(0), m_nDstTab(0), m_bHotTracking(false), m_InsertPosRect(0, 0, 0, 0), m_pSpinCtrl(0)
 {
 }
 
@@ -169,7 +169,7 @@ void TabControl::OnMouseMove(UINT nFlags, CPoint point)
 			if (nPos > 0)
 			{
 				InvalidateRect(&m_InsertPosRect, FALSE);
-				ZeroMemory(&m_InsertPosRect, sizeof(m_InsertPosRect));
+				memset(&m_InsertPosRect, 0, sizeof m_InsertPosRect);
 				SendMessage(WM_HSCROLL, MAKEWPARAM(SB_THUMBPOSITION, nPos - 1), 0);
 			}
 		}
@@ -178,7 +178,7 @@ void TabControl::OnMouseMove(UINT nFlags, CPoint point)
 		if (point.x > rect.right && m_pSpinCtrl && m_pSpinCtrl->IsWindowVisible())
 		{
 			InvalidateRect(&m_InsertPosRect, FALSE);
-			ZeroMemory(&m_InsertPosRect, sizeof(m_InsertPosRect));
+			memset(&m_InsertPosRect, 0, sizeof m_InsertPosRect);
 			int nPos = LOWORD(m_pSpinCtrl->GetPos());
 			SendMessage(WM_HSCROLL, MAKEWPARAM(SB_THUMBPOSITION, nPos + 1), 0);
 		}
@@ -308,11 +308,11 @@ BOOL TabControl::ReorderTab(unsigned int nSrcTab, unsigned int nDstTab)
 	ASSERT( bOK );
 
 	// Insert it at new location
-	bOK = InsertItem(nDstTab - (m_nDstTab > m_nSrcTab ? 1 : 0), &item);
+	bOK = InsertItem(nDstTab - static_cast<unsigned>(m_nDstTab > m_nSrcTab), &item);
 
 	// Setup new selected tab
 	if (nSelectedTab == nSrcTab)
-		SetCurSel(nDstTab - (m_nDstTab > m_nSrcTab ? 1 : 0));
+		SetCurSel(nDstTab - static_cast<unsigned>(m_nDstTab > m_nSrcTab));
 	else
 	{
 		if (nSelectedTab > nSrcTab && nSelectedTab < nDstTab)
@@ -477,7 +477,7 @@ void TabControl::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 
 	COLORREF crOldColor = CLR_NONE;
 	if (tci.lParam != -1)
-		crOldColor = pDC->SetTextColor(tci.lParam);
+		crOldColor = pDC->SetTextColor((COLORREF)tci.lParam);
 	else if (bVistaHotTracked)
 		crOldColor = pDC->SetTextColor(GetSysColor(COLOR_BTNTEXT));
 

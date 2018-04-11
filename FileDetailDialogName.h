@@ -27,14 +27,13 @@ class CFileDetailDialogName : public CResizablePage
 {
 	DECLARE_DYNAMIC(CFileDetailDialogName)
 
+	enum { IDD = IDD_FILEDETAILS_NAME };
+
 public:
 	CFileDetailDialogName();   // standard constructor
 	virtual ~CFileDetailDialogName();
 
 	void SetFiles(const CSimpleArray<CObject*>* paFiles) { m_paFiles = paFiles; m_bDataChanged = true; }
-
-	// Dialog Data
-	enum { IDD = IDD_FILEDETAILS_NAME };
 
 protected:
 	CString m_strCaption;
@@ -44,8 +43,8 @@ protected:
 	CMuleListCtrl m_listFileNames;
 	bool m_bSelf;
 
-	uint32	m_timer;
-	int		m_aiColWidths[2];
+	UINT_PTR m_timer;
+	int m_aiColWidths[2];
 
 	void Localize();
 	void RefreshData();

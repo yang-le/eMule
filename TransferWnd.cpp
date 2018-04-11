@@ -63,7 +63,7 @@ IMPLEMENT_DYNCREATE(CTransferWnd, CResizableFormView)
 
 BEGIN_MESSAGE_MAP(CTransferWnd, CResizableFormView)
 	ON_NOTIFY(LVN_BEGINDRAG, IDC_DOWNLOADLIST, OnLvnBeginDragDownloadList)
-	ON_NOTIFY(LVN_HOTTRACK, IDC_CLIENTLIST , OnHoverUploadList)
+	ON_NOTIFY(LVN_HOTTRACK, IDC_CLIENTLIST, OnHoverUploadList)
 	ON_NOTIFY(LVN_HOTTRACK, IDC_DOWNLOADLIST, OnHoverDownloadList)
 	ON_NOTIFY(LVN_HOTTRACK, IDC_QUEUELIST, OnHoverUploadList)
 	ON_NOTIFY(LVN_HOTTRACK, IDC_UPLOADLIST, OnHoverUploadList)
@@ -189,12 +189,11 @@ void CTransferWnd::OnInitialUpdate()
 	Localize();
 }
 
-void CTransferWnd::ShowQueueCount(uint32 number)
+void CTransferWnd::ShowQueueCount(INT_PTR number)
 {
-	TCHAR buffer[100];
-	_sntprintf(buffer, _countof(buffer), _T("%u (%u ") + GetResString(IDS_BANNED).MakeLower() + _T(')'), number, (unsigned)theApp.clientlist->GetBannedCount());
-	buffer[_countof(buffer) - 1] = _T('\0');
-	GetDlgItem(IDC_QUEUECOUNT)->SetWindowText(buffer);
+	CString buffer;
+	buffer.Format(_T("%u (%u %s)"), (unsigned)number, (unsigned)theApp.clientlist->GetBannedCount(), (LPCTSTR)GetResString(IDS_BANNED).MakeLower());
+	SetDlgItemText(IDC_QUEUECOUNT, buffer);
 }
 
 void CTransferWnd::DoDataExchange(CDataExchange* pDX)
@@ -433,7 +432,7 @@ void CTransferWnd::UpdateListCount(EWnd2 listindex, int iCount /*=-1*/)
 			{
 				case wnd2Uploading: {
 					uint32 itemCount = iCount == -1 ? uploadlistctrl.GetItemCount() : iCount;
-					uint32 activeCount = theApp.uploadqueue->GetActiveUploadsCount();
+					uint32 activeCount = (uint32)theApp.uploadqueue->GetActiveUploadsCount();
 					if (activeCount >= itemCount)
 						strBuffer.Format(_T(" (%u)"), itemCount);
 					else
@@ -467,7 +466,7 @@ void CTransferWnd::UpdateListCount(EWnd2 listindex, int iCount /*=-1*/)
 			{
 				CString strBuffer;
 				uint32 itemCount = iCount == -1 ? uploadlistctrl.GetItemCount() : iCount;
-				uint32 activeCount = theApp.uploadqueue->GetActiveUploadsCount();
+				uint32 activeCount = (uint32)theApp.uploadqueue->GetActiveUploadsCount();
 				if (activeCount >= itemCount)
 					strBuffer.Format(_T(" (%u)"), itemCount);
 				else
@@ -675,8 +674,8 @@ void CTransferWnd::SetWnd2Icons()
 void CTransferWnd::Localize()
 {
 	LocalizeToolbars();
-	GetDlgItem(IDC_QUEUECOUNT_LABEL)->SetWindowText(GetResString(IDS_TW_QUEUE));
-	GetDlgItem(IDC_QUEUE_REFRESH_BUTTON)->SetWindowText(GetResString(IDS_SV_UPDATE));
+	SetDlgItemText(IDC_QUEUECOUNT_LABEL, GetResString(IDS_TW_QUEUE));
+	SetDlgItemText(IDC_QUEUE_REFRESH_BUTTON, GetResString(IDS_SV_UPDATE));
 
 	uploadlistctrl.Localize();
 	queuelistctrl.Localize();
@@ -799,14 +798,14 @@ void CTransferWnd::OnNmRClickDltab(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 		CatMenu.AppendMenu(MF_SEPARATOR);
 		CatMenu.AppendMenu( thePrefs.GetCatFilter(rightclickindex)>0?MF_STRING:MF_GRAYED,MP_CAT_SET0+19,GetResString(IDS_NEGATEFILTER) );
 		if ( thePrefs.GetCatFilterNeg(rightclickindex))
-			CatMenu.CheckMenuItem( MP_CAT_SET0+19 ,MF_CHECKED | MF_BYCOMMAND);
+			CatMenu.CheckMenuItem( MP_CAT_SET0+19, MF_CHECKED | MF_BYCOMMAND);
 	}
 
-	CatMenu.CheckMenuItem( MP_CAT_SET0+thePrefs.GetCatFilter(rightclickindex) ,MF_CHECKED | MF_BYCOMMAND);
+	CatMenu.CheckMenuItem( MP_CAT_SET0+thePrefs.GetCatFilter(rightclickindex), MF_CHECKED | MF_BYCOMMAND);
 
-	menu.AppendMenu(MF_STRING|MF_POPUP,(UINT_PTR)CatMenu.m_hMenu, GetResString(IDS_CHANGECATVIEW),_T("SEARCHPARAMS") );
+	menu.AppendMenu(MF_STRING|MF_POPUP, (UINT_PTR)CatMenu.m_hMenu, GetResString(IDS_CHANGECATVIEW),_T("SEARCHPARAMS") );
 	menu.AppendMenu(MF_SEPARATOR);
-	menu.AppendMenu(MF_STRING|MF_POPUP,(UINT_PTR)PrioMenu.m_hMenu, GetResString(IDS_PRIORITY), _T("FILEPRIORITY") );
+	menu.AppendMenu(MF_STRING|MF_POPUP, (UINT_PTR)PrioMenu.m_hMenu, GetResString(IDS_PRIORITY), _T("FILEPRIORITY") );
 	menu.AppendMenu(MF_STRING,MP_CANCEL,GetResString(IDS_MAIN_BTN_CANCEL),_T("DELETE") );
 	menu.AppendMenu(MF_STRING,MP_STOP, GetResString(IDS_DL_STOP),_T("STOP"));
 	menu.AppendMenu(MF_STRING,MP_PAUSE, GetResString(IDS_DL_PAUSE), _T("PAUSE"));
@@ -839,7 +838,7 @@ void CTransferWnd::OnLvnBeginDragDownloadList(NMHDR *pNMHDR, LRESULT *pResult)
 	int iSel = downloadlistctrl.GetSelectionMark();
 	if (iSel == -1)
 		return;
-	if (((CtrlItem_Struct *)downloadlistctrl.GetItemData(iSel))->type != FILE_TYPE)
+	if (reinterpret_cast<CtrlItem_Struct *>(downloadlistctrl.GetItemData(iSel))->type != FILE_TYPE)
 		return;
 
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
@@ -905,31 +904,25 @@ void CTransferWnd::OnLButtonUp(UINT /*nFlags*/, CPoint /*point*/)
 		m_pDragImage = NULL;
 
 		if (   m_nDropIndex > -1
-			&& (   downloadlistctrl.curTab == 0
-				|| (downloadlistctrl.curTab > 0 && (UINT)m_nDropIndex != downloadlistctrl.curTab)))
+			&& (downloadlistctrl.curTab == 0 || (UINT)m_nDropIndex != downloadlistctrl.curTab))
 		{
 			// for multiselections
 			CTypedPtrList<CPtrList, CPartFile *> selectedList;
-			POSITION pos = downloadlistctrl.GetFirstSelectedItemPosition();
-			while (pos != NULL)
-			{
+			for (POSITION pos = downloadlistctrl.GetFirstSelectedItemPosition(); pos != NULL;) {
 				int index = downloadlistctrl.GetNextSelectedItem(pos);
-				if (index > -1 && (((CtrlItem_Struct *)downloadlistctrl.GetItemData(index))->type == FILE_TYPE))
-					selectedList.AddTail((CPartFile *)((CtrlItem_Struct *)downloadlistctrl.GetItemData(index))->value);
+				if (index > -1) {
+					const CtrlItem_Struct *pItem = reinterpret_cast<CtrlItem_Struct *>(downloadlistctrl.GetItemData(index));
+					if (pItem->type == FILE_TYPE)
+						selectedList.AddTail(reinterpret_cast<CPartFile *>(pItem->value));
+				}
 			}
 
 			while (!selectedList.IsEmpty())
-			{
-				CPartFile *file = selectedList.GetHead();
-				selectedList.RemoveHead();
-				file->SetCategory(m_nDropIndex);
-			}
-
+				selectedList.RemoveHead()->SetCategory(m_nDropIndex);
 			m_dlTab.SetCurSel(downloadlistctrl.curTab);
 			downloadlistctrl.UpdateCurrentCategoryView();
 			UpdateCatTabTitles();
-		}
-		else
+		} else
 			m_dlTab.SetCurSel(downloadlistctrl.curTab);
 		downloadlistctrl.Invalidate();
 	}
@@ -952,7 +945,7 @@ BOOL CTransferWnd::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 		{
 			if (wParam-MP_CAT_SET0<1)	// dont negate all filter
 				thePrefs.SetCatFilterNeg(m_isetcatmenu, false);
-			thePrefs.SetCatFilter(m_isetcatmenu,wParam-MP_CAT_SET0);
+			thePrefs.SetCatFilter(m_isetcatmenu, (int)(wParam-MP_CAT_SET0));
 			m_nLastCatTT=-1;
 		}
 
@@ -1187,7 +1180,7 @@ int CTransferWnd::AddCategory(const CString& newtitle, const CString& newincomin
 	newcat->care4all = false;
 	newcat->color = (DWORD)-1;
 
-	int index = thePrefs.AddCat(newcat);
+	int index = (int)thePrefs.AddCat(newcat);
 	if (addTab)
 		m_dlTab.InsertItem(index, newtitle);
 	VerifyCatTabSize();
@@ -1331,7 +1324,7 @@ CString CTransferWnd::GetTabStatistic(int tab)
 	}
 
 	CString title;
-	title.Format(_T("%s: %i\n\n%s: %i\n%s: %i\n%s: %i\n%s: %i\n\n%s: %s\n\n%s: %.1f %s\n%s: %s/%s\n%s%s")
+	title.Format(_T("%s: %i\n\n%s: %i\n%s: %i\n%s: %i\n%s: %i\n\n%s: %s\n\n%s: %.1f %s\n%s: %s/%s\n%s%s") TOOLTIP_AUTOFORMAT_SUFFIX
 		, (LPCTSTR)GetResString(IDS_FILES), count + compl
 		, (LPCTSTR)GetResString(IDS_DOWNLOADING), dwl
 		, (LPCTSTR)GetResString(IDS_PAUSED), paus
@@ -1340,8 +1333,9 @@ CString CTransferWnd::GetTabStatistic(int tab)
 		, (LPCTSTR)GetResString(IDS_PRIORITY), (LPCTSTR)GetResString(idsprio)
 		, (LPCTSTR)GetResString(IDS_DL_SPEED), speed, (LPCTSTR)GetResString(IDS_KBYTESPERSEC)
 		, (LPCTSTR)GetResString(IDS_DL_SIZE), (LPCTSTR)CastItoXBytes(trsize, false, false), (LPCTSTR)CastItoXBytes(size, false, false)
-		, (LPCTSTR)GetResString(IDS_ONDISK), (LPCTSTR)CastItoXBytes(disksize, false, false));
-	return title + TOOLTIP_AUTOFORMAT_SUFFIX_CH;
+		, (LPCTSTR)GetResString(IDS_ONDISK), (LPCTSTR)CastItoXBytes(disksize, false, false)
+		);
+	return title;
 }
 
 void CTransferWnd::OnDblClickDltab()
@@ -1427,7 +1421,7 @@ CString CTransferWnd::GetCatTitle(int catid)
 		  IDS_ALL, IDS_ALLOTHERS, IDS_STATUS_NOTCOMPLETED, IDS_DL_TRANSFCOMPL, IDS_WAITING
 		, IDS_DOWNLOADING, IDS_ERRORLIKE, IDS_PAUSED, IDS_SEENCOMPL, 0
 		, IDS_VIDEO, IDS_AUDIO, IDS_SEARCH_ARC, IDS_SEARCH_CDIMG, IDS_SEARCH_DOC
-		, IDS_SEARCH_PICS , IDS_SEARCH_PRG, 0, IDS_REGEXPRESSION};
+		, IDS_SEARCH_PICS, IDS_SEARCH_PRG, 0, IDS_REGEXPRESSION};
 	if (catid >= 0 && catid < 17)
 		catid = idscat[catid];
 	return catid ? GetResString((UINT)catid) : CString(_T("?"));
@@ -1467,7 +1461,7 @@ void CTransferWnd::SetWnd1Icon(EWnd1Icon iIcon)
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_IMAGE;
 	tbbi.iImage = iIcon;
-	m_btnWnd1->SetButtonInfo(GetWindowLongPtr(*m_btnWnd1, GWLP_ID), &tbbi);
+	m_btnWnd1->SetButtonInfo((int)GetWindowLongPtr(*m_btnWnd1, GWLP_ID), &tbbi);
 }
 
 void CTransferWnd::SetWnd2Icon(EWnd2Icon iIcon)
@@ -1476,7 +1470,7 @@ void CTransferWnd::SetWnd2Icon(EWnd2Icon iIcon)
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_IMAGE;
 	tbbi.iImage = iIcon;
-	m_btnWnd2->SetButtonInfo(GetWindowLongPtr(*m_btnWnd2, GWLP_ID), &tbbi);
+	m_btnWnd2->SetButtonInfo((int)GetWindowLongPtr(*m_btnWnd2, GWLP_ID), &tbbi);
 }
 
 void CTransferWnd::ShowList(uint32 dwListIDC)
@@ -1564,7 +1558,7 @@ void CTransferWnd::ShowSplitWindow(bool bReDraw)
 	LONG splitpos = (thePrefs.GetSplitterbarPosition() * rcWnd.Height()) / 100;
 
 	// do some more magic, don't ask -- just fix it..
-	if (bReDraw || m_dwShowListIDC != 0 && m_dwShowListIDC != IDC_DOWNLOADLIST + IDC_UPLOADLIST)
+	if (bReDraw || (m_dwShowListIDC != 0 && m_dwShowListIDC != IDC_DOWNLOADLIST + IDC_UPLOADLIST))
 		splitpos += 10;
 
 	CRect rcDown;

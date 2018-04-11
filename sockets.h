@@ -49,7 +49,7 @@ public:
 	void	ConnectToAnyServer(UINT startAt, bool prioSort = false, bool isAuto = true, bool bNoCrypt = false);
 	void	ConnectToServer(CServer* server, bool multiconnect = false, bool bNoCrypt = false);
 	void	StopConnectionTry();
-	static  VOID CALLBACK RetryConnectTimer(HWND hWnd, UINT nMsg, UINT_PTR nId, DWORD dwTime);
+	static  VOID CALLBACK RetryConnectTimer(HWND hWnd, UINT nMsg, UINT_PTR nId, DWORD dwTime) noexcept;
 
 	void	CheckForTimeout();
 	void	DestroySocket(CServerSocket* pSck);	// safe socket closure and destruction
@@ -88,7 +88,7 @@ private:
 	CServerSocket* connectedsocket;
 	CUDPSocket* udpsocket;
 	CPtrList m_lstOpenSockets;	// list of currently opened sockets
-	UINT	m_idRetryTimer;
+	UINT_PTR	m_idRetryTimer;
 	uint32	m_nLocalIP;
 	CMap<ULONG, ULONG, CServerSocket*, CServerSocket*> connectionattemps;
 };

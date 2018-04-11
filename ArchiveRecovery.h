@@ -165,19 +165,17 @@ struct ACE_BlockFile
 	uint32  TECHINFO;
 	uint16  RESERVED;
 	uint16  FNAME_SIZE;
-	// fname
 	uint16  COMM_SIZE;
-	// comment
-
 	char*	FNAME;
 	char*	COMMENT;
 	uint64  data_offset;
-	ACE_BlockFile() {
-		FNAME=NULL;
-		COMMENT=NULL;
-		COMM_SIZE=0;
+	
+	ACE_BlockFile()
+		: FNAME_SIZE(0), COMM_SIZE(0), FNAME(NULL), COMMENT(NULL)
+	{
 	}
-	~ACE_BlockFile() {
+	~ACE_BlockFile()
+	{
 		free(FNAME);
 		free(COMMENT);
 	}
@@ -348,7 +346,8 @@ struct ThreadParam
 };
 
 
-struct archiveinfo_s {
+struct archiveinfo_s
+{
 	CTypedPtrList<CPtrList, ZIP_CentralDirectory*> *centralDirectoryEntries;
 	CTypedPtrList<CPtrList, RAR_BlockFile*> *RARdir;
 	CTypedPtrList<CPtrList, ACE_BlockFile*> *ACEdir;
@@ -371,7 +370,8 @@ struct archiveinfo_s {
 		isoInfos.iJolietUnicode=0;
 	}
 };
-struct archiveScannerThreadParams_s {
+struct archiveScannerThreadParams_s
+{
 	CShareableFile*	file;
 	archiveinfo_s*	ai;
 	CTypedPtrList<CPtrList, Gap_Struct*> *filled;
@@ -379,7 +379,7 @@ struct archiveScannerThreadParams_s {
 	HWND			ownerHwnd;
 	HWND			progressHwnd;
 	int				curProgress;
-	bool			m_bIsValid;
+	volatile bool	m_bIsValid;
 };
 
 class CArchiveRecovery

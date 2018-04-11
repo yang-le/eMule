@@ -20,7 +20,7 @@ public:
 	void	RemoveAllDeadServers();
 	void	RemoveAllFilteredServers();
 	void	Hide()		{ ShowWindow(SW_HIDE); }
-	void	Visable()	{ ShowWindow(SW_SHOW); }
+	void	Visible()	{ ShowWindow(SW_SHOW); }
 	void	Localize();
 	void	ShowServerCount();
 	bool	StaticServerFileAppend(CServer* server);

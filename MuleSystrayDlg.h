@@ -18,14 +18,14 @@ protected:
 
 class CMuleSystrayDlg : public CDialog
 {
+	enum { IDD = IDD_MULETRAYDLG };
+
 // Construction
 public:
 	CMuleSystrayDlg(CWnd* pParent, CPoint pt, int iMaxUp, int iMaxDown, int iCurUp, int iCurDown);
 	~CMuleSystrayDlg();
     
-// Dialog Data
 	//{{AFX_DATA(CMuleSystrayDlg)
-	enum { IDD = IDD_MULETRAYDLG };
 	CStatic	m_ctrlUpArrow;
 	CStatic	m_ctrlDownArrow;
 	CGradientStatic	m_ctrlSidebar;

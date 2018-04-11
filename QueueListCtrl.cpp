@@ -61,7 +61,7 @@ CQueueListCtrl::CQueueListCtrl()
 	SetSkinKey(_T("QueuedLv"));
 
 	// Barry - Refresh the queue every 10 secs
-	VERIFY( (m_hTimer = ::SetTimer(NULL, NULL, 10000, QueueUpdateTimer)) != NULL );
+	VERIFY( (m_hTimer = ::SetTimer(NULL, NULL, SEC2MS(10), QueueUpdateTimer)) != NULL );
 	if (thePrefs.GetVerbose() && !m_hTimer)
 		AddDebugLogLine(true,_T("Failed to create 'queue list control' timer - %s"), (LPCTSTR)GetErrorMessage(GetLastError()));
 }
@@ -97,50 +97,20 @@ void CQueueListCtrl::Init()
 
 void CQueueListCtrl::Localize()
 {
+	static const UINT uids[10] = {
+		IDS_QL_USERNAME, IDS_FILE, IDS_FILEPRIO, IDS_QL_RATING, IDS_SCORE
+		, IDS_ASKED, IDS_LASTSEEN, IDS_ENTERQUEUE, IDS_BANNED, IDS_UPSTATUS
+	};
+
 	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
 	HDITEM hdi;
 	hdi.mask = HDI_TEXT;
 
-	CString strRes;
-	strRes = GetResString(IDS_QL_USERNAME);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(0, &hdi);
-
-	strRes = GetResString(IDS_FILE);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(1, &hdi);
-
-	strRes = GetResString(IDS_FILEPRIO);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(2, &hdi);
-
-	strRes = GetResString(IDS_QL_RATING);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(3, &hdi);
-
-	strRes = GetResString(IDS_SCORE);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(4, &hdi);
-
-	strRes = GetResString(IDS_ASKED);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(5, &hdi);
-
-	strRes = GetResString(IDS_LASTSEEN);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(6, &hdi);
-
-	strRes = GetResString(IDS_ENTERQUEUE);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(7, &hdi);
-
-	strRes = GetResString(IDS_BANNED);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(8, &hdi);
-
-	strRes = GetResString(IDS_UPSTATUS);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(9, &hdi);
+	for (int i = 0; i < _countof(uids); ++i) {
+		CString strRes(GetResString(uids[i]));
+		hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
+		pHeaderCtrl->SetItem(i, &hdi);
+	}
 }
 
 void CQueueListCtrl::OnSysColorChange()
@@ -377,11 +347,11 @@ void CQueueListCtrl::GetItemDisplayText(const CUpDownClient *client, int iSubIte
 			break;
 
 		case 6:
-			_tcsncpy(pszText, (LPCTSTR)CastSecondsToHM((GetTickCount() - client->GetLastUpRequest()) / SEC2MS(1)), cchTextMax);
+			_tcsncpy(pszText, (LPCTSTR)CastSecondsToHM((::GetTickCount() - client->GetLastUpRequest()) / SEC2MS(1)), cchTextMax);
 			break;
 
 		case 7:
-			_tcsncpy(pszText, (LPCTSTR)CastSecondsToHM((GetTickCount() - client->GetWaitStartTime()) / SEC2MS(1)), cchTextMax);
+			_tcsncpy(pszText, (LPCTSTR)CastSecondsToHM((::GetTickCount() - client->GetWaitStartTime()) / SEC2MS(1)), cchTextMax);
 			break;
 
 		case 8:
@@ -453,9 +423,9 @@ void CQueueListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 int CALLBACK CQueueListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const CUpDownClient *item1 = reinterpret_cast<const CUpDownClient *>(lParam1);
-	const CUpDownClient *item2 = reinterpret_cast<const CUpDownClient *>(lParam2);
-	int iColumn = (lParamSort >= 100) ? lParamSort - 100 : lParamSort;
+	const CUpDownClient *item1 = reinterpret_cast<CUpDownClient *>(lParam1);
+	const CUpDownClient *item2 = reinterpret_cast<CUpDownClient *>(lParam2);
+	LPARAM iColumn = (lParamSort >= 100) ? lParamSort - 100 : lParamSort;
 	int iResult = 0;
 	switch (iColumn)
 	{
@@ -526,7 +496,7 @@ int CALLBACK CQueueListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lPa
 
 	//call secondary sortorder, if this one results in equal
 	if (iResult == 0) {
-		LPARAM dwNextSort = theApp.emuledlg->transferwnd->GetQueueList()->GetNextSortOrder(lParamSort);
+		int dwNextSort = theApp.emuledlg->transferwnd->GetQueueList()->GetNextSortOrder((int)lParamSort);
 		if (dwNextSort != -1)
 			iResult = SortProc(lParam1, lParam2, dwNextSort);
 	}
@@ -700,7 +670,7 @@ void CQueueListCtrl::ShowQueueClients()
 }
 
 // Barry - Refresh the queue every 10 secs
-void CALLBACK CQueueListCtrl::QueueUpdateTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT_PTR /*idEvent*/, DWORD /*dwTime*/)
+void CALLBACK CQueueListCtrl::QueueUpdateTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT_PTR /*idEvent*/, DWORD /*dwTime*/) noexcept
 {
 	// NOTE: Always handle all type of MFC exceptions in TimerProcs - otherwise we'll get mem leaks
 	try

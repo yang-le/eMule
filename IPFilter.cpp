@@ -44,18 +44,16 @@ CIPFilter::CIPFilter()
 
 CIPFilter::~CIPFilter()
 {
-	if (m_bModified)
-	{
-		try{
+	if (m_bModified) {
+		try {
 			SaveToDefaultFile();
-		}
-		catch(const CString&) {
+		} catch (const CString&) {
 		}
 	}
 	RemoveAllIPFilters();
 }
 
-static int __cdecl CmpSIPFilterByStartAddr(const void* p1, const void* p2)
+static int __cdecl CmpSIPFilterByStartAddr(const void* p1, const void* p2) noexcept
 {
 	const SIPFilter* rng1 = *(SIPFilter**)p1;
 	const SIPFilter* rng2 = *(SIPFilter**)p2;
@@ -67,15 +65,15 @@ CString CIPFilter::GetDefaultFilePath()
 	return thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + DFLT_IPFILTER_FILENAME;
 }
 
-int CIPFilter::LoadFromDefaultFile(bool bShowResponse)
+INT_PTR	CIPFilter::LoadFromDefaultFile(bool bShowResponse)
 {
 	RemoveAllIPFilters();
 	return AddFromFile(GetDefaultFilePath(), bShowResponse);
 }
 
-int CIPFilter::AddFromFile(LPCTSTR pszFilePath, bool bShowResponse)
+INT_PTR CIPFilter::AddFromFile(LPCTSTR pszFilePath, bool bShowResponse)
 {
-	DWORD dwStart = GetTickCount();
+	DWORD dwStart = ::GetTickCount();
 	FILE* readFile = _tfsopen(pszFilePath, _T("r"), _SH_DENYWR);
 	if (readFile != NULL)
 	{
@@ -289,7 +287,7 @@ int CIPFilter::AddFromFile(LPCTSTR pszFilePath, bool bShowResponse)
 
 		if (thePrefs.GetVerbose())
 		{
-			DWORD dwEnd = GetTickCount();
+			DWORD dwEnd = ::GetTickCount();
 			AddDebugLogLine(false, _T("Loaded IP filters from \"%s\""), pszFilePath);
 			AddDebugLogLine(false, _T("Parsed lines/entries:%u  Found IP ranges:%u  Duplicate:%u  Merged:%u  Time:%s"), iLine, iFoundRanges, iDuplicate, iMerged, (LPCTSTR)CastSecondsToHM((dwEnd-dwStart+500)/1000));
 		}
@@ -366,7 +364,7 @@ bool CIPFilter::ParseFilterLine1(const CStringA& sbuffer, uint32& ip1, uint32& i
 			if (*(pszDescStart + iDescLen - 1) == '\n')
 				--iDescLen;
 		}
-		memcpy(desc.GetBuffer(iDescLen), pszDescStart, iDescLen * sizeof(pszDescStart[0]));
+		memcpy(desc.GetBuffer(iDescLen), pszDescStart, iDescLen * (sizeof pszDescStart[0]));
 		desc.ReleaseBuffer(iDescLen);
 	}
 
@@ -416,7 +414,7 @@ bool CIPFilter::IsFiltered(uint32 ip) /*const*/
 	return IsFiltered(ip, thePrefs.GetIPFilterLevel());
 }
 
-static int __cdecl CmpSIPFilterByAddr(const void* pvKey, const void* pvElement)
+static int __cdecl CmpSIPFilterByAddr(const void* pvKey, const void* pvElement) noexcept
 {
 	uint32 ip = *(uint32*)pvKey;
 	const SIPFilter* pIPFilter = *(SIPFilter**)pvElement;
@@ -443,10 +441,10 @@ bool CIPFilter::IsFiltered(uint32 ip, UINT level) /*const*/
 	//
 	// TODO: this can still be improved even more:
 	//	*)	use a pre assembled list of IP ranges which contains only the IP ranges for the currently used filter level
-	//	*)	use a dumb plain array for storing the IP range structures. this will give more cach hits when processing
+	//	*)	use a dumb plain array for storing the IP range structures. this will give more cache hits when processing
 	//		the list. but(!) this would require to also use a dumb SIPFilter structure (don't use data items with ctors).
 	//		otherwise the creation of the array would be rather slow.
-	SIPFilter** ppFound = (SIPFilter**)bsearch(&ip, m_iplist.GetData(), m_iplist.GetCount(), sizeof(m_iplist[0]), CmpSIPFilterByAddr);
+	SIPFilter** ppFound = (SIPFilter**)bsearch(&ip, m_iplist.GetData(), m_iplist.GetCount(), sizeof m_iplist[0], CmpSIPFilterByAddr);
 	if (ppFound && (*ppFound)->level < level)
 	{
 		(*ppFound)->hits++;
@@ -469,10 +467,8 @@ const CIPFilterArray& CIPFilter::GetIPFilter() const
 
 bool CIPFilter::RemoveIPFilter(const SIPFilter* pFilter)
 {
-	for (int i = 0; i < m_iplist.GetCount(); i++)
-	{
-		if (m_iplist[i] == pFilter)
-		{
+	for (INT_PTR i = 0; i < m_iplist.GetCount(); ++i) {
+		if (m_iplist[i] == pFilter) {
 			delete m_iplist[i];
 			m_iplist.RemoveAt(i);
 			return true;

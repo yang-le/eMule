@@ -17,14 +17,13 @@ class CPPgNotify : public CPropertyPage
 {
 	DECLARE_DYNAMIC(CPPgNotify)
 
+	enum { IDD = IDD_PPG_NOTIFY };
+
 public:
 	CPPgNotify();
 	virtual ~CPPgNotify();	
 
 	void Localize();
-
-// Dialog Data
-	enum { IDD = IDD_PPG_NOTIFY };
 
 protected:
 	bool m_bEnableEMail;

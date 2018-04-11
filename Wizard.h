@@ -3,11 +3,12 @@
 class CConnectionWizardDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CConnectionWizardDlg)
+
+	enum { IDD = IDD_WIZARD };
+
 public:
 	explicit CConnectionWizardDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CConnectionWizardDlg();
-
-	enum { IDD = IDD_WIZARD };
 
 	void Localize();
 

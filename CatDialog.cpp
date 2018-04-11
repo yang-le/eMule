@@ -83,7 +83,7 @@ BOOL CCatDialog::OnInitDialog()
 	}
 	if (theApp.m_fontSymbol.m_hObject){
 		GetDlgItem(IDC_REB)->SetFont(&theApp.m_fontSymbol);
-		GetDlgItem(IDC_REB)->SetWindowText(_T("6")); // show a down-arrow
+		SetDlgItemText(IDC_REB, _T("6")); // show a down-arrow
 	}
 
 	return TRUE;
@@ -91,9 +91,9 @@ BOOL CCatDialog::OnInitDialog()
 
 void CCatDialog::UpdateData()
 {
-	GetDlgItem(IDC_TITLE)->SetWindowText(m_myCat->strTitle);
-	GetDlgItem(IDC_INCOMING)->SetWindowText(m_myCat->strIncomingPath);
-	GetDlgItem(IDC_COMMENT)->SetWindowText(m_myCat->strComment);
+	SetDlgItemText(IDC_TITLE, m_myCat->strTitle);
+	SetDlgItemText(IDC_INCOMING, m_myCat->strIncomingPath);
+	SetDlgItemText(IDC_COMMENT, m_myCat->strComment);
 
 	if (m_myCat->filter==18)
 		SetDlgItemText(IDC_REGEXP,m_myCat->regexp);
@@ -103,7 +103,7 @@ void CCatDialog::UpdateData()
 	newcolor = m_myCat->color;
 	m_ctlColor.SetColor(m_myCat->color == (DWORD)-1 ? m_ctlColor.GetDefaultColor() : m_myCat->color);
 
-	GetDlgItem(IDC_AUTOCATEXT)->SetWindowText(m_myCat->autocat);
+	SetDlgItemText(IDC_AUTOCATEXT, m_myCat->autocat);
 
 	m_prio.SetCurSel(m_myCat->prio);
 }
@@ -117,15 +117,15 @@ void CCatDialog::DoDataExchange(CDataExchange* pDX)
 
 void CCatDialog::Localize()
 {
-	GetDlgItem(IDC_STATIC_TITLE)->SetWindowText(GetResString(IDS_TITLE));
-	GetDlgItem(IDC_STATIC_INCOMING)->SetWindowText(GetResString(IDS_PW_INCOMING) + _T("  ") + GetResString(IDS_SHAREWARNING) );
-	GetDlgItem(IDC_STATIC_COMMENT)->SetWindowText(GetResString(IDS_COMMENT));
-	GetDlgItem(IDCANCEL)->SetWindowText(GetResString(IDS_CANCEL));
-	GetDlgItem(IDC_STATIC_COLOR)->SetWindowText(GetResString(IDS_COLOR));
-	GetDlgItem(IDC_STATIC_PRIO)->SetWindowText(GetResString(IDS_STARTPRIO));
-	GetDlgItem(IDC_STATIC_AUTOCAT)->SetWindowText(GetResString(IDS_AUTOCAT_LABEL));
-	GetDlgItem(IDC_REGEXPR)->SetWindowText(GetResString(IDS_ASREGEXPR));
-	GetDlgItem(IDOK)->SetWindowText(GetResString(IDS_TREEOPTIONS_OK));
+	SetDlgItemText(IDC_STATIC_TITLE, GetResString(IDS_TITLE));
+	SetDlgItemText(IDC_STATIC_INCOMING, GetResString(IDS_PW_INCOMING) + _T("  ") + GetResString(IDS_SHAREWARNING));
+	SetDlgItemText(IDC_STATIC_COMMENT, GetResString(IDS_COMMENT));
+	SetDlgItemText(IDCANCEL, GetResString(IDS_CANCEL));
+	SetDlgItemText(IDC_STATIC_COLOR, GetResString(IDS_COLOR));
+	SetDlgItemText(IDC_STATIC_PRIO, GetResString(IDS_STARTPRIO));
+	SetDlgItemText(IDC_STATIC_AUTOCAT, GetResString(IDS_AUTOCAT_LABEL));
+	SetDlgItemText(IDC_REGEXPR, GetResString(IDS_ASREGEXPR));
+	SetDlgItemText(IDOK, GetResString(IDS_TREEOPTIONS_OK));
 
 	m_ctlColor.CustomText = GetResString(IDS_COL_MORECOLORS);
 	m_ctlColor.DefaultText = GetResString(IDS_DEFAULT);
@@ -145,20 +145,20 @@ void CCatDialog::OnBnClickedBrowse()
 {
 	TCHAR buffer[MAX_PATH] = {};
 	GetDlgItemText(IDC_INCOMING, buffer, _countof(buffer));
-	if (SelectDir(GetSafeHwnd(), buffer,GetResString(IDS_SELECT_INCOMINGDIR)))
-		GetDlgItem(IDC_INCOMING)->SetWindowText(buffer);
+	if (SelectDir(GetSafeHwnd(), buffer, GetResString(IDS_SELECT_INCOMINGDIR)))
+		SetDlgItemText(IDC_INCOMING, buffer);
 }
 
 void CCatDialog::OnBnClickedOk()
 {
 	CString oldpath = m_myCat->strIncomingPath;
-	if (GetDlgItem(IDC_TITLE)->GetWindowTextLength()>0)
-		GetDlgItem(IDC_TITLE)->GetWindowText(m_myCat->strTitle);
+	if (GetDlgItem(IDC_TITLE)->GetWindowTextLength() > 0)
+		GetDlgItemText(IDC_TITLE, m_myCat->strTitle);
 
-	if (GetDlgItem(IDC_INCOMING)->GetWindowTextLength()>2)
-		GetDlgItem(IDC_INCOMING)->GetWindowText(m_myCat->strIncomingPath);
+	if (GetDlgItem(IDC_INCOMING)->GetWindowTextLength() > 2)
+		GetDlgItemText(IDC_INCOMING, m_myCat->strIncomingPath);
 
-	GetDlgItem(IDC_COMMENT)->GetWindowText(m_myCat->strComment);
+	GetDlgItemText(IDC_COMMENT, m_myCat->strComment);
 
 	m_myCat->ac_regexpeval= IsDlgButtonChecked(IDC_REGEXPR)>0;
 
@@ -181,9 +181,9 @@ void CCatDialog::OnBnClickedOk()
 
 	m_myCat->color = newcolor;
 	m_myCat->prio = m_prio.GetCurSel();
-	GetDlgItem(IDC_AUTOCATEXT)->GetWindowText(m_myCat->autocat);
+	GetDlgItemText(IDC_AUTOCATEXT, m_myCat->autocat);
 
-	GetDlgItemText(IDC_REGEXP,m_myCat->regexp);
+	GetDlgItemText(IDC_REGEXP, m_myCat->regexp);
 	if (m_myCat->regexp.GetLength()>0) {
 		if (m_pacRegExp && m_pacRegExp->IsBound()){
 			m_pacRegExp->AddItem(m_myCat->regexp,0);

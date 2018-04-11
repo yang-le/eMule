@@ -32,9 +32,9 @@
 
 using namespace dami;
 
-#if !defined HAVE_MKSTEMP
-#  include <stdio.h>
-#endif
+//#if !defined HAVE_MKSTEMP
+//#  include <stdio.h>
+//#endif
 
 #if defined HAVE_UNISTD_H
 #  include <unistd.h>
@@ -44,7 +44,7 @@ using namespace dami;
 #  include <sys/stat.h>
 #endif
 
-#if defined WIN32 && (!defined(WINCE))
+#if defined _WIN32 && (!defined(WINCE))
 #  include <windows.h>
 static int truncate(const char *path, size_t length)
 {
@@ -52,16 +52,13 @@ static int truncate(const char *path, size_t length)
   HANDLE fh;
 
   fh = ::CreateFile(
-#ifdef _UNICODE
-           (LPCWSTR)
-#endif
-                    path,
-                    GENERIC_WRITE | GENERIC_READ,
-                    0,
-                    NULL,
-                    OPEN_EXISTING,
-                    FILE_ATTRIBUTE_NORMAL,
-                    NULL);
+           (LPCTSTR)path,
+           GENERIC_WRITE | GENERIC_READ,
+           0,
+           NULL,
+           OPEN_EXISTING,
+           FILE_ATTRIBUTE_NORMAL,
+           NULL);
 
   if(INVALID_HANDLE_VALUE != fh)
   {
@@ -250,8 +247,8 @@ size_t RenderV2ToFile(const ID3_TagImpl& tag, fstream& file)
       //ID3_THROW_DESC(ID3E_NoFile, "filename too long");
     }
     char sTempFile[ID3_PATH_LENGTH];
-    strcpy(sTempFile, filename.c_str());
-    strcat(sTempFile, sTmpSuffix.c_str());
+    strcpy_s(sTempFile, ID3_PATH_LENGTH, filename.c_str());
+    strcat_s(sTempFile, ID3_PATH_LENGTH, sTmpSuffix.c_str());
 
 #if ((defined(__GNUC__) && __GNUC__ >= 3  ) || !defined(HAVE_MKSTEMP))
     // This section is for Windows folk && gcc 3.x folk

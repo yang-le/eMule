@@ -47,25 +47,25 @@ public:
 	CFont* GetFont() const;
 
 protected:
-//	bool m_bRichEdit;
-	int m_iLimitText;
-	bool m_bAutoScroll;
-	CStringArray m_astrBuff;
-	bool m_bNoPaint;
-	bool m_bEnErrSpace;
-	CString m_strTitle;
-	CString m_strSkinKey;
-	bool m_bRestoreFormat;
 	CHARFORMAT2 m_cfDefault;
-	bool m_bForceArrowCursor;
+	CStringArray m_astrBuff;
+	CString m_strSkinKey;
+	CString m_strTitle;
 	HCURSOR m_hArrowCursor;
-	bool m_bEnableSmileys;
-	COLORREF m_crForeground;
+	int m_iLimitText;
 	COLORREF m_crBackground;
+	COLORREF m_crDfltBackground;
+	COLORREF m_crForeground;
+	COLORREF m_crDfltForeground;
+	bool m_bAutoScroll;
+	bool m_bEnableSmileys;
+	bool m_bEnErrSpace;
+	bool m_bForceArrowCursor;
+	bool m_bNoPaint;
+	bool m_bRestoreFormat;
+//	bool m_bRichEdit;
 	bool m_bDfltForeground;
 	bool m_bDfltBackground;
-	COLORREF m_crDfltForeground;
-	COLORREF m_crDfltBackground;
 	static int sm_iSmileyClients;
 	static CComPtr<IStorage> sm_pIStorageSmileys;
 	static CMapStringToPtr sm_aSmileyBitmaps;
@@ -77,8 +77,8 @@ protected:
 	void SafeAddLine(int nPos, LPCTSTR pszLine, int iLen, long& lStartChar, long& lEndChar, bool bLink, COLORREF cr, COLORREF bk, DWORD mask);
 	void FlushBuffer();
 	void AddString(int nPos, LPCTSTR pszString, bool bLink, COLORREF cr, COLORREF bk, DWORD mask);
-	bool InsertSmiley(LPCTSTR pszSmileyID);
-	HBITMAP GetSmileyBitmap(LPCTSTR pszSmileyID);
+	bool InsertSmiley(LPCTSTR pszSmileyID, COLORREF bk);
+	HBITMAP GetSmileyBitmap(LPCTSTR pszSmileyID, COLORREF bk);
 	void AddSmileys(LPCTSTR pszLine);
 	void PurgeSmileyCaches();
 

@@ -255,11 +255,11 @@ bool CxImage::Mirror(bool bMirrorSelection, bool bMirrorAlpha)
 	int32_t wdt=(head.biWidth-1) * (head.biBitCount==24 ? 3:1);
 	iSrc=info.pImage + wdt;
 	iDst=imatmp->info.pImage;
-	int32_t x,y;
+
 	switch (head.biBitCount){
 	case 24:
-		for(y=0; y < head.biHeight; y++){
-			for(x=0; x <= wdt; x+=3){
+		for (int32_t y=0; y < head.biHeight; ++y) {
+			for (int32_t x=0; x <= wdt; x+=3) {
 				*(iDst+x)=*(iSrc-x);
 				*(iDst+x+1)=*(iSrc-x+1);
 				*(iDst+x+2)=*(iSrc-x+2);
@@ -269,16 +269,16 @@ bool CxImage::Mirror(bool bMirrorSelection, bool bMirrorAlpha)
 		}
 		break;
 	case 8:
-		for(y=0; y < head.biHeight; y++){
-			for(x=0; x <= wdt; x++)
+		for(int32_t y=0; y < head.biHeight; ++y) {
+			for(int32_t x=0; x <= wdt; ++x)
 				*(iDst+x)=*(iSrc-x);
 			iSrc+=info.dwEffWidth;
 			iDst+=info.dwEffWidth;
 		}
 		break;
 	default:
-		for(y=0; y < head.biHeight; y++){
-			for(x=0; x <= wdt; x++)
+		for (int32_t y=0; y < head.biHeight; ++y) {
+			for (int32_t x=0; x <= wdt; ++x)
 				imatmp->SetPixelIndex(x,y,GetPixelIndex(wdt-x,y));
 		}
 	}
@@ -416,16 +416,16 @@ bool CxImage::RotateLeft(CxImage* iDst)
 					for (x = xs; x < min(newWidth, xs+RBLOCK); x++){
 						info.nProgress = (int32_t)(100*x/newWidth); //<Anatoly Ivasyuk>
 						int32_t x2 = newWidth-x-1;
-						for (y = ys; y < min(newHeight, ys+RBLOCK); y++){
+						for (y = ys; y < min(newHeight, ys+RBLOCK); ++y) {
 							imgDest.SetPixelIndex(x, y, BlindGetPixelIndex(y, x2));
 						}//for y
 					}//for x
 				}//if (version selection)
 #if CXIMAGE_SUPPORT_ALPHA
 				if (AlphaIsValid()) {
-					for (x = xs; x < min(newWidth, xs+RBLOCK); x++){
+					for (x = xs; x < min(newWidth, xs+RBLOCK); ++x) {
 						int32_t x2 = newWidth-x-1;
-						for (y = ys; y < min(newHeight, ys+RBLOCK); y++){
+						for (y = ys; y < min(newHeight, ys+RBLOCK); ++y) {
 							imgDest.AlphaSet(x,y,BlindAlphaGet(y, x2));
 						}//for y
 					}//for x
@@ -438,9 +438,9 @@ bool CxImage::RotateLeft(CxImage* iDst)
 					imgDest.info.rSelectionBox.right = newWidth-info.rSelectionBox.bottom;
 					imgDest.info.rSelectionBox.bottom = info.rSelectionBox.left;
 					imgDest.info.rSelectionBox.top = info.rSelectionBox.right;
-					for (x = xs; x < min(newWidth, xs+RBLOCK); x++){
+					for (x = xs; x < min(newWidth, xs+RBLOCK); ++x) {
 						int32_t x2 = newWidth-x-1;
-						for (y = ys; y < min(newHeight, ys+RBLOCK); y++){
+						for (y = ys; y < min(newHeight, ys+RBLOCK); ++y) {
 							imgDest.SelectionSet(x,y,BlindSelectionGet(y, x2));
 						}//for y
 					}//for x
@@ -1943,29 +1943,28 @@ bool CxImage::Dither(int32_t method)
 		// Bayer ordered dither
 		int32_t order = 4;
 		//create Bayer matrix
-		if (order>4) order = 4;
+		if (order > 4)
+			order = 4;
 		int32_t size = (1 << (2*order));
 		uint8_t* Bmatrix = (uint8_t*) malloc(size * sizeof(uint8_t));
-		for(int32_t i = 0; i < size; i++) {
-			int32_t n = order;
-			int32_t x = i / n;
-			int32_t y = i % n;
+		for (int32_t i = 0; i < size; ++i) {
+			int32_t x = i / order;
+			int32_t y = i % order;
 			int32_t dither = 0;
-			while (n-- > 0){
+			for (int32_t n = order; --n >= 0;) {
 				dither = (((dither<<1)|((x&1) ^ (y&1)))<<1) | (y&1);
 				x >>= 1;
 				y >>= 1;
 			}
-			Bmatrix[i] = (uint8_t)(dither);
+			Bmatrix[i] = (uint8_t)dither;
 		}
 
 		int32_t scale = max(0,(8-2*order));
-		int32_t level;
-		for (int32_t y=0;y<head.biHeight;y++){
+		for (int32_t y=0; y<head.biHeight; ++y){
 			info.nProgress = (int32_t)(100*y/head.biHeight);
 			if (info.nEscape) break;
-			for (int32_t x=0;x<head.biWidth;x++){
-				level = BlindGetPixelIndex(x,y) >> scale;
+			for (int32_t x=0; x<head.biWidth; ++x){
+				int32_t level = BlindGetPixelIndex(x,y) >> scale;
 				if(level > Bmatrix[ (x % order) + order * (y % order) ]){
 					tmp.SetPixelIndex(x,y,1);
 				} else {
@@ -2196,10 +2195,10 @@ bool CxImage::Crop(int32_t left, int32_t top, int32_t right, int32_t bottom, CxI
 	case 8:
 	case 24:
 	{
-		int32_t linelen = tmp.head.biWidth * tmp.head.biBitCount >> 3;
+		int32_t linelen = (tmp.head.biWidth * tmp.head.biBitCount) >> 3;
 		uint8_t* pDest = tmp.info.pImage;
 		uint8_t* pSrc = info.pImage + starty * info.dwEffWidth + (startx*head.biBitCount >> 3);
-		for(int32_t y=starty; y<endy; y++){
+		for(int32_t y=starty; y<endy; ++y){
 			info.nProgress = (int32_t)(100*(y-starty)/(endy-starty)); //<Anatoly Ivasyuk>
 			memcpy(pDest,pSrc,linelen);
 			pDest+=tmp.info.dwEffWidth;

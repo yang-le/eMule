@@ -18,14 +18,14 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 // Note To Mods //
 /*
-Please do not change anything here and release it..
-There is going to be a new forum created just for the Kademlia side of the client..
+Please do not change anything here and release it.
+There is going to be a new forum created just for the Kademlia side of the client.
 If you feel there is an error or a way to improve something, please
-post it in the forum first and let us look at it.. If it is a real improvement,
-it will be added to the offical client.. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form..
+post it in the forum first and let us look at it. If it is a real improvement,
+it will be added to the offical client. Changing something without knowing
+what all it does can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
-there client on the eMule forum..
+there client on the eMule forum.
 */
 #include "stdafx.h"
 #include <atlenc.h>
@@ -168,7 +168,7 @@ CKadTag *CDataIO::ReadTag(bool bOptACP)
 				// NOTE: This tag data type is accepted and stored only to give us the possibility to upgrade
 				// the net in some months.
 				//
-				// And still.. it doesnt't work this way without breaking backward compatibility. To properly
+				// And still... it doesnt't work this way without breaking backward compatibility. To properly
 				// do this without messing up the network the following would have to be done:
 				//	 -	those tag types have to be ignored by any client, otherwise those tags would also be sent (and
 				//		that's really the problem)
@@ -177,9 +177,9 @@ CKadTag *CDataIO::ReadTag(bool bOptACP)
 				//		never get stored in any tag list which might be sent by that client to some other client.
 				//
 				//	 -	all calling functions have to be changed to deal with the 'nr. of tags' attribute (which was
-				//		already parsed) correctly.. just ignoring those tags here is not enough, any taglists have to
+				//		already parsed) correctly... just ignoring those tags here is not enough, any taglists have to
 				//		be built with the knowledge that the 'nr. of tags' attribute may get decreased during the tag
-				//		reading..
+				//		reading.
 				//
 				// If those new tags would just be stored and sent to remote clients, any malicious or just bugged
 				// client could let send a lot of nodes "corrupted" packets...
@@ -219,7 +219,7 @@ CKadTag *CDataIO::ReadTag(bool bOptACP)
 				// NOTE: This tag data type is accepted and stored only to give us the possibility to upgrade
 				// the net in some months.
 				//
-				// And still.. it doesnt't work this way without breaking backward compatibility
+				// And still... it doesnt't work this way without breaking backward compatibility
 			case TAGTYPE_BSOB:
 				{
 					uint8 uSize;
@@ -537,7 +537,7 @@ void KadTagStrMakeLower(CKadTagValueString& rwstr)
 
 #if 0
 	//PROBLEM: LCMapStringW does not work on Win9x (the string is not changed and LCMapStringW returns 0!)
-	// Possible solution: use a pre-computed static character map..
+	// Possible solution: use a pre-computed static character map.
 	int iLen = rwstr.GetLength();
 	LPWSTR pwsz = rwstr.GetBuffer(iLen);
 	int iSize = LCMapStringW(MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT),
@@ -560,7 +560,7 @@ void KadTagStrMakeLower(CKadTagValueString& rwstr)
 #endif
 }
 
-int KadTagStrCompareNoCase(LPCWSTR dst, LPCWSTR src) throw()
+int KadTagStrCompareNoCase(LPCWSTR dst, LPCWSTR src) noexcept
 {
 	// NOTE: It's very important that the Unicode->LowerCase map already was initialized!
 	if (s_awcLowerMap[L'A'] != L'a')

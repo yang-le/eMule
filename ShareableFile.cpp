@@ -26,7 +26,7 @@ CShareableFile::CShareableFile()
 {
 }
 
-CString	CShareableFile::GetInfoSummary(bool bNoFormatCommands) const
+CString CShareableFile::GetInfoSummary(bool bNoFormatCommands) const
 {
 	CString strFolder = GetPath();
 	PathRemoveBackslash(strFolder.GetBuffer());
@@ -36,15 +36,17 @@ CString	CShareableFile::GetInfoSummary(bool bNoFormatCommands) const
 	if (strType.IsEmpty())
 		strType = _T("-");
 
-	CString strHeadFormatCommand = bNoFormatCommands ? _T("") : _T("<br_head>");
 	CString info;
 	info.Format(_T("%s\n")
-		+ GetResString(IDS_FD_SIZE) + _T(" %s\n") + strHeadFormatCommand + _T('\n')
-		+ GetResString(IDS_TYPE) + _T(": %s\n")
-		+ GetResString(IDS_FOLDER) + _T(": %s"),
-		(LPCTSTR)GetFileName(),
-		(LPCTSTR)CastItoXBytes(GetFileSize(), false, false),
-		(LPCTSTR)strType,
-		(LPCTSTR)strFolder);
+		_T("%s %s\n")
+		_T("%s\n")
+		_T("%s: %s\n")
+		_T("%s: %s")
+		, (LPCTSTR)GetFileName()
+		, (LPCTSTR)GetResString(IDS_FD_SIZE), (LPCTSTR)CastItoXBytes(GetFileSize(), false, false)
+		, bNoFormatCommands ? _T("") : _T("<br_head>")
+		, (LPCTSTR)GetResString(IDS_TYPE), (LPCTSTR)strType
+		, (LPCTSTR)GetResString(IDS_FOLDER), (LPCTSTR)strFolder
+	);
 	return info;
 }

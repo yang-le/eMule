@@ -17,39 +17,43 @@
 #pragma once
 #include "otherfunctions.h"
 // use this class if the hash is stored somehwere else (and stays valid as long as this object exists)
-class CCKey : public CObject{
+class CCKey : public CObject
+{
 public:
 	explicit CCKey(const uchar* key = 0)	{m_key = key;}
-	explicit CCKey(const CCKey& k1)		{m_key = k1.m_key;}
+	explicit CCKey(const CCKey& k1)			{m_key = k1.m_key;}
 
-	CCKey& operator=(const CCKey& k1)						{m_key = k1.m_key; return *this; }
+	CCKey& operator=(const CCKey& k1)		{m_key = k1.m_key; return *this;}
 	friend bool operator==(const CCKey& k1,const CCKey& k2);
 
 	const uchar* m_key;
 };
 
-template<> inline UINT AFXAPI HashKey(const CCKey& key){
+template<> inline UINT AFXAPI HashKey(const CCKey& key)
+{
    uint32 hash = 1;
-   for (int i = 0;i != 16;i++)
+   for (int i = 0; i < 16; ++i)
 	   hash += (key.m_key[i]+1)*((i*i)+1);
    return hash;
 };
 
 // use this class if the hash is stored somehwere inside the key (in any case safer but needs more memory)
-class CSKey : public CObject{
+class CSKey : public CObject
+{
 public:
-	explicit CSKey(const uchar* key = 0)	{ if(key) md4cpy(m_key, key); else md4clr(m_key); }
-	CSKey(const CSKey& k1)		{ md4cpy(m_key, k1.m_key); }
+	explicit CSKey(const uchar* key = 0)	{if (key) md4cpy(m_key, key); else md4clr(m_key);}
+	CSKey(const CSKey& k1)					{md4cpy(m_key, k1.m_key);}
 
-	CSKey& operator=(const CSKey& k1)						{md4cpy(m_key, k1.m_key); return *this; }
+	CSKey& operator=(const CSKey& k1)		{md4cpy(m_key, k1.m_key); return *this;}
 	friend bool operator==(const CSKey& k1,const CSKey& k2);
 
 	uchar m_key[16];
 };
 
-template<> inline UINT AFXAPI HashKey(const CSKey& key){
+template<> inline UINT AFXAPI HashKey(const CSKey& key)
+{
    uint32 hash = 1;
-   for (int i = 0;i != 16;i++)
+   for (int i = 0; i < 16; ++i)
 	   hash += (key.m_key[i]+1)*((i*i)+1);
    return hash;
 };

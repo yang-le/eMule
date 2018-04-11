@@ -55,7 +55,7 @@ void CKadContactListCtrl::Init()
 	SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
 	InsertColumn(colID,		  GetResString(IDS_ID),				LVCFMT_LEFT, 16 + DFLT_HASH_COL_WIDTH);
-	InsertColumn(colType,	  GetResString(IDS_TYPE) ,			LVCFMT_LEFT,  50);
+	InsertColumn(colType,	  GetResString(IDS_TYPE),			LVCFMT_LEFT,  50);
 	InsertColumn(colDistance, GetResString(IDS_KADDISTANCE),	LVCFMT_LEFT, 600);
 
 	SetAllIcons();
@@ -158,7 +158,7 @@ bool CKadContactListCtrl::ContactAdd(const Kademlia::CContact *contact)
 	//		Trying to update all the columns causes one of the connection freezes in win98
 	//		ContactRef(contact);
 			// If it still doesn't work under Win98, uncomment the '!afxData.bWin95' term
-			if (!afxIsWin95() && iItem >= 0)
+			if (!afxIsWin95())
 				UpdateContact(iItem, contact);
 			UpdateKadContactCount();
 		}

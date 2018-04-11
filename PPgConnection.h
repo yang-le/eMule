@@ -4,18 +4,20 @@ class CPPgConnection : public CPropertyPage
 {
 	DECLARE_DYNAMIC(CPPgConnection)
 
+	enum
+	{
+		IDD = IDD_PPG_CONNECTION
+	};
+	LONG lockUDP;
+
 public:
 	CPPgConnection();
 	virtual ~CPPgConnection();
-
-// Dialog Data
-	enum { IDD = IDD_PPG_CONNECTION };
 
 	void Localize();
 	void LoadSettings();
 
 protected:
-	bool guardian;
 	CSliderCtrl m_ctlMaxDown;
 	CSliderCtrl m_ctlMaxUp;
 

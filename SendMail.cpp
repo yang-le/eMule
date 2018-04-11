@@ -36,15 +36,15 @@ static char THIS_FILE[] = __FILE__;
 class CMimeRawAttachmentEx : public CMimeRawAttachment
 {
 protected:
-	virtual BOOL MakeMimeHeader(CStringA& header, LPCSTR szBoundary) throw()
+	virtual BOOL MakeMimeHeader(CStringA& header, LPCSTR szBoundary) noexcept
 	{
-		// WINBUG: Original code from 'CMimeRawAttachment' does not do what the comment below is announcing..
+		// WINBUG: Original code from 'CMimeRawAttachment' does not do what the comment below is announcing.
 		// if no display name is specified, default to "rawdata"
 		return MakeMimeHeader(header, szBoundary, m_szDisplayName[0] != _T('\0') ? m_szDisplayName : _T("rawdata"));
 	}
 
 	// Make the MIME header with the specified filename
-	virtual BOOL MakeMimeHeader(CStringA& header, LPCSTR szBoundary, LPCTSTR szFileName) throw()
+	virtual BOOL MakeMimeHeader(CStringA& header, LPCSTR szBoundary, LPCTSTR szFileName) noexcept
 	{
 		ATLASSERT(szBoundary != NULL);
 		ATLASSERT(szFileName != NULL);
@@ -135,16 +135,16 @@ public:
 };
 #pragma warning(pop)
 
-// Print the hash in a format which is similar to CertMgr's..
+// Print the hash in a format which is similar to CertMgr's.
 CString GetCertHash(const BYTE* pucHash, int iBytes)
 {
 	static LPCTSTR pszHex = _T("0123456789abcdef");
 	CString strHash;
 	LPTSTR pszHash = strHash.GetBuffer(iBytes * 3);
-	for (int i = 0; i < iBytes; i++, pucHash++)
+	for (int i = 0; i < iBytes; ++i)
 	{
 		*pszHash++ = pszHex[*pucHash >> 4];
-		*pszHash++ = pszHex[*pucHash & 0xf];
+		*pszHash++ = pszHex[*pucHash++ & 0xf];
 		*pszHash++ = _T(' ');
 	}
 	*pszHash = _T('\0');
@@ -152,7 +152,7 @@ CString GetCertHash(const BYTE* pucHash, int iBytes)
 	return strHash;
 }
 
-// Print the 'integer' in a format which is similar to CertMgr's..
+// Print the 'integer' in a format which is similar to CertMgr's.
 CString GetCertInteger(const BYTE* pucBlob, int cbBlob)
 {
 	CString strInteger;
@@ -324,8 +324,7 @@ BOOL CNotifierMailThread::InitInstance()
 			HRESULT hr = spMultiLanguage.CoCreateInstance(__uuidof(CMultiLanguage));
 			if (hr == S_OK)
 			{
-				CStringA strMimeMessageA;
-				strMimeMessageA = "Content-Type: text/plain;\r\n\tformat=flowed";
+				CStringA strMimeMessageA("Content-Type: text/plain;\r\n\tformat=flowed");
 				char szCharset[ATL_MAX_ENC_CHARSET_LENGTH];
 #if _ATL_VER==0x0700
 				if (AtlMimeCharsetFromCodePage(szCharset, uCodePage, spMultiLanguage))
@@ -333,9 +332,10 @@ BOOL CNotifierMailThread::InitInstance()
 				if (AtlMimeCharsetFromCodePage(szCharset, uCodePage, spMultiLanguage, ARRSIZE(szCharset)))
 #endif
 					strMimeMessageA.AppendFormat(";\r\n\tcharset=\"%s\"", szCharset);
-				strMimeMessageA += "\r\n";
-				strMimeMessageA += "Content-Transfer-Encoding: 8bit\r\n";
-				strMimeMessageA += "\r\n";
+
+				strMimeMessageA +=	"\r\n"
+									"Content-Transfer-Encoding: 8bit\r\n"
+									"\r\n";
 
 				UINT nMimeTextLen = 0;
 				LPSTR pszMimeText = NULL;
@@ -343,7 +343,7 @@ BOOL CNotifierMailThread::InitInstance()
 				{
 					strMimeMessageA.Append(pszMimeText, nMimeTextLen);
 					if (Encrypt(strMimeMessageA, aEncryptedBody, m_strEncryptCertName))
-						bHaveValidMsg = aEncryptedBody.GetSize() > 0;
+						bHaveValidMsg = !aEncryptedBody.IsEmpty();
 				}
 
 				CHeapPtr<char> pMimeText;
@@ -370,7 +370,7 @@ BOOL CNotifierMailThread::InitInstance()
 					msg.AddRecipient(m_strRecipient);
 					msg.SetSubject(m_strSubject);
 					if (aEncryptedBody.GetSize() > 0) {
-						msg.AttachRaw((void*)aEncryptedBody.GetData(), aEncryptedBody.GetSize(), ATLSMTP_BASE64_ENCODE, TRUE,
+						msg.AttachRaw((void*)aEncryptedBody.GetData(), (DWORD)aEncryptedBody.GetSize(), ATLSMTP_BASE64_ENCODE, TRUE,
 									_T("smime.p7m"), _T("application/x-pkcs7-mime;\r\n\tformat=flowed;\r\n\tsmime-type=enveloped-data"));
 					}
 					else {
@@ -418,31 +418,32 @@ void CemuleDlg::SendNotificationMail(int iMsgType, LPCTSTR pszText)
 		pThread->m_strSender = strSender;
 		pThread->m_strEncryptCertName = theApp.GetProfileString(_T("eMule"), _T("NotifierMailEncryptCertName")).Trim();
 		pThread->m_strSubject = GetResString(IDS_EMULENOTIFICATION);
-		UINT sid = 0;
+		UINT uid;
 		switch (iMsgType) {
 		case TBN_CHAT:
-			sid = IDS_PW_TBN_POP_ALWAYS;
+			uid = IDS_PW_TBN_POP_ALWAYS;
 			break;
 		case TBN_DOWNLOADFINISHED:
-			sid = IDS_PW_TBN_ONDOWNLOAD;
+			uid = IDS_PW_TBN_ONDOWNLOAD;
 			break;
 		case TBN_DOWNLOADADDED:
-			sid = IDS_TBN_ONNEWDOWNLOAD;
+			uid = IDS_TBN_ONNEWDOWNLOAD;
 			break;
 		case TBN_LOG:
-			sid = IDS_PW_TBN_ONLOG;
+			uid = IDS_PW_TBN_ONLOG;
 			break;
 		case TBN_IMPORTANTEVENT:
-			sid = IDS_ERROR;
+			uid = IDS_ERROR;
 			break;
 		case TBN_NEWVERSION:
-			sid = IDS_CB_TBN_ONNEWVERSION;
+			uid = IDS_CB_TBN_ONNEWVERSION;
 			break;
 		default:
+			uid = 0;
 			ASSERT(0);
 		}
-		if (sid)
-			pThread->m_strSubject.AppendFormat(_T(": %s"), (LPCTSTR)GetResString(sid));
+		if (uid)
+			pThread->m_strSubject.AppendFormat(_T(": %s"), (LPCTSTR)GetResString(uid));
 		pThread->m_strBody = pszText;
 		pThread->ResumeThread();
 	}

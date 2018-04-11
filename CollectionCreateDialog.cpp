@@ -175,12 +175,10 @@ BOOL CCollectionCreateDialog::OnInitDialog()
 void CCollectionCreateDialog::AddSelectedFiles()
 {
 	CTypedPtrList<CPtrList, CKnownFile*> knownFileList;
-	POSITION pos = m_CollectionAvailListCtrl.GetFirstSelectedItemPosition();
-	while (pos != NULL)
-	{
+	for (POSITION pos = m_CollectionAvailListCtrl.GetFirstSelectedItemPosition(); pos != NULL;)	{
 		int index = m_CollectionAvailListCtrl.GetNextSelectedItem(pos);
 		if (index >= 0)
-			knownFileList.AddTail((CKnownFile*)m_CollectionAvailListCtrl.GetItemData(index));
+			knownFileList.AddTail(reinterpret_cast<CKnownFile *>(m_CollectionAvailListCtrl.GetItemData(index)));
 	}
 
 	while (!knownFileList.IsEmpty())
@@ -201,12 +199,10 @@ void CCollectionCreateDialog::AddSelectedFiles()
 void CCollectionCreateDialog::RemoveSelectedFiles()
 {
 	CTypedPtrList<CPtrList, CCollectionFile*> collectionFileList;
-	POSITION pos = m_CollectionListCtrl.GetFirstSelectedItemPosition();
-	while (pos != NULL)
-	{
+	for (POSITION pos = m_CollectionListCtrl.GetFirstSelectedItemPosition(); pos != NULL;) {
 		int index = m_CollectionListCtrl.GetNextSelectedItem(pos);
 		if (index >= 0)
-			collectionFileList.AddTail((CCollectionFile*)m_CollectionListCtrl.GetItemData(index));
+			collectionFileList.AddTail(reinterpret_cast<CCollectionFile *>(m_CollectionListCtrl.GetItemData(index)));
 	}
 
 	while (!collectionFileList.IsEmpty())
@@ -289,7 +285,8 @@ void CCollectionCreateDialog::OnBnClickedOk()
 				RSASSA_PKCS1v15_SHA_Verifier pubkey(*pSignkey);
 				byte abyMyPublicKey[1000];
 				ArraySink asink(abyMyPublicKey, 1000);
-				pubkey.DEREncode(asink);
+//				pubkey.DEREncode(asink);
+				pubkey.GetMaterial().Save(asink);
 				uint32 nLen = (uint32)asink.TotalPutLength();
 				asink.MessageEnd();
 				m_pCollection->SetCollectionAuthorKey(abyMyPublicKey, nLen);
@@ -345,9 +342,7 @@ void CCollectionCreateDialog::UpdateAvailFiles()
 	else
 		theApp.knownfiles->CopyKnownFileMap(Files_Map);
 
-	POSITION pos = Files_Map.GetStartPosition();
-	while (pos != NULL)
-	{
+	for (POSITION pos = Files_Map.GetStartPosition(); pos != NULL;) {
 		CCKey key;
 		CKnownFile* pKnownFile;
 		Files_Map.GetNextAssoc(pos, key, pKnownFile);
@@ -382,7 +377,7 @@ void CCollectionCreateDialog::OnEnKillFocusCollectionName()
 	CString sNewFileName;
 	m_CollectionNameEdit.GetWindowText(sFileName);
 	sNewFileName = ValidFilename(sFileName);
-	if (sNewFileName.Compare(sFileName))
+	if (sNewFileName.Compare(sFileName) != 0)
 		m_CollectionNameEdit.SetWindowText(sNewFileName);
 }
 

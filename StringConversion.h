@@ -21,7 +21,7 @@
 bool IsValidEd2kString(LPCTSTR psz);
 bool IsValidEd2kStringA(LPCSTR psz);
 
-__inline bool NeedUTF8String(LPCWSTR pwsz)
+inline bool NeedUTF8String(LPCWSTR pwsz)
 {
 	// This function is used for determining whether it is valid to convert an
 	// Unicode string into an MBCS string (e.g. for local storage in *.met
@@ -32,39 +32,34 @@ __inline bool NeedUTF8String(LPCWSTR pwsz)
 	// characters! Thus to safely evaluate whether a string can get stored with
 	// MBCS without loosing any characters due to the conversion, the valid
 	// character range must be 0x00-0x7F.
-	while (*pwsz != L'\0')
-	{
+	while (*pwsz != L'\0') {
 		if (*pwsz > 0x007f/*ATL_ASCII*/)	// VS2008: ATL_ASCII(0x007f) is no longer defined
 			return true;
-		pwsz++;
+		++pwsz;
 	}
 	return false;
 }
 
-//#define ED2KCODEPAGE	28591 // ISO 8859-1 Latin I
-//
-//void CreateBOMUTF8String(const CStringW& rwstrUnicode, CStringA& rstrUTF8);
-//
-//__inline void OptCreateED2KUTF8String(bool bOptUTF8, const CStringW& rwstr, CStringA& rstrUTF8)
-//{
-//	if (bOptUTF8 && NeedUTF8String(rwstr))
-//	{
-//		CreateBOMUTF8String(rwstr, rstrUTF8);
-//	}
-//	else
-//	{
-//		// backward compatibility: use local codepage
-//		UINT cp = bOptUTF8 ? ED2KCODEPAGE : _AtlGetConversionACP();
-//		int iSize = WideCharToMultiByte(cp, 0, rwstr, -1, NULL, 0, NULL, NULL);
-//		if (iSize >= 1)
-//		{
-//			int iChars = iSize - 1;
-//			LPSTR pszUTF8 = rstrUTF8.GetBuffer(iChars);
-//			WideCharToMultiByte(cp, 0, rwstr, -1, pszUTF8, iSize, NULL, NULL);
-//			rstrUTF8.ReleaseBuffer(iChars);
-//		}
-//	}
-//}
+/*#define ED2KCODEPAGE	28591 // ISO 8859-1 Latin I
+
+void CreateBOMUTF8String(const CStringW& rwstrUnicode, CStringA& rstrUTF8);
+
+inline void OptCreateED2KUTF8String(bool bOptUTF8, const CStringW& rwstr, CStringA& rstrUTF8)
+{
+	if (bOptUTF8 && NeedUTF8String(rwstr))
+		CreateBOMUTF8String(rwstr, rstrUTF8);
+	else {
+		// backward compatibility: use local codepage
+		UINT cp = bOptUTF8 ? ED2KCODEPAGE : _AtlGetConversionACP();
+		int iSize = WideCharToMultiByte(cp, 0, rwstr, -1, NULL, 0, NULL, NULL);
+		if (iSize >= 1) {
+			int iChars = iSize - 1;
+			LPSTR pszUTF8 = rstrUTF8.GetBuffer(iChars);
+			WideCharToMultiByte(cp, 0, rwstr, -1, pszUTF8, iSize, NULL, NULL);
+			rstrUTF8.ReleaseBuffer(iChars);
+		}
+	}
+}*/
 
 CStringA wc2utf8(const CStringW& rwstr);
 CString OptUtf8ToStr(const CStringA& rastr);
@@ -110,7 +105,7 @@ public:
 	TUnicodeToUTF8(LPCWSTR pwsz, int iLength = -1)
 	{
 		if (iLength == -1)
-			iLength = wcslen(pwsz);
+			iLength = (int)wcslen(pwsz);
 		int iBuffSize;
 		int iMaxEncodedStrSize = iLength*4;
 		if (iMaxEncodedStrSize > t_nBufferLength)
@@ -177,9 +172,9 @@ public:
 			m_psz = m_acBuff;
 		}
 
-		m_psz[0] = 0xEFU;
-		m_psz[1] = 0xBBU;
-		m_psz[2] = 0xBFU;
+		((UCHAR *)m_psz)[0] = 0xEFU;
+		((UCHAR *)m_psz)[1] = 0xBBU;
+		((UCHAR *)m_psz)[2] = 0xBFU;
 		m_iChars = 3 + AtlUnicodeToUTF8(rwstr, rwstr.GetLength(), m_psz + 3, iBuffSize - 3);
 		ASSERT( m_iChars > 3 || rwstr.GetLength() == 0 );
 	}

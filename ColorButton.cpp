@@ -40,8 +40,8 @@ void AFXAPI DDX_ColorButton(CDataExchange *pDX, int nIDC, COLORREF& crColour)
 //***********************************************************************
 //**                             Constants                             **
 //***********************************************************************
-const int g_ciArrowSizeX = 4 ;
-const int g_ciArrowSizeY = 2 ;
+const int g_ciArrowSizeX = 4;
+const int g_ciArrowSizeY = 2;
 
 //***********************************************************************
 //**                            MFC Macros                            **
@@ -188,10 +188,10 @@ LRESULT CColorButton::OnSelEndOK(WPARAM wParam, LPARAM /*lParam*/)
 	if (pParent) {
 		pParent->SendMessage(UM_CPN_CLOSEUP, wParam, (LPARAM)GetDlgCtrlID());
 		pParent->SendMessage(UM_CPN_SELENDOK, wParam, (LPARAM)GetDlgCtrlID());
+		if (OldColor != m_Color)
+			pParent->SendMessage(UM_CPN_SELCHANGE, (m_Color != CLR_DEFAULT) ? m_Color : m_DefaultColor, (LPARAM)GetDlgCtrlID());
 	}
 
-	if (OldColor != m_Color)
-		if (pParent) pParent->SendMessage(UM_CPN_SELCHANGE, (m_Color!=CLR_DEFAULT)? m_Color:m_DefaultColor, (LPARAM)GetDlgCtrlID());
 	return TRUE;
 }
 
@@ -345,7 +345,7 @@ void CColorButton::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 				  EDGE_ETCHED,
 				  BF_RIGHT);
 
-	rDraw.right -= (::GetSystemMetrics(SM_CXEDGE) * 2) + 1 ;
+	rDraw.right -= (::GetSystemMetrics(SM_CXEDGE) * 2) + 1;
 
 	//******************************************************
 	//**                     Draw Color

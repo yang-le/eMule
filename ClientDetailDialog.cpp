@@ -88,126 +88,94 @@ BOOL CClientDetailPage::OnSetActive()
 	if (!CResizablePage::OnSetActive())
 		return FALSE;
 
-	if (m_bDataChanged)
-	{
-		CUpDownClient* client = STATIC_DOWNCAST(CUpDownClient, (*m_paClients)[0]);
+	if (m_bDataChanged) {
+		CUpDownClient* client = static_cast<CUpDownClient *>((*m_paClients)[0]);
+
+		SetDlgItemText(IDC_DNAME, (client->GetUserName() ? client->GetUserName() : CString(_T("?"))));
+		SetDlgItemText(IDC_DHASH, (client->HasValidHash() ? md4str(client->GetUserHash()) : CString(_T("?"))));
+		SetDlgItemText(IDC_DSOFT, client->GetClientSoftVer());
 
 		CString buffer;
-		if (client->GetUserName())
-			GetDlgItem(IDC_DNAME)->SetWindowText(client->GetUserName());
-		else
-			GetDlgItem(IDC_DNAME)->SetWindowText(_T("?"));
-
-		if (client->HasValidHash())
-			GetDlgItem(IDC_DHASH)->SetWindowText(md4str(client->GetUserHash()));
-		else
-			GetDlgItem(IDC_DHASH)->SetWindowText(_T("?"));
-
-		GetDlgItem(IDC_DSOFT)->SetWindowText(client->GetClientSoftVer());
-
-		if (client->SupportsCryptLayer() && thePrefs.IsClientCryptLayerSupported() && (client->RequestsCryptLayer() || thePrefs.IsClientCryptLayerRequested())
-			&& (client->IsObfuscatedConnectionEstablished() || !(client->socket != NULL && client->socket->IsConnected())))
-		{
-			buffer = GetResString(IDS_ENABLED);
-		}
-		else if (client->SupportsCryptLayer())
-			buffer = GetResString(IDS_SUPPORTED);
-		else
+		if (client->SupportsCryptLayer()) {
+			if (thePrefs.IsClientCryptLayerSupported()
+				&& (client->RequestsCryptLayer() || thePrefs.IsClientCryptLayerRequested())
+				&& (client->IsObfuscatedConnectionEstablished() || client->socket == NULL || !client->socket->IsConnected()))
+			{
+				buffer = GetResString(IDS_ENABLED);
+			} else
+				buffer = GetResString(IDS_SUPPORTED);
+		} else
 			buffer = GetResString(IDS_IDENTNOSUPPORT);
 #if defined(_DEBUG)
 		if (client->IsObfuscatedConnectionEstablished())
 			buffer += _T("(In Use)");
 #endif
-		GetDlgItem(IDC_OBFUSCATION_STAT)->SetWindowText(buffer);
+		SetDlgItemText(IDC_OBFUSCATION_STAT, buffer);
 
-		buffer = GetResString(client->HasLowID() ? IDS_IDLOW : IDS_IDHIGH);
-		GetDlgItem(IDC_DID)->SetWindowText(buffer);
+		SetDlgItemText(IDC_DID, GetResString(client->HasLowID() ? IDS_IDLOW : IDS_IDHIGH));
 
-		if (client->GetServerIP()){
-			GetDlgItem(IDC_DSIP)->SetWindowText(ipstr(client->GetServerIP()));
-			CServer* cserver = theApp.serverlist->GetServerByIPTCP(client->GetServerIP(), client->GetServerPort());
-			if (cserver)
-				GetDlgItem(IDC_DSNAME)->SetWindowText(cserver->GetListName());
-			else
-				GetDlgItem(IDC_DSNAME)->SetWindowText(_T("?"));
-		}
-		else{
-			GetDlgItem(IDC_DSIP)->SetWindowText(_T("?"));
-			GetDlgItem(IDC_DSNAME)->SetWindowText(_T("?"));
+		if (client->GetServerIP()) {
+			SetDlgItemText(IDC_DSIP, ipstr(client->GetServerIP()));
+			const CServer* cserver = theApp.serverlist->GetServerByIPTCP(client->GetServerIP(), client->GetServerPort());
+			SetDlgItemText(IDC_DSNAME, cserver ? cserver->GetListName() : CString(_T("?")));
+		} else {
+			SetDlgItemText(IDC_DSIP, _T("?"));
+			SetDlgItemText(IDC_DSNAME, _T("?"));
 		}
 
-		CKnownFile* file = theApp.sharedfiles->GetFileByID(client->GetUploadFileID());
-		if (file)
-			GetDlgItem(IDC_DDOWNLOADING)->SetWindowText(file->GetFileName());
-		else
-			GetDlgItem(IDC_DDOWNLOADING)->SetWindowText(_T("-"));
+		const CKnownFile* file = theApp.sharedfiles->GetFileByID(client->GetUploadFileID());
+		SetDlgItemText(IDC_DDOWNLOADING, file ? file->GetFileName() : CString(_T("-")));
 
-		if (client->GetRequestFile())
-			GetDlgItem(IDC_UPLOADING)->SetWindowText( client->GetRequestFile()->GetFileName()  );
-		else
-			GetDlgItem(IDC_UPLOADING)->SetWindowText(_T("-"));
-
-		GetDlgItem(IDC_DDUP)->SetWindowText(CastItoXBytes(client->GetTransferredDown(), false, false));
-
-		GetDlgItem(IDC_DDOWN)->SetWindowText(CastItoXBytes(client->GetTransferredUp(), false, false));
-
-		buffer = CastItoXBytes(client->GetDownloadDatarate(), false, true);
-		GetDlgItem(IDC_DAVUR)->SetWindowText(buffer);
-
-		buffer = CastItoXBytes(client->GetDatarate(), false, true);
-		GetDlgItem(IDC_DAVDR)->SetWindowText(buffer);
+		SetDlgItemText(IDC_UPLOADING, client->GetRequestFile() ? client->GetRequestFile()->GetFileName() : CString(_T("-")));
+		SetDlgItemText(IDC_DDUP, CastItoXBytes(client->GetTransferredDown(), false, false));
+		SetDlgItemText(IDC_DDOWN, CastItoXBytes(client->GetTransferredUp(), false, false));
+		SetDlgItemText(IDC_DAVUR, CastItoXBytes(client->GetDownloadDatarate(), false, true));
+		SetDlgItemText(IDC_DAVDR, CastItoXBytes(client->GetDatarate(), false, true));
 
 		const CClientCredits *clcredits = client->Credits();
-		if (clcredits){
-			GetDlgItem(IDC_DUPTOTAL)->SetWindowText(CastItoXBytes(clcredits->GetDownloadedTotal(), false, false));
-			GetDlgItem(IDC_DDOWNTOTAL)->SetWindowText(CastItoXBytes(clcredits->GetUploadedTotal(), false, false));
-			buffer.Format(_T("%.1f"),clcredits->GetScoreRatio(client->GetIP()));
-			GetDlgItem(IDC_DRATIO)->SetWindowText(buffer);
+		if (clcredits) {
+			SetDlgItemText(IDC_DUPTOTAL, CastItoXBytes(clcredits->GetDownloadedTotal(), false, false));
+			SetDlgItemText(IDC_DDOWNTOTAL, CastItoXBytes(clcredits->GetUploadedTotal(), false, false));
+			buffer.Format(_T("%.1f"), clcredits->GetScoreRatio(client->GetIP()));
+			SetDlgItemText(IDC_DRATIO, buffer);
 
-			if (theApp.clientcredits->CryptoAvailable()){
-				switch(clcredits->GetCurrentIdentState(client->GetIP())){
-					case IS_NOTAVAILABLE:
-						GetDlgItem(IDC_CDIDENT)->SetWindowText(GetResString(IDS_IDENTNOSUPPORT));
-						break;
-					case IS_IDFAILED:
-					case IS_IDNEEDED:
-					case IS_IDBADGUY:
-						GetDlgItem(IDC_CDIDENT)->SetWindowText(GetResString(IDS_IDENTFAILED));
-						break;
-					case IS_IDENTIFIED:
-						GetDlgItem(IDC_CDIDENT)->SetWindowText(GetResString(IDS_IDENTOK));
-						break;
+			if (theApp.clientcredits->CryptoAvailable()) {
+				switch (clcredits->GetCurrentIdentState(client->GetIP())) {
+				case IS_NOTAVAILABLE:
+					SetDlgItemText(IDC_CDIDENT, GetResString(IDS_IDENTNOSUPPORT));
+					break;
+				case IS_IDFAILED:
+				case IS_IDNEEDED:
+				case IS_IDBADGUY:
+					SetDlgItemText(IDC_CDIDENT, GetResString(IDS_IDENTFAILED));
+					break;
+				case IS_IDENTIFIED:
+					SetDlgItemText(IDC_CDIDENT, GetResString(IDS_IDENTOK));
 				}
-			}
+			} else
+				SetDlgItemText(IDC_CDIDENT, GetResString(IDS_IDENTNOSUPPORT));
+		} else {
+			SetDlgItemText(IDC_DDOWNTOTAL, _T("?"));
+			SetDlgItemText(IDC_DUPTOTAL, _T("?"));
+			SetDlgItemText(IDC_DRATIO, _T("?"));
+			SetDlgItemText(IDC_CDIDENT, _T("?"));
+		}
+
+		if (client->GetUserName() && clcredits != NULL) {
+			buffer.Format(_T("%.1f"), (float)client->GetScore(false, client->IsDownloading(), true));
+			SetDlgItemText(IDC_DRATING, buffer);
+		} else
+			SetDlgItemText(IDC_DRATING, _T("?"));
+
+		if (client->GetUploadState() != US_NONE && clcredits != NULL) {
+			if (!client->GetFriendSlot())
+				SetDlgItemInt(IDC_DSCORE, client->GetScore(false, client->IsDownloading(), false));
 			else
-				GetDlgItem(IDC_CDIDENT)->SetWindowText(GetResString(IDS_IDENTNOSUPPORT));
-		}
-		else{
-			GetDlgItem(IDC_DDOWNTOTAL)->SetWindowText(_T("?"));
-			GetDlgItem(IDC_DUPTOTAL)->SetWindowText(_T("?"));
-			GetDlgItem(IDC_DRATIO)->SetWindowText(_T("?"));
-			GetDlgItem(IDC_CDIDENT)->SetWindowText(_T("?"));
-		}
+				SetDlgItemText(IDC_DSCORE, GetResString(IDS_FRIENDDETAIL));
+		} else
+			SetDlgItemText(IDC_DSCORE, _T("-"));
 
-		if (client->GetUserName() && clcredits!=NULL){
-			buffer.Format(_T("%.1f"),(float)client->GetScore(false,client->IsDownloading(),true));
-			GetDlgItem(IDC_DRATING)->SetWindowText(buffer);
-		}
-		else
-			GetDlgItem(IDC_DRATING)->SetWindowText(_T("?"));
-
-		if (client->GetUploadState() != US_NONE && clcredits!=NULL){
-			if (!client->GetFriendSlot()){
-				buffer.Format(_T("%u"),client->GetScore(false,client->IsDownloading(),false));
-				GetDlgItem(IDC_DSCORE)->SetWindowText(buffer);
-			}
-			else
-				GetDlgItem(IDC_DSCORE)->SetWindowText(GetResString(IDS_FRIENDDETAIL));
-		}
-		else
-			GetDlgItem(IDC_DSCORE)->SetWindowText(_T("-"));
-
-		GetDlgItem(IDC_CLIENTDETAIL_KADCON)->SetWindowText(GetResString(client->GetKadPort() ? IDS_CONNECTED : IDS_DISCONNECTED));
+		SetDlgItemText(IDC_CLIENTDETAIL_KADCON, GetResString(client->GetKadPort() ? IDS_CONNECTED : IDS_DISCONNECTED));
 
 		m_bDataChanged = false;
 	}
@@ -222,30 +190,30 @@ LRESULT CClientDetailPage::OnDataChanged(WPARAM, LPARAM)
 
 void CClientDetailPage::Localize()
 {
-	GetDlgItem(IDC_STATIC30)->SetWindowText(GetResString(IDS_CD_GENERAL));
-	GetDlgItem(IDC_STATIC31)->SetWindowText(GetResString(IDS_CD_UNAME));
-	GetDlgItem(IDC_STATIC32)->SetWindowText(GetResString(IDS_CD_UHASH));
-	GetDlgItem(IDC_STATIC33)->SetWindowText(GetResString(IDS_CD_CSOFT) + _T(':'));
-	GetDlgItem(IDC_STATIC35)->SetWindowText(GetResString(IDS_CD_SIP));
-	GetDlgItem(IDC_STATIC38)->SetWindowText(GetResString(IDS_CD_SNAME));
-	GetDlgItem(IDC_STATIC_OBF_LABEL)->SetWindowText(GetResString(IDS_OBFUSCATION) + _T(':'));
+	SetDlgItemText(IDC_STATIC30, GetResString(IDS_CD_GENERAL));
+	SetDlgItemText(IDC_STATIC31, GetResString(IDS_CD_UNAME));
+	SetDlgItemText(IDC_STATIC32, GetResString(IDS_CD_UHASH));
+	SetDlgItemText(IDC_STATIC33, GetResString(IDS_CD_CSOFT) + _T(':'));
+	SetDlgItemText(IDC_STATIC35, GetResString(IDS_CD_SIP));
+	SetDlgItemText(IDC_STATIC38, GetResString(IDS_CD_SNAME));
+	SetDlgItemText(IDC_STATIC_OBF_LABEL, GetResString(IDS_OBFUSCATION) + _T(':'));
 
-	GetDlgItem(IDC_STATIC40)->SetWindowText(GetResString(IDS_CD_TRANS));
-	GetDlgItem(IDC_STATIC41)->SetWindowText(GetResString(IDS_CD_CDOWN));
-	GetDlgItem(IDC_STATIC42)->SetWindowText(GetResString(IDS_CD_DOWN));
-	GetDlgItem(IDC_STATIC43)->SetWindowText(GetResString(IDS_CD_ADOWN));
-	GetDlgItem(IDC_STATIC44)->SetWindowText(GetResString(IDS_CD_TDOWN));
-	GetDlgItem(IDC_STATIC45)->SetWindowText(GetResString(IDS_CD_UP));
-	GetDlgItem(IDC_STATIC46)->SetWindowText(GetResString(IDS_CD_AUP));
-	GetDlgItem(IDC_STATIC47)->SetWindowText(GetResString(IDS_CD_TUP));
-	GetDlgItem(IDC_STATIC48)->SetWindowText(GetResString(IDS_CD_UPLOADREQ));
+	SetDlgItemText(IDC_STATIC40, GetResString(IDS_CD_TRANS));
+	SetDlgItemText(IDC_STATIC41, GetResString(IDS_CD_CDOWN));
+	SetDlgItemText(IDC_STATIC42, GetResString(IDS_CD_DOWN));
+	SetDlgItemText(IDC_STATIC43, GetResString(IDS_CD_ADOWN));
+	SetDlgItemText(IDC_STATIC44, GetResString(IDS_CD_TDOWN));
+	SetDlgItemText(IDC_STATIC45, GetResString(IDS_CD_UP));
+	SetDlgItemText(IDC_STATIC46, GetResString(IDS_CD_AUP));
+	SetDlgItemText(IDC_STATIC47, GetResString(IDS_CD_TUP));
+	SetDlgItemText(IDC_STATIC48, GetResString(IDS_CD_UPLOADREQ));
 
-	GetDlgItem(IDC_STATIC50)->SetWindowText(GetResString(IDS_CD_SCORES));
-	GetDlgItem(IDC_STATIC51)->SetWindowText(GetResString(IDS_CD_MOD));
-	GetDlgItem(IDC_STATIC52)->SetWindowText(GetResString(IDS_CD_RATING));
-	GetDlgItem(IDC_STATIC53)->SetWindowText(GetResString(IDS_CD_USCORE));
-	GetDlgItem(IDC_STATIC133x)->SetWindowText(GetResString(IDS_CD_IDENT));
-	GetDlgItem(IDC_CLIENTDETAIL_KAD)->SetWindowText(GetResString(IDS_KADEMLIA) + _T(':'));
+	SetDlgItemText(IDC_STATIC50, GetResString(IDS_CD_SCORES));
+	SetDlgItemText(IDC_STATIC51, GetResString(IDS_CD_MOD));
+	SetDlgItemText(IDC_STATIC52, GetResString(IDS_CD_RATING));
+	SetDlgItemText(IDC_STATIC53, GetResString(IDS_CD_USCORE));
+	SetDlgItemText(IDC_STATIC133x, GetResString(IDS_CD_IDENT));
+	SetDlgItemText(IDC_CLIENTDETAIL_KAD, GetResString(IDS_KADEMLIA) + _T(':'));
 }
 
 
@@ -268,7 +236,7 @@ CClientDetailDialog::CClientDetailDialog(CUpDownClient* pClient, CListCtrlItemWa
 CClientDetailDialog::CClientDetailDialog(const CSimpleArray<CUpDownClient*>* paClients, CListCtrlItemWalk* pListCtrl)
 	: CListViewWalkerPropertySheet(pListCtrl)
 {
-	for (int i = 0; i < paClients->GetSize(); i++)
+	for (int i = 0; i < paClients->GetSize(); ++i)
 		m_aItems.Add((*paClients)[i]);
 	Construct();
 }

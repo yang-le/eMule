@@ -71,7 +71,7 @@ time_t		CKademlia::m_tBootstrap;
 time_t		CKademlia::m_tConsolidate;
 time_t		CKademlia::m_tExternPortLookup;
 time_t		CKademlia::m_tLANModeCheck = 0;
-bool		CKademlia::m_bRunning = false;
+volatile bool	CKademlia::m_bRunning = false;
 bool		CKademlia::m_bLANMode = false;
 CList<uint32, uint32> CKademlia::m_liStatsEstUsersProbes;
 _ContactList CKademlia::s_liBootstrapList;
@@ -79,7 +79,8 @@ bool		CKademlia::m_bootstrapping = false;
 
 CKademlia::CKademlia()
 	: m_pPrefs(NULL), m_pRoutingZone(NULL), m_pUDPListener(NULL), m_pIndexed(NULL)
-{}
+{
+}
 
 void CKademlia::Start()
 {
@@ -91,7 +92,7 @@ void CKademlia::Start(CPrefs *pPrefs)
 {
 	try
 	{
-		// If we already have a instance, something is wrong.
+		// If we already have an instance, something is wrong.
 		if( m_pInstance )
 		{
 			delete pPrefs;
@@ -100,7 +101,7 @@ void CKademlia::Start(CPrefs *pPrefs)
 			return;
 		}
 
-		// Make sure a prefs was passed in..
+		// Make sure a prefs was passed in.
 		if( !pPrefs )
 			return;
 
@@ -157,10 +158,10 @@ void CKademlia::Stop()
 	if( !m_bRunning )
 		return;
 
-	AddDebugLogLine(false, _T("Stopping Kademlia"));
-
 	// Mark Kad as being in the stop state to make sure nothing else is used.
 	m_bRunning = false;
+
+	AddDebugLogLine(false, _T("Stopping Kademlia"));
 
 	// Reset Firewallstate
 	CUDPFirewallTester::Reset();
@@ -195,29 +196,25 @@ void CKademlia::Stop()
 
 void CKademlia::Process()
 {
-	if( m_pInstance == NULL || !m_bRunning)
+	if (m_pInstance == NULL || !m_bRunning)
 		return;
-	bool bUpdateUserFile = false;
 	uint32 uMaxUsers = 0;
 	uint32 uTempUsers = 0;
-	uint32 uLastContact = 0;
 	time_t tNow = time(NULL);
 	ASSERT(m_pInstance->m_pPrefs != NULL);
-	uLastContact = m_pInstance->m_pPrefs->GetLastContact();
+	time_t uLastContact = m_pInstance->m_pPrefs->GetLastContact();
 	CSearchManager::UpdateStats();
-	if( m_tStatusUpdate <= tNow )
-	{
-		bUpdateUserFile = true;
+	bool bUpdateUserFile = (m_tStatusUpdate <= tNow);
+	if (bUpdateUserFile) {
 		m_tStatusUpdate = MIN2S(1) + tNow;
 #ifdef _BOOTSTRAPNODESDAT
 		// do some random lookup to fill out contact list with fresh (but for routing useless) nodes which we can
-	// use for our bootstrap nodes.dat
-	if (GetRoutingZone()->GetNumContacts() < 1500)
-	{
-		CUInt128 uRandom;
-		uRandom.SetValueRandom();
-		CSearchManager::FindNode(uRandom, false);
-	}
+		// use for our bootstrap nodes.dat
+		if (GetRoutingZone()->GetNumContacts() < 1500) {
+			CUInt128 uRandom;
+			uRandom.SetValueRandom();
+			CSearchManager::FindNode(uRandom, false);
+		}
 #endif
 	}
 	if( m_tNextFirewallCheck <= tNow)
@@ -618,7 +615,7 @@ uint32 CKademlia::CalculateKadUsersNew()
 			liMedian.AddTail(nProbe);
 	}
 	// cut away 1/3 of the values - 1/6 of the top and 1/6 of the bottom  to avoid spikes having too much influence, build the average of the rest
-	sint32 nCut = liMedian.GetCount() / 6;
+	INT_PTR nCut = liMedian.GetCount() / 6;
 	for (int i = 0; i < nCut; ++i) {
 		liMedian.RemoveHead();
 		liMedian.RemoveTail();

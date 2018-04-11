@@ -121,7 +121,7 @@ BOOL CCommentDialog::OnSetActive()
 		{
 			if (!(*m_paFiles)[i]->IsKindOf(RUNTIME_CLASS(CKnownFile)))
 				continue;
-			CKnownFile* file = STATIC_DOWNCAST(CKnownFile, (*m_paFiles)[i]);
+			CKnownFile* file = static_cast<CKnownFile *>((*m_paFiles)[i]);
 			// we actually could show, add and even search for comments on kad for known but not shared files,
 			// but we don't publish coments entered by the user if the file is not shared (which might be changed at some point)
 			// so make sure we don't let him think he can comment and disable the dialog for such files
@@ -177,13 +177,13 @@ BOOL CCommentDialog::OnApply()
 	if (m_bEnabled && !m_bDataChanged)
 	{
 	    CString strComment;
-	    GetDlgItem(IDC_CMT_TEXT)->GetWindowText(strComment);
+	    GetDlgItemText(IDC_CMT_TEXT, strComment);
 	    int iRating = m_ratebox.GetCurSel();
 	    for (int i = 0; i < m_paFiles->GetSize(); i++)
 	    {
 			if (!(*m_paFiles)[i]->IsKindOf(RUNTIME_CLASS(CKnownFile)))
 				continue;
-		    CKnownFile* file = STATIC_DOWNCAST(CKnownFile, (*m_paFiles)[i]);
+		    CKnownFile* file = static_cast<CKnownFile *>((*m_paFiles)[i]);
 			if (theApp.sharedfiles->GetFileByID(file->GetFileHash()) == NULL)
 				continue;
 		    if (!strComment.IsEmpty() || !m_bMergedComment)
@@ -197,16 +197,16 @@ BOOL CCommentDialog::OnApply()
 
 void CCommentDialog::Localize()
 {
-	GetDlgItem(IDC_RESET)->SetWindowText(GetResString(IDS_PW_RESET));
+	SetDlgItemText(IDC_RESET, GetResString(IDS_PW_RESET));
 
-	GetDlgItem(IDC_CMT_LQUEST)->SetWindowText(GetResString(IDS_CMT_QUEST));
-	GetDlgItem(IDC_CMT_LAIDE)->SetWindowText(GetResString(IDS_CMT_AIDE));
+	SetDlgItemText(IDC_CMT_LQUEST, GetResString(IDS_CMT_QUEST));
+	SetDlgItemText(IDC_CMT_LAIDE, GetResString(IDS_CMT_AIDE));
 
-	GetDlgItem(IDC_RATEQUEST)->SetWindowText(GetResString(IDS_CMT_RATEQUEST));
-	GetDlgItem(IDC_RATEHELP)->SetWindowText(GetResString(IDS_CMT_RATEHELP));
+	SetDlgItemText(IDC_RATEQUEST, GetResString(IDS_CMT_RATEQUEST));
+	SetDlgItemText(IDC_RATEHELP, GetResString(IDS_CMT_RATEHELP));
 
-	GetDlgItem(IDC_USERCOMMENTS)->SetWindowText(GetResString(IDS_COMMENT));
-	GetDlgItem(IDC_SEARCHKAD)->SetWindowText(GetResString(IDS_SEARCHKAD));
+	SetDlgItemText(IDC_USERCOMMENTS, GetResString(IDS_COMMENT));
+	SetDlgItemText(IDC_SEARCHKAD, GetResString(IDS_SEARCHKAD));
 
 	CImageList iml;
 	iml.Create(16, 16, theApp.m_iDfltImageListColorFlags | ILC_MASK, 0, 1);
@@ -318,7 +318,7 @@ void CCommentDialog::OnBnClickedSearchKad()
 		int iMaxSearches = mini(m_paFiles->GetSize(), KADEMLIATOTALFILE);
 	    for (int i = 0; i < iMaxSearches; i++)
 	    {
-			CAbstractFile* file = STATIC_DOWNCAST(CAbstractFile, (*m_paFiles)[i]);
+			CAbstractFile* file = static_cast<CAbstractFile *>((*m_paFiles)[i]);
  			if (file && file->IsKindOf(RUNTIME_CLASS(CKnownFile)) && theApp.sharedfiles->GetFileByID(file->GetFileHash()) != NULL)
 			{
 				if (!Kademlia::CSearchManager::PrepareLookup(Kademlia::CSearch::NOTES, true, Kademlia::CUInt128(file->GetFileHash())))
@@ -340,9 +340,9 @@ void CCommentDialog::EnableDialog(bool bEnabled)
 	if (m_bEnabled == bEnabled)
 		return;
 	m_bEnabled = bEnabled;
-	GetDlgItem(IDC_LST)->EnableWindow(m_bEnabled ? TRUE : FALSE);
-	GetDlgItem(IDC_CMT_TEXT)->EnableWindow(m_bEnabled ? TRUE : FALSE);
-	GetDlgItem(IDC_RATELIST)->EnableWindow(m_bEnabled ? TRUE : FALSE);
-	GetDlgItem(IDC_RESET)->EnableWindow(m_bEnabled ? TRUE : FALSE);
-	GetDlgItem(IDC_SEARCHKAD)->EnableWindow(m_bEnabled ? TRUE : FALSE);
+	GetDlgItem(IDC_LST)->EnableWindow(static_cast<BOOL>(m_bEnabled));
+	GetDlgItem(IDC_CMT_TEXT)->EnableWindow(static_cast<BOOL>(m_bEnabled));
+	GetDlgItem(IDC_RATELIST)->EnableWindow(static_cast<BOOL>(m_bEnabled));
+	GetDlgItem(IDC_RESET)->EnableWindow(static_cast<BOOL>(m_bEnabled));
+	GetDlgItem(IDC_SEARCHKAD)->EnableWindow(static_cast<BOOL>(m_bEnabled));
 }

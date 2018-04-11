@@ -36,6 +36,7 @@ public:
 	CString GetNick() const;
 
 protected:
+	void PerformString(const CString& sPerform);
 	CIrcSocket *m_pIRCSocket;
 	CIrcWnd *m_pwndIRC;
 	CStringA m_sPreParseBufferA;

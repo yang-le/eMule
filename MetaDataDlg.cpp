@@ -103,7 +103,7 @@ BOOL CMetaDataDlg::OnInitDialog()
 	AddAnchor(IDC_TAGS, TOP_LEFT, BOTTOM_RIGHT);
 	AddAnchor(IDC_TOTAL_TAGS, BOTTOM_LEFT, BOTTOM_RIGHT);
 
-	GetDlgItem(IDC_TOTAL_TAGS)->SetWindowText(GetResString(IDS_METATAGS));
+	SetDlgItemText(IDC_TOTAL_TAGS, GetResString(IDS_METATAGS));
 
 	m_tags.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_GRIDLINES);
 	m_tags.ReadColumnStats(ARRSIZE(s_aColumns), s_aColumns);
@@ -314,7 +314,7 @@ void CMetaDataDlg::RefreshData()
 	if (m_paFiles->GetSize() >= 1)
 	{
 		CString strBuff;
-		if (!STATIC_DOWNCAST(CAbstractFile, (*m_paFiles)[0])->HasNullHash())
+		if (!static_cast<CAbstractFile *>((*m_paFiles)[0])->HasNullHash())
 		{
 			LVITEM lvi;
 			lvi.mask = LVIF_TEXT;
@@ -335,15 +335,15 @@ void CMetaDataDlg::RefreshData()
 				m_tags.SetItem(&lvi);
 
 
-				strBuff = md4str(STATIC_DOWNCAST(CAbstractFile, (*m_paFiles)[0])->GetFileHash());
+				strBuff = md4str(static_cast<CAbstractFile *>((*m_paFiles)[0])->GetFileHash());
 				lvi.pszText = const_cast<LPTSTR>((LPCTSTR)strBuff);
 				lvi.iSubItem = META_DATA_COL_VALUE;
 				m_tags.SetItem(&lvi);
 			}
 		}
 
-		const CArray<CTag*,CTag*>& aTags = STATIC_DOWNCAST(CAbstractFile, (*m_paFiles)[0])->GetTags();
-		int iTags = aTags.GetCount();
+		const CArray<CTag*,CTag*>& aTags = static_cast<CAbstractFile *>((*m_paFiles)[0])->GetTags();
+		INT_PTR iTags = aTags.GetCount();
 		for (int i = 0; i < iTags; i++)
 		{
 			const CTag* pTag = aTags[i];

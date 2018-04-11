@@ -121,6 +121,8 @@ class CPPgWiz1Welcome : public CDlgPageWizard
 {
 	DECLARE_DYNAMIC(CPPgWiz1Welcome)
 
+	enum { IDD = IDD_WIZ1_WELCOME };
+
 public:
 	CPPgWiz1Welcome();
 	CPPgWiz1Welcome(UINT nIDTemplate, LPCTSTR pszCaption = NULL, LPCTSTR pszHeaderTitle = NULL, LPCTSTR pszHeaderSubTitle = NULL)
@@ -129,9 +131,6 @@ public:
 	}
 	virtual ~CPPgWiz1Welcome();
 	virtual BOOL OnInitDialog();
-
-// Dialog Data
-	enum { IDD = IDD_WIZ1_WELCOME };
 
 protected:
 	CFont m_FontTitle;
@@ -173,9 +172,9 @@ BOOL CPPgWiz1Welcome::OnInitDialog()
 
 	CDlgPageWizard::OnInitDialog();
 	InitWindowStyles(this);
-	GetDlgItem(IDC_WIZ1_TITLE)->SetWindowText(GetResString(IDS_WIZ1_WELCOME_TITLE));
-	GetDlgItem(IDC_WIZ1_ACTIONS)->SetWindowText(GetResString(IDS_WIZ1_WELCOME_ACTIONS));
-	GetDlgItem(IDC_WIZ1_BTN_HINT)->SetWindowText(GetResString(IDS_WIZ1_WELCOME_BTN_HINT));
+	SetDlgItemText(IDC_WIZ1_TITLE, GetResString(IDS_WIZ1_WELCOME_TITLE));
+	SetDlgItemText(IDC_WIZ1_ACTIONS, GetResString(IDS_WIZ1_WELCOME_ACTIONS));
+	SetDlgItemText(IDC_WIZ1_BTN_HINT, GetResString(IDS_WIZ1_WELCOME_BTN_HINT));
 	return TRUE;
 }
 
@@ -185,6 +184,8 @@ BOOL CPPgWiz1Welcome::OnInitDialog()
 class CPPgWiz1General : public CDlgPageWizard
 {
 	DECLARE_DYNAMIC(CPPgWiz1General)
+
+	enum { IDD = IDD_WIZ1_GENERAL };
 
 public:
 	CPPgWiz1General();
@@ -196,9 +197,6 @@ public:
 	}
 	virtual ~CPPgWiz1General();
 	virtual BOOL OnInitDialog();
-
-// Dialog Data
-	enum { IDD = IDD_WIZ1_GENERAL };
 
 	CString m_strNick;
 	int m_iAutoConnectAtStart;
@@ -239,9 +237,9 @@ BOOL CPPgWiz1General::OnInitDialog()
 	CDlgPageWizard::OnInitDialog();
 	InitWindowStyles(this);
 	((CEdit*)GetDlgItem(IDC_NICK))->SetLimitText(thePrefs.GetMaxUserNickLength());
-	GetDlgItem(IDC_NICK_FRM)->SetWindowText(GetResString(IDS_ENTERUSERNAME));
-	GetDlgItem(IDC_AUTOCONNECT)->SetWindowText(GetResString(IDS_FIRSTAUTOCON));
-	GetDlgItem(IDC_AUTOSTART)->SetWindowText(GetResString(IDS_WIZ_STARTWITHWINDOWS));
+	SetDlgItemText(IDC_NICK_FRM, GetResString(IDS_ENTERUSERNAME));
+	SetDlgItemText(IDC_AUTOCONNECT, GetResString(IDS_FIRSTAUTOCON));
+	SetDlgItemText(IDC_AUTOSTART, GetResString(IDS_WIZ_STARTWITHWINDOWS));
 	return TRUE;
 }
 
@@ -251,6 +249,8 @@ BOOL CPPgWiz1General::OnInitDialog()
 class CPPgWiz1Ports : public CDlgPageWizard
 {
 	DECLARE_DYNAMIC(CPPgWiz1Ports)
+
+	enum { IDD = IDD_WIZ1_PORTS };
 
 public:
 	CPPgWiz1Ports();
@@ -283,17 +283,13 @@ public:
 
 	bool*	m_pbUDPDisabled;
 
-// Dialog Data
-	enum { IDD = IDD_WIZ1_PORTS };
-
 protected:
-	CString			lastudp;
 	virtual void	DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	void			ResetUPnPProgress();
+	CString			lastudp;
+	int				m_nUPnPTicks;
 
 	DECLARE_MESSAGE_MAP()
-
-	int m_nUPnPTicks;
 };
 
 IMPLEMENT_DYNAMIC(CPPgWiz1Ports, CDlgPageWizard)
@@ -324,28 +320,26 @@ void CPPgWiz1Ports::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_UDP, m_sUDP);
 }
 
-void CPPgWiz1Ports::OnEnChangeTCP() {
+void CPPgWiz1Ports::OnEnChangeTCP()
+{
 	OnPortChange();
 }
-void CPPgWiz1Ports::OnEnChangeUDP() {
+
+void CPPgWiz1Ports::OnEnChangeUDP()
+{
 	OnPortChange();
 }
 
-uint16 CPPgWiz1Ports::GetTCPPort() {
-	CString buffer;
-
-	GetDlgItem(IDC_TCP)->GetWindowText(buffer);
-	return (uint16)_tstoi(buffer);
+uint16 CPPgWiz1Ports::GetTCPPort()
+{
+	return (uint16)GetDlgItemInt(IDC_TCP, NULL, FALSE);
 }
 
-uint16 CPPgWiz1Ports::GetUDPPort() {
-	uint16 udp = 0;
-	if (IsDlgButtonChecked(IDC_UDPDISABLE)==0) {
-		CString buffer;
-		GetDlgItem(IDC_UDP)->GetWindowText(buffer);
-		udp = (uint16)_tstoi(buffer);
-	}
-	return udp;
+uint16 CPPgWiz1Ports::GetUDPPort()
+{
+	if (IsDlgButtonChecked(IDC_UDPDISABLE) == 0)
+		return (uint16)GetDlgItemInt(IDC_UDP, NULL, FALSE);
+	return 0;
 }
 
 void CPPgWiz1Ports::OnPortChange() {
@@ -361,7 +355,8 @@ void CPPgWiz1Ports::OnPortChange() {
 	GetDlgItem(IDC_STARTTEST)->EnableWindow(flag);
 }
 
-BOOL CPPgWiz1Ports::OnKillActive(){
+BOOL CPPgWiz1Ports::OnKillActive()
+{
 	ResetUPnPProgress();
 	return CDlgPageWizard::OnKillActive();
 }
@@ -384,14 +379,15 @@ void CPPgWiz1Ports::OnStartUPnP()
 	CDlgPageWizard::OnApply();
 	theApp.emuledlg->StartUPnP(true, GetTCPPort(), GetUDPPort());
 
-	GetDlgItem(IDC_UPNPSTATUS)->SetWindowText(GetResString(IDS_UPNPSETUP));
+	SetDlgItemText(IDC_UPNPSTATUS, GetResString(IDS_UPNPSETUP));
 	GetDlgItem(IDC_UPNPSTART)->EnableWindow(FALSE);
 	m_nUPnPTicks = 0;
 	static_cast<CProgressCtrl *>(GetDlgItem(IDC_UPNPPROGRESS))->SetPos(0);
 	VERIFY(SetTimer(1, SEC2MS(1), NULL));
 }
 
-void CPPgWiz1Ports::OnTimer(UINT_PTR /*nIDEvent*/){
+void CPPgWiz1Ports::OnTimer(UINT_PTR /*nIDEvent*/)
+{
 	m_nUPnPTicks++;
 	if (theApp.m_pUPnPFinder && theApp.m_pUPnPFinder->GetImplementation()->ArePortsForwarded() == TRIS_UNKNOWN)
 	{
@@ -404,13 +400,13 @@ void CPPgWiz1Ports::OnTimer(UINT_PTR /*nIDEvent*/){
 		static_cast<CProgressCtrl *>(GetDlgItem(IDC_UPNPPROGRESS))->SetPos(40);
 		CString strMessage;
 		strMessage.Format(GetResString(IDS_UPNPSUCCESS), GetTCPPort(), GetUDPPort());
-		GetDlgItem(IDC_UPNPSTATUS)->SetWindowText(strMessage);
+		SetDlgItemText(IDC_UPNPSTATUS, strMessage);
 		// enable UPnP in the preferences after the successful try
 		thePrefs.m_bEnableUPnP = true;
 	}
 	else{
 		static_cast<CProgressCtrl *>(GetDlgItem(IDC_UPNPPROGRESS))->SetPos(0);
-		GetDlgItem(IDC_UPNPSTATUS)->SetWindowText(GetResString(IDS_UPNPFAILED));
+		SetDlgItemText(IDC_UPNPSTATUS, GetResString(IDS_UPNPFAILED));
 	}
 	GetDlgItem(IDC_UPNPSTART)->EnableWindow(TRUE);
 	VERIFY( KillTimer(1));
@@ -425,12 +421,12 @@ void CPPgWiz1Ports::ResetUPnPProgress()
 
 // **
 
-void CPPgWiz1Ports::OnStartConTest() {
+void CPPgWiz1Ports::OnStartConTest()
+{
+	uint16 tcp = GetTCPPort();
+	uint16 udp = GetUDPPort();
 
-	uint16 tcp=GetTCPPort();
-	uint16 udp=GetUDPPort();
-
-	if (tcp==0)
+	if (tcp == 0)
 		return;
 
 	if ( (tcp!=theApp.listensocket->GetConnectedPort() || udp!=theApp.clientudp->GetConnectedPort() ) ) {
@@ -444,7 +440,7 @@ void CPPgWiz1Ports::OnStartConTest() {
 		thePrefs.port=tcp;
 		thePrefs.udpport=udp;
 
-		theApp.listensocket->Rebind() ;
+		theApp.listensocket->Rebind();
 		theApp.clientudp->Rebind();
 	}
 
@@ -462,9 +458,9 @@ BOOL CPPgWiz1Ports::OnInitDialog()
 	lastudp = m_sUDP;
 
 	// disable changing ports to prevent harm
-	SetDlgItemText(IDC_PORTINFO , GetResString(IDS_PORTINFO) );
-	SetDlgItemText(IDC_TESTFRAME , GetResString(IDS_CONNECTIONTEST) );
-	SetDlgItemText(IDC_TESTINFO , GetResString(IDS_TESTINFO) );
+	SetDlgItemText(IDC_PORTINFO, GetResString(IDS_PORTINFO) );
+	SetDlgItemText(IDC_TESTFRAME, GetResString(IDS_CONNECTIONTEST) );
+	SetDlgItemText(IDC_TESTINFO, GetResString(IDS_TESTINFO) );
 	SetDlgItemText(IDC_STARTTEST, GetResString(IDS_STARTTEST) );
 	SetDlgItemText(IDC_UDPDISABLE, GetResString(IDS_UDPDISABLED));
 	SetDlgItemText(IDC_UPNPSTART, GetResString(IDS_UPNPSTART));
@@ -480,10 +476,10 @@ void CPPgWiz1Ports::OnEnChangeUDPDisable()
 
 	if (disabled) {
 		GetDlgItemText(IDC_UDP, lastudp);
-		GetDlgItem(IDC_UDP)->SetWindowText(_T("0"));
+		SetDlgItemText(IDC_UDP, _T("0"));
 	}
 	else
-		GetDlgItem(IDC_UDP)->SetWindowText(lastudp);
+		SetDlgItemText(IDC_UDP, lastudp);
 
 	if (m_pbUDPDisabled != NULL)
 		*m_pbUDPDisabled = disabled;
@@ -499,6 +495,8 @@ class CPPgWiz1UlPrio : public CDlgPageWizard
 {
 	DECLARE_DYNAMIC(CPPgWiz1UlPrio)
 
+	enum { IDD = IDD_WIZ1_ULDL_PRIO };
+
 public:
 	CPPgWiz1UlPrio();
 	CPPgWiz1UlPrio(UINT nIDTemplate, LPCTSTR pszCaption = NULL, LPCTSTR pszHeaderTitle = NULL, LPCTSTR pszHeaderSubTitle = NULL)
@@ -509,9 +507,6 @@ public:
 	}
 	virtual ~CPPgWiz1UlPrio();
 	virtual BOOL OnInitDialog();
-
-// Dialog Data
-	enum { IDD = IDD_WIZ1_ULDL_PRIO };
 
 	int m_iUAP;
 	int m_iDAP;
@@ -549,8 +544,8 @@ BOOL CPPgWiz1UlPrio::OnInitDialog()
 {
 	CDlgPageWizard::OnInitDialog();
 	InitWindowStyles(this);
-	GetDlgItem(IDC_UAP)->SetWindowText(GetResString(IDS_FIRSTAUTOUP));
-	GetDlgItem(IDC_DAP)->SetWindowText(GetResString(IDS_FIRSTAUTODOWN));
+	SetDlgItemText(IDC_UAP, GetResString(IDS_FIRSTAUTOUP));
+	SetDlgItemText(IDC_DAP, GetResString(IDS_FIRSTAUTODOWN));
 
 	return TRUE;
 }
@@ -563,6 +558,8 @@ class CPPgWiz1Upload : public CDlgPageWizard
 {
 	DECLARE_DYNAMIC(CPPgWiz1Upload)
 
+	enum { IDD = IDD_WIZ1_UPLOAD };
+
 public:
 	CPPgWiz1Upload();
 	CPPgWiz1Upload(UINT nIDTemplate, LPCTSTR pszCaption = NULL, LPCTSTR pszHeaderTitle = NULL, LPCTSTR pszHeaderSubTitle = NULL)
@@ -571,9 +568,6 @@ public:
 	}
 	virtual ~CPPgWiz1Upload();
 	virtual BOOL OnInitDialog();
-
-// Dialog Data
-	enum { IDD = IDD_WIZ1_UPLOAD };
 
 	int m_iObfuscation;
 
@@ -607,7 +601,7 @@ BOOL CPPgWiz1Upload::OnInitDialog()
 {
 	CDlgPageWizard::OnInitDialog();
 	InitWindowStyles(this);
-	GetDlgItem(IDC_WIZZARDOBFUSCATION)->SetWindowText(GetResString(IDS_WIZZARDOBFUSCATION));
+	SetDlgItemText(IDC_WIZZARDOBFUSCATION, GetResString(IDS_WIZZARDOBFUSCATION));
 	return TRUE;
 }
 
@@ -618,6 +612,8 @@ BOOL CPPgWiz1Upload::OnInitDialog()
 class CPPgWiz1Server : public CDlgPageWizard
 {
 	DECLARE_DYNAMIC(CPPgWiz1Server)
+
+	enum { IDD = IDD_WIZ1_SERVER };
 
 public:
 	CPPgWiz1Server();
@@ -630,9 +626,6 @@ public:
 	}
 	virtual ~CPPgWiz1Server();
 	virtual BOOL OnInitDialog();
-
-// Dialog Data
-	enum { IDD = IDD_WIZ1_SERVER };
 
 	int m_iSafeServerConnect;
 	int m_iKademlia;
@@ -677,9 +670,9 @@ BOOL CPPgWiz1Server::OnInitDialog()
 {
 	CDlgPageWizard::OnInitDialog();
 	InitWindowStyles(this);
-	GetDlgItem(IDC_SAFESERVERCONNECT)->SetWindowText(GetResString(IDS_FIRSTSAFECON));
-	GetDlgItem(IDC_WIZARD_NETWORK)->SetWindowText(GetResString(IDS_WIZARD_NETWORK));
-	GetDlgItem(IDC_WIZARD_ED2K)->SetWindowText(GetResString(IDS_WIZARD_ED2K));
+	SetDlgItemText(IDC_SAFESERVERCONNECT, GetResString(IDS_FIRSTSAFECON));
+	SetDlgItemText(IDC_WIZARD_NETWORK, GetResString(IDS_WIZARD_NETWORK));
+	SetDlgItemText(IDC_WIZARD_ED2K, GetResString(IDS_WIZARD_ED2K));
 	return TRUE;
 }
 
@@ -701,6 +694,8 @@ class CPPgWiz1End : public CDlgPageWizard
 {
 	DECLARE_DYNAMIC(CPPgWiz1End)
 
+	enum { IDD = IDD_WIZ1_END };
+
 public:
 	CPPgWiz1End();
 	CPPgWiz1End(UINT nIDTemplate, LPCTSTR pszCaption = NULL, LPCTSTR pszHeaderTitle = NULL, LPCTSTR pszHeaderSubTitle = NULL)
@@ -709,9 +704,6 @@ public:
 	}
 	virtual ~CPPgWiz1End();
 	virtual BOOL OnInitDialog();
-
-// Dialog Data
-	enum { IDD = IDD_WIZ1_END };
 
 protected:
 	CFont m_FontTitle;
@@ -753,9 +745,9 @@ BOOL CPPgWiz1End::OnInitDialog()
 
 	CDlgPageWizard::OnInitDialog();
 	InitWindowStyles(this);
-	GetDlgItem(IDC_WIZ1_TITLE)->SetWindowText(GetResString(IDS_WIZ1_END_TITLE));
-	GetDlgItem(IDC_WIZ1_ACTIONS)->SetWindowText(GetResString(IDS_FIRSTCOMPLETE));
-	GetDlgItem(IDC_WIZ1_BTN_HINT)->SetWindowText(GetResString(IDS_WIZ1_END_BTN_HINT));
+	SetDlgItemText(IDC_WIZ1_TITLE, GetResString(IDS_WIZ1_END_TITLE));
+	SetDlgItemText(IDC_WIZ1_ACTIONS, GetResString(IDS_FIRSTCOMPLETE));
+	SetDlgItemText(IDC_WIZ1_BTN_HINT, GetResString(IDS_WIZ1_END_BTN_HINT));
 
 	return TRUE;
 }
@@ -834,7 +826,7 @@ BOOL FirstTimeWizard()
 	page3.m_sUDP.Format(_T("%u"), thePrefs.GetUDPPort());
 	page4.m_iDAP = 1;
 	page4.m_iUAP = 1;
-	page5.m_iObfuscation = thePrefs.IsClientCryptLayerSupported() ? 1 : 0; //was Requested()
+	page5.m_iObfuscation = static_cast<int>(thePrefs.IsClientCryptLayerSupported()); //was Requested()
 	page6.m_iSafeServerConnect = 0;
 	page6.m_iKademlia = 1;
 	page6.m_iED2K = 1;
@@ -846,13 +838,12 @@ BOOL FirstTimeWizard()
 	uint16 oldtcpport=thePrefs.GetPort();
 	uint16 oldudpport=thePrefs.GetUDPPort();
 
-	int iResult = sheet.DoModal();
-	if (iResult == IDCANCEL) {
+	if (sheet.DoModal() == IDCANCEL) {
 
 		// restore port settings?
 		thePrefs.port=oldtcpport;
 		thePrefs.udpport=oldudpport;
-		theApp.listensocket->Rebind() ;
+		theApp.listensocket->Rebind();
 		theApp.clientudp->Rebind();
 
 		return FALSE;
@@ -879,8 +870,8 @@ BOOL FirstTimeWizard()
 	thePrefs.SetNetworkED2K(page6.m_iED2K!=0);
 
 	// set ports
-	thePrefs.port=(uint16)_tstoi(page3.m_sTCP);
-	thePrefs.udpport=(uint16)_tstoi(page3.m_sUDP);
+	thePrefs.port = (uint16)_tstoi(page3.m_sTCP);
+	thePrefs.udpport = (uint16)_tstoi(page3.m_sUDP);
 	ASSERT( thePrefs.port!=0 && thePrefs.udpport!=0+10 );
 	if (thePrefs.port == 0)
 		thePrefs.port = thePrefs.GetRandomTCPPort();
@@ -890,7 +881,7 @@ BOOL FirstTimeWizard()
 		if (!theApp.IsPortchangeAllowed())
 			LocMessageBox(IDS_NOPORTCHANGEPOSSIBLE, MB_OK, 0);
 		else {
-			theApp.listensocket->Rebind() ;
+			theApp.listensocket->Rebind();
 			theApp.clientudp->Rebind();
 		}
 

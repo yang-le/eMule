@@ -196,7 +196,7 @@ typedef struct tagCxImageInfo {
 	uint32_t	dwType;				///< original image format
 	char	szLastError[256];	///< debugging
 	int32_t	nProgress;			///< monitor
-	int32_t	nEscape;			///< escape
+	volatile int32_t	nEscape;			///< escape
 	int32_t	nBkgndIndex;		///< used for GIF, PNG, MNG
 	RGBQUAD nBkgndColor;		///< used for RGB transparency
 	float	fQuality;			///< used for JPEG, JPEG2000 (0.0f ... 100.0f)
@@ -282,20 +282,20 @@ public:
 	bool	CreateFromMatrix(uint8_t** ppMatrix,uint32_t dwWidth,uint32_t dwHeight,uint32_t dwBitsperpixel, uint32_t dwBytesperline, bool bFlipImage);
 	void	FreeMemory(void* memblock);
 
-	uint32_t Dump(uint8_t * dst);
-	uint32_t UnDump(const uint8_t * src);
-	uint32_t DumpSize();
+	size_t Dump(uint8_t * dst);
+	size_t UnDump(const uint8_t * src);
+	size_t DumpSize();
 
 //@}
 
 /** \addtogroup Attributes */ //@{
-	int32_t	GetSize();
+	size_t		GetSize();
 	uint8_t*	GetBits(uint32_t row = 0);
 	uint8_t     GetColorType() const;
 	void*       GetDIB() const;
 	uint32_t	GetHeight() const;
 	uint32_t	GetWidth() const;
-	uint32_t    GetEffWidth() const;
+	size_t		GetEffWidth() const;
 	uint32_t	GetNumColors() const;
 	uint16_t	GetBpp() const;
 	uint32_t	GetType() const;
@@ -374,7 +374,7 @@ public:
 	bool	IsGrayScale() const;
 	bool	IsIndexed() const;
 	bool	IsSamePalette(CxImage &img, bool bCheckAlpha = true) const;
-	uint32_t	GetPaletteSize() const;
+	size_t	GetPaletteSize() const;
 	RGBQUAD* GetPalette() const;
 	RGBQUAD GetPaletteColor(uint8_t idx) const;
 	bool	GetPaletteColor(uint8_t i, uint8_t* r, uint8_t* g, uint8_t* b) const;
@@ -521,7 +521,7 @@ public:
 	// file operations
 #if CXIMAGE_SUPPORT_DECODE
 /** \addtogroup Decode */ //@{
-#ifdef WIN32
+#ifdef _WIN32
 	//bool Load(LPCWSTR filename, uint32_t imagetype=0);
 	bool LoadResource(HRSRC hRes, uint32_t imagetype, HMODULE hModule=NULL);
 #endif
@@ -545,11 +545,11 @@ protected:
 
 public:
 /** \addtogroup Encode */ //@{
-#ifdef WIN32
+#ifdef _WIN32
 	//bool Save(LPCWSTR filename, uint32_t imagetype=0);
 #endif
 	// For UNICODE support: char -> TCHAR
-	bool Save(const TCHAR* filename, uint32_t imagetype);
+	bool Save(LPCTSTR filename, uint32_t imagetype);
 	//bool Save(const char * filename, uint32_t imagetype=0);
 	bool Encode(FILE * hFile, uint32_t imagetype);
 	bool Encode(CxFile * hFile, uint32_t imagetype);
@@ -787,7 +787,7 @@ protected:
 	void Startup(uint32_t imagetype = 0);
 	void CopyInfo(const CxImage &src);
 	void Ghost(const CxImage *src);
-	void RGBtoBGR(uint8_t *buffer, int32_t length) const;
+	void RGBtoBGR(uint8_t *buffer, size_t length) const;
 	static float HueToRGB(float n1,float n2, float hue);
 	void Bitfield2RGB(uint8_t *src, uint32_t redmask, uint32_t greenmask, uint32_t bluemask, uint8_t bpp);
 	static int32_t CompareColors(const void *elem1, const void *elem2);

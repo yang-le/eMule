@@ -285,18 +285,18 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 				sizText.cy += siz.cy + iLineHeightOff;
 
 			LPCTSTR pszCol2 = (LPCTSTR)strLine + iColon + 1;
-			while (_istspace((_TUCHAR)*pszCol2))
-				pszCol2++;
+			while (_istspace(*pszCol2))
+				++pszCol2;
 			if (*pszCol2 != _T('\0')) {
 				if (hTheme && bUseEmbeddedThemeFonts) {
 					CRect rcExtent;
 					CRect rcBounding(0, 0, 32767, 32767);
-					g_xpStyle.GetThemeTextExtent(hTheme, *pdc, TTP_STANDARD, TTSS_NORMAL, pszCol2, ((LPCTSTR)strLine + strLine.GetLength()) - pszCol2, m_dwCol2DrawTextFlags, &rcBounding, &rcExtent);
+					g_xpStyle.GetThemeTextExtent(hTheme, *pdc, TTP_STANDARD, TTSS_NORMAL, pszCol2, (int)(((LPCTSTR)strLine + strLine.GetLength()) - pszCol2), m_dwCol2DrawTextFlags, &rcBounding, &rcExtent);
 					siz.cx = rcExtent.Width();
 					siz.cy = rcExtent.Height();
 				}
 				else {
-					siz = pdc->GetTextExtent(pszCol2, ((LPCTSTR)strLine + strLine.GetLength()) - pszCol2);
+					siz = pdc->GetTextExtent(pszCol2, (int)(((LPCTSTR)strLine + strLine.GetLength()) - pszCol2));
 				}
 				iMaxCol2Width = max(iMaxCol2Width, siz.cx);
 			}
@@ -435,15 +435,15 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 				}
 
 				LPCTSTR pszCol2 = (LPCTSTR)strLine + iColon + 1;
-				while (_istspace((_TUCHAR)*pszCol2))
-					pszCol2++;
+				while (_istspace(*pszCol2))
+					++pszCol2;
 				if (*pszCol2 != _T('\0')) {
 					rcDT.left = ptText.x + iMaxCol1Width + iMiddleMargin;
 					rcDT.right = rcDT.left + iMaxCol2Width;
 					if (hTheme && bUseEmbeddedThemeFonts)
-						g_xpStyle.DrawThemeText(hTheme, pdc->m_hDC, TTP_STANDARD, TTSS_NORMAL, pszCol2, ((LPCTSTR)strLine + strLine.GetLength()) - pszCol2, m_dwCol2DrawTextFlags, 0, &rcDT);
+						g_xpStyle.DrawThemeText(hTheme, pdc->m_hDC, TTP_STANDARD, TTSS_NORMAL, pszCol2, (int)(((LPCTSTR)strLine + strLine.GetLength()) - pszCol2), m_dwCol2DrawTextFlags, 0, &rcDT);
 					else
-						pdc->DrawText(pszCol2, ((LPCTSTR)strLine + strLine.GetLength()) - pszCol2, &rcDT, m_dwCol2DrawTextFlags);
+						pdc->DrawText(pszCol2, (int)(((LPCTSTR)strLine + strLine.GetLength()) - pszCol2), &rcDT, m_dwCol2DrawTextFlags);
 				}
 
 				ptText.y += iTextHeight;

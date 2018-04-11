@@ -1,6 +1,7 @@
 #pragma once
 
-enum EDebugLogPriority: int {
+enum EDebugLogPriority : int
+{
 	DLP_VERYLOW = 0,
 	DLP_LOW,
 	DLP_DEFAULT,
@@ -50,7 +51,7 @@ void AddLogTextV(UINT uFlags, EDebugLogPriority dlpPriority, LPCTSTR pszLine, va
 ///////////////////////////////////////////////////////////////////////////////
 // CLogFile
 
-enum ELogFileFormat: int
+enum ELogFileFormat: uint8
 {
 	Unicode = 0,
 	Utf8
@@ -66,9 +67,9 @@ public:
 	const CString& GetFilePath() const;
 	bool SetFilePath(LPCTSTR pszFilePath);
 	void SetMaxFileSize(UINT uMaxFileSize);
-	bool SetFileFormat(ELogFileFormat eFileFormat);
+	bool SetFileFormat(const ELogFileFormat eFileFormat);
 
-	bool Create(LPCTSTR pszFilePath, UINT uMaxFileSize = 1024*1024, ELogFileFormat eFileFormat = Unicode);
+	bool Create(LPCTSTR pszFilePath, UINT uMaxFileSize = 1024*1024, const ELogFileFormat eFileFormat = Unicode);
 	bool Open();
 	bool Close();
 	bool Log(LPCTSTR pszMsg, int iLen = -1);
@@ -79,8 +80,8 @@ protected:
 	FILE* m_fp;
 	time_t m_tStarted;
 	CString m_strFilePath;
-	UINT m_uBytesWritten;
-	UINT m_uMaxFileSize;
+	size_t m_uBytesWritten;
+	size_t m_uMaxFileSize;
 	bool m_bInOpenCall;
 	ELogFileFormat m_eFileFormat;
 };

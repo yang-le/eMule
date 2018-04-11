@@ -44,14 +44,14 @@ namespace Kademlia
 			virtual		~CEntry();
 
 			virtual		CEntry* Copy();
-			virtual bool IsKeyEntry()					{ return false; }
+			virtual bool IsKeyEntry()						{ return false; }
 
 			uint64		GetIntTagValue(const CKadTagNameString& strTagName, bool bIncludeVirtualTags = true) const;
 			bool		GetIntTagValue(const CKadTagNameString& strTagName, uint64& rValue, bool bIncludeVirtualTags = true) const;
 			CKadTagValueString GetStrTagValue(const CKadTagNameString& strTagName) const;
 			void		AddTag(CKadTag* pTag, uint32 uDbgSourceIP = 0);
 			uint32		GetTagCount() const; // Adds filename and size to the count if not empty, even if they are not stored as tags
-			void		WriteTagList(CDataIO* pData)	{ WriteTagListInc(pData, 0); }
+			void		WriteTagList(CDataIO* pData)		{ WriteTagListInc(pData, 0); }
 
 			CKadTagValueString	GetCommonFileNameLowerCase() const;
 			CKadTagValueString	GetCommonFileName() const;
@@ -75,9 +75,9 @@ namespace Kademlia
 	class CKeyEntry : public CEntry
 	{
 		protected:
-			struct structPublishingIP{
-				uint32				m_uIP;
+			struct structPublishingIP {
 				time_t				m_tLastPublish;
+				uint32				m_uIP;
 				uint16				m_byAICHHashIdx;
 			};
 		public:
@@ -85,7 +85,7 @@ namespace Kademlia
 			virtual ~CKeyEntry();
 
 			virtual	CEntry*		Copy();
-			virtual bool IsKeyEntry()					{ return true; }
+			virtual bool IsKeyEntry()						{ return true; }
 
 			bool				StartSearchTermsMatch(const SSearchTerm* pSearchTerm);
 			void				MergeIPsAndFilenames(CKeyEntry* pFromEntry);
@@ -96,8 +96,8 @@ namespace Kademlia
 			void				DirtyDeletePublishData();
 			void				WriteTagListWithPublishInfo(CDataIO* pData);
 			uint16				AddRemoveAICHHash(const CAICHHash& hash, bool bAdd);
-			uint16				GetAICHHashCount() const						{ return (uint16)m_aAICHHashs.GetCount(); }
-			static void			ResetGlobalTrackingMap()						{ s_mapGlobalPublishIPs.RemoveAll(); }
+			uint16				GetAICHHashCount() const	{ return (uint16)m_aAICHHashs.GetCount(); }
+			static void			ResetGlobalTrackingMap()	{ s_mapGlobalPublishIPs.RemoveAll(); }
 
 		protected:
 			void				RecalcualteTrustValue();

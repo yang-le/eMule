@@ -182,23 +182,22 @@ IMPLEMENT_DYNAMIC(CTreeOptionsCtrl, CTreeCtrl)
 
 BEGIN_MESSAGE_MAP(CTreeOptionsCtrl, CTreeCtrl)
 	//{{AFX_MSG_MAP(CTreeOptionsCtrl)
-	ON_WM_LBUTTONDOWN()
 	ON_WM_CHAR()
 	ON_WM_DESTROY()
-	ON_WM_VSCROLL()
 	ON_WM_HSCROLL()
 	ON_WM_KEYDOWN()
 	ON_WM_KILLFOCUS()
 	ON_WM_LBUTTONDOWN()
-	//}}AFX_MSG_MAP
 	ON_WM_MOUSEWHEEL()
-	ON_MESSAGE(WM_TOC_SETFOCUS_TO_CHILD, OnSetFocusToChild)
+	ON_WM_VSCROLL()
+	//}}AFX_MSG_MAP
 	ON_MESSAGE(WM_TOC_REPOSITION_CHILD_CONTROL, OnRepositionChild)
+	ON_MESSAGE(WM_TOC_SETFOCUS_TO_CHILD, OnSetFocusToChild)
 	ON_NOTIFY_REFLECT_EX(NM_CLICK, OnNmClick)
-	ON_NOTIFY_REFLECT_EX(TVN_SELCHANGED, OnSelchanged)
-	ON_NOTIFY_REFLECT_EX(TVN_ITEMEXPANDING, OnItemExpanding)
-	ON_NOTIFY_REFLECT_EX(TVN_DELETEITEM, OnDeleteItem)
 	ON_NOTIFY_REFLECT_EX(NM_CUSTOMDRAW, OnCustomDraw)
+	ON_NOTIFY_REFLECT_EX(TVN_DELETEITEM, OnDeleteItem)
+	ON_NOTIFY_REFLECT_EX(TVN_ITEMEXPANDING, OnItemExpanding)
+	ON_NOTIFY_REFLECT_EX(TVN_SELCHANGED, OnSelchanged)
 END_MESSAGE_MAP()
 
 CTreeOptionsCtrl::CTreeOptionsCtrl()
@@ -582,7 +581,7 @@ HTREEITEM CTreeOptionsCtrl::InsertRadioButton(LPCTSTR lpszItem, HTREEITEM hParen
 BOOL CTreeOptionsCtrl::IsGroup(HTREEITEM hItem) const
 {
 	int nImage = -1;
-	int nSelectedImage = -1 ;
+	int nSelectedImage = -1;
 	BOOL bSuccess = GetItemImage(hItem, nImage, nSelectedImage);
 	ASSERT(bSuccess);
 
@@ -1527,7 +1526,7 @@ void CTreeOptionsCtrl::GetFontItem(HTREEITEM hItem, LOGFONT* pLogFont) const
 	ASSERT(pLogFont);
 	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
-	CopyMemory(pLogFont, &pItemData->m_Font, sizeof(LOGFONT));
+	memcpy(pLogFont, &pItemData->m_Font, sizeof(LOGFONT));
 }
 
 void CTreeOptionsCtrl::SetFontItem(HTREEITEM hItem, const LOGFONT* pLogFont)
@@ -1535,7 +1534,7 @@ void CTreeOptionsCtrl::SetFontItem(HTREEITEM hItem, const LOGFONT* pLogFont)
 	ASSERT(pLogFont);
 	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
-	CopyMemory(&pItemData->m_Font, pLogFont, sizeof(LOGFONT));
+	memcpy(&pItemData->m_Font, pLogFont, sizeof(LOGFONT));
 
 	//Also update the text while we are at it
 	SetEditText(hItem, pLogFont->lfFaceName);
@@ -1949,14 +1948,14 @@ void CTreeOptionsCtrl::GetDateTime(HTREEITEM hItem, SYSTEMTIME& st) const
 {
 	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
-	CopyMemory(&st, &pItemData->m_DateTime, sizeof(SYSTEMTIME));
+	memcpy(&st, &pItemData->m_DateTime, sizeof(SYSTEMTIME));
 }
 
 void CTreeOptionsCtrl::SetDateTime(HTREEITEM hItem, const SYSTEMTIME& st)
 {
 	CTreeOptionsItemData* pItemData = reinterpret_cast<CTreeOptionsItemData *>(GetItemData(hItem));
 	ASSERT(pItemData);
-	CopyMemory(&pItemData->m_DateTime, &st, sizeof(SYSTEMTIME));
+	memcpy(&pItemData->m_DateTime, &st, sizeof(SYSTEMTIME));
 
 	//Also update the text while we are at it
 	CTreeOptionsDateCtrl* pTempDateTime = static_cast<CTreeOptionsDateCtrl *>(pItemData->m_pRuntimeClass1->CreateObject());
@@ -2168,8 +2167,8 @@ int CTreeOptionsFontNameCombo::EnumFontProc(CONST LOGFONT* lplf, CONST TEXTMETRI
 	return 1; //To continue enumeration
 }
 
-int CALLBACK CTreeOptionsFontNameCombo::_EnumFontProc(CONST LOGFONT* lplf, CONST TEXTMETRIC* lptm,
-													  DWORD dwType, LPARAM lpData)
+int CALLBACK CTreeOptionsFontNameCombo::_EnumFontProc(CONST LOGFONT* lplf, CONST TEXTMETRIC* lptm
+													 , DWORD dwType, LPARAM lpData) noexcept
 {
 	//Convert from the SDK world to the C++ world
 	CTreeOptionsFontNameCombo* pThis = reinterpret_cast<CTreeOptionsFontNameCombo *>(lpData);
@@ -2850,13 +2849,13 @@ void CTreeOptionsBrowseButton::SetColor(COLORREF color)
 void CTreeOptionsBrowseButton::GetFontItem(LOGFONT* pLogFont)
 {
 	ASSERT(pLogFont);
-	CopyMemory(pLogFont, &m_Font, sizeof(LOGFONT));
+	memcpy(pLogFont, &m_Font, sizeof(LOGFONT));
 }
 
 void CTreeOptionsBrowseButton::SetFontItem(const LOGFONT* pLogFont)
 {
 	ASSERT(pLogFont);
-	CopyMemory(&m_Font, pLogFont, sizeof(LOGFONT));
+	memcpy(&m_Font, pLogFont, sizeof(LOGFONT));
 }
 
 

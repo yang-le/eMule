@@ -109,7 +109,7 @@ int utf8towc(LPCSTR pcUtf8, UINT uUtf8Size, LPWSTR pwc, UINT uWideCharSize)
         }
     }
 
-    return pwc - pwc0;
+    return (int)(pwc - pwc0);
 }
 
 int ByteStreamToWideChar(LPCSTR pcUtf8, UINT uUtf8Size, LPWSTR pwc, UINT uWideCharSize)
@@ -125,22 +125,22 @@ int ByteStreamToWideChar(LPCSTR pcUtf8, UINT uUtf8Size, LPWSTR pwc, UINT uWideCh
 			uUtf8Size--;
 			uWideCharSize--;
 		}
-		iWideChars = pwc - pwc0;
+		iWideChars = (int)(pwc - pwc0);
 	}
 	return iWideChars;
 }
 
-//void CreateBOMUTF8String(const CStringW& rwstr, CStringA& rstrUTF8)
-//{
-//	int iChars = AtlUnicodeToUTF8(rwstr, rwstr.GetLength(), NULL, 0);
-//	int iRawChars = 3 + iChars;
-//	LPSTR pszUTF8 = rstrUTF8.GetBuffer(iRawChars);
-//	*pszUTF8++ = 0xEFU;
-//	*pszUTF8++ = 0xBBU;
-//	*pszUTF8++ = 0xBFU;
-//	AtlUnicodeToUTF8(rwstr, rwstr.GetLength(), pszUTF8, iRawChars);
-//	rstrUTF8.ReleaseBuffer(iRawChars);
-//}
+/*void CreateBOMUTF8String(const CStringW& rwstr, CStringA& rstrUTF8)
+{
+	int iChars = AtlUnicodeToUTF8(rwstr, rwstr.GetLength(), NULL, 0);
+	int iRawChars = 3 + iChars;
+	LPSTR pszUTF8 = rstrUTF8.GetBuffer(iRawChars);
+	*pszUTF8++ = 0xEFU;
+	*pszUTF8++ = 0xBBU;
+	*pszUTF8++ = 0xBFU;
+	AtlUnicodeToUTF8(rwstr, rwstr.GetLength(), pszUTF8, iRawChars);
+	rstrUTF8.ReleaseBuffer(iRawChars);
+}*/
 
 CStringA wc2utf8(const CStringW& rwstr)
 {
@@ -182,7 +182,7 @@ CString OptUtf8ToStr(LPCSTR psz, int iLen)
 	{
 		// invalid UTF8 string...
 		wstr.ReleaseBuffer(0);
-		wstr = psz;				// convert with local codepage
+		wstr = CString(psz, iLen);	// convert with local codepage
 	}
 	else
 		wstr.ReleaseBuffer(iWideChars);
@@ -199,7 +199,7 @@ CString OptUtf8ToStr(const CStringW& rwstr)
 			// this is no UTF8 string (it's already an Unicode string)...
 			return rwstr;			// just return the string
 		}
-		astr += (BYTE)rwstr[i];
+		astr += (CHAR)rwstr[i];
 	}
 	return OptUtf8ToStr(astr);
 }
@@ -256,11 +256,11 @@ CString EncodeUrlUtf8(const CString& rstr)
 
 CStringW DecodeDoubleEncodedUtf8(LPCWSTR pszFileName)
 {
-	size_t nChars = wcslen(pszFileName);
+	int nChars = (int)wcslen(pszFileName);
 
 	// Check if all characters are valid for UTF-8 value range
 	//
-	for (unsigned i = 0; i < nChars; ++i) {
+	for (int i = 0; i < nChars; ++i) {
 		if (pszFileName[i] > (WCHAR)0xFFU)
 			return pszFileName; // string is already using Unicode character value range; return original
 	}
@@ -269,7 +269,7 @@ CStringW DecodeDoubleEncodedUtf8(LPCWSTR pszFileName)
 	//
 	CStringA strA;
 	LPSTR pszA = strA.GetBuffer(nChars);
-	for (UINT i = 0; i < nChars; i++)
+	for (int i = 0; i < nChars; ++i)
 		pszA[i] = (CHAR)pszFileName[i];
 	strA.ReleaseBuffer(nChars);
 

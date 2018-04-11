@@ -74,7 +74,7 @@
 
 // Dummy identifier for grayscale icon
 #ifndef	BTNST_AUTO_GRAY
-#define	BTNST_AUTO_GRAY					(HICON)(0xffffffff - 1L)
+#define	BTNST_AUTO_GRAY					(HICON)(-2) //(0xffffffff - 1l)
 #endif
 
 class CButtonST : public CButton

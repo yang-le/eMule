@@ -197,7 +197,7 @@ ID3_Reader::int_type io::UnsyncedReader::readChar()
   return ch;
 }
 
-io::CompressedReader::CompressedReader(ID3_Reader& reader, size_type newSize)
+io::CompressedReader::CompressedReader(ID3_Reader& reader, uLong newSize)
   : _uncompressed(new char_type[newSize])
 {
   size_type oldSize = reader.remainingBytes();
@@ -205,8 +205,8 @@ io::CompressedReader::CompressedReader(ID3_Reader& reader, size_type newSize)
   BString binary = readBinary(reader, oldSize);
 
   ::uncompress(_uncompressed,
-               reinterpret_cast<uLong *>(&newSize),
-               reinterpret_cast<const uchar*>(binary.data()),
+               &newSize,
+               static_cast<const uchar*>(binary.data()),
                static_cast<uLong>(oldSize));
   this->setBuffer(_uncompressed, newSize);
 }
@@ -221,7 +221,7 @@ ID3_Writer::int_type io::UnsyncedWriter::writeChar(char_type ch)
   if (_last == 0xFF && (ch == 0x00 || ch >= 0xE0))
   {
     _writer.writeChar('\0');
-    _numSyncs++;
+    ++_numSyncs;
   }
   _last = _writer.writeChar(ch);
   return _last;
@@ -232,7 +232,7 @@ void io::UnsyncedWriter::flush()
   if (_last == 0xFF)
   {
     _last = _writer.writeChar('\0');
-    _numSyncs++;
+    ++_numSyncs;
   }
   _writer.flush();
 }
@@ -261,13 +261,13 @@ void io::CompressedWriter::flush()
   {
     return;
   }
-  const char_type* data = reinterpret_cast<const char_type*>(_data.data());
+  const char_type* data = static_cast<const char_type *>(_data.data());
   size_type dataSize = _data.size();
   _origSize = dataSize;
   // The zlib documentation specifies that the destination size needs to
-  // be an unsigned long at least 0.1% larger than the source buffer,
+  // be an unsigned long at least 10% larger than the source buffer,
   // plus 12 bytes
-  unsigned long newDataSize = static_cast<unsigned long>(dataSize + (dataSize / 10) + 12);
+  uLong newDataSize = static_cast<uLong>(dataSize + (dataSize / 10) + 12);
   char_type* newData = LEAKTESTNEW(char_type[newDataSize]);
   if (::compress(newData, &newDataSize, data, static_cast<uLong>(dataSize)) != Z_OK)
   {
@@ -296,4 +296,3 @@ io::CompressedWriter::writeChars(const char_type buf[], size_type len)
   _data.append(buf, len);
   return len;
 }
-

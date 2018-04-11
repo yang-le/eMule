@@ -107,7 +107,9 @@ private:
 		DWORD		dwFlags;	// Bit 0	- Item is disabled
 
 		_STRUCT_LBDATA()
-		{::ZeroMemory(this, sizeof(_STRUCT_LBDATA));}
+		{
+			memset(this, 0, sizeof(_STRUCT_LBDATA));
+		}
 	} STRUCT_LBDATA;
 #pragma pack()
 

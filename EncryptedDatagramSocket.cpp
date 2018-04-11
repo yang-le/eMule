@@ -389,7 +389,7 @@ int CEncryptedDatagramSocket::DecryptReceivedServer(BYTE* pbyBufIn, int nBufLen,
 
 	// might be an encrypted packet, try to decrypt
 	uchar achKeyData[7];
-	memcpy(achKeyData, &dwBaseKey, 4);
+	*(uint32 *)achKeyData = dwBaseKey;
 	achKeyData[4] = MAGICVALUE_UDP_SERVERCLIENT;
 	memcpy(achKeyData + 5, pbyBufIn + 1, 2); // random key part sent from remote server
 	MD5Sum md5(achKeyData, sizeof achKeyData);
@@ -436,9 +436,9 @@ int CEncryptedDatagramSocket::EncryptSendServer(uchar* pbyBuf, int nBufLen, uint
 	uint16 nRandomKeyPart = (uint16)cryptRandomGen.GenerateWord32(0x0000, 0xFFFFu);
 
 	uchar achKeyData[7];
-	memcpy(achKeyData, &dwBaseKey, 4);
+	*(uint32 *)achKeyData = dwBaseKey;
 	achKeyData[4] = MAGICVALUE_UDP_CLIENTSERVER;
-	memcpy(achKeyData + 5, &nRandomKeyPart, 2);
+	*(uint16 *)&achKeyData[5] = nRandomKeyPart;
 	MD5Sum md5(achKeyData, sizeof achKeyData);
 	RC4_Key_Struct keySendKey;
 	RC4CreateKey(md5.GetRawHash(), 16, &keySendKey, true);

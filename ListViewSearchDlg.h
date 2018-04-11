@@ -7,12 +7,11 @@ class CListViewSearchDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CListViewSearchDlg)
 
+	enum { IDD = IDD_LISTVIEW_SEARCH };
+
 public:
 	explicit CListViewSearchDlg(CWnd* pParent = NULL);	  // standard constructor
 	virtual ~CListViewSearchDlg();
-
-// Dialog Data
-	enum { IDD = IDD_LISTVIEW_SEARCH };
 
 	CListCtrl* m_pListView;
 	CString m_strFindText;

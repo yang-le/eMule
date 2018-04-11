@@ -38,9 +38,9 @@ IMPLEMENT_DYNAMIC(CPPgMessages, CPropertyPage)
 BEGIN_MESSAGE_MAP(CPPgMessages, CPropertyPage)
 	ON_EN_CHANGE(IDC_FILTER, OnSettingsChange)
 	ON_EN_CHANGE(IDC_COMMENTFILTER, OnSettingsChange)
-	ON_BN_CLICKED(IDC_MSGONLYFRIENDS , OnSettingsChange)
-	ON_BN_CLICKED(IDC_ADVSPAMFILTER , OnSpamFilterChange)
-	ON_BN_CLICKED(IDC_INDICATERATINGS , OnSettingsChange)
+	ON_BN_CLICKED(IDC_MSGONLYFRIENDS, OnSettingsChange)
+	ON_BN_CLICKED(IDC_ADVSPAMFILTER, OnSpamFilterChange)
+	ON_BN_CLICKED(IDC_INDICATERATINGS, OnSettingsChange)
 	ON_BN_CLICKED(IDC_MSHOWSMILEYS, OnSettingsChange)
 	ON_BN_CLICKED(IDC_USECAPTCHAS, OnSettingsChange)
 	ON_WM_HELPINFO()
@@ -69,8 +69,8 @@ void CPPgMessages::LoadSettings()
 	CheckDlgButton(IDC_MSHOWSMILEYS, static_cast<UINT>(thePrefs.GetMessageEnableSmileys()));
 	CheckDlgButton(IDC_USECAPTCHAS, static_cast<UINT>(thePrefs.IsChatCaptchaEnabled()));
 
-	GetDlgItem(IDC_FILTER)->SetWindowText(thePrefs.messageFilter);
-	GetDlgItem(IDC_COMMENTFILTER)->SetWindowText(thePrefs.commentFilter);
+	SetDlgItemText(IDC_FILTER, thePrefs.messageFilter);
+	SetDlgItemText(IDC_COMMENTFILTER, thePrefs.commentFilter);
 	OnSpamFilterChange();
 }
 
@@ -99,10 +99,10 @@ BOOL CPPgMessages::OnApply()
 	if (bOldSmileys != thePrefs.GetMessageEnableSmileys())
 		theApp.emuledlg->chatwnd->EnableSmileys(thePrefs.GetMessageEnableSmileys());
 
-	GetDlgItem(IDC_FILTER)->GetWindowText(thePrefs.messageFilter);
+	GetDlgItemText(IDC_FILTER, thePrefs.messageFilter);
 
 	CString strCommentFilters;
-	GetDlgItem(IDC_COMMENTFILTER)->GetWindowText(strCommentFilters);
+	GetDlgItemText(IDC_COMMENTFILTER, strCommentFilters);
 	strCommentFilters.MakeLower();
 	CString strNewCommentFilters;
 	int curPos = 0;
@@ -130,19 +130,19 @@ void CPPgMessages::Localize()
 	{
 		SetWindowText(GetResString(IDS_MESSAGESCOMMENTS));
 
-		GetDlgItem(IDC_FILTERCOMMENTSLABEL)->SetWindowText(GetResString(IDS_FILTERCOMMENTSLABEL));
-		GetDlgItem(IDC_STATIC_COMMENTS)->SetWindowText(GetResString(IDS_COMMENT));
-		GetDlgItem(IDC_INDICATERATINGS)->SetWindowText(GetResString(IDS_INDICATERATINGS));
+		SetDlgItemText(IDC_FILTERCOMMENTSLABEL, GetResString(IDS_FILTERCOMMENTSLABEL));
+		SetDlgItemText(IDC_STATIC_COMMENTS, GetResString(IDS_COMMENT));
+		SetDlgItemText(IDC_INDICATERATINGS, GetResString(IDS_INDICATERATINGS));
 
-		GetDlgItem(IDC_FILTERLABEL)->SetWindowText(GetResString(IDS_FILTERLABEL));
-		GetDlgItem(IDC_MSG)->SetWindowText(GetResString(IDS_CW_MESSAGES));
+		SetDlgItemText(IDC_FILTERLABEL, GetResString(IDS_FILTERLABEL));
+		SetDlgItemText(IDC_MSG, GetResString(IDS_CW_MESSAGES));
 
-		GetDlgItem(IDC_MSGONLYFRIENDS)->SetWindowText(GetResString(IDS_MSGONLYFRIENDS));
-		GetDlgItem(IDC_USECAPTCHAS)->SetWindowText(GetResString(IDS_USECAPTCHAS));
+		SetDlgItemText(IDC_MSGONLYFRIENDS, GetResString(IDS_MSGONLYFRIENDS));
+		SetDlgItemText(IDC_USECAPTCHAS, GetResString(IDS_USECAPTCHAS));
 
-		GetDlgItem(IDC_ADVSPAMFILTER)->SetWindowText(GetResString(IDS_ADVSPAMFILTER));
+		SetDlgItemText(IDC_ADVSPAMFILTER, GetResString(IDS_ADVSPAMFILTER));
 
-		GetDlgItem(IDC_MSHOWSMILEYS)->SetWindowText(GetResString(IDS_SHOWSMILEYS));
+		SetDlgItemText(IDC_MSHOWSMILEYS, GetResString(IDS_SHOWSMILEYS));
 	}
 }
 

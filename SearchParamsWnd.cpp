@@ -170,7 +170,7 @@ LRESULT CSearchParamsWnd::OnInitDialog(WPARAM /*wParam*/, LPARAM /*lParam*/)
 		if (theApp.m_fontSymbol.m_hObject)
 		{
 			GetDlgItem(IDC_DD)->SetFont(&theApp.m_fontSymbol);
-			GetDlgItem(IDC_DD)->SetWindowText(_T("6")); // show a down-arrow
+			SetDlgItemText(IDC_DD, _T("6")); // show a down-arrow
 		}
 	}
 	else
@@ -497,15 +497,15 @@ void CSearchParamsWnd::UpdateControls()
 		}
 	}
 
-	m_ctlOpts.SetItemData(orAvailability, (iMethod==SearchTypeContentDB) ? 1 : 0);
-	m_ctlOpts.SetItemData(orExtension, (iMethod==SearchTypeContentDB) ? 1 : 0);
-	m_ctlOpts.SetItemData(orCompleteSources, (iMethod==SearchTypeKademlia || iMethod==SearchTypeContentDB) ? 1 : 0);
-	m_ctlOpts.SetItemData(orCodec, (iMethod==SearchTypeContentDB) ? 1 : 0);
-	m_ctlOpts.SetItemData(orBitrate, (iMethod==SearchTypeContentDB) ? 1 : 0);
-	m_ctlOpts.SetItemData(orLength, (iMethod==SearchTypeContentDB) ? 1 : 0);
-	m_ctlOpts.SetItemData(orTitle, (iMethod==SearchTypeEd2kServer || iMethod==SearchTypeEd2kGlobal || iMethod==SearchTypeContentDB) ? 1 : 0);
-	m_ctlOpts.SetItemData(orAlbum, (iMethod==SearchTypeEd2kServer || iMethod==SearchTypeEd2kGlobal || iMethod==SearchTypeContentDB) ? 1 : 0);
-	m_ctlOpts.SetItemData(orArtist, (iMethod==SearchTypeEd2kServer || iMethod==SearchTypeEd2kGlobal || iMethod==SearchTypeContentDB) ? 1 : 0);
+	m_ctlOpts.SetItemData(orAvailability, static_cast<DWORD_PTR>(iMethod==SearchTypeContentDB));
+	m_ctlOpts.SetItemData(orExtension, static_cast<DWORD_PTR>(iMethod==SearchTypeContentDB));
+	m_ctlOpts.SetItemData(orCompleteSources, static_cast<DWORD_PTR>(iMethod==SearchTypeKademlia || iMethod==SearchTypeContentDB));
+	m_ctlOpts.SetItemData(orCodec, static_cast<DWORD_PTR>(iMethod==SearchTypeContentDB));
+	m_ctlOpts.SetItemData(orBitrate, static_cast<DWORD_PTR>(iMethod==SearchTypeContentDB));
+	m_ctlOpts.SetItemData(orLength, static_cast<DWORD_PTR>(iMethod==SearchTypeContentDB));
+	m_ctlOpts.SetItemData(orTitle, static_cast<DWORD_PTR>(iMethod==SearchTypeEd2kServer || iMethod==SearchTypeEd2kGlobal || iMethod==SearchTypeContentDB));
+	m_ctlOpts.SetItemData(orAlbum, static_cast<DWORD_PTR>(iMethod==SearchTypeEd2kServer || iMethod==SearchTypeEd2kGlobal || iMethod==SearchTypeContentDB));
+	m_ctlOpts.SetItemData(orArtist, static_cast<DWORD_PTR>(iMethod==SearchTypeEd2kServer || iMethod==SearchTypeEd2kGlobal || iMethod==SearchTypeContentDB));
 }
 
 void CSearchParamsWnd::SetAllIcons()
@@ -516,7 +516,7 @@ void CSearchParamsWnd::SetAllIcons()
 	iml.Add(CTempIconLoader(_T("SearchMethod_SERVER")));
 	iml.Add(CTempIconLoader(_T("SearchMethod_GLOBAL")));
 	iml.Add(CTempIconLoader(_T("SearchMethod_KADEMLIA")));
-	iml.Add(CTempIconLoader(_T("SearchMethod_FILEDONKEY")));
+	iml.Add(CTempIconLoader(_T("SearchMethod_CONTENTDB")));
 	m_ctlMethod.SetImageList(&iml);
 	m_imlSearchMethods.DeleteImageList();
 	m_imlSearchMethods.Attach(iml.Detach());
@@ -557,7 +557,7 @@ void CSearchParamsWnd::InitMethodsCtrl()
 	VERIFY( m_ctlMethod.AddItem(GetResString(IDS_SERVER), 1) == SearchTypeEd2kServer );
 	VERIFY( m_ctlMethod.AddItem(GetResString(IDS_GLOBALSEARCH), 2) == SearchTypeEd2kGlobal );
 	VERIFY( m_ctlMethod.AddItem(GetResString(IDS_KADEMLIA) + _T(' ') + GetResString(IDS_NETWORK), 3) == SearchTypeKademlia );
-	VERIFY( m_ctlMethod.AddItem(_T("ContentDB (Web)"), 4) == SearchTypeContentDB );
+	VERIFY( m_ctlMethod.AddItem(GetResString(IDS_CONTENTDB), 4) == SearchTypeContentDB );
 	UpdateHorzExtent(m_ctlMethod, 16); // adjust dropped width to ensure all strings are fully visible
 	m_ctlMethod.SetCurSel(iMethod != CB_ERR ? iMethod : SearchTypeAutomatic);
 }
@@ -641,10 +641,10 @@ void CSearchParamsWnd::Localize()
 {
 	SetWindowText(GetResString(IDS_SEARCHPARAMS));
 
-	GetDlgItem(IDC_MSTATIC3)->SetWindowText(GetResString(IDS_SW_NAME));
-	GetDlgItem(IDC_MSTATIC7)->SetWindowText(GetResString(IDS_TYPE));
-	GetDlgItem(IDC_SEARCH_RESET)->SetWindowText(GetResString(IDS_PW_RESET));
-	GetDlgItem(IDC_METH)->SetWindowText(GetResString(IDS_METHOD));
+	SetDlgItemText(IDC_MSTATIC3, GetResString(IDS_SW_NAME));
+	SetDlgItemText(IDC_MSTATIC7, GetResString(IDS_TYPE));
+	SetDlgItemText(IDC_SEARCH_RESET, GetResString(IDS_PW_RESET));
+	SetDlgItemText(IDC_METH, GetResString(IDS_METHOD));
 
 	m_ctlStart.SetWindowText(GetResString(IDS_SW_START));
 	m_ctlCancel.SetWindowText(GetResString(IDS_CANCEL));
@@ -887,7 +887,7 @@ uint64 CSearchParamsWnd::GetSearchAttrSize(const CString& rstrExpr)
 		while (*endptr == _T(' '))
 			++endptr;
 
-		switch (_totlower((_TUCHAR)*endptr)) {
+		switch (_totlower(*endptr)) {
 		case _T('b'): //bytes
 			return (uint64)(dbl + 0.5);
 		case _T('k'): //kilobytes
@@ -913,7 +913,7 @@ ULONG CSearchParamsWnd::GetSearchAttrNumber(const CString& rstrExpr)
 		while (*endptr == _T(' '))
 			++endptr;
 
-		switch (_totlower((_TUCHAR)*endptr)) {
+		switch (_totlower(*endptr)) {
 		case _T('\0'): //not specified
 		case _T('b'): //bytes
 			break;
@@ -946,7 +946,7 @@ ULONG CSearchParamsWnd::GetSearchAttrLength(const CString& rstrExpr)
 		while (*endptr == _T(' '))
 			++endptr;
 
-		switch (_totlower((_TUCHAR)*endptr)) {
+		switch (_totlower(*endptr)) {
 		case _T('\0'): //not specified
 		case _T('s'): //seconds
 			break;
@@ -1007,9 +1007,9 @@ SSearchParams* CSearchParamsWnd::GetParameters()
 	{
 		strExtension = m_ctlOpts.GetItemText(orExtension, 1);
 		strExtension.Trim();
-		if (!strExtension.IsEmpty() && strExtension[0] == _T('.'))
+		if (strExtension[0] == _T('.'))
 		{
-			strExtension = strExtension.Mid(1);
+			strExtension.Delete(0, 1);
 			m_ctlOpts.SetItemText(orExtension, 1, strExtension);
 		}
 	}

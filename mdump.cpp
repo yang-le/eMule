@@ -58,7 +58,8 @@ void CMiniDumper::Enable(LPCTSTR pszAppName, bool bShowErrors, LPCTSTR pszDumpDi
 }
 
 #define DBGHELP_HINT _T("You can get the required DBGHELP.DLL by downloading the \"User Mode Process Dumper\" from \"Microsoft Download Center\".\r\n\r\n") \
-	_T("Extract the \"User Mode Process Dumper\" and locate the \"x86\" folder. Copy the DBGHELP.DLL from the \"x86\" folder into your eMule installation folder and/or into your Windows system/system32 folder.")
+	_T("Extract the \"User Mode Process Dumper\" and locate the \"x86\" folder. ") \
+	_T("Copy the DBGHELP.DLL from the \"x86\" folder into your eMule installation folder and/or into your Windows system/system32 folder.")
 
 
 HMODULE CMiniDumper::GetDebugHelperDll(FARPROC* ppfnMiniDumpWriteDump, bool bShowErrors)
@@ -86,84 +87,85 @@ HMODULE CMiniDumper::GetDebugHelperDll(FARPROC* ppfnMiniDumpWriteDump, bool bSho
 	return hDll;
 }
 
-LONG WINAPI CMiniDumper::TopLevelFilter(struct _EXCEPTION_POINTERS* pExceptionInfo)
+#define CRASHTEXT _T("eMule crashed :-(\r\n\r\n") \
+	_T("A diagnostic file can be created which will help the author to resolve this problem.\r\n") \
+	_T("This file will be saved on your Disk (and not sent).\r\n\r\n") \
+	_T("Do you want to create this file now?")
+LONG WINAPI CMiniDumper::TopLevelFilter(struct _EXCEPTION_POINTERS* pExceptionInfo) noexcept
 {
 	LONG lRetValue = EXCEPTION_CONTINUE_SEARCH;
 	TCHAR szResult[MAX_PATH + 1024] = {};
 	MINIDUMPWRITEDUMP pfnMiniDumpWriteDump = NULL;
 	HMODULE hDll = GetDebugHelperDll((FARPROC*)&pfnMiniDumpWriteDump, true);
-	if (hDll)
+	if (hDll && pfnMiniDumpWriteDump)
 	{
-		if (pfnMiniDumpWriteDump)
+		time_t tNow = time(NULL); //time of the crash
+		// Ask user if they want to save a dump file
+		// Do *NOT* localize that string (in fact, do not use MFC to load it)!
+		if (theCrashDumper.uCreateCrashDump == 2 || MessageBox(NULL, CRASHTEXT, m_szAppName, MB_ICONSTOP | MB_YESNO) == IDYES)
 		{
-			time_t tNow = time(NULL); //fix time (of crash)
-			// Ask user if they want to save a dump file
-			// Do *NOT* localize that string (in fact, do not use MFC to load it)!
-			if (MessageBox(NULL, _T("eMule crashed :-(\r\n\r\nA diagnostic file can be created which will help the author to resolve this problem. This file will be saved on your Disk (and not sent).\r\n\r\nDo you want to create this file now?"), m_szAppName, MB_ICONSTOP | MB_YESNO) == IDYES)
-			{
-				// Create full path for DUMP file
-				TCHAR szDumpPath[MAX_PATH];
-				_tcsncpy(szDumpPath, m_szDumpDir, _countof(szDumpPath) - 1);
+			// Create full path for DUMP file
+			TCHAR szDumpPath[MAX_PATH];
+			_tcsncpy(szDumpPath, m_szDumpDir, _countof(szDumpPath) - 1);
+			szDumpPath[_countof(szDumpPath) - 1] = _T('\0');
+			size_t uDumpPathLen = _tcslen(szDumpPath);
+
+			TCHAR szBaseName[MAX_PATH];
+			_tcsncpy(szBaseName, m_szAppName, _countof(szBaseName) - 1);
+			szBaseName[_countof(szBaseName) - 1] = _T('\0');
+			size_t uBaseNameLen = _tcslen(szBaseName);
+
+			_tcsftime(szBaseName + uBaseNameLen, _countof(szBaseName) - uBaseNameLen, _T("_%Y%m%d-%H%M%S"), localtime(&tNow));
+			szBaseName[_countof(szBaseName) - 1] = _T('\0');
+
+			// Replace spaces and dots in file name.
+			LPTSTR psz = szBaseName;
+			while (*psz != _T('\0')) {
+				if (*psz == _T('.'))
+					*psz = _T('-');
+				else if (*psz == _T(' '))
+					*psz = _T('_');
+				++psz;
+			}
+			if (uDumpPathLen < _countof(szDumpPath) - 1) {
+				_tcsncat(szDumpPath, szBaseName, _countof(szDumpPath) - uDumpPathLen - 1);
 				szDumpPath[_countof(szDumpPath) - 1] = _T('\0');
-				size_t uDumpPathLen = _tcslen(szDumpPath);
-
-				TCHAR szBaseName[MAX_PATH];
-				_tcsncpy(szBaseName, m_szAppName, _countof(szBaseName) - 1);
-				szBaseName[_countof(szBaseName) - 1] = _T('\0');
-				size_t uBaseNameLen = _tcslen(szBaseName);
-
-				_tcsftime(szBaseName + uBaseNameLen, _countof(szBaseName) - uBaseNameLen, _T("_%Y%m%d-%H%M%S"), localtime(&tNow));
-				szBaseName[_countof(szBaseName) - 1] = _T('\0');
-
-				// Replace spaces and dots in file name.
-				LPTSTR psz = szBaseName;
-				while (*psz != _T('\0')) {
-					if (*psz == _T('.'))
-						*psz = _T('-');
-					else if (*psz == _T(' '))
-						*psz = _T('_');
-					psz++;
-				}
+				uDumpPathLen = _tcslen(szDumpPath);
 				if (uDumpPathLen < _countof(szDumpPath) - 1) {
-					_tcsncat(szDumpPath, szBaseName, _countof(szDumpPath) - uDumpPathLen - 1);
+					_tcsncat(szDumpPath, _T(".dmp"), _countof(szDumpPath) - uDumpPathLen - 1);
 					szDumpPath[_countof(szDumpPath) - 1] = _T('\0');
-					uDumpPathLen = _tcslen(szDumpPath);
-					if (uDumpPathLen < _countof(szDumpPath) - 1) {
-						_tcsncat(szDumpPath, _T(".dmp"), _countof(szDumpPath) - uDumpPathLen - 1);
-						szDumpPath[_countof(szDumpPath) - 1] = _T('\0');
-					}
 				}
+			}
 
-				HANDLE hFile = CreateFile(szDumpPath, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-				if (hFile != INVALID_HANDLE_VALUE)
+			HANDLE hFile = CreateFile(szDumpPath, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+			if (hFile != INVALID_HANDLE_VALUE)
+			{
+				_MINIDUMP_EXCEPTION_INFORMATION ExInfo = {};
+				ExInfo.ThreadId = GetCurrentThreadId();
+				ExInfo.ExceptionPointers = pExceptionInfo;
+				ExInfo.ClientPointers = NULL;
+
+				BOOL bOK = (*pfnMiniDumpWriteDump)(GetCurrentProcess(), GetCurrentProcessId(), hFile, MiniDumpNormal, &ExInfo, NULL, NULL);
+				if (bOK)
 				{
-					_MINIDUMP_EXCEPTION_INFORMATION ExInfo = {};
-					ExInfo.ThreadId = GetCurrentThreadId();
-					ExInfo.ExceptionPointers = pExceptionInfo;
-					ExInfo.ClientPointers = NULL;
-
-					BOOL bOK = (*pfnMiniDumpWriteDump)(GetCurrentProcess(), GetCurrentProcessId(), hFile, MiniDumpNormal, &ExInfo, NULL, NULL);
-					if (bOK)
-					{
-						// Do *NOT* localize that string (in fact, do not use MFC to load it)!
-						_sntprintf(szResult, _countof(szResult) - 1, _T("Saved dump file to \"%s\".\r\n\r\nPlease send this file together with a detailed bug report to dumps@emule-project.net !\r\n\r\nThank you for helping to improve eMule."), szDumpPath);
-						szResult[_countof(szResult) - 1] = _T('\0');
-						lRetValue = EXCEPTION_EXECUTE_HANDLER;
-					}
-					else
-					{
-						// Do *NOT* localize that string (in fact, do not use MFC to load it)!
-						_sntprintf(szResult, _countof(szResult) - 1, _T("Failed to save dump file to \"%s\".\r\n\r\nError: %lu"), szDumpPath, GetLastError());
-						szResult[_countof(szResult) - 1] = _T('\0');
-					}
-					CloseHandle(hFile);
+					// Do *NOT* localize that string (in fact, do not use MFC to load it)!
+					_sntprintf(szResult, _countof(szResult) - 1, _T("Saved dump file to \"%s\".\r\n\r\nPlease send this file together with a detailed bug report to dumps@emule-project.net !\r\n\r\nThank you for helping to improve eMule."), szDumpPath);
+					szResult[_countof(szResult) - 1] = _T('\0');
+					lRetValue = EXCEPTION_EXECUTE_HANDLER;
 				}
 				else
 				{
 					// Do *NOT* localize that string (in fact, do not use MFC to load it)!
-					_sntprintf(szResult, _countof(szResult) - 1, _T("Failed to create dump file \"%s\".\r\n\r\nError: %lu"), szDumpPath, GetLastError());
+					_sntprintf(szResult, _countof(szResult) - 1, _T("Failed to save dump file to \"%s\".\r\n\r\nError: %lu"), szDumpPath, GetLastError());
 					szResult[_countof(szResult) - 1] = _T('\0');
 				}
+				CloseHandle(hFile);
+			}
+			else
+			{
+				// Do *NOT* localize that string (in fact, do not use MFC to load it)!
+				_sntprintf(szResult, _countof(szResult) - 1, _T("Failed to create dump file \"%s\".\r\n\r\nError: %lu"), szDumpPath, GetLastError());
+				szResult[_countof(szResult) - 1] = _T('\0');
 			}
 		}
 		FreeLibrary(hDll);

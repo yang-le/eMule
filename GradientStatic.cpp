@@ -165,7 +165,7 @@ void DrawRotatedText(HDC hdc, LPCTSTR str, LPRECT rect, double angle, UINT nOpti
 
    // get the center of a not-rotated text
    SIZE TextSize;
-   GetTextExtentPoint32(hdc, str, _tcslen(str), &TextSize);
+   GetTextExtentPoint32(hdc, str, (int)_tcslen(str), &TextSize);
 
    POINT center;
    center.x = TextSize.cx / 2;
@@ -180,7 +180,7 @@ void DrawRotatedText(HDC hdc, LPCTSTR str, LPRECT rect, double angle, UINT nOpti
    SetTextAlign(hdc, TA_BOTTOM);
    SetBkMode(hdc, TRANSPARENT);
    ExtTextOut(hdc, rect->left + (rect->right - rect->left) / 2 - rcenter.x,
-              rect->bottom, nOptions, rect, str, _tcslen(str), NULL);
+              rect->bottom, nOptions, rect, str, (UINT)_tcslen(str), NULL);
 }
 
 void CGradientStatic::DrawVerticalText(CRect *pRect)

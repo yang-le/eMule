@@ -20,9 +20,9 @@
 struct OpenOvFile_Struct
 {
 	uchar		ucMD4FileHash[16];
+	uint64		uFileSize;
 	HANDLE		hFile;
 	uint32		nInUse;
-	uint64		uFileSize;
 	bool		bStatsIsPartfile;
 	bool		bCompress;
 };
@@ -67,7 +67,7 @@ private:
 
 	void		StartCreateNextBlockPackage(UploadingToClient_Struct* pUploadClientStruct);
 	bool		ReleaseOvOpenFile(OpenOvFile_Struct* pOpenOvFileStruct);
-	void		ReadCompletetionRoutine(DWORD dwErrorCode, DWORD dwBytesRead, OverlappedEx_Struct*  pOverlappedExStruct);
+	void		ReadCompletionRoutine(DWORD dwErrorCode, DWORD dwBytesRead, OverlappedEx_Struct*  pOverlappedExStruct);
 
 	static void CreateStandardPackets(byte* pbyData, uint64 uStartOffset, uint64 uEndOffset, bool bFromPF, CPacketList& rOutPacketList, const uchar* pucMD4FileHash, const CString& strDbgClientInfo);
 	static void CreatePackedPackets(byte* pbyData, uint64 uStartOffset, uint64 uEndOffset, bool bFromPF, CPacketList& rOutPacketList, const uchar* pucMD4FileHash, const CString& strDbgClientInfo);

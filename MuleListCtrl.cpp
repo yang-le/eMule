@@ -42,7 +42,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 #define MAX_SORTORDERHISTORY 4
-#define MLC_BLEND(A, B, X) ((A + B * (X-1) + ((X+1)/2)) / X)
+#define MLC_BLEND(A, B, X) (((A) + (B) * ((X)-1) + (((X)+1)/2)) / (X))
 
 #define MLC_RGBBLEND(A, B, X) (                   \
 	RGB(MLC_BLEND(GetRValue(A), GetRValue(B), X), \
@@ -82,7 +82,7 @@ BEGIN_MESSAGE_MAP(CMuleListCtrl, CListCtrl)
 END_MESSAGE_MAP()
 
 CMuleListCtrl::CMuleListCtrl(PFNLVCOMPARE pfnCompare, DWORD dwParamSort)
-	: m_atSortArrow(), m_lvcd()
+	: m_lvcd(), m_atSortArrow()
 {
 	m_SortProc = pfnCompare;
 	m_dwParamSort = dwParamSort;
@@ -783,14 +783,14 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 				tmColumnMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
 				VERIFY( tmColumnMenu.DestroyMenu() );
 
-				return *pResult = TRUE;
+				return (BOOL)(*pResult = TRUE);
 
 			} else if(((NMHDR*)lParam)->code == HDN_BEGINTRACKA || ((NMHDR*)lParam)->code == HDN_BEGINTRACKW) {
 				//stop them from changeing the size of anything "before" first column
 
 				HD_NOTIFY *pHDN = (HD_NOTIFY*)lParam;
 				if(m_aColumns[pHDN->iItem].bHidden)
-					return *pResult = TRUE;
+					return (BOOL)(*pResult = TRUE);
 
 			} else if(((NMHDR*)lParam)->code == HDN_ENDDRAG) {
 				//stop them from moving first column
@@ -829,7 +829,7 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 					}
 				}
 
-				return *pResult = 1;
+				return (BOOL)(*pResult = TRUE);
 			}
 			else if(((NMHDR*)lParam)->code == HDN_DIVIDERDBLCLICKA || ((NMHDR*)lParam)->code == HDN_DIVIDERDBLCLICKW) {
 				// The effect of LVSCW_AUTOSIZE_USEHEADER is as follows:
@@ -857,7 +857,7 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 					// If the listview is empty, the LVSCW_AUTOSIZE_USEHEADER is more appropriate, even if
 					// some listview has requested LVSCW_AUTOSIZE.
 					SetColumnWidth(pHeader->iItem, GetItemCount() == 0 ? LVSCW_AUTOSIZE_USEHEADER : m_iAutoSizeWidth);
-					return *pResult = 1;
+					return (BOOL)(*pResult = TRUE);
 				}
 			}
 		}
@@ -866,13 +866,13 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 	case WM_COMMAND:
 		//deal with menu clicks
 		if(wParam == MLC_IDC_UPDATE) {
-			UpdateLocation(lParam);
-			return *pResult = 1;
+			UpdateLocation((int)lParam);
+			return (BOOL)(*pResult = TRUE);
 		} else if(wParam >= MLC_IDC_MENU) {
 			CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
 			int iCount = pHeaderCtrl->GetItemCount();
 
-			int iToggle = wParam - MLC_IDC_MENU;
+			int iToggle = (int)(wParam - MLC_IDC_MENU);
 			if(iToggle >= iCount)
 				break;
 
@@ -881,7 +881,7 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 			else
 				HideColumn(iToggle);
 
-			return *pResult = 1;
+			return (BOOL)(*pResult = TRUE);
 		}
 		break;
 
@@ -920,13 +920,13 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 
 	case LVM_SETITEM:
 	{
-		POSITION pos = m_Params.FindIndex(((LPLVITEM)lParam)->iItem);
-		if(pos) {
+		POSITION pos = m_Params.FindIndex(reinterpret_cast<LPLVITEM>(lParam)->iItem);
+		if (pos) {
 			m_Params.SetAt(pos, MLC_MAGIC);
 			if (m_eUpdateMode == lazy)
-				PostMessage(LVM_UPDATE, ((LPLVITEM)lParam)->iItem);
+				PostMessage(LVM_UPDATE, reinterpret_cast<LPLVITEM>(lParam)->iItem);
 			else if (m_eUpdateMode == direct)
-				UpdateLocation(((LPLVITEM)lParam)->iItem);
+				UpdateLocation(reinterpret_cast<LPLVITEM>(lParam)->iItem);
 		}
 		break;
 	}
@@ -941,12 +941,12 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 			if (m_eUpdateMode == lazy)
 				PostMessage(WM_COMMAND, MLC_IDC_UPDATE, wParam);
 			else if (m_eUpdateMode == direct)
-				UpdateLocation(wParam);
+				UpdateLocation((int)wParam);
 		}
-		return *pResult;
+		return *pResult != 0;
 
 	case LVM_SORTITEMS:
-		m_dwParamSort = (LPARAM)wParam;
+		m_dwParamSort = (DWORD)wParam;
 		m_SortProc = (PFNLVCOMPARE)lParam;
 		for(POSITION pos = m_Params.GetHeadPosition(); pos != NULL; m_Params.GetNext(pos))
 			m_Params.SetAt(pos, MLC_MAGIC);
@@ -955,13 +955,13 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 	case LVM_DELETEALLITEMS:
 		if(!CListCtrl::OnWndMsg(message, wParam, lParam, pResult) && DefWindowProc(message, wParam, lParam))
 			m_Params.RemoveAll();
-		return *pResult = TRUE;
+		return (BOOL)(*pResult = TRUE);
 
 	case LVM_DELETEITEM:
 		MLC_ASSERT(m_Params.GetAt(m_Params.FindIndex(wParam)) == CListCtrl::GetItemData(wParam));
 		if(!CListCtrl::OnWndMsg(message, wParam, lParam, pResult) && DefWindowProc(message, wParam, lParam))
 			m_Params.RemoveAt(m_Params.FindIndex(wParam));
-		return *pResult = TRUE;
+		return (BOOL)(*pResult = TRUE);
 
 	case LVM_INSERTITEMA:
 	case LVM_INSERTITEMW:
@@ -979,8 +979,7 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 				int iResult = m_SortProc(pItem->lParam, GetParamAt(pos, iNewIndex), m_dwParamSort);
 				if(iResult < 0) {
 					POSITION posPrev = pos;
-					int iDist = iNewIndex / 2;
-					while(iDist > 1) {
+					for (int iDist = iNewIndex / 2; iDist > 1;) {
 						for(int i = 0; i < iDist; i++)
 							m_Params.GetPrev(posPrev);
 
@@ -1044,7 +1043,7 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 				else
 					m_Params.InsertAfter(m_Params.FindIndex(lResult - 1), pItem->lParam);
 			}
-			return *pResult = lResult;
+			return (BOOL)(*pResult = lResult);
 		}
 
 	case WM_DESTROY:
@@ -1053,14 +1052,14 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 
 	case LVM_UPDATE:
 		//better fix for old problem... normally Update(int) causes entire list to redraw
-		if (wParam == (UINT)UpdateLocation(wParam)) { //no need to invalidate rect if item moved
+		if ((int)wParam == UpdateLocation((int)wParam)) { //no need to invalidate rect if item moved
 			RECT rcItem;
-			BOOL bResult = GetItemRect(wParam, &rcItem, LVIR_BOUNDS);
-			if(bResult)
+			BOOL bResult = GetItemRect((int)wParam, &rcItem, LVIR_BOUNDS);
+			if (bResult)
 				InvalidateRect(&rcItem, FALSE);
-			return *pResult = bResult;
+			return (BOOL)(*pResult = bResult);
 		}
-		return *pResult = TRUE;
+		return (BOOL)(*pResult = TRUE);
 
 	case WM_CONTEXTMENU:
 		// If the context menu is opened with the _mouse_ and if it was opened _outside_
@@ -1075,7 +1074,7 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 				CRect rcClient;
 				GetClientRect(&rcClient);
 				if (!rcClient.PtInRect(ptMouse))
-					return DefWindowProc(message, wParam, lParam);
+					return DefWindowProc(message, wParam, lParam) != 0;
 			}
 		}
 	}
@@ -1658,7 +1657,7 @@ void CMuleListCtrl::UpdateSortHistory(int dwNewOrder, int dwInverseValue)
 		m_liSortHistory.RemoveTail();
 }
 
-int	CMuleListCtrl::GetNextSortOrder(int dwCurrentSortOrder) const
+int CMuleListCtrl::GetNextSortOrder(int dwCurrentSortOrder) const
 {
 	POSITION pos = m_liSortHistory.Find(dwCurrentSortOrder);
 	if (pos) {
@@ -1723,7 +1722,7 @@ void CMuleListCtrl::SetAutoSizeWidth(int iAutoSizeWidth)
 	m_iAutoSizeWidth = iAutoSizeWidth;
 }
 
-int CMuleListCtrl::InsertColumn(int nCol, LPCTSTR lpszColumnHeading, int nFormat, int nWidth, int nSubItem , bool bHiddenByDefault)
+int CMuleListCtrl::InsertColumn(int nCol, LPCTSTR lpszColumnHeading, int nFormat, int nWidth, int nSubItem, bool bHiddenByDefault)
 {
 	if (bHiddenByDefault)
 		m_liDefaultHiddenColumns.AddTail(nCol);

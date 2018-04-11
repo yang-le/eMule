@@ -269,7 +269,7 @@ void CLogFile::SetMaxFileSize(UINT uMaxFileSize)
 	m_uMaxFileSize = uMaxFileSize;
 }
 
-bool CLogFile::SetFileFormat(ELogFileFormat eFileFormat)
+bool CLogFile::SetFileFormat(const ELogFileFormat eFileFormat)
 {
 	if (eFileFormat != Unicode && eFileFormat != Utf8){
 		ASSERT(0);
@@ -286,7 +286,7 @@ bool CLogFile::IsOpen() const
 	return m_fp != NULL;
 }
 
-bool CLogFile::Create(LPCTSTR pszFilePath, UINT uMaxFileSize, ELogFileFormat eFileFormat)
+bool CLogFile::Create(LPCTSTR pszFilePath, UINT uMaxFileSize, const ELogFileFormat eFileFormat)
 {
 	Close();
 	m_strFilePath = pszFilePath;
@@ -427,9 +427,7 @@ void CLogFile::StartNewLogFile()
 	_tsplitpath(m_strFilePath, szDrv, szDir, szNam, szExt);
 
 	CString strLogBakNam;
-	strLogBakNam = szNam;
-	strLogBakNam += _T(" - ");
-	strLogBakNam += szDateLogStarted;
+	strLogBakNam.Format(_T("%s - %s"), szNam, szDateLogStarted);
 
 	TCHAR szLogBakFilePath[MAX_PATH];
 	_tmakepathlimit(szLogBakFilePath, szDrv, szDir, strLogBakNam, szExt);

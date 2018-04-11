@@ -105,10 +105,9 @@ CString CSHA::HashToString(const SHA1* pHashIn, bool bURN)
 	static LPCTSTR pszBase64 = _T("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567");
 
 	CString strHash;
-	LPTSTR pszHash = strHash.GetBuffer( bURN ? 9 + 32 : 32 );
+	LPTSTR pszHash = strHash.GetBuffer(bURN ? 9 + 32 : 32);
 
-	if ( bURN )
-	{
+	if (bURN) {
 		*pszHash++ = 'u'; *pszHash++ = 'r'; *pszHash++ = 'n'; *pszHash++ = ':';
 		*pszHash++ = 's'; *pszHash++ = 'h'; *pszHash++ = 'a'; *pszHash++ = '1'; *pszHash++ = ':';
 	}
@@ -116,26 +115,24 @@ CString CSHA::HashToString(const SHA1* pHashIn, bool bURN)
 	LPBYTE pHash = (LPBYTE)pHashIn;
 	int nShift = 7;
 
-	for ( int nChar = 32 ; nChar ; nChar-- )
-	{
+	for (int nChar = 32; nChar; --nChar) {
 		BYTE nBits = 0;
 
-		for ( int nBit = 0 ; nBit < 5 ; nBit++ )
-		{
-			if ( nBit ) nBits <<= 1;
-			nBits |= ( *pHash >> nShift ) & 1;
+		for (int nBit = 0; nBit < 5; ++nBit) {
+			if (nBit)
+				nBits <<= 1;
+			nBits |= (*pHash >> nShift) & 1;
 
-			if ( ! nShift-- )
-			{
+			if (!nShift--) {
 				nShift = 7;
 				pHash++;
 			}
 		}
 
-		*pszHash++ = pszBase64[ nBits ];
+		*pszHash++ = pszBase64[nBits];
 	}
 
-	strHash.ReleaseBuffer( bURN ? 9 + 32 : 32 );
+	strHash.ReleaseBuffer(bURN ? 9 + 32 : 32);
 
 	return strHash;
 }
@@ -147,19 +144,18 @@ CString CSHA::HashToHexString(const SHA1* pHashIn, bool bURN)
 {
 	static LPCTSTR pszHex = _T("0123456789ABCDEF");
 
-	LPBYTE pHash = (LPBYTE)pHashIn;
 	CString strHash;
 	LPTSTR pszHash = strHash.GetBuffer(SHA1_DIGEST_SIZE*sizeof(TCHAR));
 
-	for ( int nByte = 0 ; nByte < SHA1_DIGEST_SIZE ; ++nByte, ++pHash )
-	{
-		*pszHash++ = pszHex[ *pHash >> 4 ];
-		*pszHash++ = pszHex[ *pHash & 15 ];
+	LPBYTE pHash = (LPBYTE)pHashIn;
+	for (int nByte = 0; nByte < SHA1_DIGEST_SIZE; ++nByte) {
+		*pszHash++ = pszHex[*pHash >> 4];
+		*pszHash++ = pszHex[*pHash++ & 15];
 	}
 
 	strHash.ReleaseBuffer(SHA1_DIGEST_SIZE*sizeof(TCHAR));
 
-	if ( bURN )
+	if (bURN)
 		strHash = _T("urn:sha1:") + strHash;
 
 	return strHash;

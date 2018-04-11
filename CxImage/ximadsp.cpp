@@ -95,7 +95,7 @@ bool CxImage::Threshold(CxImage* pThresholdMask)
  * and preserves the colors for the unfiltered pixels.
  * \param level = the lightness threshold.
  * \param bDirection = false: filter dark pixels, true: filter light pixels
- * \param nBkgndColor =  filtered pixels are set to nBkgndColor color
+ * \param nBkgndColor = filtered pixels are set to nBkgndColor color
  * \param bSetAlpha = if true, sets also the alpha component for the filtered pixels, with nBkgndColor.rgbReserved
  * \return true if everything is ok
  * \author [DP], [wangsongtao]
@@ -1103,9 +1103,9 @@ void CxImage::Mix(CxImage & imgsrc2, ImageOpType op, int32_t lXOffset, int32_t l
 				switch(op)
 				{
 					case OpAvg:
-						rgbDest.rgbBlue =  (uint8_t)((rgb1.rgbBlue+rgb2.rgbBlue)/2);
+						rgbDest.rgbBlue = (uint8_t)((rgb1.rgbBlue+rgb2.rgbBlue)/2);
 						rgbDest.rgbGreen = (uint8_t)((rgb1.rgbGreen+rgb2.rgbGreen)/2);
-						rgbDest.rgbRed =   (uint8_t)((rgb1.rgbRed+rgb2.rgbRed)/2);
+						rgbDest.rgbRed = (uint8_t)((rgb1.rgbRed+rgb2.rgbRed)/2);
 						if (bEditAlpha) rgbDest.rgbReserved = (uint8_t)((rgb1.rgbReserved+rgb2.rgbReserved)/2);
 					break;
 					case OpAdd:
@@ -1394,17 +1394,15 @@ bool CxImage::GammaRGB(float gammaR, float gammaG, float gammaB)
  */
 bool CxImage::Median(int32_t Ksize)
 {
-	if (!pDib) return false;
-
-	int32_t k2 = Ksize/2;
-	int32_t kmax= Ksize-k2;
-	int32_t i,j,k;
-
+	if (!pDib)
+		return false;
 	RGBQUAD* kernel = (RGBQUAD*)malloc(Ksize*Ksize*sizeof(RGBQUAD));
+	if (!kernel)
+		return false;
 
 	CxImage tmp(*this);
-	if (!tmp.IsValid()){
-		strcpy(info.szLastError,tmp.GetLastError());
+	if (!tmp.IsValid()) {
+		strcpy(info.szLastError, tmp.GetLastError());
 		free(kernel);
 		return false;
 	}
@@ -1418,18 +1416,22 @@ bool CxImage::Median(int32_t Ksize)
 		xmax = head.biWidth; ymax=head.biHeight;
 	}
 
+	int32_t k2 = Ksize/2;
+	int32_t kmax = Ksize-k2;
 	for(int32_t y=ymin; y<ymax; y++){
 		info.nProgress = (int32_t)(100*(y-ymin)/(ymax-ymin));
-		if (info.nEscape) break;
+		if (info.nEscape)
+			break;
 		for(int32_t x=xmin; x<xmax; x++){
 #if CXIMAGE_SUPPORT_SELECTION
 			if (BlindSelectionIsInside(x,y))
 #endif //CXIMAGE_SUPPORT_SELECTION
-				{
-				for(j=-k2, i=0;j<kmax;j++)
-					for(k=-k2;k<kmax;k++)
-						if (IsInside(x+j,y+k))
-							kernel[i++]=BlindGetPixelColor(x+j,y+k);
+			{
+				int32_t i = 0;
+				for(int32_t j=-k2; j<kmax; ++j)
+					for(int32_t k=-k2; k<kmax; ++k)
+						if (IsInside(x+j, y+k))
+							kernel[i++]=BlindGetPixelColor(x+j, y+k);
 
 				qsort(kernel, i, sizeof(RGBQUAD), CompareColors);
 				tmp.SetPixelColor(x,y,kernel[i/2]);
@@ -1501,7 +1503,8 @@ bool CxImage::FFT2(CxImage* srcReal, CxImage* srcImag, CxImage* dstReal, CxImage
 				   int32_t direction, bool bForceFFT, bool bMagnitude)
 {
 	//check if there is something to convert
-	if (srcReal==NULL && srcImag==NULL) return false;
+	if (srcReal==NULL && srcImag==NULL)
+		return false;
 
 	int32_t w,h;
 	//get width and height
@@ -1517,49 +1520,53 @@ bool CxImage::FFT2(CxImage* srcReal, CxImage* srcImag, CxImage* dstReal, CxImage
 	bool bYpow2 = IsPowerof2(h);
 	//if bForceFFT, width AND height must be powers of 2
 	if (bForceFFT && !(bXpow2 && bYpow2)) {
-		int32_t i;
-
-		i=0;
-		while((1<<i)<w) i++;
+		int32_t i=0;
+		while((1<<i)<w)
+			++i;
 		w=1<<i;
 		bXpow2=true;
 
 		i=0;
-		while((1<<i)<h) i++;
+		while((1<<i)<h)
+			++i;
 		h=1<<i;
 		bYpow2=true;
 	}
 
 	// I/O images for FFT
-	CxImage *tmpReal,*tmpImag;
+//	CxImage *tmpReal,*tmpImag;
 
 	// select output
-	tmpReal = (dstReal) ? dstReal : srcReal;
-	tmpImag = (dstImag) ? dstImag : srcImag;
+	CxImage *tmpReal = (dstReal) ? dstReal : srcReal;
+	CxImage *tmpImag = (dstImag) ? dstImag : srcImag;
 
 	// src!=dst -> copy the image
 	if (srcReal && dstReal) tmpReal->Copy(*srcReal,true,false,false);
 	if (srcImag && dstImag) tmpImag->Copy(*srcImag,true,false,false);
 
 	// dst&&src are empty -> create new one, else turn to GrayScale
-	if (srcReal==0 && dstReal==0){
+	if (srcReal==NULL && dstReal==NULL) {
 		tmpReal = new CxImage(w,h,8);
 		tmpReal->Clear(0);
 		tmpReal->SetGrayPalette();
 	} else {
-		if (!tmpReal->IsGrayScale()) tmpReal->GrayScale();
+		if (!tmpReal->IsGrayScale())
+			tmpReal->GrayScale();
 	}
-	if (srcImag==0 && dstImag==0){
+	if (srcImag==NULL && dstImag==NULL) {
 		tmpImag = new CxImage(w,h,8);
 		tmpImag->Clear(0);
 		tmpImag->SetGrayPalette();
 	} else {
-		if (!tmpImag->IsGrayScale()) tmpImag->GrayScale();
+		if (!tmpImag->IsGrayScale())
+			tmpImag->GrayScale();
 	}
 
 	if (!(tmpReal->IsValid() && tmpImag->IsValid())){
-		if (srcReal==0 && dstReal==0) delete tmpReal;
-		if (srcImag==0 && dstImag==0) delete tmpImag;
+		if (srcReal==NULL && dstReal==NULL)
+			delete tmpReal;
+		if (srcImag==NULL && dstImag==NULL)
+			delete tmpImag;
 		return false;
 	}
 
@@ -1569,46 +1576,43 @@ bool CxImage::FFT2(CxImage* srcReal, CxImage* srcImag, CxImage* dstReal, CxImage
 
 	//ok, here we have 2 (w x h), grayscale images ready for a FFT
 
-	double* real;
-	double* imag;
-	int32_t j,k,m;
-
-	_complex **grid;
 	//double mean = tmpReal->Mean();
 	/* Allocate memory for the grid */
-	grid = (_complex **)malloc(w * sizeof(_complex *));
-	for (k=0;k<w;k++) {
+	_complex **grid = (_complex **)malloc(w * sizeof(_complex *));
+	for (int32_t k=0;k<w;k++)
 		grid[k] = (_complex *)malloc(h * sizeof(_complex));
-	}
-	for (j=0;j<h;j++) {
-		for (k=0;k<w;k++) {
+
+	for (int32_t j=0;j<h;j++) {
+		for (int32_t k=0;k<w;k++) {
 			grid[k][j].x = tmpReal->GetPixelIndex(k,j)-128;
 			grid[k][j].y = tmpImag->GetPixelIndex(k,j)-128;
 		}
 	}
 
 	//DFT buffers
-	double *real2,*imag2;
-	real2 = (double*)malloc(max(w,h) * sizeof(double));
-	imag2 = (double*)malloc(max(w,h) * sizeof(double));
+	double *real2 = (double*)malloc(max(w,h) * sizeof(double));
+	double *imag2 = (double*)malloc(max(w,h) * sizeof(double));
 
 	/* Transform the rows */
-	real = (double *)malloc(w * sizeof(double));
-	imag = (double *)malloc(w * sizeof(double));
+	double* real = (double *)malloc(w * sizeof(double));
+	double* imag = (double *)malloc(w * sizeof(double));
 
-	m=0;
-	while((1<<m)<w) m++;
+	int32_t m=0;
+	while ((1<<m)<w)
+		++m;
 
-	for (j=0;j<h;j++) {
-		for (k=0;k<w;k++) {
+	for (int32_t j=0;j<h;j++) {
+		for (int32_t k=0;k<w;k++) {
 			real[k] = grid[k][j].x;
 			imag[k] = grid[k][j].y;
 		}
 
-		if (bXpow2) FFT(direction,m,real,imag);
-		else		DFT(direction,w,real,imag,real2,imag2);
+		if (bXpow2)
+			FFT(direction,m,real,imag);
+		else
+			DFT(direction,w,real,imag,real2,imag2);
 
-		for (k=0;k<w;k++) {
+		for (int32_t k=0;k<w;k++) {
 			grid[k][j].x = real[k];
 			grid[k][j].y = imag[k];
 		}
@@ -1621,10 +1625,11 @@ bool CxImage::FFT2(CxImage* srcReal, CxImage* srcImag, CxImage* dstReal, CxImage
 	imag = (double *)malloc(h * sizeof(double));
 
 	m=0;
-	while((1<<m)<h) m++;
+	while((1<<m)<h)
+		++m;
 
-	for (k=0;k<w;k++) {
-		for (j=0;j<h;j++) {
+	for (int32_t k=0;k<w;k++) {
+		for (int32_t j=0;j<h;j++) {
 			real[j] = grid[k][j].x;
 			imag[j] = grid[k][j].y;
 		}
@@ -1632,7 +1637,7 @@ bool CxImage::FFT2(CxImage* srcReal, CxImage* srcImag, CxImage* dstReal, CxImage
 		if (bYpow2) FFT(direction,m,real,imag);
 		else		DFT(direction,h,real,imag,real2,imag2);
 
-		for (j=0;j<h;j++) {
+		for (int32_t j=0;j<h;j++) {
 			grid[k][j].x = real[j];
 			grid[k][j].y = imag[j];
 		}
@@ -1651,8 +1656,8 @@ bool CxImage::FFT2(CxImage* srcReal, CxImage* srcImag, CxImage* dstReal, CxImage
 	//bMagnitude : just to see it on the screen
 	if (bMagnitude) nn*=4;
 
-	for (j=0;j<h;j++) {
-		for (k=0;k<w;k++) {
+	for (int32_t j=0;j<h;j++) {
+		for (int32_t k=0;k<w;k++) {
 			if (bMagnitude){
 				tmpReal->SetPixelIndex(k,j,(uint8_t)max(0,min(255,(nn*(3+log(_cabs(grid[k][j])))))));
 				if (grid[k][j].x==0){
@@ -1667,11 +1672,14 @@ bool CxImage::FFT2(CxImage* srcReal, CxImage* srcImag, CxImage* dstReal, CxImage
 		}
 	}
 
-	for (k=0;k<w;k++) free (grid[k]);
-	free (grid);
+	for (int32_t k=0; k<w; k++)
+		free(grid[k]);
+	free(grid);
 
-	if (srcReal==0 && dstReal==0) delete tmpReal;
-	if (srcImag==0 && dstImag==0) delete tmpImag;
+	if (srcReal==NULL && dstReal==NULL)
+		delete tmpReal;
+	if (srcImag==NULL && dstImag==NULL)
+		delete tmpImag;
 
 	return true;
 }

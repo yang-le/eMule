@@ -65,7 +65,7 @@ CServer::CServer(const ServerMet_Struct* in_data)
 CServer::CServer(uint16 in_port, LPCTSTR i_addr)
 {
 	port = in_port;
-	if ((ip = inet_addr(CT2CA(i_addr))) == INADDR_NONE && _tcscmp(i_addr, _T("255.255.255.255")) != 0){
+	if ((ip = inet_addr(CStringA(i_addr))) == INADDR_NONE && _tcscmp(i_addr, _T("255.255.255.255")) != 0){
 		m_strDynIP = i_addr;
 		ip = 0;
 	}
@@ -271,7 +271,7 @@ void CServer::SetLastDescPingedCount(bool bReset)
 	if (bReset)
 		lastdescpingedcout = 0;
 	else
-		lastdescpingedcout++;
+		++lastdescpingedcout;
 }
 
 bool CServer::IsEqual(const CServer* pServer) const
@@ -285,15 +285,16 @@ bool CServer::IsEqual(const CServer* pServer) const
 	return (GetIP() == pServer->GetIP());
 }
 
-uint32 CServer::GetServerKeyUDP(bool bForce) const{
+uint32 CServer::GetServerKeyUDP(bool bForce) const
+{
 	if (m_dwIPServerKeyUDP != 0 && m_dwIPServerKeyUDP == theApp.GetPublicIP() || bForce)
 		return m_dwServerKeyUDP;
-	else
-		return 0;
+	return 0;
 }
 
-void CServer::SetServerKeyUDP(uint32 dwServerKeyUDP){
-	ASSERT( theApp.GetPublicIP() != 0 || dwServerKeyUDP == 0 );
+void CServer::SetServerKeyUDP(uint32 dwServerKeyUDP)
+{
+	ASSERT(theApp.GetPublicIP() != 0 || dwServerKeyUDP == 0);
 	m_dwServerKeyUDP = dwServerKeyUDP;
 	m_dwIPServerKeyUDP = theApp.GetPublicIP();
 }

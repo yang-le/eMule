@@ -52,7 +52,7 @@ public:
 	CPeerCacheFinder();
 	~CPeerCacheFinder();
 
-	void	Init(uint32 dwLastSearch, bool bLastSearchSuccess, bool bEnabled, uint16 nPort);
+	void	Init(time_t dwLastSearch, bool bLastSearchSuccess, bool bEnabled, uint16 nPort);
 	void	Save();
 	void	FoundMyPublicIPAddress(uint32 dwIP);
 	bool	IsCacheAvailable() const;

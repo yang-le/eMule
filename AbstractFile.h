@@ -89,31 +89,31 @@ public:
 	CTag* GetTag(LPCSTR tagname, uint8 tagtype) const;
 	CTag* GetTag(uint8 tagname) const;
 	CTag* GetTag(LPCSTR tagname) const;
-	const CArray<CTag*, CTag*>& GetTags() const { return taglist; }
+	const CArray<CTag*, CTag*>& GetTags() const			{ return taglist; }
 	void AddTagUnique(CTag* pTag);
 	void DeleteTag(uint8 tagname);
 	void DeleteTag(CTag* pTag);
 	void ClearTags();
 	void CopyTags(const CArray<CTag*, CTag*>& tags);
-	virtual bool IsPartFile() const { return false; }
+	virtual bool IsPartFile() const						{ return false; }
 
-	bool	HasComment() const { return m_bHasComment; }
-	void	SetHasComment(bool in) { m_bHasComment = in; }
+	bool	HasComment() const							{ return m_bHasComment; }
+	void	SetHasComment(bool in)						{ m_bHasComment = in; }
 	UINT	UserRating(bool bKadSearchIndicator = false) const { return (bKadSearchIndicator && m_bKadCommentSearchRunning)  ? 6 : m_uUserRating; }
-	bool	HasRating()	const { return m_uUserRating > 0; }
-	bool	HasBadRating()	const { return ( HasRating() && (m_uUserRating < 2)); }
-	void	SetUserRating(UINT in) { m_uUserRating = in; }
+	bool	HasRating()	const							{ return m_uUserRating > 0; }
+	bool	HasBadRating()	const						{ return ( HasRating() && (m_uUserRating < 2)); }
+	void	SetUserRating(UINT in)						{ m_uUserRating = in; }
 	const CString& GetFileComment() /*const*/;
 	UINT	GetFileRating() /*const*/;
 	void	LoadComment();
-	virtual void	UpdateFileRatingCommentAvail(bool bForceUpdate = true) = 0;
+	virtual void	UpdateFileRatingCommentAvail(bool bForceUpdate = false) = 0;
 
 	bool	AddNote(Kademlia::CEntry* pEntry);
 	void	RefilterKadNotes(bool bUpdate = true);
-	const	CKadEntryPtrList& getNotes() const { return m_kadNotes; }
+	const	CKadEntryPtrList& getNotes() const			{ return m_kadNotes; }
 
-	bool			IsKadCommentSearchRunning() const						{ return m_bKadCommentSearchRunning; }
-	void			SetKadCommentSearchRunning(bool bVal);
+	bool	IsKadCommentSearchRunning() const			{ return m_bKadCommentSearchRunning; }
+	void	SetKadCommentSearchRunning(bool bVal);
 
 #ifdef _DEBUG
 	// Diagnostic Support

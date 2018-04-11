@@ -109,7 +109,7 @@ void CIPFilterDlg::DoDataExchange(CDataExchange* pDX)
 
 static int s_lParamSort = 0;
 
-int __cdecl CompareIPFilterItems(const void* lParam1, const void* lParam2)
+int __cdecl CompareIPFilterItems(const void* lParam1, const void* lParam2) noexcept
 {
 #define COMPARE_NUM( a, b ) ((a) < (b))			\
 							  ? -1				\
@@ -148,10 +148,7 @@ int __cdecl CompareIPFilterItems(const void* lParam1, const void* lParam2)
 
 #undef COMPARE_NUM
 
-	if (s_aColumns[s_lParamSort].eSortOrder == DESCENDING)
-		return -iResult;
-	else
-		return iResult;
+	return (s_aColumns[s_lParamSort].eSortOrder == DESCENDING) ? -iResult : iResult;
 }
 
 void CIPFilterDlg::SortIPFilterItems()
@@ -241,7 +238,7 @@ void CIPFilterDlg::InitIPFilters()
 	m_ppIPFilterItems = NULL;
 
 	const CIPFilterArray& ipfilter = theApp.ipfilter->GetIPFilter();
-	m_uIPFilterItems = ipfilter.GetCount();
+	m_uIPFilterItems = (UINT)ipfilter.GetCount();
 	m_ppIPFilterItems = (const SIPFilter**)malloc(sizeof(*m_ppIPFilterItems) * m_uIPFilterItems);
 	if (m_ppIPFilterItems == NULL)
 		m_uIPFilterItems = 0;
@@ -290,7 +287,7 @@ void CIPFilterDlg::OnLvnGetDispInfoIPFilter(NMHDR *pNMHDR, LRESULT *pResult)
 				break;
 			case IPFILTER_COL_DESC:
 				if (pDispInfo->item.cchTextMax > 0){
-					_tcsncpy(pDispInfo->item.pszText, CA2T(m_ppIPFilterItems[pDispInfo->item.iItem]->desc), pDispInfo->item.cchTextMax);
+					_tcsncpy(pDispInfo->item.pszText, CA2CT(m_ppIPFilterItems[pDispInfo->item.iItem]->desc), pDispInfo->item.cchTextMax);
 					pDispInfo->item.pszText[pDispInfo->item.cchTextMax - 1] = _T('\0');
 				}
 				break;
@@ -344,14 +341,13 @@ void CIPFilterDlg::OnBnClickedAppend()
 	{
 		CWaitCursor curWait;
 
-		TCHAR szExt[_MAX_EXT];
-		_tsplitpath(strFilePath, NULL, NULL, NULL, szExt);
-		_tcslwr(szExt);
-		bool bIsArchiveFile = _tcscmp(szExt, _T(".zip"))==0 || _tcscmp(szExt, _T(".rar"))==0 || _tcscmp(szExt, _T(".gz"))==0;
+		CString szExt(PathFindExtension(strFilePath));
+		szExt = szExt.MakeLower();
+		bool bIsArchiveFile = szExt.Compare(_T(".zip"))==0 || szExt.Compare(_T(".rar"))==0 || szExt.Compare(_T(".gz"))==0;
 		bool bExtractedArchive = false;
 
 		CString strTempUnzipFilePath;
-		if (_tcscmp(szExt, _T(".zip")) == 0)
+		if (szExt.Compare(_T(".zip")) == 0)
 		{
 			CZIPFile zip;
 			if (zip.Open(strFilePath))
@@ -392,7 +388,7 @@ void CIPFilterDlg::OnBnClickedAppend()
 				AfxMessageBox(strError, MB_ICONERROR);
 			}
 		}
-		else if (_tcscmp(szExt, _T(".rar")) == 0)
+		else if (szExt.Compare(_T(".rar")) == 0)
 		{
 			CRARFile rar;
 			if (rar.Open(strFilePath))
@@ -432,7 +428,7 @@ void CIPFilterDlg::OnBnClickedAppend()
 				AfxMessageBox(strError, MB_ICONERROR);
 			}
 		}
-		else if (_tcscmp(szExt, _T(".gz")) == 0)
+		else if (szExt.Compare(_T(".gz")) == 0)
 		{
 			CGZIPFile gz;
 			if (gz.Open(strFilePath))
@@ -540,7 +536,7 @@ void CIPFilterDlg::OnBnClickedDelete()
 	    }
 
 	    m_ipfilter.SetRedraw(FALSE);
-	    for (int i = aItems.GetCount() - 1; i >= 0; i--)
+	    for (INT_PTR i = aItems.GetCount() - 1; i >= 0; --i)
 		    m_ipfilter.DeleteItem(aItems[i]);
 		if (!aItems.IsEmpty())
 	    {
@@ -602,7 +598,7 @@ bool CIPFilterDlg::FindItem(const CListCtrlX& lv, int iItem, DWORD_PTR lParam)
 
 	const CIPFilterDlg* dlg = reinterpret_cast<CIPFilterDlg*>(lParam);
 	ASSERT_VALID(dlg);
-	u_long ip = htonl(inet_addr(CT2A(lv.GetFindText())));
+	u_long ip = htonl(inet_addr(CStringA(lv.GetFindText())));
 	const SIPFilter* filter = dlg->m_ppIPFilterItems[iItem];
 	return (ip >= filter->start && ip <= filter->end);
 }

@@ -45,7 +45,7 @@ BEGIN_MESSAGE_MAP(CPPgDisplay, CPropertyPage)
 	ON_EN_CHANGE(IDC_TOOLTIPDELAY, OnSettingsChange)
 	ON_WM_HSCROLL()
 	ON_BN_CLICKED(IDC_SHOWRATEONTITLE, OnSettingsChange)
-	ON_BN_CLICKED(IDC_DISABLEHIST , OnSettingsChange)
+	ON_BN_CLICKED(IDC_DISABLEHIST, OnSettingsChange)
 	ON_BN_CLICKED(IDC_DISABLEKNOWNLIST, OnSettingsChange)
 	ON_BN_CLICKED(IDC_DISABLEQUEUELIST, OnSettingsChange)
 	ON_BN_CLICKED(IDC_SHOWCATINFO, OnSettingsChange)
@@ -124,8 +124,6 @@ BOOL CPPgDisplay::OnInitDialog()
 
 BOOL CPPgDisplay::OnApply()
 {
-	TCHAR buffer[510];
-	
 	bool mintotray_old = thePrefs.mintotray;
 	thePrefs.mintotray = IsDlgButtonChecked(IDC_MINTRAY)!=0;
 	thePrefs.transferDoubleclick = IsDlgButtonChecked(IDC_DBLCLICK)!=0;
@@ -140,10 +138,7 @@ BOOL CPPgDisplay::OnApply()
 	theApp.emuledlg->EnableTaskbarGoodies(thePrefs.m_bShowWin7TaskbarGoodies);
 #endif
 
-	if (IsDlgButtonChecked(IDC_SHOWRATEONTITLE))
-		thePrefs.showRatesInTitle = true;
-	else
-		thePrefs.showRatesInTitle = false;
+	thePrefs.showRatesInTitle = (IsDlgButtonChecked(IDC_SHOWRATEONTITLE) != 0);
 
 	thePrefs.ShowCatTabInfos(IsDlgButtonChecked(IDC_SHOWCATINFO) != 0);
 	if (!thePrefs.ShowCatTabInfos())
@@ -169,11 +164,8 @@ BOOL CPPgDisplay::OnApply()
 		bResetToolbar = true;
 	}
 
-	GetDlgItem(IDC_TOOLTIPDELAY)->GetWindowText(buffer,20);
-	if (_tstoi(buffer) > MAX_TOOLTIP_DELAY_SEC)
-		thePrefs.m_iToolDelayTime = MAX_TOOLTIP_DELAY_SEC;
-	else
-		thePrefs.m_iToolDelayTime = _tstoi(buffer);
+	UINT i = GetDlgItemInt(IDC_TOOLTIPDELAY, NULL, FALSE);
+	thePrefs.m_iToolDelayTime = (i > MAX_TOOLTIP_DELAY_SEC) ? MAX_TOOLTIP_DELAY_SEC : i;
 	theApp.emuledlg->SetToolTipsDelay(SEC2MS(thePrefs.GetToolTipDelay()));
 
 	theApp.emuledlg->transferwnd->GetDownloadList()->SetStyle();
@@ -204,29 +196,29 @@ void CPPgDisplay::Localize()
 	if(m_hWnd)
 	{
 		SetWindowText(GetResString(IDS_PW_DISPLAY));
-		GetDlgItem(IDC_MINTRAY)->SetWindowText(GetResString(IDS_PW_TRAY));
-		GetDlgItem(IDC_DBLCLICK)->SetWindowText(GetResString(IDS_PW_DBLCLICK));
-		GetDlgItem(IDC_TOOLTIPDELAY_LBL)->SetWindowText(GetResString(IDS_PW_TOOL));
-		GetDlgItem(IDC_3DDEP)->SetWindowText(GetResString(IDS_3DDEP));
-		GetDlgItem(IDC_FLAT)->SetWindowText(GetResString(IDS_FLAT));
-		GetDlgItem(IDC_ROUND)->SetWindowText(GetResString(IDS_ROUND));
-		GetDlgItem(IDC_SHOWRATEONTITLE)->SetWindowText(GetResString(IDS_SHOWRATEONTITLE));
-		GetDlgItem(IDC_DISABLEKNOWNLIST)->SetWindowText(GetResString(IDS_DISABLEKNOWNLIST));
-		GetDlgItem(IDC_DISABLEQUEUELIST)->SetWindowText(GetResString(IDS_DISABLEQUEUELIST));
-		GetDlgItem(IDC_STATIC_CPUMEM)->SetWindowText(GetResString(IDS_STATIC_CPUMEM));
-		GetDlgItem(IDC_SHOWCATINFO)->SetWindowText(GetResString(IDS_SHOWCATINFO));
+		SetDlgItemText(IDC_MINTRAY, GetResString(IDS_PW_TRAY));
+		SetDlgItemText(IDC_DBLCLICK, GetResString(IDS_PW_DBLCLICK));
+		SetDlgItemText(IDC_TOOLTIPDELAY_LBL, GetResString(IDS_PW_TOOL));
+		SetDlgItemText(IDC_3DDEP, GetResString(IDS_3DDEP));
+		SetDlgItemText(IDC_FLAT, GetResString(IDS_FLAT));
+		SetDlgItemText(IDC_ROUND, GetResString(IDS_ROUND));
+		SetDlgItemText(IDC_SHOWRATEONTITLE, GetResString(IDS_SHOWRATEONTITLE));
+		SetDlgItemText(IDC_DISABLEKNOWNLIST, GetResString(IDS_DISABLEKNOWNLIST));
+		SetDlgItemText(IDC_DISABLEQUEUELIST, GetResString(IDS_DISABLEQUEUELIST));
+		SetDlgItemText(IDC_STATIC_CPUMEM, GetResString(IDS_STATIC_CPUMEM));
+		SetDlgItemText(IDC_SHOWCATINFO, GetResString(IDS_SHOWCATINFO));
 		SetDlgItemText(IDC_HYPERTEXT_FONT_HINT, GetResString(IDS_HYPERTEXT_FONT_HINT));
 		SetDlgItemText(IDC_SELECT_HYPERTEXT_FONT, GetResString(IDS_SELECT_FONT) + _T("..."));
 		SetDlgItemText(IDC_SHOWDWLPERCENT, GetResString(IDS_SHOWDWLPERCENTAGE));
-		GetDlgItem(IDC_CLEARCOMPL)->SetWindowText(GetResString(IDS_AUTOREMOVEFD));
-		GetDlgItem(IDC_STORESEARCHES)->SetWindowText(GetResString(IDS_STORESEARCHES));
+		SetDlgItemText(IDC_CLEARCOMPL, GetResString(IDS_AUTOREMOVEFD));
+		SetDlgItemText(IDC_STORESEARCHES, GetResString(IDS_STORESEARCHES));
 
-		GetDlgItem(IDC_RESETLABEL)->SetWindowText(GetResString(IDS_RESETLABEL));
-		GetDlgItem(IDC_RESETHIST)->SetWindowText(GetResString(IDS_PW_RESET));
-		GetDlgItem(IDC_DISABLEHIST)->SetWindowText(GetResString(IDS_ENABLED));
+		SetDlgItemText(IDC_RESETLABEL, GetResString(IDS_RESETLABEL));
+		SetDlgItemText(IDC_RESETHIST, GetResString(IDS_PW_RESET));
+		SetDlgItemText(IDC_DISABLEHIST, GetResString(IDS_ENABLED));
 
-		GetDlgItem(IDC_SHOWTRANSTOOLBAR)->SetWindowText(GetResString(IDS_PW_SHOWTRANSTOOLBAR));
-		GetDlgItem(IDC_WIN7TASKBARGOODIES)->SetWindowText(GetResString(IDS_SHOWWIN7TASKBARGOODIES));
+		SetDlgItemText(IDC_SHOWTRANSTOOLBAR, GetResString(IDS_PW_SHOWTRANSTOOLBAR));
+		SetDlgItemText(IDC_WIN7TASKBARGOODIES, GetResString(IDS_SHOWWIN7TASKBARGOODIES));
 	}
 }
 
@@ -262,11 +254,11 @@ UINT_PTR CALLBACK CPPgDisplay::ChooseFontHook(HWND hdlg, UINT uiMsg, WPARAM wPar
 	case WM_COMMAND:
 		if (LOWORD(wParam) == psh3/*Apply*/ && HIWORD(wParam) == BN_CLICKED)
 		{
-			LOGFONT lf;
 			CFontDialog *pDlg = (CFontDialog *)CWnd::FromHandle(hdlg);
 			ASSERT( pDlg != NULL );
 			if (pDlg != NULL)
 			{
+				LOGFONT lf;
 				pDlg->GetCurrentFont(&lf);
 				if (s_pThis->m_eSelectFont == sfLog)
 					theApp.emuledlg->ApplyLogFont(&lf);
@@ -283,21 +275,12 @@ UINT_PTR CALLBACK CPPgDisplay::ChooseFontHook(HWND hdlg, UINT uiMsg, WPARAM wPar
 
 void CPPgDisplay::OnBnClickedSelectHypertextFont()
 {
-	if (GetAsyncKeyState(VK_CONTROL) < 0)
-		m_eSelectFont = sfLog;
-	else
-		m_eSelectFont = sfServer;
+	m_eSelectFont = (GetAsyncKeyState(VK_CONTROL) < 0) ? sfLog : sfServer;
 
 	// get current font description
-	CFont* pFont;
-	if (m_eSelectFont == sfLog)
-		pFont = &theApp.m_fontLog;
-	else
-		pFont = &theApp.m_fontHyperText;
+	CFont* pFont = (m_eSelectFont == sfLog) ? &theApp.m_fontLog : &theApp.m_fontHyperText; //cannot be NULL
 	LOGFONT lf;
-	if (pFont != NULL)
-	   pFont->GetObject(sizeof(LOGFONT), &lf);
-	else
+	if (!pFont->GetObject(sizeof(LOGFONT), &lf))
 		AfxGetMainWnd()->GetFont()->GetLogFont(&lf);
 
 	// Initialize 'CFontDialog'
@@ -310,12 +293,10 @@ void CPPgDisplay::OnBnClickedSelectHypertextFont()
 	s_pThis = this;
 
 	if (dlg.DoModal() == IDOK)
-	{
 		if (m_eSelectFont == sfLog)
 			theApp.emuledlg->ApplyLogFont(&lf);
 		else
 			theApp.emuledlg->ApplyHyperTextFont(&lf);
-	}
 
 	s_pfnChooseFontHook = NULL;
 	s_pThis = NULL;

@@ -20,7 +20,7 @@ void CxImage::Startup(uint32_t imagetype)
 	head = BITMAPINFOHEADER();
 	info = CXIMAGEINFO();
 	//init default attributes
-    info.dwType = imagetype;
+	info.dwType = imagetype;
 	info.fQuality = 90.0f;
 	info.nAlphaMax = 255;
 	info.nBkgndIndex = -1;
@@ -68,8 +68,11 @@ bool CxImage::DestroyFrames()
 {
 	if (info.pGhost==NULL) {
 		if (ppFrames) {
-			for (int32_t n=0; n<info.nNumFrames; n++) { delete ppFrames[n]; }
-			delete [] ppFrames; ppFrames = NULL; info.nNumFrames = 0;
+			for (int32_t n=0; n<info.nNumFrames; ++n)
+				delete ppFrames[n];
+			delete [] ppFrames;
+			ppFrames = NULL;
+			info.nNumFrames = 0;
 		}
 		return true;
 	}
@@ -259,10 +262,10 @@ uint8_t* CxImage::GetBits(uint32_t row)
 	if (pDib) {
 		if (row) {
 			if (row < (uint32_t)head.biHeight)
-				return ((uint8_t*)pDib + *(uint32_t*)pDib + GetPaletteSize() + (info.dwEffWidth * row));
+				return (uint8_t*)pDib + *(uint32_t*)pDib + GetPaletteSize() + (info.dwEffWidth * row);
 			return NULL;
 		}
-		return ((uint8_t*)pDib + *(uint32_t*)pDib + GetPaletteSize());
+		return (uint8_t*)pDib + *(uint32_t*)pDib + GetPaletteSize();
 	}
 	return NULL;
 }
@@ -270,7 +273,7 @@ uint8_t* CxImage::GetBits(uint32_t row)
 /**
  * \return the size in bytes of the internal pDib object
  */
-int32_t CxImage::GetSize()
+size_t CxImage::GetSize()
 {
 	return head.biSize + head.biSizeImage + GetPaletteSize();
 }

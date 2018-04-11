@@ -160,18 +160,14 @@ BOOL CPPgStats::OnApply()
 			bInvalidateGraphs = true;
 		}
 
-		TCHAR buffer[20];
-		GetDlgItem(IDC_CGRAPHSCALE)->GetWindowText(buffer, _countof(buffer));
-		UINT statsMax = _tstoi(buffer);
+		UINT statsMax = GetDlgItemInt(IDC_CGRAPHSCALE, NULL, FALSE);
 		if (statsMax > thePrefs.GetMaxConnections() + 5)
 		{
 			if (thePrefs.GetStatsMax() != thePrefs.GetMaxConnections() + 5){
 				thePrefs.SetStatsMax(thePrefs.GetMaxConnections() + 5);
 				bInvalidateGraphs = true;
 			}
-			_sntprintf(buffer, _countof(buffer), _T("%u"), thePrefs.GetStatsMax());
-			buffer[_countof(buffer) - 1] = _T('\0');
-			GetDlgItem(IDC_CGRAPHSCALE)->SetWindowText(buffer);
+			SetDlgItemInt(IDC_CGRAPHSCALE, thePrefs.GetStatsMax());
 		}
 		else
 		{
@@ -209,12 +205,12 @@ void CPPgStats::Localize()
 {
 	if (m_hWnd)
 	{
-		GetDlgItem(IDC_GRAPHS)->SetWindowText(GetResString(IDS_GRAPHS));
-		GetDlgItem(IDC_STREE)->SetWindowText(GetResString(IDS_STREE));
-		GetDlgItem(IDC_STATIC_CGRAPHSCALE)->SetWindowText(GetResString(IDS_PPGSTATS_YSCALE));
-		GetDlgItem(IDC_STATIC_CGRAPHRATIO)->SetWindowText(GetResString(IDS_PPGSTATS_ACRATIO));
+		SetDlgItemText(IDC_GRAPHS, GetResString(IDS_GRAPHS));
+		SetDlgItemText(IDC_STREE, GetResString(IDS_STREE));
+		SetDlgItemText(IDC_STATIC_CGRAPHSCALE, GetResString(IDS_PPGSTATS_YSCALE));
+		SetDlgItemText(IDC_STATIC_CGRAPHRATIO, GetResString(IDS_PPGSTATS_ACRATIO));
 		SetWindowText(GetResString(IDS_STATSSETUPINFO));
-		GetDlgItem(IDC_PREFCOLORS)->SetWindowText(GetResString(IDS_COLORS));
+		SetDlgItemText(IDC_PREFCOLORS, GetResString(IDS_COLORS));
 		SetDlgItemText(IDC_FILL_GRAPHS, GetResString(IDS_FILLGRAPHS) );
 
 		m_colors.ResetContent();
@@ -289,16 +285,16 @@ void CPPgStats::ShowInterval()
 		strLabel.Format(GetResString(IDS_DISABLED));
 	else
 		strLabel.Format(GetResString(IDS_STATS_UPDATELABEL), m_iGraphsUpdate);
-	GetDlgItem(IDC_SLIDERINFO)->SetWindowText(strLabel);
+	SetDlgItemText(IDC_SLIDERINFO, strLabel);
 
 	if (m_iGraphsAvgTime == 0)
 		strLabel.Format(GetResString(IDS_DISABLED));
 	else
 		strLabel.Format(GetResString(IDS_STATS_UPDATELABEL), m_iGraphsAvgTime);
-	GetDlgItem(IDC_SLIDERINFO2)->SetWindowText(strLabel);
+	SetDlgItemText(IDC_SLIDERINFO2, strLabel);
 
 	strLabel.Format(GetResString(IDS_STATS_AVGLABEL), m_iStatsUpdate);
-	GetDlgItem(IDC_SLIDERINFO3)->SetWindowText(strLabel);
+	SetDlgItemText(IDC_SLIDERINFO3, strLabel);
 }
 
 void CPPgStats::OnCbnSelChangeColorSelector()
@@ -306,8 +302,8 @@ void CPPgStats::OnCbnSelChangeColorSelector()
 	int iSel = m_colors.GetCurSel();
 	if (iSel >= 0)
 	{
-		int iIndex = m_colors.GetItemData(iSel);
-		if (iIndex >= 0 && iIndex < m_iStatsColors)
+		DWORD_PTR iIndex = m_colors.GetItemData(iSel);
+		if ((int)iIndex < m_iStatsColors)
 			m_ctlColor.SetColor(m_pdwStatsColors[iIndex]);
 	}
 }
@@ -315,14 +311,11 @@ void CPPgStats::OnCbnSelChangeColorSelector()
 LRESULT CPPgStats::OnColorPopupSelChange(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	int iSel = m_colors.GetCurSel();
-	if (iSel >= 0)
-	{
-		int iIndex = m_colors.GetItemData(iSel);
-		if (iIndex >= 0 && iIndex < m_iStatsColors)
-		{
+	if (iSel >= 0) {
+		DWORD_PTR iIndex = m_colors.GetItemData(iSel);
+		if ((int)iIndex < m_iStatsColors) {
 			COLORREF crColor = m_ctlColor.GetColor();
-			if (crColor != m_pdwStatsColors[iIndex])
-			{
+			if (crColor != m_pdwStatsColors[iIndex]) {
 				m_pdwStatsColors[iIndex] = crColor;
 				SetModified(TRUE);
 			}

@@ -51,7 +51,6 @@ CFileIdentifierBase& CFileIdentifierBase::operator=(const CFileIdentifierBase& r
 
 CFileIdentifierBase::~CFileIdentifierBase()
 {
-
 }
 
 // TODO: Remove me
@@ -101,8 +100,8 @@ void CFileIdentifierBase::WriteIdentifier(CFileDataIO* pFile, bool bKadExcludeMD
 	ASSERT( !isnulmd4(m_abyMD4Hash) );
 	ASSERT( GetFileSize() != 0ull );
 	const UINT uIncludesMD4			= bKadExcludeMD4 ? 0 : 1; // This is (currently) mandatory except for Kad
-	const UINT uIncludesSize		= (GetFileSize() != 0ull) ? 1 : 0;
-	const UINT uIncludesAICH		= HasAICHHash() ? 1 : 0;
+	const UINT uIncludesSize		= static_cast<UINT>(GetFileSize() != 0ull);
+	const UINT uIncludesAICH		= static_cast<UINT>(HasAICHHash());
 	const UINT uMandatoryOptions	= 0; // RESERVED - Identifier invalid if we encounter unknown options
 	const UINT uOptions				= 0; // RESERVED
 
@@ -122,7 +121,7 @@ void CFileIdentifierBase::WriteIdentifier(CFileDataIO* pFile, bool bKadExcludeMD
 		m_AICHFileHash.Write(pFile);
 }
 
-CString	CFileIdentifierBase::DbgInfo() const
+CString CFileIdentifierBase::DbgInfo() const
 {
 	//TODO fileident
 	return _T("");
@@ -164,24 +163,17 @@ bool CFileIdentifier::CalculateMD4HashByHashSet(bool bVerifyOnly, bool bDeleteOn
 	for (int i = 0; i < m_aMD4HashSet.GetCount(); i++)
 		md4cpy(buffer + (i*16), m_aMD4HashSet[i]);
 	uchar aucResult[16];
-	CKnownFile::CreateHash(buffer, m_aMD4HashSet.GetCount()*16, aucResult);
+	CKnownFile::CreateHash(buffer, (uint32)m_aMD4HashSet.GetCount()*16u, aucResult);
 	delete[] buffer;
-	if (bVerifyOnly)
-	{
-		if (md4cmp(aucResult, m_abyMD4Hash) != 0)
-		{
+	if (bVerifyOnly) {
+		if (md4cmp(aucResult, m_abyMD4Hash) != 0) {
 			if (bDeleteOnVerifyFail)
 				DeleteMD4Hashset();
 			return false;
 		}
-		else
-			return true;
-	}
-	else
-	{
+	} else
 		md4cpy(m_abyMD4Hash, aucResult);
-		return true;
-	}
+	return true;
 }
 
 bool CFileIdentifier::LoadMD4HashsetFromFile(CFileDataIO* file, bool bVerifyExistingHash)
@@ -259,9 +251,9 @@ void CFileIdentifier::WriteMD4HashsetToFile(CFileDataIO* pFile) const
 {
 	ASSERT( !isnulmd4(m_abyMD4Hash) );
 	pFile->WriteHash16(m_abyMD4Hash);
-	UINT uParts = m_aMD4HashSet.GetCount();
+	UINT uParts = (UINT)m_aMD4HashSet.GetCount();
 	pFile->WriteUInt16((uint16)uParts);
-	for (UINT i = 0; i < uParts; i++)
+	for (UINT i = 0; i < uParts; ++i)
 		pFile->WriteHash16(m_aMD4HashSet[i]);
 }
 
@@ -332,7 +324,7 @@ bool CFileIdentifier::ReadHashSetsFromPacket(CFileDataIO* pFile, bool& rbMD4, bo
 	}
 	else if (!bMD4Present)
 		rbMD4 = false;
-	else if (bMD4Present && rbMD4)
+	else if (/*bMD4Present && */rbMD4)
 	{
 		if (!LoadMD4HashsetFromFile(pFile, true))
 		{	// corrupt
@@ -356,7 +348,7 @@ bool CFileIdentifier::ReadHashSetsFromPacket(CFileDataIO* pFile, bool& rbMD4, bo
 		ASSERT( !bAICHPresent );
 		rbAICH = false;
 	}
-	else if (bAICHPresent && rbAICH)
+	else if (/*bAICHPresent && */rbAICH)
 	{
 		if (!LoadAICHHashsetFromFile(pFile, true))
 		{	// corrupt
@@ -434,9 +426,9 @@ void CFileIdentifier::WriteAICHHashsetToFile(CFileDataIO* pFile) const
 	ASSERT( HasAICHHash() );
 	ASSERT( HasExpectedAICHHashCount() );
 	m_AICHFileHash.Write(pFile);
-	UINT uParts = m_aAICHPartHashSet.GetCount();
+	UINT uParts = (UINT)m_aAICHPartHashSet.GetCount();
 	pFile->WriteUInt16((uint16)uParts);
-	for (UINT i = 0; i < uParts; i++)
+	for (UINT i = 0; i < uParts; ++i)
 		m_aAICHPartHashSet[i].Write(pFile);
 }
 
@@ -488,9 +480,9 @@ CFileIdentifierSA::CFileIdentifierSA()
 }
 
 CFileIdentifierSA::CFileIdentifierSA(const uchar* pucFileHash, EMFileSize nFileSize, const CAICHHash& rHash, bool bAICHHashValid)
+	: m_nFileSize(nFileSize)
 {
 	SetMD4Hash(pucFileHash);
-	m_nFileSize = nFileSize;
 	if (bAICHHashValid)
 		SetAICHHash(rHash);
 }

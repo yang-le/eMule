@@ -42,6 +42,7 @@
 #include "readers.h"
 #include "io_helpers.h"
 #include "id3/utils.h" // has <config.h> "id3/id3lib_streams.h" "id3/globals.h" "id3/id3lib_strings.h"
+#include "../../zlib/zconf.h" //for uLong declaration
 
 namespace dami
 {
@@ -156,7 +157,7 @@ namespace dami
     {
       char_type* _uncompressed;
      public:
-      CompressedReader(ID3_Reader& reader, size_type newSize);
+      CompressedReader(ID3_Reader& reader, uLong newSize);
       virtual ~CompressedReader();
     };
 
@@ -226,4 +227,3 @@ namespace dami
 };
 
 #endif /* _ID3LIB_READER_DECORATORS_H_ */
-

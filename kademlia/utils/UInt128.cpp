@@ -165,8 +165,8 @@ CUInt128& CUInt128::XorBE(const byte *pbyValueBE)
 
 void CUInt128::ToHexString(CString *pstr) const
 {
-	pstr->SetString(_T(""));
-	for (int iIndex=0; iIndex<4; iIndex++)
+	pstr->Empty();
+	for (int iIndex = 0; iIndex < 4; ++iIndex)
 		pstr->AppendFormat(_T("%08lX"), m_uData[iIndex]);
 }
 
@@ -179,8 +179,8 @@ CString CUInt128::ToHexString() const
 
 void CUInt128::ToBinaryString(CString *pstr, bool bTrim) const
 {
-	pstr->SetString(_T(""));
-	for (int iIndex = 0; iIndex<128; ++iIndex) {
+	pstr->Empty();
+	for (int iIndex = 0; iIndex < 128; ++iIndex) {
 		int iBit = GetBitNumber(iIndex);
 		if ((!bTrim) || (iBit != 0)) {
 			*pstr += iBit ? _T('1') : _T('0');
@@ -342,7 +342,7 @@ CUInt128& CUInt128::operator-  (const CUInt128 &uValue)
 }
 CUInt128& CUInt128::operator=  (const CUInt128 &uValue)
 {
-	return SetValue(uValue); //fo8x8
+	return SetValue(uValue);
 }
 bool CUInt128::operator<  (const CUInt128 &uValue) const
 {

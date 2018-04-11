@@ -1,5 +1,8 @@
 #pragma once
 
+#include "mbedtls/config.h"
+#include "mbedtls/ssl.h"
+
 class CWebServer;
 
 void StartSockets(CWebServer *pThis);
@@ -26,6 +29,8 @@ public:
 	CChunk* m_pTail;
 
 	char* m_pBuf;
+	mbedtls_ssl_context *m_ssl;
+	SOCKET m_hSocket;
 	DWORD m_dwRecv;
 	DWORD m_dwBufSize;
 	DWORD m_dwHttpHeaderLen;
@@ -34,15 +39,14 @@ public:
 	bool m_bCanRecv;
 	bool m_bCanSend;
 	bool m_bValid;
-	SOCKET m_hSocket;
 
-	void OnReceived(void* pData, DWORD dwSize, in_addr inad); // must be implemented
+	void OnReceived(void* pData, DWORD dwSize, const in_addr& inad); // must be implemented
 	void SendData(const void* pData, DWORD dwDataSize);
-	void SendData(LPCSTR szText) { SendData(szText, strlen(szText)); }
+	void SendData(LPCSTR szText)		{ SendData(szText, (DWORD)strlen(szText)); }
 	void SendContent(LPCSTR szStdResponse, const void* pContent, DWORD dwContentSize);
 	void SendContent(LPCSTR szStdResponse, const CString& rstr);
 	void SendReply(LPCSTR szReply);
 	void Disconnect();
 
-	void OnRequestReceived(const char* pHeader, DWORD dwHeaderLen, const char* pData, DWORD dwDataLen , in_addr inad);
+	void OnRequestReceived(const char* pHeader, DWORD dwHeaderLen, const char* pData, DWORD dwDataLen, const in_addr& inad);
 };

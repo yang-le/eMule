@@ -165,7 +165,7 @@ number			{num1}|{num2}
 					CString strError;
 					try
 					{
-						CED2KLink* pLink = CED2KLink::CreateLinkFromUrl(CA2T(yytext));
+						CED2KLink* pLink = CED2KLink::CreateLinkFromUrl(CA2CT(yytext));
 						if (pLink && pLink->GetKind() == CED2KLink::kFile)
 						{
 							CED2KFileLink* pFileLink = pLink->GetFileLink();

@@ -133,14 +133,14 @@ BOOL CListViewWalkerPropertySheet::OnInitDialog()
 		const struct
 		{
 			CButton	   *pCtlBtn;
-			UINT		uCtlId;
 			LPCTSTR		pszLabel;
 			LPCTSTR		pszSymbol;
 			DWORD		dwStyle;
+			UINT		uCtlId;
 		} aCtrls[] =
 		{
-			{ &m_ctlPrev,  IDC_PREV, _T("&Prev"),  _T("5"), WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP },
-			{ &m_ctlNext,  IDC_NEXT, _T("&Next"),  _T("6"), WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP }
+			{ &m_ctlPrev, _T("&Prev"),  _T("5"), WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP,  IDC_PREV},
+			{&m_ctlNext,  _T("&Next"),  _T("6"), WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP,  IDC_NEXT}
 		};
 
 		int iLeftMostButtonId = IDOK;
@@ -211,18 +211,16 @@ void CListViewWalkerPropertySheet::OnPrev()
 
 void CListViewWalkerPropertySheet::OnNext()
 {
-	ASSERT( m_pListCtrl != NULL );
+	ASSERT(m_pListCtrl != NULL);
 	if (m_pListCtrl == NULL)
 		return;
 
 	CObject* pObj = m_pListCtrl->GetNextSelectableItem();
-	if (pObj)
-	{
+	if (pObj) {
 		m_aItems.RemoveAll();
 		m_aItems.Add(pObj);
 		ChangedData();
-	}
-	else
+	} else
 		MessageBeep(MB_OK);
 }
 
@@ -247,7 +245,7 @@ CObject* CListCtrlItemWalk::GetPrevSelectableItem()
 				m_pListCtrl->SetSelectionMark(iItem);
 				m_pListCtrl->EnsureVisible(iItem, FALSE);
 
-				return STATIC_DOWNCAST(CObject, (CObject*)m_pListCtrl->GetItemData(iItem));
+				return reinterpret_cast<CObject*>(m_pListCtrl->GetItemData(iItem));
 			}
 		}
 	}
@@ -270,12 +268,12 @@ CObject* CListCtrlItemWalk::GetNextSelectableItem()
 			if (iItem+1 < iItemCount)
 			{
 				m_pListCtrl->SetItemState(iItem, 0, LVIS_SELECTED | LVIS_FOCUSED);
-				iItem++;
+				++iItem;
 				m_pListCtrl->SetItemState(iItem, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
 				m_pListCtrl->SetSelectionMark(iItem);
 				m_pListCtrl->EnsureVisible(iItem, FALSE);
 
-				return STATIC_DOWNCAST(CObject, (CObject*)m_pListCtrl->GetItemData(iItem));
+				return reinterpret_cast<CObject*>(m_pListCtrl->GetItemData(iItem));
 			}
 		}
 	}

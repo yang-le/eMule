@@ -75,33 +75,29 @@ IMPLEMENT_DYNAMIC(CClientException, CException)
 IMPLEMENT_DYNAMIC(CUpDownClient, CObject)
 
 CUpDownClient::CUpDownClient(CClientReqSocket* sender)
+	: socket(sender), reqfile(NULL)
 {
-	socket = sender;
-	reqfile = NULL;
 	Init();
 }
 
 CUpDownClient::CUpDownClient(CPartFile* in_reqfile, uint16 in_port, uint32 in_userid,uint32 in_serverip, uint16 in_serverport, bool ed2kID)
+	: socket(NULL), reqfile(in_reqfile)
 {
-	//Converting to the HybridID system.. The ED2K system didn't take into account of IP address ending in 0..
+	//Converting to the HybridID system. The ED2K system didn't take into account of IP address ending in 0.
 	//All IP addresses ending in 0 were assumed to be a lowID because of the calculations.
-	socket = NULL;
-	reqfile = in_reqfile;
 	Init();
 	m_nUserPort = in_port;
-	//If this is a ED2K source, check if it's a lowID.. If not, convert it to a HyrbidID.
+	//If this is a ED2K source, check if it's a lowID. If not, convert it to a HyrbidID.
 	//Else, it's already in hybrid form.
 	if(ed2kID && !IsLowID(in_userid))
 		m_nUserIDHybrid = ntohl(in_userid);
 	else
 		m_nUserIDHybrid = in_userid;
 
-	//If highID and ED2K source, incoming ID and IP are equal..
+	//If highID and ED2K source, incoming ID and IP are equal.
 	//If highID and Kad source, incoming IP needs ntohl for the IP
-	if (!HasLowID() && ed2kID)
-		m_nConnectIP = in_userid;
-	else if(!HasLowID())
-		m_nConnectIP = ntohl(in_userid);
+	if (!HasLowID())
+		m_nConnectIP = ed2kID ? in_userid : ntohl(in_userid);
 	m_dwServerIP = in_serverip;
 	m_nServerPort = in_serverport;
 }
@@ -184,7 +180,7 @@ void CUpDownClient::Init()
 	if (socket) {
 		SOCKADDR_IN sockAddr = {};
 		int nSockAddrLen = sizeof sockAddr;
-		socket->GetPeerName(reinterpret_cast<SOCKADDR *>(&sockAddr), &nSockAddrLen);
+		socket->GetPeerName(reinterpret_cast<LPSOCKADDR>(&sockAddr), &nSockAddrLen);
 		SetIP(sockAddr.sin_addr.S_un.S_addr);
 	} else
 		SetIP(0);
@@ -208,7 +204,6 @@ void CUpDownClient::Init()
 	m_bTransferredDownMini = false;
 	m_addedPayloadQueueSession = 0;
 	m_nCurQueueSessionPayloadUp = 0; // PENDING: Is this necessary? ResetSessionUp()...
-	m_lastRefreshedULDisplay = ::GetTickCount();
 	m_bGPLEvildoer = false;
 	m_bHelloAnswerPending = false;
 	m_fNoViewSharedFiles = 0;
@@ -228,8 +223,9 @@ void CUpDownClient::Init()
 	m_bPeerCacheUpHit = false;
 	m_fNeedOurPublicIP = 0;
 	m_random_update_wait = (uint32)(rand()/(RAND_MAX/1000));
+	m_lastRefreshedULDisplay = ::GetTickCount();
+	m_dwLastTriedToConnect = m_lastRefreshedULDisplay > MIN2MS(20) ? m_lastRefreshedULDisplay - MIN2MS(20) : 0; // ZZ:DownloadManager
 	m_bSourceExchangeSwapped = false; // ZZ:DownloadManager
-	m_dwLastTriedToConnect = ::GetTickCount() - MIN2MS(20); // ZZ:DownloadManager
 	m_fQueueRankPending = 0;
 	m_fUnaskQueueRankRecv = 0;
 	m_fFailedFileIdReqs = 0;
@@ -256,30 +252,30 @@ void CUpDownClient::Init()
 	m_uReqEnd = 0ull;
 }
 
-CUpDownClient::~CUpDownClient(){
-	if (IsAICHReqPending()){
+CUpDownClient::~CUpDownClient()
+{
+	if (IsAICHReqPending()) {
 		m_fAICHRequested = FALSE;
 		CAICHRecoveryHashSet::ClientAICHRequestFailed(this);
 	}
 
-	if (GetFriend() != NULL)
-	{
+	if (GetFriend() != NULL) {
 		if (GetFriend()->IsTryingToConnect())
 			GetFriend()->UpdateFriendConnectionState(FCR_DELETED);
 		m_Friend->SetLinkedClient(NULL);
 	}
-	ASSERT( m_nConnectingState == CCS_NONE || theApp.emuledlg->IsClosing() );
+	ASSERT(m_nConnectingState == CCS_NONE || theApp.emuledlg->IsClosing());
 	theApp.clientlist->RemoveClient(this, _T("Destructing client object"));
 
-	if (socket){
+	if (socket) {
 		socket->client = NULL;
 		socket->Safe_Delete();
 	}
-	if (m_pPCDownSocket){
+	if (m_pPCDownSocket) {
 		m_pPCDownSocket->client = NULL;
 		m_pPCDownSocket->Safe_Delete();
 	}
-	if (m_pPCUpSocket){
+	if (m_pPCUpSocket) {
 		m_pPCUpSocket->client = NULL;
 		m_pPCUpSocket->Safe_Delete();
 	}
@@ -302,7 +298,7 @@ CUpDownClient::~CUpDownClient(){
 		Pending_Block_Struct *pending = m_PendingBlocks_list.RemoveHead();
 		delete pending->block;
 		// Not always allocated
-		if (pending->zStream){
+		if (pending->zStream) {
 			inflateEnd(pending->zStream);
 			delete pending->zStream;
 		}
@@ -312,7 +308,7 @@ CUpDownClient::~CUpDownClient(){
 	while (!m_WaitingPackets_list.IsEmpty())
 		delete m_WaitingPackets_list.RemoveHead();
 
-	DEBUG_ONLY (theApp.listensocket->Debug_ClientDeleted(this));
+	DEBUG_ONLY(theApp.listensocket->Debug_ClientDeleted(this));
 	SetUploadFileID(NULL);
 
 	m_fileReaskTimes.RemoveAll(); // ZZ:DownloadManager (one re-ask timestamp for each file)
@@ -560,7 +556,7 @@ bool CUpDownClient::ProcessHelloTypePacket(CSafeMemFile* data)
 
 			case CT_EMULE_VERSION:
 				//  8 Compatible Client ID
-				//  7 Mjr Version (Doesn't really matter..)
+				//  7 Mjr Version (Doesn't really matter...)
 				//  7 Min Version (Only need 0-99)
 				//  3 Upd Version (Only need 0-5)
 				//  7 Bld Version (Only need 0-99) -- currently not used
@@ -614,21 +610,21 @@ bool CUpDownClient::ProcessHelloTypePacket(CSafeMemFile* data)
 	else if (bDbgInfo && data->GetPosition() < data->GetLength()){
 		UINT uAddHelloDataSize = (UINT)(data->GetLength() - data->GetPosition());
 		if (uAddHelloDataSize == sizeof(uint32)){
-			DWORD dwAddHelloInt32 = data->ReadUInt32();
-			m_strHelloInfo.AppendFormat(_T("\n  ***AddData: uint32=%lu (0x%08lx)"), dwAddHelloInt32, dwAddHelloInt32);
+			uint32 dwAddHelloInt32 = data->ReadUInt32();
+			m_strHelloInfo.AppendFormat(_T("\n  ***AddData: uint32=%u (0x%08x)"), dwAddHelloInt32, dwAddHelloInt32);
 		}
 		else if (uAddHelloDataSize == sizeof(uint32)+sizeof(uint16)){
-			DWORD dwAddHelloInt32 = data->ReadUInt32();
-			WORD w = data->ReadUInt16();
-			m_strHelloInfo.AppendFormat(_T("\n  ***AddData: uint32=%lu (0x%08lx),  uint16=%u (0x%04x)"), dwAddHelloInt32, dwAddHelloInt32, w, w);
+			uint32 dwAddHelloInt32 = data->ReadUInt32();
+			uint16 w = data->ReadUInt16();
+			m_strHelloInfo.AppendFormat(_T("\n  ***AddData: uint32=%u (0x%08x),  uint16=%u (0x%04x)"), dwAddHelloInt32, dwAddHelloInt32, w, w);
 		}
 		else
 			m_strHelloInfo.AppendFormat(_T("\n  ***AddData: %u bytes"), uAddHelloDataSize);
 	}
 
 	SOCKADDR_IN sockAddr = {};
-	int nSockAddrLen = sizeof(sockAddr);
-	socket->GetPeerName((SOCKADDR*)&sockAddr, &nSockAddrLen);
+	int nSockAddrLen = sizeof sockAddr;
+	socket->GetPeerName((LPSOCKADDR)&sockAddr, &nSockAddrLen);
 	SetIP(sockAddr.sin_addr.S_un.S_addr);
 
 	if (thePrefs.GetAddServersFromClients() && m_dwServerIP && m_nServerPort){
@@ -641,8 +637,8 @@ bool CUpDownClient::ProcessHelloTypePacket(CSafeMemFile* data)
 
 	//(a)If this is a highID user, store the ID in the Hybrid format.
 	//(b)Some older clients will not send a ID, these client are HighID users that are not connected to a server.
-	//(c)Kad users with a *.*.*.0 IPs will look like a lowID user they are actually a highID user.. They can be detected easily
-	//because they will send a ID that is the same as their IP..
+	//(c)Kad users with a *.*.*.0 IPs will look like a lowID user they are actually a highID user. They can be detected easily
+	//because they will send a ID that is the same as their IP.
 	if(!HasLowID() || m_nUserIDHybrid == 0 || m_nUserIDHybrid == m_dwUserIP )
 		m_nUserIDHybrid = ntohl(m_dwUserIP);
 
@@ -820,7 +816,7 @@ void CUpDownClient::ProcessMuleInfoPacket(const uchar* pachPacket, uint32 nSize)
 
 	uint32 tagcount = data.ReadUInt32();
 	if (bDbgInfo)
-		m_strMuleInfo.AppendFormat(_T("  Tags=%u"), (UINT)tagcount);
+		m_strMuleInfo.AppendFormat(_T("  Tags=%u"), tagcount);
 	for (uint32 i = 0; i < tagcount; i++)
 	{
 		CTag temptag(&data, false);
@@ -832,7 +828,7 @@ void CUpDownClient::ProcessMuleInfoPacket(const uchar* pachPacket, uint32 nSize)
 				if (temptag.IsInt()) {
 					m_byDataCompVer = (uint8)temptag.GetInt();
 					if (bDbgInfo)
-						m_strMuleInfo.AppendFormat(_T("\n  Compr=%u"), (UINT)temptag.GetInt());
+						m_strMuleInfo.AppendFormat(_T("\n  Compr=%u"), temptag.GetInt());
 				}
 				else if (bDbgInfo)
 					m_strMuleInfo.AppendFormat(_T("\n  ***UnkType=%s"), (LPCTSTR)temptag.GetFullInfo());
@@ -844,7 +840,7 @@ void CUpDownClient::ProcessMuleInfoPacket(const uchar* pachPacket, uint32 nSize)
 				if (temptag.IsInt()) {
 					m_nUDPPort = (uint16)temptag.GetInt();
 					if (bDbgInfo)
-						m_strMuleInfo.AppendFormat(_T("\n  UDPPort=%u"), (UINT)temptag.GetInt());
+						m_strMuleInfo.AppendFormat(_T("\n  UDPPort=%u"), temptag.GetInt());
 				}
 				else if (bDbgInfo)
 					m_strMuleInfo.AppendFormat(_T("\n  ***UnkType=%s"), (LPCTSTR)temptag.GetFullInfo());
@@ -856,7 +852,7 @@ void CUpDownClient::ProcessMuleInfoPacket(const uchar* pachPacket, uint32 nSize)
 				if (temptag.IsInt()) {
 					m_byUDPVer = (uint8)temptag.GetInt();
 					if (bDbgInfo)
-						m_strMuleInfo.AppendFormat(_T("\n  UDPVer=%u"), (UINT)temptag.GetInt());
+						m_strMuleInfo.AppendFormat(_T("\n  UDPVer=%u"), temptag.GetInt());
 				}
 				else if (bDbgInfo)
 					m_strMuleInfo.AppendFormat(_T("\n  ***UnkType=%s"), (LPCTSTR)temptag.GetFullInfo());
@@ -868,7 +864,7 @@ void CUpDownClient::ProcessMuleInfoPacket(const uchar* pachPacket, uint32 nSize)
 				if (temptag.IsInt()) {
 					m_bySourceExchange1Ver = (uint8)temptag.GetInt();
 					if (bDbgInfo)
-						m_strMuleInfo.AppendFormat(_T("\n  SrcExch=%u"), (UINT)temptag.GetInt());
+						m_strMuleInfo.AppendFormat(_T("\n  SrcExch=%u"), temptag.GetInt());
 				}
 				else if (bDbgInfo)
 					m_strMuleInfo.AppendFormat(_T("\n  ***UnkType=%s"), (LPCTSTR)temptag.GetFullInfo());
@@ -880,7 +876,7 @@ void CUpDownClient::ProcessMuleInfoPacket(const uchar* pachPacket, uint32 nSize)
 				if (temptag.IsInt()) {
 					m_byAcceptCommentVer = (uint8)temptag.GetInt();
 					if (bDbgInfo)
-						m_strMuleInfo.AppendFormat(_T("\n  Commnts=%u"), (UINT)temptag.GetInt());
+						m_strMuleInfo.AppendFormat(_T("\n  Commnts=%u"), temptag.GetInt());
 				}
 				else if (bDbgInfo)
 					m_strMuleInfo.AppendFormat(_T("\n  ***UnkType=%s"), (LPCTSTR)temptag.GetFullInfo());
@@ -892,7 +888,7 @@ void CUpDownClient::ProcessMuleInfoPacket(const uchar* pachPacket, uint32 nSize)
 				if (temptag.IsInt()) {
 					m_byExtendedRequestsVer = (uint8)temptag.GetInt();
 					if (bDbgInfo)
-						m_strMuleInfo.AppendFormat(_T("\n  ExtReq=%u"), (UINT)temptag.GetInt());
+						m_strMuleInfo.AppendFormat(_T("\n  ExtReq=%u"), temptag.GetInt());
 				}
 				else if (bDbgInfo)
 					m_strMuleInfo.AppendFormat(_T("\n  ***UnkType=%s"), (LPCTSTR)temptag.GetFullInfo());
@@ -904,7 +900,7 @@ void CUpDownClient::ProcessMuleInfoPacket(const uchar* pachPacket, uint32 nSize)
 				if (temptag.IsInt()) {
 					m_byCompatibleClient = (uint8)temptag.GetInt();
 					if (bDbgInfo)
-						m_strMuleInfo.AppendFormat(_T("\n  Comptbl=%u"), (UINT)temptag.GetInt());
+						m_strMuleInfo.AppendFormat(_T("\n  Comptbl=%u"), temptag.GetInt());
 				}
 				else if (bDbgInfo)
 					m_strMuleInfo.AppendFormat(_T("\n  ***UnkType=%s"), (LPCTSTR)temptag.GetFullInfo());
@@ -1045,9 +1041,9 @@ void CUpDownClient::SendHelloTypePacket(CSafeMemFile* data)
 	// ***
 	const UINT uExtendedRequestsVer	= 2;
 	const UINT uAcceptCommentVer	= 1;
-	const UINT uNoViewSharedFiles	= (thePrefs.CanSeeShares() == vsfaNobody) ? 1 : 0; // for backward compatibility this has to be a 'negative' flag
+	const UINT uNoViewSharedFiles	= static_cast<int>(thePrefs.CanSeeShares() == vsfaNobody); // for backward compatibility this has to be a 'negative' flag
 	const UINT uMultiPacket			= 1;
-	const UINT uSupportPreview		= (thePrefs.CanSeeShares() != vsfaNobody) ? 1 : 0; // set 'Preview supported' only if 'View Shared Files' allowed
+	const UINT uSupportPreview		= static_cast<int>(thePrefs.CanSeeShares() != vsfaNobody); // set 'Preview supported' only if 'View Shared Files' allowed
 	const UINT uPeerCache			= 1;
 	const UINT uUnicodeSupport		= 1;
 	const UINT nAICHVer				= 1;
@@ -1072,14 +1068,14 @@ void CUpDownClient::SendHelloTypePacket(CSafeMemFile* data)
 	const UINT uSupportLargeFiles	= 1;
 	const UINT uExtMultiPacket		= 1;
 	const UINT uReserved			= 0; // mod bit
-	const UINT uSupportsCryptLayer	= thePrefs.IsClientCryptLayerSupported() ? 1 : 0;
-	const UINT uRequestsCryptLayer	= thePrefs.IsClientCryptLayerRequested() ? 1 : 0;
-	const UINT uRequiresCryptLayer	= thePrefs.IsClientCryptLayerRequired() ? 1 : 0;
+	const UINT uSupportsCryptLayer	= static_cast<int>(thePrefs.IsClientCryptLayerSupported());
+	const UINT uRequestsCryptLayer	= static_cast<int>(thePrefs.IsClientCryptLayerRequested());
+	const UINT uRequiresCryptLayer	= static_cast<int>(thePrefs.IsClientCryptLayerRequired());
 	const UINT uSupportsSourceEx2	= 1;
 	const UINT uSupportsCaptcha		= 1;
 	// direct callback is only possible if connected to kad, tcp firewalled and verified UDP open (for example on a full cone NAT)
-	const UINT uDirectUDPCallback	= (Kademlia::CKademlia::IsRunning() && Kademlia::CKademlia::IsFirewalled()
-		&& !Kademlia::CUDPFirewallTester::IsFirewalledUDP(true) && Kademlia::CUDPFirewallTester::IsVerified()) ? 1 : 0;
+	const UINT uDirectUDPCallback	= static_cast<int>(Kademlia::CKademlia::IsRunning() && Kademlia::CKademlia::IsFirewalled()
+		&& !Kademlia::CUDPFirewallTester::IsFirewalledUDP(true) && Kademlia::CUDPFirewallTester::IsVerified());
 	const UINT uFileIdentifiers		= 1;
 
 	CTag tagMisOptions2(CT_EMULE_MISCOPTIONS2,
@@ -1159,19 +1155,14 @@ void CUpDownClient::ProcessMuleCommentPacket(const uchar* pachPacket, uint32 nSi
 				strCommentLower.MakeLower();
 
 				int iPos = 0;
-				CString strFilter(cfilter.Tokenize(_T("|"), iPos));
-				while (!strFilter.IsEmpty())
-				{
+				for (CString strFilter(cfilter.Tokenize(_T("|"), iPos)); !strFilter.IsEmpty(); strFilter = cfilter.Tokenize(_T("|"), iPos))
 					// comment filters are already in lowercase, compare with temp. lowercased received comment
-					if (strCommentLower.Find(strFilter) >= 0)
-					{
+					if (strCommentLower.Find(strFilter) >= 0) {
 						strComment.Empty();
 						uRating = 0;
 						SetSpammer(true);
 						break;
 					}
-					strFilter = cfilter.Tokenize(_T("|"), iPos);
-				}
 			}
 		}
 		if (!strComment.IsEmpty() || uRating > 0)
@@ -1187,9 +1178,9 @@ bool CUpDownClient::Disconnected(LPCTSTR pszReason, bool bFromSocket)
 {
 	ASSERT( theApp.clientlist->IsValidClient(this) );
 
-	// TODO LOGREMOVE
+	/*// TODO LOGREMOVE
 	if (m_nConnectingState == CCS_DIRECTCALLBACK)
-		DebugLog(_T("Direct Callback failed - %s"), (LPCTSTR)DbgGetClientInfo());
+		DebugLog(_T("Direct Callback failed - %s"), (LPCTSTR)DbgGetClientInfo());*/
 
 	if (GetKadState() == KS_QUEUED_FWCHECK_UDP || GetKadState() == KS_CONNECTING_FWCHECK_UDP)
 		Kademlia::CUDPFirewallTester::SetUDPFWCheckResult(false, true, ntohl(GetConnectIP()), 0); // inform the tester that this test was cancelled
@@ -1215,7 +1206,7 @@ bool CUpDownClient::Disconnected(LPCTSTR pszReason, bool bFromSocket)
 	else{
 		// ensure that all possible block requests are removed from the partfile
 		ClearDownloadBlockRequests();
-		if (GetDownloadState() == DS_CONNECTED){ // successfully connected, but probably didn't respond to our filerequest
+		if (GetDownloadState() == DS_CONNECTED || GetDownloadState() == DS_REQHASHSET) { // successfully connected, but probably didn't respond to our filerequest
 			theApp.clientlist->m_globDeadSourceList.AddDeadSource(this);
 			theApp.downloadqueue->RemoveSource(this);
 		}
@@ -1232,13 +1223,14 @@ bool CUpDownClient::Disconnected(LPCTSTR pszReason, bool bFromSocket)
 
 	// The remote client does not have to answer with OP_HASHSETANSWER *immediatly*
 	// after we've sent OP_HASHSETREQUEST. It may occur that a (buggy) remote client
-	// is sending use another OP_FILESTATUS which would let us change to DL-state to DS_ONQUEUE.
-	if (m_fHashsetRequestingMD4 && (reqfile != NULL))
-		reqfile->m_bMD4HashsetNeeded = true;
-	if (m_fHashsetRequestingAICH && (reqfile != NULL))
-		reqfile->SetAICHHashSetNeeded(true);
-
-	if (m_iFileListRequested){
+	// is sending use another OP_FILESTATUS which would let us change DL-state to DS_ONQUEUE.
+	if (reqfile != NULL) {
+		if (m_fHashsetRequestingMD4)
+			reqfile->m_bMD4HashsetNeeded = true;
+		if (m_fHashsetRequestingAICH)
+			reqfile->SetAICHHashSetNeeded(true);
+	}
+	if (m_iFileListRequested) {
 		LogWarning(LOG_STATUSBAR, GetResString(IDS_SHAREDFILES_FAILED), GetUserName());
 		m_iFileListRequested = 0;
 	}
@@ -1253,7 +1245,6 @@ bool CUpDownClient::Disconnected(LPCTSTR pszReason, bool bFromSocket)
 	switch(m_nUploadState) {
 		case US_ONUPLOADQUEUE:
 			bDelete = false;
-			break;
 	}
 	switch(m_nDownloadState) {
 		case DS_ONQUEUE:
@@ -1310,36 +1301,34 @@ bool CUpDownClient::Disconnected(LPCTSTR pszReason, bool bFromSocket)
 			Debug(_T("--- Deleted client            %s; Reason=%s\n"), (LPCTSTR)DbgGetClientInfo(true), pszReason);
 		return true;
 	}
-	else
-	{
-		if (thePrefs.GetDebugClientTCPLevel() > 0)
-			Debug(_T("--- Disconnected client       %s; Reason=%s\n"), (LPCTSTR)DbgGetClientInfo(true), pszReason);
-		m_fHashsetRequestingMD4 = 0;
-		m_fHashsetRequestingAICH = 0;
-		SetSentCancelTransfer(0);
-		m_bHelloAnswerPending = false;
-		m_fQueueRankPending = 0;
-		m_fFailedFileIdReqs = 0;
-		m_fUnaskQueueRankRecv = 0;
-		m_uPeerCacheDownloadPushId = 0;
-		m_uPeerCacheUploadPushId = 0;
-		m_uPeerCacheRemoteIP = 0;
-		SetPeerCacheDownState(PCDS_NONE);
-		SetPeerCacheUpState(PCUS_NONE);
-		if (m_pPCDownSocket){
-			m_pPCDownSocket->client = NULL;
-			m_pPCDownSocket->Safe_Delete();
-		}
-		if (m_pPCUpSocket){
-			m_pPCUpSocket->client = NULL;
-			m_pPCUpSocket->Safe_Delete();
-		}
-		m_fSentOutOfPartReqs = 0;
-		return false;
+
+	if (thePrefs.GetDebugClientTCPLevel() > 0)
+		Debug(_T("--- Disconnected client       %s; Reason=%s\n"), (LPCTSTR)DbgGetClientInfo(true), pszReason);
+	m_fHashsetRequestingMD4 = 0;
+	m_fHashsetRequestingAICH = 0;
+	SetSentCancelTransfer(0);
+	m_bHelloAnswerPending = false;
+	m_fQueueRankPending = 0;
+	m_fFailedFileIdReqs = 0;
+	m_fUnaskQueueRankRecv = 0;
+	m_uPeerCacheDownloadPushId = 0;
+	m_uPeerCacheUploadPushId = 0;
+	m_uPeerCacheRemoteIP = 0;
+	SetPeerCacheDownState(PCDS_NONE);
+	SetPeerCacheUpState(PCUS_NONE);
+	if (m_pPCDownSocket) {
+		m_pPCDownSocket->client = NULL;
+		m_pPCDownSocket->Safe_Delete();
 	}
+	if (m_pPCUpSocket) {
+		m_pPCUpSocket->client = NULL;
+		m_pPCUpSocket->Safe_Delete();
+	}
+	m_fSentOutOfPartReqs = 0;
+		return false;
 }
 
-//Returned bool is not if the TryToConnect is successful or not..
+//Returned bool is not if the TryToConnect is successful or not.
 //false means the client was deleted!
 //true means the client was not deleted!
 bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntimeClass* pClassSocket)
@@ -1367,7 +1356,7 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 	//		This client is firewalled, but has a Kad buddy. We sent the buddy a callback request to forward to the client
 	//		and hope for the best
 
-	if( GetKadState() == KS_QUEUED_FWCHECK )
+	if (GetKadState() == KS_QUEUED_FWCHECK)
 		SetKadState(KS_CONNECTING_FWCHECK);
 	else if (GetKadState() == KS_QUEUED_FWCHECK_UDP)
 		SetKadState(KS_CONNECTING_FWCHECK_UDP);
@@ -1375,14 +1364,14 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 	////////////////////////////////////////////////////////////
 	// Check for 1) Already Connected/Connecting
 	if (m_nConnectingState != CCS_NONE) {
-		DebugLog(_T("TryToConnect: Already Connecting (%s)"), (LPCTSTR)DbgGetClientInfo());// TODO LogRemove
+		//DebugLog(_T("TryToConnect: Already Connecting (%s)"), (LPCTSTR)DbgGetClientInfo());// TODO LogRemove
 		return true;
 	}
 	if (socket != NULL) {
 		if (socket->IsConnected())
 		{
 			if (CheckHandshakeFinished()) {
-				DEBUG_ONLY(DebugLog(_T("TryToConnect: Already Connected (%s)"), (LPCTSTR)DbgGetClientInfo()));// TODO LogRemove
+				//DEBUG_ONLY(DebugLog(_T("TryToConnect: Already Connected (%s)"), (LPCTSTR)DbgGetClientInfo()));// TODO LogRemove
 				ConnectionEstablished();
 			}
 			else
@@ -1453,7 +1442,7 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 		}
 	}
 
-	if ( HasLowID() )
+	if (HasLowID() && GetKadState() != KS_CONNECTING_FWCHECK)
 	{
 		ASSERT( pClassSocket == NULL );
 		if(!theApp.CanDoCallback(this)) // lowid2lowid check used for the whole function, don't remove
@@ -1502,7 +1491,7 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 
 	////////////////////////////////////////////////////////////
 	// 3) Normal Outgoing TCP Connection
-	if (!HasLowID())
+	if (!HasLowID() || GetKadState() == KS_CONNECTING_FWCHECK)
 	{
 		m_nConnectingState = CCS_DIRECTTCP;
 		if (pClassSocket == NULL)
@@ -1525,7 +1514,7 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 	{
 		m_nConnectingState = CCS_DIRECTCALLBACK;
 		// TODO LOGREMOVE
-		DebugLog(_T("Direct Callback on port %u to client %s (%s) "), GetKadPort(), (LPCTSTR)DbgGetClientInfo(), (LPCTSTR)md4str(GetUserHash()));
+		//DebugLog(_T("Direct Callback on port %u to client %s (%s) "), GetKadPort(), (LPCTSTR)DbgGetClientInfo(), (LPCTSTR)md4str(GetUserHash()));
 		CSafeMemFile data;
 		data.WriteUInt16(thePrefs.GetPort()); // needs to know our port
 		data.WriteHash16(thePrefs.GetUserHash()); // and userhash
@@ -1592,19 +1581,19 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 				// bad luck, as lookups aren't supposed to hapen anyway, we just let it fail, if we want
 				// to actually really use lookups (so buddies without known IPs), this should be reworked
 				// for example by adding a queuesystem for queries
-				DebugLogWarning(_T("TryToConnect: Buddy without knonw IP, Lookup currently impossible"));
+				DebugLogWarning(_T("TryToConnect: Buddy without known IP, Lookup currently impossible"));
 				delete findSource;
 				return true;
 			}
 			if(Kademlia::CSearchManager::StartSearch(findSource))
 			{
 				m_nConnectingState = CCS_KADCALLBACK;
-				//Started lookup..
+				//Started lookup.
 				SetDownloadState(DS_WAITCALLBACKKAD);
 			}
 			else
 			{
-				//This should never happen..
+				//This should never happen.
 				ASSERT(0);
 			}
 		}
@@ -1631,7 +1620,7 @@ void CUpDownClient::Connect()
 	sockAddr.sin_family = AF_INET;
 	sockAddr.sin_port = htons(GetUserPort());
 	sockAddr.sin_addr.S_un.S_addr = GetConnectIP();
-	socket->Connect((SOCKADDR*)&sockAddr, sizeof sockAddr);
+	socket->Connect((LPSOCKADDR)&sockAddr, sizeof sockAddr);
 	SendHelloPacket();
 }
 
@@ -1639,13 +1628,13 @@ void CUpDownClient::ConnectionEstablished()
 {
 	// ok we have a connection, lets see if we want anything from this client
 
-	// was this a direct callback?
+	/*// was this a direct callback?
 	if (m_nConnectingState == CCS_DIRECTCALLBACK) // TODO LOGREMOVE
 		DebugLog(_T("Direct Callback succeeded, connection established - %s"), (LPCTSTR)DbgGetClientInfo());
 
 	// remove the connecting timer and state
-	//if (m_nConnectingState == CCS_NONE) // TODO LOGREMOVE
-	//	DEBUG_ONLY( DebugLog(_T("ConnectionEstablished with CCS_NONE (incoming, that's fine)")) );
+	if (m_nConnectingState == CCS_NONE) // TODO LOGREMOVE
+		DEBUG_ONLY( DebugLog(_T("ConnectionEstablished with CCS_NONE (incoming, that's fine)")) );*/
 	m_nConnectingState = CCS_NONE;
 	theApp.clientlist->RemoveConnectingClient(this);
 
@@ -1945,22 +1934,17 @@ int CUpDownClient::GetHashType() const
 void CUpDownClient::SetUserName(LPCTSTR pszNewName)
 {
 	free(m_pszUsername);
-	if (pszNewName)
-		m_pszUsername = _tcsdup(pszNewName);
-	else
-		m_pszUsername = NULL;
+	m_pszUsername = (pszNewName ? _tcsdup(pszNewName) : NULL);
 }
 
 void CUpDownClient::RequestSharedFileList()
 {
-	if (m_iFileListRequested == 0){
+	if (m_iFileListRequested == 0) {
 		AddLogLine(true, GetResString(IDS_SHAREDFILES_REQUEST), GetUserName());
 		m_iFileListRequested = 1;
 		TryToConnect(true);
-	}
-	else{
+	} else
 		LogWarning(LOG_STATUSBAR, _T("Requesting shared files from user %s (%u) is already in progress"), GetUserName(), GetUserIDHybrid());
-	}
 }
 
 void CUpDownClient::ProcessSharedFileList(const uchar* pachPacket, uint32 nSize, LPCTSTR pszDirectory)
@@ -2052,7 +2036,7 @@ void CUpDownClient::SendSignaturePacket()
 		ASSERT ( false );
 		return;
 	}
-	Packet* packet = new Packet(OP_SIGNATURE,siglen + 1+ ( (bUseV2)? 1:0 ),OP_EMULEPROT);
+	Packet* packet = new Packet(OP_SIGNATURE, siglen + 1 + static_cast<int>(bUseV2), OP_EMULEPROT);
 	theStats.AddUpDataOverheadOther(packet->size);
 	memcpy(packet->pBuffer+1,achBuffer, siglen);
 	packet->pBuffer[0] = siglen;
@@ -2068,31 +2052,25 @@ void CUpDownClient::ProcessPublicKeyPacket(const uchar* pachPacket, uint32 nSize
 {
 	theApp.clientlist->AddTrackClient(this);
 
-	if (socket == NULL || credits == NULL || pachPacket[0] != nSize-1
-		|| nSize < 10 || nSize > 250){
+	if (socket == NULL || credits == NULL || pachPacket[0] != nSize - 1
+		|| nSize < 10 || nSize > 250) {
 //		ASSERT ( false ); on network malfunction eMule crashed while hanging in this assert's messagebox. Also I've seen 451 bytes packet in the wild.
 		return;
 	}
 	if (!theApp.clientcredits->CryptoAvailable())
 		return;
 	// the function will handle everything (mulitple key etc)
-	if (credits->SetSecureIdent(pachPacket+1, pachPacket[0])){
+	if (credits->SetSecureIdent(pachPacket + 1, pachPacket[0])) {
 		// if this client wants a signature, now we can send him one
-		if (m_SecureIdentState == IS_SIGNATURENEEDED){
+		if (m_SecureIdentState == IS_SIGNATURENEEDED)
 			SendSignaturePacket();
-		}
-		else if(m_SecureIdentState == IS_KEYANDSIGNEEDED)
-		{
+		else if (m_SecureIdentState == IS_KEYANDSIGNEEDED) {
 			// something is wrong
 			if (thePrefs.GetLogSecureIdent())
 				AddDebugLogLine(false, _T("Invalid State error: IS_KEYANDSIGNEEDED in ProcessPublicKeyPacket"));
 		}
-	}
-	else
-	{
-		if (thePrefs.GetLogSecureIdent())
-			AddDebugLogLine(false, _T("Failed to use new received public key"));
-	}
+	} else if (thePrefs.GetLogSecureIdent())
+		AddDebugLogLine(false, _T("Failed to use new received public key"));
 }
 
 void CUpDownClient::ProcessSignaturePacket(const uchar* pachPacket, uint32 nSize)
@@ -2607,7 +2585,7 @@ bool CUpDownClient::CheckHandshakeFinished() const
 {
 	if (m_bHelloAnswerPending)
 	{
-		// 24-Nov-2004 [bc]: The reason for this is that 2 clients are connecting to each other at the same..
+		// 24-Nov-2004 [bc]: The reason for this is that 2 clients are connecting to each other at the same.
 		//if (thePrefs.GetVerbose())
 		//	AddDebugLogLine(DLP_VERYLOW, false, _T("Handshake not finished - while processing packet: %s; %s"), DbgGetClientTCPOpcode(protocol, opcode), (LPCTSTR)DbgGetClientInfo());
 		return false;
@@ -2637,49 +2615,49 @@ void CUpDownClient::OnSocketConnected(int /*nErrorCode*/)
 
 CString CUpDownClient::GetDownloadStateDisplayString() const
 {
-	UINT sid;
+	UINT uid;
 	switch (GetDownloadState()) {
 	case DS_CONNECTING:
-		sid = IDS_CONNECTING;
+		uid = IDS_CONNECTING;
 		break;
 	case DS_CONNECTED:
-		sid = IDS_ASKING;
+		uid = IDS_ASKING;
 		break;
 	case DS_WAITCALLBACK:
-		sid = IDS_CONNVIASERVER;
+		uid = IDS_CONNVIASERVER;
 		break;
 	case DS_ONQUEUE:
-		sid = IsRemoteQueueFull() ? IDS_QUEUEFULL : IDS_ONQUEUE;
+		uid = IsRemoteQueueFull() ? IDS_QUEUEFULL : IDS_ONQUEUE;
 		break;
 	case DS_DOWNLOADING:
-		sid = IDS_TRANSFERRING;
+		uid = IDS_TRANSFERRING;
 		break;
 	case DS_REQHASHSET:
-		sid = IDS_RECHASHSET;
+		uid = IDS_RECHASHSET;
 		break;
 	case DS_NONEEDEDPARTS:
-		sid = IDS_NONEEDEDPARTS;
+		uid = IDS_NONEEDEDPARTS;
 		break;
 	case DS_LOWTOLOWIP:
-		sid = IDS_NOCONNECTLOW2LOW;
+		uid = IDS_NOCONNECTLOW2LOW;
 		break;
 	case DS_TOOMANYCONNS:
-		sid = IDS_TOOMANYCONNS;
+		uid = IDS_TOOMANYCONNS;
 		break;
 	case DS_ERROR:
-		sid = IDS_ERROR;
+		uid = IDS_ERROR;
 		break;
 	case DS_WAITCALLBACKKAD:
-		sid = IDS_KAD_WAITCBK;
+		uid = IDS_KAD_WAITCBK;
 		break;
 	case DS_TOOMANYCONNSKAD:
-		sid = IDS_KAD_TOOMANDYKADLKPS;
+		uid = IDS_KAD_TOOMANDYKADLKPS;
 		break;
 	default:
-		sid = 0;
+		uid = 0;
 	}
+	CString strState(GetResString(uid));
 
-	CString strState(GetResString(sid));
 	if (thePrefs.GetPeerCacheShow()) {
 		switch (m_ePeerCacheDownState) {
 		case PCDS_WAIT_CLIENT_REPLY:
@@ -2719,7 +2697,7 @@ CString CUpDownClient::GetUploadStateDisplayString() const
 			id = IDS_US_STALLEDW4BR;
 		/* else if(GetPayloadInBuffer() == 0 && thePrefs.IsExtControlsEnabled())
 			id = IDS_US_STALLEDREADINGFDISK;*/
-		else if (GetSlotNumber() <= theApp.uploadqueue->GetActiveUploadsCount())
+		else if (GetSlotNumber() <= (UINT)theApp.uploadqueue->GetActiveUploadsCount())
 			id = IDS_TRANSFERRING;
 		else
 			id = IDS_TRICKLING;
@@ -2797,17 +2775,18 @@ EUtf8Str CUpDownClient::GetUnicodeSupport() const
 	return utf8strNone;
 }
 
-void CUpDownClient::SetSpammer(bool bVal){
+void CUpDownClient::SetSpammer(bool bVal)
+{
 	if (bVal)
 		Ban(_T("Identified as Spammer"));
 	else if (IsBanned() && m_fIsSpammer)
 		UnBan();
-	m_fIsSpammer = bVal ? 1 : 0;
+	m_fIsSpammer = static_cast<int>(bVal);
 }
 
 void  CUpDownClient::SetMessageFiltered(bool bVal)
 {
-	m_fMessageFiltered = bVal ? 1 : 0;
+	m_fMessageFiltered = static_cast<int>(bVal);
 }
 
 bool  CUpDownClient::IsObfuscatedConnectionEstablished() const
@@ -2948,7 +2927,7 @@ void CUpDownClient::ProcessChatMessage(CSafeMemFile* data, uint32 nLength)
 		if (!bIsSpam) {
 
 			// first fixed criteria: If a client  sends me an URL in his first message before I response to him
-			// there is a 99,9% chance that it is some poor guy advising his leech mod, or selling you .. well you know :P
+			// there is a 99,9% chance that it is some poor guy advising his leech mod, or selling you... well you know :P
 			if (GetMessagesSent() == 0){
 				curPos = 0;
 				while (!(resToken = CString(URLINDICATOR).Tokenize(_T("|"), curPos)).IsEmpty())
@@ -3106,7 +3085,7 @@ void CUpDownClient::ProcessFirewallCheckUDPRequest(CSafeMemFile* data)
 		DebugLogWarning(_T("UDP Firewallcheck requested with SenderKey == 0 (%s)"), (LPCTSTR)DbgGetClientInfo());
 
 	CSafeMemFile fileTestPacket1;
-	fileTestPacket1.WriteUInt8(bErrorAlreadyKnown ? 1 : 0);
+	fileTestPacket1.WriteUInt8(static_cast<uint8>(bErrorAlreadyKnown));
 	fileTestPacket1.WriteUInt16(nRemoteInternPort);
 	if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 		DebugSend("KADEMLIA2_FIREWALLUDP", ntohl(GetConnectIP()), nRemoteInternPort);
@@ -3116,7 +3095,7 @@ void CUpDownClient::ProcessFirewallCheckUDPRequest(CSafeMemFile* data)
 	// if the client has a router with PAT (and therefore a different extern port than intern), test this port too
 	if (nRemoteExternPort != 0 && nRemoteExternPort != nRemoteInternPort) {
 		CSafeMemFile fileTestPacket2;
-		fileTestPacket2.WriteUInt8(bErrorAlreadyKnown ? 1 : 0);
+		fileTestPacket2.WriteUInt8(static_cast<uint8>(bErrorAlreadyKnown));
 		fileTestPacket2.WriteUInt16(nRemoteExternPort);
 		if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 			DebugSend("KADEMLIA2_FIREWALLUDP", ntohl(GetConnectIP()), nRemoteExternPort);
@@ -3165,7 +3144,7 @@ void CUpDownClient::SendSharedDirectories()
 	CSafeMemFile tempfile(80);
 	tempfile.WriteUInt32(static_cast<uint32>(arFolders.GetCount()));
 	for (int i = 0; i < arFolders.GetCount(); i++)
-		tempfile.WriteString(arFolders.GetAt(i), GetUnicodeSupport());
+		tempfile.WriteString(arFolders[i], GetUnicodeSupport());
 
 	if (thePrefs.GetDebugClientTCPLevel() > 0)
 		DebugSend("OP__AskSharedDirsAnswer", this);

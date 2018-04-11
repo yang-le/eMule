@@ -5,7 +5,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // ESearchType
 
-enum ESearchType: int
+enum ESearchType : uint8
 {
 	//NOTE: The numbers are *equal* to the entries in the comboxbox -> TODO: use item data
 	SearchTypeAutomatic = 0,
@@ -26,7 +26,7 @@ struct SSearchParams
 	SSearchParams()
 		: eType(SearchTypeEd2kServer)
 	{
-		dwSearchID = (DWORD)-1;
+		dwSearchID = (uint32)-1;
 		bClientSharedFiles = false;
 		ullMinSize = 0;
 		ullMaxSize = 0;
@@ -53,7 +53,7 @@ struct SSearchParams
 		ulMinLength = 0;
 		bMatchKeywords = false;
 	}
-	DWORD dwSearchID;
+	uint32 dwSearchID;
 	bool bClientSharedFiles;
 	CString strSearchTitle;
 	CString strExpression;
@@ -80,8 +80,8 @@ struct SSearchParams
 	void StorePartially(CFileDataIO& rFile) const
 	{
 		rFile.WriteUInt32(dwSearchID);
-		rFile.WriteUInt8((uint8)eType);
-		rFile.WriteUInt8(bClientSharedFiles ? 1 : 0);
+		rFile.WriteUInt8(static_cast<uint8>(eType));
+		rFile.WriteUInt8(static_cast<uint8>(bClientSharedFiles));
 		rFile.WriteString(strSpecialTitle, utf8strRaw);
 		rFile.WriteString(strExpression, utf8strRaw);
 		rFile.WriteString(CString(strFileType), utf8strRaw);

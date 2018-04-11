@@ -451,17 +451,8 @@ void CEditableListCtrl::OnNmCustomDraw(NMHDR *pNMHDR, LRESULT *pResult)
 
 	if (pNMCD->nmcd.dwDrawStage == CDDS_ITEMPREPAINT)
 	{
-		DWORD dwItemData = pNMCD->nmcd.lItemlParam;
-		if (dwItemData & 1)
-		{
-			pNMCD->clrText = RGB(128,128,128);
-			pNMCD->clrTextBk = 0xFF000000;
-		}
-		else
-		{
-			pNMCD->clrText = 0xFF000000;
-			pNMCD->clrTextBk = 0xFF000000;
-		}
+		pNMCD->clrText = (pNMCD->nmcd.lItemlParam & 1) ? RGB(128, 128, 128) : 0xFF000000;
+		pNMCD->clrTextBk = 0xFF000000;
 	}
 
 	*pResult = CDRF_DODEFAULT;

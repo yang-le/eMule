@@ -231,14 +231,14 @@ void ID3_TagImpl::AddFrame(const ID3_Frame* frame)
   }
 }
 
-bool ID3_TagImpl::IsValidFrame(ID3_Frame& frame, bool testlinkedFrames)
+bool ID3_TagImpl::IsValidFrame(ID3_Frame *frame, bool testlinkedFrames)
 {
-  ID3_Frame* testframe = &frame;
+  if (NULL == frame)
+    return false;
+
+  ID3_Frame* testframe = frame;
   ID3_Field* tmpField;
   ID3_Frame* tmpFrame;
-
-  if (NULL == testframe)
-    return false;
 
   // check if the frame is outdated
   ID3_FrameDef* myFrameDef = ID3_FindFrameDef(testframe->GetID());
@@ -251,7 +251,7 @@ bool ID3_TagImpl::IsValidFrame(ID3_Frame& frame, bool testlinkedFrames)
         if (tmpFrame)
         {
           testframe = tmpFrame;
-          frame = *tmpFrame;
+          *frame = *tmpFrame;
         }
         else //it's too old, and i couldn't convert
           return false; //disregard frame
@@ -306,7 +306,7 @@ bool ID3_TagImpl::IsValidFrame(ID3_Frame& frame, bool testlinkedFrames)
         if (tmpFrame && tmpFrame != testframe)
           this->RemoveFrame(tmpFrame); //remove old one, there can be only one
         tmpField = testframe->GetField(ID3FN_ID);
-        tmpFrame = this->Find(ID3FID_CRYPTOREG, ID3FN_ID, tmpField->Get());
+        tmpFrame = this->Find(ID3FID_GROUPINGREG, ID3FN_ID, tmpField->Get()); //was CRYPTOREG, possibly an error
         if (tmpFrame && tmpFrame != testframe)
           this->RemoveFrame(tmpFrame); //remove old one, there can be only one
         return true;
@@ -380,9 +380,7 @@ void ID3_TagImpl::checkFrames()
   for (iterator iter = this->begin(); iter != this->end(); ++iter)
   {
     ID3_Frame* frame = *iter;
-    ID3_Frame& testframe = *frame;
-
-    if (this->IsValidFrame(testframe, true) == false)
+    if (this->IsValidFrame(frame, true) == false)
     {
       _frames.erase(iter);
       delete frame;
@@ -396,11 +394,8 @@ void ID3_TagImpl::checkFrames()
 
 bool ID3_TagImpl::AttachFrame(ID3_Frame* frame)
 {
-  ID3_Frame& testframe = *frame;
-
-  if (IsValidFrame(testframe, false))
+  if (IsValidFrame(frame, false))
   {
-    frame = &testframe;
     _frames.push_back(frame);
     _cursor = _frames.begin();
     _changed = true;

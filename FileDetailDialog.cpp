@@ -37,7 +37,7 @@ bool NeedArchiveInfoPage(const CSimpleArray<CObject*>* paItems)
 {
 	if (paItems->GetSize() == 1)
 	{
-		CShareableFile *pFile = STATIC_DOWNCAST(CShareableFile, (*paItems)[0]);
+		CShareableFile *pFile = static_cast<CShareableFile *>((*paItems)[0]);
 		EFileType eFileType = GetFileTypeEx(pFile);
 		switch (eFileType) {
 			case ARCHIVE_ZIP:
@@ -50,8 +50,8 @@ bool NeedArchiveInfoPage(const CSimpleArray<CObject*>* paItems)
 	return false;
 }
 
-void UpdateFileDetailsPages(CListViewPropertySheet *pSheet,
-	CResizablePage *pArchiveInfo, CResizablePage *pMediaInfo)
+void UpdateFileDetailsPages(CListViewPropertySheet *pSheet
+	, CResizablePage *pArchiveInfo, CResizablePage *pMediaInfo, CResizablePage *pFileLink)
 {
 	if (pSheet->GetItems().GetSize() == 1) {
 		CPropertyPage *pActivePage = pSheet->GetActivePage();
@@ -72,9 +72,11 @@ void UpdateFileDetailsPages(CListViewPropertySheet *pSheet,
 		}
 
 		bool bFound = false;
-		for (int i = 0; !bFound && i < pSheet->GetPages().GetSize(); ++i)
-			if (pSheet->GetPages()[i] == pToShow)
+		for (int i = 0; i < pSheet->GetPages().GetSize(); ++i)
+			if (pSheet->GetPages()[i] == pToShow) {
 				bFound = true;
+				break;
+			}
 
 		if (!bFound) {
 			ASSERT(iPage >= 0);
@@ -93,6 +95,8 @@ void UpdateFileDetailsPages(CListViewPropertySheet *pSheet,
 			pSheet->UpdateWindow();
 		}
 	}
+	if (pFileLink && pFileLink->m_hWnd)
+		pFileLink->SendMessage(UM_DATA_CHANGED);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -207,14 +211,14 @@ BOOL CFileDetailDialog::OnInitDialog()
 LRESULT CFileDetailDialog::OnDataChanged(WPARAM, LPARAM)
 {
 	UpdateTitle();
-	UpdateFileDetailsPages(this, &m_wndArchiveInfo, &m_wndMediaInfo);
+	UpdateFileDetailsPages(this, &m_wndArchiveInfo, &m_wndMediaInfo, &m_wndFileLink);
 	return 1;
 }
 
 void CFileDetailDialog::UpdateTitle()
 {
 	if (m_aItems.GetSize() == 1)
-		SetWindowText(GetResString(IDS_DETAILS) + _T(": ") + STATIC_DOWNCAST(CAbstractFile, m_aItems[0])->GetFileName());
+		SetWindowText(GetResString(IDS_DETAILS) + _T(": ") + static_cast<CAbstractFile *>(m_aItems[0])->GetFileName());
 	else
 		SetWindowText(GetResString(IDS_DETAILS));
 }

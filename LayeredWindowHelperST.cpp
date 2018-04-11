@@ -31,9 +31,9 @@ CLayeredWindowHelperST::~CLayeredWindowHelperST()
 //		Zero
 //			Function failed. To get extended error information, call ::GetLastError().
 //
-LONG CLayeredWindowHelperST::AddLayeredStyle(HWND hWnd)
+LONG_PTR CLayeredWindowHelperST::AddLayeredStyle(HWND hWnd)
 {
-	return SetWindowLongPtr(hWnd, GWL_EXSTYLE, GetWindowLongPtr(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
+	return ::SetWindowLongPtr(hWnd, GWL_EXSTYLE, GetWindowLongPtr(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
 } // End of AddLayeredStyle
 
 // This function removes the WS_EX_LAYERED style from the specified window.
@@ -50,7 +50,7 @@ LONG CLayeredWindowHelperST::AddLayeredStyle(HWND hWnd)
 //		Zero
 //			Function failed. To get extended error information, call ::GetLastError().
 //
-LONG CLayeredWindowHelperST::RemoveLayeredStyle(HWND hWnd)
+LONG_PTR CLayeredWindowHelperST::RemoveLayeredStyle(HWND hWnd)
 {
 	return ::SetWindowLongPtr(hWnd, GWL_EXSTYLE, ::GetWindowLongPtr(hWnd, GWL_EXSTYLE) & ~WS_EX_LAYERED);
 } // End of RemoveLayeredStyle

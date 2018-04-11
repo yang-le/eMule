@@ -6,12 +6,11 @@ class CPPgSecurity : public CPropertyPage
 {
 	DECLARE_DYNAMIC(CPPgSecurity)
 
+	enum { IDD = IDD_PPG_SECURITY };
+
 public:
 	CPPgSecurity();
 	virtual ~CPPgSecurity();
-
-// Dialog Data
-	enum { IDD = IDD_PPG_SECURITY };
 
 	void Localize();
 	void DeleteDDB();

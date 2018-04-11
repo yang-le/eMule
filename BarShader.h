@@ -43,15 +43,15 @@ protected:
 	void FillRect(CDC *dc, LPRECT rectSpan, float fRed, float fGreen, float fBlue, bool bFlat);
 	void FillRect(CDC *dc, LPRECT rectSpan, COLORREF color, bool bFlat);
 
-	int    m_iWidth;
-	int    m_iHeight;
-	double m_dPixelsPerByte;
-	double m_dBytesPerPixel;
-	EMFileSize m_uFileSize;
+	int		m_iWidth;
+	int		m_iHeight;
+	double	m_dPixelsPerByte;
+	double	m_dBytesPerPixel;
+	EMFileSize	m_uFileSize;
 	bool	m_bIsPreview;
 
 private:
 	CRBMap<uint64, COLORREF> m_Spans;	// SLUGFILLER: speedBarShader
-	float *m_Modifiers;
-	UINT m_used3dlevel;
+	float	*m_Modifiers;
+	UINT	m_used3dlevel;
 };

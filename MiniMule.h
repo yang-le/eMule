@@ -25,19 +25,18 @@ class CMiniMule : public CDHtmlDialog
 {
 	DECLARE_DYNCREATE(CMiniMule)
 
+	enum { IDD = IDD_MINIMULE, IDH = IDR_HTML_MINIMULE };
+
 public:
 	explicit CMiniMule(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CMiniMule();
 
-// Dialog Data
-	enum { IDD = IDD_MINIMULE, IDH = IDR_HTML_MINIMULE };
-
-	bool GetAutoClose() const { return m_bAutoClose; }
-	void SetAutoClose(bool bAutoClose) { m_bAutoClose = bAutoClose; }
-	bool IsInCallback() const { return m_iInCallback != 0; }
-	bool IsInInitDialog() const { return m_iInInitDialog != 0; }
-	bool GetDestroyAfterInitDialog() const { return m_bDestroyAfterInitDialog; }
-	void SetDestroyAfterInitDialog() { m_bDestroyAfterInitDialog = true; }
+	bool GetAutoClose() const				{ return m_bAutoClose; }
+	void SetAutoClose(bool bAutoClose)		{ m_bAutoClose = bAutoClose; }
+	bool IsInCallback() const				{ return m_iInCallback != 0; }
+	bool IsInInitDialog() const				{ return m_iInInitDialog != 0; }
+	bool GetDestroyAfterInitDialog() const	{ return m_bDestroyAfterInitDialog; }
+	void SetDestroyAfterInitDialog()		{ m_bDestroyAfterInitDialog = true; }
 	void UpdateContent(UINT uUpDatarate = (UINT)-1, UINT uDownDatarate = (UINT)-1);
 	void Localize();
 
@@ -52,7 +51,7 @@ protected:
 
 	// Auto-close
 	bool m_bAutoClose;
-	UINT m_uAutoCloseTimer;
+	UINT_PTR m_uAutoCloseTimer;
 	void CreateAutoCloseTimer();
 	void KillAutoCloseTimer();
 

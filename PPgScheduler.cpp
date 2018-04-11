@@ -96,17 +96,17 @@ void CPPgScheduler::Localize()
 	{
 		SetWindowText(GetResString(IDS_SCHEDULER));
 
-		GetDlgItem(IDC_ENABLE)->SetWindowText(GetResString(IDS_ENABLED));
-		GetDlgItem(IDC_S_ENABLE)->SetWindowText(GetResString(IDS_ENABLED));
-		GetDlgItem(IDC_STATIC_S_TITLE)->SetWindowText(GetResString(IDS_TITLE));
-		GetDlgItem(IDC_STATIC_DETAILS)->SetWindowText(GetResString(IDS_DETAILS));
-		GetDlgItem(IDC_STATIC_S_TIME)->SetWindowText(GetResString(IDS_TIME));
+		SetDlgItemText(IDC_ENABLE, GetResString(IDS_ENABLED));
+		SetDlgItemText(IDC_S_ENABLE, GetResString(IDS_ENABLED));
+		SetDlgItemText(IDC_STATIC_S_TITLE, GetResString(IDS_TITLE));
+		SetDlgItemText(IDC_STATIC_DETAILS, GetResString(IDS_DETAILS));
+		SetDlgItemText(IDC_STATIC_S_TIME, GetResString(IDS_TIME));
 
-		GetDlgItem(IDC_STATIC_S_ACTION)->SetWindowText(GetResString(IDS_ACTION));
-		GetDlgItem(IDC_APPLY)->SetWindowText(GetResString(IDS_PW_APPLY));
-		GetDlgItem(IDC_REMOVE)->SetWindowText(GetResString(IDS_REMOVE));
-		GetDlgItem(IDC_NEW)->SetWindowText(GetResString(IDS_NEW));
-		GetDlgItem(IDC_CHECKNOENDTIME)->SetWindowText(GetResString(IDS_CHECKNOENDTIME));
+		SetDlgItemText(IDC_STATIC_S_ACTION, GetResString(IDS_ACTION));
+		SetDlgItemText(IDC_APPLY, GetResString(IDS_PW_APPLY));
+		SetDlgItemText(IDC_REMOVE, GetResString(IDS_REMOVE));
+		SetDlgItemText(IDC_NEW, GetResString(IDS_NEW));
+		SetDlgItemText(IDC_CHECKNOENDTIME, GetResString(IDS_CHECKNOENDTIME));
 
 		while (m_timesel.GetCount() > 0)
 			m_timesel.DeleteString(0);
@@ -127,7 +127,7 @@ void CPPgScheduler::OnNmClickList(NMHDR* /*pNMHDR*/, LRESULT* /*pResult*/)
 void CPPgScheduler::LoadSchedule(int index)
 {
 	Schedule_Struct* schedule = theApp.scheduler->GetSchedule(index);
-	GetDlgItem(IDC_S_TITLE)->SetWindowText(schedule->title);
+	SetDlgItemText(IDC_S_TITLE, schedule->title);
 
 	//time
 	CTime time = time.GetCurrentTime();
@@ -161,11 +161,11 @@ void CPPgScheduler::FillScheduleList()
 	m_list.DeleteAllItems();
 
 	for (int index = 0; index<theApp.scheduler->GetCount(); ++index) {
-		const Schedule_Struct *sch = theApp.scheduler->GetSchedule(index);
-		m_list.InsertItem(index, sch->title);
-		CTime time(sch->time);
+		const Schedule_Struct *schedule = theApp.scheduler->GetSchedule(index);
+		m_list.InsertItem(index, schedule->title);
+		CTime time(schedule->time);
 		CString timeS(time.Format(_T("%H:%M")));
-		m_list.SetItemText(index, 1, GetDayLabel(sch->day));
+		m_list.SetItemText(index, 1, GetDayLabel(schedule->day));
 		m_list.SetItemText(index, 2, timeS);
 	}
 	if (m_list.GetItemCount()>0) {
@@ -177,7 +177,6 @@ void CPPgScheduler::FillScheduleList()
 
 void CPPgScheduler::OnBnClickedAdd()
 {
-	int index;
 	Schedule_Struct* newschedule=new Schedule_Struct();
 	newschedule->day=0;
 	newschedule->enabled=false;
@@ -185,8 +184,8 @@ void CPPgScheduler::OnBnClickedAdd()
 	newschedule->title=_T("?");
 	newschedule->ResetActions();
 
-	index=theApp.scheduler->AddSchedule(newschedule);
-	m_list.InsertItem(index , newschedule->title );
+	int index = (int)theApp.scheduler->AddSchedule(newschedule);
+	m_list.InsertItem(index, newschedule->title );
 	m_list.SetSelectionMark(index);
 
 	RecheckSchedules();
@@ -200,7 +199,7 @@ void CPPgScheduler::OnBnClickedApply()
 		Schedule_Struct* schedule=theApp.scheduler->GetSchedule(index);
 
 		//title
-		GetDlgItem(IDC_S_TITLE)->GetWindowText(schedule->title);
+		GetDlgItemText(IDC_S_TITLE, schedule->title);
 
 		//time
 		CTime myTime;
@@ -222,8 +221,8 @@ void CPPgScheduler::OnBnClickedApply()
 		schedule->enabled=IsDlgButtonChecked(IDC_S_ENABLE)!=0;
 
 		schedule->ResetActions();
-		for (uint8 i=0;i<m_actions.GetItemCount();i++) {
-			schedule->actions[i]=m_actions.GetItemData(i);
+		for (int i=0; i<m_actions.GetItemCount(); ++i) {
+			schedule->actions[i] = (int)m_actions.GetItemData(i);
 			schedule->values[i]=m_actions.GetItemText(i,1);
 		}
 
@@ -238,75 +237,102 @@ void CPPgScheduler::OnBnClickedApply()
 
 void CPPgScheduler::OnBnClickedRemove()
 {
-	int index=m_list.GetSelectionMark();
+	int index = m_list.GetSelectionMark();
 
-	if (index!=-1) theApp.scheduler->RemoveSchedule(index);
+	if (index!=-1)
+		theApp.scheduler->RemoveSchedule(index);
 	FillScheduleList();
 	theApp.scheduler->RestoreOriginals();
 
 	RecheckSchedules();
 }
 
-BOOL CPPgScheduler::OnApply(){
+BOOL CPPgScheduler::OnApply()
+{
 	SetModified(FALSE);
 	return CPropertyPage::OnApply();
 }
 
 CString CPPgScheduler::GetActionLabel(int index)
 {
+	UINT uid;
 	switch (index) {
 	case ACTION_SETUPL:
-		return GetResString(IDS_PW_UPL);
+		uid = IDS_PW_UPL;
+		break;
 	case ACTION_SETDOWNL:
-		return GetResString(IDS_PW_DOWNL);
+		uid = IDS_PW_DOWNL;
+		break;
 	case ACTION_SOURCESL:
-		return GetResString(IDS_LIMITSOURCES);
+		uid = IDS_LIMITSOURCES;
+		break;
 	case ACTION_CON5SEC:
-		return GetResString(IDS_LIMITCONS5SEC);
+		uid = IDS_LIMITCONS5SEC;
+		break;
 	case ACTION_CATSTOP:
-		return GetResString(IDS_SCHED_CATSTOP);
+		uid = IDS_SCHED_CATSTOP;
+		break;
 	case ACTION_CATRESUME:
-		return GetResString(IDS_SCHED_CATRESUME);
+		uid = IDS_SCHED_CATRESUME;
+		break;
 	case ACTION_CONS:
-		return GetResString(IDS_PW_MAXC);
+		uid = IDS_PW_MAXC;
+		break;
+	default:
+		return CString();
 	}
-	return CString();
+	return GetResString(uid);
 }
 
 CString CPPgScheduler::GetDayLabel(int index)
 {
+	UINT uid;
 	switch (index) {
 	case DAY_DAYLY:
-		return GetResString(IDS_DAYLY);
+		uid = IDS_DAYLY;
+		break;
 	case DAY_MO:
-		return GetResString(IDS_MO);
+		uid = IDS_MO;
+		break;
 	case DAY_DI:
-		return GetResString(IDS_DI);
+		uid = IDS_DI;
+		break;
 	case DAY_MI:
-		return GetResString(IDS_MI);
+		uid = IDS_MI;
+		break;
 	case DAY_DO:
-		return GetResString(IDS_DO);
+		uid = IDS_DO;
+		break;
 	case DAY_FR:
-		return GetResString(IDS_FR);
+		uid = IDS_FR;
+		break;
 	case DAY_SA:
-		return GetResString(IDS_SA);
+		uid = IDS_SA;
+		break;
 	case DAY_SO:
-		return GetResString(IDS_SO);
+		uid = IDS_SO;
+		break;
 	case DAY_MO_FR:
-		return GetResString(IDS_DAY_MO_FR);
+		uid = IDS_DAY_MO_FR;
+		break;
 	case DAY_MO_SA:
-		return GetResString(IDS_DAY_MO_SA);
+		uid = IDS_DAY_MO_SA;
+		break;
 	case DAY_SA_SO:
-		return GetResString(IDS_DAY_SA_SO);
+		uid = IDS_DAY_SA_SO;
+		break;
+	default:
+		return CString();
 	}
-	return CString();
+	return GetResString(uid);
 }
 
 void CPPgScheduler::OnNmDblClkActionlist(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
 	if (m_actions.GetSelectionMark()!=-1) {
-		int ac=m_actions.GetItemData(m_actions.GetSelectionMark());
-		if (ac!=6 && ac!=7) OnCommand(MP_CAT_EDIT,0);
+		DWORD_PTR ac = m_actions.GetItemData(m_actions.GetSelectionMark());
+		if (ac!=6 && ac!=7)
+			OnCommand(MP_CAT_EDIT, 0);
 	}
 
 	*pResult = 0;
@@ -323,8 +349,9 @@ void CPPgScheduler::OnNmRClickActionlist(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 
 	bool isCatAction=false;
 	if (m_actions.GetSelectionMark()!=-1) {
-		int ac=m_actions.GetItemData(m_actions.GetSelectionMark());
-		if (ac==6 || ac==7) isCatAction=true;
+		DWORD_PTR ac=m_actions.GetItemData(m_actions.GetSelectionMark());
+		if (ac==6 || ac==7)
+			isCatAction=true;
 	}
 
 	m_ActionMenu.CreatePopupMenu();
@@ -343,14 +370,14 @@ void CPPgScheduler::OnNmRClickActionlist(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 	m_ActionSel.AppendMenu(MF_STRING,MP_SCHACTIONS+ACTION_CATRESUME,GetResString(IDS_SCHED_CATRESUME));
 
 	m_ActionMenu.AddMenuTitle(GetResString(IDS_ACTION));
-	m_ActionMenu.AppendMenu(MF_POPUP,(UINT_PTR)m_ActionSel.m_hMenu,	GetResString(IDS_ADD));
+	m_ActionMenu.AppendMenu(MF_POPUP, (UINT_PTR)m_ActionSel.m_hMenu, GetResString(IDS_ADD));
 
 	if (isCatAction) {
 		if (thePrefs.GetCatCount()>1) m_CatActionSel.AppendMenu(MF_STRING,MP_SCHACTIONS+20,GetResString(IDS_ALLUNASSIGNED));
 		m_CatActionSel.AppendMenu(MF_STRING,MP_SCHACTIONS+21,GetResString(IDS_ALL));
 		for (int i=1;i<thePrefs.GetCatCount();i++)
 			m_CatActionSel.AppendMenu(MF_STRING,MP_SCHACTIONS+22+i,thePrefs.GetCategory(i)->strTitle);
-		m_ActionMenu.AppendMenu(MF_POPUP,(UINT_PTR)m_CatActionSel.m_hMenu,	GetResString(IDS_SELECTCAT));
+		m_ActionMenu.AppendMenu(MF_POPUP, (UINT_PTR)m_CatActionSel.m_hMenu,	GetResString(IDS_SELECTCAT));
 	} else
 		m_ActionMenu.AppendMenu(nFlag,MP_CAT_EDIT,	GetResString(IDS_EDIT));
 
@@ -371,7 +398,7 @@ BOOL CPPgScheduler::OnCommand(WPARAM wParam, LPARAM lParam)
 	// add
 	if (wParam>=MP_SCHACTIONS && wParam<MP_SCHACTIONS+20 && m_actions.GetItemCount()<16)
 	{
-		int action=wParam-MP_SCHACTIONS;
+		int action = (int)(wParam-MP_SCHACTIONS);
 		int i=m_actions.GetItemCount();
 		m_actions.InsertItem(i,GetActionLabel(action));
 		m_actions.SetItemData(i,action);
@@ -408,9 +435,10 @@ BOOL CPPgScheduler::OnCommand(WPARAM wParam, LPARAM lParam)
 				}
 				inputbox.SetLabels(GetResString(IDS_SCHED_ACTCONFIG), prompt, m_actions.GetItemText(item,1));
 				inputbox.DoModal();
-				CString res = inputbox.GetInput();
-				if (!inputbox.WasCancelled())
-					m_actions.SetItemText(item,1,res);
+				if (!inputbox.WasCancelled()) {
+					CString res = inputbox.GetInput();
+					m_actions.SetItemText(item, 1, res);
+				}
 			}
 			break;
         }

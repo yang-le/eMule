@@ -34,7 +34,7 @@ typedef struct
 class CMD4
 {
 // Attributes
-	CryptoPP::Weak::MD4 m_md4; // netfinity: Use cryptlib// netfinity: Use cryptlib
+	CryptoPP::Weak::MD4 m_md4; // netfinity: Use cryptlib
 	MD4 m_hash;
 // Operations
 public:

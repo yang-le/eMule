@@ -5,12 +5,11 @@ class CPPgTweaks : public CPropertyPage
 {
 	DECLARE_DYNAMIC(CPPgTweaks)
 
+	enum { IDD = IDD_PPG_TWEAKS };
+
 public:
 	CPPgTweaks();
 	virtual ~CPPgTweaks();
-
-// Dialog Data
-	enum { IDD = IDD_PPG_TWEAKS };
 
 	void Localize();
 

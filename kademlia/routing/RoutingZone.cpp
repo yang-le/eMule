@@ -96,7 +96,7 @@ CRoutingZone::CRoutingZone(LPCSTR szFilename)
 	CKademlia::GetPrefs()->GetKadID(&uMe);
 	m_sFilename = szFilename;
 	// Init our root node.
-	Init(NULL, 0, CUInt128((ULONG)0));
+	Init(NULL, 0, CUInt128(0ul));
 }
 
 CRoutingZone::CRoutingZone(CRoutingZone *pSuper_zone, int iLevel, const CUInt128 &uZone_index)
@@ -240,12 +240,12 @@ void CRoutingZone::ReadFile(const CString& strSpecialNodesdate)
 							if (::theApp.ipfilter->IsFiltered(uhostIP))
 							{
 								if (::thePrefs.GetLogFilteredIPs())
-									AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u)--read known.dat -- - IP filter (%s)") , (LPCTSTR)ipstr(uhostIP), uUDPPort, (LPCTSTR)::theApp.ipfilter->GetLastHit());
+									AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u)--read known.dat -- - IP filter (%s)"), (LPCTSTR)ipstr(uhostIP), uUDPPort, (LPCTSTR)::theApp.ipfilter->GetLastHit());
 							}
 							else if (uUDPPort == 53 && uContactVersion <= KADEMLIA_VERSION5_48a)  /*No DNS Port without encryption*/
 							{
 								if (::thePrefs.GetLogFilteredIPs())
-									AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u)--read known.dat") , (LPCTSTR)ipstr(uhostIP), uUDPPort);
+									AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u)--read known.dat"), (LPCTSTR)ipstr(uhostIP), uUDPPort);
 							}
 							else
 							{
@@ -306,12 +306,12 @@ void CRoutingZone::ReadBootstrapNodesDat(CFileDataIO& file){
 				if (::theApp.ipfilter->IsFiltered(uhostIP))
 				{
 					if (::thePrefs.GetLogFilteredIPs())
-						AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u)--read known.dat -- - IP filter (%s)") , (LPCTSTR)ipstr(uhostIP), uUDPPort, (LPCTSTR)::theApp.ipfilter->GetLastHit());
+						AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u)--read known.dat -- - IP filter (%s)"), (LPCTSTR)ipstr(uhostIP), uUDPPort, (LPCTSTR)::theApp.ipfilter->GetLastHit());
 				}
 				else if (uUDPPort == 53 && uContactVersion <= KADEMLIA_VERSION5_48a)
 				{
 					if (::thePrefs.GetLogFilteredIPs())
-						AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u)--read known.dat") , (LPCTSTR)ipstr(uhostIP), uUDPPort);
+						AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u)--read known.dat"), (LPCTSTR)ipstr(uhostIP), uUDPPort);
 				}
 				else if (uContactVersion > 1) // only kad2 nodes
 				{
@@ -394,7 +394,7 @@ void CRoutingZone::WriteFile()
 				file.WriteUInt16(pContact->GetTCPPort());
 				file.WriteUInt8(pContact->GetVersion());
 				pContact->GetUDPKey().StoreToFile(file);
-				file.WriteUInt8(pContact->IsIpVerified() ? 1 : 0);
+				file.WriteUInt8(static_cast<uint8>(pContact->IsIpVerified()));
 			}
 			file.Close();
 			AddDebugLogLine( false, _T("Wrote %ld contact%s to file."), listContacts.size(), ((listContacts.size() == 1) ? _T("") : _T("s")));
@@ -430,10 +430,9 @@ void CRoutingZone::DbgWriteBootstrapFile()
 			uDistance.Xor(uMe);
 			GetClosestTo(2, uRandom, uDistance, 1200, &mapContacts, false, false);
 			// filter out Kad1 nodes
-			for (ContactMap::iterator itContactMap = mapContacts.begin(); itContactMap != mapContacts.end(); )
+			for (ContactMap::const_iterator itContactMap = mapContacts.begin(); itContactMap != mapContacts.end(); )
 			{
-				ContactMap::iterator itCurContactMap = itContactMap;
-				++itContactMap;
+				ContactMap::const_iterator itCurContactMap = itContactMap++;
 				CContact* pContact = itCurContactMap->second;
 				if (pContact->GetVersion() <= 1)
 					mapContacts.erase(itCurContactMap);
@@ -541,7 +540,8 @@ bool CRoutingZone::Add(CContact* pContact, bool& bUpdate, bool& bOutIPVerified)
 				// from the packet which wants to update this contact in order to make sure this is not a try to
 				// hijack this entry
 				DebugLogWarning(_T("Kad: Sender (%s) tried to update contact entry but failed to provide the proper sender key (Sent Empty: %s) for the entry (%s) - denying update")
-					, (LPCTSTR)ipstr(ntohl(pContact->GetIPAddress())), pContact->GetUDPKey().GetKeyValue(theApp.GetPublicIP(false)) == 0 ? _T("Yes") : _T("No")
+					, (LPCTSTR)ipstr(ntohl(pContact->GetIPAddress()))
+					, pContact->GetUDPKey().GetKeyValue(theApp.GetPublicIP(false)) == 0 ? _T("Yes") : _T("No")
 					, (LPCTSTR)ipstr(ntohl(pContactUpdate->GetIPAddress())));
 				bUpdate = false;
 			}
@@ -646,21 +646,19 @@ CContact* CRoutingZone::GetContact(uint32 uIP, uint16 nPort, bool bTCPPort) cons
 {
 	if (IsLeaf())
 		return m_pBin->GetContact(uIP, nPort, bTCPPort);
-	else{
-		CContact* pContact = m_pSubZones[0]->GetContact(uIP, nPort, bTCPPort);
-		return (pContact != NULL) ? pContact : m_pSubZones[1]->GetContact(uIP, nPort, bTCPPort);
-	}
+
+	CContact* pContact = m_pSubZones[0]->GetContact(uIP, nPort, bTCPPort);
+	return (pContact != NULL) ? pContact : m_pSubZones[1]->GetContact(uIP, nPort, bTCPPort);
 }
 
 CContact* CRoutingZone::GetRandomContact(uint32 nMaxType, uint32 nMinKadVersion) const
 {
 	if (IsLeaf())
 		return m_pBin->GetRandomContact(nMaxType, nMinKadVersion);
-	else{
-		uint32 nZone = GetRandomUInt16() % 2;
-		CContact* pContact = m_pSubZones[nZone]->GetRandomContact(nMaxType, nMinKadVersion);
-		return (pContact != NULL) ? pContact : m_pSubZones[nZone == 1 ? 0 : 1]->GetRandomContact(nMaxType, nMinKadVersion);
-	}
+
+	uint32 nZone = GetRandomUInt16() % 2;
+	CContact* pContact = m_pSubZones[nZone]->GetRandomContact(nMaxType, nMinKadVersion);
+	return (pContact != NULL) ? pContact : m_pSubZones[nZone == 1 ? 0 : 1]->GetRandomContact(nMaxType, nMinKadVersion);
 }
 
 void CRoutingZone::GetClosestTo(uint32 uMaxType, const CUInt128 &uTarget, const CUInt128 &uDistance, uint32 uMaxRequired, ContactMap *pmapResult, bool bEmptyFirst, bool bInUse) const
@@ -801,9 +799,8 @@ CRoutingZone *CRoutingZone::GenSubZone(int iSide)
 
 void CRoutingZone::StartTimer()
 {
-	time_t tNow = time(NULL);
 	// Start filling the tree, closest bins first.
-	m_tNextBigTimer = tNow + SEC(10);
+	m_tNextBigTimer = time(NULL) + SEC(10);
 	CKademlia::AddEvent(this);
 }
 
@@ -828,10 +825,10 @@ bool CRoutingZone::OnBigTimer()
 //tree that will give very bad results.
 uint32 CRoutingZone::EstimateCount()
 {
-	if( !IsLeaf() )
+	if (!IsLeaf())
 		return 0;
-	if( m_uLevel < KBASE )
-		return (UINT)(pow(2.0F, (int)m_uLevel)*K);
+	if (m_uLevel < KBASE)
+		return (uint32)(pow(2.0F, (int)m_uLevel)*K);
 	CRoutingZone* pCurZone = m_pSuperZone->m_pSuperZone->m_pSuperZone;
 	// Find out how full this part of the tree is.
 	float fModify = pCurZone->GetNumContacts()/(K*2.0f);
@@ -844,23 +841,23 @@ uint32 CRoutingZone::EstimateCount()
 	// Modify count by actual statistics of Firewalled ratio for >= 0.49b if we are not firewalled ourself
 	// Modify count by 40% for >= 0.49b if we are firewalled outself (the actual Firewalled count at this date on kad is 35-55%)
 	const float fFirewalledModifyOld = 1.20F;
-	float fFirewalledModifyNew = 0;
+	float fFirewalledModifyNew;
 	if (CUDPFirewallTester::IsFirewalledUDP(true))
 		fFirewalledModifyNew = 1.40F; // we are firewalled and get get the real statistic, assume 40% firewalled >=0.49b nodes
 	else if (CKademlia::GetPrefs()->StatsGetFirewalledRatio(true) > 0) {
 		fFirewalledModifyNew = 1.0F + (CKademlia::GetPrefs()->StatsGetFirewalledRatio(true)); // apply the firewalled ratio to the modify
 		ASSERT( fFirewalledModifyNew > 1.0F && fFirewalledModifyNew < 1.90F );
-	}
+	} else
+		fFirewalledModifyNew = 0;
 	float fNewRatio = CKademlia::GetPrefs()->StatsGetKadV8Ratio();
-	float fFirewalledModifyTotal = 0;
+	float fFirewalledModifyTotal;
 	if (fNewRatio > 0 && fFirewalledModifyNew > 0) // weigth the old and the new modifier based on how many new contacts we have
 		fFirewalledModifyTotal = (fNewRatio * fFirewalledModifyNew) + ((1 - fNewRatio) * fFirewalledModifyOld);
 	else
 		fFirewalledModifyTotal = fFirewalledModifyOld;
 	ASSERT( fFirewalledModifyTotal > 1.0F && fFirewalledModifyTotal < 1.90F );
 
-
-	return (UINT)(pow(2.0F, (int)m_uLevel-2)*K*fModify*fFirewalledModifyTotal);
+	return (uint32)(pow(2.0F, (int)m_uLevel-2)*K*fModify*fFirewalledModifyTotal);
 }
 
 void CRoutingZone::OnSmallTimer()
@@ -873,7 +870,7 @@ void CRoutingZone::OnSmallTimer()
 	ContactList listEntries;
 	// Remove dead entries
 	m_pBin->GetEntries(&listEntries);
-	for (ContactList::iterator itContactList = listEntries.begin(); itContactList != listEntries.end(); ++itContactList)
+	for (ContactList::const_iterator itContactList = listEntries.begin(); itContactList != listEntries.end(); ++itContactList)
 	{
 		pContact = *itContactList;
 		if ( pContact->GetType() == 4)
@@ -944,8 +941,7 @@ uint32 CRoutingZone::GetNumContacts() const
 {
 	if (IsLeaf())
 		return m_pBin->GetSize();
-	else
-		return m_pSubZones[0]->GetNumContacts() + m_pSubZones[1]->GetNumContacts();
+	return m_pSubZones[0]->GetNumContacts() + m_pSubZones[1]->GetNumContacts();
 }
 
 void CRoutingZone::GetNumContacts(uint32& nInOutContacts, uint32& nInOutFilteredContacts, uint8 byMinVersion) const
@@ -971,8 +967,7 @@ uint32 CRoutingZone::GetBootstrapContacts(ContactList *plistResult, uint32 uMaxR
 			for (ContactList::const_iterator itContactList = top.begin(); itContactList != top.end(); ++itContactList)
 			{
 				plistResult->push_back(*itContactList);
-				uRetVal++;
-				if (uRetVal == uMaxRequired)
+				if (++uRetVal >= uMaxRequired)
 					break;
 			}
 		}
@@ -987,26 +982,26 @@ uint32 CRoutingZone::GetBootstrapContacts(ContactList *plistResult, uint32 uMaxR
 bool CRoutingZone::VerifyContact(const CUInt128 &uID, uint32 uIP) const
 {
 	CContact* pContact = GetContact(uID);
-	if (pContact == NULL){
+	if (pContact == NULL)
 		return false;
-	}
-	else if (uIP != pContact->GetIPAddress())
+
+	if (uIP != pContact->GetIPAddress())
 		return false;
+
+	if (pContact->IsIpVerified())
+		DebugLogWarning(_T("Kad: VerifyContact: Sender already verified (sender: %s)"), (LPCTSTR)ipstr(ntohl(uIP)));
 	else {
-		if (pContact->IsIpVerified())
-			DebugLogWarning(_T("Kad: VerifyContact: Sender already verified (sender: %s)"), (LPCTSTR)ipstr(ntohl(uIP)));
-		else{
-			pContact->SetIpVerified(true);
-			theApp.emuledlg->kademliawnd->ContactRef(pContact);
-		}
-		return true;
+		pContact->SetIpVerified(true);
+		theApp.emuledlg->kademliawnd->ContactRef(pContact);
 	}
+	return true;
 }
 
-void CRoutingZone::SetAllContactsVerified(){
+void CRoutingZone::SetAllContactsVerified()
+{
 	if (IsLeaf())
 		m_pBin->SetAllContactsVerified();
-	else{
+	else {
 		m_pSubZones[0]->SetAllContactsVerified();
 		m_pSubZones[1]->SetAllContactsVerified();
 	}
@@ -1027,8 +1022,7 @@ bool CRoutingZone::IsAcceptableContact(const CContact* pToCheck) const
 			// already existing verfied node with different IP
 			return false;
 		}
-		else
-			return true; // node exists already in our routing table, that's fine
+		return true; // node exists already in our routing table, that's fine
 	}
 	// if the node is not yet known, check if we out IP limitations would hit
 #ifdef _DEBUG
@@ -1042,6 +1036,5 @@ bool CRoutingZone::HasOnlyLANNodes() const
 {
 	if (IsLeaf())
 		return m_pBin->HasOnlyLANNodes();
-	else
-		return m_pSubZones[0]->HasOnlyLANNodes() && m_pSubZones[1]->HasOnlyLANNodes();
+	return m_pSubZones[0]->HasOnlyLANNodes() && m_pSubZones[1]->HasOnlyLANNodes();
 }

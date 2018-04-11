@@ -392,14 +392,16 @@ void CAbstractFile::DeleteTag(uint8 tagname)
 	}
 }
 
-void CAbstractFile::SetKadCommentSearchRunning(bool bVal){
+void CAbstractFile::SetKadCommentSearchRunning(bool bVal)
+{
 	if (bVal != m_bKadCommentSearchRunning){
 		m_bKadCommentSearchRunning = bVal;
 		UpdateFileRatingCommentAvail(true);
 	}
 }
 
-void CAbstractFile::RefilterKadNotes(bool bUpdate){
+void CAbstractFile::RefilterKadNotes(bool bUpdate)
+{
 	const CString& cfilter = thePrefs.GetCommentFilter();
 	// check all availabe comments against our filter again
 	if (cfilter.IsEmpty())

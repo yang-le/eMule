@@ -137,7 +137,7 @@ bool CTrayDialog::TrayShow()
 
 bool CTrayDialog::TrayHide()
 {
-	BOOL bSuccess = Shell_NotifyIcon(NIM_DELETE, &m_nidIconData);
+	bool bSuccess = Shell_NotifyIcon(NIM_DELETE, &m_nidIconData);
 	if (bSuccess)
 		m_bTrayIconVisible = false;
 	return bSuccess;
@@ -191,8 +191,7 @@ LRESULT CTrayDialog::OnTrayNotify(WPARAM wParam, LPARAM lParam)
 		return 0;
 
 	CPoint pt;
-	UINT uMsg = (UINT)lParam;
-	switch (uMsg)
+	switch (lParam)
 	{
 		case WM_MOUSEMOVE:
 			GetCursorPos(&pt);
@@ -212,7 +211,7 @@ LRESULT CTrayDialog::OnTrayNotify(WPARAM wParam, LPARAM lParam)
 			// WM_LBUTTONUP without checking this, we may get a single WM_LBUTTONUP message
 			// whereby the according WM_LBUTTONDOWN message was meant for some other tray bar
 			// icon.
-			if (m_bLButtonDblClk || m_bLButtonDown && !thePrefs.m_bEnableMiniMule) //use single click to restore from tray
+			if (m_bLButtonDblClk || (m_bLButtonDown && !thePrefs.m_bEnableMiniMule)) //use single click to restore from tray
 			{
 				KillSingleClickTimer();
 				RestoreWindow();
@@ -248,7 +247,6 @@ LRESULT CTrayDialog::OnTrayNotify(WPARAM wParam, LPARAM lParam)
 			GetCursorPos(&pt);
 			ClientToScreen(&pt);
 			OnTrayRButtonDblClk(pt);
-			break;
 	}
 	return 1;
 }

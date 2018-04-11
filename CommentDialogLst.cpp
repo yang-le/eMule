@@ -123,8 +123,8 @@ void CCommentDialogLst::OnDestroy()
 
 void CCommentDialogLst::Localize()
 {
-	GetDlgItem(IDC_SEARCHKAD)->SetWindowText(GetResString(IDS_SEARCHKAD));
-	GetDlgItem(IDC_EDITCOMMENTFILTER)->SetWindowText(GetResString(IDS_EDITSPAMFILTER));
+	SetDlgItemText(IDC_SEARCHKAD, GetResString(IDS_SEARCHKAD));
+	SetDlgItemText(IDC_EDITCOMMENTFILTER, GetResString(IDS_EDITSPAMFILTER));
 }
 
 void CCommentDialogLst::RefreshData(bool deleteOld)
@@ -133,24 +133,21 @@ void CCommentDialogLst::RefreshData(bool deleteOld)
 		m_lstComments.DeleteAllItems();
 
 	bool kadsearchable = true;
-	for (int i = 0; i < m_paFiles->GetSize(); i++)
-    {
-		CAbstractFile* file = STATIC_DOWNCAST(CAbstractFile, (*m_paFiles)[i]);
-		if (file->IsPartFile())
-		{
-			for (POSITION pos = ((CPartFile*)file)->srclist.GetHeadPosition(); pos != NULL; )
-			{
-				CUpDownClient* cur_src = ((CPartFile*)file)->srclist.GetNext(pos);
+	for (int i = 0; i < m_paFiles->GetSize(); ++i) {
+		CAbstractFile* file = static_cast<CAbstractFile *>((*m_paFiles)[i]);
+		if (file->IsPartFile()) {
+			for (POSITION pos = static_cast<CPartFile *>(file)->srclist.GetHeadPosition(); pos != NULL;) {
+				const CUpDownClient* cur_src = static_cast<CPartFile *>(file)->srclist.GetNext(pos);
 				if (cur_src->HasFileRating() || !cur_src->GetFileComment().IsEmpty())
 					m_lstComments.AddItem(cur_src);
 			}
 		}
 
 		const CTypedPtrList<CPtrList, Kademlia::CEntry*>& list = file->getNotes();
-		for (POSITION pos = list.GetHeadPosition(); pos != NULL; )
+		for (POSITION pos = list.GetHeadPosition(); pos != NULL;)
 			m_lstComments.AddItem(list.GetNext(pos));
 		if (file->IsPartFile())
-			((CPartFile*)file)->UpdateFileRatingCommentAvail();
+			static_cast<CPartFile *>(file)->UpdateFileRatingCommentAvail();
 
 		// check if note searches are running for this file(s)
 		if (Kademlia::CSearchManager::AlreadySearchingFor(Kademlia::CUInt128(file->GetFileHash())))
@@ -161,8 +158,7 @@ void CCommentDialogLst::RefreshData(bool deleteOld)
 	if (Kademlia::CKademlia::IsConnected()) {
 		SetDlgItemText(IDC_SEARCHKAD, kadsearchable ? GetResString(IDS_SEARCHKAD) : GetResString(IDS_KADSEARCHACTIVE));
 		GetDlgItem(IDC_SEARCHKAD)->EnableWindow(kadsearchable);
-	}
-	else {
+	} else {
 		SetDlgItemText(IDC_SEARCHKAD, GetResString(IDS_SEARCHKAD));
 		GetDlgItem(IDC_SEARCHKAD)->EnableWindow(FALSE);
 	}
@@ -178,7 +174,7 @@ void CCommentDialogLst::OnBnClickedSearchKad()
 		int iMaxSearches = mini(m_paFiles->GetSize(), KADEMLIATOTALFILE);
 		for (int i = 0; i < iMaxSearches; i++)
 		{
-			CAbstractFile* file = STATIC_DOWNCAST(CAbstractFile, (*m_paFiles)[i]);
+			CAbstractFile* file = static_cast<CAbstractFile *>((*m_paFiles)[i]);
  			if (file)
 			{
 				if (!Kademlia::CSearchManager::PrepareLookup(Kademlia::CSearch::NOTES, true, Kademlia::CUInt128(file->GetFileHash())))

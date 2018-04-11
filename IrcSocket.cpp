@@ -23,6 +23,8 @@
 #include "Statistics.h"
 #include "Log.h"
 #include "Exceptions.h"
+#include "opcodes.h"
+#include "StringConversion.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -42,48 +44,45 @@ CIrcSocket::~CIrcSocket()
 	CIrcSocket::RemoveAllLayers();
 }
 
-BOOL CIrcSocket::Create(UINT uSocketPort, int iSocketType, long lEvent, LPCSTR lpszSocketAddress)
+BOOL CIrcSocket::Create(UINT uSocketPort, int iSocketType, long lEvent, const CString& sSocketAddress)
 {
 	const ProxySettings& proxy = thePrefs.GetProxySettings();
-	if (proxy.UseProxy && proxy.type != PROXYTYPE_NOPROXY)
-	{
+	if (proxy.UseProxy && proxy.type != PROXYTYPE_NOPROXY) {
 		m_pProxyLayer = new CAsyncProxySocketLayer;
-		switch (proxy.type)
-		{
-			case PROXYTYPE_SOCKS4:
-			case PROXYTYPE_SOCKS4A:
+		switch (proxy.type) {
+		case PROXYTYPE_SOCKS4:
+		case PROXYTYPE_SOCKS4A:
+			m_pProxyLayer->SetProxy(proxy.type, proxy.name, proxy.port);
+			break;
+		case PROXYTYPE_SOCKS5:
+		case PROXYTYPE_HTTP10:
+		case PROXYTYPE_HTTP11:
+			if (proxy.EnablePassword)
+				m_pProxyLayer->SetProxy(proxy.type, proxy.name, proxy.port, proxy.user, proxy.password);
+			else
 				m_pProxyLayer->SetProxy(proxy.type, proxy.name, proxy.port);
-				break;
-			case PROXYTYPE_SOCKS5:
-			case PROXYTYPE_HTTP10:
-			case PROXYTYPE_HTTP11:
-				if (proxy.EnablePassword)
-					m_pProxyLayer->SetProxy(proxy.type, proxy.name, proxy.port, proxy.user, proxy.password);
-				else
-					m_pProxyLayer->SetProxy(proxy.type, proxy.name, proxy.port);
-				break;
-			default:
-				ASSERT(0);
+			break;
+		default:
+			ASSERT(0);
 		}
 		AddLayer(m_pProxyLayer);
 	}
-
-	return CAsyncSocketEx::Create(uSocketPort, iSocketType, lEvent, lpszSocketAddress);
+	return CAsyncSocketEx::Create(uSocketPort, iSocketType, lEvent, sSocketAddress);
 }
 
 void CIrcSocket::Connect()
 {
 	int iPort = 6667;
-	int iIndex;
 	CString strServer = thePrefs.GetIRCServer();
-	if ((iIndex = strServer.Find(_T(':'))) != -1)
+	int iIndex = strServer.Find(_T(':'));
+	if (iIndex != -1)
 	{
 		iPort = _tstoi(strServer.Mid(iIndex + 1));
 		if (iPort <= 0)
 			iPort = 6667;
 		strServer = strServer.Left(iIndex);
 	}
-	CAsyncSocketEx::Connect(CStringA(strServer), iPort);
+	CAsyncSocketEx::Connect(strServer, iPort);
 }
 
 void CIrcSocket::OnReceive(int iErrorCode)
@@ -95,14 +94,15 @@ void CIrcSocket::OnReceive(int iErrorCode)
 		return;
 	}
 
+#define RCVBUFSIZE (1024)
 	TRACE("CIrcSocket::OnReceive\n");
 	try
 	{
 		int iLength;
 		do
 		{
-			char cBuffer[1024];
-			iLength = Receive(cBuffer, sizeof(cBuffer)-1);
+			char cBuffer[RCVBUFSIZE];
+			iLength = Receive(cBuffer, RCVBUFSIZE - 1);
 			TRACE("iLength=%d\n", iLength);
 			if (iLength < 0)
 			{
@@ -117,7 +117,7 @@ void CIrcSocket::OnReceive(int iErrorCode)
 				m_pIrcMain->PreParseMessage(cBuffer);
 			}
 		}
-		while (iLength > 1022);
+		while (iLength > RCVBUFSIZE - 2);
 	}
 	CATCH_DFLT_EXCEPTIONS(_T(__FUNCTION__))
 	CATCH_DFLT_ALL(_T(__FUNCTION__))
@@ -148,26 +148,22 @@ void CIrcSocket::OnConnect(int iErrorCode)
 
 void CIrcSocket::OnClose(int iErrorCode)
 {
-	if (iErrorCode)
-	{
-		if (thePrefs.GetVerbose())
-			AddDebugLogLine(false, _T("IRC socket: Failed to close - %s"), (LPCTSTR)GetErrorMessage(iErrorCode, 1));
-		m_pIrcMain->Disconnect();
-		return;
-	}
+	if (iErrorCode && thePrefs.GetVerbose())
+		AddDebugLogLine(false, _T("IRC socket: Failed to close - %s"), (LPCTSTR)GetErrorMessage(iErrorCode, 1));
 	m_pIrcMain->Disconnect();
 }
 
 int CIrcSocket::SendString(const CString& sMessage)
 {
-	CStringA sMessageA(sMessage);
+	CStringA sMessageA = thePrefs.GetIRCEnableUTF8() ? StrToUtf8(sMessage) : CStringA(sMessage);
 	TRACE("CIrcSocket::SendString: %s\n", (LPCSTR)sMessageA);
 	sMessageA += "\r\n";
 	int iSize = sMessageA.GetLength();
 	theStats.AddUpDataOverheadOther(iSize);
-	int iResult = Send(sMessageA, iSize);
-//	ASSERT( iResult == iSize ); useless as it occurs on any common network error
-	return iResult;
+	return Send(sMessageA, iSize);
+	//int iResult = Send(sMessageA, iSize);
+	//ASSERT( iResult == iSize ); //too much noise from network errors
+	//return iResult;
 }
 
 void CIrcSocket::RemoveAllLayers()
@@ -198,8 +194,10 @@ int CIrcSocket::OnLayerCallback(const CAsyncSocketExLayer* pLayer, int nType, in
 						if (wParam)
 						{
 							CString strErrInf;
-							if (GetErrorMessage(wParam, strErrInf, 1))
-								strError += _T(" - ") + strErrInf;
+							if (GetErrorMessage((DWORD)wParam, strErrInf, 1)) {
+								strError += _T(" - ");
+								strError += strErrInf;
+							}
 						}
 						LogWarning(LOG_STATUSBAR, _T("IRC socket: %s"), (LPCTSTR)strError);
 						break;

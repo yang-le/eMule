@@ -5,12 +5,11 @@ class CPPgProxy : public CPropertyPage
 {
 	DECLARE_DYNAMIC(CPPgProxy)
 
+	enum { IDD = IDD_PPG_PROXY };
+
 public:
 	CPPgProxy();
 	virtual ~CPPgProxy();
-
-	// Dialog Data
-	enum { IDD = IDD_PPG_PROXY };
 
 	void Localize();
 

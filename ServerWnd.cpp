@@ -168,7 +168,7 @@ BOOL CServerWnd::OnInitDialog()
 	serverlistctrl.Init();
 
 	((CEdit*)GetDlgItem(IDC_SPORT))->SetLimitText(5);
-	GetDlgItem(IDC_SPORT)->SetWindowText(_T("4661"));
+	SetDlgItemText(IDC_SPORT, _T("4661"));
 
 	TCITEM newitem;
 	CString name;
@@ -263,7 +263,7 @@ BOOL CServerWnd::OnInitDialog()
 			m_pacServerMetURL->LoadList(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + SERVERMET_STRINGS_PROFILE);
 		if (theApp.m_fontSymbol.m_hObject){
 			GetDlgItem(IDC_DD)->SetFont(&theApp.m_fontSymbol);
-			GetDlgItem(IDC_DD)->SetWindowText(_T("6")); // show a down-arrow
+			SetDlgItemText(IDC_DD, _T("6")); // show a down-arrow
 		}
 	}
 	else
@@ -325,7 +325,7 @@ bool CServerWnd::UpdateServerMetFromURL(CString strURL)
 	// add content of server.met to serverlist
 	serverlistctrl.Hide();
 	serverlistctrl.AddServerMetToList(strTempFilename);
-	serverlistctrl.Visable();
+	serverlistctrl.Visible();
 	(void)_tremove(strTempFilename);
 	return true;
 }
@@ -362,13 +362,13 @@ void CServerWnd::Localize()
 
 	serverlistctrl.ShowServerCount();
 	m_ctrlNewServerFrm.SetWindowText(GetResString(IDS_SV_NEWSERVER));
-	GetDlgItem(IDC_SSTATIC4)->SetWindowText(GetResString(IDS_SV_ADDRESS));
-	GetDlgItem(IDC_SSTATIC7)->SetWindowText(GetResString(IDS_SV_PORT));
-	GetDlgItem(IDC_SSTATIC3)->SetWindowText(GetResString(IDS_SW_NAME));
-	GetDlgItem(IDC_ADDSERVER)->SetWindowText(GetResString(IDS_SV_ADD));
+	SetDlgItemText(IDC_SSTATIC4, GetResString(IDS_SV_ADDRESS));
+	SetDlgItemText(IDC_SSTATIC7, GetResString(IDS_SV_PORT));
+	SetDlgItemText(IDC_SSTATIC3, GetResString(IDS_SW_NAME));
+	SetDlgItemText(IDC_ADDSERVER, GetResString(IDS_SV_ADD));
 	m_ctrlUpdateServerFrm.SetWindowText(GetResString(IDS_SV_MET));
-	GetDlgItem(IDC_UPDATESERVERMETFROMURL)->SetWindowText(GetResString(IDS_SV_UPDATE));
-	GetDlgItem(IDC_LOGRESET)->SetWindowText(GetResString(IDS_PW_RESET));
+	SetDlgItemText(IDC_UPDATESERVERMETFROMURL, GetResString(IDS_SV_UPDATE));
+	SetDlgItemText(IDC_LOGRESET, GetResString(IDS_PW_RESET));
 	m_ctrlMyInfoFrm.SetWindowText(GetResString(IDS_MYINFO));
 
 	TCITEM item;
@@ -398,7 +398,7 @@ void CServerWnd::Localize()
 void CServerWnd::OnBnClickedAddserver()
 {
 	CString serveraddr;
-	GetDlgItem(IDC_IPADDRESS)->GetWindowText(serveraddr);
+	GetDlgItemText(IDC_IPADDRESS, serveraddr);
 	serveraddr.Trim();
 	if (serveraddr.IsEmpty()) {
 		LocMessageBox(IDS_SRV_ADDR, MB_OK, 0);
@@ -447,7 +447,7 @@ void CServerWnd::OnBnClickedAddserver()
 	}
 
 	CString strServerName;
-	GetDlgItem(IDC_SNAME)->GetWindowText(strServerName);
+	GetDlgItemText(IDC_SNAME, strServerName);
 
 	AddServer(uPort, serveraddr, strServerName);
 }
@@ -533,7 +533,7 @@ bool CServerWnd::AddServer(uint16 nPort, const CString& strAddress, CString strN
 void CServerWnd::OnBnClickedUpdateServerMetFromUrl()
 {
 	CString strURL;
-	GetDlgItem(IDC_SERVERMETURL)->GetWindowText(strURL);
+	GetDlgItemText(IDC_SERVERMETURL, strURL);
 	strURL.Trim();
 	if (strURL.IsEmpty())
 	{
@@ -695,11 +695,11 @@ BOOL CServerWnd::PreTranslateMessage(MSG* pMsg)
 				if (m_pacServerMetURL && m_pacServerMetURL->IsBound())
 				{
 					CString strText;
-					GetDlgItem(IDC_SERVERMETURL)->GetWindowText(strText);
+					GetDlgItemText(IDC_SERVERMETURL, strText);
 					if (!strText.IsEmpty())
 					{
-						GetDlgItem(IDC_SERVERMETURL)->SetWindowText(_T("")); // this seems to be the only chance to let the dropdown list to disapear
-						GetDlgItem(IDC_SERVERMETURL)->SetWindowText(strText);
+						SetDlgItemText(IDC_SERVERMETURL, _T("")); // this seems to be the only chance to let the dropdown list to disapear
+						SetDlgItemText(IDC_SERVERMETURL, strText);
 						((CEdit*)GetDlgItem(IDC_SERVERMETURL))->SetSel(strText.GetLength(), strText.GetLength());
 					}
 				}
@@ -745,16 +745,16 @@ void CServerWnd::OnEnLinkServerBox(NMHDR *pNMHDR, LRESULT *pResult)
 
 void CServerWnd::UpdateControlsState()
 {
-	UINT sid;
+	UINT uid;
 	if (theApp.serverconnect->IsConnected())
-		sid = IDS_MAIN_BTN_DISCONNECT;
+		uid = IDS_MAIN_BTN_DISCONNECT;
 	else if (theApp.serverconnect->IsConnecting())
-		sid = IDS_MAIN_BTN_CANCEL;
+		uid = IDS_MAIN_BTN_CANCEL;
 	else
-		sid = IDS_MAIN_BTN_CONNECT;
-	CString strLabel(GetResString(sid));
+		uid = IDS_MAIN_BTN_CONNECT;
+	CString strLabel(GetResString(uid));
 	strLabel.Remove(_T('&'));
-	GetDlgItem(IDC_ED2KCONNECT)->SetWindowText(strLabel);
+	SetDlgItemText(IDC_ED2KCONNECT, strLabel);
 }
 
 void CServerWnd::OnBnConnect()

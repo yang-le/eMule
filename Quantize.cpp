@@ -108,7 +108,7 @@ void* CQuantizer::CreateNode (UINT nLevel, UINT	nColorBits,	UINT* pLeafCount,
 
 	if (pNode== NULL) return NULL;
 
-	pNode->bIsLeaf = (nLevel == nColorBits)	? TRUE : FALSE;
+	pNode->bIsLeaf = static_cast<BOOL>(nLevel == nColorBits);
 	if (pNode->bIsLeaf)
 		(*pLeafCount)++;
 	else {

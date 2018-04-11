@@ -774,7 +774,7 @@ bool CxImage::CreateFromHICON(HICON hico, bool bTransparency)
 	//BITMAP l_Bitmap;
 	//GetObject(iinfo.hbmColor, sizeof(BITMAP), &l_Bitmap);
 
-	bool l_bResult =  CreateFromHBITMAP( iinfo.hbmColor, NULL, bTransparency );
+	bool l_bResult = CreateFromHBITMAP( iinfo.hbmColor, NULL, bTransparency );
 
 #if CXIMAGE_SUPPORT_ALPHA
 	if(l_bResult && ((!IsHBITMAPAlphaValid(iinfo.hbmColor)) || (!bTransparency)) )
@@ -923,9 +923,10 @@ int32_t CxImage::Draw(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t cy, REC
 						*pdst++=c.rgbRed;
 					}
 				}
+				//paint the image
+				SetDIBitsToDevice(hdc, paintbox.left, paintbox.top, destw, desth, 0, 0, 0, desth, pbase, &bmInfo, 0);
 			}
-			//paint the image & cleanup
-			SetDIBitsToDevice(hdc,paintbox.left,paintbox.top,destw,desth,0,0,0,desth,pbase,&bmInfo,0);
+			//cleanup
 			DeleteObject(SelectObject(TmpDC,TmpObj));
 			DeleteDC(TmpDC);
 		}
@@ -1099,9 +1100,10 @@ int32_t CxImage::Draw(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t cy, REC
 					}
 				}
 			}
+			//paint the image
+			SetDIBitsToDevice(hdc, paintbox.left, paintbox.top, destw, desth, 0, 0, 0, desth, pbase, &bmInfo, 0);
 		}
-		//paint the image & cleanup
-		SetDIBitsToDevice(hdc,paintbox.left,paintbox.top,destw,desth,0,0,0,desth,pbase,&bmInfo,0);
+		//cleanup
 		DeleteObject(SelectObject(TmpDC,TmpObj));
 		DeleteDC(TmpDC);
 	}
@@ -1156,7 +1158,7 @@ HBITMAP CxImage::Draw2HBITMAP(HDC hdc, int32_t x, int32_t y, int32_t cx, int32_t
 	}
 #endif
 
-	HBITMAP TmpBmp;
+	HBITMAP TmpBmp = 0;
 
 	//find the smallest area to paint
 	RECT clipbox,paintbox;
@@ -1559,52 +1561,45 @@ int32_t CxImage::Tile(HDC hdc, RECT *rc)
 ////////////////////////////////////////////////////////////////////////////////
 // For UNICODE support: char -> TCHAR
 int32_t CxImage::DrawString(HDC hdc, int32_t x, int32_t y, const TCHAR* text, RGBQUAD color, const TCHAR* font, int32_t lSize, int32_t lWeight, uint8_t bItalic, uint8_t bUnderline, bool bSetAlpha)
-//int32_t CxImage::DrawString(HDC hdc, int32_t x, int32_t y, const char* text, RGBQUAD color, const char* font, int32_t lSize, int32_t lWeight, uint8_t bItalic, uint8_t bUnderline, bool bSetAlpha)
 {
-	if (IsValid()){
+	if (IsValid()) {
 		//get the background
-		HDC pDC;
-		if (hdc) pDC=hdc; else pDC = ::GetDC(0);
-		if (pDC==NULL) return 0;
-		HDC TmpDC=CreateCompatibleDC(pDC);
-		if (hdc==NULL) ::ReleaseDC(0, pDC);
-   		if (TmpDC==NULL) return 0;
+		HDC pDC = hdc ? hdc : ::GetDC(0);
+		if (pDC == NULL)
+			return 0;
+		HDC TmpDC = CreateCompatibleDC(pDC);
+		if (hdc == NULL)
+			::ReleaseDC(0, pDC);
+   		if (TmpDC == NULL)
+			return 0;
 		//choose the font
-		HFONT m_Font;
-		LOGFONT* m_pLF;
-		m_pLF=(LOGFONT*)calloc(1,sizeof(LOGFONT));
-		_tcsncpy(m_pLF->lfFaceName,font,31);	// For UNICODE support
-		//strncpy(m_pLF->lfFaceName,font,31);
-		m_pLF->lfHeight=lSize;
-		m_pLF->lfWeight=lWeight;
-		m_pLF->lfItalic=bItalic;
-		m_pLF->lfUnderline=bUnderline;
-		m_Font=CreateFontIndirect(m_pLF);
+		LOGFONT m_LF = {};
+		_tcsncpy(m_LF.lfFaceName, font, LF_FACESIZE - 1);	// For UNICODE support
+		m_LF.lfHeight = lSize;
+		m_LF.lfWeight = lWeight;
+		m_LF.lfItalic = bItalic;
+		m_LF.lfUnderline = bUnderline;
+		HFONT m_Font = CreateFontIndirect(&m_LF);
 		//select the font in the dc
-		HFONT pOldFont=NULL;
-		if (m_Font)
-			pOldFont = (HFONT)SelectObject(TmpDC,m_Font);
-		else
-			pOldFont = (HFONT)SelectObject(TmpDC,GetStockObject(DEFAULT_GUI_FONT));
+		HFONT pOldFont = (HFONT)SelectObject(TmpDC, m_Font ? m_Font : GetStockObject(DEFAULT_GUI_FONT));
 
 		//Set text color
-		SetTextColor(TmpDC,RGB(255,255,255));
-		SetBkColor(TmpDC,RGB(0,0,0));
+		SetTextColor(TmpDC, RGB(255,255,255));
+		SetBkColor(TmpDC, RGB(0,0,0));
 		//draw the text
 		SetBkMode(TmpDC,OPAQUE);
 		//Set text position;
-		RECT pos = {0,0,0,0};
-		//int32_t len = (int32_t)strlen(text);
+		RECT pos = {};
 		int32_t len = (int32_t)_tcslen(text);	// For UNICODE support
-		::DrawText(TmpDC,text,len,&pos,DT_CALCRECT);
-		pos.right+=pos.bottom; //for italics
+		::DrawText(TmpDC, text, len, &pos, DT_CALCRECT);
+		pos.right += pos.bottom; //for italics
 
 		//Preparing Bitmap Info
 		int32_t width=pos.right;
 		int32_t height=pos.bottom;
 		BITMAPINFO bmInfo;
-		memset(&bmInfo.bmiHeader,0,sizeof(BITMAPINFOHEADER));
-		bmInfo.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
+		memset(&bmInfo.bmiHeader, 0, sizeof(BITMAPINFOHEADER));
+		bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 		bmInfo.bmiHeader.biWidth=width;
 		bmInfo.bmiHeader.biHeight=height;
 		bmInfo.bmiHeader.biPlanes=1;
@@ -1627,9 +1622,10 @@ int32_t CxImage::DrawString(HDC hdc, int32_t x, int32_t y, const TCHAR* text, RG
 					SetPixelColor(x+ix,y+iy,color,bSetAlpha);
 
 		//cleanup
-		if (pOldFont) SelectObject(TmpDC,pOldFont);
+		if (pOldFont)
+			SelectObject(TmpDC,pOldFont);
 		DeleteObject(m_Font);
-		free(m_pLF);
+//		free(m_pLF);
 		DeleteObject(SelectObject(TmpDC,TmpObj));
 		DeleteDC(TmpDC);
 	}
@@ -1644,25 +1640,27 @@ int32_t CxImage::DrawStringEx(HDC hdc, int32_t x, int32_t y, CXTEXTINFO *pTextTy
         return -1;
 
 	//get the background
-	HDC pDC;
-	if (hdc) pDC=hdc; else pDC = ::GetDC(0);
-	if (pDC==NULL) return 0;
-	HDC TmpDC=CreateCompatibleDC(pDC);
-	if (hdc==NULL) ::ReleaseDC(0, pDC);
-   	if (TmpDC==NULL) return 0;
+	HDC pDC = hdc ? hdc : ::GetDC(0);
+	if (pDC == NULL)
+		return 0;
+	HDC TmpDC = CreateCompatibleDC(pDC);
+	if (hdc == NULL)
+		::ReleaseDC(0, pDC);
+   	if (TmpDC == NULL)
+		return 0;
 
     //choose the font
-	HFONT m_Font;
-    m_Font=CreateFontIndirect( &pTextType->lfont );
+	HFONT m_Font = CreateFontIndirect(&pTextType->lfont);
 
     // get colors in RGBQUAD
     RGBQUAD p_forecolor = RGBtoRGBQUAD(pTextType->fcolor);
     RGBQUAD p_backcolor = RGBtoRGBQUAD(pTextType->bcolor);
 
     // check alignment and re-set default if necessary
-    if ( pTextType->align != DT_CENTER &&
-         pTextType->align != DT_LEFT &&
-         pTextType->align != DT_RIGHT )
+    if ( pTextType->align != DT_CENTER
+      && pTextType->align != DT_LEFT
+      && pTextType->align != DT_RIGHT
+       )
         pTextType->align = DT_CENTER;
 
     // check rounding radius and re-set default if necessary
@@ -1674,39 +1672,34 @@ int32_t CxImage::DrawStringEx(HDC hdc, int32_t x, int32_t y, CXTEXTINFO *pTextTy
         pTextType->b_opacity = 0.;
 
     //select the font in the dc
-	HFONT pOldFont=NULL;
-	if (m_Font)
-		pOldFont = (HFONT)SelectObject(TmpDC,m_Font);
-	else
-		pOldFont = (HFONT)SelectObject(TmpDC,GetStockObject(DEFAULT_GUI_FONT));
+	HFONT pOldFont = (HFONT)SelectObject(TmpDC, m_Font ? m_Font : GetStockObject(DEFAULT_GUI_FONT));
 
 	//Set text color
-    SetTextColor(TmpDC,RGB(255,255,255));
-	SetBkColor(TmpDC,RGB(0,0,0));
-	SetBkMode(TmpDC,OPAQUE);
+    SetTextColor(TmpDC, RGB(255,255,255));
+	SetBkColor(TmpDC, RGB(0,0,0));
+	SetBkMode(TmpDC, OPAQUE);
 	//Set text position;
-	RECT pos = {0,0,0,0};
+	RECT pos = {};
 
     // get text length and number of lines
-    int32_t i=0, numlines=1, len=(int32_t)_tcsclen(pTextType->text);
-    while (i<len)
-    {
-        if ( pTextType->text[i++]==13 )
-            numlines++;
-    }
+	int32_t numlines = 1;
+	int32_t len = (int32_t)_tcsclen(pTextType->text);
+	for (int32_t i=0; i<len; ++i)
+		if (pTextType->text[i] == 13)
+			++numlines;
 
 	::DrawText(TmpDC, pTextType->text, len, &pos, /*DT_EDITCONTROL|DT_EXTERNALLEADING|*/DT_NOPREFIX | DT_CALCRECT );
 
     // increase only if it's really italics, and only one line height
-	if ( pTextType->lfont.lfItalic )
+	if (pTextType->lfont.lfItalic)
         pos.right += pos.bottom/2/numlines;
 
     // background frame and rounding radius
 	int32_t frame = 0, roundR = 0;
     if ( pTextType->opaque )
     {
-        roundR= (int32_t)(pos.bottom/numlines * pTextType->b_round / 100 ) ;
-        frame = (int32_t)(/*3.5 + */0.29289*roundR ) ;
+        roundR= (int32_t)(pos.bottom/numlines * pTextType->b_round / 100) ;
+        frame = (int32_t)(/*3.5 + */0.29289*roundR) ;
         pos.right += pos.bottom/numlines/3 ; // JUST FOR BEAUTY
     }
 
@@ -1789,20 +1782,18 @@ int32_t CxImage::DrawStringEx(HDC hdc, int32_t x, int32_t y, CXTEXTINFO *pTextTy
     }
 
     // draw the text itself
-    for (int32_t ix=0; ix<width; ++ix)
-    {
-		for (int32_t iy=0; iy<height; ++iy)
-        {
-			RGBQUAD pcolor = GetPixelColor(x+ix,y+iy);
-			RGBQUAD tcolor = itext.GetPixelColor(ix,iy);
-            if (tcolor.rgbBlue!=255){
+	for (int32_t ix=0; ix<width; ++ix) {
+		for (int32_t iy=0; iy<height; ++iy) {
+			RGBQUAD tcolor = itext.GetPixelColor(ix, iy);
+			if (tcolor.rgbBlue!=255) {
 				float a = tcolor.rgbBlue/255.0f;
-				pcolor.rgbBlue  = (uint8_t)(a * (pcolor.rgbBlue  - p_forecolor.rgbBlue)  + p_forecolor.rgbBlue );
-                pcolor.rgbRed   = (uint8_t)(a * (pcolor.rgbRed   - p_forecolor.rgbRed)   + p_forecolor.rgbRed ) ;
-                pcolor.rgbGreen = (uint8_t)(a * (pcolor.rgbGreen - p_forecolor.rgbGreen) + p_forecolor.rgbGreen );
-                pcolor.rgbReserved = 0;
-                SetPixelColor(x+ix+frame,y+iy-frame,pcolor,bSetAlpha);
-              //SetPixelColor(x+ix+frame,y+iy-frame,p_forecolor,bSetAlpha);
+				RGBQUAD pcolor = GetPixelColor(x+ix, y+iy);
+				pcolor.rgbBlue  = (uint8_t)(a * (pcolor.rgbBlue  - p_forecolor.rgbBlue)  + p_forecolor.rgbBlue);
+				pcolor.rgbRed   = (uint8_t)(a * (pcolor.rgbRed   - p_forecolor.rgbRed)   + p_forecolor.rgbRed);
+				pcolor.rgbGreen = (uint8_t)(a * (pcolor.rgbGreen - p_forecolor.rgbGreen) + p_forecolor.rgbGreen);
+				pcolor.rgbReserved = 0;
+				SetPixelColor(x+ix+frame, y+iy-frame, pcolor, bSetAlpha);
+				//SetPixelColor(x+ix+frame,y+iy-frame,p_forecolor,bSetAlpha);
 			}
 		}
 	}

@@ -118,19 +118,19 @@ void CPPgServer::Localize()
 	if (m_hWnd)
 	{
 		SetWindowText(GetResString(IDS_PW_SERVER));
-		GetDlgItem(IDC_LBL_UPDATE_SERVERS)->SetWindowText(GetResString(IDS_SV_UPDATE));
-		GetDlgItem(IDC_LBL_MISC)->SetWindowText(GetResString(IDS_PW_MISC));
-		GetDlgItem(IDC_REMOVEDEAD)->SetWindowText(GetResString(IDS_PW_RDEAD));
-		GetDlgItem(IDC_RETRIES_LBL)->SetWindowText(GetResString(IDS_PW_RETRIES));
-		GetDlgItem(IDC_UPDATESERVERCONNECT)->SetWindowText(GetResString(IDS_PW_USC));
-		GetDlgItem(IDC_UPDATESERVERCLIENT)->SetWindowText(GetResString(IDS_PW_UCC));
-		GetDlgItem(IDC_AUTOSERVER)->SetWindowText(GetResString(IDS_PW_USS));
-		GetDlgItem(IDC_SMARTIDCHECK)->SetWindowText(GetResString(IDS_SMARTLOWIDCHECK));
-		GetDlgItem(IDC_SAFESERVERCONNECT)->SetWindowText(GetResString(IDS_PW_FASTSRVCON));
-		GetDlgItem(IDC_SCORE)->SetWindowText(GetResString(IDS_PW_SCORE));
-		GetDlgItem(IDC_MANUALSERVERHIGHPRIO)->SetWindowText(GetResString(IDS_MANUALSERVERHIGHPRIO));
-		GetDlgItem(IDC_EDITADR)->SetWindowText(GetResString(IDS_EDITLIST));
-		GetDlgItem(IDC_AUTOCONNECTSTATICONLY)->SetWindowText(GetResString(IDS_PW_AUTOCONNECTSTATICONLY));
+		SetDlgItemText(IDC_LBL_UPDATE_SERVERS, GetResString(IDS_SV_UPDATE));
+		SetDlgItemText(IDC_LBL_MISC, GetResString(IDS_PW_MISC));
+		SetDlgItemText(IDC_REMOVEDEAD, GetResString(IDS_PW_RDEAD));
+		SetDlgItemText(IDC_RETRIES_LBL, GetResString(IDS_PW_RETRIES));
+		SetDlgItemText(IDC_UPDATESERVERCONNECT, GetResString(IDS_PW_USC));
+		SetDlgItemText(IDC_UPDATESERVERCLIENT, GetResString(IDS_PW_UCC));
+		SetDlgItemText(IDC_AUTOSERVER, GetResString(IDS_PW_USS));
+		SetDlgItemText(IDC_SMARTIDCHECK, GetResString(IDS_SMARTLOWIDCHECK));
+		SetDlgItemText(IDC_SAFESERVERCONNECT, GetResString(IDS_PW_FASTSRVCON));
+		SetDlgItemText(IDC_SCORE, GetResString(IDS_PW_SCORE));
+		SetDlgItemText(IDC_MANUALSERVERHIGHPRIO, GetResString(IDS_MANUALSERVERHIGHPRIO));
+		SetDlgItemText(IDC_EDITADR, GetResString(IDS_EDITLIST));
+		SetDlgItemText(IDC_AUTOCONNECTSTATICONLY, GetResString(IDS_PW_AUTOCONNECTSTATICONLY));
 	}
 }
 

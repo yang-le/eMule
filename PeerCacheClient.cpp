@@ -345,8 +345,7 @@ bool CUpDownClient::ProcessPeerCacheDownHttpResponse(const CStringAArray& astrHe
 		strError.Format(_T("Unexpected HTTP version: \"%hs\""), (LPCSTR)rstrHdr);
 		throw strError;
 	}
-	bool bExpectData = uHttpStatusCode == HTTP_STATUS_OK || uHttpStatusCode == HTTP_STATUS_PARTIAL_CONTENT;
-	if (!bExpectData){
+	if (uHttpStatusCode != HTTP_STATUS_OK && uHttpStatusCode != HTTP_STATUS_PARTIAL_CONTENT) {
 		CString strError;
 		strError.Format(_T("Unexpected HTTP status code \"%u\""), uHttpStatusCode);
 		throw strError;
@@ -358,7 +357,7 @@ bool CUpDownClient::ProcessPeerCacheDownHttpResponse(const CStringAArray& astrHe
 	for (int i = 1; i < astrHeaders.GetCount(); i++)
 	{
 		const CStringA& rstrHdr1 = astrHeaders[i];
-		if (bExpectData && _strnicmp(rstrHdr1, "Content-Length:", 15) == 0)
+		if (_strnicmp(rstrHdr1, "Content-Length:", 15) == 0)
 		{
 			uContentLength = _atoi64((LPCSTR)rstrHdr1 + 15);
 			if (uContentLength > m_uReqEnd - m_uReqStart + 1){
@@ -367,7 +366,7 @@ bool CUpDownClient::ProcessPeerCacheDownHttpResponse(const CStringAArray& astrHe
 				throw strError;
 			}
 		}
-		else if (bExpectData && _strnicmp(rstrHdr1, "Content-Range:", 14) == 0)
+		else if (_strnicmp(rstrHdr1, "Content-Range:", 14) == 0)
 		{
 			uint64 ui64Start = 0, ui64End = 0, ui64Len = 0;
 			if (sscanf((LPCSTR)rstrHdr1 + 14," bytes %I64u - %I64u / %I64u", &ui64Start, &ui64End, &ui64Len) != 3) {
@@ -392,11 +391,11 @@ bool CUpDownClient::ProcessPeerCacheDownHttpResponse(const CStringAArray& astrHe
 			if (m_strClientSoftware.IsEmpty())
 				m_strClientSoftware = rstrHdr1.Mid(7).Trim();
 		}
-		else if (bExpectData && _strnicmp(rstrHdr1, "X-Cache: MISS", 13) == 0)
+		else if (_strnicmp(rstrHdr1, "X-Cache: MISS", 13) == 0)
 		{
 			bCacheHit = false;
 		}
-		else if (bExpectData && _strnicmp(rstrHdr1, "X-Cache: HIT", 12) == 0)
+		else if (_strnicmp(rstrHdr1, "X-Cache: HIT", 12) == 0)
 		{
 			bCacheHit = true;
 		}
@@ -420,8 +419,8 @@ bool CUpDownClient::ProcessPeerCacheDownHttpResponse(const CStringAArray& astrHe
 	if (m_pPCDownSocket)
 	{
 		CSafeMemFile dataAck(128);
-		dataAck.WriteUInt8( bCacheHit ? 1 : 0 );
-		if (thePrefs.GetDebugClientTCPLevel() > 0){
+		dataAck.WriteUInt8(static_cast<uint8>(bCacheHit));
+		if (thePrefs.GetDebugClientTCPLevel() > 0) {
 			DebugSend("OP__PeerCacheAck", this, reqfile->GetFileHash());
 			Debug(_T("  %s\n"), bCacheHit ? _T("CacheHit") : _T("CacheMiss"));
 		}
@@ -552,7 +551,7 @@ void CUpDownClient::ProcessPeerCacheUpHttpResponse(const CStringAArray& astrHead
 	if (astrHeaders.IsEmpty())
 		throw CString(_T("Unexpected HTTP response - No headers available"));
 
-	const CStringA& rstrHdr = astrHeaders.GetAt(0);
+	const CStringA& rstrHdr = astrHeaders[0];
 	UINT uHttpMajVer, uHttpMinVer, uHttpStatusCode;
 	if (sscanf(rstrHdr, "HTTP/%u.%u %u", &uHttpMajVer, &uHttpMinVer, &uHttpStatusCode) != 3){
 		CString strError;
@@ -617,7 +616,7 @@ bool CUpDownClient::SendHttpBlockRequests()
 	sockAddr.sin_addr.S_un.S_addr = theApp.m_pPeerCache->GetCacheIP();
 	//Try to always tell the socket to WaitForOnConnect before you call Connect.
 	m_pPCDownSocket->WaitForOnConnect();
-	m_pPCDownSocket->Connect((SOCKADDR*)&sockAddr, sizeof sockAddr);
+	m_pPCDownSocket->Connect((LPSOCKADDR)&sockAddr, sizeof sockAddr);
 
 	Pending_Block_Struct* pending = m_PendingBlocks_list.GetHead();
 	ASSERT( pending->block->StartOffset <= pending->block->EndOffset );
@@ -723,12 +722,11 @@ bool CUpDownClient::ProcessPeerCacheQuery(const uchar* packet, UINT size)
 		return false;
 	}
 
+	uchar aucFileHash[16] = {};
+	uint32 uPushId = 0;
+	uint32 uRemoteIP = 0;
 	uint32 uCacheIP = 0;
 	uint16 uCachePort = 0;
-	uint32 uPushId = 0;
-	uchar aucFileHash[16];
-	uint32 uRemoteIP = 0;
-	md4clr(aucFileHash);
 
 	CString strInfo;
 	UINT uTags = dataRecv.ReadUInt8();
@@ -809,7 +807,7 @@ bool CUpDownClient::ProcessPeerCacheQuery(const uchar* packet, UINT size)
 	sockAddr.sin_addr.S_un.S_addr = uCacheIP;
 	//Try to always tell the socket to WaitForOnConnect before you call Connect.
 	m_pPCUpSocket->WaitForOnConnect();
-	m_pPCUpSocket->Connect((SOCKADDR*)&sockAddr, sizeof sockAddr);
+	m_pPCUpSocket->Connect((LPSOCKADDR)&sockAddr, sizeof sockAddr);
 
 	CStringA strPCRequest;
 	strPCRequest.AppendFormat("GIVE %u\r\n", uPushId);
@@ -886,8 +884,7 @@ bool CUpDownClient::ProcessPeerCacheAnswer(const uchar* packet, UINT size)
 
 	uint32 uPushId = 0;
 	uint32 uRemoteIP = 0;
-	uchar aucFileHash[16];
-	md4clr(aucFileHash);
+	uchar aucFileHash[16] = {};
 
 	CString strInfo;
 	UINT uTags = dataRecv.ReadUInt8();

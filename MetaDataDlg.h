@@ -14,6 +14,8 @@ class CMetaDataDlg : public CResizablePage
 {
 	DECLARE_DYNAMIC(CMetaDataDlg)
 
+	enum { IDD = IDD_META_DATA };
+
 public:
 	CMetaDataDlg();
 	virtual ~CMetaDataDlg();
@@ -21,9 +23,6 @@ public:
 	void SetFiles(const CSimpleArray<CObject*>* paFiles) { m_paFiles = paFiles; m_bDataChanged = true; }
 	void SetTagList(Kademlia::TagList* taglist);
 //not implemented	CString GetTagNameByID(UINT id);
-
-// Dialog Data
-	enum { IDD = IDD_META_DATA };
 
 protected:
 	const CSimpleArray<CObject*>* m_paFiles;

@@ -282,7 +282,7 @@ void CSharedFilesWnd::Localize()
 	m_ctlFilter.ShowColumnText(true);
 	sharedfilesctrl.SetDirectoryFilter(NULL,true);
 
-	GetDlgItem(IDC_RELOADSHAREDFILES)->SetWindowText(GetResString(IDS_SF_RELOAD));
+	SetDlgItemText(IDC_RELOADSHAREDFILES, GetResString(IDS_SF_RELOAD));
 }
 
 void CSharedFilesWnd::OnTvnSelChangedSharedDirsTree(NMHDR* /*pNMHDR*/, LRESULT* pResult)
@@ -396,7 +396,7 @@ void CSharedFilesWnd::SetToolTipsDelay(DWORD dwDelay)
 void CSharedFilesWnd::ShowSelectedFilesDetails(bool bForce)
 {
 	CTypedPtrList<CPtrList, CShareableFile*> selectedList;
-	bool m_bChanged = false;
+	bool m_bChanged = bForce;
 	if (m_bDetailsVisible) {
 		int i = 0;
 		for (POSITION pos = sharedfilesctrl.GetFirstSelectedItemPosition(); pos != NULL;) {
@@ -413,9 +413,10 @@ void CSharedFilesWnd::ShowSelectedFilesDetails(bool bForce)
 	}
 	m_bChanged |= m_dlgDetails.GetItems().GetSize() != selectedList.GetCount();
 
-	if (m_bChanged || bForce)
+	if (m_bChanged)
 		m_dlgDetails.SetFiles(selectedList);
 }
+
 void CSharedFilesWnd::ShowDetailsPanel(bool bShow)
 {
 	CWnd& button = *GetDlgItem(IDC_SF_HIDESHOWDETAILS);
@@ -490,8 +491,8 @@ int CSharedFileDetailsModelessSheet::OnCreate(LPCREATESTRUCT lpCreateStruct)
 }
 
 bool NeedArchiveInfoPage(const CSimpleArray<CObject*>* paItems);
-void UpdateFileDetailsPages(CListViewPropertySheet *pSheet,
-							CResizablePage *pArchiveInfo, CResizablePage *pMediaInfo);
+void UpdateFileDetailsPages(CListViewPropertySheet *pSheet
+	, CResizablePage *pArchiveInfo, CResizablePage *pMediaInfo, CResizablePage *pFileLink);
 
 CSharedFileDetailsModelessSheet::CSharedFileDetailsModelessSheet()
 {
@@ -585,7 +586,7 @@ LRESULT CSharedFileDetailsModelessSheet::OnDataChanged(WPARAM, LPARAM)
 {
 //When using up/down keys in shared files list, "Content" tab grabs focus on archives
 	CWnd* pWndFocus = GetFocus();
-	UpdateFileDetailsPages(this, m_wndArchiveInfo, m_wndMediaInfo);
+	UpdateFileDetailsPages(this, m_wndArchiveInfo, m_wndMediaInfo, m_wndFileLink);
 	if (pWndFocus) //try to stay in file list
 		pWndFocus->SetFocus();
 	return TRUE;

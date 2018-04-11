@@ -215,22 +215,22 @@ void CStatistics::UpdateConnectionStats(float uploadrate, float downloadrate)
 	// Transfer Times (Increment Session)
 	if (uploadrate > 0 || downloadrate > 0) {
 		if (start_timeTransfers == 0)
-			start_timeTransfers = GetTickCount();
+			start_timeTransfers = ::GetTickCount();
 		else
-			time_thisTransfer = (GetTickCount() - start_timeTransfers) / SEC2MS(1);
+			time_thisTransfer = (::GetTickCount() - start_timeTransfers) / SEC2MS(1);
 
 		if (uploadrate > 0) {
 			if (start_timeUploads == 0)
-				start_timeUploads = GetTickCount();
+				start_timeUploads = ::GetTickCount();
 			else
-				time_thisUpload = (GetTickCount() - start_timeUploads) / SEC2MS(1);
+				time_thisUpload = (::GetTickCount() - start_timeUploads) / SEC2MS(1);
 		}
 
 		if (downloadrate > 0) {
 			if (start_timeDownloads == 0)
-				start_timeDownloads = GetTickCount();
+				start_timeDownloads = ::GetTickCount();
 			else
-				time_thisDownload = (GetTickCount() - start_timeDownloads) / SEC2MS(1);
+				time_thisDownload = (::GetTickCount() - start_timeDownloads) / SEC2MS(1);
 		}
 	}
 
@@ -256,7 +256,7 @@ void CStatistics::UpdateConnectionStats(float uploadrate, float downloadrate)
 	if (theStats.serverConnectTime == 0)
 		time_thisServerDuration = 0;
 	else
-		time_thisServerDuration = (GetTickCount() - theStats.serverConnectTime) / SEC2MS(1);
+		time_thisServerDuration = (::GetTickCount() - theStats.serverConnectTime) / SEC2MS(1);
 }
 
 void CStatistics::RecordRate()
@@ -265,9 +265,9 @@ void CStatistics::RecordRate()
 		return;
 
 	// Accurate datarate Calculation
-	uint32 stick = GetTickCount();
-	downrateHistory.push_front(TransferredData{(uint32)theStats.sessionReceivedBytes, stick});
-	uprateHistory.push_front(TransferredData{(uint32)theStats.sessionSentBytes, stick});
+	uint32 tick = ::GetTickCount();
+	downrateHistory.push_front(TransferredData{(uint32)theStats.sessionReceivedBytes, tick});
+	uprateHistory.push_front(TransferredData{(uint32)theStats.sessionSentBytes, tick});
 
 	// limit to maxmins
 	UINT uAverageMilliseconds = MIN2MS(thePrefs.GetStatsAverageMinutes());
@@ -285,7 +285,7 @@ float CStatistics::GetAvgDownloadRate(int averageType)
 	switch (averageType) {
 	case AVG_SESSION:
 		if (theStats.transferStarttime > 0) {
-			running = (GetTickCount() - theStats.transferStarttime) / SEC2MS(1);
+			running = (::GetTickCount() - theStats.transferStarttime) / SEC2MS(1);
 			if (running >= 5)
 				return theStats.sessionReceivedBytes / 1024.0f / running;
 		}
@@ -293,7 +293,7 @@ float CStatistics::GetAvgDownloadRate(int averageType)
 
 	case AVG_TOTAL:
 		if (theStats.transferStarttime > 0) {
-			running = (GetTickCount() - theStats.transferStarttime) / SEC2MS(1);
+			running = (::GetTickCount() - theStats.transferStarttime) / SEC2MS(1);
 			if (running >= 5)
 				return (theStats.sessionReceivedBytes / 1024.0f / running + thePrefs.GetConnAvgDownRate()) / 2.0F;
 		}
@@ -317,7 +317,7 @@ float CStatistics::GetAvgUploadRate(int averageType)
 	switch (averageType) {
 	case AVG_SESSION:
 		if (theStats.transferStarttime) {
-			running = (GetTickCount() - theStats.transferStarttime) / SEC2MS(1);
+			running = (::GetTickCount() - theStats.transferStarttime) / SEC2MS(1);
 			if (running >= 5)
 				return theStats.sessionSentBytes / 1024.0f / running;
 		}
@@ -325,7 +325,7 @@ float CStatistics::GetAvgUploadRate(int averageType)
 
 	case AVG_TOTAL:
 		if (theStats.transferStarttime > 0) {
-			running = (GetTickCount() - theStats.transferStarttime) / SEC2MS(1);
+			running = (::GetTickCount() - theStats.transferStarttime) / SEC2MS(1);
 			if (running >= 5)
 				return (theStats.sessionSentBytes / 1024.0f / running + thePrefs.GetConnAvgUpRate()) / 2.0F;
 		}
@@ -344,7 +344,7 @@ float CStatistics::GetAvgUploadRate(int averageType)
 
 void CStatistics::CompDownDatarateOverhead()
 {
-	m_AverageDDRO_list.AddTail(TransferredData{m_nDownDataRateMSOverhead, GetTickCount()});
+	m_AverageDDRO_list.AddTail(TransferredData{m_nDownDataRateMSOverhead, ::GetTickCount()});
 	m_sumavgDDRO += m_nDownDataRateMSOverhead;
 	m_nDownDataRateMSOverhead = 0;
 
@@ -363,7 +363,7 @@ void CStatistics::CompDownDatarateOverhead()
 
 void CStatistics::CompUpDatarateOverhead()
 {
-	m_AverageUDRO_list.AddTail(TransferredData{m_nUpDataRateMSOverhead, GetTickCount()});
+	m_AverageUDRO_list.AddTail(TransferredData{m_nUpDataRateMSOverhead, ::GetTickCount()});
 	m_sumavgUDRO += m_nUpDataRateMSOverhead;
 	m_nUpDataRateMSOverhead = 0;
 

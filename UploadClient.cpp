@@ -59,7 +59,7 @@ void CUpDownClient::DrawUpStatusBar(CDC* dc, RECT* rect, bool onlygreyrect, bool
 	COLORREF crBoth;
 	COLORREF crSending;
 
-    if(GetSlotNumber() <= theApp.uploadqueue->GetActiveUploadsCount() ||
+    if(GetSlotNumber() <= (UINT)theApp.uploadqueue->GetActiveUploadsCount() ||
        (GetUploadState() != US_UPLOADING && GetUploadState() != US_CONNECTING) ) {
         crNeither = RGB(224, 224, 224);
 	    crNextSending = RGB(255,208,0);
@@ -69,7 +69,7 @@ void CUpDownClient::DrawUpStatusBar(CDC* dc, RECT* rect, bool onlygreyrect, bool
         // grayed out
         crNeither = RGB(248, 248, 248);
 	    crNextSending = RGB(255,244,191);
-	    crBoth = bFlat ? RGB(191, 191, 191) : RGB(191, 191, 191);
+	    crBoth = /*bFlat ? RGB(191, 191, 191) :*/ RGB(191, 191, 191);
 	    crSending = RGB(191, 229, 191);
     }
 
@@ -139,7 +139,7 @@ void CUpDownClient::SetUploadState(EUploadState eNewState)
 			m_fSentOutOfPartReqs = 0;
 
 		// don't add any final cleanups for US_NONE here
-		m_nUploadState = (_EUploadState)eNewState;
+		m_nUploadState = eNewState;
 		theApp.emuledlg->transferwnd->GetClientList()->RefreshClient(this);
 	}
 }
@@ -236,7 +236,7 @@ uint32 CUpDownClient::GetScore(bool sysvalue, bool isdownloading, bool onlybasev
 		// (to avoid 20 sec downloads) after this the score won't raise anymore
 		fBaseValue = (float)(m_dwUploadTime - GetWaitStartTime());
 		//ASSERT ( m_dwUploadTime-GetWaitStartTime() >= 0 ); //oct 28, 02: changed this from "> 0" to ">= 0" -> // 02-Okt-2006 []: ">=0" is always true!
-		fBaseValue += (::GetTickCount() - m_dwUploadTime > MIN2MS(15)) ? MIN2MS(15.0f) : MIN2MS(30.0f);
+		fBaseValue += (::GetTickCount() >= m_dwUploadTime + MIN2MS(15)) ? MIN2MS(15.0f) : MIN2MS(30.0f);
 		fBaseValue /= SEC2MS(1);
 	}
 	if(thePrefs.UseCreditSystem())
@@ -284,7 +284,7 @@ bool CUpDownClient::ProcessExtendedInfo(CSafeMemFile* data, CKnownFile* tempreqf
 			uint8 toread = data->ReadUInt8();
 			for (UINT i = 0; i != 8; i++)
 			{
-				m_abyUpPartStatus[done] = ((toread >> i) & 1) ? 1 : 0;
+				m_abyUpPartStatus[done] = (toread >> i) & 1;
 //				We may want to use this for another feature..
 //				if (m_abyUpPartStatus[done] && !tempreqfile->IsComplete((uint64)done*PARTSIZE,((uint64)(done+1)*PARTSIZE)-1))
 //					bPartsNeeded = true;
@@ -430,16 +430,20 @@ void CUpDownClient::AddReqBlock(Requested_Block_Struct* reqblock, bool bSignalIO
 
 		for (POSITION pos = pUploadingClientStruct->m_DoneBlocks_list.GetHeadPosition(); pos != NULL;) {
 			const Requested_Block_Struct* cur_reqblock = pUploadingClientStruct->m_DoneBlocks_list.GetNext(pos);
-			if (reqblock->StartOffset == cur_reqblock->StartOffset && reqblock->EndOffset == cur_reqblock->EndOffset
-				&& !md4cmp(reqblock->FileID, cur_reqblock->FileID)) {
+			if (reqblock->StartOffset == cur_reqblock->StartOffset
+				&& reqblock->EndOffset == cur_reqblock->EndOffset
+				&& !md4cmp(reqblock->FileID, cur_reqblock->FileID))
+			{
 				delete reqblock;
 				return;
 			}
 		}
 		for (POSITION pos = pUploadingClientStruct->m_BlockRequests_queue.GetHeadPosition(); pos != NULL;) {
 			const Requested_Block_Struct* cur_reqblock = pUploadingClientStruct->m_BlockRequests_queue.GetNext(pos);
-			if (reqblock->StartOffset == cur_reqblock->StartOffset && reqblock->EndOffset == cur_reqblock->EndOffset
-				&& !md4cmp(reqblock->FileID, cur_reqblock->FileID)) {
+			if (reqblock->StartOffset == cur_reqblock->StartOffset
+				&& reqblock->EndOffset == cur_reqblock->EndOffset
+				&& !md4cmp(reqblock->FileID, cur_reqblock->FileID))
+			{
 				delete reqblock;
 				return;
 			}
@@ -450,8 +454,8 @@ void CUpDownClient::AddReqBlock(Requested_Block_Struct* reqblock, bool bSignalIO
 	}
 	if (bSignalIOThread && theApp.m_pUploadDiskIOThread != NULL)
 	{
-		/*DebugLog(_T("BlockRequest Packet received, we have currently %u waiting requests and %s data in buffer (%u in ready packets, %s in pending IO Disk read) , socket busy: %s"), dbgLastQueueCount
-			, (LPCTSTR)CastItoXBytes(GetQueueSessionUploadAdded() - (GetQueueSessionPayloadUp() + socket->GetSentPayloadSinceLastCall(false)) , false, false, 2)
+		/*DebugLog(_T("BlockRequest Packet received, we have currently %u waiting requests and %s data in buffer (%u in ready packets, %s in pending IO Disk read), socket busy: %s"), dbgLastQueueCount
+			, (LPCTSTR)CastItoXBytes(GetQueueSessionUploadAdded() - (GetQueueSessionPayloadUp() + socket->GetSentPayloadSinceLastCall(false)), false, false, 2)
 			, socket->DbgGetStdQueueCount(), (LPCTSTR)CastItoXBytes((uint32)theApp.m_pUploadDiskIOThread->dbgDataReadPending, false, false, 2)
 			,_T('?')); */
 		theApp.m_pUploadDiskIOThread->NewBlockRequestsAvailable();
@@ -492,7 +496,7 @@ uint32 CUpDownClient::UpdateUploadingStatisticsData()
 		thePrefs.Add2SessionTransferData(GetClientSoft(), uUpStatsPort, true, true, (UINT)sentBytesPartFile, (IsFriend() && GetFriendSlot()));
 
 		m_nTransferredUp = (UINT)(m_nTransferredUp + sentBytesCompleteFile + sentBytesPartFile);
-		credits->AddUploaded((UINT)(sentBytesCompleteFile + sentBytesPartFile), GetIP());
+		credits->AddUploaded((uint32)(sentBytesCompleteFile + sentBytesPartFile), GetIP());
 
 		uint64 sentBytesPayload = s->GetSentPayloadSinceLastCall(true);
 		m_nCurQueueSessionPayloadUp = (UINT)(m_nCurQueueSessionPayloadUp + sentBytesPayload);
@@ -512,7 +516,7 @@ uint32 CUpDownClient::UpdateUploadingStatisticsData()
 	}
 
 	if(sentBytesCompleteFile + sentBytesPartFile > 0 ||
-		m_AverageUDR_list.IsEmpty() || curTick > m_AverageUDR_list.GetTail().timestamp + SEC2MS(1)) {
+		m_AverageUDR_list.IsEmpty() || curTick >= m_AverageUDR_list.GetTail().timestamp + SEC2MS(1)) {
 		// Store how much data we've transferred this round,
 		// to be able to calculate average speed later
 		// keep sum of all values in list up to date
@@ -522,13 +526,13 @@ uint32 CUpDownClient::UpdateUploadingStatisticsData()
 	}
 
 	// remove to old values in list
-	while (!m_AverageUDR_list.IsEmpty() && curTick > m_AverageUDR_list.GetHead().timestamp + SEC2MS(10)) {
+	while (!m_AverageUDR_list.IsEmpty() && curTick >= m_AverageUDR_list.GetHead().timestamp + SEC2MS(10)) {
 		// keep sum of all values in list up to date
 		m_nSumForAvgUpDataRate -= m_AverageUDR_list.RemoveHead().datalen;
 	}
 
 	// Calculate average speed for this slot
-	if (!m_AverageUDR_list.IsEmpty() && curTick > m_AverageUDR_list.GetHead().timestamp && GetUpStartTimeDelay() > SEC2MS(2)) {
+	if (!m_AverageUDR_list.IsEmpty() && curTick >= m_AverageUDR_list.GetHead().timestamp && GetUpStartTimeDelay() > SEC2MS(2)) {
 		m_nUpDatarate = (UINT)(((ULONGLONG)m_nSumForAvgUpDataRate*SEC2MS(1)) / (curTick - m_AverageUDR_list.GetHead().timestamp));
 	} else {
 		// not enough values to calculate trustworthy speed. Use -1 to tell this
@@ -536,7 +540,7 @@ uint32 CUpDownClient::UpdateUploadingStatisticsData()
 	}
 
 	// Check if it's time to update the display.
-	if (curTick > m_lastRefreshedULDisplay + MINWAIT_BEFORE_ULDISPLAY_WINDOWUPDATE+(uint32)(rand()*800/RAND_MAX)) {
+	if (curTick >= m_lastRefreshedULDisplay + MINWAIT_BEFORE_ULDISPLAY_WINDOWUPDATE+(uint32)(rand()*800/RAND_MAX)) {
 		// Update display
 		theApp.emuledlg->transferwnd->GetUploadList()->RefreshClient(this);
 		theApp.emuledlg->transferwnd->GetClientList()->RefreshClient(this);
@@ -668,7 +672,7 @@ void CUpDownClient::AddRequestCount(const uchar* fileid)
 	for (POSITION pos = m_RequestedFiles_list.GetHeadPosition(); pos != NULL;) {
 		Requested_File_Struct* cur_struct = m_RequestedFiles_list.GetNext(pos);
 		if (!md4cmp(cur_struct->fileid, fileid)) {
-			if (::GetTickCount() - cur_struct->lastasked < MIN_REQUESTTIME && !GetFriendSlot()) {
+			if (::GetTickCount() < cur_struct->lastasked + MIN_REQUESTTIME && !GetFriendSlot()) {
 				if (GetDownloadState() != DS_DOWNLOADING)
 					cur_struct->badrequests++;
 				if (cur_struct->badrequests == BADCLIENTBAN)

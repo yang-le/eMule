@@ -95,13 +95,13 @@ void CMMSocket::OnReceive(int nErrorCode)
 
 		if (m_pBuf)
 		{
-			CopyMemory(pNewBuf, m_pBuf, m_dwRecv);
+			memcpy(pNewBuf, m_pBuf, m_dwRecv);
 			delete[] m_pBuf;
 		}
 
 		m_pBuf = pNewBuf;
 	}
-	CopyMemory(m_pBuf + m_dwRecv, GlobalReadBuffer, dwSize);
+	memcpy(&m_pBuf[m_dwRecv], GlobalReadBuffer, dwSize);
 	m_dwRecv += dwSize;
 
 	// check if we have all that we want
@@ -122,7 +122,7 @@ void CMMSocket::OnReceive(int nErrorCode)
 						char* pPtr = (char*)memchr(m_pBuf + dwPos, '\n', m_dwHttpHeaderLen - dwPos);
 						if (!pPtr)
 							break;
-						DWORD dwNextPos = pPtr - m_pBuf;
+						DWORD dwNextPos = (DWORD)(pPtr - m_pBuf);
 
 						// check this header
 						char szMatch[] = "content-length";
@@ -158,7 +158,7 @@ void CMMSocket::OnReceive(int nErrorCode)
 		{
 			// move our data
 			m_dwRecv -= m_dwHttpHeaderLen + m_dwHttpContentLen;
-			MoveMemory(m_pBuf, m_pBuf + m_dwHttpHeaderLen + m_dwHttpContentLen, m_dwRecv);
+			memmove(m_pBuf, m_pBuf + m_dwHttpHeaderLen + m_dwHttpContentLen, m_dwRecv);
 		} else
 			m_dwRecv = 0;
 
@@ -325,46 +325,48 @@ CListenMMSocket::CListenMMSocket(CMMServer* pOwner)
 
 CListenMMSocket::~CListenMMSocket()
 {
-	while(!m_socket_list.IsEmpty())
+	while (!m_socket_list.IsEmpty())
 		delete m_socket_list.RemoveHead();
 }
 
-bool  CListenMMSocket::Create(){
+bool  CListenMMSocket::Create()
+{
 	return CAsyncSocket::Create(thePrefs.GetMMPort(),SOCK_STREAM,FD_ACCEPT) && Listen();
 }
 
 
-void CListenMMSocket::OnAccept(int nErrorCode){
-	if (!nErrorCode){
+void CListenMMSocket::OnAccept(int nErrorCode)
+{
+	if (!nErrorCode) {
 		CMMSocket* newclient = new CMMSocket(m_pOwner);
-			if (!Accept(*newclient))
-				delete newclient;
-			else{
-				newclient->AsyncSelect(FD_WRITE|FD_READ|FD_CLOSE);
-				m_socket_list.AddTail(newclient);
-				/*LINGER linger = { 1, 7 };
-				VERIFY(newclient->SetSockOpt(SO_LINGER,&linger, sizeof(linger), SOL_SOCKET));
-				DeleteClosedSockets();*/
-			}
+		if (!Accept(*newclient))
+			delete newclient;
+		else {
+			newclient->AsyncSelect(FD_WRITE|FD_READ|FD_CLOSE);
+			m_socket_list.AddTail(newclient);
+			/*LINGER linger = { 1, 7 };
+			VERIFY(newclient->SetSockOpt(SO_LINGER,&linger, sizeof(linger), SOL_SOCKET));
+			DeleteClosedSockets();*/
+		}
 	}
 }
 
-void CListenMMSocket::DeleteClosedSockets(){
-	POSITION pos2,pos1;
-	for(pos1 = m_socket_list.GetHeadPosition(); ( pos2 = pos1 ) != NULL; ){
-       m_socket_list.GetNext(pos1);
-	   CMMSocket* cur_sock = m_socket_list.GetAt(pos2);
-	   if ( cur_sock->m_bClosed){
+void CListenMMSocket::DeleteClosedSockets()
+{
+	for (POSITION pos1 = m_socket_list.GetHeadPosition(); pos1 != NULL;) {
+		POSITION pos2 = pos1;
+		CMMSocket* cur_sock = m_socket_list.GetNext(pos1);
+		if (cur_sock->m_bClosed) {
 			m_socket_list.RemoveAt(pos2);
 			delete cur_sock;
-	   }
-	   else if (cur_sock->m_dwTimedShutdown && cur_sock->m_dwTimedShutdown < ::GetTickCount()){
-		   cur_sock->ShutDown(SD_SEND);
-		   cur_sock->m_dwTimedShutdown = 0;
-	   }
-   }
+		} else if (cur_sock->m_dwTimedShutdown && ::GetTickCount() >= cur_sock->m_dwTimedShutdown) {
+			cur_sock->ShutDown(SD_SEND);
+			cur_sock->m_dwTimedShutdown = 0;
+		}
+	}
 }
 
-void CListenMMSocket::Process(){
+void CListenMMSocket::Process()
+{
 	DeleteClosedSockets();
 }

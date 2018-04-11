@@ -20,7 +20,7 @@ protected:
 	void SetAllIcons();
 	void GetCloseButtonRect(int iItem, const CRect& rcItem, CRect& rcCloseButton, bool bItemSelected, bool bVistaThemeActive);
 	int GetTabUnderContextMenu() const;
-	int GetTabUnderPoint(CPoint point) const;
+	int GetTabUnderPoint(const CPoint& point) const;
 	bool SetDefaultContextMenuPos();
 
 	virtual void PreSubclassWindow();

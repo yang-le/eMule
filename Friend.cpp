@@ -42,9 +42,8 @@ void	CFriend::init()
 	m_LinkedClient = NULL;
 }
 
-
 CFriend::CFriend()
-	: m_strName(), m_abyUserhash(), m_dwLastSeen(0), m_dwLastUsedIP(0), m_nLastUsedPort(0), m_dwLastChatted(0)
+	: m_abyUserhash(), m_dwLastSeen(0), m_dwLastUsedIP(0), m_nLastUsedPort(0), m_dwLastChatted(0), m_strName()
 {
 	init();
 }
@@ -119,22 +118,22 @@ void CFriend::WriteToFile(CFileDataIO* file)
 	file->WriteHash16(m_abyUserhash);
 	file->WriteUInt32(m_dwLastUsedIP);
 	file->WriteUInt16(m_nLastUsedPort);
-	file->WriteUInt32(m_dwLastSeen);
-	file->WriteUInt32(m_dwLastChatted);
+	file->WriteUInt32((uint32)m_dwLastSeen);
+	file->WriteUInt32((uint32)m_dwLastChatted);
 
 	uint32 uTagCount = 0;
-	ULONG uTagCountFilePos = (ULONG)file->GetPosition();
-	file->WriteUInt32(uTagCount);
+	ULONGLONG uTagCountFilePos = file->GetPosition();
+	file->WriteUInt32(0);
 
 	if (!m_strName.IsEmpty()){
 		CTag nametag(FF_NAME, m_strName);
 		nametag.WriteTagToFile(file, utf8strOptBOM);
-		uTagCount++;
+		++uTagCount;
 	}
 	if (HasKadID()){
 		CTag tag(FF_KADID, (const BYTE*)m_abyKadID);
 		tag.WriteNewEd2kTag(file);
-		uTagCount++;
+		++uTagCount;
 	}
 
 	file->Seek(uTagCountFilePos, CFile::begin);
@@ -307,7 +306,7 @@ void CFriend::UpdateFriendConnectionState(EFriendConnectReport eEvent)
 			if (m_FriendConnectState == FCS_CONNECTING || m_FriendConnectState == FCS_AUTH){
 				if (m_FriendConnectState == FCS_CONNECTING && Kademlia::CKademlia::IsRunning()
 					&&  Kademlia::CKademlia::IsConnected() && !isnulmd4(m_abyKadID)
-					&& (m_dwLastKadSearch == 0 || ::GetTickCount() - m_dwLastKadSearch > MIN2MS(10)))
+					&& (m_dwLastKadSearch == 0 || ::GetTickCount() >= m_dwLastKadSearch + MIN2MS(10)))
 				{
 					// connecting failed to the last known IP, now we search kad for an updated IP of our friend
 					m_FriendConnectState = FCS_KADSEARCHING;

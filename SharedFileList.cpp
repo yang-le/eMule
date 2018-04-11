@@ -78,8 +78,8 @@ public:
 	int GetRefCount() const { return m_aFiles.GetSize(); }
 	const CSimpleKnownFileArray& GetReferences() const { return m_aFiles; }
 
-	UINT GetNextPublishTime() const { return m_tNextPublishTime; }
-	void SetNextPublishTime(UINT tNextPublishTime) { m_tNextPublishTime = tNextPublishTime; }
+	time_t GetNextPublishTime() const { return m_tNextPublishTime; }
+	void SetNextPublishTime(time_t tNextPublishTime) { m_tNextPublishTime = tNextPublishTime; }
 
 	UINT GetPublishedCount() const { return m_uPublishedCount; }
 	void SetPublishedCount(UINT uPublishedCount) { m_uPublishedCount = uPublishedCount; }
@@ -124,7 +124,7 @@ public:
 protected:
 	Kademlia::CKadTagValueString m_strKeyword;
 	Kademlia::CUInt128 m_nKadID;
-	UINT m_tNextPublishTime;
+	time_t m_tNextPublishTime;
 	UINT m_uPublishedCount;
 	CSimpleKnownFileArray m_aFiles;
 };
@@ -146,13 +146,13 @@ public:
 	void RemoveAllKeywordReferences();
 	void PurgeUnreferencedKeywords();
 
-	int GetCount() const { return m_lstKeywords.GetCount(); }
+	INT_PTR GetCount() const { return m_lstKeywords.GetCount(); }
 
 	CPublishKeyword* GetNextKeyword();
 	void ResetNextKeyword();
 
-	UINT GetNextPublishTime() const { return m_tNextPublishKeywordTime; }
-	void SetNextPublishTime(UINT tNextPublishKeywordTime) { m_tNextPublishKeywordTime = tNextPublishKeywordTime; }
+	time_t GetNextPublishTime() const { return m_tNextPublishKeywordTime; }
+	void SetNextPublishTime(time_t tNextPublishKeywordTime) { m_tNextPublishKeywordTime = tNextPublishKeywordTime; }
 
 #ifdef _DEBUG
 	void Dump();
@@ -163,7 +163,7 @@ protected:
 	//CTypedPtrMap<CMapStringToPtr, CString, CPublishKeyword*> m_lstKeywords;
 	CTypedPtrList<CPtrList, CPublishKeyword*> m_lstKeywords;
 	POSITION m_posNextKeyword;
-	UINT m_tNextPublishKeywordTime;
+	time_t m_tNextPublishKeywordTime;
 
 	CPublishKeyword* FindKeyword(const CStringW& rstrKeyword, POSITION* ppos = NULL) const;
 };
@@ -224,7 +224,7 @@ void CPublishKeywordList::AddKeywords(CKnownFile* pFile)
 			m_lstKeywords.AddTail(pPubKw);
 			SetNextPublishTime(0);
 		}
-		if(pPubKw->AddRef(pFile) && pPubKw->GetNextPublishTime() > MIN2S(30))
+		else if(pPubKw->AddRef(pFile) && pPubKw->GetNextPublishTime() > MIN2S(30))
 		{
 			// User may be adding and removing files, so if this is a keyword that
 			// has already been published, we reduce the time, but still give the user
@@ -643,9 +643,9 @@ void CSharedFileList::RepublishFile(CKnownFile* pFile)
 
 bool CSharedFileList::AddFile(CKnownFile* pFile)
 {
-	ASSERT( pFile->GetFileIdentifier().HasExpectedMD4HashCount() );
-	ASSERT( !pFile->IsKindOf(RUNTIME_CLASS(CPartFile)) || !STATIC_DOWNCAST(CPartFile, pFile)->m_bMD4HashsetNeeded );
-	ASSERT( !pFile->IsShellLinked() || ShouldBeShared(pFile->GetSharedDirectory(), _T(""), false) );
+	ASSERT(pFile->GetFileIdentifier().HasExpectedMD4HashCount());
+	ASSERT(!pFile->IsKindOf(RUNTIME_CLASS(CPartFile)) || !static_cast<CPartFile *>(pFile)->m_bMD4HashsetNeeded);
+	ASSERT(!pFile->IsShellLinked() || ShouldBeShared(pFile->GetSharedDirectory(), _T(""), false));
 	CCKey key(pFile->GetFileHash());
 	CKnownFile* pFileInMap;
 	if (m_Files_map.Lookup(key, pFileInMap))
@@ -830,7 +830,7 @@ void CSharedFileList::SendListToServer(){
 	}
 	if( (uint32)sortedList.GetCount() < limit )
 	{
-		limit = sortedList.GetCount();
+		limit = (uint32)sortedList.GetCount();
 		if (limit == 0)
 		{
 			m_lastPublishED2KFlag = false;
@@ -1017,7 +1017,7 @@ void CSharedFileList::CreateOfferedFilePacket(CKnownFile* cur_file, CSafeMemFile
 		if (iExt != -1){
 			strExt = cur_file->GetFileName().Mid(iExt);
 			if (!strExt.IsEmpty()){
-				strExt = strExt.Mid(1);
+				strExt.Delete(0, 1);
 				if (!strExt.IsEmpty()){
 					strExt.MakeLower();
 					tags.Add(new CTag(FT_FILEFORMAT, strExt)); // file extension without a "."
@@ -1216,11 +1216,12 @@ bool CSharedFileList::IsFilePtrInList(const CKnownFile* file) const
 	return false;
 }
 
-void CSharedFileList::HashNextFile(){
+void CSharedFileList::HashNextFile()
+{
 	// SLUGFILLER: SafeHash
 	if (!theApp.emuledlg || !::IsWindow(theApp.emuledlg->m_hWnd))	// wait for the dialog to open
 		return;
-	if (theApp.emuledlg && !theApp.emuledlg->IsClosing())
+	if (!theApp.emuledlg->IsClosing())
 		theApp.emuledlg->sharedfileswnd->sharedfilesctrl.ShowFilesCount();
 	if (!currentlyhashing_list.IsEmpty())	// one hash at a time
 		return;
@@ -1289,10 +1290,9 @@ void CSharedFileList::UpdateFile(CKnownFile* toupdate)
 void CSharedFileList::Process()
 {
 	Publish();
-	if( !m_lastPublishED2KFlag || ( ::GetTickCount() - m_lastPublishED2K < ED2KREPUBLISHTIME ) )
-	{
+	if (!m_lastPublishED2KFlag || ::GetTickCount() < m_lastPublishED2K + ED2KREPUBLISHTIME)
 		return;
-	}
+
 	SendListToServer();
 	m_lastPublishED2K = ::GetTickCount();
 }
@@ -1300,7 +1300,7 @@ void CSharedFileList::Process()
 void CSharedFileList::Publish()
 {
 	// Variables to save cpu.
-	UINT tNow = time(NULL);
+	time_t tNow = time(NULL);
 	bool isFirewalled = theApp.IsFirewalled();
 	bool bDirectCallback = Kademlia::CKademlia::IsRunning() && !Kademlia::CUDPFirewallTester::IsFirewalledUDP(true) && Kademlia::CUDPFirewallTester::IsVerified();
 
@@ -1392,7 +1392,7 @@ void CSharedFileList::Publish()
 					if(pCurKnownFile->PublishSrc())
 					{
 						if(Kademlia::CSearchManager::PrepareLookup(Kademlia::CSearch::STOREFILE, true, Kademlia::CUInt128(pCurKnownFile->GetFileHash()))==NULL)
-							pCurKnownFile->SetLastPublishTimeKadSrc(0,0);
+							pCurKnownFile->SetLastPublishTimeKadSrc(0, 0);
 					}
 				}
 				m_currFileSrc++;
@@ -1590,19 +1590,11 @@ void CSharedFileList::CheckAndAddSingleFile(const CFileFind& ff)
 		if (strFoundFilePath.CompareNoCase(m_liSingleExcludedFiles.GetNext(pos)) == 0)
 			return;
 
-
-	CTime tFoundFileTime;
-	try {
-		ff.GetLastWriteTime(tFoundFileTime);
-	}
-	catch(CException* ex) {
-		ex->Delete();
-	}
+	FILETIME tFoundFileTime;
+	ff.GetLastWriteTime(&tFoundFileTime);
 
 	// ignore real(!) LNK files
-	TCHAR szExt[_MAX_EXT];
-	_tsplitpath(strFoundFileName, NULL, NULL, NULL, szExt);
-	if (_tcsicmp(szExt, _T(".lnk")) == 0){
+	if (ExtensionIs(strFoundFileName, _T(".lnk"))) {
 		SHFILEINFO info;
 		if (SHGetFileInfo(strFoundFilePath, 0, &info, sizeof(info), SHGFI_ATTRIBUTES) && (info.dwAttributes & SFGAO_LINK)){
 			if (!thePrefs.GetResolveSharedShellLinks()) {
@@ -1634,13 +1626,7 @@ void CSharedFileList::CheckAndAddSingleFile(const CFileFind& ff)
 							strFoundFileName = ffResolved.GetFileName();
 							strFoundFilePath = ffResolved.GetFilePath();
 							ullFoundFileSize = ffResolved.GetLength();
-							try {
-								ffResolved.GetLastWriteTime(tFoundFileTime);
-							}
-							catch (CException *ex) {
-								ex->Delete();
-								return;
-							}
+							ffResolved.GetLastWriteTime(&tFoundFileTime);
 							if (strFoundDirectory.Right(1) != _T("\\"))
 								strFoundDirectory += _T('\\');
 						}
@@ -1672,14 +1658,13 @@ void CSharedFileList::CheckAndAddSingleFile(const CFileFind& ff)
 		}
 	}
 
-	time_t fdate = (uint32)tFoundFileTime.GetTime();
+	time_t fdate = (time_t)FileTimeToUnixTime(tFoundFileTime);
 	if (fdate == 0)
 		fdate = (time_t)-1;
-	if (fdate == (time_t)-1){
+	if (fdate == (time_t)-1) {
 		if (thePrefs.GetVerbose())
 			AddDebugLogLine(false, _T("Failed to get file date of \"%s\""), (LPCTSTR)strFoundFilePath);
-	}
-	else
+	} else
 		AdjustNTFSDaylightFileTime(fdate, strFoundFilePath);
 
 	CKnownFile* toadd = theApp.knownfiles->FindKnownFile(strFoundFileName, fdate, ullFoundFileSize);
@@ -1877,7 +1862,7 @@ CString CSharedFileList::GetPseudoDirName(const CString& strDirectoryName)
 	if (!strPseudoName.IsEmpty())
 	{
 		// remove first backslash
-		ASSERT( strPseudoName.GetAt(0) == _T('\\') );
+		ASSERT( strPseudoName[0] == _T('\\') );
 		strPseudoName = strPseudoName.Right(strPseudoName.GetLength() - 1);
 	}
 	else

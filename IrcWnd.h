@@ -26,14 +26,20 @@
 class CIrcMain;
 class CSmileySelector;
 
+static const TCHAR *sBadCharsIRC = _T(" \t!@#$%^&*():;<>,.?~+=");
+
 class CIrcWnd : public CResizableDialog
 {
 	DECLARE_DYNAMIC(CIrcWnd)
+
+	enum
+	{
+		IDD = IDD_IRC
+	};
+
 public:
 	explicit CIrcWnd(CWnd* pParent = NULL);
 	virtual ~CIrcWnd();
-
-	enum { IDD = IDD_IRC };
 
 	void Localize();
 	bool GetLoggedIn();
@@ -43,23 +49,25 @@ public:
 	bool IsConnected();
 	void UpdateFonts(CFont* pFont);
 	void ParseChangeMode(const CString& sChannel, const CString& sChanger, CString sCommands, const CString& sParams);
+	void AddCurrent(CString sLine, bool bShowActivity = true, UINT uStatusCode = 0);
 	void AddStatus(CString sLine, bool bShowActivity = true, UINT uStatusCode = 0);
-	void AddStatusF(const CString sLine, ...); //cannot pass sLine by reference - would be 'undefined behaviour' by C++ standards
+	void AddStatusF(LPCTSTR sLine, ...); //to pass sLine by reference would be an 'undefined behaviour'
 	void AddInfoMessage(Channel *pChannel, const CString& sLine);
-	void AddInfoMessage(const CString& sChannelName, const CString& sLine, const bool bShowChannel = false);
-	void AddInfoMessageF(const CString& sChannelName, const CString sLine, ...);
-	void AddInfoMessageC(const CString& sChannelName, const COLORREF& msgcolour, const CString& sLine);
-	void AddInfoMessageCF(const CString& sChannelName, const COLORREF& msgcolour, const CString sLine, ...);
-	void AddMessage(const CString& sChannelName, const CString& sTargetName, const CString& sLine);
-	void AddMessageF(const CString& sChannelName, const CString& sTargetName, const CString sLine, ...);
+	void AddInfoMessage(const CString& sChannel, const CString& sLine, const bool bShowChannel = false);
+	void AddInfoMessageC(Channel *pChannel, const COLORREF& msgcolour, LPCTSTR sLine);
+	void AddInfoMessageC(const CString& sChannel, const COLORREF& msgcolour, LPCTSTR sLine);
+	void AddInfoMessageCF(const CString& sChannel, const COLORREF& msgcolour, LPCTSTR sLine, ...);
+	void AddInfoMessageF(const CString& sChannel, LPCTSTR sLine, ...);
+	void AddMessage(const CString& sChannel, const CString& sTargetName, const CString& sLine);
+	void AddMessageF(const CString& sChannel, const CString& sTargetName, LPCTSTR sLine, ...);
 	void AddColorLine(const CString& line, CHTRichEditCtrl& wnd, COLORREF crForeground = CLR_DEFAULT);
 	void SetConnectStatus(bool bFlag);
 	void NoticeMessage(const CString& sSource, const CString& sTarget, const CString& sMessage);
 	CString StripMessageOfFontCodes(CString sTemp);
 	CString StripMessageOfColorCodes(CString sTemp);
-	void SetTitle(const CString& sChannel, const CString& sTitle);
+	void SetTopic(const CString& sChannel, const CString& sTopic);
 	void SendString(const CString& sSend);
-	void EnableSmileys(bool bEnable)										{m_wndChanSel.EnableSmileys(bEnable);}
+	void EnableSmileys(bool bEnable)							{m_wndChanSel.EnableSmileys(bEnable);}
 	afx_msg void OnBnClickedCloseChannel(int iItem = -1);
 
 	CEdit m_wndInput;
@@ -79,7 +87,6 @@ protected:
 	CSmileySelector *m_pwndSmileySel;
 
 	void OnChatTextChange();
-	void AutoComplete();
 	void DoResize(int iDelta);
 	void UpdateChannelChildWindowsSize();
 	void SetAllIcons();
@@ -99,13 +106,14 @@ protected:
 	afx_msg void OnBnClickedIrcSend();
 	afx_msg LRESULT OnCloseTab(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnQueryTab(WPARAM wParam, LPARAM lParam);
-	afx_msg void OnBnClickedColour();
-	afx_msg void OnBnClickedUnderline();
-	afx_msg void OnBnClickedBold();
-	afx_msg void OnBnClickedReset();
 	afx_msg void OnBnClickedSmiley();
-	afx_msg LRESULT OnSelEndOK(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT OnSelEndCancel(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnBnClickedBold();
+	afx_msg void OnBnClickedColour();
+	afx_msg void OnBnClickedItalic();
+	afx_msg void OnBnClickedUnderline();
+	afx_msg void OnBnClickedReset();
+	afx_msg LRESULT OnSelEndOK(WPARAM wParam, LPARAM /*lParam*/);
+	afx_msg LRESULT OnSelEndCancel(WPARAM wParam, LPARAM /*lParam*/);
 	afx_msg void OnEnRequestResizeTitle(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 };

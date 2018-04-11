@@ -58,10 +58,8 @@ BEGIN_MESSAGE_MAP(CClosableTabCtrl, CTabCtrl)
 END_MESSAGE_MAP()
 
 CClosableTabCtrl::CClosableTabCtrl()
+	: m_bCloseable(true), m_iiCloseButton(), m_ptCtxMenu(-1, -1)
 {
-	m_bCloseable = true;
-	memset(&m_iiCloseButton, 0, sizeof m_iiCloseButton);
-	m_ptCtxMenu.SetPoint(-1, -1);
 }
 
 CClosableTabCtrl::~CClosableTabCtrl()
@@ -93,7 +91,7 @@ void CClosableTabCtrl::GetCloseButtonRect(int iItem, const CRect& rcItem, CRect&
 	}
 }
 
-int CClosableTabCtrl::GetTabUnderPoint(CPoint point) const
+int CClosableTabCtrl::GetTabUnderPoint(const CPoint& point) const
 {
 	int iTabs = GetItemCount();
 	for (int i = 0; i < iTabs; i++)
@@ -522,7 +520,7 @@ BOOL CClosableTabCtrl::OnCommand(WPARAM wParam, LPARAM lParam)
 
 LRESULT CClosableTabCtrl::_OnThemeChanged()
 {
-	// Owner drawn tab control seems to have troubles with updating itself due to an XP theme change..
+	// Owner drawn tab control seems to have troubles with updating itself due to an XP theme change.
 	ModifyStyle(TCS_OWNERDRAWFIXED, 0);	// Reset control style to not-owner drawn
     Default();							// Process original WM_THEMECHANGED message
 	ModifyStyle(0, TCS_OWNERDRAWFIXED);	// Apply owner drawn style again

@@ -22,9 +22,9 @@ bool CxImageBMP::Encode(CxFile * hFile)
 	BITMAPFILEHEADER	hdr;
 
 	hdr.bfType = 0x4d42;   // 'BM' WINDOWS_BITMAP_SIGNATURE
-	hdr.bfSize = GetSize() + 14 /*sizeof(BITMAPFILEHEADER)*/;
+	hdr.bfSize = (DWORD)(GetSize() + 14) /*sizeof(BITMAPFILEHEADER)*/;
 	hdr.bfReserved1 = hdr.bfReserved2 = 0;
-	hdr.bfOffBits = 14 /*sizeof(BITMAPFILEHEADER)*/ + head.biSize + GetPaletteSize();
+	hdr.bfOffBits = (DWORD)(14 /*sizeof(BITMAPFILEHEADER)*/ + head.biSize + GetPaletteSize());
 
 	hdr.bfType = m_ntohs(hdr.bfType);
 	hdr.bfSize = m_ntohl(hdr.bfSize);
@@ -140,7 +140,8 @@ bool CxImageBMP::Decode(CxFile * hFile)
         }
     }
 
-	if (info.nEscape) cx_throw("Cancelled"); // <vho> - cancel decoding
+	if (info.nEscape)
+		cx_throw("Cancelled"); // <vho> - cancel decoding
 
 	switch (dwBitCount) {
 		case 32 :
@@ -413,8 +414,8 @@ bool CxImageBMP::DibReadBitmapInfo(CxFile* fh, BITMAPINFOHEADER *pdib)
             pdib->biSize               = bc.bcSize;
             pdib->biWidth              = (uint32_t)bc.bcWidth;
             pdib->biHeight             = (uint32_t)bc.bcHeight;
-            pdib->biPlanes             =  bc.bcPlanes;
-            pdib->biBitCount           =  bc.bcBitCount;
+            pdib->biPlanes             = bc.bcPlanes;
+            pdib->biBitCount           = bc.bcBitCount;
             pdib->biCompression        = BI_RGB;
             pdib->biSizeImage          = 0;
             pdib->biXPelsPerMeter      = 0;

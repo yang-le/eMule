@@ -55,7 +55,7 @@ bool CUDPFirewallTester::IsFirewalledUDP(bool bLastStateIfTesting)
 		return false;
 	if (!m_bTimedOut && IsFWCheckUDPRunning())
 	{
-		if (!m_bFirewalledUDP && CKademlia::IsFirewalled() && m_dwTestStart != 0 && ::GetTickCount() - m_dwTestStart > MIN2MS(6)
+		if (!m_bFirewalledUDP && CKademlia::IsFirewalled() && m_dwTestStart != 0 && ::GetTickCount() >= m_dwTestStart + MIN2MS(6)
 			&& !m_bIsFWVerifiedUDP /*For now we don't allow to get firewalled by timeouts if we have succeded a test before, might be changed later*/)
 		{
 			DebugLogWarning(_T("Firewall UDP Tester: Timeout: Setting UDP status to firewalled after beeing unable to get results for 6 minutes"));
@@ -88,7 +88,7 @@ void CUDPFirewallTester::SetUDPFWCheckResult(bool bSucceeded, bool bTestCancelle
 		UsedClient_Struct& ucs = m_liUsedTestClients.GetNext(pos);
 		if (ucs.contact.GetIPAddress() == uFromIP) {
 
-			if (!IsFWCheckUDPRunning() && !m_bFirewalledUDP && m_bIsFWVerifiedUDP && m_dwLastSucceededTime + SEC2MS(10) > ::GetTickCount()
+			if (!IsFWCheckUDPRunning() && !m_bFirewalledUDP && m_bIsFWVerifiedUDP && ::GetTickCount() < m_dwLastSucceededTime + SEC2MS(10)
 				&& nIncomingPort == CKademlia::GetPrefs()->GetInternKadPort() && CKademlia::GetPrefs()->GetUseExternKadPort())
 			{
 				// our test finished already in the last 10 seconds with being open because we received a proper result packet before
@@ -102,8 +102,8 @@ void CUDPFirewallTester::SetUDPFWCheckResult(bool bSucceeded, bool bTestCancelle
 				return;
 			}
 			if (ucs.bAnswered) {
-				// we already received an answer. This may happen since all tests contain of two answer pakcets
-				// , but the answer could also be too late and we already counted it as failure.
+				// we already received an answer. This may happen since all tests contain of two answer packets,
+				// but the answer could also be too late and we already counted it as failure.
 				return;
 			}
 			ucs.bAnswered = true;

@@ -78,6 +78,7 @@ enum ESearchResultImage
 };
 
 #define	SEARCH_LIST_MENU_BUTTON_XOFF	8
+#define	SEARCH_LIST_MENU_BUTTON_YOFF	2
 #define	SEARCH_LIST_MENU_BUTTON_WIDTH	170
 #define	SEARCH_LIST_MENU_BUTTON_HEIGHT	22	// don't set the height do something different than 22 unless you know exactly what you are doing!
 
@@ -143,11 +144,10 @@ void CSearchResultsWnd::OnInitialUpdate()
 	searchlistctrl.Init(theApp.searchlist);
 	searchlistctrl.SetPrefsKey(_T("SearchListCtrl"));
 
-	CRect rc;
-	rc.top = 2;
-	rc.left = SEARCH_LIST_MENU_BUTTON_XOFF;
-	rc.right = rc.left + SEARCH_LIST_MENU_BUTTON_WIDTH;
-	rc.bottom = rc.top + SEARCH_LIST_MENU_BUTTON_HEIGHT;
+	static const CRect rc(SEARCH_LIST_MENU_BUTTON_YOFF
+		, SEARCH_LIST_MENU_BUTTON_XOFF
+		, SEARCH_LIST_MENU_BUTTON_XOFF + SEARCH_LIST_MENU_BUTTON_WIDTH
+		, SEARCH_LIST_MENU_BUTTON_YOFF + SEARCH_LIST_MENU_BUTTON_HEIGHT);
 	m_btnSearchListMenu->Init(true, true);
 	m_btnSearchListMenu->MoveWindow(&rc);
 	m_btnSearchListMenu->AddBtnStyle(IDC_SEARCHLST_ICO, TBSTYLE_AUTOSIZE);
@@ -177,7 +177,7 @@ void CSearchResultsWnd::OnInitialUpdate()
 
 	if (theApp.m_fontSymbol.m_hObject) {
 		GetDlgItem(IDC_STATIC_DLTOof)->SetFont(&theApp.m_fontSymbol);
-		GetDlgItem(IDC_STATIC_DLTOof)->SetWindowText(GetExStyle() & WS_EX_LAYOUTRTL ? _T("3") : _T("4")); // show a right-arrow
+		SetDlgItemText(IDC_STATIC_DLTOof, (GetExStyle() & WS_EX_LAYOUTRTL) ? _T("3") : _T("4")); // show a right-arrow
 	}
 }
 
@@ -231,7 +231,7 @@ void CSearchResultsWnd::OnTimer(UINT_PTR nIDEvent)
 		if (globsearch)
 		{
 			if (global_search_timer == 0)
-				VERIFY( (global_search_timer = SetTimer(TimerGlobalSearch, 750, 0)) != NULL );
+				VERIFY( (global_search_timer = SetTimer(TimerGlobalSearch, 750, NULL)) != NULL );
 		}
 		else
 			CancelEd2kSearch();
@@ -328,7 +328,7 @@ void CSearchResultsWnd::OnTimer(UINT_PTR nIDEvent)
 		ASSERT( 0 );
 }
 
-void CSearchResultsWnd::SetSearchResultsIcon(UINT uSearchID, int iImage)
+void CSearchResultsWnd::SetSearchResultsIcon(uint32 uSearchID, int iImage)
 {
     int iTabItems = searchselect.GetItemCount();
     for (int i = 0; i < iTabItems; i++)
@@ -345,7 +345,7 @@ void CSearchResultsWnd::SetSearchResultsIcon(UINT uSearchID, int iImage)
     }
 }
 
-void CSearchResultsWnd::SetActiveSearchResultsIcon(UINT uSearchID)
+void CSearchResultsWnd::SetActiveSearchResultsIcon(uint32 uSearchID)
 {
 	SSearchParams* pParams = GetSearchResultsParams(uSearchID);
 	if (pParams)
@@ -361,7 +361,7 @@ void CSearchResultsWnd::SetActiveSearchResultsIcon(UINT uSearchID)
 	}
 }
 
-void CSearchResultsWnd::SetInactiveSearchResultsIcon(UINT uSearchID)
+void CSearchResultsWnd::SetInactiveSearchResultsIcon(uint32 uSearchID)
 {
 	SSearchParams* pParams = GetSearchResultsParams(uSearchID);
 	if (pParams)
@@ -377,7 +377,7 @@ void CSearchResultsWnd::SetInactiveSearchResultsIcon(UINT uSearchID)
 	}
 }
 
-SSearchParams* CSearchResultsWnd::GetSearchResultsParams(UINT uSearchID) const
+SSearchParams* CSearchResultsWnd::GetSearchResultsParams(uint32 uSearchID) const
 {
     int iTabItems = searchselect.GetItemCount();
     for (int i = 0; i < iTabItems; i++)
@@ -390,7 +390,7 @@ SSearchParams* CSearchResultsWnd::GetSearchResultsParams(UINT uSearchID) const
 	return NULL;
 }
 
-void CSearchResultsWnd::CancelSearch(UINT uSearchID)
+void CSearchResultsWnd::CancelSearch(uint32 uSearchID)
 {
 	if (uSearchID == 0)
 	{
@@ -446,7 +446,7 @@ void CSearchResultsWnd::CancelEd2kSearch()
 	SearchCanceled(m_nEd2kSearchID);
 }
 
-void CSearchResultsWnd::CancelKadSearch(UINT uSearchID)
+void CSearchResultsWnd::CancelKadSearch(uint32 uSearchID)
 {
 	SearchCanceled(uSearchID);
 }
@@ -460,7 +460,7 @@ void CSearchResultsWnd::SearchStarted()
 	m_pwndParams->m_ctlCancel.EnableWindow(TRUE);
 }
 
-void CSearchResultsWnd::SearchCanceled(UINT uSearchID)
+void CSearchResultsWnd::SearchCanceled(uint32 uSearchID)
 {
 	SetInactiveSearchResultsIcon(uSearchID);
 
@@ -494,7 +494,7 @@ void CSearchResultsWnd::LocalEd2kSearchEnd(UINT count, bool bMoreResultsAvailabl
 		if (!globsearch)
 			SearchCanceled(m_nEd2kSearchID);
 		else
-			VERIFY( (global_search_timer = SetTimer(TimerGlobalSearch, 750, 0)) != NULL );
+			VERIFY( (global_search_timer = SetTimer(TimerGlobalSearch, 750, NULL)) != NULL );
 	}
 	m_pwndParams->m_ctlMore.EnableWindow(bMoreResultsAvailable && m_iSentMoreReq < MAX_MORE_SEARCH_REQ);
 }
@@ -517,7 +517,7 @@ void CSearchResultsWnd::OnDblClkSearchList(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 	*pResult = 0;
 }
 
-CString	CSearchResultsWnd::CreateWebQuery(SSearchParams* pParams)
+CString CSearchResultsWnd::CreateWebQuery(SSearchParams* pParams)
 {
 	CString query;
 	switch (pParams->eType)
@@ -619,9 +619,9 @@ void CSearchResultsWnd::Localize()
 	m_ctlFilter.ShowColumnText(true);
 	UpdateCatTabs();
 
-    GetDlgItem(IDC_CLEARALL)->SetWindowText(GetResString(IDS_REMOVEALLSEARCH));
+    SetDlgItemText(IDC_CLEARALL, GetResString(IDS_REMOVEALLSEARCH));
 	m_btnSearchListMenu->SetWindowText(GetResString(IDS_SW_RESULT));
-    GetDlgItem(IDC_SDOWNLOAD)->SetWindowText(GetResString(IDS_SW_DOWNLOAD));
+    SetDlgItemText(IDC_SDOWNLOAD, GetResString(IDS_SW_DOWNLOAD));
 	m_ctlOpenParamsWnd.SetWindowText(GetResString(IDS_SEARCHPARAMS)+_T("..."));
 }
 
@@ -1004,12 +1004,12 @@ bool GetSearchPacket(CSafeMemFile* pData, SSearchParams* pParams, bool bTargetSu
 	CStringA strFileType;
 	if (pParams->strFileType == ED2KFTSTR_ARCHIVE){
 		// eDonkeyHybrid 0.48 uses type "Pro" for archives files
-		// www.filedonkey.com uses type "Pro" for archives files
+		// www.filedonkey.com used type "Pro" for archives files
 		strFileType = ED2KFTSTR_PROGRAM;
 	}
 	else if (pParams->strFileType == ED2KFTSTR_CDIMAGE){
 		// eDonkeyHybrid 0.48 uses *no* type for iso/nrg/cue/img files
-		// www.filedonkey.com uses type "Pro" for CD-image files
+		// www.filedonkey.com used type "Pro" for CD-image files
 		strFileType = ED2KFTSTR_PROGRAM;
 	}
 	else{
@@ -1246,8 +1246,6 @@ bool CSearchResultsWnd::StartNewSearch(SSearchParams* pParams)
 		if (!Kademlia::CKademlia::IsRunning() || !Kademlia::CKademlia::IsConnected()) {
 			LocMessageBox(IDS_ERR_NOTCONNECTEDKAD, MB_ICONWARNING, 0);
 			delete pParams;
-			//if (!Kademlia::CKademlia::IsRunning())
-			//	Kademlia::CKademlia::Start();
 			return false;
 		}
 
@@ -1319,7 +1317,7 @@ bool CSearchResultsWnd::DoNewEd2kSearch(SSearchParams* pParams)
 	if (pParams->eType == SearchTypeEd2kGlobal && theApp.serverconnect->IsUDPSocketAvailable())
 	{
 		// set timeout timer for local server
-		m_uTimerLocalServer = SetTimer(TimerServerTimeout, 50000, NULL);
+		m_uTimerLocalServer = SetTimer(TimerServerTimeout, SEC2MS(50), NULL);
 
 		if (thePrefs.GetUseServerPriorities())
 			theApp.serverlist->ResetSearchServerPos();
@@ -1332,7 +1330,7 @@ bool CSearchResultsWnd::DoNewEd2kSearch(SSearchParams* pParams)
 		searchpacket->opcode = OP_GLOBSEARCHREQ; // will be changed later when actually sending the packet!!
 		m_b64BitSearchPacket = bPacketUsing64Bit;
 		servercount = 0;
-		searchprogress.SetRange32(0, theApp.serverlist->GetServerCount() - 1);
+		searchprogress.SetRange32(0, (int)theApp.serverlist->GetServerCount() - 1);
 		globsearch = true;
 	}
 	else{
@@ -1368,7 +1366,7 @@ bool CSearchResultsWnd::DoNewKadSearch(SSearchParams* pParams)
 
 	int iPos = 0;
 	pParams->strKeyword = pParams->strExpression.Tokenize(_T(" "), iPos);
-	if (!pParams->strKeyword.IsEmpty() && pParams->strKeyword[0] == _T('\"'))
+	if (pParams->strKeyword[0] == _T('\"'))
 	{
 		// remove leading and possibly trailing quotes, if they terminate properly (otherwise the keyword is later handled as invalid)
 		// (quotes are still kept in search expr and matched against the result, so everything is fine)
@@ -1469,7 +1467,7 @@ void CSearchResultsWnd::DeleteSelectedSearch()
 	if (searchselect.GetItemCount() > 0 && searchselect.GetCurFocus() != (-1) && searchselect.GetItem(searchselect.GetCurFocus(), &item)
 		&& item.lParam != NULL)
 	{
-		DeleteSearch(((const SSearchParams*)item.lParam)->dwSearchID);
+		DeleteSearch(reinterpret_cast<SSearchParams *>(item.lParam)->dwSearchID);
 	}
 }
 
@@ -1486,11 +1484,11 @@ void CSearchResultsWnd::DeleteSearch(uint32 nSearchID)
 	item.mask = TCIF_PARAM;
 	item.lParam = -1;
 	int i;
-	for (i = 0; i < searchselect.GetItemCount(); i++) {
-		if (searchselect.GetItem(i, &item) && item.lParam != -1 && item.lParam != NULL && ((const SSearchParams*)item.lParam)->dwSearchID == nSearchID)
+	for (i = 0; i < searchselect.GetItemCount(); ++i)
+		if (searchselect.GetItem(i, &item) && item.lParam != -1 && item.lParam != NULL && reinterpret_cast<SSearchParams *>(item.lParam)->dwSearchID == nSearchID)
 			break;
-	}
-	if (item.lParam == -1 || item.lParam == NULL || ((const SSearchParams*)item.lParam)->dwSearchID != nSearchID)
+
+	if (item.lParam == -1 || item.lParam == NULL || reinterpret_cast<SSearchParams *>(item.lParam)->dwSearchID != nSearchID)
 		return;
 
 	// delete search results
@@ -1635,8 +1633,8 @@ LRESULT CSearchResultsWnd::OnCloseTab(WPARAM wParam, LPARAM /*lParam*/)
 	item.mask = TCIF_PARAM;
 	if (searchselect.GetItem((int)wParam, &item) && item.lParam != NULL)
 	{
-		int nSearchID = ((const SSearchParams*)item.lParam)->dwSearchID;
-		if (!canceld && (UINT)nSearchID == m_nEd2kSearchID)
+		uint32 nSearchID = ((const SSearchParams*)item.lParam)->dwSearchID;
+		if (!canceld && nSearchID == m_nEd2kSearchID)
 			CancelEd2kSearch();
 		DeleteSearch(nSearchID);
 	}
@@ -1742,15 +1740,13 @@ void CSearchResultsWnd::OnBnClickedOpenParamsWnd()
 
 void CSearchResultsWnd::OnSysCommand(UINT nID, LPARAM lParam)
 {
-	if (nID == SC_KEYMENU)
-	{
+	if (nID == SC_KEYMENU) {
 		if (lParam == EMULE_HOTMENU_ACCEL)
 			theApp.emuledlg->SendMessage(WM_COMMAND, IDC_HOTMENU);
 		else
 			theApp.emuledlg->SendMessage(WM_SYSCOMMAND, nID, lParam);
-		return;
-	}
-	__super::OnSysCommand(nID, lParam);
+	} else
+		__super::OnSysCommand(nID, lParam);
 }
 
 bool CSearchResultsWnd::CanSearchRelatedFiles() const
@@ -1900,8 +1896,7 @@ void CSearchResultsWnd::OnSearchListMenuBtnDropDown(NMHDR* /*pNMHDR*/, LRESULT* 
 
 BOOL CSearchResultsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
-	switch (wParam)
-	{
+	switch (wParam) {
 	case MP_REMOVEALL:
 		DeleteAllSearches();
 		return TRUE;
@@ -1921,7 +1916,5 @@ BOOL CSearchResultsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 HBRUSH CSearchResultsWnd::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
 	HBRUSH hbr = theApp.emuledlg->GetCtlColor(pDC, pWnd, nCtlColor);
-	if (hbr)
-		return hbr;
-	return __super::OnCtlColor(pDC, pWnd, nCtlColor);
+	return hbr ? hbr : __super::OnCtlColor(pDC, pWnd, nCtlColor);
 }

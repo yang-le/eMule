@@ -46,7 +46,7 @@ BOOL CDropDownButton::Create(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, 
 	m_bSingleDropDownBtn = bSingleDropDownBtn;
 	dwStyle |= CCS_NOMOVEY
 			   | CCS_NOPARENTALIGN
-			   | CCS_NORESIZE		// prevent adjusting of specified width & height(!) by Create func..
+			   | CCS_NORESIZE		// prevent adjusting of specified width & height(!) by Create func.
 			   | CCS_NODIVIDER
 			   | TBSTYLE_LIST
 			   | TBSTYLE_FLAT
@@ -80,7 +80,7 @@ BOOL CDropDownButton::Init(bool bSingleDropDownBtn, bool bWholeDropDown)
 	{
 		TBBUTTON atb[1] = {};
 		atb[0].iBitmap = -1;
-		atb[0].idCommand = GetWindowLongPtr(m_hWnd, GWLP_ID);
+		atb[0].idCommand = (int)GetWindowLongPtr(m_hWnd, GWLP_ID);
 		atb[0].fsState = TBSTATE_ENABLED;
 		atb[0].fsStyle = m_bSingleDropDownBtn ? (bWholeDropDown ? BTNS_WHOLEDROPDOWN : BTNS_DROPDOWN) : BTNS_BUTTON;
 		atb[0].iString = -1;
@@ -94,7 +94,7 @@ BOOL CDropDownButton::Init(bool bSingleDropDownBtn, bool bWholeDropDown)
 
 void CDropDownButton::SetWindowText(LPCTSTR pszString)
 {
-	LONG_PTR id = GetWindowLongPtr(m_hWnd, GWLP_ID);
+	int id = (int)GetWindowLongPtr(m_hWnd, GWLP_ID);
 	int cx = m_bSingleDropDownBtn ? 0 : GetBtnWidth(id);
 
 	TBBUTTONINFO tbbi = {};
@@ -124,7 +124,7 @@ void CDropDownButton::SetIcon(LPCTSTR pszResourceID)
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_IMAGE;
 	tbbi.iImage = 0;
-	SetButtonInfo(GetWindowLongPtr(m_hWnd, GWLP_ID), &tbbi);
+	SetButtonInfo((int)GetWindowLongPtr(m_hWnd, GWLP_ID), &tbbi);
 }
 
 void CDropDownButton::ResizeToMaxWidth()
@@ -140,7 +140,7 @@ void CDropDownButton::ResizeToMaxWidth()
 	    tbbi.cbSize = sizeof tbbi;
 	    tbbi.dwMask = TBIF_SIZE;
 	    tbbi.cx = (WORD)rcWnd.Width();
-	    SetButtonInfo(GetWindowLongPtr(m_hWnd, GWLP_ID), &tbbi);
+	    SetButtonInfo((int)GetWindowLongPtr(m_hWnd, GWLP_ID), &tbbi);
 	}
 }
 
@@ -159,7 +159,7 @@ void CDropDownButton::RecalcLayout(bool bForce)
 	// button style(s) and force the toolbar to resize and apply them again.
 	//
 	// TODO: Should be moved to CToolBarCtrlX
-	LONG_PTR id = GetWindowLongPtr(m_hWnd, GWLP_ID);
+	int id = (int)GetWindowLongPtr(m_hWnd, GWLP_ID);
 	bool bDropDownBtn = (GetBtnStyle(id) & BTNS_DROPDOWN) != 0;
 	if (bDropDownBtn || bForce) {
 		if (bDropDownBtn)

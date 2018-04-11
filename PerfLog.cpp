@@ -37,7 +37,7 @@ static char THIS_FILE[] = __FILE__;
 CPerfLog thePerfLog;
 
 CPerfLog::CPerfLog()
-	: m_eMode(None), m_eFileFormat(CSV), m_dwInterval(MIN2MS(5))
+	: m_dwInterval(MIN2MS(5)), m_eMode(None), m_eFileFormat(CSV)
 {
 	m_bInitialized = false;
 	m_dwLastSampled = 0;
@@ -149,8 +149,8 @@ void CPerfLog::LogSamples()
 	if (m_eMode == None)
 		return;
 
-	DWORD dwNow = GetTickCount();
-	if (dwNow - m_dwLastSampled < m_dwInterval)
+	DWORD dwNow = ::GetTickCount();
+	if (dwNow < m_dwLastSampled + m_dwInterval)
 		return;
 
 	// 'data counters' amount of transferred file data

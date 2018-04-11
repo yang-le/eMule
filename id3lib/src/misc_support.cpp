@@ -506,12 +506,12 @@ ID3_Frame* ID3_AddTrack(ID3_Tag *tag, uchar trk, uchar ttl, bool replace)
         if (0 == ttl)
         {
           sTrack = LEAKTESTNEW(char[4]);
-          sprintf(sTrack, "%lu", (luint)trk);
+          sprintf_s(sTrack, 4, "%lu", (luint)trk);
         }
         else
         {
           sTrack = LEAKTESTNEW(char[8]);
-          sprintf(sTrack, "%lu/%lu", (luint)trk, (luint)ttl);
+          sprintf_s(sTrack, 8, "%lu/%lu", (luint)trk, (luint)ttl);
         }
 
         frame->GetField(ID3FN_TEXT)->Set(sTrack);
@@ -828,7 +828,7 @@ size_t ID3_GetGenreNum(const ID3_Tag *tag)
   return ulGenre;
 }
 
-size_t ID3_GetV1GenreNum(char* sGenre)
+size_t ID3_GetV1GenreNum(char* sGenre, unsigned maxlen)
 {
   dami::String tmpgenre;
   size_t ulGenre = 0xFF;
@@ -914,13 +914,13 @@ size_t ID3_GetV1GenreNum(char* sGenre)
   }
   if (!tmpgenre.empty())
   {
-     sprintf(sGenre, tmpgenre.c_str());
+     sprintf_s(sGenre, maxlen, tmpgenre.c_str()); //size of string should be passed as a parameter
   }
 
   return ulGenre;
 }
 
-bool ID3_HasChars(char* text, char* chars)
+bool ID3_HasChars(char* text, char* chars, unsigned maxlen)
 {
   dami::String tmptext;
 //  char* newtext = text;
@@ -943,7 +943,7 @@ bool ID3_HasChars(char* text, char* chars)
       }
       if (tmptext.size() > 0)
       {
-        sprintf(text, tmptext.c_str());
+        sprintf_s(text, maxlen, tmptext.c_str()); //size of string should be passed as a parameter
       }
       else
         text[0] = '\0';
@@ -976,6 +976,7 @@ char* chartest(char** input)
   return genre;
 }
 */
+#define BUFSIZE (1024)
 ID3_Frame* ID3_AddGenre(ID3_Tag* tag, size_t genreNum, char* genre, bool add_v1_genre_number, bool add_v1_genre_description, bool addRXorCR, bool replace)
 {
 /* This routine should work for the following (all examples):
@@ -989,7 +990,7 @@ ID3_Frame* ID3_AddGenre(ID3_Tag* tag, size_t genreNum, char* genre, bool add_v1_
   size_t newGenreNum2 = 0xFF; //this is the one found in the text by matching the string
   bool writeRX = false;
   bool writeCR = false;
-  char* tmpgenre1 = LEAKTESTNEW(char[1024]);// = NULL;
+  char* tmpgenre1 = LEAKTESTNEW(char[BUFSIZE]);
   const char* tmpgenre = NULL;
   const char* remainder = NULL;
   dami::String* newgenre = LEAKTESTNEW(dami::String);
@@ -1011,16 +1012,16 @@ ID3_Frame* ID3_AddGenre(ID3_Tag* tag, size_t genreNum, char* genre, bool add_v1_
       delete [] tmpgenre1;
       return NULL;
     }
-    sprintf(tmpgenre1, "%s", genre);
+    sprintf_s(tmpgenre1, BUFSIZE, "%s", genre);
 
-    newGenreNum1 = ID3_GetV1GenreNum(tmpgenre1); //get's the first and strips it
+    newGenreNum1 = ID3_GetV1GenreNum(tmpgenre1, BUFSIZE); //get's the first and strips it
     if (*tmpgenre1)
     { //see if there are references to v1 genre numbers in it, e.g. "(" + number + ")" + description
-      writeRX = ID3_HasChars(tmpgenre1, "(RX)");
+      writeRX = ID3_HasChars(tmpgenre1, "(RX)", BUFSIZE);
     }
     if (*tmpgenre1)
     { //see if there are references to v1 genre numbers in it, e.g. "(" + number + ")" + description
-      writeCR = ID3_HasChars(tmpgenre1, "(CR)");
+      writeCR = ID3_HasChars(tmpgenre1, "(CR)", BUFSIZE);
     }
     // search for an additional genre number, from a match
     if (*tmpgenre1) //try to find an additional number from the remaining genre
@@ -1062,17 +1063,17 @@ ID3_Frame* ID3_AddGenre(ID3_Tag* tag, size_t genreNum, char* genre, bool add_v1_
     size_t size;
     if (genreNum < ID3_NR_OF_V1_GENRES)
     {
-      size = sprintf(sGenre, "(%lu)", (luint) genreNum);
+      size = sprintf_s(sGenre, 6, "(%lu)", (luint) genreNum);
       newgenre->append(sGenre, size);
     }
     if (newGenreNum1 < ID3_NR_OF_V1_GENRES && newGenreNum1 != genreNum)
     {
-      size = sprintf(sGenre, "(%lu)", (luint) newGenreNum1);
+      size = sprintf_s(sGenre, 6, "(%lu)", (luint) newGenreNum1);
       newgenre->append(sGenre, size);
     }
     if (newGenreNum2 < ID3_NR_OF_V1_GENRES && newGenreNum2 != genreNum && newGenreNum2 != newGenreNum1)
     {
-      size = sprintf(sGenre, "(%lu)", (luint) newGenreNum2);
+      size = sprintf_s(sGenre, 6, "(%lu)", (luint) newGenreNum2);
       newgenre->append(sGenre, size);
     }
     delete [] sGenre;
@@ -1120,7 +1121,7 @@ ID3_Frame* ID3_AddGenre(ID3_Tag* tag, size_t genreNum, char* genre, bool add_v1_
     return NULL;
   }
 
-  sprintf(tmpgenre1, newgenre->c_str());
+  sprintf_s(tmpgenre1, BUFSIZE, newgenre->c_str());
   delete newgenre;
   ID3_Frame* newframe = ID3_AddGenre(tag, tmpgenre1, replace);
   delete [] tmpgenre1;
@@ -1156,13 +1157,10 @@ ID3_Frame* ID3_AddGenre(ID3_Tag *tag, size_t genreNum, bool replace)
   if(0xFF != genreNum)
   {
     char sGenre[6];
-    sprintf(sGenre, "(%lu)", (luint) genreNum);
+    sprintf_s(sGenre, 6, "(%lu)", (luint) genreNum);
     return(ID3_AddGenre(tag, sGenre, replace));
   }
-  else
-  {
-    return(NULL);
-  }
+  return(NULL);
 }
 
 size_t ID3_RemoveGenres(ID3_Tag *tag)

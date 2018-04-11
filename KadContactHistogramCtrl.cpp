@@ -58,7 +58,7 @@ void CKadContactHistogramCtrl::Localize()
 		Invalidate();
 }
 
-__inline UINT GetHistSlot(const Kademlia::CUInt128& KadUint128)
+inline UINT GetHistSlot(const Kademlia::CUInt128& KadUint128)
 {
 //	byte aucUInt128[16];
 //	KadUint128.ToByteArray(aucUInt128);

@@ -26,7 +26,7 @@ public:
 
 	BOOL Create(UINT uSocketPort = 0, int iSocketType = SOCK_STREAM,
 		        long lEvent = FD_READ | FD_WRITE | FD_OOB | FD_ACCEPT |	FD_CONNECT | FD_CLOSE,
-		        LPCSTR lpszSocketAddress = NULL);
+		        const CString& sSocketAddress = NULL);
 	void Connect();
 	int SendString(const CString& sMessage);
 

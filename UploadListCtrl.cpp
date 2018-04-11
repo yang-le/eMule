@@ -98,42 +98,20 @@ void CUploadListCtrl::Init()
 
 void CUploadListCtrl::Localize()
 {
+	static const UINT uids[8] = {
+		IDS_QL_USERNAME, IDS_FILE, IDS_DL_SPEED, IDS_DL_TRANSF, IDS_WAITED
+		, IDS_UPLOADTIME, IDS_STATUS, IDS_UPSTATUS
+	};
+
 	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
 	HDITEM hdi;
 	hdi.mask = HDI_TEXT;
 
-	CString strRes;
-	strRes = GetResString(IDS_QL_USERNAME);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(0, &hdi);
-
-	strRes = GetResString(IDS_FILE);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(1, &hdi);
-
-	strRes = GetResString(IDS_DL_SPEED);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(2, &hdi);
-
-	strRes = GetResString(IDS_DL_TRANSF);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(3, &hdi);
-
-	strRes = GetResString(IDS_WAITED);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(4, &hdi);
-
-	strRes = GetResString(IDS_UPLOADTIME);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(5, &hdi);
-
-	strRes = GetResString(IDS_STATUS);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(6, &hdi);
-
-	strRes = GetResString(IDS_UPSTATUS);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(7, &hdi);
+	for (int i = 0; i < _countof(uids); ++i) {
+		CString strRes(GetResString(uids[i]));
+		hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
+		pHeaderCtrl->SetItem(i, &hdi);
+	}
 }
 
 void CUploadListCtrl::OnSysColorChange()
@@ -184,8 +162,8 @@ void CUploadListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	CRect cur_rec(lpDrawItemStruct->rcItem);
 	CRect rcClient;
 	GetClientRect(&rcClient);
-	const CUpDownClient *client = (CUpDownClient *)lpDrawItemStruct->itemData;
-    if (client->GetSlotNumber() > theApp.uploadqueue->GetActiveUploadsCount())
+	const CUpDownClient *client = reinterpret_cast<CUpDownClient *>(lpDrawItemStruct->itemData);
+    if (client->GetSlotNumber() > (UINT)theApp.uploadqueue->GetActiveUploadsCount())
         dc.SetTextColor(::GetSysColor(COLOR_GRAYTEXT));
 
 	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
@@ -384,7 +362,7 @@ void CUploadListCtrl::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 			return;
 		}
 
-		const CUpDownClient* client = (CUpDownClient*)GetItemData(pGetInfoTip->iItem);
+		const CUpDownClient* client = reinterpret_cast<CUpDownClient *>(GetItemData(pGetInfoTip->iItem));
 		if (client && pGetInfoTip->pszText && pGetInfoTip->cchTextMax > 0)
 		{
 			CString strInfo;
@@ -441,9 +419,9 @@ void CUploadListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 int CALLBACK CUploadListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const CUpDownClient *item1 = reinterpret_cast<const CUpDownClient *>(lParam1);
-	const CUpDownClient *item2 = reinterpret_cast<const CUpDownClient *>(lParam2);
-	int iColumn = (lParamSort >= 100) ? lParamSort - 100 : lParamSort;
+	const CUpDownClient *item1 = reinterpret_cast<CUpDownClient *>(lParam1);
+	const CUpDownClient *item2 = reinterpret_cast<CUpDownClient *>(lParam2);
+	LPARAM iColumn = (lParamSort >= 100) ? lParamSort - 100 : lParamSort;
 	int iResult = 0;
 	switch (iColumn)
 	{
@@ -483,7 +461,7 @@ int CALLBACK CUploadListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 			break;
 
 		case 5:
-			iResult = CompareUnsigned(item1->GetUpStartTimeDelay() ,item2->GetUpStartTimeDelay());
+			iResult = CompareUnsigned(item1->GetUpStartTimeDelay(), item2->GetUpStartTimeDelay());
 			break;
 
 		case 6:
@@ -500,7 +478,7 @@ int CALLBACK CUploadListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 
 	//call secondary sortorder, if this one results in equal
 	if (iResult == 0) {
-		LPARAM dwNextSort = theApp.emuledlg->transferwnd->m_pwndTransfer->uploadlistctrl.GetNextSortOrder(lParamSort);
+		int dwNextSort = theApp.emuledlg->transferwnd->m_pwndTransfer->uploadlistctrl.GetNextSortOrder((int)lParamSort);
 		if (dwNextSort != -1)
 			iResult = SortProc(lParam1, lParam2, dwNextSort);
 	}
@@ -512,8 +490,8 @@ void CUploadListCtrl::OnNmDblClk(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
 	int iSel = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
 	if (iSel != -1) {
-		CUpDownClient* client = (CUpDownClient*)GetItemData(iSel);
-		if (client){
+		CUpDownClient *client = reinterpret_cast<CUpDownClient *>(GetItemData(iSel));
+		if (client) {
 			CClientDetailDialog dialog(client, this);
 			dialog.DoModal();
 		}
@@ -524,7 +502,7 @@ void CUploadListCtrl::OnNmDblClk(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 void CUploadListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 {
 	int iSel = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
-	const CUpDownClient* client = (iSel != -1) ? (CUpDownClient*)GetItemData(iSel) : NULL;
+	const CUpDownClient* client = (iSel != -1) ? reinterpret_cast<CUpDownClient *>(GetItemData(iSel)) : NULL;
 	const bool is_ed2k = client && client->IsEd2kClient();
 
 	CTitleMenu ClientMenu;
@@ -631,17 +609,17 @@ void CUploadListCtrl::ShowSelectedUserDetails()
 	POINT point;
 	::GetCursorPos(&point);
 	CPoint p = point;
-    ScreenToClient(&p);
-    int it = HitTest(p);
-    if (it == -1)
+	ScreenToClient(&p);
+	int it = HitTest(p);
+	if (it == -1)
 		return;
 
 	SetItemState(-1, 0, LVIS_SELECTED);
 	SetItemState(it, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
 	SetSelectionMark(it);   // display selection mark correctly!
 
-	CUpDownClient* client = (CUpDownClient*)GetItemData(GetSelectionMark());
-	if (client){
+	CUpDownClient* client = reinterpret_cast<CUpDownClient *>(GetItemData(GetSelectionMark()));
+	if (client) {
 		CClientDetailDialog dialog(client, this);
 		dialog.DoModal();
 	}

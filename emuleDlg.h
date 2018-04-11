@@ -58,11 +58,11 @@ class CemuleDlg : public CTrayDialog
 	friend class CMuleToolbarCtrl;
 	friend class CMiniMule;
 
+	enum { IDD = IDD_EMULE_DIALOG };
+
 public:
 	explicit CemuleDlg(CWnd* pParent = NULL);
 	~CemuleDlg();
-
-	enum { IDD = IDD_EMULE_DIALOG };
 
 	static bool IsRunning();
 	static bool IsClosing();
@@ -118,7 +118,7 @@ public:
 	void ApplyLogFont(LPLOGFONT pFont);
 	void ProcessED2KLink(LPCTSTR pszData);
 	void SetStatusBarPartsSize();
-	int ShowPreferences(UINT uStartPageID = (UINT)-1);
+	INT_PTR	ShowPreferences(UINT uStartPageID = (UINT)-1);
 	bool IsPreferencesDlgOpen() const;
 	bool IsTrayIconToFlash()	{ return m_iMsgIcon!=0; }
 	void SetToolTipsDelay(UINT uMilliseconds);
@@ -203,11 +203,11 @@ protected:
 
 	// Startup Timer
 	UINT_PTR m_hTimer;
-	static void CALLBACK StartupTimer(HWND hwnd, UINT uiMsg, UINT_PTR idEvent, DWORD dwTime);
+	static void CALLBACK StartupTimer(HWND hwnd, UINT uiMsg, UINT_PTR idEvent, DWORD dwTime) noexcept;
 
 	// UPnP TimeOutTimer
 	UINT_PTR m_hUPnPTimeOutTimer;
-	static void CALLBACK UPnPTimeOutTimer(HWND hwnd, UINT uiMsg, UINT_PTR idEvent, DWORD dwTime);
+	static void CALLBACK UPnPTimeOutTimer(HWND hwnd, UINT uiMsg, UINT_PTR idEvent, DWORD dwTime) noexcept;
 
 	void StartConnection();
 	void CloseConnection();

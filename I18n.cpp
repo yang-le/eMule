@@ -38,7 +38,8 @@ int LocMessageBox(int uId, UINT nType, UINT nIDHelp)
 	return AfxMessageBox(GetResString((UINT)uId), nType, nIDHelp);
 }
 
-struct SLanguage {
+struct SLanguage
+{
 	LANGID	lid;
 	LPCTSTR pszLocale;
 	BOOL	bSupported;
@@ -412,7 +413,7 @@ CString CPreferences::GetHtmlCharset()
 		if (pszLcLocale) {
 			TCHAR szLocaleID[128];
 			UINT uCodepage = 0;
-			if (_stscanf(pszLcLocale, _T("%[a-zA-Z_].%u"), szLocaleID, &uCodepage) == 2 && uCodepage != 0) {
+			if (_stscanf_s(pszLcLocale, _T("%[a-zA-Z_].%u"), szLocaleID, (unsigned)_countof(szLocaleID), &uCodepage) == 2 && uCodepage != 0) {
 				CString strHtmlCodepage;
 				strHtmlCodepage.Format(_T("windows-%u"), uCodepage);
 				return strHtmlCodepage;
@@ -425,7 +426,7 @@ CString CPreferences::GetHtmlCharset()
 
 static HHOOK s_hRTLWindowsLayoutOldCbtFilterHook = NULL;
 
-LRESULT CALLBACK RTLWindowsLayoutCbtFilterHook(int code, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK RTLWindowsLayoutCbtFilterHook(int code, WPARAM wParam, LPARAM lParam) noexcept
 {
 	if (code == HCBT_CREATEWND)
 	{

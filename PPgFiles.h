@@ -4,12 +4,11 @@ class CPPgFiles : public CPropertyPage
 {
 	DECLARE_DYNAMIC(CPPgFiles)
 
+	enum { IDD = IDD_PPG_FILES };
+
 public:
 	CPPgFiles();
 	virtual ~CPPgFiles();
-
-// Dialog Data
-	enum { IDD = IDD_PPG_FILES };
 
 	void Localize();
 

@@ -88,6 +88,7 @@ public:
   virtual ID3_Err    Render(ID3_Writer&) const = 0;
   virtual bool       Parse(ID3_Reader&) = 0;
 
+  ID3_Header(const ID3_Header&) = delete;
   ID3_Header &operator=( const ID3_Header &rhs)
   {
     if (this != &rhs)

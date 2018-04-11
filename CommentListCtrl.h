@@ -50,17 +50,17 @@ protected:
 	{
 		SComment(const void* pClientCookie, int iRating, const CString& strComment,
 			     const CString& strFileName, const CString& strUserName, int iOrigin)
-			: m_pClientCookie(pClientCookie), m_iRating(iRating),
-			  m_strComment(strComment), m_strFileName(strFileName),
-			  m_strUserName(strUserName), m_iOrigin(iOrigin)
+			: m_pClientCookie(pClientCookie)
+			, m_strComment(strComment), m_strFileName(strFileName), m_strUserName(strUserName)
+			, m_iOrigin(iOrigin), m_iRating(iRating)
 		{ }
 
 		const void* m_pClientCookie;
-		int m_iRating;
 		CString m_strComment;
 		CString m_strFileName;
 		CString m_strUserName;
 		int m_iOrigin;	// 0=eD2K, 1=Kad
+		int m_iRating;
 	};
 	void AddComment(const SComment* pComment);
 	int FindClientComment(const void* pClientCookie);

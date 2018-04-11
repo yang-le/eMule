@@ -198,7 +198,7 @@ void Packet::PackPacket()
 	ASSERT(!m_bSplitted);
 	uLongf newsize = size+300;
 	BYTE* output = new BYTE[newsize];
-	UINT result = compress2(output, &newsize, (BYTE*)pBuffer, size, Z_BEST_COMPRESSION);
+	int result = compress2(output, &newsize, (BYTE*)pBuffer, size, Z_BEST_COMPRESSION);
 	if (result == Z_OK && newsize < size) {
 		if (prot == OP_KADEMLIAHEADER)
 			prot = OP_KADEMLIAPACKEDPROT;
@@ -214,21 +214,21 @@ void Packet::PackPacket()
 bool Packet::UnPackPacket(UINT uMaxDecompressedSize)
 {
 	ASSERT ( prot == OP_PACKEDPROT || prot == OP_KADEMLIAPACKEDPROT);
-	uint32 nNewSize = size*10+300;
+	UINT nNewSize = size*10+300;
 	if (nNewSize > uMaxDecompressedSize) {
 		//ASSERT(0);
 		nNewSize = uMaxDecompressedSize;
 	}
 	BYTE* unpack = NULL;
 	uLongf unpackedsize = 0;
-	UINT result = 0;
+	int result = 0;
 	do {
 		delete[] unpack;
 		unpack = new BYTE[nNewSize];
 		unpackedsize = nNewSize;
 		result = uncompress(unpack,&unpackedsize,(BYTE*)pBuffer,size);
 		nNewSize *= 2; // size for the next try if needed
-	} while (result == (UINT)Z_BUF_ERROR && nNewSize < uMaxDecompressedSize);
+	} while (result == Z_BUF_ERROR && nNewSize < uMaxDecompressedSize);
 
 	if (result == Z_OK) {
 		ASSERT ( completebuffer == NULL );
@@ -236,10 +236,7 @@ bool Packet::UnPackPacket(UINT uMaxDecompressedSize)
 		size = unpackedsize;
 		delete[] pBuffer;
 		pBuffer = (char*)unpack;
-		if( prot == OP_KADEMLIAPACKEDPROT )
-			prot = OP_KADEMLIAHEADER;
-		else
-			prot =  OP_EMULEPROT;
+		prot = (prot == OP_KADEMLIAPACKEDPROT) ? OP_KADEMLIAHEADER : OP_EMULEPROT;
 		return true;
 	}
 	delete[] unpack;
@@ -399,7 +396,7 @@ CTag::CTag(uint8 uName, size_t nSize, const BYTE* pucData)
 	m_pszName = NULL;
 	m_pData = new BYTE[nSize];
 	memcpy(m_pData, pucData, nSize);
-	m_nBlobSize = nSize;
+	m_nBlobSize = (uint32)nSize;
 	ASSERT_VALID(this);
 }
 
@@ -409,15 +406,15 @@ CTag::CTag(uint8 uName, BYTE* pucAttachData, uint32 nSize)
 	m_uName = uName;
 	m_pszName = NULL;
 	m_pData = pucAttachData;
-	m_nBlobSize = nSize;
+	m_nBlobSize = (uint32)nSize;
 	ASSERT_VALID(this);
 }
 
 CTag::CTag(const CTag& rTag)
-	: m_uType(rTag.m_uType)
-	, m_uName(rTag.m_uName)
-	, m_pszName(rTag.m_pszName!=NULL ? nstrdup(rTag.m_pszName) : NULL)
+	: m_pszName(rTag.m_pszName!=NULL ? nstrdup(rTag.m_pszName) : NULL)
 	, m_nBlobSize(0)
+	, m_uType(rTag.m_uType)
+	, m_uName(rTag.m_uName)
 {
 	if (rTag.IsStr())
 		m_pstrVal = new CString(rTag.GetStr());
@@ -654,7 +651,7 @@ bool CTag::WriteNewEd2kTag(CFileDataIO* data, EUtf8Str eStrEncode) const
 	if (m_pszName)
 	{
 		data->WriteUInt8(uType);
-		UINT uTagNameLen = strlen(m_pszName);
+		UINT uTagNameLen = (UINT)strlen(m_pszName);
 		data->WriteUInt16((uint16)uTagNameLen);
 		data->Write(m_pszName, uTagNameLen);
 	}
@@ -706,6 +703,7 @@ bool CTag::WriteNewEd2kTag(CFileDataIO* data, EUtf8Str eStrEncode) const
 	}
 	else
 	{
+		delete pstrValA;
 		TRACE("%s; Unknown tag: type=0x%02X\n", __FUNCTION__, uType);
 		ASSERT(0);
 		return false;
@@ -727,7 +725,7 @@ bool CTag::WriteTagToFile(CFileDataIO* file, EUtf8Str eStrEncode) const
 
 		if (m_pszName)
 		{
-			UINT taglen = strlen(m_pszName);
+			UINT taglen = (UINT)strlen(m_pszName);
 			file->WriteUInt16((uint16)taglen);
 			file->Write(m_pszName, taglen);
 		}

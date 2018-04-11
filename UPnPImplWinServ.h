@@ -26,6 +26,7 @@
 #pragma warning( disable: 4355 )
 
 #include "UPnPImpl.h"
+#include "opcodes.h"
 #include <upnp.h>
 #include <iphlpapi.h>
 #include <comdef.h>
@@ -83,7 +84,7 @@ public:
 		return UPNP_IMPL_WINDOWSERVICE;
 	}
 
-	// No Support for Refreshing on this  (fallback) implementation yet - in many cases where it would be needed (router reset etc)
+	// No Support for Refreshing for this (fallback) implementation yet - in many cases where it would be needed (router reset etc)
 	// the windows side of the implementation tends to get bugged until reboot anyway. Still might get added later
 	virtual bool CheckAndRefresh()
 	{
@@ -99,7 +100,7 @@ protected:
 
 	inline bool IsAsyncFindRunning()
 	{
-		if (m_pDeviceFinder != NULL && m_bAsyncFindRunning && GetTickCount() - m_tLastEvent > 10000) {
+		if (m_pDeviceFinder != NULL && m_bAsyncFindRunning && ::GetTickCount() >= m_tLastEvent + SEC2MS(10)) {
 			m_pDeviceFinder->CancelAsyncFind(m_nAsyncFindHandle);
 			m_bAsyncFindRunning = false;
 		}

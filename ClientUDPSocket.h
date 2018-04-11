@@ -54,12 +54,13 @@ protected:
 	virtual void	OnReceive(int nErrorCode);
 
 private:
-	int		SendTo(uchar* lpBuf, int nBufLen, uint32 dwIP, uint16 nPort);
-	bool	IsBusy() const { return m_bWouldBlock; }
-	bool	m_bWouldBlock;
-	uint16	m_port;
+	int	SendTo(uchar* lpBuf, int nBufLen, uint32 dwIP, uint16 nPort);
+	bool	IsBusy() const		{ return m_bWouldBlock; }
 
 	CTypedPtrList<CPtrList, UDPPack*> controlpacket_queue;
 
 	CCriticalSection sendLocker; // ZZ:UploadBandWithThrottler (UDP)
+
+	uint16	m_port;
+	bool	m_bWouldBlock;
 };

@@ -20,7 +20,7 @@
 class CUpDownClient;
 class CPacket;
 class CTimerWnd;
-enum EDebugLogPriority: int;
+enum EDebugLogPriority : int;
 
 enum SocketState
 {

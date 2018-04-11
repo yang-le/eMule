@@ -132,13 +132,7 @@ void CStatisticsTree::DoMenu(CPoint doWhere)
 
 void CStatisticsTree::DoMenu(CPoint doWhere, UINT nFlags)
 {
-	CFileFind	findBackUp;
-	CString		myBuffer;
-	int			myFlags;
-
-	myBuffer.Format(_T("%sstatbkup.ini"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
-	if (!findBackUp.FindFile(myBuffer)) myFlags = MF_GRAYED;
-		else myFlags = MF_STRING;
+	int myFlags = PathFileExists(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("statbkup.ini")) ? MF_STRING : MF_GRAYED;
 
 	mnuContext.CreatePopupMenu();
 	mnuContext.AddMenuTitle(GetResString(IDS_STATS_MNUTREETITLE), true);
@@ -185,7 +179,7 @@ BOOL CStatisticsTree::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 
 				CString myBuffer;
 				myBuffer.Format(GetResString(IDS_STATS_LASTRESETSTATIC), (LPCTSTR)thePrefs.GetStatsLastResetStr(false));
-				GetParent()->GetDlgItem(IDC_STATIC_LASTRESET)->SetWindowText(myBuffer);
+				GetParent()->SetDlgItemText(IDC_STATIC_LASTRESET, myBuffer);
 
 				break;
 			}
@@ -200,7 +194,7 @@ BOOL CStatisticsTree::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 					AddLogLine(false, GetResString(IDS_STATS_NFOLOADEDBKUP));
 					CString myBuffer;
 					myBuffer.Format(GetResString(IDS_STATS_LASTRESETSTATIC), (LPCTSTR)thePrefs.GetStatsLastResetStr(false));
-					GetParent()->GetDlgItem(IDC_STATIC_LASTRESET)->SetWindowText(myBuffer);
+					GetParent()->SetDlgItemText(IDC_STATIC_LASTRESET, myBuffer);
 				}
 
 				break;
@@ -230,14 +224,14 @@ lblSaveExpanded:
 		case MP_STATTREE_COPYVIS:
 		case MP_STATTREE_COPYALL:
 			{
-				CopyText(wParam);
+				CopyText((int)wParam);
 				break;
 			}
 		case MP_STATTREE_HTMLCOPYSEL:
 		case MP_STATTREE_HTMLCOPYVIS:
 		case MP_STATTREE_HTMLCOPYALL:
 			{
-				CopyHTML(wParam);
+				CopyHTML((int)wParam);
 				break;
 			}
 		case MP_STATTREE_HTMLEXPORT:
@@ -356,17 +350,15 @@ CString CStatisticsTree::GetHTML(bool onlyVisible, HTREEITEM theItem, int theIte
 	else
 		hCurrent = theItem;
 
-	CString	strBuffer;
+	CString strBuffer;
 	if (firstItem)
 		strBuffer.Format(_T("<font face=\"Tahoma,Verdana,Courier New,Helvetica\" size=\"2\">\r\n<b>eMule v%s %s [%s]</b>\r\n<br /><br />\r\n"), (LPCTSTR)theApp.m_strCurVersionLong, (LPCTSTR)GetResString(IDS_SF_STATISTICS), (LPCTSTR)thePrefs.GetUserNick());
 
 	while (hCurrent != NULL)
 	{
-		CString	strItem;
+		CString strItem(GetItemText(hCurrent));
 		if (IsBold(hCurrent))
-			strItem = _T("<b>") + GetItemText(hCurrent) + _T("</b>");
-		else
-			strItem = GetItemText(hCurrent);
+			strItem = _T("<b>") + strItem + _T("</b>");
 		for (int i = 0; i < theItemLevel; i++)
 			strBuffer += _T("&nbsp;&nbsp;&nbsp;");
 		if (theItemLevel == 0)
@@ -436,7 +428,7 @@ CString CStatisticsTree::GetText(bool onlyVisible, HTREEITEM theItem, int theIte
 		hCurrent = theItem;
 	}
 
-	CString	strBuffer;
+	CString strBuffer;
 	if (bPrintHeader)
 		strBuffer.Format(_T("eMule v%s %s [%s]\r\n\r\n"), (LPCTSTR)theApp.m_strCurVersionLong, (LPCTSTR)GetResString(IDS_SF_STATISTICS), (LPCTSTR)thePrefs.GetUserNick());
 
@@ -506,16 +498,10 @@ CString CStatisticsTree::GetHTMLForExport(HTREEITEM theItem, int theItemLevel, b
 	if (theItem==NULL && theItemLevel==0 && firstItem)
 		s_iHtmlId = 0;
 
-	CString		strBuffer, strItem, strImage, strChild, strTab;
-	int			nImage=0, nSelectedImage=0;
-	HTREEITEM	hCurrent;
-
+	CString strBuffer, strItem, strImage, strChild, strTab;
 	CString strDivStart, strDiv, strDivA, strDivEnd, strJ, strName;
-
-	strBuffer.Empty();
-
-	if (firstItem) hCurrent = GetRootItem();
-	else hCurrent = theItem;
+	int nImage = 0, nSelectedImage = 0;
+	HTREEITEM hCurrent = firstItem ? GetRootItem() : theItem;
 
 	while (hCurrent != NULL)
 	{
@@ -602,7 +588,7 @@ void CStatisticsTree::ExportHTML()
 	if (saveAsDlg.DoModal() == IDOK)
 	{
 		theApp.emuledlg->statisticswnd->ShowStatistics(true);// force update
-		CString		strHTML;
+		CString strHTML;
 
 		strHTML.Format( CString("<html>\r\n<header>\r\n<title>eMule %s [%s]</title>\r\n"
 			"<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">"
@@ -766,8 +752,9 @@ int CStatisticsTree::ApplyExpandedMask(const CString& theMask, HTREEITEM theItem
 	while (hCurrent != NULL && theStringIndex < theMask.GetLength())
 	{
 		if (ItemHasChildren(hCurrent) && IsBold(hCurrent)) {
-			if (theMask.GetAt(theStringIndex) == '0') Expand(hCurrent, TVE_COLLAPSE);
-			theStringIndex++;
+			if (theMask[theStringIndex] == _T('0'))
+				Expand(hCurrent, TVE_COLLAPSE);
+			++theStringIndex;
 			theStringIndex = ApplyExpandedMask(theMask, GetChildItem(hCurrent), theStringIndex);
 		}
 		hCurrent = GetNextItem(hCurrent, TVGN_NEXT);

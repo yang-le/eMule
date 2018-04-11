@@ -24,12 +24,11 @@ class CCollectionViewDialog : public CResizableDialog
 {
 	DECLARE_DYNAMIC(CCollectionViewDialog)
 
+	enum { IDD = IDD_COLLECTIONVIEWDIALOG };
+
 public:
 	explicit CCollectionViewDialog(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CCollectionViewDialog();
-
-	// Dialog Data
-	enum { IDD = IDD_COLLECTIONVIEWDIALOG };
 
 	void SetCollection(CCollection* pCollection);
 

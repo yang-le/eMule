@@ -28,7 +28,8 @@ class Packet;
 
 #define PACKET_HEADER_SIZE	6
 
-struct StandardPacketQueueEntry {
+struct StandardPacketQueueEntry
+{
 	uint32 actualPayloadSize;
 	Packet* packet;
 };
@@ -40,7 +41,7 @@ public:
 	CEMSocket();
 	virtual ~CEMSocket();
 
-	virtual void 	SendPacket(Packet* packet, bool delpacket = true, bool controlpacket = true, uint32 actualPayloadSize = 0, bool bForceImmediateSend = false);
+	virtual void SendPacket(Packet* packet, bool delpacket = true, bool controlpacket = true, uint32 actualPayloadSize = 0, bool bForceImmediateSend = false);
 	bool	IsConnected() const { return byConnected == ES_CONNECTED; }
 	uint8	GetConState() const { return byConnected; }
 	virtual bool IsRawDataMode() const { return false; }
@@ -57,8 +58,8 @@ public:
 	virtual UINT GetTimeOut() const;
 	virtual void SetTimeOut(UINT uTimeOut);
 
-	virtual BOOL Connect(LPCSTR lpszHostAddress, UINT nHostPort);
-	virtual BOOL Connect(SOCKADDR* pSockAddr, int iSockAddrLen);
+	virtual bool Connect(const CString& sHostAddress, UINT nHostPort);
+	virtual BOOL Connect(const LPSOCKADDR pSockAddr, int iSockAddrLen);
 
 	void InitProxySupport();
 	virtual void RemoveAllLayers();
@@ -104,8 +105,8 @@ private:
 	SocketSentBytes SendStd(uint32 maxNumberOfBytesToSend, uint32 minFragSize, bool onlyAllowedToSendControlPacket);
 	SocketSentBytes SendOv(uint32 maxNumberOfBytesToSend, uint32 minFragSize, bool onlyAllowedToSendControlPacket);
 	void	ClearQueues();
+	void	CleanUpOverlappedSendOperation();
 	virtual int Receive(void* lpBuf, int nBufLen, int nFlags = 0);
-	void	CleanUpOverlappedSendOperation(bool bCancelRequestFirst);
 
 	static uint32 GetNextFragSize(uint32 current, uint32 minFragSize);
 	bool    HasSent() const { return m_hasSent; }
@@ -117,7 +118,7 @@ private:
 
 	// Download partial header
 	char	pendingHeader[PACKET_HEADER_SIZE];	// actually, this holds only 'PACKET_HEADER_SIZE-1' bytes.
-	uint32	pendingHeaderSize;
+	size_t	pendingHeaderSize;
 
 	// Download partial packet
 	Packet* pendingPacket;
@@ -132,20 +133,21 @@ private:
 
 	CTypedPtrList<CPtrList, Packet*> controlpacket_queue;
 	CList<StandardPacketQueueEntry> standardpacket_queue;
-	bool m_currentPacket_is_controlpacket;
 	CCriticalSection sendLocker;
-	uint64 m_numberOfSentBytesCompleteFile;
-	uint64 m_numberOfSentBytesPartFile;
-	uint64 m_numberOfSentBytesControlPacket;
-	bool m_currentPackageIsFromPartFile;
-	bool m_bAccelerateUpload;
-	DWORD lastCalledSend;
-	DWORD lastSent;
-	uint32 lastFinishedStandard;
-	uint32 m_actualPayloadSize;			// Payloadsize of the data currently in sendbuffer
-	uint32 m_actualPayloadSizeSent;
-	bool m_bBusy;
-	bool m_hasSent;
-	bool m_bUsesBigSendBuffers;
-	bool m_bOverlappedSending;
+	uint64	m_numberOfSentBytesCompleteFile;
+	uint64	m_numberOfSentBytesPartFile;
+	uint64	m_numberOfSentBytesControlPacket;
+	LONG	m_OverlappedCleaning;
+	DWORD	lastCalledSend;
+	DWORD	lastSent;
+	uint32	lastFinishedStandard;
+	uint32	m_actualPayloadSize;			// Payloadsize of the data currently in sendbuffer
+	uint32	m_actualPayloadSizeSent;
+	bool	m_currentPacket_is_controlpacket;
+	bool	m_currentPackageIsFromPartFile;
+	bool	m_bAccelerateUpload;
+	bool	m_bBusy;
+	bool	m_hasSent;
+	bool	m_bUsesBigSendBuffers;
+	bool	m_bOverlappedSending;
 };

@@ -50,11 +50,13 @@ private:
 class CPartFileConvertDlg : public CResizableDialog
 {
 	DECLARE_DYNAMIC(CPartFileConvertDlg)
+
+	enum { IDD = IDD_CONVERTPARTFILES };
+
 public:
 	explicit CPartFileConvertDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CPartFileConvertDlg();
 
-	enum { IDD = IDD_CONVERTPARTFILES };
 	CWnd* m_pParent;
 
 	void AddJob(ConvertJob* job);

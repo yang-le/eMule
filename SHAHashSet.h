@@ -90,7 +90,6 @@ class CUpDownClient;
 class CAICHHash
 {
 public:
-
 	~CAICHHash()									{}
 	CAICHHash()	: m_abyBuffer()						{}
 	explicit CAICHHash(CFileDataIO* file)			{ Read(file); }
@@ -106,13 +105,13 @@ public:
 	CString		GetString() const;
 	uchar*		GetRawHash()						{ return m_abyBuffer; }
 	const uchar* GetRawHashC() const				{ return m_abyBuffer; }
-
 	static unsigned	GetHashSize()					{ return HASHSIZE; }
 private:
 	uchar m_abyBuffer[HASHSIZE];
 };
 
-template<> inline UINT AFXAPI HashKey(const CAICHHash& key){
+template<> inline UINT AFXAPI HashKey(const CAICHHash& key)
+{
    uint32 hash = 1;
    for (unsigned i = 0; i < HASHSIZE; ++i)
 	   hash += (key.GetRawHashC()[i]+1)*((i*i)+1);
@@ -176,7 +175,7 @@ private:
 ///CAICHUntrustedHashs
 class CAICHUntrustedHash {
 public:
-	CAICHUntrustedHash() : m_adwIpsSigning(), m_Hash()	{}
+	CAICHUntrustedHash() : m_Hash(), m_adwIpsSigning()	{}
 	CAICHUntrustedHash(const CAICHUntrustedHash& k1)	{ *this = k1; }
 	CAICHUntrustedHash&	operator=(const CAICHUntrustedHash& k1)		{ m_adwIpsSigning.Copy(k1.m_adwIpsSigning); m_Hash = k1.m_Hash; return *this; }
 	bool	AddSigningIP(uint32 dwIP, bool bTestOnly);
@@ -235,7 +234,7 @@ public:
 	static void		RemoveClientAICHRequest(const CUpDownClient* pClient);
 	static bool		IsClientRequestPending(const CPartFile* pForFile, uint16 nPart);
 	static CAICHRequestedData GetAICHReqDetails(const  CUpDownClient* pClient);
-	static void		AddStoredAICHHash(CAICHHash Hash, ULONGLONG nFilePos);
+	static ULONGLONG	AddStoredAICHHash(CAICHHash Hash, ULONGLONG nFilePos);
 	void			DbgTest();
 
 	CAICHHashTree	m_pHashTree;

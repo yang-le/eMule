@@ -22,7 +22,7 @@ typedef CTypedPtrList<CPtrList, CUpDownClient*> CUpDownClientPtrList;
 
 struct UploadingToClient_Struct
 {
-	UploadingToClient_Struct()							{ m_bIOError = false; m_bDisableCompression = false; m_pClient = NULL; }
+	UploadingToClient_Struct()							{m_bIOError = false; m_bDisableCompression = false; m_pClient = NULL;}
 	~UploadingToClient_Struct();
 	CUpDownClient*										m_pClient;
 	CTypedPtrList<CPtrList, Requested_Block_Struct*>	m_BlockRequests_queue;
@@ -54,24 +54,24 @@ public:
 	uint32  GetToNetworkDatarate() const;
 
 	bool	CheckForTimeOver(const CUpDownClient* client);
-	INT_PTR	GetWaitingUserCount() const				{return waitinglist.GetCount();}
-	INT_PTR	GetUploadQueueLength() const			{return uploadinglist.GetCount();}
-	uint32	GetActiveUploadsCount()	const			{return m_MaxActiveClientsShortTime;}
+	INT_PTR	GetWaitingUserCount() const					{return waitinglist.GetCount();}
+	INT_PTR	GetUploadQueueLength() const				{return uploadinglist.GetCount();}
+	INT_PTR	GetActiveUploadsCount()	const				{return m_MaxActiveClientsShortTime;}
 	uint32	GetWaitingUserForFileCount(const CSimpleArray<CObject*>& raFiles, bool bOnlyIfChanged);
 	uint32	GetDatarateForFile(const CSimpleArray<CObject*>& raFiles) const;
 	uint32	GetTargetClientDataRate(bool bMinDatarate) const;
 
-	POSITION GetFirstFromUploadList()				{return uploadinglist.GetHeadPosition();}
-	CUpDownClient* GetNextFromUploadList(POSITION &curpos)	{return ((UploadingToClient_Struct*)uploadinglist.GetNext(curpos))->m_pClient;}
-	CUpDownClient* GetQueueClientAt(POSITION &curpos)	{return ((UploadingToClient_Struct*)uploadinglist.GetAt(curpos))->m_pClient;}
+	POSITION GetFirstFromUploadList() const				{return uploadinglist.GetHeadPosition();}
+	CUpDownClient* GetNextFromUploadList(POSITION &curpos) const {return static_cast<UploadingToClient_Struct *>(uploadinglist.GetNext(curpos))->m_pClient;}
+	CUpDownClient* GetQueueClientAt(POSITION &curpos) const {return static_cast<UploadingToClient_Struct *>(uploadinglist.GetAt(curpos))->m_pClient;}
 
-	POSITION GetFirstFromWaitingList()				{return waitinglist.GetHeadPosition();}
-	CUpDownClient* GetNextFromWaitingList(POSITION &curpos)	{return waitinglist.GetNext(curpos);}
-	CUpDownClient* GetWaitClientAt(POSITION &curpos)	{return waitinglist.GetAt(curpos);}
+	POSITION GetFirstFromWaitingList() const			{return waitinglist.GetHeadPosition();}
+	CUpDownClient* GetNextFromWaitingList(POSITION &curpos) const {return waitinglist.GetNext(curpos);}
+	CUpDownClient* GetWaitClientAt(POSITION &curpos) const {return waitinglist.GetAt(curpos);}
 
 	CUpDownClient*	GetWaitingClientByIP_UDP(uint32 dwIP, uint16 nUDPPort, bool bIgnorePortOnUniqueIP, bool* pbMultipleIPs = NULL);
-	CUpDownClient*	GetWaitingClientByIP(uint32 dwIP);
-	CUpDownClient*	GetNextClient(const CUpDownClient* lastclient);
+	CUpDownClient*	GetWaitingClientByIP(uint32 dwIP) const;
+	CUpDownClient*	GetNextClient(const CUpDownClient* lastclient) const;
 
 	UploadingToClient_Struct* GetUploadingClientStructByClient(const CUpDownClient* pClient) const;
 
@@ -81,8 +81,8 @@ public:
 	void	DeleteAll();
 	UINT	GetWaitingPosition(CUpDownClient* client);
 
-	uint32	GetSuccessfullUpCount() const			{return successfullupcount;}
-	uint32	GetFailedUpCount() const				{return failedupcount;}
+	uint32	GetSuccessfullUpCount() const				{return successfullupcount;}
+	uint32	GetFailedUpCount() const					{return failedupcount;}
 	uint32	GetAverageUpTime() const;
 
 	CUpDownClient* FindBestClientInQueue();
@@ -97,11 +97,11 @@ protected:
 	bool		ForceNewClient(bool allowEmptyWaitingQueue = false);
 	bool		AddUpNextClient(LPCTSTR pszReason, CUpDownClient* directadd = 0);
 
-	static VOID CALLBACK UploadTimer(HWND hWnd, UINT nMsg, UINT_PTR nId, DWORD dwTime);
+	static VOID CALLBACK UploadTimer(HWND hWnd, UINT nMsg, UINT_PTR nId, DWORD dwTime) noexcept;
 
 private:
 	void	UpdateMaxClientScore();
-	uint32	GetMaxClientScore() const				{return m_imaxscore;}
+	uint32	GetMaxClientScore() const					{return m_imaxscore;}
 	void	UpdateActiveClientsInfo(DWORD curTick);
 
 	void InsertInUploadingList(CUpDownClient* newclient, bool bNoLocking = false);
@@ -137,15 +137,15 @@ private:
 
 	uint32	m_imaxscore;
 
-	DWORD   m_dwLastCalculatedAverageCombinedFilePrioAndCredit;
-	float   m_fAverageCombinedFilePrioAndCredit;
-	INT_PTR m_iHighestNumberOfFullyActivatedSlotsSinceLastCall;
-	uint32  m_MaxActiveClients;
-	uint32  m_MaxActiveClientsShortTime;
+	DWORD	m_dwLastCalculatedAverageCombinedFilePrioAndCredit;
+	float	m_fAverageCombinedFilePrioAndCredit;
+	INT_PTR	m_iHighestNumberOfFullyActivatedSlotsSinceLastCall;
+	INT_PTR	m_MaxActiveClients;
+	INT_PTR	m_MaxActiveClientsShortTime;
 
-	DWORD   m_lastCalculatedDataRateTick;
-	uint64  m_average_dr_sum;
+	DWORD	m_lastCalculatedDataRateTick;
+	uint64	m_average_dr_sum;
 
-	DWORD   m_dwLastResortedUploadSlots;
+	DWORD	m_dwLastResortedUploadSlots;
 	bool	m_bStatisticsWaitingListDirty;
 };

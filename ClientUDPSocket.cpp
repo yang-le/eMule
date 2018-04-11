@@ -52,7 +52,7 @@ static char THIS_FILE[] = __FILE__;
 CClientUDPSocket::CClientUDPSocket()
 {
 	m_bWouldBlock = false;
-	m_port=0;
+	m_port = 0;
 }
 
 CClientUDPSocket::~CClientUDPSocket()
@@ -76,7 +76,7 @@ void CClientUDPSocket::OnReceive(int nErrorCode)
 	BYTE buffer[8192]; //5000 could be too low
 	SOCKADDR_IN sockAddr = {};
 	int iSockAddrLen = sizeof sockAddr;
-	int nRealLen = ReceiveFrom(buffer, sizeof buffer, (SOCKADDR*)&sockAddr, &iSockAddrLen);
+	int nRealLen = ReceiveFrom(buffer, sizeof buffer, (LPSOCKADDR)&sockAddr, &iSockAddrLen);
 	if (!(theApp.ipfilter->IsFiltered(sockAddr.sin_addr.S_un.S_addr) || theApp.clientlist->IsBannedClient(sockAddr.sin_addr.S_un.S_addr)))
 	{
 		BYTE* pBuffer;
@@ -185,13 +185,13 @@ void CClientUDPSocket::OnReceive(int nErrorCode)
 				error->Delete();
 				strError = _T("General packet error");
 			}
-	#ifndef _DEBUG
+#ifndef _DEBUG
 			catch(...)
 			{
 				strError = _T("Unknown exception");
 				ASSERT(0);
 			}
-	#endif
+#endif
 			if (thePrefs.GetVerbose() && !strError.IsEmpty())
 			{
 				CString strClientInfo;
@@ -503,7 +503,7 @@ SocketSentBytes CClientUDPSocket::SendControlData(uint32 maxNumberOfBytesToSend,
 
 	while (!controlpacket_queue.IsEmpty() && !IsBusy() && sentBytes < maxNumberOfBytesToSend) { // ZZ:UploadBandWithThrottler (UDP)
 		UDPPack* cur_packet = controlpacket_queue.RemoveHead();
-		if (GetTickCount() - cur_packet->dwTime < UDPMAXQUEUETIME) {
+		if (::GetTickCount() < cur_packet->dwTime + UDPMAXQUEUETIME) {
 			uint32 nLen = cur_packet->packet->size + 2;
 			int cLen = cur_packet->bEncrypt && (theApp.GetPublicIP() > 0 || cur_packet->bKad)
 				? EncryptOverheadSize(cur_packet->bKad) : 0;
@@ -534,7 +534,7 @@ SocketSentBytes CClientUDPSocket::SendControlData(uint32 maxNumberOfBytesToSend,
 
 	sendLocker.Unlock();
 
-	return SocketSentBytes{ true, 0, sentBytes };
+	return SocketSentBytes{true, 0, sentBytes};
 // <-- ZZ:UploadBandWithThrottler (UDP)
 }
 
@@ -559,7 +559,7 @@ bool CClientUDPSocket::SendPacket(Packet* packet, uint32 dwIP, uint16 nPort, boo
 	newpending->dwIP = dwIP;
 	newpending->nPort = nPort;
 	newpending->packet = packet;
-	newpending->dwTime = GetTickCount();
+	newpending->dwTime = ::GetTickCount();
 	newpending->bEncrypt = bEncrypt && (pachTargetClientHashORKadID != NULL || (bKad && nReceiverVerifyKey != 0));
 	newpending->bKad = bKad;
 	newpending->nReceiverVerifyKey = nReceiverVerifyKey;
@@ -585,26 +585,18 @@ bool CClientUDPSocket::SendPacket(Packet* packet, uint32 dwIP, uint16 nPort, boo
 
 bool CClientUDPSocket::Create()
 {
-	bool ret = true;
-
-	if (thePrefs.GetUDPPort())
-	{
-		ret = CAsyncSocket::Create(thePrefs.GetUDPPort(), SOCK_DGRAM, FD_READ | FD_WRITE, thePrefs.GetBindAddrW()) != FALSE;
-		if (ret)
-		{
-			m_port = thePrefs.GetUDPPort();
-			// the default socket size seems to be not enough for this UDP socket
-			// because we tend to drop packets if several flow in at the same time
-			int val = 64 * 1024;
-			if (!SetSockOpt(SO_RCVBUF, &val, sizeof(val)))
-				DebugLogError(_T("Failed to increase socket size on UDP socket"));
-		}
-	}
-
-	if (ret)
+	if (thePrefs.GetUDPPort()) {
+		if (!CAsyncSocket::Create(thePrefs.GetUDPPort(), SOCK_DGRAM, FD_READ | FD_WRITE, thePrefs.GetBindAddrW()))
+			return false;
 		m_port = thePrefs.GetUDPPort();
-
-	return ret;
+		// the default socket size seems to be not enough for this UDP socket
+		// because we tend to drop packets if several flow in at the same time
+		int val = 64 * 1024;
+		if (!SetSockOpt(SO_RCVBUF, &val, sizeof val))
+			DebugLogError(_T("Failed to increase socket size on UDP socket"));
+	} else
+		m_port = 0;
+	return true;
 }
 
 bool CClientUDPSocket::Rebind()

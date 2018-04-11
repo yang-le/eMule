@@ -7,6 +7,8 @@
 
 class CCreditsDlg : public CDialog
 {
+	enum { IDD = IDD_ABOUTBOX };
+
 // Construction
 public:
 	void KillThread();
@@ -19,17 +21,10 @@ public:
 
 	CGDIThread* m_pThread;
 
-// Dialog Data
-	//{{AFX_DATA(CCreditsDlg)
-	enum { IDD = IDD_ABOUTBOX };
-		// NOTE: the ClassWizard will add data members here
-	//}}AFX_DATA
-
-
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CCreditsDlg)
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
 

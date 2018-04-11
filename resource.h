@@ -1542,6 +1542,16 @@
 #define IDS_DONOTASKAGAIN               1588
 #define IDS_POPULARITY                  1589
 #define IDS_SHOWWIN7TASKBARGOODIES      1590
+#define IDS_WEB_HTTPS                   1591
+#define IDS_CERTIFICATE                 1592
+#define IDS_CERT_NOT_FOUND              1593
+#define IDS_KEY_NOT_FOUND               1594
+#define IDS_IRC_IGNOREPINGPONGMESSAGE   1596
+#define IDS_IRC_ENABLEUTF8              1597
+#define IDS_ITALIC                      1598
+#define IDS_IRC_BAN                     1599
+#define IDS_ED2KSERVER                  1600
+#define IDS_CONTENTDB                   1601
 #define IDC_ANIMATE1                    2000
 #define IDC_STATUS                      2001
 #define IDC_FILESTATUS                  2002
@@ -2232,7 +2242,7 @@
 #define IDC_LD_HTMLCHE                  2905
 #define IDC_LD_HASHSETCHE               2906
 #define IDC_LD_EMULEHASHCHE             2907
-#define IDC_LD_HOSTNAMECHE              2909
+#define IDC_LD_HOSTNAMECHE              2908
 #define IDC_SOURCE_TYPE                 2909
 #define IDC_UIP                         2910
 #define IDC_REGEXPR                     2912
@@ -2316,7 +2326,6 @@
 #define IDC_SHAREDFILES_FILTER          2994
 #define IDC_EDITCOMMENTFILTER           2995
 #define IDC_WIZZARDOBFUSCATION          2996
-#define IDC_SPIN1                       2997
 #define IDC_TOOLTIPDELAY_SPIN           2997
 #define IDC_CHECK_FILE_OPEN             2998
 #define IDC_DTOOLBAR                    2999
@@ -2330,10 +2339,19 @@
 #define IDC_FS_ONQUEUE_VAL              3007
 #define IDC_FS_UPLOADING_LBL            3008
 #define IDC_FS_UPLOADING_VAL            3009
-#define IDC_FS_POPLULARITY2_LBL         3010
 #define IDC_FS_POPULARITY2_LBL          3010
 #define IDC_FS_POPULARITY2_VAL          3011
 #define IDC_OPENPREFINI                 3012
+#define IDC_WEB_HTTPS                   3013
+#define IDC_WEB_CERT                    3014
+#define IDC_CERTPATH                    3015
+#define IDC_CERTBROWSE                  3016
+#define IDC_WEB_KEY                     3017
+#define IDC_KEYPATH                     3018
+#define IDC_KEYBROWSE                   3019
+#define IDC_ITALIC                      3020
+
+
 #define IDA_ENTER                       32771
 
 // Next default values for new objects

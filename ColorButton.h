@@ -5,7 +5,7 @@
 // DESCRIPTION: This class is alarmingly similar to the CColourPicker control
 //	created by Chris Maunder of www.codeproject.com. It is so as it was blatantly
 //	copied from that class and is entirely dependant on his other great work
-//  in CColourPopup. I was hoping for (cough.. gag..) a more Microsoft look
+//  in CColourPopup. I was hoping for (cough... gag...) a more Microsoft look
 //  and I think this is pretty close. Hope you like it.
 //
 // ORIGINAL: http://www.codeproject.com/miscctrl/colour_picker.asp

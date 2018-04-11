@@ -45,8 +45,8 @@ public:
 
 	CString		m_strFullPath;
 	HTREEITEM	m_htItem;
-	int			m_nCatFilter;
 	CList<CDirectoryItem*, CDirectoryItem*> liSubDirectories;
+	int			m_nCatFilter;
 	ESpecialDirectoryItems m_eItemType;
 };
 

@@ -24,8 +24,6 @@
 #include "ED2kLinkDlg.h"
 #include "ArchivePreviewDlg.h"
 
-class CSearchFile;
-
 class CFileDetailDialog : public CListViewWalkerPropertySheet
 {
 	DECLARE_DYNAMIC(CFileDetailDialog)

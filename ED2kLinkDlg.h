@@ -27,20 +27,19 @@ class CED2kLinkDlg : public CResizablePage
 { 
 	DECLARE_DYNAMIC(CED2kLinkDlg) 
 
-public: 
+	enum { IDD = IDD_ED2KLINK };
+
+public:
 	CED2kLinkDlg(); 
 	virtual ~CED2kLinkDlg(); 
 
 	void SetFiles(const CSimpleArray<CObject*>* paFiles) { m_paFiles = paFiles; m_bDataChanged = true; }
 	void SetReducedDialog()								 { m_bReducedDlg = true; }
 
-// Dialog Data 
-	enum { IDD = IDD_ED2KLINK }; 
-
 protected: 
 	CEdit m_ctrlLinkEdit;
 	CString m_strCaption;
-	const CSimpleArray<CObject*>* m_paFiles;
+	const CSimpleArray<CObject *> *m_paFiles;
 	bool m_bDataChanged;
 	bool m_bReducedDlg;
 

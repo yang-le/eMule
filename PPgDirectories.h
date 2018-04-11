@@ -5,12 +5,11 @@ class CPPgDirectories : public CPropertyPage
 {
 	DECLARE_DYNAMIC(CPPgDirectories)
 
+	enum { IDD = IDD_PPG_DIRECTORIES };
+
 public:
 	CPPgDirectories();									// standard constructor
 	virtual ~CPPgDirectories();
-
-// Dialog Data
-	enum { IDD = IDD_PPG_DIRECTORIES };
 
 	void Localize();
 

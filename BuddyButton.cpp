@@ -69,7 +69,7 @@ static LRESULT CALLBACK BuddyButtonSubClassedProc(HWND hWnd, UINT uMessage, WPAR
 			CRect rc;
 			GetClientRect(hWnd, rc);
 			rc.left = rc.right;
-			rc.right = rc.left + pBuddyData->m_uButtonWidth;
+			rc.right += pBuddyData->m_uButtonWidth;
 			MapWindowPoints(hWnd, GetParent(hWnd), (LPPOINT)&rc, 2);
 			SetWindowPos(pBuddyData->m_hwndButton, NULL, rc.left, rc.top, rc.Width(), rc.Height(), SWP_NOZORDER);
 			break;

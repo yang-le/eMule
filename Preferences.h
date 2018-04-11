@@ -24,13 +24,15 @@ enum EViewSharedFilesAccess{
 	vsfaNobody = 2
 };
 
-enum ENotifierSoundType{
+enum ENotifierSoundType
+{
 	ntfstNoSound = 0,
 	ntfstSoundFile = 1,
 	ntfstSpeech = 2
 };
 
-enum EDefaultDirectory{
+enum EDefaultDirectory
+{
 	EMULE_CONFIGDIR = 0,
 	EMULE_TEMPDIR = 1,
 	EMULE_INCOMINGDIR = 2,
@@ -47,12 +49,13 @@ enum EDefaultDirectory{
 };
 
 
-enum EToolbarLabelType: int;
-enum ELogFileFormat: int;
+enum EToolbarLabelType : uint8;
+enum ELogFileFormat : uint8;
 
 // DO NOT EDIT VALUES like making a uint16 to uint32, or insert any value. ONLY append new vars
 #pragma pack(1)
-struct Preferences_Ext_Struct{
+struct Preferences_Ext_Struct
+{
 	uint8	version;
 	uchar	userhash[16];
 	WINDOWPLACEMENT EmuleWindowPlacement;
@@ -60,7 +63,8 @@ struct Preferences_Ext_Struct{
 #pragma pack()
 
 // deadlake PROXYSUPPORT
-struct ProxySettings{
+struct ProxySettings
+{
 	CStringA	name;
 	CStringA	user;
 	CStringA	password;
@@ -70,7 +74,8 @@ struct ProxySettings{
 	bool		UseProxy;
 };
 
-struct Category_Struct{
+struct Category_Struct
+{
 	CString	strIncomingPath;
 	CString	strTitle;
 	CString	strComment;
@@ -356,12 +361,14 @@ public:
 	static	bool	m_bIRCIgnoreJoinMessages;
 	static	bool	m_bIRCIgnorePartMessages;
 	static	bool	m_bIRCIgnoreQuitMessages;
+	static	bool	m_bIRCIgnorePingPongMessages;
 	static	bool	m_bIRCIgnoreEmuleAddFriendMsgs;
 	static	bool	m_bIRCAllowEmuleAddFriend;
 	static	bool	m_bIRCIgnoreEmuleSendLinkMsgs;
 	static	bool	m_bIRCJoinHelpChannel;
 	static	bool	m_bIRCEnableSmileys;
 	static	bool	m_bMessageEnableSmileys;
+	static	bool	m_bIRCEnableUTF8;
 
 	static	bool	m_bRemove2bin;
 	static	bool	m_bShowCopyEd2kLinkCmd;
@@ -390,7 +397,7 @@ public:
 	static	bool	m_bLogSecureIdent;
 	static	bool	m_bLogFilteredIPs;
 	static	bool	m_bLogFileSaving;
-    static  bool    m_bLogA4AF; // ZZ:DownloadManager
+	static  bool	m_bLogA4AF; // ZZ:DownloadManager
 	static	bool	m_bLogUlDlEvents;
 	static	bool	m_bUseDebugDevice;
 	static	int		m_iDebugServerTCPLevel;
@@ -447,10 +454,10 @@ public:
 	static	UINT	m_iFileBufferSize;
 	static	INT_PTR	m_iQueueSize;
 	static	int		m_iCommitFiles;
-	static	UINT	m_uFileBufferTimeLimit;
+	static	DWORD	m_uFileBufferTimeLimit;
 
 	static	UINT	maxmsgsessions;
-	static	uint32	versioncheckLastAutomatic;
+	static	time_t	versioncheckLastAutomatic;
 	static	CString	messageFilter;
 	static	CString	commentFilter;
 	static	CString	filenameCleanups;
@@ -465,7 +472,7 @@ public:
 	static	int		m_iExtractMetaData;
 	static	bool	m_bAdjustNTFSDaylightFileTime;
 	static	bool	m_bRearrangeKadSearchKeywords;
-	static  bool    m_bAllocFull;
+	static  bool	m_bAllocFull;
 	static	bool	m_bShowSharedFilesDetails;
 	static  bool	m_bShowWin7TaskbarGoodies;
 	static  bool	m_bShowUpDownIconInTaskbar;
@@ -489,6 +496,9 @@ public:
 	static	ProxySettings proxy; // deadlake PROXYSUPPORT
 	static  bool	m_bAllowAdminHiLevFunc;
 	static	CUIntArray m_aAllowedRemoteAccessIPs;
+	static  bool	m_bWebUseHttps;
+	static	CString	m_sWebHttpsCertificate;
+	static	CString	m_sWebHttpsKey;
 
 	static	bool	showCatTabInfos;
 	static	bool	resumeSameCat;
@@ -499,7 +509,7 @@ public:
 	static	bool	m_bUseAutocompl;
 	static	bool	m_bShowDwlPercentage;
 	static	bool	m_bRemoveFinishedDownloads;
-	static	UINT	m_iMaxChatHistory;
+	static	INT_PTR	m_iMaxChatHistory;
 	static	bool	m_bShowActiveDownloadsBold;
 
 	static	int		m_iSearchMethod;
@@ -538,9 +548,9 @@ public:
 	static  bool	m_bDynUpUseMillisecondPingTolerance;
 	// ZZ:UploadSpeedSense <--
 
-    static bool     m_bA4AFSaveCpu; // ZZ:DownloadManager
+	static bool		m_bA4AFSaveCpu; // ZZ:DownloadManager
 
-    static bool     m_bHighresTimer;
+	static bool		m_bHighresTimer;
 
 	static	bool	m_bResolveSharedShellLinks;
 	static	CStringList shareddir_list;
@@ -555,7 +565,7 @@ public:
 	static  bool	m_bUseOldTimeRemaining;
 
 	// PeerCache
-	static	uint32	m_uPeerCacheLastSearch;
+	static	time_t	m_uPeerCacheLastSearch;
 	static	bool	m_bPeerCacheWasFound;
 	static	bool	m_bPeerCacheEnabled;
 	static	uint16	m_nPeerCachePort;
@@ -662,8 +672,14 @@ public:
 	static	void	SetUserNick(LPCTSTR pszNick);
 	static	int		GetMaxUserNickLength()				{return 50;}
 
-	static	LPCSTR	GetBindAddrA()						{return m_pszBindAddrA; }
-	static	LPCWSTR	GetBindAddrW()						{return m_pszBindAddrW; }
+	static	LPCSTR	GetBindAddrA()						{return m_pszBindAddrA;}
+	static	LPCWSTR	GetBindAddrW()						{return m_pszBindAddrW;}
+#ifdef UNICODE
+#define GetBindAddr  GetBindAddrW
+#else
+#define GetBindAddr  GetBindAddrA
+#endif // !UNICODE
+
 	static	uint16	GetPort()							{return port;}
 	static	uint16	GetUDPPort()						{return udpport;}
 	static	uint16	GetServerUDPPort()					{return nServerUDPPort;}
@@ -1022,6 +1038,7 @@ public:
 	static	bool	GetIRCIgnoreJoinMessages()			{return m_bIRCIgnoreJoinMessages;}
 	static	bool	GetIRCIgnorePartMessages()			{return m_bIRCIgnorePartMessages;}
 	static	bool	GetIRCIgnoreQuitMessages()			{return m_bIRCIgnoreQuitMessages;}
+	static	bool	GetIRCIgnorePingPongMessages()		{return m_bIRCIgnorePingPongMessages;}
 	static	bool	GetIRCIgnoreEmuleAddFriendMsgs()	{return m_bIRCIgnoreEmuleAddFriendMsgs;}
 	static	bool	GetIRCIgnoreEmuleSendLinkMsgs()		{return m_bIRCIgnoreEmuleSendLinkMsgs;}
 	static	bool	GetIRCAllowEmuleAddFriend()			{return m_bIRCAllowEmuleAddFriend;}
@@ -1029,6 +1046,7 @@ public:
 	static	bool	GetIRCAcceptLinksFriendsOnly()		{return m_bIRCAcceptLinksFriendsOnly;}
 	static	bool	GetIRCEnableSmileys()				{return m_bIRCEnableSmileys;}
 	static	bool	GetMessageEnableSmileys()			{return m_bMessageEnableSmileys;}
+	static	bool	GetIRCEnableUTF8()					{return m_bIRCEnableUTF8;}
 
 	static	WORD	GetWindowsVersion();
 	static  bool	IsRunningAeroGlassTheme();
@@ -1072,7 +1090,7 @@ public:
 	static	const CString& GetVideoPlayerArgs()			{return m_strVideoPlayerArgs;}
 
 	static	UINT	GetFileBufferSize()					{return m_iFileBufferSize;}
-	static	UINT	GetFileBufferTimeLimit()			{return m_uFileBufferTimeLimit;}
+	static	DWORD	GetFileBufferTimeLimit()			{return m_uFileBufferTimeLimit;}
 	static	INT_PTR	GetQueueSize()						{return m_iQueueSize;}
 	static	int		GetCommitFiles()					{return m_iCommitFiles;}
 	static	bool	GetShowCopyEd2kLinkCmd()			{return m_bShowCopyEd2kLinkCmd;}
@@ -1124,7 +1142,7 @@ public:
 	static	bool	GetResolveSharedShellLinks()		{return m_bResolveSharedShellLinks;}
 	static  bool	IsShowUpDownIconInTaskbar()			{return m_bShowUpDownIconInTaskbar;}
 	static  bool	IsWin7TaskbarGoodiesEnabled()		{return m_bShowWin7TaskbarGoodies;}
-	static  void    SetWin7TaskbarGoodiesEnabled(bool flag)	{m_bShowWin7TaskbarGoodies = flag;}
+	static  void	SetWin7TaskbarGoodiesEnabled(bool flag)	{m_bShowWin7TaskbarGoodies = flag;}
 
 	static	void	SetMaxUpload(UINT in);
 	static	void	SetMaxDownload(UINT in);
@@ -1134,7 +1152,7 @@ public:
 
 	static	bool	GetAutoConnectToStaticServersOnly() {return m_bAutoConnectToStaticServersOnly;}
 	static	UINT	GetUpdateDays()						{return versioncheckdays;}
-	static	uint32	GetLastVC()							{return versioncheckLastAutomatic;}
+	static	time_t	GetLastVC()							{return versioncheckLastAutomatic;}
 	static	void	UpdateLastVC();
 	static	int		GetIPFilterLevel()					{return filterlevel;}
 	static	const CString& GetMessageFilter()			{return messageFilter;}
@@ -1144,9 +1162,9 @@ public:
 
 	static	bool	ShowRatesOnTitle()					{return showRatesInTitle;}
 	static	void	LoadCats();
-	static	const CString& GetDateTimeFormat()			{return m_strDateTimeFormat;}
-	static	const CString& GetDateTimeFormat4Log()		{return m_strDateTimeFormat4Log;}
-	static	const CString& GetDateTimeFormat4Lists()	{return m_strDateTimeFormat4Lists;}
+	static	const	CString& GetDateTimeFormat()		{return m_strDateTimeFormat;}
+	static	const	CString& GetDateTimeFormat4Log()	{return m_strDateTimeFormat4Log;}
+	static	const	CString& GetDateTimeFormat4Lists()	{return m_strDateTimeFormat4Lists;}
 
 	// Download Categories (Ornis)
 	static	INT_PTR	AddCat(Category_Struct* cat)		{catMap.Add(cat); return catMap.GetCount()-1;}
@@ -1158,7 +1176,7 @@ public:
 	static	bool	GetCatFilterNeg(int index);
 	static	void	SetCatFilterNeg(int index, bool val);
 	static	Category_Struct* GetCategory(int index)		{if (index>=0 && index<catMap.GetCount()) return catMap[index]; else return NULL;}
-	static	const CString &GetCatPath(int index)		{return catMap[index]->strIncomingPath;}
+	static	const	CString &GetCatPath(int index)		{return catMap[index]->strIncomingPath;}
 	static	DWORD	GetCatColor(int index, int nDefault = COLOR_BTNTEXT);
 
 	static	bool	GetPreviewOnIconDblClk()			{return m_bPreviewOnIconDblClk;}
@@ -1177,8 +1195,8 @@ public:
 	// WebServer
 	static	uint16	GetWSPort()							{return m_nWebPort;}
 	static	bool	GetWSUseUPnP()						{return m_bWebUseUPnP && GetWSIsEnabled();}
-	static	void	SetWSPort(uint16 uPort)				{m_nWebPort=uPort;}
-	static	const CString& GetWSPass()					{return m_strWebPassword;}
+	static	void	SetWSPort(uint16 uPort)				{m_nWebPort = uPort;}
+	static	const	CString& GetWSPass()				{return m_strWebPassword;}
 	static	void	SetWSPass(const CString& strNewPass);
 	static	bool	GetWSIsEnabled()					{return m_bWebEnabled;}
 	static	void	SetWSIsEnabled(bool bEnable)		{m_bWebEnabled=bEnable;}
@@ -1187,19 +1205,25 @@ public:
 	static	int		GetWebPageRefresh()					{return m_nWebPageRefresh;}
 	static	void	SetWebPageRefresh(int nRefresh)		{m_nWebPageRefresh=nRefresh;}
 	static	bool	GetWSIsLowUserEnabled()				{return m_bWebLowEnabled;}
-	static	void	SetWSIsLowUserEnabled(bool in)		{m_bWebLowEnabled=in;}
-	static	const CString& GetWSLowPass()				{return m_strWebLowPassword;}
+	static	void	SetWSIsLowUserEnabled(bool in)		{m_bWebLowEnabled = in;}
+	static	const	CString& GetWSLowPass()				{return m_strWebLowPassword;}
 	static	int		GetWebTimeoutMins()					{return m_iWebTimeoutMins;}
 	static  bool	GetWebAdminAllowedHiLevFunc()		{return m_bAllowAdminHiLevFunc;}
 	static	void	SetWSLowPass(const CString& strNewPass);
-	static  const CUIntArray& GetAllowedRemoteAccessIPs(){return m_aAllowedRemoteAccessIPs;}
+	static  const	CUIntArray& GetAllowedRemoteAccessIPs()	{return m_aAllowedRemoteAccessIPs;}
 	static	uint32	GetMaxWebUploadFileSizeMB()			{return m_iWebFileUploadSizeLimitMB;}
+	static	bool	GetWebUseHttps()					{return m_bWebUseHttps;}
+	static	void	SetWebUseHttps(bool bUse)			{m_bWebUseHttps = bUse;}
+	static	const	CString& GetWebCertPath()			{return m_sWebHttpsCertificate;}
+	static	void	SetWebCertPath(const CString& path)	{m_sWebHttpsCertificate = path;};
+	static	const	CString& GetWebKeyPath()			{return m_sWebHttpsKey;}
+	static	void	SetWebKeyPath(const CString& path)	{m_sWebHttpsKey = path;};
 
-	static	void	SetMaxSourcesPerFile(UINT in)		{maxsourceperfile=in;}
-	static	void	SetMaxConnections(UINT in)			{maxconnections =in;}
-	static	void	SetMaxHalfConnections(UINT in)		{maxhalfconnections =in;}
+	static	void	SetMaxSourcesPerFile(UINT in)		{maxsourceperfile = in;}
+	static	void	SetMaxConnections(UINT in)			{maxconnections = in;}
+	static	void	SetMaxHalfConnections(UINT in)		{maxhalfconnections = in;}
 	static	bool	IsSchedulerEnabled()				{return scheduler;}
-	static	void	SetSchedulerEnabled(bool in)		{scheduler=in;}
+	static	void	SetSchedulerEnabled(bool in)		{scheduler = in;}
 	static	bool	GetDontCompressAvi()				{return dontcompressavi;}
 
 	static	bool	MsgOnlyFriends()					{return msgonlyfriends;}
@@ -1208,7 +1232,7 @@ public:
 	static	bool	IsSecureIdentEnabled()				{return m_bUseSecureIdent;} // use clientcredits->CryptoAvailable() to check if crypting is really available and not this function
 	static	bool	IsAdvSpamfilterEnabled()			{return m_bAdvancedSpamfilter;}
 	static	bool	IsChatCaptchaEnabled()				{return IsAdvSpamfilterEnabled() && m_bUseChatCaptchas;}
-	static	const CString& GetTemplate()				{return m_strTemplateFile;}
+	static	const	CString& GetTemplate()				{return m_strTemplateFile;}
 	static	void	SetTemplate(const CString& in)		{m_strTemplateFile = in;}
 	static	bool	GetNetworkKademlia()				{return networkkademlia && udpport > 0;}
 	static	void	SetNetworkKademlia(bool val);
@@ -1216,7 +1240,7 @@ public:
 	static	void	SetNetworkED2K(bool val)			{networked2k = val;}
 
 	// mobileMule
-	static	const CString& GetMMPass()					{return m_strMMPassword;}
+	static	const	CString& GetMMPass()				{return m_strMMPassword;}
 	static	void	SetMMPass(const CString& strNewPass);
 	static	bool	IsMMServerEnabled()					{return m_bMMEnabled;}
 	static	void	SetMMIsEnabled(bool bEnable)		{m_bMMEnabled=bEnable;}
@@ -1224,8 +1248,8 @@ public:
 	static	void	SetMMPort(uint16 uPort)				{m_nMMPort=uPort;}
 
 	// deadlake PROXYSUPPORT
-	static	const ProxySettings& GetProxySettings()		{return proxy;}
-	static	void	SetProxySettings(const ProxySettings& proxysettings) {proxy = proxysettings;}
+	static	const	ProxySettings& GetProxySettings()	{return proxy;}
+	static	void	SetProxySettings(const ProxySettings& proxysettings)	{proxy = proxysettings;}
 
 	static	bool	ShowCatTabInfos()					{return showCatTabInfos;}
 	static	void	ShowCatTabInfos(bool in)			{showCatTabInfos=in;}
@@ -1240,7 +1264,7 @@ public:
 	static	void	SetExtControls(bool in)				{m_bExtControls=in;}
 	static	bool	GetRemoveFinishedDownloads()		{return m_bRemoveFinishedDownloads;}
 
-	static	UINT	GetMaxChatHistoryLines()			{return m_iMaxChatHistory;}
+	static	INT_PTR	GetMaxChatHistoryLines()			{return m_iMaxChatHistory;}
 	static	bool	GetUseAutocompletion()				{return m_bUseAutocompl;}
 	static	bool	GetUseDwlPercentage()				{return m_bShowDwlPercentage;}
 	static	void	SetUseDwlPercentage(bool in)		{m_bShowDwlPercentage=in;}
@@ -1253,13 +1277,13 @@ public:
 	static	bool	GetExtraPreviewWithMenu()			{return m_bExtraPreviewWithMenu;}
 
 	//Toolbar
-	static	const CString& GetToolbarSettings()					{return m_sToolbarSettings;}
-	static	void	SetToolbarSettings(const CString& in)		{m_sToolbarSettings = in;}
-	static	const CString& GetToolbarBitmapSettings()			{return m_sToolbarBitmap;}
-	static	void	SetToolbarBitmapSettings(const CString& path){m_sToolbarBitmap = path;}
-	static	EToolbarLabelType GetToolbarLabelSettings()			{return m_nToolbarLabels;}
-	static	void	SetToolbarLabelSettings(EToolbarLabelType eLabelType) {m_nToolbarLabels = eLabelType;}
-	static	bool	GetReBarToolbar()							{return m_bReBarToolbar;}
+	static	const CString& GetToolbarSettings()			{return m_sToolbarSettings;}
+	static	void	SetToolbarSettings(const CString& in)	{m_sToolbarSettings = in;}
+	static	const CString& GetToolbarBitmapSettings()	{return m_sToolbarBitmap;}
+	static	void	SetToolbarBitmapSettings(const CString& path)	{m_sToolbarBitmap = path;}
+	static	EToolbarLabelType GetToolbarLabelSettings()	{return m_nToolbarLabels;}
+	static	void	SetToolbarLabelSettings(EToolbarLabelType eLabelType)	{m_nToolbarLabels = eLabelType;}
+	static	bool	GetReBarToolbar()					{return m_bReBarToolbar;}
 	static	bool	GetUseReBarToolbar();
 	static	CSize	GetToolbarIconSize()				{return m_sizToolbarIconSize;}
 	static	void	SetToolbarIconSize(CSize siz)		{m_sizToolbarIconSize = siz;}
@@ -1278,14 +1302,14 @@ public:
 	static	int		GetDynUpGoingUpDivider()			{return m_iDynUpGoingUpDivider;}
 	static	int		GetDynUpGoingDownDivider()			{return m_iDynUpGoingDownDivider;}
 	static	int		GetDynUpNumberOfPings()				{return m_iDynUpNumberOfPings;}
-    static  bool	IsDynUpUseMillisecondPingTolerance(){return m_bDynUpUseMillisecondPingTolerance;} // EastShare - Added by TAHO, USS limit
+	static  bool	IsDynUpUseMillisecondPingTolerance(){return m_bDynUpUseMillisecondPingTolerance;} // EastShare - Added by TAHO, USS limit
 	static  int		GetDynUpPingToleranceMilliseconds() {return m_iDynUpPingToleranceMilliseconds;} // EastShare - Added by TAHO, USS limit
 	static  void	SetDynUpPingToleranceMilliseconds(int in){m_iDynUpPingToleranceMilliseconds = in;}
 	// ZZ:UploadSpeedSense <--
 
-    static bool     GetA4AFSaveCpu()                    {return m_bA4AFSaveCpu;} // ZZ:DownloadManager
+	static bool		GetA4AFSaveCpu()					{return m_bA4AFSaveCpu;} // ZZ:DownloadManager
 
-    static bool     GetHighresTimer()                   {return m_bHighresTimer;}
+	static bool		GetHighresTimer()					{return m_bHighresTimer;}
 
 	static	CString	GetHomepageBaseURL()				{return GetHomepageBaseURLForLevel(GetWebMirrorAlertLevel());}
 	static	CString	GetVersionCheckBaseURL();
@@ -1300,9 +1324,9 @@ public:
 
 	// PeerCache
 	static	bool	IsPeerCacheDownloadEnabled()		{return (m_bPeerCacheEnabled && !IsClientCryptLayerRequested());}
-	static	uint32	GetPeerCacheLastSearch()			{return m_uPeerCacheLastSearch;}
+	static	time_t	GetPeerCacheLastSearch()			{return m_uPeerCacheLastSearch;}
 	static	bool	WasPeerCacheFound()					{return m_bPeerCacheWasFound;}
-	static	void	SetPeerCacheLastSearch(uint32 dwLastSearch) {m_uPeerCacheLastSearch = dwLastSearch;}
+	static	void	SetPeerCacheLastSearch(time_t dwLastSearch) {m_uPeerCacheLastSearch = dwLastSearch;}
 	static	void	SetPeerCacheWasFound(bool bFound)	{m_bPeerCacheWasFound = bFound;}
 	static	uint16	GetPeerCachePort()					{return m_nPeerCachePort;}
 	static	void	SetPeerCachePort(uint16 nPort)		{m_nPeerCachePort = nPort;}
@@ -1318,7 +1342,7 @@ public:
 	static	bool	GetLogSecureIdent()					{return m_bVerbose && m_bLogSecureIdent;}
 	static	bool	GetLogFilteredIPs()					{return m_bVerbose && m_bLogFilteredIPs;}
 	static	bool	GetLogFileSaving()					{return m_bVerbose && m_bLogFileSaving;}
-    static	bool	GetLogA4AF()    					{return m_bVerbose && m_bLogA4AF;} // ZZ:DownloadManager
+	static	bool	GetLogA4AF()						{return m_bVerbose && m_bLogA4AF;} // ZZ:DownloadManager
 	static	bool	GetLogUlDlEvents()					{return m_bVerbose && m_bLogUlDlEvents;}
 	static	bool	GetLogKadSecurityEvents()			{return m_bVerbose && true;}
 	static	bool	GetUseDebugDevice()					{return m_bUseDebugDevice;}

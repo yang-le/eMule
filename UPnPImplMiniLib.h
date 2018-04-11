@@ -39,11 +39,11 @@ public:
 	class CStartDiscoveryThread : public CWinThread
 	{
 		DECLARE_DYNCREATE(CStartDiscoveryThread)
-protected:
+	protected:
 		CStartDiscoveryThread();
 		bool OpenPort(uint16 nPort, bool bTCP, char *pachLANIP, bool bCheckAndRefresh);
 
-public:
+	public:
 		virtual BOOL InitInstance();
 		virtual int Run();
 		void SetValues(CUPnPImplMiniLib *pOwner)
@@ -51,7 +51,7 @@ public:
 			m_pOwner = pOwner;
 		}
 
-private:
+	private:
 		CUPnPImplMiniLib *m_pOwner;
 	};
 
@@ -59,10 +59,10 @@ protected:
 	void DeletePorts(bool bSkipLock);
 
 private:
+	void Cleanup();
+	void DeletePort(uint16 port, LPCTSTR prot);
+	void GetOldPorts();
 	void StartThread();
-	uint16 m_nOldUDPPort;
-	uint16 m_nOldTCPPort;
-	uint16 m_nOldTCPWebPort;
 	bool m_bSucceededOnce;
 	char m_achLanIP[16];
 

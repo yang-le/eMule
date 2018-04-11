@@ -38,7 +38,7 @@ static char THIS_FILE[] = __FILE__;
 // CDirectoryItem
 
 CDirectoryItem::CDirectoryItem(const CString& strFullPath, HTREEITEM htItem, ESpecialDirectoryItems eItemType, int nCatFilter)
-	: m_htItem(htItem), m_strFullPath(strFullPath), m_eItemType(eItemType), m_nCatFilter(nCatFilter)
+	: m_strFullPath(strFullPath), m_htItem(htItem), m_nCatFilter(nCatFilter), m_eItemType(eItemType)
 {
 }
 	
@@ -267,11 +267,11 @@ CString GetFolderLabel(const CString &strFolderPath, bool bTopFolder, bool bAcce
 			CString strParentFolder(strFolder);
 			PathRemoveFileSpec(strParentFolder.GetBuffer());
 			strParentFolder.ReleaseBuffer();
-			strLabel += _T("  (") + strParentFolder + _T(')');
+			strLabel.AppendFormat(_T("  (%s)"), (LPCTSTR)strParentFolder);
 		}
 	}
 	if (!bAccessible && bTopFolder)
-		strLabel += _T(" [") + GetResString(IDS_NOTCONNECTED) + _T(']');
+		strLabel.AppendFormat(_T(" [%s]"), (LPCTSTR)GetResString(IDS_NOTCONNECTED));
 
 	return strLabel;
 }
@@ -510,7 +510,7 @@ void CSharedDirsTreeCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 			bWideRangeSelection = false;
 		}
 
-		m_SharedFilesMenu.EnableMenuItem((UINT_PTR)m_PrioMenu.m_hMenu, iSelectedItems > 0 ? MF_ENABLED : MF_GRAYED);
+		m_SharedFilesMenu.EnableMenuItem((UINT)m_PrioMenu.m_hMenu, iSelectedItems > 0 ? MF_ENABLED : MF_GRAYED);
 		m_PrioMenu.CheckMenuRadioItem(MP_PRIOVERYLOW, MP_PRIOAUTO, uPrioMenuItem, 0);
 
 		m_SharedFilesMenu.EnableMenuItem(MP_OPENFOLDER, !pSelectedDir->m_strFullPath.IsEmpty() || pSelectedDir->m_eItemType == SDI_INCOMING || pSelectedDir->m_eItemType == SDI_TEMP || pSelectedDir->m_eItemType == SDI_CATINCOMING ? MF_ENABLED : MF_GRAYED);
@@ -553,47 +553,38 @@ BOOL CSharedDirsTreeCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 	CTypedPtrList<CPtrList, CShareableFile*> selectedList;
 	int iSelectedItems = m_pSharedFilesCtrl->GetItemCount();
 	for (int i = 0; i < iSelectedItems; i++)
-	{
-		selectedList.AddTail((CShareableFile*)m_pSharedFilesCtrl->GetItemData(i));
-	}
+		selectedList.AddTail(reinterpret_cast<CShareableFile *>(m_pSharedFilesCtrl->GetItemData(i)));
+
 	CDirectoryItem* pSelectedDir = GetSelectedFilter();
 
 	// folder based
-	if (pSelectedDir != NULL){
-		switch (wParam){
-			case MP_OPENFOLDER:
-				if (pSelectedDir && !pSelectedDir->m_strFullPath.IsEmpty() /*&& pSelectedDir->m_eItemType == SDI_NO*/){
-					ShellExecute(NULL, _T("open"), pSelectedDir->m_strFullPath, NULL, NULL, SW_SHOW);
-				}
-				else if (pSelectedDir && pSelectedDir->m_eItemType == SDI_INCOMING)
-					ShellExecute(NULL, _T("open"), thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR), NULL, NULL, SW_SHOW);
-				else if (pSelectedDir && pSelectedDir->m_eItemType == SDI_TEMP)
-					ShellExecute(NULL, _T("open"), thePrefs.GetTempDir(), NULL, NULL, SW_SHOW);
-				break;
-			case MP_SHAREDIR:
-				EditSharedDirectories(pSelectedDir, true, false);
-				break;
+	if (pSelectedDir != NULL) {
+		switch (wParam) {
+		case MP_OPENFOLDER:
+			if (!pSelectedDir->m_strFullPath.IsEmpty() /*&& pSelectedDir->m_eItemType == SDI_NO*/)
+				ShellExecute(NULL, _T("open"), pSelectedDir->m_strFullPath, NULL, NULL, SW_SHOW);
+			else if (pSelectedDir->m_eItemType == SDI_INCOMING)
+				ShellExecute(NULL, _T("open"), thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR), NULL, NULL, SW_SHOW);
+			else if (pSelectedDir->m_eItemType == SDI_TEMP)
+				ShellExecute(NULL, _T("open"), thePrefs.GetTempDir(), NULL, NULL, SW_SHOW);
+			break;
+		case MP_SHAREDIR:
+			EditSharedDirectories(pSelectedDir, true, false);
+		break;
 			case MP_SHAREDIRSUB:
-				EditSharedDirectories(pSelectedDir, true, true);
-				break;
+			EditSharedDirectories(pSelectedDir, true, true);
+		break;
 			case MP_UNSHAREDIR:
-				EditSharedDirectories(pSelectedDir, false, false);
-				break;
-			case MP_UNSHAREDIRSUB:
-				EditSharedDirectories(pSelectedDir, false, true);
+			EditSharedDirectories(pSelectedDir, false, false);
+		break;
+		case MP_UNSHAREDIRSUB:
+			EditSharedDirectories(pSelectedDir, false, true);
 		}
 	}
 
 	// file based
-	if (!selectedList.IsEmpty() && pSelectedDir != NULL)
+	if (iSelectedItems > 0 && pSelectedDir != NULL)
 	{
-		CKnownFile* pKnownFile = NULL;
-		if (selectedList.GetCount() == 1) {
-			CShareableFile *file = selectedList.GetHead();
-			if (file != NULL && file->IsKindOf(RUNTIME_CLASS(CKnownFile)))
-				pKnownFile = static_cast<CKnownFile *>(file);
-		}
-
 		switch (wParam){
 			case MP_GETED2KLINK:{
 				CString str;
@@ -626,7 +617,7 @@ BOOL CSharedDirsTreeCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 					bool delsucc = ShellDeleteFile(myfile->GetFilePath());
 					if (delsucc){
 						if (myfile->IsKindOf(RUNTIME_CLASS(CKnownFile)))
-							theApp.sharedfiles->RemoveFile((CKnownFile*)myfile, true);
+							theApp.sharedfiles->RemoveFile(static_cast<CKnownFile *>(myfile), true);
 						bRemovedItems = true;
 						if (myfile->IsKindOf(RUNTIME_CLASS(CPartFile)))
 							theApp.emuledlg->transferwnd->GetDownloadList()->ClearCompleted(static_cast<CPartFile*>(myfile));
@@ -876,7 +867,7 @@ void CSharedDirsTreeCtrl::FileSystemTreeAddSubdirectories(CDirectoryItem* pRoot)
 	finder.Close();
 }
 
-int	CSharedDirsTreeCtrl::AddSystemIcon(HICON hIcon, int nSystemListPos)
+int CSharedDirsTreeCtrl::AddSystemIcon(HICON hIcon, int nSystemListPos)
 {
 	int nPos = 0;
 	if (!m_mapSystemIcons.Lookup(nSystemListPos, nPos)) {
@@ -966,7 +957,7 @@ void CSharedDirsTreeCtrl::RemoveSharedDirectory(CString strDir, bool bSubDirecto
 		POSITION pos2 = pos1;
 		CString str = m_strliSharedDirs.GetNext(pos1);
 		str.MakeLower();
-		if (str.Compare(strDir) == 0 || bSubDirectories && str.Find(strDir) == 0)
+		if (str.Compare(strDir) == 0 || (bSubDirectories && str.Find(strDir) == 0))
 			m_strliSharedDirs.RemoveAt(pos2);
 	}
 }
@@ -1222,13 +1213,13 @@ void CSharedDirsTreeCtrl::OnLButtonUp(UINT nFlags, CPoint point)
 		ScreenToClient(&tvhti.pt);
 		HTREEITEM hItemSel = HitTest(&tvhti);
 		CDirectoryItem* pDragTarget;
-		if (hItemSel != NULL && (pDragTarget = (CDirectoryItem*)GetItemData(hItemSel)) != NULL) {
+		if (hItemSel != NULL && (pDragTarget = reinterpret_cast<CDirectoryItem *>(GetItemData(hItemSel))) != NULL) {
 			//only allow dragging to shared folders
 			if (pDragTarget->m_eItemType == SDI_DIRECTORY || pDragTarget->m_eItemType == SDI_NO) {
 				CDirectoryItem* pRealDragItem;
 				HTREEITEM htReal = m_pRootUnsharedDirectries->FindItem(m_pDraggingItem);
 				// get the original drag src
-				if (htReal != NULL && (pRealDragItem = (CDirectoryItem*)GetItemData(htReal)) != NULL) {
+				if (htReal != NULL && (pRealDragItem = reinterpret_cast<CDirectoryItem *>(GetItemData(htReal))) != NULL) {
 					EditSharedDirectories(pRealDragItem, true, false);
 				} else {
 					// item was deleted - no problem as when we dont need to update the visible part

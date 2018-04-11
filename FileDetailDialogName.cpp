@@ -97,7 +97,7 @@ BOOL CFileDetailDialogName::OnInitDialog()
 	Localize();
 
 	// start time for calling 'RefreshData'
-	VERIFY( (m_timer = SetTimer(301, 5000, 0)) != NULL );
+	VERIFY( (m_timer = SetTimer(301, SEC2MS(5), 0)) != NULL );
 
 	return TRUE;
 }
@@ -109,7 +109,7 @@ BOOL CFileDetailDialogName::OnSetActive()
 	if (m_bDataChanged)
 	{
 		m_bSelf = true;
-		GetDlgItem(IDC_FILENAME)->SetWindowText(STATIC_DOWNCAST(CPartFile, (*m_paFiles)[0])->GetFileName());
+		SetDlgItemText(IDC_FILENAME, static_cast<CPartFile *>((*m_paFiles)[0])->GetFileName());
 		m_bSelf = false;
 		RefreshData();
 		m_bDataChanged = false;
@@ -150,9 +150,9 @@ void CFileDetailDialogName::OnDestroy()
 
 void CFileDetailDialogName::Localize()
 {
-    GetDlgItem(IDC_TAKEOVER)->SetWindowText(GetResString(IDS_TAKEOVER));
-    GetDlgItem(IDC_BUTTONSTRIP)->SetWindowText(GetResString(IDS_CLEANUP));
-    GetDlgItem(IDC_FD_SN)->SetWindowText(GetResString(IDS_SOURCENAMES));
+    SetDlgItemText(IDC_TAKEOVER, GetResString(IDS_TAKEOVER));
+    SetDlgItemText(IDC_BUTTONSTRIP, GetResString(IDS_CLEANUP));
+    SetDlgItemText(IDC_FD_SN, GetResString(IDS_SOURCENAMES));
 }
 
 void CFileDetailDialogName::FillSourcenameList()
@@ -170,7 +170,7 @@ void CFileDetailDialogName::FillSourcenameList()
 	}
 
 	// update
-	const CPartFile* file = STATIC_DOWNCAST(CPartFile, (*m_paFiles)[0]);
+	const CPartFile* file = static_cast<CPartFile *>((*m_paFiles)[0]);
 	for (POSITION pos = file->srclist.GetHeadPosition(); pos != NULL; )
 	{
 		CUpDownClient* cur_src = file->srclist.GetNext(pos);
@@ -192,7 +192,7 @@ void CFileDetailDialogName::FillSourcenameList()
 				m_bAppliedSystemImageList = true;
 			}
 
-			int ix = m_listFileNames.InsertItem(LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE, m_listFileNames.GetItemCount() ,cur_src->GetClientFilename(), 0, 0, iSystemIconIdx, (LPARAM)newitem);
+			int ix = m_listFileNames.InsertItem(LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE, m_listFileNames.GetItemCount(),cur_src->GetClientFilename(), 0, 0, iSystemIconIdx, (LPARAM)newitem);
 			m_listFileNames.SetItemText(ix, 1, _T("1"));
 		}
 		else
@@ -223,7 +223,7 @@ void CFileDetailDialogName::TakeOver()
 {
 	int iSel = m_listFileNames.GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
 	if (iSel != -1)
-		GetDlgItem(IDC_FILENAME)->SetWindowText(m_listFileNames.GetItemText(iSel, 0));
+		SetDlgItemText(IDC_FILENAME, m_listFileNames.GetItemText(iSel, 0));
 }
 
 void CFileDetailDialogName::Copy()
@@ -236,8 +236,8 @@ void CFileDetailDialogName::Copy()
 void CFileDetailDialogName::OnBnClickedButtonStrip()
 {
 	CString filename;
-	GetDlgItem(IDC_FILENAME)->GetWindowText(filename);
-	GetDlgItem(IDC_FILENAME)->SetWindowText(CleanupFilename(filename));
+	GetDlgItemText(IDC_FILENAME, filename);
+	SetDlgItemText(IDC_FILENAME, CleanupFilename(filename));
 }
 
 void CFileDetailDialogName::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
@@ -342,20 +342,21 @@ void CFileDetailDialogName::RenameFile()
 	if (CanRenameFile())
 	{
 		CString strNewFileName;
-		GetDlgItem(IDC_FILENAME)->GetWindowText(strNewFileName);
+		GetDlgItemText(IDC_FILENAME, strNewFileName);
 		strNewFileName.Trim();
 		if (strNewFileName.IsEmpty() || !IsValidEd2kString(strNewFileName))
 			return;
-		CPartFile* file = STATIC_DOWNCAST(CPartFile, (*m_paFiles)[0]);
+		CPartFile* file = static_cast<CPartFile *>((*m_paFiles)[0]);
 		file->SetFileName(strNewFileName, true);
 		file->UpdateDisplayedInfo();
 		file->SavePartFile();
+		GetParent()->SendMessage(UM_DATA_CHANGED); //refresh notification for FileDetailDialog
 	}
 }
 
 bool CFileDetailDialogName::CanRenameFile() const
 {
-	const CPartFile* file = STATIC_DOWNCAST(CPartFile, (*m_paFiles)[0]);
+	const CPartFile* file = static_cast<CPartFile *>((*m_paFiles)[0]);
 	return (file->GetStatus() != PS_COMPLETE && file->GetStatus() != PS_COMPLETING);
 }
 

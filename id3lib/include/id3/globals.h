@@ -51,7 +51,7 @@
  * we prefix variable declarations so they can
  * properly get exported in windows dlls.
  */
-#ifdef WIN32
+#ifdef _WIN32
 #  define LINKOPTION_STATIC         1 //both for use and creation of static lib
 #  define LINKOPTION_CREATE_DYNAMIC 2 //should only be used by prj/id3lib.dsp
 #  define LINKOPTION_USE_DYNAMIC    3 //if your project links id3lib dynamic
@@ -101,12 +101,12 @@
 #  else
 #    define LEAKTESTNEW(type) new type
 #  endif
-#else /* !WIN32 */
+#else /* !_WIN32 */
 #  define ID3_C_EXPORT
 #  define ID3_CPP_EXPORT
 #  define CCONV
 #  define LEAKTESTNEW(type) new type
-#endif /* !WIN32 */
+#endif /* !_WIN32 */
 
 #define ID3_C_VAR extern
 
@@ -636,7 +636,7 @@ static const char* ID3_v1_genre_description[ID3_NR_OF_V1_GENRES] =
   "Synthpop"               //147
 };
 
-#define ID3_V1GENRE2DESCRIPTION(x) (x < ID3_NR_OF_V1_GENRES && x >= 0) ? ID3_v1_genre_description[x] : NULL
+#define ID3_V1GENRE2DESCRIPTION(x) (((x) < ID3_NR_OF_V1_GENRES && (x) >= 0) ? ID3_v1_genre_description[(x)] : NULL)
 
 ID3_ENUM(MP3_BitRates)
 {
@@ -768,7 +768,7 @@ ID3_STRUCT(Mp3_Headerinfo)
 /*
  * The following is borrowed from glib.h (http://www.gtk.org)
  */
-#ifdef WIN32
+#ifdef _WIN32
 
 /* On native Win32, directory separator is the backslash, and search path
  * separator is the semicolon.
@@ -778,7 +778,7 @@ ID3_STRUCT(Mp3_Headerinfo)
 #  define ID3_SEARCHPATH_SEPARATOR ';'
 #  define ID3_SEARCHPATH_SEPARATOR_S ";"
 
-#else  /* !WIN32 */
+#else  /* !_WIN32 */
 
 #  ifndef _EMX_
 /* Unix */
@@ -798,7 +798,7 @@ ID3_STRUCT(Mp3_Headerinfo)
 
 #  endif
 
-#endif /* !WIN32 */
+#endif /* !_WIN32 */
 
 #ifndef NULL
 #  define NULL ((void*) 0)

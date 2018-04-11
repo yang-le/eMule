@@ -146,10 +146,8 @@ int CTaskbarNotifier::Create(CWnd *pWndParent)
 	// detecting this case so it calls the MSLU proc which calls AfxWndProc which calls the MSLU proc, etc., until
 	// the stack overflows. By using either DefWindowProc or your own proc yourself, you avoid the stack overflow.
 	extern bool g_bUnicoWS;
-	if (g_bUnicoWS)
-		wcx.lpfnWndProc = My_AfxWndProc;
-	else
-		wcx.lpfnWndProc = AfxWndProc;
+	wcx.lpfnWndProc = g_bUnicoWS ? My_AfxWndProc : AfxWndProc;
+
 	static const TCHAR s_szClassName[] = _T("eMule_TaskbarNotifierWndClass");
 	wcx.style = CS_DBLCLKS | CS_SAVEBITS;
 	wcx.cbClsExtra = 0;
@@ -174,11 +172,11 @@ void CTaskbarNotifier::OnSysColorChange()
 
 BOOL CTaskbarNotifier::LoadConfiguration(LPCTSTR pszFilePath)
 {
-	struct _stat st;
-	st.st_mtime = -1; // '-1' = missing file
-	(void)_tstat(pszFilePath, &st);
+	struct _stat64 st;
+	if (statUTC(pszFilePath, st))
+		st.st_mtime = -1; // '-1' = missing file
 	if (   m_strConfigFilePath.CompareNoCase(pszFilePath) == 0
-		&& st.st_mtime == m_tConfigFileLastModified)
+		&& (time_t)st.st_mtime == m_tConfigFileLastModified)
 		return TRUE;
 
 	TCHAR szConfigDir[MAX_PATH];
@@ -292,7 +290,7 @@ BOOL CTaskbarNotifier::LoadConfiguration(LPCTSTR pszFilePath)
 	SetTextColor(RGB(iTextNormalRed, iTextNormalGreen, iTextNormalBlue),
 			     RGB(iTextSelectedRed, iTextSelectedGreen, iTextSelectedBlue));
 
-	m_tConfigFileLastModified = st.st_mtime;
+	m_tConfigFileLastModified = (time_t)st.st_mtime;
 	return TRUE;
 }
 

@@ -20,20 +20,19 @@ class CFileDetailDialogInfo : public CResizablePage
 {
 	DECLARE_DYNAMIC(CFileDetailDialogInfo)
 
+	enum { IDD = IDD_FILEDETAILS_INFO };
+
 public:
 	CFileDetailDialogInfo();   // standard constructor
 	virtual ~CFileDetailDialogInfo();
 
 	void SetFiles(const CSimpleArray<CObject*>* paFiles) { m_paFiles = paFiles; m_bDataChanged = true; }
 
-	// Dialog Data
-	enum { IDD = IDD_FILEDETAILS_INFO };
-
 protected:
 	CString m_strCaption;
 	const CSimpleArray<CObject*>* m_paFiles;
 	bool m_bDataChanged;
-	uint32 m_timer;
+	UINT_PTR m_timer;
 	static LPCTSTR sm_pszNotAvail;
 	bool m_bShowFileTypeWarning;
 

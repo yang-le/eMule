@@ -161,10 +161,11 @@ CKadTagValueString CEntry::GetCommonFileNameLowerCase() const
 
 uint32 CEntry::GetTagCount() const // Adds filename and size to the count if not empty, even if they are not stored as tags
 {
-	return m_listTag.size() + ((m_uSize != 0) ? 1 : 0) + (GetCommonFileName().IsEmpty() ? 0 : 1);
+	return (uint32)(m_listTag.size() + static_cast<unsigned>(m_uSize != 0) + static_cast<unsigned>(GetCommonFileName().IsEmpty()));
 }
 
-void CEntry::WriteTagListInc(CDataIO* pData, uint32 nIncreaseTagNumber){
+void CEntry::WriteTagListInc(CDataIO* pData, uint32 nIncreaseTagNumber)
+{
 	// write taglist and add name + size tag
 	if (pData == NULL){
 		ASSERT( false );
@@ -252,7 +253,7 @@ bool CKeyEntry::SearchTermsMatch(const SSearchTerm* pSearchTerm) const
 	// word which is to be searched in the file name (and in additional meta data as done by some ed2k servers???)
 	if (pSearchTerm->m_type == SSearchTerm::String)
 	{
-		int iStrSearchTerms = pSearchTerm->m_pastr->GetCount();
+		INT_PTR iStrSearchTerms = pSearchTerm->m_pastr->GetCount();
 		if (iStrSearchTerms == 0)
 			return false;
 		// if there are more than one search strings specified (e.g. "aaa bbb ccc") the entire string is handled
@@ -534,7 +535,7 @@ void CKeyEntry::MergeIPsAndFilenames(CKeyEntry* pFromEntry){
 			nAICHHashIdx = AddRemoveAICHHash(*pNewAICHHash, true);
 		else
 			nAICHHashIdx = _UI16_MAX;
-		structPublishingIP add = { m_uIP, time(NULL), nAICHHashIdx };
+		structPublishingIP add = {time(NULL), m_uIP, nAICHHashIdx};
 		m_pliPublishingIPs->AddTail(add);
 
 		// add the publisher to the tacking list
@@ -607,9 +608,10 @@ void CKeyEntry::RecalcualteTrustValue(){
 	}
 }
 
-float CKeyEntry::GetTrustValue(){
+float CKeyEntry::GetTrustValue()
+{
 	// update if last calcualtion is too old, will assert if this entry is not supposed to have a trustvalue
-	if (::GetTickCount() - dwLastTrustValueCalc > MIN2MS(10))
+	if (::GetTickCount() >= dwLastTrustValueCalc + MIN2MS(10))
 		RecalcualteTrustValue();
 	return m_fTrustValue;
 }
@@ -641,7 +643,7 @@ void CKeyEntry::WritePublishTrackingDataToFile(CDataIO* pData){
 
 	// Write AICH Hashes and map them to a new cleaned up index without unreferenced hashes
 	uint16 nNewIdxPos = 0;
-	int asize = m_aAICHHashs.GetCount();
+	INT_PTR asize = m_aAICHHashs.GetCount();
 	CArray<uint16> aNewIndexes;
 	aNewIndexes.SetSize(asize);
 	for (int i = 0; i < asize; ++i)

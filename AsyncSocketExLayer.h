@@ -1,4 +1,4 @@
-/*CAsyncSocketEx by Tim Kosse (Tim.Kosse@gmx.de)
+/*CAsyncSocketEx by Tim Kosse (tim.kosse@filezilla-project.org)
             Version 1.1 (2002-11-01)
 --------------------------------------------------------
 
@@ -27,7 +27,7 @@ First have a look at the way CAsyncSocket works. For each thread that uses
 CAsyncSocket, a window is created. CAsyncSocket calls WSAAsyncSelect with
 the handle of that window. Until here, CAsyncSocketEx works the same way.
 But CAsyncSocket uses only one window message (WM_SOCKET_NOTIFY) for all
-sockets within one thread. When the window receive WM_SOCKET_NOTIFY, wParam
+sockets within one thread. When the window recieve WM_SOCKET_NOTIFY, wParam
 contains the socket handle and the window looks up an CAsyncSocket instance
 using a map. CAsyncSocketEx works differently. It's helper window uses a
 wide range of different window messages (WM_USER through 0xBFFF) and passes
@@ -58,11 +58,11 @@ License
 Feel free to use this class, as long as you don't claim that you wrote it
 and this copyright notice stays intact in the source files.
 If you use this class in commercial applications, please send a short message
-to tim.kosse@gmx.de
+to tim.kosse@filezilla-project.org
 
 */
 #pragma once
-#include "AsyncSocketEx.h"	// Hinzugefugt von der Klassenansicht
+#include "AsyncSocketEx.h"	// Hinzugefügt von der Klassenansicht
 
 class CAsyncSocketEx;
 class CAsyncSocketExLayer
@@ -82,17 +82,21 @@ protected:
 	virtual void OnSend(int nErrorCode);
 
 	//Operations
-	virtual BOOL Accept(CAsyncSocketEx& rConnectedSocket, SOCKADDR* lpSockAddr = NULL, int* lpSockAddrLen = NULL);
+	virtual BOOL Accept(CAsyncSocketEx& rConnectedSocket, LPSOCKADDR lpSockAddr = NULL, int* lpSockAddrLen = NULL);
 	virtual void Close();
-	virtual BOOL Connect(LPCSTR lpszHostAddress, UINT nHostPort);
-	virtual BOOL Connect(const SOCKADDR* lpSockAddr, int nSockAddrLen);
-	virtual BOOL Create(UINT nSocketPort = 0, int nSocketType = SOCK_STREAM,
-						long lEvent = FD_READ | FD_WRITE | FD_OOB | FD_ACCEPT | FD_CONNECT | FD_CLOSE,
-						LPCSTR lpszSocketAddress = NULL );
-	virtual BOOL GetPeerName(SOCKADDR* lpSockAddr, int* lpSockAddrLen);
-#ifdef _AFX
-	virtual BOOL GetPeerName(CString& rPeerAddress, UINT& rPeerPort);
-#endif
+	virtual bool Connect(const CString& sHostAddress, UINT nHostPort);
+	virtual BOOL Connect(const LPSOCKADDR lpSockAddr, int nSockAddrLen);
+	virtual bool Create(UINT nSocketPort = 0, int nSocketType = SOCK_STREAM
+				, long lEvent = FD_READ | FD_WRITE | FD_OOB | FD_ACCEPT | FD_CONNECT | FD_CLOSE
+				, const CString& sSocketAddress = CString()
+				, int nFamily = AF_INET
+				, bool reusable = false);
+
+	virtual bool GetPeerName(CString& rPeerAddress, UINT& rPeerPort);
+	virtual BOOL GetPeerName(LPSOCKADDR lpPeerAddr, int* lpPeerAddrLen);
+	virtual bool GetSockName(CString& rSockAddress, UINT& rSockPort);
+	virtual BOOL GetSockName(LPSOCKADDR lpSockAddr, int* lpSockAddrLen);
+
 	virtual BOOL Listen(int nConnectionBacklog);
 	virtual int Receive(void* lpBuf, int nBufLen, int nFlags = 0);
 	virtual int Send(const void* lpBuf, int nBufLen, int nFlags = 0);
@@ -101,46 +105,54 @@ protected:
 
 	//Functions that will call next layer
 	BOOL ShutDownNext(int nHow = sends);
-	BOOL AcceptNext(CAsyncSocketEx& rConnectedSocket, SOCKADDR* lpSockAddr = NULL, int* lpSockAddrLen = NULL);
+	BOOL AcceptNext(CAsyncSocketEx& rConnectedSocket, LPSOCKADDR lpSockAddr = NULL, int* lpSockAddrLen = NULL);
 	void CloseNext();
-	BOOL ConnectNext(LPCSTR lpszHostAddress, UINT nHostPort);
-	BOOL ConnectNext(const SOCKADDR* lpSockAddr, int nSockAddrLen);
-	BOOL CreateNext(UINT nSocketPort, int nSocketType, long lEvent, LPCSTR lpszSocketAddress);
-#ifdef _AFX
-	BOOL GetPeerNameNext(CString& rPeerAddress, UINT& rPeerPort);
-#endif
-	BOOL GetPeerNameNext(SOCKADDR* lpSockAddr, int* lpSockAddrLen);
-	BOOL ListenNext( int nConnectionBacklog);
+	bool ConnectNext(const CString& sHostAddress, UINT nHostPort);
+	BOOL ConnectNext(const LPSOCKADDR lpSockAddr, int nSockAddrLen);
+	bool CreateNext(UINT nSocketPort, int nSocketType, long lEvent, const CString& sSocketAddress, int nFamily = AF_INET, bool reusable = false);
+
+	bool GetPeerNameNext(CString& rPeerAddress, UINT& rPeerPort);
+	BOOL GetPeerNameNext(LPSOCKADDR lpPeerAddr, int* lpPeerAddrLen);
+	bool GetSockNameNext(CString& rSockAddress, UINT& rSockPort);
+	BOOL GetSockNameNext(LPSOCKADDR lpSockAddr, int* lpSockAddrLen);
+
+	BOOL ListenNext(int nConnectionBacklog);
 	int ReceiveNext(void *lpBuf, int nBufLen, int nFlags = 0);
 	int SendNext(const void *lpBuf, int nBufLen, int nFlags = 0);
 
 	CAsyncSocketEx *m_pOwnerSocket;
 
 	//Calls OnLayerCallback on owner socket
-	int DoLayerCallback(int nType, int nCode, WPARAM wParam = 0, LPARAM lParam = 0);
+	int DoLayerCallback(int nType, WPARAM wParam, LPARAM lParam, char* str = NULL);
 
 	int GetLayerState() const;
 	BOOL TriggerEvent(long lEvent, int nErrorCode, BOOL bPassThrough = FALSE);
 
-	enum LayerState
-	{
-		notsock,
-		unconnected,
-		connecting,
-		listening,
-		connected,
-		closed,
-		aborted
-	};
+	//Gets the socket family
+	ADDRESS_FAMILY GetFamily() const;
+
+	//Sets the socket family
+	bool SetFamily(ADDRESS_FAMILY nFamily);
+
+	// Iterate through protocols
+	bool TryNextProtocol();
 
 private:
 	//Layer state can't be set directly from derived classes
 	void SetLayerState(int nLayerState);
 	int m_nLayerState;
 
+	ADDRESS_FAMILY m_nFamily;
+	int m_lEvent;
+	CString m_sSocketAddress;
+	UINT m_nSocketPort;
+
+	addrinfo *m_addrInfo, *m_nextAddr;
+
 	//Called by helper window, dispatches event notification and updated layer state
 	void CallEvent(int nEvent, int nErrorCode);
 
+	int m_nPendingEvents;
 	int m_nCriticalError;
 
 	void Init(CAsyncSocketExLayer *pPrevLayer, CAsyncSocketEx *pOwnerSocket);
@@ -151,6 +163,7 @@ private:
 
 	struct t_LayerNotifyMsg
 	{
+		SOCKET hSocket;
 		CAsyncSocketExLayer *pLayer;
 		long lEvent;
 	};

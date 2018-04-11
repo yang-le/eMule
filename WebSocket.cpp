@@ -7,15 +7,32 @@
 #include "StringConversion.h"
 #include "Log.h"
 
+#include "mbedtls/platform.h"
+#include "mbedtls/entropy.h"
+#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/certs.h"
+#include "mbedtls/x509.h"
+#include "mbedtls/net_sockets.h"
+#include "mbedtls/error.h"
+#include "mbedtls/ssl_cache.h"
+#include "mbedtls/threading_alt.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
 
-
 static HANDLE s_hTerminate = NULL;
 static CWinThread* s_pSocketThread = NULL;
+
+mbedtls_entropy_context entropy;
+mbedtls_ctr_drbg_context ctr_drbg;
+mbedtls_ssl_config conf;
+mbedtls_x509_crt srvcert;
+mbedtls_x509_crt cachain;
+mbedtls_pk_context pkey;
+mbedtls_ssl_cache_context cache;
 
 typedef struct
 {
@@ -24,38 +41,78 @@ typedef struct
 	in_addr incomingaddr;
 } SocketData;
 
+static void threading_mutex_init_alt(mbedtls_threading_mutex_t *mutex) noexcept
+{
+	if (mutex) {
+		InitializeCriticalSection(&mutex->cs);
+		mutex->is_valid = 1;
+	}
+}
+
+static void threading_mutex_free_alt(mbedtls_threading_mutex_t *mutex) noexcept
+{
+	if (mutex && mutex->is_valid) {
+		DeleteCriticalSection(&mutex->cs);
+		mutex->is_valid = 0;
+	}
+}
+
+static int threading_mutex_lock_alt(mbedtls_threading_mutex_t *mutex) noexcept
+{
+	if (mutex == NULL || !mutex->is_valid)
+		return(MBEDTLS_ERR_THREADING_BAD_INPUT_DATA);
+	EnterCriticalSection(&mutex->cs);
+	return(0);
+}
+
+static int threading_mutex_unlock_alt(mbedtls_threading_mutex_t *mutex) noexcept
+{
+	if (mutex == NULL || !mutex->is_valid)
+		return(MBEDTLS_ERR_THREADING_BAD_INPUT_DATA);
+	LeaveCriticalSection(&mutex->cs);
+	return(0);
+}
+
+CString SSLerror(int ret)
+{
+	char buf[256];
+	mbedtls_strerror(ret, buf, sizeof buf);
+	buf[sizeof buf - 1] = '\0';
+	return CString(buf);
+}
+
 void CWebSocket::SetParent(CWebServer *pParent)
 {
 	m_pParent = pParent;
 }
 
-void CWebSocket::OnRequestReceived(const char* pHeader, DWORD dwHeaderLen, const char* pData, DWORD dwDataLen, in_addr inad)
+void CWebSocket::OnRequestReceived(const char* pHeader, DWORD dwHeaderLen, const char* pData, DWORD dwDataLen, const in_addr& inad)
 {
 	CStringA sHeader(pHeader, dwHeaderLen);
-	CStringA sData(pData, dwDataLen);
 	CStringA sURL;
 
-	if(sHeader.Left(3) == "GET")
+	if (sHeader.Left(3) == "GET")
 		sURL = sHeader.Trim();
 
-	else if(sHeader.Left(4) == "POST")
-		sURL = "?" + sData.Trim();	// '?' to imitate GET syntax for ParseURL
-
-	if(sURL.Find(" ") > -1)
-		sURL = sURL.Mid(sURL.Find(" ")+1, sURL.GetLength());
-	if(sURL.Find(" ") > -1)
-		sURL = sURL.Left(sURL.Find(" "));
-	bool filereq = sURL.GetLength()>=3 && sURL.Find("..") < 0; // don't allow leaving the emule-webserver-folder for accessing files
+	else if (sHeader.Left(4) == "POST") {
+		CStringA sData(pData, dwDataLen);
+		sURL = '?' + sData.Trim();	// '?' to imitate GET syntax for ParseURL
+	}
+	if (sURL.Find(' ') > -1)
+		sURL = sURL.Mid(sURL.Find(' ') + 1, sURL.GetLength());
+	if (sURL.Find(' ') > -1)
+		sURL = sURL.Left(sURL.Find(' '));
+	bool filereq = sURL.GetLength() >= 3 && sURL.Find("..") < 0; // don't allow leaving the emule-webserver-folder for accessing files
 	if (filereq) {
 		CStringA ext(sURL.Right(5).MakeLower());
 		int i = ext.ReverseFind('.');
 		ext.Delete(0, i);
-		filereq = i>=0 && ext.GetLength()>2 && (ext==".gif" || ext==".jpg" || ext==".png" || ext==".ico" || ext==".css" || ext==".bmp"
-			|| ext==".js" || ext==".jpeg");
+		filereq = i >= 0 && ext.GetLength() > 2 && (ext == ".gif" || ext == ".jpg" || ext == ".png"
+			|| ext == ".ico" || ext == ".css" || ext == ".bmp" || ext == ".js" || ext == ".jpeg");
 	}
 	ThreadData Data;
 	Data.sURL = sURL;
-	Data.pThis = m_pParent;
+	Data.pThis = (void *)m_pParent;
 	Data.inadr = inad;
 	Data.pSocket = this;
 
@@ -67,65 +124,59 @@ void CWebSocket::OnRequestReceived(const char* pHeader, DWORD dwHeaderLen, const
 	Disconnect();
 }
 
-void CWebSocket::OnReceived(void* pData, DWORD dwSize, in_addr inad)
+void CWebSocket::OnReceived(void* pData, DWORD dwSize, const in_addr& inad)
 {
-	const UINT SIZE_PRESERVE = 0x1000;
+	const DWORD SIZE_PRESERVE = 0x1000u;
 
-	if (m_dwBufSize < dwSize + m_dwRecv)
-	{
+	if (m_dwBufSize < dwSize + m_dwRecv) {
 		// reallocate
 		char* pNewBuf;
 		try {
 			m_dwBufSize = dwSize + m_dwRecv + SIZE_PRESERVE;
 			pNewBuf = new char[m_dwBufSize];
-		} catch (...)
-		{
+		} catch (...) {
 			m_bValid = false; // internal problem
 			return;
 		}
 
-		if (m_pBuf)
-		{
-			CopyMemory(pNewBuf, m_pBuf, m_dwRecv);
+		if (m_pBuf) {
+			memcpy(pNewBuf, m_pBuf, m_dwRecv);
 			delete[] m_pBuf;
 		}
 
 		m_pBuf = pNewBuf;
 	}
-	CopyMemory(m_pBuf + m_dwRecv, pData, dwSize);
-	m_dwRecv += dwSize;
-
+	if (pData != NULL) {
+		memcpy(&m_pBuf[m_dwRecv], pData, dwSize);
+		m_dwRecv += dwSize;
+	}
 	// check if we have all that we want
-	if (!m_dwHttpHeaderLen)
-	{
+	if (!m_dwHttpHeaderLen) {
 		// try to find it
 		bool bPrevEndl = false;
-		for (DWORD dwPos = 0; dwPos < m_dwRecv; dwPos++)
+		for (DWORD dwPos = 0; dwPos < m_dwRecv; ++dwPos)
 			if ('\n' == m_pBuf[dwPos])
-				if (bPrevEndl)
-				{
+				if (bPrevEndl) {
 					// We just found the end of the http header
 					// Now write the message's position into two first DWORDs of the buffer
 					m_dwHttpHeaderLen = dwPos + 1;
 
 					// try to find now the 'Content-Length' header
-					for (dwPos = 0; dwPos < m_dwHttpHeaderLen; )
-					{
+					for (dwPos = 0; dwPos < m_dwHttpHeaderLen; ) {
 						// Elandal: pPtr is actually a char*, not a void*
 						char* pPtr = (char*)memchr(m_pBuf + dwPos, '\n', m_dwHttpHeaderLen - dwPos);
 						if (!pPtr)
 							break;
 						// Elandal: And thus now the pointer substraction works as it should
-						DWORD dwNextPos = pPtr - m_pBuf;
+						DWORD dwNextPos = (DWORD)(pPtr - m_pBuf);
 
 						// check this header
-						char szMatch[] = "content-length";
-						if (!_strnicmp(m_pBuf + dwPos, szMatch, sizeof(szMatch) - 1))
-						{
+						static const char szMatch[] = "content-length";
+						if (!_strnicmp(m_pBuf + dwPos, szMatch, sizeof(szMatch) - 1)) {
 							dwPos += sizeof(szMatch) - 1;
 							pPtr = (char*)memchr(m_pBuf + dwPos, ':', m_dwHttpHeaderLen - dwPos);
 							if (pPtr)
-								m_dwHttpContentLen = atol((pPtr) + 1);
+								m_dwHttpContentLen = atol((pPtr)+1);
 
 							break;
 						}
@@ -133,69 +184,68 @@ void CWebSocket::OnReceived(void* pData, DWORD dwSize, in_addr inad)
 					}
 
 					break;
-				}
-				else
-				{
+				} else {
 					bPrevEndl = true;
-				}
-			else
-				if ('\r' != m_pBuf[dwPos])
-					bPrevEndl = false;
+				} else
+					if ('\r' != m_pBuf[dwPos])
+						bPrevEndl = false;
 
 	}
 	if (m_dwHttpHeaderLen && !m_bCanRecv && !m_dwHttpContentLen)
 		m_dwHttpContentLen = m_dwRecv - m_dwHttpHeaderLen; // of course
 
-	if (m_dwHttpHeaderLen && m_dwHttpContentLen < m_dwRecv && (!m_dwHttpContentLen || (m_dwHttpHeaderLen + m_dwHttpContentLen <= m_dwRecv)))
-	{
+	if (m_dwHttpHeaderLen && m_dwHttpContentLen < m_dwRecv && (!m_dwHttpContentLen || (m_dwHttpHeaderLen + m_dwHttpContentLen <= m_dwRecv))) {
 		OnRequestReceived(m_pBuf, m_dwHttpHeaderLen, m_pBuf + m_dwHttpHeaderLen, m_dwHttpContentLen, inad);
 
-		if (m_bCanRecv && (m_dwRecv > m_dwHttpHeaderLen + m_dwHttpContentLen))
-		{
+		if (m_bCanRecv && (m_dwRecv > m_dwHttpHeaderLen + m_dwHttpContentLen)) {
 			// move our data
 			m_dwRecv -= m_dwHttpHeaderLen + m_dwHttpContentLen;
-			MoveMemory(m_pBuf, m_pBuf + m_dwHttpHeaderLen + m_dwHttpContentLen, m_dwRecv);
+			memmove(m_pBuf, m_pBuf + m_dwHttpHeaderLen + m_dwHttpContentLen, m_dwRecv);
 		} else
 			m_dwRecv = 0;
 
 		m_dwHttpHeaderLen = 0;
 		m_dwHttpContentLen = 0;
 	}
-
 }
 
 void CWebSocket::SendData(const void* pData, DWORD dwDataSize)
 {
 	ASSERT(pData);
-	if (m_bValid && m_bCanSend)
-	{
-		if (!m_pHead)
-		{
-			// try to send it directly
-			//-- remember: in "nRes" could be "-1" after "send" call
-			int nRes = send(m_hSocket, (const char*) pData, dwDataSize, 0);
+	if (m_bValid && m_bCanSend) {
+		if (!m_pHead) {
+			if (thePrefs.GetWebUseHttps()) {
+				for (;;) {
+					int nRes = mbedtls_ssl_write(m_ssl, (const unsigned char*)pData, dwDataSize);
+					if (nRes > 0) {
+						reinterpret_cast<const char *&>(pData) += nRes;
+						dwDataSize -= nRes;
+						if (dwDataSize)
+							continue;
+					}
+					if (!dwDataSize)
+						break;
+					if (nRes == MBEDTLS_ERR_NET_CONN_RESET || (nRes != MBEDTLS_ERR_SSL_WANT_READ && nRes != MBEDTLS_ERR_SSL_WANT_WRITE)) {
+						m_bValid = false;
+						break;
+					}
+				}
+			} else {
+				// try to send it directly
+				//-- remember: in "nRes" could be "-1" after "send" call
+				int nRes = send(m_hSocket, (const char *)pData, dwDataSize, 0);
 
-			if (((nRes < 0) || (nRes > (signed) dwDataSize)) && (WSAEWOULDBLOCK != WSAGetLastError()))
-			{
-				m_bValid = false;
-			}
-			else
-			{
-				//-- in nRes still could be "-1" (if WSAEWOULDBLOCK occured)
-				//-- next to line should be like this:
+				if (nRes < (int)dwDataSize && WSAEWOULDBLOCK != WSAGetLastError())
+					m_bValid = false;
 
-				((const char*&) pData) += (nRes == -1 ? 0 : nRes);
-				dwDataSize -= (nRes == -1 ? 0 : nRes);
-
-				//-- ... and not like this:
-				//-- ((const char*&) pData) += nRes;
-				//-- dwDataSize -= nRes;
-
+				if (nRes > 0) {
+					reinterpret_cast<const char *&>(pData) += nRes;
+					dwDataSize -= nRes;
+				}
 			}
 		}
 
-		if (dwDataSize && m_bValid)
-		{
+		if (dwDataSize && m_bValid) {
 			// push it to our tails
 			CChunk* pChunk = NULL;
 			try {
@@ -214,7 +264,7 @@ void CWebSocket::SendData(const void* pData, DWORD dwDataSize)
 			//-- data should be copied into "pChunk->m_pData" anyhow
 			//-- possible solution is simple:
 
-			CopyMemory(pChunk->m_pData, pData, dwDataSize);
+			memcpy(pChunk->m_pData, pData, dwDataSize);
 
 			// push it to the end of our queue
 			pChunk->m_pToSend = pChunk->m_pData;
@@ -229,18 +279,18 @@ void CWebSocket::SendData(const void* pData, DWORD dwDataSize)
 
 void CWebSocket::SendReply(LPCSTR szReply)
 {
-	char szBuf[256];
-	int nLen = _snprintf(szBuf, _countof(szBuf), "%s\r\n", szReply);
-	if (nLen > 0)
-		SendData(szBuf, nLen);
+	CStringA sBuf;
+	sBuf.Format("%s\r\n", szReply);
+	if (!sBuf.IsEmpty())
+		SendData(sBuf, sBuf.GetLength());
 }
 
 void CWebSocket::SendContent(LPCSTR szStdResponse, const void* pContent, DWORD dwContentSize)
 {
-	char szBuf[0x1000];
-	int nLen = _snprintf(szBuf, _countof(szBuf), "HTTP/1.1 200 OK\r\n%sContent-Length: %lu\r\n\r\n", szStdResponse, dwContentSize);
-	if (nLen > 0) {
-		SendData(szBuf, nLen);
+	CStringA sBuf;
+	sBuf.Format("HTTP/1.1 200 OK\r\n%sContent-Length: %lu\r\n\r\n", szStdResponse, dwContentSize);
+	if (!sBuf.IsEmpty()) {
+		SendData(sBuf, sBuf.GetLength());
 		SendData(pContent, dwContentSize);
 	}
 }
@@ -253,11 +303,9 @@ void CWebSocket::SendContent(LPCSTR szStdResponse, const CString& rstr)
 
 void CWebSocket::Disconnect()
 {
-	if (m_bValid && m_bCanSend)
-	{
+	if (m_bValid && m_bCanSend) {
 		m_bCanSend = false;
-		if (m_pTail)
-		{
+		if (m_pTail) {
 			// push it as a tail
 			CChunk* pChunk;
 			try {
@@ -282,23 +330,21 @@ UINT AFX_CDECL WebSocketAcceptedFunc(LPVOID pD)
 {
 	DbgSetThreadName("WebSocketAccepted");
 
-	srand(time(NULL));
+	srand((unsigned)time(NULL));
 	InitThreadLocale();
 
-	SocketData *pData = static_cast<SocketData *>(pD);
-	SOCKET hSocket = pData->hSocket;
+	const SocketData *pData = static_cast<SocketData *>(pD);
 	CWebServer *pThis = static_cast<CWebServer *>(pData->pThis);
-	in_addr ad=pData->incomingaddr;
-
+	SOCKET hSocket = pData->hSocket;
+	in_addr ad = pData->incomingaddr;
 	delete pData;
 
 	ASSERT(INVALID_SOCKET != hSocket);
 
 	HANDLE hEvent = CreateEvent(NULL, FALSE, TRUE, NULL);
-	if (hEvent)
-	{
-		if (!WSAEventSelect(hSocket, hEvent, FD_READ | FD_CLOSE | FD_WRITE))
-		{
+	if (hEvent) {
+		if (!WSAEventSelect(hSocket, hEvent, FD_READ | FD_CLOSE | FD_WRITE)) {
+			mbedtls_ssl_context ssl;
 			CWebSocket stWebSocket;
 			stWebSocket.SetParent(pThis);
 			stWebSocket.m_pHead = NULL;
@@ -312,39 +358,51 @@ UINT AFX_CDECL WebSocketAcceptedFunc(LPVOID pD)
 			stWebSocket.m_dwBufSize = 0;
 			stWebSocket.m_dwHttpHeaderLen = 0;
 			stWebSocket.m_dwHttpContentLen = 0;
+			stWebSocket.m_ssl = &ssl;
 
+			if (thePrefs.GetWebUseHttps()) {
+				mbedtls_ssl_init(&ssl);
+				int ret = mbedtls_ssl_setup(&ssl, &conf);
+				if (ret)
+					goto thread_exit;
+				mbedtls_ssl_set_bio(&ssl, (void *)&hSocket, mbedtls_net_send, mbedtls_net_recv, NULL);
+				while ((ret = mbedtls_ssl_handshake(&ssl)) != 0)
+					if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+						DebugLogWarning(_T("Web Interface handshake failed: %s"), (LPCTSTR)SSLerror(ret));
+						goto thread_exit;
+					}
+			}
 			HANDLE pWait[] = { hEvent, s_hTerminate };
 
-			while (WAIT_OBJECT_0 == WaitForMultipleObjects(2, pWait, FALSE, INFINITE))
-			{
-				while (stWebSocket.m_bValid)
-				{
+			while (WAIT_OBJECT_0 == WaitForMultipleObjects(2, pWait, FALSE, INFINITE)) {
+				while (stWebSocket.m_bValid) {
 					WSANETWORKEVENTS stEvents;
 					if (WSAEnumNetworkEvents(hSocket, NULL, &stEvents))
 						stWebSocket.m_bValid = false;
-					else
-					{
+					else {
 						if (!stEvents.lNetworkEvents)
 							break; //no more events till now
 
 						if (FD_READ & stEvents.lNetworkEvents)
-							for (;;)
-							{
+							for (;;) {
 								char pBuf[0x1000];
-								int nRes = recv(hSocket, pBuf, sizeof pBuf, 0);
-								if (nRes <= 0)
-								{
-									if (!nRes)
-									{
+								int nRes;
+								if (thePrefs.GetWebUseHttps())
+									nRes = mbedtls_ssl_read(stWebSocket.m_ssl, (unsigned char *)pBuf, sizeof pBuf);
+								else
+									nRes = recv(hSocket, pBuf, sizeof pBuf, 0);
+								if (nRes == MBEDTLS_ERR_SSL_WANT_READ || nRes == MBEDTLS_ERR_SSL_WANT_WRITE)
+									continue;
+								if (nRes <= 0) {
+									if (!nRes) {
 										stWebSocket.m_bCanRecv = false;
 										stWebSocket.OnReceived(NULL, 0, ad);
-									}
-									else
+									} else
 										if (WSAEWOULDBLOCK != WSAGetLastError())
 											stWebSocket.m_bValid = false;
 									break;
 								}
-								stWebSocket.OnReceived(pBuf, nRes,ad);
+								stWebSocket.OnReceived(pBuf, nRes, ad);
 							}
 
 						if (FD_CLOSE & stEvents.lNetworkEvents)
@@ -352,27 +410,38 @@ UINT AFX_CDECL WebSocketAcceptedFunc(LPVOID pD)
 
 						if (FD_WRITE & stEvents.lNetworkEvents)
 							// send what is left in our tails
-							while (stWebSocket.m_pHead)
-							{
-								if (stWebSocket.m_pHead->m_pToSend)
-								{
-									int nRes = send(hSocket, stWebSocket.m_pHead->m_pToSend, stWebSocket.m_pHead->m_dwSize, 0);
-									if (nRes != (signed) stWebSocket.m_pHead->m_dwSize)
-									{
-										if (nRes)
-											if ((nRes > 0) && (nRes < (signed) stWebSocket.m_pHead->m_dwSize))
-											{
+							while (stWebSocket.m_pHead) {
+								if (stWebSocket.m_pHead->m_pToSend) {
+									if (thePrefs.GetWebUseHttps()) {
+										for (;;) {
+											int nRes = mbedtls_ssl_write(stWebSocket.m_ssl, (const unsigned char *)stWebSocket.m_pHead->m_pToSend, stWebSocket.m_pHead->m_dwSize);
+											if (nRes > 0) {
 												stWebSocket.m_pHead->m_pToSend += nRes;
 												stWebSocket.m_pHead->m_dwSize -= nRes;
+												if (stWebSocket.m_pHead->m_dwSize)
+													continue;
+											}
+											if (!stWebSocket.m_pHead->m_dwSize)
+												break;
+											if (nRes == MBEDTLS_ERR_NET_CONN_RESET || (nRes != MBEDTLS_ERR_SSL_WANT_READ && nRes != MBEDTLS_ERR_SSL_WANT_WRITE))
+												goto thread_exit;
+										};
+									} else {
+										int nRes = send(hSocket, stWebSocket.m_pHead->m_pToSend, stWebSocket.m_pHead->m_dwSize, 0);
+										if (nRes != (int)stWebSocket.m_pHead->m_dwSize) {
+											if (nRes)
+												if ((nRes > 0) && (nRes < (int)stWebSocket.m_pHead->m_dwSize)) {
+													stWebSocket.m_pHead->m_pToSend += nRes;
+													stWebSocket.m_pHead->m_dwSize -= nRes;
 
-											} else
-												if (WSAEWOULDBLOCK != WSAGetLastError())
-													stWebSocket.m_bValid = false;
-										break;
+												} else
+													if (WSAEWOULDBLOCK != WSAGetLastError())
+														stWebSocket.m_bValid = false;
+												break;
+										}
 									}
 								} else
-									if (shutdown(hSocket, SD_SEND))
-									{
+									if (shutdown(hSocket, SD_SEND)) {
 										stWebSocket.m_bValid = false;
 										break;
 									}
@@ -390,19 +459,28 @@ UINT AFX_CDECL WebSocketAcceptedFunc(LPVOID pD)
 				if (!stWebSocket.m_bValid || (!stWebSocket.m_bCanRecv && !stWebSocket.m_pHead))
 					break;
 			}
-
-			while (stWebSocket.m_pHead)
-			{
+thread_exit:
+			stWebSocket.m_bValid = false;
+			while (stWebSocket.m_pHead) {
 				CWebSocket::CChunk* pNext = stWebSocket.m_pHead->m_pNext;
 				delete stWebSocket.m_pHead;
 				stWebSocket.m_pHead = pNext;
 			}
 			delete[] stWebSocket.m_pBuf;
+			if (thePrefs.GetWebUseHttps()) {
+				int ret;
+				while ((ret = mbedtls_ssl_close_notify(stWebSocket.m_ssl)) < 0)
+					if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE)
+						break;
+				mbedtls_ssl_free(stWebSocket.m_ssl);
+			}
 		}
-		VERIFY( CloseHandle(hEvent) );
+		VERIFY(CloseHandle(hEvent));
 	}
-	VERIFY( !closesocket(hSocket) );
-
+	if (thePrefs.GetWebUseHttps())
+		mbedtls_net_free((mbedtls_net_context *)&hSocket);
+	else
+		VERIFY(!closesocket(hSocket));
 	return 0;
 }
 
@@ -410,12 +488,11 @@ UINT AFX_CDECL WebSocketListeningFunc(LPVOID pThis)
 {
 	DbgSetThreadName("WebSocketListening");
 
-	srand(time(NULL));
+	srand((unsigned)time(NULL));
 	InitThreadLocale();
 
 	SOCKET hSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, 0);
-	if (INVALID_SOCKET != hSocket)
-	{
+	if (INVALID_SOCKET != hSocket) {
 		SOCKADDR_IN stAddr;
 		stAddr.sin_family = AF_INET;
 		stAddr.sin_port = htons(thePrefs.GetWSPort());
@@ -424,121 +501,144 @@ UINT AFX_CDECL WebSocketListeningFunc(LPVOID pThis)
 		else
 			stAddr.sin_addr.S_un.S_addr = INADDR_ANY;
 
-		if (!bind(hSocket, (sockaddr*)&stAddr, sizeof stAddr) && !listen(hSocket, SOMAXCONN))
-		{
+		if (!bind(hSocket, (LPSOCKADDR)&stAddr, sizeof stAddr) && !listen(hSocket, SOMAXCONN)) {
 			HANDLE hEvent = CreateEvent(NULL, FALSE, TRUE, NULL);
-			if (hEvent)
-			{
-				if (!WSAEventSelect(hSocket, hEvent, FD_ACCEPT))
-				{
-					HANDLE pWait[] = { hEvent, s_hTerminate };
-					while (WAIT_OBJECT_0 == WaitForMultipleObjects(2, pWait, FALSE, INFINITE))
-					{
-						for (;;)
-						{
-							struct sockaddr_in their_addr;
-                            int sin_size = sizeof(struct sockaddr_in);
+			if (hEvent) {
+				if (!WSAEventSelect(hSocket, hEvent, FD_ACCEPT)) {
+					HANDLE pWait[] = {hEvent, s_hTerminate};
+					while (WAIT_OBJECT_0 == WaitForMultipleObjects(2, pWait, FALSE, INFINITE)) {
+						for (;;) {
+							SOCKADDR_IN their_addr;
+							int sin_size = (int)sizeof(SOCKADDR_IN);
 
-							SOCKET hAccepted = accept(hSocket,(struct sockaddr *)&their_addr, &sin_size);
+							SOCKET hAccepted = accept(hSocket, (LPSOCKADDR)&their_addr, &sin_size);
 							if (INVALID_SOCKET == hAccepted)
 								break;
 
-							if (!thePrefs.GetAllowedRemoteAccessIPs().IsEmpty())
-							{
+							if (!thePrefs.GetAllowedRemoteAccessIPs().IsEmpty()) {
 								bool bAllowedIP = false;
-								for (int i = 0; i < thePrefs.GetAllowedRemoteAccessIPs().GetCount(); i++)
-								{
-									if (their_addr.sin_addr.S_un.S_addr == thePrefs.GetAllowedRemoteAccessIPs()[i])
-									{
+								for (int i = 0; i < thePrefs.GetAllowedRemoteAccessIPs().GetCount(); i++) {
+									if (their_addr.sin_addr.S_un.S_addr == thePrefs.GetAllowedRemoteAccessIPs()[i]) {
 										bAllowedIP = true;
 										break;
 									}
 								}
 								if (!bAllowedIP) {
 									LogWarning(_T("Web Interface: Rejected connection attempt from %s"), (LPCTSTR)ipstr(their_addr.sin_addr.S_un.S_addr));
-									VERIFY( !closesocket(hAccepted) );
+									VERIFY(!closesocket(hAccepted));
 									break;
 								}
 							}
 
-							if(thePrefs.GetWSIsEnabled())
-							{
+							if (thePrefs.GetWSIsEnabled()) {
 								SocketData *pData = new SocketData;
-								pData->hSocket = hAccepted;
 								pData->pThis = pThis;
-								pData->incomingaddr=their_addr.sin_addr;
-
+								pData->hSocket = hAccepted;
+								pData->incomingaddr = their_addr.sin_addr;
 								// - do NOT use Windows API 'CreateThread' to create a thread which uses MFC/CRT -> lot of mem leaks!
 								// - 'AfxBeginThread' could be used here, but creates a little too much overhead for our needs.
 								CWinThread* pAcceptThread = new CWinThread(WebSocketAcceptedFunc, (LPVOID)pData);
-								if (!pAcceptThread->CreateThread())
-								{
+								if (!pAcceptThread->CreateThread()) {
 									delete pAcceptThread;
-									pAcceptThread = NULL;
-									VERIFY( !closesocket(hAccepted) );
-									hAccepted = NULL;
+									VERIFY(!closesocket(hAccepted));
 								}
-							}
-							else
-							{
-								VERIFY( !closesocket(hAccepted) );
-								hAccepted = NULL;
-							}
+							} else
+								VERIFY(!closesocket(hAccepted));
 						}
 					}
 				}
-				VERIFY( CloseHandle(hEvent) );
+				VERIFY(CloseHandle(hEvent));
 			}
 		}
-		VERIFY( !closesocket(hSocket) );
+		VERIFY(!closesocket(hSocket));
 	}
 
 	return 0;
 }
 
+int StartSSL()
+{
+	static const char pers[] = "eMule_WebSrv";
+	if (!thePrefs.GetWebUseHttps())
+		return 0; //success
+	mbedtls_threading_set_alt(threading_mutex_init_alt, threading_mutex_free_alt, threading_mutex_lock_alt, threading_mutex_unlock_alt);
+	mbedtls_ssl_cache_init(&cache);
+	mbedtls_x509_crt_init(&srvcert);
+	mbedtls_x509_crt_init(&cachain);
+	mbedtls_ssl_config_init(&conf);
+	mbedtls_ctr_drbg_init(&ctr_drbg);
+	mbedtls_entropy_init(&entropy);
+	int ret = mbedtls_x509_crt_parse_file(&srvcert, thePrefs.GetWebCertPath());
+	if (!ret) {
+		ret = mbedtls_x509_crt_parse(&cachain, (const unsigned char *)mbedtls_test_cas_pem, mbedtls_test_cas_pem_len);
+		if (!ret) {
+			mbedtls_pk_init(&pkey);
+			ret = mbedtls_pk_parse_keyfile(&pkey, thePrefs.GetWebKeyPath(), NULL);
+			if (!ret) {
+				ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers));
+				if (!ret) {
+					ret = mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_SERVER, MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
+					if (!ret) {
+						mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &ctr_drbg);
+						mbedtls_ssl_conf_session_cache(&conf, &cache, mbedtls_ssl_cache_get, mbedtls_ssl_cache_set);
+						mbedtls_ssl_conf_ca_chain(&conf, &cachain, NULL);
+						ret = mbedtls_ssl_conf_own_cert(&conf, &srvcert, &pkey);
+					}
+				}
+			}
+		}
+	}
+	if (ret)
+		DebugLogError(_T("Web Interface start failed: %s"), (LPCTSTR)SSLerror(ret));
+
+	return ret;
+}
+
+void StopSSL()
+{
+	if (thePrefs.GetWebUseHttps()) {
+		mbedtls_x509_crt_free(&srvcert);
+		mbedtls_pk_free(&pkey);
+		mbedtls_ssl_cache_free(&cache);
+		mbedtls_ctr_drbg_free(&ctr_drbg);
+		mbedtls_entropy_free(&entropy);
+		mbedtls_ssl_config_free(&conf);
+	}
+}
+
 void StartSockets(CWebServer *pThis)
 {
-	ASSERT( s_hTerminate == NULL );
-	ASSERT( s_pSocketThread == NULL );
-	if ((s_hTerminate = CreateEvent(NULL, TRUE, FALSE, NULL)) != NULL)
-	{
+	ASSERT(s_hTerminate == NULL);
+	ASSERT(s_pSocketThread == NULL);
+	s_hTerminate = CreateEvent(NULL, TRUE, FALSE, NULL);
+	if (s_hTerminate != NULL) {
 		// - do NOT use Windows API 'CreateThread' to create a thread which uses MFC/CRT -> lot of mem leaks!
 		// - because we want to wait on the thread handle we have to disable 'CWinThread::m_AutoDelete' -> can't
 		//   use 'AfxBeginThread'
 		s_pSocketThread = new CWinThread(WebSocketListeningFunc, (LPVOID)pThis);
 		s_pSocketThread->m_bAutoDelete = FALSE;
-		if (!s_pSocketThread->CreateThread())
-		{
-			CloseHandle(s_hTerminate);
-			s_hTerminate = NULL;
-			delete s_pSocketThread;
-			s_pSocketThread = NULL;
-		}
+		if (!s_pSocketThread->CreateThread() || StartSSL())
+			StopSockets();
 	}
 }
 
 void StopSockets()
 {
-	if (s_pSocketThread)
-	{
-		VERIFY( SetEvent(s_hTerminate) );
+	if (s_pSocketThread) {
+		VERIFY(SetEvent(s_hTerminate));
 
-		if (s_pSocketThread->m_hThread)
-		{
+		if (s_pSocketThread->m_hThread) {
 			// because we want to wait on the thread handle we must not use 'CWinThread::m_AutoDelete'.
 			// otherwise we may run into the situation that the CWinThread was already auto-deleted and
 			// the CWinThread::m_hThread is invalid.
-			ASSERT( !s_pSocketThread->m_bAutoDelete );
+			ASSERT(!s_pSocketThread->m_bAutoDelete);
 
 			DWORD dwWaitRes = WaitForSingleObject(s_pSocketThread->m_hThread, 1300);
-			if (dwWaitRes == WAIT_TIMEOUT)
-			{
+			if (dwWaitRes == WAIT_TIMEOUT) {
 				TRACE("*** Failed to wait for websocket thread termination - Timeout\n");
-				VERIFY( TerminateThread(s_pSocketThread->m_hThread, (DWORD)-1) );
-				VERIFY( CloseHandle(s_pSocketThread->m_hThread) );
-			}
-			else if (dwWaitRes == (UINT)-1)
-			{
+				VERIFY(TerminateThread(s_pSocketThread->m_hThread, (DWORD)-1));
+				VERIFY(CloseHandle(s_pSocketThread->m_hThread));
+			} else if (dwWaitRes == WAIT_FAILED) {
 				TRACE("*** Failed to wait for websocket thread termination - Error %u\n", GetLastError());
 				ASSERT(0); // probable invalid thread handle
 			}
@@ -546,8 +646,9 @@ void StopSockets()
 		delete s_pSocketThread;
 		s_pSocketThread = NULL;
 	}
-	if (s_hTerminate){
-		VERIFY( CloseHandle(s_hTerminate) );
+	if (s_hTerminate) {
+		VERIFY(CloseHandle(s_hTerminate));
 		s_hTerminate = NULL;
 	}
+	StopSSL();
 }

@@ -31,11 +31,10 @@ class CTransferWnd : public CResizableFormView
 {
 	DECLARE_DYNCREATE(CTransferWnd)
 
-public:
-	explicit CTransferWnd(CWnd* pParent = NULL);   // standard constructor
-	virtual ~CTransferWnd();
+	enum { IDD = IDD_TRANSFER };
 
-	enum EWnd1Icon {
+	enum EWnd1Icon
+	{
 		w1iSplitWindow = 0,
 		w1iDownloadFiles,
 		w1iUploading,
@@ -44,21 +43,27 @@ public:
 		w1iClientsKnown
 	};
 
-	enum EWnd2Icon {
+	enum EWnd2Icon
+	{
 		w2iUploading = 0,
 		w2iDownloading,
 		w2iOnQueue,
 		w2iClientsKnown
 	};
 
-	enum EWnd2 {
+	enum EWnd2
+	{
 		wnd2Downloading = 0,
 		wnd2Uploading = 1,
 		wnd2OnQueue = 2,
 		wnd2Clients = 3
 	};
 
-	void ShowQueueCount(uint32 number);
+public:
+	explicit CTransferWnd(CWnd* pParent = NULL);   // standard constructor
+	virtual ~CTransferWnd();
+
+	void ShowQueueCount(INT_PTR number);
 	void UpdateListCount(EWnd2 listindex, int iCount = -1);
 	void UpdateFilesCount(int iCount);
 	void Localize();
@@ -71,8 +76,6 @@ public:
 	void SetToolTipsDelay(DWORD dwDelay);
 	void OnDisableList();
 
-	// Dialog Data
-	enum { IDD = IDD_TRANSFER };
 	CUploadListCtrl			uploadlistctrl;
 	CDownloadListCtrl		downloadlistctrl;
 	CQueueListCtrl			queuelistctrl;

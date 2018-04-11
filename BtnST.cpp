@@ -98,11 +98,11 @@ CButtonST::CButtonST()
 	m_ptImageOrg.y = 3;
 
 	// No defined callbacks
-	::ZeroMemory(&m_csCallbacks, sizeof(m_csCallbacks));
+	memset(&m_csCallbacks, 0, sizeof m_csCallbacks);
 
 #ifdef	BTNST_USE_SOUND
 	// No defined sounds
-	::ZeroMemory(&m_csSounds, sizeof(m_csSounds));
+	memset(&m_csSounds, 0, sizeof m_csSounds);
 #endif
 } // End of CButtonST
 
@@ -179,8 +179,8 @@ void CButtonST::FreeResources(BOOL bCheckForNULL)
 			VERIFY( ::DeleteObject(m_csBitmaps[1].hMask) );
 	} // if
 
-	::ZeroMemory(m_csIcons, sizeof m_csIcons);
-	::ZeroMemory(m_csBitmaps, sizeof m_csBitmaps);
+	memset(m_csIcons, 0, sizeof m_csIcons);
+	memset(m_csBitmaps, 0, sizeof m_csBitmaps);
 } // End of FreeResources
 
 void CButtonST::PreSubclassWindow()
@@ -501,7 +501,7 @@ void CButtonST::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 	// Checkbox?
 	if (m_bIsCheckBox)
 	{
-		m_bIsPressed  =  ((lpDIS->itemState & ODS_SELECTED) || (m_nCheck != 0) || marked );
+		m_bIsPressed = ((lpDIS->itemState & ODS_SELECTED) || (m_nCheck != 0) || marked );
 	} // if
 	else	// Normal button OR other button style ...
 	{
@@ -558,11 +558,6 @@ void CButtonST::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 	}
 	else // ...else draw non pressed button
 	{
-		CPen penBtnHiLight(PS_SOLID, 0, GetSysColor(COLOR_BTNHILIGHT)); // White
-		CPen pen3DLight(PS_SOLID, 0, GetSysColor(COLOR_3DLIGHT));       // Light gray
-		CPen penBtnShadow(PS_SOLID, 0, GetSysColor(COLOR_BTNSHADOW));   // Dark gray
-		CPen pen3DDKShadow(PS_SOLID, 0, GetSysColor(COLOR_3DDKSHADOW)); // Black
-
 		if (m_bIsFlat)
 		{
 			if (m_bMouseOnButton && m_bDrawBorder)
@@ -570,6 +565,10 @@ void CButtonST::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 		}
 		else
 		{
+			CPen penBtnHiLight(PS_SOLID, 0, GetSysColor(COLOR_BTNHILIGHT)); // White
+			CPen pen3DLight(PS_SOLID, 0, GetSysColor(COLOR_3DLIGHT));       // Light gray
+			CPen penBtnShadow(PS_SOLID, 0, GetSysColor(COLOR_BTNSHADOW));   // Dark gray
+			CPen pen3DDKShadow(PS_SOLID, 0, GetSysColor(COLOR_3DDKSHADOW)); // Black
 			// Draw top-left borders
 			// White line
 			CPen *pOldPen = pDC->SelectObject(&penBtnHiLight);
@@ -621,7 +620,7 @@ void CButtonST::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 		DrawTheText(pDC, (LPCTSTR)sTitle, &lpDIS->rcItem, &captionRect, m_bIsPressed, m_bIsDisabled);
 	} // if
 
-	if (m_bIsFlat == FALSE || (m_bIsFlat && m_bDrawFlatFocus))
+	if (m_bIsFlat == FALSE || m_bDrawFlatFocus)
 	{
 		// Draw the focus rect
 		if (m_bIsFocused)
@@ -1007,7 +1006,7 @@ HICON CButtonST::CreateGrayscaleIcon(HICON hIcon)
 //
 DWORD CButtonST::SetIcon(LPCTSTR pszIconIn, LPCTSTR pszIconOut)
 {
-	HICON		hIconOut		= NULL;
+	HICON hIconOut = NULL;
 
 	// Set icon when the mouse is IN the button
 	HICON hIconIn = theApp.LoadIcon(pszIconIn, 16, 16);
@@ -1015,7 +1014,7 @@ DWORD CButtonST::SetIcon(LPCTSTR pszIconIn, LPCTSTR pszIconOut)
   	// Set icon when the mouse is OUT the button
 	if (pszIconOut)
 	{
-		if ((UINT)pszIconOut == (UINT)BTNST_AUTO_GRAY)
+		if ((HICON)pszIconOut == BTNST_AUTO_GRAY)
 			hIconOut = BTNST_AUTO_GRAY;
 		else
 			hIconOut = theApp.LoadIcon(pszIconOut, 16, 16);
@@ -1059,8 +1058,8 @@ DWORD CButtonST::SetIcon(HICON hIconIn, HICON hIconOut)
 			return BTNST_INVALIDRESOURCE;
 		} // if
 
-		m_csIcons[0].dwWidth	= (DWORD)(ii.xHotspot * 2);
-		m_csIcons[0].dwHeight	= (DWORD)(ii.yHotspot * 2);
+		m_csIcons[0].dwWidth = ii.xHotspot * 2;
+		m_csIcons[0].dwHeight = ii.yHotspot * 2;
 		VERIFY( ::DeleteObject(ii.hbmMask) );
 		VERIFY( ::DeleteObject(ii.hbmColor) );
 
@@ -1074,15 +1073,15 @@ DWORD CButtonST::SetIcon(HICON hIconIn, HICON hIconOut)
 
 			m_csIcons[1].hIcon = hIconOut;
 			// Get icon dimension
-			::ZeroMemory(&ii, sizeof(ICONINFO));
+			memset(&ii, 0, sizeof(ICONINFO));
 			if (!::GetIconInfo(hIconOut, &ii))
 			{
 				FreeResources();
 				return BTNST_INVALIDRESOURCE;
 			} // if
 
-			m_csIcons[1].dwWidth	= (DWORD)(ii.xHotspot * 2);
-			m_csIcons[1].dwHeight	= (DWORD)(ii.yHotspot * 2);
+			m_csIcons[1].dwWidth = ii.xHotspot * 2;
+			m_csIcons[1].dwHeight = ii.yHotspot * 2;
 			VERIFY( ::DeleteObject(ii.hbmMask) );
 			VERIFY( ::DeleteObject(ii.hbmColor) );
 		} // if
@@ -1978,7 +1977,7 @@ void CButtonST::SizeToContent()
 #ifdef	BTNST_USE_SOUND
 DWORD CButtonST::SetSound(LPCTSTR lpszSound, HMODULE hMod, BOOL bPlayOnClick, BOOL bPlayAsync)
 {
-	BYTE	byIndex = bPlayOnClick ? 1 : 0;
+	BYTE byIndex = static_cast<BYTE>(bPlayOnClick);
 
 	// Store new sound
 	if (lpszSound)
@@ -2001,7 +2000,7 @@ DWORD CButtonST::SetSound(LPCTSTR lpszSound, HMODULE hMod, BOOL bPlayOnClick, BO
 	else
 	{
 		// Or remove any existing
-		::ZeroMemory(&m_csSounds[byIndex], sizeof(STRUCT_SOUND));
+		memset(&m_csSounds[byIndex], 0,  sizeof(STRUCT_SOUND));
 	} // else
 
 	return BTNST_OK;

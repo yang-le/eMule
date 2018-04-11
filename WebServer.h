@@ -302,7 +302,7 @@ public:
 	~CWebServer();
 
 	inline void SetIP(ULONG ip) { m_ulCurIP = ip; }
-	int	 UpdateSessionCount();
+	INT_PTR	 UpdateSessionCount();
 	void StartServer();
 	void RestartServer();
 	void AddStatsLine(UpDown line);
@@ -347,7 +347,7 @@ private:
 	static bool		_RemoveSession(const ThreadData& Data, long lSession);
 	static CString	_SpecialChars(CString str, bool noquote = true);
 	static CString	_GetPlainResString(UINT nID, bool noquote = true);
-	static void		_GetPlainResString(CString *pstrOut, UINT nID, bool noquote = true);
+	static void		_GetPlainResString(CString& rstrOut, UINT nID, bool noquote = true);
 	static int		_GzipCompress(Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen, int level);
 	static CString	_LoadTemplate(const CString& sAll, const CString& sTemplateName);
 	static Session	GetSessionByID(ThreadData Data,long sessionID);

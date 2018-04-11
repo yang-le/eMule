@@ -47,7 +47,7 @@ BEGIN_MESSAGE_MAP(CPPgNotify, CPropertyPage)
 	ON_BN_CLICKED(IDC_CB_TBN_ONDOWNLOAD, OnSettingsChange)
 	ON_BN_CLICKED(IDC_CB_TBN_ONLOG, OnSettingsChange)
 	ON_BN_CLICKED(IDC_CB_TBN_ONCHAT, OnBnClickedOnChat)
-	ON_BN_CLICKED(IDC_CB_TBN_IMPORTATNT , OnSettingsChange)
+	ON_BN_CLICKED(IDC_CB_TBN_IMPORTATNT, OnSettingsChange)
 	ON_BN_CLICKED(IDC_CB_TBN_POP_ALWAYS, OnSettingsChange)
 	ON_BN_CLICKED(IDC_CB_TBN_ONNEWVERSION, OnSettingsChange)
 	ON_EN_CHANGE(IDC_EDIT_SMTPSERVER, OnSettingsChange)
@@ -110,7 +110,7 @@ BOOL CPPgNotify::OnInitDialog()
 
 	SetDlgItemText(IDC_EDIT_TBN_WAVFILE, thePrefs.notifierSoundFile);
 
-	if (!m_bEnableEMail){
+	if (!m_bEnableEMail) {
 		CheckDlgButton(IDC_CB_ENABLENOTIFICATIONS, BST_UNCHECKED);
 		GetDlgItem(IDC_EMAILNOT_GROUP)->EnableWindow(FALSE);
 		GetDlgItem(IDC_CB_ENABLENOTIFICATIONS)->EnableWindow(FALSE);
@@ -120,23 +120,14 @@ BOOL CPPgNotify::OnInitDialog()
 		GetDlgItem(IDC_EDIT_SMTPSERVER)->EnableWindow(FALSE);
 		GetDlgItem(IDC_EDIT_RECEIVER)->EnableWindow(FALSE);
 		GetDlgItem(IDC_EDIT_SENDER)->EnableWindow(FALSE);
-	}
-	else{
+	} else {
 		SetDlgItemText(IDC_EDIT_SMTPSERVER, thePrefs.GetNotifierMailServer());
 		SetDlgItemText(IDC_EDIT_RECEIVER, thePrefs.GetNotifierMailReceiver());
 		SetDlgItemText(IDC_EDIT_SENDER, thePrefs.GetNotifierMailSender());
-		if (thePrefs.IsNotifierSendMailEnabled()){
-			CheckDlgButton(IDC_CB_ENABLENOTIFICATIONS, BST_CHECKED);
-			GetDlgItem(IDC_EDIT_SMTPSERVER)->EnableWindow(TRUE);
-			GetDlgItem(IDC_EDIT_RECEIVER)->EnableWindow(TRUE);
-			GetDlgItem(IDC_EDIT_SENDER)->EnableWindow(TRUE);
-		}
-		else{
-			CheckDlgButton(IDC_CB_ENABLENOTIFICATIONS, BST_UNCHECKED);
-			GetDlgItem(IDC_EDIT_SMTPSERVER)->EnableWindow(FALSE);
-			GetDlgItem(IDC_EDIT_RECEIVER)->EnableWindow(FALSE);
-			GetDlgItem(IDC_EDIT_SENDER)->EnableWindow(FALSE);
-		}
+		CheckDlgButton(IDC_CB_ENABLENOTIFICATIONS, thePrefs.IsNotifierSendMailEnabled() ? BST_CHECKED : BST_UNCHECKED);
+		GetDlgItem(IDC_EDIT_SMTPSERVER)->EnableWindow(thePrefs.IsNotifierSendMailEnabled());
+		GetDlgItem(IDC_EDIT_RECEIVER)->EnableWindow(thePrefs.IsNotifierSendMailEnabled());
+		GetDlgItem(IDC_EDIT_SENDER)->EnableWindow(thePrefs.IsNotifierSendMailEnabled());
 	}
 
 	UpdateControls();
@@ -162,23 +153,23 @@ void CPPgNotify::Localize()
 	if (m_hWnd)
 	{
 		SetWindowText(GetResString(IDS_PW_EKDEV_OPTIONS));
-		GetDlgItem(IDC_CB_TBN_USESOUND)->SetWindowText(GetResString(IDS_PW_TBN_USESOUND));
-		GetDlgItem(IDC_CB_TBN_NOSOUND)->SetWindowText(GetResString(IDS_NOSOUND));
-		GetDlgItem(IDC_CB_TBN_ONLOG)->SetWindowText(GetResString(IDS_PW_TBN_ONLOG));
-		GetDlgItem(IDC_CB_TBN_ONCHAT)->SetWindowText(GetResString(IDS_PW_TBN_ONCHAT));
-		GetDlgItem(IDC_CB_TBN_POP_ALWAYS)->SetWindowText(GetResString(IDS_PW_TBN_POP_ALWAYS));
-		GetDlgItem(IDC_CB_TBN_ONDOWNLOAD)->SetWindowText(GetResString(IDS_PW_TBN_ONDOWNLOAD) + _T(" (*)") );
-		GetDlgItem(IDC_CB_TBN_ONNEWDOWNLOAD)->SetWindowText(GetResString(IDS_TBN_ONNEWDOWNLOAD));
-		GetDlgItem(IDC_TASKBARNOTIFIER)->SetWindowText(GetResString(IDS_PW_TASKBARNOTIFIER));
-		GetDlgItem(IDC_CB_TBN_IMPORTATNT)->SetWindowText(GetResString(IDS_PS_TBN_IMPORTANT) + _T(" (*)"));
-		GetDlgItem(IDC_CB_TBN_ONNEWVERSION)->SetWindowText(GetResString(IDS_CB_TBN_ONNEWVERSION));
-		GetDlgItem(IDC_TBN_OPTIONS)->SetWindowText(GetResString(IDS_PW_TBN_OPTIONS));
-		GetDlgItem(IDC_CB_TBN_USESPEECH)->SetWindowText(GetResString(IDS_USESPEECH));
-		GetDlgItem(IDC_EMAILNOT_GROUP)->SetWindowText(GetResString(IDS_PW_EMAILNOTIFICATIONS) + _T(" (*)"));
-		GetDlgItem(IDC_TXT_SMTPSERVER)->SetWindowText(GetResString(IDS_PW_SMTPSERVER));
-		GetDlgItem(IDC_TXT_RECEIVER)->SetWindowText(GetResString(IDS_PW_RECEIVERADDRESS));
-		GetDlgItem(IDC_TXT_SENDER)->SetWindowText(GetResString(IDS_PW_SENDERADDRESS));
-		GetDlgItem(IDC_CB_ENABLENOTIFICATIONS)->SetWindowText(GetResString(IDS_PW_ENABLEEMAIL));
+		SetDlgItemText(IDC_CB_TBN_USESOUND, GetResString(IDS_PW_TBN_USESOUND));
+		SetDlgItemText(IDC_CB_TBN_NOSOUND, GetResString(IDS_NOSOUND));
+		SetDlgItemText(IDC_CB_TBN_ONLOG, GetResString(IDS_PW_TBN_ONLOG));
+		SetDlgItemText(IDC_CB_TBN_ONCHAT, GetResString(IDS_PW_TBN_ONCHAT));
+		SetDlgItemText(IDC_CB_TBN_POP_ALWAYS, GetResString(IDS_PW_TBN_POP_ALWAYS));
+		SetDlgItemText(IDC_CB_TBN_ONDOWNLOAD, GetResString(IDS_PW_TBN_ONDOWNLOAD) + _T(" (*)") );
+		SetDlgItemText(IDC_CB_TBN_ONNEWDOWNLOAD, GetResString(IDS_TBN_ONNEWDOWNLOAD));
+		SetDlgItemText(IDC_TASKBARNOTIFIER, GetResString(IDS_PW_TASKBARNOTIFIER));
+		SetDlgItemText(IDC_CB_TBN_IMPORTATNT, GetResString(IDS_PS_TBN_IMPORTANT) + _T(" (*)"));
+		SetDlgItemText(IDC_CB_TBN_ONNEWVERSION, GetResString(IDS_CB_TBN_ONNEWVERSION));
+		SetDlgItemText(IDC_TBN_OPTIONS, GetResString(IDS_PW_TBN_OPTIONS));
+		SetDlgItemText(IDC_CB_TBN_USESPEECH, GetResString(IDS_USESPEECH));
+		SetDlgItemText(IDC_EMAILNOT_GROUP, GetResString(IDS_PW_EMAILNOTIFICATIONS) + _T(" (*)"));
+		SetDlgItemText(IDC_TXT_SMTPSERVER, GetResString(IDS_PW_SMTPSERVER));
+		SetDlgItemText(IDC_TXT_RECEIVER, GetResString(IDS_PW_RECEIVERADDRESS));
+		SetDlgItemText(IDC_TXT_SENDER, GetResString(IDS_PW_SENDERADDRESS));
+		SetDlgItemText(IDC_CB_ENABLENOTIFICATIONS, GetResString(IDS_PW_ENABLEEMAIL));
 		SetDlgItemText(IDC_TEST_NOTIFICATION, GetResString(IDS_TEST) );
 	}
 }

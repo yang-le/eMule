@@ -119,7 +119,7 @@ void CToolBarCtrlX::SetBtnText(int nID, LPCTSTR pszString)
 
 CSize CToolBarCtrlX::GetPadding()
 {
-	DWORD dwPadding = SendMessage(TB_GETPADDING);
+	LRESULT dwPadding = SendMessage(TB_GETPADDING);
 	return CSize(LOWORD(dwPadding), HIWORD(dwPadding));
 }
 
@@ -147,7 +147,7 @@ void CToolBarCtrlX::AdjustFont(int iMaxPointSize, CSize sizButton)
 	CFont* pFont = GetFont();
 	if (pFont)
 	{
-		LOGFONT lf = {};
+		LOGFONT lf;
 		if (pFont->GetLogFont(&lf) > 0)
 		{
 			HDC hDC = ::GetDC(HWND_DESKTOP);

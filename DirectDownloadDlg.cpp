@@ -71,18 +71,18 @@ void CDirectDownloadDlg::OnEnUpdateElink()
 void CDirectDownloadDlg::OnEnKillfocusElink()
 {
 	CString strLinks;
-	GetDlgItem(IDC_ELINK)->GetWindowText(strLinks);
+	GetDlgItemText(IDC_ELINK, strLinks);
 	if (strLinks.IsEmpty() || strLinks.Find(_T('\n')) == -1)
 		return;
 	strLinks.Replace(_T("\n"), _T("\r\n"));
 	strLinks.Replace(_T("\r\r"), _T("\r"));
-	GetDlgItem(IDC_ELINK)->SetWindowText(strLinks);
+	SetDlgItemText(IDC_ELINK, strLinks);
 }
 
 void CDirectDownloadDlg::OnOK()
 {
 	CString strLinks;
-	GetDlgItem(IDC_ELINK)->GetWindowText(strLinks);
+	GetDlgItemText(IDC_ELINK, strLinks);
 
 	int curPos = 0;
 	CString strTok = strLinks.Tokenize(_T(" \t\r\n"), curPos); // tokenize by whitespaces
@@ -144,12 +144,12 @@ BOOL CDirectDownloadDlg::OnInitDialog()
 	SetWindowText(GetResString(IDS_SW_DIRECTDOWNLOAD));
 	m_ctrlDirectDlFrm.SetIcon(_T("Download"));
 	m_ctrlDirectDlFrm.SetWindowText(GetResString(IDS_SW_DIRECTDOWNLOAD));
-    GetDlgItem(IDOK)->SetWindowText(GetResString(IDS_DOWNLOAD));
-	GetDlgItem(IDC_FSTATIC2)->SetWindowText(GetResString(IDS_SW_LINK));
-	GetDlgItem(IDC_CATLABEL)->SetWindowText(GetResString(IDS_CAT)+_T(':'));
+    SetDlgItemText(IDOK, GetResString(IDS_DOWNLOAD));
+	SetDlgItemText(IDC_FSTATIC2, GetResString(IDS_SW_LINK));
+	SetDlgItemText(IDC_CATLABEL, GetResString(IDS_CAT)+_T(':'));
 
-	GetDlgItem(IDOK)->SetWindowText(GetResString(IDS_DOWNLOAD));
-	GetDlgItem(IDCANCEL)->SetWindowText(GetResString(IDS_CANCEL));
+	SetDlgItemText(IDOK, GetResString(IDS_DOWNLOAD));
+	SetDlgItemText(IDCANCEL, GetResString(IDS_CANCEL));
 
 
 	if (thePrefs.GetCatCount()==0) {
@@ -160,7 +160,7 @@ BOOL CDirectDownloadDlg::OnInitDialog()
 		UpdateCatTabs();
 		if (theApp.m_fontSymbol.m_hObject){
 			GetDlgItem(IDC_CATLABEL)->SetFont(&theApp.m_fontSymbol);
-			GetDlgItem(IDC_CATLABEL)->SetWindowText(GetExStyle() & WS_EX_LAYOUTRTL ? _T("3") : _T("4")); // show a right-arrow
+			SetDlgItemText(IDC_CATLABEL, (GetExStyle() & WS_EX_LAYOUTRTL) ? _T("3") : _T("4")); // show a right-arrow
 		}
 
 	}

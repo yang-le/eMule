@@ -165,10 +165,8 @@ void CClientCreditsList::LoadList()
 		if (fexp.m_cause != CFileException::fileNotFound){
 			CString strError(GetResString(IDS_ERR_LOADCREDITFILE));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
-				strError += _T(" - ");
-				strError += szError;
-			}
+			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError)))
+				strError.AppendFormat(_T(" - %s"), szError);
 			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
 		return;
@@ -196,7 +194,7 @@ void CClientCreditsList::LoadList()
 			DWORD dwBakFileSize = ::GetFileSize(hBakFile, NULL); //debug
 			if (dwBakFileSize > (DWORD)file.GetLength())
 			{
-				// the size of the backup was larger then the org. file, something is wrong here, don't overwrite old backup..
+				// the size of the backup was larger then the org. file, something is wrong here, don't overwrite old backup.
 				bCreateBackup = FALSE;
 			}
 			//else: backup is smaller or the same size as org. file, proceed with copying of file
@@ -215,10 +213,8 @@ void CClientCreditsList::LoadList()
 			if (!file.Open(strFileName, iOpenFlags, &fexp)){
 				CString strError(GetResString(IDS_ERR_LOADCREDITFILE));
 				TCHAR szError[MAX_CFEXP_ERRORMSG];
-				if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
-					strError += _T(" - ");
-					strError += szError;
-				}
+				if (GetExceptionMessage(fexp, szError, ARRSIZE(szError)))
+					strError.AppendFormat(_T(" - %s"), szError);
 				LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 				return;
 			}
@@ -238,7 +234,7 @@ void CClientCreditsList::LoadList()
 			else
 				file.Read(newcstruct, sizeof(CreditStruct));
 
-			if (newcstruct->nLastSeen < dwExpired){
+			if (newcstruct->nLastSeen < (uint32)dwExpired){
 				++cDeleted;
 				delete newcstruct;
 				continue;
@@ -278,10 +274,8 @@ void CClientCreditsList::SaveList()
 	if (!file.Open(name, CFile::modeWrite|CFile::modeCreate|CFile::typeBinary|CFile::shareDenyWrite, &fexp)){
 		CString strError(GetResString(IDS_ERR_FAILED_CREDITSAVE));
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
-			strError += _T(" - ");
-			strError += szError;
-		}
+		if (GetExceptionMessage(fexp, szError, ARRSIZE(szError)))
+			strError.AppendFormat(_T(" - %s"), szError);
 		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		return;
 	}
@@ -310,10 +304,8 @@ void CClientCreditsList::SaveList()
 	catch(CFileException* error){
 		CString strError(GetResString(IDS_ERR_FAILED_CREDITSAVE));
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (GetExceptionMessage(*error, szError, ARRSIZE(szError))) {
-			strError += _T(" - ");
-			strError += szError;
-		}
+		if (GetExceptionMessage(*error, szError, ARRSIZE(szError)))
+			strError.AppendFormat(_T(" - %s"), szError);
 		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		error->Delete();
 	}
@@ -335,7 +327,7 @@ CClientCredits* CClientCreditsList::GetCredit(const uchar* key)
 
 void CClientCreditsList::Process()
 {
-	if (::GetTickCount() - m_nLastSaved > MIN2MS(13))
+	if (::GetTickCount() >= m_nLastSaved + MIN2MS(13))
 		SaveList();
 }
 
@@ -390,14 +382,11 @@ EIdentState	CClientCredits::GetCurrentIdentState(uint32 dwForIP) const
 {
 	if (IdentState != IS_IDENTIFIED)
 		return IdentState;
-	else{
-		if (dwForIP == m_dwIdentIP)
-			return IS_IDENTIFIED;
-		else
-			return IS_IDBADGUY;
-			// mod note: clients which just reconnected after an IP change and have to ident yet will also have this state for 1-2 seconds
-			//		 so don't try to spam such clients with "bad guy" messages (besides: spam messages are always bad)
-	}
+	if (dwForIP == m_dwIdentIP)
+		return IS_IDENTIFIED;
+	return IS_IDBADGUY;
+	// mod note: clients which just reconnected after an IP change and have to ident yet will also have this state for 1-2 seconds
+	//		 so don't try to spam such clients with "bad guy" messages (besides: spam messages are always bad)
 }
 
 using namespace CryptoPP;
@@ -432,7 +421,8 @@ void CClientCreditsList::InitalizeCrypting()
 		// calculate and store public key
 		RSASSA_PKCS1v15_SHA_Verifier pubkey(*m_pSignkey);
 		ArraySink asink(m_abyMyPublicKey, 80);
-		pubkey.DEREncode(asink);
+//		pubkey.DEREncode(asink);
+		pubkey.GetMaterial().Save(asink);
 		m_nMyPublicKeyLen = (uint8)asink.TotalPutLength();
 		asink.MessageEnd();
 	}
@@ -501,7 +491,7 @@ uint8 CClientCreditsList::CreateSignature(CClientCredits* pTarget, uchar* pachOu
 			PokeUInt32(abyBuffer+keylen+4, ChallengeIP);
 			PokeUInt8(abyBuffer+keylen+4+4, byChaIPKind);
 		}
-		sigkey->SignMessage(rng, abyBuffer ,keylen+4+ChIpLen , sbbSignature.begin());
+		sigkey->SignMessage(rng, abyBuffer,keylen+4+ChIpLen, sbbSignature.begin());
 		ArraySink asink(pachOutput, nMaxSize);
 		asink.Put(sbbSignature.begin(), sbbSignature.size());
 		nResult = (uint8)asink.TotalPutLength();
@@ -554,7 +544,6 @@ bool CClientCreditsList::VerifyIdent(CClientCredits* pTarget, const uchar* pachS
 					break;
 				case CRYPT_CIP_NONECLIENT: // maybe not supported in future versions
 					ChallengeIP = 0;
-					break;
 			}
 			PokeUInt32(abyBuffer+m_nMyPublicKeyLen+4, ChallengeIP);
 			PokeUInt8(abyBuffer+m_nMyPublicKeyLen+4+4, byChaIPKind);
@@ -597,7 +586,8 @@ bool CClientCreditsList::Debug_CheckCrypting()
 
 	byte abyPublicKey[80];
 	ArraySink asink(abyPublicKey, 80);
-	pub.DEREncode(asink);
+//	pub.DEREncode(asink);
+	pub.GetMaterial().Save(asink);
 	uint8 PublicKeyLen = (uint8)asink.TotalPutLength();
 	asink.MessageEnd();
 	uint32 challenge = rand();
@@ -636,33 +626,30 @@ uint32 CClientCredits::GetSecureWaitStartTime(uint32 dwForIP)
 	if (m_dwUnSecureWaitTime == 0 || m_dwSecureWaitTime == 0)
 		SetSecWaitStartTime(dwForIP);
 
-	if (m_pCredits->nKeySize != 0){	// this client is a SecureHash Client
-		if (GetCurrentIdentState(dwForIP) == IS_IDENTIFIED){ // good boy
+	if (m_pCredits->nKeySize != 0) {	// this client is a SecureHash Client
+		if (GetCurrentIdentState(dwForIP) == IS_IDENTIFIED) // good boy
 			return m_dwSecureWaitTime;
-		}
-		else{	// not so good boy
-			if (dwForIP == m_dwWaitTimeIP){
-				return m_dwUnSecureWaitTime;
-			}
-			else{	// bad boy
-				// this can also happen if the client has not identified himself yet, but will do later - so maybe he is not a bad boy :) .
-				/*CString buffer2, buffer;
-				for (uint16 i = 0;i != 16;i++){
-					buffer2.Format("%02X",this->m_pCredits->abyKey[i]);
-					buffer+=buffer2;
-				}
-				if (thePrefs.GetLogSecureIdent())
-					AddDebugLogLine(false,"Warning: WaitTime resetted due to Invalid Ident for Userhash %s", buffer);*/
 
-				m_dwUnSecureWaitTime = ::GetTickCount();
-				m_dwWaitTimeIP = dwForIP;
-				return m_dwUnSecureWaitTime;
-			}
+		// not so good boy
+		if (dwForIP == m_dwWaitTimeIP)
+			return m_dwUnSecureWaitTime;
+
+		// bad boy
+		// this can also happen if the client has not identified himself yet, but will do later - so maybe he is not a bad boy :) .
+		/*CString buffer2, buffer;
+		for (uint16 i = 0;i != 16;i++){
+			buffer2.Format("%02X",this->m_pCredits->abyKey[i]);
+			buffer+=buffer2;
 		}
+		if (thePrefs.GetLogSecureIdent())
+			AddDebugLogLine(false,"Warning: WaitTime resetted due to Invalid Ident for Userhash %s", buffer);*/
+
+		m_dwUnSecureWaitTime = ::GetTickCount();
+		m_dwWaitTimeIP = dwForIP;
+//		return m_dwUnSecureWaitTime;
 	}
-	else{	// not a SecureHash Client - handle it like before for now (no security checks)
-		return m_dwUnSecureWaitTime;
-	}
+	// not a SecureHash Client - handle it like before for now (no security checks)
+	return m_dwUnSecureWaitTime;
 }
 
 void CClientCredits::SetSecWaitStartTime(uint32 dwForIP)

@@ -161,9 +161,8 @@ CSearchFile::CSearchFile(const CSearchFile* copyfrom)
 
 CSearchFile::CSearchFile(CFileDataIO* in_data, bool bOptUTF8,
 						 uint32 nSearchID, uint32 nServerIP, uint16 nServerPort, LPCTSTR pszDirectory, bool bKademlia, bool bServerUDPAnswer)
-	: m_nSources(0), m_nCompleteSources(0), m_flags(0)
+	: m_bMultipleAICHFound(false), m_flags(), m_nSources(0), m_nCompleteSources(0)
 {
-	m_bMultipleAICHFound = false;
 	m_bKademlia = bKademlia;
 	m_bServerUDPAnswer = bServerUDPAnswer;
 	m_nSearchID = nSearchID;
@@ -323,9 +322,9 @@ void CSearchFile::StoreToFile(CFileDataIO& rFile) const
 	rFile.WriteHash16(m_FileIdentifier.GetMD4Hash());
 	rFile.WriteUInt32(m_nClientID);
 	rFile.WriteUInt16(m_nClientPort);
-	uint32 nTagCount = taglist.GetCount();
+	uint32 nTagCount = (uint32)taglist.GetCount();
 	if (m_FileIdentifier.HasAICHHash())
-		nTagCount++;
+		++nTagCount;
 	rFile.WriteUInt32(nTagCount);
 	for (INT_PTR pos = 0; pos < taglist.GetCount(); pos++) {
 		CTag* tag = taglist[pos];

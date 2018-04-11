@@ -76,12 +76,12 @@ void CCommentListCtrl::Init()
 
 int CALLBACK CCommentListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const SComment *item1 = reinterpret_cast<const SComment *>(lParam1);
-	const SComment *item2 = reinterpret_cast<const SComment *>(lParam2);
+	const SComment *item1 = reinterpret_cast<SComment *>(lParam1);
+	const SComment *item2 = reinterpret_cast<SComment *>(lParam2);
 	if (item1 == NULL || item2 == NULL)
 		return 0;
 
-	int iResult;
+	int iResult = 0;
 	switch (LOWORD(lParamSort))
 	{
 		case colRating:
@@ -89,8 +89,6 @@ int CALLBACK CCommentListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM l
 				iResult = -1;
 			else if (item1->m_iRating > item2->m_iRating)
 				iResult = 1;
-			else
-				iResult = 0;
 			break;
 
 		case colComment:
@@ -110,13 +108,10 @@ int CALLBACK CCommentListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM l
 				iResult = -1;
 			else if (item1->m_iOrigin > item2->m_iOrigin)
 				iResult = 1;
-			else
-				iResult = 0;
 			break;
 
 		default:
 			ASSERT(0);
-			return 0;
 	}
 	if (HIWORD(lParamSort))
 		iResult = -iResult;
@@ -187,7 +182,7 @@ int CCommentListCtrl::FindClientComment(const void* pClientCookie)
 	int iItems = GetItemCount();
 	for (int i = 0; i < iItems; i++)
 	{
-		const SComment* pComment = reinterpret_cast<const SComment *>(GetItemData(i));
+		const SComment* pComment = reinterpret_cast<SComment *>(GetItemData(i));
 		if (pComment && pComment->m_pClientCookie == pClientCookie)
 			return i;
 	}

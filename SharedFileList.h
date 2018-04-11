@@ -86,8 +86,8 @@ public:
 	CString GetDirNameByPseudo(const CString& strPseudoName) const;
 
 	uint64	GetDatasize(uint64 &pbytesLargest) const;
-	int		GetCount()															{return static_cast<int>(m_Files_map.GetCount()); }
-	int		GetHashingCount()													{ return waitingforhash_list.GetCount()+currentlyhashing_list.GetCount(); }
+	INT_PTR	GetCount()															{return m_Files_map.GetCount(); }
+	INT_PTR	GetHashingCount()													{ return waitingforhash_list.GetCount()+currentlyhashing_list.GetCount(); }
 	bool	ProbablyHaveSingleSharedFiles() const								{ return bHaveSingleSharedFiles && !m_liSingleSharedFiles.IsEmpty(); } // might not be always up-to-date, could give false "true"s, not a problem currently
 
 	void	HashFailed(UnknownFile_Struct* hashed);		// SLUGFILLER: SafeHash
@@ -122,13 +122,13 @@ private:
 	CStringList			m_liSingleSharedFiles;
 	CStringList			m_liSingleExcludedFiles;
 
-	uint32 m_lastPublishED2K;
-	bool	 m_lastPublishED2KFlag;
-	int m_currFileSrc;
+	uint32	m_lastPublishED2K;
+	bool	m_lastPublishED2KFlag;
+	int	m_currFileSrc;
 	int m_currFileNotes;
 	int m_currFileKey;
-	uint32 m_lastPublishKadSrc;
-	uint32 m_lastPublishKadNotes;
+	time_t m_lastPublishKadSrc;
+	time_t m_lastPublishKadNotes;
 	bool bHaveSingleSharedFiles;
 };
 

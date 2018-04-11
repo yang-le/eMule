@@ -72,19 +72,16 @@ void CFileDataIO::ReadHash16(uchar* pVal)
 CString CFileDataIO::ReadString(bool bOptUTF8, UINT uRawSize)
 {
 	const UINT uMaxShortRawSize = SHORT_RAW_ED2K_UTF8_STR;
-	if (uRawSize <= uMaxShortRawSize)
-	{
+	if (uRawSize <= uMaxShortRawSize) {
 		char acRaw[uMaxShortRawSize];
 		Read(acRaw, uRawSize);
-		if (uRawSize >= 3 && (UCHAR)acRaw[0] == 0xEFU && (UCHAR)acRaw[1] == 0xBBU && (UCHAR)acRaw[2] == 0xBFU)
-		{
+		if (uRawSize >= 3 && acRaw[0] == (char)0xEFU && acRaw[1] == (char)0xBBU && acRaw[2] == (char)0xBFU) {
 			WCHAR awc[uMaxShortRawSize];
 			int iChars = ByteStreamToWideChar(acRaw + 3, uRawSize - 3, awc, ARRSIZE(awc));
 			if (iChars >= 0)
 				return CStringW(awc, iChars);
 		}
-		else if (bOptUTF8)
-		{
+		if (bOptUTF8) {
 			WCHAR awc[uMaxShortRawSize];
 			//int iChars = ByteStreamToWideChar(acRaw, uRawSize, awc, ARRSIZE(awc));
 			int iChars = utf8towc(acRaw, uRawSize, awc, ARRSIZE(awc));
@@ -93,27 +90,23 @@ CString CFileDataIO::ReadString(bool bOptUTF8, UINT uRawSize)
 		}
 		return CStringW(acRaw, uRawSize); // use local codepage
 	}
-	else
-	{
-		Array<char> acRaw(uRawSize);
-		Read(acRaw, uRawSize);
-		if (uRawSize >= 3 && (UCHAR)acRaw[0] == 0xEFU && (UCHAR)acRaw[1] == 0xBBU && (UCHAR)acRaw[2] == 0xBFU)
-		{
-			Array<WCHAR> awc(uRawSize);
-			int iChars = ByteStreamToWideChar(acRaw + 3, uRawSize - 3, awc, uRawSize);
-			if (iChars >= 0)
-				return CStringW(awc, iChars);
-		}
-		else if (bOptUTF8)
-		{
-			Array<WCHAR> awc(uRawSize);
-			//int iChars = ByteStreamToWideChar(acRaw, uRawSize, awc, uRawSize);
-			int iChars = utf8towc(acRaw, uRawSize, awc, uRawSize);
-			if (iChars >= 0)
-				return CStringW(awc, iChars);
-		}
-		return CStringW(acRaw, uRawSize); // use local codepage
+
+	Array<char> acRaw(uRawSize);
+	Read(acRaw, uRawSize);
+	if (uRawSize >= 3 && acRaw[0] == (char)0xEFU && acRaw[1] == (char)0xBBU && acRaw[2] == (char)0xBFU) {
+		Array<WCHAR> awc(uRawSize);
+		int iChars = ByteStreamToWideChar(acRaw + 3, uRawSize - 3, awc, uRawSize);
+		if (iChars >= 0)
+			return CStringW(awc, iChars);
 	}
+	if (bOptUTF8) {
+		Array<WCHAR> awc(uRawSize);
+		//int iChars = ByteStreamToWideChar(acRaw, uRawSize, awc, uRawSize);
+		int iChars = utf8towc(acRaw, uRawSize, awc, uRawSize);
+		if (iChars >= 0)
+			return CStringW(awc, iChars);
+	}
+	return CStringW(acRaw, uRawSize); // use local codepage
 }
 
 CString CFileDataIO::ReadString(bool bOptUTF8)
@@ -213,9 +206,9 @@ void CFileDataIO::WriteString(const CString& rstr, EUtf8Str eEncode)
 
 void CFileDataIO::WriteString(LPCSTR psz)
 {
-	UINT uLen = strlen(psz);
+	size_t uLen = strlen(psz);
 	WriteUInt16((uint16)uLen);
-	Write(psz, uLen);
+	Write(psz, (UINT)uLen);
 }
 
 void CFileDataIO::WriteLongString(const CString& rstr, EUtf8Str eEncode)
@@ -245,15 +238,16 @@ void CFileDataIO::WriteLongString(const CString& rstr, EUtf8Str eEncode)
 	else
 	{
 		CUnicodeToMultiByte mb(rstr);
-		WRITE_STR_LEN(mb.GetLength());
-		Write((LPCSTR)mb, mb.GetLength());
+		UINT uLen = (UINT)mb.GetLength();
+		WRITE_STR_LEN(uLen);
+		Write((LPCSTR)mb, uLen);
 	}
 #undef WRITE_STR_LEN
 }
 
 void CFileDataIO::WriteLongString(LPCSTR psz)
 {
-	UINT uLen = strlen(psz);
+	UINT uLen = (UINT)strlen(psz);
 	WriteUInt32(uLen);
 	Write(psz, uLen);
 }

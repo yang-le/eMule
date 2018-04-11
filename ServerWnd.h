@@ -29,6 +29,15 @@ class CServerWnd : public CResizableDialog
 {
 	DECLARE_DYNAMIC(CServerWnd)
 
+	enum { IDD = IDD_SERVER };
+
+	enum ELogPaneItems
+	{
+		PaneServerInfo = 0, // those are CTabCtrl item indices
+		PaneLog = 1,
+		PaneVerboseLog = 2
+	};
+
 public:
 	explicit CServerWnd(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CServerWnd();
@@ -45,16 +54,6 @@ public:
 	void PasteServerFromClipboard();
 	bool AddServer(uint16 nPort, const CString& strAddress, CString strName = _T(""), bool bShowErrorMB = true);
 	CString GetMyInfoString();
-
-// Dialog Data
-	enum { IDD = IDD_SERVER };
-
-	enum ELogPaneItems
-	{
-		PaneServerInfo	= 0, // those are CTabCtrl item indices
-		PaneLog			= 1,
-		PaneVerboseLog	= 2
-	};
 
 	CServerListCtrl serverlistctrl;
 	CHTRichEditCtrl* servermsgbox;

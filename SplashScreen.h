@@ -6,12 +6,11 @@ class CSplashScreen : public CDialog
 {
 	DECLARE_DYNAMIC(CSplashScreen)
 
+	enum { IDD = IDD_SPLASH };
+
 public:
 	explicit CSplashScreen(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CSplashScreen();
-
-// Dialog Data
-	enum { IDD = IDD_SPLASH };
 
 protected:
 	CBitmap m_imgSplash;

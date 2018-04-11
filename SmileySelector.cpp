@@ -237,7 +237,7 @@ BOOL CSmileySelector::OnCommand(WPARAM wParam, LPARAM lParam)
 
 		CString strEdit;
 		m_pwndEdit->GetWindowText(strEdit);
-		int iEditLen =  strEdit.GetLength();
+		int iEditLen = strEdit.GetLength();
 
 		CString strInsert;
 		if (   (iStart > 0 && iStart < iEditLen - 1 && strEdit[iStart] != _T(' '))

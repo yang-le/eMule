@@ -73,12 +73,12 @@ BOOL InputBox::OnInitDialog()
 	InitWindowStyles(this);
 	SetIcon( m_icMain = theApp.LoadIcon(_T("RENAME")),FALSE);
 
-	GetDlgItem(IDC_IBLABEL)->SetWindowText(m_label);
-	GetDlgItem(IDC_TEXT)->SetWindowText(m_default);
+	SetDlgItemText(IDC_IBLABEL, m_label);
+	SetDlgItemText(IDC_TEXT, m_default);
 	SetWindowText(m_title);
 
 	SetDlgItemText(IDOK, GetResString(IDS_TREEOPTIONS_OK) );
-	GetDlgItem(IDCANCEL)->SetWindowText(GetResString(IDS_CANCEL));
+	SetDlgItemText(IDCANCEL, GetResString(IDS_CANCEL));
 	SetDlgItemText(IDC_CLEANFILENAME,GetResString(IDS_CLEANUP));
 	GetDlgItem(IDC_CLEANFILENAME)->ShowWindow(m_bFilenameMode ? SW_NORMAL : SW_HIDE);
 
@@ -88,6 +88,6 @@ BOOL InputBox::OnInitDialog()
 void InputBox::OnCleanFilename()
 {
 	CString filename;
-	GetDlgItem(IDC_TEXT)->GetWindowText(filename);
-	GetDlgItem(IDC_TEXT)->SetWindowText(CleanupFilename(filename));
+	GetDlgItemText(IDC_TEXT, filename);
+	SetDlgItemText(IDC_TEXT, CleanupFilename(filename));
 }

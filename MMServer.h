@@ -61,7 +61,7 @@ public:
 	uint8	m_byPendingCommand;
 
 protected:
-	static VOID CALLBACK CommandTimer(HWND hWnd, UINT nMsg, UINT_PTR nId, DWORD dwTime);
+	static VOID CALLBACK CommandTimer(HWND hWnd, UINT nMsg, UINT_PTR nId, DWORD dwTime) noexcept;
 	void	DeleteSearchFiles();
 	static void	WriteFileInfo(CPartFile* selFile, CMMPacket* packet);
 

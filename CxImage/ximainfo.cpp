@@ -191,9 +191,9 @@ uint32_t CxImage::GetWidth() const
 /**
  * \return size_t aligned width of the image.
  */
-uint32_t CxImage::GetEffWidth() const
+size_t CxImage::GetEffWidth() const
 {
-	return info.dwEffWidth;
+	return (size_t)info.dwEffWidth;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -776,10 +776,9 @@ const char* CxImage::GetLastError() const
 	return info.szLastError;
 }
 ////////////////////////////////////////////////////////////////////////////////
-uint32_t CxImage::DumpSize()
+size_t CxImage::DumpSize()
 {
-	uint32_t n;
-	n = sizeof(BITMAPINFOHEADER) + sizeof(CXIMAGEINFO) + GetSize();
+	size_t n = sizeof(BITMAPINFOHEADER) + sizeof(CXIMAGEINFO) + GetSize();
 
 #if CXIMAGE_SUPPORT_ALPHA
 	if (pAlpha)
@@ -806,19 +805,17 @@ uint32_t CxImage::DumpSize()
 		++n;
 #endif
 
-	if (ppFrames){
-		for (int32_t m=0; m<GetNumFrames(); m++){
-			if (GetFrame(m)){
+	if (ppFrames) {
+		for (int32_t m=0; m<GetNumFrames(); m++)
+			if (GetFrame(m))
 				n += 1 + GetFrame(m)->DumpSize();
-			}
-		}
 	} else
 		++n;
 
 	return n;
 }
 ////////////////////////////////////////////////////////////////////////////////
-uint32_t CxImage::Dump(uint8_t * dst)
+size_t CxImage::Dump(uint8_t * dst)
 {
 	if (!dst) return 0;
 
@@ -878,7 +875,7 @@ uint32_t CxImage::Dump(uint8_t * dst)
 	return DumpSize();
 }
 ////////////////////////////////////////////////////////////////////////////////
-uint32_t CxImage::UnDump(const uint8_t * src)
+size_t CxImage::UnDump(const uint8_t * src)
 {
 	if (!src)
 		return 0;
@@ -887,7 +884,7 @@ uint32_t CxImage::UnDump(const uint8_t * src)
 	if (!DestroyFrames())
 		return 0;
 
-	uint32_t n = 0;
+	size_t n = 0;
 
 	memcpy(&head,src,sizeof(BITMAPINFOHEADER));
 	n += sizeof(BITMAPINFOHEADER);
@@ -932,7 +929,7 @@ uint32_t CxImage::UnDump(const uint8_t * src)
 #endif
 
 	if (src[n++]){
-		ppFrames = new CxImage*[info.nNumFrames];
+		ppFrames = (CxImage **)new CxImage*[info.nNumFrames];
 		for (int32_t m=0; m<GetNumFrames(); m++){
 			ppFrames[m] = new CxImage();
 			n += ppFrames[m]->UnDump(&src[n]);

@@ -137,9 +137,9 @@ void CServerConnect::ConnectToServer(CServer* server, bool multiconnect, bool bN
 
 	CServerSocket* newsocket = new CServerSocket(this, !multiconnect);
 	m_lstOpenSockets.AddTail((void*&)newsocket);
-	newsocket->Create(0, SOCK_STREAM, FD_READ | FD_WRITE | FD_CLOSE | FD_CONNECT, thePrefs.GetBindAddrA());
+	newsocket->Create(0, SOCK_STREAM, FD_READ | FD_WRITE | FD_CLOSE | FD_CONNECT, thePrefs.GetBindAddr());
 	newsocket->ConnectTo(server, bNoCrypt);
-	connectionattemps.SetAt(GetTickCount(), newsocket);
+	connectionattemps.SetAt(::GetTickCount(), newsocket);
 }
 
 void CServerConnect::StopConnectionTry()
@@ -228,7 +228,7 @@ void CServerConnect::ConnectionEstablished(CServerSocket* sender)
 	else if (sender->GetConnectionState() == CS_CONNECTED)
 	{
 		theStats.reconnects++;
-		theStats.serverConnectTime = GetTickCount();
+		theStats.serverConnectTime = ::GetTickCount();
 		connected = true;
 		CString strMsg;
 		if (sender->IsObfusicating())
@@ -345,7 +345,7 @@ void CServerConnect::ConnectionFailed(CServerSocket* sender)
 					if (iPosInList >= 0)
 						m_uStartAutoConnectPos = (iPosInList + 1) % theApp.serverlist->GetServerCount();
 				}
-				VERIFY( (m_idRetryTimer = SetTimer(NULL, 0, 1000*CS_RETRYCONNECTTIME, RetryConnectTimer)) != NULL );
+				VERIFY( (m_idRetryTimer = SetTimer(NULL, 0, SEC2MS(1)*CS_RETRYCONNECTTIME, RetryConnectTimer)) != NULL );
 				if (thePrefs.GetVerbose() && !m_idRetryTimer)
 					DebugLogError(_T("Failed to create 'server connect retry' timer - %s"), (LPCTSTR)GetErrorMessage(GetLastError()));
 			}
@@ -401,7 +401,7 @@ void CServerConnect::ConnectionFailed(CServerSocket* sender)
 	theApp.emuledlg->ShowConnectionState();
 }
 
-VOID CALLBACK CServerConnect::RetryConnectTimer(HWND /*hWnd*/, UINT /*nMsg*/, UINT_PTR /*nId*/, DWORD /*dwTime*/)
+VOID CALLBACK CServerConnect::RetryConnectTimer(HWND /*hWnd*/, UINT /*nMsg*/, UINT_PTR /*nId*/, DWORD /*dwTime*/) noexcept
 {
 	// NOTE: Always handle all type of MFC exceptions in TimerProcs - otherwise we'll get mem leaks
 	try
@@ -428,20 +428,20 @@ void CServerConnect::CheckForTimeout()
 	if (thePrefs.GetProxySettings().UseProxy)
 		dwServerConnectTimeout = max(dwServerConnectTimeout, CONNECTION_TIMEOUT);
 
-	DWORD dwCurTick = GetTickCount();
+	DWORD dwCurTick = ::GetTickCount();
 	DWORD tmpkey;
 	CServerSocket* tmpsock;
 	POSITION pos = connectionattemps.GetStartPosition();
-	while (pos){
-		connectionattemps.GetNextAssoc(pos,tmpkey,tmpsock);
-		if (!tmpsock){
+	while (pos) {
+		connectionattemps.GetNextAssoc(pos, tmpkey, tmpsock);
+		if (!tmpsock) {
 			if (thePrefs.GetVerbose())
 				DebugLogError(_T("Error: Socket invalid at timeoutcheck"));
 			connectionattemps.RemoveKey(tmpkey);
 			return;
 		}
 
-		if (dwCurTick - tmpkey > dwServerConnectTimeout){
+		if (dwCurTick >= tmpkey + dwServerConnectTimeout) {
 			LogWarning(GetResString(IDS_ERR_CONTIMEOUT), (LPCTSTR)tmpsock->cur_server->GetListName(), tmpsock->cur_server->GetAddress(), tmpsock->cur_server->GetPort());
 			connectionattemps.RemoveKey(tmpkey);
 			DestroySocket(tmpsock);
@@ -592,7 +592,7 @@ void CServerConnect::KeepConnectionAlive()
 {
 	DWORD dwServerKeepAliveTimeout = thePrefs.GetServerKeepAliveTimeout();
 	if (dwServerKeepAliveTimeout && connected && connectedsocket && connectedsocket->connectionstate == CS_CONNECTED &&
-		GetTickCount() - connectedsocket->GetLastTransmission() >= dwServerKeepAliveTimeout)
+		::GetTickCount() >= connectedsocket->GetLastTransmission() + dwServerKeepAliveTimeout)
 	{
 		// "Ping" the server if the TCP connection was not used for the specified interval with
 		// an empty publish files packet -> recommended by lugdunummaster himself!

@@ -20,32 +20,36 @@
 
 namespace Kademlia
 {
-	struct TrackPackets_Struct{
-		uint32 dwIP;
+	struct TrackPackets_Struct
+	{
 		uint32 dwInserted;
+		uint32 dwIP;
 		uint8  byOpcode;
 	};
 
-	struct TrackChallenge_Struct{
-		uint32 uIP;
+	struct TrackChallenge_Struct
+	{
 		uint32 dwInserted;
-		uint8  byOpcode;
 		CUInt128 uContactID;
 		CUInt128 uChallenge;
+		uint32 uIP;
+		uint8  byOpcode;
 	};
 
-	struct TrackPacketsIn_Struct{
-		struct TrackedRequestIn_Struct{
-			uint32	m_nCount;
+	struct TrackPacketsIn_Struct
+	{
+		struct TrackedRequestIn_Struct
+		{
 			uint32	m_dwFirstAdded;
+			uint32	m_nCount;
 			uint8	m_byOpcode;
 			bool	m_bDbgLogged;
 		};
 
 		TrackPacketsIn_Struct() { m_dwLastExpire = 0; m_uIP = 0; }
 
-		uint32	m_uIP;
 		uint32	m_dwLastExpire;
+		uint32	m_uIP;
 		CArray<TrackedRequestIn_Struct> m_aTrackedRequests;
 	};
 
@@ -58,7 +62,7 @@ namespace Kademlia
 		protected:
 			void AddTrackedOutPacket(uint32 dwIP, uint8 byOpcode);
 			bool IsOnOutTrackList(uint32 dwIP, uint8 byOpcode, bool bDontRemove = false);
-			bool InTrackListIsAllowedPacket(uint32 uIP, uint8 byOpcode, bool bValidReceiverkey);
+			int InTrackListIsAllowedPacket(uint32 uIP, uint8 byOpcode, bool bValidReceiverkey);
 			void InTrackListCleanup();
 			void AddLegacyChallenge(const CUInt128& uContactID, const CUInt128& uChallengeID, uint32 uIP, uint8 byOpcode);
 			bool IsLegacyChallenge(const CUInt128& uChallengeID, uint32 uIP, uint8 byOpcode, CUInt128& ruContactID);

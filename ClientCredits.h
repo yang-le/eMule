@@ -31,7 +31,8 @@
 #define CRYPT_CIP_NONECLIENT	30
 
 #pragma pack(1)
-struct CreditStruct_29a{
+struct CreditStruct_29a
+{
 	uchar		abyKey[16];
 	uint32		nUploadedLo;	// uploaded TO him
 	uint32		nDownloadedLo;	// downloaded from him
@@ -40,7 +41,8 @@ struct CreditStruct_29a{
 	uint32		nDownloadedHi;	// download high 32
 	uint16		nReserved3;
 };
-struct CreditStruct{
+struct CreditStruct
+{
 	uchar		abyKey[16];
 	uint32		nUploadedLo;	// uploaded TO him
 	uint32		nDownloadedLo;	// downloaded from him
@@ -53,7 +55,8 @@ struct CreditStruct{
 };
 #pragma pack()
 
-enum EIdentState{
+enum EIdentState
+{
 	IS_NOTAVAILABLE,
 	IS_IDNEEDED,
 	IS_IDENTIFIED,
@@ -70,10 +73,10 @@ public:
 	~CClientCredits();
 	CClientCredits(const CClientCredits&) = delete;
 
-	const uchar* GetKey() const					{return m_pCredits->abyKey;}
+	const uchar*	GetKey() const				{return m_pCredits->abyKey;}
 	uchar*	GetSecureIdent()					{return m_abyPublicKey;}
 	uint8	GetSecIDKeyLen() const				{return m_nPublicKeyLen;}
-	CreditStruct* GetDataStruct() const			{return m_pCredits;}
+	CreditStruct*	GetDataStruct() const		{return m_pCredits;}
 	void	ClearWaitStartTime();
 	void	AddDownloaded(uint32 bytes, uint32 dwForIP);
 	void	AddUploaded(uint32 bytes, uint32 dwForIP);
@@ -91,14 +94,14 @@ protected:
 	void	Verified(uint32 dwForIP);
 	EIdentState IdentState;
 private:
-	void			InitalizeIdent();
+	void	InitalizeIdent();
 	CreditStruct*	m_pCredits;
-	byte			m_abyPublicKey[80];			// even keys which are not verified will be stored here, and - if verified - copied into the struct
-	uint8			m_nPublicKeyLen;
-	uint32			m_dwIdentIP;
-	uint32			m_dwSecureWaitTime;
-	uint32			m_dwUnSecureWaitTime;
-	uint32			m_dwWaitTimeIP;			   // client IP assigned to the waittime
+	uint32	m_dwIdentIP;
+	uint32	m_dwSecureWaitTime;
+	uint32	m_dwUnSecureWaitTime;
+	uint32	m_dwWaitTimeIP;			// client IP assigned to the waittime
+	byte	m_abyPublicKey[80];		// even keys which are not verified will be stored here, and - if verified - copied into the struct
+	uint8	m_nPublicKeyLen;
 };
 
 class CClientCreditsList
@@ -111,7 +114,7 @@ public:
 	uint8	CreateSignature(CClientCredits* pTarget, uchar* pachOutput, uint8 nMaxSize, uint32 ChallengeIP, uint8 byChaIPKind, CryptoPP::RSASSA_PKCS1v15_SHA_Signer* sigkey = NULL) const;
 	bool	VerifyIdent(CClientCredits* pTarget, const uchar* pachSignature, uint8 nInputSize, uint32 dwForIP, uint8 byChaIPKind);
 
-	CClientCredits* GetCredit(const uchar* key) ;
+	CClientCredits* GetCredit(const uchar* key);
 	void	Process();
 	uint8	GetPubKeyLen() const			{return m_nMyPublicKeyLen;}
 	byte*	GetPublicKey()					{return m_abyMyPublicKey;}
@@ -126,8 +129,8 @@ protected:
 #endif
 private:
 	CMap<CCKey, const CCKey&, CClientCredits*, CClientCredits*> m_mapClients;
-	uint32			m_nLastSaved;
 	CryptoPP::RSASSA_PKCS1v15_SHA_Signer*		m_pSignkey;
+	uint32			m_nLastSaved;
 	byte			m_abyMyPublicKey[80];
 	uint8			m_nMyPublicKeyLen;
 };

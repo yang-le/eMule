@@ -59,10 +59,8 @@ bool CFriendList::LoadList(){
 		if (fexp.m_cause != CFileException::fileNotFound){
 			CString strError(GetResString(IDS_ERR_READEMFRIENDS));
 			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
-				strError += _T(" - ");
-				strError += szError;
-			}
+			if (GetExceptionMessage(fexp, szError, ARRSIZE(szError)))
+				strError.AppendFormat(_T(" - %s"), szError);
 			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
 		return false;
@@ -76,7 +74,7 @@ bool CFriendList::LoadList(){
 		}
 		UINT nRecordsNumber = file.ReadUInt32();
 		for (UINT i = 0; i < nRecordsNumber; i++) {
-			CFriend* Record =  new CFriend();
+			CFriend* Record = new CFriend();
 			Record->LoadFromFile(&file);
 			m_listFriends.AddTail(Record);
 		}
@@ -97,7 +95,8 @@ bool CFriendList::LoadList(){
 	return true;
 }
 
-void CFriendList::SaveList(){
+void CFriendList::SaveList()
+{
 	if (thePrefs.GetLogFileSaving())
 		AddDebugLogLine(false, _T("Saving friends list file \"%s\""), EMFRIENDS_MET_FILENAME);
 	m_nLastSaved = ::GetTickCount();
@@ -108,10 +107,8 @@ void CFriendList::SaveList(){
 	if (!file.Open(strFileName, CFile::modeCreate | CFile::modeWrite | CFile::typeBinary | CFile::shareDenyWrite, &fexp)){
 		CString strError(_T("Failed to save ") EMFRIENDS_MET_FILENAME _T(" file"));
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (GetExceptionMessage(fexp, szError, ARRSIZE(szError))) {
-			strError += _T(" - ");
-			strError += szError;
-		}
+		if (GetExceptionMessage(fexp, szError, ARRSIZE(szError)))
+			strError.AppendFormat(_T(" - %s"), szError);
 		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		return;
 	}
@@ -119,7 +116,7 @@ void CFriendList::SaveList(){
 
 	try{
 		file.WriteUInt8(MET_HEADER);
-		file.WriteUInt32(m_listFriends.GetCount());
+		file.WriteUInt32((uint32)m_listFriends.GetCount());
 		for (POSITION pos = m_listFriends.GetHeadPosition(); pos != NULL;)
 			m_listFriends.GetNext(pos)->WriteToFile(&file);
 		if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.emuledlg->IsClosing())) {
@@ -132,10 +129,8 @@ void CFriendList::SaveList(){
 	catch(CFileException* error){
 		CString strError(_T("Failed to save ") EMFRIENDS_MET_FILENAME _T(" file"));
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (GetExceptionMessage(*error, szError, ARRSIZE(szError))) {
-			strError += _T(" - ");
-			strError += szError;
-		}
+		if (GetExceptionMessage(*error, szError, ARRSIZE(szError)))
+			strError.AppendFormat(_T(" - %s"), szError);
 		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		error->Delete();
 	}
@@ -250,7 +245,7 @@ void CFriendList::RemoveAllFriendSlots()
 
 void CFriendList::Process()
 {
-	if (::GetTickCount() > m_nLastSaved + MIN2MS(19))
+	if (::GetTickCount() >= m_nLastSaved + MIN2MS(19))
 		SaveList();
 }
 

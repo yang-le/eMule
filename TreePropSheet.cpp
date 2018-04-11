@@ -55,38 +55,38 @@ const UINT CTreePropSheet::s_unPageTreeId = 0x7EEE;
 
 CTreePropSheet::CTreePropSheet()
 :	CPropertySheet(),
-	m_bPageTreeSelChangedActive(FALSE),
 	m_bTreeViewMode(TRUE),
+	m_pwndPageTree(NULL),
+	m_pFrame(NULL),
+	m_bPageTreeSelChangedActive(FALSE),
 	m_bPageCaption(FALSE),
 	m_bTreeImages(FALSE),
-	m_nPageTreeWidth(150),
-	m_pwndPageTree(NULL),
-	m_pFrame(NULL)
+	m_nPageTreeWidth(150)
 {}
 
 
 CTreePropSheet::CTreePropSheet(UINT nIDCaption, CWnd* pParentWnd, UINT iSelectPage)
-:	CPropertySheet(nIDCaption, pParentWnd, iSelectPage),
-	m_bPageTreeSelChangedActive(FALSE),
-	m_bTreeViewMode(TRUE),
-	m_bPageCaption(FALSE),
-	m_bTreeImages(FALSE),
-	m_nPageTreeWidth(150),
-	m_pwndPageTree(NULL),
-	m_pFrame(NULL)
+	: CPropertySheet(nIDCaption, pParentWnd, iSelectPage)
+	, m_bTreeViewMode(TRUE)
+	, m_pwndPageTree(NULL)
+	, m_pFrame(NULL)
+	, m_bPageTreeSelChangedActive(FALSE)
+	, m_bPageCaption(FALSE)
+	, m_bTreeImages(FALSE)
+	, m_nPageTreeWidth(150)
 {
 }
 
 
 CTreePropSheet::CTreePropSheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage)
-:	CPropertySheet(pszCaption, pParentWnd, iSelectPage),
-	m_bPageTreeSelChangedActive(FALSE),
-	m_bTreeViewMode(TRUE),
-	m_bPageCaption(FALSE),
-	m_bTreeImages(FALSE),
-	m_nPageTreeWidth(150),
-	m_pwndPageTree(NULL),
-	m_pFrame(NULL)
+	: CPropertySheet(pszCaption, pParentWnd, iSelectPage)
+	, m_bTreeViewMode(TRUE)
+	, m_pwndPageTree(NULL)
+	, m_pFrame(NULL)
+	, m_bPageTreeSelChangedActive(FALSE)
+	, m_bPageCaption(FALSE)
+	, m_bTreeImages(FALSE)
+	, m_nPageTreeWidth(150)
 {
 }
 
@@ -408,7 +408,7 @@ HTREEITEM CTreePropSheet::CreatePageTreeItem(LPCTSTR lpszPath, HTREEITEM hParent
 
 CString CTreePropSheet::SplitPageTreePath(CString &strRest)
 {
-	int	nSeparatorPos = 0;
+	int nSeparatorPos = 0;
 	for (;;)
 	{
 		nSeparatorPos = strRest.Find(_T("::"), nSeparatorPos);
@@ -418,23 +418,22 @@ CString CTreePropSheet::SplitPageTreePath(CString &strRest)
 			strRest.Empty();
 			return strItem;
 		}
-		else if (nSeparatorPos>0)
+		if (nSeparatorPos > 0)
 		{
 			// if there is an odd number of backslashes infront of the
 			// separator, than do not interpret it as separator
 			int	nBackslashCount = 0;
 			for (int nPos = nSeparatorPos-1; nPos >= 0 && strRest[nPos]==_T('\\'); --nPos, ++nBackslashCount);
-			if (nBackslashCount%2 == 0)
+			if ((nBackslashCount & 1) == 0)
 				break;
-			else
-				++nSeparatorPos;
+			++nSeparatorPos;
 		}
 	}
 
 	CString	strItem(strRest.Left(nSeparatorPos));
 	strItem.Replace(_T("\\::"), _T("::"));
 	strItem.Replace(_T("\\\\"), _T("\\"));
-	strRest = strRest.Mid(nSeparatorPos+2);
+	strRest.Delete(0, nSeparatorPos+2);
 	return strItem;
 }
 

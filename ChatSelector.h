@@ -35,9 +35,9 @@ public:
 	CUpDownClient*		client;
 	CHTRichEditCtrl*	log;
 	CString				strMessagePending;
-	bool				notify;
 	CStringArray		history;
-	int					history_pos;
+	INT_PTR				history_pos;
+	bool				notify;
 };
 
 
@@ -75,11 +75,11 @@ public:
 
 protected:
 	CChatWnd	*m_pParent;
+	CImageList	m_imlChat;
 	UINT_PTR	m_Timer;
+	int			m_iContextIndex;
 	bool		m_blinkstate;
 	bool		m_lastemptyicon;
-	CImageList	m_imlChat;
-	int			m_iContextIndex;
 
 	void AddTimeStamp(CChatItem*);
 	void SetAllIcons();

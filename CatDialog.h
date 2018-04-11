@@ -23,11 +23,12 @@ class CCustomAutoComplete;
 class CCatDialog : public CDialog
 {
 	DECLARE_DYNAMIC(CCatDialog)
+
+	enum { IDD = IDD_CAT };
+
 public:
 	explicit CCatDialog(int catindex);   // standard constructor
 	virtual ~CCatDialog();
-
-	enum { IDD = IDD_CAT };
 
 protected:
 	Category_Struct* m_myCat;

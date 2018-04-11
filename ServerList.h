@@ -76,12 +76,12 @@ public:
 #endif
 
 private:
+	CTypedPtrList<CPtrList, CServer*> list;
+	DWORD		m_nLastSaved;
 	UINT		serverpos;
 	UINT		searchserverpos;
 	UINT		statserverpos;
-	uint8		version;
 	UINT		servercount;
-	CTypedPtrList<CPtrList, CServer*> list;
 	UINT		delservercount;
-	DWORD		m_nLastSaved;
+	uint8		version;
 };

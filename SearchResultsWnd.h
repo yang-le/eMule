@@ -55,11 +55,11 @@ class CSearchResultsWnd : public CResizableFormView
 {
 	DECLARE_DYNCREATE(CSearchResultsWnd)
 
+	enum { IDD = IDD_SEARCH };
+
 public:
 	explicit CSearchResultsWnd(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CSearchResultsWnd();
-
-	enum { IDD = IDD_SEARCH };
 
 	CSearchListCtrl searchlistctrl;
 	CSearchResultsSelector searchselect;
@@ -70,7 +70,7 @@ public:
 
 	void	StartSearch(SSearchParams* pParams);
 	bool	SearchMore();
-	void	CancelSearch(UINT uSearchID = 0);
+	void	CancelSearch(uint32 uSearchID = 0);
 
 	bool	DoNewEd2kSearch(SSearchParams* pParams);
 	void	CancelEd2kSearch();
@@ -81,7 +81,7 @@ public:
 	void	SetNextSearchID(uint32 uNextID)				{m_nEd2kSearchID = uNextID;}
 
 	bool	DoNewKadSearch(SSearchParams* pParams);
-	void	CancelKadSearch(UINT uSearchID);
+	void	CancelKadSearch(uint32 uSearchID);
 
 	bool	CanSearchRelatedFiles() const;
 	void	SearchRelatedFiles(CPtrList& listFiles);
@@ -100,7 +100,7 @@ public:
 	int		GetSelectedCat();
 	void	UpdateCatTabs();
 
-	SSearchParams* GetSearchResultsParams(UINT uSearchID) const;
+	SSearchParams* GetSearchResultsParams(uint32 uSearchID) const;
 
 	uint32	GetFilterColumn() const				{ return m_nFilterColumn; }
 
@@ -108,7 +108,7 @@ protected:
 	Packet*		searchpacket;
 	bool		m_b64BitSearchPacket;
 	UINT_PTR	global_search_timer;
-	UINT		m_uTimerLocalServer;
+	UINT_PTR	m_uTimerLocalServer;
 	CProgressCtrl searchprogress;
 	CHeaderCtrl m_ctlSearchListHeader;
 	CEditDelayed m_ctlFilter;
@@ -125,13 +125,13 @@ protected:
 
 	bool StartNewSearch(SSearchParams* pParams);
 	void SearchStarted();
-	void SearchCanceled(UINT uSearchID);
+	void SearchCanceled(uint32 uSearchID);
 	CString	CreateWebQuery(SSearchParams* pParams);
 	void ShowResults(const SSearchParams* pParams);
 	void SetAllIcons();
-	void SetSearchResultsIcon(UINT uSearchID, int iImage);
-	void SetActiveSearchResultsIcon(UINT uSearchID);
-	void SetInactiveSearchResultsIcon(UINT uSearchID);
+	void SetSearchResultsIcon(uint32 uSearchID, int iImage);
+	void SetActiveSearchResultsIcon(uint32 uSearchID);
+	void SetInactiveSearchResultsIcon(uint32 uSearchID);
 
 
 	virtual void OnInitialUpdate();

@@ -51,7 +51,7 @@ public:
 	CPreviewApps();
 
 	static CString GetDefaultAppsFile();
-	int ReadAllApps();
+	INT_PTR ReadAllApps();
 	void RemoveAllApps();
 
 	int GetAllMenuEntries(CMenu& rMenu, const CPartFile* file);
@@ -86,12 +86,12 @@ protected:
 			return *this;
 		}
 
+		uint64 ullMinStartOfFile;
+		uint64 ullMinCompletedSize;
 		CString strTitle;
 		CString strCommand;
 		CString strCommandArgs;
 		CStringArray astrExtensions;
-		uint64 ullMinStartOfFile;
-		uint64 ullMinCompletedSize;
 	};
 	CArray<SPreviewApp> m_aApps;
 	time_t m_tDefAppsFileLastModified;

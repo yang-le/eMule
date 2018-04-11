@@ -40,7 +40,7 @@ public:
 	CColourPopup();
 	CColourPopup(CPoint p, COLORREF crColour, CWnd* pParentWnd,
 		         LPCTSTR szDefaultText = NULL, LPCTSTR szCustomText = NULL,
-		         COLORREF* colourArray = NULL,int NumberOfColours = 0);
+		         const LPCOLORREF colourArray = NULL,int NumberOfColours = 0);
 	void Initialise();
 
 // Attributes
@@ -86,7 +86,7 @@ protected:
 
 // protected attributes
 protected:
-	static ColourTableEntry m_crColours[];
+	static const ColourTableEntry m_crColours[];
 	int			   m_nNumColours;
 	int			   m_nNumColumns, m_nNumRows;
 	int			   m_nBoxSize, m_nMargin;

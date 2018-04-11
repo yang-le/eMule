@@ -259,20 +259,20 @@ void CKademliaWnd::OnBnClickedBootstrapbutton()
 
 	if (IsDlgButtonChecked(IDC_RADIP) != 0)
 	{
-		GetDlgItem(IDC_BOOTSTRAPIP)->GetWindowText(strIP);
+		GetDlgItemText(IDC_BOOTSTRAPIP, strIP);
 		strIP.Trim();
 
 		// auto-handle ip:port
 		int iPos;
 		if ((iPos = strIP.Find(_T(':'))) != -1)
 		{
-			GetDlgItem(IDC_BOOTSTRAPPORT)->SetWindowText(strIP.Mid(iPos+1));
+			SetDlgItemText(IDC_BOOTSTRAPPORT, strIP.Mid(iPos+1));
 			strIP = strIP.Left(iPos);
-			GetDlgItem(IDC_BOOTSTRAPIP)->SetWindowText(strIP);
+			SetDlgItemText(IDC_BOOTSTRAPIP, strIP);
 		}
 
 		CString strPort;
-		GetDlgItem(IDC_BOOTSTRAPPORT)->GetWindowText(strPort);
+		GetDlgItemText(IDC_BOOTSTRAPPORT, strPort);
 		strPort.Trim();
 		uint16 nPort = (uint16)_ttoi(strPort);
 
@@ -353,11 +353,11 @@ void CKademliaWnd::SetAllIcons()
 void CKademliaWnd::Localize()
 {
 	m_ctrlBootstrap.SetWindowText(GetResString(IDS_BOOTSTRAP));
-	GetDlgItem(IDC_BOOTSTRAPBUTTON)->SetWindowText(GetResString(IDS_BOOTSTRAP));
-	GetDlgItem(IDC_SSTATIC4)->SetWindowText(GetResString(IDS_SV_ADDRESS) + _T(':'));
-	GetDlgItem(IDC_SSTATIC7)->SetWindowText(GetResString(IDS_SV_PORT) + _T(':'));
-	GetDlgItem(IDC_NODESDATLABEL)->SetWindowText(GetResString(IDS_BOOTSRAPNODESDAT));
-	GetDlgItem(IDC_FIREWALLCHECKBUTTON)->SetWindowText(GetResString(IDS_KAD_RECHECKFW));
+	SetDlgItemText(IDC_BOOTSTRAPBUTTON, GetResString(IDS_BOOTSTRAP));
+	SetDlgItemText(IDC_SSTATIC4, GetResString(IDS_SV_ADDRESS) + _T(':'));
+	SetDlgItemText(IDC_SSTATIC7, GetResString(IDS_SV_PORT) + _T(':'));
+	SetDlgItemText(IDC_NODESDATLABEL, GetResString(IDS_BOOTSRAPNODESDAT));
+	SetDlgItemText(IDC_FIREWALLCHECKBUTTON, GetResString(IDS_KAD_RECHECKFW));
 
 	SetDlgItemText(IDC_RADCLIENTS,GetResString(IDS_RADCLIENTS));
 
@@ -374,16 +374,16 @@ void CKademliaWnd::Localize()
 
 void CKademliaWnd::UpdateControlsState()
 {
-	UINT sid;
+	UINT uid;
 	if (Kademlia::CKademlia::IsConnected())
-		sid = IDS_MAIN_BTN_DISCONNECT;
+		uid = IDS_MAIN_BTN_DISCONNECT;
 	else if (Kademlia::CKademlia::IsRunning())
-		sid = IDS_MAIN_BTN_CANCEL;
+		uid = IDS_MAIN_BTN_CANCEL;
 	else
-		sid = IDS_MAIN_BTN_CONNECT;
-	CString strLabel(GetResString(sid));
+		uid = IDS_MAIN_BTN_CONNECT;
+	CString strLabel(GetResString(uid));
 	strLabel.Remove(_T('&'));
-	GetDlgItem(IDC_KADCONNECT)->SetWindowText(strLabel);
+	SetDlgItemText(IDC_KADCONNECT, strLabel);
 	GetDlgItem(IDC_KADCONNECT)->EnableWindow(theApp.emuledlg->IsRunning() && thePrefs.GetNetworkKademlia());
 	GetDlgItem(IDC_FIREWALLCHECKBUTTON)->EnableWindow(Kademlia::CKademlia::IsConnected());
 
@@ -464,7 +464,8 @@ void CKademliaWnd::ContactRef(const Kademlia::CContact* contact)
 		m_contactListCtrl->ContactRef(contact);
 }
 
-void CKademliaWnd::UpdateNodesDatFromURL(CString strURL){
+void CKademliaWnd::UpdateNodesDatFromURL(CString strURL)
+{
 	CString strTempFilename;
 	strTempFilename.Format(_T("%stemp-%lu-nodes.dat"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR), ::GetTickCount());
 
@@ -575,7 +576,7 @@ void CKademliaWnd::ShowLookupGraph(bool bShow)
 	tbbi.cbSize = sizeof tbbi;
 	tbbi.dwMask = TBIF_IMAGE;
 	tbbi.iImage = iIcon;
-	m_pbtnWnd->SetButtonInfo(GetWindowLongPtr(*m_pbtnWnd, GWLP_ID), &tbbi);
+	m_pbtnWnd->SetButtonInfo((int)GetWindowLongPtr(*m_pbtnWnd, GWLP_ID), &tbbi);
 	m_kadLookupGraph->ShowWindow(bShow ? SW_SHOW : SW_HIDE);
 	m_contactListCtrl->ShowWindow(bShow ? SW_HIDE : SW_SHOW);
 	UpdateButtonTitle(bShow);

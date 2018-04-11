@@ -19,12 +19,12 @@
 class InputBox : public CDialog
 {
 	DECLARE_DYNAMIC(InputBox)
+
+	enum { IDD = IDD_INPUTBOX };
+
 public:
 	explicit InputBox(CWnd* pParent = NULL);   // standard constructor
 	virtual ~InputBox();
-
-// Dialog Data
-	enum { IDD = IDD_INPUTBOX };
 
 	void	SetLabels(const CString& title, const CString& label, const CString& defaultStr);
 	const CString& GetInput() const { return m_return; }

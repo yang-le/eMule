@@ -22,14 +22,14 @@ struct SIPFilter
 		: start(newStart),
 		  end(newEnd),
 		  level(newLevel),
-		  desc(newDesc),
-		  hits(0)
+		  hits(0),
+		  desc(newDesc)
 	{ }
 	uint32		start;
 	uint32		end;
 	UINT		level;
-	CStringA	desc;
 	UINT		hits;
+	CStringA	desc;
 };
 
 #define	DFLT_IPFILTER_FILENAME	_T("ipfilter.dat")
@@ -54,8 +54,8 @@ public:
 	bool RemoveIPFilter(const SIPFilter* pFilter);
 	void SetModified(bool bModified = true) { m_bModified = bModified; }
 
-	int AddFromFile(LPCTSTR pszFilePath, bool bShowResponse = true);
-	int LoadFromDefaultFile(bool bShowResponse = true);
+	INT_PTR AddFromFile(LPCTSTR pszFilePath, bool bShowResponse = true);
+	INT_PTR	LoadFromDefaultFile(bool bShowResponse = true);
 	void SaveToDefaultFile();
 
 	bool IsFiltered(uint32 ip) /*const*/;

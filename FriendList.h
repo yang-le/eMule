@@ -40,7 +40,7 @@ public:
 	void		RemoveFriend(CFriend* todel);
 	void		RemoveAllFriendSlots();
 	void		Process();
-	INT_PTR			GetCount()		{ return m_listFriends.GetCount(); }
+	INT_PTR		GetCount() const					{ return m_listFriends.GetCount(); }
 
 private:
 	CTypedPtrList<CPtrList, CFriend*>	m_listFriends;

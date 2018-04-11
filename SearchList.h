@@ -20,7 +20,7 @@
 #include "QArray.h"
 #include "Mapkey.h"
 
-enum ESearchType: int;
+enum ESearchType : uint8;
 
 typedef struct
 {

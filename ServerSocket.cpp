@@ -45,7 +45,8 @@ static char THIS_FILE[] = __FILE__;
 
 
 #pragma pack(1)
-struct LoginAnswer_Struct {
+struct LoginAnswer_Struct
+{
 	uint32	clientid;
 };
 #pragma pack()
@@ -67,7 +68,7 @@ CServerSocket::~CServerSocket()
 	delete cur_server;
 }
 
-BOOL CServerSocket::OnHostNameResolved(const SOCKADDR_IN *pSockAddr)
+bool CServerSocket::OnHostNameResolved(const SOCKADDR_IN *pSockAddr)
 {
 	// If we are connecting to a dynIP-server by DN, we will get this callback after the
 	// DNS query finished.
@@ -97,10 +98,10 @@ BOOL CServerSocket::OnHostNameResolved(const SOCKADDR_IN *pSockAddr)
 			m_bIsDeleting = true;
 			SetConnectionState(CS_ERROR);
 			serverconnect->DestroySocket(this);
-			return FALSE;	// Do *NOT* connect to this server
+			return false;	// Do *NOT* connect to this server
 		}
 	}
-	return TRUE; // Connect to this server
+	return true; // Connect to this server
 }
 
 void CServerSocket::OnConnect(int nErrorCode)
@@ -153,7 +154,7 @@ void CServerSocket::OnReceive(int nErrorCode){
 		return;
 	}
 	CEMSocket::OnReceive(nErrorCode);
-	m_dwLastTransmission = GetTickCount();
+	m_dwLastTransmission = ::GetTickCount();
 }
 
 bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
@@ -267,7 +268,7 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 				if (size < sizeof(LoginAnswer_Struct)){
 					throw GetResString(IDS_ERR_BADSERVERREPLY);
 				}
-				LoginAnswer_Struct* la = (LoginAnswer_Struct *)packet;
+				const LoginAnswer_Struct* la = reinterpret_cast<const LoginAnswer_Struct *>(packet);
 
 				// save TCP flags in 'cur_server'
 				CServer* pServer = NULL;
@@ -405,7 +406,7 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 			case OP_SERVERSTATUS:{
 				if (thePrefs.GetDebugServerTCPLevel() > 0)
 					Debug(_T("ServerMsg - OP_ServerStatus\n"));
-				// FIXME some statuspackets have a different size -> why? structur?
+				// FIXME some statuspackets have a different size -> why? structure?
 				if (size < 8)
 					break;//throw "Invalid status packet";
 				uint32 cur_user = PeekUInt32(packet);
@@ -681,7 +682,7 @@ void CServerSocket::ProcessPacketError(UINT size, UINT opcode, LPCTSTR pszError)
 
 void CServerSocket::ConnectTo(CServer* server, bool bNoCrypt)
 {
-	if (cur_server){
+	if (cur_server) {
 		ASSERT(0);
 		delete cur_server;
 		cur_server = NULL;
@@ -689,12 +690,11 @@ void CServerSocket::ConnectTo(CServer* server, bool bNoCrypt)
 
 	uint16 nPort = 0;
 	cur_server = new CServer(server);
-	if ( !bNoCrypt && thePrefs.IsServerCryptLayerTCPRequested() && server->GetObfuscationPortTCP() != 0 && server->SupportsObfuscationTCP()){
+	if (!bNoCrypt && thePrefs.IsServerCryptLayerTCPRequested() && server->GetObfuscationPortTCP() != 0 && server->SupportsObfuscationTCP()) {
 		Log(GetResString(IDS_CONNECTINGTOOBFUSCATED), (LPCTSTR)cur_server->GetListName(), cur_server->GetAddress(), cur_server->GetObfuscationPortTCP());
 		nPort = cur_server->GetObfuscationPortTCP();
 		SetConnectionEncryption(true, NULL, true);
-	}
-	else{
+	} else {
 		Log(GetResString(IDS_CONNECTINGTO), (LPCTSTR)cur_server->GetListName(), cur_server->GetAddress(), cur_server->GetPort());
 		nPort = cur_server->GetPort();
 		SetConnectionEncryption(false, NULL, true);
@@ -711,12 +711,11 @@ void CServerSocket::ConnectTo(CServer* server, bool bNoCrypt)
 	//		resolving the DN right before sending the UDP packet.
 	//
 	SetConnectionState(CS_CONNECTING);
-	if (!Connect(CStringA(server->GetAddress()), nPort)){
+	if (!Connect(server->GetAddress(), nPort)) {
 		DWORD dwError = GetLastError();
-		if (dwError != WSAEWOULDBLOCK){
+		if (dwError != WSAEWOULDBLOCK) {
 			LogError(GetResString(IDS_ERR_CONNECTIONERROR), (LPCTSTR)cur_server->GetListName(), cur_server->GetAddress(), nPort, (LPCTSTR)GetFullErrorMessage(dwError));
 			SetConnectionState(CS_FATALERROR);
-			return;
 		}
 	}
 }
@@ -754,7 +753,7 @@ bool CServerSocket::PacketReceived(Packet* packet)
 		else
 		{
 			if (thePrefs.GetVerbose())
-				DebugLogWarning(_T("Received server TCP packet with unknown protocol: protocol=0x%02x  opcode=0x%02x  size=%u"), packet ? packet->prot : 0, packet ? packet->opcode : 0, packet ? packet->size : 0);
+				DebugLogWarning(_T("Received server TCP packet with unknown protocol: protocol=0x%02x  opcode=0x%02x  size=%u"), packet->prot, packet->opcode, packet->size);
 		}
 #ifndef _DEBUG
 	}
@@ -798,6 +797,6 @@ void CServerSocket::SetConnectionState(int newstate)
 
 void CServerSocket::SendPacket(Packet* packet, bool delpacket, bool controlpacket, uint32 actualPayloadSize, bool bForceImmediateSend)
 {
-	m_dwLastTransmission = GetTickCount();
+	m_dwLastTransmission = ::GetTickCount();
 	CEMSocket::SendPacket(packet, delpacket, controlpacket, actualPayloadSize, bForceImmediateSend);
 }

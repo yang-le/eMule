@@ -127,7 +127,7 @@ LRESULT CCollectionFileDetailsSheet::OnDataChanged(WPARAM, LPARAM)
 void CCollectionFileDetailsSheet::UpdateTitle()
 {
 	if (m_aItems.GetSize() == 1)
-		SetWindowText(GetResString(IDS_DETAILS) + _T(": ") + STATIC_DOWNCAST(CAbstractFile, m_aItems[0])->GetFileName());
+		SetWindowText(GetResString(IDS_DETAILS) + _T(": ") + static_cast<CAbstractFile *>(m_aItems[0])->GetFileName());
 	else
 		SetWindowText(GetResString(IDS_DETAILS));
 }
@@ -194,32 +194,29 @@ void CCollectionListCtrl::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 int CALLBACK CCollectionListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const CAbstractFile *item1 = (CAbstractFile *)lParam1;
-	const CAbstractFile *item2 = (CAbstractFile *)lParam2;
+	const CAbstractFile *item1 = reinterpret_cast<CAbstractFile *>(lParam1);
+	const CAbstractFile *item2 = reinterpret_cast<CAbstractFile *>(lParam2);
 	if (item1 == NULL || item2 == NULL)
 		return 0;
 
 	int iResult;
-	switch (LOWORD(lParamSort))
-	{
-		case colName:
-			iResult = CompareLocaleStringNoCase(item1->GetFileName(),item2->GetFileName());
-			break;
+	switch (LOWORD(lParamSort)) {
+	case colName:
+		iResult = CompareLocaleStringNoCase(item1->GetFileName(), item2->GetFileName());
+		break;
 
-		case colSize:
-			iResult = CompareUnsigned64(item1->GetFileSize(), item2->GetFileSize());
-			break;
+	case colSize:
+		iResult = CompareUnsigned64(item1->GetFileSize(), item2->GetFileSize());
+		break;
 
-		case colHash:
-			iResult = memcmp(item1->GetFileHash(), item2->GetFileHash(), 16);
-			break;
+	case colHash:
+		iResult = memcmp(item1->GetFileHash(), item2->GetFileHash(), 16);
+		break;
 
-		default:
-			return 0;
+	default:
+		return 0;
 	}
-	if (HIWORD(lParamSort))
-		iResult = -iResult;
-	return iResult;
+	return HIWORD(lParamSort) ? -iResult : iResult;
 }
 
 void CCollectionListCtrl::OnNmRClick(NMHDR* /*pNMHDR*/, LRESULT* pResult)
@@ -228,11 +225,10 @@ void CCollectionListCtrl::OnNmRClick(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 	for (POSITION pos = GetFirstSelectedItemPosition(); pos != NULL;) {
 		int index = GetNextSelectedItem(pos);
 		if (index >= 0)
-			abstractFileList.AddTail((CAbstractFile*)GetItemData(index));
+			abstractFileList.AddTail(reinterpret_cast<CAbstractFile *>(GetItemData(index)));
 	}
 
-	if (!abstractFileList.IsEmpty())
-	{
+	if (!abstractFileList.IsEmpty()) {
 		CCollectionFileDetailsSheet dialog(abstractFileList, 0, this);
 		dialog.DoModal();
 	}

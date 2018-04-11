@@ -111,7 +111,7 @@ public:
   void       AddFrame(const ID3_Frame&);
   void       AddFrame(const ID3_Frame*);
   bool       AttachFrame(ID3_Frame*);
-  bool       IsValidFrame(ID3_Frame&, bool);
+  bool       IsValidFrame(ID3_Frame*, bool);
   void       checkFrames();
   ID3_Frame* RemoveFrame(const ID3_Frame *);
 

@@ -55,7 +55,7 @@ BOOL CNetworkInfoDlg::OnInitDialog()
 	EnableSaveRestore(PREF_INI_SECTION);
 
 	SetWindowText(GetResString(IDS_NETWORK_INFO));
-	GetDlgItem(IDOK)->SetWindowText(GetResString(IDS_TREEOPTIONS_OK));
+	SetDlgItemText(IDOK, GetResString(IDS_TREEOPTIONS_OK));
 
 	SetDlgItemText(IDC_NETWORK_INFO_LABEL, GetResString(IDS_NETWORK_INFO));
 
@@ -139,7 +139,7 @@ void CreateNetworkInfo(CRichEditCtrlX& rCtrl, CHARFORMAT& rcfDef, CHARFORMAT& rc
 	}
 
 	if (theApp.serverconnect->IsConnected()){
-		rCtrl << GetResString(IDS_IP) << _T(":") << GetResString(IDS_PORT) << _T(":") ;
+		rCtrl << GetResString(IDS_IP) << _T(":") << GetResString(IDS_PORT) << _T(":");
 		if (theApp.serverconnect->IsLowID() && theApp.GetPublicIP(true) == 0)
 			buffer = GetResString(IDS_UNKNOWN);
 		else
@@ -341,7 +341,7 @@ void CreateNetworkInfo(CRichEditCtrlX& rCtrl, CHARFORMAT& rcfDef, CHARFORMAT& rc
 			//rCtrl << GetResString(IDS_UUSERS) << _T(":\t") << GetFormatedUInt(Kademlia::CKademlia::GetKademliaUsers()) << _T("\r\n");
 			rCtrl << GetResString(IDS_PW_FILES) << _T(":\t") << GetFormatedUInt(Kademlia::CKademlia::GetKademliaFiles()) << _T("\r\n");
 			rCtrl <<  GetResString(IDS_INDEXED) << _T(":\r\n");
-			buffer.Format(GetResString(IDS_KADINFO_SRC) , Kademlia::CKademlia::GetIndexed()->m_uTotalIndexSource);
+			buffer.Format(GetResString(IDS_KADINFO_SRC), Kademlia::CKademlia::GetIndexed()->m_uTotalIndexSource);
 			rCtrl << buffer;
 			buffer.Format(GetResString(IDS_KADINFO_KEYW), Kademlia::CKademlia::GetIndexed()->m_uTotalIndexKeyword);
 			rCtrl << buffer;

@@ -218,20 +218,20 @@ void CKadLookupGraph::OnPaint()
 	if (m_pLookupHistory != NULL && m_pLookupHistory->GetHistoryEntries().GetCount() >= 1)
 	{
 		const CArray<Kademlia::CLookupHistory::SLookupHistoryEntry*>& he = m_pLookupHistory->GetHistoryEntries();
-		const INT_PTR hecount = he.GetCount();
+		const uint32 hecount = (uint32)he.GetCount();
 		// How many nodes can we show without scrolling?
-		sint32 uMaxNodes = uHistWidth / NODE_ENTRY_WIDTH;
+		uint32 uMaxNodes = uHistWidth / NODE_ENTRY_WIDTH;
 		uint32 uNodeEntryWidth = 0;
 		if (hecount > uMaxNodes /*|| !m_pLookupHistory->IsSearchStopped()*/)
 			uNodeEntryWidth = NODE_ENTRY_WIDTH; // While the search is running, use a fixed width
 		else
 			uNodeEntryWidth = uHistWidth / hecount; // when the search is finished, use all available screen space
 
-		sint32 iVisibleNodes = min(uMaxNodes, hecount);
+		int iVisibleNodes = (int)min(uMaxNodes, hecount);
 
 		// Set the scaling. 3 times the highest distance of the 1/3 closest nodes is the max distance
 		CArray<CUInt128> aClosest;
-		for (int i = 1; i <= iVisibleNodes; i++)
+		for (int i = 1; i <= iVisibleNodes; ++i)
 		{
 			if (aClosest.GetCount() < ((iVisibleNodes / 3 == 0) ? 1 : (iVisibleNodes / 3)))
 				aClosest.Add(he[hecount - i]->m_uDistance);
@@ -287,7 +287,7 @@ void CKadLookupGraph::OnPaint()
 		uMaxScalingDistance.Add(uTmpScalingDistance);
 
 		// wow, what a mess, now lets collect drawing points
-		for (int i = 1; i <= iVisibleNodes; i++)
+		for (int i = 1; i <= iVisibleNodes; ++i)
 		{
 			CUInt128 uTmpDist = he[hecount - i]->m_uDistance;
 			uint64 uDrawYPos;
@@ -325,14 +325,14 @@ void CKadLookupGraph::OnPaint()
 				m_iHotItemIdx = CheckHotItem(ptCursor);
 			}
 		}
-		m_pToolTip->Activate(m_iHotItemIdx >= 0 ? TRUE : FALSE);
+		m_pToolTip->Activate(static_cast<BOOL>(m_iHotItemIdx >= 0));
 		UpdateToolTip();
 
 		CArray<bool> abHotItemConnected;
 		if (m_iHotItemIdx >= 0)
 		{
 			abHotItemConnected.SetSize(iVisibleNodes);
-			for (int i = 0; i < iVisibleNodes; i++)
+			for (int i = 0; i < iVisibleNodes; ++i)
 				abHotItemConnected[i] = (m_iHotItemIdx == i);
 		}
 		// start drawing, beginning with the arrowClines connecting the nodes
@@ -353,18 +353,18 @@ void CKadLookupGraph::OnPaint()
 				Gdiplus::Pen gdipPenRed(Gdiplus::Color(255, 32, 32), 0.8f);
 				gdipPenRed.SetCustomEndCap(&gdipArrow);
 
-				for (int i = 0; i < iVisibleNodes; i++)
+				for (int i = 0; i < iVisibleNodes; ++i)
 				{
 					const CLookupHistory::SLookupHistoryEntry* sEntry = he[hecount - (i + 1)];
 					for (int j = 0; j < sEntry->m_liReceivedFromIdx.GetCount(); j++)
 					{
 						int iIdx = sEntry->m_liReceivedFromIdx[j];
-						if (iIdx >= hecount - iVisibleNodes) {
+						if (iIdx >= (int)hecount - iVisibleNodes) {
 							CPoint pFrom = m_aNodesDrawRects[hecount - (iIdx + 1)].CenterPoint();
 							CPoint pointTo = m_aNodesDrawRects[i].CenterPoint();
 
 							Gdiplus::Pen* pen;
-							if (hecount - (iIdx + 1) == m_iHotItemIdx) {
+							if ((int)hecount - (iIdx + 1) == m_iHotItemIdx) {
 								abHotItemConnected[i] = true;
 								pen = &gdipPenRed;
 							}
@@ -391,12 +391,12 @@ void CKadLookupGraph::OnPaint()
 				for (int j = 0; j < sEntry->m_liReceivedFromIdx.GetCount(); j++)
 				{
 					int iIdx = sEntry->m_liReceivedFromIdx[j];
-					if (iIdx >= hecount - iVisibleNodes) {
+					if (iIdx >= (int)hecount - iVisibleNodes) {
 
 						CPoint pFrom = m_aNodesDrawRects[hecount - (iIdx + 1)].CenterPoint();
 						CPoint pointTo = m_aNodesDrawRects[i].CenterPoint();
 
-						if (hecount - (iIdx + 1) == m_iHotItemIdx) {
+						if ((int)hecount - (iIdx + 1) == m_iHotItemIdx) {
 							abHotItemConnected[i] = true;
 							dc.SelectObject(&m_penRed);
 						}
@@ -460,7 +460,7 @@ void CKadLookupGraph::OnPaint()
 			{
 				if (sEntry->m_uRespondedContact > 0)
 					byIconIdx = sEntry->m_bProvidedCloser ? 0 : 1; // green or blue
-				else if (sEntry->m_dwAskedContactsTime + SEC2MS(3) < ::GetTickCount())
+				else if (::GetTickCount() >= sEntry->m_dwAskedContactsTime + SEC2MS(3))
 					byIconIdx = 3; // red
 				else
 					byIconIdx = 2; // yellow
@@ -496,7 +496,7 @@ void CKadLookupGraph::OnPaint()
 						int nOverlayImage = 0;
 						if (sEntry->m_uRespondedSearchItem > 0)
 							nOverlayImage = 1;
-						else if (sEntry->m_dwAskedSearchItemTime + SEC2MS(5) < ::GetTickCount())
+						else if (::GetTickCount() >= sEntry->m_dwAskedSearchItemTime + SEC2MS(5))
 							nOverlayImage = 2;
 						m_iml.Draw(&dc, 4, pointIndicator, ILD_NORMAL | INDEXTOOVERLAYMASK(nOverlayImage));
 						break;
@@ -549,7 +549,7 @@ void CKadLookupGraph::UpdateToolTip()
 	if (m_iHotItemIdx >= 0)
 	{
 		const CArray<Kademlia::CLookupHistory::SLookupHistoryEntry*>& he = m_pLookupHistory->GetHistoryEntries();
-		const INT_PTR hecount = he.GetCount();
+		const int hecount = (int)he.GetCount();
 		int iHotItemRealIdx = hecount - (m_iHotItemIdx + 1);
 		const CLookupHistory::SLookupHistoryEntry* sEntry = he[iHotItemRealIdx];
 		CString strDiscovered;
@@ -563,7 +563,7 @@ void CKadLookupGraph::UpdateToolTip()
 		{
 			if (sEntry->m_uRespondedContact == 0)
 			{
-				if (sEntry->m_dwAskedContactsTime + SEC2MS(3) < ::GetTickCount())
+				if (::GetTickCount() >= sEntry->m_dwAskedContactsTime + SEC2MS(3))
 					strFoundNodes = GetResString(IDS_NORESPONSE);
 				else
 					strFoundNodes = GetResString(IDS_ASKING);
@@ -571,12 +571,11 @@ void CKadLookupGraph::UpdateToolTip()
 			else
 			{
 				uint32 iUseful = 0;
-				for (int i = 0; i < hecount; ++i) {
-					for (int j = 0; j < he[i]->m_liReceivedFromIdx.GetCount(); ++j) {
+				for (int i = 0; i < hecount; ++i)
+					for (int j = 0; j < he[i]->m_liReceivedFromIdx.GetCount(); ++j)
 						if (he[i]->m_liReceivedFromIdx[j] == iHotItemRealIdx)
 							iUseful++;
-					}
-				}
+
 				strFoundNodes.Format(_T("%u (%u)"), sEntry->m_uRespondedContact, iUseful);
 			}
 		}
@@ -588,7 +587,7 @@ void CKadLookupGraph::UpdateToolTip()
 		{
 			if (sEntry->m_uRespondedSearchItem == 0)
 			{
-				if (sEntry->m_dwAskedSearchItemTime + SEC2MS(5) < ::GetTickCount())
+				if (::GetTickCount() >= sEntry->m_dwAskedSearchItemTime + SEC2MS(5))
 					strFoundResults = GetResString(IDS_BUDDYNONE);
 				else
 					strFoundResults = GetResString(IDS_ASKING);
@@ -600,22 +599,22 @@ void CKadLookupGraph::UpdateToolTip()
 			strFoundResults = GetResString(IDS_NOTASKED);
 
 		strToolText.Format(_T("%s\n")
-				+ GetResString(IDS_KADDISTANCE) + _T(": %s\n")
-				+ GetResString(IDS_PROTOCOLVERSION) + _T(": %u\n<br>\n")
-				+ GetResString(IDS_DISCOVEREDBY) + _T(": %s\n")
-				+ GetResString(IDS_FOUNDNODESUSEFUL) + _T(": %s\n\n")
-				+ GetResString(IDS_SW_RESULT) + _T(": %s\a")
+			_T("%s: %s\n")
+			_T("%s: %u\n<br>\n")
+			_T("%s: %s\n")
+			_T("%s: %s\n\n")
+			_T("%s: %s\a")
 			, (LPCTSTR)sEntry->m_uContactID.ToHexString()
-			, (LPCTSTR)sEntry->m_uDistance.ToHexString()
-			, sEntry->m_byContactVersion
-			, (LPCTSTR)strDiscovered
-			, (LPCTSTR)strFoundNodes
-			, (LPCTSTR)strFoundResults);
+			, (LPCTSTR)GetResString(IDS_KADDISTANCE), (LPCTSTR)sEntry->m_uDistance.ToHexString()
+			, (LPCTSTR)GetResString(IDS_PROTOCOLVERSION), (unsigned)sEntry->m_byContactVersion
+			, (LPCTSTR)GetResString(IDS_DISCOVEREDBY), (LPCTSTR)strDiscovered
+			, (LPCTSTR)GetResString(IDS_FOUNDNODESUSEFUL), (LPCTSTR)strFoundNodes
+			, (LPCTSTR)GetResString(IDS_SW_RESULT), (LPCTSTR)strFoundResults
+			);
 	}
-	else
-	{
-
-	}
+	//else
+	//{
+	//}
 	m_pToolTip->UpdateTipText(strToolText, this);
 	m_pToolTip->Update();
 }
@@ -635,7 +634,7 @@ void CKadLookupGraph::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	CMenu menu;
 	menu.CreatePopupMenu();
 	menu.AppendMenu(MF_STRING, MP_AUTOKADLOOKUPGRAPH, GetResString(IDS_AUTOKADLOOKUPGRAPH));
-	menu.CheckMenuItem(MP_AUTOKADLOOKUPGRAPH , thePrefs.GetAutoShowLookups() ? MF_CHECKED : MF_UNCHECKED);
+	menu.CheckMenuItem(MP_AUTOKADLOOKUPGRAPH, thePrefs.GetAutoShowLookups() ? MF_CHECKED : MF_UNCHECKED);
 	menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
 }
 

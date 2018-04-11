@@ -22,7 +22,7 @@ namespace Kademlia{
 
 #define MAX_CFEXP_ERRORMSG	(MAX_PATH + 256)
 
-enum EUtf8Str: int
+enum EUtf8Str: uint8
 {
 	utf8strNone,		// convert Unicode string to locale dependent MBCS
 	utf8strOptBOM,		// convert Unicode string to BOM'd UTF-8 string (non ASCII data in string)
@@ -145,22 +145,22 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 // Peek - helper functions for read-accessing memory without modifying the memory pointer
 
-__inline uint8 PeekUInt8(const void* p)
+inline uint8 PeekUInt8(const void* p)
 {
 	return *((uint8*)p);
 }
 
-__inline uint16 PeekUInt16(const void* p)
+inline uint16 PeekUInt16(const void* p)
 {
 	return *((uint16*)p);
 }
 
-__inline uint32 PeekUInt32(const void* p)
+inline uint32 PeekUInt32(const void* p)
 {
 	return *((uint32*)p);
 }
 
-__inline uint64 PeekUInt64(const void* p)
+inline uint64 PeekUInt64(const void* p)
 {
 	return *((uint64*)p);
 }
@@ -170,22 +170,22 @@ __inline uint64 PeekUInt64(const void* p)
 ///////////////////////////////////////////////////////////////////////////////
 // Poke - helper functions for write-accessing memory without modifying the memory pointer
 
-__inline void PokeUInt8(void* p, uint8 nVal)
+inline void PokeUInt8(void* p, uint8 nVal)
 {
 	*((uint8*)p) = nVal;
 }
 
-__inline void PokeUInt16(void* p, uint16 nVal)
+inline void PokeUInt16(void* p, uint16 nVal)
 {
 	*((uint16*)p) = nVal;
 }
 
-__inline void PokeUInt32(void* p, uint32 nVal)
+inline void PokeUInt32(void* p, uint32 nVal)
 {
 	*((uint32*)p) = nVal;
 }
 
-__inline void PokeUInt64(void* p, uint64 nVal)
+inline void PokeUInt64(void* p, uint64 nVal)
 {
 	*((uint64*)p) = nVal;
 }

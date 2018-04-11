@@ -124,7 +124,7 @@ private:
 };
 
 // Compare Helper for lists
-__inline int CompareAICHHash(const CFileIdentifier& ident1, const CFileIdentifier& ident2, bool bSortAscending)
+inline int CompareAICHHash(const CFileIdentifier& ident1, const CFileIdentifier& ident2, bool bSortAscending)
 {
 	if (ident1.HasAICHHash()) {
 		if (ident2.HasAICHHash())

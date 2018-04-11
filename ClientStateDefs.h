@@ -16,7 +16,8 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #pragma once
 
-enum EUploadState{
+enum EUploadState : uint8
+{
 	US_UPLOADING,
 	US_ONUPLOADQUEUE,
 	US_CONNECTING,
@@ -24,7 +25,8 @@ enum EUploadState{
 	US_NONE
 };
 
-enum EDownloadState: int {
+enum EDownloadState : uint8
+{
 	DS_DOWNLOADING,
 	DS_ONQUEUE,
 	DS_CONNECTED,
@@ -42,27 +44,31 @@ enum EDownloadState: int {
 	DS_REMOTEQUEUEFULL  // not used yet, except in statistics
 };
 
-enum EPeerCacheDownState{
-	PCDS_NONE = 0,
+enum EPeerCacheDownState : uint8
+{
+	PCDS_NONE			= 0,
 	PCDS_WAIT_CLIENT_REPLY,
 	PCDS_WAIT_CACHE_REPLY,
 	PCDS_DOWNLOADING
 };
 
-enum EPeerCacheUpState{
-	PCUS_NONE = 0,
+enum EPeerCacheUpState : uint8
+{
+	PCUS_NONE			= 0,
 	PCUS_WAIT_CACHE_REPLY,
 	PCUS_UPLOADING
 };
 
-enum EChatState{
+enum EChatState : uint8
+{
 	MS_NONE,
 	MS_CHATTING,
 	MS_CONNECTING,
 	MS_UNABLETOCONNECT
 };
 
-enum EKadState{
+enum EKadState : uint8
+{
 	KS_NONE,
 	KS_QUEUED_FWCHECK,
 	KS_CONNECTING_FWCHECK,
@@ -76,7 +82,8 @@ enum EKadState{
 	KS_CONNECTING_FWCHECK_UDP
 };
 
-enum EClientSoftware{
+enum EClientSoftware : uint8
+{
 	SO_EMULE			= 0,	// default
 	SO_CDONKEY			= 1,	// ET_COMPATIBLECLIENT
 	SO_XMULE			= 2,	// ET_COMPATIBLECLIENT
@@ -92,21 +99,24 @@ enum EClientSoftware{
 	SO_UNKNOWN
 };
 
-enum ESecureIdentState{
+enum ESecureIdentState : uint8
+{
 	IS_UNAVAILABLE		= 0,
 	IS_ALLREQUESTSSEND  = 0,
 	IS_SIGNATURENEEDED	= 1,
 	IS_KEYANDSIGNEEDED	= 2,
 };
 
-enum EInfoPacketState{
+enum EInfoPacketState : uint8
+{
 	IP_NONE				= 0,
 	IP_EDONKEYPROTPACK  = 1,
 	IP_EMULEPROTPACK	= 2,
 	IP_BOTH				= 3,
 };
 
-enum ESourceFrom{
+enum ESourceFrom : uint8
+{
 	SF_SERVER			= 0,
 	SF_KADEMLIA			= 1,
 	SF_SOURCE_EXCHANGE	= 2,
@@ -114,7 +124,8 @@ enum ESourceFrom{
 	SF_LINK				= 4
 };
 
-enum EChatCaptchaState{
+enum EChatCaptchaState : uint8
+{
 	CA_NONE				= 0,
 	CA_CHALLENGESENT,
 	CA_CAPTCHASOLVED,
@@ -123,34 +134,12 @@ enum EChatCaptchaState{
 	CA_SOLUTIONSENT
 };
 
-enum EConnectingState{
-	CCS_NONE				= 0,
+enum EConnectingState : uint8
+{
+	CCS_NONE			= 0,
 	CCS_DIRECTTCP,
 	CCS_DIRECTCALLBACK,
 	CCS_KADCALLBACK,
 	CCS_SERVERCALLBACK,
 	CCS_PRECONDITIONS
 };
-
-#ifdef _DEBUG
-	// use the 'Enums' only for debug builds, each enum costs 4 bytes (3 unused)
-#define _EClientSoftware	EClientSoftware
-#define _EChatState			EChatState
-#define _EKadState			EKadState
-#define _ESecureIdentState	ESecureIdentState
-#define _EUploadState		EUploadState
-#define _EDownloadState		EDownloadState
-#define _ESourceFrom		ESourceFrom
-#define _EChatCaptchaState  EChatCaptchaState
-#define _EConnectingState	EConnectingState
-#else
-#define _EClientSoftware	uint8
-#define _EChatState			uint8
-#define _EKadState			uint8
-#define _ESecureIdentState	uint8
-#define _EUploadState		uint8
-#define _EDownloadState		uint8
-#define _ESourceFrom		uint8
-#define _EChatCaptchaState	uint8
-#define _EConnectingState	uint8
-#endif

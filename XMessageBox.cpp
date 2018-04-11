@@ -119,6 +119,7 @@
 #endif
 
 #include "XMessageBox.h"
+#include "opcodes.h"
 
 #pragma warning(push)
 #pragma warning(disable : 4127)		// conditional expression is constant
@@ -495,7 +496,7 @@ protected:
 		EDefault         = 0x00
 	};
 
-	static INT_PTR CALLBACK MsgBoxDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM me);
+	static INT_PTR CALLBACK MsgBoxDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM me) noexcept;
 
 	void	LoadButtonStrings();
 	void	LoadButtonStringsFromResources(HINSTANCE hInstance);
@@ -635,14 +636,11 @@ INT_PTR XMessageBox(HWND hwnd,
 	TRACE(_T("in XMessageBox\n"));
 	_ASSERTE(lpszMessage);
 
-	if (hwnd == NULL)
-	{
-		hwnd = ::GetActiveWindow() ;
+	if (hwnd == NULL) {
+		hwnd = ::GetActiveWindow();
 		if (hwnd != NULL)
-		{
-			hwnd = ::GetLastActivePopup(hwnd) ;
-		}
-	};
+			hwnd = ::GetLastActivePopup(hwnd);
+	}
 
 	if ((nStyle & MB_ICONHAND) && (nStyle & MB_SYSTEMMODAL))
 	{
@@ -752,35 +750,35 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 								   LPCTSTR lpszCaption,
 								   UINT nStyle,
 								   XMSGBOXPARAMS *pXMB) :
-	m_nReturnValue(-1),
-	m_bEnded(FALSE),
-	m_hWndOwner(hWnd),
-	m_lpszMessage(NULL),
-	m_lpszCaption(NULL),
-	m_hBackgroundBrush(0),
-	m_nStyle(nStyle),
-	m_nHelpId(pXMB->nIdHelp),
-	m_hInstanceStrings(pXMB->hInstanceStrings),
-	m_hInstanceIcon(pXMB->hInstanceIcon),
 	m_lpReportFunc(pXMB->lpReportFunc),
 	m_dwReportUserData(pXMB->dwReportUserData),
+	m_Options(EDefault),
+	m_nButton(0),				// current button no.
 	m_nTimeoutSeconds(pXMB->nTimeoutSeconds),
 	m_nDisabledSeconds(pXMB->nDisabledSeconds),
-	m_Options(EDefault),
-	m_hIcon(NULL),
-	m_hFont(NULL),
-	m_nButton(0),				// current button no.
-	m_nDefId(1),				// button number of default button
-	m_nMaxID(FirstControlId),	// control id
 	m_X(pXMB->x),
 	m_Y(pXMB->y),
-	m_lpszModule(pXMB->lpszModule),
+	m_nReturnValue(-1),
 	m_nLine(pXMB->nLine),
-	m_crText(pXMB->crText),
-	m_crBackground(pXMB->crBackground),
+	m_nMaxID(FirstControlId),	// control id
+	m_nDefId(1),				// button number of default button
+	m_nHelpId(pXMB->nIdHelp),
+	m_nStyle(nStyle),
 	m_bRightJustifyButtons(pXMB->dwOptions & XMSGBOXPARAMS::RightJustifyButtons),
 	m_bVistaStyle(pXMB->dwOptions & XMSGBOXPARAMS::VistaStyle),		//+++1.8
-	m_bNarrow(pXMB->dwOptions & XMSGBOXPARAMS::Narrow)				//+++1.8
+	m_bNarrow(pXMB->dwOptions & XMSGBOXPARAMS::Narrow),				//+++1.8
+	m_bEnded(FALSE),
+	m_lpszModule(pXMB->lpszModule),
+	m_hWndOwner(hWnd),
+	m_hInstanceStrings(pXMB->hInstanceStrings),
+	m_hInstanceIcon(pXMB->hInstanceIcon),
+	m_lpszMessage(NULL),
+	m_lpszCaption(NULL),
+	m_hIcon(NULL),
+	m_hFont(NULL),
+	m_crText(pXMB->crText),
+	m_crBackground(pXMB->crBackground),
+	m_hBackgroundBrush(0)
 {
 	TRACE(_T("in CXDialogTemplate::CXDialogTemplate\n"));
 
@@ -1088,14 +1086,21 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 	}
 	else if (nStyle & MB_ICONMASK)
 	{
-		LPTSTR lpIcon = (LPTSTR)IDI_EXCLAMATION;
+		LPTSTR lpIcon;
 
-		switch (nStyle & MB_ICONMASK)
-		{
-			case MB_ICONEXCLAMATION: lpIcon = (LPTSTR)IDI_EXCLAMATION; break;
-			case MB_ICONHAND:        lpIcon = (LPTSTR)IDI_HAND;        break;
-			case MB_ICONQUESTION:    lpIcon = (LPTSTR)IDI_QUESTION;    break;
-			case MB_ICONASTERISK:    lpIcon = (LPTSTR)IDI_ASTERISK;    break;
+		switch (nStyle & MB_ICONMASK) {
+		default:
+		case MB_ICONEXCLAMATION:
+			lpIcon = (LPTSTR)IDI_EXCLAMATION;
+			break;
+		case MB_ICONHAND:
+			lpIcon = (LPTSTR)IDI_HAND;
+			break;
+		case MB_ICONQUESTION:
+			lpIcon = (LPTSTR)IDI_QUESTION;
+			break;
+		case MB_ICONASTERISK:
+			lpIcon = (LPTSTR)IDI_ASTERISK;
 		}
 
 		if (lpIcon)
@@ -1695,10 +1700,10 @@ void CXDialogTemplate::LoadButtonStringsFromResources(HINSTANCE hInstance)
 
 ///////////////////////////////////////////////////////////////////////////////
 // MsgBoxDlgProc
-INT_PTR CALLBACK CXDialogTemplate::MsgBoxDlgProc(HWND hwnd,
-												 UINT message,
-												 WPARAM wParam,
-												 LPARAM lParam)
+INT_PTR CALLBACK CXDialogTemplate::MsgBoxDlgProc( HWND hwnd
+												, UINT message
+												, WPARAM wParam
+												, LPARAM lParam) noexcept
 {
 	CXDialogTemplate* Me = (CXDialogTemplate*) ::GetWindowLongPtr(hwnd, GWLP_USERDATA);
 	HWND hwndChild = 0;
@@ -1852,10 +1857,10 @@ INT_PTR CALLBACK CXDialogTemplate::MsgBoxDlgProc(HWND hwnd,
 
 			// display seconds countdown if timeout specified
 			if (Me->m_nTimeoutSeconds > 0)
-				::SetTimer(hwnd, 1, 1000, NULL);
+				::SetTimer(hwnd, 1, SEC2MS(1), NULL);
 
 			if (Me->m_nDisabledSeconds > 0)
-				::SetTimer(hwnd, 2, 1000, NULL);
+				::SetTimer(hwnd, 2, SEC2MS(1), NULL);
 
 			::SetForegroundWindow(hwnd);
 
@@ -1934,7 +1939,7 @@ INT_PTR CALLBACK CXDialogTemplate::MsgBoxDlgProc(HWND hwnd,
 					BOOL bFlag = FALSE;
 
 					if (hwndChild && ::IsWindow(hwndChild))
-						bFlag = (BOOL)::SendMessage(hwndChild, BM_GETCHECK, 0, 0);
+						bFlag = ::SendMessage(hwndChild, BM_GETCHECK, 0, 0) != 0;
 
 					if (Me->Option(DoNotAskAgain))
 						wParam |= bFlag ? MB_DONOTASKAGAIN : 0;

@@ -24,13 +24,12 @@ class CSearchParamsWnd : public CDialogBar
 {
 	DECLARE_DYNAMIC(CSearchParamsWnd);
 
+	enum { IDD = IDD_SEARCH_PARAMS };
+
 // Construction
 public:
 	CSearchParamsWnd();
 	virtual ~CSearchParamsWnd();
-
-// Dialog Data
-	enum { IDD = IDD_SEARCH_PARAMS };
 
 	CEditX m_ctlName;
 	CButton m_ctlStart;

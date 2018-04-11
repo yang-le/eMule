@@ -86,7 +86,7 @@ bool CxImage::EncodeSafeCheck(CxFile *hFile)
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
-//#ifdef WIN32
+//#ifdef _WIN32
 //bool CxImage::Save(LPCWSTR filename, uint32_t imagetype)
 //{
 //	FILE* hFile;	//file handle to write the image
@@ -95,7 +95,7 @@ bool CxImage::EncodeSafeCheck(CxFile *hFile)
 //	fclose(hFile);
 //	return bOK;
 //}
-//#endif //WIN32
+//#endif //_WIN32
 ////////////////////////////////////////////////////////////////////////////////
 // For UNICODE support: char -> TCHAR
 /**
@@ -104,11 +104,11 @@ bool CxImage::EncodeSafeCheck(CxFile *hFile)
  * \param imagetype: file format, see ENUM_CXIMAGE_FORMATS
  * \return true if everything is ok
  */
-bool CxImage::Save(const TCHAR * filename, uint32_t imagetype)
+bool CxImage::Save(LPCTSTR filename, uint32_t imagetype)
 {
 	FILE* hFile;	//file handle to write the image
 
-#ifdef WIN32
+#ifdef _WIN32
 	if ((hFile=_tfopen(filename,_T("wb")))==NULL)  return false;	// For UNICODE support
 #else
 	if ((hFile=fopen(filename,"wb"))==NULL)  return false;
@@ -581,7 +581,7 @@ bool CxImage::Load(const TCHAR * filename, uint32_t imagetype)
 	if ( GetTypeIndexFromId(imagetype) ){
 		FILE* hFile;	//file handle to read the image
 
-#ifdef WIN32
+#ifdef _WIN32
 		if ((hFile=_tfopen(filename,_T("rb")))==NULL)  return false;	// For UNICODE support
 #else
 		if ((hFile=fopen(filename,"rb"))==NULL)  return false;
@@ -598,7 +598,7 @@ bool CxImage::Load(const TCHAR * filename, uint32_t imagetype)
 	// if failed, try automatic recognition of the file...
 	FILE* hFile;
 
-#ifdef WIN32
+#ifdef _WIN32
 	if ((hFile=_tfopen(filename,_T("rb")))==NULL)  return false;	// For UNICODE support
 #else
 	if ((hFile=fopen(filename,"rb"))==NULL)  return false;
@@ -612,7 +612,7 @@ bool CxImage::Load(const TCHAR * filename, uint32_t imagetype)
 	return bOK;
 }
 ////////////////////////////////////////////////////////////////////////////////
-#ifdef WIN32
+#ifdef _WIN32
 //bool CxImage::Load(LPCWSTR filename, uint32_t imagetype)
 //{
 //	/*FILE* hFile;	//file handle to read the image
@@ -679,7 +679,7 @@ bool CxImage::LoadResource(HRSRC hRes, uint32_t imagetype, HMODULE hModule)
 	} else strcpy(info.szLastError,"Unable to load resource!");
 	return false;
 }
-#endif //WIN32
+#endif //_WIN32
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * Constructor from file name, see Load()

@@ -219,7 +219,7 @@ void COScopeCtrl::SetTrendRatio(int iTrend, unsigned iRatio)
 		double dTrendModifier = (double)m_PlotData[iTrend].iTrendRatio / iRatio;
 		m_PlotData[iTrend].iTrendRatio = iRatio;
 
-		int iCnt = m_PlotData[iTrend].lstPoints.GetCount();
+		INT_PTR iCnt = m_PlotData[iTrend].lstPoints.GetCount();
 		for (int i = 0; i < iCnt; i++)
 		{
 			POSITION pos = m_PlotData[iTrend].lstPoints.FindIndex(i);
@@ -449,7 +449,7 @@ void COScopeCtrl::InvalidateCtrl(bool deleteGraph)
         }
     } else {
 	    strTemp.Format(_T("%.*lf"), m_nYDecimals, m_PlotData[0].dUpperLimit / 2);
-	    m_dcGrid.TextOut(m_rectPlot.left - 2, m_rectPlot.bottom + ((m_rectPlot.top - m_rectPlot.bottom) / 2) - 7 , strTemp);
+	    m_dcGrid.TextOut(m_rectPlot.left - 2, m_rectPlot.bottom + ((m_rectPlot.top - m_rectPlot.bottom) / 2) - 7, strTemp);
     }
 
 	// y min
@@ -859,10 +859,10 @@ int COScopeCtrl::ReCreateGraph()
 
 	// Try to avoid to call the method AppendPoints() more than necessary
 	// Remark: the default size of the list is 1024
-	int pointToDraw = m_PlotData[0].lstPoints.GetCount();
+	INT_PTR pointToDraw = m_PlotData[0].lstPoints.GetCount();
 	if (pointToDraw > m_nPlotWidth / m_nShiftPixels + 1)
 		pointToDraw = m_nPlotWidth / m_nShiftPixels + 1;
-	int startIndex = m_PlotData[0].lstPoints.GetCount() - pointToDraw;
+	INT_PTR startIndex = m_PlotData[0].lstPoints.GetCount() - pointToDraw;
 
 	// Prepare to go through the elements on n lists in parallel
 	for(int iTrend = 0; iTrend < m_NTrends; iTrend++)

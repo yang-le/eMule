@@ -81,35 +81,25 @@ void CConnectionWizardDlg::OnBnClickedApply()
 		return;
 	}
 
-	TCHAR buffer[510];
+	CString buffer;
 	int upload, download;
-	if (GetDlgItem(IDC_WIZ_TRUEDOWNLOAD_BOX)->GetWindowTextLength())
-	{ 
-		GetDlgItem(IDC_WIZ_TRUEDOWNLOAD_BOX)->GetWindowText(buffer, 20);
+	if (GetDlgItemText(IDC_WIZ_TRUEDOWNLOAD_BOX, buffer)) {
 		download = _tstoi(buffer);
 		if (download < 0 || download >= INT_MAX) {
 			GetDlgItem(IDC_WIZ_TRUEDOWNLOAD_BOX)->SetFocus();
 			return;
 		}
-	}
-	else
-	{
+	} else
 		download = 0;
- 	}
 
-	if (GetDlgItem(IDC_WIZ_TRUEUPLOAD_BOX)->GetWindowTextLength())
-	{ 
-		GetDlgItem(IDC_WIZ_TRUEUPLOAD_BOX)->GetWindowText(buffer, 20);
+	if (GetDlgItemText(IDC_WIZ_TRUEUPLOAD_BOX, buffer)) {
 		upload = _tstoi(buffer);
 		if (upload < 0 || upload >= INT_MAX) {
 			GetDlgItem(IDC_WIZ_TRUEUPLOAD_BOX)->SetFocus();
 			return;
 		}
-	}
-	else
-	{
+	} else
 		upload = 0;
-	}
 
 	if (IsDlgButtonChecked(IDC_KBITS) == 1)
 	{
@@ -312,15 +302,15 @@ void CConnectionWizardDlg::OnNmClickProviders(NMHDR* /*pNMHDR*/, LRESULT* pResul
 void CConnectionWizardDlg::Localize()
 {
 	SetWindowText(GetResString(IDS_WIZARD));
-	GetDlgItem(IDC_WIZ_OS_FRAME)->SetWindowText(GetResString(IDS_WIZ_OS_FRAME));
-	GetDlgItem(IDC_WIZ_CONCURENTDOWN_FRAME)->SetWindowText(GetResString(IDS_CONCURDWL));
-	GetDlgItem(IDC_WIZ_HOTBUTTON_FRAME)->SetWindowText(GetResString(IDS_WIZ_CTFRAME));
-	GetDlgItem(IDC_WIZ_TRUEUPLOAD_TEXT)->SetWindowText(GetResString(IDS_WIZ_TRUEUPLOAD_TEXT));
-	GetDlgItem(IDC_WIZ_TRUEDOWNLOAD_TEXT)->SetWindowText(GetResString(IDS_WIZ_TRUEDOWNLOAD_TEXT));
-	GetDlgItem(IDC_KBITS)->SetWindowText(GetResString(IDS_KBITSSEC));
-	GetDlgItem(IDC_KBYTES)->SetWindowText(GetResString(IDS_KBYTESSEC));
-	GetDlgItem(IDC_WIZ_APPLY_BUTTON)->SetWindowText(GetResString(IDS_PW_APPLY));
-	GetDlgItem(IDC_WIZ_CANCEL_BUTTON)->SetWindowText(GetResString(IDS_CANCEL));
+	SetDlgItemText(IDC_WIZ_OS_FRAME, GetResString(IDS_WIZ_OS_FRAME));
+	SetDlgItemText(IDC_WIZ_CONCURENTDOWN_FRAME, GetResString(IDS_CONCURDWL));
+	SetDlgItemText(IDC_WIZ_HOTBUTTON_FRAME, GetResString(IDS_WIZ_CTFRAME));
+	SetDlgItemText(IDC_WIZ_TRUEUPLOAD_TEXT, GetResString(IDS_WIZ_TRUEUPLOAD_TEXT));
+	SetDlgItemText(IDC_WIZ_TRUEDOWNLOAD_TEXT, GetResString(IDS_WIZ_TRUEDOWNLOAD_TEXT));
+	SetDlgItemText(IDC_KBITS, GetResString(IDS_KBITSSEC));
+	SetDlgItemText(IDC_KBYTES, GetResString(IDS_KBYTESSEC));
+	SetDlgItemText(IDC_WIZ_APPLY_BUTTON, GetResString(IDS_PW_APPLY));
+	SetDlgItemText(IDC_WIZ_CANCEL_BUTTON, GetResString(IDS_CANCEL));
 }
 
 void CConnectionWizardDlg::SetCustomItemsActivation()

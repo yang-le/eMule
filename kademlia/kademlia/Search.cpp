@@ -148,8 +148,8 @@ CSearch::~CSearch()
 	}
 
 	// Decrease the use count for any contacts that are in your contact list.
-	for (ContactMap::iterator itContactMap = m_mapInUse.begin(); itContactMap != m_mapInUse.end(); ++itContactMap)
-		((CContact*)itContactMap->second)->DecUse();
+	for (ContactMap::const_iterator itContactMap = m_mapInUse.begin(); itContactMap != m_mapInUse.end(); ++itContactMap)
+		itContactMap->second->DecUse();
 
 	// Delete any temp contacts..
 	for (ContactList::const_iterator itContactList = m_listDelete.begin(); itContactList != m_listDelete.end(); ++itContactList)
@@ -164,7 +164,7 @@ CSearch::~CSearch()
 		switch(GetSearchTypes())
 		{
 			case CSearch::STOREKEYWORD:
-				Kademlia::CKademlia::GetIndexed()->AddLoad(GetTarget(), ((uint32)(DAY2S(7)*((double)GetNodeLoad()/100.0))+(uint32)time(NULL)));
+				Kademlia::CKademlia::GetIndexed()->AddLoad(GetTarget(), (uint32)(DAY2S(7)*(GetNodeLoad()/100.0) + time(NULL)));
 				break;
 		}
 	}
@@ -183,14 +183,14 @@ void CSearch::Go()
 		uDistance.Xor(m_uTarget);
 		CKademlia::GetRoutingZone()->GetClosestTo(3, m_uTarget, uDistance, 50, &m_mapPossible, true, true);
 
-		for (ContactMap::iterator itContactMap = m_mapPossible.begin(); itContactMap != m_mapPossible.end(); ++itContactMap)
+		for (ContactMap::const_iterator itContactMap = m_mapPossible.begin(); itContactMap != m_mapPossible.end(); ++itContactMap)
 			m_pLookupHistory->ContactReceived(itContactMap->second, NULL, itContactMap->first, false);
 		theApp.emuledlg->kademliawnd->UpdateSearchGraph(m_pLookupHistory);
 	}
 	if (!m_mapPossible.empty())
 	{
 		//Lets keep our contact list entries in mind to dec the inUse flag.
-		for (ContactMap::iterator itContactMap = m_mapPossible.begin(); itContactMap != m_mapPossible.end(); ++itContactMap)
+		for (ContactMap::const_iterator itContactMap = m_mapPossible.begin(); itContactMap != m_mapPossible.end(); ++itContactMap)
 			m_mapInUse[itContactMap->first] = itContactMap->second;
 
 		ASSERT(m_mapPossible.size() == m_mapInUse.size());
@@ -198,9 +198,9 @@ void CSearch::Go()
 		// Take top ALPHA_QUERY to start search with.
 		int iCount = (m_uType == NODE) ? 1 : mini(ALPHA_QUERY, (int)m_mapPossible.size());
 
-		ContactMap::iterator itContactMap2 = m_mapPossible.begin();
+		ContactMap::const_iterator itContactMap2 = m_mapPossible.begin();
 		// Send initial packets to start the search.
-		for (int iIndex=0; iIndex<iCount; iIndex++)
+		for (int iIndex=0; iIndex<iCount; ++iIndex)
 		{
 			CContact* pContact = itContactMap2->second;
 			// Move to tried
@@ -320,7 +320,7 @@ void CSearch::JumpStart()
 	// Search for contacts that can be used to jumpstart a stalled search.
 	while(!m_mapPossible.empty())
 	{
-		const ContactMap::iterator cmit = m_mapPossible.begin();
+		const ContactMap::const_iterator cmit = m_mapPossible.begin();
 		// Get a contact closest to our target.
 		CContact* pContact = cmit->second;
 
@@ -348,7 +348,7 @@ void CSearch::JumpStart()
 void CSearch::ProcessResponse(uint32 uFromIP, uint16 uFromPort, ContactList *plistResults)
 {
 	// Remember the contacts to be deleted when finished
-	for (ContactList::iterator itContactList = plistResults->begin(); itContactList != plistResults->end(); ++itContactList)
+	for (ContactList::const_iterator itContactList = plistResults->begin(); itContactList != plistResults->end(); ++itContactList)
 		m_listDelete.push_back(*itContactList);
 
 	m_uLastResponse = time(NULL);
@@ -394,7 +394,7 @@ void CSearch::ProcessResponse(uint32 uFromIP, uint16 uFromPort, ContactList *pli
 		// Note we got an answer
 		m_uAnswers++;
 		// Add contacts to the History for GUI purposes
-		for (ContactList::iterator itContactList = plistResults->begin(); itContactList != plistResults->end(); ++itContactList)
+		for (ContactList::const_iterator itContactList = plistResults->begin(); itContactList != plistResults->end(); ++itContactList)
 		{
 			CUInt128 uDistance(((CContact*)*itContactList)->GetClientID().Xor(m_uTarget));
 			m_pLookupHistory->ContactReceived(*itContactList, pFromContact, uDistance, uDistance < uFromDistance, true);
@@ -416,10 +416,10 @@ void CSearch::ProcessResponse(uint32 uFromIP, uint16 uFromPort, ContactList *pli
 			bool bProvidedCloserContacts = false;
 			std::map<uint32, uint32> mapReceivedIPs;
 			std::map<uint32, uint32> mapReceivedSubnets;
-			mapReceivedIPs[uFromIP] = 1; // A node is not allowd to answer with contacts to itself
+			mapReceivedIPs[uFromIP] = 1; // A node is not allowed to answer with contacts to itself
 			mapReceivedSubnets[uFromIP & 0xFFFFFF00] = 1;
 			// Loop through their responses
-			for (ContactList::iterator itContactList = plistResults->begin(); itContactList != plistResults->end(); ++itContactList)
+			for (ContactList::const_iterator itContactList = plistResults->begin(); itContactList != plistResults->end(); ++itContactList)
 			{
 				// Get next result
 				CContact* pContact = *itContactList;
@@ -483,7 +483,7 @@ void CSearch::ProcessResponse(uint32 uFromIP, uint16 uFromPort, ContactList *pli
 					}
 					else
 					{
-						ContactMap::iterator itContactMapBest = m_mapBest.end();
+						ContactMap::const_iterator itContactMapBest = m_mapBest.end();
 						--itContactMapBest;
 						if (uDistance < itContactMapBest->first)
 						{
@@ -844,7 +844,7 @@ void CSearch::StorePacket()
 							iCount--;
 							iPacketCount++;
 							byIO.WriteUInt128(iID);
-							PreparePacketForTags( &byIO, pFile, pFromContact->GetVersion() );
+							PreparePacketForTags(&byIO, pFile, pFromContact->GetVersion() );
 						}
 						++itListFileID;
 					}
@@ -860,14 +860,14 @@ void CSearch::StorePacket()
 						if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 							DebugSend("KADEMLIA2_PUBLISH_KEY_REQ", pFromContact->GetIPAddress(), pFromContact->GetUDPPort());
 						CUInt128 uClientID = pFromContact->GetClientID();
-						CKademlia::GetUDPListener()->SendPacket( byPacket, sizeof(byPacket)-byIO.GetAvailable(), KADEMLIA2_PUBLISH_KEY_REQ, pFromContact->GetIPAddress(), pFromContact->GetUDPPort(), pFromContact->GetUDPKey(), &uClientID);
+						CKademlia::GetUDPListener()->SendPacket(byPacket, sizeof(byPacket)-byIO.GetAvailable(), KADEMLIA2_PUBLISH_KEY_REQ, pFromContact->GetIPAddress(), pFromContact->GetUDPPort(), pFromContact->GetUDPKey(), &uClientID);
 
 					}
 					else if (pFromContact->GetVersion() >= 2/*47a*/)
 					{
 						if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 							DebugSend("KADEMLIA2_PUBLISH_KEY_REQ", pFromContact->GetIPAddress(), pFromContact->GetUDPPort());
-						CKademlia::GetUDPListener()->SendPacket( byPacket, sizeof(byPacket)-byIO.GetAvailable(), KADEMLIA2_PUBLISH_KEY_REQ, pFromContact->GetIPAddress(), pFromContact->GetUDPPort(), CKadUDPKey(0), NULL);
+						CKademlia::GetUDPListener()->SendPacket(byPacket, sizeof(byPacket)-byIO.GetAvailable(), KADEMLIA2_PUBLISH_KEY_REQ, pFromContact->GetIPAddress(), pFromContact->GetUDPPort(), CKadUDPKey(0), NULL);
 						ASSERT( CKadUDPKey(0) == pFromContact->GetUDPKey() );
 					}
 					else
@@ -912,13 +912,13 @@ void CSearch::StorePacket()
 						if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 							DebugSend("KADEMLIA2_PUBLISH_NOTES_REQ", pFromContact->GetIPAddress(), pFromContact->GetUDPPort());
 						CUInt128 uClientID = pFromContact->GetClientID();
-						CKademlia::GetUDPListener()->SendPacket( byPacket, sizeof(byPacket)-byIO.GetAvailable(), KADEMLIA2_PUBLISH_NOTES_REQ, pFromContact->GetIPAddress(), pFromContact->GetUDPPort(), pFromContact->GetUDPKey(), &uClientID);
+						CKademlia::GetUDPListener()->SendPacket( byPacket, (sizeof byPacket)-byIO.GetAvailable(), KADEMLIA2_PUBLISH_NOTES_REQ, pFromContact->GetIPAddress(), pFromContact->GetUDPPort(), pFromContact->GetUDPKey(), &uClientID);
 					}
 					else if (pFromContact->GetVersion() >= 2/*47a*/)
 					{
 						if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 							DebugSend("KADEMLIA2_PUBLISH_NOTES_REQ", pFromContact->GetIPAddress(), pFromContact->GetUDPPort());
-						CKademlia::GetUDPListener()->SendPacket( byPacket, sizeof(byPacket)-byIO.GetAvailable(), KADEMLIA2_PUBLISH_NOTES_REQ, pFromContact->GetIPAddress(), pFromContact->GetUDPPort(), CKadUDPKey(0), NULL);
+						CKademlia::GetUDPListener()->SendPacket( byPacket, (sizeof byPacket)-byIO.GetAvailable(), KADEMLIA2_PUBLISH_NOTES_REQ, pFromContact->GetIPAddress(), pFromContact->GetUDPPort(), CKadUDPKey(0), NULL);
 						ASSERT( CKadUDPKey(0) == pFromContact->GetUDPKey() );
 					}
 					else
@@ -1341,7 +1341,7 @@ void CSearch::ProcessResultKeyword(const CUInt128 &uAnswer, TagList *plistInfo, 
 				}
 				catch (CFileException* pError)
 				{
-					DebugLogError(_T("ProcessResultKeyword: Corrupt or invalid TAG_KADAICHHASHRESULT received - ip: %s)") , (LPCTSTR)ipstr(ntohl(uFromIP)));
+					DebugLogError(_T("ProcessResultKeyword: Corrupt or invalid TAG_KADAICHHASHRESULT received - ip: %s)"), (LPCTSTR)ipstr(ntohl(uFromIP)));
 					pError->Delete();
 					aAICHHashPopularity.RemoveAll();
 					aAICHHashs.RemoveAll();
@@ -1512,14 +1512,13 @@ void CSearch::AddFileID(const CUInt128& uID)
 	m_listFileIDs.push_back(uID);
 }
 
-static int GetMetaDataWords(CStringArray& rastrWords, const CString& rstrData)
+static INT_PTR GetMetaDataWords(CStringArray& rastrWords, const CString& rstrData)
 {
 	// Create a list of the 'words' found in 'data'. This is similar but though not equal
 	// to the 'CSearchManager::GetWords' function which needs to follow some other rules.
 	int iPos = 0;
 	CString strWord = rstrData.Tokenize(g_aszInvKadKeywordChars, iPos);
-	while (!strWord.IsEmpty())
-	{
+	while (!strWord.IsEmpty()) {
 		rastrWords.Add(strWord);
 		strWord = rstrData.Tokenize(g_aszInvKadKeywordChars, iPos);
 	}
@@ -1714,7 +1713,7 @@ uint32 CSearch::GetAnswers() const
 	if (m_listFileIDs.empty())
 		return m_uAnswers;
 	// If we sent more then one packet per node, we have to average the answers for the real count.
-	return m_uAnswers/((m_listFileIDs.size()+49)/50);
+	return (uint32)(m_uAnswers/((m_listFileIDs.size()+49)/50));
 }
 uint32 CSearch::GetKadPacketSent() const
 {

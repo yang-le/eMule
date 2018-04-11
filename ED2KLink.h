@@ -32,10 +32,18 @@ struct SUnresolvedHostname
 class CED2KLink
 {
 public:
-	static CED2KLink* CreateLinkFromUrl(const TCHAR* uri);
+	static CED2KLink* CreateLinkFromUrl(LPCTSTR uri);
 	virtual ~CED2KLink();
 
-	typedef enum { kServerList, kServer , kFile , kNodesList, kSearch, kInvalid } LinkType;
+	typedef enum
+	{
+		kServerList,
+		kServer,
+		kFile,
+		kNodesList,
+		kSearch,
+		kInvalid
+	} LinkType;
 
 	virtual LinkType GetKind() const = 0;
 	virtual void GetLink(CString& lnk) const = 0;
@@ -50,7 +58,7 @@ public:
 class CED2KServerLink : public CED2KLink
 {
 public:
-	CED2KServerLink(const TCHAR* ip, const TCHAR* port);
+	CED2KServerLink(LPCTSTR ip, LPCTSTR port);
 	virtual ~CED2KServerLink();
 
 	virtual LinkType GetKind() const;
@@ -61,9 +69,9 @@ public:
 	virtual CED2KNodesListLink* GetNodesListLink()		{ return NULL; }
 	virtual CED2KSearchLink* GetSearchLink()			{ return NULL; }
 
-	const CString& GetAddress() const { return m_strAddress; }
-	uint16 GetPort() const { return m_port;}
-	void GetDefaultName(CString& defName) const { defName = m_defaultName; }
+	const CString& GetAddress() const					{ return m_strAddress; }
+	uint16 GetPort() const								{ return m_port;}
+	void GetDefaultName(CString& defName) const			{ defName = m_defaultName; }
 
 private:
 	CED2KServerLink();
@@ -79,7 +87,7 @@ private:
 class CED2KFileLink : public CED2KLink
 {
 public:
-	CED2KFileLink(const TCHAR* pszName, const TCHAR* pszSize, const TCHAR* pszHash, const CStringArray& astrParams, const TCHAR* pszSources);
+	CED2KFileLink(LPCTSTR pszName, LPCTSTR pszSize, LPCTSTR pszHash, const CStringArray& astrParams, LPCTSTR pszSources);
 	virtual ~CED2KFileLink();
 
 	virtual LinkType GetKind() const;
@@ -90,13 +98,13 @@ public:
 	virtual CED2KNodesListLink* GetNodesListLink() 		{ return NULL; }
 	virtual CED2KSearchLink* GetSearchLink()			{ return NULL; }
 
-	const TCHAR* GetName() const			{ return m_name; }
-	const uchar* GetHashKey() const			{ return m_hash;}
-	const CAICHHash& GetAICHHash() const	{ return m_AICHHash;}
-	EMFileSize GetSize() const				{ return (uint64)_tstoi64(m_size); }
-	bool HasValidSources() const			{ return (SourcesList != NULL); }
-	bool HasHostnameSources() const			{ return (!m_HostnameSourcesList.IsEmpty()); }
-	bool HasValidAICHHash() const			{ return m_bAICHHashValid; }
+	LPCTSTR GetName() const								{ return m_name; }
+	const uchar* GetHashKey() const						{ return m_hash;}
+	const CAICHHash& GetAICHHash() const				{ return m_AICHHash;}
+	EMFileSize GetSize() const							{ return (uint64)_tstoi64(m_size); }
+	bool HasValidSources() const						{ return (SourcesList != NULL); }
+	bool HasHostnameSources() const						{ return (!m_HostnameSourcesList.IsEmpty()); }
+	bool HasValidAICHHash() const						{ return m_bAICHHashValid; }
 
 	CSafeMemFile* SourcesList;
 	CSafeMemFile* m_hashset;
@@ -105,7 +113,7 @@ public:
 private:
 	CED2KFileLink();
 	CED2KFileLink(const CED2KFileLink&);
-	CED2KFileLink& operator=(const CED2KFileLink&);
+	CED2KFileLink& operator=(const CED2KFileLink&) = delete;
 
 	CString m_name;
 	CString m_size;
@@ -118,7 +126,7 @@ private:
 class CED2KServerListLink : public CED2KLink
 {
 public:
-	explicit CED2KServerListLink(const TCHAR* address);
+	explicit CED2KServerListLink(LPCTSTR address);
 	virtual ~CED2KServerListLink();
 
 	virtual LinkType GetKind() const;
@@ -129,7 +137,7 @@ public:
 	virtual CED2KNodesListLink* GetNodesListLink()		{ return NULL; }
 	virtual CED2KSearchLink* GetSearchLink()			{ return NULL; }
 
-	const TCHAR* GetAddress() const { return m_address; }
+	LPCTSTR GetAddress() const							{ return m_address; }
 
 private:
 	CString m_address;
@@ -139,7 +147,7 @@ private:
 class CED2KNodesListLink : public CED2KLink
 {
 public:
-	explicit CED2KNodesListLink(const TCHAR* address);
+	explicit CED2KNodesListLink(LPCTSTR address);
 	virtual ~CED2KNodesListLink();
 
 	virtual LinkType GetKind() const;
@@ -150,7 +158,7 @@ public:
 	virtual CED2KNodesListLink* GetNodesListLink();
 	virtual CED2KSearchLink* GetSearchLink()			{ return NULL; }
 
-	const TCHAR* GetAddress() const { return m_address; }
+	LPCTSTR GetAddress() const							{ return m_address; }
 
 private:
 	CString m_address;
@@ -159,7 +167,7 @@ private:
 class CED2KSearchLink : public CED2KLink
 {
 public:
-	explicit CED2KSearchLink(const TCHAR* pszSearchTerm);
+	explicit CED2KSearchLink(LPCTSTR pszSearchTerm);
 	virtual ~CED2KSearchLink();
 
 	virtual LinkType GetKind() const;
@@ -170,7 +178,7 @@ public:
 	virtual CED2KNodesListLink* GetNodesListLink();
 	virtual CED2KSearchLink* GetSearchLink();
 
-	CString GetSearchTerm() const { return m_strSearchTerm; }
+	CString GetSearchTerm() const						{ return m_strSearchTerm; }
 
 private:
 	CString m_strSearchTerm;

@@ -2,7 +2,7 @@
  * TIFF file IO, using CxFile.
  */
 
-#ifdef WIN32
+#ifdef _WIN32
  #include <windows.h>
 #endif
 #include <stdio.h>
@@ -162,7 +162,7 @@ static void
 Win32WarningHandler(const char* module, const char* fmt, va_list ap)
 {
 #ifdef _DEBUG
-#if (!defined(_CONSOLE) && !defined(_WIN32_WCE) && defined(WIN32))
+#if (!defined(_CONSOLE) && !defined(_WIN32_WCE) && defined(_WIN32))
 	LPSTR szTitle;
 	LPSTR szTmp;
 	LPCSTR szTitleText = "%s Warning";
@@ -192,7 +192,7 @@ static void
 Win32ErrorHandler(const char* module, const char* fmt, va_list ap)
 {
 #ifdef _DEBUG
-#if (!defined(_CONSOLE) && !defined(_WIN32_WCE) && defined(WIN32))
+#if (!defined(_CONSOLE) && !defined(_WIN32_WCE) && defined(_WIN32))
 	LPSTR szTitle;
 	LPSTR szTmp;
 	LPCSTR szTitleText = "%s Error";
