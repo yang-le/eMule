@@ -216,8 +216,8 @@ void CCommentListCtrl::AddItem(const Kademlia::CEntry* entry)
 	const void* pClientCookie = entry;
 	if (FindClientComment(pClientCookie) != -1)
 		return;
-	int iRating = (int)entry->GetIntTagValue(TAG_FILERATING);
-	SComment* pComment = new SComment(pClientCookie, iRating, entry->GetStrTagValue(TAG_DESCRIPTION),
+	int iRating = (int)entry->GetIntTagValue(Kademlia::CKadTagNameString(TAG_FILERATING));
+	SComment* pComment = new SComment(pClientCookie, iRating, entry->GetStrTagValue(Kademlia::CKadTagNameString(TAG_DESCRIPTION)),
 									  entry->GetCommonFileName(), _T(""), 1/*Kad*/);
 	AddComment(pComment);
 }

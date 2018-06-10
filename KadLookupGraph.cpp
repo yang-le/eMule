@@ -612,8 +612,7 @@ void CKadLookupGraph::UpdateToolTip()
 			, (LPCTSTR)GetResString(IDS_SW_RESULT), (LPCTSTR)strFoundResults
 			);
 	}
-	//else
-	//{
+	//else {
 	//}
 	m_pToolTip->UpdateTipText(strToolText, this);
 	m_pToolTip->Update();

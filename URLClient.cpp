@@ -174,16 +174,19 @@ bool CUrlClient::SendHttpBlockRequests()
 	m_nUrlStartPos = m_uReqStart;
 
 	CStringA strHttpRequest;
-	strHttpRequest.AppendFormat("GET %s HTTP/1.0\r\n", (LPCSTR)m_strUrlPath);
-	strHttpRequest.AppendFormat("Accept: */*\r\n");
-	strHttpRequest.AppendFormat("Range: bytes=%I64u-%I64u\r\n", m_uReqStart, m_uReqEnd);
-	strHttpRequest.AppendFormat("Connection: Keep-Alive\r\n");
-	strHttpRequest.AppendFormat("Host: %s\r\n", (LPCSTR)m_strHostA);
-	strHttpRequest.AppendFormat("\r\n");
+	strHttpRequest.Format("GET %s HTTP/1.0\r\n"
+		"Accept: */*\r\n"
+		"Range: bytes=%I64u-%I64u\r\n"
+		"Connection: Keep-Alive\r\n"
+		"Host: %s\r\n"
+		"\r\n"
+		, (LPCSTR)m_strUrlPath
+		, m_uReqStart, m_uReqEnd
+		, (LPCSTR)m_strHostA);
 
 	if (thePrefs.GetDebugClientTCPLevel() > 0)
 		Debug(_T("Sending HTTP request:\n%hs"), (LPCSTR)strHttpRequest);
-	CRawPacket* pHttpPacket = new CRawPacket(strHttpRequest);
+	CRawPacket *pHttpPacket = new CRawPacket(strHttpRequest);
 	theStats.AddUpDataOverheadFileRequest(pHttpPacket->size);
 	socket->SendPacket(pHttpPacket);
 	static_cast<CHttpClientDownSocket *>(socket)->SetHttpState(HttpStateRecvExpected);

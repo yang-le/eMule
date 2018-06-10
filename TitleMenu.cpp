@@ -95,8 +95,7 @@ void CTitleMenu::DeleteIcons()
 	m_mapIconNameToIconIdx.RemoveAll();
 	m_mapMenuIdToIconIdx.RemoveAll();
 
-	POSITION pos = m_mapIconNameToBitmap.GetStartPosition();
-	while (pos) {
+	for (POSITION pos = m_mapIconNameToBitmap.GetStartPosition(); pos != NULL;) {
 		CString strKey;
 		void *pvBmp;
 		m_mapIconNameToBitmap.GetNextAssoc(pos, strKey, pvBmp);

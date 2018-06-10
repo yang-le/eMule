@@ -215,6 +215,8 @@ class Pinger {
 public:
     Pinger();
     ~Pinger();
+    Pinger(const Pinger&) = delete;
+    Pinger& operator=(const Pinger&) = delete;
 
     PingStatus Ping(uint32 lAddr, uint32 ttl = DEFAULT_TTL, bool doLog = false, bool useUdp = false);
 

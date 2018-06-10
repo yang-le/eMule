@@ -23,7 +23,7 @@ void CIni::AddModulPath(CString &rstrFileName, bool bModulPath)
 		CString strModule;
 		if (bModulPath)
 		{
-			DWORD dwModPathLen = GetModuleFileName(NULL, strModule.GetBuffer(MAX_PATH), MAX_PATH);
+			DWORD dwModPathLen = ::GetModuleFileName(NULL, strModule.GetBuffer(MAX_PATH), MAX_PATH);
 			strModule.ReleaseBuffer((dwModPathLen == 0 || dwModPathLen == MAX_PATH) ? 0 : -1);
 		}
 		else
@@ -36,9 +36,7 @@ void CIni::AddModulPath(CString &rstrFileName, bool bModulPath)
 			strModule += _T('\\');
 		}
 		_tsplitpath(strModule, drive, dir, fname, ext);
-		strModule = drive;
-		strModule += dir;
-		strModule += rstrFileName;
+		strModule.Format(_T("%s%s%s"), drive, dir, (LPCTSTR)rstrFileName);
 		rstrFileName = strModule;
 	}
 }
@@ -55,26 +53,20 @@ CString CIni::GetDefaultIniFile(bool bModulPath)
 	TCHAR fname[_MAX_FNAME];
 	TCHAR ext[_MAX_EXT];
 	CString strTemp;
-	CString strApplName;
-	DWORD dwModPathLen = GetModuleFileName(NULL, strTemp.GetBuffer(MAX_PATH), MAX_PATH);
+	DWORD dwModPathLen = ::GetModuleFileName(NULL, strTemp.GetBuffer(MAX_PATH), MAX_PATH);
 	strTemp.ReleaseBuffer((dwModPathLen == 0 || dwModPathLen == MAX_PATH) ? 0 : -1);
-	_tsplitpath( strTemp, drive, dir, fname, ext );
-	strTemp = fname;
-	strTemp += _T(".ini");
+	_tsplitpath(strTemp, drive, dir, fname, ext);
+	strTemp.Format(_T("%s.ini"), fname);
+
+	CString strApplName;
 	if (bModulPath)
-	{
-		strApplName = drive;
-		strApplName += dir;
-		strApplName += strTemp;
-	}
-	else
-	{
+		strApplName.Format(_T("%s%s%s"), drive, dir, (LPCTSTR)strTemp);
+	else {
 		DWORD dwCurDirLen = GetCurrentDirectory(MAX_PATH, strApplName.GetBuffer(MAX_PATH));
 		strApplName.ReleaseBuffer((dwCurDirLen == 0 || dwCurDirLen >= MAX_PATH) ? 0 : -1);
 		strApplName.TrimRight(_T('\\'));
 		strApplName.TrimRight(_T('/'));
-		strApplName += _T('\\');
-		strApplName += strTemp;
+		strApplName.AppendFormat(_T("\\%s"), (LPCTSTR)strTemp);
 	}
 	return strApplName;
 }
@@ -84,7 +76,7 @@ CIni::CIni()
 	, m_chBuffer()
 {
 	m_strFileName = GetDefaultIniFile(m_bModulPath);
-	m_strSection  = GetDefaultSection();
+	m_strSection = GetDefaultSection();
 }
 
 CIni::CIni(const CIni& Ini)
@@ -545,9 +537,9 @@ void CIni::SerGet(bool bGet, CString *ar, int nCount, LPCTSTR lpszEntry, LPCTSTR
 					ar[i] = lpszDefault;
 			}
 		} else {
-			strBuffer = ar[0];
-			for (int i = 1; i < nCount; ++i) {
-				strBuffer += _T(',');
+			for (int i = 0; i < nCount; ++i) {
+				if (i)
+					strBuffer += _T(',');
 				strBuffer += ar[i];
 			}
 			WriteString(lpszEntry, strBuffer, lpszSection);

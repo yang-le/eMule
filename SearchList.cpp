@@ -24,7 +24,6 @@
 #include "Preferences.h"
 #include "UpDownClient.h"
 #include "SafeFile.h"
-#include "MMServer.h"
 #include "SharedFileList.h"
 #include "KnownFileList.h"
 #include "DownloadQueue.h"
@@ -55,7 +54,6 @@ CSearchList::CSearchList()
 	: m_nCurED2KSearchID(0)
 {
 	outputwnd = NULL;
-	m_MobilMuleSearch = false;
 	m_bSpamFilterLoaded = false;
 }
 
@@ -134,7 +132,7 @@ void CSearchList::RemoveResult(CSearchFile* todel)
 	}
 }
 
-void CSearchList::NewSearch(CSearchListCtrl* pWnd, const CStringA& strResultFileType, uint32 nSearchID, ESearchType eSearchType, CString strSearchExpression, bool bMobilMuleSearch)
+void CSearchList::NewSearch(CSearchListCtrl* pWnd, const CStringA& strResultFileType, uint32 nSearchID, ESearchType eSearchType, CString strSearchExpression)
 {
 	if (pWnd)
 		outputwnd = pWnd;
@@ -150,10 +148,9 @@ void CSearchList::NewSearch(CSearchListCtrl* pWnd, const CStringA& strResultFile
 	m_foundSourcesCount.SetAt(nSearchID, 0);
 	m_ReceivedUDPAnswersCount.SetAt(nSearchID, 0);
 	m_RequestedUDPAnswersCount.SetAt(nSearchID, 0);
-	m_MobilMuleSearch = bMobilMuleSearch;
 
 	// convert the expression into an array of searchkeywords which the user has typed in
-	// this is used for the spamfilter later and not at all semantically equal with the actual search expression anymore
+	// this is used for the spamfilter later and not at all semantically equal with the actual search expression any more
 	m_astrSpamCheckCurSearchExp.RemoveAll();
 	strSearchExpression.MakeLower();
 	if (strSearchExpression.Find(_T("related:"), 0) != 0){ // ignore special searches
@@ -253,9 +250,6 @@ UINT CSearchList::ProcessSearchAnswer(const uchar* in_packet, uint32 size, bool 
 		}
 		AddToList(toadd, false);
 	}
-	if (m_MobilMuleSearch)
-		theApp.mmserver->SearchFinished(false);
-	m_MobilMuleSearch = false;
 
 	if (pbMoreResultsAvailable)
 		*pbMoreResultsAvailable = false;
@@ -309,8 +303,9 @@ UINT CSearchList::ProcessUDPSearchAnswer(CFileDataIO& packet, bool bOptUTF8, uin
 		}
 	}
 	if (bNewResponse){
-		uint32 nResponses = 0;
-		VERIFY( m_ReceivedUDPAnswersCount.Lookup(m_nCurED2KSearchID, nResponses) );
+		uint32 nResponses;
+		if (!m_ReceivedUDPAnswersCount.Lookup(m_nCurED2KSearchID, nResponses))
+			nResponses = 0;
 		m_ReceivedUDPAnswersCount.SetAt(m_nCurED2KSearchID, nResponses + 1);
 		m_aCurED2KSentReceivedIPs.Add(nServerIP);
 	}
@@ -333,9 +328,8 @@ UINT CSearchList::ProcessUDPSearchAnswer(CFileDataIO& packet, bool bOptUTF8, uin
 
 UINT CSearchList::GetResultCount(uint32 nSearchID) const
 {
-	UINT nSources = 0;
-	VERIFY( m_foundSourcesCount.Lookup(nSearchID, nSources) );
-	return nSources;
+	UINT nSources;
+	return m_foundSourcesCount.Lookup(nSearchID, nSources) ? nSources : 0;
 }
 
 UINT CSearchList::GetED2KResultCount() const
@@ -399,33 +393,6 @@ void CSearchList::AddFileToDownloadByHash(const uchar* hash, int cat)
 			}
 		}
 	}
-}
-
-// mobilemule
-CSearchFile* CSearchList::DetachNextFile(uint32 nSearchID)
-{
-	// the files are NOT deleted, make sure you do this if you call this function
-	// find, removes and returns the searchresult with most Sources
-	uint32 nHighSource = 0;
-	POSITION resultpos = 0;
-
-	SearchList* list = GetSearchListForID(nSearchID);
-	for (POSITION pos = list->GetHeadPosition(); pos != NULL;) {
-		POSITION cur_pos = pos;
-		CSearchFile* cur_file = list->GetNext(pos);
-		ASSERT(cur_file->GetSearchID() == nSearchID);
-		if (cur_file->GetSourceCount() >= nHighSource) {
-			nHighSource = cur_file->GetSourceCount();
-			resultpos = cur_pos;
-		}
-	}
-	if (resultpos == 0) {
-		ASSERT(false);
-		return NULL;
-	}
-	CSearchFile* result = list->GetAt(resultpos);
-	list->RemoveAt(resultpos);
-	return result;
 }
 
 bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwFromUDPServerIP)
@@ -598,7 +565,7 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 				if (child->GetListParent() == parent)
 				{
 					const CFileIdentifier& fileid = child->GetFileIdentifierC();
-					// figure out if the childs of different AICH hashs
+					// figure out if the childs of different AICH hashes
 					if (fileid.HasAICHHash()) {
 						if (bAICHHashValid && aichHash != fileid.GetAICHHash())
 							 bHasMultipleAICHHashs = true;
@@ -660,7 +627,7 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 			AddResultCount(parent->GetSearchID(), parent->GetFileHash(), uAvail, parent->IsConsideredSpam());
 
 			// update parent in GUI
-			if (outputwnd && !m_MobilMuleSearch)
+			if (outputwnd)
 				outputwnd->UpdateSources(parent);
 
 			if (bFound) {
@@ -676,8 +643,9 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 	UINT uAvail = toadd->GetSourceCount();
 	if (list->AddTail(toadd))
 	{
-		UINT tempValue = 0;
-		VERIFY( m_foundFilesCount.Lookup(toadd->GetSearchID(), tempValue) );
+		UINT tempValue;
+		if (!m_foundFilesCount.Lookup(toadd->GetSearchID(), tempValue))
+			tempValue = 0;
 		m_foundFilesCount.SetAt(toadd->GetSearchID(), tempValue + 1);
 
 		// get the 'Availability' of this new search result entry
@@ -697,7 +665,7 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool bClientResponse, uint32 dwF
 	AddResultCount(toadd->GetSearchID(), toadd->GetFileHash(), uAvail, toadd->IsConsideredSpam());
 
 	// add parent in GUI
-	if (outputwnd && !m_MobilMuleSearch)
+	if (outputwnd)
 		outputwnd->AddResult(toadd);
 
 	return true;
@@ -753,8 +721,9 @@ void CSearchList::AddResultCount(uint32 nSearchID, const uchar* hash, UINT nCoun
 	if (theApp.sharedfiles->GetFileByID(hash) || theApp.downloadqueue->GetFileByID(hash))
 		return;
 
-	UINT tempValue = 0;
-	VERIFY( m_foundSourcesCount.Lookup(nSearchID, tempValue) );
+	UINT tempValue;
+	if (!m_foundSourcesCount.Lookup(nSearchID, tempValue))
+		tempValue = 0;
 
 	// spam files count as max 5 availability
 	m_foundSourcesCount.SetAt(nSearchID, tempValue
@@ -791,7 +760,7 @@ void CSearchList::KademliaSearchKeyword(uint32 searchID, const Kademlia::CUInt12
 	CTag tagName(FT_FILENAME, name);
 	tagName.WriteTagToFile(temp, eStrEncode);
 	tagcount++;
-	verifierEntry.SetFileName(name);
+	verifierEntry.SetFileName(Kademlia::CKadTagValueString(name));
 
 	CTag tagSize(FT_FILESIZE, size, true);
 	tagSize.WriteTagToFile(temp, eStrEncode);
@@ -854,7 +823,7 @@ void CSearchList::KademliaSearchKeyword(uint32 searchID, const Kademlia::CUInt12
 	{
 		CSearchFile* tempFile = new CSearchFile(temp, eStrEncode == utf8strRaw, searchID, 0, 0, 0, true);
 		tempFile->SetKadPublishInfo(uKadPublishInfo);
-		// About the AICH hash: We received a list of possible AICH Hashs for this file and now have to decide what to do
+		// About the AICH hash: We received a list of possible AICH hashes for this file and now have to decide what to do
 		// If it wasn't for backwards compability, the choice would be easy: Each different md4+aich+size is its own result,
 		// but we can'T do this alone for the fact that for the next years we will always have publishers which don'T report
 		// the AICH hash at all (which would mean ahving a different entry, which leads to double files in searchresults). So here is what we do for now:
@@ -878,7 +847,7 @@ void CSearchList::KademliaSearchKeyword(uint32 searchID, const Kademlia::CUInt12
 								, (LPCTSTR)tempFile->GetFileName(), raAICHHashPopularity[0], byPublishers, (LPCTSTR)raAICHHashs[0].GetString()) );
 		}
 		else if (raAICHHashs.GetCount() > 1)
-			DEBUG_ONLY( DebugLog(_T("Received multiple (%u) AICH Hashs for search result %s, ignoring AICH"), raAICHHashs.GetCount(), (LPCTSTR)tempFile->GetFileName()) );
+			DEBUG_ONLY( DebugLog(_T("Received multiple (%u) AICH hashes for search result %s, ignoring AICH"), raAICHHashs.GetCount(), (LPCTSTR)tempFile->GetFileName()) );
 		AddToList(tempFile);
 	}
 	else
@@ -1089,10 +1058,12 @@ void CSearchList::DoSpamRating(CSearchFile* pSearchFile, bool bIsClientFile, boo
 
 
 		// 7 Heuristic (UDP Results)
-			uint32 nResponses = 0;
-			VERIFY( m_ReceivedUDPAnswersCount.Lookup(pTempFile->GetSearchID(), nResponses) );
-			uint32 nRequests = 0;
-			VERIFY( m_RequestedUDPAnswersCount.Lookup(pTempFile->GetSearchID(), nRequests) );
+			uint32 nResponses;
+			if (!m_ReceivedUDPAnswersCount.Lookup(pTempFile->GetSearchID(), nResponses))
+				nResponses = 0;
+			uint32 nRequests;
+			if (!m_RequestedUDPAnswersCount.Lookup(pTempFile->GetSearchID(), nRequests))
+				nRequests = 0;
 			if (!bNormalServerWithoutCurrentPresent
 				&& (nResponses >= 3 || nRequests >= 5) && pTempFile->GetSourceCount() > 100)
 			{
@@ -1462,7 +1433,7 @@ void CSearchList::LoadSpamFilter()
 		return;
 	}
 
-	DebugLog(_T("Loaded search Spam Filter. Entries - ServerIPs: %u, SourceIPs, %u, Hashs: %u, PositiveHashs: %i, FileSizes: %u, FullNames: %u, SimilarNames: %u")
+	DebugLog(_T("Loaded search Spam Filter. Entries - ServerIPs: %u, SourceIPs, %u, hashes: %u, PositiveHashs: %i, FileSizes: %u, FullNames: %u, SimilarNames: %u")
 		, (unsigned)m_mapKnownSpamSourcesIPs.GetCount(), (unsigned)m_mapKnownSpamServerIPs.GetCount(), (unsigned)m_mapKnownSpamHashs.GetCount() - nDbgFileHashPos, nDbgFileHashPos
 		, (unsigned)m_aui64KnownSpamSizes.GetCount(), (unsigned)m_astrKnownSpamNames.GetCount(), (unsigned)m_astrKnownSimilarSpamNames.GetCount());
 }
@@ -1682,23 +1653,21 @@ void CSearchList::LoadSearches()
 				nHighestEd2kSearchID = pParams->dwSearchID;
 			}
 
-			// create the new tab
+			// create a new tab
 			CStringA strResultType = pParams->strFileType;
 			if (strResultType == ED2KFTSTR_PROGRAM)
 				strResultType.Empty();
-			NewSearch(NULL, strResultType, pParams->dwSearchID, pParams->eType, pParams->strExpression, false);
+			NewSearch(NULL, strResultType, pParams->dwSearchID, pParams->eType, pParams->strExpression);
 
-			bool bDeleteParams = false;
-			if (theApp.emuledlg->searchwnd->CreateNewTab(pParams, false)) {
+			bool bDeleteParams = !theApp.emuledlg->searchwnd->CreateNewTab(pParams, false);
+			if (!bDeleteParams) {
 				m_foundFilesCount.SetAt(pParams->dwSearchID, 0);
 				m_foundSourcesCount.SetAt(pParams->dwSearchID, 0);
-			} else {
-				bDeleteParams = true;
-				ASSERT(false);
-			}
+			} else
+				ASSERT(0);
 
 			// fill the list with stored results
-			for (uint32 j = 0; j < nFileCount; j++) {
+			for (uint32 j = 0; j < nFileCount; ++j) {
 				CSearchFile* toadd = new CSearchFile(&file, true, pParams->dwSearchID, 0, 0, NULL, pParams->eType == SearchTypeKademlia);
 				AddToList(toadd, pParams->bClientSharedFiles);
 			}

@@ -541,7 +541,7 @@ bool CUpDownClient::ProcessHelloTypePacket(CSafeMemFile* data)
 					m_fSupportsCryptLayer	= (temptag.GetInt() >>  7) & 0x01;
 					// reserved 1
 					m_fExtMultiPacket		= (temptag.GetInt() >>  5) & 0x01;
-					m_fSupportsLargeFiles   = (temptag.GetInt() >>  4) & 0x01;
+					m_fSupportsLargeFiles	= (temptag.GetInt() >>  4) & 0x01;
 					m_byKadVersion			= (uint8)((temptag.GetInt() >>  0) & 0x0f);
 					dwEmuleTags |= 8;
 					if (bDbgInfo)
@@ -662,7 +662,7 @@ bool CUpDownClient::ProcessHelloTypePacket(CSafeMemFile* data)
 
 	if (GetFriend() != NULL && GetFriend()->HasUserhash() && md4cmp(GetFriend()->m_abyUserhash, m_achUserHash) != 0)
 	{
-		// this isnt our friend anymore and it will be removed/replaced, tell our friendobject about it
+		// this isnt our friend any more and it will be removed/replaced, tell our friendobject about it
 		if (GetFriend()->IsTryingToConnect())
 			GetFriend()->UpdateFriendConnectionState(FCR_USERHASHFAILED); // this will remove our linked friend
 		else
@@ -726,7 +726,7 @@ void CUpDownClient::SendHelloPacket()
 	CSafeMemFile data(128);
 	data.WriteUInt8(16); // size of userhash
 	SendHelloTypePacket(&data);
-	Packet* packet = new Packet(&data);
+	Packet *packet = new Packet(&data);
 	packet->opcode = OP_HELLO;
 	if (thePrefs.GetDebugClientTCPLevel() > 0)
 		DebugSend("OP__Hello", this);
@@ -765,7 +765,7 @@ void CUpDownClient::SendMuleInfoPacket(bool bAnswer){
 	CTag tag7(ET_FEATURES, dwTagValue);
 	tag7.WriteTagToFile(&data);
 
-	Packet* packet = new Packet(&data,OP_EMULEPROT);
+	Packet *packet = new Packet(&data,OP_EMULEPROT);
 	if (!bAnswer)
 		packet->opcode = OP_EMULEINFO;
 	else
@@ -912,7 +912,7 @@ void CUpDownClient::ProcessMuleInfoPacket(const uchar* pachPacket, uint32 nSize)
 				// Bit  6- 0: secure identification
 				if (temptag.IsInt()) {
 					m_bySupportSecIdent = (uint8)((temptag.GetInt()) & 3);
-					m_fSupportsPreview  = (temptag.GetInt() >> 7) & 1;
+					m_fSupportsPreview = (temptag.GetInt() >> 7) & 1;
 					if (bDbgInfo)
 						m_strMuleInfo.AppendFormat(_T("\n  SecIdent=%u  Preview=%u"), m_bySupportSecIdent, m_fSupportsPreview);
 				}
@@ -963,7 +963,7 @@ void CUpDownClient::SendHelloAnswer(){
 
 	CSafeMemFile data(128);
 	SendHelloTypePacket(&data);
-	Packet* packet = new Packet(&data);
+	Packet *packet = new Packet(&data);
 	packet->opcode = OP_HELLOANSWER;
 	if (thePrefs.GetDebugClientTCPLevel() > 0)
 		DebugSend("OP__HelloAnswer", this);
@@ -1522,7 +1522,7 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 		data.WriteUInt8(GetMyConnectOptions(true, false));
 		if (thePrefs.GetDebugClientUDPLevel() > 0)
 			DebugSend("OP_DIRECTCALLBACKREQ", this);
-		Packet* packet = new Packet(&data, OP_EMULEPROT);
+		Packet *packet = new Packet(&data, OP_EMULEPROT);
 		packet->opcode = OP_DIRECTCALLBACKREQ;
 		theStats.AddUpDataOverheadOther(packet->size);
 		theApp.clientudp->SendPacket(packet, GetConnectIP(), GetKadPort(), ShouldReceiveCryptUDPPackets(), GetUserHash(), false, 0);
@@ -1541,7 +1541,7 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 	if (theApp.serverconnect->IsLocalServer(m_dwServerIP, m_nServerPort))
 	{
 		m_nConnectingState = CCS_SERVERCALLBACK;
-		Packet* packet = new Packet(OP_CALLBACKREQUEST,4);
+		Packet *packet = new Packet(OP_CALLBACKREQUEST,4);
 		PokeUInt32(packet->pBuffer, m_nUserIDHybrid);
 		if (thePrefs.GetDebugServerTCPLevel() > 0 || thePrefs.GetDebugClientTCPLevel() > 0)
 			DebugSend("OP__CallbackRequest", this);
@@ -1559,7 +1559,7 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 			bio.WriteUInt16(thePrefs.GetPort());
 			if (thePrefs.GetDebugClientKadUDPLevel() > 0 || thePrefs.GetDebugClientUDPLevel() > 0)
 				DebugSend("KadCallbackReq", this);
-			Packet* packet = new Packet(&bio, OP_KADEMLIAHEADER);
+			Packet *packet = new Packet(&bio, OP_KADEMLIAHEADER);
 			packet->opcode = KADEMLIA_CALLBACK_REQ;
 			theStats.AddUpDataOverheadKad(packet->size);
 			m_nConnectingState = CCS_KADCALLBACK;
@@ -1569,7 +1569,7 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 		}
 		else if (reqfile != NULL)
 		{
-			// I don't think we should ever have a buddy without its IP (anymore), but nevertheless let the functionality in
+			// I don't think we should ever have a buddy without its IP (any more), but nevertheless let the functionality in
 			//Create search to find buddy.
 			Kademlia::CSearch *findSource = new Kademlia::CSearch;
 			findSource->SetSearchTypes(Kademlia::CSearch::FINDSOURCE);
@@ -1697,7 +1697,7 @@ void CUpDownClient::ConnectionEstablished()
 				SetUploadState(US_UPLOADING);
 				if (thePrefs.GetDebugClientTCPLevel() > 0)
 					DebugSend("OP__AcceptUploadReq", this);
-				Packet* packet = new Packet(OP_ACCEPTUPLOADREQ,0);
+				Packet *packet = new Packet(OP_ACCEPTUPLOADREQ,0);
 				theStats.AddUpDataOverheadFileRequest(packet->size);
 				SendPacket(packet,true);
 			}
@@ -1707,7 +1707,7 @@ void CUpDownClient::ConnectionEstablished()
 	{
 		if (thePrefs.GetDebugClientTCPLevel() > 0)
 			DebugSend(m_fSharedDirectories ? "OP__AskSharedDirs" : "OP__AskSharedFiles", this);
-		Packet* packet = new Packet(m_fSharedDirectories ? OP_ASKSHAREDDIRS : OP_ASKSHAREDFILES,0);
+		Packet *packet = new Packet(m_fSharedDirectories ? OP_ASKSHAREDDIRS : OP_ASKSHAREDFILES,0);
 		theStats.AddUpDataOverheadOther(packet->size);
 		SendPacket(packet,true);
 	}
@@ -1786,7 +1786,7 @@ void CUpDownClient::InitClientSoftwareVersion()
 		else{
 			UINT nClientMajVersion = (m_nClientVersion >> 17) & 0x7f;
 			UINT nClientMinVersion = (m_nClientVersion >> 10) & 0x7f;
-			UINT nClientUpVersion  = (m_nClientVersion >>  7) & 0x07;
+			UINT nClientUpVersion = (m_nClientVersion >>  7) & 0x07;
 			m_nClientVersion = MAKE_CLIENT_VERSION(nClientMajVersion, nClientMinVersion, nClientUpVersion);
 			if (m_clientSoft == SO_EMULE)
 				iLen = _sntprintf(szSoftware, ARRSIZE(szSoftware), _T("%s v%u.%u%c"), pszSoftware, nClientMajVersion, nClientMinVersion, _T('a') + nClientUpVersion);
@@ -1985,7 +1985,7 @@ void CUpDownClient::SendPublicKeyPacket()
 	if (!theApp.clientcredits->CryptoAvailable())
 		return;
 
-	Packet* packet = new Packet(OP_PUBLICKEY,theApp.clientcredits->GetPubKeyLen() + 1,OP_EMULEPROT);
+	Packet *packet = new Packet(OP_PUBLICKEY,theApp.clientcredits->GetPubKeyLen() + 1,OP_EMULEPROT);
 	theStats.AddUpDataOverheadOther(packet->size);
 	memcpy(packet->pBuffer+1,theApp.clientcredits->GetPublicKey(), theApp.clientcredits->GetPubKeyLen());
 	packet->pBuffer[0] = theApp.clientcredits->GetPubKeyLen();
@@ -2026,7 +2026,7 @@ void CUpDownClient::SendSignaturePacket()
 		}
 		else{
 			ChallengeIP = theApp.serverconnect->GetClientID();
-			byChaIPKind  = CRYPT_CIP_LOCALCLIENT;
+			byChaIPKind = CRYPT_CIP_LOCALCLIENT;
 		}
 	}
 	//end v2
@@ -2036,7 +2036,7 @@ void CUpDownClient::SendSignaturePacket()
 		ASSERT ( false );
 		return;
 	}
-	Packet* packet = new Packet(OP_SIGNATURE, siglen + 1 + static_cast<int>(bUseV2), OP_EMULEPROT);
+	Packet *packet = new Packet(OP_SIGNATURE, siglen + 1 + static_cast<int>(bUseV2), OP_EMULEPROT);
 	theStats.AddUpDataOverheadOther(packet->size);
 	memcpy(packet->pBuffer+1,achBuffer, siglen);
 	packet->pBuffer[0] = siglen;
@@ -2157,7 +2157,7 @@ void CUpDownClient::SendSecIdentStatePacket()
 		// crypt: send random data to sign
 		uint32 dwRandom = rand()+1;
 		credits->m_dwCryptRndChallengeFor = dwRandom;
-		Packet* packet = new Packet(OP_SECIDENTSTATE,5,OP_EMULEPROT);
+		Packet *packet = new Packet(OP_SECIDENTSTATE,5,OP_EMULEPROT);
 		theStats.AddUpDataOverheadOther(packet->size);
 		packet->pBuffer[0] = nValue;
 		PokeUInt32(packet->pBuffer+1, dwRandom);
@@ -2226,7 +2226,7 @@ void CUpDownClient::SendPreviewRequest(const CAbstractFile* pForFile)
 		m_fPreviewReqPending = 1;
 		if (thePrefs.GetDebugClientTCPLevel() > 0)
 			DebugSend("OP__RequestPreview", this, pForFile->GetFileHash());
-		Packet* packet = new Packet(OP_REQUESTPREVIEW,16,OP_EMULEPROT);
+		Packet *packet = new Packet(OP_REQUESTPREVIEW,16,OP_EMULEPROT);
 		md4cpy(packet->pBuffer,pForFile->GetFileHash());
 		theStats.AddUpDataOverheadOther(packet->size);
 		SafeConnectAndSendPacket(packet);
@@ -2268,7 +2268,7 @@ void CUpDownClient::SendPreviewAnswer(const CKnownFile* pForFile, CxImage** imgF
 		data.Write(abyResultBuffer, nResultSize);
 		free(abyResultBuffer);
 	}
-	Packet* packet = new Packet(&data, OP_EMULEPROT);
+	Packet *packet = new Packet(&data, OP_EMULEPROT);
 	packet->opcode = OP_PREVIEWANSWER;
 	if (thePrefs.GetDebugClientTCPLevel() > 0)
 		DebugSend("OP__PreviewAnswer", this, (uchar*)packet->pBuffer);
@@ -2339,8 +2339,8 @@ void CUpDownClient::ProcessPreviewAnswer(const uchar* pachPacket, uint32 nSize)
 
 // sends a packet, if needed it will establish a connection before
 // options used: ignore max connections, control packet, delete packet
-// !if the functions returns false that client object was deleted because the connection try failed and the object wasn't needed anymore.
-bool CUpDownClient::SafeConnectAndSendPacket(Packet* packet)
+// !if the functions returns false that client object was deleted because the connection try failed and the object wasn't needed any more.
+bool CUpDownClient::SafeConnectAndSendPacket(Packet *packet)
 {
 	if (socket != NULL && socket->IsConnected()) {
 		socket->SendPacket(packet, true, true);
@@ -2350,7 +2350,7 @@ bool CUpDownClient::SafeConnectAndSendPacket(Packet* packet)
 	return TryToConnect(true);
 }
 
-bool CUpDownClient::SendPacket(Packet* packet, bool bDeletePacket, bool bVerifyConnection)
+bool CUpDownClient::SendPacket(Packet *packet, bool bDeletePacket, bool bVerifyConnection)
 {
 	if (socket != NULL && (!bVerifyConnection || socket->IsConnected())) {
 		socket->SendPacket(packet, bDeletePacket, true);
@@ -2656,19 +2656,24 @@ CString CUpDownClient::GetDownloadStateDisplayString() const
 	default:
 		uid = 0;
 	}
-	CString strState(GetResString(uid));
+	CString strState(uid ? GetResString(uid) : _T(""));
 
 	if (thePrefs.GetPeerCacheShow()) {
 		switch (m_ePeerCacheDownState) {
 		case PCDS_WAIT_CLIENT_REPLY:
-			strState += _T(' ')+GetResString(IDS_PCDS_CLIENTWAIT);
+			uid = IDS_PCDS_CLIENTWAIT;
 			break;
 		case PCDS_WAIT_CACHE_REPLY:
-			strState += _T(' ')+GetResString(IDS_PCDS_CACHEWAIT);
+			uid = IDS_PCDS_CACHEWAIT;
 			break;
 		case PCDS_DOWNLOADING:
-			strState += _T(' ')+GetResString(IDS_CACHE);
+			uid = IDS_CACHE;
+			break;
+		default:
+			uid = 0;
 		}
+		if (uid)
+			strState.AppendFormat(_T(" %s"), (LPCTSTR)GetResString(uid));
 		if (m_ePeerCacheDownState != PCDS_NONE && m_bPeerCacheDownHit)
 			strState += _T(" Hit");
 	}
@@ -2678,38 +2683,34 @@ CString CUpDownClient::GetDownloadStateDisplayString() const
 
 CString CUpDownClient::GetUploadStateDisplayString() const
 {
-	RESSTRIDTYPE id = 0;
+	UINT uid = 0;
 	switch (GetUploadState()) {
 	case US_ONUPLOADQUEUE:
-		id = IDS_ONQUEUE;
+		uid = IDS_ONQUEUE;
 		break;
 	case US_BANNED:
-		id = IDS_BANNED;
+		uid = IDS_BANNED;
 		break;
 	case US_CONNECTING:
-		id = IDS_CONNECTING;
+		uid = IDS_CONNECTING;
 		break;
 	case US_UPLOADING:
 		// GetNumberOfRequestedBlocksInQueue is no longer available and retrieving it would cause quite some extra load
 		// (either due to thread syncing or due to adding redunant extra vars just for this function), so given that
 		// "stalled, waiting for disk" should happen like never, it is removed for now
 		if (GetPayloadInBuffer() == 0 && /*GetNumberOfRequestedBlocksInQueue() == 0 &&*/ thePrefs.IsExtControlsEnabled())
-			id = IDS_US_STALLEDW4BR;
+			uid = IDS_US_STALLEDW4BR;
 		/* else if(GetPayloadInBuffer() == 0 && thePrefs.IsExtControlsEnabled())
-			id = IDS_US_STALLEDREADINGFDISK;*/
+			uid = IDS_US_STALLEDREADINGFDISK;*/
 		else if (GetSlotNumber() <= (UINT)theApp.uploadqueue->GetActiveUploadsCount())
-			id = IDS_TRANSFERRING;
+			uid = IDS_TRANSFERRING;
 		else
-			id = IDS_TRICKLING;
+			uid = IDS_TRICKLING;
 	}
-	CString strState;
-	if (id)
-		strState = GetResString(id);
+	CString strState(uid ? GetResString(uid) : _T(""));
 
-	if (thePrefs.GetPeerCacheShow())
-	{
-		switch (m_ePeerCacheUpState)
-		{
+	if (thePrefs.GetPeerCacheShow()) {
+		switch (m_ePeerCacheUpState) {
 		case PCUS_WAIT_CACHE_REPLY:
 			strState += _T(" CacheWait");
 			break;
@@ -2725,10 +2726,10 @@ CString CUpDownClient::GetUploadStateDisplayString() const
 
 void CUpDownClient::SendPublicIPRequest()
 {
-	if (socket && socket->IsConnected()){
+	if (socket && socket->IsConnected()) {
 		if (thePrefs.GetDebugClientTCPLevel() > 0)
 			DebugSend("OP__PublicIPReq", this);
-		Packet* packet = new Packet(OP_PUBLICIP_REQ,0,OP_EMULEPROT);
+		Packet *packet = new Packet(OP_PUBLICIP_REQ, 0, OP_EMULEPROT);
 		theStats.AddUpDataOverheadOther(packet->size);
 		SendPacket(packet, true);
 		m_fNeedOurPublicIP = 1;
@@ -2856,7 +2857,7 @@ void CUpDownClient::ProcessChatMessage(CSafeMemFile* data, uint32 nLength)
 							m_strCaptchaChallenge = captcha.GetCaptchaText();
 							m_nChatCaptchaState = CA_CHALLENGESENT;
 							m_cCaptchasSent++;
-							Packet* packet = new Packet(&fileAnswer, OP_EMULEPROT, OP_CHATCAPTCHAREQ);
+							Packet *packet = new Packet(&fileAnswer, OP_EMULEPROT, OP_CHATCAPTCHAREQ);
 							theStats.AddUpDataOverheadOther(packet->size);
 							if (!SafeConnectAndSendPacket(packet))
 								return; // deleted client while connecting
@@ -2896,7 +2897,7 @@ void CUpDownClient::ProcessChatMessage(CSafeMemFile* data, uint32 nLength)
 					strMessage = m_strCaptchaPendingMsg;
 					m_cCaptchasSent = 0;
 					m_strCaptchaChallenge.Empty();
-					Packet* packet = new Packet(OP_CHATCAPTCHARES, 1, OP_EMULEPROT, false);
+					Packet *packet = new Packet(OP_CHATCAPTCHARES, 1, OP_EMULEPROT, false);
 					packet->pBuffer[0] = 0; // status response
 					theStats.AddUpDataOverheadOther(packet->size);
 					if (!SafeConnectAndSendPacket(packet)) {
@@ -2909,7 +2910,7 @@ void CUpDownClient::ProcessChatMessage(CSafeMemFile* data, uint32 nLength)
 					m_nChatCaptchaState = CA_NONE;
 					m_strCaptchaChallenge.Empty();
 					m_strCaptchaPendingMsg.Empty();
-					Packet* packet = new Packet(OP_CHATCAPTCHARES, 1, OP_EMULEPROT, false);
+					Packet *packet = new Packet(OP_CHATCAPTCHARES, 1, OP_EMULEPROT, false);
 					packet->pBuffer[0] = (m_cCaptchasSent < 3)? 1 : 2; // status response
 					theStats.AddUpDataOverheadOther(packet->size);
 					SafeConnectAndSendPacket(packet);
@@ -3023,7 +3024,7 @@ void CUpDownClient::SendChatMessage(const CString& strMessage)
 {
 	CSafeMemFile data;
 	data.WriteString(strMessage, GetUnicodeSupport());
-	Packet* packet = new Packet(&data, OP_EDONKEYPROT, OP_MESSAGE);
+	Packet *packet = new Packet(&data, OP_EDONKEYPROT, OP_MESSAGE);
 	theStats.AddUpDataOverheadOther(packet->size);
 	SafeConnectAndSendPacket(packet);
 }
@@ -3059,7 +3060,7 @@ void CUpDownClient::SendFirewallCheckUDPRequest()
 	data.WriteUInt16(Kademlia::CKademlia::GetPrefs()->GetInternKadPort());
 	data.WriteUInt16(Kademlia::CKademlia::GetPrefs()->GetExternalKadPort());
 	data.WriteUInt32(Kademlia::CKademlia::GetPrefs()->GetUDPVerifyKey(GetConnectIP()));
-	Packet* packet = new Packet(&data, OP_EMULEPROT, OP_FWCHECKUDPREQ);
+	Packet *packet = new Packet(&data, OP_EMULEPROT, OP_FWCHECKUDPREQ);
 	theStats.AddUpDataOverheadKad(packet->size);
 	SafeConnectAndSendPacket(packet);
 }
@@ -3148,7 +3149,7 @@ void CUpDownClient::SendSharedDirectories()
 
 	if (thePrefs.GetDebugClientTCPLevel() > 0)
 		DebugSend("OP__AskSharedDirsAnswer", this);
-	Packet* replypacket = new Packet(&tempfile);
+	Packet *replypacket = new Packet(&tempfile);
 	replypacket->opcode = OP_ASKSHAREDDIRSANS;
 	theStats.AddUpDataOverheadOther(replypacket->size);
 	VERIFY( SendPacket(replypacket, true, true) );

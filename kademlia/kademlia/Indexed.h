@@ -78,8 +78,8 @@ namespace Kademlia
 			CIndexed();
 			~CIndexed();
 
-			bool AddKeyword(const CUInt128& uKeyWordID, const CUInt128& uSourceID, Kademlia::CKeyEntry* pEntry, uint8& uLoad, bool bIgnoreThreadLock = false);
-			bool AddSources(const CUInt128& uKeyWordID, const CUInt128& uSourceID, Kademlia::CEntry* pEntry, uint8& uLoad, bool bIgnoreThreadLock = false);
+			bool AddKeyword(const CUInt128& uKeyID, const CUInt128& uSourceID, Kademlia::CKeyEntry* pEntry, uint8& uLoad, bool bIgnoreThreadLock = false);
+			bool AddSources(const CUInt128& uKeyID, const CUInt128& uSourceID, Kademlia::CEntry* pEntry, uint8& uLoad, bool bIgnoreThreadLock = false);
 			bool AddNotes(const CUInt128& uKeyID, const CUInt128& uSourceID, Kademlia::CEntry* pEntry, uint8& uLoad, bool bIgnoreThreadLock = false);
 			bool AddLoad(const CUInt128& uKeyID, uint32 uTime, bool bIgnoreThreadLock = false);
 			uint32 GetFileKeyCount();

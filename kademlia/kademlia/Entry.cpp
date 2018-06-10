@@ -83,7 +83,7 @@ CEntry* CEntry::Copy()
 
 uint64 CEntry::GetIntTagValue(const CKadTagNameString& strTagName, bool bIncludeVirtualTags) const
 {
-	uint64 uResult = 0;
+	uint64 uResult;
 	GetIntTagValue(strTagName, uResult, bIncludeVirtualTags);
 	return uResult;
 }
@@ -101,7 +101,7 @@ bool CEntry::GetIntTagValue(const CKadTagNameString& strTagName, uint64& rValue,
 
 	if (bIncludeVirtualTags)
 	{
-		// SizeTag is not stored anymore, but queried in some places
+		// SizeTag is not stored any more, but queried in some places
 		if (!strTagName.Compare(TAG_FILESIZE)){
 			rValue = m_uSize;
 			return true;
@@ -509,7 +509,7 @@ void CKeyEntry::MergeIPsAndFilenames(CKeyEntry* pFromEntry){
 
 		// copy over the different names, if they are different the one we have right now
 		ASSERT( m_listFileNames.GetCount() == 1 ); // we should have only one name here, since its the entry from one sinlge source
-		structFileNameEntry structCurrentName = {_T(""), 0};
+		structFileNameEntry structCurrentName = {Kademlia::CKadTagValueString(L""), 0};
 		if (!m_listFileNames.IsEmpty())
 			structCurrentName = m_listFileNames.RemoveHead();
 
@@ -704,7 +704,7 @@ void CKeyEntry::ReadPublishTrackingDataFromFile(CDataIO* pData, bool bIncludesAI
 	uint32 nNameCount = pData->ReadUInt32();
 	for (uint32 i = 0; i < nNameCount; i++){
 		structFileNameEntry sToAdd;
-		sToAdd.m_fileName = pData->ReadStringUTF8();
+		sToAdd.m_fileName = Kademlia::CKadTagValueString(pData->ReadStringUTF8());
 		sToAdd.m_uPopularityIndex = pData->ReadUInt32();
 		m_listFileNames.AddTail(sToAdd);
 	}
@@ -750,7 +750,7 @@ void CKeyEntry::ReadPublishTrackingDataFromFile(CDataIO* pData, bool bIncludesAI
 		DebugLog(_T("Loaded 1 AICH Hash (%s, publishers %u of %u) for file %s"), (LPCTSTR)m_aAICHHashs[0].GetString(), m_anAICHHashPopularity[0], m_pliPublishingIPs->GetCount(), (LPCTSTR)m_uSourceID.ToHexString());
 	else if (m_aAICHHashs.GetCount() > 1)
 	{
-		DebugLogWarning(_T("Loaded multiple (%u) AICH Hashs for file %s, dumping..."), m_aAICHHashs.GetCount(), (LPCTSTR)m_uSourceID.ToHexString());
+		DebugLogWarning(_T("Loaded multiple (%u) AICH Hashes for file %s, dumping..."), m_aAICHHashs.GetCount(), (LPCTSTR)m_uSourceID.ToHexString());
 		for (int i = 0; i < m_aAICHHashs.GetCount(); i++)
 			DebugLog(_T("%s - %u out of %u publishers"), (LPCTSTR)m_aAICHHashs[i].GetString(), m_anAICHHashPopularity[i], m_pliPublishingIPs->GetCount());
 	}
@@ -807,7 +807,7 @@ void CKeyEntry::WriteTagListWithPublishInfo(CDataIO* pData){
 			// 10 for some reason we can't use it most likely anyway
 			if (1 + (CAICHHash::GetHashSize() * (byCount + 1)) + (1 * (byCount + 1)) > 250)
 			{
-				DebugLogWarning(_T("More than 12(!) AICH Hashs to send for search answer, have to truncate, entry: %s"), (LPCTSTR)m_uSourceID.ToHexString());
+				DebugLogWarning(_T("More than 12(!) AICH Hashes to send for search answer, have to truncate, entry: %s"), (LPCTSTR)m_uSourceID.ToHexString());
 				break;
 			}
 

@@ -104,7 +104,7 @@ CClientReqSocket::~CClientReqSocket()
 	SetConState(SS_Other);
 	if (client)
 		client->socket = 0;
-	client = 0;
+	client = NULL;
 	theApp.listensocket->RemoveSocket(this);
 
 	DEBUG_ONLY (theApp.clientlist->Debug_SocketDeleted(this));
@@ -122,12 +122,13 @@ void CClientReqSocket::ResetTimeOutTimer()
 	timeout_timer = ::GetTickCount();
 }
 
-UINT CClientReqSocket::GetTimeOut() const
+DWORD CClientReqSocket::GetTimeOut() const
 {
 	// PC-TODO
 	// the PC socket may even already be disconnected and deleted and we still need to keep the
 	// ed2k socket open because remote client may still be downloading from cache.
-	UINT uTimeout = CEMSocket::GetTimeOut(), u1 = 0;
+	DWORD uTimeout = CEMSocket::GetTimeOut();
+	DWORD u1 = 0;
 	if (client)
 		if (client->IsUploadingToPeerCache() && (client->m_pPCUpSocket == NULL || !client->m_pPCUpSocket->IsConnected()))
 			// we are uploading (or at least allow uploading) but currently no socket
@@ -143,59 +144,50 @@ UINT CClientReqSocket::GetTimeOut() const
 
 bool CClientReqSocket::CheckTimeOut()
 {
-	if(m_nOnConnect == SS_Half)
-	{
+	DWORD tNow = ::GetTickCount();
+	if (m_nOnConnect == SS_Half) {
 		//This socket is still in a half connection state.. Because of SP2, we don't know
 		//if this socket is actually failing, or if this socket is just queued in SP2's new
 		//protection queue. Therefore we give the socket a chance to either finally report
 		//the connection error, or finally make it through SP2's new queued socket system..
-		if (::GetTickCount() >= timeout_timer + CEMSocket::GetTimeOut()*4){
-			timeout_timer = ::GetTickCount();
-			CString str;
-			str.Format(_T("Timeout: State:%u = SS_Half"), m_nOnConnect);
-			Disconnect(str);
-			return true;
-		}
-		return false;
-	}
-	UINT uTimeout = GetTimeOut();
-	if(client)
-	{
-		if (client->GetKadState() == KS_CONNECTED_BUDDY)
-		{
-			uTimeout += MIN2MS(15);
-		}
-		if (client->GetChatState()!=MS_NONE)
-		{
-			//We extend the timeout time here to avoid people chatting from disconnecting to fast.
-			uTimeout += CONNECTION_TIMEOUT;
-		}
-	}
-	if (::GetTickCount() >= timeout_timer + uTimeout){
-		timeout_timer = ::GetTickCount();
+		if (tNow < timeout_timer + CEMSocket::GetTimeOut() * 4)
+			return false;
+		timeout_timer = tNow;
 		CString str;
-		str.Format(_T("Timeout: State:%u (0 = SS_Other, 1 = SS_Half, 2 = SS_Complete"), m_nOnConnect);
+		str.Format(_T("Timeout: State:%u = SS_Half"), m_nOnConnect);
 		Disconnect(str);
 		return true;
 	}
-	return false;
+	DWORD uTimeout = GetTimeOut();
+	if (client) {
+		if (client->GetKadState() == KS_CONNECTED_BUDDY)
+			uTimeout += MIN2MS(15);
+		if (client->GetChatState() != MS_NONE)
+			//We extend the timeout time here to avoid people chatting from disconnecting too fast.
+			uTimeout += CONNECTION_TIMEOUT;
+	}
+	if (tNow < timeout_timer + uTimeout)
+		return false;
+	timeout_timer = tNow;
+	CString str;
+	str.Format(_T("Timeout: State:%u (0 = SS_Other, 1 = SS_Half, 2 = SS_Complete"), m_nOnConnect);
+	Disconnect(str);
+	return true;
 }
 
 void CClientReqSocket::OnClose(int nErrorCode)
 {
-	ASSERT (theApp.listensocket->IsValidSocket(this));
+	ASSERT(theApp.listensocket->IsValidSocket(this));
 	CEMSocket::OnClose(nErrorCode);
 
 	LPCTSTR pszReason;
-	CString* pstrReason = NULL;
+	CString *pstrReason = NULL;
 	if (nErrorCode == 0)
 		pszReason = _T("Close");
-	else if (thePrefs.GetVerbose()){
-		pstrReason = new CString;
-		*pstrReason = GetErrorMessage(nErrorCode, 1);
+	else if (thePrefs.GetVerbose()) {
+		pstrReason = new CString(GetErrorMessage(nErrorCode, 1));
 		pszReason = *pstrReason;
-	}
-	else
+	} else
 		pszReason = NULL;
 	Disconnect(pszReason);
 	delete pstrReason;
@@ -207,7 +199,7 @@ void CClientReqSocket::Disconnect(LPCTSTR pszReason)
 	AsyncSelect(0);
 	if (client)
 		if (client->Disconnected(CString(_T("CClientReqSocket::Disconnect(): ")) + pszReason, true)) {
-			CUpDownClient* temp = client;
+			const CUpDownClient* temp = client;
 			client->socket = NULL;
 			client = NULL;
 			delete temp;
@@ -385,7 +377,7 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 						if (!client->ProcessExtendedInfo(&data_in, reqfile)){
 							if (thePrefs.GetDebugClientTCPLevel() > 0)
 								DebugSend("OP__FileReqAnsNoFil", client, packet);
-							Packet* replypacket = new Packet(OP_FILEREQANSNOFIL, 16);
+							Packet *replypacket = new Packet(OP_FILEREQANSNOFIL, 16);
 							md4cpy(replypacket->pBuffer, reqfile->GetFileHash());
 							theStats.AddUpDataOverheadFileRequest(replypacket->size);
 							SendPacket(replypacket, true);
@@ -405,7 +397,7 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 						CSafeMemFile data_out(128);
 						data_out.WriteHash16(reqfile->GetFileHash());
 						data_out.WriteString(reqfile->GetFileName(), client->GetUnicodeSupport());
-						Packet* packet1 = new Packet(&data_out);
+						Packet *packet1 = new Packet(&data_out);
 						packet1->opcode = OP_REQFILENAMEANSWER;
 						if (thePrefs.GetDebugClientTCPLevel() > 0)
 							DebugSend("OP__FileReqAnswer", client, reqfile->GetFileHash());
@@ -436,7 +428,7 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 								// send file request no such file packet (0x48)
 								if (thePrefs.GetDebugClientTCPLevel() > 0)
 									DebugSend("OP__FileReqAnsNoFil", client, packet);
-								Packet* replypacket = new Packet(OP_FILEREQANSNOFIL, 16);
+								Packet *replypacket = new Packet(OP_FILEREQANSNOFIL, 16);
 								md4cpy(replypacket->pBuffer, packet);
 								theStats.AddUpDataOverheadFileRequest(replypacket->size);
 								SendPacket(replypacket, true);
@@ -447,7 +439,7 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 						if (reqfile->IsLargeFile() && !client->SupportsLargeFiles()){
 							if (thePrefs.GetDebugClientTCPLevel() > 0)
 									DebugSend("OP__FileReqAnsNoFil", client, packet);
-							Packet* replypacket = new Packet(OP_FILEREQANSNOFIL, 16);
+							Packet *replypacket = new Packet(OP_FILEREQANSNOFIL, 16);
 							md4cpy(replypacket->pBuffer, packet);
 							theStats.AddUpDataOverheadFileRequest(replypacket->size);
 							SendPacket(replypacket, true);
@@ -468,7 +460,7 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 							((CPartFile*)reqfile)->WritePartStatus(&data);
 						else
 							data.WriteUInt16(0);
-						Packet* packet2 = new Packet(&data);
+						Packet *packet2 = new Packet(&data);
 						packet2->opcode = OP_FILESTATUS;
 						if (thePrefs.GetDebugClientTCPLevel() > 0)
 							DebugSend("OP__FileStatus", client, reqfile->GetFileHash());
@@ -794,11 +786,11 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 					if (thePrefs.CanSeeShares()==vsfaEverybody || (thePrefs.CanSeeShares()==vsfaFriends && client->IsFriend()))
 					{
 						CCKey bufKey;
-						CKnownFile* cur_file;
+						CKnownFile *cur_file;
 						for (POSITION pos = theApp.sharedfiles->m_Files_map.GetStartPosition(); pos != NULL;) {
 							theApp.sharedfiles->m_Files_map.GetNextAssoc(pos, bufKey, cur_file);
 							if (!cur_file->IsLargeFile() || client->SupportsLargeFiles())
-								list.AddTail((void*&)cur_file);
+								list.AddTail((void *)cur_file);
 						}
 						AddLogLine(true, GetResString(IDS_REQ_SHAREDFILES), (LPCTSTR)client->GetUserName(), client->GetUserIDHybrid(), (LPCTSTR)GetResString(IDS_ACCEPTED));
 					}
@@ -811,12 +803,12 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 					CSafeMemFile tempfile(80);
 					tempfile.WriteUInt32((uint32)list.GetCount());
 					while (!list.IsEmpty())
-						theApp.sharedfiles->CreateOfferedFilePacket((CKnownFile*)list.RemoveHead(), &tempfile, NULL, client);
+						theApp.sharedfiles->CreateOfferedFilePacket(reinterpret_cast<CKnownFile *>(list.RemoveHead()), &tempfile, NULL, client);
 
 					// create a packet and send it
 					if (thePrefs.GetDebugClientTCPLevel() > 0)
 						DebugSend("OP__AskSharedFilesAnswer", client);
-					Packet* replypacket = new Packet(&tempfile);
+					Packet *replypacket = new Packet(&tempfile);
 					replypacket->opcode = OP_ASKSHAREDFILESANSWER;
 					theStats.AddUpDataOverheadOther(replypacket->size);
 					SendPacket(replypacket, true, true);
@@ -846,7 +838,7 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 						DebugLog(GetResString(IDS_SHAREDREQ1), client->GetUserName(), client->GetUserIDHybrid(), (LPCTSTR)GetResString(IDS_DENIED));
 						if (thePrefs.GetDebugClientTCPLevel() > 0)
 							DebugSend("OP__AskSharedDeniedAnswer", client);
-                        Packet* replypacket = new Packet(OP_ASKSHAREDDENIEDANS, 0);
+                        Packet *replypacket = new Packet(OP_ASKSHAREDDENIEDANS, 0);
 						theStats.AddUpDataOverheadOther(replypacket->size);
                         SendPacket(replypacket, true, true);
                     }
@@ -912,7 +904,7 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 
 						if (thePrefs.GetDebugClientTCPLevel() > 0)
 							DebugSend("OP__AskSharedFilesInDirectoryAnswer", client);
-						Packet* replypacket = new Packet(&tempfile);
+						Packet *replypacket = new Packet(&tempfile);
 						replypacket->opcode = OP_ASKSHAREDFILESDIRANS;
 						theStats.AddUpDataOverheadOther(replypacket->size);
 						SendPacket(replypacket, true, true);
@@ -922,7 +914,7 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 						DebugLog(GetResString(IDS_SHAREDREQ2), client->GetUserName(), client->GetUserIDHybrid(), (LPCTSTR)strReqDir, (LPCTSTR)GetResString(IDS_DENIED));
 						if (thePrefs.GetDebugClientTCPLevel() > 0)
 							DebugSend("OP__AskSharedDeniedAnswer", client);
-                        Packet* replypacket = new Packet(OP_ASKSHAREDDENIEDANS, 0);
+                        Packet *replypacket = new Packet(OP_ASKSHAREDDENIEDANS, 0);
                         theStats.AddUpDataOverheadOther(replypacket->size);
                         SendPacket(replypacket, true, true);
                     }
@@ -949,7 +941,7 @@ bool CClientReqSocket::ProcessPacket(const BYTE* packet, uint32 size, UINT opcod
 								DebugSend("OP__AskSharedFilesInDirectory", client);
                             CSafeMemFile tempfile(80);
 							tempfile.WriteString(strDir, client->GetUnicodeSupport());
-                            Packet* replypacket = new Packet(&tempfile);
+                            Packet *replypacket = new Packet(&tempfile);
                             replypacket->opcode = OP_ASKSHAREDFILESDIR;
                             theStats.AddUpDataOverheadOther(replypacket->size);
                             SendPacket(replypacket, true, true);
@@ -1118,7 +1110,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 						// send file request no such file packet (0x48)
 						if (thePrefs.GetDebugClientTCPLevel() > 0)
 							DebugSend("OP__FileReqAnsNoFil", client, packet);
-						Packet* replypacket = new Packet(OP_FILEREQANSNOFIL, 16);
+						Packet *replypacket = new Packet(OP_FILEREQANSNOFIL, 16);
 						md4cpy(replypacket->pBuffer, reqfilehash);
 						theStats.AddUpDataOverheadFileRequest(replypacket->size);
 						SendPacket(replypacket, true);
@@ -1161,7 +1153,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 								if (!client->ProcessExtendedInfo(&data_in, reqfile)){
 									if (thePrefs.GetDebugClientTCPLevel() > 0)
 										DebugSend("OP__FileReqAnsNoFil", client, packet);
-									Packet* replypacket = new Packet(OP_FILEREQANSNOFIL, 16);
+									Packet *replypacket = new Packet(OP_FILEREQANSNOFIL, 16);
 									md4cpy(replypacket->pBuffer, reqfile->GetFileHash());
 									theStats.AddUpDataOverheadFileRequest(replypacket->size);
 									SendPacket(replypacket, true);
@@ -1179,7 +1171,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 									DebugRecv("OP_MPAichFileHashReq", client, packet);
 
 								if (client->SupportsFileIdentifiers() || opcode == OP_MULTIPACKET_EXT2)
-								{// not allowed anymore with fileidents supported
+								{// not allowed any more with fileidents supported
 									DebugLogWarning(_T("Client requested AICH Hash packet, but supports FileIdentifiers, ignored - %s"), (LPCTSTR)client->DbgGetClientInfo());
 									break;
 								}
@@ -1234,7 +1226,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 									   )
 									{
 										client->SetLastSrcReqTime();
-										Packet* tosend = reqfile->CreateSrcInfoPacket(client, byRequestedVersion, byRequestedOptions);
+										Packet *tosend = reqfile->CreateSrcInfoPacket(client, byRequestedVersion, byRequestedOptions);
 										if (tosend)
 										{
 											if (thePrefs.GetDebugClientTCPLevel() > 0)
@@ -1263,7 +1255,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 					{
 						if (thePrefs.GetDebugClientTCPLevel() > 0)
 							DebugSend("OP__MultiPacketAns", client, reqfile->GetFileHash());
-						Packet* reply = new Packet(&data_out, OP_EMULEPROT);
+						Packet *reply = new Packet(&data_out, OP_EMULEPROT);
 						reply->opcode = (opcode == OP_MULTIPACKET_EXT2) ?  OP_MULTIPACKETANSWER_EXT2 : OP_MULTIPACKETANSWER;
 						theStats.AddUpDataOverheadFileRequest(reply->size);
 						SendPacket(reply, true);
@@ -1481,7 +1473,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 							   )
 							{
 								client->SetLastSrcReqTime();
-								Packet* tosend = reqfile->CreateSrcInfoPacket(client, byRequestedVersion, byRequestedOptions);
+								Packet *tosend = reqfile->CreateSrcInfoPacket(client, byRequestedVersion, byRequestedOptions);
 								if (tosend)
 								{
 									if (thePrefs.GetDebugClientTCPLevel() > 0)
@@ -1598,7 +1590,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 							DebugSend("OP__PeerCacheAnswer", client);
 							Debug(_T("  %s\n"), _T("Not supported"));
 						}
-						Packet* pEd2kPacket = new Packet(&dataSend, OP_EMULEPROT, OP_PEERCACHE_ANSWER);
+						Packet *pEd2kPacket = new Packet(&dataSend, OP_EMULEPROT, OP_PEERCACHE_ANSWER);
 						theStats.AddUpDataOverheadFileRequest(pEd2kPacket->size);
 						SendPacket(pEd2kPacket);
 					}
@@ -1645,7 +1637,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 
 					if (thePrefs.GetDebugClientTCPLevel() > 0)
 						DebugSend("OP__PublicIPAns", client);
-					Packet* pPacket = new Packet(OP_PUBLICIP_ANSWER, 4, OP_EMULEPROT);
+					Packet *pPacket = new Packet(OP_PUBLICIP_ANSWER, 4, OP_EMULEPROT);
 					PokeUInt32(pPacket->pBuffer, client->GetIP());
 					theStats.AddUpDataOverheadOther(pPacket->size);
 					SendPacket(pPacket);
@@ -1660,7 +1652,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 					m_bPortTestCon=true;
 					if (thePrefs.GetDebugClientTCPLevel() > 0)
 						DebugSend("OP__PortTest", client);
-					Packet* replypacket = new Packet(OP_PORTTEST, 1);
+					Packet *replypacket = new Packet(OP_PORTTEST, 1);
 					replypacket->pBuffer[0]=0x12;
 					theStats.AddUpDataOverheadOther(replypacket->size);
 					SendPacket(replypacket);
@@ -1717,7 +1709,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 						break;
 					if (thePrefs.GetDebugClientTCPLevel() > 0)
 						DebugSend("OP__BuddyPong", client);
-					Packet* replypacket = new Packet(OP_BUDDYPONG, 0, OP_EMULEPROT);
+					Packet *replypacket = new Packet(OP_BUDDYPONG, 0, OP_EMULEPROT);
 					theStats.AddDownDataOverheadOther(replypacket->size);
 					SendPacket(replypacket);
 					client->SetLastBuddyPingPongTime();
@@ -1729,7 +1721,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 						DebugRecv("OP_BuddyPong", client);
 					theStats.AddDownDataOverheadOther(uRawSize);
 
-					CUpDownClient* buddy = theApp.clientlist->GetBuddy();
+					CUpDownClient *buddy = theApp.clientlist->GetBuddy();
 					if( buddy != client || client->GetKadVersion() == 0 )
 						//This pong was not from our buddy or wrong version. Ignore
 						break;
@@ -1740,7 +1732,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 				case OP_REASKCALLBACKTCP:
 				{
 					theStats.AddDownDataOverheadFileRequest(uRawSize);
-					CUpDownClient* buddy = theApp.clientlist->GetBuddy();
+					CUpDownClient *buddy = theApp.clientlist->GetBuddy();
 					if (buddy != client) {
 						if (thePrefs.GetDebugClientTCPLevel() > 0)
 							DebugRecv("OP_ReaskCallbackTCP", client, NULL);
@@ -1754,15 +1746,15 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 					data_in.ReadHash16(reqfilehash);
 					if (thePrefs.GetDebugClientTCPLevel() > 0)
 						DebugRecv("OP_ReaskCallbackTCP", client, reqfilehash);
-					CKnownFile* reqfile = theApp.sharedfiles->GetFileByID(reqfilehash);
+					CKnownFile *reqfile = theApp.sharedfiles->GetFileByID(reqfilehash);
 
 					bool bSenderMultipleIpUnknown = false;
-					CUpDownClient* sender = theApp.uploadqueue->GetWaitingClientByIP_UDP(destip, destport, true, &bSenderMultipleIpUnknown);
+					CUpDownClient *sender = theApp.uploadqueue->GetWaitingClientByIP_UDP(destip, destport, true, &bSenderMultipleIpUnknown);
 					if (!reqfile)
 					{
 						if (thePrefs.GetDebugClientUDPLevel() > 0)
 							DebugSend("OP__FileNotFound", NULL);
-						Packet* response = new Packet(OP_FILENOTFOUND,0,OP_EMULEPROT);
+						Packet *response = new Packet(OP_FILENOTFOUND,0,OP_EMULEPROT);
 						theStats.AddUpDataOverheadFileRequest(response->size);
 						if (sender != NULL)
 							theApp.clientudp->SendPacket(response, destip, destport, sender->ShouldReceiveCryptUDPPackets(), sender->GetUserHash(), false, 0);
@@ -1810,7 +1802,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 							data_out.WriteUInt16((uint16)theApp.uploadqueue->GetWaitingPosition(sender));
 							if (thePrefs.GetDebugClientUDPLevel() > 0)
 								DebugSend("OP__ReaskAck", sender);
-							Packet* response = new Packet(&data_out, OP_EMULEPROT);
+							Packet *response = new Packet(&data_out, OP_EMULEPROT);
 							response->opcode = OP_REASKACK;
 							theStats.AddUpDataOverheadFileRequest(response->size);
 							theApp.clientudp->SendPacket(response, destip, destport, sender->ShouldReceiveCryptUDPPackets(), sender->GetUserHash(), false, 0);
@@ -1829,7 +1821,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 							{
 								if (thePrefs.GetDebugClientUDPLevel() > 0)
 									DebugSend("OP__QueueFull", NULL);
-								Packet* response = new Packet(OP_QUEUEFULL,0,OP_EMULEPROT);
+								Packet *response = new Packet(OP_QUEUEFULL,0,OP_EMULEPROT);
 								theStats.AddUpDataOverheadFileRequest(response->size);
 								theApp.clientudp->SendPacket(response, destip, destport, false, NULL, false, 0);
 							}
@@ -1879,7 +1871,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 					CSafeMemFile data(packet, size);
 					uchar abyHash[16];
 					data.ReadHash16(abyHash);
-					CKnownFile* pPartFile = theApp.sharedfiles->GetFileByID(abyHash);
+					CKnownFile *pPartFile = theApp.sharedfiles->GetFileByID(abyHash);
 					if (pPartFile == NULL){
 						client->CheckFailedFileIdReqs(abyHash);
 						break;
@@ -1891,7 +1883,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 						CSafeMemFile data_out;
 						data_out.WriteHash16(abyHash);
 						pPartFile->GetFileIdentifier().GetAICHHash().Write(&data_out);
-						Packet* response = new Packet(&data_out, OP_EMULEPROT, OP_AICHFILEHASHANS);
+						Packet *response = new Packet(&data_out, OP_EMULEPROT, OP_AICHFILEHASHANS);
 						theStats.AddUpDataOverheadFileRequest(response->size);
 						SendPacket(response);
 					}
@@ -2083,19 +2075,16 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE* packet, uint32 size, UINT op
 
 void CClientReqSocket::PacketToDebugLogLine(LPCTSTR protocol, const uchar* packet, uint32 size, UINT opcode)
 {
-	if (thePrefs.GetVerbose())
-	{
+	if (thePrefs.GetVerbose()) {
 		CString buffer;
-	    buffer.Format(_T("Unknown %s Protocol Opcode: 0x%02x, Size=%u, Data=["), protocol, opcode, size);
+		buffer.Format(_T("Unknown %s Protocol Opcode: 0x%02x, Size=%u, Data=["), protocol, opcode, size);
 		UINT i;
-		for (i = 0; i < size && i < 50; i++){
+		for (i = 0; i < size && i < 50; i++) {
 			if (i > 0)
 				buffer += _T(' ');
-			TCHAR temp[3];
-		    _stprintf(temp, _T("%02x"), packet[i]);
-			buffer += temp;
+			buffer.AppendFormat(_T("%02x"), packet[i]);
 		}
-		buffer += (i == size) ? _T("]") : _T("..]");
+		buffer += (i < size) ? _T("]") : _T("..]");
 		DbgAppendClientInfo(buffer);
 		DebugLogWarning(_T("%s"), (LPCTSTR)buffer);
 	}
@@ -2109,10 +2098,10 @@ CString CClientReqSocket::DbgGetClientInfo()
 	GetPeerName((LPSOCKADDR)&sockAddr, &nSockAddrLen);
 	if (sockAddr.sin_addr.S_un.S_addr != 0 && (client == NULL || sockAddr.sin_addr.S_un.S_addr != client->GetIP()))
 		str.Format(_T("IP=%s"), (LPCTSTR)ipstr(sockAddr.sin_addr));
-	if (client){
+	if (client) {
 		if (!str.IsEmpty())
 			str += _T("; ");
-		str += _T("Client=") + client->DbgGetClientInfo();
+		str.AppendFormat(_T("Client=%s"), (LPCTSTR)client->DbgGetClientInfo());
 	}
 	return str;
 }
@@ -2157,9 +2146,8 @@ void CClientReqSocket::OnSend(int nErrorCode)
 
 void CClientReqSocket::OnError(int nErrorCode)
 {
-	CString strTCPError;
-	if (thePrefs.GetVerbose())
-	{
+	LPCTSTR strTCPError;
+	if (thePrefs.GetVerbose()) {
 		if (nErrorCode == ERR_WRONGHEADER)
 			strTCPError = _T("Error: Wrong header");
 		else if (nErrorCode == ERR_TOOBIG)
@@ -2170,13 +2158,14 @@ void CClientReqSocket::OnError(int nErrorCode)
 			strTCPError = _T("Error: Unencrypted Connection when Encryption was required");
 		else
 			strTCPError = GetErrorMessage(nErrorCode);
-		DebugLogWarning(_T("Client TCP socket: %s; %s"), (LPCTSTR)strTCPError, (LPCTSTR)DbgGetClientInfo());
-	}
+		DebugLogWarning(_T("Client TCP socket: %s; %s"), strTCPError, (LPCTSTR)DbgGetClientInfo());
+	} else
+		strTCPError = _T("");
 
 	Disconnect(strTCPError);
 }
 
-bool CClientReqSocket::PacketReceivedCppEH(Packet* packet)
+bool CClientReqSocket::PacketReceivedCppEH(Packet *packet)
 {
 	UINT uRawSize = packet->size;
 	switch (packet->prot) {
@@ -2203,7 +2192,7 @@ bool CClientReqSocket::PacketReceivedCppEH(Packet* packet)
 }
 
 #if !NO_USE_CLIENT_TCP_CATCH_ALL_HANDLER
-int FilterSE(DWORD dwExCode, LPEXCEPTION_POINTERS pExPtrs, CClientReqSocket* reqsock, Packet* packet)
+int FilterSE(DWORD dwExCode, LPEXCEPTION_POINTERS pExPtrs, CClientReqSocket* reqsock, Packet *packet)
 {
 	if (thePrefs.GetVerbose())
 	{
@@ -2244,7 +2233,7 @@ int FilterSE(DWORD dwExCode, LPEXCEPTION_POINTERS pExPtrs, CClientReqSocket* req
 #endif//!NO_USE_CLIENT_TCP_CATCH_ALL_HANDLER
 
 #if !NO_USE_CLIENT_TCP_CATCH_ALL_HANDLER
-int CClientReqSocket::PacketReceivedSEH(Packet* packet)
+int CClientReqSocket::PacketReceivedSEH(Packet *packet)
 {
 	// this function is only here to get a chance of determining the crash address via SEH
 	__try {
@@ -2256,7 +2245,7 @@ int CClientReqSocket::PacketReceivedSEH(Packet* packet)
 }
 #endif//!NO_USE_CLIENT_TCP_CATCH_ALL_HANDLER
 
-bool CClientReqSocket::PacketReceived(Packet* packet)
+bool CClientReqSocket::PacketReceived(Packet *packet)
 {
 #if !NO_USE_CLIENT_TCP_CATCH_ALL_HANDLER
 	int iResult = PacketReceivedSEH(packet);
@@ -2300,7 +2289,7 @@ SocketSentBytes CClientReqSocket::SendFileAndControlData(uint32 maxNumberOfBytes
     return returnStatus;
 }
 
-void CClientReqSocket::SendPacket(Packet* packet, bool delpacket, bool controlpacket, uint32 actualPayloadSize, bool bForceImmediateSend)
+void CClientReqSocket::SendPacket(Packet *packet, bool delpacket, bool controlpacket, uint32 actualPayloadSize, bool bForceImmediateSend)
 {
 	ResetTimeOutTimer();
 	CEMSocket::SendPacket(packet, delpacket, controlpacket, actualPayloadSize, bForceImmediateSend);
@@ -2314,7 +2303,7 @@ bool CListenSocket::SendPortTestReply(char result, bool disconnect)
 		{
 			if (thePrefs.GetDebugClientTCPLevel() > 0)
 				DebugSend("OP__PortTest", cur_sock->client);
-			Packet* replypacket = new Packet(OP_PORTTEST, 1);
+			Packet *replypacket = new Packet(OP_PORTTEST, 1);
 			replypacket->pBuffer[0]=result;
 			theStats.AddUpDataOverheadOther(replypacket->size);
 			cur_sock->SendPacket(replypacket);
@@ -2327,12 +2316,12 @@ bool CListenSocket::SendPortTestReply(char result, bool disconnect)
 }
 
 CListenSocket::CListenSocket()
+	: m_ConnectionStates()
 {
 	bListening = false;
 	maxconnectionreached = 0;
 	m_OpenSocketsInterval = 0;
 	m_nPendingConnections = 0;
-	memset(m_ConnectionStates, 0, sizeof m_ConnectionStates);
 	peakconnections = 0;
 	totalconnectionchecks = 0;
 	averageconnections = 0.0;
@@ -2624,7 +2613,7 @@ void CListenSocket::Process()
 void CListenSocket::RecalculateStats()
 {
 	memset(m_ConnectionStates, 0, sizeof m_ConnectionStates);
-	for (POSITION pos = socket_list.GetHeadPosition(); pos != NULL;) {
+	for (POSITION pos = socket_list.GetHeadPosition(); pos != NULL;)
 		switch (socket_list.GetNext(pos)->GetConState()) {
 		case ES_DISCONNECTED:
 			++m_ConnectionStates[0];
@@ -2635,7 +2624,6 @@ void CListenSocket::RecalculateStats()
 		case ES_CONNECTED:
 			++m_ConnectionStates[2];
 		}
-	}
 }
 
 void CListenSocket::AddSocket(CClientReqSocket* toadd)

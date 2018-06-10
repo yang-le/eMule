@@ -679,36 +679,36 @@ void CRoutingZone::GetClosestTo(uint32 uMaxType, const CUInt128 &uTarget, const 
 		m_pSubZones[1-iCloser]->GetClosestTo(uMaxType, uTarget, uDistance, uMaxRequired, pmapResult, false, bInUse);
 }
 
-void CRoutingZone::GetAllEntries(ContactList *pmapResult, bool bEmptyFirst)
+void CRoutingZone::GetAllEntries(ContactList *plistResult, bool bEmptyFirst)
 {
 	if (IsLeaf())
-		m_pBin->GetEntries(pmapResult, bEmptyFirst);
+		m_pBin->GetEntries(plistResult, bEmptyFirst);
 	else
 	{
-		m_pSubZones[0]->GetAllEntries(pmapResult, bEmptyFirst);
-		m_pSubZones[1]->GetAllEntries(pmapResult, false);
+		m_pSubZones[0]->GetAllEntries(plistResult, bEmptyFirst);
+		m_pSubZones[1]->GetAllEntries(plistResult, false);
 	}
 }
 
-void CRoutingZone::TopDepth(int iDepth, ContactList *pmapResult, bool bEmptyFirst)
+void CRoutingZone::TopDepth(int iDepth, ContactList *plistResult, bool bEmptyFirst)
 {
 	if (IsLeaf())
-		m_pBin->GetEntries(pmapResult, bEmptyFirst);
+		m_pBin->GetEntries(plistResult, bEmptyFirst);
 	else if (iDepth <= 0)
-		RandomBin(pmapResult, bEmptyFirst);
+		RandomBin(plistResult, bEmptyFirst);
 	else
 	{
-		m_pSubZones[0]->TopDepth(iDepth-1, pmapResult, bEmptyFirst);
-		m_pSubZones[1]->TopDepth(iDepth-1, pmapResult, false);
+		m_pSubZones[0]->TopDepth(iDepth-1, plistResult, bEmptyFirst);
+		m_pSubZones[1]->TopDepth(iDepth-1, plistResult, false);
 	}
 }
 
-void CRoutingZone::RandomBin(ContactList *pmapResult, bool bEmptyFirst)
+void CRoutingZone::RandomBin(ContactList *plistResult, bool bEmptyFirst)
 {
 	if (IsLeaf())
-		m_pBin->GetEntries(pmapResult, bEmptyFirst);
+		m_pBin->GetEntries(plistResult, bEmptyFirst);
 	else
-		m_pSubZones[rand()&1]->RandomBin(pmapResult, bEmptyFirst);
+		m_pSubZones[rand()&1]->RandomBin(plistResult, bEmptyFirst);
 }
 
 uint32 CRoutingZone::GetMaxDepth() const
@@ -909,7 +909,7 @@ void CRoutingZone::OnSmallTimer()
 				// FIXME:
 				// This is a bit of a work arround for statistic values. Normally we only count values from incoming HELLO_REQs for
 				// the firewalled statistics in order to get numbers from nodes which have us on their routing table,
-				// however if we send a HELLO due to the timer, the remote node won't send a HELLO_REQ itself anymore (but
+				// however if we send a HELLO due to the timer, the remote node won't send a HELLO_REQ itself any more (but
 				// a HELLO_RES which we don't count), so count those statistics here. This isn't really accurate, but it should
 				// do fair enough. Maybe improve it later for example by putting a flag into the contact and make the answer count
 				CKademlia::GetPrefs()->StatsIncUDPFirewalledNodes(false);

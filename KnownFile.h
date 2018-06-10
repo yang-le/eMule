@@ -42,8 +42,8 @@ public:
 	virtual void SetFileName(LPCTSTR pszFileName, bool bReplaceInvalidFileSystemChars = false, bool bRemoveControlChars = false); // 'bReplaceInvalidFileSystemChars' is set to 'false' for backward compatibility!
 
 	bool	CreateFromFile(LPCTSTR directory, LPCTSTR filename, LPVOID pvProgressParam); // create date, hashset and tags from a file
-	bool	LoadFromFile(CFileDataIO* file);	//load date, hashset and tags from a .met file
-	bool	WriteToFile(CFileDataIO* file);
+	bool	LoadFromFile(CFileDataIO *file);	//load date, hashset and tags from a .met file
+	bool	WriteToFile(CFileDataIO *file);
 	bool	CreateAICHHashSetOnly();
 
 	// last file modification time in (DST corrected, if NTFS) real UTC format
@@ -75,10 +75,10 @@ public:
 	// This may be replaced with total complete source known in the network.
 	INT_PTR	GetQueuedCount()								{ return m_ClientUploadList.GetCount();}
 
-	void	AddUploadingClient(CUpDownClient* client);
-	void	RemoveUploadingClient(CUpDownClient* client);
+	void	AddUploadingClient(CUpDownClient *client);
+	void	RemoveUploadingClient(CUpDownClient *client);
 	virtual void	UpdatePartsInfo();
-	virtual	void	DrawShareStatusBar(CDC* dc, LPCRECT rect, bool onlygreyrect, bool bFlat) const;
+	virtual	void	DrawShareStatusBar(CDC *dc, LPCRECT rect, bool onlygreyrect, bool bFlat) const;
 
 	// comment
 	void	SetFileComment(LPCTSTR pszComment);
@@ -91,7 +91,7 @@ public:
 	uint32	GetKadFileSearchID() const						{ return kadFileSearchID; }
 	void	SetKadFileSearchID(uint32 id)					{ kadFileSearchID = id; } //Don't use this unless you know what your are DOING!! (Hopefully I do.. :)
 
-	const Kademlia::WordList& GetKadKeywords() const		{ return wordlist; }
+	const Kademlia::WordList &GetKadKeywords() const		{ return wordlist; }
 
 	time_t	GetLastPublishTimeKadSrc() const				{ return m_lastPublishTimeKadSrc; }
 	void	SetLastPublishTimeKadSrc(time_t time, uint32 buddyip)	{ m_lastPublishTimeKadSrc = time; m_lastBuddyIP = buddyip;}
@@ -103,7 +103,7 @@ public:
 	bool	PublishNotes();
 
 	// file sharing
-	virtual Packet* CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 byRequestedVersion, uint16 nRequestedOptions) const;
+	virtual Packet *CreateSrcInfoPacket(const CUpDownClient *forClient, uint8 byRequestedVersion, uint16 nRequestedOptions) const;
 	UINT	GetMetaDataVer() const							{ return m_uMetaDataVer; }
 	void	UpdateMetaDataTags();
 	void	RemoveMetaDataTags(UINT uTagType = 0);
@@ -111,8 +111,8 @@ public:
 
 	// preview
 	bool	IsMovie() const;
-	virtual bool GrabImage(uint8 nFramesToGrab, double dStartTime, bool bReduceColor, uint16 nMaxWidth, void* pSender);
-	virtual void GrabbingFinished(CxImage** imgResults, uint8 nFramesGrabbed, void* pSender);
+	virtual bool GrabImage(uint8 nFramesToGrab, double dStartTime, bool bReduceColor, uint16 nMaxWidth, void *pSender);
+	virtual void GrabbingFinished(CxImage **imgResults, uint8 nFramesGrabbed, void *pSender);
 
 	// Display / Info / Strings
 	virtual CString	GetInfoSummary(bool bNoFormatCommands = false) const;
@@ -122,7 +122,7 @@ public:
 	void	SetAICHRecoverHashSetAvailable(bool bVal)		{ m_bAICHRecoverHashSetAvailable = bVal; }
 	bool	IsAICHRecoverHashSetAvailable() const			{ return m_bAICHRecoverHashSetAvailable; }
 
-	static bool	CreateHash(const uchar* pucData, uint32 uSize, uchar* pucHash, CAICHHashTree* pShaHashOut = NULL);
+	static bool	CreateHash(const uchar *pucData, uint32 uSize, uchar *pucHash, CAICHHashTree *pShaHashOut = NULL);
 
 
 
@@ -137,21 +137,21 @@ public:
 	uint16 m_nCompleteSourcesCountHi;
 	CUpDownClientPtrList m_ClientUploadList;
 	CArray<uint16, uint16> m_AvailPartFrequency;
-	CCollection* m_pCollection;
+	CCollection *m_pCollection;
 
 #ifdef _DEBUG
 	// Diagnostic Support
 	virtual void AssertValid() const;
-	virtual void Dump(CDumpContext& dc) const;
+	virtual void Dump(CDumpContext &dc) const;
 #endif
 
 protected:
 	//preview
-	bool	GrabImage(const CString& strFileName, uint8 nFramesToGrab, double dStartTime, bool bReduceColor, uint16 nMaxWidth, void* pSender);
-	bool	LoadTagsFromFile(CFileDataIO* file);
-	bool	LoadDateFromFile(CFileDataIO* file);
-	static void	CreateHash(CFile* pFile, uint64 Length, uchar* pucHash, CAICHHashTree* pShaHashOut = NULL);
-	static bool	CreateHash(FILE* fp, uint64 uSize, uchar* pucHash, CAICHHashTree* pShaHashOut = NULL);
+	bool	GrabImage(const CString &strFileName, uint8 nFramesToGrab, double dStartTime, bool bReduceColor, uint16 nMaxWidth, void *pSender);
+	bool	LoadTagsFromFile(CFileDataIO *file);
+	bool	LoadDateFromFile(CFileDataIO *file);
+	static void	CreateHash(CFile *pFile, uint64 Length, uchar *pucHash, CAICHHashTree *pShaHashOut = NULL);
+	static bool	CreateHash(FILE *fp, uint64 uSize, uchar *pucHash, CAICHHashTree *pShaHashOut = NULL);
 	virtual void	UpdateFileRatingCommentAvail(bool bForceUpdate = false);
 
 private:

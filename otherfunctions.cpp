@@ -95,29 +95,35 @@ static const byte base16Lookup[BASE16_LOOKUP_MAX][2] = {
 };
 static const CString badchar(_T("\"*<>?|\\/:")); // lots of invalid chars for filenames in windows :=)
 
-CString CastItoXBytes(uint16 count, bool isK, bool isPerSec, uint32 decimal){
+CString CastItoXBytes(uint16 count, bool isK, bool isPerSec, uint32 decimal)
+{
 	return CastItoXBytes((double)count, isK, isPerSec, decimal);
 }
 
-CString CastItoXBytes(uint32 count, bool isK, bool isPerSec, uint32 decimal){
+CString CastItoXBytes(uint32 count, bool isK, bool isPerSec, uint32 decimal)
+{
 	return CastItoXBytes((double)count, isK, isPerSec, decimal);
 }
 
-CString CastItoXBytes(uint64 count, bool isK, bool isPerSec, uint32 decimal){
+CString CastItoXBytes(uint64 count, bool isK, bool isPerSec, uint32 decimal)
+{
 	return CastItoXBytes((double)count, isK, isPerSec, decimal);
 }
 
 #if defined(_DEBUG) && defined(USE_DEBUG_EMFILESIZE)
-CString CastItoXBytes(EMFileSize count, bool isK, bool isPerSec, uint32 decimal){
+CString CastItoXBytes(EMFileSize count, bool isK, bool isPerSec, uint32 decimal)
+{
 	return CastItoXBytes((double)count, isK, isPerSec, decimal);
 }
 #endif
 
-CString CastItoXBytes(float count, bool isK, bool isPerSec, uint32 decimal){
+CString CastItoXBytes(float count, bool isK, bool isPerSec, uint32 decimal)
+{
 	return CastItoXBytes((double)count, isK, isPerSec, decimal);
 }
 
-CString CastItoXBytes(double count, bool isK, bool isPerSec, uint32 decimal){
+CString CastItoXBytes(double count, bool isK, bool isPerSec, uint32 decimal)
+{
 	if( count <= 0.0 )
 	{
 		if(isPerSec)
@@ -177,44 +183,45 @@ CString CastItoIShort(uint32 count, bool isK, uint32 decimal)
 	return CastItoIShort((double)count, isK, decimal);
 }
 
-CString CastItoIShort(uint64 count, bool isK, uint32 decimal){
+CString CastItoIShort(uint64 count, bool isK, uint32 decimal)
+{
 	return CastItoIShort((double)count, isK, decimal);
 }
 
-CString CastItoIShort(float count, bool isK, uint32 decimal){
+CString CastItoIShort(float count, bool isK, uint32 decimal)
+{
 	return CastItoIShort((double)count, isK, decimal);
 }
 
-CString CastItoIShort(double count, bool isK, uint32 decimal){
-	if( count <= 0.0 )
-	{
+CString CastItoIShort(double count, bool isK, uint32 decimal)
+{
+	if (count <= 0.0)
 		return _T("0");
-	}
-	else if( isK )
-	{
-		if( count >  1.7E+300 )
-			count =  1.7E+300;
+
+	if (isK)
+		if (count > 1.7E+300)
+			count = 1.7E+300;
 		else
 			count *= 1000.0;
-	}
+
 	CString output;
 	if (count < 1000.0)
 		output.Format(_T("%.0f"), count);
 	else if (count < 1000000.0)
-		output.Format(_T("%.*f %s"), decimal, count/1000.0, (LPCTSTR)GetResString(IDS_KILO));
+		output.Format(_T("%.*f %s"), decimal, count / 1000.0, (LPCTSTR)GetResString(IDS_KILO));
 	else if (count < 1000000000.0)
-		output.Format(_T("%.*f %s"), decimal, count/1000000.0, (LPCTSTR)GetResString(IDS_MEGA));
+		output.Format(_T("%.*f %s"), decimal, count / 1000000.0, (LPCTSTR)GetResString(IDS_MEGA));
 	else if (count < 1000000000000.0)
-		output.Format(_T("%.*f %s"), decimal, count/1000000000.0, (LPCTSTR)GetResString(IDS_GIGA));
+		output.Format(_T("%.*f %s"), decimal, count / 1000000000.0, (LPCTSTR)GetResString(IDS_GIGA));
 	else if (count < 1000000000000000.0)
-		output.Format(_T("%.*f %s"), decimal, count/1000000000000.0, (LPCTSTR)GetResString(IDS_TERRA));
+		output.Format(_T("%.*f %s"), decimal, count / 1000000000000.0, (LPCTSTR)GetResString(IDS_TERRA));
 	return output;
 }
 
 CString CastSecondsToHM(time_t tSeconds)
 {
 	if (tSeconds == -1)	// invalid or unknown time value
-		return _T("?");
+		return CString(_T("?"));
 
 	CString buffer;
 	UINT count = (UINT)tSeconds;
@@ -235,7 +242,7 @@ CString CastSecondsToHM(time_t tSeconds)
 CString CastSecondsToLngHM(time_t tSeconds)
 {
 	if (tSeconds == -1) // invalid or unknown time value
-		return _T("?");
+		return CString(_T("?"));
 
 	CString buffer;
 	UINT count = (UINT)tSeconds;
@@ -434,11 +441,11 @@ CString EncodeURLQueryParam(const CString& sInT)
 	CStringA sIn(sInT);
 	LPCSTR pInBuf = sIn;
 
-	// query         = *uric
-	// uric          = reserved | unreserved | escaped
-	// reserved      = ";" | "/" | "?" | ":" | "@" | "&" | "=" | "+" | "$" | ","
-	// unreserved    = alphanum | mark
-	// mark          = "-" | "_" | "." | "!" | "~" | "*" | "'" | "(" | ")"
+	// query		= *uric
+	// uric			= reserved | unreserved | escaped
+	// reserved		= ";" | "/" | "?" | ":" | "@" | "&" | "=" | "+" | "$" | ","
+	// unreserved	= alphanum | mark
+	// mark			= "-" | "_" | "." | "!" | "~" | "*" | "'" | "(" | ")"
 	//
 	// See also: http://www.w3.org/MarkUp/html-spec/html-spec_8.html
 
@@ -1616,18 +1623,36 @@ EED2KFileType GetED2KFileTypeSearchID(EED2KFileType iFileID)
 // Returns a file type which is used eMule internally only, examining the extension of the given filename
 CString GetFileTypeByName(LPCTSTR pszFileName)
 {
-	EED2KFileType iFileType = GetED2KFileTypeID(pszFileName);
-	switch (iFileType) {
-		case ED2KFT_AUDIO:			return _T(ED2KFTSTR_AUDIO);
-		case ED2KFT_VIDEO:			return _T(ED2KFTSTR_VIDEO);
-		case ED2KFT_IMAGE:			return _T(ED2KFTSTR_IMAGE);
-		case ED2KFT_DOCUMENT:		return _T(ED2KFTSTR_DOCUMENT);
-		case ED2KFT_PROGRAM:		return _T(ED2KFTSTR_PROGRAM);
-		case ED2KFT_ARCHIVE:		return _T(ED2KFTSTR_ARCHIVE);
-		case ED2KFT_CDIMAGE:		return _T(ED2KFTSTR_CDIMAGE);
-		case ED2KFT_EMULECOLLECTION:return _T(ED2KFTSTR_EMULECOLLECTION);
-		default:					return _T("");
+	LPCTSTR p;
+	switch (GetED2KFileTypeID(pszFileName)) {
+	case ED2KFT_AUDIO:
+		p = _T(ED2KFTSTR_AUDIO);
+		break;
+	case ED2KFT_VIDEO:
+		p = _T(ED2KFTSTR_VIDEO);
+		break;
+	case ED2KFT_IMAGE:
+		p = _T(ED2KFTSTR_IMAGE);
+		break;
+	case ED2KFT_DOCUMENT:
+		p = _T(ED2KFTSTR_DOCUMENT);
+		break;
+	case ED2KFT_PROGRAM:
+		p = _T(ED2KFTSTR_PROGRAM);
+		break;
+	case ED2KFT_ARCHIVE:
+		p = _T(ED2KFTSTR_ARCHIVE);
+		break;
+	case ED2KFT_CDIMAGE:
+		p = _T(ED2KFTSTR_CDIMAGE);
+		break;
+	case ED2KFT_EMULECOLLECTION:
+		p = _T(ED2KFTSTR_EMULECOLLECTION);
+		break;
+	default:
+		p = _T("");
 	}
+	return CString(p);
 }
 
 // Returns a file type which is used eMule internally only (GUI)
@@ -1675,28 +1700,22 @@ CED2KFileTypes theED2KFileTypes; // get the list sorted *before* any code is acc
 
 const BYTE *FindPattern(const BYTE *pucBuff, int iBuffSize, const BYTE *pucPattern, int iPatternSize)
 {
-	int iSearchRange = iBuffSize - iPatternSize;
-	while (iSearchRange-- >= 0) {
+	for (int iSearchRange = iBuffSize - iPatternSize; iSearchRange >= 0; --iSearchRange) {
 		if (memcmp(pucBuff, pucPattern, iPatternSize) == 0)
 			return pucBuff;
-		pucBuff++;
+		++pucBuff;
 	}
 	return NULL;
 }
 
-TCHAR *stristr(const TCHAR *str1, const TCHAR *str2)
+const TCHAR *stristr(const TCHAR *str1, const TCHAR *str2)
 {
-	const TCHAR *cp = str1;
-	const TCHAR *s1;
-	const TCHAR *s2;
-
 	if (!*str2)
-		return (TCHAR *)str1;
+		return str1;
 
-	while (*cp)
-	{
-		s1 = cp;
-		s2 = str2;
+	for (const TCHAR *cp = str1; *cp; ++cp) {
+		const TCHAR *s1 = cp;
+		const TCHAR *s2 = str2;
 
 		while (*s1 && *s2 && _totlower(*s1) == _totlower(*s2)) {
 			++s1;
@@ -1704,9 +1723,7 @@ TCHAR *stristr(const TCHAR *str1, const TCHAR *str2)
 		}
 
 		if (!*s2)
-			return (TCHAR *)cp;
-
-		cp++;
+			return cp;
 	}
 
 	return NULL;
@@ -2007,12 +2024,12 @@ CString DbgGetHexDump(const uint8* data, UINT size)
 	CString buffer;
 	buffer.Format(_T("Size=%u, Data=["), size);
 	UINT i = 0;
-	for(; i < size && i < 50; i++){
+	for (; i < size && i < 50; ++i) {
 		if (i > 0)
 			buffer += _T(' ');
 		buffer.AppendFormat(_T("%02x"), data[i]);
 	}
-	buffer += (i == size) ? _T("]") : _T("..]");
+	buffer += (i < size) ? _T("]") : _T("..]");
 	return buffer;
 }
 
@@ -2781,11 +2798,11 @@ public:
 		if (pPair != NULL)
 			return pPair->value;
 
-		// 'GetVolumeInformation' may cause a noticable delay - depending on the type of volume
+		// 'GetVolumeInformation' may cause a noticeable delay - depending on the type of volume
 		// which is queried. As we are using that function for almost every file (for compensating
 		// the NTFS file time issues), we need to cash this information.
 		//
-		// The cash gets cleared when the user manually hits the 'Reload' button in the 'Shared
+		// The cache gets cleared when the user manually hits the 'Reload' button in the 'Shared
 		// Files' window and when Windows broadcasts a message about that a volume was mounted/unmounted.
 		//
 		DWORD dwMaximumComponentLength = 0;
@@ -2808,7 +2825,7 @@ public:
 			if (szRoot[0] != _T('\0'))
 			{
 				CString strVolumeId(szRoot);
-				ASSERT( strVolumeId.GetLength() > 0 && strVolumeId[strVolumeId.GetLength() - 1] == _T('\\') );
+				ASSERT(strVolumeId.Right(1) == _T("\\"));
 				strVolumeId.MakeLower();
 				m_mapVolumeInfo.RemoveKey(strVolumeId);
 			}
@@ -3187,7 +3204,8 @@ void InstallSkin(LPCTSTR pszSkinPackage)
 	}
 }
 
-void TriggerPortTest(uint16 tcp, uint16 udp) {
+void TriggerPortTest(uint16 tcp, uint16 udp)
+{
 	CString m_sTestURL;
 
 	// do not alter the connection test, this is a manual test only. If you want to change the behaviour, use your server!
@@ -3195,7 +3213,7 @@ void TriggerPortTest(uint16 tcp, uint16 udp) {
 
 	// the portcheck will need to do an obfuscated callback too if obfuscation is requested, so we have to provide our userhash so it can create the key
 	if (thePrefs.IsClientCryptLayerRequested())
-		m_sTestURL += _T("&obf=1&clienthash=") + md4str(thePrefs.GetUserHash());
+		m_sTestURL.AppendFormat(_T("&obf=1&clienthash=%s"), (LPCTSTR)md4str(thePrefs.GetUserHash()));
 	else
 		m_sTestURL += _T("&obf=0");
 	ShellOpenFile(m_sTestURL);
@@ -3206,9 +3224,7 @@ int CompareLocaleStringNoCase(LPCTSTR psz1, LPCTSTR psz2)
 	// SDK says: The 'CompareString' function is optimized to run at the highest speed when 'dwCmpFlags' is set to 0
 	// or NORM_IGNORECASE, and 'cchCount1' and 'cchCount2' have the value -1.
 	int iResult = CompareString(GetThreadLocale(), NORM_IGNORECASE, psz1, -1, psz2, -1);
-	if (iResult == 0)
-		return 0;
-	return iResult - 2;
+	return iResult ? iResult - 2 : 0;
 }
 
 int CompareLocaleString(LPCTSTR psz1, LPCTSTR psz2)
@@ -3216,55 +3232,45 @@ int CompareLocaleString(LPCTSTR psz1, LPCTSTR psz2)
 	// SDK says: The 'CompareString' function is optimized to run at the highest speed when 'dwCmpFlags' is set to 0
 	// or NORM_IGNORECASE, and 'cchCount1' and 'cchCount2' have the value -1.
 	int iResult = CompareString(GetThreadLocale(), 0, psz1, -1, psz2, -1);
-	if (iResult == 0)
-		return 0;
-	return iResult - 2;
+	return iResult ? iResult - 2 : 0;
 }
 
 int __cdecl CompareCStringPtrLocaleStringNoCase(const void* p1, const void* p2)
 {
-	const CString* pstr1 = (const CString*)p1;
-	const CString* pstr2 = (const CString*)p2;
-	return CompareLocaleStringNoCase(*pstr1, *pstr2);
+	return CompareLocaleStringNoCase(*(CString *)p1, *(CString *)p2);
 }
 
 int __cdecl CompareCStringPtrLocaleString(const void* p1, const void* p2)
 {
-	const CString* pstr1 = (const CString*)p1;
-	const CString* pstr2 = (const CString*)p2;
-	return CompareLocaleString(*pstr1, *pstr2);
+	return CompareLocaleString(*(CString *)p1, *(CString *)p2);
 }
 
 void Sort(CStringArray& astr, int (__cdecl *pfnCompare)(const void*, const void*))
 {
-	qsort(astr.GetData(), astr.GetCount(), sizeof(CString*), pfnCompare);
+	qsort(astr.GetData(), astr.GetCount(), sizeof(CString *), pfnCompare);
 }
 
 int __cdecl CompareCStringPtrPtrLocaleStringNoCase(const void* p1, const void* p2)
 {
-	const CString* pstr1 = *(const CString**)p1;
-	const CString* pstr2 = *(const CString**)p2;
-	return CompareLocaleStringNoCase(*pstr1, *pstr2);
+	return CompareLocaleStringNoCase(**(CString **)p1, **(CString **)p2);
 }
 
 int __cdecl CompareCStringPtrPtrLocaleString(const void* p1, const void* p2)
 {
-	const CString* pstr1 = *(const CString**)p1;
-	const CString* pstr2 = *(const CString**)p2;
-	return CompareLocaleString(*pstr1, *pstr2);
+	return CompareLocaleString(**(CString **)p1, **(CString **)p2);
 }
 
 void Sort(CSimpleArray<const CString*>& apstr, int (__cdecl *pfnCompare)(const void*, const void*))
 {
-	qsort(apstr.GetData(), apstr.GetSize(), sizeof(CString*), pfnCompare);
+	qsort(apstr.GetData(), apstr.GetSize(), sizeof(CString *), pfnCompare);
 }
+
+static LPCTSTR const pstrKeyName = _T("eMuleAutoStart");
 
 void AddAutoStart()
 {
 #ifndef _DEBUG
 	RemAutoStart();
-	CString strKeyName;
-	strKeyName = _T("eMuleAutoStart");
 	TCHAR sExeFilePath[MAX_PATH];
 	DWORD dwModPathLen = ::GetModuleFileName(NULL, sExeFilePath, _countof(sExeFilePath));
 	if (dwModPathLen == 0 || dwModPathLen == _countof(sExeFilePath))
@@ -3272,13 +3278,15 @@ void AddAutoStart()
 	CString sFullExeCommand;
 	sFullExeCommand.Format(_T("%s -AutoStart"), sExeFilePath);
 	CRegKey mKey;
-	mKey.Create(HKEY_CURRENT_USER,
-		_T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
-		REG_NONE,REG_OPTION_NON_VOLATILE,
-		KEY_ALL_ACCESS,	NULL,NULL);
-	if (mKey != NULL)
-	{
-		mKey.SetStringValue(strKeyName, sFullExeCommand);
+	mKey.Create(HKEY_CURRENT_USER
+		, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Run")
+		, REG_NONE
+		, REG_OPTION_NON_VOLATILE
+		, KEY_ALL_ACCESS
+		, NULL
+		, NULL);
+	if (mKey != NULL) {
+		mKey.SetStringValue(pstrKeyName, sFullExeCommand);
 		mKey.Close();
 	}
 #endif
@@ -3286,16 +3294,16 @@ void AddAutoStart()
 
 void RemAutoStart()
 {
-	CString strKeyName;
-	strKeyName = _T("eMuleAutoStart");
 	CRegKey mKey;
-	mKey.Create(HKEY_CURRENT_USER,
-		_T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
-		REG_NONE,REG_OPTION_NON_VOLATILE,
-		KEY_ALL_ACCESS,	NULL,NULL);
-	if (mKey != NULL)
-	{
-		mKey.DeleteValue(strKeyName);
+	mKey.Create(HKEY_CURRENT_USER
+		, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Run")
+		, REG_NONE
+		, REG_OPTION_NON_VOLATILE
+		, KEY_ALL_ACCESS
+		, NULL
+		, NULL);
+	if (mKey != NULL) {
+		mKey.DeleteValue(pstrKeyName);
 		mKey.Close();
 	}
 }
@@ -3377,15 +3385,7 @@ bool RegularExpressionMatch(const CString& regexpr, const CString& teststring)
 	}
 
 	CAtlREMatchContext<> mcUrl;
-	if (!reFN.Match(
-		teststring,
-		&mcUrl))
-	{
-		// Unexpected error.
-		return false;
-	} else {
-		return true;
-	}
+	return reFN.Match(teststring, &mcUrl);
 }
 
 ULONGLONG GetModuleVersion(LPCTSTR pszFilePath)
@@ -3417,7 +3417,7 @@ ULONGLONG GetModuleVersion(LPCTSTR pszFilePath)
 ULONGLONG GetModuleVersion(HMODULE hModule)
 {
 	TCHAR szFilePath[MAX_PATH];
-	DWORD dwModPathLen = GetModuleFileName(hModule, szFilePath, _countof(szFilePath));
+	DWORD dwModPathLen = ::GetModuleFileName(hModule, szFilePath, _countof(szFilePath));
 	if (dwModPathLen == 0 || dwModPathLen == _countof(szFilePath))
 		return 0;
 	return GetModuleVersion(szFilePath);
@@ -3464,9 +3464,6 @@ UINT64 GetFreeTempSpace(int tempdirindex)
 
 bool DoCollectionRegFix(bool checkOnly)
 {
-	bool bGlobalSet = false;
-	CRegKey regkey;
-	LONG result;
 	TCHAR modbuffer[MAX_PATH];
 	DWORD dwModPathLen = ::GetModuleFileName(NULL, modbuffer, _countof(modbuffer));
 	if (dwModPathLen == 0 || dwModPathLen == _countof(modbuffer))
@@ -3477,7 +3474,9 @@ bool DoCollectionRegFix(bool checkOnly)
 	regbuffer.Format(_T("\"%s\" \"%%1\""), (LPCTSTR)strCanonFileName);
 
 	// first check if the registry keys are already set (either by installer in HKLM or by user in HKCU)
-	result = regkey.Open(HKEY_CLASSES_ROOT, _T("eMule\\shell\\open\\command"), KEY_READ);
+	bool bGlobalSet = false;
+	CRegKey regkey;
+	LONG result = regkey.Open(HKEY_CLASSES_ROOT, _T("eMule\\shell\\open\\command"), KEY_READ);
 	if (result == ERROR_SUCCESS)
 	{
 		TCHAR rbuffer[MAX_PATH + 100];
@@ -3592,7 +3591,8 @@ void RC4Crypt(const uchar* pachIn, uchar* pachOut, uint32 nLen, RC4_Key_Struct* 
 }
 
 
-struct SFileExts {
+struct SFileExts
+{
 	EFileType ftype;
 	LPCTSTR label;
 	LPCTSTR extlist;
@@ -3607,6 +3607,9 @@ static const SFileExts s_fileexts[] =
 	{IMAGE_ISO,				_T("ISO/NRG"),		_T("|ISO|NRG|") },
 	{VIDEO_MPG,				_T("MPEG Video"),	_T("|MPG|MPEG|") },
 	{VIDEO_AVI,				_T("AVI"),			_T("|AVI|DIVX|") },
+	{VIDEO_MP4,				_T("MP4"),			_T("|MP4|MOV|QT|")},
+	{VIDEO_MKV,				_T("MKV"),			_T("|MKV|")},
+	{VIDEO_OGG,				_T("OGG"),			_T("|OGG|OGM|")},
 	{WM,					_T("Microsoft Media Audio/Video"), _T("|ASF|WMV|WMA|") },
 	{PIC_JPG,				_T("JPEG"),			_T("|JPG|JPEG|") },
 	{PIC_PNG,				_T("PNG"),			_T("|PNG|") },
@@ -3618,20 +3621,23 @@ static const SFileExts s_fileexts[] =
 
 #define HEADERCHECKSIZE 16
 
-const unsigned char FILEHEADER_AVI_ID[]	= { 0x52, 0x49, 0x46, 0x46 };
-const unsigned char FILEHEADER_RAR[]	= { 0x52, 0x61, 0x72, 0x21 };
-const unsigned char FILEHEADER_ZIP[]	= { 0x50, 0x4b, 0x03, 0x04 };
-const unsigned char FILEHEADER_ACE_ID[]	= { 0x2A, 0x2A, 0x41, 0x43, 0x45, 0x2A, 0x2A };
-const unsigned char FILEHEADER_MP3_ID[]	= { 0x49, 0x44, 0x33, 0x03 };
-const unsigned char FILEHEADER_MP3_ID2[]= { 0xFE, 0xFB };
-const unsigned char FILEHEADER_MPG_ID[]	= { 0x00, 0x00, 0x01, 0xba };
-const unsigned char FILEHEADER_ISO_ID[]	= { 0x01, 0x43, 0x44, 0x30, 0x30, 0x31 };
-const unsigned char FILEHEADER_WM_ID[]	= { 0x30, 0x26, 0xb2, 0x75, 0x8e, 0x66, 0xcf, 0x11, 0xa6, 0xd9, 0x00, 0xaa, 0x00, 0x62, 0xce, 0x6c };
-const unsigned char FILEHEADER_PNG_ID[]	= { 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a };
-const unsigned char FILEHEADER_JPG_ID[]	= { 0xff, 0xd8, 0xff };
-const unsigned char FILEHEADER_GIF_ID[]	= { 0x47, 0x49, 0x46, 0x38 };
-const unsigned char FILEHEADER_PDF_ID[]	= { 0x25, 0x50, 0x44, 0x46 };
-const unsigned char FILEHEADER_EXECUTABLE_ID[]={0x4d, 0x5a };
+static const unsigned char FILEHEADER_AVI_ID[]	= { 0x52, 0x49, 0x46, 0x46 };
+static const unsigned char FILEHEADER_RAR[]		= { 0x52, 0x61, 0x72, 0x21 };
+static const unsigned char FILEHEADER_ZIP[]		= { 0x50, 0x4b, 0x03, 0x04 };
+static const unsigned char FILEHEADER_ACE_ID[]	= { 0x2A, 0x2A, 0x41, 0x43, 0x45, 0x2A, 0x2A };
+static const unsigned char FILEHEADER_MP3_ID[]	= { 0x49, 0x44, 0x33, 0x03 };
+static const unsigned char FILEHEADER_MP3_ID2[]	= { 0xFE, 0xFB };
+static const unsigned char FILEHEADER_MPG_ID[]	= { 0x00, 0x00, 0x01, 0xba };
+static const unsigned char FILEHEADER_ISO_ID[]	= { 0x01, 0x43, 0x44, 0x30, 0x30, 0x31 };
+static const unsigned char FILEHEADER_WM_ID[]	= { 0x30, 0x26, 0xb2, 0x75, 0x8e, 0x66, 0xcf, 0x11, 0xa6, 0xd9, 0x00, 0xaa, 0x00, 0x62, 0xce, 0x6c };
+static const unsigned char FILEHEADER_MP4_ID[]	= {0x66, 0x74, 0x79, 0x70};	//Enig123::please note that the header starts at the position 4, not 0
+static const unsigned char FILEHEADER_MKV_ID[]	= {0x1A, 0x45, 0xDF, 0xA3};
+static const unsigned char FILEHEADER_OGG_ID[]	= {0x4F, 0x67, 0x67, 0x53};
+static const unsigned char FILEHEADER_PNG_ID[]	= { 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a };
+static const unsigned char FILEHEADER_JPG_ID[]	= { 0xff, 0xd8, 0xff };
+static const unsigned char FILEHEADER_GIF_ID[]	= { 0x47, 0x49, 0x46, 0x38 };
+static const unsigned char FILEHEADER_PDF_ID[]	= { 0x25, 0x50, 0x44, 0x46 };
+static const unsigned char FILEHEADER_EXECUTABLE_ID[] = {0x4d, 0x5a };
 
 bool GetDRM(LPCTSTR pszFilePath)
 {
@@ -3699,6 +3705,12 @@ EFileType GetFileTypeEx(CShareableFile* kfile, bool checkextention, bool checkfi
 							res = AUDIO_MPEG;
 						else if (memcmp(headerbuf, FILEHEADER_MPG_ID, sizeof FILEHEADER_MPG_ID) == 0)
 							res = VIDEO_MPG;
+						else if (memcmp(headerbuf + 4, FILEHEADER_MP4_ID, sizeof(FILEHEADER_MP4_ID)) == 0)
+							res = VIDEO_MP4;
+						else if (memcmp(headerbuf, FILEHEADER_MKV_ID, sizeof(FILEHEADER_MKV_ID)) == 0)
+							res = VIDEO_MKV;
+						else if (memcmp(headerbuf, FILEHEADER_OGG_ID, sizeof(FILEHEADER_OGG_ID)) == 0)
+							res = VIDEO_OGG;
 						else if (memcmp(headerbuf, FILEHEADER_PDF_ID, sizeof FILEHEADER_PDF_ID) == 0)
 							res = DOCUMENT_PDF;
 						else if (memcmp(headerbuf, FILEHEADER_PNG_ID, sizeof FILEHEADER_PNG_ID) == 0)
@@ -3777,7 +3789,7 @@ CString GetFileTypeName(EFileType ftype)
 		if (ftype == ext->ftype)
 			return ext->label;
 
-	return _T("?");
+	return CString(_T("?"));
 }
 
 bool ExtensionIs(LPCTSTR pszFilePath, LPCTSTR pszExt)

@@ -24,6 +24,8 @@ class UploadBandwidthThrottler :
 public:
 	UploadBandwidthThrottler();
 	~UploadBandwidthThrottler();
+	UploadBandwidthThrottler(const UploadBandwidthThrottler&) = delete;
+	UploadBandwidthThrottler& operator=(const UploadBandwidthThrottler&) = delete;
 
 	uint64 GetNumberOfSentBytesSinceLastCallAndReset();
 	uint64 GetNumberOfSentBytesOverheadSinceLastCallAndReset();
@@ -31,12 +33,12 @@ public:
 
 	INT_PTR GetStandardListSize() { return m_StandardOrder_list.GetSize(); };
 
-	void AddToStandardList(INT_PTR index, ThrottledFileSocket* socket);
-	bool RemoveFromStandardList(ThrottledFileSocket* socket);
+	void AddToStandardList(INT_PTR index, ThrottledFileSocket *socket);
+	bool RemoveFromStandardList(ThrottledFileSocket *socket);
 
-	void QueueForSendingControlPacket(ThrottledControlSocket* socket, const bool hasSent = false); // ZZ:UploadBandWithThrottler (UDP)
-	void RemoveFromAllQueues(ThrottledFileSocket* socket);
-	void RemoveFromAllQueuesLocked(ThrottledControlSocket* socket); // ZZ:UploadBandWithThrottler (UDP)
+	void QueueForSendingControlPacket(ThrottledControlSocket *socket, const bool hasSent = false); // ZZ:UploadBandWithThrottler (UDP)
+	void RemoveFromAllQueues(ThrottledFileSocket *socket);
+	void RemoveFromAllQueuesLocked(ThrottledControlSocket *socket); // ZZ:UploadBandWithThrottler (UDP)
 	void NewUploadDataAvailable();
 	void SocketAvailable();
 	HANDLE GetSocketAvailableEvent() { return m_eventSocketAvailable; }
@@ -49,10 +51,10 @@ private:
 	static UINT RunProc(LPVOID pParam);
 	UINT RunInternal();
 
-	void RemoveFromAllQueuesNoLock(ThrottledControlSocket* socket); // ZZ:UploadBandWithThrottler (UDP)
-	bool RemoveFromStandardListNoLock(ThrottledFileSocket* socket);
+	void RemoveFromAllQueuesNoLock(ThrottledControlSocket *socket); // ZZ:UploadBandWithThrottler (UDP)
+	bool RemoveFromStandardListNoLock(ThrottledFileSocket *socket);
 
-	uint32 CalculateChangeDelta(uint32 numberOfConsecutiveChanges) const;
+	static uint32 CalculateChangeDelta(uint32 numberOfConsecutiveChanges);
 
 	CTypedPtrList<CPtrList, ThrottledControlSocket*> m_ControlQueue_list; // a queue for all the sockets that want to have Send() called on them. // ZZ:UploadBandWithThrottler (UDP)
 	CTypedPtrList<CPtrList, ThrottledControlSocket*> m_ControlQueueFirst_list; // a queue for all the sockets that want to have Send() called on them. // ZZ:UploadBandWithThrottler (UDP)

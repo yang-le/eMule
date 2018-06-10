@@ -86,34 +86,24 @@ void CDirectDownloadDlg::OnOK()
 
 	int curPos = 0;
 	CString strTok = strLinks.Tokenize(_T(" \t\r\n"), curPos); // tokenize by whitespaces
-	while (!strTok.IsEmpty())
-	{
+	while (!strTok.IsEmpty()) {
 		if (strTok.Right(1) != _T("/"))
 			strTok += _T('/');
-		try
-		{
+		try {
 			CED2KLink* pLink = CED2KLink::CreateLinkFromUrl(strTok);
-			if (pLink)
-			{
-				if (pLink->GetKind() == CED2KLink::kFile)
-				{
-					theApp.downloadqueue->AddFileLinkToDownload(pLink->GetFileLink(), (thePrefs.GetCatCount() == 0) ? 0 : m_cattabs.GetCurSel());
-				}
-				else
-				{
+			if (pLink) {
+				if (pLink->GetKind() != CED2KLink::kFile) {
 					delete pLink;
 					throw CString(_T("bad link"));
 				}
+				theApp.downloadqueue->AddFileLinkToDownload(pLink->GetFileLink(), thePrefs.GetCatCount() ? m_cattabs.GetCurSel() : 0);
 				delete pLink;
 			}
-		}
-		catch (const CString& error)
-		{
-			TCHAR szBuffer[200];
-			_sntprintf(szBuffer, _countof(szBuffer), (LPCTSTR)GetResString(IDS_ERR_INVALIDLINK), (LPCTSTR)error);
-			szBuffer[_countof(szBuffer) - 1] = _T('\0');
+		} catch (const CString& error) {
+			CString sBuffer;
+			sBuffer.Format(GetResString(IDS_ERR_INVALIDLINK), (LPCTSTR)error);
 			CString strError;
-			strError.Format(GetResString(IDS_ERR_LINKERROR), szBuffer);
+			strError.Format(GetResString(IDS_ERR_LINKERROR), (LPCTSTR)sBuffer);
 			AfxMessageBox(strError);
 			return;
 		}

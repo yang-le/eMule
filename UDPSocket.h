@@ -52,10 +52,12 @@ class CUDPSocket : public CAsyncSocket, public CEncryptedDatagramSocket, public 
 public:
 	CUDPSocket();
 	virtual ~CUDPSocket();
+	CUDPSocket(const CUDPSocket&) = delete;
+	CUDPSocket& operator=(const CUDPSocket&) = delete;
 
 	bool Create();
 	SocketSentBytes SendControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize); // ZZ:UploadBandWithThrottler (UDP)
-	void SendPacket(Packet* packet, CServer* pServer, uint16 nSpecialPort = 0, BYTE* pInRawPacket = 0, uint32 nRawLen = 0);
+	void SendPacket(Packet *packet, CServer* pServer, uint16 nSpecialPort = 0, BYTE* pInRawPacket = 0, uint32 nRawLen = 0);
 	void DnsLookupDone(WPARAM wp, LPARAM lp);
 
 protected:

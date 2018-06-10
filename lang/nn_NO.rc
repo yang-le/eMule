@@ -1271,8 +1271,6 @@ BEGIN
     IDS_VERSION             "Utgåve"
     IDS_PASTE               "Sett inn"
     IDS_A4AF                "Kjeldehandsaming (A4AF)"
-    IDS_MOBILEMULE          "MobileMule"
-    IDS_ENABLEMM            "Aktiver MobileMule"
     IDS_AUTOCAT_LABEL       "Automatisk kategoritildeling (mønster, skild av |)"
     IDS_SHOWEXTSETTINGS     "Syn fleire innstillingar (avanserte innstillingar)"
     IDS_TREEOPTIONS_TRUE    "Sant"
@@ -1291,13 +1289,10 @@ BEGIN
     IDS_WRN_INCFILE_RESERVED "Innkomande mappe må ikkje settast til ei eMule installasjonsmappe"
     IDS_WRN_TEMPFILES_RESERVED "Den mellombelse mappa må ikkje settast til ei eMule installasjonsmappe"
     IDS_WRN_INCTEMP_SAME    "Innkommende mappe og mellombels mappe må ikkje vere den same"
-    IDS_MMFAILED            "Klarte ikkje å opprette MobileMule!"
-    IDS_MMSTARTED           "MobileMule  starta på port %u. Protokollutgåve: %s"
     IDS_SHOWDWLPERCENTAGE   "Syn prosentdel nedlasta i framdriftslinja"
     IDS_TBN_ONNEWDOWNLOAD   "Nedlasting lagt til"
     IDS_ARTIST              "Artist"
     IDS_ALBUM               "Album"
-    IDS_MMGUIDELINK         "Gaid til MservermobileMule"
 END
 
 STRINGTABLE
@@ -1394,7 +1389,6 @@ BEGIN
     IDS_ERR_FAILEDDOWNLOADLANG "Klarte ikkje å laste ned og installere den valde språk-dll fila frå %s!"
     IDS_ERR_BADFOLDER       "Ugyldig mappe.\nMappe kunne ikkje verte oppretta. Kontroller namn og plasering."
     IDS_AUTOREMOVEFD        "Ta bort ferdige nedlastingar automatisk"
-    IDS_MM_BLOCK            "Siste tre freistingar på å logge på var mislukka - vidare freistingar er sperra i ti minutt!"
 END
 
 STRINGTABLE
@@ -1419,7 +1413,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MM_NEWUSER          "Ny brukar er logga inn på MobileMuletenar"
     IDS_RADCLIENTS          "Frå kjende klientar"
     IDS_KADUDPPORTERR       "Kad sin UDP-port er i konflikt med anten eMule sin eksterne UDP port eller eMuletenaren sin UDP-port. Porten er endra til %u."
     IDS_CONFIRM_FILEDELETE  "Vil du verkeleg slette alle valde filer fra disken?"
@@ -1443,7 +1436,7 @@ BEGIN
     IDS_TEXTLABELS          "Tekstmerkelappar"
     IDS_ENABLETEXTLABELS    "Syn tekstmerkelappar"
     IDS_CUSTOMIZETOOLBAR    "Spesialbygg Verktylinje"
-    IDS_MINBITRATE          "Min. bitrate [kBit/s]"
+    IDS_MINBITRATE          "Min. bitrate [kbit/s]"
     IDS_KAD_RECHECKFW       "Kontroller brannmur"
     IDS_SHAREDTITLE         "Delt ED2K|Kad"
     IDS_FIREWALLED          "Brannmur er aktiv"

@@ -119,7 +119,7 @@ bool CSearchManager::StartSearch(CSearch* pSearch)
 	return true;
 }
 
-CSearch* CSearchManager::PrepareFindKeywords(LPCTSTR szKeyword, UINT uSearchTermsSize, LPBYTE pucSearchTermsData)
+CSearch* CSearchManager::PrepareFindKeywords(LPCWSTR szKeyword, UINT uSearchTermsSize, LPBYTE pucSearchTermsData)
 {
 	// Create a keyword search object.
 	CSearch *pSearch = new CSearch;
@@ -149,7 +149,7 @@ CSearch* CSearchManager::PrepareFindKeywords(LPCTSTR szKeyword, UINT uSearchTerm
 		}
 
 		pSearch->SetSearchTermData( uSearchTermsSize, pucSearchTermsData );
-		pSearch->SetGUIName(szKeyword);
+		pSearch->SetGUIName(Kademlia::CKadTagValueString(szKeyword));
 		// Inc our searchID
 		pSearch->m_uSearchID = ++m_uNextID;
 		// Insert search into map.
@@ -271,13 +271,13 @@ bool CSearchManager::IsFWCheckUDPSearch(const CUInt128 &uTarget)
 }
 
 
-void CSearchManager::GetWords(LPCTSTR sz, WordList *plistWords)
+void CSearchManager::GetWords(LPCWSTR sz, WordList *plistWords)
 {
 	size_t uChars = 0;
 	size_t uBytes = 0;
-	for (LPCTSTR szS = sz; *szS;) {
-		uChars = _tcscspn(szS, g_aszInvKadKeywordChars);
-		CKadTagValueString sWord = szS;
+	for (LPCWSTR szS = sz; *szS;) {
+		uChars = wcscspn(szS, g_aszInvKadKeywordChars);
+		CKadTagValueString sWord = Kademlia::CKadTagValueString(szS);
 		sWord.Truncate((int)uChars);
 		// TODO: We'd need a safe way to determine if a sequence which contains only 3 chars is a real word.
 		// Currently we do this by evaluating the UTF-8 byte count. This will work well for Western locales,
@@ -293,7 +293,7 @@ void CSearchManager::GetWords(LPCTSTR sz, WordList *plistWords)
 			plistWords->push_back(sWord);
 		}
 		szS += uChars;
-		if (uChars < _tcslen(szS))
+		if (uChars < wcslen(szS))
 			++szS;
 	}
 

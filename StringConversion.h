@@ -130,6 +130,7 @@ public:
 	}
 
 	TUnicodeToUTF8(const TUnicodeToUTF8&) = delete;
+	TUnicodeToUTF8& operator=(const TUnicodeToUTF8&) = delete;
 
 	operator LPCSTR() const
 	{
@@ -186,6 +187,7 @@ public:
 	}
 
 	TUnicodeToBOMUTF8(const TUnicodeToBOMUTF8&) = delete;
+	TUnicodeToBOMUTF8& operator=(const TUnicodeToBOMUTF8&) = delete;
 
 	operator LPCSTR() const
 	{
@@ -239,6 +241,7 @@ public:
 	}
 
 	TUnicodeToMultiByte(const TUnicodeToMultiByte&) = delete;
+	TUnicodeToMultiByte& operator=(const TUnicodeToMultiByte&) = delete;
 
 	operator LPCSTR() const
 	{

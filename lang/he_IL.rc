@@ -1283,8 +1283,6 @@ BEGIN
     IDS_VERSION             "גירסה"
     IDS_PASTE               "הדבק"
     IDS_A4AF                "טיפול במקורות"
-    IDS_MOBILEMULE          "אימיול נייד"
-    IDS_ENABLEMM            "הפעל את האימיול הנייד"
     IDS_AUTOCAT_LABEL       "הצב אוטומטית בקטגוריה (תבנית, מופרד ע""י |)"
     IDS_SHOWEXTSETTINGS     "הצג פקדים נוספים (מצב פקדים מתקדם)"
     IDS_TREEOPTIONS_TRUE    "אמת"
@@ -1305,13 +1303,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "תיקיית הזמניים חייבת להיות שונה מתיקיית ההתקנה של אימיול."
     IDS_WRN_INCTEMP_SAME    "אסור לתיקיית שהתקבלו ולתיקייה הזמנית להיות זהים."
-    IDS_MMFAILED            "נכשל ביצירת יציאת תקשורת לאימיול הנייד!"
-    IDS_MMSTARTED           "שרת אימיול נייד התחיל בפורט %u. גירסת פרוטוקול: %s"
     IDS_SHOWDWLPERCENTAGE   "הצג הושלם באחוזים (להורדות) בבר ההתקדמות"
     IDS_TBN_ONNEWDOWNLOAD   "הורדה נוספה"
     IDS_ARTIST              "אמן"
     IDS_ALBUM               "אלבום"
-    IDS_MMGUIDELINK         "מדריך לאימיול הנייד"
 END
 
 STRINGTABLE 
@@ -1410,7 +1405,6 @@ BEGIN
                             "נכשל בהורדה והתקנה של השפה שנבחרה מ-%s!"
     IDS_ERR_BADFOLDER       "תיקייה לא תקינה.\nלא ניתן ליצור תיקייה. נא לבדוק שם ומיקום."
     IDS_AUTOREMOVEFD        "נקה אוטומטית הורדות שהסתיימו"
-    IDS_MM_BLOCK            "3 ניסיונות התחברות לאימיול נייד שנכשלו - כל ניסיון נוסף נחסם ל-10 דקות!"
 END
 
 STRINGTABLE 
@@ -1436,7 +1430,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "משתמש חדש התחבר בהצלחה לשרת אימיול מייד"
     IDS_RADCLIENTS          "מקליינטים ידועים"
     IDS_KADUDPPORTERR       "פורט UDP של קדמליה מתנגש עם פורט UDP מורחב של אימיול או פורט UDP של שרת אימיול. הפורט שונה ל-%u."
     IDS_CONFIRM_FILEDELETE  "האם אתה בטוח שברצונך למחוק את כל הקבצים הנבחרים מהכונן?"

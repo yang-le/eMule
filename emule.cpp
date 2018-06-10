@@ -43,7 +43,6 @@
 #include "ClientUDPSocket.h"
 #include "DownloadQueue.h"
 #include "IPFilter.h"
-#include "MMServer.h"
 #include "Statistics.h"
 #include "OtherFunctions.h"
 #include "WebServer.h"
@@ -460,8 +459,7 @@ BOOL InitWinsock2(WSADATA *lpwsaData)
 		int nResult = WSAStartup(wVersionRequested, lpwsaData);
 		if (nResult != 0)
 			return FALSE;
-		if (LOBYTE(lpwsaData->wVersion) != 2 || HIBYTE(lpwsaData->wVersion) != 2)
-			{
+		if (lpwsaData->wVersion != MAKEWORD(2, 2)) {
 			WSACleanup();
 			return FALSE;
 			}
@@ -727,11 +725,6 @@ BOOL CemuleApp::InitInstance()
 		}
 	}
 
-	// ZZ:UploadSpeedSense -->
-	lastCommonRouteFinder = new LastCommonRouteFinder();
-	uploadBandwidthThrottler = new UploadBandwidthThrottler();
-	// ZZ:UploadSpeedSense <--
-
 	clientlist = new CClientList();
 	friendlist = new CFriendList();
 	searchlist = new CSearchList();
@@ -746,9 +739,14 @@ BOOL CemuleApp::InitInstance()
 	uploadqueue = new CUploadQueue();
 	ipfilter 	= new CIPFilter();
 	webserver = new CWebServer(); // Webserver [kuchin]
-	mmserver = new CMMServer();
 	scheduler = new CScheduler();
 	m_pPeerCache = new CPeerCacheFinder();
+
+	// ZZ:UploadSpeedSense -->
+	lastCommonRouteFinder = new LastCommonRouteFinder();
+	uploadBandwidthThrottler = new UploadBandwidthThrottler();
+	// ZZ:UploadSpeedSense <--
+
 	m_pUploadDiskIOThread = new CUploadDiskIOThread();
 
 	thePerfLog.Startup();
@@ -1525,8 +1523,7 @@ HICON CemuleApp::LoadIcon(LPCTSTR lpszResourceName, int cx, int cy, UINT uFlags)
 
 				if (hIcon == NULL)
 				{
-					HICON aIconsLarge[1] = {};
-					HICON aIconsSmall[1] = {};
+					HICON aIconsLarge[1], aIconsSmall[1];
 					int iExtractedIcons = ExtractIconEx(strFullResPath, iIconIndex, aIconsLarge, aIconsSmall, 1);
 					if (iExtractedIcons > 0) // 'iExtractedIcons' is 2(!) if we get a large and a small icon
 					{
@@ -1688,7 +1685,7 @@ CString CemuleApp::GetSkinFileItem(LPCTSTR lpszResourceName, LPCTSTR pszResource
 			return szFullResPath;
 		}
 	}
-	return _T("");
+	return CString();
 }
 
 bool CemuleApp::LoadSkinColor(LPCTSTR pszKey, COLORREF& crColor) const
@@ -1795,7 +1792,7 @@ void CemuleApp::SearchClipboard()
 		// Don't feed too long strings into the MessageBox function, it may freak out.
 		CString strLinksDisplay;
 		if (strLinks.GetLength() > 512)
-			strLinksDisplay = strLinks.Left(512) + _T("...");
+			strLinksDisplay = strLinks.Left(509) + _T("...");
 		else
 			strLinksDisplay = strLinks;
 		if (AfxMessageBox(GetResString(IDS_ADDDOWNLOADSFROMCB) + _T("\r\n") + strLinksDisplay, MB_YESNO | MB_TOPMOST) == IDYES)
@@ -1826,8 +1823,8 @@ bool CemuleApp::IsEd2kLinkInClipboard(LPCSTR pszLinkType, int iLinkTypeLen)
 				LPCSTR pszText = (LPCSTR)GlobalLock(hText);
 				if (pszText != NULL)
 				{
-					while (isspace((unsigned char)*pszText))
-						pszText++;
+					while (isspace(*pszText))
+						++pszText;
 					bFoundLink = (_strnicmp(pszText, pszLinkType, iLinkTypeLen) == 0);
 					GlobalUnlock(hText);
 				}
@@ -1857,42 +1854,38 @@ void CemuleApp::QueueDebugLogLine(bool bAddToStatusbar, LPCTSTR line, ...)
 	if (!thePrefs.GetVerbose())
 		return;
 
-	m_queueLock.Lock();
-
-	TCHAR bufferline[1000];
+	CString bufferline;
 	va_list argptr;
 	va_start(argptr, line);
-	int iLen = _vsntprintf(bufferline, _countof(bufferline), line, argptr);
+	bufferline.FormatV(line, argptr);
 	va_end(argptr);
-	if (iLen > 0)
-	{
-		SLogItem* newItem = new SLogItem;
+	if (!bufferline.IsEmpty()) {
+		SLogItem *newItem = new SLogItem;
 		newItem->uFlags = LOG_DEBUG | (bAddToStatusbar ? LOG_STATUSBAR : 0);
-		newItem->line.SetString(bufferline, iLen);
-		m_QueueDebugLog.AddTail(newItem);
-	}
+		newItem->line = bufferline;
 
-	m_queueLock.Unlock();
+		m_queueLock.Lock();
+		m_QueueDebugLog.AddTail(newItem);
+		m_queueLock.Unlock();
+	}
 }
 
 void CemuleApp::QueueLogLine(bool bAddToStatusbar, LPCTSTR line, ...)
 {
-	m_queueLock.Lock();
-
-	TCHAR bufferline[1000];
+	CString bufferline;
 	va_list argptr;
 	va_start(argptr, line);
-	int iLen = _vsntprintf(bufferline, _countof(bufferline), line, argptr);
+	bufferline.FormatV(line, argptr);
 	va_end(argptr);
-	if (iLen > 0)
-	{
-		SLogItem* newItem = new SLogItem;
+	if (!bufferline.IsEmpty()) {
+		SLogItem *newItem = new SLogItem;
 		newItem->uFlags = bAddToStatusbar ? LOG_STATUSBAR : 0;
-		newItem->line.SetString(bufferline, iLen);
-		m_QueueLog.AddTail(newItem);
-	}
+		newItem->line = bufferline;
 
-	m_queueLock.Unlock();
+		m_queueLock.Lock();
+		m_QueueLog.AddTail(newItem);
+		m_queueLock.Unlock();
+	}
 }
 
 void CemuleApp::QueueDebugLogLineEx(UINT uFlags, LPCTSTR line, ...)
@@ -1900,49 +1893,44 @@ void CemuleApp::QueueDebugLogLineEx(UINT uFlags, LPCTSTR line, ...)
 	if (!thePrefs.GetVerbose())
 		return;
 
-	m_queueLock.Lock();
-
-	TCHAR bufferline[1000];
+	CString bufferline;
 	va_list argptr;
 	va_start(argptr, line);
-	int iLen = _vsntprintf(bufferline, _countof(bufferline), line, argptr);
+	bufferline.FormatV(line, argptr);
 	va_end(argptr);
-	if (iLen > 0)
-	{
+	if (!bufferline.IsEmpty()) {
 		SLogItem* newItem = new SLogItem;
 		newItem->uFlags = uFlags | LOG_DEBUG;
-		newItem->line.SetString(bufferline, iLen);
-		m_QueueDebugLog.AddTail(newItem);
-	}
+		newItem->line = bufferline;
 
-	m_queueLock.Unlock();
+		m_queueLock.Lock();
+		m_QueueDebugLog.AddTail(newItem);
+		m_queueLock.Unlock();
+	}
 }
 
 void CemuleApp::QueueLogLineEx(UINT uFlags, LPCTSTR line, ...)
 {
-	m_queueLock.Lock();
-
-	TCHAR bufferline[1000];
+	CString bufferline;
 	va_list argptr;
 	va_start(argptr, line);
-	int iLen = _vsntprintf(bufferline, _countof(bufferline), line, argptr);
+	bufferline.FormatV(line, argptr);
 	va_end(argptr);
-	if (iLen > 0)
-	{
-		SLogItem* newItem = new SLogItem;
+	if (!bufferline.IsEmpty()) {
+		SLogItem *newItem = new SLogItem;
 		newItem->uFlags = uFlags;
-		newItem->line.SetString(bufferline, iLen);
-		m_QueueLog.AddTail(newItem);
-	}
+		newItem->line = bufferline;
 
-	m_queueLock.Unlock();
+		m_queueLock.Lock();
+		m_QueueLog.AddTail(newItem);
+		m_queueLock.Unlock();
+	}
 }
 
 void CemuleApp::HandleDebugLogQueue()
 {
 	m_queueLock.Lock();
-	while (!m_QueueDebugLog.IsEmpty())
-	{
+	while (!m_QueueDebugLog.IsEmpty()) {
 		const SLogItem* newItem = m_QueueDebugLog.RemoveHead();
 		if (thePrefs.GetVerbose())
 			Log(newItem->uFlags, _T("%s"), (LPCTSTR)newItem->line);
@@ -1954,8 +1942,7 @@ void CemuleApp::HandleDebugLogQueue()
 void CemuleApp::HandleLogQueue()
 {
 	m_queueLock.Lock();
-	while (!m_QueueLog.IsEmpty())
-	{
+	while (!m_QueueLog.IsEmpty()) {
 		const SLogItem* newItem = m_QueueLog.RemoveHead();
 		Log(newItem->uFlags, _T("%s"), (LPCTSTR)newItem->line);
 		delete newItem;
@@ -1966,8 +1953,7 @@ void CemuleApp::HandleLogQueue()
 void CemuleApp::ClearDebugLogQueue(bool bDebugPendingMsgs)
 {
 	m_queueLock.Lock();
-	while(!m_QueueDebugLog.IsEmpty())
-	{
+	while (!m_QueueDebugLog.IsEmpty()) {
 		if (bDebugPendingMsgs)
 			TRACE(_T("Queued dbg log msg: %s\n"), (LPCTSTR)m_QueueDebugLog.GetHead()->line);
 		delete m_QueueDebugLog.RemoveHead();
@@ -2176,7 +2162,7 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD dwCtrlType) noexcept
 
 	if (thePrefs.GetDebug2Disk()) {
 		static TCHAR szCtrlType[40];
-		LPCTSTR pszCtrlType = NULL;
+		LPCTSTR pszCtrlType;
 		switch (dwCtrlType) {
 		case CTRL_C_EVENT:
 			pszCtrlType = _T("CTRL_C_EVENT");
@@ -2297,5 +2283,5 @@ bool CemuleApp::IsVistaThemeActive() const
 
 bool CemuleApp::IsWinSock2Available() const
 {
-	return LOBYTE(m_wsaData.wVersion) == 2 && HIBYTE(m_wsaData.wVersion ) == 2;
+	return m_wsaData.wVersion == MAKEWORD(2, 2);
 }

@@ -278,7 +278,7 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 						DWORD dwFlags = *((uint32*)(packet + sizeof(LoginAnswer_Struct)));
 						if (thePrefs.GetDebugServerTCPLevel() > 0){
 							CString strInfo;
-							strInfo.AppendFormat(_T("  TCP Flags=0x%08lx"), dwFlags);
+							strInfo.Format(_T("  TCP Flags=0x%08lx"), dwFlags);
 							const DWORD dwKnownBits = SRV_TCPFLG_COMPRESSION | SRV_TCPFLG_NEWTAGS | SRV_TCPFLG_UNICODE | SRV_TCPFLG_RELATEDSEARCH | SRV_TCPFLG_TYPETAGINTEGER | SRV_TCPFLG_LARGEFILES | SRV_TCPFLG_TCPOBFUSCATION;
 							if (dwFlags & ~dwKnownBits)
 								strInfo.AppendFormat(_T("  ***UnkBits=0x%08lx"), dwFlags & ~dwKnownBits);
@@ -727,7 +727,7 @@ void CServerSocket::OnError(int nErrorCode)
 		DebugLogError(GetResString(IDS_ERR_SOCKET), (LPCTSTR)cur_server->GetListName(), cur_server->GetAddress(), cur_server->GetPort(), (LPCTSTR)GetFullErrorMessage(nErrorCode));
 }
 
-bool CServerSocket::PacketReceived(Packet* packet)
+bool CServerSocket::PacketReceived(Packet *packet)
 {
 #ifndef _DEBUG
 	try {
@@ -795,7 +795,7 @@ void CServerSocket::SetConnectionState(int newstate)
 	}
 }
 
-void CServerSocket::SendPacket(Packet* packet, bool delpacket, bool controlpacket, uint32 actualPayloadSize, bool bForceImmediateSend)
+void CServerSocket::SendPacket(Packet *packet, bool delpacket, bool controlpacket, uint32 actualPayloadSize, bool bForceImmediateSend)
 {
 	m_dwLastTransmission = ::GetTickCount();
 	CEMSocket::SendPacket(packet, delpacket, controlpacket, actualPayloadSize, bForceImmediateSend);

@@ -439,10 +439,7 @@ void CIPFilterDlg::OnBnClickedAppend()
 				// add filename and extension of uncompressed file to temporary file
 				CString strUncompressedFileName = gz.GetUncompressedFileName();
 				if (!strUncompressedFileName.IsEmpty())
-				{
-					strTempUnzipFilePath += _T('.');
-					strTempUnzipFilePath += strUncompressedFileName;
-				}
+					strTempUnzipFilePath.AppendFormat(_T(".%s"), (LPCTSTR)strUncompressedFileName);
 
 				if (gz.Extract(strTempUnzipFilePath))
 				{

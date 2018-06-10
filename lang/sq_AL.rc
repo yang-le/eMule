@@ -1365,8 +1365,6 @@ BEGIN
     IDS_SEARCHAUTHORCOLLECTION "Koleksione nga Autori"
     IDS_ERR_DUPL_FILES      "Skedë identike e shpërndarë: ""%s"" dhe ""%s"""
     IDS_A4AF                "Trajtimi i Skedave (A4AF)"
-    IDS_MOBILEMULE          "MobileMule"//!
-    IDS_ENABLEMM            "Lejo MobileMule"
     IDS_AUTOCAT_LABEL       "Auto kthim-caktim (model, i ndarë me |)"
     IDS_SHOWEXTSETTINGS     "Trego më tepër kontrolle (kontrolle të avancuara)"
     IDS_TREEOPTIONS_TRUE    "E vërtetë"
@@ -1387,13 +1385,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED
                             "Direktori e përkohësive nuk duhet vendosur në direktorinë e instalimit të eMule."
     IDS_WRN_INCTEMP_SAME    "Direktoritë e hyrjeve dhe të përkohësive nuk duhet të jenë njësoj."
-    IDS_MMFAILED            "Krijimi i Folesë MobileMule dështoi!"
-    IDS_MMSTARTED           "Serveri MobileMule u nis në Portin %u. Versioni i protokollit: %s"
     IDS_SHOWDWLPERCENTAGE   "Shfaqje e përqindjes së shkarkimit në shiritin e progresit"
     IDS_TBN_ONNEWDOWNLOAD   "Shtohet një shkarkesë"
     IDS_ARTIST              "Artisti"
     IDS_ALBUM               "Albumi"
-    IDS_MMGUIDELINK         "Guida MobileMule"
 END
 
 STRINGTABLE
@@ -1492,7 +1487,6 @@ BEGIN
                             "Shkarkimi dhe instalimi i gjuhës së zgjedhur dll nga %s dështoi!"
     IDS_ERR_BADFOLDER       "Dosje e pavlerë.\nDosja nuk mund të krijohet. Ju lutemi verifikoni emrin dhe pozicionin."
     IDS_AUTOREMOVEFD        "Autofshirje shkarkesave të përfunduara"
-    IDS_MM_BLOCK            "Për MobileMule u shënuan 3 hyrje të dështuara - çdo përpjekje e mëtejshme bllokohet për 10 min!"
 END
 
 STRINGTABLE
@@ -1518,7 +1512,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MM_NEWUSER          "Përdoruesi i ri hyri me sukses në Serverin MobileMule"
     IDS_RADCLIENTS          "Nga klientë të njohur"
     IDS_KADUDPPORTERR       "Konflikte porti UDP në Kad, si me portin e Zgjer. UDP në eMule, ose me portin UDP të Serverit eMule. Porti ndryshoi në %u."
     IDS_CONFIRM_FILEDELETE  "Vërtet do e fshini nga disku skedën e zgjedhur?"
@@ -1542,7 +1535,7 @@ BEGIN
     IDS_TEXTLABELS          "Etiketat e Tekstit"
     IDS_ENABLETEXTLABELS    "Trego Etiketat e Tekstit"
     IDS_CUSTOMIZETOOLBAR    "Porosite shiritin e mjeteve..."
-    IDS_MINBITRATE          "Bitrate min. [kBit/s]"
+    IDS_MINBITRATE          "Bitrate min. [kbit/s]"
     IDS_KAD_RECHECKFW       "Riverifiko Fajruollin"
     IDS_SHAREDTITLE         "eD2K|Kad i Shpërndarë"
     IDS_FIREWALLED          "Me fajruoll'"

@@ -1290,8 +1290,6 @@ BEGIN
     IDS_VERSION             "Versão"
     IDS_PASTE               "Colar"
     IDS_A4AF                "Gestão de fontes"
-    IDS_MOBILEMULE          "MobileMule"//!
-    IDS_ENABLEMM            "Activar MobileMule"
     IDS_AUTOCAT_LABEL       "Auto-Atribuição de Categoria (padrão, separado por |)"
     IDS_SHOWEXTSETTINGS     "Mostrar mais controlos (controlos em modo avançado)"
     IDS_TREEOPTIONS_TRUE    "Verdadeiro"
@@ -1312,13 +1310,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "A directoria de ficheiros temporários não pode ser definida numa directoria de instalação do eMule."
     IDS_WRN_INCTEMP_SAME    "As directorias de ficheiros recebidos e temporários não podem ser a mesma."
-    IDS_MMFAILED            "Falhou a criação do Socket para o MobileMule!"
-    IDS_MMSTARTED           "Servidor MobileMule iniciado na Porta %u. Versão do protocolo: %s"
     IDS_SHOWDWLPERCENTAGE   "Mostrar percentagem do ficheiro na barra de progresso"
     IDS_TBN_ONNEWDOWNLOAD   "Download adicionado"
     IDS_ARTIST              "Artista"
     IDS_ALBUM               "Album"//!
-    IDS_MMGUIDELINK         "Guia MobileMule"
 END
 
 STRINGTABLE 
@@ -1418,7 +1413,6 @@ BEGIN
                             "Falhou a transferência e instalação dos ficheiros dll escolhidos a partir de %s!"
     IDS_ERR_BADFOLDER       "Pasta Inválida.\nPasta não pode ser criada. Por favor confira o nome e a localização."
     IDS_AUTOREMOVEFD        "Limpar automaticamente os downloads concluídos"
-    IDS_MM_BLOCK            "Foram registadas 3 autenticações falhadas no MobileMule - qualquer outra tentativa será bloqueada durante os próximos 10 min!"
 END
 
 STRINGTABLE 
@@ -1444,7 +1438,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Novo utilizador entrou com sucesso no servidor MobileMule"
     IDS_RADCLIENTS          "de clientes conhecidos"
     IDS_KADUDPPORTERR       "A porta UDP da Kad está em conflito ou com a porta UDP ext. do eMule ou com a porta UDP do servidor eMule. A porta foi alterada para %u."
     IDS_CONFIRM_FILEDELETE  "Deseja realmente remover todos os ficheiros seleccionados do disco?"
@@ -1468,7 +1461,7 @@ BEGIN
     IDS_TEXTLABELS          "Etiquetas de Texto"
     IDS_ENABLETEXTLABELS    "Por debaixo do ícone"
     IDS_CUSTOMIZETOOLBAR    "Personalizar Barra de Ferramentas"
-    IDS_MINBITRATE          "Bitrate min. [kBit/s]"
+    IDS_MINBITRATE          "Bitrate min. [kbit/s]"
     IDS_KAD_RECHECKFW       "Reverificar a Firewall"
     IDS_SHAREDTITLE         "Partilhas ED2K|Kad"
     IDS_FIREWALLED          "Atrás de Firewall"

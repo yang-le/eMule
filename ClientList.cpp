@@ -529,7 +529,7 @@ void CClientList::Process()
 					ASSERT( cur_client->socket != NULL && cur_client->socket->IsConnected() );
 					if (thePrefs.GetDebugClientTCPLevel() > 0)
 						DebugSend("OP_KAD_FWTCPCHECK_ACK", cur_client);
-					Packet* pPacket = new Packet(OP_KAD_FWTCPCHECK_ACK, 0, OP_EMULEPROT);
+					Packet *pPacket = new Packet(OP_KAD_FWTCPCHECK_ACK, 0, OP_EMULEPROT);
 					if (!cur_client->SafeConnectAndSendPacket(pPacket))
 						break; //cur_client = NULL;
 				}
@@ -599,7 +599,7 @@ void CClientList::Process()
 				{
 					if (thePrefs.GetDebugClientTCPLevel() > 0)
 						DebugSend("OP__BuddyPing", cur_client);
-					Packet* buddyPing = new Packet(OP_BUDDYPING, 0, OP_EMULEPROT);
+					Packet *buddyPing = new Packet(OP_BUDDYPING, 0, OP_EMULEPROT);
 					theStats.AddUpDataOverheadOther(buddyPing->size);
 					VERIFY( cur_client->SendPacket(buddyPing, true, true) );
 					cur_client->SetLastBuddyPingPongTime();
@@ -668,7 +668,7 @@ void CClientList::Process()
 	{
 		if( m_pBuddy )
 		{
-			//We are not connected anymore. Just set this buddy to KS_NONE and things will be cleared out on next cycle.
+			//We are not connected any more. Just set this buddy to KS_NONE and things will be cleared out on next cycle.
 			m_pBuddy->SetKadState(KS_NONE);
 		}
 	}

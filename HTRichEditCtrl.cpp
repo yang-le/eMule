@@ -56,7 +56,7 @@ CHTRichEditCtrl::CHTRichEditCtrl()
 	m_bNoPaint = false;
 	m_bEnErrSpace = false;
 	m_bRestoreFormat = false;
-	m_cfDefault.cbSize = sizeof(CHARFORMAT2);
+	m_cfDefault.cbSize = (UINT)sizeof(CHARFORMAT2);
 	m_bForceArrowCursor = false;
 	m_hArrowCursor = ::LoadCursor(NULL, IDC_ARROW);
 	m_bEnableSmileys = false;
@@ -181,7 +181,7 @@ void CHTRichEditCtrl::OnSize(UINT nType, int cx, int cy)
 	// use a scrollinfo which points to the top and we would thus stay at the top.
 	bool bAtEndOfScroll;
 	SCROLLINFO si;
-	si.cbSize = sizeof si;
+	si.cbSize = (UINT)sizeof si;
 	si.fMask = SIF_ALL;
 	if ((GetStyle() & WS_VSCROLL) && GetScrollInfo(SB_VERT, &si))
 		bAtEndOfScroll = (si.nPos >= (int)(si.nMax - si.nPage));
@@ -251,15 +251,10 @@ void CHTRichEditCtrl::Add(LPCTSTR pszMsg, int iLen)
 
 void CHTRichEditCtrl::AddTyped(LPCTSTR pszMsg, int iLen, UINT eMsgType)
 {
-	if (m_hWnd == NULL)
-	{
-		CString strLine;
-		strLine = (TCHAR)(eMsgType & LOGMSGTYPEMASK);
-		strLine += pszMsg;
-		m_astrBuff.Add(strLine);
-	}
-	else
-	{
+	if (m_hWnd == NULL) {
+		CString strLine((TCHAR)(eMsgType & LOGMSGTYPEMASK));
+		m_astrBuff.Add(strLine + pszMsg);
+	} else {
 		FlushBuffer();
 		AddLine(pszMsg, iLen, false, GetLogLineColor(eMsgType & LOGMSGTYPEMASK));
 	}
@@ -281,7 +276,7 @@ void CHTRichEditCtrl::AddLine(LPCTSTR pszMsg, int iLen, bool bLink, COLORREF cr,
 	// Use the 'ScrollInfo' only, if there is a scrollbar available, otherwise we would
 	// use a scrollinfo which points to the top and we would thus stay at the top.
 	SCROLLINFO si;
-	si.cbSize = sizeof si;
+	si.cbSize = (UINT)sizeof si;
 	si.fMask = SIF_ALL;
 	if ((GetStyle() & WS_VSCROLL) && GetScrollInfo(SB_VERT, &si)) {
 		// use some threshold to determine if at end or "very near" at end, unfortunately
@@ -820,7 +815,7 @@ void CHTRichEditCtrl::SetFont(CFont* pFont, BOOL bRedraw)
 	// use a scrollinfo which points to the top and we would thus stay at the top.
 	bool bAtEndOfScroll;
 	SCROLLINFO si;
-	si.cbSize = sizeof si;
+	si.cbSize = (UINT)sizeof si;
 	si.fMask = SIF_ALL;
 	if ((GetStyle() & WS_VSCROLL) && GetScrollInfo(SB_VERT, &si))
 		bAtEndOfScroll = (si.nPos >= (int)(si.nMax - si.nPage));
@@ -831,7 +826,7 @@ void CHTRichEditCtrl::SetFont(CFont* pFont, BOOL bRedraw)
 	pFont->GetLogFont(&lf);
 
 	CHARFORMAT cf = {};
-	cf.cbSize = sizeof cf;
+	cf.cbSize = (UINT)sizeof cf;
 
 	cf.dwMask |= CFM_BOLD;
 	cf.dwEffects |= (lf.lfWeight == FW_BOLD) ? CFE_BOLD : 0;
@@ -906,7 +901,7 @@ void CHTRichEditCtrl::ApplySkin()
 		// use a scrollinfo which points to the top and we would thus stay at the top.
 		bool bAtEndOfScroll;
 		SCROLLINFO si;
-		si.cbSize = sizeof si;
+		si.cbSize = (UINT)sizeof si;
 		si.fMask = SIF_ALL;
 		if ((GetStyle() & WS_VSCROLL) && GetScrollInfo(SB_VERT, &si))
 			bAtEndOfScroll = (si.nPos >= (int)(si.nMax - si.nPage));

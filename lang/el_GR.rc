@@ -1261,8 +1261,6 @@ BEGIN
     IDS_VERSION             "Έκδοση"
     IDS_PASTE               "Επικόλληση"
     IDS_A4AF                "Διαχείρηση πηγών"
-    IDS_MOBILEMULE          "MobileMule" //!
-    IDS_ENABLEMM            "Ενεργοποίηση MobileMule"
     IDS_AUTOCAT_LABEL       "Αυτόματη κατηγοριοποίηση (φράσεις, χωρισμένες με |)"
     IDS_SHOWEXTSETTINGS     "Περισσότερα εργαλεία (εκτεταμένες επιλογές)"
     IDS_TREEOPTIONS_TRUE    "Αληθές"
@@ -1281,13 +1279,10 @@ BEGIN
     IDS_WRN_INCFILE_RESERVED "Ο φάκελος των εισερχομένων δεν πρέπει να βρίσκεται στον φάκελο εγκατάστασης του eMule"
     IDS_WRN_TEMPFILES_RESERVED "Ο φάκελος προσωρινών αρχείων δεν πρέπει να βρίσκεται στον φάκελο εγκατάστασης του eMule"
     IDS_WRN_INCTEMP_SAME    "Ο φάκελος των εισερχομένων και ο φάκελος προσωρινών αρχείων δεν πρέπει να είναι ίδιοι"
-    IDS_MMFAILED            "Αποτυχία κατά την δημιουργία MobileMule Socket!"
-    IDS_MMSTARTED           "Ο εξυπηρετητής MobileMule ενεργοποιήθηκε στο port %u. Έκδοση πρωτοκόλλου: %s"
     IDS_SHOWDWLPERCENTAGE   "Προβολή ποσοστού ολοκλήρωσης στην μπάρα προόδου"
     IDS_TBN_ONNEWDOWNLOAD   "Πρόσθεση κατεβάσματος"
     IDS_ARTIST              "Καλλιτέχνης"
     IDS_ALBUM               "Δίσκος"
-    IDS_MMGUIDELINK         "Βοηθός MobileMule"
 END
 
 STRINGTABLE 
@@ -1384,7 +1379,6 @@ BEGIN
     IDS_ERR_FAILEDDOWNLOADLANG "Αποτυχία κατά το κατέβασμα και εγκατάσταση του αρχείου dll της επιλεγμένης γλώσσας από %s!"
     IDS_ERR_BADFOLDER       "Μη έγκυρος φάκελος.\nΟ φάκελος δεν μπορεί να δημιουργηθεί. Παρακαλώ ελέγξτε όνομα και τοποθεσία."
     IDS_AUTOREMOVEFD        "Αυτόματη απομάκρυνση ολοκληρωμένων κατεβασμάτων"
-    IDS_MM_BLOCK            "3 αποτυχημένες απόπειρες σύνδεσης στο MobileMule καταγράφηκαν - κάθε επιπλέον απόπειρα θα εμποδιστεί για 10 λεπτά!"
 END
 
 STRINGTABLE 
@@ -1409,7 +1403,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Νέος χρήστης συνδέθηκε στον εξυπηρετητή MobileMule επιτυχώς"
     IDS_RADCLIENTS          "από γνωστούς χρήστες"
     IDS_KADUDPPORTERR       "Η UDP port του Kademlia συγκρούεται με την εξωτερική UDP port του eMule ή του εξυπηρετητή του eMule. Η ρύθμιση της port άλλαξε σε %u."
     IDS_CONFIRM_FILEDELETE  "Θέλετε πράγματι να απομακρύνετε όλα τα επιλεγμένα αρχεία από τον δίσκο;"
@@ -1433,7 +1426,7 @@ BEGIN
     IDS_TEXTLABELS          "Κείμενο"
     IDS_ENABLETEXTLABELS    "Κάτω από την εικόνα"
     IDS_CUSTOMIZETOOLBAR    "Προσαρμογή μπάρας..."
-    IDS_MINBITRATE          "Ελάχ. bitrate [kBit/δευτ]"
+    IDS_MINBITRATE          "Ελάχ. bitrate [kbit/δευτ]"
     IDS_KAD_RECHECKFW       "Επανέλεγχος Firewall"
     IDS_SHAREDTITLE         "eD2K|Kad (Κοινόχρηστο)"
     IDS_FIREWALLED          "Firewalled" //!

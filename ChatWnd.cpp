@@ -119,16 +119,16 @@ void CChatWnd::ShowFriendMsgDetails(CFriend* pFriend)
 		if (linkedc)
 			SetDlgItemText(IDC_FRIENDS_NAME_EDIT, linkedc->GetUserName());
 		else
-			SetDlgItemText(IDC_FRIENDS_NAME_EDIT, (pFriend->m_strName.IsEmpty() ? CString(_T("?")) : pFriend->m_strName));
+			SetDlgItemText(IDC_FRIENDS_NAME_EDIT, (pFriend->m_strName.IsEmpty() ? _T("?") : (LPCTSTR)pFriend->m_strName));
 
 		// Hash
 		if (linkedc)
 			SetDlgItemText(IDC_FRIENDS_USERHASH_EDIT, md4str(linkedc->GetUserHash()));
 		else
-			SetDlgItemText(IDC_FRIENDS_USERHASH_EDIT, (pFriend->HasUserhash() ? md4str(pFriend->m_abyUserhash) : CString(_T("?"))));
+			SetDlgItemText(IDC_FRIENDS_USERHASH_EDIT, (pFriend->HasUserhash() ? (LPCTSTR)md4str(pFriend->m_abyUserhash) : _T("?")));
 
 		// Client
-		SetDlgItemText(IDC_FRIENDS_CLIENTE_EDIT, (linkedc ? linkedc->GetClientSoftVer() : CString(_T("?"))));
+		SetDlgItemText(IDC_FRIENDS_CLIENTE_EDIT, (linkedc ? (LPCTSTR)linkedc->GetClientSoftVer() : _T("?")));
 
 		// Identification
 		if (linkedc && linkedc->Credits())

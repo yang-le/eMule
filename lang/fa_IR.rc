@@ -1405,8 +1405,6 @@ BEGIN
                             "˜הÊׁב וזװדהֿ ֲבזֿ: ֿהַָב ˜ֿׁה ד׃םׁ ֿÝÚַÊ ׂםַֿם ַָ װ˜׃Ê דזַּו װֿ. ַׂ ˜ַׁ ַהַֿ־Êה ֲבזֿ SpeedSense."
     IDS_USS_STARTING        "˜הÊׁב וזװדהֿ ֲבזֿ: ַÞַֿדַÊ דÞֿדַÊם ַהַּד װֿ. ˜הÊׁב ˜ֿׁה ׃ׁÚÊ ֲבזֿ ֲÛַׂ דם װזֿ (60 ַֻהםו ַזב ֿׁ ַֽבÊ זַ˜הװ ׃ׁםÚ ־זַוֿ ָזֿ)ף"
     IDS_A4AF                "ָו ˜ַׁ ׁÝÊה דהָÚ"
-    IDS_MOBILEMULE          "דזַָםב ַםדזב"
-    IDS_ENABLEMM            "ÝÚַב ˜ֿׁה דזַָםב ַםדזב"
     IDS_AUTOCAT_LABEL       "ֿ׃Êו ָהֿם ־זֿ˜ַׁ (הדזהו,ַּֿ װֿו Êז׃״ |)ף"
     IDS_SHOWEXTSETTINGS     "«הדַםװ ˜הÊׁב וַם ָםװÊׁ (ַֽבÊ ˜הÊׁב וַם םװׁÝÊו)ף"
     IDS_TREEOPTIONS_TRUE    "ֿׁ׃Ê"
@@ -1427,8 +1425,6 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "זװו דזÞÊם (Êדזׁם)הַָםֿ ֿׁ זװו הױָ ַםדזב Þַׁׁ ָםֿׁ.ף"
     IDS_WRN_INCTEMP_SAME    "זװו Ýַםב וַם ֿׁ ַֽב ַםַּֿ ז זװו Ýַםב וַם דזÞÊם(Êדזׁם)הַָםֿ דֻב וד ַָװהֿ"
-    IDS_MMFAILED            "הַדזÝÞ ֿׁ ַםַּֿ ׃ז˜Ê דזַָםב ַםדזב"
-    IDS_MMSTARTED           "׃ׁזׁ ַםדזב דזַָםב ָׁ ׁזם זׁזֿם ַÛַׂ ָו ˜ַׁ ˜ֿׁ %u. הַׁװ ׁזÊ˜ב %s"
     IDS_SHOWDWLPERCENTAGE   "הדַםװ דÞַֿׁ ֿׁםַÝÊ װֿו ֿׁ Þ׃דÊ ָֻÊ םװׁזם "
     IDS_TBN_ONNEWDOWNLOAD   "ַָׁם ֿׁםַÝÊ װֿה ַײַÝו װֿ"
     IDS_ARTIST              "והׁדהֿ"
@@ -1437,7 +1433,6 @@ END
 STRINGTABLE 
 BEGIN
     IDS_ALBUM               "ֲבָזד"
-    IDS_MMGUIDELINK         "ַׁוהדַם דזַָםב ַםדזב"
     IDS_CD_UPLOADREQ        "ֿׁ־זַ׃Ê װֿו ַָׁם ֲבזֿ:"
     IDS_SETTINGCHANGED_RESTART 
                             "ַָׁם דװַוֿו ÊÛםםַׁÊ ַהַּד װֿו, ב״Ýַ ַםדזב ַׁ דַּֿֿ ַׁו ַהַֿׂם ˜הםֿ"
@@ -1532,8 +1527,6 @@ BEGIN
                             "ז הױָ ַָׂה ַהÊ־ַָם הװֿ ַׂ dllדזÝÞ ָו ַֿהבזֿ ˜ֿׁהצ %s!"
     IDS_ERR_BADFOLDER       "זװו ָם ַÚÊַָׁ.\׃ַ־Êה Ýזבֿׁ ּֿםֿ ַד˜ַה הַֿֿׁ. ב״Ýַ הַד ז דֽב ַה ַׁ ˜ ˜הםֿ.ף"
     IDS_AUTOREMOVEFD        "ַֿהבזֿ וַם ˜ַדב װֿו ָױזׁÊ ־זֿ˜ַׁ ֽ׀Ý װזהֿ"
-    IDS_MM_BLOCK            "3 ַÊױַב הַדזÝÞ ָו ַםדזב דזַָםב ַהַּד װֿ - וׁ זהו ˜זװװ דּֿֿ ָו דֿÊ 10 ֿÞםÞו ד׃ֿזֿ ־זַוֿ װֿ"
-    IDS_MM_NEWUSER          "˜ַָׁׁ ּֿםֿ ַָ דזÝÞםÊ זַֿׁ ׃ׁזׁ-ַםדזב דזַָםב װֿ "
 END
 
 STRINGTABLE 
@@ -1541,7 +1534,7 @@ BEGIN
     IDS_TEXTLABELS          "ÊהÙםדַÊ הזÚ דÊה"
     IDS_ENABLETEXTLABELS    "הדַםװ ַהזַÚ דÊה"
     IDS_CUSTOMIZETOOLBAR    "ÊהÙםדַÊ הזַׁ ַַָׁׂ"
-    IDS_MINBITRATE          "˜דÊׁםה. ׃ׁÚÊ ַהÊÞַב ַֿֿו [kBit/s]"
+    IDS_MINBITRATE          "˜דÊׁםה. ׃ׁÚÊ ַהÊÞַב ַֿֿו [kbit/s]"
     IDS_KAD_RECHECKFW       "˜ ˜ֿׁה דּֿֿ ֿםזַׁ ֲÊװ"
     IDS_SHAREDTITLE         "ָו ַװÊַׁ˜ ׀ַװÊו װֿו eD2K|Kad"
     IDS_FIREWALLED          "ֽÝַÙÊ װֿו Êז׃״ ֿםזַׁ ֲÊװ םַ Ýַםׁזַב"

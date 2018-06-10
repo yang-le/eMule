@@ -662,7 +662,12 @@ int CAsyncSocketExLayer::DoLayerCallback(int nType, WPARAM wParam, LPARAM lParam
 
 		t_callbackMsg msg;
 		msg.pLayer = this;
-		msg.str = str;
+		if (str) {
+			rsize_t i = strlen(str) + 1;
+			msg.str = new char[i];
+			strcpy_s(msg.str, i, str);
+		} else
+			msg.str = NULL;
 		msg.wParam = wParam;
 		msg.lParam = lParam;
 		msg.nType = nType;

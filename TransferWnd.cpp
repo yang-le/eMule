@@ -1458,7 +1458,7 @@ void CTransferWnd::OnBnClickedChangeView()
 void CTransferWnd::SetWnd1Icon(EWnd1Icon iIcon)
 {
 	TBBUTTONINFO tbbi = {};
-	tbbi.cbSize = sizeof tbbi;
+	tbbi.cbSize = (UINT)sizeof tbbi;
 	tbbi.dwMask = TBIF_IMAGE;
 	tbbi.iImage = iIcon;
 	m_btnWnd1->SetButtonInfo((int)GetWindowLongPtr(*m_btnWnd1, GWLP_ID), &tbbi);
@@ -1467,7 +1467,7 @@ void CTransferWnd::SetWnd1Icon(EWnd1Icon iIcon)
 void CTransferWnd::SetWnd2Icon(EWnd2Icon iIcon)
 {
 	TBBUTTONINFO tbbi = {};
-	tbbi.cbSize = sizeof tbbi;
+	tbbi.cbSize = (UINT)sizeof tbbi;
 	tbbi.dwMask = TBIF_IMAGE;
 	tbbi.iImage = iIcon;
 	m_btnWnd2->SetButtonInfo((int)GetWindowLongPtr(*m_btnWnd2, GWLP_ID), &tbbi);

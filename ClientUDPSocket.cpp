@@ -251,7 +251,7 @@ bool CClientUDPSocket::ProcessPacket(const BYTE* packet, UINT size, uint8 opcode
 				{
 					PokeUInt32(const_cast<BYTE*>(packet)+10, ip);
 					PokeUInt16(const_cast<BYTE*>(packet)+14, port);
-					Packet* response = new Packet(OP_EMULEPROT);
+					Packet *response = new Packet(OP_EMULEPROT);
 					response->opcode = OP_REASKCALLBACKTCP;
 					response->pBuffer = new char[size];
 					memcpy(response->pBuffer, packet+10, size-10);
@@ -281,7 +281,7 @@ bool CClientUDPSocket::ProcessPacket(const BYTE* packet, UINT size, uint8 opcode
 					DebugSend("OP__FileNotFound", NULL);
 				}
 
-				Packet* response = new Packet(OP_FILENOTFOUND,0,OP_EMULEPROT);
+				Packet *response = new Packet(OP_FILENOTFOUND,0,OP_EMULEPROT);
 				theStats.AddUpDataOverheadFileRequest(response->size);
 				if (sender != NULL)
 					SendPacket(response, ip, port, sender->ShouldReceiveCryptUDPPackets(), sender->GetUserHash(), false, 0);
@@ -331,7 +331,7 @@ bool CClientUDPSocket::ProcessPacket(const BYTE* packet, UINT size, uint8 opcode
 					data_out.WriteUInt16((uint16)(theApp.uploadqueue->GetWaitingPosition(sender)));
 					if (thePrefs.GetDebugClientUDPLevel() > 0)
 						DebugSend("OP__ReaskAck", sender);
-					Packet* response = new Packet(&data_out, OP_EMULEPROT);
+					Packet *response = new Packet(&data_out, OP_EMULEPROT);
 					response->opcode = OP_REASKACK;
 					theStats.AddUpDataOverheadFileRequest(response->size);
 					SendPacket(response, ip, port, sender->ShouldReceiveCryptUDPPackets(), sender->GetUserHash(), false, 0);
@@ -353,7 +353,7 @@ bool CClientUDPSocket::ProcessPacket(const BYTE* packet, UINT size, uint8 opcode
 					{
 						if (thePrefs.GetDebugClientUDPLevel() > 0)
 							DebugSend("OP__QueueFull", NULL);
-						Packet* response = new Packet(OP_QUEUEFULL,0,OP_EMULEPROT);
+						Packet *response = new Packet(OP_QUEUEFULL,0,OP_EMULEPROT);
 						theStats.AddUpDataOverheadFileRequest(response->size);
 						SendPacket(response, ip, port, false, NULL, false, 0); // we cannot answer this one encrypted since we dont know this client
 					}
@@ -502,12 +502,12 @@ SocketSentBytes CClientUDPSocket::SendControlData(uint32 maxNumberOfBytesToSend,
 	sendLocker.Lock();
 
 	while (!controlpacket_queue.IsEmpty() && !IsBusy() && sentBytes < maxNumberOfBytesToSend) { // ZZ:UploadBandWithThrottler (UDP)
-		UDPPack* cur_packet = controlpacket_queue.RemoveHead();
+		UDPPack *cur_packet = controlpacket_queue.RemoveHead();
 		if (::GetTickCount() < cur_packet->dwTime + UDPMAXQUEUETIME) {
 			uint32 nLen = cur_packet->packet->size + 2;
 			int cLen = cur_packet->bEncrypt && (theApp.GetPublicIP() > 0 || cur_packet->bKad)
 				? EncryptOverheadSize(cur_packet->bKad) : 0;
-			uchar* sendbuffer = new uchar[nLen + cLen];
+			uchar *sendbuffer = new uchar[nLen + cLen];
 			memcpy(sendbuffer+cLen, cur_packet->packet->GetUDPHeader(), 2);
 			memcpy(sendbuffer+cLen+2, cur_packet->packet->pBuffer, cur_packet->packet->size);
 
@@ -534,7 +534,7 @@ SocketSentBytes CClientUDPSocket::SendControlData(uint32 maxNumberOfBytesToSend,
 
 	sendLocker.Unlock();
 
-	return SocketSentBytes{true, 0, sentBytes};
+	return SocketSentBytes{0, sentBytes, true};
 // <-- ZZ:UploadBandWithThrottler (UDP)
 }
 
@@ -553,7 +553,7 @@ int CClientUDPSocket::SendTo(uchar* lpBuf, int nBufLen, uint32 dwIP, uint16 nPor
 	return result;
 }
 
-bool CClientUDPSocket::SendPacket(Packet* packet, uint32 dwIP, uint16 nPort, bool bEncrypt, const uchar* pachTargetClientHashORKadID, bool bKad, uint32 nReceiverVerifyKey)
+bool CClientUDPSocket::SendPacket(Packet *packet, uint32 dwIP, uint16 nPort, bool bEncrypt, const uchar* pachTargetClientHashORKadID, bool bKad, uint32 nReceiverVerifyKey)
 {
 	UDPPack* newpending = new UDPPack;
 	newpending->dwIP = dwIP;

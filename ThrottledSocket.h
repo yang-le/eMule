@@ -2,10 +2,11 @@
 
 #pragma once
 
-struct SocketSentBytes {
-	bool	success;
+struct SocketSentBytes
+{
 	uint32	sentBytesStandardPackets;
 	uint32	sentBytesControlPackets;
+	bool	success;
 };
 
 class ThrottledControlSocket

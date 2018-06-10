@@ -41,6 +41,7 @@ public:
 	CServerConnect();
 	~CServerConnect();
 	CServerConnect(const CServerConnect&) = delete;
+	CServerConnect& operator=(const CServerConnect&) = delete;
 
 	void	ConnectionFailed(CServerSocket* sender);
 	void	ConnectionEstablished(CServerSocket* sender);
@@ -53,9 +54,9 @@ public:
 
 	void	CheckForTimeout();
 	void	DestroySocket(CServerSocket* pSck);	// safe socket closure and destruction
-	bool	SendPacket(Packet* packet,bool delpacket = true, CServerSocket* to = 0);
+	bool	SendPacket(Packet *packet,bool delpacket = true, CServerSocket* to = 0);
 	bool	IsUDPSocketAvailable() const { return udpsocket != NULL; }
-	bool	SendUDPPacket(Packet* packet,CServer* host, bool delpacket = false, uint16 nSpecialPort = 0, BYTE* pRawPacket = NULL, uint32 nLen = 0);
+	bool	SendUDPPacket(Packet *packet,CServer* host, bool delpacket = false, uint16 nSpecialPort = 0, BYTE* pRawPacket = NULL, uint32 nLen = 0);
 	void	KeepConnectionAlive();
 	bool	Disconnect();
 	bool	IsConnecting() const	{ return connecting; }

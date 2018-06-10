@@ -1293,8 +1293,6 @@ BEGIN
     IDS_VERSION             "Bertsioa"
     IDS_PASTE               "Itsatsi"
     IDS_A4AF                "Iturriak"
-    IDS_MOBILEMULE          "MobileMule"
-    IDS_ENABLEMM            "MobileMule desaktibatu"
     IDS_AUTOCAT_LABEL       "Kategoria esleitu (formatua, |-z banandurik)"
     IDS_SHOWEXTSETTINGS     "Kontrol gehiago erakutsi (kontrol aurreratuak)"
     IDS_TREEOPTIONS_TRUE    "Egia"
@@ -1315,13 +1313,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Fitxategi tenporalen karpeta ez da eMuleren instalazio karpeta barruan egon behar."
     IDS_WRN_INCTEMP_SAME    "Jaitsitako fitxategien karpeta eta fitxategi tenporalena ezin dira berdina izan."
-    IDS_MMFAILED            "Errorea MobileMule socket-a sortzean!"
-    IDS_MMSTARTED           "MobileMule zerbitzaria sortu da %u portuan. Protokolo bertsioa: %s"
     IDS_SHOWDWLPERCENTAGE   "Aurrerapen barran jaitsiera portzentaia erakutsi"
     IDS_TBN_ONNEWDOWNLOAD   "Jaitsiera gehitu da"
     IDS_ARTIST              "Egilea"
     IDS_ALBUM               "Albuma"
-    IDS_MMGUIDELINK         "MobileMule gida"
 END
 
 STRINGTABLE 
@@ -1421,12 +1416,10 @@ BEGIN
                             "Errorea aukeratutako hizkuntza jaitsi eta instalatzerakoan (dll fitxategia) %s-tik!"
     IDS_ERR_BADFOLDER       "Baliogabeko karpeta.\nEzin da karpeta sortu. Izena eta kokapena aztertu."
     IDS_AUTOREMOVEFD        "Osatutako jaitsierak automatikoki garbitu"
-    IDS_MM_BLOCK            "MobileMule-ra 3 konexiok huts egin dute - beste edozein saiakuntza blokeatuta dago 10 minutuz!"
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Erabiltzaile berria konektatu da MobileMule zerbitzarira"
     IDS_RADCLIENTS          "bezero ezagunengandik"
     IDS_KADUDPPORTERR       "Kademlia-ren UDP portuak beste UDP portu batekin koinziditzen du. Portu berria %u da."
     IDS_CONFIRM_FILEDELETE  "Aukeratutako fitxategi guztiak diskotik ezabatu nahi dituzu?"
@@ -1471,7 +1464,7 @@ BEGIN
     IDS_TEXTLABELS          "Testu etiketak"
     IDS_ENABLETEXTLABELS    "Ikono azpian"
     IDS_CUSTOMIZETOOLBAR    "Tresna barra pertsonalizatu"
-    IDS_MINBITRATE          "Bitrate min. [kBit/s]"
+    IDS_MINBITRATE          "Bitrate min. [kbit/s]"
     IDS_KAD_RECHECKFW       "Suhesia aztertu"
     IDS_SHAREDTITLE         "ED2K|Kad konpartitutakoa"
     IDS_FIREWALLED          "Suhesia erabiltzen"

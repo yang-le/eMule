@@ -1284,8 +1284,6 @@ BEGIN
     IDS_VERSION             "Version" //!
     IDS_PASTE               "Klistra in"
     IDS_A4AF                "Källhantering"
-    IDS_MOBILEMULE          "MobilMule"
-    IDS_ENABLEMM            "Aktivera MobilMule"
     IDS_AUTOCAT_LABEL       "Auto Kategoritilldelning (mönster, skiljs med |)"
     IDS_SHOWEXTSETTINGS     "Visa fler inställningar (avancerade grundinställningar)"
     IDS_TREEOPTIONS_TRUE    "Sant"
@@ -1306,13 +1304,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Temponära filer mappen får inte vara samma som eMules installationsmapp."
     IDS_WRN_INCTEMP_SAME    "Inkommande filer mappen och Temponära filer mappen får inte vara samma mapp."
-    IDS_MMFAILED            "Misslyckades att skapa MobileMule socket!"
-    IDS_MMSTARTED           "MobileMule server startade på port %u. Protokollversion: %s"
     IDS_SHOWDWLPERCENTAGE   "Visa procent av nedladdning i progressmätaren"
     IDS_TBN_ONNEWDOWNLOAD   "Tillagd nedladdning"
     IDS_ARTIST              "Artist" //!
     IDS_ALBUM               "Album" //!
-    IDS_MMGUIDELINK         "MobileMule guide"
 END
 
 STRINGTABLE 
@@ -1412,12 +1407,10 @@ BEGIN
                             "Misslyckades att ladda ner och installera språkfilen från %s!"
     IDS_ERR_BADFOLDER       "Felaktig katalog.\nKatalogen kan inte skapas. Kolla namnet och katalogstrukturen."
     IDS_AUTOREMOVEFD        "Rensa automatiskt slutförda nedladdningar"
-    IDS_MM_BLOCK            "Tre misslyckade inloggningar för MobileMule loggades - fortsatta försök är blockerade i 10 min!"
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Ny användare loggade in på MobileMule-Servern"
     IDS_RADCLIENTS          "från kända klienter"
     IDS_KADUDPPORTERR       "Kads UDP port är i konflikt med antingen eMules Ext UDP port eller eMules Server UDP port. Porten ändrades till %u."
     IDS_CONFIRM_FILEDELETE  "Är du säker på att du vill radera alla markerade filer från hårddisken?"
@@ -1462,7 +1455,7 @@ BEGIN
     IDS_TEXTLABELS          "Textetiketter"
     IDS_ENABLETEXTLABELS    "nedanför ikonerna"
     IDS_CUSTOMIZETOOLBAR    "Skräddarsy vertygsfält"
-    IDS_MINBITRATE          "Min. bitrate [kBit/s]"
+    IDS_MINBITRATE          "Min. bitrate [kbit/s]"
     IDS_KAD_RECHECKFW       "Kontrollera brandvägg"
     IDS_SHAREDTITLE         "Utdelade ED2K|Kad"
     IDS_FIREWALLED          "Bakom brandvägg"

@@ -16,13 +16,7 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #pragma once
 #include "MapKey.h"
-#pragma warning(push)
-#pragma warning(disable:4516) // access-declarations are deprecated; member using-declarations provide a better alternative
-#pragma warning(disable:4244) // conversion from 'type1' to 'type2', possible loss of data
-#pragma warning(disable:4100) // unreferenced formal parameter
-#pragma warning(disable:4702) // unreachable code
 #include <cryptopp/rsa.h>
-#pragma warning(pop)
 
 #define	 MAXPUBKEYSIZE		80
 
@@ -72,6 +66,7 @@ public:
 	explicit CClientCredits(const uchar* key);
 	~CClientCredits();
 	CClientCredits(const CClientCredits&) = delete;
+	CClientCredits& operator=(const CClientCredits&) = delete;
 
 	const uchar*	GetKey() const				{return m_pCredits->abyKey;}
 	uchar*	GetSecureIdent()					{return m_abyPublicKey;}

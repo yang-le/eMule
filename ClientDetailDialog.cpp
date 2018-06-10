@@ -91,8 +91,8 @@ BOOL CClientDetailPage::OnSetActive()
 	if (m_bDataChanged) {
 		CUpDownClient* client = static_cast<CUpDownClient *>((*m_paClients)[0]);
 
-		SetDlgItemText(IDC_DNAME, (client->GetUserName() ? client->GetUserName() : CString(_T("?"))));
-		SetDlgItemText(IDC_DHASH, (client->HasValidHash() ? md4str(client->GetUserHash()) : CString(_T("?"))));
+		SetDlgItemText(IDC_DNAME, (client->GetUserName() ? client->GetUserName() : _T("?")));
+		SetDlgItemText(IDC_DHASH, (client->HasValidHash() ? (LPCTSTR)md4str(client->GetUserHash()) : _T("?")));
 		SetDlgItemText(IDC_DSOFT, client->GetClientSoftVer());
 
 		CString buffer;
@@ -117,16 +117,16 @@ BOOL CClientDetailPage::OnSetActive()
 		if (client->GetServerIP()) {
 			SetDlgItemText(IDC_DSIP, ipstr(client->GetServerIP()));
 			const CServer* cserver = theApp.serverlist->GetServerByIPTCP(client->GetServerIP(), client->GetServerPort());
-			SetDlgItemText(IDC_DSNAME, cserver ? cserver->GetListName() : CString(_T("?")));
+			SetDlgItemText(IDC_DSNAME, cserver ? (LPCTSTR)cserver->GetListName() : _T("?"));
 		} else {
 			SetDlgItemText(IDC_DSIP, _T("?"));
 			SetDlgItemText(IDC_DSNAME, _T("?"));
 		}
 
 		const CKnownFile* file = theApp.sharedfiles->GetFileByID(client->GetUploadFileID());
-		SetDlgItemText(IDC_DDOWNLOADING, file ? file->GetFileName() : CString(_T("-")));
+		SetDlgItemText(IDC_DDOWNLOADING, file ? (LPCTSTR)file->GetFileName() : _T("-"));
 
-		SetDlgItemText(IDC_UPLOADING, client->GetRequestFile() ? client->GetRequestFile()->GetFileName() : CString(_T("-")));
+		SetDlgItemText(IDC_UPLOADING, client->GetRequestFile() ? (LPCTSTR)client->GetRequestFile()->GetFileName() : _T("-"));
 		SetDlgItemText(IDC_DDUP, CastItoXBytes(client->GetTransferredDown(), false, false));
 		SetDlgItemText(IDC_DDOWN, CastItoXBytes(client->GetTransferredUp(), false, false));
 		SetDlgItemText(IDC_DAVUR, CastItoXBytes(client->GetDownloadDatarate(), false, true));

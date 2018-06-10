@@ -16,9 +16,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "emule", "emule.vcxproj", "{
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cryptlib", "..\cryptopp\cryptlib.vcxproj", "{3423EC9A-52E4-4A4D-9753-EDEBC38785EF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cximage", ".\CxImage\cximage.vcxproj", "{B8C41401-6A2B-488D-B198-B0564C2B7404}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cximage", "CxImage\cximage.vcxproj", "{B8C41401-6A2B-488D-B198-B0564C2B7404}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "id3lib", ".\id3lib\libprj\id3lib.vcxproj", "{4AACBF8D-B90F-41AD-A5BE-D5E557C668E3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "id3lib", "id3lib\libprj\id3lib.vcxproj", "{4AACBF8D-B90F-41AD-A5BE-D5E557C668E3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpng", "..\libpng\projects\visualc\libpng.vcxproj", "{E27AB0B5-84CC-47E8-8F43-34C4F3FDA71E}"
 EndProject

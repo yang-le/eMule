@@ -593,9 +593,10 @@ int CArchivePreviewDlg::ShowISOResults(int succ, archiveScannerThreadParams_s* t
 	temp.Format(_T("%s: %lu"), (LPCTSTR)GetResString(IDS_FILES), filecount);
 	SetDlgItemText(IDC_INFO_FILECOUNT, temp);
 
-	temp.Empty();
 	if (tp->ai->isoInfos.bBootable)
 		temp = GetResString(IDS_BOOTABLE);
+	else
+		temp.Empty();
 
 	if (tp->ai->isoInfos.type & ISOtype_9660) {
 		if (!temp.IsEmpty())
@@ -806,7 +807,7 @@ int CArchivePreviewDlg::ShowZipResults(int succ, archiveScannerThreadParams_s* t
 	CString temp;
 
 	if (tp->ai->bZipCentralDir)
-		temp =  GetResString(IDS_ARCPREV_DIRSUCCREAD);
+		temp = GetResString(IDS_ARCPREV_DIRSUCCREAD);
 	else {
 		temp.Format(_T("%s %s %s"), (LPCTSTR)GetResString(IDS_ARCPREV_DIRNOTFOUND)
 			, (LPCTSTR)GetResString(IDS_ARCPARSED)
@@ -913,7 +914,7 @@ int CArchivePreviewDlg::ShowZipResults(int succ, archiveScannerThreadParams_s* t
 
 	// general info / archive attribs
 
-	SetDlgItemText(IDC_INFO_ATTR, (statusEncrypted ? GetResString(IDS_PASSWPROT) : CString()));
+	SetDlgItemText(IDC_INFO_ATTR, (statusEncrypted ? (LPCTSTR)GetResString(IDS_PASSWPROT) : _T("")));
 	//... any other info?
 
 	delete tp->ai->centralDirectoryEntries;
@@ -978,7 +979,7 @@ void CArchivePreviewDlg::UpdateArchiveDisplay(bool doscan)
 	// invalidate previous scanning thread if still running
 	if (m_activeTParams != NULL) {
 		m_activeTParams->m_bIsValid = false;
-		m_activeTParams = NULL; // thread may still run but is not our active one anymore
+		m_activeTParams = NULL; // thread may still run but is not our active one any more
 	}
 	m_progressbar.SetPos(0);
 

@@ -611,12 +611,12 @@ void CListCtrlX::CheckSelectedItems(int nCurrItem)
 void CreateItemReport(CListCtrl& lv, CString& rstrReport)
 {
 	// Get nr. of listview columns
-	CHeaderCtrl* hdr = lv.GetHeaderCtrl();
+	CHeaderCtrl *hdr = lv.GetHeaderCtrl();
 	int iCols = hdr->GetItemCount();
 	if (iCols == 0)
 		return;
 	// Get max. chars per column
-	int* paiColWidths;
+	int *paiColWidths;
 	try {
 		paiColWidths = new int[iCols]();
 	} catch (...) {
@@ -626,29 +626,25 @@ void CreateItemReport(CListCtrl& lv, CString& rstrReport)
 	int iItems = lv.GetItemCount();
 
 //	memset(paiColWidths, 0, (sizeof *paiColWidths) * iCols);
-	for (int iCol = 0; iCol < iCols; iCol++)
-	{
+	for (int iCol = 0; iCol < iCols; ++iCol) {
 		LVCOLUMN lvc;
 		lvc.mask = LVCF_TEXT | LVCF_WIDTH;
 		lvc.pszText = szItem;
 		lvc.cchTextMax = _countof(szItem);
-		if (lv.GetColumn(iCol, &lvc) && lvc.cx > 0)
-		{
+		if (lv.GetColumn(iCol, &lvc) && lvc.cx > 0) {
 			szItem[_countof(szItem) - 1] = _T('\0');
 			int iLen = (int)_tcslen(lvc.pszText);
 			if (iLen > paiColWidths[iCol])
 				paiColWidths[iCol] = iLen;
 
-			for (int iItem = 0; iItem < iItems; iItem++)
-			{
+			for (int iItem = 0; iItem < iItems; ++iItem) {
 				LVITEM lvi;
 				lvi.mask = LVIF_TEXT;
 				lvi.iItem = iItem;
 				lvi.iSubItem = iCol;
 				lvi.pszText = szItem;
 				lvi.cchTextMax = _countof(szItem);
-				if (lv.GetItem(&lvi))
-				{
+				if (lv.GetItem(&lvi)) {
 					szItem[_countof(szItem) - 1] = _T('\0');
 					iLen = (int)_tcslen(lvi.pszText);
 					if (iLen > paiColWidths[iCol])
@@ -659,52 +655,36 @@ void CreateItemReport(CListCtrl& lv, CString& rstrReport)
 	}
 
 	CString strLine;
-	for (int iCol = 0; iCol < iCols; iCol++)
-	{
-		if (paiColWidths[iCol] > 0)
-		{
+	for (int iCol = 0; iCol < iCols; ++iCol) {
+		if (paiColWidths[iCol] > 0) {
 			LVCOLUMN lvc;
 			lvc.mask = LVCF_TEXT;
 			lvc.pszText = szItem;
 			lvc.cchTextMax = _countof(szItem);
-			if (lv.GetColumn(iCol, &lvc))
-			{
+			if (lv.GetColumn(iCol, &lvc)) {
 				szItem[_countof(szItem) - 1] = _T('\0');
-				TCHAR szFmtItem[_countof(szItem)+32];
-				_sntprintf(szFmtItem, _countof(szFmtItem), _T("%-*s"), paiColWidths[iCol] + 2, szItem);
-				szFmtItem[_countof(szFmtItem) - 1] = _T('\0');
-				strLine += szFmtItem;
+				strLine.AppendFormat(_T("%-*s"), paiColWidths[iCol] + 2, szItem);
 			}
 		}
 	}
 	if (!strLine.IsEmpty()) {
 		if (!rstrReport.IsEmpty())
 			rstrReport += _T("\r\n");
-		rstrReport += strLine;
-		rstrReport += _T("\r\n");
-		for (int i = 0; i < strLine.GetLength(); i++)
-			rstrReport += _T('-');
+		rstrReport.AppendFormat(_T("%s\r\n%s"), (LPCTSTR)strLine, (LPCTSTR)CString(_T('-'), strLine.GetLength()));
 	}
 
-	for (int iItem = 0; iItem < iItems; iItem++)
-	{
-		for (int iCol = 0; iCol < iCols; iCol++)
-		{
-			if (paiColWidths[iCol] > 0)
-			{
+	for (int iItem = 0; iItem < iItems; ++iItem) {
+		for (int iCol = 0; iCol < iCols; ++iCol) {
+			if (paiColWidths[iCol] > 0) {
 				LVITEM lvi;
 				lvi.mask = LVIF_TEXT;
 				lvi.iItem = iItem;
 				lvi.iSubItem = iCol;
 				lvi.pszText = szItem;
 				lvi.cchTextMax = _countof(szItem);
-				if (lv.GetItem(&lvi))
-				{
+				if (lv.GetItem(&lvi)) {
 					szItem[_countof(szItem) - 1] = _T('\0');
-					TCHAR szFmtItem[_countof(szItem)+32];
-					_sntprintf(szFmtItem, _countof(szFmtItem), _T("%-*s"), paiColWidths[iCol] + 2, szItem);
-					szFmtItem[_countof(szFmtItem) - 1] = _T('\0');
-					strLine += szFmtItem;
+					strLine.AppendFormat(_T("%-*s"), paiColWidths[iCol] + 2, szItem);
 				}
 			}
 		}

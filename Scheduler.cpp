@@ -42,37 +42,30 @@ CScheduler::~CScheduler(){
 	RemoveAll();
 }
 
-int CScheduler::LoadFromFile(){
+int CScheduler::LoadFromFile()
+{
 
 	CString strName;
-	CString temp;
-
 	strName.Format(_T("%spreferences.ini"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
 	CIni ini(strName, _T("Scheduler"));
 
-	UINT max=ini.GetInt(_T("Count"),0);
-	UINT count=0;
-
-	while (count<max) {
-		strName.Format(_T("Schedule#%u"),count);
-		temp=ini.GetString(_T("Title"),_T(""),strName);
-		if (!temp.IsEmpty()) {
-			Schedule_Struct* news= new Schedule_Struct();
-			news->title=temp;
-			news->day=ini.GetInt(_T("Day"),0);
-			news->enabled=ini.GetBool(_T("Enabled"));
-			news->time=ini.GetInt(_T("StartTime"));
-			news->time2=ini.GetInt(_T("EndTime"));
-			ini.SerGet(true, news->actions,
-				ARRSIZE(news->actions), _T("Actions"));
-			ini.SerGet(true, news->values,
-				ARRSIZE(news->values), _T("Values"));
-
-			AddSchedule(news);
-			count++;
-		} else break;
+	UINT max = ini.GetInt(_T("Count"), 0);
+	UINT count;
+	for (count = 0; count < max; ++count) {
+		strName.Format(_T("Schedule#%u"), count);
+		CString temp = ini.GetString(_T("Title"), _T(""), strName);
+		if (temp.IsEmpty())
+			break;
+		Schedule_Struct* news = new Schedule_Struct();
+		news->title = temp;
+		news->day = ini.GetInt(_T("Day"), 0);
+		news->enabled = ini.GetBool(_T("Enabled"));
+		news->time = ini.GetInt(_T("StartTime"));
+		news->time2 = ini.GetInt(_T("EndTime"));
+		ini.SerGet(true, news->actions, ARRSIZE(news->actions), _T("Actions"));
+		ini.SerGet(true, news->values, ARRSIZE(news->values), _T("Values"));
+		AddSchedule(news);
 	}
-
 	return count;
 }
 
@@ -91,10 +84,8 @@ void CScheduler::SaveToFile()
 		ini.WriteInt(_T("EndTime"), (int)schedule->time2);
 		ini.WriteBool(_T("Enabled"), schedule->enabled);
 
-		ini.SerGet(false, schedule->actions,
-			ARRSIZE(schedule->actions), _T("Actions"));
-		ini.SerGet(false, schedule->values,
-			ARRSIZE(schedule->values), _T("Values"));
+		ini.SerGet(false, schedule->actions, ARRSIZE(schedule->actions), _T("Actions"));
+		ini.SerGet(false, schedule->values, ARRSIZE(schedule->values), _T("Values"));
 	}
 }
 
@@ -118,67 +109,87 @@ INT_PTR CScheduler::AddSchedule(Schedule_Struct* schedule)
 	return GetCount()-1;
 }
 
-int CScheduler::Check(bool forcecheck){
+int CScheduler::Check(bool forcecheck)
+{
 	if (!thePrefs.IsSchedulerEnabled()
-		|| theApp.scheduler->GetCount()==0
-		|| theApp.emuledlg->IsClosing())
-	{
+		|| theApp.scheduler->GetCount() == 0
+		|| theApp.emuledlg->IsClosing()) {
 		return -1;
 	}
 	struct tm tmTemp;
 	CTime tNow = CTime(safe_mktime(CTime::GetCurrentTime().GetLocalTm(&tmTemp)));
 
-	if (!forcecheck && tNow.GetMinute()==m_iLastCheckedMinute)
+	if (!forcecheck && tNow.GetMinute() == m_iLastCheckedMinute)
 		return -1;
 
-	m_iLastCheckedMinute=tNow.GetMinute();
+	m_iLastCheckedMinute = tNow.GetMinute();
 	theApp.scheduler->RestoreOriginals();
 
-	for (int si=0; si<theApp.scheduler->GetCount(); ++si) {
+	for (int si = 0; si < theApp.scheduler->GetCount(); ++si) {
 		Schedule_Struct *schedule = theApp.scheduler->GetSchedule(si);
-		if (schedule->actions[0]==0 || !schedule->enabled)
+		if (schedule->actions[0] == 0 || !schedule->enabled)
 			continue;
 
 		// check day of week
-		if (schedule->day!=DAY_DAYLY) {
-			int dow=tNow.GetDayOfWeek();
+		if (schedule->day != DAY_DAYLY) {
+			int dow = tNow.GetDayOfWeek();
 			switch (schedule->day) {
-				case DAY_MO : if (dow!=2) continue;
-					break;
-				case DAY_DI : if (dow!=3) continue;
-					break;
-				case DAY_MI : if (dow!=4) continue;
-					break;
-				case DAY_DO : if (dow!=5) continue;
-					break;
-				case DAY_FR : if (dow!=6) continue;
-					break;
-				case DAY_SA : if (dow!=7) continue;
-					break;
-				case DAY_SO : if (dow!=1) continue;
-					break;
-				case DAY_MO_FR : if (dow==7 || dow==1 ) continue;
-					break;
-				case DAY_MO_SA : if (dow==1) continue;
-					break;
-				case DAY_SA_SO : if (dow>=2 && dow<=6) continue;
+			case DAY_MO:
+				if (dow != 2)
+					continue;
+				break;
+			case DAY_DI:
+				if (dow != 3)
+					continue;
+				break;
+			case DAY_MI:
+				if (dow != 4)
+					continue;
+				break;
+			case DAY_DO:
+				if (dow != 5)
+					continue;
+				break;
+			case DAY_FR:
+				if (dow != 6)
+					continue;
+				break;
+			case DAY_SA:
+				if (dow != 7)
+					continue;
+				break;
+			case DAY_SO:
+				if (dow != 1)
+					continue;
+				break;
+			case DAY_MO_FR:
+				if (dow == 7 || dow == 1)
+					continue;
+				break;
+			case DAY_MO_SA:
+				if (dow == 1)
+					continue;
+				break;
+			case DAY_SA_SO:
+				if (dow >= 2 && dow <= 6)
+					continue;
 			}
 		}
 		//check time
 		CTime t1 = CTime(schedule->time);
 		CTime t2 = CTime(schedule->time2);
-		int it1 = t1.GetHour()*60 + t1.GetMinute();
-		int it2 = t2.GetHour()*60 + t2.GetMinute();
-		int itn = tNow.GetHour()*60 + tNow.GetMinute();
+		int it1 = t1.GetHour() * 60 + t1.GetMinute();
+		int it2 = t2.GetHour() * 60 + t2.GetMinute();
+		int itn = tNow.GetHour() * 60 + tNow.GetMinute();
 		if (it1 <= it2) { // normal timespan
-			if (itn<it1 || itn>=it2)
+			if (itn < it1 || itn >= it2)
 				continue;
 		} else {		   // reversed timespan (23:30 to 5:10)  now 10
-			if (itn<it1 && itn>=it2)
+			if (itn < it1 && itn >= it2)
 				continue;
 		}
 		// ok, lets do the actions of this schedule
-		ActivateSchedule(si, schedule->time2==0);
+		ActivateSchedule(si, schedule->time2 == 0);
 	}
 
 	return -1;

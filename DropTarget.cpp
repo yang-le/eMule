@@ -367,7 +367,7 @@ HRESULT CMainFrameDropTarget::PasteText(CLIPFORMAT cfData, COleDataObject& data)
 		{
 			// skip white space
 			while (isspace(*pszUrlA))
-				pszUrlA++;
+				++pszUrlA;
 
 			hrPasteResult = S_FALSE; // default: nothing was pasted
 			if (_strnicmp(pszUrlA, "ed2k://|", 8) == 0 || _strnicmp(pszUrlA, "magnet:?", 8) == 0)
@@ -492,7 +492,7 @@ BOOL CMainFrameDropTarget::IsSupportedDropData(COleDataObject* pDataObject)
 			{
 				// skip white space
 				while (isspace(*lpszUrl))
-					lpszUrl++;
+					++lpszUrl;
 				bResult = IsUrlSchemeSupportedW(lpszUrl);
 				GlobalUnlock(hMem);
 			}

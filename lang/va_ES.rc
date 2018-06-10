@@ -1290,8 +1290,6 @@ BEGIN
     IDS_VERSION             "Versió"
     IDS_PASTE               "Enganxa"
     IDS_A4AF                "Gestió de fonts"
-    IDS_MOBILEMULE          "MobileMule"//.
-    IDS_ENABLEMM            "Activa el MobileMule"
     IDS_AUTOCAT_LABEL       "Assignació automàtica de categoria (patró separat per |)"
     IDS_SHOWEXTSETTINGS     "Mostra més controls (controls del mode avançat)"
     IDS_TREEOPTIONS_TRUE    "Cert"
@@ -1304,7 +1302,7 @@ STRINGTABLE
 BEGIN
     IDS_SELECT_FONT         "Selecciona la font"
     IDS_SERVER_LIMITS       "Límit de fitxer tou / dur"
-    IDS_KBITSSEC            "kBit/s"//.
+    IDS_KBITSSEC            "kbit/s"//.
     IDS_KBYTESSEC           "kByte/s"//.
     IDS_ERR_CREATE_DIR      "S'ha produït una fallada en crear el directori %s «%s» - %s"
     IDS_WRN_INCFILE_RESERVED 
@@ -1312,13 +1310,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "El directori temporal no pot ser el directori d'instal·lació de l'eMule."
     IDS_WRN_INCTEMP_SAME    "El directori de baixades i el temporal no poden ser el mateix."
-    IDS_MMFAILED            "S'ha produït una fallada en crear el sòcol per al MobileMule"
-    IDS_MMSTARTED           "Servidor MobileMule iniciat al Port %u. Versió de Protocol: %s"
     IDS_SHOWDWLPERCENTAGE   "Mostra el percentatge de baixada a la barra de progrés"
     IDS_TBN_ONNEWDOWNLOAD   "S'ha afegit la baixada"
     IDS_ARTIST              "Artista"
     IDS_ALBUM               "Àlbum"
-    IDS_MMGUIDELINK         "Guia del MobileMule"
 END
 
 STRINGTABLE 
@@ -1417,7 +1412,6 @@ BEGIN
                             "S'ha produït un error en baixar i instal·lar el fitxer dll de la llengua seleccionada des de %s"
     IDS_ERR_BADFOLDER       "La carpeta és incorrecta.\nLa carpeta no es pot crear. Comproveu-ne el nom i la ubicació."
     IDS_AUTOREMOVEFD        "Neteja les baixades completades automàticament"
-    IDS_MM_BLOCK            "S'han enregistrat 3 intents de connexió erronis per al MobileMule - els nous intents seran blocats durant 10 minuts"
 END
 
 STRINGTABLE 
@@ -1443,7 +1437,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Un usuari nou s'ha connectat amb èxit al servidor MobileMule"
     IDS_RADCLIENTS          "des de clients nous"
     IDS_KADUDPPORTERR       "El port UDP del Kad entra en conflicte o bé amb el port ampliat de l'eMule o bé amb el del servidor UDP de l'eMule. El port s'ha canviat a %u."
     IDS_CONFIRM_FILEDELETE  "Realment voleu suprimir tots els fitxers seleccionats del disc?"
@@ -1467,7 +1460,7 @@ BEGIN
     IDS_TEXTLABELS          "Etiquetes de text"
     IDS_ENABLETEXTLABELS    "Sota la icona"
     IDS_CUSTOMIZETOOLBAR    "Personalitza la barra d'eines"
-    IDS_MINBITRATE          "Taxa de bits mín. [kBit/s]"
+    IDS_MINBITRATE          "Taxa de bits mín. [kbit/s]"
     IDS_KAD_RECHECKFW       "Comprova el tallafocs"
     IDS_SHAREDTITLE         "Compartit amb eD2K/KAD"
     IDS_FIREWALLED          "Tallafocs"

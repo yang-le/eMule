@@ -24,7 +24,7 @@ __int64 CTimeTick::m_nPerformanceFrequency = CTimeTick::GetPerformanceFrequency(
 CTimeTick::CTimeTick()
 {
 	m_nTimeElapsed.QuadPart = 0;
-	m_nTime.QuadPart 	    = 0;
+	m_nTime.QuadPart = 0;
 }
 
 CTimeTick::~CTimeTick()

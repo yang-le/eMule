@@ -1165,7 +1165,7 @@ void CArchiveRecovery::writeRarBlock(CFile *input, CFile *output, RAR_BlockFile 
 			input->Seek(block->offsetData, CFile::begin);
 			BYTE chunk[4096];
 			while (lenToCopy > 0) {
-				uint32 lenChunk  = min(lenToCopy, sizeof chunk);
+				uint32 lenChunk = min(lenToCopy, sizeof chunk);
 				lenChunk = input->Read(chunk, lenChunk);
 				if (lenChunk == 0)
 					break;
@@ -1519,7 +1519,7 @@ void CArchiveRecovery::writeAceBlock(CFile *input, CFile *output, ACE_BlockFile 
 			uint32 written = 0;
 			BYTE chunk[4096];
 			while (written < lenToCopy) {
-				uint32 lenChunk  = (lenToCopy - written);
+				uint32 lenChunk = (lenToCopy - written);
 				if (lenChunk > sizeof(chunk))
 					lenChunk = sizeof(chunk);
 				lenChunk = input->Read(chunk, lenChunk);

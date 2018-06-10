@@ -179,7 +179,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <MapFileName>
       </MapFileName>
       <SubSystem>Windows</SubSystem>
@@ -244,8 +243,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="MMServer.cpp" />
-    <ClCompile Include="MMSocket.cpp" />
     <ClCompile Include="OtherFunctions.cpp" />
     <ClCompile Include="Packets.cpp" />
     <ClCompile Include="Parser.cpp">
@@ -566,8 +563,6 @@
     <ClInclude Include="MD5Sum.h" />
     <ClInclude Include="Mdump.h" />
     <ClInclude Include="MediaInfo.h" />
-    <ClInclude Include="MMServer.h" />
-    <ClInclude Include="MMSocket.h" />
     <ClInclude Include="Opcodes.h" />
     <ClInclude Include="OtherFunctions.h" />
     <ClInclude Include="Packets.h" />

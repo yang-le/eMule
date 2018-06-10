@@ -23,18 +23,18 @@ static char THIS_FILE[] = __FILE__;
 
 void AFXAPI DDX_ColorButton(CDataExchange *pDX, int nIDC, COLORREF& crColour)
 {
-    HWND hWndCtrl = pDX->PrepareCtrl(nIDC);
-    ASSERT (hWndCtrl != NULL);
+	HWND hWndCtrl = pDX->PrepareCtrl(nIDC);
+	ASSERT (hWndCtrl != NULL);
 
-    CColorButton* pColourButton = static_cast<CColorButton *>(CWnd::FromHandlePermanent(hWndCtrl));
-    if (pDX->m_bSaveAndValidate)
-    {
+	CColorButton* pColourButton = static_cast<CColorButton *>(CWnd::FromHandlePermanent(hWndCtrl));
+	if (pDX->m_bSaveAndValidate)
+	{
 		crColour = pColourButton->Color;
-    }
-    else // initializing
-    {
+	}
+	else // initializing
+	{
 		pColourButton->Color = crColour;
-    }
+	}
 }
 
 //***********************************************************************
@@ -90,7 +90,7 @@ void CColorButton::SetColor(COLORREF dwColor)
 	m_Color = dwColor;
 
 	if (::IsWindow(m_hWnd))
-        RedrawWindow();
+		RedrawWindow();
 }
 
 
@@ -154,22 +154,22 @@ BOOL CColorButton::GetTrackSelection() const
 //***********************************************************************
 void CColorButton::PreSubclassWindow()
 {
-    ModifyStyle(0, BS_OWNERDRAW);
+	ModifyStyle(0, BS_OWNERDRAW);
 
-    _Inherited::PreSubclassWindow();
+	_Inherited::PreSubclassWindow();
 }
 
 //***********************************************************************
 //**                         Message Handlers                         **
 //***********************************************************************
 BEGIN_MESSAGE_MAP(CColorButton, CButton)
-    //{{AFX_MSG_MAP(CColorButton)
-    ON_CONTROL_REFLECT_EX(BN_CLICKED, OnClicked)
-    ON_WM_CREATE()
-    //}}AFX_MSG_MAP
-    ON_MESSAGE(UM_CPN_SELENDOK,     OnSelEndOK)
-    ON_MESSAGE(UM_CPN_SELENDCANCEL, OnSelEndCancel)
-    ON_MESSAGE(UM_CPN_SELCHANGE,    OnSelChange)
+	//{{AFX_MSG_MAP(CColorButton)
+	ON_CONTROL_REFLECT_EX(BN_CLICKED, OnClicked)
+	ON_WM_CREATE()
+	//}}AFX_MSG_MAP
+	ON_MESSAGE(UM_CPN_SELENDOK,     OnSelEndOK)
+	ON_MESSAGE(UM_CPN_SELENDCANCEL, OnSelEndCancel)
+	ON_MESSAGE(UM_CPN_SELCHANGE,    OnSelChange)
 END_MESSAGE_MAP()
 
 
@@ -188,7 +188,7 @@ LRESULT CColorButton::OnSelEndOK(WPARAM wParam, LPARAM /*lParam*/)
 	if (pParent) {
 		pParent->SendMessage(UM_CPN_CLOSEUP, wParam, (LPARAM)GetDlgCtrlID());
 		pParent->SendMessage(UM_CPN_SELENDOK, wParam, (LPARAM)GetDlgCtrlID());
-		if (OldColor != m_Color)
+		if (OldColor != Color)
 			pParent->SendMessage(UM_CPN_SELCHANGE, (m_Color != CLR_DEFAULT) ? m_Color : m_DefaultColor, (LPARAM)GetDlgCtrlID());
 	}
 
@@ -236,10 +236,10 @@ LRESULT CColorButton::OnSelChange(WPARAM wParam, LPARAM /*lParam*/)
 //***********************************************************************
 int CColorButton::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
-    if (CButton::OnCreate(lpCreateStruct) == -1)
-        return -1;
+	if (CButton::OnCreate(lpCreateStruct) == -1)
+		return -1;
 
-    return 0;
+	return 0;
 }
 
 //***********************************************************************
@@ -250,21 +250,21 @@ BOOL CColorButton::OnClicked()
 {
 	m_bPopupActive = TRUE;
 
-    CRect rDraw;
-    GetWindowRect(rDraw);
+	CRect rDraw;
+	GetWindowRect(rDraw);
 
-    new CColourPopup(CPoint(rDraw.left, rDraw.bottom),		// Point to display popup
-                     m_Color,								// Selected colour
-                     this,									// parent
-                     m_strDefaultText,						// "Default" text area
-                     m_strCustomText);						// Custom Text
+	new CColourPopup(CPoint(rDraw.left, rDraw.bottom)	// Point to display popup
+					, m_Color							// Selected colour
+					, this								// parent
+					, m_strDefaultText					// "Default" text area
+					, m_strCustomText);					// Custom Text
 
-    CWnd *pParent = GetParent();
+	CWnd *pParent = GetParent();
 
-    if (pParent)
-        pParent->SendMessage(UM_CPN_DROPDOWN, (WPARAM)m_Color, (LPARAM)GetDlgCtrlID());
+	if (pParent)
+		pParent->SendMessage(UM_CPN_DROPDOWN, (WPARAM)m_Color, (LPARAM)GetDlgCtrlID());
 
-    return TRUE;
+	return TRUE;
 }
 
 
@@ -277,10 +277,9 @@ void CColorButton::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 {
 	ASSERT(lpDrawItemStruct);
 
-	CDC*    pDC      = CDC::FromHandle(lpDrawItemStruct->hDC);
-	UINT    state    = lpDrawItemStruct->itemState;
-    CRect   rDraw    = lpDrawItemStruct->rcItem;
-	CRect	rArrow;
+	CDC *pDC = CDC::FromHandle(lpDrawItemStruct->hDC);
+	UINT state = lpDrawItemStruct->itemState;
+	CRect rDraw = lpDrawItemStruct->rcItem;
 
 	if (m_bPopupActive)
 		state |= ODS_SELECTED|ODS_FOCUS;
@@ -308,14 +307,14 @@ void CColorButton::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	//**                     Draw Focus
 	//******************************************************
 	if (state & ODS_FOCUS)
-    {
+	{
 		RECT rFocus = {rDraw.left,
 					   rDraw.top,
 					   rDraw.right - 1,
 					   rDraw.bottom};
 
-        pDC->DrawFocusRect(&rFocus);
-    }
+		pDC->DrawFocusRect(&rFocus);
+	}
 
 	rDraw.DeflateRect(::GetSystemMetrics(SM_CXEDGE),
 					  ::GetSystemMetrics(SM_CYEDGE));
@@ -323,6 +322,7 @@ void CColorButton::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	//******************************************************
 	//**                     Draw Arrow
 	//******************************************************
+	CRect rArrow;
 	rArrow.left		= rDraw.right - g_ciArrowSizeX - ::GetSystemMetrics(SM_CXEDGE) /2;
 	rArrow.right	= rArrow.left + g_ciArrowSizeX;
 	rArrow.top		= (rDraw.bottom + rDraw.top)/2 - g_ciArrowSizeY / 2;
@@ -425,7 +425,7 @@ void CColorButton::DrawArrow(CDC* pDC,
 	CPen penArrow(PS_SOLID, 1, clrArrow);
 
 	CBrush* pOldBrush = pDC->SelectObject(&brsArrow);
-	CPen*   pOldPen   = pDC->SelectObject(&penArrow);
+	CPen*   pOldPen = pDC->SelectObject(&penArrow);
 
 	pDC->SetPolyFillMode(WINDING);
 	pDC->Polygon(ptsArrow, 3);

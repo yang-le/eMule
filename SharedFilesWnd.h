@@ -36,8 +36,10 @@ class CSharedFileDetailsModelessSheet : public CListViewPropertySheet
 public:
 	CSharedFileDetailsModelessSheet();
 	virtual ~CSharedFileDetailsModelessSheet();
-	void SetFiles(CTypedPtrList<CPtrList, CShareableFile*>& aFiles);
+	CSharedFileDetailsModelessSheet(const CSharedFileDetailsModelessSheet&) = delete;
+	CSharedFileDetailsModelessSheet& operator=(const CSharedFileDetailsModelessSheet&) = delete;
 
+	void SetFiles(CTypedPtrList<CPtrList, CShareableFile*>& aFiles);
 protected:
 	CFileDetailDlgStatistics*	m_wndStatistics;
 	CED2kLinkDlg*				m_wndFileLink;

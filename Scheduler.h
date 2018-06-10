@@ -67,8 +67,8 @@ public:
 	void	RestoreOriginals();
 	void	ActivateSchedule(INT_PTR index,bool makedefault=false);
 
-	uint16	original_upload;
-	uint16	original_download;
+	uint32	original_upload;
+	uint32	original_download;
 	UINT	original_connections;
 	UINT	original_cons5s;
 	UINT	original_sources;

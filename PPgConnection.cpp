@@ -112,7 +112,7 @@ void CPPgConnection::OnEnChangePorts(uint8 istcpport)
 
 void CPPgConnection::OnEnChangeUDPDisable()
 {
-	if (InterlockedCompareExchange(&lockUDP, 1, 0))
+	if (InterlockedExchange(&lockUDP, 1))
 		return;
 
 	SetModified();
@@ -189,7 +189,7 @@ void CPPgConnection::LoadSettings()
 		CheckDlgButton(IDC_NETWORK_ED2K, static_cast<UINT>(thePrefs.networked2k));
 
 		WORD wv = thePrefs.GetWindowsVersion();
-		// don't try on XP SP2 or higher, not needed there anymore
+		// don't try on XP SP2 or higher, not needed there any more
 		GetDlgItem(IDC_OPENPORTS)->ShowWindow(
 			(wv == _WINVER_XP_ && IsRunningXPSP2() == 0 && theApp.m_pFirewallOpener->DoesFWConnectionExist())
 			? SW_SHOW : SW_HIDE);
@@ -205,15 +205,15 @@ void CPPgConnection::LoadSettings()
 
 BOOL CPPgConnection::OnApply()
 {
-	int lastmaxgu = thePrefs.maxGraphUploadRate;
-	int lastmaxgd = thePrefs.maxGraphDownloadRate;
-	bool bRestartApp = false;
-
 	UINT i = GetDlgItemInt(IDC_DOWNLOAD_CAP, NULL, FALSE);
 	if (i >= UNLIMITED) {
 		GetDlgItem(IDC_DOWNLOAD_CAP)->SetFocus();
 		return FALSE;
 	}
+
+	int lastmaxgu = thePrefs.maxGraphUploadRate;
+	int lastmaxgd = thePrefs.maxGraphDownloadRate;
+
 	thePrefs.SetMaxGraphDownloadRate(i);
 
 	m_ctlMaxDown.SetRange(1, thePrefs.GetMaxGraphDownloadRate(), TRUE);
@@ -229,29 +229,29 @@ BOOL CPPgConnection::OnApply()
 	m_ctlMaxUp.SetRange(1, thePrefs.GetMaxGraphUploadRate(true), TRUE);
 	SetRateSliderTicks(m_ctlMaxUp);
 
-	{
-		uint16 ulSpeed = (uint16)(IsDlgButtonChecked(IDC_ULIMIT_LBL) ? m_ctlMaxUp.GetPos() : UNLIMITED);
+	uint32 ulSpeed = (uint32)(IsDlgButtonChecked(IDC_ULIMIT_LBL) ? m_ctlMaxUp.GetPos() : UNLIMITED);
 
-		if (thePrefs.GetMaxGraphUploadRate(true) < ulSpeed && ulSpeed != UNLIMITED)
-			ulSpeed = (uint16)(thePrefs.GetMaxGraphUploadRate(true) * 0.8);
+	if (ulSpeed > (uint32)thePrefs.GetMaxGraphUploadRate(true) && ulSpeed != UNLIMITED)
+		ulSpeed = (uint32)(thePrefs.GetMaxGraphUploadRate(true) * 0.8);
 
-		if (ulSpeed > thePrefs.GetMaxUpload())
-			// make USS go up to higher ul limit faster
-			theApp.lastCommonRouteFinder->InitiateFastReactionPeriod();
+	if (ulSpeed > thePrefs.GetMaxUpload())
+		// make USS go up to higher ul limit faster
+		theApp.lastCommonRouteFinder->InitiateFastReactionPeriod();
 
-		thePrefs.SetMaxUpload(ulSpeed);
-	}
+	thePrefs.SetMaxUpload(ulSpeed);
 
 	if (thePrefs.GetMaxUpload() != UNLIMITED)
 		m_ctlMaxUp.SetPos(thePrefs.GetMaxUpload());
 
 	thePrefs.SetMaxDownload(IsDlgButtonChecked(IDC_DLIMIT_LBL) ? m_ctlMaxDown.GetPos() : UNLIMITED);
 
-	if (thePrefs.GetMaxGraphDownloadRate() < thePrefs.GetMaxDownload() && thePrefs.GetMaxDownload() != UNLIMITED)
-		thePrefs.SetMaxDownload((uint16)(thePrefs.GetMaxGraphDownloadRate() * 0.8));
+	if (thePrefs.GetMaxDownload() > (uint32)thePrefs.GetMaxGraphDownloadRate() && thePrefs.GetMaxDownload() != UNLIMITED)
+		thePrefs.SetMaxDownload((uint32)(thePrefs.GetMaxGraphDownloadRate() * 0.8));
 
 	if (thePrefs.GetMaxDownload() != UNLIMITED)
 		m_ctlMaxDown.SetPos(thePrefs.GetMaxDownload());
+
+	bool bRestartApp = false;
 
 	uint16 nNewPort = (uint16)GetDlgItemInt(IDC_PORT, NULL, FALSE);
 	if (nNewPort && nNewPort != thePrefs.port) {

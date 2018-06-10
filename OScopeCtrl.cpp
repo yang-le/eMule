@@ -102,9 +102,9 @@ COScopeCtrl::COScopeCtrl(int NTrends)
 	for (i = 0; i < m_NTrends; i++)
 	{
 		if (i < 15)
-			m_PlotData[i].crPlotColor  = PresetColor[i];  // see also SetPlotColor
+			m_PlotData[i].crPlotColor = PresetColor[i];  // see also SetPlotColor
 		else
-			m_PlotData[i].crPlotColor  = RGB(255, 255, 255);  // see also SetPlotColor
+			m_PlotData[i].crPlotColor = RGB(255, 255, 255);  // see also SetPlotColor
 		m_PlotData[i].penPlot.CreatePen(PS_SOLID, 0, m_PlotData[i].crPlotColor);
 		m_PlotData[i].dPreviousPosition = 0.0;
 		m_PlotData[i].nPrevY = -1;
@@ -309,12 +309,6 @@ void COScopeCtrl::SetBackgroundColor(COLORREF color)
 
 void COScopeCtrl::InvalidateCtrl(bool deleteGraph)
 {
-	int GridPos;
-	CPen *oldPen;
-	CPen solidPen(PS_SOLID, 0, m_crGridColor);
-	CFont yUnitFont, *oldFont;
-	CString strTemp;
-
 	CClientDC dc(this);
 
 	// if we don't have one yet, set up a memory dc for the grid
@@ -349,8 +343,10 @@ void COScopeCtrl::InvalidateCtrl(bool deleteGraph)
 	m_dcGrid.FillSolidRect(m_rectClient, crLabelBk);
 
 	m_rectPlot.left = m_rectClient.left + 8*8+4;
-	m_nPlotWidth    = m_rectPlot.Width();
+	m_nPlotWidth = m_rectPlot.Width();
 
+	CPen *oldPen;
+	CPen solidPen(PS_SOLID, 0, m_crGridColor);
 	// draw the plot rectangle
 	if (bStraightGraphs)
 	{
@@ -378,7 +374,7 @@ void COScopeCtrl::InvalidateCtrl(bool deleteGraph)
 	// use SetPixel instead of a dotted pen - this allows for a finer dotted line and a more "technical" look
 	for (int j = 1; j < m_nYGrids + 1; ++j)
 	{
-		GridPos = m_rectPlot.Height() * j / (m_nYGrids + 1) + m_rectPlot.top;
+		int GridPos = m_rectPlot.Height() * j / (m_nYGrids + 1) + m_rectPlot.top;
 		for (int i = m_rectPlot.left; i < m_rectPlot.right; i += 4)
 			m_dcGrid.SetPixel(i, GridPos, m_crGridColor);
 	}
@@ -398,7 +394,7 @@ void COScopeCtrl::InvalidateCtrl(bool deleteGraph)
 				surplus = m_rectPlot.Width() - hourSize*m_nXGrids - partialSize; // Pixel surplus
 			}
 
-			GridPos = 0;
+			int GridPos = 0;
 			for (int j = 1; j <= m_nXGrids; ++j) {
 				int extra = 0;
 				if (surplus) {
@@ -417,6 +413,7 @@ void COScopeCtrl::InvalidateCtrl(bool deleteGraph)
 		}
 	}
 
+	CFont yUnitFont;
 	if (afxIsWin95()) {
 		// Win98: To get a rotated font it has to be specified as "Arial" ("MS Shell Dlg"
 		// and "MS Sans Serif" are not created with rotation)
@@ -429,12 +426,13 @@ void COScopeCtrl::InvalidateCtrl(bool deleteGraph)
 	}
 
 	// grab the horizontal font
-	oldFont = m_dcGrid.SelectObject(&sm_fontAxis);
+	CFont *oldFont = m_dcGrid.SelectObject(&sm_fontAxis);
 
 	// y max
 	m_dcGrid.SetTextColor(crLabelFg);
 	m_dcGrid.SetBkColor(crLabelBk);
 	m_dcGrid.SetTextAlign(TA_RIGHT | TA_TOP);
+	CString strTemp;
 	if (m_str.YMax.IsEmpty())
 		strTemp.Format(_T("%.*lf"), m_nYDecimals, m_PlotData[0].dUpperLimit);
 	else
@@ -443,7 +441,7 @@ void COScopeCtrl::InvalidateCtrl(bool deleteGraph)
 
     if (m_rectPlot.Height() / (m_nYGrids + 1) >= 14) {
 	    for (int j = 1; j < (m_nYGrids + 1); ++j) {
-		    GridPos = m_rectPlot.Height() * j / (m_nYGrids + 1) + m_rectPlot.top;
+		    int GridPos = m_rectPlot.Height() * j / (m_nYGrids + 1) + m_rectPlot.top;
     	    strTemp.Format(_T("%.*lf"), m_nYDecimals, m_PlotData[0].dUpperLimit * (m_nYGrids - j + 1) / (m_nYGrids + 1));
     	    m_dcGrid.TextOut(m_rectPlot.left - 4, GridPos - 7, strTemp);
         }
@@ -947,13 +945,13 @@ void COScopeCtrl::OnMouseMove(UINT nFlags, CPoint point)
 
 		int mypos = (plotRect.Width() - point.x) + plotRect.left;
 		int shownsecs = plotRect.Width() * thePrefs.GetTrafficOMeterInterval();
-		float apixel = (float)shownsecs / (float)plotRect.Width();
+		float apixel = shownsecs / (float)plotRect.Width();
 
-		CString strInfo;
 		DWORD dwTime = (DWORD)(mypos * apixel);
 		time_t tNow = time(NULL) - dwTime;
 		TCHAR szDate[128];
 		_tcsftime(szDate, _countof(szDate), thePrefs.GetDateTimeFormat4Log(), localtime(&tNow));
+		CString strInfo;
 		strInfo.Format(_T("%s: %u @ %s ") + GetResString(IDS_TIMEBEFORE), (LPCTSTR)m_str.YUnits, yValue, szDate, (LPCTSTR)CastSecondsToLngHM(dwTime));
 
 		pwndParent->SendMessage(UM_OSCOPEPOSITION, 0, (LPARAM)(LPCTSTR)strInfo);

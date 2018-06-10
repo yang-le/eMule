@@ -55,7 +55,7 @@ public:
 	virtual ~CSearchListCtrl();
 
 	void	Init(CSearchList* in_searchlist);
-	void	CreateMenues();
+	void	CreateMenus();
 	void	UpdateSources(const CSearchFile* toupdate);
 	void	AddResult(const CSearchFile* toshow);
 	void	RemoveResult(const CSearchFile* toremove);

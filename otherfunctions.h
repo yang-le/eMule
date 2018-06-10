@@ -36,6 +36,9 @@ enum EFileType: uint8
 		AUDIO_MPEG,
 		VIDEO_AVI,
 		VIDEO_MPG,
+		VIDEO_MP4,
+		VIDEO_MKV,
+		VIDEO_OGG,
 		WM,
 		PIC_JPG,
 		PIC_PNG,
@@ -81,11 +84,11 @@ template <typename T> inline static const int sgn(const T& val)
 //
 inline char* nstrdup(const char* todup)
 {
-   size_t len = strlen(todup) + 1;
-   return (char*)memcpy(new char[len], todup, len);
+	size_t len = strlen(todup) + 1;
+	return (char*)memcpy(new char[len], todup, len);
 }
 
-TCHAR *stristr(const TCHAR *str1, const TCHAR *str2);
+const TCHAR *stristr(const TCHAR *str1, const TCHAR *str2);
 CString GetNextString(const CString& rstr, LPCTSTR pszTokens, int& riStart);
 CString GetNextString(const CString& rstr, TCHAR chToken, int& riStart);
 

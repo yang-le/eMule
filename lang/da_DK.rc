@@ -1303,8 +1303,6 @@ BEGIN
     IDS_VERSION             "Version"
     IDS_PASTE               "Sæt ind"
     IDS_A4AF                "Kilde håndtering"
-    IDS_MOBILEMULE          "MobileMule"
-    IDS_ENABLEMM            "Aktivér MobileMule"
     IDS_AUTOCAT_LABEL       "Auto kategori-tildeling (mønster, adskilt af |)"
     IDS_SHOWEXTSETTINGS     "Vis flere indstillinger (avancerede indstillinger)"
     IDS_TREEOPTIONS_TRUE    "Sandt"
@@ -1325,13 +1323,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Den midlertidige mappe må ikke sættes til en eMule installationsmappe."
     IDS_WRN_INCTEMP_SAME    "Indkommende mappe og midlertidig mappe må ikke være den samme."
-    IDS_MMFAILED            "Mislykkedes at oprette MobileMule socket!"
-    IDS_MMSTARTED           "MobileMule server startet på port %u. Protokol version: %s"
     IDS_SHOWDWLPERCENTAGE   "Vis procentdel download færdiggørelse i fremskridtsbjælke"
     IDS_TBN_ONNEWDOWNLOAD   "Download tilføjet"
     IDS_ARTIST              "Kunstner"
     IDS_ALBUM               "Album"
-    IDS_MMGUIDELINK         "MobileMule Guide"
 END
 
 STRINGTABLE 
@@ -1431,7 +1426,6 @@ BEGIN
                             "Mislykkedes at downloade og installere den valgte sprog dll fil fra %s!"
     IDS_ERR_BADFOLDER       "Ugyldig mappe.\nFolder kan ikke skabes. Tjek venligst navn og placering."
     IDS_AUTOREMOVEFD        "Ryd færdige downloads automatisk"
-    IDS_MM_BLOCK            "3 mislykkedes logins til MobileMule logget - ethvert yderligere forsøg er blokeret i 10 min!"
 END
 
 STRINGTABLE 
@@ -1457,7 +1451,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Ny bruger er succesfuldt logget i MobileMule-Server"
     IDS_RADCLIENTS          "Fra kendte klienter"
     IDS_KADUDPPORTERR       "Kads UDP port er i konflikt med enten eMule's Eksterne UDP port eller eMule's Server UDP port. Port er blevet ændret til %u."
     IDS_CONFIRM_FILEDELETE  "Ønsker du virkelig at fjerne alle valgte filer fra disken?"
@@ -1481,7 +1474,7 @@ BEGIN
     IDS_TEXTLABELS          "Tekst labels"
     IDS_ENABLETEXTLABELS    "under ikonet"
     IDS_CUSTOMIZETOOLBAR    "Specialbyg Værktøjslinie"
-    IDS_MINBITRATE          "Min. bitrate [kBit/s]"
+    IDS_MINBITRATE          "Min. bitrate [kbit/s]"
     IDS_KAD_RECHECKFW       "Tjek firewall igen"
     IDS_SHAREDTITLE         "Delt ED2K|Kad"
     IDS_FIREWALLED          "Firewalled"

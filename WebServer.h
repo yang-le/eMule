@@ -309,7 +309,6 @@ public:
 	void ReloadTemplates();
 	INT_PTR GetSessionCount()	{ return m_Params.Sessions.GetCount();}
 	bool IsRunning() const	{ return m_bServerWorking;}
-	CArray<UpDown>* GetPointsForWeb()	{return &m_Params.PointsForWeb;} // MobileMule
 protected:
 	static void		ProcessURL(const ThreadData& Data);
 	static void		ProcessFileReq(const ThreadData& Data);
@@ -334,13 +333,13 @@ private:
 	static void		_RemoveServer(const CString& sIP, int nPort);
 	static void		_AddToStatic(const CString& sIP, int nPort);
 	static void		_RemoveFromStatic(const CString& sIP, int nPort);
-	static uchar*	_GetFileHash(const CString& sHash, uchar *FileHash);
+	static uchar	*_GetFileHash(const CString& sHash, uchar *FileHash);
 
-//	static CString	_GetWebSearch(const ThreadData& Data);
-	static CString	_GetSearch(const ThreadData& Data);
+//	static CString	_GetWebSearch(const ThreadData &Data);
+	static CString	_GetSearch(const ThreadData &Data);
 
-	static CString	_ParseURL(const CString& URL, const CString& fieldname);
-	static CString	_ParseURLArray(CString& URL, CString fieldname);
+	static CString	_ParseURL(const CString &URL, const CString &fieldname);
+	static CString	_ParseURLArray(CString &URL, CString fieldname);
 	static void		_ConnectToServer(const CString& sIP, int nPort);
 	static bool		_IsLoggedIn(const ThreadData& Data, long lSession);
 	static void		_RemoveTimeOuts(const ThreadData& Data);

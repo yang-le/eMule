@@ -258,9 +258,7 @@ LRESULT CHttpDownloadDlg::OnThreadFinished(WPARAM wParam, LPARAM /*lParam*/)
 
 BOOL CHttpDownloadDlg::OnInitDialog()
 {
-	CString cap;
-	cap = GetResString(IDS_CANCEL);
-	SetDlgItemText(IDCANCEL, cap);
+	SetDlgItemText(IDCANCEL, GetResString(IDS_CANCEL));
 
 	if (!m_strTitle.IsEmpty())
 		SetWindowText(m_strTitle);

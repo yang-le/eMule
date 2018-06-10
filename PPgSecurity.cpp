@@ -246,7 +246,7 @@ void CPPgSecurity::OnLoadIPFFromURL()
 			(void)_tremove(strTempFilePath);
 			CString strError = GetResString(IDS_DWLIPFILTERFAILED);
 			if (!dlgDownload.GetError().IsEmpty())
-				strError.AppendFormat(_T("\r\n\r\n%s"),  (LPCTSTR)(dlgDownload.GetError()));
+				strError.AppendFormat(_T("\r\n\r\n%s"),  (LPCTSTR)dlgDownload.GetError());
 			AfxMessageBox(strError, MB_ICONERROR);
 			return;
 		}
@@ -364,10 +364,7 @@ void CPPgSecurity::OnLoadIPFFromURL()
 				// add filename and extension of uncompressed file to temporary file
 				CString strUncompressedFileName = gz.GetUncompressedFileName();
 				if (!strUncompressedFileName.IsEmpty())
-				{
-					strTempUnzipFilePath += _T('.');
-					strTempUnzipFilePath += strUncompressedFileName;
-				}
+					strTempUnzipFilePath.AppendFormat(_T(".%s"), (LPCTSTR)strUncompressedFileName);
 
 				if (gz.Extract(strTempUnzipFilePath))
 				{

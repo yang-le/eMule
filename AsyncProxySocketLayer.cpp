@@ -304,7 +304,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 			if (m_nRecvBufferPos == 8) {
 				TRACE(_T("SOCKS4 response: VN=%u  CD=%u  DSTPORT=%u  DSTIP=%s\n"), (BYTE)m_pRecvBuffer[0], (BYTE)m_pRecvBuffer[1], ntohs(*(u_short*)&m_pRecvBuffer[2]), (LPCTSTR)ipstr(*(u_long*)&m_pRecvBuffer[4]));
 				if (m_pRecvBuffer[0] != 0 || m_pRecvBuffer[1] != 90) {
-					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0); //, GetSocks4Error(m_pRecvBuffer[0], m_pRecvBuffer[1])); - copy string to new char[]
+					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0, (LPSTR)(LPCSTR)GetSocks4Error(m_pRecvBuffer[0], m_pRecvBuffer[1]));
 					TriggerEvent((m_nProxyOpID == PROXYOP_CONNECT) ? FD_CONNECT : FD_ACCEPT, WSAECONNABORTED, TRUE);
 					Reset();
 					ClearBuffer();
@@ -389,7 +389,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 			if (m_nRecvBufferPos == 2) {
 				TRACE(_T("SOCKS5 response: VER=%u  METHOD=%u\n"), (BYTE)m_pRecvBuffer[0], (BYTE)m_pRecvBuffer[1]);
 				if (m_pRecvBuffer[0] != 5) {
-					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0); //GetSocks5Error(m_pRecvBuffer[1])); - copy string to new char[]
+					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0, (LPSTR)(LPCSTR)GetSocks5Error(m_pRecvBuffer[1]));
 					TriggerEvent((m_nProxyOpID == PROXYOP_CONNECT) ? FD_CONNECT : FD_ACCEPT, WSAECONNABORTED, TRUE);
 					Reset();
 					ClearBuffer();
@@ -630,7 +630,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 			TRACE(_T("SOCKS5 response: VER=%u  REP=%u  RSV=%u  ATYP=%u  BND.ADDR=%s  BND.PORT=%u\n"), (BYTE)m_pRecvBuffer[0], (BYTE)m_pRecvBuffer[1], (BYTE)m_pRecvBuffer[2], (BYTE)m_pRecvBuffer[3], (LPCTSTR)ipstr(*(u_long*)&m_pRecvBuffer[4]), ntohs(*(u_short*)&m_pRecvBuffer[8]));
 			if (m_nRecvBufferPos == 10) {
 				if (m_pRecvBuffer[1] != 0) {
-					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0); //, GetSocks5Error(m_pRecvBuffer[1])); - copy string to new char[]
+					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0, (LPSTR)(LPCSTR)GetSocks5Error(m_pRecvBuffer[1]));
 					if (m_nProxyOpID == PROXYOP_CONNECT)
 						TriggerEvent(FD_CONNECT, WSAECONNABORTED, TRUE);
 					else {
@@ -681,9 +681,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 			}
 			const char start[] = "HTTP/";
 			if (memcmp(start, m_pStrBuffer, mini(strlen(start), strlen(m_pStrBuffer))) != 0) {
-//				char* serr = new char[_countof("No valid HTTP reponse") + 1];
-//				strcpy_s(serr, _countof("No valid HTTP reponse") + 1, "No valid HTTP reponse");
-				DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0/*, serr*/); //string paramter unused so far
+				DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0, "No valid HTTP reponse");
 				Reset();
 				ClearBuffer();
 				TriggerEvent(FD_CONNECT, WSAECONNABORTED, TRUE);
@@ -693,10 +691,8 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 			if (pos) {
 				char *pos2 = strchr(m_pStrBuffer, ' ');
 				if (!pos2 || pos2[1] != '2' || pos2 > pos) {
-//					char *serr = new char[pos - m_pStrBuffer + 1];
-//					strncpy(serr, m_pStrBuffer, pos - m_pStrBuffer);
-//					serr[pos - m_pStrBuffer] = 0;
-					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0/*, serr*/); //string paramter unused so far
+					CStringA serr(m_pStrBuffer, (int)(pos - m_pStrBuffer));
+					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0, (LPSTR)(LPCSTR)serr);
 					Reset();
 					ClearBuffer();
 					TriggerEvent(FD_CONNECT, WSAECONNABORTED, TRUE);
@@ -782,13 +778,8 @@ BOOL CAsyncProxySocketLayer::Connect(const LPSOCKADDR lpSockAddr, int nSockAddrL
 	m_nProxyOpID = PROXYOP_CONNECT;
 
 	BOOL res = ConnectNext(CString(m_ProxyData.pProxyHost), m_ProxyData.nProxyPort);
-	if (!res) {
-		if (WSAGetLastError() != WSAEWOULDBLOCK) {
-			DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_NOCONN, 0);
-			return FALSE;
-		}
-	}
-
+	if (!res && WSAGetLastError() != WSAEWOULDBLOCK)
+		DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_NOCONN, 0);
 	return res;
 }
 
@@ -798,9 +789,8 @@ void CAsyncProxySocketLayer::OnConnect(int nErrorCode)
 		TriggerEvent(FD_CONNECT, nErrorCode, TRUE);
 		return;
 	}
-	ASSERT(m_nProxyOpID);
 	if (!m_nProxyOpID) {
-		//This should not happen
+		ASSERT(0); //This should not happen
 		return;
 	}
 
@@ -996,8 +986,6 @@ void CAsyncProxySocketLayer::OnConnect(int nErrorCode)
 				ClearBuffer();
 				return;
 			}
-//			++m_nProxyOpState;
-//			return;
 		} else
 			ASSERT(FALSE);
 		//Now we'll wait for the response, handled in OnReceive
@@ -1009,10 +997,8 @@ void CAsyncProxySocketLayer::ClearBuffer()
 {
 	delete[] m_pStrBuffer;
 	m_pStrBuffer = NULL;
-	if (m_pRecvBuffer) {
-		delete[] m_pRecvBuffer;
-		m_pRecvBuffer = 0;
-	}
+	delete[] m_pRecvBuffer;
+	m_pRecvBuffer = NULL;
 	m_nRecvBufferLen = 0;
 	m_nRecvBufferPos = 0;
 }

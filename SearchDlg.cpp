@@ -226,7 +226,7 @@ void CSearchDlg::Localize()
 
 void CSearchDlg::CreateMenus()
 {
-	m_pwndResults->searchlistctrl.CreateMenues();
+	m_pwndResults->searchlistctrl.CreateMenus();
 }
 
 bool CSearchDlg::DoNewKadSearch(SSearchParams* pParams)

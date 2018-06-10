@@ -52,7 +52,7 @@ static LPCTSTR s_apszTBFiles[] =
 
 static LPCTSTR s_apszSkinFiles[] =
 {
-	_T("*.") EMULSKIN_BASEEXT _T(".ini"),
+	_T("*.") EMULSKIN_BASEEXT _T(".ini")
 };
 
 #define	MAX_TOOLBAR_FILES	100

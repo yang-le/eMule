@@ -209,6 +209,7 @@ public:
 	}
 
 	Array(const Array&) = delete;
+	Array& operator=(const Array&) = delete;
 
 	operator T* () const
 	{

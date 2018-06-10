@@ -517,7 +517,7 @@ void CButtonST::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 			&& m_bMenuDisplayed)	m_bIsPressed = TRUE;
 	} // else
 
-	m_bIsFocused  = (lpDIS->itemState & ODS_FOCUS);
+	m_bIsFocused = (lpDIS->itemState & ODS_FOCUS);
 	m_bIsDisabled = (lpDIS->itemState & ODS_DISABLED);
 
 	CRect itemRect = lpDIS->rcItem;

@@ -244,7 +244,7 @@ public:
 	void	ResumeFileInsufficient();
 	void	SetPauseOnPreview(bool bVal)							{ m_bPauseOnPreview = bVal; }
 
-	virtual Packet* CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 byRequestedVersion, uint16 nRequestedOptions) const;
+	virtual Packet *CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 byRequestedVersion, uint16 nRequestedOptions) const;
 	void	AddClientSources(CSafeMemFile* sources, uint8 uClientSXVersion, bool bSourceExchange2, const CUpDownClient* pClient = NULL);
 
 	UINT	GetAvailablePartCount() const							{ return (status == PS_COMPLETING || status == PS_COMPLETE) ? GetPartCount() : availablePartsCount; }
@@ -274,8 +274,6 @@ public:
 	void	SetCategory(UINT cat);
 	bool	HasDefaultCategory() const;
 	bool	CheckShowItemInGivenCat(int inCategory) /*const*/;
-
-	uint8*	MMCreatePartStatus();
 
 	//preview
 	virtual bool GrabImage(uint8 nFramesToGrab, double dStartTime, bool bReduceColor, uint16 nMaxWidth,void* pSender);

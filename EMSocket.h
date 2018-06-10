@@ -15,23 +15,21 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #pragma once
+#include "opcodes.h"
 #include "EncryptedStreamSocket.h"
-#include "OtherFunctions.h"
 #include "ThrottledSocket.h" // ZZ:UploadBandWithThrottler (UDP)
 
 class CAsyncProxySocketLayer;
 class Packet;
 
-#define ES_DISCONNECTED		0xFF
-#define ES_NOTCONNECTED		0x00
-#define ES_CONNECTED		0x01
-
-#define PACKET_HEADER_SIZE	6
+#define ES_DISCONNECTED	0xFF
+#define ES_NOTCONNECTED	0x00
+#define ES_CONNECTED	0x01
 
 struct StandardPacketQueueEntry
 {
+	Packet *packet;
 	uint32 actualPayloadSize;
-	Packet* packet;
 };
 
 class CEMSocket : public CEncryptedStreamSocket, public ThrottledFileSocket // ZZ:UploadBandWithThrottler
@@ -41,10 +39,10 @@ public:
 	CEMSocket();
 	virtual ~CEMSocket();
 
-	virtual void SendPacket(Packet* packet, bool delpacket = true, bool controlpacket = true, uint32 actualPayloadSize = 0, bool bForceImmediateSend = false);
-	bool	IsConnected() const { return byConnected == ES_CONNECTED; }
-	uint8	GetConState() const { return byConnected; }
-	virtual bool IsRawDataMode() const { return false; }
+	virtual void SendPacket(Packet *packet, bool delpacket = true, bool controlpacket = true, uint32 actualPayloadSize = 0, bool bForceImmediateSend = false);
+	bool	IsConnected() const				{ return byConnected == ES_CONNECTED; }
+	uint8	GetConState() const				{ return byConnected; }
+	virtual bool IsRawDataMode() const		{ return false; }
 	void	SetDownloadLimit(uint32 limit);
 	void	DisableDownloadLimit();
 	BOOL	AsyncSelect(long lEvent);
@@ -53,43 +51,43 @@ public:
 	virtual bool HasQueues(bool bOnlyStandardPackets = false) const;
 	virtual bool IsEnoughFileDataQueued(uint32 nMinFilePayloadBytes) const;
 	virtual bool UseBigSendBuffer();
-	INT_PTR	DbgGetStdQueueCount() const { return standardpacket_queue.GetCount(); }
+	INT_PTR	DbgGetStdQueueCount() const		{ return standardpacket_queue.GetCount(); }
 
-	virtual UINT GetTimeOut() const;
-	virtual void SetTimeOut(UINT uTimeOut);
+	virtual DWORD GetTimeOut() const;
+	virtual void SetTimeOut(DWORD uTimeOut);
 
-	virtual bool Connect(const CString& sHostAddress, UINT nHostPort);
+	virtual bool Connect(const CString &sHostAddress, UINT nHostPort);
 	virtual BOOL Connect(const LPSOCKADDR pSockAddr, int iSockAddrLen);
 
 	void InitProxySupport();
 	virtual void RemoveAllLayers();
-	const CString GetLastProxyError() const { return m_strLastProxyError; }
-	bool GetProxyConnectFailed() const { return m_bProxyConnectFailed; }
+	const CString GetLastProxyError() const	{ return m_strLastProxyError; }
+	bool GetProxyConnectFailed() const		{ return m_bProxyConnectFailed; }
 
 	CString GetFullErrorMessage(DWORD dwError);
 
-	DWORD GetLastCalledSend() const	{ return lastCalledSend; }
+	DWORD GetLastCalledSend() const			{ return lastCalledSend; }
 	uint64 GetSentBytesCompleteFileSinceLastCallAndReset();
 	uint64 GetSentBytesPartFileSinceLastCallAndReset();
 	uint64 GetSentBytesControlPacketSinceLastCallAndReset();
 	uint64 GetSentPayloadSinceLastCall(bool bReset);
 	void TruncateQueues();
 
-	virtual SocketSentBytes SendControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize) { return Send(maxNumberOfBytesToSend, minFragSize, true); };
-	virtual SocketSentBytes SendFileAndControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize) { return Send(maxNumberOfBytesToSend, minFragSize, false); };
+	virtual SocketSentBytes SendControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize)			{ return Send(maxNumberOfBytesToSend, minFragSize, true); };
+	virtual SocketSentBytes SendFileAndControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize)	{ return Send(maxNumberOfBytesToSend, minFragSize, false); };
 
 	uint32	GetNeededBytes();
 #ifdef _DEBUG
 	// Diagnostic Support
 	virtual void AssertValid() const;
-	virtual void Dump(CDumpContext& dc) const;
+	virtual void Dump(CDumpContext &dc) const;
 #endif
 
 protected:
-	virtual int	OnLayerCallback(const CAsyncSocketExLayer *pLayer, int nType, int nCode, WPARAM wParam, LPARAM lParam);
+	virtual int	OnLayerCallback(std::list<t_callbackMsg> &callbacks);
 
-	virtual void	DataReceived(const BYTE* pcData, UINT uSize);
-	virtual bool	PacketReceived(Packet* packet) = 0;
+	virtual void	DataReceived(const BYTE *pcData, UINT uSize);
+	virtual bool	PacketReceived(Packet *packet) = 0;
 	virtual void	OnError(int nErrorCode) = 0;
 	virtual void	OnClose(int nErrorCode);
 	virtual void	OnSend(int nErrorCode);
@@ -97,7 +95,7 @@ protected:
 	uint8	byConnected;
 	UINT	m_uTimeOut;
 	bool	m_bProxyConnectFailed;
-	CAsyncProxySocketLayer* m_pProxyLayer;
+	CAsyncProxySocketLayer *m_pProxyLayer;
 	CString m_strLastProxyError;
 
 private:
@@ -106,10 +104,9 @@ private:
 	SocketSentBytes SendOv(uint32 maxNumberOfBytesToSend, uint32 minFragSize, bool onlyAllowedToSendControlPacket);
 	void	ClearQueues();
 	void	CleanUpOverlappedSendOperation();
-	virtual int Receive(void* lpBuf, int nBufLen, int nFlags = 0);
+	virtual int Receive(void *lpBuf, int nBufLen, int nFlags = 0);
 
 	static uint32 GetNextFragSize(uint32 current, uint32 minFragSize);
-	bool    HasSent() const { return m_hasSent; }
 
 	// Download (pseudo) rate control
 	uint32	downloadLimit;
@@ -121,17 +118,17 @@ private:
 	size_t	pendingHeaderSize;
 
 	// Download partial packet
-	Packet* pendingPacket;
+	Packet	*pendingPacket;
 	uint32	pendingPacketSize;
 
 	// Upload control
-	char*	sendbuffer;
-	uint32	sendblen;
+	char	*sendbuffer;
+	uint32	sendblen; //packet length in sendbuffer
 	uint32	sent;
 	LPWSAOVERLAPPED m_pPendingSendOperation;
 	CArray<WSABUF> m_aBufferSend;
 
-	CTypedPtrList<CPtrList, Packet*> controlpacket_queue;
+	CTypedPtrList<CPtrList, Packet *> controlpacket_queue;
 	CList<StandardPacketQueueEntry> standardpacket_queue;
 	CCriticalSection sendLocker;
 	uint64	m_numberOfSentBytesCompleteFile;
@@ -140,7 +137,7 @@ private:
 	LONG	m_OverlappedCleaning;
 	DWORD	lastCalledSend;
 	DWORD	lastSent;
-	uint32	lastFinishedStandard;
+	DWORD	lastFinishedStandard;
 	uint32	m_actualPayloadSize;			// Payloadsize of the data currently in sendbuffer
 	uint32	m_actualPayloadSizeSent;
 	bool	m_currentPacket_is_controlpacket;

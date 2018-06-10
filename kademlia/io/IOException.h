@@ -39,7 +39,7 @@ namespace Kademlia
 		public:
 			explicit CIOException(int iCause = ERR_SUCCESS);
 
-			BOOL GetErrorMessage(LPTSTR lpszError, UINT uMaxError, PUINT pnHelpContext = NULL);
+			BOOL GetErrorMessage(LPTSTR lpszError, UINT uMaxError, PUINT pnHelpContext = NULL) const;
 			int m_iCause;
 	};
 }

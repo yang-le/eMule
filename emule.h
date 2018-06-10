@@ -44,7 +44,6 @@ class CFriendList;
 class CClientUDPSocket;
 class CIPFilter;
 class CWebServer;
-class CMMServer;
 class CAbstractFile;
 class CUpDownClient;
 class CPeerCacheFinder;
@@ -87,7 +86,6 @@ public:
 	CIPFilter*			ipfilter;
 	CWebServer*			webserver;
 	CScheduler*			scheduler;
-	CMMServer*			mmserver;
 	CPeerCacheFinder*	m_pPeerCache;
 	CFirewallOpener*	m_pFirewallOpener;
 	CUPnPImplWrapper*	m_pUPnPFinder;

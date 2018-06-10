@@ -114,11 +114,12 @@ CUDPSocket::~CUDPSocket()
 	theApp.uploadBandwidthThrottler->RemoveFromAllQueuesLocked(this); // ZZ:UploadBandWithThrottler (UDP)
 
 	while (!controlpacket_queue.IsEmpty()) {
-		const SServerUDPPacket* p = controlpacket_queue.RemoveHead();
+		const SServerUDPPacket *p = controlpacket_queue.RemoveHead();
 		delete[] p->packet;
 		delete p;
 	}
 	m_udpwnd->DestroyWindow();
+	delete m_udpwnd;
 
 	while (!m_aDNSReqs.IsEmpty())
 		delete m_aDNSReqs.RemoveHead();
@@ -427,7 +428,7 @@ bool CUDPSocket::ProcessPacket(const BYTE* packet, UINT size, UINT opcode, uint3
 					// challenge, the server returns additional info with OP_SERVER_DESC_RES. To properly distinguish the
 					// old and new OP_SERVER_DESC_RES answer, the challenge has to be selected carefully. The first 2 bytes
 					// of the challenge (in network byte order) MUST NOT be a valid string-len-int16!
-					Packet* packet1 = new Packet(OP_SERVER_DESC_REQ, 4);
+					Packet *packet1 = new Packet(OP_SERVER_DESC_REQ, 4);
 					uint32 uDescReqChallenge = ((uint32)GetRandomUInt16() << 16) + INV_SERV_DESC_LEN; // 0xF0FF = an 'invalid' string length.
 					pServer->SetDescReqChallenge(uDescReqChallenge);
 					PokeUInt32(packet1->pBuffer, uDescReqChallenge);
@@ -578,7 +579,7 @@ void CUDPSocket::ProcessPacketError(UINT size, UINT opcode, uint32 nIP, uint16 n
 		CString strName;
 		CServer* pServer = theApp.serverlist->GetServerByIPUDP(nIP, nUDPPort);
 		if (pServer)
-			strName.AppendFormat(_T(" (%s)"), (LPCTSTR)pServer->GetListName());
+			strName.Format(_T(" (%s)"), (LPCTSTR)pServer->GetListName());
 		DebugLogWarning(LOG_DEFAULT, _T("Error: Failed to process server UDP packet from %s:%u%s opcode=0x%02x size=%u - %s"), (LPCTSTR)ipstr(nIP), nUDPPort, (LPCTSTR)strName, opcode, size, pszError);
 	}
 }
@@ -660,7 +661,7 @@ void CUDPSocket::DnsLookupDone(WPARAM wp, LPARAM lp)
 
 		// Send all of the queued packets for this server.
 		for (POSITION posPacket = pDNSReq->m_aPackets.GetHeadPosition(); posPacket;) {
-			SRawServerPacket* pServerPacket = pDNSReq->m_aPackets.GetNext(posPacket);
+			SRawServerPacket *pServerPacket = pDNSReq->m_aPackets.GetNext(posPacket);
 			SendBuffer(nIP, pServerPacket->m_nPort, pServerPacket->m_pPacket, pServerPacket->m_uSize);
 			// Detach packet data
 			pServerPacket->m_pPacket = NULL;
@@ -704,7 +705,7 @@ SocketSentBytes CUDPSocket::SendControlData(uint32 maxNumberOfBytesToSend, uint3
 
 // <-- ZZ:UploadBandWithThrottler (UDP)
 	while (!controlpacket_queue.IsEmpty() && !IsBusy() && sentBytes < maxNumberOfBytesToSend) { // ZZ:UploadBandWithThrottler (UDP)
-		SServerUDPPacket* packet = controlpacket_queue.RemoveHead();
+		SServerUDPPacket *packet = controlpacket_queue.RemoveHead();
 		if (SendTo(packet->packet, packet->size, packet->dwIP, packet->nPort) >= 0) {
 			sentBytes += packet->size; // ZZ:UploadBandWithThrottler (UDP)
 			delete[] packet->packet;
@@ -719,7 +720,7 @@ SocketSentBytes CUDPSocket::SendControlData(uint32 maxNumberOfBytesToSend, uint3
 
 	sendLocker.Unlock();
 
-	return SocketSentBytes{true, 0, sentBytes};
+	return SocketSentBytes{0, sentBytes, true};
 // <-- ZZ:UploadBandWithThrottler (UDP)
 }
 
@@ -744,7 +745,7 @@ int CUDPSocket::SendTo(BYTE* lpBuf, int nBufLen, uint32 dwIP, uint16 nPort)
 void CUDPSocket::SendBuffer(uint32 nIP, uint16 nPort, BYTE* pPacket, UINT uSize)
 {
 // ZZ:UploadBandWithThrottler (UDP) -->
-	SServerUDPPacket* newpending = new SServerUDPPacket;
+	SServerUDPPacket *newpending = new SServerUDPPacket;
 	newpending->dwIP = nIP;
 	newpending->nPort = nPort;
 	newpending->packet = pPacket;
@@ -756,7 +757,7 @@ void CUDPSocket::SendBuffer(uint32 nIP, uint16 nPort, BYTE* pPacket, UINT uSize)
 // <-- ZZ:UploadBandWithThrottler (UDP)
 }
 
-void CUDPSocket::SendPacket(Packet* packet, CServer* pServer, uint16 nSpecialPort, BYTE* pInRawPacket, uint32 nRawLen)
+void CUDPSocket::SendPacket(Packet *packet, CServer* pServer, uint16 nSpecialPort, BYTE* pInRawPacket, uint32 nRawLen)
 {
 	// Just for safety.. Ensure that there are no stalled DNS queries and/or packets
 	// hanging endlessly in the queue.
@@ -797,7 +798,7 @@ void CUDPSocket::SendPacket(Packet* packet, CServer* pServer, uint16 nSpecialPor
 		nPort = pServer->GetPort() + 4;
 	}
 	else{
-		ASSERT( false );
+		ASSERT(false);
 		return;
 	}
 	nPort = (nSpecialPort == 0) ? nPort : nSpecialPort;
@@ -814,7 +815,7 @@ void CUDPSocket::SendPacket(Packet* packet, CServer* pServer, uint16 nSpecialPor
 		for (POSITION reqpos = m_aDNSReqs.GetHeadPosition(); reqpos != NULL;) {
 			SServerDNSRequest* pDNSReq = m_aDNSReqs.GetNext(reqpos);
 			if (_tcsicmp(pDNSReq->m_pServer->GetAddress(), pServer->GetAddress()) == 0) {
-				SRawServerPacket* pServerPacket = new SRawServerPacket(pRawPacket, uRawPacketSize, nPort);
+				SRawServerPacket *pServerPacket = new SRawServerPacket(pRawPacket, uRawPacketSize, nPort);
 				pDNSReq->m_aPackets.AddTail(pServerPacket);
 				return;
 			}
@@ -831,7 +832,7 @@ void CUDPSocket::SendPacket(Packet* packet, CServer* pServer, uint16 nSpecialPor
 			delete[] pRawPacket;
 			return;
 		}
-		SRawServerPacket* pServerPacket = new SRawServerPacket(pRawPacket, uRawPacketSize, nPort);
+		SRawServerPacket *pServerPacket = new SRawServerPacket(pRawPacket, uRawPacketSize, nPort);
 		pDNSReq->m_aPackets.AddTail(pServerPacket);
 		m_aDNSReqs.AddTail(pDNSReq);
 	}

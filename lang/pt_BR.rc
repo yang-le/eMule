@@ -1290,8 +1290,6 @@ BEGIN
                             "UploadSpeedSense: O roteamento falhou muito. Desabilitando Upload SpeedSense."
     IDS_USS_STARTING        "UploadSpeedSense: Preparação terminada. Iniciando o controle da velocidade de upload. (Primeiros 60s em modo de reação rápida)"
     IDS_A4AF                "Gerenciar fontes"
-    IDS_MOBILEMULE          "MobileMule"//!
-    IDS_ENABLEMM            "Habilitar MobileMule"
     IDS_AUTOCAT_LABEL       "Atribuição automática de categorias (modelo, separado por |)"
     IDS_SHOWEXTSETTINGS     "Exibir mais controles (controles do modo avançado)"
     IDS_TREEOPTIONS_TRUE    "Verdadeiro"
@@ -1312,8 +1310,6 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "A pasta de arquivos incompletos (Temp) não pode ser a pasta de instalação do eMule."
     IDS_WRN_INCTEMP_SAME    "A pasta de arquivos completos e a de arquivos incompletos não podem ser a mesma."
-    IDS_MMFAILED            "Falha ao criar socket para MobileMule!"
-    IDS_MMSTARTED           "Servidor MobileMule iniciado na porta %u. Versão do protocolo: %s"
     IDS_SHOWDWLPERCENTAGE   "Exibir porcentagem de download na barra de progresso"
     IDS_TBN_ONNEWDOWNLOAD   "Adicionar download"
     IDS_ARTIST              "Artista"
@@ -1322,7 +1318,6 @@ END
 STRINGTABLE 
 BEGIN
     IDS_ALBUM               "Álbum"
-    IDS_MMGUIDELINK         "Guia MobileMule"
     IDS_CD_UPLOADREQ        "Upload requisitado:"
     IDS_SETTINGCHANGED_RESTART 
                             "Por favor reinicie o eMule para que as alterações tenham efeito!"
@@ -1418,8 +1413,6 @@ BEGIN
                             "Falha ao  baixar e instalar a biblioteca do idioma selecionado de %s!"
     IDS_ERR_BADFOLDER       "Pasta inválida.\nA pasta não pode ser criada. Por favor verifique o nome e o local."
     IDS_AUTOREMOVEFD        "Auto-limpar downloads concluídos"
-    IDS_MM_BLOCK            "Registrado 3 falhas de login para o MobileMule - qualquer tentativa adicional está bloqueada por 10 minutos!"
-    IDS_MM_NEWUSER          "Novo usuário logado com sucesso no servidor MobileMule"
 END
 
 STRINGTABLE 
@@ -1447,7 +1440,7 @@ BEGIN
     IDS_TEXTLABELS          "Texto dos botões"
     IDS_ENABLETEXTLABELS    "Abaixo do ícone"
     IDS_CUSTOMIZETOOLBAR    "Personalizar Barra de Ferramentas..."
-    IDS_MINBITRATE          "Bitrate mín. [kBit/s]"
+    IDS_MINBITRATE          "Bitrate mín. [kbit/s]"
     IDS_KAD_RECHECKFW       "Verificar Firewall"
     IDS_SHAREDTITLE         "eD2K|Kad"
     IDS_FIREWALLED          "Sob Firewall"

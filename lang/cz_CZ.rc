@@ -1290,8 +1290,6 @@ BEGIN
     IDS_VERSION             "Verze"
     IDS_PASTE               "Vložit"
     IDS_A4AF                "Øízení zdrojù"
-    IDS_MOBILEMULE          "MobileMule" //!
-    IDS_ENABLEMM            "Povolit MobileMule"
     IDS_AUTOCAT_LABEL       "Automatické pøidìlení kategorie (pøedloha, oddìlená |)"
     IDS_SHOWEXTSETTINGS     "Zobrazit více ovládacích prvkù (režim pokroèilého ovládání)"
     IDS_TREEOPTIONS_TRUE    "Pravda"
@@ -1312,13 +1310,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Doèasný adresáø nesmí být nastaven do instalaèního adresáøe eMule."
     IDS_WRN_INCTEMP_SAME    "Pøíchozí a doèasný adresáø nesmí být stejný."
-    IDS_MMFAILED            "Nepodaøilo se vytvoøit MobleMule soket!"
-    IDS_MMSTARTED           "MobileMule server spuštìn na portu %u. Verze protokolu: %s"
     IDS_SHOWDWLPERCENTAGE   "Zobrazit procento z dokonèení downloadu v progressbaru"
     IDS_TBN_ONNEWDOWNLOAD   "Download pøidán"
     IDS_ARTIST              "Autor"
     IDS_ALBUM               "Album" //!
-    IDS_MMGUIDELINK         "Prùvodce MobileMule"
 END
 
 STRINGTABLE 
@@ -1416,7 +1411,6 @@ BEGIN
                             "Nepodaøilo se stáhnout a nainstalovat vybrané jazykové knihovny z %s!"
     IDS_ERR_BADFOLDER       "Neplatná složka.\nSložku nelze vytvoøit. Prosím zkontrolujte jméno a umístìní."
     IDS_AUTOREMOVEFD        "Automaticky èistit dokonèené"
-    IDS_MM_BLOCK            "Byly zaznamenány 3 neplatné pokusy o pøihlášení pro Mobilemule - další pøihlašování bude po dobu 10 min. blokováno!"
 END
 
 STRINGTABLE 
@@ -1442,7 +1436,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Nový uživatel byl úspìšnì pøihlášen do MobileMule-Serveru"
     IDS_RADCLIENTS          "od známých klientù"
     IDS_KADUDPPORTERR       "Kad. UDP port je v konfliktu s eMule Ext UDP portem nebo eMule Server UDP port. Port byl zmìnìn na %u."
     IDS_CONFIRM_FILEDELETE  "Opravdu máte zájem o smazání všech vybraných souborù z disku?"
@@ -1466,7 +1459,7 @@ BEGIN
     IDS_TEXTLABELS          "Textové popisky"
     IDS_ENABLETEXTLABELS    "Pod ikonou"
     IDS_CUSTOMIZETOOLBAR    "Pøizpùsobení panelu nástrojù"
-    IDS_MINBITRATE          "Min. bitrate [kBit/s]"
+    IDS_MINBITRATE          "Min. bitrate [kbit/s]"
     IDS_KAD_RECHECKFW       "Pøekontrolujte firewall"
     IDS_SHAREDTITLE         "Sdílené ED2K|Kad"
     IDS_FIREWALLED          "Za firewallem"

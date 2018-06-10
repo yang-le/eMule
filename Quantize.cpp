@@ -181,7 +181,7 @@ void CQuantizer::GetPaletteColors (NODE* pTree,	RGBQUAD* prgb, UINT* pIndex)
 	}
 }
 /////////////////////////////////////////////////////////////////////////////
-UINT CQuantizer::GetColorCount ()
+UINT CQuantizer::GetColorCount () const
 {
 	return m_nLeafCount;
 }

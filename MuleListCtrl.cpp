@@ -260,8 +260,8 @@ void CMuleListCtrl::SaveSettings()
 
 	ShowWindow(SW_HIDE);
 
-	int* piSortHist  = new int[MAX_SORTORDERHISTORY];
-	int i=0;
+	int *piSortHist = new int[MAX_SORTORDERHISTORY];
+	int i = 0;
 	for (POSITION pos = m_liSortHistory.GetHeadPosition(); pos != NULL;)
 		piSortHist[i++] = m_liSortHistory.GetNext(pos) + 1;
 	ini.SerGet(false, piSortHist, i, m_Name + _T("SortHistory"));

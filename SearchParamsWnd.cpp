@@ -670,14 +670,13 @@ void CSearchParamsWnd::Localize()
 	CHeaderCtrl* pHeaderCtrl = m_ctlOpts.GetHeaderCtrl();
 	HDITEM hdi;
 	hdi.mask = HDI_TEXT;
-	CString strRes;
 
-	strRes = GetResString(IDS_PARAMETER);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
+	CString sHdr(GetResString(IDS_PARAMETER));
+	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)sHdr);
 	pHeaderCtrl->SetItem(0, &hdi);
 
-	strRes = GetResString(IDS_VALUE);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
+	sHdr = GetResString(IDS_VALUE);
+	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)sHdr);
 	pHeaderCtrl->SetItem(1, &hdi);
 }
 
@@ -1056,8 +1055,7 @@ SSearchParams* CSearchParamsWnd::GetParameters()
 
 	CString strCodec;
 	if ((m_ctlOpts.GetItemData(orCodec) & 1) == 0)
-		strCodec = m_ctlOpts.GetItemText(orCodec, 1);
-	strCodec.Trim();
+		strCodec = m_ctlOpts.GetItemText(orCodec, 1).Trim();
 
 	ULONG ulMinBitrate = 0;
 	if ((m_ctlOpts.GetItemData(orBitrate) & 1) == 0)

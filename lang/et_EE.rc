@@ -1275,8 +1275,6 @@ STRINGTABLE
 BEGIN
     IDS_VERSION             "Versioon"
     IDS_A4AF                "Allikate haldamine"
-    IDS_MOBILEMULE          "MobileMule"
-    IDS_ENABLEMM            "Luba MobileMule"
     IDS_AUTOCAT_LABEL       "Automaatne jaotus kategooriatesse (| eraldatud võtmesõnad)"
     IDS_SHOWEXTSETTINGS     "Lisakäsud ja võimalused (edasijõudnutele)"
     IDS_TREEOPTIONS_TRUE    "Õige"
@@ -1297,13 +1295,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Ajutiste failide kaust ei tohi viidata eMule paigalduskaustale."
     IDS_WRN_INCTEMP_SAME    "Sissetulekute ja ajutiste failide kaustad ei tohi olla samad."
-    IDS_MMFAILED            "Viga MobileMule socketi tekitamisel!"
-    IDS_MMSTARTED           "MobileMule server käivitatud pordil %u. Protokolli versioon: %s"
     IDS_SHOWDWLPERCENTAGE   "Näita progressiribal kohalejõudmise protsenti"
     IDS_TBN_ONNEWDOWNLOAD   "Tõmabamine lisatud"
     IDS_ARTIST              "Artist"
     IDS_ALBUM               "Album"
-    IDS_MMGUIDELINK         "MobileMule giid"
 END
 
 STRINGTABLE 
@@ -1400,7 +1395,6 @@ BEGIN
                             "Viga valitud keelefailide tõmbamisel ja paigaldusel %s-st!"
     IDS_ERR_BADFOLDER       "Ebasobiv kaust.\nKausta pole võimalik tekitada - kontrolli nime ja asukohta."
     IDS_AUTOREMOVEFD        "Peida kohalejõudnud failid automaatselt"
-    IDS_MM_BLOCK            "MobileMule registreeris 3 ebaõnnestunud sisselogimist - blokeeritud 10 min!"
 END
 
 STRINGTABLE 
@@ -1426,7 +1420,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Uus kasutaja logis õnnelikult MobileMule serverisse"
     IDS_RADCLIENTS          "tuntud kasutajatelt"
     IDS_KADUDPPORTERR       "Kad UDP port on vastuolus eMule kliendi või serveri UDP pordiga. Kad UDP pordiks on asendatud %u."
     IDS_CONFIRM_FILEDELETE  "Tahad Sa ikka kindlasti kustutada kõik valitud failid?"

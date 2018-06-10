@@ -37,21 +37,24 @@ void CStatisticFile::MergeFileStats( CStatisticFile *toMerge )
 	SetAllTimeAccepts(alltimeaccepted + toMerge->GetAllTimeAccepts());
 }
 
-void CStatisticFile::AddRequest(){
+void CStatisticFile::AddRequest()
+{
 	requested++;
 	alltimerequested++;
 	theApp.knownfiles->requested++;
 	theApp.sharedfiles->UpdateFile(fileParent);
 }
 	
-void CStatisticFile::AddAccepted(){
+void CStatisticFile::AddAccepted()
+{
 	accepted++;
 	alltimeaccepted++;
 	theApp.knownfiles->accepted++;
 	theApp.sharedfiles->UpdateFile(fileParent);
 }
 	
-void CStatisticFile::AddTransferred(uint64 bytes){
+void CStatisticFile::AddTransferred(uint64 bytes)
+{
 	transferred += bytes;
 	alltimetransferred += bytes;
 	theApp.knownfiles->transferred += bytes;

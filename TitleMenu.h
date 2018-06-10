@@ -33,6 +33,8 @@ class CTitleMenu : public CMenu
 public:
 	CTitleMenu();
 	virtual ~CTitleMenu();
+	CTitleMenu(const CTitleMenu&) = delete;
+	CTitleMenu& operator=(const CTitleMenu&) = delete;
 
 	BOOL CreateMenu();
 	BOOL DestroyMenu();

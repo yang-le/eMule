@@ -346,10 +346,10 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     EDITTEXT        IDC_DOWNLOAD_CAP,11,23,32,12,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
     EDITTEXT        IDC_UPLOAD_CAP,11,52,32,12,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
-    CONTROL         "Downloadlimit",IDC_DLIMIT_LBL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,83,13,94,10
-    CONTROL         "",IDC_MAXDOWN_SLIDER,"msctls_trackbar32",WS_TABSTOP,82,25,140,11
-    CONTROL         "Uploadlimit",IDC_ULIMIT_LBL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,83,43,94,10
-    CONTROL         "",IDC_MAXUP_SLIDER,"msctls_trackbar32",WS_TABSTOP,83,55,140,11
+    CONTROL         "Download limit",IDC_DLIMIT_LBL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,83,13,89,10
+    CONTROL         "",IDC_MAXDOWN_SLIDER,"msctls_trackbar32",WS_TABSTOP,81,25,142,11
+    CONTROL         "Upload limit",IDC_ULIMIT_LBL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,83,43,89,10
+    CONTROL         "",IDC_MAXUP_SLIDER,"msctls_trackbar32",WS_TABSTOP,81,55,142,11
     EDITTEXT        IDC_PORT,29,84,38,12,ES_AUTOHSCROLL | ES_NUMBER
     EDITTEXT        IDC_UDPPORT,29,100,38,12,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "disable",IDC_UDPDISABLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,71,102,51,9
@@ -371,8 +371,8 @@ BEGIN
     LTEXT           "KB/s",IDC_KBS3,45,54,22,8
     CONTROL         "Upload",IDC_UCAP_LBL,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,11,42,58,8
     GROUPBOX        "Limits:",IDC_LIMITS_FRM,77,2,149,70
-    RTEXT           "KB/s",IDC_KBS1,185,13,33,8
-    RTEXT           "KB/s",IDC_KBS4,185,43,33,8
+    RTEXT           "KB/s",IDC_KBS1,176,13,44,8
+    RTEXT           "KB/s",IDC_KBS4,176,43,44,8
     LTEXT           "Hard limit",IDC_MAXSRCHARD_LBL,11,143,82,8
     LTEXT           "UDP",IDC_UDPPORTLABEL,11,103,16,8
     LTEXT           "Static",IDC_MAXCONLABEL,117,143,86,8
@@ -478,7 +478,7 @@ BEGIN
     CONTROL         "",IDC_PROVIDERS,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_GROUP | WS_TABSTOP,14,79,228,85
     EDITTEXT        IDC_WIZ_TRUEDOWNLOAD_BOX,133,166,40,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_WIZ_TRUEUPLOAD_BOX,133,179,40,12,ES_AUTOHSCROLL
-    CONTROL         "kBit/s",IDC_KBITS,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,176,168,66,11
+    CONTROL         "kbit/s",IDC_KBITS,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,176,168,66,11
     CONTROL         "kByte/s",IDC_KBYTES,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,176,180,66,11
     DEFPUSHBUTTON   "Apply",IDC_WIZ_APPLY_BUTTON,136,204,55,14,WS_GROUP
     PUSHBUTTON      "Cancel",IDC_WIZ_CANCEL_BUTTON,194,204,56,14
@@ -2773,12 +2773,12 @@ BEGIN
                             "The file 'emfriends.met' is invalid or corrupted!"
     IDS_ERR_READEMFRIENDS   "Unknown error while reading emfriends.met: %s"
     IDS_ERR_KNOWNSERVERINFOREC "Unknown server info received!"
-    IDS_WIZ_DOWN            "Down (kBit/s)"
+    IDS_WIZ_DOWN            "Down (kbit/s)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_WIZ_UP              "Up (kBit/s)"
+    IDS_WIZ_UP              "Up (kbit/s)"
     IDS_SELECT_INCOMINGDIR  "Choose a folder for incoming files"
     IDS_SELECT_TEMPDIR      "Choose a folder for temp files"
     IDS_PRIOAUTO            "Auto"
@@ -3162,8 +3162,8 @@ BEGIN
                             "UploadSpeedSense: Trace routing failed too many times. Disabling Upload SpeedSense."
     IDS_USS_STARTING        "UploadSpeedSense: Done with preparations. Starting control of upload speed. (First 60 seconds will be in fast reaction mode)"
     IDS_A4AF                "Source Handling"
-    IDS_MOBILEMULE          "MobileMule"
-    IDS_ENABLEMM            "Enable MobileMule"
+    //IDS_MOBILEMULE          "MobileMule"
+    //IDS_ENABLEMM            "Enable MobileMule"
     IDS_AUTOCAT_LABEL       "Auto cat-assignment (pattern, separated by |)"
     IDS_SHOWEXTSETTINGS     "Show more controls (advanced mode controls)"
     IDS_TREEOPTIONS_TRUE    "True"
@@ -3176,7 +3176,7 @@ BEGIN
     IDS_HYPERTEXT_FONT_HINT "Font for Server-, Message- and IRC-Window"
     IDS_SELECT_FONT         "Select Font"
     IDS_SERVER_LIMITS       "Soft- / Hard-File Limit"
-    IDS_KBITSSEC            "kBit/s"
+    IDS_KBITSSEC            "kbit/s"
     IDS_KBYTESSEC           "kByte/s"
     IDS_ERR_CREATE_DIR      "Failed to create %s directory ""%s"" - %s"
     IDS_WRN_INCFILE_RESERVED
@@ -3184,8 +3184,8 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED
                             "The temporary directory must not be set to an eMule installation directory."
     IDS_WRN_INCTEMP_SAME    "Incoming directory and temporary directory must not be the same."
-    IDS_MMFAILED            "Failed to create MobileMule Socket!"
-    IDS_MMSTARTED           "MobileMule server started on Port %u. Protocol version: %s"
+    //IDS_MMFAILED            "Failed to create MobileMule Socket!"
+    //IDS_MMSTARTED           "MobileMule server started on Port %u. Protocol version: %s"
     IDS_SHOWDWLPERCENTAGE   "Show percentage of download completion in progressbar"
     IDS_TBN_ONNEWDOWNLOAD   "Download added"
     IDS_ARTIST              "Artist"
@@ -3194,7 +3194,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ALBUM               "Album"
-    IDS_MMGUIDELINK         "MobileMule Guide"
+    //IDS_MMGUIDELINK         "MobileMule Guide"
     IDS_CD_UPLOADREQ        "Requested to upload:"
     IDS_SETTINGCHANGED_RESTART
                             "For the changed settings to take effect, please restart eMule!"
@@ -3289,8 +3289,8 @@ BEGIN
                             "Failed to download and install selected language library from %s!"
     IDS_ERR_BADFOLDER       "Invalid folder.\nFolder can not be created. Please check name and location."
     IDS_AUTOREMOVEFD        "Auto clear completed downloads"
-    IDS_MM_BLOCK            "3 failed logins for MobileMule logged - any further attempt is blocked for 10 min!"
-    IDS_MM_NEWUSER          "New user successfully logged into MobileMule-Server"
+    //IDS_MM_BLOCK            "3 failed logins for MobileMule logged - any further attempt is blocked for 10 min!"
+    //IDS_MM_NEWUSER          "New user successfully logged into MobileMule-Server"
 END
 
 STRINGTABLE
@@ -3298,7 +3298,7 @@ BEGIN
     IDS_TEXTLABELS          "Text Label Options"
     IDS_ENABLETEXTLABELS    "Show Text Labels"
     IDS_CUSTOMIZETOOLBAR    "Customize Toolbar..."
-    IDS_MINBITRATE          "Min. Bitrate [kBit/s]"
+    IDS_MINBITRATE          "Min. Bitrate [kbit/s]"
     IDS_KAD_RECHECKFW       "Recheck Firewall"
     IDS_SHAREDTITLE         "Shared eD2K|Kad"
     IDS_FIREWALLED          "Firewalled"
@@ -3647,7 +3647,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SHAREEMULEWARNING   "Changing this option will let eMule use another configuration. Your current settings will be ignored and already started downloads might not be visible anymore. You can switch back to your current configuration by changing this option again anytime.\n\nYou need to restart eMule for this change to take effect."
+    IDS_SHAREEMULEWARNING   "Changing this option will let eMule use another configuration. Your current settings will be ignored and already started downloads might not be visible any more. You can switch back to your current configuration by changing this option again anytime.\n\nYou need to restart eMule for this change to take effect."
     IDS_SPAM                "Spam"
     IDS_MARKSPAM            "Mark as Spam"
     IDS_MARKNOTSPAM         "Mark as not Spam"

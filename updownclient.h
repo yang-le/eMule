@@ -83,7 +83,7 @@ public:
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Base
-	explicit CUpDownClient(CClientReqSocket* sender = 0);
+	explicit CUpDownClient(CClientReqSocket *sender = NULL);
 	CUpDownClient(CPartFile* in_reqfile, uint16 in_port, uint32 in_userid, uint32 in_serverip, uint16 in_serverport, bool ed2kID = false);
 	virtual ~CUpDownClient();
 
@@ -206,14 +206,14 @@ public:
 	void			InfoPacketsReceived();
 	bool			HasPassedSecureIdent(bool bPassIfUnavailable) const;
 	// preview
-	void			SendPreviewRequest(const CAbstractFile* pForFile);
-	void			SendPreviewAnswer(const CKnownFile* pForFile, CxImage** imgFrames, uint8 nCount);
+	void			SendPreviewRequest(const CAbstractFile *pForFile);
+	void			SendPreviewAnswer(const CKnownFile *pForFile, CxImage **imgFrames, uint8 nCount);
 	void			ProcessPreviewReq(const uchar* pachPacket, uint32 nSize);
 	void			ProcessPreviewAnswer(const uchar* pachPacket, uint32 nSize);
 	bool			GetPreviewSupport() const						{ return m_fSupportsPreview && GetViewSharedFilesSupport(); }
 	bool			GetViewSharedFilesSupport() const				{ return m_fNoViewSharedFiles==0; }
-	bool			SafeConnectAndSendPacket(Packet* packet);
-	bool			SendPacket(Packet* packet, bool bDeletePacket, bool bVerifyConnection = false);
+	bool			SafeConnectAndSendPacket(Packet *packet);
+	bool			SendPacket(Packet *packet, bool bDeletePacket, bool bVerifyConnection = false);
 	void			CheckForGPLEvilDoer();
 	// Encryption / Obfuscation / Connectoptions
 	bool			SupportsCryptLayer() const						{ return m_fSupportsCryptLayer; }
@@ -244,10 +244,10 @@ public:
 	void 			SetUpStartTime()								{ m_dwUploadTime = ::GetTickCount(); }
 	void			SendHashsetPacket(const uchar* pData, uint32 nSize, bool bFileIdentifiers);
 	const uchar*	GetUploadFileID() const							{ return requpfileid; }
-	void			SetUploadFileID(CKnownFile* newreqfile);
+	void			SetUploadFileID(CKnownFile *newreqfile);
 	uint32			UpdateUploadingStatisticsData();
 	void			SendRankingInfo();
-	void			SendCommentInfo(/*const*/ CKnownFile *file);
+	void			SendCommentInfo(/*const */CKnownFile *file);
 	void			AddRequestCount(const uchar* fileid);
 	void			UnBan();
 	void			Ban(LPCTSTR pszReason = NULL);

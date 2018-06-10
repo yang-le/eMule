@@ -68,7 +68,6 @@
 #include "DropTarget.h"
 #include "LastCommonRouteFinder.h"
 #include "WebServer.h"
-#include "MMServer.h"
 #include "DownloadQueue.h"
 #include "ClientUDPSocket.h"
 #include "UploadQueue.h"
@@ -616,7 +615,6 @@ BOOL CemuleDlg::OnInitDialog()
 
 	if (thePrefs.GetWSIsEnabled())
 		theApp.webserver->StartServer();
-	theApp.mmserver->Init();
 
 	VERIFY( (m_hTimer = ::SetTimer(NULL, NULL, 300, StartupTimer)) != NULL );
 	if (thePrefs.GetVerbose() && !m_hTimer)
@@ -659,7 +657,7 @@ BOOL CemuleDlg::OnInitDialog()
 void CemuleDlg::DoVersioncheck(bool manual)
 {
 #ifndef _DEVBUILD
-	if (!manual && thePrefs.GetLastVC()!=0) {
+	if (!manual && thePrefs.GetLastVC() != 0) {
 		CTime last(thePrefs.GetLastVC());
 		struct tm tmTemp;
 		time_t tLast = safe_mktime(last.GetLocalTm(&tmTemp));
@@ -687,42 +685,40 @@ void CemuleDlg::DoVersioncheck(bool manual)
 void CALLBACK CemuleDlg::StartupTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT_PTR /*idEvent*/, DWORD /*dwTime*/) noexcept
 {
 	// NOTE: Always handle all type of MFC exceptions in TimerProcs - otherwise we'll get mem leaks
-	try
-	{
-		switch(theApp.emuledlg->status){
-			case 0:
+	try {
+		switch (theApp.emuledlg->status) {
+		case 0:
+			theApp.emuledlg->status++;
+			theApp.emuledlg->ready = true;
+			theApp.sharedfiles->SetOutputCtrl(&theApp.emuledlg->sharedfileswnd->sharedfilesctrl);
+			theApp.emuledlg->status++;
+			break;
+		case 1:
+			break;
+		case 2:
+			theApp.emuledlg->status++;
+			try {
+				theApp.serverlist->Init();
+			} catch (...) {
+				ASSERT(0);
+				LogError(LOG_STATUSBAR, _T("Failed to initialize server list - Unknown exception"));
+			}
+			theApp.emuledlg->status++;
+			break;
+		case 3:
+			break;
+		case 4:
+			{
 				theApp.emuledlg->status++;
-				theApp.emuledlg->ready = true;
-				theApp.sharedfiles->SetOutputCtrl(&theApp.emuledlg->sharedfileswnd->sharedfilesctrl);
-				theApp.emuledlg->status++;
-				break;
-			case 1:
-				break;
-			case 2:
-				theApp.emuledlg->status++;
-				try{
-					theApp.serverlist->Init();
-				}
-				catch(...){
-					ASSERT(0);
-					LogError(LOG_STATUSBAR,_T("Failed to initialize server list - Unknown exception"));
-				}
-				theApp.emuledlg->status++;
-				break;
-			case 3:
-				break;
-			case 4:{
 				bool bError = false;
-				theApp.emuledlg->status++;
 
 				// NOTE: If we have an unhandled exception in CDownloadQueue::Init, MFC will silently catch it
 				// and the creation of the TCP and the UDP socket will not be done -> client will get a LowID!
-				try{
+				try {
 					theApp.downloadqueue->Init();
-				}
-				catch(...){
+				} catch (...) {
 					ASSERT(0);
-					LogError(LOG_STATUSBAR,_T("Failed to initialize download queue - Unknown exception"));
+					LogError(LOG_STATUSBAR, _T("Failed to initialize download queue - Unknown exception"));
 					bError = true;
 				}
 				if (!theApp.listensocket->StartListening()) {
@@ -759,13 +755,13 @@ void CALLBACK CemuleDlg::StartupTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT_PTR /*
 #endif
 				break;
 			}
-			case 5:
-				if (thePrefs.IsStoringSearchesEnabled())
-					theApp.searchlist->LoadSearches();
-				theApp.emuledlg->status++;
-				break;
-			default:
-				theApp.emuledlg->StopTimer();
+		case 5:
+			theApp.emuledlg->status++;
+			if (thePrefs.IsStoringSearchesEnabled())
+				theApp.searchlist->LoadSearches();
+			break;
+		default:
+			theApp.emuledlg->StopTimer();
 		}
 	}
 	CATCH_DFLT_EXCEPTIONS(_T("CemuleDlg::StartupTimer"))
@@ -773,18 +769,17 @@ void CALLBACK CemuleDlg::StartupTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT_PTR /*
 
 void CemuleDlg::StopTimer()
 {
-	if (m_hTimer){
-		VERIFY( ::KillTimer(NULL, m_hTimer) );
+	if (m_hTimer) {
+		VERIFY(::KillTimer(NULL, m_hTimer));
 		m_hTimer = 0;
 	}
 	if (thePrefs.UpdateNotify())
 		DoVersioncheck(false);
 
-	if (theApp.pstrPendingLink != NULL){
+	if (theApp.pstrPendingLink != NULL) {
 		OnWMData(NULL, (LPARAM)&theApp.sendstruct);
 		delete theApp.pstrPendingLink;
 	}
-
 }
 
 void CemuleDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -803,29 +798,29 @@ void CemuleDlg::OnSysCommand(UINT nID, LPARAM lParam)
 		return;
 	}
 
-	switch (nID /*& 0xFFF0*/)
-	{
-		case MP_ABOUTBOX: {
+	switch (nID /*& 0xFFF0*/) {
+	case MP_ABOUTBOX:
+		{
 			CCreditsDlg dlgAbout;
 			dlgAbout.DoModal();
 			break;
 		}
-		case MP_VERSIONCHECK:
-			DoVersioncheck(true);
-			break;
-		case MP_CONNECT:
-			StartConnection();
-			break;
-		case MP_DISCONNECT:
-			CloseConnection();
-			break;
-		default:
-			CTrayDialog::OnSysCommand(nID, lParam);
+	case MP_VERSIONCHECK:
+		DoVersioncheck(true);
+		break;
+	case MP_CONNECT:
+		StartConnection();
+		break;
+	case MP_DISCONNECT:
+		CloseConnection();
+		break;
+	default:
+		CTrayDialog::OnSysCommand(nID, lParam);
 	}
 
-	if ((nID & 0xFFF0) == SC_MINIMIZE		||
-		(nID & 0xFFF0) == MP_MINIMIZETOTRAY	||
-		(nID & 0xFFF0) == SC_RESTORE		||
+	if ((nID & 0xFFF0) == SC_MINIMIZE ||
+		(nID & 0xFFF0) == MP_MINIMIZETOTRAY ||
+		(nID & 0xFFF0) == SC_RESTORE ||
 		(nID & 0xFFF0) == SC_MAXIMIZE)
 	{
 		ShowTransferRate(true);
@@ -836,24 +831,16 @@ void CemuleDlg::OnSysCommand(UINT nID, LPARAM lParam)
 
 void CemuleDlg::PostStartupMinimized()
 {
-	if (!m_bStartMinimizedChecked)
-	{
+	if (!m_bStartMinimizedChecked) {
 		//TODO: Use full initialized 'WINDOWPLACEMENT' and remove the 'OnCancel' call...
-		// Isn't that easy.. Read comments in OnInitDialog..
+		// Isn't that easy. Read comments in OnInitDialog.
 		m_bStartMinimizedChecked = true;
-		if (m_bStartMinimized)
-		{
-			if (theApp.DidWeAutoStart())
-			{
-				if (!thePrefs.mintotray) {
-					thePrefs.mintotray = true;
-					MinimizeWindow();
-					thePrefs.mintotray = false;
-				}
-				else
-					MinimizeWindow();
-			}
-			else
+		if (m_bStartMinimized) {
+			if (theApp.DidWeAutoStart() && !thePrefs.mintotray) {
+				thePrefs.mintotray = true;
+				MinimizeWindow();
+				thePrefs.mintotray = false;
+			} else
 				MinimizeWindow();
 		}
 	}
@@ -1197,16 +1184,16 @@ void CemuleDlg::ShowTransferRate(bool bForceAll)
 	CString strTransferRate = GetTransferRateString();
 	if (TrayIsVisible() || bForceAll) {
 		// set trayicon-icon
-		int iDownRateProcent = (int)ceil((m_uDownDatarate/10.24) / thePrefs.GetMaxGraphDownloadRate());
-		if (iDownRateProcent > 100)
-			iDownRateProcent = 100;
-		UpdateTrayIcon(iDownRateProcent);
+		int iDownRatePercent = (int)ceil((m_uDownDatarate/10.24) / thePrefs.GetMaxGraphDownloadRate());
+		if (iDownRatePercent > 100)
+			iDownRatePercent = 100;
+		UpdateTrayIcon(iDownRatePercent);
 
 		CString buffer2;
 		buffer2.Format(_T("eMule v%s (%s)\r\n%s")
-					  ,(LPCTSTR)theApp.m_strCurVersionLong
-					  ,(LPCTSTR)GetResString(theApp.IsConnected() ? IDS_CONNECTED : IDS_DISCONNECTED)
-					  ,(LPCTSTR)strTransferRate);
+					  , (LPCTSTR)theApp.m_strCurVersionLong
+					  , (LPCTSTR)GetResString(theApp.IsConnected() ? IDS_CONNECTED : IDS_DISCONNECTED)
+					  , (LPCTSTR)strTransferRate);
 
 		// Win98: '\r\n' is not displayed correctly in tooltip
 		if (afxIsWin95()) {
@@ -1222,7 +1209,7 @@ void CemuleDlg::ShowTransferRate(bool bForceAll)
 	}
 	if (IsWindowVisible() && thePrefs.ShowRatesOnTitle()) {
 		CString szBuff;
-		szBuff.Format(_T("(U:%.1f D:%.1f) eMule v%s"), m_uUpDatarate/1024.0, m_uDownDatarate/1024.0, (LPCTSTR)theApp.m_strCurVersionLong);
+		szBuff.Format(_T("(U:%.1f D:%.1f) eMule v%s"), m_uUpDatarate/1024.0f, m_uDownDatarate/1024.0f, (LPCTSTR)theApp.m_strCurVersionLong);
 		SetWindowText(szBuff);
 	}
 	if (m_pMiniMule && m_pMiniMule->m_hWnd && m_pMiniMule->IsWindowVisible() && !m_pMiniMule->GetAutoClose() && !m_pMiniMule->IsInInitDialog())
@@ -1740,7 +1727,7 @@ bool CemuleDlg::CanClose()
 void CemuleDlg::OnClose()
 {
 	static LONG closing = 0;
-	if (InterlockedCompareExchange(&closing, 1, 0))
+	if (InterlockedExchange(&closing, 1))
 		return; //already closing or cannot close yet
 	if (!CanClose()) {
 		InterlockedExchange(&closing, 0);
@@ -1855,7 +1842,6 @@ void CemuleDlg::OnClose()
 	// NOTE: Do not move those dtors into 'CemuleApp::InitInstance' (althought they should be there). The
 	// dtors are indirectly calling functions which access several windows which would not be available
 	// after we have closed the main window -> crash!
-	delete theApp.mmserver;			theApp.mmserver = NULL;
 	delete theApp.listensocket;		theApp.listensocket = NULL;
 	delete theApp.clientudp;		theApp.clientudp = NULL;
 	delete theApp.sharedfiles;		theApp.sharedfiles = NULL;
@@ -2586,7 +2572,7 @@ void CemuleDlg::QuickSpeedUpload(UINT nID)
 		thePrefs.SetMaxUpload(GetRecMaxUpload());
 		return;
 	}
-	thePrefs.SetMaxUpload((UINT)(thePrefs.GetMaxGraphUploadRate(true) * 0.1 * nID));
+	thePrefs.SetMaxUpload((uint32)(thePrefs.GetMaxGraphUploadRate(true) * 0.1 * nID));
 }
 
 void CemuleDlg::QuickSpeedDownload(UINT nID)
@@ -3513,8 +3499,8 @@ LRESULT CemuleDlg::OnWebServerClearCompleted(WPARAM wParam, LPARAM lParam)
 	}
 	else
 	{
-		uchar* pFileHash = reinterpret_cast<uchar*>(lParam);
-		CKnownFile* file = theApp.knownfiles->FindKnownFileByID(pFileHash);
+		uchar *pFileHash = reinterpret_cast<uchar *>(lParam);
+		CKnownFile *file = theApp.knownfiles->FindKnownFileByID(pFileHash);
 		if (file)
 			transferwnd->GetDownloadList()->RemoveFile(static_cast<CPartFile *>(file));
 		delete[] pFileHash;
@@ -3525,7 +3511,7 @@ LRESULT CemuleDlg::OnWebServerClearCompleted(WPARAM wParam, LPARAM lParam)
 
 LRESULT CemuleDlg::OnWebServerFileRename(WPARAM wParam, LPARAM lParam)
 {
-	CString sNewName((LPCTSTR)(lParam));
+	CString sNewName((LPCTSTR)lParam);
 
 	(reinterpret_cast<CPartFile *>(wParam))->SetFileName(sNewName);
 	(reinterpret_cast<CPartFile *>(wParam))->SavePartFile();
@@ -3555,16 +3541,12 @@ LRESULT CemuleDlg::OnWebGUIInteraction(WPARAM wParam, LPARAM lParam) {
 					tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;	// Get the shutdown privilege for this process.
 					AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
 
-					if (lParam==1) {	// shutdown
+					if (lParam==1) // shutdown
 						ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCE, 0);
-					} else
-					if (lParam==2) {
+					else if (lParam==2)
 						ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
-					}
-
-				} catch(...)
-					{
-						AddLogLine(true, GetResString(IDS_WEB_REBOOT) + _T(' ') + GetResString(IDS_FAILED));
+				} catch(...) {
+					AddLogLine(true, GetResString(IDS_WEB_REBOOT) + _T(' ') + GetResString(IDS_FAILED));
 				}
 			}
 			else
@@ -3588,7 +3570,7 @@ LRESULT CemuleDlg::OnWebGUIInteraction(WPARAM wParam, LPARAM lParam) {
 			if (!lParam)
 				theApp.serverconnect->ConnectToAnyServer();
 			else
-				theApp.serverconnect->ConnectToServer((CServer*)lParam);
+				theApp.serverconnect->ConnectToServer(reinterpret_cast<CServer *>(lParam));
 			break;
 		case WEBGUIIA_DISCONNECT:
 			if (lParam!=2)	// !KAD
@@ -3598,7 +3580,7 @@ LRESULT CemuleDlg::OnWebGUIInteraction(WPARAM wParam, LPARAM lParam) {
 			break;
 
 		case WEBGUIIA_SERVER_REMOVE:
-			serverwnd->serverlistctrl.RemoveServer((CServer*)lParam);
+			serverwnd->serverlistctrl.RemoveServer(reinterpret_cast<CServer *>(lParam));
 			break;
 
 		case WEBGUIIA_SHARED_FILES_RELOAD:
@@ -3606,18 +3588,18 @@ LRESULT CemuleDlg::OnWebGUIInteraction(WPARAM wParam, LPARAM lParam) {
 			break;
 
 		case WEBGUIIA_ADD_TO_STATIC:
-			serverwnd->serverlistctrl.StaticServerFileAppend((CServer*)lParam);
+			serverwnd->serverlistctrl.StaticServerFileAppend(reinterpret_cast<CServer *>(lParam));
 			break;
 
 		case WEBGUIIA_REMOVE_FROM_STATIC:
-			serverwnd->serverlistctrl.StaticServerFileRemove((CServer*)lParam);
+			serverwnd->serverlistctrl.StaticServerFileRemove(reinterpret_cast<CServer *>(lParam));
 			break;
 
 		case WEBGUIIA_UPDATESERVERMETFROMURL:
-			theApp.emuledlg->serverwnd->UpdateServerMetFromURL((TCHAR*)lParam);
+			theApp.emuledlg->serverwnd->UpdateServerMetFromURL((TCHAR *)lParam);
 			break;
 		case WEBGUIIA_SHOWSTATISTICS:
-			theApp.emuledlg->statisticswnd->ShowStatistics(lParam!=0);
+			theApp.emuledlg->statisticswnd->ShowStatistics(lParam != 0);
 			break;
 		case WEBGUIIA_DELETEALLSEARCHES:
 			theApp.emuledlg->searchwnd->DeleteAllSearches();

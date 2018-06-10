@@ -374,9 +374,8 @@ void CCollectionCreateDialog::OnNmDblClkCollectionList(NMHDR* /*pNMHDR*/, LRESUL
 void CCollectionCreateDialog::OnEnKillFocusCollectionName()
 {
 	CString sFileName;
-	CString sNewFileName;
 	m_CollectionNameEdit.GetWindowText(sFileName);
-	sNewFileName = ValidFilename(sFileName);
+	CString sNewFileName(ValidFilename(sFileName));
 	if (sNewFileName.Compare(sFileName) != 0)
 		m_CollectionNameEdit.SetWindowText(sNewFileName);
 }

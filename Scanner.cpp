@@ -1265,7 +1265,7 @@ YY_RULE_SETUP
 							if (pFileLink)
 							{
 								yylval.pstr = new CStringA;
-								yylval.pstr->Format("ed2k::%s", (LPCSTR)CStringA(md4str(pFileLink->GetHashKey())));
+								yylval.pstr->Format("ed2k::%S", (LPCTSTR)md4str(pFileLink->GetHashKey()));
 								delete pLink;
 								return TOK_ED2K_LINK;
 							}
@@ -2508,7 +2508,7 @@ int yylex_destroy  (void)
 	(yy_buffer_stack) = NULL;
 
     yyfree ( (yy_state_buf) );
-    (yy_state_buf)  = NULL;
+    (yy_state_buf) = NULL;
 
     /* Reset the globals. This is important in a non-reentrant scanner so the next time
      * yylex() is called, initialization will occur. */

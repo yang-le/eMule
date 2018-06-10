@@ -51,6 +51,8 @@ class CUploadDiskIOThread: public CWinThread
 public:
 	CUploadDiskIOThread();
 	~CUploadDiskIOThread();
+	CUploadDiskIOThread(const CUploadDiskIOThread&) = delete;
+	CUploadDiskIOThread& operator=(const CUploadDiskIOThread&) = delete;
 
 	void NewBlockRequestsAvailable();
 	void SocketNeedsMoreData();

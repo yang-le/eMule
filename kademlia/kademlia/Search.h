@@ -88,6 +88,7 @@ namespace Kademlia
 			CSearch();
 			~CSearch();
 			CSearch(const CSearch&) = delete;
+			CSearch& operator=(const CSearch&) = delete;
 
 		private:
 			void Go();

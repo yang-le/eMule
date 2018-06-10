@@ -163,7 +163,7 @@ CStringW CSecRunAsUser::CreateRandomPW()
 	while (strResult.GetLength() < 10){
 		char chRnd = (char)('0' + (rand() % 'z')); //'0'..'z'
 		if (chRnd>='a' && chRnd<='z' || chRnd>='A' && chRnd<='Z' || chRnd>='0' && chRnd<='9' || chRnd=='_')
-				strResult.AppendChar(chRnd);
+			strResult += chRnd;
 	}
 	return strResult;
 }
@@ -334,17 +334,18 @@ eResult CSecRunAsUser::RestartAsUser(){
 	if (!LoadAPI())
 		return RES_FAILED;
 
-	TCHAR szAppPath[MAX_PATH];
-	DWORD dwModPathLen = GetModuleFileName(NULL, szAppPath, _countof(szAppPath));
+	TCHAR szAppPath[MAX_PATH + 2];
+	DWORD dwModPathLen = ::GetModuleFileName(NULL, &szAppPath[1], MAX_PATH);
 	if (dwModPathLen == 0 || dwModPathLen == _countof(szAppPath))
 		return RES_FAILED;
+	szAppPath[0] = _T('"');
+	szAppPath[++dwModPathLen] = _T('"');
+	szAppPath[++dwModPathLen] = _T('\0');
 
 	ASSERT ( !m_strPassword.IsEmpty() );
 	BOOL bResult;
 	try{
 		PROCESS_INFORMATION ProcessInfo = {};
-		CString strAppName;
-		strAppName.Format(_T("\"%s\""),szAppPath);
 
 		STARTUPINFOW StartInf = {};
 		StartInf.cb = sizeof StartInf;
@@ -356,7 +357,7 @@ eResult CSecRunAsUser::RestartAsUser(){
 		::CloseHandle(theApp.m_hMutexOneInstance);
 
 		bResult = CreateProcessWithLogonW(EMULEACCOUNTW, m_strDomain, m_strPassword,
-			LOGON_WITH_PROFILE, NULL, const_cast<LPWSTR>((LPCWSTR)strAppName), 0, NULL, NULL, &StartInf, &ProcessInfo);
+			LOGON_WITH_PROFILE, NULL, szAppPath, 0, NULL, NULL, &StartInf, &ProcessInfo);
 		CloseHandle(ProcessInfo.hProcess);
 		CloseHandle(ProcessInfo.hThread);
 
@@ -370,9 +371,7 @@ eResult CSecRunAsUser::RestartAsUser(){
 	if (!bResult)
 		theApp.QueueDebugLogLine(false, _T("Run as unpriveleged user: Error: Failed to restart eMule as different user! Error Code: %i"),GetLastError());
 
-	if (bResult)
-		return RES_OK_NEED_RESTART;
-	return RES_FAILED;
+	return bResult ? RES_OK_NEED_RESTART : RES_FAILED;
 }
 
 CStringW CSecRunAsUser::GetCurrentUserW() const
@@ -494,7 +493,7 @@ eResult CSecRunAsUser::RestartAsRestricted()
 
 		// do the starting job
 		TCHAR szAppPath[MAX_PATH + 2];
-		DWORD dwModPathLen = GetModuleFileName(NULL, &szAppPath[1], MAX_PATH);
+		DWORD dwModPathLen = ::GetModuleFileName(NULL, &szAppPath[1], MAX_PATH);
 		if (dwModPathLen == 0 || dwModPathLen >= MAX_PATH)
 			throw CString(_T("Failed to get module file path"));
 		szAppPath[0] = _T('"');

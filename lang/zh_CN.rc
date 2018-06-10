@@ -1407,8 +1407,6 @@ BEGIN
                             "USS: 路由跟踪多次失败. 关闭USS."
     IDS_USS_STARTING        "USS: 准备就绪. 开始控制上传速度. (起初的60秒内将采取快速反应模式)"
     IDS_A4AF                "来源处理"
-    IDS_MOBILEMULE          "MobileMule" //!
-    IDS_ENABLEMM            "启用MobileMule"
     IDS_AUTOCAT_LABEL       "自动指定类别(形式,用‘|’分隔)"
     IDS_SHOWEXTSETTINGS     "显示更多控制(高级模式控制)"
     IDS_TREEOPTIONS_TRUE    "真"
@@ -1429,8 +1427,6 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Temporary目录禁止被设为eMule的安装目录."
     IDS_WRN_INCTEMP_SAME    "Incoming目录和Temporary目录不能相同."
-    IDS_MMFAILED            "创建MobileMule Socket失败!"
-    IDS_MMSTARTED           "MobileMule服务器启动于端口 %u.协议版本:%s"
     IDS_SHOWDWLPERCENTAGE   "在进度条上显示下载完成量的百分比"
     IDS_TBN_ONNEWDOWNLOAD   "下载已添加"
     IDS_ARTIST              "艺术家"
@@ -1439,7 +1435,6 @@ END
 STRINGTABLE 
 BEGIN
     IDS_ALBUM               "专辑"
-    IDS_MMGUIDELINK         "MobileMule用户指南"
     IDS_CD_UPLOADREQ        "被请求的上传:"
     IDS_SETTINGCHANGED_RESTART 
                             "要使更改的设置生效,请重启eMule!"
@@ -1534,8 +1529,6 @@ BEGIN
                             "从%s下载和安装所选的语言dll失败!"
     IDS_ERR_BADFOLDER       "无效文件夹.\n不能创建文件夹.请检查名字和位置."
     IDS_AUTOREMOVEFD        "自动清除完成的下载"
-    IDS_MM_BLOCK            "登录MobileMule失败已满3次 - 任何进一步的尝试将会被阻止10分钟!"
-    IDS_MM_NEWUSER          "新用户成功登陆MobileMule-Server"
 END
 
 STRINGTABLE 
@@ -1543,7 +1536,7 @@ BEGIN
     IDS_TEXTLABELS          "文本标签"
     IDS_ENABLETEXTLABELS    "在图表下面显示"
     IDS_CUSTOMIZETOOLBAR    "定制工具条"
-    IDS_MINBITRATE          "最小比特率 [kBit/s]"
+    IDS_MINBITRATE          "最小比特率 [kbit/s]"
     IDS_KAD_RECHECKFW       "重新检查防火墙"
     IDS_SHAREDTITLE         "共享ED2K|Kad"
     IDS_FIREWALLED          "通过防火墙"

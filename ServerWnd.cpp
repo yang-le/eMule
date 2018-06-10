@@ -113,8 +113,8 @@ BOOL CServerWnd::OnInitDialog()
 	// using ES_NOHIDESEL is actually not needed, but it helps to get around a tricky window update problem!
 	// If that style is not specified there are troubles with right clicking into the control for the very first time!?
 #define	LOG_PANE_RICHEDIT_STYLES WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_READONLY | ES_NOHIDESEL
-	CRect rect;
 
+	CRect rect;
 	GetDlgItem(IDC_SERVMSG)->GetWindowRect(rect);
 	GetDlgItem(IDC_SERVMSG)->DestroyWindow();
 	::MapWindowPoints(NULL, m_hWnd, (LPPOINT)&rect, 2);
@@ -623,8 +623,7 @@ void CServerWnd::ToggleDebugWindow()
 	if (thePrefs.GetVerbose() && !debug)
 	{
 		TCITEM newitem;
-		CString name;
-		name = SZ_DEBUG_LOG_TITLE;
+		CString name(SZ_DEBUG_LOG_TITLE);
 		name.Replace(_T("&"), _T("&&"));
 		newitem.mask = TCIF_TEXT | TCIF_IMAGE;
 		newitem.pszText = const_cast<LPTSTR>((LPCTSTR)name);
@@ -656,7 +655,8 @@ void CServerWnd::UpdateMyInfo()
 	m_MyInfo.Invalidate();
 }
 
-CString CServerWnd::GetMyInfoString() {
+CString CServerWnd::GetMyInfoString()
+{
 	CString buffer;
 	m_MyInfo.GetWindowText(buffer);
 
@@ -728,7 +728,7 @@ void CServerWnd::ShowNetworkInfo()
 void CServerWnd::OnEnLinkServerBox(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	*pResult = 0;
-	ENLINK* pEnLink = reinterpret_cast<ENLINK *>(pNMHDR);
+	ENLINK *pEnLink = reinterpret_cast<ENLINK *>(pNMHDR);
 	if (pEnLink && pEnLink->msg == WM_LBUTTONDOWN)
 	{
 		CString strUrl;

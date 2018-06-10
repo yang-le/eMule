@@ -152,10 +152,8 @@ BOOL CSmileySelector::Create(CWnd *pWndParent, const RECT *pRect, CEdit *pwndEdi
 	//
 #ifdef SHOW_SMILEY_SHORTCUTS
 	CString strStrings;
-	for (int i = 0; i < _countof(g_aSmileys); i++) {
-		strStrings += g_aSmileys[i].pszSmileys;
-		strStrings += _T('\001');
-	}
+	for (int i = 0; i < _countof(g_aSmileys); ++i)
+		strStrings.AppendFormat(_T("%s\001"), g_aSmileys[i].pszSmileys);
 	strStrings += _T('\001');
 	strStrings.Replace('\001', '\000');
 	m_tb.AddStrings(strStrings);
@@ -165,7 +163,7 @@ BOOL CSmileySelector::Create(CWnd *pWndParent, const RECT *pRect, CEdit *pwndEdi
 	// Create toolbar buttons
 	//
 	TBBUTTON *tb = new TBBUTTON[m_iBitmaps];
-	for (int i = 0; i < m_iBitmaps; i++)
+	for (int i = 0; i < m_iBitmaps; ++i)
 	{
 		tb[i].iBitmap = i;
 		tb[i].idCommand = SMSEL_CMD_START + i;
@@ -272,4 +270,3 @@ void CSmileySelector::OnTbnSmileyGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 #endif
-

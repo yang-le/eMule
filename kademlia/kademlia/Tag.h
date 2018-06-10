@@ -51,7 +51,7 @@ namespace Kademlia
 		{
 		}
 
-		CKadTagNameString(LPCSTR psz)
+		explicit CKadTagNameString(LPCSTR psz)
 			: CStringA(psz)
 		{
 		}
@@ -61,9 +61,9 @@ namespace Kademlia
 		{
 		}
 
-	   // A tag name may include character values >= 0xD0 and therefore also >= 0xF0. to prevent those
-	   // characters be interpreted as multi byte character sequences we have to ensure that a binary
-	   // string compare is performed.
+		// A tag name may include character values >= 0xD0 and therefore also >= 0xF0. to prevent those
+		// characters be interpreted as multi byte character sequences we have to ensure that a binary
+		// string compare is performed.
 		int Compare(LPCSTR psz) const noexcept
 		{
 			ATLASSERT(AfxIsValidString(psz));
@@ -128,12 +128,12 @@ namespace Kademlia
 		{
 		}
 
-		CKadTagValueString(const CStringW &rstr)
+		explicit CKadTagValueString(const CStringW &rstr)
 			: CStringW(rstr)
 		{
 		}
 
-		CKadTagValueString(const wchar_t *psz)
+		explicit CKadTagValueString(const wchar_t *psz)
 			: CStringW(psz)
 		{
 		}
@@ -227,7 +227,7 @@ namespace Kademlia
 		virtual CKadTagValueString GetStr() const
 		{
 			ASSERT(0);
-			return L"";
+			return CKadTagValueString(L"");
 		}
 		virtual uint64 GetInt() const
 		{
@@ -477,6 +477,9 @@ namespace Kademlia
 			delete[] m_value;
 		}
 
+		CKadTagBsob(const CKadTagBsob&) = delete;
+		CKadTagBsob& operator=(const CKadTagBsob&) = delete;
+
 		virtual CKadTagBsob* Copy()
 		{
 			return new CKadTagBsob(m_name, m_value, m_size);
@@ -511,6 +514,9 @@ namespace Kademlia
 		{
 			delete[] m_value;
 		}
+
+		CKadTagHash(const CKadTagHash&) = delete;
+		CKadTagHash& operator=(const CKadTagHash&) = delete;
 
 		virtual CKadTagHash* Copy()
 		{

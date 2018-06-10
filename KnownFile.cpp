@@ -27,7 +27,6 @@
 #include "KnownFileList.h"
 #include "SharedFileList.h"
 #include "UpDownClient.h"
-#include "MMServer.h"
 #include "ClientList.h"
 #include "opcodes.h"
 #include "ini2.h"
@@ -48,11 +47,8 @@
 #include "emuledlg.h"
 #include "SharedFilesWnd.h"
 #include "MediaInfo.h"
-#pragma warning(push)
-#pragma warning(disable:4100) // unreferenced formal parameter
 #include <id3/tag.h>
 #include <id3/misc_support.h>
-#pragma warning(pop)
 extern wchar_t *ID3_GetStringW(const ID3_Frame *frame, ID3_FieldID fldName);
 
 #ifdef _DEBUG
@@ -208,9 +204,9 @@ void CKnownFile::UpdateFileRatingCommentAvail(bool bForceUpdate)
 	for(POSITION pos = m_kadNotes.GetHeadPosition(); pos != NULL; )
 	{
 		const Kademlia::CEntry* entry = m_kadNotes.GetNext(pos);
-		if (!m_bHasComment && !entry->GetStrTagValue(TAG_DESCRIPTION).IsEmpty())
+		if (!m_bHasComment && !entry->GetStrTagValue(Kademlia::CKadTagNameString(TAG_DESCRIPTION)).IsEmpty())
 			m_bHasComment = true;
-		UINT rating = (UINT)entry->GetIntTagValue(TAG_FILERATING);
+		UINT rating = (UINT)entry->GetIntTagValue(Kademlia::CKadTagNameString(TAG_FILERATING));
 		if (rating != 0)
 		{
 			uRatings++;
@@ -379,12 +375,12 @@ void CKnownFile::SetFileName(LPCTSTR pszFileName, bool bReplaceInvalidFileSystem
 	wordlist.clear();
 	if(m_pCollection)
 	{
-		CString sKeyWords;
-		sKeyWords.Format(_T("%s %s"), (LPCTSTR)m_pCollection->GetCollectionAuthorKeyString(), (LPCTSTR)GetFileName());
+		CStringW sKeyWords;
+		sKeyWords.Format(_T("%s %s"), (LPCTSTR)m_pCollection->GetCollectionAuthorKeyString(), (LPCTSTR)(CString)GetFileName());  //cast to CStringT
 		Kademlia::CSearchManager::GetWords(sKeyWords, &wordlist);
 	}
 	else
-		Kademlia::CSearchManager::GetWords(GetFileName(), &wordlist);
+		Kademlia::CSearchManager::GetWords((CStringW)GetFileName(), &wordlist); //make sure it is CStringW
 
 	if (pFile && pFile == this)
 		theApp.sharedfiles->AddKeywords(this);
@@ -487,7 +483,7 @@ bool CKnownFile::CreateFromFile(LPCTSTR in_directory, LPCTSTR in_filename, LPVOI
 		m_FileIdentifier.SetAICHHash(cAICHHashSet.GetMasterHash());
 		if (!m_FileIdentifier.SetAICHHashSet(cAICHHashSet))
 		{
-			ASSERT( false );
+			ASSERT(false);
 			DebugLogError(_T("CreateFromFile() - failed to create AICH PartHashSet out of RecoveryHashSet - %s"), (LPCTSTR)GetFileName());
 		}
 		if (!cAICHHashSet.SaveHashSet())
@@ -588,7 +584,7 @@ bool CKnownFile::CreateAICHHashSetOnly()
 		m_FileIdentifier.SetAICHHash(cAICHHashSet.GetMasterHash());
 		if (!m_FileIdentifier.SetAICHHashSet(cAICHHashSet))
 		{
-			ASSERT( false );
+			ASSERT(false);
 			DebugLogError(_T("CreateAICHHashSetOnly() - failed to create AICH PartHashSet out of RecoveryHashSet - %s"), (LPCTSTR)GetFileName());
 		}
 		if (!cAICHHashSet.SaveHashSet())
@@ -616,26 +612,26 @@ void CKnownFile::SetFileSize(EMFileSize nFileSize)
 	//
 	//File size: 3 bytes
 	//File hash: 2D55E87D0E21F49B9AD25F98531F3724
-	//Nr. hashs: 0
+	//Nr. hashes: 0
 	//
 	//
 	//File size: 1*PARTSIZE
 	//File hash: A72CA8DF7F07154E217C236C89C17619
-	//Nr. hashs: 2
+	//Nr. hashes: 2
 	//Hash[  0]: 4891ED2E5C9C49F442145A3A5F608299
 	//Hash[  1]: 31D6CFE0D16AE931B73C59D7E0C089C0	*special part hash*
 	//
 	//
 	//File size: 1*PARTSIZE + 1 byte
 	//File hash: 2F620AE9D462CBB6A59FE8401D2B3D23
-	//Nr. hashs: 2
+	//Nr. hashes: 2
 	//Hash[  0]: 121795F0BEDE02DDC7C5426D0995F53F
 	//Hash[  1]: C329E527945B8FE75B3C5E8826755747
 	//
 	//
 	//File size: 2*PARTSIZE
 	//File hash: A54C5E562D5E03CA7D77961EB9A745A4
-	//Nr. hashs: 3
+	//Nr. hashes: 3
 	//Hash[  0]: B3F5CE2A06BF403BFB9BFFF68BDDC4D9
 	//Hash[  1]: 509AA30C9EA8FC136B1159DF2F35B8A9
 	//Hash[  2]: 31D6CFE0D16AE931B73C59D7E0C089C0	*special part hash*
@@ -643,7 +639,7 @@ void CKnownFile::SetFileSize(EMFileSize nFileSize)
 	//
 	//File size: 3*PARTSIZE
 	//File hash: 5E249B96F9A46A18FC2489B005BF2667
-	//Nr. hashs: 4
+	//Nr. hashes: 4
 	//Hash[  0]: 5319896A2ECAD43BF17E2E3575278E72
 	//Hash[  1]: D86EF157D5E49C5ED502EDC15BB5F82B
 	//Hash[  2]: 10F2D5B1FCB95C0840519C58D708480F
@@ -652,14 +648,14 @@ void CKnownFile::SetFileSize(EMFileSize nFileSize)
 	//
 	//File size: 3*PARTSIZE + 1 byte
 	//File hash: 797ED552F34380CAFF8C958207E40355
-	//Nr. hashs: 4
+	//Nr. hashes: 4
 	//Hash[  0]: FC7FD02CCD6987DCF1421F4C0AF94FB8
 	//Hash[  1]: 2FE466AF8A7C06DA3365317B75A5ACFE
 	//Hash[  2]: 873D3BF52629F7C1527C6E8E473C1C30
 	//Hash[  3]: BCE50BEE7877BB07BB6FDA56BFE142FB
 	//
 
-	// File size       Data parts      ED2K parts      ED2K part hashs		AICH part hashs
+	// File size       Data parts      ED2K parts      ED2K part hashes		AICH part hashes
 	// -------------------------------------------------------------------------------------------
 	// 1..PARTSIZE-1   1               1               0(!)					0 (!)
 	// PARTSIZE        1               2(!)            2(!)					0 (!)
@@ -682,12 +678,11 @@ void CKnownFile::SetFileSize(EMFileSize nFileSize)
 	m_iED2KPartCount = (uint16)((uint64)nFileSize / PARTSIZE + 1);
 }
 
-bool CKnownFile::LoadTagsFromFile(CFileDataIO* file)
+bool CKnownFile::LoadTagsFromFile(CFileDataIO *file)
 {
-	UINT tagcount = file->ReadUInt32();
 	bool bHadAICHHashSetTag = false;
-	for (UINT j = 0; j < tagcount; ++j) {
-		CTag* newtag = new CTag(file, false);
+	for (uint32 j = file->ReadUInt32(); j > 0; --j) {
+		CTag *newtag = new CTag(file, false);
 		switch (newtag->GetNameID()) {
 		case FT_FILENAME:
 			ASSERT(newtag->IsStr());
@@ -700,8 +695,9 @@ bool CKnownFile::LoadTagsFromFile(CFileDataIO* file)
 			ASSERT(newtag->IsInt64(true));
 			if (newtag->IsInt64(true)) {
 				SetFileSize(newtag->GetInt64());
-				m_AvailPartFrequency.SetSize(GetPartCount());
-				for (UINT i = 0; i < GetPartCount(); i++)
+				int i = (int)GetPartCount();
+				m_AvailPartFrequency.SetSize(i);
+				while (--i >= 0)
 					m_AvailPartFrequency[i] = 0;
 			}
 			break;
@@ -772,7 +768,7 @@ bool CKnownFile::LoadTagsFromFile(CFileDataIO* file)
 			break;
 		case FT_AICH_HASH: {
 			if (!newtag->IsStr()) {
-				//ASSERT( false ); uncomment later
+				//ASSERT(false); uncomment later
 				break;
 			}
 			CAICHHash hash;
@@ -905,7 +901,7 @@ bool CKnownFile::WriteToFile(CFileDataIO* file)
 			}
 			catch (CFileException* pError)
 			{
-				ASSERT( false );
+				ASSERT(false);
 				DebugLogError(_T("Memfile Error while storing AICH Part HashSet"));
 				bWriteHashSet = false;
 				delete[] hashSetFile.Detach();
@@ -1121,8 +1117,9 @@ Packet*	CKnownFile::CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 by
 	}
 
 	// check whether client has either no download status at all or a download status which is valid for this file
-	if (   !(forClient->GetUpPartCount()==0 && forClient->GetUpPartStatus()==NULL)
-		&& !(forClient->GetUpPartCount()==GetPartCount() && forClient->GetUpPartStatus()!=NULL)) {
+	if (   !(forClient->GetUpPartCount() == 0 && forClient->GetUpPartStatus() == NULL)
+		&& !(forClient->GetUpPartCount() == GetPartCount() && forClient->GetUpPartStatus() != NULL))
+	{
 		// should never happen
 		DEBUG_ONLY( DebugLogError(_T("*** %hs - part count (%u) of client (%s) does not match part count (%u) of file \"%s\""), __FUNCTION__, forClient->GetUpPartCount(), (LPCTSTR)forClient->DbgGetClientInfo(), GetPartCount(), (LPCTSTR)GetFileName()) );
 		ASSERT(0);
@@ -1165,7 +1162,7 @@ Packet*	CKnownFile::CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 by
 #if defined(_BETA) || defined(_DEVBUILD)
 			throw new CUserException();
 #endif
-			ASSERT( false );
+			ASSERT(false);
 			DebugLogError(_T("Invalid client in uploading list for file %s"), (LPCTSTR)GetFileName());
 			return NULL;
 		}
@@ -1276,7 +1273,7 @@ Packet*	CKnownFile::CreateSrcInfoPacket(const CUpDownClient* forClient, uint8 by
 	data.Seek(bIsSX2Packet ? 17 : 16, SEEK_SET);
 	data.WriteUInt16((uint16)nCount);
 
-	Packet* result = new Packet(&data, OP_EMULEPROT);
+	Packet *result = new Packet(&data, OP_EMULEPROT);
 	result->opcode = bIsSX2Packet ? OP_ANSWERSOURCES2 : OP_ANSWERSOURCES;
 	// (1+)16+2+501*(4+2+4+2+16+1) = 14547 (14548) bytes max.
 	if (result->size > 354)
@@ -1801,27 +1798,25 @@ bool CKnownFile::GrabImage(const CString& strFileName, uint8 nFramesToGrab, doub
 {
 	if (!IsMovie())
 		return false;
-	CFrameGrabThread* framegrabthread = (CFrameGrabThread*) AfxBeginThread(RUNTIME_CLASS(CFrameGrabThread), THREAD_PRIORITY_NORMAL,0, CREATE_SUSPENDED);
+	CFrameGrabThread *framegrabthread = static_cast<CFrameGrabThread *>(AfxBeginThread(RUNTIME_CLASS(CFrameGrabThread), THREAD_PRIORITY_NORMAL,0, CREATE_SUSPENDED));
 	framegrabthread->SetValues(this, strFileName, nFramesToGrab, dStartTime, bReduceColor, nMaxWidth, pSender);
 	framegrabthread->ResumeThread();
 	return true;
 }
 
 // imgResults[i] can be NULL
-void CKnownFile::GrabbingFinished(CxImage** imgResults, uint8 nFramesGrabbed, void* pSender)
+void CKnownFile::GrabbingFinished(CxImage **imgResults, uint8 nFramesGrabbed, void *pSender)
 {
 	// continue processing
-	if (pSender == theApp.mmserver)
-		theApp.mmserver->PreviewFinished(imgResults, nFramesGrabbed);
-	else if (theApp.clientlist->IsValidClient((CUpDownClient*)pSender))
-		((CUpDownClient*)pSender)->SendPreviewAnswer(this, imgResults, nFramesGrabbed);
+	if (theApp.clientlist->IsValidClient(reinterpret_cast<CUpDownClient *>(pSender)))
+		reinterpret_cast<CUpDownClient *>(pSender)->SendPreviewAnswer(this, imgResults, nFramesGrabbed);
 	else
 		//probably a client which got deleted while grabbing the frames for some reason
 		if (thePrefs.GetVerbose())
 			AddDebugLogLine(false, _T("Couldn't find Sender of FrameGrabbing Request"));
 
 	//cleanup
-	for (int i = 0; i != nFramesGrabbed; ++i)
+	for (int i = nFramesGrabbed; --i >= 0;)
 		delete imgResults[i];
 	delete[] imgResults;
 }

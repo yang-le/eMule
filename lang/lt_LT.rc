@@ -1287,8 +1287,6 @@ BEGIN
     IDS_VERSION             "Versija"
     IDS_PASTE               "Áterpti"
     IDS_A4AF                "Ðaltiniø tvarkymas"
-    IDS_MOBILEMULE          "Mobilus eMule"
-    IDS_ENABLEMM            "Ájungti Mobilø eMule"
     IDS_AUTOCAT_LABEL       "Auto kategorijø priskyrimas (atskyrëjas |)"
     IDS_SHOWEXTSETTINGS     "Rodyti daugiau valdymø (sudëtingesnis valdymas)"
     IDS_TREEOPTIONS_TRUE    "Tikras"
@@ -1309,13 +1307,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Laikinø failø katalogas neturi bûti eMule instaliacinis katalogas."
     IDS_WRN_INCTEMP_SAME    "Ateinanèiø ir laikinø failø katalogai negali bûti tie patys."
-    IDS_MMFAILED            "Nepavyko sukurti Mobilaus eMule soketo!"
-    IDS_MMSTARTED           "Mobilus eMule serveris startavo %u porte. Protokolo versija: %s"
     IDS_SHOWDWLPERCENTAGE   "Rodyti gavimus procentais progreso juostoje"
     IDS_TBN_ONNEWDOWNLOAD   "Gavimas pridëtas"
     IDS_ARTIST              "Artistas"
     IDS_ALBUM               "Albumas"
-    IDS_MMGUIDELINK         "Mobilaus eMule vedlys"
 END
 
 STRINGTABLE 
@@ -1415,7 +1410,6 @@ BEGIN
                             "Nepavyko gauti ir instaliuoti pasirinktà kalbos dll ið %s!"
     IDS_ERR_BADFOLDER       "Neteisingas katalogas.\nKatalogas negali bûti sukurtas. Praðom patikrinti pavadinimà ir vietà."
     IDS_AUTOREMOVEFD        "Automatiðkai iðvalyti gautus failus"
-    IDS_MM_BLOCK            "Uþfiksuoti 3 nesekmingi bandymai prisijungti prie Mobilaus eMule - bet koks prisijungimas yra blokuojamas 10 minuèiø!"
 END
 
 STRINGTABLE 
@@ -1441,7 +1435,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Naujas vartotojas sekmingai prisijungë prie Mobilaus eMule"
     IDS_RADCLIENTS          "nuo pasijungusiø klientø"
     IDS_KADUDPPORTERR       "Kademlios UDP portas pykstasi su eMule iðplëstiniu UDP portu arba su serverio UDP portut. Portas pakeistas á %u."
     IDS_CONFIRM_FILEDELETE  "Ar jûs tikrai norite paðalinti ið disko visus paþymëtus failus?"
@@ -1465,7 +1458,7 @@ BEGIN
     IDS_TEXTLABELS          "Tekstinës þymos"
     IDS_ENABLETEXTLABELS    "po ikonomis"
     IDS_CUSTOMIZETOOLBAR    "Prisitaikyti uþduoèiø juostà"
-    IDS_MINBITRATE          "Min bitreitas [kBit/s]"
+    IDS_MINBITRATE          "Min bitreitas [kbit/s]"
     IDS_KAD_RECHECKFW       "Patikrinti ugniasienæ"
     IDS_SHAREDTITLE         "Ðarinama eD2k|Kad"
     IDS_FIREWALLED          "Uþ ugniasienes"

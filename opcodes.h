@@ -103,6 +103,8 @@
 #define OLD_MAX_EMULE_FILE_SIZE	4290048000ui64	// (4294967295/PARTSIZE)*PARTSIZE = ~4GB
 // MOD Note: end
 
+#define PACKET_HEADER_SIZE	6
+
 #define CONFIGFOLDER			_T("config\\")
 #define MAXCONPER5SEC			20
 #define MAXCON5WIN9X			10
@@ -144,7 +146,7 @@
 #define	MET_HEADER				0x0E
 #define	MET_HEADER_I64TAGS		0x0F
 
-#define UNLIMITED				0xFFFF
+#define UNLIMITED				_UI32_MAX
 
 //Proxytypes deadlake
 #define PROXYTYPE_NOPROXY	0
@@ -349,7 +351,7 @@
 #define TAG_VERSION				"\x11"	// <string>
 #define  FT_PARTFILENAME		 0x12	// <string>
 #define TAG_PARTFILENAME		"\x12"	// <string>
-//#define FT_PRIORITY			 0x13	// Not used anymore
+//#define FT_PRIORITY			 0x13	// Not used any more
 #define TAG_PRIORITY			"\x13"	// <uint32>
 #define  FT_STATUS				 0x14	// <uint32>
 #define TAG_STATUS				"\x14"	// <uint32>
@@ -357,7 +359,7 @@
 #define TAG_SOURCES				"\x15"	// <uint32>
 #define  FT_PERMISSIONS			 0x16	// <uint32>
 #define TAG_PERMISSIONS			"\x16"
-//#define FT_ULPRIORITY			 0x17	// Not used anymore
+//#define FT_ULPRIORITY			 0x17	// Not used any more
 #define TAG_PARTS				"\x17"
 #define  FT_DLPRIORITY			 0x18	// Was 13
 #define  FT_ULPRIORITY			 0x19	// Was 17

@@ -110,14 +110,7 @@
 #include "safefile.h"
 #include "./kademlia/kademlia/prefs.h"
 #include "./kademlia/kademlia/kademlia.h"
-// random generator
-#pragma warning(push)
-#pragma warning(disable:4516) // access-declarations are deprecated; member using-declarations provide a better alternative
-#pragma warning(disable:4244) // conversion from 'type1' to 'type2', possible loss of data
-#pragma warning(disable:4100) // unreferenced formal parameter
-#pragma warning(disable:4702) // unreachable code
 #include <cryptopp/osrng.h>
-#pragma warning(pop)
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

@@ -54,7 +54,7 @@ public:
 
 	void	Init();
 	void	SetToolTipsDelay(DWORD dwDelay);
-	void	CreateMenues();
+	void	CreateMenus();
 	void	ReloadFileList();
 	void	AddFile(const CShareableFile* file);
 	void	RemoveFile(const CShareableFile* file, bool bDeletedFromDisk);

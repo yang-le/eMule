@@ -373,7 +373,7 @@ void CMuleSystrayDlg::OnChangeDowntxt()
 {
 	UpdateData();
 
-	if(thePrefs.GetMaxGraphDownloadRate() == UNLIMITED)	//Cax2 - shouldn't be anymore...
+	if(thePrefs.GetMaxGraphDownloadRate() == UNLIMITED)	//Cax2 - shouldn't be any more...
 	{
 		if(m_nDownSpeedTxt > 64)		//Cax2 - why 64 ???
 			m_nDownSpeedTxt = 64;

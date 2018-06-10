@@ -29,7 +29,7 @@ public:
 	void ConnectTo(CServer* server, bool bNoCrypt = false);
 	int GetConnectionState() const { return connectionstate; } 
 	DWORD GetLastTransmission() const { return m_dwLastTransmission; }
-	virtual void SendPacket(Packet* packet, bool delpacket = true, bool controlpacket = true, uint32 actualPayloadSize = 0, bool bForceImmediateSend = false);
+	virtual void SendPacket(Packet *packet, bool delpacket = true, bool controlpacket = true, uint32 actualPayloadSize = 0, bool bForceImmediateSend = false);
 
 protected:
 	virtual void OnClose(int nErrorCode);
@@ -37,7 +37,7 @@ protected:
 	virtual void OnReceive(int nErrorCode);
 	virtual void OnError(int nErrorCode);
 	virtual bool OnHostNameResolved(const SOCKADDR_IN *pSockAddr);
-	bool PacketReceived(Packet* packet);
+	bool PacketReceived(Packet *packet);
 	void ProcessPacketError(UINT size, UINT opcode, LPCTSTR pszError);
 
 private:

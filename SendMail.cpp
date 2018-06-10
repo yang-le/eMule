@@ -94,41 +94,35 @@ protected:
 // CMimeMessageEx -- needed to access the bug fixed version of CMimeRawAttachmentEx
 
 #pragma warning(push)
-#pragma warning(disable:4701) // local variable 'pRawAttach' may be used without having been initialized
+#pragma warning(disable: 4701 4703) //potentially uninitialized local (pointer) variable 'pRawAttach' used
+
 class CMimeMessageEx : public CMimeMessage
 {
 public:
-	BOOL AttachRaw(void* pRawData, DWORD dwDataLength, int nEncodingScheme = ATLSMTP_BASE64_ENCODE, BOOL bCopyData = TRUE,
+	BOOL AttachRaw(void *pRawData, DWORD dwDataLength, int nEncodingScheme = ATLSMTP_BASE64_ENCODE, BOOL bCopyData = TRUE,
 		LPCTSTR szDisplayName = NULL, LPCTSTR szContentType = _T("application/octet-stream"), UINT uiCodepage = 0)
 	{
 		if (!pRawData)
 			return FALSE;
 
 		CAutoPtr<CMimeBodyPart> spRawAttach;
-		CMimeRawAttachmentEx* pRawAttach;
+		CMimeRawAttachmentEx *pRawAttach;
 		ATLTRY(spRawAttach.Attach(pRawAttach = new CMimeRawAttachmentEx()));
 		if (!spRawAttach)
-		{
 			return FALSE;
-		}
 
 		BOOL bRet = pRawAttach->Initialize(pRawData, dwDataLength, bCopyData, szDisplayName, m_spMultiLanguage, uiCodepage);
-
 		if (bRet)
 			bRet = pRawAttach->SetEncodingScheme(nEncodingScheme);
 		if (bRet)
 			bRet = pRawAttach->SetContentType(szContentType);
 
-		_ATLTRY
-		{
-			if (bRet)
-				if(!m_BodyParts.AddTail(spRawAttach))
-					bRet = FALSE;
-		}
-		_ATLCATCHALL()
-		{
-			bRet = FALSE;
-		}
+		if (bRet)
+			_ATLTRY {
+				return m_BodyParts.AddTail(spRawAttach) != NULL;
+			} _ATLCATCHALL() {
+				bRet = FALSE;
+			}
 
 		return bRet;
 	}
@@ -136,18 +130,17 @@ public:
 #pragma warning(pop)
 
 // Print the hash in a format which is similar to CertMgr's.
-CString GetCertHash(const BYTE* pucHash, int iBytes)
+CString GetCertHash(const BYTE *pucHash, int iBytes)
 {
 	static LPCTSTR pszHex = _T("0123456789abcdef");
 	CString strHash;
 	LPTSTR pszHash = strHash.GetBuffer(iBytes * 3);
-	for (int i = 0; i < iBytes; ++i)
-	{
+	for (int i = 0; i < iBytes; ++i) {
 		*pszHash++ = pszHex[*pucHash >> 4];
 		*pszHash++ = pszHex[*pucHash++ & 0xf];
 		*pszHash++ = _T(' ');
 	}
-	*pszHash = _T('\0');
+	*--pszHash = _T('\0');
 	strHash.ReleaseBuffer();
 	return strHash;
 }
@@ -169,7 +162,7 @@ PCCERT_CONTEXT GetCertificate(HCERTSTORE hCertStore, DWORD dwFindType, LPCWSTR p
 	{
 		DebugLog(LOG_DONTNOTIFY, _T("E-Mail Encryption: Found certificate"));
 
-		TCHAR szString[512] = {};
+		TCHAR szString[512];
 		PCERT_INFO pCertInfo = pCertContext->pCertInfo;
 		if (pCertInfo)
 		{
@@ -187,12 +180,12 @@ PCCERT_CONTEXT GetCertificate(HCERTSTORE hCertStore, DWORD dwFindType, LPCWSTR p
 			if (CertGetNameString(pCertContext, CERT_NAME_SIMPLE_DISPLAY_TYPE, CERT_NAME_DISABLE_IE4_UTF8_FLAG, szOID_COMMON_NAME, szString, ARRSIZE(szString)))
 				DebugLog(LOG_DONTNOTIFY, _T("E-Mail Encryption: Name: %s"), szString);
 
-			BYTE md5[16] = {};
+			BYTE md5[16];
 			DWORD cb = sizeof md5;
 			if (CertGetCertificateContextProperty(pCertContext, CERT_MD5_HASH_PROP_ID, md5, &cb) && cb == sizeof md5)
 				DebugLog(LOG_DONTNOTIFY, _T("E-Mail Encryption: MD5 hash: %s"), (LPCTSTR)GetCertHash(md5, cb));
 
-			BYTE sha1[20] = {};
+			BYTE sha1[20];
 			cb = sizeof sha1;
 			if (CertGetCertificateContextProperty(pCertContext, CERT_SHA1_HASH_PROP_ID, sha1, &cb) && cb == sizeof sha1)
 				DebugLog(LOG_DONTNOTIFY, _T("E-Mail Encryption: SHA1 hash: %s"), (LPCTSTR)GetCertHash(sha1, cb));

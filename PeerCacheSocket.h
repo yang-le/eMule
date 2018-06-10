@@ -18,8 +18,8 @@
 
 #include "HttpClientReqSocket.h"
 
-UINT GetPeerCacheSocketUploadTimeout();
-UINT GetPeerCacheSocketDownloadTimeout();
+DWORD GetPeerCacheSocketUploadTimeout();
+DWORD GetPeerCacheSocketDownloadTimeout();
 
 
 ///////////////////////////////////////////////////////////////////////////////

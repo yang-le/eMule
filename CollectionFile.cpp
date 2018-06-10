@@ -37,13 +37,10 @@ CCollectionFile::CCollectionFile()
 {
 }
 
-CCollectionFile::CCollectionFile(CFileDataIO* in_data)
+CCollectionFile::CCollectionFile(CFileDataIO *in_data)
 {
-	UINT tagcount = in_data->ReadUInt32();
-
-	for (UINT i = 0; i < tagcount; i++)
-	{
-		CTag* toadd;
+	for (UINT cnt = in_data->ReadUInt32(); cnt > 0; --cnt) {
+		CTag *toadd;
 		try {
 			toadd = new CTag(in_data, true);
 		} catch (...) {
@@ -52,20 +49,19 @@ CCollectionFile::CCollectionFile(CFileDataIO* in_data)
 		taglist.Add(toadd);
 	}
 
-	CTag* pTagHash = GetTag(FT_FILEHASH);
-	if(pTagHash)
+	CTag *pTagHash = GetTag(FT_FILEHASH);
+	if (pTagHash)
 		SetFileHash(pTagHash->GetHash());
 	else
 		ASSERT(0);
 
 	pTagHash = GetTag(FT_AICH_HASH);
-	if (pTagHash != NULL && pTagHash->IsStr())
-	{
+	if (pTagHash != NULL && pTagHash->IsStr()) {
 		CAICHHash hash;
 		if (DecodeBase32(pTagHash->GetStr(), hash) == CAICHHash::GetHashSize())
 			m_FileIdentifier.SetAICHHash(hash);
 		else
-			ASSERT( false );
+			ASSERT(0);
 	}
 
 	// here we have two choices
@@ -77,28 +73,20 @@ CCollectionFile::CCollectionFile(CFileDataIO* in_data)
 	//
 	// but, in no case, we will use the receive file type when adding this search result to the download queue, to avoid
 	// that we are using 'wrong' file types in part files. (this has to be handled when creating the part files)
-	const CString& rstrFileType = GetStrTagValue(FT_FILETYPE);
+	const CString &rstrFileType = GetStrTagValue(FT_FILETYPE);
 	CCollectionFile::SetFileName(GetStrTagValue(FT_FILENAME), false, rstrFileType.IsEmpty());
 	CCollectionFile::SetFileSize(GetInt64TagValue(FT_FILESIZE));
 	if (!rstrFileType.IsEmpty())
-	{
-		if (_tcscmp(rstrFileType, _T(ED2KFTSTR_PROGRAM))==0)
-		{
-			CString strDetailFileType = GetFileTypeByName(GetFileName());
-			if (!strDetailFileType.IsEmpty())
-				CCollectionFile::SetFileType(strDetailFileType);
-			else
-				CCollectionFile::SetFileType(rstrFileType);
-		}
-		else
+		if (_tcscmp(rstrFileType, _T(ED2KFTSTR_PROGRAM)) == 0) {
+			const CString &strDetailFileType = GetFileTypeByName(GetFileName());
+			CCollectionFile::SetFileType(strDetailFileType.IsEmpty() ? rstrFileType : strDetailFileType);
+		} else
 			CCollectionFile::SetFileType(rstrFileType);
-	}
 
-	if((uint64)GetFileSize() == 0ull || GetFileName().IsEmpty())
-		ASSERT(0);
+		ASSERT((uint64)GetFileSize() && !GetFileName().IsEmpty());
 }
 
-CCollectionFile::CCollectionFile(CAbstractFile* pAbstractFile) : CAbstractFile(pAbstractFile)
+CCollectionFile::CCollectionFile(CAbstractFile *pAbstractFile) : CAbstractFile(pAbstractFile)
 {
 	ClearTags();
 
@@ -120,24 +108,23 @@ CCollectionFile::CCollectionFile(CAbstractFile* pAbstractFile) : CAbstractFile(p
 
 bool CCollectionFile::InitFromLink(const CString& sLink)
 {
-	CED2KLink* pLink = NULL;
-	CED2KFileLink* pFileLink = NULL;
-	try
-	{
+	CED2KLink *pLink = NULL;
+	CED2KFileLink *pFileLink = NULL;
+	try {
 		pLink = CED2KLink::CreateLinkFromUrl(sLink);
-		if(!pLink)
+		if (!pLink)
 			throw GetResString(IDS_ERR_NOTAFILELINK);
 		pFileLink = pLink->GetFileLink();
 		if (!pFileLink)
 			throw GetResString(IDS_ERR_NOTAFILELINK);
-	}
-	catch (const CString& error)
-	{
+	} catch (const CString &error) {
 		CString strBuffer;
 		strBuffer.Format(GetResString(IDS_ERR_INVALIDLINK), (LPCTSTR)error);
 		LogError(LOG_STATUSBAR, (LPCTSTR)GetResString(IDS_ERR_LINKERROR), (LPCTSTR)strBuffer);
+		delete pLink;
 		return false;
 	}
+	delete pLink;
 
 	taglist.Add(new CTag(FT_FILEHASH, pFileLink->GetHashKey()));
 	m_FileIdentifier.SetMD4Hash(pFileLink->GetHashKey());
@@ -148,13 +135,11 @@ bool CCollectionFile::InitFromLink(const CString& sLink)
 	taglist.Add(new CTag(FT_FILENAME, pFileLink->GetName()));
 	SetFileName(pFileLink->GetName(), false, false);
 
-	if (pFileLink->HasValidAICHHash())
-	{
+	if (pFileLink->HasValidAICHHash()) {
 		taglist.Add(new CTag(FT_AICH_HASH, pFileLink->GetAICHHash().GetString()));
 		m_FileIdentifier.SetAICHHash(pFileLink->GetAICHHash());
 	}
 
-	delete pLink;
 	return true;
 }
 
@@ -178,21 +163,16 @@ void CCollectionFile::UpdateFileRatingCommentAvail(bool /*bForceUpdate*/)
 	UINT uRatings = 0;
 	UINT uUserRatings = 0;
 
-	for(POSITION pos = m_kadNotes.GetHeadPosition(); pos != NULL; )
-	{
-		const Kademlia::CEntry* entry = m_kadNotes.GetNext(pos);
-		if (!m_bHasComment && !entry->GetStrTagValue(TAG_DESCRIPTION).IsEmpty())
+	for (POSITION pos = m_kadNotes.GetHeadPosition(); pos != NULL;) {
+		const Kademlia::CEntry *entry = m_kadNotes.GetNext(pos);
+		if (!m_bHasComment && !entry->GetStrTagValue(Kademlia::CKadTagNameString(TAG_DESCRIPTION)).IsEmpty())
 			m_bHasComment = true;
-		UINT rating = (UINT)entry->GetIntTagValue(TAG_FILERATING);
-		if (rating != 0)
-		{
+		UINT rating = (UINT)entry->GetIntTagValue(Kademlia::CKadTagNameString(TAG_FILERATING));
+		if (rating != 0) {
 			uRatings++;
 			uUserRatings += rating;
 		}
 	}
 
-	if (uRatings)
-		m_uUserRating = uUserRatings / uRatings;
-	else
-		m_uUserRating = 0;
+	m_uUserRating = uRatings ? uUserRatings / uRatings : 0;
 }

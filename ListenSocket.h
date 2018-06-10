@@ -35,29 +35,29 @@ class CClientReqSocket : public CEMSocket
 	DECLARE_DYNCREATE(CClientReqSocket)
 
 public:
-	explicit CClientReqSocket(CUpDownClient* in_client = NULL);
+	explicit CClientReqSocket(CUpDownClient *in_client = NULL);
 
-	void	SetClient(CUpDownClient* pClient);
+	void	SetClient(CUpDownClient *pClient);
 	void	Disconnect(LPCTSTR pszReason);
 	void	WaitForOnConnect();
 	void	ResetTimeOutTimer();
 	bool	CheckTimeOut();
-	virtual UINT GetTimeOut() const;
+	virtual DWORD GetTimeOut() const;
 	virtual void Safe_Delete();
 
 	bool	Create();
-	virtual void SendPacket(Packet* packet, bool delpacket = true, bool controlpacket = true, uint32 actualPayloadSize = 0, bool bForceImmediateSend = false);
+	virtual void SendPacket(Packet *packet, bool delpacket = true, bool controlpacket = true, uint32 actualPayloadSize = 0, bool bForceImmediateSend = false);
     virtual SocketSentBytes SendControlData(uint32 maxNumberOfBytesToSend, uint32 overchargeMaxBytesToSend);
     virtual SocketSentBytes SendFileAndControlData(uint32 maxNumberOfBytesToSend, uint32 overchargeMaxBytesToSend);
 
-	void	DbgAppendClientInfo(CString& str);
+	void	DbgAppendClientInfo(CString &str);
 	CString DbgGetClientInfo();
 
 	CUpDownClient*	client;
 	void		 OnReceive(int nErrorCode);
 protected:
 	virtual ~CClientReqSocket();
-	virtual void Close() { CAsyncSocketEx::Close(); }
+	virtual void Close()				{ CAsyncSocketEx::Close(); }
 	void	Delete_Timed();
 
 	virtual void OnConnect(int nErrorCode);
@@ -66,16 +66,16 @@ protected:
 
 	void		 OnError(int nErrorCode);
 
-	virtual bool PacketReceived(Packet* packet);
-	int			 PacketReceivedSEH(Packet* packet);
-	bool		 PacketReceivedCppEH(Packet* packet);
+	virtual bool PacketReceived(Packet *packet);
+	int			 PacketReceivedSEH(Packet *packet);
+	bool		 PacketReceivedCppEH(Packet *packet);
 
-	bool	ProcessPacket(const BYTE* packet, uint32 size,UINT opcode);
-	bool	ProcessExtPacket(const BYTE* packet, uint32 size, UINT opcode, UINT uRawSize);
-	void	PacketToDebugLogLine(LPCTSTR protocol, const uchar* packet, uint32 size, UINT opcode);
+	bool	ProcessPacket(const BYTE *packet, uint32 size,UINT opcode);
+	bool	ProcessExtPacket(const BYTE *packet, uint32 size, UINT opcode, UINT uRawSize);
+	void	PacketToDebugLogLine(LPCTSTR protocol, const uchar *packet, uint32 size, UINT opcode);
 	void	SetConState(SocketState val);
 
-	uint32	timeout_timer;
+	DWORD	timeout_timer;
 	uint32	deltimer;
 	uint32	m_nOnConnect;
 	bool	deletethis;
@@ -95,17 +95,17 @@ public:
 	void	StopListening();
 	virtual void OnAccept(int nErrorCode);
 	void	Process();
-	void	RemoveSocket(CClientReqSocket* todel);
-	void	AddSocket(CClientReqSocket* toadd);
+	void	RemoveSocket(CClientReqSocket *todel);
+	void	AddSocket(CClientReqSocket *toadd);
 	UINT	GetOpenSockets()		{return static_cast<UINT>(socket_list.GetCount());}
 	void	KillAllSockets();
 	bool	TooManySockets(bool bIgnoreInterval = false);
 	uint32	GetMaxConnectionReached()	{return maxconnectionreached;}
-	bool    IsValidSocket(CClientReqSocket* totest);
+	bool    IsValidSocket(CClientReqSocket *totest);
 	void	AddConnection();
 	void	RecalculateStats();
 	void	ReStartListening();
-	void	Debug_ClientDeleted(CUpDownClient* deleted);
+	void	Debug_ClientDeleted(CUpDownClient *deleted);
 	bool	Rebind();
 	bool	SendPortTestReply(char result,bool disconnect=false);
 

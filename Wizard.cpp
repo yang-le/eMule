@@ -68,7 +68,7 @@ void CConnectionWizardDlg::DoDataExchange(CDataExchange* pDX)
 
 void CConnectionWizardDlg::OnBnClickedApply()
 {
-	if (m_provider.GetSelectionMark() == 0){
+	if (m_provider.GetSelectionMark() == 0) {
 		// change the upload/download to unlimited and dont touch other stuff, keep the default values
 		thePrefs.maxGraphUploadRate = UNLIMITED;
 		thePrefs.maxGraphDownloadRate = 96;
@@ -117,7 +117,7 @@ void CConnectionWizardDlg::OnBnClickedApply()
 
 	if (upload > 0 && download > 0)
 	{
-		thePrefs.maxupload = (uint16)((upload * 4L) / 5);
+		thePrefs.maxupload = (uint32)((upload * 4L) / 5);
 		if (upload < 4 && download > upload*3) {
 			thePrefs.maxdownload = thePrefs.maxupload * 3;
 			download = upload * 3;
@@ -128,7 +128,7 @@ void CConnectionWizardDlg::OnBnClickedApply()
 			download = upload * 4;
 		}
 		else
-			thePrefs.maxdownload = (uint16)((download * 9L) / 10);
+			thePrefs.maxdownload = (uint32)((download * 9L) / 10);
 
 		theApp.emuledlg->statisticswnd->SetARange(false, thePrefs.maxGraphUploadRate);
 		theApp.emuledlg->statisticswnd->SetARange(true, thePrefs.maxGraphDownloadRate);
@@ -149,7 +149,7 @@ void CConnectionWizardDlg::OnBnClickedApply()
 		}
 		
 		if (m_iOS == 1)
-			download = download/2;
+			download /= 2;
 
 		if (download <= 7)
 		{
@@ -224,7 +224,7 @@ BOOL CConnectionWizardDlg::OnInitDialog()
 
 	SetIcon(m_icnWnd = theApp.LoadIcon(_T("Wizard")), FALSE);
 
-	if (thePrefs.GetWindowsVersion() ==_WINVER_95_ || thePrefs.GetWindowsVersion() ==_WINVER_98_ || thePrefs.GetWindowsVersion() ==_WINVER_ME_){
+	if (thePrefs.GetWindowsVersion() ==_WINVER_95_ || thePrefs.GetWindowsVersion() ==_WINVER_98_ || thePrefs.GetWindowsVersion() ==_WINVER_ME_) {
 		CheckRadioButton(IDC_WIZ_XP_RADIO, IDC_WIZ_ME_RADIO, IDC_WIZ_ME_RADIO);
 		m_iOS = 1;
 	}

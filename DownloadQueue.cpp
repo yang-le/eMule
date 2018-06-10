@@ -340,11 +340,11 @@ void CDownloadQueue::AddDownload(CPartFile* newfile,bool paused) {
 	ExportPartMetFilesOverview();
 }
 
-bool CDownloadQueue::IsFileExisting(const uchar* fileid, bool bLogWarnings) const
+bool CDownloadQueue::IsFileExisting(const uchar *fileid, bool bLogWarnings) const
 {
-	const CKnownFile* file = theApp.sharedfiles->GetFileByID(fileid);
-	if (file){
-		if (bLogWarnings){
+	const CKnownFile *file = theApp.sharedfiles->GetFileByID(fileid);
+	if (file) {
+		if (bLogWarnings) {
 			if (file->IsPartFile())
 				LogWarning(LOG_STATUSBAR, GetResString(IDS_ERR_ALREADY_DOWNLOADING), (LPCTSTR)file->GetFileName());
 			else
@@ -352,22 +352,23 @@ bool CDownloadQueue::IsFileExisting(const uchar* fileid, bool bLogWarnings) cons
 		}
 		return true;
 	}
-	else if ((file = GetFileByID(fileid)) != NULL){
-		if (bLogWarnings)
-			LogWarning(LOG_STATUSBAR, GetResString(IDS_ERR_ALREADY_DOWNLOADING), (LPCTSTR)file->GetFileName());
-		return true;
-	}
-	return false;
+	file = GetFileByID(fileid);
+	if (!file)
+		return false;
+	if (bLogWarnings)
+		LogWarning(LOG_STATUSBAR, GetResString(IDS_ERR_ALREADY_DOWNLOADING), (LPCTSTR)file->GetFileName());
+	return true;
 }
 
-void CDownloadQueue::Process(){
+void CDownloadQueue::Process()
+{
 
 	ProcessLocalRequests(); // send src requests to local server
 
 	uint32 downspeed = 0;
-    uint64 maxDownload = thePrefs.GetMaxDownloadInBytesPerSec(true);
-	if (maxDownload != UNLIMITED*1024 && datarate > 1500){
-		downspeed = (uint32)((maxDownload*100)/(datarate+1));
+	uint64 maxDownload = thePrefs.GetMaxDownloadInBytesPerSec(true);
+	if (maxDownload != UNLIMITED * 1024ull && datarate > 1500) {
+		downspeed = (uint32)((maxDownload * 100) / (datarate + 1));
 		if (downspeed < 50)
 			downspeed = 50;
 		else if (downspeed > 200)
@@ -375,19 +376,19 @@ void CDownloadQueue::Process(){
 	}
 
 	while (!average_dr_list.IsEmpty() && ::GetTickCount() >= average_dr_list.GetHead().timestamp + SEC2MS(10))
-		m_datarateMS-=average_dr_list.RemoveHead().datalen;
+		m_datarateMS -= average_dr_list.RemoveHead().datalen;
 
-	if (average_dr_list.GetCount()>1)
+	if (average_dr_list.GetCount() > 1)
 		datarate = (uint32)(m_datarateMS / average_dr_list.GetCount());
 	else
 		datarate = 0;
 
-	uint32 datarateX=0;
+	uint32 datarateX = 0;
 	udcounter++;
 
 	theStats.m_fGlobalDone = 0;
 	theStats.m_fGlobalSize = 0;
-	theStats.m_dwOverallStatus=0;
+	theStats.m_dwOverallStatus = 0;
 	//filelist is already sorted by prio, therefore I removed all the extra loops.
 	for (POSITION pos = filelist.GetHeadPosition(); pos != NULL;) {
 		CPartFile* cur_file = filelist.GetNext(pos);
@@ -396,25 +397,23 @@ void CDownloadQueue::Process(){
 		theStats.m_fGlobalDone += (uint64)cur_file->GetCompletedSize();
 		theStats.m_fGlobalSize += (uint64)cur_file->GetFileSize();
 
-		if (cur_file->GetTransferringSrcCount()>0)
-			theStats.m_dwOverallStatus  |= STATE_DOWNLOADING;
+		if (cur_file->GetTransferringSrcCount() > 0)
+			theStats.m_dwOverallStatus |= STATE_DOWNLOADING;
 		if (cur_file->GetStatus() == PS_ERROR)
-			theStats.m_dwOverallStatus  |= STATE_ERROROUS;
+			theStats.m_dwOverallStatus |= STATE_ERROROUS;
 
 
-		if (cur_file->GetStatus() == PS_READY || cur_file->GetStatus() == PS_EMPTY){
+		if (cur_file->GetStatus() == PS_READY || cur_file->GetStatus() == PS_EMPTY)
 			datarateX += cur_file->Process(downspeed, udcounter);
-		}
-		else{
+		else
 			//This will make sure we don't keep old sources to paused and stoped files.
 			cur_file->StopPausedFile();
-		}
 	}
 
-	average_dr_list.AddTail(TransferredData {datarateX, ::GetTickCount()});
+	average_dr_list.AddTail(TransferredData{datarateX, ::GetTickCount()});
 	m_datarateMS += datarateX;
 
-	if (udcounter == 5 
+	if (udcounter == 5
 		&& theApp.serverconnect->IsUDPSocketAvailable()
 		&& (!lastudpstattime || ::GetTickCount() >= lastudpstattime + UDPSERVERSTATTIME))
 	{
@@ -433,10 +432,10 @@ void CDownloadQueue::Process(){
 	CheckDiskspaceTimed();
 
 // ZZ:DownloadManager -->
-    if(!m_dwLastA4AFtime || ::GetTickCount() >= m_dwLastA4AFtime + MIN2MS(8)) {
-        theApp.clientlist->ProcessA4AFClients();
-        m_dwLastA4AFtime = ::GetTickCount();
-    }
+	if (!m_dwLastA4AFtime || ::GetTickCount() >= m_dwLastA4AFtime + MIN2MS(8)) {
+		theApp.clientlist->ProcessA4AFClients();
+		m_dwLastA4AFtime = ::GetTickCount();
+	}
 // <-- ZZ:DownloadManager
 }
 
@@ -1499,7 +1498,7 @@ void CDownloadQueue::ProcessLocalRequests()
 		{
 			// create one 'packet' which contains all buffered OP_GETSOURCES eD2K packets to be sent with one TCP frame
 			// server credits: 16*iMaxFilesPerTcpFrame+1 = 241
-			Packet* packet = new Packet(new char[iSize], (uint32)dataTcpFrame.GetLength(), true, false);
+			Packet *packet = new Packet(new char[iSize], (uint32)dataTcpFrame.GetLength(), true, false);
 			dataTcpFrame.Seek(0, CFile::begin);
 			dataTcpFrame.Read(packet->GetPacket(), iSize);
 			theStats.AddUpDataOverheadServer(packet->size);

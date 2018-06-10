@@ -1280,8 +1280,6 @@ BEGIN
     IDS_VERSION             "Razlièica"
     IDS_PASTE               "Prilepi"
     IDS_A4AF                "Upravljanje z viri"
-    IDS_MOBILEMULE          "MobileMule" //!
-    IDS_ENABLEMM            "Omogoèi MobileMule"
     IDS_AUTOCAT_LABEL       "Samodejna dodelitev kategoriji (vzorec, loèen z |)"
     IDS_SHOWEXTSETTINGS     "Pokaži veè kontrol (napredni naèin)"
     IDS_TREEOPTIONS_TRUE    "Da"
@@ -1294,7 +1292,7 @@ STRINGTABLE
 BEGIN
     IDS_SELECT_FONT         "Izberi pisavo"
     IDS_SERVER_LIMITS       "Mehka/Trda omejitev datotek"
-    IDS_KBITSSEC            "kBit/s" //!
+    IDS_KBITSSEC            "kbit/s" //!
     IDS_KBYTESSEC           "kBajt/s"
     IDS_ERR_CREATE_DIR      "Ni bilo mogoèe ustvariti mape %s ""%s"" - %s"
     IDS_WRN_INCFILE_RESERVED 
@@ -1302,13 +1300,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Mapa zaèasne datoteke ne sme biti nastavljena na inštalacijsko mapo eMule."
     IDS_WRN_INCTEMP_SAME    "Ne morete nastaviti iste mape za prihajajoèe in zaèasne datoteke."
-    IDS_MMFAILED            "Ni bilo mogoèe ustvariti vtiènice za MobileMule"
-    IDS_MMSTARTED           "MobileMule strežnik zagnan na vratih %u. Razlièica protokola: %s"
     IDS_SHOWDWLPERCENTAGE   "Prikaži odstotek dokonèanega prenosa na vrstici napredka"
     IDS_TBN_ONNEWDOWNLOAD   "Dodanem prenosu"
     IDS_ARTIST              "Izvajalec"
     IDS_ALBUM               "Album" //!
-    IDS_MMGUIDELINK         "Vodiè po MobileMule"
 END
 
 STRINGTABLE 
@@ -1407,7 +1402,6 @@ BEGIN
     IDS_ERR_FAILEDDOWNLOADLANG 
                             "Ni bilo mogoèe prenesti in namestiti izbrane jezikovne knjižice iz %s!"
     IDS_AUTOREMOVEFD        "Samodejno poèisti konèane prenose"
-    IDS_MM_BLOCK            "3 neuspele prijave v MobileMule - vsak nadaljnji dostop v roku 10 minut bo blokiran!"
 END
 
 STRINGTABLE 
@@ -1437,7 +1431,7 @@ BEGIN
     IDS_TEXTLABELS          "Besedilne oznake"
     IDS_ENABLETEXTLABELS    "Pod ikonami"
     IDS_CUSTOMIZETOOLBAR    "Uredi orodjarno..."
-    IDS_MINBITRATE          "Min. bitna hitrost [kBit/s]"
+    IDS_MINBITRATE          "Min. bitna hitrost [kbit/s]"
     IDS_KAD_RECHECKFW       "Preveri požarni zid"
     IDS_SHAREDTITLE         "Deljeno na eD2K|Kademlia"
     IDS_FIREWALLED          "Za požarnim zidom"
@@ -1452,7 +1446,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Nov uporabnik uspešno prijavljen na MobileMule strežnik"
     IDS_RADCLIENTS          "od znanih odjemalcev"
     IDS_KADUDPPORTERR       "Vrata UDP od Kad so v sporu z vrati UDP od eMule. Vrata so bila spremenjena na %u."
     IDS_CONFIRM_FILEDELETE  "Ali res želite zbrisati vse izbrane datoteke z diska?"

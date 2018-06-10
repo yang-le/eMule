@@ -161,7 +161,7 @@ void CQueueListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	CRect cur_rec(lpDrawItemStruct->rcItem);
 	CRect rcClient;
 	GetClientRect(&rcClient);
-	const CUpDownClient *client = (CUpDownClient *)lpDrawItemStruct->itemData;
+	const CUpDownClient *client = reinterpret_cast<CUpDownClient *>(lpDrawItemStruct->itemData);
 
 	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
 	int iCount = pHeaderCtrl->GetItemCount();
@@ -381,7 +381,7 @@ void CQueueListCtrl::OnLvnGetDispInfo(NMHDR *pNMHDR, LRESULT *pResult)
 		//
 		NMLVDISPINFO *pDispInfo = reinterpret_cast<NMLVDISPINFO*>(pNMHDR);
 		if (pDispInfo->item.mask & LVIF_TEXT) {
-			const CUpDownClient* pClient = reinterpret_cast<CUpDownClient*>(pDispInfo->item.lParam);
+			const CUpDownClient *pClient = reinterpret_cast<CUpDownClient *>(pDispInfo->item.lParam);
 			if (pClient != NULL)
 				GetItemDisplayText(pClient, pDispInfo->item.iSubItem, pDispInfo->item.pszText, pDispInfo->item.cchTextMax);
 		}
@@ -508,7 +508,7 @@ void CQueueListCtrl::OnNmDblClk(NMHDR* /*pNMHDR*/, LRESULT *pResult)
 {
 	int iSel = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
 	if (iSel != -1) {
-		CUpDownClient* client = (CUpDownClient*)GetItemData(iSel);
+		CUpDownClient *client = reinterpret_cast<CUpDownClient *>(GetItemData(iSel));
 		if (client){
 			CClientDetailDialog dialog(client, this);
 			dialog.DoModal();
@@ -520,7 +520,7 @@ void CQueueListCtrl::OnNmDblClk(NMHDR* /*pNMHDR*/, LRESULT *pResult)
 void CQueueListCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 {
 	int iSel = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
-	const CUpDownClient* client = (iSel != -1) ? (CUpDownClient*)GetItemData(iSel) : NULL;
+	const CUpDownClient *client = reinterpret_cast<CUpDownClient *>(iSel != -1 ? GetItemData(iSel) : NULL);
 	const bool is_ed2k = client && client->IsEd2kClient();
 
 	CTitleMenu ClientMenu;
@@ -553,7 +553,7 @@ BOOL CQueueListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 
 	int iSel = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
 	if (iSel != -1){
-		CUpDownClient* client = (CUpDownClient*)GetItemData(iSel);
+		CUpDownClient *client = reinterpret_cast<CUpDownClient *>(GetItemData(iSel));
 		switch (wParam){
 			case MP_SHOWLIST:
 				client->RequestSharedFileList();
@@ -651,7 +651,7 @@ void CQueueListCtrl::ShowSelectedUserDetails()
 	SetItemState(it, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
 	SetSelectionMark(it);   // display selection mark correctly!
 
-	CUpDownClient* client = (CUpDownClient*)GetItemData(GetSelectionMark());
+	CUpDownClient *client = reinterpret_cast<CUpDownClient *>(GetItemData(GetSelectionMark()));
 	if (client){
 		CClientDetailDialog dialog(client, this);
 		dialog.DoModal();
@@ -673,20 +673,16 @@ void CQueueListCtrl::ShowQueueClients()
 void CALLBACK CQueueListCtrl::QueueUpdateTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT_PTR /*idEvent*/, DWORD /*dwTime*/) noexcept
 {
 	// NOTE: Always handle all type of MFC exceptions in TimerProcs - otherwise we'll get mem leaks
-	try
-	{
-		if (   theApp.emuledlg->IsClosing() // Don't do anything if the app is shutting down - can cause unhandled exceptions
+	try {
+		if (theApp.emuledlg->IsClosing() // Don't do anything if the app is shutting down - can cause unhandled exceptions
 			|| !thePrefs.GetUpdateQueueList()
 			|| theApp.emuledlg->activewnd != theApp.emuledlg->transferwnd
-			|| !theApp.emuledlg->transferwnd->GetQueueList()->IsWindowVisible() )
+			|| !theApp.emuledlg->transferwnd->GetQueueList()->IsWindowVisible())
 			return;
 
-		const CUpDownClient* update = theApp.uploadqueue->GetNextClient(NULL);
-		while( update )
-		{
+		const CUpDownClient *update = theApp.uploadqueue->GetNextClient(NULL);
+		for (; update; update = theApp.uploadqueue->GetNextClient(update))
 			theApp.emuledlg->transferwnd->GetQueueList()->RefreshClient(update);
-			update = theApp.uploadqueue->GetNextClient(update);
-		}
 	}
 	CATCH_DFLT_EXCEPTIONS(_T("CQueueListCtrl::QueueUpdateTimer"))
 }

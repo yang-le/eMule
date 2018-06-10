@@ -2,7 +2,7 @@
 // By John O'Byrne
 // 11 August 2002: - Timer precision is now determined automatically
 //		   Complete change in the way the popup is showing (thanks to this,now the popup can be always on top, it shows even while watching a movie)
-//		   The popup doesn't steal the focus anymore (by replacing ShowWindow(SW_SHOW) by ShowWindow(SW_SHOWNOACTIVATE))
+//		   The popup doesn't steal the focus any more (by replacing ShowWindow(SW_SHOW) by ShowWindow(SW_SHOWNOACTIVATE))
 //		   Thanks to Daniel Lohmann, update in the way the taskbar pos is determined (more flexible now)
 // 17 July 2002: - Another big Change in the method for determining the pos of the taskbar (using the SHAppBarMessage function)
 // 16 July 2002: - Thanks to the help of Daniel Lohmann, the Show Function timings work perfectly now ;)
@@ -90,7 +90,7 @@ CTaskbarNotifier::CTaskbarNotifier()
 	m_uTextFormat = DT_MODIFYSTRING | DT_WORDBREAK | DT_PATH_ELLIPSIS | DT_END_ELLIPSIS | DT_NOPREFIX;
 	m_hCursor = ::LoadCursor(NULL, MAKEINTRESOURCE(32649)); // System Hand cursor
 	m_nHistoryPosition = 0;
-	m_nActiveMessageType  = TBN_NULL;
+	m_nActiveMessageType = TBN_NULL;
 	m_bTextSelected = FALSE;
 	m_bAutoClose = TRUE;
 
@@ -119,7 +119,7 @@ CTaskbarNotifier::~CTaskbarNotifier()
 	if (m_hMsImg32Dll)
 		FreeLibrary(m_hMsImg32Dll);
 	while (!m_MessageHistory.IsEmpty())
-		delete (CTaskbarNotifierHistory*)m_MessageHistory.RemoveTail();
+		delete static_cast<CTaskbarNotifierHistory *>(m_MessageHistory.RemoveTail());
 }
 
 LRESULT CALLBACK My_AfxWndProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam)
@@ -480,7 +480,7 @@ void CTaskbarNotifier::ShowLastHistoryMessage()
 {
 	if (!m_MessageHistory.IsEmpty())
 	{
-		CTaskbarNotifierHistory* pHistMsg = (CTaskbarNotifierHistory*)m_MessageHistory.RemoveHead();
+		CTaskbarNotifierHistory *pHistMsg = static_cast<CTaskbarNotifierHistory *>(m_MessageHistory.RemoveHead());
 		Show(pHistMsg->m_strMessage, pHistMsg->m_nMessageType, pHistMsg->m_strLink);
 		delete pHistMsg;
 	}
@@ -515,8 +515,8 @@ void CTaskbarNotifier::Show(LPCTSTR pszCaption, int nMsgType, LPCTSTR pszLink, B
 	{
 		// Add element into string list. Max 5 elements.
 		while (m_MessageHistory.GetCount() >= 5)
-			delete (CTaskbarNotifierHistory*)m_MessageHistory.RemoveHead();
-		CTaskbarNotifierHistory* pHistMsg = new CTaskbarNotifierHistory;
+			delete static_cast<CTaskbarNotifierHistory *>(m_MessageHistory.RemoveHead());
+		CTaskbarNotifierHistory *pHistMsg = new CTaskbarNotifierHistory;
 		pHistMsg->m_strMessage = m_strCaption;
 		pHistMsg->m_nMessageType = nMsgType;
 		pHistMsg->m_strLink = m_strLink;
@@ -850,7 +850,7 @@ void CTaskbarNotifier::OnLButtonUp(UINT nFlags, CPoint point)
 	{
 		if (!m_MessageHistory.IsEmpty())
 		{
-			CTaskbarNotifierHistory* pHistMsg = (CTaskbarNotifierHistory*)m_MessageHistory.RemoveHead();
+			CTaskbarNotifierHistory *pHistMsg = static_cast<CTaskbarNotifierHistory *>(m_MessageHistory.RemoveHead());
 			Show(pHistMsg->m_strMessage, pHistMsg->m_nMessageType, pHistMsg->m_strLink);
 			delete pHistMsg;
 		}

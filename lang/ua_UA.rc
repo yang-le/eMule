@@ -1369,8 +1369,6 @@ BEGIN
                             "Розумне відвантаження: Неодноразова помилка запитів. Вимкнення розумного відвантаження"
     IDS_USS_STARTING        "Розумне відвантаження: Виконано з приготуванням. Початок контролю розумного відвантаження. (Перші 60 секунд мине в швидкому режимі)"
     IDS_A4AF                "Керування джерелами"
-    IDS_MOBILEMULE          "MobileMule"
-    IDS_ENABLEMM            "Дозволити MobileMule"
     IDS_AUTOCAT_LABEL       "Aвтовизначення категорії (розділювач |)"
     IDS_SHOWEXTSETTINGS     "Показувати додатковий контроль"
     IDS_TREEOPTIONS_TRUE    "Вірно"
@@ -1391,13 +1389,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Тимчасова тека  не може бути в теці встановлення."
     IDS_WRN_INCTEMP_SAME    "Вхідна тека і тимчасова тека не можуть бути однаковими."
-    IDS_MMFAILED            "Неможливо створити MobileMule Socket!"
-    IDS_MMSTARTED           "MobileMule сервер увімкнено на порті %u. Версія протоколу: %s"
     IDS_SHOWDWLPERCENTAGE   "Показувати відсоток завершення завантаження у покажчику завантаження"
     IDS_TBN_ONNEWDOWNLOAD   "Завантаження додано"
     IDS_ARTIST              "Виконавець"
     IDS_ALBUM               "Альбом"
-    IDS_MMGUIDELINK         "Відомості про MobileMule"
 END
 
 STRINGTABLE 
@@ -1496,7 +1491,6 @@ BEGIN
                             "Неможливо завантажити і встановити вибраний dll мови з %s!"
     IDS_ERR_BADFOLDER       "Хибна тека.\nНеможливо створити тку. Будь ласка перевірте ім'я і розташування."
     IDS_AUTOREMOVEFD        "Автоматично прибирати завершені завантаження"
-    IDS_MM_BLOCK            "Три невдалі спроби входу в MobileMule - подальша спроба призведе до блокування на 10 хвилин!"
 END
 
 STRINGTABLE 
@@ -1522,7 +1516,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Нового користувача з'єднано з сервером MobileMule"
     IDS_RADCLIENTS          "Від відомих клієнтів"
     IDS_KADUDPPORTERR       "UDP порт конфліктує з eMule UDP портом. Порт змінено на %u."
     IDS_CONFIRM_FILEDELETE  "Ви насправді хочете видалити усі вибрані файли з диска?"

@@ -299,8 +299,7 @@ void CreateNetworkInfo(CRichEditCtrlX& rCtrl, CHARFORMAT& rcfDef, CHARFORMAT& rc
 		}
 		rCtrl << _T("\r\n");
 
-		CString IP;
-		IP = ipstr(ntohl(Kademlia::CKademlia::GetPrefs()->GetIPAddress()));
+		CString IP = ipstr(ntohl(Kademlia::CKademlia::GetPrefs()->GetIPAddress()));
 		buffer.Format(_T("%s:%i"), (LPCTSTR)IP, thePrefs.GetUDPPort());
 		rCtrl << GetResString(IDS_IP) << _T(":") << GetResString(IDS_PORT) << _T(":\t") << buffer << _T("\r\n");
 

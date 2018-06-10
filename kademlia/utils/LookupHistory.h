@@ -44,7 +44,7 @@ namespace Kademlia
 			CLookupHistory();
 			~CLookupHistory();
 
-			void			ContactReceived(CContact* pRecContact, CContact* pFromContact, CUInt128 uDistance, bool bCloser, bool bForceInteresting = false);
+			void			ContactReceived(CContact* pRecContact, CContact* pFromContact, const CUInt128 &uDistance, bool bCloser, bool bForceInteresting = false);
 			void			ContactAskedKad(CContact* pContact);
 			void			ContactAskedKeyword(CContact* pContact);
 			void			ContactRespondedKeyword(uint32 uContactIP, uint16 uContactUDPPort, uint32 uResultCount);

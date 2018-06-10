@@ -38,10 +38,10 @@ class CShareableFile;
 
 class CDirectoryItem{
 public:
-	explicit CDirectoryItem(const CString& strFullPath, HTREEITEM htItem = TVI_ROOT, ESpecialDirectoryItems eItemType = SDI_NO, int nCatFilter = -1);
+	explicit CDirectoryItem(const CString &strFullPath, HTREEITEM htItem = TVI_ROOT, ESpecialDirectoryItems eItemType = SDI_NO, int nCatFilter = -1);
 	~CDirectoryItem();
 	CDirectoryItem*		CloneContent() { return new CDirectoryItem(m_strFullPath, 0, m_eItemType, m_nCatFilter); }
-	HTREEITEM			FindItem(CDirectoryItem* pContentToFind) const;
+	HTREEITEM			FindItem(CDirectoryItem *pContentToFind) const;
 
 	CString		m_strFullPath;
 	HTREEITEM	m_htItem;
@@ -61,25 +61,25 @@ public:
 	CSharedDirsTreeCtrl();
 	virtual ~CSharedDirsTreeCtrl();
 
-	void			Initalize(CSharedFilesCtrl* pSharedFilesCtrl);
+	void			Initalize(CSharedFilesCtrl *pSharedFilesCtrl);
 	void			SetAllIcons();
 
-	CDirectoryItem* GetSelectedFilter() const;
+	CDirectoryItem *GetSelectedFilter() const;
 	bool			IsCreatingTree() const		{return m_bCreatingTree;};
 	void			Localize();
-	void			EditSharedDirectories(const CDirectoryItem* pDir, bool bAdd, bool bSubDirectories);
+	void			EditSharedDirectories(const CDirectoryItem *pDir, bool bAdd, bool bSubDirectories);
 	void			Reload(bool bForce = false);
 	void			OnVolumesChanged();
-	void			FileSystemTreeUpdateBoldState(const CDirectoryItem* pDir = NULL);
-	bool			ShowFileSystemDirectory(const CString& strDir);
-	bool			ShowSharedDirectory(const CString& strDir);
+	void			FileSystemTreeUpdateBoldState(const CDirectoryItem *pDir = NULL);
+	bool			ShowFileSystemDirectory(const CString &strDir);
+	bool			ShowSharedDirectory(const CString &strDir);
 	void			ShowAllSharedFiles();
 
 protected:
 	virtual BOOL	OnCommand(WPARAM wParam, LPARAM lParam);
-	void			CreateMenues();
-	void			ShowFileDialog(CTypedPtrList<CPtrList, CShareableFile*>& aFiles, UINT uPshInvokePage = 0);
-	void			DeleteChildItems(CDirectoryItem* pParent);
+	void			CreateMenus();
+	void			ShowFileDialog(CTypedPtrList<CPtrList, CShareableFile *> &aFiles, UINT uPshInvokePage = 0);
+	void			DeleteChildItems(CDirectoryItem *pParent);
 	void			AddSharedDirectory(CString strDir, bool bSubDirectories);
 	void			RemoveSharedDirectory(CString strDir, bool bSubDirectories);
 	void			RemoveAllSharedDirectories();
@@ -88,12 +88,12 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void	OnSysColorChange();
-	afx_msg void	OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void	OnContextMenu(CWnd *pWnd, CPoint point);
 	afx_msg	void	OnRButtonDown(UINT nFlags, CPoint point );
 	afx_msg	void	OnLButtonUp(UINT nFlags, CPoint point );
 	afx_msg void	OnTvnItemexpanding(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void	OnTvnGetdispinfo(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void	OnTvnBeginDrag(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void	OnTvnBeginDrag(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void	OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void	OnCancelMode();
 
@@ -113,17 +113,17 @@ private:
 	void	InitalizeStandardItems();
 
 	void	FileSystemTreeCreateTree();
-	void	FileSystemTreeAddChildItem(CDirectoryItem* pRoot, CString strText, bool bTopLevel);
+	void	FileSystemTreeAddChildItem(CDirectoryItem *pRoot, CString strText, bool bTopLevel);
 	bool	FileSystemTreeHasSubdirectories(CString strDir);
 	bool	FileSystemTreeHasSharedSubdirectory(CString strDir, bool bOrFiles);
-	void	FileSystemTreeAddSubdirectories(CDirectoryItem* pRoot);
-	bool	FileSystemTreeIsShared(const CString& strDir);
+	void	FileSystemTreeAddSubdirectories(CDirectoryItem *pRoot);
+	bool	FileSystemTreeIsShared(const CString &strDir);
 
-	void	FileSystemTreeUpdateShareState(const CDirectoryItem* pDir = NULL);
-	void	FileSystemTreeSetShareState(const CDirectoryItem* pDir, bool bSubDirectories);
-//	void	FilterTreeAddSharedDirectory(CDirectoryItem* pDir, bool bRefresh);
-	void	FilterTreeAddSubDirectories(CDirectoryItem* pDirectory, const CStringList& liDirs, int nLevel, bool &rbShowWarning, bool bParentAccessible);
-	bool	FilterTreeIsSubDirectory(CString strDir, CString strRoot, const CStringList& liDirs);
+	void	FileSystemTreeUpdateShareState(const CDirectoryItem *pDir = NULL);
+	void	FileSystemTreeSetShareState(const CDirectoryItem *pDir, bool bSubDirectories);
+//	void	FilterTreeAddSharedDirectory(CDirectoryItem *pDir, bool bRefresh);
+	void	FilterTreeAddSubDirectories(CDirectoryItem *pDirectory, const CStringList &liDirs, int nLevel, bool &rbShowWarning, bool bParentAccessible);
+	bool	FilterTreeIsSubDirectory(CString strDir, CString strRoot, const CStringList &liDirs);
 	void	FilterTreeReloadTree();
 
 	bool			m_bCreatingTree;

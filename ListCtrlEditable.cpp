@@ -214,9 +214,7 @@ void CEditableListCtrl::CommitEditCtrl()
 		{
 			CString strItem;
 			m_pctrlEdit->GetWindowText(strItem);
-			strItem.TrimLeft();
-			strItem.TrimRight();
-			SetItemText(m_iEditRow, m_iEditCol, strItem);
+			SetItemText(m_iEditRow, m_iEditCol, strItem.Trim());
 //			m_iEditRow = -1;
 //			m_iEditCol = -1;
 		}
@@ -224,9 +222,7 @@ void CEditableListCtrl::CommitEditCtrl()
 		{
 			CString strItem;
 			m_pctrlComboBox->GetLBText(m_pctrlComboBox->GetCurSel(), strItem);
-			strItem.TrimLeft();
-			strItem.TrimRight();
-			SetItemText(m_iEditRow, m_iEditCol, strItem);
+			SetItemText(m_iEditRow, m_iEditCol, strItem.Trim());
 //			m_iEditRow = -1;
 //			m_iEditCol = -1;
 		}

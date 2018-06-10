@@ -124,7 +124,7 @@ BOOL CPPgFiles::OnApply()
 	bool bOldPreviewPrio = thePrefs.m_bpreviewprio;
 	thePrefs.m_bpreviewprio = (IsDlgButtonChecked(IDC_PREVIEWPRIO) != 0);
 	if (bOldPreviewPrio != thePrefs.m_bpreviewprio)
-		theApp.emuledlg->transferwnd->GetDownloadList()->CreateMenues();
+		theApp.emuledlg->transferwnd->GetDownloadList()->CreateMenus();
 
 	thePrefs.m_bDAP = (IsDlgButtonChecked(IDC_DAP) !=0);
 

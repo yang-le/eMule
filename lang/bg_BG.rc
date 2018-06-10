@@ -1357,8 +1357,6 @@ BEGIN
     IDS_VERSION             "Версия"
     IDS_PASTE               "Постави"
     IDS_A4AF                "Управление на източниците"
-    IDS_MOBILEMULE          "MobileMule" //!
-    IDS_ENABLEMM            "Използвай MobileMule"
     IDS_AUTOCAT_LABEL       "Автоматично определяне на категория (разделител |)"
     IDS_SHOWEXTSETTINGS     "Покажи още контроли (режим - допълнителен контрол)"
     IDS_TREEOPTIONS_TRUE    "Вярно"
@@ -1377,13 +1375,10 @@ BEGIN
     IDS_WRN_INCFILE_RESERVED "Папката за сваляните файлове не трябва да е в инсталационната папка на eMule."
     IDS_WRN_TEMPFILES_RESERVED "Папката за временните файлове не трябва да е в инсталационната папка на eMule."
     IDS_WRN_INCTEMP_SAME    "Папките за свалени и временни файлове не трябва да съвпадат."
-    IDS_MMFAILED            "Не може да се създаде MobileMule сокет!"
-    IDS_MMSTARTED           "MobileMule е стартиран на порт %u. Версия на протокола: %s"
     IDS_SHOWDWLPERCENTAGE   "Покажи проценти в лентата с напредъка"
     IDS_TBN_ONNEWDOWNLOAD   "Задачата е добавена"
     IDS_ARTIST              "Изпълнител"
     IDS_ALBUM               "Албум"
-    IDS_MMGUIDELINK         "Информация за MobileMule"
 END
 
 STRINGTABLE 
@@ -1481,7 +1476,6 @@ BEGIN
                             "Не можах да сваля и инсталирам избраният езиков файл от %s!"
     IDS_ERR_BADFOLDER       "Грешна папка.\nПапката не може да бъде създадена. Моля, проверете името и положението й."
     IDS_AUTOREMOVEFD        "Автоматично изтриване на завършените задачи"
-    IDS_MM_BLOCK            "Отчетени са 3 неуспешни опита за влизане в MobileMule - всички бъдещи опити са блокирани за 10 мин.!"
 END
 
 STRINGTABLE 
@@ -1507,7 +1501,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Нов потребител успешно влезна в сървъра MobileMule"
     IDS_RADCLIENTS          "От известни клиенти"
     IDS_KADUDPPORTERR       "UDP порта за Kad мрежата влиза в конфликт с UDP порта на eMule. Портът ще бъде променен на %u."
     IDS_CONFIRM_FILEDELETE  "Наистина ли искате да изтриете всички избрани файлове от диска?"

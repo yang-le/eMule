@@ -321,15 +321,15 @@ public:
 	TCHAR * m_pszCaption;	//+++1.5
 
 public:
-	explicit CXDialogItem(Econtroltype cType);	// default constructor will fill in default values
+	explicit CXDialogItem(Econtroltype ctrlType);	// default constructor will fill in default values
 	CXDialogItem() : m_dlgItemTemplate(), m_controltype(), m_pszCaption(NULL) {}	// default constructor, not to be called directly
 	virtual ~CXDialogItem();			//+++1.5
 
 	void AddItem(CXDialogTemplate& dialog,
-				 Econtroltype cType,
+				 Econtroltype ctrlType,
 				 UINT nID,
 				 CXRect* prect = NULL,
-				 LPCTSTR pszCaption = NULL);
+				 LPCTSTR lpszCaption = NULL);
 };
 
 
@@ -373,8 +373,9 @@ public:
 					 XMSGBOXPARAMS *pXMB);
 
 	virtual ~CXDialogTemplate();
-
-// Attributes
+	CXDialogTemplate(const CXDialogTemplate &t) = delete;
+	CXDialogTemplate& operator=(const CXDialogTemplate &t) = delete;
+	// Attributes
 public:
 	LPCTSTR	GetMessageText() const				{ return m_lpszMessage; }
 	int&	GetButtonCount()					{ return m_nButton; }
@@ -496,14 +497,14 @@ protected:
 		EDefault         = 0x00
 	};
 
-	static INT_PTR CALLBACK MsgBoxDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM me) noexcept;
+	static INT_PTR CALLBACK MsgBoxDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) noexcept;
 
 	void	LoadButtonStrings();
 	void	LoadButtonStringsFromResources(HINSTANCE hInstance);
-	BOOL	OnKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam);
+	static BOOL	OnKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	int		Option(EOptions id) const	{ return m_Options & id; }
 	void	Set(EOptions id)			{ m_Options |= id;};
-	BOOL	SetClipboardText(LPCTSTR lpszBuffer);
+	static BOOL	SetClipboardText(LPCTSTR lpszBuffer);
 	void	Unset(EOptions id)			{ m_Options &= ~id;};
 
 	//-[UK
@@ -797,7 +798,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 	int nBaseunitX = LOWORD(GetDialogBaseUnits());
 	int nBaseunitY = HIWORD(GetDialogBaseUnits());
 
-	m_nButtonWidth  = MulDiv(ButtonWidth, nBaseunitX, 4);
+	m_nButtonWidth = MulDiv(ButtonWidth, nBaseunitX, 4);
 	m_nButtonHeight = MulDiv(ButtonHeight, nBaseunitY, 8);
 	m_nButtonTimeoutExtraWidth = MulDiv(ButtonTimeoutExtraWidth, nBaseunitX, 4);
 
@@ -1028,7 +1029,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 	SIZE nLineSize;
 	::GetTextExtentPoint32(hdc, _T("My"), 2, &nLineSize);	//+++1.8
 
-	m_msgrect.right  += 12;
+	m_msgrect.right += 12;
 	m_msgrect.bottom += 5;
 
 	m_msgrect.left    = 2 * SpacingSize;
@@ -1759,7 +1760,7 @@ INT_PTR CALLBACK CXDialogTemplate::MsgBoxDlgProc( HWND hwnd
 			//m_hWnd = hwnd;
 
 			::SetWindowLongPtr(hwnd, GWLP_USERDATA, lParam);	// save it for the others
-			Me = (CXDialogTemplate*) lParam;
+			Me = reinterpret_cast<CXDialogTemplate *>(lParam);
 			_ASSERTE(Me);
 
 			HDC hdc = ::CreateDC(_T("DISPLAY"), NULL, NULL, NULL);
@@ -2410,21 +2411,13 @@ INT_PTR CXDialogTemplate::Display()
 		nBufferSize += nItemLength;
 	}
 
-	HLOCAL hLocal = LocalAlloc(LHND, nBufferSize);
-	_ASSERTE(hLocal);
-	if (hLocal == NULL)
-		return IDCANCEL;
-
-	BYTE* pBuffer = (BYTE*)LocalLock(hLocal);
-	_ASSERTE(pBuffer);
-	if (pBuffer == NULL)
-	{
-		LocalFree(hLocal);
+	BYTE* pBuffer;
+	try {
+		pBuffer = new BYTE[nBufferSize];
+	}  catch (...) {
 		return IDCANCEL;
 	}
-
-	BYTE* pdest = pBuffer;
-
+	BYTE *pdest = pBuffer;
 	// transfer DLGTEMPLATE structure to the buffer
 	memcpy(pdest, &m_dlgTempl, sizeof(DLGTEMPLATE));
 	pdest += sizeof(DLGTEMPLATE);
@@ -2545,8 +2538,7 @@ INT_PTR CXDialogTemplate::Display()
 		::DestroyWindow(hDlg);
 	}
 
-	LocalUnlock(hLocal);
-	LocalFree(hLocal);
+	delete[] pBuffer;
 
 	return m_nReturnValue;
 }
@@ -2573,7 +2565,7 @@ CXDialogItem::~CXDialogItem()
 ///////////////////////////////////////////////////////////////////////////////
 // CXDialogItem::AddItem
 void CXDialogItem::AddItem(CXDialogTemplate& dialog,
-						   Econtroltype ctrltype,
+						   Econtroltype ctrlType,
 						   UINT nID,
 						   CXRect* prect,
 						   LPCTSTR lpszCaption)
@@ -2582,7 +2574,7 @@ void CXDialogItem::AddItem(CXDialogTemplate& dialog,
 	short lodbu = LOWORD(GetDialogBaseUnits());
 
 	// first fill in the type, location and size of the control
-	m_controltype = ctrltype;
+	m_controltype = ctrlType;
 
 	if (m_controltype == CHECKBOX)
 		m_controltype = BUTTON;
@@ -2605,7 +2597,7 @@ void CXDialogItem::AddItem(CXDialogTemplate& dialog,
 	m_dlgItemTemplate.dwExtendedStyle = 0;
 	m_dlgItemTemplate.id = (WORD)nID;
 
-	switch (ctrltype)
+	switch (ctrlType)
 	{
 		case ICON:
 			m_dlgItemTemplate.style = WS_CHILD | SS_ICON | WS_VISIBLE;

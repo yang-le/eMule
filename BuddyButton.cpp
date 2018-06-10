@@ -53,9 +53,7 @@ static LRESULT CALLBACK BuddyButtonSubClassedProc(HWND hWnd, UINT uMessage, WPAR
 
 		case WM_NCHITTEST: {
 			LRESULT lResult = CallWindowProc(pfnOldWndProc, hWnd, uMessage, wParam, lParam);
-			if (lResult == HTNOWHERE)
-				lResult = HTTRANSPARENT;
-			return lResult;
+			return (lResult == HTNOWHERE) ? HTTRANSPARENT : lResult;
 		}
 
 		case WM_NCCALCSIZE: {

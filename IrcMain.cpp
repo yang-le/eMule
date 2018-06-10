@@ -509,10 +509,8 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 					if (thePrefs.GetIRCGetChannelsOnConnect())
 					{
 						CString strCommand(_T("LIST"));
-						if (thePrefs.GetIRCUseChannelFilter() && !thePrefs.GetIRCChannelFilter().IsEmpty()) {
-							strCommand += _T(' ');
-							strCommand += thePrefs.GetIRCChannelFilter();
-						}
+						if (thePrefs.GetIRCUseChannelFilter() && !thePrefs.GetIRCChannelFilter().IsEmpty())
+							strCommand.AppendFormat(_T(" %s"), (LPCTSTR)thePrefs.GetIRCChannelFilter());
 						m_pIRCSocket->SendString(strCommand);
 					}
 					ParsePerform();

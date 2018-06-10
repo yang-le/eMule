@@ -281,7 +281,7 @@ CIndexed::~CIndexed()
 void CIndexed::Clean()
 {
 	static LONG cleaning = 0;
-	if (InterlockedCompareExchange(&cleaning, 1, 0))
+	if (InterlockedExchange(&cleaning, 1))
 		return; //already cleaning
 	try {
 		time_t tNow = time(NULL);

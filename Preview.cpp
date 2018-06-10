@@ -102,15 +102,12 @@ BOOL CPreviewThread::Run()
 		SHELLEXECUTEINFO SE = {};
 		SE.fMask = SEE_MASK_NOCLOSEPROCESS;
 
-		CString strCommand;
-		CString strArgs;
-		CString strCommandDir;
 		if (!m_strCommand.IsEmpty())
 		{
 			SE.lpVerb = _T("open");	// "open" the specified video player
 
 			// get directory of video player application
-			strCommandDir = m_strCommand;
+			CString strCommandDir = m_strCommand;
 			int iPos = strCommandDir.ReverseFind(_T('\\'));
 			if (iPos == -1)
 				strCommandDir.Empty();
@@ -119,15 +116,15 @@ BOOL CPreviewThread::Run()
 			PathRemoveBackslash(strCommandDir.GetBuffer());
 			strCommandDir.ReleaseBuffer();
 
-			strArgs = m_strCommandArgs;
+			CString strArgs = m_strCommandArgs;
 			if (!strArgs.IsEmpty())
 				strArgs += _T(' ');
 			if (strPreviewName.Find(_T(' ')) != -1)
-				strArgs += _T('\"') + strPreviewName + _T('\"');
+				strArgs.AppendFormat(_T("\"%s\""), (LPCTSTR)strPreviewName);
 			else
 				strArgs += strPreviewName;
 
-			strCommand = m_strCommand;
+			CString strCommand = m_strCommand;
 			ExpandEnvironmentStrings(strCommand);
 			ExpandEnvironmentStrings(strArgs);
 			ExpandEnvironmentStrings(strCommandDir);

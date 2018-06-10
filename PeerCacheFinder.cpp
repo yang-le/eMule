@@ -21,13 +21,7 @@
 #include "Preferences.h"
 #include "opcodes.h"
 #include "md5sum.h"
-#pragma warning(push)
-#pragma warning(disable:4516) // access-declarations are deprecated; member using-declarations provide a better alternative
-#pragma warning(disable:4244) // conversion from 'type1' to 'type2', possible loss of data
-#pragma warning(disable:4100) // unreferenced formal parameter
-#pragma warning(disable:4702) // unreachable code
 #include <cryptopp/rsa.h>
-#pragma warning(pop)
 #include "Log.h"
 #include "UserMsgs.h"
 
@@ -63,7 +57,7 @@ static const uchar achVerify_Key[256] = {
     0xF8, 0xB7, 0xAC, 0x7A, 0xD8, 0x43, 0x6F, 0xA4, 0x21, 0x51, 0x93, 0xDF, 0x58, 0x9A, 0xC1, 0xC7,
     0x77, 0x45, 0xD7, 0xBE, 0x9B, 0x55, 0x0F, 0x2E, 0xC9, 0xD5, 0x85, 0x8F, 0xB5, 0xF9, 0xF0, 0x49,
     0xF6, 0x85, 0x24, 0x7A, 0xA8, 0x74, 0x64, 0xB1, 0x8B, 0x71, 0x63, 0xFC, 0x1F, 0x1B, 0x5E, 0x26,
-    0xF5,
+    0xF5
 };
 
 CPeerCacheFinder::CPeerCacheFinder()
@@ -498,21 +492,19 @@ bool CPCValditeThread::Valdite(){
 		// read content
 		CArray<uint32, uint32> adwCacheIPs;
 		CStringAArray astrIPRanges;
-		CStringA strLine;
 		bool bContentCheckFailed = false;
 
 		UINT uContentSize = nIFileSize - SIGNATURELENGTH;
-		char* pcContent = new char[uContentSize + 1];
+		char *pcContent = new char[uContentSize + 1];
 		if (file->Read(pcContent, uContentSize) != uContentSize)
 			DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: Failed to read p2pinfo file content")));
 		pcContent[uContentSize] = '\0';
 
 		//----------- CHECKING .P2PINFO CONTENT
 		// NOTE: 'pcContent' gets destroyed with 'strtok' !
-		LPSTR pszLine = strtok(pcContent, "\r\n");
-		while (pszLine && !bContentCheckFailed)
+		for (LPSTR pszLine = strtok(pcContent, "\r\n"); pszLine && !bContentCheckFailed; pszLine = strtok(NULL, "\r\n"))
 		{
-			strLine = pszLine;
+			CStringA strLine(pszLine);
 			int posSeparator = strLine.Find('=',1);
 			if ( posSeparator != -1 && strLine.GetLength() - posSeparator > 1)
 			{
@@ -560,17 +552,15 @@ bool CPCValditeThread::Valdite(){
 				}
 
 			}
-
-			pszLine = strtok(NULL, "\r\n");
 		}
 		// finish the CacheIP check
 		bool bIPRangeCheckFailed = true;
-		for (int i = 0; i != adwCacheIPs.GetCount(); i++){
+		for (int i = 0; i != adwCacheIPs.GetCount(); ++i)
 			if(adwCacheIPs[i] == m_dwPCIP){
 				bIPRangeCheckFailed = false;
 				break;
 			}
-		}
+
 		if (bIPRangeCheckFailed){
 			bContentCheckFailed = true;
 			DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: CacheIP check failed.")));

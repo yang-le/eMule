@@ -68,11 +68,11 @@ public:
 
 	void	Localize();
 
-	void	StartSearch(SSearchParams* pParams);
+	void	StartSearch(SSearchParams *pParams);
 	bool	SearchMore();
 	void	CancelSearch(uint32 uSearchID = 0);
 
-	bool	DoNewEd2kSearch(SSearchParams* pParams);
+	bool	DoNewEd2kSearch(SSearchParams *pParams);
 	void	CancelEd2kSearch();
 	bool	IsLocalEd2kSearchRunning() const { return (m_uTimerLocalServer != 0); }
 	bool	IsGlobalEd2kSearchRunning() const { return (global_search_timer != 0); }
@@ -80,7 +80,7 @@ public:
 	void	AddGlobalEd2kSearchResults(UINT count);
 	void	SetNextSearchID(uint32 uNextID)				{m_nEd2kSearchID = uNextID;}
 
-	bool	DoNewKadSearch(SSearchParams* pParams);
+	bool	DoNewKadSearch(SSearchParams *pParams);
 	void	CancelKadSearch(uint32 uSearchID);
 
 	bool	CanSearchRelatedFiles() const;
@@ -95,12 +95,12 @@ public:
 	void	DeleteAllSearches();
 	void	DeleteSelectedSearch();
 
-	bool	CreateNewTab(SSearchParams* pParams, bool bActiveIcon = true);
+	bool	CreateNewTab(SSearchParams *pParams, bool bActiveIcon = true);
 	void	ShowSearchSelector(bool visible);
 	int		GetSelectedCat();
 	void	UpdateCatTabs();
 
-	SSearchParams* GetSearchResultsParams(uint32 uSearchID) const;
+	SSearchParams *GetSearchResultsParams(uint32 uSearchID) const;
 
 	uint32	GetFilterColumn() const				{ return m_nFilterColumn; }
 
@@ -123,11 +123,11 @@ protected:
 	int			m_iSentMoreReq;
 	uint32		m_nFilterColumn;
 
-	bool StartNewSearch(SSearchParams* pParams);
+	bool StartNewSearch(SSearchParams *pParams);
 	void SearchStarted();
 	void SearchCanceled(uint32 uSearchID);
-	CString	CreateWebQuery(SSearchParams* pParams);
-	void ShowResults(const SSearchParams* pParams);
+	CString	CreateWebQuery(SSearchParams *pParams);
+	void ShowResults(const SSearchParams *pParams);
 	void SetAllIcons();
 	void SetSearchResultsIcon(uint32 uSearchID, int iImage);
 	void SetActiveSearchResultsIcon(uint32 uSearchID);

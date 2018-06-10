@@ -1314,8 +1314,6 @@ BEGIN
     IDS_VERSION             "Versiune"
     IDS_PASTE               "Adaugã"
     IDS_A4AF                "Gestionare"
-    IDS_MOBILEMULE          "MobileMule" //!
-    IDS_ENABLEMM            "Activare MobileMule"
     IDS_AUTOCAT_LABEL       "Recunoaºtere automatã categorie (exemple separate cu |)"
     IDS_SHOWEXTSETTINGS     "Mai multe controale (mod avansat)"
     IDS_TREEOPTIONS_TRUE    "Adevãrat"
@@ -1336,13 +1334,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Dosarul fiºiere temporare nu poate corespunde cu unul din dosarele de instalare eMule."
     IDS_WRN_INCTEMP_SAME    "Dosarele fiºiere descãrcate ºi fiºiere temporare nu pot coincide."
-    IDS_MMFAILED            "Nu pot crea socket ptr. MobileMule!"
-    IDS_MMSTARTED           "Serverul MobileMule pornit pe portul %u. Versiune protocol: %s"
     IDS_SHOWDWLPERCENTAGE   "Aratã procentul completat în bara de progres"
     IDS_TBN_ONNEWDOWNLOAD   "S-a adãugat o descãrcare"
     IDS_ARTIST              "Artist" //!
     IDS_ALBUM               "Album" //!
-    IDS_MMGUIDELINK         "Ghidul MobileMule"
 END
 
 STRINGTABLE 
@@ -1442,7 +1437,6 @@ BEGIN
                             "Nu pot descãrca ºi instala dll-ul limbii selectate de la %s!"
     IDS_ERR_BADFOLDER       "Dosar incorect.\nDosarul nu poate fi creat. Verificã numele ºi calea."
     IDS_AUTOREMOVEFD        "ªterge automat din listã fiºierele descãrcate"
-    IDS_MM_BLOCK            "3 logãri eºuate cu MobileMule logat - blochez alte încercãri ptr. 10 min!"
 END
 
 STRINGTABLE 
@@ -1468,7 +1462,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Noul utilizator a intrat corect pe serverul MobileMule"
     IDS_RADCLIENTS          "din clienþii cunoscuþi"
     IDS_KADUDPPORTERR       "Portul UDP ptr. Kad e în conflict cu cel al eMule pentru Protocol Extins sau UDP server. Am trecut pe portul %u."
     IDS_CONFIRM_FILEDELETE  "Chiar vrei sã ºtergi de pe disc toate fiºierele selectate?"
@@ -1492,7 +1485,7 @@ BEGIN
     IDS_TEXTLABELS          "Eticheta"
     IDS_ENABLETEXTLABELS    "sub icon"
     IDS_CUSTOMIZETOOLBAR    "Personalizare barã de unelte"
-    IDS_MINBITRATE          "Min. bitrate [kBit/s]"
+    IDS_MINBITRATE          "Min. bitrate [kbit/s]"
     IDS_KAD_RECHECKFW       "Reverificã Firewall"
     IDS_SHAREDTITLE         "Share eD2k|Kad"
     IDS_FIREWALLED          "cu Firewall"

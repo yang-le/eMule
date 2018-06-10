@@ -1288,8 +1288,6 @@ BEGIN
     IDS_VERSION             "Versie"
     IDS_PASTE               "Plakken"
     IDS_A4AF                "Bronafhandeling"
-    IDS_MOBILEMULE          "MobileMule" //!
-    IDS_ENABLEMM            "MobileMule activeren"
     IDS_AUTOCAT_LABEL       "Auto-cattoekenning (filter, gescheiden door |)"
     IDS_SHOWEXTSETTINGS     "Meer opties tonen (uitgebreide algemene opties)"
     IDS_TREEOPTIONS_TRUE    "Waar"
@@ -1310,13 +1308,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "De tijdelijke bestandenmap mag niet toegekend worden aan een eMule-installatiemap."
     IDS_WRN_INCTEMP_SAME    "Downloadsmap en tijdelijke bestandenmap mogen niet hetzelfde zijn."
-    IDS_MMFAILED            "Fout bij het maken van een socket voor MobileMule!"
-    IDS_MMSTARTED           "MobileMule-server is gestart onder poort %u. Protocolversie: %s"
     IDS_SHOWDWLPERCENTAGE   "Percentage voor al gedownload deelbestand in voortgangsbalk tonen"
     IDS_TBN_ONNEWDOWNLOAD   "Download is toegevoegd"
     IDS_ARTIST              "Artiest"
     IDS_ALBUM               "Album" //!
-    IDS_MMGUIDELINK         "MobileMule-handleiding"
 END
 
 STRINGTABLE 
@@ -1415,12 +1410,10 @@ BEGIN
                             "Fout bij het downloaden en installeren van de geselecteerde taal-DLL van %s!"
     IDS_ERR_BADFOLDER       "Ongeldige map.\nMap kan niet worden aangemaakt. Controleer a.u.b. naam en plaats."
     IDS_AUTOREMOVEFD        "Complete downloads automatisch verwijderen"
-    IDS_MM_BLOCK            "3 foutieve logins voor MobileMule gelogd - elke volgende poging is geblokkeerd voor 10 minuten!"
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Nieuwe gebruiker succesvol ingelogd op de MobileMule-server"
     IDS_RADCLIENTS          "van bekende gebruikers"
     IDS_KADUDPPORTERR       "Kad's UDP-poort heeft een conflict met óf eMule's Ext UDP-poort óf eMule's Server UDP-poort. De poort is veranderd naar %u."
     IDS_CONFIRM_FILEDELETE  "Alle geselcteerde bestanden verwijderen?"

@@ -1312,8 +1312,6 @@ BEGIN
                             "Gönderme Hýzý Algýlama: Yönlendirerek Ýzleme bir çok kez baþarýsýz oldu. Gönderme Hýzý Algýlama Etkisizleþtiriliyor."
     IDS_USS_STARTING        "Gönderme Hýzý Algýlama: Hazýrlanma bitti. Gönderme hýzý denetimi baþlatýlýyor. (Ýlk 60 saniye hýzlý tepki kipinde olacaktýr)"
     IDS_A4AF                "Kaynak Saptama"
-    IDS_MOBILEMULE          "MobileMule" //!
-    IDS_ENABLEMM            "MobileMule etkin"
     IDS_AUTOCAT_LABEL       "Otomatik Kat-Belirleme (örnek, | ile ayýrýn)"
     IDS_SHOWEXTSETTINGS     "Daha fazla denetim göster (Geliþmiþ Denetim kipi)"
     IDS_TREEOPTIONS_TRUE    "Doðru"
@@ -1326,7 +1324,7 @@ STRINGTABLE
 BEGIN
     IDS_SELECT_FONT         "Yazý Tipi Seç"
     IDS_SERVER_LIMITS       "Esnek- / Sabit-Dosya Sýnýrý"
-    IDS_KBITSSEC            "kBit/san"
+    IDS_KBITSSEC            "kbit/san"
     IDS_KBYTESSEC           "kBayt/san"
     IDS_ERR_CREATE_DIR      "%s dizini oluþturma baþarýsýz ""%s"" - %s"
     IDS_WRN_INCFILE_RESERVED 
@@ -1334,13 +1332,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Geçici dizini eMule kurulum dizini olarak ayarlanamaz."
     IDS_WRN_INCTEMP_SAME    "Gelen dizini ve geçici dizini ayný olamaz."
-    IDS_MMFAILED            "MobileMule Soketini oluþturma baþarýsýz!"
-    IDS_MMSTARTED           "MobileMule sunucusu %u nolu baðlantý noktasýnda baþlatýldý. Protokol Sürümü: %s"
     IDS_SHOWDWLPERCENTAGE   "Ýlerleme çubuðunda indirme tamamlanma yüzdesini göster"
     IDS_TBN_ONNEWDOWNLOAD   "Ýndirme eklendiðinde"
     IDS_ARTIST              "Sanatçý"
     IDS_ALBUM               "Albüm"
-    IDS_MMGUIDELINK         "MobileMule Rehberi"
 END
 
 STRINGTABLE 
@@ -1439,7 +1434,6 @@ BEGIN
                             "Seçili '.dll' dil dosyasýný %s adresinden indirme ve kurma baþarýsýz!"
     IDS_ERR_BADFOLDER       "Geçersiz klasör.\nKlasör oluþturulamadý. Lütfen isim ve yerini kontrol edin."
     IDS_AUTOREMOVEFD        "Tamamlanan indirmeleri otomatik temizle"
-    IDS_MM_BLOCK            "MobileMule oturumu için 3 baþarýsýz oturum açma - 10 dakikalýðýna daha fazla giriþim engellenecek!"
 END
 
 STRINGTABLE 
@@ -1465,7 +1459,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "MobileMule-Sunucusu 'na yeni kullanýcý baþarýlý oturum açtý"
     IDS_RADCLIENTS          "Bilinen istemcilerden"
     IDS_KADUDPPORTERR       "Kad'in UDP baðlantý noktasý ya eMule'un Gen.UDP bað.noktasýyla yada eMule'un Sunucu UDP bað.noktasýyla çakýþýyor. Baðlantý noktasý %u numarasýna deðiþtirildi."
     IDS_CONFIRM_FILEDELETE  "Tüm seçilmiþ dosyalarý diskten kaldýrmak istediðinize emin misiniz?"
@@ -1489,7 +1482,7 @@ BEGIN
     IDS_TEXTLABELS          "Metin Etiketi Seçenekleri"
     IDS_ENABLETEXTLABELS    "Metin Etiketlerini Göster"
     IDS_CUSTOMIZETOOLBAR    "Araç Çubuðunu Özelleþtir..."
-    IDS_MINBITRATE          "En Az Bitoraný [kBit/s]"
+    IDS_MINBITRATE          "En Az Bitoraný [kbit/s]"
     IDS_KAD_RECHECKFW       "Güvenlik Duvarý Kontrolü"
     IDS_SHAREDTITLE         "ED2K|Kad Paylaþýlmýþ"
     IDS_FIREWALLED          "Güvenlik Duvarý"

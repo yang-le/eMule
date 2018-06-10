@@ -716,7 +716,7 @@ void CSearch::StorePacket()
 				if (pFile)
 				{
 					// We set this mostly for GUI resonse.
-					SetGUIName(pFile->GetFileName());
+					SetGUIName(Kademlia::CKadTagValueString(pFile->GetFileName()));
 
 					// Get our clientID for the packet.
 					CUInt128 uID(CKademlia::GetPrefs()->GetClientHash());

@@ -28,7 +28,7 @@ public:
 		        long lEvent = FD_READ | FD_WRITE | FD_OOB | FD_ACCEPT |	FD_CONNECT | FD_CLOSE,
 		        const CString& sSocketAddress = NULL);
 	void Connect();
-	int SendString(const CString& sMessage);
+	int SendString(const CString &sMessage);
 
 	virtual void OnConnect(int iErrorCode);
 	virtual void OnReceive(int iErrorCode);
@@ -37,8 +37,8 @@ public:
 	virtual void RemoveAllLayers();
 
 protected:
-	CAsyncProxySocketLayer* m_pProxyLayer;
-	CIrcMain* m_pIrcMain;
+	CAsyncProxySocketLayer *m_pProxyLayer;
+	CIrcMain *m_pIrcMain;
 
-	virtual int	OnLayerCallback(const CAsyncSocketExLayer* pLayer, int nType, int nCode, WPARAM wParam, LPARAM lParam);
+	virtual int	OnLayerCallback(std::list<t_callbackMsg> &callbacks);
 };

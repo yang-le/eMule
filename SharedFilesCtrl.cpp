@@ -279,7 +279,7 @@ void CSharedFilesCtrl::Init()
 	InsertColumn(17,GetResString(IDS_CODEC),			LVCFMT_LEFT,  DFLT_CODEC_COL_WIDTH,		-1, true);
 
 	SetAllIcons();
-	CreateMenues();
+	CreateMenus();
 	LoadSettings();
 
 	m_aSortBySecondValue[0] = true; // Requests:			Sort by 2nd value by default
@@ -310,7 +310,7 @@ void CSharedFilesCtrl::OnSysColorChange()
 {
 	CMuleListCtrl::OnSysColorChange();
 	SetAllIcons();
-	CreateMenues();
+	CreateMenus();
 }
 
 void CSharedFilesCtrl::SetAllIcons()
@@ -354,7 +354,7 @@ void CSharedFilesCtrl::Localize()
 		pHeaderCtrl->SetItem(i, &hdi);
 	}
 
-	CreateMenues();
+	CreateMenus();
 
 	for (int i = GetItemCount(); --i >= 0;)
 		Update(i);
@@ -1406,7 +1406,7 @@ void CSharedFilesCtrl::OnNmDblClk(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 	*pResult = 0;
 }
 
-void CSharedFilesCtrl::CreateMenues()
+void CSharedFilesCtrl::CreateMenus()
 {
 	if (m_PrioMenu) VERIFY( m_PrioMenu.DestroyMenu() );
 	if (m_CollectionsMenu) VERIFY( m_CollectionsMenu.DestroyMenu() );
@@ -1903,7 +1903,7 @@ BOOL CSharedFilesCtrl::CShareDropTarget::OnDrop(CWnd* /*pWnd*/, COleDataObject* 
 						}
 						if (ff.IsDirectory())
 						{
-							DEBUG_ONLY( DebugLog(_T("Drag'n'Drop'ed directory: %s"), (LPCTSTR)(ffpath + _T('\\'))) );
+							DEBUG_ONLY( DebugLog(_T("Drag'n'Drop'ed directory: %s\\"), (LPCTSTR)ffpath) );
 							liToAddDirs.AddTail(ffpath + _T('\\'));
 						}
 						else

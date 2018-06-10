@@ -1286,8 +1286,6 @@ BEGIN
     IDS_VERSION             "版本"
     IDS_PASTE               "貼上"
     IDS_A4AF                "來源處理"
-    IDS_MOBILEMULE          "MobileMule"//!
-    IDS_ENABLEMM            "啟用 MobileMule"
     IDS_AUTOCAT_LABEL       "自動 類別-分配 (樣式, 以 | 做分隔)"
     IDS_SHOWEXTSETTINGS     "顯示更多控制 (進階的模式控制)"
     IDS_TREEOPTIONS_TRUE    "真的"
@@ -1308,13 +1306,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "暫存檔案資料夾必須不是設定在安裝 eMule 程式的資料夾."
     IDS_WRN_INCTEMP_SAME    "新進檔案資料夾及暫存檔案資料夾必須不能相同."
-    IDS_MMFAILED            "建立 MobileMule 插口失敗!"
-    IDS_MMSTARTED           "MobileMule 伺服器已啟動在連接埠 %u. 協定版本: %s"
     IDS_SHOWDWLPERCENTAGE   "在進度條顯示下載完成百分比"
     IDS_TBN_ONNEWDOWNLOAD   "下載已加入"
     IDS_ARTIST              "藝人"
     IDS_ALBUM               "專輯"
-    IDS_MMGUIDELINK         "MobileMule 指南"
 END
 
 STRINGTABLE 
@@ -1411,12 +1406,10 @@ BEGIN
     IDS_ERR_FAILEDDOWNLOADLANG "從 %s 下載並安裝已選擇的語言 DLL 檔案失敗!"
     IDS_ERR_BADFOLDER       "無效的資料夾.\n資料夾不能被建立. 請檢查名稱及位置."
     IDS_AUTOREMOVEFD        "自動清除已完成下載"
-    IDS_MM_BLOCK            "3 次登入 MobileMule 失敗 - 在未來的 10 分鐘內都會封鎖!"
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "新的使用者登入到 MobileMule-伺服器 成功"
     IDS_RADCLIENTS          "來自已知的客戶端"
     IDS_KADUDPPORTERR       "Kad UDP 連接埠和 eMule 的延伸 UDP 連接埠或 eMule 的伺服器 UDP 連接埠的其中一個發生衝突. 連接埠已經改變到 %u."
     IDS_CONFIRM_FILEDELETE  "您真的想要從磁碟中移除全部已選擇的檔案?"
@@ -1440,7 +1433,7 @@ BEGIN
     IDS_TEXTLABELS          "文字標籤選項"
     IDS_ENABLETEXTLABELS    "顯示文字標籤"
     IDS_CUSTOMIZETOOLBAR    "自訂工具列..."
-    IDS_MINBITRATE          "最小位元率 [kBit/秒]"
+    IDS_MINBITRATE          "最小位元率 [kbit/秒]"
     IDS_KAD_RECHECKFW       "重新檢查防火牆"
     IDS_SHAREDTITLE         "分享 eD2K|Kad"
     IDS_FIREWALLED          "防火牆內"

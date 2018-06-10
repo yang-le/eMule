@@ -119,10 +119,10 @@ CColourPopup::CColourPopup(CPoint p, COLORREF crColour, CWnd* pParentWnd
 
 	Initialise(); //If not a custom palette intialise as NORMAL!
 
-	m_crColour       = m_crInitialColour = crColour;
-	m_pParent        = pParentWnd;
+	m_crColour		 = m_crInitialColour = crColour;
+	m_pParent		 = pParentWnd;
 	m_strDefaultText = szDefaultText ? szDefaultText : _T("");
-	m_strCustomText  = szCustomText ?  szCustomText  : _T("");
+	m_strCustomText	 = szCustomText ?  szCustomText  : _T("");
 
 	CColourPopup::Create(p, crColour, pParentWnd, szDefaultText, szCustomText);
 }
@@ -137,14 +137,14 @@ void CColourPopup::Initialise()
 	if (m_nNumColours > MAX_COLOURS)
 		m_nNumColours = MAX_COLOURS;
 
-	m_nNumColumns       = 0;
-	m_nNumRows          = 0;
-	m_nBoxSize          = 18;
-	m_nMargin           = ::GetSystemMetrics(SM_CXEDGE);
-	m_nCurrentSel       = INVALID_COLOUR;
-	m_nChosenColourSel  = INVALID_COLOUR;
-	m_pParent           = NULL;
-	m_crColour          = m_crInitialColour = RGB(0,0,0);
+	m_nNumColumns		= 0;
+	m_nNumRows			= 0;
+	m_nBoxSize			= 18;
+	m_nMargin			= ::GetSystemMetrics(SM_CXEDGE);
+	m_nCurrentSel		= INVALID_COLOUR;
+	m_nChosenColourSel	= INVALID_COLOUR;
+	m_pParent			= NULL;
+	m_crColour			= m_crInitialColour = RGB(0,0,0);
 
 	m_bChildWindowVisible = FALSE;
 
@@ -169,21 +169,20 @@ void CColourPopup::Initialise()
 	pLogPalette->palVersion = 0x300;
 	pLogPalette->palNumEntries = (WORD)m_nNumColours;
 
-	if (colourArrayPassed == NULL) { //use default array
+	if (colourArrayPassed == NULL) //use default array
 		for (int i = 0; i < m_nNumColours; ++i) {
-			pLogPalette->palPalEntry[i].peRed   = GetRValue(m_crColours[i].crColour);
-			pLogPalette->palPalEntry[i].peGreen = GetGValue(m_crColours[i].crColour);
-			pLogPalette->palPalEntry[i].peBlue  = GetBValue(m_crColours[i].crColour);
-			pLogPalette->palPalEntry[i].peFlags = 0;
+			pLogPalette->palPalEntry[i].peRed	= GetRValue(m_crColours[i].crColour);
+			pLogPalette->palPalEntry[i].peGreen	= GetGValue(m_crColours[i].crColour);
+			pLogPalette->palPalEntry[i].peBlue	= GetBValue(m_crColours[i].crColour);
+			pLogPalette->palPalEntry[i].peFlags	= 0;
 		}
-	} else { //if an array has been passed use it
+	else //if an array has been passed use it
 		for(int i = 0; i < m_nNumColours; ++i) {
-			pLogPalette->palPalEntry[i].peRed   = GetRValue(colourArrayPassed[i]);
-			pLogPalette->palPalEntry[i].peGreen = GetGValue(colourArrayPassed[i]);
-			pLogPalette->palPalEntry[i].peBlue  = GetBValue(colourArrayPassed[i]);
-			pLogPalette->palPalEntry[i].peFlags = 0;
+			pLogPalette->palPalEntry[i].peRed	= GetRValue(colourArrayPassed[i]);
+			pLogPalette->palPalEntry[i].peGreen	= GetGValue(colourArrayPassed[i]);
+			pLogPalette->palPalEntry[i].peBlue	= GetBValue(colourArrayPassed[i]);
+			pLogPalette->palPalEntry[i].peFlags	= 0;
 		}
-	}
 
 	m_Palette.CreatePalette(pLogPalette);
 }
@@ -200,7 +199,7 @@ BOOL CColourPopup::Create(CPoint p, COLORREF crColour, CWnd* pParentWnd,
 {
 	ASSERT(pParentWnd && ::IsWindow(pParentWnd->GetSafeHwnd()));
 
-	m_pParent  = pParentWnd;
+	m_pParent = pParentWnd;
 	m_crColour = m_crInitialColour = crColour;
 
 	// Get the class name and create the window
@@ -588,7 +587,7 @@ BOOL CColourPopup::GetCellRect(int nIndex, const LPRECT& rect)
 		return FALSE;
 
 	rect->left = GetColumn(nIndex) * m_nBoxSize + m_nMargin;
-	rect->top  = GetRow(nIndex) * m_nBoxSize + m_nMargin;
+	rect->top = GetRow(nIndex) * m_nBoxSize + m_nMargin;
 
 	// Move everything down if we are displaying a default text area
 	if (m_strDefaultText.GetLength())
@@ -880,11 +879,11 @@ void CColourPopup::DrawCell(CDC* pDC, int nIndex)
 	CBrush brush(PALETTERGB(GetRValue(GetColour(nIndex)),
 	                        GetGValue(GetColour(nIndex)),
 	                        GetBValue(GetColour(nIndex)) ));
-	CPen   pen;
+	CPen pen;
 	pen.CreatePen(PS_SOLID, 1, ::GetSysColor(COLOR_3DSHADOW));
 
-	CBrush* pOldBrush = (CBrush*) pDC->SelectObject(&brush);
-	CPen*   pOldPen   = (CPen*)   pDC->SelectObject(&pen);
+	CBrush *pOldBrush = pDC->SelectObject(&brush);
+	CPen *pOldPen = pDC->SelectObject(&pen);
 
 	// Draw the cell colour
 	rect.DeflateRect(m_nMargin+1, m_nMargin+1);

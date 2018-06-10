@@ -1350,8 +1350,6 @@ BEGIN
     IDS_VERSION             "«’œ«—"
     IDS_PASTE               "·’ﬁ"
     IDS_A4AF                " œ»Ì— «·„’«œ— (A4AF)"
-    IDS_MOBILEMULE          "ÃÊ«· «Ì„Ê·"
-    IDS_ENABLEMM            "›⁄· ÃÊ«· «Ì„Ê·"
     IDS_AUTOCAT_LABEL       "ﬁÊ«∆„ «Ê Ê„« ÌﬂÌ… (pattern, separated by |)"
     IDS_SHOWEXTSETTINGS     "«ŸÂ—  Õﬂ„«  «ﬂÀ— («·ÊŸ⁄Ì… «·„ ﬁœ„… ·· Õﬂ„)"
     IDS_TREEOPTIONS_TRUE    "’Õ"
@@ -1372,13 +1370,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "„ﬂ«‰ œŒÊ· «·„·›«  «·„ƒﬁ … ·« ÌÃ» «‰ ÌﬂÊ‰ ›Ì „ﬂ«‰  ‰”Ì» «Ì„Ê· ."
     IDS_WRN_INCTEMP_SAME    "«·„·›«  «·ﬁ«œ„… Ê «·„ƒﬁ … ÌÃ» «‰ ·« ÌﬂÊ‰Ê« ›Ì ‰›” «·„ﬂ«‰."
-    IDS_MMFAILED            "›‘· ›Ì »‰«¡ ÃÊ«· «Ì„Ê· ”ÊﬂÌ !"
-    IDS_MMSTARTED           "Œ«œ„ ÃÊ«· «Ì„Ê·  »œ√ ›Ì »Ê—  %u. «’œ«— «·»—Ê ÊﬂÊ·: %s"
     IDS_SHOWDWLPERCENTAGE   "«ŸÂ— «·‰”»… «·„∆ÊÌ… ›Ì «·»«—"
     IDS_TBN_ONNEWDOWNLOAD   "«· Õ„Ì· «÷Ì›"
     IDS_ARTIST              "«·›‰«‰"
     IDS_ALBUM               "«·»Ê„"
-    IDS_MMGUIDELINK         "«—‘«œ ÃÊ«· «Ì„Ê·"
 END
 
 STRINGTABLE 
@@ -1477,7 +1472,6 @@ BEGIN
                             "›‘· ›Ì  Õ„· Ê  ‰’Ì» „·› «··€… «·„Õœœ „‰ %s!"
     IDS_ERR_BADFOLDER       "„Ã·œ €Ì— ’«·Õ.\n·« Ì„ﬂ‰ »‰«¡ «·„Ã·œ «·—Ã«¡ «· √ﬂœ „‰ «·«”„ Ê «·„ﬂ«‰."
     IDS_AUTOREMOVEFD        "«“«·… «· Õ„Ì·«  «·„ﬂ „·…  ·ﬁ«∆Ì«"
-    IDS_MM_BLOCK            "3 „Õ«Ê·«  ›«‘·… ·œŒÊ· Œ«œ„ ÃÊ«· «Ì„Ê· «Ì „Õ«Ê· «Œ—Ï ”Ê› Ì „ «·ÕŸ— · 10 œﬁ«∆ﬁ"
 END
 
 STRINGTABLE 
@@ -1503,7 +1497,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "„” Œœ„ ÃœÌœ œŒ· »‰Ã«Õ «·Ï Œ«œ„ ÃÊ«· «Ì„Ê·"
     IDS_RADCLIENTS          "„‰ ⁄„·«¡ „⁄—Ê›Ì‰"
     IDS_KADUDPPORTERR       "»Ê—  Kad UDP   ⁄«—÷ «„« „⁄ »Ê—  «Ì„Ê· «Ê „⁄ Œ«œ„ «Ì„Ê·. «·»Ê—   „  €ÌÌ—Â «·Ï  %u."
     IDS_CONFIRM_FILEDELETE  "Â·  —Ìœ Õ–› ﬂ· «·„·›«  «·„Œ «— „‰ ÃÂ«“ﬂø"
@@ -1527,7 +1520,7 @@ BEGIN
     IDS_TEXTLABELS          "«Œ Ì«—«  ‰’ «·ÿ»⁄"
     IDS_ENABLETEXTLABELS    "«ŸÂ— ÿ»⁄ «·‰’"
     IDS_CUSTOMIZETOOLBAR    "⁄œ· ⁄·Ï «· Ê· »«—..."
-    IDS_MINBITRATE          "Min.  ’ÊÌ  «·»«Ì  [kBit/s]"
+    IDS_MINBITRATE          "Min.  ’ÊÌ  «·»«Ì  [kbit/s]"
     IDS_KAD_RECHECKFW       "«⁄«œ… ›Õ’ «·Ãœ«— «·‰«—Ì"
     IDS_SHAREDTITLE         "„‘ —ﬂ eD2K|Kad"
     IDS_FIREWALLED          "„Õ„Ì »Ãœ«— ‰«—Ì"

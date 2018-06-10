@@ -45,12 +45,12 @@ CIOException::CIOException(int iCause)
 	m_iCause = iCause;
 }
 
-BOOL CIOException::GetErrorMessage(LPTSTR lpszError, UINT iMaxError, PUINT pnHelpContext)
+BOOL CIOException::GetErrorMessage(LPTSTR lpszError, UINT uMaxError, PUINT pnHelpContext) const
 {
-	CString sMsg = _T("ONLY AVAILABLE WITH EMULE INTEGRATION");
+	static TCHAR const sMsg[] = _T("ONLY AVAILABLE WITH EMULE INTEGRATION");
 	//	CString msg = GetResString(IOEXCEPTION_ERR_BASE + m_cause);
-	_tcsncpy(lpszError, sMsg, iMaxError);
-	lpszError[iMaxError-1] = 0;
+	_tcsncpy(lpszError, sMsg, uMaxError);
+	lpszError[uMaxError - 1] = 0;
 
 	if (pnHelpContext != NULL)
 		*pnHelpContext = 0;

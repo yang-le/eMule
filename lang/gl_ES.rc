@@ -1292,8 +1292,6 @@ BEGIN
     IDS_VERSION             "Versión"
     IDS_PASTE               "Pegar"
     IDS_A4AF                "Xestión de fontes"
-    IDS_MOBILEMULE          "MobileMule"//!
-    IDS_ENABLEMM            "Activar MobileMule"
     IDS_AUTOCAT_LABEL       "Autoasignar categoría (formato, separado por |)"
     IDS_SHOWEXTSETTINGS     "Mostrar máis controis (Controis de modo avanzado)"
     IDS_TREEOPTIONS_TRUE    "Verdadeiro"
@@ -1314,13 +1312,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "O directorio temporal non debe asignarse ao directorio de instalación de eMule."
     IDS_WRN_INCTEMP_SAME    "Os directorios entrante e temporal non deben ser o mesmo."
-    IDS_MMFAILED            "Non se puido crear o socket MobileMule!"
-    IDS_MMSTARTED           "Servidor MobileMule iniciado en Porto %u. Versión do Protocolo: %s"
     IDS_SHOWDWLPERCENTAGE   "Amosar porcentaxe de descarga na barra de progreso"
     IDS_TBN_ONNEWDOWNLOAD   "Descarga engadida"
     IDS_ARTIST              "Artista"
     IDS_ALBUM               "Álbum"
-    IDS_MMGUIDELINK         "Guía MobileMule"
 END
 
 STRINGTABLE 
@@ -1420,12 +1415,10 @@ BEGIN
                             "Erro ao descargar e instalar o arquivo dll da linguaxe seleccionada de %s!"
     IDS_ERR_BADFOLDER       "Carpeta non válida.\nA carpeta non pode ser creada. Por favor comproba nome e ubicación."
     IDS_AUTOREMOVEFD        "Limpar automaticamente as descargas completas"
-    IDS_MM_BLOCK            "Rexistrados 3 intentos erróneos de conexión a MobileMule - calquer intento posterior será bloqueado durante 10 minutos!"
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Novo usuario conectado con éxito ao Servidor MobileMule"
     IDS_RADCLIENTS          "de clientes coñecidos"
     IDS_KADUDPPORTERR       "O porto UDP de Kademlia está en conflicto co porto UDP exterior de eMule ou co porto UDP do servidor eMule. O porto foi cambiado polo %u."
     IDS_CONFIRM_FILEDELETE  "Estás seguro de que queres borrar todos os arquivos seleccionados do disco?"
@@ -1470,7 +1463,7 @@ BEGIN
     IDS_TEXTLABELS          "Etiquetas de texto"
     IDS_ENABLETEXTLABELS    "baixo a icona"
     IDS_CUSTOMIZETOOLBAR    "Personalizar Barra de Ferramentas"
-    IDS_MINBITRATE          "Min. bitrate [kBit/s]"
+    IDS_MINBITRATE          "Min. bitrate [kbit/s]"
     IDS_KAD_RECHECKFW       "Comprobar Cortalumes"
     IDS_SHAREDTITLE         "Compartido ED2K|Kad"
     IDS_FIREWALLED          "Tras un cortalumes"

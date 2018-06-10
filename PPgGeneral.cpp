@@ -234,7 +234,7 @@ BOOL CPPgGeneral::OnApply()
 	thePrefs.bringtoforeground = IsDlgButtonChecked(IDC_BRINGTOFOREGROUND) != 0;
 	thePrefs.updatenotify = IsDlgButtonChecked(IDC_CHECK4UPDATE) != 0;
 	thePrefs.onlineSig = IsDlgButtonChecked(IDC_ONLINESIG) != 0;
-	thePrefs.versioncheckdays = ((CSliderCtrl*)GetDlgItem(IDC_CHECKDAYS))->GetPos();
+	thePrefs.versioncheckdays = static_cast<CSliderCtrl *>(GetDlgItem(IDC_CHECKDAYS))->GetPos();
 	thePrefs.m_bEnableMiniMule = IsDlgButtonChecked(IDC_MINIMULE) != 0;
 	thePrefs.m_bPreventStandby = IsDlgButtonChecked(IDC_PREVENTSTANDBY) != 0;
 
@@ -288,9 +288,8 @@ void CPPgGeneral::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	SetModified(TRUE);
 
 	if (pScrollBar == GetDlgItem(IDC_CHECKDAYS)) {
-		const CSliderCtrl* slider = (CSliderCtrl*)pScrollBar;
 		CString text;
-		text.Format(_T("%i %s"), slider->GetPos(), (LPCTSTR)GetResString(IDS_DAYS2));
+		text.Format(_T("%i %s"), reinterpret_cast<CSliderCtrl *>(pScrollBar)->GetPos(), (LPCTSTR)GetResString(IDS_DAYS2));
 		SetDlgItemText(IDC_DAYS, text);
 	}
 
@@ -319,7 +318,7 @@ void CPPgGeneral::OnLangChange()
 				strUrl += thePrefs.GetLangDLLNameByID(newLangId);
 				// safeto
 				CString strFilename = thePrefs.GetMuleDirectory(EMULE_ADDLANGDIR, true);
-				strFilename.Append(thePrefs.GetLangDLLNameByID(newLangId));
+				strFilename += thePrefs.GetLangDLLNameByID(newLangId);
 				// start
 				CHttpDownloadDlg dlgDownload;
 				dlgDownload.m_strTitle = GetResString(IDS_DOWNLOAD_LANGFILE);

@@ -72,16 +72,16 @@ BOOL CIrcSocket::Create(UINT uSocketPort, int iSocketType, long lEvent, const CS
 
 void CIrcSocket::Connect()
 {
-	int iPort = 6667;
+	int iPort;
 	CString strServer = thePrefs.GetIRCServer();
 	int iIndex = strServer.Find(_T(':'));
-	if (iIndex != -1)
-	{
+	if (iIndex != -1) {
 		iPort = _tstoi(strServer.Mid(iIndex + 1));
-		if (iPort <= 0)
+		if (iPort <= 0 || iPort > 65535)
 			iPort = 6667;
-		strServer = strServer.Left(iIndex);
-	}
+		strServer.Truncate(iIndex);
+	} else
+		iPort = 6667;
 	CAsyncSocketEx::Connect(strServer, iPort);
 }
 
@@ -162,7 +162,7 @@ int CIrcSocket::SendString(const CString& sMessage)
 	theStats.AddUpDataOverheadOther(iSize);
 	return Send(sMessageA, iSize);
 	//int iResult = Send(sMessageA, iSize);
-	//ASSERT( iResult == iSize ); //too much noise from network errors
+	//ASSERT( iResult == iSize ); //too much noise from minor network errors
 	//return iResult;
 }
 
@@ -173,39 +173,23 @@ void CIrcSocket::RemoveAllLayers()
 	m_pProxyLayer = NULL;
 }
 
-int CIrcSocket::OnLayerCallback(const CAsyncSocketExLayer* pLayer, int nType, int nCode, WPARAM wParam, LPARAM lParam)
+int CIrcSocket::OnLayerCallback(std::list<t_callbackMsg> &callbacks)
 {
-	if (nType == LAYERCALLBACK_LAYERSPECIFIC)
-	{
-		ASSERT( pLayer );
-		if (pLayer == m_pProxyLayer)
-		{
-			switch (nCode)
-			{
+	for (std::list<t_callbackMsg>::const_iterator iter = callbacks.begin(); iter != callbacks.end(); ++iter) {
+		if (iter->nType == LAYERCALLBACK_LAYERSPECIFIC) {
+			ASSERT(iter->pLayer);
+			if (iter->pLayer == m_pProxyLayer) {
+				CString strError(GetProxyError((int)iter->wParam));
+				switch (iter->wParam) {
 				case PROXYERROR_NOCONN:
 				case PROXYERROR_REQUESTFAILED:
-					{
-						CString strError(GetProxyError(nCode));
-						if (lParam)
-						{
-							strError += _T(" - ");
-							strError += (LPCSTR)lParam;
-						}
-						if (wParam)
-						{
-							CString strErrInf;
-							if (GetErrorMessage((DWORD)wParam, strErrInf, 1)) {
-								strError += _T(" - ");
-								strError += strErrInf;
-							}
-						}
-						LogWarning(LOG_STATUSBAR, _T("IRC socket: %s"), (LPCTSTR)strError);
-						break;
-					}
-				default:
-					LogWarning(LOG_STATUSBAR, _T("IRC socket: %s"), (LPCTSTR)GetProxyError(nCode));
+					if (iter->str)
+						strError.AppendFormat(_T(" - %hs"), iter->str);
+				}
+				LogWarning(LOG_STATUSBAR, _T("IRC socket: %s"), (LPCTSTR)strError);
 			}
 		}
+		delete[] iter->str;
 	}
-	return 1;
+	return 0;
 }

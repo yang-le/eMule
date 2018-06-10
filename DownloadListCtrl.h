@@ -94,7 +94,7 @@ public:
 	void	ClearCompleted(int incat=-2);
 	void	ClearCompleted(const CPartFile* pFile);
 	void	SetStyle();
-	void	CreateMenues();
+	void	CreateMenus();
 	void	Localize();
 	void	ShowFilesCount();
 	void	ChangeCategory(int newsel);

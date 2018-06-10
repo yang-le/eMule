@@ -40,12 +40,12 @@ static char THIS_FILE[] = __FILE__;
 
 #define HTTP_STATUS_INV_RANGE	416
 
-UINT GetPeerCacheSocketUploadTimeout()
+DWORD GetPeerCacheSocketUploadTimeout()
 {
 	return DOWNLOADTIMEOUT + SEC2MS(20 + 30);
 }
 
-UINT GetPeerCacheSocketDownloadTimeout()
+DWORD GetPeerCacheSocketDownloadTimeout()
 {
 	return DOWNLOADTIMEOUT + SEC2MS(20);	// must be lower than Upload timeout
 }
@@ -290,15 +290,16 @@ bool CPeerCacheUpSocket::ProcessHttpRequest()
 		throw CString(__FUNCTION__ " - No client attached to HTTP socket");
 
 	UINT uHttpRes = GetClient()->ProcessPeerCacheUpHttpRequest(m_astrHttpHeaders);
-	if (uHttpRes != HTTP_STATUS_OK){
+	if (uHttpRes != HTTP_STATUS_OK) {
 		CStringA strResponse;
-		strResponse.AppendFormat("HTTP/1.0 %u\r\n", uHttpRes);
-		strResponse.AppendFormat("Content-Length: 0\r\n");
-		strResponse.AppendFormat("\r\n");
+		strResponse.Format("HTTP/1.0 %u\r\n"
+			"Content-Length: 0\r\n"
+			"\r\n"
+			, uHttpRes);
 
 		if (thePrefs.GetDebugClientTCPLevel() > 0)
 			Debug(_T("Sending PeerCache HTTP respone:\n%hs"), (LPCSTR)strResponse);
-		CRawPacket* pHttpPacket = new CRawPacket(strResponse);
+		CRawPacket *pHttpPacket = new CRawPacket(strResponse);
 		theStats.AddUpDataOverheadFileRequest(pHttpPacket->size);
 		SendPacket(pHttpPacket);
 		SetHttpState(HttpStateUnknown);
@@ -425,7 +426,7 @@ bool CUpDownClient::ProcessPeerCacheDownHttpResponse(const CStringAArray& astrHe
 			Debug(_T("  %s\n"), bCacheHit ? _T("CacheHit") : _T("CacheMiss"));
 		}
 
-		Packet* pEd2kPacket = new Packet(&dataAck, OP_EMULEPROT, OP_PEERCACHE_ACK);
+		Packet *pEd2kPacket = new Packet(&dataAck, OP_EMULEPROT, OP_PEERCACHE_ACK);
 		theStats.AddUpDataOverheadFileRequest(pEd2kPacket->size);
 		socket->SendPacket(pEd2kPacket);
 	}
@@ -625,19 +626,23 @@ bool CUpDownClient::SendHttpBlockRequests()
 	m_uReqEnd = pending->block->EndOffset;
 	m_nUrlStartPos = (uint64)-1;
 
-	CString strPCRequest;
-	strPCRequest.AppendFormat(_T("GET http://%s/.ed2khash=%s HTTP/1.0\r\n"), (LPCTSTR)ipstr(m_uPeerCacheRemoteIP), (LPCTSTR)md4str(reqfile->GetFileHash()));
-	strPCRequest.AppendFormat(_T("X-ED2K-PushId: %u\r\n"), m_uPeerCacheDownloadPushId);
-	strPCRequest.AppendFormat(_T("Range: bytes=%I64u-%I64u\r\n"), m_uReqStart, m_uReqEnd);
-	strPCRequest.AppendFormat(_T("User-Agent: eMule/%s\r\n"), (LPCTSTR)theApp.m_strCurVersionLong);
-	strPCRequest.AppendFormat(_T("X-Network: eDonkey,Kademlia\r\n"));
-	strPCRequest.AppendFormat(_T("\r\n"));
+	CStringA strPCRequest;
+	strPCRequest.Format("GET http://%s/.ed2khash=%S HTTP/1.0\r\n"
+		"X-ED2K-PushId: %u\r\n"
+		"Range: bytes=%I64u-%I64u\r\n"
+		"User-Agent: eMule/%S\r\n"
+		"X-Network: eDonkey,Kademlia\r\n"
+		"\r\n"
+		, (LPCSTR)ipstrA(m_uPeerCacheRemoteIP), (LPCTSTR)md4str(reqfile->GetFileHash())
+		, m_uPeerCacheDownloadPushId
+		, m_uReqStart, m_uReqEnd
+		, (LPCTSTR)theApp.m_strCurVersionLong);
 
 	if (thePrefs.GetDebugClientTCPLevel() > 0){
 		DebugSend("PeerCache-GET", this, reqfile->GetFileHash());
-		Debug(_T("  %hs\n"), (LPCTSTR)strPCRequest);
+		Debug(_T("  %hs\n"), (LPCSTR)strPCRequest);
 	}
-	CRawPacket* pHttpPacket = new CRawPacket((CStringA)strPCRequest);
+	CRawPacket *pHttpPacket = new CRawPacket(strPCRequest);
 	theStats.AddUpDataOverheadFileRequest(pHttpPacket->size);
 	m_pPCDownSocket->SendPacket(pHttpPacket);
 	m_pPCDownSocket->SetHttpState(HttpStateRecvExpected);
@@ -686,7 +691,7 @@ bool CUpDownClient::SendPeerCacheFileRequest()
 		Debug(_T("  CacheIP=%s  PushId=%u  PublicIP=%s  FileId=%s\n"), (LPCTSTR)ipstr(tagCacheIP.GetInt()), tagPushId.GetInt(), (LPCTSTR)ipstr(tagPublicIP.GetInt()), (LPCTSTR)md4str(tagFileId.GetHash()));
 	}
 
-	Packet* pEd2kPacket = new Packet(&data, OP_EMULEPROT, OP_PEERCACHE_QUERY);
+	Packet *pEd2kPacket = new Packet(&data, OP_EMULEPROT, OP_PEERCACHE_QUERY);
 	theStats.AddUpDataOverheadFileRequest(pEd2kPacket->size);
 	socket->SendPacket(pEd2kPacket);
 	SetDownloadState(DS_DOWNLOADING);
@@ -810,14 +815,14 @@ bool CUpDownClient::ProcessPeerCacheQuery(const uchar* packet, UINT size)
 	m_pPCUpSocket->Connect((LPSOCKADDR)&sockAddr, sizeof sockAddr);
 
 	CStringA strPCRequest;
-	strPCRequest.AppendFormat("GIVE %u\r\n", uPushId);
+	strPCRequest.Format("GIVE %u\r\n", uPushId);
 
 	if (thePrefs.GetDebugClientTCPLevel() > 0){
 		DebugSend("PeerCache-GIVE", this, pUploadFile->GetFileHash());
 		Debug(_T("  %hs\n"), (LPCSTR)strPCRequest);
 	}
 
-	CRawPacket* pHttpPacket = new CRawPacket(strPCRequest);
+	CRawPacket *pHttpPacket = new CRawPacket(strPCRequest);
 	theStats.AddUpDataOverheadFileRequest(pHttpPacket->size);
 	m_pPCUpSocket->SendPacket(pHttpPacket);
 	m_pPCUpSocket->SetHttpState(HttpStateRecvExpected);
@@ -841,7 +846,7 @@ bool CUpDownClient::ProcessPeerCacheQuery(const uchar* packet, UINT size)
 		Debug(_T("  PushId=%u  PublicIP=%s  FileId=%s\n"), tagPushId.GetInt(), (LPCTSTR)ipstr(tagPublicIP.GetInt()), (LPCTSTR)md4str(tagFileId.GetHash()));
 	}
 
-	Packet* pEd2kPacket = new Packet(&dataSend, OP_EMULEPROT, OP_PEERCACHE_ANSWER);
+	Packet *pEd2kPacket = new Packet(&dataSend, OP_EMULEPROT, OP_PEERCACHE_ANSWER);
 	theStats.AddUpDataOverheadFileRequest(pEd2kPacket->size);
 	socket->SendPacket(pEd2kPacket);
 	return true;

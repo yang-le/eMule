@@ -1297,8 +1297,6 @@ BEGIN
     IDS_VERSION             "Versjon"
     IDS_PASTE               "Sett inn"
     IDS_A4AF                "Kilde håndtering"
-    IDS_MOBILEMULE          "Transportabel eMule"
-    IDS_ENABLEMM            "Aktiver Transportabel eMule"
     IDS_AUTOCAT_LABEL       "Auto kategori-tildeling (mønster, avskilt av |)"
     IDS_SHOWEXTSETTINGS     "Vis flere innstillinger (avanserte innstillinger)"
     IDS_TREEOPTIONS_TRUE    "Sant"
@@ -1319,13 +1317,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Den midlertidige mappen må ikke settes til en eMule installasjonsmappe."
     IDS_WRN_INCTEMP_SAME    "Innkommende mappe og midlertidig mappe må ikke være den samme."
-    IDS_MMFAILED            "Klarte ikke å opprette Transportabel Mule!"
-    IDS_MMSTARTED           "Transportabel eMule server startet på port %u. Protokoll versjon: %s"
     IDS_SHOWDWLPERCENTAGE   "Vis prosentdel nedlastet i fremdriftbaren"
     IDS_TBN_ONNEWDOWNLOAD   "Nedlastning lagt til"
     IDS_ARTIST              "Artist"//!
     IDS_ALBUM               "Album"//!
-    IDS_MMGUIDELINK         "Transportabel eMule Veileder"
 END
 
 STRINGTABLE 
@@ -1425,7 +1420,6 @@ BEGIN
                             "Klarte ikke å laste ned og installere den valgte språk dll fil fra %s!"
     IDS_ERR_BADFOLDER       "Ugyldig mappe.\nMappe kunne ikke opprettes. Kontroller navn og plassering."
     IDS_AUTOREMOVEFD        "Rydd ferdige nedlastninger automatisk"
-    IDS_MM_BLOCK            "Siste 3 forsøk på å logge på var mislykket - neste forsøk kan først skje om 10 min!"
 END
 
 STRINGTABLE 
@@ -1451,7 +1445,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Ny bruker er logget inn på Transportabel eMule-Server"
     IDS_RADCLIENTS          "Fra kjente klienter"
     IDS_KADUDPPORTERR       "Kad's UDP port er i konflikt med enten eMule's eksterne UDP port eller eMule's Server UDP port. Porten er endret til %u."
     IDS_CONFIRM_FILEDELETE  "Ønsker du virkelig å fjerne alle valgte filer fra disken?"
@@ -1475,7 +1468,7 @@ BEGIN
     IDS_TEXTLABELS          "Tekst etiketter"
     IDS_ENABLETEXTLABELS    "under ikonene"
     IDS_CUSTOMIZETOOLBAR    "Tilpass Verktøyslinje"
-    IDS_MINBITRATE          "Min. bitrate [kBit/s]"
+    IDS_MINBITRATE          "Min. bitrate [kbit/s]"
     IDS_KAD_RECHECKFW       "Kontroller brannmur"
     IDS_SHAREDTITLE         "Delt ED2K|Kad"
     IDS_FIREWALLED          "Bak brannmur"

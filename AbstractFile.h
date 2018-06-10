@@ -52,18 +52,18 @@ public:
 	explicit CAbstractFile(const CAbstractFile* pAbstractFile);
 	virtual ~CAbstractFile();
 
-	const CString& GetFileName() const { return m_strFileName; }
+	const CString &GetFileName() const { return m_strFileName; }
 	virtual void SetFileName(LPCTSTR pszFileName, bool bReplaceInvalidFileSystemChars = false, bool bAutoSetFileType = true, bool bRemoveControlChars = false); // 'bReplaceInvalidFileSystemChars' is set to 'false' for backward compatibility!
 
 	// returns the ED2K file type (an ASCII string)
-	const CString& GetFileType() const { return m_strFileType; }
+	const CString &GetFileType() const { return m_strFileType; }
 	virtual void SetFileType(LPCTSTR pszFileType);
 
 	// returns the file type which is used to be shown in the GUI
 	CString GetFileTypeDisplayStr() const;
 
-	CFileIdentifier& GetFileIdentifier()				{ return m_FileIdentifier; }
-	const CFileIdentifier& GetFileIdentifierC() const	{ return m_FileIdentifier; }
+	CFileIdentifier &GetFileIdentifier()				{ return m_FileIdentifier; }
+	const CFileIdentifier &GetFileIdentifierC() const	{ return m_FileIdentifier; }
 	const uchar* GetFileHash() const					{ return m_FileIdentifier.GetMD4Hash(); }
 	void SetFileHash(const uchar* pucFileHash)			{ m_FileIdentifier.SetMD4Hash(pucFileHash); }
 	bool HasNullHash() const;
@@ -76,25 +76,25 @@ public:
 
 	uint32 GetIntTagValue(uint8 tagname) const;
 	uint32 GetIntTagValue(LPCSTR tagname) const;
-	bool GetIntTagValue(uint8 tagname, uint32& ruValue) const;
+	bool GetIntTagValue(uint8 tagname, uint32 &ruValue) const;
 	uint64 GetInt64TagValue(uint8 tagname) const;
 	uint64 GetInt64TagValue(LPCSTR tagname) const;
-	bool GetInt64TagValue(uint8 tagname, uint64& ruValue) const;
+	bool GetInt64TagValue(uint8 tagname, uint64 &ruValue) const;
 	void SetIntTagValue(uint8 tagname, uint32 uValue);
 	void SetInt64TagValue(uint8 tagname, uint64 uValue);
-	const CString& GetStrTagValue(uint8 tagname) const;
-	const CString& GetStrTagValue(LPCSTR tagname) const;
+	const CString &GetStrTagValue(uint8 tagname) const;
+	const CString &GetStrTagValue(LPCSTR tagname) const;
 	void SetStrTagValue(uint8 tagname, LPCTSTR);
-	CTag* GetTag(uint8 tagname, uint8 tagtype) const;
-	CTag* GetTag(LPCSTR tagname, uint8 tagtype) const;
-	CTag* GetTag(uint8 tagname) const;
-	CTag* GetTag(LPCSTR tagname) const;
-	const CArray<CTag*, CTag*>& GetTags() const			{ return taglist; }
-	void AddTagUnique(CTag* pTag);
+	CTag *GetTag(uint8 tagname, uint8 tagtype) const;
+	CTag *GetTag(LPCSTR tagname, uint8 tagtype) const;
+	CTag *GetTag(uint8 tagname) const;
+	CTag *GetTag(LPCSTR tagname) const;
+	const CArray<CTag*, CTag*> &GetTags() const			{ return taglist; }
+	void AddTagUnique(CTag *pTag);
 	void DeleteTag(uint8 tagname);
-	void DeleteTag(CTag* pTag);
+	void DeleteTag(CTag *pTag);
 	void ClearTags();
-	void CopyTags(const CArray<CTag*, CTag*>& tags);
+	void CopyTags(const CArray<CTag*, CTag*> &tags);
 	virtual bool IsPartFile() const						{ return false; }
 
 	bool	HasComment() const							{ return m_bHasComment; }
@@ -103,14 +103,14 @@ public:
 	bool	HasRating()	const							{ return m_uUserRating > 0; }
 	bool	HasBadRating()	const						{ return ( HasRating() && (m_uUserRating < 2)); }
 	void	SetUserRating(UINT in)						{ m_uUserRating = in; }
-	const CString& GetFileComment() /*const*/;
+	const CString &GetFileComment() /*const*/;
 	UINT	GetFileRating() /*const*/;
 	void	LoadComment();
 	virtual void	UpdateFileRatingCommentAvail(bool bForceUpdate = false) = 0;
 
 	bool	AddNote(Kademlia::CEntry* pEntry);
 	void	RefilterKadNotes(bool bUpdate = true);
-	const	CKadEntryPtrList& getNotes() const			{ return m_kadNotes; }
+	const	CKadEntryPtrList &getNotes() const			{ return m_kadNotes; }
 
 	bool	IsKadCommentSearchRunning() const			{ return m_bKadCommentSearchRunning; }
 	void	SetKadCommentSearchRunning(bool bVal);
@@ -118,7 +118,7 @@ public:
 #ifdef _DEBUG
 	// Diagnostic Support
 	virtual void AssertValid() const;
-	virtual void Dump(CDumpContext& dc) const;
+	virtual void Dump(CDumpContext &dc) const;
 #endif
 
 protected:

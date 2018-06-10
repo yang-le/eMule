@@ -278,7 +278,11 @@
 typedef CArray<CStringA> CStringAArray;
 typedef CStringArray CStringWArray;
 
+#ifdef UNICODE
 #define _TWINAPI(fname)	fname "W"
+#else
+#define _TWINAPI(fname)	fname "A"
+#endif
 
 extern "C" int __cdecl __ascii_stricmp(const char * dst, const char * src);
 

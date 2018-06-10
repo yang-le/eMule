@@ -948,8 +948,8 @@ BEGIN
                             "¡L’archivu 'emfriends.met' ye inválidu o ta corruptu!"
     IDS_ERR_READEMFRIENDS   "Error desconocíu al lleer emfriends.met: %s"
     IDS_ERR_KNOWNSERVERINFOREC "¡Información de servidor recibida desconocida!"
-    IDS_WIZ_DOWN            "Baxada (kBit/s)"
-    IDS_WIZ_UP              "Subida (kBit/s)"
+    IDS_WIZ_DOWN            "Baxada (kbit/s)"
+    IDS_WIZ_UP              "Subida (kbit/s)"
     IDS_SELECT_INCOMINGDIR  "Escueyi un directoriu pa los archivos entrantes"
     IDS_SELECT_TEMPDIR      "Escueyi un directoriu pa los archivos temporales"
     IDS_PRIOAUTO            "Auto"
@@ -1368,8 +1368,6 @@ BEGIN
                             "Sensor de velocidá de Subida: Errores abondo en Tracerouting. Desactivando sensor de velocidá de Subida."
     IDS_USS_STARTING        "Sensor de velocidá de Subida: Preparáu. Entamando control de velocidá de Subida. (Va emplegase mou de reaición rápida durante 60 seg)"
     IDS_A4AF                "Fontes"
-    IDS_MOBILEMULE          "MobileMule"
-    IDS_ENABLEMM            "Activar MobileMule"
     IDS_AUTOCAT_LABEL       "Auto asignar categoría (formatu, separtáu por |)"
     IDS_SHOWEXTSETTINGS     "Amosar más controles (controles básicos avanzaos)"
     IDS_TREEOPTIONS_TRUE    "Verdaderu"
@@ -1382,7 +1380,7 @@ STRINGTABLE
 BEGIN
     IDS_SELECT_FONT         "Seleccionar fonte"
     IDS_SERVER_LIMITS       "Límite d’archivu Baxu/Altu"
-    IDS_KBITSSEC            "kBit/seg"
+    IDS_KBITSSEC            "kbit/seg"
     IDS_KBYTESSEC           "kByte/seg"
     IDS_ERR_CREATE_DIR      "Error al crear %s directoriu ""%s"" - %s"
     IDS_WRN_INCFILE_RESERVED 
@@ -1390,13 +1388,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "El directoriu temporal nun ha asitiase nun directoriu d’instalación d’eMule."
     IDS_WRN_INCTEMP_SAME    "El direcotoriu entrante y temporal nun ha ser el mesmu."
-    IDS_MMFAILED            "Error al crear MobileMule Socket!"
-    IDS_MMSTARTED           "Servidor MobileMule activáu en Puertu %u. Versión protocolu: %s"
     IDS_SHOWDWLPERCENTAGE   "Amosar porcentax de baxada na barra de progresu"
     IDS_TBN_ONNEWDOWNLOAD   "Descarga añedida"
     IDS_ARTIST              "Artista"
     IDS_ALBUM               "Álbum"
-    IDS_MMGUIDELINK         "Guía MobileMule "
 END
 
 STRINGTABLE 
@@ -1495,7 +1490,6 @@ BEGIN
                             "Error al baxar ya instalar la llingua seleccionada (archivu dll) dende %s!"
     IDS_ERR_BADFOLDER       "Carpeta non válida.\nNun se pue pesllar la carpeta. Comprobar Nome y Localización."
     IDS_AUTOREMOVEFD        "Autollimpiar descargues completes"
-    IDS_MM_BLOCK            "3 intentos erróneos de conexón a MobileMule – cualquier intentu posterior va ser bloquiáu durante 10 min.!"
 END
 
 STRINGTABLE 
@@ -1521,7 +1515,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Nuevu usuariu conectáu con ésitu al servidor MobileMule"
     IDS_RADCLIENTS          "De veceros conocíos"
     IDS_KADUDPPORTERR       "El puertu UDP Kademlia ta en conflictu con otru puertu UDP esternu ó puertu Servidor d’eMule. EL puertu camudó a %u."
     IDS_CONFIRM_FILEDELETE  "¿Daveres quies desaniciar tolos archivos seleccionaos del discu?"
@@ -1545,7 +1538,7 @@ BEGIN
     IDS_TEXTLABELS          "Etiquetes del testu"
     IDS_ENABLETEXTLABELS    "Embaxo del iconu"
     IDS_CUSTOMIZETOOLBAR    "Personalizar la barra de ferramientes"
-    IDS_MINBITRATE          "Bitrate Mín. [kBit/s]"
+    IDS_MINBITRATE          "Bitrate Mín. [kbit/s]"
     IDS_KAD_RECHECKFW       "Comprobar Cortafueos"
     IDS_SHAREDTITLE         "Compartío eD2K|Kad"
     IDS_FIREWALLED          "Tres cortafueos"

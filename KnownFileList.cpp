@@ -384,7 +384,7 @@ bool CKnownFileList::SafeAddKFile(CKnownFile* toadd)
 		// and were renamed during file completion, we have a pending ptr in transfer window.
 		if (theApp.emuledlg && theApp.emuledlg->transferwnd && theApp.emuledlg->transferwnd->GetDownloadList()->m_hWnd)
 			theApp.emuledlg->transferwnd->GetDownloadList()->RemoveFile(reinterpret_cast<CPartFile *>(pFileInMap));
-		// Make sure the file is not used in out sharedfilesctrl anymore
+		// Make sure the file is not used in out sharedfilesctrl any more
 		if (theApp.emuledlg && theApp.emuledlg->sharedfileswnd && theApp.emuledlg->sharedfileswnd->sharedfilesctrl.m_hWnd)
 			theApp.emuledlg->sharedfileswnd->sharedfilesctrl.RemoveFile(pFileInMap, true);
 		delete pFileInMap;

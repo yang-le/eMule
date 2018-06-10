@@ -25,22 +25,15 @@
 
 #pragma once
 #include "AsyncSocketEx.h"
-
-// cryptoPP used for DH integer calculations
-#pragma warning(push)
-#pragma warning(disable:4244) // conversion from 'type1' to 'type2', possible loss of data
-#pragma warning(disable:4100) // unreferenced formal parameter
 #include <cryptopp/integer.h>
-#pragma warning(pop)
-
-
 
 #define ERR_WRONGHEADER				0x01
 #define ERR_TOOBIG					0x02
 #define ERR_ENCRYPTION				0x03
 #define ERR_ENCRYPTION_NOTALLOWED	0x04
 
-enum EStreamCryptState {
+enum EStreamCryptState
+{
 	ECS_NONE = 0,			// Disabled or not available
 	ECS_UNKNOWN,			// Incoming connection, will test the first incoming data for encrypted protocol
 	ECS_PENDING,			// Outgoing connection, will start sending encryption protocol
@@ -49,7 +42,8 @@ enum EStreamCryptState {
 	ECS_ENCRYPTING			// Encryption enabled
 };
 
-enum ENegotiatingState {
+enum ENegotiatingState
+{
 	ONS_NONE,
 
 	ONS_BASIC_CLIENTA_RANDOMPART,
@@ -70,7 +64,8 @@ enum ENegotiatingState {
 	ONS_COMPLETE
 };
 
-enum EEncryptionMethods {
+enum EEncryptionMethods
+{
 	ENM_OBFUSCATION = 0x00
 };
 
@@ -95,13 +90,13 @@ public:
 	uint8	m_dbgbyEncryptionMethodSet;
 
 protected:
-	int Send(const void* lpBuf, int nBufLen, int nFlags = 0);
-	int SendOv(CArray<WSABUF>& raBuffer, DWORD& dwBytesSent, LPWSAOVERLAPPED lpOverlapped);
-	int Receive(void* lpBuf, int nBufLen, int nFlags = 0);
+	int Send(const void *lpBuf, int nBufLen, int nFlags = 0);
+	int SendOv(CArray<WSABUF> &raBuffer, LPWSAOVERLAPPED lpOverlapped);
+	int Receive(void *lpBuf, int nBufLen, int nFlags = 0);
 	virtual void	OnError(int nErrorCode) = 0;
 	virtual void	OnSend(int nErrorCode);
 	CString			DbgGetIPString();
-	void			CryptPrepareSendData(uchar* pBuffer, uint32 nLen);
+	void			CryptPrepareSendData(uchar *pBuffer, uint32 nLen);
 	bool			IsEncryptionLayerReady();
 	uint8			GetSemiRandomNotProtocolMarker() const;
 

@@ -57,7 +57,7 @@ CAbstractFile::CAbstractFile(const CAbstractFile* pAbstractFile)
 	m_strFileType = pAbstractFile->m_strFileType;
 	m_bKadCommentSearchRunning = pAbstractFile->m_bKadCommentSearchRunning;
 
-	const CTypedPtrList<CPtrList, Kademlia::CEntry*>& list = pAbstractFile->getNotes();
+	const CTypedPtrList<CPtrList, Kademlia::CEntry*> &list = pAbstractFile->getNotes();
 	for (POSITION pos = list.GetHeadPosition(); pos != NULL;)
 		m_kadNotes.AddTail(list.GetNext(pos)->Copy());
 
@@ -87,7 +87,7 @@ void CAbstractFile::AssertValid() const
 	taglist.AssertValid();
 }
 
-void CAbstractFile::Dump(CDumpContext& dc) const
+void CAbstractFile::Dump(CDumpContext &dc) const
 {
 	CObject::Dump(dc);
 }
@@ -95,11 +95,9 @@ void CAbstractFile::Dump(CDumpContext& dc) const
 
 bool CAbstractFile::AddNote(Kademlia::CEntry* pEntry)
 {
-	for(POSITION pos = m_kadNotes.GetHeadPosition(); pos != NULL; )
-	{
+	for (POSITION pos = m_kadNotes.GetHeadPosition(); pos != NULL; ) {
 		const Kademlia::CEntry* entry = m_kadNotes.GetNext(pos);
-		if(entry->m_uSourceID == pEntry->m_uSourceID)
-		{
+		if (entry->m_uSourceID == pEntry->m_uSourceID) {
 			ASSERT(entry != pEntry);
 			return false;
 		}
@@ -116,7 +114,7 @@ UINT CAbstractFile::GetFileRating() /*const*/
 	return m_uRating;
 }
 
-const CString& CAbstractFile::GetFileComment() /*const*/
+const CString &CAbstractFile::GetFileComment() /*const*/
 {
 	if (!m_bCommentLoaded)
 		LoadComment();
@@ -131,7 +129,7 @@ void CAbstractFile::LoadComment()
 	m_bCommentLoaded = true;
 }
 
-void CAbstractFile::CopyTags(const CArray<CTag*, CTag*>& tags)
+void CAbstractFile::CopyTags(const CArray<CTag*, CTag*> &tags)
 {
 	for (int i = 0; i < tags.GetSize(); ++i)
 		taglist.Add(new CTag(*tags[i]));
@@ -139,19 +137,20 @@ void CAbstractFile::CopyTags(const CArray<CTag*, CTag*>& tags)
 
 void CAbstractFile::ClearTags()
 {
-	for (int i = 0; i < taglist.GetSize(); i++)
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;)
 		delete taglist[i];
 	taglist.RemoveAll();
 }
 
-void CAbstractFile::AddTagUnique(CTag* pTag)
+void CAbstractFile::AddTagUnique(CTag *pTag)
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		const CTag* pCurTag = taglist[i];
-		if ( (   (pCurTag->GetNameID()!=0 && pCurTag->GetNameID()==pTag->GetNameID())
-			  || (pCurTag->GetName()!=NULL && pTag->GetName()!=NULL && CmpED2KTagName(pCurTag->GetName(), pTag->GetName())==0)
-			 )
-			 && pCurTag->GetType() == pTag->GetType()){
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
+		const CTag *pCurTag = taglist[i];
+		if (((pCurTag->GetNameID() != 0 && pCurTag->GetNameID() == pTag->GetNameID())
+			|| (pCurTag->GetName() != NULL && pTag->GetName() != NULL && CmpED2KTagName(pCurTag->GetName(), pTag->GetName()) == 0)
+			)
+			&& pCurTag->GetType() == pTag->GetType())
+		{
 			delete pCurTag;
 			taglist.SetAt(i, pTag);
 			return;
@@ -178,11 +177,9 @@ void CAbstractFile::SetFileName(LPCTSTR pszFileName, bool bReplaceInvalidFileSys
 		SetFileType(GetFileTypeByName(m_strFileName));
 
 	if (bRemoveControlChars) {
-		for (int i = 0; i < m_strFileName.GetLength(); )
+		for (int i = m_strFileName.GetLength(); --i >= 0;)
 			if (m_strFileName[i] <= '\x1F')
 				m_strFileName.Delete(i);
-			else
-				++i;
 	}
 }
 
@@ -206,19 +203,19 @@ bool CAbstractFile::HasNullHash() const
 
 uint32 CAbstractFile::GetIntTagValue(uint8 tagname) const
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		const CTag* pTag = taglist[i];
-		if (pTag->GetNameID()==tagname && pTag->IsInt())
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
+		const CTag *pTag = taglist[i];
+		if (pTag->GetNameID() == tagname && pTag->IsInt())
 			return pTag->GetInt();
 	}
 	return 0;
 }
 
-bool CAbstractFile::GetIntTagValue(uint8 tagname, uint32& ruValue) const
+bool CAbstractFile::GetIntTagValue(uint8 tagname, uint32 &ruValue) const
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		const CTag* pTag = taglist[i];
-		if (pTag->GetNameID()==tagname && pTag->IsInt()){
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
+		const CTag *pTag = taglist[i];
+		if (pTag->GetNameID() == tagname && pTag->IsInt()) {
 			ruValue = pTag->GetInt();
 			return true;
 		}
@@ -228,9 +225,9 @@ bool CAbstractFile::GetIntTagValue(uint8 tagname, uint32& ruValue) const
 
 uint64 CAbstractFile::GetInt64TagValue(LPCSTR tagname) const
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		const CTag* pTag = taglist[i];
-		if (pTag->GetNameID()==0 && pTag->IsInt64(true) && CmpED2KTagName(pTag->GetName(), tagname)==0)
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
+		const CTag *pTag = taglist[i];
+		if (pTag->GetNameID() == 0 && pTag->IsInt64(true) && CmpED2KTagName(pTag->GetName(), tagname) == 0)
 			return pTag->GetInt64();
 	}
 	return 0;
@@ -238,9 +235,9 @@ uint64 CAbstractFile::GetInt64TagValue(LPCSTR tagname) const
 
 uint64 CAbstractFile::GetInt64TagValue(uint8 tagname) const
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		const CTag* pTag = taglist[i];
-		if (pTag->GetNameID()==tagname && pTag->IsInt64(true))
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
+		const CTag *pTag = taglist[i];
+		if (pTag->GetNameID() == tagname && pTag->IsInt64(true))
 			return pTag->GetInt64();
 	}
 	return 0;
@@ -248,9 +245,9 @@ uint64 CAbstractFile::GetInt64TagValue(uint8 tagname) const
 
 bool CAbstractFile::GetInt64TagValue(uint8 tagname, uint64& ruValue) const
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		const CTag* pTag = taglist[i];
-		if (pTag->GetNameID()==tagname && pTag->IsInt64(true)){
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
+		const CTag *pTag = taglist[i];
+		if (pTag->GetNameID() == tagname && pTag->IsInt64(true)) {
 			ruValue = pTag->GetInt64();
 			return true;
 		}
@@ -260,9 +257,9 @@ bool CAbstractFile::GetInt64TagValue(uint8 tagname, uint64& ruValue) const
 
 uint32 CAbstractFile::GetIntTagValue(LPCSTR tagname) const
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		const CTag* pTag = taglist[i];
-		if (pTag->GetNameID()==0 && pTag->IsInt() && CmpED2KTagName(pTag->GetName(), tagname)==0)
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
+		const CTag *pTag = taglist[i];
+		if (pTag->GetNameID() == 0 && pTag->IsInt() && CmpED2KTagName(pTag->GetName(), tagname) == 0)
 			return pTag->GetInt();
 	}
 	return 0;
@@ -270,121 +267,119 @@ uint32 CAbstractFile::GetIntTagValue(LPCSTR tagname) const
 
 void CAbstractFile::SetIntTagValue(uint8 tagname, uint32 uValue)
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		CTag* pTag = taglist[i];
-		if (pTag->GetNameID()==tagname && pTag->IsInt()){
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
+		CTag *pTag = taglist[i];
+		if (pTag->GetNameID() == tagname && pTag->IsInt()) {
 			pTag->SetInt(uValue);
 			return;
 		}
 	}
-	CTag* pTag = new CTag(tagname, uValue);
+	CTag *pTag = new CTag(tagname, uValue);
 	taglist.Add(pTag);
 }
 
 void CAbstractFile::SetInt64TagValue(uint8 tagname, uint64 uValue)
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		CTag* pTag = taglist[i];
-		if (pTag->GetNameID()==tagname && pTag->IsInt64(true)){
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
+		CTag *pTag = taglist[i];
+		if (pTag->GetNameID() == tagname && pTag->IsInt64(true)) {
 			pTag->SetInt64(uValue);
 			return;
 		}
 	}
-	CTag* pTag = new CTag(tagname, uValue);
-	taglist.Add(pTag);
+	taglist.Add(new CTag(tagname, uValue));
 }
 
-const CString& CAbstractFile::GetStrTagValue(uint8 tagname) const
+static const CString s_strEmpty;
+
+const CString &CAbstractFile::GetStrTagValue(uint8 tagname) const
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		const CTag* pTag = taglist[i];
-		if (pTag->GetNameID()==tagname && pTag->IsStr())
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
+		const CTag *pTag = taglist[i];
+		if (pTag->GetNameID() == tagname && pTag->IsStr())
 			return pTag->GetStr();
 	}
-	static const CString s_strEmpty;
 	return s_strEmpty;
 }
 
-const CString& CAbstractFile::GetStrTagValue(LPCSTR tagname) const
+const CString &CAbstractFile::GetStrTagValue(LPCSTR tagname) const
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		const CTag* pTag = taglist[i];
-		if (pTag->GetNameID()==0 && pTag->IsStr() && CmpED2KTagName(pTag->GetName(), tagname)==0)
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
+		const CTag *pTag = taglist[i];
+		if (pTag->GetNameID() == 0 && pTag->IsStr() && CmpED2KTagName(pTag->GetName(), tagname) == 0)
 			return pTag->GetStr();
 	}
-	static const CString s_strEmpty;
 	return s_strEmpty;
 }
 
 void CAbstractFile::SetStrTagValue(uint8 tagname, LPCTSTR pszValue)
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		CTag* pTag = taglist[i];
-		if (pTag->GetNameID()==tagname && pTag->IsStr()){
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
+		CTag *pTag = taglist[i];
+		if (pTag->GetNameID() == tagname && pTag->IsStr()) {
 			pTag->SetStr(pszValue);
 			return;
 		}
 	}
-	CTag* pTag = new CTag(tagname, pszValue);
+	CTag *pTag = new CTag(tagname, pszValue);
 	taglist.Add(pTag);
 }
 
-CTag* CAbstractFile::GetTag(uint8 tagname, uint8 tagtype) const
+CTag *CAbstractFile::GetTag(uint8 tagname, uint8 tagtype) const
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		CTag* pTag = taglist[i];
-		if (pTag->GetNameID()==tagname && pTag->GetType()==tagtype)
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
+		CTag *pTag = taglist[i];
+		if (pTag->GetNameID() == tagname && pTag->GetType() == tagtype)
 			return pTag;
 	}
 	return NULL;
 }
 
-CTag* CAbstractFile::GetTag(LPCSTR tagname, uint8 tagtype) const
+CTag *CAbstractFile::GetTag(LPCSTR tagname, uint8 tagtype) const
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		CTag* pTag = taglist[i];
-		if (pTag->GetNameID()==0 && pTag->GetType()==tagtype && CmpED2KTagName(pTag->GetName(), tagname)==0)
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
+		CTag *pTag = taglist[i];
+		if (pTag->GetNameID() == 0 && pTag->GetType() == tagtype && CmpED2KTagName(pTag->GetName(), tagname) == 0)
 			return pTag;
 	}
 	return NULL;
 }
 
-CTag* CAbstractFile::GetTag(uint8 tagname) const
+CTag *CAbstractFile::GetTag(uint8 tagname) const
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		CTag* pTag = taglist[i];
-		if (pTag->GetNameID()==tagname)
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
+		CTag *pTag = taglist[i];
+		if (pTag->GetNameID() == tagname)
 			return pTag;
 	}
 	return NULL;
 }
 
-CTag* CAbstractFile::GetTag(LPCSTR tagname) const
+CTag *CAbstractFile::GetTag(LPCSTR tagname) const
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		CTag* pTag = taglist[i];
-		if (pTag->GetNameID()==0 && CmpED2KTagName(pTag->GetName(), tagname)==0)
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
+		CTag *pTag = taglist[i];
+		if (pTag->GetNameID() == 0 && CmpED2KTagName(pTag->GetName(), tagname) == 0)
 			return pTag;
 	}
 	return NULL;
 }
 
-void CAbstractFile::DeleteTag(CTag* pTag)
+void CAbstractFile::DeleteTag(CTag *pTag)
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		if (taglist[i] == pTag){
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;)
+		if (taglist[i] == pTag) {
 			taglist.RemoveAt(i);
 			delete pTag;
 			return;
 		}
-	}
 }
 
 void CAbstractFile::DeleteTag(uint8 tagname)
 {
-	for (int i = 0; i < taglist.GetSize(); i++){
-		CTag* pTag = taglist[i];
-		if (pTag->GetNameID()==tagname){
+	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
+		CTag *pTag = taglist[i];
+		if (pTag->GetNameID() == tagname) {
 			taglist.RemoveAt(i);
 			delete pTag;
 			return;
@@ -394,7 +389,7 @@ void CAbstractFile::DeleteTag(uint8 tagname)
 
 void CAbstractFile::SetKadCommentSearchRunning(bool bVal)
 {
-	if (bVal != m_bKadCommentSearchRunning){
+	if (bVal != m_bKadCommentSearchRunning) {
 		m_bKadCommentSearchRunning = bVal;
 		UpdateFileRatingCommentAvail(true);
 	}
@@ -402,7 +397,7 @@ void CAbstractFile::SetKadCommentSearchRunning(bool bVal)
 
 void CAbstractFile::RefilterKadNotes(bool bUpdate)
 {
-	const CString& cfilter = thePrefs.GetCommentFilter();
+	const CString &cfilter = thePrefs.GetCommentFilter();
 	// check all availabe comments against our filter again
 	if (cfilter.IsEmpty())
 		return;
@@ -410,18 +405,16 @@ void CAbstractFile::RefilterKadNotes(bool bUpdate)
 	for (POSITION pos1 = m_kadNotes.GetHeadPosition(); pos1 != NULL;) {
 		POSITION pos2 = pos1;
 		const Kademlia::CEntry* entry = m_kadNotes.GetNext(pos1);
-		if (!entry->GetStrTagValue(TAG_DESCRIPTION).IsEmpty()){
-			CString strCommentLower(entry->GetStrTagValue(TAG_DESCRIPTION));
+		if (!entry->GetStrTagValue(Kademlia::CKadTagNameString(TAG_DESCRIPTION)).IsEmpty()) {
+			CString strCommentLower(entry->GetStrTagValue(Kademlia::CKadTagNameString(TAG_DESCRIPTION)));
 			// Verified Locale Dependency: Locale dependent string conversion (OK)
 			strCommentLower.MakeLower();
 
 			int iPos = 0;
 			CString strFilter(cfilter.Tokenize(_T("|"), iPos));
-			while (!strFilter.IsEmpty())
-			{
+			while (!strFilter.IsEmpty()) {
 				// comment filters are already in lowercase, compare with temp. lowercased received comment
-				if (strCommentLower.Find(strFilter) >= 0)
-				{
+				if (strCommentLower.Find(strFilter) >= 0) {
 					m_kadNotes.RemoveAt(pos2);
 					delete entry;
 					break;
@@ -444,10 +437,9 @@ CString CAbstractFile::GetED2kLink(bool bHashset, bool bHTML, bool bHostname, bo
 
 	if (bHTML)
 		strLink = _T("<a href=\"") + strLink;
-	if (bHashset && GetFileIdentifierC().GetAvailableMD4PartHashCount() > 0 && GetFileIdentifierC().HasExpectedMD4HashCount()){
+	if (bHashset && GetFileIdentifierC().GetAvailableMD4PartHashCount() > 0 && GetFileIdentifierC().HasExpectedMD4HashCount()) {
 		strLink += _T("p=");
-		for (UINT j = 0; j < GetFileIdentifierC().GetAvailableMD4PartHashCount(); j++)
-		{
+		for (UINT j = 0; j < GetFileIdentifierC().GetAvailableMD4PartHashCount(); j++) {
 			if (j > 0)
 				strLink += _T(':');
 			strLink += EncodeBase16(GetFileIdentifierC().GetMD4PartHash(j), 16);
@@ -459,14 +451,11 @@ CString CAbstractFile::GetED2kLink(bool bHashset, bool bHTML, bool bHostname, bo
 		strLink += _T("h=") + GetFileIdentifierC().GetAICHHash().GetString() + _T('|');
 
 	strLink += _T('/');
-	if (bHostname && !thePrefs.GetYourHostname().IsEmpty() && thePrefs.GetYourHostname().Find(_T('.')) != -1)
-	{
-		strBuffer.Format(_T("|sources,%s:%i|/"), (LPCTSTR)thePrefs.GetYourHostname(), thePrefs.GetPort() );
+	if (bHostname && !thePrefs.GetYourHostname().IsEmpty() && thePrefs.GetYourHostname().Find(_T('.')) != -1) {
+		strBuffer.Format(_T("|sources,%s:%i|/"), (LPCTSTR)thePrefs.GetYourHostname(), thePrefs.GetPort());
 		strLink += strBuffer;
-	}
-	else if(bSource && dwSourceIP != 0)
-	{
-		strBuffer.Format(_T("|sources,%i.%i.%i.%i:%i|/"),(uint8)dwSourceIP,(uint8)(dwSourceIP>>8),(uint8)(dwSourceIP>>16),(uint8)(dwSourceIP>>24), thePrefs.GetPort() );
+	} else if (bSource && dwSourceIP != 0) {
+		strBuffer.Format(_T("|sources,%i.%i.%i.%i:%i|/"), (uint8)dwSourceIP, (uint8)(dwSourceIP >> 8), (uint8)(dwSourceIP >> 16), (uint8)(dwSourceIP >> 24), thePrefs.GetPort());
 		strLink += strBuffer;
 	}
 	if (bHTML)

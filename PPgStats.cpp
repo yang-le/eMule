@@ -88,7 +88,7 @@ BOOL CPPgStats::OnInitDialog()
 	CPropertyPage::OnInitDialog();
 	InitWindowStyles(this);
 
-	((CSliderCtrl*)GetDlgItem(IDC_SLIDER))->SetRange(0, 200, TRUE);
+	static_cast<CSliderCtrl *>(GetDlgItem(IDC_SLIDER))->SetRange(0, 200, TRUE);
 
 	m_ctlGraphsUpdate.SetPos(thePrefs.GetTrafficOMeterInterval());
 	m_ctlGraphsUpdate.SetTicFreq(10);
@@ -245,7 +245,7 @@ void CPPgStats::Localize()
 
 void CPPgStats::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
 {
-	CSliderCtrl* slider = (CSliderCtrl*)pScrollBar;
+	CSliderCtrl *slider = reinterpret_cast<CSliderCtrl *>(pScrollBar);
 	int position = slider->GetPos();
 
 	if (pScrollBar->GetSafeHwnd() == m_ctlGraphsUpdate.m_hWnd)

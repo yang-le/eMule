@@ -2380,7 +2380,7 @@ BOOL GetWMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsWM, bool bFullI
 
 											mi->strInfo << _T("   ") << GetResString(IDS_CODEC) << _T(":\t") << GetVideoFormatName(pVideoInfo->bmiHeader.biCompression) << _T("\n");
 											if (pVideoInfo->dwBitRate)
-												mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << (UINT)((pVideoInfo->dwBitRate + 500) / 1000) << _T(" kBit/s\n");
+												mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << (UINT)((pVideoInfo->dwBitRate + 500) / 1000) << _T(" kbit/s\n");
 											mi->strInfo << _T("   ") << GetResString(IDS_WIDTH) << _T(" x ") << GetResString(IDS_HEIGHT) << _T(":\t") << abs(pVideoInfo->bmiHeader.biWidth) << _T(" x ") << abs(pVideoInfo->bmiHeader.biHeight) << _T("\n");
 											float fAspectRatio = (float)abs(pVideoInfo->bmiHeader.biWidth) / (float)abs(pVideoInfo->bmiHeader.biHeight);
 											mi->strInfo << _T("   ") << GetResString(IDS_ASPECTRATIO) << _T(":\t") << fAspectRatio << _T("  (") << GetKnownAspectRatioDisplayString(fAspectRatio) << _T(")\n");
@@ -2497,7 +2497,7 @@ BOOL GetWMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsWM, bool bFullI
 
 								DWORD dwValue;
 								if (GetAttributeEx(pIWMHeaderInfo3, wStream, g_wszWMPeakBitrate, dwValue) && dwValue != 0)
-									mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << (UINT)((dwValue + 500) / 1000) << _T(" kBit/s\n");
+									mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << (UINT)((dwValue + 500) / 1000) << _T(" kbit/s\n");
 							}
 						}
 					}
@@ -2522,31 +2522,31 @@ BOOL GetWMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsWM, bool bFullI
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
 								uStreamType = IDS_AUDIO;
-								strStreamInfo += _T("64 - 160 kBit/s");
+								strStreamInfo += _T("64 - 160 kbit/s");
 							}
 							else if (strDevTempl == _T("L2"))
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
 								uStreamType = IDS_AUDIO;
-								strStreamInfo += _T("<= 160 kBit/s");
+								strStreamInfo += _T("<= 160 kbit/s");
 							}
 							else if (strDevTempl == _T("L3"))
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
 								uStreamType = IDS_AUDIO;
-								strStreamInfo += _T("<= 384 kBit/s");
+								strStreamInfo += _T("<= 384 kbit/s");
 							}
 							else if (strDevTempl == _T("S1"))
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
 								uStreamType = IDS_AUDIO;
-								strStreamInfo += _T("<= 20 kBit/s");
+								strStreamInfo += _T("<= 20 kbit/s");
 							}
 							else if (strDevTempl == _T("S2"))
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
 								uStreamType = IDS_AUDIO;
-								strStreamInfo += _T("<= 20 kBit/s");
+								strStreamInfo += _T("<= 20 kbit/s");
 							}
 							else if (strDevTempl == _T("M"))
 							{
@@ -2558,49 +2558,49 @@ BOOL GetWMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsWM, bool bFullI
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
 								uStreamType = IDS_AUDIO;
-								strStreamInfo += _T("<= 384 kBit/s, <= 48 kHz");
+								strStreamInfo += _T("<= 384 kbit/s, <= 48 kHz");
 							}
 							else if (strDevTempl == _T("M2"))
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
 								uStreamType = IDS_AUDIO;
-								strStreamInfo += _T("<= 768 kBit/s, <= 96 kHz");
+								strStreamInfo += _T("<= 768 kbit/s, <= 96 kHz");
 							}
 							else if (strDevTempl == _T("M3"))
 							{
 								streamCodecType = WMT_CODECINFO_AUDIO;
 								uStreamType = IDS_AUDIO;
-								strStreamInfo += _T("<= 1500 kBit/s, <= 96 kHz");
+								strStreamInfo += _T("<= 1500 kbit/s, <= 96 kHz");
 							}
 							else if (strDevTempl == _T("SP@LL"))
 							{
 								streamCodecType = WMT_CODECINFO_VIDEO;
 								uStreamType = IDS_VIDEO;
-								strStreamInfo += _T("Simple Profile, Low Level, <= 176 x 144, <= 96 kBit/s");
+								strStreamInfo += _T("Simple Profile, Low Level, <= 176 x 144, <= 96 kbit/s");
 							}
 							else if (strDevTempl == _T("SP@ML"))
 							{
 								streamCodecType = WMT_CODECINFO_VIDEO;
 								uStreamType = IDS_VIDEO;
-								strStreamInfo += _T("Simple Profile, Medium Level, <= 352 x 288, <= 384 kBit/s");
+								strStreamInfo += _T("Simple Profile, Medium Level, <= 352 x 288, <= 384 kbit/s");
 							}
 							else if (strDevTempl == _T("MP@LL"))
 							{
 								streamCodecType = WMT_CODECINFO_VIDEO;
 								uStreamType = IDS_VIDEO;
-								strStreamInfo += _T("Main Profile, Low Level, <= 352 x 288, 2 MBit/s");
+								strStreamInfo += _T("Main Profile, Low Level, <= 352 x 288, 2 Mbit/s");
 							}
 							else if (strDevTempl == _T("MP@ML"))
 							{
 								streamCodecType = WMT_CODECINFO_VIDEO;
 								uStreamType = IDS_VIDEO;
-								strStreamInfo += _T("Main Profile, Medium Level, <= 720 x 576, 10 MBit/s");
+								strStreamInfo += _T("Main Profile, Medium Level, <= 720 x 576, 10 Mbit/s");
 							}
 							else if (strDevTempl == _T("MP@HL"))
 							{
 								streamCodecType = WMT_CODECINFO_VIDEO;
 								uStreamType = IDS_VIDEO;
-								strStreamInfo += _T("Main Profile, High Level, <= 1920 x 1080, 20 MBit/s");
+								strStreamInfo += _T("Main Profile, High Level, <= 1920 x 1080, 20 Mbit/s");
 							}
 							else if (strDevTempl == _T("CP"))
 							{
@@ -2612,13 +2612,13 @@ BOOL GetWMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsWM, bool bFullI
 							{
 								streamCodecType = WMT_CODECINFO_VIDEO;
 								uStreamType = IDS_VIDEO;
-								strStreamInfo += _T("Video Image Level 1, <= 352 x 288, 192 kBit/s");
+								strStreamInfo += _T("Video Image Level 1, <= 352 x 288, 192 kbit/s");
 							}
 							else if (strDevTempl == _T("I2"))
 							{
 								streamCodecType = WMT_CODECINFO_VIDEO;
 								uStreamType = IDS_VIDEO;
-								strStreamInfo += _T("Video Image Level 2, <= 1024 x 768, 384 kBit/s");
+								strStreamInfo += _T("Video Image Level 2, <= 1024 x 768, 384 kbit/s");
 							}
 							else if (strDevTempl == _T("I"))
 							{
@@ -2729,7 +2729,7 @@ BOOL GetWMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsWM, bool bFullI
 									if (!strStreamInfo.IsEmpty())
 										mi->strInfo << _T("   Device Conformance:\t") << strStreamInfo << _T("\n");
 									if (dwBitrate)
-										mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << (UINT)((dwBitrate + 500) / 1000) << _T(" kBit/s\n");
+										mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << (UINT)((dwBitrate + 500) / 1000) << _T(" kbit/s\n");
 								}
 							}
 							else if (streamCodecType == WMT_CODECINFO_AUDIO)
@@ -2770,7 +2770,7 @@ BOOL GetWMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsWM, bool bFullI
 									if (!strStreamInfo.IsEmpty())
 										mi->strInfo << _T("   Device Conformance:\t") << strStreamInfo << _T("\n");
 									if (dwBitrate)
-										mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << (UINT)((dwBitrate + 500) / 1000) << _T(" kBit/s\n");
+										mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << (UINT)((dwBitrate + 500) / 1000) << _T(" kbit/s\n");
 								}
 							}
 							else if (bFullInfo && mi->strInfo.m_hWnd)
@@ -2783,7 +2783,7 @@ BOOL GetWMHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsWM, bool bFullI
 								if (!strStreamInfo.IsEmpty())
 									mi->strInfo << _T("   Device Conformance:\t") << strStreamInfo << _T("\n");
 								if (dwBitrate)
-									mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << (UINT)((dwBitrate + 500) / 1000) << _T(" kBit/s\n");
+									mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << (UINT)((dwBitrate + 500) / 1000) << _T(" kbit/s\n");
 							}
 						}
 					}

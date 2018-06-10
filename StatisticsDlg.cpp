@@ -2327,11 +2327,11 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 						cbuffer.Format( GetResString( IDS_STATS_GAINCOMP ), (LPCTSTR)CastItoXBytes( (uint64)(thePrefs.GetSesSavedFromCompression()+ thePrefs.GetCumSavedFromCompression()) * avgModifier[mx], false, false ) );
 						stattree.SetItemText( time_aap_down[mx][3], cbuffer );
 						// Set Cumulative Lost Due To Corruption
-						cbuffer.Format( GetResString( IDS_STATS_LOSTCORRUPT ), (LPCTSTR)CastItoXBytes( (uint64)(thePrefs.GetSesLostFromCorruption() + thePrefs.GetCumLostFromCorruption()) * avgModifier[mx], false, false ) );
-						stattree.SetItemText( time_aap_down[mx][4], cbuffer );
+						cbuffer.Format(GetResString(IDS_STATS_LOSTCORRUPT), (LPCTSTR)CastItoXBytes((uint64)(thePrefs.GetSesLostFromCorruption() + thePrefs.GetCumLostFromCorruption()) * avgModifier[mx], false, false));
+						stattree.SetItemText(time_aap_down[mx][4], cbuffer);
 						// Set Cumulative Saved Due To ICH
 						cbuffer.Format(GetResString(IDS_STATS_ICHSAVED), (uint32)((thePrefs.GetSesPartsSavedByICH() + thePrefs.GetCumPartsSavedByICH()) * avgModifier[mx]));
-						stattree.SetItemText( time_aap_down[mx][5], cbuffer );
+						stattree.SetItemText(time_aap_down[mx][5], cbuffer);
 
 						uint64 DownOHTotal =	theStats.GetDownDataOverheadFileRequest() +
 												theStats.GetDownDataOverheadSourceExchange() +
@@ -2879,14 +2879,11 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 	if (forceUpdate || stattree.IsExpanded(h_shared))
 	{
 		// Set Number of Shared Files
-		cbuffer.Format(GetResString(IDS_SHAREDFILESCOUNT),theApp.sharedfiles->GetCount());
+		cbuffer.Format(GetResString(IDS_SHAREDFILESCOUNT), theApp.sharedfiles->GetCount());
 		// SLUGFILLER: SafeHash - extra statistics
 		if (theApp.sharedfiles->GetHashingCount())
-		{
-			CString tempbuffer;
-			tempbuffer.Format(GetResString(IDS_HASHINGFILESCOUNT),theApp.sharedfiles->GetHashingCount());
-			cbuffer += tempbuffer;
-		}
+			cbuffer.AppendFormat(GetResString(IDS_HASHINGFILESCOUNT),theApp.sharedfiles->GetHashingCount());
+
 		// SLUGFILLER: SafeHash
 		stattree.SetItemText(shar[0], cbuffer);
 		// Set Average File Size

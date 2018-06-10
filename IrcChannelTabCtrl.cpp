@@ -683,12 +683,12 @@ void CIrcChannelTabCtrl::ChatSend(CString sSend)
 			}
 
 			if (sSend.Left(17).CompareNoCase(_T("/PRIVMSG nickserv")) == 0) {
-				sSend = _T("/ns") + sSend.Mid(17);
+				sSend.Format(_T("/ns%s"), (LPCTSTR)sSend.Mid(17));
 			} else if (sSend.Left(17).CompareNoCase(_T("/PRIVMSG chanserv")) == 0) {
-				sSend = _T("/cs") + sSend.Mid(17);
+				sSend.Format(_T("/cs%s"), (LPCTSTR)sSend.Mid(17));
 			} else if (sSend.Left(5).CompareNoCase(_T("/part")) == 0) {
 				if (sSend.TrimRight().GetLength() == 5 && m_pCurrentChannel->m_eType == Channel::ctNormal)
-					sSend += _T(' ') + m_pCurrentChannel->m_sName;
+					sSend.AppendFormat(_T(" %s"), (LPCTSTR)m_pCurrentChannel->m_sName);
 			} else if (sSend.Left(8).CompareNoCase(_T("/PRIVMSG")) == 0) {
 				int iIndex = sSend.Find(_T(' '), sSend.Find(_T(' ')) + 1);
 				sSend.Insert(iIndex + 1, _T(":"));

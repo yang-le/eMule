@@ -60,7 +60,7 @@ void CLookupHistory::SetGUIDeleted()
 		delete this;
 }
 
-void CLookupHistory::ContactReceived(CContact* pRecContact, CContact* pFromContact, CUInt128 uDistance, bool bCloser, bool bForceInteresting)
+void CLookupHistory::ContactReceived(CContact* pRecContact, CContact* pFromContact, const CUInt128 &uDistance, bool bCloser, bool bForceInteresting)
 {
 	// Do we know this contact already? If pRecContact is NULL we only set the responded flag to the pFromContact
 	for (int i = 0; i < m_aHistoryEntries.GetCount(); i++)

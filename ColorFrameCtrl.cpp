@@ -33,10 +33,9 @@ CColorFrameCtrl::~CColorFrameCtrl()
 
 BOOL CColorFrameCtrl::Create(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID) 
 {
-	BOOL result;
 	static CString className = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, AfxGetApp()->LoadStandardCursor(IDC_ARROW));
 
-	result = CWnd::CreateEx( WS_EX_STATICEDGE, 
+	BOOL result = CWnd::CreateEx( WS_EX_STATICEDGE,
 		                      className, NULL, dwStyle, 
 		                      rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top,
 		                      pParentWnd->GetSafeHwnd(), (HMENU)nID);

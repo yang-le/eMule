@@ -79,9 +79,9 @@ BOOL CComboBoxEx2::PreTranslateMessage(MSG* pMsg)
 
 					//those casts are indeed all(!) needed to get that thing (at least!) running correctly for ANSI code pages,
 					//if that will also work for MBCS code pages has to be tested.
-					UINT uFirstChar      = (UINT)strItem[0];
+					UINT uFirstChar		 = (UINT)strItem[0];
 					UINT uFirstCharLower = (UINT)_totlower((TCHAR)uFirstChar);
-					UINT uTheChar        = (UINT)_totlower((TCHAR)uChar);
+					UINT uTheChar		 = (UINT)_totlower((TCHAR)uChar);
 					if (uFirstCharLower == uTheChar){
 						SetCurSel(i);
 						GetParent()->SendMessage(WM_COMMAND, MAKELONG(GetWindowLongPtr(m_hWnd, GWLP_ID), CBN_SELCHANGE), (LPARAM)m_hWnd);

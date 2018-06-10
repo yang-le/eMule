@@ -1007,8 +1007,8 @@
 #define IDS_USS_TRACEROUTEOFTENFAILED   1064
 #define IDS_USS_STARTING                1065
 #define IDS_A4AF                        1066
-#define IDS_MOBILEMULE                  1067
-#define IDS_ENABLEMM                    1068
+//#define IDS_MOBILEMULE                  1067
+//#define IDS_ENABLEMM                    1068
 #define IDS_AUTOCAT_LABEL               1069
 #define IDS_SHOWEXTSETTINGS             1070
 #define IDS_TREEOPTIONS_TRUE            1071
@@ -1023,13 +1023,13 @@
 #define IDS_WRN_INCFILE_RESERVED        1080
 #define IDS_WRN_TEMPFILES_RESERVED      1081
 #define IDS_WRN_INCTEMP_SAME            1082
-#define IDS_MMFAILED                    1083
-#define IDS_MMSTARTED                   1084
+//#define IDS_MMFAILED                    1083
+//#define IDS_MMSTARTED                   1084
 #define IDS_SHOWDWLPERCENTAGE           1085
 #define IDS_TBN_ONNEWDOWNLOAD           1086
 #define IDS_ARTIST                      1087
 #define IDS_ALBUM                       1088
-#define IDS_MMGUIDELINK                 1089
+//#define IDS_MMGUIDELINK                 1089
 #define IDS_CD_UPLOADREQ                1090
 #define IDS_SETTINGCHANGED_RESTART      1091
 #define IDS_CREDITSEXPIRED              1092
@@ -1106,8 +1106,8 @@
 #define IDS_ERR_FAILEDDOWNLOADLANG      1163
 #define IDS_ERR_BADFOLDER               1164
 #define IDS_AUTOREMOVEFD                1165
-#define IDS_MM_BLOCK                    1166
-#define IDS_MM_NEWUSER                  1167
+//#define IDS_MM_BLOCK                    1166
+//#define IDS_MM_NEWUSER                  1167
 #define IDS_RADCLIENTS                  1168
 #define IDS_KADUDPPORTERR               1169
 #define IDD_META_DATA                   1170
@@ -2029,7 +2029,7 @@
 #define IDC_STATIC_GENERAL              2651
 #define IDC_DATETIMEPICKER1             2652
 #define IDC_MINS                        2652
-#define IDC_STATIC_MOBILEMULE           2653
+//#define IDC_STATIC_MOBILEMULE           2653
 #define IDC_STATIC_S_TITLE              2654
 #define IDC_STATIC_S_TIME               2655
 #define IDC_STATIC_S_ACTION             2656

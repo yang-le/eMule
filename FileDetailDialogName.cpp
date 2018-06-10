@@ -137,12 +137,10 @@ void CFileDetailDialogName::OnDestroy()
 {
 	m_listFileNames.SaveSettings();
 
-	for (int i=0;i<m_listFileNames.GetItemCount();++i) {
-		FCtrlItem_Struct* item= (FCtrlItem_Struct*)m_listFileNames.GetItemData(i);
-		delete item;
-	}
+	for (int i = m_listFileNames.GetItemCount(); --i >= 0;)
+		delete reinterpret_cast<FCtrlItem_Struct *>(m_listFileNames.GetItemData(i));
 
-	if (m_timer){
+	if (m_timer) {
 		KillTimer(m_timer);
 		m_timer = 0;
 	}
@@ -159,60 +157,49 @@ void CFileDetailDialogName::FillSourcenameList()
 {
 	LVFINDINFO info;
 	info.flags = LVFI_STRING;
-	int itempos;
-
-	CString strText;
 
 	// reset
-	for (int i=0;i<m_listFileNames.GetItemCount();i++){
-		FCtrlItem_Struct* item= (FCtrlItem_Struct*)m_listFileNames.GetItemData(i);
-		item->count=0;
-	}
+	for (int i = m_listFileNames.GetItemCount(); --i >= 0;)
+		reinterpret_cast<FCtrlItem_Struct *>(m_listFileNames.GetItemData(i))->count = 0;
 
 	// update
-	const CPartFile* file = static_cast<CPartFile *>((*m_paFiles)[0]);
-	for (POSITION pos = file->srclist.GetHeadPosition(); pos != NULL; )
-	{
-		CUpDownClient* cur_src = file->srclist.GetNext(pos);
+	const CPartFile *file = static_cast<CPartFile *>((*m_paFiles)[0]);
+	for (POSITION pos = file->srclist.GetHeadPosition(); pos != NULL; ) {
+		CUpDownClient *cur_src = file->srclist.GetNext(pos);
 		if (cur_src->GetRequestFile() != file || cur_src->GetClientFilename().IsEmpty())
 			continue;
 
 		info.psz = cur_src->GetClientFilename();
-		if ((itempos=m_listFileNames.FindItem(&info, -1)) == -1)
-		{
-			FCtrlItem_Struct* newitem= new FCtrlItem_Struct();
-			newitem->count=1;
-			newitem->filename=cur_src->GetClientFilename();
+		int itempos = m_listFileNames.FindItem(&info, -1);
+		if (itempos == -1) {
+			FCtrlItem_Struct *newitem = new FCtrlItem_Struct();
+			newitem->count = 1;
+			newitem->filename = cur_src->GetClientFilename();
 
 			int iSystemIconIdx = theApp.GetFileTypeSystemImageIdx(cur_src->GetClientFilename());
-			if (theApp.GetSystemImageList() && !m_bAppliedSystemImageList)
-			{
+			if (theApp.GetSystemImageList() && !m_bAppliedSystemImageList) {
 				m_listFileNames.ApplyImageList(theApp.GetSystemImageList());
-				ASSERT( (m_listFileNames.GetStyle() & LVS_SHAREIMAGELISTS) != 0 );
+				ASSERT((m_listFileNames.GetStyle() & LVS_SHAREIMAGELISTS) != 0);
 				m_bAppliedSystemImageList = true;
 			}
 
-			int ix = m_listFileNames.InsertItem(LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE, m_listFileNames.GetItemCount(),cur_src->GetClientFilename(), 0, 0, iSystemIconIdx, (LPARAM)newitem);
+			int ix = m_listFileNames.InsertItem(LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE, m_listFileNames.GetItemCount(), cur_src->GetClientFilename(), 0, 0, iSystemIconIdx, (LPARAM)newitem);
 			m_listFileNames.SetItemText(ix, 1, _T("1"));
-		}
-		else
-		{
-			FCtrlItem_Struct* item= (FCtrlItem_Struct*)m_listFileNames.GetItemData(itempos);
-			item->count+=1;
-			strText.Format(_T("%i"),item->count);
-			m_listFileNames.SetItemText(itempos, 1,strText );
+		} else {
+			FCtrlItem_Struct *item = reinterpret_cast<FCtrlItem_Struct *>(m_listFileNames.GetItemData(itempos));
+			item->count++;
+			CString strText;
+			strText.Format(_T("%i"), item->count);
+			m_listFileNames.SetItemText(itempos, 1, strText);
 		}
 	}
 
 	// remove 0'er
-	for (int i=0;i<m_listFileNames.GetItemCount();i++)
-	{
-		FCtrlItem_Struct* item= (FCtrlItem_Struct*)m_listFileNames.GetItemData(i);
-		if (item && item->count==0)
-		{
+	for (int i = m_listFileNames.GetItemCount(); --i >= 0;) {
+		FCtrlItem_Struct *item = reinterpret_cast<FCtrlItem_Struct *>(m_listFileNames.GetItemData(i));
+		if (item && item->count == 0) {
 			delete item;
 			m_listFileNames.DeleteItem(i);
-			i=0;
 		}
 	}
 
@@ -267,8 +254,8 @@ void CFileDetailDialogName::OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 int CALLBACK CFileDetailDialogName::CompareListNameItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	const FCtrlItem_Struct *item1 = (FCtrlItem_Struct *)lParam1;
-	const FCtrlItem_Struct *item2 = (FCtrlItem_Struct *)lParam2;
+	const FCtrlItem_Struct *item1 = reinterpret_cast<FCtrlItem_Struct *>(lParam1);
+	const FCtrlItem_Struct *item2 = reinterpret_cast<FCtrlItem_Struct *>(lParam2);
 
 	int iResult = 0;
 	switch (lParamSort)

@@ -220,7 +220,7 @@ void CPublishKeywordList::AddKeywords(CKnownFile* pFile)
 		CPublishKeyword* pPubKw = FindKeyword(strKeyword);
 		if (pPubKw == NULL)
 		{
-			pPubKw = new CPublishKeyword(strKeyword);
+			pPubKw = new CPublishKeyword(Kademlia::CKadTagValueString(strKeyword));
 			m_lstKeywords.AddTail(pPubKw);
 			SetNextPublishTime(0);
 		}
@@ -463,8 +463,6 @@ void CSharedFileList::FindSharedFiles()
 		}
 		theApp.downloadqueue->AddPartFilesToShare(); // read partfiles
 	}
-
-
 
 	// khaos::kmod+ Fix: Shared files loaded multiple times.
 	CStringList l_sAdded;
@@ -845,7 +843,7 @@ void CSharedFileList::SendListToServer(){
 		file->SetPublishedED2K(true);
 	}
 	sortedList.RemoveAll();
-	Packet* packet = new Packet(&files);
+	Packet *packet = new Packet(&files);
 	packet->opcode = OP_OFFERFILES;
 	// compress packet
 	//   - this kind of data is highly compressable (N * (1 MD4 and at least 3 string meta data tags and 1 integer meta data tag))
@@ -1012,16 +1010,13 @@ void CSharedFileList::CreateOfferedFilePacket(CKnownFile* cur_file, CSafeMemFile
 	// eserver 16.4+ does not need the FT_FILEFORMAT tag at all nor does any eMule client. This tag
 	// was used for older (very old) eDonkey servers only. -> We send it only to non-eMule clients.
 	if (pServer == NULL && uEmuleVer == 0) {
-		CString strExt;
 		int iExt = cur_file->GetFileName().ReverseFind(_T('.'));
-		if (iExt != -1){
-			strExt = cur_file->GetFileName().Mid(iExt);
-			if (!strExt.IsEmpty()){
+		if (iExt != -1) {
+			CString strExt = cur_file->GetFileName().Mid(iExt);
+			if (!strExt.IsEmpty()) {
 				strExt.Delete(0, 1);
-				if (!strExt.IsEmpty()){
-					strExt.MakeLower();
-					tags.Add(new CTag(FT_FILEFORMAT, strExt)); // file extension without a "."
-				}
+				if (!strExt.IsEmpty())
+					tags.Add(new CTag(FT_FILEFORMAT, strExt.MakeLower())); // file extension without a "."
 			}
 		}
 	}
@@ -1604,7 +1599,7 @@ void CSharedFileList::CheckAndAddSingleFile(const CFileFind& ff)
 			// Win98: Would need to implement a different code path which is using 'IShellLinkA' on Win9x.
 			CComPtr<IShellLink> pShellLink;
 			if (SUCCEEDED(pShellLink.CoCreateInstance(CLSID_ShellLink))){
-				CComQIPtr<IPersistFile> pPersistFile = pShellLink;
+				CComQIPtr<IPersistFile> pPersistFile(pShellLink);
 				if (pPersistFile){
 					if (SUCCEEDED(pPersistFile->Load(strFoundFilePath, STGM_READ))){
 						TCHAR szResolvedPath[MAX_PATH];
@@ -1827,19 +1822,16 @@ CString CSharedFileList::GetPseudoDirName(const CString& strDirectoryName)
 	// but we still want to use a descriptive name so the information of files sorted by directories is not lost
 	// So, in general we use only the name of the directory, shared subdirs keep the path up to the highest shared dir,
 	// this way we never reveal the name of any not directly shared directory. We then make sure its unique.
-	if (!ShouldBeShared(strDirectoryName, _T(""), false))
-	{
-		ASSERT( false );
-		return _T("");
+	if (!ShouldBeShared(strDirectoryName, _T(""), false)) {
+		ASSERT(false);
+		return CString();
 	}
 	// does the name already exists?
-	for (POSITION pos = m_mapPseudoDirNames.GetStartPosition(); pos != NULL;)
-	{
+	for (POSITION pos = m_mapPseudoDirNames.GetStartPosition(); pos != NULL;) {
 		CString strTmpPseudo;
 		CString strTmpPath;
 		m_mapPseudoDirNames.GetNextAssoc(pos, strTmpPseudo, strTmpPath);
-		if (CompareDirectories(strTmpPath, strDirectoryName) == 0)
-		{
+		if (CompareDirectories(strTmpPath, strDirectoryName) == 0) {
 			// already done here
 			return strTmpPseudo;
 		}
@@ -1852,48 +1844,38 @@ CString CSharedFileList::GetPseudoDirName(const CString& strDirectoryName)
 
 	CString strPseudoName;
 	int iPos;
-	while ((iPos = strDirectoryTmp.ReverseFind(_T('\\'))) != (-1))
-	{
+	while ((iPos = strDirectoryTmp.ReverseFind(_T('\\'))) != (-1)) {
 		strPseudoName = strDirectoryTmp.Right(strDirectoryTmp.GetLength() - iPos) + strPseudoName;
 		strDirectoryTmp.Truncate(iPos);
 		if (!ShouldBeShared(strDirectoryTmp, _T(""), false))
 			break;
 	}
-	if (!strPseudoName.IsEmpty())
-	{
+	if (!strPseudoName.IsEmpty()) {
 		// remove first backslash
-		ASSERT( strPseudoName[0] == _T('\\') );
+		ASSERT(strPseudoName[0] == _T('\\'));
 		strPseudoName = strPseudoName.Right(strPseudoName.GetLength() - 1);
-	}
-	else
-	{
+	} else {
 		// must be a rootdirectory
-		ASSERT( strDirectoryTmp.GetLength() == 2 );
+		ASSERT(strDirectoryTmp.GetLength() == 2);
 		strPseudoName = strDirectoryTmp;
 	}
 	// we have the name, make sure it is unique
-	if (m_mapPseudoDirNames.Lookup(strPseudoName, strDirectoryTmp))
-	{
+	if (m_mapPseudoDirNames.Lookup(strPseudoName, strDirectoryTmp)) {
 		CString strUnique;
-		for (iPos = 2; ; iPos++)
-		{
+		for (iPos = 2; ; ++iPos) {
 			strUnique.Format(_T("%s_%i"), (LPCTSTR)strPseudoName, iPos);
-			if (!m_mapPseudoDirNames.Lookup(strUnique, strDirectoryTmp))
-			{
+			if (!m_mapPseudoDirNames.Lookup(strUnique, strDirectoryTmp)) {
 				DebugLog(_T("Using Pseudoname %s for directory %s"), (LPCTSTR)strUnique, (LPCTSTR)strDirectoryName);
 				m_mapPseudoDirNames.SetAt(strUnique, strDirectoryName);
 				return strUnique;
 			}
-			else if (iPos > 200)
-			{
+			if (iPos > 200) {
 				// wth?
-				ASSERT( false );
-				return _T("");
+				ASSERT(false);
+				return CString();
 			}
 		}
-	}
-	else
-	{
+	} else {
 		DebugLog(_T("Using Pseudoname %s for directory %s"), (LPCTSTR)strPseudoName, (LPCTSTR)strDirectoryName);
 		m_mapPseudoDirNames.SetAt(strPseudoName, strDirectoryName);
 		return strPseudoName;

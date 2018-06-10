@@ -40,15 +40,7 @@
 #include "Log.h"
 #include "MuleToolbarCtrl.h"
 #include "VistaDefines.h"
-
-#pragma warning(push)
-#pragma warning(disable:4516) // access-declarations are deprecated; member using-declarations provide a better alternative
-#pragma warning(disable:4244) // conversion from 'type1' to 'type2', possible loss of data
-#pragma warning(disable:4100) // unreferenced formal parameter
-#pragma warning(disable:4702) // unreachable code
 #include <cryptopp/osrng.h>
-#pragma warning(pop)
-
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -63,9 +55,9 @@ bool	CPreferences::m_abDefaultDirsCreated[13] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 int		CPreferences::m_nCurrentUserDirMode = -1;
 int		CPreferences::m_iDbgHeap;
 CString	CPreferences::strNick;
-uint16	CPreferences::minupload;
-uint16	CPreferences::maxupload;
-uint16	CPreferences::maxdownload;
+uint32	CPreferences::minupload;
+uint32	CPreferences::maxupload;
+uint32	CPreferences::maxdownload;
 LPCSTR	CPreferences::m_pszBindAddrA;
 CStringA CPreferences::m_strBindAddrA;
 LPCWSTR	CPreferences::m_pszBindAddrW;
@@ -412,9 +404,6 @@ bool	CPreferences::m_bShowActiveDownloadsBold;
 int		CPreferences::m_iSearchMethod;
 bool	CPreferences::m_bAdvancedSpamfilter;
 bool	CPreferences::m_bUseSecureIdent;
-CString	CPreferences::m_strMMPassword;
-bool	CPreferences::m_bMMEnabled;
-uint16	CPreferences::m_nMMPort;
 bool	CPreferences::networkkademlia;
 bool	CPreferences::networked2k;
 EToolbarLabelType CPreferences::m_nToolbarLabels;
@@ -739,9 +728,9 @@ bool CPreferences::IsTempFile(const CString& rstrDirectory, const CString& rstrN
 	return false;
 }
 
-uint16 CPreferences::GetMaxDownload()
+uint32 CPreferences::GetMaxDownload()
 {
-    return (uint16)(GetMaxDownloadInBytesPerSec()/1024);
+    return (uint32)(GetMaxDownloadInBytesPerSec()/1024);
 }
 
 uint64 CPreferences::GetMaxDownloadInBytesPerSec(bool dynamic)
@@ -1532,9 +1521,9 @@ void CPreferences::SavePreferences()
 	ini.WriteString(_T("TempDir"), tempdir[0]);
 
 	CString tempdirs;
-	for (int i=1; i<tempdir.GetCount(); ++i) {
+	for (int i = 1; i < tempdir.GetCount(); ++i) {
 		tempdirs += tempdir[i];
-		if (i+1 < tempdir.GetCount())
+		if (i + 1 < tempdir.GetCount())
 			tempdirs += _T('|');
 	}
 	ini.WriteString(_T("TempDirs"), tempdirs);
@@ -1825,14 +1814,6 @@ void CPreferences::SavePreferences()
 
 
 	///////////////////////////////////////////////////////////////////////////
-	// Section: "MobileMule"
-	//
-	ini.WriteString(_T("Password"), GetMMPass(), _T("MobileMule"));
-	ini.WriteBool(_T("Enabled"), m_bMMEnabled);
-	ini.WriteInt(_T("Port"), m_nMMPort);
-
-
-	///////////////////////////////////////////////////////////////////////////
 	// Section: "PeerCache"
 	//
 	ini.WriteInt(_T("LastSearch"), (int)m_uPeerCacheLastSearch, _T("PeerCache"));
@@ -1888,16 +1869,15 @@ bool CPreferences::SetAllStatsColors(int iCount, const DWORD* pdwColors)
 	return bModified;
 }
 
-void CPreferences::IniCopy(const CString& si, const CString& di)
+void CPreferences::IniCopy(const CString &si, const CString &di)
 {
 	CIni ini(GetConfigFile(), _T("eMule"));
 	CString s = ini.GetString(si);
 	// Do NOT write empty settings, this will mess up reading of default settings in case
-	// there were no settings (fresh emule install) at all available!
-	if (!s.IsEmpty())
-	{
+	// there were no settings available at all (fresh emule install)!
+	if (!s.IsEmpty()) {
 		ini.SetSection(_T("ListControlSetup"));
-		ini.WriteString(di,s);
+		ini.WriteString(di, s);
 	}
 }
 
@@ -1906,16 +1886,11 @@ void CPreferences::LoadPreferences()
 	CIni ini(GetConfigFile(), _T("eMule"));
 	ini.SetSection(_T("eMule"));
 
-	CString strCurrVersion, strPrefsVersion;
-
-	strCurrVersion = theApp.m_strCurVersionLong;
-	strPrefsVersion = ini.GetString(_T("AppVersion"));
-
-	m_bFirstStart = strPrefsVersion.IsEmpty();
+	m_bFirstStart = ini.GetString(_T("AppVersion")).IsEmpty();
 
 #ifdef _BETA
-	CString strBetaNotified = ini.GetString(_T("BetaVersionNotified"), _T(""));
-	m_bBetaNaggingDone = strBetaNotified.Compare(strCurrVersion) == 0;
+	CString strCurrVersion(theApp.m_strCurVersionLong);
+	m_bBetaNaggingDone = (ini.GetString(_T("BetaVersionNotified"), _T(""))  == strCurrVersion);
 #endif
 
 #ifdef _DEBUG
@@ -1925,7 +1900,7 @@ void CPreferences::LoadPreferences()
 #endif
 
 	m_nWebMirrorAlertLevel = ini.GetInt(_T("WebMirrorAlertLevel"),0);
-	updatenotify=ini.GetBool(_T("UpdateNotifyTestClient"),true);
+	updatenotify = ini.GetBool(_T("UpdateNotifyTestClient"),true);
 
 	SetUserNick(ini.GetStringUTF8(_T("Nick"), DEFAULT_NICK));
 	if (strNick.IsEmpty() || IsDefaultNick(strNick))
@@ -1937,37 +1912,32 @@ void CPreferences::LoadPreferences()
 	MakeFoldername(m_strIncomingDir);
 
 	// load tempdir(s) setting
-	CString tempdirs;
-	tempdirs = ini.GetString(_T("TempDir"), _T(""));
+	CString tempdirs = ini.GetString(_T("TempDir"), _T(""));
 	if (tempdirs.IsEmpty()) // We want GetDefaultDirectory to also create the folder, so we have to know if we use the default or not
 		tempdirs = GetDefaultDirectory(EMULE_TEMPDIR, true);
-	tempdirs += _T('|') + ini.GetString(_T("TempDirs"));
+	tempdirs.AppendFormat(_T("|%s"), (LPCTSTR)ini.GetString(_T("TempDirs")));
 
-	int curPos=0;
+	int curPos = 0;
 	bool doubled;
-	CString atmp=tempdirs.Tokenize(_T("|"), curPos);
-	while (!atmp.IsEmpty())
-	{
+	for (CString atmp = tempdirs.Tokenize(_T("|"), curPos); !atmp.IsEmpty(); atmp = tempdirs.Tokenize(_T("|"), curPos)) {
 		atmp.Trim();
 		if (!atmp.IsEmpty()) {
 			MakeFoldername(atmp);
-			doubled=false;
-			for (int i=0;i<tempdir.GetCount();i++)	// avoid double tempdirs
-				if (atmp.CompareNoCase(GetTempDir(i))==0) {
-					doubled=true;
+			doubled = false;
+			for (int i = 0; i < tempdir.GetCount(); ++i)	// avoid double tempdirs
+				if (atmp.CompareNoCase(GetTempDir(i)) == 0) {
+					doubled = true;
 					break;
 				}
 			if (!doubled) {
 				if (!PathFileExists(atmp)) {
-					CreateDirectory(atmp,NULL);
+					CreateDirectory(atmp, NULL);
 					if (PathFileExists(atmp) || tempdir.IsEmpty())
 						tempdir.Add(atmp);
-				}
-				else
+				} else
 					tempdir.Add(atmp);
 			}
 		}
-		atmp = tempdirs.Tokenize(_T("|"), curPos);
 	}
 
 	maxGraphDownloadRate=ini.GetInt(_T("DownloadCapacity"),96);
@@ -1990,14 +1960,14 @@ void CPreferences::LoadPreferences()
 			maxGraphUploadRate = nOldUploadCapacity; // use old custoum value
 	}
 
-	minupload=(uint16)ini.GetInt(_T("MinUpload"), 1);
-	maxupload=(uint16)ini.GetInt(_T("MaxUpload"),UNLIMITED);
-	if (maxupload > maxGraphUploadRate && maxupload != UNLIMITED)
-		maxupload = (uint16)(maxGraphUploadRate * .8);
+	minupload = (uint32)ini.GetInt(_T("MinUpload"), 1);
+	maxupload = (uint32)ini.GetInt(_T("MaxUpload"), UNLIMITED);
+	if (maxupload > (uint32)maxGraphUploadRate && maxupload != UNLIMITED)
+		maxupload = (uint32)(maxGraphUploadRate * .8);
 
-	maxdownload=(uint16)ini.GetInt(_T("MaxDownload"), UNLIMITED);
-	if (maxdownload > maxGraphDownloadRate && maxdownload != UNLIMITED)
-		maxdownload = (uint16)(maxGraphDownloadRate * .8);
+	maxdownload = (uint32)ini.GetInt(_T("MaxDownload"), UNLIMITED);
+	if (maxdownload > (uint32)maxGraphDownloadRate && maxdownload != UNLIMITED)
+		maxdownload = (uint32)(maxGraphDownloadRate * .8);
 	maxconnections=ini.GetInt(_T("MaxConnections"),GetRecommendedMaxConnections());
 	maxhalfconnections=ini.GetInt(_T("MaxHalfConnections"),9);
 	m_bOverlappedSockets = ini.GetBool(_T("OverlappedSockets"), true);
@@ -2006,15 +1976,13 @@ void CPreferences::LoadPreferences()
 	// reset max halfopen to a default if OS changed to SP2 (or higher) or away
 	int dwSP2OrHigher = ini.GetInt(_T("WinXPSP2OrHigher"), -1);
 	int dwCurSP2OrHigher = IsRunningXPSP2OrHigher();
-	if (dwSP2OrHigher != dwCurSP2OrHigher) {
+	if (dwSP2OrHigher != dwCurSP2OrHigher)
 		if (dwCurSP2OrHigher == 0)
 			maxhalfconnections = 50;
 		else if (dwCurSP2OrHigher == 1)
 			maxhalfconnections = 9;
-	}
 
-	m_strBindAddrW = ini.GetString(_T("BindAddr"));
-	m_strBindAddrW.Trim();
+	m_strBindAddrW = ini.GetString(_T("BindAddr")).Trim();
 	m_pszBindAddrW = m_strBindAddrW.IsEmpty() ? NULL : (LPCWSTR)m_strBindAddrW;
 	m_strBindAddrA = m_strBindAddrW;
 	m_pszBindAddrA = m_strBindAddrA.IsEmpty() ? NULL : (LPCSTR)m_strBindAddrA;
@@ -2229,7 +2197,7 @@ void CPreferences::LoadPreferences()
 	m_bShowSharedFilesDetails = ini.GetBool(_T("ShowSharedFilesDetails"), true);
 	m_bAutoShowLookups = ini.GetBool(_T("AutoShowLookups"), true);
 	m_bShowUpDownIconInTaskbar = ini.GetBool(_T("ShowUpDownIconInTaskbar"), false );
-	m_bShowWin7TaskbarGoodies  = ini.GetBool(_T("ShowWin7TaskbarGoodies"), true);
+	m_bShowWin7TaskbarGoodies = ini.GetBool(_T("ShowWin7TaskbarGoodies"), true);
 	m_bForceSpeedsToKB = ini.GetBool(_T("ForceSpeedsToKB"), false);
 	m_bExtraPreviewWithMenu = ini.GetBool(_T("ExtraPreviewWithMenu"), false);
 
@@ -2417,7 +2385,7 @@ void CPreferences::LoadPreferences()
 	for (unsigned i = 0; i < _countof(m_adwStatsColors); ++i) {
 		buffer2.Format(_T("StatColor%u"), i);
 		m_adwStatsColors[i] = 0;
-		if (_stscanf(ini.GetString(buffer2, _T(""), _T("Statistics")), _T("%li"), (long *)&m_adwStatsColors[i]) != 1) //must be "%li", not "%lu"
+		if (_stscanf(ini.GetString(buffer2, _T(""), _T("Statistics")), _T("%li"), (long *)&m_adwStatsColors[i]) != 1)
 			ResetStatsColor(i);
 	}
 	bHasCustomTaskIconColor = ini.GetBool(_T("HasCustomTaskIconColor"), false, _T("Statistics"));
@@ -2456,13 +2424,6 @@ void CPreferences::LoadPreferences()
 	m_bWebUseHttps = ini.GetBool(_T("UseHTTPS"), false);
 	m_sWebHttpsCertificate = ini.GetString(_T("HTTPSCertificate"), _T(""));
 	m_sWebHttpsKey = ini.GetString(_T("HTTPSKey"), _T(""));
-
-	///////////////////////////////////////////////////////////////////////////
-	// Section: "MobileMule"
-	//
-	m_strMMPassword = ini.GetString(_T("Password"), _T(""), _T("MobileMule"));
-	m_bMMEnabled = ini.GetBool(_T("Enabled"), false);
-	m_nMMPort = (uint16)ini.GetInt(_T("Port"), 80);
 
 	///////////////////////////////////////////////////////////////////////////
 	// Section: "PeerCache"
@@ -2710,21 +2671,14 @@ void CPreferences::SetWSLowPass(const CString& strNewPass)
 	m_strWebLowPassword = MD5Sum(strNewPass).GetHashString();
 }
 
-void CPreferences::SetMMPass(const CString& strNewPass)
+void CPreferences::SetMaxUpload(uint32 in)
 {
-	m_strMMPassword = MD5Sum(strNewPass).GetHashString();
+	maxupload = in ? in : UNLIMITED;
 }
 
-void CPreferences::SetMaxUpload(UINT in)
+void CPreferences::SetMaxDownload(uint32 in)
 {
-	uint16 oldMaxUpload = (uint16)in;
-	maxupload = (oldMaxUpload) ? oldMaxUpload : (uint16)UNLIMITED;
-}
-
-void CPreferences::SetMaxDownload(UINT in)
-{
-	uint16 oldMaxDownload = (uint16)in;
-	maxdownload = (oldMaxDownload) ? oldMaxDownload : (uint16)UNLIMITED;
+	maxdownload = in ? in : UNLIMITED;
 }
 
 void CPreferences::SetNetworkKademlia(bool val)
@@ -2732,7 +2686,8 @@ void CPreferences::SetNetworkKademlia(bool val)
 	networkkademlia = val;
 }
 
-CString CPreferences::GetHomepageBaseURLForLevel(int nLevel){
+CString CPreferences::GetHomepageBaseURLForLevel(int nLevel)
+{
 	CString tmp;
 	if (nLevel == 0)
 		tmp = _T("http://emule-project.net");
@@ -2741,11 +2696,11 @@ CString CPreferences::GetHomepageBaseURLForLevel(int nLevel){
 	else if (nLevel == 2)
 		tmp = _T("http://www.emule-project.com");
 	else if (nLevel < 100)
-		tmp.Format(_T("http://www%i.emule-project.net"),nLevel-2);
+		tmp.Format(_T("http://www%i.emule-project.net"), nLevel - 2);
 	else if (nLevel < 150)
-		tmp.Format(_T("http://www%i.emule-project.org"),nLevel);
+		tmp.Format(_T("http://www%i.emule-project.org"), nLevel);
 	else if (nLevel < 200)
-		tmp.Format(_T("http://www%i.emule-project.com"),nLevel);
+		tmp.Format(_T("http://www%i.emule-project.com"), nLevel);
 	else if (nLevel == 200)
 		tmp = _T("http://emule.sf.net");
 	else if (nLevel == 201)
@@ -2780,17 +2735,20 @@ CString CPreferences::GetVersionCheckURL()
 {
 	CString theUrl;
 	theUrl.Format(_T("%s/en/version_check.php?version=%u&language=%u")
-		, (LPCTSTR)thePrefs.GetVersionCheckBaseURL(), theApp.m_uCurVersionCheck, thePrefs.GetLanguageID());
+		, (LPCTSTR)thePrefs.GetVersionCheckBaseURL()
+		, theApp.m_uCurVersionCheck
+		, thePrefs.GetLanguageID());
 	return theUrl;
 }
 
-bool CPreferences::IsDefaultNick(const CString& strCheck) {
-	// not fast, but this function is called often
-	for (int i = 0; i != 255; i++){
+bool CPreferences::IsDefaultNick(const CString& strCheck)
+{
+// not fast, but this function is not called often
+	for (int i = 0; i != 255; ++i)
 		if (GetHomepageBaseURLForLevel(i) == strCheck)
 			return true;
-	}
-	return ( strCheck == _T("http://emule-project.net") );
+
+	return (strCheck == _T("http://emule-project.net"));
 }
 
 void CPreferences::SetUserNick(LPCTSTR pszNick)
@@ -2798,15 +2756,14 @@ void CPreferences::SetUserNick(LPCTSTR pszNick)
 	strNick = pszNick;
 }
 
-UINT CPreferences::GetWebMirrorAlertLevel(){
+UINT CPreferences::GetWebMirrorAlertLevel()
+{
 	// Known upcoming DDoS Attacks
-	if (m_nWebMirrorAlertLevel == 0){
+	if (m_nWebMirrorAlertLevel == 0) {
 		// no threats known at this time
 	}
 	// end
-	if (UpdateNotify())
-		return m_nWebMirrorAlertLevel;
-	return 0;
+	return UpdateNotify() ? m_nWebMirrorAlertLevel : 0;
 }
 
 bool CPreferences::IsRunAsUserEnabled()
@@ -3068,7 +3025,7 @@ CString CPreferences::GetDefaultDirectory(EDefaultDirectory eDirectory, bool bCr
 						if (_tcsclen(pszLocalAppData) < MAX_PATH - 30 && _tcsclen(pszPersonalDownloads) < MAX_PATH - 40
 							&& _tcsclen(pszProgrammData) < MAX_PATH - 30 && _tcsclen(pszPublicDownloads) < MAX_PATH - 40)
 						{
-							CString strLocalAppData  = pszLocalAppData;
+							CString strLocalAppData = pszLocalAppData;
 							CString strPersonalDownloads = pszPersonalDownloads;
 							CString strPublicDownloads = pszPublicDownloads;
 							CString strProgrammData = pszProgrammData;

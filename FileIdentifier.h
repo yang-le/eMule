@@ -79,7 +79,7 @@ public:
 	uchar*			GetMD4PartHash(UINT part) const;
 	void			DeleteMD4Hashset();
 
-	// nr. of part hashs according the file size wrt ED2K protocol
+	// nr. of part hashes according the file size wrt ED2K protocol
 	uint16			GetTheoreticalMD4PartHashCount() const;																 /* prev: GetED2KPartHashCount()*/
 	uint16			GetAvailableMD4PartHashCount() const					{ return (uint16)m_aMD4HashSet.GetCount(); } /* prev: GetHashCount() */
 	bool			HasExpectedMD4HashCount() const							{ return GetTheoreticalMD4PartHashCount() == GetAvailableMD4PartHashCount(); }

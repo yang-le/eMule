@@ -24,12 +24,8 @@
 #include "UserMsgs.h"
 #include "SplitterControl.h"
 
-// id3lib
-#pragma warning(push)
-#pragma warning(disable:4100) // unreferenced formal parameter
 #include <id3/tag.h>
 #include <id3/misc_support.h>
-#pragma warning(pop)
 
 // MediaInfoDLL
 /** @brief Kinds of Stream */
@@ -87,9 +83,8 @@ class CGetMediaInfoThread : public CWinThread
 
 protected:
 	CGetMediaInfoThread()
-		: m_hFont(NULL)
+		: m_hWndOwner(NULL), m_hFont(NULL)
 	{
-		m_hWndOwner = NULL;
 	}
 
 public:
@@ -235,7 +230,7 @@ public:
 					m_pfnMediaInfo_Get = NULL;
 					m_pfnMediaInfo_Count_Get = NULL;
 				}
-				else if (ullVersion >= MAKEDLLVERULL(0, 7, 0, 0) && ullVersion < MAKEDLLVERULL(18, 4, 0, 0))
+				else if (ullVersion < MAKEDLLVERULL(18, 6, 0, 0)) //here ullVersion >= 7.0
 				{
 					(FARPROC &)m_pfnMediaInfo_New = GetProcAddress(m_hLib, "MediaInfo_New");
 					(FARPROC &)m_pfnMediaInfo_Delete = GetProcAddress(m_hLib, "MediaInfo_Delete");
@@ -295,7 +290,7 @@ public:
 	{
 		if (m_pfnMediaInfo4_Get)
 			return CString((*m_pfnMediaInfo4_Get)(Handle, StreamKind, StreamNumber, (LPSTR)(LPCSTR)CStringA(Parameter), KindOfInfo, KindOfSearch));
-		else if (m_pfnMediaInfo_Get) {
+		if (m_pfnMediaInfo_Get) {
 			CString strNewParameter(Parameter);
 			if (m_ullVersion >= MAKEDLLVERULL(0, 7, 1, 0)) {
 				// Convert old tags to new tags
@@ -307,7 +302,7 @@ public:
 			}
 			return (*m_pfnMediaInfo_Get)(Handle, StreamKind, StreamNumber, strNewParameter, KindOfInfo, KindOfSearch);
 		}
-		return _T("");
+		return CString();
 	}
 
 	int Count_Get(void* Handle, stream_t_C StreamKind, int StreamNumber) const
@@ -745,9 +740,7 @@ LRESULT CFileInfoDialog::OnMediaInfoResult(WPARAM, LPARAM lParam)
 		}
 	}
 
-	CString buffer;
-
-	buffer = ami.strFileFormat;
+	CString buffer = ami.strFileFormat;
 	if (!ami.strMimeType.IsEmpty()) {
 		if (!buffer.IsEmpty())
 			buffer += _T("; MIME type=");
@@ -1543,10 +1536,8 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile* pFi
 					void* Handle = theMediaInfoDLL.Open(pFile->GetFilePath());
 					if (Handle)
 					{
-						CString str;
-
 						mi->strFileFormat = theMediaInfoDLL.Get(Handle, Stream_General, 0, _T("Format"), Info_Text, Info_Name);
-						str = theMediaInfoDLL.Get(Handle, Stream_General, 0, _T("Format_String"), Info_Text, Info_Name);
+						CString str = theMediaInfoDLL.Get(Handle, Stream_General, 0, _T("Format_String"), Info_Text, Info_Name);
 						if (!str.IsEmpty() && str.Compare(mi->strFileFormat) != 0)
 							mi->strFileFormat.AppendFormat(_T(" (%s)"), (LPCTSTR)str);
 

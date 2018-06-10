@@ -1408,8 +1408,6 @@ BEGIN
                             "USS: Œledzenie trasy pingu nie powiód³o siê zbyt wiele razy. Wy³¹czanie Upload Speed Sense."
     IDS_USS_STARTING        "USS: Wykonane zgodnie z ustawieniami. Start automatycznej czu³oœci wysy³ania. Pierwsze 60 sekund jest w trybie 'szybkiej reakcji'"
     IDS_A4AF                "Zarz¹dzanie Ÿród³ami"
-    IDS_MOBILEMULE          "MobileMule" //!
-    IDS_ENABLEMM            "W³¹cz MobileMule"
     IDS_AUTOCAT_LABEL       "Automatyczne przydzielanie kategorii (separator |)"
     IDS_SHOWEXTSETTINGS     "Poka¿ wiêcej kontrolek (zaawansowane)"
     IDS_TREEOPTIONS_TRUE    "Prawda"
@@ -1430,8 +1428,6 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Katalog tymczasowy nie mo¿e byc katalogiem instalacyjnym eMule."
     IDS_WRN_INCTEMP_SAME    "Katalogi incoming i tymczasowy musz¹ siê ró¿niæ."
-    IDS_MMFAILED            "Nie uda³o siê utworzyæ gniazda dla MobileMule!"
-    IDS_MMSTARTED           "MobileMule serwer uruchomiony na porcie %u. Wersja protoko³u: %s"
     IDS_SHOWDWLPERCENTAGE   "Pokazuj procent pobrania na pasku pobierania"
     IDS_TBN_ONNEWDOWNLOAD   "Dodano plik do pobrania"
     IDS_ARTIST              "Artysta"
@@ -1440,7 +1436,6 @@ END
 STRINGTABLE 
 BEGIN
     IDS_ALBUM               "Album" //!
-    IDS_MMGUIDELINK         "Poradnik MobileMule"
     IDS_CD_UPLOADREQ        "¯¹dane wysy³anie:"
     IDS_SETTINGCHANGED_RESTART 
                             "W celu aktywacji zmian, musisz zrestarowaæ eMule!"
@@ -1536,8 +1531,6 @@ BEGIN
                             "Nie uda³o siê pobraæ i zainstalowaæ pliku t³umaczeñ z %s!"
     IDS_ERR_BADFOLDER       "B³êdny katalog.\nKatalog nie mog³ byæ utworzony. SprawdŸ nazwe i lokalizacje."
     IDS_AUTOREMOVEFD        "Czyœæ zakoñczone pliki automatycznie"
-    IDS_MM_BLOCK            "3 nieudane pod³¹czenia do MobileMule ! - dostêp zabroniony na 10 minut"
-    IDS_MM_NEWUSER          "Nowy u¿ytkownik zalogowa³ siê na serwer MobileMule"
 END
 
 STRINGTABLE 
@@ -1545,7 +1538,7 @@ BEGIN
     IDS_TEXTLABELS          "Podpisy tekstowe"
     IDS_ENABLETEXTLABELS    "pod ikon¹"
     IDS_CUSTOMIZETOOLBAR    "Opcje paska narzêdziowego"
-    IDS_MINBITRATE          "Min. bitrate [kBit/s]"
+    IDS_MINBITRATE          "Min. bitrate [kbit/s]"
     IDS_KAD_RECHECKFW       "SprawdŸ firewall"
     IDS_SHAREDTITLE         "Udostêpniane eD2K|Kad"
     IDS_FIREWALLED          "Firewalled" //!

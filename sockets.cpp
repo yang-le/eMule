@@ -135,8 +135,8 @@ void CServerConnect::ConnectToServer(CServer* server, bool multiconnect, bool bN
 	singleconnecting = !multiconnect;
 	theApp.emuledlg->ShowConnectionState();
 
-	CServerSocket* newsocket = new CServerSocket(this, !multiconnect);
-	m_lstOpenSockets.AddTail((void*&)newsocket);
+	CServerSocket *newsocket = new CServerSocket(this, !multiconnect);
+	m_lstOpenSockets.AddTail((void *)newsocket);
 	newsocket->Create(0, SOCK_STREAM, FD_READ | FD_WRITE | FD_CLOSE | FD_CONNECT, thePrefs.GetBindAddr());
 	newsocket->ConnectTo(server, bNoCrypt);
 	connectionattemps.SetAt(::GetTickCount(), newsocket);
@@ -218,7 +218,7 @@ void CServerConnect::ConnectionEstablished(CServerSocket* sender)
 							(CemuleApp::m_nVersionUpd	<<  7) );
 		tagMuleVersion.WriteTagToFile(&data);
 
-		Packet* packet = new Packet(&data);
+		Packet *packet = new Packet(&data);
 		packet->opcode = OP_LOGINREQUEST;
 		if (thePrefs.GetDebugServerTCPLevel() > 0)
 			Debug(_T(">>> Sending OP__LoginRequest\n"));
@@ -247,7 +247,7 @@ void CServerConnect::ConnectionEstablished(CServerSocket* sender)
 		// tecxx 1609 2002 - serverlist update
 		if (thePrefs.GetAddServersFromServer())
 		{
-			Packet* packet = new Packet(OP_GETSERVERLIST,0);
+			Packet *packet = new Packet(OP_GETSERVERLIST,0);
 			if (thePrefs.GetDebugServerTCPLevel() > 0)
 				Debug(_T(">>> Sending OP__GetServerList\n"));
 			theStats.AddUpDataOverheadServer(packet->size);
@@ -261,7 +261,7 @@ void CServerConnect::ConnectionEstablished(CServerSocket* sender)
 	theApp.emuledlg->ShowConnectionState();
 }
 
-bool CServerConnect::SendPacket(Packet* packet, bool delpacket, CServerSocket* to)
+bool CServerConnect::SendPacket(Packet *packet, bool delpacket, CServerSocket* to)
 {
 	if (!to) {
 		if (connected) {
@@ -277,7 +277,7 @@ bool CServerConnect::SendPacket(Packet* packet, bool delpacket, CServerSocket* t
 	return true;
 }
 
-bool CServerConnect::SendUDPPacket(Packet* packet, CServer* host, bool delpacket, uint16 nSpecialPort, BYTE* pRawPacket, uint32 nLen)
+bool CServerConnect::SendUDPPacket(Packet *packet, CServer* host, bool delpacket, uint16 nSpecialPort, BYTE* pRawPacket, uint32 nLen)
 {
 	if (theApp.IsConnected()){
 		if (udpsocket != NULL)
@@ -598,7 +598,7 @@ void CServerConnect::KeepConnectionAlive()
 		// an empty publish files packet -> recommended by lugdunummaster himself!
 		CSafeMemFile files(4);
 		files.WriteUInt32(0); // nr. of files
-		Packet* packet = new Packet(&files);
+		Packet *packet = new Packet(&files);
 		packet->opcode = OP_OFFERFILES;
 		if (thePrefs.GetVerbose())
 			AddDebugLogLine(false, _T("Refreshing server connection"));

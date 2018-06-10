@@ -1360,8 +1360,6 @@ BEGIN
     IDS_VERSION             "Версия"
     IDS_PASTE               "Вставить"
     IDS_A4AF                "Управление источниками"
-    IDS_MOBILEMULE          "MobileMule" //!
-    IDS_ENABLEMM            "Включить MobileMule"
     IDS_AUTOCAT_LABEL       "Автораспределение в категорию (разделитель |)"
     IDS_SHOWEXTSETTINGS     "Дополнительные опции управления"
     IDS_TREEOPTIONS_TRUE    "Верно"
@@ -1382,13 +1380,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Папка для временных файлов не может быть папкой, где установлен eMule."
     IDS_WRN_INCTEMP_SAME    "Папки для загруженных и временных файлов должны быть разными."
-    IDS_MMFAILED            "Не удалось создать сокет MobileMule!"
-    IDS_MMSTARTED           "MobileMule сервер включен на порту %u. Версия протокола: %s"
     IDS_SHOWDWLPERCENTAGE   "Показывать процент завершенности в колонке 'Прогресс'"
     IDS_TBN_ONNEWDOWNLOAD   "Добавлен файл на приём"
     IDS_ARTIST              "Артист"
     IDS_ALBUM               "Альбом"
-    IDS_MMGUIDELINK         "Информация о MobileMule"
 END
 
 STRINGTABLE 
@@ -1487,7 +1482,6 @@ BEGIN
                             "Не удалось загрузить и установить выбранный языковой модуль c %s!"
     IDS_ERR_BADFOLDER       "Неправильная папка.\nПапка не может быть создана. Проверьте имя и расположение папки."
     IDS_AUTOREMOVEFD        "Автоочистка списка от завершённых файлов"
-    IDS_MM_BLOCK            "3 неудавшихся входа в MobileMule - все дальнейшие попытки блокированы на 10 минут!"
 END
 
 STRINGTABLE 
@@ -1513,7 +1507,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Новый пользователь успешно соединён с сервером MobileMule"
     IDS_RADCLIENTS          "От известных клиентов"
     IDS_KADUDPPORTERR       "Kad UDP порт конфликтует с eMule UDP портом расширений или же с eMule UDP портом сервера. Порт сменён на %u."
     IDS_CONFIRM_FILEDELETE  "Вы действительно хотите удалить все выделенные файлы с диска?"

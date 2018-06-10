@@ -57,7 +57,7 @@ struct SSearchParams
 	bool bClientSharedFiles;
 	CString strSearchTitle;
 	CString strExpression;
-	CString strKeyword;
+	CStringW strKeyword;
 	CString strBooleanExpr;
 	ESearchType eType;
 	CStringA strFileType;

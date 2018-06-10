@@ -247,10 +247,9 @@ BOOL CPPgDirectories::OnApply()
 	// on changing incoming dir, update incoming dirs of category of the same path
 	if (testincdirchanged.CompareNoCase(thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR)) != 0) {
 		thePrefs.GetCategory(0)->strIncomingPath = thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR);
-		CString oldpath;
 		bool dontaskagain = false;
-		for (int cat = 1; cat <= thePrefs.GetCatCount() - 1; cat++) {
-			oldpath = CString(thePrefs.GetCatPath(cat));
+		for (int cat = 1; cat <= thePrefs.GetCatCount() - 1; ++cat) {
+			const CString &oldpath = thePrefs.GetCatPath(cat);
 			if (oldpath.Left(testincdirchanged.GetLength()).CompareNoCase(testincdirchanged) == 0) {
 
 				if (!dontaskagain) {
@@ -365,8 +364,7 @@ void CPPgDirectories::OnBnClickedSeltempdiradd()
 	//GetDlgItemText(IDC_TEMPFILES, buffer, _countof(buffer));
 
 	if (SelectDir(GetSafeHwnd(), buffer, GetResString(IDS_SELECT_TEMPDIR))) {
-		paths += _T('|');
-		paths += buffer;
+		paths.AppendFormat(_T("|%s"), (LPCTSTR)buffer);
 		SetDlgItemText(IDC_TEMPFILES, paths);
 	}
 }

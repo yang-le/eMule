@@ -1293,8 +1293,6 @@ BEGIN
     IDS_VERSION             "Versión"
     IDS_PASTE               "Pegar"
     IDS_A4AF                "Fuentes"
-    IDS_MOBILEMULE          "MobileMule"//!
-    IDS_ENABLEMM            "Activar MobileMule"
     IDS_AUTOCAT_LABEL       "Asignar categoría automáticamente (formato, separado por |)"
     IDS_SHOWEXTSETTINGS     "Mostrar más controles (Controles de modo avanzado)"
     IDS_TREEOPTIONS_TRUE    "Verdadero"
@@ -1315,13 +1313,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "El directorio temporal no debe colocarse en un directorio de instalación de eMule."
     IDS_WRN_INCTEMP_SAME    "El directorio entrante y el directorio temporal no deben ser el mismo."
-    IDS_MMFAILED            "¡Error al crear socket para MobileMule!"
-    IDS_MMSTARTED           "Servidor MobileMule activado en Puerto %u. Versión Protocolo: %s"
     IDS_SHOWDWLPERCENTAGE   "Mostrar porcentaje de descarga en barra de progreso"
     IDS_TBN_ONNEWDOWNLOAD   "Descarga añadida"
     IDS_ARTIST              "Autor"
     IDS_ALBUM               "Álbum"
-    IDS_MMGUIDELINK         "Guia de MobileMule"
 END
 
 STRINGTABLE 
@@ -1421,12 +1416,10 @@ BEGIN
                             "¡Error al descargar e instalar el idioma seleccionado (archivo dll) desde %s!"
     IDS_ERR_BADFOLDER       "Carpeta no válida.\nNo puede crearse la carpeta. Comprobar Nombre y Localización."
     IDS_AUTOREMOVEFD        "Limpiar automáticamente descargas completas"
-    IDS_MM_BLOCK            "3 intentos erróneos de conexión a MobileMule - ¡cualquier intento posterior será bloqueado durante 10 min.!"
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Nuevo usuario conectado con éxito al Servidor-MobileMule"
     IDS_RADCLIENTS          "De clientes conocidos"
     IDS_KADUDPPORTERR       "El puerto UDP de Kademlia entra en conflicto con otro puerto UDP externo o el puerto ServerUDP de eMule. El puerto se ha cambiado a %u."
     IDS_CONFIRM_FILEDELETE  "¿Estás seguro de querer eliminar todos los archivos seleccionados del disco?"

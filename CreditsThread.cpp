@@ -231,7 +231,7 @@ void CCreditsThread::CreateCredits()
 
 	CFont* pOldFont;
 
-	pOldFont  = m_dcCredits.SelectObject(m_arFonts[0]);
+	pOldFont = m_dcCredits.SelectObject(m_arFonts[0]);
 
 	m_dcCredits.SetBkMode(TRANSPARENT);
 

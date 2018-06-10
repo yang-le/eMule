@@ -96,10 +96,10 @@ class CPreferences
 public:
 	static	CString	strNick;
 	// ZZ:UploadSpeedSense -->
-	static	uint16	minupload;
+	static	uint32	minupload;
 	// ZZ:UploadSpeedSense <--
-	static	uint16	maxupload;
-	static	uint16	maxdownload;
+	static	uint32	maxupload;
+	static	uint32	maxdownload;
 	static	LPCSTR	m_pszBindAddrA;
 	static	CStringA m_strBindAddrA;
 	static	LPCWSTR	m_pszBindAddrW;
@@ -515,10 +515,6 @@ public:
 	static	int		m_iSearchMethod;
 	static	bool	m_bAdvancedSpamfilter;
 	static	bool	m_bUseSecureIdent;
-	// mobilemule
-	static	CString	m_strMMPassword;
-	static	bool	m_bMMEnabled;
-	static	uint16	m_nMMPort;
 
 	static	bool	networkkademlia;
 	static	bool	networked2k;
@@ -685,9 +681,9 @@ public:
 	static	uint16	GetServerUDPPort()					{return nServerUDPPort;}
 	static	uchar*	GetUserHash()						{return userhash;}
 	// ZZ:UploadSpeedSense -->
-	static	uint16	GetMinUpload()						{return minupload;}
+	static	uint32	GetMinUpload()						{return minupload;}
 	// ZZ:UploadSpeedSense <--
-	static	uint16	GetMaxUpload()						{return maxupload;}
+	static	uint32	GetMaxUpload()						{return maxupload;}
 	static	bool	IsICHEnabled()						{return ICH;}
 	static	bool	GetAutoUpdateServerList()			{return m_bAutoUpdateServerList;}
 	static	bool	UpdateNotify()						{return updatenotify;}
@@ -947,7 +943,7 @@ public:
 	static	void	SetMaxGraphUploadRate(int in);
 	static	void	SetMaxGraphDownloadRate(int in)		{maxGraphDownloadRate=(in)?in:96;}
 
-	static	uint16	GetMaxDownload();
+	static	uint32	GetMaxDownload();
 	static	uint64	GetMaxDownloadInBytesPerSec(bool dynamic = false);
 	static	UINT	GetMaxConnections()					{return maxconnections;}
 	static	UINT	GetMaxHalfConnections()				{return maxhalfconnections;}
@@ -1144,8 +1140,8 @@ public:
 	static  bool	IsWin7TaskbarGoodiesEnabled()		{return m_bShowWin7TaskbarGoodies;}
 	static  void	SetWin7TaskbarGoodiesEnabled(bool flag)	{m_bShowWin7TaskbarGoodies = flag;}
 
-	static	void	SetMaxUpload(UINT in);
-	static	void	SetMaxDownload(UINT in);
+	static	void	SetMaxUpload(uint32 in);
+	static	void	SetMaxDownload(uint32 in);
 
 	static	WINDOWPLACEMENT GetEmuleWindowPlacement()	{return EmuleWindowPlacement;}
 	static	void	SetWindowLayout(const WINDOWPLACEMENT& in) {EmuleWindowPlacement=in;}
@@ -1238,14 +1234,6 @@ public:
 	static	void	SetNetworkKademlia(bool val);
 	static	bool	GetNetworkED2K()					{return networked2k;}
 	static	void	SetNetworkED2K(bool val)			{networked2k = val;}
-
-	// mobileMule
-	static	const	CString& GetMMPass()				{return m_strMMPassword;}
-	static	void	SetMMPass(const CString& strNewPass);
-	static	bool	IsMMServerEnabled()					{return m_bMMEnabled;}
-	static	void	SetMMIsEnabled(bool bEnable)		{m_bMMEnabled=bEnable;}
-	static	uint16	GetMMPort()							{return m_nMMPort;}
-	static	void	SetMMPort(uint16 uPort)				{m_nMMPort=uPort;}
 
 	// deadlake PROXYSUPPORT
 	static	const	ProxySettings& GetProxySettings()	{return proxy;}

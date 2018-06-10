@@ -1285,8 +1285,6 @@ BEGIN
     IDS_VERSION             "Version" //!
     IDS_PASTE               "Coller"
     IDS_A4AF                "Gestion des sources"
-    IDS_MOBILEMULE          "MobileMule" //!
-    IDS_ENABLEMM            "Activer MobileMule"
     IDS_AUTOCAT_LABEL       "Assignation auto. à une catégorie (séparer les modèles par |)"
     IDS_SHOWEXTSETTINGS     "Afficher les fonctionnalités avancées"
     IDS_TREEOPTIONS_TRUE    "Vrai"
@@ -1307,13 +1305,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Le dossier pour les fichiers temporaires ne doit pas être défini dans le répertoire d'installation d'eMule."
     IDS_WRN_INCTEMP_SAME    "Le dossier pour les fichiers temporaires et le dossier pour les fichiers téléchargés ne doivent pas être le même."
-    IDS_MMFAILED            "Echec de la création du socket MobileMule !"
-    IDS_MMSTARTED           "Serveur MobileMule démarré sur le Port %u. Version du protocole: %s"
     IDS_SHOWDWLPERCENTAGE   "Afficher le % d'avancement dans la barre de progression"
     IDS_TBN_ONNEWDOWNLOAD   "Téléchargement ajouté"
     IDS_ARTIST              "Artiste"
     IDS_ALBUM               "Album" //!
-    IDS_MMGUIDELINK         "Guide MobileMule"
 END
 
 STRINGTABLE 
@@ -1413,7 +1408,6 @@ BEGIN
                             "Echec du téléchargement et de l'installation du langage sélectionné à partir de %s !"
     IDS_ERR_BADFOLDER       "Répertoire invalide.\nLe répertoire ne peut être créé. Vérifiez le nom et l'emplacement."
     IDS_AUTOREMOVEFD        "Effacer automatiquement les téléchargements terminés"
-    IDS_MM_BLOCK            "3 échecs d'identification à MobileMule enregistrés - toute autre tentative bloquée pendant 10 min !"
 END
 
 STRINGTABLE 
@@ -1439,7 +1433,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Nouvel utilisateur correctement identifié auprès du Serveur MobileMule"
     IDS_RADCLIENTS          "à partir des clients connus"
     IDS_KADUDPPORTERR       "Le port UDP de Kad est en conflit avec le port UDP d'eMule ou le port UDP Serveurs. Le port a été changé en %u."
     IDS_CONFIRM_FILEDELETE  "Voulez-vous vraiment supprimer du disque tous les fichiers sélectionnés ?"
@@ -1463,7 +1456,7 @@ BEGIN
     IDS_TEXTLABELS          "Etiquettes texte"
     IDS_ENABLETEXTLABELS    "Sous l'icône"
     IDS_CUSTOMIZETOOLBAR    "Personnaliser la barre d'outils"
-    IDS_MINBITRATE          "Débit min. [kBit/s]"
+    IDS_MINBITRATE          "Débit min. [kbit/s]"
     IDS_KAD_RECHECKFW       "Revérifier le pare-feu"
     IDS_SHAREDTITLE         "Partages eD2K|Kad"
     IDS_FIREWALLED          "Derrière un pare-feu"

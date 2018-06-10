@@ -117,7 +117,7 @@ public:
 	{
 		//Clean up socket storage
 		delete[] m_pAsyncSocketExWindowData;
-		m_pAsyncSocketExWindowData = 0;
+		m_pAsyncSocketExWindowData = NULL;
 		m_nWindowDataSize = 0;
 		m_nSocketCount = 0;
 
@@ -129,6 +129,7 @@ public:
 	};
 
 	CAsyncSocketExHelperWindow(const CAsyncSocketExHelperWindow&) = delete;
+	CAsyncSocketExHelperWindow& operator=(const CAsyncSocketExHelperWindow&) = delete;
 
 	//Adds a socket to the list of attached sockets
 	BOOL AddSocket(CAsyncSocketEx *pSocket, int &nSocketIndex)
@@ -274,17 +275,13 @@ public:
 						if (pSocket->m_SocketData.onCloseCalled)
 							break;
 #endif //NOSOCKETSTATES
-						if (pSocket->m_lEvent & FD_READ) {
-							DWORD nBytes = 0;
-							if (!nErrorCode && !pSocket->IOCtl(FIONREAD, &nBytes))
-								nErrorCode = WSAGetLastError();
+
 #ifndef NOSOCKETSTATES
-							if (nErrorCode)
-								pSocket->SetState(aborted);
+						if (nErrorCode)
+							pSocket->SetState(aborted);
 #endif //NOSOCKETSTATES
-							if (nBytes != 0 || nErrorCode)
-								pSocket->OnReceive(nErrorCode);
-						}
+						if (pSocket->m_lEvent & FD_READ)
+							pSocket->OnReceive(nErrorCode);
 						break;
 					case FD_FORCEREAD: //Forceread does not check if there's data waiting
 #ifndef NOSOCKETSTATES
@@ -371,15 +368,11 @@ public:
 						DWORD nBytes = 0;
 						if (!nErrorCode && pSocket->IOCtl(FIONREAD, &nBytes))
 							if (nBytes > 0) {
+								// Just repeat message.
+								pSocket->ResendCloseNotify();
 								pSocket->m_SocketData.onCloseCalled = true;
 								pSocket->OnReceive(WSAESHUTDOWN);
-								// netfinity: OnReceive may fail and then we could get into a endless loop
-								DWORD nBytesRemaining = 0;
-								if (pSocket->IOCtl(FIONREAD, &nBytesRemaining) && nBytesRemaining < nBytes) {
-									// Just repeat message.
-									PostMessage(hWnd, message, wParam, lParam);
-									break;
-								}
+								break;
 							}
 
 						pSocket->SetState(nErrorCode ? aborted : closed);
@@ -393,25 +386,22 @@ public:
 						if (pSocket->m_SocketData.onCloseCalled)
 							return 0;
 
-						DWORD nBytes = 0;
+						DWORD nBytes;
 						if (!pSocket->IOCtl(FIONREAD, &nBytes))
 							nErrorCode = WSAGetLastError();
-						if (!nBytes && !nErrorCode)
-							return 0;
 					} else if (nEvent == FD_CLOSE) {
 						// If there are still bytes left to read, call OnReceive instead of 
 						// OnClose and trigger a new OnClose
-						DWORD nBytes = 0;
-						if (!nErrorCode && pSocket->IOCtl(FIONREAD, &nBytes)) {
-							if (!nBytes)
-								return 0;
+						DWORD nBytes;
+						if (!nErrorCode && pSocket->IOCtl(FIONREAD, &nBytes) && nBytes > 0) {
 							// Just repeat message.
 							pSocket->ResendCloseNotify();
-						}
-						pSocket->m_SocketData.onCloseCalled = true;
+							nEvent = FD_READ;
+						} else
+							pSocket->m_SocketData.onCloseCalled = true;
 					}
 					if (pSocket->m_pLastLayer)
-							pSocket->m_pLastLayer->CallEvent(nEvent, nErrorCode);
+						pSocket->m_pLastLayer->CallEvent(nEvent, nErrorCode);
 				}
 			}
 			return 0;
@@ -423,7 +413,7 @@ public:
 			CAsyncSocketExHelperWindow *pWnd = reinterpret_cast<CAsyncSocketExHelperWindow *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 			ASSERT(pWnd);
 
-			if (wParam >= static_cast<WPARAM>(pWnd->m_nWindowDataSize)) //Index is within socket storage
+			if (!pWnd || wParam >= static_cast<WPARAM>(pWnd->m_nWindowDataSize)) //Index is within socket storage
 				return 0;
 			
 			CAsyncSocketEx *pSocket = pWnd->m_pAsyncSocketExWindowData[wParam].m_pSocket;
@@ -432,8 +422,8 @@ public:
 				delete pMsg;
 				return 0;
 			}
-			int nEvent = pMsg->lEvent & 0xFFFF;
-			int nErrorCode = (int)(pMsg->lEvent >> 16);
+			int nEvent = (int)WSAGETSELECTEVENT(pMsg->lEvent);
+			int nErrorCode = (int)WSAGETSELECTERROR(pMsg->lEvent);
 
 			//Dispatch to layer
 			if (pMsg->pLayer)
@@ -530,7 +520,8 @@ public:
 					break;
 				case FD_CLOSE:
 #ifndef NOSOCKETSTATES
-					if ((pSocket->GetState() == connected || pSocket->GetState() == attached) && (pSocket->m_lEvent & FD_CLOSE)) {
+					if ((pSocket->GetState() == connected || pSocket->GetState() == attached) && (pSocket->m_lEvent & FD_CLOSE))
+					{
 						pSocket->SetState(nErrorCode ? aborted : closed);
 #else
 					{
@@ -571,8 +562,8 @@ public:
 
 			SOCKADDR_IN sockAddr = {};
 			sockAddr.sin_family = AF_INET;
-			sockAddr.sin_port = htons(pSocket->m_nAsyncGetHostByNamePort);
 			sockAddr.sin_addr.s_addr = ((LPIN_ADDR)((LPHOSTENT)pSocket->m_pAsyncGetHostByNameBuffer)->h_addr)->s_addr;
+			sockAddr.sin_port = htons(pSocket->m_nAsyncGetHostByNamePort);
 
 			if (!pSocket->OnHostNameResolved(&sockAddr))
 				return 0;
@@ -593,10 +584,8 @@ public:
 				return 0;
 
 			CAsyncSocketExHelperWindow *pWnd = reinterpret_cast<CAsyncSocketExHelperWindow *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
-			if (!pWnd)
-				return 0;
 
-			if (wParam >= static_cast<WPARAM>(pWnd->m_nWindowDataSize)) //Index is within socket storage
+			if (!pWnd || wParam >= static_cast<WPARAM>(pWnd->m_nWindowDataSize)) //Index is within socket storage
 				return 0;
 
 			CAsyncSocketEx *pSocket = pWnd->m_pAsyncSocketExWindowData[wParam].m_pSocket;
@@ -682,7 +671,7 @@ CAsyncSocketEx::CAsyncSocketEx()
 	m_SocketData.nSocketIndex = -1;
 	m_SocketData.nFamily = AF_UNSPEC;
 	m_SocketData.onCloseCalled = false;
-	m_pLocalAsyncSocketExThreadData = 0;
+	m_pLocalAsyncSocketExThreadData = NULL;
 
 #ifndef NOSOCKETSTATES
 	m_nPendingEvents = 0;
@@ -919,7 +908,7 @@ bool CAsyncSocketEx::InitAsyncSocketExInstance()
 	if (!m_pLocalAsyncSocketExThreadData) {
 		// Get thread specific data
 		if (!thread_local_data) {
-			thread_local_data = new t_AsyncSocketExThreadData;
+			thread_local_data = new t_AsyncSocketExThreadData();
 			thread_local_data->m_pHelperWindow = new CAsyncSocketExHelperWindow(thread_local_data);
 		}
 		m_pLocalAsyncSocketExThreadData = thread_local_data;
@@ -1254,15 +1243,14 @@ BOOL CAsyncSocketEx::TriggerEvent(long lEvent)
 	if (m_pFirstLayer) {
 		CAsyncSocketExLayer::t_LayerNotifyMsg *pMsg = new CAsyncSocketExLayer::t_LayerNotifyMsg;
 		pMsg->hSocket = m_SocketData.hSocket;
-		pMsg->lEvent = lEvent & 0xFFFF;
-		pMsg->pLayer = 0;
+		pMsg->lEvent = (int)WSAGETSELECTEVENT(lEvent);
+		pMsg->pLayer = NULL;
 		BOOL res = PostMessage(GetHelperWindowHandle(), WM_SOCKETEX_TRIGGER, (WPARAM)m_SocketData.nSocketIndex, (LPARAM)pMsg);
 		if (!res)
 			delete pMsg;
 		return res;
 	}
-	return PostMessage(GetHelperWindowHandle(), m_SocketData.nSocketIndex + WM_SOCKETEX_NOTIFY, m_SocketData.hSocket, lEvent % 0xFFFF);
-
+	return PostMessage(GetHelperWindowHandle(), m_SocketData.nSocketIndex + WM_SOCKETEX_NOTIFY, m_SocketData.hSocket, WSAGETSELECTEVENT(lEvent));
 }
 
 SOCKET CAsyncSocketEx::GetSocketHandle()
@@ -1291,7 +1279,7 @@ BOOL CAsyncSocketEx::AddLayer(CAsyncSocketExLayer *pLayer)
 	}
 
 	ASSERT(!m_pLastLayer);
-	pLayer->Init(0, this);
+	pLayer->Init(NULL, this);
 	m_pFirstLayer = pLayer;
 	m_pLastLayer = m_pFirstLayer;
 	if (m_SocketData.hSocket != INVALID_SOCKET)
@@ -1303,8 +1291,9 @@ BOOL CAsyncSocketEx::AddLayer(CAsyncSocketExLayer *pLayer)
 
 void CAsyncSocketEx::RemoveAllLayers()
 {
-	for (std::list<t_callbackMsg>::const_iterator iter = m_pendingCallbacks.begin(); iter != m_pendingCallbacks.end(); ++iter)
-		delete[] iter->str;
+	//for (std::list<t_callbackMsg>::const_iterator iter = m_pendingCallbacks.begin(); iter != m_pendingCallbacks.end(); ++iter)
+	//	delete[] iter->str;
+	CAsyncSocketEx::OnLayerCallback(m_pendingCallbacks);
 	m_pendingCallbacks.clear();
 
 	m_pFirstLayer = NULL;
@@ -1459,21 +1448,6 @@ void CAsyncSocketEx::AssertValid() const
 	(void)m_nAsyncGetHostByNamePort;
 	(void)m_nSocketPort;
 	(void)m_pendingCallbacks;
-
-	//Pointer to the data of the local thread
-//	struct t_AsyncSocketExThreadData
-//	{
-//		CAsyncSocketExHelperWindow *m_pHelperWindow;
-//		int nInstanceCount;
-//		DWORD nThreadId;
-//	} *m_pLocalAsyncSocketExThreadData;
-
-	//List of the data structures for all threads
-//	static struct t_AsyncSocketExThreadDataList
-//	{
-//		t_AsyncSocketExThreadDataList *pNext;
-//		t_AsyncSocketExThreadData *pThreadData;
-//	} *m_spAsyncSocketExThreadDataList;
 
 	CHECK_PTR(m_pFirstLayer);
 	CHECK_PTR(m_pLastLayer);

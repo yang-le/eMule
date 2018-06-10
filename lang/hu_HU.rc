@@ -1290,8 +1290,6 @@ BEGIN
     IDS_VERSION             "Verzió"
     IDS_PASTE               "Beilleszt"
     IDS_A4AF                "Forráskezelés"
-    IDS_MOBILEMULE          "MobileMule"
-    IDS_ENABLEMM            "MobileMule engedélyezése"
     IDS_AUTOCAT_LABEL       "Automatikus kategória hozzárendelés (a mintákat | jellel kell elválasztani)"
     IDS_SHOWEXTSETTINGS     "További beállítások (speciális)"
     IDS_TREEOPTIONS_TRUE    "Igaz"
@@ -1312,13 +1310,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Az ideiglenes fájlok mappája nem lehet ugyanaz, mint az eMule telepítõ mappája."
     IDS_WRN_INCTEMP_SAME    "Az érkezõ fájlok mappája és az ideiglenes fájlok mappája nem lehet lehet ugyanaz."
-    IDS_MMFAILED            "Nem sikerült létrehozni MobileMule fájlleírót! (socket)"
-    IDS_MMSTARTED           "MobileMule kiszolgáló elindult a %u porton. Protokol verziója: %s"
     IDS_SHOWDWLPERCENTAGE   "A letöltés befejezésének százalékos kijelzése a folyamatmutatón"
     IDS_TBN_ONNEWDOWNLOAD   "Új letöltést adunk hozzá"
     IDS_ARTIST              "Elõadó"
     IDS_ALBUM               "Album"
-    IDS_MMGUIDELINK         "MobileMule útmutató"
 END
 
 STRINGTABLE 
@@ -1418,12 +1413,10 @@ BEGIN
                             "A kiválasztott nyelv letöltése és telepítése nem sikerült: %s!"
     IDS_ERR_BADFOLDER       "Érvénytelen mappa.\nA mappát nem sikerült létrehozni. Kérlek ellenõrizd a nevét és a helyét."
     IDS_AUTOREMOVEFD        "Befejezett letöltések automatikus törlése a sorból"
-    IDS_MM_BLOCK            "A MobileMule 3 hibás bejelentkezést észlelt - 10 percig minden próbálkozás elutasítva"
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "A felhasználó sikeresen belépett a MobileMule kiszolgálóra"
     IDS_RADCLIENTS          "ismert ügyfelektõl"
     IDS_KADUDPPORTERR       "A Kads UDP portja ütközik (a) az eMule's külsõ UDP portjával vagy (b) az eMule's kiszolgáló UDP portjával. Az új port: %u."
     IDS_CONFIRM_FILEDELETE  "Biztosan törölni szeretnéd a kijelölt fájlokat a lemezrõl?"
@@ -1468,7 +1461,7 @@ BEGIN
     IDS_TEXTLABELS          "Szöveges cimkék"
     IDS_ENABLETEXTLABELS    "Az ikon alatt"
     IDS_CUSTOMIZETOOLBAR    "Eszköztár beállítása"
-    IDS_MINBITRATE          "Min. bitrate [kBit/s]"
+    IDS_MINBITRATE          "Min. bitrate [kbit/s]"
     IDS_KAD_RECHECKFW       "Tûzfal újraellenõrzése"
     IDS_SHAREDTITLE         "Megosztott ED2K|Kad"
     IDS_FIREWALLED          "Tûzfal"

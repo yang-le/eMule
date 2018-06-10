@@ -514,7 +514,7 @@ bool CKademlia::FindNodeIDByIP(CKadClientSearcher& rRequester, uint32 dwIP, uint
 		return false;
 	}
 	// first search our known contacts if we can deliver a result without asking, otherwise forward the request
-	CContact* pContact = GetRoutingZone()->GetContact(ntohl(dwIP), nTCPPort, true);
+	const CContact *pContact = GetRoutingZone()->GetContact(ntohl(dwIP), nTCPPort, true);
 	if (pContact != NULL) {
 		uchar uchID[16];
 		pContact->GetClientID().ToByteArray(uchID);
@@ -531,7 +531,7 @@ bool CKademlia::FindIPByNodeID(CKadClientSearcher& rRequester, const uchar* pach
 		return false;
 	}
 	// first search our known contacts if we can deliver a result without asking, otherwise forward the request
-	CContact* pContact = GetRoutingZone()->GetContact(CUInt128(pachNodeID));
+	const CContact *pContact = GetRoutingZone()->GetContact(CUInt128(pachNodeID));
 	if (pContact != NULL) {
 		// make sure that this entry is not too old, otherwise just do a search to be sure
 		if (pContact->GetLastSeen() != 0 && time(NULL) - pContact->GetLastSeen() < MIN2S(30)) {
@@ -596,7 +596,6 @@ uint32 CKademlia::CalculateKadUsersNew()
 
 	if (m_liStatsEstUsersProbes.GetCount() < 10)
 		return 0;
-	uint32 nMedian = 0;
 
 	CList<uint32, uint32> liMedian;
 	for (POSITION pos1 = m_liStatsEstUsersProbes.GetHeadPosition(); pos1 != NULL; )
@@ -615,15 +614,14 @@ uint32 CKademlia::CalculateKadUsersNew()
 			liMedian.AddTail(nProbe);
 	}
 	// cut away 1/3 of the values - 1/6 of the top and 1/6 of the bottom  to avoid spikes having too much influence, build the average of the rest
-	INT_PTR nCut = liMedian.GetCount() / 6;
-	for (int i = 0; i < nCut; ++i) {
+	for (INT_PTR nCut = liMedian.GetCount() / 6; --nCut >= 0;) {
 		liMedian.RemoveHead();
 		liMedian.RemoveTail();
 	}
 	uint64 nAverage = 0;
 	for (POSITION pos1 = liMedian.GetHeadPosition(); pos1 != NULL; )
 		nAverage += liMedian.GetNext(pos1);
-	nMedian = (uint32)(nAverage / liMedian.GetCount());
+	uint32 nMedian = (uint32)(nAverage / liMedian.GetCount());
 
 	// LowIDModififier
 	// Modify count by assuming 20% of the users are firewalled and can't be a contact for < 0.49b nodes
@@ -649,14 +647,14 @@ uint32 CKademlia::CalculateKadUsersNew()
 		fFirewalledModifyTotal = fFirewalledModifyOld;
 	ASSERT( fFirewalledModifyTotal > 1.0F && fFirewalledModifyTotal < 1.90F );
 
-	return (uint32)((float)nMedian*fFirewalledModifyTotal);
+	return (uint32)(nMedian*fFirewalledModifyTotal);
 }
 
 bool CKademlia::IsRunningInLANMode()
 {
 	if (thePrefs.FilterLANIPs() || !IsRunning() || GetRoutingZone() == NULL)
 		return false;
-	if (m_tLANModeCheck + 10 <= time(NULL))
+	if (time(NULL) >= m_tLANModeCheck + 10)
 	{
 		m_tLANModeCheck = time(NULL);
 		uint32 nCount = GetRoutingZone()->GetNumContacts();

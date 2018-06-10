@@ -1295,8 +1295,6 @@ BEGIN
     IDS_VERSION             "Versió"
     IDS_PASTE               "Apegar"
     IDS_A4AF                "Fonts"
-    IDS_MOBILEMULE          "MobileMule"//!
-    IDS_ENABLEMM            "Activar MobileMule"
     IDS_AUTOCAT_LABEL       "Assignació de categories automàticament (patro separat per |)"
     IDS_SHOWEXTSETTINGS     "Vore mes controls (controls modo alvançat)"
     IDS_TREEOPTIONS_TRUE    "Verdader"
@@ -1317,13 +1315,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "El directori temporal no pot ser el directori d'instalació d'eMule."
     IDS_WRN_INCTEMP_SAME    "El directori de descarregues i el temporal no poden ser el mateix."
-    IDS_MMFAILED            "¡Fallo creant el Socket per a MobileMule!"
-    IDS_MMSTARTED           "Servidor MobileMule iniciat en el Port %u. Versió de Protocol: %s"
     IDS_SHOWDWLPERCENTAGE   "Mostrar percentage de descarrega completa en la barra de progres"
     IDS_TBN_ONNEWDOWNLOAD   "Descarrega afegida"
     IDS_ARTIST              "Artiste/a"
     IDS_ALBUM               "Àlbum"
-    IDS_MMGUIDELINK         "Guia de MobileMule"
 END
 
 STRINGTABLE 
@@ -1423,7 +1418,6 @@ BEGIN
                             "Erro al descarregar i instalar la dll de l' idioma seleccionat des de %s!"
     IDS_ERR_BADFOLDER       "Carpeta incorrecta.\nLa carpeta no pot ser creada. Per favor, comprova el nom i la localisació."
     IDS_AUTOREMOVEFD        "Auto-netejar descarregues completes"
-    IDS_MM_BLOCK            "3 intents de conexió erròneus a MobileMule - els nous intents seran bloquejats per 10 minuts"
 END
 
 STRINGTABLE 
@@ -1449,7 +1443,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "Nou usuari conectat en èxit al servidor MobileMule"
     IDS_RADCLIENTS          "Des de nous clients"
     IDS_KADUDPPORTERR       "El port UDP de Kad entra en conflicte en el port extès d'eMule o del servidor UDP d'eMule. El port ha segut canviat a %u."
     IDS_CONFIRM_FILEDELETE  "¿Realment vols borrar tots els archius seleccionats del disc?"
@@ -1473,7 +1466,7 @@ BEGIN
     IDS_TEXTLABELS          "Etiquetes"
     IDS_ENABLETEXTLABELS    "Baix de l'icon"
     IDS_CUSTOMIZETOOLBAR    "Personalisar Barra de ferramentes"
-    IDS_MINBITRATE          "Bitrate min.[kBit/s]"
+    IDS_MINBITRATE          "Bitrate min.[kbit/s]"
     IDS_KAD_RECHECKFW       "Comprovar tallafocs"
     IDS_SHAREDTITLE         "ED2K Compartit|Kad"
     IDS_FIREWALLED          "Tallafocs"

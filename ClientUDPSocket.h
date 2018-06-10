@@ -23,7 +23,7 @@ class Packet;
 #pragma pack(1)
 struct UDPPack
 {
-	Packet* packet;
+	Packet *packet;
 	uint32	dwIP;
 	uint16	nPort;
 	uint32	dwTime;
@@ -44,7 +44,7 @@ public:
 	bool	Create();
 	bool	Rebind();
 	uint16	GetConnectedPort() { return m_port; }
-	bool	SendPacket(Packet* packet, uint32 dwIP, uint16 nPort, bool bEncrypt, const uchar* pachTargetClientHashORKadID, bool bKad, uint32 nReceiverVerifyKey);
+	bool	SendPacket(Packet *packet, uint32 dwIP, uint16 nPort, bool bEncrypt, const uchar* pachTargetClientHashORKadID, bool bKad, uint32 nReceiverVerifyKey);
 	SocketSentBytes  SendControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize); // ZZ:UploadBandWithThrottler (UDP)
 
 protected:

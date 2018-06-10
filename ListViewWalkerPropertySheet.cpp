@@ -49,7 +49,7 @@ CListViewPropertySheet::~CListViewPropertySheet()
 {
 }
 
-void CListViewPropertySheet::InsertPage(int iIndex, CPropertyPage* pPage)
+void CListViewPropertySheet::InsertPage(int iIndex, CPropertyPage *pPage)
 {
 	ASSERT_VALID( this );
 	ASSERT( pPage != NULL );
@@ -61,11 +61,11 @@ void CListViewPropertySheet::InsertPage(int iIndex, CPropertyPage* pPage)
 
 	if (m_hWnd != NULL)
 	{
-		PROPSHEETPAGE* ppsp = const_cast<PROPSHEETPAGE*>(m_psh.ppsp);
-		for (UINT i = 0; i < m_psh.nPages; i++) {
+		PROPSHEETPAGE *ppsp = const_cast<PROPSHEETPAGE *>(m_psh.ppsp);
+		for (UINT i = 0; i < m_psh.nPages; ++i) {
 			if (i == (UINT)iIndex)
 				break;
-			(BYTE*&)ppsp += ppsp->dwSize;
+			(BYTE *&)ppsp += ppsp->dwSize;
 		}
 
 		HPROPSHEETPAGE hPSP = CreatePropertySheetPage(ppsp);

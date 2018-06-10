@@ -22,7 +22,7 @@
  This means it is NOT a complete hashtree, since the 9.28MB is a given level, in order
  to be able to create a hashset format similar to the MD4 one.
 
- If the number of elements for the next level are odd (for example 21 blocks to spread into 2 hashs)
+ If the number of elements for the next level are odd (for example 21 blocks to spread into 2 hashes)
  the majority of elements will go into the left branch if the parent node was a left branch
  and into the right branch if the parent node was a right branch. The first node is always
  taken as a left branch.
@@ -44,7 +44,7 @@ X(180KB)   X(180KB)  [...] X(140KB) | X(180KB) X(180KB [...]			   BlockHashs
 						 Border between first and second Part (9.28MB)
 
 HashsIdentifier:
-When sending hashs, they are send with a 16bit identifier which specifies its postion in the
+When sending hashes, they are send with a 16bit identifier which specifies its postion in the
 tree (so StartPosition + HashDataSize would lead to the same hash)
 The identifier basically describes the way from the top of the tree to the hash. a set bit (1)
 means follow the left branch, a 0 means follow the right. The highest bit which is set is seen as the start-

@@ -1406,8 +1406,6 @@ BEGIN
                             "Lähetysnopeuden tunnustelu: Reitinjäljitys epäonnistui liian monta kertaa. Lähetysnopeuden tunnustelu ei ole käytössä."
     IDS_USS_STARTING        "Lähetysnopeuden tunnustelu: Valmistelut on tehty, ja aloitan nyt lähetysnopeuden säätelyn. Ensimmäisen 60 sekunnin ajan reagoin muutoksiin nopeasti."
     IDS_A4AF                "Lähteiden käsittely"
-    IDS_MOBILEMULE          "MobileMule" //!
-    IDS_ENABLEMM            "Käytä MobileMulea"
     IDS_AUTOCAT_LABEL       "Automaattinen kategoriaan sijoitus (kaava, erotin |)"
     IDS_SHOWEXTSETTINGS     "Näytä enemmän asetuksia"
     IDS_TREEOPTIONS_TRUE    "Tosi"
@@ -1428,8 +1426,6 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Väliaikaiset tiedostot -hakemisto ei saa olla sama kuin eMulen asennushakemisto."
     IDS_WRN_INCTEMP_SAME    "Valmiit tiedostot -hakemisto ei saa olla sama kuin väliaikset tiedostot -hakemisto."
-    IDS_MMFAILED            "MobileMulen soketin luominen epäonnistui!"
-    IDS_MMSTARTED           "MobileMule käynnissä portissa %u. Protokollan versio: %s"
     IDS_SHOWDWLPERCENTAGE   "Näytä latauksen edistyminen prosentteina edistymispalkissa"
     IDS_TBN_ONNEWDOWNLOAD   "Uusi lataus."
     IDS_ARTIST              "Esittäjä"	
@@ -1438,7 +1434,6 @@ END
 STRINGTABLE 
 BEGIN
     IDS_ALBUM               "Albumi"
-    IDS_MMGUIDELINK         "MobileMule-opas"
     IDS_CD_UPLOADREQ        "Pyydetty lähetystä:"
     IDS_SETTINGCHANGED_RESTART 
                             "Jotta asetukset tulisivat voimaan, eMule pitää käynnistää uudelleen."
@@ -1533,8 +1528,6 @@ BEGIN
                             "Kohtasin virheen, kun yritin ladata ja asentaa valitun kielen osoitteesta %s!"
     IDS_ERR_BADFOLDER       "Kelvoton hakemisto.\nEn ei voi luoda hakemistoa. Tarkista hakemiston nimi ja sijainti."
     IDS_AUTOREMOVEFD        "Poista valmiit lataukset listasta autom."
-    IDS_MM_BLOCK            "Kolme epäonnistunutta kirjautumisyritystä MobileMuleen. Kaikki tuleva toiminta on estetty kymmeneksi minuutiksi!"
-    IDS_MM_NEWUSER          "Uusi käyttäjä kirjautui MobileMule-palvelimeen."	
 END
 
 STRINGTABLE 
@@ -1542,7 +1535,7 @@ BEGIN
     IDS_TEXTLABELS          "Tekstiselitteet"
     IDS_ENABLETEXTLABELS    "Ikonin alla"
     IDS_CUSTOMIZETOOLBAR    "Muokkaa työkalupalkkia"
-    IDS_MINBITRATE          "Min. bitrate [kBit/s]"
+    IDS_MINBITRATE          "Min. bitrate [kbit/s]"
     IDS_KAD_RECHECKFW       "Tarkista palomuurin tila"
     IDS_SHAREDTITLE         "Jaettu eD2K|Kademlia"
     IDS_FIREWALLED          "Palomuurin takana"

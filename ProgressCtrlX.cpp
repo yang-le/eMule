@@ -269,7 +269,6 @@ void CProgressCtrlX::DrawText(const CDrawInfo& info, const CRect &rcMax, const C
 				sFormat = _T("%d");
 			// retrieve current position
 			nValue = info.nCurPos;
-			break;
 	}
 
 	if (sFormat.IsEmpty())

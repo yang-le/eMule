@@ -78,6 +78,6 @@ protected:
 	afx_msg void OnBnClickedCollectionViewShared();
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnEnKillFocusCollectionName();
-	afx_msg void OnNmDblClkCollectionAvailList(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnNmDblClkCollectionList(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnNmDblClkCollectionAvailList(NMHDR* /*pNMHDR*/, LRESULT *pResult);
+	afx_msg void OnNmDblClkCollectionList(NMHDR* /*pNMHDR*/, LRESULT *pResult);
 };

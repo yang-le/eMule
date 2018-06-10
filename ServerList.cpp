@@ -324,7 +324,7 @@ void CServerList::ServerStats()
 				DEBUG_ONLY(DebugLog(_T("CryptPing skipped because our public IP is unknown for server %s"), (LPCTSTR)ping_server->GetListName()));
 
 			ping_server->SetCryptPingReplyPending(false);
-			Packet* packet = new Packet(OP_GLOBSERVSTATREQ, 4);
+			Packet *packet = new Packet(OP_GLOBSERVSTATREQ, 4);
 			uint32 uChallenge = 0x55AA0000 + GetRandomUInt16();
 			ping_server->SetChallenge(uChallenge);
 			PokeUInt32(packet->pBuffer, uChallenge);

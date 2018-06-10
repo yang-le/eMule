@@ -336,7 +336,7 @@ void CPPgTweaks::DoDataExchange(CDataExchange* pDX)
 	DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiFullAlloc, m_bFullAlloc);
 	DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiCheckDiskspace, m_bCheckDiskspace);
 	DDX_Text(pDX, IDC_EXT_OPTS, m_htiMinFreeDiskSpace, m_fMinFreeDiskSpaceMB);
-	DDV_MinMaxFloat(pDX, m_fMinFreeDiskSpaceMB, 0.0, UINT_MAX / (float)(1024*1024));
+	DDV_MinMaxFloat(pDX, m_fMinFreeDiskSpaceMB, 0.0, _UI32_MAX / (1024.0f * 1024.0f));
 	DDX_TreeRadio(pDX, IDC_EXT_OPTS, m_htiCommit, m_iCommitFiles);
 	DDX_TreeRadio(pDX, IDC_EXT_OPTS, m_htiExtractMetaData, m_iExtractMetaData);
 	DDX_TreeCheck(pDX, IDC_EXT_OPTS, m_htiResolveShellLinks, m_bResolveShellLinks);
@@ -563,9 +563,9 @@ BOOL CPPgTweaks::OnApply()
 	thePrefs.m_iQueueSize = m_iQueueSize;
 	if (thePrefs.m_bExtControls != m_bExtControls) {
 		thePrefs.m_bExtControls = m_bExtControls;
-		theApp.emuledlg->transferwnd->GetDownloadList()->CreateMenues();
+		theApp.emuledlg->transferwnd->GetDownloadList()->CreateMenus();
 		theApp.emuledlg->searchwnd->CreateMenus();
-		theApp.emuledlg->sharedfileswnd->sharedfilesctrl.CreateMenues();
+		theApp.emuledlg->sharedfileswnd->sharedfilesctrl.CreateMenus();
 	}
 	thePrefs.m_dwServerKeepAliveTimeout = m_uServerKeepAliveTimeout * 60000;
 	thePrefs.m_bSparsePartFiles = m_bSparsePartFiles;
@@ -580,7 +580,7 @@ BOOL CPPgTweaks::OnApply()
 	thePrefs.m_bOpenPortsOnStartUp = m_bFirewallStartup;
 
 	thePrefs.m_bDynUpEnabled = m_bDynUpEnabled;
-	thePrefs.minupload = (uint16)m_iDynUpMinUpload;
+	thePrefs.minupload = (uint32)m_iDynUpMinUpload;
 	thePrefs.m_iDynUpPingTolerance = m_iDynUpPingTolerance;
 	thePrefs.m_iDynUpPingToleranceMilliseconds = m_iDynUpPingToleranceMilliseconds;
 	thePrefs.m_bDynUpUseMillisecondPingTolerance = (m_iDynUpRadioPingTolerance == 1);
@@ -616,7 +616,7 @@ void CPPgTweaks::OnHScroll(UINT /*nSBCode*/, UINT /*nPos*/, CScrollBar* pScrollB
 		SetDlgItemText(IDC_FILEBUFFERSIZE_STATIC, temp);
 		SetModified(TRUE);
 	} else if (pScrollBar->GetSafeHwnd() == m_ctlQueueSize.m_hWnd) {
-		m_iQueueSize = ((CSliderCtrl*)pScrollBar)->GetPos() * 100;
+		m_iQueueSize = reinterpret_cast<CSliderCtrl *>(pScrollBar)->GetPos() * 100;
 		CString temp;
 		temp.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_QUEUESIZE), (LPCTSTR)GetFormatedUInt((ULONG)m_iQueueSize));
 		SetDlgItemText(IDC_QUEUESIZE_STATIC, temp);

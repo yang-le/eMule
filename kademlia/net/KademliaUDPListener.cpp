@@ -409,7 +409,7 @@ void CKademliaUDPListener::ProcessPacket(const byte* pbyData, uint32 uLenData, u
 		Process_KADEMLIA2_FIREWALLUDP(pbyPacketData, uLenData, uIP, senderUDPKey);
 		break;
 
-		// old Kad1 opcodes which we don't handle anymore
+	// old Kad1 opcodes which we don't handle any more
 	case KADEMLIA_BOOTSTRAP_REQ_DEPRECATED:
 	case KADEMLIA_BOOTSTRAP_RES_DEPRECATED:
 	case KADEMLIA_HELLO_REQ_DEPRECATED:
@@ -559,7 +559,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_BOOTSTRAP_RES (const byte *pbyPacke
 	CRoutingZone *pRoutingZone = CKademlia::GetRoutingZone();
 
 	// How many contacts were given
-	CSafeMemFile fileIO( pbyPacketData, uLenPacket);
+	CSafeMemFile fileIO(pbyPacketData, uLenPacket);
 	CUInt128 uContactID;
 	fileIO.ReadUInt128(&uContactID);
 	uint16 uTCPPort = fileIO.ReadUInt16();
@@ -574,7 +574,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_BOOTSTRAP_RES (const byte *pbyPacke
 
 	DEBUG_ONLY( AddDebugLogLine(DLP_LOW, false, _T("Inc Kad2 Bootstrap Packet from %s"), (LPCTSTR)ipstr(ntohl(uIP))) );
 
-	for (unsigned uNumContacts = fileIO.ReadUInt16(); uNumContacts--;) {
+	for (unsigned uNumContacts = fileIO.ReadUInt16(); uNumContacts > 0; --uNumContacts) {
 		fileIO.ReadUInt128(&uContactID);
 		uIP = fileIO.ReadUInt32();
 		uUDPPort = fileIO.ReadUInt16();
@@ -777,7 +777,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_RES (const byte *pbyPacketData, uin
 	//Used Pointers
 	CRoutingZone *pRoutingZone = CKademlia::GetRoutingZone();
 
-	// don't do firewallchecks on this opcode anymore, since we need the contacts kad version - hello opcodes are good enough
+	// don't do firewallchecks on this opcode any more, since we need the contacts kad version - hello opcodes are good enough
 	/*if(CKademlia::GetPrefs()->GetRecheckIP())
 	{
 		FirewalledCheck(uIP, uUDPPort, senderUDPKey);
@@ -1278,16 +1278,14 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_KEY_REQ(const byte *pbyPack
 		return;
 
 	bool bDbgInfo = (thePrefs.GetDebugClientKadUDPLevel() > 0);
-	CString sInfo;
 	uint8 uLoad = 0;
 	CUInt128 uTarget;
 	for (unsigned uCount = byteIO.ReadUInt16(); uCount > 0; --uCount) {
-		sInfo.Empty();
-		byteIO.ReadUInt128(&uTarget);
-
-		CKadTag* pTag = NULL;
-		CKeyEntry* pEntry = NULL;
+		CKadTag *pTag = NULL;
+		CKeyEntry *pEntry = NULL;
 		try {
+			CString sInfo;
+			byteIO.ReadUInt128(&uTarget);
 			pEntry = new Kademlia::CKeyEntry();
 			pEntry->m_uIP = uIP;
 			pEntry->m_uUDPPort = uUDPPort;
@@ -1342,7 +1340,7 @@ void CKademliaUDPListener::Process_KADEMLIA2_PUBLISH_KEY_REQ(const byte *pbyPack
 
 		if (!pIndexed->AddKeyword(uFile, uTarget, pEntry, uLoad)) {
 			//We already indexed the maximum number of keywords.
-			//We do not index anymore but we still send a success.
+			//We do not index any more but we still send a success.
 			//Reason: Because if a VERY busy node tells the publisher it failed,
 			//this busy node will spread to all the surrounding nodes causing popular
 			//keywords to be stored on MANY nodes.
@@ -1882,7 +1880,7 @@ void CKademliaUDPListener::Process_KADEMLIA_CALLBACK_REQ (const byte *pbyPacketD
 		fileIO2.WriteUInt128(&uFile);
 		fileIO2.WriteUInt32(uIP);
 		fileIO2.WriteUInt16(uTCP);
-		Packet* pPacket = new Packet(&fileIO2, OP_EMULEPROT, OP_CALLBACK);
+		Packet *pPacket = new Packet(&fileIO2, OP_EMULEPROT, OP_CALLBACK);
 		if (thePrefs.GetDebugClientKadUDPLevel() > 0 || thePrefs.GetDebugClientTCPLevel() > 0)
 			DebugSend("OP_CALLBACK", pBuddy);
 		theStats.AddUpDataOverheadFileRequest(pPacket->size);
@@ -1969,7 +1967,7 @@ void CKademliaUDPListener::SendPacket(const byte *pbyData, uint32 uLenData, uint
 		ASSERT(0);
 		return;
 	}
-	Packet* pPacket = new Packet(OP_KADEMLIAHEADER);
+	Packet *pPacket = new Packet(OP_KADEMLIAHEADER);
 	pPacket->opcode = pbyData[1];
 	pPacket->pBuffer = new char[uLenData+8];
 	memcpy(pPacket->pBuffer, pbyData+2, uLenData-2);
@@ -1985,7 +1983,7 @@ void CKademliaUDPListener::SendPacket(const byte *pbyData, uint32 uLenData, uint
 
 void CKademliaUDPListener::SendPacket(const byte *pbyData, uint32 uLenData, byte byOpcode, uint32 uDestinationHost, uint16 uDestinationPort, CKadUDPKey targetUDPKey, const CUInt128* uCryptTargetID)
 {
-	Packet* pPacket = new Packet(OP_KADEMLIAHEADER);
+	Packet *pPacket = new Packet(OP_KADEMLIAHEADER);
 	pPacket->opcode = byOpcode;
 	pPacket->pBuffer = new char[uLenData];
 	memcpy(pPacket->pBuffer, pbyData, uLenData);
@@ -2001,7 +1999,7 @@ void CKademliaUDPListener::SendPacket(const byte *pbyData, uint32 uLenData, byte
 
 void CKademliaUDPListener::SendPacket(CSafeMemFile *pbyData, byte byOpcode, uint32 uDestinationHost, uint16 uDestinationPort, CKadUDPKey targetUDPKey, const CUInt128* uCryptTargetID)
 {
-	Packet* pPacket = new Packet(pbyData, OP_KADEMLIAHEADER);
+	Packet *pPacket = new Packet(pbyData, OP_KADEMLIAHEADER);
 	pPacket->opcode = byOpcode;
 	if (pPacket->size > 200)
 		pPacket->PackPacket();

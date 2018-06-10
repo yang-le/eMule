@@ -21,7 +21,7 @@
 #include "knownfile.h"
 #include "log.h"
 
-// File size       Data parts      ED2K parts      ED2K part hashs		AICH part hashs
+// File size       Data parts      ED2K parts      ED2K part hashes		AICH part hashes
 // -------------------------------------------------------------------------------------------
 // 1..PARTSIZE-1   1               1               0(!)					0 (!)
 // PARTSIZE        1               2(!)            2(!)					0 (!)
@@ -124,7 +124,7 @@ void CFileIdentifierBase::WriteIdentifier(CFileDataIO* pFile, bool bKadExcludeMD
 CString CFileIdentifierBase::DbgInfo() const
 {
 	//TODO fileident
-	return _T("");
+	return CString();
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // CFileIdentifier
@@ -187,7 +187,7 @@ bool CFileIdentifier::LoadMD4HashsetFromFile(CFileDataIO* file, bool bVerifyExis
 	DeleteMD4Hashset();
 
 	UINT parts = file->ReadUInt16();
-	//TRACE("Nr. hashs: %u\n", (UINT)parts);
+	//TRACE("Nr. hashes: %u\n", (UINT)parts);
 	if (bVerifyExistingHash && (md4cmp(m_abyMD4Hash, checkid) != 0 || parts != GetTheoreticalMD4PartHashCount()))
 		return false;
 	for (UINT i = 0; i < parts; i++){
@@ -232,7 +232,7 @@ uchar* CFileIdentifier::GetMD4PartHash(UINT part) const
 	return m_aMD4HashSet[part];
 }
 
-// nr. of part hashs according the file size wrt ED2K protocol
+// nr. of part hashes according the file size wrt ED2K protocol
 // nr. of parts to be used with OP_HASHSETANSWER
 uint16 CFileIdentifier::GetTheoreticalMD4PartHashCount() const
 {
@@ -308,7 +308,7 @@ bool CFileIdentifier::ReadHashSetsFromPacket(CFileDataIO* pFile, bool& rbMD4, bo
 	bool bAICHPresent = (byOptions & 0x02) > 0;
 	// We don't abort on unkown option, because even if there is another unknown hashset, there is no data afterwards we
 	// try to read on the only occasion this function is used. So we might be able to add optional flags in the future
-	// without having to adjust the protocol any further (new additional data/hashs should not be appended without adjustement however)
+	// without having to adjust the protocol any further (new additional data/hashes should not be appended without adjustement however)
 	if ((byOptions >> 2) > 0)
 		DebugLogWarning(_T("Unknown Options/HashSets set in CFileIdentifier::ReadHashSetsFromPacket"));
 
@@ -446,7 +446,7 @@ bool CFileIdentifier::VerifyAICHHashSet()
 
 	uint32 uPartCount = (uint16)(((uint64)m_rFileSize + (PARTSIZE - 1)) / PARTSIZE);
 	if (uPartCount <= 1)
-		return true; // No AICH Part Hashs
+		return true; // No AICH Part Hashes
 	for (uint32 nPart = 0; nPart < uPartCount; nPart++)
 	{
 		uint64 nPartStartPos = (uint64)nPart*PARTSIZE;

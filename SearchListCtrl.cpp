@@ -290,7 +290,7 @@ void CSearchListCtrl::Init(CSearchList* in_searchlist)
 	if (pOldStates)
 		pOldStates->DeleteImageList();
 
-	CreateMenues();
+	CreateMenus();
 
 	LoadSettings();
 	SetHighlightColors();
@@ -336,7 +336,7 @@ void CSearchListCtrl::Localize()
 		pHeaderCtrl->SetItem(icol, &hdi);
 	}
 
-	CreateMenues();
+	CreateMenus();
 }
 
 void CSearchListCtrl::AddResult(const CSearchFile* toshow)
@@ -857,7 +857,7 @@ BOOL CSearchListCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 					file = selectedList.GetNext(pos);
 					if (file) {
 						if (!clpbrd.IsEmpty())
-							clpbrd += _T("<br />\r\n");
+							clpbrd += _T("<br>\r\n");
 						clpbrd += file->GetED2kLink(false, true);
 					}
 				}
@@ -984,7 +984,7 @@ void CSearchListCtrl::OnLvnDeleteAllItems(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 	*pResult = TRUE;
 }
 
-void CSearchListCtrl::CreateMenues()
+void CSearchListCtrl::CreateMenus()
 {
 	if (m_SearchFileMenu)
 		VERIFY( m_SearchFileMenu.DestroyMenu() );

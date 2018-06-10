@@ -35,6 +35,8 @@ class LastCommonRouteFinder :
 public:
 	LastCommonRouteFinder();
 	~LastCommonRouteFinder();
+	LastCommonRouteFinder(const LastCommonRouteFinder&) = delete;
+	LastCommonRouteFinder& operator=(const LastCommonRouteFinder&) = delete;
 
 	void EndThread();
 

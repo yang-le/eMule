@@ -42,6 +42,7 @@ public:
 	explicit CSharedFileList(CServerConnect* in_server);
 	~CSharedFileList();
 	CSharedFileList(const CSharedFileList&) = delete;
+	CSharedFileList& operator=(const CSharedFileList&) = delete;
 
 	void	SendListToServer();
 	void	Reload();

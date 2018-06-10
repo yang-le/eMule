@@ -1347,8 +1347,6 @@ BEGIN
     IDS_VERSION             "バージョン"
     IDS_PASTE               "貼り付け"
     IDS_A4AF                "ソースハンドリング"
-    IDS_MOBILEMULE          "モバイルMule"
-    IDS_ENABLEMM            "モバイルeMuleを使用する"
     IDS_AUTOCAT_LABEL       "自動的に分類する(パターンは「|」で区切ります)"
     IDS_SHOWEXTSETTINGS     "追加オプションを表示する(高度モード)"
     IDS_TREEOPTIONS_TRUE    "真"
@@ -1369,13 +1367,10 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "eMuleインストールディレクトリを一時ディレクトリとして設定することはできません"
     IDS_WRN_INCTEMP_SAME    "ダウンロードディレクトリと一時ディレクトリが同じであってはなりません"
-    IDS_MMFAILED            "モバイルeMuleソケットの作成に失敗しました!"
-    IDS_MMSTARTED           "モバイルMuleサーバーをポート%uで起動しました。プロトコルバージョン: %s"
     IDS_SHOWDWLPERCENTAGE   "進行バー上でダウンロードの進行状況を表示する"
     IDS_TBN_ONNEWDOWNLOAD   "ダウンロード追加"
     IDS_ARTIST              "アーティスト"
     IDS_ALBUM               "アルバム"
-    IDS_MMGUIDELINK         "モバイルeMuleガイド"
 END
 
 STRINGTABLE 
@@ -1474,7 +1469,6 @@ BEGIN
                             "%sから選択された言語DLLのダウンロード・インストール作業に失敗しました!"
     IDS_ERR_BADFOLDER       "無効なフォルダ\nフォルダを作成できません。フォルダ名と位置を確認して下さい"
     IDS_AUTOREMOVEFD        "完了したダウンロードを自動クリア"
-    IDS_MM_BLOCK            "MobileMuleへのログインに3回失敗しました･･･10分間は全てのログイン試行がブロックされます!"
 END
 
 STRINGTABLE 
@@ -1500,7 +1494,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_MM_NEWUSER          "新規ユーザーがMobileMuleサーバーへのログインに成功しました"
     IDS_RADCLIENTS          "既知のクライアント"
     IDS_KADUDPPORTERR       "KadのUDPポートはeMuleの外部UDPポート又はサーバーUDPポートのどちらかと競合しています。ポートは%uに変更されました。"
     IDS_CONFIRM_FILEDELETE  "ディスクから選択したファイルを全て削除しますか?"

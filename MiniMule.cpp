@@ -246,7 +246,7 @@ BOOL CMiniMule::OnInitDialog()
 	if (m_strCurrentUrl.IsEmpty())
 	{
 		TCHAR szModulePath[MAX_PATH];
-		DWORD dwModPathLen = GetModuleFileName(AfxGetResourceHandle(), szModulePath, _countof(szModulePath));
+		DWORD dwModPathLen = ::GetModuleFileName(AfxGetResourceHandle(), szModulePath, _countof(szModulePath));
 		if (dwModPathLen != 0 && dwModPathLen < _countof(szModulePath))
 		{
 			m_strCurrentUrl = CreateFilePathUrl(szModulePath, INTERNET_SCHEME_RES);
@@ -423,7 +423,7 @@ void CMiniMule::UpdateContent(UINT uUpDatarate, UINT uDownDatarate)
 		}
 
 		TCHAR szModulePath[MAX_PATH];
-		DWORD dwModPathLen = GetModuleFileName(AfxGetResourceHandle(), szModulePath, _countof(szModulePath));
+		DWORD dwModPathLen = ::GetModuleFileName(AfxGetResourceHandle(), szModulePath, _countof(szModulePath));
 		if (dwModPathLen != 0 && dwModPathLen < _countof(szModulePath))
 		{
 			CComPtr<IHTMLImgElement> elm;
@@ -527,7 +527,7 @@ void CMiniMule::OnDocumentComplete(LPDISPATCH pDisp, LPCTSTR pszUrl)
 	if (m_bResolveImages)
 	{
 		TCHAR szModulePath[MAX_PATH];
-		DWORD dwModPathLen = GetModuleFileName(AfxGetResourceHandle(), szModulePath, _countof(szModulePath));
+		DWORD dwModPathLen = ::GetModuleFileName(AfxGetResourceHandle(), szModulePath, _countof(szModulePath));
 		if (dwModPathLen != 0 && dwModPathLen < _countof(szModulePath))
 		{
 			CString strFilePathUrl(CreateFilePathUrl(szModulePath, INTERNET_SCHEME_RES));

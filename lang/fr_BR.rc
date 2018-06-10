@@ -1277,8 +1277,6 @@ BEGIN
 	IDS_VERSION	"Stumm"
 	IDS_PASTE	"Pegañ"
 	IDS_A4AF	"Merañs an orinoù"
-	IDS_MOBILEMULE	"MobileMule"
-	IDS_ENABLEMM	"Gweredekaat MobileMule"
 	IDS_AUTOCAT_LABEL	"Merkañ emgfre d'ur rummad (dispartiañ ar gwiskadurioù gant |)"
 	IDS_SHOWEXTSETTINGS	"Diskouez muioc'h a reoliñ (Reoliñ eeun kempleshoc'h)"
 	IDS_TREEOPTIONS_TRUE	"Gwir"
@@ -1297,13 +1295,10 @@ BEGIN
 	IDS_WRN_INCFILE_RESERVED	"Ret eo bezañ lec'hiet an teuliad evit ar restroù pellgarget e-barzh ur c'havlec'h disheñvel diouzh hini staliañ eMule."
 	IDS_WRN_TEMPFILES_RESERVED	"Ret eo bezañ lec'hiet an teuliad evit ar restroù dibadus e-barzh ur c'havlec'h disheñvel diouzh hini staliañ eMule."
 	IDS_WRN_INCTEMP_SAME	"Ret eo bezañ disheñvel an teuliad evit ar restroù dibadus diouzh hini ar restroù pellgarget."
-	IDS_MMFAILED	"Fazi o sevel ar socket MobileMule!"
-	IDS_MMSTARTED	"Servijer MobileMule loc'het war ar porzh %u. Stumm ar protokol: %s"
 	IDS_SHOWDWLPERCENTAGE	"Diskouez an % eus an araokadenn er varrenn greskaat"
 	IDS_TBN_ONNEWDOWNLOAD	"Pellgargañ ouzhpennet"
 	IDS_ARTIST	"Aozer"
 	IDS_ALBUM	"Albom"
-	IDS_MMGUIDELINK	"Levr-henchañ MobileMule"
 END
 
 STRINGTABLE FIXED IMPURE 
@@ -1400,12 +1395,10 @@ BEGIN
 	IDS_ERR_FAILEDDOWNLOADLANG	"Fazi o pellgargañ ha fazi o staliañ ar yezh dibabet adalek %s!"
 	IDS_ERR_BADFOLDER	"Kavlec'h direizh.\nN'haller ket sevel ar c'havlec'h. Gwiriit e anv hag e lec'hiadur."
 	IDS_AUTOREMOVEFD	"Diverkañ ar pellgargañ kaset a-benn ent-emgefre"
-	IDS_MM_BLOCK	"3 fazi dilesa da MobileMule enrollet - harpet e vo pep arnodenn nevez e-pad 10 mun !"
 END
 
 STRINGTABLE FIXED IMPURE 
 BEGIN
-	IDS_MM_NEWUSER	"Dilesa an implijour nevez a zo bet kaset a-benn mat gant ar servijer MobileMule"
 	IDS_RADCLIENTS	"adalek an ostizien anavezet"
 	IDS_KADUDPPORTERR			 "Ur c'henniñv a zo etre porzh UDP Kad ha porzh UDP eMule pe porzh UDP Servijeroù. Kemmet eo bet ar porzh e %u."
 	IDS_CONFIRM_FILEDELETE	"Ha fellout a ra deoc'h dilamet diouzh ar gantenn pep restr diuzet ?"
@@ -1429,7 +1422,7 @@ BEGIN
 	IDS_TEXTLABELS	"Skritelligoù testenn"
 	IDS_ENABLETEXTLABELS	"dindan an arlun"
 	IDS_CUSTOMIZETOOLBAR	"Personelaat ar varrenn ostilhoù"
-	IDS_MINBITRATE	"Dibun izel. [kBit/e]"
+	IDS_MINBITRATE	"Dibun izel. [kbit/e]"
 	IDS_KAD_RECHECKFW	"Gwiriañ an harz-tan en-dro"
 	IDS_SHAREDTITLE	"Eskemmoù ED2K|Kad"
 	IDS_FIREWALLED	"A-dreñv d'an harz-tan"

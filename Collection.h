@@ -16,16 +16,10 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #pragma once
 #include "MapKey.h"
-#pragma warning(push)
-#pragma warning(disable:4516) // access-declarations are deprecated; member using-declarations provide a better alternative
-#pragma warning(disable:4244) // conversion from 'type1' to 'type2', possible loss of data
-#pragma warning(disable:4100) // unreferenced formal parameter
-#pragma warning(disable:4702) // unreachable code
 #include <cryptopp/rsa.h>
 #include <cryptopp/base64.h>
 #include <cryptopp/osrng.h>
 #include <cryptopp/files.h>
-#pragma warning(pop)
 
 #define COLLECTION_FILEEXTENSION	_T(".emulecollection")
 
@@ -43,6 +37,7 @@ public:
 	explicit CCollection(const CCollection* pCollection);
 	~CCollection();
 	CCollection(const CCollection&) = delete;
+	CCollection& operator=(const CCollection&) = delete;
 	bool InitCollectionFromFile(const CString& sFilePath, CString sFileName);
 	CCollectionFile* AddFileToCollection(CAbstractFile* pAbstractFile, bool bCreateClone);
 	void RemoveFileFromCollection(CAbstractFile* pAbstractFile);

@@ -164,7 +164,7 @@ void CDownloadClientsCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	CRect cur_rec(lpDrawItemStruct->rcItem);
 	CRect rcClient;
 	GetClientRect(&rcClient);
-	const CUpDownClient *client = (CUpDownClient *)lpDrawItemStruct->itemData;
+	const CUpDownClient *client = reinterpret_cast<CUpDownClient *>(lpDrawItemStruct->itemData);
 
 	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
 	int iCount = pHeaderCtrl->GetItemCount();
@@ -361,7 +361,7 @@ void CDownloadClientsCtrl::OnLvnGetDispInfo(NMHDR *pNMHDR, LRESULT *pResult)
 		//
 		NMLVDISPINFO *pDispInfo = reinterpret_cast<NMLVDISPINFO*>(pNMHDR);
 		if (pDispInfo->item.mask & LVIF_TEXT) {
-			const CUpDownClient* pClient = reinterpret_cast<CUpDownClient*>(pDispInfo->item.lParam);
+			const CUpDownClient *pClient = reinterpret_cast<CUpDownClient *>(pDispInfo->item.lParam);
 			if (pClient != NULL)
 				GetItemDisplayText(pClient, pDispInfo->item.iSubItem, pDispInfo->item.pszText, pDispInfo->item.cchTextMax);
 		}
@@ -472,7 +472,7 @@ void CDownloadClientsCtrl::OnNmDblClk(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
 	int iSel = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
 	if (iSel != -1) {
-		CUpDownClient* client = (CUpDownClient*)GetItemData(iSel);
+		CUpDownClient *client = reinterpret_cast<CUpDownClient *>(GetItemData(iSel));
 		if (client){
 			CClientDetailDialog dialog(client, this);
 			dialog.DoModal();
@@ -484,7 +484,7 @@ void CDownloadClientsCtrl::OnNmDblClk(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 void CDownloadClientsCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 {
 	int iSel = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
-	const CUpDownClient* client = (iSel != -1) ? (CUpDownClient*)GetItemData(iSel) : NULL;
+	const CUpDownClient *client = reinterpret_cast<CUpDownClient *>(iSel != -1 ? GetItemData(iSel) : NULL);
 	const bool is_ed2k = client && client->IsEd2kClient();
 
 	CTitleMenu ClientMenu;
@@ -515,7 +515,7 @@ BOOL CDownloadClientsCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 
 	int iSel = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
 	if (iSel != -1){
-		CUpDownClient* client = (CUpDownClient*)GetItemData(iSel);
+		CUpDownClient *client = reinterpret_cast<CUpDownClient *>(GetItemData(iSel));
 		switch (wParam){
 			case MP_SHOWLIST:
 				client->RequestSharedFileList();
@@ -589,17 +589,17 @@ void CDownloadClientsCtrl::ShowSelectedUserDetails()
 	POINT point;
 	::GetCursorPos(&point);
 	CPoint p = point;
-    ScreenToClient(&p);
-    int it = HitTest(p);
-    if (it == -1)
+	ScreenToClient(&p);
+	int it = HitTest(p);
+	if (it == -1)
 		return;
 
 	SetItemState(-1, 0, LVIS_SELECTED);
 	SetItemState(it, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
 	SetSelectionMark(it);   // display selection mark correctly!
 
-	CUpDownClient* client = (CUpDownClient*)GetItemData(GetSelectionMark());
-	if (client){
+	CUpDownClient *client = reinterpret_cast<CUpDownClient *>(GetItemData(GetSelectionMark()));
+	if (client) {
 		CClientDetailDialog dialog(client, this);
 		dialog.DoModal();
 	}

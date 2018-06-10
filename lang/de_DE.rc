@@ -883,12 +883,12 @@ BEGIN
                             "Die Datei emfriends.met ist ungültig oder fehlerhaft!"
     IDS_ERR_READEMFRIENDS   "Unbekannter Fehler trat auf, während des Lesens der Datei emfriends.met: %s"
     IDS_ERR_KNOWNSERVERINFOREC "Unbekannte Serverinformation empfangen!"
-    IDS_WIZ_DOWN            "Down (kBit/s)" //!
+    IDS_WIZ_DOWN            "Down (kbit/s)" //!
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_WIZ_UP              "Up (kBit/s)"  //!
+    IDS_WIZ_UP              "Up (kbit/s)"  //!
     IDS_SELECT_INCOMINGDIR  "Wähle einen Ziel-Ordner für fertige Downloads!"
     IDS_SELECT_TEMPDIR      "Wähle einen Ordner für die temporären Dateien aus!"
     IDS_PRIOAUTO            "Auto"				//!
@@ -1287,8 +1287,6 @@ BEGIN
                             "UploadSpeedSense: Tracerouting zu oft fehlgeschlafen. UploadSpeedSense wird deaktiviert."
     IDS_USS_STARTING        "UploadSpeedSense: Vorbereitungen beendet. Regelung der Uploadgeschwindigkeit wird gestartet. (erste 60 Sekunden im schnellen Reaktionsmodus)"
     IDS_A4AF                "Quellen-Kontrolle"
-    IDS_MOBILEMULE          "MobileMule" //!
-    IDS_ENABLEMM            "MobileMule aktivieren"
     IDS_AUTOCAT_LABEL       "Autom. Kategorien-Zuweisung ( | trennt Muster)"
     IDS_SHOWEXTSETTINGS     "Zusätzliche Kontrollen anzeigen (für Fortgeschrittene)"
     IDS_TREEOPTIONS_TRUE    "Wahr"
@@ -1301,7 +1299,7 @@ BEGIN
     IDS_HYPERTEXT_FONT_HINT "Schriftart für Server-, Nachrichten- und IRC-Fenster"
     IDS_SELECT_FONT         "Schriftart wählen"
     IDS_SERVER_LIMITS       "Soft- / Hard- Dateilimits"
-    IDS_KBITSSEC            "kBit/s" //!
+    IDS_KBITSSEC            "kbit/s" //!
     IDS_KBYTESSEC           "kByte/s" //!
     IDS_ERR_CREATE_DIR      "Verzeichnis %s konnte nicht erstellt werden ""%s"" - %s"
     IDS_WRN_INCFILE_RESERVED 
@@ -1309,8 +1307,6 @@ BEGIN
     IDS_WRN_TEMPFILES_RESERVED 
                             "Das Temporär-Verzeichnis darf kein eMule-Installations-Verzeichnis sein."
     IDS_WRN_INCTEMP_SAME    "Eingangs- und Temporärverzeichnis dürfen nicht identisch sein."
-    IDS_MMFAILED            "MobileMule Socket konnte nicht erstellt werden!"
-    IDS_MMSTARTED           "MobileMule Server gestartet auf Port %u. Protokollversion: %s"
     IDS_SHOWDWLPERCENTAGE   "Zeige Fortschrittsprozent von Downloads im Statusbalken"
     IDS_TBN_ONNEWDOWNLOAD   "Download hinzugefügt"
     IDS_ARTIST              "Künstler"
@@ -1319,7 +1315,6 @@ END
 STRINGTABLE 
 BEGIN
     IDS_ALBUM               "Album" //!
-    IDS_MMGUIDELINK         "MobileMule Einführung"
     IDS_CD_UPLOADREQ        "Angefordert zum Upload:"
     IDS_SETTINGCHANGED_RESTART 
                             "Damit die geänderten Einstellungen greifen, muss eMule neu gestartet werden!"
@@ -1414,8 +1409,6 @@ BEGIN
                             "Download und Installation der ausgewählten Sprache fehlgeschlagen (Download von:%s)!"
     IDS_ERR_BADFOLDER       "Ungültiges Verzeichnis.\nDas Verzeichnis kann nicht erstellt werden. Bitte prüfe den Namen!"
     IDS_AUTOREMOVEFD        "Beendete Downloads aus Liste entfernen"
-    IDS_MM_BLOCK            "3 fehlgeschlagene Loginversuche bei MobileMule aufgetreten - weitere Versuche werden für 10 Minuten blockiert!"
-    IDS_MM_NEWUSER          "Neuer Nutzer hat sich erfolgreich in den MobileMule-Server eingeloggt"
 END
 
 STRINGTABLE 
@@ -1423,7 +1416,7 @@ BEGIN
     IDS_TEXTLABELS          "Textoptionen"
     IDS_ENABLETEXTLABELS    "Symboltitel anzeigen"
     IDS_CUSTOMIZETOOLBAR    "Toolbar anpassen..."
-    IDS_MINBITRATE          "min. Bitrate [kBit/s]" //!
+    IDS_MINBITRATE          "min. Bitrate [kbit/s]" //!
     IDS_KAD_RECHECKFW       "Firewall neu prüfen"
     IDS_SHAREDTITLE         "Freigegeben eD2K|Kad"
     IDS_FIREWALLED          "Firewalled" //!

@@ -59,7 +59,7 @@ public:
 	~CSearchList();
 
 	void	Clear();
-	void	NewSearch(CSearchListCtrl* pWnd, const CStringA& strResultFileType, uint32 nSearchID, ESearchType eSearchType, CString strSearchExpression, bool bMobilMuleSearch = false);
+	void	NewSearch(CSearchListCtrl* pWnd, const CStringA& strResultFileType, uint32 nSearchID, ESearchType eSearchType, CString strSearchExpression);
 	UINT	ProcessSearchAnswer(const uchar* in_packet, uint32 size, CUpDownClient* Sender, bool* pbMoreResultsAvailable, LPCTSTR pszDirectory = NULL);
 	UINT	ProcessSearchAnswer(const uchar* in_packet, uint32 size, bool bOptUTF8, uint32 nServerIP, uint16 nServerPort, bool* pbMoreResultsAvailable);
 	UINT	ProcessUDPSearchAnswer(CFileDataIO& packet, bool bOptUTF8, uint32 nServerIP, uint16 nServerPort);
@@ -89,13 +89,11 @@ public:
 	void	RecalculateSpamRatings(uint32 nSearchID, bool bExpectHigher, bool bExpectLower, bool bUpdate);
 	void	SaveSpamFilter();
 
-	UINT GetFoundFiles(uint32 searchID) const {
-		UINT returnVal = 0;
-		VERIFY( m_foundFilesCount.Lookup(searchID, returnVal) );
-		return returnVal;
+	UINT GetFoundFiles(uint32 searchID) const
+	{
+		UINT returnVal;
+		return m_foundFilesCount.Lookup(searchID, returnVal) ? returnVal : 0;
 	}
-	// mobilemule
-	CSearchFile*	DetachNextFile(uint32 nSearchID);
 protected:
 	SearchList*		GetSearchListForID(uint32 nSearchID);
 	uint32			GetSpamFilenameRatings(const CSearchFile* pSearchFile, bool bMarkAsNoSpam);
@@ -109,11 +107,10 @@ private:
 	CMap<uint32, uint32, UINT, UINT> m_foundSourcesCount;
 	CMap<uint32, uint32, UINT, UINT> m_ReceivedUDPAnswersCount;
 	CMap<uint32, uint32, UINT, UINT> m_RequestedUDPAnswersCount;
-	CSearchListCtrl* outputwnd;
+	CSearchListCtrl *outputwnd;
 	CString			m_strResultFileType;
 
 	uint32			m_nCurED2KSearchID;
-	bool			m_MobilMuleSearch;
 
 	// spamfilter
 	CStringArray							m_astrSpamCheckCurSearchExp;
@@ -125,6 +122,6 @@ private:
 	CArray<uint64>							m_aui64KnownSpamSizes;
 	CArray<uint32, uint32>					m_aCurED2KSentRequestsIPs;
 	CArray<uint32, uint32>					m_aCurED2KSentReceivedIPs;
-	bool									m_bSpamFilterLoaded;
 	CMap<uint32, uint32, UDPServerRecord*, UDPServerRecord*>	m_aUDPServerRecords;
+	bool									m_bSpamFilterLoaded;
 };
