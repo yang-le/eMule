@@ -146,8 +146,8 @@ void CAbstractFile::AddTagUnique(CTag *pTag)
 {
 	for (INT_PTR i = taglist.GetSize(); --i >= 0;) {
 		const CTag *pCurTag = taglist[i];
-		if (((pCurTag->GetNameID() != 0 && pCurTag->GetNameID() == pTag->GetNameID())
-			|| (pCurTag->GetName() != NULL && pTag->GetName() != NULL && CmpED2KTagName(pCurTag->GetName(), pTag->GetName()) == 0)
+		if ((	(pCurTag->GetNameID() != 0 && pCurTag->GetNameID() == pTag->GetNameID())
+			 ||	(pCurTag->GetName() != NULL && pTag->GetName() != NULL && CmpED2KTagName(pCurTag->GetName(), pTag->GetName()) == 0)
 			)
 			&& pCurTag->GetType() == pTag->GetType())
 		{

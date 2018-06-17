@@ -62,7 +62,7 @@
 #define MAX_CLIENTCONNECTIONTRY	2
 #define CONNECTION_TIMEOUT		SEC2MS(40)	//40 secs - set his lower if you want less connections at once, set it higher if you have enough sockets (edonkey has its own timout too, so a very high value won't effect this)
 #define	FILEREASKTIME			MIN2MS(29)	//29 mins
-#define SERVERREASKTIME			MIN2MS(15)	//15 mins - don't set this too low, it wont speed up anything, but it could kill emule or your internetconnection
+#define SERVERREASKTIME			MIN2MS(15)	//15 mins - don't set this too low, it wont speed up anything, but it could kill emule or your internet connection
 #define UDPSERVERREASKTIME		MIN2MS(30)	//30 mins
 #define	MAX_SERVERFAILCOUNT		10
 #define SOURCECLIENTREASKS		MIN2MS(40)	//40 mins

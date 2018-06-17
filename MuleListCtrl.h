@@ -114,7 +114,8 @@ public:
 	}
 
 	// Sorts the list
-	BOOL SortItems(PFNLVCOMPARE pfnCompare, DWORD_PTR dwData) {
+	BOOL SortItems(PFNLVCOMPARE pfnCompare, DWORD_PTR dwData)
+	{
 		return CListCtrl::SortItems(pfnCompare, dwData);
 	}
 
@@ -134,10 +135,10 @@ public:
 	int GetItemCount() const { return static_cast<int>(m_Params.GetCount()); };
 
 	enum ArrowType {
-		arrowDown		= IDB_DOWN,
-		arrowUp			= IDB_UP,
+		arrowDown = IDB_DOWN,
+		arrowUp = IDB_UP,
 		arrowDoubleDown = IDB_DOWN2X,
-		arrowDoubleUp	= IDB_UP2X
+		arrowDoubleUp = IDB_UP2X
 	};
 
 	int	GetSortType(ArrowType at);
@@ -157,38 +158,41 @@ public:
 	void	DoFind(int iStartItem, int iDirection /*1=down, 0 = up*/, BOOL bShowError);
 	void	DoFindNext(BOOL bShowError);
 
-	enum EUpdateMode {
+	enum EUpdateMode
+	{
 		lazy,
 		direct,
 		none
 	};
-	enum EUpdateMode SetUpdateMode(enum EUpdateMode eUpdateMode);
+	EUpdateMode SetUpdateMode(EUpdateMode eUpdateMode);
 	void SetAutoSizeWidth(int iAutoSizeWidth);
 
 	int InsertColumn(int nCol, LPCTSTR lpszColumnHeading, int nFormat = LVCFMT_LEFT, int nWidth = -1, int nSubItem = -1, bool bHiddenByDefault = false);
 
 	HIMAGELIST ApplyImageList(HIMAGELIST himl);
 	void AutoSelectItem();
-	void SetSkinKey(LPCTSTR pszKey) {
+	void SetSkinKey(LPCTSTR pszKey)
+	{
 		m_strSkinKey = pszKey;
 	}
-	const CString &GetSkinKey() const {
+	const CString &GetSkinKey() const
+	{
 		return m_strSkinKey;
 	}
 
 protected:
 	virtual void PreSubclassWindow();
-	virtual BOOL OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult);
-	virtual BOOL OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult);
-	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	virtual BOOL OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT *pResult);
+	virtual BOOL OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRESULT *pResult);
+	virtual BOOL PreTranslateMessage(MSG *pMsg);
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg void DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct);
 	afx_msg void MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct);
-	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+	afx_msg BOOL OnEraseBkgnd(CDC *pDC);
 	afx_msg void OnSysColorChange();
-	afx_msg void OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnLvnGetInfoTip(LPNMHDR pNMHDR, LRESULT *pResult);
 
 	int UpdateLocation(int iItem);
 	int MoveItem(int iOldIndex, int iNewIndex);
@@ -196,11 +200,12 @@ protected:
 	void DrawFocusRect(CDC *pDC, const CRect &rcItem, BOOL bItemFocused, BOOL bCtrlFocused, BOOL bItemSelected);
 	void InitItemMemDC(CMemoryDC *dc, LPDRAWITEMSTRUCT lpDrawItemStruct, BOOL &bCtrlFocused);
 
-	static inline bool HaveIntersection(const CRect &rc1, const CRect &rc2) {
-        return (rc1.left   < rc2.right  &&
-                rc1.right  > rc2.left   &&
-                rc1.top    < rc2.bottom &&
-                rc1.bottom > rc2.top);
+	static inline bool HaveIntersection(const CRect &rc1, const CRect &rc2)
+	{
+		return (rc1.left  < rc2.right
+			&& rc1.right  > rc2.left
+			&& rc1.top    < rc2.bottom
+			&& rc1.bottom > rc2.top);
 	}
 
 	CString         m_Name;
@@ -241,7 +246,7 @@ protected:
 	void OnFindPrev();
 
 private:
-	static int	IndexToOrder(CHeaderCtrl* pHeader, int iIndex);
+	static int	IndexToOrder(CHeaderCtrl *pHeader, int iIndex);
 
 	struct MULE_COLUMN {
 		int iWidth;
@@ -252,10 +257,11 @@ private:
 	int          m_iColumnsTracked;
 	MULE_COLUMN *m_aColumns;
 
-	int GetHiddenColumnCount() const {
+	int GetHiddenColumnCount() const
+	{
 		int iHidden = 0;
-		for(int i = 0; i < m_iColumnsTracked; i++)
-			if(m_aColumns[i].bHidden)
+		for (int i = 0; i < m_iColumnsTracked; i++)
+			if (m_aColumns[i].bHidden)
 				iHidden++;
 		return iHidden;
 	}
@@ -266,9 +272,10 @@ private:
 	int m_iRedrawCount;
 	CList<DWORD_PTR, DWORD_PTR> m_Params;
 
-	DWORD_PTR GetParamAt(POSITION pos, int iPos) {
+	DWORD_PTR GetParamAt(POSITION pos, int iPos)
+	{
 		DWORD_PTR lParam = m_Params.GetAt(pos);
-		if(lParam == 0xFEEBDEEF) //same as MLC_MAGIC!
+		if (lParam == 0xFEEBDEEF) //same as MLC_MAGIC!
 			m_Params.SetAt(pos, lParam = CListCtrl::GetItemData(iPos));
 		return lParam;
 	}
@@ -276,4 +283,4 @@ private:
 	CList<int> m_liDefaultHiddenColumns;
 };
 
-//void GetContextMenuPosition(CListCtrl& lv, CPoint& point);
+//void GetContextMenuPosition(CListCtrl &lv, CPoint &point);

@@ -38,7 +38,7 @@ extern LPCWSTR g_awszInvKadKeywordChars;
 
 namespace Kademlia
 {
-	void deleteTagListEntries(TagList* plistTag);
+	void deleteTagListEntries(TagList *plistTag);
 
 	class CRoutingZone;
 	class CKadClientSearcher;
@@ -52,10 +52,10 @@ namespace Kademlia
 			static void StopAllSearches();
 			// Search for a particular file
 			// Will return unique search id, returns zero if already searching for this file.
-			static CSearch* PrepareLookup(uint32 uType, bool bStart, const CUInt128 &uID);
+			static CSearch *PrepareLookup(uint32 uType, bool bStart, const CUInt128 &uID);
 			// Will return unique search id, returns zero if already searching for this keyword.
-			static CSearch* PrepareFindKeywords(LPCWSTR szKeyword, UINT uSearchTermsSize, LPBYTE pucSearchTermsData);
-			static bool StartSearch(CSearch* pSearch);
+			static CSearch *PrepareFindKeywords(LPCWSTR szKeyword, UINT uSearchTermsSize, LPBYTE pucSearchTermsData);
+			static bool StartSearch(CSearch *pSearch);
 			static void ProcessResponse(const CUInt128 &uTarget, uint32 uFromIP, uint16 uFromPort, ContactList *plistResults);
 			static uint8 GetExpectedResponseContactCount(const CUInt128 &uTarget);
 			static void ProcessResult(const CUInt128 &uTarget, const CUInt128 &uAnswer, TagList *plistInfo, uint32 uFromIP, uint16 uFromPort);
@@ -70,8 +70,8 @@ namespace Kademlia
 			static void SetNextSearchID(uint32 uNextID)				{m_uNextID = uNextID;}
 		private:
 			static void FindNode(const CUInt128 &uID, bool bComplete);
-			static bool FindNodeSpecial(const CUInt128 &uID, CKadClientSearcher* pRequester);
-			static void CancelNodeSpecial(CKadClientSearcher* pRequester);
+			static bool FindNodeSpecial(const CUInt128 &uID, CKadClientSearcher *pRequester);
+			static void CancelNodeSpecial(CKadClientSearcher *pRequester);
 			static void JumpStart();
 			static uint32 m_uNextID;
 			static SearchMap m_mapSearches;

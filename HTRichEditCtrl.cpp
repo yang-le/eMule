@@ -75,7 +75,7 @@ CHTRichEditCtrl::~CHTRichEditCtrl()
 
 BOOL CHTRichEditCtrl::Create(DWORD dwStyle, const RECT & rect, CWnd *parent, UINT nID)
 {
-	return ((CWnd *)this)->Create(RICHEDIT_CLASS, NULL, dwStyle, rect, parent, nID);
+	return static_cast<CWnd *>(this)->Create(RICHEDIT_CLASS, NULL, dwStyle, rect, parent, nID);
 }
 
 void CHTRichEditCtrl::Localize()
@@ -87,15 +87,15 @@ void CHTRichEditCtrl::Init(LPCTSTR pszTitle, LPCTSTR pszSkinKey)
 	SetProfileSkinKey(pszSkinKey);
 	SetTitle(pszTitle);
 
-	VERIFY( SendMessage(EM_SETUNDOLIMIT, 0, 0) == 0 );
+	VERIFY(SendMessage(EM_SETUNDOLIMIT, 0, 0) == 0);
 	int iMaxLogBuff = thePrefs.GetMaxLogBuff();
 	if (afxIsWin95())
 		LimitText(iMaxLogBuff > 0xFFFF ? 0xFFFF : iMaxLogBuff);
 	else
-		LimitText(iMaxLogBuff ? iMaxLogBuff : 128*1024);
+		LimitText(iMaxLogBuff ? iMaxLogBuff : 128 * 1024);
 	m_iLimitText = GetLimitText();
 
-	VERIFY( GetSelectionCharFormat(m_cfDefault) );
+	VERIFY(GetSelectionCharFormat(m_cfDefault));
 
 	// prevent the RE control to change the font height within single log lines (may happen with some Unicode chars)
 	LRESULT dwLangOpts = SendMessage(EM_GETLANGOPTIONS);
@@ -105,22 +105,16 @@ void CHTRichEditCtrl::Init(LPCTSTR pszTitle, LPCTSTR pszSkinKey)
 
 void CHTRichEditCtrl::EnableSmileys(bool bEnable)
 {
-	if (bEnable)
-	{
-		if (!m_bEnableSmileys)
-		{
+	if (bEnable) {
+		if (!m_bEnableSmileys) {
 			m_bEnableSmileys = true;
-			sm_iSmileyClients++;
+			++sm_iSmileyClients;
 		}
-	}
-	else
-	{
-		if (m_bEnableSmileys)
-		{
+	} else {
+		if (m_bEnableSmileys) {
 			m_bEnableSmileys = false;
-			sm_iSmileyClients--;
-			if (sm_iSmileyClients <= 0)
-			{
+			--sm_iSmileyClients;
+			if (sm_iSmileyClients <= 0) {
 				PurgeSmileyCaches();
 				sm_iSmileyClients = 0;
 			}
@@ -135,9 +129,9 @@ void CHTRichEditCtrl::PurgeSmileyCaches()
 		void *pValue;
 		sm_aSmileyBitmaps.GetNextAssoc(pos, strKey, pValue);
 #ifdef USE_METAFILE
-		VERIFY( DeleteEnhMetaFile((HENHMETAFILE)pValue) );
+		VERIFY(DeleteEnhMetaFile((HENHMETAFILE)pValue));
 #else
-		VERIFY( DeleteObject((HBITMAP)pValue) );
+		VERIFY(DeleteObject((HBITMAP)pValue));
 #endif
 	}
 	sm_aSmileyBitmaps.RemoveAll();
@@ -165,12 +159,10 @@ int CHTRichEditCtrl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 LRESULT CHTRichEditCtrl::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) {
-		case WM_ERASEBKGND:
-			if (m_bNoPaint)
-				return TRUE;
-		case WM_PAINT:
-			if (m_bNoPaint)
-				return TRUE;
+	case WM_ERASEBKGND:
+	case WM_PAINT:
+		if (m_bNoPaint)
+			return TRUE;
 	}
 	return CRichEditCtrl::WindowProc(message, wParam, lParam);
 }
@@ -202,19 +194,16 @@ COLORREF GetLogLineColor(UINT eMsgType)
 		return thePrefs.m_crLogWarning;
 	if (eMsgType == LOG_SUCCESS)
 		return thePrefs.m_crLogSuccess;
-	ASSERT( eMsgType == LOG_INFO );
+	ASSERT(eMsgType == LOG_INFO);
 	return CLR_DEFAULT;
 }
 
 void CHTRichEditCtrl::FlushBuffer()
 {
-	if (m_astrBuff.GetSize() > 0) // flush buffer
-	{
-		for (int i = 0; i < m_astrBuff.GetSize(); i++)
-		{
-			const CString& rstrLine = m_astrBuff[i];
-			if (!rstrLine.IsEmpty())
-			{
+	if (m_astrBuff.GetSize() > 0) { // flush buffer
+		for (int i = 0; i < m_astrBuff.GetSize(); ++i) {
+			const CString &rstrLine = m_astrBuff[i];
+			if (!rstrLine.IsEmpty()) {
 				if ((UINT)rstrLine[0] < 8)
 					AddLine((LPCTSTR)rstrLine + 1, rstrLine.GetLength() - 1, false, GetLogLineColor((UINT)rstrLine[0]));
 				else
@@ -239,11 +228,9 @@ void CHTRichEditCtrl::AddEntry(LPCTSTR pszMsg)
 
 void CHTRichEditCtrl::Add(LPCTSTR pszMsg, int iLen)
 {
-	if (m_hWnd == NULL){
-		CString strLine(pszMsg);
-		m_astrBuff.Add(strLine);
-	}
-	else{
+	if (m_hWnd == NULL)
+		m_astrBuff.Add(CString(pszMsg));
+	else {
 		FlushBuffer();
 		AddLine(pszMsg, iLen);
 	}
@@ -326,8 +313,7 @@ void CHTRichEditCtrl::OnEnMaxtext()
 
 void CHTRichEditCtrl::ScrollToLastLine(bool bForceLastLineAtBottom)
 {
-	if (bForceLastLineAtBottom)
-	{
+	if (bForceLastLineAtBottom) {
 		int iFirstVisible = GetFirstVisibleLine();
 		if (iFirstVisible > 0)
 			LineScroll(-iFirstVisible);
@@ -335,8 +321,7 @@ void CHTRichEditCtrl::ScrollToLastLine(bool bForceLastLineAtBottom)
 
 	// WM_VSCROLL does not work correctly under Win98 (or older version of comctl.dll)
 	SendMessage(WM_VSCROLL, SB_BOTTOM);
-	if (afxIsWin95())
-	{
+	if (afxIsWin95()) {
 		// older version of comctl.dll seem to need this to properly update the display
 		int iPos = GetScrollPos(SB_VERT);
 		SendMessage(WM_VSCROLL, MAKELONG(SB_THUMBPOSITION, iPos));
@@ -348,8 +333,7 @@ void CHTRichEditCtrl::ScrollToFirstLine()
 {
 	// WM_VSCROLL does not work correctly under Win98 (or older version of comctl.dll)
 	SendMessage(WM_VSCROLL, SB_TOP);
-	if (afxIsWin95())
-	{
+	if (afxIsWin95()) {
 		// older version of comctl.dll seem to need this to properly update the display
 		int iPos = GetScrollPos(SB_VERT);
 		SendMessage(WM_VSCROLL, MAKELONG(SB_THUMBPOSITION, iPos));
@@ -362,40 +346,33 @@ void CHTRichEditCtrl::AddString(int nPos, LPCTSTR pszString, bool bLink, COLORRE
 	bool bRestoreFormat = false;
 	m_bEnErrSpace = false;
 	SetSel(nPos, nPos);
-	if (bLink)
-	{
+	if (bLink) {
 		CHARFORMAT2 cf = {};
 		cf.cbSize = (UINT)sizeof cf;
 		GetSelectionCharFormat(cf);
 		cf.dwMask |= CFM_LINK;
 		cf.dwEffects |= CFE_LINK;
 		SetSelectionCharFormat(cf);
-	}
-	else if (cr != CLR_DEFAULT || bk != CLR_DEFAULT || (mask & (CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE)) != 0)
-	{
+	} else if (cr != CLR_DEFAULT || bk != CLR_DEFAULT || (mask & (CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE)) != 0) {
 		CHARFORMAT2 cf = {};
 		cf.cbSize = (UINT)sizeof cf;
 		GetSelectionCharFormat(cf);
 
 		cf.dwMask |= CFM_COLOR;
-		if (cr == CLR_DEFAULT)
-		{
+		if (cr == CLR_DEFAULT) {
 			if (m_bDfltForeground)
 				cf.dwEffects |= CFE_AUTOCOLOR;
 			else {
-				ASSERT( m_crForeground != CLR_DEFAULT );
+				ASSERT(m_crForeground != CLR_DEFAULT);
 				cf.dwEffects &= ~CFE_AUTOCOLOR;
 				cf.crTextColor = m_crForeground;
 			}
-		}
-		else
-		{
+		} else {
 			cf.dwEffects &= ~CFE_AUTOCOLOR;
 			cf.crTextColor = cr;
 		}
 
-		if (bk == CLR_DEFAULT)
-		{
+		if (bk == CLR_DEFAULT) {
 			// Background color is a little different than foreground color. Even if the
 			// background color is set to a non-standard value (e.g. via skin), the
 			// CFE_AUTOBACKCOLOR can be used to get this value. The usage of this flag instead
@@ -404,17 +381,15 @@ void CHTRichEditCtrl::AddString(int nPos, LPCTSTR pszString, bool bLink, COLORRE
 			// text in the new color scheme better (e.g. the text is at least readable and
 			// not shown as black-on-black or white-on-white).
 			//if (m_bDfltBackground) {
-				cf.dwMask |= CFM_BACKCOLOR;
-				cf.dwEffects |= CFE_AUTOBACKCOLOR;
-			//}
-			//else {
-			//	ASSERT( m_crBackground != CLR_DEFAULT );
-			//	cf.dwEffects &= ~CFE_AUTOBACKCOLOR;
-			//	cf.crBackColor = m_crBackground;
-			//}
-		}
-		else
-		{
+			cf.dwMask |= CFM_BACKCOLOR;
+			cf.dwEffects |= CFE_AUTOBACKCOLOR;
+		//}
+		//else {
+		//	ASSERT( m_crBackground != CLR_DEFAULT );
+		//	cf.dwEffects &= ~CFE_AUTOBACKCOLOR;
+		//	cf.crBackColor = m_crBackground;
+		//}
+		} else {
 			cf.dwMask |= CFM_BACKCOLOR;
 			cf.dwEffects &= ~CFE_AUTOBACKCOLOR;
 			cf.crBackColor = bk;
@@ -439,9 +414,7 @@ void CHTRichEditCtrl::AddString(int nPos, LPCTSTR pszString, bool bLink, COLORRE
 
 		SetSelectionCharFormat(cf);
 		bRestoreFormat = true;
-	}
-	else if (m_bRestoreFormat)
-	{
+	} else if (m_bRestoreFormat) {
 		SetSelectionCharFormat(m_cfDefault);
 	}
 
@@ -458,16 +431,14 @@ void CHTRichEditCtrl::SafeAddLine(int nPos, LPCTSTR pszLine, int iLen, long& lSt
 	// EN_ERRSPACE and EN_MAXTEXT are not working for rich edit control (at least not same as for standard control),
 	// need to explicitly check the log buffer limit..
 	int iCurSize = nPos;
-	if (iCurSize + iLen >= m_iLimitText)
-	{
+	if (iCurSize + iLen >= m_iLimitText) {
 		bool bOldNoPaint = m_bNoPaint;
 		m_bNoPaint = true;
 		BOOL bIsVisible = IsWindowVisible();
 		if (bIsVisible)
 			SetRedraw(FALSE);
 
-		while (iCurSize > 0 && iCurSize + iLen > m_iLimitText)
-		{
+		while (iCurSize > 0 && iCurSize + iLen > m_iLimitText) {
 			// delete 1st line
 			int iLine0Len = LineLength(0) + 1; // add NL character
 			SetSel(0, iLine0Len);
@@ -485,8 +456,7 @@ void CHTRichEditCtrl::SafeAddLine(int nPos, LPCTSTR pszLine, int iLen, long& lSt
 		}
 
 		m_bNoPaint = bOldNoPaint;
-		if (bIsVisible && !m_bNoPaint)
-		{
+		if (bIsVisible && !m_bNoPaint) {
 			SetRedraw();
 			Invalidate();
 		}
@@ -494,8 +464,7 @@ void CHTRichEditCtrl::SafeAddLine(int nPos, LPCTSTR pszLine, int iLen, long& lSt
 
 	AddString(nPos, pszLine, bLink, cr, bk, mask);
 
-	if (m_bEnErrSpace)
-	{
+	if (m_bEnErrSpace) {
 		bool bOldNoPaint = m_bNoPaint;
 		m_bNoPaint = true;
 		BOOL bIsVisible = IsWindowVisible();
@@ -504,8 +473,7 @@ void CHTRichEditCtrl::SafeAddLine(int nPos, LPCTSTR pszLine, int iLen, long& lSt
 
 		// remove the first line as long as we are capable of adding the new line
 		int iSafetyCounter = 0;
-		while (m_bEnErrSpace && iSafetyCounter < 10)
-		{
+		while (m_bEnErrSpace && iSafetyCounter < 10) {
 			// delete the previous partially added line
 			SetSel(nPos, -1);
 			ReplaceSel(_T(""));
@@ -527,7 +495,7 @@ void CHTRichEditCtrl::SafeAddLine(int nPos, LPCTSTR pszLine, int iLen, long& lSt
 			nPos = GetWindowTextLength();
 			AddString(nPos, pszLine, bLink, cr, bk, mask);
 
-			if (m_bEnErrSpace && nPos == 0){
+			if (m_bEnErrSpace && nPos == 0) {
 				// should never happen: if we tried to add the line another time in the 1st line, there
 				// will be no chance to add the line at all -> avoid endless loop!
 				break;
@@ -535,8 +503,7 @@ void CHTRichEditCtrl::SafeAddLine(int nPos, LPCTSTR pszLine, int iLen, long& lSt
 			iSafetyCounter++; // never ever create an endless loop!
 		}
 		m_bNoPaint = bOldNoPaint;
-		if (bIsVisible && !m_bNoPaint)
-		{
+		if (bIsVisible && !m_bNoPaint) {
 			SetRedraw();
 			Invalidate();
 		}
@@ -568,9 +535,8 @@ void CHTRichEditCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	GetSel(lSelStart, lSelEnd);
 
 	// ugly, simulate a left click to get around the text cursor problem when right clicking.
-	if (point.x != -1 && point.y != -1 && lSelStart == lSelEnd)
-	{
-		ASSERT( GetStyle() & ES_NOHIDESEL ); // this works only if ES_NOHIDESEL is set
+	if (point.x != -1 && point.y != -1 && lSelStart == lSelEnd) {
+		ASSERT(GetStyle() & ES_NOHIDESEL); // this works only if ES_NOHIDESEL is set
 		CPoint ptMouse(point);
 		ScreenToClient(&ptMouse);
 		SendMessage(WM_LBUTTONDOWN, MK_LBUTTON, MAKELONG(ptMouse.x, ptMouse.y));
@@ -590,8 +556,7 @@ void CHTRichEditCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	menu.AppendMenu(MF_SEPARATOR);
 	menu.AppendMenu(MF_STRING | (m_bAutoScroll ? MF_CHECKED : MF_UNCHECKED), MP_AUTOSCROLL, GetResString(IDS_AUTOSCROLL));
 
-	if (point.x == -1 && point.y == -1)
-	{
+	if (point.x == -1 && point.y == -1) {
 		point.x = 16;
 		point.y = 32;
 		ClientToScreen(&point);
@@ -604,28 +569,26 @@ void CHTRichEditCtrl::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
 	m_bForceArrowCursor = false;
 
-	VERIFY( menu.DestroyMenu() );
+	VERIFY(menu.DestroyMenu());
 }
 
 BOOL CHTRichEditCtrl::OnCommand(WPARAM wParam, LPARAM /*lParam*/)
 {
-	switch (wParam)
-	{
-		case MP_COPYSELECTED:
-			CopySelectedItems();
-			break;
-		case MP_SELECTALL:
-			SelectAllItems();
-			break;
-		case MP_REMOVEALL:
-			Reset();
-			break;
-		case MP_SAVELOG:
-			SaveLog();
-			break;
-		case MP_AUTOSCROLL:
-			m_bAutoScroll = !m_bAutoScroll;
-			break;
+	switch (wParam) {
+	case MP_COPYSELECTED:
+		CopySelectedItems();
+		break;
+	case MP_SELECTALL:
+		SelectAllItems();
+		break;
+	case MP_REMOVEALL:
+		Reset();
+		break;
+	case MP_SAVELOG:
+		SaveLog();
+		break;
+	case MP_AUTOSCROLL:
+		m_bAutoScroll = !m_bAutoScroll;
 	}
 	return TRUE;
 }
@@ -635,27 +598,23 @@ bool CHTRichEditCtrl::SaveLog(LPCTSTR pszDefName)
 	bool bResult = false;
 	CString fname = pszDefName ? CString(pszDefName) : m_strTitle;
 	CFileDialog dlg(FALSE, _T("log"), (LPCTSTR)ValidFilename(fname), OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, _T("Log Files (*.log)|*.log||"), this, 0);
-	if (dlg.DoModal() == IDOK)
-	{
-		FILE* fp = _tfsopen(dlg.GetPathName(), _T("wb"), _SH_DENYWR);
-		if (fp)
-		{
+	if (dlg.DoModal() == IDOK) {
+		FILE *fp = _tfsopen(dlg.GetPathName(), _T("wb"), _SH_DENYWR);
+		if (fp) {
 			// write Unicode byte-order mark 0xFEFF
 			fputwc((wchar_t)0xFEFF, fp);
 
 			CString strText;
 			GetWindowText(strText);
 			fwrite(strText, sizeof(TCHAR), strText.GetLength(), fp);
-			if (ferror(fp)){
+			if (ferror(fp)) {
 				CString strError;
 				strError.Format(_T("Failed to write log file \"%s\" - %s"), (LPCTSTR)dlg.GetPathName(), _tcserror(errno));
 				AfxMessageBox(strError, MB_ICONERROR);
-			}
-			else
+			} else
 				bResult = true;
 			fclose(fp);
-		}
-		else{
+		} else {
 			CString strError;
 			strError.Format(_T("Failed to create log file \"%s\" - %s"), (LPCTSTR)dlg.GetPathName(), _tcserror(errno));
 			AfxMessageBox(strError, MB_ICONERROR);
@@ -668,8 +627,7 @@ CString CHTRichEditCtrl::GetLastLogEntry()
 {
 	CString strLog;
 	int iLastLine = GetLineCount() - 2;
-	if (iLastLine >= 0)
-	{
+	if (iLastLine >= 0) {
 		GetLine(iLastLine, strLog.GetBuffer(1024), 1024);
 		strLog.ReleaseBuffer();
 	}
@@ -695,51 +653,41 @@ void CHTRichEditCtrl::CopySelectedItems()
 
 void CHTRichEditCtrl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
-	if (nChar == 'A' && (GetKeyState(VK_CONTROL) & 0x8000))
-	{
+	if (nChar == 'A' && (GetKeyState(VK_CONTROL) & 0x8000)) //Ctrl is down
 		//////////////////////////////////////////////////////////////////
 		// Ctrl+A: Select all items
 		SelectAllItems();
-	}
-	else if (nChar == 'C' && (GetKeyState(VK_CONTROL) & 0x8000))
-	{
+	else if (nChar == 'C' && (GetKeyState(VK_CONTROL) & 0x8000)) //Ctrl is down
 		//////////////////////////////////////////////////////////////////
 		// Ctrl+C: Copy listview items to clipboard
 		CopySelectedItems();
-	}
 	else if (nChar == VK_ESCAPE)
-	{
 		// dont minimize CHTRichEditCtrl
 		return;
-	}
 
 	CRichEditCtrl::OnKeyDown(nChar, nRepCnt, nFlags);
 }
 
-void CHTRichEditCtrl::AppendText(const CString& sText)
+void CHTRichEditCtrl::AppendText(const CString &sText)
 {
 	LPCTSTR psz = sText;
 	LPCTSTR pszStart = psz;
-	while (*psz != _T('\0'))
-	{
+	while (*psz != _T('\0')) {
 		bool bFoundScheme = false;
-		for (unsigned i = 0; i < _countof(s_apszSchemes); ++i)
-		{
-			if (_tcsncmp(psz, s_apszSchemes[i].pszScheme, s_apszSchemes[i].iLen) == 0)
-			{
+		for (unsigned i = 0; i < _countof(s_apszSchemes); ++i) {
+			if (_tcsncmp(psz, s_apszSchemes[i].pszScheme, s_apszSchemes[i].iLen) == 0) {
 				// output everything before the URL
-				if (psz - pszStart > 0){
+				if (psz - pszStart > 0) {
 					CString str(pszStart, (int)(psz - pszStart));
 					AddLine(str, str.GetLength());
 				}
 
 				// search next space or EOL
 				int iLen = (int)_tcscspn(psz, _T(" \t\r\n"));
-				if (iLen == 0){
+				if (iLen == 0) {
 					AddLine(psz, -1, true);
 					psz += _tcslen(psz);
-				}
-				else{
+				} else {
 					CString str(psz, iLen);
 					AddLine(str, str.GetLength(), true);
 					psz += iLen;
@@ -762,9 +710,9 @@ void CHTRichEditCtrl::AppendHyperLink(const CString& sText, const CString& sTitl
 	UNREFERENCED_PARAMETER(sText);
 	UNREFERENCED_PARAMETER(sTitle);
 	UNREFERENCED_PARAMETER(sDirectory);
-	ASSERT( sText.IsEmpty() );
-	ASSERT( sTitle.IsEmpty() );
-	ASSERT( sDirectory.IsEmpty() );
+	ASSERT(sText.IsEmpty());
+	ASSERT(sTitle.IsEmpty());
+	ASSERT(sDirectory.IsEmpty());
 	AddLine(sCommand, sCommand.GetLength(), true);
 }
 
@@ -783,15 +731,14 @@ BOOL CHTRichEditCtrl::OnEnLink(NMHDR *pNMHDR, LRESULT *pResult)
 	BOOL bMsgHandled = FALSE;
 	*pResult = 0;
 	ENLINK* pEnLink = reinterpret_cast<ENLINK *>(pNMHDR);
-	if (pEnLink && pEnLink->msg == WM_LBUTTONDOWN)
-	{
+	if (pEnLink && pEnLink->msg == WM_LBUTTONDOWN) {
 		CString strUrl;
 		GetTextRange(pEnLink->chrg.cpMin, pEnLink->chrg.cpMax, strUrl);
 
 		// check if that "URL" has a valid URL scheme. if it does not have, pass that notification up to the
 		// parent window which may interpret that "URL" in some other way.
 		for (unsigned i = 0; i < _countof(s_apszSchemes); ++i) {
-			if (_tcsncmp(strUrl, s_apszSchemes[i].pszScheme, s_apszSchemes[i].iLen) == 0){
+			if (_tcsncmp(strUrl, s_apszSchemes[i].pszScheme, s_apszSchemes[i].iLen) == 0) {
 				ShellExecute(NULL, NULL, strUrl, NULL, NULL, SW_SHOWDEFAULT);
 				*pResult = 1;
 				bMsgHandled = TRUE; // do not route this message to any parent
@@ -857,7 +804,7 @@ void CHTRichEditCtrl::SetFont(CFont* pFont, BOOL bRedraw)
 	//	cf.bCharSet = lf.lfCharSet;
 
 	cf.yOffset = 0;
-	VERIFY( SetDefaultCharFormat(cf) );
+	VERIFY(SetDefaultCharFormat(cf));
 
 	// copy everything except the color
 	m_cfDefault.dwMask = (cf.dwMask & ~CFM_COLOR) | (m_cfDefault.dwMask & CFM_COLOR);
@@ -874,8 +821,7 @@ void CHTRichEditCtrl::SetFont(CFont* pFont, BOOL bRedraw)
 	if (bAtEndOfScroll)
 		ScrollToLastLine();
 
-	if (bRedraw)
-	{
+	if (bRedraw) {
 		Invalidate();
 		UpdateWindow();
 	}
@@ -895,8 +841,7 @@ void CHTRichEditCtrl::OnSysColorChange()
 
 void CHTRichEditCtrl::ApplySkin()
 {
-	if (!m_strSkinKey.IsEmpty())
-	{
+	if (!m_strSkinKey.IsEmpty()) {
 		// Use the 'ScrollInfo' only, if there is a scrollbar available, otherwise we would
 		// use a scrollinfo which points to the top and we would thus stay at the top.
 		bool bAtEndOfScroll;
@@ -912,8 +857,7 @@ void CHTRichEditCtrl::ApplySkin()
 		if (theApp.LoadSkinColor(m_strSkinKey + _T("Fg"), cr)) {
 			m_bDfltForeground = false;
 			m_crForeground = cr;
-		}
-		else {
+		} else {
 			m_bDfltForeground = m_crDfltForeground == CLR_DEFAULT;
 			m_crForeground = m_bDfltForeground ? GetSysColor(COLOR_WINDOWTEXT) : m_crDfltForeground;
 		}
@@ -924,24 +868,22 @@ void CHTRichEditCtrl::ApplySkin()
 		if (!m_bDfltForeground && (cf.dwEffects & CFE_AUTOCOLOR)) {
 			cf.dwEffects &= ~CFE_AUTOCOLOR;
 			bSetCharFormat = true;
-		}
-		else if (m_bDfltForeground && !(cf.dwEffects & CFE_AUTOCOLOR)) {
+		} else if (m_bDfltForeground && !(cf.dwEffects & CFE_AUTOCOLOR)) {
 			cf.dwEffects |= CFE_AUTOCOLOR;
 			bSetCharFormat = true;
 		}
 		if (bSetCharFormat) {
 			cf.dwMask |= CFM_COLOR;
 			cf.crTextColor = m_crForeground;
-			VERIFY( SetDefaultCharFormat(cf) );
-			VERIFY( GetSelectionCharFormat(m_cfDefault) );
+			VERIFY(SetDefaultCharFormat(cf));
+			VERIFY(GetSelectionCharFormat(m_cfDefault));
 		}
 
 		if (theApp.LoadSkinColor(m_strSkinKey + _T("Bk"), cr)) {
 			m_bDfltBackground = false;
 			m_crBackground = cr;
 			SetBackgroundColor(FALSE, m_crBackground);
-		}
-		else {
+		} else {
 			m_bDfltBackground = m_crDfltBackground == CLR_DEFAULT;
 			m_crBackground = m_bDfltBackground ? GetSysColor(COLOR_WINDOW) : m_crDfltBackground;
 			SetBackgroundColor(m_bDfltBackground, m_crBackground);
@@ -949,16 +891,14 @@ void CHTRichEditCtrl::ApplySkin()
 
 		if (bAtEndOfScroll)
 			ScrollToLastLine();
-	}
-	else
-	{
+	} else {
 		m_bDfltForeground = m_crDfltForeground == CLR_DEFAULT;
 		m_crForeground = m_bDfltForeground ? GetSysColor(COLOR_WINDOWTEXT) : m_crDfltForeground;
 
 		m_bDfltBackground = m_crDfltBackground == CLR_DEFAULT;
 		m_crBackground = m_bDfltBackground ? GetSysColor(COLOR_WINDOW) : m_crDfltBackground;
 
-		VERIFY( GetSelectionCharFormat(m_cfDefault) );
+		VERIFY(GetSelectionCharFormat(m_cfDefault));
 	}
 	PurgeSmileyCaches();
 }
@@ -968,8 +908,7 @@ BOOL CHTRichEditCtrl::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 	// Cheap workaround for the "Text cursor is showing while context menu is open" glitch. It could be solved properly
 	// with the RE's COM interface, but because the according messages are not routed with a unique control ID, it's not
 	// really useable (e.g. if there are more RE controls in one window). Would to envelope each RE window to get a unique ID..
-	if (m_bForceArrowCursor && m_hArrowCursor)
-	{
+	if (m_bForceArrowCursor && m_hArrowCursor) {
 		::SetCursor(m_hArrowCursor);
 		return TRUE;
 	}
@@ -987,15 +926,15 @@ protected:
 	DECLARE_INTERFACE_MAP();
 
 	BEGIN_INTERFACE_PART(DataObject, IDataObject)
-        STDMETHOD(GetData)(FORMATETC *pformatetcIn, STGMEDIUM *pmedium);
-        STDMETHOD(GetDataHere)(FORMATETC *pformatetc, STGMEDIUM *pmedium);
-        STDMETHOD(QueryGetData)(FORMATETC *pformatetc);
-        STDMETHOD(GetCanonicalFormatEtc)(FORMATETC *pformatectIn, FORMATETC *pformatetcOut);
-        STDMETHOD(SetData)(FORMATETC *pformatetc, STGMEDIUM *pmedium, BOOL fRelease);
-        STDMETHOD(EnumFormatEtc)(DWORD dwDirection, IEnumFORMATETC **ppenumFormatEtc);
-        STDMETHOD(DAdvise)(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection);
-        STDMETHOD(DUnadvise)(DWORD dwConnection);
-        STDMETHOD(EnumDAdvise)(IEnumSTATDATA **ppenumAdvise);
+		STDMETHOD(GetData)(FORMATETC *pformatetcIn, STGMEDIUM *pmedium);
+	STDMETHOD(GetDataHere)(FORMATETC *pformatetc, STGMEDIUM *pmedium);
+	STDMETHOD(QueryGetData)(FORMATETC *pformatetc);
+	STDMETHOD(GetCanonicalFormatEtc)(FORMATETC *pformatectIn, FORMATETC *pformatetcOut);
+	STDMETHOD(SetData)(FORMATETC *pformatetc, STGMEDIUM *pmedium, BOOL fRelease);
+	STDMETHOD(EnumFormatEtc)(DWORD dwDirection, IEnumFORMATETC **ppenumFormatEtc);
+	STDMETHOD(DAdvise)(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection);
+	STDMETHOD(DUnadvise)(DWORD dwConnection);
+	STDMETHOD(EnumDAdvise)(IEnumSTATDATA **ppenumAdvise);
 	END_INTERFACE_PART(DataObject)
 
 	HBITMAP m_hBitmap;
@@ -1109,11 +1048,11 @@ static const struct
 {
 	// :) :))) ;) :D :/ :P :-x :( :'-( :-| :-* :ph34r: =) :] :[ :-O <_<
 #define	S(str, id)	 { _T(str), _countof(str)-1, _T(id) }
-    S(":)",         "smile"),
-    S(":-)",        "smile"),
+	S(":)",         "smile"),
+	S(":-)",        "smile"),
 
 	S(":]",         "smileq"),
-    S(":-]",        "smileq"),
+	S(":-]",        "smileq"),
 
 	S(":))",		"happy"),
 	S(":)))",		"happy"),
@@ -1123,7 +1062,7 @@ static const struct
 	S("(^.^)",		"happy"),
 
 	S(";)",         "wink"),
-    S(";-)",        "wink"),
+	S(";-)",        "wink"),
 
 	S(":D",			"laugh"),
 	S(":-D",		"laugh"),
@@ -1157,11 +1096,11 @@ static const struct
 
 	S(":-|",		"disgust"),
 
-    S(":(",         "sad"),
-    S(":-(",        "sad"),
+	S(":(",         "sad"),
+	S(":-(",        "sad"),
 
 	S(":[",         "sadq"),
-    S(":-[",        "sadq"),
+	S(":-[",        "sadq"),
 
 	S(":cry:",		"cry"),
 	S(":'-(",		"cry"),
@@ -1233,8 +1172,7 @@ void CHTRichEditCtrl::AddSmileys(LPCTSTR pszLine)
 
 HBITMAP IconToBitmap(HICON hIcon, COLORREF crBackground, int cx = 16, int cy = 16)
 {
-	if (cx <= 0 || cy <= 0)
-	{
+	if (cx <= 0 || cy <= 0) {
 		ICONINFO ii;
 		if (!GetIconInfo(hIcon, &ii))
 			return NULL;
@@ -1270,10 +1208,9 @@ HBITMAP IconToBitmap(HICON hIcon, COLORREF crBackground, int cx = 16, int cy = 1
 			int iHeightMM = GetDeviceCaps(hdc, VERTSIZE);
 			int iWidthPels = GetDeviceCaps(hdc, HORZRES);
 			int iHeightPels = GetDeviceCaps(hdc, VERTRES);
-			CRect rcMF(0, 0, ((cx + 1) * iWidthMM * 100)/iWidthPels, ((cy + 1) * iHeightMM * 100)/iHeightPels);
+			CRect rcMF(0, 0, ((cx + 1) * iWidthMM * 100) / iWidthPels, ((cy + 1) * iHeightMM * 100) / iHeightPels);
 			HDC hdcEnhMF = CreateEnhMetaFile(NULL, NULL, &rect, NULL);
-			if (hdcEnhMF)
-			{
+			if (hdcEnhMF) {
 				SetBkColor(hdcEnhMF, crBackground);
 				DrawIconEx(hdcEnhMF, 0, 0, hIcon, cx, cy, 0, 0, DI_NORMAL);
 				hBitmap = (HBITMAP)CloseEnhMetaFile(hdcEnhMF);
@@ -1283,11 +1220,9 @@ HBITMAP IconToBitmap(HICON hIcon, COLORREF crBackground, int cx = 16, int cy = 1
 #else
 		CClientDC dcScreen(CWnd::GetDesktopWindow());
 		CDC dcMem;
-		if (dcMem.CreateCompatibleDC(&dcScreen))
-		{
+		if (dcMem.CreateCompatibleDC(&dcScreen)) {
 			CBitmap bmp;
-			if (bmp.CreateCompatibleBitmap(&dcScreen, cx, cy))
-			{
+			if (bmp.CreateCompatibleBitmap(&dcScreen, cx, cy)) {
 				CBitmap *pbmpOld = dcMem.SelectObject(&bmp);
 				dcMem.FillSolidRect(0, 0, cx, cy, crBackground);
 				DrawIconEx(dcMem, 0, 0, hIcon, cx, cy, 0, 0, DI_NORMAL);
@@ -1296,8 +1231,7 @@ HBITMAP IconToBitmap(HICON hIcon, COLORREF crBackground, int cx = 16, int cy = 1
 			}
 		}
 #endif
-	}
-	catch(CException *ex){
+	} catch (CException *ex) {
 		ASSERT(0);
 		ex->Delete();
 	}
@@ -1316,8 +1250,7 @@ HBITMAP CHTRichEditCtrl::GetSmileyBitmap(LPCTSTR pszSmileyID, COLORREF bk)
 	int cx = 16, cy = 16;
 	CHARFORMAT cf;
 	GetDefaultCharFormat(cf);
-	if (cf.cbSize == sizeof(cf) && (cf.dwMask & CFM_SIZE))
-	{
+	if (cf.cbSize == sizeof(cf) && (cf.dwMask & CFM_SIZE)) {
 		HDC hDC = ::GetDC(HWND_DESKTOP);
 		int iPixelFontSize = abs(-MulDiv(cf.yHeight, GetDeviceCaps(hDC, LOGPIXELSY), 20) / 72);
 		::ReleaseDC(NULL, hDC);
@@ -1373,8 +1306,7 @@ bool CHTRichEditCtrl::InsertSmiley(LPCTSTR pszSmileyID, COLORREF bk)
 	if (!pIOleClientSite)
 		return false;
 
-	if (sm_pIStorageSmileys == NULL)
-	{
+	if (sm_pIStorageSmileys == NULL) {
 		CComPtr<ILockBytes> pILockBytes;
 		if (CreateILockBytesOnHGlobal(NULL, TRUE, &pILockBytes) != S_OK)
 			return false;
@@ -1436,8 +1368,7 @@ bool CHTRichEditCtrl::AddCaptcha(HBITMAP hbmp)
 	if (!pIOleClientSite)
 		return false;
 
-	if (m_pIStorageCaptchas == NULL)
-	{
+	if (m_pIStorageCaptchas == NULL) {
 		CComPtr<ILockBytes> pILockBytes;
 		if (CreateILockBytesOnHGlobal(NULL, TRUE, &pILockBytes) != S_OK)
 			return false;

@@ -91,7 +91,7 @@ protected:
 	BOOL m_bMouseIsOver;
 	BOOL m_bTextSelected;
 	BOOL m_bAutoClose;
-	int m_nAnimStatus;
+	UINT_PTR m_nAnimStatus;
 	int m_nTaskbarPlacement;
 	DWORD m_dwTimerPrecision;
 	DWORD m_dwTimeToStay;

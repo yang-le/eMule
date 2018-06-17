@@ -65,10 +65,9 @@ bool CSearchManager::IsSearching(uint32 uSearchID)
 {
 	// Check if this searchID is within the searches.
 	for (SearchMap::const_iterator itSearchMap = m_mapSearches.begin(); itSearchMap != m_mapSearches.end(); ++itSearchMap)
-	{
 		if (itSearchMap->second->m_uSearchID == uSearchID)
 			return true;
-	}
+
 	return false;
 }
 
@@ -76,14 +75,11 @@ void CSearchManager::StopSearch(uint32 uSearchID, bool bDelayDelete)
 {
 	// Stop a specific searchID
 	for (SearchMap::const_iterator itSearchMap = m_mapSearches.begin(); itSearchMap != m_mapSearches.end(); ++itSearchMap)
-	{
-		if (itSearchMap->second->m_uSearchID == uSearchID)
-		{
+		if (itSearchMap->second->m_uSearchID == uSearchID) {
 			// Do not delete as we want to get a chance for late packets to be processed.
-			if(bDelayDelete)
+			if (bDelayDelete)
 				itSearchMap->second->PrepareToStop();
-			else
-			{
+			else {
 				// Delete this search now.
 				// If this method is changed to continue looping, take care of the iterator as we will already
 				// be pointing to the next entry and the for-loop could cause you to iterate past the end.
@@ -92,7 +88,6 @@ void CSearchManager::StopSearch(uint32 uSearchID, bool bDelayDelete)
 			}
 			return;
 		}
-	}
 }
 
 void CSearchManager::StopAllSearches()
@@ -103,11 +98,10 @@ void CSearchManager::StopAllSearches()
 	m_mapSearches.clear();
 }
 
-bool CSearchManager::StartSearch(CSearch* pSearch)
+bool CSearchManager::StartSearch(CSearch *pSearch)
 {
 	// A search object was created, now try to start the search.
-	if (AlreadySearchingFor(pSearch->m_uTarget))
-	{
+	if (AlreadySearchingFor(pSearch->m_uTarget)) {
 		// There was already a search in progress with this target.
 		delete pSearch;
 		return false;
@@ -119,12 +113,11 @@ bool CSearchManager::StartSearch(CSearch* pSearch)
 	return true;
 }
 
-CSearch* CSearchManager::PrepareFindKeywords(LPCWSTR szKeyword, UINT uSearchTermsSize, LPBYTE pucSearchTermsData)
+CSearch *CSearchManager::PrepareFindKeywords(LPCWSTR szKeyword, UINT uSearchTermsSize, LPBYTE pucSearchTermsData)
 {
 	// Create a keyword search object.
 	CSearch *pSearch = new CSearch;
-	try
-	{
+	try {
 		// Set search to a keyword type.
 		pSearch->SetSearchTypes(CSearch::KEYWORD);
 
@@ -140,15 +133,14 @@ CSearch* CSearchManager::PrepareFindKeywords(LPCWSTR szKeyword, UINT uSearchTerm
 		KadGetKeywordHash(wstrKeyword, &pSearch->m_uTarget);
 
 		// Verify that we are not already searching for this target.
-		if (AlreadySearchingFor(pSearch->m_uTarget))
-		{
+		if (AlreadySearchingFor(pSearch->m_uTarget)) {
 			delete pSearch;
 			CString strError;
 			strError.Format(GetResString(IDS_KAD_SEARCH_KEYWORD_ALREADY_SEARCHING), (LPCTSTR)wstrKeyword);
 			throw strError;
 		}
 
-		pSearch->SetSearchTermData( uSearchTermsSize, pucSearchTermsData );
+		pSearch->SetSearchTermData(uSearchTermsSize, pucSearchTermsData);
 		pSearch->SetGUIName(Kademlia::CKadTagValueString(szKeyword));
 		// Inc our searchID
 		pSearch->m_uSearchID = ++m_uNextID;
@@ -156,17 +148,13 @@ CSearch* CSearchManager::PrepareFindKeywords(LPCWSTR szKeyword, UINT uSearchTerm
 		m_mapSearches[pSearch->m_uTarget] = pSearch;
 		// Start search.
 		pSearch->Go();
-	}
-	catch (CIOException* ioe)
-	{
+	} catch (CIOException *ioe) {
 		CString strError;
 		strError.Format(_T("IO-Exception in %hs: Error %i"), __FUNCTION__, ioe->m_iCause);
 		ioe->Delete();
 		delete pSearch;
 		throw strError;
-	}
-	catch (CFileException* e)
-	{
+	} catch (CFileException *e) {
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
 		e->m_strFileName = _T("search packet");
 		GetExceptionMessage(*e, szError, ARRSIZE(szError));
@@ -175,13 +163,9 @@ CSearch* CSearchManager::PrepareFindKeywords(LPCWSTR szKeyword, UINT uSearchTerm
 		e->Delete();
 		delete pSearch;
 		throw strError;
-	}
-	catch (const CString&)
-	{
+	} catch (const CString&) {
 		throw;
-	}
-	catch (...)
-	{
+	} catch (...) {
 		CString strError;
 		strError.Format(_T("Unknown exception in %hs"), __FUNCTION__);
 		delete pSearch;
@@ -190,11 +174,11 @@ CSearch* CSearchManager::PrepareFindKeywords(LPCWSTR szKeyword, UINT uSearchTerm
 	return pSearch;
 }
 
-CSearch* CSearchManager::PrepareLookup(uint32 uType, bool bStart, const CUInt128 &uID)
+CSearch *CSearchManager::PrepareLookup(uint32 uType, bool bStart, const CUInt128 &uID)
 {
 	// Prepare a kad lookup.
 	// Make sure this target is not already in progress.
-	if(AlreadySearchingFor(uID))
+	if (AlreadySearchingFor(uID))
 		return NULL;
 
 	// Create a new search.
@@ -204,38 +188,30 @@ CSearch* CSearchManager::PrepareLookup(uint32 uType, bool bStart, const CUInt128
 	pSearch->SetSearchTypes(uType);
 	pSearch->m_uTarget = uID;
 
-	try
-	{
-		switch(pSearch->m_uType)
-		{
-			case CSearch::STOREKEYWORD:
-				if(!Kademlia::CKademlia::GetIndexed()->SendStoreRequest(uID))
-				{
-					// Keyword Store was determined to be a overloaded node, abort store.
-					delete pSearch;
-					return NULL;
-				}
-				break;
+	try {
+		switch (pSearch->m_uType) {
+		case CSearch::STOREKEYWORD:
+			if (!Kademlia::CKademlia::GetIndexed()->SendStoreRequest(uID)) {
+				// Keyword Store was determined to be a overloaded node, abort store.
+				delete pSearch;
+				return NULL;
+			}
+			break;
 		}
 
 		// Inc search ID.
 		pSearch->m_uSearchID = ++m_uNextID;
-		if( bStart )
-		{
+		if (bStart) {
 			// Auto start this search.
 			m_mapSearches[pSearch->m_uTarget] = pSearch;
 			pSearch->Go();
 		}
-	}
-	catch ( CIOException *ioe )
-	{
-		AddDebugLogLine( false, _T("Exception in CSearchManager::PrepareLookup (IO error(%i))"), ioe->m_iCause);
+	} catch (CIOException *ioe) {
+		AddDebugLogLine(false, _T("Exception in CSearchManager::PrepareLookup (IO error(%i))"), ioe->m_iCause);
 		ioe->Delete();
 		delete pSearch;
 		return NULL;
-	}
-	catch (...)
-	{
+	} catch (...) {
 		AddDebugLogLine(false, _T("Exception in CSearchManager::PrepareLookup"));
 		delete pSearch;
 		return NULL;
@@ -247,10 +223,7 @@ void CSearchManager::FindNode(const CUInt128 &uID, bool bComplete)
 {
 	// Do a node lookup.
 	CSearch *pSearch = new CSearch;
-	if(bComplete)
-		pSearch->SetSearchTypes(CSearch::NODECOMPLETE);
-	else
-		pSearch->SetSearchTypes(CSearch::NODE);
+	pSearch->SetSearchTypes(bComplete ? CSearch::NODECOMPLETE : CSearch::NODE);
 	pSearch->m_uTarget = uID;
 	StartSearch(pSearch);
 }
@@ -265,9 +238,9 @@ bool CSearchManager::IsFWCheckUDPSearch(const CUInt128 &uTarget)
 {
 	// Check if this target is in the search map.
 	SearchMap::const_iterator itSearchMap = m_mapSearches.find(uTarget);
-	if (itSearchMap != m_mapSearches.end())
-		return (itSearchMap->second->GetSearchTypes() == CSearch::NODEFWCHECKUDP);
-	return false;
+	if (itSearchMap == m_mapSearches.end())
+		return false;
+	return itSearchMap->second->GetSearchTypes() == CSearch::NODEFWCHECKUDP;
 }
 
 
@@ -286,15 +259,13 @@ void CSearchManager::GetWords(LPCWSTR sz, WordList *plistWords)
 		// Maybe we need to evaluate the Unicode character values itself whether the characters are located
 		// in code ranges where single characters are known to represent words.
 		uBytes = KadGetKeywordBytes(sWord).GetLength();
-		if (uBytes >= 3)
-		{
+		if (uBytes >= 3) {
 			KadTagStrMakeLower(sWord);
 			plistWords->remove(sWord);
 			plistWords->push_back(sWord);
 		}
 		szS += uChars;
-		if (uChars < wcslen(szS))
-			++szS;
+		szS += static_cast<int>(uChars < wcslen(szS));
 	}
 
 	// if the last word we have added, contains 3 chars (and 3 bytes), it's in almost all cases a file's extension.
@@ -307,157 +278,89 @@ void CSearchManager::JumpStart()
 	// Find any searches that has stalled and jumpstart them.
 	// This will also prune all searches.
 	time_t tNow = time(NULL);
-	for (SearchMap::const_iterator itSearchMap = m_mapSearches.begin(); itSearchMap != m_mapSearches.end(); ++itSearchMap) {
-		CSearch* msecond = itSearchMap->second;
+	for (SearchMap::const_iterator itSearchMap = m_mapSearches.begin(); itSearchMap != m_mapSearches.end();) {
+		CSearch *pSearch = itSearchMap->second;
 		// Each type has it's own criteria for being deleted or jumpstarted.
+		bool bDel = false, bStop = false;
 		switch (itSearchMap->second->GetSearchTypes()) {
 		case CSearch::FILE:
-			if (tNow >= msecond->m_tCreated + SEARCHFILE_LIFETIME) {
-				delete msecond;
-				itSearchMap = m_mapSearches.erase(itSearchMap);
-				//Don't do anything after this. We are already at the next entry.
-				continue;
-			}
-			if (msecond->GetAnswers() >= SEARCHFILE_TOTAL || tNow >= msecond->m_tCreated + SEARCHFILE_LIFETIME - SEC(20))
-				msecond->PrepareToStop();
-			else
-				msecond->JumpStart();
+			if (tNow >= pSearch->m_tCreated + SEARCHFILE_LIFETIME)
+				bDel = true;
+			else if (pSearch->GetAnswers() >= SEARCHFILE_TOTAL || tNow >= pSearch->m_tCreated + SEARCHFILE_LIFETIME - SEC(20))
+				bStop = true;
 			break;
-
 		case CSearch::KEYWORD:
-			if (tNow >= msecond->m_tCreated + SEARCHKEYWORD_LIFETIME) {
+			if (tNow >= pSearch->m_tCreated + SEARCHKEYWORD_LIFETIME) {
+				bDel = true;
 				// Tell GUI that search ended
 				if (theApp.emuledlg && theApp.emuledlg->searchwnd)
-					theApp.emuledlg->searchwnd->CancelKadSearch(msecond->GetSearchID());
-				delete msecond;
-				itSearchMap = m_mapSearches.erase(itSearchMap);
-				//Don't do anything after this. We are already at the next entry.
-				continue;
-			}
-			if (msecond->GetAnswers() >= SEARCHKEYWORD_TOTAL || tNow >= msecond->m_tCreated + SEARCHKEYWORD_LIFETIME - SEC(20))
-				msecond->PrepareToStop();
-			else
-				msecond->JumpStart();
+					theApp.emuledlg->searchwnd->CancelKadSearch(pSearch->GetSearchID());
+			} else if (pSearch->GetAnswers() >= SEARCHKEYWORD_TOTAL || tNow >= pSearch->m_tCreated + SEARCHKEYWORD_LIFETIME - SEC(20))
+				bStop = true;
 			break;
-
 		case CSearch::NOTES:
-			if (tNow >= msecond->m_tCreated + SEARCHNOTES_LIFETIME) {
-				delete msecond;
-				itSearchMap = m_mapSearches.erase(itSearchMap);
-				//Don't do anything after this. We are already at the next entry.
-				continue;
-			}
-			if (msecond->GetAnswers() >= SEARCHNOTES_TOTAL || tNow >= msecond->m_tCreated + SEARCHNOTES_LIFETIME - SEC(20))
-				msecond->PrepareToStop();
-			else
-				msecond->JumpStart();
+			if (tNow >= pSearch->m_tCreated + SEARCHNOTES_LIFETIME)
+				bDel = true;
+			else if (pSearch->GetAnswers() >= SEARCHNOTES_TOTAL || tNow >= pSearch->m_tCreated + SEARCHNOTES_LIFETIME - SEC(20))
+				bStop = true;
 			break;
-
 		case CSearch::FINDBUDDY:
-			if (tNow >= msecond->m_tCreated + SEARCHFINDBUDDY_LIFETIME) {
-				delete msecond;
-				itSearchMap = m_mapSearches.erase(itSearchMap);
-				//Don't do anything after this. We are already at the next entry.
-				continue;
-			}
-			if (msecond->GetAnswers() >= SEARCHFINDBUDDY_TOTAL || tNow >= msecond->m_tCreated + SEARCHFINDBUDDY_LIFETIME - SEC(20))
-				msecond->PrepareToStop();
-			else
-				msecond->JumpStart();
+			if (tNow >= pSearch->m_tCreated + SEARCHFINDBUDDY_LIFETIME)
+				bDel = true;
+			else if (pSearch->GetAnswers() >= SEARCHFINDBUDDY_TOTAL || tNow >= pSearch->m_tCreated + SEARCHFINDBUDDY_LIFETIME - SEC(20))
+				bStop = true;
 			break;
-
 		case CSearch::FINDSOURCE:
-			if (tNow >= msecond->m_tCreated + SEARCHFINDSOURCE_LIFETIME) {
-				delete msecond;
-				itSearchMap = m_mapSearches.erase(itSearchMap);
-				//Don't do anything after this. We are already at the next entry.
-				continue;
-			}
-			if (msecond->GetAnswers() >= SEARCHFINDSOURCE_TOTAL || tNow >= msecond->m_tCreated + SEARCHFINDSOURCE_LIFETIME - SEC(20))
-				msecond->PrepareToStop();
-			else
-				msecond->JumpStart();
+			if (tNow >= pSearch->m_tCreated + SEARCHFINDSOURCE_LIFETIME)
+				bDel = true;
+			else if (pSearch->GetAnswers() >= SEARCHFINDSOURCE_TOTAL || tNow >= pSearch->m_tCreated + SEARCHFINDSOURCE_LIFETIME - SEC(20))
+				bStop = true;
 			break;
-
 		case CSearch::NODE:
 		case CSearch::NODESPECIAL:
 		case CSearch::NODEFWCHECKUDP:
-			if (tNow >= msecond->m_tCreated + SEARCHNODE_LIFETIME) {
-				delete msecond;
-				itSearchMap = m_mapSearches.erase(itSearchMap);
-				//Don't do anything after this. We are already at the next entry.
-				continue;
-			}
-			msecond->JumpStart();
+			if (tNow >= pSearch->m_tCreated + SEARCHNODE_LIFETIME)
+				bDel = true;
 			break;
-
 		case CSearch::NODECOMPLETE:
-			if (tNow >= msecond->m_tCreated + SEARCHNODE_LIFETIME) {
+			if (tNow >= pSearch->m_tCreated + SEARCHNODE_LIFETIME || (tNow >= pSearch->m_tCreated + SEARCHNODECOMP_LIFETIME && pSearch->GetAnswers() >= SEARCHNODECOMP_TOTAL)) {
+				bDel = true;
 				// Tell Kad that it can start publishing.
 				CKademlia::GetPrefs()->SetPublish(true);
-				delete msecond;
-				itSearchMap = m_mapSearches.erase(itSearchMap);
-				//Don't do anything after this. We are already at the next entry.
-				continue;
 			}
-			if (tNow >= msecond->m_tCreated + SEARCHNODECOMP_LIFETIME && msecond->GetAnswers() >= SEARCHNODECOMP_TOTAL) {
-				// Tell Kad that it can start publishing.
-				CKademlia::GetPrefs()->SetPublish(true);
-				delete msecond;
-				itSearchMap = m_mapSearches.erase(itSearchMap);
-				//Don't do anything after this. We are already at the next entry.
-				continue;
-			}
-			msecond->JumpStart();
 			break;
 
 		case CSearch::STOREFILE:
-			if (tNow >= msecond->m_tCreated + SEARCHSTOREFILE_LIFETIME) {
-				delete msecond;
-				itSearchMap = m_mapSearches.erase(itSearchMap);
-				//Don't do anything after this.. We are already at the next entry.
-				continue;
-			}
-			if (msecond->GetAnswers() >= SEARCHSTOREFILE_TOTAL || tNow >= msecond->m_tCreated + SEARCHSTOREFILE_LIFETIME - SEC(20))
-				msecond->PrepareToStop();
-			else
-				msecond->JumpStart();
+			if (tNow >= pSearch->m_tCreated + SEARCHSTOREFILE_LIFETIME)
+				bDel = true;
+			else if (pSearch->GetAnswers() >= SEARCHSTOREFILE_TOTAL || tNow >= pSearch->m_tCreated + SEARCHSTOREFILE_LIFETIME - SEC(20))
+				bStop = true;
 			break;
-
 		case CSearch::STOREKEYWORD:
-			if (tNow >= msecond->m_tCreated + SEARCHSTOREKEYWORD_LIFETIME) {
-				delete msecond;
-				itSearchMap = m_mapSearches.erase(itSearchMap);
-				//Don't do anything after this. We are already at the next entry.
-				continue;
-			}
-			if (msecond->GetAnswers() >= SEARCHSTOREKEYWORD_TOTAL || tNow >= msecond->m_tCreated + SEARCHSTOREKEYWORD_LIFETIME - SEC(20))
-				msecond->PrepareToStop();
-			else
-				msecond->JumpStart();
+			if (tNow >= pSearch->m_tCreated + SEARCHSTOREKEYWORD_LIFETIME)
+				bDel = true;
+			else if (pSearch->GetAnswers() >= SEARCHSTOREKEYWORD_TOTAL || tNow >= pSearch->m_tCreated + SEARCHSTOREKEYWORD_LIFETIME - SEC(20))
+				bStop = true;
 			break;
-
 		case CSearch::STORENOTES:
-			if (tNow >= msecond->m_tCreated + SEARCHSTORENOTES_LIFETIME) {
-				delete msecond;
-				itSearchMap = m_mapSearches.erase(itSearchMap);
-				//Don't do anything after this.. We are already at the next entry.
-				continue;
-			}
-			if (msecond->GetAnswers() >= SEARCHSTORENOTES_TOTAL || tNow >= msecond->m_tCreated + SEARCHSTORENOTES_LIFETIME - SEC(20))
-				msecond->PrepareToStop();
-			else
-				msecond->JumpStart();
+			if (tNow >= pSearch->m_tCreated + SEARCHSTORENOTES_LIFETIME)
+				bDel = true;
+			else if (pSearch->GetAnswers() >= SEARCHSTORENOTES_TOTAL || tNow >= pSearch->m_tCreated + SEARCHSTORENOTES_LIFETIME - SEC(20))
+				bStop = true;
 			break;
-
 		default:
-			if (tNow >= msecond->m_tCreated + SEARCH_LIFETIME) {
-				delete msecond;
-				itSearchMap = m_mapSearches.erase(itSearchMap);
-				//Don't do anything after this.. We are already at the next entry.
-				continue;
-			}
-			msecond->JumpStart();
+			if (tNow >= pSearch->m_tCreated + SEARCH_LIFETIME)
+				bDel = true;
+		}
+		if (bDel) {
+			delete pSearch;
+			itSearchMap = m_mapSearches.erase(itSearchMap);	//Don't do anything after this. We are already at the next entry.
+		} else {
+			if (bStop)
+				pSearch->PrepareToStop();
+			else
+				pSearch->JumpStart();
+			++itSearchMap;
 		}
 	}
 }
@@ -471,32 +374,29 @@ void CSearchManager::UpdateStats()
 	uint8 uTotalSource = 0;
 	uint8 uTotalNotes = 0;
 	uint8 uTotalStoreNotes = 0;
-	for (SearchMap::const_iterator itSearchMap = m_mapSearches.begin(); itSearchMap != m_mapSearches.end(); ++itSearchMap)
-	{
-		switch(itSearchMap->second->GetSearchTypes())
-		{
-			case CSearch::FILE:
-				uTotalFile++;
-				break;
-			case CSearch::STOREFILE:
-				uTotalStoreSrc++;
-				break;
-			case CSearch::STOREKEYWORD:
-				uTotalStoreKey++;
-				break;
-			case CSearch::FINDSOURCE:
-				uTotalSource++;
-				break;
-			case CSearch::STORENOTES:
-				uTotalStoreNotes++;
-				break;
-			case CSearch::NOTES:
-				uTotalNotes++;
+	for (SearchMap::const_iterator itSearchMap = m_mapSearches.begin(); itSearchMap != m_mapSearches.end(); ++itSearchMap) {
+		switch (itSearchMap->second->GetSearchTypes()) {
+		case CSearch::FILE:
+			++uTotalFile;
+			break;
+		case CSearch::STOREFILE:
+			++uTotalStoreSrc;
+			break;
+		case CSearch::STOREKEYWORD:
+			++uTotalStoreKey;
+			break;
+		case CSearch::FINDSOURCE:
+			++uTotalSource;
+			break;
+		case CSearch::STORENOTES:
+			++uTotalStoreNotes;
+			break;
+		case CSearch::NOTES:
+			++uTotalNotes;
 		}
 	}
 	CPrefs *pPrefs = CKademlia::GetPrefs();
-	if(pPrefs)
-	{
+	if (pPrefs) {
 		pPrefs->SetTotalFile(uTotalFile);
 		pPrefs->SetTotalStoreSrc(uTotalStoreSrc);
 		pPrefs->SetTotalStoreKey(uTotalStoreKey);
@@ -509,24 +409,22 @@ void CSearchManager::UpdateStats()
 void CSearchManager::ProcessPublishResult(const CUInt128 &uTarget, const uint8 uLoad, const bool bLoadResponse)
 {
 	// We tried to publish some info and got a result.
-	CSearch *pSearch = NULL;
 	SearchMap::const_iterator itSearchMap = m_mapSearches.find(uTarget);
-	if (itSearchMap != m_mapSearches.end())
-		pSearch = itSearchMap->second;
-
+	if (itSearchMap == m_mapSearches.end())
+		return;
+	CSearch *pSearch = itSearchMap->second;
 	// Result could be very late and store deleted, abort.
 	if (pSearch == NULL)
 		return;
 
-	switch(pSearch->GetSearchTypes())
-	{
-		case CSearch::STOREKEYWORD:
-			if( bLoadResponse )
-				pSearch->UpdateNodeLoad( uLoad );
-			break;
-		case CSearch::STOREFILE:
-		case CSearch::STORENOTES:
-			break;
+	switch (pSearch->GetSearchTypes()) {
+	case CSearch::STOREKEYWORD:
+		if (bLoadResponse)
+			pSearch->UpdateNodeLoad(uLoad);
+		break;
+	case CSearch::STOREFILE:
+	case CSearch::STORENOTES:
+		break;
 	}
 
 	// Inc the number of answers.
@@ -539,51 +437,41 @@ void CSearchManager::ProcessPublishResult(const CUInt128 &uTarget, const uint8 u
 void CSearchManager::ProcessResponse(const CUInt128 &uTarget, uint32 uFromIP, uint16 uFromPort, ContactList *plistResults)
 {
 	// We got a response to a kad lookup.
-	CSearch *pSearch = NULL;
-	SearchMap::const_iterator itSearchMap= m_mapSearches.find(uTarget);
-	if (itSearchMap != m_mapSearches.end())
-		pSearch = itSearchMap->second;
-
-	// If this search was deleted before this response, delete contacts and abort, otherwise process them.
-	if (pSearch == NULL)
-	{
+	SearchMap::const_iterator itSearchMap = m_mapSearches.find(uTarget);
+	if (itSearchMap != m_mapSearches.end() && itSearchMap->second != NULL)
+		itSearchMap->second->ProcessResponse(uFromIP, uFromPort, plistResults);
+	else {
+		// This search was deleted before this response, delete contacts and abort
 		for (ContactList::const_iterator itContactList = plistResults->begin(); itContactList != plistResults->end(); ++itContactList)
-			delete (*itContactList);
+			delete *itContactList;
 		delete plistResults;
 	}
-	else
-		pSearch->ProcessResponse(uFromIP, uFromPort, plistResults);
 }
 
 uint8 CSearchManager::GetExpectedResponseContactCount(const CUInt128 &uTarget)
 {
 	SearchMap::const_iterator itSearchMap = m_mapSearches.find(uTarget);
 	// If this search was deleted before this response, delete contacts and abort, otherwise process them.
-	if (itSearchMap != m_mapSearches.end())
-		return itSearchMap->second->GetRequestContactCount();
-	return 0;
+	if (itSearchMap == m_mapSearches.end())
+		return 0;
+	return itSearchMap->second->GetRequestContactCount();
 }
 
 void CSearchManager::ProcessResult(const CUInt128 &uTarget, const CUInt128 &uAnswer, TagList *plistInfo, uint32 uFromIP, uint16 uFromPort)
 {
 	// We have results for a request for info.
-	CSearch *pSearch = NULL;
 	SearchMap::const_iterator itSearchMap = m_mapSearches.find(uTarget);
-	if (itSearchMap != m_mapSearches.end())
-		pSearch = itSearchMap->second;
-
-	// If this search was deleted before these results, delete contacts and abort, otherwise process them.
-	if (pSearch == NULL)
-	{
+	if (itSearchMap != m_mapSearches.end() && itSearchMap->second != NULL)
+		itSearchMap->second->ProcessResult(uAnswer, plistInfo, uFromIP, uFromPort);
+	else {
+		// This search was deleted before these results, delete contacts and abort
 		for (TagList::const_iterator itTagList = plistInfo->begin(); itTagList != plistInfo->end(); ++itTagList)
 			delete *itTagList;
 		delete plistInfo;
 	}
-	else
-		pSearch->ProcessResult(uAnswer, plistInfo, uFromIP, uFromPort);
 }
 
-bool CSearchManager::FindNodeSpecial(const CUInt128 &uID, CKadClientSearcher* pRequester)
+bool CSearchManager::FindNodeSpecial(const CUInt128 &uID, CKadClientSearcher *pRequester)
 {
 	// Do a node lookup.
 	CString strDbgID;
@@ -608,14 +496,14 @@ bool CSearchManager::FindNodeFWCheckUDP()
 	return StartSearch(pSearch);
 }
 
-void CSearchManager::CancelNodeSpecial(CKadClientSearcher* pRequester)
+void CSearchManager::CancelNodeSpecial(CKadClientSearcher *pRequester)
 {
-	// Stop a specific nodespecialsearch
+	// Stop a specific nodespecial search
 	for (SearchMap::const_iterator itSearchMap = m_mapSearches.begin(); itSearchMap != m_mapSearches.end(); ++itSearchMap) {
-		CSearch* msecond = itSearchMap->second;
-		if (msecond->GetNodeSpecialSearchRequester() == pRequester) {
-			msecond->SetNodeSpecialSearchRequester(NULL);
-			msecond->PrepareToStop();
+		CSearch *pSearch = itSearchMap->second;
+		if (pSearch->GetNodeSpecialSearchRequester() == pRequester) {
+			pSearch->SetNodeSpecialSearchRequester(NULL);
+			pSearch->PrepareToStop();
 			return;
 		}
 	}

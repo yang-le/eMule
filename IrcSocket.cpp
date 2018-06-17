@@ -87,8 +87,7 @@ void CIrcSocket::Connect()
 
 void CIrcSocket::OnReceive(int iErrorCode)
 {
-	if (iErrorCode)
-	{
+	if (iErrorCode) {
 		if (thePrefs.GetVerbose())
 			AddDebugLogLine(false, _T("IRC socket: Failed to read - %s"), (LPCTSTR)GetErrorMessage(iErrorCode, 1));
 		return;
@@ -96,28 +95,24 @@ void CIrcSocket::OnReceive(int iErrorCode)
 
 #define RCVBUFSIZE (1024)
 	TRACE("CIrcSocket::OnReceive\n");
-	try
-	{
+	try {
 		int iLength;
-		do
-		{
+		do {
 			char cBuffer[RCVBUFSIZE];
 			iLength = Receive(cBuffer, RCVBUFSIZE - 1);
 			TRACE("iLength=%d\n", iLength);
-			if (iLength < 0)
-			{
-				if (thePrefs.GetVerbose())
-					AddDebugLogLine(false, _T("IRC socket: Failed to read - %s"), (LPCTSTR)GetErrorMessage(GetLastError(), 1));
+			if (iLength < 0) {
+				iErrorCode = GetLastError();
+				if (iErrorCode != WSAEWOULDBLOCK && thePrefs.GetVerbose())
+					AddDebugLogLine(false, _T("IRC socket: Failed to read - %s"), (LPCTSTR)GetErrorMessage(iErrorCode, 1));
 				return;
 			}
-			if (iLength > 0)
-			{
+			if (iLength > 0) {
 				cBuffer[iLength] = '\0';
 				theStats.AddDownDataOverheadOther(iLength);
 				m_pIrcMain->PreParseMessage(cBuffer);
 			}
-		}
-		while (iLength > RCVBUFSIZE - 2);
+		} while (iLength > RCVBUFSIZE - 2);
 	}
 	CATCH_DFLT_EXCEPTIONS(_T(__FUNCTION__))
 	CATCH_DFLT_ALL(_T(__FUNCTION__))

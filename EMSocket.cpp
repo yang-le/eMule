@@ -209,8 +209,8 @@ void CEMSocket::InitProxySupport()
 		AddLayer(m_pProxyLayer);
 
 		// Connection Initialization
-		Create(0, SOCK_STREAM, FD_READ | FD_WRITE | FD_OOB | FD_ACCEPT | FD_CONNECT | FD_CLOSE, thePrefs.GetBindAddr());
-		AsyncSelect(FD_READ | FD_WRITE | FD_OOB | FD_ACCEPT | FD_CONNECT | FD_CLOSE);
+		Create(0, SOCK_STREAM, FD_SIX_EVENTS, thePrefs.GetBindAddr());
+		AsyncSelect(FD_SIX_EVENTS);
 	}
 }
 
@@ -641,15 +641,16 @@ SocketSentBytes CEMSocket::SendStd(uint32 maxNumberOfBytesToSend, uint32 minFrag
 		lastCalledSend = timeGetTime();
 		bool bWasLongTimeSinceSend = (lastCalledSend >= lastSent + SEC2MS(1));
 
-		while (sentStandardPacketBytesThisCall + sentControlPacketBytesThisCall < maxNumberOfBytesToSend && !anErrorHasOccured && // don't send more than allowed. Also, there should have been no error in earlier loop
-			(sendbuffer != NULL || !controlpacket_queue.IsEmpty() || !standardpacket_queue.IsEmpty()) && // there must exist something to send
-			(!onlyAllowedToSendControlPacket || // this means we are allowed to send both types of packets, so proceed
-			(sendbuffer != NULL && m_currentPacket_is_controlpacket) || // We are in the progress of sending a control packet. We are always allowed to send those
-				(sentStandardPacketBytesThisCall + sentControlPacketBytesThisCall > 0 && (sentStandardPacketBytesThisCall + sentControlPacketBytesThisCall) % minFragSize != 0) || // Once we've started, continue to send until an even minFragsize to minimize packet overhead
-				(sendbuffer == NULL && !controlpacket_queue.IsEmpty()) || // There's a control packet in queue, and we are not currently sending anything, so we will handle the control packet next
-				(sendbuffer != NULL && !m_currentPacket_is_controlpacket && bWasLongTimeSinceSend && !controlpacket_queue.IsEmpty() && (sentStandardPacketBytesThisCall + sentControlPacketBytesThisCall) < minFragSize) // We have waited to long to clean the current packet (which may be a standard packet that is in the way). Proceed no matter what the value of onlyAllowedToSendControlPacket.
+		while (sentStandardPacketBytesThisCall + sentControlPacketBytesThisCall < maxNumberOfBytesToSend && !anErrorHasOccured // don't send more than allowed. Also, there should have been no error in earlier loop
+			&& (sendbuffer != NULL || !controlpacket_queue.IsEmpty() || !standardpacket_queue.IsEmpty()) // there must exist something to send
+			&& (	!onlyAllowedToSendControlPacket // this means we are allowed to send both types of packets, so proceed
+				|| (sendbuffer != NULL && m_currentPacket_is_controlpacket) // We are in the progress of sending a control packet. We are always allowed to send those
+				|| (sentStandardPacketBytesThisCall + sentControlPacketBytesThisCall > 0 && (sentStandardPacketBytesThisCall + sentControlPacketBytesThisCall) % minFragSize != 0) // Once we've started, continue to send until an even minFragsize to minimize packet overhead
+				|| (sendbuffer == NULL && !controlpacket_queue.IsEmpty()) // There's a control packet in queue, and we are not currently sending anything, so we will handle the control packet next
+				|| (sendbuffer != NULL && !m_currentPacket_is_controlpacket && bWasLongTimeSinceSend && !controlpacket_queue.IsEmpty() && (sentStandardPacketBytesThisCall + sentControlPacketBytesThisCall) < minFragSize) // We have waited to long to clean the current packet (which may be a standard packet that is in the way). Proceed no matter what the value of onlyAllowedToSendControlPacket.
 				)
-			) { // If we are currently not in the progress of sending a packet, we will need to find the next one to send
+			)
+		{ // If we are currently not in the progress of sending a packet, we will need to find the next one to send
 			if (sendbuffer == NULL) {
 				Packet *curPacket = NULL;
 				m_currentPacket_is_controlpacket = !controlpacket_queue.IsEmpty();
@@ -697,7 +698,8 @@ SocketSentBytes CEMSocket::SendStd(uint32 maxNumberOfBytesToSend, uint32 minFrag
 					|| (bWasLongTimeSinceSend && sentStandardPacketBytesThisCall + sentControlPacketBytesThisCall < minFragSize)
 					|| (sentStandardPacketBytesThisCall + sentControlPacketBytesThisCall) % minFragSize != 0
 					)
-				&& !anErrorHasOccured) {
+				&& !anErrorHasOccured)
+			{
 				uint32 tosend = sendblen - sent;
 				if (!onlyAllowedToSendControlPacket || m_currentPacket_is_controlpacket) {
 					if (tosend > maxNumberOfBytesToSend - (sentStandardPacketBytesThisCall + sentControlPacketBytesThisCall))
@@ -1238,14 +1240,12 @@ bool CEMSocket::IsBusyExtensiveCheck()
 // won't always deliver the proper result (sometimes reports busy even if it isn't any more and thread related errors) but doesn't needs locks or function calls
 bool CEMSocket::IsBusyQuickCheck() const
 {
-	if (!m_bOverlappedSending)
-		return m_bBusy;
-	return m_pPendingSendOperation != NULL;
+	return m_bOverlappedSending ? (m_pPendingSendOperation != NULL) : m_bBusy;
 }
 
 void CEMSocket::CleanUpOverlappedSendOperation()
 {
-//sendLock must be locked by the caller!
+//sendLock must be locked by a caller!
 	if (InterlockedExchange(&m_OverlappedCleaning, 1))
 		return;
 	if (m_pPendingSendOperation != NULL) {

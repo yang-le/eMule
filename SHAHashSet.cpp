@@ -587,12 +587,10 @@ bool CAICHRecoveryHashSet::CreatePartRecoveryData(uint64 nPartStartPos, CFileDat
 		ASSERT(false);
 		return false;
 	}
-	if (!bDbgDontLoad) {
-		if (!LoadHashSet()) {
-			theApp.QueueDebugLogLine(/*DLP_VERYHIGH,*/ false, _T("Created RecoveryData error: failed to load hashset (file: %s)"), (LPCTSTR)m_pOwner->GetFileName());
-			SetStatus(AICH_ERROR);
-			return false;
-		}
+	if (!bDbgDontLoad && !LoadHashSet()) {
+		theApp.QueueDebugLogLine(/*DLP_VERYHIGH,*/ false, _T("Created RecoveryData error: failed to load hashset (file: %s)"), (LPCTSTR)m_pOwner->GetFileName());
+		SetStatus(AICH_ERROR);
+		return false;
 	}
 	bool bResult;
 	uint8 nLevel = 0;
@@ -606,13 +604,12 @@ bool CAICHRecoveryHashSet::CreatePartRecoveryData(uint64 nPartStartPos, CFileDat
 	fileDataOut->WriteUInt16(nHashsToWrite);
 	ULONGLONG nCheckFilePos = fileDataOut->GetPosition();
 	if (m_pHashTree.CreatePartRecoveryData(nPartStartPos, nPartSize, fileDataOut, 0, bUse32BitIdentifier)) {
-		if (nHashsToWrite*(HASHSIZE+(bUse32BitIdentifier? 4ull : 2ull)) != fileDataOut->GetPosition() - nCheckFilePos) {
+		bResult = (nHashsToWrite * (HASHSIZE + (bUse32BitIdentifier ? 4ull : 2ull)) == fileDataOut->GetPosition() - nCheckFilePos);
+		if (!bResult) {
 			ASSERT(false);
 			theApp.QueueDebugLogLine(/*DLP_VERYHIGH,*/ false, _T("Created RecoveryData has wrong length (file: %s)"), (LPCTSTR)m_pOwner->GetFileName());
-			bResult = false;
 			SetStatus(AICH_ERROR);
-		} else
-			bResult = true;
+		}
 	} else {
 		theApp.QueueDebugLogLine(/*DLP_VERYHIGH,*/ false, _T("Failed to create RecoveryData for %s"), (LPCTSTR)m_pOwner->GetFileName());
 		bResult = false;
@@ -659,7 +656,7 @@ bool CAICHRecoveryHashSet::ReadRecoveryData(uint64 nPartStartPos, CSafeMemFile* 
 	for (uint32 i = 0; i < nHashsAvailable; ++i) {
 		uint16 wHashIdent = fileDataIn->ReadUInt16();
 		if (wHashIdent == 1 /*never allow masterhash to be overwritten*/
-			|| !m_pHashTree.SetHash(fileDataIn, wHashIdent,(-1), false))
+			|| !m_pHashTree.SetHash(fileDataIn, wHashIdent, (-1), false))
 		{
 			theApp.QueueDebugLogLine(/*DLP_VERYHIGH,*/ false, _T("Failed to read RecoveryData for %s - Error when trying to read hash into tree (1)"), (LPCTSTR)m_pOwner->GetFileName() );
 			VerifyHashTree(true); // remove invalid hashes which we have already written

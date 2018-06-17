@@ -82,39 +82,39 @@ protected:
 	virtual void OnSend(int nErrorCode);
 
 	//Operations
-	virtual BOOL Accept(CAsyncSocketEx& rConnectedSocket, LPSOCKADDR lpSockAddr = NULL, int* lpSockAddrLen = NULL);
+	virtual BOOL Accept(CAsyncSocketEx &rConnectedSocket, LPSOCKADDR lpSockAddr = NULL, int *lpSockAddrLen = NULL);
 	virtual void Close();
-	virtual bool Connect(const CString& sHostAddress, UINT nHostPort);
+	virtual bool Connect(const CString &sHostAddress, UINT nHostPort);
 	virtual BOOL Connect(const LPSOCKADDR lpSockAddr, int nSockAddrLen);
 	virtual bool Create(UINT nSocketPort = 0, int nSocketType = SOCK_STREAM
-				, long lEvent = FD_READ | FD_WRITE | FD_OOB | FD_ACCEPT | FD_CONNECT | FD_CLOSE
-				, const CString& sSocketAddress = CString()
-				, int nFamily = AF_INET
+				, long lEvent = FD_SIX_EVENTS
+				, const CString &sSocketAddress = CString()
+				, ADDRESS_FAMILY nFamily = AF_INET
 				, bool reusable = false);
 
-	virtual bool GetPeerName(CString& rPeerAddress, UINT& rPeerPort);
-	virtual BOOL GetPeerName(LPSOCKADDR lpPeerAddr, int* lpPeerAddrLen);
-	virtual bool GetSockName(CString& rSockAddress, UINT& rSockPort);
-	virtual BOOL GetSockName(LPSOCKADDR lpSockAddr, int* lpSockAddrLen);
+	virtual bool GetPeerName(CString &rPeerAddress, UINT &rPeerPort);
+	virtual BOOL GetPeerName(LPSOCKADDR lpPeerAddr, int *lpPeerAddrLen);
+	virtual bool GetSockName(CString &rSockAddress, UINT &rSockPort);
+	virtual BOOL GetSockName(LPSOCKADDR lpSockAddr, int *lpSockAddrLen);
 
 	virtual BOOL Listen(int nConnectionBacklog);
-	virtual int Receive(void* lpBuf, int nBufLen, int nFlags = 0);
-	virtual int Send(const void* lpBuf, int nBufLen, int nFlags = 0);
+	virtual int Receive(void *lpBuf, int nBufLen, int nFlags = 0);
+	virtual int Send(const void *lpBuf, int nBufLen, int nFlags = 0);
 	virtual BOOL ShutDown(int nHow = sends);
 	enum { receives = 0, sends = 1, both = 2 };
 
 	//Functions that will call next layer
 	BOOL ShutDownNext(int nHow = sends);
-	BOOL AcceptNext(CAsyncSocketEx& rConnectedSocket, LPSOCKADDR lpSockAddr = NULL, int* lpSockAddrLen = NULL);
+	BOOL AcceptNext(CAsyncSocketEx &rConnectedSocket, LPSOCKADDR lpSockAddr = NULL, int *lpSockAddrLen = NULL);
 	void CloseNext();
-	bool ConnectNext(const CString& sHostAddress, UINT nHostPort);
+	bool ConnectNext(const CString &sHostAddress, UINT nHostPort);
 	BOOL ConnectNext(const LPSOCKADDR lpSockAddr, int nSockAddrLen);
-	bool CreateNext(UINT nSocketPort, int nSocketType, long lEvent, const CString& sSocketAddress, int nFamily = AF_INET, bool reusable = false);
+	bool CreateNext(UINT nSocketPort, int nSocketType, long lEvent, const CString &sSocketAddress, ADDRESS_FAMILY nFamily = AF_INET, bool reusable = false);
 
-	bool GetPeerNameNext(CString& rPeerAddress, UINT& rPeerPort);
-	BOOL GetPeerNameNext(LPSOCKADDR lpPeerAddr, int* lpPeerAddrLen);
-	bool GetSockNameNext(CString& rSockAddress, UINT& rSockPort);
-	BOOL GetSockNameNext(LPSOCKADDR lpSockAddr, int* lpSockAddrLen);
+	bool GetPeerNameNext(CString &rPeerAddress, UINT &rPeerPort);
+	BOOL GetPeerNameNext(LPSOCKADDR lpPeerAddr, int *lpPeerAddrLen);
+	bool GetSockNameNext(CString &rSockAddress, UINT &rSockPort);
+	BOOL GetSockNameNext(LPSOCKADDR lpSockAddr, int *lpSockAddrLen);
 
 	BOOL ListenNext(int nConnectionBacklog);
 	int ReceiveNext(void *lpBuf, int nBufLen, int nFlags = 0);
@@ -123,7 +123,7 @@ protected:
 	CAsyncSocketEx *m_pOwnerSocket;
 
 	//Calls OnLayerCallback on owner socket
-	int DoLayerCallback(int nType, WPARAM wParam, LPARAM lParam, char* str = NULL);
+	int DoLayerCallback(int nType, WPARAM wParam, LPARAM lParam, char *str = NULL);
 
 	int GetLayerState() const;
 	BOOL TriggerEvent(long lEvent, int nErrorCode, BOOL bPassThrough = FALSE);

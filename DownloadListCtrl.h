@@ -34,7 +34,13 @@ class CToolTipCtrlX;
 ///////////////////////////////////////////////////////////////////////////////
 // CtrlItem_Struct
 
-enum ItemType {FILE_TYPE = 1, AVAILABLE_SOURCE = 2, UNAVAILABLE_SOURCE = 3};
+enum ItemType
+{
+	INVALID_TYPE = -1
+	, FILE_TYPE = 1
+	, AVAILABLE_SOURCE = 2
+	, UNAVAILABLE_SOURCE = 3
+};
 
 class CtrlItem_Struct : public CObject
 {
@@ -43,12 +49,12 @@ class CtrlItem_Struct : public CObject
 public:
 	~CtrlItem_Struct() { status.DeleteObject(); }
 
-	ItemType         type;
-	CPartFile*       owner;
-	void*            value; // could be both CPartFile or CUpDownClient
-	CtrlItem_Struct* parent;
-	DWORD            dwUpdated;
-	CBitmap          status;
+	ItemType		type;
+	CPartFile		*owner;
+	void			*value; // could be both CPartFile or CUpDownClient
+	CtrlItem_Struct	*parent;
+	DWORD			dwUpdated;
+	CBitmap			status;
 };
 
 
@@ -58,15 +64,15 @@ public:
 class CDownloadListListCtrlItemWalk : public CListCtrlItemWalk
 {
 public:
-	explicit CDownloadListListCtrlItemWalk(CDownloadListCtrl* pListCtrl);
+	explicit CDownloadListListCtrlItemWalk(CDownloadListCtrl *pListCtrl);
 
-	virtual CObject* GetNextSelectableItem();
-	virtual CObject* GetPrevSelectableItem();
+	virtual CObject *GetNextSelectableItem();
+	virtual CObject *GetPrevSelectableItem();
 
 	void SetItemType(ItemType eItemType) { m_eItemType = eItemType; }
 
 protected:
-	CDownloadListCtrl* m_pDownloadListCtrl;
+	CDownloadListCtrl *m_pDownloadListCtrl;
 	ItemType m_eItemType;
 };
 
@@ -85,14 +91,14 @@ public:
 
 	UINT	curTab;
 
-	void	UpdateItem(void* toupdate);
+	void	UpdateItem(void *toupdate);
 	void	Init();
-	void	AddFile(CPartFile* toadd);
-	void	AddSource(CPartFile* owner, CUpDownClient* source, bool notavailable);
-	void	RemoveSource(CUpDownClient* source, CPartFile* owner);
-	bool	RemoveFile(const CPartFile* toremove);
+	void	AddFile(CPartFile *toadd);
+	void	AddSource(CPartFile *owner, CUpDownClient *source, bool notavailable);
+	void	RemoveSource(CUpDownClient *source, CPartFile *owner);
+	bool	RemoveFile(const CPartFile *toremove);
 	void	ClearCompleted(int incat=-2);
-	void	ClearCompleted(const CPartFile* pFile);
+	void	ClearCompleted(const CPartFile *pFile);
 	void	SetStyle();
 	void	CreateMenus();
 	void	Localize();
@@ -100,20 +106,20 @@ public:
 	void	ChangeCategory(int newsel);
 	CString getTextList();
 	void	ShowSelectedFileDetails();
-	void	HideFile(CPartFile* tohide);
-	void	ShowFile(CPartFile* toshow);
+	void	HideFile(CPartFile *tohide);
+	void	ShowFile(CPartFile *toshow);
 	void	ExpandCollapseItem(int iItem, int iAction, bool bCollapseSource = false);
-	void	HideSources(CPartFile* toCollapse);
-	void	GetDisplayedFiles(CArray<CPartFile*, CPartFile*>* list);
+	void	HideSources(CPartFile *toCollapse);
+	void	GetDisplayedFiles(CArray<CPartFile*, CPartFile*> *list);
 	void	MoveCompletedfilesCat(uint8 from, uint8 to);
 	int		GetCompleteDownloads(int cat,int &total);
 	void	UpdateCurrentCategoryView();
-	void	UpdateCurrentCategoryView(CPartFile* thisfile);
+	void	UpdateCurrentCategoryView(CPartFile *thisfile);
 	CImageList *CreateDragImage(int iItem, LPPOINT lpPoint);
-	void	FillCatsMenu(CMenu& rCatsMenu, int iFilesInCats = (-1));
-	CTitleMenu* GetPrioMenu();
+	void	FillCatsMenu(CMenu &rCatsMenu, int iFilesInCats = (-1));
+	CTitleMenu *GetPrioMenu();
 	float	GetFinishedSize();
-	bool	ReportAvailableCommands(CList<int>& liAvailableCommands);
+	bool	ReportAvailableCommands(CList<int> &liAvailableCommands);
 
 protected:
 	CImageList  m_ImageList;
@@ -127,12 +133,12 @@ protected:
     ListItems	m_ListItems;
 	CFont		m_fontBold; // may contain a locally created bold font
 	CFont*		m_pFontBold;// points to the bold font which is to be used (may be the locally created or the default bold font)
-	CToolTipCtrlX* m_tooltip;
+	CToolTipCtrlX *m_tooltip;
 	uint32		m_dwLastAvailableCommandsCheck;
 	bool		m_availableCommandsDirty;
 
 	void ShowFileDialog(UINT uInvokePage);
-	void ShowClientDialog(CUpDownClient* pClient);
+	void ShowClientDialog(CUpDownClient *pClient);
 	void SetAllIcons();
 	void DrawFileItem(CDC *dc, int nColumn, LPCRECT lpRect, UINT uDrawTextAlignment, CtrlItem_Struct *pCtrlItem);
 	void DrawSourceItem(CDC *dc, int nColumn, LPCRECT lpRect, UINT uDrawTextAlignment, CtrlItem_Struct *pCtrlItem);
@@ -141,17 +147,17 @@ protected:
 	void GetSourceItemDisplayText(const CtrlItem_Struct *pCtrlItem, int iSubItem, LPTSTR pszText, int cchTextMax);
 
 	static int CALLBACK SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
-    static int Compare(const CPartFile* file1, const CPartFile* file2, LPARAM lParamSort);
-    static int Compare(const CUpDownClient* client1, const CUpDownClient* client2, LPARAM lParamSort);
+    static int Compare(const CPartFile *file1, const CPartFile *file2, LPARAM lParamSort);
+    static int Compare(const CUpDownClient *client1, const CUpDownClient *client2, LPARAM lParamSort);
 
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 	virtual void DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct);
 
 	DECLARE_MESSAGE_MAP()
-	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnContextMenu(CWnd *pWnd, CPoint point);
 	afx_msg void OnListModified(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnLvnColumnClick(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnLvnGetDispInfo(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnLvnGetDispInfo(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnLvnItemActivate(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNmDblClk(NMHDR *pNMHDR, LRESULT *pResult);

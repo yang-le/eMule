@@ -240,7 +240,8 @@ public:
 	UINT			GetDatarate() const								{ return m_nUpDatarate; }
 	UINT			GetScore(bool sysvalue, bool isdownloading = false, bool onlybasevalue = false) const;
 	void			AddReqBlock(Requested_Block_Struct* reqblock, bool bSignalIOThread);
-	uint32			GetUpStartTimeDelay() const						{ return ::GetTickCount() - m_dwUploadTime; }
+	DWORD			GetUpStartTime() const							{ return m_dwUploadTime; }
+	DWORD			GetUpStartTimeDelay() const						{ return ::GetTickCount() - m_dwUploadTime; }
 	void 			SetUpStartTime()								{ m_dwUploadTime = ::GetTickCount(); }
 	void			SendHashsetPacket(const uchar* pData, uint32 nSize, bool bFileIdentifiers);
 	const uchar*	GetUploadFileID() const							{ return requpfileid; }
@@ -580,7 +581,7 @@ protected:
 	int GetFilePrioAsNumber() const;
 
 	UINT		m_nTransferredUp;
-	uint32		m_dwUploadTime;
+	DWORD		m_dwUploadTime;
 	UINT		m_cAsked;
 	uint32		m_dwLastUpRequest;
 	UINT		m_nCurSessionUp;

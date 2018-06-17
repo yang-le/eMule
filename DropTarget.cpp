@@ -103,7 +103,7 @@ LPCWSTR GetFileExtW(LPCWSTR pszPathW, int iLen /*= -1*/)
 struct PASTEURLDATA
 {
 	PASTEURLDATA()
-		: m_eType((DataType)-1)
+		: m_eType(InvalidType)
 	{
 		m_dwFlags = 0;
 	}
@@ -122,6 +122,7 @@ struct PASTEURLDATA
 
 	enum DataType
 	{
+		InvalidType = -1,
 		Text,
 		HTMLText,
 		Document

@@ -1947,7 +1947,8 @@ void CKademliaUDPListener::Process_KADEMLIA2_FIREWALLUDP(const byte *pbyPacketDa
 	uint16 nIncomingPort = PeekUInt16(pbyPacketData + 1);
 
 	if ((nIncomingPort != CKademlia::GetPrefs()->GetExternalKadPort() && nIncomingPort != CKademlia::GetPrefs()->GetInternKadPort())
-		|| nIncomingPort == 0){
+		|| nIncomingPort == 0)
+	{
 		DebugLogWarning(_T("Received UDP FirewallCheck on unexpected incoming port %u (%s)"), nIncomingPort, (LPCTSTR)ipstr(ntohl(uIP)));
 		CUDPFirewallTester::SetUDPFWCheckResult(false, true, uIP, 0);
 	}

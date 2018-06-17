@@ -1192,10 +1192,8 @@ bool CUpDownClient::Disconnected(LPCTSTR pszReason, bool bFromSocket)
 	SetKadState(KS_NONE);
 
 	if (GetUploadState() == US_UPLOADING || GetUploadState() == US_CONNECTING)
-	{
 		// sets US_NONE
 		theApp.uploadqueue->RemoveFromUploadQueue(this, CString(_T("CUpDownClient::Disconnected: ")) + pszReason);
-	}
 
 	if (GetDownloadState() == DS_DOWNLOADING){
 		ASSERT( m_nConnectingState == CCS_NONE );
@@ -1496,7 +1494,7 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 		m_nConnectingState = CCS_DIRECTTCP;
 		if (pClassSocket == NULL)
 			pClassSocket = RUNTIME_CLASS(CClientReqSocket);
-		socket = static_cast<CClientReqSocket*>(pClassSocket->CreateObject());
+		socket = static_cast<CClientReqSocket *>(pClassSocket->CreateObject());
 		socket->SetClient(this);
 		if (!socket->Create())
 		{
@@ -1966,7 +1964,7 @@ void CUpDownClient::SetUserHash(const uchar* pucUserHash)
 
 void CUpDownClient::SetBuddyID(const uchar* pucBuddyID)
 {
-	if( pucBuddyID == NULL ){
+	if (pucBuddyID == NULL) {
 		md4clr(m_achBuddyID);
 		m_bBuddyIDValid = false;
 	} else {
@@ -2253,12 +2251,12 @@ void CUpDownClient::SendPreviewAnswer(const CKnownFile* pForFile, CxImage** imgF
 			ASSERT ( false );
 			return;
 		}
-		CxImage* cur_frame = imgFrames[i];
+		CxImage *cur_frame = imgFrames[i];
 		if (cur_frame == NULL){
 			ASSERT ( false );
 			return;
 		}
-		BYTE* abyResultBuffer = NULL;
+		BYTE *abyResultBuffer = NULL;
 		int32_t nResultSize = 0;
 		if (!cur_frame->Encode(abyResultBuffer, nResultSize, CXIMAGE_FORMAT_PNG)) {
 			ASSERT ( false );
@@ -2313,15 +2311,15 @@ void CUpDownClient::ProcessPreviewAnswer(const uchar* pachPacket, uint32 nSize)
 		return;
 	}
 
-	BYTE* pBuffer = NULL;
-	try{
-		for (int i = 0; i != nCount; i++){
+	BYTE *pBuffer = NULL;
+	try {
+		for (int i = 0; i != nCount; ++i) {
 			uint32 nImgSize = data.ReadUInt32();
 			if (nImgSize > nSize)
 				throw CString(_T("CUpDownClient::ProcessPreviewAnswer - Provided image size exceeds limit"));
 			pBuffer = new BYTE[nImgSize];
 			data.Read(pBuffer, nImgSize);
-			CxImage* image = new CxImage(pBuffer, nImgSize, CXIMAGE_FORMAT_PNG);
+			CxImage *image = new CxImage(pBuffer, nImgSize, CXIMAGE_FORMAT_PNG);
 			delete[] pBuffer;
 			pBuffer = NULL;
 			if (image->IsValid())
@@ -2329,8 +2327,7 @@ void CUpDownClient::ProcessPreviewAnswer(const uchar* pachPacket, uint32 nSize)
 			else
 				delete image;
 		}
-	}
-	catch(...){
+	} catch (...) {
 		delete[] pBuffer;
 		throw;
 	}
@@ -2683,7 +2680,7 @@ CString CUpDownClient::GetDownloadStateDisplayString() const
 
 CString CUpDownClient::GetUploadStateDisplayString() const
 {
-	UINT uid = 0;
+	UINT uid;
 	switch (GetUploadState()) {
 	case US_ONUPLOADQUEUE:
 		uid = IDS_ONQUEUE;
@@ -2706,6 +2703,9 @@ CString CUpDownClient::GetUploadStateDisplayString() const
 			uid = IDS_TRANSFERRING;
 		else
 			uid = IDS_TRICKLING;
+		break;
+	default:
+		uid = 0;
 	}
 	CString strState(uid ? GetResString(uid) : _T(""));
 
@@ -2736,7 +2736,7 @@ void CUpDownClient::SendPublicIPRequest()
 	}
 }
 
-void CUpDownClient::ProcessPublicIPAnswer(const BYTE* pbyData, UINT uSize)
+void CUpDownClient::ProcessPublicIPAnswer(const BYTE *pbyData, UINT uSize)
 {
 	if (uSize != 4)
 		throw GetResString(IDS_ERR_WRONGPACKAGESIZE);
@@ -2957,42 +2957,37 @@ void CUpDownClient::ProcessChatMessage(CSafeMemFile* data, uint32 nLength)
 	theApp.emuledlg->chatwnd->chatselector.ProcessMessage(this, strMessage);
 }
 
-void CUpDownClient::ProcessCaptchaRequest(CSafeMemFile* data){
+void CUpDownClient::ProcessCaptchaRequest(CSafeMemFile* data)
+{
 	// received a captcha request, check if we actually accept it (only after sending a message ourself to this client)
 	if (GetChatCaptchaState() == CA_ACCEPTING && GetChatState() != MS_NONE
 		&& theApp.emuledlg->chatwnd->chatselector.GetItemByClient(this) != NULL)
 	{
 		// read tags (for future use)
-		uint8 nTagCount = data->ReadUInt8();
-		for (uint32 i = 0; i < nTagCount; i++)
+		for (uint32 i = data->ReadUInt8(); i > 0; --i)
 			CTag tag(data, true);
 		// sanitize checks - we want a small captcha not a wallpaper
 		uint32 nSize = (uint32)(data->GetLength() - data->GetPosition());
-		if ( nSize > 128 && nSize < 4096)
-		{
+		if (nSize > 128 && nSize < 4096) {
 			ULONGLONG pos = data->GetPosition();
-			BYTE* byBuffer = data->Detach();
+			BYTE *byBuffer = data->Detach();
 			CxImage imgCaptcha(&byBuffer[pos], nSize, CXIMAGE_FORMAT_BMP);
 			//free(byBuffer);
 			if (imgCaptcha.IsValid() && imgCaptcha.GetHeight() > 10 && imgCaptcha.GetHeight() < 50
-				&& imgCaptcha.GetWidth() > 10 && imgCaptcha.GetWidth() < 150 )
+				&& imgCaptcha.GetWidth() > 10 && imgCaptcha.GetWidth() < 150)
 			{
 				HBITMAP hbmp = imgCaptcha.MakeBitmap();
-				if (hbmp != NULL){
+				if (hbmp != NULL) {
 					m_nChatCaptchaState = CA_CAPTCHARECV;
 					theApp.emuledlg->chatwnd->chatselector.ShowCaptchaRequest(this, hbmp);
 					DeleteObject(hbmp);
-				}
-				else
+				} else
 					DebugLogWarning(_T("Received captcha request from client, Creating bitmap failed (%s)"), (LPCTSTR)DbgGetClientInfo());
-			}
-			else
+			} else
 				DebugLogWarning(_T("Received captcha request from client, processing image failed or invalid pixel size (%s)"), (LPCTSTR)DbgGetClientInfo());
-		}
-		else
+		} else
 			DebugLogWarning(_T("Received captcha request from client, size sanitize check failed (%u) (%s)"), nSize, (LPCTSTR)DbgGetClientInfo());
-	}
-	else
+	} else
 		DebugLogWarning(_T("Received captcha request from client, but don't accepting it at this time (%s)"), (LPCTSTR)DbgGetClientInfo());
 }
 
@@ -3004,8 +2999,7 @@ void CUpDownClient::ProcessCaptchaReqRes(uint8 nStatus)
 		ASSERT( nStatus < 3 );
 		m_nChatCaptchaState = CA_NONE;
 		theApp.emuledlg->chatwnd->chatselector.ShowCaptchaResult(this, GetResString((nStatus == 0) ? IDS_CAPTCHASOLVED : IDS_CAPTCHAFAILED));
-	}
-	else {
+	} else {
 		m_nChatCaptchaState = CA_NONE;
 		DebugLogWarning(_T("Received captcha result from client, but don't accepting it at this time (%s)"), (LPCTSTR)DbgGetClientInfo());
 	}
@@ -3015,8 +3009,7 @@ CFriend* CUpDownClient::GetFriend() const
 {
 	if (m_Friend != NULL && theApp.friendlist->IsValid(m_Friend))
 		return m_Friend;
-	else if (m_Friend != NULL)
-		ASSERT( FALSE );
+	ASSERT(m_Friend == NULL);
 	return NULL;
 }
 
@@ -3032,13 +3025,12 @@ void CUpDownClient::SendChatMessage(const CString& strMessage)
 bool CUpDownClient::HasPassedSecureIdent(bool bPassIfUnavailable) const
 {
 	if (credits != NULL)
-	{
 		if (credits->GetCurrentIdentState(GetConnectIP()) == IS_IDENTIFIED
 			|| (credits->GetCurrentIdentState(GetConnectIP()) == IS_NOTAVAILABLE && bPassIfUnavailable))
 		{
 			return true;
 		}
-	}
+
 	return false;
 }
 
@@ -3127,8 +3119,7 @@ void CUpDownClient::SendSharedDirectories()
 	}
 
 	// add incoming folders
-	for (int iCat = 0; iCat < thePrefs.GetCatCount(); iCat++)
-	{
+	for (int iCat = 0; iCat < thePrefs.GetCatCount(); ++iCat) {
 		strDir = theApp.sharedfiles->GetPseudoDirName(thePrefs.GetCategory(iCat)->strIncomingPath);
 		if (!strDir.IsEmpty())
 			arFolders.Add(strDir);
@@ -3152,5 +3143,5 @@ void CUpDownClient::SendSharedDirectories()
 	Packet *replypacket = new Packet(&tempfile);
 	replypacket->opcode = OP_ASKSHAREDDIRSANS;
 	theStats.AddUpDataOverheadOther(replypacket->size);
-	VERIFY( SendPacket(replypacket, true, true) );
+	VERIFY(SendPacket(replypacket, true, true));
 }
