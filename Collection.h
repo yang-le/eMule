@@ -26,7 +26,7 @@
 class CAbstractFile;
 class CCollectionFile;
 
-typedef CMap<CSKey,const CSKey&,CCollectionFile*,CCollectionFile*> CCollectionFilesMap;
+typedef CMap<CSKey,const CSKey &, CCollectionFile *, CCollectionFile *> CCollectionFilesMap;
 
 class CCollection
 {
@@ -34,18 +34,18 @@ class CCollection
 	friend class CCollectionViewDialog;
 public:
 	CCollection();
-	explicit CCollection(const CCollection* pCollection);
+	explicit CCollection(const CCollection *pCollection);
 	~CCollection();
 	CCollection(const CCollection&) = delete;
 	CCollection& operator=(const CCollection&) = delete;
-	bool InitCollectionFromFile(const CString& sFilePath, CString sFileName);
-	CCollectionFile* AddFileToCollection(CAbstractFile* pAbstractFile, bool bCreateClone);
-	void RemoveFileFromCollection(CAbstractFile* pAbstractFile);
-	void WriteToFileAddShared(CryptoPP::RSASSA_PKCS1v15_SHA_Signer* pSignKey = NULL);
-	void SetCollectionAuthorKey(const byte* abyCollectionAuthorKey, uint32 nSize);
+	bool InitCollectionFromFile(const CString &sFilePath, CString sFileName);
+	CCollectionFile *AddFileToCollection(CAbstractFile *pAbstractFile, bool bCreateClone);
+	void RemoveFileFromCollection(CAbstractFile *pAbstractFile);
+	void WriteToFileAddShared(CryptoPP::RSASSA_PKCS1v15_SHA_Signer *pSignKey = NULL);
+	void SetCollectionAuthorKey(const byte *abyCollectionAuthorKey, uint32 nSize);
 	CString GetCollectionAuthorKeyString();
-	static bool HasCollectionExtention(const CString& sFileName);
-	CString	GetAuthorKeyHashString();
+	static bool HasCollectionExtention(const CString &sFileName);
+	CString	GetAuthorKeyHashString() const;
 
 	CString m_sCollectionName;
 	CString m_sCollectionAuthorName;
@@ -54,6 +54,6 @@ public:
 
 private:
 	CCollectionFilesMap m_CollectionFilesMap;
-	byte*	m_pabyCollectionAuthorKey;
+	byte	*m_pabyCollectionAuthorKey;
 	uint32	m_nKeySize;
 };

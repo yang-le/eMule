@@ -53,26 +53,26 @@ bool CUDPFirewallTester::IsFirewalledUDP(bool bLastStateIfTesting)
 {
 	if (CKademlia::IsRunningInLANMode())
 		return false;
-	if (!m_bTimedOut && IsFWCheckUDPRunning())
-	{
+	bool bCheckingFW = IsFWCheckUDPRunning();
+	if (m_bTimedOut) {
+		if (bCheckingFW)
+			return true; // firewalled state by timeout
+		ASSERT(false);
+	} else if (bCheckingFW) {
 		if (!m_bFirewalledUDP && CKademlia::IsFirewalled() && m_dwTestStart != 0 && ::GetTickCount() >= m_dwTestStart + MIN2MS(6)
-			&& !m_bIsFWVerifiedUDP /*For now we don't allow to get firewalled by timeouts if we have succeded a test before, might be changed later*/)
+			&& !m_bIsFWVerifiedUDP) //For now we don't allow to get firewalled by timeouts if we have succeded a test before; might be changed later
 		{
 			DebugLogWarning(_T("Firewall UDP Tester: Timeout: Setting UDP status to firewalled after beeing unable to get results for 6 minutes"));
 			m_bTimedOut = true;
 			theApp.emuledlg->ShowConnectionState();
 		}
 	}
-	else if (m_bTimedOut && IsFWCheckUDPRunning()){
-		return true; // firewallstate by timeout
-	}
-	else if (m_bTimedOut)
-		ASSERT( false );
 
-	if (bLastStateIfTesting && IsFWCheckUDPRunning())
+	if (bLastStateIfTesting && bCheckingFW)
 		return m_bFirewalledLastStateUDP;
 	return m_bFirewalledUDP;
 }
+
 bool CUDPFirewallTester::GetUDPCheckClientsNeeded()
 { // are we in search for testclients
 	return (m_byFWChecksRunningUDP + m_byFWChecksFinishedUDP) < UDP_FIREWALLTEST_CLIENTSTOASK;

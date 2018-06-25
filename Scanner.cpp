@@ -354,7 +354,7 @@ static void yy_fatal_error (yyconst char msg[]  );
  */
 #define YY_DO_BEFORE_ACTION \
 	(yytext_ptr) = yy_bp; \
-	yyleng = (size_t) (yy_cp - yy_bp); \
+	yyleng = (int) (yy_cp - yy_bp); \
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
@@ -1783,8 +1783,8 @@ static int yy_get_next_buffer (void)
 
 	else
 		{
-			int num_to_read =
-			YY_CURRENT_BUFFER_LVALUE->yy_buf_size - number_to_move - 1;
+			int num_to_read = (int)
+			(YY_CURRENT_BUFFER_LVALUE->yy_buf_size - number_to_move - 1);
 
 		while ( num_to_read <= 0 )
 			{ /* Not enough room in the buffer - grow it. */
@@ -1916,7 +1916,7 @@ static int yy_get_next_buffer (void)
 		yy_cp += (int) (dest - source);
 		yy_bp += (int) (dest - source);
 		YY_CURRENT_BUFFER_LVALUE->yy_n_chars =
-			(yy_n_chars) = YY_CURRENT_BUFFER_LVALUE->yy_buf_size;
+			(yy_n_chars) = (int)YY_CURRENT_BUFFER_LVALUE->yy_buf_size;
 
 		if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
 			YY_FATAL_ERROR( "flex scanner push-back overflow" );
@@ -2252,7 +2252,7 @@ static void yyensure_buffer_stack (void)
 		/* Increase the buffer to prepare for a possible push. */
 		int grow_size = 8 /* arbitrary grow size */;
 
-		num_to_alloc = (yy_buffer_stack_max) + grow_size;
+		num_to_alloc = (int)(yy_buffer_stack_max + grow_size);
 		(yy_buffer_stack) = (struct yy_buffer_state**)yyrealloc
 								((yy_buffer_stack),
 								num_to_alloc * sizeof(struct yy_buffer_state*)
@@ -2290,7 +2290,7 @@ YY_BUFFER_STATE yy_scan_buffer  (char * base, yy_size_t  size )
 	b->yy_buf_pos = b->yy_ch_buf = base;
 	b->yy_is_our_buffer = 0;
 	b->yy_input_file = 0;
-	b->yy_n_chars = b->yy_buf_size;
+	b->yy_n_chars = (int)b->yy_buf_size;
 	b->yy_is_interactive = 0;
 	b->yy_at_bol = 1;
 	b->yy_fill_buffer = 0;
@@ -2312,7 +2312,7 @@ YY_BUFFER_STATE yy_scan_buffer  (char * base, yy_size_t  size )
 YY_BUFFER_STATE yy_scan_string (yyconst char * yystr )
 {
 
-	return yy_scan_bytes(yystr,strlen(yystr) );
+	return yy_scan_bytes(yystr, (int)strlen(yystr) );
 }
 
 /** Setup the input buffer state to scan the given bytes. The next call to yylex() will
@@ -2584,7 +2584,7 @@ static void ReadLexBuff(char* pcBuff, int& riResult, size_t uMaxSize)
 	ASSERT( sizeof(YY_CHAR) == sizeof(char) );
 	size_t uCharsInBuff = strlen(s_pszLexBuff);
 	size_t uCharsRead = min(uMaxSize, uCharsInBuff);
-	riResult = uCharsRead;
+	riResult = (int)uCharsRead;
 	memcpy(pcBuff, s_pszLexBuff, uCharsRead);
 	s_pszLexBuff += uCharsRead;
 }

@@ -43,26 +43,26 @@ public:
 	CServerConnect(const CServerConnect&) = delete;
 	CServerConnect& operator=(const CServerConnect&) = delete;
 
-	void	ConnectionFailed(CServerSocket* sender);
-	void	ConnectionEstablished(CServerSocket* sender);
+	void	ConnectionFailed(CServerSocket *sender);
+	void	ConnectionEstablished(CServerSocket *sender);
 
-	void	ConnectToAnyServer() { ConnectToAnyServer(0, true, true); }
+	void	ConnectToAnyServer()			{ ConnectToAnyServer(0, true, true); }
 	void	ConnectToAnyServer(UINT startAt, bool prioSort = false, bool isAuto = true, bool bNoCrypt = false);
-	void	ConnectToServer(CServer* server, bool multiconnect = false, bool bNoCrypt = false);
+	void	ConnectToServer(CServer *server, bool multiconnect = false, bool bNoCrypt = false);
 	void	StopConnectionTry();
 	static  VOID CALLBACK RetryConnectTimer(HWND hWnd, UINT nMsg, UINT_PTR nId, DWORD dwTime) noexcept;
 
 	void	CheckForTimeout();
-	void	DestroySocket(CServerSocket* pSck);	// safe socket closure and destruction
-	bool	SendPacket(Packet *packet,bool delpacket = true, CServerSocket* to = 0);
-	bool	IsUDPSocketAvailable() const { return udpsocket != NULL; }
-	bool	SendUDPPacket(Packet *packet,CServer* host, bool delpacket = false, uint16 nSpecialPort = 0, BYTE* pRawPacket = NULL, uint32 nLen = 0);
+	void	DestroySocket(CServerSocket *pSck);	// safe socket closure and destruction
+	bool	SendPacket(Packet *packet, bool delpacket = true, CServerSocket *to = NULL);
+	bool	IsUDPSocketAvailable() const	{ return udpsocket != NULL; }
+	bool	SendUDPPacket(Packet *packet, CServer *host, bool delpacket = false, uint16 nSpecialPort = 0, BYTE *pRawPacket = NULL, uint32 nLen = 0);
 	void	KeepConnectionAlive();
 	bool	Disconnect();
-	bool	IsConnecting() const	{ return connecting; }
-	bool	IsConnected() const	{ return connected; }
-	uint32	GetClientID() const	{ return clientid; }
-	CServer* GetCurrentServer();
+	bool	IsConnecting() const			{ return connecting; }
+	bool	IsConnected() const				{ return connected; }
+	uint32	GetClientID() const				{ return clientid; }
+	CServer *GetCurrentServer();
 
 	uint32	clientid;
 	uint8	pendingConnects;
@@ -72,9 +72,9 @@ public:
 	void	SetClientID(uint32 newid);
 	bool	IsLocalServer(uint32 dwIP, uint16 nPort) const;
 	void	TryAnotherConnectionRequest();
-	bool	IsSingleConnect() const	{ return singleconnecting; }
+	bool	IsSingleConnect() const			{ return singleconnecting; }
 	void	InitLocalIP();
-	uint32	GetLocalIP() const	{ return m_nLocalIP; }
+	uint32	GetLocalIP() const				{ return m_nLocalIP; }
 
 	bool	AwaitingTestFromIP(uint32 dwIP) const;
 	bool	IsConnectedObfuscated() const;
@@ -86,10 +86,10 @@ private:
 	bool	m_bTryObfuscated;
 	uint8	max_simcons;
 	UINT	m_uStartAutoConnectPos;
-	CServerSocket* connectedsocket;
-	CUDPSocket* udpsocket;
+	CServerSocket *connectedsocket;
+	CUDPSocket *udpsocket;
 	CPtrList m_lstOpenSockets;	// list of currently opened sockets
-	UINT_PTR	m_idRetryTimer;
+	UINT_PTR m_idRetryTimer;
 	uint32	m_nLocalIP;
 	CMap<ULONG, ULONG, CServerSocket*, CServerSocket*> connectionattemps;
 };

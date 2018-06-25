@@ -929,7 +929,7 @@ BOOL GetRIFFHeaders(LPCTSTR pszFileName, SMediaInfo* mi, bool& rbIsAVI, bool bFu
 				if (dwLength == sizeof(MainAVIHeader))
 				{
 					MainAVIHeader avihdr;
-					if (_read(hAviFile, &avihdr, sizeof(avihdr)) != sizeof(avihdr))
+					if (_read(hAviFile, &avihdr, sizeof avihdr) != sizeof avihdr)
 						goto inv_format_errno;
 					if (dwLength & 1) {
 						if (_lseek(hAviFile, 1, SEEK_CUR) == -1)

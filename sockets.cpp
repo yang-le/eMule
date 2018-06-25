@@ -42,29 +42,23 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-
 void CServerConnect::TryAnotherConnectionRequest()
 {
-	if (connectionattemps.GetCount() < (thePrefs.IsSafeServerConnectEnabled() ? 1 : 2))
-	{
-		CServer* next_server = theApp.serverlist->GetNextServer(m_bTryObfuscated);
-		if (next_server == NULL)
-		{
-			if (connectionattemps.IsEmpty())
-			{
-				if (m_bTryObfuscated && !thePrefs.IsClientCryptLayerRequired()){
+	if (connectionattemps.GetCount() < (thePrefs.IsSafeServerConnectEnabled() ? 1 : 2)) {
+		CServer *next_server = theApp.serverlist->GetNextServer(m_bTryObfuscated);
+		if (next_server == NULL) {
+			if (connectionattemps.IsEmpty()) {
+				if (m_bTryObfuscated && !thePrefs.IsClientCryptLayerRequired()) {
 					// try all servers on the non-obfuscated port next
 					m_bTryObfuscated = false;
 					ConnectToAnyServer(0, true, true, true);
-				}
-				else if (m_idRetryTimer == 0)
-				{
+				} else if (m_idRetryTimer == 0) {
 					// 05-Nov-2003: If we have a very short server list, we could put serious load on those few servers
 					// if we start the next connection tries without waiting.
 					LogWarning(LOG_STATUSBAR, GetResString(IDS_OUTOFSERVERS));
 					AddLogLine(false, GetResString(IDS_RECONNECT), CS_RETRYCONNECTTIME);
 					m_uStartAutoConnectPos = 0; // default: start at 0
-					VERIFY( (m_idRetryTimer = SetTimer(NULL, 0, SEC2MS(CS_RETRYCONNECTTIME), RetryConnectTimer)) != NULL );
+					VERIFY((m_idRetryTimer = SetTimer(NULL, 0, SEC2MS(CS_RETRYCONNECTTIME), RetryConnectTimer)) != NULL);
 					if (thePrefs.GetVerbose() && !m_idRetryTimer)
 						DebugLogError(_T("Failed to create 'server connect retry' timer - %s"), (LPCTSTR)GetErrorMessage(GetLastError()));
 				}
@@ -88,13 +82,11 @@ void CServerConnect::ConnectToAnyServer(UINT startAt, bool prioSort, bool isAuto
 	m_bTryObfuscated = thePrefs.IsServerCryptLayerTCPRequested() && !bNoCrypt;
 
 	// Barry - Only auto-connect to static server option
-	if (thePrefs.GetAutoConnectToStaticServersOnly() && isAuto)
-	{
+	if (thePrefs.GetAutoConnectToStaticServersOnly() && isAuto) {
 		bool anystatic = false;
 		CServer *next_server;
 		theApp.serverlist->SetServerPosition(startAt);
-		while ((next_server = theApp.serverlist->GetNextServer(false)) != NULL)
-		{
+		while ((next_server = theApp.serverlist->GetNextServer(false)) != NULL) {
 			if (next_server->IsStaticMember()) {
 				anystatic = true;
 				break;
@@ -125,7 +117,7 @@ void CServerConnect::ConnectToAnyServer(UINT startAt, bool prioSort, bool isAuto
 	TryAnotherConnectionRequest();
 }
 
-void CServerConnect::ConnectToServer(CServer* server, bool multiconnect, bool bNoCrypt)
+void CServerConnect::ConnectToServer(CServer *server, bool multiconnect, bool bNoCrypt)
 {
 	if (!multiconnect) {
 		StopConnectionTry();
@@ -149,22 +141,22 @@ void CServerConnect::StopConnectionTry()
 	singleconnecting = false;
 	theApp.emuledlg->ShowConnectionState();
 
-	if (m_idRetryTimer)
-	{
+	if (m_idRetryTimer) {
 		KillTimer(NULL, m_idRetryTimer);
-		m_idRetryTimer= 0;
+		m_idRetryTimer = 0;
 	}
 
-	// close all currenty opened sockets except the one which is connected to our current server
+	// close all currenty opened sockets except those that are:
+	//- connected to our current server
+	//- going to destroy itself later on
 	for (POSITION pos = m_lstOpenSockets.GetHeadPosition(); pos != NULL; ) {
-		CServerSocket* pSck = static_cast<CServerSocket *>(m_lstOpenSockets.GetNext(pos));
-		if (pSck != connectedsocket 	// don't destroy socket which is connected to server
-			&& !pSck->m_bIsDeleting)	// don't destroy socket if it is going to destroy itself later on
+		CServerSocket *pSck = static_cast<CServerSocket *>(m_lstOpenSockets.GetNext(pos));
+		if (pSck != connectedsocket && !pSck->m_bIsDeleting)
 			DestroySocket(pSck);
 	}
 }
 
-void CServerConnect::ConnectionEstablished(CServerSocket* sender)
+void CServerConnect::ConnectionEstablished(CServerSocket *sender)
 {
 	if (!connecting) {
 		// we are already connected to another server
@@ -173,11 +165,10 @@ void CServerConnect::ConnectionEstablished(CServerSocket* sender)
 	}
 
 	InitLocalIP();
-	if (sender->GetConnectionState() == CS_WAITFORLOGIN)
-	{
+	if (sender->GetConnectionState() == CS_WAITFORLOGIN) {
 		AddLogLine(false, GetResString(IDS_CONNECTEDTOREQ), (LPCTSTR)sender->cur_server->GetListName(), sender->cur_server->GetAddress(), sender->IsServerCryptEnabledConnection() ? sender->cur_server->GetObfuscationPortTCP() : sender->cur_server->GetPort());
 
-		CServer* pServer = theApp.serverlist->GetServerByAddress(sender->cur_server->GetAddress(), sender->cur_server->GetPort());
+		CServer *pServer = theApp.serverlist->GetServerByAddress(sender->cur_server->GetAddress(), sender->cur_server->GetPort());
 		if (pServer) {
 			pServer->ResetFailedCount();
 			theApp.emuledlg->serverwnd->serverlistctrl.RefreshServer(pServer);
@@ -212,10 +203,10 @@ void CServerConnect::ConnectionEstablished(CServerSocket* sender)
 		// eMule Version (14-Mar-2004: requested by lugdunummaster (need for LowID clients which have no chance
 		// to send an Hello packet to the server during the callback test))
 		CTag tagMuleVersion(CT_EMULE_VERSION,
-							//(uCompatibleClientID		<< 24) |
-							(CemuleApp::m_nVersionMjr	<< 17) |
-							(CemuleApp::m_nVersionMin	<< 10) |
-							(CemuleApp::m_nVersionUpd	<<  7) );
+			//(uCompatibleClientID		<< 24) |
+			(CemuleApp::m_nVersionMjr << 17) |
+			(CemuleApp::m_nVersionMin << 10) |
+			(CemuleApp::m_nVersionUpd << 7));
 		tagMuleVersion.WriteTagToFile(&data);
 
 		Packet *packet = new Packet(&data);
@@ -224,9 +215,7 @@ void CServerConnect::ConnectionEstablished(CServerSocket* sender)
 			Debug(_T(">>> Sending OP__LoginRequest\n"));
 		theStats.AddUpDataOverheadServer(packet->size);
 		SendPacket(packet, true, sender);
-	}
-	else if (sender->GetConnectionState() == CS_CONNECTED)
-	{
+	} else if (sender->GetConnectionState() == CS_CONNECTED) {
 		theStats.reconnects++;
 		theStats.serverConnectTime = ::GetTickCount();
 		connected = true;
@@ -245,28 +234,27 @@ void CServerConnect::ConnectionEstablished(CServerSocket* sender)
 		theApp.emuledlg->serverwnd->serverlistctrl.RemoveAllDeadServers();
 
 		// tecxx 1609 2002 - serverlist update
-		if (thePrefs.GetAddServersFromServer())
-		{
-			Packet *packet = new Packet(OP_GETSERVERLIST,0);
+		if (thePrefs.GetAddServersFromServer()) {
+			Packet *packet = new Packet(OP_GETSERVERLIST, 0);
 			if (thePrefs.GetDebugServerTCPLevel() > 0)
 				Debug(_T(">>> Sending OP__GetServerList\n"));
 			theStats.AddUpDataOverheadServer(packet->size);
 			SendPacket(packet, true);
 		}
 
-		CServer* pServer = theApp.serverlist->GetServerByAddress(sender->cur_server->GetAddress(), sender->cur_server->GetPort());
+		CServer *pServer = theApp.serverlist->GetServerByAddress(sender->cur_server->GetAddress(), sender->cur_server->GetPort());
 		if (pServer)
 			theApp.emuledlg->serverwnd->serverlistctrl.RefreshServer(pServer);
 	}
 	theApp.emuledlg->ShowConnectionState();
 }
 
-bool CServerConnect::SendPacket(Packet *packet, bool delpacket, CServerSocket* to)
+bool CServerConnect::SendPacket(Packet *packet, bool delpacket, CServerSocket *to)
 {
 	if (!to) {
-		if (connected) {
+		if (connected)
 			connectedsocket->SendPacket(packet, delpacket, true);
-		} else {
+		else {
 			if (delpacket)
 				delete packet;
 			return false;
@@ -277,56 +265,53 @@ bool CServerConnect::SendPacket(Packet *packet, bool delpacket, CServerSocket* t
 	return true;
 }
 
-bool CServerConnect::SendUDPPacket(Packet *packet, CServer* host, bool delpacket, uint16 nSpecialPort, BYTE* pRawPacket, uint32 nLen)
+bool CServerConnect::SendUDPPacket(Packet *packet, CServer *host, bool delpacket, uint16 nSpecialPort, BYTE *pRawPacket, uint32 nLen)
 {
-	if (theApp.IsConnected()){
-		if (udpsocket != NULL)
-			udpsocket->SendPacket(packet, host, nSpecialPort, pRawPacket, nLen);
-	}
-	if (delpacket){
+	if (theApp.IsConnected() && udpsocket != NULL)
+		udpsocket->SendPacket(packet, host, nSpecialPort, pRawPacket, nLen);
+
+	if (delpacket) {
 		delete packet;
 		delete[] pRawPacket;
 	}
 	return true;
 }
 
-void CServerConnect::ConnectionFailed(CServerSocket* sender)
+void CServerConnect::ConnectionFailed(CServerSocket *sender)
 {
-	if (!connecting && sender != connectedsocket) {
+	if (!connecting && sender != connectedsocket)
 		// just return, cleanup is done by the socket itself
 		return;
-	}
 
-	CServer* pServer = theApp.serverlist->GetServerByAddress(sender->cur_server->GetAddress(), sender->cur_server->GetPort());
-	switch (sender->GetConnectionState())
-	{
-		case CS_FATALERROR:
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FATAL));
-			break;
-		case CS_DISCONNECTED:
-			theApp.sharedfiles->ClearED2KPublishInfo();
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_LOSTC), (LPCTSTR)sender->cur_server->GetListName(), sender->cur_server->GetAddress(), sender->cur_server->GetPort());
-			break;
-		case CS_SERVERDEAD:
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_DEAD), (LPCTSTR)sender->cur_server->GetListName(), sender->cur_server->GetAddress(), sender->cur_server->GetPort());
-			if (pServer) {
-				pServer->AddFailedCount();
-				theApp.emuledlg->serverwnd->serverlistctrl.RefreshServer(pServer);
-			}
-			break;
-		case CS_ERROR:
-			break;
-		case CS_SERVERFULL:
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FULL), (LPCTSTR)sender->cur_server->GetListName(), sender->cur_server->GetAddress(), sender->cur_server->GetPort());
+	CServer *pServer = theApp.serverlist->GetServerByAddress(sender->cur_server->GetAddress(), sender->cur_server->GetPort());
+	switch (sender->GetConnectionState()) {
+	case CS_FATALERROR:
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FATAL));
+		break;
+	case CS_DISCONNECTED:
+		theApp.sharedfiles->ClearED2KPublishInfo();
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_LOSTC), (LPCTSTR)sender->cur_server->GetListName(), sender->cur_server->GetAddress(), sender->cur_server->GetPort());
+		break;
+	case CS_SERVERDEAD:
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_DEAD), (LPCTSTR)sender->cur_server->GetListName(), sender->cur_server->GetAddress(), sender->cur_server->GetPort());
+		if (pServer) {
+			pServer->AddFailedCount();
+			theApp.emuledlg->serverwnd->serverlistctrl.RefreshServer(pServer);
+		}
+		break;
+	case CS_ERROR:
+		break;
+	case CS_SERVERFULL:
+		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FULL), (LPCTSTR)sender->cur_server->GetListName(), sender->cur_server->GetAddress(), sender->cur_server->GetPort());
 	}
 
 	// IMPORTANT: mark this socket not to be deleted in StopConnectionTry(),
 	// because it will delete itself after this function!
 	sender->m_bIsDeleting = true;
 
-	switch (sender->GetConnectionState())
-	{
-		case CS_FATALERROR:{
+	switch (sender->GetConnectionState()) {
+	case CS_FATALERROR:
+		{
 			bool autoretry = !singleconnecting;
 			StopConnectionTry();
 			if (thePrefs.Reconnect() && autoretry && !m_idRetryTimer) {
@@ -345,13 +330,14 @@ void CServerConnect::ConnectionFailed(CServerSocket* sender)
 					if (iPosInList >= 0)
 						m_uStartAutoConnectPos = (iPosInList + 1) % theApp.serverlist->GetServerCount();
 				}
-				VERIFY( (m_idRetryTimer = SetTimer(NULL, 0, SEC2MS(1)*CS_RETRYCONNECTTIME, RetryConnectTimer)) != NULL );
+				VERIFY((m_idRetryTimer = SetTimer(NULL, 0, SEC2MS(1)*CS_RETRYCONNECTTIME, RetryConnectTimer)) != NULL);
 				if (thePrefs.GetVerbose() && !m_idRetryTimer)
 					DebugLogError(_T("Failed to create 'server connect retry' timer - %s"), (LPCTSTR)GetErrorMessage(GetLastError()));
 			}
 			break;
 		}
-		case CS_DISCONNECTED:{
+	case CS_DISCONNECTED:
+		{
 			theApp.sharedfiles->ClearED2KPublishInfo();
 			connected = false;
 			if (connectedsocket) {
@@ -367,16 +353,17 @@ void CServerConnect::ConnectionFailed(CServerSocket* sender)
 				theApp.emuledlg->ShowNotifier(GetResString(IDS_CONNECTIONLOST), TBN_IMPORTANTEVENT);
 			break;
 		}
-		case CS_ERROR:
-		case CS_NOTCONNECTED:
-//			if (!connecting)
-//				break;
-		case CS_SERVERDEAD:
-		case CS_SERVERFULL:{
+	case CS_ERROR:
+	case CS_NOTCONNECTED:
+		//if (!connecting)
+		//	break;
+	case CS_SERVERDEAD:
+	case CS_SERVERFULL:
+		{
 			if (!connecting)
 				break;
-			if (singleconnecting){
-				if (pServer != NULL && sender->IsServerCryptEnabledConnection() && !thePrefs.IsClientCryptLayerRequired()){
+			if (singleconnecting) {
+				if (pServer != NULL && sender->IsServerCryptEnabledConnection() && !thePrefs.IsClientCryptLayerRequired()) {
 					// try reconnecting without obfuscation
 					ConnectToServer(pServer, false, true);
 					break;
@@ -386,9 +373,8 @@ void CServerConnect::ConnectionFailed(CServerSocket* sender)
 			}
 
 			DWORD tmpkey;
-			CServerSocket* tmpsock;
-			POSITION pos = connectionattemps.GetStartPosition();
-			while (pos) {
+			CServerSocket *tmpsock;
+			for (POSITION pos = connectionattemps.GetStartPosition(); pos != NULL;) {
 				connectionattemps.GetNextAssoc(pos, tmpkey, tmpsock);
 				if (tmpsock == sender) {
 					connectionattemps.RemoveKey(tmpkey);
@@ -404,12 +390,10 @@ void CServerConnect::ConnectionFailed(CServerSocket* sender)
 VOID CALLBACK CServerConnect::RetryConnectTimer(HWND /*hWnd*/, UINT /*nMsg*/, UINT_PTR /*nId*/, DWORD /*dwTime*/) noexcept
 {
 	// NOTE: Always handle all type of MFC exceptions in TimerProcs - otherwise we'll get mem leaks
-	try
-	{
+	try {
 		CServerConnect *_this = theApp.serverconnect;
-		ASSERT( _this );
-		if (_this)
-		{
+		ASSERT(_this);
+		if (_this) {
 			_this->StopConnectionTry();
 			if (_this->IsConnected())
 				return;
@@ -430,9 +414,8 @@ void CServerConnect::CheckForTimeout()
 
 	DWORD dwCurTick = ::GetTickCount();
 	DWORD tmpkey;
-	CServerSocket* tmpsock;
-	POSITION pos = connectionattemps.GetStartPosition();
-	while (pos) {
+	CServerSocket *tmpsock;
+	for (POSITION pos = connectionattemps.GetStartPosition(); pos != NULL;) {
 		connectionattemps.GetNextAssoc(pos, tmpkey, tmpsock);
 		if (!tmpsock) {
 			if (thePrefs.GetVerbose())
@@ -456,11 +439,10 @@ void CServerConnect::CheckForTimeout()
 
 bool CServerConnect::Disconnect()
 {
-	if (connected && connectedsocket)
-	{
+	if (connected && connectedsocket) {
 		theApp.sharedfiles->ClearED2KPublishInfo();
 		connected = false;
-		CServer* pServer = theApp.serverlist->GetServerByAddress(connectedsocket->cur_server->GetAddress(), connectedsocket->cur_server->GetPort());
+		CServer *pServer = theApp.serverlist->GetServerByAddress(connectedsocket->cur_server->GetAddress(), connectedsocket->cur_server->GetPort());
 		if (pServer)
 			theApp.emuledlg->serverwnd->serverlistctrl.RefreshServer(pServer);
 		theApp.SetPublicIP(0);
@@ -483,14 +465,13 @@ CServerConnect::CServerConnect()
 	connected = false;
 	clientid = 0;
 	singleconnecting = false;
-	if (thePrefs.GetServerUDPPort() != 0){
-	    udpsocket = new CUDPSocket(); // initalize socket for udp packets
-		if (!udpsocket->Create()){
+	if (thePrefs.GetServerUDPPort() != 0) {
+		udpsocket = new CUDPSocket(); // initalize socket for udp packets
+		if (!udpsocket->Create()) {
 			delete udpsocket;
 			udpsocket = NULL;
 		}
-	}
-	else
+	} else
 		udpsocket = NULL;
 	m_idRetryTimer = 0;
 	m_uStartAutoConnectPos = 0;
@@ -511,7 +492,7 @@ CServerConnect::~CServerConnect()
 	}
 }
 
-CServer* CServerConnect::GetCurrentServer()
+CServer *CServerConnect::GetCurrentServer()
 {
 	if (IsConnected() && connectedsocket)
 		return connectedsocket->cur_server;
@@ -528,7 +509,7 @@ void CServerConnect::SetClientID(uint32 newid)
 	theApp.emuledlg->ShowConnectionState();
 }
 
-void CServerConnect::DestroySocket(CServerSocket* pSck)
+void CServerConnect::DestroySocket(CServerSocket *pSck)
 {
 	if (pSck == NULL)
 		return;
@@ -572,15 +553,14 @@ void CServerConnect::InitLocalIP()
 	// Don't use 'gethostbyname(NULL)'. The winsock DLL may be replaced by a DLL from a third party
 	// which is not fully compatible to the original winsock DLL. ppl reported crash with SCORSOCK.DLL
 	// when using 'gethostbyname(NULL)'.
-	__try{
+	__try {
 		char szHost[256];
-		if (gethostname(szHost, sizeof szHost) == 0){
-			hostent* pHostEnt = gethostbyname(szHost);
+		if (gethostname(szHost, sizeof szHost) == 0) {
+			hostent *pHostEnt = gethostbyname(szHost);
 			if (pHostEnt != NULL && pHostEnt->h_length == 4 && pHostEnt->h_addr_list[0] != NULL)
 				m_nLocalIP = *((uint32*)pHostEnt->h_addr_list[0]);
 		}
-	}
-	__except(EXCEPTION_EXECUTE_HANDLER){
+	} __except (EXCEPTION_EXECUTE_HANDLER) {
 		// at least two ppl reported crashs when using 'gethostbyname' with third party winsock DLLs
 		if (thePrefs.GetVerbose())
 			DebugLogError(_T("Unknown exception in CServerConnect::InitLocalIP"));
@@ -591,8 +571,8 @@ void CServerConnect::InitLocalIP()
 void CServerConnect::KeepConnectionAlive()
 {
 	DWORD dwServerKeepAliveTimeout = thePrefs.GetServerKeepAliveTimeout();
-	if (dwServerKeepAliveTimeout && connected && connectedsocket && connectedsocket->connectionstate == CS_CONNECTED &&
-		::GetTickCount() >= connectedsocket->GetLastTransmission() + dwServerKeepAliveTimeout)
+	if (dwServerKeepAliveTimeout && connected && connectedsocket && connectedsocket->connectionstate == CS_CONNECTED
+		&& ::GetTickCount() >= connectedsocket->GetLastTransmission() + dwServerKeepAliveTimeout)
 	{
 		// "Ping" the server if the TCP connection was not used for the specified interval with
 		// an empty publish files packet -> recommended by lugdunummaster himself!
@@ -605,7 +585,7 @@ void CServerConnect::KeepConnectionAlive()
 		if (thePrefs.GetDebugServerTCPLevel() > 0)
 			Debug(_T(">>> Sending OP__OfferFiles(KeepAlive) to server\n"));
 		theStats.AddUpDataOverheadServer(packet->size);
-		connectedsocket->SendPacket(packet,true);
+		connectedsocket->SendPacket(packet, true);
 	}
 }
 
@@ -615,13 +595,13 @@ bool CServerConnect::IsLowID() const
 }
 
 // true if the IP is one of a server which we currently try to connect to
-bool CServerConnect::AwaitingTestFromIP(uint32 dwIP) const{
+bool CServerConnect::AwaitingTestFromIP(uint32 dwIP) const
+{
 	if (connectionattemps.IsEmpty())
 		return false;
 	DWORD tmpkey;
-	CServerSocket* tmpsock;
-	POSITION pos = connectionattemps.GetStartPosition();
-	while (pos) {
+	CServerSocket *tmpsock;
+	for (POSITION pos = connectionattemps.GetStartPosition(); pos != NULL;) {
 		connectionattemps.GetNextAssoc(pos, tmpkey, tmpsock);
 		if (tmpsock != NULL && tmpsock->cur_server != NULL && tmpsock->cur_server->GetIP() == dwIP && tmpsock->GetConnectionState() == CS_WAITFORLOGIN)
 			return true;
@@ -629,6 +609,7 @@ bool CServerConnect::AwaitingTestFromIP(uint32 dwIP) const{
 	return false;
 }
 
-bool CServerConnect::IsConnectedObfuscated() const {
+bool CServerConnect::IsConnectedObfuscated() const
+{
 	return connectedsocket != NULL && connectedsocket->IsObfusicating();
 }

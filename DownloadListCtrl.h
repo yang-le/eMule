@@ -128,11 +128,11 @@ protected:
 	CTitleMenu	m_PreviewMenu;
 	CMenu		m_SourcesMenu;
 	bool		m_bRemainSort;
-	typedef std::pair<void*, CtrlItem_Struct*> ListItemsPair;
-	typedef std::multimap<void*, CtrlItem_Struct*> ListItems;
+	typedef std::pair<void *, CtrlItem_Struct *> ListItemsPair;
+	typedef std::multimap<void *, CtrlItem_Struct *> ListItems;
     ListItems	m_ListItems;
 	CFont		m_fontBold; // may contain a locally created bold font
-	CFont*		m_pFontBold;// points to the bold font which is to be used (may be the locally created or the default bold font)
+	CFont		*m_pFontBold;// points to the bold font which is to be used (may be the locally created or the default bold font)
 	CToolTipCtrlX *m_tooltip;
 	uint32		m_dwLastAvailableCommandsCheck;
 	bool		m_availableCommandsDirty;

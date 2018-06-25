@@ -800,8 +800,8 @@ void CHTRichEditCtrl::SetFont(CFont* pFont, BOOL bRedraw)
 
 	// although this should work correctly (according to SDK) it may give false results (e.g. the "click here..." text
 	// which is shown in the server info window may not be entirely used as a hyperlink???)
-	//	cf.dwMask |= CFM_CHARSET;
-	//	cf.bCharSet = lf.lfCharSet;
+	//cf.dwMask |= CFM_CHARSET;
+	//cf.bCharSet = lf.lfCharSet;
 
 	cf.yOffset = 0;
 	VERIFY(SetDefaultCharFormat(cf));
@@ -814,7 +814,7 @@ void CHTRichEditCtrl::SetFont(CFont* pFont, BOOL bRedraw)
 	//m_cfDefault.crTextColor = cf.crTextColor;
 	m_cfDefault.bCharSet = cf.bCharSet;
 	m_cfDefault.bPitchAndFamily = cf.bPitchAndFamily;
-	memcpy(m_cfDefault.szFaceName, cf.szFaceName, sizeof(m_cfDefault.szFaceName));
+	memcpy(m_cfDefault.szFaceName, cf.szFaceName, sizeof m_cfDefault.szFaceName);
 
 	PurgeSmileyCaches();
 
@@ -927,14 +927,14 @@ protected:
 
 	BEGIN_INTERFACE_PART(DataObject, IDataObject)
 		STDMETHOD(GetData)(FORMATETC *pformatetcIn, STGMEDIUM *pmedium);
-	STDMETHOD(GetDataHere)(FORMATETC *pformatetc, STGMEDIUM *pmedium);
-	STDMETHOD(QueryGetData)(FORMATETC *pformatetc);
-	STDMETHOD(GetCanonicalFormatEtc)(FORMATETC *pformatectIn, FORMATETC *pformatetcOut);
-	STDMETHOD(SetData)(FORMATETC *pformatetc, STGMEDIUM *pmedium, BOOL fRelease);
-	STDMETHOD(EnumFormatEtc)(DWORD dwDirection, IEnumFORMATETC **ppenumFormatEtc);
-	STDMETHOD(DAdvise)(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection);
-	STDMETHOD(DUnadvise)(DWORD dwConnection);
-	STDMETHOD(EnumDAdvise)(IEnumSTATDATA **ppenumAdvise);
+		STDMETHOD(GetDataHere)(FORMATETC *pformatetc, STGMEDIUM *pmedium);
+		STDMETHOD(QueryGetData)(FORMATETC *pformatetc);
+		STDMETHOD(GetCanonicalFormatEtc)(FORMATETC *pformatectIn, FORMATETC *pformatetcOut);
+		STDMETHOD(SetData)(FORMATETC *pformatetc, STGMEDIUM *pmedium, BOOL fRelease);
+		STDMETHOD(EnumFormatEtc)(DWORD dwDirection, IEnumFORMATETC **ppenumFormatEtc);
+		STDMETHOD(DAdvise)(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection);
+		STDMETHOD(DUnadvise)(DWORD dwConnection);
+		STDMETHOD(EnumDAdvise)(IEnumSTATDATA **ppenumAdvise);
 	END_INTERFACE_PART(DataObject)
 
 	HBITMAP m_hBitmap;
@@ -1177,10 +1177,10 @@ HBITMAP IconToBitmap(HICON hIcon, COLORREF crBackground, int cx = 16, int cy = 1
 		if (!GetIconInfo(hIcon, &ii))
 			return NULL;
 		BITMAP bmi;
-		int iSize = GetObject(ii.hbmColor, sizeof(bmi), &bmi);
+		int iSize = GetObject(ii.hbmColor, sizeof bmi, &bmi);
 		DeleteObject(ii.hbmMask);
 		DeleteObject(ii.hbmColor);
-		if ((unsigned)iSize < sizeof(bmi) - sizeof(bmi.bmBits))
+		if ((size_t)iSize < sizeof bmi  - sizeof bmi.bmBits )
 			return NULL;
 		cx = bmi.bmWidth;
 		cy = bmi.bmHeight;
@@ -1250,7 +1250,7 @@ HBITMAP CHTRichEditCtrl::GetSmileyBitmap(LPCTSTR pszSmileyID, COLORREF bk)
 	int cx = 16, cy = 16;
 	CHARFORMAT cf;
 	GetDefaultCharFormat(cf);
-	if (cf.cbSize == sizeof(cf) && (cf.dwMask & CFM_SIZE)) {
+	if (cf.cbSize == sizeof cf && cf.dwMask & CFM_SIZE) {
 		HDC hDC = ::GetDC(HWND_DESKTOP);
 		int iPixelFontSize = abs(-MulDiv(cf.yHeight, GetDeviceCaps(hDC, LOGPIXELSY), 20) / 72);
 		::ReleaseDC(NULL, hDC);
@@ -1335,7 +1335,7 @@ bool CHTRichEditCtrl::InsertSmiley(LPCTSTR pszSmileyID, COLORREF bk)
 	OleSetContainedObject(pIOleObject, TRUE);
 
 	REOBJECT reobject = {};
-	reobject.cbStruct = sizeof reobject;
+	reobject.cbStruct = (DWORD)sizeof reobject;
 	if (pIOleObject->GetUserClassID(&reobject.clsid) != S_OK)
 		return false;
 	reobject.cp = (LONG)REO_CP_SELECTION;
@@ -1397,7 +1397,7 @@ bool CHTRichEditCtrl::AddCaptcha(HBITMAP hbmp)
 	OleSetContainedObject(pIOleObject, TRUE);
 
 	REOBJECT reobject = {};
-	reobject.cbStruct = sizeof reobject;
+	reobject.cbStruct = (DWORD)sizeof reobject;
 	if (pIOleObject->GetUserClassID(&reobject.clsid) != S_OK)
 		return false;
 	reobject.cp = (LONG)REO_CP_SELECTION;

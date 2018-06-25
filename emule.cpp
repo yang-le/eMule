@@ -462,7 +462,7 @@ BOOL InitWinsock2(WSADATA *lpwsaData)
 		if (lpwsaData->wVersion != MAKEWORD(2, 2)) {
 			WSACleanup();
 			return FALSE;
-			}
+		}
 		// setup for termination of sockets
 		pStateS->m_pfnSockTerm = &AfxSocketTerm;
 	}
