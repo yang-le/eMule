@@ -75,7 +75,7 @@ BOOL CEnBitmap::LoadImage(LPCTSTR lpszResourceName, LPCTSTR szResourceType, HMOD
 				}
 			}
 
-			delete [] pBuff;
+			delete[] pBuff;
 		}
 	}
 
@@ -122,7 +122,7 @@ BOOL CEnBitmap::LoadImage(LPCTSTR szImagePath, COLORREF crBack)
 				pPicture->Release();
 			}
 		}
-		delete [] pBuff;
+		delete[] pBuff;
 	}
 
 	return bResult;

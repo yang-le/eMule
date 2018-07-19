@@ -195,11 +195,10 @@ BEGIN_MESSAGE_MAP(CSearchListCtrl, CMuleListCtrl)
 END_MESSAGE_MAP()
 
 CSearchListCtrl::CSearchListCtrl()
-	: CListCtrlItemWalk(this), m_crSearchResultDownloading(), m_crSearchResultDownloadStopped()
+	: CListCtrlItemWalk(this)
+	, m_nResultsID(), searchlist(), m_crSearchResultDownloading(), m_crSearchResultDownloadStopped()
 	, m_crSearchResultKnown(), m_crSearchResultShareing(), m_crSearchResultCancelled(), m_crShades()
 {
-	searchlist = NULL;
-	m_nResultsID = 0;
 	SetGeneralPurposeFind(true);
 	m_tooltip = new CToolTipCtrlX;
 	m_eFileSizeFormat = (EFileSizeFormat)theApp.GetProfileInt(_T("eMule"), _T("SearchResultsFileSizeFormat"), fsizeDefault);

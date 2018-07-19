@@ -45,11 +45,8 @@ BEGIN_MESSAGE_MAP(CConnectionWizardDlg, CDialog)
 END_MESSAGE_MAP()
 
 CConnectionWizardDlg::CConnectionWizardDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CConnectionWizardDlg::IDD, pParent)
+	: CDialog(CConnectionWizardDlg::IDD, pParent), m_icnWnd(), m_iOS(), m_iTotalDownload()
 {
-	m_iOS = 0;
-	m_iTotalDownload = 0;
-	m_icnWnd = NULL;
 }
 
 CConnectionWizardDlg::~CConnectionWizardDlg()

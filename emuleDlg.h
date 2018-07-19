@@ -83,7 +83,8 @@ public:
 	void OnTBBPressed(UINT id);
 	void EnableTaskbarGoodies(bool enable);
 
-	enum TBBIDS {
+	enum TBBIDS
+	{
 		TBB_FIRST,
 		TBB_CONNECT=TBB_FIRST,
 		TBB_DISCONNECT,

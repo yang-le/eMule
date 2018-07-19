@@ -114,11 +114,11 @@ public:
 
 	struct SServer {
 		SServer()
-			: m_uAvail(0), m_nIP(0), m_nPort(0), m_bUDPAnswer(false)
+			: m_uAvail(), m_nIP(), m_nPort(), m_bUDPAnswer()
 		{}
 
 		SServer(uint32 nIP, uint16 nPort, bool bUDPAnswer)
-			: m_uAvail(0), m_nIP(nIP), m_nPort(nPort), m_bUDPAnswer(bUDPAnswer)
+			: m_uAvail(), m_nIP(nIP), m_nPort(nPort), m_bUDPAnswer(bUDPAnswer)
 		{}
 
 		friend inline bool __stdcall operator==(const CSearchFile::SServer& s1, const CSearchFile::SServer& s2)

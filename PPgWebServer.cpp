@@ -61,7 +61,7 @@ BEGIN_MESSAGE_MAP(CPPgWebServer, CPropertyPage)
 END_MESSAGE_MAP()
 
 CPPgWebServer::CPPgWebServer()
-	: CPropertyPage(CPPgWebServer::IDD), m_bModified(false), bCreated(false), m_icoBrowse(NULL)
+	: CPropertyPage(CPPgWebServer::IDD), m_bModified(), bCreated(), m_icoBrowse()
 {
 }
 

@@ -41,15 +41,11 @@ static LPCTSTR sTCP = _T("TCP");
 static LPCTSTR sUDP = _T("UDP");
 
 CUPnPImplMiniLib::CUPnPImplMiniLib()
-	: m_hThreadHandle(NULL)
+	: m_bSucceededOnce(), m_pURLs(), m_pIGDData(), m_hThreadHandle(), m_bAbortDiscovery()
 {
 	m_nOldUDPPort = 0;
 	m_nOldTCPPort = 0;
 	m_nOldTCPWebPort = 0;
-	m_pURLs = NULL;
-	m_pIGDData = NULL;
-	m_bAbortDiscovery = false;
-	m_bSucceededOnce = false;
 	m_achLanIP[0] = 0;
 }
 

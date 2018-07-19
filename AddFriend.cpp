@@ -38,10 +38,8 @@ BEGIN_MESSAGE_MAP(CAddFriend, CDialog)
 END_MESSAGE_MAP()
 
 CAddFriend::CAddFriend()
-	: CDialog(CAddFriend::IDD)
+	: CDialog(CAddFriend::IDD), m_pShowFriend(), m_icnWnd()
 {
-	m_pShowFriend = NULL;
-	m_icnWnd = NULL;
 }
 
 CAddFriend::~CAddFriend()

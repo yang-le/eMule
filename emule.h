@@ -53,7 +53,8 @@ class CUploadDiskIOThread;
 
 struct SLogItem;
 
-enum AppState {
+enum AppState
+{
 	APP_STATE_STARTING = 0, //initialization phase
 	APP_STATE_RUNNING,
 	APP_STATE_ASKCLOSE, //exit confirmation dialog is active

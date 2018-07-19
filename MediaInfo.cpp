@@ -515,7 +515,8 @@ static BOOL ParseStreamHeader(int hAviFile, DWORD dwLengthLeft, STREAMHEADER* pS
 			if (dwLength > 4096) // expect corrupt data
 				return FALSE;
 			try {
-				pStrmHdr->fmt.dat = new BYTE[pStrmHdr->dwFormatLen = dwLength];
+				pStrmHdr->dwFormatLen = dwLength;
+				pStrmHdr->fmt.dat = new BYTE[dwLength];
 			} catch (...) {
 				errno = ENOMEM;
 				return FALSE;

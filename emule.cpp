@@ -1243,7 +1243,7 @@ void CemuleApp::ShowHelp(UINT uTopic, UINT uCmd)
 bool CemuleApp::ShowWebHelp(UINT uTopic)
 {
 	CString strHelpURL;
-	strHelpURL.Format(_T("http://onlinehelp.emule-project.net/help.php?language=%u&topic=%u"), thePrefs.GetLanguageID(), uTopic);
+	strHelpURL.Format(_T("https://onlinehelp.emule-project.net/help.php?language=%u&topic=%u"), thePrefs.GetLanguageID(), uTopic);
 	ShellExecute(NULL, NULL, strHelpURL, NULL, thePrefs.GetMuleDirectory(EMULE_EXECUTEABLEDIR), SW_SHOWDEFAULT);
 	return true;
 }

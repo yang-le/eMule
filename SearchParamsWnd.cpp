@@ -567,7 +567,7 @@ class SFileTypeCbEntry
 public:
 #if _MSC_VER>=1400
 	SFileTypeCbEntry()
-		: m_pszItemData(NULL), m_iImage(0)
+		: m_pszItemData(), m_iImage()
 	{}
 #endif
 	SFileTypeCbEntry(const CString& strLabel, LPCSTR pszItemData, int iImage)

@@ -48,8 +48,8 @@ CCollection::CCollection()
 }
 
 CCollection::CCollection(const CCollection *pCollection)
+	: m_sCollectionName(pCollection->m_sCollectionName)
 {
-	m_sCollectionName = pCollection->m_sCollectionName;
 	if (pCollection->m_pabyCollectionAuthorKey != NULL) {
 		m_nKeySize = pCollection->m_nKeySize;
 		m_pabyCollectionAuthorKey = new BYTE[m_nKeySize];

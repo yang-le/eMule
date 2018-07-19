@@ -37,9 +37,8 @@ BEGIN_MESSAGE_MAP(PreviewDlg, CDialog)
 END_MESSAGE_MAP()
 
 PreviewDlg::PreviewDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(PreviewDlg::IDD, pParent), m_pFile(NULL), m_nCurrentImage(0)
+	: CDialog(PreviewDlg::IDD, pParent), m_pFile(), m_nCurrentImage(), m_icons()
 {
-	memset(m_icons, 0, sizeof m_icons);
 }
 
 PreviewDlg::~PreviewDlg()
@@ -82,7 +81,7 @@ void PreviewDlg::ShowImage(int nNumber)
 	int nImageCount = m_pFile->GetPreviews().GetSize();
 	if (nImageCount <= 0)
 		return;
-	else if (nImageCount <= nNumber)
+	if (nImageCount <= nNumber)
 		nNumber = 0;
 	else if (nNumber < 0)
 		nNumber = nImageCount-1;
@@ -117,7 +116,8 @@ void PreviewDlg::OnBnClickedPvPrior()
 	ShowImage(m_nCurrentImage-1);
 }
 
-void PreviewDlg::OnClose(){
+void PreviewDlg::OnClose()
+{
 	HBITMAP hbitmap = m_ImageStatic.SetBitmap(NULL);
 	if (hbitmap)
 		DeleteObject(hbitmap);

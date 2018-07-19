@@ -31,7 +31,7 @@
 #define VERSION_MJR	0
 #define VERSION_MIN	51
 #define VERSION_UPDATE	0
-#define VERSION_BUILD	10
+#define VERSION_BUILD	11
 
 // NOTE: Do not forget to update file: res/eMule.manifest
 

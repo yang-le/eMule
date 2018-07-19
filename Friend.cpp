@@ -43,7 +43,7 @@ void	CFriend::init()
 }
 
 CFriend::CFriend()
-	: m_abyUserhash(), m_dwLastSeen(0), m_dwLastUsedIP(0), m_nLastUsedPort(0), m_dwLastChatted(0), m_strName()
+	: m_abyUserhash(), m_dwLastSeen(), m_dwLastUsedIP(), m_nLastUsedPort(), m_dwLastChatted(), m_strName()
 {
 	init();
 }

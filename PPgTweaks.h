@@ -27,7 +27,7 @@ protected:
 	bool m_bLogSecureIdent;
 	bool m_bLogFilteredIPs;
 	bool m_bLogFileSaving;
-    bool m_bLogA4AF;
+	bool m_bLogA4AF;
 	bool m_bLogUlDlEvents;
 	bool m_bCreditSystem;
 	bool m_bLog2Disk;
@@ -43,15 +43,15 @@ protected:
 	CString m_sYourHostname;
 	bool m_bFirewallStartup;
 	int m_iLogLevel;
-    bool m_bDynUpEnabled;
-    int m_iDynUpMinUpload;
-    int m_iDynUpPingTolerance;
-    int m_iDynUpPingToleranceMilliseconds;
-    int m_iDynUpRadioPingTolerance;
-    int m_iDynUpGoingUpDivider;
-    int m_iDynUpGoingDownDivider;
-    int m_iDynUpNumberOfPings;
-    bool m_bA4AFSaveCpu;
+	bool m_bDynUpEnabled;
+	int m_iDynUpMinUpload;
+	int m_iDynUpPingTolerance;
+	int m_iDynUpPingToleranceMilliseconds;
+	int m_iDynUpRadioPingTolerance;
+	int m_iDynUpGoingUpDivider;
+	int m_iDynUpGoingDownDivider;
+	int m_iDynUpNumberOfPings;
+	bool m_bA4AFSaveCpu;
 	bool m_bAutoArchDisable;
 	int m_iExtractMetaData;
 	bool m_bCloseUPnPOnExit;
@@ -64,7 +64,7 @@ protected:
 
 	CSliderCtrl m_ctlFileBuffSize;
 	CSliderCtrl m_ctlQueueSize;
-    CTreeOptionsCtrlEx m_ctrlTreeOptions;
+	CTreeOptionsCtrlEx m_ctrlTreeOptions;
 	bool m_bInitializedTreeOpts;
 	HTREEITEM m_htiTCPGroup;
 	HTREEITEM m_htiMaxCon5Sec;
@@ -79,7 +79,7 @@ protected:
 	HTREEITEM m_htiLogSecureIdent;
 	HTREEITEM m_htiLogFilteredIPs;
 	HTREEITEM m_htiLogFileSaving;
-    HTREEITEM m_htiLogA4AF;
+	HTREEITEM m_htiLogA4AF;
 	HTREEITEM m_htiLogUlDlEvents;
 	HTREEITEM m_htiCreditSystem;
 	HTREEITEM m_htiLog2Disk;
@@ -98,18 +98,18 @@ protected:
 	HTREEITEM m_htiYourHostname;
 	HTREEITEM m_htiFirewallStartup;
 	HTREEITEM m_htiLogLevel;
-    HTREEITEM m_htiDynUp;
+	HTREEITEM m_htiDynUp;
 	HTREEITEM m_htiDynUpEnabled;
-    HTREEITEM m_htiDynUpMinUpload;
-    HTREEITEM m_htiDynUpPingTolerance;
-    HTREEITEM m_htiDynUpPingToleranceMilliseconds;
-    HTREEITEM m_htiDynUpPingToleranceGroup;
-    HTREEITEM m_htiDynUpRadioPingTolerance;
-    HTREEITEM m_htiDynUpRadioPingToleranceMilliseconds;
-    HTREEITEM m_htiDynUpGoingUpDivider;
-    HTREEITEM m_htiDynUpGoingDownDivider;
-    HTREEITEM m_htiDynUpNumberOfPings;
-    HTREEITEM m_htiA4AFSaveCpu;
+	HTREEITEM m_htiDynUpMinUpload;
+	HTREEITEM m_htiDynUpPingTolerance;
+	HTREEITEM m_htiDynUpPingToleranceMilliseconds;
+	HTREEITEM m_htiDynUpPingToleranceGroup;
+	HTREEITEM m_htiDynUpRadioPingTolerance;
+	HTREEITEM m_htiDynUpRadioPingToleranceMilliseconds;
+	HTREEITEM m_htiDynUpGoingUpDivider;
+	HTREEITEM m_htiDynUpGoingDownDivider;
+	HTREEITEM m_htiDynUpNumberOfPings;
+	HTREEITEM m_htiA4AFSaveCpu;
 	HTREEITEM m_htiExtractMetaData;
 	HTREEITEM m_htiExtractMetaDataNever;
 	HTREEITEM m_htiExtractMetaDataID3Lib;
@@ -132,7 +132,7 @@ protected:
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 
 	DECLARE_MESSAGE_MAP()
-    afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnDestroy();
 	afx_msg LRESULT OnTreeOptsCtrlNotify(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnHelp();

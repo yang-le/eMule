@@ -363,16 +363,17 @@ void CreateNetworkInfo(CRichEditCtrlX& rCtrl, CHARFORMAT& rcfDef, CHARFORMAT& rc
 	rCtrl << GetResString(IDS_WEBSRV) << _T("\r\n");
 	rCtrl.SetSelectionCharFormat(rcfDef);
 	rCtrl << GetResString(IDS_STATUS) << _T(":\t");
-	rCtrl << (thePrefs.GetWSIsEnabled() ? GetResString(IDS_ENABLED) : GetResString(IDS_DISABLED)) << _T("\r\n");
+	rCtrl << GetResString(thePrefs.GetWSIsEnabled() ? IDS_ENABLED : IDS_DISABLED) << _T("\r\n");
 	if (thePrefs.GetWSIsEnabled()){
 		CString count;
 		count.Format(_T("%d %s"), static_cast<int>(theApp.webserver->GetSessionCount()), (LPCTSTR)GetResString(IDS_ACTSESSIONS));
 		rCtrl << _T("\t") << count << _T("\r\n");
 		CString strHostname;
-		if (!thePrefs.GetYourHostname().IsEmpty() && thePrefs.GetYourHostname().Find(_T('.')) != -1)
-			strHostname = thePrefs.GetYourHostname();
-		else
+		if (thePrefs.GetYourHostname().IsEmpty() || thePrefs.GetYourHostname().Find(_T('.')) < 0)
 			strHostname = ipstr(theApp.serverconnect->GetLocalIP());
-		rCtrl << _T("URL:\t") << _T("http://") << strHostname << _T(":") << thePrefs.GetWSPort() << _T("/\r\n");
+		else
+			strHostname = thePrefs.GetYourHostname();
+		rCtrl << _T("URL:\t") << (thePrefs.GetWebUseHttps() ? _T("https://") : _T("http://"));
+		rCtrl << strHostname << _T(":") << thePrefs.GetWSPort() << _T("/\r\n");
 	}
 }

@@ -90,6 +90,6 @@ protected:
 	volatile BOOL	m_bAbort;
 	BOOL			m_bSafeToClose;
 	CFile			m_FileToWrite;
-	CWinThread*		m_pThread;
+	CWinThread		*m_pThread;
 	static ULONGLONG sm_ullWinInetVer;
 };

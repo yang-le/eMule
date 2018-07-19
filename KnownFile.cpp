@@ -358,31 +358,26 @@ void Dump(const Kademlia::WordList& wordlist)
 
 void CKnownFile::SetFileName(LPCTSTR pszFileName, bool bReplaceInvalidFileSystemChars, bool bRemoveControlChars)
 {
-	CKnownFile* pFile = NULL;
-
 	// If this is called within the sharedfiles object during startup,
 	// we cannot reference it yet..
 
-	if(theApp.sharedfiles)
-		pFile = theApp.sharedfiles->GetFileByID(GetFileHash());
+	CKnownFile *pFile = theApp.sharedfiles ? theApp.sharedfiles->GetFileByID(GetFileHash()) : NULL;
 
-	if (pFile && pFile == this)
+	if (pFile == this)
 		theApp.sharedfiles->RemoveKeywords(this);
 
 	CAbstractFile::SetFileName(pszFileName, bReplaceInvalidFileSystemChars, true, bRemoveControlChars);
 	m_verifiedFileType = FILETYPE_UNKNOWN;
 
 	wordlist.clear();
-	if(m_pCollection)
-	{
+	if (m_pCollection) {
 		CStringW sKeyWords;
-		sKeyWords.Format(_T("%s %s"), (LPCTSTR)m_pCollection->GetCollectionAuthorKeyString(), (LPCTSTR)(CString)GetFileName());  //cast to CStringT
+		sKeyWords.Format(_T("%s %s"), (LPCTSTR)m_pCollection->GetCollectionAuthorKeyString(), (LPCTSTR)GetFileName());
 		Kademlia::CSearchManager::GetWords(sKeyWords, &wordlist);
-	}
-	else
-		Kademlia::CSearchManager::GetWords((CStringW)GetFileName(), &wordlist); //make sure it is CStringW
+	}  else
+		Kademlia::CSearchManager::GetWords((CStringW)GetFileName(), &wordlist); //make sure that it is a CStringW
 
-	if (pFile && pFile == this)
+	if (pFile == this)
 		theApp.sharedfiles->AddKeywords(this);
 }
 

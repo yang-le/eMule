@@ -1273,7 +1273,7 @@ void CUpDownClient::ProcessBlockPacket(const uchar *packet, uint32 size, bool pa
 					cur_block->fZStreamError = 1;
 					cur_block->totalUnzipped = 0;
 				}
-				delete [] unzipped;
+				delete[] unzipped;
 			}
 
 			// These checks only need to be done if any data was written

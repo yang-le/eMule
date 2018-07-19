@@ -33,7 +33,7 @@ END_MESSAGE_MAP()
 // 'TabControl::TabControl'
 //
 TabControl::TabControl()
-	: m_bDragging(false), m_nSrcTab(0), m_nDstTab(0), m_bHotTracking(false), m_InsertPosRect(0, 0, 0, 0), m_pSpinCtrl(0)
+	: m_bDragging(), m_nSrcTab(), m_nDstTab(), m_bHotTracking(), m_InsertPosRect(), m_pSpinCtrl()
 {
 }
 

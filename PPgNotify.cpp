@@ -58,10 +58,8 @@ BEGIN_MESSAGE_MAP(CPPgNotify, CPropertyPage)
 END_MESSAGE_MAP()
 
 CPPgNotify::CPPgNotify()
-	: CPropertyPage(CPPgNotify::IDD)
+	: CPropertyPage(CPPgNotify::IDD), m_bEnableEMail(true), m_icoBrowse()
 {
-	m_bEnableEMail = true;
-	m_icoBrowse = NULL;
 }
 
 CPPgNotify::~CPPgNotify()

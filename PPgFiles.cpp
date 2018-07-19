@@ -58,9 +58,8 @@ BEGIN_MESSAGE_MAP(CPPgFiles, CPropertyPage)
 END_MESSAGE_MAP()
 
 CPPgFiles::CPPgFiles()
-	: CPropertyPage(CPPgFiles::IDD)
+	: CPropertyPage(CPPgFiles::IDD), m_icoBrowse()
 {
-	m_icoBrowse = NULL;
 }
 
 CPPgFiles::~CPPgFiles()

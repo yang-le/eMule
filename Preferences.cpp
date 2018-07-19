@@ -51,7 +51,7 @@ static char THIS_FILE[] = __FILE__;
 CPreferences thePrefs;
 
 CString CPreferences::m_astrDefaultDirs[13];
-bool	CPreferences::m_abDefaultDirsCreated[13] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+bool	CPreferences::m_abDefaultDirsCreated[13] = {};
 int		CPreferences::m_nCurrentUserDirMode = -1;
 int		CPreferences::m_iDbgHeap;
 CString	CPreferences::strNick;
@@ -2690,25 +2690,25 @@ CString CPreferences::GetHomepageBaseURLForLevel(int nLevel)
 {
 	CString tmp;
 	if (nLevel == 0)
-		tmp = _T("http://emule-project.net");
+		tmp = _T("https://emule-project.net");
 	else if (nLevel == 1)
-		tmp = _T("http://www.emule-project.org");
+		tmp = _T("https://www.emule-project.org");
 	else if (nLevel == 2)
-		tmp = _T("http://www.emule-project.com");
+		tmp = _T("https://www.emule-project.com");
 	else if (nLevel < 100)
-		tmp.Format(_T("http://www%i.emule-project.net"), nLevel - 2);
+		tmp.Format(_T("https://www%i.emule-project.net"), nLevel - 2);
 	else if (nLevel < 150)
-		tmp.Format(_T("http://www%i.emule-project.org"), nLevel);
+		tmp.Format(_T("https://www%i.emule-project.org"), nLevel);
 	else if (nLevel < 200)
-		tmp.Format(_T("http://www%i.emule-project.com"), nLevel);
+		tmp.Format(_T("https://www%i.emule-project.com"), nLevel);
 	else if (nLevel == 200)
-		tmp = _T("http://emule.sf.net");
+		tmp = _T("https://emule.sf.net");
 	else if (nLevel == 201)
-		tmp = _T("http://www.emuleproject.net");
+		tmp = _T("https://www.emuleproject.net");
 	else if (nLevel == 202)
-		tmp = _T("http://sourceforge.net/projects/emule/");
+		tmp = _T("https://sourceforge.net/projects/emule/");
 	else
-		tmp = _T("http://www.emule-project.net");
+		tmp = _T("https://www.emule-project.net");
 	return tmp;
 }
 
@@ -2717,24 +2717,24 @@ CString CPreferences::GetVersionCheckBaseURL()
 	CString tmp;
 	UINT nWebMirrorAlertLevel = GetWebMirrorAlertLevel();
 	if (nWebMirrorAlertLevel < 100)
-		tmp = _T("http://vcheck.emule-project.net");
+		tmp = _T("https://vcheck.emule-project.net");
 	else if (nWebMirrorAlertLevel < 150)
-		tmp.Format(_T("http://vcheck%u.emule-project.org"), nWebMirrorAlertLevel);
+		tmp.Format(_T("https://vcheck%u.emule-project.org"), nWebMirrorAlertLevel);
 	else if (nWebMirrorAlertLevel < 200)
-		tmp.Format(_T("http://vcheck%u.emule-project.com"), nWebMirrorAlertLevel);
+		tmp.Format(_T("https://vcheck%u.emule-project.com"), nWebMirrorAlertLevel);
 	else if (nWebMirrorAlertLevel == 200)
-		tmp = _T("http://emule.sf.net");
+		tmp = _T("https://emule.sf.net");
 	else if (nWebMirrorAlertLevel == 201)
-		tmp = _T("http://www.emuleproject.net");
+		tmp = _T("https://www.emuleproject.net");
 	else
-		tmp = _T("http://vcheck.emule-project.net");
+		tmp = _T("https://vcheck.emule-project.net");
 	return tmp;
 }
 
 CString CPreferences::GetVersionCheckURL()
 {
 	CString theUrl;
-	theUrl.Format(_T("%s/en/version_check.php?version=%u&language=%u")
+	theUrl.Format(_T("%s/en/version_check.php?version=%u&language=%u") _T("&mod=1")
 		, (LPCTSTR)thePrefs.GetVersionCheckBaseURL()
 		, theApp.m_uCurVersionCheck
 		, thePrefs.GetLanguageID());

@@ -92,7 +92,10 @@ class CAICHHash
 {
 public:
 	~CAICHHash()									{}
-	CAICHHash()	: m_abyBuffer()						{}
+	CAICHHash()
+		: m_abyBuffer()
+	{
+	}
 	explicit CAICHHash(CFileDataIO *file)			{ Read(file); }
 	explicit CAICHHash(const uchar* data)			{ Read(data); }
 	CAICHHash(const CAICHHash &k1)					{ *this = k1; }
@@ -190,15 +193,15 @@ public:
 class CAICHRequestedData {
 public:
 	CAICHRequestedData()
-		: m_nPart(0), m_pPartFile(NULL), m_pClient(NULL)
+		: m_nPart(), m_pPartFile(), m_pClient()
 	{}
 	CAICHRequestedData(const CAICHRequestedData &k1)
 		: m_nPart(k1.m_nPart), m_pPartFile(k1.m_pPartFile), m_pClient(k1.m_pClient)
 	{}
 	CAICHRequestedData&	operator=(const CAICHRequestedData& k1)		{ m_nPart = k1.m_nPart; m_pPartFile = k1.m_pPartFile; m_pClient = k1.m_pClient; return *this; }
 	uint16			m_nPart;
-	CPartFile*		m_pPartFile;
-	CUpDownClient*	m_pClient;
+	CPartFile		*m_pPartFile;
+	CUpDownClient	*m_pClient;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////

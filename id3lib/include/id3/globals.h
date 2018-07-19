@@ -433,7 +433,8 @@ ID3_ENUM(ID3_Err)
 //  ID3E_FieldNotFound,           /**< Requested field not found */
 //  ID3E_TagAlreadyAttached,      /**< Tag is already attached to a file */
 //  ID3E_InvalidTagVersion,       /**< Invalid tag version */
-  ID3E_zlibError                /**< Error in compression/uncompression */
+  ID3E_zlibError = 15,          /**< Error in compression/uncompression */
+  ID3E_LastError                // Prevents undefined behaviour when casting values < 17
 // We use these errors in a hack in RenderV2ToFile; for this, it is important to keep
 // the errors which can be returned from createFile(), openWritableFile and ID3E_NoFile and ID3E_ReadOnly
 // below the minimum tag size ( which is 10 bytes for the header, + 7 bytes for a minimal (2.2) frame

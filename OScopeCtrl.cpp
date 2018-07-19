@@ -47,7 +47,7 @@ BEGIN_MESSAGE_MAP(COScopeCtrl, CWnd)
 END_MESSAGE_MAP()
 
 COScopeCtrl::COScopeCtrl(int NTrends)
-	: m_nClientHeight(0), m_nClientWidth(0), m_nPlotHeight(0), m_nPlotWidth(0)
+	: m_nClientHeight(), m_nClientWidth(), m_nPlotHeight(), m_nPlotWidth()
 {
 	static const COLORREF PresetColor[16] =
 	{

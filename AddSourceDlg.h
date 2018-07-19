@@ -27,8 +27,8 @@ struct SUnresolvedHostname
 		nPort = 0;
 	}
 	CStringA strHostname;
-	uint16 nPort;
 	CString strURL;
+	uint16 nPort;
 };
 
 // CAddSourceDlg dialog
@@ -40,13 +40,13 @@ class CAddSourceDlg : public CResizableDialog
 	enum { IDD = IDD_ADDSOURCE };
 
 public:
-	explicit CAddSourceDlg(CWnd* pParent = NULL);   // standard constructor
+	explicit CAddSourceDlg(CWnd *pParent = NULL);   // standard constructor
 	virtual ~CAddSourceDlg();
 
-	void SetFile( CPartFile* pFile );
+	void SetFile(CPartFile *pFile);
 
 protected:
-	CPartFile* m_pFile;
+	CPartFile *m_pFile;
 	int m_nSourceType;
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support

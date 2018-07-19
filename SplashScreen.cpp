@@ -108,10 +108,14 @@ void CSplashScreen::OnPaint()
 			dc.FillSolidRect(rc.left+1, rc.top+1, rc.Width()-2, rc.Height()-2, RGB(255,255,255));
 
 			LOGFONT lf = {};
+#ifdef _BOOTSTRAPNODESDAT
+			lf.lfHeight = 24;
+#else
 #if defined(_DEBUG) && (defined(_BETA) || defined(_DEVBUILD))
 			lf.lfHeight = 28;
 #else
 			lf.lfHeight = 30;
+#endif
 #endif
 			lf.lfWeight = FW_BOLD;
 			lf.lfQuality = afxIsWin95() ? NONANTIALIASED_QUALITY : ANTIALIASED_QUALITY;
@@ -133,7 +137,7 @@ void CSplashScreen::OnPaint()
 			_tcscpy(lf.lfFaceName, _T("Arial"));
 			font.CreateFontIndirect(&lf);
 			pOldFont = dc.SelectObject(&font);
-			dc.DrawText(_T("Copyright (C) 2002-2015 Merkur"), &rc, DT_CENTER | DT_NOPREFIX);
+			dc.DrawText(_T("Copyright (C) 2002-2018 Merkur"), &rc, DT_CENTER | DT_NOPREFIX);
 			if (pOldFont)
 				dc.SelectObject(pOldFont);
 			font.DeleteObject();

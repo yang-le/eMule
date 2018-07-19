@@ -95,8 +95,8 @@ protected:
 	};
 	CArray<SPreviewApp> m_aApps;
 	time_t m_tDefAppsFileLastModified;
-	CPartFile* m_pLastCheckedPartFile;
-	SPreviewApp* m_pLastPartFileApp;
+	CPartFile *m_pLastCheckedPartFile;
+	SPreviewApp *m_pLastPartFileApp;
 
 	void UpdateApps();
 
@@ -104,4 +104,4 @@ protected:
 
 extern CPreviewApps thePreviewApps;
 
-void ExecutePartFile(CPartFile* file, LPCTSTR pszCommand, LPCTSTR pszCommandArgs);
+void ExecutePartFile(CPartFile *file, LPCTSTR pszCommand, LPCTSTR pszCommandArgs);

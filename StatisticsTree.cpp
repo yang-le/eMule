@@ -50,14 +50,16 @@ BEGIN_MESSAGE_MAP(CStatisticsTree, CTreeCtrl)
 END_MESSAGE_MAP()
 
 CStatisticsTree::CStatisticsTree()
-	: m_bExpandingAll(false)
+	: m_bExpandingAll()
 {
 }
 
 CStatisticsTree::~CStatisticsTree()
 {
-	if (mnuHTML) VERIFY( mnuHTML.DestroyMenu() );
-	if (mnuContext) VERIFY( mnuContext.DestroyMenu() );
+	if (mnuHTML)
+		VERIFY(mnuHTML.DestroyMenu());
+	if (mnuContext)
+		VERIFY(mnuContext.DestroyMenu());
 }
 
 // This function is called from CStatisticsDlg::OnInitDialog in StatisticsDlg.cpp

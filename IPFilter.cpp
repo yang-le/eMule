@@ -230,8 +230,7 @@ INT_PTR CIPFilter::AddFromFile(LPCTSTR pszFilePath, bool bShowResponse)
 
 			// Reserve a byte array (its used as a boolean array actually) as large as the current
 			// IP-filter list, so we can set a 'to delete' flag for each entry in the current IP-filter list.
-			char* pcToDelete = new char[m_iplist.GetCount()];
-			memset(pcToDelete, 0, m_iplist.GetCount());
+			char *pcToDelete = new char[m_iplist.GetCount()]();
 			int iNumToDelete = 0;
 
 			SIPFilter* pPrv = m_iplist[0];

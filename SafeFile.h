@@ -75,7 +75,9 @@ class CSafeFile : public CFile, public CFileDataIO
 public:
 	CSafeFile() {}
 	CSafeFile(LPCTSTR lpszFileName, UINT nOpenFlags)
-		: CFile(lpszFileName, nOpenFlags) {}
+		: CFile(lpszFileName, nOpenFlags)
+	{
+	}
 
 	virtual UINT Read(void* lpBuf, UINT nCount);
 	virtual void Write(const void* lpBuf, UINT nCount);
@@ -92,11 +94,15 @@ class CSafeMemFile : public CMemFile, public CFileDataIO
 {
 public:
 	explicit CSafeMemFile(UINT nGrowBytes = 512)
-		: CMemFile(nGrowBytes) {}
+		: CMemFile(nGrowBytes)
+	{
+	}
 	//CSafeMemFile::CSafeMemFile(BYTE* lpBuffer, UINT nBufferSize, UINT nGrowBytes = 0)
 	//	: CMemFile(lpBuffer, nBufferSize, nGrowBytes) {}
 	CSafeMemFile(const BYTE* lpBuffer, UINT nBufferSize)
-		: CMemFile(const_cast<BYTE*>(lpBuffer), nBufferSize, 0) {}
+		: CMemFile(const_cast<BYTE*>(lpBuffer), nBufferSize, 0)
+	{
+	}
 
 	const BYTE* GetBuffer() const { return m_lpBuffer; }
 
@@ -130,7 +136,9 @@ class CSafeBufferedFile : public CStdioFile, public CFileDataIO
 public:
 	CSafeBufferedFile() {}
 	CSafeBufferedFile(LPCTSTR lpszFileName, UINT nOpenFlags)
-		: CStdioFile(lpszFileName, nOpenFlags) {}
+		: CStdioFile(lpszFileName, nOpenFlags)
+	{
+	}
 
 	virtual UINT Read(void* lpBuf, UINT nCount);
 	virtual void Write(const void* lpBuf, UINT nCount);

@@ -133,6 +133,7 @@ protected:
 			: m_udn(udn)
 		{
 		}
+
 		result_type operator()(argument_type device) const
 		{
 			CComBSTR deviceName;
@@ -144,6 +145,7 @@ protected:
 			}
 			return wcscmp(deviceName.m_str, m_udn) == 0;
 		}
+		
 		CComBSTR m_udn;
 	};
 
@@ -199,8 +201,8 @@ class CDeviceFinderCallback
 	: public IUPnPDeviceFinderCallback
 {
 public:
-	explicit CDeviceFinderCallback(CUPnPImplWinServ& instance)
-		: m_instance(instance), m_lRefCount(0)
+	explicit CDeviceFinderCallback(CUPnPImplWinServ &instance)
+		: m_instance(instance), m_lRefCount()
 	{
 	}
 
@@ -224,8 +226,8 @@ class CServiceCallback
 	: public IUPnPServiceCallback
 {
 public:
-	explicit CServiceCallback(CUPnPImplWinServ& instance)
-		: m_instance(instance), m_lRefCount(0)
+	explicit CServiceCallback(CUPnPImplWinServ &instance)
+		: m_instance(instance), m_lRefCount()
 	{
 	}
 

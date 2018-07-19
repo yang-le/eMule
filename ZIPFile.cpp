@@ -212,13 +212,13 @@ BOOL CZIPFile::LocateCentralDirectory()
 
 		if ( ! ParseCentralDirectory( pDirectory, pLoc->nDirectorySize ) )
 		{
-			delete [] m_pFile;
+			delete[] m_pFile;
 			m_pFile = NULL;
 			m_nFile = 0;
 		}
 	}
 
-	delete [] pDirectory;
+	delete[] pDirectory;
 
 	return ( m_nFile > 0 );
 }
@@ -375,7 +375,7 @@ BOOL CZIPFile::File::PrepareToDecompress(LPVOID pStream)
 	if ( nSource != (DWORD)m_nCompressedSize )
 	{
 		inflateEnd( &pStream );
-		delete [] pSource;
+		delete[] pSource;
 		return NULL;
 	}
 
@@ -390,7 +390,7 @@ BOOL CZIPFile::File::PrepareToDecompress(LPVOID pStream)
 
 	inflate( &pStream, Z_FINISH );
 
-	delete [] pSource;
+	delete[] pSource;
 
 	if ( pStream.avail_out != 0 )
 	{
@@ -459,8 +459,8 @@ BOOL CZIPFile::File::Extract(LPCTSTR pszFile)
 			}
 		}
 
-		delete [] pBufferOut;
-		delete [] pBufferIn;
+		delete[] pBufferOut;
+		delete[] pBufferIn;
 
 		inflateEnd( &pStream );
 	}
@@ -481,7 +481,7 @@ BOOL CZIPFile::File::Extract(LPCTSTR pszFile)
 			nUncompressed += nChunk;
 		}
 
-		delete [] pBufferOut;
+		delete[] pBufferOut;
 	}
 
 	CloseHandle( hFile );

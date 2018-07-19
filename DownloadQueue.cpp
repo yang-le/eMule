@@ -831,7 +831,7 @@ bool CDownloadQueue::SendNextUDPPacket()
 			else
 			{
 				POSITION pos = filelist.Find(lastfile);
-				if (pos == 0) // the last file is no longer in the DL-list (may have been finished or canceld)
+				if (pos == 0) // the last file is no longer in the DL-list (may have been finished or cancelled)
 				{
 					// get first file to search sources for
 					nextfile = filelist.GetHead();

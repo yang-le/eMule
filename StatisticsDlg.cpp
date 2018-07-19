@@ -69,10 +69,8 @@ CStatisticsDlg::CStatisticsDlg(CWnd* pParent /*=NULL*/)
 	, m_DownloadOMeter(3)
 	, m_UploadOMeter(5)
 	, m_Statistics(4)
-{
-	m_oldcx=0;
-	m_oldcy=0;
-	m_TimeToolTips = NULL;
+	, m_oldcx(), m_oldcy(), m_TimeToolTips()
+{	
 }
 
 CStatisticsDlg::~CStatisticsDlg()

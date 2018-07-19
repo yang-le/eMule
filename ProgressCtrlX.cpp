@@ -41,7 +41,7 @@ static char THIS_FILE[] = __FILE__;
 // CProgressCtrlX
 
 CProgressCtrlX::CProgressCtrlX()
-	: m_rcBorders(0,0,0,0)
+	: m_rcBorders()
 {
 	// Init colors
 	m_clrBk = ::GetSysColor(COLOR_3DFACE);

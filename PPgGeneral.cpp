@@ -117,42 +117,43 @@ BOOL CPPgGeneral::OnInitDialog()
 	thePrefs.GetLanguages(aLanguageIDs);
 	for (int i = 0; i < aLanguageIDs.GetSize(); i++) {
 		TCHAR szLang[128];
+		TCHAR *pLang = szLang;
 		int ret = GetLocaleInfo(aLanguageIDs[i], LOCALE_SLANGUAGE, szLang, ARRSIZE(szLang));
 
 		if (ret == 0)
 			switch (aLanguageIDs[i]) {
 			case LANGID_UG_CN:
-				_tcscpy(szLang, _T("Uyghur"));
+				pLang = _T("Uyghur");
 				break;
 			case LANGID_GL_ES:
-				_tcscpy(szLang, _T("Galician"));
+				pLang = _T("Galician");
 				break;
 			case LANGID_FR_BR:
-				_tcscpy(szLang, _T("Breton (Brezhoneg)"));
+				pLang = _T("Breton (Brezhoneg)");
 				break;
 			case LANGID_MT_MT:
-				_tcscpy(szLang, _T("Maltese"));
+				pLang = _T("Maltese");
 				break;
 			case LANGID_ES_AS:
-				_tcscpy(szLang, _T("Asturian"));
+				pLang = _T("Asturian");
 				break;
 			case LANGID_VA_ES:
-				_tcscpy(szLang, _T("Valencian"));
+				pLang = _T("Valencian");
 				break;
 			case LANGID_VA_ES_RACV:
-				_tcscpy(szLang, _T("Valencian (RACV)"));
+				pLang = _T("Valencian (RACV)");
 				break;
 			default:
 				ASSERT(0);
-				_tcscpy(szLang, _T("?(unknown language)?"));
+				pLang = _T("?(unknown language)?");
 			}
 
-		m_language.SetItemData(m_language.AddString(szLang), aLanguageIDs[i]);
+		m_language.SetItemData(m_language.AddString(pLang), aLanguageIDs[i]);
 	}
 
 	UpdateEd2kLinkFixCtrl();
 
-	CSliderCtrl *sliderUpdate = (CSliderCtrl*)GetDlgItem(IDC_CHECKDAYS);
+	CSliderCtrl *sliderUpdate = static_cast<CSliderCtrl *>(GetDlgItem(IDC_CHECKDAYS));
 	sliderUpdate->SetRange(2, 7, true);
 	sliderUpdate->SetPos(thePrefs.GetUpdateDays());
 
@@ -167,7 +168,7 @@ BOOL CPPgGeneral::OnInitDialog()
 
 void ModifyAllWindowStyles(CWnd* pWnd, DWORD dwRemove, DWORD dwAdd)
 {
-	CWnd* pWndChild = pWnd->GetWindow(GW_CHILD);
+	CWnd *pWndChild = pWnd->GetWindow(GW_CHILD);
 	while (pWndChild) {
 		ModifyAllWindowStyles(pWndChild, dwRemove, dwAdd);
 		pWndChild = pWndChild->GetNextWindow();
@@ -304,7 +305,7 @@ void CPPgGeneral::OnBnClickedEditWebservices()
 
 void CPPgGeneral::OnLangChange()
 {
-#define MIRRORS_URL	_T("http://langmirror%u.emule-project.org/lang/%u%u%u%u/")
+#define MIRRORS_URL	_T("http://langmirror%u.emule-project.org/lang/fox/%u%u%u%u/32/")
 
 	LANGID newLangId = (LANGID)m_language.GetItemData(m_language.GetCurSel());
 	if (thePrefs.GetLanguageID() != newLangId) {
@@ -316,7 +317,7 @@ void CPPgGeneral::OnLangChange()
 				CString strUrl;
 				strUrl.Format(MIRRORS_URL, nRand, CemuleApp::m_nVersionMjr, CemuleApp::m_nVersionMin, CemuleApp::m_nVersionUpd, CemuleApp::m_nVersionBld);
 				strUrl += thePrefs.GetLangDLLNameByID(newLangId);
-				// safeto
+				// save to
 				CString strFilename = thePrefs.GetMuleDirectory(EMULE_ADDLANGDIR, true);
 				strFilename += thePrefs.GetLangDLLNameByID(newLangId);
 				// start

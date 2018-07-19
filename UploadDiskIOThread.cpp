@@ -47,7 +47,7 @@ static char THIS_FILE[] = __FILE__;
 IMPLEMENT_DYNCREATE(CUploadDiskIOThread, CWinThread)
 
 CUploadDiskIOThread::CUploadDiskIOThread()
-	: dbgDataReadPending(0), m_bRun(false), m_bSignalThrottler(false), m_eventAsyncIOFinished(FALSE, TRUE)
+	: dbgDataReadPending(), m_bRun(), m_bSignalThrottler(), m_eventAsyncIOFinished(FALSE, TRUE)
 {
 	ASSERT(theApp.uploadqueue != NULL);
 	m_eventThreadEnded = new CEvent(FALSE, TRUE);

@@ -42,17 +42,18 @@ BEGIN_MESSAGE_MAP(CCreditsThread, CGDIThread)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-CCreditsThread::CCreditsThread(CWnd* pWnd, HDC hDC, CRect rectScreen)
-    : CGDIThread(pWnd, hDC), m_rectScreen(rectScreen)
+CCreditsThread::CCreditsThread(CWnd *pWnd, HDC hDC, CRect rectScreen)
+    : CGDIThread(pWnd, hDC)
+	, m_rectScreen(rectScreen)
+	, m_nScrollPos()
+	, m_pbmpOldBk()
+	, m_pbmpOldCredits()
+	, m_pbmpOldScreen()
+	, m_pbmpOldMask()
+	, m_nCreditsBmpWidth()
+	, m_nCreditsBmpHeight()
 {
 	m_rgnScreen.CreateRectRgnIndirect(m_rectScreen);
-	m_nScrollPos = 0;
-	m_pbmpOldBk = NULL;
-	m_pbmpOldCredits = NULL;
-	m_pbmpOldScreen = NULL;
-	m_pbmpOldMask = NULL;
-	m_nCreditsBmpWidth = 0;
-	m_nCreditsBmpHeight = 0;
 }
 
 CCreditsThread::~CCreditsThread()
@@ -431,7 +432,7 @@ void CCreditsThread::InitText()
 
 	m_arCredits.Add(_T("03:00:eMule"));
 	m_arCredits.Add(_T("02:01:Version ") + theApp.m_strCurVersionLong);
-	m_arCredits.Add(_T("01:06:Copyright (C) 2002-2015 Merkur"));
+	m_arCredits.Add(_T("01:06:Copyright (C) 2002-2018 Merkur"));
 	m_arCredits.Add(_T("S:50"));
 	m_arCredits.Add(_T("02:04:Developers"));
 	m_arCredits.Add(_T("S:5"));

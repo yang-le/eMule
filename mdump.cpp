@@ -93,7 +93,9 @@ HMODULE CMiniDumper::GetDebugHelperDll(FARPROC* ppfnMiniDumpWriteDump, bool bSho
 	_T("Do you want to create this file now?")
 LONG WINAPI CMiniDumper::TopLevelFilter(struct _EXCEPTION_POINTERS* pExceptionInfo) noexcept
 {
+#ifdef _DEBUG
 	LONG lRetValue = EXCEPTION_CONTINUE_SEARCH;
+#endif
 	TCHAR szResult[MAX_PATH + 1024] = {};
 	MINIDUMPWRITEDUMP pfnMiniDumpWriteDump = NULL;
 	HMODULE hDll = GetDebugHelperDll((FARPROC*)&pfnMiniDumpWriteDump, true);
@@ -151,7 +153,9 @@ LONG WINAPI CMiniDumper::TopLevelFilter(struct _EXCEPTION_POINTERS* pExceptionIn
 					// Do *NOT* localize that string (in fact, do not use MFC to load it)!
 					_sntprintf(szResult, _countof(szResult) - 1, _T("Saved dump file to \"%s\".\r\n\r\nPlease send this file together with a detailed bug report to dumps@emule-project.net !\r\n\r\nThank you for helping to improve eMule."), szDumpPath);
 					szResult[_countof(szResult) - 1] = _T('\0');
+#ifdef _DEBUG
 					lRetValue = EXCEPTION_EXECUTE_HANDLER;
+#endif
 				}
 				else
 				{

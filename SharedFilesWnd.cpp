@@ -66,10 +66,8 @@ END_MESSAGE_MAP()
 
 CSharedFilesWnd::CSharedFilesWnd(CWnd* pParent /*=NULL*/)
 	: CResizableDialog(CSharedFilesWnd::IDD, pParent)
+	, icon_files(), m_nFilterColumn(), m_bDetailsVisible(true)
 {
-	icon_files = NULL;
-	m_nFilterColumn = 0;
-	m_bDetailsVisible = true;
 }
 
 CSharedFilesWnd::~CSharedFilesWnd()

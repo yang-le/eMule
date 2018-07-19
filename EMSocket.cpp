@@ -86,7 +86,7 @@ namespace
 IMPLEMENT_DYNAMIC(CEMSocket, CEncryptedStreamSocket)
 
 CEMSocket::CEMSocket()
-	: pendingHeader(), m_OverlappedCleaning(0), lastFinishedStandard(0)
+	: pendingHeader(), m_OverlappedCleaning(), lastFinishedStandard()
 {
 	byConnected = ES_NOTCONNECTED;
 	m_uTimeOut = CONNECTION_TIMEOUT; // default timeout for ed2k sockets

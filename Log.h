@@ -77,12 +77,12 @@ public:
 	void StartNewLogFile();
 
 protected:
-	FILE* m_fp;
-	time_t m_tStarted;
-	CString m_strFilePath;
-	size_t m_uBytesWritten;
-	size_t m_uMaxFileSize;
-	bool m_bInOpenCall;
+	FILE	*m_fp;
+	time_t	m_tStarted;
+	CString	m_strFilePath;
+	size_t	m_uBytesWritten;
+	size_t	m_uMaxFileSize;
+	bool	m_bInOpenCall;
 	ELogFileFormat m_eFileFormat;
 };
 

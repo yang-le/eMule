@@ -56,7 +56,6 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 extern int yyparse();
-extern int yyerror(const char* errstr);
 extern int yyerror(LPCTSTR errstr);
 extern LPCTSTR g_aszInvKadKeywordChars;
 
@@ -498,7 +497,7 @@ CString CSearchResultsWnd::CreateWebQuery(SSearchParams *pParams)
 			p = _T("1");
 		else
 			p = _T("all");
-		query.Format(_T("http://contentdb.emule-project.net/search.php?s=%s&cat=%s&rel=1&search_option=simple&network=edonkey&go=Search")
+		query.Format(_T("https://contentdb.emule-project.net/search.php?s=%s&cat=%s&rel=1&search_option=simple&network=edonkey&go=Search")
 			, (LPCTSTR)EncodeURLQueryParam(pParams->strExpression)
 			, p);
 	}

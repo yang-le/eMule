@@ -171,7 +171,7 @@ struct ACE_BlockFile
 	uint64  data_offset;
 	
 	ACE_BlockFile()
-		: FNAME_SIZE(0), COMM_SIZE(0), FNAME(NULL), COMMENT(NULL)
+		: FNAME_SIZE(), COMM_SIZE(), FNAME(), COMMENT()
 	{
 	}
 	~ACE_BlockFile()

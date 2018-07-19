@@ -49,7 +49,7 @@ public:
 protected:
 	static HCURSOR m_hcurMoveVert;
 	static HCURSOR m_hcurMoveHorz;
-	BOOL	m_bIsPressed;
+	BOOL	m_bIsPressed;	// Mouse is pressed down or not ?
 	int		m_nType;
 	int		m_nX, m_nY;
 	int		m_nMin, m_nMax;

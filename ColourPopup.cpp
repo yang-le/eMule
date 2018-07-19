@@ -100,7 +100,7 @@ const ColourTableEntry CColourPopup::m_crColours[] =
 // CColourPopup
 
 CColourPopup::CColourPopup()
-	: colourArrayPassed(NULL)
+	: colourArrayPassed()
 {
 	Initialise();
 }

@@ -32,7 +32,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // CFileIdentifierBase
 CFileIdentifierBase::CFileIdentifierBase()
-	: m_abyMD4Hash(), m_bHasValidAICHHash(false)
+	: m_abyMD4Hash(), m_bHasValidAICHHash()
 {
 }
 

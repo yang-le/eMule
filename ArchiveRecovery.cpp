@@ -514,7 +514,7 @@ bool CArchiveRecovery::processZipEntry(CFile *zipInput, CFile *zipOutput, uint32
 		entry.filename = new BYTE[entry.lenFilename];
 		if (zipInput->Read(entry.filename, entry.lenFilename) != entry.lenFilename)
 		{
-			delete [] entry.filename;
+			delete[] entry.filename;
 			return false;
 		}
 
@@ -595,9 +595,9 @@ bool CArchiveRecovery::processZipEntry(CFile *zipInput, CFile *zipOutput, uint32
 		}
 		else
 		{
-			delete [] entry.filename;
+			delete[] entry.filename;
 			if (entry.lenExtraField > 0)
-				delete [] entry.extraField;
+				delete[] entry.extraField;
 		}
 		retVal = true;
 
@@ -795,7 +795,7 @@ bool CArchiveRecovery::recoverRar(CFile *rarInput, CFile *rarOutput, archiveScan
 					rarInput->Seek(block->offsetData + block->dataLength, CFile::begin);
 				}
 				if (aitp==NULL) {
-					delete [] block->FILE_NAME;
+					delete[] block->FILE_NAME;
 					delete block;
 				}
 				if (rarInput->GetPosition() >=fill->end)

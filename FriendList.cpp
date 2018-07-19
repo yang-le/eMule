@@ -38,7 +38,7 @@ static char THIS_FILE[] = __FILE__;
 #define EMFRIENDS_MET_FILENAME	_T("emfriends.met")
 
 CFriendList::CFriendList()
-	: m_wndOutput(NULL)
+	: m_wndOutput()
 {
 	LoadList();
 	m_nLastSaved = ::GetTickCount();

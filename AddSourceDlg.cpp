@@ -41,9 +41,8 @@ BEGIN_MESSAGE_MAP(CAddSourceDlg, CResizableDialog)
 	ON_BN_CLICKED(IDOK, OnBnClickedOk)
 END_MESSAGE_MAP()
 
-CAddSourceDlg::CAddSourceDlg(CWnd* pParent /*=NULL*/)
-	: CResizableDialog(CAddSourceDlg::IDD, pParent)
-	, m_pFile(NULL), m_nSourceType(0)
+CAddSourceDlg::CAddSourceDlg(CWnd *pParent /*= NULL*/)
+	: CResizableDialog(CAddSourceDlg::IDD, pParent), m_pFile(), m_nSourceType()
 {
 }
 
@@ -51,7 +50,7 @@ CAddSourceDlg::~CAddSourceDlg()
 {
 }
 
-void CAddSourceDlg::DoDataExchange(CDataExchange* pDX)
+void CAddSourceDlg::DoDataExchange(CDataExchange *pDX)
 {
 	CResizableDialog::DoDataExchange(pDX);
 	DDX_Radio(pDX, IDC_RSRC, m_nSourceType);

@@ -40,15 +40,10 @@ BEGIN_MESSAGE_MAP(CSplitterControl, CStatic)
 END_MESSAGE_MAP()
 
 CSplitterControl::CSplitterControl()
-	: m_nType(0), m_nX(0), m_nY(0), m_nSavePos(0)
+	: m_bIsPressed(), m_nType(), m_nX(), m_nY(), m_nSavePos(), m_bDrawBorder()
 {
-	// Mouse is pressed down or not ?
-	m_bIsPressed = FALSE;
-
 	// Min and Max range of the splitter.
 	m_nMin = m_nMax = -1;
-
-	m_bDrawBorder = false;
 }
 
 CSplitterControl::~CSplitterControl()

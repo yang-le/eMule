@@ -72,7 +72,7 @@ BEGIN_MESSAGE_MAP(CChatSelector, CClosableTabCtrl)
 END_MESSAGE_MAP()
 
 CChatSelector::CChatSelector()
-	: m_pParent(NULL), m_iContextIndex(-1)
+	: m_pParent(), m_iContextIndex(-1)
 {
 	m_lastemptyicon = false;
 	m_blinkstate = false;

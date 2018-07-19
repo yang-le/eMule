@@ -77,8 +77,8 @@ static BOOL	WSserverColumnHidden[10];
 static BOOL	WSsearchColumnHidden[4];
 
 CWebServer::CWebServer()
-	: m_Templates(), m_bServerWorking(false), m_iSearchSortby(3), m_bSearchAsc(false)
-	, m_nIntruderDetect(0), m_bIsTempDisabled(false), m_nStartTempDisabledTime(0), m_ulCurIP(0)
+	: m_Templates(), m_bServerWorking(), m_iSearchSortby(3), m_bSearchAsc()
+	, m_nIntruderDetect(), m_bIsTempDisabled(), m_nStartTempDisabledTime(), m_ulCurIP()
 {
 	m_Params.sLastModified.Empty();
 	m_Params.sETag.Empty();
@@ -278,7 +278,10 @@ void CWebServer::StartServer()
 		StopSockets();
 
 	UINT uid = (thePrefs.GetWSIsEnabled() && m_bServerWorking ? IDS_ENABLED : IDS_DISABLED);
-	AddLogLine(false, _T("%s: %s"), (LPCTSTR)_GetPlainResString(IDS_PW_WS), (LPCTSTR)_GetPlainResString(uid).MakeLower());
+	AddLogLine(false, _T("%s: %s%s")
+		, (LPCTSTR)_GetPlainResString(IDS_PW_WS)
+		, (LPCTSTR)_GetPlainResString(uid).MakeLower()
+		, (uid == IDS_ENABLED && thePrefs.GetWebUseHttps()) ? _T(" (HTTPS)") : _T(""));
 }
 
 void CWebServer::_RemoveServer(const CString& sIP, int nPort)
@@ -374,8 +377,8 @@ void CWebServer::ProcessURL(const ThreadData& Data)
 			return;
 		}
 
-		bool login;
 		bool justAddLink = false;
+		bool login = false;
 		CString sSession = _ParseURL(Data.sURL, _T("ses"));
 		long lSession = sSession.IsEmpty() ? 0 : _tstol(sSession);
 
@@ -423,7 +426,6 @@ void CWebServer::ProcessURL(const ThreadData& Data)
 					CoUninitialize();
 					return;
 				}
-				login = false;
 			}
 			isUseGzip = false; // [Julien]
 			if (login)	// on login, forget previous failed attempts
@@ -507,7 +509,7 @@ void CWebServer::ProcessURL(const ThreadData& Data)
 						EMFileSize filesize = kf->GetFileSize();
 
 #define SENDFILEBUFSIZE 2048
-						char* buffer = (char*)malloc(SENDFILEBUFSIZE);
+						char *buffer = (char *)malloc(SENDFILEBUFSIZE);
 						if (!buffer) {
 							Data.pSocket->SendReply("HTTP/1.1 500 Internal Server Error\r\n");
 							CoUninitialize();
