@@ -55,7 +55,7 @@ namespace
       ID3_Frame* f = LEAKTESTNEW(ID3_Frame);
       f->SetSpec(tag.GetSpec());
       bool goodParse = f->Parse(rdr);
-	  size_t frameSize = rdr.getCur() - last_pos;
+      size_t frameSize = rdr.getCur() - last_pos;
       ID3D_NOTICE( "id3::v2::parseFrames(): frameSize = " << frameSize );
 
       if (frameSize == 0)
@@ -378,7 +378,7 @@ void ID3_TagImpl::ParseFile()
     _appended_bytes = end - cur;
 
     // Now get the mp3 header
-	size_t mp3_core_size = (_file_size - _appended_bytes) - (_prepended_bytes + bytes_till_sync);
+    size_t mp3_core_size = (_file_size - _appended_bytes) - (_prepended_bytes + bytes_till_sync);
     if (mp3_core_size >= 4)
     { //it has at least the size for a mp3 header (a mp3 header is 4 bytes)
       wr.setBeg(_prepended_bytes + bytes_till_sync);
@@ -560,7 +560,7 @@ void ID3_TagImpl::ParseReader(ID3_Reader &reader)
     _appended_bytes = end - cur;
 
     // Now get the mp3 header
-	size_t mp3_core_size = (_file_size - _appended_bytes) - (_prepended_bytes + bytes_till_sync);
+    size_t mp3_core_size = (_file_size - _appended_bytes) - (_prepended_bytes + bytes_till_sync);
     if (mp3_core_size >= 4)
     { //it has at least the size for a mp3 header (a mp3 header is 4 bytes)
       wr.setBeg(_prepended_bytes + bytes_till_sync);

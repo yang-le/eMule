@@ -179,8 +179,8 @@ const char* ID3_FrameHeader::GetTextID() const
 
 ID3_FrameHeader::ID3_FrameHeader(const ID3_FrameHeader& hdr)
 {
-	if (this != &hdr)
-		*this = hdr;
+  if (this != &hdr)
+    *this = hdr;
 }
 
 ID3_FrameHeader& ID3_FrameHeader::operator=(const ID3_FrameHeader& hdr)

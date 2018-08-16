@@ -1028,8 +1028,8 @@ ID3_Frame* ID3_AddGenre(ID3_Tag* tag, size_t genreNum, char* genre, bool add_v1_
     {
       for (newGenreNum2 = 0; newGenreNum2 < ID3_NR_OF_V1_GENRES; ++newGenreNum2)
       {
-//		  tmpgenre = ID3_V1GENRE2DESCRIPTION(newGenreNum2); - no point to use that macro with checks for signed int values while here only valid unsigned numbers are present
-		  tmpgenre = ID3_v1_genre_description[newGenreNum2];
+//        tmpgenre = ID3_V1GENRE2DESCRIPTION(newGenreNum2); - no point to use that macro with checks for signed int values while here only valid unsigned numbers are present
+        tmpgenre = ID3_v1_genre_description[newGenreNum2];
         // if tmpgenre = "Blues" and tmpgenre1 = "Blues, HardRock" they should match i accept a space, a comma and a ; as delimters
         // if tmpgenre = "Pop" and tmpgenre1 = "Pop-Folk" they shouldn't match
         // if tmpgenre = "Jazz" and tmpgenre1 = "Jazz+Funk" they shouldn't match
@@ -1090,23 +1090,23 @@ ID3_Frame* ID3_AddGenre(ID3_Tag* tag, size_t genreNum, char* genre, bool add_v1_
     if (genreNum < ID3_NR_OF_V1_GENRES)
     {
 //      tmpgenre = ID3_V1GENRE2DESCRIPTION(genreNum);
-	  tmpgenre = ID3_v1_genre_description[genreNum];
-	  newgenre->append(tmpgenre, strlen(tmpgenre));
+      tmpgenre = ID3_v1_genre_description[genreNum];
+      newgenre->append(tmpgenre, strlen(tmpgenre));
     }
     if (newGenreNum1 < ID3_NR_OF_V1_GENRES && newGenreNum1 != genreNum)
     {
       if (genreNum < ID3_NR_OF_V1_GENRES) //also valid
         newgenre->append(", ", 2);
-//	  tmpgenre = ID3_V1GENRE2DESCRIPTION(newGenreNum1);
-	  tmpgenre = ID3_v1_genre_description[newGenreNum1];
+//      tmpgenre = ID3_V1GENRE2DESCRIPTION(newGenreNum1);
+      tmpgenre = ID3_v1_genre_description[newGenreNum1];
       newgenre->append(tmpgenre, strlen(tmpgenre));
     }
     if (newGenreNum2 < ID3_NR_OF_V1_GENRES && newGenreNum2 != genreNum && newGenreNum2 != newGenreNum1)
     {
       if (genreNum < ID3_NR_OF_V1_GENRES || newGenreNum1 < ID3_NR_OF_V1_GENRES)
         newgenre->append(", ", 2);
-//	  tmpgenre = ID3_V1GENRE2DESCRIPTION(newGenreNum2);
-	  tmpgenre = ID3_v1_genre_description[newGenreNum2];
+//      tmpgenre = ID3_V1GENRE2DESCRIPTION(newGenreNum2);
+      tmpgenre = ID3_v1_genre_description[newGenreNum2];
       newgenre->append(tmpgenre, strlen(tmpgenre));
     }
     // add any remaining text

@@ -154,8 +154,8 @@ extern "C"
   {
     if (!tag)
       return ID3E_InvalidTag;
-	ID3_Err err = ID3E_NoError;
-	ID3_CATCH((void)reinterpret_cast<ID3_Tag *>(tag)->Parse(header, buffer));
+    ID3_Err err = ID3E_NoError;
+    ID3_CATCH((void)reinterpret_cast<ID3_Tag *>(tag)->Parse(header, buffer));
     ID3_CATCH(err = reinterpret_cast<ID3_Tag *>(tag)->GetLastError());
     return err;
   }
@@ -185,8 +185,8 @@ extern "C"
   ID3_C_EXPORT ID3_Err CCONV
   ID3Tag_Update(ID3Tag *tag)
   {
-	if (!tag)
-		return ID3E_InvalidTag;
+    if (!tag)
+      return ID3E_InvalidTag;
     ID3_Err err = ID3E_NoError;
     ID3_CATCH((void)reinterpret_cast<ID3_Tag *>(tag)->Update());
     ID3_CATCH(err = reinterpret_cast<ID3_Tag *>(tag)->GetLastError());

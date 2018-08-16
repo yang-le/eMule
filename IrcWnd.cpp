@@ -382,32 +382,21 @@ void CIrcWnd::UpdateChannelChildWindowsSize()
 		{
 			CRect rcTopic;
 			pChannel->m_wndTopic.GetWindowRect(rcTopic);
-			ScreenToClient(rcTopic);
-			pChannel->m_wndTopic.SetWindowPos(NULL, rcChannelPane.left, rcTopic.top, rcChannelPane.Width(), rcTopic.Height(), SWP_NOZORDER);
+			pChannel->m_wndTopic.SetWindowPos(NULL, rcChannelPane.left, rcChannelPane.top, rcChannelPane.Width(), rcTopic.Height(), SWP_NOZORDER);
+			rcChannelPane.top += rcTopic.Height();
 			pChannel->m_wndTopic.ScrollToFirstLine();
 
 			if (pChannel->m_wndSplitter.m_hWnd)
 			{
 				CRect rcSplitter;
 				pChannel->m_wndSplitter.GetWindowRect(rcSplitter);
-				ScreenToClient(rcSplitter);
-				pChannel->m_wndSplitter.SetWindowPos(NULL, rcChannelPane.left, rcSplitter.top, rcChannelPane.Width(), rcSplitter.Height(), SWP_NOZORDER);
+				pChannel->m_wndSplitter.SetWindowPos(NULL, rcChannelPane.left, rcChannelPane.top, rcChannelPane.Width(), rcSplitter.Height(), SWP_NOZORDER);
+				rcChannelPane.top += rcSplitter.Height();
 			}
 		}
 
 		if (pChannel->m_wndLog.m_hWnd)
-		{
-			if (pChannel->m_wndTopic.m_hWnd)
-			{
-				CRect rcLog;
-				pChannel->m_wndLog.GetWindowRect(rcLog);
-				ScreenToClient(rcLog);
-				rcLog.bottom = rcChannelPane.bottom;
-				pChannel->m_wndLog.SetWindowPos(NULL, rcChannelPane.left, rcLog.top, rcChannelPane.Width(), rcLog.Height(), SWP_NOZORDER);
-			}
-			else
-				pChannel->m_wndLog.SetWindowPos(NULL, rcChannelPane.left, rcChannelPane.top, rcChannelPane.Width(), rcChannelPane.Height(), SWP_NOZORDER);
-		}
+			pChannel->m_wndLog.SetWindowPos(NULL, rcChannelPane.left, rcChannelPane.top, rcChannelPane.Width(), rcChannelPane.Height(), SWP_NOZORDER);
 	}
 }
 
@@ -682,28 +671,29 @@ void CIrcWnd::AddInfoMessageF(const CString& sChannel, LPCTSTR sLine, ...)
 	AddInfoMessage(sChannel, sTemp);
 }
 
-void CIrcWnd::AddMessage(const CString& sChannel, const CString& sTargetName, const CString& sLine)
+#pragma warning(push)
+#pragma warning(disable:4125) // decimal digit terminates octal escape sequence
+void CIrcWnd::AddMessage(const CString &sChannel, const CString &sTargetName, const CString &sLine)
 {
 	if (sChannel.IsEmpty() || sTargetName.IsEmpty())
 		return;
-	Channel* pChannel = m_wndChanSel.FindChannelByName(sChannel);
+	Channel *pChannel = m_wndChanSel.FindChannelByName(sChannel);
 	CString sOp;
 	if (!pChannel)
-		if (sChannel[0] == _T('#'))
-			pChannel = m_wndChanSel.NewChannel(sChannel, Channel::ctNormal);
-		else
-			pChannel = m_wndChanSel.NewChannel(sChannel, Channel::ctPrivate);
+		pChannel = m_wndChanSel.NewChannel(sChannel, (sChannel[0] == _T('#') ? Channel::ctNormal : Channel::ctPrivate));
 	else {
 		const Nick *pNick = m_wndNicks.FindNickByName(pChannel, sTargetName);
 		if (pNick)
-			sOp = pNick->m_sModes.Mid(0);
+			sOp = pNick->m_sModes;
 	}
+	LPCTSTR fmt = (m_pIrcMain->GetNick() == sTargetName) ? _T("%s<\002\00310%s%s\003\002> %s\r\n") : _T("%s<\00310%s%s\003> %s\r\n");
 	CString cs;
-	cs.Format(_T("%s<%s%s> %s\r\n"), (LPCTSTR)make_time_stamp(), (LPCTSTR)sOp, (LPCTSTR)sTargetName, (LPCTSTR)sLine);
+	cs.Format(fmt, (LPCTSTR)make_time_stamp(), (LPCTSTR)sOp, (LPCTSTR)sTargetName, (LPCTSTR)sLine);
 	AddColorLine(cs, pChannel->m_wndLog);
 	if (m_wndChanSel.m_pCurrentChannel != pChannel)
 		m_wndChanSel.SetActivity(pChannel, true);
 }
+#pragma warning(pop)
 
 void CIrcWnd::AddMessageF(const CString& sChannel, const CString& sTargetName, LPCTSTR sLine, ...)
 {
@@ -719,22 +709,22 @@ void CIrcWnd::AddMessageF(const CString& sChannel, const CString& sTargetName, L
 
 static const COLORREF s_aColors[16] =
 {
-	RGB(0xff,0xff,0xff), //  0: white
-	RGB(   0,   0,   0), //  1: black
-	RGB(   0,   0,0x7f), //  2: dark blue
-	RGB(   0,0x93,   0), //  3: dark green
-	RGB(0xff,   0,   0), //  4: red
-	RGB(0x7f,   0,   0), //  5: dark red
-	RGB(0x9c,   0,0x9c), //  6: purple
-	RGB(0xfc,0x7f,   0), //  7: orange
-	RGB(0xff,0xff,   0), //  8: yellow
-	RGB(   0,0xff,   0), //  9: green
-	RGB(   0,0x7f,0x7f), // 10: dark cyan
-	RGB(   0,0xff,0xff), // 11: cyan
-	RGB(   0,   0,0xff), // 12: blue
-	RGB(0xff,   0,0xff), // 13: pink
-	RGB(0x7f,0x7f,0x7f), // 14: dark grey
-	RGB(0xd2,0xd2,0xd2)  // 15: light grey
+	RGB(0xff, 0xff, 0xff),	//  0: white
+	RGB(   0,    0,    0),	//  1: black
+	RGB(   0,    0, 0x7f),	//  2: dark blue
+	RGB(   0, 0x93,    0),	//  3: dark green
+	RGB(0xff,    0,    0),	//  4: red
+	RGB(0x7f,    0,    0),	//  5: dark red
+	RGB(0x9c,    0, 0x9c),	//  6: purple
+	RGB(0xfc, 0x7f,    0),	//  7: orange
+	RGB(0xff, 0xff,    0),	//  8: yellow
+	RGB(   0, 0xff,    0),	//  9: green
+	RGB(   0, 0x7f, 0x7f),	// 10: dark cyan
+	RGB(   0, 0xff, 0xff),	// 11: cyan
+	RGB(   0,    0, 0xff),	// 12: blue
+	RGB(0xff,    0, 0xff),	// 13: pink
+	RGB(0x7f, 0x7f, 0x7f),	// 14: dark grey
+	RGB(0xd2, 0xd2, 0xd2)	// 15: light grey
 };
 
 bool IsValidURLTerminationChar(TCHAR ch)

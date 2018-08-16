@@ -72,8 +72,6 @@ BOOL CAddSourceDlg::OnInitDialog()
 	AddAnchor(IDC_BUTTON1, BOTTOM_RIGHT);
 	AddAnchor(IDCANCEL, BOTTOM_RIGHT);
 
-	AddAllOtherAnchors();
-
 	if (m_pFile)
 		SetWindowText(m_pFile->GetFileName());
 

@@ -1882,13 +1882,13 @@ size_t ID3_FrameInfo::MaxFrameID()
 
 size_t ID3_FrameInfo::NumFields(ID3_FrameID frameid)
 {
-	size_t fieldnum=0;
+  size_t fieldnum=0;
 
   if(frameid > ID3FID_NOFRAME && frameid < ID3FID_LASTFRAMEID)
-	while (ID3_FrameDefs[frameid-1].aeFieldDefs[fieldnum]._id != ID3FN_NOFIELD)
-	{
-		++fieldnum;
-	}
+    while (ID3_FrameDefs[frameid-1].aeFieldDefs[fieldnum]._id != ID3FN_NOFIELD)
+    {
+      ++fieldnum;
+    }
 
   return fieldnum;
 }
@@ -1897,7 +1897,7 @@ ID3_FieldID ID3_FrameInfo::FieldID(ID3_FrameID frameid, size_t fieldnum)
 {
   if(frameid > ID3FID_NOFRAME && frameid < ID3FID_LASTFRAMEID &&
      fieldnum < NumFields(frameid))
-  	return (ID3_FrameDefs[frameid-1].aeFieldDefs[fieldnum]._id);
+  return (ID3_FrameDefs[frameid-1].aeFieldDefs[fieldnum]._id);
 
   return ID3FN_NOFIELD;
 }
@@ -1906,7 +1906,7 @@ ID3_FieldType ID3_FrameInfo::FieldType(ID3_FrameID frameid, size_t fieldnum)
 {
   if(frameid > ID3FID_NOFRAME && frameid < ID3FID_LASTFRAMEID &&
      fieldnum < NumFields(frameid))
-  	return (ID3_FrameDefs[frameid-1].aeFieldDefs[fieldnum]._type);
+  return (ID3_FrameDefs[frameid-1].aeFieldDefs[fieldnum]._type);
 
   return ID3FTY_NONE;
 }
@@ -1915,7 +1915,7 @@ size_t ID3_FrameInfo::FieldSize(ID3_FrameID frameid, size_t fieldnum)
 {
   if(frameid > ID3FID_NOFRAME && frameid < ID3FID_LASTFRAMEID &&
      fieldnum < NumFields(frameid))
-  	return (ID3_FrameDefs[frameid-1].aeFieldDefs[fieldnum]._fixed_size);
+  return (ID3_FrameDefs[frameid-1].aeFieldDefs[fieldnum]._fixed_size);
 
   return 0;
 }
@@ -1924,7 +1924,7 @@ flags_t ID3_FrameInfo::FieldFlags(ID3_FrameID frameid, size_t fieldnum)
 {
   if(frameid > ID3FID_NOFRAME && frameid < ID3FID_LASTFRAMEID &&
      fieldnum < NumFields(frameid))
-  	return (ID3_FrameDefs[frameid-1].aeFieldDefs[fieldnum]._flags);
+  return (ID3_FrameDefs[frameid-1].aeFieldDefs[fieldnum]._flags);
 
   return ID3FF_NONE;
 }

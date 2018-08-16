@@ -62,6 +62,17 @@ static const struct
 	{ _T("magnet:?"), 8 }
 };
 
+struct SUnresolvedHostname
+{
+	SUnresolvedHostname()
+		: nPort()
+	{
+	}
+	CStringA strHostname;
+	CString strURL;
+	uint16 nPort;
+};
+
 #define ROUND(x) (floor((float)(x)+0.5f))
 
 template <typename T> inline static const T maxi(const T& v0, const T& v1)

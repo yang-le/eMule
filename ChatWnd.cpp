@@ -52,7 +52,7 @@ BEGIN_MESSAGE_MAP(CChatWnd, CResizableDialog)
 	ON_MESSAGE(UM_CLOSETAB, OnCloseTab)
 	ON_WM_SYSCOLORCHANGE()
 	ON_WM_CTLCOLOR()
-    ON_WM_CONTEXTMENU()
+	ON_WM_CONTEXTMENU()
 	ON_WM_HELPINFO()
 	ON_NOTIFY(LVN_ITEMACTIVATE, IDC_FRIENDS_LIST, OnLvnItemActivateFriendList)
 	ON_NOTIFY(NM_CLICK, IDC_FRIENDS_LIST, OnNmClickFriendList)
@@ -255,6 +255,8 @@ BOOL CChatWnd::OnInitDialog()
 
 	Localize();
 	theApp.friendlist->ShowFriends();
+	EnableClose();
+	OnChatTextChange();
 
 	return TRUE;
 }
@@ -376,6 +378,7 @@ void CChatWnd::StartSession(CUpDownClient* client)
 		return;
 	theApp.emuledlg->SetActiveDialog(this);
 	chatselector.StartSession(client, true);
+	EnableClose();
 }
 
 void CChatWnd::OnShowWindow(BOOL bShow, UINT /*nStatus*/)
@@ -407,7 +410,7 @@ BOOL CChatWnd::PreTranslateMessage(MSG* pMsg)
 		if (pMsg->hwnd == m_FriendListCtrl.m_hWnd)
 			OnLvnItemActivateFriendList(0, 0);
 	}
-
+	OnChatTextChange();
 	return CResizableDialog::PreTranslateMessage(pMsg);
 }
 
@@ -415,6 +418,11 @@ void CChatWnd::OnNmClickFriendList(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	OnLvnItemActivateFriendList(pNMHDR, pResult);
 	*pResult = 0;
+}
+
+void CChatWnd::OnChatTextChange()
+{
+	GetDlgItem(IDC_CSEND)->EnableWindow(m_wndMessage.GetWindowTextLength() > 0);
 }
 
 void CChatWnd::SetAllIcons()
@@ -461,6 +469,7 @@ LRESULT CChatWnd::OnCloseTab(WPARAM wParam, LPARAM /*lParam*/)
 	item.mask = TCIF_PARAM;
 	if (chatselector.GetItem((int)wParam, &item))
 		chatselector.EndSession(reinterpret_cast<CChatItem *>(item.lParam)->client);
+	EnableClose();
 	return TRUE;
 }
 
@@ -539,6 +548,7 @@ void CChatWnd::OnBnClickedSmiley()
 void CChatWnd::OnBnClickedClose()
 {
 	chatselector.EndSession();
+	EnableClose();
 }
 
 void CChatWnd::OnBnClickedSend()

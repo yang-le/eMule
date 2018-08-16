@@ -6,16 +6,15 @@
 #include "Preferences.h"
 #include "StringConversion.h"
 #include "Log.h"
+#include "TLSthreading.h"
 
-#include "mbedtls/platform.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
+#include "mbedtls/error.h"
 #include "mbedtls/certs.h"
 #include "mbedtls/x509.h"
 #include "mbedtls/net_sockets.h"
-#include "mbedtls/error.h"
 #include "mbedtls/ssl_cache.h"
-#include "mbedtls/threading_alt.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -40,46 +39,6 @@ typedef struct
 	SOCKET	hSocket;
 	in_addr incomingaddr;
 } SocketData;
-
-static void threading_mutex_init_alt(mbedtls_threading_mutex_t *mutex) noexcept
-{
-	if (mutex) {
-		InitializeCriticalSection(&mutex->cs);
-		mutex->is_valid = 1;
-	}
-}
-
-static void threading_mutex_free_alt(mbedtls_threading_mutex_t *mutex) noexcept
-{
-	if (mutex && mutex->is_valid) {
-		DeleteCriticalSection(&mutex->cs);
-		mutex->is_valid = 0;
-	}
-}
-
-static int threading_mutex_lock_alt(mbedtls_threading_mutex_t *mutex) noexcept
-{
-	if (mutex == NULL || !mutex->is_valid)
-		return(MBEDTLS_ERR_THREADING_BAD_INPUT_DATA);
-	EnterCriticalSection(&mutex->cs);
-	return(0);
-}
-
-static int threading_mutex_unlock_alt(mbedtls_threading_mutex_t *mutex) noexcept
-{
-	if (mutex == NULL || !mutex->is_valid)
-		return(MBEDTLS_ERR_THREADING_BAD_INPUT_DATA);
-	LeaveCriticalSection(&mutex->cs);
-	return(0);
-}
-
-CString SSLerror(int ret)
-{
-	char buf[256];
-	mbedtls_strerror(ret, buf, sizeof buf);
-	buf[sizeof buf - 1] = '\0';
-	return CString(buf);
-}
 
 void CWebSocket::SetParent(CWebServer *pParent)
 {
@@ -126,7 +85,7 @@ void CWebSocket::OnRequestReceived(const char* pHeader, DWORD dwHeaderLen, const
 
 void CWebSocket::OnReceived(void* pData, DWORD dwSize, const in_addr& inad)
 {
-	const DWORD SIZE_PRESERVE = 0x1000u;
+	static const DWORD SIZE_PRESERVE = 0x1000u;
 
 	if (m_dwBufSize < dwSize + m_dwRecv) {
 		// reallocate
@@ -184,11 +143,11 @@ void CWebSocket::OnReceived(void* pData, DWORD dwSize, const in_addr& inad)
 					}
 
 					break;
-				} else {
-					bPrevEndl = true;
 				} else
-					if ('\r' != m_pBuf[dwPos])
-						bPrevEndl = false;
+					bPrevEndl = true;
+			else
+				if ('\r' != m_pBuf[dwPos])
+					bPrevEndl = false;
 
 	}
 	if (m_dwHttpHeaderLen && !m_bCanRecv && !m_dwHttpContentLen)

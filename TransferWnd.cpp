@@ -46,13 +46,13 @@ static char THIS_FILE[] = __FILE__;
 #define	WND_SPLITTER_YOFF	10
 #define	WND_SPLITTER_HEIGHT	4
 
+//#define	WND1_BUTTON_XOFF	8
 #define	WND1_BUTTON_YOFF	5
-#define	WND1_BUTTON_XOFF	8
 #define	WND1_BUTTON_WIDTH	170
 #define	WND1_BUTTON_HEIGHT	22	// don't set the height to something different than 22 unless you know exactly what you are doing!
 #define	WND1_NUM_BUTTONS	6
 
-#define	WND2_BUTTON_XOFF	8
+//#define	WND2_BUTTON_XOFF	8
 #define	WND2_BUTTON_WIDTH	170
 #define	WND2_BUTTON_HEIGHT	22	// don't set the height to something different than 22 unless you know exactly what you are doing!
 #define	WND2_NUM_BUTTONS	4
@@ -1483,7 +1483,7 @@ void CTransferWnd::ShowList(uint32 dwListIDC)
 	GetDlgItem(dwListIDC)->GetWindowRect(rcDown);
 	ScreenToClient(rcDown);
 	rcDown.top = WND1_BUTTON_YOFF + WND1_BUTTON_HEIGHT + 1;
-	rcDown.bottom = rcWnd.bottom - 20;
+	rcDown.bottom = rcWnd.bottom - 22;
 	m_wndSplitter.DestroyWindow();
 	RemoveAnchor(dwListIDC);
 	m_btnWnd2->ShowWindow(SW_HIDE);
@@ -1571,7 +1571,7 @@ void CTransferWnd::ShowSplitWindow(bool bReDraw)
 	uploadlistctrl.GetWindowRect(rcDown);
 	ScreenToClient(rcDown);
 	rcDown.right = rcWnd.right - 7;
-	rcDown.bottom = rcWnd.bottom - 20;
+	rcDown.bottom = rcWnd.bottom - 22;
 	rcDown.top = splitpos + 20;
 
 	uploadlistctrl.MoveWindow(rcDown);
@@ -1593,7 +1593,7 @@ void CTransferWnd::ShowSplitWindow(bool bReDraw)
 	}
 	else
 		m_wndSplitter.MoveWindow(rcSpl, TRUE);
-	m_btnWnd2->MoveWindow(WND2_BUTTON_XOFF, rcSpl.top - (WND_SPLITTER_YOFF - 1) - 5, rcBtn2.Width(), WND2_BUTTON_HEIGHT);
+	m_btnWnd2->MoveWindow(rcBtn2.left, rcSpl.top - (WND_SPLITTER_YOFF - 1) - 5, rcBtn2.Width(), WND2_BUTTON_HEIGHT);
 	DoResize(0);
 
 	m_dwShowListIDC = IDC_DOWNLOADLIST + IDC_UPLOADLIST;
@@ -1693,9 +1693,10 @@ void CTransferWnd::ResetTransToolbar(bool bShowToolbar, bool bResetLists)
 		RemoveAnchor(*m_btnWnd2);
 
 	CRect rcBtn1;
+	m_btnWnd1->GetWindowRect(rcBtn1);
+	ScreenToClient(rcBtn1);
 	rcBtn1.top = WND1_BUTTON_YOFF;
-	rcBtn1.left = WND1_BUTTON_XOFF;
-	rcBtn1.right = rcBtn1.left + WND1_BUTTON_WIDTH + (bShowToolbar ? WND1_NUM_BUTTONS*DFLT_TOOLBAR_BTN_WIDTH : 0);
+	rcBtn1.right = rcBtn1.left + WND1_BUTTON_WIDTH + (bShowToolbar ? WND1_NUM_BUTTONS * DFLT_TOOLBAR_BTN_WIDTH : 0);
 	rcBtn1.bottom = rcBtn1.top + WND1_BUTTON_HEIGHT;
 	m_btnWnd1->Init(!bShowToolbar);
 	m_btnWnd1->MoveWindow(&rcBtn1);
@@ -1704,8 +1705,7 @@ void CTransferWnd::ResetTransToolbar(bool bShowToolbar, bool bResetLists)
 	CRect rcBtn2;
 	m_btnWnd2->GetWindowRect(rcBtn2);
 	ScreenToClient(rcBtn2);
-	rcBtn2.left = WND2_BUTTON_XOFF;
-	rcBtn2.right = rcBtn2.left + WND2_BUTTON_WIDTH + (bShowToolbar ? WND2_NUM_BUTTONS*DFLT_TOOLBAR_BTN_WIDTH : 0);
+	rcBtn2.right = rcBtn2.left + WND2_BUTTON_WIDTH + (bShowToolbar ? WND2_NUM_BUTTONS * DFLT_TOOLBAR_BTN_WIDTH : 0);
 	rcBtn2.bottom = rcBtn2.top + WND2_BUTTON_HEIGHT;
 	m_btnWnd2->Init(!bShowToolbar);
 	m_btnWnd2->MoveWindow(&rcBtn2);

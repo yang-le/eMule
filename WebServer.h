@@ -3,7 +3,6 @@
 #include <zlib/zlib.h>
 #include "WebSocket.h"
 #include "PartFile.h"
-//#include "Loggable.h"
 
 #define WEB_GRAPH_HEIGHT		120
 #define WEB_GRAPH_WIDTH			500
@@ -26,10 +25,10 @@ typedef struct
 	long	lSession;
 	bool	admin;
 	int		lastcat;
-
 } Session;
 
-struct BadLogin {
+struct BadLogin
+{
 	uint32	datalen;
 	DWORD	timestamp;
 };
@@ -304,9 +303,10 @@ public:
 	inline void SetIP(ULONG ip) { m_ulCurIP = ip; }
 	INT_PTR	 UpdateSessionCount();
 	void StartServer();
-	void RestartServer();
+	void StopServer();
+	void RestartSockets();
 	void AddStatsLine(UpDown line);
-	void ReloadTemplates();
+	bool ReloadTemplates();
 	INT_PTR GetSessionCount()	{ return m_Params.Sessions.GetCount();}
 	bool IsRunning() const	{ return m_bServerWorking;}
 protected:

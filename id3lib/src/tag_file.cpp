@@ -51,8 +51,8 @@ static int truncate(const char *path, size_t length)
   int result = -1;
   HANDLE fh;
 
-  fh = ::CreateFile(
-           (LPCTSTR)path,
+  fh = ::CreateFileA(
+           path,
            GENERIC_WRITE | GENERIC_READ,
            0,
            NULL,

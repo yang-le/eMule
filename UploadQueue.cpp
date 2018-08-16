@@ -837,9 +837,11 @@ bool CUploadQueue::CheckForTimeOver(const CUpDownClient* client)
 
 	if (!thePrefs.TransferFullChunks()) {
 		if (client->GetUpStartTimeDelay() > SESSIONMAXTIME) { // Try to keep the clients from downloading for ever
-			if (thePrefs.GetLogUlDlEvents())
-				AddDebugLogLine(DLP_LOW, false, _T("%s: Upload session ended due to max time %s."), client->GetUserName(), (LPCTSTR)CastSecondsToHM(SESSIONMAXTIME / SEC2MS(1)));
-			return true;
+			if (!ForceNewClient()) { // Restrict only if someone else might need this slot
+				if (thePrefs.GetLogUlDlEvents())
+					AddDebugLogLine(DLP_LOW, false, _T("%s: Upload session ended due to max time %s."), client->GetUserName(), (LPCTSTR)CastSecondsToHM(SESSIONMAXTIME / SEC2MS(1)));
+				return true;
+			}
 		}
 
 		// Cache current client score
@@ -858,9 +860,11 @@ bool CUploadQueue::CheckForTimeOver(const CUpDownClient* client)
 	} else {
 		// Allow the client to download a specified amount per session
 		if (client->GetQueueSessionPayloadUp() > SESSIONMAXTRANS) {
-			if (thePrefs.GetLogUlDlEvents())
-				AddDebugLogLine(DLP_DEFAULT, false, _T("%s: Upload session ended due to max transferred amount. %s"), client->GetUserName(), (LPCTSTR)CastItoXBytes(SESSIONMAXTRANS, false, false));
-			return true;
+			if (!ForceNewClient()) { // Restrict only if someone else might need this slot
+				if (thePrefs.GetLogUlDlEvents())
+					AddDebugLogLine(DLP_DEFAULT, false, _T("%s: Upload session ended due to max transferred amount (%s)"), client->GetUserName(), (LPCTSTR)CastItoXBytes(SESSIONMAXTRANS, false, false));
+				return true;
+			}
 		}
 	}
 	return false;

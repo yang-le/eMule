@@ -238,11 +238,6 @@ void CIrcNickListCtrl::DeleteAllNick(Channel *pChannel)
 			delete pChannel->m_lstNicks.RemoveHead();
 }
 
-void CIrcNickListCtrl::DeleteAllNick(const CString& sChannel)
-{
-	DeleteAllNick(m_pParent->m_wndChanSel.FindChannelByName(sChannel));
-}
-
 void CIrcNickListCtrl::DeleteNickInAll(const CString& sNick, const CString& sMessage)
 {
 	for (POSITION pos = m_pParent->m_wndChanSel.m_lstChannels.GetHeadPosition(); pos != NULL;)

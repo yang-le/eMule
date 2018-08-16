@@ -863,7 +863,6 @@ void CIrcMain::ParseMessage(CString sRawMessage)
 					const CString sChannel = sRawMessage.Tokenize(_T(" "), iIndex);
 					if (sChannel[0] == _T('#')) {
 						iIndex++;
-						m_pwndIRC->m_wndNicks.DeleteAllNick(sChannel);
 						CString sNewNick = sRawMessage.Tokenize(_T(" "), iIndex);
 						while (!sNewNick.IsEmpty()) {
 							m_pwndIRC->m_wndNicks.NewNick(sChannel, sNewNick);

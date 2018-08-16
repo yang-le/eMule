@@ -5,6 +5,8 @@ class CPPgWebServer : public CPropertyPage
 	DECLARE_DYNAMIC(CPPgWebServer)
 
 	enum { IDD = IDD_PPG_WEBSRV };
+	long m_generating;
+	bool bNewCert;
 
 public:
 	CPPgWebServer();
@@ -15,7 +17,6 @@ public:
 
 protected:
 	BOOL m_bModified;
-	bool bCreated;
 	HICON m_icoBrowse;
 
 	void LoadSettings();
@@ -35,6 +36,7 @@ protected:
 	afx_msg void OnChangeHTTPS();
 	afx_msg void OnReloadTemplates();
 	afx_msg void OnBnClickedTmplbrowse();
+	afx_msg void OnGenerateCertificate();
 	afx_msg void OnBnClickedCertbrowse();
 	afx_msg void OnBnClickedKeybrowse();
 	afx_msg void OnHelp();

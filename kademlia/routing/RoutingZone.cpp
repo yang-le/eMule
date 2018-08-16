@@ -457,7 +457,7 @@ void CRoutingZone::DbgWriteBootstrapFile()
 			AddDebugLogLine( false, _T("Wrote %ld contact to bootstrap file."), mapContacts.size());
 		}
 		else
-			DebugLogError(_T("Unable to store Kad file: %s"), m_sFilename);
+			DebugLogError(_T("Unable to store Kad file: %s"), (LPCTSTR)m_sFilename);
 	}
 	catch (CFileException* e)
 	{

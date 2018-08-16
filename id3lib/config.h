@@ -44,12 +44,12 @@
 /* #undef HAVE_ZLIB */
 /* #undef HAVE_GETOPT_LONG */
 #define _ID3LIB_NAME "id3lib"
-#define _ID3LIB_VERSION "3.9.0"
-#define _ID3LIB_VERSION0 "3.9.0\0" //added for resource file
-#define _ID3LIB_FULLNAME "id3lib-3.9.0-devel"
+#define _ID3LIB_VERSION "3.9.1"
+#define _ID3LIB_VERSION0 "3.9.1\0" //added for resource file
+#define _ID3LIB_FULLNAME "id3lib-3.9.1-devel"
 #define _ID3LIB_MAJOR_VERSION 3
 #define _ID3LIB_MINOR_VERSION 9
-#define _ID3LIB_PATCH_VERSION 0
+#define _ID3LIB_PATCH_VERSION 1
 #define _ID3LIB_INTERFACE_AGE 0
 #define _ID3LIB_BINARY_AGE 0
 /* #undef ID3_COMPILED_WITH_DEBUGGING */
@@ -125,7 +125,7 @@
 #define PACKAGE "id3lib"
 
 /* Version number of package */
-#define VERSION "3.9.0"
+#define VERSION "3.9.1"
 
 /* This is the bottom section */
 

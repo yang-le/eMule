@@ -27,6 +27,7 @@ class CSmileySelector;
 class CChatWnd : public CResizableDialog
 {
 	DECLARE_DYNAMIC(CChatWnd)
+	friend class CChatSelector;
 
 	enum { IDD = IDD_CHAT };
 
@@ -39,13 +40,13 @@ public:
 	void UpdateFriendlistCount(INT_PTR count);
 	void UpdateSelectedFriendMsgDetails();
 	void ScrollHistory(bool down);
-	void EnableSmileys(bool bEnable)						{ chatselector.EnableSmileys(bEnable); }
+	void EnableClose()						{ GetDlgItem(IDC_CCLOSE)->EnableWindow(chatselector.GetCurrentChatItem() != NULL); }
+	void EnableSmileys(bool bEnable)		{ chatselector.EnableSmileys(bEnable); }
 
 	CFriendListCtrl m_FriendListCtrl;
 	CChatSelector chatselector;
 
 protected:
-	friend class CChatSelector;
 	HICON icon_friend;
 	HICON icon_msg;
 	CSplitterControl m_wndSplitterHorz;
@@ -55,6 +56,7 @@ protected:
 	CButton m_wndSend;
 	CButton m_wndClose;
 	CSmileySelector *m_pwndSmileySel;
+	void OnChatTextChange();
 
 	void SetAllIcons();
 	void DoResize(int iDelta);

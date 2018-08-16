@@ -80,9 +80,6 @@ CWebServer::CWebServer()
 	: m_Templates(), m_bServerWorking(), m_iSearchSortby(3), m_bSearchAsc()
 	, m_nIntruderDetect(), m_bIsTempDisabled(), m_nStartTempDisabledTime(), m_ulCurIP()
 {
-	m_Params.sLastModified.Empty();
-	m_Params.sETag.Empty();
-
 	CIni ini(thePrefs.GetConfigFile(), _T("WebServer"));
 
 	ini.SerGet(true, WSdownloadColumnHidden, ARRSIZE(WSdownloadColumnHidden), _T("downloadColumnHidden"));
@@ -140,8 +137,7 @@ void CWebServer::SaveWIConfigArray(BOOL array[], int size, LPCTSTR key)
 	ini.SerGet(false, array, size, key);
 }
 
-
-void CWebServer::ReloadTemplates()
+bool CWebServer::ReloadTemplates()
 {
 	TCHAR *sPrevLocale = _tsetlocale(LC_TIME, NULL);
 
@@ -161,19 +157,7 @@ void CWebServer::ReloadTemplates()
 		file.Close();
 
 		CString sVersion = _LoadTemplate(sAll, _T("TMPL_VERSION"));
-		long lVersion = _tstol(sVersion);
-		if (lVersion < WEB_SERVER_TEMPLATES_VERSION) {
-			if (thePrefs.GetWSIsEnabled() || m_bServerWorking) {
-				CString buffer;
-				buffer.Format(GetResString(IDS_WS_ERR_LOADTEMPLATE), (LPCTSTR)sFile);
-				AddLogLine(true, buffer);
-				AfxMessageBox(buffer, MB_OK);
-			}
-			if (m_bServerWorking)
-				StopSockets();
-			m_bServerWorking = false;
-			thePrefs.SetWSIsEnabled(false);
-		} else {
+		if (_tstol(sVersion) >= WEB_SERVER_TEMPLATES_VERSION) {
 			m_Templates.sHeader = _LoadTemplate(sAll, _T("TMPL_HEADER"));
 			m_Templates.sHeaderStylesheet = _LoadTemplate(sAll, _T("TMPL_HEADER_STYLESHEET"));
 			m_Templates.sFooter = _LoadTemplate(sAll, _T("TMPL_FOOTER"));
@@ -227,13 +211,20 @@ void CWebServer::ReloadTemplates()
 			m_Templates.sProgressbarImgsPercent.Replace(_T("[PROGRESSGIFINTERNAL]"), _T("%i"));
 			m_Templates.sProgressbarImgs.Replace(_T("[PROGRESSGIFNAME]"), _T("%s"));
 			m_Templates.sProgressbarImgs.Replace(_T("[PROGRESSGIFINTERNAL]"), _T("%i"));
+			return true;
+		}
+		if(thePrefs.GetWSIsEnabled() || m_bServerWorking) {
+			CString buffer;
+			buffer.Format(GetResString(IDS_WS_ERR_LOADTEMPLATE), (LPCTSTR)sFile);
+			AddLogLine(true, buffer);
+			AfxMessageBox(buffer, MB_OK);
+			StopServer();
 		}
 	} else if (m_bServerWorking) {
 		AddLogLine(true, GetResString(IDS_WEB_ERR_CANTLOAD), (LPCTSTR)sFile);
-		StopSockets();
-		m_bServerWorking = false;
-		thePrefs.SetWSIsEnabled(false);
+		StopServer();
 	}
+	return false;
 }
 
 CString CWebServer::_LoadTemplate(const CString& sAll, const CString& sTemplateName)
@@ -253,7 +244,7 @@ CString CWebServer::_LoadTemplate(const CString& sAll, const CString& sTemplateN
 	return sRet;
 }
 
-void CWebServer::RestartServer()
+void CWebServer::RestartSockets()
 {	//Cax2 - restarts the server with the new port settings
 	StopSockets();
 	if (m_bServerWorking)
@@ -282,6 +273,15 @@ void CWebServer::StartServer()
 		, (LPCTSTR)_GetPlainResString(IDS_PW_WS)
 		, (LPCTSTR)_GetPlainResString(uid).MakeLower()
 		, (uid == IDS_ENABLED && thePrefs.GetWebUseHttps()) ? _T(" (HTTPS)") : _T(""));
+}
+
+void CWebServer::StopServer()
+{
+	if (m_bServerWorking) {
+		StopSockets();
+		m_bServerWorking = false;
+	}
+	thePrefs.SetWSIsEnabled(false);
 }
 
 void CWebServer::_RemoveServer(const CString& sIP, int nPort)
@@ -335,7 +335,7 @@ void CWebServer::_ConnectToServer(const CString& sIP, int nPort)
 
 void CWebServer::ProcessURL(const ThreadData& Data)
 {
-	if (theApp.m_app_state != APP_STATE_RUNNING)
+	if (!theApp.emuledlg->IsRunning())
 		return;
 
 	CWebServer *pThis = reinterpret_cast<CWebServer *>(Data.pThis);
@@ -659,7 +659,7 @@ CString CWebServer::_ParseURL(const CString &URL, const CString &fieldname)
 		if (findPos >= 0) {
 			Parameter = Parameter.Mid(findPos + findLength, Parameter.GetLength());
 			if (Parameter.Find(_T('&')) > -1)
-				Parameter = Parameter.Mid(0, Parameter.Find(_T('&')));
+				Parameter.Truncate(Parameter.Find(_T('&')));
 			Parameter.Replace(_T('+'), _T(' '));
 			// decode value ...
 			return OptUtf8ToStr(URLDecode(Parameter, true));
@@ -1894,7 +1894,8 @@ CString CWebServer::_GetTransferList(const ThreadData& Data)
 				case -13: if (ED2KFT_DOCUMENT != GetED2KFileTypeID(pPartFile->GetFileName())) continue; break;
 				case -14: if (ED2KFT_IMAGE != GetED2KFileTypeID(pPartFile->GetFileName())) continue; break;
 				case -15: if (ED2KFT_PROGRAM != GetED2KFileTypeID(pPartFile->GetFileName())) continue; break;
-					//JOHNTODO: Not too sure here.. I was going to add Collections but noticed something strange.. Are these supposed to match the list in PartFile around line 5132? Because they do not..
+				case -16: if (ED2KFT_EMULECOLLECTION != GetED2KFileTypeID(pPartFile->GetFileName())) continue; break;
+				//JOHNTODO: Not too sure here.. I was going to add Collections but noticed something strange.. Are these supposed to match the list in PartFile around line 5132? Because they do not..
 				}
 			} else if (cat > 0 && pPartFile->GetCategory() != (UINT)cat)
 				continue;
@@ -3931,15 +3932,16 @@ CString CWebServer::_GetSearch(const ThreadData& Data)
 
 		CString strResponse = _GetPlainResString(IDS_SW_SEARCHINGINFO);
 		try {
+			CSearchDlg *searchdlg = (CSearchDlg *)CWnd::FromHandle(theApp.emuledlg->searchwnd->m_hWnd);
 			if (pParams->eType != SearchTypeKademlia) {
-				if (!theApp.emuledlg->searchwnd->DoNewEd2kSearch(pParams)) {
+				if (!searchdlg->DoNewEd2kSearch(pParams)) {
 					delete pParams;
 					pParams = NULL;
 					strResponse = _GetPlainResString(IDS_ERR_NOTCONNECTED);
 				} else
 					Sleep(SEC2MS(2));	// wait for some results to come in (thanks thread)
 			} else {
-				if (!theApp.emuledlg->searchwnd->DoNewKadSearch(pParams)) {
+				if (!searchdlg->DoNewKadSearch(pParams)) {
 					delete pParams;
 					pParams = NULL;
 					strResponse = _GetPlainResString(IDS_ERR_NOTCONNECTEDKAD);
@@ -4052,6 +4054,7 @@ CString CWebServer::_GetSearch(const ThreadData& Data)
 	Out.Replace(_T("[CDImage]"), _GetPlainResString(IDS_SEARCH_CDIMG));
 	Out.Replace(_T("[Program]"), _GetPlainResString(IDS_SEARCH_PRG));
 	Out.Replace(_T("[Archive]"), _GetPlainResString(IDS_SEARCH_ARC));
+	Out.Replace(_T("[eMuleCollection]"), _GetPlainResString(IDS_SEARCH_EMULECOLLECTION));
 	Out.Replace(_T("[Search]"), _GetPlainResString(IDS_EM_SEARCH));
 	Out.Replace(_T("[Unicode]"), _GetPlainResString(IDS_SEARCH_UNICODE));
 	Out.Replace(_T("[Size]"), _GetPlainResString(IDS_DL_SIZE));
@@ -4234,11 +4237,12 @@ void CWebServer::InsertCatBox(CString& Out, int preselect, const CString& boxlab
 
 CString CWebServer::GetSubCatLabel(int cat)
 {
-	if (cat < 0 && cat >= -15) {
-		static const UINT ids[15] = {
+	if (cat < 0 && cat >= -16) {
+		static const UINT ids[16] = {
 			  IDS_ALLOTHERS, IDS_STATUS_NOTCOMPLETED, IDS_DL_TRANSFCOMPL, IDS_WAITING, IDS_DOWNLOADING
 			, IDS_ERRORLIKE, IDS_PAUSED, IDS_SEENCOMPL, IDS_VIDEO, IDS_AUDIO
-			, IDS_SEARCH_ARC, IDS_SEARCH_CDIMG, IDS_SEARCH_DOC, IDS_SEARCH_PICS, IDS_SEARCH_PRG };
+			, IDS_SEARCH_ARC, IDS_SEARCH_CDIMG, IDS_SEARCH_DOC, IDS_SEARCH_PICS, IDS_SEARCH_PRG
+			, IDS_SEARCH_EMULECOLLECTION };
 		return _GetPlainResString(ids[-cat - 1]);
 	}
 	return CString(_T('?'));

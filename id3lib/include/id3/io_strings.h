@@ -76,13 +76,16 @@ namespace dami
       {
         return this->readChars((char_type*) buf, len);
       }
-      virtual size_type readChars(char_type buf[], size_type len)
+#pragma warning(push)
+#pragma warning(disable:4996)
+	  virtual size_type readChars(char_type buf[], size_type len)
       {
         size_type size = min(len, (_string.size() - _cur));
-        _string.copy(reinterpret_cast<String::value_type *>(buf), size, _cur);
+        _string.copy(reinterpret_cast<String::value_type *>(buf), size, _cur); //C4996
         _cur += size;
         return size;
       }
+#pragma warning(pop)
 
       virtual pos_type getCur()
       {
@@ -146,13 +149,16 @@ namespace dami
       {
         return this->readChars((char_type*) buf, len);
       }
-      virtual size_type readChars(char_type buf[], size_type len)
+#pragma warning(push)
+#pragma warning(disable:4996)
+	  virtual size_type readChars(char_type buf[], size_type len)
       {
         size_type size = min(len, (_string.size() - _cur));
-        _string.copy(reinterpret_cast<BString::value_type *>(buf), size, _cur);
+        _string.copy(reinterpret_cast<BString::value_type *>(buf), size, _cur); //C4996
         _cur += size;
         return size;
       }
+#pragma warning(pop)
 
       virtual pos_type getCur()
       {

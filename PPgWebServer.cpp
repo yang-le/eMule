@@ -26,6 +26,16 @@
 #include "ppgwebserver.h"
 #include "UPnPImplWrapper.h"
 #include "UPnPImpl.h"
+#include "Log.h"
+#include "TLSthreading.h"
+
+#include "mbedtls/entropy.h"
+#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/error.h"
+#include "mbedtls/pk.h"
+#include "mbedtls/rsa.h"
+#include "mbedtls/x509_crt.h"
+#include "mbedtls/md.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -33,8 +43,204 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-
 static const TCHAR *sHiddenPassword = _T("*****");
+
+struct options
+{
+	LPCTSTR	issuer_key;		//filename of the issuer key file
+	LPCTSTR cert_file;		//where to store the constructed certificate file
+	LPCSTR	subject_name;	//subject name for certificate
+	LPCSTR	issuer_name;	//issuer name for certificate
+	LPCSTR	not_before;		//validity period not before
+	LPCSTR	not_after;		//validity period not after
+	LPCSTR	serial;			//serial number string
+};
+
+static int write_buffer(LPCTSTR output_file, const unsigned char *buffer)
+{
+	size_t len;
+	FILE *f = _tfopen(output_file, _T("wb"));
+	if (f == NULL)
+		return -1;
+	len = strlen((char *)buffer);
+	if (fwrite((void *)buffer, 1, len, f) != len) {
+		fclose(f);
+		return -1;
+	}
+	fclose(f);
+	return 0;
+}
+
+static int write_private_key(mbedtls_pk_context *key, LPCTSTR output_file)
+{
+	unsigned char output_buf[16000];
+
+	int ret = mbedtls_pk_write_key_pem(key, output_buf, sizeof(output_buf));
+	return ret ? ret : write_buffer(output_file, output_buf);
+}
+
+int KeyCreate(mbedtls_pk_context *key, mbedtls_ctr_drbg_context *ctr_drbg, LPCTSTR output_file)
+{
+	mbedtls_mpi N, P, Q, D, E, DP, DQ, QP;
+	LPCTSTR pmsg = NULL;
+	int ret;
+
+	mbedtls_mpi_init(&N);
+	mbedtls_mpi_init(&P);
+	mbedtls_mpi_init(&Q);
+	mbedtls_mpi_init(&D);
+	mbedtls_mpi_init(&E);
+	mbedtls_mpi_init(&DP);
+	mbedtls_mpi_init(&DQ);
+	mbedtls_mpi_init(&QP);
+
+	//create RSA 2048 key
+	ret = mbedtls_pk_setup(key, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA));
+	if (ret) {
+		pmsg = _T("mbedtls_pk_setup");
+		goto exit;
+	}
+	ret = mbedtls_rsa_gen_key(mbedtls_pk_rsa(key), mbedtls_ctr_drbg_random, ctr_drbg, 2048u, 65537);
+	if (ret) {
+		pmsg = _T("mbedtls_rsa_gen_key");
+		goto exit;
+	}
+
+	//write the key to a file
+	ret = write_private_key(key, output_file);
+	if (ret)
+		DebugLogError(_T("Error: writing private key failed"));
+
+exit:
+	mbedtls_mpi_free(&N);
+	mbedtls_mpi_free(&P);
+	mbedtls_mpi_free(&Q);
+	mbedtls_mpi_free(&D);
+	mbedtls_mpi_free(&E);
+	mbedtls_mpi_free(&DP);
+	mbedtls_mpi_free(&DQ);
+	mbedtls_mpi_free(&QP);
+
+	if (pmsg)
+		DebugLogError(_T("Error: %s returned -0x%04x - %s"), pmsg, -ret, (LPCTSTR)SSLerror(ret));
+	return ret;
+}
+
+int write_certificate(mbedtls_x509write_cert *crt, LPCTSTR output_file, int(*f_rng)(void *, unsigned char *, size_t), void *p_rng)
+{
+	unsigned char output_buf[4096];
+
+	int ret = mbedtls_x509write_crt_pem(crt, output_buf, 4096, f_rng, p_rng);
+	return ret ? ret : write_buffer(output_file, output_buf);
+}
+
+int CertCreate(const struct options &opt)
+{
+	static const char pers[] = "cert create";
+	mbedtls_pk_context issuer_key;
+	mbedtls_x509write_cert crt;
+	mbedtls_mpi serial;
+	mbedtls_entropy_context entropy;
+	mbedtls_ctr_drbg_context ctr_drbg;
+	LPCTSTR pmsg = NULL;
+	int ret;
+
+	mbedtls_threading_set_alt(threading_mutex_init_alt, threading_mutex_free_alt, threading_mutex_lock_alt, threading_mutex_unlock_alt);
+	mbedtls_x509write_crt_init(&crt);
+	mbedtls_pk_init(&issuer_key);
+	mbedtls_mpi_init(&serial);
+	mbedtls_ctr_drbg_init(&ctr_drbg);
+
+	//seed the PRNG
+	mbedtls_entropy_init(&entropy);
+	ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers));
+	if (ret) {
+		DebugLogError(_T("Error: mbedtls_ctr_drbg_seed returned %d - %s"), ret, (LPCTSTR)SSLerror(ret));
+		goto exit;
+	}
+
+	//generated the key
+	ret = KeyCreate(&issuer_key, &ctr_drbg, opt.issuer_key);
+	if (ret)
+		goto exit;
+
+	mbedtls_x509write_crt_set_subject_key(&crt, &issuer_key);
+	mbedtls_x509write_crt_set_issuer_key(&crt, &issuer_key);
+
+	// Parse serial to MPI
+	ret = mbedtls_mpi_read_string(&serial, 10, opt.serial);
+	if (ret) {
+		pmsg = _T("mbedtls_mpi_read_string");
+		goto exit;
+	}
+
+	//set parameters
+	ret = mbedtls_x509write_crt_set_subject_name(&crt, opt.subject_name);
+	if (ret) {
+		pmsg = _T("mbedtls_x509write_crt_set_subject_name");
+		goto exit;
+	}
+	ret = mbedtls_x509write_crt_set_issuer_name(&crt, opt.issuer_name);
+	if (ret) {
+		pmsg = _T("mbedtls_x509write_crt_set_issuer_name");
+		goto exit;
+	}
+
+	mbedtls_x509write_crt_set_version(&crt, 2); //2 for v3 version
+	mbedtls_x509write_crt_set_md_alg(&crt, MBEDTLS_MD_SHA256);
+
+	ret = mbedtls_x509write_crt_set_serial(&crt, &serial);
+	if (ret) {
+		pmsg = _T("mbedtls_x509write_crt_set_serial");
+		goto exit;
+	}
+	ret = mbedtls_x509write_crt_set_validity(&crt, opt.not_before, opt.not_after);
+	if (ret) {
+		pmsg = _T("mbedtls_x509write_crt_set_validity");
+		goto exit;
+	}
+	ret = mbedtls_x509write_crt_set_basic_constraints(&crt, 0, 0);
+	if (ret) {
+		pmsg = _T("x509write_crt_set_basic_contraints");
+		goto exit;
+	}
+	ret = mbedtls_x509write_crt_set_subject_key_identifier(&crt);
+	if (ret) {
+		pmsg = _T("mbedtls_x509write_crt_set_subject_key_identifier");
+		goto exit;
+	}
+	ret = mbedtls_x509write_crt_set_authority_key_identifier(&crt);
+	if (ret) {
+		pmsg = _T("mbedtls_x509write_crt_set_authority_key_identifier");
+		goto exit;
+	}
+	ret = mbedtls_x509write_crt_set_key_usage(&crt, MBEDTLS_X509_KU_KEY_ENCIPHERMENT);
+	if (ret) {
+		pmsg = _T("mbedtls_x509write_crt_set_key_usage");
+		goto exit;
+	}
+	ret = mbedtls_x509write_crt_set_ns_cert_type(&crt, MBEDTLS_X509_NS_CERT_TYPE_SSL_SERVER);
+	if (ret) {
+		pmsg = _T("mbedtls_x509write_crt_set_ns_cert_type");
+		goto exit;
+	}
+
+	//write the certificate to a file
+	ret = write_certificate(&crt, opt.cert_file, mbedtls_ctr_drbg_random, &ctr_drbg);
+	if (ret)
+		pmsg = _T("write_certificate");
+
+exit:
+	mbedtls_x509write_crt_free(&crt);
+	mbedtls_pk_free(&issuer_key);
+	mbedtls_mpi_free(&serial);
+	mbedtls_ctr_drbg_free(&ctr_drbg);
+	mbedtls_entropy_free(&entropy);
+
+	if (pmsg)
+		DebugLogError(_T("Error: %s returned -0x%04x - %s"), pmsg, -ret, (LPCTSTR)SSLerror(ret));
+	return ret;
+}
 
 IMPLEMENT_DYNAMIC(CPPgWebServer, CPropertyPage)
 
@@ -48,6 +254,7 @@ BEGIN_MESSAGE_MAP(CPPgWebServer, CPropertyPage)
 	ON_EN_CHANGE(IDC_WSTIMEOUT, OnDataChange)
 	ON_BN_CLICKED(IDC_WSENABLED, OnEnChangeWSEnabled)
 	ON_BN_CLICKED(IDC_WEB_HTTPS, OnChangeHTTPS)
+	ON_BN_CLICKED(IDC_WEB_GENERATE, OnGenerateCertificate)
 	ON_BN_CLICKED(IDC_WSENABLEDLOW, OnEnChangeWSEnabled)
 	ON_BN_CLICKED(IDC_WSRELOADTMPL, OnReloadTemplates)
 	ON_BN_CLICKED(IDC_TMPLBROWSE, OnBnClickedTmplbrowse)
@@ -61,7 +268,11 @@ BEGIN_MESSAGE_MAP(CPPgWebServer, CPropertyPage)
 END_MESSAGE_MAP()
 
 CPPgWebServer::CPPgWebServer()
-	: CPropertyPage(CPPgWebServer::IDD), m_bModified(), bCreated(), m_icoBrowse()
+	: CPropertyPage(CPPgWebServer::IDD)
+	, m_generating()
+	, bNewCert()
+	, m_bModified()
+	, m_icoBrowse()
 {
 }
 
@@ -136,7 +347,7 @@ BOOL CPPgWebServer::OnApply()
 		CString sBuf;
 		bool bUPnP = thePrefs.GetWSUseUPnP();
 		bool bWSIsEnabled = IsDlgButtonChecked(IDC_WSENABLED) != 0;
-		// get and check templatefile existence...
+		// get and check template file existence...
 		GetDlgItemText(IDC_TMPLPATH, sBuf);
 		if (bWSIsEnabled && !PathFileExists(sBuf)) {
 			CString buffer;
@@ -145,9 +356,33 @@ BOOL CPPgWebServer::OnApply()
 			return FALSE;
 		}
 		thePrefs.SetTemplate(sBuf);
-		theApp.webserver->ReloadTemplates();
+		if (!theApp.webserver->ReloadTemplates()) {
+			GetDlgItem(IDC_TMPLPATH)->SetFocus();
+			return FALSE;
+		}
 
-		uint16 oldPort = thePrefs.GetWSPort();
+		bool bHTTPS = IsDlgButtonChecked(IDC_WEB_HTTPS) != 0;
+		GetDlgItemText(IDC_CERTPATH, sBuf);
+		if (bWSIsEnabled && bHTTPS) {
+			if (!PathFileExists(sBuf)) {
+				AfxMessageBox(GetResString(IDS_CERT_NOT_FOUND), MB_OK);
+				return FALSE;
+			}
+			if (!bNewCert)
+				bNewCert = !thePrefs.GetWebCertPath().CompareNoCase(sBuf);
+		}
+		thePrefs.SetWebCertPath(sBuf);
+
+		GetDlgItemText(IDC_KEYPATH, sBuf);
+		if (bWSIsEnabled && bHTTPS) {
+			if (!PathFileExists(sBuf)) {
+				AfxMessageBox(GetResString(IDS_KEY_NOT_FOUND), MB_OK);
+				return FALSE;
+			}
+			if (!bNewCert)
+				bNewCert = !thePrefs.GetWebKeyPath().CompareNoCase(sBuf);
+		}
+		thePrefs.SetWebKeyPath(sBuf);
 
 		GetDlgItemText(IDC_WSPASS, sBuf);
 		if (sBuf != sHiddenPassword) {
@@ -161,32 +396,21 @@ BOOL CPPgWebServer::OnApply()
 			SetDlgItemText(IDC_WSPASSLOW, sHiddenPassword);
 		}
 
-		uint16 u = (uint16)GetDlgItemInt(IDC_WSPORT, NULL, FALSE);
-		if (u != oldPort && u > 0) {
-			thePrefs.SetWSPort(u);
-			theApp.webserver->RestartServer();
-		}
-
 		thePrefs.m_iWebTimeoutMins = (int)GetDlgItemInt(IDC_WSTIMEOUT, NULL, FALSE);
 
-		bool bHTTPS = IsDlgButtonChecked(IDC_WEB_HTTPS) != 0;
-		GetDlgItemText(IDC_CERTPATH, sBuf);
-		if (bWSIsEnabled && bHTTPS && !PathFileExists(sBuf)) {
-			AfxMessageBox(GetResString(IDS_CERT_NOT_FOUND), MB_OK);
-			return FALSE;
+		uint16 u = (uint16)GetDlgItemInt(IDC_WSPORT, NULL, FALSE);
+		if (u > 0 && u != thePrefs.GetWSPort()) {
+			thePrefs.SetWSPort(u);
+			theApp.webserver->RestartSockets();
 		}
-		thePrefs.SetWebCertPath(sBuf);
 
-		GetDlgItemText(IDC_KEYPATH, sBuf);
-		if (bWSIsEnabled && bHTTPS && !PathFileExists(sBuf)) {
-			AfxMessageBox(GetResString(IDS_KEY_NOT_FOUND), MB_OK);
-			return FALSE;
-		}
-		thePrefs.SetWebKeyPath(sBuf);
+		if (thePrefs.GetWebUseHttps() != bHTTPS || (bHTTPS && bNewCert))
+			theApp.webserver->StopServer();
+		bNewCert = false;
 
 		thePrefs.SetWSIsEnabled(bWSIsEnabled);
 		thePrefs.SetWebUseGzip(IsDlgButtonChecked(IDC_WS_GZIP) != 0);
-		thePrefs.SetWebUseHttps(IsDlgButtonChecked(IDC_WEB_HTTPS) != 0);
+		thePrefs.SetWebUseHttps(bHTTPS);
 		thePrefs.SetWSIsLowUserEnabled(IsDlgButtonChecked(IDC_WSENABLEDLOW) != 0);
 		theApp.webserver->StartServer();
 		thePrefs.m_bAllowAdminHiLevFunc = (IsDlgButtonChecked(IDC_WS_ALLOWHILEVFUNC) != 0);
@@ -222,6 +446,7 @@ void CPPgWebServer::Localize()
 		SetDlgItemText(IDC_MINS, GetResString(IDS_LONGMINS).MakeLower());
 
 		SetDlgItemText(IDC_WEB_HTTPS, GetResString(IDS_WEB_HTTPS));
+		SetDlgItemText(IDC_WEB_GENERATE, GetResString(IDS_WEB_GENERATE));
 		SetDlgItemText(IDC_WEB_CERT, GetResString(IDS_CERTIFICATE) + _T(':'));
 		SetDlgItemText(IDC_WEB_KEY, GetResString(IDS_KEY) + _T(':'));
 
@@ -243,10 +468,12 @@ void CPPgWebServer::SetUPnPState()
 void CPPgWebServer::OnChangeHTTPS()
 {
 	BOOL bEnable = IsDlgButtonChecked(IDC_WSENABLED) && IsDlgButtonChecked(IDC_WEB_HTTPS);
+	GetDlgItem(IDC_WEB_GENERATE)->EnableWindow(bEnable && !m_generating);
 	GetDlgItem(IDC_CERTPATH)->EnableWindow(bEnable);
 	GetDlgItem(IDC_CERTBROWSE)->EnableWindow(bEnable);
 	GetDlgItem(IDC_KEYPATH)->EnableWindow(bEnable);
 	GetDlgItem(IDC_KEYBROWSE)->EnableWindow(bEnable);
+	SetModified();
 }
 
 void CPPgWebServer::OnEnChangeWSEnabled()
@@ -286,16 +513,54 @@ void CPPgWebServer::OnBnClickedTmplbrowse()
 	SetTmplButtonState();
 }
 
+//create cert.key and cert.crt in config directory
+void CPPgWebServer::OnGenerateCertificate()
+{
+	if (InterlockedExchange(&m_generating, 1))
+		return;
+	CWaitCursor curWaiting;
+
+	CString confdir(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+	CString fkey(confdir + _T("cert.key"));
+	CString fcrt(confdir + _T("cert.crt"));
+	CStringA not_after, not_before, serial;
+	SYSTEMTIME st;
+	GetSystemTime(&st);
+	not_before.Format("%4hu%02hu01000000", st.wYear, st.wMonth);
+	not_after.Format("%4hu%02hu01235959", st.wYear + 1, st.wMonth);
+	int nserial = rand() % 1000; //try to avoid repeating serials
+	serial.Format("%d", nserial);
+	struct options opt;
+	opt.issuer_key = (LPCTSTR)fkey;
+	opt.cert_file = (LPCTSTR)fcrt;
+	opt.subject_name = "CN=Web Interface,O=emule-project.net,OU=eMule";
+	opt.issuer_name = "CN=eMule,O=emule-project.net";
+	opt.not_before = (LPCSTR)not_before;
+	opt.not_after = (LPCSTR)not_after;
+	opt.serial = (LPCSTR)serial;
+	bNewCert = !CertCreate(opt);
+	if (bNewCert) {
+		AddLogLine(false, _T("New certificate created; serial %d"), nserial);
+		SetDlgItemText(IDC_KEYPATH, fkey);
+		SetDlgItemText(IDC_CERTPATH, fcrt);
+		GetDlgItem(IDC_WEB_GENERATE)->EnableWindow(FALSE);
+		SetModified();
+	} else {
+		LogError(_T("Certificate creation failed"));
+		AfxMessageBox(GetResString(IDS_CERT_ERR_CREATE));
+		InterlockedExchange(&m_generating, 0);
+	}
+}
+
 void CPPgWebServer::OnBnClickedCertbrowse()
 {
 	CString strCert;
 	GetDlgItemText(IDC_CERTPATH, strCert);
 	CString buffer(GetResString(IDS_CERTIFICATE) + _T(" (*.crt)|*.crt|All Files (*.*)|*.*||"));
-	if (DialogBrowseFile(buffer, buffer, strCert)) {
+	if (DialogBrowseFile(buffer, buffer, strCert))
 		SetDlgItemText(IDC_CERTPATH, buffer);
+	if (buffer.CompareNoCase(strCert))
 		SetModified();
-	}
-	SetModified();
 }
 
 void CPPgWebServer::OnBnClickedKeybrowse()
@@ -303,11 +568,10 @@ void CPPgWebServer::OnBnClickedKeybrowse()
 	CString strKey;
 	GetDlgItemText(IDC_KEYPATH, strKey);
 	CString buffer(GetResString(IDS_KEY) + _T(" (*.key)|*.key|All Files (*.*)|*.*||"));
-	if (DialogBrowseFile(buffer, buffer, strKey)) {
+	if (DialogBrowseFile(buffer, buffer, strKey))
 		SetDlgItemText(IDC_KEYPATH, buffer);
+	if (buffer.CompareNoCase(strKey))
 		SetModified();
-	}
-	SetModified();
 }
 
 void CPPgWebServer::SetTmplButtonState()

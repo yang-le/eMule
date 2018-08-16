@@ -49,7 +49,7 @@ CCaptchaGenerator::~CCaptchaGenerator()
 void CCaptchaGenerator::ReGenerateCaptcha(uint32 nLetterCount)
 {
 	Clear();
-	CxImage* pimgResult = new CxImage(nLetterCount > 1 ? (LETTERSIZE + (nLetterCount-1)*CROWDEDSIZE) : LETTERSIZE, 32, 1, CXIMAGE_FORMAT_BMP);
+	CxImage *pimgResult = new CxImage(nLetterCount > 1 ? ((LETTERSIZE) + nLetterCount * (CROWDEDSIZE)) : (LETTERSIZE), 48, 1, CXIMAGE_FORMAT_BMP);
 	pimgResult->SetPaletteColor(0, 255, 255, 255);
 	pimgResult->SetPaletteColor(1, 0, 0, 0, 0);
 	pimgResult->Clear();
@@ -70,14 +70,14 @@ void CCaptchaGenerator::ReGenerateCaptcha(uint32 nLetterCount)
 		float fRotate = (float)(35 - (GetRandomUInt16() % 70));
 		imgLetter.Rotate2(fRotate, NULL, CxImage::IM_BILINEAR,  CxImage::OM_BACKGROUND, 0, false, true);
 		uint32 nOffset = i * CROWDEDSIZE;
-		ASSERT( imgLetter.GetHeight() == pimgResult->GetHeight() && pimgResult->GetWidth() >= nOffset + imgLetter.GetWidth() );
+		ASSERT(pimgResult->GetHeight() >= imgLetter.GetHeight() && pimgResult->GetWidth() >= nOffset + imgLetter.GetWidth());
 		for (uint32 j = 0; j < imgLetter.GetHeight(); j++)
 			for (uint32 k = 0; k < imgLetter.GetWidth(); k++)
 				if (pimgResult->GetPixelIndex(nOffset + k, j) != 1)
 					pimgResult->SetPixelIndex(nOffset + k, j, imgLetter.GetPixelIndex(k, j));
 	}
 	pimgResult->Jitter(1);
-	//pimgResult->Save("D:\\CaptchaTest.bmp", CXIMAGE_FORMAT_BMP);
+	//pimgResult->Save(_T("D:\\CaptchaTest.bmp"), CXIMAGE_FORMAT_BMP);
 	m_pimgCaptcha = pimgResult;
 }
 
@@ -99,6 +99,5 @@ bool CCaptchaGenerator::WriteCaptchaImage(CFileDataIO& file)
 		free(pbyBuffer);
 		return true;
 	}
-	else
-		return false;
+	return false;
 }

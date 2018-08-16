@@ -890,16 +890,17 @@ uint64 CSearchParamsWnd::GetSearchAttrSize(const CString& rstrExpr)
 		case _T('b'): //bytes
 			return (uint64)(dbl + 0.5);
 		case _T('k'): //kilobytes
-			return (uint64)(dbl*1024 + 0.5);
+			return (uint64)(dbl * 1024 + 0.5);
 		case _T('\0'): //not specified
 		case _T('m'): //megabytes
 			break;
 		case _T('g'): //gigabytes
-			return (uint64)(dbl*1024*1024*1024 + 0.5);
+			return (uint64)(dbl * 1024 * 1024 * 1024 + 0.5);
+		default:
+			return _UI64_MAX;
 		}
-		return (uint64)-1;
 	}
-	return (uint64)(dbl*1024*1024 + 0.5); // Default = MBytes
+	return (uint64)(dbl * 1024 * 1024 + 0.5); // Default = MBytes
 }
 
 ULONG CSearchParamsWnd::GetSearchAttrNumber(const CString& rstrExpr)
@@ -917,13 +918,14 @@ ULONG CSearchParamsWnd::GetSearchAttrNumber(const CString& rstrExpr)
 		case _T('b'): //bytes
 			break;
 		case _T('k'): //kilobytes
-			return (ULONG)(dbl*1000 + 0.5);
+			return (ULONG)(dbl * 1000 + 0.5);
 		case _T('m'): //megabytes
-			return (ULONG)(dbl*1000*1000 + 0.5);
+			return (ULONG)(dbl * 1000 * 1000 + 0.5);
 		case _T('g'): //gigabytes
-			return (ULONG)(dbl*1000*1000*1000 + 0.5);
+			return (ULONG)(dbl * 1000 * 1000 * 1000 + 0.5);
+		default:
+			return ULONG_MAX;
 		}
-		return (ULONG)-1;
 	}
 	return (ULONG)(dbl + 0.5); //default is bytes
 }
@@ -953,8 +955,9 @@ ULONG CSearchParamsWnd::GetSearchAttrLength(const CString& rstrExpr)
 			return (ULONG)(MIN2S(dbl) + 0.5);
 		case _T('h'): //hours
 			return (ULONG)(HR2S(dbl) + 0.5);
+		default:
+			return ULONG_MAX;
 		}
-		return (ULONG)-1;
 	}
 	return (ULONG)(dbl + 0.5); //default is seconds
 }

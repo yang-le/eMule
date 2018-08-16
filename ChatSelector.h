@@ -35,9 +35,9 @@ public:
 	CUpDownClient*		client;
 	CHTRichEditCtrl*	log;
 	CString				strMessagePending;
+	bool				notify;
 	CStringArray		history;
 	INT_PTR				history_pos;
-	bool				notify;
 };
 
 

@@ -390,7 +390,7 @@ ID3_ENUM(ID3_FieldFlags)
 {
   ID3FF_NONE          =      0,
   ID3FF_CSTR          = 1 << 0,  /*null (according to encoding) terminated*/
-  ID3FF_LIST          = 1 << 1,  /*null (according to encoding) seperates listitems*/
+  ID3FF_LIST          = 1 << 1,  /*null (according to encoding) separates listitems*/
   ID3FF_ENCODABLE     = 1 << 2,  /*possible to encode in valid encodings, 
                                   *if not set then string is encoded by ID3TE_ISO8859_1 */
   ID3FF_HASLINKEDSIZE = 1 << 3   /*used together with _linked_field. 

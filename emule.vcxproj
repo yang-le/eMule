@@ -301,6 +301,7 @@
     </ClCompile>
     <ClCompile Include="StringConversion.cpp" />
     <ClCompile Include="TimeTick.cpp" />
+    <ClCompile Include="TLSthreading.cpp" />
     <ClCompile Include="UDPSocket.cpp" />
     <ClCompile Include="UploadBandwidthThrottler.cpp" />
     <ClCompile Include="UploadClient.cpp" />
@@ -343,7 +344,6 @@
     <ClCompile Include="AddSourceDlg.cpp" />
     <ClCompile Include="ArchivePreviewDlg.cpp" />
     <ClCompile Include="BarShader.cpp" />
-    <ClCompile Include="BtnST.cpp" />
     <ClCompile Include="BuddyButton.cpp" />
     <ClCompile Include="ButtonsTabCtrl.cpp" />
     <ClCompile Include="CatDialog.cpp" />
@@ -599,6 +599,7 @@
     <ClInclude Include="StringConversion.h" />
     <ClInclude Include="ThrottledSocket.h" />
     <ClInclude Include="TimeTick.h" />
+    <ClInclude Include="TLSthreading.h" />
     <ClInclude Include="Types.h" />
     <ClInclude Include="UDPSocket.h" />
     <ClInclude Include="UpdownClient.h" />
@@ -648,7 +649,6 @@
     <ClInclude Include="AddSourceDlg.h" />
     <ClInclude Include="ArchivePreviewDlg.h" />
     <ClInclude Include="BarShader.h" />
-    <ClInclude Include="BtnST.h" />
     <ClInclude Include="ButtonsTabCtrl.h" />
     <ClInclude Include="CatDialog.h" />
     <ClInclude Include="ChatSelector.h" />

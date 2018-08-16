@@ -76,7 +76,7 @@ enum ESearchResultImage
 	sriKad
 };
 
-#define	SEARCH_LIST_MENU_BUTTON_XOFF	8
+#define	SEARCH_LIST_MENU_BUTTON_XOFF	7
 #define	SEARCH_LIST_MENU_BUTTON_YOFF	2
 #define	SEARCH_LIST_MENU_BUTTON_WIDTH	170
 #define	SEARCH_LIST_MENU_BUTTON_HEIGHT	22	// don't set the height do something different than 22 unless you know exactly what you are doing!
@@ -143,8 +143,8 @@ void CSearchResultsWnd::OnInitialUpdate()
 	searchlistctrl.Init(theApp.searchlist);
 	searchlistctrl.SetPrefsKey(_T("SearchListCtrl"));
 
-	static const CRect rc(SEARCH_LIST_MENU_BUTTON_YOFF
-		, SEARCH_LIST_MENU_BUTTON_XOFF
+	static const CRect rc(SEARCH_LIST_MENU_BUTTON_XOFF
+		, SEARCH_LIST_MENU_BUTTON_YOFF
 		, SEARCH_LIST_MENU_BUTTON_XOFF + SEARCH_LIST_MENU_BUTTON_WIDTH
 		, SEARCH_LIST_MENU_BUTTON_YOFF + SEARCH_LIST_MENU_BUTTON_HEIGHT);
 	m_btnSearchListMenu->Init(true, true);

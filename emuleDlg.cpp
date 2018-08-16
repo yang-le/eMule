@@ -671,13 +671,15 @@ void CemuleDlg::DoVersioncheck(bool manual)
 			return;
 		}
 	}
+//Automatic version check for community and official versions use different domain names
+//Hence "cv" prefix was added for community version
 #ifndef _BETA
-	if (WSAAsyncGetHostByName(m_hWnd, UM_VERSIONCHECK_RESPONSE, "vcdns2.emule-project.org", m_acVCDNSBuffer, sizeof m_acVCDNSBuffer) == 0)
+	if (WSAAsyncGetHostByName(m_hWnd, UM_VERSIONCHECK_RESPONSE, "cv" "vcdns2.emule-project.org", m_acVCDNSBuffer, sizeof m_acVCDNSBuffer) == 0)
 #else
-	if (WSAAsyncGetHostByName(m_hWnd, UM_VERSIONCHECK_RESPONSE, "vcdns1.emule-project.org", m_acVCDNSBuffer, sizeof m_acVCDNSBuffer) == 0)
+	if (WSAAsyncGetHostByName(m_hWnd, UM_VERSIONCHECK_RESPONSE, "cv" "vcdns1.emule-project.org", m_acVCDNSBuffer, sizeof m_acVCDNSBuffer) == 0)
 #endif
 	{
-		AddLogLine(true,GetResString(IDS_NEWVERSIONFAILED));
+		AddLogLine(true, GetResString(IDS_NEWVERSIONFAILED));
 	}
 #endif
 }

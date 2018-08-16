@@ -285,7 +285,7 @@ ID3_Frame* id3::v2::setComment(ID3_TagImpl& tag, const String& text, const Strin
     ID3D_NOTICE( "id3::v2::setComment: creating new comment frame" );
     frame = LEAKTESTNEW( ID3_Frame(ID3FID_COMMENT));
     if(!tag.AttachFrame(frame))
-		return NULL;
+      return NULL;
   }
 //  if (!frame)
 //  {

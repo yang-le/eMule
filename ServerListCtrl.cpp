@@ -496,8 +496,8 @@ CString CServerListCtrl::CreateSelectedServersURLs()
 	for (POSITION pos = GetFirstSelectedItemPosition(); pos != NULL;) {
 		const CServer* pServer = reinterpret_cast<CServer *>(GetItemData(GetNextSelectedItem(pos)));
 		buffer.Format(_T("ed2k://|server|%s|%u|/"), pServer->GetAddress(), pServer->GetPort());
-		if (link.GetLength() > 0)
-			buffer = _T("\r\n") + buffer;
+		if (!link.IsEmpty())
+			link += _T("\r\n");
 		link += buffer;
 	}
 	return link;
@@ -505,9 +505,9 @@ CString CServerListCtrl::CreateSelectedServersURLs()
 
 void CServerListCtrl::DeleteSelectedServers()
 {
-	
 	SetRedraw(FALSE);
-	for (POSITION pos = GetFirstSelectedItemPosition(); pos != NULL;) {
+	POSITION pos;
+	while ((pos = GetFirstSelectedItemPosition()) != NULL) {
 		int iItem = GetNextSelectedItem(pos);
 		theApp.serverlist->RemoveServer(reinterpret_cast<const CServer *>(GetItemData(iItem)));
 		DeleteItem(iItem);

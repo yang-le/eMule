@@ -898,12 +898,12 @@ void CClientList::ProcessConnectingClientsList()
 	for (POSITION pos1 = m_liConnectingClients.GetHeadPosition(); pos1 != NULL;) {
 		POSITION pos2 = pos1;
 		const CONNECTINGCLIENT &cc = m_liConnectingClients.GetNext(pos1);
-		if (cur_tick < cc.dwInserted + SEC2MS(45))
-			break;
-		ASSERT(cc.pClient->GetConnectingState() != CCS_NONE);
-		m_liConnectingClients.RemoveAt(pos2);
-		if (cc.pClient->Disconnected(_T("Connectiontry Timeout")))
-			delete cc.pClient;
+		if (cur_tick >= cc.dwInserted + SEC2MS(45)) {
+			ASSERT(cc.pClient->GetConnectingState() != CCS_NONE);
+			m_liConnectingClients.RemoveAt(pos2);
+			if (cc.pClient->Disconnected(_T("Connectiontry Timeout")))
+				delete cc.pClient;
+		}
 	}
 }
 

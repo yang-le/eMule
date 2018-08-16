@@ -20,17 +20,6 @@
 
 class CPartFile;
 
-struct SUnresolvedHostname
-{
-	SUnresolvedHostname()
-	{
-		nPort = 0;
-	}
-	CStringA strHostname;
-	CString strURL;
-	uint16 nPort;
-};
-
 // CAddSourceDlg dialog
 
 class CAddSourceDlg : public CResizableDialog

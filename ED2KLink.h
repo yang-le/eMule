@@ -15,19 +15,9 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #pragma once
 #include "shahashset.h"
+#include "otherfunctions.h"
+
 class CSafeMemFile;
-
-struct SUnresolvedHostname
-{
-	SUnresolvedHostname()
-	{
-		nPort = 0;
-	}
-	CStringA strHostname;
-	uint16 nPort;
-	CString strURL;
-};
-
 
 class CED2KLink
 {

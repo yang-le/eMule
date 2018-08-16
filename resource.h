@@ -1552,6 +1552,8 @@
 #define IDS_IRC_BAN                     1599
 #define IDS_ED2KSERVER                  1600
 #define IDS_CONTENTDB                   1601
+#define IDS_WEB_GENERATE                1602
+#define IDS_CERT_ERR_CREATE             1603
 #define IDC_ANIMATE1                    2000
 #define IDC_STATUS                      2001
 #define IDC_FILESTATUS                  2002
@@ -2350,7 +2352,7 @@
 #define IDC_KEYPATH                     3018
 #define IDC_KEYBROWSE                   3019
 #define IDC_ITALIC                      3020
-
+#define IDC_WEB_GENERATE                3021
 
 #define IDA_ENTER                       32771
 

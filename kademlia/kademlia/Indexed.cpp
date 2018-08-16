@@ -283,9 +283,13 @@ void CIndexed::Clean()
 	static LONG cleaning = 0;
 	if (InterlockedExchange(&cleaning, 1))
 		return; //already cleaning
-	try {
-		time_t tNow = time(NULL);
+	time_t tNow = time(NULL);
+	if (m_tLastClean > tNow) {
+		InterlockedExchange(&cleaning, 0);
+		return;
+	}
 
+	try {
 		uint32 uRemovedKey = 0;
 		uint32 uRemovedSource = 0;
 		uint32 uTotalSource = 0;
