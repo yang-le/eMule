@@ -161,7 +161,7 @@ CKadTagValueString CEntry::GetCommonFileNameLowerCase() const
 
 uint32 CEntry::GetTagCount() const // Adds filename and size to the count if not empty, even if they are not stored as tags
 {
-	return (uint32)(m_listTag.size() + static_cast<unsigned>(m_uSize != 0) + static_cast<unsigned>(GetCommonFileName().IsEmpty()));
+	return (uint32)(m_listTag.size() + static_cast<unsigned>(m_uSize > 0) + static_cast<unsigned>(!GetCommonFileName().IsEmpty()));
 }
 
 void CEntry::WriteTagListInc(CDataIO* pData, uint32 nIncreaseTagNumber)
