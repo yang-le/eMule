@@ -743,13 +743,12 @@ void CALLBACK CemuleDlg::StartupTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT_PTR /*
 					AddLogLine(true, GetResString(IDS_MAIN_READY), (LPCTSTR)theApp.m_strCurVersionLong);
 
 				theApp.m_app_state = APP_STATE_RUNNING; //initialization completed
-				bool bconnect = thePrefs.GetNetworkED2K() || thePrefs.GetNetworkKademlia();
-				theApp.emuledlg->toolbar->EnableButton(TBBTN_CONNECT, bconnect);
-				theApp.emuledlg->m_SysMenuOptions.EnableMenuItem(MP_CONNECT, bconnect ? MF_ENABLED : MF_DISABLED);
-				theApp.emuledlg->serverwnd->GetDlgItem(IDC_ED2KCONNECT)->EnableWindow(thePrefs.GetNetworkED2K());
+				theApp.emuledlg->toolbar->EnableButton(TBBTN_CONNECT, TRUE);
+				theApp.emuledlg->m_SysMenuOptions.EnableMenuItem(MP_CONNECT, MF_ENABLED);
+				theApp.emuledlg->serverwnd->GetDlgItem(IDC_ED2KCONNECT)->EnableWindow();
 				theApp.emuledlg->kademliawnd->UpdateControlsState(); //application state change is not tracked - force update
 
-				if (bconnect && thePrefs.DoAutoConnect())
+				if (thePrefs.DoAutoConnect())
 					theApp.emuledlg->OnBnClickedConnect();
 
 #ifdef HAVE_WIN7_SDK_H

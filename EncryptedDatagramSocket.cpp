@@ -460,7 +460,7 @@ int CEncryptedDatagramSocket::EncryptSendServer(uchar* pbyBuf, int nBufLen, uint
 		uint8 byRand = (uint8)rand();	// they actually dont really need to be random, but it doesn't hurts either
 		RC4Crypt((uchar*)&byRand, pbyBuf + CRYPT_HEADER_WITHOUTPADDING + j, 1, &keySendKey);
 	}
-	RC4Crypt(pbyBuf, pbyBuf + CRYPT_HEADER_WITHOUTPADDING + byPadLen, nBufLen, &keySendKey);
+	RC4Crypt(pbyBuf + CRYPT_HEADER_WITHOUTPADDING + byPadLen, pbyBuf + CRYPT_HEADER_WITHOUTPADDING + byPadLen, nBufLen, &keySendKey);
 
 	theStats.AddUpDataOverheadCrypt(nCryptHeaderLen);
 	return nBufLen + nCryptHeaderLen;

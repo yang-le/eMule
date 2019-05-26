@@ -309,21 +309,16 @@ bool CServerSocket::ProcessPacket(const BYTE* packet, uint32 size, uint8 opcode)
 						pServer->SetTCPFlags(cur_server->GetTCPFlags());
 				}
 
-				uint32 dwServerReportedIP = 0;
-				if (size >= 20){
-					dwServerReportedIP = *((uint32*)(packet + 12));
-					if (::IsLowID(dwServerReportedIP)){
-						ASSERT( false );
+				uint32 dwServerReportedIP;
+				if (size >= 16) {
+					dwServerReportedIP = PeekUInt32(packet + 12);
+					if (::IsLowID(dwServerReportedIP)) {
+						ASSERT(false);
 						dwServerReportedIP = 0;
 					}
-					ASSERT( dwServerReportedIP == la->clientid || ::IsLowID(la->clientid) );
-					uint32 dwObfuscationTCPPort = *((uint32*)(packet + 16));
-					if (cur_server != NULL && dwObfuscationTCPPort != 0)
-						cur_server->SetObfuscationPortTCP((uint16)dwObfuscationTCPPort);
-					if (pServer != NULL && dwObfuscationTCPPort != 0)
-						pServer->SetObfuscationPortTCP((uint16)dwObfuscationTCPPort);
-
-				}
+					ASSERT(dwServerReportedIP == la->clientid || ::IsLowID(la->clientid));
+				} else
+					dwServerReportedIP = 0;
 
 				if (la->clientid == 0)
 				{

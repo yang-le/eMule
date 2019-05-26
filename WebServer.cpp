@@ -3925,16 +3925,15 @@ CString CWebServer::_GetSearch(const ThreadData& Data)
 
 		CString strResponse = _GetPlainResString(IDS_SW_SEARCHINGINFO);
 		try {
-			CSearchDlg *searchdlg = (CSearchDlg *)CWnd::FromHandle(theApp.emuledlg->searchwnd->m_hWnd);
 			if (pParams->eType != SearchTypeKademlia) {
-				if (!searchdlg->DoNewEd2kSearch(pParams)) {
+				if (!theApp.emuledlg->searchwnd->DoNewEd2kSearch(pParams)) {
 					delete pParams;
 					pParams = NULL;
 					strResponse = _GetPlainResString(IDS_ERR_NOTCONNECTED);
 				} else
 					Sleep(SEC2MS(2));	// wait for some results to come in (thanks thread)
 			} else {
-				if (!searchdlg->DoNewKadSearch(pParams)) {
+				if (!theApp.emuledlg->searchwnd->DoNewKadSearch(pParams)) {
 					delete pParams;
 					pParams = NULL;
 					strResponse = _GetPlainResString(IDS_ERR_NOTCONNECTEDKAD);

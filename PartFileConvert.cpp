@@ -360,6 +360,7 @@ int CPartFileConvert::performConvertToeMule(CString folder)
 	file->GetFileIdentifier().DeleteMD4Hashset();
 	while (!file->gaplist.IsEmpty())
 		delete file->gaplist.RemoveHead();
+	file->ClearTags();
 
 	if (file->LoadPartFile(thePrefs.GetTempDir(), file->GetPartMetFileName()) != PLR_LOADSUCCESS) {
 		//delete file;

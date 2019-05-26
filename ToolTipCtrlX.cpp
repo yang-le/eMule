@@ -470,7 +470,7 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 			}
 			else {
 				bool bIsBrHeadLine = false;
-				if (bAutoFormatText && (strLine.Compare(_T("<br>")) == 0 || (bIsBrHeadLine = (strLine.Compare(_T("<br_head>")) == 0)))) {
+				if (bAutoFormatText && (strLine.Compare(_T("<br>")) == 0 || (bIsBrHeadLine = (strLine.Compare(_T("<br_head>")) == 0)) == true)) {
 					CPen pen;
 					pen.CreatePen(0, 1, m_crTooltipTextColor);
 					CPen *pOP = pdc->SelectObject(&pen);

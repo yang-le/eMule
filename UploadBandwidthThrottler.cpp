@@ -314,17 +314,16 @@ void UploadBandwidthThrottler::Pause(bool paused)
 uint32 UploadBandwidthThrottler::GetSlotLimit(uint32 currentUpSpeed)
 {
 	uint32 upPerClient = theApp.uploadqueue->GetTargetClientDataRate(true);
-
 	// if throttler doesn't require another slot, go with a slightly more restrictive method
-	if (currentUpSpeed > 20 * 1024)
+	if (currentUpSpeed > 20 * 1024) {
 		upPerClient += currentUpSpeed / 43;
-
-	if (upPerClient > UPLOAD_CLIENT_MAXDATARATE)
-		upPerClient = UPLOAD_CLIENT_MAXDATARATE;
+		if (upPerClient > UPLOAD_CLIENT_MAXDATARATE)
+			upPerClient = UPLOAD_CLIENT_MAXDATARATE;
+	}
 
 	//now the final check
 	if (currentUpSpeed > 12 * 1024)
-		return max(currentUpSpeed / upPerClient, MIN_UP_CLIENTS_ALLOWED);
+		return maxi(currentUpSpeed / upPerClient, (uint32)(MIN_UP_CLIENTS_ALLOWED + 3));
 	if (currentUpSpeed > 7 * 1024)
 		return MIN_UP_CLIENTS_ALLOWED + 2;
 	if (currentUpSpeed > 3 * 1024)
@@ -336,7 +335,7 @@ uint32 UploadBandwidthThrottler::CalculateChangeDelta(uint32 numberOfConsecutive
 {
 	static const uint32 deltas[9] =
 		{50u, 50u, 128u, 256u, 512u, 512u + 256u, 1024u, 1024u + 256u, 1024u + 512u};
-	return deltas[min(numberOfConsecutiveChanges, _countof(deltas) - 1)]; //return 1024u+512u for 8 and above
+	return deltas[min(numberOfConsecutiveChanges, _countof(deltas) - 1)]; //use the last element for 8 and above
 }
 
 /**

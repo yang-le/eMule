@@ -78,7 +78,7 @@ BOOL CNetworkInfoDlg::OnInitDialog()
 		m_info.SetParaFormat(pf);
 	}
 
-	cfDef.cbSize = sizeof cfDef;
+	cfDef.cbSize = (UINT)sizeof cfDef;
 	if (m_info.GetSelectionCharFormat(cfDef)){
 		cfBold = cfDef;
 		cfBold.dwMask |= CFM_BOLD;
@@ -86,6 +86,9 @@ BOOL CNetworkInfoDlg::OnInitDialog()
 	}
 
 	CreateNetworkInfo(m_info, cfDef, cfBold, true);
+	m_info.SetSel(0, 0);
+	m_info.HideSelection(TRUE, FALSE);
+	m_info.SetOptions(ECOOP_OR, ECO_SAVESEL);
 
 	return TRUE;
 }

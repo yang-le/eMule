@@ -434,31 +434,28 @@ bool CUploadQueue::AcceptNewClient(INT_PTR curUploadSlots) const
 uint32 CUploadQueue::GetTargetClientDataRate(bool bMinDatarate) const
 {
 	uint32 nOpenSlots = (uint32)GetUploadQueueLength();
+	// 3 slots or less - 3KiB/s
+	// 4 slots or more - linear growth by 1 KiB/s steps, cap off at UPLOAD_CLIENT_MAXDATARATE
 	uint32 nResult;
 	if (nOpenSlots <= 3)
-		nResult = 3 * 1024; // 3KB/s for 3 slots or less
-	else if (nOpenSlots >= 40)
-		nResult = UPLOAD_CLIENT_MAXDATARATE; //for 40 slots and more
+		nResult = 3 * 1024;
 	else
-		nResult = min(UPLOAD_CLIENT_MAXDATARATE, nOpenSlots * 1280); // linear increase in between, 1280 = 1024*1.25
+		nResult = min(UPLOAD_CLIENT_MAXDATARATE, nOpenSlots * 1024);
 
-	if (bMinDatarate)
-		nResult = nResult * 3 / 4; // nResult * 0.75f
-	return nResult;
+	return bMinDatarate ? nResult * 3 / 4 : nResult;
 }
 
 bool CUploadQueue::ForceNewClient(bool allowEmptyWaitingQueue)
 {
-	if (!allowEmptyWaitingQueue && waitinglist.GetSize() <= 0)
-		return false;
-
-	if (::GetTickCount() < m_nLastStartUpload + SEC2MS(1) && datarate < 102400)
+	if (!allowEmptyWaitingQueue && waitinglist.IsEmpty())
 		return false;
 
 	INT_PTR curUploadSlots = uploadinglist.GetCount();
-
 	if (curUploadSlots < MIN_UP_CLIENTS_ALLOWED)
 		return true;
+
+	if (::GetTickCount() < m_nLastStartUpload + SEC2MS(1) && datarate < 102400)
+		return false;
 
 	if (!AcceptNewClient(curUploadSlots) || !theApp.lastCommonRouteFinder->AcceptNewClient()) // UploadSpeedSense can veto a new slot if USS enabled
 		return false;
@@ -472,21 +469,20 @@ bool CUploadQueue::ForceNewClient(bool allowEmptyWaitingQueue)
 	uint32 upPerClient = GetTargetClientDataRate(false);
 
 	// if throttler doesn't require another slot, go with a slightly more restrictive method
-	if (MaxSpeed > 20) // || MaxSpeed == UNLIMITED) - because UNLIMITED > 20
+	if (MaxSpeed > 20 /*|| MaxSpeed == UNLIMITED */) { //because UNLIMITED > 20
 		upPerClient += datarate / 43;
-
-	if (upPerClient > UPLOAD_CLIENT_MAXDATARATE)
-		upPerClient = UPLOAD_CLIENT_MAXDATARATE;
+		if (upPerClient > UPLOAD_CLIENT_MAXDATARATE)
+			upPerClient = UPLOAD_CLIENT_MAXDATARATE;
+	}
 
 	//now the final check
-
 	if (MaxSpeed == UNLIMITED) {
 		if ((uint32)curUploadSlots < (datarate / upPerClient))
 			return true;
 	} else {
 		uint32 nMaxSlots;
 		if (MaxSpeed > 12)
-			nMaxSlots = (MaxSpeed * 1024u) / upPerClient;
+			nMaxSlots = maxi((MaxSpeed * 1024u) / upPerClient, (uint32)(MIN_UP_CLIENTS_ALLOWED + 3));
 		else if (MaxSpeed > 7)
 			nMaxSlots = MIN_UP_CLIENTS_ALLOWED + 2;
 		else if (MaxSpeed > 3)
@@ -499,18 +495,17 @@ bool CUploadQueue::ForceNewClient(bool allowEmptyWaitingQueue)
 			return true;
 	}
 /*
-	if(m_iHighestNumberOfFullyActivatedSlotsSinceLastCall > uploadinglist.GetSize()) {
+	if(m_iHighestNumberOfFullyActivatedSlotsSinceLastCall > uploadinglist.GetCount()) {
 		// uploadThrottler requests another slot. If throttler says it needs another slot, we will allow more slots
 		// than what we require ourself. Never allow more slots than to give each slot high enough average transfer speed, though (checked above).
-		//if(thePrefs.GetLogUlDlEvents() && waitinglist.GetSize() > 0)
-		//	AddDebugLogLine(false, _T("UploadQueue: Added new slot since throttler needs it. m_iHighestNumberOfFullyActivatedSlotsSinceLastCall: %i uploadinglist.GetSize(): %i tick: %i"), m_iHighestNumberOfFullyActivatedSlotsSinceLastCall, uploadinglist.GetSize(), ::GetTickCount());
+		//if(thePrefs.GetLogUlDlEvents() && !waitinglist.IsEmpty())
+		//	AddDebugLogLine(false, _T("UploadQueue: Added new slot since throttler needs it. m_iHighestNumberOfFullyActivatedSlotsSinceLastCall: %i uploadinglist.GetCount(): %i tick: %i"), m_iHighestNumberOfFullyActivatedSlotsSinceLastCall, uploadinglist.GetCount(), ::GetTickCount());
 		return true;
 	}
-
 	//nope
 	return false;
 */
-	return m_iHighestNumberOfFullyActivatedSlotsSinceLastCall > uploadinglist.GetSize();
+	return m_iHighestNumberOfFullyActivatedSlotsSinceLastCall > uploadinglist.GetCount();
 }
 
 CUpDownClient* CUploadQueue::GetWaitingClientByIP_UDP(uint32 dwIP, uint16 nUDPPort, bool bIgnorePortOnUniqueIP, bool* pbMultipleIPs)
