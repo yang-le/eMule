@@ -3320,15 +3320,29 @@ bool IsUnicodeFile(LPCTSTR pszFilePath)
 	return bResult;
 }
 
+bool IsRegExpValid(const CString & regexpr)
+{
+	try {
+		std::basic_regex<TCHAR> reFN(regexpr);
+	} catch (const std::regex_error&) {
+		return false;
+	}
+	return true;
+}
+
 bool RegularExpressionMatch(const CString &regexpr, const CString &teststring)
 {
-	std::basic_regex<TCHAR> reFN(regexpr);
+	try {
+		std::basic_regex<TCHAR> reFN(regexpr);
 #ifdef UNICODE
-	std::wcmatch mcUrl;
+		std::wcmatch mcUrl;
 #else
-	std::cmatch mcUrl;
+		std::cmatch mcUrl;
 #endif
-	return std::regex_match((LPCTSTR)teststring, mcUrl, reFN);
+		return std::regex_match((LPCTSTR)teststring, mcUrl, reFN);
+	} catch (const std::regex_error&) {
+		return false;
+	}
 }
 
 ULONGLONG GetModuleVersion(LPCTSTR pszFilePath)

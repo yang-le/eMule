@@ -96,7 +96,6 @@ BOOL CCommentDialogLst::OnSetActive()
 		return FALSE;
 	if (m_bDataChanged) {
 		RefreshData();
-		RefreshData();
 		m_bDataChanged = false;
 	}
 	return TRUE;
@@ -197,7 +196,7 @@ void CCommentDialogLst::OnBnClickedFilter()
 		CString strNewCommentFilters;
 		for (int iPos = 0; iPos >= 0;) {
 			CString strFilter = strCommentFilters.Tokenize(_T("|"), iPos);
-			if (!strFilter.IsEmpty()) {
+			if (!strFilter.Trim().IsEmpty()) {
 				if (!strNewCommentFilters.IsEmpty())
 					strNewCommentFilters += _T('|');
 				strNewCommentFilters += strFilter.Trim();

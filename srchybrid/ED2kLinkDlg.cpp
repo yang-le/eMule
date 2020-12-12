@@ -181,7 +181,7 @@ void CED2kLinkDlg::UpdateLink()
 
 	CString strLinks;
 	for (int i = 0; i != m_paFiles->GetSize(); ++i)
-		if ((*m_paFiles)[i] && (*m_paFiles)[i]->IsKindOf(RUNTIME_CLASS(CKnownFile))) {
+		if ((*m_paFiles)[i]->IsKindOf(RUNTIME_CLASS(CKnownFile))) {
 			if (!strLinks.IsEmpty())
 				strLinks += _T("\r\n\r\n");
 			const CKnownFile *file = static_cast<CKnownFile*>((*m_paFiles)[i]);

@@ -715,7 +715,7 @@ void CKeyEntry::WriteTagListWithPublishInfo(CDataIO *pData)
 		uint8 nSize = (uint8)fileAICHTag.GetLength();
 		BYTE *byBuffer = fileAICHTag.Detach();
 		const CKadTagBsob tag1(TAG_KADAICHHASHRESULT, byBuffer, nSize);
-		pData->WriteTag(&tag);
+		pData->WriteTag(&tag1);
 		free(byBuffer);
 	}
 }

@@ -132,6 +132,7 @@ CString GetFormatedUInt(ULONG ulVal);
 CString GetFormatedUInt64(ULONGLONG ullVal);
 void SecToTimeLength(unsigned long ulSec, CStringA &rstrTimeLength);
 void SecToTimeLength(unsigned long ulSec, CStringW &rstrTimeLength);
+bool IsRegExpValid(const CString &regexpr);
 bool RegularExpressionMatch(const CString &regexpr, const CString &teststring);
 
 // Print hash in a format which is similar to CertMgr's

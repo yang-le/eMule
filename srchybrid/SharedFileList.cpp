@@ -1370,7 +1370,7 @@ void CSharedFileList::Publish()
 
 	if (Kademlia::CKademlia::GetTotalStoreSrc() < KADEMLIATOTALSTORESRC) {
 		if (tNow >= m_lastPublishKadSrc) {
-			if (m_currFileSrc > GetCount())
+			if (m_currFileSrc >= GetCount())
 				m_currFileSrc = 0;
 			CKnownFile *pCurKnownFile = GetFileByIndex(m_currFileSrc);
 			if (pCurKnownFile && pCurKnownFile->PublishSrc())
@@ -1387,7 +1387,7 @@ void CSharedFileList::Publish()
 
 	if (Kademlia::CKademlia::GetTotalStoreNotes() < KADEMLIATOTALSTORENOTES) {
 		if (tNow >= m_lastPublishKadNotes) {
-			if (m_currFileNotes > GetCount())
+			if (m_currFileNotes >= GetCount())
 				m_currFileNotes = 0;
 			CKnownFile *pCurKnownFile = GetFileByIndex(m_currFileNotes);
 			if (pCurKnownFile && pCurKnownFile->PublishNotes())

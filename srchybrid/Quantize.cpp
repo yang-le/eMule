@@ -102,7 +102,7 @@ void CQuantizer::AddColor(NODE **ppNode, BYTE r, BYTE g, BYTE b,
 void* CQuantizer::CreateNode(UINT nLevel, UINT	nColorBits, UINT *pLeafCount,
 	NODE **pReducibleNodes)
 {
-	NODE *pNode = (NODE*)malloc(sizeof(NODE));
+	NODE *pNode = (NODE*)calloc(1, sizeof(NODE));
 
 	if (pNode == NULL)
 		return NULL;

@@ -17,7 +17,7 @@ class CCommentDialog : public CResizablePage
 	{
 		IDD = IDD_COMMENT
 	};
-
+	int m_iRating;
 public:
 	CCommentDialog();	// standard constructor
 	virtual	~CCommentDialog() = default;

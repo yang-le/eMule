@@ -116,6 +116,7 @@ void CPartFileConvert::ConvertToeMule(const CString &folder, bool deletesource)
 		m_convertgui->AddJob(newjob);
 
 	StartThread();
+	m_convertgui->SetForegroundWindow();
 }
 
 void CPartFileConvert::StartThread()
@@ -502,8 +503,8 @@ void CPartFileConvert::RemoveAllJobs()
 
 void CPartFileConvert::RemoveJob(ConvertJob *job)
 {
-	POSITION pos = NULL;
-	while ((pos = m_jobs.Find(job, pos)) != NULL) {
+	POSITION pos = m_jobs.Find(job);
+	if (pos) {
 		ConvertJob *del = m_jobs.GetAt(pos);
 		if (m_convertgui)
 			m_convertgui->RemoveJob(del);
@@ -639,10 +640,11 @@ void CPartFileConvertDlg::OnAddFolder()
 		// Now cause the dialog to appear.
 		LPITEMIDLIST pidlRoot;
 		if ((pidlRoot = SHBrowseForFolder(&bi)) != NULL) {
-			int reply = IDNO;
-
+			int reply;
 			if (thePrefs.IsExtControlsEnabled())
 				reply = LocMessageBox(IDS_IMP_DELSRC, MB_YESNOCANCEL | MB_DEFBUTTON2, 0);
+			else
+				reply = IDNO;
 
 			if (reply != IDCANCEL) {
 				bool removesrc = (reply == IDYES);
@@ -676,7 +678,7 @@ void CPartFileConvertDlg::UpdateJobInfo(ConvertJob *job)
 		return;
 	}
 
-	// search jobitem in listctrl
+	// search job item in listctrl
 	LVFINDINFO find;
 	find.flags = LVFI_PARAM;
 	find.lParam = (LPARAM)job;
@@ -689,8 +691,7 @@ void CPartFileConvertDlg::UpdateJobInfo(ConvertJob *job)
 			buffer.Format(GetResString(IDS_IMP_SIZE), (LPCTSTR)CastItoXBytes(job->size), (LPCTSTR)CastItoXBytes(job->spaceneeded));
 		joblist.SetItemText(iItem, 2, buffer);
 		joblist.SetItemText(iItem, 3, job->filehash);
-	}// else
-	//	AddJob(job);	why???
+	}
 }
 
 void CPartFileConvertDlg::RemoveJob(ConvertJob *job)
@@ -717,13 +718,10 @@ void CPartFileConvertDlg::RemoveSel()
 
 	for (POSITION pos = joblist.GetFirstSelectedItemPosition(); pos != NULL;) {
 		int index = joblist.GetNextSelectedItem(pos);
-		if (index > -1) {
+		if (index >= 0) {
 			ConvertJob *job = reinterpret_cast<ConvertJob*>(joblist.GetItemData(index));
-			if (job->state != CONV_INPROGRESS) {
-				RemoveJob(job); // from list
+			if (job->state != CONV_INPROGRESS)
 				CPartFileConvert::RemoveJob(job);
-				pos = joblist.GetFirstSelectedItemPosition();
-			}
 		}
 	}
 }
@@ -735,7 +733,7 @@ void CPartFileConvertDlg::RetrySel()
 
 	for (POSITION pos = joblist.GetFirstSelectedItemPosition(); pos != NULL;) {
 		int index = joblist.GetNextSelectedItem(pos);
-		if (index > -1) {
+		if (index >= 0) {
 			ConvertJob *job = reinterpret_cast<ConvertJob*>(joblist.GetItemData(index));
 			if (job->state != CONV_OK && job->state != CONV_INPROGRESS) {
 				UpdateJobInfo(job);

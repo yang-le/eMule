@@ -87,7 +87,7 @@ void CUpDownClient::DrawUpStatusBar(CDC *dc, const CRect &rect, bool onlygreyrec
 		if (!onlygreyrect && m_abyUpPartStatus)
 			for (UINT i = 0; i < m_nUpPartCount; ++i)
 				if (m_abyUpPartStatus[i])
-					s_UpStatusBar.FillRange(i * PARTSIZE, i * PARTSIZE + PARTSIZE - 1, crBoth);
+					s_UpStatusBar.FillRange(i * PARTSIZE, i * PARTSIZE + PARTSIZE, crBoth);
 
 		UploadingToClient_Struct *pUpClientStruct = theApp.uploadqueue->GetUploadingClientStructByClient(this);
 //		ASSERT( pUpClientStruct != NULL || theApp.uploadqueue->IsOnUploadQueue((CUpDownClient*)this) != NULL);
@@ -99,14 +99,14 @@ void CUpDownClient::DrawUpStatusBar(CDC *dc, const CRect &rect, bool onlygreyrec
 				block = pUpClientStruct->m_BlockRequests_queue.GetHead();
 				if (block) {
 					uint32 start = (uint32)(block->StartOffset / PARTSIZE);
-					s_UpStatusBar.FillRange(start * PARTSIZE, start * PARTSIZE + PARTSIZE - 1, crNextSending);
+					s_UpStatusBar.FillRange(start * PARTSIZE, start * PARTSIZE + PARTSIZE, crNextSending);
 				}
 			}
 			if (!pUpClientStruct->m_DoneBlocks_list.IsEmpty()) {
 				block = pUpClientStruct->m_DoneBlocks_list.GetHead();
 				if (block) {
 					uint32 start = (uint32)(block->StartOffset / PARTSIZE);
-					s_UpStatusBar.FillRange(start * PARTSIZE, start * PARTSIZE + PARTSIZE - 1, crNextSending);
+					s_UpStatusBar.FillRange(start * PARTSIZE, start * PARTSIZE + PARTSIZE, crNextSending);
 				}
 				for (POSITION pos = pUpClientStruct->m_DoneBlocks_list.GetHeadPosition();pos != 0;) {
 					block = pUpClientStruct->m_DoneBlocks_list.GetNext(pos);

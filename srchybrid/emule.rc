@@ -1221,7 +1221,7 @@ BEGIN
     ICON            "",IDC_COLLECTIONSOURCELISTICON,7,6,20,20
     CONTROL         "Sign collection with name and key",IDC_COLLECTIONCREATESIGNCHECK,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,168,367,10
-    CONTROL         "Save collection in a simple text format",IDC_COLLECTIONCREATEFORMAT,
+    CONTROL         "Save collection in plain text format",IDC_COLLECTIONCREATEFORMAT,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,158,368,10
     RTEXT           "Static",IDC_CCOLL_STATIC_NAME,14,128,75,10,0
     GROUPBOX        "Basic Options",IDC_CCOLL_BASICOPTIONS,7,117,389,27
@@ -1236,7 +1236,7 @@ BEGIN
     DEFPUSHBUTTON   "Exit",IDC_VCOLL_CLOSE,361,232,50,14
     CONTROL         "",IDC_COLLECTIONVEWLIST,"SysListView32",LVS_REPORT | LVS_SHAREIMAGELISTS | LVS_OWNERDRAWFIXED | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,17,404,140
     PUSHBUTTON      "Download",IDC_VIEWCOLLECTIONDL,305,232,50,14
-    CONTROL         "Add new downloads in a collection category",IDC_COLLECTIONVIEWCATEGORYCHECK,
+    CONTROL         "Add new downloads into the collection category",IDC_COLLECTIONVIEWCATEGORYCHECK,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,211,377,10
     LTEXT           "Collection List",IDC_COLLECTIONVIEWLISTLABEL,24,7,99,8
     ICON            "",IDC_COLLECTIONVIEWLISTICON,7,6,20,20
@@ -1916,7 +1916,7 @@ BEGIN
     IDS_ERR_BADHASHSET      "Corrupted or invalid hashset received"
     IDS_ERR_BADDATABLOCK    "Corrupted or invalid data block received"
     IDS_ERR_ILLFORMEDHASH   "Ill-formed hash"
-    IDS_ERR_BADED2KLINK     "Not a well-formed eD2K link"
+    IDS_ERR_BADED2KLINK     "Ill-formed eD2K link"
     IDS_ERR_NOSLLINK        "Not an eD2K server or file link"
     IDS_ERR_WRONGPACKETSIZE "Invalid OP_REQUESTFILENAME packet size"
     IDS_ERR_WRONGHPACKETSIZE "Invalid OP_HASHSETREQUEST packet size"
@@ -2272,7 +2272,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_WS_PASS             "Password"
-    IDS_WS_ERR_LOADTEMPLATE "Can't load templates: replace file %s with a newer version!"
+    IDS_WS_ERR_LOADTEMPLATE "Can't load templates: replace the file %s with a newer version!"
     IDS_WEB_CONLIMITS       "Connection Limits"
     IDS_INFLST_USER_TOTALDOWNLOAD "Downloaded total"
     IDS_INFLST_USER_TOTALUPLOAD "Uploaded total"
@@ -2542,7 +2542,7 @@ BEGIN
     IDS_HARDLIMIT           "Hard limit"
     IDS_COL_MORECOLORS      "more..."
     IDS_TOOMANYCONNS        "Too many connections"
-    IDS_DOWNLOADRENAMED     "A file with that name already exists, the file has been saved as %s"
+    IDS_DOWNLOADRENAMED     "A file with this name already exists, the file has been saved as %s"
     IDS_TBN_DOWNLOADDONE    "Downloaded:"
     IDS_PW_TBN_USESOUND     "Play sound"
     IDS_PW_TBN_ONLOG        "Log entry added"
@@ -2576,7 +2576,7 @@ BEGIN
     IDS_RAU_RUNNING         "eMule running as unprivileged user ""%s"""
     IDS_RAU_FAILED          "Failed to start eMule as unprivileged user ""eMule_Secure"". Keeping the privileges of the current user (""%s"")."
     IDS_KADCONTACTSREAD     "Read %u contacts from file."
-    IDS_ERR_KADCONTACTS     "No contacts found, please bootstrap, or download a nodes.dat file."
+    IDS_ERR_KADCONTACTS     "No contacts found, please bootstrap, or download nodes.dat file."
     IDS_METATAGS            "Meta tag count:"
     IDS_FILEFORMAT          "Format"
     IDS_UDPREASKS           "UDP File Re-asks"
@@ -2703,7 +2703,7 @@ BEGIN
     IDS_STATS_FRATIO        "Session UL:DL Ratio (Friends UL excluded):"
     IDS_STATS_UDATA_FRIENDS "Uploaded Data to Friend Slots (Session): %s"
     IDS_IMP_ERR_BADFORMAT   "Unknown or bad format of temporary file."
-    IDS_SEARCH_INVALIDCHAR  "Search expression contains invalid characters. You either entered a '?' character or entered characters which can not be used in this network."
+    IDS_SEARCH_INVALIDCHAR  "Search expression contains invalid characters. You either entered '?' character or entered characters which can not be used in this network."
     IDS_PORTSCON            "Ports and Connection"
     IDS_PORTINFO            "eMule uses two ports for communication with servers and clients. These ports must be free and available for remote clients. The TCP port must be available to ensure the main functionality of eMule. The UDP port is used for Kad (serverless network) and to reduce network usage (Overhead).\n\nYou can change the ports here while no network activities have started."
     IDS_IRC_BAN             "Ban"
@@ -2800,7 +2800,7 @@ BEGIN
     IDS_STATS_MAXDL         "max. Downloadrate: %s"
     IDS_IRC_EMULEPROTO_IGNOREADDFRIEND "Ignore eMule add friend protocol messages"
     IDS_PW_FASTSRVCON       "Safe Connect"
-    IDS_SOURCELINKFAILED    "You need a HighID to create a valid source link"
+    IDS_SOURCELINKFAILED    "You need a high ID to create a valid source link"
     IDS_ERR_LOADSERVERMET   "Failed to load server.met!"
     IDS_ERR_CORRUPTCOMPRPKG "Corrupted compressed packet for %s received (error %u)"
     IDS_ERR_EMFRIENDSINVALID "The file 'emfriends.met' is invalid or corrupted!"
@@ -2813,7 +2813,7 @@ STRINGTABLE
 BEGIN
     IDS_WIZ_UP              "Up (kbit/s)"
     IDS_SELECT_INCOMINGDIR  "Choose a folder for incoming files"
-    IDS_SELECT_TEMPDIR      "Choose a folder for temp files"
+    IDS_SELECT_TEMPDIR      "Choose a folder for temporary files"
     IDS_PRIOAUTO            "Auto"
     IDS_PRIOAUTONORMAL      "Auto [No]"
     IDS_PRIOAUTOHIGH        "Auto [Hi]"
@@ -3233,7 +3233,7 @@ STRINGTABLE
 BEGIN
     IDS_FD_DOWNLOADSTARTED  "Download added:"
     IDS_FAILEDREOPEN        "Fatal Error: Failed to reopen part file '%s' (%s)!"
-    IDS_ERR_PREVIEWALREADY  "There is already a preview request pending from this client"
+    IDS_ERR_PREVIEWALREADY  "There is already a pending preview request from this client"
     IDS_ERR_PREVIEWFAILED   "Preview from user '%s' failed"
     IDS_DWTOT               "Disk Space"
     IDS_DWTOT_NR            "Number of Downloads: %u"
@@ -3454,7 +3454,7 @@ BEGIN
     IDS_STATS_MINORCLIENTS  "Minor"
     IDS_AICH_SYNCTOTAL      "Found %u files without valid AICH Hashset, going to rehash those files now"
     IDS_AICH_CALCFILE       "Calculating AICH Hash for file %s"
-    IDS_AICH_WARNUSER       "Since version 0.44a eMule uses an additional file hash which helps to greatly reduce the data loss when a corruption is detected. Because your are updating from an earlier version, eMule needs to rehash all your shared files to calculate the new hash. This may take a while but is an one-time action.  "
+    IDS_AICH_WARNUSER       "Since version 0.44a eMule uses an additional file hash which helps to greatly reduce the data loss when corruption is detected. Because your are updating from an earlier version, eMule needs to rehash all your shared files to calculate the new hash. This may take a while but is a one-time action."
     IDS_AICH_WORKED         "AICH successfully recovered %s of %s from part %u for %s"
     IDS_SOURCECLIENT        "Source Client"
     IDS_USERSIP             "User's IP"
@@ -3525,13 +3525,13 @@ BEGIN
     IDS_COLL_SIGN           "Sign collection with name and key"
     IDS_AUTHOR              "Author"
     IDS_AUTHORKEY           "Author Key"
-    IDS_COLL_ADDINCAT       "Add new downloads in a collection category"
+    IDS_COLL_ADDINCAT       "Add new downloads into the collection category"
     IDS_VIEWCOLLECTION      "View Collection..."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_COLL_TEXTFORMAT     "Save collection in a simple text format"
+    IDS_COLL_TEXTFORMAT     "Save collection in plain text format"
     IDS_RUNNINGRESTRICTED   "eMule is running with reduced privileges"
     IDS_USS_MANUALUPLOADLIMITDETECTED "UploadSpeedSense: Raised upload limit in Options detected. Going into fast reaction mode for 60 seconds."
     IDS_USS_STATE_PREPARING "Preparing..."
@@ -3561,7 +3561,7 @@ BEGIN
     IDS_CONVERTINGKNOWN2DONE "... done, finished converting"
     IDS_ERR_MET_BAD         "Error: the file %s is corrupted, unable to load known files"
     IDS_SRV_LARGEFILES      "Support for large files"
-    IDS_ERR_FSCANTHANDLEFILE "You cannot download this file because your file system doesn't supports files which are larger than 4GB, consider converting it to NTFS"
+    IDS_ERR_FSCANTHANDLEFILE "You cannot download this file because your file system doesn't support files which are larger than 4GB, consider converting it to NTFS"
     IDS_NEWVERSIONAVLBETA   "This Beta version is out of date. Due to the nature of Beta versions, which often contain bugs it is very important that you update to a stable release as soon as possible!"
     IDS_BOLD                "Toggles bold text"
     IDS_UNDERLINE           "Toggles underlined text"
@@ -3651,7 +3651,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SHAREEMULEWARNING   "Changing this option will let eMule to use another configuration. Your current settings will be ignored and already started downloads might not be visible any more. You can switch back to your current configuration by changing this option again anytime.\n\nYou need to restart eMule for this change to take effect."
+    IDS_SHAREEMULEWARNING   "Changing this option will let eMule use another configuration. Your current settings will be ignored and already started downloads might not be visible any more. You can switch back to your current configuration by changing this option again anytime.\n\nYou need to restart eMule for this change to take effect."
     IDS_SPAM                "Spam"
     IDS_MARKSPAM            "Mark as Spam"
     IDS_MARKNOTSPAM         "Mark as not Spam"
@@ -3695,7 +3695,7 @@ BEGIN
     IDS_WEBUPNPINCLUDE      "Include port into UPnP setup"
     IDS_ADDEDON             "Added On"
     IDS_RESOLVELINKS        "Resolve shell links in shared directories"
-    IDS_PAUSEONPREVIEW      "Pause when preview possible"
+    IDS_PAUSEONPREVIEW      "Pause when preview is possible"
     IDS_PREVIEWWITH         "Preview with"
     IDS_DOWNLOADCOMMANDS    "Download Commands"
     IDS_CLOSETOOLBAR        "Close Toolbar"

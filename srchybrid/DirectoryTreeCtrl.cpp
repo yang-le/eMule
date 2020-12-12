@@ -342,7 +342,7 @@ bool CDirectoryTreeCtrl::HasSubdirectories(const CString &strDir)
 
 void CDirectoryTreeCtrl::GetSharedDirectories(CStringList &list)
 {
-	for (POSITION pos = m_lstShared.GetHeadPosition(); pos != NULL; )
+	for (POSITION pos = m_lstShared.GetHeadPosition(); pos != NULL;)
 		list.AddTail(m_lstShared.GetNext(pos));
 }
 
@@ -350,12 +350,10 @@ void CDirectoryTreeCtrl::SetSharedDirectories(CStringList &list)
 {
 	m_lstShared.RemoveAll();
 
-	for (POSITION pos = list.GetHeadPosition(); pos != NULL; ) {
-		CString str = list.GetNext(pos);
-		if (str.Left(2) != _T("\\\\"))
-			slosh(str);
-		m_lstShared.AddTail(str);
-
+	for (POSITION pos = list.GetHeadPosition(); pos != NULL;) {
+		const CString &sDir(list.GetNext(pos));
+		if (!::PathIsUNC(sDir))
+			m_lstShared.AddTail(sDir);
 	}
 	Init();
 }

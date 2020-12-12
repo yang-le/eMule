@@ -180,9 +180,17 @@ void CCatDialog::OnBnClickedOk()
 	m_myCat->color = newcolor;
 	m_myCat->prio = m_prio.GetCurSel();
 	GetDlgItemText(IDC_AUTOCATEXT, m_myCat->autocat);
+	if (m_myCat->ac_regexpeval && !IsRegExpValid(m_myCat->autocat)) {
+		GetDlgItem(IDC_AUTOCATEXT)->SetFocus();
+		return;
+	}
 
 	GetDlgItemText(IDC_REGEXP, m_myCat->regexp);
 	if (m_myCat->regexp.GetLength() > 0) {
+		if (!IsRegExpValid(m_myCat->regexp)) {
+			GetDlgItem(IDC_REGEXP)->SetFocus();
+			return;
+		}
 		if (m_pacRegExp && m_pacRegExp->IsBound()) {
 			m_pacRegExp->AddItem(m_myCat->regexp, 0);
 			m_myCat->filter = 18;

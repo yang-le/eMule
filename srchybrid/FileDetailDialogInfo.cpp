@@ -72,6 +72,8 @@ BOOL CFileDetailDialogInfo::OnInitDialog()
 	CResizablePage::OnInitDialog();
 	InitWindowStyles(this);
 
+	AddAnchor(IDC_FNAME, TOP_LEFT, TOP_RIGHT);
+	AddAnchor(IDC_METFILE, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_FD_X0, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_FD_X6, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_FD_X8, TOP_LEFT, TOP_RIGHT);

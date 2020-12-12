@@ -1744,7 +1744,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE *packet, uint32 size, UINT op
 						DebugRecv(sOp, client, (size >= 16) ? packet : NULL);
 					}
 
-					theStats.AddDownDataOverheadFileRequest(16 + 2 * (opcode == OP_COMPRESSEDPART ? 4 : 8));
+					theStats.AddDownDataOverheadFileRequest(16 + (opcode == OP_COMPRESSEDPART ? 4 : 8) + (opcode == OP_SENDINGPART_I64 ? 8 : 4));
 					client->CheckHandshakeFinished();
 					const CPartFile *creqfile = client->GetRequestFile();
 					if (creqfile && !creqfile->IsStopped() && (creqfile->GetStatus() == PS_READY || creqfile->GetStatus() == PS_EMPTY)) {
@@ -2367,7 +2367,7 @@ void CListenSocket::UpdateConnectionsStatus()
 		if (averageconnections < 0.001f)
 			averageconnections = 0.001f;	// avoid floating point underflow
 	}
-	}
+}
 
 float CListenSocket::GetMaxConperFiveModifier()
 {

@@ -53,6 +53,7 @@ END_MESSAGE_MAP()
 
 CCommentDialog::CCommentDialog()
 	: CResizablePage(CCommentDialog::IDD)
+	, m_iRating(-1)
 	, m_paFiles()
 	, m_bDataChanged()
 	, m_bMergedComment()
@@ -109,7 +110,7 @@ BOOL CCommentDialog::OnSetActive()
 		return FALSE;
 	if (m_bDataChanged) {
 		bool bContainsSharedKnownFile = false;
-		int iRating = -1;
+		m_iRating = -1;
 		m_bMergedComment = false;
 		CString strComment;
 		for (int i = 0; i < m_paFiles->GetSize(); ++i) {
@@ -124,20 +125,20 @@ BOOL CCommentDialog::OnSetActive()
 			bContainsSharedKnownFile = true;
 			if (i == 0) {
 				strComment = file->GetFileComment();
-				iRating = file->GetFileRating();
+				m_iRating = file->GetFileRating();
 			} else {
 				if (!m_bMergedComment && strComment.Compare(file->GetFileComment()) != 0) {
 					strComment.Empty();
 					m_bMergedComment = true;
 				}
-				if (iRating >= 0 && (UINT)iRating != file->GetFileRating())
-					iRating = -1;
+				if (m_iRating >= 0 && (UINT)m_iRating != file->GetFileRating())
+					m_iRating = -1;
 			}
 		}
 		m_bSelf = true;
 		SetDlgItemText(IDC_CMT_TEXT, strComment);
 		static_cast<CEdit*>(GetDlgItem(IDC_CMT_TEXT))->SetLimitText(MAXFILECOMMENTLEN);
-		m_ratebox.SetCurSel(iRating);
+		m_ratebox.SetCurSel(m_iRating);
 		m_bSelf = false;
 		EnableDialog(bContainsSharedKnownFile);
 
@@ -167,15 +168,15 @@ BOOL CCommentDialog::OnApply()
 	if (m_bEnabled && !m_bDataChanged) {
 		CString strComment;
 		GetDlgItemText(IDC_CMT_TEXT, strComment);
-		int iRating = m_ratebox.GetCurSel();
+		m_iRating = m_ratebox.GetCurSel();
 		for (int i = 0; i < m_paFiles->GetSize(); ++i)
 			if ((*m_paFiles)[i]->IsKindOf(RUNTIME_CLASS(CKnownFile))) {
 				CKnownFile *file = static_cast<CKnownFile*>((*m_paFiles)[i]);
 				if (theApp.sharedfiles->GetFileByID(file->GetFileHash()) != NULL) {
 					if (!strComment.IsEmpty() || !m_bMergedComment)
 						file->SetFileComment(strComment);
-					if (iRating >= 0)
-						file->SetFileRating(iRating);
+					if (m_iRating >= 0)
+						file->SetFileRating(m_iRating);
 				}
 			}
 	}
@@ -218,8 +219,8 @@ void CCommentDialog::Localize()
 	m_ratebox.AddItem(GetResString(IDS_CMT_FAIR), 3);
 	m_ratebox.AddItem(GetResString(IDS_CMT_GOOD), 4);
 	m_ratebox.AddItem(GetResString(IDS_CMT_EXCELLENT), 5);
-	UpdateHorzExtent(m_ratebox, 16); // adjust dropped width to ensure all strings are fully visible
-
+	UpdateHorzExtent(m_ratebox, 16); // adjust dropdown width to ensure all strings are fully visible
+	m_ratebox.SetCurSel(m_iRating);
 	RefreshData();
 }
 
@@ -263,7 +264,7 @@ void CCommentDialog::RefreshData(bool deleteOld)
 	for (int i = 0; i < m_paFiles->GetSize(); ++i) {
 		CAbstractFile *file = static_cast<CAbstractFile*>((*m_paFiles)[i]);
 		if (file->IsPartFile()) {
-			for (POSITION pos = static_cast<CPartFile*>(file)->srclist.GetHeadPosition(); pos != NULL; ) {
+			for (POSITION pos = static_cast<CPartFile*>(file)->srclist.GetHeadPosition(); pos != NULL;) {
 				CUpDownClient *cur_src = static_cast<CPartFile*>(file)->srclist.GetNext(pos);
 				if (cur_src->HasFileRating() || !cur_src->GetFileComment().IsEmpty())
 					m_lstComments.AddItem(cur_src);
@@ -318,12 +319,12 @@ void CCommentDialog::OnBnClickedSearchKad()
 
 void CCommentDialog::EnableDialog(bool bEnabled)
 {
-	if (m_bEnabled == bEnabled)
-		return;
-	m_bEnabled = bEnabled;
-	GetDlgItem(IDC_LST)->EnableWindow(static_cast<BOOL>(m_bEnabled));
-	GetDlgItem(IDC_CMT_TEXT)->EnableWindow(static_cast<BOOL>(m_bEnabled));
-	GetDlgItem(IDC_RATELIST)->EnableWindow(static_cast<BOOL>(m_bEnabled));
-	GetDlgItem(IDC_RESET)->EnableWindow(static_cast<BOOL>(m_bEnabled));
-	GetDlgItem(IDC_SEARCHKAD)->EnableWindow(static_cast<BOOL>(m_bEnabled));
+	if (m_bEnabled != bEnabled) {
+		m_bEnabled = bEnabled;
+		GetDlgItem(IDC_LST)->EnableWindow(bEnabled);
+		GetDlgItem(IDC_CMT_TEXT)->EnableWindow(bEnabled);
+		GetDlgItem(IDC_RATELIST)->EnableWindow(bEnabled);
+		GetDlgItem(IDC_RESET)->EnableWindow(bEnabled);
+		GetDlgItem(IDC_SEARCHKAD)->EnableWindow(bEnabled);
+	}
 }

@@ -103,14 +103,12 @@ void CUpDownClient::DrawStatusBar(CDC *dc, const CRect &rect, bool onlygreyrect,
 			for (UINT i = 0; i < m_nPartCount; ++i) {
 				if (m_abyPartStatus[i]) {
 					uint64 uBegin = PARTSIZE * i;
-					uint64 uEnd = uBegin + PARTSIZE - 1;
-					if (uEnd >= (uint64)m_reqfile->GetFileSize())
-						uEnd = (uint64)m_reqfile->GetFileSize();
+					uint64 uEnd = min(uBegin + PARTSIZE, (uint64)m_reqfile->GetFileSize());
 
 					COLORREF colour;
 					if (m_reqfile->IsComplete(uBegin, uEnd - 1, false))
 						colour = crBoth;
-					else if (m_eDownloadState == DS_DOWNLOADING && GetSessionDown() > 0 && m_nLastBlockOffset >= uBegin && m_nLastBlockOffset <= uEnd)
+					else if (m_eDownloadState == DS_DOWNLOADING && GetSessionDown() && m_nLastBlockOffset >= uBegin && m_nLastBlockOffset < uEnd)
 						colour = crPending;
 					else if (pcNextPendingBlks != NULL && pcNextPendingBlks[i] == 'Y')
 						colour = crNextPending;
@@ -298,10 +296,11 @@ void CUpDownClient::SendFileRequest()
 		if (thePrefs.GetDebugClientTCPLevel() > 0)
 			DebugSend("OP_MPReqFileName", this, m_reqfile->GetFileHash());
 		dataFileReq.WriteUInt8(OP_REQUESTFILENAME);
-		if (GetExtendedRequestsVersion() > 0)
+		if (GetExtendedRequestsVersion() > 0) {
 			m_reqfile->WritePartStatus(&dataFileReq);
-		if (GetExtendedRequestsVersion() > 1)
-			m_reqfile->WriteCompleteSourcesCount(&dataFileReq);
+			if (GetExtendedRequestsVersion() > 1)
+				m_reqfile->WriteCompleteSourcesCount(&dataFileReq);
+		}
 
 		// OP_SETREQFILEID
 		if (thePrefs.GetDebugClientTCPLevel() > 0)
@@ -357,10 +356,11 @@ void CUpDownClient::SendFileRequest()
 		CSafeMemFile dataFileReq(96);
 		dataFileReq.WriteHash16(m_reqfile->GetFileHash());
 		//This is extended information
-		if (GetExtendedRequestsVersion() > 0)
+		if (GetExtendedRequestsVersion() > 0) {
 			m_reqfile->WritePartStatus(&dataFileReq);
-		if (GetExtendedRequestsVersion() > 1)
-			m_reqfile->WriteCompleteSourcesCount(&dataFileReq);
+			if (GetExtendedRequestsVersion() > 1)
+				m_reqfile->WriteCompleteSourcesCount(&dataFileReq);
+		}
 		if (thePrefs.GetDebugClientTCPLevel() > 0)
 			DebugSend("OP_FileRequest", this, m_reqfile->GetFileHash());
 		Packet *packet = new Packet(&dataFileReq);
@@ -640,7 +640,7 @@ void CUpDownClient::SetDownloadState(EDownloadState nNewState, LPCTSTR pszReason
 			}
 			break;
 		case DS_NONEEDEDPARTS:
-			// Since TCP asks never sets re-ask time if the result is DS_NONEEDEDPARTS
+			// Since TCP asks never set re-ask time if the result is DS_NONEEDEDPARTS
 			// If we set this, we will not re-ask for that file until some time has passed.
 			SetLastAskedTime();
 			//DontSwapTo(m_reqfile);
@@ -676,16 +676,15 @@ void CUpDownClient::SetDownloadState(EDownloadState nNewState, LPCTSTR pszReason
 				if (nNewState == DS_NONEEDEDPARTS)
 					pszReason = _T("NNP. You don't need any parts from this client.");
 
-				if (thePrefs.GetLogUlDlEvents())
-					AddDebugLogLine(DLP_VERYLOW, false
-						, _T("Download session ended: %s User: %s in SetDownloadState(). New State: %i, Length: %s, Payload: %s, Transferred: %s, Req blocks not yet completed: %i.")
-						, pszReason
-						, (LPCTSTR)DbgGetClientInfo()
-						, nNewState
-						, (LPCTSTR)CastSecondsToHM(GetDownTimeDifference(false) / SEC2MS(1))
-						, (LPCTSTR)CastItoXBytes(GetSessionPayloadDown())
-						, (LPCTSTR)CastItoXBytes(GetSessionDown())
-						, m_PendingBlocks_list.GetCount());
+				AddDebugLogLine(DLP_VERYLOW, false
+					, _T("Download session ended: %s User: %s in SetDownloadState(). New State: %i, Length: %s, Payload: %s, Transferred: %s, Req blocks not yet completed: %i.")
+					, pszReason
+					, (LPCTSTR)DbgGetClientInfo()
+					, nNewState
+					, (LPCTSTR)CastSecondsToHM(GetDownTimeDifference(false) / SEC2MS(1))
+					, (LPCTSTR)CastItoXBytes(GetSessionPayloadDown())
+					, (LPCTSTR)CastItoXBytes(GetSessionDown())
+					, m_PendingBlocks_list.GetCount());
 			}
 
 			ResetSessionDown();

@@ -1660,7 +1660,7 @@ void CDownloadQueue::ExportPartMetFilesOverview() const
 		file.printf(_T("--------------------------------------------------------------------------------\r\n"));
 		for (POSITION pos = filelist.GetHeadPosition(); pos != NULL;) {
 			const CPartFile *pPartFile = filelist.GetNext(pos);
-			if (pPartFile && pPartFile->GetStatus(true) != PS_COMPLETE) {
+			if (pPartFile->GetStatus(true) != PS_COMPLETE) {
 				CString strPartFilePath(pPartFile->GetFilePath());
 				TCHAR szNam[_MAX_FNAME];
 				TCHAR szExt[_MAX_EXT];

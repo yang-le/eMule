@@ -3649,6 +3649,8 @@ bool CPartFile::IsReadyForPreview() const
 		case PS_EMPTY:
 		case PS_PAUSED:
 		case PS_INSUFFICIENT:
+			break;
+		default:
 			return false;
 		}
 

@@ -305,10 +305,9 @@ void CSearchFile::StoreToFile(CFileDataIO &rFile) const
 	rFile.WriteUInt32(nTagCount);
 	for (INT_PTR pos = 0; pos < m_taglist.GetCount(); ++pos) {
 		const CTag *tag = m_taglist[pos];
-		if (tag->GetNameID() == FT_FILERATING && tag->IsInt()) {
-			tag = new CTag(FT_FILERATING, (tag->GetInt() * (255 / 5)) & 0xFF);
-			tag->WriteNewEd2kTag(&rFile);
-		} else
+		if (tag->GetNameID() == FT_FILERATING && tag->IsInt())
+			CTag(FT_FILERATING, (tag->GetInt() * (255 / 5)) & 0xFF).WriteNewEd2kTag(&rFile);
+		else
 			tag->WriteNewEd2kTag(&rFile, UTF8strRaw);
 	}
 	if (m_FileIdentifier.HasAICHHash()) {
