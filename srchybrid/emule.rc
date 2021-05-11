@@ -394,8 +394,8 @@ BEGIN
     CONTROL         "",IDC_PROVIDERS,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_GROUP | WS_TABSTOP,14,79,228,85
     EDITTEXT        IDC_WIZ_TRUEDOWNLOAD_BOX,133,166,40,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_WIZ_TRUEUPLOAD_BOX,133,179,40,12,ES_AUTOHSCROLL
-    CONTROL         "kbit/s",IDC_KBITS,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,176,168,66,11
-    CONTROL         "kB/s",IDC_KBYTES,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,176,180,66,11
+    CONTROL         "Kbit/s",IDC_KBITS,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,176,168,66,11
+    CONTROL         "KB/s",IDC_KBYTES,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,176,180,66,11
     DEFPUSHBUTTON   "Apply",IDC_WIZ_APPLY_BUTTON,136,204,55,14,WS_GROUP
     PUSHBUTTON      "Cancel",IDC_WIZ_CANCEL_BUTTON,194,204,56,14
     GROUPBOX        "Operating System",IDC_WIZ_OS_FRAME,7,7,242,25
@@ -1092,8 +1092,8 @@ BEGIN
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,17,150,162,1
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,17,132,162,1
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,17,114,162,1
-    LTEXT           "kB/s",IDC_DOWNKB,159,18,19,12,SS_CENTERIMAGE
-    LTEXT           "kB/s",IDC_UPKB,159,34,19,12,SS_CENTERIMAGE
+    LTEXT           "KB/s",IDC_DOWNKB,159,18,19,12,SS_CENTERIMAGE
+    LTEXT           "KB/s",IDC_UPKB,159,34,19,12,SS_CENTERIMAGE
     LTEXT           "eMule",IDC_SIDEBAR,0,0,16,166
     ICON            "",IDC_TRAYDOWN,18,18,20,20
     ICON            "",IDC_TRAYUP,18,34,20,20
@@ -1172,7 +1172,7 @@ BEGIN
     GROUPBOX        "Advanced Options",IDC_LD_ADVANCEDGROUP,4,87,384,46
     CONTROL         "Add HTML-Tags",IDC_LD_HTMLCHE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,98,370,10
     CONTROL         "Add complete hashset",IDC_LD_HASHSETCHE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,108,369,10
-    CONTROL         "Use hostname (from peferences) instead of IP when creating a source link",IDC_LD_HOSTNAMECHE,
+    CONTROL         "Use hostname (from preferences) instead of IP when creating a source link",IDC_LD_HOSTNAMECHE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,118,370,10
 END
 
@@ -2806,12 +2806,12 @@ BEGIN
     IDS_ERR_EMFRIENDSINVALID "The file 'emfriends.met' is invalid or corrupted!"
     IDS_ERR_READEMFRIENDS   "Unknown error while reading emfriends.met: %s"
     IDS_ERR_KNOWNSERVERINFOREC "Unknown server info received!"
-    IDS_WIZ_DOWN            "Down (kbit/s)"
+    IDS_WIZ_DOWN            "Down (Kbit/s)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_WIZ_UP              "Up (kbit/s)"
+    IDS_WIZ_UP              "Up (Kbit/s)"
     IDS_SELECT_INCOMINGDIR  "Choose a folder for incoming files"
     IDS_SELECT_TEMPDIR      "Choose a folder for temporary files"
     IDS_PRIOAUTO            "Auto"
@@ -3196,8 +3196,8 @@ BEGIN
     IDS_HYPERTEXT_FONT_HINT "Font for Server-, Message- and IRC-Window"
     IDS_SELECT_FONT         "Select Font"
     IDS_SERVER_LIMITS       "Soft/Hard File Limits"
-    IDS_KBITSSEC            "kbit/s"
-    IDS_KBYTESSEC           "kB/s"
+    IDS_KBITSSEC            "Kbit/s"
+    IDS_KBYTESSEC           "KB/s"
     IDS_ERR_CREATE_DIR      "Failed to create %s directory ""%s"" - %s"
     IDS_WRN_INCFILE_RESERVED "The incoming directory must not be set to an eMule installation directory."
     IDS_WRN_TEMPFILES_RESERVED "The temporary directory must not be set to an eMule installation directory."
@@ -3314,7 +3314,7 @@ BEGIN
     IDS_TEXTLABELS          "Text Label Options"
     IDS_ENABLETEXTLABELS    "Show Text Labels"
     IDS_CUSTOMIZETOOLBAR    "Customize Toolbar..."
-    IDS_MINBITRATE          "Min. Bitrate [kbit/s]"
+    IDS_MINBITRATE          "Min. Bitrate [Kbit/s]"
     IDS_KAD_RECHECKFW       "Recheck Firewall"
     IDS_SHAREDTITLE         "Shared eD2K|Kad"
     IDS_FIREWALLED          "Firewalled"
@@ -3443,7 +3443,7 @@ BEGIN
     IDS_SAVEACFAILED        "Failed to save AICH Hashset!"
     IDS_AICHHASH            "AICH Hash"
     IDS_BYTESPERSEC         "B/s"
-    IDS_KBYTESPERSEC        "kB/s"
+    IDS_KBYTESPERSEC        "KB/s"
     IDS_MBYTESPERSEC        "MB/s"
     IDS_GBYTESPERSEC        "GB/s"
     IDS_TBYTESPERSEC        "TB/s"

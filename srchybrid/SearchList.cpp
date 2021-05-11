@@ -167,9 +167,14 @@ void CSearchList::NewSearch(CSearchListCtrl *pWnd, const CString &strResultFileT
 }
 
 UINT CSearchList::ProcessSearchAnswer(const uchar *in_packet, uint32 size
-	, const CUpDownClient &sender, bool *pbMoreResultsAvailable, LPCTSTR pszDirectory)
+	, CUpDownClient &sender, bool *pbMoreResultsAvailable, LPCTSTR pszDirectory)
 {
-	uint32 uSearchID = theApp.emuledlg->searchwnd->m_pwndResults->GetNextSearchID();
+	uint32 uSearchID = sender.GetSearchID();
+	if (!uSearchID) {
+		uSearchID = theApp.emuledlg->searchwnd->m_pwndResults->GetNextSearchID();
+		sender.SetSearchID(uSearchID);
+	}
+	ASSERT(uSearchID);
 	SSearchParams *pParams = new SSearchParams;
 	pParams->strExpression = sender.GetUserName();
 	pParams->dwSearchID = uSearchID;

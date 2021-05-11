@@ -161,6 +161,7 @@ void CUpDownClient::Init()
 	m_dwLastSourceRequest = 0;
 	m_dwLastSourceAnswer = 0;
 	m_dwLastAskedForSources = 0;
+	m_uSearchID = 0;
 	m_iFileListRequested = 0;
 
 	m_uFileRating = 0;
@@ -2283,6 +2284,7 @@ void CUpDownClient::AssertValid() const
 	(void)m_dwLastSourceRequest;
 	(void)m_dwLastSourceAnswer;
 	(void)m_dwLastAskedForSources;
+	(void)m_uSearchID;
 	(void)m_iFileListRequested;
 	(void)m_byCompatibleClient;
 	m_WaitingPackets_list.AssertValid();
@@ -2994,7 +2996,8 @@ void CUpDownClient::SetConnectOptions(uint8 byOptions, bool bEncryption, bool bC
 
 void CUpDownClient::SendSharedDirectories()
 {
-	//TODO: Don't send shared directories which do not contain any files
+	//TODO: Don't send shared directories without any files
+	theApp.sharedfiles->ResetPseudoDirNames(); //purge stale data
 	// add shared directories
 	CStringArray arFolders;
 	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos != NULL;) {

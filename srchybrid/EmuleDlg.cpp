@@ -359,6 +359,7 @@ void DialogCreateIndirect(CDialog *pWnd, UINT uID)
 
 BOOL CemuleDlg::OnInitDialog()
 {
+	theStats.starttime = ::GetTickCount();
 #ifdef HAVE_WIN7_SDK_H
 	// allow the TaskbarButtonCreated- & (tbb-)WM_COMMAND message to be sent to our window if our app is running elevated
 	if (thePrefs.GetWindowsVersion() >= _WINVER_7_) {
@@ -609,8 +610,6 @@ BOOL CemuleDlg::OnInitDialog()
 	VERIFY((m_hTimer = ::SetTimer(NULL, 0, 300, StartupTimer)) != 0);
 	if (thePrefs.GetVerbose() && !m_hTimer)
 		AddDebugLogLine(true, _T("Failed to create 'startup' timer - %s"), (LPCTSTR)GetErrorMessage(::GetLastError()));
-
-	theStats.starttime = ::GetTickCount();
 
 	// Start UPnP port forwarding
 	if (thePrefs.IsUPnPEnabled())
@@ -2008,9 +2007,8 @@ void CemuleDlg::RestoreWindow()
 		preferenceswnd->BringWindowToTop();
 		return;
 	}
-	if (TrayIsVisible())
-		TrayHide();
 
+	TrayHide();
 	DestroyMiniMule();
 
 	if (m_wpFirstRestore.length) {

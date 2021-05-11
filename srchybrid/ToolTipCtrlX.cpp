@@ -414,7 +414,7 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 				const CRect rect(ptText.x + iIconDrawingWidth, ptText.y, ptText.x + iMaxSingleLineWidth, ptText.y + iTextHeight);
 				// first line on special file icon tab - draw icon and bold filename
 				if (hTheme && bUseEmbeddedThemeFonts)
-					g_xpStyle.DrawThemeText(hTheme, pdc->m_hDC, m_bCol1Bold ? TTP_STANDARDTITLE : TTP_STANDARD, TTSS_NORMAL, strLine, strLine.GetLength(), m_dwCol1DrawTextFlags, 0, &rect);
+					g_xpStyle.DrawThemeText(hTheme, pdc->m_hDC, m_bCol1Bold ? TTP_STANDARDTITLE : TTP_STANDARD, TTSS_NORMAL, strLine, strLine.GetLength(), m_dwCol1DrawTextFlags, 0, rect);
 				else {
 					CFont *pOldFont = m_bCol1Bold ? pdc->SelectObject(&m_fontBold) : NULL;
 					pdc->DrawText(strLine, const_cast<CRect&>(rect), m_dwCol1DrawTextFlags);
@@ -451,8 +451,10 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 					} else {
 						// Text is written in the currently selected font. If 'nTabPositions' is 0 and 'lpnTabStopPositions' is NULL,
 						// tabs are expanded to eight times the average character width.
-						// Win98: To draw an empty line we need to output at least a space.
-						siz = pdc->TabbedTextOut(ptText.x, ptText.y, (strLine.IsEmpty() ? _T(" ") : strLine), -1, NULL, 0);
+						if (strLine.IsEmpty()) // Win98: To draw an empty line we need to output at least a space.
+							siz = pdc->TabbedTextOut(ptText.x, ptText.y, _T(" "), 1, NULL, 0);
+						else
+							siz = pdc->TabbedTextOut(ptText.x, ptText.y, strLine, strLine.GetLength(), NULL, 0);
 						ptText.y += siz.cy + iLineHeightOff;
 					}
 				}
@@ -528,7 +530,7 @@ BOOL CToolTipCtrlX::OnTTShow(LPNMHDR pNMHDR, LRESULT *pResult)
 	// exact positioning of in-place tooltips which is performed by the tooltip control by default.
 	// Thus it is important that we tell MFC (not the Windows API in that case) to further route this message.
 	*pResult = FALSE;	// Windows API: Perform default positioning
-	return FALSE;		// MFC API.     Perform further routing of this message (to the sub-classed tooltip control)
+	return FALSE;		// MFC API.     Perform further routing of this message (to the subclassed tooltip control)
 }
 
 void CToolTipCtrlX::OnNmCustomDraw(LPNMHDR pNMHDR, LRESULT *pResult)

@@ -64,7 +64,7 @@ public:
 
 	void	Clear();
 	void	NewSearch(CSearchListCtrl *pWnd, const CString &strResultFileType, SSearchParams *pParams);
-	UINT	ProcessSearchAnswer(const uchar *in_packet, uint32 size, const CUpDownClient &sender, bool *pbMoreResultsAvailable, LPCTSTR pszDirectory = NULL);
+	UINT	ProcessSearchAnswer(const uchar *in_packet, uint32 size, CUpDownClient &sender, bool *pbMoreResultsAvailable, LPCTSTR pszDirectory = NULL);
 	UINT	ProcessSearchAnswer(const uchar *in_packet, uint32 size, bool bOptUTF8, uint32 nServerIP, uint16 nServerPort, bool *pbMoreResultsAvailable);
 	UINT	ProcessUDPSearchAnswer(CFileDataIO &packet, bool bOptUTF8, uint32 nServerIP, uint16 nServerPort);
 	UINT	GetED2KResultCount() const;

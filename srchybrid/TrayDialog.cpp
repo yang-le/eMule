@@ -52,9 +52,9 @@ CTrayDialog::CTrayDialog(UINT uIDD, CWnd *pParent /*=NULL*/)
 	, m_pbMinimizeToTray()
 	, m_hPrevIconDelete()
 	, m_uSingleClickTimer()
+	, u_DblClickSpeed(::GetDoubleClickTime())
+	, m_uLButtonDown()
 	, m_bCurIconDelete()
-	, m_bLButtonDblClk()
-	, m_bLButtonDown()
 	, m_bTrayIconVisible()
 	//, m_nDefaultMenuItem()
 {
@@ -137,8 +137,8 @@ bool CTrayDialog::TrayShow()
 bool CTrayDialog::TrayHide()
 {
 	bool bSuccess = Shell_NotifyIcon(NIM_DELETE, &m_nidIconData);
-	if (bSuccess)
-		m_bTrayIconVisible = false;
+	m_bTrayIconVisible = false;
+	m_uLButtonDown = 0;
 	return bSuccess;
 }
 
@@ -204,16 +204,12 @@ LRESULT CTrayDialog::OnTrayNotify(WPARAM wParam, LPARAM lParam)
 		// WM_LBUTTONUP without checking this, we may get a single WM_LBUTTONUP message
 		// whereby the according WM_LBUTTONDOWN message was meant for some other tray bar
 		// icon.
-		if (m_bLButtonDblClk || (m_bLButtonDown && !thePrefs.m_bEnableMiniMule)) { //use single click to restore from tray
-			KillSingleClickTimer();
-			RestoreWindow();
-			if (!thePrefs.m_bEnableMiniMule) //if restoring on single click
-				m_bLButtonDown = false; //reset single click too
-			m_bLButtonDblClk = false;
-		} else if (m_bLButtonDown) {
-			if (!m_uSingleClickTimer && !IsWindowVisible())
-				m_uSingleClickTimer = SetTimer(IDT_SINGLE_CLICK, 300, NULL);
-			m_bLButtonDown = false;
+		if (m_uLButtonDown) {
+			if (m_uLButtonDown > 1 || !thePrefs.m_bEnableMiniMule) { //use single click to restore from tray
+				KillSingleClickTimer();
+				RestoreWindow();
+			} else if (!m_uSingleClickTimer && !IsWindowVisible())
+				m_uSingleClickTimer = SetTimer(IDT_SINGLE_CLICK, u_DblClickSpeed, NULL);
 		}
 		break;
 	case WM_LBUTTONDBLCLK:
@@ -244,6 +240,7 @@ void CTrayDialog::KillSingleClickTimer()
 		VERIFY(KillTimer(m_uSingleClickTimer));
 		m_uSingleClickTimer = 0;
 	}
+	m_uLButtonDown = 0;
 }
 
 void CTrayDialog::OnTimer(UINT_PTR nIDEvent)
@@ -253,8 +250,8 @@ void CTrayDialog::OnTimer(UINT_PTR nIDEvent)
 		// Kill that timer before calling 'OnTrayLButtonUp' which may create the MiniMule window asynchronously!
 		KillSingleClickTimer();
 		OnTrayLButtonUp(CPoint());
-	}
-	CDialogMinTrayBtn<CResizableDialog>::OnTimer(nIDEvent);
+	} else
+		CDialogMinTrayBtn<CResizableDialog>::OnTimer(nIDEvent);
 }
 
 void CTrayDialog::OnSysCommand(UINT nID, LPARAM lParam)
@@ -292,7 +289,7 @@ void CTrayDialog::OnTrayRButtonUp(CPoint)
 
 void CTrayDialog::OnTrayLButtonDown(CPoint)
 {
-	m_bLButtonDown = true;
+	m_uLButtonDown = 1;
 }
 
 void CTrayDialog::OnTrayLButtonUp(CPoint)
@@ -301,7 +298,7 @@ void CTrayDialog::OnTrayLButtonUp(CPoint)
 
 void CTrayDialog::OnTrayLButtonDblClk(CPoint)
 {
-	m_bLButtonDblClk = true;
+	m_uLButtonDown = 2;
 }
 
 void CTrayDialog::OnTrayRButtonDblClk(CPoint)

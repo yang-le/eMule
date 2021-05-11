@@ -863,18 +863,20 @@ SocketSentBytes CEMSocket::SendOv(uint32 maxNumberOfBytesToSend, uint32 minFragS
 				else
 					m_numberOfSentBytesCompleteFile += pCurBuf.len;
 			}
-			// all right, prepare to send our collected buffers
-			memset(&m_PendingSendOperation, 0, sizeof WSAOVERLAPPED);
-			m_PendingSendOperation.hEvent = theApp.uploadBandwidthThrottler->GetSocketAvailableEvent();
-			m_bPendingSendOv = true;
-			if (CEncryptedStreamSocket::SendOv(m_aBufferSend, &m_PendingSendOperation) == 0)
-				CleanUpOverlappedSendOperation(false);
-			else {
-				int nError = WSAGetLastError();
-				if (nError != WSA_IO_PENDING) {
-					anErrorHasOccured = true;
-					theApp.QueueDebugLogLineEx(ERROR, _T("WSASend() Error: %u, %s"), nError, (LPCTSTR)GetErrorMessage(nError));
-					CleanUpOverlappedSendOperation(true);
+			if (m_aBufferSend.GetCount() > 0) {
+				// all right, prepare to send our collected buffers
+				memset(&m_PendingSendOperation, 0, sizeof WSAOVERLAPPED);
+				m_PendingSendOperation.hEvent = theApp.uploadBandwidthThrottler->GetSocketAvailableEvent();
+				m_bPendingSendOv = true;
+				if (CEncryptedStreamSocket::SendOv(m_aBufferSend, &m_PendingSendOperation) == 0)
+					CleanUpOverlappedSendOperation(false);
+				else {
+					int nError = WSAGetLastError();
+					if (nError != WSA_IO_PENDING) {
+						anErrorHasOccured = true;
+						theApp.QueueDebugLogLineEx(ERROR, _T("WSASend() Error: %u, %s"), nError, (LPCTSTR)GetErrorMessage(nError));
+						CleanUpOverlappedSendOperation(true);
+					}
 				}
 			}
 		}
@@ -1155,17 +1157,19 @@ bool CEMSocket::UseBigSendBuffer()
 		int val = BIGSIZE;
 		int oldval;
 		int vallen = sizeof oldval;
-		if (GetSockOpt(SO_SNDBUF, &oldval, &vallen) && BIGSIZE > oldval) {
-			SetSockOpt(SO_SNDBUF, &val, sizeof val);
-			vallen = sizeof val;
-			m_bUseBigSendBuffers = (GetSockOpt(SO_SNDBUF, &val, &vallen) && val >= BIGSIZE);
-		}
+		if (GetSockOpt(SO_SNDBUF, &oldval, &vallen))
+			if (BIGSIZE > oldval) {
+				SetSockOpt(SO_SNDBUF, &val, sizeof val);
+				vallen = sizeof val;
+				m_bUseBigSendBuffers = (GetSockOpt(SO_SNDBUF, &val, &vallen) && val >= BIGSIZE);
 #if defined(_DEBUG) || defined(_BETA) || defined(_DEVBUILD)
-		if (m_bUseBigSendBuffers)
-			theApp.QueueDebugLogLine(false, _T("Increased Sendbuffer for uploading socket from %u KiB to %u KiB"), oldval / 1024, val / 1024);
-		else
-			theApp.QueueDebugLogLine(false, _T("Failed to increase Sendbuffer for uploading socket, stays at %u KiB"), oldval / 1024);
+				if (m_bUseBigSendBuffers)
+					theApp.QueueDebugLogLine(false, _T("Increased Sendbuffer for uploading socket from %u KiB to %u KiB"), oldval / 1024, val / 1024);
+				else
+					theApp.QueueDebugLogLine(false, _T("Failed to increase Sendbuffer for uploading socket, stays at %u KiB"), oldval / 1024);
 #endif
+			} else
+				m_bUseBigSendBuffers = true;
 	}
 	return m_bUseBigSendBuffers;
 }

@@ -877,43 +877,43 @@ HRESULT CUPnPImplWinServ::InvokeAction(ServicePointer pService,
 	vaActionArgs.vt = VT_VARIANT | VT_BYREF;
 	vaActionArgs.pvarVal = &vaArray;
 
-	for (LONG  nArg = 0; nArg < nArgs; ++nArg) {
+	for (LONG nArg = 0; nArg < nArgs; ++nArg) {
 		LONG nPos = nArg + 1;
 		(void)SafeArrayPutElement(psaArgs, &nPos, ppVars[nArg]);
 	}
 
 	hr = pService->InvokeAction(action, vaActionArgs, &vaOutArgs, &vaRet);
 	if (SUCCEEDED(hr)) {
-		// In connection services return value is empty
-		// when OUT arguments are returned
-		if (vaRet.vt == VT_EMPTY)
-			hr = GetStringFromOutArgs(&vaOutArgs, strResult);
-		else {
-			switch (vaRet.vt) {
-			case VT_BSTR:
-				strResult = _T("|VT_BSTR=");
-				break;
-			case VT_UI2:
-				strResult = _T("|VT_UI2=");
-				break;
-			case VT_UI4:
-				strResult = _T("|VT_UI4=");
-				break;
-			case VT_BOOL:
-				strResult = _T("|VT_BOOL=");
-				break;
-			default:
-				hr = E_FAIL;
-			}
-			if (SUCCEEDED(hr)) {
-				hr = VariantChangeType(&vaRet, &vaRet, VARIANT_ALPHABOOL, VT_BSTR);
-				if (SUCCEEDED(hr))
-					strResult.AppendFormat(_T("%s|"), vaRet.bstrVal);
-			}
+		bool bInvalid = false;
+
+		switch (vaRet.vt) {
+		case VT_BSTR:
+			strResult = _T("|VT_BSTR=");
+			break;
+		case VT_UI2:
+			strResult = _T("|VT_UI2=");
+			break;
+		case VT_UI4:
+			strResult = _T("|VT_UI4=");
+			break;
+		case VT_BOOL:
+			strResult = _T("|VT_BOOL=");
+			break;
+		case VT_EMPTY:
+			// If connection services return value is empty
+			// then OUT arguments are returned
+			GetStringFromOutArgs(&vaOutArgs, strResult);
+		default:
+			bInvalid = true;
+		}
+		if (!bInvalid) {
+			hr = VariantChangeType(&vaRet, &vaRet, VARIANT_ALPHABOOL, VT_BSTR);
+			if (SUCCEEDED(hr))
+				strResult.AppendFormat(_T("%s|"), vaRet.bstrVal);
+			else
+				strResult.Empty();
 		}
 	}
-	if (FAILED(hr))
-		strResult.Empty();
 
 	if (ppVars != NULL)
 		DestroyVars(nArgs, &ppVars);
@@ -1060,7 +1060,7 @@ LONG CUPnPImplWinServ::GetStringFromOutArgs(const VARIANT *pvaOutArgs, CString &
 			hr = VariantChangeType(&vaOutElement, &vaOutElement, VARIANT_ALPHABOOL, VT_BSTR);
 			if (FAILED(hr))
 				return -1;
-			strResult.AppendFormat(_T("%s|%s|"), vaOutElement.bstrVal, pToken);
+			strResult.AppendFormat(_T("%s%s|"), pToken, vaOutElement.bstrVal);
 		}
 	}
 	strArgs = strResult;
@@ -1111,7 +1111,7 @@ void CUPnPImplWinServ::DestroyVars(const INT_PTR nCount, VARIANT ***pppVars)
 
 // Called when a device is added
 // nFindData--AsyncFindHandle; pDevice--COM interface pointer of the device being added
-HRESULT __stdcall CDeviceFinderCallback::DeviceAdded(LONG /*nFindData*/, IUPnPDevice * pDevice)
+HRESULT __stdcall CDeviceFinderCallback::DeviceAdded(LONG /*nFindData*/, IUPnPDevice *pDevice)
 {
 	ATLTRACE2(atlTraceCOM, 1, _T("Device Added\n"));
 	m_instance.AddDevice(pDevice, true);
@@ -1202,8 +1202,8 @@ HRESULT __stdcall CServiceCallback::StateVariableChanged(IUPnPService *pService,
 		}
 	}
 
-	DebugLog(_T("UPnP device state variable %s changed to %s in %s"),
-		pszStateVarName, strValue.IsEmpty() ? _T("NULL") : strValue.GetString(), bsServiceId.m_str);
+	DebugLog(_T("UPnP device state variable %s changed to %s in %s")
+		, pszStateVarName, strValue.IsEmpty() ? _T("NULL") : (LPCTSTR)strValue, bsServiceId.m_str);
 
 	return hr;
 }
@@ -1222,7 +1222,7 @@ HRESULT __stdcall CServiceCallback::ServiceInstanceDied(IUPnPService *pService)
 	return UPnPMessage(hr);
 }
 
-HRESULT __stdcall CServiceCallback::QueryInterface(REFIID iid, LPVOID * ppvObject)
+HRESULT __stdcall CServiceCallback::QueryInterface(REFIID iid, LPVOID *ppvObject)
 {
 	if (NULL == ppvObject)
 		return E_POINTER;
@@ -1331,6 +1331,6 @@ HRESULT UPnPMessage(HRESULT hr)
 {
 	CString strError(translateUPnPResult(hr));
 	if (!strError.IsEmpty())
-		DebugLogWarning(_T("upnp: ") + strError);
+		DebugLogWarning(_T("UPnP: ") + strError);
 	return hr;
 }

@@ -2085,7 +2085,7 @@ void CPartFile::DrawStatusBar(CDC *dc, const CRect &rect, bool bFlat) /*const*/
 			s_LoadBar.Fill(crProgress);
 			s_LoadBar.Draw(dc, rect.left, rect.top, false);
 		} else {
-			RECT gaprect = { rect.left, rect.top, rect.left + (LONG)width, gaprect.top + PROGRESS_HEIGHT };
+			RECT gaprect = { rect.left, rect.top, rect.left + (LONG)width, rect.top + PROGRESS_HEIGHT };
 			dc->FillSolidRect(&gaprect, crProgress);
 			//draw gray progress only if flat
 			gaprect.left = gaprect.right;

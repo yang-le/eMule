@@ -4,7 +4,7 @@ VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "emule", "emule.vcxproj", "{584EA69D-3443-4197-8994-364880FC1B9B}"
 	ProjectSection(ProjectDependencies) = postProject
-		{c39f4b46-6e89-4074-902e-ca57073044d2} = {c39f4b46-6e89-4074-902e-ca57073044d2}
+		{C39F4B46-6E89-4074-902E-CA57073044D2} = {C39F4B46-6E89-4074-902E-CA57073044D2}
 		{B8C41401-6A2B-488D-B198-B0564C2B7404} = {B8C41401-6A2B-488D-B198-B0564C2B7404}
 		{4AACBF8D-B90F-41AD-A5BE-D5E557C668E3} = {4AACBF8D-B90F-41AD-A5BE-D5E557C668E3}
 		{E27AB0B5-84CC-47E8-8F43-34C4F3FDA71E} = {E27AB0B5-84CC-47E8-8F43-34C4F3FDA71E}
@@ -14,7 +14,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "emule", "emule.vcxproj", "{
 		{745DEC58-EBB3-47A9-A9B8-4C6627C01BF8} = {745DEC58-EBB3-47A9-A9B8-4C6627C01BF8}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cryptlib", "..\cryptopp\cryptlib.vcxproj", "{c39f4b46-6e89-4074-902e-ca57073044d2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cryptlib", "..\cryptopp\cryptlib.vcxproj", "{C39F4B46-6E89-4074-902E-CA57073044D2}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cximage", "..\CxImage\cximage.vcxproj", "{B8C41401-6A2B-488D-B198-B0564C2B7404}"
 EndProject
@@ -52,18 +52,18 @@ Global
 		{584EA69D-3443-4197-8994-364880FC1B9B}.Release|Win32.Build.0 = Release|Win32
 		{584EA69D-3443-4197-8994-364880FC1B9B}.Release|x64.ActiveCfg = Release|x64
 		{584EA69D-3443-4197-8994-364880FC1B9B}.Release|x64.Build.0 = Release|x64
-		{c39f4b46-6e89-4074-902e-ca57073044d2}._SpecialBootstrapNodes|Win32.ActiveCfg = Debug|Win32
-		{c39f4b46-6e89-4074-902e-ca57073044d2}._SpecialBootstrapNodes|Win32.Build.0 = Debug|Win32
-		{c39f4b46-6e89-4074-902e-ca57073044d2}._SpecialBootstrapNodes|x64.ActiveCfg = Debug|x64
-		{c39f4b46-6e89-4074-902e-ca57073044d2}._SpecialBootstrapNodes|x64.Build.0 = Debug|x64
-		{c39f4b46-6e89-4074-902e-ca57073044d2}.Debug|Win32.ActiveCfg = Debug|Win32
-		{c39f4b46-6e89-4074-902e-ca57073044d2}.Debug|Win32.Build.0 = Debug|Win32
-		{c39f4b46-6e89-4074-902e-ca57073044d2}.Debug|x64.ActiveCfg = Debug|x64
-		{c39f4b46-6e89-4074-902e-ca57073044d2}.Debug|x64.Build.0 = Debug|x64
-		{c39f4b46-6e89-4074-902e-ca57073044d2}.Release|Win32.ActiveCfg = Release|Win32
-		{c39f4b46-6e89-4074-902e-ca57073044d2}.Release|Win32.Build.0 = Release|Win32
-		{c39f4b46-6e89-4074-902e-ca57073044d2}.Release|x64.ActiveCfg = Release|x64
-		{c39f4b46-6e89-4074-902e-ca57073044d2}.Release|x64.Build.0 = Release|x64
+		{C39F4B46-6E89-4074-902E-CA57073044D2}._SpecialBootstrapNodes|Win32.ActiveCfg = Debug|Win32
+		{C39F4B46-6E89-4074-902E-CA57073044D2}._SpecialBootstrapNodes|Win32.Build.0 = Debug|Win32
+		{C39F4B46-6E89-4074-902E-CA57073044D2}._SpecialBootstrapNodes|x64.ActiveCfg = Debug|x64
+		{C39F4B46-6E89-4074-902E-CA57073044D2}._SpecialBootstrapNodes|x64.Build.0 = Debug|x64
+		{C39F4B46-6E89-4074-902E-CA57073044D2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C39F4B46-6E89-4074-902E-CA57073044D2}.Debug|Win32.Build.0 = Debug|Win32
+		{C39F4B46-6E89-4074-902E-CA57073044D2}.Debug|x64.ActiveCfg = Debug|x64
+		{C39F4B46-6E89-4074-902E-CA57073044D2}.Debug|x64.Build.0 = Debug|x64
+		{C39F4B46-6E89-4074-902E-CA57073044D2}.Release|Win32.ActiveCfg = Release|Win32
+		{C39F4B46-6E89-4074-902E-CA57073044D2}.Release|Win32.Build.0 = Release|Win32
+		{C39F4B46-6E89-4074-902E-CA57073044D2}.Release|x64.ActiveCfg = Release|x64
+		{C39F4B46-6E89-4074-902E-CA57073044D2}.Release|x64.Build.0 = Release|x64
 		{B8C41401-6A2B-488D-B198-B0564C2B7404}._SpecialBootstrapNodes|Win32.ActiveCfg = Debug|Win32
 		{B8C41401-6A2B-488D-B198-B0564C2B7404}._SpecialBootstrapNodes|Win32.Build.0 = Debug|Win32
 		{B8C41401-6A2B-488D-B198-B0564C2B7404}._SpecialBootstrapNodes|x64.ActiveCfg = Debug|x64

@@ -396,6 +396,8 @@ public:
 	void			UpdateDisplayedInfo(bool force = false);
 	int				GetFileListRequested() const					{ return m_iFileListRequested; }
 	void			SetFileListRequested(int iFileListRequested)	{ m_iFileListRequested = iFileListRequested; }
+	uint32			GetSearchID() const								{ return m_uSearchID; }
+	void			SetSearchID(uint32 uID)							{ m_uSearchID = uID; }
 
 	virtual void	SetRequestFile(CPartFile *pReqFile);
 	CPartFile*		GetRequestFile() const							{ return m_reqfile; }
@@ -537,6 +539,7 @@ protected:
 	uint32	m_dwLastSourceRequest;
 	uint32	m_dwLastSourceAnswer;
 	uint32	m_dwLastAskedForSources;
+	uint32	m_uSearchID;
 	int		m_iFileListRequested;
 	CString	m_strFileComment;
 	//--group aligned to int32

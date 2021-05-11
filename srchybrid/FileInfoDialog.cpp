@@ -205,7 +205,7 @@ public:
 					(FARPROC &)m_pfnMediaInfo_Count_Get = GetProcAddress(m_hLib, "MediaInfo_Count_Get");
 					if (m_pfnMediaInfo5_Open && m_pfnMediaInfo_Close && m_pfnMediaInfo_Get)
 						m_ullVersion = ullVersion;
-				} else if (ullVersion < MAKEDLLVERULL(20, 10, 0, 0)) { //here ullVersion >= 7.0
+				} else if (ullVersion < MAKEDLLVERULL(21, 4, 0, 0)) { //here ullVersion >= 7.0
 					(FARPROC &)m_pfnMediaInfo_New = GetProcAddress(m_hLib, "MediaInfo_New");
 					(FARPROC &)m_pfnMediaInfo_Delete = GetProcAddress(m_hLib, "MediaInfo_Delete");
 					(FARPROC &)m_pfnMediaInfo_Open = GetProcAddress(m_hLib, "MediaInfo_Open");
@@ -1230,9 +1230,9 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile *pFi
 				case ID3FID_WWWUSER:
 					{
 						wchar_t *sURL = ID3_GetStringW(frame, ID3FN_URL);
-						wchar_t *sDesc = ID3_GetStringW(frame, ID3FN_DESCRIPTION);
 						CString strURL(sURL);
 						if (!strURL.Trim().IsEmpty()) {
+							wchar_t* sDesc = ID3_GetStringW(frame, ID3FN_DESCRIPTION);
 							CString strDesc(sDesc);
 							if (!strDesc.Trim().IsEmpty())
 								strFidInfo << _T("(") << strDesc << _T("): ");

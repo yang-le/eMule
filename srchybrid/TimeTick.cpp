@@ -40,8 +40,9 @@ float CTimeTick::Tick()
 
 	if (m_nPerformanceFrequency) {
 		QueryPerformanceCounter(&nTime);
+		float nTickTime	= GetTimeInMilliSeconds(nTime.QuadPart - m_nTimeElapsed.QuadPart);
 		m_nTimeElapsed.QuadPart = nTime.QuadPart;
-		return GetTimeInMilliSeconds(nTime.QuadPart - m_nTimeElapsed.QuadPart);
+		return nTickTime;
 	}
 	return 0.0f;
 }

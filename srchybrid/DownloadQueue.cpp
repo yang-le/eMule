@@ -881,7 +881,7 @@ bool CDownloadQueue::SendNextUDPPacket()
 			Debug(_T("Rotating file list\n"));
 
 		// move the last 35 files to the head
-		if (filelist.GetCount() >= MAX_REQUESTS_PER_SERVER)
+		if (filelist.GetCount() > MAX_REQUESTS_PER_SERVER)
 			for (int i = MAX_REQUESTS_PER_SERVER; --i >= 0;)
 				filelist.AddHead(filelist.RemoveTail());
 

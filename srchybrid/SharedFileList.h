@@ -39,7 +39,6 @@ class CSharedFileList
 	friend class CSharedFilesCtrl;
 	friend class CClientReqSocket;
 
-	void	AddDirectory(const CString &strDir, CStringList &dirlist);
 public:
 	explicit CSharedFileList(CServerConnect *in_server);
 	~CSharedFileList();
@@ -101,6 +100,8 @@ public:
 
 	CCriticalSection m_mutWriteList; // don't acquire other locks while having this one in the main thread or make sure deadlocks are impossible
 	static uint8 GetRealPrio(uint8 in)				{ return (in < 4) ? in + 1 : 0; };
+	void	ResetPseudoDirNames()					{ m_mapPseudoDirNames.RemoveAll(); }
+
 protected:
 	bool	AddFile(CKnownFile *pFile);
 	void	AddFilesFromDirectory(const CString &rstrDirectory);
@@ -115,6 +116,8 @@ protected:
 	bool	CheckAndAddSingleFile(const CString &rstrFilePath); // add specific files without editing sharing preferences
 
 private:
+	void	AddDirectory(const CString& strDir, CStringList& dirlist);
+
 	CMap<CCKey, const CCKey&, CKnownFile*, CKnownFile*> m_Files_map;
 	CMap<CSKey, const CSKey&, bool, bool>			 m_UnsharedFiles_map;
 	CMapStringToString m_mapPseudoDirNames;
