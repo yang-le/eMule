@@ -2013,8 +2013,9 @@ bool GetWMHeaders(LPCTSTR pszFileName, SMediaInfo *mi, bool &rbIsWM, bool bFullI
 				CComQIPtr<IWMMetadataEditor2> pIWMMetadataEditor2 = pIWMMetadataEditor;
 				if (pIWMMetadataEditor2 && (hr = pIWMMetadataEditor2->OpenEx(pszFileName, GENERIC_READ, FILE_SHARE_READ)) == S_OK)
 					pIUnkReader = pIWMMetadataEditor2;
-				else if ((hr = pIWMMetadataEditor->Open(pszFileName)) == S_OK)
-					pIUnkReader = pIWMMetadataEditor;
+				//This Open() call unpacks files compressed with "compact /exe:lzx"; assumed to be obsolete
+				//else if ((hr = pIWMMetadataEditor->Open(pszFileName)) == S_OK)
+				//	pIUnkReader = pIWMMetadataEditor;
 			}
 		}
 

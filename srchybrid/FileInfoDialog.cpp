@@ -205,7 +205,7 @@ public:
 					(FARPROC &)m_pfnMediaInfo_Count_Get = GetProcAddress(m_hLib, "MediaInfo_Count_Get");
 					if (m_pfnMediaInfo5_Open && m_pfnMediaInfo_Close && m_pfnMediaInfo_Get)
 						m_ullVersion = ullVersion;
-				} else if (ullVersion < MAKEDLLVERULL(21, 4, 0, 0)) { //here ullVersion >= 7.0
+				} else if (ullVersion < MAKEDLLVERULL(21, 10, 0, 0)) { //here ullVersion >= 7.0
 					(FARPROC &)m_pfnMediaInfo_New = GetProcAddress(m_hLib, "MediaInfo_New");
 					(FARPROC &)m_pfnMediaInfo_Delete = GetProcAddress(m_hLib, "MediaInfo_Delete");
 					(FARPROC &)m_pfnMediaInfo_Open = GetProcAddress(m_hLib, "MediaInfo_Open");

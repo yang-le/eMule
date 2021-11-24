@@ -30,7 +30,7 @@
 //
 #define VERSION_MJR	0
 #define VERSION_MIN	60
-#define VERSION_UPDATE	2
+#define VERSION_UPDATE	3
 #define VERSION_BUILD	1
 #ifdef _M_X64
 #define VERSION_X64 _T(" x64")

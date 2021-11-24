@@ -720,8 +720,10 @@ void CPartFileConvertDlg::RemoveSel()
 		int index = joblist.GetNextSelectedItem(pos);
 		if (index >= 0) {
 			ConvertJob *job = reinterpret_cast<ConvertJob*>(joblist.GetItemData(index));
-			if (job->state != CONV_INPROGRESS)
+			if (job->state != CONV_INPROGRESS) {
 				CPartFileConvert::RemoveJob(job);
+				pos = joblist.GetFirstSelectedItemPosition();
+			}
 		}
 	}
 }
