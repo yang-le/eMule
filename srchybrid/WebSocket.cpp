@@ -509,10 +509,10 @@ int StartSSL()
 	mbedtls_ssl_config_init(&conf);
 	mbedtls_ctr_drbg_init(&ctr_drbg);
 	mbedtls_entropy_init(&entropy);
-	int ret = mbedtls_x509_crt_parse_file(&srvcert, thePrefs.GetWebCertPath());
+	int ret = mbedtls_x509_crt_parse_file(&srvcert, CT2CA(thePrefs.GetWebCertPath()));
 	if (!ret) {
 		mbedtls_pk_init(&pkey);
-		ret = mbedtls_pk_parse_keyfile(&pkey, thePrefs.GetWebKeyPath(), NULL);
+		ret = mbedtls_pk_parse_keyfile(&pkey, CT2CA(thePrefs.GetWebKeyPath()), NULL);
 		if (!ret) {
 			ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (unsigned char*)pers, strlen(pers));
 			if (!ret) {
@@ -530,7 +530,7 @@ int StartSSL()
 		DebugLogError(_T("Web Interface start failed: %s"), (LPCTSTR)SSLerror(ret));
 	else {
 		unsigned char fingerprint[20];
-		mbedtls_sha1(srvcert.raw.p, srvcert.raw.len, fingerprint);
+		mbedtls_sha1_ret(srvcert.raw.p, srvcert.raw.len, fingerprint);
 		DebugLog(_T("Loaded certificate: %s"), (LPCTSTR)GetCertHash(fingerprint, (int)(sizeof fingerprint)));
 	}
 	return ret;

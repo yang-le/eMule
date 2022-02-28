@@ -21,9 +21,9 @@
 #include "UPnPImplMiniLib.h"
 #include "Log.h"
 #include "Otherfunctions.h"
-#include "miniupnpc\miniupnpc.h"
-#include "miniupnpc\upnpcommands.h"
-#include "miniupnpc\upnperrors.h"
+#include "miniupnpc.h"
+#include "upnpcommands.h"
+#include "upnperrors.h"
 #include "opcodes.h"
 
 
