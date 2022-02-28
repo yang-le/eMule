@@ -1,0 +1,26 @@
+[submodule "CxImage"]
+	path = CxImage
+	url = https://github.com/yang-le/CxImage.git
+	branch = v7.03_lite
+[submodule "id3lib"]
+	path = id3lib
+	url = https://github.com/yang-le/id3lib.git
+	branch = v3.9.1
+[submodule "mbedtls"]
+	path = mbedtls
+	url = https://github.com/yang-le/mbedtls.git
+[submodule "miniupnp"]
+	path = miniupnp
+	url = https://github.com/yang-le/miniupnp.git
+[submodule "resizablelib"]
+	path = resizablelib
+	url = https://github.com/yang-le/resizablelib.git
+[submodule "zlib"]
+	path = zlib
+	url = https://github.com/madler/zlib.git
+[submodule "cryptopp"]
+	path = cryptopp
+	url = https://github.com/weidai11/cryptopp.git
+[submodule "libpng"]
+	path = libpng
+	url = https://github.com/yang-le/libpng.git
