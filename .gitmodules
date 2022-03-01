@@ -9,7 +9,6 @@
 [submodule "mbedtls"]
 	path = mbedtls
 	url = https://github.com/yang-le/mbedtls.git
-	branch = vs2022
 [submodule "miniupnp"]
 	path = miniupnp
 	url = https://github.com/yang-le/miniupnp.git
