@@ -20,6 +20,15 @@
 #include "opcodes.h"
 #include "OtherFunctions.h"
 
+#include "cryptopp/cryptlib.h"
+#include "CxImage/ximage.h"
+#include "id3.h"
+#include "libpng/png.h"
+#include "mbedtls/version.h"
+#include "miniupnpc.h"
+#include "zlib/zlib.h"
+#include "FileInfoDialog.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -386,6 +395,34 @@ void CCreditsThread::InitText()
 	sTmp.Format(_T("S:%d"), m_rectScreen.Height());
 	m_arCredits.Add(sTmp);
 
+	CString strOSS(_T("02:00:Open source software information"));
+	m_arCredits.Add(strOSS);
+	strOSS.Format(_T("02:01:cryptlib %d.%d.%d"), CRYPTOPP_MAJOR, CRYPTOPP_MINOR, CRYPTOPP_REVISION);
+	m_arCredits.Add(strOSS);
+	strOSS.Format(_T("02:01:%s"), CxImage::GetVersion());
+	m_arCredits.Add(strOSS);
+	strOSS.Format(_T("02:01:%S %d.%d.%d"), ID3LIB_NAME, ID3LIB_MAJOR_VERSION, ID3LIB_MINOR_VERSION, ID3LIB_PATCH_VERSION);
+	m_arCredits.Add(strOSS);
+	strOSS.Format(_T("02:01:libpng %S"), PNG_LIBPNG_VER_STRING);
+	m_arCredits.Add(strOSS);
+	strOSS.Format(_T("02:01:%S"), MBEDTLS_VERSION_STRING_FULL);
+	m_arCredits.Add(strOSS);
+	strOSS.Format(_T("02:01:miniupnpc %S"), MINIUPNPC_VERSION);
+	m_arCredits.Add(strOSS);
+	strOSS.Format(_T("02:01:resizablelib"));
+	m_arCredits.Add(strOSS);
+	strOSS.Format(_T("02:01:zlib %S"), ZLIB_VERSION);
+	m_arCredits.Add(strOSS);
+	
+	CMediaInfoDLL theMediaInfoDLL;
+	if (theMediaInfoDLL.Initialize()) {
+		ULONGLONG version = theMediaInfoDLL.GetVersion();
+		strOSS.Format(_T("02:01:MediaInfoLib %d.%d.%d.%d"), (version & DLLVER_MAJOR_MASK) >> 48, (version & DLLVER_MINOR_MASK) >> 32, (version & DLLVER_BUILD_MASK) >> 16, (version & DLLVER_QFE_MASK) >> 0);
+		m_arCredits.Add(strOSS);
+	}
+	
+	m_arCredits.Add(_T("S:50"));
+	
 	m_arCredits.Add(_T("03:00:eMule"));
 	m_arCredits.Add(_T("02:01:Version ") + theApp.m_strCurVersionLong);
 	m_arCredits.Add(_T("01:06:Copyright (C) 2002-2021 Merkur"));
