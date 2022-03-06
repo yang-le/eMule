@@ -1828,7 +1828,7 @@ BEGIN
     IDS_SUPPORTED           "支持" //"Supported"
     IDS_ESTIMATED           "评价" //"estimated"
     IDS_MEDIAINFO_DLLMISSING
-				"媒体信息库未安装.如果需要在此对话框获得到更多有关声音/视频文件的信息,\r\从https://mediaarea.net/zh-CN/MediaInfo下载媒体信息库文件 MediaInfo.dll 并拷贝到\r\neMule安装目录 ""%s"".\r\n"
+				"媒体信息库未安装.如果需要在此对话框获得到更多有关声音/视频文件的信息,\r\n从https://mediaarea.net/zh-CN/MediaInfo下载媒体信息库文件 MediaInfo.dll 并拷贝到\r\neMule安装目录 ""%s"".\r\n"
     // "There is no MediaInfo library installed. If you want to get more information about audio/video files in this dialog,\r\ndownload the MediaInfo library from https://mediaarea.net/en/MediaInfo and copy the MediaInfo.dll file into\r\neMule's installation folder ""%s"".\r\n"
     IDS_WARNING_WRONGFILEEXTENTION
                             "警告: 文件扩展名""%s""和用于该文件格式的标准的文件扩展名不符\r\n你可能要使用""%s""中的一个文件扩展名来重新命名该文件,才能正确地使用或者浏览它. \r\n"
