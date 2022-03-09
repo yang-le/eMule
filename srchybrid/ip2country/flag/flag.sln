@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32228.430
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "flag", "flag.vcxproj", "{499FC6E6-5968-4D83-9FB0-7F2805FC2F91}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Dynamic|x86 = Dynamic|x86
+		Static|x86 = Static|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{499FC6E6-5968-4D83-9FB0-7F2805FC2F91}.Dynamic|x86.ActiveCfg = Dynamic|Win32
+		{499FC6E6-5968-4D83-9FB0-7F2805FC2F91}.Dynamic|x86.Build.0 = Dynamic|Win32
+		{499FC6E6-5968-4D83-9FB0-7F2805FC2F91}.Static|x86.ActiveCfg = Static|Win32
+		{499FC6E6-5968-4D83-9FB0-7F2805FC2F91}.Static|x86.Build.0 = Static|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {10C5E23A-641E-4376-80AF-CF489C4B6AD2}
+	EndGlobalSection
+EndGlobal

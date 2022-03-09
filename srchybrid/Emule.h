@@ -50,6 +50,7 @@ class CPeerCacheFinder;
 class CFirewallOpener;
 class CUPnPImplWrapper;
 class CUploadDiskIOThread;
+class CIP2Country; //EastShare - added by AndCycle, IP to Country
 
 struct SLogItem;
 
@@ -93,6 +94,7 @@ public:
 	CFirewallOpener		*m_pFirewallOpener;
 	CUPnPImplWrapper	*m_pUPnPFinder;
 	CUploadDiskIOThread	*m_pUploadDiskIOThread;
+	CIP2Country			*ip2country; //EastShare - added by AndCycle, IP to Country
 
 	static const UINT	m_nVersionMjr;
 	static const UINT	m_nVersionMin;

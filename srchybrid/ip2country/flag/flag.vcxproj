@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Dynamic|Win32">
+      <Configuration>Dynamic</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Static|Win32">
+      <Configuration>Static</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{499FC6E6-5968-4D83-9FB0-7F2805FC2F91}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dynamic|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Static|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dynamic|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Static|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>17.0.32203.90</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Static|Win32'">
+    <OutDir>Static\</OutDir>
+    <IntDir>Static\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dynamic|Win32'">
+    <OutDir>Dynamic\</OutDir>
+    <IntDir>Dynamic\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Static|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <OmitFramePointers>true</OmitFramePointers>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_WINDOWS;AR_AE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <AdditionalOptions>/MACHINE:IX86 %(AdditionalOptions)</AdditionalOptions>
+      <OutputFile>$(OutDir)countryflag.lib</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dynamic|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <OmitFramePointers>true</OmitFramePointers>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;AR_AE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <OutputFile>$(OutDir)countryflag.dll</OutputFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <NoEntryPoint>true</NoEntryPoint>
+      <ImportLibrary />
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Image Include="res\ad.ico" />
+    <Image Include="res\ae.ico" />
+    <Image Include="res\af.ico" />
+    <Image Include="res\ag.ico" />
+    <Image Include="res\ai.ico" />
+    <Image Include="res\al.ico" />
+    <Image Include="res\am.ico" />
+    <Image Include="res\an.ico" />
+    <Image Include="res\ao.ico" />
+    <Image Include="res\ap.ico" />
+    <Image Include="res\aq.ico" />
+    <Image Include="res\ar.ico" />
+    <Image Include="res\as.ico" />
+    <Image Include="res\at.ico" />
+    <Image Include="res\au.ico" />
+    <Image Include="res\aw.ico" />
+    <Image Include="res\ax.ico" />
+    <Image Include="res\az.ico" />
+    <Image Include="res\ba.ico" />
+    <Image Include="res\bb.ico" />
+    <Image Include="res\bd.ico" />
+    <Image Include="res\be.ico" />
+    <Image Include="res\bf.ico" />
+    <Image Include="res\bg.ico" />
+    <Image Include="res\bh.ico" />
+    <Image Include="res\bi.ico" />
+    <Image Include="res\bj.ico" />
+    <Image Include="res\bm.ico" />
+    <Image Include="res\bn.ico" />
+    <Image Include="res\bo.ico" />
+    <Image Include="res\br.ico" />
+    <Image Include="res\bs.ico" />
+    <Image Include="res\bt.ico" />
+    <Image Include="res\bv.ico" />
+    <Image Include="res\bw.ico" />
+    <Image Include="res\by.ico" />
+    <Image Include="res\bz.ico" />
+    <Image Include="res\ca.ico" />
+    <Image Include="res\cc.ico" />
+    <Image Include="res\cd.ico" />
+    <Image Include="res\cf.ico" />
+    <Image Include="res\cg.ico" />
+    <Image Include="res\ch.ico" />
+    <Image Include="res\ci.ico" />
+    <Image Include="res\ck.ico" />
+    <Image Include="res\cl.ico" />
+    <Image Include="res\cm.ico" />
+    <Image Include="res\cn.ico" />
+    <Image Include="res\co.ico" />
+    <Image Include="res\cr.ico" />
+    <Image Include="res\cs.ico" />
+    <Image Include="res\cu.ico" />
+    <Image Include="res\cv.ico" />
+    <Image Include="res\cx.ico" />
+    <Image Include="res\cy.ico" />
+    <Image Include="res\cz.ico" />
+    <Image Include="res\de.ico" />
+    <Image Include="res\dj.ico" />
+    <Image Include="res\dk.ico" />
+    <Image Include="res\dm.ico" />
+    <Image Include="res\do.ico" />
+    <Image Include="res\dz.ico" />
+    <Image Include="res\ec.ico" />
+    <Image Include="res\ee.ico" />
+    <Image Include="res\eg.ico" />
+    <Image Include="res\eh.ico" />
+    <Image Include="res\er.ico" />
+    <Image Include="res\es.ico" />
+    <Image Include="res\et.ico" />
+    <Image Include="res\eu.ico" />
+    <Image Include="res\fi.ico" />
+    <Image Include="res\fj.ico" />
+    <Image Include="res\fk.ico" />
+    <Image Include="res\fm.ico" />
+    <Image Include="res\fo.ico" />
+    <Image Include="res\fr.ico" />
+    <Image Include="res\ga.ico" />
+    <Image Include="res\gb.ico" />
+    <Image Include="res\gd.ico" />
+    <Image Include="res\ge.ico" />
+    <Image Include="res\gf.ico" />
+    <Image Include="res\gg.ico" />
+    <Image Include="res\gh.ico" />
+    <Image Include="res\gi.ico" />
+    <Image Include="res\gk.ico" />
+    <Image Include="res\gl.ico" />
+    <Image Include="res\gm.ico" />
+    <Image Include="res\gn.ico" />
+    <Image Include="res\gp.ico" />
+    <Image Include="res\gq.ico" />
+    <Image Include="res\gr.ico" />
+    <Image Include="res\gs.ico" />
+    <Image Include="res\gt.ico" />
+    <Image Include="res\gu.ico" />
+    <Image Include="res\gw.ico" />
+    <Image Include="res\gy.ico" />
+    <Image Include="res\hk.ico" />
+    <Image Include="res\hn.ico" />
+    <Image Include="res\hr.ico" />
+    <Image Include="res\ht.ico" />
+    <Image Include="res\hu.ico" />
+    <Image Include="res\id.ico" />
+    <Image Include="res\ie.ico" />
+    <Image Include="res\il.ico" />
+    <Image Include="res\im.ico" />
+    <Image Include="res\in.ico" />
+    <Image Include="res\io.ico" />
+    <Image Include="res\iq.ico" />
+    <Image Include="res\ir.ico" />
+    <Image Include="res\is.ico" />
+    <Image Include="res\it.ico" />
+    <Image Include="res\je.ico" />
+    <Image Include="res\jm.ico" />
+    <Image Include="res\jo.ico" />
+    <Image Include="res\jp.ico" />
+    <Image Include="res\ke.ico" />
+    <Image Include="res\kg.ico" />
+    <Image Include="res\kh.ico" />
+    <Image Include="res\ki.ico" />
+    <Image Include="res\km.ico" />
+    <Image Include="res\kn.ico" />
+    <Image Include="res\kp.ico" />
+    <Image Include="res\kr.ico" />
+    <Image Include="res\kw.ico" />
+    <Image Include="res\ky.ico" />
+    <Image Include="res\kz.ico" />
+    <Image Include="res\la.ico" />
+    <Image Include="res\lb.ico" />
+    <Image Include="res\lc.ico" />
+    <Image Include="res\li.ico" />
+    <Image Include="res\lk.ico" />
+    <Image Include="res\lr.ico" />
+    <Image Include="res\ls.ico" />
+    <Image Include="res\lt.ico" />
+    <Image Include="res\lu.ico" />
+    <Image Include="res\lv.ico" />
+    <Image Include="res\ly.ico" />
+    <Image Include="res\ma.ico" />
+    <Image Include="res\mc.ico" />
+    <Image Include="res\md.ico" />
+    <Image Include="res\me.ico" />
+    <Image Include="res\mf.ico" />
+    <Image Include="res\mg.ico" />
+    <Image Include="res\mh.ico" />
+    <Image Include="res\mk.ico" />
+    <Image Include="res\ml.ico" />
+    <Image Include="res\mm.ico" />
+    <Image Include="res\mn.ico" />
+    <Image Include="res\mo.ico" />
+    <Image Include="res\mp.ico" />
+    <Image Include="res\mq.ico" />
+    <Image Include="res\mr.ico" />
+    <Image Include="res\ms.ico" />
+    <Image Include="res\mt.ico" />
+    <Image Include="res\mu.ico" />
+    <Image Include="res\mv.ico" />
+    <Image Include="res\mw.ico" />
+    <Image Include="res\mx.ico" />
+    <Image Include="res\my.ico" />
+    <Image Include="res\mz.ico" />
+    <Image Include="res\na.ico" />
+    <Image Include="res\nc.ico" />
+    <Image Include="res\ne.ico" />
+    <Image Include="res\nf.ico" />
+    <Image Include="res\ng.ico" />
+    <Image Include="res\ni.ico" />
+    <Image Include="res\nl.ico" />
+    <Image Include="res\no.ico" />
+    <Image Include="res\not.ico" />
+    <Image Include="res\np.ico" />
+    <Image Include="res\nr.ico" />
+    <Image Include="res\nu.ico" />
+    <Image Include="res\nz.ico" />
+    <Image Include="res\om.ico" />
+    <Image Include="res\pa.ico" />
+    <Image Include="res\pc.ico" />
+    <Image Include="res\pe.ico" />
+    <Image Include="res\pf.ico" />
+    <Image Include="res\pg.ico" />
+    <Image Include="res\ph.ico" />
+    <Image Include="res\pk.ico" />
+    <Image Include="res\pl.ico" />
+    <Image Include="res\pm.ico" />
+    <Image Include="res\pn.ico" />
+    <Image Include="res\pr.ico" />
+    <Image Include="res\ps.ico" />
+    <Image Include="res\pt.ico" />
+    <Image Include="res\pw.ico" />
+    <Image Include="res\py.ico" />
+    <Image Include="res\qa.ico" />
+    <Image Include="res\re.ico" />
+    <Image Include="res\ro.ico" />
+    <Image Include="res\rs.ico" />
+    <Image Include="res\ru.ico" />
+    <Image Include="res\rw.ico" />
+    <Image Include="res\sa.ico" />
+    <Image Include="res\sb.ico" />
+    <Image Include="res\sc.ico" />
+    <Image Include="res\sd.ico" />
+    <Image Include="res\se.ico" />
+    <Image Include="res\sg.ico" />
+    <Image Include="res\sh.ico" />
+    <Image Include="res\si.ico" />
+    <Image Include="res\sk.ico" />
+    <Image Include="res\sl.ico" />
+    <Image Include="res\sm.ico" />
+    <Image Include="res\sn.ico" />
+    <Image Include="res\so.ico" />
+    <Image Include="res\sr.ico" />
+    <Image Include="res\st.ico" />
+    <Image Include="res\su.ico" />
+    <Image Include="res\sv.ico" />
+    <Image Include="res\sy.ico" />
+    <Image Include="res\sz.ico" />
+    <Image Include="res\tc.ico" />
+    <Image Include="res\td.ico" />
+    <Image Include="res\tf.ico" />
+    <Image Include="res\tg.ico" />
+    <Image Include="res\th.ico" />
+    <Image Include="res\tj.ico" />
+    <Image Include="res\tk.ico" />
+    <Image Include="res\tl.ico" />
+    <Image Include="res\tm.ico" />
+    <Image Include="res\tn.ico" />
+    <Image Include="res\to.ico" />
+    <Image Include="res\tr.ico" />
+    <Image Include="res\tt.ico" />
+    <Image Include="res\tv.ico" />
+    <Image Include="res\tw.ico" />
+    <Image Include="res\tz.ico" />
+    <Image Include="res\ua.ico" />
+    <Image Include="res\ug.ico" />
+    <Image Include="res\uk.ico" />
+    <Image Include="res\um.ico" />
+    <Image Include="res\us.ico" />
+    <Image Include="res\uy.ico" />
+    <Image Include="res\uz.ico" />
+    <Image Include="res\va.ico" />
+    <Image Include="res\vc.ico" />
+    <Image Include="res\ve.ico" />
+    <Image Include="res\vg.ico" />
+    <Image Include="res\vi.ico" />
+    <Image Include="res\vn.ico" />
+    <Image Include="res\vu.ico" />
+    <Image Include="res\wf.ico" />
+    <Image Include="res\ws.ico" />
+    <Image Include="res\ye.ico" />
+    <Image Include="res\yt.ico" />
+    <Image Include="res\yu.ico" />
+    <Image Include="res\za.ico" />
+    <Image Include="res\zm.ico" />
+    <Image Include="res\zw.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="flag.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

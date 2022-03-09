@@ -19,6 +19,7 @@
 #include "ClientStateDefs.h"
 #include "opcodes.h"
 #include "OtherFunctions.h"
+#include "ip2country/IP2Country.h" //EastShare - added by AndCycle, IP to Country
 
 class CClientReqSocket;
 class CPeerCacheDownSocket;
@@ -694,4 +695,14 @@ protected:
 	DWORD   lastSwapForSourceExchangeTick; // ZZ:DownloadManaager
 	DWORD   m_dwLastTriedToConnect; // ZZ:DownloadManager (one re-ask timestamp for each file)
 	bool	m_bSourceExchangeSwapped; // ZZ:DownloadManager
+
+	//EastShare Start - added by AndCycle, IP to Country
+public:
+	CString			GetCountryName(bool longName = true) const; //Xman changed 
+	int				GetCountryFlagIndex() const;
+	void			ResetIP2Country(uint32 dwIP = 0);
+
+	//private:
+	/*struct*/	Country_Struct* m_structUserCountry; //EastShare - added by AndCycle, IP to Country
+//EastShare End - added by AndCycle, IP to Country
 };

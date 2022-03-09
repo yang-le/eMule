@@ -218,6 +218,9 @@ void CUpDownClient::Init()
 	m_bRemoteQueueFull = false;
 	m_bCompleteSource = false;
 	m_nPartCount = 0;
+	//EastShare Start - added by AndCycle, IP to Country
+	m_structUserCountry = theApp.ip2country->GetCountryFromIP(m_dwUserIP); 
+	//EastShare End - added by AndCycle, IP to Country
 
 	m_cShowDR = 0;
 	m_bReaskPending = false;
@@ -617,10 +620,21 @@ bool CUpDownClient::ProcessHelloTypePacket(CSafeMemFile *data)
 		}
 	}
 
+	//Xman IP to Country
+	uint32 oldIP=m_dwUserIP;
+	//Xman end
+
 	SOCKADDR_IN sockAddr = {};
 	int nSockAddrLen = sizeof sockAddr;
 	socket->GetPeerName((LPSOCKADDR)&sockAddr, &nSockAddrLen);
 	SetIP(sockAddr.sin_addr.s_addr);
+
+	//Xman IP to Country
+	//only search if changed, it's cheaper
+	//EastShare Start - added by AndCycle, IP to Country
+	if(oldIP!=m_dwUserIP)
+		m_structUserCountry = theApp.ip2country->GetCountryFromIP(m_dwUserIP);
+	//EastShare End - added by AndCycle, IP to Country
 
 	if (thePrefs.GetAddServersFromClients() && m_dwServerIP && m_nServerPort) {
 		CServer *addsrv = new CServer(m_nServerPort, ipstr(m_dwServerIP));
@@ -3033,3 +3047,19 @@ void CUpDownClient::SendSharedDirectories()
 	theStats.AddUpDataOverheadOther(replypacket->size);
 	VERIFY(SendPacket(replypacket, true));
 }
+
+//EastShare Start - added by AndCycle, IP to Country
+// Superlexx - client's location
+CString	CUpDownClient::GetCountryName(bool longName) const {
+	return theApp.ip2country->GetCountryNameFromRef(m_structUserCountry,longName);
+}
+
+int CUpDownClient::GetCountryFlagIndex() const {
+	return m_structUserCountry->FlagIndex;
+}
+//MORPH START - Changed by SiRoB, ProxyClient
+void CUpDownClient::ResetIP2Country(uint32 m_dwIP){
+	m_structUserCountry = theApp.ip2country->GetCountryFromIP((m_dwIP)?m_dwIP:m_dwUserIP);
+}
+//MORPH END - Changed by SiRoB, ProxyClient
+//EastShare End - added by AndCycle, IP to Country

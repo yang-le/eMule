@@ -607,6 +607,7 @@ BOOL CemuleApp::InitInstance()
 		}
 	}
 
+	ip2country = new CIP2Country(); //EastShare - added by AndCycle, IP to Country
 	clientlist = new CClientList();
 	friendlist = new CFriendList();
 	searchlist = new CSearchList();
@@ -1324,7 +1325,7 @@ HICON CemuleApp::LoadIcon(LPCTSTR lpszResourceName, int cx, int cy, UINT uFlags)
 				}
 			} else {
 				// WINBUG???: 'ExtractIcon' does not work well on ICO-files when using the color
-				// scheme 'Windows-Standard (extragroß)' -> always try to use 'LoadImage'!
+				// scheme 'Windows-Standard (extragro?' -> always try to use 'LoadImage'!
 				//
 				// If the ICO file contains a 16x16 icon, 'LoadImage' will though return a 32x32 icon,
 				// if LR_DEFAULTSIZE is specified! -> always specify the requested size!

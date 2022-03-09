@@ -1764,6 +1764,9 @@ void CemuleDlg::OnClose()
 	delete theApp.lastCommonRouteFinder;	theApp.lastCommonRouteFinder = NULL;
 	delete theApp.m_pUPnPFinder;			theApp.m_pUPnPFinder = NULL;
 	delete theApp.m_pUploadDiskIOThread;	theApp.m_pUploadDiskIOThread = NULL;
+	//EastShare Start - added by AndCycle, IP to Country
+	delete theApp.ip2country;				theApp.ip2country = NULL;
+	//EastShare End   - added by AndCycle, IP to Country
 
 	thePrefs.Uninit();
 	theApp.m_app_state = APP_STATE_DONE;

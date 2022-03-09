@@ -2374,6 +2374,26 @@
 #define IDC_SMTPPASS                    3036
 #define IDA_ENTER                       32771
 
+#define IDS_COUNTRYNAME_SHORT           4029
+#define IDS_COUNTRYNAME_MID             4030
+#define IDS_COUNTRYNAME_LONG            4031
+#define IDS_COUNTRYNAME_SHOWFLAG        4032
+#define IDS_IP2COUNTRY_MSG1             4033
+#define IDS_IP2COUNTRY_MSG2             4034
+#define IDS_IP2COUNTRY_LOADED           4035
+#define IDS_IP2COUNTRY_UNLOADED         4036
+#define IDS_IP2COUNTRY_ERROR1           4037
+#define IDS_IP2COUNTRY_ERROR3           4038
+#define IDS_IP2COUNTRY_ERROR4           4039
+#define IDS_IP2COUNTRY_ERROR5           4040
+#define IDS_IP2COUNTRY_INFO             4041
+#define IDS_IP2COUNTRY_FLAGLOAD         4042
+#define IDS_IP2COUNTRY_FILELOAD         4043
+#define IDS_IP2COUNTRY_FLAGUNLD         4044
+#define IDS_IP2COUNTRY_NALONG           4045
+#define IDS_IP2COUNTRY_NASHORT          4046
+#define IDS_IP2COUNTRY_LOADED2          4047
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

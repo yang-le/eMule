@@ -1,0 +1,772 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="res">
+      <UniqueIdentifier>{c383b538-740d-4f9e-8557-5e9aa97dd4a5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\ad.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ae.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\af.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ag.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ai.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\al.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\am.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\an.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ao.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ar.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\as.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\at.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\au.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\aw.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\az.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ba.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\bb.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\bd.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\be.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\bf.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\bg.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\bh.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\bi.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\bj.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\bm.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\bn.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\bo.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\br.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\bs.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\bt.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\bw.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\by.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\bz.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ca.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\cc.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\cd.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\cf.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\cg.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ch.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ci.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ck.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\cl.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\cm.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\cn.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\co.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\cr.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\cs.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\cu.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\cv.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\cx.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\cy.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\cz.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\de.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\dj.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\dk.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\dm.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\do.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\dz.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ec.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ee.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\eg.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\eh.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\er.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\es.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\et.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\fi.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\fj.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\fk.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\fm.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\fo.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\fr.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ga.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gb.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gd.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ge.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gg.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gh.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gi.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gk.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gl.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gm.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gn.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gp.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gq.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gr.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gs.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gt.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gu.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gw.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gy.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\hk.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\hn.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\hr.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ht.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\hu.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\id.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ie.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\il.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\im.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\in.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\io.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\iq.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ir.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\is.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\it.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\je.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\jm.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\jo.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\jp.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ke.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\kg.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\kh.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ki.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\km.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\kn.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\kp.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\kr.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\kw.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ky.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\kz.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\la.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\lb.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\lc.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\li.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\lk.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\lr.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ls.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\lt.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\lu.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\lv.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ly.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ma.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\mc.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\md.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\mg.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\mh.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\mk.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ml.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\mm.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\mn.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\mo.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\mp.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\mq.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\mr.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ms.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\mt.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\mu.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\mv.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\mw.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\mx.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\my.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\mz.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\na.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\nc.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ne.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\nf.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ng.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ni.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\nl.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\no.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\not.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\np.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\nr.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\nu.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\nz.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\om.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\pa.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\pc.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\pe.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\pf.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\pg.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ph.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\pk.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\pl.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\pm.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\pn.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\pr.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ps.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\pt.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\pw.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\py.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\qa.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ro.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ru.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\rw.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\sa.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\sb.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\sc.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\sd.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\se.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\sg.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\sh.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\si.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\sk.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\sl.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\sm.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\sn.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\so.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\sr.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\st.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\su.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\sv.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\sy.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\sz.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\tc.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\td.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\tf.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\tg.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\th.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\tj.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\tk.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\tl.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\tm.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\tn.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\to.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\tr.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\tt.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\tv.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\tw.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\tz.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ua.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ug.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\uk.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\um.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\us.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\uy.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\uz.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\va.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\vc.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ve.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\vg.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\vi.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\vn.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\vu.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\wf.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ws.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ye.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\yu.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\za.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\zm.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\zw.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\aq.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ax.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\bv.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\gf.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\me.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\mf.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\re.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\rs.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\yt.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\ap.ico">
+      <Filter>res</Filter>
+    </Image>
+    <Image Include="res\eu.ico">
+      <Filter>res</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="flag.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+</Project>
