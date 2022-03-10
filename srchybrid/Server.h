@@ -19,6 +19,8 @@
 class CTag;
 class CFileDataIO;
 
+struct Country_Struct; //EastShare - added by AndCycle, IP to Country
+
 #pragma pack(push, 1)
 struct ServerMet_Struct
 {
@@ -198,4 +200,14 @@ private:
 	bool	m_bstaticservermember;
 	bool	m_bCryptPingReplyPending;
 	bool	m_bTriedCryptOnce;
+
+	//EastShare Start - added by AndCycle, IP to Country
+public:
+	CString	GetCountryName() const;
+	int		GetCountryFlagIndex() const;
+	void	ResetIP2Country();
+
+private:
+	/*struct*/	Country_Struct* m_structServerCountry;
+	//EastShare End - added by AndCycle, IP to Country
 };

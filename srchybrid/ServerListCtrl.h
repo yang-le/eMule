@@ -17,6 +17,7 @@ public:
 	void	RemoveServer(const CServer *pServer);
 	bool	AddServerMetToList(const CString &strFile);
 	void	RefreshServer(const CServer *server);
+	//void	RefreshAllServer();//EastShare - added by AndCycle, IP to Country
 	void	RemoveAllDeadServers();
 	void	RemoveAllFilteredServers();
 	void	Hide()									{ ShowWindow(SW_HIDE); }
@@ -42,11 +43,18 @@ protected:
 
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM);
 
+	//Commander - Added: CountryFlag - Start IP to Country
+	void	GetItemDisplayText(const CServer* server, int iSubItem, LPTSTR pszText, int cchTextMax) const;
+	virtual void DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct);
+	CImageList imagelist;
+	//Commander - Added: CountryFlag - End
+
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnContextMenu(CWnd*, CPoint point);
 	afx_msg void OnLvnColumnClick(LPNMHDR pNMHDR, LRESULT *pResult);
 	afx_msg void OnLvnGetInfoTip(LPNMHDR pNMHDR, LRESULT *pResult);
-	afx_msg void OnNmCustomDraw(LPNMHDR pNMHDR, LRESULT *pResult);
+	afx_msg void OnLvnGetDispInfo(NMHDR* pNMHDR, LRESULT* pResult); //Commander - Added: CountryFlag
+	//afx_msg void OnNmCustomDraw(LPNMHDR pNMHDR, LRESULT *pResult);
 	afx_msg void OnNmDblClk(LPNMHDR, LRESULT*);
 	afx_msg void OnSysColorChange();
 };

@@ -934,3 +934,16 @@ bool CClientList::AllowCalbackRequest(uint32 dwIP) const
 	}
 	return true;
 }
+
+//EastShare Start - added by AndCycle, IP to Country
+void CClientList::ResetIP2Country() {
+
+	CUpDownClient* cur_client;
+
+	for (POSITION pos = list.GetHeadPosition(); pos != NULL; list.GetNext(pos)) {
+		cur_client = theApp.clientlist->list.GetAt(pos);
+		cur_client->ResetIP2Country();
+	}
+
+}
+//EastShare End - added by AndCycle, IP to Country

@@ -653,6 +653,15 @@ void CDownloadListCtrl::DrawSourceItem(CDC *dc, int nColumn, LPCRECT lpRect, UIN
 			m_ImageList.Draw(dc, nImg, point2, ILD_NORMAL | INDEXTOOVERLAYMASK(uOvlImg));
 			rcItem.left += 20;
 
+			//EastShare Start - added by AndCycle, IP to Country 
+			if (theApp.ip2country->ShowCountryFlag()) {
+				POINT point3 = { rcItem.left,rcItem.top + 1 };
+				//theApp.ip2country->GetFlagImageList()->DrawIndirect(dc, pClient->GetCountryFlagIndex(), point3, CSize(18,16), CPoint(0,0), ILD_NORMAL);
+				theApp.ip2country->GetFlagImageList()->DrawIndirect(&theApp.ip2country->GetFlagImageDrawParams(dc, pClient->GetCountryFlagIndex(), point3));
+				rcItem.left += 20;
+			}
+			//EastShare End - added by AndCycle, IP to Country
+
 			dc->DrawText(sItem, -1, &rcItem, MLC_DT_TEXT | uDrawTextAlignment);
 		}
 		break;

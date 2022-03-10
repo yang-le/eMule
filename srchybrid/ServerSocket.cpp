@@ -99,6 +99,10 @@ bool CServerSocket::OnHostNameResolved(const SOCKADDR_IN *pSockAddr)
 			serverconnect->DestroySocket(this);
 			return false;	// Do *NOT* connect to this server
 		}
+		//zz_fly :: support dynamic ip servers :: DolphinX :: Start
+		if (pServer)
+			pServer->ResetIP2Country(); //EastShare - added by AndCycle, IP to Country
+		//zz_fly :: End
 	}
 	return true; // Connect to this server
 }

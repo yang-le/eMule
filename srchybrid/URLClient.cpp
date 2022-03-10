@@ -116,6 +116,7 @@ bool CUrlClient::SetUrl(LPCTSTR pszUrl, uint32 nIP)
 
 	//NOTE: be very careful with what is stored in the following IP/ID/Port members!
 	m_nConnectIP = nIP ? nIP : inet_addr(CStringA(szHostName));
+	ResetIP2Country(m_nConnectIP); //MORPH Added by SiRoB, IP to Country URLClient
 //	if (m_nConnectIP == INADDR_NONE)
 //		m_nConnectIP = 0;
 	m_nUserIDHybrid = htonl(m_nConnectIP);

@@ -20,6 +20,7 @@
 #include "Opcodes.h"
 #include "OtherFunctions.h"
 #include "Packets.h"
+#include "ip2country/IP2Country.h"//EastShare - added by AndCycle, IP to Country
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -54,6 +55,7 @@ void CServer::init()
 	m_bstaticservermember = false;
 	m_bCryptPingReplyPending = false;
 	m_bTriedCryptOnce = false;
+	m_structServerCountry = theApp.ip2country->GetCountryFromIP(ip); //EastShare - added by AndCycle, IP to Country
 }
 
 CServer::CServer(const ServerMet_Struct *in_data)
@@ -107,6 +109,7 @@ CServer::CServer(const CServer *pOld)
 	m_bstaticservermember = pOld->IsStaticMember();
 	m_bCryptPingReplyPending = pOld->m_bCryptPingReplyPending;
 	m_bTriedCryptOnce = pOld->m_bTriedCryptOnce;
+	m_structServerCountry = theApp.ip2country->GetCountryFromIP(ip); //EastShare - added by AndCycle, IP to Country
 }
 
 bool CServer::AddTagFromFile(CFileDataIO *servermet)
@@ -289,3 +292,17 @@ void CServer::SetServerKeyUDP(uint32 dwServerKeyUDP)
 	m_dwServerKeyUDP = dwServerKeyUDP;
 	m_dwIPServerKeyUDP = theApp.GetPublicIP();
 }
+
+//EastShare Start - added by AndCycle, IP to Country
+CString CServer::GetCountryName() const {
+	return theApp.ip2country->GetCountryNameFromRef(m_structServerCountry);
+}
+
+int CServer::GetCountryFlagIndex() const {
+	return m_structServerCountry->FlagIndex;
+}
+
+void CServer::ResetIP2Country() {
+	m_structServerCountry = theApp.ip2country->GetCountryFromIP(ip);
+}
+//EastShare End - added by AndCycle, IP to Country

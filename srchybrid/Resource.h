@@ -2394,6 +2394,8 @@
 #define IDS_IP2COUNTRY_NASHORT          4046
 #define IDS_IP2COUNTRY_LOADED2          4047
 
+#define IDC_DLOC                        5024
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
