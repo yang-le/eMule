@@ -162,4 +162,9 @@ private:
 	DWORD	m_dwLastTrackedCleanUp;
 	DWORD	m_dwLastClientCleanUp;
 	uint8	m_nBuddyStatus;
+
+	//EastShare Start - added by AndCycle, IP to Country
+public:
+	void ResetIP2Country();
+	//EastShare End - added by AndCycle, IP to Country
 };

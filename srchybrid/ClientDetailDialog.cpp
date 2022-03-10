@@ -70,6 +70,7 @@ BOOL CClientDetailPage::OnInitDialog()
 	AddAnchor(IDC_STATIC50, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_DNAME, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_DSNAME, TOP_LEFT, TOP_RIGHT);
+	AddAnchor(IDC_DLOC, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_DDOWNLOADING, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_UPLOADING, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(IDC_OBFUSCATION_STAT, TOP_LEFT, TOP_RIGHT);
@@ -88,6 +89,9 @@ BOOL CClientDetailPage::OnSetActive()
 		CUpDownClient *client = static_cast<CUpDownClient*>((*m_paClients)[0]);
 
 		SetDlgItemText(IDC_DNAME, (client->GetUserName() ? client->GetUserName() : _T("?")));
+		//EastShare Start - added by AndCycle, IP to Country
+		SetDlgItemText(IDC_DLOC, client->GetCountryName(true));
+		//EastShare End - added by AndCycle, IP to Country
 		SetDlgItemText(IDC_DHASH, (client->HasValidHash() ? (LPCTSTR)md4str(client->GetUserHash()) : _T("?")));
 		SetDlgItemText(IDC_DSOFT, client->GetClientSoftVer());
 

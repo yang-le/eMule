@@ -156,10 +156,28 @@ void CClientListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 						const POINT point = {rcItem.left, rcItem.top + iIconPosY};
 						m_pImageList->Draw(dc, iImage, point, ILD_NORMAL | INDEXTOOVERLAYMASK(uOverlayImage));
 
+						//EastShare Start - added by AndCycle, IP to Country 
+						if (theApp.ip2country->ShowCountryFlag())
+						{
+							rcItem.left += 20;
+							POINT point2 = { rcItem.left,rcItem.top + 1 };
+							//theApp.ip2country->GetFlagImageList()->Draw(dc, client->GetCountryFlagIndex(), point2, ILD_NORMAL);
+							theApp.ip2country->GetFlagImageList()->DrawIndirect(&theApp.ip2country->GetFlagImageDrawParams(dc, client->GetCountryFlagIndex(), point2));
+							rcItem.left += sm_iLabelOffset;
+						}
+						//EastShare End - added by AndCycle, IP to Country
+
 						rcItem.left += 16 + sm_iLabelOffset;
 						dc.DrawText(sItem, -1, &rcItem, MLC_DT_TEXT | uDrawTextAlignment);
 						rcItem.left -= 16;
 						rcItem.right -= sm_iSubItemInset;
+
+						//EastShare Start - added by AndCycle, IP to Country
+						if (theApp.ip2country->ShowCountryFlag())
+						{
+							rcItem.left -= 20;
+						}
+						//EastShare End - added by AndCycle, IP to Country
 					}
 					break;
 				default:
