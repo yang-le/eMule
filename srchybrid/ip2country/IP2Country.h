@@ -53,7 +53,7 @@ class CIP2Country
 		void	AddIPRange(uint32 IPfrom,uint32 IPto, TCHAR* shortCountryName, TCHAR* midCountryName, TCHAR* longCountryName);
 
 		Country_Struct*	GetCountryFromIP(uint32 IP) const;
-		CString	GetCountryNameFromRef(Country_Struct* m_structServerCountry, bool longname=false);
+		CString	GetCountryNameFromRef(Country_Struct* m_structServerCountry, bool longname=true);
 		//WORD	GetFlagResIDfromCountryCode(CString shortCountryName);
 
 		CImageList* GetFlagImageList() const {return &CountryFlagImageList;}

@@ -812,8 +812,8 @@ void CServerListCtrl::OnNmCustomDraw(LPNMHDR pNMHDR, LRESULT *pResult)
 //Commander - Added: CountryFlag - Start IP to Country
 void CServerListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 {
-	if (theApp.m_app_state != APP_STATE_RUNNING)
-		return;
+	//if (theApp.m_app_state != APP_STATE_RUNNING)
+	//	return;
 	if (!lpDrawItemStruct->itemData)
 		return;
 
@@ -846,12 +846,13 @@ void CServerListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 		&& _tcsicmp(cur_srv->GetAddress(), server->GetAddress()) == 0)
 	{
 		//it's our server
-		GetFont()->GetLogFont(&lfFont);
-		lfFont.lfWeight = FW_BOLD;
-		fontCustom.CreateFontIndirect(&lfFont);
+		//GetFont()->GetLogFont(&lfFont);
+		//lfFont.lfWeight = FW_BOLD;
+		//fontCustom.CreateFontIndirect(&lfFont);
 
-		dc.SelectObject(&fontCustom);
-		dc.SetTextColor(RGB(0, 0, 192));
+		//dc.SelectObject(&fontCustom);
+		//dc.SetTextColor(RGB(0, 0, 192));
+		dc.SetTextColor(RGB(32, 32, 255));
 	}
 	else //TK4 Mod grey out Filtered servers or Dead servers
 		if (server && server->GetFailedCount() >= thePrefs.GetDeadServerRetries() || theApp.ipfilter->IsFiltered(server->GetIP()))
@@ -945,7 +946,11 @@ void CServerListCtrl::GetItemDisplayText(const CServer* server, int iSubItem, LP
 		//DolphinX :: support dynamic ip servers :: End
 		break;
 	case 2:
-		_tcsncpy(pszText, server->GetDescription(), cchTextMax);
+		if (theApp.ip2country->ShowCountryFlag()) {
+			_sntprintf(pszText, cchTextMax, _T("%s%s"), server->GetCountryName(), server->GetDescription());
+		}else {
+			_tcsncpy(pszText, server->GetDescription(), cchTextMax);
+		}
 		break;
 	case 3:
 		if (server->GetPing())
@@ -953,15 +958,15 @@ void CServerListCtrl::GetItemDisplayText(const CServer* server, int iSubItem, LP
 		break;
 	case 4:
 		if (server->GetUsers())
-			_sntprintf(pszText, cchTextMax, _T("%i"), server->GetUsers());
+			_tcsncpy(pszText, CastItoIShort(server->GetUsers()), cchTextMax);
 		break;
 	case 5:
 		if (server->GetMaxUsers())
-			_sntprintf(pszText, cchTextMax, _T("%i"), server->GetMaxUsers());
+			_tcsncpy(pszText, CastItoIShort(server->GetMaxUsers()), cchTextMax);
 		break;
 	case 6:
 		if (server->GetFiles())
-			_sntprintf(pszText, cchTextMax, _T("%i"), server->GetFiles());
+			_tcsncpy(pszText, CastItoIShort(server->GetFiles()), cchTextMax);
 		break;
 	case 7:
 	{
@@ -990,11 +995,11 @@ void CServerListCtrl::GetItemDisplayText(const CServer* server, int iSubItem, LP
 		break;
 	case 10:
 		if (server->GetSoftFiles())
-			_sntprintf(pszText, cchTextMax, _T("%i"), server->GetSoftFiles());
+			_tcsncpy(pszText, CastItoIShort(server->GetSoftFiles()), cchTextMax);
 		break;
 	case 11:
 		if (server->GetHardFiles())
-			_sntprintf(pszText, cchTextMax, _T("%i"), server->GetHardFiles());
+			_tcsncpy(pszText, CastItoIShort(server->GetHardFiles()), cchTextMax);
 		break;
 	case 12:
 	{
