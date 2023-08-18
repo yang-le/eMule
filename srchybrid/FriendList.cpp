@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -17,12 +17,11 @@
 #include "stdafx.h"
 #include <io.h>
 #include "emule.h"
-#include "FriendList.h"
 #include "UpDownClient.h"
 #include "Friend.h"
+#include "FriendList.h"
 #include "Preferences.h"
 #include "SafeFile.h"
-#include "OtherFunctions.h"
 #include "opcodes.h"
 #include "emuledlg.h"
 #include "FriendListCtrl.h"
@@ -53,7 +52,7 @@ CFriendList::~CFriendList()
 
 bool CFriendList::LoadList()
 {
-	CString strFileName(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + EMFRIENDS_MET_FILENAME);
+	const CString &strFileName(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + EMFRIENDS_MET_FILENAME);
 	CSafeBufferedFile file;
 	CFileException fexp;
 	if (!file.Open(strFileName, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
@@ -76,7 +75,7 @@ bool CFriendList::LoadList()
 
 		for (uint32 i = file.ReadUInt32(); i > 0; --i) { //number of records
 			CFriend *Record = new CFriend();
-			Record->LoadFromFile(&file);
+			Record->LoadFromFile(file);
 			m_listFriends.AddTail(Record);
 		}
 		file.Close();
@@ -100,7 +99,7 @@ void CFriendList::SaveList()
 		AddDebugLogLine(false, _T("Saving friends list file \"%s\""), EMFRIENDS_MET_FILENAME);
 	m_nLastSaved = ::GetTickCount();
 
-	CString strFileName(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + EMFRIENDS_MET_FILENAME);
+	const CString &strFileName(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + EMFRIENDS_MET_FILENAME);
 	CSafeBufferedFile file;
 	CFileException fexp;
 	if (!file.Open(strFileName, CFile::modeCreate | CFile::modeWrite | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
@@ -111,14 +110,14 @@ void CFriendList::SaveList()
 		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		return;
 	}
-	setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
+	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 
 	try {
 		file.WriteUInt8(MET_HEADER);
 		file.WriteUInt32((uint32)m_listFriends.GetCount());
 		for (POSITION pos = m_listFriends.GetHeadPosition(); pos != NULL;)
-			m_listFriends.GetNext(pos)->WriteToFile(&file);
-		if ((theApp.IsClosing() && thePrefs.GetCommitFiles() >= 1) || thePrefs.GetCommitFiles() >= 2) {
+			m_listFriends.GetNext(pos)->WriteToFile(file);
+		if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.IsClosing())) {
 			file.Flush(); // flush file stream buffers to disk buffers
 			if (_commit(_fileno(file.m_pStream)) != 0) // commit disk buffers to disk
 				AfxThrowFileException(CFileException::hardIO, ::GetLastError(), file.GetFileName());
@@ -216,7 +215,7 @@ bool CFriendList::AddFriend(CUpDownClient *toadd)
 		m_wndOutput->UpdateList();
 	}
 	SaveList();
-	NewFriend->FindKadID(); // fetch the kadid of this friend if we don't have it already
+	NewFriend->FindKadID(); // fetch the Kad ID of this friend if we don't have it already
 	return true;
 }
 

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -21,9 +21,9 @@
 #include "Preferences.h"
 #include "opcodes.h"
 #include "md5sum.h"
-#include <cryptopp/rsa.h>
 #include "Log.h"
 #include "UserMsgs.h"
+#include "cryptopp/rsa.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -69,7 +69,7 @@ CPeerCacheFinder::CPeerCacheFinder()
 	, m_nFailedDownloads()
 	, m_posCurrentLookUp()
 	, m_nPCPort()
-	, m_bValdited()
+	, m_bValidated()
 	, m_bNotReSearched()
 	, m_bNotReValdited()
 {
@@ -129,7 +129,7 @@ void CPeerCacheFinder::Init(time_t dwLastSearch, bool bLastSearchSuccess, bool b
 					return;
 				}
 				// no need to revalidate the cache yet
-				m_bValdited = true;
+				m_bValidated = true;
 				m_bNotReValdited = true;
 				DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: CacheIdent still valid, not trying to revalidate this time")));
 			} else
@@ -191,7 +191,7 @@ void CPeerCacheFinder::SearchForPC()
 				// we have to wait until we get our IP from a reverse lookup
 				m_PCStatus = PCS_OWNIPUNKNOWN;
 			else {
-				if (!m_bValdited) {
+				if (!m_bValidated) {
 					m_PCStatus = PCS_VALDATING;
 					ValidateDescriptorFile();
 				} else {
@@ -262,7 +262,7 @@ CString ReverseDnsLookup(DWORD dwIP)
 
 	HMODULE hLib = LoadLibrary(_T("dnsapi.dll"));
 	if (hLib) {
-		DNS_STATUS(WINAPI *pfnDnsQueryConfig)(DNS_CONFIG_TYPE Config, DWORD Flag, PWSTR pwsAdapterName, PVOID pReserved, PVOID pBuffer, PDWORD pBufferLength);
+		DNS_STATUS(WINAPI *pfnDnsQueryConfig)(DNS_CONFIG_TYPE Config, DWORD Flag, PCWSTR pwsAdapterName, PVOID pReserved, PVOID pBuffer, PDWORD pBufferLength);
 		DNS_STATUS(WINAPI *pfnDnsQuery)(PCTSTR pszName, WORD wType, DWORD Options, PIP4_ARRAY aipServers, PDNS_RECORD *ppQueryResults, PVOID *pReserved);
 		VOID(WINAPI *pfnDnsRecordListFree)(PDNS_RECORD pRecordList, DNS_FREE_TYPE FreeType);
 
@@ -328,7 +328,7 @@ void CPeerCacheFinder::ValidateDescriptorFile()
 	pValidateThread->ResumeThread();
 }
 
-void CPeerCacheFinder::AddBannedVersion(CClientVersionInfo cviVersion)
+void CPeerCacheFinder::AddBannedVersion(const CClientVersionInfo &cviVersion)
 {
 	// Thread safe, due to logic this is not really needed at this time
 	// (because no one will access the list while the ValidateThread is running),
@@ -337,7 +337,7 @@ void CPeerCacheFinder::AddBannedVersion(CClientVersionInfo cviVersion)
 	liBannedVersions.Add(cviVersion);
 }
 
-void CPeerCacheFinder::AddAllowedVersion(CClientVersionInfo cviVersion)
+void CPeerCacheFinder::AddAllowedVersion(const CClientVersionInfo &cviVersion)
 {
 	CSingleLock lock(&m_SettingsMutex, TRUE);
 	liAllowedVersions.Add(cviVersion);
@@ -395,8 +395,8 @@ BOOL CPCValidateThread::InitInstance()
 BOOL CPCValidateThread::Run()
 {
 	if (!theApp.IsClosing()) {
-		if (Valdite()) {
-			m_pOwner->m_bValdited = true;
+		if (Validate()) {
+			m_pOwner->m_bValidated = true;
 			m_pOwner->m_nPCPort = m_nPCPort;
 			if (m_pOwner->m_PCStatus == PCS_VALDATING) {
 				DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: Validating .p2pinfo succeeded")));
@@ -405,7 +405,7 @@ BOOL CPCValidateThread::Run()
 			} else
 				ASSERT(0);
 		} else {
-			m_pOwner->m_bValdited = false;
+			m_pOwner->m_bValidated = false;
 			m_pOwner->m_PCStatus = PCS_NOTVERIFIED;
 			m_pOwner->m_nPCPort = 0;
 		}
@@ -420,10 +420,9 @@ void CPCValidateThread::SetValues(CPeerCacheFinder *in_pOwner, uint32 dwPCIP, ui
 	m_pOwner = in_pOwner;
 }
 
-bool CPCValidateThread::Valdite()
+bool CPCValidateThread::Validate()
 {
-	ASSERT(m_dwPCIP != 0);
-	ASSERT(m_dwMyIP != 0);
+	ASSERT(m_dwPCIP && m_dwMyIP);
 
 	CInternetSession session;
 	CInternetFile *file = NULL;
@@ -475,10 +474,11 @@ bool CPCValidateThread::Valdite()
 			CStringA strLine(pszLine);
 			int posSeparator = strLine.Find('=', 1);
 			if (posSeparator >= 0 && strLine.GetLength() - posSeparator > 1) {
-				CStringA strTopic = strLine.Left(posSeparator).Trim();
-				CStringA strContent = strLine.Mid(posSeparator + 1).Trim();
+				CStringA strTopic(strLine, posSeparator);
+				strTopic.Trim();
+				CStringA strContent(strLine.Mid(posSeparator + 1).Trim());
 
-				//DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: Current line to be processed: %hs"),strLine);
+				//DEBUG_ONLY(theApp.QueueDebugLogLine(false, _T("PeerCache: Current line to be processed: %hs"), strLine);
 
 				///////***** CacheIP
 				if (strTopic == "CacheIP")
@@ -531,7 +531,7 @@ bool CPCValidateThread::Valdite()
 		// finish the RangeChack
 		bool bIPCheckFailed = true;
 		for (int i = 0; i != astrIPRanges.GetCount(); ++i) {
-			CStringA strCurRange = astrIPRanges[i];
+			const CStringA &strCurRange(astrIPRanges[i]);
 			int posContentSeparator = strCurRange.Find('-', 7);
 			if (!(posContentSeparator == -1 || strCurRange.GetLength() - posContentSeparator <= 7)) {
 				uint32 dwIPRangeStart = inet_addr(strCurRange.Left(posContentSeparator).Trim());
@@ -613,7 +613,7 @@ bool CPCValidateThread::Valdite()
 				uchar aucResult[SIGNATURELENGTH];
 				result.Encode(aucResult, SIGNATURELENGTH);
 
-				uchar aucHash1[16];
+				uchar aucHash1[MDX_DIGEST_SIZE];
 				for (int i = 0; i < 16; ++i)
 					aucHash1[i] = aucResult[(SIGNATURELENGTH - 1) - i];
 				bSignatureCheckResult = md4equ(MD5Sum(pachCompleteFile, nIFileSize - SIGNATURELENGTH).GetRawHash(), aucHash1);
@@ -639,12 +639,11 @@ END_MESSAGE_MAP()
 IMPLEMENT_DYNCREATE(CPCReverseDnsThread, CWinThread)
 BOOL CPCReverseDnsThread::InitInstance()
 {
-	ASSERT(m_wndAsyncResult != NULL);
-	ASSERT(m_dwIP != 0);
+	ASSERT(m_wndAsyncResult && m_dwIP);
 	InitThreadLocale();
 
 	memset(s_acDNSBuffer, 0, sizeof s_acDNSBuffer);
-	const CString &strHostname = ReverseDnsLookup(m_dwIP);
+	const CString &strHostname(ReverseDnsLookup(m_dwIP));
 	if (strHostname.IsEmpty()) {
 		in_addr IPHost;
 		// FIXME: Unable to resolve my own host - will always get the Windows Computer/Domain name. Dunno how to avoid this
@@ -656,7 +655,7 @@ BOOL CPCReverseDnsThread::InitInstance()
 		}
 	} else {
 		UINT uError;
-		CStringA strHostnameA(strHostname);
+		const CStringA strHostnameA(strHostname);
 		UINT uBufLen = sizeof(HOSTENT)	// 'hostent' structure
 			+ sizeof(char*)				// h_aliases list + NUL entry
 			+ sizeof(DWORD) * 2			// h_addr_list + NUL entry

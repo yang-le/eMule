@@ -83,11 +83,11 @@ public:
 			case FT_MEDIA_TITLE:
 			case FT_MEDIA_ALBUM:
 			case FT_MEDIA_ARTIST:
-				ASSERT( m_uIntegerOperator == ED2K_SEARCH_OP_EQUAL );
+				ASSERT(m_uIntegerOperator == ED2K_SEARCH_OP_EQUAL);
 				strDbg.Format(_T("%s=%s"), (LPCTSTR)DbgGetFileMetaTagName(m_iTag), (LPCTSTR)OptUtf8ToStr(m_str));
 				break;
 			default:
-				ASSERT( m_iTag == FT_FILENAME );
+				ASSERT(m_iTag == FT_FILENAME);
 				strDbg.Format(_T("\"%s\""), (LPCTSTR)OptUtf8ToStr(m_str));
 		}
 		return strDbg;
@@ -108,21 +108,26 @@ public:
 	{
 	}
 
-	explicit CSearchExpr(const CSearchAttr *pAttr)
+	explicit CSearchExpr(const CSearchAttr &Attr)
 	{
-		m_aExpr.Add(*pAttr);
+		m_aExpr.Add(Attr);
 	}
 
 	void Add(ESearchOperators eOperator)
 	{
-		if (eOperator == SEARCHOP_OR)
-			m_aExpr.Add(CSearchAttr(SEARCHOPTOK_OR));
-		else if (eOperator == SEARCHOP_NOT)
-			m_aExpr.Add(CSearchAttr(SEARCHOPTOK_NOT));
-		else {
-			ASSERT( eOperator == SEARCHOP_AND );
-			m_aExpr.Add(CSearchAttr(SEARCHOPTOK_AND));
+		LPCSTR pszOp;
+		switch (eOperator) {
+		case SEARCHOP_OR:
+			pszOp = SEARCHOPTOK_OR;
+			break;
+		case SEARCHOP_NOT:
+			pszOp = SEARCHOPTOK_NOT;
+			break;
+		default:
+			ASSERT(eOperator == SEARCHOP_AND);
+			pszOp = SEARCHOPTOK_AND;
 		}
+		m_aExpr.Add(CSearchAttr(pszOp));
 	}
 
 	void Add(const CSearchAttr *pAttr)

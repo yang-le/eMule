@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2010 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -21,25 +21,15 @@
 #include "QueueListCtrl.h"
 #include "ClientListCtrl.h"
 #include "DownloadClientsCtrl.h"
-
-class CTransferWnd;
-class CToolbarWnd;
+#include "TransferWnd.h"
+#include "ToolbarWnd.h"
 
 class CTransferDlg : public CFrameWnd
 {
 	DECLARE_DYNCREATE(CTransferDlg)
 
 public:
-	enum EWnd2
-	{
-		wnd2Downloading = 0,
-		wnd2Uploading = 1,
-		wnd2OnQueue = 2,
-		wnd2Clients = 3
-	};
-
 	CTransferDlg();           // protected constructor used by dynamic creation
-	virtual	~CTransferDlg();
 	CTransferWnd *m_pwndTransfer;
 
 	BOOL Create(CWnd *pParent);
@@ -55,7 +45,7 @@ public:
 	void ResetTransToolbar(bool bShowToolbar, bool bResetLists = true);
 	void SetToolTipsDelay(DWORD dwDelay);
 	void OnDisableList();
-	void UpdateListCount(EWnd2 listindex, int iCount = -1);
+	void UpdateListCount(CTransferWnd::EWnd2 listindex, int iCount = -1);
 	int	 AddCategory(const CString &newtitle, const CString &newincoming, const CString &newcomment, const CString &newautocat, bool addTab = true);
 	void ShowToolbar(bool bShow);
 
@@ -64,10 +54,9 @@ public:
 	CQueueListCtrl*			GetQueueList();
 	CClientListCtrl*		GetClientList();
 	CDownloadClientsCtrl*	GetDownloadClientsList();
-	CImageList*				GetClientIconList() const;
 
 protected:
-	CToolbarWnd *m_pwndToolbar;
+	CToolbarWnd m_wndToolbar;
 
 	virtual BOOL PreTranslateMessage(MSG *pMsg);
 	void DockToolbarWnd();

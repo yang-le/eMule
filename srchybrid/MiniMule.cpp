@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -214,23 +214,25 @@ CString CreateFilePathUrl(LPCTSTR pszFilePath, int nProtocol)
 	//	"c:\#dir\emule.exe". For any unknown reason the sequence "c:\#" causes troubles for
 	// the IE control. It does not help to escape that sequence. It always fails.
 	//
-	CString strEncodedFilePath;
+	LPCTSTR pszProtocol;
 	if (nProtocol == INTERNET_SCHEME_RES) {
 		// "res://" protocol has to be specified with 2 slashes ("res:///" does not work)
-		strEncodedFilePath = _T("res://");
+		pszProtocol = _T("res://");
 	} else {
 		ASSERT(nProtocol == INTERNET_SCHEME_FILE);
 		// "file://" protocol has to be specified with 3 slashes
-		strEncodedFilePath = _T("file:///");
+		pszProtocol = _T("file:///");
 	}
-	return strEncodedFilePath + pszFilePath;
+	CString strEncodedFilePath;
+	strEncodedFilePath.Format(_T("%s%s"), pszProtocol, pszFilePath);
+	return strEncodedFilePath;
 }
 
 BOOL CMiniMule::OnInitDialog()
 {
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	ASSERT(m_iInCallback == 0);
-	const CString &strHtmlFile = theApp.GetSkinFileItem(_T("MiniMule"), _T("HTML"));
+	const CString &strHtmlFile(theApp.GetSkinFileItem(_T("MiniMule"), _T("HTML")));
 	if (!strHtmlFile.IsEmpty()) {
 		if (_taccess(strHtmlFile, 0) == 0) {
 			m_strCurrentUrl = CreateFilePathUrl(strHtmlFile, INTERNET_SCHEME_FILE);
@@ -261,7 +263,6 @@ BOOL CMiniMule::OnInitDialog()
 	// Otherwise, we may crash due to deleting the MiniMule and OCX control while it is being created.
 
 	TRACE("%s before CDHtmlDialog::OnInitDialog()\n", __FUNCTION__);
-	ASSERT_VALID(this);
 	ASSERT(m_iInInitDialog == 0);
 	++m_iInInitDialog;
 
@@ -270,7 +271,6 @@ BOOL CMiniMule::OnInitDialog()
 	--m_iInInitDialog;
 	ASSERT(m_iInInitDialog == 0);
 	TRACE("%s after CDHtmlDialog::OnInitDialog()\n", __FUNCTION__);
-	ASSERT_VALID(this);
 
 	if (m_uWndTransparency) {
 		m_layeredWnd.AddLayeredStyle(m_hWnd);
@@ -285,26 +285,21 @@ BOOL CMiniMule::OnInitDialog()
 void CMiniMule::OnClose()
 {
 	TRACE("%s\n", __FUNCTION__);
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	ASSERT(m_iInInitDialog == 0);
 	ASSERT(m_iInCallback == 0);
 	KillAutoCloseTimer();
 
-	if (GetAutoClose()) {
-		BOOL(WINAPI *pfnAnimateWindow)(HWND hWnd, DWORD dwTime, DWORD dwFlags);
-		(FARPROC&)pfnAnimateWindow = GetProcAddress(GetModuleHandle(_T("user32")), "AnimateWindow");
-		if (pfnAnimateWindow)
-			(*pfnAnimateWindow)(m_hWnd, 200, AW_HIDE | AW_BLEND | AW_CENTER);
-	}
+	if (GetAutoClose())
+		::AnimateWindow(m_hWnd, 200, AW_HIDE | AW_BLEND | AW_CENTER);
 
 	CDHtmlDialog::OnClose();
 
 	///////////////////////////////////////////////////////////////////////////
 	// Destroy the MiniMule window
 
-	// Solution #1: Posting a close-message to main window (can not be done with 'SendMessage') may
-	// create message queue sync. problems when having high system load.
+	// Solution #1: Posting a close-message to the main window (can not be done with 'SendMessage')
+	// may create message queue sync. problems when having high system load.
 	//theApp.emuledlg->PostMessage(UM_CLOSE_MINIMULE, (WPARAM)m_bRestoreMainWnd);
 
 	// Solution #2: 'DestroyModeless' -- posts a 'destroy' message to 'this' which will have a very
@@ -325,7 +320,6 @@ void CMiniMule::OnClose()
 void CMiniMule::OnDestroy()
 {
 	TRACE("%s\n", __FUNCTION__);
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	ASSERT(m_iInInitDialog == 0);
 	ASSERT(m_iInCallback == 0);
@@ -336,7 +330,6 @@ void CMiniMule::OnDestroy()
 void CMiniMule::PostNcDestroy()
 {
 	TRACE("%s\n", __FUNCTION__);
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	ASSERT(m_iInInitDialog == 0);
 	CDHtmlDialog::PostNcDestroy();
@@ -390,7 +383,6 @@ void CMiniMule::Localize()
 
 void CMiniMule::UpdateContent(UINT uUpDatarate, UINT uDownDatarate)
 {
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	if (m_bResolveImages) {
 		static LPCTSTR const _apszConnectedImgs[] =
@@ -415,9 +407,8 @@ void CMiniMule::UpdateContent(UINT uUpDatarate, UINT uDownDatarate)
 			CComPtr<IHTMLImgElement> img;
 			GetElementInterface(_T("connectedImg"), &img);
 			if (img) {
-				CString strFilePathUrl(CreateFilePathUrl(szModulePath, INTERNET_SCHEME_RES));
-				CString strResourceURL;
-				strResourceURL.Format(_T("%s/%s"), (LPCTSTR)strFilePathUrl, _apszConnectedImgs[uIconIdx]);
+				CString strResourceURL(CreateFilePathUrl(szModulePath, INTERNET_SCHEME_RES));
+				strResourceURL.AppendFormat(_T("/%s"), _apszConnectedImgs[uIconIdx]);
 				img->put_src(CComBSTR(strResourceURL));
 			}
 		}
@@ -439,7 +430,6 @@ void CMiniMule::UpdateContent(UINT uUpDatarate, UINT uDownDatarate)
 
 STDMETHODIMP CMiniMule::TranslateUrl(DWORD /*dwTranslate*/, OLECHAR *pchURLIn, OLECHAR **ppchURLOut) noexcept
 {
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	UNREFERENCED_PARAMETER(pchURLIn);
 	TRACE(_T("%hs: %ls\n"), __FUNCTION__, pchURLIn);
@@ -449,7 +439,6 @@ STDMETHODIMP CMiniMule::TranslateUrl(DWORD /*dwTranslate*/, OLECHAR *pchURLIn, O
 
 void CMiniMule::_OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT *URL, VARIANT* /*Flags*/, VARIANT* /*TargetFrameName*/, VARIANT* /*PostData*/, VARIANT* /*Headers*/, BOOL *Cancel)
 {
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	CString strURL(V_BSTR(URL));
 	TRACE(_T("%hs: %s\n"), __FUNCTION__, (LPCTSTR)strURL);
@@ -460,22 +449,22 @@ void CMiniMule::_OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT *URL, VARIANT* /*Fl
 	Url.dwStructSize = sizeof Url;
 	Url.lpszScheme = szScheme;
 	Url.dwSchemeLength = _countof(szScheme);
-	if (::InternetCrackUrl(strURL, 0, 0, &Url) && Url.dwSchemeLength) {
-		if (Url.nScheme != INTERNET_SCHEME_UNKNOWN  // <absolute local file path>
-			&& Url.nScheme != INTERNET_SCHEME_RES	// res://...
-			&& Url.nScheme != INTERNET_SCHEME_FILE)	// file://...
-		{
+	if (::InternetCrackUrl(strURL, 0, 0, &Url) && Url.dwSchemeLength)
+		switch (Url.nScheme) {
+		case INTERNET_SCHEME_UNKNOWN:	// <absolute local file path>
+		case INTERNET_SCHEME_RES:		// res://...
+		case INTERNET_SCHEME_FILE:		// file://...
+			break;
+		default:
 			*Cancel = TRUE;
 			return;
 		}
-	}
 
 	OnBeforeNavigate(pDisp, strURL);
 }
 
 void CMiniMule::OnBeforeNavigate(LPDISPATCH pDisp, LPCTSTR pszUrl)
 {
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	TRACE(_T("%hs: %s\n"), __FUNCTION__, pszUrl);
 	CDHtmlDialog::OnBeforeNavigate(pDisp, pszUrl);
@@ -483,7 +472,6 @@ void CMiniMule::OnBeforeNavigate(LPDISPATCH pDisp, LPCTSTR pszUrl)
 
 void CMiniMule::OnNavigateComplete(LPDISPATCH pDisp, LPCTSTR pszUrl)
 {
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	TRACE(_T("%hs: %s\n"), __FUNCTION__, pszUrl);
 	// If the HTML file contains 'OnLoad' scripts, the HTML DOM is fully accessible
@@ -493,11 +481,10 @@ void CMiniMule::OnNavigateComplete(LPDISPATCH pDisp, LPCTSTR pszUrl)
 
 void CMiniMule::OnDocumentComplete(LPDISPATCH pDisp, LPCTSTR pszUrl)
 {
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	if (theApp.emuledlg->m_pMiniMule == NULL) {
 		// FIX ME
-		// apparently in some rare cases (high cpu load, fast double clicks) this function is called when the object was destroyed already
+		// apparently in some rare cases (high CPU load, fast double clicks) this function is called when the object was destroyed already
 		ASSERT(0);
 		return;
 	}
@@ -513,7 +500,7 @@ void CMiniMule::OnDocumentComplete(LPDISPATCH pDisp, LPCTSTR pszUrl)
 		TCHAR szModulePath[MAX_PATH];
 		DWORD dwModPathLen = ::GetModuleFileName(AfxGetResourceHandle(), szModulePath, _countof(szModulePath));
 		if (dwModPathLen != 0 && dwModPathLen < _countof(szModulePath)) {
-			CString strFilePathUrl(CreateFilePathUrl(szModulePath, INTERNET_SCHEME_RES));
+			const CString &strFilePathUrl(CreateFilePathUrl(szModulePath, INTERNET_SCHEME_RES));
 
 			static const struct
 			{
@@ -534,8 +521,8 @@ void CMiniMule::OnDocumentComplete(LPDISPATCH pDisp, LPCTSTR pszUrl)
 				CComPtr<IHTMLImgElement> elm;
 				GetElementInterface(_aImg[i].pszImgId, &elm);
 				if (elm) {
-					CString strResourceURL;
-					strResourceURL.Format(_T("%s/%s"), (LPCTSTR)strFilePathUrl, _aImg[i].pszResourceId);
+					CString strResourceURL(strFilePathUrl);
+					strResourceURL.AppendFormat(_T("/%s"), _aImg[i].pszResourceId);
 					elm->put_src(CComBSTR(strResourceURL));
 				}
 			}
@@ -543,8 +530,8 @@ void CMiniMule::OnDocumentComplete(LPDISPATCH pDisp, LPCTSTR pszUrl)
 			CComPtr<IHTMLTable> elm;
 			GetElementInterface(_T("table"), &elm);
 			if (elm) {
-				CString strResourceURL;
-				strResourceURL.Format(_T("%s/%s"), (LPCTSTR)strFilePathUrl, _T("TABLEBACKGND.GIF"));
+				CString strResourceURL(strFilePathUrl);
+				strResourceURL.AppendFormat(_T("/%s"), _T("TABLEBACKGND.GIF"));
 				elm->put_background(CComBSTR(strResourceURL));
 				elm.Release();
 			}
@@ -562,7 +549,7 @@ void CMiniMule::OnDocumentComplete(LPDISPATCH pDisp, LPCTSTR pszUrl)
 			// smaller than the size of that window. To have the auto-size working correctly even for
 			// very small window sizes, the size of the dialog resource should therefore be kept very small!
 			// TODO: Only in debug build: Check the size of the dialog resource right before 'OnInitDialog'.
-			CComQIPtr<IHTMLElement2> body2 = body;
+			CComQIPtr<IHTMLElement2> body2(body);
 			long lScrollWidth;
 			long lScrollHeight;
 			if (body2->get_scrollWidth(&lScrollWidth) == S_OK && lScrollWidth > 0 && body2->get_scrollHeight(&lScrollHeight) == S_OK && lScrollHeight > 0)
@@ -608,7 +595,6 @@ UINT GetTaskbarPos(HWND hwndTaskbar)
 
 void CMiniMule::AutoSizeAndPosition(CSize sizClient)
 {
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	TRACE("AutoSizeAndPosition: %dx%d\n", sizClient.cx, sizClient.cy);
 	CSize sizDesktop(::GetSystemMetrics(SM_CXSCREEN), ::GetSystemMetrics(SM_CYSCREEN));
@@ -630,7 +616,7 @@ void CMiniMule::AutoSizeAndPosition(CSize sizClient)
 	HWND hWndTaskbar = ::FindWindow(_T("Shell_TrayWnd"), NULL);
 	if (hWndTaskbar)
 		::GetWindowRect(hWndTaskbar, &rcTaskbar);
-	CPoint ptWnd;
+
 	UINT uTaskbarPos;
 #if 0
 	// Do *NOT* use 'GetTaskbarPos' (which will use 'SHAppBarMessage') -- it may cause us to crash due to internal
@@ -638,29 +624,27 @@ void CMiniMule::AutoSizeAndPosition(CSize sizClient)
 	uTaskbarPos = GetTaskbarPos(hWndTaskbar);
 #else
 	if (rcTaskbar.left <= 0) {
-		if (rcTaskbar.top <= 0) {
-			if (rcTaskbar.Width() > rcTaskbar.Height())
-				uTaskbarPos = ABE_TOP;
-			else
-				uTaskbarPos = ABE_LEFT;
-		} else
+		if (rcTaskbar.top <= 0)
+			uTaskbarPos = (rcTaskbar.Width() > rcTaskbar.Height()) ? ABE_TOP : ABE_LEFT;
+		else
 			uTaskbarPos = ABE_BOTTOM;
 	} else
 		uTaskbarPos = ABE_RIGHT;
 #endif
+	POINT ptWnd;
 	switch (uTaskbarPos) {
 	case ABE_TOP:
-		ptWnd.SetPoint(sizDesktop.cx - 8 - rcWnd.Width(), rcTaskbar.Height() + 8);
+		ptWnd = POINT{ sizDesktop.cx - 8 - rcWnd.Width(), rcTaskbar.Height() + 8 };
 		break;
 	case ABE_LEFT:
-		ptWnd.SetPoint(rcTaskbar.Width() + 8, sizDesktop.cy - 8 - rcWnd.Height());
+		ptWnd = POINT{ rcTaskbar.Width() + 8, sizDesktop.cy - 8 - rcWnd.Height() };
 		break;
 	case ABE_RIGHT:
-		ptWnd.SetPoint(sizDesktop.cx - rcTaskbar.Width() - 8 - rcWnd.Width(), sizDesktop.cy - 8 - rcWnd.Height());
+		ptWnd = POINT{ sizDesktop.cx - rcTaskbar.Width() - 8 - rcWnd.Width(), sizDesktop.cy - 8 - rcWnd.Height() };
 		break;
 	default:
 		ASSERT(uTaskbarPos == ABE_BOTTOM);
-		ptWnd.SetPoint(sizDesktop.cx - 8 - rcWnd.Width(), sizDesktop.cy - rcTaskbar.Height() - 8 - rcWnd.Height());
+		ptWnd = POINT{ sizDesktop.cx - 8 - rcWnd.Width(), sizDesktop.cy - rcTaskbar.Height() - 8 - rcWnd.Height() };
 	}
 
 	SetWindowPos(NULL, ptWnd.x, ptWnd.y, rcWnd.Width(), rcWnd.Height(), SWP_NOZORDER | SWP_SHOWWINDOW);
@@ -668,7 +652,6 @@ void CMiniMule::AutoSizeAndPosition(CSize sizClient)
 
 void CMiniMule::CreateAutoCloseTimer()
 {
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	if (m_uAutoCloseTimer == 0)
 		m_uAutoCloseTimer = SetTimer(IDT_AUTO_CLOSE_TIMER, SEC2MS(3), NULL);
@@ -676,7 +659,6 @@ void CMiniMule::CreateAutoCloseTimer()
 
 void CMiniMule::KillAutoCloseTimer()
 {
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	if (m_uAutoCloseTimer != 0) {
 		VERIFY(KillTimer(m_uAutoCloseTimer));
@@ -686,7 +668,6 @@ void CMiniMule::KillAutoCloseTimer()
 
 void CMiniMule::OnTimer(UINT_PTR nIDEvent)
 {
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	if (m_bAutoClose && nIDEvent == m_uAutoCloseTimer) {
 		ASSERT(m_iInInitDialog == 0);
@@ -706,22 +687,19 @@ void CMiniMule::OnTimer(UINT_PTR nIDEvent)
 
 void CMiniMule::RestoreMainWindow()
 {
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	ASSERT(m_iInInitDialog == 0);
-	if (!theApp.IsClosing() && !theApp.emuledlg->IsWindowVisible()) {
+	if (!theApp.IsClosing() && !theApp.emuledlg->IsWindowVisible())
 		if (!theApp.emuledlg->IsPreferencesDlgOpen()) {
 			KillAutoCloseTimer();
 			m_bRestoreMainWnd = true;
 			PostMessage(WM_CLOSE);
 		} else
 			MessageBeep(MB_OK);
-	}
 }
 
 void CMiniMule::OnNcLButtonDblClk(UINT nHitTest, CPoint point)
 {
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	ASSERT(m_iInInitDialog == 0);
 	CDHtmlDialog::OnNcLButtonDblClk(nHitTest, point);
@@ -731,7 +709,6 @@ void CMiniMule::OnNcLButtonDblClk(UINT nHitTest, CPoint point)
 
 HRESULT CMiniMule::OnRestoreMainWindow(IHTMLElement* /*pElement*/)
 {
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	ASSERT(m_iInInitDialog == 0);
 	CCounter cc(m_iInCallback);
@@ -741,7 +718,6 @@ HRESULT CMiniMule::OnRestoreMainWindow(IHTMLElement* /*pElement*/)
 
 HRESULT CMiniMule::OnOpenIncomingFolder(IHTMLElement* /*pElement*/)
 {
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	ASSERT(m_iInInitDialog == 0);
 	CCounter cc(m_iInCallback);
@@ -755,7 +731,6 @@ HRESULT CMiniMule::OnOpenIncomingFolder(IHTMLElement* /*pElement*/)
 
 HRESULT CMiniMule::OnOptions(IHTMLElement* /*pElement*/)
 {
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	ASSERT(m_iInInitDialog == 0);
 	CCounter cc(m_iInCallback);
@@ -772,7 +747,6 @@ HRESULT CMiniMule::OnOptions(IHTMLElement* /*pElement*/)
 
 STDMETHODIMP CMiniMule::ShowContextMenu(DWORD /*dwID*/, POINT* /*ppt*/, IUnknown* /*pcmdtReserved*/, IDispatch* /*pdispReserved*/) noexcept
 {
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	ASSERT(m_iInInitDialog == 0);
 	CCounter cc(m_iInCallback);
@@ -782,13 +756,12 @@ STDMETHODIMP CMiniMule::ShowContextMenu(DWORD /*dwID*/, POINT* /*ppt*/, IUnknown
 
 STDMETHODIMP CMiniMule::TranslateAccelerator(LPMSG lpMsg, const GUID* /*pguidCmdGroup*/, DWORD /*nCmdID*/) noexcept
 {
-	ASSERT_VALID(this);
 	ASSERT(GetCurrentThreadId() == g_uMainThreadId);
 	ASSERT(m_iInInitDialog == 0);
 	CCounter cc(m_iInCallback);
 	// Allow only some basic keys
 	//
-	//TODO: Allow the ESC key (for closing the window); does currently not work properly because
+	//TODO: Allow the ESC key (for closing the window); currently does not work properly because
 	// we don't get a callback that the window was just hidden(!) by MSHTML.
 	switch (lpMsg->message) {
 	case WM_CHAR:

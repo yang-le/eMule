@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -25,7 +25,7 @@
 
 #pragma once
 #include "AsyncSocketEx.h"
-#include <cryptopp/integer.h>
+#include "cryptopp/integer.h"
 
 #define ERR_WRONGHEADER				0x01
 #define ERR_TOOBIG					0x02
@@ -94,7 +94,7 @@ public:
 	uint8	m_dbgbyEncryptionMethodSet;
 
 protected:
-	int SendOv(CArray<WSABUF> &raBuffer, LPWSAOVERLAPPED lpOverlapped);
+	int SendOv(CArray<WSABUF> &aBuffer, LPWSAOVERLAPPED lpOverlapped);
 	virtual void	OnError(int nErrorCode) = 0;
 	CString			DbgGetIPString();
 	void			CryptPrepareSendData(uchar *pBuffer, uint32 nLen);

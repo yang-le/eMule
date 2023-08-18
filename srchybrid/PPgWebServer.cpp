@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -337,12 +337,12 @@ void CPPgWebServer::OnDataChange()
 BOOL CPPgWebServer::OnApply()
 {
 	if (m_bModified) {
-		CString sBuf;
 		bool bUPnP = thePrefs.GetWSUseUPnP();
 		bool bWSIsEnabled = IsDlgButtonChecked(IDC_WSENABLED) != 0;
 		// get and check template file existence...
+		CString sBuf;
 		GetDlgItemText(IDC_TMPLPATH, sBuf);
-		if (bWSIsEnabled && !PathFileExists(sBuf)) {
+		if (bWSIsEnabled && !::PathFileExists(sBuf)) {
 			CString buffer;
 			buffer.Format(GetResString(IDS_WEB_ERR_CANTLOAD), (LPCTSTR)sBuf);
 			AfxMessageBox(buffer, MB_OK);
@@ -357,7 +357,7 @@ BOOL CPPgWebServer::OnApply()
 		bool bHTTPS = IsDlgButtonChecked(IDC_WEB_HTTPS) != 0;
 		GetDlgItemText(IDC_CERTPATH, sBuf);
 		if (bWSIsEnabled && bHTTPS) {
-			if (!PathFileExists(sBuf)) {
+			if (!::PathFileExists(sBuf)) {
 				AfxMessageBox(GetResString(IDS_CERT_NOT_FOUND), MB_OK);
 				return FALSE;
 			}
@@ -368,7 +368,7 @@ BOOL CPPgWebServer::OnApply()
 
 		GetDlgItemText(IDC_KEYPATH, sBuf);
 		if (bWSIsEnabled && bHTTPS) {
-			if (!PathFileExists(sBuf)) {
+			if (!::PathFileExists(sBuf)) {
 				AfxMessageBox(GetResString(IDS_KEY_NOT_FOUND), MB_OK);
 				return FALSE;
 			}
@@ -510,7 +510,7 @@ void CPPgWebServer::OnBnClickedTmplbrowse()
 //create cert.key and cert.crt in config directory
 void CPPgWebServer::OnGenerateCertificate()
 {
-	if (InterlockedExchange(&m_generating, 1))
+	if (::InterlockedExchange(&m_generating, 1))
 		return;
 	CWaitCursor curWaiting;
 
@@ -543,7 +543,7 @@ void CPPgWebServer::OnGenerateCertificate()
 	} else {
 		LogError(_T("Certificate creation failed"));
 		AfxMessageBox(GetResString(IDS_CERT_ERR_CREATE));
-		InterlockedExchange(&m_generating, 0); //re-enable only if failed
+		::InterlockedExchange(&m_generating, 0); //re-enable only if failed
 	}
 }
 
@@ -551,7 +551,8 @@ void CPPgWebServer::OnBnClickedCertbrowse()
 {
 	CString strCert;
 	GetDlgItemText(IDC_CERTPATH, strCert);
-	CString buffer(GetResString(IDS_CERTIFICATE) + _T(" (*.crt)|*.crt|All Files (*.*)|*.*||"));
+	CString buffer(GetResString(IDS_CERTIFICATE));
+	buffer += _T(" (*.crt)|*.crt|All Files (*.*)|*.*||");
 	if (DialogBrowseFile(buffer, buffer, strCert))
 		SetDlgItemText(IDC_CERTPATH, buffer);
 	if (buffer.CompareNoCase(strCert) != 0)
@@ -562,7 +563,8 @@ void CPPgWebServer::OnBnClickedKeybrowse()
 {
 	CString strKey;
 	GetDlgItemText(IDC_KEYPATH, strKey);
-	CString buffer(GetResString(IDS_KEY) + _T(" (*.key)|*.key|All Files (*.*)|*.*||"));
+	CString buffer(GetResString(IDS_KEY));
+	buffer += _T(" (*.key)|*.key|All Files (*.*)|*.*||");
 	if (DialogBrowseFile(buffer, buffer, strKey))
 		SetDlgItemText(IDC_KEYPATH, buffer);
 	if (buffer.CompareNoCase(strKey) != 0)

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -83,7 +83,7 @@ BOOL CFileDetailDialogInfo::OnInitDialog()
 
 	// no need to refresh data explicitly because
 	// 'OnSetActive' will be called right after 'OnInitDialog'
-	
+
 	// start timer for calling 'RefreshData'
 	VERIFY((m_timer = SetTimer(IDT_REFRESH, SEC2MS(5), NULL)) != 0);
 
@@ -150,7 +150,7 @@ void CFileDetailDialogInfo::RefreshData()
 		struct tm tmTemp;
 		struct tm *ptimLastSeenComplete = file->lastseencomplete.GetLocalTm(&tmTemp);
 		if (file->lastseencomplete == 0 || ptimLastSeenComplete == NULL)
-			str.Format(GetResString(IDS_NEVER));
+			str = GetResString(IDS_NEVER);
 		else {
 			str.Format(_T("%s   ") + GetResString(IDS_TIMEBEFORE)
 				, (LPCTSTR)file->lastseencomplete.Format(thePrefs.GetDateTimeFormat())
@@ -195,32 +195,34 @@ void CFileDetailDialogInfo::RefreshData()
 		}
 
 		// file type
-		CString ext;
-		bool showwarning = false;
-		int pos = fname.ReverseFind(_T('.'));
-		if (fname.ReverseFind(_T('\\')) < pos)
-			ext = fname.Mid(pos + 1).MakeUpper();
+		LPCTSTR pDot = ::PathFindExtension(fname);
+		CString szExt(pDot + static_cast<int>(*pDot != _T('\0'))); //skip the dot
+		szExt.MakeUpper();
 
+		bool showwarning = false;
 		EFileType bycontent = GetFileTypeEx(file, false, true);
 		if (bycontent != FILETYPE_UNKNOWN) {
 			str.Format(_T("%s  (%s)"), (LPCTSTR)GetFileTypeName(bycontent), (LPCTSTR)GetResString(IDS_VERIFIED));
 
-			switch (IsExtensionTypeOf(bycontent, ext)) {
+			UINT uid;
+			switch (IsExtensionTypeOf(bycontent, szExt)) {
 			case -1:
 				showwarning = true;
-				str.AppendFormat(_T(" - %s: %s"), (LPCTSTR)GetResString(IDS_INVALIDFILEEXT), (LPCTSTR)ext);
+				uid = IDS_INVALIDFILEEXT;
 				break;
 			case 0:
-				str.AppendFormat(_T(" - %s: %s"), (LPCTSTR)GetResString(IDS_UNKNOWNFILEEXT), (LPCTSTR)ext);
+				uid = IDS_UNKNOWNFILEEXT;
+				break;
+			default:
+				uid = 0;
 			}
-		} else {
-			// not verified
-			if (pos >= 0) {
-				str = fname.Mid(pos + 1).MakeUpper();
-				str.AppendFormat(_T("  (%s)"), (LPCTSTR)GetResString(IDS_UNVERIFIED));
-			} else
-				str = GetResString(IDS_UNKNOWN);
-		}
+			if (uid)
+				str.AppendFormat(_T(" - %s: %s"), (LPCTSTR)GetResString(uid), (LPCTSTR)szExt);
+		} else if (!szExt.IsEmpty())
+			str.Format(_T("%s  (%s)"), (LPCTSTR)szExt, (LPCTSTR)GetResString(IDS_UNVERIFIED));
+		else
+			str = GetResString(IDS_UNKNOWN);
+
 		m_bShowFileTypeWarning = showwarning;
 		SetDlgItemText(IDC_FD_X11, str);
 	} else {
@@ -302,13 +304,13 @@ void CFileDetailDialogInfo::RefreshData()
 
 	SetDlgItemText(IDC_TRANSFERRED, CastItoXBytes(uTransferred));
 
-	str.Format(_T("%s (%.1f%%)"), (LPCTSTR)CastItoXBytes(uCompleted), uFileSize != 0 ? (uCompleted * 100.0 / uFileSize) : 0.0);
+	str.Format(_T("%s (%.1f%%)"), (LPCTSTR)CastItoXBytes(uCompleted), (uFileSize != 0 ? uCompleted * 100.0 / uFileSize : 0.0));
 	SetDlgItemText(IDC_COMPLSIZE, str);
 
-	str.Format(_T("%s (%.1f%%)"), (LPCTSTR)CastItoXBytes(uCorrupted), uTransferred != 0 ? (uCorrupted * 100.0 / uTransferred) : 0.0);
+	str.Format(_T("%s (%.1f%%)"), (LPCTSTR)CastItoXBytes(uCorrupted), (uTransferred != 0 ? uCorrupted * 100.0 / uTransferred : 0.0));
 	SetDlgItemText(IDC_CORRUPTED, str);
 
-	str.Format(_T("%s (%.1f%%)"), (LPCTSTR)CastItoXBytes(uFileSize - uCompleted), uFileSize != 0 ? ((uFileSize - uCompleted) * 100.0 / uFileSize) : 0.0);
+	str.Format(_T("%s (%.1f%%)"), (LPCTSTR)CastItoXBytes(uFileSize - uCompleted), (uFileSize != 0 ? (uFileSize - uCompleted) * 100.0 / uFileSize : 0.0));
 	SetDlgItemText(IDC_REMAINING, str);
 
 	str.Format(_T("%u %s"), uRecoveredParts, (LPCTSTR)GetResString(IDS_FD_PARTS));

@@ -472,7 +472,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Глобальный (серверы) "
     IDS_METHOD              "Метод"
     IDS_UNDO                "Вернуть"
-    IDS_DAYLY               "Ежедневно"
+    IDS_DAILY               "Ежедневно"
 END
 
 STRINGTABLE
@@ -1499,7 +1499,7 @@ BEGIN
     IDS_EM_HELP             "&Помощь"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Не добавлен в список друзей.\r\n\r\nУже есть друг с таким же IP и портом."
-    IDS_DYNUP               "'Умная' отдача"
+    IDS_DYNUP               "'Умная' отдача (не рекомендовано)"
     IDS_KADOVERHEAD         "Сеть Kad (пакеты): %s (%s)"
     IDS_FIND                "Поиск..."
     IDS_LOG_BANNED_CLIENTS  "Лог забаненных клиентов"

@@ -1,5 +1,5 @@
 /*
-Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
+Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -23,7 +23,7 @@ There is going to be a new forum created just for the Kademlia side of the clien
 If you feel there is an error or a way to improve something, please
 post it in the forum first and let us look at it. If it is a real improvement,
 it will be added to the official client. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form.
+what all it does, can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 their client on the eMule forum.
 */
@@ -130,7 +130,7 @@ void CKademlia::Start(CPrefs *pPrefs)
 		// Init bootstrap time.
 		m_tBootstrap = 0;
 		// Init our random seed.
-		srand((UINT)tNow);
+		//srand((unsigned)tNow); not needed, KAD is in the main thread
 		// Create our Kad objects.
 		m_pInstance = new CKademlia();
 		m_pInstance->m_pPrefs = pPrefs;
@@ -235,7 +235,8 @@ void CKademlia::Process()
 		CContact *pContact = GetRoutingZone()->GetRandomContact(3, KADEMLIA_VERSION6_49aBETA);
 		if (pContact != NULL) {
 			DEBUG_ONLY(DebugLog(_T("Requesting our external port from %s"), (LPCTSTR)ipstr(pContact->GetNetIP())));
-			GetUDPListener()->SendNullPacket(KADEMLIA2_PING, pContact->GetIPAddress(), pContact->GetUDPPort(), pContact->GetUDPKey(), &pContact->GetClientID());
+			const CUInt128 uTargetID(pContact->GetClientID());
+			GetUDPListener()->SendNullPacket(KADEMLIA2_PING, pContact->GetIPAddress(), pContact->GetUDPPort(), pContact->GetUDPKey(), &uTargetID);
 		} else
 			DEBUG_ONLY(DebugLogWarning(_T("No valid client for requesting external port available")));
 		m_tExternPortLookup = tNow + 15;
@@ -291,7 +292,8 @@ void CKademlia::Process()
 			m_tBootstrap = tNow;
 			m_bootstrapping = true;
 			DebugLog(_T("Trying to Bootstrap Kad from %s, Distance: %s, Version: %u, %u Contacts left"), (LPCTSTR)ipstr(pContact->GetNetIP()), (LPCTSTR)pContact->GetDistance().ToHexString(), pContact->GetVersion(), s_liBootstrapList.GetCount());
-			m_pInstance->m_pUDPListener->Bootstrap(pContact->GetIPAddress(), pContact->GetUDPPort(), pContact->GetVersion(), &pContact->GetClientID());
+			const CUInt128 uTargetID(pContact->GetClientID());
+			m_pInstance->m_pUDPListener->Bootstrap(pContact->GetIPAddress(), pContact->GetUDPPort(), pContact->GetVersion(), &uTargetID);
 			delete pContact;
 			theApp.emuledlg->kademliawnd->StartUpdateContacts();
 		} else if (m_bootstrapping) {
@@ -330,12 +332,8 @@ bool CKademlia::IsFirewalled()
 
 uint32 CKademlia::GetKademliaUsers(bool bNewMethod)
 {
-	if (m_pInstance && m_pInstance->m_pPrefs) {
-		if (bNewMethod)
-			return CalculateKadUsersNew();
-		else
-			return m_pInstance->m_pPrefs->GetKademliaUsers();
-	}
+	if (m_pInstance && m_pInstance->m_pPrefs)
+		return bNewMethod ? CalculateKadUsersNew() : m_pInstance->m_pPrefs->GetKademliaUsers();
 	return 0;
 }
 
@@ -556,7 +554,7 @@ uint32 CKademlia::CalculateKadUsersNew()
 	// produce a usable number. To avoid drifts caused by a single (or more) really close or really
 	// far away hits, we do use median-average instead
 
-	// doesn't works well if we have no files to index and nothing to download and the numbers seems
+	// doesn't work well if we have no files to index and nothing to download and the numbers seems
 	// to be a bit too low compared to our other method. So lets stay with the old one for now,
 	// but keeps this here as an alternative
 
@@ -564,7 +562,7 @@ uint32 CKademlia::CalculateKadUsersNew()
 		return 0;
 
 	CList<uint32, uint32> liMedian;
-	for (POSITION pos = m_liStatsEstUsersProbes.GetHeadPosition(); pos != NULL; ) {
+	for (POSITION pos = m_liStatsEstUsersProbes.GetHeadPosition(); pos != NULL;) {
 		uint32 nProbe = m_liStatsEstUsersProbes.GetNext(pos);
 		bool bInserted = false;
 		for (POSITION pos2 = liMedian.GetHeadPosition(); pos2 != NULL;) {
@@ -584,7 +582,7 @@ uint32 CKademlia::CalculateKadUsersNew()
 		liMedian.RemoveTail();
 	}
 	uint64 nMedian = 0;
-	for (POSITION pos = liMedian.GetHeadPosition(); pos != NULL; )
+	for (POSITION pos = liMedian.GetHeadPosition(); pos != NULL;)
 		nMedian += liMedian.GetNext(pos);
 	nMedian /= liMedian.GetCount();
 

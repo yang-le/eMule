@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -37,19 +37,19 @@ void CToolBarCtrlX::DeleteAllButtons()
 
 DWORD CToolBarCtrlX::GetBtnStyle(int id)
 {
-	TBBUTTONINFO tbbi = {};
+	TBBUTTONINFO tbbi;
 	tbbi.cbSize = (UINT)sizeof tbbi;
 	tbbi.dwMask = TBIF_STYLE;
-	(void)GetButtonInfo(id, &tbbi);
-	return tbbi.fsStyle;
+	return (GetButtonInfo(id, &tbbi) < 0 ? 0 : tbbi.fsStyle);
 }
 
 DWORD CToolBarCtrlX::AddBtnStyle(int id, DWORD dwStyle)
 {
-	TBBUTTONINFO tbbi = {};
+	TBBUTTONINFO tbbi;
 	tbbi.cbSize = (UINT)sizeof tbbi;
 	tbbi.dwMask = TBIF_STYLE;
-	(void)GetButtonInfo(id, &tbbi);
+	if (GetButtonInfo(id, &tbbi) < 0)
+		return 0;
 	DWORD dwOldStyle = tbbi.fsStyle;
 	tbbi.fsStyle |= dwStyle;
 	SetButtonInfo(id, &tbbi);
@@ -58,10 +58,11 @@ DWORD CToolBarCtrlX::AddBtnStyle(int id, DWORD dwStyle)
 
 DWORD CToolBarCtrlX::RemoveBtnStyle(int id, DWORD dwStyle)
 {
-	TBBUTTONINFO tbbi = {};
+	TBBUTTONINFO tbbi;
 	tbbi.cbSize = (UINT)sizeof tbbi;
 	tbbi.dwMask = TBIF_STYLE;
-	(void)GetButtonInfo(id, &tbbi);
+	if (GetButtonInfo(id, &tbbi) < 0)
+		return 0;
 	DWORD dwOldStyle = tbbi.fsStyle;
 	tbbi.fsStyle &= ~dwStyle;
 	SetButtonInfo(id, &tbbi);
@@ -70,11 +71,10 @@ DWORD CToolBarCtrlX::RemoveBtnStyle(int id, DWORD dwStyle)
 
 int CToolBarCtrlX::GetBtnWidth(int nID)
 {
-	TBBUTTONINFO tbbi = {};
+	TBBUTTONINFO tbbi;
 	tbbi.cbSize = (UINT)sizeof tbbi;
 	tbbi.dwMask = TBIF_SIZE;
-	(void)GetButtonInfo(nID, &tbbi);
-	return tbbi.cx;
+	return (GetButtonInfo(nID, &tbbi) < 0 ? 0 : tbbi.cx);
 }
 
 void CToolBarCtrlX::SetBtnWidth(int nID, int iWidth)
@@ -89,19 +89,18 @@ void CToolBarCtrlX::SetBtnWidth(int nID, int iWidth)
 CString CToolBarCtrlX::GetBtnText(int nID)
 {
 	TCHAR szString[512];
-	TBBUTTONINFO tbbi = {};
+	TBBUTTONINFO tbbi;
 	tbbi.cbSize = (UINT)sizeof tbbi;
 	tbbi.dwMask = TBIF_TEXT;
 	tbbi.pszText = szString;
 	tbbi.cchText = _countof(szString);
-	GetButtonInfo(nID, &tbbi);
-	szString[_countof(szString) - 1] = _T('\0');
-	return szString;
+	szString[GetButtonInfo(nID, &tbbi) < 0 ? 0 : _countof(szString) - 1] = _T('\0');
+	return CString(szString);
 }
 
 void CToolBarCtrlX::SetBtnText(int nID, LPCTSTR pszString)
 {
-	TBBUTTONINFO tbbi = {};
+	TBBUTTONINFO tbbi;
 	tbbi.cbSize = (UINT)sizeof tbbi;
 	tbbi.dwMask = TBIF_TEXT;
 	tbbi.pszText = const_cast<LPTSTR>(pszString);
@@ -118,7 +117,6 @@ void CToolBarCtrlX::SetPadding(CSize sizPadding)
 {
 	SendMessage(TB_SETPADDING, 0, MAKELPARAM(sizPadding.cx, sizPadding.cy));
 }
-
 
 void CToolBarCtrlX::AdjustFont(int iMaxPointSize, CSize sizButton)
 {
@@ -176,12 +174,5 @@ void CToolBarCtrlX::RecalcLayout()
 
 int CToolBarCtrlX::AddString(const CString &strToAdd)
 {
-	int nLen = strToAdd.GetLength();
-	TCHAR *apChar = new TCHAR[nLen + 2];
-	_tcsncpy(apChar, strToAdd, nLen);
-	apChar[nLen] = _T('\0');
-	apChar[nLen + 1] = _T('\0');
-	nLen = AddStrings(apChar);
-	delete[] apChar;
-	return nLen;
+	return AddStrings(strToAdd + _T('\0')); //2 NULs required
 }

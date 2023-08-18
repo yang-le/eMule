@@ -464,7 +464,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Global (Server)"
     IDS_METHOD              "Tipul căutării"
     IDS_UNDO                "Anulează"
-    IDS_DAYLY               "zilnic"
+    IDS_DAILY               "zilnic"
 END
 
 STRINGTABLE
@@ -1453,7 +1453,7 @@ BEGIN
     IDS_EM_HELP             "&Ajutor"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Slot prieten neadăugat.\r\n\r\nExistă deja un prieten cu acelaşi IP şi port."
-    IDS_DYNUP               "Upload dinamic"
+    IDS_DYNUP               "Upload dinamic (nerecomandat)"
     IDS_KADOVERHEAD         "Adiţional Kad (Pachete): %s (%s)"
     IDS_FIND                "Caută..."
     IDS_LOG_BANNED_CLIENTS  "Loghează clienţii alungaţi"

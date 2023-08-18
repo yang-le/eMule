@@ -80,17 +80,12 @@ BOOL CNetworkInfoDlg::OnInitDialog()
 	}
 
 	CreateNetworkInfo(m_info, cfDef, cfBold, true);
-	m_info.SetSel(0, 0);
-	m_info.HideSelection(TRUE, FALSE);
-	m_info.SetOptions(ECOOP_OR, ECO_SAVESEL);
-
+	DisableAutoSelect(m_info);
 	return TRUE;
 }
 
 void CreateNetworkInfo(CRichEditCtrlX &rCtrl, CHARFORMAT &rcfDef, CHARFORMAT &rcfBold, bool bFullInfo)
 {
-	CString buffer;
-
 	if (bFullInfo) {
 		///////////////////////////////////////////////////////////////////////////
 		// Ports Info
@@ -134,6 +129,7 @@ void CreateNetworkInfo(CRichEditCtrlX &rCtrl, CHARFORMAT &rcfDef, CHARFORMAT &rc
 		rCtrl << GetResString(IDS_PW_FILES) << _T(":\t") << GetFormatedUInt(uTotalFile) << _T("\r\n");
 	}
 
+	CString buffer;
 	if (theApp.serverconnect->IsConnected()) {
 		rCtrl << GetResString(IDS_IP) << _T(":") << GetResString(IDS_PORT) << _T(":");
 		if (theApp.serverconnect->IsLowID() && theApp.GetPublicIP(true) == 0)
@@ -278,9 +274,8 @@ void CreateNetworkInfo(CRichEditCtrlX &rCtrl, CHARFORMAT &rcfDef, CHARFORMAT &rc
 		}
 
 		if (bFullInfo) {
-
 			CString sKadID;
-			Kademlia::CKademlia::GetPrefs()->GetKadID(&sKadID);
+			Kademlia::CKademlia::GetPrefs()->GetKadID(sKadID);
 			rCtrl << GetResString(IDS_CD_UHASH) << _T("\t") << sKadID << _T("\r\n");
 
 			rCtrl << GetResString(IDS_UUSERS) << _T(":\t") << GetFormatedUInt(Kademlia::CKademlia::GetKademliaUsers()) << _T(" (Experimental: ") << GetFormatedUInt(Kademlia::CKademlia::GetKademliaUsers(true)) << _T(")\r\n");
@@ -310,15 +305,15 @@ void CreateNetworkInfo(CRichEditCtrlX &rCtrl, CHARFORMAT &rcfDef, CHARFORMAT &rc
 	rCtrl << GetResString(IDS_STATUS) << _T(":\t");
 	rCtrl << GetResString(thePrefs.GetWSIsEnabled() ? IDS_ENABLED : IDS_DISABLED) << _T("\r\n");
 	if (thePrefs.GetWSIsEnabled()) {
-		CString count;
-		count.Format(_T("%d %s"), static_cast<int>(theApp.webserver->GetSessionCount()), (LPCTSTR)GetResString(IDS_ACTSESSIONS));
-		rCtrl << _T("\t") << count << _T("\r\n");
-		CString strHostname;
+		CString sTemp;
+		sTemp.Format(_T("%d %s"), static_cast<int>(theApp.webserver->GetSessionCount()), (LPCTSTR)GetResString(IDS_ACTSESSIONS));
+		rCtrl << _T("\t") << sTemp << _T("\r\n"); //count
+
 		if (thePrefs.GetYourHostname().IsEmpty() || thePrefs.GetYourHostname().Find(_T('.')) < 0)
-			strHostname = ipstr(theApp.serverconnect->GetLocalIP());
+			sTemp = ipstr(theApp.serverconnect->GetLocalIP());
 		else
-			strHostname = thePrefs.GetYourHostname();
+			sTemp = thePrefs.GetYourHostname();
 		rCtrl << _T("URL:\t") << (thePrefs.GetWebUseHttps() ? _T("https://") : _T("http://"));
-		rCtrl << strHostname << _T(":") << thePrefs.GetWSPort() << _T("/\r\n");
+		rCtrl << sTemp << _T(":") << thePrefs.GetWSPort() << _T("/\r\n"); //web interface host name
 	}
 }

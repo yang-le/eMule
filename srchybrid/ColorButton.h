@@ -159,15 +159,15 @@ protected:
 	static void DrawArrow(CDC *pDC,
 						  LPRECT pRect,
 						  int iDirection = 0,
-						  COLORREF clrArrow = RGB(0,0,0));
+						  COLORREF clrArrow = RGB(0, 0, 0));
 
 
 	DECLARE_MESSAGE_MAP()
 
 	COLORREF m_Color;
 	COLORREF m_DefaultColor;
-	CString m_strDefaultText;
-	CString m_strCustomText;
+	CString	m_strDefaultText;
+	CString	m_strCustomText;
 	BOOL	m_bPopupActive;
 	BOOL	m_bTrackSelection;
 

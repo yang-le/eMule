@@ -473,7 +473,7 @@ BEGIN
     IDS_GLOBALSEARCH        "グローバル(サーバー)"
     IDS_METHOD              "検索方法"
     IDS_UNDO                "元に戻す"
-    IDS_DAYLY               "毎日"
+    IDS_DAILY               "毎日"
 END
 
 STRINGTABLE
@@ -1485,7 +1485,7 @@ BEGIN
     IDS_EM_HELP             "ヘルプ"
     IDS_WRN_FRIENDDUPLIPPORT
                             "友達は追加されませんでした\r\n\r\n既に同じIPアドレスとポートを持った友達が存在します"
-    IDS_DYNUP               "アップロード速度感知"
+    IDS_DYNUP               "アップロード速度感知 (非推奨)"
     IDS_KADOVERHEAD         "Kadオーバーヘッド(パケット): %s (%s)"
     IDS_FIND                "検索..."
     IDS_LOG_BANNED_CLIENTS  "BANしたクライアントのログを採る"

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -17,10 +17,9 @@
 #include "stdafx.h"
 #include "emule.h"
 #include "DirectDownloadDlg.h"
-#include "OtherFunctions.h"
+#include "ED2KLink.h"
 #include "emuleDlg.h"
 #include "DownloadQueue.h"
-#include "ED2KLink.h"
 #include "Preferences.h"
 
 #ifdef _DEBUG
@@ -88,14 +87,14 @@ void CDirectDownloadDlg::OnOK()
 		const CString &sToken(strLinks.Tokenize(_T(" \t\r\n"), iPos)); //tokenize by whitespace
 		if (sToken.IsEmpty())
 			break;
-		bool bSlash = (sToken.Right(1) == _T("/"));
+		bool bSlash = (sToken[sToken.GetLength() - 1] == _T('/'));
 		CED2KLink *pLink = NULL;
 		try {
 			pLink = CED2KLink::CreateLinkFromUrl(bSlash ? sToken : sToken + _T('/'));
 			if (pLink) {
 				if (pLink->GetKind() != CED2KLink::kFile)
-					throw CString(_T("bad link"));
-				theApp.downloadqueue->AddFileLinkToDownload(pLink->GetFileLink(), thePrefs.GetCatCount() ? m_cattabs.GetCurSel() : 0);
+					throwCStr(_T("bad link"));
+				theApp.downloadqueue->AddFileLinkToDownload(*pLink->GetFileLink(), thePrefs.GetCatCount() ? m_cattabs.GetCurSel() : 0);
 				delete pLink;
 				pLink = NULL;
 			}
@@ -163,13 +162,11 @@ void CDirectDownloadDlg::UpdateCatTabs()
 {
 	int oldsel = m_cattabs.GetCurSel();
 	m_cattabs.DeleteAllItems();
-	for (int ix = 0; ix < thePrefs.GetCatCount(); ++ix) {
-		CString label = (ix == 0) ? GetResString(IDS_ALL) : thePrefs.GetCategory(ix)->strTitle;
-		label.Replace(_T("&"), _T("&&"));
-		m_cattabs.InsertItem(ix, label);
+	for (INT_PTR i = thePrefs.GetCatCount(); --i >= 0;) {
+		CString label(i ? thePrefs.GetCategory(i)->strTitle : GetResString(IDS_ALL));
+		DupAmpersand(label);
+		m_cattabs.InsertItem(0, label);
 	}
-	if (oldsel >= m_cattabs.GetItemCount() || oldsel == -1)
-		oldsel = 0;
 
-	m_cattabs.SetCurSel(oldsel);
+	m_cattabs.SetCurSel(oldsel >= 0 && oldsel < m_cattabs.GetItemCount() ? oldsel : 0);
 }

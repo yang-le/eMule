@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -66,20 +66,12 @@ public:
 			, uint32 dwLastChatted, LPCTSTR pszName, uint32 dwHasHash);
 	~CFriend();
 
-	uchar	m_abyUserhash[16];
-
-	time_t	m_dwLastSeen;
-	time_t	m_dwLastChatted;
-	CString m_strName;
-	uint32	m_dwLastUsedIP;
-	uint16	m_nLastUsedPort;
-
 	CUpDownClient*	GetClientForChatSession();
 	CUpDownClient*	GetLinkedClient(bool bValidCheck = false) const;
 	void			SetLinkedClient(CUpDownClient *linkedClient);
 
-	void	LoadFromFile(CFileDataIO *file);
-	void	WriteToFile(CFileDataIO *file);
+	void	LoadFromFile(CFileDataIO &file);
+	void	WriteToFile(CFileDataIO &file);
 
 	bool	TryToConnect(CFriendConnectionListener *pConnectionReport);
 	void	UpdateFriendConnectionState(EFriendConnectReport eEvent);
@@ -97,13 +89,20 @@ public:
 	bool	HasUserhash() const;
 	bool	HasKadID() const;
 
+	uchar	m_abyUserhash[MDX_DIGEST_SIZE];
+
+	time_t	m_dwLastSeen;
+	time_t	m_dwLastChatted;
+	CString m_strName;
+	uint32	m_dwLastUsedIP;
+	uint16	m_nLastUsedPort;
 private:
-	uchar	m_abyKadID[16];
+	void	init();
+
+	uchar	m_abyKadID[MDX_DIGEST_SIZE];
 	CTypedPtrList<CPtrList, CFriendConnectionListener*> m_liConnectionReport;
 	CUpDownClient *m_LinkedClient;
+	DWORD	m_dwLastKadSearch;
 	EFriendConnectState	m_FriendConnectState;
-	uint32	m_dwLastKadSearch;
 	bool	m_friendSlot;
-
-	void	init();
 };

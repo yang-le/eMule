@@ -66,12 +66,12 @@ class /*AFX_EXT_CLASS*/ CTreePropSheet : public CPropertySheet
 {
 	DECLARE_DYNAMIC(CTreePropSheet)
 
+	void init();
 // Construction/Destruction
 public:
 	CTreePropSheet();
 	explicit CTreePropSheet(UINT nIDCaption, CWnd *pParentWnd = NULL, UINT iSelectPage = 0);
 	explicit CTreePropSheet(LPCTSTR pszCaption, CWnd *pParentWnd = NULL, UINT iSelectPage = 0);
-	virtual	~CTreePropSheet() = default;
 
 // Operations
 public:
@@ -194,7 +194,7 @@ public:
 	image as an icon from the given image list and assign the
 	icon-handle to the hIcon property of the pages PROPSHEETPAGE
 	structure (m_psp) and modify the structures flags, so that the
-	image will be recognized.
+	image will be recognised.
 
 	You need to call this method for a page, before adding the page
 	to a property sheet.
@@ -323,7 +323,7 @@ protected:
 	method will return "Appearance" and after the call strRest will
 	be "Toolbars::Customize".
 	*/
-	CString SplitPageTreePath(CString &strRest);
+	static CString SplitPageTreePath(CString &strRest);
 
 	/**
 	Tries to deactivate the current page, and hides it if successful,
@@ -415,27 +415,6 @@ protected:
 
 // Properties
 private:
-	/** TRUE if we should use the tree control instead of the tab ctrl. */
-	BOOL m_bTreeViewMode;
-
-	/** The tree control */
-	CTreeCtrl *m_pwndPageTree;
-
-	/** The frame around the pages */
-	CPropPageFrame *m_pFrame;
-
-	/**
-	TRUE, if a tree item selection by OnPageTreeSelChanged() is
-	performed currently.
-	*/
-	BOOL m_bPageTreeSelChangedActive;
-
-	/** TRUE if a page caption should be displayed, FALSE otherwise. */
-	BOOL m_bPageCaption;
-
-	/** TRUE if images should be displayed in the tree. */
-	BOOL m_bTreeImages;
-
 	/** Images to be displayed in the tree control. */
 	CImageList m_Images;
 
@@ -448,6 +427,27 @@ private:
 	page.
 	*/
 	CString m_strEmptyPageMessage;
+
+	/** The tree control */
+	CTreeCtrl *m_pwndPageTree;
+
+	/** The frame around the pages */
+	CPropPageFrame *m_pFrame;
+
+	/** TRUE if we should use the tree control instead of the tab ctrl. */
+	BOOL m_bTreeViewMode;
+
+	/**
+	TRUE, if a tree item selection by OnPageTreeSelChanged() is
+	performed currently.
+	*/
+	BOOL m_bPageTreeSelChangedActive;
+
+	/** TRUE if a page caption should be displayed, FALSE otherwise. */
+	BOOL m_bPageCaption;
+
+	/** TRUE if images should be displayed in the tree. */
+	BOOL m_bTreeImages;
 
 	/** The width of the page tree control in pixels. */
 	int m_nPageTreeWidth;

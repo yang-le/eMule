@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -31,8 +31,6 @@ class CCBBRecord
 {
 public:
 	CCBBRecord(uint64 nStartPos = 0, uint64 nEndPos = 0, uint32 dwIP = 0, EBBRStatus BBRStatus = BBR_NONE);
-	CCBBRecord(const CCBBRecord &cv)			{ *this = cv; }
-	CCBBRecord& operator=(const CCBBRecord &cv);
 
 	bool	Merge(uint64 nStartPos, uint64 nEndPos, uint32 dwIP, EBBRStatus BBRStatus = BBR_NONE);
 	bool	CanMerge(uint64 nStartPos, uint64 nEndPos, uint32 dwIP, EBBRStatus BBRStatus = BBR_NONE) const;

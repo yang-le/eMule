@@ -170,20 +170,15 @@ BOOL CZIPFile::LocateCentralDirectory()
 	SetFilePointer(m_hFile, -(LONG)sizeof pBuffer, NULL, FILE_END);
 	if (!::ReadFile(m_hFile, pBuffer, sizeof pBuffer, &nBuffer, NULL))
 		return FALSE;
-	if (nBuffer < sizeof(ZIP_DIRECTORY_LOC))
-		return FALSE;
 
 	ZIP_DIRECTORY_LOC *pLoc = NULL;
-
-	for (DWORD nScan = 4; nScan < nBuffer; ++nScan) {
-		DWORD *pnSignature = (DWORD*)(pBuffer + nBuffer - nScan);
-
+	for (INT_PTR nScan = nBuffer - sizeof(ZIP_DIRECTORY_LOC) + 1; --nScan >= 0;) {
+		DWORD *pnSignature = (DWORD*)&pBuffer[nScan];
 		if (*pnSignature == 0x06054b50) {
 			pLoc = (ZIP_DIRECTORY_LOC*)pnSignature;
 			break;
 		}
 	}
-
 	if (pLoc == NULL)
 		return FALSE;
 	ASSERT(pLoc->nSignature == 0x06054b50);
@@ -307,8 +302,7 @@ BOOL CZIPFile::SeekToFile(File *pFile)
 		return FALSE;
 
 	ZIP_LOCAL_FILE pLocal;
-	DWORD nRead = 0;
-
+	DWORD nRead;
 	VERIFY(::ReadFile(m_hFile, &pLocal, sizeof pLocal, &nRead, NULL));
 	if (nRead != sizeof pLocal)
 		return FALSE;
@@ -363,10 +357,11 @@ BOOL CZIPFile::File::PrepareToDecompress(LPVOID pStream)
 	}
 
 	DWORD nSource = (DWORD)m_nCompressedSize;
+	DWORD rSource;
 	BYTE *pSource = new BYTE[nSource];
-	::ReadFile(m_pZIP->m_hFile, pSource, nSource, &nSource, NULL);
+	::ReadFile(m_pZIP->m_hFile, pSource, nSource, &rSource, NULL);
 
-	if (nSource != (DWORD)m_nCompressedSize) {
+	if (nSource != rSource) {
 		inflateEnd(&pStream);
 		delete[] pSource;
 		return NULL;
@@ -406,8 +401,7 @@ BOOL CZIPFile::File::Extract(LPCTSTR pszFile)
 	z_stream pStream;
 	HANDLE hFile;
 
-	hFile = ::CreateFile(pszFile, GENERIC_WRITE, 0, NULL, CREATE_NEW,
-		FILE_ATTRIBUTE_NORMAL, NULL);
+	hFile = ::CreateFile(pszFile, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return FALSE;
 
@@ -428,7 +422,7 @@ BOOL CZIPFile::File::Extract(LPCTSTR pszFile)
 				pStream.avail_in = (DWORD)min(m_nCompressedSize - nCompressed, BUFFER_IN_SIZE);
 				pStream.next_in = pBufferIn;
 
-				DWORD nRead = 0;
+				DWORD nRead;
 				VERIFY(::ReadFile(m_pZIP->m_hFile, pBufferIn, pStream.avail_in, &nRead, NULL));
 				if (nRead != pStream.avail_in)
 					break;
@@ -443,8 +437,9 @@ BOOL CZIPFile::File::Extract(LPCTSTR pszFile)
 
 			if (pStream.avail_out < BUFFER_OUT_SIZE) {
 				DWORD nWrite = BUFFER_OUT_SIZE - pStream.avail_out;
-				::WriteFile(hFile, pBufferOut, nWrite, &nWrite, NULL);
-				if (nWrite != BUFFER_OUT_SIZE - pStream.avail_out)
+				DWORD nWritten;
+				::WriteFile(hFile, pBufferOut, nWrite, &nWritten, NULL);
+				if (nWritten != nWrite)
 					break;
 				nUncompressed += nWrite;
 			}
@@ -456,7 +451,7 @@ BOOL CZIPFile::File::Extract(LPCTSTR pszFile)
 	} else
 		while (nUncompressed < m_nSize) {
 			DWORD nChunk = (DWORD)min(m_nSize - nUncompressed, BUFFER_OUT_SIZE);
-			DWORD nProcess = 0;
+			DWORD nProcess;
 
 			VERIFY(::ReadFile(m_pZIP->m_hFile, pBufferOut, nChunk, &nProcess, NULL));
 			if (nChunk != nProcess)

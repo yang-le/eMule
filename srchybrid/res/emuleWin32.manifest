@@ -4,7 +4,7 @@
                     name="eMule"
                     processorArchitecture="x86"
                     publicKeyToken="0000000000000000"
-                    version="0.60.3.1"
+                    version="0.70.0.9"
   />
   <description>eMule by https://www.emule-project.net</description>
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
@@ -16,7 +16,7 @@
   </trustInfo>
   <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
     <application>
-      <!-- Windows 10 --> 
+      <!-- Windows 10 -->
       <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>
       <!-- Windows 8.1 -->
       <supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}"/>
@@ -25,7 +25,7 @@
       <!-- Windows 7 -->
       <supportedOS Id="{35138b9a-5d96-4fbd-8e2d-a2440225f93a}"/>
       <!-- Windows Vista -->
-      <supportedOS Id="{e2011457-1546-43c5-a5fe-008deee3d3f0}"/> 
+      <supportedOS Id="{e2011457-1546-43c5-a5fe-008deee3d3f0}"/>
     </application>
   </compatibility>
 </assembly>

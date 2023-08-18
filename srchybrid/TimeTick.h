@@ -31,6 +31,5 @@ protected:
 private:
 	static __int64 m_nPerformanceFrequency;
 
-	LARGE_INTEGER m_nTimeElapsed;
 	LARGE_INTEGER m_nTime;
 };

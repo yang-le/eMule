@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -25,7 +25,7 @@
 #define ACTION_CATSTOP		6
 #define ACTION_CATRESUME	7
 
-#define DAY_DAYLY		0
+#define DAY_DAILY		0
 #define DAY_MO			1
 #define DAY_DI			2
 #define DAY_MI			3

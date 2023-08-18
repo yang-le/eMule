@@ -293,7 +293,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 			if (m_nRecvBufferPos == 8) {
 				TRACE(_T("SOCKS4 response: VN=%u  CD=%u  DSTPORT=%u  DSTIP=%s\n"), (BYTE)m_pRecvBuffer[0], (BYTE)m_pRecvBuffer[1], ntohs(*(u_short*)&m_pRecvBuffer[2]), (LPCTSTR)ipstr(*(u_long*)&m_pRecvBuffer[4]));
 				if (m_pRecvBuffer[0] != 0 || m_pRecvBuffer[1] != 90) {
-					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0, (LPSTR)(LPCSTR)GetSocks4Error(m_pRecvBuffer[0], m_pRecvBuffer[1]));
+					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0, const_cast<LPSTR>((LPCSTR)GetSocks4Error(m_pRecvBuffer[0], m_pRecvBuffer[1])));
 					TriggerEvent((m_nProxyOpID == PROXYOP_CONNECT) ? FD_CONNECT : FD_ACCEPT, WSAECONNABORTED, TRUE);
 					Reset();
 					ClearBuffer();
@@ -377,7 +377,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 			if (m_nRecvBufferPos == 2) {
 				TRACE(_T("SOCKS5 response: VER=%u  METHOD=%u\n"), (BYTE)m_pRecvBuffer[0], (BYTE)m_pRecvBuffer[1]);
 				if (m_pRecvBuffer[0] != 5) {
-					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0, (LPSTR)(LPCSTR)GetSocks5Error(m_pRecvBuffer[1]));
+					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0, const_cast<LPSTR>((LPCSTR)GetSocks5Error(m_pRecvBuffer[1])));
 					TriggerEvent((m_nProxyOpID == PROXYOP_CONNECT) ? FD_CONNECT : FD_ACCEPT, WSAECONNABORTED, TRUE);
 					Reset();
 					ClearBuffer();
@@ -416,13 +416,13 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 					// PASSWD field that follows. The PASSWD field contains the password
 					// association with the given UNAME.
 
-					const CStringA &sAsciiUser((CStringA)m_ProxyData.pProxyUser);
-					const CStringA &sAsciiPass((CStringA)m_ProxyData.pProxyPass);
+					const CStringA sAsciiUser(m_ProxyData.pProxyUser);
+					const CStringA sAsciiPass(m_ProxyData.pProxyPass);
 					int nLenUser = sAsciiUser.GetLength();
 					int nLenPass = sAsciiPass.GetLength();
 					ASSERT(nLenUser <= 255);
 					ASSERT(nLenPass <= 255);
-					unsigned char *buffer = new unsigned char[3 + nLenUser + nLenPass];
+					unsigned char *buffer = new unsigned char[3 + (size_t)nLenUser + nLenPass];
 					buffer[0] = 1;
 					buffer[1] = static_cast<unsigned char>(nLenUser);
 					if (nLenUser)
@@ -450,7 +450,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 			//Send connection request
 			const CStringA sAsciiHost(m_pProxyPeerHost);
 			size_t nlen = sAsciiHost.GetLength();
-			char *command = new char[10 + nlen + 1]();
+			char *command = new char[10 + nlen + 1]{};
 			command[0] = 5;
 			command[1] = static_cast<char>(m_nProxyOpID);
 			//command[2]=0;
@@ -509,7 +509,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 				}
 				const CStringA sAsciiHost(m_pProxyPeerHost);
 				size_t nlen = sAsciiHost.GetLength();
-				char *command = new char[10 + nlen + 1]();
+				char *command = new char[10 + nlen + 1]{};
 				command[0] = 5;
 				command[1] = static_cast<char>(m_nProxyOpID);
 				//command[2]=0;
@@ -618,7 +618,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 			TRACE(_T("SOCKS5 response: VER=%u  REP=%u  RSV=%u  ATYP=%u  BND.ADDR=%s  BND.PORT=%u\n"), (BYTE)m_pRecvBuffer[0], (BYTE)m_pRecvBuffer[1], (BYTE)m_pRecvBuffer[2], (BYTE)m_pRecvBuffer[3], (LPCTSTR)ipstr(*(u_long*)&m_pRecvBuffer[4]), ntohs(*(u_short*)&m_pRecvBuffer[8]));
 			if (m_nRecvBufferPos == 10) {
 				if (m_pRecvBuffer[1] != 0) {
-					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0, (LPSTR)(LPCSTR)GetSocks5Error(m_pRecvBuffer[1]));
+					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0, const_cast<LPSTR>((LPCSTR)GetSocks5Error(m_pRecvBuffer[1])));
 					if (m_nProxyOpID == PROXYOP_CONNECT)
 						TriggerEvent(FD_CONNECT, WSAECONNABORTED, TRUE);
 					else {
@@ -681,7 +681,7 @@ void CAsyncProxySocketLayer::OnReceive(int nErrorCode)
 				char *pos2 = strchr(m_pStrBuffer, ' ');
 				if (!pos2 || pos2[1] != '2' || pos2 > pos) {
 					CStringA serr(m_pStrBuffer, (int)(pos - m_pStrBuffer));
-					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0, (LPSTR)(LPCSTR)serr);
+					DoLayerCallback(LAYERCALLBACK_LAYERSPECIFIC, PROXYERROR_REQUESTFAILED, 0, const_cast<LPSTR>((LPCSTR)serr));
 					Reset();
 					ClearBuffer();
 					TriggerEvent(FD_CONNECT, WSAECONNABORTED, TRUE);
@@ -814,8 +814,8 @@ void CAsyncProxySocketLayer::OnConnect(int nErrorCode)
 				const CStringA sAscii(m_pProxyPeerHost);
 				ASSERT(!sAscii.IsEmpty());
 
-				size_t nLen1 = sAscii.GetLength() + 1;
-				char *command = new char[9 + nLen1]();
+				size_t nLen1 = (size_t)sAscii.GetLength() + 1;
+				char *command = new char[9 + nLen1]{};
 				int nBufLen = 9;
 				command[0] = 4;
 				command[1] = static_cast<char>(m_nProxyOpID); //CONNECT or BIND request

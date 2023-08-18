@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -281,13 +281,13 @@ void CPPgStats::ShowInterval()
 	CString strLabel;
 
 	if (m_iGraphsUpdate == 0)
-		strLabel.Format(GetResString(IDS_DISABLED));
+		strLabel = GetResString(IDS_DISABLED);
 	else
 		strLabel.Format(GetResString(IDS_STATS_UPDATELABEL), m_iGraphsUpdate);
 	SetDlgItemText(IDC_SLIDERINFO, strLabel);
 
 	if (m_iGraphsAvgTime == 0)
-		strLabel.Format(GetResString(IDS_DISABLED));
+		strLabel = GetResString(IDS_DISABLED);
 	else
 		strLabel.Format(GetResString(IDS_STATS_UPDATELABEL), m_iGraphsAvgTime);
 	SetDlgItemText(IDC_SLIDERINFO2, strLabel);

@@ -25,7 +25,7 @@ void CIni::AddModulePath(CString &rstrFileName, bool bModulPath)
 			DWORD dwModPathLen = ::GetModuleFileName(NULL, strModule.GetBuffer(MAX_PATH), MAX_PATH);
 			strModule.ReleaseBuffer((dwModPathLen == 0 || dwModPathLen == MAX_PATH) ? 0 : -1);
 		} else {
-			DWORD dwCurDirLen = GetCurrentDirectory(MAX_PATH, strModule.GetBuffer(MAX_PATH));
+			DWORD dwCurDirLen = ::GetCurrentDirectory(MAX_PATH, strModule.GetBuffer(MAX_PATH));
 			strModule.ReleaseBuffer((dwCurDirLen == 0 || dwCurDirLen >= MAX_PATH) ? 0 : -1);
 			// fix by "cpp@world-online.no"
 			strModule.TrimRight(_T("\\/"));
@@ -35,11 +35,6 @@ void CIni::AddModulePath(CString &rstrFileName, bool bModulPath)
 		strModule.Format(_T("%s%s%s"), drive, dir, (LPCTSTR)rstrFileName);
 		rstrFileName = strModule;
 	}
-}
-
-CString CIni::GetDefaultSection()
-{
-	return AfxGetAppName();
 }
 
 CString CIni::GetDefaultIniFile(bool bModulPath)
@@ -58,7 +53,7 @@ CString CIni::GetDefaultIniFile(bool bModulPath)
 	if (bModulPath)
 		strApplName.Format(_T("%s%s%s"), drive, dir, (LPCTSTR)strTemp);
 	else {
-		DWORD dwCurDirLen = GetCurrentDirectory(MAX_PATH, strApplName.GetBuffer(MAX_PATH));
+		DWORD dwCurDirLen = ::GetCurrentDirectory(MAX_PATH, strApplName.GetBuffer(MAX_PATH));
 		strApplName.ReleaseBuffer((dwCurDirLen == 0 || dwCurDirLen >= MAX_PATH) ? 0 : -1);
 		strApplName.TrimRight(_T('\\'));
 		strApplName.TrimRight(_T('/'));
@@ -86,9 +81,9 @@ CIni::CIni(const CIni &Ini)
 		m_strSection = GetDefaultSection();
 }
 
-CIni::CIni(const CString &rstrFileName)
+CIni::CIni(LPCTSTR const pstrFileName)
 	: m_bModulePath(true)
-	, m_strFileName(rstrFileName)
+	, m_strFileName(pstrFileName)
 {
 	if (m_strFileName.IsEmpty())
 		m_strFileName = GetDefaultIniFile(m_bModulePath);
@@ -96,10 +91,10 @@ CIni::CIni(const CString &rstrFileName)
 	m_strSection = GetDefaultSection();
 }
 
-CIni::CIni(const CString &rstrFileName, const CString &rstrSection)
+CIni::CIni(LPCTSTR const pstrFileName, LPCTSTR const pstrSection)
 	: m_bModulePath(true)
-	, m_strFileName(rstrFileName)
-	, m_strSection(rstrSection)
+	, m_strFileName(pstrFileName)
+	, m_strSection(pstrSection)
 {
 	if (m_strFileName.IsEmpty())
 		m_strFileName = GetDefaultIniFile(m_bModulePath);
@@ -116,27 +111,6 @@ CIni& CIni::operator=(const CIni &Ini)
 	return *this;
 }
 
-void CIni::SetFileName(const CString &rstrFileName)
-{
-	m_strFileName = rstrFileName;
-	AddModulePath(m_strFileName);
-}
-
-void CIni::SetSection(const CString &rstrSection)
-{
-	m_strSection = rstrSection;
-}
-
-const CString& CIni::GetFileName() const
-{
-	return m_strFileName;
-}
-
-const CString& CIni::GetSection() const
-{
-	return m_strSection;
-}
-
 CString CIni::GetString(LPCTSTR lpszEntry, LPCTSTR lpszDefault, LPCTSTR lpszSection)
 {
 	if (lpszSection != NULL)
@@ -146,17 +120,17 @@ CString CIni::GetString(LPCTSTR lpszEntry, LPCTSTR lpszDefault, LPCTSTR lpszSect
 
 CString CIni::GetStringLong(LPCTSTR lpszEntry, LPCTSTR lpszDefault, LPCTSTR lpszSection)
 {
-	CString ret;
 	unsigned maxstrlen = MAX_INI_BUFFER;
 
 	if (lpszSection != NULL)
 		m_strSection = lpszSection;
 
+	CString ret;
 	do {
-		GetPrivateProfileString(m_strSection, lpszEntry, (lpszDefault == NULL) ? _T("") : lpszDefault,
-			ret.GetBuffer(maxstrlen), maxstrlen, m_strFileName);
+		GetPrivateProfileString(m_strSection, lpszEntry, (lpszDefault ? lpszDefault : _T(""))
+			, ret.GetBuffer(maxstrlen), maxstrlen, m_strFileName);
 		ret.ReleaseBuffer();
-		if ((unsigned)ret.GetLength() < maxstrlen - 2u)
+		if ((unsigned)ret.GetLength() < maxstrlen - 2)
 			break;
 		maxstrlen += MAX_INI_BUFFER;
 	} while (maxstrlen < _UI16_MAX);
@@ -170,8 +144,8 @@ CString CIni::GetStringUTF8(LPCTSTR lpszEntry, LPCTSTR lpszDefault, LPCTSTR lpsz
 		m_strSection = lpszSection;
 
 	CStringA strUTF8;
-	GetPrivateProfileStringA(CStringA(m_strSection), CStringA(lpszEntry), CStringA(lpszDefault),
-		strUTF8.GetBuffer(MAX_INI_BUFFER), MAX_INI_BUFFER, CStringA(m_strFileName));
+	GetPrivateProfileStringA(CStringA(m_strSection), CStringA(lpszEntry), CStringA(lpszDefault)
+		, strUTF8.GetBuffer(MAX_INI_BUFFER), MAX_INI_BUFFER, CStringA(m_strFileName));
 	strUTF8.ReleaseBuffer();
 	return OptUtf8ToStr(strUTF8);
 }
@@ -728,7 +702,7 @@ bool CIni::GetBinary(LPCTSTR lpszEntry, BYTE **ppData, UINT *pBytes, LPCTSTR psz
 	*ppData = NULL;
 	*pBytes = 0;
 
-	const CString &str = GetString(lpszEntry, NULL, pszSection);
+	const CString &str(GetString(lpszEntry, NULL, pszSection));
 	int nLen = str.GetLength();
 	ASSERT(nLen % 2 == 0);
 	if (nLen <= 1)
@@ -741,12 +715,12 @@ bool CIni::GetBinary(LPCTSTR lpszEntry, BYTE **ppData, UINT *pBytes, LPCTSTR psz
 	return true;
 }
 
-bool CIni::WriteBinary(LPCTSTR lpszEntry, LPBYTE pData, UINT nBytes, LPCTSTR lpszSection)
+bool CIni::WriteBinary(LPCTSTR lpszEntry, LPBYTE pData, size_t nBytes, LPCTSTR lpszSection)
 {
 	// convert to string and write out
 	LPTSTR lpsz = new TCHAR[nBytes * 2 + 1];
 	LPTSTR p = lpsz;
-	for (UINT i = 0; i < nBytes; ++i) {
+	for (; nBytes; --nBytes) {
 		*p++ = (TCHAR)((*pData & 0x0F) + 'A'); //low nibble
 		*p++ = (TCHAR)(((*pData++ >> 4) & 0x0F) + 'A'); //high nibble
 	}

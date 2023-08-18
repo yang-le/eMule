@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -45,14 +45,14 @@ CPacketTracking::~CPacketTracking()
 
 void CPacketTracking::AddTrackedOutPacket(uint32 dwIP, uint8 byOpcode)
 {
-	// this tracklist tacks _outgoing_ request packets, to make sure incoming answer packets were requested
-	// only track packets which we actually check for later
-	if (!IsTrackedOutListRequestPacket(byOpcode))
-		return;
-	const uint32 tick = ::GetTickCount();
-	listTrackedRequests.AddHead(TrackPackets_Struct{tick, dwIP, byOpcode});
-	while (!listTrackedRequests.IsEmpty() && tick >= listTrackedRequests.GetTail().dwInserted + SEC2MS(180))
-		listTrackedRequests.RemoveTail();
+	// this tracklist monitors _outgoing_ request packets, to make sure incoming answer packets were requested
+	// later we will check only tracked packets
+	if (IsTrackedOutListRequestPacket(byOpcode)) {
+		const DWORD curTick = ::GetTickCount();
+		listTrackedRequests.AddHead(TrackPackets_Struct{ curTick, dwIP, byOpcode });
+		while (!listTrackedRequests.IsEmpty() && curTick >= listTrackedRequests.GetTail().dwInserted + SEC2MS(180))
+			listTrackedRequests.RemoveTail();
+	}
 }
 
 bool CPacketTracking::IsTrackedOutListRequestPacket(uint8 byOpcode)
@@ -82,11 +82,11 @@ bool CPacketTracking::IsOnOutTrackList(uint32 dwIP, uint8 byOpcode, bool bDontRe
 	if (!IsTrackedOutListRequestPacket(byOpcode))
 		ASSERT(0); // code error / bug
 #endif
-	const uint32 tick = ::GetTickCount();
+	const DWORD curTick = ::GetTickCount();
 	for (POSITION pos = listTrackedRequests.GetHeadPosition(); pos != NULL;) {
 		POSITION pos2 = pos;
 		const TrackPackets_Struct &req = listTrackedRequests.GetNext(pos);
-		if (tick >= req.dwInserted + SEC2MS(180))
+		if (curTick >= req.dwInserted + SEC2MS(180))
 			break;
 		if (req.dwIP == dwIP && req.byOpcode == byOpcode) {
 			if (!bDontRemove)
@@ -102,64 +102,59 @@ int CPacketTracking::InTrackListIsAllowedPacket(uint32 uIP, uint8 byOpcode, bool
 {
 	// this tracklist monitors _incoming_ request packets and acts as a general flood protection
 	// by dropping too frequent requests from a single IP, thus avoiding response floods, saving CPU time,
-	// preventing DOS attacks and slowing down other possible attacks/behavior
+	// preventing DoS attacks and slowing down other possible attacks/behaviour
 	// (scanning indexed files, fake publish floods, etc)
 
-	// first figure out if this is a request packet to be tracked and its time limits
+	// first figure out if this is a request packet to be tracked
 	// time limits are chosen by estimating the max. frequency of such packets in normal operation (+ buffer)
 	// (those limits are not meant be fine for normal usage, but only supposed to be a flood detection)
-	uint32 iAllowedPacketsPerMinute;
+	//
+	// Tokens are calculated as the number of milliseconds corresponding to the allowed quantity of packets per minute.
+	int token;
 	const byte byDbgOrgOpcode = byOpcode;
 	switch (byOpcode) {
 	case KADEMLIA2_BOOTSTRAP_REQ:
-		iAllowedPacketsPerMinute = 2;
+		token = MIN2MS(1) / 2;
 		break;
 	case KADEMLIA2_HELLO_REQ:
-		iAllowedPacketsPerMinute = 3;
+		token = MIN2MS(1) / 3;
 		break;
 	case KADEMLIA2_REQ:
-		iAllowedPacketsPerMinute = 10;
+		token = MIN2MS(1) / 10;
 		break;
 	case KADEMLIA2_SEARCH_NOTES_REQ:
-		iAllowedPacketsPerMinute = 3;
-		break;
 	case KADEMLIA2_SEARCH_KEY_REQ:
-		iAllowedPacketsPerMinute = 3;
-		break;
 	case KADEMLIA2_SEARCH_SOURCE_REQ:
-		iAllowedPacketsPerMinute = 3;
+		token = MIN2MS(1) / 3;
 		break;
 	case KADEMLIA2_PUBLISH_KEY_REQ:
-		iAllowedPacketsPerMinute = 4;
+		token = MIN2MS(1) / 4;
 		break;
 	case KADEMLIA2_PUBLISH_SOURCE_REQ:
-		iAllowedPacketsPerMinute = 3;
+		token = MIN2MS(1) / 3;
 		break;
 	case KADEMLIA2_PUBLISH_NOTES_REQ:
-		iAllowedPacketsPerMinute = 2;
+		token = MIN2MS(1) / 2;
 		break;
 	case KADEMLIA_FIREWALLED2_REQ:
 		byOpcode = KADEMLIA_FIREWALLED_REQ;
 	case KADEMLIA_FIREWALLED_REQ:
-		iAllowedPacketsPerMinute = 2;
-		break;
 	case KADEMLIA_FINDBUDDY_REQ:
-		iAllowedPacketsPerMinute = 2;
+		token = MIN2MS(1) / 2;
 		break;
 	case KADEMLIA_CALLBACK_REQ:
-		iAllowedPacketsPerMinute = 1;
+		token = MIN2MS(1) / 1;
 		break;
 	case KADEMLIA2_PING:
-		iAllowedPacketsPerMinute = 2;
+		token = MIN2MS(1) / 2;
 		break;
 	default:
-		// not a request packets, so it's a response - no further checks at this point
+		// not a request packets, but a response - no further checks at this point
 		return 0;
 	}
-	const uint32 milliSecsPerPacket = MIN2MS(1) / iAllowedPacketsPerMinute;
-	const uint32 dwCurrentTick = ::GetTickCount();
+	const DWORD curTick = ::GetTickCount();
 	// time for cleaning up?
-	if (dwCurrentTick >= dwLastTrackInCleanup + MIN2MS(12))
+	if (curTick >= dwLastTrackInCleanup + MIN2MS(12))
 		InTrackListCleanup();
 
 	// check for existing entries
@@ -167,77 +162,62 @@ int CPacketTracking::InTrackListIsAllowedPacket(uint32 uIP, uint8 byOpcode, bool
 	if (!m_mapTrackPacketsIn.Lookup(uIP, pTrackEntry)) {
 		pTrackEntry = new TrackPacketsIn_Struct();
 		pTrackEntry->m_uIP = uIP;
-		m_mapTrackPacketsIn.SetAt(uIP, pTrackEntry);
+		m_mapTrackPacketsIn[uIP] = pTrackEntry;
 		m_liTrackPacketsIn.AddHead(pTrackEntry);
 	}
 
-	// search specific request tracks
-	for (int i = 0; i < pTrackEntry->m_aTrackedRequests.GetCount(); ++i) {
-		if (pTrackEntry->m_aTrackedRequests[i].m_byOpcode == byOpcode) {
-			// already tracked requests with this opcode, remove expired request counts
-			TrackPacketsIn_Struct::TrackedRequestIn_Struct &rCurTrackedRequest = pTrackEntry->m_aTrackedRequests[i];
-			if (rCurTrackedRequest.m_nCount > 0
-				&& dwCurrentTick >= rCurTrackedRequest.m_dwFirstAdded + milliSecsPerPacket + 500) //allow small extra time
-			{
-				uint32 nRemoveCount = (dwCurrentTick - rCurTrackedRequest.m_dwFirstAdded - 500) / milliSecsPerPacket;
-				if (nRemoveCount >= rCurTrackedRequest.m_nCount) {
-					rCurTrackedRequest.m_nCount = 0;
-					rCurTrackedRequest.m_dwFirstAdded = dwCurrentTick; // for the packet we just process
-				} else {
-					rCurTrackedRequest.m_nCount -= nRemoveCount;
-					rCurTrackedRequest.m_dwFirstAdded += milliSecsPerPacket * nRemoveCount;
-				}
-			}
-			// we increase the counter in any case, even if we drop the packet later
-			++rCurTrackedRequest.m_nCount;
-			// remember only for easier cleanup
-			pTrackEntry->m_dwLastExpire = max(pTrackEntry->m_dwLastExpire, rCurTrackedRequest.m_dwFirstAdded + milliSecsPerPacket * rCurTrackedRequest.m_nCount);
+	INT_PTR i = pTrackEntry->m_aTrackedRequests.GetCount();
+	// search for the specific request track
+	while (--i >= 0 && pTrackEntry->m_aTrackedRequests[i].m_byOpcode == byOpcode);
 
-			if (CKademlia::IsRunningInLANMode() && IsLANIP(ntohl(uIP))) // no flood detection in LanMode
-				return 0;
+	if (i >= 0) {
+		// already tracking requests with this opcode
+		TrackPacketsIn_Struct::TrackedRequestIn_Struct &TrackedRequest = pTrackEntry->m_aTrackedRequests[i];
+		TrackedRequest.m_tokens += curTick - TrackedRequest.m_dwLatest;
+		if (TrackedRequest.m_tokens > MIN2MS(1))
+			TrackedRequest.m_tokens = MIN2MS(1);
+		TrackedRequest.m_tokens -= token;
+		TrackedRequest.m_dwLatest = curTick;
+		// remember only for easier cleanup
+		pTrackEntry->m_dwLastExpire = max(pTrackEntry->m_dwLastExpire, curTick + abs(TrackedRequest.m_tokens) + token);
 
-			// now the actual check if this request is allowed
-			if (rCurTrackedRequest.m_nCount > iAllowedPacketsPerMinute * 4) {
-				// this is so far above the limit that it has to be an intentional flood / misuse in any case
-				// so we take the next higher punishment and ban the IP
+		if (CKademlia::IsRunningInLANMode() && IsLANIP(ntohl(uIP))) // no flood detection in LanMode
+			return 0;
+
+		// now the actual check if this request is allowed
+		if (TrackedRequest.m_tokens < 0) {
+			if (TrackedRequest.m_tokens < MIN2MS(-3)) {
+				// this is so far above the limit that has to be an intentional flood / misuse
+				// so we take higher level of punishment and ban the IP
 				DebugLogWarning(_T("Kad: Massive request flood detected for opcode 0x%X (0x%X) from IP %s - Banning IP"), byOpcode, byDbgOrgOpcode, (LPCTSTR)ipstr(htonl(uIP)));
 				theApp.clientlist->AddBannedClient(ntohl(uIP));
 				return 2; // drop the packet, remove the contact from routing
 			}
-			if (rCurTrackedRequest.m_nCount > iAllowedPacketsPerMinute) {
-				// over the limit, drop the packet but do nothing else
-				if (!rCurTrackedRequest.m_bDbgLogged) {
-					rCurTrackedRequest.m_bDbgLogged = true;
-					DebugLog(_T("Kad: Request flood detected for opcode 0x%X (0x%X) from IP %s - Dropping packets with this opcode"), byOpcode, byDbgOrgOpcode, (LPCTSTR)ipstr(htonl(uIP)));
-				}
-				return 1; // drop the packet
+			// over the limit, drop the packet but do nothing else
+			if (!TrackedRequest.m_bDbgLogged) {
+				TrackedRequest.m_bDbgLogged = true;
+				DebugLog(_T("Kad: Request flood detected for opcode 0x%X (0x%X) from IP %s - Dropping packets with this opcode"), byOpcode, byDbgOrgOpcode, (LPCTSTR)ipstr(htonl(uIP)));
 			}
-			rCurTrackedRequest.m_bDbgLogged = false;
-			return 0;
+			return 1; // drop the packet
 		}
+		TrackedRequest.m_bDbgLogged = false;
+	} else {
+		// add a new entry for this request
+		TrackPacketsIn_Struct::TrackedRequestIn_Struct TrackedRequest =	{ curTick, MIN2MS(1) - token, byOpcode, false };
+		pTrackEntry->m_aTrackedRequests.Add(TrackedRequest);
 	}
-
-	// add a new entry for this request, no checks needed since 1 is always OK
-	TrackPacketsIn_Struct::TrackedRequestIn_Struct curTrackedRequest;
-	curTrackedRequest.m_byOpcode = byOpcode;
-	curTrackedRequest.m_bDbgLogged = false;
-	curTrackedRequest.m_dwFirstAdded = dwCurrentTick;
-	curTrackedRequest.m_nCount = 1;
-	// remember only for easier cleanup
-	pTrackEntry->m_dwLastExpire = max(pTrackEntry->m_dwLastExpire, dwCurrentTick + milliSecsPerPacket);
-	pTrackEntry->m_aTrackedRequests.Add(curTrackedRequest);
 	return 0;
 }
 
 void CPacketTracking::InTrackListCleanup()
 {
-	const uint32 dwCurrentTick = ::GetTickCount();
+	const DWORD curTick = ::GetTickCount();
 	const INT_PTR dbgOldSize = m_liTrackPacketsIn.GetCount();
-	dwLastTrackInCleanup = dwCurrentTick;
+	dwLastTrackInCleanup = curTick;
 	for (POSITION pos = m_liTrackPacketsIn.GetHeadPosition(); pos != NULL;) {
 		POSITION pos2 = pos;
 		const TrackPacketsIn_Struct *curEntry = m_liTrackPacketsIn.GetNext(pos);
-		if (dwCurrentTick >= curEntry->m_dwLastExpire) {
+		if (curTick >= curEntry->m_dwLastExpire) {
 			VERIFY(m_mapTrackPacketsIn.RemoveKey(curEntry->m_uIP));
 			m_liTrackPacketsIn.RemoveAt(pos2);
 			delete curEntry;
@@ -248,9 +228,9 @@ void CPacketTracking::InTrackListCleanup()
 
 void CPacketTracking::AddLegacyChallenge(const CUInt128 &uContactID, const CUInt128 &uChallengeID, uint32 uIP, uint8 byOpcode)
 {
-	const uint32 tick = ::GetTickCount();
-	listChallengeRequests.AddHead(TrackChallenge_Struct{tick, uContactID, uChallengeID, uIP, byOpcode});
-	while (!listChallengeRequests.IsEmpty() && tick >= listChallengeRequests.GetTail().dwInserted + SEC2MS(180)) {
+	const DWORD curTick = ::GetTickCount();
+	listChallengeRequests.AddHead(TrackChallenge_Struct{ curTick, uIP, uContactID, uChallengeID, byOpcode });
+	while (!listChallengeRequests.IsEmpty() && curTick >= listChallengeRequests.GetTail().dwInserted + SEC2MS(180)) {
 		DEBUG_ONLY(DebugLog(_T("Challenge timed out, client not verified - %s"), (LPCTSTR)ipstr(htonl(listChallengeRequests.GetTail().uIP))));
 		listChallengeRequests.RemoveTail();
 	}
@@ -259,11 +239,11 @@ void CPacketTracking::AddLegacyChallenge(const CUInt128 &uContactID, const CUInt
 bool CPacketTracking::IsLegacyChallenge(const CUInt128 &uChallengeID, uint32 uIP, uint8 byOpcode, CUInt128 &ruContactID)
 {
 	bool bDbgWarning = false;
-	const uint32 tick = ::GetTickCount();
+	const DWORD curTick = ::GetTickCount();
 	for (POSITION pos = listChallengeRequests.GetHeadPosition(); pos != NULL;) {
 		POSITION pos2 = pos;
 		const TrackChallenge_Struct &tc = listChallengeRequests.GetNext(pos);
-		if (tick >= tc.dwInserted + SEC2MS(180))
+		if (curTick >= tc.dwInserted + SEC2MS(180))
 			break;
 		if (tc.uIP == uIP && tc.byOpcode == byOpcode) {
 			ASSERT(tc.uChallenge != 0 || byOpcode == KADEMLIA2_PING);
@@ -282,10 +262,10 @@ bool CPacketTracking::IsLegacyChallenge(const CUInt128 &uChallengeID, uint32 uIP
 
 bool CPacketTracking::HasActiveLegacyChallenge(uint32 uIP) const
 {
-	const uint32 tick = ::GetTickCount();
+	const DWORD curTick = ::GetTickCount();
 	for (POSITION pos = listChallengeRequests.GetHeadPosition(); pos != NULL;) {
 		const TrackChallenge_Struct &tcstruct = listChallengeRequests.GetNext(pos);
-		if (tick >= tcstruct.dwInserted + SEC2MS(180))
+		if (curTick >= tcstruct.dwInserted + SEC2MS(180))
 			break;
 		if (tcstruct.uIP == uIP)
 			return true;

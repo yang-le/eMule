@@ -19,7 +19,6 @@ class CCommentDialogLst : public CResizablePage
 
 public:
 	CCommentDialogLst();
-	virtual	~CCommentDialogLst() = default;
 	virtual BOOL OnInitDialog();
 
 	void SetFiles(const CSimpleArray<CObject*> *paFiles)	{ m_paFiles = paFiles; m_bDataChanged = true; }

@@ -168,7 +168,7 @@ bool CSHA::HashFromString(LPCTSTR pszHash, SHA1 *pHashIn)
 	DWORD nBits = 0;
 	int nCount = 0;
 
-	for (int nChars = 32; nChars--; ++pszHash) {
+	for (int nChars = 32; --nChars >= 0; ++pszHash) {
 		if (*pszHash >= 'A' && *pszHash <= 'Z')
 			nBits |= (*pszHash - 'A');
 		else if (*pszHash >= 'a' && *pszHash <= 'z')

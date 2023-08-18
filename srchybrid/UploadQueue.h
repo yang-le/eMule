@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -108,10 +108,9 @@ private:
 	uint32	GetMaxClientScore() const						{ return m_imaxscore; }
 	void	UpdateActiveClientsInfo(DWORD curTick);
 
-	void InsertInUploadingList(CUpDownClient *newclient, bool bNoLocking = false);
-	void InsertInUploadingList(UploadingToClient_Struct *pNewClientUploadStruct, bool bNoLocking = false);
+	void InsertInUploadingList(CUpDownClient *newclient, bool bNoLocking);
+	void InsertInUploadingList(UploadingToClient_Struct *pNewClientUploadStruct, bool bNoLocking);
 	float GetAverageCombinedFilePrioAndCredit();
-
 
 	// By BadWolf - Accurate Speed Measurement
 	typedef struct
@@ -137,7 +136,7 @@ private:
 	uint32	successfullupcount;
 	uint32	failedupcount;
 	uint32	totaluploadtime;
-	uint32	m_nLastStartUpload;
+	DWORD	m_nLastStartUpload;
 	uint32	m_dwRemovedClientByScore;
 
 	uint32	m_imaxscore;

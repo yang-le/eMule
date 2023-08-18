@@ -1,13 +1,13 @@
 #pragma once
 #include "ResizableLib/ResizablePage.h"
 #include "ListCtrlX.h"
-#include <list>
+#include <vector>
 
 class CAbstractFile;
 namespace Kademlia
 {
 	class CKadTag;
-	typedef std::list<CKadTag*> TagList;
+	typedef std::vector<CKadTag*> TagList;
 };
 
 class CMetaDataDlg : public CResizablePage

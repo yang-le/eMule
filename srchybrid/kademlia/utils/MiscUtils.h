@@ -1,5 +1,5 @@
 /*
-Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
+Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -23,7 +23,7 @@ There is going to be a new forum created just for the Kademlia side of the clien
 If you feel there is an error or a way to improve something, please
 post it in the forum first and let us look at it. If it is a real improvement,
 it will be added to the official client. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form.
+what all it does, can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 their client on the eMule forum.
 */
@@ -35,11 +35,9 @@ namespace Kademlia
 	class CMiscUtils
 	{
 	public:
-		static void IPAddressToString(uint32 uIP, CString *pString);
+		static void IPAddressToString(uint32 uIP, CString &sAddr);
 #ifdef DEBUG
 		static void DebugHexDump(const byte *pbyData, uint32 uLenData);
 #endif
-	//private:
-	//	static CString m_sAppDirectory;
 	};
 }

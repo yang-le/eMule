@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -63,7 +63,7 @@ void CPerfLog::Startup()
 		m_eFileFormat = (ELogFileFormat)ini.GetInt(_T("FileFormat"), CSV);
 
 		// set default log file path
-		CString strDefFilePath = thePrefs.GetMuleDirectory(EMULE_CONFIGBASEDIR);
+		CString strDefFilePath(thePrefs.GetMuleDirectory(EMULE_CONFIGBASEDIR));
 		if (m_eFileFormat == CSV)
 			strDefFilePath += _T("perflog.csv");
 		else
@@ -113,7 +113,7 @@ void CPerfLog::WriteSamples(UINT nCurDn, UINT nCurUp, UINT nCurDnOH, UINT nCurUp
 			LogError(LOG_DEFAULT, _T("Failed to open performance log file \"%s\" - %s"), (LPCTSTR)m_strFilePath, _tcserror(errno));
 			return;
 		}
-		setvbuf(fp, NULL, _IOFBF, 16384); // ensure that all lines are written to file with one call
+		::setvbuf(fp, NULL, _IOFBF, 16384); // ensure that all lines are written to file with one call
 		if (m_eMode == OneSample || _filelength(_fileno(fp)) == 0)
 			fprintf(fp, "\"(PDH-CSV 4.0)\",\"DatDown\",\"DatUp\",\"OvrDown\",\"OvrUp\"\n");
 		fprintf(fp, "\"%s\",\"%u\",\"%u\",\"%u\",\"%u\"\n", szTime, nCurDn, nCurUp, nCurDnOH, nCurUpOH);
@@ -142,8 +142,8 @@ void CPerfLog::LogSamples()
 	if (m_eMode == None)
 		return;
 
-	DWORD dwNow = ::GetTickCount();
-	if (dwNow < m_dwLastSampled + m_dwInterval)
+	const DWORD curTick = ::GetTickCount();
+	if (curTick < m_dwLastSampled + m_dwInterval)
 		return;
 
 	// 'data counters' amount of transferred file data
@@ -170,7 +170,7 @@ void CPerfLog::LogSamples()
 	m_nLastSessionSentBytes = theStats.sessionSentBytes;
 	m_nLastDnOH = nDnOHTotal;
 	m_nLastUpOH = nUpOHTotal;
-	m_dwLastSampled = dwNow;
+	m_dwLastSampled = curTick;
 }
 
 void CPerfLog::Shutdown()

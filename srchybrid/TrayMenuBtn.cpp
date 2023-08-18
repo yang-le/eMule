@@ -51,9 +51,9 @@ void CTrayMenuBtn::OnMouseMove(UINT nFlags, CPoint point)
 			if (pParent)
 				pParent->SetCapture();
 			else
-				ReleaseCapture();
+				::ReleaseCapture();
 		} else
-			ReleaseCapture();
+			::ReleaseCapture();
 
 		m_bMouseOver = false;
 	}
@@ -72,7 +72,7 @@ void CTrayMenuBtn::OnLButtonUp(UINT nFlags, CPoint point)
 		if (pParent)
 			pParent->PostMessage(WM_COMMAND, MAKEWPARAM(m_nBtnID, BN_CLICKED), reinterpret_cast<LPARAM>(m_hWnd));
 	} else {
-		ReleaseCapture();
+		::ReleaseCapture();
 		m_bMouseOver = false;
 		Invalidate();
 	}

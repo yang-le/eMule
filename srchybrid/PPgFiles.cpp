@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -106,7 +106,7 @@ void CPPgFiles::LoadSettings()
 	SetDlgItemText(IDC_VIDEOPLAYER, thePrefs.m_strVideoPlayer);
 	SetDlgItemText(IDC_VIDEOPLAYER_ARGS, thePrefs.m_strVideoPlayerArgs);
 
-	CheckDlgButton(IDC_VIDEOBACKUP, static_cast<UINT>(thePrefs.moviePreviewBackup));
+	CheckDlgButton(IDC_VIDEOBACKUP, static_cast<UINT>(thePrefs.m_bMoviePreviewBackup));
 	CheckDlgButton(IDC_FNCLEANUP, static_cast<UINT>(thePrefs.AutoFilenameCleanup()));
 	CheckDlgButton(IDC_WATCHCB, static_cast<UINT>(thePrefs.watchclipboard));
 	CheckDlgButton(IDC_REMEMBERDOWNLOADED, static_cast<UINT>(thePrefs.IsRememberingDownloadedFiles()));
@@ -151,7 +151,7 @@ BOOL CPPgFiles::OnApply()
 	thePrefs.m_strVideoPlayer.Trim();
 	GetDlgItemText(IDC_VIDEOPLAYER_ARGS, thePrefs.m_strVideoPlayerArgs);
 	thePrefs.m_strVideoPlayerArgs.Trim();
-	thePrefs.moviePreviewBackup = IsDlgButtonChecked(IDC_VIDEOBACKUP) != 0;
+	thePrefs.m_bMoviePreviewBackup = IsDlgButtonChecked(IDC_VIDEOBACKUP) != 0;
 
 	LoadSettings();
 	SetModified(FALSE);

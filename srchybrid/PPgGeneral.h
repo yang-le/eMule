@@ -11,7 +11,6 @@ class CPPgGeneral : public CPropertyPage
 	void SetLangSel();
 public:
 	CPPgGeneral();
-	virtual	~CPPgGeneral() = default;
 
 	void Localize();
 

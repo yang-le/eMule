@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002 Merkur ( merkur-@users.sourceforge.net / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( merkur-@users.sourceforge.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -42,11 +42,11 @@ void CCommentListCtrl::Init()
 	ASSERT((GetStyle() & LVS_SINGLESEL) == 0);
 	SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
-	InsertColumn(colRating,		GetResString(IDS_QL_RATING),	LVCFMT_LEFT,  80);
-	InsertColumn(colComment,	GetResString(IDS_COMMENT),		LVCFMT_LEFT, 340);
-	InsertColumn(colFileName,	GetResString(IDS_DL_FILENAME),	LVCFMT_LEFT, DFLT_FILENAME_COL_WIDTH);
-	InsertColumn(colUserName,	GetResString(IDS_QL_USERNAME),	LVCFMT_LEFT, DFLT_CLIENTNAME_COL_WIDTH);
-	InsertColumn(colOrigin,		GetResString(IDS_NETWORK),		LVCFMT_LEFT,  80);
+	InsertColumn(colRating,		_T(""),	LVCFMT_LEFT,  80);							//IDS_QL_RATING
+	InsertColumn(colComment,	_T(""),	LVCFMT_LEFT, 340);							//IDS_COMMENT
+	InsertColumn(colFileName,	_T(""),	LVCFMT_LEFT, DFLT_FILENAME_COL_WIDTH);		//IDS_DL_FILENAME
+	InsertColumn(colUserName,	_T(""),	LVCFMT_LEFT, DFLT_CLIENTNAME_COL_WIDTH);	//IDS_QL_USERNAME
+	InsertColumn(colOrigin,		_T(""),	LVCFMT_LEFT,  80);							//IDS_NETWORK
 
 	CImageList iml;
 	iml.Create(16, 16, theApp.m_iDfltImageListColorFlags | ILC_MASK, 0, 1);
@@ -63,7 +63,7 @@ void CCommentListCtrl::Init()
 
 	LoadSettings();
 	SetSortArrow();
-	SortItems(SortProc, MAKELONG(GetSortItem(), static_cast<int>(!GetSortAscending())));
+	SortItems(SortProc, MAKELONG(GetSortItem(), !GetSortAscending()));
 }
 
 int CALLBACK CCommentListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
@@ -104,21 +104,17 @@ int CALLBACK CCommentListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM l
 
 void CCommentListCtrl::OnLvnColumnClick(LPNMHDR pNMHDR, LRESULT *pResult)
 {
-	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
-
+	const LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	// Determine ascending based on whether already sorted on this column
-	int iSortItem = GetSortItem();
-	bool bOldSortAscending = GetSortAscending();
-	bool bSortAscending = (iSortItem != pNMLV->iSubItem) ? true : !bOldSortAscending;
+	bool bSortAscending = (GetSortItem() != pNMLV->iSubItem || !GetSortAscending());
 
 	// Item is column clicked
-	iSortItem = pNMLV->iSubItem;
+	int iSortItem = pNMLV->iSubItem;
 
 	// Sort table
-	UpdateSortHistory(MAKELONG(iSortItem, (bSortAscending ? 0 : 0x0001)));
+	UpdateSortHistory(MAKELONG(iSortItem, !bSortAscending));
 	SetSortArrow(iSortItem, bSortAscending);
-	SortItems(SortProc, MAKELONG(iSortItem, (bSortAscending ? 0 : 0x0001)));
-
+	SortItems(SortProc, MAKELONG(iSortItem, !bSortAscending));
 	*pResult = 0;
 }
 
@@ -159,8 +155,7 @@ BOOL CCommentListCtrl::OnCommand(WPARAM wParam, LPARAM lParam)
 
 int CCommentListCtrl::FindClientComment(const void *pClientCookie)
 {
-	int iItems = GetItemCount();
-	for (int i = 0; i < iItems; ++i) {
+	for (int i = GetItemCount(); --i >= 0;) {
 		const SComment *pComment = reinterpret_cast<SComment*>(GetItemData(i));
 		if (pComment && pComment->m_pClientCookie == pClientCookie)
 			return i;
@@ -203,7 +198,7 @@ void CCommentListCtrl::AddItem(const Kademlia::CEntry *entry)
 
 void CCommentListCtrl::OnLvnDeleteItem(LPNMHDR pNMHDR, LRESULT *pResult)
 {
-	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	const LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	delete reinterpret_cast<SComment*>(pNMLV->lParam);
 	*pResult = 0;
 }

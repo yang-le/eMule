@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -42,8 +42,6 @@ private:
 
 	static int performConvertToeMule(const CString &folder);
 	static UINT AFX_CDECL run(LPVOID lpParam);
-//	static void	ReConvertNewEDPartfile(CString folder);
-//	static UINT	PFConvertThread(LPVOID param);
 };
 
 
@@ -82,10 +80,4 @@ protected:
 	afx_msg void OnCancel();
 	afx_msg void RetrySel();
 	afx_msg void RemoveSel();
-	//afx_msg void ShowInfo();
 };
-
-static CWinThread	*convertPfThread;
-static CList<ConvertJob*, ConvertJob*> m_jobs;
-static ConvertJob	*pfconverting;
-static CPartFileConvertDlg *m_convertgui;

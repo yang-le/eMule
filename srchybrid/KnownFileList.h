@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -47,7 +47,7 @@ public:
 	bool	IsCancelledFileByID(const uchar *hash) const;
 
 	const CKnownFilesMap &GetKnownFiles() const		{ return m_Files_map; }
-	void	CopyKnownFileMap(CMap<CCKey, const CCKey&, CKnownFile*, CKnownFile*> &Files_Map);
+	void	CopyKnownFileMap(CKnownFilesMap &Files_Map);
 
 	bool	ShouldPurgeAICHHashset(const CAICHHash &rAICHHash) const;
 	void	AICHHashChanged(const CAICHHash *pOldAICHHash, const CAICHHash &rNewAICHHash, CKnownFile *pFile);
@@ -69,7 +69,7 @@ private:
 	// make sure to change this if needed)
 	KnonwFilesByAICHMap m_mapKnownFilesByAICH;
 	uint32	m_dwCancelledFilesSeed;
-	uint32	m_nLastSaved;
+	DWORD	m_nLastSaved;
 	uint16	requested;
 	uint16	accepted;
 };

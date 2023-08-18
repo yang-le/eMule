@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -24,18 +24,18 @@
 class CDeadSource : public CObject
 {
 public:
+	CDeadSource();
+	explicit CDeadSource(const CUpDownClient &client);
 	CDeadSource(const CDeadSource &ds)			{ *this = ds; }
-	CDeadSource(uint32 dwID = 0, uint16 nPort = 0, uint32 dwServerIP = 0, uint16 nKadPort = 0);
-	explicit CDeadSource(const uchar *paucHash);
 
 	CDeadSource& operator=(const CDeadSource &ds);
 	friend bool operator==(const CDeadSource &ds1, const CDeadSource &ds2);
 
-	uint32			m_dwID;
+	uchar			m_aucHash[MDX_DIGEST_SIZE];
 	uint32			m_dwServerIP;
+	uint32			m_dwID;
 	uint16			m_nPort;
 	uint16			m_nKadPort;
-	uchar			m_aucHash[16];
 };
 
 template<> inline UINT AFXAPI HashKey(const CDeadSource &ds)
@@ -44,13 +44,12 @@ template<> inline UINT AFXAPI HashKey(const CDeadSource &ds)
 	if (hash != 0) {
 		if (::IsLowID(hash))
 			hash ^= ds.m_dwServerIP;
-	} else {
-		ASSERT(!isnulmd4(ds.m_aucHash));
-		hash = 1;
-		for (unsigned i = 0; i < 16; ++i)
-			hash += (ds.m_aucHash[i] + 1) * ((i * i) + 1);
+		return hash;
 	}
-	return hash;
+	ASSERT(!isnulmd4(ds.m_aucHash));
+	for (int i = MDX_DIGEST_SIZE; --i >= 0;)
+		hash += (ds.m_aucHash[i] + 1) * (i * i + 1);
+	return hash + 1;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -61,17 +60,18 @@ class CDeadSourceList
 public:
 	CDeadSourceList();
 	~CDeadSourceList() = default;
-	void		AddDeadSource(const CUpDownClient *pToAdd);
-	void		RemoveDeadSource(const CUpDownClient *client);
-	bool		IsDeadSource(const CUpDownClient *pToCheck) const;
-	INT_PTR		GetDeadSourcesCount() const		{ return m_mapDeadSources.GetCount(); }
-	void		Init(bool bGlobalList);
+	void	AddDeadSource(const CUpDownClient &client);
+	void	RemoveDeadSource(const CUpDownClient &client);
+	bool	IsDeadSource(const CUpDownClient &client) const;
+	INT_PTR	GetDeadSourcesCount() const			{ return m_mapDeadSources.GetCount(); }
+	void	Init(bool bGlobalList);
 
 protected:
-	void		CleanUp();
+	void	CleanUp();
 
 private:
-	CMap<CDeadSource, const CDeadSource&, uint32, uint32> m_mapDeadSources;
-	uint32	m_dwLastCleanUp;
+	typedef CMap<CDeadSource, const CDeadSource&, DWORD, DWORD> CDeadSourcesMap;
+	CDeadSourcesMap m_mapDeadSources;
+	DWORD	m_dwLastCleanUp;
 	bool	m_bGlobalList;
 };

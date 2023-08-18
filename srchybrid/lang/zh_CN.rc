@@ -500,7 +500,7 @@ BEGIN
     IDS_GLOBALSEARCH        "全局(服务器)"
     IDS_METHOD              "方法"
     IDS_UNDO                "撤销"
-    IDS_DAYLY               "每日"
+    IDS_DAILY               "每日"
     IDS_DAY_MO_FR           "周一-周五"
 END
 
@@ -1563,7 +1563,7 @@ BEGIN
     IDS_EM_HELP             "帮助(&H)"
     IDS_WRN_FRIENDDUPLIPPORT
                             "朋友没有添加.\r\n\r\n已存在一个有着相同的IP和端口的朋友."
-    IDS_DYNUP               "上传速度侦测(USS)"
+    IDS_DYNUP               "上传速度侦测 - USS (不推荐)"
     IDS_KADOVERHEAD         "Kad开销(包):%s (%s)"
     IDS_FIND                "查找 ..."
     IDS_LOG_BANNED_CLIENTS  "记录被禁止的客户"

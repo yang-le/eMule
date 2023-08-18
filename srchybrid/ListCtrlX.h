@@ -59,7 +59,6 @@ class CListCtrlX : public CListCtrl
 // Construction
 public:
 	CListCtrlX();
-	virtual	~CListCtrlX() = default;
 
 // Attributes
 public:

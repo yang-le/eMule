@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -62,7 +62,7 @@
 #define MAX_CLIENTCONNECTIONTRY	2
 #define CONNECTION_TIMEOUT		SEC2MS(40)	//40 secs - set his lower if you want less connections at once, set it higher if you have enough sockets (edonkey has its own timeout too, so a very high value won't effect this)
 #define	FILEREASKTIME			MIN2MS(29)	//29 mins
-#define SERVERREASKTIME			MIN2MS(15)	//15 mins - don't set this too low, it wont speed up anything, but it could kill emule or your internet connection
+#define SERVERREASKTIME			MIN2MS(15)	//15 mins - don't set this too low, it won't speed up anything, but it could kill emule or your internet connection
 #define UDPSERVERREASKTIME		MIN2MS(30)	//30 mins
 #define	MAX_SERVERFAILCOUNT		10
 #define SOURCECLIENTREASKS		MIN2MS(40)	//40 mins
@@ -127,10 +127,10 @@
 #define CLIENTLIST_CLEANUP_TIME	MIN2MS(34)	// 34 min
 #define MAXPRIORITYCOLL_SIZE	(50*1024)	// max file size for collection file which are allowed to bypass the queue
 #define SEARCH_SPAM_THRESHOLD	60
-#define OLDFILES_PARTIALLYPURGE DAY2S(31)	// time after which some data about a know file in the known.met and known2.met is deleted
+#define OLDFILES_PARTIALLYPURGE DAY2S(31)	// time after which some data about a known file in the known.met and known2.met is deleted
 
 // you shouldn't change anything here if you are not really sure, or probably emule will not work
-#define UDP_KAD_MAXFRAGMENT		1420		// based on a 1500 ethernet MTU, use a conservative value to leave enough room for IP/UDP headers, tunnel headers, Kad headers(16) and misconfigs
+#define UDP_KAD_MAXFRAGMENT		1420		// based on a 1500 Ethernet MTU, use a conservative value to leave enough room for IP/UDP headers, tunnel headers, Kad headers(16) and misconfigs
 #define EMBLOCKSIZE				184320u
 #define OP_EDONKEYHEADER		0xE3
 #define OP_KADEMLIAHEADER		0xE4
@@ -146,7 +146,7 @@
 
 #define UNLIMITED				_UI32_MAX
 
-//Proxytypes deadlake
+//Proxy types deadlake
 #define PROXYTYPE_NOPROXY	0
 #define PROXYTYPE_SOCKS4	1
 #define PROXYTYPE_SOCKS4A	2
@@ -532,7 +532,7 @@
 // values for CT_SERVER_UDPSEARCH_FLAGS
 #define SRVCAP_UDP_NEWTAGS_LARGEFILES	0x01
 
-// emule tagnames
+// eMule tag names
 #define ET_COMPRESSION			0x20
 #define ET_UDPPORT				0x21
 #define ET_UDPVER				0x22

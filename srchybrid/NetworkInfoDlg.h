@@ -16,7 +16,6 @@ class CNetworkInfoDlg : public CResizableDialog
 
 public:
 	explicit CNetworkInfoDlg(CWnd *pParent = NULL);   // standard constructor
-	virtual	~CNetworkInfoDlg() = default;
 
 protected:
 	CRichEditCtrlX m_info;

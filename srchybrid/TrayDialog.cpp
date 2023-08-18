@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -84,11 +84,11 @@ void CTrayDialog::OnDestroy()
 	CTrayDialogBase::OnDestroy();
 
 	// shouldn't that be done before passing the message to DefWinProc?
-	if (m_nidIconData.hWnd && m_nidIconData.uID > 0 && TrayIsVisible())
+	if (m_nidIconData.hWnd && m_nidIconData.uID > 0 && TrayIconVisible())
 		VERIFY(Shell_NotifyIcon(NIM_DELETE, &m_nidIconData));
 }
 
-bool CTrayDialog::TrayIsVisible()
+bool CTrayDialog::TrayIconVisible()
 {
 	return m_bTrayIconVisible;
 }
@@ -142,6 +142,13 @@ bool CTrayDialog::TrayHide()
 	return bSuccess;
 }
 
+void CTrayDialog::TrayReset()
+{
+	Shell_NotifyIcon(NIM_DELETE, &m_nidIconData); //fix for DPI change as it keeps the icon
+	if (m_bTrayIconVisible)
+		TrayShow();
+}
+
 BOOL CTrayDialog::TrayUpdate()
 {
 	BOOL bSuccess = FALSE;
@@ -186,17 +193,13 @@ LRESULT CTrayDialog::OnTrayNotify(WPARAM wParam, LPARAM lParam)
 	if (wParam != 1u) //check ID
 		return 0;
 
-	CPoint pt;
+	POINT pt;
 	switch (lParam) {
 	case WM_MOUSEMOVE:
-		::GetCursorPos(&pt);
-		ClientToScreen(&pt);
-		OnTrayMouseMove(pt);
+		OnTrayMouseMove();
 		break;
 	case WM_LBUTTONDOWN:
-		::GetCursorPos(&pt);
-		ClientToScreen(&pt);
-		OnTrayLButtonDown(pt);
+		OnTrayLButtonDown();
 		break;
 	case WM_LBUTTONUP:
 		// Handle the WM_LBUTTONUP only if we know that there was also an according
@@ -214,22 +217,17 @@ LRESULT CTrayDialog::OnTrayNotify(WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_LBUTTONDBLCLK:
 		KillSingleClickTimer();
-		::GetCursorPos(&pt);
-		ClientToScreen(&pt);
-		OnTrayLButtonDblClk(pt);
+		OnTrayLButtonDblClk();
 		break;
 	case WM_RBUTTONUP:
 	case WM_CONTEXTMENU:
 		KillSingleClickTimer();
 		::GetCursorPos(&pt);
-		//ClientToScreen(&pt);
 		OnTrayRButtonUp(pt);
 		break;
 	case WM_RBUTTONDBLCLK:
 		KillSingleClickTimer();
-		::GetCursorPos(&pt);
-		ClientToScreen(&pt);
-		OnTrayRButtonDblClk(pt);
+		OnTrayRButtonDblClk();
 	}
 	return 1;
 }
@@ -249,7 +247,7 @@ void CTrayDialog::OnTimer(UINT_PTR nIDEvent)
 		TRACE("%s: nIDEvent=%u\n", __FUNCTION__, nIDEvent);
 		// Kill that timer before calling 'OnTrayLButtonUp' which may create the MiniMule window asynchronously!
 		KillSingleClickTimer();
-		OnTrayLButtonUp(CPoint());
+		OnTrayLButtonUp();
 	} else
 		CDialogMinTrayBtn<CResizableDialog>::OnTimer(nIDEvent);
 }
@@ -287,33 +285,43 @@ void CTrayDialog::OnTrayRButtonUp(CPoint)
 {
 }
 
-void CTrayDialog::OnTrayLButtonDown(CPoint)
+void CTrayDialog::OnTrayLButtonDown()
 {
+	/*POINT pt;
+	::GetCursorPos(&pt);
+	ClientToScreen(&pt);*/
 	m_uLButtonDown = 1;
 }
 
-void CTrayDialog::OnTrayLButtonUp(CPoint)
+void CTrayDialog::OnTrayLButtonUp()
 {
 }
 
-void CTrayDialog::OnTrayLButtonDblClk(CPoint)
+void CTrayDialog::OnTrayLButtonDblClk()
 {
+	/*POINT pt;
+	::GetCursorPos(&pt);
+	ClientToScreen(&pt);*/
 	m_uLButtonDown = 2;
 }
 
-void CTrayDialog::OnTrayRButtonDblClk(CPoint)
+void CTrayDialog::OnTrayRButtonDblClk()
 {
+	/*POINT pt;
+	::GetCursorPos(&pt);
+	ClientToScreen(&pt);*/
 }
 
-void CTrayDialog::OnTrayMouseMove(CPoint)
+void CTrayDialog::OnTrayMouseMove()
 {
+	/*POINT pt;
+	::GetCursorPos(&pt);
+	ClientToScreen(&pt);*/
 }
 
 LRESULT CTrayDialog::OnTaskBarCreated(WPARAM, LPARAM)
 {
-	Shell_NotifyIcon(NIM_DELETE, &m_nidIconData); //fix for DPI change as it keeps icon
-	if (m_bTrayIconVisible)
-		TrayShow();
+	TrayReset();
 	return 0;
 }
 

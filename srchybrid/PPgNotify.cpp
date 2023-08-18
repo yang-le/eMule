@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -106,6 +106,8 @@ BOOL CPPgNotify::OnInitDialog()
 	bool b = IsRunningXPSP2OrHigher();
 	m_mail.bSendMail &= b;
 	CheckDlgButton(IDC_CB_ENABLENOTIFICATIONS, m_mail.bSendMail ? BST_CHECKED : BST_UNCHECKED);
+	SetDlgItemText(IDC_EDIT_RECEIVER, m_mail.sTo);
+	SetDlgItemText(IDC_EDIT_SENDER, m_mail.sFrom);
 
 	UpdateControls();
 	Localize();
@@ -239,7 +241,7 @@ void CPPgNotify::OnBnClickedTestNotification()
 	// save current pref settings
 	bool bCurNotifyOnImportantError = thePrefs.notifierOnImportantError;
 	ENotifierSoundType iCurSoundType = thePrefs.notifierSoundType;
-	CString strSoundFile = thePrefs.notifierSoundFile;
+	CString strSoundFile(thePrefs.notifierSoundFile);
 
 	// temporary apply current settings from dialog
 	thePrefs.notifierOnImportantError = true;

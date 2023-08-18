@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2005 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -20,6 +20,7 @@
 #include "CollectionViewDialog.h"
 #include "Collection.h"
 #include "CollectionFile.h"
+#include "OtherFunctions.h"
 #include "DownloadQueue.h"
 #include "TransferDlg.h"
 #include "CatDialog.h"
@@ -61,7 +62,7 @@ void CCollectionViewDialog::DoDataExchange(CDataExchange *pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_COLLECTIONVEWLIST, m_CollectionViewList);
-	DDX_Control(pDX, IDC_COLLECTIONVIEWCATEGORYCHECK, m_AddNewCatagory);
+	DDX_Control(pDX, IDC_COLLECTIONVIEWCATEGORYCHECK, m_AddNewCategory);
 	DDX_Control(pDX, IDC_COLLECTIONVIEWLISTLABEL, m_CollectionViewListLabel);
 	DDX_Control(pDX, IDC_COLLECTIONVIEWLISTICON, m_CollectionViewListIcon);
 	DDX_Control(pDX, IDC_VIEWCOLLECTIONDL, m_CollectionDownload);
@@ -92,10 +93,10 @@ BOOL CCollectionViewDialog::OnInitDialog()
 	m_CollectionViewList.Init(_T("CollectionView"));
 	SetIcon(m_icoWnd = theApp.LoadIcon(_T("Collection_View")), FALSE);
 
-	m_AddNewCatagory.SetCheck(0);
+	m_AddNewCategory.SetCheck(0);
 
-	CString str(GetResString(IDS_VIEWCOLLECTION));
-	str.AppendFormat(_T(": %s"), (LPCTSTR)m_pCollection->m_sCollectionName);
+	CString str;
+	str.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_VIEWCOLLECTION), (LPCTSTR)m_pCollection->m_sCollectionName);
 	SetWindowText(str);
 
 	m_icoColl = theApp.LoadIcon(_T("AABCollectionFileType"));
@@ -123,25 +124,22 @@ BOOL CCollectionViewDialog::OnInitDialog()
 	AddAnchor(IDC_VIEWCOLLECTIONDL, BOTTOM_RIGHT);
 	EnableSaveRestore(PREF_INI_SECTION);
 
-	CSKey key;
-	for (POSITION pos = m_pCollection->m_CollectionFilesMap.GetStartPosition(); pos != NULL;) {
-		CCollectionFile *pCollectionFile;
-		m_pCollection->m_CollectionFilesMap.GetNextAssoc(pos, key, pCollectionFile);
-
-		int iImage = theApp.GetFileTypeSystemImageIdx(pCollectionFile->GetFileName());
-		int iItem = m_CollectionViewList.InsertItem(LVIF_TEXT | LVIF_PARAM | (iImage > 0 ? LVIF_IMAGE : 0), m_CollectionViewList.GetItemCount(), NULL, 0, 0, iImage, (LPARAM)pCollectionFile);
+	for (CCollectionFilesMap::CPair *pair = m_pCollection->m_CollectionFilesMap.PGetFirstAssoc(); pair != NULL; pair = m_pCollection->m_CollectionFilesMap.PGetNextAssoc(pair)) {
+		const CCollectionFile *pFile = pair->value;
+		int iImage = theApp.GetFileTypeSystemImageIdx(pFile->GetFileName());
+		int iItem = m_CollectionViewList.InsertItem(LVIF_TEXT | LVIF_PARAM | (iImage > 0 ? LVIF_IMAGE : 0), m_CollectionViewList.GetItemCount(), _T(""), 0, 0, iImage, (LPARAM)pFile);
 		if (iItem >= 0) {
-			m_CollectionViewList.SetItemText(iItem, colName, pCollectionFile->GetFileName());
-			m_CollectionViewList.SetItemText(iItem, colSize, (LPCTSTR)CastItoXBytes(pCollectionFile->GetFileSize()));
-			m_CollectionViewList.SetItemText(iItem, colHash, md4str(pCollectionFile->GetFileHash()));
+			m_CollectionViewList.SetItemText(iItem, colName, pFile->GetFileName());
+			m_CollectionViewList.SetItemText(iItem, colSize, (LPCTSTR)CastItoXBytes(pFile->GetFileSize()));
+			m_CollectionViewList.SetItemText(iItem, colHash, md4str(pFile->GetFileHash()));
 		}
 	}
 
 	for (int iItem = m_CollectionViewList.GetItemCount(); --iItem >= 0;)
 		m_CollectionViewList.SetItemState(iItem, LVIS_SELECTED, LVIS_SELECTED);
 
-	CString strTitle(GetResString(IDS_COLLECTIONLIST));
-	strTitle.AppendFormat(_T(" (%d)"), m_CollectionViewList.GetItemCount());
+	CString strTitle;
+	strTitle.Format(_T("%s (%d)"), (LPCTSTR)GetResString(IDS_COLLECTIONLIST), m_CollectionViewList.GetItemCount());
 	m_CollectionViewListLabel.SetWindowText(strTitle);
 
 	return TRUE;
@@ -156,13 +154,13 @@ void CCollectionViewDialog::OnNmDblClkCollectionList(LPNMHDR, LRESULT *pResult)
 void CCollectionViewDialog::DownloadSelected()
 {
 	int iNewIndex = 0;
-	for (int iIndex = (int)thePrefs.GetCatCount(); --iIndex > 0;)
+	for (INT_PTR iIndex = thePrefs.GetCatCount(); --iIndex > 0;)
 		if (!m_pCollection->m_sCollectionName.CompareNoCase(thePrefs.GetCategory(iIndex)->strTitle)) {
-			iNewIndex = iIndex;
+			iNewIndex = (int)iIndex;
 			break;
 		}
 
-	if (m_AddNewCatagory.GetCheck() && !iNewIndex) {
+	if (m_AddNewCategory.GetCheck() && !iNewIndex) {
 		iNewIndex = theApp.emuledlg->transferwnd->AddCategory(m_pCollection->m_sCollectionName, thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR), _T(""), _T(""), true);
 		theApp.emuledlg->searchwnd->UpdateCatTabs();
 	}
@@ -175,9 +173,9 @@ void CCollectionViewDialog::DownloadSelected()
 	}
 
 	while (!collectionFileList.IsEmpty()) {
-		CCollectionFile *pCollectionFile = collectionFileList.RemoveHead();
-		if (pCollectionFile)
-			theApp.downloadqueue->AddSearchToDownload(pCollectionFile->GetED2kLink(), thePrefs.AddNewFilesPaused(), iNewIndex);
+		const CCollectionFile *pFile = collectionFileList.RemoveHead();
+		if (pFile)
+			theApp.downloadqueue->AddSearchToDownload(pFile->GetED2kLink(), thePrefs.AddNewFilesPaused(), iNewIndex);
 	}
 }
 

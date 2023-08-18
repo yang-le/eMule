@@ -89,19 +89,19 @@ public:
 	{
 		static LPCTSTR const sHelperWnd = _T("CAsyncSocketEx Helper Window");
 		//Initialize data
-		m_pAsyncSocketExWindowData = new t_AsyncSocketExWindowData[m_nWindowDataSize](); //Reserve space for 512 active sockets
+		m_pAsyncSocketExWindowData = new t_AsyncSocketExWindowData[m_nWindowDataSize]{}; //Reserve space for 512 active sockets
 
 		//Create window
-		WNDCLASSEX wndclass = {};
+		WNDCLASSEX wndclass{};
 		wndclass.cbSize = (UINT)sizeof wndclass;
 		wndclass.lpfnWndProc = WindowProc;
-		wndclass.hInstance = GetModuleHandle(NULL);
+		wndclass.hInstance = ::GetModuleHandle(NULL);
 		wndclass.lpszClassName = sHelperWnd;
 		::RegisterClassEx(&wndclass);
 
 		//Starting from Win2000, system supports message-only windows that are not visible,
 		//have no z-order, cannot be enumerated, and do not receive broadcast messages.
-		m_hWnd = ::CreateWindow(sHelperWnd, sHelperWnd, 0, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, ::GetModuleHandle(0));
+		m_hWnd = ::CreateWindow(sHelperWnd, NULL, 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, NULL,0);
 		if (m_hWnd)
 			::SetWindowLongPtr(m_hWnd, GWLP_USERDATA, (LONG_PTR)this);
 		else
@@ -136,7 +136,7 @@ public:
 		if (!m_nWindowDataSize) {
 			ASSERT(!m_nSocketCount);
 			m_nWindowDataSize = 512;
-			m_pAsyncSocketExWindowData = new t_AsyncSocketExWindowData[512](); //Reserve space for 512 active sockets
+			m_pAsyncSocketExWindowData = new t_AsyncSocketExWindowData[512]{}; //Reserve space for 512 active sockets
 		}
 
 		if (nSocketIndex >= 0) {
@@ -144,7 +144,7 @@ public:
 			ASSERT(m_nWindowDataSize > nSocketIndex);
 			ASSERT(m_pAsyncSocketExWindowData[nSocketIndex].m_pSocket == pSocket);
 			ASSERT(m_nSocketCount);
-			return TRUE; //m_pAsyncSocketExWindowData != NULL;
+			return m_pAsyncSocketExWindowData != NULL;
 		}
 
 		//Increase socket storage if too small
@@ -178,49 +178,47 @@ public:
 	}
 
 	//Removes a socket from the socket storage
-	BOOL RemoveSocket(CAsyncSocketEx *pSocket, int &nSocketIndex)
+	BOOL RemoveSocket(const CAsyncSocketEx *pSocket, int &nSocketIndex)
 	{
 		if (!pSocket) {
 			ASSERT(0);
 			return FALSE;
 		}
-		if (nSocketIndex < 0)
-			return TRUE;
+		if (nSocketIndex >= 0) {
+			// Remove additional messages from queue
+				MSG msg;
+			while (::PeekMessage(&msg, m_hWnd, WM_SOCKETEX_NOTIFY + nSocketIndex, WM_SOCKETEX_NOTIFY + nSocketIndex, PM_REMOVE));
 
-		// Remove additional messages from queue
-		MSG msg;
-		while (PeekMessage(&msg, m_hWnd, WM_SOCKETEX_NOTIFY + nSocketIndex, WM_SOCKETEX_NOTIFY + nSocketIndex, PM_REMOVE));
-
-		ASSERT(m_pAsyncSocketExWindowData);
-		ASSERT(m_nWindowDataSize > 0);
-		ASSERT(m_nSocketCount > 0);
-		ASSERT(m_pAsyncSocketExWindowData[nSocketIndex].m_pSocket == pSocket);
-		m_pAsyncSocketExWindowData[nSocketIndex].m_pSocket = NULL;
-		nSocketIndex = -1;
-		--m_nSocketCount;
-
+			ASSERT(m_pAsyncSocketExWindowData);
+			ASSERT(m_nWindowDataSize > 0);
+			ASSERT(m_nSocketCount > 0);
+			ASSERT(m_pAsyncSocketExWindowData[nSocketIndex].m_pSocket == pSocket);
+			m_pAsyncSocketExWindowData[nSocketIndex].m_pSocket = NULL;
+			nSocketIndex = -1;
+			--m_nSocketCount;
+		}
 		return TRUE;
 	}
 
-	void RemoveLayers(CAsyncSocketEx *pOrigSocket)
+	void RemoveLayers(const CAsyncSocketEx *pOrigSocket)
 	{
 		// Remove all layer messages from old socket
-		std::list<MSG> msgList;
-		MSG msg;
-		while (PeekMessage(&msg, m_hWnd, WM_SOCKETEX_TRIGGER, WM_SOCKETEX_TRIGGER, PM_REMOVE)) {
+		std::vector<MSG> msgList;
+
+		for (MSG msg; ::PeekMessage(&msg, m_hWnd, WM_SOCKETEX_TRIGGER, WM_SOCKETEX_TRIGGER, PM_REMOVE);) {
 			//Verify parameters, lookup socket and notification message
 			if (msg.wParam >= static_cast<WPARAM>(m_nWindowDataSize)) //Index is within socket storage
 				continue;
 
 			CAsyncSocketEx *pSocket = m_pAsyncSocketExWindowData[msg.wParam].m_pSocket;
 			CAsyncSocketExLayer::t_LayerNotifyMsg *pMsg = reinterpret_cast<CAsyncSocketExLayer::t_LayerNotifyMsg*>(msg.lParam);
-			if (!pMsg || !pSocket || pSocket == pOrigSocket || pSocket->m_SocketData.hSocket != pMsg->hSocket)
+			if (!pMsg || !pSocket || pSocket->m_SocketData.hSocket == INVALID_SOCKET || pSocket == pOrigSocket || pSocket->m_SocketData.hSocket != pMsg->hSocket)
 				delete pMsg;
 			else
 				msgList.push_back(msg);
 		}
 
-		for (std::list<MSG>::const_iterator iter = msgList.begin(); iter != msgList.end(); ++iter)
+		for (std::vector<MSG>::const_iterator iter = msgList.begin(); iter != msgList.end(); ++iter)
 			if (!::PostMessage(m_hWnd, iter->message, iter->wParam, iter->lParam))
 				delete reinterpret_cast<CAsyncSocketExLayer::t_LayerNotifyMsg*>(iter->lParam);
 	}
@@ -305,10 +303,8 @@ public:
 
 #ifndef NOSOCKETSTATES
 						// netfinity: Check that socket is still valid. It might have got deleted.
-						if (!nErrorCode && pWnd->m_pAsyncSocketExWindowData && pSocket == pWnd->m_pAsyncSocketExWindowData[message - WM_SOCKETEX_NOTIFY].m_pSocket) {
-							if ((pSocket->m_nPendingEvents & FD_READ) && pSocket->GetState() == connected)
-								pSocket->OnReceive(0);
-							if ((pSocket->m_nPendingEvents & FD_FORCEREAD) && pSocket->GetState() == connected)
+						if (!nErrorCode && pWnd->m_pAsyncSocketExWindowData	&& pSocket == pWnd->m_pAsyncSocketExWindowData[message - WM_SOCKETEX_NOTIFY].m_pSocket) {
+							if ((pSocket->m_nPendingEvents & (FD_READ | FD_FORCEREAD)) && pSocket->GetState() == connected)
 								pSocket->OnReceive(0);
 							if ((pSocket->m_nPendingEvents & FD_WRITE) && pSocket->GetState() == connected)
 								pSocket->OnSend(0);
@@ -498,7 +494,7 @@ public:
 				if (pWnd->m_pThreadData->layerCloseNotify.empty())
 					::KillTimer(hWnd, 1);
 				if (socket)
-					::PostMessage(hWnd, socket->m_SocketData.nSocketIndex + WM_SOCKETEX_NOTIFY, socket->m_SocketData.hSocket, FD_CLOSE);
+					::PostMessage(hWnd, WM_SOCKETEX_NOTIFY + socket->m_SocketData.nSocketIndex, socket->m_SocketData.hSocket, FD_CLOSE);
 			}
 			return 0;
 		case WM_SOCKETEX_GETHOST: //WSAAsyncGetHostByName reply
@@ -559,7 +555,7 @@ public:
 					return 0;
 
 				// Process pending callbacks
-				std::list<t_callbackMsg> tmp;
+				std::vector<t_callbackMsg> tmp;
 				tmp.swap(pSocket->m_pendingCallbacks);
 				pSocket->OnLayerCallback(tmp);
 			}
@@ -662,7 +658,7 @@ bool CAsyncSocketEx::Create(UINT nSocketPort /*=0*/, int nSocketType /*=SOCK_STR
 
 	if (m_pFirstLayer) {
 		m_lEvent = lEvent;
-		if (WSAAsyncSelect(m_SocketData.hSocket, GetHelperWindowHandle(), m_SocketData.nSocketIndex + WM_SOCKETEX_NOTIFY, FD_DEFAULT)) {
+		if (WSAAsyncSelect(m_SocketData.hSocket, GetHelperWindowHandle(), WM_SOCKETEX_NOTIFY + m_SocketData.nSocketIndex, FD_DEFAULT)) {
 			Close();
 			return false;
 		}
@@ -829,8 +825,16 @@ bool CAsyncSocketEx::InitAsyncSocketExInstance()
 	if (!m_pLocalAsyncSocketExThreadData) {
 		// Get thread specific data
 		if (!thread_local_data) {
-			thread_local_data = new t_AsyncSocketExThreadData();
-			thread_local_data->m_pHelperWindow = new CAsyncSocketExHelperWindow(thread_local_data);
+			try {
+				thread_local_data = new t_AsyncSocketExThreadData{};
+				thread_local_data->m_pHelperWindow = new CAsyncSocketExHelperWindow(thread_local_data);
+			} catch (...) {
+				if (thread_local_data) {
+					delete thread_local_data;
+					thread_local_data = NULL;
+				}
+				return false;
+			}
 		}
 		m_pLocalAsyncSocketExThreadData = thread_local_data;
 		++m_pLocalAsyncSocketExThreadData->nInstanceCount;
@@ -844,13 +848,13 @@ void CAsyncSocketEx::FreeAsyncSocketExInstance()
 	if (!m_pLocalAsyncSocketExThreadData)
 		return;
 
-	for (std::list<CAsyncSocketEx*>::const_iterator iter = m_pLocalAsyncSocketExThreadData->layerCloseNotify.begin(); iter != m_pLocalAsyncSocketExThreadData->layerCloseNotify.end(); ++iter)
-		if (*iter == this) {
-			m_pLocalAsyncSocketExThreadData->layerCloseNotify.erase(iter);
-			if (m_pLocalAsyncSocketExThreadData->layerCloseNotify.empty())
-				::KillTimer(m_pLocalAsyncSocketExThreadData->m_pHelperWindow->GetHwnd(), 1);
-			break;
-		}
+	std::list<CAsyncSocketEx*> &socks = m_pLocalAsyncSocketExThreadData->layerCloseNotify;
+	std::list<CAsyncSocketEx*>::const_iterator iter = std::find(socks.begin(), socks.end(), this);
+	if (iter != socks.end()) {
+		socks.erase(iter);
+		if (socks.empty())
+			::KillTimer(m_pLocalAsyncSocketExThreadData->m_pHelperWindow->GetHwnd(), 1);
+	}
 
 	if (!--m_pLocalAsyncSocketExThreadData->nInstanceCount) {
 		m_pLocalAsyncSocketExThreadData = NULL;
@@ -1061,7 +1065,7 @@ BOOL CAsyncSocketEx::Attach(SOCKET hSocket, long lEvent /*= FD_DEFAULT*/)
 
 	if (m_pFirstLayer) {
 		m_lEvent = lEvent;
-		return !WSAAsyncSelect(m_SocketData.hSocket, GetHelperWindowHandle(), m_SocketData.nSocketIndex + WM_SOCKETEX_NOTIFY, FD_DEFAULT);
+		return !WSAAsyncSelect(m_SocketData.hSocket, GetHelperWindowHandle(), WM_SOCKETEX_NOTIFY + m_SocketData.nSocketIndex, FD_DEFAULT);
 	}
 	return AsyncSelect(lEvent);
 }
@@ -1074,7 +1078,7 @@ BOOL CAsyncSocketEx::AsyncSelect(long lEvent /*= FD_DEFAULT*/)
 		return TRUE;
 	if (m_SocketData.hSocket == INVALID_SOCKET && m_SocketData.nFamily == AF_UNSPEC)
 		return TRUE;
-	return !WSAAsyncSelect(m_SocketData.hSocket, GetHelperWindowHandle(), m_SocketData.nSocketIndex + WM_SOCKETEX_NOTIFY, lEvent);
+	return !WSAAsyncSelect(m_SocketData.hSocket, GetHelperWindowHandle(), WM_SOCKETEX_NOTIFY + m_SocketData.nSocketIndex, lEvent);
 }
 
 BOOL CAsyncSocketEx::Listen(int nConnectionBacklog /*=5*/)
@@ -1139,7 +1143,7 @@ BOOL CAsyncSocketEx::TriggerEvent(long lEvent)
 			delete pMsg;
 		return res;
 	}
-	return ::PostMessage(GetHelperWindowHandle(), m_SocketData.nSocketIndex + WM_SOCKETEX_NOTIFY, m_SocketData.hSocket, WSAGETSELECTEVENT(lEvent));
+	return ::PostMessage(GetHelperWindowHandle(), WM_SOCKETEX_NOTIFY + m_SocketData.nSocketIndex, m_SocketData.hSocket, WSAGETSELECTEVENT(lEvent));
 }
 
 SOCKET CAsyncSocketEx::GetSocketHandle()
@@ -1149,9 +1153,7 @@ SOCKET CAsyncSocketEx::GetSocketHandle()
 
 HWND CAsyncSocketEx::GetHelperWindowHandle()
 {
-	if (!m_pLocalAsyncSocketExThreadData)
-		return 0;
-	if (!m_pLocalAsyncSocketExThreadData->m_pHelperWindow)
+	if (!m_pLocalAsyncSocketExThreadData || !m_pLocalAsyncSocketExThreadData->m_pHelperWindow)
 		return 0;
 	return m_pLocalAsyncSocketExThreadData->m_pHelperWindow->GetHwnd();
 }
@@ -1171,7 +1173,7 @@ BOOL CAsyncSocketEx::AddLayer(CAsyncSocketExLayer *pLayer)
 	m_pLastLayer = m_pFirstLayer;
 
 	return m_SocketData.hSocket == INVALID_SOCKET
-		|| !WSAAsyncSelect(m_SocketData.hSocket, GetHelperWindowHandle(), m_SocketData.nSocketIndex + WM_SOCKETEX_NOTIFY, FD_DEFAULT);
+		|| !WSAAsyncSelect(m_SocketData.hSocket, GetHelperWindowHandle(), WM_SOCKETEX_NOTIFY + m_SocketData.nSocketIndex, FD_DEFAULT);
 }
 
 void CAsyncSocketEx::RemoveAllLayers()
@@ -1185,11 +1187,11 @@ void CAsyncSocketEx::RemoveAllLayers()
 		m_pLocalAsyncSocketExThreadData->m_pHelperWindow->RemoveLayers(this);
 }
 
-int CAsyncSocketEx::OnLayerCallback(std::list<t_callbackMsg> &callbacks)
+int CAsyncSocketEx::OnLayerCallback(std::vector<t_callbackMsg> &callbacks)
 {
 	while (!callbacks.empty()) {
-		delete[] callbacks.begin()->str;
-		callbacks.pop_front();
+		delete[] callbacks.back().str;
+		callbacks.pop_back();
 	}
 	return 0;
 }
@@ -1253,7 +1255,7 @@ bool CAsyncSocketEx::TryNextProtocol()
 		AttachHandle();
 
 		if (AsyncSelect(m_lEvent))
-			if (!m_pFirstLayer || !WSAAsyncSelect(m_SocketData.hSocket, GetHelperWindowHandle(), m_SocketData.nSocketIndex + WM_SOCKETEX_NOTIFY, FD_DEFAULT))
+			if (!m_pFirstLayer || !WSAAsyncSelect(m_SocketData.hSocket, GetHelperWindowHandle(), WM_SOCKETEX_NOTIFY + m_SocketData.nSocketIndex, FD_DEFAULT))
 				if (Bind(m_nSocketPort, m_sSocketAddress)) {
 					ret = Connect(m_SocketData.nextAddr->ai_addr, (int)m_SocketData.nextAddr->ai_addrlen);
 					if (ret || GetLastError() == WSAEWOULDBLOCK)
@@ -1285,14 +1287,13 @@ void CAsyncSocketEx::AddCallbackNotification(const t_callbackMsg &msg)
 
 void CAsyncSocketEx::ResendCloseNotify()
 {
-	for (std::list<CAsyncSocketEx*>::const_iterator iter = m_pLocalAsyncSocketExThreadData->layerCloseNotify.begin(); iter != m_pLocalAsyncSocketExThreadData->layerCloseNotify.end(); ++iter)
-		if (*iter == this)
-			return;
-
-	m_pLocalAsyncSocketExThreadData->layerCloseNotify.push_back(this);
-	if (m_pLocalAsyncSocketExThreadData->layerCloseNotify.size() == 1)
-		::SetTimer(m_pLocalAsyncSocketExThreadData->m_pHelperWindow->GetHwnd(), 1, 10, NULL);
-
+	std::list<CAsyncSocketEx*> &socks = m_pLocalAsyncSocketExThreadData->layerCloseNotify;
+	std::list<CAsyncSocketEx*>::const_iterator iter = std::find(socks.begin(), socks.end(), this);
+	if (iter == socks.end()) {
+		m_pLocalAsyncSocketExThreadData->layerCloseNotify.push_back(this);
+		if (m_pLocalAsyncSocketExThreadData->layerCloseNotify.size() == 1)
+			::SetTimer(m_pLocalAsyncSocketExThreadData->m_pHelperWindow->GetHwnd(), 1, 10, NULL);
+	}
 }
 #ifdef _DEBUG
 void CAsyncSocketEx::AssertValid() const
@@ -1306,9 +1307,8 @@ void CAsyncSocketEx::AssertValid() const
 	(void)m_nAsyncGetHostByNamePort;
 	(void)m_nSocketPort;
 	(void)m_pendingCallbacks;
-
-	CHECK_PTR(m_pFirstLayer);
-	CHECK_PTR(m_pLastLayer);
+	(void)m_pFirstLayer;
+	(void)m_pLastLayer;
 }
 #endif
 

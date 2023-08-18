@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -20,7 +20,6 @@
 #include "PPgConnection.h"
 #include "wizard.h"
 #include "Scheduler.h"
-#include "OtherFunctions.h"
 #include "emuledlg.h"
 #include "Preferences.h"
 #include "Opcodes.h"
@@ -223,8 +222,8 @@ BOOL CPPgConnection::OnApply()
 		return FALSE;
 	}
 
-	int lastmaxgu = thePrefs.maxGraphUploadRate; //save the values
-	int lastmaxgd = thePrefs.maxGraphDownloadRate;
+	uint32 lastmaxgu = thePrefs.maxGraphUploadRate; //save the values
+	uint32 lastmaxgd = thePrefs.maxGraphDownloadRate;
 
 	thePrefs.SetMaxGraphDownloadRate(v);
 	m_ctlMaxDown.SetRange(1, thePrefs.GetMaxGraphDownloadRate(), TRUE);
@@ -313,7 +312,7 @@ BOOL CPPgConnection::OnApply()
 	else
 		tempcon = (u >= INT_MAX ? CPreferences::GetRecommendedMaxConnections() : u);
 
-	if (tempcon > (UINT)GetMaxWindowsTCPConnections()) {
+	if (tempcon > GetMaxWindowsTCPConnections()) {
 		CString strMessage;
 		strMessage.Format(GetResString(IDS_PW_WARNING), (LPCTSTR)GetResString(IDS_PW_MAXC), GetMaxWindowsTCPConnections());
 		int iResult = AfxMessageBox(strMessage, MB_ICONWARNING | MB_YESNO);
@@ -386,7 +385,7 @@ void CPPgConnection::OnBnClickedWizard()
 
 bool CPPgConnection::CheckUp(uint32 mUp, uint32 &mDown)
 {
-	if (thePrefs.maxGraphDownloadRate <= 0)
+	if (thePrefs.maxGraphDownloadRate == 0)
 		return false;
 	uint32 uDown = mDown;
 	if (mUp < 4 && mDown > mUp * 3)
@@ -395,7 +394,7 @@ bool CPPgConnection::CheckUp(uint32 mUp, uint32 &mDown)
 		mDown = mUp * 4;
 	else if (mUp < 20 && mDown > mUp * 5)
 		mDown = mUp * 5;
-	if (mDown > (uint32)thePrefs.maxGraphDownloadRate) {
+	if (mDown > thePrefs.maxGraphDownloadRate) {
 		mDown = thePrefs.maxGraphDownloadRate;
 		return true;
 	}
@@ -404,7 +403,7 @@ bool CPPgConnection::CheckUp(uint32 mUp, uint32 &mDown)
 
 bool CPPgConnection::CheckDown(uint32 &mUp, uint32 mDown)
 {
-	if (thePrefs.maxGraphUploadRate <= 0)
+	if (thePrefs.maxGraphUploadRate == 0)
 		return false;
 	uint32 uUp = mUp;
 	if (mDown < 13 && mUp * 3 < mDown)
@@ -413,7 +412,7 @@ bool CPPgConnection::CheckDown(uint32 &mUp, uint32 mDown)
 		mUp = (mDown + 3) / 4;
 	else if (mUp < 20 && mUp * 5 < mDown)
 		mUp = (mDown + 4) / 5;
-	if (mUp > (uint32)thePrefs.maxGraphUploadRate) {
+	if (mUp > thePrefs.maxGraphUploadRate) {
 		mUp = thePrefs.maxGraphUploadRate;
 		return true;
 	}

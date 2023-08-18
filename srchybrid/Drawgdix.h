@@ -26,10 +26,10 @@ class CSelStock
 	CGdiObject* Old()
 
 class CSelPen
-	CSelPen(CDC *pDC, COLORREF col, int sty=PS_SOLID, int wid = 0)
+	CSelPen(CDC *pDC, COLORREF col, int sty = PS_SOLID, int wid = 0)
 	CSelPen(CDC *pDC, CPen *pPen)
 	void Select(CPen *pPen)
-	void Select(COLORREF col, int sty=PS_SOLID, int wid = 0)
+	void Select(COLORREF col, int sty = PS_SOLID, int wid = 0)
 
 class CSelBrush
 	CSelBrush(CDC *pDC, CBrush *pBrush)
@@ -650,7 +650,7 @@ public:
 		: CSelect(pDC)
 		, m_OldRop()
 	{
-		/*VERIFY(m_OldRop=m_pDC->GetROP2());*/
+		/*VERIFY(m_OldRop = m_pDC->GetROP2());*/
 	}
 
 	CSelROP2(CDC *pDC, int drawMode)

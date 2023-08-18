@@ -11,7 +11,6 @@ class CPPgScheduler : public CPropertyPage
 
 public:
 	CPPgScheduler();
-	virtual	~CPPgScheduler() = default;
 
 	void Localize();
 

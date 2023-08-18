@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -21,10 +21,10 @@
 
 #define CVI_IGNORED	(UINT_MAX)
 // Version comparison rules
-// == means same client type, same or ignored version (for example eMule/0.4.* == eMule/0.4.2 )
-// != means different client or different defined version (for example eMule/0.4.2 != SomeClient/0.4.2 )
-// > mean _same client type_ and higher version, which therefore cannot be completely undefined ( for example eMule/1.* > eMule/0.4.2 )
-// >= same as > but here the version can be undefined ( for example eMule/* >= eMule/0.4.2 )
+// == means same client type, same or ignored version (for example, eMule/0.4.* == eMule/0.4.2)
+// != means different client or different defined version (for example, eMule/0.4.2 != SomeClient/0.4.2)
+// > mean _same client type_ and higher version, which therefore cannot be completely undefined (for example, eMule/1.* > eMule/0.4.2)
+// >= same as > but here the version can be undefined (for example, eMule/* >= eMule/0.4.2)
 class CClientVersionInfo
 {
 	void init(UINT nVerMajor, UINT nVerMinor, UINT nVerUpdate, UINT nVerBuild, UINT ClientTypeMajor, UINT ClientTypeMinor)
@@ -47,8 +47,8 @@ public:
 			theApp.QueueDebugLogLine(false, _T("PeerCache Error: Bad Version info in PeerCache Descriptor found: %s"), (LPCTSTR)strPCEncodedVersion);
 			return;
 		}
-		const CString &strClientType(strPCEncodedVersion.Left(posSeparator).Trim());
-		const CString &strVersionNumber(strPCEncodedVersion.Mid(posSeparator + 1).Trim());
+		const CString strClientType(strPCEncodedVersion.Left(posSeparator).Trim());
+		const CString strVersionNumber(strPCEncodedVersion.Mid(posSeparator + 1).Trim());
 
 		if (strClientType.CompareNoCase(_T("eMule")) == 0)
 			m_ClientTypeMajor = SO_EMULE;
@@ -64,31 +64,22 @@ public:
 		CString strNumber = strVersionNumber.Tokenize(_T("."), iPos);
 		if (strNumber.IsEmpty())
 			return;
-		if (strNumber == _T("*"))
-			m_nVerMajor = UINT_MAX;
-		else
-			m_nVerMajor = _tstoi(strNumber);
+		m_nVerMajor = (strNumber == _T("*")) ? CVI_IGNORED : _tstoi(strNumber);
+
 		strNumber = strVersionNumber.Tokenize(_T("."), iPos);
 		if (strNumber.IsEmpty())
 			return;
-		if (strNumber == _T("*"))
-			m_nVerMinor = UINT_MAX;
-		else
-			m_nVerMinor = _tstoi(strNumber);
+		m_nVerMinor = (strNumber == _T("*")) ? CVI_IGNORED : _tstoi(strNumber);
+
 		strNumber = strVersionNumber.Tokenize(_T("."), iPos);
 		if (strNumber.IsEmpty())
 			return;
-		if (strNumber == _T("*"))
-			m_nVerUpdate = UINT_MAX;
-		else
-			m_nVerUpdate = _tstoi(strNumber);
+		m_nVerUpdate = (strNumber == _T("*")) ? CVI_IGNORED : _tstoi(strNumber);
+
 		strNumber = strVersionNumber.Tokenize(_T("."), iPos);
 		if (strNumber.IsEmpty())
 			return;
-		if (strNumber == _T("*"))
-			m_nVerBuild = UINT_MAX;
-		else
-			m_nVerBuild = _tstoi(strNumber);
+		m_nVerBuild = (strNumber == _T("*")) ? CVI_IGNORED : _tstoi(strNumber);
 	}
 
 	CClientVersionInfo(uint32 dwTagVersionInfo, UINT nClientMajor)
@@ -109,17 +100,6 @@ public:
 		init(CVI_IGNORED, CVI_IGNORED, CVI_IGNORED, CVI_IGNORED, SO_UNKNOWN, SO_UNKNOWN);
 	}
 
-	CClientVersionInfo(const CClientVersionInfo &cv)
-	{
-		*this = cv;
-	}
-
-	CClientVersionInfo& operator=(const CClientVersionInfo &cv)
-	{
-		init(cv.m_nVerMajor, cv.m_nVerMinor, cv.m_nVerUpdate, cv.m_nVerBuild, cv.m_ClientTypeMajor, cv.m_ClientTypeMinor);
-		return *this;
-	}
-
 	friend bool operator==(const CClientVersionInfo &c1, const CClientVersionInfo &c2)
 	{
 		return (c1.m_nVerMajor == CVI_IGNORED || c2.m_nVerMajor == CVI_IGNORED || c1.m_nVerMajor == c2.m_nVerMajor)
@@ -137,18 +117,16 @@ public:
 
 	friend bool operator >(const CClientVersionInfo &c1, const CClientVersionInfo &c2)
 	{
-		if ((c1.m_ClientTypeMajor == CVI_IGNORED || c2.m_ClientTypeMajor == CVI_IGNORED || c1.m_ClientTypeMajor != c2.m_ClientTypeMajor)
-			|| (c1.m_ClientTypeMinor != c2.m_ClientTypeMinor))
+		if (c1.m_ClientTypeMajor == CVI_IGNORED || c2.m_ClientTypeMajor == CVI_IGNORED
+			|| c1.m_ClientTypeMajor != c2.m_ClientTypeMajor || c1.m_ClientTypeMinor != c2.m_ClientTypeMinor)
+		{
 			return false;
-		if (c1.m_nVerMajor != CVI_IGNORED && c2.m_nVerMajor != CVI_IGNORED && c1.m_nVerMajor > c2.m_nVerMajor)
-			return true;
-		if (c1.m_nVerMinor != CVI_IGNORED && c2.m_nVerMinor != CVI_IGNORED && c1.m_nVerMinor > c2.m_nVerMinor)
-			return true;
-		if (c1.m_nVerUpdate != CVI_IGNORED && c2.m_nVerUpdate != CVI_IGNORED && c1.m_nVerUpdate > c2.m_nVerUpdate)
-			return true;
-		if (c1.m_nVerBuild != CVI_IGNORED && c2.m_nVerBuild != CVI_IGNORED && c1.m_nVerBuild > c2.m_nVerBuild)
-			return true;
-		return false;
+		}
+		return (c1.m_nVerMajor != CVI_IGNORED && c2.m_nVerMajor != CVI_IGNORED && c1.m_nVerMajor > c2.m_nVerMajor)
+			|| (c1.m_nVerMinor != CVI_IGNORED && c2.m_nVerMinor != CVI_IGNORED && c1.m_nVerMinor > c2.m_nVerMinor)
+			|| (c1.m_nVerUpdate != CVI_IGNORED && c2.m_nVerUpdate != CVI_IGNORED && c1.m_nVerUpdate > c2.m_nVerUpdate)
+			|| (c1.m_nVerBuild != CVI_IGNORED && c2.m_nVerBuild != CVI_IGNORED && c1.m_nVerBuild > c2.m_nVerBuild);
+
 	}
 
 	friend bool operator <(const CClientVersionInfo &c1, const CClientVersionInfo &c2)

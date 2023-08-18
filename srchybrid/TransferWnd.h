@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2005 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -23,9 +23,7 @@
 #include "QueueListCtrl.h"
 #include "ClientListCtrl.h"
 #include "DownloadClientsCtrl.h"
-
-class CDropDownButton;
-class CToolTipCtrlX;
+#include "DropDownButton.h"
 
 class CTransferWnd : public CResizableFormView
 {
@@ -54,6 +52,7 @@ class CTransferWnd : public CResizableFormView
 		w2iClientsKnown
 	};
 
+public:
 	enum EWnd2
 	{
 		wnd2Downloading = 0,
@@ -61,10 +60,6 @@ class CTransferWnd : public CResizableFormView
 		wnd2OnQueue = 2,
 		wnd2Clients = 3
 	};
-	//Client icons for all windows in EWnd2 enumeration
-	CImageList m_ImageList;
-	void SetImageList();
-public:
 	explicit CTransferWnd(CWnd *pParent = NULL);   // standard constructor
 	virtual	~CTransferWnd();
 	CTransferWnd(const CTransferWnd&) = delete;
@@ -90,22 +85,22 @@ public:
 	CDownloadClientsCtrl	downloadclientsctrl;
 
 protected:
+	POINT		m_pLastMousePoint;
 	CSplitterControl m_wndSplitter;
-	EWnd2		m_uWnd2;
-	bool		downloadlistactive;
-	CDropDownButton	*m_btnWnd1;
-	CDropDownButton	*m_btnWnd2;
+	CDropDownButton	m_btnWnd2;
+	CDropDownButton	m_btnWnd1;
+	CToolTipCtrlX m_tooltipCats;
 	TabControl	m_dlTab;
+	EWnd2		m_uWnd2;
+	CImageList	*m_pDragImage;
+	uint32		m_dwShowListIDC;
 	int			m_rightclickindex;
 	int			m_nDragIndex;
 	int			m_nDropIndex;
 	int			m_nLastCatTT;
 	int			m_isetcatmenu;
 	bool		m_bIsDragging;
-	CImageList	*m_pDragImage;
-	POINT		m_pLastMousePoint;
-	uint32		m_dwShowListIDC;
-	CToolTipCtrlX	*m_tooltipCats;
+	bool		downloadlistactive;
 	bool		m_bLayoutInited;
 
 	void	ShowWnd2(EWnd2 uWnd2);

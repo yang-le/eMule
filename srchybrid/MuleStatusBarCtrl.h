@@ -16,7 +16,6 @@ class CMuleStatusBarCtrl : public CStatusBarCtrl
 
 public:
 	CMuleStatusBarCtrl() = default;
-	virtual	~CMuleStatusBarCtrl() = default;
 
 	void Init();
 

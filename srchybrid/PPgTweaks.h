@@ -14,7 +14,6 @@ class CPPgTweaks : public CPropertyPage
 
 public:
 	CPPgTweaks();
-	virtual	~CPPgTweaks() = default;
 
 	void Localize();
 

@@ -14,7 +14,6 @@ class CPPgConnection : public CPropertyPage
 
 public:
 	CPPgConnection();
-	virtual	~CPPgConnection() = default;
 
 	void Localize();
 	void LoadSettings();

@@ -4,6 +4,10 @@
  *
  * CQuantizer (c)  1996-1997 Jeff Prosise
  *
+ * 31/08/2003 Davide Pizzolato - www.xdp.it
+ * - fixed minor bug in ProcessImage when bpp<=8
+ * - better color reduction to less than 16 colors
+ *
  * COVERED CODE IS PROVIDED UNDER THIS LICENSE ON AN "AS IS" BASIS, WITHOUT WARRANTY
  * OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, WITHOUT LIMITATION, WARRANTIES
  * THAT THE COVERED CODE IS FREE OF DEFECTS, MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE
@@ -23,36 +27,35 @@ class CQuantizer
 {
 	typedef struct _NODE
 	{
-		BOOL bIsLeaf;               // TRUE if node has no children
+		struct _NODE *pChild[8];    // Pointers to child nodes
+		struct _NODE *pNext;        // Pointer to next reducible node
 		UINT nPixelCount;           // Number of pixels represented by this leaf
 		UINT nRedSum;               // Sum of red components
 		UINT nGreenSum;             // Sum of green components
 		UINT nBlueSum;              // Sum of blue components
-		struct _NODE *pChild[8];    // Pointers to child nodes
-		struct _NODE *pNext;        // Pointer to next reducible node
+		UINT nAlphaSum;             // Sum of alpha components
+		bool bIsLeaf;               // true if node has no children
 	} NODE;
 protected:
 	NODE *m_pTree;
 	NODE *m_pReducibleNodes[9];
 	UINT m_nLeafCount;
 	UINT m_nMaxColors;
+	UINT m_nOutputMaxColors;
 	UINT m_nColorBits;
 
 public:
 	CQuantizer(UINT nMaxColors, UINT nColorBits);
-	virtual	~CQuantizer();
+	virtual ~CQuantizer();
 	BOOL ProcessImage(HANDLE hImage);
 	UINT GetColorCount() const;
-	void SetColorTable(RGBQUAD *prgb);
+	void SetColorTable(RGBQUAD* prgb);
 
 protected:
-	void AddColor(NODE **ppNode, BYTE r, BYTE g, BYTE b, UINT nColorBits
-		, UINT nLevel, UINT *pLeafCount, NODE **pReducibleNodes);
-	void* CreateNode(UINT nLevel, UINT nColorBits, UINT *pLeafCount
-		, NODE **pReducibleNodes);
-	void ReduceTree(UINT nColorBits, UINT *pLeafCount
-		, NODE **pReducibleNodes);
+	void AddColor(NODE **ppNode, BYTE r, BYTE g, BYTE b, BYTE a, UINT nColorBits, UINT nLevel, UINT *pLeafCount, NODE **pReducibleNodes);
+	void* CreateNode(UINT nLevel, UINT nColorBits, UINT* pLeafCount, NODE **pReducibleNodes);
 	void DeleteTree(NODE **ppNode);
-	static void GetPaletteColors(NODE *pTree, RGBQUAD *prgb, UINT *pIndex);
+	static void ReduceTree(UINT nColorBits, UINT *pLeafCount, NODE **pReducibleNodes);
+	static void GetPaletteColors(NODE *pTree, RGBQUAD *prgb, UINT *pIndex, UINT *pSum);
 	static BYTE GetPixelIndex(long x, long y, int nbit, long effwdt, BYTE *pimage);
 };

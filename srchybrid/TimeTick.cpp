@@ -8,6 +8,7 @@
 
 #include "stdafx.h"
 #include "TimeTick.h"
+#include "opcodes.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -22,29 +23,24 @@ static char THIS_FILE[] = __FILE__;
 __int64 CTimeTick::m_nPerformanceFrequency = CTimeTick::GetPerformanceFrequency();
 
 CTimeTick::CTimeTick()
-	: m_nTimeElapsed()
-	, m_nTime()
+	: m_nTime()
 {
 }
 
 void CTimeTick::Start()
 {
 	if (m_nPerformanceFrequency)
-		QueryPerformanceCounter(&m_nTimeElapsed);
-	m_nTime.QuadPart = 0;
+		QueryPerformanceCounter(&m_nTime);
 }
 
 float CTimeTick::Tick()
 {
-	LARGE_INTEGER nTime;
+	if (!m_nPerformanceFrequency)
+		return 0.0f;
 
-	if (m_nPerformanceFrequency) {
-		QueryPerformanceCounter(&nTime);
-		float nTickTime	= GetTimeInMilliSeconds(nTime.QuadPart - m_nTimeElapsed.QuadPart);
-		m_nTimeElapsed.QuadPart = nTime.QuadPart;
-		return nTickTime;
-	}
-	return 0.0f;
+	LARGE_INTEGER nTime = m_nTime;
+	QueryPerformanceCounter(&m_nTime);
+	return GetTimeInMilliSeconds(m_nTime.QuadPart - nTime.QuadPart);
 }
 
 __int64 CTimeTick::GetPerformanceFrequency()
@@ -55,5 +51,5 @@ __int64 CTimeTick::GetPerformanceFrequency()
 
 float CTimeTick::GetTimeInMilliSeconds(__int64 nTime)
 {
-	return (float)nTime * 1000 / m_nPerformanceFrequency;
+	return SEC2MS(nTime) / (float)m_nPerformanceFrequency;
 }

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -54,27 +54,27 @@ void CKadSearchListCtrl::Init()
 	SetPrefsKey(_T("KadSearchListCtrl"));
 	SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
-	InsertColumn(colNum, GetResString(IDS_NUMBER), LVCFMT_LEFT, 60);
-	InsertColumn(colKey, GetResString(IDS_KEY), LVCFMT_LEFT, DFLT_HASH_COL_WIDTH);
-	InsertColumn(colType, GetResString(IDS_TYPE), LVCFMT_LEFT, 100);
-	InsertColumn(colName, GetResString(IDS_SW_NAME), LVCFMT_LEFT, DFLT_FILENAME_COL_WIDTH);
-	InsertColumn(colStop, GetResString(IDS_STATUS), LVCFMT_LEFT, 100);
-	InsertColumn(colLoad, GetResString(IDS_THELOAD), LVCFMT_LEFT, 100);
-	InsertColumn(colPacketsSent, GetResString(IDS_PACKSENT), LVCFMT_LEFT, 100);
-	InsertColumn(colResponses, GetResString(IDS_RESPONSES), LVCFMT_LEFT, 100);
+	InsertColumn(colNum,			_T(""),	LVCFMT_LEFT,	60);						//IDS_NUMBER
+	InsertColumn(colKey,			_T(""),	LVCFMT_LEFT,	DFLT_HASH_COL_WIDTH);		//IDS_KEY
+	InsertColumn(colType,			_T(""),	LVCFMT_LEFT,	100);						//IDS_TYPE
+	InsertColumn(colName,			_T(""),	LVCFMT_LEFT,	DFLT_FILENAME_COL_WIDTH);	//IDS_SW_NAME
+	InsertColumn(colStop,			_T(""),	LVCFMT_LEFT,	100);						//IDS_STATUS
+	InsertColumn(colLoad,			_T(""),	LVCFMT_LEFT,	100);						//IDS_THELOAD
+	InsertColumn(colPacketsSent,	_T(""),	LVCFMT_LEFT,	100);						//(IDS_PACKSENT
+	InsertColumn(colResponses,		_T(""),	LVCFMT_LEFT,	100);						//IDS_RESPONSES
 
 	SetAllIcons();
 	Localize();
 
 	LoadSettings();
 	SetSortArrow();
-	SortItems(SortProc, MAKELONG(GetSortItem(), (GetSortAscending() ? 0 : 0x0001)));
+	SortItems(SortProc, MAKELONG(GetSortItem(), !GetSortAscending()));
 }
 
 void CKadSearchListCtrl::UpdateKadSearchCount()
 {
-	CString id;
-	id.Format(_T("%s (%i)"), (LPCTSTR)GetResString(IDS_KADSEARCHLAB), GetItemCount());
+	CString id(GetResString(IDS_KADSEARCHLAB));
+	id.AppendFormat(_T(" (%i)"), GetItemCount());
 	theApp.emuledlg->kademliawnd->SetDlgItemText(IDC_KADSEARCHLAB, id);
 }
 
@@ -101,47 +101,13 @@ void CKadSearchListCtrl::SetAllIcons()
 
 void CKadSearchListCtrl::Localize()
 {
-	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
-	HDITEM hdi;
-	hdi.mask = HDI_TEXT;
-	CString strRes;
+	static const UINT uids[8] =
+	{
+		IDS_NUMBER, IDS_KEY, IDS_TYPE, IDS_SW_NAME, IDS_STATUS,
+		IDS_THELOAD, IDS_PACKSENT, IDS_RESPONSES
+	};
 
-	for (int icol = pHeaderCtrl->GetItemCount(); --icol >= 0;) {
-		UINT uid;
-		switch (icol) {
-		case colNum:
-			uid = IDS_NUMBER;
-			break;
-		case colKey:
-			uid = IDS_KEY;
-			break;
-		case colType:
-			uid = IDS_TYPE;
-			break;
-		case colName:
-			uid = IDS_SW_NAME;
-			break;
-		case colStop:
-			uid = IDS_STATUS;
-			break;
-		case colResponses:
-			uid = IDS_RESPONSES;
-			break;
-		case colLoad:
-			uid = IDS_THELOAD;
-			break;
-		case colPacketsSent:
-			uid = IDS_PACKSENT;
-			break;
-		default:
-			uid = 0;
-			strRes.Empty();
-		}
-		if (uid)
-			strRes = GetResString(uid);
-		hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-		pHeaderCtrl->SetItem(icol, &hdi);
-	}
+	LocaliseHeaderCtrl(uids, _countof(uids));
 
 	for (int i = GetItemCount(); --i >= 0;)
 		SearchRef(reinterpret_cast<Kademlia::CSearch*>(GetItemData(i)));
@@ -193,7 +159,7 @@ void CKadSearchListCtrl::UpdateSearch(int iItem, const Kademlia::CSearch *search
 	SetItemText(iItem, colName, (CString)search->GetGUIName());
 
 	if (search->GetTarget() != NULL) {
-		search->GetTarget().ToHexString(&id);
+		search->GetTarget().ToHexString(id);
 		SetItemText(iItem, colKey, id);
 	}
 
@@ -213,7 +179,7 @@ void CKadSearchListCtrl::SearchAdd(const Kademlia::CSearch *search)
 {
 	try {
 		ASSERT(search != NULL);
-		int iItem = InsertItem(LVIF_TEXT | LVIF_PARAM, GetItemCount(), NULL, 0, 0, 0, (LPARAM)search);
+		int iItem = InsertItem(LVIF_TEXT | LVIF_PARAM, GetItemCount(), _T(""), 0, 0, 0, (LPARAM)search);
 		if (iItem >= 0) {
 			UpdateSearch(iItem, search);
 			UpdateKadSearchCount();
@@ -263,20 +229,17 @@ BOOL CKadSearchListCtrl::OnCommand(WPARAM, LPARAM)
 
 void CKadSearchListCtrl::OnLvnColumnClick(LPNMHDR pNMHDR, LRESULT *pResult)
 {
-	NMLISTVIEW *pNMListView = reinterpret_cast<NMLISTVIEW*>(pNMHDR);
-
+	const LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	// Determine ascending based on whether already sorted on this column
-	int iSortItem = GetSortItem();
-	bool bSortAscending = (iSortItem != pNMListView->iSubItem) || !GetSortAscending();
+	bool bSortAscending = (GetSortItem() != pNMLV->iSubItem) || !GetSortAscending();
 
 	// Item is the clicked column
-	iSortItem = pNMListView->iSubItem;
+	int iSortItem = pNMLV->iSubItem;
 
 	// Sort table
-	UpdateSortHistory(MAKELONG(iSortItem, (bSortAscending ? 0 : 0x0001)));
+	UpdateSortHistory(MAKELONG(iSortItem, !bSortAscending));
 	SetSortArrow(iSortItem, bSortAscending);
-	SortItems(SortProc, MAKELONG(iSortItem, (bSortAscending ? 0 : 0x0001)));
-
+	SortItems(SortProc, MAKELONG(iSortItem, !bSortAscending));
 	*pResult = 0;
 }
 
@@ -292,7 +255,6 @@ int CALLBACK CKadSearchListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM
 	case colNum:
 		iResult = CompareUnsigned(item1->GetSearchID(), item2->GetSearchID());
 		break;
-
 	case colKey:
 		if (item1->GetTarget() == NULL && item2->GetTarget() == NULL)
 			iResult = 0;
@@ -324,9 +286,7 @@ int CALLBACK CKadSearchListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM
 	default:
 		return 0;
 	}
-	if (HIWORD(lParamSort))
-		iResult = -iResult;
-	return iResult;
+	return HIWORD(lParamSort) ? -iResult : iResult;
 }
 
 Kademlia::CLookupHistory* CKadSearchListCtrl::FetchAndSelectActiveSearch(bool bMark)

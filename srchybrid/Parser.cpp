@@ -145,7 +145,7 @@ static char THIS_FILE[] = __FILE__;
 
 extern CStringArray g_astrParserErrors;
 
-void ParsedSearchExpression(const CSearchExpr *pexpr);
+void ParsedSearchExpression(const CSearchExpr &expr);
 int yyerror(LPCTSTR errstr);
 int yyerrorf(LPCTSTR errstr, ...);
 
@@ -1491,7 +1491,7 @@ yyreduce:
 	case 2:
 
 		{
-			ParsedSearchExpression((yyvsp[(1) - (2)].pexpr));
+			ParsedSearchExpression(*(yyvsp[(1) - (2)].pexpr));
 			delete (yyvsp[(1) - (2)].pexpr);
 			return 0;
 			;
@@ -1501,8 +1501,8 @@ yyreduce:
 	case 3:
 
 		{
-			CSearchExpr *pexpr = new CSearchExpr(&CSearchAttr((yyvsp[(1) - (2)].pstr)));
-			ParsedSearchExpression(pexpr);
+			CSearchExpr *pexpr = new CSearchExpr(CSearchAttr((yyvsp[(1) - (2)].pstr)));
+			ParsedSearchExpression(*pexpr);
 			delete pexpr;
 			delete (yyvsp[(1) - (2)].pstr);
 			return 0;
@@ -1545,7 +1545,7 @@ yyreduce:
 	case 7:
 
 		{
-			(yyval.pexpr) = new CSearchExpr((yyvsp[(1) - (1)].pattr));
+			(yyval.pexpr) = new CSearchExpr(*(yyvsp[(1) - (1)].pattr));
 			delete (yyvsp[(1) - (1)].pattr);
 			;
 		}

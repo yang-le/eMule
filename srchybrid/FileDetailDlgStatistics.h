@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2010 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -31,7 +31,6 @@ class CFileDetailDlgStatistics : public CResizablePage
 
 public:
 	CFileDetailDlgStatistics();
-	virtual	~CFileDetailDlgStatistics() = default;
 	virtual BOOL OnInitDialog();
 
 	void SetFiles(const CSimpleArray<CObject*> *paFiles)	{ m_paFiles = paFiles; m_bDataChanged = true; }

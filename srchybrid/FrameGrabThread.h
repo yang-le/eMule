@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2003 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//Copyright (C)2003-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -34,7 +34,7 @@ class CFrameGrabThread : public CWinThread
 
 protected:
 	CFrameGrabThread();           // protected constructor used by dynamic creation
-	virtual	~CFrameGrabThread() = default;
+
 	DECLARE_MESSAGE_MAP()
 	UINT	GrabFrames();
 public:
@@ -48,7 +48,7 @@ private:
 	const CKnownFile *pOwner;
 	void	*pSender;
 	double	dStartTime;
-	uint16	nMaxWidth;
+	int32_t	nMaxWidth;
 	uint8	nFramesToGrab;
 	bool	bReduceColor;
 };

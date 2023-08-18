@@ -420,7 +420,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Global (Server)"
     IDS_METHOD              "Metode"
     IDS_UNDO                "Angre"
-    IDS_DAYLY               "daglig"
+    IDS_DAILY               "daglig"
 END
 
 STRINGTABLE
@@ -1436,7 +1436,7 @@ BEGIN
     IDS_EM_HELP             "&Hjelp"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Venn ikke lagt til.\r\n\r\nDet er allerede en venn med samme IP og port tilgjengelig."
-    IDS_DYNUP               "Opplasnings hastighetmåler"
+    IDS_DYNUP               "Opplasnings hastighetmåler (ikke anbefalt)"
     IDS_KADOVERHEAD         "Kad Dataoverskudd (Pakker): %s (%s)"
     IDS_FIND                "Finn..."
     IDS_LOG_BANNED_CLIENTS  "Logg svartelistede klienter"

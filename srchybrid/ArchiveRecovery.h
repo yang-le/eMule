@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -193,7 +193,7 @@ static unsigned char sig_udf_bea[5]	 = {0x42, 0x45, 0x41, 0x30, 0x31};	// "BEA01
 static unsigned char sig_udf_nsr2[5] = {0x4e, 0x53, 0x52, 0x30, 0x32};	// "NSR02"
 static unsigned char sig_udf_nsr3[5] = {0x4e, 0x53, 0x52, 0x30, 0x33};	// "NSR03"
 static unsigned char sig_tea[5]		 = {0x54, 0x45, 0x41, 0x30, 0x31};	// "TEA01"
-static const unsigned char sElToritoID[] = "EL TORITO SPECIFICATION";
+static unsigned char sElToritoID[]	 = "EL TORITO SPECIFICATION";
 
 enum ISO_ImageType
 {
@@ -348,7 +348,7 @@ struct ISOInfos_s
 struct ThreadParam
 {
 	CPartFile *partFile;
-	CTypedPtrList<CPtrList, Gap_Struct*> *filled;
+	CArray<Gap_Struct> *filled;
 	bool preview;
 	bool bCreatePartFileCopy;
 };
@@ -384,7 +384,7 @@ struct archiveScannerThreadParams_s
 {
 	CShareableFile	*file;
 	archiveinfo_s	*ai;
-	CTypedPtrList<CPtrList, Gap_Struct*> *filled;
+	CArray<Gap_Struct> *filled;
 	int				type;
 	HWND			ownerHwnd;
 	HWND			progressHwnd;
@@ -396,20 +396,20 @@ class CArchiveRecovery
 {
 public:
 	static void recover(CPartFile *partFile, bool preview = false, bool bCreatePartFileCopy = true);
-	static bool recoverZip(CFile *zipInput, CFile *zipOutput, archiveScannerThreadParams_s *aitp, CTypedPtrList<CPtrList, Gap_Struct*> *filled, bool fullSize);
-	static bool recoverRar(CFile *rarInput, CFile *rarOutput, archiveScannerThreadParams_s *aitp, CTypedPtrList<CPtrList, Gap_Struct*> *filled);
-	static bool recoverAce(CFile *aceInput, CFile *aceOutput, archiveScannerThreadParams_s *aitp, CTypedPtrList<CPtrList, Gap_Struct*> *filled);
-	static bool recoverISO(CFile *isoInput, CFile *isoOutput, archiveScannerThreadParams_s *aitp, CTypedPtrList<CPtrList, Gap_Struct*> *filled);
+	static bool recoverZip(CFile *zipInput, CFile *zipOutput, archiveScannerThreadParams_s *aitp, CArray<Gap_Struct> *paFilled, bool fullSize);
+	static bool recoverRar(CFile *rarInput, CFile *rarOutput, archiveScannerThreadParams_s *aitp, CArray<Gap_Struct> *paFilled);
+	static bool recoverAce(CFile *aceInput, CFile *aceOutput, archiveScannerThreadParams_s *aitp, CArray<Gap_Struct> *paFilled);
+	static bool recoverISO(CFile *isoInput, CFile *isoOutput, archiveScannerThreadParams_s *aitp, CArray<Gap_Struct> *paFilled);
 
 private:
 	CArchiveRecovery(); // Just use static recover method
 
 	static UINT AFX_CDECL run(LPVOID lpParam);
-	static bool performRecovery(CPartFile *partFile, CTypedPtrList<CPtrList, Gap_Struct*> *filled, bool preview, bool bCreatePartFileCopy = true);
+	static bool performRecovery(CPartFile *partFile, CArray<Gap_Struct> *paFilled, bool preview, bool bCreatePartFileCopy = true);
 
 	static bool scanForZipMarker(CFile *input, archiveScannerThreadParams_s *aitp, uint32 marker, ULONGLONG available);
 	static bool processZipEntry(CFile *zipInput, CFile *zipOutput, uint32 available, CTypedPtrList<CPtrList, ZIP_CentralDirectory*> *centralDirectoryEntries);
-	static bool readZipCentralDirectory(CFile *zipInput, CTypedPtrList<CPtrList, ZIP_CentralDirectory*> *centralDirectoryEntries, CTypedPtrList<CPtrList, Gap_Struct*> *filled);
+	static bool readZipCentralDirectory(CFile *zipInput, CTypedPtrList<CPtrList, ZIP_CentralDirectory*> *centralDirectoryEntries, CArray<Gap_Struct> *filled);
 
 	static RAR_BlockFile* scanForRarFileHeader(CFile *input, archiveScannerThreadParams_s *aitp, ULONGLONG available);
 	static bool validateRarFileBlock(RAR_BlockFile *block);
@@ -419,9 +419,8 @@ private:
 	static void writeAceBlock(CFile *input, CFile *output, ACE_BlockFile *block);
 	static void writeAceHeader(CFile *output, ACE_ARCHIVEHEADER *hdr);
 
-	static bool CopyPartFile(CPartFile *partFile, CTypedPtrList<CPtrList, Gap_Struct*> *filled, const CString &tempFileName);
 	static void DeleteMemory(ThreadParam *tp);
-	static bool IsFilled(uint64 start, uint64 end, CTypedPtrList<CPtrList, Gap_Struct*> *filled);
+	static bool IsFilled(uint64 start, uint64 end, CArray<Gap_Struct> *filled);
 
 	static void ISOReadDirectory(archiveScannerThreadParams_s *aitp, UINT32 startSec, CFile *isoInput, const CString &currentDirName);
 

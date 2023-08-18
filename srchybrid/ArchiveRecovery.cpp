@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -65,16 +65,13 @@ void CArchiveRecovery::recover(CPartFile *partFile, bool preview, bool bCreatePa
 	AddLogLine(true, _T("%s \"%s\""), (LPCTSTR)GetResString(IDS_ATTEMPTING_RECOVERY), (LPCTSTR)partFile->GetFileName());
 
 	// Get the current filled list for this file
-	CTypedPtrList<CPtrList, Gap_Struct*> *filled = new CTypedPtrList<CPtrList, Gap_Struct*>;
-	partFile->GetFilledList(filled);
+	CArray<Gap_Struct> *filled = new CArray<Gap_Struct>;
+	partFile->GetFilledArray(*filled);
 #ifdef _DEBUG
-	{
-		int i = 0;
-		TRACE("%s: filled\n", __FUNCTION__);
-		for (POSITION pos = filled->GetHeadPosition(); pos != NULL;) {
-			const Gap_Struct *gap = filled->GetNext(pos);
-			TRACE("%3u: %10u  %10u  (%u)\n", i++, gap->start, gap->end, gap->end - gap->start + 1);
-		}
+	TRACE("%s: filled\n", __FUNCTION__);
+	for (INT_PTR i = 0; i < filled->GetCount(); ++i) {
+		const Gap_Struct &gap = (*filled)[i];
+		TRACE("%3u: %10u  %10u  (%u)\n", i, gap.start, gap.end, gap.end - gap.start + 1);
 	}
 #endif
 
@@ -110,10 +107,10 @@ UINT AFX_CDECL CArchiveRecovery::run(LPVOID lpParam)
 	return 0;
 }
 
-bool CArchiveRecovery::performRecovery(CPartFile *partFile, CTypedPtrList<CPtrList, Gap_Struct*> *filled
+bool CArchiveRecovery::performRecovery(CPartFile *partFile, CArray<Gap_Struct> *paFilled
 	, bool preview, bool bCreatePartFileCopy)
 {
-	if (filled->IsEmpty())
+	if (paFilled->IsEmpty())
 		return false;
 
 	bool success = false;
@@ -122,8 +119,8 @@ bool CArchiveRecovery::performRecovery(CPartFile *partFile, CTypedPtrList<CPtrLi
 		CString tempFileName;
 		if (bCreatePartFileCopy) {
 			// Copy the file
-			tempFileName.Format(_T("%s%s-rec.tmp"), (LPCTSTR)partFile->GetTempPath(), (LPCTSTR)partFile->GetFileName().Left(5));
-			if (!CopyPartFile(partFile, filled, tempFileName))
+			tempFileName.Format(_T("%s%s-rec.tmp"), (LPCTSTR)partFile->GetTmpPath(), (LPCTSTR)partFile->GetFileName().Left(5));
+			if (!partFile->CopyPartFile(*paFilled, tempFileName))
 				return false;
 
 			// Open temp file for reading
@@ -153,20 +150,20 @@ bool CArchiveRecovery::performRecovery(CPartFile *partFile, CTypedPtrList<CPtrLi
 		}
 
 		CString outputFileName;
-		outputFileName.Format(_T("%s%s-rec%s"), (LPCTSTR)partFile->GetTempPath(), (LPCTSTR)partFile->GetFileName().Left(5), ext);
+		outputFileName.Format(_T("%s%s-rec%s"), (LPCTSTR)partFile->GetTmpPath(), (LPCTSTR)partFile->GetFileName().Left(5), ext);
 		CFile output;
 		ULONGLONG ulTempFileSize = 0;
 		if (output.Open(outputFileName, CFile::modeWrite | CFile::shareDenyWrite | CFile::modeCreate)) {
 			// Process the output file
 			switch (myAtype) {
 			case ARCHIVE_ZIP:
-				success = recoverZip(&temp, &output, NULL, filled, (temp.GetLength() == partFile->GetFileSize()));
+				success = recoverZip(&temp, &output, NULL, paFilled, (temp.GetLength() == partFile->GetFileSize()));
 				break;
 			case ARCHIVE_RAR:
-				success = recoverRar(&temp, &output, NULL, filled);
+				success = recoverRar(&temp, &output, NULL, paFilled);
 				break;
 			case ARCHIVE_ACE:
-				success = recoverAce(&temp, &output, NULL, filled);
+				success = recoverAce(&temp, &output, NULL, paFilled);
 			}
 			ulTempFileSize = output.GetLength();
 			// Close output
@@ -210,7 +207,7 @@ bool CArchiveRecovery::performRecovery(CPartFile *partFile, CTypedPtrList<CPtrLi
 }
 
 bool CArchiveRecovery::recoverZip(CFile *zipInput, CFile *zipOutput, archiveScannerThreadParams_s *aitp
-	, CTypedPtrList<CPtrList, Gap_Struct*> *filled, bool fullSize)
+	, CArray<Gap_Struct> *paFilled, bool fullSize)
 {
 	bool retVal = false;
 	INT_PTR fileCount = 0;
@@ -222,8 +219,8 @@ bool CArchiveRecovery::recoverZip(CFile *zipInput, CFile *zipOutput, archiveScan
 		else
 			centralDirectoryEntries = aitp->ai->centralDirectoryEntries;
 
-		// If the central directory is intact this is simple
-		if (fullSize && readZipCentralDirectory(zipInput, centralDirectoryEntries, filled)) {
+		// This is simple if the central directory is intact
+		if (fullSize && readZipCentralDirectory(zipInput, centralDirectoryEntries, paFilled)) {
 			if (centralDirectoryEntries->IsEmpty())
 				goto done;
 
@@ -241,8 +238,8 @@ bool CArchiveRecovery::recoverZip(CFile *zipInput, CFile *zipOutput, archiveScan
 				bool deleteCD = false;
 				POSITION del = pos;
 				ZIP_CentralDirectory *cdEntry = centralDirectoryEntries->GetNext(pos);
-				uint32 lenEntry = sizeof(ZIP_Entry) + cdEntry->lenFilename + cdEntry->lenExtraField + cdEntry->lenCompressed;
-				if (IsFilled(cdEntry->relativeOffsetOfLocalHeader, (uint64)cdEntry->relativeOffsetOfLocalHeader + lenEntry, filled)) {
+				uint32 lenEntry = (uint32)(sizeof(ZIP_Entry) + cdEntry->lenFilename + cdEntry->lenExtraField + cdEntry->lenCompressed);
+				if (IsFilled(cdEntry->relativeOffsetOfLocalHeader, (uint64)cdEntry->relativeOffsetOfLocalHeader + lenEntry, paFilled)) {
 					zipInput->Seek(cdEntry->relativeOffsetOfLocalHeader, CFile::begin);
 					// Update offset
 					cdEntry->relativeOffsetOfLocalHeader = (uint32)zipOutput->GetPosition();
@@ -263,23 +260,23 @@ bool CArchiveRecovery::recoverZip(CFile *zipInput, CFile *zipOutput, archiveScan
 			// Have to scan the file the hard way
 			zipInput->SeekToBegin();
 			// Loop through filled areas of the file looking for entries
-			for (POSITION pos = filled->GetHeadPosition(); pos != NULL;) {
-				const Gap_Struct *fill = filled->GetNext(pos);
+			for (INT_PTR i = 0; i < paFilled->GetCount(); ++i) {
+				const Gap_Struct &fill = (*paFilled)[i];
 				const ULONGLONG filePos = zipInput->GetPosition();
 				// The file may have been positioned to the next entry in ScanForMarker() or processZipEntry()
-				if (filePos > fill->end)
+				if (filePos > fill.end)
 					continue;
-				if (filePos < fill->start)
-					zipInput->Seek(fill->start, CFile::begin);
+				if (filePos < fill.start)
+					zipInput->Seek(fill.start, CFile::begin);
 
-				// If there is any problem, then don't bother checking the rest of this part
+				// If there is any problem, don't bother checking the rest of this area
 				do {
 					if (aitp && !aitp->m_bIsValid)
 						return 0;
 					// Scan for entry marker within this filled area
-				} while (scanForZipMarker(zipInput, aitp, ZIP_LOCAL_HEADER_MAGIC, fill->end - zipInput->GetPosition() + 1)
-						&& zipInput->GetPosition() <= fill->end
-						&& processZipEntry(zipInput, zipOutput, (uint32)(fill->end - zipInput->GetPosition() + 1), centralDirectoryEntries));
+				} while (scanForZipMarker(zipInput, aitp, ZIP_LOCAL_HEADER_MAGIC, fill.end - zipInput->GetPosition() + 1)
+						&& zipInput->GetPosition() <= fill.end
+						&& processZipEntry(zipInput, zipOutput, (uint32)(fill.end - zipInput->GetPosition() + 1), centralDirectoryEntries));
 			}
 			if (!zipOutput) {
 				retVal = !centralDirectoryEntries->IsEmpty();
@@ -332,8 +329,8 @@ bool CArchiveRecovery::recoverZip(CFile *zipInput, CFile *zipOutput, archiveScan
 			writeUInt32(zipOutput, ZIP_END_CD_MAGIC);
 			writeUInt16(zipOutput, 0); // Number of this disk
 			writeUInt16(zipOutput, 0); // Disk number where the central directory starts
-			writeUInt16(zipOutput, (uint16)fileCount); //Number of central directory records on this disk 
-			writeUInt16(zipOutput, (uint16)fileCount); //Total number of central directory records 
+			writeUInt16(zipOutput, (uint16)fileCount); //Number of central directory records on this disk
+			writeUInt16(zipOutput, (uint16)fileCount); //Total number of central directory records
 			writeUInt32(zipOutput, (uint32)(endOffset - startOffset));
 			writeUInt32(zipOutput, (uint32)startOffset);
 			writeUInt16(zipOutput, (uint16)strlen(ZIP_COMMENT));
@@ -354,7 +351,7 @@ done:
 	return retVal;
 }
 
-bool CArchiveRecovery::readZipCentralDirectory(CFile *zipInput, CTypedPtrList<CPtrList, ZIP_CentralDirectory*> *centralDirectoryEntries, CTypedPtrList<CPtrList, Gap_Struct*> *filled)
+bool CArchiveRecovery::readZipCentralDirectory(CFile *zipInput, CTypedPtrList<CPtrList, ZIP_CentralDirectory*> *centralDirectoryEntries, CArray<Gap_Struct> *filled)
 {
 	try {
 		// Ideally this zip file will not have a comment and the End-CD will be easy to find
@@ -432,7 +429,7 @@ bool CArchiveRecovery::processZipEntry(CFile *zipInput, CFile *zipOutput, uint32
 
 		// Entry format :
 		//  4      2 bytes  Version needed to extract
-		//  6      2 bytes  General purpose bit flag
+		//  6      2 bytes  General purpose bit flags
 		//  8      2 bytes  Compression method
 		// 10      2 bytes  Last mod file time
 		// 12      2 bytes  Last mod file date
@@ -445,28 +442,22 @@ bool CArchiveRecovery::processZipEntry(CFile *zipInput, CFile *zipOutput, uint32
 		//        (e)bytes  Extra field
 		//        (n)bytes  Compressed data
 
-		// Read header
-		if (readUInt32(zipInput) != ZIP_LOCAL_HEADER_MAGIC)
+		ZIP_Entry entry;
+		UINT uReadLen = (UINT)((byte*)&entry.filename - (byte*)&entry);
+		if (zipInput->Read(&entry, uReadLen) != uReadLen
+			|| entry.header != ZIP_LOCAL_HEADER_MAGIC
+			|| !entry.crc32 //may be 0 if (generalPurposeFlag & 8)
+			|| !entry.lenCompressed //same
+			|| !entry.lenUncompressed //same
+			|| !entry.lenFilename
+			|| entry.lenFilename > MAX_PATH) // Possibly corrupt, don't allocate lots of memory
+		{
 			return false;
-
-		ZIP_Entry entry = {};
-		entry.versionToExtract = readUInt16(zipInput);
-		entry.generalPurposeFlag = readUInt16(zipInput);
-		entry.compressionMethod = readUInt16(zipInput);
-		entry.lastModFileTime = readUInt16(zipInput);
-		entry.lastModFileDate = readUInt16(zipInput);
-		entry.crc32 = readUInt32(zipInput);
-		entry.lenCompressed = readUInt32(zipInput);
-		entry.lenUncompressed = readUInt32(zipInput);
-		entry.lenFilename = readUInt16(zipInput);
-		entry.lenExtraField = readUInt16(zipInput);
+		}
 
 		// Do some quick checks at this stage that data is looking OK
 //		if ((entry.crc32 == 0) && (entry.lenCompressed == 0) && (entry.lenUncompressed == 0) && (entry.lenFilename > 0))
 //			; // this is a directory entry
-//		else
-		if ((entry.crc32 == 0) || (entry.lenCompressed == 0) || (entry.lenUncompressed == 0) || (entry.lenFilename == 0))
-			return false;
 
 		// Is this entry complete
 		if (entry.lenFilename + entry.lenExtraField + (zipOutput ? entry.lenCompressed : 0) > available - 26) {
@@ -476,8 +467,6 @@ bool CArchiveRecovery::processZipEntry(CFile *zipInput, CFile *zipOutput, uint32
 		}
 
 		// Filename
-		if (entry.lenFilename > MAX_PATH)
-			return false; // Possibly corrupt, don't allocate lots of memory
 		entry.filename = new BYTE[entry.lenFilename];
 		if (zipInput->Read(entry.filename, entry.lenFilename) != entry.lenFilename) {
 			delete[] entry.filename;
@@ -492,17 +481,7 @@ bool CArchiveRecovery::processZipEntry(CFile *zipInput, CFile *zipOutput, uint32
 
 		if (zipOutput) {
 			// Output
-			writeUInt32(zipOutput, ZIP_LOCAL_HEADER_MAGIC);
-			writeUInt16(zipOutput, entry.versionToExtract);
-			writeUInt16(zipOutput, entry.generalPurposeFlag);
-			writeUInt16(zipOutput, entry.compressionMethod);
-			writeUInt16(zipOutput, entry.lastModFileTime);
-			writeUInt16(zipOutput, entry.lastModFileDate);
-			writeUInt32(zipOutput, entry.crc32);
-			writeUInt32(zipOutput, entry.lenCompressed);
-			writeUInt32(zipOutput, entry.lenUncompressed);
-			writeUInt16(zipOutput, entry.lenFilename);
-			writeUInt16(zipOutput, entry.lenExtraField);
+			zipOutput->Write(&entry, uReadLen);
 			zipOutput->Write(entry.filename, entry.lenFilename);
 			if (entry.lenExtraField > 0)
 				zipOutput->Write(entry.extraField, entry.lenExtraField);
@@ -541,15 +520,15 @@ bool CArchiveRecovery::processZipEntry(CFile *zipInput, CFile *zipOutput, uint32
 			cdEntry->relativeOffsetOfLocalHeader = (uint32)startOffset;
 			cdEntry->filename = entry.filename;
 
-			if (entry.lenExtraField > 0)
-				cdEntry->extraField = entry.extraField;
+			cdEntry->extraField = (entry.lenExtraField > 0) ? entry.extraField : NULL;
 
 			cdEntry->lenComment = 0;
 			if (zipOutput != NULL) {
 				cdEntry->lenComment = static_cast<uint16>(strlen(ZIP_COMMENT));
 				cdEntry->comment = new BYTE[cdEntry->lenComment];
 				memcpy(cdEntry->comment, ZIP_COMMENT, cdEntry->lenComment);
-			}
+			} else
+				cdEntry->comment = NULL;
 
 			centralDirectoryEntries->AddTail(cdEntry);
 		} else {
@@ -578,58 +557,12 @@ bool CArchiveRecovery::processZipEntry(CFile *zipInput, CFile *zipOutput, uint32
 
 void CArchiveRecovery::DeleteMemory(ThreadParam *tp)
 {
-	while (!tp->filled->IsEmpty())
-		delete tp->filled->RemoveHead();
 	delete tp->filled;
 	delete tp;
 }
 
-bool CArchiveRecovery::CopyPartFile(CPartFile *partFile, CTypedPtrList<CPtrList, Gap_Struct*> *filled, const CString &tempFileName)
-{
-	try {
-		CFile srcFile;
-		if (!srcFile.Open(partFile->GetFilePath(), CFile::modeRead | CFile::shareDenyNone))
-			return false;
-
-		// Open destination file and set length to the last filled end position
-		CFile destFile;
-		destFile.Open(tempFileName, CFile::modeWrite | CFile::shareDenyWrite | CFile::modeCreate);
-		Gap_Struct *fill = filled->GetTail();
-		destFile.SetLength(fill->end);
-
-		// Loop through the filled areas and copy data
-		partFile->m_bPreviewing = true;
-		for (POSITION pos = filled->GetHeadPosition(); pos != NULL;) {
-			fill = filled->GetNext(pos);
-			uint32 copied = 0;
-			srcFile.Seek(fill->start, CFile::begin);
-			destFile.Seek(fill->start, CFile::begin);
-			uint32 read;
-			BYTE buffer[4096];
-			while ((read = srcFile.Read(buffer, sizeof buffer)) > 0) {
-				destFile.Write(buffer, read);
-				copied += read;
-				// Stop when finished filling (don't worry about extra)
-				if (fill->start + copied >= fill->end)
-					break;
-			}
-		}
-		destFile.Close();
-		srcFile.Close();
-		partFile->m_bPreviewing = false;
-
-		return true;
-	} catch (CFileException *error) {
-		error->Delete();
-	} catch (...) {
-		ASSERT(0);
-	}
-
-	return false;
-}
-
 bool CArchiveRecovery::recoverRar(CFile *rarInput, CFile *rarOutput, archiveScannerThreadParams_s *aitp
-	, CTypedPtrList<CPtrList, Gap_Struct*> *filled)
+	, CArray<Gap_Struct> *paFilled)
 {
 	bool retVal = false;
 	INT_PTR fileCount = 0;
@@ -710,19 +643,19 @@ bool CArchiveRecovery::recoverRar(CFile *rarInput, CFile *rarOutput, archiveScan
 			rarOutput->Write(start1, sizeof(start1));
 
 		// loop through the filled blocks
-		for (POSITION pos = filled->GetHeadPosition(); pos != NULL;) {
-			const Gap_Struct *fill = filled->GetNext(pos);
+		const INT_PTR iLast = paFilled->GetCount() - 1;
+		for (INT_PTR i = 0; i <= iLast; ++i) {
+			const Gap_Struct &fill = (*paFilled)[i];
+			rarInput->Seek(fill.start, CFile::begin);
 
-			rarInput->Seek(fill->start, CFile::begin);
-
-			while ((block = scanForRarFileHeader(rarInput, aitp, (fill->end - rarInput->GetPosition()))) != NULL) {
+			while ((block = scanForRarFileHeader(rarInput, aitp, (fill.end - rarInput->GetPosition()))) != NULL) {
 				if (aitp) {
 					aitp->ai->RARdir->AddTail(block);
 					if (!aitp->m_bIsValid)
 						return false;
 				}
 
-				if (rarOutput != NULL && IsFilled(block->offsetData, block->offsetData + block->dataLength, filled)) {
+				if (rarOutput != NULL && IsFilled(block->offsetData, block->offsetData + block->dataLength, paFilled)) {
 					// Don't include directories in file count
 					if ((block->HEAD_FLAGS & 0xE0) != 0xE0)
 						++fileCount;
@@ -736,7 +669,7 @@ bool CArchiveRecovery::recoverRar(CFile *rarInput, CFile *rarOutput, archiveScan
 					delete block;
 					block = NULL;
 				}
-				if (rarInput->GetPosition() >= fill->end)
+				if (rarInput->GetPosition() >= fill.end)
 					break;
 			}
 		}
@@ -757,13 +690,14 @@ bool CArchiveRecovery::recoverRar(CFile *rarInput, CFile *rarOutput, archiveScan
 	return retVal;
 }
 
-bool CArchiveRecovery::IsFilled(uint64 start, uint64 end, CTypedPtrList<CPtrList, Gap_Struct*> *filled)
+bool CArchiveRecovery::IsFilled(uint64 start, uint64 end, CArray<Gap_Struct> *filled)
 {
-	for (POSITION pos = filled->GetHeadPosition(); pos != NULL;) {
-		const Gap_Struct *fill = filled->GetNext(pos);
-		if (fill->start > start)
+	const INT_PTR iLast = filled->GetCount() - 1;
+	for (INT_PTR i = 0; i <= iLast; ++i) {
+		const Gap_Struct &fill = (*filled)[i];
+		if (fill.start > start)
 			break;
-		if (fill->end >= end)
+		if (fill.end >= end)
 			return true;
 	}
 	return false;
@@ -774,32 +708,28 @@ bool CArchiveRecovery::IsFilled(uint64 start, uint64 end, CTypedPtrList<CPtrList
 bool CArchiveRecovery::scanForZipMarker(CFile *input, archiveScannerThreadParams_s *aitp, uint32 marker, ULONGLONG available)
 {
 	try {
-		//ULONGLONG originalOffset = input->GetPosition();
 		BYTE chunk[TESTCHUNKSIZE];
-		int lenChunk = (int)sizeof(chunk);
-		BYTE *foundPos = NULL;
-		int pos = 0;
 
-		while ((available > 0) && ((lenChunk = input->Read(chunk, lenChunk)) > 0)) {
+		while (available > 0) {
+			INT_PTR lenChunk = input->Read(chunk, (UINT)(min(available, TESTCHUNKSIZE)));
+			if (lenChunk <= 0)
+				break;
 			available -= lenChunk;
-			foundPos = chunk;
-			// Move back one, will be incremented in loop
-			--foundPos;
-			while (foundPos != NULL) {
+			for (BYTE *foundPos = chunk; foundPos != NULL; ++foundPos) {
 				if (aitp && !aitp->m_bIsValid)
 					return false;
 
 				// Find first matching byte
-				foundPos = (BYTE*)memchr(foundPos + 1, (marker & 0xFF), (lenChunk - (foundPos + 1 - (&chunk[0]))));
+				foundPos = (BYTE*)memchr(foundPos, marker & 0xFF, lenChunk - (foundPos - chunk));
 				if (foundPos == NULL)
 					break;
 
 				// Test for end of buffer
-				pos = (int)(foundPos - chunk);
-				if ((pos + 3) > lenChunk) {
-					// Re-read buffer starting from found first byte position
-					input->Seek((LONGLONG)pos - lenChunk, CFile::current);
-					available += lenChunk - pos;
+				INT_PTR pos = foundPos - &chunk[lenChunk]; //offset from the current file position
+				if (pos + 3 > 0) {
+					// Re-read buffer starting from position of the found first byte
+					input->Seek(pos, CFile::current);
+					available += -pos;
 					break;
 				}
 
@@ -807,9 +737,9 @@ bool CArchiveRecovery::scanForZipMarker(CFile *input, archiveScannerThreadParams
 					ProcessProgress(aitp, input->GetPosition());
 
 				// Check for other bytes
-				if (*(uint32*)&chunk[pos] == marker) {
+				if (*(uint32*)foundPos == marker) {
 					// Found it
-					input->Seek((LONGLONG)pos - lenChunk, CFile::current);
+					input->Seek(pos, CFile::current);
 					return true;
 				}
 			}
@@ -838,20 +768,16 @@ RAR_BlockFile* CArchiveRecovery::scanForRarFileHeader(CFile *input, archiveScann
 				break;
 
 			available -= lenChunk;
-			BYTE *foundPos = chunk;
-
-			// Move back one, will be incremented in loop
-			--foundPos;
-			while (foundPos != NULL) {
+			for (BYTE *foundPos = chunk; foundPos != NULL; ++foundPos) {
 				if (aitp && !aitp->m_bIsValid)
 					return 0;
 
 				// Find rar head block marker
-				foundPos = (BYTE*)memchr(foundPos + 1, RAR_HEAD_FILE, (lenChunk - (foundPos + 1 - (&chunk[0]))));
+				foundPos = (BYTE*)memchr(foundPos, RAR_HEAD_FILE, lenChunk - (foundPos - chunk));
 				if (foundPos == NULL)
 					break;
 
-				ULONGLONG chunkOffset = foundPos - (&chunk[0]);
+				ULONGLONG chunkOffset = foundPos - chunk;
 				ULONGLONG foundOffset = chunkstart + chunkOffset;
 
 				if (aitp)
@@ -932,7 +858,7 @@ RAR_BlockFile* CArchiveRecovery::scanForRarFileHeader(CFile *input, archiveScann
 				uLong crc = crc32(0, checkCRC, sizeof *hdr);
 				crc = crc32(crc, fileName, lenFileName);
 				if (checkCRCsize > sizeof *hdr)
-					crc = crc32(crc, &checkCRC[sizeof *hdr], (checkCRCsize - sizeof *hdr));
+					crc = crc32(crc, &checkCRC[sizeof *hdr], (uInt)(checkCRCsize - sizeof *hdr));
 				if ((uint16)crc == headCRC) {
 					// Found valid crc, build block and return
 					// Note that it may still be invalid data, so more checks should be performed
@@ -1125,7 +1051,7 @@ ULONG getcrc(ULONG crc, UCHAR *addr, INT len)
 }
 
 bool CArchiveRecovery::recoverAce(CFile *aceInput, CFile *aceOutput, archiveScannerThreadParams_s *aitp
-		, CTypedPtrList<CPtrList, Gap_Struct*> *filled)
+		, CArray<Gap_Struct> *paFilled)
 {
 	make_crctable();
 	ACE_ARCHIVEHEADER *acehdr = NULL;
@@ -1134,14 +1060,15 @@ bool CArchiveRecovery::recoverAce(CFile *aceInput, CFile *aceOutput, archiveScan
 	try {
 		UINT64 filesearchstart = 0;
 		// Try to get file header and main header
-		if (IsFilled(0, 32, filled)) {
+		if (IsFilled(0, 32, paFilled)) {
 			static const char ACE_ID[] = {0x2A, 0x2A, 0x41, 0x43, 0x45, 0x2A, 0x2A};
 			acehdr = new ACE_ARCHIVEHEADER;
 
 			UINT hdrread = aceInput->Read((void*)acehdr, sizeof(ACE_ARCHIVEHEADER) - (3 * sizeof(char*)) - sizeof(uint16));
 
-			if (memcmp(acehdr->HEAD_SIGN, ACE_ID, sizeof ACE_ID) != 0 || acehdr->HEAD_TYPE != 0
-				|| !IsFilled(0, acehdr->HEAD_SIZE, filled))
+			if (memcmp(acehdr->HEAD_SIGN, ACE_ID, sizeof ACE_ID) != 0
+				|| acehdr->HEAD_TYPE != 0
+				|| !IsFilled(0, acehdr->HEAD_SIZE, paFilled))
 			{
 				delete acehdr;
 				acehdr = NULL;
@@ -1199,14 +1126,16 @@ bool CArchiveRecovery::recoverAce(CFile *aceInput, CFile *aceOutput, archiveScan
 			acehdr = NULL;
 		}
 
-		// loop filled blocks
-		for (POSITION pos = filled->GetHeadPosition(); pos != NULL;) {
-			const Gap_Struct *fill = filled->GetNext(pos);
+		// loop on filled blocks
+		const INT_PTR iLast = paFilled->GetCount() - 1;
+		for (INT_PTR i = 0; i <= iLast; ++i) {
+			const Gap_Struct &fill = (*paFilled)[i];
 
-			filesearchstart = (filesearchstart < fill->start) ? fill->start : filesearchstart;
+			if (filesearchstart < fill.start)
+				filesearchstart = fill.start;
 			aceInput->Seek(filesearchstart, CFile::begin);
 
-			while ((block = scanForAceFileHeader(aceInput, aitp, (fill->end - filesearchstart))) != NULL) {
+			while ((block = scanForAceFileHeader(aceInput, aitp, (fill.end - filesearchstart))) != NULL) {
 				if (aitp) {
 					if (!aitp->m_bIsValid)
 						return false;
@@ -1214,7 +1143,7 @@ bool CArchiveRecovery::recoverAce(CFile *aceInput, CFile *aceOutput, archiveScan
 					aitp->ai->ACEdir->AddTail(block);
 				}
 
-				if (aceOutput != NULL && IsFilled(block->data_offset, block->data_offset + block->PACK_SIZE, filled)) {
+				if (aceOutput != NULL && IsFilled(block->data_offset, block->data_offset + block->PACK_SIZE, paFilled)) {
 					// Don't include directories in file count
 					//if ((block->HEAD_FLAGS & 0xE0) != 0xE0)
 					//	++fileCount;
@@ -1227,7 +1156,7 @@ bool CArchiveRecovery::recoverAce(CFile *aceInput, CFile *aceOutput, archiveScan
 					block = NULL;
 				}
 
-				if (aceInput->GetPosition() >= fill->end)
+				if (aceInput->GetPosition() >= fill.end)
 					break;
 			}
 		}
@@ -1257,20 +1186,17 @@ ACE_BlockFile* CArchiveRecovery::scanForAceFileHeader(CFile *input, archiveScann
 				break;
 
 			available -= lenChunk;
-			BYTE *foundPos = &chunk[0];
 
-			// Move back one, will be incremented in loop
-			--foundPos;
-			while (foundPos != NULL) {
+			for (BYTE *foundPos = chunk; foundPos != NULL; ++foundPos) {
 				if (aitp && !aitp->m_bIsValid)
 					return NULL;
 
 				// Find rar head block marker
-				foundPos = (BYTE*)memchr(foundPos + 1, 0x01, (lenChunk - (foundPos + 1 - (&chunk[0]))));
+				foundPos = (BYTE*)memchr(foundPos, 0x01, lenChunk - (foundPos - chunk));
 				if (foundPos == NULL)
 					break;
 
-				ULONGLONG chunkOffset = foundPos - (&chunk[0]);
+				ULONGLONG chunkOffset = foundPos - chunk;
 				ULONGLONG foundOffset = chunkstart + chunkOffset;
 
 				if (chunkOffset < 4)
@@ -1305,10 +1231,10 @@ ACE_BlockFile* CArchiveRecovery::scanForAceFileHeader(CFile *input, archiveScann
 				newblock->HEAD_SIZE = headSize;
 
 				memcpy(&newblock->HEAD_TYPE, mempos, (char*)&newblock->COMM_SIZE - (char*)&newblock->HEAD_TYPE);
-//				sizeof(ACE_BlockFile) - 4 - (2*sizeof(newblock->COMMENT)) - sizeof(newblock->COMM_SIZE) - sizeof(newblock->data_offset) );
+				//sizeof(ACE_BlockFile) - 4 - (2 * sizeof(newblock->COMMENT)) - sizeof(newblock->COMM_SIZE) - sizeof(newblock->data_offset) );
 
 				mempos += (char*)&newblock->COMM_SIZE - (char*)&newblock->HEAD_TYPE;
-//				mempos += sizeof(ACE_BlockFile)-sizeof(newblock->HEAD_CRC)-sizeof(newblock->HEAD_SIZE) - (2*sizeof(newblock->COMMENT)) - sizeof(newblock->COMM_SIZE) - sizeof(newblock->data_offset);
+				//mempos += sizeof(ACE_BlockFile)-sizeof(newblock->HEAD_CRC)-sizeof(newblock->HEAD_SIZE) - (2 * sizeof(newblock->COMMENT)) - sizeof(newblock->COMM_SIZE) - sizeof(newblock->data_offset);
 
 				// basic checks
 				if (newblock->HEAD_SIZE < newblock->FNAME_SIZE) {
@@ -1326,7 +1252,7 @@ ACE_BlockFile* CArchiveRecovery::scanForAceFileHeader(CFile *input, archiveScann
 					mempos += newblock->FNAME_SIZE;
 				}
 
-				//int blockleft = newblock->HEAD_SIZE - newblock->FNAME_SIZE - (sizeof(ACE_BlockFile)- (3*sizeof(uint16)) - sizeof(newblock->data_offset) - 2*sizeof(char*));
+				//int blockleft = newblock->HEAD_SIZE - newblock->FNAME_SIZE - (sizeof(ACE_BlockFile)- (3 * sizeof(uint16)) - sizeof(newblock->data_offset) - 2 * sizeof(char*));
 
 				if (mempos < blockmem + newblock->HEAD_SIZE) {
 					memcpy(&newblock->COMM_SIZE, mempos, sizeof newblock->COMM_SIZE);
@@ -1402,8 +1328,6 @@ void CArchiveRecovery::writeAceBlock(CFile *input, CFile *output, ACE_BlockFile 
 {
 	ULONGLONG offsetStart = output->GetPosition();
 	try {
-//		block->data_offset = offsetStart;
-
 		writeUInt16(output, block->HEAD_CRC);
 		writeUInt16(output, block->HEAD_SIZE);
 		output->Write(&block->HEAD_TYPE, 1);
@@ -1423,16 +1347,15 @@ void CArchiveRecovery::writeAceBlock(CFile *input, CFile *output, ACE_BlockFile 
 			output->Write(block->COMMENT, block->COMM_SIZE);
 		}
 
-		// skip unknown data between header and compressed data - if ever existed...
+		// skip unknown data between header and compressed data - if any exists...
 
 		// Now copy compressed data from input file
 		uint32 lenToCopy = block->PACK_SIZE;
 		if (lenToCopy > 0) {
 			input->Seek(block->data_offset, CFile::begin);
-			BYTE chunk[4096];
 			for (uint32 written = 0; written < lenToCopy;) {
-				uint32 lenChunk = min(lenToCopy - written, sizeof chunk);
-				lenChunk = input->Read(chunk, lenChunk);
+				BYTE chunk[4096];
+				uint32 lenChunk = input->Read(chunk, min(lenToCopy - written, sizeof chunk));
 				if (lenChunk == 0)
 					break;
 				output->Write(chunk, lenChunk);
@@ -1515,36 +1438,34 @@ void CArchiveRecovery::ISOReadDirectory(archiveScannerThreadParams_s *aitp, UINT
 			continue;
 		}
 
-		if (aitp->ai->isoInfos.iJolietUnicode) //convert UTF-16BE to UTF-16LE
+		CString pathNew(currentDirName);
+		// make filename from Unicode (UTF-16BE) or ASCII
+		if (aitp->ai->isoInfos.iJolietUnicode) {
+			//convert UTF-16BE to UTF-16LE
 			for (unsigned int i = 0; i < file->nameLen / sizeof(uint16); ++i)
 				file->name[i] = _byteswap_ushort(file->name[i]);
-
-		// make filename CString from ASCII or Unicode
-		const CString &filename(aitp->ai->isoInfos.iJolietUnicode ? CString(file->name) : CString((char*)file->name));
+			pathNew += file->name;
+		} else
+			pathNew += CString((char*)file->name);
 		free(file->name);
 
-		if (file->fileFlags & ISO_DIRECTORY) {
-			// store dir entry
-			CString pathNew;
-			pathNew.Format(_T("%s%s\\"), (LPCTSTR)currentDirName, (LPCTSTR)filename);
-			file->name = _tcsdup(pathNew);
-			aitp->ai->ISOdir->AddTail(file);
+		if (file->fileFlags & ISO_DIRECTORY)
+			slosh(pathNew); //make this a directory path
+		// store the entry
+		file->name = _tcsdup(pathNew);
+		aitp->ai->ISOdir->AddTail(file);
 
-			// read subdirectory recursively
+		if (file->fileFlags & ISO_DIRECTORY) {
+			// read subdirectories recursively
 			LONGLONG curpos = isoInput->GetPosition();
 			ISOReadDirectory(aitp, LODWORD(file->sector1OfExtension), isoInput, pathNew);
 			isoInput->Seek(curpos, FILE_BEGIN);
-		} else {
-			// store file entry
-			const CString &fullpath(currentDirName + filename);
-			file->name = _tcsdup(fullpath);
-			aitp->ai->ISOdir->AddTail(file);
 		}
 	}
 }
 
 bool CArchiveRecovery::recoverISO(CFile *isoInput, CFile *isoOutput, archiveScannerThreadParams_s *aitp
-		, CTypedPtrList<CPtrList, Gap_Struct*> *filled)
+		, CArray<Gap_Struct> *paFilled)
 {
 	if (isoOutput)
 		return false;
@@ -1554,7 +1475,7 @@ bool CArchiveRecovery::recoverISO(CFile *isoInput, CFile *isoOutput, archiveScan
 	uint64 nextstart = 16 * SECSIZE;
 
 	// do we have the primary volume descriptor?
-	if (!IsFilled(nextstart, nextstart + SECSIZE, filled))
+	if (!IsFilled(nextstart, nextstart + SECSIZE, paFilled))
 		return false;
 
 	ISO_PVD_s pvd, svd, tempSec;
@@ -1616,7 +1537,7 @@ bool CArchiveRecovery::recoverISO(CFile *isoInput, CFile *isoOutput, archiveScan
 				iUdfDetectState += 2;	// remember Terminating Extended Area Descriptor (TEA) received
 		}
 
-	} while (IsFilled(nextstart, nextstart + SECSIZE, filled));
+	} while (IsFilled(nextstart, nextstart + SECSIZE, paFilled));
 
 	if (iUdfDetectState == 4)
 		aitp->ai->isoInfos.type |= ISOtype_UDF_nsr02;

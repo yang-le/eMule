@@ -125,7 +125,7 @@ void CStatisticsTree::DoMenu(CPoint doWhere)
 
 void CStatisticsTree::DoMenu(CPoint doWhere, UINT nFlags)
 {
-	int myFlags = PathFileExists(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("statbkup.ini")) ? MF_STRING : MF_GRAYED;
+	int myFlags = ::PathFileExists(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("statbkup.ini")) ? MF_STRING : MF_GRAYED;
 
 	mnuContext.CreatePopupMenu();
 	mnuContext.AddMenuTitle(GetResString(IDS_STATS_MNUTREETITLE), true);
@@ -212,7 +212,7 @@ lblSaveExpanded:
 	case MP_STATTREE_HTMLEXPORT:
 		ExportHTML();
 	}
-	return true;
+	return TRUE;
 }
 
 // If the item is bold it returns true, otherwise
@@ -234,8 +234,8 @@ BOOL CStatisticsTree::IsExpanded(HTREEITEM theItem)
 }
 
 // This is a generic function to check if a state is valid or not.
-// It accepts a tree item handle and a state/statemask/whatever.
-// It then retrieves the state UINT value and does a bitand
+// It accepts a tree item handle and a state/state-mask/whatever.
+// It then retrieves the state UINT value and does a bit 'and'
 // with the original input.  This should translate into a
 // boolean result that tells us whether the checked state is
 // true or not.  This is currently unused, but may come in handy
@@ -252,20 +252,18 @@ BOOL CStatisticsTree::CheckState(HTREEITEM hItem, UINT state)
 // EX: CString itemText = GetItemText(myTreeItem);
 CString CStatisticsTree::GetItemText(HTREEITEM theItem)
 {
+	TCHAR szText[1024];
 	if (theItem != NULL) {
 		TVITEM item;
-		TCHAR szText[1024];
 		item.mask = TVIF_TEXT | TVIF_HANDLE;
 		item.hItem = theItem;
 		item.pszText = szText;
 		item.cchTextMax = _countof(szText);
+		szText[GetItem(&item) ? _countof(szText) - 1 : 0] = _T('\0');
+	} else
+		szText[0] = _T('\0');
 
-		if (GetItem(&item)) {
-			szText[_countof(szText) - 1] = _T('\0');
-			return CString(szText);
-		}
-	}
-	return CString();
+	return CString(szText);
 }
 
 // This separates the title from the value in a tree item that has
@@ -279,20 +277,20 @@ CString CStatisticsTree::GetItemText(HTREEITEM theItem)
 // AfxMessageBox("The title is: " + strTitle + "\nThe value is: " + strValue);
 CString CStatisticsTree::GetItemText(HTREEITEM theItem, int getPart)
 {
+	CString fullText;
 	if (theItem != NULL) {
-		const CString &fullText = GetItemText(theItem);
+		fullText = GetItemText(theItem);
 		if (!fullText.IsEmpty()) {
 			int posSeparator = fullText.Find(_T(": "));
-			if (posSeparator < 1)
-				return (getPart == GET_TITLE) ? fullText : CString();
-
-			if (getPart == GET_TITLE)
-				return fullText.Left(posSeparator);
-			if (getPart == GET_VALUE)
-				return fullText.Mid(posSeparator + 2);
+			if (getPart == GET_TITLE && posSeparator > 0)
+				fullText.Truncate(posSeparator);
+			else if (getPart == GET_VALUE && posSeparator >= 0)
+				fullText.Delete(0, posSeparator + 2);
+			else
+				fullText.Empty();
 		}
 	}
-	return CString();
+	return fullText;
 }
 
 // This is the primary function for generating HTML output of the statistics tree.
@@ -313,8 +311,10 @@ CString CStatisticsTree::GetHTML(bool onlyVisible, HTREEITEM theItem, int theIte
 
 	while (hCurrent != NULL) {
 		CString strItem(GetItemText(hCurrent));
-		if (IsBold(hCurrent))
-			strItem = _T("<b>") + strItem + _T("</b>");
+		if (IsBold(hCurrent)) {
+			strItem.Insert(0, _T("<b>"));
+			strItem += _T("</b>");
+		}
 		for (int i = 0; i < theItemLevel; ++i)
 			strBuffer += _T("&nbsp;&nbsp;&nbsp;");
 		if (theItemLevel == 0)
@@ -342,7 +342,7 @@ bool CStatisticsTree::CopyHTML(int copyMode)
 			HTREEITEM selectedItem = GetSelectedItem();
 			if (selectedItem == NULL)
 				break;
-			const CString &theHTML = GetHTML(true, selectedItem);
+			const CString &theHTML(GetHTML(true, selectedItem));
 			if (theHTML.IsEmpty())
 				break;
 			theApp.CopyTextToClipboard(theHTML);
@@ -350,7 +350,7 @@ bool CStatisticsTree::CopyHTML(int copyMode)
 		return true;
 	case MP_STATTREE_HTMLCOPYVIS:
 		{
-			const CString &theHTML = GetHTML();
+			const CString &theHTML(GetHTML());
 			if (theHTML.IsEmpty())
 				break;
 			theApp.CopyTextToClipboard(theHTML);
@@ -358,7 +358,7 @@ bool CStatisticsTree::CopyHTML(int copyMode)
 		return true;
 	case MP_STATTREE_HTMLCOPYALL:
 		{
-			const CString &theHTML = GetHTML(false);
+			const CString &theHTML(GetHTML(false));
 			if (theHTML.IsEmpty())
 				break;
 			theApp.CopyTextToClipboard(theHTML);
@@ -406,7 +406,7 @@ bool CStatisticsTree::CopyText(int copyMode)
 			HTREEITEM selectedItem = GetSelectedItem();
 			if (selectedItem == NULL)
 				break;
-			const CString &theText = GetText(true, selectedItem);
+			const CString &theText(GetText(true, selectedItem));
 			if (theText.IsEmpty())
 				break;
 			theApp.CopyTextToClipboard(theText);
@@ -414,7 +414,7 @@ bool CStatisticsTree::CopyText(int copyMode)
 		return true;
 	case MP_STATTREE_COPYVIS:
 		{
-			const CString &theText = GetText();
+			const CString &theText(GetText());
 			if (theText.IsEmpty())
 				break;
 			theApp.CopyTextToClipboard(theText);
@@ -422,7 +422,7 @@ bool CStatisticsTree::CopyText(int copyMode)
 		return true;
 	case MP_STATTREE_COPYALL:
 		{
-			const CString &theText = GetText(false);
+			const CString &theText(GetText(false));
 			if (theText.IsEmpty())
 				break;
 			theApp.CopyTextToClipboard(theText);
@@ -514,7 +514,7 @@ void CStatisticsTree::ExportHTML()
 {
 	// Save/Restore the current directory
 	TCHAR szCurDir[MAX_PATH];
-	DWORD dwCurDirLen = GetCurrentDirectory(_countof(szCurDir), szCurDir);
+	DWORD dwCurDirLen = ::GetCurrentDirectory(_countof(szCurDir), szCurDir);
 	if (dwCurDirLen == 0 || dwCurDirLen >= _countof(szCurDir))
 		*szCurDir = _T('\0');
 
@@ -579,8 +579,8 @@ void CStatisticsTree::ExportHTML()
 			_T("stats_14.gif"), _T("stats_15.gif"), _T("stats_16.gif"), _T("stats_17.gif"),
 			_T("stats_hidden.gif"), _T("stats_space.gif"), _T("stats_visible.gif")
 		};
-		CString strDst = saveAsDlg.GetPathName().Left(saveAsDlg.GetPathName().GetLength() - saveAsDlg.GetFileName().GetLength());// EC - what if directory name == filename? this should fix this
-		CString strSrc = thePrefs.GetMuleDirectory(EMULE_WEBSERVERDIR);
+		CString strDst(saveAsDlg.GetPathName(), saveAsDlg.GetPathName().GetLength() - saveAsDlg.GetFileName().GetLength());// EC - what if directory name == filename? this should fix this
+		CString strSrc(thePrefs.GetMuleDirectory(EMULE_WEBSERVERDIR));
 
 		for (size_t i = 0; i < _countof(s_apcFileNames); ++i)
 			::CopyFile(strSrc + s_apcFileNames[i], strDst + s_apcFileNames[i], FALSE);

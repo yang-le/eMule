@@ -31,10 +31,10 @@ class CFileInfoDialog : public CResizablePage
 	{
 		IDD = IDD_FILEINFO
 	};
+	void InitDisplay(LPCTSTR pStr);
 	CSimpleArray<CObject*> m_pFiles;
 public:
 	CFileInfoDialog();   // standard constructor
-	virtual	~CFileInfoDialog() = default;
 	virtual BOOL OnInitDialog();
 
 	void SetFiles(const CSimpleArray<CObject*> *paFiles)	{ m_paFiles = paFiles; m_bDataChanged = true; }
@@ -46,12 +46,6 @@ protected:
 	bool m_bDataChanged;
 	CRichEditCtrlX m_fi;
 	bool m_bReducedDlg;
-	//CHARFORMAT m_cfDef;
-	//CHARFORMAT m_cfBold;
-	//CHARFORMAT m_cfRed;
-
-	//bool GetMediaInfo(const CKnownFile *file, SMediaInfo *mi, bool bSingleFile);
-	//void AddFileInfo(LPCTSTR pszFmt, ...);
 
 	virtual void DoDataExchange(CDataExchange *pDX);    // DDX/DDV support
 	virtual BOOL OnSetActive();

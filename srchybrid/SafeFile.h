@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -49,7 +49,7 @@ public:
 	virtual uint16 ReadUInt16();
 	virtual uint32 ReadUInt32();
 	virtual uint64 ReadUInt64();
-	virtual void ReadUInt128(Kademlia::CUInt128 *pVal);
+	virtual void ReadUInt128(Kademlia::CUInt128 &Val);
 	virtual void ReadHash16(uchar *pVal);
 	virtual CString ReadString(bool bOptUTF8);
 	virtual CString ReadString(bool bOptUTF8, UINT uRawSize);
@@ -59,12 +59,14 @@ public:
 	virtual void WriteUInt16(uint16 nVal);
 	virtual void WriteUInt32(uint32 nVal);
 	virtual void WriteUInt64(uint64 nVal);
-	virtual void WriteUInt128(const Kademlia::CUInt128 *pVal);
+	virtual void WriteUInt128(const Kademlia::CUInt128 &Val);
 	virtual void WriteHash16(const uchar *pVal);
 	virtual void WriteString(const CString &rstr, EUTF8str eEncode);
-	virtual void WriteString(LPCSTR psz);
+	virtual void WriteString(LPCSTR const psz);
 	virtual void WriteLongString(const CString &rstr, EUTF8str eEncode);
-	virtual void WriteLongString(LPCSTR psz);
+	virtual void WriteLongString(LPCSTR const psz);
+protected:
+	virtual ~CFileDataIO() = default;
 };
 
 
@@ -98,7 +100,7 @@ public:
 		: CMemFile(nGrowBytes)
 	{
 	}
-	//CSafeMemFile::CSafeMemFile(BYTE *lpBuffer, UINT nBufferSize, UINT nGrowBytes = 0)
+	//CSafeMemFile(BYTE *lpBuffer, UINT nBufferSize, UINT nGrowBytes = 0)
 	//	: CMemFile(lpBuffer, nBufferSize, nGrowBytes) {}
 	CSafeMemFile(const BYTE *lpBuffer, UINT nBufferSize)
 		: CMemFile(const_cast<BYTE*>(lpBuffer), nBufferSize, 0)
@@ -120,14 +122,14 @@ public:
 	virtual uint16 ReadUInt16();
 	virtual uint32 ReadUInt32();
 	virtual uint64 ReadUInt64();
-	virtual void ReadUInt128(Kademlia::CUInt128 *pVal);
+	virtual void ReadUInt128(Kademlia::CUInt128 &Val);
 	virtual void ReadHash16(uchar *pVal);
 
 	virtual void WriteUInt8(uint8 nVal);
 	virtual void WriteUInt16(uint16 nVal);
 	virtual void WriteUInt32(uint32 nVal);
 	virtual void WriteUInt64(uint64 nVal);
-	virtual void WriteUInt128(const Kademlia::CUInt128 *pVal);
+	virtual void WriteUInt128(const Kademlia::CUInt128 &Val);
 	virtual void WriteHash16(const uchar *pVal);
 };
 

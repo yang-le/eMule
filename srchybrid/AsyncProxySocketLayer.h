@@ -189,7 +189,7 @@ private:
 	CString	m_pProxyPeerHost;//The host connected to
 };
 
-//Errorcodes
+//Error codes
 #define PROXYERROR_NOERROR			0
 #define PROXYERROR_NOCONN			1 //Can't connect to proxy server, use GetLastError for more information
 #define PROXYERROR_REQUESTFAILED	2 //Request failed, can't send data

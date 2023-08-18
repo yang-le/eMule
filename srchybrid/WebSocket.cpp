@@ -44,28 +44,28 @@ void CWebSocket::SetParent(CWebServer *pParent)
 	m_pParent = pParent;
 }
 
-void CWebSocket::OnRequestReceived(const char *pHeader, DWORD dwHeaderLen, const char *pData, DWORD dwDataLen, const in_addr &inad)
+void CWebSocket::OnRequestReceived(const char *pHeader, DWORD dwHeaderLen, const char *pData, DWORD dwDataLen, const in_addr inad)
 {
 	CStringA sHeader(pHeader, dwHeaderLen);
 	CStringA sURL;
 
-	if (sHeader.Left(3) == "GET")
+	if (strncmp(sHeader, "GET", 3) == 0)
 		sURL = sHeader.Trim();
-	else if (sHeader.Left(4) == "POST") {
+	else if (strncmp(sHeader, "POST", 4) == 0) {
 		CStringA sData(pData, dwDataLen);
 		sURL = '?' + sData.Trim();	// '?' to imitate GET syntax for ParseURL
 	}
-	if (sURL.Find(' ') >= 0)
-		sURL = sURL.Mid(sURL.Find(' ') + 1, sURL.GetLength());
-	if (sURL.Find(' ') >= 0)
-		sURL = sURL.Left(sURL.Find(' '));
+	sURL.Delete(0, sURL.Find(' ') + 1);
+	int i = sURL.Find(' ');
+	if (i >= 0)
+		sURL.Truncate(i);
 	bool filereq = sURL.GetLength() >= 3 && sURL.Find("..") < 0; // prevent file access in the eMule's webserver folder
 	if (filereq) {
 		CStringA ext(sURL.Right(5).MakeLower());
-		int i = ext.ReverseFind('.');
+		i = ext.ReverseFind('.') + 1;
 		ext.Delete(0, i);
-		filereq = i >= 0 && ext.GetLength() > 2 && (ext == ".gif" || ext == ".jpg" || ext == ".png"
-			|| ext == ".ico" || ext == ".css" || ext == ".bmp" || ext == ".js" || ext == ".jpeg");
+		filereq = (i > 0) && ext.GetLength() > 1 && (ext == "gif" || ext == "jpg" || ext == "png"
+			|| ext == "ico" || ext == "css" || ext == "bmp" || ext == "js" || ext == "jpeg");
 	}
 	ThreadData Data;
 	Data.sURL = sURL;
@@ -81,7 +81,7 @@ void CWebSocket::OnRequestReceived(const char *pHeader, DWORD dwHeaderLen, const
 	Disconnect();
 }
 
-void CWebSocket::OnReceived(void *pData, DWORD dwSize, const in_addr &inad)
+void CWebSocket::OnReceived(void *pData, DWORD dwSize, const in_addr inad)
 {
 	static const DWORD SIZE_PRESERVE = 0x1000u;
 
@@ -263,7 +263,7 @@ void CWebSocket::Disconnect()
 		m_bCanSend = false;
 		if (m_pTail)
 			try {
-				// push an empty chunk as a tail
+				// push an empty chunk as the tail
 				m_pTail->m_pNext = new CChunk();
 			} catch (...) {
 			}
@@ -275,9 +275,9 @@ void CWebSocket::Disconnect()
 UINT AFX_CDECL WebSocketAcceptedFunc(LPVOID pD)
 {
 	DbgSetThreadName("WebSocketAccepted");
+	InitThreadLocale();
 
 	srand((unsigned)time(NULL));
-	InitThreadLocale();
 
 	const SocketData *pData = static_cast<SocketData*>(pD);
 	CWebServer *pThis = static_cast<CWebServer*>(pData->pThis);
@@ -431,9 +431,9 @@ thread_exit:
 UINT AFX_CDECL WebSocketListeningFunc(LPVOID pThis)
 {
 	DbgSetThreadName("WebSocketListening");
+	InitThreadLocale();
 
 	srand((unsigned)time(NULL));
-	InitThreadLocale();
 
 	SOCKET hSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, 0);
 	if (INVALID_SOCKET != hSocket) {
@@ -509,12 +509,12 @@ int StartSSL()
 	mbedtls_ssl_config_init(&conf);
 	mbedtls_ctr_drbg_init(&ctr_drbg);
 	mbedtls_entropy_init(&entropy);
-	int ret = mbedtls_x509_crt_parse_file(&srvcert, thePrefs.GetWebCertPath());
+	int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (unsigned char*)pers, strlen(pers));
 	if (!ret) {
-		mbedtls_pk_init(&pkey);
-		ret = mbedtls_pk_parse_keyfile(&pkey, thePrefs.GetWebKeyPath(), NULL);
+		ret = mbedtls_x509_crt_parse_file(&srvcert, thePrefs.GetWebCertPath());
 		if (!ret) {
-			ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (unsigned char*)pers, strlen(pers));
+			mbedtls_pk_init(&pkey);
+			ret = mbedtls_pk_parse_keyfile(&pkey, thePrefs.GetWebKeyPath(), NULL, mbedtls_ctr_drbg_random, &ctr_drbg);
 			if (!ret) {
 				ret = mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_SERVER, MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
 				if (!ret) {

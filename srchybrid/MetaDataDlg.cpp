@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -18,7 +18,6 @@
 #include "emule.h"
 #include "kademlia/kademlia/tag.h"
 #include "MetaDataDlg.h"
-#include "OtherFunctions.h"
 #include "Preferences.h"
 #include "MenuCmds.h"
 #include "Packets.h"
@@ -284,19 +283,18 @@ CString GetTagNameByID(UINT id)
 		uid = IDS_META_SRCTYPE;
 		break;
 	default:
-		uid = 0;
+		{
+			CString buffer;
+			buffer.Format(_T("Tag0x%02X"), id);
+			return buffer;
+		}
 	}
-	if (uid)
-		return GetResString(uid);
-
-	CString buffer;
-	buffer.Format(_T("Tag0x%02X"), id);
-	return buffer;
+	return GetResString(uid);
 }
 
 CString GetMetaTagName(UINT uTagID)
 {
-	CString strName = GetTagNameByID(uTagID);
+	CString strName(GetTagNameByID(uTagID));
 	StripTrailingColon(strName);
 	return strName;
 }
@@ -332,7 +330,7 @@ CString GetValue(const CTag *pTag)
 			strValue = GetCodecDisplayName(strValue);
 	} else if (pTag->IsInt()) {
 		if (pTag->GetNameID() == FT_MEDIA_LENGTH || pTag->GetNameID() == FT_LASTSEENCOMPLETE)
-			SecToTimeLength(pTag->GetInt(), strValue);
+			strValue = SecToTimeLength(pTag->GetInt());
 		else if (pTag->GetNameID() == FT_FILERATING)
 			strValue = GetRateString(pTag->GetInt());
 		else if (pTag->GetNameID() == 0x10 || pTag->GetNameID() >= 0xFA)
@@ -359,7 +357,7 @@ CString GetValue(const Kademlia::CKadTag *pTag) // FIXME LARGE FILES
 			strValue = GetCodecDisplayName(strValue);
 	} else if (pTag->IsInt()) {
 		if (pTag->m_name.Compare(TAG_MEDIA_LENGTH) == 0)
-			SecToTimeLength((unsigned long)pTag->GetInt(), strValue);
+			strValue = SecToTimeLength((UINT)pTag->GetInt());
 		else if (pTag->m_name.Compare(TAG_FILERATING) == 0)
 			strValue = GetRateString((UINT)pTag->GetInt());
 		else if ((BYTE)pTag->m_name[0] == 0x10 || (BYTE)pTag->m_name[0] >= 0xFA)
@@ -446,8 +444,8 @@ void CMetaDataDlg::RefreshData()
 				m_tags.SetItem(&lvi);
 
 
-				strBuff = md4str(m_pFile->GetFileHash());
-				lvi.pszText = const_cast<LPTSTR>((LPCTSTR)strBuff);
+				const CString &sMD4(md4str(m_pFile->GetFileHash()));
+				lvi.pszText = const_cast<LPTSTR>((LPCTSTR)sMD4);
 				lvi.iSubItem = META_DATA_COL_VALUE;
 				m_tags.SetItem(&lvi);
 			}
@@ -461,20 +459,20 @@ void CMetaDataDlg::RefreshData()
 			lvi.mask = LVIF_TEXT;
 			lvi.iItem = INT_MAX;
 			lvi.iSubItem = META_DATA_COL_NAME;
-			strBuff = GetName(pTag);
-			lvi.pszText = const_cast<LPTSTR>((LPCTSTR)strBuff);
+			const CString &sName(GetName(pTag));
+			lvi.pszText = const_cast<LPTSTR>((LPCTSTR)sName);
 			int iItem = m_tags.InsertItem(&lvi);
 			if (iItem >= 0) {
 				//lvi.mask = LVIF_TEXT;
 				lvi.iItem = iItem;
 
-				strBuff = GetType(pTag->GetType());
-				lvi.pszText = const_cast<LPTSTR>((LPCTSTR)strBuff);
+				const CString &sType(GetType(pTag->GetType()));
+				lvi.pszText = const_cast<LPTSTR>((LPCTSTR)sType);
 				lvi.iSubItem = META_DATA_COL_TYPE;
 				m_tags.SetItem(&lvi);
 
-				strBuff = GetValue(pTag);
-				lvi.pszText = const_cast<LPTSTR>((LPCTSTR)strBuff);
+				const CString &sValue(GetValue(pTag));
+				lvi.pszText = const_cast<LPTSTR>((LPCTSTR)sValue);
 				lvi.iSubItem = META_DATA_COL_VALUE;
 				m_tags.SetItem(&lvi);
 
@@ -484,25 +482,24 @@ void CMetaDataDlg::RefreshData()
 	} else if (m_taglist != NULL) {
 		for (Kademlia::TagList::const_iterator it = m_taglist->begin(); it != m_taglist->end(); ++it) {
 			const Kademlia::CKadTag *pTag = *it;
-			CString strBuff;
 			LVITEM lvi;
 			lvi.mask = LVIF_TEXT;
 			lvi.iItem = INT_MAX;
 			lvi.iSubItem = META_DATA_COL_NAME;
-			strBuff = GetName(pTag);
-			lvi.pszText = const_cast<LPTSTR>((LPCTSTR)strBuff);
+			const CString &sName(GetName(pTag));
+			lvi.pszText = const_cast<LPTSTR>((LPCTSTR)sName);
 			int iItem = m_tags.InsertItem(&lvi);
 			if (iItem >= 0) {
 				//lvi.mask = LVIF_TEXT;
 				lvi.iItem = iItem;
 
-				strBuff = GetType(pTag->m_type);
-				lvi.pszText = const_cast<LPTSTR>((LPCTSTR)strBuff);
+				const CString &sType(GetType(pTag->m_type));
+				lvi.pszText = const_cast<LPTSTR>((LPCTSTR)sType);
 				lvi.iSubItem = META_DATA_COL_TYPE;
 				m_tags.SetItem(&lvi);
 
-				strBuff = GetValue(pTag);
-				lvi.pszText = const_cast<LPTSTR>((LPCTSTR)strBuff);
+				const CString &sValue(GetValue(pTag));
+				lvi.pszText = const_cast<LPTSTR>((LPCTSTR)sValue);
 				lvi.iSubItem = META_DATA_COL_VALUE;
 				m_tags.SetItem(&lvi);
 
@@ -510,9 +507,9 @@ void CMetaDataDlg::RefreshData()
 			}
 		}
 	}
-	CString strTmp;
-	strTmp.Format(_T("%s %i"), (LPCTSTR)GetResString(IDS_METATAGS), iMetaTags);
-	SetDlgItemText(IDC_TOTAL_TAGS, strTmp);
+	CString sTotal(GetResString(IDS_METATAGS));
+	sTotal.AppendFormat(_T(" %i"), iMetaTags);
+	SetDlgItemText(IDC_TOTAL_TAGS, sTotal);
 	m_tags.SetRedraw();
 }
 
@@ -523,8 +520,7 @@ void CMetaDataDlg::OnCopyTags()
 	CString strData;
 	for (POSITION pos = m_tags.GetFirstSelectedItemPosition(); pos != NULL;) {
 		int iItem = m_tags.GetNextSelectedItem(pos);
-		const CString &strValue = m_tags.GetItemText(iItem, META_DATA_COL_VALUE);
-
+		const CString &strValue(m_tags.GetItemText(iItem, META_DATA_COL_VALUE));
 		if (!strValue.IsEmpty()) {
 			if (!strData.IsEmpty())
 				strData += _T("\r\n");

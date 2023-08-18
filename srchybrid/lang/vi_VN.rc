@@ -472,7 +472,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Toàn cục (Các máy chủ)"
     IDS_METHOD              "Phương pháp"
     IDS_UNDO                "Làm lại"
-    IDS_DAYLY               "Hàng ngày"
+    IDS_DAILY               "Hàng ngày"
 END
 
 STRINGTABLE
@@ -1508,7 +1508,7 @@ BEGIN
     IDS_EM_HELP             "&Trợ Giúp"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Bạn bè không được thêm vào.\r\n\r\nĐã có bạn với cùng địa chỉ IP và cổng này rồi."
-    IDS_DYNUP               "ĐoánTốcĐộ-TảiLên"
+    IDS_DYNUP               "ĐoánTốcĐộ-TảiLên (không khuyến khích)"
     IDS_KADOVERHEAD         "Phần dư Kad (Gói): %s (%s)"
     IDS_FIND                "Tìm..."
     IDS_LOG_BANNED_CLIENTS  "Ghi lại các máy khách bị cấm"

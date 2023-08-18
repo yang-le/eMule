@@ -105,8 +105,8 @@ number			{num1}|{num2}
 						BEGIN(STRING);
 						return TOK_EXT;
 					}
-					else if (opt_strnicmp(yytext+1, "availability", 3) == 0 ||
-						     opt_strnicmp(yytext+1, "sources", 3) == 0) {
+					else if (opt_strnicmp(yytext+1, "availability", 3) == 0
+						     || opt_strnicmp(yytext+1, "sources", 3) == 0) {
 						BEGIN(NUMBER);
 						return TOK_SOURCES;
 					}
@@ -419,22 +419,20 @@ number			{num1}|{num2}
 							}
 						}
 #ifndef _UNICODE
-						else{
-							if ((unsigned char)c >= 0x80 && IsDBCSLeadByte(yytext[0])){
-								psz[i++] = (unsigned char)c;
-								if (i >= l){
-									char *pszNew = (char*)realloc(psz, l += 128);
-									if (pszNew == NULL){
-										free(psz);
-										yyerror(_T("Less memory for string"));
-										yyterminate();
-										/*NOT REACHED*/
-										break;
-									}
-									psz = pszNew;
+						else if ((unsigned char)c >= 0x80 && IsDBCSLeadByte(yytext[0])){
+							psz[i++] = (unsigned char)c;
+							if (i >= l){
+								char *pszNew = (char*)realloc(psz, l += 128);
+								if (pszNew == NULL){
+									free(psz);
+									yyerror(_T("Less memory for string"));
+									yyterminate();
+									/*NOT REACHED*/
+									break;
 								}
-								c = yyinput();
+								psz = pszNew;
 							}
+							c = yyinput();
 						}
 #endif
 
@@ -454,11 +452,8 @@ number			{num1}|{num2}
 					psz[i] = '\0';
 
 					if (s_bKeepQuotedStrings && YYSTATE != STRING) {
-						CStringA quoted;
-						quoted = '\"';
-						quoted += psz;
-						quoted += '\"';
-						yylval.pstr = new CStringA(quoted);
+						yylval.pstr = new CStringA();
+						yylval.pstr->Format("\"%s\"", psz);
 					}
 					else
 						yylval.pstr = new CStringA(psz);

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -16,12 +16,13 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
 #include "emule.h"
+#include "opcodes.h"
+#include "OtherFunctions.h"
 #include "SearchDlg.h"
 #include "PPgTweaks.h"
 #include "Scheduler.h"
 #include "DownloadQueue.h"
 #include "Preferences.h"
-#include "OtherFunctions.h"
 #include "TransferDlg.h"
 #include "emuledlg.h"
 #include "SharedFilesWnd.h"
@@ -29,7 +30,6 @@
 #include "HelpIDs.h"
 #include "Log.h"
 #include "UserMsgs.h"
-#include "opcodes.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -299,7 +299,7 @@ void CPPgTweaks::DoDataExchange(CDataExchange *pDX)
 			m_ctrlTreeOptions.Expand(m_htiVerboseGroup, TVE_EXPAND);
 		m_ctrlTreeOptions.Expand(m_htiCommit, TVE_EXPAND);
 		m_ctrlTreeOptions.Expand(m_htiCheckDiskspace, TVE_EXPAND);
-		m_ctrlTreeOptions.Expand(m_htiDynUp, TVE_EXPAND);
+		m_ctrlTreeOptions.Expand(m_htiDynUp, m_bDynUpEnabled ? TVE_EXPAND : TVE_COLLAPSE);
 		m_ctrlTreeOptions.Expand(m_htiDynUpPingToleranceGroup, TVE_EXPAND);
 		m_ctrlTreeOptions.Expand(m_htiExtractMetaData, TVE_EXPAND);
 		m_ctrlTreeOptions.Expand(m_htiUPnP, TVE_EXPAND);
@@ -622,14 +622,14 @@ void CPPgTweaks::OnHScroll(UINT /*nSBCode*/, UINT /*nPos*/, CScrollBar *pScrollB
 {
 	if (pScrollBar->GetSafeHwnd() == m_ctlFileBuffSize.m_hWnd) {
 		m_uFileBufferSize = m_ctlFileBuffSize.GetPos() * 1024;
-		CString temp;
-		temp.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_FILEBUFFERSIZE), (LPCTSTR)CastItoXBytes(m_uFileBufferSize));
+		CString temp(GetResString(IDS_FILEBUFFERSIZE));
+		temp.AppendFormat(_T(": %s"), (LPCTSTR)CastItoXBytes(m_uFileBufferSize));
 		SetDlgItemText(IDC_FILEBUFFERSIZE_STATIC, temp);
 		SetModified(TRUE);
 	} else if (pScrollBar->GetSafeHwnd() == m_ctlQueueSize.m_hWnd) {
 		m_iQueueSize = reinterpret_cast<CSliderCtrl*>(pScrollBar)->GetPos() * 100;
-		CString temp;
-		temp.Format(_T("%s: %s"), (LPCTSTR)GetResString(IDS_QUEUESIZE), (LPCTSTR)GetFormatedUInt((ULONG)m_iQueueSize));
+		CString temp(GetResString(IDS_QUEUESIZE));
+		temp.AppendFormat(_T(": %s"), (LPCTSTR)GetFormatedUInt((ULONG)m_iQueueSize));
 		SetDlgItemText(IDC_QUEUESIZE_STATIC, temp);
 		SetModified(TRUE);
 	}

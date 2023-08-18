@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -90,7 +90,7 @@ BOOL CFileDetailDialogName::OnInitDialog()
 	m_listFileNames.LoadSettings();
 
 	m_listFileNames.SetSortArrow();
-	m_listFileNames.SortItems(&CompareListNameItems, m_listFileNames.GetSortItem() + (m_listFileNames.GetSortAscending() ? 0 : 10));
+	m_listFileNames.SortItems(&CompareListNameItems, MAKELONG(m_listFileNames.GetSortItem(), !m_listFileNames.GetSortAscending()));
 
 	Localize();
 
@@ -165,7 +165,7 @@ void CFileDetailDialogName::FillSourcenameList()
 
 	// update
 	const CPartFile *file = static_cast<CPartFile*>((*m_paFiles)[0]);
-	for (POSITION pos = file->srclist.GetHeadPosition(); pos != NULL; ) {
+	for (POSITION pos = file->srclist.GetHeadPosition(); pos != NULL;) {
 		CUpDownClient *cur_src = file->srclist.GetNext(pos);
 		if (cur_src->GetRequestFile() != file || cur_src->GetClientFilename().IsEmpty())
 			continue;
@@ -173,7 +173,7 @@ void CFileDetailDialogName::FillSourcenameList()
 		info.psz = cur_src->GetClientFilename();
 		int itempos = m_listFileNames.FindItem(&info, -1);
 		if (itempos == -1) {
-			FCtrlItem_Struct *newitem = new FCtrlItem_Struct();
+			FCtrlItem_Struct *newitem = new FCtrlItem_Struct{};
 			newitem->count = 1;
 			newitem->filename = cur_src->GetClientFilename();
 
@@ -188,7 +188,7 @@ void CFileDetailDialogName::FillSourcenameList()
 			m_listFileNames.SetItemText(ix, 1, _T("1"));
 		} else {
 			FCtrlItem_Struct *item = reinterpret_cast<FCtrlItem_Struct*>(m_listFileNames.GetItemData(itempos));
-			item->count++;
+			++item->count;
 			CString strText;
 			strText.Format(_T("%i"), item->count);
 			m_listFileNames.SetItemText(itempos, 1, strText);
@@ -204,7 +204,7 @@ void CFileDetailDialogName::FillSourcenameList()
 		}
 	}
 
-	m_listFileNames.SortItems(&CompareListNameItems, m_listFileNames.GetSortItem() + (m_listFileNames.GetSortAscending() ? 0 : 10));
+	m_listFileNames.SortItems(&CompareListNameItems, MAKELONG(m_listFileNames.GetSortItem(), !m_listFileNames.GetSortAscending()));
 }
 
 void CFileDetailDialogName::TakeOver()
@@ -245,7 +245,7 @@ void CFileDetailDialogName::OnLvnColumnClick(LPNMHDR pNMHDR, LRESULT *pResult)
 	}
 
 	m_listFileNames.SetSortArrow(pNMListView->iSubItem, sortAscending);
-	m_listFileNames.SortItems(&CompareListNameItems, pNMListView->iSubItem + (sortAscending ? 0 : 10));
+	m_listFileNames.SortItems(&CompareListNameItems, MAKELONG(pNMListView->iSubItem, !sortAscending));
 
 	*pResult = 0;
 }
@@ -256,19 +256,17 @@ int CALLBACK CFileDetailDialogName::CompareListNameItems(LPARAM lParam1, LPARAM 
 	const FCtrlItem_Struct *item2 = reinterpret_cast<FCtrlItem_Struct*>(lParam2);
 
 	int iResult;
-	switch (lParamSort) {
+	switch (LOWORD(lParamSort)) {
 	case 0:
-	case 10:
 		iResult = CompareLocaleStringNoCase(item1->filename, item2->filename);
 		break;
 	case 1:
-	case 11:
 		iResult = CompareUnsigned(item1->count, item2->count);
 		break;
 	default:
-		iResult = 0;
+		return 0;
 	}
-	return (lParamSort < 10) ? iResult : -iResult;
+	return HIWORD(lParamSort) ? -iResult : iResult;
 }
 
 void CFileDetailDialogName::OnNmDblClkList(LPNMHDR, LRESULT *pResult)
@@ -304,13 +302,13 @@ BOOL CFileDetailDialogName::OnCommand(WPARAM wParam, LPARAM lParam)
 		switch (wParam) {
 		case MP_MESSAGE:
 			TakeOver();
-			return true;
+			return TRUE;
 		case MP_COPYSELECTED:
 			Copy();
-			return true;
+			return TRUE;
 		case MP_RESTORE:
 			FillSourcenameList();
-			return true;
+			return TRUE;
 		}
 	}
 	return CResizablePage::OnCommand(wParam, lParam);
@@ -321,14 +319,13 @@ void CFileDetailDialogName::RenameFile()
 	if (CanRenameFile()) {
 		CString strNewFileName;
 		GetDlgItemText(IDC_FILENAME, strNewFileName);
-		strNewFileName.Trim();
-		if (strNewFileName.IsEmpty() || !IsValidEd2kString(strNewFileName))
-			return;
-		CPartFile *file = static_cast<CPartFile*>((*m_paFiles)[0]);
-		file->SetFileName(strNewFileName, true);
-		file->UpdateDisplayedInfo();
-		file->SavePartFile();
-		GetParent()->SendMessage(UM_DATA_CHANGED); //refresh notification for FileDetailDialog
+		if (!strNewFileName.Trim().IsEmpty() && IsValidEd2kString(strNewFileName)) {
+			CPartFile *file = static_cast<CPartFile*>((*m_paFiles)[0]);
+			file->SetFileName(strNewFileName, true);
+			file->UpdateDisplayedInfo();
+			file->SavePartFile();
+			GetParent()->SendMessage(UM_DATA_CHANGED); //refresh notification for FileDetailDialog
+		}
 	}
 }
 

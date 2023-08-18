@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -18,7 +18,7 @@
 
 struct SIPFilter
 {
-	SIPFilter(uint32 newStart, uint32 newEnd, UINT newLevel, const CStringA &newDesc)
+	SIPFilter(uint32 newStart, uint32 newEnd, uint32 newLevel, const CStringA &newDesc)
 		: start(newStart)
 		, end(newEnd)
 		, level(newLevel)
@@ -29,7 +29,7 @@ struct SIPFilter
 
 	uint32		start;
 	uint32		end;
-	UINT		level;
+	uint32		level;
 	UINT		hits;
 	CStringA	desc;
 };
@@ -49,7 +49,7 @@ public:
 
 	static CString GetDefaultFilePath();
 
-	void AddIPRange(uint32 start, uint32 end, UINT level, const CStringA &rstrDesc)
+	void AddIPRange(uint32 start, uint32 end, uint32 level, const CStringA &rstrDesc)
 	{
 		m_iplist.Add(new SIPFilter(start, end, level, rstrDesc));
 	}
@@ -65,7 +65,7 @@ public:
 	void SaveToDefaultFile();
 
 	bool IsFiltered(uint32 ip) /*const*/;
-	bool IsFiltered(uint32 ip, UINT level) /*const*/;
+	bool IsFiltered(uint32 ip, uint32 level) /*const*/;
 	CString GetLastHit() const;
 	const CIPFilterArray& GetIPFilter() const;
 
@@ -74,6 +74,6 @@ private:
 	CIPFilterArray m_iplist;
 	bool m_bModified;
 
-	static bool ParseFilterLine1(const CStringA &sbuffer, uint32 &ip1, uint32 &ip2, UINT &level, CStringA &desc);
-	static bool ParseFilterLine2(const CStringA &sbuffer, uint32 &ip1, uint32 &ip2, UINT &level, CStringA &desc);
+	static bool ParseFilterLine1(const CStringA &sbuffer, uint32 &ip1, uint32 &ip2, uint32 &level, CStringA &desc);
+	static bool ParseFilterLine2(const CStringA &sbuffer, uint32 &ip1, uint32 &ip2, uint32 &level, CStringA &desc);
 };

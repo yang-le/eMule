@@ -414,7 +414,7 @@ BEGIN
     IDS_WEB_ERR_CANTLOAD    "Viga makettide laadimisel: ei saa avada faili %s"
     IDS_GLOBALSEARCH        "Globaalne (server)"
     IDS_METHOD              "Meetod"
-    IDS_DAYLY               "Päev"
+    IDS_DAILY               "Päev"
 END
 
 STRINGTABLE
@@ -1411,7 +1411,7 @@ BEGIN
     IDS_EM_HELP             "&Appi"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Sõber jäi lisamata.\r\n\r\nMeil juba on üks sama IP aadressi ja pordiga sõber."
-    IDS_DYNUP               "Saatmiskiiruse regulaator (USS)"
+    IDS_DYNUP               "Saatmiskiiruse regulaator - USS (not recommended)"
     IDS_KADOVERHEAD         "Kad Overhead (pakette): %s (%s)"
     IDS_FIND                "Leia..."
     IDS_LOG_BANNED_CLIENTS  "Logi bännitud kasutajad"

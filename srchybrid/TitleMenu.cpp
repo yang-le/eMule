@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -149,8 +149,8 @@ void CTitleMenu::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 
 		if (!g_bLowColorDesktop &&/* m_pfnGradientFill &&*/ m_clLeft != m_clRight) {
 			TRIVERTEX rcVertex[2];
-			lpDIS->rcItem.right--; // exclude this point, like FillRect does
-			lpDIS->rcItem.bottom--;
+			--lpDIS->rcItem.right; // exclude this point, like FillRect does
+			--lpDIS->rcItem.bottom;
 			rcVertex[0].x = lpDIS->rcItem.left;
 			rcVertex[0].y = lpDIS->rcItem.top;
 			rcVertex[0].Red = GetRValue(m_clLeft) << 8;	// color values from 0x0000 to 0xff00 !!!!
@@ -314,13 +314,12 @@ void CTitleMenu::SetMenuBitmap(UINT nFlags, UINT nIDNewItem, LPCTSTR /*lpszNewIt
 			}
 
 			if (hBmp) {
-				//MENUITEMINFOEX info = {};
 				MENUITEMINFO info = {};
 				info.cbSize = (UINT)sizeof info;
 				info.fMask = MIIM_BITMAP;
 				info.hbmpItem = hBmp;
 				VERIFY(SetMenuItemInfo(nIDNewItem, (MENUITEMINFO*)&info, FALSE));
-				m_mapIconNameToBitmap.SetAt(strIconLower, hBmp);
+				m_mapIconNameToBitmap[strIconLower] = hBmp;
 			}
 		}
 	} else if (!strIconLower.IsEmpty()) {
@@ -329,41 +328,14 @@ void CTitleMenu::SetMenuBitmap(UINT nFlags, UINT nIDNewItem, LPCTSTR /*lpszNewIt
 		void *pvIndex;
 		if (m_mapIconNameToIconIdx.Lookup(strIconLower, pvIndex)) {
 			nPos = (int)pvIndex;
-			m_mapMenuIdToIconIdx.SetAt(nIDNewItem, nPos);
+			m_mapMenuIdToIconIdx[nIDNewItem] = nPos;
 		} else {
 			HICON hIcon = theApp.LoadIcon(strIconLower);
 			if (hIcon) {
 				nPos = m_ImageList.Add(hIcon);
 				if (nPos >= 0) {
-					m_mapIconNameToIconIdx.SetAt(strIconLower, (void*)nPos);
-					m_mapMenuIdToIconIdx.SetAt(nIDNewItem, nPos);
-
-					// It doesn't work to use API checkmark bitmaps in a sufficient way. The size
-					// of those bitmaps is limited and smaller than our menu item bitmaps.
-					/*if (nFlags & MF_CHECKED) {
-						HDC hdcScreen = ::GetDC(HWND_DESKTOP);
-						if (hdcScreen) {
-							CDC *pdcScreen = CDC::FromHandle(hdcScreen);
-							CDC dcMem;
-							dcMem.CreateCompatibleDC(pdcScreen);
-
-							CBitmap bmpCheckmark;
-							bmpCheckmark.CreateCompatibleBitmap(pdcScreen, ICONSIZE+4, ICONSIZE+4);
-							CBitmap *pBmpOld = dcMem.SelectObject(&bmpCheckmark);
-							static const RECT rc = {0, 0, ICONSIZE + 4, ICONSIZE + 4};
-							dcMem.FillSolidRect(&rc, RGB(255, 255, 255));
-							m_ImageList.Draw(&dcMem, nPos, CPoint(), ILD_TRANSPARENT);
-							dcMem.SelectObject(pBmpOld);
-
-							MENUITEMINFO mii = {};
-							mii.cbSize = (UINT)sizeof mii;
-							mii.fMask = MIIM_CHECKMARKS;
-							mii.hbmpChecked = (HBITMAP)bmpCheckmark.Detach(); // resource leak
-							VERIFY(SetMenuItemInfo(nIDNewItem, &mii));
-
-							::ReleaseDC(HWND_DESKTOP, hdcScreen);
-						}
-					}*/
+					m_mapIconNameToIconIdx[strIconLower] = (void*)nPos;
+					m_mapMenuIdToIconIdx[nIDNewItem] = nPos;
 				}
 				VERIFY(::DestroyIcon(hIcon));
 			} else
@@ -414,7 +386,7 @@ void CTitleMenu::DrawMonoIcon(int nIconPos, CPoint nDrawPos, CDC *dc)
 	ULONG_PTR gdiplusToken = 0;
 	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 	if (Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL) == Gdiplus::Ok) {
-		HICON hIcon = m_ImageList.ExtractIconW(nIconPos);
+		HICON hIcon = m_IconList.ExtractIconW(nIconPos);
 		if (hIcon) {
 			Gdiplus::Bitmap bmp(hIcon);
 			VERIFY(::DestroyIcon(hIcon));

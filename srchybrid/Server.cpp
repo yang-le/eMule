@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -66,7 +66,7 @@ CServer::CServer(const ServerMet_Struct *in_data)
 CServer::CServer(uint16 in_port, LPCTSTR pszAddr)
 	: port(in_port)
 {
-	ip = inet_addr(CStringA(pszAddr));
+	ip = inet_addr((CStringA)pszAddr);
 	if (ip == INADDR_NONE && _tcscmp(pszAddr, _T("255.255.255.255")) != 0) {
 		m_strDynIP = pszAddr;
 		ip = 0;
@@ -109,7 +109,7 @@ CServer::CServer(const CServer *pOld)
 	m_bTriedCryptOnce = pOld->m_bTriedCryptOnce;
 }
 
-bool CServer::AddTagFromFile(CFileDataIO *servermet)
+bool CServer::AddTagFromFile(CFileDataIO &servermet)
 {
 	CTag *tag = new CTag(servermet, false);
 	switch (tag->GetNameID()) {

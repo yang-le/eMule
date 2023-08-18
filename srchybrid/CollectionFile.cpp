@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2005 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -33,9 +33,9 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(CCollectionFile, CAbstractFile)
 
-CCollectionFile::CCollectionFile(CFileDataIO *in_data)
+CCollectionFile::CCollectionFile(CFileDataIO &in_data)
 {
-	for (uint32 cnt = in_data->ReadUInt32(); cnt > 0; --cnt)
+	for (uint32 cnt = in_data.ReadUInt32(); cnt > 0; --cnt)
 		try {
 			CTag *toadd = new CTag(in_data, true);
 			m_taglist.Add(toadd);
@@ -59,13 +59,13 @@ CCollectionFile::CCollectionFile(CFileDataIO *in_data)
 
 	// here we have two choices
 	//	- if the server/client sent us a file type, we could use it (though it could be wrong)
-	//	- we always trust our file type list and determine the file type by the extension of the file
+	//	- we always trust our file type list and determine the file type by the file's extension
 	//
 	// if we received a file type from server, we use it.
 	// if we did not receive a file type, we determine it by examining the file's extension.
 	//
-	// but, in no case, we will use the receive file type when adding this search result to the download queue, to avoid
-	// that we are using 'wrong' file types in part files. (this has to be handled when creating the part files)
+	// to avoid using 'wrong' file types for part files when adding a search result to the download queue,
+	// in no case we will use the received file type (this has to be handled when creating the part files)
 	const CString &rstrFileType(GetStrTagValue(FT_FILETYPE));
 	CCollectionFile::SetFileName(GetStrTagValue(FT_FILENAME), false, rstrFileType.IsEmpty());
 	CCollectionFile::SetFileSize(GetInt64TagValue(FT_FILESIZE));
@@ -136,10 +136,10 @@ bool CCollectionFile::InitFromLink(const CString &sLink)
 	return true;
 }
 
-void CCollectionFile::WriteCollectionInfo(CFileDataIO *out_data)
+void CCollectionFile::WriteCollectionInfo(CFileDataIO &out_data)
 {
 	INT_PTR cnt = m_taglist.GetCount();
-	out_data->WriteUInt32((uint32)cnt);
+	out_data.WriteUInt32((uint32)cnt);
 
 	for (INT_PTR i = 0; i < cnt; ++i) {
 		CTag tempTag(*m_taglist[i]);

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2003 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//Copyright (C)2003-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -16,10 +16,10 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
 #include "emule.h"
-#include "FrameGrabThread.h"
 #include "CxImage/xImage.h"
-#include "OtherFunctions.h"
 #include "quantize.h"
+#include "FrameGrabThread.h"
+#include "OtherFunctions.h"
 #ifndef HAVE_QEDIT_H
 // This is a remote feature and not optional, in order to keep to working properly for other clients who want to use it
 // Check emule_site_config.h to fix it
@@ -91,7 +91,7 @@ BOOL CFrameGrabThread::InitInstance()
 
 BOOL CFrameGrabThread::Run()
 {
-	imgResults = new CxImage*[nFramesToGrab];
+	imgResults = new CxImage*[nFramesToGrab]{};
 	FrameGrabResult_Struct *result = new FrameGrabResult_Struct;
 	(void)CoInitialize(NULL);
 	result->nImagesGrabbed = (uint8)GrabFrames();
@@ -110,8 +110,6 @@ BOOL CFrameGrabThread::Run()
 UINT CFrameGrabThread::GrabFrames()
 {
 #define TIMEBETWEENFRAMES	50.0 // could be a param later, if needed
-	for (int i = nFramesToGrab; --i >= 0;)
-		imgResults[i] = NULL;
 	try {
 		HRESULT hr;
 		CComPtr<IMediaDet> pDet;
@@ -160,7 +158,7 @@ UINT CFrameGrabThread::GrabFrames()
 
 		/*FreeMediaType(mt); = */
 		if (mt.cbFormat != 0) {
-			CoTaskMemFree((PVOID)mt.pbFormat);
+			::CoTaskMemFree((PVOID)mt.pbFormat);
 			mt.cbFormat = 0;
 			mt.pbFormat = NULL;
 		}
@@ -173,63 +171,62 @@ UINT CFrameGrabThread::GrabFrames()
 		uint32 nFramesGrabbed;
 		for (nFramesGrabbed = 0; nFramesGrabbed < nFramesToGrab; ++nFramesGrabbed) {
 			long size;
-			hr = pDet->GetBitmapBits(dStartTime + (nFramesGrabbed*TIMEBETWEENFRAMES), &size, NULL, width, height);
+			hr = pDet->GetBitmapBits(dStartTime + (nFramesGrabbed * TIMEBETWEENFRAMES), &size, NULL, width, height);
 			if (SUCCEEDED(hr)) {
 				// we could also directly create a Bitmap in memory, however this caused problems/failed with *some* movie files
 				// when I tried it for the MMPreview, while this method works always - so I'll continue to use this one
-				long nFullBufferLen = sizeof(BITMAPFILEHEADER) + size;
+				uint32_t nFullBufferLen = static_cast<uint32_t>(sizeof(BITMAPFILEHEADER) + size);
 				char *buffer = new char[nFullBufferLen];
 
-				BITMAPFILEHEADER bfh = {};
-				bfh.bfType = 'MB';
-				bfh.bfSize = nFullBufferLen;
-				bfh.bfOffBits = sizeof(BITMAPINFOHEADER) + sizeof(BITMAPFILEHEADER);
-				memcpy(buffer, &bfh, sizeof bfh);
+				BITMAPFILEHEADER *pHdr = reinterpret_cast<BITMAPFILEHEADER*>(buffer);
+				memset(buffer, 0, sizeof(BITMAPFILEHEADER));
+				pHdr->bfType = 'MB';
+				pHdr->bfSize = nFullBufferLen;
+				pHdr->bfOffBits = sizeof(BITMAPINFOHEADER) + sizeof(BITMAPFILEHEADER);
 
 				try {
-					hr = pDet->GetBitmapBits(dStartTime + (nFramesGrabbed*TIMEBETWEENFRAMES), NULL, buffer + sizeof bfh, width, height);
+					hr = pDet->GetBitmapBits(dStartTime + nFramesGrabbed * TIMEBETWEENFRAMES, NULL, &buffer[sizeof(BITMAPFILEHEADER)], width, height);
 				} catch (...) {
 					ASSERT(0);
 					hr = E_FAIL;
 				}
-				if (SUCCEEDED(hr)) {
-					// decode
-					CxImage *imgResult = new CxImage();
-					imgResult->Decode((BYTE*)buffer, nFullBufferLen, CXIMAGE_FORMAT_BMP);
-					delete[] buffer;
-					if (!imgResult->IsValid()) {
-						delete imgResult;
-						break;
-					}
 
-					// resize if needed
-					if (nMaxWidth > 0 && nMaxWidth < width) {
-						float scale = (float)nMaxWidth / imgResult->GetWidth();
-						int nMaxHeigth = (int)(imgResult->GetHeight() * scale);
-						imgResult->Resample(nMaxWidth, nMaxHeigth, 0);
-					}
-
-					// decrease bpp if needed
-					if (bReduceColor) {
-						RGBQUAD *ppal = (RGBQUAD*)malloc(256 * sizeof(RGBQUAD));
-						if (ppal) {
-							CQuantizer q(256, 8);
-							q.ProcessImage(imgResult->GetDIB());
-							q.SetColorTable(ppal);
-							imgResult->DecreaseBpp(8, true, ppal);
-							free(ppal);
-						}
-					}
-
-					//CString TestName;
-					//TestName.Format("G:\\testframe%i.png",nFramesGrabbed);
-					//imgResult->Save(TestName,CXIMAGE_FORMAT_PNG);
-					// done
-					imgResults[nFramesGrabbed] = imgResult;
-				} else {
+				if (FAILED(hr)) {
 					delete[] buffer;
 					break;
 				}
+
+				// decode
+				CxImage *imgResult = new CxImage();
+				imgResult->Decode((uint8_t*)buffer, nFullBufferLen, CXIMAGE_FORMAT_BMP);
+				delete[] buffer;
+				if (!imgResult->IsValid()) {
+					delete imgResult;
+					break;
+				}
+
+				// resize if needed
+				if (nMaxWidth > 0 && nMaxWidth < width) {
+					float scale = (float)nMaxWidth / imgResult->GetWidth();
+					int32_t nMaxHeigth = (int32_t)(imgResult->GetHeight() * scale);
+					imgResult->Resample(nMaxWidth, nMaxHeigth, 0);
+				}
+
+				// decrease bpp if needed
+				if (bReduceColor) {
+					RGBQUAD pal[256];
+					CQuantizer q(_countof(pal), 8);
+					q.ProcessImage(imgResult->GetDIB());
+					q.SetColorTable(pal);
+					imgResult->DecreaseBpp(8, true, pal);
+				}
+#if TEST_FRAMEGRABBER //see also "case MP_OPEN" in CSharedFilesCtrl::OnContextMenu
+				CString TestName;
+				TestName.Format(_T("G:\\em\\testframe%i.png"), nFramesGrabbed);
+				imgResult->Save(TestName, CXIMAGE_FORMAT_PNG); //Save grabbed images for inspection
+#endif
+				// done
+				imgResults[nFramesGrabbed] = imgResult;
 			}
 		}
 		return nFramesGrabbed;

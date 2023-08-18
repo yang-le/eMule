@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -50,21 +50,12 @@ enum EFileType : uint8
 extern LPCTSTR const sBadFileNameChar;
 extern LPCTSTR const sHiddenPassword;
 
-static const struct
+struct LinkScheme
 {
 	LPCTSTR pszScheme;
 	int iLen;
-} s_apszSchemes[] =
-{
-	{ _T("ed2k://"),  7 },
-	{ _T("http://"),  7 },
-	{ _T("https://"), 8 },
-	{ _T("ftp://"),   6 },
-	{ _T("www."),     4 },
-	{ _T("ftp."),     4 },
-	{ _T("mailto:"),  7 },
-	{ _T("magnet:?"), 8 }
 };
+extern const struct LinkScheme s_apszSchemes[];
 
 struct SUnresolvedHostname
 {
@@ -79,17 +70,17 @@ struct SUnresolvedHostname
 
 #define ROUND(x) (floor((float)(x)+0.5f))
 
-template <typename T> inline static const T maxi(const T &v0, const T &v1)
+template <typename T> inline static T maxi(const T &v0, const T &v1)
 {
 	return v0 >= v1 ? v0 : v1;
 }
 
-template <typename T> inline static const T mini(const T &v0, const T &v1)
+template <typename T> inline static T mini(const T &v0, const T &v1)
 {
 	return v0 <= v1 ? v0 : v1;
 }
 
-template <typename T> inline static const int sgn(const T &val)
+template <typename T> inline static int sgn(const T &val) //for signed types only!
 {
 	return (T(0) < val) - (val < T(0));
 }
@@ -130,8 +121,7 @@ CString CastSecondsToHM(time_t seconds);
 CString	CastSecondsToLngHM(time_t seconds);
 CString GetFormatedUInt(ULONG ulVal);
 CString GetFormatedUInt64(ULONGLONG ullVal);
-void SecToTimeLength(unsigned long ulSec, CStringA &rstrTimeLength);
-void SecToTimeLength(unsigned long ulSec, CStringW &rstrTimeLength);
+CString SecToTimeLength(UINT uiSec);
 bool IsRegExpValid(const CString &regexpr);
 bool RegularExpressionMatch(const CString &regexpr, const CString &teststring);
 
@@ -146,7 +136,7 @@ CString GetCertInteger(const unsigned char *pucBlob, int cbBlob);
 CString URLDecode(const CString &sIn, bool bKeepNewLine = false);
 CString URLEncode(const CString &sIn);
 CString EncodeURLQueryParam(const CString &rstrQuery);
-//CString MakeStringEscaped(CString in);
+void DupAmpersand(CString &rstr);
 //CString RemoveAmpersand(const CString &rstr);
 CString	StripInvalidFilenameChars(const CString &strText);
 
@@ -169,7 +159,7 @@ void unslosh(CString &path); //remove trailing backslash from the path
 void canonical(CString &path); //applies PathCanonicalize
 void MakeFoldername(CString &path); //removes trailing backslash
 CString RemoveFileExtension(const CString &rstrFilePath);
-int CompareDirectory(const CString &rstrDir1, const CString &rstrDir2);
+bool EqualPaths(const CString &rstrDir1, const CString &rstrDir2);
 CString StringLimit(const CString &in, UINT length);
 CString CleanupFilename(const CString &filename, bool bExtension = true);
 CString ValidFilename(const CString &filename);
@@ -188,17 +178,21 @@ void		StripTrailingColon(CString &rstr);
 bool		IsUnicodeFile(LPCTSTR pszFilePath);
 uint64		GetFreeTempSpace(INT_PTR tempdirindex);
 int			GetPathDriveNumber(const CString &path);
+CString		GetShareName(const CString &path);
 EFileType	GetFileTypeEx(CShareableFile *kfile, bool checkextention = true, bool checkfileheader = true, bool nocached = false);
 CString		GetFileTypeName(EFileType ftype);
 bool		ExtensionIs(LPCTSTR pszFilePath, LPCTSTR pszExt);
 int			IsExtensionTypeOf(EFileType type, const CString &ext);
 uint32		LevenshteinDistance(const CString &str1, const CString &str2);
 bool		_tmakepathlimit(LPTSTR path, LPCTSTR drive, LPCTSTR dir, LPCTSTR fname, LPCTSTR ext);
+bool		HasSubdirectories(const CString &strDir);
+bool		DirAccsess(const CString &strDir);
 #ifdef UNICODE
 #define CompareLocaleStringNoCase  CompareLocaleStringNoCaseW
 #else
 #define CompareLocaleStringNoCase	CompareLocaleStringNoCaseA
 #endif // !UNICODE
+bool IsThumbsDb(const CString &sFilePath, const CString &sFileName);
 
 ///////////////////////////////////////////////////////////////////////////////
 // GUI helpers
@@ -220,6 +214,7 @@ void GetPopupMenuPos(const CTreeCtrl &tv, CPoint &point);
 void InitWindowStyles(CWnd *pWnd);
 CString GetRateString(UINT rate);
 HWND ReplaceRichEditCtrl(CWnd *pwndRE, CWnd *pwndParent, CFont *pFont);
+void DisableAutoSelect(CRichEditCtrl &re);
 int  FontPointSizeToLogUnits(int nPointSize);
 bool CreatePointFont(CFont &rFont, int nPointSize, LPCTSTR lpszFaceName);
 bool CreatePointFontIndirect(CFont &rFont, const LOGFONT *lpLogFont);
@@ -256,7 +251,7 @@ LPCTSTR	GetShellExecuteErrMsg(DWORD dwShellExecError);
 CString DbgGetHexDump(const uint8 *data, UINT size); //limited to the first 50 bytes
 void DbgSetThreadName(LPCSTR szThreadName, ...);
 void Debug(LPCTSTR pszFmtMsg, ...);
-void DebugHexDump(const uint8 *data, UINT lenData);
+void DebugHexDump(const void *data, UINT lenData);
 void DebugHexDump(CFile &file);
 CString DbgGetFileInfo(const uchar *hash);
 CString DbgGetFileStatus(UINT nPartCount, CSafeMemFile *data);
@@ -278,7 +273,7 @@ void DebugSend(LPCSTR pszMsg, const CUpDownClient *client, const uchar *packet =
 void DebugSend(LPCSTR pszOpcode, uint32 ip, uint16 port);
 void DebugSendF(LPCSTR pszOpcode, uint32 ip, uint16 port, LPCTSTR pszMsg, ...);
 void DebugHttpHeaders(const CStringAArray &astrHeaders);
-
+void throwCStr(LPCTSTR pStr);
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -294,7 +289,7 @@ void SetAutoStart(bool bOn);
 ULONGLONG GetModuleVersion(LPCTSTR pszFilePath);
 ULONGLONG GetModuleVersion(HMODULE hModule);
 
-int GetMaxWindowsTCPConnections();
+UINT GetMaxWindowsTCPConnections();
 
 #define _WINVER_95_		0x0400	// 4.0
 #define _WINVER_NT4_	0x0401	// 4.1 (baked version)
@@ -328,7 +323,7 @@ bool		AddIconGrayscaledToImageList(CImageList &rList, HICON hIcon);
 #define MDX_BLOCK_SIZE	64 //both MD4 and MD5
 #define MDX_DIGEST_SIZE	16
 
-inline BYTE toHex(const BYTE &x)
+inline BYTE toHex(const BYTE x)
 {
 	return x + (x > 9 ? 'A' - 10 : '0');
 }
@@ -369,11 +364,17 @@ bool strmd4(const CString &rstr, byte *hash);
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Compare helpers (spaceship operator would have been handy here)
+// Compare helpers (three-way)
 //
-inline int CompareUnsigned(uint32 uSize1, uint32 uSize2)
+
+//Designed for unsigned integral types because sgn(v0-v1) would fail.
+template <typename T> inline static int CompareUnsigned(const T v0, const T v1)
 {
-	return (uSize1 < uSize2) ? -1 : static_cast<int>(uSize1 > uSize2);
+#if _MSVC_LANG == 202002L
+	return v0 <=> v1;
+#else
+	return (v0 < v1) ? -1 : static_cast<int>(v0 > v1);
+#endif
 }
 
 inline int CompareUnsignedUndefinedAtBottom(uint32 uSize1, uint32 uSize2, bool bSortAscending)
@@ -388,16 +389,6 @@ inline int CompareUnsignedUndefinedAtBottom(uint32 uSize1, uint32 uSize2, bool b
 	return CompareUnsigned(uSize1, uSize2);
 }
 
-inline int CompareUnsigned64(uint64 uSize1, uint64 uSize2)
-{
-	return (uSize1 < uSize2) ? -1 : static_cast<int>(uSize1 > uSize2);
-}
-
-/*inline int CompareFloat(float uSize1, float uSize2)
-{
-	return (uSize1 < uSize2) ? -1 : static_cast<int>(uSize1 > uSize2);
-}
-*/
 inline int CompareOptLocaleStringNoCase(LPCTSTR psz1, LPCTSTR psz2)
 {
 	if (psz1 && psz2)
@@ -452,7 +443,7 @@ uint8 GetMyConnectOptions(bool bEncryption = true, bool bCallback = true);
 //No longer need separate lowID checks as we now know the servers just give *.*.*.0 users a lowID
 inline bool IsLowID(uint32 id)
 {
-	return (id < 16777216u); //0x01000000u
+	return (id < 16777216u); //0x01000000u or 2^25
 }
 CString ipstr(uint32 nIP);
 CString ipstr(uint32 nIP, uint16 nPort);
@@ -477,8 +468,8 @@ bool AdjustNTFSDaylightFileTime(time_t &ruFileDate, LPCTSTR pszFilePath);
 //MS have broken stat functions in XP builds of VS 2015+, and refused to fix it properly.
 //Return UTC time and file size in _stat64 structure; all time fields are in UTC.
 __time64_t FileTimeToUnixTime(const FILETIME &ft);
-int statUTC(LPCTSTR pname, struct _stat64 &ft);
-int statUTC(int ifile, struct _stat64 &ft);
+int statUTC(LPCTSTR pName, struct _stat64 &ft);
+int statUTC(HANDLE hFile, struct _stat64 &ft);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Random Numbers

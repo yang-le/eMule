@@ -12,6 +12,7 @@ protected:
 	DECLARE_INTERFACE_MAP();
 
 	BEGIN_INTERFACE_PART(InternetSecurityManager, IInternetSecurityManager)
+		virtual ~XInternetSecurityManager() = default;
 		STDMETHOD(SetSecuritySite)(IInternetSecurityMgrSite*);
 		STDMETHOD(GetSecuritySite)(IInternetSecurityMgrSite**);
 		STDMETHOD(MapUrlToZone)(LPCWSTR, DWORD*, DWORD);
@@ -23,6 +24,7 @@ protected:
 	END_INTERFACE_PART(InternetSecurityManager)
 
 	BEGIN_INTERFACE_PART(ServiceProvider, IServiceProvider)
+		virtual ~XServiceProvider() = default;
 		STDMETHOD(QueryService)(REFGUID, REFIID, void**);
 	END_INTERFACE_PART(ServiceProvider)
 };

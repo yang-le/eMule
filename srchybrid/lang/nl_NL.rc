@@ -422,7 +422,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Globaal (server)"
     IDS_METHOD              "Methode"
     IDS_UNDO                "Ongedaan maken"
-    IDS_DAYLY               "dagelijks"
+    IDS_DAILY               "dagelijks"
 END
 
 STRINGTABLE
@@ -1445,7 +1445,7 @@ BEGIN
     IDS_EM_HELP             "Help"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Vriend niet toegevoegd.\r\n\r\nEr is al een vriend met hetzelfde IP-adres en poort beschikbaar."
-    IDS_DYNUP               "Uploadsnelheidssensor"
+    IDS_DYNUP               "Uploadsnelheidssensor (niet aangeraden)"
     IDS_KADOVERHEAD         "Kad-overhead (pakketten): %s (%s)"
     IDS_FIND                "Zoeken..."
     IDS_LOG_BANNED_CLIENTS  "Verbannen cliënten loggen"

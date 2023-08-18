@@ -107,7 +107,7 @@ BEGIN
     CONTROL         "",IDC_MYINFOLIST,"RichEdit20W",ES_MULTILINE | ES_READONLY | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,372,176,130,106,WS_EX_STATICEDGE
     ICON            "",IDC_SERVLST_ICO,5,5,20,20,SS_NOTIFY
     CONTROL         "Servers:",IDC_SERVLIST_TEXT,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,18,6,91,8
-    CONTROL         "",IDC_SERVLIST,"SysListView32",LVS_REPORT | LVS_OWNERDRAWFIXED | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,5,17,358,159
+    CONTROL         "",IDC_SERVLIST,"SysListView32",LVS_REPORT | LVS_OWNERDRAWFIXED | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,5,17,358,159
     CONTROL         "",IDC_SPLITTER_SERVER,"Static",SS_BLACKFRAME | NOT WS_VISIBLE,4,179,357,4
     CONTROL         "",IDC_TAB3,"SysTabControl32",WS_TABSTOP,5,194,358,96
     PUSHBUTTON      "Reset",IDC_LOGRESET,318,183,45,12
@@ -296,7 +296,7 @@ BEGIN
     PUSHBUTTON      "Button1",IDC_FNC,176,43,48,12
     CONTROL         "Try to transfer full chunks to all uploads",IDC_FULLCHUNKTRANS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,70,209,10
-    CONTROL         "Try to Download preview chunks first.",IDC_PREVIEWPRIO,
+    CONTROL         "Try to download preview chunks first.",IDC_PREVIEWPRIO,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,80,209,10
     CONTROL         "IDS_PF_WATCHCB",IDC_WATCHCB,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,90,209,10
     CONTROL         "Use advanced calculation method for remaining time",IDC_PF_TIMECALC,
@@ -365,12 +365,12 @@ BEGIN
     GROUPBOX        "Max. connections:",IDC_MAXCONN_FRM,110,132,117,40
     GROUPBOX        "Capacities:",IDC_CAPACITIES_FRM,4,2,67,70
     CONTROL         "Download",IDC_DCAP_LBL,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,11,13,58,8
-    LTEXT           "kB/s",IDC_KBS2,45,25,22,8
-    LTEXT           "kB/s",IDC_KBS3,45,54,22,8
+    LTEXT           "KB/s",IDC_KBS2,45,25,22,8
+    LTEXT           "KB/s",IDC_KBS3,45,54,22,8
     CONTROL         "Upload",IDC_UCAP_LBL,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,11,42,58,8
     GROUPBOX        "Limits:",IDC_LIMITS_FRM,77,2,149,70
-    RTEXT           "kB/s",IDC_KBS1,176,13,44,8
-    RTEXT           "kB/s",IDC_KBS4,176,43,44,8
+    RTEXT           "KB/s",IDC_KBS1,176,13,44,8
+    RTEXT           "KB/s",IDC_KBS4,176,43,44,8
     LTEXT           "Hard limit",IDC_MAXSRCHARD_LBL,11,143,82,8
     LTEXT           "UDP",IDC_UDPPORTLABEL,11,103,16,8
     LTEXT           "Static",IDC_MAXCONLABEL,117,143,86,8
@@ -386,23 +386,20 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Wizard"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    CONTROL         "Win2K/XP/Vista+",IDC_WIZ_XP_RADIO,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,14,17,77,10
-    CONTROL         "Win95/98/ME",IDC_WIZ_ME_RADIO,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,107,17,77,10
-    CONTROL         "1-5",IDC_WIZ_LOWDOWN_RADIO,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,14,48,40,10
-    CONTROL         "6-15",IDC_WIZ_MEDIUMDOWN_RADIO,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,107,48,40,10
-    CONTROL         "16+",IDC_WIZ_HIGHDOWN_RADIO,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,200,48,40,10
-    CONTROL         "",IDC_PROVIDERS,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_GROUP | WS_TABSTOP,14,79,228,85
+    GROUPBOX        "Concurrent Downloads",IDC_WIZ_CONCURENTDOWN_FRAME,7,7,242,25
+    CONTROL         "1-5",IDC_WIZ_LOWDOWN_RADIO,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,14,17,40,10
+    CONTROL         "6-15",IDC_WIZ_MEDIUMDOWN_RADIO,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,107,17,40,10
+    CONTROL         "16+",IDC_WIZ_HIGHDOWN_RADIO,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,200,17,40,10
+    CONTROL         "",IDC_PROVIDERS,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_GROUP | WS_TABSTOP,14,49,228,112
+    GROUPBOX        "Connection Type",IDC_WIZ_HOTBUTTON_FRAME,7,37,242,161
+    RTEXT           "True Upload Bandwidth",IDC_WIZ_TRUEUPLOAD_TEXT,14,181,116,8
     EDITTEXT        IDC_WIZ_TRUEDOWNLOAD_BOX,133,166,40,12,ES_AUTOHSCROLL
+    RTEXT           "True Download Bandwidth",IDC_WIZ_TRUEDOWNLOAD_TEXT,14,168,116,8
     EDITTEXT        IDC_WIZ_TRUEUPLOAD_BOX,133,179,40,12,ES_AUTOHSCROLL
     CONTROL         "Kbit/s",IDC_KBITS,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,176,168,66,11
     CONTROL         "KB/s",IDC_KBYTES,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,176,180,66,11
     DEFPUSHBUTTON   "Apply",IDC_WIZ_APPLY_BUTTON,136,204,55,14,WS_GROUP
     PUSHBUTTON      "Cancel",IDC_WIZ_CANCEL_BUTTON,194,204,56,14
-    GROUPBOX        "Operating System",IDC_WIZ_OS_FRAME,7,7,242,25
-    GROUPBOX        "Concurrent Downloads",IDC_WIZ_CONCURENTDOWN_FRAME,7,37,242,25
-    GROUPBOX        "Connection Type",IDC_WIZ_HOTBUTTON_FRAME,7,67,242,131
-    RTEXT           "True Upload Bandwidth",IDC_WIZ_TRUEUPLOAD_TEXT,14,181,116,8
-    RTEXT           "True Download Bandwidth",IDC_WIZ_TRUEDOWNLOAD_TEXT,14,168,116,8
 END
 
 IDD_IRC DIALOGEX 0, 35, 511, 289
@@ -430,6 +427,8 @@ BEGIN
     ICON            "",IDC_FILES_ICO,5,5,20,20,SS_NOTIFY
     CONTROL         "",IDC_SHAREDDIRSTREE,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,5,33,114,252
     EDITTEXT        IDC_SHAREDFILES_FILTER,5,17,114,14,ES_MULTILINE | ES_AUTOHSCROLL
+    ICON            "",IDC_SF_FICON,124,273,20,20
+    LTEXT           "",IDC_SF_FNAME,144,275,340,8
 END
 
 IDD_PPG_NOTIFY DIALOGEX 0, 0, 231, 241
@@ -870,7 +869,7 @@ BEGIN
     CONTROL         "eD2K",IDC_WIZARD_NETWORK_ED2K,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,14,144,10
     CONTROL         "Kad",IDC_WIZARD_NETWORK_KADEMLIA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,158,14,145,10
     GROUPBOX        "eD2K Setting",IDC_WIZARD_ED2K,0,38,317,63
-    CONTROL         "Do you want eMule to connect using Safe Connect?\n\nTurning this feature off allows eMule to connect to servers a little faster, but can cause you to get more false lowID connects.",IDC_SAFESERVERCONNECT,
+    CONTROL         "Do you want eMule to connect using Safe Connect?\n\nTurning this feature off allows eMule to connect to servers a little faster, but can cause you to get more false low ID connects.",IDC_SAFESERVERCONNECT,
                     "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,8,53,289,45
 END
 
@@ -909,7 +908,7 @@ BEGIN
     EDITTEXT        IDC_BOOTSTRAPPORT,458,57,40,12,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "from connected clients",IDC_RADCLIENTS,"Button",BS_AUTORADIOBUTTON,364,97,134,8
     PUSHBUTTON      "BootStrap",IDC_BOOTSTRAPBUTTON,430,107,68,13
-    CONTROL         "",IDC_SEARCHLIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_OWNERDRAWFIXED | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,5,193,501,93
+    CONTROL         "",IDC_KADSEARCHLIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_OWNERDRAWFIXED | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,5,193,501,93
     CONTROL         "",IDC_CONTACTLIST,"SysListView32",LVS_REPORT | LVS_OWNERDRAWFIXED | LVS_ALIGNLEFT | NOT WS_VISIBLE | WS_BORDER | WS_TABSTOP,5,17,349,162
     LTEXT           "IP or Address:",IDC_SSTATIC4,376,47,74,8
     LTEXT           "Port:",IDC_SSTATIC7,458,47,40,8
@@ -953,7 +952,7 @@ BEGIN
     CONTROL         "Static",IDC_DDOWNTOTAL,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,110,135,53,8
     RTEXT           "Uploaded (this session):",IDC_STATIC45,163,113,90,8,0
     CONTROL         "Static",IDC_DDUP,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,256,113,51,8
-    RTEXT           "Average Uploadrate:",IDC_STATIC46,163,124,90,8,0
+    RTEXT           "Average Upload rate:",IDC_STATIC46,163,124,90,8,0
     CONTROL         "Static",IDC_DAVUR,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,256,124,50,8
     RTEXT           "Uploaded total:",IDC_STATIC47,163,135,90,8,0
     CONTROL         "Static",IDC_DUPTOTAL,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,256,135,50,8
@@ -962,7 +961,7 @@ BEGIN
     CONTROL         "Static",IDC_DRATIO,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,110,166,53,8
     RTEXT           "Rating (total):",IDC_STATIC52,19,177,87,8,0
     CONTROL         "Static",IDC_DRATING,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,110,177,53,8
-    RTEXT           "Uploadqueue Score:",IDC_STATIC53,19,188,87,8,0
+    RTEXT           "Upload queue Score:",IDC_STATIC53,19,188,87,8,0
     CONTROL         "Static",IDC_DSCORE,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,110,188,105,8
     RTEXT           "Currently downloading:",IDC_STATIC48,19,102,87,8,0
     CONTROL         "Static",IDC_UPLOADING,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,110,102,202,8
@@ -1004,7 +1003,7 @@ BEGIN
     CONTROL         "Static",IDC_HASHSET,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,269,97,62,8
     CONTROL         "Sources:",IDC_FD_X7,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,11,122,72,8,WS_EX_RIGHT
     CONTROL         "Static",IDC_SOURCECOUNT,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,89,122,231,8
-    CONTROL         "Datarate:",IDC_FD_X13,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,11,132,72,8,WS_EX_RIGHT
+    CONTROL         "Data rate:",IDC_FD_X13,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,11,132,72,8,WS_EX_RIGHT
     CONTROL         "Static",IDC_DATARATE,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,89,132,231,8
     CONTROL         "Transferred:",IDC_FD_X14,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,11,142,72,8,WS_EX_RIGHT
     CONTROL         "Static",IDC_TRANSFERRED,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,89,142,70,8
@@ -1029,7 +1028,7 @@ BEGIN
     GROUPBOX        "General",IDC_FD_X0,4,2,333,108
     GROUPBOX        "Transfer",IDC_FD_X6,4,111,333,66
     GROUPBOX        "Dates",IDC_FD_X8,4,177,333,55
-    CONTROL         "Filetype:",IDC_FD_X10,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,11,73,72,8,WS_EX_RIGHT
+    CONTROL         "File type:",IDC_FD_X10,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,11,73,72,8,WS_EX_RIGHT
     CONTROL         "FileType-ID and warning",IDC_FD_X11,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,89,73,224,8
 END
 
@@ -1138,15 +1137,15 @@ BEGIN
     CONTROL         "&Name:",IDC_MSTATIC3,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,0,0,63,8
     EDITTEXT        IDC_SEARCHNAME,0,8,183,12,ES_AUTOHSCROLL
     PUSHBUTTON      "v",IDC_DD,183,8,11,12,BS_CENTER
-    CONTROL         "T&ype",IDC_MSTATIC7,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,0,30,60,8
-    CONTROL         "",IDC_TYPESEARCH,"ComboBoxEx32",CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,0,39,66,118
-    CONTROL         "Method:",IDC_METH,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,70,30,70,8
-    CONTROL         "",IDC_COMBO1,"ComboBoxEx32",CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,68,39,80,78
-    PUSHBUTTON      "&Reset",IDC_SEARCH_RESET,150,38,45,15
+    CONTROL         "T&ype",IDC_MSTATIC7,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,0,25,60,8
+    CONTROL         "",IDC_TYPESEARCH,"ComboBoxEx32",CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,0,34,66,118
+    CONTROL         "Method:",IDC_METH,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,70,25,70,8
+    CONTROL         "",IDC_COMBO1,"ComboBoxEx32",CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,68,34,80,78
+    PUSHBUTTON      "&Reset",IDC_SEARCH_RESET,150,33,45,15
     CONTROL         "",IDC_SEARCH_OPTS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,258,0,220,55,WS_EX_LEFTSCROLLBAR
-    DEFPUSHBUTTON   "&Start",IDC_STARTS,198,0,58,14
-    PUSHBUTTON      "More",IDC_MORE,198,19,58,14,WS_DISABLED
-    PUSHBUTTON      "Cance&l",IDC_CANCELS,198,39,58,15,WS_DISABLED
+    DEFPUSHBUTTON   "&Start",IDC_STARTS,198,0,58,15
+    PUSHBUTTON      "More",IDC_MORE,198,19,58,15,WS_DISABLED
+    PUSHBUTTON      "Cance&l",IDC_CANCELS,198,38,58,15,WS_DISABLED
 END
 
 IDD_NETWORK_INFO DIALOGEX 0, 0, 291, 165
@@ -1603,9 +1602,9 @@ BEGIN
     IDC_SMTPAUTH, 0x403, 5, 0
 0x6f4e, 0x656e, "\000"
     IDC_SMTPAUTH, 0x403, 6, 0
-0x4f4c, 0x4947, 0x004e,
-    IDC_SMTPAUTH, 0x403, 6, 0
 0x4c50, 0x4941, 0x004e,
+    IDC_SMTPAUTH, 0x403, 6, 0
+0x4f4c, 0x4947, 0x004e,
     0
 END
 
@@ -1867,6 +1866,7 @@ BEGIN
     IDS_LD_ADDHTML          "Add HTML-Tags"
     IDS_AUTHMETHOD          "Authentication method"
     IDS_ENABLEIMPORTPARTS   "Enable Import parts"
+    IDS_ERR_REGEXP          "Bad regular expression"
 END
 
 STRINGTABLE
@@ -2285,7 +2285,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Global (Servers)"
     IDS_METHOD              "Method"
     IDS_UNDO                "Undo"
-    IDS_DAYLY               "Daily"
+    IDS_DAILY               "Daily"
     IDS_DAY_MO_FR           "Mon-Fri"
 END
 
@@ -3000,10 +3000,10 @@ BEGIN
     IDS_SHAREDREQ1          "User %s (%u) requested your list of shared directories -> %s"
     IDS_SHAREDREQ2          "User %s (%u) requested your list of shared files for directory '%s' -> %s"
     IDS_SHAREDANSW          "User %s (%u) shares directory '%s'"
-    IDS_SHAREDANSW2         "User %s (%u) sent not requested list of shared directories - ignored"
+    IDS_SHAREDANSW2         "User %s (%u) sent unrequested list of shared directories - ignored"
     IDS_SHAREDINFO1         "User %s (%u) sent list of shared files for directory '%s'"
     IDS_SHAREDINFO2         "User %s (%u) finished sending lists of shared files"
-    IDS_SHAREDANSW3         "User %s (%u) sent not requested list of shared files for directory '%s' - ignored"
+    IDS_SHAREDANSW3         "User %s (%u) sent unrequested list of shared files for directory '%s' - ignored"
     IDS_SHAREDREQDENIED     "User %s (%u) denied access to list of shared directories/files"
     IDS_AUTOCLEANUPFN       "Auto cleanup file names of new downloads"
     IDS_ONNEWDOWNLOAD       "Initializations"
@@ -3183,7 +3183,7 @@ BEGIN
     IDS_USS_STARTING        "UploadSpeedSense: Done with preparations. Starting control of upload speed. (First 60 seconds will be in fast reaction mode)"
     IDS_A4AF                "Source Handling"
     IDS_IMPORTPARTS_STOP    "Stop Import parts to file"
-    IDS_AUTOCAT_LABEL       "Auto cat-assignment (pattern, separated by |)"
+    IDS_AUTOCAT_LABEL       "Auto cat. assignment (separate patterns with |)"
     IDS_SHOWEXTSETTINGS     "Show more controls (advanced mode controls)"
     IDS_TREEOPTIONS_TRUE    "True"
     IDS_DELETEAFTERFILEOP   "File '%s' will be deleted after the current operation was completed"
@@ -3340,7 +3340,7 @@ BEGIN
     IDS_MINLENGTH           "Min. Length [hh:mm:ss]"
     IDS_EM_HELP             "&Help"
     IDS_WRN_FRIENDDUPLIPPORT "Friend not added.\r\n\r\nThere is already a friend with same IP address and port available."
-    IDS_DYNUP               "Upload SpeedSense"
+    IDS_DYNUP               "Upload SpeedSense (not recommended)"
     IDS_KADOVERHEAD         "Kad Overhead (Packets): %s (%s)"
     IDS_FIND                "Find..."
     IDS_LOG_BANNED_CLIENTS  "Log banned clients"

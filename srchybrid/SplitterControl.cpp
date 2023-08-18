@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -192,7 +192,7 @@ void CSplitterControl::OnLButtonUp(UINT nFlags, CPoint point)
 	}
 
 	CStatic::OnLButtonUp(nFlags, point);
-	ReleaseCapture();
+	::ReleaseCapture();
 }
 
 void CSplitterControl::DrawLine(CDC *pDC, int /*x*/, int /*y*/)

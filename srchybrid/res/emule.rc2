@@ -38,7 +38,7 @@ BEGIN
             VALUE "FileDescription", "eMule"
             VALUE "FileVersion", SZ_VERSION_NAME " Unicode"
             VALUE "InternalName", "emule.exe"
-            VALUE "LegalCopyright", "Copyright © 2002-2021 Merkur - Read license.txt for more infos."
+            VALUE "LegalCopyright", "Copyright © 2002-2023 Merkur - Read license.txt for more infos."
             VALUE "OriginalFilename", "emule.exe"
             VALUE "ProductName", "eMule"
             VALUE "ProductVersion", SZ_VERSION_NAME " Unicode"

@@ -1177,8 +1177,9 @@ YY_RULE_SETUP
 						BEGIN(STRING);
 						return TOK_EXT;
 					}
-					else if (opt_strnicmp(yytext+1, "availability", 3) == 0 ||
-						     opt_strnicmp(yytext+1, "sources", 3) == 0) {
+					else if (opt_strnicmp(yytext+1, "availability", 3) == 0
+						     || opt_strnicmp(yytext+1, "sources", 3) == 0)
+					{
 						BEGIN(NUMBER);
 						return TOK_SOURCES;
 					}
@@ -1530,22 +1531,20 @@ YY_RULE_SETUP
 							}
 						}
 #ifndef _UNICODE
-						else{
-							if ((unsigned char)c >= 0x80 && IsDBCSLeadByte(yytext[0])){
-								psz[i++] = (unsigned char)c;
-								if (i >= l){
-									char *pszNew = (char*)realloc(psz, l += 128);
-									if (pszNew == NULL){
-										free(psz);
-										yyerror(_T("Less memory for string"));
-										yyterminate();
-										/*NOT REACHED*/
-										break;
-									}
-									psz = pszNew;
+						else if ((unsigned char)c >= 0x80 && IsDBCSLeadByte(yytext[0])) {
+							psz[i++] = (unsigned char)c;
+							if (i >= l) {
+								char *pszNew = (char*)realloc(psz, l += 128);
+								if (pszNew == NULL) {
+									free(psz);
+									yyerror(_T("Less memory for string"));
+									yyterminate();
+									/*NOT REACHED*/
+									break;
 								}
-								c = yyinput();
+								psz = pszNew;
 							}
+							c = yyinput();
 						}
 #endif
 
@@ -1565,11 +1564,8 @@ YY_RULE_SETUP
 					psz[i] = '\0';
 
 					if (s_bKeepQuotedStrings && YYSTATE != STRING) {
-						CStringA quoted;
-						quoted = '\"';
-						quoted += psz;
-						quoted += '\"';
-						yylval.pstr = new CStringA(quoted);
+						yylval.pstr = new CStringA();
+						yylval.pstr->Format("\"%s\"", psz);
 					}
 					else
 						yylval.pstr = new CStringA(psz);
@@ -1912,8 +1908,8 @@ static int yy_get_next_buffer (void)
 		while ( source > YY_CURRENT_BUFFER_LVALUE->yy_ch_buf )
 			*--dest = *--source;
 
-		yy_cp += (int) (dest - source);
-		yy_bp += (int) (dest - source);
+		yy_cp += dest - source;
+		yy_bp += dest - source;
 		YY_CURRENT_BUFFER_LVALUE->yy_n_chars =
 			(yy_n_chars) = (int)YY_CURRENT_BUFFER_LVALUE->yy_buf_size;
 
@@ -1952,7 +1948,7 @@ static int yy_get_next_buffer (void)
 
 		else
 			{ /* need more input */
-			int offset = (yy_c_buf_p) - (yytext_ptr);
+			int offset = (int)(yy_c_buf_p - (yytext_ptr));
 			++(yy_c_buf_p);
 
 			switch ( yy_get_next_buffer(  ) )
@@ -2275,9 +2271,9 @@ YY_BUFFER_STATE yy_scan_buffer  (char *base, yy_size_t  size )
 {
 	YY_BUFFER_STATE b;
 
-	if ( size < 2 ||
-	     base[size-2] != YY_END_OF_BUFFER_CHAR ||
-	     base[size-1] != YY_END_OF_BUFFER_CHAR )
+	if ( size < 2
+	     || base[size-2] != YY_END_OF_BUFFER_CHAR
+	     || base[size-1] != YY_END_OF_BUFFER_CHAR )
 		/* They forgot to leave room for the EOB's. */
 		return 0;
 

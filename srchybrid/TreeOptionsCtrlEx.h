@@ -8,7 +8,7 @@ typedef struct
 } TREEOPTSCTRLNOTIFY;
 
 
-// pre defined treeview image list indices
+// predefined treeview image list indices
 #define	TREEOPTSCTRLIMG_EDIT	11
 
 
@@ -19,7 +19,6 @@ class CTreeOptionsCtrlEx : public CTreeOptionsCtrl
 {
 public:
 	explicit CTreeOptionsCtrlEx(UINT uImageListColorFlags = ILC_COLOR);
-	virtual	~CTreeOptionsCtrlEx() = default;
 
 	void SetEditLabel(HTREEITEM hItem, const CString &rstrLabel);
 	void UpdateCheckBoxGroup(HTREEITEM hItem);
@@ -64,7 +63,6 @@ public:
 		: m_bSelf(false)
 	{
 	}
-	virtual	~CNumTreeOptionsEdit() = default;
 
 	virtual DWORD GetWindowStyle()		{ return CTreeOptionsEdit::GetWindowStyle() | ES_NUMBER; }
 
@@ -90,7 +88,6 @@ public:
 		: m_bSelf(false)
 	{
 	}
-	virtual	~CTreeOptionsEditEx() = default;
 
 protected:
 	bool m_bSelf;

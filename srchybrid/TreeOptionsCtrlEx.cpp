@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -248,13 +248,13 @@ void CTreeOptionsCtrlEx::OnCreateImageList()
 		static const int iBmpHeight = 16;
 		static const int iBitmaps = 13;
 		CBitmap bmpControls;
-		if (bmpControls.CreateCompatibleBitmap(pDCScreen, iBmpWidth*iBitmaps, iBmpHeight)) {
+		if (bmpControls.CreateCompatibleBitmap(pDCScreen, iBmpWidth * iBitmaps, iBmpHeight)) {
 			if (m_ilTree.Create(iBmpWidth, iBmpHeight, m_uImageListColorFlags | ILC_MASK, 0, 1)) {
 				CDC dcMem;
 				if (dcMem.CreateCompatibleDC(pDCScreen)) {
 					HTHEME hTheme = (g_xpStyle.IsThemeActive() && g_xpStyle.IsAppThemed()) ? g_xpStyle.OpenThemeData(NULL, L"BUTTON") : NULL;
 					CBitmap *pOldBmp = dcMem.SelectObject(&bmpControls);
-					dcMem.FillSolidRect(0, 0, iBmpWidth*iBitmaps, iBmpHeight, ::GetSysColor(COLOR_WINDOW));
+					dcMem.FillSolidRect(0, 0, iBmpWidth * iBitmaps, iBmpHeight, ::GetSysColor(COLOR_WINDOW));
 
 					//int iCtrlWidth = iBmpWidth - 2;
 					//int iCtrlHeight = iBmpHeight - 2;
@@ -387,13 +387,11 @@ void CTreeOptionsCtrlEx::HandleChildControlLosingFocus()
 
 void CTreeOptionsCtrlEx::SetEditLabel(HTREEITEM hItem, const CString &rstrLabel)
 {
-	const CString &rstrSep(GetTextSeparator());
-	const CString &strItemText(GetItemText(hItem));
-	CString strData;
-	int nSeparator = strItemText.Find(rstrSep);
-	if (nSeparator >= 0)
-		strData = strItemText.Mid(nSeparator + rstrSep.GetLength());
-	SetItemText(hItem, rstrLabel + rstrSep + strData);
+	CString sItemText(GetItemText(hItem));
+	int nSeparator = sItemText.Find(GetTextSeparator());
+	sItemText.Delete(0, nSeparator < 0 ? INT_MAX : nSeparator);
+	sItemText.Insert(0, rstrLabel);
+	SetItemText(hItem, sItemText);
 }
 
 void CTreeOptionsCtrlEx::OnDestroy()

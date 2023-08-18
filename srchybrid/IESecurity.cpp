@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -55,14 +55,14 @@ CMuleBrowserControlSite::CMuleBrowserControlSite(COleControlContainer *pCtrlCont
 		char c;
 		__int64 ll;
 	};
-	ASSERT( offsetof(S1, ll) == 8 );
+	ASSERT(offsetof(S1, ll) == 8);
 
 	InitInternetSecurityZone();
 }
 
 void CMuleBrowserControlSite::InitInternetSecurityZone()
 {
-	const CString &strZone = AfxGetApp()->GetProfileString(_T("eMule"), _T("InternetSecurityZone"), _T("Untrusted"));
+	const CString &strZone(AfxGetApp()->GetProfileString(_T("eMule"), _T("InternetSecurityZone"), _T("Untrusted")));
 	if (strZone.CompareNoCase(_T("LocalMachine")) == 0)
 		m_eUrlZone = URLZONE_LOCAL_MACHINE;
 	else if (strZone.CompareNoCase(_T("Intranet")) == 0)
@@ -125,7 +125,7 @@ void DumpIID(REFIID iid, LPCTSTR pszClassName)
 	if (!bFound)
 		OutputDebugString(pszGUID);
 	OutputDebugString(_T("\n"));
-	CoTaskMemFree(pszGUID);
+	::CoTaskMemFree(pszGUID);
 }
 #endif
 
@@ -136,19 +136,19 @@ void DumpIID(REFIID iid, LPCTSTR pszClassName)
 #pragma warning(push)
 #pragma warning(disable:4555) // expression has no effect; expected expression with side-effect (because of the 'METHOD_PROLOGUE' macro)
 
-STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::QueryInterface(REFIID riid, void **ppvObj) noexcept
+STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::QueryInterface(REFIID iid, LPVOID *ppvObj) XP_NOEXCEPT
 {
 	METHOD_PROLOGUE(CMuleBrowserControlSite, InternetSecurityManager);
-	return (HRESULT)pThis->ExternalQueryInterface(&riid, ppvObj);
+	return (HRESULT)pThis->ExternalQueryInterface(&iid, ppvObj);
 }
 
-STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XInternetSecurityManager::AddRef() noexcept
+STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XInternetSecurityManager::AddRef() XP_NOEXCEPT
 {
 	METHOD_PROLOGUE(CMuleBrowserControlSite, InternetSecurityManager);
 	return pThis->ExternalAddRef();
 }
 
-STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XInternetSecurityManager::Release() noexcept
+STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XInternetSecurityManager::Release() XP_NOEXCEPT
 {
 	METHOD_PROLOGUE(CMuleBrowserControlSite, InternetSecurityManager);
 	return pThis->ExternalRelease();
@@ -157,14 +157,14 @@ STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XInternetSecurityManager::Release(
 STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::SetSecuritySite(IInternetSecurityMgrSite* /*pSite*/) noexcept
 {
 	METHOD_PROLOGUE(CMuleBrowserControlSite, InternetSecurityManager);
-	TRACE(_T("%hs\n"), "SetSecuritySite");
+	TRACE(_T("%s\n"), _T("SetSecuritySite"));
 	return INET_E_DEFAULT_ACTION;
 }
 
 STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::GetSecuritySite(IInternetSecurityMgrSite** /*ppSite*/) noexcept
 {
 	METHOD_PROLOGUE(CMuleBrowserControlSite, InternetSecurityManager);
-	TRACE(_T("%hs\n"), "GetSecuritySite");
+	TRACE(_T("%s\n"), _T("GetSecuritySite"));
 	return INET_E_DEFAULT_ACTION;
 }
 
@@ -176,7 +176,7 @@ STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::MapUrlToZone(
 	UNREFERENCED_PARAMETER(pwszUrl);
 	UNREFERENCED_PARAMETER(dwFlags);
 	METHOD_PROLOGUE(CMuleBrowserControlSite, InternetSecurityManager);
-	TRACE(_T("%hs: URL=%ls, Zone=%d, Flags=0x%x\n"), "MapUrlToZone", pwszUrl, pdwZone ? *pdwZone : 0, dwFlags);
+	TRACE(_T("%s: URL=%ls, Zone=%lu, Flags=0x%lx\n"), _T("MapUrlToZone"), pwszUrl, pdwZone ? *pdwZone : 0, dwFlags);
 	if (pdwZone != NULL) {
 		*pdwZone = (DWORD)pThis->m_eUrlZone;
 		return S_OK;
@@ -192,7 +192,7 @@ STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::GetSecurityId(
 	UNREFERENCED_PARAMETER(pwszUrl);
 	UNREFERENCED_PARAMETER(dwReserved);
 	METHOD_PROLOGUE(CMuleBrowserControlSite, InternetSecurityManager);
-	TRACE(_T("%hs: URL=%ls, Reserved=%u\n"), "GetSecurityId", pwszUrl, dwReserved);
+	TRACE(_T("%s: URL=%ls, Reserved=%lu\n"), _T("GetSecurityId"), pwszUrl, dwReserved);
 	return INET_E_DEFAULT_ACTION;
 }
 
@@ -208,7 +208,7 @@ STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::ProcessUrlAction
 	UNREFERENCED_PARAMETER(dwFlags);
 	UNREFERENCED_PARAMETER(dwReserved);
 	METHOD_PROLOGUE(CMuleBrowserControlSite, InternetSecurityManager);
-	TRACE(_T("%hs: URL=%ls, Action=%u, Flags=0x%x, Reserved=%u\n"), "ProcessUrlAction", pwszUrl, dwAction, dwFlags, dwReserved);
+	TRACE(_T("%s: URL=%ls, Action=%lu, Flags=0x%lx, Reserved=%lu\n"), _T("ProcessUrlAction"), pwszUrl, dwAction, dwFlags, dwReserved);
 
 #if 0
 	DWORD dwPolicy = URLPOLICY_DISALLOW;
@@ -233,7 +233,7 @@ STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::QueryCustomPolic
 {
 	UNREFERENCED_PARAMETER(pwszUrl);
 	METHOD_PROLOGUE(CMuleBrowserControlSite, InternetSecurityManager);
-	TRACE(_T("%hs: URL=%ls\n"), "QueryCustomPolicy", pwszUrl);
+	TRACE(_T("%s: URL=%ls\n"), _T("QueryCustomPolicy"), pwszUrl);
 	return INET_E_DEFAULT_ACTION;
 }
 
@@ -246,7 +246,7 @@ STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::SetZoneMapping(
 	UNREFERENCED_PARAMETER(lpszPattern);
 	UNREFERENCED_PARAMETER(dwFlags);
 	METHOD_PROLOGUE(CMuleBrowserControlSite, InternetSecurityManager);
-	TRACE(_T("%hs: Zone=%d, Pattern=%ls, Flags=0x%x\n"), "SetZoneMapping", dwZone, lpszPattern, dwFlags);
+	TRACE(_T("%s: Zone=%lu, Pattern=%ls, Flags=0x%lx\n"), _T("SetZoneMapping"), dwZone, lpszPattern, dwFlags);
 	return INET_E_DEFAULT_ACTION;
 }
 
@@ -258,7 +258,7 @@ STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::GetZoneMappings(
 	UNREFERENCED_PARAMETER(dwZone);
 	UNREFERENCED_PARAMETER(dwFlags);
 	METHOD_PROLOGUE(CMuleBrowserControlSite, InternetSecurityManager);
-	TRACE(_T("%hs: Zone=%d, Flags=0x%s\n"), "GetZoneMappings", dwZone, dwFlags);
+	TRACE(_T("%s: Zone=%lu, Flags=0x%lx\n"), _T("GetZoneMappings"), dwZone, dwFlags);
 	return INET_E_DEFAULT_ACTION;
 }
 
@@ -267,32 +267,32 @@ STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::GetZoneMappings(
 // IServiceProvider
 //
 
-STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XServiceProvider::AddRef() noexcept
+STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XServiceProvider::AddRef() XP_NOEXCEPT
 {
 	METHOD_PROLOGUE(CMuleBrowserControlSite, ServiceProvider);
 	return pThis->ExternalAddRef();
 }
 
-STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XServiceProvider::Release() noexcept
+STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XServiceProvider::Release() XP_NOEXCEPT
 {
 	METHOD_PROLOGUE(CMuleBrowserControlSite, ServiceProvider);
 	return pThis->ExternalRelease();
 }
 
-STDMETHODIMP CMuleBrowserControlSite::XServiceProvider::QueryInterface(REFIID riid, void **ppvObj) noexcept
+STDMETHODIMP CMuleBrowserControlSite::XServiceProvider::QueryInterface(REFIID iid, LPVOID *ppvObj) XP_NOEXCEPT
 {
 	METHOD_PROLOGUE(CMuleBrowserControlSite, ServiceProvider);
-	return (HRESULT)pThis->ExternalQueryInterface(&riid, ppvObj);
+	return (HRESULT)pThis->ExternalQueryInterface(&iid, ppvObj);
 }
 
-STDMETHODIMP CMuleBrowserControlSite::XServiceProvider::QueryService(REFGUID guidService, REFIID riid, void **ppvObject) noexcept
+STDMETHODIMP CMuleBrowserControlSite::XServiceProvider::QueryService(REFGUID guidService, REFIID iid, void **ppvObject) noexcept
 {
 	METHOD_PROLOGUE(CMuleBrowserControlSite, ServiceProvider);
 	//DUMPIID(guidService, _T("guidService"));
-	//DUMPIID(riid, _T("riid"));
-	if (guidService == SID_SInternetSecurityManager && riid == IID_IInternetSecurityManager) {
-		TRACE(_T("%hs\n"), "QueryService");
-		return (HRESULT)pThis->ExternalQueryInterface(&riid, ppvObject);
+	//DUMPIID(iid, _T("iid"));
+	if (guidService == SID_SInternetSecurityManager && iid == IID_IInternetSecurityManager) {
+		TRACE(_T("%s\n"), _T("QueryService"));
+		return (HRESULT)pThis->ExternalQueryInterface(&iid, ppvObject);
 	}
 	*ppvObject = NULL;
 	return E_NOINTERFACE;

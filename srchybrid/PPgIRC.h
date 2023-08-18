@@ -13,7 +13,6 @@ class CPPgIRC : public CPropertyPage
 
 public:
 	CPPgIRC();
-	virtual	~CPPgIRC() = default;
 
 	void Localize();
 

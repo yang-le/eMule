@@ -117,7 +117,7 @@ CColourPopup::CColourPopup(CPoint p, COLORREF crColour, CWnd *pParentWnd
 	} else
 		colourArrayPassed = NULL;	//if an array is passed without a size parameter, ignore it and use the defaults
 
-	Initialise(); //If not a custom palette intialise as NORMAL!
+	Initialise(); //If not a custom palette initialise as NORMAL!
 
 	m_crColour = m_crInitialColour = crColour;
 	m_pParent = pParentWnd;
@@ -203,13 +203,13 @@ BOOL CColourPopup::Create(CPoint p, COLORREF crColour, CWnd *pParentWnd
 	m_crColour = m_crInitialColour = crColour;
 
 	// Get the class name and create the window
-	static const CString &szClassName = AfxRegisterWndClass(CS_CLASSDC|CS_SAVEBITS|CS_HREDRAW|CS_VREDRAW
+	static const CString &szClassName(AfxRegisterWndClass(CS_CLASSDC|CS_SAVEBITS|CS_HREDRAW|CS_VREDRAW
 	                      , AfxGetApp()->LoadStandardCursor(IDC_ARROW)
-	                      , (HBRUSH) (COLOR_BTNFACE+1)
-	                      , 0);
+	                      , (HBRUSH)COLOR_BTNSHADOW
+	                      , 0));
 
 	if (!CWnd::CreateEx(0, szClassName, _T(""), WS_VISIBLE|WS_POPUP
-	                    , p.x, p.y, 100, 100 // size updated soon
+	                    , p.x, p.y, 100, 100 // size to be updated soon
 	                    , pParentWnd->GetSafeHwnd(), 0, NULL))
 	{
 		return FALSE;
@@ -468,7 +468,7 @@ int CColourPopup::GetIndex(int row, int col) const
 		return DEFAULT_BOX_VALUE;
 	if (row < 0 || col < 0 || row >= m_nNumRows || col >= m_nNumColumns)
 		return INVALID_COLOUR;
-	if (row*m_nNumColumns + col >= m_nNumColours)
+	if (row * m_nNumColumns + col >= m_nNumColours)
 		return INVALID_COLOUR;
 	return row * m_nNumColumns + col;
 }
@@ -681,7 +681,7 @@ void CColourPopup::ChangeSelection(int nIndex)
 
 void CColourPopup::EndSelection(int nMessage)
 {
-	ReleaseCapture();
+	::ReleaseCapture();
 
 	// If custom text selected, perform a custom colour selection
 	if (nMessage != UM_CPN_SELENDCANCEL && m_nCurrentSel == CUSTOM_BOX_VALUE) {
@@ -756,7 +756,7 @@ void CColourPopup::DrawCell(CDC *pDC, int nIndex)
 		// fill background
 		bool b = (m_nChosenColourSel == nIndex && m_nCurrentSel != nIndex);
 		pDC->FillSolidRect(TextButtonRect, ::GetSysColor(b ? COLOR_3DLIGHT : COLOR_3DFACE));
-		
+
 		// Draw thin line around text
 		CRect LineRect = TextButtonRect;
 		LineRect.DeflateRect(2 * m_nMargin, 2 * m_nMargin);
@@ -841,7 +841,7 @@ void CColourPopup::OnKillFocus(CWnd *pNewWnd)
 {
 	CWnd::OnKillFocus(pNewWnd);
 
-	ReleaseCapture();
+	::ReleaseCapture();
 	//DestroyWindow(); - causes crash when Custom colour dialog appears.
 }
 

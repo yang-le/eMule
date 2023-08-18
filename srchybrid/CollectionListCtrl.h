@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002 Merkur ( merkur-@users.sourceforge.net / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( merkur-@users.sourceforge.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -27,10 +27,8 @@ class CCollectionListCtrl : public CMuleListCtrl, public CListCtrlItemWalk
 
 public:
 	CCollectionListCtrl();
-	virtual	~CCollectionListCtrl() = default;
 
 	void Init(const CString &strNameAdd);
-//	void Localize();
 
 	void AddFileToList(CAbstractFile *pAbstractFile);
 	void RemoveFileFromList(CAbstractFile *pAbstractFile);

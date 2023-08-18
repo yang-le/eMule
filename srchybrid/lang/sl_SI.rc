@@ -421,7 +421,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Globalno (Strežnik)"
     IDS_METHOD              "Način"
     IDS_UNDO                "Razveljavi"
-    IDS_DAYLY               "dnevno"
+    IDS_DAILY               "dnevno"
 END
 
 STRINGTABLE
@@ -1418,7 +1418,7 @@ BEGIN
     IDS_EM_HELP             "&Pomoč"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Prijatelj ni bil dodan.\r\n\r\nPrijatelj z istim IP naslovom in vrati že obstaja."
-    IDS_DYNUP               "Zaznavanje hitrosti prenosa gor (SpeedSense)"
+    IDS_DYNUP               "Zaznavanje hitrosti prenosa gor (ni priporočljivo)"
     IDS_KADOVERHEAD         "Presežek Kad (Paketov): %s (%s)"
     IDS_FIND                "Najdi..."
     IDS_LOG_BANNED_CLIENTS  "Beleži izločene odjemalce"

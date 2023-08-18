@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2005 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -93,9 +93,7 @@ static bool s_bInitialized = false;
 bool Speak(LPCTSTR pszSay)
 {
 #ifdef HAVE_SAPI_H
-	if (theApp.IsClosing())
-		return false;
-	if (s_bTTSDisabled)
+	if (s_bTTSDisabled || theApp.IsClosing())
 		return false;
 
 	if (!s_bInitialized) {

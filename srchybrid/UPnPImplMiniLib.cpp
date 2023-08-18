@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -21,9 +21,9 @@
 #include "UPnPImplMiniLib.h"
 #include "Log.h"
 #include "Otherfunctions.h"
-#include "miniupnpc\miniupnpc.h"
-#include "miniupnpc\upnpcommands.h"
-#include "miniupnpc\upnperrors.h"
+#include "miniupnpc\include\miniupnpc.h"
+#include "miniupnpc\include\upnpcommands.h"
+#include "miniupnpc\include\upnperrors.h"
 #include "opcodes.h"
 
 
@@ -147,7 +147,7 @@ void CUPnPImplMiniLib::DeletePorts(bool bSkipLock)
 void CUPnPImplMiniLib::StartDiscovery(uint16 nTCPPort, uint16 nUDPPort, uint16 nTCPWebPort)
 {
 	DebugLog(_T("Using MiniUPnPLib based implementation"));
-	DebugLog(_T("miniupnpc (c) 2005-2021 Thomas Bernard - http://miniupnp.free.fr/"));
+	DebugLog(_T("miniupnpc (c) 2005-2023 Thomas Bernard - http://miniupnp.free.fr/"));
 	GetOldPorts();
 	m_nUDPPort = nUDPPort;
 	m_nTCPPort = nTCPPort;
@@ -221,7 +221,7 @@ int CUPnPImplMiniLib::CStartDiscoveryThread::Run()
 	{
 		if (!m_pOwner->m_bCheckAndRefresh) {
 			int error = 0;
-			UPNPDev *structDeviceList = upnpDiscover(2000, thePrefs.m_pszBindAddrA, NULL, 0, 0, 2, &error);
+			UPNPDev *structDeviceList = upnpDiscover(2000, thePrefs.GetBindAddrA(), NULL, 0, 0, 2, &error);
 			if (structDeviceList == NULL) {
 				DebugLog(_T("UPNP: No Internet Gateway Devices found, aborting: %d"), error);
 				m_pOwner->m_bUPnPPortsForwarded = TRIS_FALSE;

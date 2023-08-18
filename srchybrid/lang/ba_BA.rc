@@ -428,7 +428,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Globala (Zerbitzaria)"
     IDS_METHOD              "Metodoa"
     IDS_UNDO                "Desegin"
-    IDS_DAYLY               "egunero"
+    IDS_DAILY               "egunero"
 END
 
 STRINGTABLE
@@ -1451,7 +1451,7 @@ BEGIN
     IDS_EM_HELP             "Laguntza"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Laguna ez da gehitu.\r\n\r\nBadago dagoeneko IP eta portu berdina dituen lagun bat."
-    IDS_DYNUP               "Igoera abiadura sentsorea"
+    IDS_DYNUP               "Igoera abiadura sentsorea (ez da gomendagarria)"
     IDS_KADOVERHEAD         "Kad trafiko gainkarga (paketeak): %s (%s)"
     IDS_FIND                "Aurkitu..."
     IDS_LOG_BANNED_CLIENTS  "Blokeatutako bezeroak log fitxategian gorde"

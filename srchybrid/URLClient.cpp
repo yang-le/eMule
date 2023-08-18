@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -52,6 +52,7 @@ void CUrlClient::SetRequestFile(CPartFile *pReqFile)
 	if (m_reqfile) {
 		m_nPartCount = m_reqfile->GetPartCount();
 		m_abyPartStatus = new uint8[m_nPartCount];
+		ASSERT(m_nPartCount);
 		memset(m_abyPartStatus, 1, m_nPartCount);
 		m_bCompleteSource = true;
 	}
@@ -119,7 +120,7 @@ bool CUrlClient::SetUrl(LPCTSTR pszUrl, uint32 nIP)
 //	if (m_nConnectIP == INADDR_NONE)
 //		m_nConnectIP = 0;
 	m_nUserIDHybrid = htonl(m_nConnectIP);
-	ASSERT(m_nUserIDHybrid != 0);
+	ASSERT(m_nUserIDHybrid);
 	m_nUserPort = Url.nPort;
 	return true;
 }
@@ -133,9 +134,9 @@ bool CUrlClient::SendHttpBlockRequests()
 {
 	m_dwLastBlockReceived = ::GetTickCount();
 	if (m_reqfile == NULL)
-		throw CString(_T("Failed to send block requests - No 'reqfile' attached"));
+		throwCStr(_T("Failed to send block requests - No 'reqfile' attached"));
 
-	CreateBlockRequests(PARTSIZE / EMBLOCKSIZE, PARTSIZE / EMBLOCKSIZE);
+	CreateBlockRequests(PARTSIZE / EMBLOCKSIZE);
 	if (m_PendingBlocks_list.IsEmpty()) {
 		SetDownloadState(DS_NONEEDEDPARTS);
 		SwapToAnotherFile(_T("A4AF for NNP file. UrlClient::SendHttpBlockRequests()"), true, false, false, NULL, true, true);
@@ -154,10 +155,8 @@ bool CUrlClient::SendHttpBlockRequests()
 			m_uReqEnd = pending->block->EndOffset;
 		else {
 			bMergeBlocks = false;
-			m_reqfile->RemoveBlockFromList(pending->block->StartOffset, pending->block->EndOffset);
-			delete pending->block;
-			delete pending;
 			m_PendingBlocks_list.RemoveAt(posLast);
+			ClearPendingBlockRequest(pending);
 		}
 	}
 
@@ -229,7 +228,7 @@ bool CUrlClient::Disconnected(LPCTSTR pszReason, bool bFromSocket)
 {
 	CHttpClientDownSocket *s = static_cast<CHttpClientDownSocket*>(socket);
 
-	TRACE(_T("%hs: HttpState=%u, Reason=%s\n"), __FUNCTION__, s == NULL ? -1 : s->GetHttpState(), pszReason);
+	TRACE(_T("%hs: HttpState=%u, Reason=%s\n"), __FUNCTION__, (s ? s->GetHttpState() : -1), pszReason);
 	// TODO: This is a mess.
 	if (s && (s->GetHttpState() == HttpStateRecvExpected || s->GetHttpState() == HttpStateRecvBody))
 		m_fileReaskTimes.RemoveKey(m_reqfile); // ZZ:DownloadManager (one re-ask timestamp for each file)
@@ -239,11 +238,11 @@ bool CUrlClient::Disconnected(LPCTSTR pszReason, bool bFromSocket)
 bool CUrlClient::ProcessHttpDownResponse(const CStringAArray &astrHeaders)
 {
 	if (m_reqfile == NULL)
-		throw CString(_T("Failed to process received HTTP data block - No 'reqfile' attached"));
+		throwCStr(_T("Failed to process received HTTP data block - No 'reqfile' attached"));
 	if (astrHeaders.IsEmpty())
-		throw CString(_T("Unexpected HTTP response - No headers available"));
+		throwCStr(_T("Unexpected HTTP response - No headers available"));
 
-	const CStringA &rstrHdr = astrHeaders[0];
+	const CStringA &rstrHdr(astrHeaders[0]);
 	UINT uHttpMajVer, uHttpMinVer, uHttpStatusCode;
 	if (sscanf(rstrHdr, "HTTP/%u.%u %u", &uHttpMajVer, &uHttpMinVer, &uHttpStatusCode) != 3) {
 		CString strError;
@@ -308,12 +307,12 @@ bool CUrlClient::ProcessHttpDownResponse(const CStringAArray &astrHeaders)
 
 	if (bNewLocation) {
 		if (++m_iRedirected >= 3)
-			throw CString(_T("Max. HTTP redirection count exceeded"));
+			throwCStr(_T("Max. HTTP redirection count exceeded"));
 
 		// the tricky part
 		socket->Safe_Delete();		// mark our parent object for getting deleted!
 		if (!TryToConnect(true))	// replace our parent object with a new one
-			throw CString(_T("Failed to connect to redirected URL"));
+			throwCStr(_T("Failed to connect to redirected URL"));
 		return false;				// tell our old parent object (which was marked as to get deleted
 									// and which is no longer attached to us) to disconnect.
 	}
@@ -321,7 +320,7 @@ bool CUrlClient::ProcessHttpDownResponse(const CStringAArray &astrHeaders)
 	if (!bValidContentRange) {
 		if (thePrefs.GetDebugClientTCPLevel() <= 0)
 			DebugHttpHeaders(astrHeaders);
-		throw CString(_T("Unexpected HTTP response - No valid HTTP content range found"));
+		throwCStr(_T("Unexpected HTTP response - No valid HTTP content range found"));
 	}
 
 	SetDownloadState(DS_DOWNLOADING);
@@ -352,7 +351,7 @@ void CUpDownClient::ProcessHttpBlockPacket(const BYTE *pucData, UINT uSize)
 	else
 		p = NULL;
 	if (p)
-		throw CString(p);
+		throwCStr(p);
 
 	uint64 nStartPos = m_nUrlStartPos;
 	uint64 nEndPos = m_nUrlStartPos + uSize;
@@ -363,12 +362,12 @@ void CUpDownClient::ProcessHttpBlockPacket(const BYTE *pucData, UINT uSize)
 //		Debug("  Start=%I64u  End=%I64u  Size=%u  %s\n", nStartPos, nEndPos, size, (LPCTSTR)DbgGetFileInfo(m_reqfile->GetFileHash()));
 
 	if (!(GetDownloadState() == DS_DOWNLOADING || GetDownloadState() == DS_NONEEDEDPARTS))
-		throw CString(_T("Failed to process HTTP data block - Invalid download state"));
+		throwCStr(_T("Failed to process HTTP data block - Invalid download state"));
 
 	m_dwLastBlockReceived = ::GetTickCount();
 
 	if (nEndPos <= nStartPos)
-		throw CString(_T("Failed to process HTTP data block - Invalid block start/end offsets"));
+		throwCStr(_T("Failed to process HTTP data block - Invalid block start/end offsets"));
 
 	thePrefs.Add2SessionTransferData(GetClientSoft(), (UINT)((GetClientSoft() == SO_URL) ? -2 : -1), false, false, uSize);
 	m_nDownDataRateMS += uSize;
@@ -387,17 +386,16 @@ void CUpDownClient::ProcessHttpBlockPacket(const BYTE *pucData, UINT uSize)
 			}
 
 			m_nLastBlockOffset = nStartPos;
-			uint32 lenWritten = m_reqfile->WriteToBuffer(uSize, pucData, nStartPos, nEndPos, cur_block->block, this);
+			uint32 lenWritten = m_reqfile->WriteToBuffer(uSize, pucData, nStartPos, nEndPos, cur_block->block, this, true);
 			if (lenWritten > 0) {
 				m_nTransferredDown += uSize;
 				m_nCurSessionPayloadDown += lenWritten;
+				cur_block->block->transferred += lenWritten;
 				SetTransferredDownMini();
 
 				if (nEndPos >= cur_block->block->EndOffset) {
-					m_reqfile->RemoveBlockFromList(cur_block->block->StartOffset, cur_block->block->EndOffset);
-					delete cur_block->block;
-					delete cur_block;
 					m_PendingBlocks_list.RemoveAt(posLast);
+					ClearPendingBlockRequest(cur_block);
 
 					if (m_PendingBlocks_list.IsEmpty()) {
 						if (thePrefs.GetDebugClientTCPLevel() > 0)

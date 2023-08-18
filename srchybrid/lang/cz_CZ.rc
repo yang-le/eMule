@@ -461,7 +461,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Globální (Server)"
     IDS_METHOD              "Metoda"
     IDS_UNDO                "Zpět"
-    IDS_DAYLY               "denně"
+    IDS_DAILY               "denně"
 END
 
 STRINGTABLE
@@ -1427,7 +1427,7 @@ BEGIN
     IDS_EM_HELP             "&Nápověda"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Přítel nepřidán.\r\n\r\nJiž je zde přítel se stejnou IP adresou i portem."
-    IDS_DYNUP               "Citlivost na rychlost uploadu"
+    IDS_DYNUP               "Citlivost na rychlost uploadu (není doporučeno)"
     IDS_KADOVERHEAD         "Kad Overhead (Pakety): %s (%s)"
     IDS_FIND                "Najít..."
     IDS_LOG_BANNED_CLIENTS  "Logovat zakázané klienty"

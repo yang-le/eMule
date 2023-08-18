@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -17,7 +17,9 @@
 #pragma once
 #include "ResizableLib\ResizableFormView.h"
 #include "SearchListCtrl.h"
+#include "ButtonsTabCtrl.h"
 #include "ClosableTabCtrl.h"
+#include "DropDownButton.h"
 #include "IconStatic.h"
 #include "EditX.h"
 #include "EditDelayed.h"
@@ -29,8 +31,6 @@ class Packet;
 class CSafeMemFile;
 class CSearchParamsWnd;
 struct SSearchParams;
-class CDropDownButton;
-class CButtonsTabCtrl;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -69,8 +69,8 @@ public:
 
 	CSearchListCtrl searchlistctrl;
 	CSearchResultsSelector searchselect;
-	CSearchParamsWnd *m_pwndParams;
 	CStringArray m_astrFilter;
+	CSearchParamsWnd *m_pwndParams;
 
 	void	Localize();
 
@@ -112,23 +112,23 @@ public:
 	uint32	GetFilterColumn() const				{ return m_nFilterColumn; }
 
 protected:
-	Packet		*m_searchpacket;
-	bool		m_b64BitSearchPacket;
-	UINT_PTR	global_search_timer;
-	UINT_PTR	m_uTimerLocalServer;
 	CProgressCtrl searchprogress;
 	CHeaderCtrl m_ctlSearchListHeader;
 	CEditDelayed m_ctlFilter;
 	CButton		m_ctlOpenParamsWnd;
-	bool		cancelled;
-	uint16		servercount;
-	bool		m_globsearch;
-	uint32		m_nEd2kSearchID;
 	CImageList	m_imlSearchResults;
-	CButtonsTabCtrl	*m_cattabs;
-	CDropDownButton	*m_btnSearchListMenu;
-	int			m_iSentMoreReq;
+	CButtonsTabCtrl	m_cattabs;
+	CDropDownButton	m_btnSearchListMenu;
+	Packet		*m_searchpacket;
+	UINT_PTR	global_search_timer;
+	UINT_PTR	m_uTimerLocalServer;
+	uint32		m_nEd2kSearchID;
 	uint32		m_nFilterColumn;
+	unsigned	m_servercount;
+	int			m_iSentMoreReq;
+	bool		m_b64BitSearchPacket;
+	bool		m_globsearch;
+	bool		m_cancelled;
 
 	bool StartNewSearch(SSearchParams *pParams);
 	void SearchStarted();
@@ -150,7 +150,7 @@ protected:
 	afx_msg void OnDblClkSearchList(LPNMHDR, LRESULT *pResult);
 	afx_msg void OnSelChangeTab(LPNMHDR, LRESULT *pResult);
 	afx_msg LRESULT OnCloseTab(WPARAM wParam, LPARAM);
-	afx_msg LRESULT OnDblClickTab(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnDblClickTab(WPARAM wParam, LPARAM);
 	afx_msg void OnDestroy();
 	afx_msg void OnSysColorChange();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);

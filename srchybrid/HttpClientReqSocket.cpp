@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -82,22 +82,18 @@ void CHttpClientReqSocket::DataReceived(const BYTE *pucData, UINT uSize)
 	try {
 		bResult = ProcessHttpPacket(pucData, uSize);
 	} catch (CMemoryException *ex) {
-		strError.Format(_T("Error: HTTP socket: Memory exception; %s"), (LPCTSTR)DbgGetClientInfo());
-		if (thePrefs.GetVerbose())
-			AddDebugLogLine(false, _T("%s"), (LPCTSTR)strError);
+		strError.Format(_T("Memory exception; %s"), (LPCTSTR)DbgGetClientInfo());
 		ex->Delete();
 	} catch (CFileException *ex) {
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
 		GetExceptionMessage(*ex, szError, _countof(szError));
-		strError.Format(_T("Error: HTTP socket: File exception - %s"), szError);
-		if (thePrefs.GetVerbose())
-			AddDebugLogLine(false, _T("%s"), (LPCTSTR)strError);
+		strError.Format(_T("File exception - %s"), szError);
 		ex->Delete();
 	} catch (const CString &ex) {
-		strError.Format(_T("Error: HTTP socket: %s; %s"), (LPCTSTR)ex, (LPCTSTR)DbgGetClientInfo());
-		if (thePrefs.GetVerbose())
-			AddDebugLogLine(false, _T("%s"), (LPCTSTR)strError);
+		strError.Format(_T("%s; %s"), (LPCTSTR)ex, (LPCTSTR)DbgGetClientInfo());
 	}
+	if (thePrefs.GetVerbose() && !strError.IsEmpty())
+		AddDebugLogLine(false, _T("Error: HTTP socket: %s"), (LPCTSTR)strError);
 
 	if (!bResult && !deletethis) {
 		if (thePrefs.GetVerbose() && thePrefs.GetDebugClientTCPLevel() <= 0)
@@ -143,9 +139,9 @@ bool CHttpClientReqSocket::ProcessHttpPacket(const BYTE *pucData, UINT uSize)
 			theStats.AddDownDataOverheadFileRequest(iSizeHeader);
 
 			if (iSizeBody < 0)
-				throw CString(_T("Internal HTTP header/body parsing error"));
+				throwCStr(_T("Internal HTTP header/body parsing error"));
 
-			if (m_astrHttpHeaders[0].GetLength() >= 4 && memcmp((LPCSTR)m_astrHttpHeaders[0], "HTTP", 4) == 0) {
+			if (strncmp(m_astrHttpHeaders[0], "HTTP", 4) == 0) {
 				if (!ProcessHttpResponse())
 					return false;
 
@@ -158,22 +154,22 @@ bool CHttpClientReqSocket::ProcessHttpPacket(const BYTE *pucData, UINT uSize)
 					// body will be processed because of HTTP state 'HttpStateRecvBody' with next recv
 					;
 				}
-			} else if (m_astrHttpHeaders[0].GetLength() >= 3 && memcmp((LPCSTR)m_astrHttpHeaders[0], "GET", 3) == 0) {
+			} else if (strncmp(m_astrHttpHeaders[0], "GET", 3) == 0) {
 				if (!ProcessHttpRequest())
 					return false;
 				if (iSizeBody != 0) {
-					ASSERT(0); // no body for GET requests allowed yet
+					ASSERT(0); // no body allowed for GET requests
 					return false;
 				}
 			} else
-				throw CString(_T("Invalid HTTP header received"));
+				throwCStr(_T("Invalid HTTP header received"));
 		} else
 			TRACE("+++ Received partial HTTP header packet\n");
 	} else if (GetHttpState() == HttpStateRecvBody)
 		ProcessHttpResponseBody(pucData, uSize);
 	else {
 		theStats.AddDownDataOverheadFileRequest(uSize);
-		throw CString(_T("Invalid HTTP socket state"));
+		throwCStr(_T("Invalid HTTP socket state"));
 	}
 
 	return true;
@@ -209,8 +205,7 @@ void SplitHeaders(LPCSTR pszHeaders, CStringArray &astrHeaders)
 		if (iLineLen <= 0)
 			break;
 
-		CString strHdr(pLine, iLineLen);
-		astrHeaders.Add(strHdr);
+		astrHeaders.Add(CString(pLine, iLineLen));
 	}
 }
 
@@ -251,7 +246,7 @@ void CHttpClientReqSocket::ProcessHttpHeaderPacket(const char *packet, UINT size
 
 				// safety check
 				if (m_iHttpHeadersSize > MAX_HTTP_HEADERS_SIZE)
-					throw CString(_T("Received HTTP headers exceed limit"));
+					throwCStr(_T("Received HTTP headers exceed limit"));
 			}
 		} else {
 			// partial line, add to according buffer
@@ -260,7 +255,7 @@ void CHttpClientReqSocket::ProcessHttpHeaderPacket(const char *packet, UINT size
 
 			// safety check
 			if (m_strHttpCurHdrLine.GetLength() > MAX_HTTP_HEADER_LINE_SIZE)
-				throw CString(_T("Received HTTP header line exceeds limit"));
+				throwCStr(_T("Received HTTP header line exceeds limit"));
 		}
 	}
 }

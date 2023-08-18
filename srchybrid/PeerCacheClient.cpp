@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -316,11 +316,11 @@ bool CUpDownClient::ProcessPeerCacheDownHttpResponse(const CStringAArray &astrHe
 	ASSERT(m_ePeerCacheDownState == PCDS_WAIT_CACHE_REPLY);
 
 	if (m_reqfile == NULL)
-		throw CString(_T("Failed to process HTTP response - No 'reqfile' attached"));
+		throwCStr(_T("Failed to process HTTP response - No 'reqfile' attached"));
 	if (GetDownloadState() != DS_DOWNLOADING)
-		throw CString(_T("Failed to process HTTP response - Invalid client download state"));
+		throwCStr(_T("Failed to process HTTP response - Invalid client download state"));
 	if (astrHeaders.IsEmpty())
-		throw CString(_T("Unexpected HTTP response - No headers available"));
+		throwCStr(_T("Unexpected HTTP response - No headers available"));
 
 	const CStringA &rstrHdr = astrHeaders[0];
 	UINT uHttpMajVer, uHttpMinVer, uHttpStatusCode;
@@ -344,7 +344,7 @@ bool CUpDownClient::ProcessPeerCacheDownHttpResponse(const CStringAArray &astrHe
 	bool bCacheHit = false;
 	bool bValidContentRange = false;
 	for (int i = 1; i < astrHeaders.GetCount(); ++i) {
-		const CStringA &rstrHdr1 = astrHeaders[i];
+		const CStringA &rstrHdr1(astrHeaders[i]);
 		if (_strnicmp(rstrHdr1, "Content-Length:", 15) == 0) {
 			uContentLength = _atoi64((LPCSTR)rstrHdr1 + 15);
 			if (uContentLength > m_uReqEnd - m_uReqStart + 1) {
@@ -402,7 +402,7 @@ bool CUpDownClient::ProcessPeerCacheDownHttpResponse(const CStringAArray &astrHe
 			Debug(_T("  %s\n"), bCacheHit ? _T("CacheHit") : _T("CacheMiss"));
 		}
 
-		Packet *pEd2kPacket = new Packet(&dataAck, OP_EMULEPROT, OP_PEERCACHE_ACK);
+		Packet *pEd2kPacket = new Packet(dataAck, OP_EMULEPROT, OP_PEERCACHE_ACK);
 		theStats.AddUpDataOverheadFileRequest(pEd2kPacket->size);
 		socket->SendPacket(pEd2kPacket);
 	}
@@ -465,7 +465,7 @@ UINT CUpDownClient::ProcessPeerCacheUpHttpRequest(const CStringAArray &astrHeade
 	uint64 ui64RangeEnd = 0;
 	DWORD dwPushID = 0;
 	for (int i = 1; i < astrHeaders.GetCount(); ++i) {
-		const CStringA &rstrHdr2 = astrHeaders[i];
+		const CStringA &rstrHdr2(astrHeaders[i]);
 		if (_strnicmp(rstrHdr2, "Range:", 6) == 0) {
 			int iParams;
 			if ((iParams = sscanf((LPCSTR)rstrHdr2 + 6, " bytes = %I64u - %I64u", &ui64RangeStart, &ui64RangeEnd)) != 2
@@ -523,9 +523,9 @@ void CUpDownClient::ProcessPeerCacheUpHttpResponse(const CStringAArray &astrHead
 	ASSERT(m_ePeerCacheUpState == PCUS_WAIT_CACHE_REPLY);
 
 	if (astrHeaders.IsEmpty())
-		throw CString(_T("Unexpected HTTP response - No headers available"));
+		throwCStr(_T("Unexpected HTTP response - No headers available"));
 
-	const CStringA &rstrHdr = astrHeaders[0];
+	const CStringA &rstrHdr(astrHeaders[0]);
 	UINT uHttpMajVer, uHttpMinVer, uHttpStatusCode;
 	if (sscanf(rstrHdr, "HTTP/%u.%u %u", &uHttpMajVer, &uHttpMinVer, &uHttpStatusCode) != 3) {
 		CString strError;
@@ -551,9 +551,9 @@ bool CUpDownClient::SendHttpBlockRequests()
 	m_bPeerCacheDownHit = false;
 	m_dwLastBlockReceived = ::GetTickCount();
 	if (m_reqfile == NULL)
-		throw CString(_T("Failed to send block requests - No 'reqfile' attached"));
+		throwCStr(_T("Failed to send block requests - No 'reqfile' attached"));
 
-	CreateBlockRequests(1, 1);
+	CreateBlockRequests(1);
 	if (m_PendingBlocks_list.IsEmpty()) {
 		if (m_pPCDownSocket != NULL) {
 			m_pPCDownSocket->Safe_Delete();
@@ -645,22 +645,22 @@ bool CUpDownClient::SendPeerCacheFileRequest()
 	data.WriteUInt8(PCOP_REQ);
 	data.WriteUInt8(5);
 	CTag tagCacheIP(PCTAG_CACHEIP, theApp.m_pPeerCache->GetCacheIP());
-	tagCacheIP.WriteNewEd2kTag(&data);
+	tagCacheIP.WriteNewEd2kTag(data);
 	CTag tagPushId(PCTAG_PUSHID, m_uPeerCacheDownloadPushId);
-	tagPushId.WriteNewEd2kTag(&data);
+	tagPushId.WriteNewEd2kTag(data);
 	CTag tagFileId(PCTAG_FILEID, (uchar*)m_reqfile->GetFileHash());
-	tagFileId.WriteNewEd2kTag(&data);
+	tagFileId.WriteNewEd2kTag(data);
 	CTag tagPublicIP(PCTAG_PUBLICIP, theApp.GetPublicIP());
-	tagPublicIP.WriteNewEd2kTag(&data);
+	tagPublicIP.WriteNewEd2kTag(data);
 	CTag tagCachePort(PCTAG_CACHEPORT, theApp.m_pPeerCache->GetCachePort());
-	tagCachePort.WriteNewEd2kTag(&data);
+	tagCachePort.WriteNewEd2kTag(data);
 
 	if (thePrefs.GetDebugClientTCPLevel() > 0) {
 		DebugSend("OP_PeerCacheQuery", this, m_reqfile->GetFileHash());
 		Debug(_T("  CacheIP=%s  PushId=%u  PublicIP=%s  FileId=%s\n"), (LPCTSTR)ipstr(tagCacheIP.GetInt()), tagPushId.GetInt(), (LPCTSTR)ipstr(tagPublicIP.GetInt()), (LPCTSTR)md4str(tagFileId.GetHash()));
 	}
 
-	Packet *pEd2kPacket = new Packet(&data, OP_EMULEPROT, OP_PEERCACHE_QUERY);
+	Packet *pEd2kPacket = new Packet(data, OP_EMULEPROT, OP_PEERCACHE_QUERY);
 	theStats.AddUpDataOverheadFileRequest(pEd2kPacket->size);
 	socket->SendPacket(pEd2kPacket);
 	SetDownloadState(DS_DOWNLOADING);
@@ -696,14 +696,14 @@ bool CUpDownClient::ProcessPeerCacheQuery(const uchar *packet, UINT size)
 		return false;
 	}
 
-	uchar aucFileHash[16] = {};
+	uchar aucFileHash[MDX_DIGEST_SIZE] = {};
 	uint32 uPushId = 0;
 	uint32 uCacheIP = 0;
 	uint16 uCachePort = 0;
 
 	CString strInfo;
 	for (UINT uTags = dataRecv.ReadUInt8(); uTags > 0; --uTags) {
-		CTag tag(&dataRecv, GetUnicodeSupport() != UTF8strNone);
+		CTag tag(dataRecv, GetUnicodeSupport() != UTF8strNone);
 		if (tag.GetNameID() == PCTAG_CACHEIP && tag.IsInt()) {
 			uCacheIP = tag.GetInt();
 			if (bDebug)
@@ -721,9 +721,10 @@ bool CUpDownClient::ProcessPeerCacheQuery(const uchar *packet, UINT size)
 			if (bDebug)
 				strInfo.AppendFormat(_T("  FileId=%s"), (LPCTSTR)md4str(aucFileHash));
 		} else if (tag.GetNameID() == PCTAG_PUBLICIP && tag.IsInt()) {
-			uint32 uPublicIP = tag.GetInt();
-			if (bDebug)
+			if (bDebug) {
+				uint32 uPublicIP = tag.GetInt();
 				strInfo.AppendFormat(_T("  PublicIP=%s"), (LPCTSTR)ipstr(uPublicIP));
+			}
 		} else {
 			if (bDebug)
 				strInfo.AppendFormat(_T("  ***UnkTag: %s"), (LPCTSTR)tag.GetFullInfo());
@@ -788,18 +789,18 @@ bool CUpDownClient::ProcessPeerCacheQuery(const uchar *packet, UINT size)
 	dataSend.WriteUInt8(PCOP_RES);
 	dataSend.WriteUInt8(3);
 	CTag tagPushId(PCTAG_PUSHID, uPushId);
-	tagPushId.WriteNewEd2kTag(&dataSend);
+	tagPushId.WriteNewEd2kTag(dataSend);
 	CTag tagPublicIP(PCTAG_PUBLICIP, theApp.GetPublicIP());
-	tagPublicIP.WriteNewEd2kTag(&dataSend);
+	tagPublicIP.WriteNewEd2kTag(dataSend);
 	CTag tagFileId(PCTAG_FILEID, (BYTE*)aucFileHash);
-	tagFileId.WriteNewEd2kTag(&dataSend);
+	tagFileId.WriteNewEd2kTag(dataSend);
 
 	if (thePrefs.GetDebugClientTCPLevel() > 0) {
 		DebugSend("OP_PeerCacheAnswer", this, aucFileHash);
 		Debug(_T("  PushId=%u  PublicIP=%s  FileId=%s\n"), tagPushId.GetInt(), (LPCTSTR)ipstr(tagPublicIP.GetInt()), (LPCTSTR)md4str(tagFileId.GetHash()));
 	}
 
-	Packet *pEd2kPacket = new Packet(&dataSend, OP_EMULEPROT, OP_PEERCACHE_ANSWER);
+	Packet *pEd2kPacket = new Packet(dataSend, OP_EMULEPROT, OP_PEERCACHE_ANSWER);
 	theStats.AddUpDataOverheadFileRequest(pEd2kPacket->size);
 	socket->SendPacket(pEd2kPacket);
 	return true;
@@ -840,13 +841,13 @@ bool CUpDownClient::ProcessPeerCacheAnswer(const uchar *packet, UINT size)
 		return false;
 	}
 
+	uchar aucFileHash[MDX_DIGEST_SIZE] = {};
 	uint32 uPushId = 0;
 	uint32 uRemoteIP = 0;
-	uchar aucFileHash[16] = {};
 
 	CString strInfo;
 	for (UINT uTags = dataRecv.ReadUInt8(); uTags > 0; --uTags) {
-		CTag tag(&dataRecv, GetUnicodeSupport() != UTF8strNone);
+		CTag tag(dataRecv, GetUnicodeSupport() != UTF8strNone);
 		if (tag.GetNameID() == PCTAG_PUSHID && tag.IsInt()) {
 			uPushId = tag.GetInt();
 			if (bDebug)

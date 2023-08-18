@@ -28,7 +28,7 @@ class CCatDialog : public CDialog
 	{
 		IDD = IDD_CAT
 	};
-
+	void ErrorBalloon(int iEdit, UINT uid);
 public:
 	explicit CCatDialog(int index);   // standard constructor
 	virtual	~CCatDialog();
@@ -38,7 +38,7 @@ protected:
 	Category_Struct *m_myCat;
 	CComboBox m_prio;
 	CCustomAutoComplete *m_pacRegExp;
-	COLORREF newcolor;
+	COLORREF m_newcolor;
 
 	void Localize();
 	void UpdateData();

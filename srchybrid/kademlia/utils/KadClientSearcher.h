@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -16,7 +16,7 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 #pragma once
-// Interface class for non-kad classes which want to do clientsearches
+// Interface class for non-kad classes which want to do client searches
 namespace Kademlia
 {
 	enum EKadClientSearchRes
@@ -29,8 +29,9 @@ namespace Kademlia
 	class CKadClientSearcher
 	{
 	public:
-		virtual	~CKadClientSearcher() = default; //just in case...
 		virtual	void KadSearchNodeIDByIPResult(EKadClientSearchRes eStatus, const uchar *pachNodeID) = 0;
 		virtual	void KadSearchIPByNodeIDResult(EKadClientSearchRes eStatus, uint32 dwIP, uint16 nPort) = 0;
+	protected:
+		virtual	~CKadClientSearcher() = default;
 	};
 }

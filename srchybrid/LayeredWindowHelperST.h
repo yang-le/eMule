@@ -35,19 +35,13 @@
 class CLayeredWindowHelperST
 {
 public:
-	CLayeredWindowHelperST();
-	virtual	~CLayeredWindowHelperST() = default;
+	CLayeredWindowHelperST() = default;
+	~CLayeredWindowHelperST() = default;
 
 	static LONG_PTR AddLayeredStyle(HWND hWnd);
 	static LONG_PTR RemoveLayeredStyle(HWND hWnd);
-	BOOL SetLayeredWindowAttributes(HWND hWnd, COLORREF crKey, BYTE bAlpha, DWORD dwFlags);
-	BOOL SetTransparentPercentage(HWND hWnd, UINT byPercentage);
+	static BOOL SetTransparentPercentage(HWND hWnd, UINT byPercentage);
 
 	static short GetVersionI()		{ return 11; }
 	static LPCTSTR GetVersionC()	{ return (LPCTSTR)_T("1.1"); }
-
-private:
-	typedef BOOL(WINAPI *lpfnSetLayeredWindowAttributes)(HWND hWnd, COLORREF crKey, BYTE bAlpha, DWORD dwFlags);
-
-	HMODULE		m_hDll;
 };

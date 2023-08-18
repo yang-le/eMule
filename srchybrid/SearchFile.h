@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -28,7 +28,7 @@ class CSearchFile : public CAbstractFile
 	friend class CSearchListCtrl;
 
 public:
-	CSearchFile(CFileDataIO *in_data, bool bOptUTF8, uint32 nSearchID
+	CSearchFile(CFileDataIO &in_data, bool bOptUTF8, uint32 nSearchID
 		, uint32 nServerIP = 0, uint16 nServerPort = 0
 		, LPCTSTR pszDirectory = NULL
 		, bool bKademlia = false
@@ -61,7 +61,7 @@ public:
 	int		GetClientsCount() const							{ return m_aClients.GetSize() + static_cast<int>(GetClientID() && GetClientPort()); }
 	uint32	GetKadPublishInfo() const						{ return m_nKadPublishInfo; } // == TAG_PUBLISHINFO
 	void	SetKadPublishInfo(uint32 dwVal)					{ m_nKadPublishInfo = dwVal; }
-	bool	DidFoundMultipleAICH() const					{ return m_bMultipleAICHFound; }
+	bool	HasFoundMultipleAICH() const					{ return m_bMultipleAICHFound; }
 	void	SetFoundMultipleAICH()							{ m_bMultipleAICHFound = true; }
 
 	// Spam filter
@@ -93,6 +93,7 @@ public:
 			, m_nServerPort()
 		{
 		}
+
 		SClient(uint32 nIP, uint16 nPort, uint32 nServerIP, uint16 nServerPort)
 			: m_nIP(nIP)
 			, m_nServerIP(nServerIP)
@@ -100,11 +101,13 @@ public:
 			, m_nServerPort(nServerPort)
 		{
 		}
+
 		friend inline bool __stdcall operator==(const CSearchFile::SClient &c1, const CSearchFile::SClient &c2)
 		{
 			return c1.m_nIP == c2.m_nIP && c1.m_nServerIP == c2.m_nServerIP
 				&& c1.m_nPort == c2.m_nPort && c1.m_nServerPort == c2.m_nServerPort;
 		}
+
 		uint32 m_nIP;
 		uint32 m_nServerIP;
 		uint16 m_nPort;
@@ -135,6 +138,7 @@ public:
 		{
 			return s1.m_nIP == s2.m_nIP && s1.m_nPort == s2.m_nPort;
 		}
+
 		UINT   m_uAvail;
 		uint32 m_nIP;
 		uint16 m_nPort;
@@ -168,7 +172,7 @@ private:
 	bool	m_bServerUDPAnswer;
 	struct
 	{
-		byte noshow : 1;  //bit #0 - do not display in lists
+		byte noshow : 1;  //bit #0 - do not display in GUI lists
 		byte nowrite : 1; //bit #1 - do not save this entry
 	} m_flags;
 	uint32	m_nSources;

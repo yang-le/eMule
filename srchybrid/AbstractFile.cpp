@@ -1,6 +1,6 @@
 // parts of this file are based on work from pan One (http://home-3.tiscali.nl/~meost/pms/)
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -39,8 +39,8 @@ CAbstractFile::CAbstractFile()
 	: m_nFileSize(0ull)
 	, m_FileIdentifier(m_nFileSize)
 	, m_uRating()
-	, m_bCommentLoaded()
 	, m_uUserRating()
+	, m_bCommentLoaded()
 	, m_bHasComment()
 	, m_bKadCommentSearchRunning()
 {
@@ -51,12 +51,12 @@ CAbstractFile::CAbstractFile(const CAbstractFile *pAbstractFile)
 	, m_FileIdentifier(pAbstractFile->m_FileIdentifier, m_nFileSize)
 	, m_strFileName(pAbstractFile->m_strFileName)
 	, m_strComment(pAbstractFile->m_strComment)
+	, m_strFileType(pAbstractFile->m_strFileType)
 	, m_uRating(pAbstractFile->m_uRating)
-	, m_bCommentLoaded(pAbstractFile->m_bCommentLoaded)
 	, m_uUserRating(pAbstractFile->m_uUserRating)
+	, m_bCommentLoaded(pAbstractFile->m_bCommentLoaded)
 	, m_bHasComment(pAbstractFile->m_bHasComment)
 	, m_bKadCommentSearchRunning(pAbstractFile->m_bKadCommentSearchRunning)
-	, m_strFileType(pAbstractFile->m_strFileType)
 {
 
 	const CTypedPtrList<CPtrList, Kademlia::CEntry*> &list = pAbstractFile->getNotes();
@@ -77,16 +77,16 @@ CAbstractFile::~CAbstractFile()
 void CAbstractFile::AssertValid() const
 {
 	CObject::AssertValid();
-	(void)m_strFileName;
+	m_taglist.AssertValid();
 	(void)m_FileIdentifier;
 	(void)m_nFileSize;
+	(void)m_strFileName;
 	(void)m_strComment;
-	(void)m_uRating;
 	(void)m_strFileType;
+	(void)m_uRating;
 	(void)m_uUserRating;
 	CHECK_BOOL(m_bHasComment);
 	CHECK_BOOL(m_bCommentLoaded);
-	m_taglist.AssertValid();
 }
 
 void CAbstractFile::Dump(CDumpContext &dc) const
@@ -95,16 +95,16 @@ void CAbstractFile::Dump(CDumpContext &dc) const
 }
 #endif
 
-bool CAbstractFile::AddNote(Kademlia::CEntry *pEntry)
+bool CAbstractFile::AddNote(const Kademlia::CEntry &cEntry)
 {
-	for (POSITION pos = m_kadNotes.GetHeadPosition(); pos != NULL; ) {
+	for (POSITION pos = m_kadNotes.GetHeadPosition(); pos != NULL;) {
 		const Kademlia::CEntry *entry = m_kadNotes.GetNext(pos);
-		if (entry->m_uSourceID == pEntry->m_uSourceID) {
-			ASSERT(entry != pEntry);
+		if (entry->m_uSourceID == cEntry.m_uSourceID) {
+			ASSERT(entry != &cEntry);
 			return false;
 		}
 	}
-	m_kadNotes.AddHead(pEntry);
+	m_kadNotes.AddHead(const_cast<Kademlia::CEntry&>(cEntry).Copy());
 	UpdateFileRatingCommentAvail();
 	return true;
 }
@@ -149,12 +149,12 @@ void CAbstractFile::AddTagUnique(CTag *pTag)
 	for (INT_PTR i = m_taglist.GetCount(); --i >= 0;) {
 		const CTag *pCurTag = m_taglist[i];
 		if ((	(pCurTag->GetNameID() != 0 && pCurTag->GetNameID() == pTag->GetNameID())
-			 ||	(pCurTag->GetName()[0] && pTag->GetName()[0] && CmpED2KTagName(pCurTag->GetName(), pTag->GetName()) == 0)
+			 ||	(pCurTag->HasName() && pTag->HasName() && CmpED2KTagName(pCurTag->GetName(), pTag->GetName()) == 0)
 			)
 			&& pCurTag->GetType() == pTag->GetType())
 		{
 			delete pCurTag;
-			m_taglist.SetAt(i, pTag);
+			m_taglist[i] = pTag;
 			return;
 		}
 	}
@@ -418,13 +418,11 @@ void CAbstractFile::RefilterKadNotes(bool bUpdate)
 CString CAbstractFile::GetED2kLink(bool bHashset, bool bHTML, bool bHostname, bool bSource, uint32 dwSourceIP) const
 {
 	CString strLink;
-	strLink.Format(_T("ed2k://|file|%s|%I64u|%s|")
+	strLink.Format(&_T("<a href=\"ed2k://|file|%s|%I64u|%s|")[bHTML ? 0 : 9]
 		, (LPCTSTR)EncodeUrlUtf8(StripInvalidFilenameChars(GetFileName()))
 		, (uint64)GetFileSize()
 		, (LPCTSTR)EncodeBase16(GetFileHash(), 16));
 
-	if (bHTML)
-		strLink = _T("<a href=\"") + strLink;
 	if (bHashset && GetFileIdentifierC().GetAvailableMD4PartHashCount() > 0 && GetFileIdentifierC().HasExpectedMD4HashCount()) {
 		strLink += _T("p=");
 		for (UINT j = 0; j < GetFileIdentifierC().GetAvailableMD4PartHashCount(); ++j) {

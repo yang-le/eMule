@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -46,7 +46,6 @@ public:
 
 protected:
 	explicit CHttpClientReqSocket(CUpDownClient *pclient = NULL);
-	virtual	~CHttpClientReqSocket() = default;
 
 	virtual void DataReceived(const BYTE *pucData, UINT uSize);
 
@@ -75,8 +74,6 @@ public:
 	explicit CHttpClientDownSocket(CUpDownClient *pclient = NULL);
 
 protected:
-	virtual	~CHttpClientDownSocket() = default;
-
 	virtual bool ProcessHttpResponse();
 	virtual bool ProcessHttpResponseBody(const BYTE *pucData, UINT size);
 	virtual bool ProcessHttpRequest();

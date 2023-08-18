@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -48,7 +48,7 @@ CCatDialog::CCatDialog(int index)
 {
 	m_myCat = thePrefs.GetCategory(index);
 	if (m_myCat != NULL)
-		newcolor = CLR_NONE;
+		m_newcolor = CLR_NONE;
 }
 
 CCatDialog::~CCatDialog()
@@ -99,7 +99,7 @@ void CCatDialog::UpdateData()
 
 	CheckDlgButton(IDC_REGEXPR, m_myCat->ac_regexpeval);
 
-	newcolor = m_myCat->color;
+	m_newcolor = m_myCat->color;
 	m_ctlColor.SetColor(m_myCat->color == CLR_NONE ? m_ctlColor.GetDefaultColor() : m_myCat->color);
 
 	SetDlgItemText(IDC_AUTOCATEXT, m_myCat->autocat);
@@ -159,36 +159,34 @@ void CCatDialog::OnBnClickedOk()
 
 	GetDlgItemText(IDC_COMMENT, m_myCat->strComment);
 
-	m_myCat->ac_regexpeval = IsDlgButtonChecked(IDC_REGEXPR) != 0;
-
 	MakeFoldername(m_myCat->strIncomingPath);
-	if (!thePrefs.IsShareableDirectory(m_myCat->strIncomingPath)) {
+	if (!thePrefs.IsShareableDirectory(m_myCat->strIncomingPath))
 		m_myCat->strIncomingPath = thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR);
-		MakeFoldername(m_myCat->strIncomingPath);
-	}
 
-	if (!PathFileExists(m_myCat->strIncomingPath))
-		if (!::CreateDirectory(m_myCat->strIncomingPath, 0)) {
-			LocMessageBox(IDS_ERR_BADFOLDER, MB_OK, 0);
-			m_myCat->strIncomingPath = oldpath;
-			return;
-		}
+	if (!::PathFileExists(m_myCat->strIncomingPath) && !::CreateDirectory(m_myCat->strIncomingPath, 0)) {
+		ErrorBalloon(IDC_INCOMING, IDS_ERR_BADFOLDER);
+		m_myCat->strIncomingPath = oldpath;
+		return;
+	}
 
 	if (m_myCat->strIncomingPath.CompareNoCase(oldpath) != 0)
 		theApp.sharedfiles->Reload();
 
-	m_myCat->color = newcolor;
+	m_myCat->color = m_newcolor;
 	m_myCat->prio = m_prio.GetCurSel();
+
+	m_myCat->ac_regexpeval = IsDlgButtonChecked(IDC_REGEXPR) != 0;
+
 	GetDlgItemText(IDC_AUTOCATEXT, m_myCat->autocat);
 	if (m_myCat->ac_regexpeval && !IsRegExpValid(m_myCat->autocat)) {
-		GetDlgItem(IDC_AUTOCATEXT)->SetFocus();
+		ErrorBalloon(IDC_AUTOCATEXT, IDS_ERR_REGEXP);
 		return;
 	}
 
 	GetDlgItemText(IDC_REGEXP, m_myCat->regexp);
 	if (m_myCat->regexp.GetLength() > 0) {
 		if (!IsRegExpValid(m_myCat->regexp)) {
-			GetDlgItem(IDC_REGEXP)->SetFocus();
+			ErrorBalloon(IDC_REGEXP, IDS_ERR_REGEXP);
 			return;
 		}
 		if (m_pacRegExp && m_pacRegExp->IsBound()) {
@@ -207,7 +205,7 @@ void CCatDialog::OnBnClickedOk()
 
 LRESULT CCatDialog::OnSelChange(WPARAM wParam, LPARAM)
 {
-	newcolor = (wParam == CLR_DEFAULT) ? CLR_NONE : m_ctlColor.GetColor();
+	m_newcolor = (wParam == CLR_DEFAULT) ? CLR_NONE : m_ctlColor.GetColor();
 	return 0;
 }
 
@@ -217,4 +215,9 @@ void CCatDialog::OnDDBnClicked()
 	box->SetFocus();
 	box->SetWindowText(_T(""));
 	box->SendMessage(WM_KEYDOWN, VK_DOWN, 0x00510001);
+}
+
+void CCatDialog::ErrorBalloon(int iEdit, UINT uid)
+{
+	static_cast<CEdit*>(GetDlgItem(iEdit))->ShowBalloonTip(GetResString(IDS_ERROR), GetResString(uid), TTI_ERROR);
 }

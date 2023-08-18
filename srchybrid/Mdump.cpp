@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -45,9 +45,9 @@ void CMiniDumper::Enable(LPCTSTR pszAppName, bool bShowErrors, LPCTSTR pszDumpDi
 	// Need to pre-determine a valid directory.
 	_tcsncpy(m_szDumpDir, pszDumpDir, _countof(m_szDumpDir) - 2);
 	m_szDumpDir[_countof(m_szDumpDir) - 2] = _T('\0');
-	PathAddBackslash(m_szDumpDir);
+	::PathAddBackslash(m_szDumpDir);
 
-	MINIDUMPWRITEDUMP pfnMiniDumpWriteDump = NULL;
+	MINIDUMPWRITEDUMP pfnMiniDumpWriteDump;
 	HMODULE hDbgHelpDll = GetDebugHelperDll((FARPROC*)&pfnMiniDumpWriteDump, bShowErrors);
 	if (hDbgHelpDll) {
 		if (pfnMiniDumpWriteDump)
@@ -56,9 +56,9 @@ void CMiniDumper::Enable(LPCTSTR pszAppName, bool bShowErrors, LPCTSTR pszDumpDi
 	}
 }
 
-#define DBGHELP_HINT _T("You can get the required DBGHELP.DLL by downloading the \"User Mode Process Dumper\" from \"Microsoft Download Center\".\r\n\r\n") \
-	_T("Extract the \"User Mode Process Dumper\" and locate the \"x86\" folder. ") \
-	_T("Copy the DBGHELP.DLL from the \"x86\" folder into your eMule installation folder and/or into your Windows system/system32 folder.")
+#define DBGHELP_HINT _T("The required DBGHELP.DLL may be obtained from \"Microsoft Download Center\" as a part of \"User Mode Process Dumper\".\r\n\r\n") \
+	_T("DBGHELP.DLL should reside in Windows/System32 folder, and also 32-bit DLL in 64-bit OS in Windows/SysWOW64 folder.\r\n") \
+	_T("Alternatively, DBGHELP.DLL may be copied to eMule executable's folder (DLL and executable must have the same bitness).")
 
 HMODULE CMiniDumper::GetDebugHelperDll(FARPROC *ppfnMiniDumpWriteDump, bool bShowErrors)
 {
@@ -72,7 +72,7 @@ HMODULE CMiniDumper::GetDebugHelperDll(FARPROC *ppfnMiniDumpWriteDump, bool bSho
 		*ppfnMiniDumpWriteDump = GetProcAddress(hDll, "MiniDumpWriteDump");
 		if (*ppfnMiniDumpWriteDump == NULL && bShowErrors)
 			// Do *NOT* localize that string (in fact, do not use MFC to load it)!
-			MessageBox(NULL, _T("DBGHELP.DLL found is too old. Please upgrade to version 5.1 (or later) of DBGHELP.DLL.\r\n\r\n") DBGHELP_HINT, m_szAppName, MB_ICONSTOP | MB_OK);
+			MessageBox(NULL, _T("DBGHELP.DLL found is too old. Please upgrade to the current version of DBGHELP.DLL.\r\n\r\n") DBGHELP_HINT, m_szAppName, MB_ICONSTOP | MB_OK);
 	}
 	return hDll;
 }
@@ -87,79 +87,81 @@ LONG WINAPI CMiniDumper::TopLevelFilter(struct _EXCEPTION_POINTERS *pExceptionIn
 #ifdef _DEBUG
 	LONG lRetValue = EXCEPTION_CONTINUE_SEARCH;
 #endif
-	TCHAR szResult[MAX_PATH + 1024] = {};
-	MINIDUMPWRITEDUMP pfnMiniDumpWriteDump = NULL;
+	MINIDUMPWRITEDUMP pfnMiniDumpWriteDump;
 	HMODULE hDll = GetDebugHelperDll((FARPROC*)&pfnMiniDumpWriteDump, true);
-	if (hDll && pfnMiniDumpWriteDump) {
-		time_t tNow = time(NULL); //time of the crash
-		// Ask user if they want to save a dump file
-		// Do *NOT* localize that string (in fact, do not use MFC to load it)!
-		if (theCrashDumper.uCreateCrashDump == 2 || MessageBox(NULL, CRASHTEXT, m_szAppName, MB_ICONSTOP | MB_YESNO) == IDYES) {
-			// Create full path for DUMP file
-			TCHAR szDumpPath[MAX_PATH];
-			_tcsncpy(szDumpPath, m_szDumpDir, _countof(szDumpPath) - 1);
-			szDumpPath[_countof(szDumpPath) - 1] = _T('\0');
-			size_t uDumpPathLen = _tcslen(szDumpPath);
-
-			TCHAR szBaseName[MAX_PATH];
-			_tcsncpy(szBaseName, m_szAppName, _countof(szBaseName) - 1);
-			szBaseName[_countof(szBaseName) - 1] = _T('\0');
-			size_t uBaseNameLen = _tcslen(szBaseName);
-
-			_tcsftime(szBaseName + uBaseNameLen, _countof(szBaseName) - uBaseNameLen, _T("_%Y%m%d-%H%M%S"), localtime(&tNow));
-			szBaseName[_countof(szBaseName) - 1] = _T('\0');
-
-			// Replace spaces and dots in file name.
-			LPTSTR psz = szBaseName;
-			while (*psz != _T('\0')) {
-				if (*psz == _T('.'))
-					*psz = _T('-');
-				else if (*psz == _T(' '))
-					*psz = _T('_');
-				++psz;
-			}
-			if (uDumpPathLen < _countof(szDumpPath) - 1) {
-				_tcsncat(szDumpPath, szBaseName, _countof(szDumpPath) - uDumpPathLen - 1);
+	if (hDll) {
+		if (pfnMiniDumpWriteDump) {
+			time_t tNow = time(NULL); //time of the crash
+			// Ask user if they want to save a dump file
+			// Do *NOT* localize that string (in fact, do not use MFC to load it)!
+			if (theCrashDumper.uCreateCrashDump == 2 || MessageBox(NULL, CRASHTEXT, m_szAppName, MB_ICONSTOP | MB_YESNO) == IDYES) {
+				// Create full path for DUMP file
+				TCHAR szDumpPath[MAX_PATH];
+				_tcsncpy(szDumpPath, m_szDumpDir, _countof(szDumpPath) - 1);
 				szDumpPath[_countof(szDumpPath) - 1] = _T('\0');
-				uDumpPathLen = _tcslen(szDumpPath);
-				if (uDumpPathLen < _countof(szDumpPath) - 1) {
-					_tcsncat(szDumpPath, _T(".dmp"), _countof(szDumpPath) - uDumpPathLen - 1);
-					szDumpPath[_countof(szDumpPath) - 1] = _T('\0');
+				size_t uDumpPathLen = _tcslen(szDumpPath);
+
+				TCHAR szBaseName[MAX_PATH];
+				_tcsncpy(szBaseName, m_szAppName, _countof(szBaseName) - 1);
+				szBaseName[_countof(szBaseName) - 1] = _T('\0');
+				size_t uBaseNameLen = _tcslen(szBaseName);
+
+				_tcsftime(szBaseName + uBaseNameLen, _countof(szBaseName) - uBaseNameLen, _T("_%Y%m%d-%H%M%S"), localtime(&tNow));
+				szBaseName[_countof(szBaseName) - 1] = _T('\0');
+
+				// Replace spaces and dots in file name.
+				LPTSTR psz = szBaseName;
+				while (*psz != _T('\0')) {
+					if (*psz == _T('.'))
+						*psz = _T('-');
+					else if (*psz == _T(' '))
+						*psz = _T('_');
+					++psz;
 				}
-			}
+				if (uDumpPathLen < _countof(szDumpPath) - 1) {
+					_tcsncat(szDumpPath, szBaseName, _countof(szDumpPath) - uDumpPathLen - 1);
+					szDumpPath[_countof(szDumpPath) - 1] = _T('\0');
+					uDumpPathLen = _tcslen(szDumpPath);
+					if (uDumpPathLen < _countof(szDumpPath) - 1) {
+						_tcsncat(szDumpPath, _T(".dmp"), _countof(szDumpPath) - uDumpPathLen - 1);
+						szDumpPath[_countof(szDumpPath) - 1] = _T('\0');
+					}
+				}
 
-			HANDLE hFile = ::CreateFile(szDumpPath, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-			if (hFile != INVALID_HANDLE_VALUE) {
-				_MINIDUMP_EXCEPTION_INFORMATION ExInfo = {};
-				ExInfo.ThreadId = GetCurrentThreadId();
-				ExInfo.ExceptionPointers = pExceptionInfo;
-				ExInfo.ClientPointers = NULL;
+				TCHAR szResult[MAX_PATH + 1024];
+				*szResult = _T('\0');
+				HANDLE hFile = ::CreateFile(szDumpPath, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+				if (hFile != INVALID_HANDLE_VALUE) {
+					_MINIDUMP_EXCEPTION_INFORMATION ExInfo = {};
+					ExInfo.ThreadId = GetCurrentThreadId();
+					ExInfo.ExceptionPointers = pExceptionInfo;
+					ExInfo.ClientPointers = NULL;
 
-				BOOL bOK = (*pfnMiniDumpWriteDump)(GetCurrentProcess(), GetCurrentProcessId(), hFile, MiniDumpNormal, &ExInfo, NULL, NULL);
-				if (bOK) {
-					// Do *NOT* localize that string (in fact, do not use MFC to load it)!
-					_sntprintf(szResult, _countof(szResult) - 1, _T("Saved dump file to \"%s\".\r\n\r\nPlease send this file together with a detailed bug report to dumps@emule-project.net !\r\n\r\nThank you for helping to improve eMule."), szDumpPath);
-					szResult[_countof(szResult) - 1] = _T('\0');
+					BOOL bOK = (*pfnMiniDumpWriteDump)(GetCurrentProcess(), GetCurrentProcessId(), hFile, MiniDumpNormal, &ExInfo, NULL, NULL);
+					if (bOK) {
+						// Do *NOT* localize that string (in fact, do not use MFC to load it)!
+						_sntprintf(szResult, _countof(szResult) - 1, _T("Saved dump file to \"%s\".\r\n\r\nPlease send this file together with a detailed bug report to dumps@emule-project.net !\r\n\r\nThank you for helping to improve eMule."), szDumpPath);
+						szResult[_countof(szResult) - 1] = _T('\0');
 #ifdef _DEBUG
-					lRetValue = EXCEPTION_EXECUTE_HANDLER;
+						lRetValue = EXCEPTION_EXECUTE_HANDLER;
 #endif
+					} else {
+						// Do *NOT* localize that string (in fact, do not use MFC to load it)!
+						_sntprintf(szResult, _countof(szResult) - 1, _T("Failed to save dump file to \"%s\".\r\n\r\nError: %lu"), szDumpPath, ::GetLastError());
+						szResult[_countof(szResult) - 1] = _T('\0');
+					}
+					::CloseHandle(hFile);
 				} else {
 					// Do *NOT* localize that string (in fact, do not use MFC to load it)!
-					_sntprintf(szResult, _countof(szResult) - 1, _T("Failed to save dump file to \"%s\".\r\n\r\nError: %lu"), szDumpPath, ::GetLastError());
+					_sntprintf(szResult, _countof(szResult) - 1, _T("Failed to create dump file \"%s\".\r\n\r\nError: %lu"), szDumpPath, ::GetLastError());
 					szResult[_countof(szResult) - 1] = _T('\0');
 				}
-				::CloseHandle(hFile);
-			} else {
-				// Do *NOT* localize that string (in fact, do not use MFC to load it)!
-				_sntprintf(szResult, _countof(szResult) - 1, _T("Failed to create dump file \"%s\".\r\n\r\nError: %lu"), szDumpPath, ::GetLastError());
-				szResult[_countof(szResult) - 1] = _T('\0');
+				if (*szResult != _T('\0'))
+					MessageBox(NULL, szResult, m_szAppName, MB_ICONINFORMATION | MB_OK);
 			}
 		}
 		FreeLibrary(hDll);
 	}
-
-	if (szResult[0] != _T('\0'))
-		MessageBox(NULL, szResult, m_szAppName, MB_ICONINFORMATION | MB_OK);
 
 #ifndef _DEBUG
 	// Exit the process only in release builds, so that in debug builds the exception

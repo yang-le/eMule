@@ -11,7 +11,6 @@ class CPPgFiles : public CPropertyPage
 
 public:
 	CPPgFiles();
-	virtual	~CPPgFiles() = default;
 
 	void Localize();
 

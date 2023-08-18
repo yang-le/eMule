@@ -13,7 +13,6 @@ class CPPgSecurity : public CPropertyPage
 
 public:
 	CPPgSecurity();
-	virtual	~CPPgSecurity() = default;
 
 	void Localize();
 	void DeleteDDB();

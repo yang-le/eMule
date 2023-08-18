@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -65,15 +65,19 @@ class CemuleDlg : public CTrayDialog
 		IDD = IDD_EMULE_DIALOG
 	};
 
+	//Client icons for all windows
+	CImageList m_IconList;
+	void SetClientIconList();
 public:
 	explicit CemuleDlg(CWnd *pParent = NULL);
 	~CemuleDlg();
 
+	CImageList& GetClientIconList();
 	void ShowConnectionState();
 	void ShowNotifier(LPCTSTR pszText, TbnMsg nMsgType, LPCTSTR pszLink = NULL, bool bForceSoundOFF = false);
 	void SendNotificationMail(TbnMsg nMsgType, LPCTSTR pszText);
 	void ShowUserCount();
-	void ShowMessageState(UINT iconnr);
+	void ShowMessageState(UINT nIcon);
 	void SetActiveDialog(CWnd *dlg);
 	CWnd* GetActiveDialog() const			{ return activewnd; }
 	void ShowTransferRate(bool bForceAll = false);
@@ -130,8 +134,8 @@ public:
 	void RefreshUPnP(bool bRequestAnswer = false);
 	HBRUSH GetCtlColor(CDC*, CWnd*, UINT);
 
-	virtual void OnTrayRButtonUp(CPoint);
-	virtual void OnTrayLButtonUp(CPoint pt);
+	virtual void OnTrayRButtonUp(CPoint pt);
+	virtual void OnTrayLButtonUp();
 	virtual void TrayMinimizeToTrayChange();
 	virtual void RestoreWindow();
 	virtual void HtmlHelp(DWORD_PTR dwData, UINT nCmd = 0x000F);
@@ -265,6 +269,7 @@ protected:
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
 	afx_msg BOOL OnChevronPushed(UINT id, LPNMHDR pNMHDR, LRESULT *plResult);
 	afx_msg LRESULT OnPowerBroadcast(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnDisplayChange(WPARAM, LPARAM);
 
 	// quick-speed changer -- based on xrmb
 	afx_msg void QuickSpeedUpload(UINT nID);
@@ -297,19 +302,14 @@ protected:
 	afx_msg LRESULT OnWebAddDownloads(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnWebSetCatPrio(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnAddRemoveFriend(WPARAM wParam, LPARAM lParam);
-
 	// VersionCheck DNS
 	afx_msg LRESULT OnVersionCheckResponse(WPARAM, LPARAM lParam);
-
 	// Peercache DNS
 	afx_msg LRESULT OnPeerCacheResponse(WPARAM wParam, LPARAM lParam);
-
 	// MiniMule
 	afx_msg LRESULT OnCloseMiniMule(WPARAM wParam, LPARAM);
-
 	// Terminal Services
 	afx_msg LRESULT OnConsoleThreadEvent(WPARAM wParam, LPARAM lParam);
-
 	// UPnP
 	afx_msg LRESULT OnUPnPResult(WPARAM wParam, LPARAM lParam);
 };

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -212,7 +212,7 @@ void CPPgSecurity::OnReloadIPFilter()
 
 void CPPgSecurity::OnEditIPFilter()
 {
-	ShellOpen(thePrefs.GetTxtEditor(), _T('\"') + thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + DFLT_IPFILTER_FILENAME + _T('\"'));
+	ShellOpen(thePrefs.GetTxtEditor(), _T('"') + CIPFilter::GetDefaultFilePath() + _T('"'));
 }
 
 void CPPgSecurity::OnLoadIPFFromURL()
@@ -225,8 +225,9 @@ void CPPgSecurity::OnLoadIPFFromURL()
 		if (m_pacIPFilterURL && m_pacIPFilterURL->IsBound())
 			m_pacIPFilterURL->AddItem(url, 0);
 
+		const CString &sConfDir(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
 		CString strTempFilePath;
-		_tmakepathlimit(strTempFilePath.GetBuffer(MAX_PATH), NULL, thePrefs.GetMuleDirectory(EMULE_CONFIGDIR), DFLT_IPFILTER_FILENAME, _T("tmp"));
+		_tmakepathlimit(strTempFilePath.GetBuffer(MAX_PATH), NULL, sConfDir, DFLT_IPFILTER_FILENAME, _T("tmp"));
 		strTempFilePath.ReleaseBuffer();
 
 		CHttpDownloadDlg dlgDownload;
@@ -259,7 +260,7 @@ void CPPgSecurity::OnLoadIPFFromURL()
 			}
 			if (zfile) {
 				CString strTempUnzipFilePath;
-				_tmakepathlimit(strTempUnzipFilePath.GetBuffer(_MAX_PATH), NULL, thePrefs.GetMuleDirectory(EMULE_CONFIGDIR), DFLT_IPFILTER_FILENAME, _T(".unzip.tmp"));
+				_tmakepathlimit(strTempUnzipFilePath.GetBuffer(MAX_PATH), NULL, sConfDir, DFLT_IPFILTER_FILENAME, _T(".unzip.tmp"));
 				strTempUnzipFilePath.ReleaseBuffer();
 
 				if (zfile->Extract(strTempUnzipFilePath)) {
@@ -297,7 +298,7 @@ void CPPgSecurity::OnLoadIPFFromURL()
 						|| strFile.CompareNoCase(_T("guardian.p2p")) == 0))
 				{
 					CString strTempUnzipFilePath;
-					_tmakepathlimit(strTempUnzipFilePath.GetBuffer(MAX_PATH), NULL, thePrefs.GetMuleDirectory(EMULE_CONFIGDIR), DFLT_IPFILTER_FILENAME, _T(".unzip.tmp"));
+					_tmakepathlimit(strTempUnzipFilePath.GetBuffer(MAX_PATH), NULL, sConfDir, DFLT_IPFILTER_FILENAME, _T(".unzip.tmp"));
 					strTempUnzipFilePath.ReleaseBuffer();
 					if (rar.Extract(strTempUnzipFilePath)) {
 						rar.Close();
@@ -332,11 +333,11 @@ void CPPgSecurity::OnLoadIPFFromURL()
 				bIsArchiveFile = true;
 
 				CString strTempUnzipFilePath;
-				_tmakepathlimit(strTempUnzipFilePath.GetBuffer(_MAX_PATH), NULL, thePrefs.GetMuleDirectory(EMULE_CONFIGDIR), DFLT_IPFILTER_FILENAME, _T(".unzip.tmp"));
+				_tmakepathlimit(strTempUnzipFilePath.GetBuffer(MAX_PATH), NULL, sConfDir, DFLT_IPFILTER_FILENAME, _T(".unzip.tmp"));
 				strTempUnzipFilePath.ReleaseBuffer();
 
 				// add filename and extension of uncompressed file to temporary file
-				const CString &strUncompressedFileName = gz.GetUncompressedFileName();
+				const CString &strUncompressedFileName(gz.GetUncompressedFileName());
 				if (!strUncompressedFileName.IsEmpty())
 					strTempUnzipFilePath.AppendFormat(_T(".%s"), (LPCTSTR)strUncompressedFileName);
 
@@ -366,23 +367,19 @@ void CPPgSecurity::OnLoadIPFFromURL()
 			FILE *fp = _tfsopen(strTempFilePath, _T("rb"), _SH_DENYWR);
 			if (fp) {
 				char szBuff[16384];
-				size_t iRead = fread(szBuff, 1, _countof(szBuff) - 1, fp);
+				size_t iRead = fread(szBuff, 1, sizeof szBuff - 1, fp);
+				fclose(fp);
 				if (iRead <= 0)
 					bValidIPFilterFile = false;
 				else {
 					szBuff[iRead - 1] = '\0';
 
 					const char *pc = szBuff;
-					while (*pc == ' ' || *pc == '\t' || *pc == '\r' || *pc == '\n')
+					while (*pc && *pc <= ' ')
 						++pc;
-					if (_strnicmp(pc, "<html", 5) == 0
-						|| _strnicmp(pc, "<xml", 4) == 0
-						|| _strnicmp(pc, "<!doc", 5) == 0)
-					{
+					if (_strnicmp(pc, "<html", 5) == 0 || _strnicmp(pc, "<xml", 4) == 0 || _strnicmp(pc, "<!doc", 5) == 0)
 						bValidIPFilterFile = false;
-					}
 				}
-				fclose(fp);
 			}
 
 			if (bValidIPFilterFile) {
@@ -397,13 +394,13 @@ void CPPgSecurity::OnLoadIPFFromURL()
 	if (url.IsEmpty() || bHaveNewFilterFile)
 		OnReloadIPFilter();
 
-	// In case we received an invalid IP-filter file (e.g. an 404 HTML page with HTTP status "OK"),
-	// warn the user that there are no IP-filters available any longer.
+	// In case we received an invalid IP filter file (e.g. an 404 HTML page with HTTP status "OK"),
+	// warn the user that there are no IP filters available any longer.
 	if (bHaveNewFilterFile && theApp.ipfilter->GetIPFilter().IsEmpty()) {
 		CString strLoaded;
 		strLoaded.Format(GetResString(IDS_IPFILTERLOADED), theApp.ipfilter->GetIPFilter().GetCount());
-		CString strError;
-		strError.Format(_T("%s\r\n\r\n%s"), (LPCTSTR)GetResString(IDS_DWLIPFILTERFAILED), (LPCTSTR)strLoaded);
+		CString strError(GetResString(IDS_DWLIPFILTERFAILED));
+		strError.AppendFormat(_T("\r\n\r\n%s"), (LPCTSTR)strLoaded);
 		AfxMessageBox(strError, MB_ICONERROR);
 	}
 }

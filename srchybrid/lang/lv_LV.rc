@@ -472,7 +472,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Globālie (Serveri)"
     IDS_METHOD              "Metode"
     IDS_UNDO                "Atsaukt"
-    IDS_DAYLY               "Ikdiena"
+    IDS_DAILY               "Ikdiena"
 END
 
 STRINGTABLE
@@ -1200,10 +1200,10 @@ BEGIN
     IDS_SHAREDREQ1          "User %s (%u) requested your list of shared directories -> %s"
     IDS_SHAREDREQ2          "User %s (%u) requested your list of shared files for directory '%s' -> %s"
     IDS_SHAREDANSW          "User %s (%u) shares directory '%s'"
-    IDS_SHAREDANSW2         "User %s (%u) sent not requested list of shared directories - ignored"
+    IDS_SHAREDANSW2         "User %s (%u) sent unrequested list of shared directories - ignored"
     IDS_SHAREDINFO1         "User %s (%u) sent list of shared files for directory '%s'"
     IDS_SHAREDINFO2         "User %s (%u) finished sending lists of shared files"
-    IDS_SHAREDANSW3         "User %s (%u) sent not requested list of shared files for directory '%s' - ignored"
+    IDS_SHAREDANSW3         "User %s (%u) sent unrequested list of shared files for directory '%s' - ignored"
 END
 
 STRINGTABLE
@@ -1502,7 +1502,7 @@ BEGIN
     IDS_EM_HELP             "&Help"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Friend not added.\r\n\r\nThere is already a friend with same IP address and port available."
-    IDS_DYNUP               "Upload SpeedSense"
+    IDS_DYNUP               "Upload SpeedSense (not recommended)"
     IDS_KADOVERHEAD         "Kad Overhead (Packets): %s (%s)"
     IDS_FIND                "Find..."
     IDS_LOG_BANNED_CLIENTS  "Log banned clients"

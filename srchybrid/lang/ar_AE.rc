@@ -471,7 +471,7 @@ BEGIN
     IDS_GLOBALSEARCH        "عالمي  (Server)"
     IDS_METHOD              "طريقة"
     IDS_UNDO                "تراجع"
-    IDS_DAYLY               "يومي"
+    IDS_DAILY               "يومي"
 END
 
 STRINGTABLE
@@ -1488,7 +1488,7 @@ BEGIN
     IDS_EM_HELP             "&مساعدة"
     IDS_WRN_FRIENDDUPLIPPORT
                             "صديق لم يضف.\r\n\r\nهناك صديق متوفر بنفس الاي بي و البورت."
-    IDS_DYNUP               "رفع بحاسة السرعة"
+    IDS_DYNUP               "رفع بحاسة السرعة (غير منصوح به)"
     IDS_KADOVERHEAD         "Kad راس (Packets): %s (%s)"
     IDS_FIND                "جد..."
     IDS_LOG_BANNED_CLIENTS  "عملاء مطرودين"
@@ -1602,7 +1602,7 @@ BEGIN
     IDS_CHAT_DOWNLOADED     "حمل:"
     IDS_CHAT_UPLOADED       "رفع:"
     IDS_CHAT_IDENT          "كشف الهوية:"
-    IDS_MAXHALFOPENCONS     "الحد الاقصى: نصف الاتصالات المفتوحة"
+    IDS_MAXHALFOPENCONS     "الحد الأقصى للاتصالات نصف المفتوحة"
     IDS_WIZ_STARTWITHWINDOWS
                             "فعل هذا الاختيار لبدأ ايمول عند بدأ الويندوز. [معطل تلقائياً]"
     IDS_KAD_WAITCBK         "انتظر الرد من  Kad "

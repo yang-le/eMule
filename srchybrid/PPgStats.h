@@ -12,7 +12,6 @@ class CPPgStats : public CPropertyPage
 
 public:
 	CPPgStats();
-	virtual	~CPPgStats() = default;
 
 	void Localize();
 

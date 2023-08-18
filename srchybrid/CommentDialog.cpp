@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -219,7 +219,7 @@ void CCommentDialog::Localize()
 	m_ratebox.AddItem(GetResString(IDS_CMT_FAIR), 3);
 	m_ratebox.AddItem(GetResString(IDS_CMT_GOOD), 4);
 	m_ratebox.AddItem(GetResString(IDS_CMT_EXCELLENT), 5);
-	UpdateHorzExtent(m_ratebox, 16); // adjust dropdown width to ensure all strings are fully visible
+	UpdateHorzExtent(m_ratebox, 16); // adjust drop-down width to ensure all strings are fully visible
 	m_ratebox.SetCurSel(m_iRating);
 	RefreshData();
 }

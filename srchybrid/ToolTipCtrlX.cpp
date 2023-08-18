@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -122,7 +122,7 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 	//
 	// Windows Vista *with* SP1
 	// ------------------------
-	// The Vista SP1(!) 'TOOLTIP' theme does though *not* offer a bold font. Keep
+	// The Vista SP1(!) 'TOOLTIP' theme does *not* offer a bold font. Keep
 	// in mind that TTP_STANDARDTITLE does not return a bold font. Keep also in mind
 	// that TTP_STANDARDTITLE is even a *different* font than TTP_STANDARD!
 	// Which means, that TTP_STANDARDTITLE should *not* be used within the same line
@@ -135,7 +135,7 @@ void CToolTipCtrlX::CustomPaint(LPNMTTCUSTOMDRAW pNMCD)
 	// ----------
 	// Can *not* use the 'TOOLTIP' theme at all because it would give us only a (non-bold)
 	// black font on a white tooltip window background. Seems that the 'TOOLTIP' theme under
-	// WinXP is just using the default Window values (black+white) and does not
+	// WinXP is just using the default Window values (black + white) and does not
 	// use any of the tooltip specific Window metrics...
 	//
 	bool bUseEmbeddedThemeFonts = false;
@@ -526,7 +526,7 @@ BOOL CToolTipCtrlX::OnTTShow(LPNMHDR pNMHDR, LRESULT *pResult)
 		return TRUE;	 // MFC API:     Suppress further routing of this message
 	}
 
-	// If the TTN_SHOW notification is not sent to the sub-classed tooltip control, we would lose the
+	// If the TTN_SHOW notification is not sent to the subclassed tooltip control, we would lose the
 	// exact positioning of in-place tooltips which is performed by the tooltip control by default.
 	// Thus it is important that we tell MFC (not the Windows API in that case) to further route this message.
 	*pResult = FALSE;	// Windows API: Perform default positioning

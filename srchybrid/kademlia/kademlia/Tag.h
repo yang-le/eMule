@@ -1,5 +1,5 @@
 /*
-Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
+Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -23,7 +23,7 @@ There is going to be a new forum created just for the Kademlia side of the clien
 If you feel there is an error or a way to improve something, please
 post it in the forum first and let us look at it. If it is a real improvement,
 it will be added to the official client. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form.
+what all it does, can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 their client on the eMule forum.
 */
@@ -34,16 +34,15 @@ their client on the eMule forum.
 #include "otherfunctions.h"
 #include "kademlia/routing/Maps.h"
 
-// forward declarations
 namespace Kademlia
 {
+	// forward declarations
 	class CKadTagValueString;
-}
-void KadTagStrMakeLower(Kademlia::CKadTagValueString &rwstr);
-int KadTagStrCompareNoCase(LPCWSTR dst, LPCWSTR src) noexcept;
 
-namespace Kademlia
-{
+	void deleteTagListEntries(TagList &rTaglist);
+	void KadTagStrMakeLower(Kademlia::CKadTagValueString &rwstr);
+	bool EqualKadTagStr(LPCWSTR dst, LPCWSTR src) noexcept;
+
 	class CKadTagNameString : protected CStringA
 	{
 	public:
@@ -59,10 +58,8 @@ namespace Kademlia
 		{
 		}
 
-		~CKadTagNameString() = default;
-
 		// A tag name may include character values >= 0xD0 and also >= 0xF0. to prevent those
-		// characters to be interpreted as multibyte character sequences we have to ensure that a binary
+		// characters to be interpreted as multi-byte character sequences we have to ensure that a binary
 		// string compare is performed.
 		int Compare(LPCSTR psz) const noexcept
 		{
@@ -84,6 +81,11 @@ namespace Kademlia
 			return __ascii_stricmp(GetString(), psz);
 		}
 
+		friend bool operator==(const CKadTagNameString& str1, LPCSTR const psz2) noexcept
+		{
+			return (str1.Compare(psz2) == 0);
+		}
+
 		CKadTagNameString& operator=(LPCSTR pszSrc)
 		{
 			CStringA::operator=(pszSrc);
@@ -97,7 +99,7 @@ namespace Kademlia
 
 		XCHAR operator[](int iChar) const noexcept
 		{
-			return CStringA::operator [](iChar);
+			return CStringA::operator[](iChar);
 		}
 
 		PXSTR GetBuffer()
@@ -135,13 +137,11 @@ namespace Kademlia
 			: CStringW(psz, iLen)
 		{
 		}
-		
-		~CKadTagValueString() = default;
 
-		int CompareNoCase(LPCWSTR src) const noexcept
+		/*bool EqualNoCase(LPCWSTR src) const noexcept //unused
 		{
-			return KadTagStrCompareNoCase(GetString(), src);
-		}
+			return EqualKadTagStr(GetString(), src);
+		}*/
 
 		int Collate(PCXSTR psz) const noexcept
 		{
@@ -185,7 +185,7 @@ namespace Kademlia
 		}
 		virtual	~CKadTag() = default;
 
-		virtual CKadTag* Copy() = 0;
+		virtual CKadTag* Copy() const = 0;
 
 		bool IsStr() const
 		{
@@ -236,37 +236,37 @@ namespace Kademlia
 
 		virtual CKadTagValueString GetStr() const
 		{
-			ASSERT(0);
+			ASSERT(0); //requires implementation
 			return CKadTagValueString();
 		}
 		virtual uint64 GetInt() const
 		{
-			ASSERT(0);
+			ASSERT(0); //requires implementation
 			return 0;
 		}
 		virtual float GetFloat() const
 		{
-			ASSERT(0);
+			ASSERT(0); //requires implementation
 			return 0.0F;
 		}
 		virtual const BYTE* GetBsob() const
 		{
-			ASSERT(0);
+			ASSERT(0); //requires implementation
 			return NULL;
 		}
 		virtual uint8 GetBsobSize() const
 		{
-			ASSERT(0);
+			ASSERT(0); //requires implementation
 			return 0;
 		}
 		virtual bool GetBool() const
 		{
-			ASSERT(0);
+			ASSERT(0); //requires implementation
 			return false;
 		}
 		virtual const BYTE* GetHash() const
 		{
-			ASSERT(0);
+			ASSERT(0); //requires implementation
 			return NULL;
 		}
 
@@ -292,7 +292,7 @@ namespace Kademlia
 		{
 		}
 
-		virtual CKadTagStr* Copy()
+		virtual CKadTagStr* Copy() const
 		{
 			return new CKadTagStr(m_name, m_value);
 		}
@@ -314,7 +314,7 @@ namespace Kademlia
 		{
 		}
 
-		virtual CKadTagUInt* Copy()
+		virtual CKadTagUInt* Copy() const
 		{
 			return new CKadTagUInt(m_name, m_value);
 		}
@@ -336,7 +336,7 @@ namespace Kademlia
 		{
 		}
 
-		virtual CKadTagUInt64* Copy()
+		virtual CKadTagUInt64* Copy() const
 		{
 			return new CKadTagUInt64(m_name, m_value);
 		}
@@ -359,7 +359,7 @@ namespace Kademlia
 		{
 		}
 
-		virtual CKadTagUInt32* Copy()
+		virtual CKadTagUInt32* Copy() const
 		{
 			return new CKadTagUInt32(m_name, m_value);
 		}
@@ -382,7 +382,7 @@ namespace Kademlia
 		{
 		}
 
-		virtual CKadTagFloat* Copy()
+		virtual CKadTagFloat* Copy() const
 		{
 			return new CKadTagFloat(m_name, m_value);
 		}
@@ -405,7 +405,7 @@ namespace Kademlia
 		{
 		}
 
-		virtual CKadTagBool* Copy()
+		virtual CKadTagBool* Copy() const
 		{
 			return new CKadTagBool(m_name, m_value);
 		}
@@ -429,7 +429,7 @@ namespace Kademlia
 		{
 		}
 
-		virtual CKadTagUInt16* Copy()
+		virtual CKadTagUInt16* Copy() const
 		{
 			return new CKadTagUInt16(m_name, m_value);
 		}
@@ -453,7 +453,7 @@ namespace Kademlia
 		{
 		}
 
-		virtual CKadTagUInt8* Copy()
+		virtual CKadTagUInt8* Copy() const
 		{
 			return new CKadTagUInt8(m_name, m_value);
 		}
@@ -487,7 +487,7 @@ namespace Kademlia
 		CKadTagBsob(const CKadTagBsob&) = delete;
 		CKadTagBsob& operator=(const CKadTagBsob&) = delete;
 
-		virtual CKadTagBsob* Copy()
+		virtual CKadTagBsob* Copy() const
 		{
 			return new CKadTagBsob(m_name, m_value, m_size);
 		}
@@ -525,7 +525,7 @@ namespace Kademlia
 		CKadTagHash(const CKadTagHash&) = delete;
 		CKadTagHash& operator=(const CKadTagHash&) = delete;
 
-		virtual CKadTagHash* Copy()
+		virtual CKadTagHash* Copy() const
 		{
 			return new CKadTagHash(m_name, m_value);
 		}

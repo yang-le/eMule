@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -100,7 +100,7 @@ void CPPgDirectories::LoadSettings()
 	SetDlgItemText(IDC_TEMPFILES, tempfolders);
 
 	m_ShareSelector.SetSharedDirectories(thePrefs.shareddir_list);
-	FillUncList();
+	FillUNClist();
 }
 
 void CPPgDirectories::OnBnClickedSelincdir()
@@ -121,44 +121,38 @@ void CPPgDirectories::OnBnClickedSeltempdir()
 
 BOOL CPPgDirectories::OnApply()
 {
-	bool testtempdirchanged = false;
-	const CString &testincdirchanged = thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR);
-
 	CString strIncomingDir;
 	GetDlgItemText(IDC_INCFILES, strIncomingDir);
 	MakeFoldername(strIncomingDir);
 	if (strIncomingDir.IsEmpty()) {
-		strIncomingDir = thePrefs.GetDefaultDirectory(EMULE_INCOMINGDIR, true); // will create the directory here if it doesn't exists
+		strIncomingDir = thePrefs.GetDefaultDirectory(EMULE_INCOMINGDIR, true); // will create the directory here if it doesn't exist
 		SetDlgItemText(IDC_INCFILES, strIncomingDir);
 	} else if (thePrefs.IsInstallationDirectory(strIncomingDir)) {
-		LocMessageBox(IDS_WRN_INCFILE_RESERVED, MB_OK, 0);
+		ErrorBalloon(IDC_INCFILES, IDS_WRN_INCFILE_RESERVED);
 		return FALSE;
-	} else if (strIncomingDir.CompareNoCase(testincdirchanged) != 0 && strIncomingDir.CompareNoCase(thePrefs.GetDefaultDirectory(EMULE_INCOMINGDIR, false)) != 0) {
+	}
+
+	const CString &sOldIncoming(thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR));
+	if (strIncomingDir.CompareNoCase(sOldIncoming) != 0 && strIncomingDir.CompareNoCase(thePrefs.GetDefaultDirectory(EMULE_INCOMINGDIR, false)) != 0) {
 		// if the user chooses a non-default directory which already contains files,
 		// inform him that all those files will be shared
-		CFileFind ff;
-		CString strSearchPath(strIncomingDir + _T("\\*"));
-		bool bEnd = !ff.FindFile(strSearchPath, 0);
 		bool bExistingFile = false;
-		while (!bEnd) {
-			bEnd = !ff.FindNextFile();
-			if (ff.IsDirectory() || ff.IsDots() || ff.IsSystem() || ff.IsTemporary() || ff.GetLength() == 0 || ff.GetLength() > MAX_EMULE_FILE_SIZE)
+		CFileFind ff;
+		for (BOOL bFound = ff.FindFile(strIncomingDir + _T('*')); bFound && !bExistingFile;) {
+			bFound = ff.FindNextFile();
+			if (ff.IsDirectory() || ff.IsSystem() || ff.IsTemporary() || ff.GetLength() == 0 || ff.GetLength() > MAX_EMULE_FILE_SIZE)
 				continue;
 
 			// ignore real LNK files
 			if (ExtensionIs(ff.GetFileName(), _T(".lnk"))) {
 				SHFILEINFO info;
-				if (SHGetFileInfo(ff.GetFilePath(), 0, &info, sizeof(info), SHGFI_ATTRIBUTES) && (info.dwAttributes & SFGAO_LINK))
+				if (::SHGetFileInfo(ff.GetFilePath(), 0, &info, sizeof info, SHGFI_ATTRIBUTES) && (info.dwAttributes & SFGAO_LINK))
 					if (!thePrefs.GetResolveSharedShellLinks())
 						continue;
 			}
 
 			// ignore real THUMBS.DB files -- seems that lot of ppl have 'thumbs.db' files without the 'System' file attribute
-			if (ff.GetFileName().CompareNoCase(_T("thumbs.db")) == 0)
-				continue;
-
-			bExistingFile = true;
-			break;
+			bExistingFile = (ff.GetFileName().CompareNoCase(_T("thumbs.db")) != 0);
 		}
 		if (bExistingFile && LocMessageBox(IDS_WRN_INCFILE_EXISTS, MB_OKCANCEL | MB_ICONINFORMATION, 0) == IDCANCEL)
 			return FALSE;
@@ -168,27 +162,31 @@ BOOL CPPgDirectories::OnApply()
 	CString strTempDir;
 	GetDlgItemText(IDC_TEMPFILES, strTempDir);
 	if (strTempDir.IsEmpty()) {
-		strTempDir = thePrefs.GetDefaultDirectory(EMULE_TEMPDIR, true); // will create the directory here if it doesn't exists
+		strTempDir = thePrefs.GetDefaultDirectory(EMULE_TEMPDIR, true); // will create the directory if it doesn't exist
 		SetDlgItemText(IDC_TEMPFILES, strTempDir);
 	}
 
+	bool testtempdirchanged = false;
 	CStringArray temptempfolders;
 	for (int iPos = 0; iPos >= 0;) {
 		CString atmp(strTempDir.Tokenize(_T("|"), iPos));
 		if (atmp.Trim().IsEmpty())
 			continue;
-		if (CompareDirectory(strIncomingDir, atmp) == 0) {
-			LocMessageBox(IDS_WRN_INCTEMP_SAME, MB_OK, 0);
-			return FALSE;
-		}
-		if (thePrefs.IsInstallationDirectory(atmp)) {
-			LocMessageBox(IDS_WRN_TEMPFILES_RESERVED, MB_OK, 0);
+		UINT uid;
+		if (EqualPaths(strIncomingDir, atmp))
+			uid = IDS_WRN_INCTEMP_SAME;
+		else if (thePrefs.IsInstallationDirectory(atmp))
+			uid = IDS_WRN_TEMPFILES_RESERVED;
+		else
+			uid = 0;
+		if (uid) {
+			ErrorBalloon(IDC_TEMPFILES, uid);
 			return FALSE;
 		}
 
 		bool bDup = false;
 		for (INT_PTR i = temptempfolders.GetCount(); --i >= 0;)	// avoid duplicate tempdirs
-			if (temptempfolders[i].CompareNoCase(atmp) == 0) {
+			if (atmp.CompareNoCase(temptempfolders[i]) == 0) {
 				bDup = true;
 				break;
 			}
@@ -215,9 +213,9 @@ BOOL CPPgDirectories::OnApply()
 		for (INT_PTR i = 0; i < temptempfolders.GetCount(); ++i) {
 			CString toadd(temptempfolders[i]);
 			MakeFoldername(toadd);
-			if (!PathFileExists(toadd))
+			if (!::PathFileExists(toadd))
 				::CreateDirectory(toadd, NULL);
-			if (PathFileExists(toadd))
+			if (::PathFileExists(toadd))
 				thePrefs.tempdir.Add(toadd);
 		}
 	}
@@ -229,8 +227,7 @@ BOOL CPPgDirectories::OnApply()
 
 	thePrefs.shareddir_list.RemoveAll();
 	m_ShareSelector.GetSharedDirectories(thePrefs.shareddir_list);
-	for (int i = 0; i < m_ctlUncPaths.GetItemCount(); ++i)
-		thePrefs.shareddir_list.AddTail(m_ctlUncPaths.GetItemText(i, 0));
+	FillUNClist();
 
 	// check shared directories for reserved folder names
 	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos != NULL;) {
@@ -239,20 +236,19 @@ BOOL CPPgDirectories::OnApply()
 			thePrefs.shareddir_list.RemoveAt(posLast);
 	}
 
-	// on changing incoming dir, update incoming dirs of category of the same path
-	if (testincdirchanged.CompareNoCase(thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR)) != 0) {
+	// on changing incoming dir, update directories for categories with the same path
+	if (sOldIncoming.CompareNoCase(thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR)) != 0) {
 		thePrefs.GetCategory(0)->strIncomingPath = thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR);
-		bool dontaskagain = false;
-		for (int cat = 1; cat <= thePrefs.GetCatCount() - 1; ++cat) {
-			const CString &oldpath = thePrefs.GetCatPath(cat);
-			if (oldpath.Left(testincdirchanged.GetLength()).CompareNoCase(testincdirchanged) == 0) {
-
-				if (!dontaskagain) {
-					dontaskagain = true;
+		bool bAskedOnce = false;
+		for (INT_PTR cat = thePrefs.GetCatCount(); --cat > 0;) { //skip 0
+			const CString &oldpath(thePrefs.GetCatPath(cat));
+			if (oldpath.Left(sOldIncoming.GetLength()).CompareNoCase(sOldIncoming) == 0) {
+				if (!bAskedOnce) {
+					bAskedOnce = true;
 					if (LocMessageBox(IDS_UPDATECATINCOMINGDIRS, MB_YESNO, 0) == IDNO)
 						break;
 				}
-				thePrefs.GetCategory(cat)->strIncomingPath = thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR) + oldpath.Mid(testincdirchanged.GetLength());
+				thePrefs.GetCategory(cat)->strIncomingPath = thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR) + oldpath.Mid(sOldIncoming.GetLength());
 			}
 		}
 		thePrefs.SaveCats();
@@ -290,14 +286,14 @@ void CPPgDirectories::Localize()
 	}
 }
 
-void CPPgDirectories::FillUncList()
+void CPPgDirectories::FillUNClist()
 {
 	m_ctlUncPaths.DeleteAllItems();
 
 	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos != NULL;) {
-		const CString &folder = thePrefs.shareddir_list.GetNext(pos);
-		if (PathIsUNC(folder))
-			m_ctlUncPaths.InsertItem(0, folder);
+		const CString &sDir(thePrefs.shareddir_list.GetNext(pos));
+		if (::PathIsUNC(sDir))
+			m_ctlUncPaths.InsertItem(INT_MAX, sDir);
 	}
 }
 
@@ -307,26 +303,24 @@ void CPPgDirectories::OnBnClickedAddUNC()
 	inputbox.SetLabels(GetResString(IDS_UNCFOLDERS), GetResString(IDS_UNCFOLDERS), _T("\\\\Server\\Share"));
 	if (inputbox.DoModal() != IDOK)
 		return;
-	CString unc = inputbox.GetInput();
+	CString unc(inputbox.GetInput());
 
 	// basic UNC check
-	if (!PathIsUNC(unc)) {
+	if (!::PathIsUNC(unc)) {
 		LocMessageBox(IDS_ERR_BADUNC, MB_ICONERROR, 0);
 		return;
 	}
-
-	if (unc.Right(1) == _T("\\"))
-		unc.Truncate(unc.GetLength() - 1);
+	slosh(unc);
 
 	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos != NULL;)
-		if (unc.CompareNoCase(thePrefs.shareddir_list.GetNext(pos)) == 0)
+		if (EqualPaths(thePrefs.shareddir_list.GetNext(pos), unc))
 			return;
 
 	for (int i = m_ctlUncPaths.GetItemCount(); --i >= 0;)
-		if (unc.CompareNoCase(m_ctlUncPaths.GetItemText(i, 0)) == 0)
+		if (EqualPaths(m_ctlUncPaths.GetItemText(i, 0), unc))
 			return;
 
-	m_ctlUncPaths.InsertItem(m_ctlUncPaths.GetItemCount(), unc);
+	m_ctlUncPaths.InsertItem(INT_MAX, unc);
 	SetModified();
 }
 
@@ -371,4 +365,9 @@ void CPPgDirectories::OnDestroy()
 		VERIFY(::DestroyIcon(m_icoBrowse));
 		m_icoBrowse = NULL;
 	}
+}
+
+void CPPgDirectories::ErrorBalloon(int iEdit, UINT uid)
+{
+	static_cast<CEdit*>(GetDlgItem(iEdit))->ShowBalloonTip(GetResString(IDS_ERROR), GetResString(uid), TTI_ERROR);
 }

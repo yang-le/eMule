@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2010 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2010-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -60,14 +60,14 @@ void CLookupHistory::SetGUIDeleted()
 void CLookupHistory::ContactReceived(CContact *pRecContact, CContact *pFromContact, const CUInt128 &uDistance, bool bCloser, bool bForceInteresting)
 {
 	// Do we know this contact already? If pRecContact is NULL we only set the responded flag to the pFromContact
-	for (int i = (int)m_aHistoryEntries.GetCount(); --i >= 0;)
+	for (INT_PTR i = m_aHistoryEntries.GetCount(); --i >= 0;)
 		if (uDistance == m_aHistoryEntries[i]->m_uDistance || pRecContact == NULL) {
 			if (pFromContact != NULL) {
 				int iIdx = GetInterestingContactIdxByID(pFromContact->GetClientID());
 				if (iIdx >= 0) {
 					if (pRecContact != NULL)
 						m_aHistoryEntries[i]->m_liReceivedFromIdx.Add(iIdx);
-					m_aIntrestingHistoryEntries[iIdx]->m_uRespondedContact++;
+					++m_aIntrestingHistoryEntries[iIdx]->m_uRespondedContact;
 					if (bCloser)
 						m_aIntrestingHistoryEntries[iIdx]->m_bProvidedCloser = true;
 				}
@@ -85,7 +85,7 @@ void CLookupHistory::ContactReceived(CContact *pRecContact, CContact *pFromConta
 		int iIdx = GetInterestingContactIdxByID(pFromContact->GetClientID());
 		if (iIdx >= 0) {
 			pstructNewEntry->m_liReceivedFromIdx.Add(iIdx);
-			m_aIntrestingHistoryEntries[iIdx]->m_uRespondedContact++;
+			++m_aIntrestingHistoryEntries[iIdx]->m_uRespondedContact;
 			if (bCloser)
 				m_aIntrestingHistoryEntries[iIdx]->m_bProvidedCloser = true;
 		}
@@ -104,7 +104,7 @@ void CLookupHistory::ContactReceived(CContact *pRecContact, CContact *pFromConta
 void CLookupHistory::ContactAskedKad(const CContact *pContact)
 {
 	// Find contact
-	for (int i = (int)m_aHistoryEntries.GetCount(); --i >= 0;)
+	for (INT_PTR i = m_aHistoryEntries.GetCount(); --i >= 0;)
 		if (pContact->GetClientID() == m_aHistoryEntries[i]->m_uContactID) {
 			if (!m_aHistoryEntries[i]->IsInteresting())
 				m_aIntrestingHistoryEntries.Add(m_aHistoryEntries[i]);
@@ -117,9 +117,9 @@ void CLookupHistory::ContactAskedKad(const CContact *pContact)
 
 int CLookupHistory::GetInterestingContactIdxByID(const CUInt128 &uContact) const
 {
-	for (int i = (int)m_aIntrestingHistoryEntries.GetCount(); --i >= 0;)
+	for (INT_PTR i = m_aIntrestingHistoryEntries.GetCount(); --i >= 0;)
 		if (uContact == m_aIntrestingHistoryEntries[i]->m_uContactID)
-			return i;
+			return (int)i;
 
 	ASSERT(0);
 	return -1;
@@ -128,7 +128,7 @@ int CLookupHistory::GetInterestingContactIdxByID(const CUInt128 &uContact) const
 void CLookupHistory::ContactAskedKeyword(const CContact *pContact)
 {
 	// Find contact
-	for (int i = (int)m_aHistoryEntries.GetCount(); --i >= 0;)
+	for (INT_PTR i = m_aHistoryEntries.GetCount(); --i >= 0;)
 		if (pContact->GetClientID() == m_aHistoryEntries[i]->m_uContactID) {
 			if (!m_aHistoryEntries[i]->IsInteresting())
 				m_aIntrestingHistoryEntries.Add(m_aHistoryEntries[i]);
@@ -142,7 +142,7 @@ void CLookupHistory::ContactAskedKeyword(const CContact *pContact)
 
 void CLookupHistory::ContactRespondedKeyword(uint32 uContactIP, uint16 uContactUDPPort, uint32 uResultCount)
 {
-	for (int i = (int)m_aIntrestingHistoryEntries.GetCount(); --i >= 0;)
+	for (INT_PTR i = m_aIntrestingHistoryEntries.GetCount(); --i >= 0;)
 		if ((m_aIntrestingHistoryEntries[i]->m_uIP == uContactIP) && (m_aIntrestingHistoryEntries[i]->m_uPort == uContactUDPPort)) {
 			ASSERT(m_aIntrestingHistoryEntries[i]->m_dwAskedSearchItemTime > 0 || m_uType == CSearch::NODE || m_uType == CSearch::NODEFWCHECKUDP);
 			m_aIntrestingHistoryEntries[i]->m_uRespondedSearchItem += uResultCount;

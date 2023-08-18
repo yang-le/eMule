@@ -471,7 +471,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Глобално"
     IDS_METHOD              "Метод"
     IDS_UNDO                "Отмени"
-    IDS_DAYLY               "Ежедневно"
+    IDS_DAILY               "Ежедневно"
 END
 
 STRINGTABLE
@@ -1492,7 +1492,7 @@ BEGIN
     IDS_EM_HELP             "Помощ"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Приятелят не е добавен.\r\n\r\nВече съществува приятел със същият IP адрес и порт."
-    IDS_DYNUP               "'Умно' качване"
+    IDS_DYNUP               "'Умно' качване (не се препоръчва)"
     IDS_KADOVERHEAD         "Превишение за Kad (пакета): %s (%s)"
     IDS_FIND                "Търси..."
     IDS_LOG_BANNED_CLIENTS  "Отчет за забранените клиенти"

@@ -25,7 +25,6 @@ class CPPgNotify : public CPropertyPage
 
 public:
 	CPPgNotify();
-	virtual	~CPPgNotify() = default;
 
 	void Localize();
 

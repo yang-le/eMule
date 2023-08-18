@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -38,15 +38,6 @@ enum EUTF8str : uint8;
 
 struct Pending_Block_Struct
 {
-	Pending_Block_Struct()
-		: block()
-		, zStream()
-		, totalUnzipped()
-		, fZStreamError()
-		, fRecovered()
-		, fQueued()
-	{
-	}
 	Requested_Block_Struct	*block;
 	struct z_stream_s		*zStream;		// Barry - Used to unzip packets
 	UINT					totalUnzipped;	// Barry - This holds the total unzipped bytes for all packets so far
@@ -58,8 +49,8 @@ struct Pending_Block_Struct
 #pragma pack(push, 1)
 struct Requested_File_Struct
 {
-	uchar	  fileid[16];
-	uint32	  lastasked;
+	uchar	  fileid[MDX_DIGEST_SIZE];
+	DWORD	  lastasked;
 	uint8	  badrequests;
 };
 #pragma pack(pop)
@@ -71,7 +62,7 @@ struct PartFileStamp
 };
 
 #define	MAKE_CLIENT_VERSION(mjr, min, upd) \
-	((UINT)(mjr)*100U*10U*100U + (UINT)(min)*100U*10U + (UINT)(upd)*100U)
+	((((UINT)(mjr)*100U + (UINT)(min))*10U + (UINT)(upd))*100U)
 
 class CUpDownClient : public CObject
 {
@@ -107,13 +98,13 @@ public:
 	//Only use this when you know the real IP or when your clearing it.
 	void			SetIP(uint32 val)								{ m_dwUserIP = val; m_nConnectIP = val; }
 
-	inline bool		HasLowID() const								{ return (m_nUserIDHybrid < 16777216u); } //0x01000000u
+	inline bool		HasLowID() const								{ return ::IsLowID(m_nUserIDHybrid); }
 	uint32			GetConnectIP() const							{ return m_nConnectIP; }
 	void			SetConnectIP(uint32 val)						{ m_nConnectIP = val; }
 	uint16			GetUserPort() const								{ return m_nUserPort; }
 	void			SetUserPort(uint16 val)							{ m_nUserPort = val; }
-	UINT			GetTransferredUp() const						{ return m_nTransferredUp; }
-	UINT			GetTransferredDown() const						{ return m_nTransferredDown; }
+	uint64			GetTransferredUp() const						{ return m_nTransferredUp; }
+	uint64			GetTransferredDown() const						{ return m_nTransferredDown; }
 	uint32			GetServerIP() const								{ return m_dwServerIP; }
 	void			SetServerIP(uint32 nIP)							{ m_dwServerIP = nIP; }
 	uint16			GetServerPort() const							{ return m_nServerPort; }
@@ -141,7 +132,7 @@ public:
 	bool			SupportPeerCache() const						{ return m_fPeerCache; }
 	bool			SupportsLargeFiles() const						{ return m_fSupportsLargeFiles; }
 	bool			SupportsFileIdentifiers() const					{ return m_fSupportsFileIdent; }
-	bool			IsEmuleClient() const							{ return m_byEmuleVersion!=0; }
+	bool			IsEmuleClient() const							{ return m_byEmuleVersion != 0; }
 	uint8			GetSourceExchange1Version() const				{ return m_bySourceExchange1Ver; }
 	bool			SupportsSourceExchange2() const					{ return m_fSupportsSourceEx2; }
 	CClientCredits*	Credits() const									{ return credits; }
@@ -172,11 +163,11 @@ public:
 	void			CheckQueueRankFlood();
 	bool			Compare(const CUpDownClient *tocomp, bool bIgnoreUserhash = false) const;
 	void			ResetFileStatusInfo();
-	uint32			GetLastSrcReqTime() const						{ return m_dwLastSourceRequest; }
+	DWORD			GetLastSrcReqTime() const						{ return m_dwLastSourceRequest; }
 	void			SetLastSrcReqTime()								{ m_dwLastSourceRequest = ::GetTickCount(); }
-	uint32			GetLastSrcAnswerTime() const					{ return m_dwLastSourceAnswer; }
+	DWORD			GetLastSrcAnswerTime() const					{ return m_dwLastSourceAnswer; }
 	void			SetLastSrcAnswerTime()							{ m_dwLastSourceAnswer = ::GetTickCount(); }
-	uint32			GetLastAskedForSources() const					{ return m_dwLastAskedForSources; }
+	DWORD			GetLastAskedForSources() const					{ return m_dwLastAskedForSources; }
 	void			SetLastAskedForSources()						{ m_dwLastAskedForSources = ::GetTickCount(); }
 	bool			GetFriendSlot() const;
 	void			SetFriendSlot(bool bNV)							{ m_bFriendSlot = bNV; }
@@ -191,7 +182,7 @@ public:
 	bool			SendBuddyPingPong()								{ return ::GetTickCount() >= m_dwLastBuddyPingPongTime; }
 	bool			AllowIncomeingBuddyPingPong()					{ return ::GetTickCount() >= m_dwLastBuddyPingPongTime + MIN2MS(3); }
 	void			SetLastBuddyPingPongTime()						{ m_dwLastBuddyPingPongTime = ::GetTickCount() + MIN2MS(10); }
-	void			ProcessFirewallCheckUDPRequest(CSafeMemFile *data);
+	void			ProcessFirewallCheckUDPRequest(CSafeMemFile &data);
 	void			SendSharedDirectories();
 
 	// secure ident
@@ -206,7 +197,7 @@ public:
 	void			InfoPacketsReceived();
 	bool			HasPassedSecureIdent(bool bPassIfUnavailable) const;
 	// preview
-	void			SendPreviewRequest(const CAbstractFile *pForFile);
+	void			SendPreviewRequest(const CAbstractFile &rForFile);
 	void			SendPreviewAnswer(const CKnownFile *pForFile, CxImage **imgFrames, uint8 nCount);
 	void			ProcessPreviewReq(const uchar *pachPacket, uint32 nSize);
 	void			ProcessPreviewAnswer(const uchar *pachPacket, uint32 nSize);
@@ -233,12 +224,12 @@ public:
 	// Upload
 	EUploadState	GetUploadState() const							{ return m_eUploadState; }
 	void			SetUploadState(EUploadState eNewState);
-	uint32			GetWaitStartTime() const;
+	DWORD			GetWaitStartTime() const;
 	void			SetWaitStartTime();
 	void			ClearWaitStartTime();
-	uint32			GetWaitTime() const								{ return m_dwUploadTime - GetWaitStartTime(); }
+	DWORD			GetWaitTime() const								{ return m_dwUploadTime - GetWaitStartTime(); }
 	bool			IsDownloading() const							{ return (m_eUploadState == US_UPLOADING); }
-	UINT			GetDatarate() const								{ return m_nUpDatarate; }
+	UINT			GetUploadDatarate() const								{ return m_nUpDatarate; }
 	UINT			GetScore(bool sysvalue, bool isdownloading = false, bool onlybasevalue = false) const;
 	void			AddReqBlock(Requested_Block_Struct *reqblock, bool bSignalIOThread);
 	DWORD			GetUpStartTime() const							{ return m_dwUploadTime; }
@@ -247,42 +238,40 @@ public:
 	void			SendHashsetPacket(const uchar *pData, uint32 nSize, bool bFileIdentifiers);
 	const uchar*	GetUploadFileID() const							{ return requpfileid; }
 	void			SetUploadFileID(CKnownFile *newreqfile);
-	uint32			UpdateUploadingStatisticsData();
+	void			UpdateUploadingStatisticsData();
 	void			SendRankingInfo();
 	void			SendCommentInfo(/*const */CKnownFile *file);
 	void			AddRequestCount(const uchar *fileid);
 	void			UnBan();
 	void			Ban(LPCTSTR pszReason = NULL);
 	UINT			GetAskedCount() const							{ return m_cAsked; }
-	void			AddAskedCount()									{ ++m_cAsked; }
+	void			IncrementAskedCount()							{ ++m_cAsked; }
 	void			SetAskedCount(UINT m_cInAsked)					{ m_cAsked = m_cInAsked; }
 	void			FlushSendBlocks(); // call this when you stop upload, or the socket might be not able to send
-	uint32			GetLastUpRequest() const						{ return m_dwLastUpRequest; }
+	DWORD			GetLastUpRequest() const						{ return m_dwLastUpRequest; }
 	void			SetLastUpRequest()								{ m_dwLastUpRequest = ::GetTickCount(); }
 	void			SetCollectionUploadSlot(bool bValue);
 	bool			HasCollectionUploadSlot() const					{ return m_bCollectionUploadSlot; }
 
-	UINT			GetSessionUp() const							{ return m_nTransferredUp - m_nCurSessionUp; }
+	uint64			GetSessionUp() const							{ return m_nTransferredUp - m_nCurSessionUp; }
 	void			ResetSessionUp() {
 						m_nCurSessionUp = m_nTransferredUp;
 						m_addedPayloadQueueSession = 0;
 						m_nCurQueueSessionPayloadUp = 0;
 					}
 
-	UINT			GetSessionDown() const							{ return m_nTransferredDown - m_nCurSessionDown; }
-	UINT			GetSessionPayloadDown() const					{ return m_nCurSessionPayloadDown; }
+	uint64			GetSessionDown() const							{ return m_nTransferredDown - m_nCurSessionDown; }
+	uint64			GetSessionPayloadDown() const					{ return m_nCurSessionPayloadDown; }
 	void			ResetSessionDown()								{ m_nCurSessionDown = m_nTransferredDown; m_nCurSessionPayloadDown = 0; }
-	UINT			GetQueueSessionPayloadUp() const				{ return m_nCurQueueSessionPayloadUp; } // Data uploaded/transmitted
-	UINT			GetQueueSessionUploadAdded() const				{ return m_addedPayloadQueueSession; } // Data put into upload buffers
-	UINT			GetPayloadInBuffer() const						{ return m_addedPayloadQueueSession - m_nCurQueueSessionPayloadUp; }
-	void			SetQueueSessionUploadAdded(UINT uVal)			{ m_addedPayloadQueueSession = uVal; }
+	uint64			GetQueueSessionPayloadUp() const				{ return m_nCurQueueSessionPayloadUp; } // Data uploaded/transmitted
+	uint64			GetQueueSessionUploadAdded() const				{ return m_addedPayloadQueueSession; } // Data put into upload buffers
+	uint64			GetPayloadInBuffer() const						{ return m_addedPayloadQueueSession - m_nCurQueueSessionPayloadUp; }
+	void			SetQueueSessionUploadAdded(uint64 uVal)			{ m_addedPayloadQueueSession = uVal; }
 
 	bool			ProcessExtendedInfo(CSafeMemFile *data, CKnownFile *tempreqfile);
 	uint16			GetUpPartCount() const							{ return m_nUpPartCount; }
 	void			DrawUpStatusBar(CDC *dc, const CRect &rect, bool onlygreyrect, bool  bFlat) const;
-	bool			IsUpPartAvailable(UINT iPart) const {
-						return (iPart >= m_nUpPartCount || !m_abyUpPartStatus) ? false : m_abyUpPartStatus[iPart] != 0;
-					}
+	bool			IsUpPartAvailable(UINT uPart) const				{ return (m_abyUpPartStatus && uPart < m_nUpPartCount && m_abyUpPartStatus[uPart]);	}
 	uint8*			GetUpPartStatus() const							{ return m_abyUpPartStatus; }
 	float			GetCombinedFilePrioAndCredit();
 	uint8			GetDataCompressionVersion() const				{ return m_byDataCompVer; }
@@ -290,13 +279,13 @@ public:
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Download
 	UINT			GetAskedCountDown() const						{ return m_cDownAsked; }
-	void			AddAskedCountDown()								{ ++m_cDownAsked; }
+	void			IncrementAskedCountDown()						{ ++m_cDownAsked; }
 	void			SetAskedCountDown(UINT cInDownAsked)			{ m_cDownAsked = cInDownAsked; }
 	EDownloadState	GetDownloadState() const						{ return m_eDownloadState; }
 	void			SetDownloadState(EDownloadState nNewState, LPCTSTR pszReason = _T("Unspecified"));
-	DWORD			GetLastAskedTime(const CPartFile *partFile = NULL) const;
-	void			SetLastAskedTime()								{ m_fileReaskTimes.SetAt(m_reqfile, ::GetTickCount()); }
-	bool			IsPartAvailable(UINT iPart) const				{ return m_abyPartStatus && iPart < m_nPartCount && m_abyPartStatus[iPart] != 0; }
+	DWORD			GetLastAskedTime(const CPartFile *pFile = NULL) const;
+	void			SetLastAskedTime()								{ m_fileReaskTimes[m_reqfile] = ::GetTickCount(); }
+	bool			IsPartAvailable(UINT uPart) const				{ return m_abyPartStatus && uPart < m_nPartCount && m_abyPartStatus[uPart]; }
 	uint8*			GetPartStatus() const							{ return m_abyPartStatus; }
 	uint16			GetPartCount() const							{ return m_nPartCount; }
 	UINT			GetDownloadDatarate() const						{ return m_nDownDatarate; }
@@ -313,11 +302,12 @@ public:
 	void			ProcessHashSet(const uchar *packet, uint32 size, bool bFileIdentifiers);
 	void			ProcessAcceptUpload();
 	bool			AddRequestForAnotherFile(CPartFile *file);
-	void			CreateBlockRequests(int iMinBlocks, int iMaxBlocks);
+	void			CreateBlockRequests(int blockCount);
 	virtual void	SendBlockRequests();
 	virtual bool	SendHttpBlockRequests();
 	virtual void	ProcessBlockPacket(const uchar *packet, uint32 size, bool packed, bool bI64Offsets);
 	virtual void	ProcessHttpBlockPacket(const BYTE *pucData, UINT uSize);
+	void			ClearPendingBlockRequest(const Pending_Block_Struct *pending);
 	void			ClearDownloadBlockRequests();
 	void			SendOutOfPartReqsAndAddToWaitingQueue();
 	UINT			CalculateDownloadRate();
@@ -325,9 +315,9 @@ public:
 	bool			SwapToAnotherFile(LPCTSTR reason, bool bIgnoreNoNeeded, bool ignoreSuspensions, bool bRemoveCompletely, CPartFile *toFile = NULL, bool allowSame = true, bool isAboutToAsk = false, bool debug = false); // ZZ:DownloadManager
 	void			DontSwapTo(/*const*/ CPartFile *file);
 	bool			IsSwapSuspended(const CPartFile *file, const bool allowShortReaskTime = false, const bool fileIsNNP = false) /*const*/; // ZZ:DownloadManager
-	uint32			GetTimeUntilReask() const;
-	uint32			GetTimeUntilReask(const CPartFile *file) const;
-	uint32			GetTimeUntilReask(const CPartFile *file, const bool allowShortReaskTime, const bool useGivenNNP = false, const bool givenNNP = false) const;
+	DWORD			GetTimeUntilReask() const;
+	DWORD			GetTimeUntilReask(const CPartFile *file) const;
+	DWORD			GetTimeUntilReask(const CPartFile *file, const bool allowShortReaskTime, const bool useGivenNNP = false, const bool givenNNP = false) const;
 	void			UDPReaskACK(uint16 nNewQR);
 	void			UDPReaskFNF();
 	void			UDPReaskForDownload();
@@ -361,9 +351,9 @@ public:
 	void			SetChatState(const EChatState nNewS)			{ m_eChatstate = nNewS; }
 	EChatCaptchaState GetChatCaptchaState() const					{ return m_eChatCaptchaState; }
 	void			SetChatCaptchaState(const EChatCaptchaState nNewS)	{ m_eChatCaptchaState = nNewS; }
-	void			ProcessChatMessage(CSafeMemFile *data, uint32 nLength);
+	void			ProcessChatMessage(CSafeMemFile &data, uint32 nLength);
 	void			SendChatMessage(const CString &strMessage);
-	void			ProcessCaptchaRequest(CSafeMemFile *data);
+	void			ProcessCaptchaRequest(CSafeMemFile &data);
 	void			ProcessCaptchaReqRes(uint8 nStatus);
 	// message filtering
 	uint8			GetMessagesReceived() const						{ return m_cMessagesReceived; }
@@ -426,10 +416,10 @@ public:
 	const CString&	DbgGetMuleInfo() const							{ return m_strMuleInfo; }
 
 // ZZ:DownloadManager -->
-	const bool		IsInNoNeededList(const CPartFile *fileToCheck) const;
-	const bool		SwapToRightFile(CPartFile *SwapTo, CPartFile *cur_file, bool ignoreSuspensions, bool SwapToIsNNPFile, bool curFileisNNPFile, bool &wasSkippedDueToSourceExchange, bool doAgressiveSwapping = false, bool debug = false);
-	const DWORD		getLastTriedToConnectTime() const				{ return m_dwLastTriedToConnect; }
-	void			setLastTriedToConnectTime()						{ m_dwLastTriedToConnect = ::GetTickCount(); }
+	bool			IsInNoNeededList(const CPartFile *fileToCheck) const;
+	bool			SwapToRightFile(CPartFile *SwapTo, CPartFile *cur_file, bool ignoreSuspensions, bool SwapToIsNNPFile, bool curFileisNNPFile, bool &wasSkippedDueToSourceExchange, bool doAgressiveSwapping = false, bool debug = false);
+	DWORD			GetLastTriedToConnectTime() const				{ return m_dwLastTriedToConnect; }
+	void			SetLastTriedToConnectTime()						{ m_dwLastTriedToConnect = ::GetTickCount(); }
 // <-- ZZ:DownloadManager
 
 #ifdef _DEBUG
@@ -491,8 +481,8 @@ protected:
 	EPeerCacheUpState m_ePeerCacheUpState;
 
 	// base
-	bool	ProcessHelloTypePacket(CSafeMemFile *data);
-	void	SendHelloTypePacket(CSafeMemFile *data);
+	bool	ProcessHelloTypePacket(CSafeMemFile &data);
+	void	SendHelloTypePacket(CSafeMemFile &data);
 	void	SendFirewallCheckUDPRequest();
 	void	SendHashSetRequest();
 
@@ -536,9 +526,9 @@ protected:
 	uint32	m_dwLastSignatureIP;
 	CString m_strClientSoftware;
 	CString m_strModVersion;
-	uint32	m_dwLastSourceRequest;
-	uint32	m_dwLastSourceAnswer;
-	uint32	m_dwLastAskedForSources;
+	DWORD	m_dwLastSourceRequest;
+	DWORD	m_dwLastSourceAnswer;
+	DWORD	m_dwLastAskedForSources;
 	uint32	m_uSearchID;
 	int		m_iFileListRequested;
 	CString	m_strFileComment;
@@ -556,7 +546,7 @@ protected:
 	uint8	m_cCaptchasSent;
 
 	uint32	m_nBuddyIP;
-	uint32	m_dwLastBuddyPingPongTime;
+	DWORD	m_dwLastBuddyPingPongTime;
 	uchar	m_achBuddyID[MDX_DIGEST_SIZE];
 	CString m_strHelloInfo;
 	CString m_strMuleInfo;
@@ -582,23 +572,23 @@ protected:
 	//
 	int GetFilePrioAsNumber() const;
 
-	UINT		m_nTransferredUp;
+	uint64		m_nTransferredUp;
+	uint64		m_nCurSessionUp;
+	uint64		m_nCurSessionDown;
+	uint64		m_nCurQueueSessionPayloadUp;
+	uint64		m_addedPayloadQueueSession;
 	DWORD		m_dwUploadTime;
+	DWORD		m_dwLastUpRequest;
 	UINT		m_cAsked;
-	uint32		m_dwLastUpRequest;
-	UINT		m_nCurSessionUp;
-	UINT		m_nCurSessionDown;
-	UINT		m_nCurQueueSessionPayloadUp;
-	UINT		m_addedPayloadQueueSession;
+	UINT		m_slotNumber;
+	uchar		requpfileid[MDX_DIGEST_SIZE];
 	uint16		m_nUpPartCount;
 	uint16		m_nUpCompleteSourcesCount;
-	uchar		requpfileid[16];
-	UINT		m_slotNumber;
 	bool		m_bCollectionUploadSlot;
 
 	typedef struct
 	{
-		UINT	datalen;
+		uint32	datalen;
 		DWORD	timestamp;
 	} TransferredData;
 	CTypedPtrList<CPtrList, Requested_File_Struct*>	 m_RequestedFiles_list;
@@ -610,12 +600,12 @@ protected:
 	CAICHHash	*m_pReqFileAICHHash;
 	uint8		*m_abyPartStatus;
 	CString		m_strClientFilename;
-	UINT		m_cDownAsked;
-	UINT		m_nTransferredDown;
-	UINT		m_nCurSessionPayloadDown;
-	DWORD		m_dwDownStartTime;
+	uint64		m_nTransferredDown;
+	uint64		m_nCurSessionPayloadDown;
 	uint64		m_nLastBlockOffset;
-	uint32		m_dwLastBlockReceived;
+	DWORD		m_dwDownStartTime;
+	DWORD		m_dwLastBlockReceived;
+	UINT		m_cDownAsked;
 	UINT		m_nTotalUDPPackets;
 	UINT		m_nFailedUDPPackets;
 	UINT		m_nRemoteQueueRank;
@@ -639,17 +629,17 @@ protected:
 	//////////////////////////////////////////////////////////
 	// Upload data rate computation
 	//
-	UINT		m_nUpDatarate;
-	UINT		m_nSumForAvgUpDataRate;
 	CList<TransferredData> m_AverageUDR_list;
+	UINT		m_nUpDatarate;
+	uint64		m_nSumForAvgUpDataRate;
 
 	//////////////////////////////////////////////////////////
 	// Download data rate computation
 	//
+	CList<TransferredData> m_AverageDDR_list;
 	UINT		m_nDownDatarate;
 	UINT		m_nDownDataRateMS;
-	UINT		m_nSumForAvgDownDataRate;
-	CList<TransferredData> m_AverageDDR_list;
+	uint64		m_nSumForAvgDownDataRate;
 
 	//////////////////////////////////////////////////////////
 	// GUI helpers
@@ -657,10 +647,11 @@ protected:
 	static CBarShader s_StatusBar;
 	static CBarShader s_UpStatusBar;
 	CTypedPtrList<CPtrList, Pending_Block_Struct*> m_PendingBlocks_list;
-	CMap<CPartFile*, CPartFile*, DWORD, DWORD> m_fileReaskTimes; // ZZ:DownloadManager (one re-ask timestamp for each file)
+	typedef CMap<const CPartFile*, const CPartFile*, DWORD, DWORD> CFileReaskTimesMap;
+	CFileReaskTimesMap m_fileReaskTimes; // ZZ:DownloadManager (one re-ask timestamp for each file)
 	DWORD		m_lastRefreshedDLDisplay;
 	DWORD		m_lastRefreshedULDisplay;
-	uint32		m_random_update_wait;
+	DWORD		m_random_update_wait;
 
 	// using bit fields for less important flags, to save some bytes
 	UINT m_fHashsetRequestingMD4 : 1, // we have sent a hashset request to this client in the current connection

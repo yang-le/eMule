@@ -426,7 +426,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Global (Server)"
     IDS_METHOD              "Metode"
     IDS_UNDO                "Fortryd ændring"
-    IDS_DAYLY               "dagligt"
+    IDS_DAILY               "dagligt"
 END
 
 STRINGTABLE
@@ -1442,7 +1442,7 @@ BEGIN
     IDS_EM_HELP             "&Hjælp"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Ven ikke tilføjet.\r\n\r\nDer er allerede en ven med samme IP og port tilrådig."
-    IDS_DYNUP               "Upload SpeedSense"
+    IDS_DYNUP               "Upload SpeedSense (ikke anbefalet)"
     IDS_KADOVERHEAD         "Kad Overhead (Pakker): %s (%s)"
     IDS_FIND                "Find..."
     IDS_LOG_BANNED_CLIENTS  "Log bandlyste klienter"

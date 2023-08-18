@@ -7,7 +7,6 @@ class CRichEditStream : public CRichEditCtrl
 {
 public:
 	CRichEditStream();
-	virtual	~CRichEditStream() = default;
 
 	CRichEditStream& operator<<(LPCTSTR const psz);
 	CRichEditStream& operator<<(const char *const psz);

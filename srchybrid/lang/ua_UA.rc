@@ -471,7 +471,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Глобальний"
     IDS_METHOD              "Метод"
     IDS_UNDO                "Повернути"
-    IDS_DAYLY               "Щоденно"
+    IDS_DAILY               "Щоденно"
 END
 
 STRINGTABLE
@@ -1507,7 +1507,7 @@ BEGIN
     IDS_EM_HELP             "&Довідка"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Не додано до списку друзів.\r\n\r\nВ списках друзів даний IP вже присутній"
-    IDS_DYNUP               "'Розумне' відвантаження"
+    IDS_DYNUP               "'Розумне' відвантаження (не рекомендується)"
     IDS_KADOVERHEAD         "Kad перевищення (Пакети): %s (%s)"
     IDS_FIND                "Знайти..."
     IDS_LOG_BANNED_CLIENTS  "Лоґ заблокованих клієнтів"

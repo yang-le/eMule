@@ -20,7 +20,6 @@ class CCommentDialog : public CResizablePage
 	int m_iRating;
 public:
 	CCommentDialog();	// standard constructor
-	virtual	~CCommentDialog() = default;
 	virtual BOOL OnInitDialog();
 
 	void SetFiles(const CSimpleArray<CObject*> *paFiles)	{ m_paFiles = paFiles; m_bDataChanged = true; }

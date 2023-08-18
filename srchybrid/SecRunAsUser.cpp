@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2004-2005 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//Copyright (C)2004-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -54,7 +54,7 @@ eResult CSecRunAsUser::PrepareUser()
 		try {
 			IADsWinNTSystemInfoPtr pNTsys;
 			if (CoCreateInstance(CLSID_WinNTSystemInfo, NULL, CLSCTX_INPROC_SERVER, IID_IADsWinNTSystemInfo, (void**)&pNTsys) != S_OK)
-				throw CString(_T("Failed to create IADsWinNTSystemInfo"));
+				throwCStr(_T("Failed to create IADsWinNTSystemInfo"));
 			// check if we are already running on our eMule Account
 			// todo: check if the current account is an administrator
 
@@ -64,11 +64,11 @@ eResult CSecRunAsUser::PrepareUser()
 
 			if (m_strCurrentUser == EMULEACCOUNTW) {
 				m_bRunningAsEmule = true;
-				throw CString(_T("Already running as eMule_Secure Account (everything is fine)"));
+				throwCStr(_T("Already running as eMule_Secure Account (everything is fine)"));
 			}
 			CComBSTR bstrCompName;
 			pNTsys->get_ComputerName(&bstrCompName);
-			CStringW cscompName = bstrCompName;
+			const CStringW cscompName(bstrCompName);
 
 			CComBSTR bstrDomainName;
 			pNTsys->get_DomainName(&bstrDomainName);
@@ -76,7 +76,7 @@ eResult CSecRunAsUser::PrepareUser()
 
 			ADSPath.Format(L"WinNT://%s,computer", (LPCTSTR)cscompName);
 			if (!SUCCEEDED(ADsGetObject(ADSPath.AllocSysString(), IID_IADsContainer, (void **)&pUsers)))
-				throw CString(_T("Failed ADsGetObject()"));
+				throwCStr(_T("Failed ADsGetObject()"));
 
 			IEnumVARIANTPtr pEnum;
 			ADsBuildEnumerator(pUsers, &pEnum);
@@ -89,14 +89,14 @@ eResult CSecRunAsUser::PrepareUser()
 				//If the object in the container is user then get properties
 				CComBSTR bstrName;
 				pChild->get_Name(&bstrName);
-				CStringW csName(bstrName);
+				const CStringW csName(bstrName);
 
 				// find the emule user account if possible
 				if (csName == EMULEACCOUNTW) {
 					// account found, set new random password and save it
 					m_strPassword = CreateRandomPW();
 					if (!SUCCEEDED(pChild->SetPassword(m_strPassword.AllocSysString())))
-						throw CString(_T("Failed to set password"));
+						throwCStr(_T("Failed to set password"));
 
 					bResult = true;
 					break;
@@ -138,7 +138,7 @@ bool CSecRunAsUser::CreateEmuleUser(IADsContainerPtr pUsers)
 	pUser->put_AccountDisabled(bAccountDisabled);
 	pUser->put_IsAccountLocked(bIsLocked);
 	pUser->put_PasswordRequired(bPwRequired);
-	pUser->put_Description(CString(_T("Account used to run eMule with additional security")).AllocSysString());
+	pUser->put_Description(CStringW(_T("Account used to run eMule with additional security")).AllocSysString());
 	pUser->SetInfo();
 	m_strPassword = CreateRandomPW();
 	return SUCCEEDED(pUser->SetPassword(m_strPassword.AllocSysString()));
@@ -171,11 +171,10 @@ bool CSecRunAsUser::SetDirectoryPermissions()
 	bool bSucceeded = SetObjectPermission(thePrefs.GetMuleDirectory(EMULE_CONFIGBASEDIR), FULLACCESS);
 	bSucceeded = bSucceeded && SetObjectPermission(thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR), FULLACCESS);
 	bSucceeded = bSucceeded && SetObjectPermission(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR), FULLACCESS);
-	for (int i = 0; i < thePrefs.GetTempDirCount(); ++i)
+	for (INT_PTR i = thePrefs.GetTempDirCount(); --i >= 0;)
 		bSucceeded = bSucceeded && SetObjectPermission(thePrefs.GetTempDir(i), FULLACCESS);
 
-	INT_PTR cCats = thePrefs.GetCatCount();
-	for (int i = 0; i < cCats; ++i)
+	for (INT_PTR i = thePrefs.GetCatCount(); --i >= 0;)
 		if (!thePrefs.GetCatPath(i).IsEmpty())
 			bSucceeded = bSucceeded && SetObjectPermission(thePrefs.GetCatPath(i), FULLACCESS);
 
@@ -207,28 +206,28 @@ bool CSecRunAsUser::SetObjectPermission(const CString &strDirFile, DWORD lGrante
 		DWORD cbUserSID = 0;
 		fAPISuccess = LookupAccountName(NULL, EMULEACCOUNTW, pUserSID, &cbUserSID, szDomain, &cbDomain, &snuType);
 		if ((!fAPISuccess) && ::GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-			throw CString(_T("Run as unprivileged user: Error: LookupAccountName() failed,"));
+			throwCStr(_T("Run as unprivileged user: Error: LookupAccountName() failed,"));
 
 		pUserSID = MHeapAlloc(cbUserSID);
 		if (!pUserSID)
-			throw CString(_T("Run as unprivileged user: Error: Allocating memory failed,"));
+			throwCStr(_T("Run as unprivileged user: Error: Allocating memory failed,"));
 
 		szDomain = (TCHAR*)MHeapAlloc(cbDomain * sizeof(TCHAR));
 		if (!szDomain)
-			throw CString(_T("Run as unprivileged user: Error: Allocating memory failed,"));
+			throwCStr(_T("Run as unprivileged user: Error: Allocating memory failed,"));
 
 		fAPISuccess = LookupAccountName(NULL, EMULEACCOUNTW, pUserSID, &cbUserSID, szDomain, &cbDomain, &snuType);
 		if (!fAPISuccess)
-			throw CString(_T("Run as unprivileged user: Error: LookupAccountName()2 failed"));
+			throwCStr(_T("Run as unprivileged user: Error: LookupAccountName()2 failed"));
 
 		if (CStringW(szDomain) != m_strDomain)
-			throw CString(_T("Run as unprivileged user: Logical Error: Domain name mismatch"));
+			throwCStr(_T("Run as unprivileged user: Logical Error: Domain name mismatch"));
 
 		// get old ACL
 		PACL pOldACL = NULL;
 		fAPISuccess = GetNamedSecurityInfo(strDirFile, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL, &pOldACL, NULL, &pSD);
 		if (fAPISuccess != ERROR_SUCCESS)
-			throw CString(_T("Run as unprivileged user: Error: GetNamedSecurityInfo() failed"));
+			throwCStr(_T("Run as unprivileged user: Error: GetNamedSecurityInfo() failed"));
 
 		// calculate size for new ACL
 		ACL_SIZE_INFORMATION AclInfo;
@@ -237,17 +236,17 @@ bool CSecRunAsUser::SetObjectPermission(const CString &strDirFile, DWORD lGrante
 		AclInfo.AclBytesInUse = sizeof(ACL);
 
 		if (pOldACL != NULL && !GetAclInformation(pOldACL, &AclInfo, sizeof(ACL_SIZE_INFORMATION), AclSizeInformation))
-			throw CString(_T("Run as unprivileged user: Error: GetAclInformation() failed"));
+			throwCStr(_T("Run as unprivileged user: Error: GetAclInformation() failed"));
 
 		// Create new ACL
-		DWORD cbNewACL = AclInfo.AclBytesInUse + sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(pUserSID) - sizeof(DWORD);
+		DWORD cbNewACL = (DWORD)(AclInfo.AclBytesInUse + sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(pUserSID) - sizeof(DWORD));
 
 		pNewACL = (PACL)MHeapAlloc(cbNewACL);
 		if (!pNewACL)
-			throw CString(_T("Run as unprivileged user: Error: Allocating memory failed,"));
+			throwCStr(_T("Run as unprivileged user: Error: Allocating memory failed,"));
 
 		if (!InitializeAcl(pNewACL, cbNewACL, ACL_REVISION2))
-			throw CString(_T("Run as unprivileged user: Error: Allocating memory failed,"));
+			throwCStr(_T("Run as unprivileged user: Error: Allocating memory failed,"));
 
 
 		// copy the entries form the old acl into the new one and enter a new ace in the right order
@@ -256,7 +255,7 @@ bool CSecRunAsUser::SetObjectPermission(const CString &strDirFile, DWORD lGrante
 			for (CurrentAceIndex = 0; CurrentAceIndex < AclInfo.AceCount; ++CurrentAceIndex) {
 				LPVOID pTempAce;
 				if (!GetAce(pOldACL, CurrentAceIndex, &pTempAce))
-					throw CString(_T("Run as unprivileged user: Error: GetAce() failed,"));
+					throwCStr(_T("Run as unprivileged user: Error: GetAce() failed,"));
 
 				if (((ACCESS_ALLOWED_ACE*)pTempAce)->Header.AceFlags & INHERITED_ACE)
 					break;
@@ -265,28 +264,28 @@ bool CSecRunAsUser::SetObjectPermission(const CString &strDirFile, DWORD lGrante
 					continue;
 
 				if (!AddAce(pNewACL, ACL_REVISION, MAXDWORD, pTempAce, ((PACE_HEADER)pTempAce)->AceSize))
-					throw CString(_T("Run as unprivileged user: Error: AddAce()1 failed,"));
+					throwCStr(_T("Run as unprivileged user: Error: AddAce()1 failed,"));
 			}
 		}
 		// here we add the actually entry
 		if (!AddAccessAllowedAceEx(pNewACL, ACL_REVISION2, CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE, lGrantedAccess, pUserSID))
-			throw CString(_T("Run as unprivileged user: Error: AddAccessAllowedAceEx() failed,"));
+			throwCStr(_T("Run as unprivileged user: Error: AddAccessAllowedAceEx() failed,"));
 
 		// copy the rest
 		if (AclInfo.AceCount) {
 			for (; CurrentAceIndex < AclInfo.AceCount; ++CurrentAceIndex) {
 				LPVOID pTempAce;
 				if (!GetAce(pOldACL, CurrentAceIndex, &pTempAce))
-					throw CString(_T("Run as unprivileged user: Error: GetAce()2 failed,"));
+					throwCStr(_T("Run as unprivileged user: Error: GetAce()2 failed,"));
 
 				if (!AddAce(pNewACL, ACL_REVISION, MAXDWORD, pTempAce, ((PACE_HEADER)pTempAce)->AceSize))
-					throw CString(_T("Run as unprivileged user: Error: AddAce()2 failed,"));
+					throwCStr(_T("Run as unprivileged user: Error: AddAce()2 failed,"));
 			}
 		}
 
-		fAPISuccess = SetNamedSecurityInfo((LPTSTR)(LPCTSTR)strDirFile, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL, pNewACL, NULL);
+		fAPISuccess = SetNamedSecurityInfo(const_cast<LPTSTR>((LPCTSTR)strDirFile), SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL, pNewACL, NULL);
 		if (fAPISuccess != ERROR_SUCCESS)
-			throw CString(_T("Run as unprivileged user: Error: SetNamedSecurityInfo() failed,"));
+			throwCStr(_T("Run as unprivileged user: Error: SetNamedSecurityInfo() failed,"));
 		fAPISuccess = TRUE;
 	} catch (const CString &error) {
 		fAPISuccess = FALSE;
@@ -347,7 +346,7 @@ eResult CSecRunAsUser::RestartAsUser()
 	FreeAPI();
 	if (bResult)
 		return RES_OK_NEED_RESTART;
-	
+
 	theApp.QueueDebugLogLine(false, _T("Run as unprivileged user: Error: Failed to restart eMule as different user! Error Code: %i"), ::GetLastError());
 	return RES_FAILED;
 }
@@ -429,7 +428,7 @@ eResult CSecRunAsUser::RestartAsRestricted()
 	try {
 		// get our access token from the process
 		if (!OpenProcessToken(GetCurrentProcess(), TOKEN_DUPLICATE | TOKEN_ASSIGN_PRIMARY | TOKEN_READ, &hProcessToken))
-			throw(CString(_T("Failed to retrieve access token from process")));
+			throwCStr(_T("Failed to retrieve access token from process"));
 
 		// there is no easy way to check if we have already restricted token when not using the restricted SID list
 		// so just check if we set the SANDBOX_INERT flag and hope no one else did
@@ -437,22 +436,22 @@ eResult CSecRunAsUser::RestartAsRestricted()
 		DWORD dwLen = 0;
 		DWORD dwInertFlag;
 		if (!GetTokenInformation(hProcessToken, TokenSandBoxInert, &dwInertFlag, sizeof(dwInertFlag), &dwLen))
-			throw(CString(_T("Failed to Flag-Status from AccessToken")));
+			throwCStr(_T("Failed to Flag-Status from AccessToken"));
 
 		if (dwInertFlag != 0) {
 			m_bRunningRestricted = true;
-			throw(CString(_T("Already using a restricted Token it seems (everything is fine!)")));
+			throwCStr(_T("Already using a restricted Token it seems (everything is fine!)"));
 		}
 
 		// get the user account SID to disable it in our new token
 		dwLen = 0;
 		while (!GetTokenInformation(hProcessToken, TokenUser, pstructUserToken, dwLen, &dwLen)) {
 			if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER || pstructUserToken != NULL)
-				throw(CString(_T("Failed to retrieve UserSID from AccessToken")));
+				throwCStr(_T("Failed to retrieve UserSID from AccessToken"));
 			pstructUserToken = (PTOKEN_USER)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLen);
 		}
 		if (pstructUserToken == NULL)
-			throw(CString(_T("Failed to retrieve UserSID from AccessToken")));
+			throwCStr(_T("Failed to retrieve UserSID from AccessToken"));
 
 		// disabling our primary token would make sense from a Security POV, but this would cause file acces conflicts
 		// in the default settings (since we cannot access files we created ourself if they don't have the write flag for the group "users")
@@ -460,13 +459,13 @@ eResult CSecRunAsUser::RestartAsRestricted()
 
 		// create the new token
 		if (!CreateRestrictedToken(hProcessToken, DISABLE_MAX_PRIVILEGE | SANDBOX_INERT, 0 /*disabled*/, &pstructUserToken->User, 0, NULL, 0, NULL, &hRestrictedToken))
-			throw(CString(_T("Failed to create Restricted Token")));
+			throwCStr(_T("Failed to create Restricted Token"));
 
 		// do the starting job
 		TCHAR szAppPath[MAX_PATH + 2];
 		DWORD dwModPathLen = ::GetModuleFileName(NULL, &szAppPath[1], MAX_PATH);
 		if (dwModPathLen == 0 || dwModPathLen >= MAX_PATH)
-			throw CString(_T("Failed to get module file path"));
+			throwCStr(_T("Failed to get module file path"));
 		szAppPath[0] = _T('"');
 		szAppPath[++dwModPathLen] = _T('"');
 		szAppPath[++dwModPathLen] = _T('\0');
@@ -486,7 +485,8 @@ eResult CSecRunAsUser::RestartAsRestricted()
 		if (!CreateProcessAsUser(hRestrictedToken, NULL, szAppPath, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &StartInf, &ProcessInfo)) {
 			CString e;
 			GetErrorMessage(::GetLastError(), e, 0);
-			throw (_T("CreateProcessAsUser failed: ") + e);
+			e.Insert(0, _T("CreateProcessAsUser failed: "));
+			throw e;
 		}
 		::CloseHandle(ProcessInfo.hProcess);
 		::CloseHandle(ProcessInfo.hThread);
@@ -518,7 +518,7 @@ eResult CSecRunAsUser::RestartSecure()
 		res = PrepareUser();
 		if (res == RES_OK) {
 			theApp.QueueLogLine(false, GetResString(IDS_RAU_RUNNING), EMULEACCOUNTW);
-			return RES_OK;
+			return res;
 		}
 		if (res == RES_OK_NEED_RESTART) {
 			res = RestartAsUser();

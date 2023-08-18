@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -41,9 +41,9 @@
 	- Additional Comments:
 			- RandomKeyPart is needed to make multiple connections between two clients look different (but still random), since otherwise the same key
 			  would be used and RC4 would create the same output. Since the key is a MD5 hash it doesn't weaken the key if that part is known
-			- Why DH-KeyAgreement isn't used as basic obfuscation key: It doesn't offers substantial more protection against passive connection based protocol identification, it has about 200 bytes more overhead,
+			- Why DH-KeyAgreement isn't used as basic obfuscation key: It doesn't offer substantial more protection against passive connection based protocol identification, it has about 200 bytes more overhead,
 			  needs more CPU time, we cannot say if the received data is junk, unencrypted or part of the key agreement before the handshake is finished without losing the complete randomness,
-			  it doesn't offers substantial protection against eavesdropping without added authentication
+			  it doesn't offer substantial protection against eavesdropping without added authentication
 
 Basic Obfuscated Handshake Protocol Client <-> Server:
 	- RC4 Key creation:
@@ -84,7 +84,7 @@ Basic Obfuscated Handshake Protocol Client <-> Server:
 #include "opcodes.h"
 #include "clientlist.h"
 #include "ServerConnect.h"
-#include <cryptopp/osrng.h>
+#include "cryptopp/osrng.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -189,11 +189,11 @@ int CEncryptedStreamSocket::Send(const void *lpBuf, int nBufLen, int nFlags)
 	return CAsyncSocketEx::Send(lpBuf, nBufLen, nFlags);
 }
 
-int CEncryptedStreamSocket::SendOv(CArray<WSABUF> &raBuffer, LPWSAOVERLAPPED lpOverlapped)
+int CEncryptedStreamSocket::SendOv(CArray<WSABUF> &aBuffer, LPWSAOVERLAPPED lpOverlapped)
 {
 	if (!IsEncryptionLayerReady()) {
 		ASSERT(0); // must be a bug
-		return -1;
+		return SOCKET_ERROR;
 	}
 	if (m_bServerCrypt && m_StreamCryptState == ECS_ENCRYPTING && m_pfiSendBuffer != NULL) {
 		ASSERT(m_NegotiatingState == ONS_BASIC_SERVER_DELAYEDSENDING);
@@ -203,7 +203,7 @@ int CEncryptedStreamSocket::SendOv(CArray<WSABUF> &raBuffer, LPWSAOVERLAPPED lpO
 		wbuf.buf = new CHAR[wbuf.len];
 		m_pfiSendBuffer->SeekToBegin();
 		m_pfiSendBuffer->Read(wbuf.buf, wbuf.len);
-		raBuffer.InsertAt(0, wbuf);
+		aBuffer.InsertAt(0, wbuf);
 		m_NegotiatingState = ONS_COMPLETE;
 		delete m_pfiSendBuffer;
 		m_pfiSendBuffer = NULL;
@@ -216,7 +216,8 @@ int CEncryptedStreamSocket::SendOv(CArray<WSABUF> &raBuffer, LPWSAOVERLAPPED lpO
 		m_StreamCryptState = ECS_NONE;
 		DebugLogError(_T("CEncryptedStreamSocket: Overwriting State ECS_UNKNOWN with ECS_NONE because of premature Send() (%s)"), (LPCTSTR)DbgGetIPString());
 	}
-	return WSASend(GetSocketHandle(), raBuffer.GetData(), (DWORD)raBuffer.GetCount(), NULL, 0, lpOverlapped, NULL);
+
+	return WSASend(GetSocketHandle(), aBuffer.GetData(), (DWORD)aBuffer.GetCount(), NULL, 0, lpOverlapped, NULL);
 }
 
 bool CEncryptedStreamSocket::IsEncryptionLayerReady()

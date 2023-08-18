@@ -55,7 +55,5 @@ public:
 
 // Implementation
 protected:
-	virtual	~CCreditsThread() = default;
-
 	DECLARE_MESSAGE_MAP()
 };

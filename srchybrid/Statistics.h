@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -68,8 +68,8 @@ public:
 	static void	AddDownDataOverheadKad(uint32 data)				{ m_nDownDataRateMSOverhead += data;
 																  m_nDownDataOverheadKad += data;
 																  ++m_nDownDataOverheadKadPackets; }
-	static void	AddDownDataOverheadCrypt(uint32 /*data*/)		{}
-	static uint32	GetDownDatarateOverhead()					{ return m_nDownDatarateOverhead; }
+	static void		AddDownDataOverheadCrypt(uint32 /*data*/)	{}
+	static uint64	GetDownDatarateOverhead()					{ return m_nDownDatarateOverhead; }
 	static uint64	GetDownDataOverheadSourceExchange()			{ return m_nDownDataOverheadSourceExchange; }
 	static uint64	GetDownDataOverheadFileRequest()			{ return m_nDownDataOverheadFileRequest; }
 	static uint64	GetDownDataOverheadServer()					{ return m_nDownDataOverheadServer; }
@@ -104,7 +104,7 @@ public:
 																  ++m_nUpDataOverheadOtherPackets; }
 	static void	AddUpDataOverheadCrypt(uint32 /*data*/)			{}
 
-	static uint32	GetUpDatarateOverhead()						{ return m_nUpDatarateOverhead; }
+	static uint64	GetUpDatarateOverhead()						{ return m_nUpDatarateOverhead; }
 	static uint64	GetUpDataOverheadSourceExchange()			{ return m_nUpDataOverheadSourceExchange; }
 	static uint64	GetUpDataOverheadFileRequest()				{ return m_nUpDataOverheadFileRequest; }
 	static uint64	GetUpDataOverheadServer()					{ return m_nUpDataOverheadServer; }
@@ -130,17 +130,17 @@ public:
 	static float	maxUpavg;
 	static float	rateDown;
 	static float	rateUp;
-	static uint32	timeTransfers;
-	static uint32	timeDownloads;
-	static uint32	timeUploads;
-	static uint32	start_timeTransfers;
-	static uint32	start_timeDownloads;
-	static uint32	start_timeUploads;
-	static uint32	time_thisTransfer;
-	static uint32	time_thisDownload;
-	static uint32	time_thisUpload;
-	static uint32	timeServerDuration;
-	static uint32	time_thisServerDuration;
+	static DWORD	timeTransfers;
+	static DWORD	timeDownloads;
+	static DWORD	timeUploads;
+	static DWORD	start_timeTransfers;
+	static DWORD	start_timeDownloads;
+	static DWORD	start_timeUploads;
+	static DWORD	time_thisTransfer;
+	static DWORD	time_thisDownload;
+	static DWORD	time_thisUpload;
+	static DWORD	timeServerDuration;
+	static DWORD	time_thisServerDuration;
 	static DWORD	m_dwOverallStatus;
 	static float	m_fGlobalDone;
 	static float	m_fGlobalSize;
@@ -156,14 +156,14 @@ public:
 
 private:
 	typedef struct {
-		uint32	datalen;
+		uint64	datalen;
 		DWORD	timestamp;
 	} TransferredData;
 	std::list<TransferredData> uprateHistory;
 	std::list<TransferredData> downrateHistory;
 
-	static uint32	m_nDownDatarateOverhead;
-	static uint32	m_nDownDataRateMSOverhead;
+	static uint64	m_nDownDatarateOverhead;
+	static uint64	m_nDownDataRateMSOverhead;
 	static uint64	m_nDownDataOverheadSourceExchange;
 	static uint64	m_nDownDataOverheadSourceExchangePackets;
 	static uint64	m_nDownDataOverheadFileRequest;
@@ -175,8 +175,8 @@ private:
 	static uint64	m_nDownDataOverheadOther;
 	static uint64	m_nDownDataOverheadOtherPackets;
 
-	static uint32	m_nUpDatarateOverhead;
-	static uint32	m_nUpDataRateMSOverhead;
+	static uint64	m_nUpDatarateOverhead;
+	static uint64	m_nUpDataRateMSOverhead;
 	static uint64	m_nUpDataOverheadSourceExchange;
 	static uint64	m_nUpDataOverheadSourceExchangePackets;
 	static uint64	m_nUpDataOverheadFileRequest;
@@ -188,10 +188,10 @@ private:
 	static uint64	m_nUpDataOverheadOther;
 	static uint64	m_nUpDataOverheadOtherPackets;
 
-	static uint32	m_sumavgDDRO;
-	static uint32	m_sumavgUDRO;
-	CList<TransferredData> m_AverageDDRO_list;
-	CList<TransferredData> m_AverageUDRO_list;
+	static uint64	m_sumavgDDRO;
+	static uint64	m_sumavgUDRO;
+	std::list<TransferredData> m_AverageDDRO_list;
+	std::list<TransferredData> m_AverageUDRO_list;
 };
 
 extern CStatistics theStats;

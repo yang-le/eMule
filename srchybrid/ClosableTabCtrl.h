@@ -6,7 +6,6 @@ class CClosableTabCtrl : public CTabCtrl
 
 public:
 	CClosableTabCtrl();
-	virtual	~CClosableTabCtrl() = default;
 	BOOL DeleteItem(int nItem);
 
 	bool m_bClosable;

@@ -12,17 +12,14 @@ public:
 	//set the height of the bar
 	void SetHeight(int height);
 
+	//set the width of the bar
+	void SetRect(const CRect &rect);
+
 	//returns the width of the bar
-	int GetWidth() const
-	{
-		return m_iWidth;
-	}
+	int GetWidth() const					{ return m_iWidth; }
 
 	//returns the height of the bar
-	int GetHeight() const
-	{
-		return m_iHeight;
-	}
+	int GetHeight() const					{ return m_iHeight; }
 
 	//call this to blank the shader without changing file size
 	void Reset();

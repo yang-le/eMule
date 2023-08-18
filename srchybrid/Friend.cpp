@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -16,11 +16,10 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
 #include "emule.h"
-#include "Friend.h"
-#include "FriendList.h"
-#include "OtherFunctions.h"
 #include "UpDownClient.h"
 #include "Packets.h"
+#include "Friend.h"
+#include "FriendList.h"
 #include "SafeFile.h"
 #include "clientlist.h"
 #include "ListenSocket.h"
@@ -93,15 +92,15 @@ CFriend::~CFriend()
 		Kademlia::CKademlia::CancelClientSearch(*this);
 }
 
-void CFriend::LoadFromFile(CFileDataIO *file)
+void CFriend::LoadFromFile(CFileDataIO &file)
 {
-	file->ReadHash16(m_abyUserhash);
-	m_dwLastUsedIP = file->ReadUInt32();
-	m_nLastUsedPort = file->ReadUInt16();
-	m_dwLastSeen = file->ReadUInt32();
-	m_dwLastChatted = file->ReadUInt32();
+	file.ReadHash16(m_abyUserhash);
+	m_dwLastUsedIP = file.ReadUInt32();
+	m_nLastUsedPort = file.ReadUInt16();
+	m_dwLastSeen = file.ReadUInt32();
+	m_dwLastChatted = file.ReadUInt32();
 
-	for (uint32 tagcount = file->ReadUInt32(); tagcount > 0; --tagcount) {
+	for (uint32 tagcount = file.ReadUInt32(); tagcount > 0; --tagcount) {
 		const CTag *newtag = new CTag(file, false);
 		switch (newtag->GetNameID()) {
 		case FF_NAME:
@@ -118,17 +117,17 @@ void CFriend::LoadFromFile(CFileDataIO *file)
 	}
 }
 
-void CFriend::WriteToFile(CFileDataIO *file)
+void CFriend::WriteToFile(CFileDataIO &file)
 {
-	file->WriteHash16(m_abyUserhash);
-	file->WriteUInt32(m_dwLastUsedIP);
-	file->WriteUInt16(m_nLastUsedPort);
-	file->WriteUInt32((uint32)m_dwLastSeen);
-	file->WriteUInt32((uint32)m_dwLastChatted);
+	file.WriteHash16(m_abyUserhash);
+	file.WriteUInt32(m_dwLastUsedIP);
+	file.WriteUInt16(m_nLastUsedPort);
+	file.WriteUInt32((uint32)m_dwLastSeen);
+	file.WriteUInt32((uint32)m_dwLastChatted);
 
 	uint32 uTagCount = 0;
-	ULONGLONG uTagCountFilePos = file->GetPosition();
-	file->WriteUInt32(0);
+	ULONGLONG uTagCountFilePos = file.GetPosition();
+	file.WriteUInt32(0);
 
 	if (!m_strName.IsEmpty()) {
 		CTag nametag(FF_NAME, m_strName);
@@ -141,9 +140,9 @@ void CFriend::WriteToFile(CFileDataIO *file)
 		++uTagCount;
 	}
 
-	file->Seek(uTagCountFilePos, CFile::begin);
-	file->WriteUInt32(uTagCount);
-	file->Seek(0, CFile::end);
+	file.Seek(uTagCountFilePos, CFile::begin);
+	file.WriteUInt32(uTagCount);
+	file.Seek(0, CFile::end);
 }
 
 bool CFriend::HasUserhash() const
@@ -240,7 +239,7 @@ bool CFriend::TryToConnect(CFriendConnectionListener *pConnectionReport)
 
 	m_liConnectionReport.AddTail(pConnectionReport);
 	if (GetLinkedClient(true) == NULL) {
-		//ASSERT( pConnectionReport != &theApp.emuledlg->chatwnd->chatselector ); // shouldn't happen, if the chat connector calls, we he always should have a client for the session already
+		//ASSERT(pConnectionReport != &theApp.emuledlg->chatwnd->chatselector); // shouldn't happen, if the chat connector calls, we he always should have a client for the session already
 		ASSERT(0);
 		GetClientForChatSession();
 	}

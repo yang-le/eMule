@@ -217,7 +217,7 @@ BEGIN
     IDS_GLOBALSEARCH        "גלובלי בשרת"
     IDS_METHOD              "שיטת חיפוש"
     IDS_UNDO                "בטל"
-    IDS_DAYLY               "יומי"
+    IDS_DAILY               "יומי"
 END
 
 STRINGTABLE
@@ -1421,7 +1421,7 @@ BEGIN
     IDS_EM_HELP             "עזרה"
     IDS_WRN_FRIENDDUPLIPPORT
                             "חבר לא נוסף.\r\n\r\nכבר קיים חבר עם כתובת איי פי ופורט דומים."
-    IDS_DYNUP               "Upload SpeedSense"//!
+    IDS_DYNUP               "Upload SpeedSense (לא מומלץ)"
     IDS_KADOVERHEAD         "תקורת רשת קדמליה (מנות): %s (%s)"
     IDS_FIND                "חפש..."
     IDS_LOG_BANNED_CLIENTS  "שמור יומן קליינטים מוחרמים"

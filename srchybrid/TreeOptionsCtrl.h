@@ -50,7 +50,6 @@ class CTreeOptionsCombo : public CComboBox
 public:
 	//Constructors / Destructors
 	CTreeOptionsCombo();
-	virtual	~CTreeOptionsCombo() = default;
 
 protected:
 	//Misc methods
@@ -84,11 +83,6 @@ protected:
 //Class which represents a combo box which allows a Font Name to be specified
 class CTreeOptionsFontNameCombo : public CTreeOptionsCombo
 {
-public:
-	//Constructors / Destructors
-	CTreeOptionsFontNameCombo() = default;
-	virtual	~CTreeOptionsFontNameCombo() = default;
-
 protected:
 	//{{AFX_VIRTUAL(CTreeOptionsFontNameCombo)
 	//}}AFX_VIRTUAL
@@ -110,11 +104,6 @@ protected:
 //Class which represents a combo box which allows a True / False value to be specified
 class CTreeOptionsBooleanCombo : public CTreeOptionsCombo
 {
-public:
-	//Constructors / Destructors
-	CTreeOptionsBooleanCombo();
-	virtual	~CTreeOptionsBooleanCombo();
-
 protected:
 	//{{AFX_VIRTUAL(CTreeOptionsBooleanCombo)
 	//}}AFX_VIRTUAL
@@ -140,7 +129,6 @@ class CTreeOptionsEdit : public CEdit
 public:
 	//Constructors / Destructors
 	CTreeOptionsEdit();
-	virtual	~CTreeOptionsEdit();
 
 protected:
 	//Misc methods
@@ -186,7 +174,6 @@ class CTreeOptionsSpinCtrl : public CSpinButtonCtrl
 public:
 	//Constructors / Destructors
 	CTreeOptionsSpinCtrl();
-	virtual	~CTreeOptionsSpinCtrl() = default;
 
 protected:
 	//Misc methods
@@ -221,7 +208,6 @@ class CTreeOptionsBrowseButton : public CButton
 public:
 	//Constructors / Destructors
 	CTreeOptionsBrowseButton();
-	virtual	~CTreeOptionsBrowseButton();
 
 protected:
 	//Misc methods
@@ -262,7 +248,7 @@ protected:
 
 
 
-//Class which is used for browsing for filenames
+//Class which is used for browsing for file names
 class CTreeOptionsFileDialog : public CFileDialog
 {
 public:

@@ -312,7 +312,7 @@ bool CAsyncSocketExLayer::ConnectNext(const CString &sHostAddress, UINT nHostPor
 				m_pOwnerSocket->m_SocketData.hSocket = hSocket;
 				m_pOwnerSocket->AttachHandle();
 				if (!m_pOwnerSocket->AsyncSelect(m_lEvent)
-					|| (m_pOwnerSocket->m_pFirstLayer && WSAAsyncSelect(m_pOwnerSocket->m_SocketData.hSocket, m_pOwnerSocket->GetHelperWindowHandle(), m_pOwnerSocket->m_SocketData.nSocketIndex + WM_SOCKETEX_NOTIFY, FD_DEFAULT)))
+					|| (m_pOwnerSocket->m_pFirstLayer && WSAAsyncSelect(m_pOwnerSocket->m_SocketData.hSocket, m_pOwnerSocket->GetHelperWindowHandle(), WM_SOCKETEX_NOTIFY + m_pOwnerSocket->m_SocketData.nSocketIndex, FD_DEFAULT)))
 				{
 					m_pOwnerSocket->Close();
 					continue;
@@ -603,7 +603,7 @@ bool CAsyncSocketExLayer::CreateNext(UINT nSocketPort, int nSocketType, long lEv
 			m_pOwnerSocket->Close();
 			return false;
 		}
-		if (m_pOwnerSocket->m_pFirstLayer && WSAAsyncSelect(m_pOwnerSocket->m_SocketData.hSocket, m_pOwnerSocket->GetHelperWindowHandle(), m_pOwnerSocket->m_SocketData.nSocketIndex + WM_SOCKETEX_NOTIFY, FD_DEFAULT)) {
+		if (m_pOwnerSocket->m_pFirstLayer && WSAAsyncSelect(m_pOwnerSocket->m_SocketData.hSocket, m_pOwnerSocket->GetHelperWindowHandle(), WM_SOCKETEX_NOTIFY + m_pOwnerSocket->m_SocketData.nSocketIndex, FD_DEFAULT)) {
 			m_pOwnerSocket->Close();
 			return false;
 		}
@@ -624,7 +624,7 @@ bool CAsyncSocketExLayer::CreateNext(UINT nSocketPort, int nSocketType, long lEv
 	return ret;
 }
 
-int CAsyncSocketExLayer::DoLayerCallback(int nType, WPARAM wParam, LPARAM lParam, char *str /*=NULL*/)
+int CAsyncSocketExLayer::DoLayerCallback(int nType, WPARAM wParam, LPARAM lParam, const char* const str /*=NULL*/)
 {
 	if (m_pOwnerSocket) {
 		int nError = WSAGetLastError();
@@ -748,7 +748,7 @@ bool CAsyncSocketExLayer::TryNextProtocol()
 		m_pOwnerSocket->AttachHandle();
 
 		if (m_pOwnerSocket->AsyncSelect(m_lEvent))
-			if (!m_pOwnerSocket->m_pFirstLayer || !WSAAsyncSelect(m_pOwnerSocket->m_SocketData.hSocket, m_pOwnerSocket->GetHelperWindowHandle(), m_pOwnerSocket->m_SocketData.nSocketIndex + WM_SOCKETEX_NOTIFY, FD_DEFAULT)) {
+			if (!m_pOwnerSocket->m_pFirstLayer || !WSAAsyncSelect(m_pOwnerSocket->m_SocketData.hSocket, m_pOwnerSocket->GetHelperWindowHandle(), WM_SOCKETEX_NOTIFY + m_pOwnerSocket->m_SocketData.nSocketIndex, FD_DEFAULT)) {
 				m_pOwnerSocket->m_SocketData.nFamily = m_nFamily = (ADDRESS_FAMILY)m_nextAddr->ai_family;
 				if (m_pOwnerSocket->Bind(m_nSocketPort, m_sSocketAddress)) {
 					ret = !connect(m_pOwnerSocket->GetSocketHandle(), m_nextAddr->ai_addr, (int)m_nextAddr->ai_addrlen) || WSAGetLastError() == WSAEWOULDBLOCK;

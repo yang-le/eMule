@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -17,8 +17,8 @@
 #include "stdafx.h"
 #include "emule.h"
 #include "CommentDialogLst.h"
-#include "PartFile.h"
 #include "UpDownClient.h"
+#include "PartFile.h"
 #include "UserMsgs.h"
 #include "kademlia/kademlia/kademlia.h"
 #include "kademlia/kademlia/SearchManager.h"
@@ -133,13 +133,12 @@ void CCommentDialogLst::RefreshData(bool deleteOld)
 	bool kadsearchable = true;
 	for (int i = 0; i < m_paFiles->GetSize(); ++i) {
 		CAbstractFile *file = static_cast<CAbstractFile*>((*m_paFiles)[i]);
-		if (file->IsPartFile()) {
+		if (file->IsPartFile())
 			for (POSITION pos = static_cast<CPartFile*>(file)->srclist.GetHeadPosition(); pos != NULL;) {
 				const CUpDownClient *cur_src = static_cast<CPartFile*>(file)->srclist.GetNext(pos);
 				if (cur_src->HasFileRating() || !cur_src->GetFileComment().IsEmpty())
 					m_lstComments.AddItem(cur_src);
 			}
-		}
 
 		const CTypedPtrList<CPtrList, Kademlia::CEntry*> &list = file->getNotes();
 		for (POSITION pos = list.GetHeadPosition(); pos != NULL;)
@@ -195,11 +194,11 @@ void CCommentDialogLst::OnBnClickedFilter()
 		strCommentFilters.MakeLower();
 		CString strNewCommentFilters;
 		for (int iPos = 0; iPos >= 0;) {
-			CString strFilter = strCommentFilters.Tokenize(_T("|"), iPos);
+			CString strFilter(strCommentFilters.Tokenize(_T("|"), iPos));
 			if (!strFilter.Trim().IsEmpty()) {
 				if (!strNewCommentFilters.IsEmpty())
 					strNewCommentFilters += _T('|');
-				strNewCommentFilters += strFilter.Trim();
+				strNewCommentFilters += strFilter;
 			}
 		}
 

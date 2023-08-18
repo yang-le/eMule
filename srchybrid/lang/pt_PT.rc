@@ -425,7 +425,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Global (Servidores)"
     IDS_METHOD              "Método"
     IDS_UNDO                "Desfazer"
-    IDS_DAYLY               "diariamente"
+    IDS_DAILY               "diariamente"
 END
 
 STRINGTABLE
@@ -1429,7 +1429,7 @@ BEGIN
     IDS_EM_HELP             "&Ajuda"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Amigo não adicionado.\r\n\r\nJá existe um amigo registado com o mesmo endereço de IP e Porta."
-    IDS_DYNUP               "Detecção da Velocidade de Upload"
+    IDS_DYNUP               "Detecção da Velocidade de Upload (não recomendado)"
     IDS_KADOVERHEAD         "Largura de Banda Kad Adicional (Pacotes): %s (%s)"
     IDS_FIND                "Pesquisar..."
     IDS_LOG_BANNED_CLIENTS  "Registar clientes banidos"

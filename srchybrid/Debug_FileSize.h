@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2005 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -135,9 +135,9 @@ private:
 			ASSERT(m_nSize >= nSize1 && m_nSize >= nSize2 && m_nSize <= MAX_EMULE_FILE_SIZE);
 		}
 	}
-	void	Check()	const
+	void Check() const
 	{
-		ASSERT( m_nSize != _UI64_MAX && m_nSize <= MAX_EMULE_FILE_SIZE);
+		ASSERT(m_nSize != _UI64_MAX && m_nSize <= MAX_EMULE_FILE_SIZE);
 	}
 	uint64	m_nSize;
 };

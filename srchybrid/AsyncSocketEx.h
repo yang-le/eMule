@@ -72,6 +72,7 @@ to tim.kosse@filezilla-project.org
 #define FD_DEFAULT (FD_READ | FD_WRITE | FD_OOB | FD_ACCEPT | FD_CONNECT | FD_CLOSE)
 
 #include <list>
+#include <vector>
 
 #define _afxSockThreadState AfxGetModuleThreadState()
 #define _AFX_SOCK_THREAD_STATE AFX_MODULE_THREAD_STATE
@@ -236,7 +237,7 @@ public:
 	//Returns the handle of the socket.
 	SOCKET GetSocketHandle();
 
-	//Trigers an event on the socket
+	//Triggers an event on the socket
 	// Any combination of FD_READ, FD_WRITE, FD_CLOSE, FD_ACCEPT, FD_CONNECT and FD_FORCEREAD is valid for lEvent.
 	BOOL TriggerEvent(long lEvent);
 
@@ -313,14 +314,14 @@ protected:
 	CAsyncSocketExLayer *m_pLastLayer;
 
 	//Called by the layers to notify application of some events
-	virtual int OnLayerCallback(std::list<t_callbackMsg> &callbacks);
+	virtual int OnLayerCallback(std::vector<t_callbackMsg> &callbacks);
 
 	// Used by Bind with AF_UNSPEC sockets
 	UINT m_nSocketPort;
 	CString m_sSocketAddress;
 
 	// Pending callbacks
-	std::list<t_callbackMsg> m_pendingCallbacks;
+	std::vector<t_callbackMsg> m_pendingCallbacks;
 };
 
 #define LAYERCALLBACK_STATECHANGE 0

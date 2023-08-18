@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -16,7 +16,7 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #pragma once
 
-static LPCTSTR const strDefaultToolbar = _T("0099010203040506070899091011");
+extern LPCTSTR const strDefaultToolbar;
 
 enum EViewSharedFilesAccess
 {
@@ -116,10 +116,10 @@ struct Category_Struct
 	CString	strIncomingPath;
 	CString	strTitle;
 	CString	strComment;
-	COLORREF color;
-	UINT	prio;
 	CString autocat;
 	CString	regexp;
+	COLORREF color;
+	UINT	prio;
 	int		filter;
 	bool	filterNeg;
 	bool	care4all;
@@ -144,6 +144,8 @@ class CPreferences
 	friend class CPPgTweaks;
 	friend class Wizard;
 
+	static LPCSTR	m_pszBindAddrA;
+	static LPCWSTR	m_pszBindAddrW;
 public:
 	static CString	strNick;
 	// ZZ:UploadSpeedSense -->
@@ -151,9 +153,7 @@ public:
 	// ZZ:UploadSpeedSense <--
 	static uint32	m_maxupload;
 	static uint32	m_maxdownload;
-	static LPCSTR	m_pszBindAddrA;
 	static CStringA m_strBindAddrA;
-	static LPCWSTR	m_pszBindAddrW;
 	static CStringW m_strBindAddrW;
 	static uint16	port;
 	static uint16	udpport;
@@ -189,15 +189,15 @@ public:
 	static bool		m_bFillGraphs;
 	static uchar	userhash[16];
 	static WINDOWPLACEMENT EmuleWindowPlacement;
-	static int		maxGraphDownloadRate;
-	static int		maxGraphUploadRate;
+	static uint32	maxGraphDownloadRate;
+	static uint32	maxGraphUploadRate;
 	static uint32	maxGraphUploadRateEstimated;
 	static bool		beepOnError;
 	static bool		confirmExit;
 	static DWORD	m_adwStatsColors[15];
-	static bool		bHasCustomTaskIconColor;
+	static bool		m_bHasCustomTaskIconColor;
 	static bool		m_bIconflashOnNewMessage;
-		   
+
 	static bool		splashscreen;
 	static bool		filterLANIPs;
 	static bool		m_bAllocLocalHostIP;
@@ -473,11 +473,11 @@ public:
 
 	static UINT		versioncheckdays;
 	static bool		showRatesInTitle;
-		   
+
 	static CString	m_strTxtEditor;
 	static CString	m_strVideoPlayer;
 	static CString	m_strVideoPlayerArgs;
-	static bool		moviePreviewBackup;
+	static bool		m_bMoviePreviewBackup;
 	static int		m_iPreviewSmallBlocks;
 	static bool		m_bPreviewCopiedArchives;
 	static int		m_iInspectAllFileTypes;
@@ -489,7 +489,7 @@ public:
 	static bool		m_bFirstStart;
 	static bool		m_bBetaNaggingDone;
 	static bool		m_bCreditSystem;
-		   
+
 	static bool		log2disk;
 	static bool		debug2disk;
 	static int		iMaxLogBuff;
@@ -500,13 +500,13 @@ public:
 	static bool		msgonlyfriends;
 	static bool		msgsecure;
 	static bool		m_bUseChatCaptchas;
-		   
+
 	static UINT		filterlevel;
 	static UINT		m_uFileBufferSize;
 	static INT_PTR	m_iQueueSize;
 	static int		m_iCommitFiles;
 	static DWORD	m_uFileBufferTimeLimit;
-		   
+
 	static UINT		maxmsgsessions;
 	static time_t	versioncheckLastAutomatic;
 	static CString	messageFilter;
@@ -561,11 +561,11 @@ public:
 	static bool		m_bRemoveFinishedDownloads;
 	static INT_PTR	m_iMaxChatHistory;
 	static bool		m_bShowActiveDownloadsBold;
-		   
+
 	static int		m_iSearchMethod;
 	static bool		m_bAdvancedSpamfilter;
 	static bool		m_bUseSecureIdent;
-		   
+
 	static bool		networkkademlia;
 	static bool		networked2k;
 
@@ -576,7 +576,7 @@ public:
 	static CString	m_sToolbarSettings;
 	static bool		m_bReBarToolbar;
 	static CSize	m_sizToolbarIconSize;
-		   
+
 	static bool		m_bWinaTransToolbar;
 	static bool		m_bShowDownloadToolbar;
 
@@ -607,7 +607,7 @@ public:
 	static UINT		m_nWebMirrorAlertLevel;
 	static bool		m_bRunAsUser;
 	static bool		m_bPreferRestrictedOverUser;
-		   
+
 	static bool		m_bUseOldTimeRemaining;
 
 	// PeerCache
@@ -788,19 +788,19 @@ public:
 	// Saved stats for cumulative upline data
 	static uint32	GetUpSuccessfulSessions()			{ return cumUpSuccessfulSessions; }
 	static uint32	GetUpFailedSessions()				{ return cumUpFailedSessions; }
-	static uint32	GetUpAvgTime()						{ return cumUpAvgTime; }
+	static uint32	GetUpAvgTime()						{ return cumUpSuccessfulSessions ? cumConnUploadTime / cumUpSuccessfulSessions : 0; }
 
 	// Saved stats for cumulative downline data
 	static uint32	GetDownCompletedFiles()				{ return cumDownCompletedFiles; }
 	static uint32	GetDownC_SuccessfulSessions()		{ return cumDownSuccessfulSessions; }
 	static uint32	GetDownC_FailedSessions()			{ return cumDownFailedSessions; }
-	static uint32	GetDownC_AvgTime()					{ return cumDownAvgTime; }
+	static uint32	GetDownC_AvgTime()					{ return cumDownSuccessfulSessions ? cumConnDownloadTime / cumDownSuccessfulSessions : 0; }
 
 	// Session download stats
 	static uint32	GetDownSessionCompletedFiles()		{ return sesDownCompletedFiles; }
 	static uint32	GetDownS_SuccessfulSessions()		{ return sesDownSuccessfulSessions; }
 	static uint32	GetDownS_FailedSessions()			{ return sesDownFailedSessions; }
-	static uint32	GetDownS_AvgTime()					{ return GetDownS_SuccessfulSessions() ? sesDownAvgTime / GetDownS_SuccessfulSessions() : 0; }
+	static uint32	GetDownS_AvgTime()					{ return sesDownSuccessfulSessions ? sesDownAvgTime / sesDownSuccessfulSessions : 0; }
 
 	// Saved stats for corruption/compression
 	static uint64	GetCumLostFromCorruption()			{ return cumLostFromCorruption; }
@@ -969,10 +969,10 @@ public:
 	static bool		FilterLANIPs()						{ return filterLANIPs; }
 	static bool		GetAllowLocalHostIP()				{ return m_bAllocLocalHostIP; }
 	static bool		IsOnlineSignatureEnabled()			{ return onlineSig; }
-	static int		GetMaxGraphUploadRate(bool bEstimateIfUnlimited);
-	static int		GetMaxGraphDownloadRate()			{ return maxGraphDownloadRate; }
-	static void		SetMaxGraphUploadRate(int in);
-	static void		SetMaxGraphDownloadRate(int in)		{ maxGraphDownloadRate = (in ? in : 96); }
+	static uint32	GetMaxGraphDownloadRate()			{ return maxGraphDownloadRate; }
+	static void		SetMaxGraphDownloadRate(uint32 in)	{ maxGraphDownloadRate = (in ? in : 96); }
+	static uint32	GetMaxGraphUploadRate(bool bEstimateIfUnlimited);
+	static void		SetMaxGraphUploadRate(uint32 in);
 
 	static uint32	GetMaxDownload();
 	static uint64	GetMaxDownloadInBytesPerSec(bool dynamic = false);
@@ -1135,7 +1135,7 @@ public:
 	static void		GetAllStatsColors(int iCount, LPDWORD pdwColors);
 	static bool		SetAllStatsColors(int iCount, const LPDWORD pdwColors);
 	static void		ResetStatsColor(int index);
-	static bool		HasCustomTaskIconColor()			{ return bHasCustomTaskIconColor; }
+	static bool		HasCustomTaskIconColor()			{ return m_bHasCustomTaskIconColor; }
 
 	static void		SetMaxConsPerFive(UINT in)			{ MaxConperFive = in; }
 	static LPLOGFONT GetHyperTextLogFont()				{ return &m_lfHyperText; }
@@ -1151,7 +1151,7 @@ public:
 
 	static bool		IsSafeServerConnectEnabled()		{ return m_bSafeServerConnect; }
 	static void		SetSafeServerConnectEnabled(bool in) { m_bSafeServerConnect = in; }
-	static bool		IsMoviePreviewBackup()				{ return moviePreviewBackup; }
+	static bool		IsMoviePreviewBackup()				{ return m_bMoviePreviewBackup; }
 	static int		GetPreviewSmallBlocks()				{ return m_iPreviewSmallBlocks; }
 	static bool		GetPreviewCopiedArchives()			{ return m_bPreviewCopiedArchives; }
 	static int		GetInspectAllFileTypes()			{ return m_iInspectAllFileTypes; }
@@ -1193,16 +1193,16 @@ public:
 	static const CString& GetDateTimeFormat4Lists()		{ return m_strDateTimeFormat4Lists; }
 
 	// Download Categories (Ornis)
-	static INT_PTR	AddCat(Category_Struct *cat)		{ catMap.Add(cat); return catMap.GetCount() - 1; }
+	static INT_PTR	AddCat(Category_Struct *cat)		{ catArr.Add(cat); return catArr.GetCount() - 1; }
 	static bool		MoveCat(INT_PTR from, INT_PTR to);
 	static void		RemoveCat(INT_PTR index);
-	static INT_PTR	GetCatCount()						{ return catMap.GetCount(); }
+	static INT_PTR	GetCatCount()						{ return catArr.GetCount(); }
 	static bool		SetCatFilter(INT_PTR index, int filter);
 	static int		GetCatFilter(INT_PTR index);
 	static bool		GetCatFilterNeg(INT_PTR index);
 	static void		SetCatFilterNeg(INT_PTR index, bool val);
-	static Category_Struct* GetCategory(INT_PTR index)	{ return (index >= 0 && index<catMap.GetCount()) ? catMap[index] : NULL; }
-	static const CString& GetCatPath(INT_PTR index)		{ return catMap[index]->strIncomingPath; }
+	static Category_Struct* GetCategory(INT_PTR index)	{ return (index >= 0 && index<catArr.GetCount()) ? catArr[index] : NULL; }
+	static const CString& GetCatPath(INT_PTR index)		{ return catArr[index]->strIncomingPath; }
 	static DWORD	GetCatColor(INT_PTR index, int nDefault = COLOR_BTNTEXT);
 
 	static bool		GetPreviewOnIconDblClk()			{ return m_bPreviewOnIconDblClk; }
@@ -1362,8 +1362,10 @@ public:
 	static bool		GetLogFileSaving()					{ return m_bVerbose && m_bLogFileSaving; }
 	static bool		GetLogA4AF()						{ return m_bVerbose && m_bLogA4AF; } // ZZ:DownloadManager
 	static bool		GetLogUlDlEvents()					{ return m_bVerbose && m_bLogUlDlEvents; }
-	static bool		GetLogKadSecurityEvents()			{ return m_bVerbose && true; }
+	static bool		GetLogKadSecurityEvents()			{ return m_bVerbose; }
 	static bool		GetUseDebugDevice()					{ return m_bUseDebugDevice; }
+	static int		GetVerboseLogPriority()				{ return m_byLogLevel; }
+#if defined(_DEBUG) || defined(USE_DEBUG_DEVICE)
 	static int		GetDebugServerTCPLevel()			{ return m_iDebugServerTCPLevel; }
 	static int		GetDebugServerUDPLevel()			{ return m_iDebugServerUDPLevel; }
 	static int		GetDebugServerSourcesLevel()		{ return m_iDebugServerSourcesLevel; }
@@ -1372,7 +1374,18 @@ public:
 	static int		GetDebugClientUDPLevel()			{ return m_iDebugClientUDPLevel; }
 	static int		GetDebugClientKadUDPLevel()			{ return m_iDebugClientKadUDPLevel; }
 	static int		GetDebugSearchResultDetailLevel()	{ return m_iDebugSearchResultDetailLevel; }
-	static int		GetVerboseLogPriority()				{ return	m_byLogLevel; }
+#else
+	// release builds optimise out the corresponding debug-only code
+	static int		GetDebugServerTCPLevel()			{ return 0; }
+	static int		GetDebugServerUDPLevel()			{ return 0; }
+	static int		GetDebugServerSourcesLevel()		{ return 0; }
+	static int		GetDebugServerSearchesLevel()		{ return 0; }
+	static int		GetDebugClientTCPLevel()			{ return 0; }
+	static int		GetDebugClientUDPLevel()			{ return 0; }
+	static int		GetDebugClientKadUDPLevel()			{ return 0; }
+	static int		GetDebugSearchResultDetailLevel()	{ return 0; }
+#endif
+
 
 	// Firewall settings
 	static bool		IsOpenPortsOnStartupEnabled()		{ return m_bOpenPortsOnStartUp; }
@@ -1438,14 +1451,14 @@ protected:
 	static CString	m_strFileCommentsFilePath;
 	static Preferences_Ext_Struct *prefsExt;
 	static WORD		m_wWinVer;
-	static CArray<Category_Struct*,Category_Struct*> catMap;
+	static CArray<Category_Struct*,Category_Struct*> catArr;
 	static CString	m_astrDefaultDirs[13];
 	static bool		m_abDefaultDirsCreated[13];
 	static int		m_nCurrentUserDirMode; // Only for PPgTweaks
 
 	static void		CreateUserHash();
 	static void		SetStandardValues();
-	static int		GetRecommendedMaxConnections();
+	static UINT		GetRecommendedMaxConnections();
 	static void		LoadPreferences();
 	static void		SavePreferences();
 	static CString	GetHomepageBaseURLForLevel(int nLevel);

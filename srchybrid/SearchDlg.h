@@ -1,8 +1,6 @@
 #pragma once
 
-struct SSearchParams;
-class CSearchResultsWnd;
-class CSearchParamsWnd;
+#include "SearchParamsWnd.h"
 class CSearchFile;
 class CClosableTabCtrl;
 
@@ -16,7 +14,6 @@ class CSearchDlg : public CFrameWnd
 
 public:
 	CSearchDlg();           // protected constructor used by dynamic creation
-	virtual	~CSearchDlg();
 	CSearchResultsWnd *m_pwndResults;
 
 	BOOL Create(CWnd *pParent);
@@ -49,13 +46,11 @@ public:
 
 	bool CreateNewTab(SSearchParams *pParams, bool bActiveIcon = true);
 	SSearchParams* GetSearchParamsBySearchID(uint32 nSearchID);
-//	void ShowSearchSelector(bool visible);
 	CClosableTabCtrl& GetSearchSelector();
 
 	int GetSelectedCat();
 	void UpdateCatTabs();
 	void SaveAllSettings();
-//	BOOL SaveSearchStrings();
 	void ResetHistory();
 
 	void SetToolTipsDelay(UINT uDelay);
@@ -68,7 +63,7 @@ public:
 	void UpdateSearch(CSearchFile *pSearchFile);
 
 protected:
-	CSearchParamsWnd	*m_pwndParams;
+	CSearchParamsWnd	m_wndParams;
 
 	virtual BOOL PreTranslateMessage(MSG *pMsg);
 

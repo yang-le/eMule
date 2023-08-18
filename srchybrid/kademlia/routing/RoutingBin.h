@@ -1,5 +1,5 @@
 /*
-Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
+Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -29,7 +29,7 @@ There is going to be a new forum created just for the Kademlia side of the clien
 If you feel there is an error or a way to improve something, please
 post it in the forum first and let us look at it. If it is a real improvement,
 it will be added to the official client. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form.
+what all it does, can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 their client on the eMule forum.
 */
@@ -54,8 +54,8 @@ namespace Kademlia
 		UINT GetSize() const;
 		void GetNumContacts(uint32 &nInOutContacts, uint32 &nInOutFilteredContacts, uint8 byMinVersion) const;
 		UINT GetRemaining() const;
-		void GetEntries(ContactList *plistResult, bool bEmptyFirst = true);
-		void GetClosestTo(uint32 uMaxType, const CUInt128 &uTarget, uint32 uMaxRequired, ContactMap *pmapResult, bool bEmptyFirst = true, bool bSetInUse = false);
+		void GetEntries(ContactArray &listResult, bool bEmptyFirst = true);
+		void GetClosestTo(uint32 uMaxType, const CUInt128 &uTarget, uint32 uMaxRequired, ContactMap &rmapResult, bool bEmptyFirst = true, bool bSetInUse = false);
 		bool ChangeContactIPAddress(CContact *pContact, uint32 uNewIP);
 		void PushToBottom(CContact *pContact); // puts an existing contact from X to the end of the list
 		CContact* GetRandomContact(uint32 nMaxType, uint32 nMinKadVersion);

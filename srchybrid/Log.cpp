@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -300,7 +300,7 @@ bool CLogFile::Open()
 		if (m_uBytesWritten == 0) {
 			if (m_eFileFormat == Unicode) {
 				// write Unicode byte order mark 0xFEFF
-				fputwc(0xFEFFui16, m_fp);
+				fputwc(u'\xFEFF', m_fp);
 			} else {
 				ASSERT(m_eFileFormat == Utf8);
 				; // could write UTF-8 header.
@@ -309,15 +309,15 @@ bool CLogFile::Open()
 			// check for Unicode byte order mark 0xFEFF
 			WORD wBOM;
 			if (fread(&wBOM, sizeof wBOM, 1, m_fp) == 1) {
-				if (wBOM == 0xFEFFui16 && m_eFileFormat == Unicode) {
+				if (wBOM == u'\xFEFF' && m_eFileFormat == Unicode) {
 					// log file already in Unicode format
 					(void)fseek(m_fp, 0, SEEK_END); // actually not needed because file is opened in 'Append' mode.
-				} else if (wBOM != 0xFEFFui16 && m_eFileFormat != Unicode) {
+				} else if (wBOM != u'\xFEFF' && m_eFileFormat != Unicode) {
 					// log file already in UTF-8 format
 					(void)fseek(m_fp, 0, SEEK_END); // actually not needed because file is opened in 'Append' mode.
 				} else {
 					// log file does not have the required format, create a new one (with the req. format)
-					ASSERT((m_eFileFormat == Unicode && wBOM != 0xFEFFui16) || (m_eFileFormat == Utf8 && wBOM == 0xFEFF));
+					ASSERT((m_eFileFormat == Unicode && wBOM != u'\xFEFF') || (m_eFileFormat == Utf8 && wBOM == 0xFEFF));
 
 					ASSERT(!m_bInOpenCall);
 					if (!m_bInOpenCall) { // just for safety

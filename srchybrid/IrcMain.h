@@ -44,5 +44,5 @@ protected:
 	CString m_sNick;
 	CString m_sVersion;
 	uint32	m_uVerify;
-	uint32	m_dwLastRequest;
+	DWORD	m_dwLastRequest;
 };

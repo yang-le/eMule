@@ -88,21 +88,21 @@ typedef struct
 	CString	sUserHash;
 	CString	sActive;
 	CString sFileInfo;
-	CString sClientSoft;
 	CString	sClientExtra;
 	CString	sUserName;
 	CString	sFileName;
 	CString	sClientNameVersion;
-	uint32	nTransferredDown;
-	uint32	nTransferredUp;
+	uint64	nTransferredDown;
+	uint64	nTransferredUp;
 	int		nDataRate;
+	TCHAR	sClientSoft[2];
 } UploadUsers;
 
 typedef struct
 {
 	CString	sClientExtra;
 	CString	sClientNameVersion;
-	CString	sClientSoft;
+//	LPCTSTR	sClientSoft;
 	CString	sClientSoftSpecial;
 	CString	sClientState;
 	CString	sClientStateSpecial;
@@ -111,6 +111,7 @@ typedef struct
 	CString	sUserHash;
 	CString	sUserName;
 	uint32	nScore;
+	TCHAR	sClientSoft[2];
 } QueueUsers;
 
 struct SortParams
@@ -309,7 +310,7 @@ public:
 	void StartServer();
 	void StopServer();
 	void RestartSockets();
-	void AddStatsLine(UpDown line);
+	void AddStatsLine(const UpDown &line);
 	bool ReloadTemplates();
 	INT_PTR GetSessionCount()					{ return m_Params.Sessions.GetCount(); }
 	bool IsRunning() const						{ return m_bServerWorking; }
@@ -358,19 +359,20 @@ private:
 	static bool		_IsSessionAdmin(const ThreadData &Data, const CString &strSsessionID);
 	static CString	_GetPermissionDenied();
 	static CString	_GetDownloadGraph(const ThreadData &Data, const CString &filehash);
-	static void		_InsertCatBox(CString &Out, int preselect, const CString &boxlabel, bool jump, bool extraCats, const CString &sSession, const CString &sFileHash, bool ed2kbox = false);
+	static void		_InsertCatBox(CString &Out, int preselect, LPCTSTR boxlabel, bool jump, bool extraCats, const CString &sSession, const CString &sFileHash, bool ed2kbox = false);
 	static CString	_GetSubCatLabel(int cat);
 	static CString  _GetRemoteLinkAddedOk(const ThreadData &Data);
 	static CString  _GetRemoteLinkAddedFailed(const ThreadData &Data);
 	static void		_SetLastUserCat(const ThreadData &Data, long lSession, int cat);
 	static int		_GetLastUserCat(const ThreadData &Data, long lSession);
 	static void		_MakeTransferList(CString &Out, CWebServer *pThis, const ThreadData &Data, void *FilesArray, void *UploadArray, bool bAdmin);
+	static void		_SetBoolean(bool &var, const CString &URL, LPCTSTR pFieldname);
 
 	static void		_SaveWIConfigArray(BOOL *array, int size, LPCTSTR key);
 	static CString	_GetWebImageNameForFileType(const CString &filename);
 	static CString  _GetClientSummary(const CUpDownClient &client);
 	static CString	_GetMyInfo(const ThreadData &Data);
-	static CString	_GetClientversionImage(const CUpDownClient &client);
+	static void		_GetClientversionImage(const CUpDownClient &client, TCHAR pSoft[2]);
 
 	bool			_GetIsTempDisabled() const	{ return m_bIsTempDisabled; } //never used
 
@@ -384,7 +386,6 @@ private:
 	GlobalParams	m_Params;
 	WebTemplates	m_Templates;
 	u_long			m_uCurIP;
-	uint32			m_nStartTempDisabledTime;
 	int				m_iSearchSortby;
 	uint16			m_nIntruderDetect;
 	bool			m_bServerWorking;

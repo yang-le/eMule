@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -17,11 +17,10 @@
 #include "stdafx.h"
 #include <wininet.h>
 #include "resource.h"
+#include "opcodes.h"
 #include "ED2KLink.h"
-#include "OtherFunctions.h"
 #include "SafeFile.h"
 #include "StringConversion.h"
-#include "opcodes.h"
 #include "preferences.h"
 #include "ATLComTime.h"
 
@@ -31,24 +30,6 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
-
-namespace
-{
-	struct autoFree
-	{
-		explicit autoFree(LPTSTR p)
-			: m_p(p)
-		{
-		}
-		~autoFree()
-		{
-			free(m_p);
-		}
-	private:
-		LPTSTR m_p;
-	};
-}
 
 /////////////////////////////////////////////
 // CED2KServerListLink implementation
@@ -127,21 +108,24 @@ CED2KFileLink::CED2KFileLink(LPCTSTR pszName, LPCTSTR pszSize, LPCTSTR pszHash
 	// at the same time. However, to avoid the pasting of raw UTF-8 strings (which would lead
 	// to a greater mess in the network) we always try to decode from UTF-8, even if the string
 	// did not contain escape sequences.
+	UINT uid = 0;
 	if (m_name.IsEmpty())
-		throw GetResString(IDS_ERR_NOTAFILELINK);
-
-	if (_tcslen(pszHash) != 32)
-		throw GetResString(IDS_ERR_ILLFORMEDHASH);
-
-	const sint64 iSize = _tstoi64(pszSize);
-	if (iSize <= 0)
-		throw GetResString(IDS_ERR_NOTAFILELINK);
-	if ((uint64)iSize > MAX_EMULE_FILE_SIZE)
-		throw GetResString(IDS_ERR_TOOLARGEFILE);
-	if ((uint64)iSize > OLD_MAX_EMULE_FILE_SIZE && !thePrefs.CanFSHandleLargeFiles(0))
-		throw GetResString(IDS_ERR_FSCANTHANDLEFILE);
-	if (!strmd4(pszHash, m_hash))
-		throw GetResString(IDS_ERR_ILLFORMEDHASH);
+		uid = IDS_ERR_NOTAFILELINK;
+	else if (_tcslen(pszHash) != 32)
+		uid = IDS_ERR_ILLFORMEDHASH;
+	else {
+		const sint64 iSize = _tstoi64(pszSize);
+		if (iSize <= 0)
+			uid = IDS_ERR_NOTAFILELINK;
+		else if ((uint64)iSize > MAX_EMULE_FILE_SIZE)
+			uid = IDS_ERR_TOOLARGEFILE;
+		else if ((uint64)iSize > OLD_MAX_EMULE_FILE_SIZE && !thePrefs.CanFSHandleLargeFiles(0))
+			uid = IDS_ERR_FSCANTHANDLEFILE;
+		else if (!strmd4(pszHash, m_hash))
+			uid = IDS_ERR_ILLFORMEDHASH;
+	}
+	if (uid)
+		throw GetResString(uid);
 
 	bool bError = false;
 	for (int i = 0; !bError && i < astrParams.GetCount(); ++i) {
@@ -222,14 +206,11 @@ CED2KFileLink::CED2KFileLink(LPCTSTR pszName, LPCTSTR pszSize, LPCTSTR pszHash
 			}
 			break;
 		case _T('h'):
-			{
-				const CString &strHash(strParam.Mid(iPos + 1));
-				if (!strHash.IsEmpty()) {
-					if (DecodeBase32(strHash, m_AICHHash.GetRawHash(), CAICHHash::GetHashSize()) == CAICHHash::GetHashSize()) {
-						m_bAICHHashValid = true;
-						ASSERT(m_AICHHash.GetString().CompareNoCase(strHash) == 0);
-						break;
-					}
+			if (strParam[iPos + 1]) { //not empty
+				if (DecodeBase32(CPTR(strParam, iPos + 1), m_AICHHash.GetRawHash(), CAICHHash::GetHashSize()) == CAICHHash::GetHashSize()) {
+					m_bAICHHashValid = true;
+					ASSERT(m_AICHHash.GetString().CompareNoCase(CPTR(strParam, iPos + 1)) == 0);
+					break;
 				}
 			}
 		default:
@@ -242,106 +223,106 @@ CED2KFileLink::CED2KFileLink(LPCTSTR pszName, LPCTSTR pszSize, LPCTSTR pszHash
 		m_hashset = NULL;
 	}
 
-	if (pszSources && *pszSources) {
-		LPTSTR pNewString = _tcsdup(pszSources);
-		if (!pNewString)
-			throw CString(_T("No memory"));
-		autoFree liberator(pNewString);
-		LPTSTR pCh = pNewString;
+	if (!pszSources || !*pszSources)
+		return;
+	LPCTSTR pCh = pszSources;
+	pCh = _tcsstr(pCh, _T("sources"));
+	if (pCh == NULL)
+		return;
+	pCh += 7; // point to char after "sources"
+	LPCTSTR pEnd = pCh; // make a pointer to the terminating NUL
+	while (*pEnd)
+		++pEnd;
 
-		pCh = _tcsstr(pCh, _T("sources"));
-		if (pCh != NULL) {
-			pCh += 7; // point to char after "sources"
-			LPTSTR pEnd = pCh;
-			while (*pEnd)
-				++pEnd; // make pEnd point to the terminating NULL
-			bool bAllowSources;
-			// if there's an expiration date...
-			if (*pCh == _T('@') && (pEnd - pCh) > 7) {
-				TCHAR date[3];
-				++pCh; // after '@'
-				date[2] = 0; // terminate the two character string
-				date[0] = *pCh++;
-				date[1] = *pCh++;
-				int nYear = (int)_tcstol(date, 0, 10);
-				date[0] = *pCh++;
-				date[1] = *pCh++;
-				int nMonth = (int)_tcstol(date, 0, 10);
-				date[0] = *pCh++;
-				date[1] = *pCh++;
-				int nDay = (int)_tcstol(date, 0, 10);
-				COleDateTime expirationDate(2000 + nYear, nMonth, nDay, 0, 0, 0);
-				bAllowSources = (expirationDate.GetStatus() == COleDateTime::DateTimeStatus::valid
-					&& COleDateTime::GetCurrentTime() < expirationDate);
-			} else
-				bAllowSources = true;
+	// if there's an expiration date...
+	if (*pCh == _T('@')) {
+		if (pEnd - pCh <= 7)
+			return;
+		TCHAR date[3];
+		date[2] = 0; // terminate the string
 
-			// increment pCh to point to the first "ip:port" and check for sources
-			if (bAllowSources && ++pCh < pEnd) {
-				//uint32 dwServerIP = 0; - is unknown here
-				//uint16 nServerPort = 0;
-				uint16 nCount = 0;
-				int nInvalid = 0;
-				SourcesList = new CSafeMemFile(256);
-				SourcesList->WriteUInt16(nCount); // init to 0, we'll fix this at the end.
-				// for each "ip:port" source string until the end
-				// limit to prevent overflow (uint16 due to CPartFile::AddClientSources)
-				while (*pCh != 0 && nCount < MAXSHORT) {
-					LPTSTR pIP = pCh;
-					// find the end of this ip:port string & start of next ip:port string.
-					if ((pCh = _tcschr(pCh, _T(','))) != NULL)
-						*pCh++ = 0; // terminate current "ip:port" and point to next "ip:port"
-					else
-						pCh = pEnd;
+		struct tm tmexp = {};
+		date[0] = *++pCh;
+		date[1] = *++pCh;
+		tmexp.tm_year = (int)_tcstol(date, NULL, 10) + (2000 - 1900); //since 1900
+		date[0] = *++pCh;
+		date[1] = *++pCh;
+		tmexp.tm_mon = (int)_tcstol(date, NULL, 10) - 1;
+		date[0] = *++pCh;
+		date[1] = *++pCh;
+		tmexp.tm_mday = (int)_tcstol(date, NULL, 10);
+		time_t tExpire = mktime(&tmexp);
+		//no time zone information, assume UTC
+		if (tExpire == (time_t)-1 || tExpire <= time(NULL))
+			return;
+		++pCh;
+	}
 
-					LPTSTR pPort = _tcschr(pIP, _T(':'));
-					// if port is not present for this ip, go to the next ip.
-					if (pPort == NULL) {
-						++nInvalid;
-						continue;
-					}
-					*pPort++ = 0;	// terminate ip string and point pPort to port string.
-					unsigned long uPort = _tcstoul(pPort, 0, 10);
-					// skip bad ips / ports
-					if (!uPort || uPort > _UI16_MAX) {
-						++nInvalid;
-						continue;
-					}
-					CStringA sIPa(pIP);
-					unsigned long dwID = inet_addr(sIPa);
-					if (dwID == INADDR_NONE) {	// hostname?
-						if (_tcslen(pIP) > 512) {
-							++nInvalid;
-							continue;
-						}
-						SUnresolvedHostname *hostname = new SUnresolvedHostname;
-						hostname->strHostname = sIPa;
-						hostname->nPort = static_cast<uint16>(uPort);
-						m_HostnameSourcesList.AddTail(hostname);
-						continue;
-					}
-					//TODO: This will filter out *.*.*.0 clients. Is there a nice way to fix?
-					if (::IsLowID(dwID)) { // ip
-						++nInvalid;
-						continue;
-					}
+	if (++pCh >= pEnd) //make pCh to point to the first "ip:port" and check for sources
+		return;
+	//uint32 dwServerIP = 0; - unknown here
+	//uint16 nServerPort = 0;
+	int nInvalid = 0;
+	SourcesList = new CSafeMemFile(256);
+	uint16 nCount = 0;
+	SourcesList->WriteUInt16(nCount); // init to 0, we'll fix this at the end.
+	// for each "ip:port" source string until the end
+	// limit to prevent overflow (uint16 due to CPartFile::AddClientSources)
+	while (*pCh != 0 && nCount < MAXSHORT) {
+		LPCTSTR pIP = pCh;
+		LPCTSTR pNext;
+		// find the end of this ip:port string & start of next ip:port string.
+		if ((pCh = _tcschr(pCh, _T(','))) != NULL)
+			pNext = pCh++; // ends the current "ip:port" and point to next "ip:port"
+		else
+			pNext = pCh = pEnd;
 
-					SourcesList->WriteUInt32(dwID);
-					SourcesList->WriteUInt16(static_cast<uint16>(uPort));
-					SourcesList->WriteUInt32(0); // dwServerIP
-					SourcesList->WriteUInt16(0); // nServerPort
-					++nCount;
-				}
-				if (nCount) {
-					SourcesList->SeekToBegin();
-					SourcesList->WriteUInt16(nCount);
-					SourcesList->SeekToBegin();
-				} else {
-					delete SourcesList;
-					SourcesList = NULL;
-				}
-			}
+		LPCTSTR pPort = _tcschr(pIP, _T(':'));
+		// if port is not present for this ip, skip to the next ip
+		if (pPort == NULL || pPort >= pNext) {
+			++nInvalid;
+			continue;
 		}
+		CStringA sIPa(pIP, static_cast<int>(pPort - pIP));
+		++pPort;	// move to port string
+		unsigned long uPort = _tcstoul(pPort, NULL, 10);
+		// skip bad ips and ports
+		if (!uPort || uPort > _UI16_MAX) {
+			++nInvalid;
+			continue;
+		}
+		unsigned long dwID = inet_addr(sIPa);
+		if (dwID == INADDR_NONE) {	// host name?
+			if (_tcslen(pIP) > 512) {
+				++nInvalid;
+				continue;
+			}
+			SUnresolvedHostname *hostname = new SUnresolvedHostname;
+			hostname->strHostname = sIPa;
+			hostname->nPort = static_cast<uint16>(uPort);
+			m_HostnameSourcesList.AddTail(hostname);
+			continue;
+		}
+		//TODO: This will filter out *.*.*.0 clients. Is there a nice way to fix?
+		if (::IsLowID(dwID)) { // ip
+			++nInvalid;
+			continue;
+		}
+
+		SourcesList->WriteUInt32(dwID);
+		SourcesList->WriteUInt16(static_cast<uint16>(uPort));
+		SourcesList->WriteUInt32(0); // dwServerIP
+		SourcesList->WriteUInt16(0); // nServerPort
+		++nCount;
+	}
+
+	if (nCount) {
+		SourcesList->SeekToBegin();
+		SourcesList->WriteUInt16(nCount);
+		SourcesList->SeekToBegin();
+	} else {
+		delete SourcesList;
+		SourcesList = NULL;
 	}
 }
 

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -146,8 +146,7 @@ CMainFrameDropTarget::CMainFrameDropTarget()
 	, m_cfHTML((CLIPFORMAT)RegisterClipboardFormat(_T("HTML Format")))
 	, m_cfShellURL((CLIPFORMAT)RegisterClipboardFormat(CFSTR_SHELLURL))
 {
-	ASSERT(m_cfHTML != 0);
-	ASSERT(m_cfShellURL != 0);
+	ASSERT(m_cfHTML && m_cfShellURL);
 }
 
 HRESULT CMainFrameDropTarget::PasteHTMLDocument(IHTMLDocument2 *doc, PASTEURLDATA* /*pPaste*/)
@@ -179,7 +178,7 @@ HRESULT CMainFrameDropTarget::PasteHTMLDocument(IHTMLDocument2 *doc, PASTEURLDAT
 							theApp.emuledlg->ProcessED2KLink(CString(bstrHref));
 							hrPasteResult = S_OK;
 						}
-						anchor.Release(); // conserve memory
+						anchor.Release(); // free memory
 					}
 				}
 			}
@@ -314,7 +313,7 @@ HRESULT CMainFrameDropTarget::PasteHTML(COleDataObject &data)
 	HRESULT hrPasteResult = E_FAIL;
 	HGLOBAL hMem = data.GetGlobalData(m_cfHTML);
 	if (hMem != NULL) {
-		LPCSTR pszClipboard = (LPCSTR)GlobalLock(hMem);
+		LPCSTR pszClipboard = (LPCSTR)::GlobalLock(hMem);
 		if (pszClipboard != NULL) {
 			hrPasteResult = S_FALSE; // default: nothing was pasted
 			LPCSTR pszHTML = strchr(pszClipboard, '<');
@@ -323,9 +322,9 @@ HRESULT CMainFrameDropTarget::PasteHTML(COleDataObject &data)
 				PASTEURLDATA Paste(bstrHTMLText);
 				hrPasteResult = PasteHTML(&Paste);
 			}
-			GlobalUnlock(hMem);
+			::GlobalUnlock(hMem);
 		}
-		GlobalFree(hMem);
+		::GlobalFree(hMem);
 	}
 	return hrPasteResult;
 }
@@ -335,7 +334,7 @@ HRESULT CMainFrameDropTarget::PasteText(CLIPFORMAT cfData, COleDataObject &data)
 	HRESULT hrPasteResult = E_FAIL;
 	HANDLE hMem = data.GetGlobalData(cfData);
 	if (hMem != NULL) {
-		LPCSTR pszUrlA = (LPCSTR)GlobalLock(hMem);
+		LPCSTR pszUrlA = (LPCSTR)::GlobalLock(hMem);
 		if (pszUrlA != NULL) {
 			// skip white space
 			while (isspace(*pszUrlA))
@@ -352,10 +351,9 @@ HRESULT CMainFrameDropTarget::PasteText(CLIPFORMAT cfData, COleDataObject &data)
 					}
 				}
 			}
-
-			GlobalUnlock(hMem);
+			::GlobalUnlock(hMem);
 		}
-		GlobalFree(hMem);
+		::GlobalFree(hMem);
 	}
 	return hrPasteResult;
 }
@@ -380,7 +378,7 @@ HRESULT CMainFrameDropTarget::AddUrlFileContents(LPCTSTR pszFileName)
 							theApp.emuledlg->ProcessED2KLink(pwszUrl);
 						else
 							hrResult = S_FALSE;
-						CoTaskMemFree(pwszUrl);
+						::CoTaskMemFree(pwszUrl);
 					}
 				}
 			}
@@ -395,7 +393,7 @@ HRESULT CMainFrameDropTarget::PasteHDROP(COleDataObject &data)
 	HRESULT hrPasteResult = E_FAIL;
 	HANDLE hMem = data.GetGlobalData(CF_HDROP);
 	if (hMem != NULL) {
-		LPDROPFILES lpDrop = (LPDROPFILES)GlobalLock(hMem);
+		LPDROPFILES lpDrop = (LPDROPFILES)::GlobalLock(hMem);
 		if (lpDrop != NULL) {
 			if (lpDrop->fWide) {
 				LPCWSTR pszFileNameW = (LPCWSTR)((LPBYTE)lpDrop + lpDrop->pFiles);
@@ -414,60 +412,58 @@ HRESULT CMainFrameDropTarget::PasteHDROP(COleDataObject &data)
 					pszFileNameA += strlen(pszFileNameA) + 1;
 				}
 			}
-			GlobalUnlock(hMem);
+			::GlobalUnlock(hMem);
 		}
-		GlobalFree(hMem);
+		::GlobalFree(hMem);
 	}
 	return hrPasteResult;
 }
 
 BOOL CMainFrameDropTarget::IsSupportedDropData(COleDataObject *pDataObject)
 {
-	BOOL bResult;
-
 	//************************************************************************
 	//*** THIS FUNCTION HAS TO BE AS FAST AS POSSIBLE!!!
 	//************************************************************************
 
-	if (m_cfHTML && pDataObject->IsDataAvailable(m_cfHTML)) {
-		// If the data is in 'HTML Format', there is no need to check the contents.
-		bResult = TRUE;
-	} else if (m_cfShellURL && pDataObject->IsDataAvailable(m_cfShellURL)) {
-		// If the data is in 'UniformResourceLocator', there is no need to check the contents.
-		bResult = TRUE;
-	} else if (pDataObject->IsDataAvailable(CF_UNICODETEXT)) {
+	// If the data is in 'HTML Format', there is no need to check the contents.
+	if (m_cfHTML && pDataObject->IsDataAvailable(m_cfHTML))
+		return TRUE;
+
+	// If the data is in 'UniformResourceLocator', there is no need to check the contents.
+	if (m_cfShellURL && pDataObject->IsDataAvailable(m_cfShellURL))
+		return TRUE;
+
+	BOOL bResult = FALSE; // Unknown data format
+	if (pDataObject->IsDataAvailable(CF_UNICODETEXT)) {
 		//
 		// Check text data
 		//
-		bResult = FALSE;
 		HANDLE hMem = pDataObject->GetGlobalData(CF_UNICODETEXT);
 		if (hMem != NULL) {
-			LPCWSTR lpszUrl = (LPCWSTR)GlobalLock(hMem);
+			LPCWSTR lpszUrl = (LPCWSTR)::GlobalLock(hMem);
 			if (lpszUrl != NULL) {
 				// skip white space
 				while (isspace(*lpszUrl))
 					++lpszUrl;
 				bResult = IsUrlSchemeSupportedW(lpszUrl);
-				GlobalUnlock(hMem);
+				::GlobalUnlock(hMem);
 			}
-			GlobalFree(hMem);
+			::GlobalFree(hMem);
 		}
 	} else if (pDataObject->IsDataAvailable(CF_HDROP)) {
 		//
 		// Check HDROP data
 		//
-		bResult = FALSE;
-
 		HANDLE hMem = pDataObject->GetGlobalData(CF_HDROP);
 		if (hMem != NULL) {
-			LPDROPFILES lpDrop = (LPDROPFILES)GlobalLock(hMem);
+			LPDROPFILES lpDrop = (LPDROPFILES)::GlobalLock(hMem);
 			if (lpDrop != NULL) {
 				// Just check, if there's at least one file we can import
 				if (lpDrop->fWide) {
 					LPCWSTR pszFileW = (LPCWSTR)((LPBYTE)lpDrop + lpDrop->pFiles);
 					while (*pszFileW != L'\0') {
-						int iLen = (int)wcslen(pszFileW);
-						LPCWSTR pszExtW = GetFileExtW(pszFileW, iLen);
+						size_t iLen = wcslen(pszFileW);
+						LPCWSTR pszExtW = GetFileExtW(pszFileW, (int)iLen);
 						if (pszExtW != NULL && _wcsicmp(pszExtW, FILEEXTDOT_INETSHRTCUTW) == 0) {
 							bResult = TRUE;
 							break;
@@ -477,8 +473,8 @@ BOOL CMainFrameDropTarget::IsSupportedDropData(COleDataObject *pDataObject)
 				} else {
 					LPCSTR pszFileA = (LPCSTR)((LPBYTE)lpDrop + lpDrop->pFiles);
 					while (*pszFileA != '\0') {
-						int iLen = (int)strlen(pszFileA);
-						LPCSTR pszExtA = GetFileExtA(pszFileA, iLen);
+						size_t iLen = strlen(pszFileA);
+						LPCSTR pszExtA = GetFileExtA(pszFileA, (int)iLen);
 						if (pszExtA != NULL && _stricmp(pszExtA, FILEEXTDOT_INETSHRTCUTA) == 0) {
 							bResult = TRUE;
 							break;
@@ -486,15 +482,11 @@ BOOL CMainFrameDropTarget::IsSupportedDropData(COleDataObject *pDataObject)
 						pszFileA += iLen + 1;
 					}
 				}
-				GlobalUnlock(hMem);
+				::GlobalUnlock(hMem);
 			}
-			GlobalFree(hMem);
+			::GlobalFree(hMem);
 		}
-	} else {
-		// Unknown data format
-		bResult = FALSE;
 	}
-
 	return bResult;
 }
 

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -203,7 +203,7 @@ void CHTRichEditCtrl::FlushBuffer()
 {
 	if (!m_astrBuff.IsEmpty()) { // flush buffer
 		for (int i = 0; i < m_astrBuff.GetCount(); ++i) {
-			const CString &rstrLine = m_astrBuff[i];
+			const CString &rstrLine(m_astrBuff[i]);
 			if (!rstrLine.IsEmpty()) {
 				if ((UINT)rstrLine[0] < 8)
 					AddLine((LPCTSTR)rstrLine + 1, rstrLine.GetLength() - 1, false, GetLogLineColor((UINT)rstrLine[0]));
@@ -371,7 +371,7 @@ void CHTRichEditCtrl::AddString(int nPos, LPCTSTR pszString, bool bLink, COLORRE
 			cf.dwEffects |= CFE_AUTOBACKCOLOR;
 		//}
 		//else {
-		//	ASSERT( m_crBackground != CLR_DEFAULT );
+		//	ASSERT(m_crBackground != CLR_DEFAULT);
 		//	cf.dwEffects &= ~CFE_AUTOBACKCOLOR;
 		//	cf.crBackColor = m_crBackground;
 		//}
@@ -575,13 +575,13 @@ BOOL CHTRichEditCtrl::OnCommand(WPARAM wParam, LPARAM)
 bool CHTRichEditCtrl::SaveLog(LPCTSTR pszDefName)
 {
 	bool bResult = false;
-	const CString &fname(pszDefName ? CString(pszDefName) : m_strTitle);
+	const CString &fname(pszDefName ? pszDefName : m_strTitle);
 	CFileDialog dlg(FALSE, _T("log"), (LPCTSTR)ValidFilename(fname), OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, _T("Log Files (*.log)|*.log||"), this, 0);
 	if (dlg.DoModal() == IDOK) {
 		FILE *fp = _tfsopen(dlg.GetPathName(), _T("wb"), _SH_DENYWR);
 		if (fp) {
 			// write Unicode byte order mark 0xFEFF
-			fputwc(0xFEFFui16, fp);
+			fputwc(u'\xFEFF', fp);
 
 			CString strText;
 			GetWindowText(strText);
@@ -648,30 +648,27 @@ void CHTRichEditCtrl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	CRichEditCtrl::OnKeyDown(nChar, nRepCnt, nFlags);
 }
 
-void CHTRichEditCtrl::AppendText(const CString &sText)
+void CHTRichEditCtrl::AppendText(LPCTSTR sText)
 {
 	LPCTSTR psz = sText;
 	LPCTSTR pszStart = psz;
 	while (*psz != _T('\0')) {
 		bool bFoundScheme = false;
-		for (unsigned i = 0; i < _countof(s_apszSchemes); ++i) {
+		for (unsigned i = 0; s_apszSchemes[i].pszScheme; ++i) {
 			if (_tcsncmp(psz, s_apszSchemes[i].pszScheme, s_apszSchemes[i].iLen) == 0) {
 				// output everything before the URL
-				if (psz - pszStart > 0) {
-					CString str(pszStart, (int)(psz - pszStart));
-					AddLine(str, str.GetLength());
-				}
+				int iLen = (int)(psz - pszStart);
+				if (iLen > 0)
+					AddLine(pszStart, iLen);
 
 				// search next space or EOL
-				int iLen = (int)_tcscspn(psz, _T(" \t\r\n"));
-				if (iLen == 0) {
-					AddLine(psz, -1, true);
+				iLen = (int)_tcscspn(psz, _T(" \t\r\n"));
+				if (iLen <= 0) {
+					iLen = -1;
 					psz += _tcslen(psz);
-				} else {
-					CString str(psz, iLen);
-					AddLine(str, str.GetLength(), true);
+				} else
 					psz += iLen;
-				}
+				AddLine(psz, iLen, true);
 				pszStart = psz;
 				bFoundScheme = true;
 				break;
@@ -685,14 +682,14 @@ void CHTRichEditCtrl::AppendText(const CString &sText)
 		AddLine(pszStart, -1);
 }
 
-void CHTRichEditCtrl::AppendHyperLink(const CString &sText, const CString &sTitle, const CString &sCommand, const CString &sDirectory)
+void CHTRichEditCtrl::AppendHyperLink(LPCTSTR pszText, LPCTSTR pszTitle, const CString &sCommand, LPCTSTR pszDirectory)
 {
-	UNREFERENCED_PARAMETER(sText);
-	UNREFERENCED_PARAMETER(sTitle);
-	UNREFERENCED_PARAMETER(sDirectory);
-	ASSERT(sText.IsEmpty());
-	ASSERT(sTitle.IsEmpty());
-	ASSERT(sDirectory.IsEmpty());
+	UNREFERENCED_PARAMETER(pszText);
+	UNREFERENCED_PARAMETER(pszTitle);
+	UNREFERENCED_PARAMETER(pszDirectory);
+	ASSERT(!pszText || !*pszText);
+	ASSERT(!pszTitle || !*pszTitle);
+	ASSERT(!pszDirectory || !*pszDirectory);
 	AddLine(sCommand, sCommand.GetLength(), true);
 }
 
@@ -701,7 +698,7 @@ void CHTRichEditCtrl::AppendColoredText(LPCTSTR pszText, COLORREF cr, COLORREF b
 	AddLine(pszText, -1, false, cr, bk, mask);
 }
 
-void CHTRichEditCtrl::AppendKeyWord(const CString &str, COLORREF cr)
+void CHTRichEditCtrl::AppendKeyWord(LPCTSTR str, COLORREF cr)
 {
 	AppendColoredText(str, cr);
 }
@@ -715,7 +712,7 @@ BOOL CHTRichEditCtrl::OnEnLink(LPNMHDR pNMHDR, LRESULT *pResult)
 
 		// check if that "URL" has a valid URL scheme. if it has not, pass that notification up to the
 		// parent window which may interpret that "URL" in some other way.
-		for (unsigned i = 0; i < _countof(s_apszSchemes); ++i)
+		for (unsigned i = 0; s_apszSchemes[i].pszScheme; ++i)
 			if (_tcsncmp(strUrl, s_apszSchemes[i].pszScheme, s_apszSchemes[i].iLen) == 0) {
 				BrowserOpen(strUrl, NULL);
 				return (BOOL)(*pResult = 1); // do not pass this message to any parent
@@ -899,12 +896,12 @@ class CBitmapDataObject : public CCmdTarget
 {
 public:
 	explicit CBitmapDataObject(HBITMAP hBitmap);
-	virtual	~CBitmapDataObject() = default;
 
 protected:
 	DECLARE_INTERFACE_MAP();
 
 	BEGIN_INTERFACE_PART(DataObject, IDataObject)
+		virtual ~XDataObject() = default;
 		STDMETHOD(GetData)(FORMATETC *pformatetcIn, STGMEDIUM *pmedium);
 		STDMETHOD(GetDataHere)(FORMATETC *pformatetc, STGMEDIUM *pmedium);
 		STDMETHOD(QueryGetData)(FORMATETC *pformatetc);
@@ -932,19 +929,19 @@ CBitmapDataObject::CBitmapDataObject(HBITMAP hBitmap)
 #pragma warning(disable:4100) // unreferenced parameter
 #pragma warning(disable:4555) // expression has no effect; expected expression with side-effect (because of the 'METHOD_PROLOGUE' macro)
 
-STDMETHODIMP CBitmapDataObject::XDataObject::QueryInterface(REFIID riid, void **ppvObj) noexcept
+STDMETHODIMP CBitmapDataObject::XDataObject::QueryInterface(REFIID iid, LPVOID *ppvObj) XP_NOEXCEPT
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
-	return (HRESULT)pThis->ExternalQueryInterface(&riid, ppvObj);
+	return (HRESULT)pThis->ExternalQueryInterface(&iid, ppvObj);
 }
 
-STDMETHODIMP_(ULONG) CBitmapDataObject::XDataObject::AddRef() noexcept
+STDMETHODIMP_(ULONG) CBitmapDataObject::XDataObject::AddRef() XP_NOEXCEPT
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 	return pThis->ExternalAddRef();
 }
 
-STDMETHODIMP_(ULONG) CBitmapDataObject::XDataObject::Release() noexcept
+STDMETHODIMP_(ULONG) CBitmapDataObject::XDataObject::Release() XP_NOEXCEPT
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 	return pThis->ExternalRelease();
@@ -1257,7 +1254,7 @@ HBITMAP CHTRichEditCtrl::GetSmileyBitmap(LPCTSTR pszSmileyID, COLORREF bk)
 	// icons (which can also be GIF images) can have any size.
 	HBITMAP hBitmap = IconToBitmap(hIcon, bk, 0, 0);
 	if (hBitmap != NULL)
-		sm_aSmileyBitmaps.SetAt(sSmileyID, hBitmap);
+		sm_aSmileyBitmaps[sSmileyID] = hBitmap;
 	return hBitmap;
 }
 
@@ -1305,7 +1302,7 @@ bool CHTRichEditCtrl::InsertSmiley(LPCTSTR pszSmileyID, COLORREF bk)
 #endif
 
 	CComPtr<IOleObject> pIOleObject;
-	if (OleCreateStaticFromData(pIDataObject, __uuidof(pIOleObject), OLERENDER_FORMAT, &FormatEtc, pIOleClientSite, sm_pIStorageSmileys, (void **)&pIOleObject) != S_OK)
+	if (S_OK != OleCreateStaticFromData(pIDataObject, __uuidof(pIOleObject), OLERENDER_FORMAT, &FormatEtc, pIOleClientSite, sm_pIStorageSmileys, (void **)&pIOleObject))
 		return false;
 	OleSetContainedObject(pIOleObject, TRUE);
 
@@ -1345,9 +1342,9 @@ bool CHTRichEditCtrl::AddCaptcha(HBITMAP hbmp)
 
 	if (m_pIStorageCaptchas == NULL) {
 		CComPtr<ILockBytes> pILockBytes;
-		if (CreateILockBytesOnHGlobal(NULL, TRUE, &pILockBytes) != S_OK)
+		if (S_OK != CreateILockBytesOnHGlobal(NULL, TRUE, &pILockBytes))
 			return false;
-		if (StgCreateDocfileOnILockBytes(pILockBytes, STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_READWRITE, 0, &m_pIStorageCaptchas) != S_OK)
+		if (S_OK != StgCreateDocfileOnILockBytes(pILockBytes, STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_READWRITE, 0, &m_pIStorageCaptchas))
 			return false;
 	}
 

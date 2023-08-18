@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -24,7 +24,7 @@
 #define	DEFAULT_TCP_PORT_OLD	4662
 #define	DEFAULT_UDP_PORT_OLD	(DEFAULT_TCP_PORT_OLD+10)
 
-#define PORTTESTURL			_T("http://porttest.emule-project.net/connectiontest.php?tcpport=%i&udpport=%i&lang=%i")
+#define PORTTESTURL			_T("https://porttest.emule-project.net/connectiontest.php?tcpport=%i&udpport=%i&lang=%i")
 
 class CSearchList;
 class CUploadQueue;
@@ -50,6 +50,7 @@ class CPeerCacheFinder;
 class CFirewallOpener;
 class CUPnPImplWrapper;
 class CUploadDiskIOThread;
+class CPartFileWriteThread;
 
 struct SLogItem;
 
@@ -93,6 +94,8 @@ public:
 	CFirewallOpener		*m_pFirewallOpener;
 	CUPnPImplWrapper	*m_pUPnPFinder;
 	CUploadDiskIOThread	*m_pUploadDiskIOThread;
+	CPartFileWriteThread *m_pPartFileWriteThread;
+
 
 	static const UINT	m_nVersionMjr;
 	static const UINT	m_nVersionMin;

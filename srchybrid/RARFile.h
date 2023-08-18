@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2005 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//Copyright (C)2005-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -96,13 +96,13 @@ public:
 	bool Skip() const;
 
 protected:
-	HMODULE m_hLibUnRar;
 	CString m_strArchiveFilePath;
+	HMODULE m_hLibUnRar;
 	HANDLE m_hArchive;
 
 	bool InitUnRarLib();
-	HANDLE(WINAPI *m_pfnRAROpenArchiveEx)(struct RAROpenArchiveDataEx *ArchiveData) throw(...);
-	int (WINAPI *m_pfnRARCloseArchive)(HANDLE hArcData) throw(...);
-	int (WINAPI *m_pfnRARReadHeaderEx)(HANDLE hArcData, struct RARHeaderDataEx *HeaderData) throw(...);
-	int (WINAPI *m_pfnRARProcessFileW)(HANDLE hArcData, int iOperation, const WCHAR *pszDestFolder, const WCHAR *pszDestName) throw(...);
+	HANDLE(WINAPI *m_pfnRAROpenArchiveEx)(struct RAROpenArchiveDataEx *ArchiveData) noexcept(false);
+	int (WINAPI *m_pfnRARCloseArchive)(HANDLE hArcData) noexcept(false);
+	int (WINAPI *m_pfnRARReadHeaderEx)(HANDLE hArcData, struct RARHeaderDataEx *HeaderData) noexcept(false);
+	int (WINAPI *m_pfnRARProcessFileW)(HANDLE hArcData, int iOperation, const WCHAR *pszDestFolder, const WCHAR *pszDestName) noexcept(false);
 };

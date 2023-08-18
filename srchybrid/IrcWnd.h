@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -42,11 +42,11 @@ public:
 	virtual	~CIrcWnd();
 
 	void Localize();
-	bool GetLoggedIn() const;
-	void SetLoggedIn(bool bFlag);
-	void SetSendFileString(const CString &sInFile);
-	const CString& GetSendFileString() const;
-	bool IsConnected() const;
+	bool GetLoggedIn() const						{ return m_bLoggedIn; };
+	void SetLoggedIn(bool bFlag)					{ m_bLoggedIn = bFlag; };
+	void SetSendFileString(const CString &sInFile)	{ m_sSendString = sInFile; };
+	const CString& GetSendFileString() const		{ return m_sSendString; };
+	bool IsConnected() const						{ return m_bConnected; };
 	void UpdateFonts(CFont *pFont);
 	void ParseChangeMode(const CString &sChannel, const CString &sChanger, CString sCommands, const CString &sParams);
 	void AddCurrent(const CString &sLine, bool bShowActivity = true, UINT uStatusCode = 0);
@@ -54,9 +54,9 @@ public:
 	void AddStatusF(LPCTSTR sLine, ...); //to pass sLine by reference would be an 'undefined behaviour'
 	void AddInfoMessage(Channel *pChannel, const CString &sLine);
 	void AddInfoMessage(const CString &sChannel, const CString &sLine, const bool bShowChannel = false);
-	void AddInfoMessageC(Channel *pChannel, const COLORREF &msgcolour, LPCTSTR sLine);
-	void AddInfoMessageC(const CString &sChannel, const COLORREF &msgcolour, LPCTSTR sLine);
-	void AddInfoMessageCF(const CString &sChannel, const COLORREF &msgcolour, LPCTSTR sLine, ...);
+	void AddInfoMessageC(Channel *pChannel, const COLORREF msgcolour, LPCTSTR sLine);
+	void AddInfoMessageC(const CString &sChannel, const COLORREF msgcolour, LPCTSTR sLine);
+	void AddInfoMessageCF(const CString &sChannel, const COLORREF msgcolour, LPCTSTR sLine, ...);
 	void AddInfoMessageF(const CString &sChannel, LPCTSTR sLine, ...);
 	void AddMessage(const CString &sChannel, const CString &sTargetName, const CString &sLine);
 	void AddMessageF(const CString &sChannel, const CString &sTargetName, LPCTSTR sLine, ...);

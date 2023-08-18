@@ -19,7 +19,7 @@ There is going to be a new forum created just for the Kademlia side of the clien
 If you feel there is an error or a way to improve something, please
 post it in the forum first and let us look at it. If it is a real improvement,
 it will be added to the official client. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form.
+what all it does, can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 their client on the eMule forum.
 */
@@ -107,11 +107,11 @@ namespace Kademlia
 		static void	AdjustGlobalPublishTracking(uint32 uIP, bool bIncrease, const CString &strDbgReason);
 
 		float	m_fTrustValue;
-		CArray<uint8>		m_anAICHHashPopularity;
+		CArray<uint8, uint8> m_anAICHHashPopularity;
 		CArray<CAICHHash>	m_aAICHHashes;
 		static CMap<uint32, uint32, uint32, uint32> s_mapGlobalPublishIPs; // tracks count of publishings for each 255.255.255.0/28 subnet
 		CList<structPublishingIP> *m_pliPublishingIPs;
-		uint32	dwLastTrustValueCalc;
+		DWORD	dwLastTrustValueCalc;
 	private:
 		bool SearchTermsMatch(const SSearchTerm &rSearchTerm) const;
 		CKadTagValueString m_strSearchTermCacheCommonFileNameLowerCase; // contains a valid value only while 'SearchTermsMatch' is running.

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -22,11 +22,11 @@
 #include "SafeFile.h"
 #include "Opcodes.h"
 #include "ServerConnect.h"
-#include <cryptopp/base64.h>
-#include <cryptopp/osrng.h>
-#include <cryptopp/files.h>
 #include "emuledlg.h"
 #include "Log.h"
+#include "cryptopp/base64.h"
+#include "cryptopp/osrng.h"
+#include "cryptopp/files.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -36,8 +36,8 @@ static char THIS_FILE[] = __FILE__;
 
 #define CLIENTS_MET_FILENAME	_T("clients.met")
 
-CClientCredits::CClientCredits(CreditStruct *in_credits)
-	: m_pCredits(in_credits)
+CClientCredits::CClientCredits(const CreditStruct &in_credits)
+	: m_Credits(in_credits)
 {
 	InitalizeIdent();
 	ClearWaitStartTime();
@@ -45,18 +45,12 @@ CClientCredits::CClientCredits(CreditStruct *in_credits)
 }
 
 CClientCredits::CClientCredits(const uchar *key)
+	: m_Credits()
 {
-	m_pCredits = new CreditStruct();
-	md4cpy(m_pCredits->abyKey, key);
+	md4cpy(&m_Credits.abyKey, key);
 	InitalizeIdent();
-	m_dwUnSecureWaitTime = ::GetTickCount();
-	m_dwSecureWaitTime = m_dwUnSecureWaitTime;
+	m_dwSecureWaitTime = m_dwUnSecureWaitTime = ::GetTickCount();
 	m_dwWaitTimeIP = 0;
-}
-
-CClientCredits::~CClientCredits()
-{
-	delete m_pCredits;
 }
 
 void CClientCredits::AddDownloaded(uint32 bytes, uint32 dwForIP)
@@ -71,8 +65,8 @@ void CClientCredits::AddDownloaded(uint32 bytes, uint32 dwForIP)
 
 	uint64 current = GetDownloadedTotal() + bytes;
 	//recode
-	m_pCredits->nDownloadedLo = (uint32)current;
-	m_pCredits->nDownloadedHi = (uint32)(current >> 32);
+	m_Credits.nDownloadedLo = LODWORD(current);
+	m_Credits.nDownloadedHi = HIDWORD(current);
 }
 
 void CClientCredits::AddUploaded(uint32 bytes, uint32 dwForIP)
@@ -87,18 +81,18 @@ void CClientCredits::AddUploaded(uint32 bytes, uint32 dwForIP)
 
 	uint64 current = GetUploadedTotal() + bytes;
 	//recode
-	m_pCredits->nUploadedLo = (uint32)current;
-	m_pCredits->nUploadedHi = (uint32)(current >> 32);
+	m_Credits.nUploadedLo = LODWORD(current);
+	m_Credits.nUploadedHi = HIDWORD(current);
 }
 
 uint64 CClientCredits::GetUploadedTotal() const
 {
-	return ((uint64)m_pCredits->nUploadedHi << 32) | m_pCredits->nUploadedLo;
+	return ((uint64)m_Credits.nUploadedHi << 32) | m_Credits.nUploadedLo;
 }
 
 uint64 CClientCredits::GetDownloadedTotal() const
 {
-	return ((uint64)m_pCredits->nDownloadedHi << 32) | m_pCredits->nDownloadedLo;
+	return ((uint64)m_Credits.nDownloadedHi << 32) | m_Credits.nDownloadedLo;
 }
 
 float CClientCredits::GetScoreRatio(uint32 dwForIP) const
@@ -117,7 +111,7 @@ float CClientCredits::GetScoreRatio(uint32 dwForIP) const
 		return 1.0f;
 	float result;
 	if (GetUploadedTotal())
-		result = GetDownloadedTotal() * 2.0f / GetUploadedTotal();
+		result = (GetDownloadedTotal() * 2) / (float)GetUploadedTotal();
 	else
 		result = 10.0f;
 
@@ -162,7 +156,8 @@ CClientCreditsList::~CClientCreditsList()
 
 void CClientCreditsList::LoadList()
 {
-	CString strFileName(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + CLIENTS_MET_FILENAME);
+	const CString &sConfDir(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+	const CString &strFileName(sConfDir + CLIENTS_MET_FILENAME);
 	const int iOpenFlags = CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite;
 	CSafeBufferedFile file;
 	CFileException fexp;
@@ -176,7 +171,7 @@ void CClientCreditsList::LoadList()
 		}
 		return;
 	}
-	setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
+	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 
 	try {
 		uint8 version = file.ReadUInt8();
@@ -187,7 +182,7 @@ void CClientCreditsList::LoadList()
 		}
 
 		// everything is OK, lets see if the backup exist...
-		CString strBakFileName(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + CLIENTS_MET_FILENAME _T(".bak"));
+		const CString &strBakFileName(sConfDir + CLIENTS_MET_FILENAME _T(".bak"));
 
 		BOOL bCreateBackup = TRUE;
 
@@ -220,7 +215,7 @@ void CClientCreditsList::LoadList()
 				LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 				return;
 			}
-			setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
+			::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 			file.Seek(1, CFile::begin); //set file pointer behind file version byte
 		}
 
@@ -230,15 +225,14 @@ void CClientCreditsList::LoadList()
 		const time_t dwExpired = time(NULL) - DAY2S(150); // today - 150 days
 		uint32 cDeleted = 0;
 		for (uint32 i = 0; i < count; ++i) {
-			CreditStruct *newcstruct = new CreditStruct();
-			file.Read(newcstruct, (version == CREDITFILE_VERSION_29) ? sizeof(CreditStruct_29a) : sizeof(CreditStruct));
+			CreditStruct newcstruct{};
+			file.Read(&newcstruct, (version == CREDITFILE_VERSION_29) ? sizeof(CreditStruct_29a) : sizeof(CreditStruct));
 
-			if (newcstruct->nLastSeen < (uint32)dwExpired) {
+			if (newcstruct.nLastSeen < (uint32)dwExpired)
 				++cDeleted;
-				delete newcstruct;
-			} else {
+			else {
 				CClientCredits *newcredits = new CClientCredits(newcstruct);
-				m_mapClients.SetAt(CCKey(newcredits->GetKey()), newcredits);
+				m_mapClients[CCKey(newcredits->GetKey())] = newcredits;
 			}
 		}
 		file.Close();
@@ -265,10 +259,10 @@ void CClientCreditsList::SaveList()
 		AddDebugLogLine(false, _T("Saving clients credit list file \"%s\""), CLIENTS_MET_FILENAME);
 	m_nLastSaved = ::GetTickCount();
 
-	CString name(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + CLIENTS_MET_FILENAME);
+	const CString &metname(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + CLIENTS_MET_FILENAME);
 	CFile file;// no buffering needed here since we swap out the entire array
 	CFileException fexp;
-	if (!file.Open(name, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
+	if (!file.Open(metname, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
 		CString strError(GetResString(IDS_ERR_FAILED_CREDITSAVE));
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
 		if (GetExceptionMessage(fexp, szError, _countof(szError)))
@@ -277,25 +271,19 @@ void CClientCreditsList::SaveList()
 		return;
 	}
 
-	BYTE *pBuffer = new BYTE[m_mapClients.GetCount() * sizeof(CreditStruct)];
+	byte *pBuffer = new byte[m_mapClients.GetCount() * sizeof(CreditStruct)]; //not CreditStruct[] because of alignment
 	uint32 count = 0;
-	CCKey tempkey;
-	for (POSITION pos = m_mapClients.GetStartPosition(); pos != NULL;) {
-		CClientCredits *cur_credit;
-		m_mapClients.GetNextAssoc(pos, tempkey, cur_credit);
-		if (cur_credit->GetUploadedTotal() || cur_credit->GetDownloadedTotal()) {
-			memcpy(pBuffer + (count * sizeof(CreditStruct)), cur_credit->GetDataStruct(), sizeof(CreditStruct));
-			++count;
-		}
+	for (const CClientCreditsMap::CPair *pair = m_mapClients.PGetFirstAssoc(); pair != NULL; pair = m_mapClients.PGetNextAssoc(pair)) {
+		const CClientCredits *cur_credit = pair->value;
+		if (cur_credit->GetUploadedTotal() || cur_credit->GetDownloadedTotal())
+			*reinterpret_cast<CreditStruct*>(&pBuffer[sizeof(CreditStruct) * count++]) = cur_credit->m_Credits;
 	}
 
 	try {
 		uint8 version = CREDITFILE_VERSION;
 		file.Write(&version, 1);
 		file.Write(&count, 4);
-		file.Write(pBuffer, count * sizeof(CreditStruct));
-		if ((theApp.IsClosing() && thePrefs.GetCommitFiles() >= 1) || thePrefs.GetCommitFiles() >= 2)
-			file.Flush();
+		file.Write(pBuffer, (UINT)(count * sizeof(CreditStruct)));
 		file.Close();
 	} catch (CFileException *error) {
 		CString strError(GetResString(IDS_ERR_FAILED_CREDITSAVE));
@@ -311,11 +299,11 @@ void CClientCreditsList::SaveList()
 
 CClientCredits* CClientCreditsList::GetCredit(const uchar *key)
 {
-	CClientCredits *result;
 	CCKey tkey(key);
+	CClientCredits *result;
 	if (!m_mapClients.Lookup(tkey, result)) {
 		result = new CClientCredits(key);
-		m_mapClients.SetAt(CCKey(result->GetKey()), result);
+		m_mapClients[CCKey(result->GetKey())] = result;
 	}
 	result->SetLastSeen();
 	return result;
@@ -329,13 +317,13 @@ void CClientCreditsList::Process()
 
 void CClientCredits::InitalizeIdent()
 {
-	if (m_pCredits->nKeySize == 0) {
+	if (m_Credits.nKeySize == 0) {
 		memset(m_abyPublicKey, 0, sizeof m_abyPublicKey); // for debugging
 		m_nPublicKeyLen = 0;
 		IdentState = IS_NOTAVAILABLE;
 	} else {
-		m_nPublicKeyLen = m_pCredits->nKeySize;
-		memcpy(m_abyPublicKey, m_pCredits->abySecureIdent, m_nPublicKeyLen);
+		m_nPublicKeyLen = m_Credits.nKeySize;
+		memcpy(m_abyPublicKey, m_Credits.abySecureIdent, m_nPublicKeyLen);
 		IdentState = IS_IDNEEDED;
 	}
 	m_dwCryptRndChallengeFor = 0;
@@ -347,15 +335,15 @@ void CClientCredits::Verified(uint32 dwForIP)
 {
 	m_dwIdentIP = dwForIP;
 	// client was verified, copy the key to store him if not done already
-	if (m_pCredits->nKeySize == 0) {
-		m_pCredits->nKeySize = m_nPublicKeyLen;
-		memcpy(m_pCredits->abySecureIdent, m_abyPublicKey, m_nPublicKeyLen);
+	if (m_Credits.nKeySize == 0) {
+		m_Credits.nKeySize = m_nPublicKeyLen;
+		memcpy(m_Credits.abySecureIdent, m_abyPublicKey, m_nPublicKeyLen);
 		if (GetDownloadedTotal() > 0) {
 			// for security reason, we have to delete all prior credits here
-			m_pCredits->nDownloadedHi = 0;
-			m_pCredits->nDownloadedLo = 1;
-			m_pCredits->nUploadedHi = 0;
-			m_pCredits->nUploadedLo = 1; // in order to save this client, set 1 byte
+			m_Credits.nDownloadedHi = 0;
+			m_Credits.nDownloadedLo = 1;
+			m_Credits.nUploadedHi = 0;
+			m_Credits.nUploadedLo = 1; // in order to save this client, set 1 byte
 			if (thePrefs.GetVerbose())
 				DEBUG_ONLY(AddDebugLogLine(false, _T("Credits deleted due to new SecureIdent")));
 		}
@@ -365,7 +353,7 @@ void CClientCredits::Verified(uint32 dwForIP)
 
 bool CClientCredits::SetSecureIdent(const uchar *pachIdent, uint8 nIdentLen)  // verified Public key cannot change, use only if there is no public key yet
 {
-	if (MAXPUBKEYSIZE < nIdentLen || m_pCredits->nKeySize != 0)
+	if (MAXPUBKEYSIZE < nIdentLen || m_Credits.nKeySize != 0)
 		return false;
 	memcpy(m_abyPublicKey, pachIdent, nIdentLen);
 	m_nPublicKeyLen = nIdentLen;
@@ -395,7 +383,8 @@ void CClientCreditsList::InitalizeCrypting()
 		return;
 	// check if keyfile is there
 	bool bCreateNewKey = false;
-	HANDLE hKeyFile = ::CreateFile(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("cryptkey.dat")
+	const CString &cryptkeypath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("cryptkey.dat"));
+	HANDLE hKeyFile = ::CreateFile(cryptkeypath
 		, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hKeyFile != INVALID_HANDLE_VALUE) {
 		if (::GetFileSize(hKeyFile, NULL) == 0)
@@ -409,7 +398,7 @@ void CClientCreditsList::InitalizeCrypting()
 	// load key
 	try {
 		// load private key
-		FileSource filesource((CStringA)(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("cryptkey.dat")), true, new Base64Decoder);
+		FileSource filesource((CStringA)cryptkeypath, true, new Base64Decoder);
 		m_pSignkey = new RSASSA_PKCS1v15_SHA_Signer(filesource);
 		// calculate and store public key
 		RSASSA_PKCS1v15_SHA_Verifier pubkey(*m_pSignkey);
@@ -448,17 +437,15 @@ bool CClientCreditsList::CreateKeyPair()
 	return false;
 }
 
-uint8 CClientCreditsList::CreateSignature(CClientCredits *pTarget, uchar *pachOutput, uint8 nMaxSize,
-	uint32 ChallengeIP, uint8 byChaIPKind,
-	CryptoPP::RSASSA_PKCS1v15_SHA_Signer *sigkey) const
+uint8 CClientCreditsList::CreateSignature(CClientCredits *pTarget, uchar *pachOutput, uint8 nMaxSize
+	, uint32 ChallengeIP, uint8 byChaIPKind, CryptoPP::RSASSA_PKCS1v15_SHA_Signer *sigkey) const
 {
+	ASSERT(pTarget != NULL && pachOutput != NULL);
 	// sigkey param is used for debug only
 	if (sigkey == NULL)
 		sigkey = m_pSignkey;
 
 	// create a signature of the public key from pTarget
-	ASSERT(pTarget);
-	ASSERT(pachOutput);
 	if (!CryptoAvailable())
 		return 0;
 	try {
@@ -469,7 +456,7 @@ uint8 CClientCreditsList::CreateSignature(CClientCredits *pTarget, uchar *pachOu
 		memcpy(abyBuffer, pTarget->GetSecureIdent(), keylen);
 		// 4 additional bytes of random data sent from this client
 		uint32 challenge = pTarget->m_dwCryptRndChallengeFrom;
-		ASSERT(challenge != 0);
+		ASSERT(challenge);
 		PokeUInt32(&abyBuffer[keylen], challenge);
 		size_t ChIpLen;
 		if (byChaIPKind == 0)
@@ -506,7 +493,7 @@ bool CClientCreditsList::VerifyIdent(CClientCredits *pTarget, const uchar *pachS
 		byte abyBuffer[MAXPUBKEYSIZE + 9];
 		memcpy(abyBuffer, m_abyMyPublicKey, m_nMyPublicKeyLen);
 		uint32 challenge = pTarget->m_dwCryptRndChallengeFor;
-		ASSERT(challenge != 0);
+		ASSERT(challenge);
 		PokeUInt32(&abyBuffer[m_nMyPublicKeyLen], challenge);
 
 		// v2 security improvements (not supported by 29b, not used as default by 29c)
@@ -557,7 +544,6 @@ bool CClientCreditsList::CryptoAvailable() const
 	return m_nMyPublicKeyLen > 0 && m_pSignkey != NULL && thePrefs.IsSecureIdentEnabled();
 }
 
-
 #ifdef _DEBUG
 bool CClientCreditsList::Debug_CheckCrypting()
 {
@@ -572,43 +558,40 @@ bool CClientCreditsList::Debug_CheckCrypting()
 	pub.GetMaterial().Save(asink);
 	uint8 PublicKeyLen = (uint8)asink.TotalPutLength();
 	asink.MessageEnd();
-	uint32 challenge = rand();
+	uint32 challenge = GetRandomUInt32();
 	// create fake client which pretends to be this emule
-	CreditStruct *newcstruct = new CreditStruct();
-	CClientCredits *newcredits = new CClientCredits(newcstruct);
-	newcredits->SetSecureIdent(m_abyMyPublicKey, m_nMyPublicKeyLen);
-	newcredits->m_dwCryptRndChallengeFrom = challenge;
+	CreditStruct emptystruct{};
+	CClientCredits newcredits(emptystruct);
+	newcredits.SetSecureIdent(m_abyMyPublicKey, m_nMyPublicKeyLen);
+	newcredits.m_dwCryptRndChallengeFrom = challenge;
 	// create signature with fake priv key
 	uchar pachSignature[200] = {};
-	uint8 sigsize = CreateSignature(newcredits, pachSignature, sizeof pachSignature, 0, 0, &priv);
+	uint8 sigsize = CreateSignature(&newcredits, pachSignature, sizeof pachSignature, 0, 0, &priv);
 
 	// next fake client uses the random created public key
-	CreditStruct *newcstruct2 = new CreditStruct();
-	CClientCredits *newcredits2 = new CClientCredits(newcstruct2);
-	newcredits2->m_dwCryptRndChallengeFor = challenge;
+	CClientCredits newcredits2(emptystruct);
+	newcredits2.m_dwCryptRndChallengeFor = challenge;
 
 	// if you uncomment one of the following lines the check has to fail
 	//abyPublicKey[5] = 34;
 	//m_abyMyPublicKey[5] = 22;
 	//pachSignature[5] = 232;
 
-	newcredits2->SetSecureIdent(abyPublicKey, PublicKeyLen);
+	newcredits2.SetSecureIdent(abyPublicKey, PublicKeyLen);
 
 	//now verify this signature - if it's true everything is fine
-	bool bResult = VerifyIdent(newcredits2, pachSignature, sigsize, 0, 0);
-
-	delete newcredits;
-	delete newcredits2;
+	bool bResult = VerifyIdent(&newcredits2, pachSignature, sigsize, 0, 0);
 
 	return bResult;
 }
 #endif
-uint32 CClientCredits::GetSecureWaitStartTime(uint32 dwForIP)
+
+DWORD CClientCredits::GetSecureWaitStartTime(uint32 dwForIP)
 {
 	if (m_dwUnSecureWaitTime == 0 || m_dwSecureWaitTime == 0)
 		SetSecWaitStartTime(dwForIP);
 
-	if (m_pCredits->nKeySize != 0) {	// this client is a SecureHash Client
+	if (m_Credits.nKeySize != 0) {	// this client is a SecureHash Client
 		if (GetCurrentIdentState(dwForIP) == IS_IDENTIFIED) // good boy
 			return m_dwSecureWaitTime;
 
@@ -619,9 +602,9 @@ uint32 CClientCredits::GetSecureWaitStartTime(uint32 dwForIP)
 		// bad boy
 		// this can also happen if the client has not identified himself yet, but will do later - so maybe he is not a bad boy :) .
 		/*CString buffer2, buffer;
-		for (uint16 i = 0;i != 16; ++i) {
-			buffer2.Format("%02X", m_pCredits->abyKey[i]);
-			buffer+=buffer2;
+		for (int i = 0; i < 16; ++i) {
+			buffer2.Format("%02X", m_Credits.abyKey[i]);
+			buffer += buffer2;
 		}
 		if (thePrefs.GetLogSecureIdent())
 			AddDebugLogLine(false, "Warning: WaitTime reset due to Invalid Ident for Userhash %s", buffer);*/

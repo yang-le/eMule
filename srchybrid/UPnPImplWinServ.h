@@ -5,7 +5,7 @@
 // This file is part of SHAREAZA (www.shareaza.com)
 //
 // this file is part of eMule
-// Copyright (C)2007 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+// Copyright (C)2007-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -82,7 +82,7 @@ public:
 		return UPNP_IMPL_WINDOWSERVICE;
 	}
 
-	// No Support for Refreshing for this (fallback) implementation yet - in many cases where it would be needed (router reset etc)
+	// No Support for Refreshing in this (fallback) implementation yet - in many cases where it would be needed (router reset etc)
 	// the windows side of the implementation tends to get bugged until reboot anyway. Still might get added later
 	virtual bool CheckAndRefresh()
 	{
@@ -103,27 +103,16 @@ protected:
 			m_bAsyncFindRunning = false;
 		}
 		MSG msg;
-		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+		while (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+			::TranslateMessage(&msg);
+			::DispatchMessage(&msg);
 		}
 		return m_bAsyncFindRunning;
 	}
+
 	TRISTATE m_bUPnPDeviceConnected;
 
 // Implementation
-	// API functions
-	SC_HANDLE(WINAPI *m_pfnOpenSCManager)(LPCTSTR, LPCTSTR, DWORD);
-	SC_HANDLE(WINAPI *m_pfnOpenService)(SC_HANDLE, LPCTSTR, DWORD);
-	BOOL(WINAPI *m_pfnQueryServiceStatusEx)(SC_HANDLE, SC_STATUS_TYPE, LPBYTE, DWORD, LPDWORD);
-	BOOL(WINAPI *m_pfnCloseServiceHandle)(SC_HANDLE);
-	BOOL(WINAPI *m_pfnStartService)(SC_HANDLE, DWORD, LPCTSTR*);
-	BOOL(WINAPI *m_pfnControlService)(SC_HANDLE, DWORD, LPSERVICE_STATUS);
-
-	TGetBestInterface m_pfGetBestInterface;
-	TGetIpAddrTable m_pfGetIpAddrTable;
-	TGetIfEntry m_pfGetIfEntry;
-
 	static FinderPointer CreateFinderInstance();
 	struct FindDevice : private std::unary_function<DevicePointer, bool>
 	{
@@ -177,8 +166,6 @@ private:
 
 	CString m_sLocalIP;
 	CString m_sExternalIP;
-	HMODULE m_hADVAPI32_DLL;
-	HMODULE m_hIPHLPAPI_DLL;
 	DWORD m_tLastEvent;	// When the last event was received?
 	LONG m_nAsyncFindHandle;
 	bool m_bCOM;
@@ -208,13 +195,14 @@ public:
 	STDMETHODIMP_(ULONG) AddRef();
 	STDMETHODIMP_(ULONG) Release();
 
+protected:
+	virtual ~CDeviceFinderCallback() = default;
 // implementation
 private:
 	HRESULT __stdcall DeviceAdded(LONG nFindData, IUPnPDevice *pDevice);
 	HRESULT __stdcall DeviceRemoved(LONG nFindData, BSTR bsUDN);
 	HRESULT __stdcall SearchComplete(LONG nFindData);
 
-private:
 	CUPnPImplWinServ &m_instance;
 	LONG m_lRefCount;
 };
@@ -233,12 +221,13 @@ public:
 	STDMETHODIMP_(ULONG) AddRef();
 	STDMETHODIMP_(ULONG) Release();
 
+protected:
+	virtual ~CServiceCallback() = default;
 // implementation
 private:
 	HRESULT __stdcall StateVariableChanged(IUPnPService *pService, LPCWSTR pszStateVarName, VARIANT varValue);
 	HRESULT __stdcall ServiceInstanceDied(IUPnPService *pService);
 
-private:
 	CUPnPImplWinServ &m_instance;
 	LONG m_lRefCount;
 };

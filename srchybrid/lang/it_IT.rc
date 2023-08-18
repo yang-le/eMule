@@ -498,7 +498,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Globale (server)"
     IDS_METHOD              "Metodo di ricerca"
     IDS_UNDO                "Annulla"
-    IDS_DAYLY               "- Quotidiano -"
+    IDS_DAILY               "- Quotidiano -"
     IDS_DAY_MO_FR           "Lun-ven"
 END
 
@@ -1561,7 +1561,7 @@ BEGIN
     IDS_EM_HELP             "Ai&uto"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Amico non aggiunto.\r\n\r\nEsiste già un amico con lo stesso IP e la stessa porta."
-    IDS_DYNUP               "Limite dinamico della banda d'invio"
+    IDS_DYNUP               "Limite dinamico della banda d'invio (sconsigliato)"
     IDS_KADOVERHEAD         "Overhead Kad (pacchetti): %s (%s)"
     IDS_FIND                "Trova..."
     IDS_LOG_BANNED_CLIENTS  "Registra gli utenti bloccati"

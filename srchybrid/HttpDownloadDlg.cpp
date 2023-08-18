@@ -121,13 +121,13 @@ static int check_header(z_stream *stream, HINTERNET m_hHttpFile)
   /*check for gzip or x-gzip stream*/                                       \
   TCHAR szContentEncoding[32];                                              \
   DWORD dwEncodeStringSize = _countof(szContentEncoding);                   \
-  if(HttpQueryInfo(m_hHttpFile, HTTP_QUERY_CONTENT_ENCODING,              \
+  if(HttpQueryInfo(m_hHttpFile, HTTP_QUERY_CONTENT_ENCODING,                \
        szContentEncoding, &dwEncodeStringSize, NULL)) {                     \
-    if(szContentEncoding[0] == 'x' && szContentEncoding[1] == '-')          \
-      szContentEncoding += 2;                                               \
-    if(!stricmp(szContentEncoding, "gzip")                                  \
-      bEncodedWithGZIP = TRUE;                                              \
-     }                                                                      \
+      if(szContentEncoding[0] == 'x' && szContentEncoding[1] == '-')        \
+        szContentEncoding += 2;                                             \
+      if(!stricmp(szContentEncoding, "gzip")                                \
+        bEncodedWithGZIP = TRUE;                                            \
+    }                                                                       \
   }
 
 #define PREPARE_DECODER                                                     \
@@ -278,7 +278,7 @@ BOOL CHttpDownloadDlg::OnInitDialog()
 
 	// Check to see if the file we will be downloading into, exists
 	// if it does, then ask the user if they allow to overwrite
-	// edited: we always overwrite old language dlls and server.met
+	// edited: we always overwrite old language DLLs and server.met
 	/*CFileStatus fs;
 	ASSERT(m_sFileToDownloadInto.GetLength());
 	if (CFile::GetStatus(m_sFileToDownloadInto, fs)) {
@@ -648,18 +648,18 @@ void CHttpDownloadDlg::UpdateControlsDuringTransfer(DWORD dwStartTicks, DWORD &d
 	}
 
 	//Update the transfer rate and estimated time left every second
-	DWORD dwNowTicks = ::GetTickCount();
-	DWORD dwTimeTaken = dwNowTicks - dwCurrentTicks;
+	const DWORD curTick = ::GetTickCount();
+	DWORD dwTimeTaken = curTick - dwCurrentTicks;
 	if (dwTimeTaken > SEC2MS(1)) {
 		double KbPerSecond = (dwTotalBytesRead - dwLastTotalBytes) / (double)dwTimeTaken;
 		SetTransferRate(KbPerSecond);
 
 		//Setup for the next time around the loop
-		dwCurrentTicks = dwNowTicks;
+		dwCurrentTicks = curTick;
 		dwLastTotalBytes = dwTotalBytesRead;
 
 		if (bGotFileSize && dwTotalBytesRead) { //Update the estimated time left
-			DWORD dwSecondsLeft = (DWORD)((dwNowTicks - dwStartTicks) / (double)dwTotalBytesRead
+			DWORD dwSecondsLeft = (DWORD)((curTick - dwStartTicks) / (double)dwTotalBytesRead
 				* (dwFileSize - dwTotalBytesRead) / 1000.0);
 			SetTimeLeft(dwSecondsLeft, dwTotalBytesRead, dwFileSize);
 		}

@@ -15,7 +15,7 @@ static char THIS_FILE[] = __FILE__;
 
 extern CStringArray g_astrParserErrors;
 
-void ParsedSearchExpression(const CSearchExpr *pexpr);
+void ParsedSearchExpression(const CSearchExpr &expr);
 int yyerror(LPCTSTR errstr);
 int yyerrorf(LPCTSTR errstr, ...);
 
@@ -74,14 +74,14 @@ action			: and_searchexpr TOK_EOF
 				 *				would be done and if we just 'return 0'.
 				 */
 					{
-						ParsedSearchExpression($1);
+						ParsedSearchExpression(*$1);
 						delete $1;
 						return 0;
 					}
 				| TOK_ED2K_LINK TOK_EOF
 					{
-						CSearchExpr *pexpr = new CSearchExpr(&CSearchAttr($1));
-						ParsedSearchExpression(pexpr);
+						CSearchExpr *pexpr = new CSearchExpr(CSearchAttr(*$1));
+						ParsedSearchExpression(*pexpr);
 						delete pexpr;
 						delete $1;
 						return 0;

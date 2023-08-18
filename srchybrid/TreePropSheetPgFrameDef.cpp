@@ -188,7 +188,7 @@ void CPropPageFrameDefault::DrawCaption(CDC *pDc, CRect rect, LPCTSTR lpszCaptio
 
 void CPropPageFrameDefault::FillGradientRectH(CDC *pDc, const CRect &rect, COLORREF clrLeft, COLORREF clrRight)
 {
-	// pre calculation
+	// precalculation
 	int	nSteps = rect.Width() + 1;
 	int	nRRange = GetRValue(clrRight) - GetRValue(clrLeft);
 	int	nGRange = GetGValue(clrRight) - GetGValue(clrLeft);
