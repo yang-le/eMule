@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -91,7 +91,7 @@ void CDropDownButton::SetWindowText(LPCTSTR pszString)
 	int id = (int)::GetWindowLongPtr(m_hWnd, GWLP_ID);
 	int cx = m_bSingleDropDownBtn ? 0 : GetBtnWidth(id);
 
-	TBBUTTONINFO tbbi = {};
+	TBBUTTONINFO tbbi;
 	tbbi.cbSize = (UINT)sizeof tbbi;
 	tbbi.dwMask = TBIF_TEXT;
 	tbbi.pszText = const_cast<LPTSTR>(pszString);
@@ -114,7 +114,7 @@ void CDropDownButton::SetIcon(LPCTSTR pszResourceID)
 	if (pImlOld)
 		pImlOld->DeleteImageList();
 
-	TBBUTTONINFO tbbi = {};
+	TBBUTTONINFO tbbi;
 	tbbi.cbSize = (UINT)sizeof tbbi;
 	tbbi.dwMask = TBIF_IMAGE;
 	tbbi.iImage = 0;

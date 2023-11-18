@@ -7,8 +7,7 @@
 #include <shldisp.h>
 #include <shlguid.h>
 
-class CCustomAutoComplete :
-	public IEnumString
+class CCustomAutoComplete : public IEnumString
 {
 private:
 	CStringArray m_asList;
@@ -16,8 +15,8 @@ private:
 
 	ULONG m_nCurrentElement;
 	ULONG m_nRefCount;
-	bool m_fBound;
 	int m_iMaxItemCount;
+	bool m_bBound;
 
 	// Constructors/destructors
 public:
@@ -29,7 +28,7 @@ public:
 public:
 	bool Bind(HWND p_hWndEdit, DWORD p_dwOptions = 0, LPCTSTR p_lpszFormatString = NULL);
 	void Unbind();
-	bool IsBound() const				{ return m_fBound; }
+	bool IsBound() const				{ return m_bBound; }
 
 	bool SetList(const CStringArray &p_sItemList);
 	const CStringArray& GetList() const;
@@ -50,7 +49,7 @@ public:
 public:
 	STDMETHOD_(ULONG, AddRef)();
 	STDMETHOD_(ULONG, Release)();
-	STDMETHOD(QueryInterface)(REFIID riid, void **ppvObject);
+	STDMETHOD(QueryInterface)(REFIID iid, LPVOID *ppvObj);
 
 public:
 	STDMETHOD(Next)(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched);
@@ -61,6 +60,6 @@ public:
 	// Internal implementation
 private:
 	void InternalInit();
-	HRESULT EnDisable(BOOL p_fEnable);
+	HRESULT EnDisable(bool p_bEnable);
 	int FindItem(const CString &rstr);
 };

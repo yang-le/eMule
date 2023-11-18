@@ -9,10 +9,9 @@ class CPPgDirectories : public CPropertyPage
 	{
 		IDD = IDD_PPG_DIRECTORIES
 	};
-
+	void ErrorBalloon(int iEdit, UINT uid);
 public:
 	CPPgDirectories();									// standard constructor
-	virtual	~CPPgDirectories() = default;
 
 	void Localize();
 
@@ -22,7 +21,7 @@ protected:
 	HICON m_icoBrowse;
 
 	void LoadSettings();
-	void FillUncList();
+	void FillUNClist();
 
 	virtual void DoDataExchange(CDataExchange *pDX);    // DDX/DDV support
 	virtual BOOL OnInitDialog();

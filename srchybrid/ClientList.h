@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -42,12 +42,12 @@ struct PORTANDHASH
 struct IPANDTICS
 {
 	uint32 dwIP;
-	uint32 dwInserted;
+	DWORD dwInserted;
 };
 struct CONNECTINGCLIENT
 {
 	CUpDownClient *pClient;
-	uint32 dwInserted;
+	DWORD dwInserted;
 };
 
 
@@ -56,7 +56,7 @@ class CDeletedClient
 public:
 	explicit CDeletedClient(const CUpDownClient *pClient);
 	CArray<PORTANDHASH> m_ItemsList;
-	uint32				m_dwInserted;
+	DWORD				m_dwInserted;
 	uint32				m_cBadRequest;
 };
 
@@ -68,6 +68,8 @@ enum buddyState
 };
 
 // ----------------------CClientList Class---------------
+typedef CMap<uint32, uint32, uint32, uint32> CClientVersionMap;
+
 class CClientList
 {
 	friend class CClientListCtrl;
@@ -80,10 +82,10 @@ public:
 	void	AddClient(CUpDownClient *toadd, bool bSkipDupTest = false);
 	void	RemoveClient(CUpDownClient *toremove, LPCTSTR pszReason = NULL);
 	void	GetStatistics(uint32 &ruTotalClients, int stats[NUM_CLIENTLIST_STATS],
-						  CMap<uint32, uint32, uint32, uint32> &clientVersionEDonkey,
-						  CMap<uint32, uint32, uint32, uint32> &clientVersionEDonkeyHybrid,
-						  CMap<uint32, uint32, uint32, uint32> &clientVersionEMule,
-						  CMap<uint32, uint32, uint32, uint32> &clientVersionAMule);
+						  CClientVersionMap &clientVersionEDonkey,
+						  CClientVersionMap &clientVersionEDonkeyHybrid,
+						  CClientVersionMap &clientVersionEMule,
+						  CClientVersionMap &clientVersionAMule);
 	INT_PTR	GetClientCount()							{ return list.GetCount(); }
 	void	DeleteAll();
 	bool	AttachToAlreadyKnown(CUpDownClient **client, CClientReqSocket *sender);
@@ -105,11 +107,11 @@ public:
 
 	// Tracked clients
 	void	AddTrackClient(CUpDownClient *toadd);
-	bool	ComparePriorUserhash(uint32 dwIP, uint16 nPort, void *pNewHash);
+	bool	ComparePriorUserhash(uint32 dwIP, uint16 nPort, const void *pNewHash);
 	INT_PTR	GetClientsFromIP(uint32 dwIP) const;
 	void	TrackBadRequest(const CUpDownClient *upcClient, int nIncreaseCounter);
 	uint32	GetBadRequests(const CUpDownClient *upcClient) const;
-	INT_PTR	GetTrackedCount() const						{ return m_trackedClientsList.GetCount(); }
+	INT_PTR	GetTrackedCount() const						{ return m_trackedClientsMap.GetCount(); }
 	void	RemoveAllTrackedClients();
 
 	// Kad client list, buddy handling
@@ -132,7 +134,7 @@ public:
 
 	// Connecting Clients
 	void	AddConnectingClient(CUpDownClient *pToAdd);
-	void	RemoveConnectingClient(CUpDownClient *pToRemove);
+	void	RemoveConnectingClient(const CUpDownClient *pToRemove);
 
 	void	Process();
 	bool	IsValidClient(CUpDownClient *tocheck) const;
@@ -153,7 +155,8 @@ private:
 	CUpDownClientPtrList list;
 	CUpDownClientPtrList m_KadList;
 	CMap<uint32, uint32, DWORD, DWORD> m_bannedList;
-	CMap<uint32, uint32, CDeletedClient*, CDeletedClient*> m_trackedClientsList;
+	typedef CMap<uint32, uint32, CDeletedClient*, CDeletedClient*> CDeletedClientMap;
+	CDeletedClientMap m_trackedClientsMap;
 	CUpDownClient *m_pBuddy;
 	CList<IPANDTICS> listFirewallCheckRequests;
 	CList<IPANDTICS> listDirectCallbackRequests;

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -15,10 +15,11 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #pragma once
+#include <map>
 #include "MuleListCtrl.h"
 #include "TitleMenu.h"
-#include <map>
 #include "ListCtrlItemWalk.h"
+#include "ToolTipCtrlX.h"
 
 #define COLLAPSE_ONLY	0
 #define EXPAND_ONLY		1
@@ -28,7 +29,6 @@
 class CPartFile;
 class CUpDownClient;
 class CDownloadListCtrl;
-class CToolTipCtrlX;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -135,8 +135,8 @@ protected:
 	ListItems	m_ListItems;
 	CFont		m_fontBold; // may contain a locally created bold font
 	CFont		*m_pFontBold;// points to the bold font which is to be used (may be the locally created or the default bold font)
-	CToolTipCtrlX *m_tooltip;
-	uint32		m_dwLastAvailableCommandsCheck;
+	CToolTipCtrlX m_tooltip;
+	DWORD		m_dwLastAvailableCommandsCheck;
 	bool		m_availableCommandsDirty;
 
 	void ShowFileDialog(UINT uInvokePage);

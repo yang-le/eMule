@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2010 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -158,7 +158,7 @@ BOOL CListViewWalkerPropertySheet::OnInitDialog()
 
 		for (unsigned i = 0; i < _countof(aCtrls); ++i) {
 			RECT rc;
-			rc.left = rcOk.left - (8 + iNaviBtnWidth) * (_countof(aCtrls) - i);
+			rc.left = (LONG)(rcOk.left - (8 + iNaviBtnWidth) * (_countof(aCtrls) - i));
 			rc.top = rcOk.top;
 			rc.right = rc.left + iNaviBtnWidth;
 			rc.bottom = rc.top + rcOk.Height();

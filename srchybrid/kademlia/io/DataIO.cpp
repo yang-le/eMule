@@ -1,5 +1,5 @@
 /*
-Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
+Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -23,7 +23,7 @@ There is going to be a new forum created just for the Kademlia side of the clien
 If you feel there is an error or a way to improve something, please
 post it in the forum first and let us look at it. If it is a real improvement,
 it will be added to the official client. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form.
+what all it does, can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 their client on the eMule forum.
 */
@@ -81,9 +81,9 @@ uint64 CDataIO::ReadUInt64()
 	return uRetVal;
 }
 
-void CDataIO::ReadUInt128(CUInt128 *puValue)
+void CDataIO::ReadUInt128(const CUInt128 &uValue)
 {
-	ReadArray(puValue->GetDataPtr(), sizeof(uint32) * 4);
+	ReadArray(uValue.GetDataPtr(), sizeof(uint32) * 4);
 }
 
 float CDataIO::ReadFloat()
@@ -145,7 +145,7 @@ CKadTag* CDataIO::ReadTag(bool bOptACP)
 	CKadTag *pRetVal = NULL;
 	char *pcName = NULL;
 	byte byType = 0;
-	uint16 uLenName = 0;
+	uint32 uLenName = 0;
 	try {
 		byType = ReadByte();
 		uLenName = ReadUInt16();
@@ -229,12 +229,10 @@ CKadTag* CDataIO::ReadTag(bool bOptACP)
 	return pRetVal;
 }
 
-void CDataIO::ReadTagList(TagList *pTaglist, bool bOptACP)
+void CDataIO::ReadTagList(TagList &rTaglist, bool bOptACP)
 {
-	for (uint32 uCount = ReadByte(); uCount > 0; --uCount) {
-		CKadTag *pTag = ReadTag(bOptACP);
-		pTaglist->push_back(pTag);
-	}
+	for (uint32 uCount = ReadByte(); uCount > 0; --uCount)
+		rTaglist.push_back(ReadTag(bOptACP));
 }
 
 void CDataIO::WriteByte(byte byVal)
@@ -283,58 +281,58 @@ void CDataIO::WriteBsob(const BYTE *pbyValue, uint8 uSize)
 	WriteArray(pbyValue, uSize);
 }
 
-void CDataIO::WriteTag(const CKadTag *pTag)
+void CDataIO::WriteTag(const CKadTag &Tag)
 {
 	try {
 		uint8 uType;
-		if (pTag->m_type == TAGTYPE_UINT) {
-			if (pTag->GetInt() <= 0xFFu)
+		if (Tag.m_type == TAGTYPE_UINT) {
+			if (Tag.GetInt() <= _UI8_MAX)
 				uType = TAGTYPE_UINT8;
-			else if (pTag->GetInt() <= 0xFFFFu)
+			else if (Tag.GetInt() <= _UI16_MAX)
 				uType = TAGTYPE_UINT16;
-			else if (pTag->GetInt() <= 0xFFFFFFFFu)
+			else if (Tag.GetInt() <= _UI32_MAX)
 				uType = TAGTYPE_UINT32;
 			else
 				uType = TAGTYPE_UINT64;
 		} else
-			uType = pTag->m_type;
+			uType = Tag.m_type;
 
 		WriteByte(uType);
 
-		const CKadTagNameString &name = pTag->m_name;
+		const CKadTagNameString &name = Tag.m_name;
 		WriteUInt16((uint16)name.GetLength());
 		WriteArray((LPCSTR)name, name.GetLength());
 
 		switch (uType) {
 		case TAGTYPE_HASH:
 			// Do NOT use this to transfer any tags for at least half a year!!
-			WriteHash(pTag->GetHash());
+			WriteHash(Tag.GetHash());
 			ASSERT(0);
 			break;
 		case TAGTYPE_STRING:
 			{
-				CUnicodeToUTF8 utf8(pTag->GetStr());
+				CUnicodeToUTF8 utf8(Tag.GetStr());
 				WriteUInt16((uint16)utf8.GetLength());
 				WriteArray(utf8, utf8.GetLength());
 			}
 			break;
 		case TAGTYPE_UINT64:
-			WriteUInt64(pTag->GetInt());
+			WriteUInt64(Tag.GetInt());
 			break;
 		case TAGTYPE_UINT32:
-			WriteUInt32((uint32)pTag->GetInt());
+			WriteUInt32((uint32)Tag.GetInt());
 			break;
 		case TAGTYPE_UINT16:
-			WriteUInt16((uint16)pTag->GetInt());
+			WriteUInt16((uint16)Tag.GetInt());
 			break;
 		case TAGTYPE_UINT8:
-			WriteUInt8((uint8)pTag->GetInt());
+			WriteUInt8((uint8)Tag.GetInt());
 			break;
 		case TAGTYPE_FLOAT32:
-			WriteFloat(pTag->GetFloat());
+			WriteFloat(Tag.GetFloat());
 			break;
 		case TAGTYPE_BSOB:
-			WriteBsob(pTag->GetBsob(), pTag->GetBsobSize());
+			WriteBsob(Tag.GetBsob(), Tag.GetBsobSize());
 		}
 	} catch (CIOException *ioe) {
 		AddDebugLogLine(false, _T("Exception in CDataIO:writeTag (IO Error(%i))"), ioe->m_iCause);
@@ -347,27 +345,27 @@ void CDataIO::WriteTag(const CKadTag *pTag)
 
 void CDataIO::WriteTag(LPCSTR szName, uint64 uValue)
 {
-	WriteTag(&CKadTagUInt64(szName, uValue));
+	WriteTag(CKadTagUInt64(szName, uValue));
 }
 
 void CDataIO::WriteTag(LPCSTR szName, uint32 uValue)
 {
-	WriteTag(&CKadTagUInt32(szName, uValue));
+	WriteTag(CKadTagUInt32(szName, uValue));
 }
 
 void CDataIO::WriteTag(LPCSTR szName, uint16 uValue)
 {
-	WriteTag(&CKadTagUInt16(szName, uValue));
+	WriteTag(CKadTagUInt16(szName, uValue));
 }
 
 void CDataIO::WriteTag(LPCSTR szName, uint8 uValue)
 {
-	WriteTag(&CKadTagUInt8(szName, uValue));
+	WriteTag(CKadTagUInt8(szName, uValue));
 }
 
 void CDataIO::WriteTag(LPCSTR szName, float fValue)
 {
-	WriteTag(&CKadTagFloat(szName, fValue));
+	WriteTag(CKadTagFloat(szName, fValue));
 }
 
 void CDataIO::WriteTagList(const TagList &tagList)
@@ -375,7 +373,7 @@ void CDataIO::WriteTagList(const TagList &tagList)
 	ASSERT(tagList.size() <= 0xFF);
 	WriteByte((uint8)tagList.size());
 	for (TagList::const_iterator itTagList = tagList.begin(); itTagList != tagList.end(); ++itTagList)
-		WriteTag(*itTagList);
+		WriteTag(**itTagList);
 }
 
 void CDataIO::WriteString(const CStringW &strVal)
@@ -383,17 +381,6 @@ void CDataIO::WriteString(const CStringW &strVal)
 	CUnicodeToUTF8 utf8(strVal);
 	WriteUInt16((uint16)utf8.GetLength());
 	WriteArray(utf8, utf8.GetLength());
-}
-
-namespace Kademlia
-{
-	void deleteTagListEntries(TagList *pTaglist)
-	{
-		while (!pTaglist->empty()) {
-			delete pTaglist->front();
-			pTaglist->pop_front();
-		}
-	}
 }
 
 static WCHAR s_awcLowerMap[0x10000];
@@ -434,7 +421,7 @@ bool CKademlia::InitUnicode(HMODULE hInst)
 void gen_wclwrtab()
 {
 	FILE *fpt = fopen("wclwrtab_gen.txt", "wb");
-	fputwc(0xFEFFui16, fpt);
+	fputwc(u'\xFEFF', fpt);
 
 	int iDiffs = 0;
 	FILE *fp = fopen("wclwrtab.bin", "wb");
@@ -468,7 +455,7 @@ void use_wclwrtab(const char *fname)
 	fp = NULL;
 
 	FILE *fpt = fopen("wclwrtab_use.txt", "wb");
-	fputwc(0xFEFFui16, fpt);
+	fputwc(u'\xFEFF', fpt);
 	int iDiffs = 0;
 	for (UINT ch = 0; ch < 0x10000; ++ch) {
 		WCHAR wch = ch;
@@ -483,52 +470,64 @@ void use_wclwrtab(const char *fname)
 	printf("Diffs=%u\n", iDiffs);
 }*/
 
-void KadTagStrMakeLower(CKadTagValueString &rwstr)
+namespace Kademlia
 {
-	// NOTE: We can *not* use any locale dependent string functions here. All clients in the network
-	// have to use the same character mapping whereby it actually does not matter if they 'understand'
-	// the strings or not -- they just have to use the same mapping. That's why we hardcode
-	// to 'LANG_ENGLISH' here! Note also, using 'LANG_ENGLISH' is not the same as using the "C" locale.
-	// The "C" locale would only handle ASCII-7 characters while the 'LANG_ENGLISH' locale also handles
-	// chars from 0x80-0xFF and more.
-	//rwstr.MakeLower();
+	void deleteTagListEntries(TagList &rTaglist)
+	{
+		while (!rTaglist.empty()) {
+			delete rTaglist.back();
+			rTaglist.pop_back();
+		}
+	}
+
+	void KadTagStrMakeLower(CKadTagValueString &rwstr)
+	{
+		// NOTE: We can *not* use any locale dependent string functions here. All clients
+		// in the network have to use the same character mapping whereby it actually does
+		// not matter if they 'understand' the strings or not -- they just have to use
+		// the same mapping. That's why we hardcode to 'LANG_ENGLISH' here! Note also, using
+		// 'LANG_ENGLISH' is not the same as using the "C" locale. The "C" locale would only
+		// handle ASCII-7 characters while the 'LANG_ENGLISH' locale also handles chars
+		// from 0x80-0xFF and more.
+		//rwstr.MakeLower();
 
 #if 0
-	//PROBLEM: LCMapStringW does not work on Win9x (the string is not changed and LCMapStringW returns 0!)
-	// Possible solution: use a pre-computed static character map.
-	int iLen = rwstr.GetLength();
-	LPWSTR pwsz = rwstr.GetBuffer(iLen);
-	int iSize = LCMapStringW(MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT),
-		LCMAP_LOWERCASE, pwsz, -1, pwsz, iLen + 1);
-	ASSERT(iSize - 1 == iLen);
-	rwstr.ReleaseBuffer(iLen);
+		//PROBLEM: LCMapStringW does not work on Win9x (the string is not changed and LCMapStringW returns 0!)
+		// Possible solution: use a pre-computed static character map.
+		int iLen = rwstr.GetLength();
+		LPWSTR pwsz = rwstr.GetBuffer(iLen);
+		int iSize = LCMapStringW(MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT),
+			LCMAP_LOWERCASE, pwsz, -1, pwsz, iLen + 1);
+		ASSERT(iSize - 1 == iLen);
+		rwstr.ReleaseBuffer(iLen);
 #else
-	// NOTE: It's very important that the Unicode->LowerCase map already was initialized!
-	if (s_awcLowerMap[L'A'] != L'a') {
-		AfxMessageBox(_T("Kad Unicode lower case character map not initialized!"));
-		exit(1);
-	}
+		// NOTE: It's very important that the Unicode->LowerCase map already was initialized!
+		if (s_awcLowerMap[L'A'] != L'a') {
+			AfxMessageBox(_T("Kad Unicode lower case character map not initialized!"));
+			exit(1);
+		}
 
-	int iLen = rwstr.GetLength();
-	LPWSTR pwsz = rwstr.GetBuffer(iLen);
-	while ((*pwsz = s_awcLowerMap[*pwsz]) != L'\0')
-		++pwsz;
-	rwstr.ReleaseBuffer(iLen);
+		int iLen = rwstr.GetLength();
+		LPWSTR pwsz = rwstr.GetBuffer(iLen);
+		while ((*pwsz = s_awcLowerMap[*pwsz]) != L'\0')
+			++pwsz;
+		rwstr.ReleaseBuffer(iLen);
 #endif
-}
-
-int KadTagStrCompareNoCase(LPCWSTR dst, LPCWSTR src) noexcept
-{
-	// NOTE: It's very important that the Unicode->LowerCase map already was initialized!
-	if (s_awcLowerMap[L'A'] != L'a') {
-		AfxMessageBox(_T("Kad Unicode lower case character map not initialized!"));
-		exit(1);
 	}
 
-	WCHAR d, s;
-	do {
-		d = s_awcLowerMap[*dst++];
-		s = s_awcLowerMap[*src++];
-	} while (d != L'\0' && (d == s));
-	return (int)(d - s);
+	bool EqualKadTagStr(LPCWSTR dst, LPCWSTR src) noexcept
+	{
+		// NOTE: It's very important that the Unicode->LowerCase map already was initialized!
+		if (s_awcLowerMap[L'A'] != L'a') {
+			AfxMessageBox(_T("Kad Unicode lower case character map not initialized!"));
+			exit(1);
+		}
+
+		WCHAR d, s;
+		do {
+			d = s_awcLowerMap[*dst++];
+			s = s_awcLowerMap[*src++];
+		} while (d != L'\0' && d == s);
+		return (d == s);
+	}
 }

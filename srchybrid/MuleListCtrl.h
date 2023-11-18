@@ -32,7 +32,7 @@ class CMuleListCtrl : public CListCtrl
 	DECLARE_DYNAMIC(CMuleListCtrl)
 
 public:
-	CMuleListCtrl(PFNLVCOMPARE pfnCompare = SortProc, DWORD dwParamSort = 0);
+	CMuleListCtrl(PFNLVCOMPARE pfnCompare = SortProc, LPARAM iParamSort = 0);
 	virtual	~CMuleListCtrl();
 
 	// Default sort proc, this does nothing
@@ -56,12 +56,7 @@ public:
 	void ShowColumn(int iColumn);
 
 	// Check to see if the column is hidden
-	bool IsColumnHidden(int iColumn) const
-	{
-		if (iColumn < 1 || iColumn >= m_iColumnsTracked)
-			return false;
-		return m_aColumns[iColumn].bHidden;
-	}
+	bool IsColumnHidden(int iColumn) const	{ return iColumn >= 1 && iColumn < m_iColumnsTracked && m_aColumns[iColumn].bHidden; }
 
 	// Get the correct column width even if column is hidden
 	int GetColumnWidth(int iColumn) const
@@ -102,7 +97,7 @@ public:
 	}
 
 	// Call SetRedraw to allow changes to be redrawn or to prevent changes from being redrawn.
-	void SetRedraw(BOOL bRedraw = TRUE)
+	void SetRedraw(bool bRedraw = true)
 	{
 		if (bRedraw) {
 			if (m_iRedrawCount > 0 && --m_iRedrawCount == 0)
@@ -114,7 +109,7 @@ public:
 	}
 
 	// Sorts the list
-	BOOL SortItems(PFNLVCOMPARE pfnCompare, DWORD_PTR dwData)
+	BOOL SortItems(PFNLVCOMPARE pfnCompare, DWORD dwData)
 	{
 		return CListCtrl::SortItems(pfnCompare, dwData);
 	}
@@ -178,8 +173,8 @@ public:
 	{
 		SetSortArrow(iColumn, bAscending ? arrowUp : arrowDown);
 	}
-	int GetNextSortOrder(int dwCurrentSortOrder) const;
-	void UpdateSortHistory(int dwNewOrder, int dwInverseValue = 100);
+	LPARAM GetNextSortOrder(LPARAM iCurrentSortOrder) const;
+	void UpdateSortHistory(LPARAM dwNewOrder);
 
 	// General purpose listview find dialog+functions (optional)
 	void	SetGeneralPurposeFind(bool bEnable, bool bCanSearchInAllColumns = true)
@@ -203,14 +198,8 @@ public:
 
 	HIMAGELIST ApplyImageList(HIMAGELIST himl);
 	void AutoSelectItem();
-	void SetSkinKey(LPCTSTR pszKey)
-	{
-		m_strSkinKey = pszKey;
-	}
-	const CString& GetSkinKey() const
-	{
-		return m_strSkinKey;
-	}
+	void SetSkinKey(LPCTSTR pszKey)			{ m_strSkinKey = pszKey; }
+	const CString& GetSkinKey() const		{ return m_strSkinKey; }
 
 protected:
 	virtual void PreSubclassWindow();
@@ -232,8 +221,9 @@ protected:
 	void SetColors();
 	void DrawFocusRect(CDC *pDC, LPCRECT rcItem, BOOL bItemFocused, BOOL bCtrlFocused, BOOL bItemSelected);
 	void InitItemMemDC(CMemoryDC *dc, LPDRAWITEMSTRUCT lpDrawItemStruct, BOOL &bCtrlFocused);
+	void LocaliseHeaderCtrl(const UINT *const uids, size_t cnt);
 
-	static inline bool HaveIntersection(const CRect &rc1, const CRect &rc2)
+	static inline bool HaveIntersection(const RECT &rc1, const RECT &rc2)
 	{
 		return (rc1.left   < rc2.right
 			 && rc1.top    < rc2.bottom
@@ -243,7 +233,7 @@ protected:
 
 	CString         m_Name;
 	PFNLVCOMPARE    m_SortProc;
-	DWORD           m_dwParamSort;
+	LPARAM          m_dwParamSort;
 	CString			m_strSkinKey;
 	COLORREF        m_crWindow;
 	COLORREF        m_crWindowText;
@@ -257,7 +247,7 @@ protected:
 	NMLVCUSTOMDRAW  m_lvcd;
 	BOOL            m_bCustomDraw;
 	CImageList		m_imlHeaderCtrl;
-	CList<int, int>	m_liSortHistory;
+	CList<LONG>		m_liSortHistory;
 	UINT			m_uIDAccel;
 	HACCEL			m_hAccel;
 	enum EUpdateMode m_eUpdateMode;
@@ -308,8 +298,10 @@ private:
 	DWORD_PTR GetParamAt(POSITION pos, int iPos)
 	{
 		DWORD_PTR lParam = m_Params.GetAt(pos);
-		if (lParam == 0xFEEBDEEF) //same as MLC_MAGIC!
-			m_Params.SetAt(pos, lParam = CListCtrl::GetItemData(iPos));
+		if (lParam == 0xFEEBDEEF) { //same as MLC_MAGIC!
+			lParam = CListCtrl::GetItemData(iPos);
+			m_Params.SetAt(pos, lParam);
+		}
 		return lParam;
 	}
 

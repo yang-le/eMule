@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2010 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -75,7 +75,7 @@ public:
 	uint64 GetSentBytesCompleteFileSinceLastCallAndReset();
 	uint64 GetSentBytesPartFileSinceLastCallAndReset();
 	uint64 GetSentBytesControlPacketSinceLastCallAndReset();
-	uint64 GetSentPayloadSinceLastCall(bool bReset);
+	uint32 GetSentPayloadSinceLastCall(bool bReset);
 	void TruncateQueues();
 
 	virtual SocketSentBytes SendControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize)			{ return Send(maxNumberOfBytesToSend, minFragSize, true); };
@@ -89,7 +89,7 @@ public:
 #endif
 
 protected:
-	virtual int	OnLayerCallback(std::list<t_callbackMsg> &callbacks);
+	virtual int	OnLayerCallback(std::vector<t_callbackMsg> &callbacks);
 
 	virtual void	DataReceived(const BYTE *pcData, UINT uSize);
 	virtual bool	PacketReceived(Packet *packet) = 0;

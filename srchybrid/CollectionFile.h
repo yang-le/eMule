@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2005 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -26,11 +26,10 @@ class CCollectionFile : public CAbstractFile
 
 public:
 	CCollectionFile() = default;
-	explicit CCollectionFile(CFileDataIO *in_data);
+	explicit CCollectionFile(CFileDataIO &in_data);
 	explicit CCollectionFile(CAbstractFile *pAbstractFile);
-	virtual	~CCollectionFile() = default;
 
 	bool	InitFromLink(const CString &sLink);
-	void	WriteCollectionInfo(CFileDataIO *out_data);
+	void	WriteCollectionInfo(CFileDataIO &out_data);
 	virtual void UpdateFileRatingCommentAvail(bool bForceUpdate = false);
 };

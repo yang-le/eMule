@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -26,6 +26,7 @@ class CPublishKeywordList;
 class CSafeMemFile;
 class CServer;
 class CCollection;
+typedef CMap<CCKey, const CCKey&, CKnownFile*, CKnownFile*> CKnownFilesMap;
 
 struct UnknownFile_Struct
 {
@@ -56,7 +57,7 @@ public:
 	void	ClearED2KPublishInfo();
 	void	ClearKadSourcePublishInfo();
 
-	static void	CreateOfferedFilePacket(CKnownFile *cur_file, CSafeMemFile *files, CServer *pServer, CUpDownClient *pClient = NULL);
+	static void	CreateOfferedFilePacket(CKnownFile *cur_file, CSafeMemFile &files, CServer *pServer, CUpDownClient *pClient = NULL);
 
 	bool	SafeAddKFile(CKnownFile *toadd, bool bOnlyAdd = false);
 	void	RepublishFile(CKnownFile *pFile);
@@ -73,7 +74,7 @@ public:
 	void	AddKeywords(CKnownFile *pFile);
 	void	RemoveKeywords(CKnownFile *pFile);
 
-	void	CopySharedFileMap(CMap<CCKey, const CCKey&, CKnownFile*, CKnownFile*> &Files_Map);
+	void	CopySharedFileMap(CKnownFilesMap &Files_Map);
 
 	CKnownFile*	GetFileByID(const uchar *hash) const;
 	CKnownFile*	GetFileByIdentifier(const CFileIdentifierBase &rFileIdent, bool bStrict = false) const;
@@ -83,7 +84,7 @@ public:
 
 	bool	IsFilePtrInList(const CKnownFile *file) const; // slow
 	bool	IsUnsharedFile(const uchar *auFileHash) const;
-	bool	ShouldBeShared(const CString &strPath, const CString &strFilePath, bool bMustBeShared) const;
+	bool	ShouldBeShared(const CString &sDirPath, LPCTSTR const pFilePath, bool bMustBeShared) const;
 	bool	ContainsSingleSharedFiles(const CString &strDirectory) const; // includes subdirs
 	CString	GetPseudoDirName(const CString &strDirectoryName);
 	CString	GetDirNameByPseudo(const CString &strPseudoName) const;
@@ -116,10 +117,10 @@ protected:
 	bool	CheckAndAddSingleFile(const CString &rstrFilePath); // add specific files without editing sharing preferences
 
 private:
-	void	AddDirectory(const CString& strDir, CStringList& dirlist);
+	void	AddDirectory(const CString &strDir, CStringList &dirlist);
 
-	CMap<CCKey, const CCKey&, CKnownFile*, CKnownFile*> m_Files_map;
-	CMap<CSKey, const CSKey&, bool, bool>			 m_UnsharedFiles_map;
+	CKnownFilesMap m_Files_map;
+	CMap<CSKey, const CSKey&, bool, bool>		 m_UnsharedFiles_map;
 	CMapStringToString m_mapPseudoDirNames;
 	CPublishKeywordList *m_keywords;
 	CTypedPtrList<CPtrList, UnknownFile_Struct*> waitingforhash_list;
@@ -128,10 +129,12 @@ private:
 	CSharedFilesCtrl *output;
 	CStringList		 m_liSingleSharedFiles;
 	CStringList		 m_liSingleExcludedFiles;
+#if defined(_BETA) || defined(_DEVBUILD)
+	CString			m_strBetaFileName; //beta test file name
+#endif
 
 	INT_PTR	m_currFileSrc;
 	INT_PTR	m_currFileNotes;
-	//INT_PTR	m_currFileKey; - not used
 	time_t	m_lastPublishKadSrc;
 	time_t	m_lastPublishKadNotes;
 	DWORD	m_lastPublishED2K;
@@ -148,14 +151,14 @@ public:
 	virtual BOOL InitInstance();
 	virtual int	Run();
 	void	SetValues(CSharedFileList *pOwner, LPCTSTR directory, LPCTSTR filename, LPCTSTR strSharedDir, CPartFile *partfile = NULL);
-	bool ImportParts();
-	uint16 SetPartToImport(LPCTSTR import);
+	bool	ImportParts();
+	uint16	SetPartToImport(LPCTSTR import);
 private:
 	CSharedFileList	*m_pOwner;
-	CPartFile		*m_partfile;
-	CString			m_strDirectory;
-	CString			m_strFilename;
-	CString			m_strSharedDir;
-	CString			m_strImport;
+	CPartFile	*m_partfile;
+	CString		m_strDirectory;
+	CString		m_strFilename;
+	CString		m_strSharedDir;
+	CString		m_strImport;
 	CArray<uint16, uint16>	m_PartsToImport;
 };

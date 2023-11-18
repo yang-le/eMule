@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -44,8 +44,8 @@ bool CUDPFirewallTester::m_bNodeSearchStarted = false;
 bool CUDPFirewallTester::m_bTimedOut = false;
 uint8 CUDPFirewallTester::m_byFWChecksRunningUDP = 0;
 uint8 CUDPFirewallTester::m_byFWChecksFinishedUDP = 0;
-uint32 CUDPFirewallTester::m_dwTestStart = 0;
-uint32 CUDPFirewallTester::m_dwLastSucceededTime = 0;
+DWORD CUDPFirewallTester::m_dwTestStart = 0;
+DWORD CUDPFirewallTester::m_dwLastSucceededTime = 0;
 CList<CContact> CUDPFirewallTester::m_liPossibleTestClients;
 CList<UsedClient_Struct> CUDPFirewallTester::m_liUsedTestClients;
 
@@ -71,8 +71,9 @@ bool CUDPFirewallTester::IsFirewalledUDP(bool bLastStateIfTesting)
 	return (bLastStateIfTesting && bCheckingFW) ? m_bFirewalledLastStateUDP : m_bFirewalledUDP;
 }
 
+// are we in search for test clients
 bool CUDPFirewallTester::GetUDPCheckClientsNeeded()
-{ // are we in search for testclients
+{
 	return (m_byFWChecksRunningUDP + m_byFWChecksFinishedUDP) < UDP_FIREWALLTEST_CLIENTSTOASK;
 }
 
@@ -82,16 +83,17 @@ void CUDPFirewallTester::SetUDPFWCheckResult(bool bSucceeded, bool bTestCancelle
 		return;
 	// see if we actually requested a firewall check from this client
 	bool bRequested = false;
+	const DWORD curTick = ::GetTickCount();
 	for (POSITION pos = m_liUsedTestClients.GetHeadPosition(); pos != NULL;) {
 		UsedClient_Struct &ucs = m_liUsedTestClients.GetNext(pos);
 		if (ucs.contact.GetIPAddress() == uFromIP) {
 
-			if (!IsFWCheckUDPRunning() && !m_bFirewalledUDP && m_bIsFWVerifiedUDP && ::GetTickCount() < m_dwLastSucceededTime + SEC2MS(10)
+			if (!IsFWCheckUDPRunning() && !m_bFirewalledUDP && m_bIsFWVerifiedUDP && curTick < m_dwLastSucceededTime + SEC2MS(10)
 				&& nIncomingPort == CKademlia::GetPrefs()->GetInternKadPort() && CKademlia::GetPrefs()->GetUseExternKadPort())
 			{
 				// our test finished already in the last 10 seconds with being open because we received a proper result packet before
 				// however we now receive another answer packet on our incoming port (which is not unusual as both result packets are sent
-				// nearly at the same time and UDP doesn't cares if the order stays), while the one before was received on our extern port
+				// nearly at the same time and UDP doesn't care if the order stays), while the one before was received on our extern port
 				// Because a proper forwarded intern port is more reliable to stay open, than an extern port set by the NAT, we prefer
 				// intern ports and change the setting.
 				CKademlia::GetPrefs()->SetUseExternKadPort(false);
@@ -132,7 +134,7 @@ void CUDPFirewallTester::SetUDPFWCheckResult(bool bSucceeded, bool bTestCancelle
 			m_byFWChecksFinishedUDP = UDP_FIREWALLTEST_CLIENTSTOASK; // don't do any more tests
 			m_byFWChecksRunningUDP = 0; // all other tests are cancelled
 			m_liPossibleTestClients.RemoveAll(); // clear list, keep used clients list through
-			m_dwLastSucceededTime = ::GetTickCount(); // for delayed results, see above
+			m_dwLastSucceededTime = curTick; // for delayed results, see above
 			CSearchManager::CancelNodeFWCheckUDPSearch(); // cancel firewall node searches if any are still active
 			// if this packet came to our internal port, explicitly set the internal port as used port from now on
 			if (nIncomingPort == CKademlia::GetPrefs()->GetInternKadPort()) {

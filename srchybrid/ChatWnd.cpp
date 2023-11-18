@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -16,14 +16,13 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
 #include "emule.h"
-#include "ChatWnd.h"
 #include "HTRichEditCtrl.h"
-#include "FriendList.h"
 #include "emuledlg.h"
 #include "UpDownClient.h"
 #include "HelpIDs.h"
 #include "Opcodes.h"
-#include "friend.h"
+#include "FriendList.h"
+#include "ChatWnd.h"
 #include "ClientCredits.h"
 #include "IconStatic.h"
 #include "UserMsgs.h"
@@ -190,7 +189,7 @@ BOOL CChatWnd::OnInitDialog()
 	m_wndFormat.ModifyStyle((theApp.m_ullComCtrlVer >= MAKEDLLVERULL(6, 16, 0, 0)) ? TBSTYLE_TRANSPARENT : 0, TBSTYLE_TOOLTIPS);
 	m_wndFormat.SetExtendedStyle(m_wndFormat.GetExtendedStyle() | TBSTYLE_EX_MIXEDBUTTONS);
 	TBBUTTON atb[1] = {};
-	atb[0].iBitmap = 0;
+	//atb[0].iBitmap = 0;
 	atb[0].idCommand = IDC_SMILEY;
 	atb[0].fsState = TBSTATE_ENABLED;
 	atb[0].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE;
@@ -345,11 +344,11 @@ LRESULT CChatWnd::DefWindowProc(UINT uMessage, WPARAM wParam, LPARAM lParam)
 
 void CChatWnd::StartSession(CUpDownClient *client)
 {
-	if (!client->GetUserName())
-		return;
-	theApp.emuledlg->SetActiveDialog(this);
-	chatselector.StartSession(client, true);
-	EnableClose();
+	if (client->GetUserName()) {
+		theApp.emuledlg->SetActiveDialog(this);
+		chatselector.StartSession(client, true);
+		EnableClose();
+	}
 }
 
 void CChatWnd::OnShowWindow(BOOL bShow, UINT /*nStatus*/)
@@ -479,9 +478,9 @@ void CChatWnd::OnSysColorChange()
 
 void CChatWnd::UpdateFriendlistCount(INT_PTR count)
 {
-	CString strTemp;
-	strTemp.Format(_T(" (%u)"), (unsigned)count);
-	SetDlgItemText(IDC_FRIENDS_LBL, GetResString(IDS_CW_FRIENDS) + strTemp);
+	CString sCount;
+	sCount.Format(_T("%s (%u)"), (LPCTSTR)GetResString(IDS_CW_FRIENDS), (unsigned)count);
+	SetDlgItemText(IDC_FRIENDS_LBL, sCount);
 }
 
 BOOL CChatWnd::OnHelpInfo(HELPINFO*)
@@ -529,10 +528,9 @@ void CChatWnd::OnBnClickedClose()
 
 void CChatWnd::OnBnClickedSend()
 {
-	CString strMessage;
-	m_wndMessage.GetWindowText(strMessage);
-	strMessage.Trim();
-	if (!strMessage.IsEmpty() && chatselector.SendMessage(strMessage))
+	CString strText;
+	m_wndMessage.GetWindowText(strText);
+	if (!strText.Trim().IsEmpty() && chatselector.SendText(strText))
 		m_wndMessage.SetWindowText(_T(""));
 
 	m_wndMessage.SetFocus();

@@ -470,7 +470,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Globale (Server)"
     IDS_METHOD              "Metodë"
     IDS_UNDO                "Zhbëje"
-    IDS_DAYLY               "Përditë"
+    IDS_DAILY               "Përditë"
 END
 
 STRINGTABLE
@@ -1503,7 +1503,7 @@ BEGIN
     IDS_EM_HELP             "&Ndihmë"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Shoku nuk u shtua.\r\n\r\nNjë tjetër me të njëjtën adresë dhe port IP të vlefshëm ekziston që më parë."
-    IDS_DYNUP               "Ana e Shpejtësisë Ngarkuese"
+    IDS_DYNUP               "Ana e Shpejtësisë Ngarkuese (nuk rekomandohet)"
     IDS_KADOVERHEAD         "Sipëria e Kad-it (Paketa): %s (%s)"
     IDS_FIND                "Kërko..."
     IDS_LOG_BANNED_CLIENTS  "Shëno klientët e dëbuar"

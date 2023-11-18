@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -26,7 +26,7 @@
 #include <atlenc.h>
 #include <wincrypt.h>
 
-#include "mbedtls/config.h"
+//#include "mbedtls/build_info.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/base64.h"
 #include "mbedtls/error.h"
@@ -34,7 +34,6 @@
 #include "mbedtls/ssl.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
-//#include "mbedtls/certs.h"
 #include "mbedtls/x509.h"
 
 #ifdef _DEBUG
@@ -156,7 +155,8 @@ bool encoded_word(const CString &src, CStringA &dst)
 		return false;
 	}
 	dst.ReleaseBuffer(iLength);
-	dst = "=?utf-8?b?" + dst + "?=";
+	dst.Insert(0, "=?utf-8?b?");
+	dst += "?=";
 	return true;
 }
 
@@ -176,14 +176,12 @@ static int do_handshake(mbedtls_ssl_context *ssl)
 
 static int write_ssl(mbedtls_ssl_context *ssl, const char *buf, size_t len)
 {
-	if (len > 0) {
-		for (int ret; (ret = mbedtls_ssl_write(ssl, (unsigned char*)buf, len)) <= 0;) {
+	if (len > 0)
+		for (int ret; (ret = mbedtls_ssl_write(ssl, (unsigned char*)buf, len)) <= 0;)
 			if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
 				DebugLog(LOG_DONTNOTIFY, _T("mbedtls_ssl_write returned %d"), ret);
 				return -1;
 			}
-		}
-	}
 
 	for (;;) {
 		unsigned char data[256];
@@ -241,7 +239,6 @@ class CNotifierMailThread : public CWinThread
 
 protected:
 	CNotifierMailThread() = default;	// protected constructor used by dynamic creation
-	virtual	~CNotifierMailThread() = default;
 	static CCriticalSection sm_critSect;
 
 public:
@@ -267,7 +264,6 @@ BOOL CNotifierMailThread::InitInstance()
 void CNotifierMailThread::sendmail()
 {
 	static const unsigned char pers[] = "eMule_mail";
-	int ret;
 	CStringA sBodyA, sReceiverA, sSenderA, sServerA, sTmpA, sBufA;
 
 	mbedtls_net_context server_fd;
@@ -285,13 +281,13 @@ void CNotifierMailThread::sendmail()
 	mbedtls_ctr_drbg_init(&ctr_drbg);
 	mbedtls_entropy_init(&entropy);
 
-	ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, pers, sizeof pers -1);
+	int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, pers, sizeof pers -1);
 	if (ret != 0) {
 		DebugLogWarning(LOG_DONTNOTIFY, _T("Seeding the random number generator failed: %d"), ret);
 		goto exit;
 	}
 
-	sServerA = CStringA(m_mail.sServer);
+	sServerA = (CStringA)m_mail.sServer;
 	sTmpA.Format("%d", m_mail.uPort);
 	ret = mbedtls_net_connect(&server_fd, sServerA, sTmpA, MBEDTLS_NET_PROTO_TCP);
 	if (ret != 0) {
@@ -395,7 +391,7 @@ void CNotifierMailThread::sendmail()
 			goto failed;
 		}
 
-		sTmpA = CStringA(m_mail.sUser);
+		sTmpA = (CStringA)m_mail.sUser;
 		ret = mbedtls_base64_encode(base, sizeof base, &n, (unsigned char*)(LPCSTR)sTmpA, sTmpA.GetLength());
 		if (ret != 0) {
 			DebugLogWarning(LOG_DONTNOTIFY, _T("Login to base64 failed: %d"), ret);
@@ -408,7 +404,7 @@ void CNotifierMailThread::sendmail()
 			goto failed;
 		}
 
-		sTmpA = CStringA(m_mail.sPass);
+		sTmpA = (CStringA)m_mail.sPass;
 		ret = mbedtls_base64_encode(base, sizeof base, &n, (unsigned char*)(LPCSTR)sTmpA, sTmpA.GetLength());
 		if (ret != 0) {
 			DebugLogWarning(LOG_DONTNOTIFY, _T("Password to base64 failed: %d"), ret);
@@ -430,7 +426,7 @@ void CNotifierMailThread::sendmail()
 		goto failed;
 	}
 
-	sReceiverA = CStringA(m_mail.sTo);
+	sReceiverA = (CStringA)m_mail.sTo;
 	sBufA.Format("RCPT TO:<%s>\r\n", (LPCSTR)sReceiverA);
 	ret = write_data(&ssl, sBufA); //250 251
 	if (ret > 0 && ret < 200 || ret > 299) {
@@ -444,11 +440,11 @@ void CNotifierMailThread::sendmail()
 		goto failed;
 	}
 
-	sBodyA = "Content-Type: text/plain;\r\n"
+	sBodyA.Format("Content-Type: text/plain;\r\n"
 			"\tformat=flowed;\r\n"
 			"\tcharset=\"utf-8\"\r\n"
-			"Content-Transfer-Encoding: 8bit\r\n\r\n"
-			+ (NeedUTF8String(m_strBody) ? wc2utf8(m_strBody) : CStringA(m_strBody));
+			"Content-Transfer-Encoding: 8bit\r\n\r\n%s"
+			, (LPCSTR)(NeedUTF8String(m_strBody) ? wc2utf8(m_strBody) : (CStringA)m_strBody));
 
 	bool bEncrypt = !m_mail.sEncryptCertName.IsEmpty();
 	if (bEncrypt) {
@@ -463,13 +459,13 @@ void CNotifierMailThread::sendmail()
 			goto failed;
 		}
 		sBodyA.ReleaseBuffer(iLength);
-		sBodyA = "Content-Type: application/x-pkcs7-mime;\r\n"
+		sBodyA.Insert(0, "Content-Type: application/x-pkcs7-mime;\r\n"
 			"\tformat=flowed;\r\n"
 			"\tsmime-type=enveloped-data;\r\n"
 			"\tname=\"smime.p7m\"\r\n"
 			"Content-Transfer-Encoding: base64\r\n"
 			"Content-Disposition: attachment;\r\n"
-			"\tfilename=\"smime.p7m\"\r\n\r\n" + sBodyA;
+			"\tfilename=\"smime.p7m\"\r\n\r\n");
 	}
 
 	if (!encoded_word(m_strSubject, sTmpA)) //subject

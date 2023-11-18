@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2010 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -19,8 +19,6 @@
 #include "emule.h"
 #include "emuleDlg.h"
 #include "TransferDlg.h"
-#include "TransferWnd.h"
-#include "ToolbarWnd.h"
 #include "OtherFunctions.h"
 #include "HelpIDs.h"
 #include "Preferences.h"
@@ -47,14 +45,8 @@ BEGIN_MESSAGE_MAP(CTransferDlg, CFrameWnd)
 END_MESSAGE_MAP()
 
 CTransferDlg::CTransferDlg()
+	: m_pwndTransfer()
 {
-	m_pwndToolbar = new CToolbarWnd;
-	m_pwndTransfer = NULL;
-}
-
-CTransferDlg::~CTransferDlg()
-{
-	delete m_pwndToolbar;
 }
 
 BOOL CTransferDlg::Create(CWnd *pParent)
@@ -82,23 +74,23 @@ int CTransferDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_pwndTransfer->ModifyStyle(WS_BORDER, 0);
 	m_pwndTransfer->ModifyStyleEx(WS_EX_CLIENTEDGE, WS_EX_STATICEDGE);
 
-	m_pwndToolbar->Create(this, IDD_DOWNLOAD_TOOLBARS
+	m_wndToolbar.Create(this, IDD_DOWNLOAD_TOOLBARS
 		, WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_SIZE_FIXED | CBRS_SIZE_DYNAMIC | CBRS_GRIPPER
 		, IDBAR_DOWNLOAD_TOOLBAR);
-	ASSERT(m_pwndToolbar->GetStyle() & WS_CLIPSIBLINGS);
-	ASSERT(m_pwndToolbar->GetStyle() & WS_CLIPCHILDREN);
-	m_pwndToolbar->SetWindowText(GetResString(IDS_DOWNLOADCOMMANDS));
-	m_pwndToolbar->EnableDocking(CBRS_ALIGN_ANY);
+	ASSERT(m_wndToolbar.GetStyle() & WS_CLIPSIBLINGS);
+	ASSERT(m_wndToolbar.GetStyle() & WS_CLIPCHILDREN);
+	m_wndToolbar.SetWindowText(GetResString(IDS_DOWNLOADCOMMANDS));
+	m_wndToolbar.EnableDocking(CBRS_ALIGN_ANY);
 
 	EnableDocking(CBRS_ALIGN_ANY);
-	DockControlBar(m_pwndToolbar, AFX_IDW_DOCKBAR_LEFT, (LPRECT)NULL);
+	DockControlBar(&m_wndToolbar, AFX_IDW_DOCKBAR_LEFT, (LPRECT)NULL);
 
 	m_pwndTransfer->SendMessage(WM_INITIALUPDATE);
 
 	LoadBarState(DOWNLOAD_TOOLBAR_PROFILE);
-	DockToolbarWnd(); // Too much bug reports about vanished search parameters window. Force to dock.
+	DockToolbarWnd(); // Too many bug reports about vanished search parameters window. Force to dock.
 	ShowToolbar(thePrefs.IsDownloadToolbarEnabled());
-	m_pwndToolbar->SetCommandTargetWnd(GetDownloadList());
+	m_wndToolbar.SetCommandTargetWnd(GetDownloadList());
 	Localize();
 
 	return 0;
@@ -113,9 +105,9 @@ void CTransferDlg::OnClose()
 void CTransferDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 {
 	CFrameWnd::OnShowWindow(bShow, nStatus);
-	if (m_pwndToolbar->IsFloating()) {
-		//ShowControlBar(m_pwndParams, bShow, TRUE);
-		DockToolbarWnd(); // Too much bug reports about vanished search parameters window. Force to dock.
+	if (m_wndToolbar.IsFloating()) {
+		//ShowControlBar(&m_pwndParams, bShow, TRUE);
+		DockToolbarWnd(); // Too many bug reports about vanished search parameters window. Force to dock.
 	}
 }
 
@@ -126,18 +118,18 @@ void CTransferDlg::OnSetFocus(CWnd *pOldWnd)
 
 void CTransferDlg::DockToolbarWnd()
 {
-	if (m_pwndToolbar->IsFloating()) {
+	if (m_wndToolbar.IsFloating()) {
 		UINT uMRUDockID = AFX_IDW_DOCKBAR_TOP;
-		if (m_pwndToolbar->m_pDockContext)
-			uMRUDockID = m_pwndToolbar->m_pDockContext->m_uMRUDockID;
-		DockControlBar(m_pwndToolbar, uMRUDockID);
+		if (m_wndToolbar.m_pDockContext)
+			uMRUDockID = m_wndToolbar.m_pDockContext->m_uMRUDockID;
+		DockControlBar(&m_wndToolbar, uMRUDockID);
 	}
 }
 
 void CTransferDlg::Localize()
 {
 	m_pwndTransfer->Localize();
-	m_pwndToolbar->Localize();
+	m_wndToolbar.Localize();
 }
 
 void CTransferDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -175,9 +167,9 @@ BOOL CTransferDlg::OnHelpInfo(HELPINFO*)
 
 void CTransferDlg::ShowToolbar(bool bShow)
 {
-	if (m_pwndToolbar->IsVisible() != static_cast<BOOL>(bShow))
+	if (m_wndToolbar.IsVisible() != static_cast<BOOL>(bShow))
 		if (thePrefs.IsDownloadToolbarEnabled() || !bShow)
-			ShowControlBar(m_pwndToolbar, static_cast<BOOL>(bShow), TRUE);
+			ShowControlBar(&m_wndToolbar, static_cast<BOOL>(bShow), TRUE);
 }
 
 
@@ -230,9 +222,9 @@ void CTransferDlg::OnDisableList()
 	m_pwndTransfer->OnDisableList();
 }
 
-void CTransferDlg::UpdateListCount(EWnd2 listindex, int iCount)
+void CTransferDlg::UpdateListCount(CTransferWnd::EWnd2 listindex, int iCount)
 {
-	m_pwndTransfer->UpdateListCount((CTransferWnd::EWnd2)listindex, iCount);
+	m_pwndTransfer->UpdateListCount(listindex, iCount);
 }
 
 int CTransferDlg::AddCategory(const CString &newtitle, const CString &newincoming, const CString &newcomment, const CString &newautocat, bool addTab)
@@ -264,10 +256,5 @@ CClientListCtrl* CTransferDlg::GetClientList()
 CDownloadClientsCtrl* CTransferDlg::GetDownloadClientsList()
 {
 	return &m_pwndTransfer->downloadclientsctrl;
-}
-
-CImageList* CTransferDlg::GetClientIconList() const
-{
-	return &m_pwndTransfer->m_ImageList;
 }
 //////////////////////////////////////////////////////////////////

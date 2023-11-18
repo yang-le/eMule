@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002 Merkur ( merkur-@users.sourceforge.net / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( merkur-@users.sourceforge.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -16,10 +16,10 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #pragma once
 #include "MapKey.h"
-#include <cryptopp/rsa.h>
-#include <cryptopp/base64.h>
-#include <cryptopp/osrng.h>
-#include <cryptopp/files.h>
+#include "cryptopp/rsa.h"
+#include "cryptopp/base64.h"
+#include "cryptopp/osrng.h"
+#include "cryptopp/files.h"
 
 #define COLLECTION_FILEEXTENSION	_T(".emulecollection")
 
@@ -38,14 +38,14 @@ public:
 	~CCollection();
 	CCollection(const CCollection&) = delete;
 	CCollection& operator=(const CCollection&) = delete;
-	bool InitCollectionFromFile(const CString &sFilePath, const CString &sFileName);
+	bool	InitCollectionFromFile(const CString &sFilePath, const CString &sFileName);
 	CCollectionFile* AddFileToCollection(CAbstractFile *pAbstractFile, bool bCreateClone);
-	void RemoveFileFromCollection(CAbstractFile *pAbstractFile);
-	void WriteToFileAddShared(CryptoPP::RSASSA_PKCS1v15_SHA_Signer *pSignKey = NULL);
-	void SetCollectionAuthorKey(const byte *abyCollectionAuthorKey, uint32 nSize);
-	CString GetCollectionAuthorKeyString();
-	static bool HasCollectionExtention(const CString &sFileName);
+	void	RemoveFileFromCollection(CAbstractFile *pAbstractFile);
+	void	WriteToFileAddShared(CryptoPP::RSASSA_PKCS1v15_SHA_Signer *pSignKey = NULL);
+	void	SetCollectionAuthorKey(const byte *abyCollectionAuthorKey, uint32 nSize);
+	CString	GetCollectionAuthorKeyString();
 	CString	GetAuthorKeyHashString() const;
+	static bool HasCollectionExtention(const CString &sFileName);
 
 	CString m_sCollectionName;
 	CString m_sCollectionAuthorName;

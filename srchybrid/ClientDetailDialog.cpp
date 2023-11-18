@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -20,7 +20,6 @@
 #include "UpDownClient.h"
 #include "PartFile.h"
 #include "ClientCredits.h"
-#include "otherfunctions.h"
 #include "Server.h"
 #include "ServerList.h"
 #include "SharedFileList.h"
@@ -129,7 +128,7 @@ BOOL CClientDetailPage::OnSetActive()
 		SetDlgItemText(IDC_DDUP, CastItoXBytes(client->GetTransferredDown()));
 		SetDlgItemText(IDC_DDOWN, CastItoXBytes(client->GetTransferredUp()));
 		SetDlgItemText(IDC_DAVUR, CastItoXBytes(client->GetDownloadDatarate(), false, true));
-		SetDlgItemText(IDC_DAVDR, CastItoXBytes(client->GetDatarate(), false, true));
+		SetDlgItemText(IDC_DAVDR, CastItoXBytes(client->GetUploadDatarate(), false, true));
 
 		const CClientCredits *clcredits = client->Credits();
 		if (clcredits) {

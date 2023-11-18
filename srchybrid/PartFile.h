@@ -1,4 +1,4 @@
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -46,7 +46,7 @@ enum EPartFileStatus
 
 #define STATES_COUNT		17
 
-enum EPartFileFormat
+enum EPartFileFormat : uint8
 {
 	PMT_UNKNOWN			= 0,
 	PMT_DEFAULTOLD,
@@ -83,14 +83,15 @@ class CUpDownClient;
 enum EDownloadState : uint8;
 class CxImage;
 class CSafeMemFile;
+class CED2KFileLink;
 
 #pragma pack(push, 1)
 struct Requested_Block_Struct
 {
 	uint64	StartOffset;
 	uint64	EndOffset;
-	uchar	FileID[16];
-	uint64  transferred; // Barry - This counts bytes completed
+	uchar	FileID[MDX_DIGEST_SIZE];
+	uint64  transferred; // Barry - this counts completed bytes for partfile 'progress' display
 };
 #pragma pack(pop)
 
@@ -100,12 +101,20 @@ struct Gap_Struct
 	uint64 end;
 };
 
+//part file buffer write status (in PartFileBufferedData.flushed)
+#define PB_READY 0
+#define PB_PENDING 1
+#define PB_ERROR 2
+#define PB_WRITTEN 3
+
 struct PartFileBufferedData
 {
 	uint64 start;					// Barry - This is the start offset of the data
 	uint64 end;						// Barry - This is the end offset of the data
 	BYTE *data;						// Barry - This is the data to be written
 	Requested_Block_Struct *block;	// Barry - This is the requested block that this data relates to
+	DWORD dwError;					// returned from the writing thread
+	byte flushed;					// 0 - ready 1 - sent to writing thread 2 - error 3 - written
 };
 
 typedef CTypedPtrList<CPtrList, CUpDownClient*> CUpDownClientPtrList;
@@ -119,7 +128,7 @@ public:
 	explicit CPartFile(UINT cat = 0);
 	explicit CPartFile(CSearchFile *searchresult, UINT cat = 0);
 	explicit CPartFile(const CString &edonkeylink, UINT cat = 0);
-	explicit CPartFile(class CED2KFileLink *fileLink, UINT cat = 0);
+	explicit CPartFile(const CED2KFileLink &fileLink, UINT cat = 0);
 	virtual	~CPartFile();
 
 	bool	IsPartFile() const							{ return (status != PS_COMPLETE); }
@@ -133,11 +142,10 @@ public:
 	// full path to part.met file or completed file
 	const CString& GetFullName() const					{ return m_fullname; }
 	void	SetFullName(const CString &name)			{ m_fullname = name; }
-	CString	GetTempPath() const;
+	CString	GetTmpPath() const;
 
 	// local file system related properties
 	bool	IsNormalFile() const						{ return (m_dwFileAttributes & (FILE_ATTRIBUTE_COMPRESSED | FILE_ATTRIBUTE_SPARSE_FILE)) == 0; }
-	const bool	IsAllocating() const					{ return m_AllocateThread != 0; }
 	EMFileSize	GetRealFileSize() const;
 	void	GetLeftToTransferAndAdditionalNeededSpace(uint64 &rui64LeftToTransfer, uint64 &rui64AdditionalNeededSpace) const;
 	uint64	GetNeededSpace() const;
@@ -152,7 +160,7 @@ public:
 	CTime	GetCrCFileDate() const						{ return CTime(m_tCreated); }
 	time_t	GetCrFileDate() const						{ return m_tCreated; }
 
-	void	InitializeFromLink(CED2KFileLink *fileLink, UINT cat = 0);
+	void	InitializeFromLink(const CED2KFileLink &fileLink, UINT cat = 0);
 	uint32	Process(uint32 reducedownload, UINT icounter);
 	EPartFileLoadResult	LoadPartFile(LPCTSTR in_directory, LPCTSTR in_filename, EPartFileFormat *pOutCheckFileFormat = NULL); //filename = *.part.met
 	EPartFileLoadResult	ImportShareazaTempfile(LPCTSTR in_directory, LPCTSTR in_filename, EPartFileFormat *pOutCheckFileFormat = NULL);
@@ -163,10 +171,14 @@ public:
 
 	void	AddGap(uint64 start, uint64 end);
 	void	FillGap(uint64 start, uint64 end);
-	void	DrawStatusBar(CDC *dc, const CRect &rect, bool bFlat) /*const*/;
-	virtual void	DrawShareStatusBar(CDC *dc, LPCRECT rect, bool onlygreyrect, bool	 bFlat) const;
-	bool	IsComplete(uint64 start, uint64 end, bool bIgnoreBufferedData) const;
-	bool	IsComplete(uint16 uPart, bool bIgnoreBufferedData) const;
+	void	DrawStatusBar(CDC *dc, const CRect &rect, bool bFlat);
+	virtual void	DrawShareStatusBar(CDC *dc, LPCRECT rect, bool onlygreyrect, bool bFlat) const;
+	bool	IsComplete(uint64 start, uint64 end) const;
+	bool	IsCompleteSafe(uint64 start, uint64 end) const;
+	bool	IsComplete(UINT uPart) const;
+	bool	IsCompleteBD(uint64 start, uint64 end) const;
+	bool	IsCompleteBDSafe(uint64 start, uint64 end) const;
+	bool	IsCompleteBD(UINT uPart) const;
 	bool	IsPureGap(uint64 start, uint64 end) const;
 	bool	IsAlreadyRequested(uint64 start, uint64 end, bool bCheckBuffers = false) const;
 	bool	ShrinkToAvoidAlreadyRequested(uint64 &start, uint64 &end) const;
@@ -177,9 +189,9 @@ public:
 	void	UpdateCompletedInfos(uint64 uTotalGaps);
 	virtual void	UpdatePartsInfo();
 
-	bool	GetNextRequestedBlock(CUpDownClient *sender, Requested_Block_Struct **newblocks, uint16 *pcount) /*const*/;
-	void	WritePartStatus(CSafeMemFile *file) const;
-	void	WriteCompleteSourcesCount(CSafeMemFile *file) const;
+	bool	GetNextRequestedBlock(CUpDownClient *sender, Requested_Block_Struct **newblocks, int &iCount) /*const*/;
+	void	WritePartStatus(CSafeMemFile &file) const;
+	void	WriteCompleteSourcesCount(CSafeMemFile &file) const;
 	void	AddSources(CSafeMemFile *sources, uint32 serverip, uint16 serverport, bool bWithObfuscationAndHash);
 	void	AddSource(LPCTSTR pszURL, uint32 nIP);
 	static bool CanAddSource(uint32 userid, uint16 port, uint32 serverip, uint16 serverport, UINT *pdebug_lowiddropped = NULL, bool ed2kID = true);
@@ -216,16 +228,15 @@ public:
 	time_t	GetDlActiveTime() const;
 
 	// Barry - Added as replacement for BlockReceived to buffer data before writing to disk
-	uint32	WriteToBuffer(uint64 transize, const BYTE *data, uint64 start, uint64 end, Requested_Block_Struct *block, const CUpDownClient *client);
-	void	FlushBuffer(bool forcewait = false, bool bForceICH = false, bool bNoAICH = false);
+	uint32	WriteToBuffer(uint64 transize, const BYTE *data, uint64 start, uint64 end, Requested_Block_Struct *block, const CUpDownClient *client, bool bCopyData);
+	void	FlushBuffer(bool bForceICH = false, bool bNoAICH = false);
 	// Barry - This will invert the gap list, up to caller to delete gaps when done
 	// 'Gaps' returned are really the filled areas, and guaranteed to be in order
-	void	GetFilledList(CTypedPtrList<CPtrList, Gap_Struct*> *filled) const;
+	void	GetFilledArray(CArray<Gap_Struct> &filled) const;
 
 	// Barry - Added to prevent list containing deleted blocks on shutdown
 	void	RemoveAllRequestedBlocks();
 	bool	RemoveBlockFromList(uint64 start, uint64 end);
-	bool	IsInRequestedBlockList(const Requested_Block_Struct *block) const;
 	void	RemoveAllSources(bool bTryToSwap);
 
 	bool	CanOpenFile() const;
@@ -251,7 +262,7 @@ public:
 	UINT	GetAvailablePartCount() const				{ return (status == PS_COMPLETING || status == PS_COMPLETE) ? GetPartCount() : availablePartsCount; }
 	void	UpdateAvailablePartsCount();
 
-	uint32	GetLastAnsweredTime() const					{ return m_ClientSrcAnswered; }
+	DWORD	GetLastAnsweredTime() const					{ return m_ClientSrcAnswered; }
 	void	SetLastAnsweredTime()						{ m_ClientSrcAnswered = ::GetTickCount(); }
 	void	SetLastAnsweredTimeTimeout();
 
@@ -274,9 +285,10 @@ public:
 	UINT	GetCategory() /*const*/;
 	void	SetCategory(UINT cat);
 	bool	HasDefaultCategory() const;
-	bool	CheckShowItemInGivenCat(int inCategory) /*const*/;
+	bool	CheckShowItemInGivenCat(INT_PTR inCategory) /*const*/;
 
 	//preview
+	bool CopyPartFile(CArray<Gap_Struct> &raFilled, const CString &tempFileName);
 	virtual bool GrabImage(uint8 nFramesToGrab, double dStartTime, bool bReduceColor, uint16 nMaxWidth, void *pSender);
 	virtual void GrabbingFinished(CxImage **imgResults, uint8 nFramesGrabbed, void *pSender);
 
@@ -306,7 +318,7 @@ public:
 	UINT	GetMaxSourcePerFileUDP() const;
 
 	bool	GetPreviewPrio() const						{ return m_bpreviewprio; }
-	void	SetPreviewPrio(bool in)						{ m_bpreviewprio=in; }
+	void	SetPreviewPrio(bool in)						{ m_bpreviewprio = in; }
 
 	static bool RightFileHasHigherPrio(CPartFile *left, CPartFile *right);
 	bool	IsDeleting() const							{ return m_bDelayDelete; }
@@ -322,9 +334,10 @@ public:
 	CTime	lastseencomplete;
 	CFile	m_hpartfile;				// permanent opened handle to avoid write conflicts
 	CMutex	m_FileCompleteMutex;		// Lord KiRon - Mutex for file completion
-	uint64	m_iAllocinfo;
-	uint32	m_LastSearchTime;
-	uint32	m_LastSearchTimeKad;
+	HANDLE	m_hWrite;					// asynchronous part file writing
+	int		m_iWrites;					// outstanding I/O counter - read only in the main thread
+	DWORD	m_LastSearchTime;
+	DWORD	m_LastSearchTimeKad;
 	uint16	src_stats[4];
 	uint16	net_stats[3];
 	uint8	m_TotalSearchesKad;
@@ -343,23 +356,23 @@ protected:
 private:
 	BOOL	PerformFileComplete(); // Lord KiRon
 	static UINT CompleteThreadProc(LPVOID pvParams); // Lord KiRon - Used as separate thread to complete file
-	static UINT AFX_CDECL AllocateSpaceThread(LPVOID lpParam);
 	void	CharFillRange(CStringA &buffer, uint32 start, uint32 end, char color) const;
 	void	AddToSharedFiles();
+	void	DeleteWrittenItem(const POSITION pos);
 
 	static CBarShader s_LoadBar;
 	static CBarShader s_ChunkBar;
 	CCorruptionBlackBox	m_CorruptionBlackBox;
-	CTypedPtrList<CPtrList, Gap_Struct*> m_gaplist;
+	CList<Gap_Struct> m_gaplist;
 	CTypedPtrList<CPtrList, Requested_Block_Struct*> requestedblocks_list;
 	// Barry - Buffered data to be written
 	CTypedPtrList<CPtrList, PartFileBufferedData*> m_BufferedData_list;
 	CArray<uint16, uint16> m_SrcPartFrequency;
 	CList<uint16, uint16> corrupted_list;
+	CArray<bool, bool> m_aChangedPart;
 	CUpDownClientPtrList m_downloadingSourceList;
 	CString m_fullname;
 	CString m_partmetfilename;
-	CWinThread *m_AllocateThread;
 	CAICHRecoveryHashSet *m_pAICHRecoveryHashSet;
 	float	m_percentcompleted;
 	EMFileSize	m_completedsize;
@@ -376,15 +389,15 @@ private:
 	DWORD	lastSwapForSourceExchangeTick; // ZZ:DownloadManaager
 	DWORD	m_lastRefreshedDLDisplay;
 	DWORD	m_nLastBufferFlushTime;
-	DWORD	m_nFlushLimitMs; //randomize to prevent simultaneous flushing for several files
+	DWORD	m_nFileFlushTime; //if file is idle long enough, flush new data to disk
 	DWORD	m_dwFileAttributes;
 	DWORD	m_random_update_wait;
 	UINT	m_anStates[STATES_COUNT];
 	UINT	m_category;
 	UINT	m_uMaxSources;
 	UINT	availablePartsCount;
-	uint32	m_ClientSrcAnswered;
-	uint32	lastpurgetime;
+	DWORD	m_ClientSrcAnswered;
+	DWORD	m_lastpurgetime;
 	uint32	m_LastNoNeededCheck;
 	uint32	m_uPartsSavedDueICH;
 	uint32	m_datarate;
@@ -393,8 +406,8 @@ private:
 	byte	m_refresh; //delay counter for display
 	uint8	m_iDownPriority;
 	bool	m_paused;
-	bool	m_bPauseOnPreview;
 	bool	m_stopped;
+	bool	m_bPauseOnPreview;
 	bool	m_insufficient;
 	bool	m_bCompletionError;
 	bool	m_bAICHPartHashsetNeeded;

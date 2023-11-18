@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -31,7 +31,7 @@ static char THIS_FILE[] = __FILE__;
 CBarShader::CBarShader(uint32 height, uint32 width)
 	: m_dPixelsPerByte()
 	, m_dBytesPerPixel()
-	, m_uFileSize(EMFileSize(1ull))
+	, m_uFileSize(1ull)
 	, m_iWidth(width)
 	, m_iHeight(height)
 	, m_bIsPreview()
@@ -68,7 +68,7 @@ void CBarShader::BuildModifiers()
 	int depth = (7 - m_used3dlevel);
 	int count = HALF(m_iHeight);
 	double piOverDepth = M_PI / depth;
-	double base = piOverDepth * ((depth / 2.0) - 1);
+	double base = piOverDepth * (depth / 2.0 - 1);
 	double increment = piOverDepth / (count - 1);
 
 	m_Modifiers = new float[count];
@@ -100,6 +100,12 @@ void CBarShader::SetHeight(int height)
 		m_iHeight = height;
 		BuildModifiers();
 	}
+}
+
+void CBarShader::SetRect(const CRect & rect)
+{
+	SetWidth(rect.Width());
+	SetHeight(rect.Height());
 }
 
 void CBarShader::FillRange(uint64 start, uint64 end, COLORREF color)
@@ -185,7 +191,7 @@ void CBarShader::Draw(CDC *dc, int iLeft, int iTop, bool bFlat)
 			} while (pos != NULL);
 			// SLUGFILLER: speedBarShader
 			rectSpan.left = rectSpan.right;
-			rectSpan.right++;
+			++rectSpan.right;
 			if (g_bLowColorDesktop)
 				FillBarRect(dc, &rectSpan, color, bFlat);
 			else

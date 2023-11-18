@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2003 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//Copyright (C)2003-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -46,7 +46,7 @@ PreviewDlg::PreviewDlg(CWnd *pParent /*=NULL*/)
 
 PreviewDlg::~PreviewDlg()
 {
-	for (unsigned i = 0; i < _countof(m_icons); ++i)
+	for (int i = _countof(m_icons); --i >= 0;)
 		if (m_icons[i])
 			VERIFY(::DestroyIcon(m_icons[i]));
 }
@@ -65,16 +65,19 @@ BOOL PreviewDlg::OnInitDialog()
 		return FALSE;
 	}
 	InitWindowStyles(this);
-	CString title;
-	title.Format(_T("%s: %s"), (LPCTSTR)GetResNoAmp(IDS_DL_PREVIEW), (LPCTSTR)m_pFile->GetFileName());
+	CString title(GetResNoAmp(IDS_DL_PREVIEW));
+	title.AppendFormat(_T(": %s"), (LPCTSTR)m_pFile->GetFileName());
 	SetWindowText(title);
 
 	m_nCurrentImage = 0;
 	ShowImage(0);
 
-	static_cast<CButton*>(GetDlgItem(IDC_PV_EXIT))->SetIcon(m_icons[0] = theApp.LoadIcon(_T("Cancel")));
-	static_cast<CButton*>(GetDlgItem(IDC_PV_NEXT))->SetIcon(m_icons[1] = theApp.LoadIcon(_T("Forward")));
-	static_cast<CButton*>(GetDlgItem(IDC_PV_PRIOR))->SetIcon(m_icons[2] = theApp.LoadIcon(_T("Back")));
+	m_icons[0] = theApp.LoadIcon(_T("Cancel"));
+	static_cast<CButton*>(GetDlgItem(IDC_PV_EXIT))->SetIcon(m_icons[0]);
+	m_icons[1] = theApp.LoadIcon(_T("Forward"));
+	static_cast<CButton*>(GetDlgItem(IDC_PV_NEXT))->SetIcon(m_icons[1]);
+	m_icons[2] = theApp.LoadIcon(_T("Back"));
+	static_cast<CButton*>(GetDlgItem(IDC_PV_PRIOR))->SetIcon(m_icons[2]);
 	return TRUE;
 }
 

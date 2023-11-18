@@ -1,5 +1,5 @@
 /*
-Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
+Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -23,7 +23,7 @@ There is going to be a new forum created just for the Kademlia side of the clien
 If you feel there is an error or a way to improve something, please
 post it in the forum first and let us look at it. If it is a real improvement,
 it will be added to the official client. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form.
+what all it does, can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 their client on the eMule forum.
 */
@@ -101,10 +101,10 @@ void CPrefs::ReadFile()
 		CSafeBufferedFile file;
 		CFileException fexp;
 		if (file.Open(m_sFilename, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-			setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
+			::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 			m_uIP = file.ReadUInt32();
 			file.ReadUInt16();
-			file.ReadUInt128(&m_uClientID);
+			file.ReadUInt128(m_uClientID);
 			// get rid of invalid kad IDs which may have been stored by older versions
 			if (m_uClientID == 0)
 				m_uClientID.SetValueRandom();
@@ -124,10 +124,10 @@ void CPrefs::WriteFile()
 		CSafeBufferedFile file;
 		CFileException fexp;
 		if (file.Open(m_sFilename, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-			setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
+			::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 			file.WriteUInt32(m_uIP);
 			file.WriteUInt16(0); //This is no longer used.
-			file.WriteUInt128(&m_uClientID);
+			file.WriteUInt128(m_uClientID);
 			file.WriteUInt8(0); //This is to tell older clients there are no tags.
 			file.Close();
 		}
@@ -177,7 +177,7 @@ bool CPrefs::GetFirewalled() const
 }
 void CPrefs::SetFirewalled()
 {
-	//We are checking our firewall state. Let keep a snapshot of our
+	//We are checking our firewall state. Let's keep a snapshot of our
 	//current state to prevent false reports during the recheck.
 	m_bLastFirewallState = (m_uFirewalled < 2);
 	m_uFirewalled = 0;
@@ -233,14 +233,14 @@ void CPrefs::SetKademliaFiles()
 	m_uKademliaFiles = nKadAverage * m_uKademliaUsers;
 }
 
-void CPrefs::GetKadID(CUInt128 *puID) const
+void CPrefs::GetKadID(CUInt128 &uID) const
 {
-	puID->SetValue(m_uClientID);
+	uID.SetValue(m_uClientID);
 }
 
-void CPrefs::GetKadID(CString *psID) const
+void CPrefs::GetKadID(CString &sID) const
 {
-	m_uClientID.ToHexString(psID);
+	m_uClientID.ToHexString(sID);
 }
 
 void CPrefs::SetKadID(const CUInt128 &puID)
@@ -253,14 +253,14 @@ CUInt128 CPrefs::GetKadID() const
 	return m_uClientID;
 }
 
-void CPrefs::GetClientHash(CUInt128 *puID) const
+void CPrefs::GetClientHash(CUInt128 &uID) const
 {
-	puID->SetValue(m_uClientHash);
+	uID.SetValue(m_uClientHash);
 }
 
-void CPrefs::GetClientHash(CString *psID) const
+void CPrefs::GetClientHash(CString &sID) const
 {
-	m_uClientHash.ToHexString(psID);
+	m_uClientHash.ToHexString(sID);
 }
 
 void CPrefs::SetClientHash(const CUInt128 &puID)

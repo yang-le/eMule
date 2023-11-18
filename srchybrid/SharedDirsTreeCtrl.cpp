@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -132,6 +132,10 @@ void CSharedDirsTreeCtrl::SetAllIcons()
 	// support an update of the control and the image list, we need to 'replace' our own
 	// images so that we are able to keep the already stored images from the Windows System
 	// image list.
+
+	//Should be terminated with a backslash for a directory image
+	int nImage = theApp.GetFileTypeSystemImageIdx(thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR));
+
 	CImageList *pCurImageList = GetImageList(TVSIL_NORMAL);
 	if (pCurImageList != NULL && pCurImageList->GetImageCount() >= 7) {
 		pCurImageList->Replace(0, CTempIconLoader(_T("AllFiles")));			// 0: All Directory
@@ -139,10 +143,7 @@ void CSharedDirsTreeCtrl::SetAllIcons()
 		pCurImageList->Replace(2, CTempIconLoader(_T("Incoming")));			// 2: Incoming Directory
 		pCurImageList->Replace(3, CTempIconLoader(_T("Category")));			// 3: Cats
 		pCurImageList->Replace(4, CTempIconLoader(_T("HardDisk")));			// 4: All Dirs
-		CString strTempDir(thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR));
-		slosh(strTempDir);
-		int nImage = theApp.GetFileTypeSystemImageIdx(strTempDir);			// 5: System Folder Icon
-		if (nImage > 0 && theApp.GetSystemImageList() != NULL) {
+		if (nImage > 0 && theApp.GetSystemImageList() != NULL) {			// 5: System Folder Icon
 			HICON hIcon = ::ImageList_GetIcon(theApp.GetSystemImageList(), nImage, 0);
 			pCurImageList->Replace(5, hIcon);
 			::DestroyIcon(hIcon);
@@ -159,10 +160,7 @@ void CSharedDirsTreeCtrl::SetAllIcons()
 		iml.Add(CTempIconLoader(_T("Incoming")));							// 2: Incoming Directory
 		iml.Add(CTempIconLoader(_T("Category")));							// 3: Cats
 		iml.Add(CTempIconLoader(_T("HardDisk")));							// 4: All Dirs
-		CString strTempDir(thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR));
-		slosh(strTempDir);
-		int nImage = theApp.GetFileTypeSystemImageIdx(strTempDir);			// 5: System Folder Icon
-		if (nImage > 0 && theApp.GetSystemImageList() != NULL) {
+		if (nImage > 0 && theApp.GetSystemImageList() != NULL) {			// 5: System Folder Icon
 			HICON hIcon = ::ImageList_GetIcon(theApp.GetSystemImageList(), nImage, 0);
 			iml.Add(hIcon);
 			::DestroyIcon(hIcon);
@@ -240,14 +238,14 @@ bool CSharedDirsTreeCtrl::FilterTreeIsSubDirectory(const CString &strDir, const 
 {
 	CString sRoot(strRoot);
 	sRoot.MakeLower();
-	slosh(sRoot);
+	ASSERT(strRoot.IsEmpty() || strRoot.Right(1) == _T("\\"));
 	CString sDir(strDir);
 	sDir.MakeLower();
-	slosh(sDir);
+	ASSERT(strDir.Right(1) == _T("\\"));
 	for (POSITION pos = liDirs.GetHeadPosition(); pos != NULL;) {
 		CString strCurrent(liDirs.GetNext(pos));
 		strCurrent.MakeLower();
-		slosh(strCurrent);
+		ASSERT(strCurrent.Right(1) == _T("\\"));
 		if (sRoot.Find(strCurrent, 0) != 0 && sDir.Find(strCurrent, 0) == 0 && strCurrent != sRoot && strCurrent != sDir)
 			return true;
 	}
@@ -256,19 +254,16 @@ bool CSharedDirsTreeCtrl::FilterTreeIsSubDirectory(const CString &strDir, const 
 
 CString GetFolderLabel(const CString &strFolderPath, bool bTopFolder, bool bAccessible)
 {
-	CString strFolder(strFolderPath);
-	PathRemoveBackslash(strFolder.GetBuffer());
-	strFolder.ReleaseBuffer();
-
-	CString strLabel(strFolder);
+	CString strLabel(strFolderPath);
 	if (strLabel.GetLength() == 2 && strLabel[1] == _T(':')) {
 		ASSERT(bTopFolder);
 		strLabel += _T('\\');
 	} else {
+		unslosh(strLabel);
 		strLabel.Delete(0, strLabel.ReverseFind(_T('\\')) + 1);
 		if (bTopFolder) {
-			CString strParentFolder(strFolder);
-			PathRemoveFileSpec(strParentFolder.GetBuffer());
+			CString strParentFolder(strFolderPath);
+			::PathRemoveFileSpec(strParentFolder.GetBuffer());
 			strParentFolder.ReleaseBuffer();
 			strLabel.AppendFormat(_T("  (%s)"), (LPCTSTR)strParentFolder);
 		}
@@ -279,8 +274,8 @@ CString GetFolderLabel(const CString &strFolderPath, bool bTopFolder, bool bAcce
 	return strLabel;
 }
 
-void CSharedDirsTreeCtrl::FilterTreeAddSubDirectories(CDirectoryItem *pDirectory, const CStringList &liDirs,
-	int nLevel, bool &rbShowWarning, bool bParentAccessible)
+void CSharedDirsTreeCtrl::FilterTreeAddSubDirectories(CDirectoryItem *pDirectory, const CStringList &liDirs
+	, int nLevel, bool &rbShowWarning, bool bParentAccessible)
 {
 	// just some sanity check against too deep shared dirs
 	// shouldn't be needed, but never trust the file system or a recursive function ;)
@@ -289,16 +284,14 @@ void CSharedDirsTreeCtrl::FilterTreeAddSubDirectories(CDirectoryItem *pDirectory
 		return;
 	}
 
-	CString strDirectoryPath(pDirectory->m_strFullPath);
-	strDirectoryPath.MakeLower();
-	for (POSITION pos = liDirs.GetHeadPosition(); pos != NULL;) {
-		const CString &strCurrent = liDirs.GetNext(pos);
-		CString strCurrentLow = strCurrent;
-		strCurrentLow.MakeLower();
-		if ((strDirectoryPath.IsEmpty() || strCurrentLow.Find(strDirectoryPath + _T('\\'), 0) == 0) && strCurrentLow != strDirectoryPath) {
-			if (!FilterTreeIsSubDirectory(strCurrentLow, strDirectoryPath, liDirs)) {
-				bool bAccessible = !bParentAccessible ? false : (_taccess(strCurrent, 0) == 0);
-				const CString &strName = GetFolderLabel(strCurrent, nLevel == 0, bAccessible);
+	const CString &strDirectoryPath(pDirectory->m_strFullPath);
+	int iLen = strDirectoryPath.GetLength();
+	for (POSITION pos = liDirs.GetHeadPosition(); pos != NULL;) { //all paths in liDirs should have a trailing backslash
+		const CString &strCurrent(liDirs.GetNext(pos));
+		if ((iLen <= 0 || _tcsnicmp(strCurrent, strDirectoryPath, iLen) == 0) && iLen != strCurrent.GetLength()) {
+			if (!FilterTreeIsSubDirectory(strCurrent, strDirectoryPath, liDirs)) {
+				bool bAccessible = bParentAccessible ? (_taccess(strCurrent, 0) == 0) : false;
+				const CString &strName(GetFolderLabel(strCurrent, nLevel == 0, bAccessible));
 				CDirectoryItem *pNewItem = new CDirectoryItem(strCurrent);
 				pNewItem->m_htItem = InsertItem(TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE, strName, 5, 5, 0, 0, (LPARAM)pNewItem, pDirectory->m_htItem, TVI_SORT);
 				if (!bAccessible) {
@@ -331,24 +324,22 @@ void CSharedDirsTreeCtrl::FilterTreeReloadTree()
 			break;
 		case SDI_INCOMING:
 			{
-				CString strMainIncDir = thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR);
-				unslosh(strMainIncDir);
+				CString strMainIncDir(thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR));
 
 				bool bShowWarning = false;
 				if (thePrefs.GetCatCount() > 1) {
 					m_strliCatIncomingDirs.RemoveAll();
-					for (int i = 0; i < thePrefs.GetCatCount(); ++i) {
+					for (INT_PTR i = 0; i < thePrefs.GetCatCount(); ++i) {
 						Category_Struct *pCatStruct = thePrefs.GetCategory(i);
 						if (pCatStruct != NULL) {
-							CString strCatIncomingPath = pCatStruct->strIncomingPath;
-							unslosh(strCatIncomingPath);
-
+							const CString &strCatIncomingPath(pCatStruct->strIncomingPath);
+							ASSERT(strCatIncomingPath.IsEmpty() || strCatIncomingPath.Right(1) == _T("\\"));
 							if (!strCatIncomingPath.IsEmpty() && strCatIncomingPath.CompareNoCase(strMainIncDir) != 0
 								&& m_strliCatIncomingDirs.Find(strCatIncomingPath) == NULL)
 							{
 								m_strliCatIncomingDirs.AddTail(strCatIncomingPath);
 								bool bAccessible = _taccess(strCatIncomingPath, 00) == 0;
-								const CString &strName = GetFolderLabel(strCatIncomingPath, true, bAccessible);
+								const CString &strName(GetFolderLabel(strCatIncomingPath, true, bAccessible));
 								CDirectoryItem *pCatInc = new CDirectoryItem(strCatIncomingPath, 0, SDI_CATINCOMING);
 								pCatInc->m_htItem = InsertItem(TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE, strName, 5, 5, 0, 0, (LPARAM)pCatInc, pCurrent->m_htItem, TVI_SORT);
 								if (!bAccessible) {
@@ -365,11 +356,11 @@ void CSharedDirsTreeCtrl::FilterTreeReloadTree()
 			break;
 		case SDI_TEMP:
 			if (thePrefs.GetCatCount() > 1) {
-				for (int i = 0; i < thePrefs.GetCatCount(); ++i) {
+				for (INT_PTR i = 0; i < thePrefs.GetCatCount(); ++i) {
 					Category_Struct *pCatStruct = thePrefs.GetCategory(i);
 					if (pCatStruct != NULL) {
 						//temp dir
-						CDirectoryItem *pCatTemp = new CDirectoryItem(CString(), 0, SDI_TEMP, i);
+						CDirectoryItem *pCatTemp = new CDirectoryItem(CString(), 0, SDI_TEMP, (int)i);
 						pCatTemp->m_htItem = InsertItem(TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE, pCatStruct->strTitle, 3, 3, 0, 0, (LPARAM)pCatTemp, pCurrent->m_htItem, TVI_LAST);
 						pCurrent->liSubDirectories.AddTail(pCatTemp);
 
@@ -404,7 +395,8 @@ void CSharedDirsTreeCtrl::FilterTreeReloadTree()
 
 CDirectoryItem* CSharedDirsTreeCtrl::GetSelectedFilter() const
 {
-	return (GetSelectedItem() == NULL) ? NULL : reinterpret_cast<CDirectoryItem*>(GetItemData(GetSelectedItem()));
+	const HTREEITEM item = GetSelectedItem();
+	return item ? reinterpret_cast<CDirectoryItem*>(GetItemData(item)) : NULL;
 }
 
 void CSharedDirsTreeCtrl::CreateMenus()
@@ -609,7 +601,7 @@ BOOL CSharedDirsTreeCtrl::OnCommand(WPARAM wParam, LPARAM)
 				if (IDNO == LocMessageBox(IDS_CONFIRM_FILEDELETE, MB_ICONWARNING | MB_DEFBUTTON2 | MB_YESNO, 0))
 					return TRUE;
 
-				m_pSharedFilesCtrl->SetRedraw(FALSE);
+				m_pSharedFilesCtrl->SetRedraw(false);
 				bool bRemovedItems = false;
 				while (!selectedList.IsEmpty()) {
 					CShareableFile *myfile = selectedList.RemoveHead();
@@ -625,16 +617,16 @@ BOOL CSharedDirsTreeCtrl::OnCommand(WPARAM wParam, LPARAM)
 							theApp.emuledlg->transferwnd->GetDownloadList()->ClearCompleted(static_cast<CPartFile*>(myfile));
 					} else {
 						CString strError;
-						strError.Format(GetResString(IDS_ERR_DELFILE) + _T("\r\n\r\n%s"), (LPCTSTR)myfile->GetFilePath(), (LPCTSTR)GetErrorMessage(::GetLastError()));
+						strError.Format(GetResString(IDS_ERR_DELFILE), (LPCTSTR)myfile->GetFilePath());
+						strError.AppendFormat(_T("\r\n\r\n%s"), (LPCTSTR)GetErrorMessage(::GetLastError()));
 						AfxMessageBox(strError);
 					}
 				}
-				m_pSharedFilesCtrl->SetRedraw(TRUE);
+				m_pSharedFilesCtrl->SetRedraw(true);
 				if (bRemovedItems) {
 					m_pSharedFilesCtrl->AutoSelectItem();
-					// Depending on <no-idea> this does not always cause a
-					// LVN_ITEMACTIVATE message sent. So, explicitly redraw
-					// the item.
+					// Depending on <no-idea> this does not always cause an LVN_ITEMACTIVATE
+					// message to be sent. So, explicitly redraw the item.
 					theApp.emuledlg->sharedfileswnd->ShowSelectedFilesDetails();
 					theApp.emuledlg->sharedfileswnd->OnSingleFileShareStatusChanged(); // might have been a single shared file
 				}
@@ -656,38 +648,36 @@ BOOL CSharedDirsTreeCtrl::OnCommand(WPARAM wParam, LPARAM)
 		case MP_PRIOHIGH:
 		case MP_PRIOVERYHIGH:
 		case MP_PRIOAUTO:
-			{
-				for (POSITION pos = selectedList.GetHeadPosition(); pos != NULL;) {
-					CKnownFile *file = static_cast<CKnownFile*>(selectedList.GetNext(pos));
-					if (file->IsKindOf(RUNTIME_CLASS(CKnownFile))) {
-						uint8 pri;
-						switch (wParam) {
-						case MP_PRIOVERYLOW:
-							pri = PR_VERYLOW;
-							break;
-						case MP_PRIOLOW:
-							pri = PR_LOW;
-							break;
-						case MP_PRIONORMAL:
-							pri = PR_NORMAL;
-							break;
-						case MP_PRIOHIGH:
-							pri = PR_HIGH;
-							break;
-						case MP_PRIOVERYHIGH:
-							pri = PR_VERYHIGH;
-						case MP_PRIOAUTO:
-							break;
-						default:
-							wParam = MP_PRIOAUTO;
-						}
-						file->SetAutoUpPriority(wParam == MP_PRIOAUTO);
-						if (wParam == MP_PRIOAUTO)
-							file->UpdateAutoUpPriority();
-						else {
-							file->SetUpPriority(pri);
-							m_pSharedFilesCtrl->UpdateFile(file);
-						}
+			for (POSITION pos = selectedList.GetHeadPosition(); pos != NULL;) {
+				CKnownFile *file = static_cast<CKnownFile*>(selectedList.GetNext(pos));
+				if (file->IsKindOf(RUNTIME_CLASS(CKnownFile))) {
+					uint8 pri;
+					switch (wParam) {
+					case MP_PRIOVERYLOW:
+						pri = PR_VERYLOW;
+						break;
+					case MP_PRIOLOW:
+						pri = PR_LOW;
+						break;
+					case MP_PRIONORMAL:
+						pri = PR_NORMAL;
+						break;
+					case MP_PRIOHIGH:
+						pri = PR_HIGH;
+						break;
+					case MP_PRIOVERYHIGH:
+						pri = PR_VERYHIGH;
+					case MP_PRIOAUTO:
+						break;
+					default:
+						wParam = MP_PRIOAUTO;
+					}
+					file->SetAutoUpPriority(wParam == MP_PRIOAUTO);
+					if (wParam == MP_PRIOAUTO)
+						file->UpdateAutoUpPriority();
+					else {
+						file->SetUpPriority(pri);
+						m_pSharedFilesCtrl->UpdateFile(file);
 					}
 				}
 			}
@@ -712,8 +702,8 @@ void CSharedDirsTreeCtrl::FileSystemTreeCreateTree()
 
 		for (TCHAR *pos = drivebuffer; *pos != _T('\0'); pos += _tcslen(pos) + 2) {
 			// Copy drive name
-			pos[2] = _T('\0'); //drop backslash, leave only drive letter and column
-			FileSystemTreeAddChildItem(m_pRootUnsharedDirectries, pos, true); // e.g. "C:"
+			pos[2] = _T('\0'); //drop backslash, leave only drive letter with column; e.g. "C:"
+			FileSystemTreeAddChildItem(m_pRootUnsharedDirectries, pos, true);
 		}
 	}
 }
@@ -724,6 +714,7 @@ void CSharedDirsTreeCtrl::FileSystemTreeAddChildItem(CDirectoryItem *pRoot, cons
 	if (!strPath.IsEmpty())
 		slosh(strPath);
 	CString strDir(strPath + strText);
+	slosh(strDir);
 	TVINSERTSTRUCT itInsert = {};
 
 	if (m_bUseIcons) {
@@ -734,18 +725,12 @@ void CSharedDirsTreeCtrl::FileSystemTreeAddChildItem(CDirectoryItem *pRoot, cons
 		itInsert.item.stateMask = TVIS_BOLD;
 	}
 
-
 	if (FileSystemTreeHasSharedSubdirectory(strDir, true) || FileSystemTreeIsShared(strDir))
 		itInsert.item.state = TVIS_BOLD;
 	else
 		itInsert.item.state = 0;
+	itInsert.item.cChildren = FileSystemTreeHasSubdirectories(strDir) ? I_CHILDRENCALLBACK : 0;	// used to display the '+' symbol next to each item
 
-	if (FileSystemTreeHasSubdirectories(strDir))
-		itInsert.item.cChildren = I_CHILDRENCALLBACK;		// used to display the + symbol next to each item
-	else
-		itInsert.item.cChildren = 0;
-
-	unslosh(strDir);
 	CDirectoryItem *pti = new CDirectoryItem(strDir, 0, SDI_UNSHAREDDIRECTORY);
 
 	itInsert.item.pszText = const_cast<LPTSTR>((LPCTSTR)strText);
@@ -754,33 +739,33 @@ void CSharedDirsTreeCtrl::FileSystemTreeAddChildItem(CDirectoryItem *pRoot, cons
 	itInsert.item.mask |= TVIF_PARAM;
 	itInsert.item.lParam = (LPARAM)pti;
 
+	CString sName; //temporary storage for display name
 	if (m_bUseIcons) {
 		if (FileSystemTreeIsShared(strDir)) {
 			itInsert.item.stateMask |= TVIS_OVERLAYMASK;
 			itInsert.item.state |= INDEXTOOVERLAYMASK(1);
 		}
 
-		const CString strTemp(strDir + _T('\\'));
-
-		UINT nType = GetDriveType(strTemp);
+		slosh(strDir);
+		UINT nType = ::GetDriveType(strDir);
 		if (DRIVE_REMOVABLE <= nType && nType <= DRIVE_RAMDISK)
 			itInsert.item.iImage = nType;
 
 		SHFILEINFO shFinfo;
 		shFinfo.szDisplayName[0] = _T('\0');
-		if (SHGetFileInfo(strTemp, 0, &shFinfo, sizeof(shFinfo), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_DISPLAYNAME)) {
+		if (::SHGetFileInfo(strDir, 0, &shFinfo, sizeof(shFinfo), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_DISPLAYNAME)) {
 			itInsert.itemex.iImage = AddSystemIcon(shFinfo.hIcon, shFinfo.iIcon);
 			::DestroyIcon(shFinfo.hIcon);
 			if (bTopLevel && shFinfo.szDisplayName[0] != _T('\0')) {
-				strDir = shFinfo.szDisplayName; //strDir as a temporary storage here
-				itInsert.item.pszText = const_cast<LPTSTR>((LPCTSTR)strDir);
+				sName = shFinfo.szDisplayName;
+				itInsert.item.pszText = const_cast<LPTSTR>((LPCTSTR)sName);
 			}
 		} else {
 			TRACE(_T("Error Getting SystemFileInfo!"));
 			itInsert.itemex.iImage = 0; // :(
 		}
 
-		if (SHGetFileInfo(strTemp, 0, &shFinfo, sizeof(shFinfo), SHGFI_ICON | SHGFI_OPENICON | SHGFI_SMALLICON)) {
+		if (::SHGetFileInfo(strDir, 0, &shFinfo, sizeof(shFinfo), SHGFI_ICON | SHGFI_OPENICON | SHGFI_SMALLICON)) {
 			itInsert.itemex.iSelectedImage = AddSystemIcon(shFinfo.hIcon, shFinfo.iIcon);
 			::DestroyIcon(shFinfo.hIcon);
 		} else {
@@ -795,70 +780,44 @@ void CSharedDirsTreeCtrl::FileSystemTreeAddChildItem(CDirectoryItem *pRoot, cons
 
 bool CSharedDirsTreeCtrl::FileSystemTreeHasSubdirectories(const CString &strDir)
 {
-	CString sDir(strDir);
-	slosh(sDir);
-	// Never try to enumerate the files of a drive and thus physically access the drive, just
-	// for the information whether the drive has sub directories in the root folder. Depending
-	// on the physical drive type (floppy disk, CD-ROM drive, etc.) this creates an annoying
-	// physical access to that drive - which is to be avoided in each case. Even Windows
-	// Explorer shows all drives by default with a '+' sign (which means that the user has
-	// to explicitly open the drive to really get the content) - and that approach will be fine
-	// for eMule as well.
-	// Since the restriction for drives 'A:' and 'B:' was removed, this gets more important now.
-	if (PathIsRoot(sDir))
-		return true;
-	CFileFind finder;
-	BOOL bWorking = finder.FindFile(sDir + _T("*.*"));
-	while (bWorking) {
-		bWorking = finder.FindNextFile();
-		if (!finder.IsDots() && !finder.IsSystem() && finder.IsDirectory()) {
-			finder.Close();
-			return true;
-		}
-	}
-	finder.Close();
-	return false;
+	return ::HasSubdirectories(strDir);
 }
 
 bool CSharedDirsTreeCtrl::FileSystemTreeHasSharedSubdirectory(const CString &strDir, bool bOrFiles)
 {
-	CString sDir(strDir);
-	slosh(sDir.MakeLower());
+	int iLen = strDir.GetLength();
+	ASSERT(iLen > 0);
+	bool bSlosh = (strDir[iLen - 1] == _T('\\'));
 	for (POSITION pos = m_strliSharedDirs.GetHeadPosition(); pos != NULL;) {
-		CString strCurrent(m_strliSharedDirs.GetNext(pos));
-		strCurrent.MakeLower();
-		if (strCurrent.Find(sDir) == 0 && sDir != strCurrent)
+		const CString &sCurrent(m_strliSharedDirs.GetNext(pos));
+		if (_tcsnicmp(sCurrent, strDir, iLen) == 0 && iLen < sCurrent.GetLength() && (bSlosh || sCurrent[iLen] == _T('\\')))
 			return true;
 	}
-	return bOrFiles && theApp.sharedfiles->ContainsSingleSharedFiles(sDir);
+	return bOrFiles && theApp.sharedfiles->ContainsSingleSharedFiles(strDir);
 }
 
 void CSharedDirsTreeCtrl::FileSystemTreeAddSubdirectories(CDirectoryItem *pRoot)
 {
-	CString strDir = pRoot->m_strFullPath;
-	slosh(strDir);
+	ASSERT(pRoot->m_strFullPath.Right(1) == _T("\\"));
 	CFileFind finder;
-	BOOL bWorking = finder.FindFile(strDir + _T("*.*"));
-	while (bWorking) {
-		bWorking = finder.FindNextFile();
-		if (!finder.IsDots() && !finder.IsSystem() && finder.IsDirectory()) {
+	for (BOOL bFound = finder.FindFile(pRoot->m_strFullPath + _T("*.*")); bFound;) {
+		bFound = finder.FindNextFile();
+		if (finder.IsDirectory() && !finder.IsDots() && !finder.IsSystem()) {
 			CString strFilename(finder.GetFileName());
-			int i = strFilename.ReverseFind(_T('\\'));
-			if (i >= 0)
-				strFilename.Delete(0, i + 1);
+			strFilename.Delete(0, strFilename.ReverseFind(_T('\\')) + 1);
 			FileSystemTreeAddChildItem(pRoot, strFilename, false);
 		}
 	}
-	finder.Close();
 }
 
 int CSharedDirsTreeCtrl::AddSystemIcon(HICON hIcon, int nSystemListPos)
 {
-	int nPos = 0;
+	int nPos;
 	if (!m_mapSystemIcons.Lookup(nSystemListPos, nPos)) {
 		nPos = GetImageList(TVSIL_NORMAL)->Add(hIcon);
-		m_mapSystemIcons.SetAt(nSystemListPos, nPos);
-	}
+		m_mapSystemIcons[nSystemListPos] = nPos;
+	} else
+		nPos = 0;
 	return nPos;
 }
 
@@ -900,47 +859,45 @@ void CSharedDirsTreeCtrl::DeleteChildItems(CDirectoryItem *pParent)
 bool CSharedDirsTreeCtrl::FileSystemTreeIsShared(const CString &strDir)
 {
 	for (POSITION pos = m_strliSharedDirs.GetHeadPosition(); pos != NULL;)
-		if (CompareDirectory(m_strliSharedDirs.GetNext(pos), strDir) == 0)
+		if (EqualPaths(m_strliSharedDirs.GetNext(pos), strDir))
 			return true;
 	return false;
 }
 
 void CSharedDirsTreeCtrl::OnTvnGetdispinfo(LPNMHDR pNMHDR, LRESULT *pResult)
 {
-	LPNMTVDISPINFO pTVDispInfo = reinterpret_cast<LPNMTVDISPINFO>(pNMHDR);
-	pTVDispInfo->item.cChildren = 1;
+	reinterpret_cast<LPNMTVDISPINFO>(pNMHDR)->item.cChildren = 1;
 	*pResult = 0;
 }
 
 void CSharedDirsTreeCtrl::AddSharedDirectory(const CString &strDir, bool bSubDirectories)
 {
-	if (!FileSystemTreeIsShared(strDir) && thePrefs.IsShareableDirectory(strDir))
-		m_strliSharedDirs.AddTail(strDir);
+	CString sDir(strDir);
+	slosh(sDir);
+	if (!FileSystemTreeIsShared(sDir) && thePrefs.IsShareableDirectory(sDir))
+		m_strliSharedDirs.AddTail(sDir);
 
 	if (bSubDirectories) {
-		CString sDir(strDir);
-		slosh(sDir);
 		CFileFind finder;
-		BOOL bWorking = finder.FindFile(sDir + _T("*.*"));
-		while (bWorking) {
-			bWorking = finder.FindNextFile();
-			if (!finder.IsDots() && !finder.IsSystem() && finder.IsDirectory())
-				AddSharedDirectory(sDir + finder.GetFileName(), true);
+		for (BOOL bFound = finder.FindFile(sDir + _T("*.*")); bFound;) {
+			bFound = finder.FindNextFile();
+			if (finder.IsDirectory() && !finder.IsDots() && !finder.IsSystem())
+				AddSharedDirectory(sDir + finder.GetFileName(), true); //no trailing backslash here
 		}
-		finder.Close();
 	}
 }
 
 void CSharedDirsTreeCtrl::RemoveSharedDirectory(const CString &strDir, bool bSubDirectories)
 {
-	CString sDir(strDir);
-	unslosh(sDir);
-	sDir.MakeLower();
+	int iLen = strDir.GetLength();
 	for (POSITION pos = m_strliSharedDirs.GetHeadPosition(); pos != NULL;) {
 		POSITION pos2 = pos;
-		CString str(m_strliSharedDirs.GetNext(pos));
-		if (str.MakeLower().Compare(sDir) == 0 || (bSubDirectories && str.Find(sDir) == 0))
+		const CString &str(m_strliSharedDirs.GetNext(pos));
+		if (_tcsnicmp(str, strDir, (bSubDirectories ? iLen : max(iLen, str.GetLength()))) == 0) {
 			m_strliSharedDirs.RemoveAt(pos2);
+			if (!bSubDirectories)
+				break;
+		}
 	}
 }
 
@@ -953,7 +910,8 @@ void CSharedDirsTreeCtrl::FileSystemTreeUpdateBoldState(const CDirectoryItem *pD
 {
 	if (pDir == NULL)
 		pDir = m_pRootUnsharedDirectries;
-	SetItemState(pDir->m_htItem, ((FileSystemTreeHasSharedSubdirectory(pDir->m_strFullPath, true) || FileSystemTreeIsShared(pDir->m_strFullPath)) ? TVIS_BOLD : 0), TVIS_BOLD);
+	else
+		SetItemState(pDir->m_htItem, ((FileSystemTreeHasSharedSubdirectory(pDir->m_strFullPath, true) || FileSystemTreeIsShared(pDir->m_strFullPath)) ? TVIS_BOLD : 0), TVIS_BOLD);
 	for (POSITION pos = pDir->liSubDirectories.GetHeadPosition(); pos != NULL;)
 		FileSystemTreeUpdateBoldState(pDir->liSubDirectories.GetNext(pos));
 }
@@ -962,7 +920,8 @@ void CSharedDirsTreeCtrl::FileSystemTreeUpdateShareState(const CDirectoryItem *p
 {
 	if (pDir == NULL)
 		pDir = m_pRootUnsharedDirectries;
-	SetItemState(pDir->m_htItem, FileSystemTreeIsShared(pDir->m_strFullPath) ? INDEXTOOVERLAYMASK(1) : 0, TVIS_OVERLAYMASK);
+	else
+		SetItemState(pDir->m_htItem, FileSystemTreeIsShared(pDir->m_strFullPath) ? INDEXTOOVERLAYMASK(1) : 0, TVIS_OVERLAYMASK);
 	for (POSITION pos = pDir->liSubDirectories.GetHeadPosition(); pos != NULL;)
 		FileSystemTreeUpdateShareState(pDir->liSubDirectories.GetNext(pos));
 }
@@ -1004,11 +963,7 @@ void CSharedDirsTreeCtrl::EditSharedDirectories(const CDirectoryItem *pDir, bool
 	// sync with the preferences list
 	thePrefs.shareddir_list.RemoveAll();
 	// copy list
-	for (POSITION pos = m_strliSharedDirs.GetHeadPosition(); pos != NULL;) {
-		CString strPath = m_strliSharedDirs.GetNext(pos);
-		slosh(strPath);
-		thePrefs.shareddir_list.AddTail(strPath);
-	}
+	thePrefs.shareddir_list.AddTail(&m_strliSharedDirs);
 
 	// update the shared files list
 	theApp.emuledlg->sharedfileswnd->Reload();
@@ -1019,7 +974,6 @@ void CSharedDirsTreeCtrl::EditSharedDirectories(const CDirectoryItem *pDir, bool
 
 void CSharedDirsTreeCtrl::Reload(bool bForce)
 {
-//	bool bChanged = false;
 	if (!bForce) {
 		// check for changes in shared dirs
 		bForce = (thePrefs.shareddir_list.GetCount() != m_strliSharedDirs.GetCount());
@@ -1027,11 +981,9 @@ void CSharedDirsTreeCtrl::Reload(bool bForce)
 			POSITION pos = m_strliSharedDirs.GetHeadPosition();
 			POSITION pos2 = thePrefs.shareddir_list.GetHeadPosition();
 			while (pos != NULL && pos2 != NULL) {
-				CString str1 = m_strliSharedDirs.GetNext(pos);
-				CString str2 = thePrefs.shareddir_list.GetNext(pos2);
-				unslosh(str1);
-				unslosh(str2);
-				if (str1.CompareNoCase(str2) != 0) {
+				const CString &str(m_strliSharedDirs.GetNext(pos));
+				const CString &str2(thePrefs.shareddir_list.GetNext(pos2));
+				if (str.CompareNoCase(str2) != 0) {
 					bForce = true;
 					break;
 				}
@@ -1040,14 +992,12 @@ void CSharedDirsTreeCtrl::Reload(bool bForce)
 
 		if (!bForce) {
 			// check for changes in categories incoming dirs
-			CString strMainIncDir = thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR);
-			unslosh(strMainIncDir);
+			const CString &strMainIncDir(thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR));
 			CStringList strliFound;
-			for (int i = 0; i < thePrefs.GetCatCount(); ++i) {
+			for (INT_PTR i = 0; i < thePrefs.GetCatCount(); ++i) {
 				const Category_Struct *pCatStruct = thePrefs.GetCategory(i);
 				if (pCatStruct != NULL) {
-					CString strCatIncomingPath = pCatStruct->strIncomingPath;
-					unslosh(strCatIncomingPath);
+					CString strCatIncomingPath(pCatStruct->strIncomingPath);
 
 					if (!strCatIncomingPath.IsEmpty() && strCatIncomingPath.CompareNoCase(strMainIncDir) != 0
 						&& strliFound.Find(strCatIncomingPath) == NULL)
@@ -1076,13 +1026,9 @@ void CSharedDirsTreeCtrl::Reload(bool bForce)
 
 void CSharedDirsTreeCtrl::FetchSharedDirsList()
 {
-	m_strliSharedDirs.RemoveAll();
+	RemoveAllSharedDirectories();
 	// copy list
-	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos != NULL;) {
-		CString strPath = thePrefs.shareddir_list.GetNext(pos);
-		unslosh(strPath);
-		m_strliSharedDirs.AddTail(strPath);
-	}
+	m_strliSharedDirs.AddTail(&thePrefs.shareddir_list);
 }
 
 void CSharedDirsTreeCtrl::OnTvnBeginDrag(LPNMHDR pNMHDR, LRESULT *pResult)
@@ -1101,19 +1047,18 @@ void CSharedDirsTreeCtrl::OnTvnBeginDrag(LPNMHDR pNMHDR, LRESULT *pResult)
 	CImageList *piml = CreateDragImage(lpnmtv->itemNew.hItem);
 	if (piml == NULL)
 		return;
-	POINT ptOffset;
-	RECT rcItem;
 
+	CPoint ptOffset;
+	CRect rcItem;
 	/* get the bounding rectangle of the item being dragged (rel to top-left of control) */
 	if (GetItemRect(lpnmtv->itemNew.hItem, &rcItem, TRUE)) {
 		/* get offset into image that the mouse is at */
 		/* item rect doesn't include the image */
-		const POINT ptDragBegin = lpnmtv->ptDrag;
 		int nX, nY;
 		::ImageList_GetIconSize(piml->GetSafeHandle(), &nX, &nY);
-		ptOffset.x = (ptDragBegin.x - rcItem.left) + (nX - (rcItem.right - rcItem.left));
-		ptOffset.y = (ptDragBegin.y - rcItem.top) + (nY - (rcItem.bottom - rcItem.top));
-		/* convert the item rect to screen co-ords, for use later */
+		ptOffset = CPoint(lpnmtv->ptDrag) - rcItem.BottomRight() + POINT{ nX, nY };
+
+		/* convert the item rect to screen co-ords for later use */
 		MapWindowPoints(NULL, &rcItem);
 	} else {
 		GetWindowRect(&rcItem);
@@ -1147,24 +1092,22 @@ void CSharedDirsTreeCtrl::OnMouseMove(UINT nFlags, CPoint point)
 
 		CImageList::DragMove(pt);
 		CImageList::DragShowNolock(FALSE);
-		if (CWnd::WindowFromPoint(pt) != this)
-			SetCursor(AfxGetApp()->LoadStandardCursor(IDC_NO));
-		else {
+		LPCTSTR pCursor = IDC_NO;
+		if (CWnd::WindowFromPoint(pt) == this) {
 			TVHITTESTINFO tvhti;
 			tvhti.pt = pt;
 			ScreenToClient(&tvhti.pt);
 			HTREEITEM hItemSel = HitTest(&tvhti);
-			CDirectoryItem *pDragTarget;
-			if (hItemSel != NULL && (pDragTarget = reinterpret_cast<CDirectoryItem*>(GetItemData(hItemSel))) != NULL) {
-				//only allow dragging to shared folders
-				if (pDragTarget->m_eItemType == SDI_DIRECTORY || pDragTarget->m_eItemType == SDI_NO) {
-					SetCursor(AfxGetApp()->LoadStandardCursor(IDC_ARROW));
+			if (hItemSel != NULL) {
+				CDirectoryItem *pDragTarget = reinterpret_cast<CDirectoryItem*>(GetItemData(hItemSel));
+				//allow dragging only to shared folders
+				if (pDragTarget != NULL && (pDragTarget->m_eItemType == SDI_DIRECTORY || pDragTarget->m_eItemType == SDI_NO)) {
+					pCursor = IDC_ARROW;
 					SelectDropTarget(pDragTarget->m_htItem);
-				} else
-					SetCursor(AfxGetApp()->LoadStandardCursor(IDC_NO));
-			} else
-				SetCursor(AfxGetApp()->LoadStandardCursor(IDC_NO));
+				}
+			}
 		}
+		SetCursor(AfxGetApp()->LoadStandardCursor(pCursor));
 
 		CImageList::DragShowNolock(TRUE);
 	}
@@ -1196,33 +1139,28 @@ void CSharedDirsTreeCtrl::OnLButtonUp(UINT nFlags, CPoint point)
 			}
 		}
 
-		CImageList::DragLeave(NULL);
-		CImageList::EndDrag();
-		ReleaseCapture();
-		ShowCursor(TRUE);
-		SelectDropTarget(NULL);
-
-		delete m_pDraggingItem;
-		m_pDraggingItem = NULL;
-
-		RedrawWindow();
+		CancelMode();
 	}
 	CTreeCtrl::OnLButtonUp(nFlags, point);
 }
 
+void CSharedDirsTreeCtrl::CancelMode()
+{
+	CImageList::DragLeave(NULL);
+	CImageList::EndDrag();
+	::ReleaseCapture();
+	ShowCursor(TRUE);
+	SelectDropTarget(NULL);
+
+	delete m_pDraggingItem;
+	m_pDraggingItem = NULL;
+	RedrawWindow();
+}
+
 void CSharedDirsTreeCtrl::OnCancelMode()
 {
-	if (m_pDraggingItem != NULL) {
-		CImageList::DragLeave(NULL);
-		CImageList::EndDrag();
-		ReleaseCapture();
-		ShowCursor(TRUE);
-		SelectDropTarget(NULL);
-
-		delete m_pDraggingItem;
-		m_pDraggingItem = NULL;
-		RedrawWindow();
-	}
+	if (m_pDraggingItem != NULL)
+		CancelMode();
 	CTreeCtrl::OnCancelMode();
 }
 
@@ -1234,19 +1172,20 @@ void CSharedDirsTreeCtrl::OnVolumesChanged()
 bool CSharedDirsTreeCtrl::ShowFileSystemDirectory(const CString &strDir)
 {
 	// expand directories until we find our target directory and select it
+	int iLen = strDir.GetLength();
 	const CDirectoryItem *pCurrentItem = m_pRootUnsharedDirectries;
-	bool bContinue = true;
-	while (bContinue) {
+	for (bool bContinue = true; bContinue;) {
 		bContinue = false;
 		Expand(pCurrentItem->m_htItem, TVE_EXPAND);
 		for (POSITION pos = pCurrentItem->liSubDirectories.GetHeadPosition(); pos != NULL;) {
 			const CDirectoryItem *pTemp = pCurrentItem->liSubDirectories.GetNext(pos);
-			if (strDir.CompareNoCase(pTemp->m_strFullPath + '\\') == 0) {
+			if (EqualPaths(strDir, pTemp->m_strFullPath)) {
 				Select(pTemp->m_htItem, TVGN_CARET);
 				EnsureVisible(pTemp->m_htItem);
 				return true;
 			}
-			if (strDir.Find(pTemp->m_strFullPath + '\\') == 0) {
+			int jLen = pTemp->m_strFullPath.GetLength();
+			if (jLen < iLen && _tcsnicmp(strDir, pTemp->m_strFullPath, jLen) == 0) {
 				pCurrentItem = pTemp;
 				bContinue = true;
 				break;
@@ -1271,7 +1210,7 @@ bool CSharedDirsTreeCtrl::ShowSharedDirectory(const CString &strDir)
 			// search for the fitting sub dir
 			for (POSITION pos2 = pTemp->liSubDirectories.GetHeadPosition(); pos2 != NULL;) {
 				CDirectoryItem *pTemp2 = pTemp->liSubDirectories.GetNext(pos2);
-				if (strDir.CompareNoCase(pTemp2->m_strFullPath + _T('\\')) == 0) {
+				if (strDir.CompareNoCase(pTemp2->m_strFullPath) == 0) {
 					Select(pTemp2->m_htItem, TVGN_CARET);
 					EnsureVisible(pTemp2->m_htItem);
 					return true;

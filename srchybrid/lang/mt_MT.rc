@@ -471,7 +471,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Globali (Fis-Servers)"
     IDS_METHOD              "Metodu"
     IDS_UNDO                "Erġa Lura"
-    IDS_DAYLY               "Kuljum"
+    IDS_DAILY               "Kuljum"
 END
 
 STRINGTABLE
@@ -1507,7 +1507,7 @@ BEGIN
     IDS_EM_HELP             "Għajnuna"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Ħabib mhux miżjud. \r\n\r\nDiġa hemm ħabib bl-istess indirizz tal-IP u port."
-    IDS_DYNUP               "SpeedSense fl-Upload"
+    IDS_DYNUP               "SpeedSense fl-Upload (mhux rikomandat)"
     IDS_KADOVERHEAD         "Il-ħela mill-Kad (Pakketti): %s (%s)"
     IDS_FIND                "Sib..."
     IDS_LOG_BANNED_CLIENTS  "Żomm nota tal-klijenti ibbenjati"

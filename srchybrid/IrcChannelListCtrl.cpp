@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -34,12 +34,15 @@ static char THIS_FILE[] = __FILE__;
 struct ChannelName
 {
 	ChannelName(const CString &sName, UINT uUsers, const CString &sDesc)
-		: m_sName(sName), m_uUsers(uUsers), m_sDesc(sDesc)
+		: m_sName(sName)
+		, m_sDesc(sDesc)
+		, m_uUsers(uUsers)
 	{
 	}
+
 	CString m_sName;
-	UINT m_uUsers;
 	CString m_sDesc;
+	UINT	m_uUsers;
 };
 
 IMPLEMENT_DYNAMIC(CIrcChannelListCtrl, CMuleListCtrl)
@@ -67,32 +70,22 @@ void CIrcChannelListCtrl::Init()
 	SetPrefsKey(_T("IrcChannelListCtrl"));
 	SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
-	InsertColumn(0, GetResString(IDS_IRC_NAME), LVCFMT_LEFT, 200);
-	InsertColumn(1, GetResString(IDS_UUSERS), LVCFMT_RIGHT, 50);
-	InsertColumn(2, GetResString(IDS_DESCRIPTION), LVCFMT_LEFT, 350);
+	InsertColumn(0, _T(""), LVCFMT_LEFT, 200);	//IDS_IRC_NAME
+	InsertColumn(1, _T(""), LVCFMT_RIGHT, 50);	//IDS_UUSERS
+	InsertColumn(2, _T(""), LVCFMT_LEFT, 350);	//IDS_DESCRIPTION
 
 	LoadSettings();
 	SetSortArrow();
-	SortItems(&SortProc, GetSortItem() + (GetSortAscending() ? 0 : 10));
+	SortItems(&SortProc, MAKELONG(GetSortItem(), !GetSortAscending()));
 }
 
 void CIrcChannelListCtrl::Localize()
 {
-	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
-	HDITEM hdi;
-	hdi.mask = HDI_TEXT;
-
-	CString strRes = GetResString(IDS_IRC_NAME);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(0, &hdi);
-
-	strRes = GetResString(IDS_UUSERS);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(1, &hdi);
-
-	strRes = GetResString(IDS_DESCRIPTION);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(2, &hdi);
+	static const UINT uids[3] =
+	{
+		IDS_IRC_NAME, IDS_UUSERS, IDS_DESCRIPTION
+	};
+	LocaliseHeaderCtrl(uids, _countof(uids));
 }
 
 CString CIrcChannelListCtrl::GetItemDisplayText(const ChannelName *pChannel, int iSubItem) const
@@ -114,16 +107,16 @@ CString CIrcChannelListCtrl::GetItemDisplayText(const ChannelName *pChannel, int
 void CIrcChannelListCtrl::OnLvnGetDispInfo(LPNMHDR pNMHDR, LRESULT *pResult)
 {
 	if (!theApp.IsClosing()) {
-		// Although we have an owner drawn listview control we store the text for the primary item in the listview, to be
-		// capable of quick searching those items via the keyboard. Because our listview items may change their contents,
-		// we do this via a text callback function. The listview control will send us the LVN_DISPINFO notification if
-		// it needs to know the contents of the primary item.
+		// Although we have an owner drawn listview control we store the text for the primary item in the
+		// listview, to be capable of quick searching those items via the keyboard. Because our listview
+		// items may change their contents, we do this via a text callback function. The listview control
+		// will send us the LVN_DISPINFO notification if it needs to know the contents of the primary item.
 		//
-		// But, the listview control sends this notification all the time, even if we do not search for an item. At least
-		// this notification is only sent for the visible items and not for all items in the list. Though, because this
-		// function is invoked *very* often, do *NOT* put any time consuming code in here.
+		// But, the listview control sends this notification all the time, even if we do not search for an item.
+		// At least this notification is only sent for the visible items and not for all items in the list.
+		// Though, because this function is invoked *very* often, do *NOT* put any time consuming code in here.
 		//
-		// Vista: That callback is used to get the strings for the label tips for the sub(!) items.
+		// Vista: That callback is used to get the strings for the label tips for the sub(!)-items.
 		//
 		const LVITEMW &rItem = reinterpret_cast<NMLVDISPINFO*>(pNMHDR)->item;
 		if (rItem.mask & LVIF_TEXT) {
@@ -137,12 +130,11 @@ void CIrcChannelListCtrl::OnLvnGetDispInfo(LPNMHDR pNMHDR, LRESULT *pResult)
 
 void CIrcChannelListCtrl::OnLvnColumnClick(LPNMHDR pNMHDR, LRESULT *pResult)
 {
-	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	const LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	bool bSortAscending = (GetSortItem() != pNMLV->iSubItem || !GetSortAscending());
 
-	bool bSortAscending = (GetSortItem() != pNMLV->iSubItem) ? true : !GetSortAscending();
 	SetSortArrow(pNMLV->iSubItem, bSortAscending);
-	SortItems(&SortProc, pNMLV->iSubItem + (bSortAscending ? 0 : 10));
-
+	SortItems(SortProc, MAKELONG(pNMLV->iSubItem, !bSortAscending));
 	*pResult = 0;
 }
 
@@ -150,9 +142,9 @@ int CALLBACK CIrcChannelListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARA
 {
 	const ChannelName *pItem1 = reinterpret_cast<ChannelName*>(lParam1);
 	const ChannelName *pItem2 = reinterpret_cast<ChannelName*>(lParam2);
-	LPARAM iColumn = lParamSort >= 10 ? lParamSort - 10 : lParamSort;
+
 	int iResult = 0;
-	switch (iColumn) {
+	switch (LOWORD(lParamSort)) {
 	case 0:
 		iResult = pItem1->m_sName.CompareNoCase(pItem2->m_sName);
 		break;
@@ -165,7 +157,7 @@ int CALLBACK CIrcChannelListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARA
 	default:
 		return 0;
 	}
-	return (lParamSort >= 10) ? -iResult : iResult;
+	return HIWORD(lParamSort) ? -iResult : iResult;
 }
 
 void CIrcChannelListCtrl::OnNmDblClk(LPNMHDR, LRESULT *pResult)

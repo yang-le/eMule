@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -112,17 +112,18 @@ protected:
 
 private:
 	void	InitalizeStandardItems();
+	void	CancelMode();
 
 	void	FileSystemTreeCreateTree();
 	void	FileSystemTreeAddChildItem(CDirectoryItem *pRoot, const CString &strText, bool bTopLevel);
-	bool	FileSystemTreeHasSubdirectories(const CString &strDir);
+	static bool FileSystemTreeHasSubdirectories(const CString &strDir);
 	bool	FileSystemTreeHasSharedSubdirectory(const CString &strDir, bool bOrFiles);
 	void	FileSystemTreeAddSubdirectories(CDirectoryItem *pRoot);
 	bool	FileSystemTreeIsShared(const CString &strDir);
 
 	void	FileSystemTreeUpdateShareState(const CDirectoryItem *pDir = NULL);
 	void	FileSystemTreeSetShareState(const CDirectoryItem *pDir, bool bSubDirectories);
-//	void	FilterTreeAddSharedDirectory(CDirectoryItem *pDir, bool bRefresh);
+	//void	FilterTreeAddSharedDirectory(CDirectoryItem *pDir, bool bRefresh);
 	void	FilterTreeAddSubDirectories(CDirectoryItem *pDirectory, const CStringList &liDirs, int nLevel, bool &rbShowWarning, bool bParentAccessible);
 	bool	FilterTreeIsSubDirectory(const CString &strDir, const CString &strRoot, const CStringList &liDirs);
 	void	FilterTreeReloadTree();

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -82,9 +82,9 @@ BEGIN_MESSAGE_MAP(CMuleListCtrl, CListCtrl)
 	ON_WM_SYSCOLORCHANGE()
 END_MESSAGE_MAP()
 
-CMuleListCtrl::CMuleListCtrl(PFNLVCOMPARE pfnCompare, DWORD dwParamSort)
+CMuleListCtrl::CMuleListCtrl(PFNLVCOMPARE pfnCompare, LPARAM iParamSort)
 	: m_SortProc(pfnCompare)
-	, m_dwParamSort(dwParamSort)
+	, m_dwParamSort(iParamSort)
 	, m_crWindow()
 	, m_crWindowText()
 	, m_crWindowTextBk(m_crWindow)
@@ -162,14 +162,11 @@ int CMuleListCtrl::IndexToOrder(CHeaderCtrl *pHeader, int iIndex)
 	int iCount = pHeader->GetItemCount();
 	int *piArray = new int[iCount];
 	Header_GetOrderArray(pHeader->m_hWnd, iCount, piArray);
-	for (int i = 0; i < iCount; ++i)
-		if (piArray[i] == iIndex) {
-			delete[] piArray;
-			return i;
-		}
-
+	while (--iCount >= 0)
+		if (piArray[iCount] == iIndex)
+			break;
 	delete[] piArray;
-	return -1;
+	return iCount;
 }
 
 void CMuleListCtrl::HideColumn(int iColumn)
@@ -180,7 +177,7 @@ void CMuleListCtrl::HideColumn(int iColumn)
 		return;
 
 	//stop it from redrawing
-	SetRedraw(FALSE);
+	SetRedraw(false);
 
 	//shrink width to 0
 	HDITEM item;
@@ -208,7 +205,7 @@ void CMuleListCtrl::HideColumn(int iColumn)
 	m_aColumns[iColumn].bHidden = true;
 
 	//redraw
-	SetRedraw(TRUE);
+	SetRedraw(true);
 	Invalidate(FALSE);
 }
 
@@ -220,7 +217,7 @@ void CMuleListCtrl::ShowColumn(int iColumn)
 		return;
 
 	//stop it from redrawing
-	SetRedraw(FALSE);
+	SetRedraw(false);
 
 	//restore position in list
 	INT *piArray = new INT[m_iColumnsTracked];
@@ -248,7 +245,7 @@ void CMuleListCtrl::ShowColumn(int iColumn)
 	m_aColumns[iColumn].bHidden = false;
 
 	//redraw
-	SetRedraw(TRUE);
+	SetRedraw(true);
 	Invalidate(FALSE);
 }
 
@@ -265,25 +262,26 @@ void CMuleListCtrl::SaveSettings()
 
 	ShowWindow(SW_HIDE);
 
-	int *piSortHist = new int[MAX_SORTORDERHISTORY];
+	int iSortHist[MAX_SORTORDERHISTORY];
 	int i = 0;
 	for (POSITION pos = m_liSortHistory.GetHeadPosition(); pos != NULL;)
-		piSortHist[i++] = m_liSortHistory.GetNext(pos) + 1;
-	ini.SerGet(false, piSortHist, i, m_Name + _T("SortHistory"));
+		iSortHist[i++] = m_liSortHistory.GetNext(pos) + 1;
+	ini.SerGet(false, iSortHist, i, m_Name + _T("SortHistory"));
 	// store additional settings
 	ini.WriteInt(m_Name + _T("TableSortItem"), GetSortItem());
 	ini.WriteInt(m_Name + _T("TableSortAscending"), GetSortType(m_atSortArrow));
 
 	int *piColWidths = new int[m_iColumnsTracked];
 	int *piColHidden = new int[m_iColumnsTracked];
-	INT *piColOrders = new INT[m_iColumnsTracked];
 	for (i = 0; i < m_iColumnsTracked; ++i) {
 		piColWidths[i] = GetColumnWidth(i);
 		piColHidden[i] = IsColumnHidden(i);
 		ShowColumn(i);
 	}
 
+	int *piColOrders = new int[m_iColumnsTracked];
 	GetHeaderCtrl()->GetOrderArray(piColOrders, m_iColumnsTracked);
+
 	ini.SerGet(false, piColWidths, m_iColumnsTracked, m_Name + _T("ColumnWidths"));
 	ini.SerGet(false, piColHidden, m_iColumnsTracked, m_Name + _T("ColumnHidden"));
 	ini.SerGet(false, piColOrders, m_iColumnsTracked, m_Name + _T("ColumnOrders"));
@@ -294,7 +292,6 @@ void CMuleListCtrl::SaveSettings()
 
 	ShowWindow(SW_SHOW);
 
-	delete[] piSortHist;
 	delete[] piColOrders;
 	delete[] piColWidths;
 	delete[] piColHidden;
@@ -332,13 +329,13 @@ void CMuleListCtrl::LoadSettings()
 	CIni ini(thePrefs.GetConfigFile(), _T("ListControlSetup"));
 
 	// sort history
-	int *piSortHist = new int[MAX_SORTORDERHISTORY];
-	ini.SerGet(true, piSortHist, MAX_SORTORDERHISTORY, m_Name + _T("SortHistory"));
+	int iSortHist[MAX_SORTORDERHISTORY];
+	ini.SerGet(true, iSortHist, MAX_SORTORDERHISTORY, m_Name + _T("SortHistory"));
 	m_liSortHistory.RemoveAll();
 	for (int i = 0; i < MAX_SORTORDERHISTORY; ++i) {
-		if (piSortHist[i] <= 0)
+		if (iSortHist[i] <= 0)
 			break;
-		m_liSortHistory.AddTail(piSortHist[i] - 1);
+		m_liSortHistory.AddTail(iSortHist[i] - 1);
 	}
 
 	m_iCurrentSortItem = ini.GetInt(m_Name + _T("TableSortItem"), 0);
@@ -349,13 +346,13 @@ void CMuleListCtrl::LoadSettings()
 	// columns settings
 	int *piColWidths = new int[m_iColumnsTracked];
 	int *piColHidden = new int[m_iColumnsTracked];
-	INT *piColOrders = new int[m_iColumnsTracked];
+	int *piColOrders = new int[m_iColumnsTracked];
 	ini.SerGet(true, piColWidths, m_iColumnsTracked, m_Name + _T("ColumnWidths"));
 	ini.SerGet(true, piColHidden, m_iColumnsTracked, m_Name + _T("ColumnHidden"), 0, -1);
 	ini.SerGet(true, piColOrders, m_iColumnsTracked, m_Name + _T("ColumnOrders"));
 
-	// apply columnwidths and verify sortorder
-	INT *piArray = new INT[m_iColumnsTracked];
+	// apply column widths and verify sort order
+	int *piArray = new int[m_iColumnsTracked];
 	for (int i = 0; i < m_iColumnsTracked; ++i) {
 		piArray[i] = i;
 
@@ -373,23 +370,19 @@ void CMuleListCtrl::LoadSettings()
 		m_aColumns[piArray[i]].iLocation = i;
 	GetHeaderCtrl()->SetOrderArray(m_iColumnsTracked, piArray);
 
-	for (int i = 1; i < m_iColumnsTracked; ++i) {
+	for (int i = 1; i < m_iColumnsTracked; ++i)
 		if (piColHidden[i] > 0 || (piColHidden[i] < 0 && m_liDefaultHiddenColumns.Find(i) != NULL))
 			HideColumn(i);
-	}
 
 	delete[] piArray;
 	delete[] piColOrders;
 	delete[] piColWidths;
 	delete[] piColHidden;
-	delete[] piSortHist;
 }
 
 HBITMAP LoadImageAsPARGB(LPCTSTR pszPath)
 {
-	extern bool g_bGdiPlusInstalled;
-	if (!g_bGdiPlusInstalled)
-		return NULL;
+	// NOTE: Do *NOT* forget to specify /DELAYLOAD:gdiplus.dll as link parameter.
 	HBITMAP hbmPARGB = NULL;
 	ULONG_PTR gdiplusToken = 0;
 	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
@@ -436,11 +429,9 @@ void CMuleListCtrl::SetColors()
 	COLORREF crHighlight = ::GetSysColor(COLOR_HIGHLIGHT);
 
 	CString strBkImage;
-	LPCTSTR pszSkinProfile = thePrefs.GetSkinProfile();
-	if (pszSkinProfile[0] != _T('\0')) {
-		CString strKey(m_strSkinKey);
-		if (strKey.IsEmpty())
-			strKey = _T("DefLv");
+	const CString &sSkinProfile(thePrefs.GetSkinProfile());
+	if (!sSkinProfile.IsEmpty()) {
+		const CString strKey(m_strSkinKey.IsEmpty() ? _T("DefLv") : m_strSkinKey);
 
 		if (theApp.LoadSkinColorAlt(strKey + _T("Bk"), _T("DefLvBk"), m_crWindow))
 			m_crWindowTextBk = m_crWindow;
@@ -448,10 +439,10 @@ void CMuleListCtrl::SetColors()
 		theApp.LoadSkinColorAlt(strKey + _T("Hl"), _T("DefLvHl"), crHighlight);
 
 		TCHAR szColor[MAX_PATH];
-		GetPrivateProfileString(_T("Colors"), strKey + _T("BkImg"), _T(""), szColor, _countof(szColor), pszSkinProfile);
-		if (szColor[0] == _T('\0'))
-			GetPrivateProfileString(_T("Colors"), _T("DefLvBkImg"), _T(""), szColor, _countof(szColor), pszSkinProfile);
-		if (szColor[0] != _T('\0'))
+		GetPrivateProfileString(_T("Colors"), strKey + _T("BkImg"), NULL, szColor, _countof(szColor), sSkinProfile);
+		if (*szColor == _T('\0'))
+			GetPrivateProfileString(_T("Colors"), _T("DefLvBkImg"), NULL, szColor, _countof(szColor), sSkinProfile);
+		if (*szColor != _T('\0'))
 			strBkImage = szColor;
 	}
 
@@ -472,11 +463,11 @@ void CMuleListCtrl::SetColors()
 
 		// create absolute path to icon resource file
 		TCHAR szFullResPath[MAX_PATH];
-		if (PathIsRelative(strBkImage)) {
+		if (::PathIsRelative(strBkImage)) {
 			TCHAR szSkinResFolder[MAX_PATH];
-			_tcsncpy(szSkinResFolder, pszSkinProfile, _countof(szSkinResFolder));
+			_tcsncpy(szSkinResFolder, sSkinProfile, _countof(szSkinResFolder));
 			szSkinResFolder[_countof(szSkinResFolder) - 1] = _T('\0');
-			PathRemoveFileSpec(szSkinResFolder);
+			::PathRemoveFileSpec(szSkinResFolder);
 			_tmakepathlimit(szFullResPath, NULL, szSkinResFolder, strBkImage, NULL);
 		} else {
 			_tcsncpy(szFullResPath, strBkImage, _countof(szFullResPath));
@@ -485,7 +476,7 @@ void CMuleListCtrl::SetColors()
 
 #if 0
 		// Explicitly check if the file exists, because 'SetBkImage' will return TRUE even if the file does not exist.
-		if (PathFileExists(szFullResPath)) {
+		if (::PathFileExists(szFullResPath)) {
 			// This places the bitmap near the bottom-right border of the client area. But due to that
 			// the position is specified via percentages, the bitmap is never exactly at the bottom
 			// right border, it depends on the window's height. Apart from that, the bitmap gets
@@ -635,7 +626,7 @@ int CMuleListCtrl::MoveItem(int iOldIndex, int iNewIndex)
 	}
 
 	// do the move
-	SetRedraw(FALSE);
+	SetRedraw(false);
 	DeleteItem(iOldIndex);
 	lvi.iItem = iNewIndex;
 	iNewIndex = InsertItem(&lvi);
@@ -658,7 +649,7 @@ int CMuleListCtrl::MoveItem(int iOldIndex, int iNewIndex)
 		}
 	}
 
-	SetRedraw(TRUE);
+	SetRedraw(true);
 
 	return iNewIndex;
 }
@@ -800,14 +791,14 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 								int iMin = iNewLoc;
 								for (int i = 0; i < m_iColumnsTracked; ++i) {
 									if (m_aColumns[i].iLocation >= iMin && m_aColumns[i].iLocation < iMax)
-										m_aColumns[i].iLocation++;
+										++m_aColumns[i].iLocation;
 								}
 							} else { //iOldLoc < iNewLoc
 								int iMin = iOldLoc;
 								int iMax = iNewLoc;
 								for (int i = 0; i < m_iColumnsTracked; ++i) {
 									if (m_aColumns[i].iLocation > iMin && m_aColumns[i].iLocation <= iMax)
-										m_aColumns[i].iLocation--;
+										--m_aColumns[i].iLocation;
 								}
 							}
 							m_aColumns[pHeader->iItem].iLocation = iNewLoc;
@@ -925,7 +916,7 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 		}
 		return *pResult != 0;
 	case LVM_SORTITEMS:
-		m_dwParamSort = (DWORD)wParam;
+		m_dwParamSort = (LPARAM)wParam;
 		m_SortProc = (PFNLVCOMPARE)lParam;
 		for (POSITION pos = m_Params.GetHeadPosition(); pos != NULL; m_Params.GetNext(pos))
 			m_Params.SetAt(pos, MLC_MAGIC);
@@ -1105,9 +1096,9 @@ BOOL CMuleListCtrl::OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LR
 {
 	if (message != WM_DRAWITEM) {
 		//catch the prepaint and copy struct
-		if (message == WM_NOTIFY && reinterpret_cast<LPNMHDR>(lParam)->code == NM_CUSTOMDRAW &&
-			reinterpret_cast<LPNMLVCUSTOMDRAW>(lParam)->nmcd.dwDrawStage == CDDS_ITEMPREPAINT) {
-
+		if (message == WM_NOTIFY && reinterpret_cast<LPNMHDR>(lParam)->code == NM_CUSTOMDRAW
+			&& reinterpret_cast<LPNMLVCUSTOMDRAW>(lParam)->nmcd.dwDrawStage == CDDS_ITEMPREPAINT)
+		{
 			m_bCustomDraw = CListCtrl::OnChildNotify(message, wParam, lParam, pResult);
 			if (m_bCustomDraw)
 				m_lvcd = *reinterpret_cast<LPNMLVCUSTOMDRAW>(lParam);
@@ -1164,14 +1155,26 @@ void CMuleListCtrl::InitItemMemDC(CMemoryDC *dc, LPDRAWITEMSTRUCT lpDrawItemStru
 	dc->SetFont(GetFont());
 }
 
+void CMuleListCtrl::LocaliseHeaderCtrl(const UINT *const uids, size_t cnt)
+{
+	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
+	HDITEM hdi;
+	hdi.mask = HDI_TEXT;
+	for (size_t i = 0; i < cnt; ++i)
+		if (uids[i]) {
+			const CString &sText(GetResString(uids[i]));
+			hdi.pszText = const_cast<LPTSTR>((LPCTSTR)sText);
+			pHeaderCtrl->SetItem((int)i, &hdi);
+		}
+}
+
 void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 {
 	//set up our flicker free drawing
 	CRect rcItem(lpDrawItemStruct->rcItem);
-	CDC *oDC = CDC::FromHandle(lpDrawItemStruct->hDC);
-	CMemoryDC pDC(oDC, &rcItem, m_crWindow);
+	CMemoryDC pDC(CDC::FromHandle(lpDrawItemStruct->hDC), &rcItem, m_crWindow);
 	CFont *pOldFont = pDC->SelectObject(GetFont());
-	CRect rcClient;
+	RECT rcClient;
 	GetClientRect(&rcClient);
 
 	int iItem = lpDrawItemStruct->itemID;
@@ -1184,7 +1187,7 @@ void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	lvi.stateMask = LVIS_DROPHILITED | LVIS_FOCUSED | LVIS_SELECTED | LVIS_GLOW;
 	GetItem(&lvi);
 
-	//see if the item be highlighted
+	//see if the item is highlighted
 	BOOL bHighlight = ((lvi.state & LVIS_DROPHILITED) || (lvi.state & LVIS_SELECTED));
 	BOOL bCtrlFocused = ((GetFocus() == this) || (GetStyle() & LVS_SHOWSELALWAYS));
 	BOOL bGlowing = (lvi.state & LVIS_GLOW);
@@ -1231,8 +1234,9 @@ void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	//draw the item's icon
 	CImageList *pImageList = GetImageList(LVSIL_SMALL);
 	if (pImageList) {
-		int iIconPosY = max((rcItem.Height() - 16) / 2, 0);
-		pImageList->Draw(pDC, lvi.iImage, POINT{ rcIcon.left, rcIcon.top + iIconPosY }, ILD_TRANSPARENT);
+		int iIconY = max((rcItem.Height() - 16) / 2, 0);
+		const POINT point = { rcItem.left, rcItem.top + iIconY };
+		pImageList->Draw(pDC, lvi.iImage, point, ILD_TRANSPARENT);
 	}
 
 	if (m_crWindowTextBk == CLR_NONE)
@@ -1251,7 +1255,7 @@ void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	LVCOLUMN lvc;
 	lvc.mask = LVCF_FMT | LVCF_WIDTH;
 
-	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
+	const CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
 	int iCount = pHeaderCtrl->GetItemCount();
 	for (int iCurrent = 1; iCurrent < iCount; ++iCurrent) {
 		int iColumn = pHeaderCtrl->OrderToIndex(iCurrent);
@@ -1267,7 +1271,7 @@ void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 		rcCol.left = rcCol.right;
 		rcCol.right += lvc.cx;
 
-		if (rcCol.left < rcCol.right && HaveIntersection(rcClient, rcCol)) {
+		if (HaveIntersection(rcClient, rcCol)) {
 			const CString &sLabel(GetItemText(iItem, iColumn));
 			if (sLabel.IsEmpty())
 				continue;
@@ -1286,12 +1290,12 @@ void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 				nJustify = DT_LEFT;
 			}
 
-			rcLabel = rcCol;
-			rcLabel.left += sm_iLabelOffset + sm_iSubItemInset;
-			rcLabel.right -= sm_iLabelOffset + sm_iSubItemInset;
-
-			pDC->SetBkColor(clr); //FillSolidRect does this?
-			pDC->DrawText(sLabel, &rcLabel, MLC_DT_TEXT | nJustify);
+			//label text
+			rcCol.left += sm_iLabelOffset + sm_iSubItemInset;
+			rcCol.right -= sm_iLabelOffset + sm_iSubItemInset;
+			pDC->SetBkColor(clr);
+			pDC->DrawText(sLabel, &rcCol, MLC_DT_TEXT | nJustify);
+			rcCol.right += sm_iLabelOffset + sm_iSubItemInset; //restore the position
 		}
 	}
 
@@ -1303,14 +1307,16 @@ void CMuleListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 
 void CMuleListCtrl::DrawFocusRect(CDC *pDC, LPCRECT rcItem, BOOL bItemFocused, BOOL bCtrlFocused, BOOL bItemSelected)
 {
-	//draw focus rectangle if item has focus
-	if (bItemFocused && (bCtrlFocused || bItemSelected))
-		pDC->FrameRect(rcItem, &CBrush(bCtrlFocused && bItemSelected ? m_crFocusLine : m_crNoFocusLine));
+	//draw focus rectangle if the item has focus
+	if (bItemFocused && (bCtrlFocused || bItemSelected)) {
+		CBrush brush(bCtrlFocused && bItemSelected ? m_crFocusLine : m_crNoFocusLine);
+		pDC->FrameRect(rcItem, &brush);
+	}
 }
 
 BOOL CMuleListCtrl::OnEraseBkgnd(CDC *pDC)
 {
-	//if (m_crWindowTextBk == CLR_NONE) // this creates a lot screen flickering
+	//if (m_crWindowTextBk == CLR_NONE) // this creates a lot of screen flickering
 	//	return CListCtrl::OnEraseBkgnd(pDC);
 
 	int itemCount = GetItemCount();
@@ -1424,7 +1430,7 @@ HIMAGELIST CMuleListCtrl::ApplyImageList(HIMAGELIST himl)
 	return himlOld;
 }
 
-void CMuleListCtrl::DoFind(int iStartItem, int iDirection /*1 = down, 0 = up*/, BOOL bShowError)
+void CMuleListCtrl::DoFind(int iStartItem, int iDirection /*1 = down, -1 = up*/, BOOL bShowError)
 {
 	if (iStartItem < 0) {
 		MessageBeep(MB_OK);
@@ -1433,12 +1439,12 @@ void CMuleListCtrl::DoFind(int iStartItem, int iDirection /*1 = down, 0 = up*/, 
 
 	CWaitCursor curHourglass;
 
-	const int iNumItems = iDirection ? GetItemCount() : 0;
-	for (int iItem = iStartItem; (iDirection ? iItem < iNumItems : iItem >= 0);) {
+	const int iNumItems = (iDirection > 0) ? GetItemCount() : 0;
+	for (int iItem = iStartItem; ((iDirection > 0) ? iItem < iNumItems : iItem >= 0);) {
 		const CString &strItemText(GetItemText(iItem, m_iFindColumn));
 		if (!strItemText.IsEmpty()) {
 			if ((m_bFindMatchCase ? _tcsstr(strItemText, m_strFindText) : stristr(strItemText, m_strFindText)) != NULL) {
-			 // Deselect all listview entries
+				// Deselect all listview entries
 				SetItemState(-1, 0, LVIS_SELECTED);
 
 				// Select the found listview entry
@@ -1451,10 +1457,7 @@ void CMuleListCtrl::DoFind(int iStartItem, int iDirection /*1 = down, 0 = up*/, 
 			}
 		}
 
-		if (iDirection)
-			++iItem;
-		else
-			--iItem;
+		iItem += iDirection;
 	}
 
 	if (bShowError)
@@ -1498,7 +1501,7 @@ void CMuleListCtrl::DoFindNext(BOOL bShowError)
 	if (iStartItem < 0)
 		iStartItem = 0;
 	else
-		iStartItem += (m_iFindDirection ? 1 : -1);
+		iStartItem += m_iFindDirection;
 	DoFind(iStartItem, m_iFindDirection, bShowError);
 }
 
@@ -1513,9 +1516,9 @@ void CMuleListCtrl::OnFindPrev()
 	if (iStartItem < 0)
 		iStartItem = 0;
 	else
-		iStartItem += (m_iFindDirection ? -1 : 1);
+		iStartItem -= m_iFindDirection;
 
-	DoFind(iStartItem, !m_iFindDirection, FALSE/*bShowError*/);
+	DoFind(iStartItem, -m_iFindDirection, FALSE/*bShowError*/);
 }
 
 BOOL CMuleListCtrl::PreTranslateMessage(MSG *pMsg)
@@ -1548,32 +1551,33 @@ void CMuleListCtrl::AutoSelectItem()
 	}
 }
 
-void CMuleListCtrl::UpdateSortHistory(int dwNewOrder, int dwInverseValue)
+// Parameter is used as a LONG value
+// LOWORD(dwNewOrder) - sort item, HIWORD(dwNewOrder) - sort direction
+// HIWORD(dwNewOrder) != 0 means inverse order (descending usually)
+void CMuleListCtrl::UpdateSortHistory(LPARAM dwNewOrder)
 {
-	int dwInverse = (dwNewOrder > dwInverseValue) ? (dwNewOrder - dwInverseValue) : (dwNewOrder + dwInverseValue);
-	// delete the value (or its inverse sorting value) if it appears already in the list
+	// delete all history for the item, for both direct and inverse order
 	for (POSITION pos = m_liSortHistory.GetHeadPosition(); pos != NULL;) {
 		POSITION pos2 = pos;
-		int i = m_liSortHistory.GetNext(pos);
-		if (i == dwNewOrder || i == dwInverse)
+		if (LOWORD(m_liSortHistory.GetNext(pos)) == LOWORD(dwNewOrder))
 			m_liSortHistory.RemoveAt(pos2);
 	}
-	m_liSortHistory.AddHead(dwNewOrder);
+	m_liSortHistory.AddHead((LONG)dwNewOrder);
 	// limit it to MAX_SORTORDERHISTORY entries for now, just for performance
 	if (m_liSortHistory.GetCount() > MAX_SORTORDERHISTORY)
 		m_liSortHistory.RemoveTail();
 }
 
-int CMuleListCtrl::GetNextSortOrder(int dwCurrentSortOrder) const
+LPARAM CMuleListCtrl::GetNextSortOrder(LPARAM iCurrentSortOrder) const
 {
-	POSITION pos = m_liSortHistory.Find(dwCurrentSortOrder);
+	POSITION pos = m_liSortHistory.Find((LONG)iCurrentSortOrder);
 	if (pos) {
 		m_liSortHistory.GetNext(pos);
-		if (pos != NULL)
+		if (pos)
 			return m_liSortHistory.GetAt(pos);
 	}
-	//	else ASSERT( false ); // the current one not found - shouldn't happen
-	return -1; // there is no further sort orders stored
+	//ASSERT(0); // the current one not found - shouldn't happen
+	return -1; // there are no more stored sort orders
 }
 
 CMuleListCtrl::EUpdateMode CMuleListCtrl::SetUpdateMode(EUpdateMode eUpdateMode)

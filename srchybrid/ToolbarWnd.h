@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2010 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -17,7 +17,8 @@
 
 #pragma once
 
-class CToolBarCtrlX;
+#include "ToolBarCtrlX.h"
+
 class CDownloadListCtrl;
 
 class CToolbarWnd : public CDialogBar
@@ -31,7 +32,6 @@ class CToolbarWnd : public CDialogBar
 
 public:
 	CToolbarWnd();
-	virtual	~CToolbarWnd();
 
 	void Localize();
 	void OnAvailableCommandsChanged(CList<int> *liCommands);
@@ -43,9 +43,9 @@ public:
 
 protected:
 	HCURSOR m_hcurMove;
-	CSize m_szMRU;
-	CSize m_szFloat;
-	CToolBarCtrlX *m_btnBar;
+	CSize	m_szMRU;
+	CSize	m_szFloat;
+	CToolBarCtrlX m_btnBar;
 	CDownloadListCtrl *m_pCommandTargetWnd;
 
 //	void SetAllIcons();

@@ -1,4 +1,4 @@
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -22,6 +22,7 @@ class CServer;
 class CPartFile;
 class CSharedFileList;
 class CKnownFile;
+class CED2KFileLink;
 struct SUnresolvedHostname;
 
 namespace Kademlia
@@ -45,7 +46,7 @@ protected:
 private:
 	struct Hostname_Entry
 	{
-		uchar fileid[16];
+		uchar fileid[MDX_DIGEST_SIZE];
 		CStringA strHostname;
 		uint16 port;
 		CString strURL;
@@ -72,7 +73,7 @@ public:
 	void	AddDownload(CPartFile *newfile, bool paused);
 	void	AddSearchToDownload(CSearchFile *toadd, uint8 paused = 2, int cat = 0);
 	void	AddSearchToDownload(const CString &link, uint8 paused = 2, int cat = 0);
-	void	AddFileLinkToDownload(class CED2KFileLink *pLink, int cat = 0);
+	void	AddFileLinkToDownload(const CED2KFileLink &Link, int cat = 0);
 	void	RemoveFile(CPartFile *toremove);
 	void	DeleteAll();
 
@@ -108,7 +109,7 @@ public:
 	} SDownloadStats;
 	void	GetDownloadSourcesStats(SDownloadStats &results);
 	int		GetDownloadFilesStats(uint64 &rui64TotalFileSize, uint64 &rui64TotalLeftToTransfer, uint64 &rui64TotalAdditionalNeededSpace);
-	uint32	GetDatarate() const								{ return datarate; }
+	uint32	GetDatarate() const								{ return m_datarate; }
 
 	void	AddUDPFileReasks()								{ ++m_nUDPFileReasks; }
 	uint32	GetUDPFileReasks() const						{ return m_nUDPFileReasks; }
@@ -129,14 +130,14 @@ public:
 	void	ResetLocalServerRequests();
 
 	// searching in Kad
-	void	SetLastKademliaFileRequest()					{ lastkademliafilerequest = ::GetTickCount(); }
+	void	SetLastKademliaFileRequest()					{ m_lastkademliafilerequest = ::GetTickCount(); }
 	bool	DoKademliaFileRequest() const;
-	void	KademliaSearchFile(uint32 searchID, const Kademlia::CUInt128 *pcontactID, const Kademlia::CUInt128 *pbuddyID, uint8 type, uint32 ip, uint16 tcp, uint16 udp, uint32 dwBuddyIP, uint16 dwBuddyPort, uint8 byCryptOptions);
+	void	KademliaSearchFile(uint32 nSearchID, const Kademlia::CUInt128 *pcontactID, const Kademlia::CUInt128 *pbuddyID, uint8 type, uint32 ip, uint16 tcp, uint16 udp, uint32 dwBuddyIP, uint16 dwBuddyPort, uint8 byCryptOptions);
 
 	// searching on global servers
 	void	StopUDPRequests();
 
-	// check diskspace
+	// check disk space
 	void	SortByPriority();
 	void	CheckDiskspace(bool bNotEnoughSpaceLeft = false);
 	void	CheckDiskspaceTimed();
@@ -154,7 +155,7 @@ protected:
 	bool	SendNextUDPPacket();
 	void	ProcessLocalRequests();
 	bool	IsMaxFilesPerUDPServerPacketReached(uint32 nFiles, uint32 nIncludedLargeFiles) const;
-	bool	SendGlobGetSourcesUDPPacket(CSafeMemFile *data, bool bExt2Packet, uint32 nFiles, uint32 nIncludedLargeFiles);
+	bool	SendGlobGetSourcesUDPPacket(CSafeMemFile &data, bool bExt2Packet, uint32 nFiles, uint32 nIncludedLargeFiles);
 
 private:
 	bool	CompareParts(POSITION pos1, POSITION pos2);
@@ -162,23 +163,6 @@ private:
 	void	HeapSort(UINT first, UINT last);
 	CTypedPtrList<CPtrList, CPartFile*> filelist;
 	CTypedPtrList<CPtrList, CPartFile*> m_localServerReqQueue;
-
-	uint64	m_datarateMS;
-	CPartFile *lastfile;
-	DWORD	m_dwLastA4AFtime; // ZZ:DownloadManager
-	uint32	lastcheckdiskspacetime;
-	uint32	lastudpsearchtime;
-	uint32	lastudpstattime;
-	UINT	udcounter;
-	UINT	m_cRequestsSentToServer;
-	uint32	m_dwNextTCPSrcReq;
-	uint32	lastkademliafilerequest;
-	int		m_iSearchedServers;
-
-	uint32	m_nUDPFileReasks;
-	uint32	m_nFailedUDPFileReasks;
-	uint32	datarate;
-	uint16	filesrdy;
 
 	// By BadWolf - Accurate Speed Measurement
 	typedef struct
@@ -190,4 +174,19 @@ private:
 	// END By BadWolf - Accurate Speed Measurement
 
 	CSourceHostnameResolveWnd m_srcwnd;
+	uint64	m_datarateMS;
+	CPartFile *m_lastfile;
+	DWORD	m_dwLastA4AFtime; // ZZ:DownloadManager
+	DWORD	m_lastcheckdiskspacetime;
+	DWORD	m_lastudpsearchtime;
+	DWORD	m_lastudpstattime;
+	DWORD	m_lastkademliafilerequest;
+	DWORD	m_dwNextTCPSrcReq;
+	UINT	m_udcounter;
+	UINT	m_cRequestsSentToServer;
+	int		m_iSearchedServers;
+
+	uint32	m_nUDPFileReasks;
+	uint32	m_nFailedUDPFileReasks;
+	uint32	m_datarate;
 };

@@ -498,7 +498,7 @@ BEGIN
     IDS_GLOBALSEARCH        "همه سرويس دهنده ها"
     IDS_METHOD              "روش"
     IDS_UNDO                "برگشت به قبل"
-    IDS_DAYLY               "روزانه"
+    IDS_DAILY               "روزانه"
     IDS_DAY_MO_FR           "دوشنبه.جمعه"
 END
 
@@ -1561,7 +1561,7 @@ BEGIN
     IDS_EM_HELP             "&راهنما"
     IDS_WRN_FRIENDDUPLIPPORT
                             "دوست اضافه نشد.\r\n\r\nيک دوست از قبل با آدرس آي پي و پورت مشابه در دسترس است.َ"
-    IDS_DYNUP               "تعيين سرعت آپلود"
+    IDS_DYNUP               "تعيين سرعت آپلود (توصيه نمي شود)َ"
     IDS_KADOVERHEAD         "Kad سربار (بسته هاي اطلاعاتي)َ: %s (%s)"
     IDS_FIND                "يافتن...َ"
     IDS_LOG_BANNED_CLIENTS  "مشتري هايي با ممنوعيت ورود"

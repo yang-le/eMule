@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -86,14 +86,14 @@ void CPPgGeneral::LoadSettings()
 {
 	SetLangSel();
 	SetDlgItemText(IDC_NICK, thePrefs.GetUserNick());
-	CheckDlgButton(IDC_STARTWIN, static_cast<UINT>(thePrefs.m_bAutoStart));
-	CheckDlgButton(IDC_STARTMIN, static_cast<UINT>(thePrefs.startMinimized));
-	CheckDlgButton(IDC_ONLINESIG, static_cast<UINT>(thePrefs.onlineSig));
-	CheckDlgButton(IDC_EXIT, static_cast<UINT>(thePrefs.confirmExit));
-	CheckDlgButton(IDC_SPLASHON, static_cast<UINT>(thePrefs.splashscreen));
 	CheckDlgButton(IDC_BRINGTOFOREGROUND, static_cast<UINT>(thePrefs.bringtoforeground));
-	CheckDlgButton(IDC_CHECK4UPDATE, static_cast<UINT>(thePrefs.updatenotify));
+	CheckDlgButton(IDC_EXIT, static_cast<UINT>(thePrefs.confirmExit));
+	CheckDlgButton(IDC_ONLINESIG, static_cast<UINT>(thePrefs.onlineSig));
 	CheckDlgButton(IDC_MINIMULE, static_cast<UINT>(thePrefs.m_bEnableMiniMule));
+	CheckDlgButton(IDC_CHECK4UPDATE, static_cast<UINT>(thePrefs.updatenotify));
+	CheckDlgButton(IDC_SPLASHON, static_cast<UINT>(thePrefs.splashscreen));
+	CheckDlgButton(IDC_STARTMIN, static_cast<UINT>(thePrefs.startMinimized));
+	CheckDlgButton(IDC_STARTWIN, static_cast<UINT>(thePrefs.m_bAutoStart));
 
 	if (thePrefs.GetWindowsVersion() != _WINVER_95_)
 		CheckDlgButton(IDC_PREVENTSTANDBY, static_cast<UINT>(thePrefs.GetPreventStandby()));
@@ -222,16 +222,17 @@ BOOL CPPgGeneral::OnApply()
 		}
 	}
 
-	SetAutoStart(thePrefs.m_bAutoStart);
-	thePrefs.startMinimized = thePrefs.m_bAutoStart = (IsDlgButtonChecked(IDC_STARTWIN) != 0);
-	thePrefs.confirmExit = IsDlgButtonChecked(IDC_EXIT) != 0;
-	thePrefs.splashscreen = IsDlgButtonChecked(IDC_SPLASHON) != 0;
 	thePrefs.bringtoforeground = IsDlgButtonChecked(IDC_BRINGTOFOREGROUND) != 0;
-	thePrefs.updatenotify = IsDlgButtonChecked(IDC_CHECK4UPDATE) != 0;
+	thePrefs.confirmExit = IsDlgButtonChecked(IDC_EXIT) != 0;
 	thePrefs.onlineSig = IsDlgButtonChecked(IDC_ONLINESIG) != 0;
-	thePrefs.versioncheckdays = static_cast<CSliderCtrl*>(GetDlgItem(IDC_CHECKDAYS))->GetPos();
 	thePrefs.m_bEnableMiniMule = IsDlgButtonChecked(IDC_MINIMULE) != 0;
 	thePrefs.m_bPreventStandby = IsDlgButtonChecked(IDC_PREVENTSTANDBY) != 0;
+	thePrefs.updatenotify = IsDlgButtonChecked(IDC_CHECK4UPDATE) != 0;
+	thePrefs.versioncheckdays = static_cast<CSliderCtrl*>(GetDlgItem(IDC_CHECKDAYS))->GetPos();
+	thePrefs.splashscreen = IsDlgButtonChecked(IDC_SPLASHON) != 0;
+	thePrefs.startMinimized = IsDlgButtonChecked(IDC_STARTMIN) != 0;
+	thePrefs.m_bAutoStart = IsDlgButtonChecked(IDC_STARTWIN) != 0;
+	SetAutoStart(thePrefs.m_bAutoStart);
 
 	LoadSettings();
 
@@ -263,18 +264,18 @@ void CPPgGeneral::Localize()
 		SetDlgItemText(IDC_NICK_FRM, GetResString(IDS_QL_USERNAME));
 		SetDlgItemText(IDC_LANG_FRM, GetResString(IDS_PW_LANG));
 		SetDlgItemText(IDC_MISC_FRM, GetResString(IDS_PW_MISC));
-		SetDlgItemText(IDC_EXIT, GetResString(IDS_PW_PROMPT));
-		SetDlgItemText(IDC_SPLASHON, GetResString(IDS_PW_SPLASH));
 		SetDlgItemText(IDC_BRINGTOFOREGROUND, GetResString(IDS_PW_FRONT));
+		SetDlgItemText(IDC_EXIT, GetResString(IDS_PW_PROMPT));
 		SetDlgItemText(IDC_ONLINESIG, GetResString(IDS_PREF_ONLINESIG));
-		SetDlgItemText(IDC_STARTMIN, GetResString(IDS_PREF_STARTMIN));
-		SetDlgItemText(IDC_WEBSVEDIT, GetResString(IDS_WEBSVEDIT));
-		SetDlgItemText(IDC_ED2KFIX, GetResString(IDS_ED2KLINKFIX));
-		SetDlgItemText(IDC_CHECK4UPDATE, GetResString(IDS_CHECK4UPDATE));
-		SetDlgItemText(IDC_STARTUP, GetResString(IDS_STARTUP));
-		SetDlgItemText(IDC_STARTWIN, GetResString(IDS_STARTWITHWINDOWS));
 		SetDlgItemText(IDC_MINIMULE, GetResString(IDS_ENABLEMINIMULE));
 		SetDlgItemText(IDC_PREVENTSTANDBY, GetResString(IDS_PREVENTSTANDBY));
+		SetDlgItemText(IDC_WEBSVEDIT, GetResString(IDS_WEBSVEDIT));
+		SetDlgItemText(IDC_ED2KFIX, GetResString(IDS_ED2KLINKFIX));
+		SetDlgItemText(IDC_STARTUP, GetResString(IDS_STARTUP));
+		SetDlgItemText(IDC_CHECK4UPDATE, GetResString(IDS_CHECK4UPDATE));
+		SetDlgItemText(IDC_SPLASHON, GetResString(IDS_PW_SPLASH));
+		SetDlgItemText(IDC_STARTMIN, GetResString(IDS_PREF_STARTMIN));
+		SetDlgItemText(IDC_STARTWIN, GetResString(IDS_STARTWITHWINDOWS));
 	}
 }
 
@@ -315,13 +316,13 @@ void CPPgGeneral::OnLangChange()
 	LANGID newLangId = (LANGID)m_language.GetItemData(m_language.GetCurSel());
 	if (thePrefs.GetLanguageID() != newLangId) {
 		if (!thePrefs.IsLanguageSupported(newLangId)) {
-			CString sAsk;
-			sAsk.Format(_T("%s\r\n\r\n%s"), (LPCTSTR)GetResString(IDS_ASKDOWNLOADLANGCAP), (LPCTSTR)GetResString(IDS_ASKDOWNLOADLANG));
+			CString sAsk(GetResString(IDS_ASKDOWNLOADLANGCAP));
+			sAsk.AppendFormat(_T("\r\n\r\n%s"), (LPCTSTR)GetResString(IDS_ASKDOWNLOADLANG));
 			if (AfxMessageBox(sAsk, MB_ICONQUESTION | MB_YESNO) == IDYES) {
 				// download file
-				const CString &strFilename = thePrefs.GetLangDLLNameByID(newLangId);
+				const CString &strFilename(thePrefs.GetLangDLLNameByID(newLangId));
 				// create url, use random mirror for load balancing
-				UINT nRand = (rand() / (RAND_MAX / 3)) + 1;
+				UINT nRand = rand() % 3 + 1;
 				CString strUrl;
 				strUrl.Format(MIRRORS_URL _T("%s")
 					, nRand

@@ -4,7 +4,6 @@ class CEnBitmap : public CBitmap
 {
 public:
 	CEnBitmap() = default;
-	virtual	~CEnBitmap() = default;
 
 	BOOL LoadImage(LPCTSTR szImagePath, COLORREF crBack = 0);
 	BOOL LoadImage(UINT uIDRes, LPCTSTR pszResourceType, HMODULE hInst = NULL, COLORREF crBack = 0);

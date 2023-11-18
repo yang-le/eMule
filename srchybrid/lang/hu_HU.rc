@@ -421,7 +421,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Globális"
     IDS_METHOD              "Metódus"
     IDS_UNDO                "Visszacsinál"
-    IDS_DAYLY               "naponta"
+    IDS_DAILY               "naponta"
 END
 
 STRINGTABLE
@@ -1448,7 +1448,7 @@ BEGIN
     IDS_EM_HELP             "Súgó"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Friend not added.\r\n\r\nThere is already a friend with same IP address and port available."
-    IDS_DYNUP               "Feltöltési érzékenység"
+    IDS_DYNUP               "Feltöltési érzékenység (not recommended)"
     IDS_KADOVERHEAD         "Kad előny (Csomag): %s (%s)"
     IDS_FIND                "Keresés..."
     IDS_LOG_BANNED_CLIENTS  "Kitiltott kliensek naplózása"

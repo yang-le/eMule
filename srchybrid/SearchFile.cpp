@@ -1,6 +1,6 @@
 // parts of this file are based on work from pan One (http://home-3.tiscali.nl/~meost/pms/)
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -51,7 +51,7 @@ bool IsValidSearchResultClientIPPort(uint32 nIP, uint16 nPort)
 
 void ConvertED2KTag(CTag *&pTag)
 {
-	if (pTag->GetNameID() == 0 && pTag->GetName()[0]) {
+	if (pTag->GetNameID() == 0 && pTag->HasName()) {
 		static const struct
 		{
 			uint8	nID;
@@ -147,7 +147,7 @@ CSearchFile::CSearchFile(const CSearchFile *copyfrom)
 	m_nCompleteSources = copyfrom->m_nCompleteSources;
 }
 
-CSearchFile::CSearchFile(CFileDataIO *in_data, bool bOptUTF8, uint32 nSearchID, uint32 nServerIP,
+CSearchFile::CSearchFile(CFileDataIO &in_data, bool bOptUTF8, uint32 nSearchID, uint32 nServerIP,
 			uint16 nServerPort, LPCTSTR pszDirectory, bool bKademlia, bool bServerUDPAnswer)
 	: m_bMultipleAICHFound()
 	, m_bKademlia(bKademlia)
@@ -165,15 +165,15 @@ CSearchFile::CSearchFile(CFileDataIO *in_data, bool bOptUTF8, uint32 nSearchID, 
 	, m_eKnown(NotDetermined)
 {
 	m_FileIdentifier.SetMD4Hash(in_data);
-	m_nClientID = in_data->ReadUInt32();
-	m_nClientPort = in_data->ReadUInt16();
+	m_nClientID = in_data.ReadUInt32();
+	m_nClientPort = in_data.ReadUInt16();
 	if (!IsValidSearchResultClientIPPort(m_nClientID, m_nClientPort)) {
 		if (thePrefs.GetDebugServerSearchesLevel() > 1)
 			Debug(_T("Filtered source from search result %s:%u\n"), (LPCTSTR)DbgGetClientID(m_nClientID), m_nClientPort);
 		m_nClientID = 0;
 		m_nClientPort = 0;
 	}
-	uint32 tagcount = in_data->ReadUInt32();
+	uint32 tagcount = in_data.ReadUInt32();
 	// NSERVER2.EXE (lugdunum v16.38 patched for Win32) returns the ClientIP+Port of the client which offered that
 	// file, even if that client has not filled the according fields in the OP_OFFERFILES packet with its IP+Port.
 	//
@@ -248,7 +248,7 @@ CSearchFile::CSearchFile(CFileDataIO *in_data, bool bOptUTF8, uint32 nSearchID, 
 	//
 	// but, in no case, we will use the received file type when adding this search result to the download queue, to avoid
 	// that we are using 'wrong' file types in part files. (this has to be handled when creating the part files)
-	const CString &rstrFileType = GetStrTagValue(FT_FILETYPE);
+	const CString &rstrFileType(GetStrTagValue(FT_FILETYPE));
 	CSearchFile::SetFileName(GetStrTagValue(FT_FILENAME), false, rstrFileType.IsEmpty(), true);
 
 	uint64 ui64FileSize = 0;
@@ -272,7 +272,7 @@ CSearchFile::CSearchFile(CFileDataIO *in_data, bool bOptUTF8, uint32 nSearchID, 
 
 	if (!rstrFileType.IsEmpty())
 		if (rstrFileType == _T(ED2KFTSTR_PROGRAM)) {
-			const CString &strDetailFileType = GetFileTypeByName(GetFileName());
+			const CString &strDetailFileType(GetFileTypeByName(GetFileName()));
 			CSearchFile::SetFileType(strDetailFileType.IsEmpty() ? rstrFileType : strDetailFileType);
 		} else
 			CSearchFile::SetFileType(rstrFileType);
@@ -306,13 +306,13 @@ void CSearchFile::StoreToFile(CFileDataIO &rFile) const
 	for (INT_PTR pos = 0; pos < m_taglist.GetCount(); ++pos) {
 		const CTag *tag = m_taglist[pos];
 		if (tag->GetNameID() == FT_FILERATING && tag->IsInt())
-			CTag(FT_FILERATING, (tag->GetInt() * (255 / 5)) & 0xFF).WriteNewEd2kTag(&rFile);
+			CTag(FT_FILERATING, (tag->GetInt() * (255 / 5)) & 0xFF).WriteNewEd2kTag(rFile);
 		else
-			tag->WriteNewEd2kTag(&rFile, UTF8strRaw);
+			tag->WriteNewEd2kTag(rFile, UTF8strRaw);
 	}
 	if (m_FileIdentifier.HasAICHHash()) {
 		CTag aichtag(FT_AICH_HASH, m_FileIdentifier.GetAICHHash().GetString());
-		aichtag.WriteNewEd2kTag(&rFile);
+		aichtag.WriteNewEd2kTag(rFile);
 	}
 }
 

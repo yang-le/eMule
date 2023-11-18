@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -62,7 +62,7 @@ public:
 	explicit CServer(const CServer *pOld);
 	~CServer() = default;
 
-	bool	AddTagFromFile(CFileDataIO *servermet);
+	bool	AddTagFromFile(CFileDataIO &servermet);
 
 	const CString& GetListName() const				{ return m_strName; }
 	void	SetListName(LPCTSTR newname)			{ m_strName = newname; }
@@ -174,7 +174,7 @@ private:
 	CString	m_strName;
 	CString	m_strDynIP;
 	CString	m_strVersion;
-	time_t	lastpingedtime; //This is to decided when we retry the ping.
+	time_t	lastpingedtime; //This is to decide when we retry the ping.
 	time_t	m_RealLastPingedTime;
 	uint32	challenge;
 	uint32	m_uDescReqChallenge;

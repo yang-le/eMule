@@ -34,7 +34,6 @@ class CFileDetailDialogName : public CResizablePage
 
 public:
 	CFileDetailDialogName();   // standard constructor
-	virtual	~CFileDetailDialogName() = default;
 	virtual BOOL OnInitDialog();
 
 	void SetFiles(const CSimpleArray<CObject*> *paFiles)	{ m_paFiles = paFiles; m_bDataChanged = true; }

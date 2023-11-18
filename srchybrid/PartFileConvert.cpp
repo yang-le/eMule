@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -50,14 +50,14 @@ enum convstatus
 
 struct ConvertJob
 {
+	uint64	size;
+	uint64	spaceneeded;
 	CString folder;
 	CString filename;
 	CString filehash;
-	uint64	size;
-	uint64	spaceneeded;
 	int     format;
 	int		state;
-	uint8	partmettype;
+	EPartFileFormat	partmettype;
 	bool	removeSource;
 	ConvertJob()
 		: size()
@@ -68,32 +68,33 @@ struct ConvertJob
 		, removeSource(true)
 	{
 	}
-	//~ConvertJob() = default;
 };
 
+static CWinThread	*convertPfThread;
+static CList<ConvertJob*, ConvertJob*> m_jobs;
+static ConvertJob	*pfconverting;
+static CPartFileConvertDlg *m_convertgui;
 
 int CPartFileConvert::ScanFolderToAdd(const CString &folder, bool deletesource)
 {
-	CFileFind finder;
+	ASSERT(folder.Right(1) != _T("\\"));
 	int count = 0;
-	BOOL bWorking = finder.FindFile(folder + _T("\\*.part.met"));
-	while (bWorking) {
-		bWorking = finder.FindNextFile();
+	CFileFind finder;
+	for (BOOL bFound = finder.FindFile(folder + _T("\\*.part.met")); bFound;) {
+		bFound = finder.FindNextFile();
 		ConvertToeMule(finder.GetFilePath(), deletesource);
 		++count;
 	}
 	// Shareaza
-	bWorking = finder.FindFile(folder + _T("\\*.sd"));
-	while (bWorking) {
-		bWorking = finder.FindNextFile();
+	for (BOOL bFound = finder.FindFile(folder + _T("\\*.sd")); bFound;) {
+		bFound = finder.FindNextFile();
 		ConvertToeMule(finder.GetFilePath(), deletesource);
 		++count;
 	}
 
-	bWorking = finder.FindFile(folder + _T("\\*.*"));
-	while (bWorking) {
-		bWorking = finder.FindNextFile();
-		if (finder.IsDirectory() && finder.GetFileName().Left(1) != _T("."))
+	for (BOOL bFound = finder.FindFile(folder + _T("\\*.*")); bFound;) {
+		bFound = finder.FindNextFile();
+		if (finder.IsDirectory() && !finder.IsDots())
 			count += ScanFolderToAdd(finder.GetFilePath(), deletesource);
 	}
 	return count;
@@ -101,7 +102,7 @@ int CPartFileConvert::ScanFolderToAdd(const CString &folder, bool deletesource)
 
 void CPartFileConvert::ConvertToeMule(const CString &folder, bool deletesource)
 {
-	if (!PathFileExists(folder))
+	if (!::PathFileExists(folder))
 		return;
 	//if (folder.Left(strlen(thePrefs.GetTempDir())).CompareNoCase(thePrefs.GetTempDir()) == 0)
 	//	return;
@@ -122,7 +123,7 @@ void CPartFileConvert::ConvertToeMule(const CString &folder, bool deletesource)
 void CPartFileConvert::StartThread()
 {
 	if (convertPfThread == NULL)
-		convertPfThread = AfxBeginThread(run, NULL, THREAD_PRIORITY_LOWEST);
+		convertPfThread = AfxBeginThread(run, NULL, THREAD_PRIORITY_IDLE);
 }
 
 UINT AFX_CDECL CPartFileConvert::run(LPVOID /*lpParam*/)
@@ -166,70 +167,63 @@ UINT AFX_CDECL CPartFileConvert::run(LPVOID /*lpParam*/)
 
 int CPartFileConvert::performConvertToeMule(const CString &folder)
 {
-	int i = folder.ReverseFind(_T('\\'));
-	if (i < 0)
+	int i = folder.ReverseFind(_T('\\')) + 1;
+	if (i <= 0)
 		return CONV_FAILED;
-	const CString &partfile(folder.Mid(i + 1));
-	CString sDir(folder.Left(i)); //no trailing backslash
+	const CString &partfile(folder.Mid(i));
+	CString sDir(folder, i); //keep the trailing backslash
 
 	UpdateGUI(0, GetResString(IDS_IMP_STEPREADPF), true);
 
 	const CString &filepartindex(partfile.Left(partfile.Find(_T('.'))));
 
-	UpdateGUI(4, GetResString(IDS_IMP_STEPBASICINF));
+	UpdateGUI(4.0f, GetResString(IDS_IMP_STEPBASICINF));
 
 	CPartFile *file = new CPartFile();
-	EPartFileFormat eFormat = PMT_UNKNOWN;
-	if (file->LoadPartFile(sDir, partfile, &eFormat) == PLR_CHECKSUCCESS) {
-		pfconverting->partmettype = (uint8)eFormat;
-		switch (pfconverting->partmettype) {
-		case PMT_UNKNOWN:
-		case PMT_BADFORMAT:
-			delete file;
-			return CONV_BADFORMAT;
-		}
-	} else {
+	EPartFileFormat eFormat;
+	if (file->LoadPartFile(sDir, partfile, &eFormat) != PLR_CHECKSUCCESS)
+		eFormat = PMT_UNKNOWN;
+	switch (eFormat) {
+	case PMT_UNKNOWN:
+	case PMT_BADFORMAT:
 		delete file;
 		return CONV_BADFORMAT;
 	}
-
-	pfconverting->size = file->GetFileSize();
-	pfconverting->filename = file->GetFileName();
-	pfconverting->filehash = EncodeBase16(file->GetFileHash(), 16);
-	UpdateGUI(pfconverting);
-
 	if (theApp.downloadqueue->GetFileByID(file->GetFileHash()) != NULL) {
 		delete file;
 		return CONV_ALREADYEXISTS;
 	}
 
-	sDir += _T('\\'); //now add trailing backslash
+	pfconverting->size = file->GetFileSize();
+	pfconverting->filename = file->GetFileName();
+	pfconverting->filehash = EncodeBase16(file->GetFileHash(), 16);
+	pfconverting->partmettype = eFormat;
+	UpdateGUI(pfconverting);
+
 	CString newfilename;
 	CFileFind finder;
-	CString buffer;
 	if (pfconverting->partmettype == PMT_SPLITTED) {
 		try {
 			CByteArray ba;
 			ba.SetSize(PARTSIZE);
 
-			// just count
-			UINT maxindex = 0;
+			// find highest part file number
+			int maxindex = 0;
 			UINT partfilecount = 0;
-			BOOL bWorking = finder.FindFile(sDir + filepartindex + _T(".*.part"));
-			while (bWorking) {
-				bWorking = finder.FindNextFile();
+			for (BOOL bFound = finder.FindFile(sDir + filepartindex + _T(".*.part")); bFound;) {
+				bFound = finder.FindNextFile();
 				++partfilecount;
-				buffer = finder.GetFileName();
-				int pos1 = buffer.Find('.');
-				int pos2 = buffer.Find('.', pos1 + 1);
-				UINT fileindex = _tstoi(buffer.Mid(pos1 + 1, pos2 - pos1));
+				const CString &filename(finder.GetFileName());
+				int pos1 = filename.Find('.');
+				int pos2 = filename.Find('.', pos1 + 1);
+				int fileindex = _tstoi(filename.Mid(pos1 + 1, pos2 - pos1));
 				if (fileindex > maxindex)
 					maxindex = fileindex;
 			}
 			float stepperpart;
 			if (partfilecount > 0) {
 				stepperpart = (80.0f / partfilecount);
-				if (maxindex*PARTSIZE <= pfconverting->size)
+				if (maxindex * PARTSIZE <= pfconverting->size)
 					pfconverting->spaceneeded = maxindex * PARTSIZE;
 				else
 					pfconverting->spaceneeded = ((pfconverting->size / PARTSIZE) * PARTSIZE) + (pfconverting->size % PARTSIZE);
@@ -238,30 +232,31 @@ int CPartFileConvert::performConvertToeMule(const CString &folder)
 				pfconverting->spaceneeded = 0;
 			}
 
-			UpdateGUI(pfconverting);
-
-			if (GetFreeDiskSpaceX(thePrefs.GetTempDir()) < maxindex*PARTSIZE) {
+			if (GetFreeDiskSpaceX(thePrefs.GetTempDir()) < maxindex * PARTSIZE) {
 				delete file;
 				return CONV_OUTOFDISKSPACE;
 			}
+
+			UpdateGUI(pfconverting);
 
 			// create new partmetfile, and remember the new name
 			file->CreatePartFile();
 			newfilename = file->GetFullName();
 
-			UpdateGUI(8, GetResString(IDS_IMP_STEPCRDESTFILE));
+			UpdateGUI(8.0f, GetResString(IDS_IMP_STEPCRDESTFILE));
 			file->m_hpartfile.SetLength(pfconverting->spaceneeded);
 
+			CString buffer;
 			CFile inputfile;
 			unsigned curindex = 0;
-			bWorking = finder.FindFile(sDir + filepartindex + _T(".*.part"));
-			while (bWorking) {
-				bWorking = finder.FindNextFile();
+			for (BOOL bFound = finder.FindFile(sDir + filepartindex + _T(".*.part")); bFound;) {
+				bFound = finder.FindNextFile();
 
 				//stats
 				++curindex;
+				float fPercent = 10 + curindex * stepperpart;
 				buffer.Format(GetResString(IDS_IMP_LOADDATA), curindex, partfilecount);
-				UpdateGUI(10 + (curindex*stepperpart), buffer);
+				UpdateGUI(fPercent, buffer);
 
 				const CString &filename(finder.GetFileName());
 				int pos1 = filename.Find('.');
@@ -274,15 +269,16 @@ int CPartFileConvert::performConvertToeMule(const CString &folder)
 
 				// open, read data of the part-part-file into buffer, close file
 				inputfile.Open(finder.GetFilePath(), CFile::modeRead | CFile::shareDenyWrite);
-				UINT readed = inputfile.Read(ba.GetData(), (UINT)PARTSIZE);
+				UINT nRead = inputfile.Read(ba.GetData(), (UINT)PARTSIZE);
 				inputfile.Close();
 
 				buffer.Format(GetResString(IDS_IMP_SAVEDATA), curindex, partfilecount);
-				UpdateGUI(10 + (curindex*stepperpart), buffer);
+				UpdateGUI(fPercent, buffer);
 
 				// write the buffered data
-				file->m_hpartfile.Seek(chunkstart, CFile::begin);
-				file->m_hpartfile.Write(ba.GetData(), readed);
+				OVERLAPPED ov = { 0, 0, {{LODWORD(chunkstart), HIDWORD(chunkstart)}} };
+				if (!::WriteFile((HANDLE)file->m_hpartfile, ba.GetData(), nRead, NULL, &ov))
+					CFileException::ThrowOsError((LONG)::GetLastError(), file->m_hpartfile.GetFileName());
 			}
 		} catch (CFileException *error) {
 			CString strError(GetResString(IDS_IMP_IOERROR));
@@ -303,31 +299,31 @@ int CPartFileConvert::performConvertToeMule(const CString &folder)
 		if (!pfconverting->removeSource)
 			pfconverting->spaceneeded = GetDiskFileSize(oldfile);
 
-		UpdateGUI(pfconverting);
-
 		if (!pfconverting->removeSource && (GetFreeDiskSpaceX(thePrefs.GetTempDir()) < pfconverting->spaceneeded)) {
 			delete file;
 			return CONV_OUTOFDISKSPACE;
 		}
+
+		UpdateGUI(pfconverting);
 
 		file->CreatePartFile();
 		newfilename = file->GetFullName();
 
 		file->m_hpartfile.Close();
 
-		UpdateGUI(92, GetResString(IDS_COPY));
+		UpdateGUI(92.0f, GetResString(IDS_COPY));
 		::DeleteFile(newfilename.Left(newfilename.GetLength() - 4));
 
 		BOOL ret;
-		if (!PathFileExists(oldfile)) {
+		if (!::PathFileExists(oldfile)) {
 			// data file does not exist. well, then create a 0 byte big one
-			HANDLE hFile = ::CreateFile(newfilename.Left(newfilename.GetLength() - 4),	// file to open
-				GENERIC_WRITE,			// open for reading
-				FILE_SHARE_READ,		// share for reading
-				NULL,					// default security
-				CREATE_NEW,				// existing file only
-				FILE_ATTRIBUTE_NORMAL,	// normal file
-				NULL);					// no attr. template
+			HANDLE hFile = ::CreateFile(newfilename.Left(newfilename.GetLength() - 4)	// file to open
+				, GENERIC_WRITE			// open for reading
+				, FILE_SHARE_READ		// share for reading
+				, NULL					// default security
+				, CREATE_NEW			// existing file only
+				, FILE_ATTRIBUTE_NORMAL	// normal file
+				, NULL);				// no attr. template
 
 			ret = (hFile != INVALID_HANDLE_VALUE);
 
@@ -343,7 +339,7 @@ int CPartFileConvert::performConvertToeMule(const CString &folder)
 		}
 	}
 
-	UpdateGUI(94, GetResString(IDS_IMP_GETPFINFO));
+	UpdateGUI(94.0f, GetResString(IDS_IMP_GETPFINFO));
 
 	::DeleteFile(newfilename);
 	if (pfconverting->removeSource)
@@ -353,8 +349,7 @@ int CPartFileConvert::performConvertToeMule(const CString &folder)
 
 	// clean up
 	file->GetFileIdentifier().DeleteMD4Hashset();
-	while (!file->m_gaplist.IsEmpty())
-		delete file->m_gaplist.RemoveHead();
+	file->m_gaplist.RemoveAll();
 	file->ClearTags();
 	// reload from part.met file
 	if (file->LoadPartFile(thePrefs.GetTempDir(), file->GetPartMetFileName()) != PLR_LOADSUCCESS) {
@@ -368,7 +363,7 @@ int CPartFileConvert::performConvertToeMule(const CString &folder)
 		file->m_uCorruptionLoss = 0;
 	}
 
-	UpdateGUI(100, GetResString(IDS_IMP_ADDDWL));
+	UpdateGUI(100.0f, GetResString(IDS_IMP_ADDDWL));
 
 	theApp.downloadqueue->AddDownload(file, thePrefs.AddNewFilesPaused());
 	file->SavePartFile();
@@ -376,11 +371,9 @@ int CPartFileConvert::performConvertToeMule(const CString &folder)
 	if (file->GetStatus(true) == PS_READY)
 		theApp.sharedfiles->SafeAddKFile(file); // part files are always shared files
 
-
 	if (pfconverting->removeSource) {
-		BOOL bWorking = finder.FindFile(sDir + filepartindex + _T(".*"));
-		while (bWorking) {
-			bWorking = finder.FindNextFile();
+		for (BOOL bFound = finder.FindFile(sDir + filepartindex + _T(".*")); bFound;) {
+			bFound = finder.FindNextFile();
 			VERIFY(_tunlink(finder.GetFilePath()) == 0);
 		}
 
@@ -437,18 +430,18 @@ void CPartFileConvert::ShowGUI()
 
 		m_convertgui->SetIcon(m_convertgui->m_icoWnd = theApp.LoadIcon(_T("Convert")), FALSE);
 
-		// init gui
+		// init GUI
 		m_convertgui->pb_current.SetRange(0, 100);
 		m_convertgui->joblist.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
 		if (!pfconverting == NULL) {
 			UpdateGUI(pfconverting);
-			UpdateGUI(50, GetResString(IDS_IMP_FETCHSTATUS), true);
+			UpdateGUI(50.0f, GetResString(IDS_IMP_FETCHSTATUS), true);
 		}
 
 		Localize();
 
-		// fill joblist
+		// fill job list
 		for (POSITION pos = m_jobs.GetHeadPosition(); pos != NULL;) {
 			ConvertJob *job = m_jobs.GetNext(pos);
 			m_convertgui->AddJob(job);
@@ -470,7 +463,7 @@ void CPartFileConvert::Localize()
 	m_convertgui->joblist.InsertColumn(2, GetResString(IDS_DL_SIZE), LVCFMT_LEFT, DFLT_SIZE_COL_WIDTH);
 	m_convertgui->joblist.InsertColumn(3, GetResString(IDS_FILEHASH), LVCFMT_LEFT, DFLT_HASH_COL_WIDTH);
 
-	// set gui labels
+	// set GUI labels
 	m_convertgui->SetDlgItemText(IDC_ADDITEM, GetResString(IDS_IMP_ADDBTN));
 	m_convertgui->SetDlgItemText(IDC_RETRY, GetResString(IDS_IMP_RETRYBTN));
 	m_convertgui->SetDlgItemText(IDC_CONVREMOVE, GetResString(IDS_IMP_REMOVEBTN));

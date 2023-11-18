@@ -1,6 +1,6 @@
 /*
-Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
-Copyright (C)2007-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
+Copyright (C)2007-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -30,7 +30,7 @@ There is going to be a new forum created just for the Kademlia side of the clien
 If you feel there is an error or a way to improve something, please
 post it in the forum first and let us look at it. If it is a real improvement,
 it will be added to the official client. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form.
+what all it does, can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 their client on the eMule forum.
 */
@@ -82,9 +82,9 @@ CRoutingZone::CRoutingZone()
 {
 	// Can only create routing zone after prefs
 	// Set our KadID for creating the contact tree
-	CKademlia::GetPrefs()->GetKadID(&uMe);
-	// Set the preference file name.
-	m_sFilename = thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("nodes.dat");
+	CKademlia::GetPrefs()->GetKadID(uMe);
+	// Set the nodes file name.
+	m_sFilename.Format(_T("%s") _T("nodes.dat"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
 	// Init our root node.
 	Init(NULL, 0, CUInt128(0ul));
 }
@@ -93,7 +93,7 @@ CRoutingZone::CRoutingZone(LPCSTR szFilename)
 {
 	// Can only create routing zone after prefs
 	// Set our KadID for creating the contact tree
-	CKademlia::GetPrefs()->GetKadID(&uMe);
+	CKademlia::GetPrefs()->GetKadID(uMe);
 	m_sFilename = szFilename;
 	// Init our root node.
 	Init(NULL, 0, CUInt128(0ul));
@@ -172,7 +172,7 @@ void CRoutingZone::ReadFile(const CString &strSpecialNodesdate)
 		CSafeBufferedFile file;
 		CFileException fexp;
 		if (file.Open(strSpecialNodesdate.IsEmpty() ? m_sFilename : strSpecialNodesdate, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-			setvbuf(file.m_pStream, NULL, _IOFBF, 32768);
+			::setvbuf(file.m_pStream, NULL, _IOFBF, 32768);
 
 			// Get how many contacts in the saved list.
 			// NOTE: Older clients put the number of contacts here.
@@ -204,7 +204,7 @@ void CRoutingZone::ReadFile(const CString &strSpecialNodesdate)
 				uint32 uValidContacts = 0;
 				CUInt128 uID;
 				while (uNumContacts--) {
-					file.ReadUInt128(&uID);
+					file.ReadUInt128(uID);
 					uint32 uIP = file.ReadUInt32();
 					uint16 uUDPPort = file.ReadUInt16();
 					uint16 uTCPPort = file.ReadUInt16();
@@ -277,7 +277,7 @@ void CRoutingZone::ReadBootstrapNodesDat(CFileDataIO &file)
 		uint32 uValidContacts = 0;
 		CUInt128 uID;
 		while (uNumContacts--) {
-			file.ReadUInt128(&uID);
+			file.ReadUInt128(uID);
 			uint32 uIP = file.ReadUInt32();
 			uint16 uUDPPort = file.ReadUInt16();
 			uint16 uTCPPort = file.ReadUInt16();
@@ -292,13 +292,14 @@ void CRoutingZone::ReadBootstrapNodesDat(CFileDataIO &file)
 					if (thePrefs.GetLogFilteredIPs())
 						AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u)--read known.dat"), (LPCTSTR)ipstr(uhostIP), uUDPPort);
 				} else if (uContactVersion > 1) { // only kad2 nodes
-					// we want the 50 nodes closest to our own ID (provides randomness between different users and gets has good chances to get a bootstrap with close Nodes which is a nice start for our routing table)
+					// we want 50 nodes closest to our own ID (provides randomness between different users and
+					// gives good chances to bootstrap with close Nodes as a nice start for our routing table)
 					CUInt128 uDistance = uMe;
 					uDistance.Xor(uID);
 					++uValidContacts;
 					// don't bother if we already have 50 and the farthest distance is smaller than this contact
 					if (CKademlia::s_liBootstrapList.GetCount() < 50 || CKademlia::s_liBootstrapList.GetTail()->GetDistance() > uDistance) {
-						// look were to put this contact into the proper position
+						// look for the proper position where to insert this contact
 						bool bInserted = false;
 						CContact *pContact = new CContact(uID, uIP, uUDPPort, uTCPPort, uMe, uContactVersion, CKadUDPKey(), false);
 						pContact->SetBootstrapContact();
@@ -346,28 +347,28 @@ void CRoutingZone::WriteFile()
 		CSafeBufferedFile file;
 		CFileException fexp;
 		if (file.Open(m_sFilename, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-			setvbuf(file.m_pStream, NULL, _IOFBF, 32768);
+			::setvbuf(file.m_pStream, NULL, _IOFBF, 32768);
 
 			// The bootstrap method gets a very nice sample of contacts to save.
-			ContactList listContacts;
-			GetBootstrapContacts(&listContacts, 200);
+			ContactArray listContacts;
+			GetBootstrapContacts(listContacts, 200);
 			// Start file with 0 to prevent older clients from reading it.
 			file.WriteUInt32(0);
 			// Now tag it with a version which happens to be 2 (1 till 0.48a).
 			file.WriteUInt32(2);
 			// file.WriteUInt32(0) // if we would use version >=3, this would mean that this is a normal nodes.dat
 			file.WriteUInt32((uint32)listContacts.size());
-			for (ContactList::const_iterator itContactList = listContacts.begin(); itContactList != listContacts.end(); ++itContactList) {
+			for (ContactArray::const_iterator itContact = listContacts.begin(); itContact != listContacts.end(); ++itContact) {
 				CUInt128 uID;
-				const CContact *pContact = *itContactList;
-				pContact->GetClientID(&uID);
-				file.WriteUInt128(&uID);
-				file.WriteUInt32(pContact->GetIPAddress());
-				file.WriteUInt16(pContact->GetUDPPort());
-				file.WriteUInt16(pContact->GetTCPPort());
-				file.WriteUInt8(pContact->GetVersion());
-				pContact->GetUDPKey().StoreToFile(file);
-				file.WriteUInt8(static_cast<uint8>(pContact->IsIpVerified()));
+				const CContact &rContact(**itContact);
+				rContact.GetClientID(uID);
+				file.WriteUInt128(uID);
+				file.WriteUInt32(rContact.GetIPAddress());
+				file.WriteUInt16(rContact.GetUDPPort());
+				file.WriteUInt16(rContact.GetTCPPort());
+				file.WriteUInt8(rContact.GetVersion());
+				rContact.GetUDPKey().StoreToFile(file);
+				file.WriteUInt8(static_cast<uint8>(rContact.IsIpVerified()));
 			}
 			file.Close();
 			AddDebugLogLine(false, _T("Wrote %ld contact%s to file."), listContacts.size(), ((listContacts.size() == 1) ? _T("") : _T("s")));
@@ -389,16 +390,16 @@ void CRoutingZone::DbgWriteBootstrapFile()
 		CSafeBufferedFile file;
 		CFileException fexp;
 		if (file.Open(m_sFilename, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-			setvbuf(file.m_pStream, NULL, _IOFBF, 32768);
+			::setvbuf(file.m_pStream, NULL, _IOFBF, 32768);
 
 			// The bootstrap method gets a very nice sample of contacts to save.
 			ContactMap mapContacts;
 			CUInt128 uRandom(CUInt128(0ul), 0);
 			CUInt128 uDistance = uRandom;
 			uDistance.Xor(uMe);
-			GetClosestTo(2, uRandom, uDistance, 1200, &mapContacts, false, false);
+			GetClosestTo(2, uRandom, uDistance, 1200, mapContacts, false, false);
 			// filter out Kad1 nodes
-			for (ContactMap::const_iterator itContactMap = mapContacts.begin(); itContactMap != mapContacts.end(); ) {
+			for (ContactMap::const_iterator itContactMap = mapContacts.begin(); itContactMap != mapContacts.end();) {
 				ContactMap::const_iterator itCurContactMap = itContactMap++;
 				const CContact *pContact = itCurContactMap->second;
 				if (pContact->GetVersion() <= 1)
@@ -412,8 +413,8 @@ void CRoutingZone::DbgWriteBootstrapFile()
 			file.WriteUInt32((uint32)mapContacts.size());
 			for (ContactMap::const_iterator itContactMap = mapContacts.begin(); itContactMap != mapContacts.end(); ++itContactMap) {
 				const CContact *pContact = itContactMap->second;
-				pContact->GetClientID(&uID);
-				file.WriteUInt128(&uID);
+				pContact->GetClientID(uID);
+				file.WriteUInt128(uID);
 				file.WriteUInt32(pContact->GetIPAddress());
 				file.WriteUInt16(pContact->GetUDPPort());
 				file.WriteUInt16(pContact->GetTCPPort());
@@ -567,7 +568,7 @@ bool CRoutingZone::Add(CContact *pContact, bool &bUpdate, bool &bOutIPVerified)
 		bUpdate = false;
 		// This bin is not full, so add the new contact.
 		if (m_pBin->AddContact(pContact)) {
-			// Add was successful, add to the GUI and let contact know it's listed in the gui.
+			// Add was successful, add to the GUI and let the contact know it's listed in the GUI.
 			if (theApp.emuledlg->kademliawnd->ContactAdd(pContact))
 				pContact->SetGuiRefs(true);
 			return true;
@@ -590,7 +591,7 @@ CContact* CRoutingZone::GetContact(const CUInt128 &uID) const
 		return m_pBin->GetContact(uID);
 
 	CUInt128 uDistance;
-	CKademlia::GetPrefs()->GetKadID(&uDistance);
+	CKademlia::GetPrefs()->GetKadID(uDistance);
 	uDistance.Xor(uID);
 	return m_pSubZones[uDistance.GetBitNumber(m_uLevel)]->GetContact(uID);
 }
@@ -609,63 +610,61 @@ CContact* CRoutingZone::GetRandomContact(uint32 nMaxType, uint32 nMinKadVersion)
 	if (IsLeaf())
 		return m_pBin->GetRandomContact(nMaxType, nMinKadVersion);
 
-	uint32 nZone = GetRandomUInt16() % 2;
+	uint32 nZone = rand() & 1;
 	CContact *pContact = m_pSubZones[nZone]->GetRandomContact(nMaxType, nMinKadVersion);
 	return (pContact != NULL) ? pContact : m_pSubZones[static_cast<int>(nZone != 1)]->GetRandomContact(nMaxType, nMinKadVersion);
 }
 
-void CRoutingZone::GetClosestTo(uint32 uMaxType, const CUInt128 &uTarget, const CUInt128 &uDistance, uint32 uMaxRequired, ContactMap *pmapResult, bool bEmptyFirst, bool bInUse) const
+void CRoutingZone::GetClosestTo(uint32 uMaxType, const CUInt128 &uTarget, const CUInt128 &uDistance, uint32 uMaxRequired, ContactMap &rmapResult, bool bEmptyFirst, bool bInUse) const
 {
 	// If leaf zone, do it here
 	if (IsLeaf()) {
-		m_pBin->GetClosestTo(uMaxType, uTarget, uMaxRequired, pmapResult, bEmptyFirst, bInUse);
+		m_pBin->GetClosestTo(uMaxType, uTarget, uMaxRequired, rmapResult, bEmptyFirst, bInUse);
 		return;
 	}
 
 	// otherwise, recurse in the closer-to-the-target subzone first
 	int iCloser = uDistance.GetBitNumber(m_uLevel);
-	m_pSubZones[iCloser]->GetClosestTo(uMaxType, uTarget, uDistance, uMaxRequired, pmapResult, bEmptyFirst, bInUse);
+	m_pSubZones[iCloser]->GetClosestTo(uMaxType, uTarget, uDistance, uMaxRequired, rmapResult, bEmptyFirst, bInUse);
 
 	// if still not enough tokens found, recurse in the other subzone too
-	if (pmapResult->size() < uMaxRequired)
-		m_pSubZones[1 - iCloser]->GetClosestTo(uMaxType, uTarget, uDistance, uMaxRequired, pmapResult, false, bInUse);
+	if (rmapResult.size() < uMaxRequired)
+		m_pSubZones[1 - iCloser]->GetClosestTo(uMaxType, uTarget, uDistance, uMaxRequired, rmapResult, false, bInUse);
 }
 
-void CRoutingZone::GetAllEntries(ContactList *plistResult, bool bEmptyFirst)
+void CRoutingZone::GetAllEntries(ContactArray &listResult, bool bEmptyFirst)
 {
 	if (IsLeaf())
-		m_pBin->GetEntries(plistResult, bEmptyFirst);
+		m_pBin->GetEntries(listResult, bEmptyFirst);
 	else {
-		m_pSubZones[0]->GetAllEntries(plistResult, bEmptyFirst);
-		m_pSubZones[1]->GetAllEntries(plistResult, false);
+		m_pSubZones[0]->GetAllEntries(listResult, bEmptyFirst);
+		m_pSubZones[1]->GetAllEntries(listResult, false);
 	}
 }
 
-void CRoutingZone::TopDepth(int iDepth, ContactList *plistResult, bool bEmptyFirst)
+void CRoutingZone::TopDepth(int iDepth, ContactArray &listResult, bool bEmptyFirst)
 {
 	if (IsLeaf())
-		m_pBin->GetEntries(plistResult, bEmptyFirst);
+		m_pBin->GetEntries(listResult, bEmptyFirst);
 	else if (iDepth <= 0)
-		RandomBin(plistResult, bEmptyFirst);
+		RandomBin(listResult, bEmptyFirst);
 	else {
-		m_pSubZones[0]->TopDepth(iDepth - 1, plistResult, bEmptyFirst);
-		m_pSubZones[1]->TopDepth(iDepth - 1, plistResult, false);
+		m_pSubZones[0]->TopDepth(iDepth - 1, listResult, bEmptyFirst);
+		m_pSubZones[1]->TopDepth(iDepth - 1, listResult, false);
 	}
 }
 
-void CRoutingZone::RandomBin(ContactList *plistResult, bool bEmptyFirst)
+void CRoutingZone::RandomBin(ContactArray &listResult, bool bEmptyFirst)
 {
 	if (IsLeaf())
-		m_pBin->GetEntries(plistResult, bEmptyFirst);
+		m_pBin->GetEntries(listResult, bEmptyFirst);
 	else
-		m_pSubZones[rand() & 1]->RandomBin(plistResult, bEmptyFirst);
+		m_pSubZones[rand() & 1]->RandomBin(listResult, bEmptyFirst);
 }
 
 uint32 CRoutingZone::GetMaxDepth() const
 {
-	if (IsLeaf())
-		return 0;
-	return 1 + max(m_pSubZones[0]->GetMaxDepth(), m_pSubZones[1]->GetMaxDepth());
+	return IsLeaf() ? 0 : 1 + max(m_pSubZones[0]->GetMaxDepth(), m_pSubZones[1]->GetMaxDepth());
 }
 
 void CRoutingZone::Split()
@@ -675,16 +674,16 @@ void CRoutingZone::Split()
 	m_pSubZones[0] = GenSubZone(0);
 	m_pSubZones[1] = GenSubZone(1);
 
-	ContactList listEntries;
-	m_pBin->GetEntries(&listEntries);
+	ContactArray listEntries;
+	m_pBin->GetEntries(listEntries);
 	m_pBin->m_bDontDeleteContacts = true;
 	delete m_pBin;
 	m_pBin = NULL;
 
-	for (ContactList::const_iterator itContactList = listEntries.begin(); itContactList != listEntries.end(); ++itContactList) {
-		int iSuperZone = (*itContactList)->m_uDistance.GetBitNumber(m_uLevel);
-		if (!m_pSubZones[iSuperZone]->m_pBin->AddContact(*itContactList))
-			delete *itContactList;
+	for (ContactArray::const_iterator itContact = listEntries.begin(); itContact != listEntries.end(); ++itContact) {
+		int iSuperZone = (*itContact)->m_uDistance.GetBitNumber(m_uLevel);
+		if (!m_pSubZones[iSuperZone]->m_pBin->AddContact(*itContact))
+			delete *itContact;
 	}
 }
 
@@ -703,10 +702,10 @@ uint32 CRoutingZone::Consolidate()
 		m_pSubZones[0]->StopTimer();
 		m_pSubZones[1]->StopTimer();
 
-		ContactList list0;
-		ContactList list1;
-		m_pSubZones[0]->m_pBin->GetEntries(&list0);
-		m_pSubZones[1]->m_pBin->GetEntries(&list1);
+		ContactArray list0;
+		ContactArray list1;
+		m_pSubZones[0]->m_pBin->GetEntries(list0);
+		m_pSubZones[1]->m_pBin->GetEntries(list1);
 
 		m_pSubZones[0]->m_pBin->m_bDontDeleteContacts = true;
 		m_pSubZones[1]->m_pBin->m_bDontDeleteContacts = true;
@@ -715,13 +714,13 @@ uint32 CRoutingZone::Consolidate()
 		m_pSubZones[0] = NULL;
 		m_pSubZones[1] = NULL;
 
-		for (ContactList::const_iterator itContactList = list0.begin(); itContactList != list0.end(); ++itContactList)
-			if (!m_pBin->AddContact(*itContactList))
-				delete *itContactList;
+		for (ContactArray::const_iterator itContact = list0.begin(); itContact != list0.end(); ++itContact)
+			if (!m_pBin->AddContact(*itContact))
+				delete *itContact;
 
-		for (ContactList::const_iterator itContactList = list1.begin(); itContactList != list1.end(); ++itContactList)
-			if (!m_pBin->AddContact(*itContactList))
-				delete *itContactList;
+		for (ContactArray::const_iterator itContact = list1.begin(); itContact != list1.end(); ++itContact)
+			if (!m_pBin->AddContact(*itContact))
+				delete *itContact;
 
 		StartTimer();
 		++uMergeCount;
@@ -776,7 +775,7 @@ uint32 CRoutingZone::EstimateCount()
 		return (uint32)(pow(2.0F, (int)m_uLevel)*K);
 	CRoutingZone *pCurZone = m_pSuperZone->m_pSuperZone->m_pSuperZone;
 	// Find out how full this part of the tree is.
-	float fModify = pCurZone->GetNumContacts() / (K*2.0f);
+	float fModify = pCurZone->GetNumContacts() / (K * 2.0f);
 	// First calculate users assuming the tree is full.
 	// Modify count by bin size.
 	// Modify count by how full the tree is.
@@ -802,7 +801,7 @@ uint32 CRoutingZone::EstimateCount()
 		fFirewalledModifyTotal = fFirewalledModifyOld;
 	ASSERT(fFirewalledModifyTotal > 1.0F && fFirewalledModifyTotal < 1.90F);
 
-	return (uint32)(pow(2.0F, (int)m_uLevel - 2)*K*fModify*fFirewalledModifyTotal);
+	return (uint32)(pow(2.0F, (int)m_uLevel - 2) * K * fModify * fFirewalledModifyTotal);
 }
 
 void CRoutingZone::OnSmallTimer()
@@ -812,11 +811,11 @@ void CRoutingZone::OnSmallTimer()
 
 	CContact *pContact = NULL;
 	time_t tNow = time(NULL);
-	ContactList listEntries;
+	ContactArray listEntries;
 	// Remove dead entries
-	m_pBin->GetEntries(&listEntries);
-	for (ContactList::const_iterator itContactList = listEntries.begin(); itContactList != listEntries.end(); ++itContactList) {
-		pContact = *itContactList;
+	m_pBin->GetEntries(listEntries);
+	for (ContactArray::const_iterator itContact = listEntries.begin(); itContact != listEntries.end(); ++itContact) {
+		pContact = *itContact;
 		if (pContact->GetType() == 4) {
 			if (((pContact->m_tExpires > 0) && (pContact->m_tExpires <= tNow))) {
 				if (!pContact->InUse()) {
@@ -845,11 +844,12 @@ void CRoutingZone::OnSmallTimer()
 			CKademlia::GetUDPListener()->SendMyDetails(KADEMLIA2_HELLO_REQ, pContact->GetIPAddress(), pContact->GetUDPPort(), pContact->GetVersion(), pContact->GetUDPKey(), &uClientID, false);
 			if (pContact->GetVersion() >= KADEMLIA_VERSION8_49b) {
 				// FIXME:
-				// This is a bit of a work around for statistic values. Normally we only count values from incoming HELLO_REQs for
-				// the firewalled statistics in order to get numbers from nodes which have us on their routing table,
-				// however if we send a HELLO due to the timer, the remote node won't send a HELLO_REQ itself any more (but
-				// a HELLO_RES which we don't count), so count those statistics here. This isn't really accurate, but it should
-				// do fair enough. Maybe improve it later for example by putting a flag into the contact and make the answer count
+				// This is a bit of a work around for statistic values. Normally we only count values from
+				// incoming HELLO_REQs for the firewalled statistics in order to get numbers from nodes
+				// which have us on their routing table, however if we send a HELLO due to the timer,
+				// the remote node won't send a HELLO_REQ itself any more (but a HELLO_RES which we don't count),
+				// so count those statistics here. This isn't really accurate, but it should do fair enough.
+				// Maybe improve it later for example by putting a flag into the contact and make the answer count
 				CKademlia::GetPrefs()->StatsIncUDPFirewalledNodes(false);
 				CKademlia::GetPrefs()->StatsIncTCPFirewalledNodes(false);
 			}
@@ -890,17 +890,17 @@ void CRoutingZone::GetNumContacts(uint32 &nInOutContacts, uint32 &nInOutFiltered
 	}
 }
 
-uint32 CRoutingZone::GetBootstrapContacts(ContactList *plistResult, uint32 uMaxRequired)
+uint32 CRoutingZone::GetBootstrapContacts(ContactArray &rlistResult, uint32 uMaxRequired)
 {
 	ASSERT(m_pSuperZone == NULL);
-	plistResult->clear();
+	rlistResult.clear();
 	uint32 uRetVal = 0;
 	try {
-		ContactList top;
-		TopDepth(LOG_BASE_EXPONENT, &top);
+		ContactArray top;
+		TopDepth(LOG_BASE_EXPONENT, top);
 		if (!top.empty()) {
-			for (ContactList::const_iterator itContactList = top.begin(); itContactList != top.end(); ++itContactList) {
-				plistResult->push_back(*itContactList);
+			for (ContactArray::const_iterator itContact = top.begin(); itContact != top.end(); ++itContact) {
+				rlistResult.push_back(*itContact);
 				if (++uRetVal >= uMaxRequired)
 					break;
 			}

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -18,7 +18,6 @@
 #include "emule.h"
 #include "AddSourceDlg.h"
 #include "PartFile.h"
-#include "OtherFunctions.h"
 #include "UpDownClient.h"
 #include "DownloadQueue.h"
 #include <wininet.h>
@@ -91,7 +90,7 @@ BOOL CAddSourceDlg::OnInitDialog()
 
 void CAddSourceDlg::OnBnClickedRadio1()
 {
-	m_nSourceType = 0;
+	m_nSourceType = 0; //source client
 	GetDlgItem(IDC_EDIT2)->EnableWindow(true);
 	GetDlgItem(IDC_EDIT3)->EnableWindow(true);
 	GetDlgItem(IDC_EDIT10)->EnableWindow(false);
@@ -100,7 +99,7 @@ void CAddSourceDlg::OnBnClickedRadio1()
 
 void CAddSourceDlg::OnBnClickedRadio4()
 {
-	m_nSourceType = 1;
+	m_nSourceType = 1; //URL
 	GetDlgItem(IDC_EDIT2)->EnableWindow(false);
 	GetDlgItem(IDC_EDIT3)->EnableWindow(false);
 	GetDlgItem(IDC_EDIT10)->EnableWindow(true);
@@ -113,7 +112,7 @@ void CAddSourceDlg::OnBnClickedButton1()
 		return;
 
 	switch (m_nSourceType) {
-	case 0:
+	case 0: //source client
 		{
 			CString sip;
 			GetDlgItemText(IDC_EDIT2, sip);
@@ -124,10 +123,10 @@ void CAddSourceDlg::OnBnClickedButton1()
 			uint16 port;
 			int iColon = sip.Find(_T(':'));
 			if (iColon >= 0) {
-				port = (uint16)_tstoi(sip.Mid(iColon + 1));
+				port = (uint16)_tstoi(CPTR(sip, iColon + 1));
 				sip.Truncate(iColon);
 			} else {
-				BOOL bTranslated = FALSE;
+				BOOL bTranslated;
 				port = (uint16)GetDlgItemInt(IDC_EDIT3, &bTranslated, FALSE);
 				if (!bTranslated)
 					return;
@@ -140,8 +139,8 @@ void CAddSourceDlg::OnBnClickedButton1()
 				theApp.downloadqueue->CheckAndAddSource(m_pFile, toadd);
 			}
 		}
-		return;
-	case 1:
+		break;
+	case 1: //URL
 		{
 			CString strURL;
 			if (GetDlgItemText(IDC_EDIT10, strURL)) {

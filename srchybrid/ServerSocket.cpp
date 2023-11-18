@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -24,13 +24,12 @@
 #include "Server.h"
 #include "ServerList.h"
 #include "ServerConnect.h"
-#include "OtherFunctions.h"
+#include "UpDownClient.h"
 #include "Opcodes.h"
 #include "Preferences.h"
 #include "SafeFile.h"
 #include "PartFile.h"
 #include "Packets.h"
-#include "UpDownClient.h"
 #include "emuleDlg.h"
 #include "ServerWnd.h"
 #include "SearchDlg.h"
@@ -180,10 +179,9 @@ bool CServerSocket::ProcessPacket(const BYTE *packet, uint32 size, uint8 opcode)
 					bool bOutputMessage = true;
 					if (_tcsnicmp(message, _T("server version"), 14) == 0) {
 						if (pServer) {
-							// truncate string to avoid misuse by servers in showing ads
-							CString strVer(message.Mid(14).Trim().Left(64));
+							CString strVer(message.Mid(14));
 							UINT nVerMaj, nVerMin;
-							if (_stscanf(strVer, _T("%u.%u"), &nVerMaj, &nVerMin) == 2)
+							if (_stscanf(strVer.Trim(), _T("%u.%u"), &nVerMaj, &nVerMin) == 2)
 								strVer.Format(_T("%u.%02u"), nVerMaj, nVerMin);
 							pServer->SetVersion(strVer);
 							theApp.emuledlg->serverwnd->serverlistctrl.RefreshServer(pServer);
@@ -213,7 +211,7 @@ bool CServerSocket::ProcessPacket(const BYTE *packet, uint32 size, uint8 opcode)
 						iDynIP += _countof(sDynIP) - 1;
 						int iBracket = message.Find(_T(']'), iDynIP);
 						if (iBracket > 0) {
-							const CString dynip(message.Mid(iDynIP, iBracket - iDynIP).Trim());
+							const CString &dynip(message.Mid(iDynIP, iBracket - iDynIP).Trim());
 							if (!dynip.IsEmpty() && dynip.GetLength() < 51) {
 								// Verify that we really received a DN.
 								if (pServer && inet_addr((CStringA)dynip) == INADDR_NONE) {
@@ -224,7 +222,7 @@ bool CServerSocket::ProcessPacket(const BYTE *packet, uint32 size, uint8 opcode)
 									// If a dynIP-server changed its address, or if this is the
 									// first time we get the dynIP-address for a server which we
 									// already have as non-dynIP in our list, we need to remove
-									// an already available server with the same 'dynIP:port'.
+									// this server with the same 'dynIP:port'.
 									if (strOldDynIP.CompareNoCase(pServer->GetDynIP()) != 0)
 										theApp.serverlist->RemoveDuplicatesByAddress(pServer);
 									if (cur_server)
@@ -241,9 +239,9 @@ bool CServerSocket::ProcessPacket(const BYTE *packet, uint32 size, uint8 opcode)
 							m_bStartNewMessageLog = false;
 							theApp.emuledlg->AddServerMessageLine(LOG_INFO, _T(""));
 							if (cur_server) {
-								CString strMsg;
-								strMsg.Format(_T("%s: ") + GetResString(IsObfusicating() ? IDS_CONNECTEDTOOBFUSCATED : IDS_CONNECTEDTO) + _T(" (%s:%u)")
-									, (LPCTSTR)CTime::GetCurrentTime().Format(thePrefs.GetDateTimeFormat4Log())
+								CString strMsg(CTime::GetCurrentTime().Format(thePrefs.GetDateTimeFormat4Log()));
+								strMsg += _T(": ");
+								strMsg.AppendFormat(GetResString(IsObfusicating() ? IDS_CONNECTEDTOOBFUSCATED : IDS_CONNECTEDTO) + _T(" (%s:%u)")
 									, (LPCTSTR)cur_server->GetListName()
 									, cur_server->GetAddress()
 									, IsObfusicating() ? cur_server->GetObfuscationPortTCP() : cur_server->GetPort());
@@ -439,7 +437,7 @@ bool CServerSocket::ProcessPacket(const BYTE *packet, uint32 size, uint8 opcode)
 				CString strName;
 				CString strDescription;
 				for (uint32 i = 0; i < nTags; ++i) {
-					CTag tag(&data, pServer ? pServer->GetUnicodeSupport() : false);
+					CTag tag(data, pServer ? pServer->GetUnicodeSupport() : false);
 					if (tag.GetNameID() == ST_SERVERNAME) {
 						if (tag.IsStr()) {
 							strName = tag.GetStr();
@@ -521,7 +519,7 @@ bool CServerSocket::ProcessPacket(const BYTE *packet, uint32 size, uint8 opcode)
 				uint32 dwIP = PeekUInt32(packet);
 
 				if (theApp.ipfilter->IsFiltered(dwIP)) {
-					theStats.filteredclients++;
+					++theStats.filteredclients;
 					if (thePrefs.GetLogFilteredIPs())
 						AddDebugLogLine(false, _T("Ignored callback request (IP=%s) - IP filter (%s)"), (LPCTSTR)ipstr(dwIP), (LPCTSTR)theApp.ipfilter->GetLastHit());
 					break;

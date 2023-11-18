@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -15,12 +15,13 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
+#include <io.h>
 #include <sys/stat.h>
 #include <share.h>
 #include "emule.h"
-#include "Preview.h"
 #include "Preferences.h"
 #include "PartFile.h"
+#include "Preview.h"
 #include "MenuCmds.h"
 #include "opcodes.h"
 
@@ -38,11 +39,12 @@ CPreviewApps thePreviewApps;
 
 IMPLEMENT_DYNCREATE(CPreviewThread, CWinThread)
 
-BEGIN_MESSAGE_MAP(CPreviewThread, CWinThread)
-END_MESSAGE_MAP()
+//BEGIN_MESSAGE_MAP(CPreviewThread, CWinThread)
+//END_MESSAGE_MAP()
 
 CPreviewThread::CPreviewThread()
 	: m_pPartfile()
+	, m_aFilled()
 {
 }
 
@@ -55,61 +57,34 @@ BOOL CPreviewThread::InitInstance()
 
 BOOL CPreviewThread::Run()
 {
-	ASSERT(m_pPartfile);
-	CFile srcFile;
-	if (!srcFile.Open(m_pPartfile->GetFilePath(), CFile::modeRead | CFile::shareDenyNone))
-		return FALSE;
 	try {
-		uint64 nSize = m_pPartfile->GetFileSize();
-		const CString strExtension(_tcsrchr(m_pPartfile->GetFileName(), _T('.')));
-		CString strPreviewName;
-		strPreviewName.Format(_T("%s%s_preview%s"), (LPCTSTR)m_pPartfile->GetTempPath(), (LPCTSTR)m_pPartfile->GetFileName().Left(5), (LPCTSTR)strExtension);
-		bool bFullSized = (strExtension.CompareNoCase(_T(".mpg")) && strExtension.CompareNoCase(_T(".mpeg")));
-		CFile destFile;
-		if (!destFile.Open(strPreviewName, CFile::modeWrite | CFile::shareDenyWrite | CFile::modeCreate))
+		const CString srcName(m_pPartfile->GetFileName());
+		LPCTSTR const pExt = _tcsrchr(srcName, _T('.'));
+		CString strPreviewName(m_pPartfile->GetTmpPath());
+		strPreviewName.AppendFormat(_T("%s_preview%s"), (LPCTSTR)srcName.Left(5), (pExt ? pExt : _T("")));
+		strPreviewName.Format(_T("%s%s-rec.tmp"), (LPCTSTR)m_pPartfile->GetTmpPath(), (LPCTSTR)m_pPartfile->GetFileName().Left(5));
+
+		bool bRet = m_pPartfile->CopyPartFile(m_aFilled, strPreviewName);
+		m_aFilled.RemoveAll();
+		if (!bRet)
 			return FALSE;
-		srcFile.SeekToBegin();
-		if (bFullSized)
-			destFile.SetLength(nSize);
-		destFile.SeekToBegin();
-		BYTE abyBuffer[4096];
-		uint32 nRead;
-		while (destFile.GetPosition() + (sizeof abyBuffer) < PARTSIZE * 2) {
-			nRead = srcFile.Read(abyBuffer, sizeof abyBuffer);
-			destFile.Write(abyBuffer, nRead);
-		}
-		srcFile.Seek(-(LONGLONG)(PARTSIZE * 2), CFile::end);
-		uint32 nToGo = PARTSIZE * 2;
-		if (bFullSized)
-			destFile.Seek(-(LONGLONG)(PARTSIZE * 2), CFile::end);
-		do {
-			nRead = (nToGo - (sizeof abyBuffer) < 1) ? nToGo : sizeof abyBuffer;
-			nToGo -= nRead;
-			nRead = srcFile.Read(abyBuffer, sizeof abyBuffer);
-			destFile.Write(abyBuffer, nRead);
-		} while (nToGo);
-		destFile.Close();
-		srcFile.Close();
-		m_pPartfile->m_bPreviewing = false;
 
 		SHELLEXECUTEINFO SE = {};
+		SE.cbSize = (DWORD)sizeof SE;
 		SE.fMask = SEE_MASK_NOCLOSEPROCESS;
+		SE.nShow = SW_SHOW;
 
 		if (m_strCommand.IsEmpty()) {
-			SE.lpVerb = NULL;	// use the default verb or the open verb for the document
+			// use the default verb for the document
 			SE.lpFile = strPreviewName;
+			ShellExecuteEx(&SE);
 		} else {
 			SE.lpVerb = _T("open");	// "open" the specified video player
 
 			// get directory of video player application
-			CString strCommandDir = m_strCommand;
+			CString strCommandDir(m_strCommand);
 			int iPos = strCommandDir.ReverseFind(_T('\\'));
-			if (iPos < 0)
-				strCommandDir.Empty();
-			else
-				strCommandDir.Truncate(iPos + 1);
-			PathRemoveBackslash(strCommandDir.GetBuffer());
-			strCommandDir.ReleaseBuffer();
+			strCommandDir.Truncate(iPos + 1); //may be empty
 
 			CString strArgs(m_strCommandArgs);
 			if (!strArgs.IsEmpty())
@@ -119,17 +94,15 @@ BOOL CPreviewThread::Run()
 			else
 				strArgs += strPreviewName;
 
-			CString strCommand = m_strCommand;
+			CString strCommand(m_strCommand);
 			ExpandEnvironmentStrings(strCommand);
 			ExpandEnvironmentStrings(strArgs);
 			ExpandEnvironmentStrings(strCommandDir);
 			SE.lpFile = strCommand;
 			SE.lpParameters = strArgs;
 			SE.lpDirectory = strCommandDir;
+			ShellExecuteEx(&SE);
 		}
-		SE.nShow = SW_SHOW;
-		SE.cbSize = (DWORD)sizeof SE;
-		ShellExecuteEx(&SE);
 		if (SE.hProcess) {
 			::WaitForSingleObject(SE.hProcess, INFINITE);
 			::CloseHandle(SE.hProcess);
@@ -145,6 +118,7 @@ BOOL CPreviewThread::Run()
 void CPreviewThread::SetValues(CPartFile *pPartFile, LPCTSTR pszCommand, LPCTSTR pszCommandArgs)
 {
 	m_pPartfile = pPartFile;
+	pPartFile->GetFilledArray(m_aFilled);
 	m_strCommand = pszCommand;
 	m_strCommandArgs = pszCommandArgs;
 }
@@ -197,7 +171,7 @@ INT_PTR CPreviewApps::ReadAllApps()
 				if (strCommand.Trim().IsEmpty())
 					continue;
 
-				LPCTSTR pszCommandArgs = PathGetArgs((LPCTSTR)strCommand);
+				LPCTSTR pszCommandArgs = ::PathGetArgs((LPCTSTR)strCommand);
 				if (pszCommandArgs)
 					strCommand.Truncate((int)(pszCommandArgs - (LPCTSTR)strCommand));
 				if (strCommand.Trim(_T(" \t\"")).IsEmpty())
@@ -236,11 +210,12 @@ INT_PTR CPreviewApps::ReadAllApps()
 				m_aApps.Add(svc);
 			}
 		}
+		struct _stat64 st;
+		if (statUTC((HANDLE)_get_osfhandle(_fileno(readFile)), st) == 0)
+			m_tDefAppsFileLastModified = (time_t)st.st_mtime;
+
 		fclose(readFile);
 
-		struct _stat64 st;
-		if (statUTC(strFilePath, st) == 0)
-			m_tDefAppsFileLastModified = (time_t)st.st_mtime;
 	}
 
 	return m_aApps.GetCount();
@@ -277,12 +252,7 @@ void ExecutePartFile(CPartFile *file, LPCTSTR pszCommand, LPCTSTR pszCommandArgs
 	// get directory of video player application
 	CString strCommandDir(pszCommand);
 	int iPos = strCommandDir.ReverseFind(_T('\\'));
-	if (iPos < 0)
-		strCommandDir.Empty();
-	else
-		strCommandDir.Truncate(iPos + 1);
-	PathRemoveBackslash(strCommandDir.GetBuffer());
-	strCommandDir.ReleaseBuffer();
+	strCommandDir.Truncate(iPos + 1); //may be empty
 
 	CString strArgs(pszCommandArgs);
 	if (!strArgs.IsEmpty())
@@ -349,7 +319,7 @@ void ExecutePartFile(CPartFile *file, LPCTSTR pszCommand, LPCTSTR pszCommandArgs
 
 int CPreviewApps::GetPreviewApp(const CPartFile *file)
 {
-	LPCTSTR pszExt = PathFindExtension(file->GetFileName());
+	LPCTSTR pszExt = ::PathFindExtension(file->GetFileName());
 	if (*pszExt) {
 		UpdateApps();
 		for (INT_PTR i = m_aApps.GetCount(); --i >= 0;) {
@@ -368,15 +338,12 @@ CPreviewApps::ECanPreviewRes CPreviewApps::CanPreview(const CPartFile *file)
 	if (iApp == -1)
 		return NotHandled;
 
-	const SPreviewApp *pApp = &m_aApps[iApp];
-	if (pApp->ullMinCompletedSize != 0) {
-		if (file->GetCompletedSize() < pApp->ullMinCompletedSize)
-			return No;
-	}
+	const SPreviewApp &rApp = m_aApps[iApp];
+	if ((uint64)file->GetCompletedSize() < rApp.ullMinCompletedSize)
+		return No;
 
-	if (pApp->ullMinStartOfFile != 0)
-		if (!file->IsComplete(0, pApp->ullMinStartOfFile, false))
-			return No;
+	if (rApp.ullMinStartOfFile &&!file->IsComplete(0, min(rApp.ullMinStartOfFile, (uint64)file->GetFileSize()) - 1))
+		return No;
 
 	return Yes;
 }
@@ -384,7 +351,7 @@ CPreviewApps::ECanPreviewRes CPreviewApps::CanPreview(const CPartFile *file)
 bool CPreviewApps::Preview(CPartFile *file)
 {
 	int iApp = GetPreviewApp(file);
-	if (iApp == -1)
+	if (iApp < 0)
 		return false;
 	RunApp(file, MP_PREVIEW_APP_MIN + iApp);
 	return true;

@@ -418,7 +418,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Globalt (server)"
     IDS_METHOD              "Metod"
     IDS_UNDO                "Ångra"
-    IDS_DAYLY               "Dagligen"
+    IDS_DAILY               "Dagligen"
 END
 
 STRINGTABLE
@@ -1442,7 +1442,7 @@ BEGIN
     IDS_EM_HELP             "&Hjälp"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Kompisen blev inte tillagd.\r\n\r\nDet finns redan en kompis med samma IP-adress och port."
-    IDS_DYNUP               "Uppladdning SpeedSense"
+    IDS_DYNUP               "Uppladdning SpeedSense (inte rekommenderat)"
     IDS_KADOVERHEAD         "Kad overhead (paket): %s (%s)"
     IDS_FIND                "Hitta..."
     IDS_LOG_BANNED_CLIENTS  "Logga bannade klienter"

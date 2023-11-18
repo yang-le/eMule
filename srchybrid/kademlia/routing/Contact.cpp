@@ -1,5 +1,5 @@
 /*
-Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
+Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -29,7 +29,7 @@ There is going to be a new forum created just for the Kademlia side of the clien
 If you feel there is an error or a way to improve something, please
 post it in the forum first and let us look at it. If it is a real improvement,
 it will be added to the official client. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form.
+what all it does, can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 their client on the eMule forum.
 */
@@ -79,7 +79,7 @@ CContact::CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint1
 	, m_uVersion(uVersion)
 	, m_bIPVerified(bIPVerified)
 {
-	CKademlia::GetPrefs()->GetKadID(&m_uDistance);
+	CKademlia::GetPrefs()->GetKadID(m_uDistance);
 	m_uDistance.Xor(uClientID);
 	InitContact();
 }
@@ -132,31 +132,31 @@ void CContact::InitContact()
 	m_bBootstrapContact = false;
 }
 
-void CContact::GetClientID(CUInt128 *puId) const
+void CContact::GetClientID(CUInt128 &uId) const
 {
-	puId->SetValue(m_uClientID);
+	uId.SetValue(m_uClientID);
 }
 
-void CContact::GetClientID(CString *psId) const
+void CContact::GetClientID(CString &sId) const
 {
-	m_uClientID.ToHexString(psId);
+	m_uClientID.ToHexString(sId);
 }
 
 void CContact::SetClientID(const CUInt128 &uClientID)
 {
 	m_uClientID = uClientID;
-	CKademlia::GetPrefs()->GetKadID(&m_uDistance);
+	CKademlia::GetPrefs()->GetKadID(m_uDistance);
 	m_uDistance.Xor(uClientID);
 }
 
-void CContact::GetDistance(CUInt128 *puDistance) const
+void CContact::GetDistance(CUInt128 &uDistance) const
 {
-	puDistance->SetValue(m_uDistance);
+	uDistance.SetValue(m_uDistance);
 }
 
-void CContact::GetDistance(CString *psDistance) const
+void CContact::GetDistance(CString &sDistance) const
 {
-	m_uDistance.ToBinaryString(psDistance);
+	m_uDistance.ToBinaryString(sDistance);
 }
 
 CUInt128 CContact::GetDistance() const
@@ -174,9 +174,9 @@ uint32 CContact::GetNetIP() const
 	return m_uNetIp;
 }
 
-void CContact::GetIPAddress(CString *psIp) const
+void CContact::GetIPAddress(CString &sIp) const
 {
-	CMiscUtils::IPAddressToString(m_uIp, psIp);
+	CMiscUtils::IPAddressToString(m_uIp, sIp);
 }
 
 void CContact::SetIPAddress(uint32 uIp)
@@ -193,9 +193,9 @@ uint16 CContact::GetTCPPort() const
 	return m_uTcpPort;
 }
 
-void CContact::GetTCPPort(CString *psPort) const
+void CContact::GetTCPPort(CString &sPort) const
 {
-	psPort->Format(_T("%hu"), m_uTcpPort);
+	sPort.Format(_T("%hu"), m_uTcpPort);
 }
 
 void CContact::SetTCPPort(uint16 uPort)
@@ -208,9 +208,9 @@ uint16 CContact::GetUDPPort() const
 	return m_uUdpPort;
 }
 
-void CContact::GetUDPPort(CString *psPort) const
+void CContact::GetUDPPort(CString &sPort) const
 {
-	psPort->Format(_T("%hu"), m_uUdpPort);
+	sPort.Format(_T("%hu"), m_uUdpPort);
 }
 
 void CContact::SetUDPPort(uint16 uPort)

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -51,16 +51,16 @@ void CIrcNickListCtrl::Init()
 
 	LoadSettings();
 	SetSortArrow();
-	SortItems(&SortProc, GetSortItem() + (GetSortAscending() ? 0 : 10));
+	SortItems(SortProc, MAKELONG(GetSortItem(), !GetSortAscending()));
 }
 
 int CALLBACK CIrcNickListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	LPARAM iColumn = lParamSort >= 10 ? lParamSort - 10 : lParamSort;
-	if (iColumn)
+	if (LOWORD(lParamSort))
 		return 0;
 	const Nick *pItem1 = reinterpret_cast<Nick*>(lParam1);
 	const Nick *pItem2 = reinterpret_cast<Nick*>(lParam2);
+
 	if (pItem1->m_iLevel != pItem2->m_iLevel) {
 		if (pItem1->m_iLevel == -1)
 			return 1;
@@ -69,17 +69,16 @@ int CALLBACK CIrcNickListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM l
 		return pItem1->m_iLevel - pItem2->m_iLevel;
 	}
 	int iResult = pItem1->m_sNick.CompareNoCase(pItem2->m_sNick);
-	return (lParamSort >= 10) ? -iResult : iResult;
+	return HIWORD(lParamSort) ? -iResult : iResult;
 }
 
 void CIrcNickListCtrl::OnLvnColumnClick(LPNMHDR pNMHDR, LRESULT *pResult)
 {
 	const LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	bool bSortAscending = (GetSortItem() != pNMLV->iSubItem) || !GetSortAscending();
 
-	bool bSortAscending = (GetSortItem() != pNMLV->iSubItem) ? true : !GetSortAscending();
 	SetSortArrow(pNMLV->iSubItem, bSortAscending);
-	SortItems(&SortProc, pNMLV->iSubItem + (bSortAscending ? 0 : 10));
-
+	SortItems(&SortProc, MAKELONG(pNMLV->iSubItem, !bSortAscending));
 	*pResult = 0;
 }
 
@@ -116,7 +115,7 @@ void CIrcNickListCtrl::OpenPrivateChannel(const Nick *pNick)
 {
 	if (!pNick)
 		return;
-	const CString &sNick = pNick->m_sNick;
+	const CString &sNick(pNick->m_sNick);
 	if (sNick.CompareNoCase(m_pParent->m_pIrcMain->GetNick()) == 0 && !m_pParent->m_wndChanSel.FindChannelByName(sNick))
 		m_pParent->m_wndChanSel.NewChannel(sNick, Channel::ctPrivate);
 	m_pParent->AddInfoMessage(sNick, GetResString(IDS_IRC_PRIVATECHANSTART), true);
@@ -270,7 +269,7 @@ bool CIrcNickListCtrl::ChangeNick(const CString &sChannel, const CString &sOldNi
 	return false;
 }
 
-bool CIrcNickListCtrl::ChangeNickMode(const CString &sChannel, const CString &sNick, const TCHAR cDir, const TCHAR &cMode)
+bool CIrcNickListCtrl::ChangeNickMode(const CString &sChannel, const CString &sNick, const TCHAR cDir, const TCHAR cMode)
 {
 	if (sChannel[0] != _T('#') || sNick.IsEmpty())
 		return true;
@@ -314,7 +313,9 @@ bool CIrcNickListCtrl::ChangeAllNick(const CString &sOldNick, const CString &sNe
 {
 	bool bChanged = false;
 	//Change the nick in ALL channels.
-	Channel *pChannel = m_pParent->m_wndChanSel.FindChannelByName(sOldNick);
+	CIrcChannelTabCtrl& ChanSel = m_pParent->m_wndChanSel;
+	Channel *pChannel = ChanSel.FindChannelByName(sOldNick);
+
 	if (pChannel) {
 		//We had a private room opened with this nick. Update the title of the channel!
 		pChannel->m_sName = sNewNick;
@@ -322,23 +323,21 @@ bool CIrcNickListCtrl::ChangeAllNick(const CString &sOldNick, const CString &sNe
 		TCITEM item;
 		item.mask = TCIF_PARAM;
 		item.lParam = -1;
-		for (int iItem = 0; iItem < m_pParent->m_wndChanSel.GetItemCount(); ++iItem) {
-			m_pParent->m_wndChanSel.GetItem(iItem, &item);
-			if (reinterpret_cast<Channel*>(item.lParam) == pChannel) {
+		for (int iItem = ChanSel.GetItemCount(); --iItem >= 0;)
+			if (ChanSel.GetItem(iItem, &item) && reinterpret_cast<Channel*>(item.lParam) == pChannel) {
 				item.mask = TCIF_TEXT;
 				CString strTcLabel(sNewNick);
-				strTcLabel.Replace(_T("&"), _T("&&"));
+				DupAmpersand(strTcLabel);
 				item.pszText = const_cast<LPTSTR>((LPCTSTR)strTcLabel);
-				m_pParent->m_wndChanSel.SetItem(iItem, &item);
+				ChanSel.SetItem(iItem, &item);
 				bChanged = true;
 				break;
 			}
-		}
 	}
 
 	// Go through all other channel nicklists.
-	for (POSITION pos = m_pParent->m_wndChanSel.m_lstChannels.GetHeadPosition(); pos != NULL;) {
-		pChannel = m_pParent->m_wndChanSel.m_lstChannels.GetNext(pos);
+	for (POSITION pos = ChanSel.m_lstChannels.GetHeadPosition(); pos != NULL;) {
+		pChannel = ChanSel.m_lstChannels.GetNext(pos);
 		if (ChangeNick(pChannel->m_sName, sOldNick, sNewNick)) {
 			if (!thePrefs.GetIRCIgnoreMiscMessages())
 				m_pParent->AddInfoMessageF(pChannel->m_sName, GetResString(IDS_IRC_NOWKNOWNAS), (LPCTSTR)sOldNick, (LPCTSTR)sNewNick);
@@ -362,7 +361,7 @@ void CIrcNickListCtrl::UpdateNickCount()
 
 void CIrcNickListCtrl::Localize()
 {
-	CString strRes(GetResString(IDS_STATUS));
+	const CString &strRes(GetResString(IDS_STATUS));
 	HDITEM hdi;
 	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
 	hdi.mask = HDI_TEXT;
@@ -394,7 +393,7 @@ BOOL CIrcNickListCtrl::OnCommand(WPARAM wParam, LPARAM)
 	case Irc_Ban:
 		if (pNick && pChannel) {
 			CString sSend;
-//				sSend.Format(_T("cs ban %s %s"), (LPCTSTR)pChannel->m_sName, (LPCTSTR)pNick->m_sNick);
+			//sSend.Format(_T("cs ban %s %s"), (LPCTSTR)pChannel->m_sName, (LPCTSTR)pNick->m_sNick);
 			sSend.Format(_T("MODE %s +b %s"), (LPCTSTR)pChannel->m_sName, (LPCTSTR)pNick->m_sNick);
 			m_pParent->m_pIrcMain->SendString(sSend);
 		}

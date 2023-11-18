@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -71,31 +71,31 @@ public:
 	CString GetED2kLink(bool bHashset = false, bool bHTML = false, bool bHostname = false, bool bSource = false, uint32 dwSourceIP = 0) const;
 
 
-	EMFileSize		GetFileSize() const					{ return m_nFileSize; }
-	virtual void	SetFileSize(EMFileSize nFileSize)	{ m_nFileSize = nFileSize; }
-	bool			IsLargeFile() const					{ return (uint64)m_nFileSize > OLD_MAX_EMULE_FILE_SIZE; }
+	EMFileSize GetFileSize() const						{ return m_nFileSize; }
+	virtual void SetFileSize(EMFileSize nFileSize)		{ m_nFileSize = nFileSize; }
+	bool	IsLargeFile() const							{ return (uint64)m_nFileSize > OLD_MAX_EMULE_FILE_SIZE; }
 
-	uint32 GetIntTagValue(uint8 tagname) const;
-	uint32 GetIntTagValue(LPCSTR tagname) const;
-	bool GetIntTagValue(uint8 tagname, uint32 &ruValue) const;
-	uint64 GetInt64TagValue(uint8 tagname) const;
-	uint64 GetInt64TagValue(LPCSTR tagname) const;
-	bool GetInt64TagValue(uint8 tagname, uint64 &ruValue) const;
-	void SetIntTagValue(uint8 tagname, uint32 uValue);
-	void SetInt64TagValue(uint8 tagname, uint64 uValue);
+	uint32	GetIntTagValue(uint8 tagname) const;
+	uint32	GetIntTagValue(LPCSTR tagname) const;
+	bool	GetIntTagValue(uint8 tagname, uint32 &ruValue) const;
+	uint64	GetInt64TagValue(uint8 tagname) const;
+	uint64	GetInt64TagValue(LPCSTR tagname) const;
+	bool	GetInt64TagValue(uint8 tagname, uint64 &ruValue) const;
+	void	SetIntTagValue(uint8 tagname, uint32 uValue);
+	void	SetInt64TagValue(uint8 tagname, uint64 uValue);
 	const CString& GetStrTagValue(uint8 tagname) const;
 	const CString& GetStrTagValue(LPCSTR tagname) const;
-	void SetStrTagValue(uint8 tagname, LPCTSTR);
-	CTag* GetTag(uint8 tagname, uint8 tagtype) const;
-	CTag* GetTag(LPCSTR tagname, uint8 tagtype) const;
-	CTag* GetTag(uint8 tagname) const;
-	CTag* GetTag(LPCSTR tagname) const;
+	void	SetStrTagValue(uint8 tagname, LPCTSTR);
+	CTag*	GetTag(uint8 tagname, uint8 tagtype) const;
+	CTag*	GetTag(LPCSTR tagname, uint8 tagtype) const;
+	CTag*	GetTag(uint8 tagname) const;
+	CTag*	GetTag(LPCSTR tagname) const;
 	const CArray<CTag*, CTag*>& GetTags() const			{ return m_taglist; }
-	void AddTagUnique(CTag *pTag);
-	void DeleteTag(uint8 tagname);
-	void DeleteTag(CTag *pTag);
-	void ClearTags();
-	void CopyTags(const CArray<CTag*, CTag*> &tags);
+	void	AddTagUnique(CTag *pTag);
+	void	DeleteTag(uint8 tagname);
+	void	DeleteTag(CTag *pTag);
+	void	ClearTags();
+	void	CopyTags(const CArray<CTag*, CTag*> &tags);
 	virtual bool IsPartFile() const						{ return false; }
 
 	bool	HasComment() const							{ return m_bHasComment; }
@@ -107,9 +107,9 @@ public:
 	const CString &GetFileComment();
 	UINT	GetFileRating();
 	void	LoadComment();
-	virtual void	UpdateFileRatingCommentAvail(bool bForceUpdate = false) = 0;
+	virtual void UpdateFileRatingCommentAvail(bool bForceUpdate = false) = 0;
 
-	bool	AddNote(Kademlia::CEntry *pEntry);
+	bool	AddNote(const Kademlia::CEntry &cEntry);
 	void	RefilterKadNotes(bool bUpdate = true);
 	const	CKadEntryPtrList& getNotes() const			{ return m_kadNotes; }
 
@@ -123,16 +123,16 @@ public:
 #endif
 
 protected:
-	EMFileSize		m_nFileSize;
-	CFileIdentifier m_FileIdentifier;
-	CString			m_strFileName;
-	CString			m_strComment;
-	UINT	m_uRating;
-	bool	m_bCommentLoaded;
-	UINT	m_uUserRating;
-	bool	m_bHasComment;
-	bool	m_bKadCommentSearchRunning;
-	CString	m_strFileType;
 	CArray<CTag*, CTag*> m_taglist;
 	CKadEntryPtrList m_kadNotes;
+	EMFileSize m_nFileSize; //must be before m_FileIdentifier due to initialisation list order
+	CFileIdentifier m_FileIdentifier;
+	CString	m_strFileName;
+	CString	m_strComment;
+	CString	m_strFileType;
+	UINT	m_uRating;
+	UINT	m_uUserRating;
+	bool	m_bCommentLoaded;
+	bool	m_bHasComment;
+	bool	m_bKadCommentSearchRunning;
 };

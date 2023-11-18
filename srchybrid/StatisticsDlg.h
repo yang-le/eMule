@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -44,7 +44,7 @@ public:
 	// -khaos--+++> Optional force update parameter.
 	void ShowStatistics(bool forceUpdate = false);
 	// <-----khaos-
-	void SetARange(bool SetDownload, int maxValue);
+	void SetARange(bool SetDownload, uint32 maxValue);
 	void RepaintMeters();
 
 	void UpdateConnectionsGraph();
@@ -77,7 +77,7 @@ private:
 	HTREEITEM	hconn_sg, conn_sg[5], hconn_su, conn_su[4], hconn_sd, conn_sd[4]; // Connection Session Section Headers and Items
 	HTREEITEM	hconn_tg, conn_tg[4], hconn_tu, conn_tu[3], hconn_td, conn_td[3]; // Connection Total Section Headers and Items
 	HTREEITEM	h_clients, cligen[6], hclisoft, clisoft[8];
-	HTREEITEM	cli_versions[MAX_CLIENTS_WITH_SUB_VERSION*MAX_SUB_CLIENT_VERSIONS];
+	HTREEITEM	cli_versions[MAX_CLIENTS_WITH_SUB_VERSION * MAX_SUB_CLIENT_VERSIONS];
 	HTREEITEM	cli_other[MAX_SUB_CLIENT_VERSIONS / 2];
 	HTREEITEM	hclinet, clinet[4]; // Clients Section
 	HTREEITEM	hcliport, cliport[2]; // Clients Section

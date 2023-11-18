@@ -5,7 +5,6 @@ class CComboBoxEx2 : public CComboBoxEx
 	DECLARE_DYNAMIC(CComboBoxEx2)
 public:
 	CComboBoxEx2() = default;
-	virtual	~CComboBoxEx2() = default;
 
 	int AddItem(LPCTSTR pszText, int iImage);
 	BOOL SelectItemDataString(LPCTSTR pszText);

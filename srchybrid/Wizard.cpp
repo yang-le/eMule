@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -36,8 +36,6 @@ IMPLEMENT_DYNAMIC(CConnectionWizardDlg, CDialog)
 BEGIN_MESSAGE_MAP(CConnectionWizardDlg, CDialog)
 	ON_BN_CLICKED(IDC_WIZ_APPLY_BUTTON, OnBnClickedApply)
 	ON_BN_CLICKED(IDC_WIZ_CANCEL_BUTTON, OnBnClickedCancel)
-	ON_BN_CLICKED(IDC_WIZ_XP_RADIO, OnBnClickedWizRadioOsNtxp)
-	ON_BN_CLICKED(IDC_WIZ_ME_RADIO, OnBnClickedWizRadioUs98me)
 	ON_BN_CLICKED(IDC_WIZ_LOWDOWN_RADIO, OnBnClickedWizLowdownloadRadio)
 	ON_BN_CLICKED(IDC_WIZ_MEDIUMDOWN_RADIO, OnBnClickedWizMediumdownloadRadio)
 	ON_BN_CLICKED(IDC_WIZ_HIGHDOWN_RADIO, OnBnClickedWizHighdownloadRadio)
@@ -47,7 +45,6 @@ END_MESSAGE_MAP()
 CConnectionWizardDlg::CConnectionWizardDlg(CWnd *pParent /*=NULL*/)
 	: CDialog(CConnectionWizardDlg::IDD, pParent)
 	, m_icoWnd()
-	, m_iOS()
 	, m_iTotalDownload()
 {
 }
@@ -61,8 +58,8 @@ CConnectionWizardDlg::~CConnectionWizardDlg()
 void CConnectionWizardDlg::DoDataExchange(CDataExchange *pDX)
 {
 	CDialog::DoDataExchange(pDX);
+	//DDX_Radio(pDX, IDC_WIZ_XP_RADIO, m_iOS);
 	DDX_Control(pDX, IDC_PROVIDERS, m_provider);
-	DDX_Radio(pDX, IDC_WIZ_XP_RADIO, m_iOS);
 	DDX_Radio(pDX, IDC_WIZ_LOWDOWN_RADIO, m_iTotalDownload);
 }
 
@@ -81,31 +78,31 @@ void CConnectionWizardDlg::OnBnClickedApply()
 		return;
 	}
 
-	int download = (int)GetDlgItemInt(IDC_WIZ_TRUEDOWNLOAD_BOX, NULL, TRUE);
-	if (download < 0) {
+	UINT download = GetDlgItemInt(IDC_WIZ_TRUEDOWNLOAD_BOX, NULL, TRUE);
+	if (download <= 0) {
 		GetDlgItem(IDC_WIZ_TRUEDOWNLOAD_BOX)->SetFocus();
 		return;
 	}
 
-	int upload = (int)GetDlgItemInt(IDC_WIZ_TRUEUPLOAD_BOX, NULL, TRUE);
-	if (upload < 0) {
+	UINT upload = GetDlgItemInt(IDC_WIZ_TRUEUPLOAD_BOX, NULL, TRUE);
+	if (upload <= 0) {
 		GetDlgItem(IDC_WIZ_TRUEUPLOAD_BOX)->SetFocus();
 		return;
 	}
 
 	if (IsDlgButtonChecked(IDC_KBITS)) {
-		upload = (((upload / 8) * 1000) + 512) / 1024;
-		download = (((download / 8) * 1000) + 512) / 1024;
+		upload = (upload / 8 * 1000 + 512) / 1024;
+		download = (download / 8 * 1000 + 512) / 1024;
 	} else {
-		upload = ((upload * 1000) + 512) / 1024;
-		download = ((download * 1000) + 512) / 1024;
+		upload = (upload * 1000 + 512) / 1024;
+		download = (download * 1000 + 512) / 1024;
 	}
 
 	thePrefs.maxGraphDownloadRate = download;
 	thePrefs.maxGraphUploadRate = upload;
 
 	if (upload > 0 && download > 0) {
-		thePrefs.m_maxupload = (uint32)((upload * 4) / 5);
+		thePrefs.m_maxupload = upload * 4 / 5;
 		if (upload < 4 && download > upload * 3) {
 			thePrefs.m_maxdownload = thePrefs.m_maxupload * 3;
 			download = upload * 3;
@@ -116,28 +113,21 @@ void CConnectionWizardDlg::OnBnClickedApply()
 			thePrefs.m_maxdownload = thePrefs.m_maxupload * 5;
 			download = upload * 5;
 		} else
-			thePrefs.m_maxdownload = (uint32)(download * 9 / 10);
+			thePrefs.m_maxdownload = download * 9 / 10;
 
 		theApp.emuledlg->statisticswnd->SetARange(false, thePrefs.maxGraphUploadRate);
 		theApp.emuledlg->statisticswnd->SetARange(true, thePrefs.maxGraphDownloadRate);
 
-		if (m_iOS == 1)
-			thePrefs.maxconnections = 50;
-		else {
-			if (upload <= 7)
-				thePrefs.maxconnections = 80;
-			else if (upload < 12)
-				thePrefs.maxconnections = 200;
-			else if (upload < 25)
-				thePrefs.maxconnections = 400;
-			else if (upload < 37)
-				thePrefs.maxconnections = 600;
-			else
-				thePrefs.maxconnections = 800;
-		}
-
-		if (m_iOS == 1)
-			download /= 2;
+		if (upload <= 7)
+			thePrefs.maxconnections = 80;
+		else if (upload < 12)
+			thePrefs.maxconnections = 200;
+		else if (upload < 25)
+			thePrefs.maxconnections = 400;
+		else if (upload < 37)
+			thePrefs.maxconnections = 600;
+		else
+			thePrefs.maxconnections = 800;
 
 		static const UINT srcperfile[5][3] =
 		{
@@ -171,16 +161,6 @@ void CConnectionWizardDlg::OnBnClickedCancel()
 	CDialog::OnCancel();
 }
 
-void CConnectionWizardDlg::OnBnClickedWizRadioOsNtxp()
-{
-	m_iOS = 0;
-}
-
-void CConnectionWizardDlg::OnBnClickedWizRadioUs98me()
-{
-	m_iOS = 1;
-}
-
 void CConnectionWizardDlg::OnBnClickedWizLowdownloadRadio()
 {
 	m_iTotalDownload = 0;
@@ -209,16 +189,6 @@ BOOL CConnectionWizardDlg::OnInitDialog()
 
 	SetIcon(m_icoWnd = theApp.LoadIcon(_T("Wizard")), FALSE);
 
-	switch (thePrefs.GetWindowsVersion()) {
-	case _WINVER_95_:
-	case _WINVER_98_:
-	case _WINVER_ME_:
-		m_iOS = 1;
-		break;
-	default:
-		m_iOS = 0;
-	}
-	CheckRadioButton(IDC_WIZ_XP_RADIO, IDC_WIZ_ME_RADIO, m_iOS ? IDC_WIZ_ME_RADIO : IDC_WIZ_XP_RADIO);
 	CheckRadioButton(IDC_WIZ_LOWDOWN_RADIO, IDC_WIZ_HIGHDOWN_RADIO, IDC_WIZ_LOWDOWN_RADIO);
 	CheckRadioButton(IDC_KBITS, IDC_KBYTES, IDC_KBITS);
 
@@ -230,27 +200,63 @@ BOOL CConnectionWizardDlg::OnInitDialog()
 	m_provider.InsertColumn(2, GetResString(IDS_WIZ_UP), LVCFMT_LEFT, 85);
 	m_provider.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
-	m_provider.InsertItem(0, GetResString(IDS_UNKNOWN));m_provider.SetItemText(0, 1, _T(""));m_provider.SetItemText(0, 2, _T(""));
-	m_provider.InsertItem(1, GetResString(IDS_WIZARD_CUSTOM));m_provider.SetItemText(1, 1, GetResString(IDS_WIZARD_ENTERBELOW));m_provider.SetItemText(1, 2, GetResString(IDS_WIZARD_ENTERBELOW));
-	m_provider.InsertItem(2, _T("56-k Modem"));m_provider.SetItemText(2, 1, _T("56"));m_provider.SetItemText(2, 2, _T("56"));
-	m_provider.InsertItem(3, _T("ISDN"));m_provider.SetItemText(3, 1, _T("64"));m_provider.SetItemText(3, 2, _T("64"));
-	m_provider.InsertItem(4, _T("ISDN 2x"));m_provider.SetItemText(4, 1, _T("128"));m_provider.SetItemText(4, 2, _T("128"));
+	m_provider.InsertItem(0, GetResString(IDS_UNKNOWN));
+	m_provider.SetItemText(0, 1, _T(""));
+	m_provider.SetItemText(0, 2, _T(""));
+	m_provider.InsertItem(1, GetResString(IDS_WIZARD_CUSTOM));
+	m_provider.SetItemText(1, 1, GetResString(IDS_WIZARD_ENTERBELOW));
+	m_provider.SetItemText(1, 2, GetResString(IDS_WIZARD_ENTERBELOW));
+	m_provider.InsertItem(2, _T("V.92 Modem"));
+	m_provider.SetItemText(2, 1, _T("56"));
+	m_provider.SetItemText(2, 2, _T("48"));
+	m_provider.InsertItem(3, _T("ISDN"));
+	m_provider.SetItemText(3, 1, _T("64"));
+	m_provider.SetItemText(3, 2, _T("64"));
+	m_provider.InsertItem(4, _T("ISDN 2x"));
+	m_provider.SetItemText(4, 1, _T("128"));
+	m_provider.SetItemText(4, 2, _T("128"));
 
-	m_provider.InsertItem(5, _T("T DSL 1000 (T,Arcor,Freenet,1&1)"));m_provider.SetItemText(5, 1, _T("1024"));m_provider.SetItemText(5, 2, _T("128"));
-	m_provider.InsertItem(6, _T("T DSL 1500 (T)"));m_provider.SetItemText(6, 1, _T("1536"));m_provider.SetItemText(6, 2, _T("192"));
-	m_provider.InsertItem(7, _T("T DSL 2000 (T,Arcor,Freenet,Tiscali,Alice)"));m_provider.SetItemText(7, 1, _T("2048"));m_provider.SetItemText(7, 2, _T("192"));
-	m_provider.InsertItem(8, _T("Versatel DSL 2000"));m_provider.SetItemText(8, 1, _T("2048"));m_provider.SetItemText(8, 2, _T("384"));
+	m_provider.InsertItem(5, _T("T DSL 1000 (T,Arcor,Freenet,1&1)"));
+	m_provider.SetItemText(5, 1, _T("1024"));
+	m_provider.SetItemText(5, 2, _T("128"));
+	m_provider.InsertItem(6, _T("T DSL 1500 (T)"));
+	m_provider.SetItemText(6, 1, _T("1536"));
+	m_provider.SetItemText(6, 2, _T("192"));
+	m_provider.InsertItem(7, _T("T DSL 2000 (T,Arcor,Freenet,Tiscali,Alice)"));
+	m_provider.SetItemText(7, 1, _T("2048"));
+	m_provider.SetItemText(7, 2, _T("192"));
+	m_provider.InsertItem(8, _T("Versatel DSL 2000"));
+	m_provider.SetItemText(8, 1, _T("2048"));
+	m_provider.SetItemText(8, 2, _T("384"));
 
-	m_provider.InsertItem(9, _T("T-DSL 3000 (T,Arcor)"));m_provider.SetItemText(9, 1, _T("3072"));m_provider.SetItemText(9, 2, _T("384"));
-	m_provider.InsertItem(10, _T("T DSL 6000 (T,Arcor)"));m_provider.SetItemText(10, 1, _T("6016"));m_provider.SetItemText(10, 2, _T("576"));
-	m_provider.InsertItem(11, _T("  DSL 6000 (Tiscali,Freenet,1&1)"));m_provider.SetItemText(11, 1, _T("6016"));m_provider.SetItemText(11, 2, _T("572"));
-	m_provider.InsertItem(12, _T("  DSL 6000 (Lycos,Alice)"));m_provider.SetItemText(12, 1, _T("6016"));m_provider.SetItemText(12, 2, _T("512"));
-	m_provider.InsertItem(13, _T("Versatel DSL 6000"));m_provider.SetItemText(13, 1, _T("6144"));m_provider.SetItemText(13, 2, _T("512"));
+	m_provider.InsertItem(9, _T("T-DSL 3000 (T,Arcor)"));
+	m_provider.SetItemText(9, 1, _T("3072"));
+	m_provider.SetItemText(9, 2, _T("384"));
+	m_provider.InsertItem(10, _T("T DSL 6000 (T,Arcor)"));
+	m_provider.SetItemText(10, 1, _T("6016"));
+	m_provider.SetItemText(10, 2, _T("576"));
+	m_provider.InsertItem(11, _T("  DSL 6000 (Tiscali,Freenet,1&1)"));
+	m_provider.SetItemText(11, 1, _T("6016"));
+	m_provider.SetItemText(11, 2, _T("572"));
+	m_provider.InsertItem(12, _T("  DSL 6000 (Lycos,Alice)"));
+	m_provider.SetItemText(12, 1, _T("6016"));
+	m_provider.SetItemText(12, 2, _T("512"));
+	m_provider.InsertItem(13, _T("Versatel DSL 6000"));
+	m_provider.SetItemText(13, 1, _T("6144"));
+	m_provider.SetItemText(13, 2, _T("512"));
 
-	m_provider.InsertItem(14, _T("Cable"));m_provider.SetItemText(14, 1, _T("187"));m_provider.SetItemText(14, 2, _T("32"));
-	m_provider.InsertItem(15, _T("Cable"));m_provider.SetItemText(15, 1, _T("187"));m_provider.SetItemText(15, 2, _T("64"));
-	m_provider.InsertItem(16, _T("T1"));m_provider.SetItemText(16, 1, _T("1500"));m_provider.SetItemText(16, 2, _T("1500"));
-	m_provider.InsertItem(17, _T("T3+"));m_provider.SetItemText(17, 1, _T("44 Mbps"));m_provider.SetItemText(17, 2, _T("44 Mbps"));
+	m_provider.InsertItem(14, _T("Cable"));
+	m_provider.SetItemText(14, 1, _T("187"));
+	m_provider.SetItemText(14, 2, _T("32"));
+	m_provider.InsertItem(15, _T("Cable"));
+	m_provider.SetItemText(15, 1, _T("187"));
+	m_provider.SetItemText(15, 2, _T("64"));
+	m_provider.InsertItem(16, _T("T1"));
+	m_provider.SetItemText(16, 1, _T("1500"));
+	m_provider.SetItemText(16, 2, _T("1500"));
+	m_provider.InsertItem(17, _T("T3+"));
+	m_provider.SetItemText(17, 1, _T("44 Mbps"));
+	m_provider.SetItemText(17, 2, _T("44 Mbps"));
 
 	m_provider.SetSelectionMark(0);
 	m_provider.SetItemState(0, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
@@ -273,12 +279,12 @@ void CConnectionWizardDlg::OnNmClickProviders(LPNMHDR, LRESULT *pResult)
 	};
 	static const UINT aup[18] =
 	{
-		0, 0, 33u, 64u, 128u,  128u,  192u,  192u,  384u,  384u,  576u,  572u,  512u,  512u,  32u,  64u, 1500u, 44000u
+		0, 0, 48u, 64u, 128u,  128u,  192u,  192u,  384u,  384u,  576u,  572u,  512u,  512u,  32u,  64u, 1500u, 44000u
 	};
 	UINT up, down;
-	if (i == 1) {
-		down = ((thePrefs.maxGraphDownloadRate * 1024) + 500) / 1000 * 8;
-		up = ((thePrefs.GetMaxGraphUploadRate(true) * 1024) + 500) / 1000 * 8;
+	if (i == 1) { //this is 'custom'; convert to kilobits
+		down = (thePrefs.maxGraphDownloadRate * 1024 + 500) / 1000 * 8;
+		up = (thePrefs.GetMaxGraphUploadRate(true) * 1024 + 500) / 1000 * 8;
 	} else {
 		down = adown[i];
 		up = aup[i];
@@ -306,7 +312,7 @@ void CConnectionWizardDlg::Localize()
 
 void CConnectionWizardDlg::SetCustomItemsActivation()
 {
-	BOOL bActive = m_provider.GetSelectionMark() == 1;
+	BOOL bActive = (m_provider.GetSelectionMark() == 1);
 	GetDlgItem(IDC_WIZ_TRUEUPLOAD_BOX)->EnableWindow(bActive);
 	GetDlgItem(IDC_WIZ_TRUEDOWNLOAD_BOX)->EnableWindow(bActive);
 	GetDlgItem(IDC_KBITS)->EnableWindow(bActive);

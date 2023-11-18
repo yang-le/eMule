@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mbedtls/config.h"
+//#include "mbedtls/build_info.h"
 #include "mbedtls/ssl.h"
 
 class CWebServer;
@@ -40,7 +40,7 @@ public:
 	bool m_bCanSend;
 	bool m_bValid;
 
-	void OnReceived(void *pData, DWORD dwSize, const in_addr &inad); // must be implemented
+	void OnReceived(void *pData, DWORD dwSize, const in_addr inad); // must be implemented
 	void SendData(const void *pData, DWORD dwDataSize);
 	void SendData(LPCSTR szText)		{ SendData(szText, (DWORD)strlen(szText)); }
 	void SendContent(LPCSTR szStdResponse, const void *pContent, DWORD dwContentSize);
@@ -48,5 +48,5 @@ public:
 	void SendReply(LPCSTR szReply);
 	void Disconnect();
 
-	void OnRequestReceived(const char *pHeader, DWORD dwHeaderLen, const char *pData, DWORD dwDataLen, const in_addr &inad);
+	void OnRequestReceived(const char *pHeader, DWORD dwHeaderLen, const char *pData, DWORD dwDataLen, const in_addr inad);
 };

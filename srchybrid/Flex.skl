@@ -27,8 +27,8 @@
 %+
 #include <iostream>
 class istream;
-using std::cin;                                                             
-using std::cout;                                                            
+using std::cin;
+using std::cout;
 using std::cerr;
 %*
 #ifndef _WIN32

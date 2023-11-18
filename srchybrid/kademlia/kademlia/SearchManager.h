@@ -1,5 +1,5 @@
 /*
-Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
+Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -23,13 +23,14 @@ There is going to be a new forum created just for the Kademlia side of the clien
 If you feel there is an error or a way to improve something, please
 post it in the forum first and let us look at it. If it is a real improvement,
 it will be added to the official client. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form.
+what all it does, can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 their client on the eMule forum.
 */
 
 #pragma once
 #include "kademlia/routing/Maps.h"
+#include "kademlia/kademlia/Tag.h"
 
 #define INV_KAD_KEYWORD_CHARS	" ()[]{}<>,._-!?:;\\/\""
 extern LPCSTR g_aszInvKadKeywordCharsA;
@@ -38,10 +39,9 @@ extern LPCWSTR g_awszInvKadKeywordChars;
 
 namespace Kademlia
 {
-	void deleteTagListEntries(TagList *plistTag);
-
 	class CRoutingZone;
 	class CKadClientSearcher;
+
 	class CSearchManager
 	{
 		friend class CRoutingZone;
@@ -56,11 +56,11 @@ namespace Kademlia
 		// Will return unique search id, returns zero if already searching for this keyword.
 		static CSearch* PrepareFindKeywords(LPCWSTR szKeyword, UINT uSearchTermsSize, LPBYTE pucSearchTermsData);
 		static bool StartSearch(CSearch *pSearch);
-		static void ProcessResponse(const CUInt128 &uTarget, uint32 uFromIP, uint16 uFromPort, ContactList *plistResults);
+		static void ProcessResponse(const CUInt128 &uTarget, uint32 uFromIP, uint16 uFromPort, ContactArray &rlistResults);
 		static uint8 GetExpectedResponseContactCount(const CUInt128 &uTarget);
-		static void ProcessResult(const CUInt128 &uTarget, const CUInt128 &uAnswer, TagList *plistInfo, uint32 uFromIP, uint16 uFromPort);
+		static void ProcessResult(const CUInt128 &uTarget, const CUInt128 &uAnswer, TagList &rlistInfo, uint32 uFromIP, uint16 uFromPort);
 		static void ProcessPublishResult(const CUInt128 &uTarget, const uint8 uLoad, const bool bLoadResponse);
-		static void GetWords(LPCWSTR sz, WordList *plistWords);
+		static void GetWords(LPCWSTR sz, WordList &rlistWords);
 		static void UpdateStats();
 		static bool AlreadySearchingFor(const CUInt128 &uTarget);
 
@@ -71,7 +71,7 @@ namespace Kademlia
 	private:
 		static void FindNode(const CUInt128 &uID, bool bComplete);
 		static bool FindNodeSpecial(const CUInt128 &uID, CKadClientSearcher *pRequester);
-		static void CancelNodeSpecial(CKadClientSearcher *pRequester);
+		static void CancelNodeSpecial(const CKadClientSearcher *pRequester);
 		static void JumpStart();
 		static uint32 m_uNextID;
 		static SearchMap m_mapSearches;

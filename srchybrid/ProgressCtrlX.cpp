@@ -147,7 +147,7 @@ void CProgressCtrlX::DrawMultiGradient(const CDrawInfo &info, const CRect &rcGra
 			rcGradBand.right = rcGrad.right;
 
 		if (rcGradBand.right < rcClip.left)
-			continue; // skip bands before theclipping rect
+			continue; // skip bands before the clipping rect
 
 		RECT rcClipBand(rcGradBand);
 		if (rcClipBand.left < rcClip.left)
@@ -207,7 +207,8 @@ void CProgressCtrlX::DrawGradient(const CDrawInfo &info, const CRect &rcGrad, co
 			rcFill.right = rcClip.right;
 
 		COLORREF clrFill = RGB(r + (int)(i * rStep), g + (int)(i * gStep), b + (int)(i * bStep));
-		info.pDC->FillSolidRect(&ConvertToReal(info, rcFill), clrFill);
+		const CRect rcTmp(ConvertToReal(info, rcFill));
+		info.pDC->FillSolidRect(&rcTmp, clrFill);
 		if (rcFill.right >= rcClip.right)
 			break; // stop filling if we reach the current position
 	}

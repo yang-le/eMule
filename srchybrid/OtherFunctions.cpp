@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -21,13 +21,12 @@
 #include <fcntl.h>
 #include <regex>
 #include "emule.h"
-#include "OtherFunctions.h"
+#include "UpDownClient.h"
 #include "DownloadQueue.h"
 #include "Preferences.h"
 #include "PartFile.h"
 #include "SharedFileList.h"
 #include "KnownFileList.h"
-#include "UpDownClient.h"
 #include "Opcodes.h"
 #include "WebServices.h"
 #include <shlobj.h>
@@ -87,6 +86,18 @@ static const byte base16Lookup[BASE16_LOOKUP_MAX][2] = {
 };
 LPCTSTR const sBadFileNameChar(_T("\"*<>?|\\/:")); // lots of invalid chars for filenames in Windows :=)
 LPCTSTR const sHiddenPassword = _T("\012\010\011\015\033"); //tough to enter from the keyboard
+const struct LinkScheme s_apszSchemes[] =
+{
+	{ _T("ed2k://"),  7 },
+	{ _T("http://"),  7 },
+	{ _T("https://"), 8 },
+	{ _T("ftp://"),   6 },
+	{ _T("www."),     4 },
+	{ _T("ftp."),     4 },
+	{ _T("mailto:"),  7 },
+	{ _T("magnet:?"), 8 },
+	{ NULL, 0 }
+};
 
 CString CastItoXBytes(uint16 count, bool isK, bool isPerSec, uint32 decimal)
 {
@@ -295,7 +306,7 @@ void ShellDefaultVerb(LPCTSTR lpName)
 
 bool ShellDeleteFile(LPCTSTR pszFilePath)
 {
-	if (!PathFileExists(pszFilePath))
+	if (!::PathFileExists(pszFilePath))
 		return true;
 	if (thePrefs.GetRemoveToBin()) {
 		TCHAR todel[MAX_PATH + 1] = {};
@@ -356,39 +367,6 @@ CString ShellGetFolderPath(int iCSIDL)
 	return strFolderPath;
 }
 
-namespace
-{
-	bool IsHexDigit(int c)
-	{
-		switch (c) {
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-		case 'A':
-		case 'B':
-		case 'C':
-		case 'D':
-		case 'E':
-		case 'F':
-		case 'a':
-		case 'b':
-		case 'c':
-		case 'd':
-		case 'e':
-		case 'f':
-			return true;
-		}
-		return false;
-	}
-}
-
 // Print the hash in a format which is similar to CertMgr's.
 CString GetCertHash(const unsigned char *pucHash, int iBytes)
 {
@@ -418,7 +396,7 @@ CString URLDecode(const CString &inStr, bool bKeepNewLine)
 	// decode escape sequences
 	CString res;
 	for (int x = 0; x < inStr.GetLength(); ++x) {
-		if (inStr[x] == _T('%') && x + 2 < inStr.GetLength() && IsHexDigit(inStr[x + 1]) && IsHexDigit(inStr[x + 2])) {
+		if (inStr[x] == _T('%') && x + 2 < inStr.GetLength() && _istxdigit(inStr[x + 1]) && _istxdigit(inStr[x + 2])) {
 			TCHAR hexstr[3];
 			_tcsncpy(hexstr, inStr.Mid(x + 1, 2), 2);
 			hexstr[2] = _T('\0');
@@ -468,7 +446,7 @@ CString EncodeURLQueryParam(const CString &sInT)
 	// unreserved	= alphanum | mark
 	// mark			= "-" | "_" | "." | "!" | "~" | "*" | "'" | "(" | ")"
 	//
-	// See also: http://www.w3.org/MarkUp/html-spec/html-spec_8.html
+	// See also: https://www.w3.org/MarkUp/html-spec/html-spec_8.html
 
 	CString sOut;
 	LPTSTR pOutBuf = sOut.GetBuffer(sIn.GetLength() * 3);
@@ -490,12 +468,11 @@ CString EncodeURLQueryParam(const CString &sInT)
 	return sOut;
 }
 
-/*CString MakeStringEscaped(CString in)
+void DupAmpersand(CString &rstr)
 {
-	in.Replace(_T("&"), _T("&&"));
-	return in;
+	rstr.Replace(_T("&"), _T("&&"));
 }
-
+/*
 CString RemoveAmpersand(const CString &rstr)
 {
 	CString str(rstr);
@@ -563,11 +540,12 @@ bool Ask4RegFix(bool checkOnly, bool dontAsk, bool bAutoTakeCollections)
 			regkey.Close();
 		} else
 			ASSERT(0);
-	} else if (checkOnly)
-		return bAutoTakeCollections && DoCollectionRegFix(true);
-	else if (bAutoTakeCollections)
-		DoCollectionRegFix(false);
-
+	} else {
+		if (checkOnly)
+			return bAutoTakeCollections && DoCollectionRegFix(true);
+		if (bAutoTakeCollections)
+			DoCollectionRegFix(false);
+	}
 	return false;
 }
 
@@ -629,9 +607,9 @@ void RevertReg()
 		ASSERT(0);
 }
 
-int GetMaxWindowsTCPConnections()
+UINT GetMaxWindowsTCPConnections()
 {
-	return -1;
+	return UNLIMITED;
 /*	OSVERSIONINFOEX osvi;
 	osvi.dwOSVersionInfoSize = (DWORD)sizeof(OSVERSIONINFOEX);
 
@@ -639,11 +617,11 @@ int GetMaxWindowsTCPConnections()
 		//if OSVERSIONINFOEX doesn't work, try OSVERSIONINFO
 		osvi.dwOSVersionInfoSize = (DWORD)sizeof(OSVERSIONINFO);
 		if (!GetVersionEx((OSVERSIONINFO*)&osvi))
-			return -1;  //shouldn't ever happen
+			return UNLIMITED;  //shouldn't ever happen
 	}
 
 	if (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT) // Windows NT product family
-		return -1;  //no limits
+		return UNLIMITED;  //no limits
 
 	if (osvi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) { // Windows 95 product family
 
@@ -654,7 +632,7 @@ int GetMaxWindowsTCPConnections()
 
 			RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("System\\CurrentControlSet\\Services\\VxD\\MSTCP")
 				, 0, KEY_QUERY_VALUE, &hKey);
-			LONG lResult = RegQueryValueEx(hKey, TEXT("MaxConnections"), NULL, NULL
+			LONG lResult = RegQueryValueEx(hKey, _T("MaxConnections"), NULL, NULL
 				, (LPBYTE)&dwValue, &dwLength);
 			RegCloseKey(hKey);
 
@@ -681,7 +659,7 @@ int GetMaxWindowsTCPConnections()
 		return lMaxConnections;
 	}
 
-	return -1;  //give the user the benefit of the doubt, most use NT+ anyway
+	return UNLIMITED;  //give the user the benefit of the doubt, most use NT+ anyway
 */
 }
 
@@ -766,39 +744,8 @@ bool IsRunningXPSP2OrHigher()
 
 uint64 GetFreeDiskSpaceX(LPCTSTR pDirectory)
 {
-	static BOOL _bInitialized = FALSE;
-	static BOOL(WINAPI *_pfnGetDiskFreeSpaceEx)(LPCTSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER) = NULL;
-
-	if (!_bInitialized) {
-		_bInitialized = TRUE;
-		(FARPROC&)_pfnGetDiskFreeSpaceEx = GetProcAddress(GetModuleHandle(_T("kernel32")), _TWINAPI("GetDiskFreeSpaceEx"));
-	}
-
-	if (_pfnGetDiskFreeSpaceEx) {
-		ULARGE_INTEGER nFreeDiskSpace;
-		ULARGE_INTEGER dummy;
-		if ((*_pfnGetDiskFreeSpaceEx)(pDirectory, &nFreeDiskSpace, &dummy, &dummy))
-			return nFreeDiskSpace.QuadPart;
-		return 0;
-	}
-
-	TCHAR cDrive[MAX_PATH];
-	const TCHAR *p = _tcschr(pDirectory, _T('\\'));
-	if (p) {
-		size_t uChars = p - pDirectory;
-		if (uChars >= _countof(cDrive))
-			return 0;
-		memcpy(cDrive, pDirectory, uChars * sizeof(TCHAR));
-		cDrive[uChars] = _T('\0');
-	} else {
-		if (_tcslen(pDirectory) >= _countof(cDrive))
-			return 0;
-		_tcscpy(cDrive, pDirectory);
-	}
-	DWORD dwSectPerClust, dwBytesPerSect, dwFreeClusters, dwDummy;
-	if (GetDiskFreeSpace(cDrive, &dwSectPerClust, &dwBytesPerSect, &dwFreeClusters, &dwDummy))
-		return dwFreeClusters * (uint64)dwSectPerClust * (uint64)dwBytesPerSect;
-	return 0;
+	ULARGE_INTEGER nFreeDiskSpace;
+	return ::GetDiskFreeSpaceEx(pDirectory, &nFreeDiskSpace, NULL, NULL) ? nFreeDiskSpace.QuadPart : 0;
 }
 
 CString GetRateString(UINT rate)
@@ -825,10 +772,9 @@ CString EncodeBase32(const unsigned char *buffer, unsigned int bufLen)
 	CString Base32Buff;
 
 	unsigned index = 0;
-	unsigned char word;
 
 	for (unsigned i = 0; i < bufLen;) {
-
+		unsigned char word;
 		// Is the current word going to span a byte boundary?
 		if (index > 3) {
 			word = (unsigned char)(buffer[i] & (0xFF >> index));
@@ -910,7 +856,7 @@ bool DecodeBase16(const TCHAR *base16Buffer, unsigned int base16BufLen, byte *bu
 //   New length of byte array decoded
 unsigned DecodeLengthBase16(unsigned base16Length)
 {
-	return base16Length / 2U;
+	return base16Length / 2;
 }
 
 uint32 DecodeBase32(LPCTSTR pszInput, uchar *paucOutput, uint32 nBufferLen)
@@ -976,7 +922,7 @@ INT_PTR CWebServices::ReadAllServices()
 {
 	RemoveAllServices();
 
-	const CString &strFilePath = GetDefaultServicesFile();
+	const CString &strFilePath(GetDefaultServicesFile());
 	FILE *readFile = _tfsopen(strFilePath, _T("r"), _SH_DENYWR);
 	if (readFile != NULL) {
 		CString sbuffer;
@@ -992,7 +938,7 @@ INT_PTR CWebServices::ReadAllServices()
 
 			int iPos = sbuffer.Find(_T(','));
 			if (iPos > 0) {
-				CString strUrlTemplate = sbuffer.Right(sbuffer.GetLength() - iPos - 1).Trim();
+				const CString strUrlTemplate(sbuffer.Right(sbuffer.GetLength() - iPos - 1).Trim());
 				if (!strUrlTemplate.IsEmpty()) {
 					static LPCTSTR const _apszMacros[] = {
 						_T("#hashid"),
@@ -1018,11 +964,11 @@ INT_PTR CWebServices::ReadAllServices()
 				}
 			}
 		}
-		fclose(readFile);
-
 		struct _stat64 st;
-		if (statUTC(strFilePath, st) == 0)
+		if (statUTC((HANDLE)_get_osfhandle(_fileno(readFile)), st) == 0)
 			m_tDefServicesFileLastModified = (time_t)st.st_mtime;
+
+		fclose(readFile);
 	}
 
 	return m_aServices.GetCount();
@@ -1052,7 +998,7 @@ bool CWebServices::RunURL(const CAbstractFile *file, UINT uMenuID)
 	for (int i = 0; i < m_aServices.GetCount(); ++i) {
 		const SEd2kLinkService &rSvc(m_aServices[i]);
 		if (rSvc.uMenuID == uMenuID) {
-			CString strUrlTemplate = rSvc.strUrl;
+			CString strUrlTemplate(rSvc.strUrl);
 			if (file != NULL) {
 				// Convert hash to hexadecimal text and add it to the URL
 				strUrlTemplate.Replace(_T("#hashid"), md4str(file->GetFileHash()));
@@ -1066,8 +1012,8 @@ bool CWebServices::RunURL(const CAbstractFile *file, UINT uMenuID)
 				strUrlTemplate.Replace(_T("#filename"), EncodeURLQueryParam(file->GetFileName()));
 
 				// add basename to the url
-				CString strBaseName = file->GetFileName();
-				PathRemoveExtension(strBaseName.GetBuffer(strBaseName.GetLength()));
+				CString strBaseName(file->GetFileName());
+				::PathRemoveExtension(strBaseName.GetBuffer(strBaseName.GetLength()));
 				strBaseName.ReleaseBuffer();
 				strUrlTemplate.Replace(_T("#name"), EncodeURLQueryParam(strBaseName));
 
@@ -1116,6 +1062,7 @@ extern "C" int CALLBACK BrowseCallbackProc(HWND hWnd, UINT uMsg, LPARAM, LPARAM 
 
 bool SelectDir(HWND hWnd, LPTSTR pszPath, LPCTSTR pszTitle, LPCTSTR pszDlgTitle)
 {
+	ASSERT(pszPath != NULL);
 	bool bResult = false;
 	(void)CoInitialize(NULL);
 	LPMALLOC pShlMalloc;
@@ -1126,7 +1073,7 @@ bool SelectDir(HWND hWnd, LPTSTR pszPath, LPCTSTR pszTitle, LPCTSTR pszDlgTitle)
 		BrsInfo.ulFlags = BIF_VALIDATE | BIF_NEWDIALOGSTYLE | BIF_RETURNONLYFSDIRS | BIF_SHAREABLE | BIF_DONTGOBELOWDOMAIN;
 
 		BROWSEINIT BrsInit = {};
-		if (pszPath != NULL || pszTitle != NULL || pszDlgTitle != NULL) {
+		if (pszTitle != NULL || pszDlgTitle != NULL) {
 			// Need the 'BrowseCallbackProc' to set those strings
 			BrsInfo.lpfn = BrowseCallbackProc;
 			BrsInfo.lParam = (LPARAM)&BrsInit;
@@ -1135,12 +1082,12 @@ bool SelectDir(HWND hWnd, LPTSTR pszPath, LPCTSTR pszTitle, LPCTSTR pszDlgTitle)
 		}
 
 		LPITEMIDLIST pidlBrowse;
-		if ((pidlBrowse = SHBrowseForFolder(&BrsInfo)) != NULL) {
-			if (SHGetPathFromIDList(pidlBrowse, pszPath))
-				bResult = true;
+		if ((pidlBrowse = ::SHBrowseForFolder(&BrsInfo)) != NULL) {
+			bResult = ::SHGetPathFromIDList(pidlBrowse, pszPath);
 			pShlMalloc->Free(pidlBrowse);
 		}
 		pShlMalloc->Release();
+		::PathAddBackslash(pszPath);
 	}
 	CoUninitialize();
 	return bResult;
@@ -1148,20 +1095,22 @@ bool SelectDir(HWND hWnd, LPTSTR pszPath, LPCTSTR pszTitle, LPCTSTR pszDlgTitle)
 
 void slosh(CString &path)
 {
-	if (path.Right(1) != _T("\\"))
+	int i = path.GetLength() - 1;
+	if (i >= 0 && path[i] != _T('\\'))
 		path += _T('\\');
 }
 
 void unslosh(CString &path)
 {
-	if (path.Right(1) == _T("\\"))
-		path.Truncate(path.GetLength() - 1);
+	int i = path.GetLength() - 1;
+	if (i >= 0 && path[i] == _T('\\'))
+		path.Truncate(i);
 }
 
 void canonical(CString &path)
 {
 	TCHAR szPath[MAX_PATH];
-	if (PathCanonicalize(szPath, path))
+	if (::PathCanonicalize(szPath, path))
 		path = szPath;
 }
 
@@ -1169,7 +1118,7 @@ void MakeFoldername(CString &rstrPath)
 {
 	if (!rstrPath.IsEmpty()) { // don't canonicalize an empty path, we would get a "\"
 		canonical(rstrPath);
-		unslosh(rstrPath);
+		slosh(rstrPath);
 	}
 }
 
@@ -1255,11 +1204,11 @@ void StripTrailingColon(CString &rstr)
 
 CString ValidFilename(const CString &filename)
 {
-	CString fname = URLDecode(filename);
+	CString fname(URLDecode(filename));
 	if (fname.GetLength() > 100)
 		fname.Truncate(100);
 	// remove invalid characters
-	for (LPCTSTR p = sBadFileNameChar; *p; )
+	for (LPCTSTR p = sBadFileNameChar; *p;)
 		fname.Remove(*p++);
 	return fname.Trim();
 }
@@ -1317,7 +1266,7 @@ CString CleanupFilename(const CString &filename, bool bExtension)
 		--pos1;
 	}
 
-	// Make leading Caps
+	// Making title case
 	if (sClean.GetLength() > 1) {
 		sClean.SetAt(0, _totupper(sClean[0]));
 
@@ -1569,9 +1518,7 @@ EED2KFileType GetED2KFileTypeID(LPCTSTR pszFileName)
 	ft.pszExt = strExt.MakeLower();
 	ft.iFileType = ED2KFT_ANY;
 	const SED2KFileType *pFound = (SED2KFileType*)bsearch(&ft, g_aED2KFileTypes, _countof(g_aED2KFileTypes), sizeof g_aED2KFileTypes[0], CompareE2DKFileType);
-	if (pFound != NULL)
-		return pFound->iFileType;
-	return ED2KFT_ANY;
+	return pFound ? pFound->iFileType : ED2KFT_ANY;
 }
 
 // Returns the ed2k file type string ID which is to be used for publishing+searching
@@ -1798,31 +1745,24 @@ int GetSystemErrorString(DWORD dwError, CString &rstrError)
 	//  3) User default LANGID, based on the user's default locale value
 	//	4) System default LANGID, based on the system default locale value
 	//	5) US English
-	LPTSTR pszSysMsg = NULL;
-	DWORD dwLength = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL, dwError, MAKELANGID(LANG_NEUTRAL, SUBLANG_SYS_DEFAULT),
-		(LPTSTR)&pszSysMsg, 0, NULL);
-	if (dwLength != 0 && pszSysMsg != NULL) {
-		if (dwLength >= 2 && pszSysMsg[dwLength - 2] == _T('\r'))
-			pszSysMsg[dwLength - 2] = _T('\0');
-		rstrError = pszSysMsg;
-		rstrError.Replace(_T("\r\n"), _T(" ")); // some messages contain CRLF within the message!?
-	} else
-		rstrError.Empty();
-
-	if (pszSysMsg)
-		LocalFree(pszSysMsg);
-
-	return rstrError.GetLength();
+	return GetModuleErrorString(dwError, rstrError, NULL);
 }
 
 int GetModuleErrorString(DWORD dwError, CString &rstrError, LPCTSTR pszModule)
 {
 	LPTSTR pszSysMsg = NULL;
-	DWORD dwLength = FormatMessage(FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
-		GetModuleHandle(pszModule), dwError, MAKELANGID(LANG_NEUTRAL, SUBLANG_SYS_DEFAULT),
-		(LPTSTR)&pszSysMsg, 0, NULL);
-	if (dwLength != 0 && pszSysMsg != NULL) {
+	DWORD dwFlags;
+	LPCVOID lpSource;
+	if (pszModule) {
+		dwFlags = FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS;
+		lpSource = GetModuleHandle(pszModule);
+	} else {
+		dwFlags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS;
+		lpSource = NULL;
+	}
+	DWORD dwLength = FormatMessage(dwFlags, lpSource, dwError
+		, MAKELANGID(LANG_NEUTRAL, SUBLANG_SYS_DEFAULT), (LPTSTR)&pszSysMsg, 0, NULL);
+	if (dwLength > 0 && pszSysMsg != NULL) {
 		if (dwLength >= 2 && pszSysMsg[dwLength - 2] == _T('\r'))
 			pszSysMsg[dwLength - 2] = _T('\0');
 		rstrError = pszSysMsg;
@@ -1838,13 +1778,11 @@ int GetModuleErrorString(DWORD dwError, CString &rstrError, LPCTSTR pszModule)
 
 int GetErrorMessage(DWORD dwError, CString &rstrErrorMsg, DWORD dwFlags)
 {
-	int iMsgLen = GetSystemErrorString(dwError, rstrErrorMsg);
-	if (iMsgLen == 0)
+	if (GetSystemErrorString(dwError, rstrErrorMsg) == 0) //0 if no error string
 		rstrErrorMsg.Format(((long)dwError >= 0) ? _T("Error %u") : _T("Error 0x%08x"), dwError);
-	else if (dwFlags & 1) {
-		CString sMsg;
-		sMsg.Format(((long)dwError >= 0) ? _T("Error %u: ") : _T("Error 0x%08x: "), dwError);
-		rstrErrorMsg.Insert(0, sMsg);
+	else if (dwFlags & 1) { //show numeric error code
+		const CString sMsg(rstrErrorMsg);
+		rstrErrorMsg.Format(((long)dwError >= 0 ? _T("Error %u: %s") : _T("Error 0x%08x: %s")), dwError, (LPCTSTR)sMsg);
 	}
 	return rstrErrorMsg.GetLength();
 }
@@ -1982,20 +1920,17 @@ int GetDesktopColorDepth()
 int GetAppImageListColorFlag()
 {
 	int iColorBits = GetDesktopColorDepth();
-	int iIlcFlag;
 	if (iColorBits >= 32)
-		iIlcFlag = ILC_COLOR32;
-	else if (iColorBits >= 24)
-		iIlcFlag = ILC_COLOR24;
-	else if (iColorBits >= 16)
-		iIlcFlag = ILC_COLOR16;
-	else if (iColorBits >= 8)
-		iIlcFlag = ILC_COLOR8;
-	else if (iColorBits >= 4)
-		iIlcFlag = ILC_COLOR4;
-	else
-		iIlcFlag = ILC_COLOR;
-	return iIlcFlag;
+		return ILC_COLOR32;
+	if (iColorBits >= 24)
+		return ILC_COLOR24;
+	if (iColorBits >= 16)
+		return ILC_COLOR16;
+	if (iColorBits >= 8)
+		return ILC_COLOR8;
+	if (iColorBits >= 4)
+		return ILC_COLOR4;
+	return ILC_COLOR;
 }
 
 CString DbgGetHexDump(const uint8 *data, UINT size)
@@ -2004,7 +1939,7 @@ CString DbgGetHexDump(const uint8 *data, UINT size)
 	buffer.Format(_T("Size=%u, Data=["), size);
 	UINT i;
 	for (i = 0; i < size && i < 50; ++i)
-		buffer.AppendFormat(i ? _T(" %02x") : _T("%02x"), data[i]);
+		buffer.AppendFormat(&(_T(" %02x")[static_cast<int>(!i)]), data[i]);
 
 	buffer += (i < size) ? _T("]") : _T("..]");
 	return buffer;
@@ -2067,22 +2002,19 @@ CString RemoveFileExtension(const CString &rstrFilePath)
 	return (iDot < 0) ? rstrFilePath : rstrFilePath.Left(iDot);
 }
 
-int CompareDirectory(const CString &rstrDir1, const CString &rstrDir2)
+bool EqualPaths(const CString &rstrDir1, const CString &rstrDir2)
 {
-	// use case insensitive compare as a starter
-	if (rstrDir1.CompareNoCase(rstrDir2) == 0)
-		return 0;
-	// if one of the paths ends with a '\' the paths may still be equal from the file system's POV
-	CString strDir1(rstrDir1);
-	CString strDir2(rstrDir2);
-	unslosh(strDir1);
-	unslosh(strDir2);
-	return strDir1.CompareNoCase(strDir2);	// compare again
+	int i1 = rstrDir1.GetLength();
+	i1 -= static_cast<int>(i1 && rstrDir1[i1 - 1] == _T('\\'));
+	int i2 = rstrDir2.GetLength();
+	i2 -= static_cast<int>(i2 && rstrDir2[i2 - 1] == _T('\\'));
+	bool bRet = (i1 == i2);
+	return bRet ? _tcsnicmp(rstrDir1, rstrDir2, i1) == 0 : bRet;
 }
 
 bool IsGoodIP(uint32 nIP, bool forceCheck)
 {
-	// always filter following IP's
+	// always filter the following IPs
 	// -------------------------------------------
 	// 0.0.0.0							invalid
 	// 127.0.0.0 - 127.255.255.255		Loopback
@@ -2097,7 +2029,6 @@ bool IsGoodIP(uint32 nIP, bool forceCheck)
 		return false;
 #endif
 	}
-
 	return (!thePrefs.FilterLANIPs() && !forceCheck) || !IsLANIP(nIP);
 }
 
@@ -2171,6 +2102,25 @@ CString GetFormatedUInt64(ULONGLONG ullVal)
 	return iResult ? strVal : CString(szVal);
 }
 
+// this function creates the content for the "length" ed2k meta tag which was introduced by eDonkeyHybrid
+// with the data type 'string' :/  to save some bytes, omit leading zeros
+// Though it got handy to display media properties
+CString SecToTimeLength(UINT uiSec)
+{
+	CString sTimeLength;
+	if (uiSec >= HR2S(1)) {
+		UINT uHours = uiSec / HR2S(1);
+		UINT uMin = (uiSec - HR2S(uHours)) / MIN2S(1);
+		UINT uSec = uiSec - HR2S(uHours) - MIN2S(uMin);
+		sTimeLength.Format(_T("%u:%02u:%02u"), uHours, uMin, uSec);
+	} else {
+		UINT uMin = uiSec / MIN2S(1);
+		UINT uSec = uiSec - MIN2S(uMin);
+		sTimeLength.Format(_T("%u:%02u"), uMin, uSec);
+	}
+	return sTimeLength;
+}
+
 void Debug(LPCTSTR pszFmtMsg, ...)
 {
 	va_list pArgs;
@@ -2190,7 +2140,7 @@ void Debug(LPCTSTR pszFmtMsg, ...)
 	va_end(pArgs);
 }
 
-void DebugHexDump(const uint8 *data, UINT lenData)
+void DebugHexDump(const void *data, UINT lenData)
 {
 	int lenLine = 16;
 	CStringA line, single;
@@ -2198,14 +2148,14 @@ void DebugHexDump(const uint8 *data, UINT lenData)
 		line.Format("%08X ", pos);
 		lenLine = (int)min((lenData - pos), 16u);
 		for (int i = 0; i < lenLine; ++i) {
-			single.Format(" %02X", data[pos + i]);
+			single.Format(" %02X", ((const byte*)data)[pos + i]);
 			line += single;
 			if (i == 7)
 				line += ' ';
 		}
 		line += CStringA(' ', 60 - line.GetLength());
 		for (int i = 0; i < lenLine; ++i) {
-			char c = (char)data[pos + i];
+			char c = ((const char*)data)[pos + i];
 			line += (c > 31 && c < 127) ? c : '.';
 		}
 		Debug(_T("%hs\n"), (LPCSTR)line);
@@ -2416,17 +2366,16 @@ CString DbgGetMuleClientTCPOpcode(UINT opcode)
 		_STRVAL(OP_PEERCACHE_QUERY),
 		_STRVAL(OP_PEERCACHE_ANSWER),
 		_STRVAL(OP_PEERCACHE_ACK),
-		_STRVAL(OP_PUBLICIP_ANSWER),
 		_STRVAL(OP_PUBLICIP_REQ),
-		_STRVAL(OP_PORTTEST),
+		_STRVAL(OP_PUBLICIP_ANSWER),
 		_STRVAL(OP_CALLBACK),
-		_STRVAL(OP_BUDDYPING),
-		_STRVAL(OP_BUDDYPONG),
 		_STRVAL(OP_REASKCALLBACKTCP),
-		_STRVAL(OP_AICHANSWER),
 		_STRVAL(OP_AICHREQUEST),
+		_STRVAL(OP_AICHANSWER),
 		_STRVAL(OP_AICHFILEHASHANS),
 		_STRVAL(OP_AICHFILEHASHREQ),
+		_STRVAL(OP_BUDDYPING),
+		_STRVAL(OP_BUDDYPONG),
 		_STRVAL(OP_COMPRESSEDPART_I64),
 		_STRVAL(OP_SENDINGPART_I64),
 		_STRVAL(OP_REQUESTPARTS_I64),
@@ -2434,7 +2383,12 @@ CString DbgGetMuleClientTCPOpcode(UINT opcode)
 		_STRVAL(OP_CHATCAPTCHAREQ),
 		_STRVAL(OP_CHATCAPTCHARES),
 		_STRVAL(OP_FWCHECKUDPREQ),
-		_STRVAL(OP_KAD_FWTCPCHECK_ACK)
+		_STRVAL(OP_KAD_FWTCPCHECK_ACK),
+		_STRVAL(OP_MULTIPACKET_EXT2),
+		_STRVAL(OP_MULTIPACKETANSWER_EXT2),
+		_STRVAL(OP_HASHSETREQUEST2),
+		_STRVAL(OP_HASHSETANSWER2),
+		_STRVAL(OP_PORTTEST)
 	};
 
 	for (unsigned i = 0; i < _countof(_aOpcodes); ++i)
@@ -2452,13 +2406,14 @@ CString DbgGetClientTCPPacket(UINT protocol, UINT opcode, UINT size)
 {
 	CString str;
 	if (protocol == OP_EDONKEYPROT)
-		str.Format(_T("protocol=eDonkey  opcode=%s  size=%u"), (LPCTSTR)DbgGetDonkeyClientTCPOpcode(opcode), size);
+		str.Format(_T("protocol=eDonkey  opcode=%s"), (LPCTSTR)DbgGetDonkeyClientTCPOpcode(opcode));
 	else if (protocol == OP_PACKEDPROT)
-		str.Format(_T("protocol=Packed  opcode=%s  size=%u"), (LPCTSTR)DbgGetMuleClientTCPOpcode(opcode), size);
+		str.Format(_T("protocol=Packed  opcode=%s"), (LPCTSTR)DbgGetMuleClientTCPOpcode(opcode));
 	else if (protocol == OP_EMULEPROT)
-		str.Format(_T("protocol=eMule  opcode=%s  size=%u"), (LPCTSTR)DbgGetMuleClientTCPOpcode(opcode), size);
+		str.Format(_T("protocol=eMule  opcode=%s"), (LPCTSTR)DbgGetMuleClientTCPOpcode(opcode));
 	else
-		str.Format(_T("protocol=0x%02x  opcode=0x%02x  size=%u"), protocol, opcode, size);
+		str.Format(_T("protocol=0x%02x  opcode=0x%02x"), protocol, opcode);
+	str.AppendFormat(_T("  size=%u"), size);
 	return str;
 }
 
@@ -2500,14 +2455,17 @@ void DebugRecv(LPCSTR pszMsg, const CUpDownClient *client, const uchar *packet, 
 
 void DebugSend(LPCSTR pszMsg, const CUpDownClient *client, const uchar *packet)
 {
-	if (client != NULL && packet != NULL)
-		Debug(_T(">>> %-20hs to   %s; %s\n"), pszMsg, (LPCTSTR)client->DbgGetClientInfo(true), (LPCTSTR)DbgGetFileInfo(packet));
-	else if (client != NULL && packet == NULL)
-		Debug(_T(">>> %-20hs to   %s\n"), pszMsg, (LPCTSTR)client->DbgGetClientInfo(true));
-	else if (client == NULL && packet != NULL)
-		Debug(_T(">>> %-20hs; %s\n"), pszMsg, (LPCTSTR)DbgGetFileInfo(packet));
-	else
-		Debug(_T(">>> %-20hs\n"), pszMsg);
+	if (client) {
+		if (packet != NULL)
+			Debug(_T(">>> %-20hs to   %s; %s\n"), pszMsg, (LPCTSTR)client->DbgGetClientInfo(true), (LPCTSTR)DbgGetFileInfo(packet));
+		else
+			Debug(_T(">>> %-20hs to   %s\n"), pszMsg, (LPCTSTR)client->DbgGetClientInfo(true));
+	} else {
+		if (packet != NULL)
+			Debug(_T(">>> %-20hs; %s\n"), pszMsg, (LPCTSTR)DbgGetFileInfo(packet));
+		else
+			Debug(_T(">>> %-20hs\n"), pszMsg);
+	}
 }
 
 void DebugSend(LPCSTR pszOpcode, uint32 ip, uint16 port)
@@ -2539,38 +2497,31 @@ void DebugRecv(LPCSTR pszOpcode, uint32 ip, uint16 port)
 
 void DebugHttpHeaders(const CStringAArray &astrHeaders)
 {
-	for (int i = 0; i < astrHeaders.GetCount(); ++i) {
-		const CStringA &rstrHdr = astrHeaders[i];
-		Debug(_T("<%hs\n"), (LPCSTR)rstrHdr);
-	}
+	for (int i = 0; i < astrHeaders.GetCount(); ++i)
+		Debug(_T("<%hs\n"), (LPCSTR)astrHeaders[i]);
+}
+
+void throwCStr(LPCTSTR pStr)
+{
+	throw CString(pStr);
 }
 
 ULONGLONG GetDiskFileSize(LPCTSTR pszFilePath)
 {
-	static BOOL _bInitialized = FALSE;
-	static DWORD(WINAPI *_pfnGetCompressedFileSize)(LPCTSTR, LPDWORD) = NULL;
-
-	if (!_bInitialized) {
-		_bInitialized = TRUE;
-		(FARPROC&)_pfnGetCompressedFileSize = GetProcAddress(GetModuleHandle(_T("kernel32")), _TWINAPI("GetCompressedFileSize"));
-	}
-
 	// If the file is not compressed nor sparse, 'GetCompressedFileSize' returns the 'normal' file size.
-	if (_pfnGetCompressedFileSize) {
-		ULONGLONG ullCompFileSize;
-		((LPDWORD)&ullCompFileSize)[0] = (*_pfnGetCompressedFileSize)(pszFilePath, &((LPDWORD)&ullCompFileSize)[1]);
-		if (((LPDWORD)&ullCompFileSize)[0] != INVALID_FILE_SIZE || ::GetLastError() == NO_ERROR)
-			return ullCompFileSize;
-	}
+	ULONGLONG ullCompFileSize;
+	((LPDWORD)&ullCompFileSize)[0] = ::GetCompressedFileSize(pszFilePath, &((LPDWORD)&ullCompFileSize)[1]);
+	if (((LPDWORD)&ullCompFileSize)[0] != INVALID_FILE_SIZE || ::GetLastError() == NO_ERROR)
+		return ullCompFileSize;
 
 	// If 'GetCompressedFileSize' failed or is not available, use the default function
 	WIN32_FIND_DATA fd;
-	HANDLE hFind = FindFirstFile(pszFilePath, &fd);
+	HANDLE hFind = ::FindFirstFile(pszFilePath, &fd);
 	if (hFind == INVALID_HANDLE_VALUE)
 		return 0;
-	FindClose(hFind);
+	::FindClose(hFind);
 
-	return (ULONGLONG)fd.nFileSizeHigh << 32 | (ULONGLONG)fd.nFileSizeLow;
+	return ((ULONGLONG)fd.nFileSizeHigh << 32) | fd.nFileSizeLow;
 }
 
 // Listview helper function
@@ -2717,7 +2668,7 @@ public:
 		ASSERT(strVolumeId.Right(1) == _T("\\"));
 		strVolumeId.MakeLower();
 		CMapStringToString::CPair *pPair = m_mapVolumeInfo.PLookup(strVolumeId);
-		if (pPair != NULL)
+		if (pPair)
 			return pPair->value;
 
 		// 'GetVolumeInformation' may cause a noticeable delay - depending on the type of volume
@@ -2777,31 +2728,48 @@ void ClearVolumeInfoCache(int iDrive)
 bool IsFileOnNTFSVolume(LPCTSTR pszFilePath)
 {
 	CString strRootPath(pszFilePath);
-	BOOL bResult = PathStripToRoot(strRootPath.GetBuffer());
+	BOOL bResult = ::PathStripToRoot(strRootPath.GetBuffer());
 	strRootPath.ReleaseBuffer();
 	if (!bResult)
 		return false;
 	// Need to add a trailing backslash in case of a network share
-	if (!strRootPath.IsEmpty() && strRootPath[strRootPath.GetLength() - 1] != _T('\\')) {
-		PathAddBackslash(strRootPath.GetBuffer(strRootPath.GetLength() + 1));
-		strRootPath.ReleaseBuffer();
-	}
+	if (!strRootPath.IsEmpty())
+		slosh(strRootPath);
 	return IsNTFSVolume(strRootPath);
 }
 
 bool IsFileOnFATVolume(LPCTSTR pszFilePath)
 {
 	CString strRootPath(pszFilePath);
-	BOOL bResult = PathStripToRoot(strRootPath.GetBuffer());
+	BOOL bResult = ::PathStripToRoot(strRootPath.GetBuffer());
 	strRootPath.ReleaseBuffer();
 	if (!bResult)
 		return false;
 	// Need to add a trailing backslash in case of a network share
-	if (!strRootPath.IsEmpty() && strRootPath[strRootPath.GetLength() - 1] != _T('\\')) {
-		PathAddBackslash(strRootPath.GetBuffer(strRootPath.GetLength() + 1));
-		strRootPath.ReleaseBuffer();
-	}
+	if (!strRootPath.IsEmpty())
+		slosh(strRootPath);
 	return IsFATVolume(strRootPath);
+}
+
+// ignore real(!) thumbs.db files -- seems that lot of ppl have 'thumbs.db' files without the 'System' file attribute
+bool IsThumbsDb(const CString &sFilePath, const CString &sFileName)
+{
+	if (sFileName.CompareNoCase(_T("thumbs.db")) == 0) {
+		// if that's a valid 'Storage' file, we declare it as a "thumbs.db" file.
+		CComPtr<IStorage> pStorage;
+		if (StgOpenStorage(sFilePath, NULL, STGM_READ | STGM_SHARE_DENY_WRITE, NULL, 0, &pStorage) == S_OK) {
+			CComPtr<IEnumSTATSTG> pEnumSTATSTG;
+			if (SUCCEEDED(pStorage->EnumElements(0, NULL, 0, &pEnumSTATSTG))) {
+				STATSTG statstg;
+				if (pEnumSTATSTG->Next(1, &statstg, 0) == S_OK) {
+					::CoTaskMemFree(statstg.pwcsName);
+					statstg.pwcsName = NULL;
+					return true;
+				}
+			}
+		}
+	}
+	return false;
 }
 
 bool IsAutoDaylightTimeSetActive()
@@ -2845,7 +2813,7 @@ bool AdjustNTFSDaylightFileTime(time_t &ruFileDate, LPCTSTR pszFilePath)
 			/*struct tm *ptm = localtime((time_t*)&ruFileDate);
 			bool bFileDateInDST = (ptm && ptm->tm_isdst == 1);
 			if (bFileDateInDST) {
-				ruFileDate += lDaylightBias*60;
+				ruFileDate += MIN2S(lDaylightBias);
 				return true;
 			}*/
 		}
@@ -2856,14 +2824,14 @@ bool AdjustNTFSDaylightFileTime(time_t &ruFileDate, LPCTSTR pszFilePath)
 
 __time64_t FileTimeToUnixTime(const FILETIME &ft)
 {
-	const ULONGLONG t = *(UNALIGNED64 ULONGLONG*)&ft;
+	const ULONGLONG t = *(__unaligned ULONGLONG*)&ft;
 	return t ? t / 10000000ull - 11644473600ull : 0;
 }
 
-int statUTC(LPCTSTR pname, struct _stat64 &ft)
+int statUTC(LPCTSTR pName, struct _stat64 &ft)
 {
 	WIN32_FILE_ATTRIBUTE_DATA fa;
-	if (GetFileAttributesEx(pname, GetFileExInfoStandard, &fa)) {
+	if (GetFileAttributesEx(pName, GetFileExInfoStandard, &fa)) {
 		memset(&ft, 0, sizeof ft);
 		ft.st_atime = FileTimeToUnixTime(fa.ftLastAccessTime);
 		ft.st_ctime = FileTimeToUnixTime(fa.ftCreationTime);
@@ -2874,10 +2842,10 @@ int statUTC(LPCTSTR pname, struct _stat64 &ft)
 	return -1;
 }
 
-int statUTC(int ifile, struct _stat64 &ft)
+int statUTC(HANDLE hFile, struct _stat64 &ft)
 {
 	BY_HANDLE_FILE_INFORMATION fi;
-	if (GetFileInformationByHandle((HANDLE)_get_osfhandle(ifile), &fi)) {
+	if (GetFileInformationByHandle(hFile, &fi)) {
 		memset(&ft, 0, sizeof ft);
 		ft.st_atime = FileTimeToUnixTime(fi.ftLastAccessTime);
 		ft.st_ctime = FileTimeToUnixTime(fi.ftCreationTime);
@@ -2908,15 +2876,15 @@ bool ExpandEnvironmentStrings(CString &rstrStrings)
 uint16 GetRandomUInt16()
 {
 #if RAND_MAX == 0x7fff
-	// get 2 random numbers
-	UINT uRand0 = rand();
-	UINT uRand1 = rand();
-
-	// NOTE: if that assert fires, you have most likely called that function *without* calling 'srand' first.
+	uint32 uRand0 = rand();
+	uint32 uRand1 = rand();
+	ASSERT(uRand0 != 41 || uRand1 != 18467);
+	// NOTE: if this assert fires, most likely this function was called *without* calling 'srand' first.
 	// NOTE: each spawned thread HAS to call 'srand' for itself to get real random numbers.
-	ASSERT(!(uRand0 == 41 && uRand1 == 18467));
 
-	return (uint16)(uRand0 | ((uRand1 >= RAND_MAX / 2) ? 0x8000 : 0x0000));
+	uRand0 |= (uRand1 & 0x4000) << 1;
+	srand(::GetTickCount() ^ (uRand0 << 16));
+	return (uint16)uRand0;
 #else
 #error "Implement it!"
 #endif
@@ -2925,17 +2893,16 @@ uint16 GetRandomUInt16()
 uint32 GetRandomUInt32()
 {
 #if RAND_MAX == 0x7fff
-	//return ((uint32)GetRandomUInt16() << 16) | (uint32)GetRandomUInt16();
-	// this would give the receiver the following information:
-	//	random number N
-	//	random number N+1 is below or greater/equal than 0x8000
-	//	random number N+2
-	//	random number N+3 is below or greater/equal than 0x8000
+	uint32 uRand0 = rand();
+	uint32 uRand1 = rand();
+	ASSERT(uRand0 != 41 || uRand1 != 18467);
+	// NOTE: if this assert fires, most likely this function was called *without* calling 'srand' first.
+	// NOTE: each spawned thread HAS to call 'srand' for itself to get real random numbers.
 
-	uint32 uRand0 = GetRandomUInt16();
-	srand(::GetTickCount() | uRand0);
-	uint32 uRand1 = GetRandomUInt16();
-	return (uRand0 << 16) | uRand1;
+	uRand0 = (uRand0 << 15) | (uRand1 & 0x6000);
+	uRand0 = (uRand0 << 2) | rand();
+	srand(::GetTickCount() ^ uRand0);
+	return uRand0;
 #else
 #error "Implement it!"
 #endif
@@ -2973,6 +2940,13 @@ HWND ReplaceRichEditCtrl(CWnd *pwndRE, CWnd *pwndParent, CFont *pFont)
 	return hwndNewRE;
 }
 
+void DisableAutoSelect(CRichEditCtrl &re)
+{
+	re.SetSel(0, 0);
+	re.HideSelection(TRUE, FALSE);
+	re.SetOptions(ECOOP_OR, ECO_SAVESEL);
+}
+
 void InstallSkin(LPCTSTR pszSkinPackage)
 {
 	if (thePrefs.GetMuleDirectory(EMULE_SKINDIR).IsEmpty() || _taccess(thePrefs.GetMuleDirectory(EMULE_SKINDIR), 0) != 0) {
@@ -2982,7 +2956,7 @@ void InstallSkin(LPCTSTR pszSkinPackage)
 
 	static TCHAR const _szSkinSuffix[] = _T(".") EMULSKIN_BASEEXT _T(".ini");
 	UINT uid = 0;
-	CString szExt(PathFindExtension(pszSkinPackage));
+	CString szExt(::PathFindExtension(pszSkinPackage));
 	szExt.MakeLower();
 
 	if (szExt == _T(".zip")) {
@@ -3013,8 +2987,8 @@ void InstallSkin(LPCTSTR pszSkinPackage)
 					}
 
 					if (zf->m_sName[zf->m_sName.GetLength() - 1] == _T('/')) {
-						CString strDstDirPath;
-						strDstDirPath.Format(_T("%s\\%s"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_SKINDIR), (LPCTSTR)zf->m_sName.Left(zf->m_sName.GetLength() - 1));
+						CString strDstDirPath(thePrefs.GetMuleDirectory(EMULE_SKINDIR));
+						strDstDirPath += zf->m_sName.Left(zf->m_sName.GetLength() - 1);
 						canonical(strDstDirPath);
 						if (!::CreateDirectory(strDstDirPath, NULL)) {
 							DWORD dwError = ::GetLastError();
@@ -3024,8 +2998,8 @@ void InstallSkin(LPCTSTR pszSkinPackage)
 							break;
 						}
 					} else {
-						CString strDstFilePath;
-						strDstFilePath.Format(_T("%s\\%s"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_SKINDIR), (LPCTSTR)zf->m_sName);
+						CString strDstFilePath(thePrefs.GetMuleDirectory(EMULE_SKINDIR));
+						strDstFilePath += zf->m_sName;
 						canonical(strDstFilePath);
 						::SetLastError(0);
 						if (!zf->Extract(strDstFilePath)) {
@@ -3064,8 +3038,8 @@ void InstallSkin(LPCTSTR pszSkinPackage)
 					bFoundSkinINIFile = true;
 
 				// No need to care about possible available sub-directories. UnRAR.DLL cares about that automatically.
-				CString strDstFilePath;
-				strDstFilePath.Format(_T("%s\\%s"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_SKINDIR), (LPCTSTR)strFileName);
+				CString strDstFilePath(thePrefs.GetMuleDirectory(EMULE_SKINDIR));
+				strDstFilePath += strFileName;
 				canonical(strDstFilePath);
 				::SetLastError(0);
 				if (!rar.Extract(strDstFilePath)) {
@@ -3083,8 +3057,8 @@ void InstallSkin(LPCTSTR pszSkinPackage)
 
 			rar.Close();
 		} else {
-			CString strError;
-			strError.Format(_T("%s\r\n\r\nDownload latest version of UNRAR.DLL from http://www.rarlab.com and copy UNRAR.DLL into eMule installation folder."), (LPCTSTR)GetResString(IDS_INSTALL_SKIN_PKG_ERROR));
+			CString strError(GetResString(IDS_INSTALL_SKIN_PKG_ERROR));
+			strError += _T("\r\n\r\nDownload latest version of UNRAR.DLL from https://www.rarlab.com and copy UNRAR.DLL into eMule installation folder.");
 			AfxMessageBox(strError, MB_ICONERROR);
 		}
 	}
@@ -3167,10 +3141,10 @@ void Sort(CSimpleArray<const CString*> &apstr, int(__cdecl *pfnCompare)(const vo
 // SLUGFILLER: heapsortCompletesrc
 void HeapSort(CArray<uint16, uint16> &count, UINT first, UINT last)
 {
-	for (UINT r = first; !(r & (UINT)INT_MIN) && (r << 1) < last; ) {
+	for (UINT r = first; !(r & (UINT)INT_MIN) && (r << 1) < last;) {
 		UINT r2 = (r << 1) + 1;
 		if (r2 != last)
-			r2 += static_cast<uint16>(count[r2] < count[r2 + 1]);
+			r2 += static_cast<UINT>(count[r2] < count[r2 + 1]);
 		if (count[r] >= count[r2])
 			break;
 		uint16 t = count[r2];
@@ -3314,7 +3288,7 @@ bool IsUnicodeFile(LPCTSTR pszFilePath)
 {
 	WORD wBOM;
 	FILE *fp = _tfsopen(pszFilePath, _T("rb"), _SH_DENYWR);
-	bool bResult = (fp != NULL) && fread(&wBOM, sizeof wBOM, 1, fp) == 1 && wBOM == 0xFEFFui16;
+	bool bResult = (fp != NULL) && fread(&wBOM, sizeof wBOM, 1, fp) == 1 && wBOM == u'\xFEFF';
 	if (fp != NULL)
 		fclose(fp);
 	return bResult;
@@ -3381,7 +3355,22 @@ int GetPathDriveNumber(const CString &path)
 	if (path.GetLength() < 3 || path[1] != _T(':') || path[2] != _T('\\'))
 		return -1;
 
-	return tolower(path[0]) - 'a'; //97, lower case 'a'
+	return tolower(path[0]) - 'a'; //lower case 'a' ASCII 97(0x61)
+}
+
+CString GetShareName(const CString &path)
+{
+	//Should be a drive '\\?\volume\' or '\\.\volume\', or a UNC share '\\server\name\'
+	if (path.GetLength() >= 5 && path[0] == _T('\\') || path[1] == _T('\\')) {
+		int i = path.Find(_T('\\'), 3);
+		if (i > 0) {
+			i = path.Find(_T('\\'), i + 1);
+			if (i > 0)
+				return path.Left(i + 1);
+		}
+	}
+	ASSERT(0);
+	return CString();
 }
 
 uint64 GetFreeTempSpace(INT_PTR tempdirindex)
@@ -3394,7 +3383,7 @@ uint64 GetFreeTempSpace(INT_PTR tempdirindex)
 	if (tempdirindex >= 0)
 		return GetFreeDiskSpaceX(thePrefs.GetTempDir(tempdirindex));
 
-	CArray<int> hist;
+	CArray<int, int> hist;
 	uint64 sum = 0;
 	for (INT_PTR i = 0; i < thePrefs.GetTempDirCount(); ++i) {
 		int pdn = GetPathDriveNumber(thePrefs.GetTempDir(i));
@@ -3621,13 +3610,14 @@ EFileType GetFileTypeEx(CShareableFile *kfile, bool checkextention, bool checkfi
 	CPartFile *pfile = static_cast<CPartFile*>(kfile);
 
 	bool test4iso = (!kfile->IsPartFile()
-		|| ((uint64)pfile->GetFileSize() > 0x8000 + HEADERCHECKSIZE && pfile->IsComplete(0x8000, 0x8000 + HEADERCHECKSIZE, true)));
-	if (checkfileheader && (!kfile->IsPartFile() || pfile->IsComplete(0, HEADERCHECKSIZE, true) || test4iso)) {
+		|| ((uint64)pfile->GetCompletedSize() > 0x8000 + HEADERCHECKSIZE
+			&& pfile->IsCompleteBD(0x8000, 0x8000 + HEADERCHECKSIZE)));
+	if (checkfileheader && (!kfile->IsPartFile() || pfile->IsCompleteBDSafe(0, HEADERCHECKSIZE) || test4iso)) {
 		try {
 			CFile inFile;
 			if (inFile.Open(kfile->GetFilePath(), CFile::modeRead | CFile::shareDenyNone)) {
 				unsigned char headerbuf[HEADERCHECKSIZE];
-				if (!kfile->IsPartFile() || pfile->IsComplete(0, HEADERCHECKSIZE, true)) {
+				if (!kfile->IsPartFile() || pfile->IsCompleteBDSafe(0, HEADERCHECKSIZE)) {
 					int read = inFile.Read(headerbuf, HEADERCHECKSIZE);
 					if (read == HEADERCHECKSIZE) {
 						if (memcmp(headerbuf, FILEHEADER_ZIP_ID, sizeof FILEHEADER_ZIP_ID) == 0)
@@ -3666,11 +3656,8 @@ EFileType GetFileTypeEx(CShareableFile *kfile, bool checkextention, bool checkfi
 							res = PIC_GIF;
 						else if (memcmp(headerbuf, FILEHEADER_EXE_ID, sizeof FILEHEADER_EXE_ID) == 0) {
 							// This could be a self extracting RAR archive. If the ED2K name of the file
-							// has the RAR extension we treat this 'EXE' file like an 'unverified' RAR file.
-							if (_tcsicmp(PathFindExtension(kfile->GetFileName()), _T(".rar")) == 0)
-								res = FILETYPE_UNKNOWN;
-							else
-								res = FILETYPE_EXECUTABLE;
+							// has the RAR extension we treat this 'EXE' file as an 'unverified' RAR file.
+							res = ExtensionIs(kfile->GetFileName(), _T(".rar")) ? FILETYPE_UNKNOWN : FILETYPE_EXECUTABLE;
 						} else if ((headerbuf[0] & 0xFF) == 0xFF && (headerbuf[1] & 0xE0) == 0xE0)
 							res = AUDIO_MPEG;
 					}
@@ -3699,10 +3686,9 @@ EFileType GetFileTypeEx(CShareableFile *kfile, bool checkextention, bool checkfi
 	if (!checkextention)
 		return res;
 
-	CString extLC;
-	int posD = kfile->GetFileName().ReverseFind(_T('.'));
-	if (posD >= 0)
-		extLC = kfile->GetFileName().Mid(posD + 1).MakeUpper();
+	LPCTSTR pDot = ::PathFindExtension(kfile->GetFileName());
+	CString extLC(pDot + static_cast<int>(*pDot != _T('\0'))); //skip the dot
+	extLC.MakeLower();
 
 	for (const SFileExts *ext = s_fileexts; ext->ftype != FILETYPE_UNKNOWN; ++ext) {
 		const CString &testext(ext->extlist);
@@ -3710,7 +3696,7 @@ EFileType GetFileTypeEx(CShareableFile *kfile, bool checkextention, bool checkfi
 			return ext->ftype;
 	}
 
-	// rar multivolume old naming
+	// rar multi-volume old naming
 	if (extLC.GetLength() == 3 && extLC[0] == _T('R') && _istdigit(extLC[1]) && _istdigit(extLC[2]))
 		return ARCHIVE_RAR;
 	return FILETYPE_UNKNOWN;
@@ -3727,7 +3713,7 @@ CString GetFileTypeName(EFileType ftype)
 
 bool ExtensionIs(LPCTSTR pszFilePath, LPCTSTR pszExt)
 {
-	return _tcsicmp(PathFindExtension(pszFilePath), pszExt) == 0;
+	return _tcsicmp(::PathFindExtension(pszFilePath), pszExt) == 0;
 }
 
 // 1 - type matches acceptable extension
@@ -3771,8 +3757,7 @@ uint32 LevenshteinDistance(const CString &str1, const CString &str2)
 	return d_del;
 }
 
-
-// Wrapper for _tmakepath which ensures that the outputbuffer does not exceed MAX_PATH
+// Wrapper for _tmakepath which ensures that the output buffer does not exceed MAX_PATH
 // using a smaller buffer without checking the sizes prior calling this function is not safe
 // If the resulting path would be bigger than MAX_PATH-1, it will be empty and return false (similar to PathCombine)
 bool _tmakepathlimit(LPTSTR path, LPCTSTR drive, LPCTSTR dir, LPCTSTR fname, LPCTSTR ext)
@@ -3792,6 +3777,42 @@ bool _tmakepathlimit(LPTSTR path, LPCTSTR drive, LPCTSTR dir, LPCTSTR fname, LPC
 		return false;
 	}
 	_tcscpy(path, tchBuffer);
+	return true;
+}
+
+bool HasSubdirectories(const CString &strDir)
+{
+	// Never try to enumerate the files of a drive and thus physically access the drive, just
+	// for the information whether the drive has subdirectories in the root folder. Depending
+	// on the physical drive type (floppy disk, CD-ROM drive, etc.) this creates an annoying
+	// physical access to that drive - which is to be avoided in each case. Even Windows
+	// Explorer shows all drives by default with a '+' sign (which means that the user has
+	// to explicitly open the drive to really get the content) - and that approach will be fine
+	// for eMule as well.
+	// Since the restriction for drives 'A:' and 'B:' was removed, this gets more important now.
+	CString sDir(strDir);
+	slosh(sDir); //required for PathIsRoot
+	if (::PathIsRoot(sDir))
+		return true;
+	CFileFind finder;
+	for (BOOL bFound = finder.FindFile(sDir + _T('*')); bFound;) {
+		bFound = finder.FindNextFile();
+		if (finder.IsDirectory() && !finder.IsDots() && !finder.IsSystem())
+			return true;
+	}
+	return false;
+}
+
+bool DirAccsess(const CString &strDir)
+{
+	// Check directory existence only for fixed disks
+	int iDrive = ::PathGetDriveNumber(strDir);
+	if (iDrive >= 0 && iDrive <= 25) {
+		TCHAR szRootPath[4] = _T("@:\\");
+		*szRootPath = (TCHAR)(_T('A') + iDrive);
+		if (::GetDriveType(szRootPath) == DRIVE_FIXED && _taccess(strDir, 0) != 0)
+			return false;
+	}
 	return true;
 }
 

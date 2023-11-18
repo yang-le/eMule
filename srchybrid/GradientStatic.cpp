@@ -147,18 +147,16 @@ void CGradientStatic::DrawHorizontalText(CRect *pRect)
 		m_Mem.dc.SelectObject(pOldFont);
 }
 
-void DrawRotatedText(HDC hdc, LPCTSTR str, LPRECT rect, double angle, UINT nOptions = 0)
+void DrawRotatedText(HDC hdc, LPCTSTR str, LPCRECT rect, double angle, UINT nOptions = 0)
 {
 	// convert angle to radian
-	double radian = M_PI * 2 / 360 * angle;
+	double radian = M_PI / 180 * angle;
 
 	// get the center of a not-rotated text
 	SIZE TextSize;
 	GetTextExtentPoint32(hdc, str, (int)_tcslen(str), &TextSize);
 
-	POINT center;
-	center.x = TextSize.cx / 2;
-	center.y = TextSize.cy / 2;
+	const POINT center{ TextSize.cx / 2, TextSize.cy / 2 };
 
 	// now calculate the center of the rotated text
 	POINT rcenter;
@@ -168,7 +166,7 @@ void DrawRotatedText(HDC hdc, LPCTSTR str, LPRECT rect, double angle, UINT nOpti
 	// finally draw the text and move it to the center of the rectangle
 	::SetTextAlign(hdc, TA_BOTTOM);
 	::SetBkMode(hdc, TRANSPARENT);
-	::ExtTextOut(hdc, rect->left + (rect->right - rect->left) / 2 - rcenter.x,
+	::ExtTextOut(hdc, (rect->left + rect->right) / 2 - rcenter.x,
 		rect->bottom, nOptions, rect, str, (UINT)_tcslen(str), NULL);
 }
 

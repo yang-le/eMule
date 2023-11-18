@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -18,7 +18,6 @@
 #include "emule.h"
 #include "emuleDlg.h"
 #include "SearchDlg.h"
-#include "SearchParamsWnd.h"
 #include "SearchResultsWnd.h"
 #include "OtherFunctions.h"
 #include "HelpIDs.h"
@@ -45,14 +44,8 @@ BEGIN_MESSAGE_MAP(CSearchDlg, CFrameWnd)
 END_MESSAGE_MAP()
 
 CSearchDlg::CSearchDlg()
+	: m_pwndResults()
 {
-	m_pwndParams = new CSearchParamsWnd;
-	m_pwndResults = NULL;
-}
-
-CSearchDlg::~CSearchDlg()
-{
-	delete m_pwndParams;
 }
 
 BOOL CSearchDlg::Create(CWnd *pParent)
@@ -76,27 +69,27 @@ int CSearchDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	context.m_pNewViewClass = RUNTIME_CLASS(CSearchResultsWnd);
 	context.m_pNewDocTemplate = NULL;
 	m_pwndResults = static_cast<CSearchResultsWnd*>(CreateView(&context));
-	m_pwndParams->m_searchdlg = m_pwndResults;
+	m_wndParams.m_searchdlg = m_pwndResults;
 	m_pwndResults->ModifyStyle(WS_BORDER, 0);
 	m_pwndResults->ModifyStyleEx(WS_EX_CLIENTEDGE, WS_EX_STATICEDGE);
 
-	m_pwndParams->Create(this, IDD_SEARCH_PARAMS
+	m_wndParams.Create(this, IDD_SEARCH_PARAMS
 		, WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_SIZE_FIXED | CBRS_SIZE_DYNAMIC | CBRS_GRIPPER
 		, IDBAR_SEARCH_PARAMS);
-	ASSERT(m_pwndParams->GetStyle() & WS_CLIPSIBLINGS);
-	ASSERT(m_pwndParams->GetStyle() & WS_CLIPCHILDREN);
-	m_pwndParams->SetWindowText(GetResString(IDS_SEARCHPARAMS));
-	m_pwndParams->EnableDocking(CBRS_ALIGN_ANY);
+	ASSERT(m_wndParams.GetStyle() & WS_CLIPSIBLINGS);
+	ASSERT(m_wndParams.GetStyle() & WS_CLIPCHILDREN);
+	m_wndParams.SetWindowText(GetResString(IDS_SEARCHPARAMS));
+	m_wndParams.EnableDocking(CBRS_ALIGN_ANY);
 
 	EnableDocking(CBRS_ALIGN_ANY);
-	DockControlBar(m_pwndParams, AFX_IDW_DOCKBAR_TOP, (LPRECT)NULL);
+	DockControlBar(&m_wndParams, AFX_IDW_DOCKBAR_TOP, (LPRECT)NULL);
 
-	m_pwndResults->m_pwndParams = m_pwndParams;
+	m_pwndResults->m_pwndParams = &m_wndParams;
 	m_pwndResults->SendMessage(WM_INITIALUPDATE);
 
 	LoadBarState(SEARCH_PARAMS_PROFILE);
-	DockParametersWnd(); // Too much bug reports about vanished search parameters window. Force to dock.
-	ShowControlBar(m_pwndParams, TRUE, TRUE);
+	DockParametersWnd(); // Too many bug reports about vanished search parameters window. Force to dock.
+	OpenParametersWnd();
 	Localize();
 
 	return 0;
@@ -116,7 +109,7 @@ void CSearchDlg::DeleteAllSearchListCtrlItems()
 void CSearchDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 {
 	CFrameWnd::OnShowWindow(bShow, nStatus);
-	if (m_pwndParams->IsFloating()) {
+	if (m_wndParams.IsFloating()) {
 		//ShowControlBar(m_pwndParams, bShow, TRUE);
 		DockParametersWnd(); // Too much bug reports about vanished search parameters window. Force to dock.
 	}
@@ -125,37 +118,37 @@ void CSearchDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 void CSearchDlg::OnSetFocus(CWnd *pOldWnd)
 {
 	CFrameWnd::OnSetFocus(pOldWnd);
-	if (m_pwndParams->m_hWnd)
-		m_pwndParams->SetFocus();
+	if (m_wndParams.m_hWnd)
+		m_wndParams.SetFocus();
 }
 
 void CSearchDlg::SaveAllSettings()
 {
-	m_pwndParams->SaveSettings();
+	m_wndParams.SaveSettings();
 }
 
 void CSearchDlg::ResetHistory()
 {
-	m_pwndParams->ResetHistory();
+	m_wndParams.ResetHistory();
 }
 
 BOOL CSearchDlg::IsSearchParamsWndVisible() const
 {
-	return m_pwndParams->IsWindowVisible();
+	return m_wndParams.IsWindowVisible();
 }
 
 void CSearchDlg::OpenParametersWnd()
 {
-	ShowControlBar(m_pwndParams, TRUE, TRUE);
+	ShowControlBar(&m_wndParams, TRUE, TRUE);
 }
 
 void CSearchDlg::DockParametersWnd()
 {
-	if (m_pwndParams->IsFloating()) {
+	if (m_wndParams.IsFloating()) {
 		UINT uMRUDockID = AFX_IDW_DOCKBAR_TOP;
-		if (m_pwndParams->m_pDockContext)
-			uMRUDockID = m_pwndParams->m_pDockContext->m_uMRUDockID;
-		DockControlBar(m_pwndParams, uMRUDockID);
+		if (m_wndParams.m_pDockContext)
+			uMRUDockID = m_wndParams.m_pDockContext->m_uMRUDockID;
+		DockControlBar(&m_wndParams, uMRUDockID);
 	}
 }
 
@@ -219,7 +212,7 @@ void CSearchDlg::AddEd2kSearchResults(UINT nCount)
 void CSearchDlg::Localize()
 {
 	m_pwndResults->Localize();
-	m_pwndParams->Localize();
+	m_wndParams.Localize();
 }
 
 void CSearchDlg::CreateMenus()
@@ -239,7 +232,7 @@ bool CSearchDlg::DoNewEd2kSearch(SSearchParams *pParams)
 
 void CSearchDlg::ProcessEd2kSearchLinkRequest(const CString &strSearchTerm)
 {
-	m_pwndParams->ProcessEd2kSearchLinkRequest(strSearchTerm);
+	m_wndParams.ProcessEd2kSearchLinkRequest(strSearchTerm);
 }
 
 void CSearchDlg::DeleteAllSearches()

@@ -41,5 +41,5 @@ protected:
 	CAsyncProxySocketLayer *m_pProxyLayer;
 	CIrcMain *m_pIrcMain;
 
-	virtual int	OnLayerCallback(std::list<t_callbackMsg> &callbacks);
+	virtual int	OnLayerCallback(std::vector<t_callbackMsg> &callbacks);
 };

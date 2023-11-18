@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -279,8 +279,8 @@ CString CPPgScheduler::GetDayLabel(int index)
 {
 	UINT uid;
 	switch (index) {
-	case DAY_DAYLY:
-		uid = IDS_DAYLY;
+	case DAY_DAILY:
+		uid = IDS_DAILY;
 		break;
 	case DAY_MO:
 		uid = IDS_MO;
@@ -366,7 +366,7 @@ void CPPgScheduler::OnNmRClickActionlist(LPNMHDR, LRESULT *pResult)
 		if (thePrefs.GetCatCount() > 1)
 			m_CatActionSel.AppendMenu(MF_STRING, MP_SCHACTIONS + 20, GetResString(IDS_ALLUNASSIGNED));
 		m_CatActionSel.AppendMenu(MF_STRING, MP_SCHACTIONS + 21, GetResString(IDS_ALL));
-		for (int i = 1; i < thePrefs.GetCatCount(); ++i)
+		for (INT_PTR i = 1; i < thePrefs.GetCatCount(); ++i)
 			m_CatActionSel.AppendMenu(MF_STRING, MP_SCHACTIONS + 22 + i, thePrefs.GetCategory(i)->strTitle);
 		m_ActionMenu.AppendMenu(MF_POPUP, (UINT_PTR)m_CatActionSel.m_hMenu, GetResString(IDS_SELECTCAT));
 	} else

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
 #include "UploadListCtrl.h"
 #include "TransferWnd.h"
 #include "TransferDlg.h"
-#include "otherfunctions.h"
+#include "UpDownClient.h"
 #include "MenuCmds.h"
 #include "ClientDetailDialog.h"
 #include "KademliaWnd.h"
@@ -28,13 +28,11 @@
 #include "MemDC.h"
 #include "KnownFile.h"
 #include "SharedFileList.h"
-#include "UpDownClient.h"
 #include "ClientCredits.h"
 #include "ChatWnd.h"
 #include "kademlia/kademlia/Kademlia.h"
 #include "kademlia/net/KademliaUDPListener.h"
 #include "UploadQueue.h"
-#include "ToolTipCtrlX.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -57,14 +55,8 @@ END_MESSAGE_MAP()
 CUploadListCtrl::CUploadListCtrl()
 	: CListCtrlItemWalk(this)
 {
-	m_tooltip = new CToolTipCtrlX;
 	SetGeneralPurposeFind(true);
 	SetSkinKey(_T("UploadsLv"));
-}
-
-CUploadListCtrl::~CUploadListCtrl()
-{
-	delete m_tooltip;
 }
 
 void CUploadListCtrl::Init()
@@ -74,26 +66,26 @@ void CUploadListCtrl::Init()
 
 	CToolTipCtrl *tooltip = GetToolTips();
 	if (tooltip) {
-		m_tooltip->SubclassWindow(tooltip->m_hWnd);
+		m_tooltip.SubclassWindow(tooltip->m_hWnd);
 		tooltip->ModifyStyle(0, TTS_NOPREFIX);
-		tooltip->SetDelayTime(TTDT_AUTOPOP, 20000);
+		tooltip->SetDelayTime(TTDT_AUTOPOP, SEC2MS(20));
 		tooltip->SetDelayTime(TTDT_INITIAL, SEC2MS(thePrefs.GetToolTipDelay()));
 	}
 
-	InsertColumn(0, GetResString(IDS_QL_USERNAME),	LVCFMT_LEFT, DFLT_CLIENTNAME_COL_WIDTH);
-	InsertColumn(1, GetResString(IDS_FILE),			LVCFMT_LEFT, DFLT_FILENAME_COL_WIDTH);
-	InsertColumn(2, GetResString(IDS_DL_SPEED),		LVCFMT_RIGHT,DFLT_DATARATE_COL_WIDTH);
-	InsertColumn(3, GetResString(IDS_DL_TRANSF),	LVCFMT_RIGHT,DFLT_DATARATE_COL_WIDTH);
-	InsertColumn(4, GetResString(IDS_WAITED),		LVCFMT_LEFT, 60);
-	InsertColumn(5, GetResString(IDS_UPLOADTIME),	LVCFMT_LEFT, 80);
-	InsertColumn(6, GetResString(IDS_STATUS),		LVCFMT_LEFT, 100);
-	InsertColumn(7, GetResString(IDS_UPSTATUS),		LVCFMT_LEFT, DFLT_PARTSTATUS_COL_WIDTH);
+	InsertColumn(0,	_T(""),	LVCFMT_LEFT, DFLT_CLIENTNAME_COL_WIDTH);	//IDS_QL_USERNAME
+	InsertColumn(1,	_T(""),	LVCFMT_LEFT, DFLT_FILENAME_COL_WIDTH);		//IDS_FILE
+	InsertColumn(2,	_T(""),	LVCFMT_RIGHT,DFLT_DATARATE_COL_WIDTH);		//IDS_DL_SPEED
+	InsertColumn(3,	_T(""),	LVCFMT_RIGHT,DFLT_DATARATE_COL_WIDTH);		//IDS_DL_TRANSF
+	InsertColumn(4,	_T(""),	LVCFMT_LEFT, 60);							//IDS_WAITED
+	InsertColumn(5,	_T(""),	LVCFMT_LEFT, 80);							//IDS_UPLOADTIME
+	InsertColumn(6,	_T(""),	LVCFMT_LEFT, 100);							//IDS_STATUS
+	InsertColumn(7,	_T(""),	LVCFMT_LEFT, DFLT_PARTSTATUS_COL_WIDTH);	//IDS_UPSTATUS
 
 	SetAllIcons();
 	Localize();
 	LoadSettings();
 	SetSortArrow();
-	SortItems(SortProc, GetSortItem() + (GetSortAscending() ? 0 : 100));
+	SortItems(SortProc, MAKELONG(GetSortItem(), !GetSortAscending()));
 }
 
 void CUploadListCtrl::Localize()
@@ -104,15 +96,7 @@ void CUploadListCtrl::Localize()
 		, IDS_UPLOADTIME, IDS_STATUS, IDS_UPSTATUS
 	};
 
-	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
-	HDITEM hdi;
-	hdi.mask = HDI_TEXT;
-
-	for (int i = 0; i < _countof(uids); ++i) {
-		CString strRes(GetResString(uids[i]));
-		hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-		pHeaderCtrl->SetItem(i, &hdi);
-	}
+	LocaliseHeaderCtrl(uids, _countof(uids));
 }
 
 void CUploadListCtrl::OnSysColorChange()
@@ -124,89 +108,78 @@ void CUploadListCtrl::OnSysColorChange()
 void CUploadListCtrl::SetAllIcons()
 {
 	ApplyImageList(NULL);
-	m_pImageList = theApp.emuledlg->transferwnd->GetClientIconList();
 	// Apply the image list also to the listview control, even if we use our own 'DrawItem'.
 	// This is needed to give the listview control a chance to initialize the row height.
 	ASSERT((GetStyle() & LVS_SHAREIMAGELISTS) != 0);
+	m_pImageList = &theApp.emuledlg->GetClientIconList();
 	VERIFY(ApplyImageList(*m_pImageList) == NULL);
 }
 
 void CUploadListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 {
-	if (theApp.IsClosing() || !lpDrawItemStruct->itemData)
+	if (!lpDrawItemStruct->itemData || theApp.IsClosing())
 		return;
 
-	CMemoryDC dc(CDC::FromHandle(lpDrawItemStruct->hDC), &lpDrawItemStruct->rcItem);
+	CRect rcItem(lpDrawItemStruct->rcItem);
+	CMemoryDC dc(CDC::FromHandle(lpDrawItemStruct->hDC), rcItem);
 	BOOL bCtrlFocused;
 	InitItemMemDC(dc, lpDrawItemStruct, bCtrlFocused);
-	CRect rcItem(lpDrawItemStruct->rcItem);
-	CRect rcClient;
+	RECT rcClient;
 	GetClientRect(&rcClient);
 	const CUpDownClient *client = reinterpret_cast<CUpDownClient*>(lpDrawItemStruct->itemData);
 	if (client->GetSlotNumber() > (UINT)theApp.uploadqueue->GetActiveUploadsCount())
 		dc.SetTextColor(::GetSysColor(COLOR_GRAYTEXT));
 
-	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
+	const CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
 	int iCount = pHeaderCtrl->GetItemCount();
-	rcItem.right = rcItem.left - sm_iLabelOffset;
-	rcItem.left += sm_iIconOffset;
+	LONG itemLeft = rcItem.left;
+	LONG iIconY = max((rcItem.Height() - 15) / 2, 0);
 	for (int iCurrent = 0; iCurrent < iCount; ++iCurrent) {
 		int iColumn = pHeaderCtrl->OrderToIndex(iCurrent);
-		if (!IsColumnHidden(iColumn)) {
-			UINT uDrawTextAlignment;
-			int iColumnWidth = GetColumnWidth(iColumn, uDrawTextAlignment);
-			rcItem.right += iColumnWidth;
-			if (rcItem.left < rcItem.right && HaveIntersection(rcClient, rcItem)) {
-				const CString &sItem(GetItemDisplayText(client, iColumn));
-				switch (iColumn) {
-				case 0:
+		if (IsColumnHidden(iColumn))
+			continue;
+
+		UINT uDrawTextAlignment;
+		int iColumnWidth = GetColumnWidth(iColumn, uDrawTextAlignment);
+		rcItem.left = itemLeft;
+		rcItem.right = itemLeft + iColumnWidth;
+		if (rcItem.left < rcItem.right && HaveIntersection(rcClient, rcItem)) {
+			const CString &sItem(GetItemDisplayText(client, iColumn));
+			switch (iColumn) {
+			case 0: //user name
+				{
+					int iImage;
+					UINT uOverlayImage;
+					client->GetDisplayImage(iImage, uOverlayImage);
+					//EastShare Start - added by AndCycle, IP to Country 
+					if (theApp.ip2country->ShowCountryFlag())
 					{
-						int iImage;
-						UINT uOverlayImage;
-						client->GetDisplayImage(iImage, uOverlayImage);
-
-						int iIconPosY = (rcItem.Height() > 16) ? ((rcItem.Height() - 16) / 2) : 1;
-						POINT point = {rcItem.left, rcItem.top + iIconPosY};
-
-						//EastShare Start - added by AndCycle, IP to Country 
-						if (theApp.ip2country->ShowCountryFlag())
-						{
-							rcItem.left += 20;
-							POINT point2 = { rcItem.left,rcItem.top + 1 };
-							//theApp.ip2country->GetFlagImageList()->Draw(dc, client->GetCountryFlagIndex(), point2, ILD_NORMAL);
-							theApp.ip2country->GetFlagImageList()->DrawIndirect(&theApp.ip2country->GetFlagImageDrawParams(dc, client->GetCountryFlagIndex(), point2));
-							rcItem.left += sm_iLabelOffset;
-						}
-						//EastShare End - added by AndCycle, IP to Country
-
-						m_pImageList->Draw(dc, iImage, point, ILD_NORMAL | INDEXTOOVERLAYMASK(uOverlayImage));
-
-						rcItem.left += 16 + sm_iLabelOffset;
-						dc.DrawText(sItem, -1, &rcItem, MLC_DT_TEXT | uDrawTextAlignment);
-						rcItem.left -= 16;
-						rcItem.right -= sm_iSubItemInset;
-
-						//EastShare Start - added by AndCycle, IP to Country
-						if (theApp.ip2country->ShowCountryFlag())
-						{
-							rcItem.left -= 20;
-						}
-						//EastShare End - added by AndCycle, IP to Country
+						rcItem.left += 20;
+						POINT point2 = { rcItem.left,rcItem.top + 1 };
+						//theApp.ip2country->GetFlagImageList()->Draw(dc, client->GetCountryFlagIndex(), point2, ILD_NORMAL);
+						theApp.ip2country->GetFlagImageList()->DrawIndirect(&theApp.ip2country->GetFlagImageDrawParams(dc, client->GetCountryFlagIndex(), point2));
+						rcItem.left += sm_iLabelOffset;
 					}
-					break;
-				case 7:
-					++rcItem.top;
-					--rcItem.bottom;
-					client->DrawUpStatusBar(dc, &rcItem, false, thePrefs.UseFlatBar());
-					++rcItem.bottom;
-					--rcItem.top;
-					break;
-				default:
-					dc.DrawText(sItem, -1, &rcItem, MLC_DT_TEXT | uDrawTextAlignment);
+					//EastShare End - added by AndCycle, IP to Country
+					rcItem.left += sm_iIconOffset;
+					const POINT point = { rcItem.left, rcItem.top + iIconY };
+					m_pImageList->Draw(dc, iImage, point, ILD_NORMAL | INDEXTOOVERLAYMASK(uOverlayImage));
+					rcItem.left += 16 + sm_iLabelOffset - sm_iSubItemInset;
 				}
+			default: //any text column
+				rcItem.left += sm_iSubItemInset;
+				rcItem.right -= sm_iSubItemInset;
+				dc.DrawText(sItem, -1, &rcItem, MLC_DT_TEXT | uDrawTextAlignment);
+				break;
+			case 7: //upload status bar
+				++rcItem.top;
+				--rcItem.bottom;
+				client->DrawUpStatusBar(dc, &rcItem, false, thePrefs.UseFlatBar());
+				++rcItem.bottom;
+				--rcItem.top;
 			}
-			rcItem.left += iColumnWidth;
 		}
+		itemLeft += iColumnWidth;
 	}
 
 	DrawFocusRect(dc, &lpDrawItemStruct->rcItem, lpDrawItemStruct->itemState & ODS_FOCUS, bCtrlFocused, lpDrawItemStruct->itemState & ODS_SELECTED);
@@ -230,7 +203,7 @@ CString  CUploadListCtrl::GetItemDisplayText(const CUpDownClient *client, int iS
 		}
 		break;
 	case 2:
-		sText = CastItoXBytes(client->GetDatarate(), false, true);
+		sText = CastItoXBytes(client->GetUploadDatarate(), false, true);
 		break;
 	case 3:
 		// NOTE: If you change (add/remove) anything which is displayed here, update also the sorting part.
@@ -259,16 +232,16 @@ CString  CUploadListCtrl::GetItemDisplayText(const CUpDownClient *client, int iS
 void CUploadListCtrl::OnLvnGetDispInfo(LPNMHDR pNMHDR, LRESULT *pResult)
 {
 	if (!theApp.IsClosing()) {
-		// Although we have an owner drawn listview control we store the text for the primary item in the listview, to be
-		// capable of quick searching those items via the keyboard. Because our listview items may change their contents,
-		// we do this via a text callback function. The listview control will send us the LVN_DISPINFO notification if
-		// it needs to know the contents of the primary item.
+		// Although we have an owner drawn listview control we store the text for the primary item in the
+		// listview, to be capable of quick searching those items via the keyboard. Because our listview
+		// items may change their contents, we do this via a text callback function. The listview control
+		// will send us the LVN_DISPINFO notification if it needs to know the contents of the primary item.
 		//
-		// But, the listview control sends this notification all the time, even if we do not search for an item. At least
-		// this notification is only sent for the visible items and not for all items in the list. Though, because this
-		// function is invoked *very* often, do *NOT* put any time consuming code in here.
+		// But, the listview control sends this notification all the time, even if we do not search for an item.
+		// At least this notification is only sent for the visible items and not for all items in the list.
+		// Though, because this function is invoked *very* often, do *NOT* put any time consuming code in here.
 		//
-		// Vista: That callback is used to get the strings for the label tips for the sub(!) items.
+		// Vista: That callback is used to get the strings for the label tips for the sub(!)-items.
 		//
 		const LVITEMW &rItem = reinterpret_cast<NMLVDISPINFO*>(pNMHDR)->item;
 		if (rItem.mask & LVIF_TEXT) {
@@ -316,10 +289,10 @@ void CUploadListCtrl::OnLvnGetInfoTip(LPNMHDR pNMHDR, LRESULT *pResult)
 
 void CUploadListCtrl::OnLvnColumnClick(LPNMHDR pNMHDR, LRESULT *pResult)
 {
-	NMLISTVIEW *pNMListView = reinterpret_cast<NMLISTVIEW*>(pNMHDR);
+	const LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	bool sortAscending;
-	if (GetSortItem() != pNMListView->iSubItem) {
-		switch (pNMListView->iSubItem) {
+	if (GetSortItem() != pNMLV->iSubItem) {
+		switch (pNMLV->iSubItem) {
 		case 2: // Data rate
 		case 3: // Session Up
 		case 4: // Wait Time
@@ -333,10 +306,9 @@ void CUploadListCtrl::OnLvnColumnClick(LPNMHDR pNMHDR, LRESULT *pResult)
 		sortAscending = !GetSortAscending();
 
 	// Sort table
-	UpdateSortHistory(pNMListView->iSubItem + (sortAscending ? 0 : 100));
-	SetSortArrow(pNMListView->iSubItem, sortAscending);
-	SortItems(SortProc, pNMListView->iSubItem + (sortAscending ? 0 : 100));
-
+	UpdateSortHistory(MAKELONG(pNMLV->iSubItem, !sortAscending));
+	SetSortArrow(pNMLV->iSubItem, sortAscending);
+	SortItems(SortProc, MAKELONG(pNMLV->iSubItem, !sortAscending));
 	*pResult = 0;
 }
 
@@ -344,16 +316,14 @@ int CALLBACK CUploadListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 {
 	const CUpDownClient *item1 = reinterpret_cast<CUpDownClient*>(lParam1);
 	const CUpDownClient *item2 = reinterpret_cast<CUpDownClient*>(lParam2);
-	LPARAM iColumn = (lParamSort >= 100) ? lParamSort - 100 : lParamSort;
+
 	int iResult = 0;
-	switch (iColumn) {
+	switch (LOWORD(lParamSort)) {
 	case 0:
 		if (item1->GetUserName() && item2->GetUserName())
 			iResult = CompareLocaleStringNoCase(item1->GetUserName(), item2->GetUserName());
-		else if (item1->GetUserName() == NULL)
-			iResult = 1; // place clients with no usernames at bottom
-		else if (item2->GetUserName() == NULL)
-			iResult = -1; // place clients with no usernames at bottom
+		else if (item1->GetUserName() == NULL || item2->GetUserName() == NULL)
+			iResult = 1; // place clients with no user names at the bottom
 		break;
 	case 1:
 		{
@@ -366,7 +336,7 @@ int CALLBACK CUploadListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 		}
 		break;
 	case 2:
-		iResult = CompareUnsigned(item1->GetDatarate(), item2->GetDatarate());
+		iResult = CompareUnsigned(item1->GetUploadDatarate(), item2->GetUploadDatarate());
 		break;
 	case 3:
 		iResult = CompareUnsigned(item1->GetSessionUp(), item2->GetSessionUp());
@@ -386,14 +356,14 @@ int CALLBACK CUploadListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 		iResult = CompareUnsigned(item1->GetUpPartCount(), item2->GetUpPartCount());
 	}
 
-	if (lParamSort >= 100)
+	if (HIWORD(lParamSort))
 		iResult = -iResult;
 
-	//call secondary sortorder, if this one results in equal
+	//call secondary sort order, if the first one resulted as equal
 	if (iResult == 0) {
-		int dwNextSort = theApp.emuledlg->transferwnd->m_pwndTransfer->uploadlistctrl.GetNextSortOrder((int)lParamSort);
-		if (dwNextSort != -1)
-			iResult = SortProc(lParam1, lParam2, dwNextSort);
+		LPARAM iNextSort = theApp.emuledlg->transferwnd->m_pwndTransfer->uploadlistctrl.GetNextSortOrder(lParamSort);
+		if (iNextSort != -1)
+			iResult = SortProc(lParam1, lParam2, iNextSort);
 	}
 
 	return iResult;
@@ -469,7 +439,7 @@ BOOL CUploadListCtrl::OnCommand(WPARAM wParam, LPARAM)
 				Kademlia::CKademlia::Bootstrap(ntohl(client->GetIP()), client->GetKadPort());
 		}
 	}
-	return true;
+	return TRUE;
 }
 
 void CUploadListCtrl::AddClient(const CUpDownClient *client)
@@ -500,19 +470,17 @@ void CUploadListCtrl::RemoveClient(const CUpDownClient *client)
 
 void CUploadListCtrl::RefreshClient(const CUpDownClient *client)
 {
-	if (theApp.IsClosing()
-		|| theApp.emuledlg->activewnd != theApp.emuledlg->transferwnd
-		|| !theApp.emuledlg->transferwnd->m_pwndTransfer->uploadlistctrl.IsWindowVisible())
+	if (theApp.emuledlg->activewnd == theApp.emuledlg->transferwnd
+		&& !theApp.IsClosing()
+		&& theApp.emuledlg->transferwnd->m_pwndTransfer->uploadlistctrl.IsWindowVisible())
 	{
-		return;
+		LVFINDINFO find;
+		find.flags = LVFI_PARAM;
+		find.lParam = (LPARAM)client;
+		int iItem = FindItem(&find);
+		if (iItem >= 0)
+			Update(iItem);
 	}
-
-	LVFINDINFO find;
-	find.flags = LVFI_PARAM;
-	find.lParam = (LPARAM)client;
-	int iItem = FindItem(&find);
-	if (iItem >= 0)
-		Update(iItem);
 }
 
 void CUploadListCtrl::ShowSelectedUserDetails()

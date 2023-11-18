@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2005 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -152,19 +152,18 @@ BOOL CCollectionCreateDialog::OnInitDialog()
 	AddAnchor(IDC_COLLECTIONCREATESIGNCHECK, BOTTOM_LEFT, BOTTOM_RIGHT);
 	EnableSaveRestore(PREF_INI_SECTION);
 
-	CSKey key;
-	for (POSITION pos = m_pCollection->m_CollectionFilesMap.GetStartPosition(); pos != NULL;) {
-		CCollectionFile *pCollectionFile;
-		m_pCollection->m_CollectionFilesMap.GetNextAssoc(pos, key, pCollectionFile);
-		m_CollectionListCtrl.AddFileToList(pCollectionFile);
-	}
-	CString strTitle;
-	strTitle.Format(GetResString(IDS_COLLECTIONLIST) + _T(" (%u)"), m_CollectionListCtrl.GetItemCount());
+	for (CCollectionFilesMap::CPair *pair = m_pCollection->m_CollectionFilesMap.PGetFirstAssoc(); pair != NULL; pair = m_pCollection->m_CollectionFilesMap.PGetNextAssoc(pair))
+		m_CollectionListCtrl.AddFileToList(pair->value);
+
+	CString strTitle(GetResString(IDS_COLLECTIONLIST));
+	strTitle.AppendFormat(_T(" (%d)"), m_CollectionListCtrl.GetItemCount());
 	m_CollectionListLabel.SetWindowText(strTitle);
 
 	OnBnClickedCollectionViewShared();
 
-	m_CollectionNameEdit.SetWindowText(CleanupFilename(m_pCollection->m_sCollectionName));
+	CString sFileName(CleanupFilename(m_pCollection->m_sCollectionName));
+	m_CollectionNameEdit.SetWindowText(sFileName);
+
 	m_CollectionCreateFormatCheck.SetCheck(m_pCollection->m_bTextFormat);
 	OnBnClickedCollectionFormat();
 	GetDlgItem(IDC_CCOLL_SAVE)->EnableWindow(m_CollectionListCtrl.GetItemCount() > 0);
@@ -188,8 +187,8 @@ void CCollectionCreateDialog::AddSelectedFiles()
 			m_CollectionListCtrl.AddFileToList(pCollectionFile);
 	}
 
-	CString strTitle;
-	strTitle.Format(GetResString(IDS_COLLECTIONLIST) + _T(" (%u)"), m_CollectionListCtrl.GetItemCount());
+	CString strTitle(GetResString(IDS_COLLECTIONLIST));
+	strTitle.AppendFormat(_T(" (%d)"), m_CollectionListCtrl.GetItemCount());
 	m_CollectionListLabel.SetWindowText(strTitle);
 
 	GetDlgItem(IDC_CCOLL_SAVE)->EnableWindow(m_CollectionListCtrl.GetItemCount() > 0);
@@ -228,8 +227,8 @@ void CCollectionCreateDialog::OnBnClickedCollectionAdd()
 
 void CCollectionCreateDialog::OnBnClickedOk()
 {
-	//Some users have noted that the collection can at times
-	//save a collection with an invalid name...
+	//Some users have noted that a collection
+	//could be saved with an invalid name...
 	OnEnKillFocusCollectionName();
 
 	CString sFileName;
@@ -241,13 +240,14 @@ void CCollectionCreateDialog::OnBnClickedOk()
 		m_pCollection->m_bTextFormat = (m_CollectionCreateFormatCheck.GetCheck() == BST_CHECKED);
 
 		CString sFilePath;
-		sFilePath.Format(_T("%s\\%s")COLLECTION_FILEEXTENSION, (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR), (LPCTSTR)m_pCollection->m_sCollectionName);
+		sFilePath.Format(_T("%s%s") COLLECTION_FILEEXTENSION, (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR), (LPCTSTR)m_pCollection->m_sCollectionName);
 
 		using namespace CryptoPP;
 		RSASSA_PKCS1v15_SHA_Signer *pSignkey = NULL;
 		if (m_CollectionCreateSignNameKeyCheck.GetCheck()) {
 			bool bCreateNewKey = false;
-			HANDLE hKeyFile = ::CreateFile(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("collectioncryptkey.dat"), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+			const CString &collkeypath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("collectioncryptkey.dat"));
+			HANDLE hKeyFile = ::CreateFile(collkeypath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 			if (hKeyFile != INVALID_HANDLE_VALUE) {
 				if (::GetFileSize(hKeyFile, NULL) == 0)
 					bCreateNewKey = true;
@@ -255,12 +255,13 @@ void CCollectionCreateDialog::OnBnClickedOk()
 			} else
 				bCreateNewKey = true;
 
+			const CStringA collkeypathA(collkeypath);
 			if (bCreateNewKey)
 				try {
 					AutoSeededRandomPool rng;
 					InvertibleRSAFunction privkey;
 					privkey.Initialize(rng, 1024);
-					Base64Encoder privkeysink(new FileSink((CStringA)(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("collectioncryptkey.dat"))));
+					Base64Encoder privkeysink(new FileSink(collkeypathA));
 					privkey.DEREncode(privkeysink);
 					privkeysink.MessageEnd();
 				} catch (...) {
@@ -268,7 +269,7 @@ void CCollectionCreateDialog::OnBnClickedOk()
 				}
 
 			try {
-				FileSource filesource((CStringA)(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("collectioncryptkey.dat")), true, new Base64Decoder);
+				FileSource filesource(collkeypathA, true, new Base64Decoder);
 				pSignkey = new RSASSA_PKCS1v15_SHA_Signer(filesource);
 				RSASSA_PKCS1v15_SHA_Verifier pubkey(*pSignkey);
 				byte abyMyPublicKey[1000];
@@ -284,7 +285,7 @@ void CCollectionCreateDialog::OnBnClickedOk()
 			m_pCollection->m_sCollectionAuthorName = thePrefs.GetUserNick();
 		}
 
-		if (PathFileExists(sFilePath)) {
+		if (::PathFileExists(sFilePath)) {
 			if (LocMessageBox(IDS_COLL_REPLACEEXISTING, MB_ICONWARNING | MB_DEFBUTTON2 | MB_YESNO, 0) == IDNO)
 				return;
 
@@ -312,18 +313,14 @@ void CCollectionCreateDialog::UpdateAvailFiles()
 {
 	m_CollectionAvailListCtrl.DeleteAllItems();
 
-	CMap<CCKey, const CCKey&, CKnownFile*, CKnownFile*> Files_Map;
+	CKnownFilesMap Files_Map;
 	if (m_bSharedFiles)
 		theApp.sharedfiles->CopySharedFileMap(Files_Map);
 	else
 		theApp.knownfiles->CopyKnownFileMap(Files_Map);
 
-	CCKey key;
-	for (POSITION pos = Files_Map.GetStartPosition(); pos != NULL;) {
-		CKnownFile *pKnownFile;
-		Files_Map.GetNextAssoc(pos, key, pKnownFile);
-		m_CollectionAvailListCtrl.AddFileToList(pKnownFile);
-	}
+	for (CKnownFilesMap::CPair *pair = Files_Map.PGetFirstAssoc(); pair != NULL; pair = Files_Map.PGetNextAssoc(pair))
+		m_CollectionAvailListCtrl.AddFileToList(pair->value);
 }
 
 void CCollectionCreateDialog::OnBnClickedCollectionViewShared()
@@ -353,9 +350,11 @@ void CCollectionCreateDialog::OnEnKillFocusCollectionName()
 {
 	CString sFileName;
 	m_CollectionNameEdit.GetWindowText(sFileName);
-	CString sNewFileName(ValidFilename(sFileName));
-	if (sNewFileName.Compare(sFileName) != 0)
+	const CString &sNewFileName(ValidFilename(sFileName));
+	if (sNewFileName != sFileName) {
 		m_CollectionNameEdit.SetWindowText(sNewFileName);
+		m_CollectionNameEdit.SetFocus();
+	}
 }
 
 void CCollectionCreateDialog::OnBnClickedCollectionFormat()

@@ -17,23 +17,23 @@ public:
 	BOOL TrayUpdate();
 	bool TrayShow();
 	bool TrayHide();
+	void TrayReset();
 	void TraySetToolTip(LPCTSTR lpszToolTip);
 	void TraySetIcon(HICON hIcon, bool bDelete = false);
 	void TraySetIcon(UINT nResourceID);
 	void TraySetIcon(LPCTSTR lpszResourceName);
-	bool TrayIsVisible();
+	bool TrayIconVisible();
 
 	virtual void TrayMinimizeToTrayChange();
 	virtual void RestoreWindow();
-	virtual void OnTrayLButtonDown(CPoint);
-	virtual void OnTrayLButtonUp(CPoint);
-	virtual void OnTrayLButtonDblClk(CPoint);
-	virtual void OnTrayRButtonUp(CPoint);
-	virtual void OnTrayRButtonDblClk(CPoint);
-	virtual void OnTrayMouseMove(CPoint);
+	virtual void OnTrayLButtonDown();
+	virtual void OnTrayLButtonUp();
+	virtual void OnTrayLButtonDblClk();
+	virtual void OnTrayRButtonUp(CPoint); //parameter used in the overriding method
+	virtual void OnTrayRButtonDblClk();
+	virtual void OnTrayMouseMove();
 
 protected:
-
 	bool *m_pbMinimizeToTray;
 	HICON m_hPrevIconDelete;
 	CMenu m_mnuTrayMenu;

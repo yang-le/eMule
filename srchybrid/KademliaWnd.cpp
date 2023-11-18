@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -76,8 +76,8 @@ BEGIN_MESSAGE_MAP(CKademliaWnd, CResizableDialog)
 	ON_BN_CLICKED(IDC_RADIP, UpdateControlsState)
 	ON_BN_CLICKED(IDC_RADNODESURL, UpdateControlsState)
 	ON_WM_HELPINFO()
-	ON_NOTIFY(NM_DBLCLK, IDC_SEARCHLIST, OnNMDblclkSearchlist)
-	ON_NOTIFY(LVN_ITEMCHANGED, IDC_SEARCHLIST, OnListModifiedSearchlist)
+	ON_NOTIFY(NM_DBLCLK, IDC_KADSEARCHLIST, OnNMDblclkSearchlist)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_KADSEARCHLIST, OnListModifiedSearchlist)
 END_MESSAGE_MAP()
 
 CKademliaWnd::CKademliaWnd(CWnd *pParent /*=NULL*/)
@@ -141,13 +141,13 @@ BOOL CKademliaWnd::OnInitDialog()
 	m_pbtnWnd->SetExtendedStyle(m_pbtnWnd->GetExtendedStyle() | TBSTYLE_EX_MIXEDBUTTONS);
 
 	TBBUTTON atb1[1 + WND1_NUM_BUTTONS] = {};
-	atb1[0].iBitmap = 0;
+	//atb1[0].iBitmap = 0;
 	atb1[0].idCommand = IDC_KADICO1;
 	atb1[0].fsState = TBSTATE_ENABLED;
 	atb1[0].fsStyle = BTNS_BUTTON | BTNS_SHOWTEXT;
 	atb1[0].iString = -1;
 
-	atb1[1].iBitmap = 0;
+	//atb1[1].iBitmap = 0;
 	atb1[1].idCommand = MP_VIEW_KADCONTACTS;
 	atb1[1].fsState = TBSTATE_ENABLED;
 	atb1[1].fsStyle = BTNS_BUTTON | BTNS_CHECKGROUP | BTNS_AUTOSIZE;
@@ -192,7 +192,7 @@ BOOL CKademliaWnd::OnInitDialog()
 	AddAnchor(IDC_KAD_LOOKUPGRAPH, TOP_LEFT, MIDDLE_RIGHT);
 	AddAnchor(IDC_KAD_HISTOGRAM, TOP_RIGHT, MIDDLE_RIGHT);
 	AddAnchor(IDC_KADICO2, MIDDLE_LEFT);
-	AddAnchor(IDC_SEARCHLIST, MIDDLE_LEFT, BOTTOM_RIGHT);
+	AddAnchor(IDC_KADSEARCHLIST, MIDDLE_LEFT, BOTTOM_RIGHT);
 	AddAnchor(IDC_KADSEARCHLAB, MIDDLE_LEFT);
 
 	AddAllOtherAnchors(TOP_RIGHT);
@@ -210,7 +210,7 @@ BOOL CKademliaWnd::OnInitDialog()
 	CheckDlgButton(IDC_RADCLIENTS, 1);
 	ShowLookupGraph(false);
 
-	return true;
+	return TRUE;
 }
 
 void CKademliaWnd::DoDataExchange(CDataExchange *pDX)
@@ -219,7 +219,7 @@ void CKademliaWnd::DoDataExchange(CDataExchange *pDX)
 	DDX_Control(pDX, IDC_CONTACTLIST, *m_contactListCtrl);
 	DDX_Control(pDX, IDC_KAD_HISTOGRAM, *m_contactHistogramCtrl);
 	DDX_Control(pDX, IDC_KAD_LOOKUPGRAPH, *m_kadLookupGraph);
-	DDX_Control(pDX, IDC_SEARCHLIST, *searchList);
+	DDX_Control(pDX, IDC_KADSEARCHLIST, *searchList);
 	DDX_Control(pDX, IDC_BSSTATIC, m_ctrlBootstrap);
 	DDX_Control(pDX, IDC_KADICO1, *m_pbtnWnd);
 }
@@ -262,15 +262,14 @@ void CKademliaWnd::OnBnClickedBootstrapbutton()
 		// auto-handle ip:port
 		int iPos = strIP.Trim().Find(_T(':'));
 		if (iPos >= 0) {
-			SetDlgItemText(IDC_BOOTSTRAPPORT, strIP.Mid(iPos + 1));
+			SetDlgItemText(IDC_BOOTSTRAPPORT, CPTR(strIP, iPos + 1));
 			strIP.Truncate(iPos);
 			SetDlgItemText(IDC_BOOTSTRAPIP, strIP);
 		}
 
 		CString strPort;
 		GetDlgItemText(IDC_BOOTSTRAPPORT, strPort);
-		strPort.Trim();
-		uint16 nPort = (uint16)_ttoi(strPort);
+		uint16 nPort = (uint16)_ttoi(strPort.Trim());
 
 		// invalid IP/Port
 		if (strIP.GetLength() < 7 || nPort == 0) {
@@ -403,15 +402,15 @@ void CKademliaWnd::UpdateKadContactCount()
 
 void CKademliaWnd::StartUpdateContacts()
 {
-	m_contactHistogramCtrl->SetRedraw(TRUE);
+	m_contactHistogramCtrl->SetRedraw(true);
 	m_contactHistogramCtrl->Invalidate();
-	m_contactListCtrl->SetRedraw(TRUE);
+	m_contactListCtrl->SetRedraw(true);
 }
 
 void CKademliaWnd::StopUpdateContacts()
 {
-	m_contactHistogramCtrl->SetRedraw(FALSE);
-	m_contactListCtrl->SetRedraw(FALSE);
+	m_contactHistogramCtrl->SetRedraw(false);
+	m_contactListCtrl->SetRedraw(false);
 }
 
 bool CKademliaWnd::ContactAdd(const Kademlia::CContact *contact)
@@ -447,8 +446,8 @@ void CKademliaWnd::ContactRef(const Kademlia::CContact *contact)
 
 void CKademliaWnd::UpdateNodesDatFromURL(const CString &strURL)
 {
-	CString strTempFilename;
-	strTempFilename.Format(_T("%stemp-%lu-nodes.dat"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR), ::GetTickCount());
+	CString strTempFilename(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+	strTempFilename.AppendFormat(_T("temp-%lu-nodes.dat"), ::GetTickCount());
 
 	// try to download nodes.dat
 	Log(GetResString(IDS_DOWNLOADING_NODESDAT_FROM), (LPCTSTR)strURL);
@@ -532,7 +531,7 @@ void CKademliaWnd::ShowLookupGraph(bool bShow)
 {
 	int iIcon = static_cast<int>(bShow);
 	m_pbtnWnd->CheckButton(bShow ? MP_VIEW_KADLOOKUP : MP_VIEW_KADCONTACTS);
-	TBBUTTONINFO tbbi = {};
+	TBBUTTONINFO tbbi;
 	tbbi.cbSize = (UINT)sizeof tbbi;
 	tbbi.dwMask = TBIF_IMAGE;
 	tbbi.iImage = iIcon;

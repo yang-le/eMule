@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -18,7 +18,6 @@
 #include "BarShader.h"
 #include "StatisticFile.h"
 #include "ShareableFile.h"
-#include <list>
 
 class CxImage;
 class CUpDownClient;
@@ -42,8 +41,8 @@ public:
 	virtual void SetFileName(LPCTSTR pszFileName, bool bReplaceInvalidFileSystemChars = false, bool bRemoveControlChars = false); // 'bReplaceInvalidFileSystemChars' is set to 'false' for backward compatibility!
 
 	bool	CreateFromFile(LPCTSTR directory, LPCTSTR filename, LPVOID pvProgressParam); // create date, hashset and tags from a file
-	bool	LoadFromFile(CFileDataIO *file);	//load date, hashset and tags from a .met file
-	bool	WriteToFile(CFileDataIO *file);
+	bool	LoadFromFile(CFileDataIO &file);	//load date, hashset and tags from a .met file
+	bool	WriteToFile(CFileDataIO &file);
 	bool	CreateAICHHashSetOnly();
 
 	// last file modification time in (DST corrected, if NTFS) real UTC format
@@ -128,11 +127,11 @@ public:
 	static bool	CreateHash(const uchar *pucData, uint32 uSize, uchar *pucHash, CAICHHashTree *pShaHashOut = NULL);
 
 
+	CStatisticFile statistic;
 	// last file modification time in (DST corrected, if NTFS) real UTC format
 	// NOTE: this value can *not* be compared with NT's version of the UTC time
 	time_t	m_tUtcLastModified;
 
-	CStatisticFile statistic;
 	time_t	m_nCompleteSourcesTime;
 	uint16	m_nCompleteSourcesCount;
 	uint16	m_nCompleteSourcesCountLo;
@@ -140,7 +139,11 @@ public:
 	CUpDownClientPtrList m_ClientUploadList;
 	CArray<uint16, uint16> m_AvailPartFrequency;
 	CCollection *m_pCollection;
-
+	//overlapped disk reads
+	HANDLE		m_hRead;
+	int			nInUse; //count outstanding I/O (reads) to know if the file is in use
+	bool		bCompress;
+	bool		bNoNewReads; //blocks new overlapped reads
 #ifdef _DEBUG
 	// Diagnostic Support
 	virtual void AssertValid() const;
@@ -150,8 +153,8 @@ public:
 protected:
 	//preview
 	bool	GrabImage(const CString &strFileName, uint8 nFramesToGrab, double dStartTime, bool bReduceColor, uint16 nMaxWidth, void *pSender);
-	bool	LoadTagsFromFile(CFileDataIO *file);
-	bool	LoadDateFromFile(CFileDataIO *file);
+	bool	LoadTagsFromFile(CFileDataIO &file);
+	bool	LoadDateFromFile(CFileDataIO &file);
 	static void	CreateHash(CFile *pFile, uint64 Length, uchar *pucHash, CAICHHashTree *pShaHashOut = NULL);
 	static bool	CreateHash(FILE *fp, uint64 uSize, uchar *pucHash, CAICHHashTree *pShaHashOut = NULL);
 

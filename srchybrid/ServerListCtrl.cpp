@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -30,10 +30,9 @@
 #include "IrcWnd.h"
 #include "Opcodes.h"
 #include "Log.h"
-#include "ToolTipCtrlX.h"
 #include "IPFilter.h"
 #include "ip2country/IP2Country.h" //EastShare - added by AndCycle, IP to Country
-#include "MemDC.h" // Xman
+#include "MemDC.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -47,12 +46,7 @@ IMPLEMENT_DYNAMIC(CServerListCtrl, CMuleListCtrl)
 BEGIN_MESSAGE_MAP(CServerListCtrl, CMuleListCtrl)
 	ON_NOTIFY_REFLECT(LVN_COLUMNCLICK, OnLvnColumnClick)
 	ON_NOTIFY_REFLECT(LVN_GETINFOTIP, OnLvnGetInfoTip)
-	//Xman no need for this because //EastShare - added by AndCycle, IP to Country
-	/*
-	ON_NOTIFY_REFLECT(NM_CUSTOMDRAW, OnNmCustomDraw)
-	*/
-	ON_NOTIFY_REFLECT(LVN_GETDISPINFO, OnLvnGetDispInfo)
-	//Xman end
+
 	ON_NOTIFY_REFLECT(NM_DBLCLK, OnNmDblClk)
 	ON_WM_CONTEXTMENU()
 	ON_WM_SYSCOLORCHANGE()
@@ -60,13 +54,8 @@ END_MESSAGE_MAP()
 
 CServerListCtrl::CServerListCtrl()
 {
-	//Xman IP to country //remark: because of new drawing methodes we can only search first column
-	/*
+
 	SetGeneralPurposeFind(true);
-	*/
-	SetGeneralPurposeFind(true, false);
-	//Xman End
-	m_tooltip = new CToolTipCtrlX;
 	SetSkinKey(_T("ServersLv"));
 }
 
@@ -77,27 +66,27 @@ bool CServerListCtrl::Init()
 
 	CToolTipCtrl *tooltip = GetToolTips();
 	if (tooltip) {
-		m_tooltip->SubclassWindow(*tooltip);
+		m_tooltip.SubclassWindow(*tooltip);
 		tooltip->ModifyStyle(0, TTS_NOPREFIX);
 		tooltip->SetDelayTime(TTDT_AUTOPOP, SEC2MS(20));
 		//tooltip->SetDelayTime(TTDT_INITIAL, SEC2MS(thePrefs.GetToolTipDelay()));
 	}
 
-	InsertColumn(0, GetResString(IDS_SL_SERVERNAME), LVCFMT_LEFT,  150);
-	InsertColumn(1, GetResString(IDS_IP),			 LVCFMT_LEFT,  140);
-	InsertColumn(2, GetResString(IDS_DESCRIPTION),	 LVCFMT_LEFT,  150);
-	InsertColumn(3, GetResString(IDS_PING),			 LVCFMT_RIGHT,	50);
-	InsertColumn(4, GetResString(IDS_UUSERS),		 LVCFMT_RIGHT,	60);
-	InsertColumn(5, GetResString(IDS_MAXCLIENT),	 LVCFMT_RIGHT,	60);
-	InsertColumn(6, GetResString(IDS_PW_FILES),		 LVCFMT_RIGHT,	60);
-	InsertColumn(7, GetResString(IDS_PREFERENCE),	 LVCFMT_LEFT,	50);
-	InsertColumn(8, GetResString(IDS_UFAILED),		 LVCFMT_RIGHT,	50);
-	InsertColumn(9, GetResString(IDS_STATICSERVER),	 LVCFMT_LEFT,	50);
-	InsertColumn(10, GetResString(IDS_SOFTFILES),	 LVCFMT_RIGHT,	60);
-	InsertColumn(11, GetResString(IDS_HARDFILES),	 LVCFMT_RIGHT,	60, -1, true);
-	InsertColumn(12, GetResString(IDS_VERSION),		 LVCFMT_LEFT,	50, -1, true);
-	InsertColumn(13, GetResString(IDS_IDLOW),		 LVCFMT_RIGHT,	60);
-	InsertColumn(14, GetResString(IDS_OBFUSCATION),	 LVCFMT_RIGHT,	50);
+	InsertColumn(0,	 _T(""),	LVCFMT_LEFT,	150);			//IDS_SL_SERVERNAME
+	InsertColumn(1,	 _T(""),	LVCFMT_LEFT,	140);			//IDS_IP
+	InsertColumn(2,	 _T(""),	LVCFMT_LEFT,	150);			//IDS_DESCRIPTION
+	InsertColumn(3,	 _T(""),	LVCFMT_RIGHT,	50);			//IDS_PING
+	InsertColumn(4,	 _T(""),	LVCFMT_RIGHT,	60);			//IDS_UUSERS
+	InsertColumn(5,	 _T(""),	LVCFMT_RIGHT,	60);			//IDS_MAXCLIENT
+	InsertColumn(6,	 _T(""),	LVCFMT_RIGHT,	60);			//IDS_PW_FILES
+	InsertColumn(7,	 _T(""),	LVCFMT_LEFT,	50);			//IDS_PREFERENCE
+	InsertColumn(8,	 _T(""),	LVCFMT_RIGHT,	50);			//IDS_UFAILED
+	InsertColumn(9,	 _T(""),	LVCFMT_LEFT,	50);			//IDS_STATICSERVER
+	InsertColumn(10, _T(""),	LVCFMT_RIGHT,	60);			//IDS_SOFTFILES
+	InsertColumn(11, _T(""),	LVCFMT_RIGHT,	60, -1, true);	//IDS_HARDFILES
+	InsertColumn(12, _T(""),	LVCFMT_LEFT,	50, -1, true);	//IDS_VERSION
+	InsertColumn(13, _T(""),	LVCFMT_RIGHT,	60);			//IDS_IDLOW
+	InsertColumn(14, _T(""),	LVCFMT_RIGHT,	50);			//IDS_OBFUSCATION
 
 	SetAllIcons();
 	Localize();
@@ -105,16 +94,11 @@ bool CServerListCtrl::Init()
 
 	// Barry - Use preferred sort order from preferences
 	SetSortArrow();
-	SortItems(SortProc, MAKELONG(GetSortItem(), (GetSortAscending() ? 0 : 0x0001)));
+	SortItems(SortProc, MAKELONG(GetSortItem(), !GetSortAscending()));
 
 	ShowServerCount();
 
 	return true;
-}
-
-CServerListCtrl::~CServerListCtrl()
-{
-	delete m_tooltip;
 }
 
 void CServerListCtrl::OnSysColorChange()
@@ -125,12 +109,12 @@ void CServerListCtrl::OnSysColorChange()
 
 void CServerListCtrl::SetAllIcons()
 {
-	CImageList iml;
-	iml.Create(16, 16, theApp.m_iDfltImageListColorFlags | ILC_MASK, 0, 1);
-	iml.Add(CTempIconLoader(_T("Server")));
-	HIMAGELIST himl = ApplyImageList(iml.Detach());
-	if (himl)
-		::ImageList_Destroy(himl);
+	ApplyImageList(NULL);
+	// Apply the image list also to the listview control, even if we use our own 'DrawItem'.
+	// This is needed to give the listview control a chance to initialize the row height.
+	ASSERT((GetStyle() & LVS_SHAREIMAGELISTS) != 0);
+	m_pImageList = &theApp.emuledlg->GetClientIconList();
+	VERIFY(ApplyImageList(*m_pImageList) == NULL);
 	//MORPH START - Changed b SiRoB, CountryFlag Addon , IP to Country
 	imagelist.DeleteImageList();
 	imagelist.Create(16, 16, theApp.m_iDfltImageListColorFlags | ILC_MASK, 0, 1);
@@ -139,12 +123,152 @@ void CServerListCtrl::SetAllIcons()
 	//MORPH END  - Changed b SiRoB, CountryFlag Addon
 }
 
+CString CServerListCtrl::GetItemDisplayText(const CServer *server, int iSubItem) const
+{
+	CString sText;
+	switch (iSubItem) {
+	case 0: //name
+		sText = server->GetListName();
+		break;
+	case 1: //ip:port
+		sText.Format(_T("%s : %i"), server->GetAddress(), server->GetPort());
+		break;
+	case 2: //description
+		sText = server->GetDescription();
+		break;
+	case 3: //ping
+		if (server->GetPing())
+			sText.Format(_T("%u"), server->GetPing());
+		break;
+	case 4: //users
+		if (server->GetUsers())
+			sText = CastItoIShort(server->GetUsers());
+		break;
+	case 5: //max users
+		if (server->GetUsers())
+			sText = CastItoIShort(server->GetMaxUsers());
+		break;
+	case 6: //files
+		if (server->GetFiles())
+			sText = CastItoIShort(server->GetFiles());
+		break;
+	case 7: //priority
+		{
+			UINT uid;
+			switch (server->GetPreference()) {
+			case SRV_PR_LOW:
+				uid = IDS_PRIOLOW;
+				break;
+			case SRV_PR_NORMAL:
+				uid = IDS_PRIONORMAL;
+				break;
+			case SRV_PR_HIGH:
+				uid = IDS_PRIOHIGH;
+				break;
+			default:
+				uid = IDS_PRIONOPREF;
+			}
+			sText = GetResString(uid);
+		}
+		break;
+	case 8: //failed count
+		sText.Format(_T("%u"), server->GetFailedCount());
+		break;
+	case 9: //static
+		sText = GetResString(server->IsStaticMember() ? IDS_YES : IDS_NO);
+		break;
+	case 10: //soft files
+		sText = CastItoIShort(server->GetSoftFiles());
+		break;
+	case 11: //hard files
+		sText = CastItoIShort(server->GetHardFiles());
+		break;
+	case 12: //version
+		sText = server->GetVersion();
+		if (thePrefs.GetDebugServerUDPLevel() > 0 && server->GetUDPFlags() > 0)
+			sText.AppendFormat(&_T("; ExtUDP=%x")[sText.IsEmpty() ? 2 : 0], server->GetUDPFlags());
+		if (thePrefs.GetDebugServerTCPLevel() > 0 && server->GetTCPFlags() > 0)
+			sText.AppendFormat(&_T("; ExtTCP=%x")[sText.IsEmpty() ? 2 : 0], server->GetTCPFlags());
+		break;
+	case 13: //low ID users
+		sText = CastItoIShort(server->GetLowIDUsers());
+		break;
+	case 14: //obfuscation
+		sText = GetResString(server->SupportsObfuscationTCP() ? IDS_YES : IDS_NO);
+	}
+	return sText;
+}
+
+void CServerListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
+{
+	const CServer *pServer = reinterpret_cast<CServer*>(lpDrawItemStruct->itemData);
+	if (!pServer || theApp.IsClosing())
+		return;
+
+	CRect rcItem(lpDrawItemStruct->rcItem);
+	CMemoryDC dc(CDC::FromHandle(lpDrawItemStruct->hDC), rcItem);
+	BOOL bCtrlFocused;
+	InitItemMemDC(dc, lpDrawItemStruct, bCtrlFocused);
+	RECT rcServer;
+	GetClientRect(&rcServer);
+
+	const CServer *pConnectedServer = theApp.serverconnect->GetCurrentServer();
+	// the server which we are connected to, always has a valid numerical IP member assigned,
+	// therefore we do not need to call CServer::IsEqual which would be expensive
+	if (pConnectedServer && pConnectedServer->GetIP() == pServer->GetIP() && pConnectedServer->GetPort() == pServer->GetPort())
+		dc.SetTextColor(RGB(32, 32, 255));
+	else if (pServer->GetFailedCount() >= thePrefs.GetDeadServerRetries())
+		dc.SetTextColor(RGB(192, 192, 192));
+	else if (pServer->GetFailedCount() >= 2)
+		dc.SetTextColor(RGB(128, 128, 128));
+
+	const CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
+	int iCount = pHeaderCtrl->GetItemCount();
+	LONG itemLeft = rcItem.left;
+	LONG iIconY = max((rcItem.Height() - 15) / 2, 0);
+	for (int iCurrent = 0; iCurrent < iCount; ++iCurrent) {
+		int iColumn = pHeaderCtrl->OrderToIndex(iCurrent);
+		if (IsColumnHidden(iColumn))
+			continue;
+
+		UINT uDrawTextAlignment;
+		int iColumnWidth = GetColumnWidth(iColumn, uDrawTextAlignment);
+		rcItem.left = itemLeft;
+		rcItem.right = itemLeft + iColumnWidth - sm_iSubItemInset;
+		if (rcItem.left < rcItem.right && HaveIntersection(rcServer, rcItem)) {
+			const CString &sItem(GetItemDisplayText(pServer, iColumn));
+			switch (iColumn) {
+			case 0: //server name
+				{
+					int iImage = 15; //server
+					UINT uOverlayImage = pServer->SupportsObfuscationTCP() ? 2 : 0;
+
+					rcItem.left = itemLeft + sm_iIconOffset;
+					const POINT point = { rcItem.left, rcItem.top + iIconY };
+					int iIconSize = 16;
+					//Draw Country Flag
+					if (theApp.ip2country->ShowCountryFlag()) {
+						theApp.ip2country->GetFlagImageList()->DrawIndirect(&theApp.ip2country->GetFlagImageDrawParams(dc, pServer->GetCountryFlagIndex(), point));
+						iIconSize = 18;
+					}
+					else
+						m_pImageList->Draw(dc, iImage, point, ILD_NORMAL | INDEXTOOVERLAYMASK(uOverlayImage));
+
+					rcItem.left += iIconSize + sm_iLabelOffset - sm_iSubItemInset;
+				}
+			default: //any text column
+				rcItem.left += sm_iSubItemInset;
+				dc.DrawText(sItem, -1, &rcItem, MLC_DT_TEXT | uDrawTextAlignment);
+			}
+		}
+		itemLeft += iColumnWidth;
+	}
+
+	DrawFocusRect(dc, &lpDrawItemStruct->rcItem, lpDrawItemStruct->itemState & ODS_FOCUS, bCtrlFocused, lpDrawItemStruct->itemState & ODS_SELECTED);
+}
+
 void CServerListCtrl::Localize()
 {
-	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
-	HDITEM hdi;
-	hdi.mask = HDI_TEXT;
-
 	static const UINT uids[15] =
 	{
 		IDS_SL_SERVERNAME, IDS_IP, IDS_DESCRIPTION, IDS_PING, IDS_UUSERS
@@ -152,22 +276,12 @@ void CServerListCtrl::Localize()
 		, IDS_SOFTFILES, IDS_HARDFILES, IDS_VERSION, IDS_IDLOW, IDS_OBFUSCATION
 	};
 
-	for (int i = 0; i < _countof(uids); ++i) {
-		CString strRes(GetResString(uids[i]));
-		hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-		pHeaderCtrl->SetItem(i, &hdi);
-	}
-
-	for (int i = GetItemCount(); --i >= 0;)
-		RefreshServer(reinterpret_cast<const CServer*>(GetItemData(i)));
+	LocaliseHeaderCtrl(uids, _countof(uids));
 }
 
 void CServerListCtrl::RemoveServer(const CServer *pServer)
 {
-	LVFINDINFO find;
-	find.flags = LVFI_PARAM;
-	find.lParam = (LPARAM)pServer;
-	int iItem = FindItem(&find);
+	int iItem = FindServer(pServer);
 	if (iItem >= 0) {
 		theApp.serverlist->RemoveServer(pServer);
 		DeleteItem(iItem);
@@ -191,7 +305,7 @@ void CServerListCtrl::RemoveAllFilteredServers()
 	if (!thePrefs.GetFilterServerByIP())
 		return;
 	ShowWindow(SW_HIDE);
-	for (POSITION pos = theApp.serverlist->list.GetHeadPosition(); pos != NULL; ) {
+	for (POSITION pos = theApp.serverlist->list.GetHeadPosition(); pos != NULL;) {
 		const CServer *cur_server = theApp.serverlist->list.GetNext(pos);
 		if (theApp.ipfilter->IsFiltered(cur_server->GetIP())) {
 			if (thePrefs.GetLogFilteredIPs())
@@ -204,98 +318,15 @@ void CServerListCtrl::RemoveAllFilteredServers()
 
 bool CServerListCtrl::AddServer(const CServer *pServer, bool bAddToList, bool bRandom)
 {
-	bool bAddTail = !bRandom || ((GetRandomUInt16() % (1 + theApp.serverlist->GetServerCount())) != 0);
+	bool bAddTail = !bRandom || (rand() % (1 + theApp.serverlist->GetServerCount()) != 0);
 	if (!theApp.serverlist->AddServer(pServer, bAddTail))
 		return false;
 	if (bAddToList) {
-		InsertItem(LVIF_TEXT | LVIF_PARAM, bAddTail ? GetItemCount() : 0, pServer->GetListName(), 0, 0, 0, (LPARAM)pServer);
-		RefreshServer(pServer);
+		int iItem = InsertItem(LVIF_TEXT | LVIF_PARAM, bAddTail ? GetItemCount() : 0, pServer->GetListName(), 0, 0, 0, (LPARAM)pServer);
+		Update(iItem);
 	}
 	ShowServerCount();
 	return true;
-}
-
-void CServerListCtrl::RefreshServer(const CServer *server)
-{
-	if (theApp.IsClosing() || !server)
-		return;
-
-	LVFINDINFO find;
-	find.flags = LVFI_PARAM;
-	find.lParam = (LPARAM)server;
-	int itemnr = FindItem(&find);
-	if (itemnr == -1)
-		return;
-
-	//MORPH START - Added by SiRoB,  CountryFlag Addon, IP to Country
-	Update(itemnr);
-	//MORPH START - Added by SiRoB,  CountryFlag Addon
-
-	//Xman not used because of morph code
-	/*
-	CString temp;
-	temp.Format(_T("%s : %i"), server->GetAddress(), server->GetPort());
-	SetItemText(itemnr, 1, temp);
-	SetItemText(itemnr, 0, server->GetListName());
-	SetItemText(itemnr, 2, server->GetDescription());
-
-	// Ping
-	if (server->GetPing())
-		temp.Format(_T("%u"), server->GetPing());
-	else
-		temp.Empty();
-	SetItemText(itemnr, 3, temp);
-
-	// Users
-	SetItemText(itemnr, 4, (server->GetUsers() ? (LPCTSTR)CastItoIShort(server->GetUsers()) : _T("")));
-	// Max Users
-	SetItemText(itemnr, 5, (server->GetMaxUsers() ? (LPCTSTR)CastItoIShort(server->GetMaxUsers()) : _T("")));
-	// Files
-	SetItemText(itemnr, 6, (server->GetFiles() ? (LPCTSTR)CastItoIShort(server->GetFiles()) : _T("")));
-
-	UINT uid;
-	switch (server->GetPreference()) {
-	case SRV_PR_LOW:
-		uid = IDS_PRIOLOW;
-		break;
-	case SRV_PR_NORMAL:
-		uid = IDS_PRIONORMAL;
-		break;
-	case SRV_PR_HIGH:
-		uid = IDS_PRIOHIGH;
-		break;
-	default:
-		uid = IDS_PRIONOPREF;
-	}
-	SetItemText(itemnr, 7, (LPCTSTR)GetResString(uid));
-
-	// Failed Count
-	temp.Format(_T("%u"), server->GetFailedCount());
-	SetItemText(itemnr, 8, temp);
-
-	// Static server
-	SetItemText(itemnr, 9, (LPCTSTR)GetResString(server->IsStaticMember() ? IDS_YES : IDS_NO));
-	// Soft Files
-	SetItemText(itemnr, 10, (server->GetSoftFiles() ? (LPCTSTR)CastItoIShort(server->GetSoftFiles()) : _T("")));
-
-	// Hard Files
-	SetItemText(itemnr, 11, (server->GetHardFiles() ? (LPCTSTR)CastItoIShort(server->GetHardFiles()) : _T("")));
-
-	temp = server->GetVersion();
-	if (thePrefs.GetDebugServerUDPLevel() > 0 && server->GetUDPFlags() > 0)
-		temp.AppendFormat(&_T("; ExtUDP=%x")[temp.IsEmpty() ? 2 : 0], server->GetUDPFlags());
-
-	if (thePrefs.GetDebugServerTCPLevel() > 0 && server->GetTCPFlags() > 0)
-		temp.AppendFormat(&_T("; ExtTCP=%x")[temp.IsEmpty() ? 2 : 0], server->GetTCPFlags());
-
-	SetItemText(itemnr, 12, temp);
-
-	// LowID Users
-	SetItemText(itemnr, 13, (server->GetLowIDUsers() ? (LPCTSTR)CastItoIShort(server->GetLowIDUsers()) : _T("")));
-	// Obfuscation
-	SetItemText(itemnr, 14, (LPCTSTR)GetResString(server->SupportsObfuscationTCP() ? IDS_YES : IDS_NO));
-	*/
-	//Xman end
 }
 
 //EastShare Start - added by AndCycle, IP to Country
@@ -412,7 +443,7 @@ BOOL CServerListCtrl::OnCommand(WPARAM wParam, LPARAM)
 		return TRUE;
 	case MP_CUT:
 		{
-			const CString &strURLs = CreateSelectedServersURLs();
+			const CString &strURLs(CreateSelectedServersURLs());
 			if (!strURLs.IsEmpty())
 				theApp.CopyTextToClipboard(strURLs);
 			DeleteSelectedServers();
@@ -422,7 +453,7 @@ BOOL CServerListCtrl::OnCommand(WPARAM wParam, LPARAM)
 	case MP_GETED2KLINK:
 	case Irc_SetSendLink:
 		{
-			const CString &strURLs = CreateSelectedServersURLs();
+			const CString &strURLs(CreateSelectedServersURLs());
 			if (!strURLs.IsEmpty())
 				if (wParam == Irc_SetSendLink)
 					theApp.emuledlg->ircwnd->SetSendFileString(strURLs);
@@ -487,20 +518,19 @@ BOOL CServerListCtrl::OnCommand(WPARAM wParam, LPARAM)
 
 CString CServerListCtrl::CreateSelectedServersURLs()
 {
-	CString buffer, link;
+	CString links;
 	for (POSITION pos = GetFirstSelectedItemPosition(); pos != NULL;) {
 		const CServer *pServer = reinterpret_cast<CServer*>(GetItemData(GetNextSelectedItem(pos)));
-		buffer.Format(_T("ed2k://|server|%s|%u|/"), pServer->GetAddress(), pServer->GetPort());
-		if (!link.IsEmpty())
-			link += _T("\r\n");
-		link += buffer;
+		if (!links.IsEmpty())
+			links += _T("\r\n");
+		links.AppendFormat(_T("ed2k://|server|%s|%u|/"), pServer->GetAddress(), pServer->GetPort());
 	}
-	return link;
+	return links;
 }
 
 void CServerListCtrl::DeleteSelectedServers()
 {
-	SetRedraw(FALSE);
+	SetRedraw(false);
 	POSITION pos;
 	while ((pos = GetFirstSelectedItemPosition()) != NULL) {
 		int iItem = GetNextSelectedItem(pos);
@@ -508,7 +538,7 @@ void CServerListCtrl::DeleteSelectedServers()
 		DeleteItem(iItem);
 	}
 	ShowServerCount();
-	SetRedraw(TRUE);
+	SetRedraw(true);
 	SetFocus();
 	AutoSelectItem();
 }
@@ -540,22 +570,29 @@ void CServerListCtrl::OnNmDblClk(LPNMHDR, LRESULT*)
 
 bool CServerListCtrl::AddServerMetToList(const CString &strFile)
 {
-	SetRedraw(FALSE);
+	SetRedraw(false);
 	bool bResult = theApp.serverlist->AddServerMetToList(strFile, true);
 	RemoveAllDeadServers();
 	ShowServerCount();
-	SetRedraw(TRUE);
+	SetRedraw(true);
 	return bResult;
+}
+
+void CServerListCtrl::RefreshServer(const CServer *pServer)
+{
+	if (pServer && !theApp.IsClosing()) {
+		int iItem = FindServer(pServer);
+		if (iItem >= 0)
+			Update(iItem);
+	}
 }
 
 void CServerListCtrl::OnLvnColumnClick(LPNMHDR pNMHDR, LRESULT *pResult)
 {
-	NMLISTVIEW *pNMListView = reinterpret_cast<NMLISTVIEW*>(pNMHDR);
+	const LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	bool sortAscending;
-	if (GetSortItem() == pNMListView->iSubItem)
-		sortAscending = !GetSortAscending();
-	else
-		switch (pNMListView->iSubItem) {
+	if (GetSortItem() != pNMLV->iSubItem)
+		switch (pNMLV->iSubItem) {
 		case 4: // Users
 		case 5: // Max Users
 		case 6: // Files
@@ -571,12 +608,13 @@ void CServerListCtrl::OnLvnColumnClick(LPNMHDR pNMHDR, LRESULT *pResult)
 		default:
 			sortAscending = true;
 		}
+	else
+		sortAscending = !GetSortAscending();
 
 	// Sort table
-	UpdateSortHistory(MAKELONG(pNMListView->iSubItem, (sortAscending ? 0 : 0x0001)));
-	SetSortArrow(pNMListView->iSubItem, sortAscending);
-	SortItems(SortProc, MAKELONG(pNMListView->iSubItem, (sortAscending ? 0 : 0x0001)));
-	Invalidate();
+	UpdateSortHistory(MAKELONG(pNMLV->iSubItem, !sortAscending));
+	SetSortArrow(pNMLV->iSubItem, sortAscending);
+	SortItems(SortProc, MAKELONG(pNMLV->iSubItem, !sortAscending));
 	*pResult = 0;
 }
 
@@ -586,8 +624,8 @@ int CALLBACK CServerListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 		return 0;
 	const CServer *item1 = reinterpret_cast<CServer*>(lParam1);
 	const CServer *item2 = reinterpret_cast<CServer*>(lParam2);
-	int iResult;
 
+	int iResult;
 	switch (LOWORD(lParamSort)) {
 	case 0:
 		iResult = Undefined_at_bottom(item1->GetListName(), item2->GetListName());
@@ -661,41 +699,38 @@ int CALLBACK CServerListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 	if (iResult > 3)
 		return iResult - 5;
 
-	//call secondary sortorder, if this one results in equal
+	//call secondary sort order, if the first one resulted as equal
 	if (iResult == 0) {
-		int dwNextSort = theApp.emuledlg->serverwnd->serverlistctrl.GetNextSortOrder((int)lParamSort);
-		if (dwNextSort != -1)
-			iResult = SortProc(lParam1, lParam2, dwNextSort);
+		LPARAM iNextSort = theApp.emuledlg->serverwnd->serverlistctrl.GetNextSortOrder(lParamSort);
+		if (iNextSort != -1)
+			iResult = SortProc(lParam1, lParam2, iNextSort);
 	}
 
-	if (HIWORD(lParamSort))
-		iResult = -iResult;
-	return iResult;
+	return HIWORD(lParamSort) ? -iResult : iResult;
 }
 
-bool CServerListCtrl::StaticServerFileAppend(CServer *server)
+bool CServerListCtrl::StaticServerFileAppend(CServer *pServer)
 {
-	bool bResult;
-	AddLogLine(false, _T("'%s:%i,%s' %s"), server->GetAddress(), server->GetPort(), (LPCTSTR)server->GetListName(), (LPCTSTR)GetResString(IDS_ADDED2SSF));
-	server->SetIsStaticMember(true);
-	bResult = theApp.serverlist->SaveStaticServers();
-	RefreshServer(server);
+	AddLogLine(false, _T("'%s:%i,%s' %s"), pServer->GetAddress(), pServer->GetPort(), (LPCTSTR)pServer->GetListName(), (LPCTSTR)GetResString(IDS_ADDED2SSF));
+	pServer->SetIsStaticMember(true);
+	bool bResult = theApp.serverlist->SaveStaticServers();
+	RefreshServer(pServer);
 	return bResult;
 }
 
-bool CServerListCtrl::StaticServerFileRemove(CServer *server)
+bool CServerListCtrl::StaticServerFileRemove(CServer *pServer)
 {
-	if (!server->IsStaticMember())
+	if (!pServer->IsStaticMember())
 		return true;
-	server->SetIsStaticMember(false);
+	pServer->SetIsStaticMember(false);
 	return theApp.serverlist->SaveStaticServers();
 }
 
 void CServerListCtrl::ShowServerCount()
 {
-	CString counter;
-	counter.Format(_T(" (%i)"), GetItemCount());
-	theApp.emuledlg->serverwnd->SetDlgItemText(IDC_SERVLIST_TEXT, GetResString(IDS_SV_SERVERLIST) + counter);
+	CString sCount(GetResString(IDS_SV_SERVERLIST));
+	sCount.AppendFormat(_T(" (%i)"), GetItemCount());
+	theApp.emuledlg->serverwnd->SetDlgItemText(IDC_SERVLIST_TEXT, sCount);
 }
 
 void CServerListCtrl::OnLvnGetInfoTip(LPNMHDR pNMHDR, LRESULT *pResult)
@@ -747,9 +782,9 @@ void CServerListCtrl::OnLvnGetInfoTip(LPNMHDR pNMHDR, LRESULT *pResult)
 		}
 
 		if (iSelected > 0) {
-			CString strInfo;
-			strInfo.Format(_T("%s: %i\r\n%s: %s\r\n%s: %s\r\n%s: %s") TOOLTIP_AUTOFORMAT_SUFFIX
-				, (LPCTSTR)GetResString(IDS_FSTAT_SERVERS), iSelected
+			CString strInfo(GetResString(IDS_FSTAT_SERVERS));
+			strInfo.AppendFormat(_T(": %i\r\n%s: %s\r\n%s: %s\r\n%s: %s") TOOLTIP_AUTOFORMAT_SUFFIX
+				, iSelected
 				, (LPCTSTR)GetResString(IDS_UUSERS), (LPCTSTR)CastItoIShort(ulTotalUsers)
 				, (LPCTSTR)GetResString(IDS_IDLOW), (LPCTSTR)CastItoIShort(ulTotalLowIdUsers)
 				, (LPCTSTR)GetResString(IDS_PW_FILES), (LPCTSTR)CastItoIShort(ulTotalFiles)
@@ -779,285 +814,10 @@ int CServerListCtrl::Undefined_at_bottom(const CString &s1, const CString &s2)
 	return s2.IsEmpty() ? 4 : sgn(s1.CompareNoCase(s2));
 }
 
-//Xman no need for this because //EastShare - added by AndCycle, IP to Country
-/*
-void CServerListCtrl::OnNmCustomDraw(LPNMHDR pNMHDR, LRESULT *pResult)
+int CServerListCtrl::FindServer(const CServer *pServer)
 {
-	LPNMLVCUSTOMDRAW pnmlvcd = (LPNMLVCUSTOMDRAW)pNMHDR;
-
-	if (pnmlvcd->nmcd.dwDrawStage == CDDS_PREPAINT) {
-		*pResult = CDRF_NOTIFYITEMDRAW;
-		return;
-	}
-
-	if (pnmlvcd->nmcd.dwDrawStage == CDDS_ITEMPREPAINT) {
-		const CServer *pServer = reinterpret_cast<CServer*>(pnmlvcd->nmcd.lItemlParam);
-		const CServer *pConnectedServer = theApp.serverconnect->GetCurrentServer();
-		// the server which we are connected to always has a valid numerical IP member assigned,
-		// therefore we do not need to call CServer::IsEqual which would be expensive
-		//if (pConnectedServer && pConnectedServer->IsEqual(pServer))
-		if (pServer && pConnectedServer && pConnectedServer->GetIP() == pServer->GetIP() && pConnectedServer->GetPort() == pServer->GetPort())
-			pnmlvcd->clrText = RGB(32, 32, 255);
-		else if (pServer && pServer->GetFailedCount() >= thePrefs.GetDeadServerRetries())
-			pnmlvcd->clrText = RGB(192, 192, 192);
-		else if (pServer && pServer->GetFailedCount() >= 2)
-			pnmlvcd->clrText = RGB(128, 128, 128);
-	}
-
-	*pResult = CDRF_DODEFAULT;
+	LVFINDINFO find;
+	find.flags = LVFI_PARAM;
+	find.lParam = (LPARAM)pServer;
+	return FindItem(&find);
 }
-*/
-//Xman end
-
-//Commander - Added: CountryFlag - Start IP to Country
-void CServerListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
-{
-	//if (theApp.m_app_state != APP_STATE_RUNNING)
-	//	return;
-	if (!lpDrawItemStruct->itemData)
-		return;
-
-	// ==> Visual Studio 2010 Compatibility [Stulle/Avi-3k/ied] - Stulle
-	/*
-	CMemDC dc(CDC::FromHandle(lpDrawItemStruct->hDC), &lpDrawItemStruct->rcItem);
-	*/
-	CMemoryDC dc(CDC::FromHandle(lpDrawItemStruct->hDC), &lpDrawItemStruct->rcItem);
-	// <== Visual Studio 2010 Compatibility [Stulle/Avi-3k/ied] - Stulle
-	BOOL bCtrlFocused;
-	InitItemMemDC(dc, lpDrawItemStruct, bCtrlFocused);
-
-	CRect cur_rec(lpDrawItemStruct->rcItem);
-	CRect rcClient;
-	GetClientRect(&rcClient);
-
-	const CServer* server = (CServer*)lpDrawItemStruct->itemData;
-	const CServer* cur_srv;
-
-	//Xman our server in blubold
-	//+
-	//grey out dead servers (BlueSonic/TK4)
-	LOGFONT lfFont = { 0 };
-	CFont fontCustom;
-	if (theApp.serverconnect->IsConnected()
-		&& (cur_srv = theApp.serverconnect->GetCurrentServer()) != NULL
-		&& server != NULL
-		&& cur_srv->GetPort() == server->GetPort()
-		//&& cur_srv->GetConnPort() == server->GetConnPort()//Morph - added by AndCycle, aux Ports, by lugdunummaster
-		&& _tcsicmp(cur_srv->GetAddress(), server->GetAddress()) == 0)
-	{
-		//it's our server
-		//GetFont()->GetLogFont(&lfFont);
-		//lfFont.lfWeight = FW_BOLD;
-		//fontCustom.CreateFontIndirect(&lfFont);
-
-		//dc.SelectObject(&fontCustom);
-		//dc.SetTextColor(RGB(0, 0, 192));
-		dc.SetTextColor(RGB(32, 32, 255));
-	}
-	else //TK4 Mod grey out Filtered servers or Dead servers
-		if (server && server->GetFailedCount() >= thePrefs.GetDeadServerRetries() || theApp.ipfilter->IsFiltered(server->GetIP()))
-		{
-			//GetFont()->GetLogFont(&lfFont);
-			//fontCustom.CreateFontIndirect(&lfFont);
-			//dc.SelectObject(&fontCustom);
-			dc.SetTextColor(RGB(192, 192, 192));
-		}
-		else if (server && server->GetFailedCount() >= 2)
-		{ //unreliable servers
-			//GetFont()->GetLogFont(&lfFont);
-			//fontCustom.CreateFontIndirect(&lfFont);
-			//dc.SelectObject(&fontCustom);
-			dc.SetTextColor(RGB(128, 128, 128));
-		}
-	//Xman end
-
-	CHeaderCtrl* pHeaderCtrl = GetHeaderCtrl();
-	int iCount = pHeaderCtrl->GetItemCount();
-	cur_rec.right = cur_rec.left - sm_iLabelOffset;
-	cur_rec.left += sm_iIconOffset;
-
-	for (int iCurrent = 0; iCurrent < iCount; iCurrent++)
-	{
-		int iColumn = pHeaderCtrl->OrderToIndex(iCurrent);
-		if (!IsColumnHidden(iColumn))
-		{
-			UINT uDrawTextAlignment;
-			int iColumnWidth = GetColumnWidth(iColumn, uDrawTextAlignment);
-			cur_rec.right += iColumnWidth;
-			if (cur_rec.left < cur_rec.right && HaveIntersection(rcClient, cur_rec))
-			{
-				TCHAR szItem[1024];
-				GetItemDisplayText(server, iColumn, szItem, _countof(szItem));
-				switch (iColumn)
-				{
-				case 0:
-				{
-					int iIconPosY = (cur_rec.Height() > 16) ? ((cur_rec.Height() - 16) / 2) : 1;
-					POINT point = { cur_rec.left, cur_rec.top + iIconPosY };
-					int iIconSize = 16;
-					//Draw Country Flag
-					if (theApp.ip2country->ShowCountryFlag()) {
-						//theApp.ip2country->GetFlagImageList()->DrawIndirect(dc, server->GetCountryFlagIndex(), point, CSize(18,16), CPoint(0,0), ILD_NORMAL);
-						theApp.ip2country->GetFlagImageList()->DrawIndirect(&theApp.ip2country->GetFlagImageDrawParams(dc, server->GetCountryFlagIndex(), point));
-						iIconSize = 18;
-					}
-					else
-						imagelist.Draw(dc, 0, point, ILD_NORMAL);
-
-					cur_rec.left += iIconSize + sm_iLabelOffset;
-					dc.DrawText(szItem, -1, &cur_rec, MLC_DT_TEXT | uDrawTextAlignment);
-					cur_rec.left -= iIconSize;
-					cur_rec.right -= sm_iSubItemInset;
-					break;
-				}
-				default:
-					dc.DrawText(szItem, -1, &cur_rec, MLC_DT_TEXT | uDrawTextAlignment);
-					break;
-				}
-			}
-			cur_rec.left += iColumnWidth;
-		}
-	}
-	DrawFocusRect(dc, &lpDrawItemStruct->rcItem, lpDrawItemStruct->itemState & ODS_FOCUS, bCtrlFocused, lpDrawItemStruct->itemState & ODS_SELECTED);
-	fontCustom.DeleteObject(); //Xman
-}
-
-void CServerListCtrl::GetItemDisplayText(const CServer* server, int iSubItem, LPTSTR pszText, int cchTextMax) const
-{
-	if (pszText == NULL || cchTextMax <= 0) {
-		ASSERT(0);
-		return;
-	}
-	pszText[0] = _T('\0');
-	switch (iSubItem) {
-	case 0:
-		_tcsncpy(pszText, server->GetListName(), cchTextMax);
-		break;
-	case 1:
-		//DolphinX :: support dynamic ip servers :: Start
-		if (server->HasDynIP()) {
-			if (server->GetIP())
-				_sntprintf(pszText, cchTextMax, _T("%s(%s) : %i"), server->GetFullIP(), server->GetDynIP(), server->GetPort());
-			else
-				_sntprintf(pszText, cchTextMax, _T("%s : %i"), server->GetDynIP(), server->GetPort());
-		}
-		else
-			_sntprintf(pszText, cchTextMax, _T("%s : %i"), server->GetAddress(), server->GetPort());
-		//DolphinX :: support dynamic ip servers :: End
-		break;
-	case 2:
-		if (theApp.ip2country->ShowCountryFlag()) {
-			_sntprintf(pszText, cchTextMax, _T("%s%s"), server->GetCountryName(), server->GetDescription());
-		}else {
-			_tcsncpy(pszText, server->GetDescription(), cchTextMax);
-		}
-		break;
-	case 3:
-		if (server->GetPing())
-			_sntprintf(pszText, cchTextMax, _T("%i"), server->GetPing());
-		break;
-	case 4:
-		if (server->GetUsers())
-			_tcsncpy(pszText, CastItoIShort(server->GetUsers()), cchTextMax);
-		break;
-	case 5:
-		if (server->GetMaxUsers())
-			_tcsncpy(pszText, CastItoIShort(server->GetMaxUsers()), cchTextMax);
-		break;
-	case 6:
-		if (server->GetFiles())
-			_tcsncpy(pszText, CastItoIShort(server->GetFiles()), cchTextMax);
-		break;
-	case 7:
-	{
-		CString Sbuffer;
-		switch (server->GetPreference()) {
-		case SRV_PR_LOW:
-			Sbuffer = GetResString(IDS_PRIOLOW);
-			break;
-		case SRV_PR_NORMAL:
-			Sbuffer = GetResString(IDS_PRIONORMAL);
-			break;
-		case SRV_PR_HIGH:
-			Sbuffer = GetResString(IDS_PRIOHIGH);
-			break;
-		default:
-			Sbuffer = GetResString(IDS_PRIONOPREF);
-		}
-		_tcsncpy(pszText, Sbuffer, cchTextMax);
-		break;
-	}
-	case 8:
-		_sntprintf(pszText, cchTextMax, _T("%i"), server->GetFailedCount());
-		break;
-	case 9:
-		_tcsncpy(pszText, GetResString((server->IsStaticMember()) ? IDS_YES : IDS_NO), cchTextMax);
-		break;
-	case 10:
-		if (server->GetSoftFiles())
-			_tcsncpy(pszText, CastItoIShort(server->GetSoftFiles()), cchTextMax);
-		break;
-	case 11:
-		if (server->GetHardFiles())
-			_tcsncpy(pszText, CastItoIShort(server->GetHardFiles()), cchTextMax);
-		break;
-	case 12:
-	{
-#if defined(_DEBUG) || defined(USE_DEBUG_DEVICE)
-		CString Sbuffer = server->GetVersion();
-		if (thePrefs.GetDebugServerUDPLevel() > 0) {
-			if (server->GetUDPFlags() != 0) {
-				if (!Sbuffer.IsEmpty())
-					Sbuffer += _T("; ");
-				Sbuffer.AppendFormat(_T("ExtUDP=%x"), server->GetUDPFlags());
-			}
-		}
-		if (thePrefs.GetDebugServerTCPLevel() > 0) {
-			if (server->GetTCPFlags() != 0) {
-				if (!Sbuffer.IsEmpty())
-					Sbuffer += _T("; ");
-				Sbuffer.AppendFormat(_T("ExtTCP=%x"), server->GetTCPFlags());
-			}
-		}
-		_tcsncpy(pszText, Sbuffer, cchTextMax);
-#else
-		_tcsncpy(pszText, server->GetVersion(), cchTextMax);
-#endif
-		break;
-	}
-	//Lowid Column
-	case 13:
-		if (server->GetLowIDUsers())
-			_tcsncpy(pszText, CastItoIShort(server->GetLowIDUsers()), cchTextMax);
-		break;
-	case 14:
-		_tcsncpy(pszText, GetResString((server->SupportsObfuscationTCP() && server->GetObfuscationPortTCP() != 0) ? IDS_YES : IDS_NO), cchTextMax);
-		break;
-	}
-	pszText[cchTextMax - 1] = _T('\0');
-}
-
-void CServerListCtrl::OnLvnGetDispInfo(NMHDR* pNMHDR, LRESULT* pResult)
-{
-	if (theApp.m_app_state == APP_STATE_RUNNING) {
-		// Although we have an owner drawn listview control we store the text for the primary item in the listview, to be
-		// capable of quick searching those items via the keyboard. Because our listview items may change their contents,
-		// we do this via a text callback function. The listview control will send us the LVN_DISPINFO notification if
-		// it needs to know the contents of the primary item.
-		//
-		// But, the listview control sends this notification all the time, even if we do not search for an item. At least
-		// this notification is only sent for the visible items and not for all items in the list. Though, because this
-		// function is invoked *very* often, do *NOT* put any time consuming code in here.
-		//
-		// Vista: That callback is used to get the strings for the label tips for the sub(!) items.
-		//
-		NMLVDISPINFO* pDispInfo = reinterpret_cast<NMLVDISPINFO*>(pNMHDR);
-		if (pDispInfo->item.mask & LVIF_TEXT) {
-			const CServer* pServer = reinterpret_cast<CServer*>(pDispInfo->item.lParam);
-			if (pServer != NULL)
-				GetItemDisplayText(pServer, pDispInfo->item.iSubItem, pDispInfo->item.pszText, pDispInfo->item.cchTextMax);
-		}
-	}
-	*pResult = 0;
-}
-//Commander - Added: CountryFlag - End

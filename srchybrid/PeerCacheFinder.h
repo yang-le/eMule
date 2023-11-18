@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -20,12 +20,12 @@
 
 enum EPeerCacheStatus
 {
-	// permanent failure 20..11
+	// permanent failure: 20..11
 	PCS_NOTFOUND = 20,
 	PCS_NOTVERIFIED = 19,
 	PCS_DISABLED = 18,
 
-	// still trying to find & valdite 10..1
+	// still trying to find & validate: 10..1
 	PCS_DOINGLOOKUPS = 10,
 	PCS_VALDATING = 9,
 	PCS_NOINIT = 8,
@@ -63,8 +63,8 @@ public:
 	uint16	GetCachePort()						const	{ return m_nPCPort; }
 	void	DownloadAttemptStarted()					{ ++m_nDownloadAttempts; }
 	void	DownloadAttemptFailed();
-	void	AddBannedVersion(CClientVersionInfo cviVersion);
-	void	AddAllowedVersion(CClientVersionInfo cviVersion);
+	void	AddBannedVersion(const CClientVersionInfo &cviVersion);
+	void	AddAllowedVersion(const CClientVersionInfo &cviVersion);
 	bool	IsClientPCCompatible(uint32 dwTagVersionInfo, UINT nClientSoft);
 	bool	IsClientPCCompatible(const CClientVersionInfo &cviToCheck);
 	LRESULT OnPeerCacheCheckResponse(WPARAM, LPARAM lParam);
@@ -88,7 +88,7 @@ private:
 	uint32	m_nFailedDownloads;
 	int		m_posCurrentLookUp;
 	uint16	m_nPCPort;
-	bool	m_bValdited;
+	bool	m_bValidated;
 	bool	m_bNotReSearched;
 	bool	m_bNotReValdited;
 
@@ -103,9 +103,9 @@ class CPCValidateThread : public CWinThread
 
 protected:
 	CPCValidateThread();           // protected constructor used by dynamic creation
-	virtual	~CPCValidateThread() = default;
+
 	DECLARE_MESSAGE_MAP()
-	bool	Valdite();
+	bool	Validate();
 
 public:
 	virtual	BOOL	InitInstance();

@@ -65,7 +65,7 @@ CCustomAutoComplete::~CCustomAutoComplete()
 bool CCustomAutoComplete::Bind(HWND p_hWndEdit, DWORD p_dwOptions, LPCTSTR p_lpszFormatString)
 {
 	ATLASSERT(::IsWindow(p_hWndEdit));
-	if (m_fBound || m_pac)
+	if (m_bBound || m_pac)
 		return false;
 
 	if (SUCCEEDED(m_pac.CoCreateInstance(CLSID_AutoComplete))) {
@@ -78,7 +78,7 @@ bool CCustomAutoComplete::Bind(HWND p_hWndEdit, DWORD p_dwOptions, LPCTSTR p_lps
 		}
 
 		if (SUCCEEDED(m_pac->Init(p_hWndEdit, this, NULL, p_lpszFormatString))) {
-			m_fBound = true;
+			m_bBound = true;
 			return true;
 		}
 	}
@@ -87,9 +87,9 @@ bool CCustomAutoComplete::Bind(HWND p_hWndEdit, DWORD p_dwOptions, LPCTSTR p_lps
 
 void CCustomAutoComplete::Unbind()
 {
-	if (m_fBound && m_pac) {
+	if (m_bBound && m_pac) {
 		m_pac.Release();
-		m_fBound = false;
+		m_bBound = false;
 	}
 }
 
@@ -111,26 +111,22 @@ int CCustomAutoComplete::FindItem(const CString &rstr)
 
 bool CCustomAutoComplete::AddItem(const CString &p_sItem, int iPos)
 {
-	if (p_sItem.GetLength() != 0) {
+	if (p_sItem.GetLength() > 0) {
 		int oldpos = FindItem(p_sItem);
-		if (oldpos == -1) {
-			// use a LRU list
-			if (iPos == -1)
+		if (oldpos < 0) {
+			if (iPos < 0)
 				m_asList.Add(p_sItem);
 			else
 				m_asList.InsertAt(iPos, p_sItem);
-
+			// use a LRU list
 			if (m_asList.GetCount() > m_iMaxItemCount)
 				m_asList.SetSize(m_iMaxItemCount);
 			return true;
-		} else if (iPos >= 0) {
+		}
+		if (iPos >= 0) {
 			m_asList.RemoveAt(oldpos);
-			if (oldpos < iPos)
-				--iPos;
+			iPos -= static_cast<int>(oldpos < iPos);
 			m_asList.InsertAt(iPos, p_sItem);
-
-			if (m_asList.GetCount() > m_iMaxItemCount)
-				m_asList.SetSize(m_iMaxItemCount);
 			return true;
 		}
 	}
@@ -156,12 +152,12 @@ bool CCustomAutoComplete::RemoveItem(const CString &p_sItem)
 
 bool CCustomAutoComplete::RemoveSelectedItem()
 {
-	if (!m_fBound || !m_pac)
+	if (!m_bBound || !m_pac)
 		return false;
 
 	DWORD dwFlags;
 	LPWSTR pwszItem;
-	CComQIPtr<IAutoCompleteDropDown> pIAutoCompleteDropDown = m_pac;
+	CComQIPtr<IAutoCompleteDropDown> pIAutoCompleteDropDown(m_pac);
 	if (!pIAutoCompleteDropDown || FAILED(pIAutoCompleteDropDown->GetDropDownStatus(&dwFlags, &pwszItem)))
 		return false;
 
@@ -172,21 +168,20 @@ bool CCustomAutoComplete::RemoveSelectedItem()
 
 bool CCustomAutoComplete::Clear()
 {
-	if (!m_asList.IsEmpty()) {
-		m_asList.RemoveAll();
-		return true;
-	}
-	return false;
+	if (m_asList.IsEmpty())
+		return false;
+	m_asList.RemoveAll();
+	return true;
 }
 
 bool CCustomAutoComplete::Disable()
 {
-	return m_pac && m_fBound && SUCCEEDED(EnDisable(FALSE));
+	return m_bBound && m_pac && SUCCEEDED(EnDisable(false));
 }
 
 bool CCustomAutoComplete::Enable()
 {
-	return m_pac && !m_fBound && SUCCEEDED(EnDisable(TRUE));
+	return !m_bBound && m_pac && SUCCEEDED(EnDisable(true));
 }
 
 const CStringArray& CCustomAutoComplete::GetList() const
@@ -199,33 +194,33 @@ const CStringArray& CCustomAutoComplete::GetList() const
 //
 STDMETHODIMP_(ULONG) CCustomAutoComplete::AddRef() noexcept
 {
-	return static_cast<ULONG>(InterlockedIncrement(&m_nRefCount));
+	return static_cast<ULONG>(::InterlockedIncrement(&m_nRefCount));
 }
 
 STDMETHODIMP_(ULONG) CCustomAutoComplete::Release() noexcept
 {
-	LONG nCount = InterlockedDecrement(&m_nRefCount);
+	LONG nCount = ::InterlockedDecrement(&m_nRefCount);
 	if (nCount == 0)
 		delete this;
 	return static_cast<ULONG>(nCount);
 }
 
-STDMETHODIMP CCustomAutoComplete::QueryInterface(REFIID riid, void **ppvObject) noexcept
+STDMETHODIMP CCustomAutoComplete::QueryInterface(REFIID iid, LPVOID *ppvObj) noexcept
 {
-	if (ppvObject == NULL)
+	if (ppvObj == NULL)
 		return E_POINTER;
 
-	if (IID_IUnknown == riid)
-		*ppvObject = static_cast<IUnknown*>(this);
-	else if (IID_IEnumString == riid)
-		*ppvObject = static_cast<IEnumString*>(this);
+	if (IID_IUnknown == iid)
+		*ppvObj = static_cast<IUnknown*>(this);
+	else if (IID_IEnumString == iid)
+		*ppvObj = static_cast<IEnumString*>(this);
 	else
-		*ppvObject = NULL;
-	if (*ppvObject != NULL) {
-		((LPUNKNOWN)*ppvObject)->AddRef();
-		return S_OK;
-	}
-	return E_NOINTERFACE;
+		*ppvObj = NULL;
+	if (*ppvObj == NULL)
+		return E_NOINTERFACE;
+
+	((LPUNKNOWN)*ppvObj)->AddRef();
+	return S_OK;
 }
 
 //
@@ -233,18 +228,16 @@ STDMETHODIMP CCustomAutoComplete::QueryInterface(REFIID riid, void **ppvObject) 
 //
 STDMETHODIMP CCustomAutoComplete::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched) noexcept
 {
-	HRESULT hr = S_FALSE;
-
 	if (!celt)
 		celt = 1;
 	if (pceltFetched)
 		*pceltFetched = 0;
 	ULONG i;
 	for (i = 0; i < celt; ++i) {
-		if (m_nCurrentElement == (ULONG)m_asList.GetCount())
+		if (m_nCurrentElement >= (ULONG)m_asList.GetCount())
 			break;
 
-		rgelt[i] = (LPWSTR)CoTaskMemAlloc((ULONG)(sizeof(WCHAR) * (m_asList[m_nCurrentElement].GetLength() + 1)));
+		rgelt[i] = (LPWSTR)::CoTaskMemAlloc(sizeof(WCHAR) * ((SIZE_T)m_asList[m_nCurrentElement].GetLength() + 1));
 		wcscpy(rgelt[i], (CStringW)m_asList[m_nCurrentElement]);
 
 		if (pceltFetched)
@@ -252,11 +245,7 @@ STDMETHODIMP CCustomAutoComplete::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pcelt
 
 		++m_nCurrentElement;
 	}
-
-	if (i == celt)
-		hr = S_OK;
-
-	return hr;
+	return (i == celt) ? S_OK : S_FALSE;
 }
 
 STDMETHODIMP CCustomAutoComplete::Skip(ULONG celt) noexcept
@@ -293,17 +282,17 @@ void CCustomAutoComplete::InternalInit()
 {
 	m_nCurrentElement = 0;
 	m_nRefCount = 0;
-	m_fBound = false;
 	m_iMaxItemCount = 30;
+	m_bBound = false;
 }
 
-HRESULT CCustomAutoComplete::EnDisable(BOOL p_fEnable)
+HRESULT CCustomAutoComplete::EnDisable(bool p_bEnable)
 {
 	ATLASSERT(m_pac);
 
-	HRESULT hr = m_pac->Enable(p_fEnable);
+	HRESULT hr = m_pac->Enable(p_bEnable);
 	if (SUCCEEDED(hr))
-		m_fBound = (p_fEnable != FALSE);
+		m_bBound = p_bEnable;
 	return hr;
 }
 
@@ -315,17 +304,15 @@ bool CCustomAutoComplete::LoadList(LPCTSTR pszFileName)
 
 	// verify Unicode byte order mark 0xFEFF
 	WORD wBOM = fgetwc(fp);
-	if (wBOM != 0xFEFFui16) {
+	if (wBOM != u'\xFEFF') {
 		fclose(fp);
 		return false;
 	}
 
 	TCHAR szItem[256];
-	while (_fgetts(szItem, _countof(szItem), fp) != NULL) {
-		CString strItem(szItem);
-		strItem.Trim(_T(" \r\n"));
-		AddItem(strItem, -1);
-	}
+	while (_fgetts(szItem, _countof(szItem), fp) != NULL)
+		AddItem(CString(szItem).Trim(_T(" \r\n")), -1);
+
 	fclose(fp);
 	return true;
 }
@@ -335,7 +322,7 @@ bool CCustomAutoComplete::SaveList(LPCTSTR pszFileName)
 	FILE *fp = _tfsopen(pszFileName, _T("wb"), _SH_DENYWR);
 	if (fp == NULL)
 		return false;
-	bool ret = (fputwc(0xFEFFui16, fp) != WEOF); // write Unicode byte order mark 0xFEFF
+	bool ret = (fputwc(u'\xFEFF', fp) != WEOF); // write Unicode byte order mark 0xFEFF
 	for (int i = 0; ret && i < m_asList.GetCount(); ++i)
 		ret = (_ftprintf(fp, _T("%s\r\n"), (LPCTSTR)m_asList[i]) > 0);
 	return fclose(fp) ? false : ret;

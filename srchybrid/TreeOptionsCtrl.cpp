@@ -74,7 +74,7 @@ History: PJN / 21-04-1999 Added full support for enabling / disabling all the it
 		 PJN / 24-09-2002 1. Updated documentation which incorrectly stated that the parent of a check box item
 						  must be a group item as inserted with InsertGroup. Thanks to Kögl Christoph for
 						  spotting this.
-						  2. Fixed an issue with "IMPLEMENT_DYNAMIC(CDateTimeCtrl..." not being declared propertly.
+						  2. Fixed an issue with "IMPLEMENT_DYNAMIC(CDateTimeCtrl..." not being declared properly.
 						  Some users reported that it worked OK, while others said that my fix was causing link
 						  problems. The problem should be sorted out for good now. Thanks to Kögl Christoph for
 						  reporting this.
@@ -146,7 +146,7 @@ to maintain a single distribution point for the source code.
 #include "stdafx.h"
 #include "resource.h"
 #ifndef _SHLOBJ_H_
-#pragma message("To avoid this message, please put shlobj.h in your pre compiled header (normally stdafx.h)")
+#pragma message("To avoid this message, please put shlobj.h in your precompiled header (normally stdafx.h)")
 #include <shlobj.h>
 #endif
 #include "TreeOptionsCtrl.h"
@@ -228,6 +228,7 @@ CTreeOptionsCtrl::~CTreeOptionsCtrl()
 	ASSERT(m_pButton == NULL);
 	ASSERT(m_pDateTime == NULL);
 	ASSERT(m_pIPAddress == NULL);
+	(void)TREE_OPTIONS_STATIC_ID; //suppress warning C5264
 }
 
 LRESULT CTreeOptionsCtrl::OnSetFocusToChild(WPARAM, LPARAM)
@@ -393,12 +394,12 @@ void CTreeOptionsCtrl::OnLButtonDown(UINT nFlags, CPoint point)
 	if (!hItem)
 		uFlags = 0;
 
-	//If the mouse was over the label, icon or to the left or right of the item?
+	//If the mouse was over the icon, label or to the left or right of the item?
 	BOOL bHit;
 	if (m_bToggleOverIconOnly)
-		bHit = uFlags == TVHT_ONITEMICON;
+		bHit = (uFlags == TVHT_ONITEMICON);
 	else
-		bHit = (uFlags & TVHT_ONITEM) || (uFlags & TVHT_ONITEMINDENT) || (uFlags & TVHT_ONITEMRIGHT);
+		bHit = (uFlags & (TVHT_ONITEM | TVHT_ONITEMINDENT | TVHT_ONITEMRIGHT));
 
 	if (bHit) {
 		if (IsCheckBox(hItem)) {
@@ -953,16 +954,16 @@ BOOL CTreeOptionsCtrl::AddComboBox(HTREEITEM hItem, CRuntimeClass *pRuntimeClass
 
 CString CTreeOptionsCtrl::GetComboText(HTREEITEM hItem) const
 {
-	const CString &sText = GetItemText(hItem);
+	const CString &sText(GetItemText(hItem));
 	int nSeparator = sText.Find(m_sSeparator);
-	if (nSeparator >= 0)
-		return sText.Right(sText.GetLength() - nSeparator - m_sSeparator.GetLength());
-	return CString();
+	if (nSeparator < 0)
+		return CString();
+	return sText.Right(sText.GetLength() - nSeparator - m_sSeparator.GetLength());
 }
 
 void CTreeOptionsCtrl::RemoveChildControlText(HTREEITEM hItem)
 {
-	CString sText = GetItemText(hItem);
+	CString sText(GetItemText(hItem));
 	int nSeparator = sText.Find(m_sSeparator);
 	if (nSeparator >= 0)
 		sText.Truncate(nSeparator);
@@ -971,7 +972,7 @@ void CTreeOptionsCtrl::RemoveChildControlText(HTREEITEM hItem)
 
 void CTreeOptionsCtrl::SetComboText(HTREEITEM hItem, const CString &sComboText)
 {
-	CString sText = GetItemText(hItem);
+	CString sText(GetItemText(hItem));
 	int nSeparator = sText.Find(m_sSeparator);
 	if (nSeparator < 0)
 		sText += m_sSeparator;
@@ -1642,8 +1643,8 @@ BOOL CTreeOptionsCtrl::OnNmClick(LPNMHDR, LRESULT *pResult)
 void CTreeOptionsCtrl::OnKillFocus(CWnd *pNewWnd)
 {
 	//Clean up any controls currently open if we are losing focus to something else
-	BOOL bForeignWnd = (m_hControlItem && (pNewWnd != m_pCombo) && (pNewWnd != m_pEdit) &&
-		(pNewWnd != m_pDateTime) && (pNewWnd != m_pIPAddress) && (pNewWnd != m_pButton));
+	BOOL bForeignWnd = (m_hControlItem && (pNewWnd != m_pCombo) && (pNewWnd != m_pEdit)
+		&& (pNewWnd != m_pDateTime) && (pNewWnd != m_pIPAddress) && (pNewWnd != m_pButton));
 	if (bForeignWnd && m_pCombo)
 		bForeignWnd = !m_pCombo->IsRelatedWnd(pNewWnd);
 	if (bForeignWnd && m_pDateTime)
@@ -1758,7 +1759,7 @@ void CTreeOptionsCtrl::SetDateTime(HTREEITEM hItem, const SYSTEMTIME &st)
 	CTreeOptionsDateCtrl *pTempDateTime = static_cast<CTreeOptionsDateCtrl*>(pItemData->m_pRuntimeClass1->CreateObject());
 	ASSERT(pTempDateTime);
 	ASSERT(pTempDateTime->IsKindOf(RUNTIME_CLASS(CTreeOptionsDateCtrl)));  //Your class must be derived from CTreeOptionsDateCtrl
-	const CString &sDateTime = pTempDateTime->GetDisplayText(st);
+	const CString &sDateTime(pTempDateTime->GetDisplayText(st));
 	SetEditText(hItem, sDateTime);
 	delete pTempDateTime;
 }
@@ -2130,9 +2131,9 @@ void CTreeOptionsIPAddressCtrl::OnKillFocus(CWnd *pNewWnd)
 CString CTreeOptionsIPAddressCtrl::GetDisplayText(DWORD dwAddress)
 {
 	CString sAddress;
-	sAddress.Format(_T("%lu.%lu.%lu.%lu"), (dwAddress >> 24) & 0xFF,
-		(dwAddress >> 16) & 0xFF, (dwAddress >> 8) & 0xFF,
-		(dwAddress & 0xFF));
+	sAddress.Format(_T("%lu.%lu.%lu.%lu")
+		, (dwAddress >> 24) & 0xFF, (dwAddress >> 16) & 0xFF
+		, (dwAddress >> 8) & 0xFF, dwAddress & 0xFF);
 	return sAddress;
 }
 
@@ -2153,21 +2154,7 @@ BOOL CTreeOptionsIPAddressCtrl::IsRelatedWnd(CWnd *pChild)
 
 
 
-
-
-
-
-
-
 IMPLEMENT_DYNCREATE(CTreeOptionsBooleanCombo, CTreeOptionsCombo)
-
-CTreeOptionsBooleanCombo::CTreeOptionsBooleanCombo()
-{
-}
-
-CTreeOptionsBooleanCombo::~CTreeOptionsBooleanCombo()
-{
-}
 
 BEGIN_MESSAGE_MAP(CTreeOptionsBooleanCombo, CTreeOptionsCombo)
 	//{{AFX_MSG_MAP(CTreeOptionsBooleanCombo)
@@ -2203,10 +2190,6 @@ CTreeOptionsEdit::CTreeOptionsEdit()
 	, m_pButtonCtrl()
 	, m_hTreeCtrlItem()
 	, m_bDoNotDestroyUponLoseFocus()
-{
-}
-
-CTreeOptionsEdit::~CTreeOptionsEdit()
 {
 }
 
@@ -2288,11 +2271,11 @@ void CTreeOptionsEdit::BrowseForFolder(const CString &sInitialFolder)
 	ASSERT(m_pTreeCtrl);
 
 	//Bring up a standard directory chooser dialog
-	TCHAR sDisplayName[_MAX_PATH];
+	TCHAR sDisplayName[MAX_PATH];
 	BROWSEINFO bi;
 	bi.hwndOwner = m_pTreeCtrl->GetSafeHwnd();
 	bi.pidlRoot = NULL;
-	const CString &sCaption = GetBrowseForFolderCaption();
+	const CString &sCaption(GetBrowseForFolderCaption());
 	bi.lpszTitle = sCaption;
 	bi.pszDisplayName = sDisplayName;
 	bi.ulFlags = BIF_RETURNONLYFSDIRS;
@@ -2302,7 +2285,7 @@ void CTreeOptionsEdit::BrowseForFolder(const CString &sInitialFolder)
 
 	if (pItemIDList) {
 		//Retrieve the path and update on screen
-		TCHAR sPath[_MAX_PATH];
+		TCHAR sPath[MAX_PATH];
 		if (SHGetPathFromIDList(pItemIDList, sPath))
 			SetWindowText(sPath);
 
@@ -2324,7 +2307,7 @@ void CTreeOptionsEdit::BrowseForFile(const CString &sInitialFile)
 	CTreeOptionsFileDialog dlg(TRUE, NULL, sInitialFile, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, GetFileExtensionFilter(), m_pTreeCtrl);
 
 	//Modify the title to the desired value
-	const CString &sCaption = GetBrowseForFileCaption();
+	const CString &sCaption(GetBrowseForFileCaption());
 	dlg.m_ofn.lpstrTitle = sCaption;
 
 	//bring up the dialog and if hit OK set the text in this control to the new filename
@@ -2395,10 +2378,6 @@ CTreeOptionsBrowseButton::CTreeOptionsBrowseButton()
 	, m_pEdit()
 	, m_pCombo()
 	, m_hTreeCtrlItem()
-{
-}
-
-CTreeOptionsBrowseButton::~CTreeOptionsBrowseButton()
 {
 }
 
@@ -2611,17 +2590,12 @@ END_MESSAGE_MAP()
 
 void CTreeOptionsFileDialog::OnInitDone()
 {
-	CString sText;
+	CStringA sText;
 	if (!sText.LoadString(IDS_TREEOPTIONS_OK))
 		ASSERT(0);
-	LPTSTR pszBuffer = sText.GetBuffer(sText.GetLength());
-
 	//modify the text on the IDOK button to OK
-	CommDlg_OpenSave_SetControlText(GetParent()->m_hWnd, IDOK, pszBuffer);
-
-	sText.ReleaseBuffer();
+	CommDlg_OpenSave_SetControlText(GetParent()->m_hWnd, IDOK, (LPCSTR)sText);
 }
-
 
 
 
@@ -2777,12 +2751,8 @@ void DDX_TreeBoolean(CDataExchange *pDX, int nIDC, HTREEITEM hItem, BOOL &bValue
 {
 	//Convert from the boolean to a string if we are transferring to the control
 	CString sText;
-	if (!pDX->m_bSaveAndValidate) {
-		if (bValue)
-			VERIFY(sText.LoadString(IDS_TREEOPTIONS_TRUE));
-		else
-			VERIFY(sText.LoadString(IDS_TREEOPTIONS_FALSE));
-	}
+	if (!pDX->m_bSaveAndValidate)
+		VERIFY(sText.LoadString(bValue ? IDS_TREEOPTIONS_TRUE : IDS_TREEOPTIONS_FALSE));
 
 	//Pass the buck to the combo DDX function
 	DDX_TreeCombo(pDX, nIDC, hItem, sText);
@@ -2791,10 +2761,7 @@ void DDX_TreeBoolean(CDataExchange *pDX, int nIDC, HTREEITEM hItem, BOOL &bValue
 	if (pDX->m_bSaveAndValidate) {
 		CString sCompare;
 		VERIFY(sCompare.LoadString(IDS_TREEOPTIONS_TRUE));
-		if (sText == sCompare)
-			bValue = TRUE;
-		else
-			bValue = FALSE;
+		bValue = (sText == sCompare);
 	}
 }
 
@@ -2805,9 +2772,9 @@ HTREEITEM CTreeOptionsCtrl::CopyItem(HTREEITEM hItem, HTREEITEM htiNewParent, HT
 	tvstruct.item.hItem = hItem;
 	tvstruct.item.mask = TVIF_CHILDREN | TVIF_HANDLE | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_PARAM;
 	GetItem(&tvstruct.item);
-	CString sText = GetItemText(hItem);
+	CString sText(GetItemText(hItem));
 	tvstruct.item.cchTextMax = sText.GetLength();
-	tvstruct.item.pszText = sText.GetBuffer(tvstruct.item.cchTextMax);
+	tvstruct.item.pszText = const_cast<LPTSTR>((LPCTSTR)sText);
 	if (tvstruct.item.lParam)
 		tvstruct.item.lParam = (LPARAM)new CTreeOptionsItemData(*(reinterpret_cast<CTreeOptionsItemData*>(tvstruct.item.lParam)));
 

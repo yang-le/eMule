@@ -11,7 +11,6 @@ class CPPgServer : public CPropertyPage
 
 public:
 	CPPgServer();
-	virtual	~CPPgServer() = default;
 
 	void Localize();
 

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -38,19 +38,18 @@ BOOL CEnBitmap::LoadImage(UINT uIDRes, LPCTSTR pszResourceType, HMODULE hInst, C
 
 BOOL CEnBitmap::LoadImage(LPCTSTR lpszResourceName, LPCTSTR szResourceType, HMODULE hInst, COLORREF crBack)
 {
-	ASSERT(m_hObject == NULL);      // only attach once, detach on destroy
-
-	if (m_hObject != NULL)
+	if (m_hObject != NULL) { // only attach once, detach on destroy
+		ASSERT(0);
 		return FALSE;
+	}
 
-	int nSize = 0;
 	BOOL bResult = FALSE;
 
 	// first call is to get buffer size
+	int nSize;
 	if (GetResource(lpszResourceName, szResourceType, hInst, 0, nSize)) {
 		if (nSize > 0) {
 			BYTE *pBuff = new BYTE[nSize];
-
 			// this loads it
 			if (GetResource(lpszResourceName, szResourceType, hInst, pBuff, nSize)) {
 				IPicture *pPicture = LoadFromBuffer(pBuff, nSize);
@@ -70,34 +69,23 @@ BOOL CEnBitmap::LoadImage(LPCTSTR lpszResourceName, LPCTSTR szResourceType, HMOD
 
 BOOL CEnBitmap::LoadImage(LPCTSTR szImagePath, COLORREF crBack)
 {
-	ASSERT(m_hObject == NULL);      // only attach once, detach on destroy
-
-	if (m_hObject != NULL)
+	if (m_hObject != NULL) { // only attach once, detach on destroy
+		ASSERT(0);
 		return FALSE;
-
-	// If GDI+ is available, use that API because it supports more file formats and images with alpha channels.
-	// That DLL is installed with WinXP is available as redistributable from Microsoft for Win98+. As this DLL
-	// may not be available on some OS but we have to link statically to it, we have to take some special care.
-	//
-	extern bool g_bGdiPlusInstalled;
-	if (g_bGdiPlusInstalled) {
-		CImage img;
-		if (SUCCEEDED(img.Load(szImagePath))) {
-			CBitmap::Attach(img.Detach());
-			return TRUE;
-		}
 	}
 
-	BOOL bResult = FALSE;
-	CFile			cFile;
-	CFileException	e;
+	CImage img;
+	if (SUCCEEDED(img.Load(szImagePath)))
+		return CBitmap::Attach(img.Detach());
 
+	BOOL bResult = FALSE;
+	CFileException e;
+	CFile cFile;
 	if (cFile.Open(szImagePath, CFile::modeRead | CFile::typeBinary | CFile::shareDenyWrite, &e)) {
 		int nSize = (int)cFile.GetLength();
 		BYTE *pBuff = new BYTE[nSize];
 		if (cFile.Read(pBuff, nSize) > 0) {
 			IPicture *pPicture = LoadFromBuffer(pBuff, nSize);
-
 			if (pPicture) {
 				bResult = Attach(pPicture, crBack);
 				pPicture->Release();
@@ -105,7 +93,6 @@ BOOL CEnBitmap::LoadImage(LPCTSTR szImagePath, COLORREF crBack)
 		}
 		delete[] pBuff;
 	}
-
 	return bResult;
 }
 
@@ -113,12 +100,12 @@ IPicture* CEnBitmap::LoadFromBuffer(BYTE *pBuff, int nSize)
 {
 	IPicture *pPicture = NULL;
 
-	HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, nSize);
+	HGLOBAL hGlobal = ::GlobalAlloc(GMEM_MOVEABLE, nSize);
 	if (hGlobal != NULL) {
-		void *pData = GlobalLock(hGlobal);
+		void *pData = ::GlobalLock(hGlobal);
 		if (pData != NULL) {
 			memcpy(pData, pBuff, nSize);
-			GlobalUnlock(hGlobal);
+			::GlobalUnlock(hGlobal);
 
 			IStream *pStream = NULL;
 			if (CreateStreamOnHGlobal(hGlobal, TRUE/*fDeleteOnRelease*/, &pStream) == S_OK) {
@@ -130,9 +117,9 @@ IPicture* CEnBitmap::LoadFromBuffer(BYTE *pBuff, int nSize)
 				VERIFY(OleLoadPicture(pStream, nSize, TRUE/*FALSE*/, IID_IPicture, (LPVOID*)&pPicture) == S_OK);
 				pStream->Release();
 			} else
-				GlobalFree(hGlobal);
+				::GlobalFree(hGlobal);
 		} else
-			GlobalFree(hGlobal);
+			::GlobalFree(hGlobal);
 	}
 
 	return pPicture; // caller releases
@@ -140,35 +127,27 @@ IPicture* CEnBitmap::LoadFromBuffer(BYTE *pBuff, int nSize)
 
 BOOL CEnBitmap::GetResource(LPCTSTR lpName, LPCTSTR lpType, HMODULE hInst, void *pResource, int &nBufSize)
 {
-	HRSRC		hResInfo;
-	HANDLE		hRes;
-	LPSTR		lpRes = NULL;
-	bool		bResult = FALSE;
-
 	// Find the resource
-	hResInfo = FindResource(hInst, lpName, lpType);
-
+	HRSRC hResInfo = FindResource(hInst, lpName, lpType);
 	if (hResInfo == NULL)
-		return false;
+		return FALSE;
 
 	// Load the resource
-	hRes = LoadResource(hInst, hResInfo);
-
+	HANDLE hRes = LoadResource(hInst, hResInfo);
 	if (hRes == NULL)
-		return false;
+		return FALSE;
+
+	bool bResult = FALSE;
 
 	// Lock the resource
-	lpRes = (char*)LockResource(hRes);
-
+	LPCSTR lpRes = (LPCSTR)LockResource(hRes);
 	if (lpRes != NULL) {
 		if (pResource == NULL) {
 			nBufSize = SizeofResource(hInst, hResInfo);
-			bResult = true;
-		} else {
-			if (nBufSize >= (int)SizeofResource(hInst, hResInfo)) {
-				memcpy(pResource, lpRes, nBufSize);
-				bResult = true;
-			}
+			bResult = TRUE;
+		} else if (nBufSize >= (int)SizeofResource(hInst, hResInfo)) {
+			memcpy(pResource, lpRes, nBufSize);
+			bResult = TRUE;
 		}
 
 		UnlockResource(hRes);
@@ -215,7 +194,8 @@ BOOL CEnBitmap::Attach(IPicture *pPicture, COLORREF crBack)
 			HRESULT hr = pPicture->Render(dcMem, 0, 0, nWidth, nHeight, 0, hmHeight, hmWidth, -hmHeight, NULL);
 			dcMem.SelectObject(pOldBM);
 
-			bResult = (hr == S_OK) && CBitmap::Attach(bmMem.Detach());
+			if (hr == S_OK)
+				bResult = CBitmap::Attach(bmMem.Detach());
 		}
 	}
 

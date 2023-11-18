@@ -420,7 +420,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Globaliai (serveris)"
     IDS_METHOD              "Metodas"
     IDS_UNDO                "Atšaukti"
-    IDS_DAYLY               "kasdien"
+    IDS_DAILY               "kasdien"
 END
 
 STRINGTABLE
@@ -1426,7 +1426,7 @@ BEGIN
     IDS_EM_HELP             "Pa&galba"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Draugas nepridėtas.\r\n\r\nSąraše jau yra draugas su tokiu pačiu IP ir portu."
-    IDS_DYNUP               "Išsiuntimo greičio automatika (IGA)"
+    IDS_DYNUP               "Išsiuntimo greičio automatika (nerekomenduojama)"
     IDS_KADOVERHEAD         "Kad perkrova (paketai): %s (%s)"
     IDS_FIND                "Rasti..."
     IDS_LOG_BANNED_CLIENTS  "Loginti užbanintus klientus"

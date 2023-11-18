@@ -13,7 +13,6 @@ class CPPgDisplay : public CPropertyPage
 
 public:
 	CPPgDisplay();
-	virtual	~CPPgDisplay() = default;
 
 	void Localize();
 

@@ -10,7 +10,6 @@ class C3DPreviewControl : public CStatic
 
 public:
 	C3DPreviewControl();
-	virtual	~C3DPreviewControl() = default;
 
 protected:
 	DECLARE_MESSAGE_MAP()

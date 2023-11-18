@@ -406,7 +406,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Ευρύτερη"
     IDS_METHOD              "Μέθοδος"
     IDS_UNDO                "Αναίρεση"
-    IDS_DAYLY               "Καθημερινά"
+    IDS_DAILY               "Καθημερινά"
 END
 
 STRINGTABLE
@@ -1394,7 +1394,7 @@ BEGIN
     IDS_MINLENGTH           "Ελάχ. μήκος [ωω:λλ:δδ]"
     IDS_EM_HELP             "&Βοήθεια"
     IDS_WRN_FRIENDDUPLIPPORT "Ο φίλος δεν προστέθηκε.\r\n\r\nΥπάρχει ήδη ένας φίλος διαθέσιμος με την ίδια διεύθυνση IP και port."
-    IDS_DYNUP               "Διαίσθηση ταχύτητας ανεβάσματος"
+    IDS_DYNUP               "Διαίσθηση ταχύτητας ανεβάσματος (δεν προτείνεται)"
     IDS_KADOVERHEAD         "Kademlia (Πακέτα): %s (%s)"
     IDS_FIND                "Αναζήτηση..."
     IDS_LOG_BANNED_CLIENTS  "Καταγραφή εμποδισμένων χρηστών"

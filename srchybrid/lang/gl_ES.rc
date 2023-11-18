@@ -461,7 +461,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Global (Servidor)"
     IDS_METHOD              "Método"
     IDS_UNDO                "Desfacer"
-    IDS_DAYLY               "diariamente"
+    IDS_DAILY               "diariamente"
 END
 
 STRINGTABLE
@@ -1450,7 +1450,7 @@ BEGIN
     IDS_EM_HELP             "A&xuda"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Amigo non engadido.\r\n\r\nXa hai un amigo coa mesma IP e porto dispoñible."
-    IDS_DYNUP               "Sensor de velocidade de subida"
+    IDS_DYNUP               "Sensor de velocidade de subida (non recomendado)"
     IDS_KADOVERHEAD         "Tráfico excedente de Kademlia (Packets): %s (%s)"
     IDS_FIND                "Buscar..."
     IDS_LOG_BANNED_CLIENTS  "Rexistrar clientes bloqueados"

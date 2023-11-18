@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002 Merkur ( merkur-@users.sourceforge.net / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( merkur-@users.sourceforge.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -40,7 +40,6 @@ class CCollectionFileDetailsSheet : public CListViewWalkerPropertySheet
 
 public:
 	explicit CCollectionFileDetailsSheet(CTypedPtrList<CPtrList, CAbstractFile*> &aFiles, UINT uInvokePage = 0, CListCtrlItemWalk *pListCtrl = NULL);
-	virtual	~CCollectionFileDetailsSheet() = default;
 
 	virtual BOOL OnInitDialog();
 
@@ -157,26 +156,22 @@ void CCollectionListCtrl::Init(const CString &strNameAdd)
 
 	LoadSettings();
 	SetSortArrow();
-	SortItems(SortProc, MAKELONG(GetSortItem(), static_cast<int>(!GetSortAscending())));
+	SortItems(SortProc, MAKELONG(GetSortItem(), !GetSortAscending()));
 }
 
 void CCollectionListCtrl::OnLvnColumnClick(LPNMHDR pNMHDR, LRESULT *pResult)
 {
-	NMLISTVIEW *pNMListView = reinterpret_cast<NMLISTVIEW*>(pNMHDR);
-
+	const LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	// Determine ascending based on whether already sorted on this column
-	int iSortItem = GetSortItem();
-	bool bOldSortAscending = GetSortAscending();
-	bool bSortAscending = (iSortItem != pNMListView->iSubItem) || !bOldSortAscending;
+	bool bSortAscending = (GetSortItem() != pNMLV->iSubItem || !GetSortAscending());
 
-	// Item is column clicked
-	iSortItem = pNMListView->iSubItem;
+	// Item is the column clicked
+	int iSortItem = pNMLV->iSubItem;
 
 	// Sort table
-	UpdateSortHistory(MAKELONG(iSortItem, (bSortAscending ? 0 : 0x0001)));
+	UpdateSortHistory(MAKELONG(iSortItem, !bSortAscending));
 	SetSortArrow(iSortItem, bSortAscending);
-	SortItems(SortProc, MAKELONG(iSortItem, (bSortAscending ? 0 : 0x0001)));
-
+	SortItems(SortProc, MAKELONG(iSortItem, !bSortAscending));
 	*pResult = 0;
 }
 
@@ -192,15 +187,12 @@ int CALLBACK CCollectionListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARA
 	case colName:
 		iResult = CompareLocaleStringNoCase(item1->GetFileName(), item2->GetFileName());
 		break;
-
 	case colSize:
-		iResult = CompareUnsigned64(item1->GetFileSize(), item2->GetFileSize());
+		iResult = CompareUnsigned(item1->GetFileSize(), item2->GetFileSize());
 		break;
-
 	case colHash:
 		iResult = memcmp(item1->GetFileHash(), item2->GetFileHash(), 16);
 		break;
-
 	default:
 		return 0;
 	}
@@ -235,7 +227,7 @@ void CCollectionListCtrl::AddFileToList(CAbstractFile *pAbstractFile)
 	}
 
 	int iImage = theApp.GetFileTypeSystemImageIdx(pAbstractFile->GetFileName());
-	iItem = InsertItem(LVIF_TEXT | LVIF_PARAM | (iImage > 0 ? LVIF_IMAGE : 0), GetItemCount(), NULL, 0, 0, iImage, (LPARAM)pAbstractFile);
+	iItem = InsertItem(LVIF_TEXT | LVIF_PARAM | (iImage > 0 ? LVIF_IMAGE : 0), GetItemCount(), _T(""), 0, 0, iImage, (LPARAM)pAbstractFile);
 	if (iItem >= 0) {
 		SetItemText(iItem, colName, pAbstractFile->GetFileName());
 		SetItemText(iItem, colSize, CastItoXBytes(pAbstractFile->GetFileSize()));

@@ -57,7 +57,7 @@ public:
 	CProgressCtrlX();
 
 	// Attributes
-	void SetGradientColors(COLORREF clrStart, COLORREF clrEnd)	{ m_ardwGradColors.SetSize(2); m_ardwGradColors.SetAt(0, clrStart); m_ardwGradColors.SetAt(1, clrEnd); }
+	void SetGradientColors(COLORREF clrStart, COLORREF clrEnd)	{ m_ardwGradColors.SetSize(2); m_ardwGradColors[0] = clrStart; m_ardwGradColors[1] = clrEnd; }
 	void GetGradientColors(COLORREF &clrStart, COLORREF &clrEnd) { clrStart = m_ardwGradColors[0]; clrEnd = m_ardwGradColors[1]; }
 
 	void SetGradientColorsX(int nCount, COLORREF clrFirst, COLORREF clrNext, ...);
@@ -102,9 +102,6 @@ public:
 		// ClassWizard generated virtual function overrides
 		//{{AFX_VIRTUAL(CProgressCtrlX)
 		//}}AFX_VIRTUAL
-
-	// Implementation
-	virtual	~CProgressCtrlX() = default;
 
 protected:
 	struct CDrawInfo

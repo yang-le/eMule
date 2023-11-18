@@ -1,5 +1,5 @@
 /*
-Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
+Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -29,7 +29,7 @@ There is going to be a new forum created just for the Kademlia side of the clien
 If you feel there is an error or a way to improve something, please
 post it in the forum first and let us look at it. If it is a real improvement,
 it will be added to the official client. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form.
+what all it does, can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 their client on the eMule forum.
 */
@@ -74,12 +74,12 @@ namespace Kademlia
 			// Check if we know a contact with the same ID or IP but non-matching IP/ID and other limitations, similar checks like when adding a node to the table except allowing duplicates
 			bool		IsAcceptableContact(const CContact *pToCheck) const;
 			// Returns a list of all contacts in all leafs of this zone.
-			void		GetAllEntries(ContactList *plistResult, bool bEmptyFirst = true);
+			void		GetAllEntries(ContactArray &listResult, bool bEmptyFirst = true);
 			// Returns the *maxRequired* tokens that are closest to the target within this zone's subtree.
-			void		GetClosestTo(uint32 uMaxType, const CUInt128 &uTarget, const CUInt128 &uDistance, uint32 uMaxRequired, ContactMap *plistResult, bool bEmptyFirst = true, bool bSetInUse = false) const;
+			void		GetClosestTo(uint32 uMaxType, const CUInt128 &uTarget, const CUInt128 &uDistance, uint32 uMaxRequired, ContactMap &rlistResult, bool bEmptyFirst = true, bool bSetInUse = false) const;
 			// Ideally: Returns all contacts that are in buckets of common range between us and the asker.
 			// In practice: returns the contacts from the top (2^{logBase+1}) buckets.
-			uint32		GetBootstrapContacts(ContactList *plistResult, uint32 uMaxRequired);
+			uint32		GetBootstrapContacts(ContactArray &rlistResult, uint32 uMaxRequired);
 			uint32		EstimateCount();
 			bool		HasOnlyLANNodes() const;
 			time_t		m_tNextBigTimer;
@@ -94,10 +94,10 @@ namespace Kademlia
 			bool IsLeaf() const;
 			bool CanSplit() const;
 			// Returns all contacts from this zone tree that are no deeper than *depth* from the current zone.
-			void TopDepth(int iDepth, ContactList *plistResult, bool bEmptyFirst = true);
+			void TopDepth(int iDepth, ContactArray &listResult, bool bEmptyFirst = true);
 			// Returns the maximum depth of the tree as the number of edges of the longest path to a leaf.
 			UINT GetMaxDepth() const;
-			void RandomBin(ContactList *plistResult, bool bEmptyFirst = true);
+			void RandomBin(ContactArray &listResult, bool bEmptyFirst = true);
 			void Split();
 			void StartTimer();
 			void StopTimer();

@@ -24,15 +24,15 @@ enum ESearchType : uint8
 struct SSearchParams
 {
 	SSearchParams()
-		: dwSearchID(_UI32_MAX)
-		, bClientSharedFiles()
-		, eType(SearchTypeEd2kServer)
-		, ullMinSize()
+		: ullMinSize()
 		, ullMaxSize()
+		, dwSearchID(_UI32_MAX)
 		, uAvailability()
 		, uComplete()
-		, ulMinBitrate()
-		, ulMinLength()
+		, uiMinBitrate()
+		, uiMinLength()
+		, eType(SearchTypeEd2kServer)
+		, bClientSharedFiles()
 		, bMatchKeywords()
 	{
 	}
@@ -42,8 +42,8 @@ struct SSearchParams
 		, ullMaxSize()
 		, uAvailability()
 		, uComplete()
-		, ulMinBitrate()
-		, ulMinLength()
+		, uiMinBitrate()
+		, uiMinLength()
 		, bMatchKeywords()
 	{
 		dwSearchID = rFile.ReadUInt32();
@@ -64,29 +64,29 @@ struct SSearchParams
 		rFile.WriteString(strFileType, UTF8strRaw);
 	}
 
-	uint32 dwSearchID;
-	bool bClientSharedFiles;
 	CString strSearchTitle;
 	CString strExpression;
 	CStringW strKeyword;
 	CString strBooleanExpr;
-	ESearchType eType;
 	CString strFileType;
 	CString strMinSize;
-	uint64 ullMinSize;
 	CString strMaxSize;
-	uint64 ullMaxSize;
-	UINT uAvailability;
 	CString strExtension;
-	UINT uComplete;
 	CString strCodec;
-	ULONG ulMinBitrate;
-	ULONG ulMinLength;
 	CString strTitle;
 	CString strAlbum;
 	CString strArtist;
 	CString strSpecialTitle;
+	uint64 ullMinSize;
+	uint64 ullMaxSize;
+	uint32 dwSearchID;
+	UINT uAvailability;
+	UINT uComplete;
+	UINT uiMinBitrate;
+	UINT uiMinLength;
+	ESearchType eType;
+	bool bClientSharedFiles;
 	bool bMatchKeywords;
 };
 
-bool GetSearchPacket(CSafeMemFile *pData, SSearchParams *pParams, bool bTargetSupports64Bit, bool *pbPacketUsing64Bit);
+bool GetSearchPacket(CSafeMemFile &data, SSearchParams *pParams, bool bTargetSupports64Bit, bool *pbPacketUsing64Bit);

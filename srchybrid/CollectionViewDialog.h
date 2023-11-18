@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2005 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -44,7 +44,7 @@ private:
 	};
 
 protected:
-	CButton m_AddNewCatagory;
+	CButton m_AddNewCategory;
 	CStatic m_CollectionViewListLabel;
 	CStatic m_CollectionViewListIcon;
 	CButton m_CollectionDownload;

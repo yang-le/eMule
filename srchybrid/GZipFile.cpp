@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -62,10 +62,10 @@ void CGZIPFile::Close()
 CString CGZIPFile::GetUncompressedFilePath() const
 {
 	// return path of input file without ".gz" extension
-	LPCTSTR pszExt = PathFindExtension(m_strGzFilePath);
-	if (_tcsicmp(pszExt, _T(".gz")) != 0)
-		pszExt = m_strGzFilePath;
-	return CString(m_strGzFilePath, (int)((LPCTSTR)m_strGzFilePath - pszExt));
+	LPCTSTR pDot = ::PathFindExtension(m_strGzFilePath);
+	if (_tcsicmp(pDot, _T(".gz")) != 0)
+		pDot = m_strGzFilePath; //empty string if not .gz
+	return m_strGzFilePath.Left((int)((LPCTSTR)m_strGzFilePath - pDot));
 }
 
 CString CGZIPFile::GetUncompressedFileName() const
@@ -74,7 +74,7 @@ CString CGZIPFile::GetUncompressedFileName() const
 	const CString &strUncompressedFileName = GetUncompressedFilePath();
 	if (!strUncompressedFileName.IsEmpty()) {
 		// skip any possible available directories
-		LPCTSTR pszFileName = PathFindFileName(strUncompressedFileName);
+		LPCTSTR pszFileName = ::PathFindFileName(strUncompressedFileName);
 		if (pszFileName)
 			return CString(pszFileName);
 	}

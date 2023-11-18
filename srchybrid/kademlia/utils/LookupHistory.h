@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2010 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -28,10 +28,10 @@ namespace Kademlia
 		{
 			CUInt128	m_uContactID;
 			CUInt128	m_uDistance;
-			CArray<int>	m_liReceivedFromIdx;
-			uint32		m_dwAskedContactsTime;
+			CArray<int, int>	m_liReceivedFromIdx;
+			DWORD		m_dwAskedContactsTime;
 			uint32		m_uRespondedContact;
-			uint32		m_dwAskedSearchItemTime;
+			DWORD		m_dwAskedSearchItemTime;
 			uint32		m_uRespondedSearchItem;
 			uint32		m_uIP;
 			uint16		m_uPort;

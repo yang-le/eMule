@@ -18,12 +18,10 @@ static char THIS_FILE[] = __FILE__;
 #define	LBST_CY_BORDER	2
 
 CListBoxST::CListBoxST()
+	: m_pImageList()	// No image list associated
+	, m_szImage()
 {
-	// No image list associated
-	m_pImageList = NULL;
-	memset(&m_szImage, 0, sizeof m_szImage);
-
-	// By default, highlight full list box item
+	// By default, highlight the whole list box item
 	SetRowSelect(ST_FULLROWSELECT, FALSE);
 }
 

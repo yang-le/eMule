@@ -12,7 +12,6 @@ class CPPgProxy : public CPropertyPage
 
 public:
 	CPPgProxy();
-	virtual	~CPPgProxy() = default;
 
 	void Localize();
 

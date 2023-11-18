@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -73,10 +73,10 @@ BOOL CIrcSocket::Create(UINT uSocketPort, int iSocketType, long lEvent, const CS
 void CIrcSocket::Connect()
 {
 	int iPort;
-	CString strServer = thePrefs.GetIRCServer();
+	CString strServer(thePrefs.GetIRCServer());
 	int iIndex = strServer.Find(_T(':'));
 	if (iIndex >= 0) {
-		iPort = _tstoi(strServer.Mid(iIndex + 1));
+		iPort = _tstoi(CPTR(strServer, iIndex + 1));
 		if (iPort <= 0 || iPort > 65535)
 			iPort = 6667;
 		strServer.Truncate(iIndex);
@@ -154,7 +154,7 @@ int CIrcSocket::SendString(const CString &sMessage)
 	theStats.AddUpDataOverheadOther(iSize);
 	return Send(sMessageA + "\r\n", iSize);
 	//int iResult = Send(sMessageA + "\r\n", iSize);
-	//ASSERT( iResult == iSize ); //too much noise from minor network errors
+	//ASSERT(iResult == iSize); //too much noise from minor network errors
 	//return iResult;
 }
 
@@ -165,9 +165,9 @@ void CIrcSocket::RemoveAllLayers()
 	m_pProxyLayer = NULL;
 }
 
-int CIrcSocket::OnLayerCallback(std::list<t_callbackMsg> &callbacks)
+int CIrcSocket::OnLayerCallback(std::vector<t_callbackMsg> &callbacks)
 {
-	for (std::list<t_callbackMsg>::const_iterator iter = callbacks.begin(); iter != callbacks.end(); ++iter) {
+	for (std::vector<t_callbackMsg>::const_iterator iter = callbacks.begin(); iter != callbacks.end(); ++iter) {
 		if (iter->nType == LAYERCALLBACK_LAYERSPECIFIC) {
 			ASSERT(iter->pLayer);
 			if (iter->pLayer == m_pProxyLayer) {

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -16,7 +16,7 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #pragma once
 #include "MapKey.h"
-#include <cryptopp/rsa.h>
+#include "cryptopp/rsa.h"
 
 #define	 MAXPUBKEYSIZE		80
 
@@ -27,7 +27,7 @@
 #pragma pack(push, 1)
 struct CreditStruct_29a
 {
-	uchar		abyKey[16];
+	uchar		abyKey[MDX_DIGEST_SIZE];
 	uint32		nUploadedLo;	// uploaded TO him
 	uint32		nDownloadedLo;	// downloaded from him
 	uint32		nLastSeen;
@@ -35,6 +35,7 @@ struct CreditStruct_29a
 	uint32		nDownloadedHi;	// download high 32
 	uint16		nReserved3;
 };
+
 struct CreditStruct
 {
 	uchar		abyKey[MDX_DIGEST_SIZE];
@@ -62,38 +63,38 @@ class CClientCredits
 {
 	friend class CClientCreditsList;
 public:
-	explicit CClientCredits(CreditStruct *in_credits);
+	explicit CClientCredits(const CreditStruct &in_credits);
 	explicit CClientCredits(const uchar *key);
-	~CClientCredits();
+	~CClientCredits() = default;
 	CClientCredits(const CClientCredits&) = delete;
 	CClientCredits& operator=(const CClientCredits&) = delete;
 
-	const uchar*	GetKey() const				{ return m_pCredits->abyKey; }
+	const uchar* GetKey() const					{ return m_Credits.abyKey; }
 	uchar*	GetSecureIdent()					{ return m_abyPublicKey; }
 	uint8	GetSecIDKeyLen() const				{ return m_nPublicKeyLen; }
-	CreditStruct*	GetDataStruct() const		{ return m_pCredits; }
+	const CreditStruct*	GetDataStruct()	const	{ return &m_Credits; }
 	void	ClearWaitStartTime();
 	void	AddDownloaded(uint32 bytes, uint32 dwForIP);
 	void	AddUploaded(uint32 bytes, uint32 dwForIP);
 	uint64	GetUploadedTotal() const;
 	uint64	GetDownloadedTotal() const;
 	float	GetScoreRatio(uint32 dwForIP) const;
-	void	SetLastSeen()						{ m_pCredits->nLastSeen = static_cast<uint32>(time(NULL)); }
+	void	SetLastSeen()						{ m_Credits.nLastSeen = static_cast<uint32>(time(NULL)); }
 	bool	SetSecureIdent(const uchar *pachIdent, uint8 nIdentLen); // Public key cannot change, use only if there is not public key yet
 	uint32	m_dwCryptRndChallengeFor;
 	uint32	m_dwCryptRndChallengeFrom;
 	EIdentState	GetCurrentIdentState(uint32 dwForIP) const; // can be != IdentState
-	uint32	GetSecureWaitStartTime(uint32 dwForIP);
+	DWORD	GetSecureWaitStartTime(uint32 dwForIP);
 	void	SetSecWaitStartTime(uint32 dwForIP);
 protected:
 	void	Verified(uint32 dwForIP);
 	EIdentState IdentState;
 private:
 	void	InitalizeIdent();
-	CreditStruct	*m_pCredits;
+	CreditStruct m_Credits;
 	uint32	m_dwIdentIP;
-	uint32	m_dwSecureWaitTime;
-	uint32	m_dwUnSecureWaitTime;
+	DWORD	m_dwSecureWaitTime;
+	DWORD	m_dwUnSecureWaitTime;
 	uint32	m_dwWaitTimeIP;			// client IP assigned to the waittime
 	byte	m_abyPublicKey[80];		// even keys which are not verified will be stored here, and - if verified - copied into the struct
 	uint8	m_nPublicKeyLen;
@@ -123,9 +124,10 @@ protected:
 	bool	Debug_CheckCrypting();
 #endif
 private:
-	CMap<CCKey, const CCKey&, CClientCredits*, CClientCredits*> m_mapClients;
+	typedef CMap<CCKey, const CCKey&, CClientCredits*, CClientCredits*> CClientCreditsMap;
+	CClientCreditsMap m_mapClients;
 	CryptoPP::RSASSA_PKCS1v15_SHA_Signer *m_pSignkey;
-	uint32			m_nLastSaved;
+	DWORD			m_nLastSaved;
 	byte			m_abyMyPublicKey[80];
 	uint8			m_nMyPublicKeyLen;
 };

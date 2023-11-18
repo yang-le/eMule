@@ -33,7 +33,6 @@ class CSplitterControl : public CStatic
 {
 public:
 	CSplitterControl();
-	virtual	~CSplitterControl() = default;
 
 	void Create(DWORD dwStyle, const CRect &rect, CWnd *pParent, UINT nID);
 	int GetStyle();
@@ -53,7 +52,7 @@ protected:
 	int		m_nType;
 	int		m_nX, m_nY;
 	int		m_nMin, m_nMax;	// Min and Max range of the splitter.
-	int		m_nSavePos;		// Save point on the lbutton down message
+	int		m_nSavePos;		// Save point of the lbutton down message
 	bool	m_bDrawBorder;
 
 	void MoveWindowTo(CPoint pt);

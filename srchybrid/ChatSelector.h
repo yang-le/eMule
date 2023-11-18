@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -50,7 +50,6 @@ class CChatSelector : public CClosableTabCtrl, private CFriendConnectionListener
 
 public:
 	CChatSelector();
-	virtual	~CChatSelector() = default;
 
 	void		Init(CChatWnd *pParent);
 	CChatItem*	StartSession(CUpDownClient *client, bool show = true);
@@ -61,7 +60,7 @@ public:
 	void		ProcessMessage(CUpDownClient *sender, const CString &message);
 	void		ShowCaptchaRequest(CUpDownClient *sender, HBITMAP bmpCaptcha);
 	void		ShowCaptchaResult(CUpDownClient *sender, const CString &strResult);
-	bool		SendMessage(const CString &rstrMessage);
+	bool		SendText(const CString &rstrText);
 	void		DeleteAllItems();
 	void		ShowChat();
 	void		ConnectingResult(CUpDownClient *sender, bool success);

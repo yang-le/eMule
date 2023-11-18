@@ -36,7 +36,6 @@ class CListBoxST : public CListBox
 {
 public:
 	CListBoxST();
-	virtual	~CListBoxST() = default;
 
 	enum
 	{
@@ -87,9 +86,9 @@ protected:
 	virtual DWORD OnDrawIconBackground(int nIndex, CDC *pDC, const CRect &prcItem, const CRect &prcIcon, BOOL bIsDisabled, BOOL bIsSelected, COLORREF crSuggestedColor);
 	virtual DWORD OnDrawIcon(int /*nIndex*/, CDC *pDC, LPCRECT /*prcItem*/, LPCRECT prcIcon, int nImage, BOOL bIsDisabled, BOOL bIsSelected);
 
-	BYTE		m_byRowSelect;
 	CImageList	*m_pImageList;
 	SIZE		m_szImage;		// Size of each image in image list
+	BYTE		m_byRowSelect;
 
 private:
 	virtual void MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct);

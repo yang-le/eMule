@@ -18,7 +18,6 @@ public:
 protected:
 	HICON m_icoWnd;
 	CListCtrl m_provider;
-	int m_iOS;
 	int m_iTotalDownload;
 
 	void SetCustomItemsActivation();
@@ -32,8 +31,6 @@ protected:
 	afx_msg void OnBnClickedWizHighdownloadRadio();
 	afx_msg void OnBnClickedWizLowdownloadRadio();
 	afx_msg void OnBnClickedWizMediumdownloadRadio();
-	afx_msg void OnBnClickedWizRadioOsNtxp();
-	afx_msg void OnBnClickedWizRadioUs98me();
 	afx_msg void OnBnClickedWizResetButton();
 	afx_msg void OnNmClickProviders(LPNMHDR, LRESULT *pResult);
 };

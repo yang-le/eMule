@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -94,23 +94,18 @@ void CIrcChannelTabCtrl::AutoComplete()
 		m_pCurrentChannel->m_sTyped = sSend;
 		m_pCurrentChannel->m_sTabd.Empty(); //restart autocompletion
 	}
-	int i = m_pCurrentChannel->m_sTyped.ReverseFind(_T(' ')); //find the last word
-	CString sName, sPrev;
-	if (i < 0) {
-		sName = m_pCurrentChannel->m_sTyped; //all input is one word
-		sPrev = m_pCurrentChannel->m_sTabd;
-		sSend.Empty();
-	} else {
-		sName = m_pCurrentChannel->m_sTyped.Mid(++i); //word to complete
-		sPrev = m_pCurrentChannel->m_sTabd.Mid(i); //the latest auto-completed value
-		sSend.Truncate(i); //the rest of the string
-	}
+
+	int i = m_pCurrentChannel->m_sTyped.ReverseFind(_T(' ')) + 1; //find the last word
+	const CString &sName(m_pCurrentChannel->m_sTyped.Mid(i)); //word to complete
+	const CString &sPrev(m_pCurrentChannel->m_sTabd.Mid(i)); //the latest auto-completed value
+	sSend.Truncate(i); //beginning part of the string including space
+
 	i = sName.GetLength();
 	CString sFirst; //to wrap around after the last value
 	CString sNext; //next value
 	for (POSITION pos = m_pCurrentChannel->m_lstNicks.GetHeadPosition(); pos != NULL;) {
 		const Nick *pNick = m_pCurrentChannel->m_lstNicks.GetNext(pos);
-		if (pNick->m_sNick.Left(i).CompareNoCase(sName) == 0) {
+		if (_tcsnicmp(pNick->m_sNick, sName, i) == 0) {
 			if (sFirst.IsEmpty() || sFirst.CompareNoCase(pNick->m_sNick) > 0)
 				sFirst = pNick->m_sNick;
 			if (sPrev.CompareNoCase(pNick->m_sNick) < 0 && (sNext.IsEmpty() || sNext.CompareNoCase(pNick->m_sNick) > 0))
@@ -118,10 +113,10 @@ void CIrcChannelTabCtrl::AutoComplete()
 		}
 	}
 	if (!sNext.IsEmpty())
-		m_pCurrentChannel->m_sTabd = sSend + sNext;
+		m_pCurrentChannel->m_sTabd.Format(_T("%s%s"), (LPCTSTR)sSend, (LPCTSTR)sNext);
 	else if (!sFirst.IsEmpty())
-		m_pCurrentChannel->m_sTabd = sSend + sFirst;
-	m_pCurrentChannel->m_sTyped = sSend + sName;
+		m_pCurrentChannel->m_sTabd.Format(_T("%s%s"), (LPCTSTR)sSend, (LPCTSTR)sFirst);
+	m_pCurrentChannel->m_sTyped.Format(_T("%s%s"), (LPCTSTR)sSend, (LPCTSTR)sName);
 	if (!m_pCurrentChannel->m_sTyped.IsEmpty() && m_pCurrentChannel->m_sTabd.IsEmpty())
 		m_pCurrentChannel->m_sTabd = m_pCurrentChannel->m_sTyped;
 	SetInput(m_pCurrentChannel->m_sTabd);
@@ -274,7 +269,7 @@ Channel* CIrcChannelTabCtrl::NewChannel(const CString &sChannel, Channel::EType 
 					szLine[nLen++] = L'\r';
 					szLine[nLen++] = L'\n';
 					//TRACE(_T("%u: %s\n"), i, szLine);
-					CString strLine(szLine, nLen);
+					const CString &strLine(szLine, nLen);
 					m_pParent->AddColorLine(strLine, pChannel->m_wndLog);
 				}
 				fclose(fp);
@@ -288,7 +283,7 @@ Channel* CIrcChannelTabCtrl::NewChannel(const CString &sChannel, Channel::EType 
 	newitem.mask = TCIF_PARAM | TCIF_TEXT | TCIF_IMAGE;
 	newitem.lParam = (LPARAM)pChannel;
 	CString strTcLabel(sChannel);
-	strTcLabel.Replace(_T("&"), _T("&&"));
+	DupAmpersand(strTcLabel);
 	newitem.pszText = const_cast<LPTSTR>((LPCTSTR)strTcLabel);
 	if (eType == Channel::ctStatus)
 		newitem.iImage = 0;
@@ -482,7 +477,7 @@ void CIrcChannelTabCtrl::OnTcnSelChange(LPNMHDR, LRESULT *pResult)
 
 	//Make sure channelList is hidden.
 	m_pParent->m_wndChanList.ShowWindow(SW_HIDE);
-	//Update nicklist to the new channel.
+	//Update nick list to the new channel.
 	m_pParent->m_wndNicks.RefreshNickList(m_pCurrentChannel);
 	//Push focus back to the input box.
 	SetInput(m_pCurrentChannel->m_sTabd.IsEmpty() ? m_pCurrentChannel->m_sTyped : m_pCurrentChannel->m_sTabd);
@@ -549,8 +544,10 @@ void CIrcChannelTabCtrl::ChatSend(CString sSend)
 	m_pCurrentChannel->m_astrHistory.Add(sSend);
 	m_pCurrentChannel->m_iHistoryPos = (int)m_pCurrentChannel->m_astrHistory.GetCount();
 
-	if (sSend.Left(1) == _T("/")) {
-		if (sSend.Left(4).CompareNoCase(_T("/hop")) == 0) {
+	bool bMe;
+	bool bSound;
+	if (sSend[0] == _T('/')) {
+		if (_tcsnicmp(sSend, _T("/hop"), 4) == 0) {
 			if (m_pCurrentChannel->m_eType == Channel::ctNormal) {
 				m_pParent->m_pIrcMain->SendString(_T("PART ") + m_pCurrentChannel->m_sName);
 				m_pParent->m_pIrcMain->SendString(_T("JOIN ") + m_pCurrentChannel->m_sName);
@@ -558,42 +555,46 @@ void CIrcChannelTabCtrl::ChatSend(CString sSend)
 			return;
 		}
 
-		if (sSend.Left(3).CompareNoCase(_T("/me")) != 0 && sSend.Left(6).CompareNoCase(_T("/sound")) != 0) {
-			if (sSend.Left(4).CompareNoCase(_T("/msg")) == 0) {
+		bMe = (_tcsnicmp(sSend, _T("/me"), 3) == 0);
+		bSound = (_tcsnicmp(sSend, _T("/sound"), 6) == 0);
+		if (!bMe && ! bSound) {
+			if (_tcsnicmp(sSend, _T("/msg"), 4) == 0) {
 				int i = 5;
 				const CString &cs(sSend.Tokenize(_T(" "), i));
 				if (m_pCurrentChannel->m_eType < Channel::ctNormal || m_pCurrentChannel->m_bDetached)
-					m_pParent->AddStatusF(_T(" -> *%s* %s"), (LPCTSTR)cs, (LPCTSTR)sSend.Mid(i));
+					m_pParent->AddStatusF(_T(" -> *%s* %s"), (LPCTSTR)cs, CPTR(sSend, i));
 				else
-					m_pParent->AddInfoMessageF(m_pCurrentChannel->m_sName, _T(" -> *%s* %s"), (LPCTSTR)cs, (LPCTSTR)sSend.Mid(i));
-				sSend = _T("/PRIVMSG") + sSend.Mid(4);
-			} else if (sSend.Left(7).CompareNoCase(_T("/notice")) == 0) {
+					m_pParent->AddInfoMessageF(m_pCurrentChannel->m_sName, _T(" -> *%s* %s"), (LPCTSTR)cs, CPTR(sSend, i));
+				sSend.Insert(1, _T("priv")); //msg -> privmsg
+			} else if (_tcsnicmp(sSend, _T("/notice"), 7) == 0) {
 				int i = 8;
 				const CString &cs(sSend.Tokenize(_T(" "), i));
 				if (m_pCurrentChannel->m_eType < Channel::ctNormal || m_pCurrentChannel->m_bDetached)
-					m_pParent->AddStatusF(_T(" -> *%s* %s"), (LPCTSTR)cs, (LPCTSTR)sSend.Mid(i));
+					m_pParent->AddStatusF(_T(" -> *%s* %s"), (LPCTSTR)cs, CPTR(sSend, i));
 				else
-					m_pParent->AddInfoMessageF(m_pCurrentChannel->m_sName, _T(" -> *%s* %s"), (LPCTSTR)cs, (LPCTSTR)sSend.Mid(i));
+					m_pParent->AddInfoMessageF(m_pCurrentChannel->m_sName, _T(" -> *%s* %s"), (LPCTSTR)cs, CPTR(sSend, i));
 			}
 
-			if (sSend.Left(17).CompareNoCase(_T("/PRIVMSG nickserv")) == 0)
-				sSend.Format(_T("/ns%s"), (LPCTSTR)sSend.Mid(17));
-			else if (sSend.Left(17).CompareNoCase(_T("/PRIVMSG chanserv")) == 0)
-				sSend.Format(_T("/cs%s"), (LPCTSTR)sSend.Mid(17));
-			else if (sSend.Left(5).CompareNoCase(_T("/part")) == 0) {
+			if (_tcsnicmp(sSend, _T("/privmsg nickserv"), 17) == 0)
+				sSend.Format(_T("/ns%s"), CPTR(sSend, 17));
+			else if (_tcsnicmp(sSend, _T("/privmsg chanserv"), 17) == 0)
+				sSend.Format(_T("/cs%s"), CPTR(sSend, 17));
+			else if (_tcsnicmp(sSend, _T("/part"), 5) == 0) {
 				if (sSend.TrimRight().GetLength() == 5 && m_pCurrentChannel->m_eType == Channel::ctNormal)
 					sSend.AppendFormat(_T(" %s"), (LPCTSTR)m_pCurrentChannel->m_sName);
-			} else if (sSend.Left(8).CompareNoCase(_T("/PRIVMSG")) == 0) {
+			} else if (_tcsnicmp(sSend, _T("/privmsg"), 8) == 0) {
 				int iIndex = sSend.Find(_T(' '), sSend.Find(_T(' ')) + 1);
 				sSend.Insert(iIndex + 1, _T(":"));
-			} else if (sSend.Left(6).CompareNoCase(_T("/TOPIC")) == 0) {
+			} else if (_tcsnicmp(sSend, _T("/topic"), 6) == 0) {
 				int iIndex = sSend.Find(_T(' '), sSend.Find(_T(' ')) + 1);
 				sSend.Insert(iIndex + 1, _T(":"));
 			}
-			m_pParent->m_pIrcMain->SendString(sSend.Mid(1));
+			sSend.Delete(0, 1);
+			m_pParent->m_pIrcMain->SendString(sSend);
 			return;
 		}
-	}
+	} else
+		bMe = bSound = false;
 
 	if (m_pCurrentChannel->m_eType < Channel::ctNormal || m_pCurrentChannel->m_bDetached) {
 		m_pParent->m_pIrcMain->SendString(sSend);
@@ -601,16 +602,16 @@ void CIrcChannelTabCtrl::ChatSend(CString sSend)
 	}
 
 	CString sBuild;
-	if (sSend.Left(3).CompareNoCase(_T("/me")) == 0) {
-		sBuild.Format(_T("PRIVMSG %s :\001ACTION %s\001"), (LPCTSTR)m_pCurrentChannel->m_sName, (LPCTSTR)sSend.Mid(4));
-		m_pParent->AddInfoMessageCF(m_pCurrentChannel->m_sName, RGB(156, 0, 156), _T("* %s %s"), (LPCTSTR)m_pParent->m_pIrcMain->GetNick(), (LPCTSTR)sSend.Mid(4));
+	if (bMe) {
+		sBuild.Format(_T("PRIVMSG %s :\001ACTION %s\001"), (LPCTSTR)m_pCurrentChannel->m_sName, CPTR(sSend, 4));
+		m_pParent->AddInfoMessageCF(m_pCurrentChannel->m_sName, RGB(156, 0, 156), _T("* %s %s"), (LPCTSTR)m_pParent->m_pIrcMain->GetNick(), CPTR(sSend, 4));
 		m_pParent->m_pIrcMain->SendString(sBuild);
 		return;
 	}
 
-	if (sSend.Left(6).CompareNoCase(_T("/sound")) == 0) {
+	if (bSound) {
 		CString sound;
-		sBuild.Format(_T("PRIVMSG %s :\001SOUND %s\001"), (LPCTSTR)m_pCurrentChannel->m_sName, (LPCTSTR)sSend.Mid(7));
+		sBuild.Format(_T("PRIVMSG %s :\001SOUND %s\001"), (LPCTSTR)m_pCurrentChannel->m_sName, CPTR(sSend, 7));
 		m_pParent->m_pIrcMain->SendString(sBuild);
 		sSend.Delete(0, 7);
 		int soundlen = sSend.Find(_T(' '));
@@ -644,7 +645,7 @@ void CIrcChannelTabCtrl::Localize()
 				pChannel->m_sTitle = GetResString(pChannel->m_eType == Channel::ctStatus ? IDS_STATUS : IDS_IRC_CHANNELLIST);
 				item.mask = TCIF_TEXT;
 				CString strTcLabel(pChannel->m_sTitle);
-				strTcLabel.Replace(_T("&"), _T("&&"));
+				DupAmpersand(strTcLabel);
 				item.pszText = const_cast<LPTSTR>((LPCTSTR)strTcLabel);
 				SetItem(iIndex, &item);
 			}

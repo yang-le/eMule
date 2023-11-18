@@ -150,7 +150,7 @@ bool CTaskbarNotifier::LoadConfiguration(LPCTSTR pszFilePath)
 	struct _stat64 st;
 	if (statUTC(pszFilePath, st))
 		st.st_mtime = -1; // '-1' = missing file
-	if (m_strConfigFilePath.CompareNoCase(pszFilePath) == 0 && (time_t)st.st_mtime <= m_tConfigFileLastModified)
+	if (m_strConfigFilePath.CompareNoCase(pszFilePath) == 0 && st.st_mtime <= m_tConfigFileLastModified)
 		return true;
 
 	Hide();
@@ -181,7 +181,7 @@ bool CTaskbarNotifier::LoadConfiguration(LPCTSTR pszFilePath)
 	int iBmpTransparentBlue = ini.GetInt(_T("BmpTrasparentBlue"), 255);
 	iBmpTransparentBlue = ini.GetInt(_T("BmpTransparentBlue"), iBmpTransparentBlue);
 
-	const CString &strFontType = ini.GetString(_T("FontType"), theApp.GetDefaultFontFaceName());
+	const CString &strFontType(ini.GetString(_T("FontType"), theApp.GetDefaultFontFaceName()));
 	int iFontSize = ini.GetInt(_T("FontSize"), 8) * 10;
 
 	m_dwTimeToStay = ini.GetInt(_T("TimeToStay"), 4000);
@@ -189,9 +189,9 @@ bool CTaskbarNotifier::LoadConfiguration(LPCTSTR pszFilePath)
 	m_dwTimeToHide = ini.GetInt(_T("TimeToHide"), 200);
 
 	CString strBmpFilePath;
-	const CString &strBmpFileName = ini.GetString(_T("BmpFileName"), _T(""));
+	const CString &strBmpFileName(ini.GetString(_T("BmpFileName"), _T("")));
 	if (!strBmpFileName.IsEmpty())
-		if (PathIsRelative(strBmpFileName))
+		if (::PathIsRelative(strBmpFileName))
 			strBmpFilePath.Format(_T("%s%s"), szConfigDir, (LPCTSTR)strBmpFileName);
 		else
 			strBmpFilePath = strBmpFileName;
@@ -447,7 +447,7 @@ void CTaskbarNotifier::Show(LPCTSTR pszCaption, TbnMsg nMsgType, LPCTSTR pszLink
 	// For transparent bitmaps, all animations are disabled.
 	DWORD dwTimeToShow = m_bBitmapAlpha ? 0 : m_dwTimeToShow;
 	if (dwTimeToShow > m_dwTimerPrecision) {
-		UINT nEvents = max(mini((dwTimeToShow / m_dwTimerPrecision) / 2u, nBitmapSize), 1); //<<-- enkeyDEV(Ottavio84) -Reduced frames of a half-
+		UINT nEvents = max(mini((dwTimeToShow / m_dwTimerPrecision) / 2, nBitmapSize), 1); //<<-- enkeyDEV(Ottavio84) -Reduced frames of a half-
 		m_dwShowEvents = dwTimeToShow / nEvents;
 		m_nIncrementShow = nBitmapSize / nEvents;
 	} else {

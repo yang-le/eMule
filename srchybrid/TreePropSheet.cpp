@@ -53,40 +53,33 @@ IMPLEMENT_DYNAMIC(CTreePropSheet, CPropertySheet)
 
 const UINT CTreePropSheet::s_unPageTreeId = 0x7EEE;
 
+void CTreePropSheet::init()
+{
+	m_pwndPageTree = NULL;
+	m_pFrame = NULL;
+	m_bTreeViewMode = TRUE;
+	m_bPageTreeSelChangedActive = FALSE;
+	m_bPageCaption = FALSE;
+	m_bTreeImages = FALSE;
+	m_nPageTreeWidth = 150;
+}
+
 CTreePropSheet::CTreePropSheet()
 	: CPropertySheet()
-	, m_bTreeViewMode(TRUE)
-	, m_pwndPageTree()
-	, m_pFrame()
-	, m_bPageTreeSelChangedActive()
-	, m_bPageCaption()
-	, m_bTreeImages()
-	, m_nPageTreeWidth(150)
 {
+	init();
 }
 
 CTreePropSheet::CTreePropSheet(UINT nIDCaption, CWnd *pParentWnd, UINT iSelectPage)
 	: CPropertySheet(nIDCaption, pParentWnd, iSelectPage)
-	, m_bTreeViewMode(TRUE)
-	, m_pwndPageTree()
-	, m_pFrame()
-	, m_bPageTreeSelChangedActive()
-	, m_bPageCaption()
-	, m_bTreeImages()
-	, m_nPageTreeWidth(150)
 {
+	init();
 }
 
 CTreePropSheet::CTreePropSheet(LPCTSTR pszCaption, CWnd *pParentWnd, UINT iSelectPage)
 	: CPropertySheet(pszCaption, pParentWnd, iSelectPage)
-	, m_bTreeViewMode(TRUE)
-	, m_pwndPageTree()
-	, m_pFrame()
-	, m_bPageTreeSelChangedActive()
-	, m_bPageCaption()
-	, m_bTreeImages()
-	, m_nPageTreeWidth(150)
 {
+	init();
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -208,7 +201,7 @@ BOOL CTreePropSheet::DestroyPageIcon(CPropertyPage *pPage)
 
 CString CTreePropSheet::GenerateEmptyPageMessage(LPCTSTR lpszEmptyPageMessage, LPCTSTR lpszCaption)
 {
-	CString	strMsg;
+	CString strMsg;
 	strMsg.Format(lpszEmptyPageMessage, lpszCaption);
 	return strMsg;
 }
@@ -228,15 +221,12 @@ CPropPageFrame* CTreePropSheet::CreatePageFrame()
 
 void CTreePropSheet::MoveChildWindows(int nDx, int nDy)
 {
-	CWnd *pWnd = GetWindow(GW_CHILD);
-	while (pWnd) {
-		CRect rect;
+	CRect rect;
+	for (CWnd *pWnd = GetWindow(GW_CHILD); pWnd; pWnd = pWnd->GetNextWindow()) {
 		pWnd->GetWindowRect(rect);
 		ScreenToClient(rect);
 		rect.OffsetRect(nDx, nDy);
 		pWnd->MoveWindow(rect);
-
-		pWnd = pWnd->GetNextWindow();
 	}
 }
 
@@ -288,7 +278,7 @@ void CTreePropSheet::RefillPageTree()
 	// insert tree items
 	for (int nPage = 0; nPage < nPageCount; ++nPage) {
 		// Get title and image of the page
-		CString	strPagePath;
+		CString strPagePath;
 
 		TCITEM ti = {};
 		ti.mask = TCIF_TEXT | TCIF_IMAGE;
@@ -324,14 +314,11 @@ HTREEITEM CTreePropSheet::CreatePageTreeItem(LPCTSTR lpszPath, HTREEITEM hParent
 
 	// Check if an item with the given text does already exist
 	HTREEITEM hItem = NULL;
-	HTREEITEM hChild = m_pwndPageTree->GetChildItem(hParent);
-	while (hChild) {
+	for (HTREEITEM hChild = m_pwndPageTree->GetChildItem(hParent); hChild; hChild = m_pwndPageTree->GetNextItem(hChild, TVGN_NEXT))
 		if (m_pwndPageTree->GetItemText(hChild) == strTopMostItem) {
 			hItem = hChild;
 			break;
 		}
-		hChild = m_pwndPageTree->GetNextItem(hChild, TVGN_NEXT);
-	}
 
 	// If item with that text does not already exist, create a new one
 	if (!hItem) {
@@ -355,7 +342,7 @@ CString CTreePropSheet::SplitPageTreePath(CString &strRest)
 	for (;;) {
 		nSeparatorPos = strRest.Find(_T("::"), nSeparatorPos);
 		if (nSeparatorPos < 0) {
-			CString	strItem(strRest);
+			CString strItem(strRest);
 			strRest.Empty();
 			return strItem;
 		}
@@ -370,7 +357,7 @@ CString CTreePropSheet::SplitPageTreePath(CString &strRest)
 		}
 	}
 
-	CString	strItem(strRest.Left(nSeparatorPos));
+	CString strItem(strRest, nSeparatorPos);
 	strItem.Replace(_T("\\::"), _T("::"));
 	strItem.Replace(_T("\\\\"), _T("\\"));
 	strRest.Delete(0, nSeparatorPos + 2);
@@ -426,7 +413,7 @@ HTREEITEM CTreePropSheet::GetPageTreeItem(int nPage, HTREEITEM hRoot /* = TVI_RO
 	// we are performing a simple linear search here, because we are
 	// expecting only little data
 	HTREEITEM hItem = hRoot;
-	while (hItem) {
+	for (; hItem; hItem = m_pwndPageTree->GetNextItem(hItem, TVGN_NEXT)) {
 		if (m_pwndPageTree->GetItemData(hItem) == (DWORD_PTR)nPage)
 			 break;
 		if (m_pwndPageTree->ItemHasChildren(hItem)) {
@@ -434,7 +421,6 @@ HTREEITEM CTreePropSheet::GetPageTreeItem(int nPage, HTREEITEM hRoot /* = TVI_RO
 			if (hResult)
 				return hResult;
 		}
-		hItem = m_pwndPageTree->GetNextItem(hItem, TVGN_NEXT);
 	}
 
 	// we've found nothing, if we arrive here
@@ -460,7 +446,7 @@ void CTreePropSheet::UpdateCaption()
 	HTREEITEM hItem = m_pwndPageTree->GetSelectedItem();
 	if (!hItem)
 		return;
-	CString strCaption = m_pwndPageTree->GetItemText(hItem);
+	CString strCaption(m_pwndPageTree->GetItemText(hItem));
 
 	// if empty page, then update empty page message
 	if (!bRealPage)
@@ -477,14 +463,12 @@ void CTreePropSheet::UpdateCaption()
 		return;
 	}
 
+	HICON hIcon = NULL;
 	if (m_bTreeImages) {
 		// get image from tree
 		int	nImage;
 		m_pwndPageTree->GetItemImage(hItem, nImage, nImage);
-		HICON hIcon = m_Images.ExtractIcon(nImage);
-		m_pFrame->SetCaption(strCaption, hIcon);
-		if (hIcon)
-			::DestroyIcon(hIcon);
+		hIcon = m_Images.ExtractIcon(nImage);
 	} else if (bRealPage) {
 		// get image from hidden (original) tab provided by the original
 		// implementation
@@ -492,18 +476,13 @@ void CTreePropSheet::UpdateCaption()
 		if (pImages) {
 			TCITEM ti = {};
 			ti.mask = TCIF_IMAGE;
-
-			HICON hIcon = NULL;
 			if (pTabCtrl->GetItem((int)m_pwndPageTree->GetItemData(hItem), &ti))
 				hIcon = pImages->ExtractIcon(ti.iImage);
-
-			m_pFrame->SetCaption(strCaption, hIcon);
-			if (hIcon)
-				::DestroyIcon(hIcon);
-		} else
-			m_pFrame->SetCaption(strCaption);
-	} else
-		m_pFrame->SetCaption(strCaption);
+		}
+	}
+	m_pFrame->SetCaption(strCaption, hIcon);
+	if (hIcon)
+		::DestroyIcon(hIcon);
 }
 
 void CTreePropSheet::ActivatePreviousPage()
@@ -581,20 +560,14 @@ void CTreePropSheet::ActivateNextPage()
 		if (!hItem)
 			return;
 
-		HTREEITEM hNextItem = NULL;
-		if ((hNextItem = m_pwndPageTree->GetChildItem(hItem)) != NULL)
-			;
-		else if ((hNextItem = m_pwndPageTree->GetNextSiblingItem(hItem)) != NULL)
-			;
-		else if (m_pwndPageTree->GetParentItem(hItem)) {
-			while (!hNextItem) {
+		HTREEITEM hNextItem = m_pwndPageTree->GetChildItem(hItem);
+		if (!hNextItem)
+			while ((hNextItem = m_pwndPageTree->GetNextSiblingItem(hItem)) == NULL) {
 				hItem = m_pwndPageTree->GetParentItem(hItem);
 				if (!hItem)
 					break;
-
-				hNextItem = m_pwndPageTree->GetNextSiblingItem(hItem);
 			}
-		}
+
 
 		if (!hNextItem)
 			// no next item -- so cycle to the first item

@@ -500,7 +500,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Globalny (Serwer)"
     IDS_METHOD              "Metoda"
     IDS_UNDO                "Cofnij"
-    IDS_DAYLY               "Codziennie"
+    IDS_DAILY               "Codziennie"
     IDS_DAY_MO_FR           "Pon-Pia"
 END
 
@@ -1565,7 +1565,7 @@ BEGIN
     IDS_EM_HELP             "&Pomoc"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Znajomy nie dodany.\r\n\r\nJest już znajomy z tym samym adresem IP i portem."
-    IDS_DYNUP               "Wysyłanie SpeedSense"
+    IDS_DYNUP               "Wysyłanie SpeedSense (niezalecane)"
     IDS_KADOVERHEAD         "Narzut Kad (pakietów): %s (%s)"
     IDS_FIND                "Szukaj..."
     IDS_LOG_BANNED_CLIENTS  "Loguj banowanych klientów"

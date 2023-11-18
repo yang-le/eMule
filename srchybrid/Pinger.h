@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -20,7 +20,7 @@
 *  Some code in this file has been copied from a ping demo that was
 *  created by Bob Quinn, 1997          http://www.sockets.com
 *
-* As some general documenation about how the ping is implemented,
+* As some general documentation about how the ping is implemented,
 * here is the description Bob Quinn wrote about the ping demo.
 *
 * Description:
@@ -72,82 +72,24 @@
 
 #define DEFAULT_TTL 64
 
-#define IP_STATUS_BASE 11000
-#define IP_SUCCESS 0
-#define IP_BUF_TOO_SMALL (IP_STATUS_BASE + 1)
-#define IP_DEST_NET_UNREACHABLE (IP_STATUS_BASE + 2)
-#define IP_DEST_HOST_UNREACHABLE (IP_STATUS_BASE + 3)
-#define IP_DEST_PROT_UNREACHABLE (IP_STATUS_BASE + 4)
-#define IP_DEST_PORT_UNREACHABLE (IP_STATUS_BASE + 5)
-#define IP_NO_RESOURCES (IP_STATUS_BASE + 6)
-#define IP_BAD_OPTION (IP_STATUS_BASE + 7)
-#define IP_HW_ERROR (IP_STATUS_BASE + 8)
-#define IP_PACKET_TOO_BIG (IP_STATUS_BASE + 9)
-#define IP_REQ_TIMED_OUT (IP_STATUS_BASE + 10)
-#define IP_BAD_REQ (IP_STATUS_BASE + 11)
-#define IP_BAD_ROUTE (IP_STATUS_BASE + 12)
-#define IP_TTL_EXPIRED_TRANSIT (IP_STATUS_BASE + 13)
-#define IP_TTL_EXPIRED_REASSEM (IP_STATUS_BASE + 14)
-#define IP_PARAM_PROBLEM (IP_STATUS_BASE + 15)
-#define IP_SOURCE_QUENCH (IP_STATUS_BASE + 16)
-#define IP_OPTION_TOO_BIG (IP_STATUS_BASE + 17)
-#define IP_BAD_DESTINATION (IP_STATUS_BASE + 18)
-#define IP_ADDR_DELETED (IP_STATUS_BASE + 19)
-#define IP_SPEC_MTU_CHANGE (IP_STATUS_BASE + 20)
-#define IP_MTU_CHANGE (IP_STATUS_BASE + 21)
-#define IP_UNLOAD (IP_STATUS_BASE + 22)
-#define IP_GENERAL_FAILURE (IP_STATUS_BASE + 50)
-#define MAX_IP_STATUS IP_GENERAL_FAILURE
-#define IP_PENDING (IP_STATUS_BASE + 255)
-
-typedef HANDLE WINAPI IcmpCreateFile(); /* INVALID_HANDLE_VALUE on error */
-typedef BOOL WINAPI IcmpCloseHandle(HANDLE IcmpHandle); /* FALSE on error */
-
-/* Note 2: For the most part, you can refer to RFC 791 for details
-* on how to fill in values for the IP option information structure.
-*/
-//typedef struct ip_option_information {
-//    u_char Ttl;		/* Time To Live (used for traceroute) */
-//    u_char Tos;		/* Type Of Service (usually 0) */
-//    u_char Flags;		/* IP header flags (usually 0) */
-//    u_char OptionsSize; /* Size of options data (usually 0, max 40) */
-//    u_char FAR *OptionsData;   /* Options data buffer */
-//} IPINFO, *PIPINFO, FAR *LPIPINFO;
-
 /* Note 1: The Reply Buffer will have an array of ICMP_ECHO_REPLY
 * structures, followed by options and the data in ICMP echo reply
 * datagram received. You must have room for at least one ICMP
 * echo reply structure, plus 8 bytes for an ICMP header.
 */
-//typedef struct icmp_echo_reply {
-//    u_long Address;	/* source address */
-//    u_long Status;	/* IP status value (see below) */
-//    u_long RTTime;	/* Round Trip Time in milliseconds */
-//    u_short DataSize;	/* reply data size */
-//    u_short Reserved;	/* */
-//    void FAR *Data;	/* reply data buffer */
-//    struct ip_option_information Options; /* reply options */
-//} ICMPECHO, *PICMPECHO, FAR *LPICMPECHO;
 
-typedef DWORD WINAPI IcmpSendEcho(
-	HANDLE IcmpHandle,	/* handle returned from IcmpCreateFile() */
-	u_long DestAddress, /* destination IP address (in network order) */
-	LPVOID RequestData, /* pointer to buffer to send */
-	WORD RequestSize,	/* length of data in buffer */
-	PIP_OPTION_INFORMATION RequestOptns,  /* see Note 2 */
-	LPVOID ReplyBuffer, /* see Note 1 */
-	DWORD ReplySize,	/* length of reply (must allow at least 1 reply) */
-	DWORD Timeout		/* time in milliseconds to wait for reply */
-);
+/* Note 2: For the most part, you can refer to RFC 791 for details
+* on how to fill in values for the IP option information structure.
+*/
 
 struct PingStatus
 {
-	bool success;
-	DWORD status;
-	float delay;
+	float fDelay;
 	uint32 destinationAddress;
-	uint32 ttl;
+	DWORD status;
 	DWORD error;
+	UCHAR ttl;
+	bool bSuccess;
 };
 
 // UDPing - required constants and structures -->
@@ -155,15 +97,15 @@ struct PingStatus
 // ICMP packet types
 #define ICMP_T_ECHO_REPLY 0
 #define ICMP_T_DEST_UNREACH 3
-#define ICMP_T_TTL_EXPIRE 11
 #define ICMP_T_ECHO_REQUEST 8
+#define ICMP_T_TTL_EXPIRE 11
 
 // Minimum ICMP packet size, in bytes
 #define ICMP_MIN 8
 
-#ifdef _MSC_VER
 // The following two structures need to be packed tightly, but unlike
 // Borland C++, Microsoft C++ does not do this by default.
+#ifdef _MSC_VER
 #pragma pack(push, 1)
 #endif
 
@@ -183,7 +125,7 @@ struct IPHeader
 	ULONG dest_ip;
 };
 
-// ICMP header for DEST_UNREACH and TTL_EXPIRE replys
+// ICMP header for DEST_UNREACH and TTL_EXPIRE replies
 struct ICMPHeader
 {
 	BYTE type;			// ICMP packet type
@@ -223,20 +165,14 @@ public:
 
 	PingStatus Ping(uint32 lAddr, uint32 ttl = DEFAULT_TTL, bool doLog = false, bool useUdp = false);
 
-	static void PIcmpErr(DWORD nICMPErr);
+	static void PIcmpErr(LPCTSTR pszMsg, DWORD nICMPErr);
 
 private:
-//    void DisplayErr(int nWSAErr);
+	PingStatus PingICMP(uint32 lAddr, DWORD ttl, bool doLog);
+	PingStatus PingUDP(uint32 lAddr, DWORD ttl, bool doLog);
 
-	IcmpCreateFile *lpfnIcmpCreateFile;
-	IcmpCloseHandle *lpfnIcmpCloseHandle;
-	IcmpSendEcho *lpfnIcmpSendEcho;
-	PingStatus PingUDP(uint32 lAddr, uint32 ttl, bool doLog);
-	PingStatus PingICMP(uint32 lAddr, uint32 ttl, bool doLog);
-
-	HANDLE hICMP;
-	HMODULE hICMP_DLL; // PENDING: was HANDLE
 	IP_OPTION_INFORMATION stIPInfo;
+	HANDLE hICMP;
 
 	SOCKET us;          // UDP socket to send requests
 	SOCKET is;          // raw ICMP socket to catch responses

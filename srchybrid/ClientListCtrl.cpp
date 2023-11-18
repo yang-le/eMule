@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -43,7 +43,6 @@ IMPLEMENT_DYNAMIC(CClientListCtrl, CMuleListCtrl)
 
 BEGIN_MESSAGE_MAP(CClientListCtrl, CMuleListCtrl)
 	ON_NOTIFY_REFLECT(LVN_COLUMNCLICK, OnLvnColumnClick)
-	ON_NOTIFY_REFLECT(LVN_GETDISPINFO, OnLvnGetDispInfo)
 	ON_NOTIFY_REFLECT(NM_DBLCLK, OnNmDblClk)
 	ON_WM_CONTEXTMENU()
 	ON_WM_SYSCOLORCHANGE()
@@ -61,47 +60,38 @@ void CClientListCtrl::Init()
 	SetPrefsKey(_T("ClientListCtrl"));
 	SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
-	InsertColumn(0, GetResString(IDS_QL_USERNAME),		LVCFMT_LEFT,	DFLT_CLIENTNAME_COL_WIDTH);
-	InsertColumn(1, GetResString(IDS_CL_UPLOADSTATUS),	LVCFMT_LEFT,	100);
-	InsertColumn(2, GetResString(IDS_CL_TRANSFUP),		LVCFMT_RIGHT,	DFLT_SIZE_COL_WIDTH);
-	InsertColumn(3, GetResString(IDS_CL_DOWNLSTATUS),	LVCFMT_LEFT,	100);
-	InsertColumn(4, GetResString(IDS_CL_TRANSFDOWN),	LVCFMT_RIGHT,	DFLT_SIZE_COL_WIDTH);
-	InsertColumn(5, GetResString(IDS_CD_CSOFT),			LVCFMT_LEFT,	DFLT_CLIENTSOFT_COL_WIDTH);
-	InsertColumn(6, GetResString(IDS_CONNECTED),		LVCFMT_LEFT,	50);
-	CString coltemp;
-	coltemp = GetResString(IDS_CD_UHASH);
-	coltemp.Remove(_T(':'));
-	InsertColumn(7, coltemp, LVCFMT_LEFT, DFLT_HASH_COL_WIDTH);
+	InsertColumn(0, _T(""),	LVCFMT_LEFT,	DFLT_CLIENTNAME_COL_WIDTH);	//IDS_QL_USERNAME
+	InsertColumn(1, _T(""),	LVCFMT_LEFT,	100);						//IDS_CL_UPLOADSTATUS
+	InsertColumn(2, _T(""),	LVCFMT_RIGHT,	DFLT_SIZE_COL_WIDTH);		//IDS_CL_TRANSFUP
+	InsertColumn(3, _T(""),	LVCFMT_LEFT,	100);						//IDS_CL_DOWNLSTATUS
+	InsertColumn(4, _T(""),	LVCFMT_RIGHT,	DFLT_SIZE_COL_WIDTH);		//IDS_CL_TRANSFDOWN
+	InsertColumn(5, _T(""),	LVCFMT_LEFT,	DFLT_CLIENTSOFT_COL_WIDTH);	//IDS_CD_CSOFT
+	InsertColumn(6, _T(""),	LVCFMT_LEFT,	50);						//IDS_CONNECTED
+	InsertColumn(7, _T(""), LVCFMT_LEFT,	DFLT_HASH_COL_WIDTH);		//IDS_CD_UHASH
 
 	SetAllIcons();
 	Localize();
 	LoadSettings();
 	SetSortArrow();
-	SortItems(SortProc, GetSortItem() + (GetSortAscending() ? 0 : 100));
+	SortItems(SortProc, MAKELONG(GetSortItem(), !GetSortAscending()));
 }
 
 void CClientListCtrl::Localize()
 {
-	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
-	HDITEM hdi;
-	hdi.mask = HDI_TEXT;
-
 	static const UINT uids[7] =
 	{
-		IDS_QL_USERNAME, IDS_CL_UPLOADSTATUS, IDS_CL_TRANSFUP, IDS_CL_DOWNLSTATUS
-		, IDS_CL_TRANSFDOWN, IDS_CD_CSOFT, IDS_CONNECTED
+		IDS_QL_USERNAME, IDS_CL_UPLOADSTATUS, IDS_CL_TRANSFUP, IDS_CL_DOWNLSTATUS, IDS_CL_TRANSFDOWN
+		, IDS_CD_CSOFT, IDS_CONNECTED
 	};
 
-	for (int i = 0; i < _countof(uids); ++i) {
-		const CString &strRes(GetResString(uids[i]));
-		hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-		pHeaderCtrl->SetItem(i, &hdi);
-	}
+	LocaliseHeaderCtrl(uids, _countof(uids));
 
 	CString strRes(GetResString(IDS_CD_UHASH));
 	strRes.Remove(_T(':'));
+	HDITEM hdi;
+	hdi.mask = HDI_TEXT;
 	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(7, &hdi);
+	GetHeaderCtrl()->SetItem(7, &hdi);
 }
 
 void CClientListCtrl::OnSysColorChange()
@@ -113,79 +103,69 @@ void CClientListCtrl::OnSysColorChange()
 void CClientListCtrl::SetAllIcons()
 {
 	ApplyImageList(NULL);
-	m_pImageList = theApp.emuledlg->transferwnd->GetClientIconList();
 	// Apply the image list also to the listview control, even if we use our own 'DrawItem'.
 	// This is needed to give the listview control a chance to initialize the row height.
 	ASSERT((GetStyle() & LVS_SHAREIMAGELISTS) != 0);
+	m_pImageList = &theApp.emuledlg->GetClientIconList();
 	VERIFY(ApplyImageList(*m_pImageList) == NULL);
 }
 
 void CClientListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 {
-	if (theApp.IsClosing() || !lpDrawItemStruct->itemData)
+	if (!lpDrawItemStruct->itemData || theApp.IsClosing())
 		return;
 
-	CMemoryDC dc(CDC::FromHandle(lpDrawItemStruct->hDC), &lpDrawItemStruct->rcItem);
+	CRect rcItem(lpDrawItemStruct->rcItem);
+	CMemoryDC dc(CDC::FromHandle(lpDrawItemStruct->hDC), rcItem);
 	BOOL bCtrlFocused;
 	InitItemMemDC(dc, lpDrawItemStruct, bCtrlFocused);
-	CRect rcItem(lpDrawItemStruct->rcItem);
 	RECT rcClient;
 	GetClientRect(&rcClient);
 	const CUpDownClient *client = reinterpret_cast<CUpDownClient*>(lpDrawItemStruct->itemData);
 
-	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
+	const CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
 	int iCount = pHeaderCtrl->GetItemCount();
-	rcItem.right = rcItem.left - sm_iLabelOffset;
-	rcItem.left += sm_iIconOffset;
+	LONG itemLeft = rcItem.left;
+	LONG iIconY = max((rcItem.Height() - 15) / 2, 0);
 	for (int iCurrent = 0; iCurrent < iCount; ++iCurrent) {
 		int iColumn = pHeaderCtrl->OrderToIndex(iCurrent);
-		if (!IsColumnHidden(iColumn)) {
-			UINT uDrawTextAlignment;
-			int iColumnWidth = GetColumnWidth(iColumn, uDrawTextAlignment);
-			rcItem.right += iColumnWidth;
-			if (rcItem.left < rcItem.right && HaveIntersection(rcClient, rcItem)) {
-				const CString &sItem(GetItemDisplayText(client, iColumn));
-				switch (iColumn) {
-				case 0: //user name
-					{
-						int iImage;
-						UINT uOverlayImage;
-						client->GetDisplayImage(iImage, uOverlayImage);
+		if (IsColumnHidden(iColumn))
+			continue;
 
-						int iIconPosY = (rcItem.Height() > 16) ? ((rcItem.Height() - 16) / 2) : 1;
-						const POINT point = {rcItem.left, rcItem.top + iIconPosY};
-						m_pImageList->Draw(dc, iImage, point, ILD_NORMAL | INDEXTOOVERLAYMASK(uOverlayImage));
+		UINT uDrawTextAlignment;
+		int iColumnWidth = GetColumnWidth(iColumn, uDrawTextAlignment);
+		rcItem.left = itemLeft;
+		rcItem.right = itemLeft + iColumnWidth - sm_iSubItemInset;
+		if (rcItem.left < rcItem.right && HaveIntersection(rcClient, rcItem)) {
+			const CString &sItem(GetItemDisplayText(client, iColumn));
+			switch (iColumn) {
+			case 0: //user name
+			{
+				int iImage;
+				UINT uOverlayImage;
+				client->GetDisplayImage(iImage, uOverlayImage);
 
-						//EastShare Start - added by AndCycle, IP to Country 
-						if (theApp.ip2country->ShowCountryFlag())
-						{
-							rcItem.left += 20;
-							POINT point2 = { rcItem.left,rcItem.top + 1 };
-							//theApp.ip2country->GetFlagImageList()->Draw(dc, client->GetCountryFlagIndex(), point2, ILD_NORMAL);
-							theApp.ip2country->GetFlagImageList()->DrawIndirect(&theApp.ip2country->GetFlagImageDrawParams(dc, client->GetCountryFlagIndex(), point2));
-							rcItem.left += sm_iLabelOffset;
-						}
-						//EastShare End - added by AndCycle, IP to Country
-
-						rcItem.left += 16 + sm_iLabelOffset;
-						dc.DrawText(sItem, -1, &rcItem, MLC_DT_TEXT | uDrawTextAlignment);
-						rcItem.left -= 16;
-						rcItem.right -= sm_iSubItemInset;
-
-						//EastShare Start - added by AndCycle, IP to Country
-						if (theApp.ip2country->ShowCountryFlag())
-						{
-							rcItem.left -= 20;
-						}
-						//EastShare End - added by AndCycle, IP to Country
-					}
-					break;
-				default:
-					dc.DrawText(sItem, -1, &rcItem, MLC_DT_TEXT | uDrawTextAlignment);
+				rcItem.left = itemLeft + sm_iIconOffset;
+				const POINT point = { rcItem.left, rcItem.top + iIconY };
+				m_pImageList->Draw(dc, iImage, point, ILD_NORMAL | INDEXTOOVERLAYMASK(uOverlayImage));
+				//EastShare Start - added by AndCycle, IP to Country 
+				if (theApp.ip2country->ShowCountryFlag())
+				{
+					rcItem.left += 20;
+					POINT point2 = { rcItem.left,rcItem.top + 1 };
+					//theApp.ip2country->GetFlagImageList()->Draw(dc, client->GetCountryFlagIndex(), point2, ILD_NORMAL);
+					theApp.ip2country->GetFlagImageList()->DrawIndirect(&theApp.ip2country->GetFlagImageDrawParams(dc, client->GetCountryFlagIndex(), point2));
+					rcItem.left += sm_iLabelOffset;
 				}
+				//EastShare End - added by AndCycle, IP to Country
+				rcItem.left += 16 + sm_iLabelOffset - sm_iSubItemInset;
 			}
-			rcItem.left += iColumnWidth;
+			default: //any text column
+				rcItem.left += sm_iSubItemInset;
+				dc.DrawText(sItem, -1, &rcItem, MLC_DT_TEXT | uDrawTextAlignment);
+			}
 		}
+		itemLeft += iColumnWidth;
 	}
 
 	DrawFocusRect(dc, &lpDrawItemStruct->rcItem, lpDrawItemStruct->itemState & ODS_FOCUS, bCtrlFocused, lpDrawItemStruct->itemState & ODS_SELECTED);
@@ -230,36 +210,12 @@ CString CClientListCtrl::GetItemDisplayText(const CUpDownClient *client, int iSu
 	return sText;
 }
 
-void CClientListCtrl::OnLvnGetDispInfo(LPNMHDR pNMHDR, LRESULT *pResult)
-{
-	if (!theApp.IsClosing()) {
-		// Although we have an owner drawn listview control we store the text for the primary item in the listview, to be
-		// capable of quick searching those items via the keyboard. Because our listview items may change their contents,
-		// we do this via a text callback function. The listview control will send us the LVN_DISPINFO notification if
-		// it needs to know the contents of the primary item.
-		//
-		// But, the listview control sends this notification all the time, even if we do not search for an item. At least
-		// this notification is only sent for the visible items and not for all items in the list. Though, because this
-		// function is invoked *very* often, do *NOT* put any time consuming code in here.
-		//
-		// Vista: That callback is used to get the strings for the label tips for the sub(!) items.
-		//
-		const LVITEMW &rItem = reinterpret_cast<NMLVDISPINFO*>(pNMHDR)->item;
-		if (rItem.mask & LVIF_TEXT) {
-			const CUpDownClient *pClient = reinterpret_cast<CUpDownClient*>(rItem.lParam);
-			if (pClient != NULL)
-				_tcsncpy_s(rItem.pszText, rItem.cchTextMax, GetItemDisplayText(pClient, rItem.iSubItem), _TRUNCATE);
-		}
-	}
-	*pResult = 0;
-}
-
 void CClientListCtrl::OnLvnColumnClick(LPNMHDR pNMHDR, LRESULT *pResult)
 {
-	NMLISTVIEW *pNMListView = reinterpret_cast<NMLISTVIEW*>(pNMHDR);
+	const LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	bool sortAscending;
-	if (GetSortItem() != pNMListView->iSubItem) {
-		switch (pNMListView->iSubItem) {
+	if (GetSortItem() != pNMLV->iSubItem) {
+		switch (pNMLV->iSubItem) {
 		case 1: // Upload State
 		case 2: // Uploaded Total
 		case 4: // Downloaded Total
@@ -274,10 +230,9 @@ void CClientListCtrl::OnLvnColumnClick(LPNMHDR pNMHDR, LRESULT *pResult)
 		sortAscending = !GetSortAscending();
 
 	// Sort table
-	UpdateSortHistory(pNMListView->iSubItem + (sortAscending ? 0 : 100));
-	SetSortArrow(pNMListView->iSubItem, sortAscending);
-	SortItems(SortProc, pNMListView->iSubItem + (sortAscending ? 0 : 100));
-
+	UpdateSortHistory(MAKELONG(pNMLV->iSubItem, !sortAscending));
+	SetSortArrow(pNMLV->iSubItem, sortAscending);
+	SortItems(SortProc, MAKELONG(pNMLV->iSubItem, !sortAscending));
 	*pResult = 0;
 }
 
@@ -285,9 +240,9 @@ int CALLBACK CClientListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 {
 	const CUpDownClient *item1 = reinterpret_cast<CUpDownClient*>(lParam1);
 	const CUpDownClient *item2 = reinterpret_cast<CUpDownClient*>(lParam2);
-	LONG_PTR iColumn = (lParamSort >= 100) ? lParamSort - 100 : lParamSort;
+
 	int iResult = 0;
-	switch (iColumn) {
+	switch (LOWORD(lParamSort)) {
 	case 0: //user name
 		if (item1->GetUserName() && item2->GetUserName())
 			iResult = CompareLocaleStringNoCase(item1->GetUserName(), item2->GetUserName());
@@ -296,20 +251,15 @@ int CALLBACK CClientListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 		else if (item2->GetUserName() == NULL)
 			iResult = -1; // place clients with no user names at bottom
 		break;
-
 	case 1: //upload status
 		iResult = item1->GetUploadState() - item2->GetUploadState();
 		break;
-
 	case 2: //transferred up
 		if (item1->credits && item2->credits)
-			iResult = CompareUnsigned64(item1->credits->GetUploadedTotal(), item2->credits->GetUploadedTotal());
-		else if (item1->credits)
-			iResult = 1;
+			iResult = CompareUnsigned(item1->credits->GetUploadedTotal(), item2->credits->GetUploadedTotal());
 		else
-			iResult = -1;
+			iResult = (item1->credits) ? 1 : -1;
 		break;
-
 	case 3: //download status
 		if (item1->GetDownloadState() == item2->GetDownloadState()) {
 			if (item1->IsRemoteQueueFull() && item2->IsRemoteQueueFull())
@@ -321,44 +271,36 @@ int CALLBACK CClientListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 		} else
 			iResult = item1->GetDownloadState() - item2->GetDownloadState();
 		break;
-
 	case 4: //transferred down
 		if (item1->credits && item2->credits)
-			iResult = CompareUnsigned64(item1->credits->GetDownloadedTotal(), item2->credits->GetDownloadedTotal());
-		else if (item1->credits)
-			iResult = 1;
+			iResult = CompareUnsigned(item1->credits->GetDownloadedTotal(), item2->credits->GetDownloadedTotal());
 		else
-			iResult = -1;
+			iResult = (item1->credits) ? 1 : -1;
 		break;
-
 	case 5: //software
 		if (item1->GetClientSoft() == item2->GetClientSoft())
 			iResult = item1->GetVersion() - item2->GetVersion();
 		else
 			iResult = -(item1->GetClientSoft() - item2->GetClientSoft()); // invert result to place eMule's at top
 		break;
-
 	case 6: //connected
 		if (item1->socket && item2->socket)
 			iResult = item1->socket->IsConnected() - item2->socket->IsConnected();
-		else if (item1->socket)
-			iResult = 1;
 		else
-			iResult = -1;
+			iResult = (item1->socket) ? 1 : -1;
 		break;
-
 	case 7: //hash
 		iResult = memcmp(item1->GetUserHash(), item2->GetUserHash(), 16);
 	}
 
-	if (lParamSort >= 100)
+	if (HIWORD(lParamSort))
 		iResult = -iResult;
 
-	//call secondary sort order, if this one results in equal
+	//call secondary sort order, if the first one resulted as equal
 	if (iResult == 0) {
-		int dwNextSort = theApp.emuledlg->transferwnd->GetClientList()->GetNextSortOrder((int)lParamSort);
-		if (dwNextSort != -1)
-			iResult = SortProc(lParam1, lParam2, dwNextSort);
+		LPARAM iNextSort = theApp.emuledlg->transferwnd->GetClientList()->GetNextSortOrder(lParamSort);
+		if (iNextSort != -1)
+			iResult = SortProc(lParam1, lParam2, iNextSort);
 	}
 
 	return iResult;
@@ -440,15 +382,15 @@ BOOL CClientListCtrl::OnCommand(WPARAM wParam, LPARAM)
 				Kademlia::CKademlia::Bootstrap(ntohl(client->GetIP()), client->GetKadPort());
 		}
 	}
-	return true;
+	return TRUE;
 }
 
 void CClientListCtrl::AddClient(const CUpDownClient *client)
 {
-	if (!theApp.IsClosing() && !thePrefs.IsKnownClientListDisabled()) {
+	if (!thePrefs.IsKnownClientListDisabled() && !theApp.IsClosing()) {
 		int iItemCount = GetItemCount();
 		InsertItem(LVIF_TEXT | LVIF_PARAM, iItemCount, LPSTR_TEXTCALLBACK, 0, 0, 0, (LPARAM)client);
-		theApp.emuledlg->transferwnd->UpdateListCount(CTransferDlg::wnd2Clients, iItemCount + 1);
+		theApp.emuledlg->transferwnd->UpdateListCount(CTransferWnd::wnd2Clients, iItemCount + 1);
 	}
 }
 
@@ -461,15 +403,15 @@ void CClientListCtrl::RemoveClient(const CUpDownClient *client)
 		int iItem = FindItem(&find);
 		if (iItem >= 0) {
 			DeleteItem(iItem);
-			theApp.emuledlg->transferwnd->UpdateListCount(CTransferDlg::wnd2Clients);
+			theApp.emuledlg->transferwnd->UpdateListCount(CTransferWnd::wnd2Clients);
 		}
 	}
 }
 
 void CClientListCtrl::RefreshClient(const CUpDownClient *client)
 {
-	if (!theApp.IsClosing()
-		&& theApp.emuledlg->activewnd == theApp.emuledlg->transferwnd
+	if (theApp.emuledlg->activewnd == theApp.emuledlg->transferwnd
+		&& !theApp.IsClosing()
 		&& theApp.emuledlg->transferwnd->GetClientList()->IsWindowVisible())
 	{
 		LVFINDINFO find;
@@ -506,10 +448,10 @@ void CClientListCtrl::ShowKnownClients()
 {
 	DeleteAllItems();
 	int iItemCount = 0;
-	for (POSITION pos = theApp.clientlist->list.GetHeadPosition(); pos != NULL; ) {
+	for (POSITION pos = theApp.clientlist->list.GetHeadPosition(); pos != NULL;) {
 		int iItem = InsertItem(LVIF_TEXT | LVIF_PARAM, iItemCount, LPSTR_TEXTCALLBACK, 0, 0, 0, (LPARAM)theApp.clientlist->list.GetNext(pos));
 		Update(iItem);
 		++iItemCount;
 	}
-	theApp.emuledlg->transferwnd->UpdateListCount(CTransferDlg::wnd2Clients, iItemCount);
+	theApp.emuledlg->transferwnd->UpdateListCount(CTransferWnd::wnd2Clients, iItemCount);
 }

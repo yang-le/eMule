@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -87,9 +87,9 @@ CString CMuleStatusBarCtrl::GetPaneToolTipText(EStatusBarPane iPane) const
 {
 	CString strText;
 	if (iPane == SBarConnected && theApp.serverconnect && theApp.serverconnect->IsConnected()) {
-		CServer *cur_server = theApp.serverconnect->GetCurrentServer();
+		const CServer *cur_server = theApp.serverconnect->GetCurrentServer();
 		if (cur_server) {
-			CServer *srv = theApp.serverlist->GetServerByAddress(cur_server->GetAddress(), cur_server->GetPort());
+			const CServer *srv = theApp.serverlist->GetServerByAddress(cur_server->GetAddress(), cur_server->GetPort());
 			// Can't add more info than just the server name, unfortunately the MFC tooltip which
 			// we use here does not show more than one(!) line of text.
 			if (srv)

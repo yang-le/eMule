@@ -6,7 +6,6 @@ class CButtonsTabCtrl : public CTabCtrl
 
 public:
 	CButtonsTabCtrl() = default;
-	virtual	~CButtonsTabCtrl() = default;
 
 protected:
 	void InternalInit();

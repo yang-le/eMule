@@ -1,5 +1,5 @@
 /*
-Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
+Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -23,7 +23,7 @@ There is going to be a new forum created just for the Kademlia side of the clien
 If you feel there is an error or a way to improve something, please
 post it in the forum first and let us look at it. If it is a real improvement,
 it will be added to the official client. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form.
+what all it does, can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 their client on the eMule forum.
 */
@@ -49,9 +49,9 @@ namespace Kademlia
 		UINT	GetBitNumber(UINT uBit) const;
 		int		CompareTo(const CUInt128 &uOther) const;
 		int		CompareTo(ULONG uValue) const;
-		void	ToHexString(CString *pstr) const;
+		void	ToHexString(CString &str) const;
 		CString	ToHexString() const;
-		void	ToBinaryString(CString *pstr, bool bTrim = false) const;
+		void	ToBinaryString(CString &str, bool bTrim = false) const;
 		void	ToByteArray(byte *pby) const;
 		ULONG	Get32BitChunk(int iVal) const;
 		CUInt128& SetValue(const CUInt128 &uValue);

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -40,10 +40,10 @@
 #include "ClientList.h"
 #include "FriendList.h"
 #include "ClientUDPSocket.h"
+#include "UpDownClient.h"
 #include "DownloadQueue.h"
 #include "IPFilter.h"
 #include "Statistics.h"
-#include "OtherFunctions.h"
 #include "WebServer.h"
 #include "UploadQueue.h"
 #include "SharedFileList.h"
@@ -53,7 +53,6 @@
 #include "ClientCredits.h"
 #include "KnownFileList.h"
 #include "Server.h"
-#include "UpDownClient.h"
 #include "ED2KLink.h"
 #include "Preferences.h"
 #include "secrunasuser.h"
@@ -71,6 +70,7 @@
 #include "UPnPImplWrapper.h"
 #include "VisualStylesXP.h"
 #include "UploadDiskIOThread.h"
+#include "PartFileWriteThread.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -94,7 +94,6 @@ static char THIS_FILE[] = __FILE__;
 CLogFile theLog;
 CLogFile theVerboseLog;
 bool g_bLowColorDesktop = false;
-bool g_bGdiPlusInstalled = false;
 
 //#define USE_16COLOR_ICONS
 
@@ -108,8 +107,7 @@ _CRT_ALLOC_HOOK g_pfnPrevCrtAllocHook = NULL;
 CMap<const unsigned char*, const unsigned char*, UINT, UINT> g_allocations;
 int eMuleAllocHook(int mode, void *pUserData, size_t nSize, int nBlockUse, long lRequest, const unsigned char *pszFileName, int nLine) noexcept;
 
-//CString _strCrtDebugReportFilePath(_T("eMule CRT Debug Log.log"));
-// don't use a CString for that memory - it will not be available on application termination!
+// Cannot use a CString for that memory - it will be unavailable on application termination!
 #define APP_CRT_DEBUG_LOG_FILE _T("eMule CRT Debug Log.log")
 static TCHAR s_szCrtDebugReportFilePath[MAX_PATH] = APP_CRT_DEBUG_LOG_FILE;
 #endif //_DEBUG
@@ -216,7 +214,7 @@ void InitDEP()
 				 //			not reach this code path at all because the "/NXCOMPAT" option is specified.
 				 //			However, the code path is here for safety reasons.
 				dwFlags = PROCESS_DEP_ENABLE;
-				// VS2005: Disable ATL-thunks.
+				// VS2005: Disable ATL thunks.
 				dwFlags |= PROCESS_DEP_DISABLE_ATL_THUNK_EMULATION;
 				(*pfnSetProcessDEPPolicy)(dwFlags);
 			}
@@ -228,7 +226,7 @@ void InitDEP()
 ///////////////////////////////////////////////////////////////////////////////
 // Heap Corruption Detection
 //
-// For Windows Vista and later. Does *not* have any performance impact!
+// For Windows XP SP3 and later. Does *not* have any performance impact!
 //
 #ifndef HeapEnableTerminationOnCorruption
 #define HeapEnableTerminationOnCorruption (HEAP_INFORMATION_CLASS)1
@@ -306,13 +304,6 @@ CemuleApp::CemuleApp(LPCTSTR lpszAppName)
 	//_set_sbh_threshold(768);
 
 	srand((unsigned)time(NULL));
-
-	// NOTE: Do *NOT* forget to specify /DELAYLOAD:gdiplus.dll as link parameter.
-	HMODULE hLib = LoadLibrary(_T("gdiplus.dll"));
-	if (hLib != NULL) {
-		g_bGdiPlusInstalled = GetProcAddress(hLib, "GdiplusStartup") != NULL;
-		FreeLibrary(hLib);
-	}
 
 // MOD Note: Do not change this part - Merkur
 
@@ -430,7 +421,8 @@ BOOL CemuleApp::InitInstance()
 	_CrtSetReportMode(_CRT_ASSERT, _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_REPORT_MODE) | _CRTDBG_MODE_DEBUG);
 #endif
 	free((void*)m_pszProfileName);
-	m_pszProfileName = _tcsdup(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("preferences.ini"));
+	const CString &sConfDir(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+	m_pszProfileName = _tcsdup(sConfDir + _T("preferences.ini"));
 
 #ifdef _DEBUG
 	oldMemState.Checkpoint();
@@ -448,7 +440,7 @@ BOOL CemuleApp::InitInstance()
 #if !defined(_BETA) && !defined(_DEVBUILD)
 	if (theCrashDumper.uCreateCrashDump > 0)
 #endif
-		theCrashDumper.Enable(_T("eMule ") + m_strCurVersionLongDbg, true, thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+		theCrashDumper.Enable(_T("eMule ") + m_strCurVersionLongDbg, true, sConfDir);
 
 	///////////////////////////////////////////////////////////////////////////
 	// Locale initialization -- BE VERY CAREFUL HERE!!!
@@ -481,7 +473,7 @@ BOOL CemuleApp::InitInstance()
 	case _WINVER_2003_:
 		m_ullComCtrlVer = MAKEDLLVERULL(6, 0, 0, 0);
 		break;
-	default:  //Vista .. Win10
+	default:  //Vista .. Win11
 		m_ullComCtrlVer = MAKEDLLVERULL(6, 16, 0, 0);
 	};
 
@@ -631,6 +623,7 @@ BOOL CemuleApp::InitInstance()
 	// ZZ:UploadSpeedSense <--
 
 	m_pUploadDiskIOThread = new CUploadDiskIOThread();
+	m_pPartFileWriteThread = new CPartFileWriteThread();
 
 	thePerfLog.Startup();
 	emuledlg->DoModal();
@@ -696,11 +689,11 @@ int eMuleAllocHook(int mode, void *pUserData, size_t nSize, int nBlockUse, long 
 		count = 0;
 	if (mode == _HOOK_ALLOC) {
 		_CrtSetAllocHook(g_pfnPrevCrtAllocHook);
-		g_allocations.SetAt(pszFileName, count + 1);
+		g_allocations[pszFileName] = count + 1;
 		_CrtSetAllocHook(&eMuleAllocHook);
 	} else if (mode == _HOOK_FREE) {
 		_CrtSetAllocHook(g_pfnPrevCrtAllocHook);
-		g_allocations.SetAt(pszFileName, count - 1);
+		g_allocations[pszFileName] = count - 1;
 		_CrtSetAllocHook(&eMuleAllocHook);
 	}
 	return g_pfnPrevCrtAllocHook(mode, pUserData, nSize, nBlockUse, lRequest, pszFileName, nLine);
@@ -718,11 +711,9 @@ bool CemuleApp::ProcessCommandline()
 			if (_tcsicmp(pszParam, _T("assertfile")) == 0)
 				_CrtSetReportHook(CrtDebugReportCB);
 #endif
-			if (_tcsicmp(pszParam, _T("ignoreinstances")) == 0)
-				bIgnoreRunningInstances = true;
+			bIgnoreRunningInstances |= (_tcsicmp(pszParam, _T("ignoreinstances")) == 0);
 
-			if (_tcsicmp(pszParam, _T("AutoStart")) == 0)
-				m_bAutoStart = true;
+			m_bAutoStart |= (_tcsicmp(pszParam, _T("AutoStart")) == 0);
 		}
 	}
 
@@ -730,17 +721,16 @@ bool CemuleApp::ProcessCommandline()
 	ParseCommandLine(cmdInfo);
 
 	// If we create our TCP listen socket with SO_REUSEADDR, we have to ensure that there are
-	// not 2 emules are running using the same port.
+	// no 2 eMules are running on the same port.
 	// NOTE: This will not prevent from some other application using that port!
 	UINT uTcpPort = GetProfileInt(_T("eMule"), _T("Port"), DEFAULT_TCP_PORT_OLD);
 	CString strMutextName;
 	strMutextName.Format(_T("%s:%u"), EMULE_GUID, uTcpPort);
 	m_hMutexOneInstance = CreateMutex(NULL, FALSE, strMutextName);
 
-	HWND maininst = NULL;
 	const CString &command(cmdInfo.m_strFileName);
 
-	//this codepart is to determine special cases when we do add a link to our eMule
+	//this code part is to determine special cases when we do add a link to our eMule
 	//because in this case it would be nonsense to start another instance!
 	bool bAlreadyRunning = false;
 	if (bIgnoreRunningInstances
@@ -749,6 +739,7 @@ bool CemuleApp::ProcessCommandline()
 	{
 		bIgnoreRunningInstances = false;
 	}
+	HWND maininst = NULL;
 	if (!bIgnoreRunningInstances)
 		switch (::GetLastError()) {
 		case ERROR_ALREADY_EXISTS:
@@ -759,7 +750,7 @@ bool CemuleApp::ProcessCommandline()
 
 	if (cmdInfo.m_nShellCommand == CCommandLineInfo::FileOpen) {
 		if (command.Find(_T("://")) > 0 || command.Find(_T("magnet:?")) >= 0) {
-			sendstruct.cbData = (command.GetLength() + 1) * sizeof(TCHAR);
+			sendstruct.cbData = static_cast<DWORD>((command.GetLength() + 1) * sizeof(TCHAR));
 			sendstruct.dwData = OP_ED2KLINK;
 			sendstruct.lpData = const_cast<LPTSTR>((LPCTSTR)command);
 			if (maininst) {
@@ -769,7 +760,7 @@ bool CemuleApp::ProcessCommandline()
 
 			m_strPendingLink = command;
 		} else if (CCollection::HasCollectionExtention(command)) {
-			sendstruct.cbData = (command.GetLength() + 1) * sizeof(TCHAR);
+			sendstruct.cbData = static_cast<DWORD>((command.GetLength() + 1) * sizeof(TCHAR));
 			sendstruct.dwData = OP_COLLECTION;
 			sendstruct.lpData = const_cast<LPTSTR>((LPCTSTR)command);
 			if (maininst) {
@@ -779,7 +770,7 @@ bool CemuleApp::ProcessCommandline()
 
 			m_strPendingLink = command;
 		} else {
-			sendstruct.cbData = (command.GetLength() + 1) * sizeof(TCHAR);
+			sendstruct.cbData = static_cast<DWORD>((command.GetLength() + 1) * sizeof(TCHAR));
 			sendstruct.dwData = OP_CLCOMMAND;
 			sendstruct.lpData = const_cast<LPTSTR>((LPCTSTR)command);
 			if (maininst) {
@@ -832,7 +823,7 @@ CString CemuleApp::CreateKadSourceLink(const CAbstractFile *f)
 	CString strLink;
 	if (Kademlia::CKademlia::IsConnected() && theApp.clientlist->GetBuddy() && theApp.IsFirewalled()) {
 		CString KadID;
-		Kademlia::CKademlia::GetPrefs()->GetKadID().Xor(Kademlia::CUInt128(true)).ToHexString(&KadID);
+		Kademlia::CKademlia::GetPrefs()->GetKadID().Xor(Kademlia::CUInt128(true)).ToHexString(KadID);
 		strLink.Format(_T("ed2k://|file|%s|%I64u|%s|/|kadsources,%s:%s|/")
 			, (LPCTSTR)EncodeUrlUtf8(StripInvalidFilenameChars(f->GetFileName()))
 			, (uint64)f->GetFileSize()
@@ -848,27 +839,27 @@ bool CemuleApp::CopyTextToClipboard(const CString &strText)
 	if (strText.IsEmpty())
 		return false;
 
-	HGLOBAL hGlobalT = GlobalAlloc(GHND | GMEM_SHARE, (strText.GetLength() + 1) * sizeof(TCHAR));
+	HGLOBAL hGlobalT = ::GlobalAlloc(GHND | GMEM_SHARE, (strText.GetLength() + 1) * sizeof(TCHAR));
 	if (hGlobalT != NULL) {
-		LPTSTR pGlobalT = static_cast<LPTSTR>(GlobalLock(hGlobalT));
+		LPTSTR pGlobalT = static_cast<LPTSTR>(::GlobalLock(hGlobalT));
 		if (pGlobalT != NULL) {
 			_tcscpy(pGlobalT, strText);
-			GlobalUnlock(hGlobalT);
+			::GlobalUnlock(hGlobalT);
 		} else {
-			GlobalFree(hGlobalT);
+			::GlobalFree(hGlobalT);
 			hGlobalT = NULL;
 		}
 	}
 
 	CStringA strTextA(strText);
-	HGLOBAL hGlobalA = GlobalAlloc(GHND | GMEM_SHARE, (strTextA.GetLength() + 1) * sizeof(char));
+	HGLOBAL hGlobalA = ::GlobalAlloc(GHND | GMEM_SHARE, (strTextA.GetLength() + 1) * sizeof(char));
 	if (hGlobalA != NULL) {
-		LPSTR pGlobalA = static_cast<LPSTR>(GlobalLock(hGlobalA));
+		LPSTR pGlobalA = static_cast<LPSTR>(::GlobalLock(hGlobalA));
 		if (pGlobalA != NULL) {
 			strcpy(pGlobalA, strTextA);
-			GlobalUnlock(hGlobalA);
+			::GlobalUnlock(hGlobalA);
 		} else {
-			GlobalFree(hGlobalA);
+			::GlobalFree(hGlobalA);
 			hGlobalA = NULL;
 		}
 	}
@@ -883,7 +874,7 @@ bool CemuleApp::CopyTextToClipboard(const CString &strText)
 				if (SetClipboardData(CF_UNICODETEXT, hGlobalT) != NULL)
 					++iCopied;
 				else {
-					GlobalFree(hGlobalT);
+					::GlobalFree(hGlobalT);
 					hGlobalT = NULL;
 				}
 			}
@@ -891,7 +882,7 @@ bool CemuleApp::CopyTextToClipboard(const CString &strText)
 				if (SetClipboardData(CF_TEXT, hGlobalA) != NULL)
 					++iCopied;
 				else {
-					GlobalFree(hGlobalA);
+					::GlobalFree(hGlobalA);
 					hGlobalA = NULL;
 				}
 			}
@@ -901,9 +892,9 @@ bool CemuleApp::CopyTextToClipboard(const CString &strText)
 
 	if (iCopied == 0) {
 		if (hGlobalT)
-			GlobalFree(hGlobalT);
+			::GlobalFree(hGlobalT);
 		if (hGlobalA)
-			GlobalFree(hGlobalA);
+			::GlobalFree(hGlobalA);
 		return false;
 	}
 
@@ -914,40 +905,32 @@ bool CemuleApp::CopyTextToClipboard(const CString &strText)
 //TODO: Move to emule-window
 CString CemuleApp::CopyTextFromClipboard()
 {
-	if (IsClipboardFormatAvailable(CF_UNICODETEXT)) {
-		if (OpenClipboard(NULL)) {
-			bool bResult = false;
-			CString strClipboard;
-			HGLOBAL hMem = GetClipboardData(CF_UNICODETEXT);
-			if (hMem) {
-				LPCWSTR pwsz = (LPCWSTR)GlobalLock(hMem);
-				if (pwsz) {
-					strClipboard = pwsz;
-					GlobalUnlock(hMem);
-					bResult = true;
-				}
+	bool bResult = false;
+	CString strClipboard;
+	if (IsClipboardFormatAvailable(CF_UNICODETEXT) && OpenClipboard(NULL)) {
+		HGLOBAL hMem = GetClipboardData(CF_UNICODETEXT);
+		if (hMem) {
+			LPCWSTR pwsz = (LPCWSTR)::GlobalLock(hMem);
+			if (pwsz) {
+				strClipboard = pwsz;
+				::GlobalUnlock(hMem);
+				bResult = true;
 			}
-			CloseClipboard();
-			if (bResult)
-				return strClipboard;
 		}
+		CloseClipboard();
 	}
-
-	if (!IsClipboardFormatAvailable(CF_TEXT) || !OpenClipboard(NULL))
-		return CString();
-
-	CString retstring;
-	HGLOBAL hglb = GetClipboardData(CF_TEXT);
-	if (hglb != NULL) {
-		LPCSTR lptstr = (LPCSTR)GlobalLock(hglb);
-		if (lptstr != NULL) {
-			retstring = lptstr;
-			GlobalUnlock(hglb);
+	if (!bResult && IsClipboardFormatAvailable(CF_TEXT) && OpenClipboard(NULL)) {
+		HGLOBAL hMem = GetClipboardData(CF_TEXT);
+		if (hMem != NULL) {
+			LPCSTR lptstr = (LPCSTR)::GlobalLock(hMem);
+			if (lptstr != NULL) {
+				strClipboard = lptstr;
+				::GlobalUnlock(hMem);
+			}
 		}
+		CloseClipboard();
 	}
-	CloseClipboard();
-
-	return retstring;
+	return strClipboard;
 }
 
 void CemuleApp::OnlineSig() // Added By Bouc7
@@ -956,11 +939,10 @@ void CemuleApp::OnlineSig() // Added By Bouc7
 		return;
 
 	static LPCTSTR const _szFileName = _T("onlinesig.dat");
-	CString strFullPath;
-	strFullPath.Format(_T("%s%s"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGBASEDIR), _szFileName);
+	const CString &strSigPath(thePrefs.GetMuleDirectory(EMULE_CONFIGBASEDIR) + _szFileName);
 
 	// The 'onlinesig.dat' is potentially read by other applications at more or less frequent intervals.
-	//	 -	Set the file shareing mode to allow other processes to read the file while we are writing
+	//	 -	Set the file sharing mode to allow other processes to read the file while we are writing
 	//		it (see also next point).
 	//	 -	Try to write the hole file data at once, so other applications are always reading
 	//		a consistent amount of file data. C-RTL uses a 4 KB buffer, this is large enough to write
@@ -969,12 +951,12 @@ void CemuleApp::OnlineSig() // Added By Bouc7
 	//		compatibility with older eMule versions.
 	CSafeBufferedFile file;
 	CFileException fexp;
-	if (!file.Open(strFullPath, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyWrite | CFile::typeBinary, &fexp)) {
+	if (!file.Open(strSigPath, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyWrite | CFile::typeBinary, &fexp)) {
 		CString strError;
 		strError.Format(_T("%s %s"), (LPCTSTR)GetResString(IDS_ERROR_SAVEFILE), _szFileName);
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
 		GetExceptionMessage(fexp, szError, _countof(szError));
-		strError.AppendFormat(_T(" - %s"), szError);
+		strError.Format(_T(" - %s"), szError);
 		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		return;
 	}
@@ -1048,7 +1030,7 @@ bool CemuleApp::GetLangHelpFilePath(CString &strResult)
 		strResult.Truncate(pos);
 		strResult.AppendFormat(_T("\\eMule%s.chm"), (LPCTSTR)temp);
 	}
-	bool bFound = PathFileExists(strResult);
+	bool bFound = ::PathFileExists(strResult);
 	if (!bFound && langID > 0) {
 		strResult = m_pszHelpFilePath; // if not exists, use original help (English)
 		strResult.Replace(_T(".HLP"), _T(".chm"));
@@ -1093,7 +1075,7 @@ bool CemuleApp::ShowWebHelp(UINT uTopic)
 int CemuleApp::GetFileTypeSystemImageIdx(LPCTSTR pszFilePath, int iLength /* = -1 */, bool bNormalsSize)
 {
 	DWORD dwFileAttributes;
-	LPCTSTR pszCacheExt = NULL;
+	LPCTSTR pszCacheExt;
 	if (iLength == -1)
 		iLength = (int)_tcslen(pszFilePath);
 	if (iLength > 0 && (pszFilePath[iLength - 1] == _T('\\') || pszFilePath[iLength - 1] == _T('/'))) {
@@ -1103,6 +1085,7 @@ int CemuleApp::GetFileTypeSystemImageIdx(LPCTSTR pszFilePath, int iLength /* = -
 	} else {
 		dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
 		// search last '.' character *after* the last '\\' character
+		pszCacheExt = _T(""); //default is an empty extension
 		for (int i = iLength; --i >= 0;) {
 			if (pszFilePath[i] == _T('\\') || pszFilePath[i] == _T('/'))
 				break;
@@ -1112,8 +1095,6 @@ int CemuleApp::GetFileTypeSystemImageIdx(LPCTSTR pszFilePath, int iLength /* = -
 				break;
 			}
 		}
-		if (pszCacheExt == NULL)
-			pszCacheExt = _T("");	// empty extension
 	}
 
 	// Search extension in "ext->idx" cache.
@@ -1122,29 +1103,28 @@ int CemuleApp::GetFileTypeSystemImageIdx(LPCTSTR pszFilePath, int iLength /* = -
 		if (!m_aBigExtToSysImgIdx.Lookup(pszCacheExt, vData)) {
 			// Get index for the system's big icon image list
 			SHFILEINFO sfi;
-			HIMAGELIST hResult = (HIMAGELIST)SHGetFileInfo(pszFilePath, dwFileAttributes, &sfi, sizeof(sfi),
-				SHGFI_USEFILEATTRIBUTES | SHGFI_SYSICONINDEX);
+			HIMAGELIST hResult = (HIMAGELIST)::SHGetFileInfo(pszFilePath, dwFileAttributes, &sfi, sizeof(sfi), SHGFI_USEFILEATTRIBUTES | SHGFI_SYSICONINDEX);
 			if (hResult == 0)
 				return 0;
 			ASSERT(m_hBigSystemImageList == NULL || m_hBigSystemImageList == hResult);
 			m_hBigSystemImageList = hResult;
 
 			// Store icon index in local cache
-			m_aBigExtToSysImgIdx.SetAt(pszCacheExt, (LPVOID)sfi.iIcon);
+			m_aBigExtToSysImgIdx[pszCacheExt] = (LPVOID)sfi.iIcon;
 			return sfi.iIcon;
 		}
 	} else if (!m_aExtToSysImgIdx.Lookup(pszCacheExt, vData)) {
-			// Get index for the system's small icon image list
+		// Get index for the system's small icon image list
 		SHFILEINFO sfi;
-		HIMAGELIST hResult = (HIMAGELIST)SHGetFileInfo(pszFilePath, dwFileAttributes, &sfi, sizeof(sfi),
-			SHGFI_USEFILEATTRIBUTES | SHGFI_SYSICONINDEX | SHGFI_SMALLICON);
+		HIMAGELIST hResult = (HIMAGELIST)::SHGetFileInfo(pszFilePath, dwFileAttributes, &sfi, sizeof(sfi)
+			, SHGFI_USEFILEATTRIBUTES | SHGFI_SYSICONINDEX | SHGFI_SMALLICON);
 		if (hResult == 0)
 			return 0;
 		ASSERT(m_hSystemImageList == NULL || m_hSystemImageList == hResult);
 		m_hSystemImageList = hResult;
 
 		// Store icon index in local cache
-		m_aExtToSysImgIdx.SetAt(pszCacheExt, (LPVOID)sfi.iIcon);
+		m_aExtToSysImgIdx[pszCacheExt] = (LPVOID)sfi.iIcon;
 		return sfi.iIcon;
 	}
 
@@ -1154,7 +1134,7 @@ int CemuleApp::GetFileTypeSystemImageIdx(LPCTSTR pszFilePath, int iLength /* = -
 
 bool CemuleApp::IsConnected(bool bIgnoreEd2k, bool bIgnoreKad)
 {
-	return (theApp.serverconnect->IsConnected() && !bIgnoreEd2k) || (Kademlia::CKademlia::IsConnected() && !bIgnoreKad);
+	return (!bIgnoreEd2k && theApp.serverconnect->IsConnected()) || (!bIgnoreKad && Kademlia::CKademlia::IsConnected());
 }
 
 bool CemuleApp::IsPortchangeAllowed()
@@ -1173,8 +1153,11 @@ uint32 CemuleApp::GetID()
 
 uint32 CemuleApp::GetPublicIP(bool bIgnoreKadIP) const
 {
-	if (m_dwPublicIP == 0 && Kademlia::CKademlia::IsConnected() && Kademlia::CKademlia::GetIPAddress() && !bIgnoreKadIP)
-		return ntohl(Kademlia::CKademlia::GetIPAddress());
+	if (!bIgnoreKadIP && m_dwPublicIP == 0 && Kademlia::CKademlia::IsConnected()) {
+		uint32 uIP = Kademlia::CKademlia::GetIPAddress();
+		if (uIP)
+			return ntohl(uIP);
+	}
 	return m_dwPublicIP;
 }
 
@@ -1217,13 +1200,13 @@ bool CemuleApp::CanDoCallback(CUpDownClient *client)
 	bool eLow = theApp.serverconnect->IsLowID();
 
 	if (!Kademlia::CKademlia::IsConnected() || Kademlia::CKademlia::IsFirewalled())
-		return ed2k & !eLow; //callback for high ID server connection
+		return ed2k && !eLow; //callback for high ID server connection
 
 	//KAD is connected and Open
 	//Special case of a low ID server connection
 	//If the client connects to the same server, we prevent callback
 	//as it breaks the protocol and will get us banned.
-	if (ed2k & eLow) {
+	if ((ed2k & eLow) != 0) {
 		const CServer *srv = theApp.serverconnect->GetCurrentServer();
 		return (client->GetServerIP() != srv->GetIP() || client->GetServerPort() != srv->GetPort());
 	}
@@ -1247,11 +1230,11 @@ HICON CemuleApp::LoadIcon(LPCTSTR lpszResourceName, int cx, int cy, UINT uFlags)
 #endif
 
 	HICON hIcon = NULL;
-	LPCTSTR pszSkinProfile = thePrefs.GetSkinProfile();
-	if (pszSkinProfile != NULL && pszSkinProfile[0] != _T('\0')) {
+	const CString &sSkinProfile(thePrefs.GetSkinProfile());
+	if (!sSkinProfile.IsEmpty()) {
 		// load icon resource file specification from skin profile
 		TCHAR szSkinResource[MAX_PATH];
-		GetPrivateProfileString(_T("Icons"), lpszResourceName, _T(""), szSkinResource, _countof(szSkinResource), pszSkinProfile);
+		GetPrivateProfileString(_T("Icons"), lpszResourceName, NULL, szSkinResource, _countof(szSkinResource), sSkinProfile);
 		if (szSkinResource[0] != _T('\0')) {
 			// expand any optional available environment strings
 			TCHAR szExpSkinRes[MAX_PATH];
@@ -1262,11 +1245,11 @@ HICON CemuleApp::LoadIcon(LPCTSTR lpszResourceName, int cx, int cy, UINT uFlags)
 
 			// create absolute path to icon resource file
 			TCHAR szFullResPath[MAX_PATH];
-			if (PathIsRelative(szSkinResource)) {
+			if (::PathIsRelative(szSkinResource)) {
 				TCHAR szSkinResFolder[MAX_PATH];
-				_tcsncpy(szSkinResFolder, pszSkinProfile, _countof(szSkinResFolder));
+				_tcsncpy(szSkinResFolder, sSkinProfile, _countof(szSkinResFolder));
 				szSkinResFolder[_countof(szSkinResFolder) - 1] = _T('\0');
-				PathRemoveFileSpec(szSkinResFolder);
+				::PathRemoveFileSpec(szSkinResFolder);
 				_tmakepathlimit(szFullResPath, NULL, szSkinResFolder, szSkinResource, NULL);
 			} else {
 				_tcsncpy(szFullResPath, szSkinResource, _countof(szFullResPath));
@@ -1279,19 +1262,14 @@ HICON CemuleApp::LoadIcon(LPCTSTR lpszResourceName, int cx, int cy, UINT uFlags)
 			int iIconIndex = 0;
 			int iComma = strFullResPath.ReverseFind(_T(','));
 			if (iComma >= 0) {
-				if (_stscanf((LPCTSTR)strFullResPath + iComma + 1, _T("%d"), &iIconIndex) == 1)
-					bExtractIcon = true;
+				bExtractIcon |= (_stscanf(CPTR(strFullResPath, iComma + 1), _T("%d"), &iIconIndex) == 1);
 				strFullResPath.Truncate(iComma);
 			}
 
 			if (bExtractIcon) {
 				if (uFlags != 0 || !(cx == cy && (cx == 16 || cx == 32))) {
-					static UINT(WINAPI *_pfnPrivateExtractIcons)(LPCTSTR, int, int, int, HICON*, UINT*, UINT, UINT)
-						= (UINT(WINAPI*)(LPCTSTR, int, int, int, HICON*, UINT*, UINT, UINT))(void*)GetProcAddress(GetModuleHandle(_T("user32")), _TWINAPI("PrivateExtractIcons"));
-					if (_pfnPrivateExtractIcons) {
-						UINT uIconId;
-						(*_pfnPrivateExtractIcons)(strFullResPath, iIconIndex, cx, cy, &hIcon, &uIconId, 1, uFlags);
-					}
+					UINT uIconId;
+					::PrivateExtractIcons(strFullResPath, iIconIndex, cx, cy, &hIcon, &uIconId, 1, uFlags);
 				}
 
 				if (hIcon == NULL) {
@@ -1330,7 +1308,8 @@ HICON CemuleApp::LoadIcon(LPCTSTR lpszResourceName, int cx, int cy, UINT uFlags)
 				// If the ICO file contains a 16x16 icon, 'LoadImage' will though return a 32x32 icon,
 				// if LR_DEFAULTSIZE is specified! -> always specify the requested size!
 				hIcon = (HICON)::LoadImage(NULL, szFullResPath, IMAGE_ICON, cx, cy, uFlags | LR_LOADFROMFILE);
-				if (hIcon == NULL && ::GetLastError() != ERROR_PATH_NOT_FOUND && g_bGdiPlusInstalled) {
+				if (hIcon == NULL && ::GetLastError() != ERROR_PATH_NOT_FOUND/* && g_bGdiPlusInstalled*/) {
+					// NOTE: Do *NOT* forget to specify /DELAYLOAD:gdiplus.dll as link parameter.
 					ULONG_PTR gdiplusToken = 0;
 					Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 					if (Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL) == Gdiplus::Ok) {
@@ -1360,11 +1339,11 @@ HICON CemuleApp::LoadIcon(LPCTSTR lpszResourceName, int cx, int cy, UINT uFlags)
 
 HBITMAP CemuleApp::LoadImage(LPCTSTR lpszResourceName, LPCTSTR pszResourceType) const
 {
-	LPCTSTR pszSkinProfile = thePrefs.GetSkinProfile();
-	if (pszSkinProfile != NULL && pszSkinProfile[0] != _T('\0')) {
+	const CString &sSkinProfile(thePrefs.GetSkinProfile());
+	if (!sSkinProfile.IsEmpty()) {
 		// load resource file specification from skin profile
 		TCHAR szSkinResource[MAX_PATH];
-		GetPrivateProfileString(_T("Bitmaps"), lpszResourceName, _T(""), szSkinResource, _countof(szSkinResource), pszSkinProfile);
+		GetPrivateProfileString(_T("Bitmaps"), lpszResourceName, NULL, szSkinResource, _countof(szSkinResource), sSkinProfile);
 		if (szSkinResource[0] != _T('\0')) {
 			// expand any optional available environment strings
 			TCHAR szExpSkinRes[MAX_PATH];
@@ -1375,11 +1354,11 @@ HBITMAP CemuleApp::LoadImage(LPCTSTR lpszResourceName, LPCTSTR pszResourceType) 
 
 			// create absolute path to resource file
 			TCHAR szFullResPath[MAX_PATH];
-			if (PathIsRelative(szSkinResource)) {
+			if (::PathIsRelative(szSkinResource)) {
 				TCHAR szSkinResFolder[MAX_PATH];
-				_tcsncpy(szSkinResFolder, pszSkinProfile, _countof(szSkinResFolder));
+				_tcsncpy(szSkinResFolder, sSkinProfile, _countof(szSkinResFolder));
 				szSkinResFolder[_countof(szSkinResFolder) - 1] = _T('\0');
-				PathRemoveFileSpec(szSkinResFolder);
+				::PathRemoveFileSpec(szSkinResFolder);
 				_tmakepathlimit(szFullResPath, NULL, szSkinResFolder, szSkinResource, NULL);
 			} else {
 				_tcsncpy(szFullResPath, szSkinResource, _countof(szFullResPath));
@@ -1393,18 +1372,18 @@ HBITMAP CemuleApp::LoadImage(LPCTSTR lpszResourceName, LPCTSTR pszResourceType) 
 	}
 
 	CEnBitmap bmp;
-	if (bmp.LoadImage(lpszResourceName, pszResourceType))
-		return (HBITMAP)bmp.Detach();
-	return NULL;
+	return bmp.LoadImage(lpszResourceName, pszResourceType) ? (HBITMAP)bmp.Detach() : NULL;
 }
 
 CString CemuleApp::GetSkinFileItem(LPCTSTR lpszResourceName, LPCTSTR pszResourceType) const
 {
-	LPCTSTR pszSkinProfile = thePrefs.GetSkinProfile();
-	if (pszSkinProfile != NULL && pszSkinProfile[0] != _T('\0')) {
+	TCHAR szFullResPath[MAX_PATH];
+	*szFullResPath = _T('\0');
+	const CString &sSkinProfile(thePrefs.GetSkinProfile());
+	if (!sSkinProfile.IsEmpty()) {
 		// load resource file specification from skin profile
 		TCHAR szSkinResource[MAX_PATH];
-		GetPrivateProfileString(pszResourceType, lpszResourceName, _T(""), szSkinResource, _countof(szSkinResource), pszSkinProfile);
+		GetPrivateProfileString(pszResourceType, lpszResourceName, NULL, szSkinResource, _countof(szSkinResource), sSkinProfile);
 		if (szSkinResource[0] != _T('\0')) {
 			// expand any optional available environment strings
 			TCHAR szExpSkinRes[MAX_PATH];
@@ -1414,30 +1393,27 @@ CString CemuleApp::GetSkinFileItem(LPCTSTR lpszResourceName, LPCTSTR pszResource
 			}
 
 			// create absolute path to resource file
-			TCHAR szFullResPath[MAX_PATH];
-			if (PathIsRelative(szSkinResource)) {
+			if (::PathIsRelative(szSkinResource)) {
 				TCHAR szSkinResFolder[MAX_PATH];
-				_tcsncpy(szSkinResFolder, pszSkinProfile, _countof(szSkinResFolder));
+				_tcsncpy(szSkinResFolder, sSkinProfile, _countof(szSkinResFolder));
 				szSkinResFolder[_countof(szSkinResFolder) - 1] = _T('\0');
-				PathRemoveFileSpec(szSkinResFolder);
+				::PathRemoveFileSpec(szSkinResFolder);
 				_tmakepathlimit(szFullResPath, NULL, szSkinResFolder, szSkinResource, NULL);
 			} else {
 				_tcsncpy(szFullResPath, szSkinResource, _countof(szFullResPath));
 				szFullResPath[_countof(szFullResPath) - 1] = _T('\0');
 			}
-
-			return szFullResPath;
 		}
 	}
-	return CString();
+	return CString(szFullResPath);
 }
 
 bool CemuleApp::LoadSkinColor(LPCTSTR pszKey, COLORREF &crColor) const
 {
-	LPCTSTR pszSkinProfile = thePrefs.GetSkinProfile();
-	if (pszSkinProfile != NULL && pszSkinProfile[0] != _T('\0')) {
+	const CString &sSkinProfile(thePrefs.GetSkinProfile());
+	if (!sSkinProfile.IsEmpty()) {
 		TCHAR szColor[MAX_PATH];
-		GetPrivateProfileString(_T("Colors"), pszKey, _T(""), szColor, _countof(szColor), pszSkinProfile);
+		GetPrivateProfileString(_T("Colors"), pszKey, NULL, szColor, _countof(szColor), sSkinProfile);
 		if (szColor[0] != _T('\0')) {
 			int red, grn, blu;
 			if (_stscanf(szColor, _T("%i , %i , %i"), &red, &grn, &blu) == 3) {
@@ -1484,14 +1460,14 @@ void CemuleApp::AddEd2kLinksToDownload(const CString &strLinks, int cat)
 		const CString &sToken(strLinks.Tokenize(_T(" \t\r\n"), iPos)); //tokenize by whitespace
 		if (sToken.IsEmpty())
 			break;
-		bool bSlash = (sToken.Right(1) == _T("/"));
+		bool bSlash = (sToken[sToken.GetLength() - 1] == _T('/'));
 		CED2KLink *pLink = NULL;
 		try {
 			pLink = CED2KLink::CreateLinkFromUrl(bSlash ? sToken : sToken + _T('/'));
 			if (pLink) {
 				if (pLink->GetKind() != CED2KLink::kFile)
-					throw CString(_T("bad link"));
-				downloadqueue->AddFileLinkToDownload(pLink->GetFileLink(), cat);
+					throwCStr(_T("bad link"));
+				downloadqueue->AddFileLinkToDownload(*pLink->GetFileLink(), cat);
 				delete pLink;
 				pLink = NULL;
 			}
@@ -1520,7 +1496,7 @@ void CemuleApp::SearchClipboard()
 	// Do not alter (trim) 'strLinks' and then copy back to 'm_strLastClipboardContents'! The
 	// next clipboard content compare would fail because of the modified string.
 	LPCTSTR pszTrimmedLinks = strLinks;
-	while (_istspace(*pszTrimmedLinks)) // Skip leading whitespaces
+	while (_istspace(*pszTrimmedLinks)) // Skip leading white space
 		++pszTrimmedLinks;
 	m_bGuardClipboardPrompt = !_tcsnicmp(pszTrimmedLinks, _T("ed2k://|file|"), 13);
 	if (m_bGuardClipboardPrompt) {
@@ -1552,12 +1528,12 @@ bool CemuleApp::IsEd2kLinkInClipboard(LPCSTR pszLinkType, int iLinkTypeLen)
 			HGLOBAL	hText = GetClipboardData(CF_TEXT);
 			if (hText != NULL) {
 				// Use the ANSI string
-				LPCSTR pszText = (LPCSTR)GlobalLock(hText);
+				LPCSTR pszText = (LPCSTR)::GlobalLock(hText);
 				if (pszText != NULL) {
 					while (isspace(*pszText))
 						++pszText;
 					bFoundLink = (_strnicmp(pszText, pszLinkType, iLinkTypeLen) == 0);
-					GlobalUnlock(hText);
+					::GlobalUnlock(hText);
 				}
 			}
 			CloseClipboard();
@@ -1832,7 +1808,7 @@ void CemuleApp::CreateBackwardDiagonalBrush()
 		LOGBRUSH logBrush = {};
 		logBrush.lbStyle = BS_PATTERN;
 		logBrush.lbHatch = (ULONG_PTR)bm.GetSafeHandle();
-		logBrush.lbColor = RGB(0, 0, 0);
+		//logBrush.lbColor = RGB(0, 0, 0);
 		VERIFY(m_brushBackwardDiagonal.CreateBrushIndirect(&logBrush));
 	}
 }
@@ -1977,15 +1953,11 @@ void CemuleApp::UpdateLargeIconSize()
 void CemuleApp::ResetStandByIdleTimer()
 {
 	// check if anything is going on (ongoing upload, download or connected) and reset the idle timer if so
-	if (IsConnected() || (uploadqueue != NULL && uploadqueue->GetUploadQueueLength() > 0)
+	if (IsConnected()
+		|| (uploadqueue != NULL && uploadqueue->GetUploadQueueLength() > 0)
 		|| (downloadqueue != NULL && downloadqueue->GetDatarate() > 0))
 	{
-		EXECUTION_STATE(WINAPI *pfnSetThreadExecutionState)(EXECUTION_STATE);
-		(FARPROC&)pfnSetThreadExecutionState = GetProcAddress(GetModuleHandle(_T("kernel32")), "SetThreadExecutionState");
-		if (pfnSetThreadExecutionState)
-			VERIFY(pfnSetThreadExecutionState(ES_SYSTEM_REQUIRED));
-		else
-			ASSERT(0);
+		VERIFY(::SetThreadExecutionState(ES_SYSTEM_REQUIRED));
 	}
 }
 

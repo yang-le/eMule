@@ -301,12 +301,9 @@ void CColorButton::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	//**                     Draw Focus
 	//******************************************************
 	if (state & ODS_FOCUS) {
-		RECT rFocus = {rDraw.left,
-					   rDraw.top,
-					   rDraw.right - 1,
-					   rDraw.bottom};
-
-		pDC->DrawFocusRect(&rFocus);
+		--rDraw.right;
+		pDC->DrawFocusRect(&rDraw);
+		++rDraw.right;
 	}
 
 	int const cxedge = ::GetSystemMetrics(SM_CXEDGE);
@@ -378,7 +375,6 @@ void CColorButton::DrawArrow(CDC *pDC,
 		ptsArrow[2].x = (pRect->left + pRect->right) / 2;
 		ptsArrow[2].y = pRect->bottom;
 		break;
-
 	case 1: // Up
 		ptsArrow[0].x = pRect->left;
 		ptsArrow[0].y = pRect->bottom;
@@ -387,7 +383,6 @@ void CColorButton::DrawArrow(CDC *pDC,
 		ptsArrow[2].x = (pRect->left + pRect->right) / 2;
 		ptsArrow[2].y = pRect->top;
 		break;
-
 	case 2: // Left
 		ptsArrow[0].x = pRect->right;
 		ptsArrow[0].y = pRect->top;
@@ -396,7 +391,6 @@ void CColorButton::DrawArrow(CDC *pDC,
 		ptsArrow[2].x = pRect->left;
 		ptsArrow[2].y = (pRect->top + pRect->bottom) / 2;
 		break;
-
 	case 3: // Right
 		ptsArrow[0].x = pRect->left;
 		ptsArrow[0].y = pRect->top;
@@ -405,7 +399,6 @@ void CColorButton::DrawArrow(CDC *pDC,
 		ptsArrow[2].x = pRect->right;
 		ptsArrow[2].y = (pRect->top + pRect->bottom) / 2;
 		break;
-
 	default:
 		return;
 	}

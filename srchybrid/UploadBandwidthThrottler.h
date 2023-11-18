@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -66,14 +66,14 @@ private:
 	CCriticalSection sendLocker;
 	CCriticalSection tempQueueLocker;
 
-	CEvent *threadEndedEvent;
-	CEvent *pauseEvent;
-	CEvent m_eventNewDataAvailable;
+	CEvent m_eventThreadEnded;
+	CEvent m_eventPaused;
+	CEvent m_eventDataAvailable;
 	CEvent m_eventSocketAvailable;
 
 	uint64 m_SentBytesSinceLastCall;
 	uint64 m_SentBytesSinceLastCallOverhead;
 	INT_PTR m_highestNumberOfFullyActivatedSlots;
 
-	volatile bool doRun;
+	volatile bool m_bRun;
 };

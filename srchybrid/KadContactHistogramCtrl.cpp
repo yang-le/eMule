@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -71,9 +71,9 @@ inline UINT GetHistSlot(const Kademlia::CUInt128 &KadUint128)
 bool CKadContactHistogramCtrl::ContactAdd(const Kademlia::CContact *contact)
 {
 	Kademlia::CUInt128 distance;
-	contact->GetClientID(&distance);
+	contact->GetClientID(distance);
 	UINT uHistSlot = GetHistSlot(distance);
-	m_aHist[uHistSlot]++;
+	++m_aHist[uHistSlot];
 	Invalidate();
 	return true;
 }
@@ -81,11 +81,11 @@ bool CKadContactHistogramCtrl::ContactAdd(const Kademlia::CContact *contact)
 void CKadContactHistogramCtrl::ContactRem(const Kademlia::CContact *contact)
 {
 	Kademlia::CUInt128 distance;
-	contact->GetClientID(&distance);
+	contact->GetClientID(distance);
 	UINT uHistSlot = GetHistSlot(distance);
 	ASSERT(m_aHist[uHistSlot] > 0);
 	if (m_aHist[uHistSlot] > 0) {
-		m_aHist[uHistSlot]--;
+		--m_aHist[uHistSlot];
 		Invalidate();
 	}
 }
@@ -145,7 +145,7 @@ void CKadContactHistogramCtrl::OnPaint()
 			uMax = m_aHist[i];
 
 	//Lets take the average. This will keep the cluster of closest contacts from
-	//streching the graph too far.
+	//stretching the graph too far.
 	uMax /= _countof(m_aHist);
 	if (uMax < 15)
 		uMax = 15/*uHistHeight*/;

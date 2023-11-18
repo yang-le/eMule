@@ -496,7 +496,7 @@ BEGIN
     IDS_GLOBALSEARCH        "전역 (서버)"
     IDS_METHOD              "방식"
     IDS_UNDO                "실행 취소"
-    IDS_DAYLY               "매일"
+    IDS_DAILY               "매일"
     IDS_DAY_MO_FR           "월-금"
 END
 
@@ -1559,7 +1559,7 @@ BEGIN
     IDS_EM_HELP             "도움말(&H)"
     IDS_WRN_FRIENDDUPLIPPORT
                             "친구로 추가되지 않음.\r\n\r\n이미 같은 IP와 포트에 친구가 있습니다."
-    IDS_DYNUP               "업로드 속도 감지"
+    IDS_DYNUP               "업로드 속도 감지 (권장하지 않음)"
     IDS_KADOVERHEAD         "Kad 오버헤드 (패킷): %s (%s)"
     IDS_FIND                "찾기..."
     IDS_LOG_BANNED_CLIENTS  "추방당한 클라이언트 기록"

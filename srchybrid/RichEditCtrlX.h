@@ -7,7 +7,6 @@ class CRichEditCtrlX : public CRichEditCtrl
 {
 public:
 	CRichEditCtrlX();
-	virtual	~CRichEditCtrlX() = default;
 
 	void SetDisableSelectOnFocus(bool bDisable = true);
 	void SetSyntaxColoring(LPCTSTR *ppszKeywords = NULL, LPCTSTR pszSeparators = NULL);

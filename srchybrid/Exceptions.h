@@ -4,7 +4,7 @@
 #define	CATCH_DFLT_ALL(fname)
 #else
 #define	CATCH_DFLT_ALL(fname) \
-	catch(...){ \
+	catch(...) { \
 		if (thePrefs.GetVerbose()) \
 			DebugLogError(LOG_STATUSBAR, _T("Unknown exception in ") fname); \
 		ASSERT(0); \

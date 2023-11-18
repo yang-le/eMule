@@ -436,7 +436,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Global (Server)"
     IDS_METHOD              "Methode"
     IDS_UNDO                "Rückgängig"
-    IDS_DAYLY               "Täglich"
+    IDS_DAILY               "Täglich"
     IDS_DAY_MO_FR           "Mo-Fr"
 END
 
@@ -1442,7 +1442,7 @@ BEGIN
     IDS_EM_HELP             "&Hilfe"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Freund wurde nicht hinzugefügt.\r\n\r\nEs gibt bereits einen Freund mit gleicher IP und Port."
-    IDS_DYNUP               "Upload SpeedSense" //!
+    IDS_DYNUP               "Upload SpeedSense (nicht empfohlen)"
     IDS_KADOVERHEAD         "Kad Overhead (Pakete): %s (%s)"
     IDS_FIND                "Suche..."
     IDS_LOG_BANNED_CLIENTS  "Logge gebannte Clients"

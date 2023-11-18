@@ -37,34 +37,34 @@ public:
 	// the module's directory will be added to the FileName,
 	// bModulePath=true: ModuleDir, bModulePath=false: CurrentDir
 	static void AddModulePath(CString &rstrFileName, bool bModulPath = true);
-	static CString GetDefaultSection();
+	static CString GetDefaultSection()					{ return AfxGetAppName(); };
 	static CString GetDefaultIniFile(bool bModulPath = true);
 
 	CIni();
 	explicit CIni(const CIni &Ini);
-	explicit CIni(const CString &rstrFileName);
-	CIni(const CString &rstrFileName, const CString &rstrSection);
+	explicit CIni(LPCTSTR const pstrFileName);
+	CIni(LPCTSTR const pstrFileName, LPCTSTR const pstrSection);
 	CIni& operator=(const CIni &Ini);
 	virtual	~CIni() = default;
 
-	void SetFileName(const CString &rstrFileName);
-	void SetSection(const CString &rstrSection);
-	const CString& GetFileName() const;
-	const CString& GetSection() const;
+	void SetFileName(const CString &rstrFileName)		{ m_strFileName = rstrFileName; };
+	void SetSection(const CString &rstrSection)			{ m_strSection = rstrSection; };
+	const CString& GetFileName() const					{ return m_strFileName; };
+	const CString& GetSection() const					{ return m_strSection;};
 
-	CString		GetStringUTF8(LPCTSTR lpszEntry,LPCTSTR		lpszDefault = NULL,			 LPCTSTR lpszSection = NULL);
-	CString		GetStringLong(LPCTSTR lpszEntry,LPCTSTR		lpszDefault = NULL,			 LPCTSTR lpszSection = NULL);
-	double		GetDouble(LPCTSTR lpszEntry,	double		fDefault = 0.0,				 LPCTSTR lpszSection = NULL);
-	CString		GetString(LPCTSTR lpszEntry,	LPCTSTR		lpszDefault = NULL,			 LPCTSTR lpszSection = NULL);
-	float		GetFloat(LPCTSTR lpszEntry,		float		fDefault = 0.0F,			 LPCTSTR lpszSection = NULL);
-	int			GetInt(LPCTSTR lpszEntry,		int			nDefault = 0,				 LPCTSTR lpszSection = NULL);
-	ULONGLONG	GetUInt64(LPCTSTR lpszEntry,	ULONGLONG	nDefault = 0,				 LPCTSTR lpszSection = NULL);
-	WORD		GetWORD(LPCTSTR lpszEntry,		WORD		nDefault = 0,				 LPCTSTR lpszSection = NULL);
-	bool		GetBool(LPCTSTR lpszEntry,		bool		bDefault = false,			 LPCTSTR lpszSection = NULL);
-	CPoint		GetPoint(LPCTSTR lpszEntry,		const CPoint &ptDefault = CPoint(),		 LPCTSTR lpszSection = NULL);
-	CRect		GetRect(LPCTSTR lpszEntry,		const CRect &rcDefault = CRect(),		 LPCTSTR lpszSection = NULL);
-	COLORREF	GetColRef(LPCTSTR lpszEntry,	COLORREF	crDefault = RGB(128,128,128),LPCTSTR lpszSection = NULL);
-	bool		GetBinary(LPCTSTR lpszEntry,	BYTE		**ppData,	UINT *pBytes,	 LPCTSTR pszSection = NULL);
+	CString	GetStringUTF8(LPCTSTR lpszEntry,LPCTSTR		lpszDefault = NULL,		LPCTSTR lpszSection = NULL);
+	CString	GetStringLong(LPCTSTR lpszEntry,LPCTSTR		lpszDefault = NULL,		LPCTSTR lpszSection = NULL);
+	double	GetDouble(LPCTSTR lpszEntry,	double		fDefault = 0.0,			LPCTSTR lpszSection = NULL);
+	CString	GetString(LPCTSTR lpszEntry,	LPCTSTR		lpszDefault = NULL,		LPCTSTR lpszSection = NULL);
+	float	GetFloat(LPCTSTR lpszEntry,		float		fDefault = 0.0f,		LPCTSTR lpszSection = NULL);
+	int		GetInt(LPCTSTR lpszEntry,		int			nDefault = 0,			LPCTSTR lpszSection = NULL);
+	ULONGLONG GetUInt64(LPCTSTR lpszEntry,	ULONGLONG	nDefault = 0,			LPCTSTR lpszSection = NULL);
+	WORD	GetWORD(LPCTSTR lpszEntry,		WORD		nDefault = 0,			LPCTSTR lpszSection = NULL);
+	bool	GetBool(LPCTSTR lpszEntry,		bool		bDefault = false,		LPCTSTR lpszSection = NULL);
+	CPoint	GetPoint(LPCTSTR lpszEntry,		const CPoint &ptDefault = CPoint(),	LPCTSTR lpszSection = NULL);
+	CRect	GetRect(LPCTSTR lpszEntry,		const CRect &rcDefault = CRect(),	LPCTSTR lpszSection = NULL);
+	COLORREF GetColRef(LPCTSTR lpszEntry,	COLORREF	crDefault = RGB(128,128,128), LPCTSTR lpszSection = NULL);
+	bool	GetBinary(LPCTSTR lpszEntry,	BYTE		**ppData, UINT *pBytes, LPCTSTR pszSection = NULL);
 
 	void	WriteString(LPCTSTR lpszEntry,	  LPCTSTR		lpsz,				LPCTSTR lpszSection = NULL);
 	void	WriteStringUTF8(LPCTSTR lpszEntry,LPCTSTR		lpsz,				LPCTSTR lpszSection = NULL);
@@ -77,7 +77,7 @@ public:
 	void	WritePoint(LPCTSTR lpszEntry,	  const CPoint	&pt,				LPCTSTR lpszSection = NULL);
 	void	WriteRect(LPCTSTR lpszEntry,	  const CRect	&rect,				LPCTSTR lpszSection = NULL);
 	void	WriteColRef(LPCTSTR lpszEntry,	  COLORREF		cr,					LPCTSTR lpszSection = NULL);
-	bool	WriteBinary(LPCTSTR lpszEntry,	  LPBYTE		pData,	UINT nBytes,LPCTSTR lpszSection = NULL);
+	bool	WriteBinary(LPCTSTR lpszEntry,	  LPBYTE		pData, size_t nBytes, LPCTSTR lpszSection = NULL);
 
 	void	SerGetString( bool bGet, CString  &rstr, LPCTSTR lpszEntry, LPCTSTR lpszSection = NULL, LPCTSTR lpszDefault = NULL);
 	void	SerGetDouble( bool bGet, double	  &f,	 LPCTSTR lpszEntry, LPCTSTR lpszSection = NULL, double fDefault = 0.0);

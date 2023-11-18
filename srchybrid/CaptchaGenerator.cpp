@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -60,14 +60,13 @@ void CCaptchaGenerator::ReGenerateCaptcha(uint32 nLetterCount)
 	for (uint32 i = 0; i < nLetterCount; ++i) {
 		CxImage imgLetter(imgBlank);
 
-		strLetter[0] = schCaptchaContent[GetRandomUInt16() % (_countof(schCaptchaContent) - 1)];
+		strLetter[0] = schCaptchaContent[rand() % (_countof(schCaptchaContent) - 1)];
 		m_strCaptchaText += strLetter[0];
 
-		uint16 nRandomSize = GetRandomUInt16() % 10;
-		uint16 nRandomOffset = 3 + GetRandomUInt16() % 11;
-		imgLetter.DrawString(NULL, nRandomOffset, 32, strLetter, imgLetter.RGBtoRGBQUAD(RGB(0, 0, 0)), _T("Arial"), 40 - nRandomSize, 1000);
-		//imgLetter.DrawTextA(NULL, nRandomOffset, 32, strLetter, imgLetter.RGBtoRGBQUAD(RGB(0, 0, 0)), "Arial", 40 - nRandomSize, 1000);
-		float fRotate = 35.0f - (GetRandomUInt16() % 71);
+		int32_t iFontSize = rand() % 10;
+		int32_t iTextOffsetX = 3 + rand() % 11;
+		imgLetter.DrawString(NULL, iTextOffsetX, 32, strLetter, imgLetter.RGBtoRGBQUAD(RGB(0, 0, 0)), _T("Arial"), 40 - iFontSize, 1000);
+		float fRotate = 35.0f - (rand() % 71);
 		imgLetter.Rotate2(fRotate, NULL, CxImage::IM_BILINEAR, CxImage::OM_BACKGROUND, 0, false, false);
 		uint32 nOffset = i * CROWDEDSIZE;
 		ASSERT(pimgResult->GetHeight() >= imgLetter.GetHeight() && pimgResult->GetWidth() >= nOffset + imgLetter.GetWidth());

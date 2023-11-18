@@ -1,5 +1,5 @@
 /*
-Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
+Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -29,7 +29,7 @@ There is going to be a new forum created just for the Kademlia side of the clien
 If you feel there is an error or a way to improve something, please
 post it in the forum first and let us look at it. If it is a real improvement,
 it will be added to the official client. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form.
+what all it does, can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 their client on the eMule forum.
 */
@@ -64,12 +64,11 @@ CRoutingBin::CRoutingBin()
 CRoutingBin::~CRoutingBin()
 {
 	try {
-
 		// Delete all contacts
-		for (ContactList::const_iterator itContactList = m_listEntries.begin(); itContactList != m_listEntries.end(); ++itContactList) {
-			AdjustGlobalTracking((*itContactList)->GetIPAddress(), false);
+		for (ContactList::const_iterator itContact = m_listEntries.begin(); itContact != m_listEntries.end(); ++itContact) {
+			AdjustGlobalTracking((*itContact)->GetIPAddress(), false);
 			if (!m_bDontDeleteContacts)
-				delete *itContactList;
+				delete *itContact;
 		}
 		// Remove all contact entries.
 		m_listEntries.clear();
@@ -81,13 +80,13 @@ CRoutingBin::~CRoutingBin()
 bool CRoutingBin::AddContact(CContact *pContact)
 {
 	ASSERT(pContact != NULL);
-	const uint32 cIP = pContact->GetIPAddress();
-	uint32 cSameSubnets = 0;
+	const uint32 uIP = pContact->GetIPAddress();
+	uint32 uSameSubnets = 0;
 	// Check if we already have a contact with this ID in the list.
-	for (ContactList::const_iterator itContactList = m_listEntries.begin(); itContactList != m_listEntries.end(); ++itContactList) {
-		if (pContact->GetClientID() == (*itContactList)->m_uClientID)
+	for (ContactList::const_iterator itContact = m_listEntries.begin(); itContact != m_listEntries.end(); ++itContact) {
+		if (pContact->GetClientID() == (*itContact)->m_uClientID)
 			return false;
-		cSameSubnets += static_cast<uint32>(((cIP ^ (*itContactList)->GetIPAddress()) & ~0xFF) == 0);
+		uSameSubnets += static_cast<uint32>(((uIP ^ (*itContact)->GetIPAddress()) & ~0xFF) == 0);
 	}
 
 	// Several checks to make sure that we don't store multiple contacts from the same IP or too many
@@ -95,12 +94,12 @@ bool CRoutingBin::AddContact(CContact *pContact)
 	// several attacks and raise the resource needs (IPs) for a successful contact on the attacker side.
 	// Such IPs are not banned from Kad, they still can index, search, etc.,
 	// so multiple KAD clients behind one IP still work
-	if (!CheckGlobalIPLimits(cIP, pContact->GetUDPPort(), true))
+	if (!CheckGlobalIPLimits(uIP, pContact->GetUDPPort(), true))
 		return false;
 
 	// no more than 2 IPs from the same /24 block in one bin, except if it's a LAN IP
 	// (if we don't accept LAN IPs, they already have been filtered before)
-	if (cSameSubnets >= 2 && !IsLANIP(pContact->GetNetIP())) {
+	if (uSameSubnets >= 2 && !IsLANIP(pContact->GetNetIP())) {
 		if (thePrefs.GetLogFilteredIPs())
 			AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u) - too many contacts with the same subnet in RoutingBin"), (LPCTSTR)ipstr(pContact->GetNetIP()), pContact->GetUDPPort());
 		return false;
@@ -109,7 +108,7 @@ bool CRoutingBin::AddContact(CContact *pContact)
 	// If not full, add to the end of list
 	if (m_listEntries.size() < K) {
 		m_listEntries.push_back(pContact);
-		AdjustGlobalTracking(cIP, true);
+		AdjustGlobalTracking(uIP, true);
 		return true;
 	}
 	return false;
@@ -132,9 +131,9 @@ void CRoutingBin::SetAlive(CContact *pContact)
 void CRoutingBin::SetTCPPort(uint32 uIP, uint16 uUDPPort, uint16 uTCPPort)
 {
 	// Find contact with IP/Port
-	for (ContactList::const_iterator itContactList = m_listEntries.begin(); itContactList != m_listEntries.end(); ++itContactList) {
-		CContact *pContact = *itContactList;
-		if ((uIP == pContact->GetIPAddress()) && (uUDPPort == pContact->GetUDPPort())) {
+	for (ContactList::const_iterator itContact = m_listEntries.begin(); itContact != m_listEntries.end(); ++itContact) {
+		CContact *pContact = *itContact;
+		if (uIP == pContact->GetIPAddress() && uUDPPort == pContact->GetUDPPort()) {
 			// Set TCPPort and mark as alive.
 			pContact->SetTCPPort(uTCPPort);
 			pContact->UpdateType();
@@ -148,8 +147,8 @@ void CRoutingBin::SetTCPPort(uint32 uIP, uint16 uUDPPort, uint16 uTCPPort)
 CContact* CRoutingBin::GetContact(uint32 uIP, uint16 nPort, bool bTCPPort)
 {
 	// Find contact with IP/Port
-	for (ContactList::const_iterator itContactList = m_listEntries.begin(); itContactList != m_listEntries.end(); ++itContactList) {
-		CContact *pContact = *itContactList;
+	for (ContactList::const_iterator itContact = m_listEntries.begin(); itContact != m_listEntries.end(); ++itContact) {
+		CContact *pContact = *itContact;
 		if ((uIP == pContact->GetIPAddress())
 			&& ((!bTCPPort && nPort == pContact->GetUDPPort()) || (bTCPPort && nPort == pContact->GetTCPPort()) || nPort == 0))
 		{
@@ -169,10 +168,10 @@ void CRoutingBin::RemoveContact(CContact *pContact, bool bNoTrackingAdjust)
 CContact* CRoutingBin::GetContact(const CUInt128 &uID)
 {
 	// Find contact by ID.
-	for (ContactList::const_iterator itContactList = m_listEntries.begin(); itContactList != m_listEntries.end(); ++itContactList) {
-		if (uID == (*itContactList)->m_uClientID)
-			return *itContactList;
-	}
+	for (ContactList::const_iterator itContact = m_listEntries.begin(); itContact != m_listEntries.end(); ++itContact)
+		if (uID == (*itContact)->m_uClientID)
+			return *itContact;
+
 	return NULL;
 }
 
@@ -184,8 +183,8 @@ UINT CRoutingBin::GetSize() const
 void CRoutingBin::GetNumContacts(uint32 &nInOutContacts, uint32 &nInOutFilteredContacts, uint8 byMinVersion) const
 {
 	// Count all Nodes which meet the search criteria and also report those who don't
-	for (ContactList::const_iterator itContactList = m_listEntries.begin(); itContactList != m_listEntries.end(); ++itContactList)
-		if ((*itContactList)->GetVersion() >= byMinVersion)
+	for (ContactList::const_iterator itContact = m_listEntries.begin(); itContact != m_listEntries.end(); ++itContact)
+		if ((*itContact)->GetVersion() >= byMinVersion)
 			++nInOutContacts;
 		else
 			++nInOutFilteredContacts;
@@ -196,29 +195,25 @@ UINT CRoutingBin::GetRemaining() const
 	return (UINT)(K - m_listEntries.size());
 }
 
-void CRoutingBin::GetEntries(ContactList *plistResult, bool bEmptyFirst)
+void CRoutingBin::GetEntries(ContactArray &listResult, bool bEmptyFirst)
 {
-	// Clear results if requested first.
-	if (bEmptyFirst)
-		plistResult->clear();
-	// Append all entries to the results.
-	if (!m_listEntries.empty())
-		plistResult->insert(plistResult->end(), m_listEntries.begin(), m_listEntries.end());
+	if (bEmptyFirst) // Clear results if requested
+		listResult.assign(m_listEntries.begin(), m_listEntries.end());
+	else // Append all entries to the results
+		listResult.insert(listResult.end(), m_listEntries.begin(), m_listEntries.end());
 }
 
 CContact* CRoutingBin::GetOldest()
 {
 	// All new/updated entries are appended to the back.
-	if (!m_listEntries.empty())
-		return m_listEntries.front();
-	return NULL;
+	return m_listEntries.empty() ? NULL : m_listEntries.front();
 }
 
-void CRoutingBin::GetClosestTo(uint32 uMaxType, const CUInt128 &uTarget, uint32 uMaxRequired, ContactMap *pmapResult, bool bEmptyFirst, bool bInUse)
+void CRoutingBin::GetClosestTo(uint32 uMaxType, const CUInt128 &uTarget, uint32 uMaxRequired, ContactMap &rmapResult, bool bEmptyFirst, bool bInUse)
 {
 	// Empty list if requested.
 	if (bEmptyFirst)
-		pmapResult->clear();
+		rmapResult.clear();
 
 	// Return 0 since we have no entries.
 	if (m_listEntries.empty())
@@ -226,23 +221,23 @@ void CRoutingBin::GetClosestTo(uint32 uMaxType, const CUInt128 &uTarget, uint32 
 
 	// First put results in sort order for uTarget so we can insert them correctly.
 	// We don't care about max results at this time.
-	for (ContactList::const_iterator itContactList = m_listEntries.begin(); itContactList != m_listEntries.end(); ++itContactList)
-		if ((*itContactList)->GetType() <= uMaxType && (*itContactList)->IsIpVerified()) {
-			CUInt128 uTargetDistance((*itContactList)->m_uClientID);
+	for (ContactList::const_iterator itContact = m_listEntries.begin(); itContact != m_listEntries.end(); ++itContact)
+		if ((*itContact)->GetType() <= uMaxType && (*itContact)->IsIpVerified()) {
+			CUInt128 uTargetDistance((*itContact)->m_uClientID);
 			uTargetDistance.Xor(uTarget);
-			(*pmapResult)[uTargetDistance] = *itContactList;
+			rmapResult[uTargetDistance] = *itContact;
 			// This list will be used for an unknown time, Inc in use so it's not deleted.
 			if (bInUse)
-				(*itContactList)->IncUse();
+				(*itContact)->IncUse();
 		}
 
 	// Remove any extra results by least wanted first.
-	while (pmapResult->size() > uMaxRequired) {
+	while (rmapResult.size() > uMaxRequired) {
 		// Dec in use count.
 		if (bInUse)
-			(--pmapResult->end())->second->DecUse();
+			(--rmapResult.end())->second->DecUse();
 		// remove from results
-		pmapResult->erase(--pmapResult->end());
+		rmapResult.erase(--rmapResult.end());
 	}
 	// Return result count to the caller.
 }
@@ -266,7 +261,7 @@ void CRoutingBin::AdjustGlobalTracking(uint32 uIP, bool bIncrease)
 		--nSameIPCount;
 
 	if (nSameIPCount != 0)
-		s_mapGlobalContactIPs.SetAt(uIP, nSameIPCount);
+		s_mapGlobalContactIPs[uIP] = nSameIPCount;
 	else
 		s_mapGlobalContactIPs.RemoveKey(uIP);
 
@@ -287,17 +282,17 @@ void CRoutingBin::AdjustGlobalTracking(uint32 uIP, bool bIncrease)
 		--nSameSubnetCount;
 
 	if (nSameSubnetCount != 0)
-		s_mapGlobalContactSubnets.SetAt(uIP & ~0xFF, nSameSubnetCount);
+		s_mapGlobalContactSubnets[uIP & ~0xFF] = nSameSubnetCount;
 	else
 		s_mapGlobalContactSubnets.RemoveKey(uIP & ~0xFF);
 }
 
 bool CRoutingBin::ChangeContactIPAddress(CContact *pContact, uint32 uNewIP)
 {
-	// Called if we want to update an indexed contact with a new IP. We have to check if we actually allow such a change
-	// and if adjust our tracking. Rejecting a change will in the worst case lead a node contact to become invalid and purged later,
-	// but it also protects against a flood of malicous update requests from on IP which would be able to "reroute" all
-	// contacts to itself and by that making them useless
+	// Called if we want to update an indexed contact with a new IP. We have to check if we actually allow
+	// such a change and if adjust our tracking. Rejecting a change will in the worst case lead a node contact
+	// to become invalid and purged later, but it also protects against a flood of malicious update requests
+	// from an IP which would be able to "reroute" all contacts to itself and by that making them useless
 	if (pContact->GetIPAddress() == uNewIP)
 		return true;
 
@@ -325,14 +320,14 @@ bool CRoutingBin::ChangeContactIPAddress(CContact *pContact, uint32 uNewIP)
 			return false;
 		}
 
-		uint32 cSameSubnets = 0;
+		uint32 uSameSubnet = 0;
 		// Check if we already have a contact with this ID in the list.
-		for (ContactList::const_iterator itContactList = m_listEntries.begin(); itContactList != m_listEntries.end(); ++itContactList)
-			cSameSubnets += static_cast<uint32>(((uNewIP ^ (*itContactList)->GetIPAddress()) & ~0xFF) == 0);
+		for (ContactList::const_iterator itContact = m_listEntries.begin(); itContact != m_listEntries.end(); ++itContact)
+			uSameSubnet += static_cast<uint32>(((uNewIP ^ (*itContact)->GetIPAddress()) & ~0xFF) == 0);
 
 		// no more than 2 IPs from the same /24 block in one bin, except if it's a LAN IP
 		// (if we don't accept LAN IPs, they already have been filtered before)
-		if (cSameSubnets >= 2 && !IsLANIP(ntohl(uNewIP))) {
+		if (uSameSubnet >= 2 && !IsLANIP(ntohl(uNewIP))) {
 			if (thePrefs.GetLogFilteredIPs())
 				AddDebugLogLine(false, _T("Rejected kad contact ip change on update (old IP=%s, requested IP=%s) - too many contacts with the same Subnet (local)"), (LPCTSTR)ipstr(pContact->GetNetIP()), (LPCTSTR)ipstr(htonl(uNewIP)));
 			return false;
@@ -359,18 +354,17 @@ CContact* CRoutingBin::GetRandomContact(uint32 nMaxType, uint32 nMinKadVersion)
 {
 	if (m_listEntries.empty())
 		return NULL;
-	// Find contact with IP/Port
+	// Find contact with a suitable version
 	CContact *pLastFit = NULL;
-	uint32 nRandomStartPos = GetRandomUInt16() % m_listEntries.size();
-	uint32 nIndex = 0;
-	for (ContactList::const_iterator itContactList = m_listEntries.begin(); itContactList != m_listEntries.end(); ++itContactList) {
-		CContact *pContact = *itContactList;
+	int iRandomStartPos = rand() % m_listEntries.size();
+	for (ContactList::const_iterator itContact = m_listEntries.begin(); itContact != m_listEntries.end(); ++itContact) {
+		CContact *pContact = *itContact;
 		if (pContact->GetType() <= nMaxType && pContact->GetVersion() >= nMinKadVersion) {
-			if (nIndex >= nRandomStartPos)
+			if (iRandomStartPos <= 0)
 				return pContact;
 			pLastFit = pContact;
 		}
-		++nIndex;
+		--iRandomStartPos;
 	}
 	return pLastFit;
 }
@@ -378,8 +372,8 @@ CContact* CRoutingBin::GetRandomContact(uint32 nMaxType, uint32 nMinKadVersion)
 void CRoutingBin::SetAllContactsVerified()
 {
 	// Find contact by ID.
-	for (ContactList::const_iterator itContactList = m_listEntries.begin(); itContactList != m_listEntries.end(); ++itContactList)
-		(*itContactList)->SetIpVerified(true);
+	for (ContactList::const_iterator itContact = m_listEntries.begin(); itContact != m_listEntries.end(); ++itContact)
+		(*itContact)->SetIpVerified(true);
 }
 
 bool CRoutingBin::CheckGlobalIPLimits(uint32 uIP, uint16 uPort, bool bLog)
@@ -408,8 +402,8 @@ bool CRoutingBin::CheckGlobalIPLimits(uint32 uIP, uint16 uPort, bool bLog)
 
 bool CRoutingBin::HasOnlyLANNodes() const
 {
-	for (ContactList::const_iterator itContactList = m_listEntries.begin(); itContactList != m_listEntries.end(); ++itContactList)
-		if (!IsLANIP((*itContactList)->GetNetIP()))
+	for (ContactList::const_iterator itContact = m_listEntries.begin(); itContact != m_listEntries.end(); ++itContact)
+		if (!IsLANIP((*itContact)->GetNetIP()))
 			return false;
 
 	return true;

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -16,14 +16,13 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
 #include "emule.h"
-#include "FriendListCtrl.h"
-#include "friend.h"
 #include "ClientDetailDialog.h"
-#include "Addfriend.h"
-#include "FriendList.h"
 #include "emuledlg.h"
 #include "ClientList.h"
 #include "OtherFunctions.h"
+#include "Addfriend.h"
+#include "FriendList.h"
+#include "FriendListCtrl.h"
 #include "UpDownClient.h"
 #include "ListenSocket.h"
 #include "MenuCmds.h"
@@ -59,7 +58,7 @@ void CFriendListCtrl::Init()
 
 	CRect rcWindow;
 	GetWindowRect(rcWindow);
-	InsertColumn(0, GetResString(IDS_QL_USERNAME), LVCFMT_LEFT, rcWindow.Width() - 4);
+	InsertColumn(0, _T(""), LVCFMT_LEFT, rcWindow.Width() - 4);	//IDS_QL_USERNAME
 
 	SetAllIcons();
 	theApp.friendlist->SetWindow(this);
@@ -88,12 +87,11 @@ void CFriendListCtrl::SetAllIcons()
 
 void CFriendListCtrl::Localize()
 {
-	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
-	CString strRes(GetResString(IDS_QL_USERNAME));
-	HDITEM hdi;
-	hdi.mask = HDI_TEXT;
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-	pHeaderCtrl->SetItem(0, &hdi);
+	static const UINT uids[1] =
+	{
+		IDS_QL_USERNAME
+	};
+	LocaliseHeaderCtrl(uids, _countof(uids));
 
 	for (int i = GetItemCount(); --i >= 0;)
 		UpdateFriend(i, reinterpret_cast<CFriend*>(GetItemData(i)));
@@ -228,7 +226,7 @@ BOOL CFriendListCtrl::OnCommand(WPARAM wParam, LPARAM)
 	case MP_FIND:
 		OnFindStart();
 	}
-	return true;
+	return TRUE;
 }
 
 void CFriendListCtrl::OnNmDblClk(LPNMHDR, LRESULT *pResult)
@@ -265,20 +263,16 @@ BOOL CFriendListCtrl::PreTranslateMessage(MSG *pMsg)
 
 void CFriendListCtrl::OnLvnColumnClick(LPNMHDR pNMHDR, LRESULT *pResult)
 {
-	NMLISTVIEW *pNMListView = reinterpret_cast<NMLISTVIEW*>(pNMHDR);
-
+	const LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	// Determine ascending based on whether already sorted on this column
-	int iSortItem = GetSortItem();
-	bool bOldSortAscending = GetSortAscending();
-	bool bSortAscending = (iSortItem != pNMListView->iSubItem) ? true : !bOldSortAscending;
+	bool bSortAscending = (GetSortItem() != pNMLV->iSubItem || !GetSortAscending());
 
 	// Item is column clicked
-	iSortItem = pNMListView->iSubItem;
+	int iSortItem = pNMLV->iSubItem;
 
 	// Sort table
 	SetSortArrow(iSortItem, bSortAscending);
-	SortItems(SortProc, MAKELONG(iSortItem, (bSortAscending ? 0 : 0x0001)));
-
+	SortItems(SortProc, MAKELONG(iSortItem, !bSortAscending));
 	*pResult = 0;
 }
 
@@ -291,7 +285,7 @@ int CALLBACK CFriendListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 
 	int iResult;
 	switch (LOWORD(lParamSort)) {
-	case 0:
+	case 0: //friend's name
 		iResult = CompareLocaleStringNoCase(item1->m_strName, item2->m_strName);
 		break;
 	default:
@@ -303,5 +297,5 @@ int CALLBACK CFriendListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 void CFriendListCtrl::UpdateList()
 {
 	theApp.emuledlg->chatwnd->UpdateFriendlistCount(theApp.friendlist->GetCount());
-	SortItems(SortProc, MAKELONG(GetSortItem(), static_cast<int>(!GetSortAscending())));
+	SortItems(SortProc, MAKELONG(GetSortItem(), !GetSortAscending()));
 }

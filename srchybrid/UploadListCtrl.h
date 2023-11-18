@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -17,17 +17,17 @@
 #pragma once
 #include "MuleListCtrl.h"
 #include "ListCtrlItemWalk.h"
+#include "ToolTipCtrlX.h"
 
 class CUpDownClient;
-class CToolTipCtrlX;
 
 class CUploadListCtrl : public CMuleListCtrl, public CListCtrlItemWalk
 {
 	DECLARE_DYNAMIC(CUploadListCtrl)
 
+	CImageList	*m_pImageList;
 public:
 	CUploadListCtrl();
-	virtual	~CUploadListCtrl();
 	CUploadListCtrl(const CUploadListCtrl&) = delete;
 	CUploadListCtrl& operator=(const CUploadListCtrl&) = delete;
 
@@ -41,8 +41,7 @@ public:
 	void	ShowSelectedUserDetails();
 
 protected:
-	CImageList *m_pImageList;
-	CToolTipCtrlX *m_tooltip;
+	CToolTipCtrlX m_tooltip;
 
 	void SetAllIcons();
 	CString GetItemDisplayText(const CUpDownClient *client, int iSubItem) const;

@@ -4,12 +4,12 @@
 //  Supports WinXP styles (thanks to David Yuheng Zhao for CVisualStylesXP - yuheng_zhao@yahoo.com)
 // ------------------------------------------------------------
 //  DialogMinTrayBtn.h
-//  zegzav - 2002,2003 - eMule project (http://www.emule-project.net)
+//  zegzav - 2002,2003 - eMule project (https://www.emule-project.net)
 // ------------------------------------------------------------
 #pragma once
 #define HTMINTRAYBUTTON	65
 
-template <class BASE= CDialog> class CDialogMinTrayBtn : public BASE
+template <class BASE = CDialog> class CDialogMinTrayBtn : public BASE
 {
 public:
 	// constructor

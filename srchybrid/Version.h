@@ -19,19 +19,20 @@
 //	<major>.<minor>.<update>.<build>
 //
 // Fields:
-//	<major>		major number (e.g. 0)
-//	<minor>		minor number (e.g. 30)
+//	<major>		major number  (e.g. 0)
+//	<minor>		minor number  (e.g. 30)
 //	<update>	update number (e.g. 0='a'  1='b'  2='c'  3='d'  4='e'  5='f' ...)
-//	<build>		build number; currently not used
+//	<build>		build number  (1 or higher)
 //
 // Currently used:
 //  <major>.<minor>.<update> is used for the displayed version (GUI) and the version check number
 //	<major>.<minor>			 is used for the protocol(!) version
-//
+//  -------
+//  <build>                  not used for any checks in the program
 #define VERSION_MJR	0
-#define VERSION_MIN	60
-#define VERSION_UPDATE	3
-#define VERSION_BUILD	1
+#define VERSION_MIN	70
+#define VERSION_UPDATE	0
+#define VERSION_BUILD	9
 #ifdef _M_X64
 #define VERSION_X64 _T(" x64")
 #else

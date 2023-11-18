@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2005 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -114,7 +114,6 @@ BOOL CSharedFilesWnd::OnInitDialog()
 
 	AddAnchor(m_ctlSharedDirTree, TOP_LEFT, BOTTOM_LEFT);
 	AddAnchor(IDC_RELOADSHAREDFILES, TOP_RIGHT);
-
 	AddAllOtherAnchors();
 
 	int iPosStatInit = rcSpl.left;
@@ -125,10 +124,8 @@ BOOL CSharedFilesWnd::OnInitDialog()
 		iPosStatNew = SPLITTER_RANGE_MIN;
 	rcSpl.left = iPosStatNew;
 	rcSpl.right = iPosStatNew + SPLITTER_WIDTH;
-	if (iPosStatNew != iPosStatInit) {
-		m_wndSplitter.MoveWindow(&rcSpl);
-		DoResize(iPosStatNew - iPosStatInit);
-	}
+	m_wndSplitter.MoveWindow(&rcSpl);
+	DoResize(iPosStatNew - iPosStatInit);
 
 	GetDlgItem(IDC_SF_HIDESHOWDETAILS)->SetFont(&theApp.m_fontSymbol);
 	GetDlgItem(IDC_SF_HIDESHOWDETAILS)->BringWindowToTop();
@@ -157,17 +154,29 @@ void CSharedFilesWnd::DoResize(int iDelta)
 	ScreenToClient(&rcSpl);
 	thePrefs.SetSplitterbarPositionShared(rcSpl.left);
 
-	RemoveAnchor(m_wndSplitter);
-	AddAnchor(m_wndSplitter, TOP_LEFT);
-	RemoveAnchor(sharedfilesctrl);
-	RemoveAnchor(m_ctlSharedDirTree);
 	RemoveAnchor(m_ctlFilter);
+	RemoveAnchor(m_wndSplitter);
+	RemoveAnchor(m_ctlSharedDirTree);
+	RemoveAnchor(sharedfilesctrl);
 	RemoveAnchor(m_dlgDetails);
+	RemoveAnchor(IDC_SF_FICON);
+	RemoveAnchor(IDC_SF_FNAME);
 
-	AddAnchor(sharedfilesctrl, TOP_LEFT, BOTTOM_RIGHT);
-	AddAnchor(m_ctlSharedDirTree, TOP_LEFT, BOTTOM_LEFT);
+	GetDlgItem(IDC_SF_FICON)->SetWindowPos(NULL, rcSpl.right + 6, rcSpl.bottom - 18, 0, 0, SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOACTIVATE);
+	CWnd *wname = GetDlgItem(IDC_SF_FNAME);
+	RECT rcfname;
+	wname->GetWindowRect(&rcfname);
+	ScreenToClient(&rcfname);
+	rcfname.left += iDelta;
+	wname->MoveWindow(&rcfname);
+
 	AddAnchor(m_ctlFilter, TOP_LEFT);
+	AddAnchor(m_ctlSharedDirTree, TOP_LEFT, BOTTOM_LEFT);
+	AddAnchor(m_wndSplitter, TOP_LEFT, BOTTOM_LEFT);
+	AddAnchor(sharedfilesctrl, TOP_LEFT, BOTTOM_RIGHT);
 	AddAnchor(m_dlgDetails, BOTTOM_LEFT, BOTTOM_RIGHT);
+	AddAnchor(IDC_SF_FICON, BOTTOM_LEFT);
+	AddAnchor(IDC_SF_FNAME, BOTTOM_LEFT, BOTTOM_RIGHT);
 
 	RECT rcWnd;
 	GetWindowRect(&rcWnd);
@@ -177,7 +186,6 @@ void CSharedFilesWnd::DoResize(int iDelta)
 	Invalidate();
 	UpdateWindow();
 }
-
 
 void CSharedFilesWnd::Reload(bool bForceTreeReload)
 {
@@ -242,7 +250,7 @@ BOOL CSharedFilesWnd::PreTranslateMessage(MSG *pMsg)
 				return FALSE;
 			sharedfilesctrl.ScreenToClient(&point);
 			int it = sharedfilesctrl.HitTest(point);
-			if (it == -1)
+			if (it < 0)
 				return FALSE;
 
 			sharedfilesctrl.SetItemState(-1, 0, LVIS_SELECTED);
@@ -333,7 +341,7 @@ LRESULT CSharedFilesWnd::OnChangeFilter(WPARAM wParam, LPARAM lParam)
 	m_nFilterColumn = (uint32)wParam;
 
 	CStringArray astrFilter;
-	CString strFullFilterExpr((LPCTSTR)lParam);
+	const CString &strFullFilterExpr((LPCTSTR)lParam);
 	for (int iPos = 0; iPos >= 0;) {
 		const CString &strFilter(strFullFilterExpr.Tokenize(_T(" "), iPos));
 		if (!strFilter.IsEmpty() && strFilter != _T("-"))
@@ -392,6 +400,19 @@ void CSharedFilesWnd::ShowSelectedFilesDetails(bool bForce)
 				}
 			}
 		}
+	} else if (GetDlgItem(IDC_SF_FNAME)->IsWindowVisible()) {
+		CShareableFile *pFile = NULL;
+		if (sharedfilesctrl.GetSelectedCount() == 1) {
+			POSITION pos = sharedfilesctrl.GetFirstSelectedItemPosition();
+			if (pos) {
+				int index = sharedfilesctrl.GetNextSelectedItem(pos);
+				if (index >= 0)
+					pFile = reinterpret_cast<CShareableFile*>(sharedfilesctrl.GetItemData(index));
+			}
+		}
+		static_cast<CStatic*>(GetDlgItem(IDC_SF_FICON))->SetIcon(pFile ? icon_files : NULL);
+		const CString &sName(pFile ? pFile->GetFileName() : _T(""));
+		SetDlgItemText(IDC_SF_FNAME, sName);
 	}
 	if (bForce || nItems != (UINT)selectedList.GetCount())
 		m_dlgDetails.SetFiles(selectedList);
@@ -404,36 +425,40 @@ void CSharedFilesWnd::ShowDetailsPanel(bool bShow)
 	RemoveAnchor(sharedfilesctrl);
 	RemoveAnchor(IDC_SF_HIDESHOWDETAILS);
 
-	RECT rcSpl;
-	CRect rcFiles, rcDetailDlg, rcButton;
-
+	CRect rcFiles;
 	sharedfilesctrl.GetWindowRect(rcFiles);
 	ScreenToClient(rcFiles);
 
+	CRect rcDetailDlg;
 	m_dlgDetails.GetWindowRect(rcDetailDlg);
 
 	CWnd &button = *GetDlgItem(IDC_SF_HIDESHOWDETAILS);
+	CRect rcButton;
 	button.GetWindowRect(rcButton);
 
-	m_ctlSharedDirTree.GetWindowRect(&rcSpl);
+	RECT rcSpl;
+	m_wndSplitter.GetWindowRect(&rcSpl);
 	ScreenToClient(&rcSpl);
 
-	button.GetWindowRect(rcButton);
 	if (bShow) {
 		sharedfilesctrl.SetWindowPos(NULL, 0, 0, rcFiles.Width(), rcSpl.bottom - rcFiles.top - rcDetailDlg.Height() - 2, SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOACTIVATE);
 		m_dlgDetails.ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_SF_FICON)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SF_FNAME)->ShowWindow(SW_HIDE);
 		button.SetWindowPos(NULL, rcFiles.right - rcButton.Width() + 1, rcSpl.bottom - rcDetailDlg.Height() + 2, 0, 0, SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOACTIVATE);
 		button.SetWindowText(_T("6"));
 	} else {
 		m_dlgDetails.ShowWindow(SW_HIDE);
 		sharedfilesctrl.SetWindowPos(NULL, 0, 0, rcFiles.Width(), rcSpl.bottom - rcFiles.top - rcButton.Height() + 1, SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOACTIVATE);
+		GetDlgItem(IDC_SF_FICON)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_SF_FNAME)->ShowWindow(SW_SHOW);
 		button.SetWindowPos(NULL, rcFiles.right - rcButton.Width() + 1, rcSpl.bottom - rcButton.Height() + 1, 0, 0, SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOACTIVATE);
 		button.SetWindowText(_T("5"));
 	}
 
-	sharedfilesctrl.SetFocus();
 	AddAnchor(sharedfilesctrl, TOP_LEFT, BOTTOM_RIGHT);
 	AddAnchor(IDC_SF_HIDESHOWDETAILS, BOTTOM_RIGHT);
+	sharedfilesctrl.SetFocus();
 	ShowSelectedFilesDetails();
 }
 

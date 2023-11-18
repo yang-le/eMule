@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -261,15 +261,15 @@ void CRichEditCtrlX::UpdateSyntaxColoring()
 	LPTSTR pszStart = const_cast<LPTSTR>((LPCTSTR)strText);
 	LPCTSTR psz = pszStart;
 	while (*psz != _T('\0')) {
-		if (*psz == _T('\"')) {
-			LPCTSTR pszEnd = _tcschr(psz + 1, _T('\"'));
+		if (*psz == _T('"')) {
+			LPCTSTR pszEnd = _tcschr(psz + 1, _T('"'));
 			if (!pszEnd)
 				break;
 			psz = pszEnd + 1;
 		} else {
 			bool bFoundKeyword = false;
 			for (int k = 0; k < m_astrKeywords.GetCount(); ++k) {
-				const CString &rstrKeyword = m_astrKeywords[k];
+				const CString &rstrKeyword(m_astrKeywords[k]);
 				int iKwLen = rstrKeyword.GetLength();
 				if (_tcsncmp(psz, rstrKeyword, iKwLen) == 0 && (psz[iKwLen] == _T('\0') || _tcschr(m_strSeparators, psz[iKwLen]) != NULL)) {
 					long iStart = (long)(psz - pszStart);

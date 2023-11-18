@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -16,11 +16,10 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
 #include "emule.h"
-#include "AddFriend.h"
-#include "Friend.h"
 #include "otherfunctions.h"
-#include "FriendList.h"
 #include "Preferences.h"
+#include "AddFriend.h"
+#include "FriendList.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -114,14 +113,14 @@ void CAddFriend::OnAddBtn()
 		CString strBuff;
 		uint32 ip;
 		GetDlgItemText(IDC_IP, strBuff);
-		UINT u1, u2, u3, u4, uPort = 0;
+		UINT u1, u2, u3, u4, uPort;
 		if (_stscanf(strBuff, _T("%u.%u.%u.%u:%u"), &u1, &u2, &u3, &u4, &uPort) != 5 || u1 > 255 || u2 > 255 || u3 > 255 || u4 > 255 || uPort > 65535) {
-			uPort = 0;
 			if (_stscanf(strBuff, _T("%u.%u.%u.%u"), &u1, &u2, &u3, &u4) != 4 || u1 > 255 || u2 > 255 || u3 > 255 || u4 > 255) {
 				LocMessageBox(IDS_ERR_NOVALIDFRIENDINFO, MB_OK, 0);
 				GetDlgItem(IDC_IP)->SetFocus();
 				return;
 			}
+			uPort = 0;
 		}
 		in_addr iaFriend;
 		iaFriend.S_un.S_un_b.s_b1 = (UCHAR)u1;
@@ -141,7 +140,8 @@ void CAddFriend::OnAddBtn()
 
 		CString strUserName;
 		GetDlgItemText(IDC_USERNAME, strUserName);
-		strUserName = strUserName.Trim().Left(thePrefs.GetMaxUserNickLength());
+		if (strUserName.Trim().GetLength() > thePrefs.GetMaxUserNickLength())
+			strUserName.Truncate(thePrefs.GetMaxUserNickLength());
 
 		// why did we offer an edit control for entering the userhash but did not store it?
 		;

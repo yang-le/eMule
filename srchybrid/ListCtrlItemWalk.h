@@ -11,6 +11,6 @@ public:
 	CListCtrl* GetListCtrl() const						{ return m_pListCtrl; }
 
 protected:
-	virtual	~CListCtrlItemWalk() = default; //just in case...
+	virtual	~CListCtrlItemWalk() = default;
 	CListCtrl *m_pListCtrl;
 };

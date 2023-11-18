@@ -1,5 +1,5 @@
 /*
-Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
+Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -23,7 +23,7 @@ There is going to be a new forum created just for the Kademlia side of the clien
 If you feel there is an error or a way to improve something, please
 post it in the forum first and let us look at it. If it is a real improvement,
 it will be added to the official client. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form.
+what all it does, can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 their client on the eMule forum.
 */
@@ -116,62 +116,54 @@ bool CSearchManager::StartSearch(CSearch *pSearch)
 CSearch* CSearchManager::PrepareFindKeywords(LPCWSTR szKeyword, UINT uSearchTermsSize, LPBYTE pucSearchTermsData)
 {
 	// Create a keyword search object.
+	CString strError;
 	CSearch *pSearch = new CSearch;
 	try {
 		// Set search to a keyword type.
 		pSearch->SetSearchType(CSearch::KEYWORD);
 
 		// Make sure we have a keyword list.
-		GetWords(szKeyword, &pSearch->m_listWords);
-		if (pSearch->m_listWords.empty()) {
-			delete pSearch;
-			throw GetResString(IDS_KAD_SEARCH_KEYWORD_TOO_SHORT);
+		GetWords(szKeyword, pSearch->m_listWords);
+		if (pSearch->m_listWords.empty())
+			strError = GetResString(IDS_KAD_SEARCH_KEYWORD_TOO_SHORT);
+		else {
+			// Get the targetID based on the primary keyword.
+			CKadTagValueString wstrKeyword = pSearch->m_listWords.front();
+			KadGetKeywordHash(wstrKeyword, &pSearch->m_uTarget);
+
+			// Verify that we are not already searching for this target.
+			if (AlreadySearchingFor(pSearch->m_uTarget))
+				strError.Format(GetResString(IDS_KAD_SEARCH_KEYWORD_ALREADY_SEARCHING), (LPCTSTR)wstrKeyword);
+			else {
+				pSearch->SetSearchTermData(uSearchTermsSize, pucSearchTermsData);
+				pSearch->SetGUIName(szKeyword);
+				// Inc our searchID
+				pSearch->m_uSearchID = ++m_uNextID;
+				// Insert search into map.
+				m_mapSearches[pSearch->m_uTarget] = pSearch;
+				// Start search.
+				pSearch->Go();
+				return pSearch;
+			}
 		}
-
-		// Get the targetID based on the primary keyword.
-		CKadTagValueString wstrKeyword = pSearch->m_listWords.front();
-		KadGetKeywordHash(wstrKeyword, &pSearch->m_uTarget);
-
-		// Verify that we are not already searching for this target.
-		if (AlreadySearchingFor(pSearch->m_uTarget)) {
-			delete pSearch;
-			CString strError;
-			strError.Format(GetResString(IDS_KAD_SEARCH_KEYWORD_ALREADY_SEARCHING), (LPCTSTR)wstrKeyword);
-			throw strError;
-		}
-
-		pSearch->SetSearchTermData(uSearchTermsSize, pucSearchTermsData);
-		pSearch->SetGUIName(szKeyword);
-		// Inc our searchID
-		pSearch->m_uSearchID = ++m_uNextID;
-		// Insert search into map.
-		m_mapSearches[pSearch->m_uTarget] = pSearch;
-		// Start search.
-		pSearch->Go();
 	} catch (CIOException *ioe) {
-		CString strError;
 		strError.Format(_T("IO-Exception in %hs: Error %i"), __FUNCTION__, ioe->m_iCause);
 		ioe->Delete();
-		delete pSearch;
-		throw strError;
 	} catch (CFileException *e) {
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
 		e->m_strFileName = _T("search packet");
 		GetExceptionMessage(*e, szError, _countof(szError));
-		CString strError;
 		strError.Format(_T("Exception in %hs: %s"), __FUNCTION__, szError);
 		e->Delete();
-		delete pSearch;
-		throw strError;
 	} catch (const CString&) {
+		delete pSearch;
 		throw;
 	} catch (...) {
-		CString strError;
 		strError.Format(_T("Unknown exception in %hs"), __FUNCTION__);
-		delete pSearch;
-		throw strError;
 	}
-	return pSearch;
+	delete pSearch;
+	throw strError;
+	//return NULL;
 }
 
 CSearch* CSearchManager::PrepareLookup(uint32 uType, bool bStart, const CUInt128 &uID)
@@ -205,17 +197,15 @@ CSearch* CSearchManager::PrepareLookup(uint32 uType, bool bStart, const CUInt128
 			m_mapSearches[pSearch->m_uTarget] = pSearch;
 			pSearch->Go();
 		}
+		return pSearch;
 	} catch (CIOException *ioe) {
 		AddDebugLogLine(false, _T("Exception in CSearchManager::PrepareLookup (IO error(%i))"), ioe->m_iCause);
 		ioe->Delete();
-		delete pSearch;
-		return NULL;
 	} catch (...) {
 		AddDebugLogLine(false, _T("Exception in CSearchManager::PrepareLookup"));
-		delete pSearch;
-		return NULL;
 	}
-	return pSearch;
+	delete pSearch;
+	return NULL;
 }
 
 void CSearchManager::FindNode(const CUInt128 &uID, bool bComplete)
@@ -242,7 +232,7 @@ bool CSearchManager::IsFWCheckUDPSearch(const CUInt128 &uTarget)
 	return itSearchMap->second->GetSearchType() == CSearch::NODEFWCHECKUDP;
 }
 
-void CSearchManager::GetWords(LPCWSTR sz, WordList *plistWords)
+void CSearchManager::GetWords(LPCWSTR sz, WordList &rlistWords)
 {
 	size_t uChars = 0;
 	size_t uBytes = 0;
@@ -259,16 +249,16 @@ void CSearchManager::GetWords(LPCWSTR sz, WordList *plistWords)
 		uBytes = KadGetKeywordBytes(sWord).GetLength();
 		if (uBytes >= 3) {
 			KadTagStrMakeLower(sWord);
-			plistWords->remove(sWord);
-			plistWords->push_back(sWord);
+			rlistWords.remove(sWord);
+			rlistWords.push_back(sWord);
 		}
 		szS += uChars;
 		szS += static_cast<int>(uChars < wcslen(szS));
 	}
 
 	// if the last word we have added, contains 3 chars (and 3 bytes), in almost all cases it's a file's extension.
-	if (plistWords->size() > 1 && (uChars == 3 && uBytes == 3))
-		plistWords->pop_back();
+	if (rlistWords.size() > 1 && (uChars == 3 && uBytes == 3))
+		rlistWords.pop_back();
 }
 
 void CSearchManager::JumpStart()
@@ -328,7 +318,6 @@ void CSearchManager::JumpStart()
 				CKademlia::GetPrefs()->SetPublish(true);
 			}
 			break;
-
 		case CSearch::STOREFILE:
 			if (tNow >= pSearch->m_tCreated + SEARCHSTOREFILE_LIFETIME)
 				bDel = true;
@@ -425,22 +414,21 @@ void CSearchManager::ProcessPublishResult(const CUInt128 &uTarget, const uint8 u
 	}
 
 	// Inc the number of answers.
-	pSearch->m_uAnswers++;
+	++pSearch->m_uAnswers;
 	// Update the search for the GUI
 	theApp.emuledlg->kademliawnd->searchList->SearchRef(pSearch);
 }
 
-void CSearchManager::ProcessResponse(const CUInt128 &uTarget, uint32 uFromIP, uint16 uFromPort, ContactList *plistResults)
+void CSearchManager::ProcessResponse(const CUInt128 &uTarget, uint32 uFromIP, uint16 uFromPort, ContactArray &rlistResults)
 {
 	// We got a response to a kad lookup.
 	SearchMap::const_iterator itSearchMap = m_mapSearches.find(uTarget);
 	if (itSearchMap != m_mapSearches.end() && itSearchMap->second != NULL)
-		itSearchMap->second->ProcessResponse(uFromIP, uFromPort, plistResults);
+		itSearchMap->second->ProcessResponse(uFromIP, uFromPort, rlistResults);
 	else {
 		// This search was deleted before this response, delete contacts and abort
-		for (ContactList::const_iterator itContactList = plistResults->begin(); itContactList != plistResults->end(); ++itContactList)
-			delete *itContactList;
-		delete plistResults;
+		for (ContactArray::const_iterator itContact = rlistResults.begin(); itContact != rlistResults.end(); ++itContact)
+			delete *itContact;
 	}
 }
 
@@ -451,25 +439,21 @@ uint8 CSearchManager::GetExpectedResponseContactCount(const CUInt128 &uTarget)
 	return (itSearchMap == m_mapSearches.end()) ? 0 : itSearchMap->second->GetRequestContactCount();
 }
 
-void CSearchManager::ProcessResult(const CUInt128 &uTarget, const CUInt128 &uAnswer, TagList *plistInfo, uint32 uFromIP, uint16 uFromPort)
+void CSearchManager::ProcessResult(const CUInt128 &uTarget, const CUInt128 &uAnswer, TagList &rlistInfo, uint32 uFromIP, uint16 uFromPort)
 {
 	// We have results for a request for info.
 	SearchMap::const_iterator itSearchMap = m_mapSearches.find(uTarget);
 	if (itSearchMap != m_mapSearches.end() && itSearchMap->second != NULL)
-		itSearchMap->second->ProcessResult(uAnswer, plistInfo, uFromIP, uFromPort);
-	else {
-		// This search was deleted before these results, delete contacts and abort
-		for (TagList::const_iterator itTagList = plistInfo->begin(); itTagList != plistInfo->end(); ++itTagList)
-			delete *itTagList;
-		delete plistInfo;
-	}
+		itSearchMap->second->ProcessResult(uAnswer, rlistInfo, uFromIP, uFromPort);
+	else // This search was deleted before these results; delete contacts and abort
+		deleteTagListEntries(rlistInfo);
 }
 
 bool CSearchManager::FindNodeSpecial(const CUInt128 &uID, CKadClientSearcher *pRequester)
 {
 	// Do a node lookup.
 	CString strDbgID;
-	uID.ToHexString(&strDbgID);
+	uID.ToHexString(strDbgID);
 	DebugLog(_T("Starting NODESPECIAL Kad Search for %s"), (LPCTSTR)strDbgID);
 	CSearch *pSearch = new CSearch;
 	pSearch->SetSearchType(CSearch::NODESPECIAL);
@@ -490,14 +474,14 @@ bool CSearchManager::FindNodeFWCheckUDP()
 	return StartSearch(pSearch);
 }
 
-void CSearchManager::CancelNodeSpecial(CKadClientSearcher *pRequester)
+void CSearchManager::CancelNodeSpecial(const CKadClientSearcher *pRequester)
 {
 	// Stop a specific nodespecial search
 	for (SearchMap::const_iterator itSearchMap = m_mapSearches.begin(); itSearchMap != m_mapSearches.end(); ++itSearchMap) {
-		CSearch *pSearch = itSearchMap->second;
-		if (pSearch->GetNodeSpecialSearchRequester() == pRequester) {
-			pSearch->SetNodeSpecialSearchRequester(NULL);
-			pSearch->PrepareToStop();
+		CSearch &Search = *itSearchMap->second;
+		if (Search.GetNodeSpecialSearchRequester() == pRequester) {
+			Search.SetNodeSpecialSearchRequester(NULL);
+			Search.PrepareToStop();
 			return;
 		}
 	}

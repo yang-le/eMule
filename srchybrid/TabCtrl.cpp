@@ -101,7 +101,7 @@ void TabControl::OnLButtonUp(UINT nFlags, CPoint point)
 		// Stop the dragging process and release the mouse capture
 		// This will eventually call our OnCaptureChanged which stops the dragging
 		if (GetCapture() == this)
-			ReleaseCapture();
+			::ReleaseCapture();
 
 		// Modify the tab control style so that Hot Tracking is re-enabled
 		if (m_bHotTracking)
@@ -110,7 +110,7 @@ void TabControl::OnLButtonUp(UINT nFlags, CPoint point)
 		if (m_nSrcTab == m_nDstTab)
 			return;
 
-		// Inform Parent about Dragrequest
+		// Inform Parent about Drag request
 		NMHDR nmh;
 		nmh.code = UM_TABMOVED;
 		nmh.hwndFrom = GetSafeHwnd();
@@ -205,10 +205,11 @@ void TabControl::OnCaptureChanged(CWnd*)
 // @mfunc Utility member function to draw the (drop) indicator of where the
 //        tab will be inserted.
 //
-bool TabControl::DrawIndicator(CPoint point		// @parm Specifies a position (e.g. the mouse pointer position) which
-												//  will be used to determine whether the indicator should be
-												//   painted to the left or right of the indicator.
-)
+// @parm  Specifies a position (e.g. the mouse pointer position) which
+//        will be used to determine whether the indicator should be
+//        painted to the left or right of the indicator.
+//
+bool TabControl::DrawIndicator(CPoint point)
 {
 	TCHITTESTINFO hitinfo;
 	hitinfo.pt = point;
@@ -286,6 +287,7 @@ BOOL TabControl::ReorderTab(unsigned int nSrcTab, unsigned int nDstTab)
 	item.mask = TCIF_IMAGE | TCIF_PARAM | TCIF_TEXT; //| TCIF_STATE;
 	item.pszText = sBuffer;
 	item.cchTextMax = _countof(sBuffer);
+
 	BOOL bOK = GetItem(nSrcTab, &item);
 	sBuffer[_countof(sBuffer) - 1] = _T('\0');
 	ASSERT(bOK);
@@ -331,7 +333,7 @@ BOOL TabControl::DragDetectPlus(CWnd *Handle, CPoint p)
 	Handle->SetCapture();
 	while (!bResult && bDispatch) {
 		MSG Msg;
-		if (PeekMessage(&Msg, *Handle, 0, 0, PM_REMOVE)) {
+		if (::PeekMessage(&Msg, *Handle, 0, 0, PM_REMOVE))
 			switch (Msg.message) {
 			case WM_MOUSEMOVE:
 				bResult = !DragRect.PtInRect(Msg.pt);
@@ -342,16 +344,16 @@ BOOL TabControl::DragDetectPlus(CWnd *Handle, CPoint p)
 				bDispatch = FALSE;
 				break;
 			case WM_QUIT:
-				ReleaseCapture();
+				::ReleaseCapture();
 				return FALSE;
 			default:
-				TranslateMessage(&Msg);
-				DispatchMessage(&Msg);
+				::TranslateMessage(&Msg);
+				::DispatchMessage(&Msg);
 			}
-		} else
+		else
 			::Sleep(0);
 	}
-	ReleaseCapture();
+	::ReleaseCapture();
 	return bResult;
 }
 

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -56,7 +56,6 @@ int CAICHSyncThread::Run()
 	const CString &fullpath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + KNOWN2_MET_FILENAME);
 
 	CSafeFile file;
-	uint32 nLastVerifiedPos = 0;
 
 	// we need to keep a lock on this file while the thread is running
 	CSingleLock lockKnown2Met(&CAICHRecoveryHashSet::m_mutKnown2File, TRUE);
@@ -73,17 +72,18 @@ int CAICHSyncThread::Run()
 		}
 		return 0;
 	}
+	uint32 nLastVerifiedPos = 0;
 	try {
 		if (file.GetLength() >= 1) {
 			uint8 header = file.ReadUInt8();
 			if (header != KNOWN2_MET_VERSION)
 				AfxThrowFileException(CFileException::endOfFile, 0, file.GetFileName());
 
-			//setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
+			//::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 			ULONGLONG nExistingSize = file.GetLength();
 			while (file.GetPosition() < nExistingSize) {
 				aKnown2HashesFilePos.Add(file.GetPosition());
-				aKnown2Hashes.Add(CAICHHash(&file));
+				aKnown2Hashes.Add(CAICHHash(file));
 				uint32 nHashCount = file.ReadUInt32();
 				if (file.GetPosition() + nHashCount * (ULONGLONG)CAICHHash::GetHashSize() > nExistingSize)
 					AfxThrowFileException(CFileException::endOfFile, 0, file.GetFileName());
@@ -116,12 +116,12 @@ int CAICHSyncThread::Run()
 		return 0;
 	}
 
-	// now we check that all files which are in the shared file list have a corresponding hash in out list
+	// now we check that all files which are in the shared file list have a corresponding hash in the out list
 	// those who don't are added to the hashing list
 	CList<CAICHHash> liUsedHashes;
-	CSingleLock sharelock(&theApp.sharedfiles->m_mutWriteList, TRUE);
-
 	bool bDbgMsgCreatingPartHashes = true;
+
+	CSingleLock sharelock(&theApp.sharedfiles->m_mutWriteList, TRUE);
 	for (POSITION pos = BEFORE_START_POSITION; pos != NULL;) {
 		if (theApp.IsClosing()) // in case of shutdown while still hashing
 			return 0;
@@ -184,10 +184,10 @@ int CAICHSyncThread::Run()
 			uint32 nPurgeBecauseOld = 0;
 			uint32 nPurgeDups = 0;
 			static const CAICHHash empty; //zero AICH hash
-			while (file.GetPosition() < nExistingSize) {
-				ULONGLONG nCurrentHashsetPos = file.GetPosition();
+			ULONGLONG nCurrentHashsetPos;
+			while ((nCurrentHashsetPos = file.GetPosition()) < nExistingSize) {
 				ULONGLONG posTmp = 0; //position of an old duplicate hash
-				CAICHHash aichHash(&file);
+				CAICHHash aichHash(file);
 				uint32 nHashCount = file.ReadUInt32();
 				if (file.GetPosition() + nHashCount * (ULONGLONG)CAICHHash::GetHashSize() > nExistingSize)
 					AfxThrowFileException(CFileException::endOfFile, 0, file.GetFileName());
@@ -251,12 +251,12 @@ int CAICHSyncThread::Run()
 		}
 	} else {
 		// remember (/index) all hashes which are stored in the file for faster checking later on
-		for (INT_PTR i = 0; !theApp.IsClosing() && i < aKnown2Hashes.GetCount(); ++i)
+		for (INT_PTR i = 0; i < aKnown2Hashes.GetCount() && !theApp.IsClosing(); ++i)
 			CAICHRecoveryHashSet::AddStoredAICHHash(aKnown2Hashes[i], aKnown2HashesFilePos[i]);
 	}
 
 #ifdef _DEBUG
-	for (POSITION pos = liUsedHashes.GetHeadPosition(); !theApp.IsClosing() && pos != NULL;) {
+	for (POSITION pos = liUsedHashes.GetHeadPosition(); pos != NULL && !theApp.IsClosing();) {
 		CKnownFile *pFile = theApp.sharedfiles->GetFileByAICH(liUsedHashes.GetNext(pos));
 		if (pFile == NULL) {
 			ASSERT(0);
@@ -278,7 +278,7 @@ int CAICHSyncThread::Run()
 	if (!m_liToHash.IsEmpty()) {
 		theApp.QueueLogLine(true, GetResString(IDS_AICH_SYNCTOTAL), m_liToHash.GetCount());
 		theApp.emuledlg->sharedfileswnd->sharedfilesctrl.SetAICHHashing(m_liToHash.GetCount());
-		// let first all normal hashing be done before starting out sync hashing
+		// first let all normal hashing be done before starting out sync hashing
 		CSingleLock sLock1(&theApp.hashing_mut); // only one file hash at a time
 		while (theApp.sharedfiles->GetHashingCount() != 0) {
 			if (theApp.IsClosing())
@@ -319,11 +319,12 @@ bool CAICHSyncThread::ConvertToKnown2ToKnown264(CSafeFile *pTargetFile)
 	// changing hashcount from uint16 to uint32
 
 	// there still exists a lock on known2_64.met and it should be not opened at this point
-	CString oldfullpath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + OLD_KNOWN2_MET_FILENAME);
-	CString newfullpath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + KNOWN2_MET_FILENAME);
+	const CString &sConfDir(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+	const CString &oldfullpath(sConfDir + OLD_KNOWN2_MET_FILENAME);
+	const CString &newfullpath(sConfDir + KNOWN2_MET_FILENAME);
 
-	if (PathFileExists(newfullpath) || !PathFileExists(oldfullpath))
-		// only continue if the old file does and the new file does not exists
+	// continue only if the old file does exist, and the new file does not
+	if (::PathFileExists(newfullpath) || !::PathFileExists(oldfullpath))
 		return false;
 
 	CSafeFile oldfile;
@@ -336,7 +337,7 @@ bool CAICHSyncThread::ConvertToKnown2ToKnown264(CSafeFile *pTargetFile)
 				strError.AppendFormat(_T(" - %s"), szError);
 			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 		}
-		// else -> known2.met also doesn't exists, so nothing to convert
+		// known2.met also doesn't exist, so nothing to convert
 		return false;
 	}
 
@@ -356,7 +357,7 @@ bool CAICHSyncThread::ConvertToKnown2ToKnown264(CSafeFile *pTargetFile)
 	try {
 		pTargetFile->WriteUInt8(KNOWN2_MET_VERSION);
 		while (oldfile.GetPosition() < oldfile.GetLength()) {
-			CAICHHash aichHash(&oldfile);
+			CAICHHash aichHash(oldfile);
 			uint32 nHashCount = oldfile.ReadUInt16();
 			if (oldfile.GetPosition() + nHashCount * (ULONGLONG)CAICHHash::GetHashSize() > oldfile.GetLength())
 				AfxThrowFileException(CFileException::endOfFile, 0, oldfile.GetFileName());

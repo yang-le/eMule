@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -85,7 +85,7 @@ Packet::Packet(uint8 in_opcode, uint32 in_size, uint8 protocol, bool bFromPartFi
 {
 	init();
 	if (in_size) {
-		completebuffer = new char[in_size + 10]();
+		completebuffer = new char[in_size + 10]{};
 		pBuffer = completebuffer + PACKET_HEADER_SIZE;
 	} else {
 		completebuffer = NULL;
@@ -93,8 +93,8 @@ Packet::Packet(uint8 in_opcode, uint32 in_size, uint8 protocol, bool bFromPartFi
 	}
 }
 
-Packet::Packet(CMemFile *datafile, uint8 protocol, uint8 ucOpcode)
-	: size(static_cast<uint32>(datafile->GetLength()))
+Packet::Packet(CSafeMemFile &datafile, uint8 protocol, uint8 ucOpcode)
+	: size(static_cast<uint32>(datafile.GetLength()))
 	, opcode(ucOpcode)
 	, prot(protocol)
 	, m_bSplitted()
@@ -104,7 +104,7 @@ Packet::Packet(CMemFile *datafile, uint8 protocol, uint8 ucOpcode)
 	init();
 	completebuffer = new char[size + 10];
 	pBuffer = completebuffer + PACKET_HEADER_SIZE;
-	BYTE *tmp = datafile->Detach();
+	BYTE *tmp = datafile.Detach();
 	memcpy(pBuffer, tmp, size);
 	free(tmp);
 }
@@ -186,14 +186,14 @@ char* Packet::DetachPacket()
 char* Packet::GetHeader()
 {
 	ASSERT(!m_bSplitted);
-	*reinterpret_cast<Header_Struct*>(head) = Header_Struct{prot, size + 1, opcode};
+	*reinterpret_cast<Header_Struct*>(head) = Header_Struct{ prot, size + 1, opcode };
 	return head;
 }
 
 char* Packet::GetUDPHeader()
 {
 	ASSERT(!m_bSplitted);
-	*reinterpret_cast<UDP_Header_Struct*>(head) = UDP_Header_Struct{prot, opcode};
+	*reinterpret_cast<UDP_Header_Struct*>(head) = UDP_Header_Struct{ prot, opcode };
 	return head;
 }
 
@@ -318,7 +318,7 @@ char* CRawPacket::DetachPacket()
 // CTag
 
 CTag::CTag(LPCSTR pszName, uint64 uVal, bool bInt64)
-	: m_szName(pszName)
+	: m_sName(pszName)
 	, m_nBlobSize()
 	, m_uType(bInt64 ? TAGTYPE_UINT64 : TAGTYPE_UINT32)
 	, m_uName()
@@ -339,7 +339,7 @@ CTag::CTag(uint8 uName, uint64 uVal, bool bInt64)
 }
 
 CTag::CTag(LPCSTR pszName, LPCTSTR pszVal)
-	: m_szName(pszName)
+	: m_sName(pszName)
 	, m_nBlobSize()
 	, m_uType(TAGTYPE_STRING)
 	, m_uName()
@@ -358,7 +358,7 @@ CTag::CTag(uint8 uName, LPCTSTR pszVal)
 }
 
 CTag::CTag(LPCSTR pszName, const CString &rstrVal)
-	: m_szName(pszName)
+	: m_sName(pszName)
 	, m_nBlobSize()
 	, m_uType(TAGTYPE_STRING)
 	, m_uName()
@@ -406,7 +406,7 @@ CTag::CTag(uint8 uName, BYTE *pucAttachData, uint32 nSize)
 }
 
 CTag::CTag(const CTag &rTag)
-	: m_szName(rTag.m_szName)
+	: m_sName(rTag.m_sName)
 	, m_nBlobSize()
 	, m_uType(rTag.m_uType)
 	, m_uName(rTag.m_uName)
@@ -431,25 +431,25 @@ CTag::CTag(const CTag &rTag)
 	ASSERT_VALID(this);
 }
 
-CTag::CTag(CFileDataIO *data, bool bOptUTF8)
+CTag::CTag(CFileDataIO &data, bool bOptUTF8)
 {
-	m_uType = data->ReadUInt8();
+	m_uType = data.ReadUInt8();
 	if (m_uType & 0x80) {
 		m_uType &= 0x7F;
-		m_uName = data->ReadUInt8();
+		m_uName = data.ReadUInt8();
 	} else {
-		UINT length = data->ReadUInt16();
+		UINT length = data.ReadUInt16();
 		if (length == 1)
-			m_uName = data->ReadUInt8();
+			m_uName = data.ReadUInt8();
 		else {
 			m_uName = 0;
-			LPSTR p = m_szName.GetBuffer(length);
+			LPSTR p = m_sName.GetBuffer(length);
 			try {
-				data->Read(p, length);
+				data.Read(p, length);
 			} catch (...) {
 				throw;
 			}
-			m_szName.ReleaseBuffer(length);
+			m_sName.ReleaseBuffer(length);
 		}
 	}
 
@@ -459,43 +459,43 @@ CTag::CTag(CFileDataIO *data, bool bOptUTF8)
 	// not use each tag. Otherwise we will get troubles when the packets are returned in
 	// a list - like the search results from a server.
 	if (m_uType == TAGTYPE_STRING)
-		m_pstrVal = new CString(data->ReadString(bOptUTF8));
+		m_pstrVal = new CString(data.ReadString(bOptUTF8));
 	else if (m_uType == TAGTYPE_UINT32)
-		m_uVal = data->ReadUInt32();
+		m_uVal = data.ReadUInt32();
 	else if (m_uType == TAGTYPE_UINT64)
-		m_uVal = data->ReadUInt64();
+		m_uVal = data.ReadUInt64();
 	else if (m_uType == TAGTYPE_UINT16) {
-		m_uVal = data->ReadUInt16();
+		m_uVal = data.ReadUInt16();
 		m_uType = TAGTYPE_UINT32;
 	} else if (m_uType == TAGTYPE_UINT8) {
-		m_uVal = data->ReadUInt8();
+		m_uVal = data.ReadUInt8();
 		m_uType = TAGTYPE_UINT32;
 	} else if (m_uType == TAGTYPE_FLOAT32)
-		data->Read(&m_fVal, 4);
+		data.Read(&m_fVal, 4);
 	else if (m_uType >= TAGTYPE_STR1 && m_uType <= TAGTYPE_STR16) {
 		UINT length = m_uType - TAGTYPE_STR1 + 1;
-		m_pstrVal = new CString(data->ReadString(bOptUTF8, length));
+		m_pstrVal = new CString(data.ReadString(bOptUTF8, length));
 		m_uType = TAGTYPE_STRING;
 	} else if (m_uType == TAGTYPE_HASH) {
 		BYTE bHash[MDX_DIGEST_SIZE];
-		data->Read(bHash, MDX_DIGEST_SIZE);
+		data.Read(bHash, MDX_DIGEST_SIZE);
 		m_pData = new BYTE[MDX_DIGEST_SIZE];
 		md4cpy(m_pData, bHash);
 	} else if (m_uType == TAGTYPE_BOOL) {
 		TRACE("***NOTE: %s; Reading BOOL tag\n", __FUNCTION__);
-		data->Seek(1, CFile::current);
+		data.Seek(1, CFile::current);
 	} else if (m_uType == TAGTYPE_BOOLARRAY) {
 		TRACE("***NOTE: %s; Reading BOOL Array tag\n", __FUNCTION__);
 		uint16 len;
-		data->Read(&len, 2);
+		data.Read(&len, 2);
 		// 07-Apr-2004: eMule versions prior to 0.42e.29 used the formula "(len+7)/8"!
-		data->Seek((len / 8) + 1ll, CFile::current);
+		data.Seek((len / 8) + 1ll, CFile::current);
 	} else if (m_uType == TAGTYPE_BLOB) {
 		// 07-Apr-2004: eMule versions prior to 0.42e.29 handled the "len" as int16!
-		m_nBlobSize = data->ReadUInt32();
-		if (m_nBlobSize <= data->GetLength() - data->GetPosition()) {
+		m_nBlobSize = data.ReadUInt32();
+		if (m_nBlobSize <= data.GetLength() - data.GetPosition()) {
 			m_pData = new BYTE[m_nBlobSize];
-			data->Read(m_pData, m_nBlobSize);
+			data.Read(m_pData, m_nBlobSize);
 		} else {
 			ASSERT(0);
 			m_nBlobSize = 0;
@@ -505,7 +505,7 @@ CTag::CTag(CFileDataIO *data, bool bOptUTF8)
 		if (m_uName != 0)
 			TRACE("%s; Unknown tag: type=0x%02X  specialtag=%u\n", __FUNCTION__, m_uType, m_uName);
 		else
-			TRACE("%s; Unknown tag: type=0x%02X  name=\"%s\"\n", __FUNCTION__, m_uType, (LPCSTR)m_szName);
+			TRACE("%s; Unknown tag: type=0x%02X  name=\"%s\"\n", __FUNCTION__, m_uType, (LPCSTR)m_sName);
 		m_uVal = 0;
 	}
 	ASSERT_VALID(this);
@@ -523,7 +523,7 @@ CTag& CTag::operator=(const CTag &rTag)
 		m_nBlobSize = 0;
 		m_uType = rTag.m_uType;
 		m_uName = rTag.m_uName;
-		m_szName = rTag.m_szName;
+		m_sName = rTag.m_sName;
 		if (rTag.IsStr())
 			m_pstrVal = new CString(rTag.GetStr());
 		else if (rTag.IsInt())
@@ -547,7 +547,7 @@ CTag& CTag::operator=(const CTag &rTag)
 	return *this;
 }
 
-bool CTag::WriteNewEd2kTag(CFileDataIO *data, EUTF8str eStrEncode) const
+bool CTag::WriteNewEd2kTag(CFileDataIO &data, EUTF8str eStrEncode) const
 {
 	ASSERT_VALID(this);
 
@@ -589,44 +589,44 @@ bool CTag::WriteNewEd2kTag(CFileDataIO *data, EUTF8str eStrEncode) const
 		uType = m_uType;
 
 	// Write tag name
-	if (m_szName.IsEmpty()) {
-		ASSERT(m_uName != 0);
-		data->WriteUInt8(uType | 0x80);
-		data->WriteUInt8(m_uName);
+	if (m_sName.IsEmpty()) {
+		ASSERT(m_uName);
+		data.WriteUInt8(uType | 0x80);
+		data.WriteUInt8(m_uName);
 	} else {
-		data->WriteUInt8(uType);
-		UINT uTagNameLen = (UINT)m_szName.GetLength();
-		data->WriteUInt16((uint16)uTagNameLen);
-		data->Write(m_szName, uTagNameLen);
+		data.WriteUInt8(uType);
+		UINT uTagNameLen = (UINT)m_sName.GetLength();
+		data.WriteUInt16((uint16)uTagNameLen);
+		data.Write(m_sName, uTagNameLen);
 	}
 
 	// Write tag data
 	switch (uType) {
 	case TAGTYPE_STRING:
-		data->WriteUInt16((uint16)uStrValLen);
-		data->Write((void*)(LPCSTR)strValA, uStrValLen);
+		data.WriteUInt16((uint16)uStrValLen);
+		data.Write((void*)(LPCSTR)strValA, uStrValLen);
 		break;
 	case TAGTYPE_UINT64:
-		data->WriteUInt64(m_uVal);
+		data.WriteUInt64(m_uVal);
 		break;
 	case TAGTYPE_UINT32:
-		data->WriteUInt32((uint32)m_uVal);
+		data.WriteUInt32((uint32)m_uVal);
 		break;
 	case TAGTYPE_UINT16:
-		data->WriteUInt16((uint16)m_uVal);
+		data.WriteUInt16((uint16)m_uVal);
 		break;
 	case TAGTYPE_UINT8:
-		data->WriteUInt8((uint8)m_uVal);
+		data.WriteUInt8((uint8)m_uVal);
 		break;
 	case TAGTYPE_FLOAT32:
-		data->Write(&m_fVal, 4);
+		data.Write(&m_fVal, 4);
 		break;
 	case TAGTYPE_HASH:
-		data->WriteHash16(m_pData);
+		data.WriteHash16(m_pData);
 		break;
 	case TAGTYPE_BLOB:
-		data->WriteUInt32(m_nBlobSize);
-		data->Write(m_pData, m_nBlobSize);
+		data.WriteUInt32(m_nBlobSize);
+		data.Write(m_pData, m_nBlobSize);
 		break;
 	default:
 		if (uType < TAGTYPE_STR1 || uType > TAGTYPE_STR16) {
@@ -634,42 +634,42 @@ bool CTag::WriteNewEd2kTag(CFileDataIO *data, EUTF8str eStrEncode) const
 			ASSERT(0);
 			return false;
 		}
-		data->Write((void*)(LPCSTR)strValA, uStrValLen);
+		data.Write((void*)(LPCSTR)strValA, uStrValLen);
 	}
 
 	return true;
 }
 
-bool CTag::WriteTagToFile(CFileDataIO *file, EUTF8str eStrEncode) const
+bool CTag::WriteTagToFile(CFileDataIO &file, EUTF8str eStrEncode) const
 {
 	ASSERT_VALID(this);
 
 	// don't write tags of unknown types, we wouldn't be able to read in them,
 	// and the met file would be corrupted
 	if (IsStr() || IsInt64() || IsFloat() || IsBlob()) {
-		file->WriteUInt8(m_uType);
+		file.WriteUInt8(m_uType);
 
-		if (m_szName.IsEmpty()) {
-			file->WriteUInt16(1);
-			file->WriteUInt8(m_uName);
+		if (m_sName.IsEmpty()) {
+			file.WriteUInt16(1);
+			file.WriteUInt8(m_uName);
 		} else {
-			UINT taglen = (UINT)m_szName.GetLength();
-			file->WriteUInt16((uint16)taglen);
-			file->Write(m_szName, taglen);
+			UINT taglen = (UINT)m_sName.GetLength();
+			file.WriteUInt16((uint16)taglen);
+			file.Write(m_sName, taglen);
 		}
 
 		if (IsStr())
-			file->WriteString(GetStr(), eStrEncode);
+			file.WriteString(GetStr(), eStrEncode);
 		else if (IsInt())
-			file->WriteUInt32((uint32)m_uVal);
+			file.WriteUInt32((uint32)m_uVal);
 		else if (IsInt64(false))
-			file->WriteUInt64(m_uVal);
+			file.WriteUInt64(m_uVal);
 		else if (IsFloat())
-			file->Write(&m_fVal, 4);
+			file.Write(&m_fVal, 4);
 		else if (IsBlob()) {
 			// NOTE: This will break backward compatibility with met files for eMule versions prior to 0.44a
-			file->WriteUInt32(m_nBlobSize);
-			file->Write(m_pData, m_nBlobSize);
+			file.WriteUInt32(m_nBlobSize);
+			file.Write(m_pData, m_nBlobSize);
 		} else {
 			//TODO: Support more tag types
 			TRACE("%s; Unknown tag: type=0x%02X\n", __FUNCTION__, m_uType);
@@ -711,8 +711,8 @@ void CTag::SetStr(LPCTSTR pszVal)
 CString CTag::GetFullInfo(CString(*pfnDbgGetFileMetaTagName)(UINT uMetaTagID)) const
 {
 	CString strTag;
-	if (!m_szName.IsEmpty())
-		strTag.Format(_T("\"%hs\"="), (LPCSTR)m_szName);
+	if (!m_sName.IsEmpty())
+		strTag.Format(_T("\"%hs\"="), (LPCSTR)m_sName);
 	else if (pfnDbgGetFileMetaTagName)
 		strTag.Format(_T("\"%s\"="), (LPCTSTR)(*pfnDbgGetFileMetaTagName)(m_uName));
 	else
@@ -755,14 +755,12 @@ void CTag::AssertValid() const
 	CObject::AssertValid();
 
 	ASSERT((m_uType & ~0x80) != 0);
-	ASSERT(m_uName != 0 && m_szName.IsEmpty() || m_uName == 0 && !m_szName.IsEmpty());
-	ASSERT(m_szName.IsEmpty() || AfxIsValidString(m_szName));
+	ASSERT(m_uName != 0 && m_sName.IsEmpty() || m_uName == 0 && !m_sName.IsEmpty());
+	ASSERT(m_sName.IsEmpty() || AfxIsValidString(m_sName));
 	if (IsStr())
-		ASSERT(m_pstrVal != NULL && AfxIsValidString(*m_pstrVal));
-	else if (IsHash())
-		ASSERT(m_pData != NULL && AfxIsValidAddress(m_pData, 16));
-	else if (IsBlob())
-		ASSERT(m_pData != NULL && AfxIsValidAddress(m_pData, m_nBlobSize));
+		ASSERT(m_pstrVal != NULL);
+	else if (IsHash() || IsBlob())
+		ASSERT(m_pData != NULL);
 }
 
 void CTag::Dump(CDumpContext &dc) const

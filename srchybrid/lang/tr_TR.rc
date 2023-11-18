@@ -434,7 +434,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Genel (Sunucular)"
     IDS_METHOD              "Yöntem"
     IDS_UNDO                "Geri Al"
-    IDS_DAYLY               "Günlük"
+    IDS_DAILY               "Günlük"
 END
 
 STRINGTABLE
@@ -1450,7 +1450,7 @@ BEGIN
     IDS_EM_HELP             "&Yardım"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Arkadaş eklenmedi.\r\n\r\nZaten aynı IP adresi ve bağlantı noktası olan arkadaş var."
-    IDS_DYNUP               "Gönderme Hızı Algılama"
+    IDS_DYNUP               "Gönderme Hızı Algılama (önerilmez)"
     IDS_KADOVERHEAD         "Kad Ek Yükü (Paket): %s (%s)"
     IDS_FIND                "Bul..."
     IDS_LOG_BANNED_CLIENTS  "Yasaklı istemcileri günlükle"

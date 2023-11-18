@@ -1053,7 +1053,7 @@ BEGIN
     IDS_GLOBALSEARCH        "全球搜尋 (伺服器)"
     IDS_METHOD              "方式"
     IDS_UNDO                "復原"
-    IDS_DAYLY               "每天"
+    IDS_DAILY               "每天"
 END
 
 STRINGTABLE
@@ -1460,7 +1460,7 @@ BEGIN
     IDS_EM_HELP             "說明"
     IDS_WRN_FRIENDDUPLIPPORT
                             "好友沒有被加入.\r\n\r\n在那裡已經有一個以相同 IP 位址及連接埠的好友可使用."
-    IDS_DYNUP               "上載速度感應器"
+    IDS_DYNUP               "上載速度感應器 - USS (不建議使用)"
     IDS_KADOVERHEAD         "Kad 額外支出的傳輸量 (封包): %s (%s)"
     IDS_FIND                "尋找..."
     IDS_LOG_BANNED_CLIENTS  "記錄已被禁止客戶端"

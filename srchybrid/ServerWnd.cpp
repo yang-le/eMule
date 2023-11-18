@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -23,7 +23,6 @@
 #include "kademlia/kademlia/kademlia.h"
 #include "kademlia/kademlia/prefs.h"
 #include "kademlia/utils/MiscUtils.h"
-#include "OtherFunctions.h"
 #include "emuledlg.h"
 #include "WebServer.h"
 #include "CustomAutoComplete.h"
@@ -129,10 +128,12 @@ BOOL CServerWnd::OnInitDialog()
 		servermsgbox->ApplySkin();
 		servermsgbox->SetTitle(GetResString(IDS_SV_SERVERINFO));
 
-		servermsgbox->AppendText(_T("eMule v") + theApp.m_strCurVersionLong + _T('\n'));
+		servermsgbox->AppendText(_T("eMule v"));
+		servermsgbox->AppendText(theApp.m_strCurVersionLong);
+		servermsgbox->AppendText(_T("\n"));
 		// MOD Note: Do not remove this part - Merkur
 		m_strClickNewVersion.Format(_T("%s %s %s"), (LPCTSTR)GetResString(IDS_EMULEW), (LPCTSTR)GetResString(IDS_EMULEW3), (LPCTSTR)GetResString(IDS_EMULEW2));
-		servermsgbox->AppendHyperLink(_T(""), _T(""), m_strClickNewVersion, _T(""));
+		servermsgbox->AppendHyperLink(NULL, NULL, m_strClickNewVersion, NULL);
 		// MOD Note: end
 		servermsgbox->AppendText(_T("\n\n"));
 	}
@@ -173,23 +174,22 @@ BOOL CServerWnd::OnInitDialog()
 	SetDlgItemText(IDC_SPORT, _T("4661"));
 
 	TCITEM newitem;
-	CString name;
-	name = GetResString(IDS_SV_SERVERINFO);
-	name.Replace(_T("&"), _T("&&"));
+	CString name(GetResString(IDS_SV_SERVERINFO));
+	DupAmpersand(name);
 	newitem.mask = TCIF_TEXT | TCIF_IMAGE;
 	newitem.pszText = const_cast<LPTSTR>((LPCTSTR)name);
 	newitem.iImage = 1;
 	VERIFY(StatusSelector.InsertItem(StatusSelector.GetItemCount(), &newitem) == PaneServerInfo);
 
 	name = GetResString(IDS_SV_LOG);
-	name.Replace(_T("&"), _T("&&"));
+	DupAmpersand(name);
 	newitem.mask = TCIF_TEXT | TCIF_IMAGE;
 	newitem.pszText = const_cast<LPTSTR>((LPCTSTR)name);
 	newitem.iImage = 0;
 	VERIFY(StatusSelector.InsertItem(StatusSelector.GetItemCount(), &newitem) == PaneLog);
 
 	name = SZ_DEBUG_LOG_TITLE;
-	name.Replace(_T("&"), _T("&&"));
+	DupAmpersand(name);
 	newitem.mask = TCIF_TEXT | TCIF_IMAGE;
 	newitem.pszText = const_cast<LPTSTR>((LPCTSTR)name);
 	newitem.iImage = 0;
@@ -277,7 +277,7 @@ BOOL CServerWnd::OnInitDialog()
 	InitSplitter();
 	GetDlgItem(IDC_ED2KCONNECT)->EnableWindow(false);
 
-	return true;
+	return TRUE;
 }
 
 void CServerWnd::DoDataExchange(CDataExchange *pDX)
@@ -303,8 +303,8 @@ bool CServerWnd::UpdateServerMetFromURL(const CString &strURL)
 	if (m_pacServerMetURL && m_pacServerMetURL->IsBound())
 		m_pacServerMetURL->AddItem(strURL, 0);
 
-	CString strTempFilename;
-	strTempFilename.Format(_T("%stemp-%u-server.met"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR), ::GetTickCount());
+	CString strTempFilename(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+	strTempFilename.AppendFormat(_T("temp-%u-server.met"), ::GetTickCount());
 
 	// try to download server.met
 	Log(GetResString(IDS_DOWNLOADING_SERVERMET_FROM), (LPCTSTR)strURL);
@@ -367,21 +367,20 @@ void CServerWnd::Localize()
 	m_ctrlMyInfoFrm.SetWindowText(GetResString(IDS_MYINFO));
 
 	TCITEM item;
-	CString name;
-	name = GetResString(IDS_SV_SERVERINFO);
-	name.Replace(_T("&"), _T("&&"));
+	CString name(GetResString(IDS_SV_SERVERINFO));
+	DupAmpersand(name);
 	item.mask = TCIF_TEXT;
 	item.pszText = const_cast<LPTSTR>((LPCTSTR)name);
 	StatusSelector.SetItem(PaneServerInfo, &item);
 
 	name = GetResString(IDS_SV_LOG);
-	name.Replace(_T("&"), _T("&&"));
+	DupAmpersand(name);
 	item.mask = TCIF_TEXT;
 	item.pszText = const_cast<LPTSTR>((LPCTSTR)name);
 	StatusSelector.SetItem(PaneLog, &item);
 
 	name = SZ_DEBUG_LOG_TITLE;
-	name.Replace(_T("&"), _T("&&"));
+	DupAmpersand(name);
 	item.mask = TCIF_TEXT;
 	item.pszText = const_cast<LPTSTR>((LPCTSTR)name);
 	StatusSelector.SetItem(PaneVerboseLog, &item);
@@ -425,7 +424,7 @@ void CServerWnd::OnBnClickedAddserver()
 			return;
 		}
 
-		BOOL bTranslated = FALSE;
+		BOOL bTranslated;
 		uPort = (uint16)GetDlgItemInt(IDC_SPORT, &bTranslated, FALSE);
 		if (!bTranslated) {
 			LocMessageBox(IDS_SRV_PORT, MB_OK, 0);
@@ -446,8 +445,8 @@ void CServerWnd::OnBnClickedAddserver()
 
 void CServerWnd::PasteServerFromClipboard()
 {
-	const CString strServer(theApp.CopyTextFromClipboard().Trim());
-	if (strServer.IsEmpty())
+	CString strServer(theApp.CopyTextFromClipboard());
+	if (strServer.Trim().IsEmpty())
 		return;
 
 	bool bAdd = true;
@@ -588,7 +587,7 @@ void CServerWnd::ToggleDebugWindow()
 	if (thePrefs.GetVerbose() && !debug) {
 		TCITEM newitem;
 		CString name(SZ_DEBUG_LOG_TITLE);
-		name.Replace(_T("&"), _T("&&"));
+		DupAmpersand(name);
 		newitem.mask = TCIF_TEXT | TCIF_IMAGE;
 		newitem.pszText = const_cast<LPTSTR>((LPCTSTR)name);
 		newitem.iImage = 0;

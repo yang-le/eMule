@@ -470,7 +470,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Global (Servidores)"
     IDS_METHOD              "Métodu"
     IDS_UNDO                "Desfacer"
-    IDS_DAYLY               "Tolos díes"
+    IDS_DAILY               "Tolos díes"
 END
 
 STRINGTABLE
@@ -1506,7 +1506,7 @@ BEGIN
     IDS_EM_HELP             "&Ayuda"
     IDS_WRN_FRIENDDUPLIPPORT
                             "Collaciu ensin amestar.\r\n\r\nYá esiste un collaciu cola mesma dirección IP y puertu disponible."
-    IDS_DYNUP               "Sensor de Velocidá de Subida"
+    IDS_DYNUP               "Sensor de Velocidá de Subida (not recommended)"
     IDS_KADOVERHEAD         "Tráficu escedente Kad (Paquetes): %s (%s)"
     IDS_FIND                "Alcontrar..."
     IDS_LOG_BANNED_CLIENTS  "Rexistrar veceros bloqueaos"

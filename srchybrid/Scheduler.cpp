@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -47,15 +47,15 @@ CScheduler::~CScheduler()
 int CScheduler::LoadFromFile()
 {
 
-	CString strName;
-	strName.Format(_T("%spreferences.ini"), (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+	CString strName(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
+	strName += _T("preferences.ini");
 	CIni ini(strName, _T("Scheduler"));
 
 	UINT max = ini.GetInt(_T("Count"), 0);
 	UINT count;
 	for (count = 0; count < max; ++count) {
 		strName.Format(_T("Schedule#%u"), count);
-		const CString &temp = ini.GetString(_T("Title"), _T(""), strName);
+		const CString &temp(ini.GetString(_T("Title"), _T(""), strName));
 		if (temp.IsEmpty())
 			break;
 		Schedule_Struct *news = new Schedule_Struct();
@@ -134,7 +134,7 @@ int CScheduler::Check(bool forcecheck)
 			continue;
 
 		// check day of week
-		if (schedule->day != DAY_DAYLY) {
+		if (schedule->day != DAY_DAILY) {
 			int dow = tNow.GetDayOfWeek();
 			switch (schedule->day) {
 			case DAY_MO:

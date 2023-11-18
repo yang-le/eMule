@@ -422,7 +422,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Global (servidor)"
     IDS_METHOD              "Mètode"
     IDS_UNDO                "Desfés"
-    IDS_DAYLY               "a diari"
+    IDS_DAILY               "a diari"
 END
 
 STRINGTABLE
@@ -1427,7 +1427,7 @@ BEGIN
     IDS_EM_HELP             "A&juda"
     IDS_WRN_FRIENDDUPLIPPORT
                             "No s'ha afegit l'amic.\r\n\r\Ja existeix un amic amb la mateixa adreça IP i port disponible."
-    IDS_DYNUP               "Sensor de velocitat de pujada"
+    IDS_DYNUP               "Sensor de velocitat de pujada (no es recomana)"
     IDS_KADOVERHEAD         "Tràfic excedent Kad (paquets): %s (%s)"
     IDS_FIND                "Troba..."
     IDS_LOG_BANNED_CLIENTS  "Registra els clients exclosos"

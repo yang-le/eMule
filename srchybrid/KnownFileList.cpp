@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -23,7 +23,6 @@
 #include "opcodes.h"
 #include "Preferences.h"
 #include "SafeFile.h"
-#include "OtherFunctions.h"
 #include "UpDownClient.h"
 #include "DownloadQueue.h"
 #include "emuledlg.h"
@@ -75,7 +74,7 @@ bool CKnownFileList::Init()
 
 bool CKnownFileList::LoadKnownFiles()
 {
-	CString fullpath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + KNOWN_MET_FILENAME);
+	const CString &fullpath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + KNOWN_MET_FILENAME);
 	CSafeBufferedFile file;
 	CFileException fexp;
 	if (!file.Open(fullpath, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
@@ -88,7 +87,7 @@ bool CKnownFileList::LoadKnownFiles()
 		}
 		return false;
 	}
-	setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
+	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 
 	CKnownFile *pRecord = NULL;
 	try {
@@ -103,7 +102,7 @@ bool CKnownFileList::LoadKnownFiles()
 		uint32 RecordsNumber = file.ReadUInt32();
 		for (uint32 i = 0; i < RecordsNumber; ++i) {
 			pRecord = new CKnownFile();
-			if (!pRecord->LoadFromFile(&file)) {
+			if (!pRecord->LoadFromFile(file)) {
 				TRACE(_T("*** Failed to load entry %u (name=%s  hash=%s  size=%I64u  parthashes=%u expected parthashes=%u) from known.met\n")
 					, i, (LPCTSTR)pRecord->GetFileName(), (LPCTSTR)md4str(pRecord->GetFileHash()), (uint64)pRecord->GetFileSize()
 					, pRecord->GetFileIdentifier().GetAvailableMD4PartHashCount(), pRecord->GetFileIdentifier().GetTheoreticalMD4PartHashCount());
@@ -134,7 +133,7 @@ bool CKnownFileList::LoadCancelledFiles()
 // cancelled.met Format: <Header 1 = CANCELLED_HEADER><Version 1 = CANCELLED_VERSION><Seed 4><Count 4>[<HashHash 16><TagCount 1>[Tags TagCount] Count]
 	if (!thePrefs.IsRememberingCancelledFiles())
 		return true;
-	CString fullpath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + CANCELLED_MET_FILENAME);
+	const CString &fullpath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + CANCELLED_MET_FILENAME);
 	CSafeBufferedFile file;
 	CFileException fexp;
 	if (!file.Open(fullpath, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
@@ -147,7 +146,7 @@ bool CKnownFileList::LoadCancelledFiles()
 		}
 		return false;
 	}
-	setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
+	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 	try {
 		bool bOldVersion = false;
 		uint8 header = file.ReadUInt8();
@@ -173,12 +172,12 @@ bool CKnownFileList::LoadCancelledFiles()
 			m_dwCancelledFilesSeed = (GetRandomUInt32() % 0xFFFFFFFEu) + 1;
 		}
 
-		uchar ucHash[16];
+		uchar ucHash[MD5_DIGEST_SIZE];
 		for (uint32 i = file.ReadUInt32(); i > 0; --i) { //number of records
 			file.ReadHash16(ucHash);
 			// for compatibility with future versions which may add more data than just the hash
 			for (uint8 j = file.ReadUInt8(); j > 0; --j) //number of tags
-				CTag tag(&file, false);
+				CTag tag(file, false);
 
 			if (bOldVersion) {
 				// convert old real hash to new hash
@@ -188,7 +187,7 @@ bool CKnownFileList::LoadCancelledFiles()
 				MD5Sum md5(pachSeedHash, sizeof pachSeedHash);
 				md4cpy(ucHash, md5.GetRawHash());
 			}
-			m_mapCancelledFiles.SetAt(CSKey(ucHash), 1);
+			m_mapCancelledFiles[CSKey(ucHash)] = 1;
 		}
 		file.Close();
 		return true;
@@ -210,39 +209,38 @@ void CKnownFileList::Save()
 	if (thePrefs.GetLogFileSaving())
 		AddDebugLogLine(false, _T("Saving known files list file \"%s\""), KNOWN_MET_FILENAME);
 	m_nLastSaved = ::GetTickCount();
-	CString fullpath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + KNOWN_MET_FILENAME);
+	const CString &sConfDir(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
 	CSafeBufferedFile file;
 	CFileException fexp;
-	if (!file.Open(fullpath, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
+	if (!file.Open(sConfDir + KNOWN_MET_FILENAME, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
 		CString strError(_T("Failed to save ") KNOWN_MET_FILENAME _T(" file"));
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
 		if (GetExceptionMessage(fexp, szError, _countof(szError)))
 			strError.AppendFormat(_T(" - %s"), szError);
 		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 	} else {
-		setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
+		::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 
 		try {
 			file.WriteUInt8(0); // we will write the version tag later depending if any large files are on the list
 			UINT nRecordsNumber = 0;
 			bool bContainsAnyLargeFiles = false;
 			file.WriteUInt32(nRecordsNumber);
-			CCKey key;
-			for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
-				CKnownFile *pFile;
-				m_Files_map.GetNextAssoc(pos, key, pFile);
+
+			for (const CKnownFilesMap::CPair *pair = m_Files_map.PGetFirstAssoc(); pair != NULL; pair = m_Files_map.PGetNextAssoc(pair)) {
+				CKnownFile *pFile = pair->value;
 				if (thePrefs.IsRememberingDownloadedFiles() || theApp.sharedfiles->IsFilePtrInList(pFile)) {
-					pFile->WriteToFile(&file);
+					pFile->WriteToFile(file);
 					++nRecordsNumber;
-					if (pFile->IsLargeFile())
-						bContainsAnyLargeFiles = true;
+					bContainsAnyLargeFiles |= pFile->IsLargeFile();
 				}
 			}
+
 			file.SeekToBegin();
 			file.WriteUInt8(bContainsAnyLargeFiles ? MET_HEADER_I64TAGS : MET_HEADER);
 			file.WriteUInt32(nRecordsNumber);
 
-			if ((theApp.IsClosing() && thePrefs.GetCommitFiles() >= 1) || thePrefs.GetCommitFiles() >= 2) {
+			if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.IsClosing())) {
 				file.Flush(); // flush file stream buffers to disk buffers
 				if (_commit(_fileno(file.m_pStream)) != 0) // commit disk buffers to disk
 					AfxThrowFileException(CFileException::hardIO, ::GetLastError(), file.GetFileName());
@@ -261,16 +259,14 @@ void CKnownFileList::Save()
 
 	if (thePrefs.GetLogFileSaving())
 		AddDebugLogLine(false, _T("Saving known files list file \"%s\""), CANCELLED_MET_FILENAME);
-	fullpath = thePrefs.GetMuleDirectory(EMULE_CONFIGDIR);
-	fullpath += CANCELLED_MET_FILENAME;
-	if (!file.Open(fullpath, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
+	if (!file.Open(sConfDir + CANCELLED_MET_FILENAME, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
 		CString strError(_T("Failed to save ") CANCELLED_MET_FILENAME _T(" file"));
 		TCHAR szError[MAX_CFEXP_ERRORMSG];
 		if (GetExceptionMessage(fexp, szError, _countof(szError)))
 			strError.AppendFormat(_T(" - %s"), szError);
 		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
 	} else {
-		setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
+		::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 
 		try {
 			file.WriteUInt8(CANCELLED_HEADER);
@@ -280,16 +276,13 @@ void CKnownFileList::Save()
 				file.WriteUInt32(0);
 			else {
 				file.WriteUInt32((uint32)m_mapCancelledFiles.GetCount());
-				CSKey key;
-				for (POSITION pos = m_mapCancelledFiles.GetStartPosition(); pos != NULL;) {
-					int dwDummy;
-					m_mapCancelledFiles.GetNextAssoc(pos, key, dwDummy);
-					file.WriteHash16(key.m_key);
+				for (const CancelledFilesMap::CPair *pair = m_mapCancelledFiles.PGetFirstAssoc(); pair != NULL; pair = m_mapCancelledFiles.PGetNextAssoc(pair)) {
+					file.WriteHash16(pair->key.m_key);
 					file.WriteUInt8(0);
 				}
 			}
 
-			if ((theApp.IsClosing() && thePrefs.GetCommitFiles() >= 1) || thePrefs.GetCommitFiles() >= 2) {
+			if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.IsClosing())) {
 				file.Flush(); // flush file stream buffers to disk buffers
 				if (_commit(_fileno(file.m_pStream)) != 0) // commit disk buffers to disk
 					AfxThrowFileException(CFileException::hardIO, ::GetLastError(), file.GetFileName());
@@ -368,55 +361,48 @@ bool CKnownFileList::SafeAddKFile(CKnownFile *toadd)
 		ASSERT(theApp.sharedfiles == NULL || !theApp.sharedfiles->IsFilePtrInList(pFileInMap));
 		ASSERT(theApp.downloadqueue == NULL || !theApp.downloadqueue->IsPartFile(pFileInMap));
 
-		// Quick fix: If we downloaded already downloaded files again and if those files all had the same
-		// file names and were renamed during file completion, we have a pending ptr in transfer window.
+		// Quick fix: If we downloaded already downloaded files again, and if those files had the same
+		// file names, and were renamed during file completion, we have a pending ptr in transfer window.
 		if (theApp.emuledlg->transferwnd && theApp.emuledlg->transferwnd->GetDownloadList()->m_hWnd)
 			theApp.emuledlg->transferwnd->GetDownloadList()->RemoveFile(reinterpret_cast<CPartFile*>(pFileInMap));
-		// Make sure the file is not used in out sharedfilesctrl any more
+		// Make sure the file is not used in our sharedfilesctrl any more
 		if (theApp.emuledlg->sharedfileswnd && theApp.emuledlg->sharedfileswnd->sharedfilesctrl.m_hWnd)
 			theApp.emuledlg->sharedfileswnd->sharedfilesctrl.RemoveFile(pFileInMap, true);
 		delete pFileInMap;
 	}
-	m_Files_map.SetAt(key, toadd);
+	m_Files_map[key] = toadd;
 	if (bRemovedDuplicateSharedFile)
 		theApp.sharedfiles->SafeAddKFile(toadd);
 
 	if (toadd->GetFileIdentifier().HasAICHHash())
-		m_mapKnownFilesByAICH.SetAt(toadd->GetFileIdentifier().GetAICHHash(), toadd);
+		m_mapKnownFilesByAICH[toadd->GetFileIdentifier().GetAICHHash()] = toadd;
 	return true;
 }
 
 CKnownFile* CKnownFileList::FindKnownFile(LPCTSTR filename, time_t date, uint64 size) const
 {
-	CCKey key;
-	for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
-		CKnownFile *cur_file;
-		m_Files_map.GetNextAssoc(pos, key, cur_file);
-		if (cur_file->GetUtcFileDate() == date && (uint64)cur_file->GetFileSize() == size && filename == cur_file->GetFileName())
-			return cur_file;
-	}
+	for (const CKnownFilesMap::CPair *pair = m_Files_map.PGetFirstAssoc(); pair != NULL; pair = m_Files_map.PGetNextAssoc(pair))
+		if (pair->value->GetUtcFileDate() == date && (uint64)pair->value->GetFileSize() == size && pair->value->GetFileName() == filename)
+			return pair->value;
+
 	return NULL;
 }
 
 CKnownFile* CKnownFileList::FindKnownFileByPath(const CString &sFilePath) const
 {
-	CCKey key;
-	for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
-		CKnownFile *cur_file;
-		m_Files_map.GetNextAssoc(pos, key, cur_file);
-		if (!cur_file->GetFilePath().CompareNoCase(sFilePath))
-			return cur_file;
-	}
+	for (const CKnownFilesMap::CPair *pair = m_Files_map.PGetFirstAssoc(); pair != NULL; pair = m_Files_map.PGetNextAssoc(pair))
+		if (pair->value->GetFilePath().CompareNoCase(sFilePath) == 0)
+			return pair->value;
+
 	return NULL;
 }
 
 CKnownFile* CKnownFileList::FindKnownFileByID(const uchar *hash) const
 {
 	if (hash) {
-		CKnownFile *found_file;
-		CCKey key(hash);
-		if (m_Files_map.Lookup(key, found_file))
-			return found_file;
+		const CKnownFilesMap::CPair *pair = m_Files_map.PLookup(CCKey(hash));
+		if (pair)
+			return pair->value;
 	}
 	return NULL;
 }
@@ -428,15 +414,11 @@ bool CKnownFileList::IsKnownFile(const CKnownFile *file) const
 
 bool CKnownFileList::IsFilePtrInList(const CKnownFile *file) const
 {
-	if (file) {
-		CCKey key;
-		for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
-			CKnownFile *cur_file;
-			m_Files_map.GetNextAssoc(pos, key, cur_file);
-			if (file == cur_file)
+	if (file)
+		for (const CKnownFilesMap::CPair *pair = m_Files_map.PGetFirstAssoc(); pair != NULL; pair = m_Files_map.PGetNextAssoc(pair))
+			if (file == pair->value)
 				return true;
-		}
-	}
+
 	return false;
 }
 
@@ -451,7 +433,7 @@ void CKnownFileList::AddCancelledFileID(const uchar *hash)
 		md4cpy(pachSeedHash + 4, hash);
 		MD5Sum md5(pachSeedHash, sizeof pachSeedHash);
 		md4cpy(pachSeedHash, md5.GetRawHash());
-		m_mapCancelledFiles.SetAt(CSKey(pachSeedHash), 1);
+		m_mapCancelledFiles[CSKey(pachSeedHash)] = 1;
 	}
 }
 
@@ -464,37 +446,27 @@ bool CKnownFileList::IsCancelledFileByID(const uchar *hash) const
 		MD5Sum md5(pachSeedHash, sizeof pachSeedHash);
 		md4cpy(pachSeedHash, md5.GetRawHash());
 
-		int dwDummy;
-		if (m_mapCancelledFiles.Lookup(CSKey(pachSeedHash), dwDummy))
-			return true;
+		return m_mapCancelledFiles.PLookup(CSKey(pachSeedHash)) != NULL;
 	}
 	return false;
 }
 
-void CKnownFileList::CopyKnownFileMap(CMap<CCKey, const CCKey&, CKnownFile*, CKnownFile*> &Files_Map)
+void CKnownFileList::CopyKnownFileMap(CKnownFilesMap &Files_Map)
 {
-	CCKey key;
-	for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
-		CKnownFile *cur_file;
-		m_Files_map.GetNextAssoc(pos, key, cur_file);
-		Files_Map.SetAt(key, cur_file);
-	}
+	for (const CKnownFilesMap::CPair *pair = m_Files_map.PGetFirstAssoc(); pair != NULL; pair = m_Files_map.PGetNextAssoc(pair))
+		Files_Map[pair->key] = pair->value;
 }
 
 bool CKnownFileList::ShouldPurgeAICHHashset(const CAICHHash &rAICHHash) const
 {
-	const CKnownFile *pFile;
-	if (m_mapKnownFilesByAICH.Lookup(rAICHHash, pFile)) {
-		if (!pFile->ShouldPartiallyPurgeFile())
-			return false;
-	} else
-		ASSERT(0);
-	return true;
+	const KnonwFilesByAICHMap::CPair *pair = m_mapKnownFilesByAICH.PLookup(rAICHHash);
+	ASSERT(pair);
+	return !pair || pair->value->ShouldPartiallyPurgeFile();
 }
 
 void CKnownFileList::AICHHashChanged(const CAICHHash *pOldAICHHash, const CAICHHash &rNewAICHHash, CKnownFile *pFile)
 {
 	if (pOldAICHHash != NULL)
 		m_mapKnownFilesByAICH.RemoveKey(*pOldAICHHash);
-	m_mapKnownFilesByAICH.SetAt(rNewAICHHash, pFile);
+	m_mapKnownFilesByAICH[rNewAICHHash] = pFile;
 }

@@ -41,7 +41,7 @@ CListCtrlX::CListCtrlX()
 	, m_hAccel()
 	, m_uIDHdrImgList(UINT_MAX)
 	, m_iHdrImgListImages()
-	, m_iFindDirection(1)
+	, m_iFindDirection(1) //1 - down, -1 - up
 	, m_iFindColumn()
 	, m_iSortColumn(-1)
 	, m_bUseHdrCtrlSortBitmaps()
@@ -74,8 +74,10 @@ void CListCtrlX::ReadColumnStats(int iColumns, LCX_COLUMN_INIT *pColumns, LPCTST
 
 void ReadColumnStats(int iColumns, LCX_COLUMN_INIT *pColumns, LPCTSTR pszSection, LPCTSTR pszPrefix)
 {
+	CString sKeyName;
 	for (int iCol = 0; iCol < iColumns; ++iCol) {
-		DWORD dwVal = theApp.GetProfileInt(pszSection, CString(pszPrefix) + pColumns[iCol].pszHeading, -1);
+		sKeyName.Format(_T("%s%s"), pszPrefix, pColumns[iCol].pszHeading);
+		DWORD dwVal = theApp.GetProfileInt(pszSection, sKeyName, -1);
 		if (dwVal != _UI32_MAX) {
 			pColumns[iCol].iWidth = (short)LOWORD(dwVal);
 			if ((pColumns[iCol].iOrder = (short)HIWORD(dwVal)) < 0)
@@ -100,12 +102,14 @@ void CListCtrlX::WriteColumnStats(int iColumns, const LCX_COLUMN_INIT *pColumns,
 
 void WriteColumnStats(CListCtrl &lv, int iColumns, const LCX_COLUMN_INIT *pColumns, LPCTSTR pszSection, LPCTSTR pszPrefix)
 {
+	CString sKeyName;
 	for (int iCol = 0; iCol < iColumns; ++iCol) {
 		LVCOLUMN lvc;
 		lvc.mask = LVCF_WIDTH | LVCF_ORDER;
 		if (lv.GetColumn(iCol, &lvc) && (lvc.cx != pColumns[iCol].iWidth || lvc.iOrder != pColumns[iCol].iOrder)) {
+			sKeyName.Format(_T("%s%s"), pszPrefix, pColumns[iCol].pszHeading);
 			DWORD dwVal = MAKELONG(lvc.cx, lvc.iOrder);
-			theApp.WriteProfileInt(pszSection, CString(pszPrefix) + pColumns[iCol].pszHeading, dwVal);
+			theApp.WriteProfileInt(pszSection, sKeyName, dwVal);
 		}
 	}
 }
@@ -528,7 +532,7 @@ void CreateItemReport(CListCtrl &lv, CString &rstrReport)
 	// Get max. chars per column
 	int *paiColWidths;
 	try {
-		paiColWidths = new int[iCols]();
+		paiColWidths = new int[iCols]{};
 	} catch (...) {
 		return;
 	}
@@ -673,7 +677,7 @@ bool CListCtrlX::FindItem(const CListCtrlX &lv, int iItem, DWORD_PTR)
 	return false;
 }
 
-void CListCtrlX::DoFind(int iStartItem, int iDirection /*1=down, 0 = up*/, BOOL bShowError)
+void CListCtrlX::DoFind(int iStartItem, int iDirection /*1 = down, -1 = up*/, BOOL bShowError)
 {
 	CWaitCursor curHourglass;
 
@@ -682,9 +686,9 @@ void CListCtrlX::DoFind(int iStartItem, int iDirection /*1=down, 0 = up*/, BOOL 
 		return;
 	}
 
-	int iNumItems = iDirection ? GetItemCount() : 0;
+	int iNumItems = (iDirection > 0) ? GetItemCount() : 0;
 	int iItem = iStartItem;
-	while (iDirection ? iItem < iNumItems : iItem >= 0) {
+	while ((iDirection > 0) ? iItem < iNumItems : iItem >= 0) {
 		if ((*m_pfnFindItem)(*this, iItem, m_lFindItemParam)) {
 			// Deselect all listview entries
 			DeselectAllItems();
@@ -698,10 +702,7 @@ void CListCtrlX::DoFind(int iStartItem, int iDirection /*1=down, 0 = up*/, BOOL 
 			return;
 		}
 
-		if (iDirection)
-			++iItem;
-		else
-			--iItem;
+		iItem += iDirection;
 	}
 
 	if (bShowError)
@@ -732,20 +733,20 @@ void CListCtrlX::OnFindNext()
 void CListCtrlX::DoFindNext(BOOL bShowError)
 {
 	int iStartItem = GetNextItem(-1, LVNI_SELECTED | LVNI_FOCUSED);
-	if (iStartItem == -1)
+	if (iStartItem < 0)
 		iStartItem = 0;
 	else
-		iStartItem += (m_iFindDirection ? 1 : -1);
+		iStartItem += m_iFindDirection;
 	DoFind(iStartItem, m_iFindDirection, bShowError);
 }
 
 void CListCtrlX::OnFindPrev()
 {
 	int iStartItem = GetNextItem(-1, LVNI_SELECTED | LVNI_FOCUSED);
-	if (iStartItem == -1)
+	if (iStartItem < 0)
 		iStartItem = 0;
 	else
-		iStartItem += (!m_iFindDirection ? 1 : -1);
+		iStartItem -= m_iFindDirection;
 
-	DoFind(iStartItem, !m_iFindDirection, FALSE/*bShowError*/);
+	DoFind(iStartItem, -m_iFindDirection, FALSE/*bShowError*/);
 }

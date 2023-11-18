@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2010 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -28,7 +28,7 @@ public:
 
 	virtual EMFileSize GetFileSize() const;
 
-	void			WriteIdentifier(CFileDataIO *pFile, bool bKadExcludeMD4 = false) const;
+	void			WriteIdentifier(CFileDataIO &file, bool bKadExcludeMD4 = false) const;
 	bool			CompareRelaxed(const CFileIdentifierBase &rFileIdentifier) const;
 	bool			CompareStrict(const CFileIdentifierBase &rFileIdentifier) const;
 
@@ -36,7 +36,7 @@ public:
 
 	//******************** MD4 Related
 	void			SetMD4Hash(const uchar *pucFileHash);
-	void			SetMD4Hash(CFileDataIO *pFile);
+	void			SetMD4Hash(CFileDataIO &file);
 	const uchar*	GetMD4Hash() const						{ return m_abyMD4Hash; }
 
 	//******************** AICH Related
@@ -66,14 +66,14 @@ public:
 	virtual	~CFileIdentifier();
 
 	//******************** Common
-	void	WriteHashSetsToPacket(CFileDataIO *pFile, bool bMD4, bool bAICH) const; // not compatible with old single md4 hashset
-	bool	ReadHashSetsFromPacket(CFileDataIO *pFile, bool &rbMD4, bool &rbAICH);  // not compatible with old single md4 hashset
+	void	WriteHashSetsToPacket(CFileDataIO &file, bool bMD4, bool bAICH) const; // not compatible with old single md4 hashset
+	bool	ReadHashSetsFromPacket(CFileDataIO &file, bool &rbMD4, bool &rbAICH);  // not compatible with old single md4 hashset
 	virtual EMFileSize GetFileSize() const					{ return m_rFileSize; }
 
 	//******************** MD4 Related
 	bool	CalculateMD4HashByHashSet(bool bVerifyOnly, bool bDeleteOnVerifyFail = true);
-	bool	LoadMD4HashsetFromFile(CFileDataIO *file, bool bVerifyExistingHash);
-	void	WriteMD4HashsetToFile(CFileDataIO *pFile) const;
+	bool	LoadMD4HashsetFromFile(CFileDataIO &file, bool bVerifyExistingHash);
+	void	WriteMD4HashsetToFile(CFileDataIO &file) const;
 
 	bool	SetMD4HashSet(const CArray<uchar*, uchar*> &aHashset);
 	uchar*	GetMD4PartHash(UINT part) const;
@@ -87,8 +87,8 @@ public:
 	CArray<uchar*, uchar*>&	GetRawMD4HashSet()				{ return m_aMD4HashSet; }
 
 	//******************** AICH Related
-	bool		LoadAICHHashsetFromFile(CFileDataIO *pFile, bool bVerify = true); // bVerify=false means you must call VerifyAICHHashSet immediately after this method
-	void		WriteAICHHashsetToFile(CFileDataIO *pFile) const;
+	bool		LoadAICHHashsetFromFile(CFileDataIO &file, bool bVerify = true); // bVerify=false means you must call VerifyAICHHashSet immediately after this method
+	void		WriteAICHHashsetToFile(CFileDataIO &file) const;
 
 	bool		SetAICHHashSet(const CAICHRecoveryHashSet &sourceHashSet);
 	bool		SetAICHHashSet(const CFileIdentifier &rSourceHashSet);
@@ -114,10 +114,9 @@ public:
 	CFileIdentifierSA(const uchar *pucFileHash, EMFileSize nFileSize, const CAICHHash &rHash, bool bAICHHashValid);
 	CFileIdentifierSA();
 
-	virtual	~CFileIdentifierSA() = default;
 	virtual EMFileSize GetFileSize() const					{ return m_nFileSize; }
 
-	bool	ReadIdentifier(CFileDataIO *pFile, bool bKadValidWithoutMd4 = false);
+	bool	ReadIdentifier(CFileDataIO &file, bool bKadValidWithoutMd4 = false);
 
 private:
 	EMFileSize	m_nFileSize;

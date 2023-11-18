@@ -27,9 +27,9 @@ CString GetResString(UINT uStringID)
 {
 	CString resString;
 	if (s_hLangDLL)
-		resString.LoadString(s_hLangDLL, uStringID);
+		(void)resString.LoadString(s_hLangDLL, uStringID);
 	if (resString.IsEmpty())
-		resString.LoadString(GetModuleHandle(NULL), uStringID);
+		(void)resString.LoadString(GetModuleHandle(NULL), uStringID);
 	return resString;
 }
 
@@ -41,15 +41,14 @@ int LocMessageBox(UINT uId, UINT nType, UINT nIDHelp)
 struct SLanguage
 {
 	LANGID	lid;
-	LPCTSTR pszLocale;
-	BOOL	bSupported;
-	LPCTSTR	pszISOLocale;
+	bool	bSupported;
 	UINT	uCodepage;
+	LPCTSTR	pszISOLocale;
 	LPCTSTR	pszHtmlCharset;
 };
 
 
-// Codepages (Windows)
+// Code pages (Windows)
 // ---------------------------------------------------------------------
 // 1250		ANSI - Central European
 // 1251		ANSI - Cyrillic
@@ -95,60 +94,59 @@ struct SLanguage
 
 static SLanguage s_aLanguages[] =
 {
-	{LANGID_AR_AE,	_T(""),				FALSE,	_T("ar_AE"),	1256,	_T("windows-1256")},	// Arabic (UAE)
-	{LANGID_BA_BA,	_T(""),				FALSE,	_T("ba_BA"),	1252,	_T("windows-1252")},	// Basque
-	{LANGID_BG_BG,	_T("hun"),			FALSE,	_T("bg_BG"),	1251,	_T("windows-1251")},	// Bulgarian
-	{LANGID_CA_ES,	_T(""),				FALSE,	_T("ca_ES"),	1252,	_T("windows-1252")},	// Catalan
-	{LANGID_CZ_CZ,	_T("czech"),		FALSE,	_T("cz_CZ"),	1250,	_T("windows-1250")},	// Czech
-	{LANGID_DA_DK,	_T("danish"),		FALSE,	_T("da_DK"),	1252,	_T("windows-1252")},	// Danish
-	{LANGID_DE_DE,	_T("german"),		FALSE,	_T("de_DE"),	1252,	_T("windows-1252")},	// German (Germany)
-	{LANGID_EL_GR,	_T("greek"),		FALSE,	_T("el_GR"),	1253,	_T("windows-1253")},	// Greek
-	{LANGID_EN_US,	_T("english"),		TRUE,	_T("en_US"),	1252,	_T("windows-1252")},	// English
-	{LANGID_ES_ES_T,_T("spanish"),		FALSE,	_T("es_ES_T"),	1252,	_T("windows-1252")},	// Spanish (Castilian)
-	{LANGID_ES_AS,  _T("spanish"),		FALSE,	_T("es_AS"),	1252,	_T("windows-1252")},	// Asturian
-	{LANGID_VA_ES,  _T(""),				FALSE,	_T("va_ES"),	1252,	_T("windows-1252")},	// Valencian AVL
-	{LANGID_VA_ES_RACV,  _T(""),		FALSE,	_T("va_ES_RACV"),	1252,	_T("windows-1252")},// Valencian RACV
-	{LANGID_ET_EE,	_T(""),				FALSE,	_T("et_EE"),	1257,	_T("windows-1257")},	// Estonian
-	{LANGID_FA_IR,	_T("farsi"),		FALSE,	_T("fa_IR"),	1256,	_T("windows-1256")},	// Farsi
-	{LANGID_FI_FI,	_T("finnish"),		FALSE,	_T("fi_FI"),	1252,	_T("windows-1252")},	// Finnish
-	{LANGID_FR_FR,	_T("french"),		FALSE,	_T("fr_FR"),	1252,	_T("windows-1252")},	// French (France)
-	{LANGID_FR_BR,	_T("french"),		FALSE,	_T("fr_BR"),	1252,	_T("windows-1252")},	// French (Breton)
-	{LANGID_GL_ES,	_T(""),				FALSE,	_T("gl_ES"),	1252,	_T("windows-1252")},	// Galician
-	{LANGID_HE_IL,	_T(""),				FALSE,	_T("he_IL"),	1255,	_T("windows-1255")},	// Hebrew
-	{LANGID_HU_HU,	_T("hungarian"),	FALSE,	_T("hu_HU"),	1250,	_T("windows-1250")},	// Hungarian
-	{LANGID_IT_IT,	_T("italian"),		FALSE,	_T("it_IT"),	1252,	_T("windows-1252")},	// Italian (Italy)
-	{LANGID_JP_JP,	_T("japanese"),		FALSE,	_T("jp_JP"),	 932,	_T("shift_jis")},		// Japanese
-	{LANGID_KO_KR,	_T("korean"),		FALSE,	_T("ko_KR"),	 949,	_T("euc-kr")},			// Korean
-	{LANGID_LT_LT,	_T(""),				FALSE,	_T("lt_LT"),	1257,	_T("windows-1257")},	// Lithuanian
-	{LANGID_LV_LV,	_T(""),				FALSE,	_T("lv_LV"),	1257,	_T("windows-1257")},	// Latvian
-	{LANGID_MT_MT,	_T("mt"),			FALSE,	_T("mt_MT"),	1254,	_T("windows-1254")},	// Maltese
-	{LANGID_NB_NO,	_T("nor"),			FALSE,	_T("nb_NO"),	1252,	_T("windows-1252")},	// Norwegian (Bokmal)
-	{LANGID_NN_NO,	_T("non"),			FALSE,	_T("nn_NO"),	1252,	_T("windows-1252")},	// Norwegian (Nynorsk)
-	{LANGID_NL_NL,	_T("dutch"),		FALSE,	_T("nl_NL"),	1252,	_T("windows-1252")},	// Dutch (Netherlands)
-	{LANGID_PL_PL,	_T("polish"),		FALSE,	_T("pl_PL"),	1250,	_T("windows-1250")},	// Polish
-	{LANGID_PT_BR,	_T("ptb"),			FALSE,	_T("pt_BR"),	1252,	_T("windows-1252")},	// Portuguese (Brazil)
-	{LANGID_PT_PT,	_T("ptg"),			FALSE,	_T("pt_PT"),	1252,	_T("windows-1252")},	// Portuguese (Portugal)
-	{LANGID_RO_RO,	_T(""),				FALSE,	_T("ro_RO"),	1250,	_T("windows-1250")},	// Romanian
-	{LANGID_RU_RU,	_T("russian"),		FALSE,	_T("ru_RU"),	1251,	_T("windows-1251")},	// Russian
-	{LANGID_SL_SI,	_T("slovak"),		FALSE,	_T("sl_SI"),	1250,	_T("windows-1250")},	// Slovenian
-	{LANGID_SQ_AL,	_T(""),				FALSE,	_T("sq_AL"),	1252,	_T("windows-1252")},	// Albanian (Albania)
-	{LANGID_SV_SE,	_T("swedish"),		FALSE,	_T("sv_SE"),	1252,	_T("windows-1252")},	// Swedish
-	{LANGID_TR_TR,	_T("turkish"),		FALSE,	_T("tr_TR"),	1254,	_T("windows-1254")},	// Turkish
-	{LANGID_UA_UA,	_T(""),				FALSE,	_T("ua_UA"),	1251,	_T("windows-1251")},	// Ukrainian
-	{LANGID_ZH_CN,	_T("chs"),			FALSE,	_T("zh_CN"),	 936,	_T("gb2312")},			// Chinese (P.R.C.)
-	{LANGID_ZH_TW,	_T("cht"),			FALSE,	_T("zh_TW"),	 950,	_T("big5")},			// Chinese (Taiwan)
-	{LANGID_VI_VN,	_T(""),				FALSE,	_T("vi_VN"),	1258,	_T("windows-1258")},	// Vietnamese
-	{LANGID_UG_CN,	_T(""),				FALSE,	_T("ug_CN"),	1256,	_T("windows-1256")},	// Uighur
-	{0, NULL, 0, 0}
+	{LANGID_AR_AE,		false,	1256,	_T("ar_AE"),		_T("windows-1256")},	// Arabic (UAE)
+	{LANGID_BA_BA,		false,	1252,	_T("ba_BA"),		_T("windows-1252")},	// Basque
+	{LANGID_BG_BG,		false,	1251,	_T("bg_BG"),		_T("windows-1251")},	// Bulgarian
+	{LANGID_CA_ES,		false,	1252,	_T("ca_ES"),		_T("windows-1252")},	// Catalan
+	{LANGID_CZ_CZ,		false,	1250,	_T("cz_CZ"),		_T("windows-1250")},	// Czech
+	{LANGID_DA_DK,		false,	1252,	_T("da_DK"),		_T("windows-1252")},	// Danish
+	{LANGID_DE_DE,		false,	1252,	_T("de_DE"),		_T("windows-1252")},	// German (Germany)
+	{LANGID_EL_GR,		false,	1253,	_T("el_GR"),		_T("windows-1253")},	// Greek
+	{LANGID_EN_US,		true,	1252,	_T("en_US"),		_T("windows-1252")},	// English
+	{LANGID_ES_AS,  	false,	1252,	_T("es_AS"),		_T("windows-1252")},	// Asturian
+	{LANGID_ES_ES_T,	false,	1252,	_T("es_ES_T"),		_T("windows-1252")},	// Spanish (Castilian)
+	{LANGID_ET_EE,		false,	1257,	_T("et_EE"),		_T("windows-1257")},	// Estonian
+	{LANGID_FA_IR,		false,	1256,	_T("fa_IR"),		_T("windows-1256")},	// Farsi
+	{LANGID_FI_FI,		false,	1252,	_T("fi_FI"),		_T("windows-1252")},	// Finnish
+	{LANGID_FR_BR,		false,	1252,	_T("fr_BR"),		_T("windows-1252")},	// French (Breton)
+	{LANGID_FR_FR,		false,	1252,	_T("fr_FR"),		_T("windows-1252")},	// French (France)
+	{LANGID_GL_ES,		false,	1252,	_T("gl_ES"),		_T("windows-1252")},	// Galician
+	{LANGID_HE_IL,		false,	1255,	_T("he_IL"),		_T("windows-1255")},	// Hebrew
+	{LANGID_HU_HU,		false,	1250,	_T("hu_HU"),		_T("windows-1250")},	// Hungarian
+	{LANGID_IT_IT,		false,	1252,	_T("it_IT"),		_T("windows-1252")},	// Italian (Italy)
+	{LANGID_JP_JP,		false,	 932,	_T("jp_JP"),		_T("shift_jis")},		// Japanese
+	{LANGID_KO_KR,		false,	 949,	_T("ko_KR"),		_T("euc-kr")},			// Korean
+	{LANGID_LT_LT,		false,	1257,	_T("lt_LT"),		_T("windows-1257")},	// Lithuanian
+	{LANGID_LV_LV,		false,	1257,	_T("lv_LV"),		_T("windows-1257")},	// Latvian
+	{LANGID_MT_MT,		false,	1254,	_T("mt_MT"),		_T("windows-1254")},	// Maltese
+	{LANGID_NB_NO,		false,	1252,	_T("nb_NO"),		_T("windows-1252")},	// Norwegian (Bokmal)
+	{LANGID_NL_NL,		false,	1252,	_T("nl_NL"),		_T("windows-1252")},	// Dutch (Netherlands)
+	{LANGID_NN_NO,		false,	1252,	_T("nn_NO"),		_T("windows-1252")},	// Norwegian (Nynorsk)
+	{LANGID_PL_PL,		false,	1250,	_T("pl_PL"),		_T("windows-1250")},	// Polish
+	{LANGID_PT_BR,		false,	1252,	_T("pt_BR"),		_T("windows-1252")},	// Portuguese (Brazil)
+	{LANGID_PT_PT,		false,	1252,	_T("pt_PT"),		_T("windows-1252")},	// Portuguese (Portugal)
+	{LANGID_RO_RO,		false,	1250,	_T("ro_RO"),		_T("windows-1250")},	// Romanian
+	{LANGID_RU_RU,		false,	1251,	_T("ru_RU"),		_T("windows-1251")},	// Russian
+	{LANGID_SL_SI,		false,	1250,	_T("sl_SI"),		_T("windows-1250")},	// Slovenian
+	{LANGID_SQ_AL,		false,	1252,	_T("sq_AL"),		_T("windows-1252")},	// Albanian (Albania)
+	{LANGID_SV_SE,		false,	1252,	_T("sv_SE"),		_T("windows-1252")},	// Swedish
+	{LANGID_TR_TR,		false,	1254,	_T("tr_TR"),		_T("windows-1254")},	// Turkish
+	{LANGID_UA_UA,		false,	1251,	_T("ua_UA"),		_T("windows-1251")},	// Ukrainian
+	{LANGID_UG_CN,		false,	1256,	_T("ug_CN"),		_T("windows-1256")},	// Uighur
+	{LANGID_VA_ES,  	false,	1252,	_T("va_ES"),		_T("windows-1252")},	// Valencian AVL
+	{LANGID_VA_ES_RACV, false,	1252,	_T("va_ES_RACV"),	_T("windows-1252")},	// Valencian RACV
+	{LANGID_VI_VN,		false,	1258,	_T("vi_VN"),		_T("windows-1258")},	// Vietnamese
+	{LANGID_ZH_CN,		false,	 936,	_T("zh_CN"),		_T("gb2312")},			// Chinese (P.R.C.)
+	{LANGID_ZH_TW,		false,	 950,	_T("zh_TW"),		_T("big5")},			// Chinese (Taiwan)
+	{0}
 };
 
 static void InitLanguages(const CString &rstrLangDir1, const CString &rstrLangDir2)
 {
 	bool bFirstDir = rstrLangDir1.CompareNoCase(rstrLangDir2) != 0;
 	CFileFind ff;
-	bool bEnd = !ff.FindFile(rstrLangDir1 + _T("*.dll"), 0);
-	while (!bEnd) {
-		bEnd = !ff.FindNextFile();
+	for (BOOL bFound = ff.FindFile(rstrLangDir1 + _T("*.dll")); bFound;) {
+		bFound = ff.FindNextFile();
 		if (ff.IsDirectory())
 			continue;
 		TCHAR szLandDLLFileName[_MAX_FNAME];
@@ -156,17 +154,15 @@ static void InitLanguages(const CString &rstrLangDir1, const CString &rstrLangDi
 
 		for (SLanguage *pLang = s_aLanguages; pLang->lid; ++pLang)
 			if (_tcsicmp(pLang->pszISOLocale, szLandDLLFileName) == 0) {
-				pLang->bSupported = TRUE;
+				pLang->bSupported = true;
 				break;
 			}
 
-		if (bEnd && bFirstDir) {
-			ff.Close();
-			bEnd = !ff.FindFile(rstrLangDir2 + _T("*.dll"), 0);
+		if (!bFound && bFirstDir) {
+			bFound = ff.FindFile(rstrLangDir2 + _T("*.dll"));
 			bFirstDir = false;
 		}
 	}
-	ff.Close();
 }
 
 static void FreeLangDLL()
@@ -181,7 +177,7 @@ void CPreferences::GetLanguages(CWordArray &aLanguageIDs)
 {
 	for (const SLanguage *pLang = s_aLanguages; pLang->lid; ++pLang) {
 		//if (pLang->bSupported)
-		//show all languages, offer download if not supported ones later
+		//show all languages, offer download for non-supported ones later
 		aLanguageIDs.Add(pLang->lid);
 	}
 }
@@ -323,7 +319,7 @@ void CPreferences::SetRtlLocale(LCID lcid)
 
 void CPreferences::InitThreadLocale()
 {
-	ASSERT(m_wLanguageID != 0);
+	ASSERT(m_wLanguageID);
 
 	// NOTE: This function is for testing multi language support only.
 	// NOTE: This function is *NOT* to be enabled in release builds nor to be offered by any Mod!
@@ -367,10 +363,8 @@ CString GetCodePageNameForLocale(LCID lcid)
 	if (iResult > 0 && !strCodePage.IsEmpty()) {
 		UINT uCodePage = _tcstoul(strCodePage, NULL, 10);
 		if (uCodePage != ULONG_MAX) {
-			CPINFOEXW CPInfoEx = {};
-			BOOL(WINAPI *pfnGetCPInfoEx)(UINT, DWORD, LPCPINFOEXW);
-			(FARPROC&)pfnGetCPInfoEx = GetProcAddress(GetModuleHandle(_T("kernel32")), "GetCPInfoExW");
-			if (pfnGetCPInfoEx && (*pfnGetCPInfoEx)(uCodePage, 0, &CPInfoEx))
+			CPINFOEXW CPInfoEx;
+			if (::GetCPInfoExW(uCodePage, 0, &CPInfoEx))
 				strCodePage = CPInfoEx.CodePageName;
 		}
 	}
@@ -379,7 +373,7 @@ CString GetCodePageNameForLocale(LCID lcid)
 
 CString CPreferences::GetHtmlCharset()
 {
-	ASSERT(m_wLanguageID != 0);
+	ASSERT(m_wLanguageID);
 
 	LPCTSTR pszHtmlCharset = NULL;
 	for (const SLanguage *pLang = s_aLanguages; pLang->lid; ++pLang)
@@ -388,15 +382,15 @@ CString CPreferences::GetHtmlCharset()
 			break;
 		}
 
-	if (pszHtmlCharset == NULL || pszHtmlCharset[0] == _T('\0')) {
+	if (pszHtmlCharset == NULL || *pszHtmlCharset == _T('\0')) {
 		ASSERT(0); // should never come here
 
 		// try to get charset from code page
 		LPCTSTR pszLcLocale = _tsetlocale(LC_CTYPE, NULL);
 		if (pszLcLocale) {
 			TCHAR szLocaleID[128];
-			UINT uCodepage = 0;
-			if (_stscanf_s(pszLcLocale, _T("%[a-zA-Z_].%u"), szLocaleID, (unsigned)_countof(szLocaleID), &uCodepage) == 2 && uCodepage != 0) {
+			UINT uCodepage;
+			if (_stscanf_s(pszLcLocale, _T("%[a-zA-Z_].%u"), szLocaleID, (unsigned)_countof(szLocaleID), &uCodepage) == 2 && uCodepage > 0) {
 				CString strHtmlCodepage;
 				strHtmlCodepage.Format(_T("windows-%u"), uCodepage);
 				return strHtmlCodepage;
@@ -425,12 +419,9 @@ LRESULT CALLBACK RTLWindowsLayoutCbtFilterHook(int code, WPARAM wParam, LPARAM l
 
 void CemuleApp::EnableRTLWindowsLayout()
 {
-	BOOL(WINAPI *pfnSetProcessDefaultLayout)(DWORD dwFlags);
-	(FARPROC&)pfnSetProcessDefaultLayout = GetProcAddress(GetModuleHandle(_T("user32")), "SetProcessDefaultLayout");
-	if (pfnSetProcessDefaultLayout)
-		(*pfnSetProcessDefaultLayout)(LAYOUT_RTL);
+	::SetProcessDefaultLayout(LAYOUT_RTL);
 
-	s_hRTLWindowsLayoutOldCbtFilterHook = SetWindowsHookEx(WH_CBT, RTLWindowsLayoutCbtFilterHook, NULL, GetCurrentThreadId());
+	s_hRTLWindowsLayoutOldCbtFilterHook = ::SetWindowsHookEx(WH_CBT, RTLWindowsLayoutCbtFilterHook, NULL, GetCurrentThreadId());
 }
 
 void CemuleApp::DisableRTLWindowsLayout()
@@ -439,9 +430,6 @@ void CemuleApp::DisableRTLWindowsLayout()
 		VERIFY(UnhookWindowsHookEx(s_hRTLWindowsLayoutOldCbtFilterHook));
 		s_hRTLWindowsLayoutOldCbtFilterHook = NULL;
 
-		BOOL(WINAPI *pfnSetProcessDefaultLayout)(DWORD dwFlags);
-		(FARPROC&)pfnSetProcessDefaultLayout = GetProcAddress(GetModuleHandle(_T("user32")), "SetProcessDefaultLayout");
-		if (pfnSetProcessDefaultLayout)
-			(*pfnSetProcessDefaultLayout)(0);
+		::SetProcessDefaultLayout(0);
 	}
 }

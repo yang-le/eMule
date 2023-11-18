@@ -28,9 +28,9 @@ public:
 	CString GetAllLogEntries();
 	bool SaveLog(LPCTSTR pszDefName = NULL);
 
-	void AppendText(const CString &sText);
-	void AppendHyperLink(const CString &sText, const CString &sTitle, const CString &sCommand, const CString &sDirectory);
-	void AppendKeyWord(const CString &str, COLORREF cr);
+	void AppendText(LPCTSTR sText);
+	void AppendHyperLink(LPCTSTR pszText, LPCTSTR pszTitle, const CString &sCommand, LPCTSTR pszDirectory);
+	void AppendKeyWord(LPCTSTR str, COLORREF cr);
 	void AppendColoredText(LPCTSTR pszText, COLORREF cr, COLORREF bk = CLR_DEFAULT, DWORD mask = 0);
 	COLORREF GetForegroundColor() const				{ return m_crForeground; }
 	COLORREF GetBackgroundColor() const				{ return m_crBackground; }

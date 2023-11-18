@@ -86,10 +86,8 @@
 
 #define _ATL_ALL_WARNINGS
 #define _AFX_ALL_WARNINGS
-// Disable some warnings which get fired with /W4 for Windows/MFC/ATL headers
-#pragma warning(disable:4127) // conditional expression is constant
+// Disable some warnings which get fired with /W4 or /Wall for Windows/MFC/ATL headers
 
-// Disable some warnings which are only generated when using "/Wall"
 #pragma warning(disable:4061) // enumerate in switch of enum is not explicitly handled by a case label
 #pragma warning(disable:4062) // enumerate in switch of enum is not handled
 #pragma warning(disable:4191) // 'type cast' : unsafe conversion from <this> to <that>
@@ -102,14 +100,15 @@
 #if _MSC_VER>=1400
 #pragma warning(disable:4266) // no override available for virtual member function from base <class>; function is hidden
 #endif
-#if _MSC_VER<1400
-#pragma warning(disable:4529) // forming a pointer-to-member requires explicit use of the address-of operator ('&') and a qualified name
-#endif
 #if _MSC_VER>=1400
 #pragma warning(disable:4365) // conversion from 'int' to 'UINT', signed/unsigned mismatch
 #endif
-#pragma warning(disable:4548) // expression before comma has no effect; expected expression with side-effect
-#pragma warning(disable:4555) // expression has no effect; expected expression with side-effect
+#if _MSC_VER>=1900
+#pragma warning(disable:4435) // Object layout under /vd2 will change due to virtual base
+#endif
+#if _MSC_VER<1400
+#pragma warning(disable:4529) // forming a pointer-to-member requires explicit use of the address-of operator ('&') and a qualified name
+#endif
 #if _MSC_VER>=1400
 #pragma warning(disable:4571) // Informational: catch(...) semantics changed since Visual C++ 7.1; structured exceptions (SEH) are no longer caught
 #endif
@@ -125,22 +124,15 @@
 #endif
 #pragma warning(disable:4820) // <n> bytes padding added after member <member>
 #pragma warning(disable:4917) // a GUID can only be associated with a class, interface or namespace
-#pragma warning(disable:4928) // illegal copy-initialization; more than one user-defined conversion has been implicitly applied
 
-#if _MSC_VER>=1400
-#pragma warning(disable:6211) // Leaking memory <name> due to an exception
-#pragma warning(disable:6246) // Local declaration of <name> hides declaration of the same name in outer scope
-#pragma warning(disable:6284) // Object passed as parameter <num> when string is required in call to <printf>
-#pragma warning(disable:6387) // <argument> might be '0': this does not adhere to the specification for the function <name>
-#pragma warning(disable:6309) // Argument <n> is null: this does not adhere to function specification of <func>
-#pragma warning(disable:6255) // _alloca indicates failure by raising a stack overflow exception.
+#if _MSC_VER>=1900
+#pragma warning(disable:5026) // move constructor was implicitly defined as deleted
+#pragma warning(disable:5027) // move assignment operator was implicitly defined as deleted
+#pragma warning(disable:5045) // Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified
+#pragma warning(disable:5220) // a non-static data member with a volatile qualified type no longer implies that compiler generated copy/move constructors and copy/move assignment operators are non trivial
 #endif
 
-#if _MSC_VER>=1600
-#pragma warning(disable:4987) //  nonstandard extension used: 'throw (...)'
-#endif
 #if _MSC_VER>=1400
-
 // _CRT_SECURE_NO_DEPRECATE - Disable all warnings for not using "_s" functions.
 //
 #ifndef _CRT_SECURE_NO_DEPRECATE
@@ -171,6 +163,11 @@
 
 #if !defined(_USE_32BIT_TIME_T) && !defined(_WIN64)
 #define _USE_32BIT_TIME_T
+#endif
+
+//Windows XP compatibility requires 'inet_addr' and 'WSAAsyncGetHostByName' (warning C4996)
+#ifndef _WINSOCK_DEPRECATED_NO_WARNINGS
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #endif
 
 #endif//_MSC_VER>=1400
@@ -244,24 +241,6 @@
 #define LVBKIF_FLAG_ALPHABLEND  0x20000000
 #endif
 
-
-// Enable warnings which were disabled for Windows/MFC/ATL headers
-#pragma warning(default:4505) // unreferenced local function has been removed
-#pragma warning(default:4127) // conditional expression is constant
-#if _MSC_VER<=1310
-#pragma warning(default:4548) // expression before comma has no effect; expected expression with side-effect
-#endif
-#if _MSC_VER==1310
-#pragma warning(default:4555) // expression has no effect; expected expression with side-effect
-#endif
-
-// when using warning level 4
-#pragma warning(disable:4201) // nonstandard extension used : nameless struct/union (not worth to mess with, it's due to MIDL created code)
-#pragma warning(disable:4238) // nonstandard extension used : class rvalue used as lvalue
-#if _MSC_VER>=1400
-#pragma warning(disable:4127) // conditional expression is constant
-#endif
-
 #include "types.h"
 
 #ifdef _DEBUG
@@ -275,6 +254,11 @@
 
 typedef CArray<CStringA> CStringAArray;
 typedef CStringArray CStringWArray;
+//replaces str.Mid(idx) when a constant character pointer is required
+#define CPTR(str, idx)	(&((LPCTSTR)(str))[(idx)])
+#define CPTRA(str, idx)	(&((LPCSTR)(str))[(idx)])
+#define CPTRW(str, idx)	(&((LPCWSTR)(str))[(idx)])
+
 
 #ifdef UNICODE
 #define _TWINAPI(fname)	fname "W"

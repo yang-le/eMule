@@ -13,7 +13,6 @@ class CPPgWebServer : public CPropertyPage
 
 public:
 	CPPgWebServer();
-	virtual	~CPPgWebServer() = default;
 
 	void Localize();
 	void SetUPnPState();

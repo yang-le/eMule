@@ -3,7 +3,9 @@
 #include "EditX.h"
 #include "ComboBoxEx2.h"
 #include "ListCtrlEditable.h"
+#include "SearchParams.h"
 class CCustomAutoComplete;
+class CSearchResultsWnd;
 
 typedef enum
 {
@@ -28,6 +30,7 @@ class CSearchParamsWnd : public CDialogBar
 	{
 		IDD = IDD_SEARCH_PARAMS
 	};
+	void ParamErrorBox(EOptsRows eRow);
 	void WipeOptionFields();
 
 // Construction

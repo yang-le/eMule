@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -28,7 +28,6 @@ class CShareableFile : public CAbstractFile
 
 public:
 	CShareableFile();
-	virtual	~CShareableFile() = default;
 	virtual void UpdateFileRatingCommentAvail(bool /*bForceUpdate = false*/)	{ ASSERT(0); }
 
 	EFileType	GetVerifiedFileType() const			{ return m_verifiedFileType; }
@@ -38,7 +37,7 @@ public:
 	void SetPath(LPCTSTR path)						{ m_strDirectory = path; }
 
 	// Shared directory is equal to the path for all shared files, except those following a shell link
-	// in which case the directory of the shell link is return. Use GetPath to access the file
+	// in which case the directory of the shell link is returned. Use GetPath to access the file
 	const CString& GetSharedDirectory() const		{ return m_strSharedDirectory.IsEmpty() ? m_strDirectory : m_strSharedDirectory; }
 	void SetSharedDirectory(LPCTSTR path)			{ m_strSharedDirectory = path; }
 	bool IsShellLinked() const						{ return !m_strSharedDirectory.IsEmpty(); }

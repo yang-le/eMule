@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -217,19 +217,21 @@ void CCreditsThread::CreateCredits()
 
 	m_dcCredits.SetBkMode(TRANSPARENT);
 
-	int y = 0;
+	unsigned y = 0;
 
 	int nTextHeight = m_dcCredits.GetTextExtent(_T("Wy")).cy;
 
-	for (int n = 0; n < m_arCredits.GetCount(); ++n) {
+	for (INT_PTR n = 0; n < m_arCredits.GetCount(); ++n) {
 		const CString &cs(m_arCredits[n]);
+		if (cs.GetLength() < 3)
+			continue;
 		switch (cs[0]) {
 		case _T('B'):	// it's a bitmap
 			{
 				CBitmap bmp;
-				if (!bmp.LoadBitmap(cs.Mid(2))) {
+				if (!bmp.LoadBitmap(CPTR(cs, 2))) {
 					CString sMsg;
-					sMsg.Format(_T("Could not find bitmap resource \"%s\". Be sure to assign the bitmap a QUOTED resource name"), (LPCTSTR)cs.Mid(2));
+					sMsg.Format(_T("Could not find bitmap resource \"%s\". Be sure to assign the bitmap a QUOTED resource name"), CPTR(cs, 2));
 					AfxMessageBox(sMsg);
 					return;
 				}
@@ -251,7 +253,7 @@ void CCreditsThread::CreateCredits()
 			}
 			break;
 		case _T('S'):	// it's a vertical space
-			y += _ttoi(cs.Mid(2));
+			y += _ttoi(CPTR(cs, 2));
 			break;
 		default:		// it's a text string
 			{
@@ -269,9 +271,9 @@ void CCreditsThread::CreateCredits()
 				if (nColor != nLastColor)
 					m_dcCredits.SetTextColor(m_arColors[nColor]);
 
-				RECT rect = { 0, y, m_rectScreen.Width(), y + nTextHeight };
+				RECT rect = { 0, (LONG)y, m_rectScreen.Width(), (LONG)y + nTextHeight };
 
-				m_dcCredits.DrawText(cs.Mid(6), &rect, DT_CENTER);
+				m_dcCredits.DrawText(CPTR(cs, 6), &rect, DT_CENTER);
 
 				y += nTextHeight;
 			}
@@ -302,11 +304,11 @@ void CCreditsThread::InitFonts()
 	LOGFONT lf = {};
 	// font 0
 	// SMALL ARIAL
-	CFont *font0 = new CFont;
 	lf.lfHeight = 12;
 	lf.lfWeight = 500;
 	lf.lfQuality = NONANTIALIASED_QUALITY;
 	_tcscpy(lf.lfFaceName, _T("Arial"));
+	CFont *font0 = new CFont;
 	font0->CreateFontIndirect(&lf);
 	m_arFonts.Add(font0);
 
@@ -316,12 +318,12 @@ void CCreditsThread::InitFonts()
 
 	// font 1
 	// MEDIUM BOLD ARIAL
-	CFont *font1 = new CFont;
 	memset((void*)&lf, 0, sizeof lf);
 	lf.lfHeight = 14;
 	lf.lfWeight = 600;
 	lf.lfQuality = NONANTIALIASED_QUALITY;
 	_tcscpy(lf.lfFaceName, _T("Arial"));
+	CFont *font1 = new CFont;
 	font1->CreateFontIndirect(&lf);
 	m_arFonts.Add(font1);
 
@@ -331,13 +333,13 @@ void CCreditsThread::InitFonts()
 
 	// font 2
 	// LARGE ITALIC HEAVY BOLD TIMES ROMAN
-	CFont *font2 = new CFont;
 	memset((void*)&lf, 0, sizeof lf);
 	lf.lfHeight = 16;
 	lf.lfWeight = 700;
 	//lf.lfItalic = TRUE;
 	lf.lfQuality = ANTIALIASED_QUALITY;
 	_tcscpy(lf.lfFaceName, _T("Arial"));
+	CFont *font2 = new CFont;
 	font2->CreateFontIndirect(&lf);
 	m_arFonts.Add(font2);
 
@@ -346,12 +348,12 @@ void CCreditsThread::InitFonts()
 	m_arFontHeights.Add(nTextHeight);
 
 	// font 3
-	CFont *font3 = new CFont;
 	memset((void*)&lf, 0, sizeof lf);
 	lf.lfHeight = 25;
 	lf.lfWeight = 900;
 	lf.lfQuality = ANTIALIASED_QUALITY;
 	_tcscpy(lf.lfFaceName, _T("Arial"));
+	CFont *font3 = new CFont;
 	font3->CreateFontIndirect(&lf);
 	m_arFonts.Add(font3);
 
@@ -425,7 +427,7 @@ void CCreditsThread::InitText()
 	
 	m_arCredits.Add(_T("03:00:eMule"));
 	m_arCredits.Add(_T("02:01:Version ") + theApp.m_strCurVersionLong);
-	m_arCredits.Add(_T("01:06:Copyright (C) 2002-2021 Merkur"));
+	m_arCredits.Add(_T("01:06:Copyright (C) 2002-2023 Merkur"));
 	m_arCredits.Add(_T("S:50"));
 	m_arCredits.Add(_T("02:04:Developers"));
 	m_arCredits.Add(_T("S:5"));
@@ -509,7 +511,7 @@ void CCreditsThread::InitText()
 	m_arCredits.Add(_T("S:05"));
 	m_arCredits.Add(_T("01:06:Basque: TXiKi"));
 	m_arCredits.Add(_T("S:05"));
-	m_arCredits.Add(_T("01:06:Breton: KAD-Korvigelloù an Drouizig"));
+	m_arCredits.Add(_T("01:06:Breton: KAD-Korvigello?an Drouizig"));
 	m_arCredits.Add(_T("S:05"));
 	m_arCredits.Add(_T("01:06:Bulgarian: DapKo, Dumper"));
 	m_arCredits.Add(_T("S:05"));
@@ -592,17 +594,19 @@ void CCreditsThread::InitText()
 
 int CCreditsThread::CalcCreditsHeight()
 {
-	int nHeight = 0;
+	unsigned nHeight = 0;
 
-	for (int n = 0; n < m_arCredits.GetCount(); ++n) {
+	for (INT_PTR n = 0; n < m_arCredits.GetCount(); ++n) {
 		const CString &cs(m_arCredits[n]);
+		if (cs.GetLength() < 3)
+			continue;
 		switch (cs[0]) {
 		case _T('B'):	// it's a bitmap
 			{
 				CBitmap bmp;
-				if (!bmp.LoadBitmap(cs.Mid(2))) {
+				if (!bmp.LoadBitmap(CPTR(cs, 2))) {
 					CString sMsg;
-					sMsg.Format(_T("Could not find bitmap resource \"%s\". Be sure to assign the bitmap a QUOTED resource name"), (LPCTSTR)cs.Mid(2));
+					sMsg.Format(_T("Could not find bitmap resource \"%s\". Be sure to assign the bitmap a QUOTED resource name"), CPTR(cs, 2));
 					AfxMessageBox(sMsg);
 					return -1;
 				}
@@ -614,7 +618,7 @@ int CCreditsThread::CalcCreditsHeight()
 			}
 			break;
 		case _T('S'):	// it's a vertical space
-			nHeight += _ttoi(cs.Mid(2));
+			nHeight += _ttoi(CPTR(cs, 2));
 			break;
 		default:		// it's a text string
 			{

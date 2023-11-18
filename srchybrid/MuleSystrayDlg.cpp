@@ -100,7 +100,7 @@ void CMuleSystrayDlg::OnMouseMove(UINT nFlags, CPoint point)
 		if (pWnd == this || pWnd == &m_ctrlSidebar)
 			SetCapture();			// me, myself and i
 		else
-			ReleaseCapture();		// sweet child of mine
+			::ReleaseCapture();		// sweet child of mine
 	} else
 		SetCapture();				// I'm on the outside, I'm looking in...
 
@@ -372,7 +372,7 @@ void CMuleSystrayDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
 
 void CMuleSystrayDlg::OnLButtonUp(UINT nFlags, CPoint point)
 {
-	ReleaseCapture();
+	::ReleaseCapture();
 	EndDialog(m_nExitCode);
 	m_bClosingDown = true;
 
@@ -385,7 +385,7 @@ void CMuleSystrayDlg::OnRButtonDown(UINT nFlags, CPoint point)
 	CRect systrayRect;
 	GetClientRect(&systrayRect);
 	if (!systrayRect.PtInRect(point)) {
-		ReleaseCapture();
+		::ReleaseCapture();
 		EndDialog(m_nExitCode);
 		m_bClosingDown = true;
 	}
@@ -398,7 +398,7 @@ void CMuleSystrayDlg::OnKillFocus(CWnd *pNewWnd)
 	CDialog::OnKillFocus(pNewWnd);
 
 	if (!m_bClosingDown) {
-		ReleaseCapture();
+		::ReleaseCapture();
 		EndDialog(m_nExitCode);
 		m_bClosingDown = true;
 	}
@@ -407,7 +407,7 @@ void CMuleSystrayDlg::OnKillFocus(CWnd *pNewWnd)
 void CMuleSystrayDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 {
 	if (!bShow && !m_bClosingDown) {
-		ReleaseCapture();
+		::ReleaseCapture();
 		EndDialog(m_nExitCode);
 		m_bClosingDown = true;
 	}
@@ -427,11 +427,10 @@ void CMuleSystrayDlg::OnCaptureChanged(CWnd *pWnd)
 BOOL CMuleSystrayDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	if (HIWORD(wParam) == BN_CLICKED) {
-		ReleaseCapture();
+		::ReleaseCapture();
 		m_nExitCode = LOWORD(wParam);
 		EndDialog(m_nExitCode);
 		m_bClosingDown = true;
 	}
-
 	return CDialog::OnCommand(wParam, lParam);
 }

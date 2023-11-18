@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -16,13 +16,13 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
 #include "emule.h"
-#include "ChatSelector.h"
 #include "HTRichEditCtrl.h"
 #include "emuledlg.h"
 #include "UpDownClient.h"
 #include "TaskbarNotifier.h"
 #include "ListenSocket.h"
 #include "ChatWnd.h"
+#include "ChatSelector.h"
 #include "Log.h"
 #include "MenuCmds.h"
 #include "ClientDetailDialog.h"
@@ -174,7 +174,7 @@ CChatItem* CChatSelector::StartSession(CUpDownClient *client, bool show)
 	TCITEM newitem;
 	newitem.mask = TCIF_PARAM | TCIF_TEXT | TCIF_IMAGE;
 	newitem.lParam = (LPARAM)chatitem;
-	name.Replace(_T("&"), _T("&&"));
+	DupAmpersand(name);
 	newitem.pszText = const_cast<LPTSTR>((LPCTSTR)name);
 	newitem.iImage = 0;
 	int iItemNr = InsertItem(GetItemCount(), &newitem);
@@ -233,13 +233,16 @@ void CChatSelector::ProcessMessage(CUpDownClient *sender, const CString &message
 	if (thePrefs.GetIRCAddTimeStamp())
 		AddTimeStamp(ci);
 	ci->log->AppendKeyWord(sender->GetUserName(), RECV_SOURCE_MSG_COLOR);
-	ci->log->AppendText(_T(": ") + message + _T('\n'));
+	ci->log->AppendText(_T(": "));
+	ci->log->AppendText(message);
+	ci->log->AppendText(_T("\n"));
 	bool isCurTab = (GetTabByClient(sender) == GetCurSel());
 	if (!isCurTab || !GetParent()->IsWindowVisible()) {
 		ci->notify = true;
 		if (isCurTab && (isNewChatWindow || thePrefs.GetNotifierOnEveryChatMsg())) {
-			CString str(GetResString(IDS_TBN_NEWCHATMSG));
-			str.AppendFormat(_T(" %s:'%s'\n"), sender->GetUserName(), (LPCTSTR)message);
+			CString str;
+			str.Format(_T("%s %s:'%s'\n"), (LPCTSTR)GetResString(IDS_TBN_NEWCHATMSG)
+				, sender->GetUserName(), (LPCTSTR)message);
 			theApp.emuledlg->ShowNotifier(str, TBN_CHAT);
 		}
 	}
@@ -267,7 +270,7 @@ void CChatSelector::ShowCaptchaResult(CUpDownClient *sender, const CString &strR
 	}
 }
 
-bool CChatSelector::SendMessage(const CString &rstrMessage)
+bool CChatSelector::SendText(const CString &rstrText)
 {
 	CChatItem *ci = GetCurrentChatItem();
 	if (!ci)
@@ -275,7 +278,7 @@ bool CChatSelector::SendMessage(const CString &rstrMessage)
 
 	if (ci->history.GetCount() == thePrefs.GetMaxChatHistoryLines())
 		ci->history.RemoveAt(0);
-	ci->history.Add(rstrMessage);
+	ci->history.Add(rstrText);
 	ci->history_pos = ci->history.GetCount();
 
 	// advance spam filter stuff
@@ -294,15 +297,17 @@ bool CChatSelector::SendMessage(const CString &rstrMessage)
 	// there are three cases on connecting/sending the message:
 	if (ci->client->socket && ci->client->socket->IsConnected()) {
 		// 1.) the client is connected already - this is simple, just send it
-		ci->client->SendChatMessage(rstrMessage);
+		ci->client->SendChatMessage(rstrText);
 		if (thePrefs.GetIRCAddTimeStamp())
 			AddTimeStamp(ci);
 		ci->log->AppendKeyWord(thePrefs.GetUserNick(), SENT_TARGET_MSG_COLOR);
-		ci->log->AppendText(_T(": ") + rstrMessage + _T('\n'));
+		ci->log->AppendText(_T(": "));
+		ci->log->AppendText(rstrText);
+		ci->log->AppendText(_T("\n"));
 	} else if (ci->client->GetFriend() != NULL) {
-		// We are not connected and this client is a friend - friends have additional ways to connect and additional checks
-		// to make sure they are really friends, let the friend class is handling it
-		ci->strMessagePending = rstrMessage;
+		// We are not connected and this client is a friend - friends have additional ways to connect and additional
+		// checks to make sure they are really friends; let the friend class handle it
+		ci->strMessagePending = rstrText;
 		ci->client->SetChatState(MS_CONNECTING);
 		ci->client->GetFriend()->TryToConnect(this);
 	} else {
@@ -311,7 +316,7 @@ bool CChatSelector::SendMessage(const CString &rstrMessage)
 		if (thePrefs.GetIRCAddTimeStamp())
 			AddTimeStamp(ci);
 		ci->log->AppendKeyWord(_T("*** ") + GetResString(IDS_CONNECTING), STATUS_MSG_COLOR);
-		ci->strMessagePending = rstrMessage;
+		ci->strMessagePending = rstrText;
 		ci->client->SetChatState(MS_CONNECTING);
 		ci->client->TryToConnect(true);
 	}
@@ -338,7 +343,8 @@ void CChatSelector::ConnectingResult(CUpDownClient *sender, bool success)
 				AddTimeStamp(ci);
 			ci->log->AppendKeyWord(thePrefs.GetUserNick(), SENT_TARGET_MSG_COLOR);
 			ci->log->AppendText(_T(": "));
-			ci->log->AppendText(ci->strMessagePending + _T('\n'));
+			ci->log->AppendText(ci->strMessagePending);
+			ci->log->AppendText(_T("\n"));
 
 			ci->strMessagePending.Empty();
 		}
@@ -477,9 +483,7 @@ void CChatSelector::EndSession(CUpDownClient *client)
 	int iTabItems = GetItemCount();
 	if (iTabItems > 0) {
 		// select next tab
-		/*if (iCurSel == CB_ERR)
-			iCurSel = 0;
-		else*/ if (iCurSel >= iTabItems)
+		if (iCurSel >= iTabItems)
 			iCurSel = iTabItems - 1;
 		(void)SetCurSel(iCurSel);	// returns CB_ERR if error or no prev. selection(!)
 		if (GetCurSel() == CB_ERR)	// get the real current selection
@@ -629,7 +633,7 @@ void CChatSelector::ReportConnectionProgress(CUpDownClient *pClient, const CStri
 
 void CChatSelector::ClientObjectChanged(CUpDownClient *pOldClient, CUpDownClient *pNewClient)
 {
-	// the friend has decided to change the clients objects (because the old doesn't seems to be our friend) during a connection try
+	// the friend has decided to change the clients objects (because the old doesn't seem to be our friend) during a connection try
 	// in order to not close and reopen a new session and lose the prior chat, switch the objects on an existing tab
 	// nothing else changes since the tab is supposed to be still connected to the same friend
 	CChatItem *ci = GetItemByClient(pOldClient);

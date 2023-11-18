@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2010 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -17,33 +17,22 @@
 
 #pragma once
 
-struct OpenOvFile_Struct
-{
-	uchar		ucMD4FileHash[16];
-	uint64		uFileSize;
-	HANDLE		hFile;
-	uint32		nInUse;
-	bool		bStatsIsPartfile;
-	bool		bCompress;
-};
+class Packet;
+class CUpDownClient;
+typedef CTypedPtrList<CPtrList, Packet*> CPacketList;
 
 struct UploadingToClient_Struct;
-class CUploadDiskIOThread;
-struct OverlappedEx_Struct
+
+struct OverlappedRead_Struct
 {
 	OVERLAPPED				oOverlap; // must be the first member
-	OpenOvFile_Struct		*pFileStruct;
+	CKnownFile				*pFile;
 	UploadingToClient_Struct *pUploadClientStruct;
 	uint64					uStartOffset;
 	uint64					uEndOffset;
 	BYTE					*pBuffer;
-	DWORD					dwRead;
+	POSITION				pos;
 };
-
-class Packet;
-typedef CTypedPtrList<CPtrList, Packet*> CPacketList;
-
-class CUpDownClient;
 
 class CUploadDiskIOThread : public CWinThread
 {
@@ -54,51 +43,30 @@ public:
 	CUploadDiskIOThread(const CUploadDiskIOThread&) = delete;
 	CUploadDiskIOThread& operator=(const CUploadDiskIOThread&) = delete;
 
-	void		NewBlockRequestsAvailable();
-	void		SocketNeedsMoreData();
-	void		EndThread();
-	static bool ShouldCompressBasedOnFilename(const CString &strFileName);
-
-	uint32		dbgDataReadPending;
-protected:
-
+	void		EndThread();	//completionkey == 0
+	void		WakeUpCall();	//completionkey == (ULONG_PTR)(~0)
+	static void	DissociateFile(CKnownFile *pFile);
 
 private:
 	static UINT AFX_CDECL RunProc(LPVOID pParam);
 	UINT		RunInternal();
 
+	bool		AssociateFile(CKnownFile *pFile);
+	static bool ShouldCompressBasedOnFilename(const CString &strFileName);
 	void		StartCreateNextBlockPackage(UploadingToClient_Struct *pUploadClientStruct);
-	bool		ReleaseOvOpenFile(OpenOvFile_Struct *pOpenOvFileStruct);
-	void		ReadCompletionRoutine(DWORD dwErrorCode, DWORD dwBytesRead, OverlappedEx_Struct *pOverlappedExStruct);
+	void		ReadCompletionRoutine(DWORD dwRead, const OverlappedRead_Struct *pOvRead);
 
-	static void CreateStandardPackets(byte *pbyData, uint64 uStartOffset, uint64 uEndOffset, bool bFromPF, CPacketList &rOutPacketList, const uchar *pucMD4FileHash, const CString &strDbgClientInfo);
-	static void CreatePackedPackets(byte *pbyData, uint64 uStartOffset, uint64 uEndOffset, bool bFromPF, CPacketList &rOutPacketList, const uchar *pucMD4FileHash, const CString &strDbgClientInfo);
-	static void CreatePeerCachePackets(byte *pbyData, uint64 uStartOffset, uint64 uEndOffset, uint64 uFilesize, bool bFromPF, CPacketList &rOutPacketList, const uchar *pucMD4FileHash, CUpDownClient *pClient);
+	static void CreatePackedPackets(const OverlappedRead_Struct &OverlappedRead, CPacketList &rOutPacketList);
+	static void CreatePeerCachePackets(const OverlappedRead_Struct &OverlappedRead, CPacketList &rOutPacketList);
+	static void CreateStandardPackets(const OverlappedRead_Struct &OverlappedRead, CPacketList &rOutPacketList);
 
-	CEvent		*m_eventThreadEnded;
-	CEvent		m_eventNewBlockRequests;
-	CEvent		m_eventAsyncIOFinished;
-	CEvent		m_eventSocketNeedsData;
-	CTypedPtrList<CPtrList, OpenOvFile_Struct*>		m_listOpenFiles;
-	CTypedPtrList<CPtrList, OverlappedEx_Struct*>	m_listPendingIO;
-	CTypedPtrList<CPtrList, OverlappedEx_Struct*>	m_listFinishedIO;
-	bool		m_bSignalThrottler;
+	CEvent		m_eventThreadEnded;
+	CTypedPtrList<CPtrList, OverlappedRead_Struct*>	m_listPendingIO;
+
+	HANDLE		m_hPort;
 	volatile bool m_bRun;
-};
-
-class CSyncHelper
-{
-public:
-	CSyncHelper()
-		: m_pFile()
-	{
-	}
-
-	~CSyncHelper()
-	{
-		if (m_pFile)
-			m_pFile->Unlock();
-	}
-
-	CSyncObject *m_pFile;
+	bool		m_bSignalThrottler;
+#ifdef _DEBUG
+	uint64		dbgDataReadPending;
+#endif
 };

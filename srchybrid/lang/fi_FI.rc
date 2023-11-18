@@ -498,7 +498,7 @@ BEGIN
     IDS_GLOBALSEARCH        "Palvelimilta"
     IDS_METHOD              "Tapa"
     IDS_UNDO                "Kumoa"
-    IDS_DAYLY               "päivittäin"
+    IDS_DAILY               "päivittäin"
     IDS_DAY_MO_FR           "Ma - pe"
 END
 
@@ -1562,7 +1562,7 @@ BEGIN
     IDS_EM_HELP             "&Ohje"
     IDS_WRN_FRIENDDUPLIPPORT
                             "En lisännyt kaveria.\r\n\r\nToinen kaveri on olemassa samalla IP-osoitteella ja portilla."
-    IDS_DYNUP               "Lähetysnopeuden tunnustelu"
+    IDS_DYNUP               "Lähetysnopeuden tunnustelu (ei suositella)"
     IDS_KADOVERHEAD         "Kademlian kokonaisliikenne %s (paketteja: %s)"
     IDS_FIND                "Etsi..."
     IDS_LOG_BANNED_CLIENTS  "Kirjaa lokiin estetyt käyttäjät"

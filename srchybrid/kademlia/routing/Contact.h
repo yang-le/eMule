@@ -1,5 +1,5 @@
 /*
-Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
+Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -29,7 +29,7 @@ There is going to be a new forum created just for the Kademlia side of the clien
 If you feel there is an error or a way to improve something, please
 post it in the forum first and let us look at it. If it is a real improvement,
 it will be added to the official client. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form.
+what all it does, can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 their client on the eMule forum.
 */
@@ -52,22 +52,22 @@ namespace Kademlia
 		CContact(const CContact &k1)				{ Copy(k1); }
 		CContact& operator=(const CContact &k1)		{ Copy(k1); return *this; }
 
-		void	GetClientID(CUInt128 *puId) const;
+		void	GetClientID(CUInt128 &uId) const;
 		CUInt128 GetClientID() const;
-		void	GetClientID(CString *psId) const;
+		void	GetClientID(CString &sId) const;
 		void	SetClientID(const CUInt128 &uClientID);
-		void	GetDistance(CUInt128 *puDistance) const;
-		void	GetDistance(CString *psDistance) const;
+		void	GetDistance(CUInt128 &uDistance) const;
+		void	GetDistance(CString &sDistance) const;
 		CUInt128 GetDistance() const;
 		uint32	GetIPAddress() const;
 		uint32	GetNetIP() const;
-		void	GetIPAddress(CString *psIp) const;
+		void	GetIPAddress(CString &sIp) const;
 		void	SetIPAddress(uint32 uIp);
 		uint16	GetTCPPort() const;
-		void	GetTCPPort(CString *psPort) const;
+		void	GetTCPPort(CString &sPort) const;
 		void	SetTCPPort(uint16 uPort);
 		uint16	GetUDPPort() const;
-		void	GetUDPPort(CString *psPort) const;
+		void	GetUDPPort(CString &sPort) const;
 		void	SetUDPPort(uint16 uPort);
 		byte	GetType() const;
 		void	UpdateType();

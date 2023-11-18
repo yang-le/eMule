@@ -10,6 +10,11 @@ class CDirectoryTreeCtrl : public CTreeCtrl
 	DECLARE_DYNAMIC(CDirectoryTreeCtrl)
 
 public:
+	// construction / destruction
+	CDirectoryTreeCtrl() =  default;
+	virtual	~CDirectoryTreeCtrl();
+	virtual BOOL OnCommand(WPARAM wParam, LPARAM);
+
 	// initialize control
 	void Init();
 	// get all shared directories
@@ -18,7 +23,6 @@ public:
 	void SetSharedDirectories(CStringList &list);
 
 private:
-	CImageList m_image;
 	// add a new item
 	HTREEITEM AddChildItem(HTREEITEM hRoot, const CString &strText);
 	// add subdirectory items
@@ -26,7 +30,7 @@ private:
 	// return the full path of an item (like C:\abc\somewhere\inheaven\)
 	CString GetFullPath(HTREEITEM hItem);
 	// returns true if strDir has at least one subdirectory
-	bool HasSubdirectories(const CString &strDir);
+	static bool HasSubdirectories(const CString &strDir);
 	// check status of an item has changed
 	void CheckChanged(HTREEITEM hItem, bool bChecked);
 	// returns true if a subdirectory of strDir is shared
@@ -41,15 +45,11 @@ private:
 	void DelShare(const CString &strDir);
 	void MarkChildren(HTREEITEM hChild, bool mark);
 
+	CImageList m_images;
 	CStringList m_lstShared;
+	CStringArray m_lstUNC;
 	CString m_strLastRightClicked;
-	bool m_bSelectSubDirs;
-
-public:
-	// construction / destruction
-	CDirectoryTreeCtrl();
-	virtual	~CDirectoryTreeCtrl();
-	virtual BOOL OnCommand(WPARAM wParam, LPARAM);
+//	bool m_bSelectSubDirs;
 
 protected:
 	DECLARE_MESSAGE_MAP()

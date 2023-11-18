@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -34,8 +34,8 @@ public:
 template<> inline UINT AFXAPI HashKey(const CCKey &key)
 {
 	uint32 hash = 1;
-	for (int i = 0; i < 16; ++i)
-		hash += (key.m_key[i] + 1) * ((i * i) + 1);
+	for (int i = 0; i < MDX_DIGEST_SIZE; ++i)
+		hash += (key.m_key[i] + 1) * (i * i + 1);
 	return hash;
 };
 
@@ -49,13 +49,13 @@ public:
 	CSKey& operator=(const CSKey &k1)		{ md4cpy(m_key, k1.m_key); return *this; }
 	friend bool operator==(const CSKey &k1, const CSKey &k2);
 
-	uchar m_key[16];
+	uchar m_key[MDX_DIGEST_SIZE];
 };
 
 template<> inline UINT AFXAPI HashKey(const CSKey &key)
 {
 	uint32 hash = 1;
-	for (int i = 0; i < 16; ++i)
-		hash += (key.m_key[i] + 1) * ((i * i) + 1);
+	for (int i = 0; i < MDX_DIGEST_SIZE; ++i)
+		hash += (key.m_key[i] + 1) * (i * i + 1);
 	return hash;
 };

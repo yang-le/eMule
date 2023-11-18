@@ -17,7 +17,6 @@ class CPPgDebug : public CPropertyPage
 
 public:
 	CPPgDebug();
-	virtual	~CPPgDebug() = default;
 
 protected:
 	HTREEITEM m_htiServer;

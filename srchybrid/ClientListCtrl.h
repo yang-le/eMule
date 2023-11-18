@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -24,6 +24,7 @@ class CClientListCtrl : public CMuleListCtrl, public CListCtrlItemWalk
 {
 	DECLARE_DYNAMIC(CClientListCtrl)
 
+	CImageList	*m_pImageList;
 public:
 	CClientListCtrl();
 
@@ -38,7 +39,6 @@ public:
 	void	ShowKnownClients();
 
 protected:
-	CImageList *m_pImageList;
 	void SetAllIcons();
 	CString GetItemDisplayText(const CUpDownClient *client, int iSubItem) const;
 	static int CALLBACK SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
@@ -48,7 +48,6 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnLvnColumnClick(LPNMHDR pNMHDR, LRESULT *pResult);
-	afx_msg void OnLvnGetDispInfo(LPNMHDR pNMHDR, LRESULT *pResult);
 	afx_msg void OnContextMenu(CWnd*, CPoint point);
 	afx_msg void OnNmDblClk(LPNMHDR, LRESULT *pResult);
 	afx_msg void OnSysColorChange();

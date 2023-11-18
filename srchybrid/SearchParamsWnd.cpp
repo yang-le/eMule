@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -20,7 +20,6 @@
 #include "SearchDlg.h"
 #include "SearchParamsWnd.h"
 #include "SearchResultsWnd.h"
-#include "SearchParams.h"
 #include "OtherFunctions.h"
 #include "CustomAutoComplete.h"
 #include "HelpIDs.h"
@@ -61,7 +60,7 @@ END_MESSAGE_MAP()
 
 CSearchParamsWnd::CSearchParamsWnd()
 	: m_searchdlg()
-	, m_hcurMove(::LoadCursor(NULL, IDC_SIZEALL)) // load default windows system cursor (a shared resource)
+	, m_hcurMove(::LoadCursor(NULL, IDC_SIZEALL)) // load default windows system cursor (a shared resource, do not destoy)
 	, m_pacSearchString()
 {
 }
@@ -72,10 +71,6 @@ CSearchParamsWnd::~CSearchParamsWnd()
 		m_pacSearchString->Unbind();
 		m_pacSearchString->Release();
 	}
-
-	// 'DestroyCursor' is not to be used for a shared cursor (as returned with LoadCursor) (?!)
-//	if (m_hcurMove)
-//		VERIFY(::DestroyCursor(m_hcurMove));
 }
 
 void CSearchParamsWnd::DoDataExchange(CDataExchange *pDX)
@@ -265,16 +260,13 @@ CSize CSearchParamsWnd::CalcDynamicLayout(int nLength, DWORD dwMode)
 BOOL CSearchParamsWnd::OnSetCursor(CWnd *pWnd, UINT nHitTest, UINT message)
 {
 	if (m_hcurMove && ((m_dwStyle & (CBRS_GRIPPER | CBRS_FLOATING)) == CBRS_GRIPPER) && pWnd->GetSafeHwnd() == m_hWnd) {
-		CPoint ptCursor;
+		POINT ptCursor;
 		if (::GetCursorPos(&ptCursor)) {
 			ScreenToClient(&ptCursor);
 			CRect rcClient;
 			GetClientRect(&rcClient);
-			bool bMouseOverGripper;
-			if (m_dwStyle & CBRS_ORIENT_HORZ)
-				bMouseOverGripper = (rcClient.PtInRect(ptCursor) && ptCursor.x <= 10);
-			else
-				bMouseOverGripper = (rcClient.PtInRect(ptCursor) && ptCursor.y <= 10);
+			bool bMouseOverGripper = rcClient.PtInRect(ptCursor)
+				&& ((m_dwStyle & CBRS_ORIENT_HORZ) ? ptCursor.x : ptCursor.y) <= 10;
 			if (bMouseOverGripper) {
 				::SetCursor(m_hcurMove);
 				return TRUE;
@@ -295,11 +287,11 @@ void CSearchParamsWnd::OnSize(UINT nType, int cx, int cy)
 		GetClientRect(&rcClient);
 		CalcInsideRect(rcClient, TRUE);
 
-		// resizing the name field instead the filter fields makes sense, because the filter input mostly stays small while a bigger
-		// name filed allows longer search queries without scrolling.
-		// however it doesn't look nice at all, because of the asymmetry which is created by not resizing the method selectors
-		// but resizing them wouldn't make any sense at all, so we need to find a better build up at some point, but for now
-		// stay with the old method which is not perfect but looks fair enough
+		// resizing the name field instead the filter fields makes sense, because the filter input mostly
+		// stays small while a bigger name filed allows longer search queries without scrolling.
+		// however it doesn't look nice because of the asymmetry which is created by not resizing
+		// the method selectors but resizing them wouldn't make any sense at all, so we need to find a better
+		// build up at some point. For now stay with the old method which is not perfect but looks fair enough
 		/*
 		HDWP hdwp = BeginDeferWindowPos(12);
 		if (hdwp) {
@@ -308,7 +300,7 @@ void CSearchParamsWnd::OnSize(UINT nType, int cx, int cy)
 			if (iWidthOpts < m_rcOpts.Width())
 				iWidthOpts = m_rcOpts.Width();
 			int iXPosOpts = rcClient.right - iWidthOpts;
-			ASSERT( m_rcStart.Width() == m_rcMore.Width() && m_rcStart.Width() == m_rcCancel.Width() );
+			ASSERT(m_rcStart.Width() == m_rcMore.Width() && m_rcStart.Width() == m_rcCancel.Width());
 			int iXPosButtons = iXPosOpts - m_rcStart.Width() - 2;
 			int iXPosDDArrow = iXPosButtons - 2 - m_rcDropDownArrow.Width();
 			int iWidthName = iXPosDDArrow - (rcClient.left + m_rcName.left);
@@ -335,7 +327,7 @@ void CSearchParamsWnd::OnSize(UINT nType, int cx, int cy)
 		int iWidthOpts = rcClient.right - (rcClient.left + m_rcOpts.left);
 		HDWP hdwp = BeginDeferWindowPos(12);
 		if (hdwp) {
-			UINT uFlags = SWP_NOZORDER | SWP_NOACTIVATE;
+			const UINT uFlags = SWP_NOZORDER | SWP_NOACTIVATE;
 			hdwp = DeferWindowPos(hdwp, *GetDlgItem(IDC_MSTATIC3), NULL, rcClient.left + m_rcNameLbl.left, rcClient.top + m_rcNameLbl.top, m_rcNameLbl.Width(), m_rcNameLbl.Height(), uFlags);
 			hdwp = DeferWindowPos(hdwp, m_ctlName, NULL, rcClient.left + m_rcName.left, rcClient.top + m_rcName.top, m_rcName.Width(), m_rcName.Height(), uFlags);
 			hdwp = DeferWindowPos(hdwp, *GetDlgItem(IDC_DD), NULL, rcClient.left + m_rcDropDownArrow.left, rcClient.top + m_rcDropDownArrow.top, m_rcDropDownArrow.Width(), m_rcDropDownArrow.Height(), uFlags);
@@ -366,27 +358,30 @@ void CSearchParamsWnd::OnSize(UINT nType, int cx, int cy)
 
 		int y = rcClient.top;
 
+		CWnd *item = GetDlgItem(IDC_MSTATIC3);
 		CRect rcNameLbl;
-		GetDlgItem(IDC_MSTATIC3)->GetWindowRect(rcNameLbl);
+		item->GetWindowRect(rcNameLbl);
 		ScreenToClient(rcNameLbl);
-		GetDlgItem(IDC_MSTATIC3)->MoveWindow(rcClient.left, y, rcNameLbl.Width(), rcNameLbl.Height());
+		item->MoveWindow(rcClient.left, y, rcNameLbl.Width(), rcNameLbl.Height());
 		y += rcNameLbl.Height() + 2;
 
 		CRect rcName;
 		m_ctlName.GetWindowRect(rcName);
 		ScreenToClient(rcName);
+		item = GetDlgItem(IDC_DD);
 		CRect rcDropDownArrow;
-		GetDlgItem(IDC_DD)->GetWindowRect(rcDropDownArrow);
+		item->GetWindowRect(rcDropDownArrow);
 		ScreenToClient(rcDropDownArrow);
 		int iNameWidth = rcClient.Width() - 4 - rcDropDownArrow.Width();
 		m_ctlName.MoveWindow(rcClient.left, y, iNameWidth, rcName.Height());
-		GetDlgItem(IDC_DD)->MoveWindow(rcClient.left + iNameWidth + 4, y, rcDropDownArrow.Width(), rcDropDownArrow.Height());
+		item->MoveWindow(rcClient.left + iNameWidth + 4, y, rcDropDownArrow.Width(), rcDropDownArrow.Height());
 		y += rcName.Height() + 2;
 
+		item = GetDlgItem(IDC_MSTATIC7);
 		CRect rcFileTypeLbl;
-		GetDlgItem(IDC_MSTATIC7)->GetWindowRect(rcFileTypeLbl);
+		item->GetWindowRect(rcFileTypeLbl);
 		ScreenToClient(rcFileTypeLbl);
-		GetDlgItem(IDC_MSTATIC7)->MoveWindow(rcClient.left, y, rcFileTypeLbl.Width(), rcFileTypeLbl.Height());
+		item->MoveWindow(rcClient.left, y, rcFileTypeLbl.Width(), rcFileTypeLbl.Height());
 		y += rcFileTypeLbl.Height() + 2;
 
 		CRect rcFileType;
@@ -394,17 +389,20 @@ void CSearchParamsWnd::OnSize(UINT nType, int cx, int cy)
 		ScreenToClient(rcFileType);
 		m_ctlFileType.MoveWindow(rcClient.left, y, rcFileType.Width(), rcFileType.Height());
 
+		//Combo box height is 24 and button is 22, but the same on-screen height
+		item = GetDlgItem(IDC_SEARCH_RESET);
 		CRect rcReset;
-		GetDlgItem(IDC_SEARCH_RESET)->GetWindowRect(rcReset);
+		item->GetWindowRect(rcReset);
 		ScreenToClient(rcReset);
-		GetDlgItem(IDC_SEARCH_RESET)->MoveWindow(rcClient.left + rcFileType.Width() + 8, y, rcReset.Width(), rcReset.Height());
+		item->MoveWindow(rcClient.left + rcFileType.Width() + 8, y - 1, rcReset.Width(), rcReset.Height());
 
 		y += rcFileType.Height() + 8;
 
+		item = GetDlgItem(IDC_METH);
 		CRect rcMethodLbl;
-		GetDlgItem(IDC_METH)->GetWindowRect(rcMethodLbl);
+		item->GetWindowRect(rcMethodLbl);
 		ScreenToClient(rcMethodLbl);
-		GetDlgItem(IDC_METH)->MoveWindow(rcClient.left, y, rcMethodLbl.Width(), rcMethodLbl.Height());
+		item->MoveWindow(rcClient.left, y, rcMethodLbl.Width(), rcMethodLbl.Height());
 		y += rcMethodLbl.Height() + 2;
 
 		CRect rcMethod;
@@ -437,16 +435,12 @@ void CSearchParamsWnd::OnUpdateCmdUI(CFrameWnd* /*pTarget*/, BOOL /*bDisableIfNo
 void CSearchParamsWnd::UpdateControls()
 {
 	int iMethod = m_ctlMethod.GetCurSel();
-	if (iMethod != CB_ERR) {
-		if (iMethod != thePrefs.GetSearchMethod()) {
-			if (iMethod == SearchTypeKademlia)
-				OnEnChangeName();
-			else if (iMethod == SearchTypeEd2kServer && m_searchdlg->IsLocalEd2kSearchRunning())
-				m_ctlStart.EnableWindow(FALSE);
-			else if (iMethod == SearchTypeEd2kGlobal && m_searchdlg->IsGlobalEd2kSearchRunning())
-				m_ctlStart.EnableWindow(FALSE);
-			thePrefs.SetSearchMethod(iMethod);
-		}
+	if (iMethod != CB_ERR && iMethod != thePrefs.GetSearchMethod()) {
+		if (iMethod == SearchTypeKademlia)
+			OnEnChangeName();
+		else if (m_searchdlg->IsLocalEd2kSearchRunning() && (iMethod == SearchTypeEd2kServer || iMethod == SearchTypeEd2kGlobal))
+			m_ctlStart.EnableWindow(FALSE);
+		thePrefs.SetSearchMethod(iMethod);
 	}
 
 	DWORD_PTR dwData = static_cast<DWORD_PTR>(iMethod == SearchTypeEd2kServer || iMethod == SearchTypeEd2kGlobal || iMethod == SearchTypeContentDB);
@@ -619,12 +613,12 @@ void CSearchParamsWnd::Localize()
 	HDITEM hdi;
 	hdi.mask = HDI_TEXT;
 
-	CString sHdr(GetResString(IDS_PARAMETER));
+	const CString &sHdr(GetResString(IDS_PARAMETER));
 	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)sHdr);
 	pHeaderCtrl->SetItem(0, &hdi);
 
-	sHdr = GetResString(IDS_VALUE);
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)sHdr);
+	const CString &sHdr1(GetResString(IDS_VALUE));
+	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)sHdr1);
 	pHeaderCtrl->SetItem(1, &hdi);
 }
 
@@ -729,9 +723,7 @@ void CSearchParamsWnd::OnDDClicked()
 
 BOOL CSearchParamsWnd::SaveSearchStrings()
 {
-	if (m_pacSearchString == NULL)
-		return FALSE;
-	return m_pacSearchString->SaveList(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + SEARCH_STRINGS_PROFILE);
+	return m_pacSearchString && m_pacSearchString->SaveList(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + SEARCH_STRINGS_PROFILE);
 }
 
 void CSearchParamsWnd::SaveSettings()
@@ -769,6 +761,9 @@ void CSearchParamsWnd::OnSysCommand(UINT nID, LPARAM lParam)
 
 void CSearchParamsWnd::SetParameters(const SSearchParams *pParams)
 {
+	//There was a weird report about persistent "Syntax error" with all fields
+	//seemingly empty. That effectively disabled any search until restart.
+	WipeOptionFields(); //set all to blanks
 	if (!pParams->bClientSharedFiles) {
 		m_ctlName.SetWindowText(pParams->strExpression);
 		m_ctlFileType.SelectItemDataString(pParams->strFileType);
@@ -777,34 +772,29 @@ void CSearchParamsWnd::SetParameters(const SSearchParams *pParams)
 		m_ctlOpts.SetItemText(orMaxSize, 1, pParams->strMaxSize);
 		m_ctlOpts.SetItemText(orExtension, 1, pParams->strExtension);
 		CString strBuff;
-		if (pParams->uAvailability > 0)
+		if (pParams->uAvailability > 0) {
 			strBuff.Format(_T("%u"), pParams->uAvailability);
-		m_ctlOpts.SetItemText(orAvailability, 1, strBuff);
-
-		if (pParams->uComplete > 0)
+			m_ctlOpts.SetItemText(orAvailability, 1, strBuff);
+		}
+		if (pParams->uComplete > 0) {
 			strBuff.Format(_T("%u"), pParams->uComplete);
-		else
-			strBuff.Empty();
-		m_ctlOpts.SetItemText(orCompleteSources, 1, strBuff);
-
-		m_ctlOpts.SetItemText(orCodec, 1, pParams->strCodec);
-
-		if (pParams->ulMinBitrate > 0)
-			strBuff.Format(_T("%lu"), pParams->ulMinBitrate);
-		else
-			strBuff.Empty();
-		m_ctlOpts.SetItemText(orBitrate, 1, strBuff);
-
-		if (pParams->ulMinLength > 0)
-			SecToTimeLength(pParams->ulMinLength, strBuff);
-		else
-			strBuff.Empty();
-		m_ctlOpts.SetItemText(orLength, 1, strBuff);
-		m_ctlOpts.SetItemText(orTitle, 1, pParams->strTitle);
-		m_ctlOpts.SetItemText(orAlbum, 1, pParams->strAlbum);
-		m_ctlOpts.SetItemText(orArtist, 1, pParams->strArtist);
-	} else
-		WipeOptionFields(); //as a precaution
+			m_ctlOpts.SetItemText(orCompleteSources, 1, strBuff);
+		}
+		if (!pParams->strCodec.IsEmpty())
+			m_ctlOpts.SetItemText(orCodec, 1, pParams->strCodec);
+		if (pParams->uiMinBitrate > 0) {
+			strBuff.Format(_T("%u"), pParams->uiMinBitrate);
+			m_ctlOpts.SetItemText(orBitrate, 1, strBuff);
+		}
+		if (pParams->uiMinLength > 0)
+			m_ctlOpts.SetItemText(orLength, 1, SecToTimeLength(pParams->uiMinLength));
+		if (!pParams->strTitle.IsEmpty())
+			m_ctlOpts.SetItemText(orTitle, 1, pParams->strTitle);
+		if (!pParams->strAlbum.IsEmpty())
+			m_ctlOpts.SetItemText(orAlbum, 1, pParams->strAlbum);
+		if (!pParams->strArtist.IsEmpty())
+			m_ctlOpts.SetItemText(orArtist, 1, pParams->strArtist);
+	}
 }
 
 uint64 CSearchParamsWnd::GetSearchAttrSize(const CString &rstrExpr)
@@ -897,6 +887,14 @@ ULONG CSearchParamsWnd::GetSearchAttrLength(const CString &rstrExpr)
 	return (ULONG)(dbl + 0.5); //default is seconds
 }
 
+void CSearchParamsWnd::ParamErrorBox(EOptsRows eRow)
+{
+	CString strError(GetResString(IDS_SEARCH_EXPRERROR));
+	strError += _T("\n\n");
+	strError.AppendFormat(GetResString(IDS_SEARCH_ATTRERR), (LPCTSTR)m_ctlOpts.GetItemText(eRow, 0));
+	AfxMessageBox(strError, MB_ICONWARNING | MB_HELP, eMule_FAQ_Search - HID_BASE_PROMPT);
+}
+
 void CSearchParamsWnd::WipeOptionFields()
 {
 	for (int i = m_ctlOpts.GetItemCount(); --i >= 0;)
@@ -923,23 +921,17 @@ SSearchParams* CSearchParamsWnd::GetParameters()
 		strFileType = pszED2KFileType;
 	}
 
-	const CString &strMinSize = m_ctlOpts.GetItemText(orMinSize, 1);
+	const CString &strMinSize(m_ctlOpts.GetItemText(orMinSize, 1));
 	uint64 ullMinSize = GetSearchAttrSize(strMinSize);
 	if (ullMinSize == _UI64_MAX) {
-		CString strError(GetResString(IDS_SEARCH_EXPRERROR));
-		strError += _T("\n\n");
-		strError.AppendFormat(GetResString(IDS_SEARCH_ATTRERR), (LPCTSTR)m_ctlOpts.GetItemText(orMinSize, 0));
-		AfxMessageBox(strError, MB_ICONWARNING | MB_HELP, eMule_FAQ_Search - HID_BASE_PROMPT);
+		ParamErrorBox(orMinSize);
 		return NULL;
 	}
 
-	const CString &strMaxSize = m_ctlOpts.GetItemText(orMaxSize, 1);
+	const CString &strMaxSize(m_ctlOpts.GetItemText(orMaxSize, 1));
 	uint64 ullMaxSize = GetSearchAttrSize(strMaxSize);
 	if (ullMaxSize == _UI64_MAX) {
-		CString strError(GetResString(IDS_SEARCH_EXPRERROR));
-		strError += _T("\n\n");
-		strError.AppendFormat(GetResString(IDS_SEARCH_ATTRERR), (LPCTSTR)m_ctlOpts.GetItemText(orMaxSize, 0));
-		AfxMessageBox(strError, MB_ICONWARNING | MB_HELP, eMule_FAQ_Search - HID_BASE_PROMPT);
+		ParamErrorBox(orMaxSize);
 		return NULL;
 	}
 
@@ -959,13 +951,10 @@ SSearchParams* CSearchParamsWnd::GetParameters()
 
 	UINT uAvailability = 0;
 	if ((m_ctlOpts.GetItemData(orAvailability) & 1) == 0) {
-		CString strAvailability = m_ctlOpts.GetItemText(orAvailability, 1);
+		CString strAvailability(m_ctlOpts.GetItemText(orAvailability, 1));
 		uAvailability = GetSearchAttrNumber(strAvailability);
 		if (uAvailability == _UI32_MAX) {
-			CString strError(GetResString(IDS_SEARCH_EXPRERROR));
-			strError += _T("\n\n");
-			strError.AppendFormat(GetResString(IDS_SEARCH_ATTRERR), (LPCTSTR)m_ctlOpts.GetItemText(orAvailability, 0));
-			AfxMessageBox(strError, MB_ICONWARNING | MB_HELP, eMule_FAQ_Search - HID_BASE_PROMPT);
+			ParamErrorBox(orAvailability);
 			return NULL;
 		}
 		if (uAvailability > 1000000) {
@@ -977,13 +966,10 @@ SSearchParams* CSearchParamsWnd::GetParameters()
 
 	UINT uComplete = 0;
 	if ((m_ctlOpts.GetItemData(orCompleteSources) & 1) == 0) {
-		CString strComplete = m_ctlOpts.GetItemText(orCompleteSources, 1);
+		CString strComplete(m_ctlOpts.GetItemText(orCompleteSources, 1));
 		uComplete = GetSearchAttrNumber(strComplete);
-		if (uComplete == _UI32_MAX) {
-			CString strError(GetResString(IDS_SEARCH_EXPRERROR));
-			strError += _T("\n\n");
-			strError.AppendFormat(GetResString(IDS_SEARCH_ATTRERR), (LPCTSTR)m_ctlOpts.GetItemText(orCompleteSources, 0));
-			AfxMessageBox(strError, MB_ICONWARNING | MB_HELP, eMule_FAQ_Search - HID_BASE_PROMPT);
+		if (uComplete == UINT_MAX) {
+			ParamErrorBox(orCompleteSources);
 			return NULL;
 		}
 		if (uComplete > 1000000) {
@@ -997,40 +983,32 @@ SSearchParams* CSearchParamsWnd::GetParameters()
 	if ((m_ctlOpts.GetItemData(orCodec) & 1) == 0)
 		strCodec = m_ctlOpts.GetItemText(orCodec, 1).Trim();
 
-	ULONG ulMinBitrate = 0;
+	UINT ulMinBitrate = 0;
 	if ((m_ctlOpts.GetItemData(orBitrate) & 1) == 0) {
-		CString strMinBitrate = m_ctlOpts.GetItemText(orBitrate, 1);
+		CString strMinBitrate(m_ctlOpts.GetItemText(orBitrate, 1));
 		ulMinBitrate = GetSearchAttrNumber(strMinBitrate);
-		if (ulMinBitrate == ULONG_MAX) {
-			CString strError(GetResString(IDS_SEARCH_EXPRERROR));
-			strError += _T("\n\n");
-			strError.AppendFormat(GetResString(IDS_SEARCH_ATTRERR), (LPCTSTR)m_ctlOpts.GetItemText(orBitrate, 0));
-			AfxMessageBox(strError, MB_ICONWARNING | MB_HELP, eMule_FAQ_Search - HID_BASE_PROMPT);
+		if (ulMinBitrate == UINT_MAX) {
+			ParamErrorBox(orBitrate);
 			return NULL;
 		}
 		if (ulMinBitrate > 1000000) {
 			ulMinBitrate = 1000000;
-			strMinBitrate.Format(_T("%lu"), ulMinBitrate);
+			strMinBitrate.Format(_T("%u"), ulMinBitrate);
 			m_ctlOpts.SetItemText(orBitrate, 1, strMinBitrate);
 		}
 	}
 
-	ULONG ulMinLength = 0;
+	UINT ulMinLength = 0;
 	if ((m_ctlOpts.GetItemData(orLength) & 1) == 0) {
-		const CString &strMinLength = m_ctlOpts.GetItemText(orLength, 1);
+		const CString &strMinLength(m_ctlOpts.GetItemText(orLength, 1));
 		ulMinLength = GetSearchAttrLength(strMinLength);
-		if (ulMinLength == ULONG_MAX) {
-			CString strError(GetResString(IDS_SEARCH_EXPRERROR));
-			strError += _T("\n\n");
-			strError.AppendFormat(GetResString(IDS_SEARCH_ATTRERR), (LPCTSTR)m_ctlOpts.GetItemText(orLength, 0));
-			AfxMessageBox(strError, MB_ICONWARNING | MB_HELP, eMule_FAQ_Search - HID_BASE_PROMPT);
+		if (ulMinLength == UINT_MAX) {
+			ParamErrorBox(orLength);
 			return NULL;
 		}
 		if (ulMinLength > DAY2S(1)) {
 			ulMinLength = DAY2S(1);
-			CString strValue;
-			SecToTimeLength(ulMinLength, strValue);
-			m_ctlOpts.SetItemText(orLength, 1, strValue);
+			m_ctlOpts.SetItemText(orLength, 1, SecToTimeLength(ulMinLength));
 		}
 	}
 
@@ -1047,8 +1025,8 @@ SSearchParams* CSearchParamsWnd::GetParameters()
 	//pParams->bMatchKeywords = IsDlgButtonChecked(IDC_MATCH_KEYWORDS) != 0;
 	pParams->uComplete = uComplete;
 	pParams->strCodec = strCodec;
-	pParams->ulMinBitrate = ulMinBitrate;
-	pParams->ulMinLength = ulMinLength;
+	pParams->uiMinBitrate = ulMinBitrate;
+	pParams->uiMinLength = ulMinLength;
 	if ((m_ctlOpts.GetItemData(orTitle) & 1) == 0)
 		pParams->strTitle = m_ctlOpts.GetItemText(orTitle, 1).Trim();
 	if ((m_ctlOpts.GetItemData(orAlbum) & 1) == 0)

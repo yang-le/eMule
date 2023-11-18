@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -127,7 +127,6 @@ public:
 		: CDlgPageWizard(nIDTemplate, pszCaption, pszHeaderTitle, pszHeaderSubTitle)
 	{
 	}
-	virtual	~CPPgWiz1Welcome() = default;
 	virtual BOOL OnInitDialog();
 
 protected:
@@ -190,7 +189,6 @@ public:
 		: CDlgPageWizard(nIDTemplate, pszCaption, pszHeaderTitle, pszHeaderSubTitle), m_iAutoConnectAtStart(), m_iAutoStart()
 	{
 	}
-	virtual	~CPPgWiz1General() = default;
 	virtual BOOL OnInitDialog();
 
 	CString m_strNick;
@@ -251,6 +249,9 @@ public:
 	CPPgWiz1Ports();
 	explicit CPPgWiz1Ports(UINT nIDTemplate, LPCTSTR pszCaption = NULL, LPCTSTR pszHeaderTitle = NULL, LPCTSTR pszHeaderSubTitle = NULL)
 		: CDlgPageWizard(nIDTemplate, pszCaption, pszHeaderTitle, pszHeaderSubTitle)
+		, m_lastudp()
+		, m_uTCP()
+		, m_uUDP()
 		, m_pbUDPDisabled()
 		, m_nUPnPTicks()
 	{
@@ -258,7 +259,6 @@ public:
 
 //	void ValidateShownPorts();
 
-	virtual	~CPPgWiz1Ports() = default;
 	virtual BOOL OnInitDialog();
 	afx_msg void OnStartConTest();
 	afx_msg void OnStartUPnP();
@@ -303,6 +303,8 @@ END_MESSAGE_MAP()
 CPPgWiz1Ports::CPPgWiz1Ports()
 	: CDlgPageWizard(CPPgWiz1Ports::IDD)
 	, m_lastudp()
+	, m_uTCP()
+	, m_uUDP()
 	, m_pbUDPDisabled()
 	, m_nUPnPTicks()
 {
@@ -496,7 +498,6 @@ public:
 		: CDlgPageWizard(nIDTemplate, pszCaption, pszHeaderTitle, pszHeaderSubTitle), m_iUAP(1), m_iDAP(1)
 	{
 	}
-	virtual	~CPPgWiz1UlPrio() = default;
 	virtual BOOL OnInitDialog();
 
 	int m_iUAP;
@@ -556,7 +557,6 @@ public:
 		: CDlgPageWizard(nIDTemplate, pszCaption, pszHeaderTitle, pszHeaderSubTitle), m_iObfuscation()
 	{
 	}
-	virtual	~CPPgWiz1Upload() = default;
 	virtual BOOL OnInitDialog();
 
 	int m_iObfuscation;
@@ -612,7 +612,6 @@ public:
 		, m_iSafeServerConnect(), m_iKademlia(1), m_iED2K(1), m_pbUDPDisabled()
 	{
 	}
-	virtual	~CPPgWiz1Server() = default;
 	virtual BOOL OnInitDialog();
 
 	int m_iSafeServerConnect;
@@ -689,7 +688,6 @@ public:
 		: CDlgPageWizard(nIDTemplate, pszCaption, pszHeaderTitle, pszHeaderSubTitle)
 	{
 	}
-	virtual	~CPPgWiz1End() = default;
 	virtual BOOL OnInitDialog();
 
 protected:
@@ -745,7 +743,6 @@ class CPShtWiz1 : public CPropertySheetEx
 
 public:
 	explicit CPShtWiz1(UINT nIDCaption, CWnd *pParentWnd = NULL, UINT iSelectPage = 0);
-	virtual	~CPShtWiz1() = default;
 
 protected:
 	DECLARE_MESSAGE_MAP()

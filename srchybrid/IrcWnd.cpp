@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -182,7 +182,7 @@ BOOL CIrcWnd::OnInitDialog()
 	m_wndFormat.SetExtendedStyle(m_wndFormat.GetExtendedStyle() | TBSTYLE_EX_MIXEDBUTTONS);
 
 	TBBUTTON atb[6] = {};
-	atb[0].iBitmap = 0;
+	//atb[0].iBitmap = 0;
 	atb[0].idCommand = IDC_SMILEY;
 	atb[0].fsState = TBSTATE_ENABLED;
 	atb[0].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE;
@@ -244,7 +244,7 @@ BOOL CIrcWnd::OnInitDialog()
 	GetDlgItem(IDC_CLOSECHAT)->EnableWindow(false);
 	OnChatTextChange();
 
-	return true;
+	return TRUE;
 }
 
 void CIrcWnd::DoResize(int iDelta)
@@ -531,7 +531,7 @@ void CIrcWnd::OnBnClickedCloseChannel(int iItem)
 bool CIrcWnd::UpdateModes(const CString &sAllModes, CString &sModes, TCHAR cDir, TCHAR cCommand)
 {
 	if (sAllModes.Find(cCommand) < 0)
-		return false; //mode not in the list
+		return false; //not in the mode list
 
 	//Remove the setting. This takes care of "-" and makes sure we don't add the same symbol twice.
 	sModes.Remove(cCommand);
@@ -598,7 +598,7 @@ void CIrcWnd::AddStatusF(LPCTSTR sLine, ...)
 
 void CIrcWnd::AddInfoMessage(Channel *pChannel, const CString &sLine)
 {
-	CString cs = make_time_stamp() + sLine;
+	const CString &cs(make_time_stamp() + sLine);
 	if (sLine[0] == _T('*'))
 		AddColorLine(cs, pChannel->m_wndLog, STATUS_MSG_COLOR);
 	else if (sLine[0] == _T('-') && sLine.Find(_T('-'), 1) >= 0)
@@ -619,23 +619,23 @@ void CIrcWnd::AddInfoMessage(const CString &sChannel, const CString &sLine, cons
 	}
 }
 
-void CIrcWnd::AddInfoMessageC(Channel *pChannel, const COLORREF &msgcolour, LPCTSTR sLine)
+void CIrcWnd::AddInfoMessageC(Channel *pChannel, const COLORREF msgcolour, LPCTSTR sLine)
 {
 	if (pChannel) {
-		CString cs;
-		cs.Format(_T("%s%s\r\n"), (LPCTSTR)make_time_stamp(), (LPCTSTR)sLine);
+		CString cs(make_time_stamp());
+		cs.AppendFormat(_T("%s\r\n"), (LPCTSTR)sLine);
 		AddColorLine(cs, pChannel->m_wndLog, msgcolour);
 		if (pChannel != m_wndChanSel.m_pCurrentChannel)
 			m_wndChanSel.SetActivity(pChannel, true);
 	}
 }
 
-void CIrcWnd::AddInfoMessageC(const CString &sChannel, const COLORREF &msgcolour, LPCTSTR sLine)
+void CIrcWnd::AddInfoMessageC(const CString &sChannel, const COLORREF msgcolour, LPCTSTR sLine)
 {
 	AddInfoMessageC(m_wndChanSel.FindOrCreateChannel(sChannel), msgcolour, sLine);
 }
 
-void CIrcWnd::AddInfoMessageCF(const CString &sChannel, const COLORREF &msgcolour, LPCTSTR sLine, ...)
+void CIrcWnd::AddInfoMessageCF(const CString &sChannel, const COLORREF msgcolour, LPCTSTR sLine, ...)
 {
 	if (!sChannel.IsEmpty()) {
 		va_list argptr;
@@ -738,7 +738,7 @@ void CIrcWnd::AddColorLine(const CString &line, CHTRichEditCtrl &wnd, COLORREF c
 
 		// find any hyperlinks and send them to AppendColoredText
 		if (index == linkfoundat) { //only run the link finding code once in a line with no links
-			for (unsigned iScheme = 0; iScheme < _countof(s_apszSchemes);) {
+			for (unsigned iScheme = 0; s_apszSchemes[iScheme].pszScheme;) {
 				const CString &strLeft = line.Right(line.GetLength() - index); //make a string of what we have left
 				int foundat = strLeft.Find(s_apszSchemes[iScheme].pszScheme); //get position of link; -1 if not found
 				if (foundat == 0) { //link starts at this character
@@ -747,10 +747,10 @@ void CIrcWnd::AddColorLine(const CString &line, CHTRichEditCtrl &wnd, COLORREF c
 						text.Empty();
 					}
 
-					// search next space or EOL or control code
+					// search for next white space or EOL or control code
 					int iLen = strLeft.FindOneOf(_T(" \t\r\n\x02\x03\x0F\x11\x16\x1d\x1F"));
 					if (iLen == -1) {
-						// truncate some special chars from end of URL (and only from end)
+						// truncate some special chars from the end of URL
 						iLen = strLeft.GetLength();
 						while (iLen > 0 && !IsValidURLTerminationChar(strLeft[iLen - 1]))
 							--iLen;
@@ -762,7 +762,7 @@ void CIrcWnd::AddColorLine(const CString &line, CHTRichEditCtrl &wnd, COLORREF c
 						aChar = line[index]; // get a new char
 						break;
 					}
-					// truncate some special chars from end of URL (and only from end)
+					// truncate some special chars from the end of URL
 					while (iLen > 0 && !IsValidURLTerminationChar(strLeft[iLen - 1]))
 						--iLen;
 					wnd.AddLine(strLeft.Left(iLen), iLen, true);
@@ -771,12 +771,13 @@ void CIrcWnd::AddColorLine(const CString &line, CHTRichEditCtrl &wnd, COLORREF c
 						return;
 
 					iScheme = 0; // search from the new position
-					foundat = -1; // do not record this processed location as a future target location
+					//foundat = -1; // do not record this processed location as a future target location
 					linkfoundat = index; // reset previous finds as iScheme=0 we re-search
 					aChar = line[index]; // get a new char
 
 				} else {
-					++iScheme; //only increment if not found at this position so if we find http at this position we check for further http occurrences
+					++iScheme;	//only increment if not found at this position
+								//so if we find http at this position we check for further http occurrences
 					//foundat is a valid position && (no valid position recorded || a farther position previously recorded)
 					if (foundat > 0 && (linkfoundat == index || (index + foundat) < linkfoundat))
 						linkfoundat = index + foundat; //set the next closest link to process
@@ -848,7 +849,7 @@ void CIrcWnd::AddColorLine(const CString &line, CHTRichEditCtrl &wnd, COLORREF c
 			cr = foregroundColour;
 			bgcr = backgroundColour;
 			break;
-		case 0x16: // Reverse (as per Mirc) toggle
+		case 0x16: // Reverse (as per mIRC) toggle
 			// NOTE:This does not reset the bold/underline (dwMask) attributes, but does reset colours 'As per mIRC 6.16!!'
 			if (!text.IsEmpty()) {
 				wnd.AppendColoredText(text, cr, bgcr, dwMask);
@@ -931,8 +932,8 @@ void CIrcWnd::NoticeMessage(const CString &sSource, const CString &sTarget, cons
 			}
 		}
 		if (!bFlag) {
-			CString cs;
-			cs.Format(_T("%s-%s- %s\r\n"), (LPCTSTR)make_time_stamp(), (LPCTSTR)sSource, (LPCTSTR)sMessage);
+			CString cs(make_time_stamp());
+			cs.AppendFormat(_T("-%s- %s\r\n"), (LPCTSTR)sSource, (LPCTSTR)sMessage);
 			Channel *pStatusChannel = m_wndChanSel.m_lstChannels.GetHead();
 			if (pStatusChannel)
 				AddColorLine(cs, pStatusChannel->m_wndLog, INFO_MSG_COLOR);
@@ -942,14 +943,12 @@ void CIrcWnd::NoticeMessage(const CString &sSource, const CString &sTarget, cons
 
 CString CIrcWnd::StripMessageOfColorCodes(const CString &sTemp)
 {
-	if (!sTemp.IsEmpty()) {
-		int iTest = sTemp.Find(_T('\003'));
-		if (iTest >= 0) {
-			int iTestLength = sTemp.GetLength() - iTest;
-			if (iTestLength < 2)
-				return sTemp;
-			CString sTemp1 = sTemp.Left(iTest);
-			CString sTemp2 = sTemp.Mid(iTest + 2);
+	int iTest = sTemp.Find(_T('\003'));
+	if (iTest >= 0) {
+		int iTestLength = sTemp.GetLength() - iTest;
+		if (iTestLength >= 2) {
+			CString sTemp1(sTemp, iTest);
+			CString sTemp2(sTemp.Mid(iTest + 2));
 			if (iTestLength < 4)
 				return sTemp1 + sTemp2;
 			if (sTemp2[0] == _T(',') && sTemp2.GetLength() > 2) {
@@ -1118,31 +1117,6 @@ LRESULT CIrcWnd::OnQueryTab(WPARAM wParam, LPARAM)
 	m_wndChanSel.GetItem((int)wParam, &item);
 	const Channel *pPartChannel = reinterpret_cast<Channel*>(item.lParam);
 	return !pPartChannel || pPartChannel->m_eType < Channel::ctChannelList;
-}
-
-bool CIrcWnd::GetLoggedIn() const
-{
-	return m_bLoggedIn;
-}
-
-void CIrcWnd::SetLoggedIn(bool bFlag)
-{
-	m_bLoggedIn = bFlag;
-}
-
-void CIrcWnd::SetSendFileString(const CString &sInFile)
-{
-	m_sSendString = sInFile;
-}
-
-const CString& CIrcWnd::GetSendFileString() const
-{
-	return m_sSendString;
-}
-
-bool CIrcWnd::IsConnected() const
-{
-	return m_bConnected;
 }
 
 void CIrcWnd::OnBnClickedColour()

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -96,15 +96,15 @@ public:
 		: m_abyBuffer()
 	{
 	}
-	explicit CAICHHash(CFileDataIO *file)			{ Read(file); }
+	explicit CAICHHash(CFileDataIO &file)			{ Read(file); }
 	explicit CAICHHash(const uchar *data)			{ Read(data); }
 	CAICHHash(const CAICHHash &k1)					{ *this = k1; }
 	CAICHHash&	operator=(const CAICHHash &k1)		{ memcpy(m_abyBuffer, k1.m_abyBuffer, HASHSIZE); return *this; }
 	friend bool operator==(const CAICHHash &k1, const CAICHHash &k2)	{ return memcmp(k1.m_abyBuffer, k2.m_abyBuffer, HASHSIZE) == 0; }
 	friend bool operator!=(const CAICHHash &k1, const CAICHHash &k2)	{ return !(k1 == k2); }
-	void		Read(CFileDataIO *file);
-	static void	Skip(LONGLONG distance, CFileDataIO *file);
-	void		Write(CFileDataIO *file) const;
+	void		Read(CFileDataIO &file);
+	static void	Skip(LONGLONG distance, CFileDataIO &file);
+	void		Write(CFileDataIO &file) const;
 	void		Read(const uchar *data)				{ memcpy(m_abyBuffer, data, HASHSIZE); }
 	CString		GetString() const;
 	uchar*		GetRawHash()						{ return m_abyBuffer; }
@@ -127,7 +127,7 @@ template<> inline UINT AFXAPI HashKey(const CAICHHash &key)
 class CAICHHashAlgo
 {
 public:
-	virtual	~CAICHHashAlgo() = default; //just in case...
+	virtual	~CAICHHashAlgo() = default;
 	virtual void	Reset() = 0;
 	virtual void	Add(LPCVOID pData, DWORD nLength) = 0;
 	virtual void	Finish(CAICHHash &Hash) = 0;
@@ -154,11 +154,11 @@ public:
 protected:
 	CAICHHashTree*	FindHash(uint64 nStartPos, uint64 nSize, uint8 *nLevel);
 	const CAICHHashTree* FindExistingHash(uint64 nStartPos, uint64 nSize, uint8 *nLevel) const;
-	bool			CreatePartRecoveryData(uint64 nStartPos, uint64 nSize, CFileDataIO *fileDataOut, uint32 wHashIdent, bool b32BitIdent);
-	void			WriteHash(CFileDataIO *fileDataOut, uint32 wHashIdent, bool b32BitIdent) const;
-	bool			WriteLowestLevelHashes(CFileDataIO *fileDataOut, uint32 wHashIdent, bool bNoIdent, bool b32BitIdent) const;
-	bool			LoadLowestLevelHashes(CFileDataIO *fileInput);
-	bool			SetHash(CFileDataIO *fileInput, uint32 wHashIdent, sint8 nLevel = -1, bool bAllowOverwrite = true);
+	bool			CreatePartRecoveryData(uint64 nStartPos, uint64 nSize, CFileDataIO &fileDataOut, uint32 wHashIdent, bool b32BitIdent);
+	void			WriteHash(CFileDataIO &fileDataOut, uint32 wHashIdent, bool b32BitIdent) const;
+	bool			WriteLowestLevelHashes(CFileDataIO &fileDataOut, uint32 wHashIdent, bool bNoIdent, bool b32BitIdent) const;
+	bool			LoadLowestLevelHashes(CFileDataIO &fileInput);
+	bool			SetHash(CFileDataIO &fileInput, uint32 wHashIdent, sint8 nLevel = -1, bool bAllowOverwrite = true);
 	bool			ReduceToBaseSize(uint64 nBaseSize);
 
 	CAICHHashTree	*m_pLeftTree;
@@ -221,8 +221,8 @@ class CAICHRecoveryHashSet
 public:
 	explicit CAICHRecoveryHashSet(CKnownFile *pOwner, EMFileSize nSize = 0ull);
 	~CAICHRecoveryHashSet();
-	bool			CreatePartRecoveryData(uint64 nPartStartPos, CFileDataIO *fileDataOut, bool bDbgDontLoad = false);
-	bool			ReadRecoveryData(uint64 nPartStartPos, CSafeMemFile *fileDataIn);
+	bool			CreatePartRecoveryData(uint64 nPartStartPos, CFileDataIO &fileDataOut, bool bDbgDontLoad = false);
+	bool			ReadRecoveryData(uint64 nPartStartPos, CSafeMemFile &fileDataIn);
 	bool			ReCalculateHash(bool bDontReplace = false);
 	bool			VerifyHashTree(bool bDeleteBadTrees);
 	void			UntrustedHashReceived(const CAICHHash &Hash, uint32 dwFromIP);

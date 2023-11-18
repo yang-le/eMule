@@ -7,7 +7,6 @@ class CKadContactHistogramCtrl : public CWnd
 {
 public:
 	CKadContactHistogramCtrl();
-	virtual	~CKadContactHistogramCtrl() = default;
 
 	void Localize();
 

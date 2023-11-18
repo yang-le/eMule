@@ -12,7 +12,12 @@
 #ifdef XP_BUILD
 #define _WIN32_WINNT _WIN32_WINNT_WINXP
 #define NTDDI_VERSION NTDDI_WINXP
+#if _MSC_VER<1937 //before VS2022 17.7
+#define XP_NOEXCEPT noexcept
+#else
+#define XP_NOEXCEPT
 #endif
+#endif //XP_BUILD
 
 //////////////////////////////////////////////////////////////////////////////
 // Visual Studio 2003
@@ -54,7 +59,7 @@
 #if _MSC_VER==1400
 
 // NOTE: eMule can not get compiled with VS2005 out of the box because the SDK
-// which is shipped with VS2005 does not contain the ‘upnp.h’ header file - and
+// which is shipped with VS2005 does not contain the ‘upnp.h?header file - and
 // this feature is not yet optional for compiling eMule. Thus you need to install
 // an additional more recent SDK when compiling with VS2005.
 //
@@ -121,9 +126,10 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
-// Visual Studio 2012, 2013, 2015, 2017, 2019
+// Visual Studio 2012, 2013, 2015, 2017, 2019, 2022
 //////////////////////////////////////////////////////////////////////////////
-//  VS2012==1700, VS2013==1800, VS2015==1900, VS2017==1910-1916, VS2019==????
+//  VS2012==1700, VS2013==1800,
+//	VS2015==1900, VS2017==1910-1916, VS2019==1920-1929, VS2022==1930-????
 #if _MSC_VER>=1700
 
 #define HAVE_VISTA_SDK		// shipped with Windows SDK
@@ -135,7 +141,8 @@
 #undef HAVE_SAPI_H
 #endif//HAVE_VISTA_SDK
 
-// 'qedit.h' file is not shipped after VS200
+// 'qedit.h' file was shipped in VS2003
+// In VS2005 or VS2008 it was a part of Vista SDK and required an additional file 'ddraw.h'
 #if !defined(HAVE_VISTA_SDK) || !defined(HAVE_DIRECTX_SDK)
 #undef HAVE_QEDIT_H
 #endif//!defined(HAVE_VISTA_SDK) || !defined(HAVE_DIRECTX_SDK)

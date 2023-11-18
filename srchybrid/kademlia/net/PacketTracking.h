@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -22,26 +22,26 @@ namespace Kademlia
 {
 	struct TrackPackets_Struct
 	{
-		uint32 dwInserted;
-		uint32 dwIP;
-		uint8  byOpcode;
+		DWORD	dwInserted;
+		uint32	dwIP;
+		uint8	byOpcode;
 	};
 
 	struct TrackChallenge_Struct
 	{
-		uint32 dwInserted;
+		DWORD	dwInserted;
+		uint32	uIP;
 		CUInt128 uContactID;
 		CUInt128 uChallenge;
-		uint32 uIP;
-		uint8  byOpcode;
+		uint8	byOpcode;
 	};
 
 	struct TrackPacketsIn_Struct
 	{
 		struct TrackedRequestIn_Struct
 		{
-			uint32	m_dwFirstAdded;
-			uint32	m_nCount;
+			DWORD	m_dwLatest;
+			int		m_tokens; //tokens are equal to milliseconds in this Token Bucket algorithm implementation
 			uint8	m_byOpcode;
 			bool	m_bDbgLogged;
 		};
@@ -52,7 +52,7 @@ namespace Kademlia
 		{
 		}
 
-		uint32	m_dwLastExpire;
+		DWORD	m_dwLastExpire;
 		uint32	m_uIP;
 		CArray<TrackedRequestIn_Struct> m_aTrackedRequests;
 	};
@@ -78,6 +78,6 @@ namespace Kademlia
 		CList<TrackChallenge_Struct> listChallengeRequests;
 		CTypedPtrList<CPtrList, TrackPacketsIn_Struct*>	m_liTrackPacketsIn;
 		CMap<int, int, TrackPacketsIn_Struct*, TrackPacketsIn_Struct*> m_mapTrackPacketsIn;
-		uint32 dwLastTrackInCleanup;
+		DWORD dwLastTrackInCleanup;
 	};
 }

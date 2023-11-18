@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -179,9 +179,9 @@ void CPreferencesDlg::OnHelp()
 			HELPINFO hi = {};
 			hi.cbSize = (UINT)sizeof hi;
 			hi.iContextType = HELPINFO_WINDOW;
-			hi.iCtrlId = 0;
+			//hi.iCtrlId = 0;
 			hi.hItemHandle = pPage->m_hWnd;
-			hi.dwContextId = 0;
+			//hi.dwContextId = 0;
 			pPage->SendMessage(WM_HELP, 0, (LPARAM)&hi);
 			return;
 		}

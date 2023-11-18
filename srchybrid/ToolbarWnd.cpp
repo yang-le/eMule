@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2010 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -21,7 +21,6 @@
 #include "toolbarwnd.h"
 #include "HelpIDs.h"
 #include "OtherFunctions.h"
-#include "ToolBarCtrlX.h"
 #include "MenuCmds.h"
 #include "DownloadListCtrl.h"
 #include "TransferDlg.h"
@@ -51,65 +50,58 @@ END_MESSAGE_MAP()
 
 
 CToolbarWnd::CToolbarWnd()
-	: m_pCommandTargetWnd()
+	: m_hcurMove(::LoadCursor(NULL, IDC_SIZEALL)) // load default windows system cursor (a shared resource)
+	, m_pCommandTargetWnd()
 {
-	m_btnBar = new CToolBarCtrlX;
-	// load default windows system cursor (a shared resource)
-	m_hcurMove = ::LoadCursor(NULL, IDC_SIZEALL);
-}
-
-CToolbarWnd::~CToolbarWnd()
-{
-	delete m_btnBar;
 }
 
 void CToolbarWnd::DoDataExchange(CDataExchange *pDX)
 {
 	CDialogBar::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_DTOOLBAR, *m_btnBar);
+	DDX_Control(pDX, IDC_DTOOLBAR, m_btnBar);
 }
 
 #define DTOOLBAR_NUM_BUTTONS 18
 void CToolbarWnd::FillToolbar()
 {
-	m_btnBar->DeleteAllButtons();
+	m_btnBar.DeleteAllButtons();
 
 	TBBUTTON atb1[DTOOLBAR_NUM_BUTTONS] = {};
 
-	atb1[0].iBitmap = 0;
+	//atb1[0].iBitmap = 0;
 	atb1[0].idCommand = MP_PRIOLOW;
 	atb1[0].fsState = TBSTATE_WRAP;
 	atb1[0].fsStyle = BTNS_DROPDOWN | BTNS_AUTOSIZE;
 	CString sPrio(GetResString(IDS_PRIORITY));
 	sPrio.AppendFormat(_T(" (%s)"), (LPCTSTR)GetResString(IDS_DOWNLOAD));
-	atb1[0].iString = m_btnBar->AddString(sPrio);
+	atb1[0].iString = m_btnBar.AddString(sPrio);
 
 	atb1[1].iBitmap = 1;
 	atb1[1].idCommand = MP_PAUSE;
 	atb1[1].fsState = TBSTATE_WRAP;
 	atb1[1].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE;
-	atb1[1].iString = m_btnBar->AddString(GetResString(IDS_DL_PAUSE));
+	atb1[1].iString = m_btnBar.AddString(GetResString(IDS_DL_PAUSE));
 
 	atb1[2].iBitmap = 2;
 	atb1[2].idCommand = MP_STOP;
 	atb1[2].fsState = TBSTATE_WRAP;
 	atb1[2].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE;
-	atb1[2].iString = m_btnBar->AddString(GetResString(IDS_DL_STOP));
+	atb1[2].iString = m_btnBar.AddString(GetResString(IDS_DL_STOP));
 
 	atb1[3].iBitmap = 3;
 	atb1[3].idCommand = MP_RESUME;
 	atb1[3].fsState = TBSTATE_WRAP;
 	atb1[3].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE;
-	atb1[3].iString = m_btnBar->AddString(GetResString(IDS_DL_RESUME));
+	atb1[3].iString = m_btnBar.AddString(GetResString(IDS_DL_RESUME));
 
 	atb1[4].iBitmap = 4;
 	atb1[4].idCommand = MP_CANCEL;
 	atb1[4].fsState = TBSTATE_WRAP;
 	atb1[4].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE;
-	atb1[4].iString = m_btnBar->AddString(GetResString(IDS_MAIN_BTN_CANCEL));
+	atb1[4].iString = m_btnBar.AddString(GetResString(IDS_MAIN_BTN_CANCEL));
 	/////////////
 	atb1[5].iBitmap = -1;
-	atb1[5].idCommand = 0;
+	//atb1[5].idCommand = 0;
 	atb1[5].fsState = TBSTATE_WRAP;
 	atb1[5].fsStyle = BTNS_SEP;
 	atb1[5].iString = -1;
@@ -118,41 +110,41 @@ void CToolbarWnd::FillToolbar()
 	atb1[6].idCommand = MP_OPEN;
 	atb1[6].fsState = TBSTATE_WRAP;
 	atb1[6].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE;
-	atb1[6].iString = m_btnBar->AddString(GetResString(IDS_DL_OPEN));
+	atb1[6].iString = m_btnBar.AddString(GetResString(IDS_DL_OPEN));
 
 	atb1[7].iBitmap = 6;
 	atb1[7].idCommand = MP_OPENFOLDER;
 	atb1[7].fsState = TBSTATE_WRAP;
 	atb1[7].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE;
-	atb1[7].iString = m_btnBar->AddString(GetResString(IDS_OPENFOLDER));
+	atb1[7].iString = m_btnBar.AddString(GetResString(IDS_OPENFOLDER));
 
 	atb1[8].iBitmap = 7;
 	atb1[8].idCommand = MP_PREVIEW;
 	atb1[8].fsState = TBSTATE_WRAP;
 	atb1[8].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE;
-	atb1[8].iString = m_btnBar->AddString(GetResString(IDS_DL_PREVIEW));
+	atb1[8].iString = m_btnBar.AddString(GetResString(IDS_DL_PREVIEW));
 
 	atb1[9].iBitmap = 8;
 	atb1[9].idCommand = MP_METINFO;
 	atb1[9].fsState = TBSTATE_WRAP;
 	atb1[9].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE;
-	atb1[9].iString = m_btnBar->AddString(GetResString(IDS_DL_INFO));
+	atb1[9].iString = m_btnBar.AddString(GetResString(IDS_DL_INFO));
 
 	atb1[10].iBitmap = 9;
 	atb1[10].idCommand = MP_VIEWFILECOMMENTS;
 	atb1[10].fsState = TBSTATE_WRAP;
 	atb1[10].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE;
-	atb1[10].iString = m_btnBar->AddString(GetResString(IDS_CMT_SHOWALL));
+	atb1[10].iString = m_btnBar.AddString(GetResString(IDS_CMT_SHOWALL));
 
 	atb1[11].iBitmap = 10;
 	atb1[11].idCommand = MP_SHOWED2KLINK;
 	atb1[11].fsState = TBSTATE_WRAP;
 	atb1[11].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE;
-	atb1[11].iString = m_btnBar->AddString(GetResString(IDS_DL_SHOWED2KLINK));
+	atb1[11].iString = m_btnBar.AddString(GetResString(IDS_DL_SHOWED2KLINK));
 
 	/////////////
 	atb1[12].iBitmap = -1;
-	atb1[12].idCommand = 0;
+	//atb1[12].idCommand = 0;
 	atb1[12].fsState = TBSTATE_WRAP;
 	atb1[12].fsStyle = BTNS_SEP;
 	atb1[12].iString = -1;
@@ -161,23 +153,23 @@ void CToolbarWnd::FillToolbar()
 	atb1[13].idCommand = MP_NEWCAT;
 	atb1[13].fsState = TBSTATE_WRAP;
 	atb1[13].fsStyle = BTNS_DROPDOWN | BTNS_AUTOSIZE;
-	atb1[13].iString = m_btnBar->AddString(GetResString(IDS_TOCAT));
+	atb1[13].iString = m_btnBar.AddString(GetResString(IDS_TOCAT));
 
 	atb1[14].iBitmap = 12;
 	atb1[14].idCommand = MP_CLEARCOMPLETED;
 	atb1[14].fsState = TBSTATE_WRAP;
 	atb1[14].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE;
-	atb1[14].iString = m_btnBar->AddString(GetResString(IDS_DL_CLEAR));
+	atb1[14].iString = m_btnBar.AddString(GetResString(IDS_DL_CLEAR));
 
 	atb1[15].iBitmap = 13;
 	atb1[15].idCommand = MP_SEARCHRELATED;
 	atb1[15].fsState = TBSTATE_WRAP;
 	atb1[15].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE;
-	atb1[15].iString = m_btnBar->AddString(GetResString(IDS_SEARCHRELATED));
+	atb1[15].iString = m_btnBar.AddString(GetResString(IDS_SEARCHRELATED));
 
 	/////////////
 	atb1[16].iBitmap = -1;
-	atb1[16].idCommand = 0;
+	//atb1[16].idCommand = 0;
 	atb1[16].fsState = TBSTATE_ENABLED | TBSTATE_WRAP;
 	atb1[16].fsStyle = BTNS_SEP;
 	atb1[16].iString = -1;
@@ -186,9 +178,9 @@ void CToolbarWnd::FillToolbar()
 	atb1[17].idCommand = MP_FIND;
 	atb1[17].fsState = TBSTATE_ENABLED | TBSTATE_WRAP;
 	atb1[17].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE;
-	atb1[17].iString = m_btnBar->AddString(GetResString(IDS_FIND));
+	atb1[17].iString = m_btnBar.AddString(GetResString(IDS_FIND));
 
-	m_btnBar->AddButtons(_countof(atb1), atb1);
+	m_btnBar.AddButtons(_countof(atb1), atb1);
 }
 
 LRESULT CToolbarWnd::OnInitDialog(WPARAM, LPARAM)
@@ -248,21 +240,20 @@ LRESULT CToolbarWnd::OnInitDialog(WPARAM, LPARAM)
 		VERIFY(AddIconGrayscaledToImageList(iml2, CTempIconLoader(_T("CLEARCOMPLETE"))));
 		VERIFY(AddIconGrayscaledToImageList(iml2, CTempIconLoader(_T("KadFileSearch"))));
 		VERIFY(AddIconGrayscaledToImageList(iml2, CTempIconLoader(_T("Search"))));
-		CImageList *pImlOld = m_btnBar->SetDisabledImageList(&iml2);
+		CImageList *pImlOld = m_btnBar.SetDisabledImageList(&iml2);
 		iml2.Detach();
 		if (pImlOld)
 			pImlOld->DeleteImageList();
 	}
-	CImageList *pImlOld = m_btnBar->SetImageList(&iml);
+	CImageList *pImlOld = m_btnBar.SetImageList(&iml);
 	iml.Detach();
 	if (pImlOld)
 		pImlOld->DeleteImageList();
 
-	m_btnBar->ModifyStyle((theApp.m_ullComCtrlVer >= MAKEDLLVERULL(6, 16, 0, 0)) ? TBSTYLE_TRANSPARENT : 0, 0);
-	m_btnBar->SetMaxTextRows(0);
+	m_btnBar.ModifyStyle((theApp.m_ullComCtrlVer >= MAKEDLLVERULL(6, 16, 0, 0)) ? TBSTYLE_TRANSPARENT : 0, 0);
+	m_btnBar.SetMaxTextRows(0);
 
-	FillToolbar();
-
+	Localize();
 	return TRUE;
 }
 
@@ -358,14 +349,14 @@ BOOL CToolbarWnd::OnSetCursor(CWnd *pWnd, UINT nHitTest, UINT message)
 void CToolbarWnd::OnSize(UINT nType, int cx, int cy)
 {
 	CDialogBar::OnSize(nType, cx, cy);
-	if (m_btnBar->m_hWnd == 0)
+	if (m_btnBar.m_hWnd == 0)
 		return;
 
 	if (cx >= MIN_HORZ_WIDTH) {
 		CRect rcClient;
 		GetClientRect(&rcClient);
 		CalcInsideRect(rcClient, TRUE);
-		m_btnBar->MoveWindow(rcClient.left + 1, rcClient.top, rcClient.Width() - 8, 22);
+		m_btnBar.MoveWindow(rcClient.left + 1, rcClient.top, rcClient.Width() - 8, 22);
 		//int iWidthOpts = rcClient.right - (rcClient.left + m_rcOpts.left);
 		/*HDWP hdwp = BeginDeferWindowPos(0);
 		if (hdwp) {
@@ -377,13 +368,13 @@ void CToolbarWnd::OnSize(UINT nType, int cx, int cy)
 		CRect rcClient;
 		GetClientRect(&rcClient);
 		CalcInsideRect(rcClient, FALSE);
-		m_btnBar->MoveWindow(rcClient.left, rcClient.top + 1, 24, rcClient.Height() - 1);
+		m_btnBar.MoveWindow(rcClient.left, rcClient.top + 1, 24, rcClient.Height() - 1);
 	}
 }
 
 void CToolbarWnd::OnUpdateCmdUI(CFrameWnd* /*pTarget*/, BOOL /*bDisableIfNoHndler*/)
 {
-	if (!theApp.IsClosing()	&& m_pCommandTargetWnd != NULL) {
+	if (m_pCommandTargetWnd != NULL && !theApp.IsClosing()) {
 		CList<int> liCommands;
 		if (m_pCommandTargetWnd->ReportAvailableCommands(liCommands))
 			OnAvailableCommandsChanged(&liCommands);
@@ -410,9 +401,7 @@ void CToolbarWnd::Localize()
 
 BOOL CToolbarWnd::PreTranslateMessage(MSG *pMsg)
 {
-	if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_ESCAPE)
-		return FALSE;
-	return CDialogBar::PreTranslateMessage(pMsg);
+	return (pMsg->message != WM_KEYDOWN || pMsg->wParam != VK_ESCAPE) && CDialogBar::PreTranslateMessage(pMsg);
 }
 
 BOOL CToolbarWnd::OnHelpInfo(HELPINFO*)
@@ -423,15 +412,13 @@ BOOL CToolbarWnd::OnHelpInfo(HELPINFO*)
 
 void CToolbarWnd::OnAvailableCommandsChanged(CList<int> *liCommands)
 {
-	TBBUTTONINFO tbbi = {};
+	TBBUTTONINFO tbbi;
 	tbbi.cbSize = (UINT)sizeof tbbi;
+	tbbi.dwMask = TBIF_COMMAND | TBIF_BYINDEX | TBIF_STATE | TBIF_STYLE;
 
-	for (int i = m_btnBar->GetButtonCount(); --i >= 0;) {
-		tbbi.dwMask = TBIF_COMMAND | TBIF_BYINDEX | TBIF_STATE | TBIF_STYLE;
-		m_btnBar->GetButtonInfo(i, &tbbi);
-		if ((tbbi.fsStyle & BTNS_SEP) == 0)
-			m_btnBar->EnableButton(tbbi.idCommand, static_cast<BOOL>(liCommands->Find(tbbi.idCommand) != NULL));
-	}
+	for (int i = m_btnBar.GetButtonCount(); --i >= 0;)
+		if (m_btnBar.GetButtonInfo(i, &tbbi) >= 0 && (tbbi.fsStyle & BTNS_SEP) == 0)
+			m_btnBar.EnableButton(tbbi.idCommand, static_cast<BOOL>(liCommands->Find(tbbi.idCommand) != NULL));
 }
 
 BOOL CToolbarWnd::OnCommand(WPARAM wParam, LPARAM)
@@ -449,13 +436,13 @@ void CToolbarWnd::OnBtnDropDown(LPNMHDR pNMHDR, LRESULT *pResult)
 	TBNOTIFY *tbn = (TBNOTIFY*)pNMHDR;
 	if (tbn->iItem == MP_PRIOLOW) {
 		RECT rc;
-		m_btnBar->GetItemRect(m_btnBar->CommandToIndex(MP_PRIOLOW), &rc);
-		m_btnBar->ClientToScreen(&rc);
+		m_btnBar.GetItemRect(m_btnBar.CommandToIndex(MP_PRIOLOW), &rc);
+		m_btnBar.ClientToScreen(&rc);
 		m_pCommandTargetWnd->GetPrioMenu()->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, rc.left, rc.bottom, this);
 	} else if (tbn->iItem == MP_NEWCAT) {
 		RECT rc;
-		m_btnBar->GetItemRect(m_btnBar->CommandToIndex(MP_NEWCAT), &rc);
-		m_btnBar->ClientToScreen(&rc);
+		m_btnBar.GetItemRect(m_btnBar.CommandToIndex(MP_NEWCAT), &rc);
+		m_btnBar.ClientToScreen(&rc);
 		CMenu menu;
 		menu.CreatePopupMenu();
 		m_pCommandTargetWnd->FillCatsMenu(menu);
@@ -495,12 +482,10 @@ void CToolbarWnd::DelayShow(BOOL bShow)
 
 void CToolbarWnd::OnSysCommand(UINT nID, LPARAM lParam)
 {
-	if (nID == SC_KEYMENU) {
-		if (lParam == EMULE_HOTMENU_ACCEL)
-			theApp.emuledlg->SendMessage(WM_COMMAND, IDC_HOTMENU);
-		else
-			theApp.emuledlg->SendMessage(WM_SYSCOMMAND, nID, lParam);
-		return;
-	}
-	__super::OnSysCommand(nID, lParam);
+	if (nID != SC_KEYMENU)
+		__super::OnSysCommand(nID, lParam);
+	else if (lParam == EMULE_HOTMENU_ACCEL)
+		theApp.emuledlg->SendMessage(WM_COMMAND, IDC_HOTMENU);
+	else
+		theApp.emuledlg->SendMessage(WM_SYSCOMMAND, nID, lParam);
 }

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -50,8 +50,8 @@ namespace Kademlia
 		static bool		m_bTimedOut;
 		static uint8	m_byFWChecksRunningUDP;
 		static uint8	m_byFWChecksFinishedUDP;
-		static uint32	m_dwTestStart;
-		static uint32	m_dwLastSucceededTime;
+		static DWORD	m_dwTestStart;
+		static DWORD	m_dwLastSucceededTime;
 		static CList<CContact> m_liPossibleTestClients;
 		static CList<UsedClient_Struct> m_liUsedTestClients;
 	};

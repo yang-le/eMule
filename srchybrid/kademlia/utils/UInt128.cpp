@@ -1,5 +1,5 @@
 /*
-Copyright (C)2003 Barry Dunne (http://www.emule-project.net)
+Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -23,13 +23,13 @@ There is going to be a new forum created just for the Kademlia side of the clien
 If you feel there is an error or a way to improve something, please
 post it in the forum first and let us look at it. If it is a real improvement,
 it will be added to the official client. Changing something without knowing
-what all it does can cause great harm to the network if released in mass form.
+what all it does, can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 their client on the eMule forum.
 */
 
 #include "stdafx.h"
-#include <cryptopp/osrng.h>
+#include "cryptopp/osrng.h"
 #include "kademlia/utils/UInt128.h"
 
 #ifdef _DEBUG
@@ -158,32 +158,32 @@ CUInt128& CUInt128::XorBE(const byte *pbyValueBE)
 	return Xor(CUInt128(pbyValueBE));
 }
 
-void CUInt128::ToHexString(CString *pstr) const
+void CUInt128::ToHexString(CString &str) const
 {
-	pstr->Empty();
+	str.Empty();
 	for (int iIndex = 0; iIndex < 4; ++iIndex)
-		pstr->AppendFormat(_T("%08lX"), m_uData[iIndex]);
+		str.AppendFormat(_T("%08lX"), m_uData[iIndex]);
 }
 
 CString CUInt128::ToHexString() const
 {
 	CString str;
-	ToHexString(&str);
+	ToHexString(str);
 	return str;
 }
 
-void CUInt128::ToBinaryString(CString *pstr, bool bTrim) const
+void CUInt128::ToBinaryString(CString &str, bool bTrim) const
 {
-	pstr->Empty();
+	str.Empty();
 	for (int iIndex = 0; iIndex < 128; ++iIndex) {
 		int iBit = GetBitNumber(iIndex);
-		if (!bTrim || (iBit != 0)) {
-			*pstr += iBit ? _T('1') : _T('0');
+		if (!bTrim || iBit) {
+			str += TCHAR(_T('0') + iBit);
 			bTrim = false;
 		}
 	}
-	if (pstr->IsEmpty())
-		*pstr += _T('0');
+	if (str.IsEmpty())
+		str += _T('0');
 }
 
 void CUInt128::ToByteArray(byte *pby) const
@@ -222,7 +222,7 @@ CUInt128& CUInt128::Add(const CUInt128 &uValue)
 	if (uValue == 0)
 		return *this;
 	__int64 iSum = 0;
-	for (int iIndex = 4; --iIndex >= 0; ) {
+	for (int iIndex = 4; --iIndex >= 0;) {
 		iSum += m_uData[iIndex];
 		iSum += uValue.m_uData[iIndex];
 		m_uData[iIndex] = (ULONG)iSum;
@@ -295,8 +295,7 @@ CUInt128& CUInt128::ShiftLeft(UINT uBits)
 		uResult[iIndex - iIndexShift] = (ULONG)iShifted;
 		iShifted = iShifted >> 32;
 	}
-	for (int iIndex = 4; --iIndex >= 0;)
-		m_uData[iIndex] = uResult[iIndex];
+	memcpy(m_uData, uResult, sizeof uResult);
 	return *this;
 }
 

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -110,7 +110,7 @@
 #include "safefile.h"
 #include "kademlia/kademlia/prefs.h"
 #include "kademlia/kademlia/kademlia.h"
-#include <cryptopp/osrng.h>
+#include "cryptopp/osrng.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -118,7 +118,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define CRYPT_HEADER_PADDING	0 // padding is currently disabled for UDP; the length in low 4 bits
+#define CRYPT_HEADER_PADDING	0 // padding is currently disabled for UDP; the length in low 4 bits (0 - 15)
 
 #pragma pack(push, 1)
 struct Crypt_Header_Struct
@@ -198,7 +198,7 @@ int CEncryptedDatagramSocket::DecryptReceivedClient(BYTE *pbyBufIn, int nBufLen,
 			bKadRecvKeyUsed = false;
 			if (Kademlia::CKademlia::GetPrefs()) {
 				uchar achKeyData[18];
-				memcpy(achKeyData, Kademlia::CKademlia::GetPrefs()->GetKadID().GetData(), 16);
+				md4cpy(achKeyData, Kademlia::CKademlia::GetPrefs()->GetKadID().GetData());
 				PokeUInt16(&achKeyData[16], crypt.wRandomKeyPart); // random key part sent from remote client
 				md5.Calculate(achKeyData, sizeof achKeyData);
 			}
@@ -239,13 +239,15 @@ int CEncryptedDatagramSocket::DecryptReceivedClient(BYTE *pbyBufIn, int nBufLen,
 		// debug output notices
 		// the following cases are "allowed" but shouldn't happen given that there is only our implementation yet
 		if (bKad) {
-			LPCTSTR p = NULL;
+			LPCTSTR p;
 			if (crypt.byProtocol & 0x01)
 				p = _T("ed2k bit");
 			else if (!bKadRecvKeyUsed && (crypt.byProtocol & 0x02))
 				p = _T("nodeid key, recvkey");
 			else if (bKadRecvKeyUsed && !(crypt.byProtocol & 0x02))
 				p = _T("recvkey key, nodeid");
+			else
+				p = NULL;
 			if (p)
 				DebugLog(_T("Received obfuscated UDP packet from clientIP: %s with wrong key marker bits (kad packet, %s bit)"), (LPCTSTR)ipstr(dwIP), p);
 		}
@@ -253,7 +255,7 @@ int CEncryptedDatagramSocket::DecryptReceivedClient(BYTE *pbyBufIn, int nBufLen,
 		nResult -= CRYPT_HEADER_WITHOUTPADDING;
 		crypt.byPadding[0] &= 0xf;
 		if (nResult <= crypt.byPadding[0]) {
-			DebugLogError(_T("Invalid obfuscated UDP packet from clientIP: %s, Paddingsize (%u) larger than received bytes"), (LPCTSTR)ipstr(dwIP), crypt.byPadding[0]);
+			DebugLogError(_T("Invalid obfuscated UDP packet from clientIP: %s, Padding size (%u) larger than received bytes"), (LPCTSTR)ipstr(dwIP), crypt.byPadding[0]);
 			return nBufLen; // pass through, let the Receive function do the error handling on this junk
 		}
 		if (crypt.byPadding[0] > 0) {
@@ -289,11 +291,11 @@ uint32 CEncryptedDatagramSocket::EncryptSendClient(uchar *pbyBuf, uint32 nBufLen
 {
 	ASSERT(theApp.GetPublicIP() != 0 || bKad);
 	ASSERT(thePrefs.IsClientCryptLayerSupported());
-	ASSERT(pachClientHashOrKadID != NULL || nReceiverVerifyKey != 0);
+	ASSERT(pachClientHashOrKadID != NULL || nReceiverVerifyKey);
 	ASSERT((nReceiverVerifyKey == 0 && nSenderVerifyKey == 0) || bKad);
 
 	uint8 byKadRecKeyUsed = 0; //nodeid marker
-	const uint16 nRandomKeyPart = (uint16)cryptRandomGen.GenerateWord32(0x0000, 0xFFFFu);
+	const uint16 nRandomKeyPart = (uint16)cryptRandomGen.GenerateWord32(0, _UI16_MAX);
 	MD5Sum md5;
 	if (bKad) {
 		if ((pachClientHashOrKadID == NULL || isnulmd4(pachClientHashOrKadID)) && nReceiverVerifyKey != 0) {
@@ -331,7 +333,7 @@ uint32 CEncryptedDatagramSocket::EncryptSendClient(uchar *pbyBuf, uint32 nBufLen
 		if (bKad) {
 			bySemiRandomNotProtocolMarker &= ~3;				// clear marker bits
 			bySemiRandomNotProtocolMarker |= byKadRecKeyUsed;	//set kad reckey/nodeid marker bit
-		}  else
+		} else
 			bySemiRandomNotProtocolMarker |= 1;					// set the ed2k marker bit
 
 		switch (bySemiRandomNotProtocolMarker) {
@@ -357,8 +359,10 @@ uint32 CEncryptedDatagramSocket::EncryptSendClient(uchar *pbyBuf, uint32 nBufLen
 	crypt.wRandomKeyPart = nRandomKeyPart;
 	crypt.dwMagic = MAGICVALUE_UDP_SYNC_CLIENT;
 	crypt.byPadding[0] = CRYPT_HEADER_PADDING;
-	for (int i = CRYPT_HEADER_PADDING; i > 0; --i)
-		crypt.byPadding[i] = (uchar)rand();	// they actually don't really need to be random, but it doesn't hurt either
+#if (CRYPT_HEADER_PADDING > 0)
+	memset(&crypt.byPadding[1], nRandomKeyPart, CRYPT_HEADER_PADDING);
+	RC4Crypt(&crypt.byPadding[1], CRYPT_HEADER_PADDING, &keySendKey);
+#endif
 	if (bKad) {
 		crypt.dwReceiverKey = nReceiverVerifyKey;
 		crypt.dwSenderKey = nSenderVerifyKey;
@@ -372,7 +376,7 @@ uint32 CEncryptedDatagramSocket::EncryptSendClient(uchar *pbyBuf, uint32 nBufLen
 	return nBufLen;
 }
 
-int CEncryptedDatagramSocket::DecryptReceivedServer(BYTE *pbyBufIn, int nBufLen, BYTE **ppbyBufOut, uint32 dwBaseKey, uint32 dbgIP)
+int CEncryptedDatagramSocket::DecryptReceivedServer(BYTE *pbyBufIn, int nBufLen, BYTE **ppbyBufOut, uint32 dwBaseKey, const SOCKADDR_IN &dbgIP)
 {
 	int nResult = nBufLen;
 	*ppbyBufOut = pbyBufIn;
@@ -397,12 +401,13 @@ int CEncryptedDatagramSocket::DecryptReceivedServer(BYTE *pbyBufIn, int nBufLen,
 	if (crypt.dwMagic == MAGICVALUE_UDP_SYNC_SERVER) {
 		// yup this is an encrypted packet
 		if (thePrefs.GetDebugServerUDPLevel() > 0)
-			DEBUG_ONLY(DebugLog(_T("Received obfuscated UDP packet from ServerIP: %s"), (LPCTSTR)ipstr(dbgIP)));
+			DEBUG_ONLY(DebugLog(_T("Received obfuscated UDP packet from ServerIP: %s:%u"), (LPCTSTR)ipstr(dbgIP.sin_addr.s_addr), ntohs(dbgIP.sin_port)));
 		RC4Crypt((uchar*)crypt.byPadding, 1, &keyReceiveKey);
 		crypt.byPadding[0] &= 0xf;
 		nResult -= CRYPT_HEADER_WITHOUTPADDING;
 		if (nResult <= crypt.byPadding[0]) {
-			DebugLogError(_T("Invalid obfuscated UDP packet from ServerIP: %s, Padding size (%u) larger than received bytes"), (LPCTSTR)ipstr(dbgIP), crypt.byPadding[0]);
+			DebugLogError(_T("Invalid obfuscated UDP packet from Server IP=%s:%u, Padding size (%u) larger than received bytes")
+				, (LPCTSTR)ipstr(dbgIP.sin_addr.s_addr), ntohs(dbgIP.sin_port), crypt.byPadding[0]);
 			return nBufLen; // pass through, let the Receive function do the error handling on this junk
 		}
 		if (crypt.byPadding[0] > 0) {
@@ -414,16 +419,17 @@ int CEncryptedDatagramSocket::DecryptReceivedServer(BYTE *pbyBufIn, int nBufLen,
 
 		theStats.AddDownDataOverheadCrypt(nBufLen - nResult);
 	} else // pass through, let the Receive function do the error handling on this junk
-		DebugLogWarning(_T("Obfuscated packet expected but magicvalue mismatch on UDP packet from ServerIP: %s"), (LPCTSTR)ipstr(dbgIP));
+		DebugLogWarning(_T("Obfuscated packet expected, but magicvalue mismatch on UDP packet from Server IP=%s:%u")
+			, (LPCTSTR)ipstr(dbgIP.sin_addr.s_addr), ntohs(dbgIP.sin_port));
 	return nResult;
 }
 
 uint32 CEncryptedDatagramSocket::EncryptSendServer(uchar *pbyBuf, uint32 nBufLen, uint32 dwBaseKey)
 {
 	ASSERT(thePrefs.IsServerCryptLayerUDPEnabled());
-	ASSERT(dwBaseKey != 0);
+	ASSERT(dwBaseKey);
 
-	const uint16 nRandomKeyPart = (uint16)cryptRandomGen.GenerateWord32(0x0000, 0xFFFFu);
+	const uint16 nRandomKeyPart = (uint16)cryptRandomGen.GenerateWord32(0, _UI16_MAX);
 
 	uchar achKeyData[7];
 	PokeUInt32(achKeyData, dwBaseKey);
@@ -451,8 +457,10 @@ uint32 CEncryptedDatagramSocket::EncryptSendServer(uchar *pbyBuf, uint32 nBufLen
 	crypt.wRandomKeyPart = nRandomKeyPart;
 	crypt.dwMagic = MAGICVALUE_UDP_SYNC_SERVER;
 	crypt.byPadding[0] = CRYPT_HEADER_PADDING;
-	for (int i = CRYPT_HEADER_PADDING; i > 0; --i)
-		crypt.byPadding[i] = (uchar)rand();	// padding don't really need to be random, but it doesn't hurt either
+#if (CRYPT_HEADER_PADDING > 0)
+	memset(&crypt.byPadding[1], nRandomKeyPart , CRYPT_HEADER_PADDING);
+	RC4Crypt(&crypt.byPadding[1], CRYPT_HEADER_PADDING, &keySendKey);
+#endif
 
 	const uint32 nCryptHeaderLen = EncryptOverheadSize(false);
 	nBufLen += nCryptHeaderLen;

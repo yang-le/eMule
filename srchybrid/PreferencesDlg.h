@@ -27,7 +27,6 @@ class CPreferencesDlg : public CTreePropSheet
 	void LocalizeItemText(int i, UINT strid);
 public:
 	CPreferencesDlg();
-	virtual	~CPreferencesDlg() = default;
 	virtual BOOL OnInitDialog();
 
 	CPPgGeneral		m_wndGeneral;

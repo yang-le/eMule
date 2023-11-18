@@ -4,7 +4,7 @@
 //  Supports WinXP styles (thanks to David Yuheng Zhao for CVisualStylesXP - yuheng_zhao@yahoo.com)
 // ------------------------------------------------------------
 //  DialogMinTrayBtn.hpp
-//  zegzav - 2002,2003 - eMule project (http://www.emule-project.net)
+//  zegzav - 2002,2003 - eMule project (https://www.emule-project.net)
 // ------------------------------------------------------------
 #include "stdafx.h"
 #include "DialogMinTrayBtn.h"
@@ -21,8 +21,6 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
-static BOOL (WINAPI *s_pfnTransparentBlt)(HDC, int, int, int, int, HDC, int, int, int, int, UINT) = NULL;
 
 #if 0
 // define this to use that source file as template
@@ -126,16 +124,6 @@ TEMPLATE void CDialogMinTrayBtn<BASE>::MinTrayBtnInit()
 	m_bMinTrayBtnActive = FALSE;
 	m_bMinTrayBtnHitTest = FALSE;
 	m_nMinTrayBtnTimerId = 0;
-
-	// - Load the 'MSIMG32.DLL' only, if it's really needed.
-	if (MinTrayBtnInitBitmap() && !s_pfnTransparentBlt) {
-		HMODULE hMsImg32 = LoadLibrary(_T("MSIMG32.DLL"));
-		if (hMsImg32) {
-			(FARPROC &)s_pfnTransparentBlt = GetProcAddress(hMsImg32, "TransparentBlt");
-			if (!s_pfnTransparentBlt)
-				FreeLibrary(hMsImg32);
-		}
-	}
 }
 
 TEMPLATE BOOL CDialogMinTrayBtn<BASE>::OnInitDialog()
@@ -211,7 +199,7 @@ TEMPLATE void CDialogMinTrayBtn<BASE>::OnLButtonUp(UINT nFlags, CPoint point)
 		return;
 	}
 
-	ReleaseCapture();
+	::ReleaseCapture();
 	m_bMinTrayBtnCapture = FALSE;
 	MinTrayBtnSetUp();
 
@@ -224,7 +212,7 @@ TEMPLATE void CDialogMinTrayBtn<BASE>::OnTimer(UINT_PTR nIDEvent)
 {
 	if (!IsWindowsClassicStyle() && nIDEvent == m_nMinTrayBtnTimerId) {
 		// Visual XP Style (hot button)
-		CPoint point;
+		POINT point;
 		if (::GetCursorPos(&point)) {
 			BOOL bHitTest = MinTrayBtnHitTest(point);
 			if (m_bMinTrayBtnHitTest != bHitTest) {
@@ -294,6 +282,8 @@ TEMPLATE void CDialogMinTrayBtn<BASE>::MinTrayBtnShow()
 	if (MinTrayBtnIsVisible())
 		return;
 
+	if (!m_nMinTrayBtnTimerId)
+		m_nMinTrayBtnTimerId = SetTimer(TIMERMINTRAYBTN_ID, TIMERMINTRAYBTN_PERIOD, NULL);
 	m_bMinTrayBtnVisible = TRUE;
 	if (IsWindowVisible())
 		RedrawWindow(NULL, NULL, RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW);
@@ -305,6 +295,11 @@ TEMPLATE void CDialogMinTrayBtn<BASE>::MinTrayBtnHide()
 		return;
 
 	m_bMinTrayBtnVisible = FALSE;
+	if (m_nMinTrayBtnTimerId) {
+		KillTimer(m_nMinTrayBtnTimerId);
+		m_nMinTrayBtnTimerId = 0;
+	}
+
 	if (IsWindowVisible())
 		RedrawWindow(NULL, NULL, RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW);
 }
@@ -325,7 +320,7 @@ TEMPLATE void CDialogMinTrayBtn<BASE>::MinTrayBtnDisable()
 
 	m_bMinTrayBtnEnabled = FALSE;
 	if (m_bMinTrayBtnCapture) {
-		ReleaseCapture();
+		::ReleaseCapture();
 		m_bMinTrayBtnCapture = FALSE;
 	}
 	MinTrayBtnSetUp();
@@ -388,12 +383,14 @@ TEMPLATE void CDialogMinTrayBtn<BASE>::MinTrayBtnDraw()
 		if (!m_bMinTrayBtnActive)
 			iState += 4; // inactive state TRAYBS_Ixxx
 
-		if (m_bmMinTrayBtnBitmap.m_hObject && s_pfnTransparentBlt) {
+		if (m_bmMinTrayBtnBitmap.m_hObject) {
 			// known theme (bitmap)
 			CBitmap *pBmpOld;
 			CDC dcMem;
 			if (dcMem.CreateCompatibleDC(pDC) && (pBmpOld = dcMem.SelectObject(&m_bmMinTrayBtnBitmap)) != NULL) {
-				s_pfnTransparentBlt(pDC->m_hDC, btn.left, btn.top, btn.Width(), btn.Height(), dcMem.m_hDC, 0, BMP_TRAYBTN_HEIGHT * (iState - 1), BMP_TRAYBTN_WIDTH, BMP_TRAYBTN_HEIGHT, BMP_TRAYBTN_TRANSCOLOR);
+				::TransparentBlt(pDC->m_hDC, btn.left, btn.top, btn.Width(), btn.Height()
+					, dcMem.m_hDC, 0, BMP_TRAYBTN_HEIGHT * (iState - 1)
+					, BMP_TRAYBTN_WIDTH, BMP_TRAYBTN_HEIGHT, BMP_TRAYBTN_TRANSCOLOR);
 				dcMem.SelectObject(pBmpOld);
 			}
 		} else {
@@ -467,8 +464,7 @@ TEMPLATE INT CDialogMinTrayBtn<BASE>::GetVisualStylesXPColor() const
 	WCHAR *p = wcsrchr(szwThemeFile, _T('\\'));
 	if (p == NULL)
 		return -1;
-	++p;
-	if (_wcsicmp(p, VISUALSTYLESXP_DEFAULTFILE) == 0) {
+	if (_wcsicmp(&p[1], VISUALSTYLESXP_DEFAULTFILE) == 0) {
 		if (_wcsicmp(szwThemeColor, VISUALSTYLESXP_NAMEBLUE) == 0)
 			return VISUALSTYLESXP_BLUE;
 		if (_wcsicmp(szwThemeColor, VISUALSTYLESXP_NAMEMETALLIC) == 0)

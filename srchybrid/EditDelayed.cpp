@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -75,12 +75,12 @@ void CEditDelayed::OnDestroy()
 
 void CEditDelayed::OnTimer(UINT_PTR nIDEvent)
 {
-	//ASSERT( nIDEvent == DELAYED_EVALUATE_TIMER_ID );
+	//ASSERT(nIDEvent == DELAYED_EVALUATE_TIMER_ID);
 	if (nIDEvent == DELAYED_EVALUATE_TIMER_ID) {
-		DWORD dwTick = ::GetTickCount();
-		if (dwTick >= m_dwLastModified + 400) {
+		const DWORD curTick = ::GetTickCount();
+		if (curTick >= m_dwLastModified + 400) {
 			DoDelayedEvalute();
-			m_dwLastModified = dwTick;
+			m_dwLastModified = curTick;
 		}
 	}
 
@@ -95,7 +95,7 @@ void CEditDelayed::OnSetFocus(CWnd *pOldWnd)
 		// Create timer
 		ASSERT(m_uTimerResult == 0);
 		m_uTimerResult = SetTimer(DELAYED_EVALUATE_TIMER_ID, 100, NULL);
-		ASSERT(m_uTimerResult != 0);
+		ASSERT(m_uTimerResult);
 
 		ShowColumnText(false);
 	}
@@ -105,7 +105,7 @@ void CEditDelayed::OnKillFocus(CWnd *pNewWnd)
 {
 	if (!m_bShuttingDown) {
 		// Kill timer
-		ASSERT(m_uTimerResult != 0);
+		ASSERT(m_uTimerResult);
 		VERIFY(KillTimer(DELAYED_EVALUATE_TIMER_ID));
 		m_uTimerResult = 0;
 
@@ -150,13 +150,13 @@ void CEditDelayed::DoDelayedEvalute(bool bForce)
 		return;
 	}
 
-	// Fire 'evaluate' event only, if content really has changed.
+	// Fire 'evaluate' event only if content really has changed.
 	CString strContent;
 	GetWindowText(strContent);
-	if (m_strLastEvaluatedContent == strContent && !bForce)
-		return;
-	m_strLastEvaluatedContent = strContent;
-	GetParent()->SendMessage(UM_DELAYED_EVALUATE, (WPARAM)m_nCurrentColumnIdx, (LPARAM)(LPCTSTR)m_strLastEvaluatedContent);
+	if (m_strLastEvaluatedContent != strContent || bForce) {
+		m_strLastEvaluatedContent = strContent;
+		GetParent()->SendMessage(UM_DELAYED_EVALUATE, (WPARAM)m_nCurrentColumnIdx, (LPARAM)(LPCTSTR)m_strLastEvaluatedContent);
+	}
 }
 
 void CEditDelayed::OnInit(CHeaderCtrl *pColumnHeader, CArray<int, int> *paIgnoredColumns)
@@ -171,10 +171,7 @@ void CEditDelayed::OnInit(CHeaderCtrl *pColumnHeader, CArray<int, int> *paIgnore
 
 	CImageList *pImageList = new CImageList();
 	pImageList->Create(16, 16, theApp.m_iDfltImageListColorFlags | ILC_MASK, 0, 1);
-	if (pColumnHeader != NULL)
-		pImageList->Add(CTempIconLoader(_T("SEARCHEDIT")));
-	else
-		pImageList->Add(CTempIconLoader(_T("KADNODESEARCH")));
+	pImageList->Add(CTempIconLoader(pColumnHeader ? _T("SEARCHEDIT") : _T("KADNODESEARCH")));
 	m_iwColumn.SetImageList(pImageList);
 	m_iwColumn.Create(_T(""), WS_CHILD | WS_VISIBLE, CRect(0, 0, ICON_LEFTSPACE, rectWindow.bottom), this, 1);
 
@@ -227,13 +224,13 @@ void CEditDelayed::OnLButtonDown(UINT nFlags, CPoint point)
 				int nIdx = m_pctrlColumnHeader->OrderToIndex(i);
 				m_pctrlColumnHeader->GetItem(nIdx, &hdi);
 				szBuffer[_countof(szBuffer) - 1] = _T('\0');
-				bool bIgnored = false;
-				for (int j = 0; j < m_aIgnoredColumns.GetCount(); ++j)
+				bool bVisible = true;
+				for (INT_PTR j = m_aIgnoredColumns.GetCount(); --j >= 0;)
 					if (m_aIgnoredColumns[j] == nIdx) {
-						bIgnored = true;
+						bVisible = false;
 						break;
 					}
-				if (hdi.cxy > 0 && !bIgnored) // ignore hidden columns
+				if (hdi.cxy > 0 && bVisible) // ignore hidden columns
 					menu.AppendMenu(MF_STRING | ((m_nCurrentColumnIdx == nIdx) ? MF_CHECKED : MF_UNCHECKED), MP_FILTERCOLUMNS + nIdx, hdi.pszText);
 			}
 
@@ -262,7 +259,7 @@ void CEditDelayed::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	if (m_bShowResetButton) {
 		m_iwReset.ShowIcon(0);
-		ReleaseCapture();
+		::ReleaseCapture();
 
 		RECT editRect;
 		GetClientRect(&editRect);
@@ -315,7 +312,7 @@ void CEditDelayed::ShowColumnText(bool bShow)
 			hdi.cchTextMax = _countof(szBuffer);
 			if (m_pctrlColumnHeader->GetItem(m_nCurrentColumnIdx, &hdi)) {
 				szBuffer[_countof(szBuffer) - 1] = _T('\0');
-				SetWindowText(hdi.pszText);
+				SetWindowText(szBuffer);
 			}
 		} else
 			SetWindowText(m_strAlternateText);
@@ -327,7 +324,7 @@ void CEditDelayed::ShowColumnText(bool bShow)
 
 HBRUSH CEditDelayed::CtlColor(CDC *pDC, UINT)
 {
-	// Use gray text color when showing the column text so it doesn't gets confused with typed in text
+	// Use gray text color when showing the column text so it doesn't get confused with typed in text
 	HBRUSH hbr = ::GetSysColorBrush(COLOR_WINDOW);
 	pDC->SetTextColor(::GetSysColor(m_bShowsColumnText ? COLOR_GRAYTEXT : COLOR_WINDOWTEXT));
 	pDC->SetBkColor(::GetSysColor(COLOR_WINDOW));
@@ -365,9 +362,9 @@ BEGIN_MESSAGE_MAP(CIconWnd, CStatic)
 END_MESSAGE_MAP()
 
 CIconWnd::CIconWnd()
+	: m_pImageList()
+	, m_nCurrentIcon()
 {
-	m_pImageList = NULL;
-	m_nCurrentIcon = 0;
 }
 
 CIconWnd::~CIconWnd()
@@ -377,9 +374,9 @@ CIconWnd::~CIconWnd()
 
 void CIconWnd::OnPaint()
 {
-	CPaintDC dc(this);
 	RECT rect;
 	GetClientRect(&rect);
+	CPaintDC dc(this);
 	dc.FillSolidRect(&rect, ::GetSysColor(COLOR_WINDOW));
 	m_pImageList->Draw(&dc, m_nCurrentIcon, POINT{ 2, (rect.bottom - 16) / 2 }, ILD_NORMAL);
 }
@@ -391,9 +388,9 @@ BOOL CIconWnd::OnEraseBkgnd(CDC*)
 
 void CIconWnd::ShowIcon(int nIconNumber)
 {
-	if (nIconNumber == m_nCurrentIcon)
-		return;
-	m_nCurrentIcon = nIconNumber;
-	Invalidate();
-	UpdateWindow();
+	if (nIconNumber != m_nCurrentIcon) {
+		m_nCurrentIcon = nIconNumber;
+		Invalidate();
+		UpdateWindow();
+	}
 }

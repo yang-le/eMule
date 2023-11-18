@@ -805,7 +805,7 @@
 #define IDS_GLOBALSEARCH                875
 #define IDS_METHOD                      876
 #define IDS_UNDO                        877
-#define IDS_DAYLY                       878
+#define IDS_DAILY                       878
 #define IDS_DAY_MO_FR                   879
 #define IDS_DAY_SA_SO                   880
 #define IDS_MO                          881
@@ -1009,7 +1009,7 @@
 #define IDS_USS_STARTING                1065
 #define IDS_A4AF                        1066
 #define IDS_ENABLEIMPORTPARTS           1067
-//***#define                            1068
+#define IDS_ERR_REGEXP                  1068
 #define IDS_AUTOCAT_LABEL               1069
 #define IDS_SHOWEXTSETTINGS             1070
 #define IDS_TREEOPTIONS_TRUE            1071
@@ -1664,6 +1664,7 @@
 #define IDC_ADDSERVER                   2169
 #define IDC_DOWNLOAD_CAP                2171
 #define IDC_SEARCHLIST                  2172
+#define IDC_KADSEARCHLIST               2173
 #define IDC_UPDATESERVERMETFROMURL      2174
 #define IDC_COMBO1                      2175
 #define IDC_AUTOSERVER                  2176
@@ -2372,6 +2373,8 @@
 #define IDC_SMTPUSER                    3034
 #define IDC_SMTPPASS_LBL                3035
 #define IDC_SMTPPASS                    3036
+#define IDC_SF_FICON                    3037
+#define IDC_SF_FNAME                    3038
 #define IDA_ENTER                       32771
 
 #define IDS_COUNTRYNAME_SHORT           4029
@@ -2397,7 +2400,7 @@
 #define IDC_DLOC                        5024
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        1568

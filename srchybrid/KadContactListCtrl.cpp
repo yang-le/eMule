@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -50,9 +50,9 @@ void CKadContactListCtrl::Init()
 	SetPrefsKey(_T("ONContactListCtrl"));
 	SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
-	InsertColumn(colID,		  GetResString(IDS_ID),			LVCFMT_LEFT, 16 + DFLT_HASH_COL_WIDTH);
-	InsertColumn(colType,	  GetResString(IDS_TYPE),		LVCFMT_LEFT, 50);
-	InsertColumn(colDistance, GetResString(IDS_KADDISTANCE),LVCFMT_LEFT, 600);
+	InsertColumn(colID,		  _T(""),	LVCFMT_LEFT, 16 + DFLT_HASH_COL_WIDTH);	//IDS_ID
+	InsertColumn(colType,	  _T(""),	LVCFMT_LEFT, 50);						//IDS_TYPE
+	InsertColumn(colDistance, _T(""),	LVCFMT_LEFT, 600);						//IDS_KADDISTANCE
 
 	SetAllIcons();
 	Localize();
@@ -62,7 +62,7 @@ void CKadContactListCtrl::Init()
 	bool bSortAscending = GetSortAscending();
 
 	SetSortArrow(iSortItem, bSortAscending);
-	SortItems(SortProc, MAKELONG(iSortItem, (bSortAscending ? 0 : 0x0001)));
+	SortItems(SortProc, MAKELONG(iSortItem, !bSortAscending));
 }
 
 void CKadContactListCtrl::SaveAllSettings()
@@ -94,44 +94,24 @@ void CKadContactListCtrl::SetAllIcons()
 
 void CKadContactListCtrl::Localize()
 {
-	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
-	HDITEM hdi;
-	hdi.mask = HDI_TEXT;
-	CString strRes;
+	static const UINT uids[3] =
+	{
+		IDS_ID, IDS_TYPE, IDS_KADDISTANCE
+	};
 
-	for (int icol = pHeaderCtrl->GetItemCount(); --icol >= 0;) {
-		UINT uid;
-		switch (icol) {
-		case colID:
-			uid = IDS_ID;
-			break;
-		case colType:
-			uid = IDS_TYPE;
-			break;
-		case colDistance:
-			uid = IDS_KADDISTANCE;
-			break;
-		default:
-			uid = 0;
-			strRes.Empty();
-		}
-		if (uid)
-			strRes = GetResString(uid);
-		hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
-		pHeaderCtrl->SetItem(icol, &hdi);
-	}
+	LocaliseHeaderCtrl(uids, _countof(uids));
 }
 
 void CKadContactListCtrl::UpdateContact(int iItem, const Kademlia::CContact *contact)
 {
 	CString id;
-	contact->GetClientID(&id);
+	contact->GetClientID(id);
 	SetItemText(iItem, colID, id);
 
 	id.Format(_T("%i(%u)"), contact->GetType(), contact->GetVersion());
 	SetItemText(iItem, colType, id);
 
-	contact->GetDistance(&id);
+	contact->GetDistance(id);
 	SetItemText(iItem, colDistance, id);
 
 	UINT nImageShown;
@@ -154,7 +134,7 @@ bool CKadContactListCtrl::ContactAdd(const Kademlia::CContact *contact)
 {
 	try {
 		ASSERT(contact != NULL);
-		int iItem = InsertItem(LVIF_TEXT | LVIF_PARAM, GetItemCount(), NULL, 0, 0, 0, (LPARAM)contact);
+		int iItem = InsertItem(LVIF_TEXT | LVIF_PARAM, GetItemCount(), _T(""), 0, 0, 0, (LPARAM)contact);
 		if (iItem >= 0) {
 			UpdateContact(iItem, contact);
 			UpdateKadContactCount();
@@ -206,21 +186,17 @@ BOOL CKadContactListCtrl::OnCommand(WPARAM, LPARAM)
 
 void CKadContactListCtrl::OnLvnColumnClick(LPNMHDR pNMHDR, LRESULT *pResult)
 {
-	NMLISTVIEW *pNMListView = reinterpret_cast<NMLISTVIEW*>(pNMHDR);
-
+	const LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	// Determine ascending based on whether already sorted on this column
-	int iSortItem = GetSortItem();
-	bool bOldSortAscending = GetSortAscending();
-	bool bSortAscending = (iSortItem != pNMListView->iSubItem) ? true : !bOldSortAscending;
+	bool bSortAscending = (GetSortItem() != pNMLV->iSubItem || !GetSortAscending());
 
 	// Item is column clicked
-	iSortItem = pNMListView->iSubItem;
+	int iSortItem = pNMLV->iSubItem;
 
 	// Sort table
-	UpdateSortHistory(MAKELONG(iSortItem, (bSortAscending ? 0 : 0x0001)));
+	UpdateSortHistory(MAKELONG(iSortItem, !bSortAscending));
 	SetSortArrow(iSortItem, bSortAscending);
-	SortItems(SortProc, MAKELONG(iSortItem, (bSortAscending ? 0 : 0x0001)));
-
+	SortItems(SortProc, MAKELONG(iSortItem, !bSortAscending));
 	*pResult = 0;
 }
 
@@ -237,8 +213,8 @@ int CALLBACK CKadContactListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARA
 		{
 			Kademlia::CUInt128 i1;
 			Kademlia::CUInt128 i2;
-			item1->GetClientID(&i1);
-			item2->GetClientID(&i2);
+			item1->GetClientID(i1);
+			item2->GetClientID(i2);
 			iResult = i1.CompareTo(i2);
 		}
 		break;
@@ -250,8 +226,8 @@ int CALLBACK CKadContactListCtrl::SortProc(LPARAM lParam1, LPARAM lParam2, LPARA
 	case colDistance:
 		{
 			Kademlia::CUInt128 distance1, distance2;
-			item1->GetDistance(&distance1);
-			item2->GetDistance(&distance2);
+			item1->GetDistance(distance1);
+			item2->GetDistance(distance2);
 			iResult = distance1.CompareTo(distance2);
 		}
 		break;

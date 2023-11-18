@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2008 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / http://www.emule-project.net )
+//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -30,7 +30,7 @@ static char THIS_FILE[] = __FILE__;
 extern _CRT_ALLOC_HOOK g_pfnPrevCrtAllocHook;
 #endif
 
-#define MAXAVERAGETIME			SEC2MS(40) //millisecs
+#define MAXAVERAGETIME	SEC2MS(40)
 
 ///////////////////////////////////////////////////////////////////////////////
 // CStatistics
@@ -49,19 +49,19 @@ float	CStatistics::maxUp;
 float	CStatistics::maxUpavg;
 float	CStatistics::rateDown;
 float	CStatistics::rateUp;
-uint32	CStatistics::timeTransfers;
-uint32	CStatistics::timeDownloads;
-uint32	CStatistics::timeUploads;
-uint32	CStatistics::start_timeTransfers;
-uint32	CStatistics::start_timeDownloads;
-uint32	CStatistics::start_timeUploads;
-uint32	CStatistics::time_thisTransfer;
-uint32	CStatistics::time_thisDownload;
-uint32	CStatistics::time_thisUpload;
-uint32	CStatistics::timeServerDuration;
-uint32	CStatistics::time_thisServerDuration;
-uint32	CStatistics::m_nDownDatarateOverhead;
-uint32	CStatistics::m_nDownDataRateMSOverhead;
+DWORD	CStatistics::timeTransfers;
+DWORD	CStatistics::timeDownloads;
+DWORD	CStatistics::timeUploads;
+DWORD	CStatistics::start_timeTransfers;
+DWORD	CStatistics::start_timeDownloads;
+DWORD	CStatistics::start_timeUploads;
+DWORD	CStatistics::time_thisTransfer;
+DWORD	CStatistics::time_thisDownload;
+DWORD	CStatistics::time_thisUpload;
+DWORD	CStatistics::timeServerDuration;
+DWORD	CStatistics::time_thisServerDuration;
+uint64	CStatistics::m_nDownDatarateOverhead;
+uint64	CStatistics::m_nDownDataRateMSOverhead;
 uint64	CStatistics::m_nDownDataOverheadSourceExchange;
 uint64	CStatistics::m_nDownDataOverheadSourceExchangePackets;
 uint64	CStatistics::m_nDownDataOverheadFileRequest;
@@ -72,8 +72,8 @@ uint64	CStatistics::m_nDownDataOverheadKad;
 uint64	CStatistics::m_nDownDataOverheadKadPackets;
 uint64	CStatistics::m_nDownDataOverheadOther;
 uint64	CStatistics::m_nDownDataOverheadOtherPackets;
-uint32	CStatistics::m_nUpDatarateOverhead;
-uint32	CStatistics::m_nUpDataRateMSOverhead;
+uint64	CStatistics::m_nUpDatarateOverhead;
+uint64	CStatistics::m_nUpDataRateMSOverhead;
 uint64	CStatistics::m_nUpDataOverheadSourceExchange;
 uint64	CStatistics::m_nUpDataOverheadSourceExchangePackets;
 uint64	CStatistics::m_nUpDataOverheadFileRequest;
@@ -84,8 +84,8 @@ uint64	CStatistics::m_nUpDataOverheadKad;
 uint64	CStatistics::m_nUpDataOverheadKadPackets;
 uint64	CStatistics::m_nUpDataOverheadOther;
 uint64	CStatistics::m_nUpDataOverheadOtherPackets;
-uint32	CStatistics::m_sumavgDDRO;
-uint32	CStatistics::m_sumavgUDRO;
+uint64	CStatistics::m_sumavgDDRO;
+uint64	CStatistics::m_sumavgUDRO;
 
 float	CStatistics::m_fGlobalDone;
 float	CStatistics::m_fGlobalSize;
@@ -214,23 +214,24 @@ void CStatistics::UpdateConnectionStats(float uploadrate, float downloadrate)
 
 	// Transfer Times (Increment Session)
 	if (uploadrate > 0 || downloadrate > 0) {
-		if (start_timeTransfers == 0)
-			start_timeTransfers = ::GetTickCount();
+		const DWORD curTick = ::GetTickCount();
+		if (start_timeTransfers)
+			time_thisTransfer = (curTick - start_timeTransfers) / SEC2MS(1);
 		else
-			time_thisTransfer = (::GetTickCount() - start_timeTransfers) / SEC2MS(1);
+			start_timeTransfers = curTick;
 
 		if (uploadrate > 0) {
-			if (start_timeUploads == 0)
-				start_timeUploads = ::GetTickCount();
+			if (start_timeUploads)
+				time_thisUpload = (curTick - start_timeUploads) / SEC2MS(1);
 			else
-				time_thisUpload = (::GetTickCount() - start_timeUploads) / SEC2MS(1);
+				start_timeUploads = curTick;
 		}
 
 		if (downloadrate > 0) {
-			if (start_timeDownloads == 0)
-				start_timeDownloads = ::GetTickCount();
+			if (start_timeDownloads)
+				time_thisDownload = (curTick - start_timeDownloads) / SEC2MS(1);
 			else
-				time_thisDownload = (::GetTickCount() - start_timeDownloads) / SEC2MS(1);
+				start_timeDownloads = curTick;
 		}
 	}
 
@@ -264,17 +265,20 @@ void CStatistics::RecordRate()
 	if (theStats.transferStarttime == 0)
 		return;
 
-	// Accurate data rate Calculation
-	const DWORD tick = ::GetTickCount();
-	downrateHistory.push_front(TransferredData{(uint32)theStats.sessionReceivedBytes, tick});
-	uprateHistory.push_front(TransferredData{(uint32)theStats.sessionSentBytes, tick});
+	// Accurate data rate calculation
+	DWORD curTick = ::GetTickCount();
+	downrateHistory.push_front(TransferredData{ theStats.sessionReceivedBytes, curTick });
+	uprateHistory.push_front(TransferredData{ theStats.sessionSentBytes, curTick });
 
-	// limit to maxmins
-	UINT uAverageMilliseconds = MIN2MS(thePrefs.GetStatsAverageMinutes());
-	while (downrateHistory.front().timestamp - downrateHistory.back().timestamp > uAverageMilliseconds)
-		downrateHistory.pop_back();
-	while (uprateHistory.front().timestamp - uprateHistory.back().timestamp > uAverageMilliseconds)
-		uprateHistory.pop_back();
+	DWORD avg = MIN2MS(thePrefs.GetStatsAverageMinutes());
+	if (curTick > avg) {
+		// limit to maxmins
+		curTick -= avg;
+		while (curTick > downrateHistory.back().timestamp)
+			downrateHistory.pop_back();
+		while (curTick > uprateHistory.back().timestamp)
+			uprateHistory.pop_back();
+	}
 }
 
 // Changed these two functions (khaos)...
@@ -344,41 +348,53 @@ float CStatistics::GetAvgUploadRate(int averageType)
 
 void CStatistics::CompDownDatarateOverhead()
 {
-	m_AverageDDRO_list.AddTail(TransferredData{m_nDownDataRateMSOverhead, ::GetTickCount()});
+	DWORD curTick = ::GetTickCount();
+
+	m_AverageDDRO_list.push_back(TransferredData{ m_nDownDataRateMSOverhead, curTick });
 	m_sumavgDDRO += m_nDownDataRateMSOverhead;
 	m_nDownDataRateMSOverhead = 0;
 
-	while (m_AverageDDRO_list.GetTail().timestamp - m_AverageDDRO_list.GetHead().timestamp > MAXAVERAGETIME)
-		m_sumavgDDRO -= m_AverageDDRO_list.RemoveHead().datalen;
+	while (curTick > m_AverageDDRO_list.front().timestamp + MAXAVERAGETIME) {
+		m_sumavgDDRO -= m_AverageDDRO_list.front().datalen;
+		m_AverageDDRO_list.pop_front();
+	}
 
-	if (m_AverageDDRO_list.GetCount() > 10) {
-		DWORD dwDuration = m_AverageDDRO_list.GetTail().timestamp - m_AverageDDRO_list.GetHead().timestamp;
-		if (dwDuration)
-			m_nDownDatarateOverhead = SEC2MS(m_sumavgDDRO - m_AverageDDRO_list.GetHead().datalen) / dwDuration;
-	} else
-		m_nDownDatarateOverhead = 0;
+	if (m_AverageDDRO_list.size() > 10) {
+		const TransferredData &head = m_AverageDDRO_list.front();
+		if (curTick > head.timestamp) {
+			m_nDownDatarateOverhead = SEC2MS(m_sumavgDDRO - head.datalen) / (curTick - head.timestamp);
+			return;
+		}
+	}
+	m_nDownDatarateOverhead = 0;
 }
 
 void CStatistics::CompUpDatarateOverhead()
 {
-	m_AverageUDRO_list.AddTail(TransferredData{m_nUpDataRateMSOverhead, ::GetTickCount()});
+	DWORD curTick = ::GetTickCount();
+
+	m_AverageUDRO_list.push_back(TransferredData{ m_nUpDataRateMSOverhead, curTick });
 	m_sumavgUDRO += m_nUpDataRateMSOverhead;
 	m_nUpDataRateMSOverhead = 0;
 
-	while (m_AverageUDRO_list.GetTail().timestamp - m_AverageUDRO_list.GetHead().timestamp > MAXAVERAGETIME)
-		m_sumavgUDRO -= m_AverageUDRO_list.RemoveHead().datalen;
+	while (curTick > m_AverageUDRO_list.front().timestamp + MAXAVERAGETIME) {
+		m_sumavgUDRO -= m_AverageUDRO_list.front().datalen;
+		m_AverageUDRO_list.pop_front();
+	}
 
-	if (m_AverageUDRO_list.GetCount() > 10) {
-		DWORD dwDuration = m_AverageUDRO_list.GetTail().timestamp - m_AverageUDRO_list.GetHead().timestamp;
-		if (dwDuration)
-			m_nUpDatarateOverhead = SEC2MS(m_sumavgUDRO - m_AverageUDRO_list.GetHead().datalen) / dwDuration;
-	} else
-		m_nUpDatarateOverhead = 0;
+	if (m_AverageUDRO_list.size() > 10) {
+		const TransferredData &head = m_AverageUDRO_list.front();
+		if (curTick > head.timestamp) {
+			m_nUpDatarateOverhead = SEC2MS(m_sumavgUDRO - head.datalen) / (curTick - head.timestamp);
+			return;
+		}
+	}
+	m_nUpDatarateOverhead = 0;
 }
 
 void CStatistics::ResetDownDatarateOverhead()
 {
-	m_AverageDDRO_list.RemoveAll();
+	m_AverageDDRO_list.clear();
 	m_nDownDataRateMSOverhead = 0;
 	m_nDownDatarateOverhead = 0;
 	m_sumavgDDRO = 0;
@@ -386,7 +402,7 @@ void CStatistics::ResetDownDatarateOverhead()
 
 void CStatistics::ResetUpDatarateOverhead()
 {
-	m_AverageUDRO_list.RemoveAll();
+	m_AverageUDRO_list.clear();
 	m_nUpDataRateMSOverhead = 0;
 	m_nUpDatarateOverhead = 0;
 	m_sumavgUDRO = 0;
@@ -454,7 +470,7 @@ void* my_new(size_t n)
 		if (i >= ALLOC_SLOTS)
 			i = ALLOC_SLOTS - 1;
 	}
-	g_aAllocStats[i]++;
+	++g_aAllocStats[i];
 
 	void *pResult;
 	for (;;) {
