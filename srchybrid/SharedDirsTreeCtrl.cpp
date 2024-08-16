@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -112,8 +112,7 @@ void CSharedDirsTreeCtrl::Initialize(CSharedFilesCtrl *pSharedFilesCtrl)
 	// Win98: Explicitly set to Unicode to receive Unicode notifications.
 	SendMessage(CCM_SETUNICODEFORMAT, TRUE);
 
-	//WORD wWinVer = thePrefs.GetWindowsVersion();
-	m_bUseIcons = true;/*(wWinVer == _WINVER_2K_ || wWinVer == _WINVER_XP_ || wWinVer == _WINVER_ME_);*/
+	m_bUseIcons = true;
 	SetAllIcons();
 	Localize();
 }
@@ -739,7 +738,7 @@ void CSharedDirsTreeCtrl::FileSystemTreeAddChildItem(CDirectoryItem *pRoot, cons
 	itInsert.item.mask |= TVIF_PARAM;
 	itInsert.item.lParam = (LPARAM)pti;
 
-	CString sName; //temporary storage for display name
+	SHFILEINFO shFinfo;
 	if (m_bUseIcons) {
 		if (FileSystemTreeIsShared(strDir)) {
 			itInsert.item.stateMask |= TVIS_OVERLAYMASK;
@@ -751,26 +750,15 @@ void CSharedDirsTreeCtrl::FileSystemTreeAddChildItem(CDirectoryItem *pRoot, cons
 		if (DRIVE_REMOVABLE <= nType && nType <= DRIVE_RAMDISK)
 			itInsert.item.iImage = nType;
 
-		SHFILEINFO shFinfo;
 		shFinfo.szDisplayName[0] = _T('\0');
-		if (::SHGetFileInfo(strDir, 0, &shFinfo, sizeof(shFinfo), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_DISPLAYNAME)) {
+		if (::SHGetFileInfo(strDir, 0, &shFinfo, sizeof(shFinfo), SHGFI_SMALLICON | SHGFI_ICON | SHGFI_OPENICON | SHGFI_DISPLAYNAME)) {
 			itInsert.itemex.iImage = AddSystemIcon(shFinfo.hIcon, shFinfo.iIcon);
 			::DestroyIcon(shFinfo.hIcon);
-			if (bTopLevel && shFinfo.szDisplayName[0] != _T('\0')) {
-				sName = shFinfo.szDisplayName;
-				itInsert.item.pszText = const_cast<LPTSTR>((LPCTSTR)sName);
-			}
+			if (bTopLevel && shFinfo.szDisplayName[0] != _T('\0'))
+				itInsert.item.pszText = shFinfo.szDisplayName;
 		} else {
-			TRACE(_T("Error Getting SystemFileInfo!"));
+			TRACE(_T("Error getting SystemFileInfo!"));
 			itInsert.itemex.iImage = 0; // :(
-		}
-
-		if (::SHGetFileInfo(strDir, 0, &shFinfo, sizeof(shFinfo), SHGFI_ICON | SHGFI_OPENICON | SHGFI_SMALLICON)) {
-			itInsert.itemex.iSelectedImage = AddSystemIcon(shFinfo.hIcon, shFinfo.iIcon);
-			::DestroyIcon(shFinfo.hIcon);
-		} else {
-			TRACE(_T("Error Getting SystemFileInfo!"));
-			itInsert.itemex.iImage = 0;
 		}
 	}
 

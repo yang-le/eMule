@@ -50,7 +50,7 @@ protected:
 	afx_msg void OnBnClickedOnChat();
 	afx_msg void OnBnClickedBrowseAudioFile();
 	afx_msg void OnBnClickedTestNotification();
-	afx_msg void OnBnClickedCbEnablenotifications();
+	afx_msg void OnBnClickedCbEnableNotifications();
 	afx_msg void OnBnClickedSMTPserver();
 	afx_msg void OnDestroy();
 };

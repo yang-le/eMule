@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -24,6 +24,9 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+LPCTSTR CRARFile::sUnrar_download = _T("Download latest version of '")
+									UNRAR_DLL_NAME
+									_T("' from https://www.rarlab.com and copy the DLL into eMule installation folder.");
 
 CRARFile::CRARFile()
 	: m_hLibUnRar(NULL)
@@ -45,7 +48,7 @@ CRARFile::~CRARFile()
 bool CRARFile::InitUnRarLib()
 {
 	if (m_hLibUnRar == NULL) {
-		m_hLibUnRar = LoadLibrary(_T("unrar.dll"));
+		m_hLibUnRar = LoadLibrary(UNRAR_DLL_NAME);
 		if (m_hLibUnRar) {
 			(FARPROC&)m_pfnRAROpenArchiveEx = GetProcAddress(m_hLibUnRar, "RAROpenArchiveEx");
 			(FARPROC&)m_pfnRARCloseArchive = GetProcAddress(m_hLibUnRar, "RARCloseArchive");
@@ -63,7 +66,7 @@ bool CRARFile::InitUnRarLib()
 	}
 
 	if (m_hLibUnRar == NULL)
-		LogWarning(LOG_STATUSBAR, _T("Failed to initialize UNRAR.DLL. Download latest version of UNRAR.DLL from http://www.rarlab.com and copy UNRAR.DLL into eMule installation folder."));
+		LogWarning(LOG_STATUSBAR, _T("Failed to initialize ") UNRAR_DLL_NAME _T(". %s"), sUnrar_download);
 
 	return m_hLibUnRar != NULL;
 }
@@ -139,7 +142,7 @@ bool CRARFile::Extract(LPCTSTR pszDstFilePath) const
 	} catch (...) {
 		return false;
 	}
-	return (iProcessFileResult == 0);
+	return !iProcessFileResult;
 }
 
 bool CRARFile::Skip() const
@@ -155,5 +158,5 @@ bool CRARFile::Skip() const
 	} catch (...) {
 		return false;
 	}
-	return (iProcessFileResult == 0);
+	return !iProcessFileResult;
 }

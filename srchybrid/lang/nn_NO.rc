@@ -729,7 +729,7 @@ BEGIN
     IDS_NEWMSG              "Ny melding frå '%s' (IP:%s)"
     IDS_PREF_STARTNEXTFILECATONLY "berre i same kategori"
     IDS_LOG_ULDL_EVENTS     "Logg opplasting/nedlastingshendingar"
-    IDS_PEERCACHE_ENABLED   "Internettleverandøren din støttar PeerCache teknologien; aktiverer cachenedlastingar!"
+//    IDS_PEERCACHE_ENABLED   "Internettleverandøren din støttar PeerCache teknologien; aktiverer cachenedlastingar!"
     IDS_IRC_EMULEPROTO_ALLOWADDFRIEND "Tillat brukarar å leggje deg til som ven"
 END
 
@@ -1550,9 +1550,9 @@ BEGIN
     IDS_WIZ_STARTWITHWINDOWS "Aktiver dette så eMule vil starte saman med Windows. [Deaktivert som standard]"
     IDS_KAD_WAITCBK         "Avventar tilbakering Kad"
     IDS_KAD_TOOMANDYKADLKPS "For mange Kad-oppslag"
-    IDS_PCDS_CLIENTWAIT     "Klient Vent"
-    IDS_PCDS_CACHEWAIT      "Cache Vent"
-    IDS_CACHE               "Cache"
+//    IDS_PCDS_CLIENTWAIT     "Klient Vent"
+//    IDS_PCDS_CACHEWAIT      "Cache Vent"
+//    IDS_CACHE               "Cache"
     IDS_INDEXED             "Indeksert"
     IDS_KADINFO_SRC         "\tKjelde: %u\r\n"
     IDS_KADINFO_KEYW        "\tSøkjeord: %u\r\n"

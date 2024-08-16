@@ -9,7 +9,7 @@
 
  How to use:
 
- void CMyClass::UpdateFromIni(bool bFromIni)
+void CMyClass::UpdateFromIni(bool bFromIni)
 {
 	CIni ini(m_strFileName,m_strSection);
 	ini.SER_GET(bFromIni,m_nValueXY);
@@ -37,7 +37,7 @@ public:
 	// the module's directory will be added to the FileName,
 	// bModulePath=true: ModuleDir, bModulePath=false: CurrentDir
 	static void AddModulePath(CString &rstrFileName, bool bModulPath = true);
-	static CString GetDefaultSection()					{ return AfxGetAppName(); };
+	static CString GetDefaultSection()					{ return AfxGetAppName(); }
 	static CString GetDefaultIniFile(bool bModulPath = true);
 
 	CIni();
@@ -47,10 +47,10 @@ public:
 	CIni& operator=(const CIni &Ini);
 	virtual	~CIni() = default;
 
-	void SetFileName(const CString &rstrFileName)		{ m_strFileName = rstrFileName; };
-	void SetSection(const CString &rstrSection)			{ m_strSection = rstrSection; };
-	const CString& GetFileName() const					{ return m_strFileName; };
-	const CString& GetSection() const					{ return m_strSection;};
+	void SetFileName(const CString &rstrFileName)		{ m_strFileName = rstrFileName; }
+	void SetSection(const CString &rstrSection)			{ m_strSection = rstrSection; }
+	const CString& GetFileName() const					{ return m_strFileName; }
+	const CString& GetSection() const					{ return m_strSection;}
 
 	CString	GetStringUTF8(LPCTSTR lpszEntry,LPCTSTR		lpszDefault = NULL,		LPCTSTR lpszSection = NULL);
 	CString	GetStringLong(LPCTSTR lpszEntry,LPCTSTR		lpszDefault = NULL,		LPCTSTR lpszSection = NULL);

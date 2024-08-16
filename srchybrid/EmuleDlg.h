@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -43,7 +43,6 @@ class CServerWnd;
 class CSharedFilesWnd;
 class CSplashScreen;
 class CStatisticsDlg;
-class CTaskbarNotifier;
 class CTransferDlg;
 struct Status;
 
@@ -67,6 +66,8 @@ class CemuleDlg : public CTrayDialog
 
 	//Client icons for all windows
 	CImageList m_IconList;
+	CReBarCtrl m_ctlMainTopReBar;
+	CTaskbarNotifier m_wndTaskbarNotifier;
 	void SetClientIconList();
 public:
 	explicit CemuleDlg(CWnd *pParent = NULL);
@@ -149,8 +150,6 @@ public:
 	CMuleStatusBarCtrl *statusbar;
 	CStatisticsDlg	*statisticswnd;
 	CIrcWnd			*ircwnd;
-	CTaskbarNotifier *m_wndTaskbarNotifier;
-	CReBarCtrl		m_ctlMainTopReBar;
 	CMuleToolbarCtrl *toolbar;
 	CKademliaWnd	*kademliawnd;
 	CSplashScreen	*m_pSplashWnd;
@@ -158,33 +157,32 @@ public:
 	uint8			status;
 
 protected:
-	HICON			m_hIcon;
-	bool			ready;
-	bool			m_bStartMinimizedChecked;
-	bool			m_bStartMinimized;
 	WINDOWPLACEMENT m_wpFirstRestore;
+	HICON			m_hIcon;
 	HICON			m_connicons[9];
 	HICON			transicons[4];
 	HICON			imicons[3];
 	HICON			m_icoSysTrayCurrent;
 	HICON			usericon;
 	CMeterIcon		m_TrayIcon;
-	HICON			m_icoSysTrayConnected;		// do not use this icon for anything else than the system tray!!!
-	HICON			m_icoSysTrayDisconnected;	// do not use this icon for anything else than the system tray!!!
-	HICON			m_icoSysTrayLowID;			// do not use this icon for anything else than the system tray!!!
+	HICON			m_icoSysTrayConnected;		// do not use this icon for anything but the system tray!!!
+	HICON			m_icoSysTrayDisconnected;	// do not use this icon for anything but the system tray!!!
+	HICON			m_icoSysTrayLowID;			// do not use this icon for anything but the system tray!!!
+	CImageList		imagelist;
+	CTitleMenu		trayPopup;
+	CMuleSystrayDlg	*m_pSystrayDlg;
+	CMainFrameDropTarget *m_pDropTarget;
+	CMenu			m_SysMenuOptions;
+	CMenu			m_menuUploadCtrl;
+	CMenu			m_menuDownloadCtrl;
 	int				m_iMsgIcon;
 	UINT			m_uLastSysTrayIconCookie;
 	uint32			m_uUpDatarate;
 	uint32			m_uDownDatarate;
-	CImageList		imagelist;
-	CTitleMenu		trayPopup;
-	CMuleSystrayDlg	*m_pSystrayDlg;
-	CMainFrameDropTarget	*m_pDropTarget;
-	CMenu			m_SysMenuOptions;
-	CMenu			m_menuUploadCtrl;
-	CMenu			m_menuDownloadCtrl;
 	char			m_acVCDNSBuffer[MAXGETHOSTSTRUCT];
-	bool			m_iMsgBlinkState;
+	bool			m_bStartMinimizedChecked;
+	bool			m_bStartMinimized;
+	bool			m_bMsgBlinkState;
 	bool			m_bConnectRequestDelayedForUPnP;
 	bool			m_bKadSuspendDisconnect;
 	bool			m_bEd2kSuspendDisconnect;
@@ -304,8 +302,6 @@ protected:
 	afx_msg LRESULT OnAddRemoveFriend(WPARAM wParam, LPARAM lParam);
 	// VersionCheck DNS
 	afx_msg LRESULT OnVersionCheckResponse(WPARAM, LPARAM lParam);
-	// Peercache DNS
-	afx_msg LRESULT OnPeerCacheResponse(WPARAM wParam, LPARAM lParam);
 	// MiniMule
 	afx_msg LRESULT OnCloseMiniMule(WPARAM wParam, LPARAM);
 	// Terminal Services
@@ -314,6 +310,17 @@ protected:
 	afx_msg LRESULT OnUPnPResult(WPARAM wParam, LPARAM lParam);
 };
 
+#ifdef _DEBUG
+///////////////////////////////////////////////////////////////////////////////
+// Suppress null document warning in Output (CFrameWnd::Create)
+//
+class CFrameDoc : public CDocument
+{
+public:
+	CFrameDoc() = default;
+	BOOL OnNewDocument() { return CDocument::OnNewDocument(); }
+};
+#endif
 
 enum EEMuleAppMsgs
 {

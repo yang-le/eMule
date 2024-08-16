@@ -453,17 +453,17 @@ void CKeyEntry::MergeIPsAndFilenames(CKeyEntry *pFromEntry)
 		RecalcualteTrustValue();
 	}
 	delete pNewAICHHash;
-	/*//DEBUG_ONLY(
+	/*DEBUG_ONLY(
 		DebugLog(_T("Kad: EntryTrack: Indexed Keyword, Refresh: %s, Current Publisher: %s, Total Publishers: %u, Total different Names: %u,TrustValue: %.2f, file: %s"),
 			(bRefresh ? _T("Yes") : _T("No")), (LPCTSTR)ipstr(htonl(m_uIP)), m_pliPublishingIPs->GetCount(), m_listFileNames.GetCount(), m_fTrustValue, m_uSourceID.ToHexString());
-		//);*/
-	/*if (m_aAICHHashes.GetCount() == 1) {
+		);
+	if (m_aAICHHashes.GetCount() == 1) {
 			DebugLog(_T("Kad: EntryTrack: Indexed Keyword, Refresh: %s, Current Publisher: %s, Total Publishers: %u, Total different Names: %u,TrustValue: %.2f, file: %s, AICH Hash: %s, Popularity: %u"),
 			(bRefresh ? _T("Yes") : _T("No")), (LPCTSTR)ipstr(htonl(m_uIP)), m_pliPublishingIPs->GetCount(), m_listFileNames.GetCount(), m_fTrustValue, m_uSourceID.ToHexString(), m_aAICHHashes[0].GetString(), m_anAICHHashPopularity[0]);
 	} else if (m_aAICHHashes.GetCount() > 1) {
 			DebugLog(_T("Kad: EntryTrack: Indexed Keyword, Refresh: %s, Current Publisher: %s, Total Publishers: %u, Total different Names: %u,TrustValue: %.2f, file: %s, AICH Hash: %u - dumping"),
 			(bRefresh ? _T("Yes") : _T("No")), (LPCTSTR)ipstr(htonl(m_uIP)), m_pliPublishingIPs->GetCount(), m_listFileNames.GetCount(), m_fTrustValue, m_uSourceID.ToHexString(), m_aAICHHashes.GetCount());
-			for (int i = 0; i < m_aAICHHashes.GetCount(); ++i)
+			for (INT_PTR i = 0; i < m_aAICHHashes.GetCount(); ++i)
 				DebugLog(_T("Hash: %s, Popularity: %u"),  m_aAICHHashes[i].GetString(), m_anAICHHashPopularity[i]);
 	}*/
 }
@@ -584,7 +584,7 @@ void CKeyEntry::ReadPublishTrackingDataFromFile(CDataIO *pData, bool bIncludesAI
 	ASSERT(m_anAICHHashPopularity.IsEmpty());
 	if (bIncludesAICH) {
 		CAICHHash hash;
-		for (UINT i = pData->ReadUInt16(); i-- > 0;) { //hash count
+		for (uint32 i = pData->ReadUInt16(); i > 0; --i) { //hash count
 			pData->ReadArray(hash.GetRawHash(), CAICHHash::GetHashSize());
 			m_aAICHHashes.Add(hash);
 			m_anAICHHashPopularity.Add(0);
@@ -636,7 +636,7 @@ void CKeyEntry::ReadPublishTrackingDataFromFile(CDataIO *pData, bool bIncludesAI
 		DebugLog(_T("Loaded 1 AICH Hash (%s, publishers %u of %u) for file %s"), (LPCTSTR)m_aAICHHashes[0].GetString(), m_anAICHHashPopularity[0], m_pliPublishingIPs->GetCount(), (LPCTSTR)m_uSourceID.ToHexString());
 	else if (m_aAICHHashes.GetCount() > 1) {
 		DebugLogWarning(_T("Loaded multiple (%u) AICH Hashes for file %s, dumping..."), m_aAICHHashes.GetCount(), (LPCTSTR)m_uSourceID.ToHexString());
-		for (int i = 0; i < m_aAICHHashes.GetCount(); ++i)
+		for (INT_PTR i = 0; i < m_aAICHHashes.GetCount(); ++i)
 			DebugLog(_T("%s - %u out of %u publishers"), (LPCTSTR)m_aAICHHashes[i].GetString(), m_anAICHHashPopularity[i], m_pliPublishingIPs->GetCount());
 	}
 	//if (GetTrustValue() < 1.0f)
@@ -666,8 +666,8 @@ void CKeyEntry::WriteTagListWithPublishInfo(CDataIO *pData)
 	WriteTagListInc(pData, nAdditionalTags); // write the standard tag list but increase the tag count by the count we want to add
 
 	// here we add a tag including how many publishers this entry has, the trust value and how many different names are known
-	// this is supposed to get used in later versions as an indicator for the user how valid this result is (of course this tag
-	// alone cannot be trusted 100%, because we could be a bad node, but it's a part of the puzzle)
+	// this is supposed to get used in later versions as an indicator for the user how valid this result is (of course, tag
+	// alone cannot be trusted 100%, because it could be a bad node, but it's a part of the riddle)
 	uint32 uTrust = (uint16)(GetTrustValue() * 100);
 	uint32 uPublishers = (uint32)(m_pliPublishingIPs->GetCount() % 256);
 	uint32 uNames = (uint32)(m_listFileNames.GetCount() % 256);
@@ -675,13 +675,13 @@ void CKeyEntry::WriteTagListWithPublishInfo(CDataIO *pData)
 	uint32 uTagValue = (uNames << 24) | (uPublishers << 16) | (uTrust << 0);
 	pData->WriteTag(CKadTagUInt(TAG_PUBLISHINFO, uTagValue));
 
-	// Last but not least the AICH Hash tag, containing all reported (hopefully, exactly 1) AICH hashes
+	// Last but not least: the AICH Hash tag, containing all reported (hopefully, exactly 1) AICH hashes
 	// for this file together with the count of publishers who reported it
 	if (!m_aAICHHashes.IsEmpty()) {
 		CSafeMemFile fileAICHTag(100);
 		uint8 byCount = 0;
 		// get count of AICH tags with popularity > 0
-		for (int i = 0; i < m_aAICHHashes.GetCount(); ++i) {
+		for (INT_PTR i = 0; i < m_aAICHHashes.GetCount(); ++i) {
 			byCount += static_cast<uint8>(m_anAICHHashPopularity[i] > 0);
 			// bsob tags in kad are limited to 255 bytes, so no more than 12 AICH hashes can be written
 			// that shouldn't be an issue however, as the normal AICH hash count is 1, if we have more than
@@ -715,7 +715,7 @@ void CKeyEntry::WriteTagListWithPublishInfo(CDataIO *pData)
 uint16 CKeyEntry::AddRemoveAICHHash(const CAICHHash &hash, bool bAdd)
 {
 	ASSERT(m_aAICHHashes.GetCount() == m_anAICHHashPopularity.GetCount());
-	for (int i = (int)m_aAICHHashes.GetCount(); --i >= 0;)
+	for (INT_PTR i = m_aAICHHashes.GetCount(); --i >= 0;)
 		if (m_aAICHHashes[i] == hash) {
 			if (bAdd)
 				++m_anAICHHashPopularity[i];

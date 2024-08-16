@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -26,7 +26,6 @@
 #include "ServerList.h"
 #include "Server.h"
 #include "ListenSocket.h"
-#include "SafeFile.h"
 #include "Packets.h"
 #include "SharedFileList.h"
 #include "emuleDlg.h"
@@ -43,11 +42,11 @@ static char THIS_FILE[] = __FILE__;
 
 void CServerConnect::TryAnotherConnectionRequest()
 {
-	if (connectionattempts.GetCount() < (thePrefs.IsSafeServerConnectEnabled() ? 1 : 2)) {
+	if (connectionattempts.GetCount() < 2 - static_cast<INT_PTR>(thePrefs.IsSafeServerConnectEnabled())) {
 		CServer *next_server = theApp.serverlist->GetNextServer(m_bTryObfuscated);
 		if (next_server == NULL) {
 			if (connectionattempts.IsEmpty()) {
-				if (m_bTryObfuscated && !thePrefs.IsClientCryptLayerRequired()) {
+				if (m_bTryObfuscated && !thePrefs.IsCryptLayerRequired()) {
 					// try all servers on the non-obfuscated port next
 					m_bTryObfuscated = false;
 					ConnectToAnyServer(0, true, true, true);
@@ -69,14 +68,14 @@ void CServerConnect::TryAnotherConnectionRequest()
 	}
 }
 
-void CServerConnect::ConnectToAnyServer(UINT startAt, bool prioSort, bool isAuto, bool bNoCrypt)
+void CServerConnect::ConnectToAnyServer(INT_PTR startAt, bool prioSort, bool isAuto, bool bNoCrypt)
 {
 	StopConnectionTry();
 	Disconnect();
 	connecting = true;
 	singleconnecting = false;
 	theApp.emuledlg->ShowConnectionState();
-	m_bTryObfuscated = thePrefs.IsServerCryptLayerTCPRequested() && !bNoCrypt;
+	m_bTryObfuscated = thePrefs.IsCryptLayerPreferred() && !bNoCrypt;
 
 	// Barry - Only auto-connect to static server option
 	if (thePrefs.GetAutoConnectToStaticServersOnly() && isAuto) {
@@ -185,11 +184,11 @@ void CServerConnect::ConnectionEstablished(CServerSocket *sender)
 		tagVersion.WriteTagToFile(data);
 
 		uint32 dwCryptFlags = 0;
-		if (thePrefs.IsClientCryptLayerSupported())
+		if (thePrefs.IsCryptLayerEnabled())
 			dwCryptFlags |= SRVCAP_SUPPORTCRYPT;
-		if (thePrefs.IsClientCryptLayerRequested())
+		if (thePrefs.IsCryptLayerPreferred())
 			dwCryptFlags |= SRVCAP_REQUESTCRYPT;
-		if (thePrefs.IsClientCryptLayerRequired())
+		if (thePrefs.IsCryptLayerRequired())
 			dwCryptFlags |= SRVCAP_REQUIRECRYPT;
 
 		CTag tagFlags(CT_SERVER_FLAGS, SRVCAP_ZLIB | SRVCAP_NEWTAGS | SRVCAP_LARGEFILES | SRVCAP_UNICODE | dwCryptFlags);
@@ -241,6 +240,7 @@ void CServerConnect::ConnectionEstablished(CServerSocket *sender)
 		CServer *pServer = theApp.serverlist->GetServerByAddress(cserver->GetAddress(), cserver->GetPort());
 		if (pServer) {
 			if (sender->IsObfusicating() && !pServer->SupportsObfuscationTCP()) {
+				pServer->SetTCPFlags(cserver->GetTCPFlags() | SRV_TCPFLG_TCPOBFUSCATION);
 				pServer->SetObfuscationPortTCP(cserver->GetObfuscationPortTCP());
 				if (!pServer->SupportsObfuscationUDP())
 					pServer->SetObfuscationPortUDP(cserver->GetObfuscationPortUDP());
@@ -328,7 +328,7 @@ void CServerConnect::ConnectionFailed(CServerSocket *sender)
 					// If possible, use the "next" server.
 					int iPosInList = theApp.serverlist->GetPositionOfServer(pServer);
 					if (iPosInList >= 0)
-						m_uStartAutoConnectPos = (UINT)((iPosInList + 1) % theApp.serverlist->GetServerCount());
+						m_uStartAutoConnectPos = (iPosInList + 1) % theApp.serverlist->GetServerCount();
 				}
 				VERIFY((m_idRetryTimer = ::SetTimer(NULL, 0, SEC2MS(CS_RETRYCONNECTTIME), RetryConnectTimer)) != 0);
 				if (thePrefs.GetVerbose() && !m_idRetryTimer)
@@ -360,7 +360,7 @@ void CServerConnect::ConnectionFailed(CServerSocket *sender)
 		if (!connecting)
 			break;
 		if (singleconnecting) {
-			if (pServer != NULL && sender->IsServerCryptEnabledConnection() && !thePrefs.IsClientCryptLayerRequired()) {
+			if (pServer != NULL && sender->IsServerCryptEnabledConnection() && !thePrefs.IsCryptLayerRequired()) {
 				// try reconnecting without obfuscation
 				ConnectToServer(pServer, false, true);
 				break;
@@ -393,7 +393,7 @@ VOID CALLBACK CServerConnect::RetryConnectTimer(HWND /*hWnd*/, UINT /*nMsg*/, UI
 			_this->StopConnectionTry();
 			if (_this->IsConnected())
 				return;
-			if (_this->m_uStartAutoConnectPos >= (UINT)theApp.serverlist->GetServerCount())
+			if (_this->m_uStartAutoConnectPos >= theApp.serverlist->GetServerCount())
 				_this->m_uStartAutoConnectPos = 0;
 			_this->ConnectToAnyServer(_this->m_uStartAutoConnectPos, true, true);
 		}
@@ -457,7 +457,7 @@ CServerConnect::CServerConnect()
 	, connectedsocket()
 	, m_idRetryTimer()
 	, m_uStartAutoConnectPos()
-	, max_simcons(thePrefs.IsSafeServerConnectEnabled() ? 1 : 2)
+	, max_simcons(2 - static_cast<INT_PTR>(thePrefs.IsSafeServerConnectEnabled()))
 	, connecting()
 	, singleconnecting()
 	, connected()

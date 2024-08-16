@@ -23,7 +23,6 @@ what all it does, can cause great harm to the network if released in mass form.
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 their client on the eMule forum.
 */
-
 #pragma once
 #include "shahashset.h"
 #include "kademlia/kademlia/Tag.h"

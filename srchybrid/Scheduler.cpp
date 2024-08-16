@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -76,10 +76,10 @@ void CScheduler::SaveToFile()
 	CIni ini(thePrefs.GetConfigFile(), _T("Scheduler"));
 	ini.WriteInt(_T("Count"), (int)GetCount());
 
-	for (int i = 0; i < GetCount(); ++i) {
+	for (INT_PTR i = 0; i < GetCount(); ++i) {
 		Schedule_Struct *schedule = theApp.scheduler->GetSchedule(i);
 		CString temp;
-		temp.Format(_T("Schedule#%i"), i);
+		temp.Format(_T("Schedule#%i"), (int)i);
 		ini.WriteString(_T("Title"), schedule->title, temp);
 		ini.WriteInt(_T("Day"), schedule->day);
 		ini.WriteInt(_T("StartTime"), (int)schedule->time);
@@ -128,41 +128,23 @@ int CScheduler::Check(bool forcecheck)
 	m_iLastCheckedMinute = tNow.GetMinute();
 	theApp.scheduler->RestoreOriginals();
 
-	for (int si = 0; si < theApp.scheduler->GetCount(); ++si) {
-		const Schedule_Struct *schedule = theApp.scheduler->GetSchedule(si);
+	for (INT_PTR i = 0; i < theApp.scheduler->GetCount(); ++i) {
+		const Schedule_Struct *schedule = theApp.scheduler->GetSchedule(i);
 		if (!schedule->actions[0] || !schedule->enabled)
 			continue;
 
-		// check day of week
+		// check the day of the week
 		if (schedule->day != DAY_DAILY) {
-			int dow = tNow.GetDayOfWeek();
+			UINT dow = (UINT)tNow.GetDayOfWeek();
 			switch (schedule->day) {
 			case DAY_MO:
-				if (dow != 2)
-					continue;
-				break;
 			case DAY_DI:
-				if (dow != 3)
-					continue;
-				break;
 			case DAY_MI:
-				if (dow != 4)
-					continue;
-				break;
 			case DAY_DO:
-				if (dow != 5)
-					continue;
-				break;
 			case DAY_FR:
-				if (dow != 6)
-					continue;
-				break;
 			case DAY_SA:
-				if (dow != 7)
-					continue;
-				break;
 			case DAY_SO:
-				if (dow != 1)
+				if ((schedule->day % 7) + 1 != dow)
 					continue;
 				break;
 			case DAY_MO_FR:
@@ -192,7 +174,7 @@ int CScheduler::Check(bool forcecheck)
 				continue;
 		}
 		// OK, lets do the actions of this schedule
-		ActivateSchedule(si, schedule->time2 == 0);
+		ActivateSchedule(i, schedule->time2 == 0);
 	}
 
 	return -1;

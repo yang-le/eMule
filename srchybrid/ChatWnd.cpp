@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -183,7 +183,7 @@ BOOL CChatWnd::OnInitDialog()
 	ScreenToClient(&rcSpl);
 	rcSpl.left = rcSpl.right + SPLITTER_HORZ_MARGIN;
 	rcSpl.right = rcSpl.left + SPLITTER_HORZ_WIDTH;
-	m_wndSplitterHorz.Create(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_FRIEND);
+	m_wndSplitterHorz.CreateWnd(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_FRIEND);
 
 	// Vista: Remove the TBSTYLE_TRANSPARENT to avoid flickering (can be done only after the toolbar was initially created with TBSTYLE_TRANSPARENT !?)
 	m_wndFormat.ModifyStyle((theApp.m_ullComCtrlVer >= MAKEDLLVERULL(6, 16, 0, 0)) ? TBSTYLE_TRANSPARENT : 0, TBSTYLE_TOOLTIPS);
@@ -436,10 +436,10 @@ void CChatWnd::Localize()
 
 LRESULT CChatWnd::OnCloseTab(WPARAM wParam, LPARAM)
 {
-	TCITEM item = {};
-	item.mask = TCIF_PARAM;
-	if (chatselector.GetItem((int)wParam, &item))
-		chatselector.EndSession(reinterpret_cast<CChatItem*>(item.lParam)->client);
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	if (chatselector.GetItem((int)wParam, &ti))
+		chatselector.EndSession(reinterpret_cast<CChatItem*>(ti.lParam)->client);
 	EnableClose();
 	return TRUE;
 }
@@ -514,7 +514,7 @@ void CChatWnd::OnBnClickedSmiley()
 	m_wndFormat.GetWindowRect(&rcBtn);
 	rcBtn.top -= 2;
 
-	if (!m_pwndSmileySel->Create(this, &rcBtn, &m_wndMessage)) {
+	if (!m_pwndSmileySel->CreateWnd(this, &rcBtn, &m_wndMessage)) {
 		delete m_pwndSmileySel;
 		m_pwndSmileySel = NULL;
 	}

@@ -75,7 +75,7 @@ public:
 	CED2KFileLink(LPCTSTR pszName, LPCTSTR pszSize, LPCTSTR pszHash, const CStringArray &astrParams, LPCTSTR pszSources);
 	~CED2KFileLink();
 
-	LinkType GetKind() const							{ return kFile; };
+	LinkType GetKind() const							{ return kFile; }
 	void GetLink(CString &lnk) const;
 	CED2KFileLink* GetFileLink()						{ return this; }
 

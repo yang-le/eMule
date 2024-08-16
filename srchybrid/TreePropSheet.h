@@ -182,7 +182,7 @@ public:
 	Returns a pointer to the tree control, when the sheet is in
 	tree view mode, NULL otherwise.
 	*/
-	CTreeCtrl *GetPageTreeControl()						{ return m_pwndPageTree; };
+	CTreeCtrl* GetPageTreeControl()						{ return m_pwndPageTree; }
 
 // Public helpers
 public:

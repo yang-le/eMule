@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -79,9 +79,9 @@ BOOL CEnBitmap::LoadImage(LPCTSTR szImagePath, COLORREF crBack)
 		return CBitmap::Attach(img.Detach());
 
 	BOOL bResult = FALSE;
-	CFileException e;
+	CFileException ex;
 	CFile cFile;
-	if (cFile.Open(szImagePath, CFile::modeRead | CFile::typeBinary | CFile::shareDenyWrite, &e)) {
+	if (cFile.Open(szImagePath, CFile::modeRead | CFile::typeBinary | CFile::shareDenyWrite, &ex)) {
 		int nSize = (int)cFile.GetLength();
 		BYTE *pBuff = new BYTE[nSize];
 		if (cFile.Read(pBuff, nSize) > 0) {

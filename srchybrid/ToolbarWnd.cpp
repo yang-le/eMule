@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -14,7 +14,6 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
 #include "stdafx.h"
 #include "emule.h"
 #include "emuledlg.h"
@@ -482,7 +481,7 @@ void CToolbarWnd::DelayShow(BOOL bShow)
 
 void CToolbarWnd::OnSysCommand(UINT nID, LPARAM lParam)
 {
-	if (nID != SC_KEYMENU)
+	if ((nID & 0xFFF0) != SC_KEYMENU)
 		__super::OnSysCommand(nID, lParam);
 	else if (lParam == EMULE_HOTMENU_ACCEL)
 		theApp.emuledlg->SendMessage(WM_COMMAND, IDC_HOTMENU);

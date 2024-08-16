@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -94,8 +94,8 @@ BOOL CClientDetailPage::OnSetActive()
 		if (!client->SupportsCryptLayer())
 			uid = IDS_IDENTNOSUPPORT;
 		else
-			uid = (	   thePrefs.IsClientCryptLayerSupported()
-					&& (client->RequestsCryptLayer() || thePrefs.IsClientCryptLayerRequested())
+			uid = (	   thePrefs.IsCryptLayerEnabled()
+					&& (client->RequestsCryptLayer() || thePrefs.IsCryptLayerPreferred())
 					&& (client->IsObfuscatedConnectionEstablished() || client->socket == NULL || !client->socket->IsConnected())
 				  )
 				? IDS_ENABLED : IDS_SUPPORTED;

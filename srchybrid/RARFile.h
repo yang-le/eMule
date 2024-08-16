@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2005-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
+//Copyright (C)2005-2024 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -16,30 +16,36 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #pragma once
 
-#define ERAR_END_ARCHIVE     10
-#define ERAR_NO_MEMORY       11
-#define ERAR_BAD_DATA        12
-#define ERAR_BAD_ARCHIVE     13
-#define ERAR_UNKNOWN_FORMAT  14
-#define ERAR_EOPEN           15
-#define ERAR_ECREATE         16
-#define ERAR_ECLOSE          17
-#define ERAR_EREAD           18
-#define ERAR_EWRITE          19
-#define ERAR_SMALL_BUF       20
-#define ERAR_UNKNOWN         21
+#define ERAR_END_ARCHIVE	10
+#define ERAR_NO_MEMORY		11
+#define ERAR_BAD_DATA		12
+#define ERAR_BAD_ARCHIVE	13
+#define ERAR_UNKNOWN_FORMAT	14
+#define ERAR_EOPEN			15
+#define ERAR_ECREATE		16
+#define ERAR_ECLOSE			17
+#define ERAR_EREAD			18
+#define ERAR_EWRITE			19
+#define ERAR_SMALL_BUF		20
+#define ERAR_UNKNOWN		21
 
-#define RAR_OM_LIST           0
-#define RAR_OM_EXTRACT        1
+#define RAR_OM_LIST			0
+#define RAR_OM_EXTRACT		1
 
-#define RAR_SKIP              0
-#define RAR_TEST              1
-#define RAR_EXTRACT           2
+#define RAR_SKIP			0
+#define RAR_TEST			1
+#define RAR_EXTRACT			2
 
-#define RAR_VOL_ASK           0
-#define RAR_VOL_NOTIFY        1
+#define RAR_VOL_ASK			0
+#define RAR_VOL_NOTIFY		1
 
-#define RAR_DLL_VERSION       4
+#define RAR_DLL_VERSION		4
+
+#ifdef _WIN64
+#define UNRAR_DLL_NAME		_T("unrar64.dll")
+#else
+#define UNRAR_DLL_NAME		_T("unrar.dll")
+#endif
 
 #pragma pack(push, 1)
 struct RAROpenArchiveDataEx
@@ -94,6 +100,8 @@ public:
 	bool GetNextFile(CString &strFile) const;
 	bool Extract(LPCTSTR pszDstFilePath) const;
 	bool Skip() const;
+
+	static LPCTSTR sUnrar_download;
 
 protected:
 	CString m_strArchiveFilePath;

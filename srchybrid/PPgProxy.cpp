@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -110,7 +110,7 @@ void CPPgProxy::OnBnClickedEnableProxy()
 {
 	SetModified(TRUE);
 
-	BOOL bEnable = IsDlgButtonChecked(IDC_ENABLEPROXY);
+	bool bEnable = IsDlgButtonChecked(IDC_ENABLEPROXY) != 0;
 	GetDlgItem(IDC_PROXYTYPE)->EnableWindow(bEnable);
 	GetDlgItem(IDC_PROXYNAME)->EnableWindow(bEnable);
 	GetDlgItem(IDC_PROXYPORT)->EnableWindow(bEnable);
@@ -121,7 +121,7 @@ void CPPgProxy::OnBnClickedEnableProxy()
 void CPPgProxy::OnBnClickedEnableAuthentication()
 {
 	SetModified(TRUE);
-	BOOL bEnable = IsDlgButtonChecked(IDC_ENABLEAUTH);
+	bool bEnable = IsDlgButtonChecked(IDC_ENABLEAUTH) != 0;
 	GetDlgItem(IDC_USERNAME_A)->EnableWindow(bEnable);
 	GetDlgItem(IDC_PASSWORD)->EnableWindow(bEnable);
 }

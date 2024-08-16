@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -1543,7 +1543,7 @@ void CSharedFilesCtrl::AddShareableFiles(const CString &strFromDir)
 			} else { // neither known nor shared, create
 				CShareableFile *pNewTempFile = new CShareableFile();
 				pNewTempFile->SetFilePath(strFoundFilePath);
-				pNewTempFile->SetFileName(strFoundFileName);
+				pNewTempFile->SetAFileName(strFoundFileName);
 				pNewTempFile->SetPath(strFoundDirectory);
 				pNewTempFile->SetFileSize(ullFoundFileSize);
 				uchar aucMD4[MDX_DIGEST_SIZE] = {};
@@ -1628,7 +1628,6 @@ void CSharedFilesCtrl::OnMouseMove(UINT nFlags, CPoint point)
 		if (iItem >= 0) {
 			CRect rcItem;
 			if (GetItemRect(iItem, rcItem, LVIR_BOUNDS)) {
-				ASSERT(rcItem.PtInRect(point));
 				rcItem.left += sm_iIconOffset;
 				rcItem.right = rcItem.left + 16;
 				rcItem.top += (rcItem.Height() > 16) ? ((rcItem.Height() - 15) / 2) : 0;

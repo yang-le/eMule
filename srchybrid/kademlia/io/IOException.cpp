@@ -44,7 +44,7 @@ CIOException::CIOException(int iCause)
 {
 	m_iCause = iCause;
 }
-
+/*
 BOOL CIOException::GetErrorMessage(LPTSTR lpszError, UINT uMaxError, PUINT pnHelpContext) const
 {
 	static LPCTSTR const sMsg = _T("ONLY AVAILABLE WITH EMULE INTEGRATION");
@@ -57,3 +57,4 @@ BOOL CIOException::GetErrorMessage(LPTSTR lpszError, UINT uMaxError, PUINT pnHel
 
 	return TRUE;
 }
+*/

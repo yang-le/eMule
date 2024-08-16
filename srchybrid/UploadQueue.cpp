@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -54,9 +54,9 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 
-static uint32 counter, sec, statsave;
+static uint32 i1sec, i2sec, i5sec, i60sec;
 static UINT s_uSaveStatistics = 0;
-static uint32 igraph, istats, i2Secs;
+static uint32 igraph, istats;
 
 #define HIGHSPEED_UPLOADRATE_START	(500*1024)
 #define HIGHSPEED_UPLOADRATE_END	(300*1024)
@@ -81,12 +81,12 @@ CUploadQueue::CUploadQueue()
 	, m_dwLastResortedUploadSlots()
 	, m_bStatisticsWaitingListDirty(true)
 {
-	VERIFY((h_timer = ::SetTimer(NULL, 0, 100, UploadTimer)) != 0);
+	VERIFY((h_timer = ::SetTimer(NULL, 0, SEC2MS(1)/10, UploadTimer)) != 0);
 	if (thePrefs.GetVerbose() && !h_timer)
 		AddDebugLogLine(true, _T("Failed to create 'upload queue' timer - %s"), (LPCTSTR)GetErrorMessage(::GetLastError()));
-	counter = 0;
-	statsave = 0;
-	i2Secs = 0;
+	i1sec = 0;
+	i60sec = 0;
+	i2sec = 0;
 }
 
 CUploadQueue::~CUploadQueue()
@@ -332,7 +332,7 @@ void CUploadQueue::Process()
 			// does not have access to the client's download rate
 			if (cur_client->GetUploadDatarate() > 100 * 1024) {
 				CEMSocket *sock = cur_client->GetFileUploadSocket();
-				if (sock && (cur_client->m_ePeerCacheUpState != PCUS_WAIT_CACHE_REPLY))
+				if (sock)
 					sock->UseBigSendBuffer();
 			}
 
@@ -393,10 +393,9 @@ bool CUploadQueue::AcceptNewClient(bool addOnNextConnect) const
 	return AcceptNewClient(curUploadSlots);
 }
 
+// check if we can allow a new client to start downloading from us
 bool CUploadQueue::AcceptNewClient(INT_PTR curUploadSlots) const
 {
-	// check if we can allow a new client to start downloading from us
-
 	if (curUploadSlots < max(MIN_UP_CLIENTS_ALLOWED, 4))
 		return true;
 	if (curUploadSlots >= MAX_UP_CLIENTS_ALLOWED)
@@ -408,7 +407,6 @@ bool CUploadQueue::AcceptNewClient(INT_PTR curUploadSlots) const
 	else
 		MaxSpeed = thePrefs.GetMaxUpload();
 	uint32 TargetRate = GetTargetClientDataRate(false);
-
 	if (curUploadSlots >= (INT_PTR)(datarate / GetTargetClientDataRate(true)) || curUploadSlots >= (INT_PTR)(MaxSpeed * 1024 / TargetRate))
 		return false;
 
@@ -481,17 +479,6 @@ bool CUploadQueue::ForceNewClient(bool allowEmptyWaitingQueue)
 		if ((uint32)curUploadSlots < nMaxSlots)
 			return true;
 	}
-/*
-	if (m_iHighestNumberOfFullyActivatedSlotsSinceLastCall > uploadinglist.GetCount()) {
-		// uploadThrottler requests another slot. If throttler says it needs another slot, we will allow more slots
-		// than what we require ourself. Never allow more slots than to give each slot high enough average transfer speed, though (checked above).
-		//if (thePrefs.GetLogUlDlEvents() && !waitinglist.IsEmpty())
-		//	AddDebugLogLine(false, _T("UploadQueue: Added new slot since throttler needs it. m_iHighestNumberOfFullyActivatedSlotsSinceLastCall: %i uploadinglist.GetCount(): %i tick: %i"), m_iHighestNumberOfFullyActivatedSlotsSinceLastCall, uploadinglist.GetCount(), ::GetTickCount());
-		return true;
-	}
-	//nope
-	return false;
-*/
 	return m_iHighestNumberOfFullyActivatedSlotsSinceLastCall > uploadinglist.GetCount();
 }
 
@@ -734,10 +721,9 @@ bool CUploadQueue::RemoveFromUploadQueue(CUpDownClient *client, LPCTSTR pszReaso
 			m_csUploadListMainThrdWriteOtherThrdsRead.Unlock();
 			delete curClientStruct; // m_csBlockListsLock.Lock();
 
-			//if (thePrefs.GetLogUlDlEvents() && !theApp.uploadBandwidthThrottler->RemoveFromStandardList(client->socket) && !theApp.uploadBandwidthThrottler->RemoveFromStandardList((CClientReqSocket*)client->m_pPCUpSocket)))
+			//if (thePrefs.GetLogUlDlEvents() && !theApp.uploadBandwidthThrottler->RemoveFromStandardList(client->socket))
 			//	AddDebugLogLine(false, _T("UploadQueue: Didn't find socket to delete. Address: 0x%x"), client->socket);
 			theApp.uploadBandwidthThrottler->RemoveFromStandardList(client->socket);
-			theApp.uploadBandwidthThrottler->RemoveFromStandardList((CClientReqSocket*)client->m_pPCUpSocket);
 
 			if (client->GetSessionUp() > 0) {
 				++successfullupcount;
@@ -915,10 +901,10 @@ VOID CALLBACK CUploadQueue::UploadTimer(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /
 		}
 
 		// one second
-		if (++counter >= 10) {
-			counter = 0;
+		if (++i1sec >= 10) {
+			i1sec = 0;
 
-			// try to use different time intervals here to not create any disk-IO bottlenecks by saving all files at once
+			// try to use different time intervals here to avoid disk I/O congestion by saving all files at once
 			theApp.clientcredits->Process();	// 13 minutes
 			theApp.serverlist->Process();		// 17 minutes
 			theApp.knownfiles->Process();		// 11 minutes
@@ -946,8 +932,8 @@ VOID CALLBACK CUploadQueue::UploadTimer(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /
 				theApp.serverconnect->CheckForTimeout();
 
 			// 2 seconds
-			if (++i2Secs >= 2) {
-				i2Secs = 0;
+			if (++i2sec >= 2) {
+				i2sec = 0;
 
 				// Update connection stats...
 				theStats.UpdateConnectionStats(theApp.uploadqueue->GetDatarate() / 1024.0f, theApp.downloadqueue->GetDatarate() / 1024.0f);
@@ -988,13 +974,13 @@ VOID CALLBACK CUploadQueue::UploadTimer(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /
 				theApp.emuledlg->ShowTransferRate(true);
 
 			// *** 5 seconds **********************************************
-			if (++sec >= 5) {
+			if (++i5sec >= 5) {
 #ifdef _DEBUG
 				if (thePrefs.m_iDbgHeap > 0 && !AfxCheckMemory())
 					AfxDebugBreak();
 #endif
 
-				sec = 0;
+				i5sec = 0;
 				theApp.listensocket->Process();
 				theApp.OnlineSig(); // Added By Bouc7
 				if (!theApp.emuledlg->IsTrayIconToFlash())
@@ -1020,8 +1006,8 @@ VOID CALLBACK CUploadQueue::UploadTimer(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /
 			}
 
 			// *** 60 seconds *********************************************
-			if (++statsave >= 60) {
-				statsave = 0;
+			if (++i60sec >= 60) {
+				i60sec = 0;
 
 				if (thePrefs.GetWSIsEnabled())
 					theApp.webserver->UpdateSessionCount();
@@ -1038,7 +1024,7 @@ VOID CALLBACK CUploadQueue::UploadTimer(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /
 			}
 		}
 
-		// need more accuracy here. don't rely on the 'sec' and 'statsave' helpers.
+		// need more accuracy here; do not rely on the 'i5sec' and 'i60sec' helpers.
 		thePerfLog.LogSamples();
 	}
 	CATCH_DFLT_EXCEPTIONS(_T("CUploadQueue::UploadTimer"))
@@ -1063,7 +1049,7 @@ void CUploadQueue::UpdateDatarates()
 {
 	// Calculate average data rate
 	const DWORD curTick = ::GetTickCount();
-	if (curTick >= m_lastCalculatedDataRateTick + 500) {
+	if (curTick >= m_lastCalculatedDataRateTick + (SEC2MS(1) / 2)) {
 		m_lastCalculatedDataRateTick = curTick;
 
 		if (average_dr_list.GetCount() >= 2 && average_tick_list.GetTail() > average_tick_list.GetHead()) {
@@ -1077,40 +1063,6 @@ void CUploadQueue::UpdateDatarates()
 uint32 CUploadQueue::GetToNetworkDatarate() const
 {
 	return (datarate > friendDatarate) ? datarate - friendDatarate : 0;
-}
-
-void CUploadQueue::ReSortUploadSlots(bool force)
-{
-	const DWORD curTick = ::GetTickCount();
-	if (force || curTick >= m_dwLastResortedUploadSlots + SEC2MS(10)) {
-		m_dwLastResortedUploadSlots = curTick;
-
-		theApp.uploadBandwidthThrottler->Pause(true);
-
-		CUploadingPtrList tempUploadinglist;
-
-		// Remove all clients from uploading list and store in tempList
-		m_csUploadListMainThrdWriteOtherThrdsRead.Lock();
-		while (!uploadinglist.IsEmpty()) {
-			// Get and remove the client from upload list.
-			UploadingToClient_Struct *pCurClientStruct = uploadinglist.RemoveHead();
-			const CUpDownClient *cur_client = pCurClientStruct->m_pClient;
-
-			// Remove the found Client from UploadBandwidthThrottler
-			theApp.uploadBandwidthThrottler->RemoveFromStandardList(cur_client->socket);
-			theApp.uploadBandwidthThrottler->RemoveFromStandardList((CClientReqSocket*)cur_client->m_pPCUpSocket);
-
-			tempUploadinglist.AddTail(pCurClientStruct);
-		}
-
-		// Remove one at a time from temp list and reinsert in correct position in uploading list
-		while (!tempUploadinglist.IsEmpty())
-			InsertInUploadingList(tempUploadinglist.RemoveHead(), true);
-
-		m_csUploadListMainThrdWriteOtherThrdsRead.Unlock();
-
-		theApp.uploadBandwidthThrottler->Pause(false);
-	}
 }
 
 uint32 CUploadQueue::GetWaitingUserForFileCount(const CSimpleArray<CObject*> &raFiles, bool bOnlyIfChanged)

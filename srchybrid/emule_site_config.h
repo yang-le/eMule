@@ -12,14 +12,12 @@
 #ifdef XP_BUILD
 #define _WIN32_WINNT _WIN32_WINNT_WINXP
 #define NTDDI_VERSION NTDDI_WINXP
-#define XP_NOEXCEPT noexcept
-#else //XP_BUILD
-#if _MSC_VER<1937 //before VS2022 17.7
-#define XP_NOEXCEPT noexcept
-#else
-#define XP_NOEXCEPT
-#endif
 #endif //XP_BUILD
+#if _MSC_VER<1937 //before VS2022 17.7
+#define NOEXCEPT noexcept
+#else
+#define NOEXCEPT
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 // Visual Studio 2003

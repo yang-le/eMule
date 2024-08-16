@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -14,7 +14,6 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
 #pragma once
 
 class Packet;
@@ -44,7 +43,7 @@ public:
 	CUploadDiskIOThread& operator=(const CUploadDiskIOThread&) = delete;
 
 	void		EndThread();	//completionkey == 0
-	void		WakeUpCall();	//completionkey == (ULONG_PTR)(~0)
+	void		WakeUpCall();	//completionkey == WAKEUP
 	static void	DissociateFile(CKnownFile *pFile);
 
 private:
@@ -57,16 +56,16 @@ private:
 	void		ReadCompletionRoutine(DWORD dwRead, const OverlappedRead_Struct *pOvRead);
 
 	static void CreatePackedPackets(const OverlappedRead_Struct &OverlappedRead, CPacketList &rOutPacketList);
-	static void CreatePeerCachePackets(const OverlappedRead_Struct &OverlappedRead, CPacketList &rOutPacketList);
 	static void CreateStandardPackets(const OverlappedRead_Struct &OverlappedRead, CPacketList &rOutPacketList);
 
 	CEvent		m_eventThreadEnded;
 	CTypedPtrList<CPtrList, OverlappedRead_Struct*>	m_listPendingIO;
 
 	HANDLE		m_hPort;
-	volatile bool m_bRun;
-	bool		m_bSignalThrottler;
 #ifdef _DEBUG
 	uint64		dbgDataReadPending;
 #endif
+	volatile char m_Run; //0 - not running; 1 - idle; 2 - processing
+	volatile char m_bNewData;
+	bool		m_bSignalThrottler;
 };

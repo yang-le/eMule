@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -596,7 +596,7 @@ void CClientList::Process()
 			//be fixed in later version
 			// Update: Buddy connections itself support obfuscation properly since 0.49a (this makes it work fine if our buddy uses require crypt),
 			// however callback requests don't support it yet so we wouldn't be able to answer callback requests with RequireCrypt, protocol change intended for the next version
-			if (m_nBuddyStatus == Disconnected && Kademlia::CKademlia::GetPrefs()->GetFindBuddy() && !thePrefs.IsClientCryptLayerRequired()) {
+			if (m_nBuddyStatus == Disconnected && Kademlia::CKademlia::GetPrefs()->GetFindBuddy() && !thePrefs.IsCryptLayerRequired()) {
 				DEBUG_ONLY(DebugLog(_T("Starting Buddy search")));
 				//We are a firewalled client with no buddy. We have also waited a set time
 				//to try to avoid a false firewalled status. So lets look for a buddy.

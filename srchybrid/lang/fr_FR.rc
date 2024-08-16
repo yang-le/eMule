@@ -1543,7 +1543,7 @@ BEGIN
     IDS_NEWMSG              "Nouveau message de '%s' (IP:%s)"
     IDS_PREF_STARTNEXTFILECATONLY "Uniquement dans la même catégorie"
     IDS_LOG_ULDL_EVENTS     "Consigner les évènements d'émission/réception"
-    IDS_PEERCACHE_ENABLED   "Votre FAI supporte la technologie PeerCache, cache activé !"
+//    IDS_PEERCACHE_ENABLED   "Votre FAI supporte la technologie PeerCache, cache activé !"
     IDS_IRC_EMULEPROTO_ALLOWADDFRIEND "Autoriser l'utilisateur à vous ajouter à sa liste d'amis."
     IDS_DL_TRY_TO_GET_PREVIEW_PARTS "Priorité aux parties nécessaires à l'aperçu"
 END
@@ -1585,9 +1585,9 @@ BEGIN
                             "Lancer eMule au démarrage de Windows (désactivé par défaut)"
     IDS_KAD_WAITCBK         "Attente de PCV Kad"
     IDS_KAD_TOOMANDYKADLKPS "Trop de consultations Kad"
-    IDS_PCDS_CLIENTWAIT     "Attente client"
-    IDS_PCDS_CACHEWAIT      "Attente cache"
-    IDS_CACHE               "Cache" //!
+//    IDS_PCDS_CLIENTWAIT     "Attente client"
+//    IDS_PCDS_CACHEWAIT      "Attente cache"
+//    IDS_CACHE               "Cache" //!
     IDS_INDEXED             "Indexé"
     IDS_KADINFO_SRC         "\tSource: %u\r\n" //!
     IDS_KADINFO_KEYW        "\tMot-clé: %u\r\n"

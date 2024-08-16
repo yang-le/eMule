@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -42,7 +42,6 @@ BEGIN_MESSAGE_MAP(CPPgDirectories, CPropertyPage)
 	ON_EN_CHANGE(IDC_INCFILES, OnSettingsChange)
 	ON_EN_CHANGE(IDC_TEMPFILES, OnSettingsChange)
 	ON_BN_CLICKED(IDC_UNCADD, OnBnClickedAddUNC)
-	ON_BN_CLICKED(IDC_UNCREM, OnBnClickedRemUNC)
 	ON_WM_HELPINFO()
 	ON_BN_CLICKED(IDC_SELTEMPDIRADD, OnBnClickedSeltempdiradd)
 	ON_WM_DESTROY()
@@ -58,12 +57,11 @@ void CPPgDirectories::DoDataExchange(CDataExchange *pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_SHARESELECTOR, m_ShareSelector);
-	DDX_Control(pDX, IDC_UNCLIST, m_ctlUncPaths);
 }
 
 BOOL CPPgDirectories::OnInitDialog()
 {
-	CWaitCursor curWait; // initialization of that dialog may take a while.
+	CWaitCursor curWait; // initialization of that dialog may take a while
 	CPropertyPage::OnInitDialog();
 	InitWindowStyles(this);
 
@@ -74,9 +72,6 @@ BOOL CPPgDirectories::OnInitDialog()
 
 	AddBuddyButton(GetDlgItem(IDC_TEMPFILES)->m_hWnd, ::GetDlgItem(m_hWnd, IDC_SELTEMPDIR));
 	InitAttachedBrowseButton(::GetDlgItem(m_hWnd, IDC_SELTEMPDIR), m_icoBrowse);
-
-	m_ctlUncPaths.InsertColumn(0, GetResString(IDS_UNCFOLDERS), LVCFMT_LEFT, 280);
-	m_ctlUncPaths.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
 	GetDlgItem(IDC_SELTEMPDIRADD)->ShowWindow(thePrefs.IsExtControlsEnabled() ? SW_SHOW : SW_HIDE);
 
@@ -100,7 +95,6 @@ void CPPgDirectories::LoadSettings()
 	SetDlgItemText(IDC_TEMPFILES, tempfolders);
 
 	m_ShareSelector.SetSharedDirectories(thePrefs.shareddir_list);
-	FillUNClist();
 }
 
 void CPPgDirectories::OnBnClickedSelincdir()
@@ -227,7 +221,6 @@ BOOL CPPgDirectories::OnApply()
 
 	thePrefs.shareddir_list.RemoveAll();
 	m_ShareSelector.GetSharedDirectories(thePrefs.shareddir_list);
-	FillUNClist();
 
 	// check shared directories for reserved folder names
 	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos != NULL;) {
@@ -286,17 +279,6 @@ void CPPgDirectories::Localize()
 	}
 }
 
-void CPPgDirectories::FillUNClist()
-{
-	m_ctlUncPaths.DeleteAllItems();
-
-	for (POSITION pos = thePrefs.shareddir_list.GetHeadPosition(); pos != NULL;) {
-		const CString &sDir(thePrefs.shareddir_list.GetNext(pos));
-		if (::PathIsUNC(sDir))
-			m_ctlUncPaths.InsertItem(INT_MAX, sDir);
-	}
-}
-
 void CPPgDirectories::OnBnClickedAddUNC()
 {
 	InputBox inputbox;
@@ -316,21 +298,8 @@ void CPPgDirectories::OnBnClickedAddUNC()
 		if (EqualPaths(thePrefs.shareddir_list.GetNext(pos), unc))
 			return;
 
-	for (int i = m_ctlUncPaths.GetItemCount(); --i >= 0;)
-		if (EqualPaths(m_ctlUncPaths.GetItemText(i, 0), unc))
-			return;
-
-	m_ctlUncPaths.InsertItem(INT_MAX, unc);
-	SetModified();
-}
-
-void CPPgDirectories::OnBnClickedRemUNC()
-{
-	int index = m_ctlUncPaths.GetSelectionMark();
-	if (index >= 0 && m_ctlUncPaths.GetSelectedCount() > 0) {
-		m_ctlUncPaths.DeleteItem(index);
+	if (m_ShareSelector.AddUNCShare(unc))
 		SetModified();
-	}
 }
 
 void CPPgDirectories::OnHelp()

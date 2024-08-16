@@ -1540,7 +1540,7 @@ BEGIN
     IDS_NEWMSG              "Neue Nachricht von '%s' (IP:%s)"
     IDS_PREF_STARTNEXTFILECATONLY "Nur aus gleicher Kategorie"
     IDS_LOG_ULDL_EVENTS     "Logge Upload/Download Ereignisse"
-    IDS_PEERCACHE_ENABLED   "Dein ISP unterstützt die PeerCache Technologie. Cache Downloads aktiviert."
+//    IDS_PEERCACHE_ENABLED   "Dein ISP unterstützt die PeerCache Technologie. Cache Downloads aktiviert."
     IDS_IRC_EMULEPROTO_ALLOWADDFRIEND
                             "Erlaube dem Benutzer, dich als Freund aufzunehmen."
     IDS_SOURCESWAPBLOCKED   "Swap blockiert"
@@ -1583,9 +1583,9 @@ BEGIN
                             "Aktiviere dies, wenn eMule beim Windowsstart automatisch starten soll."
     IDS_KAD_WAITCBK         "Warte auf Kad Rückruf"
     IDS_KAD_TOOMANDYKADLKPS "Zu viele Kad Suchen"
-    IDS_PCDS_CLIENTWAIT     "ClientWarte"
-    IDS_PCDS_CACHEWAIT      "CacheWarte"
-    IDS_CACHE               "Cache" //!
+//    IDS_PCDS_CLIENTWAIT     "ClientWarte"
+//    IDS_PCDS_CACHEWAIT      "CacheWarte"
+//    IDS_CACHE               "Cache" //!
     IDS_INDEXED             "Indexiert"
     IDS_KADINFO_SRC         "\tQuelle: %u\r\n"
     IDS_KADINFO_KEYW        "\tSchlüsselwort: %u\r\n"

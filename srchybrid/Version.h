@@ -31,8 +31,8 @@
 //  <build>                  not used for any checks in the program
 #define VERSION_MJR	0
 #define VERSION_MIN	70
-#define VERSION_UPDATE	0
-#define VERSION_BUILD	9
+#define VERSION_UPDATE	1
+#define VERSION_BUILD	5
 #ifdef _M_X64
 #define VERSION_X64 _T(" x64")
 #else

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -53,24 +53,19 @@ int CAICHSyncThread::Run()
 	// we collect all masterhashes which we find in the known2.met and store them in a list
 	CArray<CAICHHash> aKnown2Hashes;
 	CArray<ULONGLONG> aKnown2HashesFilePos;
-	const CString &fullpath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + KNOWN2_MET_FILENAME);
 
 	CSafeFile file;
-
 	// we need to keep a lock on this file while the thread is running
 	CSingleLock lockKnown2Met(&CAICHRecoveryHashSet::m_mutKnown2File, TRUE);
-	bool bJustCreated = ConvertToKnown2ToKnown264(&file);
-
-	CFileException fexp;
-	if (!bJustCreated && !file.Open(fullpath, CFile::modeCreate | CFile::modeReadWrite | CFile::modeNoTruncate | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyNone, &fexp)) {
-		if (fexp.m_cause != CFileException::fileNotFound) {
-			CString strError(_T("Failed to load ") KNOWN2_MET_FILENAME _T(" file"));
-			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, _countof(szError)))
-				strError.AppendFormat(_T(" - %s"), szError);
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+	bool bJustCreated = ConvertKnown2ToKnown264(file);
+	if (!bJustCreated) {
+		if (!CFileOpen(file
+			, thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + KNOWN2_MET_FILENAME
+			, CFile::modeReadWrite | CFile::modeCreate | CFile::modeNoTruncate | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyNone
+			, _T("Failed to load ") KNOWN2_MET_FILENAME _T(" file")))
+		{
+			return 0;
 		}
-		return 0;
 	}
 	uint32 nLastVerifiedPos = 0;
 	try {
@@ -94,25 +89,23 @@ int CAICHSyncThread::Run()
 			}
 		} else
 			file.WriteUInt8(KNOWN2_MET_VERSION);
-	} catch (CFileException *error) {
-		if (error->m_cause == CFileException::endOfFile) {
+	} catch (CFileException *ex) {
+		if (ex->m_cause == CFileException::endOfFile) {
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_MET_BAD), KNOWN2_MET_FILENAME);
-			// truncate the file to the size to the last verified valid pos
+			// truncate the file to the last verified valid position
 			try {
 				file.SetLength(nLastVerifiedPos);
 				if (file.GetLength() == 0) {
 					file.SeekToBegin();
 					file.WriteUInt8(KNOWN2_MET_VERSION);
 				}
-			} catch (CFileException *error2) {
-				error2->Delete();
+			} catch (CFileException *ex2) {
+				ex2->Delete();
 			}
-		} else {
-			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			GetExceptionMessage(*error, buffer, _countof(buffer));
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_UNKNOWN), buffer);
-		}
-		error->Delete();
+		} else
+			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_UNKNOWN), (LPCTSTR)CExceptionStr(*ex));
+
+		ex->Delete();
 		return 0;
 	}
 
@@ -237,16 +230,14 @@ int CAICHSyncThread::Run()
 				, nPurgeCount - nPurgeBecauseOld, nPurgeBecauseOld, (LPCTSTR)CastItoXBytes(posReadPos - posWritePos));
 			if (nPurgeDups)
 				theApp.QueueDebugLogLine(false, _T("Marked %u duplicate hashsets for purging"), nPurgeDups);
-		} catch (CFileException *error) {
-			if (error->m_cause == CFileException::endOfFile) {
+		} catch (CFileException *ex) {
+			if (ex->m_cause == CFileException::endOfFile) {
 				// we just parsed this file some ms ago, should never happen here
 				ASSERT(0);
-			} else {
-				TCHAR buffer[MAX_CFEXP_ERRORMSG];
-				GetExceptionMessage(*error, buffer, _countof(buffer));
-				LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_UNKNOWN), buffer);
-			}
-			error->Delete();
+			} else
+				LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_UNKNOWN), (LPCTSTR)CExceptionStr(*ex));
+
+			ex->Delete();
 			return 0;
 		}
 	} else {
@@ -313,7 +304,7 @@ int CAICHSyncThread::Run()
 	return 0;
 }
 
-bool CAICHSyncThread::ConvertToKnown2ToKnown264(CSafeFile *pTargetFile)
+bool CAICHSyncThread::ConvertKnown2ToKnown264(CSafeFile &TargetFile)
 {
 	// converting known2.met to known2_64.met to support large files
 	// changing hashcount from uint16 to uint32
@@ -328,34 +319,24 @@ bool CAICHSyncThread::ConvertToKnown2ToKnown264(CSafeFile *pTargetFile)
 		return false;
 
 	CSafeFile oldfile;
-	CFileException fexp;
-	if (!oldfile.Open(oldfullpath, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyNone, &fexp)) {
-		if (fexp.m_cause != CFileException::fileNotFound) {
-			CString strError(_T("Failed to load ") OLD_KNOWN2_MET_FILENAME _T(" file"));
-			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, _countof(szError)))
-				strError.AppendFormat(_T(" - %s"), szError);
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
-		}
+	if (!CFileOpen(oldfile, oldfullpath
+		, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyNone
+		, _T("Failed to load ") OLD_KNOWN2_MET_FILENAME _T(" file")))
+	{
 		// known2.met also doesn't exist, so nothing to convert
 		return false;
 	}
-
-	if (!pTargetFile->Open(newfullpath, CFile::modeCreate | CFile::modeReadWrite | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyNone, &fexp)) {
-		if (fexp.m_cause != CFileException::fileNotFound) {
-			CString strError(_T("Failed to load ") KNOWN2_MET_FILENAME _T(" file"));
-			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, _countof(szError)))
-				strError.AppendFormat(_T(" - %s"), szError);
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
-		}
+	if (!CFileOpen(TargetFile, newfullpath
+		, CFile::modeReadWrite | CFile::modeCreate | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyNone
+		, _T("Failed to load ") KNOWN2_MET_FILENAME _T(" file")))
+	{
 		return false;
 	}
 
 	theApp.QueueLogLine(false, GetResString(IDS_CONVERTINGKNOWN2MET), OLD_KNOWN2_MET_FILENAME, KNOWN2_MET_FILENAME);
 
 	try {
-		pTargetFile->WriteUInt8(KNOWN2_MET_VERSION);
+		TargetFile.WriteUInt8(KNOWN2_MET_VERSION);
 		while (oldfile.GetPosition() < oldfile.GetLength()) {
 			CAICHHash aichHash(oldfile);
 			uint32 nHashCount = oldfile.ReadUInt16();
@@ -364,31 +345,28 @@ bool CAICHSyncThread::ConvertToKnown2ToKnown264(CSafeFile *pTargetFile)
 
 			BYTE *buffer = new BYTE[nHashCount * (size_t)CAICHHash::GetHashSize()];
 			oldfile.Read(buffer, nHashCount * CAICHHash::GetHashSize());
-			pTargetFile->Write(aichHash.GetRawHash(), CAICHHash::GetHashSize());
-			pTargetFile->WriteUInt32(nHashCount);
-			pTargetFile->Write(buffer, nHashCount * CAICHHash::GetHashSize());
+			TargetFile.Write(aichHash.GetRawHash(), CAICHHash::GetHashSize());
+			TargetFile.WriteUInt32(nHashCount);
+			TargetFile.Write(buffer, nHashCount * CAICHHash::GetHashSize());
 			delete[] buffer;
 		}
-		pTargetFile->Flush();
+		TargetFile.Flush();
 		oldfile.Close();
-	} catch (CFileException *error) {
-		if (error->m_cause == CFileException::endOfFile) {
+	} catch (CFileException *ex) {
+		if (ex->m_cause == CFileException::endOfFile) {
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_MET_BAD), OLD_KNOWN2_MET_FILENAME);
 			ASSERT(0);
-		} else {
-			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			GetExceptionMessage(*error, buffer, _countof(buffer));
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_UNKNOWN), buffer);
-		}
-		error->Delete();
+		} else
+			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_UNKNOWN), (LPCTSTR)CExceptionStr(*ex));
+		ex->Delete();
 		theApp.QueueLogLine(false, GetResString(IDS_CONVERTINGKNOWN2FAILED));
-		pTargetFile->Close();
+		TargetFile.Close();
 		return false;
 	}
 	theApp.QueueLogLine(false, GetResString(IDS_CONVERTINGKNOWN2DONE));
 
 	// FIXME LARGE FILES (uncomment)
 	//::DeleteFile(oldfullpath);
-	pTargetFile->SeekToBegin();
+	TargetFile.SeekToBegin();
 	return true;
 }

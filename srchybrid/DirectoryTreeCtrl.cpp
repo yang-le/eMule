@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -17,6 +17,7 @@
 #include "stdafx.h"
 #include "emule.h"
 #include "DirectoryTreeCtrl.h"
+#include "MenuCmds.h"
 #include "otherfunctions.h"
 #include "Preferences.h"
 #include "TitleMenu.h"
@@ -112,6 +113,26 @@ void CDirectoryTreeCtrl::ShareSubDirTree(HTREEITEM hItem, BOOL bRecurse)
 	Invalidate();
 }
 
+void CDirectoryTreeCtrl::AddDirectory(const CString &strDir)
+{
+	m_lstShared.AddTail(strDir);
+	if (::PathIsUNC(strDir)) {
+		const CString &sShare(GetShareName(strDir));
+		INT_PTR i = m_aUNCshares.GetCount();
+		if (!i)
+			m_aUNCshares.Add(sShare);
+		else
+			while (--i >= 0) {
+				int cmp = sShare.CompareNoCase(m_aUNCshares[i]);
+				if (cmp >= 0) {
+					if (cmp)
+						m_aUNCshares.InsertAt(i + 1, sShare);
+					break;
+				}
+			}
+	}
+}
+
 void CDirectoryTreeCtrl::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	//VQB adjustments to provide for sharing or unsharing of subdirectories when control key is Down
@@ -129,7 +150,7 @@ void CDirectoryTreeCtrl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		if (hItem) {
 			ShareSubDirTree(hItem, GetKeyState(VK_CONTROL) < 0);
 
-			// if Ctrl+Space is passed to the tree control, it just beeps and does not check/uncheck the item!
+			// if Ctrl+Space is passed to the tree control, it just beeps and does not check/uncheck the hItem!
 			SetCheck(hItem, !GetCheck(hItem));
 			return;
 		}
@@ -187,9 +208,7 @@ void CDirectoryTreeCtrl::Init()
 
 	TCHAR drivebuffer[500];
 	DWORD dwRet = GetLogicalDriveStrings(_countof(drivebuffer) - 1, drivebuffer);
-	if (dwRet > 0 && dwRet < _countof(drivebuffer)) {
-		drivebuffer[_countof(drivebuffer) - 1] = _T('\0');
-
+	if (dwRet > 0 && dwRet < _countof(drivebuffer))
 		for (LPCTSTR pos = drivebuffer; *pos != _T('\0');) {
 			// Copy drive name
 			TCHAR drive[4];
@@ -200,9 +219,9 @@ void CDirectoryTreeCtrl::Init()
 			// Point to the next drive
 			pos += _tcslen(pos) + 1;
 		}
-	}
-	for (INT_PTR i = 0; i < m_lstUNC.GetCount(); ++i) {
-		const CString &sUNC(m_lstUNC[i]);
+
+	for (INT_PTR i = 0; i < m_aUNCshares.GetCount(); ++i) {
+		const CString &sUNC(m_aUNCshares[i]);
 		AddChildItem(NULL, sUNC.Left(sUNC.GetLength() - 1));
 	}
 
@@ -227,7 +246,7 @@ HTREEITEM CDirectoryTreeCtrl::AddChildItem(HTREEITEM hRoot, const CString &strTe
 	// END: changed by FoRcHa ///////
 
 	itInsert.item.state = HasSharedSubdirectory(strDir) ? TVIS_BOLD : 0;
-	// used to display the + symbol next to each item
+	// used to display [+] and [-] buttons next to items
 	itInsert.item.cChildren = HasSubdirectories(strDir) ? I_CHILDRENCALLBACK : 0;
 
 	// START: added by FoRcHa ////////////////
@@ -237,27 +256,19 @@ HTREEITEM CDirectoryTreeCtrl::AddChildItem(HTREEITEM hRoot, const CString &strTe
 
 	SHFILEINFO shFinfo;
 	shFinfo.szDisplayName[0] = _T('\0');
-	if (!::SHGetFileInfo(strDir, 0, &shFinfo, sizeof(shFinfo), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_DISPLAYNAME)) {
-		TRACE(_T("Error getting SystemFileInfo!"));
-		itInsert.itemex.iImage = 0; // :(
-	} else {
+	if (::SHGetFileInfo(strDir, 0, &shFinfo, sizeof(shFinfo), SHGFI_SMALLICON | SHGFI_ICON | SHGFI_OPENICON | SHGFI_DISPLAYNAME)) {
 		itInsert.itemex.iImage = shFinfo.iIcon;
 		::DestroyIcon(shFinfo.hIcon);
 		if (hRoot == NULL && shFinfo.szDisplayName[0] != _T('\0')) {
 			STreeItem *pti = new STreeItem;
 			pti->strPath = strText;
-			itInsert.item.pszText = const_cast<LPTSTR>((LPCTSTR)pti->strPath);
+			itInsert.item.pszText = shFinfo.szDisplayName;
 			itInsert.item.mask |= TVIF_PARAM;
 			itInsert.item.lParam = (LPARAM)pti;
 		}
-	}
-
-	if (!::SHGetFileInfo(strDir, 0, &shFinfo, sizeof(shFinfo), SHGFI_ICON | SHGFI_OPENICON | SHGFI_SMALLICON)) {
-		TRACE(_T("Error Getting SystemFileInfo!"));
-		itInsert.itemex.iImage = 0;
 	} else {
-		itInsert.itemex.iSelectedImage = shFinfo.iIcon;
-		::DestroyIcon(shFinfo.hIcon);
+		TRACE(_T("Error getting SystemFileInfo!"));
+		itInsert.itemex.iImage = 0; // :(
 	}
 	// END: added by FoRcHa //////////////
 
@@ -309,27 +320,20 @@ void CDirectoryTreeCtrl::SetSharedDirectories(CStringList &list)
 {
 	m_lstShared.RemoveAll();
 
-	for (POSITION pos = list.GetHeadPosition(); pos != NULL;) {
-		const CString &sDir(list.GetNext(pos));
-		m_lstShared.AddTail(sDir);
-		if (::PathIsUNC(sDir)) {
-			const CString &sShare(GetShareName(sDir));
-			INT_PTR i = m_lstUNC.GetCount();
-			if (!i) {
-				m_lstUNC.Add(sShare);
-				continue;
-			}
-			while (--i >= 0) {
-				int cmp = sShare.CompareNoCase(m_lstUNC[i]);
-				if (cmp >= 0) {
-					if (cmp)
-						m_lstUNC.InsertAt(i + 1, sShare);
-					break;
-				}
-			}
-		}
-	}
+	for (POSITION pos = list.GetHeadPosition(); pos != NULL;)
+		AddDirectory(list.GetNext(pos));
 	Init();
+}
+
+bool CDirectoryTreeCtrl::AddUNCShare(const CString &strDir)
+{
+	ASSERT(strDir.Right(1) == _T('\\'));
+	if (IsShared(strDir) || !thePrefs.IsShareableDirectory(strDir))
+		return false;
+
+	AddDirectory(strDir);
+	Init();
+	return true;
 }
 
 bool CDirectoryTreeCtrl::HasSharedSubdirectory(const CString &strDir)
@@ -351,7 +355,7 @@ void CDirectoryTreeCtrl::CheckChanged(HTREEITEM hItem, bool bChecked)
 	if (bChecked)
 		AddShare(strDir);
 	else
-		DelShare(strDir);
+		RemShare(strDir);
 
 	UpdateParentItems(hItem);
 	GetParent()->SendMessage(WM_COMMAND, UM_ITEMSTATECHANGED, reinterpret_cast<LPARAM>(m_hWnd));
@@ -373,7 +377,7 @@ void CDirectoryTreeCtrl::AddShare(const CString &strDir)
 		m_lstShared.AddTail(strDir);
 }
 
-void CDirectoryTreeCtrl::DelShare(const CString &strDir)
+void CDirectoryTreeCtrl::RemShare(const CString &strDir)
 {
 	ASSERT(strDir.Right(1) == _T('\\'));
 	for (POSITION pos = m_lstShared.GetHeadPosition(); pos != NULL;) {
@@ -399,74 +403,88 @@ void CDirectoryTreeCtrl::OnContextMenu(CWnd*, CPoint point)
 		return;
 	}
 
-	CPoint ptMenu(-1, -1);
-	if (ptMenu != point) {
-		ptMenu = point;
-		ScreenToClient(&point);
-	} else {
-		HTREEITEM hSel = GetNextItem(TVI_ROOT, TVGN_CARET);
-		if (hSel) {
-			CRect rcItem;
-			if (GetItemRect(hSel, &rcItem, TRUE)) {
-				ptMenu = rcItem.TopLeft();
-				ClientToScreen(&ptMenu);
-			}
-		} else {
-			ptMenu.SetPoint(0, 0);
-			ClientToScreen(&ptMenu);
-		}
-	}
+	const HTREEITEM hItem = GetSelectedItem();
+	if (!hItem)
+		return;
 
-	HTREEITEM hItem = HitTest(point);
-
+	const CString &sItem(GetFullPath(hItem)); //trailing backslash
 	// create the menu
 	CTitleMenu SharedMenu;
 	SharedMenu.CreatePopupMenu();
 	SharedMenu.AddMenuTitle(GetResString(IDS_SHAREDFOLDERS));
-	bool bMenuIsEmpty = true;
 
-	// add all shared directories
-	UINT_PTR iCnt = 0;
-	const CString &sView1(GetResString(IDS_VIEW1));
-	CString sViewPath;
-	for (POSITION pos = m_lstShared.GetHeadPosition(); pos != NULL; ++iCnt) {
-		sViewPath.Format(_T("%s%s"), (LPCTSTR)sView1, (LPCTSTR)m_lstShared.GetNext(pos));
-		SharedMenu.AppendMenu(MF_STRING, MP_SHAREDFOLDERS_FIRST + iCnt, sViewPath);
-		bMenuIsEmpty = false;
-	}
-
-	// add right clicked folder, if any
-	if (hItem) {
-		m_strLastRightClicked = GetFullPath(hItem); //trailing backslash
-		if (!IsShared(m_strLastRightClicked)) {
-			sViewPath.Format(_T("%s%s%s"), (LPCTSTR)sView1, (LPCTSTR)m_strLastRightClicked, (LPCTSTR)GetResString(IDS_VIEW2));
-			if (!bMenuIsEmpty)
-				SharedMenu.AppendMenu(MF_SEPARATOR);
-			SharedMenu.AppendMenu(MF_STRING, MP_SHAREDFOLDERS_FIRST - 1, sViewPath);
-			bMenuIsEmpty = false;
+	SharedMenu.AppendMenu(MF_STRING, MP_OPENFOLDER, GetResString(IDS_OPENFOLDER));
+	SharedMenu.AppendMenu(MF_STRING | MF_SEPARATOR);
+	if (IsShared(sItem)) {
+		SharedMenu.AppendMenu(MF_STRING, MP_UNSHAREDIR, GetResString(IDS_UNSHAREDIR));
+		SharedMenu.AppendMenu(MF_STRING, MP_UNSHAREDIRSUB, GetResString(IDS_UNSHAREDIRSUB));
+		if (PathIsUNC(sItem) && !GetParentItem(hItem)) {
+			CString sViewPath;
+			sViewPath.Format(_T("%s %s"), (LPCTSTR)GetResString(IDS_REMOVETHIS), (LPCTSTR)sItem);
+			SharedMenu.AppendMenu(MF_STRING | MF_SEPARATOR);
+			SharedMenu.AppendMenu(MF_STRING, MP_REMOVESHARE, sViewPath);
 		}
+	} else {
+		SharedMenu.AppendMenu(MF_STRING, MP_SHAREDIR, GetResString(IDS_SHAREDIR));
+		SharedMenu.AppendMenu(MF_STRING, MP_SHAREDIRSUB, GetResString(IDS_SHAREDIRSUB));
 	}
 
 	// display menu
-	if (!bMenuIsEmpty)
-		SharedMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, ptMenu.x, ptMenu.y, this);
+	GetPopupMenuPos(*this, point);
+	SharedMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
+
 	VERIFY(SharedMenu.DestroyMenu());
 }
 
-void CDirectoryTreeCtrl::OnRButtonDown(UINT, CPoint)
+void CDirectoryTreeCtrl::OnRButtonDown(UINT, CPoint point)
 {
-	// catch WM_RBUTTONDOWN and do not route it the default way... otherwise we won't get a WM_CONTEXTMENU.
-	//CTreeCtrl::OnRButtonDown(nFlags, point);
+	UINT uHitFlags;
+	HTREEITEM hItem = HitTest(point, &uHitFlags);
+	if (hItem != NULL && (uHitFlags & TVHT_ONITEM)) {
+		Select(hItem, TVGN_CARET);
+		SetItemState(hItem, TVIS_SELECTED, TVIS_SELECTED);
+	}
 }
 
 BOOL CDirectoryTreeCtrl::OnCommand(WPARAM wParam, LPARAM)
 {
-	if (wParam < MP_SHAREDFOLDERS_FIRST)
-		ShellOpenFile(m_strLastRightClicked);
-	else {
-		POSITION pos = m_lstShared.FindIndex(wParam - MP_SHAREDFOLDERS_FIRST);
-		if (pos)
-			ShellOpenFile(m_lstShared.GetAt(pos));
+	const HTREEITEM hItem = GetSelectedItem();
+	if (!hItem)
+		return TRUE;
+
+	const CString &sItem(GetFullPath(hItem));
+	switch (wParam) {
+	case MP_OPENFOLDER:
+		ShellOpenFile(sItem);
+		break;
+	case MP_SHAREDIR:
+	case MP_UNSHAREDIR:
+		CheckChanged(hItem, wParam == MP_SHAREDIR);
+		SetCheck(hItem, wParam == MP_SHAREDIR);
+		break;
+	case MP_SHAREDIRSUB:
+	case MP_UNSHAREDIRSUB:
+		ShareSubDirTree(hItem, TRUE);
+		SetCheck(hItem, wParam == MP_SHAREDIRSUB);
+		break;
+	case MP_REMOVESHARE:
+		{
+			DeleteItem(hItem);
+			int iLen = sItem.GetLength();
+			for (POSITION pos = m_lstShared.GetHeadPosition(); pos != NULL;) {
+				POSITION pos2 = pos;
+				const CString &sDir(m_lstShared.GetNext(pos));
+				if (_tcsnicmp(sDir, sItem, iLen) == 0)
+					m_lstShared.RemoveAt(pos2);
+			}
+			for (INT_PTR i = m_aUNCshares.GetCount(); --i >= 0;)
+				if (_tcsnicmp(m_aUNCshares[i], sItem, iLen) == 0) {
+					m_aUNCshares.RemoveAt(i);
+					break;
+				}
+
+			static_cast<CPropertyPage*>(GetParent())->SetModified();
+		}
 	}
 
 	return TRUE;

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -165,7 +165,7 @@ BOOL CIrcWnd::OnInitDialog()
 	ScreenToClient(&rcSpl);
 	rcSpl.left = rcSpl.right + SPLITTER_HORZ_MARGIN;
 	rcSpl.right = rcSpl.left + SPLITTER_HORZ_WIDTH;
-	m_wndSplitterHorz.Create(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_IRC);
+	m_wndSplitterHorz.CreateWnd(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_IRC);
 
 	AddAnchor(IDC_BN_IRCCONNECT, BOTTOM_LEFT);
 	AddAnchor(IDC_CLOSECHAT, BOTTOM_LEFT);
@@ -343,10 +343,10 @@ LRESULT CIrcWnd::DefWindowProc(UINT uMessage, WPARAM wParam, LPARAM lParam)
 
 void CIrcWnd::UpdateFonts(CFont *pFont)
 {
-	TCITEM tci;
-	tci.mask = TCIF_PARAM;
-	for (int iIndex = 0; m_wndChanSel.GetItem(iIndex, &tci); ++iIndex) {
-		Channel *pChannel = reinterpret_cast<Channel*>(tci.lParam);
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	for (int iIndex = 0; m_wndChanSel.GetItem(iIndex, &ti); ++iIndex) {
+		Channel *pChannel = reinterpret_cast<Channel*>(ti.lParam);
 		if (pChannel->m_wndTopic.m_hWnd != NULL) {
 			pChannel->m_wndTopic.SetFont(pFont);
 			pChannel->m_wndTopic.ScrollToFirstLine();
@@ -501,8 +501,8 @@ void CIrcWnd::OnBnClickedIrcConnect()
 void CIrcWnd::OnBnClickedCloseChannel(int iItem)
 {
 	//Remove a channel.
-	TCITEM item;
-	item.mask = TCIF_PARAM;
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
 	if (iItem == -1)
 		//If no item was send, get our current channel.
 		iItem = m_wndChanSel.GetCurSel();
@@ -511,12 +511,12 @@ void CIrcWnd::OnBnClickedCloseChannel(int iItem)
 		//We have no channel, abort.
 		return;
 
-	if (!m_wndChanSel.GetItem(iItem, &item))
+	if (!m_wndChanSel.GetItem(iItem, &ti))
 		//We had no valid item here. Something isn't right.
 		//TODO: this should never happen, so maybe we should remove this tab?
 		return;
 
-	Channel *pPartChannel = reinterpret_cast<Channel*>(item.lParam);
+	Channel *pPartChannel = reinterpret_cast<Channel*>(ti.lParam);
 	if (pPartChannel->m_eType == Channel::ctNormal && !pPartChannel->m_bDetached && m_bConnected)
 		//If this was a channel and we were connected, do not just delete the channel!!
 		//Send 'part' command and the server must respond with a successful part which will remove the channel!
@@ -1112,10 +1112,10 @@ LRESULT CIrcWnd::OnCloseTab(WPARAM wParam, LPARAM)
 
 LRESULT CIrcWnd::OnQueryTab(WPARAM wParam, LPARAM)
 {
-	TCITEM item;
-	item.mask = TCIF_PARAM;
-	m_wndChanSel.GetItem((int)wParam, &item);
-	const Channel *pPartChannel = reinterpret_cast<Channel*>(item.lParam);
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	m_wndChanSel.GetItem((int)wParam, &ti);
+	const Channel *pPartChannel = reinterpret_cast<Channel*>(ti.lParam);
 	return !pPartChannel || pPartChannel->m_eType < Channel::ctChannelList;
 }
 
@@ -1219,7 +1219,7 @@ void CIrcWnd::OnBnClickedSmiley()
 	m_wndFormat.GetWindowRect(&rcBtn);
 	rcBtn.top -= 2;
 
-	if (!m_pwndSmileySel->Create(this, &rcBtn, &m_wndInput)) {
+	if (!m_pwndSmileySel->CreateWnd(this, &rcBtn, &m_wndInput)) {
 		delete m_pwndSmileySel;
 		m_pwndSmileySel = NULL;
 	}

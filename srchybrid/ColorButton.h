@@ -8,7 +8,7 @@
 //  in CColourPopup. I was hoping for (cough... gag...) a more Microsoft look
 //  and I think this is pretty close. Hope you like it.
 //
-// ORIGINAL: http://www.codeproject.com/miscctrl/colour_picker.asp
+// ORIGINAL: https://www.codeproject.com/miscctrl/colour_picker.asp
 //
 //***************************************************************************
 #pragma once

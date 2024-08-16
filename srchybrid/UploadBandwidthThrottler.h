@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -31,7 +31,7 @@ public:
 	uint64 GetNumberOfSentBytesOverheadSinceLastCallAndReset();
 	INT_PTR GetHighestNumberOfFullyActivatedSlotsSinceLastCallAndReset();
 
-	INT_PTR GetStandardListSize()		{ return m_StandardOrder_list.GetCount(); };
+	INT_PTR GetStandardListSize()		{ return m_StandardOrder_list.GetCount(); }
 
 	void AddToStandardList(INT_PTR index, ThrottledFileSocket *socket);
 	bool RemoveFromStandardList(ThrottledFileSocket *socket);

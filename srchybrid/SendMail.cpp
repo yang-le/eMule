@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -26,14 +26,14 @@
 #include <atlenc.h>
 #include <wincrypt.h>
 
-#include "mbedtls/build_info.h"
-#include "mbedtls/platform.h"
 #include "mbedtls/base64.h"
+#include "mbedtls/ctr_drbg.h"
 #include "mbedtls/error.h"
 #include "mbedtls/net_sockets.h"
-#include "mbedtls/ssl.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/platform.h"
+#include "mbedtls/ssl_cache.h"
+#include "mbedtls/ssl_cookie.h"
+#include "mbedtls/ssl_ticket.h"
 #include "mbedtls/x509.h"
 
 #ifdef _DEBUG
@@ -160,12 +160,13 @@ bool encoded_word(const CString &src, CStringA &dst)
 	return true;
 }
 
-static int do_handshake(mbedtls_ssl_context *ssl)
+static int do_handshake(mbedtls_ssl_context *ssl, LPCTSTR *pmsg)
 {
-	for (int ret; (ret = mbedtls_ssl_handshake(ssl)) != 0;)
+	int ret;
+	while ((ret = mbedtls_ssl_handshake(ssl)) != 0)
 		if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
-			DebugLogWarning(LOG_DONTNOTIFY, _T("SSL/TLS handshake failed: %d"), ret);
-			return -1;
+			*pmsg = _T("mbedtls_ssl_handshake");
+			return ret;
 		}
 
 	uint32_t flags = mbedtls_ssl_get_verify_result(ssl);
@@ -266,24 +267,37 @@ void CNotifierMailThread::sendmail()
 	static const unsigned char pers[] = "eMule_mail";
 	CStringA sBodyA, sReceiverA, sSenderA, sServerA, sTmpA, sBufA;
 
-	mbedtls_net_context server_fd;
 	mbedtls_entropy_context entropy;
 	mbedtls_ctr_drbg_context ctr_drbg;
+	mbedtls_net_context server_fd;
+	mbedtls_pk_context pkey;
 	mbedtls_ssl_context ssl;
 	mbedtls_ssl_config conf;
-	mbedtls_pk_context pkey;
+	mbedtls_ssl_cache_context cache;
+	mbedtls_ssl_cookie_ctx cookie_ctx;
+	mbedtls_ssl_ticket_context ticket_ctx;
+	LPCTSTR pmsg = NULL;
+	int ret;
 
 	mbedtls_threading_set_alt(threading_mutex_init_alt, threading_mutex_free_alt, threading_mutex_lock_alt, threading_mutex_unlock_alt);
 	mbedtls_net_init(&server_fd);
 	mbedtls_ssl_init(&ssl);
 	mbedtls_ssl_config_init(&conf);
-	mbedtls_pk_init(&pkey);
 	mbedtls_ctr_drbg_init(&ctr_drbg);
 	mbedtls_entropy_init(&entropy);
+	mbedtls_pk_init(&pkey);
+	mbedtls_ssl_cache_init(&cache);
+	mbedtls_ssl_ticket_init(&ticket_ctx);
+	mbedtls_ssl_cookie_init(&cookie_ctx);
+	ret = (int)psa_crypto_init();
+	if (ret) { //PSA_SUCCESS is 0
+		pmsg = _T("psa_crypto_init");
+		goto exit;
+	}
 
-	int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, pers, sizeof pers -1);
+	ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, pers, sizeof pers -1);
 	if (ret != 0) {
-		DebugLogWarning(LOG_DONTNOTIFY, _T("Seeding the random number generator failed: %d"), ret);
+		pmsg = _T("mbedtls_ctr_drbg_seed");
 		goto exit;
 	}
 
@@ -297,23 +311,31 @@ void CNotifierMailThread::sendmail()
 
 	ret = mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_CLIENT, MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
 	if (ret != 0) {
-		DebugLogWarning(LOG_DONTNOTIFY, _T("Seting SSL/TLS defaults failed: %d"), ret);
+		pmsg = _T("mbedtls_ssl_config_defaults");
 		goto exit;
 	}
 
 	mbedtls_ssl_conf_authmode(&conf, MBEDTLS_SSL_VERIFY_OPTIONAL);
-
 	mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &ctr_drbg);
-
 	ret = mbedtls_ssl_setup(&ssl, &conf);
 	if (ret != 0) {
-		DebugLogWarning(LOG_DONTNOTIFY, _T("SSL/TLS setup failed: %d"), ret);
+		pmsg = _T("mbedtls_ssl_setup");
 		goto exit;
 	}
 
+	mbedtls_ssl_conf_session_cache(&conf, &cache, mbedtls_ssl_cache_get, mbedtls_ssl_cache_set);
+	ret = mbedtls_ssl_ticket_setup(&ticket_ctx, mbedtls_ctr_drbg_random, &ctr_drbg, MBEDTLS_CIPHER_AES_256_GCM, 86400);
+	if (ret != 0) {
+		pmsg = _T("mbedtls_ssl_ticket_setup");
+		goto exit;
+	}
+	mbedtls_ssl_conf_session_tickets_cb(&conf, mbedtls_ssl_ticket_write, mbedtls_ssl_ticket_parse, &ticket_ctx);
+	mbedtls_ssl_conf_new_session_tickets(&conf, 1);
+	mbedtls_ssl_conf_tls13_key_exchange_modes(&conf, MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_ALL);
+
 	ret = mbedtls_ssl_set_hostname(&ssl, sServerA);
 	if (ret != 0) {
-		DebugLogWarning(LOG_DONTNOTIFY, _T("Set hostname failed: %d"), ret);
+		pmsg = _T("mbedtls_ssl_set_hostname");
 		goto exit;
 	}
 
@@ -324,19 +346,20 @@ void CNotifierMailThread::sendmail()
 
 	switch (m_mail.uTLS) {
 	case MODE_SSL_TLS:
-		if (do_handshake(&ssl) != 0)
+		ret = do_handshake(&ssl, &pmsg);
+		if (ret)
 			goto exit;
 
 		ret = write_ssl(&ssl, NULL, 0);
 		if (ret > 0 && ret < 200 || ret > 299) {
-			DebugLogWarning(LOG_DONTNOTIFY, _T("Get header from server failed: %d"), ret);
+			pmsg = _T("write_ssl");
 			goto failed;
 		}
 
 		sBufA.Format("EHLO %s\r\n", hostname);
 		ret = write_ssl(&ssl, sBufA, sBufA.GetLength()); //250
 		if (ret > 0 && ret < 200 || ret > 299) {
-			DebugLogWarning(LOG_DONTNOTIFY, _T("Write EHLO failed: %d"), ret);
+			pmsg = _T("write_txt (EHLO hostname)");
 			goto failed;
 		}
 		break;
@@ -344,14 +367,14 @@ void CNotifierMailThread::sendmail()
 	default: //MODE_NONE
 		ret = write_txt(&server_fd, NULL, 0); //220
 		if (ret > 0 && ret < 200 || ret > 299) {
-			DebugLogWarning(LOG_DONTNOTIFY, _T("Get greetings from server failed: %d"), ret);
+			pmsg = _T("write_txt (greetings)");
 			goto exit;
 		}
 
 		sBufA.Format("EHLO %s\r\n", hostname);
 		ret = write_txt(&server_fd, sBufA, sBufA.GetLength()); //250
 		if (ret > 0 && ret < 200 || ret > 299) {
-			DebugLogWarning(LOG_DONTNOTIFY, _T("Send EHLO failed: %d"), ret);
+			pmsg = _T("write_txt (EHLO)");
 			goto exit;
 		}
 		if (m_mail.uTLS == MODE_NONE)
@@ -359,61 +382,64 @@ void CNotifierMailThread::sendmail()
 
 		ret = write_txt(&server_fd, "STARTTLS\r\n", sizeof("STARTTLS\r\n")); //220
 		if (ret > 0 && ret < 200 || ret > 299) {
-			DebugLogWarning(LOG_DONTNOTIFY, _T("Send STARTTLS failed: %d"), ret);
+			pmsg = _T("write_txt (STARTTLS)");
 			goto exit;
 		}
-		if (do_handshake(&ssl) != 0)
+		ret = do_handshake(&ssl, &pmsg);
+		if (ret)
 			goto exit;
 	}
 
 	size_t n;
 	unsigned char base[1024];
+	n = sprintf((char*)base, "%s\n", mbedtls_ssl_get_ciphersuite(&ssl));
+
 	switch (m_mail.uAuth) {
 	case AUTH_PLAIN:
 		sTmpA.Format("%c%s%c%s", '\0', (LPCSTR)((CStringA)m_mail.sUser), '\0', (LPCSTR)(CStringA(m_mail.sPass)));
 		ret = mbedtls_base64_encode(base, sizeof base, &n, (unsigned char*)(LPCSTR)sTmpA, sTmpA.GetLength());
 		if (ret != 0) {
-			DebugLogWarning(LOG_DONTNOTIFY, _T("Plain ID to base64 failed: %d"), ret);
+			pmsg = _T("mbedtls_base64_encode (plain ID)");
 			goto failed;
 		}
 
 		sTmpA.Format("AUTH PLAIN %s\r\n", base);
 		ret = write_data(&ssl, sTmpA); //235
 		if (ret > 0 && ret < 200 || ret > 299) {
-			DebugLogWarning(LOG_DONTNOTIFY, _T("AUTH PLAIN failed: %d"), ret);
+			pmsg = _T("write_data (AUTH PLAIN)");
 			goto failed;
 		}
 		break;
 	case AUTH_LOGIN:
 		ret = write_data(&ssl, "AUTH LOGIN\r\n"); //334
 		if (ret > 0 && ret < 200 || ret > 399) {
-			DebugLogWarning(LOG_DONTNOTIFY, _T("AUTH LOGIN failed: %d"), ret);
+			pmsg = _T("write_data (AUTH LOGIN)");
 			goto failed;
 		}
 
 		sTmpA = (CStringA)m_mail.sUser;
 		ret = mbedtls_base64_encode(base, sizeof base, &n, (unsigned char*)(LPCSTR)sTmpA, sTmpA.GetLength());
 		if (ret != 0) {
-			DebugLogWarning(LOG_DONTNOTIFY, _T("Login to base64 failed: %d"), ret);
+			pmsg = _T("mbedtls_base64_encode (login)");
 			goto failed;
 		}
 		sBufA.Format("%s\r\n", base);
 		ret = write_data(&ssl, sBufA); //334
 		if (ret > 0 && ret < 300 || ret > 399) {
-			DebugLogWarning(LOG_DONTNOTIFY, _T("Send login failed: %d"), ret);
+			pmsg = _T("write_data (login)");
 			goto failed;
 		}
 
 		sTmpA = (CStringA)m_mail.sPass;
 		ret = mbedtls_base64_encode(base, sizeof base, &n, (unsigned char*)(LPCSTR)sTmpA, sTmpA.GetLength());
 		if (ret != 0) {
-			DebugLogWarning(LOG_DONTNOTIFY, _T("Password to base64 failed: %d"), ret);
+			pmsg = _T("mbedtls_base64_encode (password)");
 			goto failed;
 		}
 		sBufA.Format("%s\r\n", base);
 		ret = write_data(&ssl, sBufA); //235
 		if (ret > 0 && ret < 200 || ret > 299) {
-			DebugLogWarning(LOG_DONTNOTIFY, _T("Send password failed: %d"), ret);
+			pmsg = _T("write_data (password)");
 			goto failed;
 		}
 	}
@@ -422,7 +448,7 @@ void CNotifierMailThread::sendmail()
 	sBufA.Format("MAIL FROM:<%s>\r\n", (LPCSTR)sSenderA);
 	ret = write_data(&ssl, sBufA); //250
 	if (ret > 0 && ret < 200 || ret > 299) {
-		DebugLogWarning(LOG_DONTNOTIFY, _T("Send MAIL FROM failed: %d"), ret);
+		pmsg = _T("write_data (MAIL FROM)");
 		goto failed;
 	}
 
@@ -430,13 +456,13 @@ void CNotifierMailThread::sendmail()
 	sBufA.Format("RCPT TO:<%s>\r\n", (LPCSTR)sReceiverA);
 	ret = write_data(&ssl, sBufA); //250 251
 	if (ret > 0 && ret < 200 || ret > 299) {
-		DebugLogWarning(LOG_DONTNOTIFY, _T("Send RCPT TO failed: %d"), ret);
+		pmsg = _T("write_data (RCPT TO)");
 		goto failed;
 	}
 
 	ret = write_data(&ssl, "DATA\r\n"); //354 250
 	if (ret > 0 && ret < 200 || ret > 399) {
-		DebugLogWarning(LOG_DONTNOTIFY, _T("Write DATA failed: %d"), ret);
+		pmsg = _T("write_data (DATA)");
 		goto failed;
 	}
 
@@ -482,24 +508,30 @@ void CNotifierMailThread::sendmail()
 
 	ret = write_data(&ssl, sBufA);
 	if (ret > 0 && ret < 200 || ret > 299) {
-		DebugLogWarning(LOG_DONTNOTIFY, _T("Write content failed: %d"), ret);
+		pmsg = _T("write_data");
 		goto failed;
 	}
 
 	ret = write_data(&ssl, "QUIT\r\n"); //221
 	if (ret > 0 && ret < 200 || ret > 299)
-		DebugLogWarning(LOG_DONTNOTIFY, _T("Send QUIT failed: %d"), ret);
+		pmsg = _T("write_data (QUIT)");
 
 failed:
 	mbedtls_ssl_close_notify(&ssl);
 
 exit:
 	mbedtls_net_free(&server_fd);
+	mbedtls_ssl_cookie_free(&cookie_ctx);
+	mbedtls_ssl_ticket_free(&ticket_ctx);
+	mbedtls_ssl_cache_free(&cache);
+	mbedtls_psa_crypto_free();
 	mbedtls_pk_free(&pkey);
-	mbedtls_ssl_free(&ssl);
-	mbedtls_ssl_config_free(&conf);
-	mbedtls_ctr_drbg_free(&ctr_drbg);
 	mbedtls_entropy_free(&entropy);
+	mbedtls_ctr_drbg_free(&ctr_drbg);
+	mbedtls_ssl_config_free(&conf);
+	mbedtls_ssl_free(&ssl);
+	if (pmsg)
+		DebugLogError(_T("Error: %s returned -0x%04x - %s"), pmsg, -ret, (LPCTSTR)SSLerror(ret));
 }
 
 int CNotifierMailThread::write_data(mbedtls_ssl_context *ssl, const char *buf)

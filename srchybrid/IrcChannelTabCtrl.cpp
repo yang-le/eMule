@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -14,7 +14,6 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
 #include "StdAfx.h"
 #define MMNODRV			// mmsystem: Installable driver support
 //#define MMNOSOUND		// mmsystem: Sound support
@@ -49,6 +48,7 @@ BEGIN_MESSAGE_MAP(CIrcChannelTabCtrl, CClosableTabCtrl)
 	ON_MESSAGE(UM_CLOSETAB, OnCloseTab)
 	ON_MESSAGE(UM_QUERYTAB, OnQueryTab)
 	ON_NOTIFY_REFLECT(TCN_SELCHANGE, OnTcnSelChange)
+	ON_NOTIFY_REFLECT(TCN_SELCHANGING, OnTcnSelChanging)
 END_MESSAGE_MAP()
 
 CIrcChannelTabCtrl::CIrcChannelTabCtrl()
@@ -223,7 +223,7 @@ Channel* CIrcChannelTabCtrl::NewChannel(const CString &sChannel, Channel::EType 
 #endif
 
 			RECT rcSplitter = { rcChannelPane.left, rcTopic.bottom, rcChannelPane.right, rcTopic.bottom + IRC_CHANNEL_SPLITTER_HEIGHT };
-			pChannel->m_wndSplitter.Create(WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, rcSplitter, m_pParent, IDC_SPLITTER_IRC_CHANNEL);
+			pChannel->m_wndSplitter.CreateWnd(WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, rcSplitter, m_pParent, IDC_SPLITTER_IRC_CHANNEL);
 			pChannel->m_wndSplitter.SetRange(rcTopic.top + IRC_TITLE_WND_MIN_HEIGHT + IRC_CHANNEL_SPLITTER_HEIGHT / 2, rcTopic.top + IRC_TITLE_WND_MAX_HEIGHT - IRC_CHANNEL_SPLITTER_HEIGHT / 2);
 			rcLog.top = rcSplitter.bottom;
 			rcLog.bottom = rcChannelPane.bottom;
@@ -279,19 +279,19 @@ Channel* CIrcChannelTabCtrl::NewChannel(const CString &sChannel, Channel::EType 
 	}
 	m_lstChannels.AddTail(pChannel);
 
-	TCITEM newitem;
-	newitem.mask = TCIF_PARAM | TCIF_TEXT | TCIF_IMAGE;
-	newitem.lParam = (LPARAM)pChannel;
+	TCITEM ti;
+	ti.mask = TCIF_PARAM | TCIF_TEXT | TCIF_IMAGE;
+	ti.lParam = (LPARAM)pChannel;
 	CString strTcLabel(sChannel);
 	DupAmpersand(strTcLabel);
-	newitem.pszText = const_cast<LPTSTR>((LPCTSTR)strTcLabel);
+	ti.pszText = const_cast<LPTSTR>((LPCTSTR)strTcLabel);
 	if (eType == Channel::ctStatus)
-		newitem.iImage = 0;
+		ti.iImage = 0;
 	else if (eType == Channel::ctChannelList)
-		newitem.iImage = 1;
+		ti.iImage = 1;
 	else //Channel::ctNormal or Channel::ctPrivate
-		newitem.iImage = 2;
-	int iItem = InsertItem((eType == Channel::ctChannelList ? 1 : GetItemCount()), &newitem); //append
+		ti.iImage = 2;
+	int iItem = InsertItem((eType == Channel::ctChannelList ? 1 : GetItemCount()), &ti); //append
 	if (eType == Channel::ctNormal)
 		SelectChannel(iItem);
 	return pChannel;
@@ -309,10 +309,10 @@ void CIrcChannelTabCtrl::DetachChannel(Channel *pChannel)
 	int iIndex = FindTabIndex(pChannel);
 	if (iIndex >= 0) {
 		pChannel->m_sTitle = _T('(') + pChannel->m_sTitle + _T(')');
-		TCITEM item;
-		item.mask = TCIF_TEXT;
-		item.pszText = const_cast<LPTSTR>((LPCTSTR)pChannel->m_sTitle);
-		SetItem(iIndex, &item);
+		TCITEM ti;
+		ti.mask = TCIF_TEXT;
+		ti.pszText = const_cast<LPTSTR>((LPCTSTR)pChannel->m_sTitle);
+		SetItem(iIndex, &ti);
 	}
 }
 
@@ -323,11 +323,11 @@ void CIrcChannelTabCtrl::DetachChannel(const CString &sChannel)
 
 int CIrcChannelTabCtrl::FindTabIndex(const Channel *pChannel)
 {
-	TCITEM item;
-	item.mask = TCIF_PARAM;
-	item.lParam = -1;
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	ti.lParam = -1;
 	for (int iIndex = GetItemCount(); --iIndex >= 0;)
-		if (GetItem(iIndex, &item) && reinterpret_cast<Channel*>(item.lParam) == pChannel)
+		if (GetItem(iIndex, &ti) && reinterpret_cast<Channel*>(ti.lParam) == pChannel)
 			return iIndex;
 
 	return -1;
@@ -336,9 +336,11 @@ int CIrcChannelTabCtrl::FindTabIndex(const Channel *pChannel)
 void CIrcChannelTabCtrl::SelectChannel(int iItem)
 {
 	ASSERT(iItem >= 0 && iItem < GetItemCount());
+	LRESULT result;
+	OnTcnSelChanging(NULL, &result);
 	SetCurSel(iItem);
 	SetCurFocus(iItem);
-	OnTcnSelChange(NULL, NULL);
+	OnTcnSelChange(NULL, &result);
 }
 
 void CIrcChannelTabCtrl::SelectChannel(const Channel *pChannel)
@@ -413,12 +415,12 @@ void CIrcChannelTabCtrl::OnTcnSelChange(LPNMHDR, LRESULT *pResult)
 {
 	//What channel did we select?
 	int iCurSel = GetCurSel();
-	if (iCurSel == -1)
+	if (iCurSel < 0)
 		return;	//No channel, abort.
 
-	TCITEM item;
-	item.mask = TCIF_PARAM;
-	if (!GetItem(iCurSel, &item)) {
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	if (!GetItem(iCurSel, &ti)) {
 		//We had no valid item here. Something isn't right.
 		//TODO: this should never happen, so maybe we should remove this tab?
 		return;
@@ -432,7 +434,7 @@ void CIrcChannelTabCtrl::OnTcnSelChange(LPNMHDR, LRESULT *pResult)
 	}
 
 	//Set our current channel to the new one for quick reference.
-	m_pCurrentChannel = reinterpret_cast<Channel*>(item.lParam);
+	m_pCurrentChannel = reinterpret_cast<Channel*>(ti.lParam);
 
 	//We entered the channel, set activity flag off.
 	SetActivity(m_pCurrentChannel, false);
@@ -446,16 +448,6 @@ void CIrcChannelTabCtrl::OnTcnSelChange(LPNMHDR, LRESULT *pResult)
 		m_pParent->m_wndNicks.ShowWindow(SW_SHOW);
 		//Show our ChanList.
 		m_pParent->m_wndChanList.ShowWindow(SW_SHOW);
-		TCITEM tci;
-		tci.mask = TCIF_PARAM;
-		//Go through the channel tabs and hide the channels.
-		//Maybe overkill? Maybe just remember our previous channel and hide it?
-
-		for (int iIndex = 0; GetItem(iIndex++, &tci);) {
-			Channel *pCh2 = reinterpret_cast<Channel*>(tci.lParam);
-			if (pCh2 != m_pCurrentChannel && pCh2->m_wndLog.m_hWnd != NULL)
-				pCh2->Hide();
-		}
 		SetInput(m_pCurrentChannel->m_sTabd.IsEmpty() ? m_pCurrentChannel->m_sTyped : m_pCurrentChannel->m_sTabd);
 		return;
 	}
@@ -464,25 +456,28 @@ void CIrcChannelTabCtrl::OnTcnSelChange(LPNMHDR, LRESULT *pResult)
 	m_pCurrentChannel->Show();
 	m_pParent->UpdateChannelChildWindowsSize();
 
-	//Hide all channels not in focus.
-	//Maybe an overkill? Maybe remember previous channel and hide?
-	TCITEM tci;
-	tci.mask = TCIF_PARAM;
-	int iIndex = 0;
-	while (GetItem(iIndex++, &tci)) {
-		Channel *pCh2 = reinterpret_cast<Channel*>(tci.lParam);
-		if (pCh2 != m_pCurrentChannel && pCh2->m_wndLog.m_hWnd != NULL)
-			pCh2->Hide();
-	}
-
 	//Make sure channelList is hidden.
 	m_pParent->m_wndChanList.ShowWindow(SW_HIDE);
 	//Update nick list to the new channel.
 	m_pParent->m_wndNicks.RefreshNickList(m_pCurrentChannel);
 	//Push focus back to the input box.
 	SetInput(m_pCurrentChannel->m_sTabd.IsEmpty() ? m_pCurrentChannel->m_sTyped : m_pCurrentChannel->m_sTabd);
-	if (pResult)
-		*pResult = 0;
+	*pResult = 0;
+}
+
+void CIrcChannelTabCtrl::OnTcnSelChanging(LPNMHDR, LRESULT *pResult)
+{
+	int iCurSel = GetCurSel();
+	if (iCurSel >= 0) {
+		TCITEM ti;
+		ti.mask = TCIF_PARAM;
+		if (GetItem(iCurSel, &ti)) {
+			Channel *pCh = reinterpret_cast<Channel*>(ti.lParam);
+			if (pCh->m_wndLog.m_hWnd != NULL)
+				pCh->Hide();
+		}
+	}
+	*pResult = 0;
 }
 
 void CIrcChannelTabCtrl::ScrollHistory(bool bDown)
@@ -514,19 +509,19 @@ void CIrcChannelTabCtrl::SetActivity(Channel *pChannel, bool bFlag)
 		return;
 
 	if (pChannel->m_eType == Channel::ctNormal || pChannel->m_eType == Channel::ctPrivate) {
-		TCITEM item;
-		item.mask = TCIF_IMAGE;
-		if (!GetItem(iIndex, &item))
+		TCITEM ti;
+		ti.mask = TCIF_IMAGE;
+		if (!GetItem(iIndex, &ti))
 			return;
 		if (bFlag) {
-			if (item.iImage != 3) {
-				item.iImage = 3; // 'MessagePending'
-				SetItem(iIndex, &item);
+			if (ti.iImage != 3) {
+				ti.iImage = 3; // 'MessagePending'
+				SetItem(iIndex, &ti);
 			}
 		} else {
-			if (item.iImage != 2) {
-				item.iImage = 2; // 'Message'
-				SetItem(iIndex, &item);
+			if (ti.iImage != 2) {
+				ti.iImage = 2; // 'Message'
+				SetItem(iIndex, &ti);
 			}
 		}
 	}
@@ -557,7 +552,7 @@ void CIrcChannelTabCtrl::ChatSend(CString sSend)
 
 		bMe = (_tcsnicmp(sSend, _T("/me"), 3) == 0);
 		bSound = (_tcsnicmp(sSend, _T("/sound"), 6) == 0);
-		if (!bMe && ! bSound) {
+		if (!bMe && !bSound) {
 			if (_tcsnicmp(sSend, _T("/msg"), 4) == 0) {
 				int i = 5;
 				const CString &cs(sSend.Tokenize(_T(" "), i));
@@ -573,9 +568,7 @@ void CIrcChannelTabCtrl::ChatSend(CString sSend)
 					m_pParent->AddStatusF(_T(" -> *%s* %s"), (LPCTSTR)cs, CPTR(sSend, i));
 				else
 					m_pParent->AddInfoMessageF(m_pCurrentChannel->m_sName, _T(" -> *%s* %s"), (LPCTSTR)cs, CPTR(sSend, i));
-			}
-
-			if (_tcsnicmp(sSend, _T("/privmsg nickserv"), 17) == 0)
+			} else if (_tcsnicmp(sSend, _T("/privmsg nickserv"), 17) == 0)
 				sSend.Format(_T("/ns%s"), CPTR(sSend, 17));
 			else if (_tcsnicmp(sSend, _T("/privmsg chanserv"), 17) == 0)
 				sSend.Format(_T("/cs%s"), CPTR(sSend, 17));
@@ -636,21 +629,21 @@ void CIrcChannelTabCtrl::ChatSend(CString sSend)
 
 void CIrcChannelTabCtrl::Localize()
 {
-	TCITEM item;
-	item.mask = TCIF_PARAM;
-	for (int iIndex = GetItemCount(); --iIndex >= 0;) {
-		if (GetItem(iIndex, &item)) {
-			Channel *pChannel = reinterpret_cast<Channel*>(item.lParam);
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	for (int iIndex = GetItemCount(); --iIndex >= 0;)
+		if (GetItem(iIndex, &ti)) {
+			Channel *pChannel = reinterpret_cast<Channel*>(ti.lParam);
 			if (pChannel && (pChannel->m_eType == Channel::ctStatus || pChannel->m_eType == Channel::ctChannelList)) {
 				pChannel->m_sTitle = GetResString(pChannel->m_eType == Channel::ctStatus ? IDS_STATUS : IDS_IRC_CHANNELLIST);
-				item.mask = TCIF_TEXT;
+				ti.mask = TCIF_TEXT;
 				CString strTcLabel(pChannel->m_sTitle);
 				DupAmpersand(strTcLabel);
-				item.pszText = const_cast<LPTSTR>((LPCTSTR)strTcLabel);
-				SetItem(iIndex, &item);
+				ti.pszText = const_cast<LPTSTR>((LPCTSTR)strTcLabel);
+				SetItem(iIndex, &ti);
 			}
 		}
-	}
+
 	SetAllIcons();
 }
 
@@ -662,10 +655,10 @@ LRESULT CIrcChannelTabCtrl::OnCloseTab(WPARAM wParam, LPARAM)
 
 LRESULT CIrcChannelTabCtrl::OnQueryTab(WPARAM wParam, LPARAM)
 {
-	TCITEM item;
-	item.mask = TCIF_PARAM;
-	if (GetItem((int)wParam, &item)) {
-		const Channel *pPartChannel = reinterpret_cast<Channel*>(item.lParam);
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	if (GetItem((int)wParam, &ti)) {
+		const Channel *pPartChannel = reinterpret_cast<Channel*>(ti.lParam);
 		if (pPartChannel && pPartChannel->m_eType >= Channel::ctChannelList)
 			return 0;
 	}
@@ -713,7 +706,7 @@ void Channel::Hide()
 {
 	if (m_wndTopic.m_hWnd) {
 		m_wndTopic.ShowWindow(SW_HIDE);
-		m_wndTopic .EnableWindow(FALSE);
+		m_wndTopic.EnableWindow(FALSE);
 	}
 
 	if (m_wndSplitter.m_hWnd) {

@@ -91,7 +91,7 @@ namespace Kademlia
 			void DbgWriteBootstrapFile();
 
 			void WriteFile();
-			bool IsLeaf() const;
+			bool IsLeaf() const					{ return (m_pBin != NULL); }
 			bool CanSplit() const;
 			// Returns all contacts from this zone tree that are no deeper than *depth* from the current zone.
 			void TopDepth(int iDepth, ContactArray &listResult, bool bEmptyFirst = true);
@@ -100,7 +100,7 @@ namespace Kademlia
 			void RandomBin(ContactArray &listResult, bool bEmptyFirst = true);
 			void Split();
 			void StartTimer();
-			void StopTimer();
+			void StopTimer()					{ CKademlia::RemoveEvent(this); }
 			void RandomLookup();
 			void SetAllContactsVerified();
 			/**

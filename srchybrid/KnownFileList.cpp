@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -44,7 +44,7 @@ static char THIS_FILE[] = __FILE__;
 #define CANCELLED_MET_FILENAME	_T("cancelled.met")
 
 #define CANCELLED_HEADER_OLD	MET_HEADER
-#define CANCELLED_HEADER		(MET_HEADER + 0x01)
+#define CANCELLED_HEADER		MET_HEADER_I64TAGS
 #define CANCELLED_VERSION		0x01
 
 CKnownFileList::CKnownFileList()
@@ -74,21 +74,16 @@ bool CKnownFileList::Init()
 
 bool CKnownFileList::LoadKnownFiles()
 {
-	const CString &fullpath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + KNOWN_MET_FILENAME);
 	CSafeBufferedFile file;
-	CFileException fexp;
-	if (!file.Open(fullpath, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-		if (fexp.m_cause != CFileException::fileNotFound) {
-			CString strError(_T("Failed to load ") KNOWN_MET_FILENAME _T(" file"));
-			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, _countof(szError)))
-				strError.AppendFormat(_T(" - %s"), szError);
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
-		}
+	if (!CFileOpen(file
+		, thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + KNOWN_MET_FILENAME
+		, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite
+		, _T("Failed to load ") KNOWN_MET_FILENAME))
+	{
 		return false;
 	}
-	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 
+	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 	CKnownFile *pRecord = NULL;
 	try {
 		uint8 header = file.ReadUInt8();
@@ -97,10 +92,10 @@ bool CKnownFileList::LoadKnownFiles()
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_BAD));
 			return false;
 		}
-		AddDebugLogLine(false, _T("Known.met file version is %u (%s support 64bit tags)"), header, (header == MET_HEADER) ? _T("doesn't") : _T("does"));
+		AddDebugLogLine(false, _T("Known.met file version is %u (%s support 64-bit tags)"), header, (header == MET_HEADER) ? _T("doesn't") : _T("does"));
 
-		uint32 RecordsNumber = file.ReadUInt32();
-		for (uint32 i = 0; i < RecordsNumber; ++i) {
+		uint32 uRecordsNumber = file.ReadUInt32();
+		for (uint32 i = 0; i < uRecordsNumber; ++i) {
 			pRecord = new CKnownFile();
 			if (!pRecord->LoadFromFile(file)) {
 				TRACE(_T("*** Failed to load entry %u (name=%s  hash=%s  size=%I64u  parthashes=%u expected parthashes=%u) from known.met\n")
@@ -112,15 +107,12 @@ bool CKnownFileList::LoadKnownFiles()
 			pRecord = NULL;
 		}
 		file.Close();
-	} catch (CFileException *error) {
-		if (error->m_cause == CFileException::endOfFile)
+	} catch (CFileException *ex) {
+		if (ex->m_cause == CFileException::endOfFile)
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_BAD));
-		else {
-			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			GetExceptionMessage(*error, buffer, _countof(buffer));
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_UNKNOWN), buffer);
-		}
-		error->Delete();
+		else
+			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_SERVERMET_UNKNOWN), (LPCTSTR)CExceptionStr(*ex));
+		ex->Delete();
 		delete pRecord;
 		return false;
 	}
@@ -133,17 +125,12 @@ bool CKnownFileList::LoadCancelledFiles()
 // cancelled.met Format: <Header 1 = CANCELLED_HEADER><Version 1 = CANCELLED_VERSION><Seed 4><Count 4>[<HashHash 16><TagCount 1>[Tags TagCount] Count]
 	if (!thePrefs.IsRememberingCancelledFiles())
 		return true;
-	const CString &fullpath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + CANCELLED_MET_FILENAME);
 	CSafeBufferedFile file;
-	CFileException fexp;
-	if (!file.Open(fullpath, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-		if (fexp.m_cause != CFileException::fileNotFound) {
-			CString strError(_T("Failed to load ") CANCELLED_MET_FILENAME _T(" file"));
-			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, _countof(szError)))
-				strError.AppendFormat(_T(" - %s"), szError);
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
-		}
+	if (!CFileOpen(file
+		, thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + CANCELLED_MET_FILENAME
+		, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite
+		, _T("Failed to load ") CANCELLED_MET_FILENAME))
+	{
 		return false;
 	}
 	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
@@ -191,15 +178,12 @@ bool CKnownFileList::LoadCancelledFiles()
 		}
 		file.Close();
 		return true;
-	} catch (CFileException *error) {
-		if (error->m_cause == CFileException::endOfFile)
+	} catch (CFileException *ex) {
+		if (ex->m_cause == CFileException::endOfFile)
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_CONFIGCORRUPT), CANCELLED_MET_FILENAME);
-		else {
-			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			GetExceptionMessage(*error, buffer, _countof(buffer));
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FAILEDTOLOAD), CANCELLED_MET_FILENAME, buffer);
-		}
-		error->Delete();
+		else
+			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_FAILEDTOLOAD), CANCELLED_MET_FILENAME, (LPCTSTR)CExceptionStr(*ex));
+		ex->Delete();
 	}
 	return false;
 }
@@ -207,65 +191,47 @@ bool CKnownFileList::LoadCancelledFiles()
 void CKnownFileList::Save()
 {
 	if (thePrefs.GetLogFileSaving())
-		AddDebugLogLine(false, _T("Saving known files list file \"%s\""), KNOWN_MET_FILENAME);
+		AddDebugLogLine(false, _T("Saving known files list in \"%s\""), KNOWN_MET_FILENAME);
 	m_nLastSaved = ::GetTickCount();
 	const CString &sConfDir(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
 	CSafeBufferedFile file;
-	CFileException fexp;
-	if (!file.Open(sConfDir + KNOWN_MET_FILENAME, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-		CString strError(_T("Failed to save ") KNOWN_MET_FILENAME _T(" file"));
-		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (GetExceptionMessage(fexp, szError, _countof(szError)))
-			strError.AppendFormat(_T(" - %s"), szError);
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
-	} else {
+	if (CFileOpen(file
+		, sConfDir + KNOWN_MET_FILENAME
+		, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite
+		, _T("Failed to save ") KNOWN_MET_FILENAME))
+	{
 		::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
-
 		try {
-			file.WriteUInt8(0); // we will write the version tag later depending if any large files are on the list
-			UINT nRecordsNumber = 0;
-			bool bContainsAnyLargeFiles = false;
-			file.WriteUInt32(nRecordsNumber);
+			file.WriteUInt8(MET_HEADER_I64TAGS);
+			file.WriteUInt32((uint32)m_Files_map.GetCount()); // the number may be rewritten
 
+			INT_PTR iRecordsNumber = 0;
 			for (const CKnownFilesMap::CPair *pair = m_Files_map.PGetFirstAssoc(); pair != NULL; pair = m_Files_map.PGetNextAssoc(pair)) {
 				CKnownFile *pFile = pair->value;
 				if (thePrefs.IsRememberingDownloadedFiles() || theApp.sharedfiles->IsFilePtrInList(pFile)) {
 					pFile->WriteToFile(file);
-					++nRecordsNumber;
-					bContainsAnyLargeFiles |= pFile->IsLargeFile();
+					++iRecordsNumber;
 				}
 			}
 
-			file.SeekToBegin();
-			file.WriteUInt8(bContainsAnyLargeFiles ? MET_HEADER_I64TAGS : MET_HEADER);
-			file.WriteUInt32(nRecordsNumber);
-
-			if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.IsClosing())) {
-				file.Flush(); // flush file stream buffers to disk buffers
-				if (_commit(_fileno(file.m_pStream)) != 0) // commit disk buffers to disk
-					AfxThrowFileException(CFileException::hardIO, ::GetLastError(), file.GetFileName());
+			if (m_Files_map.GetCount() > iRecordsNumber) {
+				file.Seek(1, CFile::begin);
+				file.WriteUInt32((uint32)iRecordsNumber);
 			}
-			file.Close();
-		} catch (CFileException *error) {
-			CString strError(_T("Failed to save ") KNOWN_MET_FILENAME _T(" file"));
-			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(*error, szError, _countof(szError)))
-				strError.AppendFormat(_T(" - %s"), szError);
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
-			error->Delete();
+			CommitAndClose(file);
+		} catch (CFileException *ex) {
+			LogError(LOG_STATUSBAR, _T("%s %s%s"), (LPCTSTR)GetResString(IDS_ERROR_SAVEFILE), KNOWN_MET_FILENAME, (LPCTSTR)CExceptionStrDash(*ex));
+			ex->Delete();
 		}
 	}
 
-
 	if (thePrefs.GetLogFileSaving())
-		AddDebugLogLine(false, _T("Saving known files list file \"%s\""), CANCELLED_MET_FILENAME);
-	if (!file.Open(sConfDir + CANCELLED_MET_FILENAME, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-		CString strError(_T("Failed to save ") CANCELLED_MET_FILENAME _T(" file"));
-		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (GetExceptionMessage(fexp, szError, _countof(szError)))
-			strError.AppendFormat(_T(" - %s"), szError);
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
-	} else {
+		AddDebugLogLine(false, _T("Saving cancelled files list in \"%s\""), CANCELLED_MET_FILENAME);
+	if (CFileOpen(file
+		, sConfDir + CANCELLED_MET_FILENAME
+		, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite
+		, _T("Failed to save ") CANCELLED_MET_FILENAME))
+	{
 		::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 
 		try {
@@ -278,23 +244,13 @@ void CKnownFileList::Save()
 				file.WriteUInt32((uint32)m_mapCancelledFiles.GetCount());
 				for (const CancelledFilesMap::CPair *pair = m_mapCancelledFiles.PGetFirstAssoc(); pair != NULL; pair = m_mapCancelledFiles.PGetNextAssoc(pair)) {
 					file.WriteHash16(pair->key.m_key);
-					file.WriteUInt8(0);
+					file.WriteUInt8(0); //number of tags
 				}
 			}
-
-			if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.IsClosing())) {
-				file.Flush(); // flush file stream buffers to disk buffers
-				if (_commit(_fileno(file.m_pStream)) != 0) // commit disk buffers to disk
-					AfxThrowFileException(CFileException::hardIO, ::GetLastError(), file.GetFileName());
-			}
-			file.Close();
-		} catch (CFileException *error) {
-			CString strError(_T("Failed to save ") CANCELLED_MET_FILENAME _T(" file"));
-			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(*error, szError, _countof(szError)))
-				strError.AppendFormat(_T(" - %s"), szError);
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
-			error->Delete();
+			CommitAndClose(file);
+		} catch (CFileException *ex) {
+			LogError(LOG_STATUSBAR, _T("%s %s%s"), (LPCTSTR)GetResString(IDS_ERROR_SAVEFILE), CANCELLED_MET_FILENAME, (LPCTSTR)CExceptionStrDash(*ex));
+			ex->Delete();
 		}
 	}
 }

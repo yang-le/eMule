@@ -37,8 +37,8 @@ namespace Kademlia
 	{
 	public:
 		explicit CIOException(int iCause = ERR_SUCCESS);
-
-		BOOL GetErrorMessage(LPTSTR lpszError, UINT uMaxError, PUINT pnHelpContext = NULL) const;
+		//not used; causes C4266 warnings
+		//BOOL GetErrorMessage(LPTSTR lpszError, UINT uMaxError, PUINT pnHelpContext = NULL) const;
 		int m_iCause;
 	};
 }

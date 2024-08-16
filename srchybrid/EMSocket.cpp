@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -44,27 +44,27 @@ namespace
 		va_list argptr;
 		char bufferline[512];
 		va_start(argptr, fmt);
-		_vsnprintf(bufferline, 512, fmt, argptr);
+		vsnprintf(bufferline, _countof(bufferline), fmt, argptr);
 		va_end(argptr);
 		//(Ornis+)
 		char osDate[30], osTime[30];
 		char temp[1024];
 		_strtime(osTime);
 		_strdate(osDate);
-		int len = _snprintf(temp, 1021, "%s %s: %s\r\n", osDate, osTime, bufferline);
+		int len = snprintf(temp, _countof(temp), "%s %s: %s\r\n", osDate, osTime, bufferline);
 		if (len > 0) {
-			HANDLE hFile = ::CreateFile(_T("c:\\EMSocket.log")	// open MYFILE.TXT
-				, GENERIC_WRITE			// open for reading
+			HANDLE hFile = ::CreateFile(_T("c:\\tmp\\EMSocket.log")	// ensure valid path to a writable location
+				, GENERIC_WRITE			// open for writing
 				, FILE_SHARE_READ		// share for reading
 				, NULL					// no security
-				, OPEN_ALWAYS			// existing file only
+				, OPEN_ALWAYS			// open existing or create new
 				, FILE_ATTRIBUTE_NORMAL // normal file
-				, NULL);				// no attr. template
+				, NULL);				// no template file
 
 			if (hFile != INVALID_HANDLE_VALUE) {
-				DWORD nbBytesWritten = 0;
+				DWORD nbBytesWritten;
 				SetFilePointer(hFile, 0, NULL, FILE_END);
-				BOOL b = ::WriteFile(hFile	// handle to file
+				::WriteFile(hFile	// handle to file
 					, temp				// data buffer
 					, len				// number of bytes to write
 					, &nbBytesWritten	// number of bytes written
@@ -85,17 +85,17 @@ namespace
 IMPLEMENT_DYNAMIC(CEMSocket, CEncryptedStreamSocket)
 
 CEMSocket::CEMSocket()
-	: byConnected(ES_NOTCONNECTED)
+	: m_pProxyLayer()
 	, m_uTimeOut(CONNECTION_TIMEOUT) // default timeout for ed2k sockets
+	, byConnected(EMS_NOTCONNECTED)
 	, m_bProxyConnectFailed()
-	, m_pProxyLayer()
-	, downloadLimit()
 	, downloadLimitEnable()
 	, pendingOnReceive()
-	, pendingHeader()
-	, pendingHeaderSize()
-	, pendingPacket()
+	, downloadLimit()
 	, pendingPacketSize()
+	, pendingPacket()
+	, pendingHeaderSize()
+	, pendingHeader()
 	, sendbuffer()
 	, sendblen()
 	, sent()
@@ -125,7 +125,7 @@ CEMSocket::~CEMSocket()
 	// need to be locked here to know that the other methods
 	// won't be in the middle of things
 	sendLocker.Lock();
-	byConnected = ES_DISCONNECTED;
+	byConnected = EMS_DISCONNECTED;
 	CleanUpOverlappedSendOperation(true);
 	sendLocker.Unlock();
 
@@ -228,7 +228,7 @@ void CEMSocket::OnClose(int nErrorCode)
 {
 	// need to be locked here to know that the other methods
 	// won't be in the middle of things
-	SetConState(ES_DISCONNECTED);
+	SetConState(EMS_DISCONNECTED);
 
 	// now that we know no other method will keep adding to the queue
 	// we can remove ourself from the queue
@@ -265,10 +265,10 @@ void CEMSocket::OnReceive(int nErrorCode)
 	}
 
 	// Check current connection state
-	if (byConnected == ES_DISCONNECTED)
+	if (byConnected == EMS_DISCONNECTED)
 		return;
 
-	byConnected = ES_CONNECTED; // ES_DISCONNECTED, ES_NOTCONNECTED, ES_CONNECTED
+	byConnected = EMS_CONNECTED; // EMS_DISCONNECTED, EMS_NOTCONNECTED, EMS_CONNECTED
 
 	// CPU load improvement
 	if (downloadLimitEnable && downloadLimit == 0 && nErrorCode != WSAESHUTDOWN) {
@@ -284,7 +284,7 @@ void CEMSocket::OnReceive(int nErrorCode)
 
 	// We attempt to read up to 2 megs at a time (minus whatever is in our internal read buffer)
 	int ret = Receive(GlobalReadBuffer + pendingHeaderSize, (int)readMax);
-	if (ret == SOCKET_ERROR || byConnected == ES_DISCONNECTED)
+	if (ret == SOCKET_ERROR || byConnected == EMS_DISCONNECTED)
 		return;
 
 	// Bandwidth control
@@ -337,7 +337,7 @@ void CEMSocket::OnReceive(int nErrorCode)
 
 		if (pendingPacket == NULL) {
 			// Bugfix We still need to check for a valid protocol
-			// Remark: the default eMule v0.26b had removed this test......
+			// Remark: the default eMule v0.26b had removed this test...
 			switch (reinterpret_cast<Header_Struct*>(rptr)->eDonkeyID) {
 			case OP_EDONKEYPROT:
 			case OP_PACKEDPROT:
@@ -374,8 +374,8 @@ void CEMSocket::OnReceive(int nErrorCode)
 		ASSERT(pendingPacket->size >= pendingPacketSize);
 		if (pendingPacket->size == pendingPacketSize) {
 #ifdef EMSOCKET_DEBUG
-			EMTrace("CEMSocket::PacketReceived on %d, opcode=%X, realSize=%d",
-				(SOCKET)this, pendingPacket->opcode, pendingPacket->GetRealPacketSize());
+			EMTrace("CEMSocket::PacketReceived on %u, opcode=%X, realSize=%d"
+				, (SOCKET)this, pendingPacket->opcode, pendingPacket->GetRealPacketSize());
 #endif
 			// Process packet
 			bool bPacketResult = PacketReceived(pendingPacket);
@@ -438,7 +438,7 @@ void CEMSocket::SendPacket(Packet *packet, bool controlpacket, uint32 actualPayl
 {
 	//EMTrace("CEMSocket::OnSenPacked1 controlcount %i, standardcount %i, isbusy: %i", controlpacket_queue.GetCount(), standardpacket_queue.GetCount(), IsBusy());
 
-	if (byConnected == ES_DISCONNECTED) {
+	if (byConnected == EMS_DISCONNECTED) {
 		delete packet;
 		return;
 	}
@@ -466,7 +466,7 @@ void CEMSocket::SendPacket(Packet *packet, bool controlpacket, uint32 actualPayl
 
 	if (bForceImmediateSend) {
 		ASSERT(controlpacket_queue.GetCount() == 1);
-		Send(1024, 0, true);
+		SendEM(1024, 0, true);
 	}
 }
 
@@ -507,10 +507,10 @@ void CEMSocket::OnSend(int nErrorCode)
 	// stopped sending here.
 	//StoppedSendSoUpdateStats();
 
-	if (byConnected == ES_DISCONNECTED)
+	if (byConnected == EMS_DISCONNECTED)
 		return;
 
-	byConnected = ES_CONNECTED;
+	byConnected = EMS_CONNECTED;
 
 	if (m_currentPacket_is_controlpacket) {
 		// queue up for control packet
@@ -521,9 +521,9 @@ void CEMSocket::OnSend(int nErrorCode)
 		theApp.uploadBandwidthThrottler->SocketAvailable();
 }
 
-SocketSentBytes CEMSocket::Send(uint32 maxNumberOfBytesToSend, uint32 minFragSize, bool onlyAllowedToSendControlPacket)
+SocketSentBytes CEMSocket::SendEM(uint32 maxNumberOfBytesToSend, uint32 minFragSize, bool onlyAllowedToSendControlPacket)
 {
-	if (byConnected == ES_DISCONNECTED)
+	if (byConnected == EMS_DISCONNECTED)
 		return SocketSentBytes{};
 	if (m_bUseOverlappedSend)
 		return SendOv(maxNumberOfBytesToSend, minFragSize, onlyAllowedToSendControlPacket);
@@ -556,7 +556,7 @@ SocketSentBytes CEMSocket::SendStd(uint32 maxNumberOfBytesToSend, uint32 minFrag
 	SocketSentBytes ret = { 0, 0, true };
 
 	sendLocker.Lock();
-	if (byConnected == ES_CONNECTED && IsEncryptionLayerReady()) {
+	if (byConnected == EMS_CONNECTED && IsEncryptionLayerReady()) {
 		if (minFragSize < 1)
 			minFragSize = 1;
 
@@ -732,7 +732,7 @@ SocketSentBytes CEMSocket::SendOv(uint32 maxNumberOfBytesToSend, uint32 minFragS
 	SocketSentBytes ret = {0, 0, true};
 
 	sendLocker.Lock();
-	if (byConnected == ES_CONNECTED && IsEncryptionLayerReady() && !IsBusyExtensiveCheck() && maxNumberOfBytesToSend > 0) {
+	if (byConnected == EMS_CONNECTED && IsEncryptionLayerReady() && !IsBusyExtensiveCheck() && maxNumberOfBytesToSend > 0) {
 		if (minFragSize < 1)
 			minFragSize = 1;
 
@@ -798,7 +798,7 @@ SocketSentBytes CEMSocket::SendOv(uint32 maxNumberOfBytesToSend, uint32 minFragS
 						// yay
 						pCurBuf.len = curPacket->GetRealPacketSize();
 						pCurBuf.buf = curPacket->DetachPacket();
-						CryptPrepareSendData((uchar*)pCurBuf.buf, pCurBuf.len);// encrypting which cannot be done transparent by base class
+						CryptPrepareSendData((uchar*)pCurBuf.buf, pCurBuf.len);// encryption cannot be done transparently in the base class
 						::InterlockedAdd((LONG*)&m_actualPayloadSizeSent, queueEntry.actualPayloadSize);
 						lastFinishedStandard = timeGetTime();
 						m_bAccelerateUpload = false;
@@ -808,7 +808,7 @@ SocketSentBytes CEMSocket::SendOv(uint32 maxNumberOfBytesToSend, uint32 minFragS
 						sendblen = curPacket->GetRealPacketSize();
 						sendbuffer = curPacket->DetachPacket();
 						sent = 0;
-						CryptPrepareSendData((uchar*)sendbuffer, sendblen); // encrypting which cannot be done transparent by base class
+						CryptPrepareSendData((uchar*)sendbuffer, sendblen); //  encryption cannot be done transparently in the base class
 						pCurBuf.len = min(sendblen - sent, (uint32)nBytesLeft);
 						pCurBuf.buf = new CHAR[pCurBuf.len];
 						memcpy(pCurBuf.buf, sendbuffer, pCurBuf.len);
@@ -870,7 +870,7 @@ uint32 CEMSocket::GetNextFragSize(uint32 current, uint32 minFragSize)
 uint32 CEMSocket::GetNeededBytes()
 {
 	sendLocker.Lock();
-	if (byConnected == ES_DISCONNECTED) {
+	if (byConnected == EMS_DISCONNECTED) {
 		sendLocker.Unlock();
 		return 0;
 	}
@@ -915,15 +915,15 @@ uint32 CEMSocket::GetNeededBytes()
 // pach2:
 // written this overriden Receive to handle transparently FIN notifications coming from calls to recv()
 // This was maybe(??) the cause of a lot of socket error, notably after a brutal close from peer
-// also added trace so that we can debug after the fact...
+// also added trace so that we can debug after the fact.
 int CEMSocket::Receive(void *lpBuf, int nBufLen, int nFlags)
 {
-	//EMTrace("CEMSocket::Receive on %lu, maxSize=%d", (SOCKET)this, nBufLen);
+	//EMTrace("CEMSocket::Receive on %u, maxSize=%d", (SOCKET)this, nBufLen);
 	int recvRetCode = CEncryptedStreamSocket::Receive(lpBuf, nBufLen, nFlags); // deadlake PROXYSUPPORT - changed to AsyncSocketEx
 	switch (recvRetCode) {
 	case 0:
 		if (GetRealReceivedBytes() <= 0) { // we received data but it was for the underlying encryption layer - all fine
-			//EMTrace("CEMSocket::##Received FIN on %d, maxSize=%d",(SOCKET)this,nBufLen);
+			//EMTrace("CEMSocket::##Received FIN on %u, maxSize=%d", (SOCKET)this, nBufLen);
 			// FIN received on socket // Connection is being closed by peer
 			//ASSERT (false);
 			if (!AsyncSelect(FD_CLOSE | FD_WRITE)) { // no more READ notifications...
@@ -937,45 +937,45 @@ int CEMSocket::Receive(void *lpBuf, int nBufLen, int nFlags)
 		switch (CAsyncSocket::GetLastError()) {
 		case WSANOTINITIALISED:
 			ASSERT(0);
-			EMTrace("CEMSocket::OnReceive: A successful AfxSocketInit must occur before using this API.");
+			EMTrace("%sA successful AfxSocketInit must occur before using this API.");
 			break;
 		case WSAENETDOWN:
 			ASSERT(true);
-			p = "CEMSocket::OnReceive: The socket %u received a net down error";
+			p = "%sThe socket %u received a net down error";
 			break;
-		case WSAENOTCONN: // The socket is not connected.
-			p = "CEMSocket::OnReceive: The socket %u is not connected";
+		case WSAENOTCONN:
+			p = "%sThe socket %u is not connected";
 			break;
-		case WSAEINPROGRESS:   // A blocking Windows Sockets operation is in progress.
-			p = "CEMSocket::OnReceive: The socket %u is blocked";
+		case WSAEINPROGRESS:	// A blocking Windows Sockets operation is in progress.
+			p = "%sThe socket %u is blocked";
 			break;
-		case WSAEWOULDBLOCK:   // The socket is marked as nonblocking and the Receive operation would block.
-			p = "CEMSocket::OnReceive: The socket %u would block";
+		case WSAEWOULDBLOCK:	// The socket is marked as nonblocking and the Receive operation would block.
+			p = "%sThe socket %u would block";
 			break;
-		case WSAENOTSOCK:   // The descriptor is not a socket.
-			p = "CEMSocket::OnReceive: The descriptor %u is not a socket (may have been closed or never created)";
+		case WSAENOTSOCK:		// The descriptor is not a socket.
+			p = "%sThe descriptor %u is not a socket (may have been closed or never created)";
 			break;
-		case WSAEOPNOTSUPP:  // MSG_OOB was specified, but the socket is not of type SOCK_STREAM.
+		case WSAEOPNOTSUPP:		// MSG_OOB was specified, but the socket is not of type SOCK_STREAM.
 			break;
-		case WSAESHUTDOWN:   // The socket has been shut down; it is not possible to call Receive on a socket after ShutDown(0) or ShutDown(2) has been invoked.
-			p = "CEMSocket::OnReceive: The socket %u has been shut down";
+		case WSAESHUTDOWN:		// The socket has been shut down; it is impossible to call Receive on a socket after ShutDown(0) or ShutDown(2) has been invoked.
+			p = "%sThe socket %u has been shut down";
 			break;
-		case WSAEMSGSIZE:   // The datagram was too large to fit into the specified buffer and was truncated.
-			p = "CEMSocket::OnReceive: The datagram was too large to fit and was truncated (socket %u)";
+		case WSAEMSGSIZE:		// The datagram was too large to fit into the specified buffer and was truncated.
+			p = "%sThe datagram was too large to fit and was truncated (socket %u)";
 			break;
-		case WSAEINVAL:   // The socket has not been bound with Bind.
-		case WSAECONNABORTED:   // The virtual circuit was aborted due to timeout or other failure.
-		case WSAECONNRESET:   // The virtual circuit was reset by the remote side.
-			p = "CEMSocket::OnReceive: The socket %u has not been bound";
+		case WSAEINVAL:			// The socket has not been bound with Bind.
+		case WSAECONNABORTED:	// The virtual circuit was aborted due to timeout or other failure.
+		case WSAECONNRESET:		// The virtual circuit was reset by the remote side.
+			p = "%sThe socket %u has not been bound";
 			break;
 		default:
 			EMTrace("CEMSocket::OnReceive: Unexpected socket error %x on socket %u", CAsyncSocket::GetLastError(), (SOCKET)this);
 		}
 		if (p)
-			EMTrace(p, (SOCKET)this);
+			EMTrace(p, "CEMSocket::OnReceive: ", (SOCKET)this);
 //		break;
 //	default:
-//		EMTrace("CEMSocket::OnReceive on %u, receivedSize=%d",(SOCKET)this,recvRetCode);
+//		EMTrace("CEMSocket::OnReceive on %u, receivedSize=%d", (SOCKET)this, recvRetCode);
 	}
 	return recvRetCode;
 }
@@ -1038,7 +1038,7 @@ void CEMSocket::AssertValid() const
 
 	const_cast<CEMSocket*>(this)->sendLocker.Lock();
 
-	ASSERT(byConnected == ES_DISCONNECTED || byConnected == ES_NOTCONNECTED || byConnected == ES_CONNECTED);
+	ASSERT(byConnected == EMS_DISCONNECTED || byConnected == EMS_NOTCONNECTED || byConnected == EMS_CONNECTED);
 	CHECK_BOOL(m_bProxyConnectFailed);
 	CHECK_PTR(m_pProxyLayer);
 	(void)downloadLimit;
@@ -1076,16 +1076,6 @@ void CEMSocket::Dump(CDumpContext &dc) const
 void CEMSocket::DataReceived(const BYTE*, UINT)
 {
 	ASSERT(0);
-}
-
-DWORD CEMSocket::GetTimeOut() const
-{
-	return m_uTimeOut;
-}
-
-void CEMSocket::SetTimeOut(DWORD uTimeOut)
-{
-	m_uTimeOut = uTimeOut;
 }
 
 CString CEMSocket::GetFullErrorMessage(DWORD dwError)

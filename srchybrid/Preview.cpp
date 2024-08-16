@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -59,12 +59,11 @@ BOOL CPreviewThread::Run()
 {
 	try {
 		const CString srcName(m_pPartfile->GetFileName());
-		LPCTSTR const pExt = _tcsrchr(srcName, _T('.'));
 		CString strPreviewName(m_pPartfile->GetTmpPath());
-		strPreviewName.AppendFormat(_T("%s_preview%s"), (LPCTSTR)srcName.Left(5), (pExt ? pExt : _T("")));
-		strPreviewName.Format(_T("%s%s-rec.tmp"), (LPCTSTR)m_pPartfile->GetTmpPath(), (LPCTSTR)m_pPartfile->GetFileName().Left(5));
+		strPreviewName.AppendFormat(_T("%s_preview%s"), (LPCTSTR)srcName.Left(5), ::PathFindExtension(srcName));
 
 		bool bRet = m_pPartfile->CopyPartFile(m_aFilled, strPreviewName);
+		m_pPartfile->m_bPreviewing = false;
 		m_aFilled.RemoveAll();
 		if (!bRet)
 			return FALSE;
@@ -108,9 +107,9 @@ BOOL CPreviewThread::Run()
 			::CloseHandle(SE.hProcess);
 		}
 		CFile::Remove(strPreviewName);
-	} catch (CFileException *error) {
+	} catch (CFileException *ex) {
 		m_pPartfile->m_bPreviewing = false;
-		error->Delete();
+		ex->Delete();
 	}
 	return TRUE;
 }

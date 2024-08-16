@@ -80,8 +80,8 @@ CAsyncSocketExLayer::CAsyncSocketExLayer()
 	: m_pOwnerSocket()
 	, m_nLayerState(notsock)
 	, m_nFamily(AF_UNSPEC)
-	, m_lEvent()
 	, m_nSocketPort()
+	, m_lEvent()
 	, m_addrInfo()
 	, m_nextAddr()
 	, m_nPendingEvents()
@@ -477,15 +477,10 @@ void CAsyncSocketExLayer::Init(CAsyncSocketExLayer *pPrevLayer, CAsyncSocketEx *
 #endif //NOSOCKETSTATES
 }
 
-int CAsyncSocketExLayer::GetLayerState() const
-{
-	return m_nLayerState;
-}
-
-void CAsyncSocketExLayer::SetLayerState(int nLayerState)
+void CAsyncSocketExLayer::SetLayerState(AsyncSocketExState nLayerState)
 {
 	ASSERT(m_pOwnerSocket);
-	int nOldLayerState = GetLayerState();
+	AsyncSocketExState nOldLayerState = GetLayerState();
 	m_nLayerState = nLayerState;
 	if (nOldLayerState != nLayerState)
 		DoLayerCallback(LAYERCALLBACK_STATECHANGE, GetLayerState(), nOldLayerState);

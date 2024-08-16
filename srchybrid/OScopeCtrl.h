@@ -9,7 +9,7 @@ public:
 	explicit COScopeCtrl(int NTrends = 1);
 	virtual	~COScopeCtrl();
 
-	virtual BOOL Create(DWORD dwStyle, const CRect &rect, CWnd *pParentWnd, UINT nID = NULL);
+	virtual BOOL CreateWnd(DWORD dwStyle, const CRect &rect, CWnd *pParentWnd, UINT nID = NULL);
 
 	void SetTrendRatio(int iTrend, unsigned iRatio = 1);
 	void SetLegendLabel(const CString &string, int iTrend);

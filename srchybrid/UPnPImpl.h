@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -14,7 +14,6 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
 #pragma once
 #include <exception>
 
@@ -35,6 +34,9 @@ enum UPNP_IMPLEMENTATION
 
 class CUPnPImpl
 {
+	CWnd* m_wndResultMessage;
+	UINT m_nResultMessageID;
+
 public:
 	CUPnPImpl();
 	virtual	~CUPnPImpl() = default;
@@ -56,22 +58,10 @@ public:
 	void LateEnableWebServerPort(uint16 nPort);	// Add Web Server port to already existing port mapping
 
 	void SetMessageOnResult(CWnd *cwnd, UINT nMessageID);
-	TRISTATE ArePortsForwarded() const
-	{
-		return m_bUPnPPortsForwarded;
-	}
-	uint16 GetUsedTCPPort() const
-	{
-		return m_nTCPPort;
-	}
-	uint16 GetUsedUDPPort() const
-	{
-		return m_nUDPPort;
-	}
-	uint16 GetUsedTCPWebPort() const
-	{
-		return m_nTCPWebPort;
-	}
+	TRISTATE ArePortsForwarded() const					{ return m_bUPnPPortsForwarded; }
+	uint16 GetUsedTCPPort() const						{ return m_nTCPPort; }
+	uint16 GetUsedUDPPort() const						{ return m_nUDPPort; }
+	uint16 GetUsedTCPWebPort() const					{ return m_nTCPWebPort; }
 
 // Implementation
 protected:
@@ -84,41 +74,16 @@ protected:
 	uint16 m_nTCPWebPort;
 	uint16 m_nUDPPort;
 	bool m_bCheckAndRefresh;
-
-private:
-	CWnd *m_wndResultMessage;
-	UINT m_nResultMessageID;
 };
 
 // Dummy Implementation to be used when no other implementation is available
 class CUPnPImplNone : public CUPnPImpl
 {
 public:
-	virtual void StartDiscovery(uint16, uint16, uint16)
-	{
-		ASSERT(0);
-	}
-
-	virtual bool CheckAndRefresh()
-	{
-		return false;
-	}
-
-	virtual void StopAsyncFind()
-	{
-	}
-
-	virtual void DeletePorts()
-	{
-	}
-
-	virtual bool IsReady()
-	{
-		return false;
-	}
-
-	virtual int GetImplementationID()
-	{
-		return UPNP_IMPL_NONE;
-	}
+	virtual void StartDiscovery(uint16, uint16, uint16)	{ ASSERT(0); }
+	virtual bool CheckAndRefresh()						{ return false; }
+	virtual void StopAsyncFind()						{}
+	virtual void DeletePorts()							{}
+	virtual bool IsReady()								{ return false; }
+	virtual int GetImplementationID()					{ return UPNP_IMPL_NONE; }
 };

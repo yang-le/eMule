@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -144,7 +144,7 @@ void UploadBandwidthThrottler::AddToStandardList(INT_PTR index, ThrottledFileSoc
 		sendLocker.Unlock();
 	}
 //	else if (thePrefs.GetVerbose())
-//		theApp.AddDebugLogLine(true,"Tried to add NULL socket to UploadBandwidthThrottler Standard list! Prevented.");
+//		theApp.QueueDebugLogLine(true, " Prevented adding a NULL socket to UploadBandwidthThrottler Standard list!");
 }
 
 /**
@@ -492,7 +492,7 @@ UINT UploadBandwidthThrottler::RunInternal()
 		uint32 minFragSize;
 		uint32 doubleSendSize;
 		if (allowedDataRate < 6 * 1024)
-			doubleSendSize = minFragSize = 536; // send one packet at a time at very low speeds for a smoother upload
+			doubleSendSize = minFragSize = 536; // send one packet at a time at very low speeds for smoother upload
 		else {
 			minFragSize = 1300;
 			doubleSendSize = minFragSize * 2; // send two packets at a time so they can share an ACK
@@ -500,15 +500,15 @@ UINT UploadBandwidthThrottler::RunInternal()
 
 #define TIME_BETWEEN_UPLOAD_LOOPS 1
 		DWORD sleepTime;
-		if (allowedDataRate == _UI32_MAX || realBytesToSpend >= 1000 || (allowedDataRate == 0 && nEstiminatedDataRate == 0))
-			// we could send at once, but sleep a while to not suck up all CPU
+		if (allowedDataRate == _UI32_MAX || realBytesToSpend >= 1000 || (allowedDataRate | nEstiminatedDataRate) == 0)
+			// we could send immediately, but sleep a while to not suck up all CPU
 			sleepTime = TIME_BETWEEN_UPLOAD_LOOPS;
 		else {
-			if (allowedDataRate == 0)
-				sleepTime = (DWORD)ceil((doubleSendSize * 1000) / (double)nEstiminatedDataRate);
-			else
-				// sleep for just as long as we need to get back to having one byte to send
+			if (allowedDataRate)
+				// sleep untill we need to send at least one byte
 				sleepTime = (DWORD)ceil((1000 - realBytesToSpend) / (double)allowedDataRate);
+			else
+				sleepTime = (DWORD)ceil((doubleSendSize * SEC2MS(1)) / (double)nEstiminatedDataRate);
 			if (sleepTime < TIME_BETWEEN_UPLOAD_LOOPS)
 				sleepTime = TIME_BETWEEN_UPLOAD_LOOPS;
 		}

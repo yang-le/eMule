@@ -60,11 +60,15 @@ CContact::~CContact()
 
 CContact::CContact()
 	: m_uClientID()
-	, m_cUDPKey()
+	, m_tExpires()
+	, m_uInUse()
 	, m_uIp()
+	, m_uNetIp()
 	, m_uTcpPort()
 	, m_uUdpPort()
 	, m_uVersion()
+	, m_byType(3)
+	, m_bGuiRefs()
 	, m_bIPVerified()
 {
 	InitContact();
@@ -73,11 +77,18 @@ CContact::CContact()
 CContact::CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint16 uTcpPort, uint8 uVersion, const CKadUDPKey &cUDPKey, bool bIPVerified)
 	: m_uClientID(uClientID)
 	, m_cUDPKey(cUDPKey)
+	, m_tExpires()
+	, m_uInUse()
 	, m_uIp(uIp)
+	, m_uNetIp(htonl(uIp))
 	, m_uTcpPort(uTcpPort)
 	, m_uUdpPort(uUdpPort)
 	, m_uVersion(uVersion)
+	, m_byType(3)
+	, m_bGuiRefs()
 	, m_bIPVerified(bIPVerified)
+	, m_bReceivedHelloPacket()
+	, m_bBootstrapContact()
 {
 	CKademlia::GetPrefs()->GetKadID(m_uDistance);
 	m_uDistance.Xor(uClientID);
@@ -87,11 +98,18 @@ CContact::CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint1
 CContact::CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint16 uTcpPort, const CUInt128 &uTarget, uint8 uVersion, const CKadUDPKey &cUDPKey, bool bIPVerified)
 	: m_uClientID(uClientID)
 	, m_cUDPKey(cUDPKey)
+	, m_tExpires()
+	, m_uInUse()
 	, m_uIp(uIp)
+	, m_uNetIp(htonl(uIp))
 	, m_uTcpPort(uTcpPort)
 	, m_uUdpPort(uUdpPort)
 	, m_uVersion(uVersion)
+	, m_byType(3)
+	, m_bGuiRefs()
 	, m_bIPVerified(bIPVerified)
+	, m_bReceivedHelloPacket()
+	, m_bBootstrapContact()
 {
 	m_uDistance.SetValue(uTarget);
 	m_uDistance.Xor(uClientID);
@@ -103,41 +121,29 @@ void CContact::Copy(const CContact &fromContact)
 	ASSERT(!fromContact.m_bGuiRefs); // don't do this, if this is needed at some point, the code has to be adjusted before
 	m_uClientID = fromContact.m_uClientID;
 	m_uDistance = fromContact.m_uDistance;
-	m_uNetIp = fromContact.m_uNetIp;
-	m_uIp = fromContact.m_uIp;
-	m_uTcpPort = fromContact.m_uTcpPort;
-	m_uUdpPort = fromContact.m_uUdpPort;
-	m_uInUse = fromContact.m_uInUse;
+	m_cUDPKey = fromContact.m_cUDPKey;
 	m_tLastTypeSet = fromContact.m_tLastTypeSet;
 	m_tExpires = fromContact.m_tExpires;
 	m_tCreated = fromContact.m_tCreated;
-	m_byType = fromContact.m_byType;
+	m_uInUse = fromContact.m_uInUse;
+	m_uIp = fromContact.m_uIp;
+	m_uNetIp = fromContact.m_uNetIp;
+	m_uTcpPort = fromContact.m_uTcpPort;
+	m_uUdpPort = fromContact.m_uUdpPort;
 	m_uVersion = fromContact.m_uVersion;
+	m_byType = fromContact.m_byType;
 	m_bGuiRefs = false;
 	m_bIPVerified = fromContact.m_bIPVerified;
-	m_cUDPKey = fromContact.m_cUDPKey;
 	m_bReceivedHelloPacket = fromContact.m_bReceivedHelloPacket;
 	m_bBootstrapContact = fromContact.m_bBootstrapContact;
 }
 
 void CContact::InitContact()
 {
-	m_byType = 3;
-	m_tExpires = 0;
 	m_tCreated = m_tLastTypeSet = time(NULL);
-	m_bGuiRefs = false;
-	m_uInUse = 0;
-	m_uNetIp = htonl(m_uIp);
-	m_bReceivedHelloPacket = false;
-	m_bBootstrapContact = false;
 }
 
-void CContact::GetClientID(CUInt128 &uId) const
-{
-	uId.SetValue(m_uClientID);
-}
-
-void CContact::GetClientID(CString &sId) const
+void Kademlia::CContact::GetClientID(CString &sId) const
 {
 	m_uClientID.ToHexString(sId);
 }
@@ -149,32 +155,12 @@ void CContact::SetClientID(const CUInt128 &uClientID)
 	m_uDistance.Xor(uClientID);
 }
 
-void CContact::GetDistance(CUInt128 &uDistance) const
-{
-	uDistance.SetValue(m_uDistance);
-}
-
-void CContact::GetDistance(CString &sDistance) const
+void Kademlia::CContact::GetDistance(CString &sDistance) const
 {
 	m_uDistance.ToBinaryString(sDistance);
 }
 
-CUInt128 CContact::GetDistance() const
-{
-	return m_uDistance;
-}
-
-uint32 CContact::GetIPAddress() const
-{
-	return m_uIp;
-}
-
-uint32 CContact::GetNetIP() const
-{
-	return m_uNetIp;
-}
-
-void CContact::GetIPAddress(CString &sIp) const
+void Kademlia::CContact::GetIPAddress(CString &sIp) const
 {
 	CMiscUtils::IPAddressToString(m_uIp, sIp);
 }
@@ -188,39 +174,14 @@ void CContact::SetIPAddress(uint32 uIp)
 	}
 }
 
-uint16 CContact::GetTCPPort() const
-{
-	return m_uTcpPort;
-}
-
 void CContact::GetTCPPort(CString &sPort) const
 {
 	sPort.Format(_T("%hu"), m_uTcpPort);
 }
 
-void CContact::SetTCPPort(uint16 uPort)
-{
-	m_uTcpPort = uPort;
-}
-
-uint16 CContact::GetUDPPort() const
-{
-	return m_uUdpPort;
-}
-
 void CContact::GetUDPPort(CString &sPort) const
 {
 	sPort.Format(_T("%hu"), m_uUdpPort);
-}
-
-void CContact::SetUDPPort(uint16 uPort)
-{
-	m_uUdpPort = uPort;
-}
-
-byte CContact::GetType() const
-{
-	return m_byType;
 }
 
 void CContact::CheckingType()
@@ -243,7 +204,7 @@ void CContact::UpdateType()
 		break;
 	case 1:
 		m_byType = 1;
-		m_tExpires = tNow + (unsigned)HR2S(1.5);
+		m_tExpires = tNow + (time_t)HR2S(1.5);
 		break;
 	default:
 		m_byType = 0;
@@ -274,80 +235,10 @@ void Kademlia::CContact::Expire() //mark contact for removal
 	m_tExpires = 1; //the smallest non-zero
 }
 
-CUInt128 CContact::GetClientID() const
-{
-	return m_uClientID;
-}
-
-bool CContact::GetGuiRefs() const
-{
-	return m_bGuiRefs;
-}
-
-void CContact::SetGuiRefs(bool bRefs)
-{
-	m_bGuiRefs = bRefs;
-}
-
-bool CContact::InUse() const
-{
-	return (m_uInUse > 0);
-}
-
-void CContact::IncUse()
-{
-	++m_uInUse;
-}
-
 void CContact::DecUse()
 {
 	if (m_uInUse)
 		--m_uInUse;
 	else
 		ASSERT(0);
-}
-
-time_t CContact::GetCreatedTime() const
-{
-	return m_tCreated;
-}
-
-time_t CContact::GetExpireTime() const
-{
-	return m_tExpires;
-}
-
-time_t CContact::GetLastTypeSet() const
-{
-	return m_tLastTypeSet;
-}
-
-uint8 CContact::GetVersion() const
-{
-	return m_uVersion;
-}
-
-void CContact::SetVersion(uint8 uVersion)
-{
-	m_uVersion = uVersion;
-}
-
-CKadUDPKey CContact::GetUDPKey() const
-{
-	return m_cUDPKey;
-}
-
-void CContact::SetUDPKey(const CKadUDPKey &cUDPKey)
-{
-	m_cUDPKey = cUDPKey;
-}
-
-bool CContact::IsIpVerified() const
-{
-	return m_bIPVerified;
-}
-
-void CContact::SetIpVerified(bool bIPVerified)
-{
-	m_bIPVerified = bIPVerified;
 }

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -14,7 +14,6 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
 #include "StdAfx.h"
 #include "shahashset.h"
 #include "opcodes.h"
@@ -722,21 +721,17 @@ bool CAICHRecoveryHashSet::SaveHashSet()
 	if (!lockKnown2Met.Lock(SEC2MS(5)))
 		return false;
 
-	CString fullpath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + KNOWN2_MET_FILENAME);
 	CSafeFile file;
-	CFileException fexp;
-	if (!file.Open(fullpath, CFile::modeCreate | CFile::modeReadWrite | CFile::modeNoTruncate | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyNone, &fexp)) {
-		if (fexp.m_cause != CFileException::fileNotFound) {
-			CString strError(_T("Failed to load ") KNOWN2_MET_FILENAME _T(" file"));
-			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, _countof(szError)))
-				strError.AppendFormat(_T(" - %s"), szError);
-			theApp.QueueLogLine(true, _T("%s"), (LPCTSTR)strError);
-		}
+	CFileException fex;
+	if (!file.Open(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + KNOWN2_MET_FILENAME
+		, CFile::modeCreate | CFile::modeReadWrite | CFile::modeNoTruncate | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyNone, &fex))
+	{
+		if (fex.m_cause != CFileException::fileNotFound)
+			theApp.QueueLogLine(true, _T("%s%s"), _T("Failed to load ") KNOWN2_MET_FILENAME, (LPCTSTR)CExceptionStrDash(fex));
 		return false;
 	}
+	//::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 	try {
-		//::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 		if (file.GetLength() <= 0)
 			file.WriteUInt8(KNOWN2_MET_VERSION);
 		else if (file.ReadUInt8() != KNOWN2_MET_VERSION)
@@ -774,15 +769,12 @@ bool CAICHRecoveryHashSet::SaveHashSet()
 		theApp.QueueDebugLogLine(false, _T("Successfully saved AICH Hashset, %u Hashes + 1 Masterhash written"), nHashCount);
 		file.Flush();
 		file.Close();
-	} catch (CFileException *error) {
-		if (error->m_cause == CFileException::endOfFile)
+	} catch (CFileException *ex) {
+		if (ex->m_cause == CFileException::endOfFile)
 			theApp.QueueLogLine(true, GetResString(IDS_ERR_MET_BAD), KNOWN2_MET_FILENAME);
-		else {
-			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			GetExceptionMessage(*error, buffer, _countof(buffer));
-			theApp.QueueLogLine(true, GetResString(IDS_ERR_SERVERMET_UNKNOWN), buffer);
-		}
-		error->Delete();
+		else
+			theApp.QueueLogLine(true, GetResString(IDS_ERR_SERVERMET_UNKNOWN), (LPCTSTR)CExceptionStr(*ex));
+		ex->Delete();
 		FreeHashSet();
 		return false;
 	}
@@ -801,21 +793,18 @@ bool CAICHRecoveryHashSet::LoadHashSet()
 		ASSERT(0);
 		return false;
 	}
-	CString fullpath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + KNOWN2_MET_FILENAME);
+
 	CSafeFile file;
-	CFileException fexp;
-	if (!file.Open(fullpath, CFile::modeCreate | CFile::modeRead | CFile::modeNoTruncate | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyNone, &fexp)) {
-		if (fexp.m_cause != CFileException::fileNotFound) {
-			CString strError(_T("Failed to load ") KNOWN2_MET_FILENAME _T(" file"));
-			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, _countof(szError)))
-				strError.AppendFormat(_T(" - %s"), szError);
-			theApp.QueueLogLine(true, _T("%s"), (LPCTSTR)strError);
-		}
+	CFileException fex;
+	if (!file.Open(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + KNOWN2_MET_FILENAME
+		, CFile::modeCreate | CFile::modeRead | CFile::modeNoTruncate | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyNone, &fex))
+	{
+		if (fex.m_cause != CFileException::fileNotFound)
+			theApp.QueueLogLine(true, _T("%s%s"), _T("Failed to load ") KNOWN2_MET_FILENAME, (LPCTSTR)CExceptionStrDash(fex));
 		return false;
 	}
+	//::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 	try {
-		//::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 		uint8 header = file.ReadUInt8();
 		if (header != KNOWN2_MET_VERSION)
 			AfxThrowFileException(CFileException::endOfFile, 0, file.GetFileName());
@@ -881,15 +870,12 @@ bool CAICHRecoveryHashSet::LoadHashSet()
 			file.Seek(nHashCount * (LONGLONG)HASHSIZE, CFile::current);
 		}
 		theApp.QueueDebugLogLine(true, _T("Failed to load HashSet: HashSet not found!"));
-	} catch (CFileException *error) {
-		if (error->m_cause == CFileException::endOfFile)
+	} catch (CFileException *ex) {
+		if (ex->m_cause == CFileException::endOfFile)
 			theApp.QueueLogLine(true, GetResString(IDS_ERR_MET_BAD), KNOWN2_MET_FILENAME);
-		else {
-			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			GetExceptionMessage(*error, buffer, _countof(buffer));
-			theApp.QueueLogLine(true, GetResString(IDS_ERR_SERVERMET_UNKNOWN), buffer);
-		}
-		error->Delete();
+		else
+			theApp.QueueLogLine(true, GetResString(IDS_ERR_SERVERMET_UNKNOWN), (LPCTSTR)CExceptionStr(*ex));
+		ex->Delete();
 	}
 	return false;
 }
@@ -972,7 +958,7 @@ void CAICHRecoveryHashSet::UntrustedHashReceived(const CAICHHash &Hash, uint32 d
 	INT_PTR nSigningIPsTotal = 0;	// unique clients who send us a hash
 	INT_PTR nMostTrustedPos = -1;  // the hash which most clients send us
 	INT_PTR nMostTrustedIPs = 0;
-	for (int i = 0; i < m_aUntrustedHashes.GetCount(); ++i) {
+	for (INT_PTR i = 0; i < m_aUntrustedHashes.GetCount(); ++i) {
 		const INT_PTR signings = m_aUntrustedHashes[i].m_adwIpsSigning.GetCount();
 		nSigningIPsTotal += signings;
 		if (signings > nMostTrustedIPs) {

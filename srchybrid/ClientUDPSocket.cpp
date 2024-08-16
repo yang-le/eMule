@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -97,7 +97,7 @@ void CClientUDPSocket::OnReceive(int nErrorCode)
 				if (nPacketLen < 2)
 					strError = _T("Kad packet (compressed) too short");
 				else {
-					BYTE* unpack = NULL;
+					BYTE *unpack = NULL;
 					uLongf unpackedsize = 0;
 					uint32 nNewSize = nPacketLen * 10 + 300;
 					int iZLibResult = Z_OK;
@@ -119,7 +119,7 @@ void CClientUDPSocket::OnReceive(int nErrorCode)
 							Kademlia::CKademlia::ProcessPacket(unpack, unpackedsize + 2
 								, ntohl(sockAddr.sin_addr.s_addr), ntohs(sockAddr.sin_port)
 								, (Kademlia::CPrefs::GetUDPVerifyKey(sockAddr.sin_addr.s_addr) == nReceiverVerifyKey)
-								, Kademlia::CKadUDPKey(nSenderVerifyKey, theApp.GetPublicIP(false)));
+								, Kademlia::CKadUDPKey(nSenderVerifyKey, theApp.GetPublicIP()));
 						} catch (...) {
 							delete[] unpack;
 							throw;
@@ -135,25 +135,25 @@ void CClientUDPSocket::OnReceive(int nErrorCode)
 				else
 					Kademlia::CKademlia::ProcessPacket(pBuffer, nPacketLen, ntohl(sockAddr.sin_addr.s_addr), ntohs(sockAddr.sin_port)
 						, (Kademlia::CPrefs::GetUDPVerifyKey(sockAddr.sin_addr.s_addr) == nReceiverVerifyKey)
-						, Kademlia::CKadUDPKey(nSenderVerifyKey, theApp.GetPublicIP(false)));
+						, Kademlia::CKadUDPKey(nSenderVerifyKey, theApp.GetPublicIP()));
 				break;
 			default:
 				strError.Format(_T("Unknown protocol 0x%02x"), pBuffer[0]);
 			}
 			//code above does not need to throw strError
-		} catch (CFileException *error) {
-			error->Delete();
+		} catch (CFileException *ex) {
+			ex->Delete();
 			strError = _T("Invalid packet received");
-		} catch (CMemoryException *error) {
-			error->Delete();
+		} catch (CMemoryException *ex) {
+			ex->Delete();
 			strError = _T("Memory exception");
-		} catch (const CString &error) {
-			strError = error;
-		} catch (Kademlia::CIOException *error) {
-			error->Delete();
+		} catch (const CString &ex) {
+			strError = ex;
+		} catch (Kademlia::CIOException *ex) {
+			ex->Delete();
 			strError = _T("Invalid packet received");
-		} catch (CException *error) {
-			error->Delete();
+		} catch (CException *ex) {
+			ex->Delete();
 			strError = _T("General packet error");
 #ifndef _DEBUG
 		} catch (...) {
@@ -262,7 +262,7 @@ bool CClientUDPSocket::ProcessPacket(const BYTE *packet, UINT size, uint8 opcode
 					//something in the extended info data as this will be taken care of in ProcessExtendedInfo()
 					//Update extended info.
 					if (sender->GetUDPVersion() > 3)
-						sender->ProcessExtendedInfo(&data_in, reqfile);
+						sender->ProcessExtendedInfo(data_in, reqfile);
 
 					//Update our complete source counts.
 					else if (sender->GetUDPVersion() > 2) {
@@ -330,7 +330,7 @@ bool CClientUDPSocket::ProcessPacket(const BYTE *packet, UINT size, uint8 opcode
 			if (sender && sender->UDPPacketPending()) {
 				CSafeMemFile data_in(packet, size);
 				if (sender->GetUDPVersion() > 3)
-					sender->ProcessFileStatus(true, &data_in, sender->GetRequestFile());
+					sender->ProcessFileStatus(true, data_in, sender->GetRequestFile());
 
 				uint16 nRank = data_in.ReadUInt16();
 				sender->SetRemoteQueueFull(false);

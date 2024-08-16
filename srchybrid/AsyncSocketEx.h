@@ -96,7 +96,7 @@ struct t_callbackMsg
 	int nType;
 };
 
-enum AsyncSocketExState
+enum AsyncSocketExState : uint8
 {
 	notsock,
 	unconnected,
@@ -144,7 +144,7 @@ public:
 	SOCKET Detach();
 
 	//Gets the error status for the last operation that failed.
-	static int GetLastError();
+	static int GetLastError()					{ return WSAGetLastError(); }
 
 	//Gets the address of the peer socket to which the socket is connected.
 	bool GetPeerName(CString &rPeerAddress, UINT &rPeerPort);
@@ -161,7 +161,7 @@ public:
 	BOOL SetSockOpt(int nOptionName, const void *lpOptionValue, int nOptionLen, int nLevel = SOL_SOCKET);
 
 	//Gets the socket family
-	ADDRESS_FAMILY GetFamily() const;
+	ADDRESS_FAMILY GetFamily() const		{ return m_SocketData.nFamily; }
 
 	//Sets the socket family
 	bool SetFamily(ADDRESS_FAMILY nFamily);
@@ -235,7 +235,7 @@ public:
 	bool IsLayerAttached() const;
 
 	//Returns the handle of the socket.
-	SOCKET GetSocketHandle();
+	SOCKET GetSocketHandle() const					{ return m_SocketData.hSocket; }
 
 	//Triggers an event on the socket
 	// Any combination of FD_READ, FD_WRITE, FD_CLOSE, FD_ACCEPT, FD_CONNECT and FD_FORCEREAD is valid for lEvent.
@@ -257,14 +257,6 @@ protected:
 		ADDRESS_FAMILY nFamily;
 		bool bIsClosing; // Set to true on first received FD_CLOSE event
 	} m_SocketData;
-
-	//If using layers, only the events specified with m_lEvent will send to the event handlers.
-	long m_lEvent;
-
-	//AsyncGetHostByName
-	char *m_pAsyncGetHostByNameBuffer; //Buffer for hostend structure
-	HANDLE m_hAsyncGetHostByNameHandle; //TaskHandle
-	USHORT m_nAsyncGetHostByNamePort; //Port to connect to
 
 	//Returns the handle of the helper window
 	HWND GetHelperWindowHandle();
@@ -300,13 +292,17 @@ protected:
 	// Add a new notification to the list of pending callbacks
 	void AddCallbackNotification(const t_callbackMsg &msg);
 
+	//AsyncGetHostByName
+	char* m_pAsyncGetHostByNameBuffer; //Buffer for hostend structure
+	HANDLE m_hAsyncGetHostByNameHandle; //TaskHandle
+	USHORT m_nAsyncGetHostByNamePort; //Port to connect to
+
 #ifndef NOSOCKETSTATES
+	AsyncSocketExState m_nState;
 	int m_nPendingEvents;
 
-	int GetState() const;
-	void SetState(int nState);
-
-	int m_nState;
+	AsyncSocketExState GetState() const			{ return m_nState; }
+	void SetState(AsyncSocketExState nState)	{ m_nState = nState; }
 #endif //NOSOCKETSTATES
 
 	//Layer chain
@@ -317,8 +313,11 @@ protected:
 	virtual int OnLayerCallback(std::vector<t_callbackMsg> &callbacks);
 
 	// Used by Bind with AF_UNSPEC sockets
-	UINT m_nSocketPort;
 	CString m_sSocketAddress;
+	UINT m_nSocketPort;
+
+	//If using layers, only the events specified with m_lEvent will send to the event handlers.
+	long m_lEvent;
 
 	// Pending callbacks
 	std::vector<t_callbackMsg> m_pendingCallbacks;

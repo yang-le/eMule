@@ -8,12 +8,13 @@
 #include "Log.h"
 #include "TLSthreading.h"
 
-#include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/error.h"
 #include "mbedtls/net_sockets.h"
-#include "mbedtls/ssl_cache.h"
 #include "mbedtls/sha1.h"
+#include "mbedtls/ssl_cache.h"
+#include "mbedtls/ssl_cookie.h"
+#include "mbedtls/ssl_ticket.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -28,9 +29,10 @@ mbedtls_entropy_context entropy;
 mbedtls_ctr_drbg_context ctr_drbg;
 mbedtls_ssl_config conf;
 mbedtls_x509_crt srvcert;
-mbedtls_x509_crt cachain;
 mbedtls_pk_context pkey;
 mbedtls_ssl_cache_context cache;
+mbedtls_ssl_cookie_ctx cookie_ctx;
+mbedtls_ssl_ticket_context ticket_ctx;
 
 typedef struct
 {
@@ -121,7 +123,7 @@ void CWebSocket::OnReceived(void *pData, DWORD dwSize, const in_addr inad)
 					// try to find now the 'Content-Length' header
 					for (dwPos = 0; dwPos < m_dwHttpHeaderLen;) {
 						// Elandal: pPtr is actually a char*, not a void*
-						char *pPtr = (char*)memchr(m_pBuf + dwPos, '\n', m_dwHttpHeaderLen - dwPos);
+						char *pPtr = (char*)memchr(&m_pBuf[dwPos], '\n', m_dwHttpHeaderLen - dwPos);
 						if (!pPtr)
 							break;
 						// Elandal: And thus now the pointer subtraction works as it should
@@ -129,11 +131,11 @@ void CWebSocket::OnReceived(void *pData, DWORD dwSize, const in_addr inad)
 
 						// check this header
 						static const char szMatch[] = "content-length";
-						if (!_strnicmp(m_pBuf + dwPos, szMatch, (sizeof szMatch) - 1)) {
-							dwPos += (sizeof szMatch) - 1;
-							pPtr = (char*)memchr(m_pBuf + dwPos, ':', m_dwHttpHeaderLen - dwPos);
+						if (!_strnicmp(&m_pBuf[dwPos], szMatch, sizeof szMatch - 1)) {
+							dwPos += sizeof szMatch - 1;
+							pPtr = (char*)memchr(&m_pBuf[dwPos], ':', m_dwHttpHeaderLen - dwPos);
 							if (pPtr)
-								m_dwHttpContentLen = atol(pPtr + 1);
+								m_dwHttpContentLen = atol(&pPtr[1]);
 
 							break;
 						}
@@ -321,7 +323,7 @@ UINT AFX_CDECL WebSocketAcceptedFunc(LPVOID pD)
 			}
 			HANDLE pWait[] = {hEvent, s_hTerminate};
 
-			while (WAIT_OBJECT_0 == ::WaitForMultipleObjects(2, pWait, FALSE, INFINITE)) {
+			while (WAIT_OBJECT_0 == ::WaitForMultipleObjects(DWORD(_countof(pWait)), pWait, FALSE, INFINITE)) {
 				while (stWebSocket.m_bValid) {
 					WSANETWORKEVENTS stEvents;
 					if (WSAEnumNetworkEvents(hSocket, NULL, &stEvents))
@@ -456,14 +458,14 @@ UINT AFX_CDECL WebSocketListeningFunc(LPVOID pThis)
 							if (INVALID_SOCKET == hAccepted)
 								break;
 
-							if (!thePrefs.GetAllowedRemoteAccessIPs().IsEmpty()) {
-								bool bAllowedIP = false;
-								for (int i = 0; i < thePrefs.GetAllowedRemoteAccessIPs().GetCount(); ++i) {
+							bool bAllowedIP = thePrefs.GetAllowedRemoteAccessIPs().IsEmpty();
+							if (!bAllowedIP) {
+								for (INT_PTR i = thePrefs.GetAllowedRemoteAccessIPs().GetCount(); --i >= 0;)
 									if (their_addr.sin_addr.s_addr == thePrefs.GetAllowedRemoteAccessIPs()[i]) {
 										bAllowedIP = true;
 										break;
 									}
-								}
+
 								if (!bAllowedIP) {
 									LogWarning(_T("Web Interface: Rejected connection attempt from %s"), (LPCTSTR)ipstr(their_addr.sin_addr.s_addr));
 									VERIFY(!closesocket(hAccepted));
@@ -503,25 +505,36 @@ int StartSSL()
 	if (!thePrefs.GetWebUseHttps())
 		return 0; //success
 	mbedtls_threading_set_alt(threading_mutex_init_alt, threading_mutex_free_alt, threading_mutex_lock_alt, threading_mutex_unlock_alt);
-	mbedtls_ssl_cache_init(&cache);
-	mbedtls_x509_crt_init(&srvcert);
-	mbedtls_x509_crt_init(&cachain);
 	mbedtls_ssl_config_init(&conf);
 	mbedtls_ctr_drbg_init(&ctr_drbg);
 	mbedtls_entropy_init(&entropy);
-	int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (unsigned char*)pers, strlen(pers));
-	if (!ret) {
-		ret = mbedtls_x509_crt_parse_file(&srvcert, thePrefs.GetWebCertPath());
+	mbedtls_x509_crt_init(&srvcert);
+	mbedtls_pk_init(&pkey);
+	mbedtls_ssl_cache_init(&cache);
+	mbedtls_ssl_ticket_init(&ticket_ctx);
+	mbedtls_ssl_cookie_init(&cookie_ctx);
+	int ret = (int)psa_crypto_init();
+	if (!ret) { // PSA_SUCCESS is 0
+		ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (unsigned char*)pers, strlen(pers));
 		if (!ret) {
-			mbedtls_pk_init(&pkey);
-			ret = mbedtls_pk_parse_keyfile(&pkey, thePrefs.GetWebKeyPath(), NULL, mbedtls_ctr_drbg_random, &ctr_drbg);
+			ret = mbedtls_x509_crt_parse_file(&srvcert, thePrefs.GetWebCertPath());
 			if (!ret) {
-				ret = mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_SERVER, MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
+				ret = mbedtls_pk_parse_keyfile(&pkey, thePrefs.GetWebKeyPath(), NULL, mbedtls_ctr_drbg_random, &ctr_drbg);
 				if (!ret) {
-					mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &ctr_drbg);
-					mbedtls_ssl_conf_session_cache(&conf, &cache, mbedtls_ssl_cache_get, mbedtls_ssl_cache_set);
-					mbedtls_ssl_conf_ca_chain(&conf, &cachain, NULL);
-					ret = mbedtls_ssl_conf_own_cert(&conf, &srvcert, &pkey);
+					ret = mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_SERVER, MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
+					if (!ret) {
+						mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &ctr_drbg);
+						mbedtls_ssl_conf_session_cache(&conf, &cache, mbedtls_ssl_cache_get, mbedtls_ssl_cache_set);
+						ret = mbedtls_ssl_ticket_setup(&ticket_ctx, mbedtls_ctr_drbg_random, &ctr_drbg, MBEDTLS_CIPHER_AES_256_GCM, 86400);
+						if (!ret) {
+							mbedtls_ssl_conf_session_tickets_cb(&conf, mbedtls_ssl_ticket_write, mbedtls_ssl_ticket_parse, &ticket_ctx);
+							mbedtls_ssl_conf_new_session_tickets(&conf, 1);
+							mbedtls_ssl_conf_tls13_key_exchange_modes(&conf, MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_ALL);
+							//mbedtls_ssl_conf_legacy_renegotiation(&conf, MBEDTLS_SSL_LEGACY_NO_RENEGOTIATION); //default
+							//mbedtls_ssl_conf_renegotiation(&conf, MBEDTLS_SSL_RENEGOTIATION_DISABLED); //default
+							ret = mbedtls_ssl_conf_own_cert(&conf, &srvcert, &pkey);
+						}
+					}
 				}
 			}
 		}
@@ -539,11 +552,14 @@ int StartSSL()
 void StopSSL()
 {
 	if (thePrefs.GetWebUseHttps()) {
-		mbedtls_x509_crt_free(&srvcert);
-		mbedtls_pk_free(&pkey);
+		mbedtls_ssl_cookie_free(&cookie_ctx);
+		mbedtls_ssl_ticket_free(&ticket_ctx);
 		mbedtls_ssl_cache_free(&cache);
-		mbedtls_ctr_drbg_free(&ctr_drbg);
+		mbedtls_pk_free(&pkey);
+		mbedtls_psa_crypto_free();
+		mbedtls_x509_crt_free(&srvcert);
 		mbedtls_entropy_free(&entropy);
+		mbedtls_ctr_drbg_free(&ctr_drbg);
 		mbedtls_ssl_config_free(&conf);
 	}
 }

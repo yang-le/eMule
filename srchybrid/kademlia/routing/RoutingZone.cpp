@@ -1,6 +1,6 @@
 /*
 Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
-Copyright (C)2007-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+Copyright (C)2007-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -167,92 +167,96 @@ void CRoutingZone::ReadFile(const CString &strSpecialNodesdate)
 		ASSERT(0);
 		return;
 	}
+	CSafeBufferedFile file;
+	if (!file.Open(strSpecialNodesdate.IsEmpty() ? m_sFilename : strSpecialNodesdate, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite, NULL)) {
+		DebugLogWarning(_T("Unable to read Kad file: %s"), (LPCTSTR)m_sFilename);
+		return;
+	}
 	// Read in the saved contact list.
 	try {
-		CSafeBufferedFile file;
-		CFileException fexp;
-		if (file.Open(strSpecialNodesdate.IsEmpty() ? m_sFilename : strSpecialNodesdate, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-			::setvbuf(file.m_pStream, NULL, _IOFBF, 32768);
+		::setvbuf(file.m_pStream, NULL, _IOFBF, 32768);
 
-			// Get how many contacts in the saved list.
-			// NOTE: Older clients put the number of contacts here.
-			//       Newer clients always have 0 here to prevent older clients from reading it.
-			uint32 uNumContacts = file.ReadUInt32();
-			uint32 uVersion = 0;
-			if (uNumContacts == 0) {
-				if (file.GetLength() >= 8) {
-					uVersion = file.ReadUInt32();
-					if (uVersion == 3) {
-						uint32 nBoostrapEdition = file.ReadUInt32();
-						if (nBoostrapEdition == 1) {
-							// this is a special bootstrap-only nodes.dat, handle it in a separate reading function
-							ReadBootstrapNodesDat(file);
-							file.Close();
-							return;
-						}
+		// Get how many contacts in the saved list.
+		// NOTE: Older clients put the number of contacts here.
+		//       Newer clients always have 0 here to prevent older clients from reading it.
+		uint32 uNumContacts = file.ReadUInt32();
+		uint32 uVersion = 0;
+		if (uNumContacts == 0) {
+			if (file.GetLength() >= 8) {
+				uVersion = file.ReadUInt32();
+				if (uVersion == 3) {
+					uint32 nBoostrapEdition = file.ReadUInt32();
+					if (nBoostrapEdition == 1) {
+						// this is a special bootstrap-only nodes.dat, handle it in a separate reading function
+						ReadBootstrapNodesDat(file);
+						file.Close();
+						return;
 					}
-					if (uVersion >= 1 && uVersion <= 3) // those version we know, others we ignore
-						uNumContacts = file.ReadUInt32();
+				}
+				if (uVersion >= 1 && uVersion <= 3) // those version we know, others we ignore
+					uNumContacts = file.ReadUInt32();
+			} else
+				AddDebugLogLine(false, GetResString(IDS_ERR_KADCONTACTS));
+		}
+		if (uNumContacts != 0 && uNumContacts * 25ull <= (file.GetLength() - file.GetPosition())) {
+			// Hide contact list in the GUI
+			theApp.emuledlg->kademliawnd->StopUpdateContacts();
+
+			bool bDoHaveVerifiedContacts = false;
+			uint32 uValidContacts = 0;
+			CUInt128 uID;
+			while (uNumContacts--) {
+				file.ReadUInt128(uID);
+				uint32 uIP = file.ReadUInt32();
+				uint16 uUDPPort = file.ReadUInt16();
+				uint16 uTCPPort = file.ReadUInt16();
+
+				byte byType;
+				uint8 uContactVersion;
+				if (uVersion >= 1) {
+					byType = 0;
+					uContactVersion = file.ReadUInt8();
+				} else {
+					byType = file.ReadUInt8();
+					uContactVersion = 0;
+				}
+
+				bool bVerified;
+				CKadUDPKey kadUDPKey;
+				if (uVersion >= 2) {
+					kadUDPKey.ReadFromFile(file);
+					bVerified = file.ReadUInt8() != 0;
+					if (bVerified)
+						bDoHaveVerifiedContacts = true;
 				} else
-					AddDebugLogLine(false, GetResString(IDS_ERR_KADCONTACTS));
-			}
-			if (uNumContacts != 0 && uNumContacts * 25ull <= (file.GetLength() - file.GetPosition())) {
-				// Hide contact list in the GUI
-				theApp.emuledlg->kademliawnd->StopUpdateContacts();
-
-				bool bDoHaveVerifiedContacts = false;
-				uint32 uValidContacts = 0;
-				CUInt128 uID;
-				while (uNumContacts--) {
-					file.ReadUInt128(uID);
-					uint32 uIP = file.ReadUInt32();
-					uint16 uUDPPort = file.ReadUInt16();
-					uint16 uTCPPort = file.ReadUInt16();
-					byte byType = 0;
-
-					uint8 uContactVersion = 0;
-					if (uVersion >= 1)
-						uContactVersion = file.ReadUInt8();
-					else
-						byType = file.ReadUInt8();
-
-					CKadUDPKey kadUDPKey;
-					bool bVerified = false;
-					if (uVersion >= 2) {
-						kadUDPKey.ReadFromFile(file);
-						bVerified = file.ReadUInt8() != 0;
-						if (bVerified)
-							bDoHaveVerifiedContacts = true;
-					}
-					// IP Appears valid
-					if (byType < 4) {
-						uint32 uhostIP = htonl(uIP);
-						if (IsGoodIPPort(uhostIP, uUDPPort)) {
-							if (theApp.ipfilter->IsFiltered(uhostIP)) {
-								if (thePrefs.GetLogFilteredIPs())
-									AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u)--read known.dat -- - IP filter (%s)"), (LPCTSTR)ipstr(uhostIP), uUDPPort, (LPCTSTR)theApp.ipfilter->GetLastHit());
-							} else if (uUDPPort == 53 && uContactVersion <= KADEMLIA_VERSION5_48a) { /*No DNS Port without encryption*/
-								if (thePrefs.GetLogFilteredIPs())
-									AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u)--read known.dat"), (LPCTSTR)ipstr(uhostIP), uUDPPort);
-							} else {
-								// This was not a dead contact, Inc counter if add was successful
-								if (AddUnfiltered(uID, uIP, uUDPPort, uTCPPort, uContactVersion, kadUDPKey, bVerified, false, true, false))
-									++uValidContacts;
-							}
+					bVerified = false;
+				// IP Appears valid
+				if (byType < 4) {
+					uint32 uhostIP = htonl(uIP);
+					if (IsGoodIPPort(uhostIP, uUDPPort)) {
+						if (theApp.ipfilter->IsFiltered(uhostIP)) {
+							if (thePrefs.GetLogFilteredIPs())
+								AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u)--read nodes.dat -- - IP filter (%s)"), (LPCTSTR)ipstr(uhostIP), uUDPPort, (LPCTSTR)theApp.ipfilter->GetLastHit());
+						} else if (uUDPPort == 53 && uContactVersion <= KADEMLIA_VERSION5_48a) { /*No DNS Port without encryption*/
+							if (thePrefs.GetLogFilteredIPs())
+								AddDebugLogLine(false, _T("Ignored kad contact (IP=%s:%u)--read nodes.dat"), (LPCTSTR)ipstr(uhostIP), uUDPPort);
+						} else {
+							// This was not a dead contact, Inc counter if add was successful
+							if (AddUnfiltered(uID, uIP, uUDPPort, uTCPPort, uContactVersion, kadUDPKey, bVerified, false, true, false))
+								++uValidContacts;
 						}
 					}
 				}
-				AddLogLine(false, GetResString(IDS_KADCONTACTSREAD), uValidContacts);
-				if (!bDoHaveVerifiedContacts) {
-					DebugLogWarning(_T("No verified contacts found in nodes.dat - might be an old file version. Setting all contacts verified for this time to speed up Kad bootstrapping"));
-					SetAllContactsVerified();
-				}
 			}
-			file.Close();
-		} else
-			DebugLogWarning(_T("Unable to read Kad file: %s"), (LPCTSTR)m_sFilename);
-	} catch (CFileException *e) {
-		e->Delete();
+			AddLogLine(false, GetResString(IDS_KADCONTACTSREAD), uValidContacts);
+			if (!bDoHaveVerifiedContacts) {
+				DebugLogWarning(_T("No verified contacts found in nodes.dat - might be an old file version. Setting all contacts verified for this time to speed up Kad bootstrapping"));
+				SetAllContactsVerified();
+			}
+		}
+		file.Close();
+	} catch (CFileException *ex) {
+		ex->Delete();
 		DebugLogError(_T("CFileException in CRoutingZone::readFile"));
 	}
 	// Show contact list in GUI
@@ -294,7 +298,7 @@ void CRoutingZone::ReadBootstrapNodesDat(CFileDataIO &file)
 				} else if (uContactVersion > 1) { // only kad2 nodes
 					// we want 50 nodes closest to our own ID (provides randomness between different users and
 					// gives good chances to bootstrap with close Nodes as a nice start for our routing table)
-					CUInt128 uDistance = uMe;
+					CUInt128 uDistance(uMe);
 					uDistance.Xor(uID);
 					++uValidContacts;
 					// don't bother if we already have 50 and the farthest distance is smaller than this contact
@@ -342,40 +346,39 @@ void CRoutingZone::WriteFile()
 		DebugLogWarning(_T("Skipped storing nodes.dat, because we have an unfinished bootstrap of the nodes.dat version and no contacts in our routing table"));
 		return;
 	}
-	try {
-		// Write a saved contact list.
-		CSafeBufferedFile file;
-		CFileException fexp;
-		if (file.Open(m_sFilename, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-			::setvbuf(file.m_pStream, NULL, _IOFBF, 32768);
 
-			// The bootstrap method gets a very nice sample of contacts to save.
-			ContactArray listContacts;
-			GetBootstrapContacts(listContacts, 200);
-			// Start file with 0 to prevent older clients from reading it.
-			file.WriteUInt32(0);
-			// Now tag it with a version which happens to be 2 (1 till 0.48a).
-			file.WriteUInt32(2);
-			// file.WriteUInt32(0) // if we would use version >=3, this would mean that this is a normal nodes.dat
-			file.WriteUInt32((uint32)listContacts.size());
-			for (ContactArray::const_iterator itContact = listContacts.begin(); itContact != listContacts.end(); ++itContact) {
-				CUInt128 uID;
-				const CContact &rContact(**itContact);
-				rContact.GetClientID(uID);
-				file.WriteUInt128(uID);
-				file.WriteUInt32(rContact.GetIPAddress());
-				file.WriteUInt16(rContact.GetUDPPort());
-				file.WriteUInt16(rContact.GetTCPPort());
-				file.WriteUInt8(rContact.GetVersion());
-				rContact.GetUDPKey().StoreToFile(file);
-				file.WriteUInt8(static_cast<uint8>(rContact.IsIpVerified()));
-			}
-			file.Close();
-			AddDebugLogLine(false, _T("Wrote %ld contact%s to file."), listContacts.size(), ((listContacts.size() == 1) ? _T("") : _T("s")));
-		} else
-			DebugLogError(_T("Unable to store Kad file: %s"), (LPCTSTR)m_sFilename);
-	} catch (CFileException *e) {
-		e->Delete();
+	CSafeBufferedFile file;
+	if (!file.Open(m_sFilename, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, NULL)) {
+		DebugLogError(_T("Unable to store Kad file: %s"), (LPCTSTR)m_sFilename);
+		return;
+	}
+	// Write the saved contact list.
+	try {
+		::setvbuf(file.m_pStream, NULL, _IOFBF, 32768);
+
+		// The bootstrap method gets a very nice sample of contacts to save.
+		ContactArray listContacts;
+		GetBootstrapContacts(listContacts, 200);
+		// Start file with 0 to prevent older clients from reading it.
+		file.WriteUInt32(0);
+		// Now tag it with a version which happens to be 2 (1 till 0.48a).
+		file.WriteUInt32(2);
+		// file.WriteUInt32(0) // if we would use version >=3, this would mean that this is a normal nodes.dat
+		file.WriteUInt32((uint32)listContacts.size());
+		for (ContactArray::const_iterator itContact = listContacts.begin(); itContact != listContacts.end(); ++itContact) {
+			const CContact &contact(**itContact);
+			file.WriteUInt128(contact.GetClientID());
+			file.WriteUInt32(contact.GetIPAddress());
+			file.WriteUInt16(contact.GetUDPPort());
+			file.WriteUInt16(contact.GetTCPPort());
+			file.WriteUInt8(contact.GetVersion());
+			contact.GetUDPKey().StoreToFile(file);
+			file.WriteUInt8(static_cast<uint8>(contact.IsIpVerified()));
+		}
+		file.Close();
+		AddDebugLogLine(false, _T("Wrote %ld contact%s to file."), listContacts.size(), ((listContacts.size() == 1) ? _T("") : _T("s")));
+	} catch (CFileException *ex) {
+		ex->Delete();
 		AddDebugLogLine(false, _T("CFileException in CRoutingZone::writeFile"));
 	}
 }
@@ -384,48 +387,46 @@ void CRoutingZone::DbgWriteBootstrapFile()
 {
 #ifdef _BOOTSTRAPNODESDAT
 	DebugLogWarning(_T("Writing special bootstrap nodes.dat - not intended for normal use"));
+	CSafeBufferedFile file;
+	if (!file.Open(m_sFilename, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, NULL)) {
+		DebugLogError(_T("Unable to store bootstrap file: %s"), (LPCTSTR)m_sFilename);
+		return;
+	}
+	// Write the saved contact list.
 	try {
-		// Write a saved contact list.
-		CUInt128 uID;
-		CSafeBufferedFile file;
-		CFileException fexp;
-		if (file.Open(m_sFilename, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-			::setvbuf(file.m_pStream, NULL, _IOFBF, 32768);
+		::setvbuf(file.m_pStream, NULL, _IOFBF, 32768);
+		ContactMap mapContacts;
+		// filter out Kad1 nodes and null IDs
+		for (ContactMap::const_iterator itContactMap = mapContacts.begin(); itContactMap != mapContacts.end();) {
+			ContactMap::const_iterator itCurContactMap = itContactMap++;
+			const CContact *pContact = itCurContactMap->second;
+			if (pContact->GetClientID() == 0 || pContact->GetVersion() < KADEMLIA_VERSION2_47a)
+				mapContacts.erase(itCurContactMap);
+		}
 
-			// The bootstrap method gets a very nice sample of contacts to save.
-			ContactMap mapContacts;
-			CUInt128 uRandom(CUInt128(0ul), 0);
-			CUInt128 uDistance = uRandom;
-			uDistance.Xor(uMe);
-			GetClosestTo(2, uRandom, uDistance, 1200, mapContacts, false, false);
-			// filter out Kad1 nodes
-			for (ContactMap::const_iterator itContactMap = mapContacts.begin(); itContactMap != mapContacts.end();) {
-				ContactMap::const_iterator itCurContactMap = itContactMap++;
-				const CContact *pContact = itCurContactMap->second;
-				if (pContact->GetVersion() <= 1)
-					mapContacts.erase(itCurContactMap);
-			}
-			// Start file with 0 to prevent older clients from reading it.
-			file.WriteUInt32(0);
-			// Now tag it with a version which happens to be 2 (1 till 0.48a).
-			file.WriteUInt32(3);
-			file.WriteUInt32(1); // if we would use version >=3, this would mean that this is not a normal nodes.dat
-			file.WriteUInt32((uint32)mapContacts.size());
-			for (ContactMap::const_iterator itContactMap = mapContacts.begin(); itContactMap != mapContacts.end(); ++itContactMap) {
-				const CContact *pContact = itContactMap->second;
-				pContact->GetClientID(uID);
-				file.WriteUInt128(uID);
-				file.WriteUInt32(pContact->GetIPAddress());
-				file.WriteUInt16(pContact->GetUDPPort());
-				file.WriteUInt16(pContact->GetTCPPort());
-				file.WriteUInt8(pContact->GetVersion());
-			}
-			file.Close();
-			AddDebugLogLine(false, _T("Wrote %ld contact to bootstrap file."), mapContacts.size());
-		} else
-			DebugLogError(_T("Unable to store Kad file: %s"), (LPCTSTR)m_sFilename);
-	} catch (CFileException *e) {
-		e->Delete();
+		// The bootstrap method gets a very nice sample of contacts to save.
+		CUInt128 uRandom(CUInt128(0ul), 0);
+		CUInt128 uDistance = uRandom;
+		uDistance.Xor(uMe);
+		GetClosestTo(2, uRandom, uDistance, 1200, mapContacts, false, false);
+		// Start file with 0 to prevent older clients from reading it.
+		file.WriteUInt32(0);
+		// Now tag it with a version which happens to be 2 (1 till 0.48a).
+		file.WriteUInt32(3);
+		file.WriteUInt32(1); // if we would use version >=3, this would mean that this is not a normal nodes.dat
+		file.WriteUInt32((uint32)mapContacts.size());
+		for (ContactMap::const_iterator itContactMap = mapContacts.begin(); itContactMap != mapContacts.end(); ++itContactMap) {
+			const CContact &contact = *itContactMap->second;
+			file.WriteUInt128(contact.GetClientID());
+			file.WriteUInt32(contact.GetIPAddress());
+			file.WriteUInt16(contact.GetUDPPort());
+			file.WriteUInt16(contact.GetTCPPort());
+			file.WriteUInt8(contact.GetVersion());
+		}
+		file.Close();
+		AddDebugLogLine(false, _T("Wrote %ld contact to bootstrap file."), mapContacts.size());
+	} catch (CFileException *ex) {
+		ex->Delete();
 		AddDebugLogLine(false, _T("CFileException in CRoutingZone::writeFile"));
 	}
 #endif
@@ -493,8 +494,8 @@ bool CRoutingZone::Add(CContact *pContact, bool &bUpdate, bool &bOutIPVerified)
 	CContact *pContactUpdate = m_pBin->GetContact(pContact->GetClientID());
 	if (pContactUpdate) {
 		if (bUpdate) {
-			if (pContactUpdate->GetUDPKey().GetKeyValue(theApp.GetPublicIP(false)) != 0
-				&& pContactUpdate->GetUDPKey().GetKeyValue(theApp.GetPublicIP(false)) != pContact->GetUDPKey().GetKeyValue(theApp.GetPublicIP(false)))
+			if (pContactUpdate->GetUDPKey().GetKeyValue(theApp.GetPublicIP()) != 0
+				&& pContactUpdate->GetUDPKey().GetKeyValue(theApp.GetPublicIP()) != pContact->GetUDPKey().GetKeyValue(theApp.GetPublicIP()))
 			{
 				// if our existing contact has a UDPSender-Key (which should be the case for all > = 0.49a clients)
 				// except if our IP has changed recently, we demand that the key is the same as the key we received
@@ -502,7 +503,7 @@ bool CRoutingZone::Add(CContact *pContact, bool &bUpdate, bool &bOutIPVerified)
 				// hijack this entry
 				DebugLogWarning(_T("Kad: Sender (%s) tried to update contact entry but failed to provide the proper sender key (Sent Empty: %s) for the entry (%s) - denying update")
 					, (LPCTSTR)ipstr(pContact->GetNetIP())
-					, pContact->GetUDPKey().GetKeyValue(theApp.GetPublicIP(false)) == 0 ? _T("Yes") : _T("No")
+					, pContact->GetUDPKey().GetKeyValue(theApp.GetPublicIP()) == 0 ? _T("Yes") : _T("No")
 					, (LPCTSTR)ipstr(pContactUpdate->GetNetIP()));
 				bUpdate = false;
 			} else if (pContactUpdate->GetVersion() >= KADEMLIA_VERSION1_46c && pContactUpdate->GetVersion() < KADEMLIA_VERSION6_49aBETA
@@ -530,7 +531,7 @@ bool CRoutingZone::Add(CContact *pContact, bool &bUpdate, bool &bOutIPVerified)
 #ifdef _DEBUG
 				// just for outlining, get removed anyway
 				//debug logging stuff - remove later
-				if (pContact->GetUDPKey().GetKeyValue(theApp.GetPublicIP(false)) == 0) {
+				if (pContact->GetUDPKey().GetKeyValue(theApp.GetPublicIP()) == 0) {
 					if (pContact->GetVersion() >= KADEMLIA_VERSION6_49aBETA && pContact->GetType() < 2)
 						AddDebugLogLine(DLP_LOW, false, _T("Updating > 0.49a + type < 2 contact without valid key stored %s"), (LPCTSTR)ipstr(pContact->GetNetIP()));
 				} else
@@ -610,9 +611,9 @@ CContact* CRoutingZone::GetRandomContact(uint32 nMaxType, uint32 nMinKadVersion)
 	if (IsLeaf())
 		return m_pBin->GetRandomContact(nMaxType, nMinKadVersion);
 
-	uint32 nZone = rand() & 1;
+	int nZone = rand() & 1;
 	CContact *pContact = m_pSubZones[nZone]->GetRandomContact(nMaxType, nMinKadVersion);
-	return (pContact != NULL) ? pContact : m_pSubZones[static_cast<int>(nZone != 1)]->GetRandomContact(nMaxType, nMinKadVersion);
+	return (pContact != NULL) ? pContact : m_pSubZones[nZone ^ 1]->GetRandomContact(nMaxType, nMinKadVersion);
 }
 
 void CRoutingZone::GetClosestTo(uint32 uMaxType, const CUInt128 &uTarget, const CUInt128 &uDistance, uint32 uMaxRequired, ContactMap &rmapResult, bool bEmptyFirst, bool bInUse) const
@@ -728,11 +729,6 @@ uint32 CRoutingZone::Consolidate()
 	return uMergeCount;
 }
 
-bool CRoutingZone::IsLeaf() const
-{
-	return (m_pBin != NULL);
-}
-
 CRoutingZone* CRoutingZone::GenSubZone(int iSide)
 {
 	CUInt128 uNewIndex(m_uZoneIndex);
@@ -747,11 +743,6 @@ void CRoutingZone::StartTimer()
 	// Start filling the tree, closest bins first.
 	m_tNextBigTimer = time(NULL) + SEC(10);
 	CKademlia::AddEvent(this);
-}
-
-void CRoutingZone::StopTimer()
-{
-	CKademlia::RemoveEvent(this);
 }
 
 bool CRoutingZone::OnBigTimer()
@@ -772,7 +763,7 @@ uint32 CRoutingZone::EstimateCount()
 	if (!IsLeaf())
 		return 0;
 	if (m_uLevel < KBASE)
-		return (uint32)(pow(2.0F, (int)m_uLevel)*K);
+		return (uint32)(pow(2.0f, (int)m_uLevel) * K);
 	CRoutingZone *pCurZone = m_pSuperZone->m_pSuperZone->m_pSuperZone;
 	// Find out how full this part of the tree is.
 	float fModify = pCurZone->GetNumContacts() / (K * 2.0f);
@@ -816,7 +807,7 @@ void CRoutingZone::OnSmallTimer()
 	m_pBin->GetEntries(listEntries);
 	for (ContactArray::const_iterator itContact = listEntries.begin(); itContact != listEntries.end(); ++itContact) {
 		pContact = *itContact;
-		if (pContact->GetType() == 4) {
+		if (pContact->GetType() == 4)
 			if (((pContact->m_tExpires > 0) && (pContact->m_tExpires <= tNow))) {
 				if (!pContact->InUse()) {
 					m_pBin->RemoveContact(pContact);
@@ -824,17 +815,17 @@ void CRoutingZone::OnSmallTimer()
 				}
 				continue;
 			}
-		}
+
 		if (pContact->m_tExpires == 0)
 			pContact->m_tExpires = tNow;
 	}
 	pContact = m_pBin->GetOldest();
-	if (pContact != NULL) {
+	if (pContact != NULL)
 		if (pContact->m_tExpires >= tNow || pContact->GetType() == 4) {
 			m_pBin->PushToBottom(pContact);
 			pContact = NULL;
 		}
-	}
+
 	if (pContact != NULL) {
 		pContact->CheckingType();
 		if (pContact->GetVersion() >= KADEMLIA_VERSION6_49aBETA) {
@@ -898,13 +889,11 @@ uint32 CRoutingZone::GetBootstrapContacts(ContactArray &rlistResult, uint32 uMax
 	try {
 		ContactArray top;
 		TopDepth(LOG_BASE_EXPONENT, top);
-		if (!top.empty()) {
-			for (ContactArray::const_iterator itContact = top.begin(); itContact != top.end(); ++itContact) {
+		if (!top.empty())
+			for (ContactArray::const_iterator itContact = top.begin(); uRetVal < uMaxRequired && itContact != top.end(); ++itContact) {
 				rlistResult.push_back(*itContact);
-				if (++uRetVal >= uMaxRequired)
-					break;
+				++uRetVal;
 			}
-		}
 	} catch (...) {
 		AddDebugLogLine(false, _T("Exception in CRoutingZone::getBoostStrapContacts"));
 	}
@@ -938,21 +927,19 @@ void CRoutingZone::SetAllContactsVerified()
 
 bool CRoutingZone::IsAcceptableContact(const CContact *pToCheck) const
 {
-	// Check if we know a contact with the same ID or IP but not matching IP/ID and other limitations, similar checks like when adding a node to the table except allowing duplicates
-	// we use this to check KADEMLIA_RES routing answers on searches
+	// Check if we know a contact with the same ID or IP but not matching IP/ID and other limitations
+	// This is similar to adding a node to the table except alloweding duplicates
+	// We use this to check KADEMLIA_RES routing answers on searches
 	if (pToCheck->GetVersion() < KADEMLIA_VERSION2_47a)	// No Kad1 Contacts allowed
 		return false;
 	CContact *pDuplicate = GetContact(pToCheck->GetClientID());
 	if (pDuplicate != NULL) {
-		if (pDuplicate->IsIpVerified()
-			&& (pDuplicate->GetIPAddress() != pToCheck->GetIPAddress() || pDuplicate->GetUDPPort() != pToCheck->GetUDPPort()))
-		{
-			// already existing verified node with different IP
-			return false;
-		}
-		return true; // node exists already in our routing table, that's fine
+		//false - a verified node with different IP exists
+		//true - node exists already in our routing table, that's fine
+		return !pDuplicate->IsIpVerified()
+			|| (pDuplicate->GetIPAddress() == pToCheck->GetIPAddress() && pDuplicate->GetUDPPort() == pToCheck->GetUDPPort());
 	}
-	// if the node is not yet known, check if we out IP limitations would hit
+	// if the node is not yet known, check if IP limitations would hit
 #ifdef _DEBUG
 	return CRoutingBin::CheckGlobalIPLimits(pToCheck->GetIPAddress(), pToCheck->GetUDPPort(), true);
 #else

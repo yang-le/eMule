@@ -239,9 +239,9 @@ CIndexed::~CIndexed()
 			AddDebugLogLine(false, _T("Wrote %u source, %u keyword, and %u load entries"), uTotalSource, uTotalKey, uTotalLoad);
 
 
-		} catch (CIOException *ioe) {
-			AddDebugLogLine(false, _T("Exception in CIndexed::~CIndexed (IO error(%i))"), ioe->m_iCause);
-			ioe->Delete();
+		} catch (CIOException *ex) {
+			AddDebugLogLine(false, _T("Exception in CIndexed::~CIndexed (IO error(%i))"), ex->m_iCause);
+			ex->Delete();
 		} catch (...) {
 			AddDebugLogLine(false, _T("Exception in CIndexed::~CIndexed"));
 		}
@@ -1047,9 +1047,9 @@ int CIndexed::CLoadDataThread::Run()
 			} else
 				DebugLogWarning(_T("Unable to load Kad file: %s"), (LPCTSTR)m_sSourceFileName);
 		}
-	} catch (CIOException *ioe) {
-		AddDebugLogLine(false, _T("CIndexed::CLoadDataThread::Run (IO error(%i))"), ioe->m_iCause);
-		ioe->Delete();
+	} catch (CIOException *ex) {
+		AddDebugLogLine(false, _T("CIndexed::CLoadDataThread::Run (IO error(%i))"), ex->m_iCause);
+		ex->Delete();
 	} catch (...) {
 		AddDebugLogLine(false, _T("Exception in CIndexed::CLoadDataThread::Run"));
 		ASSERT(0);

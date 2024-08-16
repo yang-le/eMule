@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -43,7 +43,6 @@ END_MESSAGE_MAP()
 
 CED2kLinkDlg::CED2kLinkDlg()
 	: CResizablePage(CED2kLinkDlg::IDD)
-	, m_strLinks(_T(" "))
 	, m_paFiles()
 	, m_bDataChanged()
 	, m_bReducedDlg()
@@ -72,19 +71,16 @@ BOOL CED2kLinkDlg::OnInitDialog()
 		AddAnchor(IDC_LD_HASHSETCHE, BOTTOM_LEFT, BOTTOM_LEFT);
 		AddAnchor(IDC_LD_HOSTNAMECHE, BOTTOM_LEFT, BOTTOM_LEFT);
 
-		// enabled/disable checkbox depending on situation
-		if (theApp.IsConnected() && !theApp.IsFirewalled())
-			GetDlgItem(IDC_LD_SOURCECHE)->EnableWindow(TRUE);
-		else {
-			GetDlgItem(IDC_LD_SOURCECHE)->EnableWindow(FALSE);
+		// enabled/disable checkboxes depending on situation
+		bool b = theApp.IsConnected() && !theApp.IsFirewalled();
+		GetDlgItem(IDC_LD_SOURCECHE)->EnableWindow(b);
+		if (!b)
 			CheckDlgButton(IDC_LD_SOURCECHE, BST_UNCHECKED);
-		}
-		if (theApp.IsConnected() && !theApp.IsFirewalled() && thePrefs.GetYourHostname().Find(_T('.')) >= 0)
-			GetDlgItem(IDC_LD_HOSTNAMECHE)->EnableWindow(TRUE);
-		else {
-			GetDlgItem(IDC_LD_HOSTNAMECHE)->EnableWindow(FALSE);
+		else
+			b = thePrefs.GetYourHostname().Find(_T('.')) >= 0;
+		GetDlgItem(IDC_LD_HOSTNAMECHE)->EnableWindow(b);
+		if (!b)
 			CheckDlgButton(IDC_LD_HOSTNAMECHE, BST_UNCHECKED);
-		}
 	} else {
 		CRect rcDefault;
 		GetDlgItem(IDC_LD_LINKGROUP)->GetWindowRect(rcDefault);
@@ -190,16 +186,14 @@ void CED2kLinkDlg::UpdateLink()
 
 	//skip update if nothing has changed
 	if (m_strLinks != strLinks) {
-		m_ctrlLinkEdit.SetWindowText(strLinks);
 		m_strLinks = strLinks;
+		m_ctrlLinkEdit.SetWindowText(m_strLinks);
 	}
 }
 
 void CED2kLinkDlg::OnBnClickedClipboard()
 {
-	CString strBuffer;
-	m_ctrlLinkEdit.GetWindowText(strBuffer);
-	theApp.CopyTextToClipboard(strBuffer);
+	theApp.CopyTextToClipboard(m_strLinks);
 }
 
 void CED2kLinkDlg::OnSettingsChange()

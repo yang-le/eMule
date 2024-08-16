@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2004-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
+//Copyright (C)2004-2024 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -14,7 +14,6 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
 #pragma once
 #include <Iads.h>
 #include <activeds.h>

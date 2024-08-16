@@ -596,10 +596,10 @@ resend:
 			//Write the data to file
 			try {
 				DECODE_DATA(m_FileToWrite, szReadBuf, dwBytesRead);
-			} catch (CFileException *e) {
+			} catch (CFileException *ex) {
 				TRACE(_T("An exception occurred while writing to the download file\n"));
-				HandleThreadErrorWithLastError(GetResString(IDS_HTTPDOWNLOAD_ERROR_READFILE), e->m_lOsError);
-				e->Delete();
+				HandleThreadErrorWithLastError(GetResString(IDS_HTTPDOWNLOAD_ERROR_READFILE), ex->m_lOsError);
+				ex->Delete();
 				//clean up any encoding data before we return
 				ENCODING_CLEAN_UP;
 				return;

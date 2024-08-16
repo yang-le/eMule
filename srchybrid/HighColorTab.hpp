@@ -21,7 +21,7 @@
 
 namespace HighColorTab
 {
-  /*! \brief Policy class for creating image list.
+/*! \brief Policy class for creating image list.
 
 	Policy for creating a high color (32 bits) image list. The policy
 	ensure that there is a Win32 image list associated with the CImageList.
@@ -29,7 +29,8 @@ namespace HighColorTab
 
 	Returned image list is wrapped in an std::auto_ptr.
 
-	\sa UpdateImageListFull  */
+	\sa UpdateImageListFull
+*/
 	struct CHighColorListCreator
 	{
 	  /*! Create the image list.

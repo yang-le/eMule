@@ -50,7 +50,7 @@ protected:
 	bool	m_bIsPreview;
 
 private:
+	UINT	m_used3dlevel;
 	CRBMap<uint64, COLORREF> m_Spans;	// SLUGFILLER: speedBarShader
 	float	*m_Modifiers;
-	UINT	m_used3dlevel;
 };

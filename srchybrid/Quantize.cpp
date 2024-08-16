@@ -74,7 +74,7 @@ BOOL CQuantizer::ProcessImage(HANDLE hImage)
 void CQuantizer::AddColor(NODE **ppNode, BYTE r, BYTE g, BYTE b, BYTE a,
 	UINT nColorBits, UINT nLevel, UINT *pLeafCount, NODE **pReducibleNodes)
 {
-	static const BYTE mask[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+	static BYTE const mask[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 
 	// If the node doesn't exist, create it.
 	if (*ppNode == NULL)

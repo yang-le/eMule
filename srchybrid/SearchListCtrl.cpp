@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -330,7 +330,7 @@ void CSearchListCtrl::Localize()
 	CString strRes(GetResString(IDS_SEARCHAVAIL));
 	if (thePrefs.IsExtControlsEnabled())
 		strRes.AppendFormat(_T(" (%s)"), (LPCTSTR)GetResString(IDS_DL_SOURCES)); //modify "availability" header
-	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)strRes);
+	hdi.pszText = (LPTSTR)(LPCTSTR)strRes;
 	GetHeaderCtrl()->SetItem(2, &hdi);
 
 	CreateMenus();
@@ -338,35 +338,9 @@ void CSearchListCtrl::Localize()
 
 void CSearchListCtrl::AddResult(const CSearchFile *toshow)
 {
-	bool bFilterActive = !theApp.emuledlg->searchwnd->m_pwndResults->m_astrFilter.IsEmpty();
-	bool bItemFiltered = bFilterActive && IsFilteredOut(toshow);
-
-	// update tab-counter for the given searchfile
-	CClosableTabCtrl &searchselect = theApp.emuledlg->searchwnd->GetSearchSelector();
-	TCITEM ti;
-	ti.mask = TCIF_PARAM;
-	for (int iItem = searchselect.GetItemCount(); --iItem >= 0;)
-		if (searchselect.GetItem(iItem, &ti) && ti.lParam != NULL) {
-			const SSearchParams* pSearchParams = reinterpret_cast<SSearchParams*>(ti.lParam);
-			if (pSearchParams->dwSearchID == toshow->GetSearchID()) {
-				UINT iAvailResults = searchlist->GetFoundFiles(toshow->GetSearchID());
-				CString strTabLabel(pSearchParams->strSearchTitle);
-				if (bFilterActive) {
-					int iFilteredResult = GetItemCount() + static_cast<int>(!bItemFiltered);
-					strTabLabel.AppendFormat(_T(" (%i/%u)"), iFilteredResult, iAvailResults);
-				} else
-					strTabLabel.AppendFormat(_T(" (%u)"), iAvailResults);
-				DupAmpersand(strTabLabel);
-				ti.pszText = const_cast<LPTSTR>((LPCTSTR)strTabLabel);
-				ti.mask = TCIF_TEXT;
-				searchselect.SetItem(iItem, &ti);
-				if (searchselect.GetCurSel() != iItem)
-					searchselect.HighlightItem(iItem);
-				break;
-			}
-		}
-
-	if (bItemFiltered || toshow->GetSearchID() != m_nResultsID)
+	if (toshow->GetSearchID() != m_nResultsID)
+		return;
+	if (!theApp.emuledlg->searchwnd->m_pwndResults->m_astrFilter.IsEmpty() && IsFilteredOut(toshow))
 		return;
 
 	// Turn off updates
@@ -432,17 +406,39 @@ void CSearchListCtrl::UpdateSearch(CSearchFile *toupdate)
 	}
 }
 
+void CSearchListCtrl::UpdateTabHeader(uint32 nResultsID)
+{
+	CClosableTabCtrl &searchselect = theApp.emuledlg->searchwnd->GetSearchSelector();
+
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	for (int iItem = searchselect.GetItemCount(); --iItem >= 0;)
+		if (searchselect.GetItem(iItem, &ti) && ti.lParam != NULL) {
+			const SSearchParams* pSearchParams = reinterpret_cast<SSearchParams*>(ti.lParam);
+			if (pSearchParams->dwSearchID == nResultsID) {
+				UINT iAvailResults = searchlist->GetFoundFiles(nResultsID);
+				CString strTabLabel(pSearchParams->strSearchTitle);
+				if (theApp.emuledlg->searchwnd->m_pwndResults->m_astrFilter.IsEmpty())
+					strTabLabel.AppendFormat(_T(" (%u)"), iAvailResults);
+				else
+					strTabLabel.AppendFormat(_T(" (%i/%u)"), GetItemCount(), iAvailResults);
+				DupAmpersand(strTabLabel);
+				ti.pszText = const_cast<LPTSTR>((LPCTSTR)strTabLabel);
+				ti.mask = TCIF_TEXT;
+				searchselect.SetItem(iItem, &ti);
+				if (searchselect.GetCurSel() != iItem)
+					searchselect.HighlightItem(iItem);
+				break;
+			}
+		}
+}
+
 bool CSearchListCtrl::IsComplete(const CSearchFile *pFile, UINT uSources) const
 {
-	int iComplete = pFile->IsComplete(uSources, pFile->GetCompleteSourceCount());
-
-	if (iComplete < 0)			// '< 0' ... unknown
-		return true;			// treat 'unknown' as complete
-
-	if (iComplete > 0)			// '> 0' ... we know it's complete
-		return true;
-
-	return false;				// '= 0' ... we know it's not complete
+	// '< 0' ... unknown; treat 'unknown' as complete
+	// '> 0' ... complete
+	// '= 0' ... not complete
+	return pFile->IsComplete(uSources, pFile->GetCompleteSourceCount()) != 0;
 }
 
 CString CSearchListCtrl::GetCompleteSourcesDisplayString(const CSearchFile *pFile, UINT uSources, bool *pbComplete) const
@@ -497,7 +493,7 @@ void CSearchListCtrl::RemoveResult(const CSearchFile *toremove)
 
 void CSearchListCtrl::ShowResults(uint32 nResultsID)
 {
-	if (m_nResultsID != 0 && nResultsID != m_nResultsID) {
+	if (nResultsID != m_nResultsID) {
 		// store the current state
 		CSortSelectionState *pCurState = new CSortSelectionState();
 		for (POSITION pos = GetFirstSelectedItemPosition(); pos != NULL;)
@@ -513,7 +509,7 @@ void CSearchListCtrl::ShowResults(uint32 nResultsID)
 
 	// recover stored state
 	CSortSelectionState *pNewState;
-	if (nResultsID != 0 && nResultsID != m_nResultsID && m_mapSortSelectionStates.Lookup(nResultsID, pNewState)) {
+	if (nResultsID != m_nResultsID && m_mapSortSelectionStates.Lookup(nResultsID, pNewState)) {
 		m_mapSortSelectionStates.RemoveKey(nResultsID);
 
 		// sort order
@@ -521,9 +517,9 @@ void CSearchListCtrl::ShowResults(uint32 nResultsID)
 		SortItems(SortProc, MAKELONG(pNewState->m_nSortItem, !pNewState->m_bSortAscending));
 		// fill in the items
 		m_nResultsID = nResultsID;
-		searchlist->ShowResults(m_nResultsID);
+		searchlist->ShowResults(nResultsID);
 		// set stored selectionstates
-		for (int i = (int)pNewState->m_aSelectedItems.GetCount(); --i >= 0;)
+		for (INT_PTR i = pNewState->m_aSelectedItems.GetCount(); --i >= 0;)
 			SetItemState(pNewState->m_aSelectedItems[i], LVIS_SELECTED, LVIS_SELECTED);
 
 		if (pNewState->m_nScrollPosition > 0) {
@@ -535,7 +531,7 @@ void CSearchListCtrl::ShowResults(uint32 nResultsID)
 		delete pNewState;
 	} else {
 		m_nResultsID = nResultsID;
-		searchlist->ShowResults(m_nResultsID);
+		searchlist->ShowResults(nResultsID);
 	}
 }
 
@@ -705,8 +701,8 @@ void CSearchListCtrl::OnContextMenu(CWnd*, CPoint point)
 	m_SearchFileMenu.EnableMenuItem(MP_GETED2KLINK, iSelected > 0 ? MF_ENABLED : MF_GRAYED);
 	m_SearchFileMenu.EnableMenuItem(MP_GETHTMLED2KLINK, iSelected > 0 ? MF_ENABLED : MF_GRAYED);
 	m_SearchFileMenu.EnableMenuItem(MP_REMOVESELECTED, iSelected > 0 ? MF_ENABLED : MF_GRAYED);
-	m_SearchFileMenu.EnableMenuItem(MP_REMOVE, theApp.emuledlg->searchwnd->CanDeleteSearch() ? MF_ENABLED : MF_GRAYED);
-	m_SearchFileMenu.EnableMenuItem(MP_REMOVEALL, theApp.emuledlg->searchwnd->CanDeleteAllSearches() ? MF_ENABLED : MF_GRAYED);
+	m_SearchFileMenu.EnableMenuItem(MP_REMOVE, theApp.emuledlg->searchwnd->CanDeleteSearches() ? MF_ENABLED : MF_GRAYED);
+	m_SearchFileMenu.EnableMenuItem(MP_REMOVEALL, theApp.emuledlg->searchwnd->CanDeleteSearches() ? MF_ENABLED : MF_GRAYED);
 	m_SearchFileMenu.EnableMenuItem(MP_SEARCHRELATED, iSelected > 0 && theApp.emuledlg->searchwnd->CanSearchRelatedFiles() ? MF_ENABLED : MF_GRAYED);
 	UINT uInsertedMenuItem = 0;
 	if (iToPreview == 1) {
@@ -972,7 +968,7 @@ void CSearchListCtrl::OnLvnGetInfoTip(LPNMHDR pNMHDR, LRESULT *pResult)
 					, (LPCTSTR)GetResString(IDS_FD_SIZE), (LPCTSTR)CastItoXBytes((uint64)file->GetFileSize()));
 
 				const CArray<CTag*, CTag*> &tags = file->GetTags();
-				for (int i = 0; i < tags.GetCount(); ++i) {
+				for (INT_PTR i = 0; i < tags.GetCount(); ++i) {
 					const CTag *tag = tags[i];
 					if (tag) {
 						CString strTag;
@@ -1083,7 +1079,7 @@ void CSearchListCtrl::OnLvnGetInfoTip(LPNMHDR pNMHDR, LRESULT *pResult)
 					}
 
 					const CSimpleArray<CSearchFile::SClient> &aClients = file->GetClients();
-					for (int i = 0; i < aClients.GetSize(); ++i) {
+					for (INT_PTR i = 0; i < aClients.GetSize(); ++i) {
 						uint32 uClientIP = aClients[i].m_nIP;
 						uint32 uServerIP = aClients[i].m_nServerIP;
 						CString strSource;
@@ -1104,7 +1100,7 @@ void CSearchListCtrl::OnLvnGetInfoTip(LPNMHDR pNMHDR, LRESULT *pResult)
 
 				if (file->GetServers().GetSize()) {
 					const CSimpleArray<CSearchFile::SServer> &aServers = file->GetServers();
-					for (int i = 0; i < aServers.GetSize(); ++i) {
+					for (INT_PTR i = 0; i < aServers.GetSize(); ++i) {
 						uint32 uServerIP = aServers[i].m_nIP;
 						CString strServer;
 						if (i == 0)

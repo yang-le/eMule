@@ -29,9 +29,9 @@
 	}
 
 #define	CATCH_STR_EXCEPTION(fname) \
-	catch (const CString &strError){ \
+	catch (const CString &sError){ \
 		if (thePrefs.GetVerbose()) \
-			DebugLogError(LOG_STATUSBAR, _T("Unknown CString exception in ") fname _T(" - %s"), (LPCTSTR)strError); \
+			DebugLogError(LOG_STATUSBAR, _T("Unknown CString exception in ") fname _T(" - %s"), (LPCTSTR)sError); \
 	}
 
 #define CATCH_DFLT_EXCEPTIONS(fname) \

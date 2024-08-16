@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2003-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
+//Copyright (C)2003-2024 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -46,9 +46,7 @@ PreviewDlg::PreviewDlg(CWnd *pParent /*=NULL*/)
 
 PreviewDlg::~PreviewDlg()
 {
-	for (int i = _countof(m_icons); --i >= 0;)
-		if (m_icons[i])
-			VERIFY(::DestroyIcon(m_icons[i]));
+	DestroyIconsArr(m_icons, _countof(m_icons));
 }
 
 void PreviewDlg::DoDataExchange(CDataExchange *pDX)

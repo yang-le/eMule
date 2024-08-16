@@ -1293,7 +1293,7 @@ CString CWebServer::_GetServerList(const ThreadData &Data)
 			HTTPProcessData.Replace(_T("[Ping]"), _T(""));
 		else {
 			CString sPing;
-			sPing.Format(_T("%lu"), cur_srv.nServerPing);
+			sPing.Format(_T("%u"), cur_srv.nServerPing);
 			HTTPProcessData.Replace(_T("[Ping]"), sPing);
 		}
 
@@ -3410,7 +3410,7 @@ CString CWebServer::_GetPreferences(const ThreadData &Data)
 	m_sTestURL.Format(PORTTESTURL, thePrefs.GetPort(), thePrefs.GetUDPPort(), thePrefs.GetLanguageID());
 
 	// the portcheck will need to do an obfuscated callback too if obfuscation is requested, so we have to provide our userhash so it can create the key
-	if (thePrefs.IsClientCryptLayerRequested())
+	if (thePrefs.IsCryptLayerPreferred())
 		m_sTestURL.AppendFormat(_T("&obfuscated_test=%s"), (LPCTSTR)md4str(thePrefs.GetUserHash()));
 
 	Out.Replace(_T("[CONNECTIONTESTLINK]"), _SpecialChars(m_sTestURL));
@@ -3418,10 +3418,10 @@ CString CWebServer::_GetPreferences(const ThreadData &Data)
 
 
 	CString sT;
-	sT.Format(_T("%u"), thePrefs.GetMaxDownload() == UNLIMITED ? 0 : thePrefs.GetMaxDownload());
+	sT.Format(_T("%u"), thePrefs.GetMaxDownload() == UNLIMITED ? 0u : thePrefs.GetMaxDownload());
 	Out.Replace(_T("[MaxDownVal]"), sT);
 
-	sT.Format(_T("%u"), thePrefs.GetMaxUpload() == UNLIMITED ? 0 : thePrefs.GetMaxUpload());
+	sT.Format(_T("%u"), thePrefs.GetMaxUpload() == UNLIMITED ? 0u : thePrefs.GetMaxUpload());
 	Out.Replace(_T("[MaxUpVal]"), sT);
 
 	sT.Format(_T("%u"), thePrefs.GetMaxGraphDownloadRate());
@@ -3649,7 +3649,7 @@ CString CWebServer::_GetDownloadGraph(const ThreadData &Data, const CString &fil
 				if (i > lastindex && lastcolor < _countof(styles_active))
 					Out.AppendFormat(pThis->m_Templates.sProgressbarImgs, barcolours[lastcolor], i - lastindex);
 				lastcolor = (BYTE)(s_ChunkBar[i] - '0');
-				ASSERT(lastcolor >= 0 && lastcolor <= 9);
+				ASSERT(lastcolor <= 9);
 				lastindex = i;
 			}
 		}

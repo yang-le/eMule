@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -46,8 +46,8 @@ public:
 	void	ConnectionFailed(CServerSocket *sender);
 	void	ConnectionEstablished(CServerSocket *sender);
 
-	void	ConnectToAnyServer()			{ ConnectToAnyServer(0, true, true); }
-	void	ConnectToAnyServer(UINT startAt, bool prioSort = false, bool isAuto = true, bool bNoCrypt = false);
+	void	ConnectToAnyServer()			{ ConnectToAnyServer(0, true, true, false); }
+	void	ConnectToAnyServer(INT_PTR startAt, bool prioSort = false, bool isAuto = true, bool bNoCrypt = false);
 	void	ConnectToServer(CServer *server, bool multiconnect = false, bool bNoCrypt = false);
 	void	StopConnectionTry();
 	static  VOID CALLBACK RetryConnectTimer(HWND hWnd, UINT nMsg, UINT_PTR nId, DWORD dwTime) noexcept;
@@ -85,8 +85,8 @@ private:
 	CServerSocket *connectedsocket;
 	CUDPSocket *udpsocket;
 	UINT_PTR m_idRetryTimer;
+	INT_PTR	m_uStartAutoConnectPos;
 	uint32	m_nLocalIP;
-	UINT	m_uStartAutoConnectPos;
 	uint8	max_simcons;
 	bool	connecting;
 	bool	singleconnecting;

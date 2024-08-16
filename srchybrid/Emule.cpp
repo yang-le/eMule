@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -57,7 +57,6 @@
 #include "Preferences.h"
 #include "secrunasuser.h"
 #include "SafeFile.h"
-#include "PeerCacheFinder.h"
 #include "emuleDlg.h"
 #include "SearchDlg.h"
 #include "enbitmap.h"
@@ -292,6 +291,7 @@ CemuleApp::CemuleApp(LPCTSTR lpszAppName)
 	, m_dwPublicIP()
 	, m_bGuardClipboardPrompt()
 	, m_bAutoStart()
+	, m_bStandbyOff()
 {
 	// Initialize Windows security features.
 #if !defined(_DEBUG) && !defined(_WIN64)
@@ -336,12 +336,12 @@ CemuleApp::CemuleApp(LPCTSTR lpszAppName)
 
 	// create the protocol version number
 	CString strTmp;
-	strTmp.Format(_T("0x%u"), m_dwProductVersionMS);
+	strTmp.Format(_T("0x%lu"), m_dwProductVersionMS);
 	VERIFY(_stscanf(strTmp, _T("0x%x"), &m_uCurVersionShort) == 1);
 	ASSERT(m_uCurVersionShort < 0x99);
 
 	// create the version check number
-	strTmp.Format(_T("0x%u%c"), m_dwProductVersionMS, _T('A') + CemuleApp::m_nVersionUpd);
+	strTmp.Format(_T("0x%lu%c"), m_dwProductVersionMS, _T('A') + CemuleApp::m_nVersionUpd);
 	VERIFY(_stscanf(strTmp, _T("0x%x"), &m_uCurVersionCheck) == 1);
 	ASSERT(m_uCurVersionCheck < 0x999);
 // MOD Note: end
@@ -614,7 +614,6 @@ BOOL CemuleApp::InitInstance()
 	ipfilter = new CIPFilter();
 	webserver = new CWebServer(); // Web Server [kuchin]
 	scheduler = new CScheduler();
-	m_pPeerCache = new CPeerCacheFinder();
 
 	// ZZ:UploadSpeedSense -->
 	lastCommonRouteFinder = new LastCommonRouteFinder();
@@ -949,14 +948,9 @@ void CemuleApp::OnlineSig() // Added By Bouc7
 	//	 -	Although this file is a text file, we set the file mode to 'binary' because of backward
 	//		compatibility with older eMule versions.
 	CSafeBufferedFile file;
-	CFileException fexp;
-	if (!file.Open(strSigPath, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyWrite | CFile::typeBinary, &fexp)) {
-		CString strError;
-		strError.Format(_T("%s %s"), (LPCTSTR)GetResString(IDS_ERROR_SAVEFILE), _szFileName);
-		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		GetExceptionMessage(fexp, szError, _countof(szError));
-		strError.Format(_T(" - %s"), szError);
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+	CFileException fex;
+	if (!file.Open(strSigPath, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyWrite | CFile::typeBinary, &fex)) {
+		LogError(LOG_STATUSBAR, _T("%s %s%s"), (LPCTSTR)GetResString(IDS_ERROR_SAVEFILE), _szFileName, (LPCTSTR)CExceptionStrDash(fex));
 		return;
 	}
 
@@ -988,13 +982,11 @@ void CemuleApp::OnlineSig() // Added By Bouc7
 			file.Write("0", 1);
 		file.Write("\n", 1);
 
-		_snprintf(buffer, _countof(buffer), "%.1f", (float)downloadqueue->GetDatarate() / 1024);
-		buffer[_countof(buffer) - 1] = '\0';
+		snprintf(buffer, _countof(buffer), "%.1f", (float)downloadqueue->GetDatarate() / 1024);
 		file.Write(buffer, (UINT)strlen(buffer));
 		file.Write("|", 1);
 
-		_snprintf(buffer, _countof(buffer), "%.1f", (float)uploadqueue->GetDatarate() / 1024);
-		buffer[_countof(buffer) - 1] = '\0';
+		snprintf(buffer, _countof(buffer), "%.1f", (float)uploadqueue->GetDatarate() / 1024);
 		file.Write(buffer, (UINT)strlen(buffer));
 		file.Write("|", 1);
 
@@ -1003,11 +995,7 @@ void CemuleApp::OnlineSig() // Added By Bouc7
 
 		file.Close();
 	} catch (CFileException *ex) {
-		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		GetExceptionMessage(*ex, szError, _countof(szError));
-		CString strError;
-		strError.Format(_T("%s %s - %s"), (LPCTSTR)GetResString(IDS_ERROR_SAVEFILE), _szFileName, szError);
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+		LogError(LOG_STATUSBAR, _T("%s %s%s"), (LPCTSTR)GetResString(IDS_ERROR_SAVEFILE), _szFileName, (LPCTSTR)CExceptionStrDash(*ex));
 		ex->Delete();
 	}
 } //End Added By Bouc7
@@ -1150,9 +1138,14 @@ uint32 CemuleApp::GetID()
 	return static_cast<uint32>(Kademlia::CKademlia::IsConnected() && Kademlia::CKademlia::IsFirewalled());
 }
 
-uint32 CemuleApp::GetPublicIP(bool bIgnoreKadIP) const
+uint32 CemuleApp::GetED2KPublicIP() const
 {
-	if (!bIgnoreKadIP && m_dwPublicIP == 0 && Kademlia::CKademlia::IsConnected()) {
+	return m_dwPublicIP;
+}
+
+uint32 CemuleApp::GetPublicIP() const
+{
+	if (m_dwPublicIP == 0 && Kademlia::CKademlia::IsConnected()) {
 		uint32 uIP = Kademlia::CKademlia::GetIPAddress();
 		if (uIP)
 			return ntohl(uIP);
@@ -1164,14 +1157,12 @@ void CemuleApp::SetPublicIP(const uint32 dwIP)
 {
 	if (dwIP != 0) {
 		ASSERT(!::IsLowID(dwIP));
-		ASSERT(m_pPeerCache);
 
 		if (GetPublicIP() == 0)
 			AddDebugLogLine(DLP_VERYLOW, false, _T("My public IP Address is: %s"), (LPCTSTR)ipstr(dwIP));
 		else if (Kademlia::CKademlia::IsConnected() && Kademlia::CKademlia::GetPrefs()->GetIPAddress())
 			if (htonl(Kademlia::CKademlia::GetIPAddress()) != dwIP)
 				AddDebugLogLine(DLP_DEFAULT, false, _T("Public IP Address reported by Kademlia (%s) differs from new-found (%s)"), (LPCTSTR)ipstr(htonl(Kademlia::CKademlia::GetIPAddress())), (LPCTSTR)ipstr(dwIP));
-		m_pPeerCache->FoundMyPublicIPAddress(dwIP);
 	} else
 		AddDebugLogLine(DLP_VERYLOW, false, _T("Deleted public IP"));
 
@@ -1237,7 +1228,7 @@ HICON CemuleApp::LoadIcon(LPCTSTR lpszResourceName, int cx, int cy, UINT uFlags)
 		if (szSkinResource[0] != _T('\0')) {
 			// expand any optional available environment strings
 			TCHAR szExpSkinRes[MAX_PATH];
-			if (ExpandEnvironmentStrings(szSkinResource, szExpSkinRes, _countof(szExpSkinRes)) != 0) {
+			if (::ExpandEnvironmentStrings(szSkinResource, szExpSkinRes, _countof(szExpSkinRes)) != 0) {
 				_tcsncpy(szSkinResource, szExpSkinRes, _countof(szSkinResource));
 				szSkinResource[_countof(szSkinResource) - 1] = _T('\0');
 			}
@@ -1292,12 +1283,8 @@ HICON CemuleApp::LoadIcon(LPCTSTR lpszResourceName, int cx, int cy, UINT uFlags)
 							}
 						}
 
-						for (unsigned i = 0; i < _countof(aIconsLarge); ++i) {
-							if (aIconsLarge[i] != NULL)
-								VERIFY(::DestroyIcon(aIconsLarge[i]));
-							if (aIconsSmall[i] != NULL)
-								VERIFY(::DestroyIcon(aIconsSmall[i]));
-						}
+						DestroyIconsArr(aIconsLarge, _countof(aIconsLarge));
+						DestroyIconsArr(aIconsSmall, _countof(aIconsSmall));
 					}
 				}
 			} else {
@@ -1346,7 +1333,7 @@ HBITMAP CemuleApp::LoadImage(LPCTSTR lpszResourceName, LPCTSTR pszResourceType) 
 		if (szSkinResource[0] != _T('\0')) {
 			// expand any optional available environment strings
 			TCHAR szExpSkinRes[MAX_PATH];
-			if (ExpandEnvironmentStrings(szSkinResource, szExpSkinRes, _countof(szExpSkinRes)) != 0) {
+			if (::ExpandEnvironmentStrings(szSkinResource, szExpSkinRes, _countof(szExpSkinRes)) != 0) {
 				_tcsncpy(szSkinResource, szExpSkinRes, _countof(szSkinResource));
 				szSkinResource[_countof(szSkinResource) - 1] = _T('\0');
 			}
@@ -1386,7 +1373,7 @@ CString CemuleApp::GetSkinFileItem(LPCTSTR lpszResourceName, LPCTSTR pszResource
 		if (szSkinResource[0] != _T('\0')) {
 			// expand any optional available environment strings
 			TCHAR szExpSkinRes[MAX_PATH];
-			if (ExpandEnvironmentStrings(szSkinResource, szExpSkinRes, _countof(szExpSkinRes)) != 0) {
+			if (::ExpandEnvironmentStrings(szSkinResource, szExpSkinRes, _countof(szExpSkinRes)) != 0) {
 				_tcsncpy(szSkinResource, szExpSkinRes, _countof(szSkinResource));
 				szSkinResource[_countof(szSkinResource) - 1] = _T('\0');
 			}
@@ -1527,7 +1514,7 @@ bool CemuleApp::IsEd2kLinkInClipboard(LPCSTR pszLinkType, int iLinkTypeLen)
 			HGLOBAL	hText = GetClipboardData(CF_TEXT);
 			if (hText != NULL) {
 				// Use the ANSI string
-				LPCSTR pszText = (LPCSTR)::GlobalLock(hText);
+				LPCSTR pszText = static_cast<LPCSTR>(::GlobalLock(hText));
 				if (pszText != NULL) {
 					while (isspace(*pszText))
 						++pszText;
@@ -1951,13 +1938,16 @@ void CemuleApp::UpdateLargeIconSize()
 
 void CemuleApp::ResetStandByIdleTimer()
 {
-	// check if anything is going on (ongoing upload, download or connected) and reset the idle timer if so
+	// Prevent system from falling asleep if connected or there are ongoing data transfers (upload or download)
+	// Since Windows 11 there is no option to reset the idle timer
 	if (IsConnected()
 		|| (uploadqueue != NULL && uploadqueue->GetUploadQueueLength() > 0)
 		|| (downloadqueue != NULL && downloadqueue->GetDatarate() > 0))
 	{
-		VERIFY(::SetThreadExecutionState(ES_SYSTEM_REQUIRED));
-	}
+		if (!m_bStandbyOff && ::SetThreadExecutionState(ES_SYSTEM_REQUIRED | ES_CONTINUOUS))
+			m_bStandbyOff = true;
+	} else if (m_bStandbyOff && ::SetThreadExecutionState(ES_CONTINUOUS))
+		m_bStandbyOff = false;
 }
 
 bool CemuleApp::IsXPThemeActive() const
@@ -1968,6 +1958,6 @@ bool CemuleApp::IsXPThemeActive() const
 
 bool CemuleApp::IsVistaThemeActive() const
 {
-	// TRUE: If a Vista (or better) style is active
+	// Return true if Vista (or better) style is active
 	return theApp.m_ullComCtrlVer >= MAKEDLLVERULL(6, 16, 0, 0) && g_xpStyle.IsThemeActive() && g_xpStyle.IsAppThemed();
 }

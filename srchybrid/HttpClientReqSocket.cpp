@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -85,9 +85,7 @@ void CHttpClientReqSocket::DataReceived(const BYTE *pucData, UINT uSize)
 		strError.Format(_T("Memory exception; %s"), (LPCTSTR)DbgGetClientInfo());
 		ex->Delete();
 	} catch (CFileException *ex) {
-		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		GetExceptionMessage(*ex, szError, _countof(szError));
-		strError.Format(_T("File exception - %s"), szError);
+		strError.Format(_T("File exception%s"), (LPCTSTR)CExceptionStrDash(*ex));
 		ex->Delete();
 	} catch (const CString &ex) {
 		strError.Format(_T("%s; %s"), (LPCTSTR)ex, (LPCTSTR)DbgGetClientInfo());
@@ -97,7 +95,7 @@ void CHttpClientReqSocket::DataReceived(const BYTE *pucData, UINT uSize)
 
 	if (!bResult && !deletethis) {
 		if (thePrefs.GetVerbose() && thePrefs.GetDebugClientTCPLevel() <= 0)
-			for (int i = 0; i < m_astrHttpHeaders.GetCount(); ++i)
+			for (INT_PTR i = 0; i < m_astrHttpHeaders.GetCount(); ++i)
 				AddDebugLogLine(false, _T("<%hs"), (LPCSTR)m_astrHttpHeaders[i]);
 
 		// In case this socket is attached to a CUrlClient, we are dealing with the real CUpDownClient here

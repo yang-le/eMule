@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -162,7 +162,7 @@ BOOL CStatisticsDlg::OnInitDialog()
 	GetDlgItem(IDC_SCOPE_D)->GetWindowRect(rcDown);
 	GetDlgItem(IDC_SCOPE_D)->DestroyWindow();
 	ScreenToClient(rcDown);
-	m_DownloadOMeter.Create(WS_VISIBLE | WS_CHILD, rcDown, this, IDC_SCOPE_D);
+	m_DownloadOMeter.CreateWnd(WS_VISIBLE | WS_CHILD, rcDown, this, IDC_SCOPE_D);
 	SetARange(true, thePrefs.GetMaxGraphDownloadRate());
 	m_DownloadOMeter.SetYUnits(GetResString(IDS_KBYTESPERSEC));
 
@@ -174,7 +174,7 @@ BOOL CStatisticsDlg::OnInitDialog()
 	// compensate rounding errors due to dialog units, make each of the 3 panes the same height
 	rcUp.top = rcDown.bottom + 4;
 	rcUp.bottom = rcUp.top + rcDown.Height();
-	m_UploadOMeter.Create(WS_VISIBLE | WS_CHILD, rcUp, this, IDC_SCOPE_U);
+	m_UploadOMeter.CreateWnd(WS_VISIBLE | WS_CHILD, rcUp, this, IDC_SCOPE_U);
 	SetARange(false, thePrefs.GetMaxGraphUploadRate(true));
 	m_UploadOMeter.SetYUnits(GetResString(IDS_KBYTESPERSEC));
 
@@ -186,7 +186,7 @@ BOOL CStatisticsDlg::OnInitDialog()
 	// compensate rounding errors due to dialog units, make each of the 3 panes the same height
 	rcConn.top = rcUp.bottom + 4;
 	rcConn.bottom = rcConn.top + rcDown.Height();
-	m_Statistics.Create(WS_VISIBLE | WS_CHILD, rcConn, this, IDC_STATSSCOPE);
+	m_Statistics.CreateWnd(WS_VISIBLE | WS_CHILD, rcConn, this, IDC_STATSSCOPE);
 	m_Statistics.SetRanges(0, thePrefs.GetStatsMax());
 	m_Statistics.autofitYscale = false;
 	// Set the trend ratio of the Active Connections trend in the Connection Statistics scope.
@@ -229,7 +229,7 @@ BOOL CStatisticsDlg::OnInitDialog()
 
 	//vertical splitter
 	CRect rcSpl(rcTree.right, rcW.top + 2, rcTree.right + 4, rcW.bottom - 5);
-	m_wndSplitterstat.Create(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_STAT);
+	m_wndSplitterstat.CreateWnd(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_STAT);
 	int PosStatVinitX = rcSpl.left;
 	int PosStatVnewX = thePrefs.GetSplitterbarPositionStat() * rcW.Width() / 100;
 	int maxX = rcW.right - 13;
@@ -244,7 +244,7 @@ BOOL CStatisticsDlg::OnInitDialog()
 
 	//HR splitter
 	rcSpl = { rcDown.left, rcDown.bottom, rcDown.right, rcDown.bottom + 4 };
-	m_wndSplitterstat_HR.Create(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_STAT_HR);
+	m_wndSplitterstat_HR.CreateWnd(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_STAT_HR);
 	int PosStatVinitZ = rcSpl.top;
 	int PosStatVnewZ = thePrefs.GetSplitterbarPositionStat_HR() * rcW.Height() / 100;
 	int maxZ = rcW.bottom - 14;
@@ -259,7 +259,7 @@ BOOL CStatisticsDlg::OnInitDialog()
 
 	//HL splitter
 	rcSpl = { rcUp.left, rcUp.bottom, rcUp.right, rcUp.bottom + 4 };
-	m_wndSplitterstat_HL.Create(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_STAT_HL);
+	m_wndSplitterstat_HL.CreateWnd(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_STAT_HL);
 	int PosStatVinitY = rcSpl.top;
 	int PosStatVnewY = thePrefs.GetSplitterbarPositionStat_HL() * rcW.Height() / 100;
 	int maxY = rcW.bottom - 9;
@@ -616,9 +616,9 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 
 	// TRANSFER SECTION
 	if (forceUpdate || m_stattree.IsExpanded(h_transfer)) {
-		uint32 statGoodSessions = 0;
-		uint32 statBadSessions = 0;
-		double percentSessions = 0;
+		uint32 statGoodSessions;
+		uint32 statBadSessions;
+		double percentSessions;
 		// Transfer Ratios
 		if (theStats.sessionReceivedBytes > 0 && theStats.sessionSentBytes > 0) {
 			// Session
@@ -735,7 +735,6 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 					if (forceUpdate || m_stattree.IsExpanded(hdown_spb)) {
 						uint64	PortDataDefault = thePrefs.GetDownDataPort_4662();
 						uint64	PortDataOther = thePrefs.GetDownDataPort_OTHER();
-						uint64	PortDataPeerCache = thePrefs.GetDownDataPort_PeerCache();
 						uint64	PortDataTotal = thePrefs.GetDownSessionDataPort();
 						double	percentPortTransferred;
 
@@ -752,13 +751,6 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 						else
 							percentPortTransferred = 0;
 						sText.Format(_T("%s: %s (%1.1f%%)"), (LPCTSTR)GetResString(IDS_STATS_PRTOTHER), (LPCTSTR)CastItoXBytes(PortDataOther), percentPortTransferred);
-						m_stattree.SetItemText(down_spb[i], sText);
-						++i;
-						if (PortDataTotal != 0 && PortDataPeerCache != 0)
-							percentPortTransferred = 100.0 * PortDataPeerCache / PortDataTotal;
-						else
-							percentPortTransferred = 0;
-						sText.Format(_T("%s: %s (%1.1f%%)"), thePrefs.GetPeerCacheShow() ? _T("PeerCache") : (LPCTSTR)GetResString(IDS_STATS_PRTOTHER), (LPCTSTR)CastItoXBytes(PortDataPeerCache), percentPortTransferred);
 						m_stattree.SetItemText(down_spb[i], sText);
 					}
 				}
@@ -1001,7 +993,6 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 						int i = 0;
 						uint64	PortDataDefault = thePrefs.GetCumDownDataPort_4662();
 						uint64	PortDataOther = thePrefs.GetCumDownDataPort_OTHER();
-						uint64	PortDataPeerCache = thePrefs.GetCumDownDataPort_PeerCache();
 						uint64	PortDataTotal = thePrefs.GetDownTotalPortData();
 						double	percentPortTransferred;
 
@@ -1019,14 +1010,7 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 							percentPortTransferred = 0;
 						sText.Format(_T("%s: %s (%1.1f%%)"), (LPCTSTR)GetResString(IDS_STATS_PRTOTHER), (LPCTSTR)CastItoXBytes(PortDataOther), percentPortTransferred);
 						m_stattree.SetItemText(down_tpb[i], sText);
-						++i;
-
-						if (PortDataTotal != 0 && PortDataPeerCache != 0)
-							percentPortTransferred = 100.0 * PortDataPeerCache / PortDataTotal;
-						else
-							percentPortTransferred = 0;
-						sText.Format(_T("%s: %s (%1.1f%%)"), thePrefs.GetPeerCacheShow() ? _T("PeerCache") : (LPCTSTR)GetResString(IDS_STATS_PRTOTHER), (LPCTSTR)CastItoXBytes(PortDataPeerCache), percentPortTransferred);
-						m_stattree.SetItemText(down_tpb[i], sText);
+						//++i;
 					}
 				}
 				// Set Cum Completed Downloads
@@ -1173,11 +1157,6 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 						uint64	PortDataOther = thePrefs.GetUpDataPort_OTHER();
 						percentPortTransferred = !PortDataTotal ? 0 : 100.0 * PortDataOther / PortDataTotal;
 						sText.Format(_T("%s: %s (%1.1f%%)"), (LPCTSTR)GetResString(IDS_STATS_PRTOTHER), (LPCTSTR)CastItoXBytes(PortDataOther), percentPortTransferred);
-						m_stattree.SetItemText(up_spb[i], sText);
-						++i;
-						uint64	PortDataPeerCache = thePrefs.GetUpDataPort_PeerCache();
-						percentPortTransferred = !PortDataTotal ? 0 : 100.0 * PortDataPeerCache / PortDataTotal;
-						sText.Format(_T("%s: %s (%1.1f%%)"), thePrefs.GetPeerCacheShow() ? _T("PeerCache") : (LPCTSTR)GetResString(IDS_STATS_PRTOTHER), (LPCTSTR)CastItoXBytes(PortDataPeerCache), percentPortTransferred);
 						m_stattree.SetItemText(up_spb[i], sText);
 					}
 					// Uploaded Data By Source
@@ -1332,11 +1311,6 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 						uint64	PortDataOther = thePrefs.GetCumUpDataPort_OTHER();
 						percentPortTransferred = !PortDataTotal ? 0 : 100.0 * PortDataOther / PortDataTotal;
 						sText.Format(_T("%s: %s (%1.1f%%)"), (LPCTSTR)GetResString(IDS_STATS_PRTOTHER), (LPCTSTR)CastItoXBytes(PortDataOther), percentPortTransferred);
-						m_stattree.SetItemText(up_tpb[i], sText);
-						++i;
-						uint64	PortDataPeerCache = thePrefs.GetCumUpDataPort_PeerCache();
-						percentPortTransferred = !PortDataTotal ? 0 : 100.0 * PortDataPeerCache / PortDataTotal;
-						sText.Format(_T("%s: %s (%1.1f%%)"), thePrefs.GetPeerCacheShow() ? _T("PeerCache") : (LPCTSTR)GetResString(IDS_STATS_PRTOTHER), (LPCTSTR)CastItoXBytes(PortDataPeerCache), percentPortTransferred);
 						m_stattree.SetItemText(up_tpb[i], sText);
 					}
 					// Uploaded Data By Source
@@ -1703,7 +1677,6 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 								int i = 0;
 								uint64	PortDataDefault = (uint64)(thePrefs.GetCumUpDataPort_4662() * avgModifier[mx]);
 								uint64	PortDataOther = (uint64)(thePrefs.GetCumUpDataPort_OTHER() * avgModifier[mx]);
-								uint64	PortDataPeerCache = (uint64)(thePrefs.GetCumUpDataPort_PeerCache() * avgModifier[mx]);
 								uint64	PortDataTotal = (uint64)(thePrefs.GetUpTotalPortData() * avgModifier[mx]);
 								double	percentPortTransferred = 0;
 
@@ -1717,13 +1690,6 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 								else
 									percentPortTransferred = 0;
 								sText.Format(_T("%s: %s (%1.1f%%)"), (LPCTSTR)GetResString(IDS_STATS_PRTOTHER), (LPCTSTR)CastItoXBytes(PortDataOther), percentPortTransferred);
-								m_stattree.SetItemText(time_aap_up_dp[mx][i], sText);
-								++i;
-								if (PortDataTotal != 0 && PortDataPeerCache != 0)
-									percentPortTransferred = 100.0 * PortDataPeerCache / PortDataTotal;
-								else
-									percentPortTransferred = 0;
-								sText.Format(_T("%s: %s (%1.1f%%)"), thePrefs.GetPeerCacheShow() ? _T("PeerCache") : (LPCTSTR)GetResString(IDS_STATS_PRTOTHER), (LPCTSTR)CastItoXBytes(PortDataPeerCache), percentPortTransferred);
 								m_stattree.SetItemText(time_aap_up_dp[mx][i], sText);
 							}
 							// Uploaded Data By Source
@@ -1891,7 +1857,6 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 								int i = 0;
 								uint64	PortDataDefault = (uint64)(thePrefs.GetCumDownDataPort_4662() * avgModifier[mx]);
 								uint64	PortDataOther = (uint64)(thePrefs.GetCumDownDataPort_OTHER() * avgModifier[mx]);
-								uint64	PortDataPeerCache = (uint64)(thePrefs.GetCumDownDataPort_PeerCache() * avgModifier[mx]);
 								uint64	PortDataTotal = (uint64)(thePrefs.GetDownTotalPortData() * avgModifier[mx]);
 								double	percentPortTransferred;
 
@@ -1902,20 +1867,11 @@ void CStatisticsDlg::ShowStatistics(bool forceUpdate)
 								sText.Format(_T("%s: %s (%1.1f%%)"), (LPCTSTR)GetResString(IDS_STATS_PRTDEF), (LPCTSTR)CastItoXBytes(PortDataDefault), percentPortTransferred);
 								m_stattree.SetItemText(time_aap_down_dp[mx][i], sText);
 								++i;
-
 								if (PortDataTotal != 0 && PortDataOther != 0)
 									percentPortTransferred = 100.0 * PortDataOther / PortDataTotal;
 								else
 									percentPortTransferred = 0;
 								sText.Format(_T("%s: %s (%1.1f%%)"), (LPCTSTR)GetResString(IDS_STATS_PRTOTHER), (LPCTSTR)CastItoXBytes(PortDataOther), percentPortTransferred);
-								m_stattree.SetItemText(time_aap_down_dp[mx][i], sText);
-								++i;
-
-								if (PortDataTotal != 0 && PortDataPeerCache != 0)
-									percentPortTransferred = 100.0 * PortDataPeerCache / PortDataTotal;
-								else
-									percentPortTransferred = 0;
-								sText.Format(_T("%s: %s (%1.1f%%)"), thePrefs.GetPeerCacheShow() ? _T("PeerCache") : (LPCTSTR)GetResString(IDS_STATS_PRTOTHER), (LPCTSTR)CastItoXBytes(PortDataPeerCache), percentPortTransferred);
 								m_stattree.SetItemText(time_aap_down_dp[mx][i], sText);
 							}
 						}

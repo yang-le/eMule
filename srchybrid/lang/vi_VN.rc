@@ -820,7 +820,7 @@ BEGIN
     IDS_NEWMSG              "Tin nhắn mới từ '%s' (IP:%s)"
     IDS_PREF_STARTNEXTFILECATONLY "Chỉ các Tập tin cùng Danh mục"
     IDS_LOG_ULDL_EVENTS     "Ghi lại sự kiện tải lên/xuống"
-    IDS_PEERCACHE_ENABLED   "Nhà cung cấp Mạng của bạn hỗ trợ công nghệ PeerCache, kích hoạt tải về từ bộ nhớ truy xuất nhanh - cache!"
+//    IDS_PEERCACHE_ENABLED   "Nhà cung cấp Mạng của bạn hỗ trợ công nghệ PeerCache, kích hoạt tải về từ bộ nhớ truy xuất nhanh - cache!"
     IDS_IRC_EMULEPROTO_ALLOWADDFRIEND "Cho phép người dùng thêm bạn là Bạn bè."
     IDS_SOURCESWAPBLOCKED   "Trao đổi bị khóa"
     IDS_TRICKLING           "Đang đợi"
@@ -1627,9 +1627,9 @@ BEGIN
                             "eMule sẽ tự chạy khi khởi động windows."
     IDS_KAD_WAITCBK         "Đợi yêu cầu thông qua Kad" //Wait Callback Kad
     IDS_KAD_TOOMANDYKADLKPS "Quá nhiều Tìm kiếm Kad"
-    IDS_PCDS_CLIENTWAIT     "Máykhách-Đợi"
-    IDS_PCDS_CACHEWAIT      "Cache-Đợi"
-    IDS_CACHE               "Cache" //!
+//    IDS_PCDS_CLIENTWAIT     "Máykhách-Đợi"
+//    IDS_PCDS_CACHEWAIT      "Cache-Đợi"
+//    IDS_CACHE               "Cache" //!
     IDS_INDEXED             "Số chỉ mục"
     IDS_KADINFO_SRC         "\tNguồn: %u\r\n"
     IDS_KADINFO_KEYW        "\từKhóa: %u\r\n"

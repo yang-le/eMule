@@ -323,18 +323,16 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Directories"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    EDITTEXT        IDC_INCFILES,11,13,210,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "...",IDC_SELINCDIR,210,7,14,14
-    EDITTEXT        IDC_TEMPFILES,11,45,200,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "...",IDC_SELTEMPDIR,196,39,14,14
-    CONTROL         "",IDC_SHARESELECTOR,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_CHECKBOXES | TVS_INFOTIP | WS_BORDER | WS_TABSTOP,10,76,211,110
-    CONTROL         "",IDC_UNCLIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,10,190,195,43
-    PUSHBUTTON      "+",IDC_UNCADD,208,190,14,13,BS_CENTER
-    PUSHBUTTON      "-",IDC_UNCREM,208,220,14,13,BS_CENTER
     GROUPBOX        "Incoming Files",IDC_INCOMING_FRM,4,2,223,30
-    GROUPBOX        "Temporary Files",IDC_TEMP_FRM,4,34,223,29
+    EDITTEXT        IDC_INCFILES,11,13,210,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_SELINCDIR,208,7,14,14
+    GROUPBOX        "Temporary Files",IDC_TEMP_FRM,4,34,223,30
+    EDITTEXT        IDC_TEMPFILES,11,45,198,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_SELTEMPDIR,194,39,14,14
+    PUSHBUTTON      "+",IDC_SELTEMPDIRADD,210,45,11,12,BS_CENTER
     GROUPBOX        "Shared Directories (Ctrl-Click includes subdirectories)",IDC_SHARED_FRM,4,65,223,172
-    PUSHBUTTON      "+",IDC_SELTEMPDIRADD,212,45,11,12,BS_CENTER
+    CONTROL         "",IDC_SHARESELECTOR,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_CHECKBOXES | TVS_INFOTIP | WS_BORDER | WS_TABSTOP,11,77,209,136
+    PUSHBUTTON      "Add UNC share",IDC_UNCADD,10,218,64,14,BS_CENTER
 END
 
 IDD_PPG_CONNECTION DIALOGEX 0, 0, 231, 228
@@ -688,7 +686,7 @@ BEGIN
     PUSHBUTTON      "Reload",IDC_RELOADFILTER,119,23,50,12
     PUSHBUTTON      "Edit",IDC_EDITFILTER,171,23,50,12
     LTEXT           "Update from URL: (filter.dat- or PeerGuardian-format)",IDC_STATIC_UPDATEFROM,11,37,202,8
-    EDITTEXT        IDC_UPDATEURL,11,47,160,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_UPDATEURL,11,47,163,12,ES_AUTOHSCROLL
     PUSHBUTTON      "v",IDC_DD,174,47,11,12,BS_CENTER
     PUSHBUTTON      "Load",IDC_LOADURL,186,47,35,12
     GROUPBOX        "See My Shared Files/Directories",IDC_SEEMYSHARE_FRM,4,69,223,26
@@ -2643,7 +2641,8 @@ BEGIN
     IDS_IRC_PRIVMESSAGE     "Private Message"
     IDS_WEB_REMOTE_LINK_ADDED "Link added: "
     IDS_WEB_REMOTE_LINK_NOT_ADDED "Link not added. Wrong password."
-    IDS_DL_TRY_TO_GET_PREVIEW_PARTS "Download parts needed for preview first"
+    //IDS_DL_TRY_TO_GET_PREVIEW_PARTS "Download parts needed for preview first"
+    IDS_DL_TRY_TO_GET_PREVIEW_PARTS "Increase priority for preview parts"
     IDS_IRC_KICK            "Kick"
     IDS_IRC_SLAP            "Slap"
     IDS_IRC_JOIN            "Join"
@@ -2695,7 +2694,7 @@ BEGIN
     IDS_NEWMSG              "New Message from '%s' (IP:%s)"
     IDS_PREF_STARTNEXTFILECATONLY "Only in same category"
     IDS_LOG_ULDL_EVENTS     "Log upload/download events"
-    IDS_PEERCACHE_ENABLED   "Your ISP supports the PeerCache technology, enabling cache downloads!"
+//    IDS_PEERCACHE_ENABLED   "Your ISP supports the PeerCache technology, enabling cache downloads!"
     IDS_IRC_EMULEPROTO_ALLOWADDFRIEND "Allow others to add you as a friend"
     IDS_SOURCESWAPBLOCKED   "Swap blocked"
     IDS_TRICKLING           "Standby"
@@ -3396,9 +3395,9 @@ BEGIN
     IDS_WIZ_STARTWITHWINDOWS "Enable this so that eMule will run when you start windows."
     IDS_KAD_WAITCBK         "Wait Callback Kad"
     IDS_KAD_TOOMANDYKADLKPS "Too Many Kad Lookups"
-    IDS_PCDS_CLIENTWAIT     "ClientWait"
-    IDS_PCDS_CACHEWAIT      "CacheWait"
-    IDS_CACHE               "Cache"
+//    IDS_PCDS_CLIENTWAIT     "ClientWait"
+//    IDS_PCDS_CACHEWAIT      "CacheWait"
+//    IDS_CACHE               "Cache"
     IDS_INDEXED             "Indexed"
     IDS_KADINFO_SRC         "\tSource: %u\r\n"
     IDS_KADINFO_KEYW        "\tKeyword: %u\r\n"

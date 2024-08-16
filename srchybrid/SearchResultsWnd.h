@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -96,15 +96,14 @@ public:
 	void	DownloadSelected();
 	void	DownloadSelected(bool bPaused);
 
-	bool	CanDeleteSearch() const;
-	bool	CanDeleteAllSearches() const;
+	bool	CanDeleteSearches() const			{ return (searchselect.GetItemCount() > 0); };
 	void	DeleteSearch(uint32 uSearchID);
 	void	DeleteAllSearches();
 	void	DeleteSelectedSearch();
 
 	bool	CreateNewTab(SSearchParams *pParams, bool bActiveIcon = true);
 	void	ShowSearchSelector(bool visible);
-	int		GetSelectedCat();
+	int		GetSelectedCat()					{ return m_cattabs.GetCurSel(); }
 	void	UpdateCatTabs();
 
 	SSearchParams* GetSearchResultsParams(uint32 uSearchID) const;
@@ -149,6 +148,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnDblClkSearchList(LPNMHDR, LRESULT *pResult);
 	afx_msg void OnSelChangeTab(LPNMHDR, LRESULT *pResult);
+	afx_msg void OnSelChangingTab(LPNMHDR, LRESULT *pResult);
 	afx_msg LRESULT OnCloseTab(WPARAM wParam, LPARAM);
 	afx_msg LRESULT OnDblClickTab(WPARAM wParam, LPARAM);
 	afx_msg void OnDestroy();

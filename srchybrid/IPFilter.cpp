@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -217,7 +217,7 @@ INT_PTR CIPFilter::AddFromFile(LPCTSTR pszFilePath, bool bShowResponse)
 			int iNumToDelete = 0;
 
 			SIPFilter *pPrv = m_iplist[0];
-			for (int i = 1; i < m_iplist.GetCount(); ++i) {
+			for (INT_PTR i = 1; i < m_iplist.GetCount(); ++i) {
 				SIPFilter *pCur = m_iplist[i];
 				if (pCur->start >= pPrv->start && pCur->start <= pPrv->end	 // overlapping
 					|| pCur->start == pPrv->end + 1 && pCur->level == pPrv->level) // adjacent
@@ -277,7 +277,7 @@ void CIPFilter::SaveToDefaultFile()
 	const CString &strFilePath(GetDefaultFilePath());
 	FILE *fp = _tfsopen(strFilePath, _T("wt"), _SH_DENYWR);
 	if (fp != NULL) {
-		for (int i = 0; i < m_iplist.GetCount(); ++i) {
+		for (INT_PTR i = 0; i < m_iplist.GetCount(); ++i) {
 			const SIPFilter *flt = m_iplist[i];
 
 			CHAR szStart[16];

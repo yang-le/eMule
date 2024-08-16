@@ -1,6 +1,6 @@
 // parts of this file are based on work from pan One (http://home-3.tiscali.nl/~meost/pms/)
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -253,26 +253,24 @@ void CKnownFile::UpdatePartsInfo()
 			// SLUGFILLER: heapsortCompletesrc
 
 			// calculate range
-			int i = n >> 1;			// (n / 2)
 			int j = (n * 3) >> 2;	// (n * 3) / 4
-			int k = (n * 7) >> 3;	// (n * 7) / 8
 
 			//For complete files, trust people you had uploaded more...
 
 			if (n < 20) {
 				//For low guess and normal guess count
 				//	If we see more sources then the guessed low and normal, use what we see.
-				//	If we see less sources then the guessed low, adjust network accounts for 100%, we account for 0% with what we see and make sure we are still above the normal.
+				//	If we see less sources then the guessed low, adjust network accounts for 100%,
+				//	we account for 0% with what we see and make sure we are still above the normal.
 				//For high guess
-				//  Adjust 100% network and 0% what we see.
+				//	Adjust 100% network and 0% what we see.
+				int i = n >> 1;			// (n / 2)
 				if (acount[i] < m_nCompleteSourcesCount)
 					m_nCompleteSourcesCountLo = m_nCompleteSourcesCount;
 				else
 					m_nCompleteSourcesCountLo = acount[i];
 				m_nCompleteSourcesCount = m_nCompleteSourcesCountLo;
 				m_nCompleteSourcesCountHi = acount[j];
-				if (m_nCompleteSourcesCountHi < m_nCompleteSourcesCount)
-					m_nCompleteSourcesCountHi = m_nCompleteSourcesCount;
 			} else {
 				//Many sources.
 				//For low guess
@@ -285,10 +283,11 @@ void CKnownFile::UpdatePartsInfo()
 				m_nCompleteSourcesCount = acount[j];
 				if (m_nCompleteSourcesCount < m_nCompleteSourcesCountLo)
 					m_nCompleteSourcesCount = m_nCompleteSourcesCountLo;
+				int k = (n * 7) >> 3;	// (n * 7) / 8
 				m_nCompleteSourcesCountHi = acount[k];
-				if (m_nCompleteSourcesCountHi < m_nCompleteSourcesCount)
-					m_nCompleteSourcesCountHi = m_nCompleteSourcesCount;
 			}
+			if (m_nCompleteSourcesCountHi < m_nCompleteSourcesCount)
+				m_nCompleteSourcesCountHi = m_nCompleteSourcesCount;
 		}
 		m_nCompleteSourcesTime = tNow + MIN2S(1);
 	}
@@ -337,7 +336,7 @@ void CKnownFile::SetFileName(LPCTSTR pszFileName, bool bReplaceInvalidFileSystem
 	if (pFile == this)
 		theApp.sharedfiles->RemoveKeywords(this);
 
-	CAbstractFile::SetFileName(pszFileName, bReplaceInvalidFileSystemChars, true, bRemoveControlChars);
+	SetAFileName(pszFileName, bReplaceInvalidFileSystemChars, true, bRemoveControlChars);
 	m_verifiedFileType = FILETYPE_UNKNOWN;
 
 	wordlist.clear();
@@ -377,7 +376,7 @@ bool CKnownFile::CreateFromFile(LPCTSTR in_directory, LPCTSTR in_filename, LPVOI
 		if (llFileSize <= 0)
 			LogError(_T("Failed to hash file \"%s\" - %s"), (LPCTSTR)strFilePath, _tcserror(errno));
 		else
-			LogError(_T("Skipped hashing of file \"%s\" - File size exceeds limit."), (LPCTSTR)strFilePath);
+			LogError(_T("Skipped hashing file \"%s\" - File size exceeds limit."), (LPCTSTR)strFilePath);
 		fclose(file);
 		return false; // not supported by network
 	}
@@ -422,9 +421,13 @@ bool CKnownFile::CreateFromFile(LPCTSTR in_directory, LPCTSTR in_filename, LPVOI
 			delete[] newhash;
 		} else
 			m_FileIdentifier.GetRawMD4HashSet().Add(newhash);
+
 		togo -= uSize;
 		if (!togo)
-			break;
+			if (uSize == PARTSIZE)
+				continue;
+			else
+				break;
 
 		if (pvProgressParam) {
 			if (theApp.IsClosing()) {
@@ -834,11 +837,11 @@ bool CKnownFile::WriteToFile(CFileDataIO &file)
 			try {
 				m_FileIdentifier.WriteAICHHashsetToFile(hashSetFile);
 				bWriteHashSet = true;
-			} catch (CFileException *pError) {
+			} catch (CFileException *ex) {
 				ASSERT(0);
 				DebugLogError(_T("Memfile Error while storing AICH Part HashSet"));
 				delete[] hashSetFile.Detach();
-				pError->Delete();
+				ex->Delete();
 			}
 			if (bWriteHashSet) {
 				CTag tagAICHHashSet(FT_AICHHASHSET, hashSetFile.Detach(), nAICHHashSetSize);
@@ -907,9 +910,9 @@ bool CKnownFile::WriteToFile(CFileDataIO &file)
 		}
 
 		// other tags
-		for (int j = 0; j < m_taglist.GetCount(); ++j) {
-			if (m_taglist[j]->IsStr() || m_taglist[j]->IsInt()) {
-				m_taglist[j]->WriteTagToFile(file, UTF8strOptBOM);
+		for (INT_PTR i = 0; i < m_taglist.GetCount(); ++i) {
+			if (m_taglist[i]->IsStr() || m_taglist[i]->IsInt()) {
+				m_taglist[i]->WriteTagToFile(file, UTF8strOptBOM);
 				++uTagCount;
 			}
 		}
@@ -924,6 +927,7 @@ bool CKnownFile::WriteToFile(CFileDataIO &file)
 
 void CKnownFile::CreateHash(CFile *pFile, uint64 Length, uchar *pMd4HashOut, CAICHHashTree *pShaHashOut)
 {
+	ASSERT(!Length || pFile);
 	ASSERT(pMd4HashOut != NULL || pShaHashOut != NULL);
 
 	uchar   X[64 * 128];
@@ -1486,10 +1490,10 @@ void CKnownFile::UpdateMetaDataTags()
 					uint32 uBitrate;
 					if (mi->iVideoStreams) {
 						strCodec = GetED2KVideoCodec(mi->video.bmiHeader.biCompression);
-						uBitrate = (mi->video.dwBitRate + 500) / 1000;
+						uBitrate = (mi->video.dwBitRate + SEC2MS(1) / 2) / SEC2MS(1);
 					} else if (mi->iAudioStreams) {
 						strCodec = GetED2KAudioCodec(mi->audio.wFormatTag);
-						uBitrate = (mi->audio.nAvgBytesPerSec * 8 + 500) / 1000;
+						uBitrate = (uint32)((mi->audio.nAvgBytesPerSec * 16ull + SEC2MS(1)) / SEC2MS(2));
 					} else
 						uBitrate = 0;
 

@@ -139,15 +139,13 @@ void CKademlia::Start(CPrefs *pPrefs)
 		m_pInstance->m_pUDPListener = new CKademliaUDPListener();
 		// Mark Kad as running state.
 		m_bRunning = true;
-	} catch (CException *e) {
+	} catch (CException *ex) {
 		// Although this has never been an issue, maybe some code needs
 		// to be created here just in case things go real bad. But if things
 		// went real bad, the entire client most likely is in bad shape, so this may
 		// not be something to worry about as the client most likely will crap out anyway.
-		TCHAR err[512];
-		GetExceptionMessage(*e, err, 512);
-		AddDebugLogLine(false, _T("%s"), err);
-		e->Delete();
+		AddDebugLogLine(false, _T("%s"), (LPCTSTR)CExceptionStr(*ex));
+		ex->Delete();
 	}
 }
 
@@ -504,7 +502,7 @@ bool CKademlia::FindIPByNodeID(CKadClientSearcher &rRequester, const uchar *pach
 	return CSearchManager::FindNodeSpecial(CUInt128(pachNodeID), &rRequester);
 }
 
-void CKademlia::CancelClientSearch(CKadClientSearcher &rFromRequester)
+void CKademlia::CancelClientSearch(const CKadClientSearcher &rFromRequester)
 {
 	if (m_pInstance == NULL || GetUDPListener() == NULL) {
 		ASSERT(0);

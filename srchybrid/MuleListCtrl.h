@@ -33,13 +33,13 @@ class CMuleListCtrl : public CListCtrl
 
 public:
 	CMuleListCtrl(PFNLVCOMPARE pfnCompare = SortProc, LPARAM iParamSort = 0);
-	virtual	~CMuleListCtrl();
+	virtual	~CMuleListCtrl()					{ delete[] m_aColumns; };
 
 	// Default sort proc, this does nothing
 	static int CALLBACK SortProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 
 	// Sets the list name, used for settings in "preferences.ini"
-	void SetPrefsKey(LPCTSTR lpszName);
+	void SetPrefsKey(LPCTSTR lpszName)			{ m_Name = lpszName; };
 
 	// Save to preferences
 	void SaveSettings();
@@ -47,7 +47,7 @@ public:
 	// Load from preferences
 	void LoadSettings();
 
-	DWORD SetExtendedStyle(DWORD dwNewStyle);
+	DWORD SetExtendedStyle(DWORD dwNewStyle)	{ return CListCtrl::SetExtendedStyle(dwNewStyle | LVS_EX_HEADERDRAGDROP); };
 
 	// Hide the column
 	void HideColumn(int iColumn);
@@ -56,7 +56,7 @@ public:
 	void ShowColumn(int iColumn);
 
 	// Check to see if the column is hidden
-	bool IsColumnHidden(int iColumn) const	{ return iColumn >= 1 && iColumn < m_iColumnsTracked && m_aColumns[iColumn].bHidden; }
+	bool IsColumnHidden(int iColumn) const		{ return iColumn >= 1 && iColumn < m_iColumnsTracked && m_aColumns[iColumn].bHidden; }
 
 	// Get the correct column width even if column is hidden
 	int GetColumnWidth(int iColumn) const
@@ -151,28 +151,13 @@ public:
 
 	int	GetSortType(ArrowType at);
 	ArrowType GetArrowType(int iat);
-	int GetSortItem() const
-	{
-		return m_iCurrentSortItem;
-	}
-	bool GetSortAscending() const
-	{
-		return m_atSortArrow == arrowUp || m_atSortArrow == arrowDoubleUp;
-	}
-	bool GetSortSecondValue() const
-	{
-		return m_atSortArrow == arrowDoubleDown || m_atSortArrow == arrowDoubleUp;
-	}
+	int GetSortItem() const						{ return m_iCurrentSortItem; }
+	bool GetSortAscending() const				{ return m_atSortArrow == arrowUp || m_atSortArrow == arrowDoubleUp; }
+	bool GetSortSecondValue() const				{ return m_atSortArrow == arrowDoubleDown || m_atSortArrow == arrowDoubleUp; }
 	// Places a sort arrow in a column
 	void SetSortArrow(int iColumn, ArrowType atType);
-	void SetSortArrow()
-	{
-		SetSortArrow(m_iCurrentSortItem, m_atSortArrow);
-	}
-	void SetSortArrow(int iColumn, bool bAscending)
-	{
-		SetSortArrow(iColumn, bAscending ? arrowUp : arrowDown);
-	}
+	void SetSortArrow()							{ SetSortArrow(m_iCurrentSortItem, m_atSortArrow); }
+	void SetSortArrow(int iColumn, bool bAscending) { SetSortArrow(iColumn, bAscending ? arrowUp : arrowDown); }
 	LPARAM GetNextSortOrder(LPARAM iCurrentSortOrder) const;
 	void UpdateSortHistory(LPARAM dwNewOrder);
 
@@ -192,14 +177,14 @@ public:
 		none
 	};
 	EUpdateMode SetUpdateMode(EUpdateMode eUpdateMode);
-	void SetAutoSizeWidth(int iAutoSizeWidth);
+	void SetAutoSizeWidth(int iAutoSizeWidth)	{ m_iAutoSizeWidth = iAutoSizeWidth; };
 
 	int InsertColumn(int nCol, LPCTSTR lpszColumnHeading, int nFormat = LVCFMT_LEFT, int nWidth = -1, int nSubItem = -1, bool bHiddenByDefault = false);
 
 	HIMAGELIST ApplyImageList(HIMAGELIST himl);
 	void AutoSelectItem();
-	void SetSkinKey(LPCTSTR pszKey)			{ m_strSkinKey = pszKey; }
-	const CString& GetSkinKey() const		{ return m_strSkinKey; }
+	void SetSkinKey(LPCTSTR pszKey)				{ m_strSkinKey = pszKey; }
+	const CString& GetSkinKey() const			{ return m_strSkinKey; }
 
 protected:
 	virtual void PreSubclassWindow();
@@ -250,7 +235,7 @@ protected:
 	CList<LONG>		m_liSortHistory;
 	UINT			m_uIDAccel;
 	HACCEL			m_hAccel;
-	enum EUpdateMode m_eUpdateMode;
+	EUpdateMode		m_eUpdateMode;
 	int				m_iAutoSizeWidth;
 	static const int sm_iIconOffset;
 	static const int sm_iLabelOffset;
@@ -258,12 +243,12 @@ protected:
 
 
 	// General purpose listview find dialog+functions (optional)
-	bool m_bGeneralPurposeFind;
-	bool m_bCanSearchInAllColumns;
 	CString m_strFindText;
-	bool m_bFindMatchCase;
 	int m_iFindDirection;
 	int m_iFindColumn;
+	bool m_bGeneralPurposeFind;
+	bool m_bCanSearchInAllColumns;
+	bool m_bFindMatchCase;
 	void OnFindStart();
 	void OnFindNext();
 	void OnFindPrev();
@@ -278,8 +263,8 @@ private:
 		bool bHidden;
 	};
 
-	int          m_iColumnsTracked;
 	MULE_COLUMN *m_aColumns;
+	int          m_iColumnsTracked;
 
 	int GetHiddenColumnCount() const
 	{

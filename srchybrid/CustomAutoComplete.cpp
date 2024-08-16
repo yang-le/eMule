@@ -323,7 +323,7 @@ bool CCustomAutoComplete::SaveList(LPCTSTR pszFileName)
 	if (fp == NULL)
 		return false;
 	bool ret = (fputwc(u'\xFEFF', fp) != WEOF); // write Unicode byte order mark 0xFEFF
-	for (int i = 0; ret && i < m_asList.GetCount(); ++i)
+	for (INT_PTR i = 0; ret && i < m_asList.GetCount(); ++i)
 		ret = (_ftprintf(fp, _T("%s\r\n"), (LPCTSTR)m_asList[i]) > 0);
 	return fclose(fp) ? false : ret;
 }

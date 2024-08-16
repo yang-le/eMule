@@ -79,7 +79,7 @@ namespace Kademlia
 
 		static bool	FindNodeIDByIP(CKadClientSearcher &rRequester, uint32 dwIP, uint16 nTCPPort, uint16 nUDPPort);
 		static bool FindIPByNodeID(CKadClientSearcher &rRequester, const uchar *pachNodeID);
-		static void	CancelClientSearch(CKadClientSearcher &rFromRequester);
+		static void	CancelClientSearch(const CKadClientSearcher &rFromRequester);
 
 		static _ContactList	s_liBootstrapList;
 

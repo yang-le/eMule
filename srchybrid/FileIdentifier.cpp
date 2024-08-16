@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -206,7 +206,7 @@ bool CFileIdentifier::SetMD4HashSet(const CArray<uchar*, uchar*> &aHashset)
 	DeleteMD4Hashset();
 
 	// set new hash
-	for (int i = 0; i < aHashset.GetCount(); ++i) {
+	for (INT_PTR i = 0; i < aHashset.GetCount(); ++i) {
 		uchar *pucHash = new uchar[MDX_DIGEST_SIZE];
 		md4cpy(pucHash, aHashset[i]);
 		m_aMD4HashSet.Add(pucHash);

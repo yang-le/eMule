@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -198,8 +198,8 @@ bool CArchiveRecovery::performRecovery(CPartFile *partFile, CArray<Gap_Struct> *
 			}
 		} else
 			CFile::Remove(outputFileName);
-	} catch (CFileException *error) {
-		error->Delete();
+	} catch (CFileException *ex) {
+		ex->Delete();
 	} catch (...) {
 		ASSERT(0);
 	}
@@ -339,8 +339,8 @@ bool CArchiveRecovery::recoverZip(CFile *zipInput, CFile *zipOutput, archiveScan
 			centralDirectoryEntries->RemoveAll();
 		}
 		retVal = true;
-	} catch (CFileException *error) {
-		error->Delete();
+	} catch (CFileException *ex) {
+		ex->Delete();
 	} catch (...) {
 		ASSERT(0);
 	}
@@ -410,8 +410,8 @@ bool CArchiveRecovery::readZipCentralDirectory(CFile *zipInput, CTypedPtrList<CP
 		}
 
 		return true;
-	} catch (CFileException *error) {
-		error->Delete();
+	} catch (CFileException *ex) {
+		ex->Delete();
 	} catch (...) {
 		ASSERT(0);
 	}
@@ -547,8 +547,8 @@ bool CArchiveRecovery::processZipEntry(CFile *zipInput, CFile *zipOutput, uint32
 			zipInput->Seek(entry.lenCompressed, CFile::current);
 		}
 		return true;
-	} catch (CFileException *error) {
-		error->Delete();
+	} catch (CFileException *ex) {
+		ex->Delete();
 	} catch (...) {
 		ASSERT(0);
 	}
@@ -674,8 +674,8 @@ bool CArchiveRecovery::recoverRar(CFile *rarInput, CFile *rarOutput, archiveScan
 			}
 		}
 		retVal = true;
-	} catch (CFileException *error) {
-		error->Delete();
+	} catch (CFileException *ex) {
+		ex->Delete();
 	} catch (...) {
 		ASSERT(0);
 	}
@@ -744,8 +744,8 @@ bool CArchiveRecovery::scanForZipMarker(CFile *input, archiveScannerThreadParams
 				}
 			}
 		}
-	} catch (CFileException *error) {
-		error->Delete();
+	} catch (CFileException *ex) {
+		ex->Delete();
 	} catch (...) {
 		ASSERT(0);
 	}
@@ -917,8 +917,8 @@ RAR_BlockFile* CArchiveRecovery::scanForRarFileHeader(CFile *input, archiveScann
 				retVal = NULL;
 			}
 		}
-	} catch (CFileException *error) {
-		error->Delete();
+	} catch (CFileException *ex) {
+		ex->Delete();
 	} catch (...) {
 		ASSERT(0);
 	}
@@ -1014,8 +1014,8 @@ void CArchiveRecovery::writeRarBlock(CFile *input, CFile *output, RAR_BlockFile 
 		}
 		output->Flush();
 		return;
-	} catch (CFileException *error) {
-		error->Delete();
+	} catch (CFileException *ex) {
+		ex->Delete();
 	} catch (...) {
 		ASSERT(0);
 	}
@@ -1161,8 +1161,8 @@ bool CArchiveRecovery::recoverAce(CFile *aceInput, CFile *aceOutput, archiveScan
 			}
 		}
 		return true;
-	} catch (CFileException *error) {
-		error->Delete();
+	} catch (CFileException *ex) {
+		ex->Delete();
 	} catch (...) {
 		ASSERT(0);
 	}
@@ -1278,8 +1278,8 @@ ACE_BlockFile* CArchiveRecovery::scanForAceFileHeader(CFile *input, archiveScann
 
 			} // while foundpos
 		} // while available>0
-	} catch (CFileException *error) {
-		error->Delete();
+	} catch (CFileException *ex) {
+		ex->Delete();
 	} catch (...) {
 		ASSERT(0);
 	}
@@ -1347,7 +1347,7 @@ void CArchiveRecovery::writeAceBlock(CFile *input, CFile *output, ACE_BlockFile 
 			output->Write(block->COMMENT, block->COMM_SIZE);
 		}
 
-		// skip unknown data between header and compressed data - if any exists...
+		// skip unknown data between header and compressed data - if exists any
 
 		// Now copy compressed data from input file
 		uint32 lenToCopy = block->PACK_SIZE;
@@ -1364,8 +1364,8 @@ void CArchiveRecovery::writeAceBlock(CFile *input, CFile *output, ACE_BlockFile 
 		}
 		output->Flush();
 		return;
-	} catch (CFileException *error) {
-		error->Delete();
+	} catch (CFileException *ex) {
+		ex->Delete();
 	} catch (...) {
 		ASSERT(0);
 	}

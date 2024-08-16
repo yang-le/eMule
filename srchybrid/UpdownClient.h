@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -21,8 +21,6 @@
 #include "OtherFunctions.h"
 
 class CClientReqSocket;
-class CPeerCacheDownSocket;
-class CPeerCacheUpSocket;
 class CFriend;
 class CPartFile;
 class CClientCredits;
@@ -129,7 +127,7 @@ public:
 	bool			ExtProtocolAvailable() const					{ return m_bEmuleProtocol; }
 	bool			SupportMultiPacket() const						{ return m_bMultiPacket; }
 	bool			SupportExtMultiPacket() const					{ return m_fExtMultiPacket; }
-	bool			SupportPeerCache() const						{ return m_fPeerCache; }
+	bool			SupportPeerCache() const						{ return m_fPeerCache; } //false
 	bool			SupportsLargeFiles() const						{ return m_fSupportsLargeFiles; }
 	bool			SupportsFileIdentifiers() const					{ return m_fSupportsFileIdent; }
 	bool			IsEmuleClient() const							{ return m_byEmuleVersion != 0; }
@@ -229,7 +227,7 @@ public:
 	void			ClearWaitStartTime();
 	DWORD			GetWaitTime() const								{ return m_dwUploadTime - GetWaitStartTime(); }
 	bool			IsDownloading() const							{ return (m_eUploadState == US_UPLOADING); }
-	UINT			GetUploadDatarate() const								{ return m_nUpDatarate; }
+	UINT			GetUploadDatarate() const						{ return m_nUpDatarate; }
 	UINT			GetScore(bool sysvalue, bool isdownloading = false, bool onlybasevalue = false) const;
 	void			AddReqBlock(Requested_Block_Struct *reqblock, bool bSignalIOThread);
 	DWORD			GetUpStartTime() const							{ return m_dwUploadTime; }
@@ -268,7 +266,7 @@ public:
 	uint64			GetPayloadInBuffer() const						{ return m_addedPayloadQueueSession - m_nCurQueueSessionPayloadUp; }
 	void			SetQueueSessionUploadAdded(uint64 uVal)			{ m_addedPayloadQueueSession = uVal; }
 
-	bool			ProcessExtendedInfo(CSafeMemFile *data, CKnownFile *tempreqfile);
+	bool			ProcessExtendedInfo(CSafeMemFile &data, CKnownFile *tempreqfile);
 	uint16			GetUpPartCount() const							{ return m_nUpPartCount; }
 	void			DrawUpStatusBar(CDC *dc, const CRect &rect, bool onlygreyrect, bool  bFlat) const;
 	bool			IsUpPartAvailable(UINT uPart) const				{ return (m_abyUpPartStatus && uPart < m_nUpPartCount && m_abyUpPartStatus[uPart]);	}
@@ -297,14 +295,14 @@ public:
 	bool			AskForDownload();
 	virtual void	SendFileRequest();
 	void			SendStartupLoadReq();
-	void			ProcessFileInfo(CSafeMemFile *data, CPartFile *file);
-	void			ProcessFileStatus(bool bUdpPacket, CSafeMemFile *data, CPartFile *file);
+	void			ProcessFileInfo(CSafeMemFile &data, CPartFile *file);
+	void			ProcessFileStatus(bool bUdpPacket, CSafeMemFile &data, CPartFile *file);
 	void			ProcessHashSet(const uchar *packet, uint32 size, bool bFileIdentifiers);
 	void			ProcessAcceptUpload();
 	bool			AddRequestForAnotherFile(CPartFile *file);
 	void			CreateBlockRequests(int blockCount);
 	virtual void	SendBlockRequests();
-	virtual bool	SendHttpBlockRequests();
+	virtual bool	SendHttpBlockRequests()							{ return false; }
 	virtual void	ProcessBlockPacket(const uchar *packet, uint32 size, bool packed, bool bI64Offsets);
 	virtual void	ProcessHttpBlockPacket(const BYTE *pucData, UINT uSize);
 	void			ClearPendingBlockRequest(const Pending_Block_Struct *pending);
@@ -322,7 +320,7 @@ public:
 	void			UDPReaskFNF();
 	void			UDPReaskForDownload();
 	bool			UDPPacketPending() const						{ return m_bUDPPending; }
-	bool			IsSourceRequestAllowed() const;
+	bool			IsSourceRequestAllowed() const					{ return IsSourceRequestAllowed(m_reqfile); }
 	bool			IsSourceRequestAllowed(CPartFile *partfile, bool sourceExchangeCheck = false) const; // ZZ:DownloadManager
 
 	bool			IsValidSource() const;
@@ -441,45 +439,10 @@ public:
 	UINT			GetSlotNumber() const							{ return m_slotNumber; }
 	CEMSocket*		GetFileUploadSocket(bool bLog = false);
 
-	///////////////////////////////////////////////////////////////////////////
-	// PeerCache client
-	//
-	bool IsDownloadingFromPeerCache() const;
-	bool IsUploadingToPeerCache() const;
-	void SetPeerCacheDownState(EPeerCacheDownState eState);
-	void SetPeerCacheUpState(EPeerCacheUpState eState);
-
-	int  GetHttpSendState() const									{ return m_iHttpSendState; }
-	void SetHttpSendState(int iState)								{ m_iHttpSendState = iState; }
-
-	bool SendPeerCacheFileRequest();
-	bool ProcessPeerCacheQuery(const uchar *packet, UINT size);
-	bool ProcessPeerCacheAnswer(const uchar *packet, UINT size);
-	bool ProcessPeerCacheAcknowledge(const uchar *packet, UINT size);
-	void OnPeerCacheDownSocketClosed(int nErrorCode);
-	bool OnPeerCacheDownSocketTimeout();
-
-	bool ProcessPeerCacheDownHttpResponse(const CStringAArray &astrHeaders);
-	bool ProcessPeerCacheDownHttpResponseBody(const BYTE *pucData, UINT uSize);
-	void ProcessPeerCacheUpHttpResponse(const CStringAArray &astrHeaders);
-	UINT ProcessPeerCacheUpHttpRequest(const CStringAArray &astrHeaders);
-
 	virtual bool ProcessHttpDownResponse(const CStringAArray &astrHeaders);
 	virtual bool ProcessHttpDownResponseBody(const BYTE *pucData, UINT uSize);
 
-	CPeerCacheDownSocket *m_pPCDownSocket;
-	CPeerCacheUpSocket *m_pPCUpSocket;
-
 protected:
-	int		m_iHttpSendState;
-	uint32	m_uPeerCacheDownloadPushId;
-	uint32	m_uPeerCacheUploadPushId;
-	uint32	m_uPeerCacheRemoteIP;
-	bool	m_bPeerCacheDownHit;
-	bool	m_bPeerCacheUpHit;
-	EPeerCacheDownState m_ePeerCacheDownState;
-	EPeerCacheUpState m_ePeerCacheUpState;
-
 	// base
 	bool	ProcessHelloTypePacket(CSafeMemFile &data);
 	void	SendHelloTypePacket(CSafeMemFile &data);
@@ -524,34 +487,39 @@ protected:
 	uint8	m_bySupportSecIdent;
 	//--group aligned to int32
 	uint32	m_dwLastSignatureIP;
-	CString m_strClientSoftware;
-	CString m_strModVersion;
 	DWORD	m_dwLastSourceRequest;
 	DWORD	m_dwLastSourceAnswer;
 	DWORD	m_dwLastAskedForSources;
 	uint32	m_uSearchID;
 	int		m_iFileListRequested;
+
+	CString m_strClientSoftware;
+	CString m_strModVersion;
 	CString	m_strFileComment;
 	//--group aligned to int32
 	uint8	m_uFileRating;
 	uint8	m_cMessagesReceived;	// count of chatmessages he sent to me
 	uint8	m_cMessagesSent;		// count of chatmessages I sent to him
-	bool	m_bMultiPacket;
-	//--group aligned to int32
-	bool	m_bUnicodeSupport;
-	bool	m_bBuddyIDValid;
-	uint16	m_nBuddyPort;
-	//--group aligned to int32
-	uint8	m_byKadVersion;
 	uint8	m_cCaptchasSent;
-
+	//--group aligned to int32
+	uint16	m_nBuddyPort;
+	bool	m_bBuddyIDValid;
+	bool	m_bUnicodeSupport;
+	//--group aligned to int32
 	uint32	m_nBuddyIP;
 	DWORD	m_dwLastBuddyPingPongTime;
 	uchar	m_achBuddyID[MDX_DIGEST_SIZE];
+
 	CString m_strHelloInfo;
 	CString m_strMuleInfo;
 	CString m_strCaptchaChallenge;
 	CString m_strCaptchaPendingMsg;
+
+	CTypedPtrList<CPtrList, Packet*> m_WaitingPackets_list;
+	CList<PartFileStamp> m_DontSwap_list;
+
+	uint8	m_byKadVersion;
+	bool	m_bMultiPacket;
 
 	// States
 	EClientSoftware		m_clientSoft;
@@ -564,13 +532,14 @@ protected:
 	EChatCaptchaState	m_eChatCaptchaState;
 	EConnectingState	m_eConnectingState;
 
-	CTypedPtrList<CPtrList, Packet*> m_WaitingPackets_list;
-	CList<PartFileStamp> m_DontSwap_list;
-
 	////////////////////////////////////////////////////////////////////////
 	// Upload
 	//
 	int GetFilePrioAsNumber() const;
+
+	bool		m_bCollectionUploadSlot;
+	uint16		m_nUpPartCount;
+	uint16		m_nUpCompleteSourcesCount;
 
 	uint64		m_nTransferredUp;
 	uint64		m_nCurSessionUp;
@@ -582,9 +551,6 @@ protected:
 	UINT		m_cAsked;
 	UINT		m_slotNumber;
 	uchar		requpfileid[MDX_DIGEST_SIZE];
-	uint16		m_nUpPartCount;
-	uint16		m_nUpCompleteSourcesCount;
-	bool		m_bCollectionUploadSlot;
 
 	typedef struct
 	{
@@ -618,7 +584,21 @@ protected:
 	bool		m_bReaskPending;
 	bool		m_bUDPPending;
 	bool		m_bTransferredDownMini;
-//	bool		m_bHasMatchingAICHHash;
+
+	//////////////////////////////////////////////////////////
+	// Upload data rate computation
+	//
+	UINT		m_nUpDatarate;
+	uint64		m_nSumForAvgUpDataRate;
+	CList<TransferredData> m_AverageUDR_list;
+
+	//////////////////////////////////////////////////////////
+	// Download data rate computation
+	//
+	uint64		m_nSumForAvgDownDataRate;
+	CList<TransferredData> m_AverageDDR_list;
+	UINT		m_nDownDatarate;
+	UINT		m_nDownDataRateMS;
 
 	// Download from URL
 	CStringA	m_strUrlPath;
@@ -627,31 +607,18 @@ protected:
 	uint64		m_nUrlStartPos;
 
 	//////////////////////////////////////////////////////////
-	// Upload data rate computation
-	//
-	CList<TransferredData> m_AverageUDR_list;
-	UINT		m_nUpDatarate;
-	uint64		m_nSumForAvgUpDataRate;
-
-	//////////////////////////////////////////////////////////
-	// Download data rate computation
-	//
-	CList<TransferredData> m_AverageDDR_list;
-	UINT		m_nDownDatarate;
-	UINT		m_nDownDataRateMS;
-	uint64		m_nSumForAvgDownDataRate;
-
-	//////////////////////////////////////////////////////////
 	// GUI helpers
 	//
 	static CBarShader s_StatusBar;
 	static CBarShader s_UpStatusBar;
 	CTypedPtrList<CPtrList, Pending_Block_Struct*> m_PendingBlocks_list;
 	typedef CMap<const CPartFile*, const CPartFile*, DWORD, DWORD> CFileReaskTimesMap;
-	CFileReaskTimesMap m_fileReaskTimes; // ZZ:DownloadManager (one re-ask timestamp for each file)
-	DWORD		m_lastRefreshedDLDisplay;
-	DWORD		m_lastRefreshedULDisplay;
-	DWORD		m_random_update_wait;
+	CFileReaskTimesMap m_fileReaskTimes;	// ZZ:DownloadManager (one re-ask timestamp for each file)
+	DWORD   lastSwapForSourceExchangeTick;	// ZZ:DownloadManaager
+	DWORD   m_dwLastTriedToConnect;			// ZZ:DownloadManager (one re-ask timestamp for each file)
+	DWORD	m_lastRefreshedDLDisplay;
+	DWORD	m_lastRefreshedULDisplay;
+	DWORD	m_random_update_wait;
 
 	// using bit fields for less important flags, to save some bytes
 	UINT m_fHashsetRequestingMD4 : 1, // we have sent a hashset request to this client in the current connection
@@ -682,7 +649,5 @@ protected:
 		 m_fSupportsFileIdent : 1; // 0 bits left
 	UINT m_fHashsetRequestingAICH : 1; // 31 bits left
 
-	DWORD   lastSwapForSourceExchangeTick; // ZZ:DownloadManaager
-	DWORD   m_dwLastTriedToConnect; // ZZ:DownloadManager (one re-ask timestamp for each file)
 	bool	m_bSourceExchangeSwapped; // ZZ:DownloadManager
 };

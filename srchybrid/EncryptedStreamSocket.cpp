@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -72,7 +72,6 @@ Basic Obfuscated Handshake Protocol Client <-> Server:
 
 	- DH Agreement Specifics: sizeof(a) and sizeof(b) = 128 Bits, g = 2, p = dh768_p (see below), sizeof p, s, etc. = 768 bits
 */
-
 #include "stdafx.h"
 #include "EncryptedStreamSocket.h"
 #include "emule.h"
@@ -118,7 +117,7 @@ CEncryptedStreamSocket::CEncryptedStreamSocket()
 	: m_dbgbyEncryptionSupported(0xff)
 	, m_dbgbyEncryptionRequested(0xff)
 	, m_dbgbyEncryptionMethodSet(0xff)
-	, m_StreamCryptState(thePrefs.IsClientCryptLayerSupported() ? ECS_UNKNOWN : ECS_NONE)
+	, m_StreamCryptState(thePrefs.IsCryptLayerEnabled() ? ECS_UNKNOWN : ECS_NONE)
 	, m_EncryptionMethod(ENM_OBFUSCATION)
 	, m_bFullReceive(true)
 	, m_bServerCrypt()
@@ -231,7 +230,7 @@ int CEncryptedStreamSocket::Receive(void *lpBuf, int nBufLen, int nFlags)
 	m_nObfuscatedBytesReceived = CAsyncSocketEx::Receive(lpBuf, nBufLen, nFlags);
 	m_bFullReceive = (m_nObfuscatedBytesReceived == nBufLen);
 
-	if (m_nObfuscatedBytesReceived == SOCKET_ERROR || m_nObfuscatedBytesReceived <= 0)
+	if (m_nObfuscatedBytesReceived <= 0 || m_nObfuscatedBytesReceived == SOCKET_ERROR)
 		return m_nObfuscatedBytesReceived;
 
 	switch (m_StreamCryptState) {
@@ -268,7 +267,7 @@ int CEncryptedStreamSocket::Receive(void *lpBuf, int nBufLen, int nFlags)
 		// if we require an encrypted connection, cut the connection here.
 		// This shouldn't happen that often at least with other up-to-date eMule clients
 		// because they check for incompatibility before connecting if possible
-		if (thePrefs.IsClientCryptLayerRequired()) {
+		if (thePrefs.IsCryptLayerRequired()) {
 			// TODO: Remove me when i have been solved
 			// Even if the Require option is enabled, we currently have to accept unencrypted connection
 			// which are made for lowid/firewall checks from servers and other selected client from us.
@@ -282,7 +281,7 @@ int CEncryptedStreamSocket::Receive(void *lpBuf, int nBufLen, int nFlags)
 			SOCKADDR_IN sockAddr = {};
 			int nSockAddrLen = sizeof sockAddr;
 			GetPeerName((LPSOCKADDR)&sockAddr, &nSockAddrLen);
-			if (thePrefs.IsClientCryptLayerRequiredStrict() || (!theApp.serverconnect->AwaitingTestFromIP(sockAddr.sin_addr.s_addr)
+			if (thePrefs.IsCryptLayerRequiredStrict() || (!theApp.serverconnect->AwaitingTestFromIP(sockAddr.sin_addr.s_addr)
 				&& !theApp.clientlist->IsKadFirewallCheckIP(sockAddr.sin_addr.s_addr)))
 			{
 #if defined(_DEBUG) || defined(_BETA) || defined(_DEVBUILD)
@@ -649,9 +648,9 @@ int CEncryptedStreamSocket::Negotiate(const uchar *pBuffer, int nLen)
 			m_pfiReceiveBuffer = NULL;
 		}
 		return nRead;
-	} catch (CFileException *error) {
+	} catch (CFileException *ex) {
 		// can only be caused by a bug in negotiation handling, not by the data stream
-		error->Delete();
+		ex->Delete();
 		ASSERT(0);
 		OnError(ERR_ENCRYPTION);
 		if (m_pfiReceiveBuffer != NULL) {

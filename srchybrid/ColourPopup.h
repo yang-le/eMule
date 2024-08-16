@@ -48,7 +48,7 @@ public:
 
 	// Operations
 public:
-	BOOL Create(CPoint p, COLORREF crColour, CWnd *pParentWnd, LPCTSTR szDefaultText = NULL
+	BOOL CreateWnd(CPoint p, COLORREF crColour, CWnd *pParentWnd, LPCTSTR szDefaultText = NULL
 			, LPCTSTR szCustomText = NULL);
 
 	// Overrides

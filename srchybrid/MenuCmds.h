@@ -3,7 +3,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Menu commands for GUI only
 
-// Menu entries for the application system menu -> require a set of IDs with special restrictions!
+// Menu entries for the application system menu require IDs compatible with
+// WM_SYSCOMMAND - bit mask 0xfff0 will be applied.
 #define MP_RESTORE				0x110
 #define MP_CONNECT				0x120
 #define MP_DISCONNECT			0x130
@@ -11,6 +12,7 @@
 #define	MP_ABOUTBOX				0x150
 #define MP_VERSIONCHECK			0x160
 #define MP_MINIMIZETOTRAY		0x170
+
 
 #define MP_MESSAGE				10102
 #define MP_DETAIL				10103

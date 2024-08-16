@@ -1,6 +1,6 @@
 /*
 Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
-Copyright (C)2004-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+Copyright (C)2004-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -1135,9 +1135,9 @@ void CSearch::ProcessResultKeyword(const CUInt128 &uAnswer, TagList &rlistInfo, 
 							aAICHHashes.Add(CAICHHash(fileAICHTag));
 						}
 					}
-				} catch (CFileException *pError) {
+				} catch (CFileException *ex) {
 					DebugLogError(_T("ProcessResultKeyword: Corrupt or invalid TAG_KADAICHHASHRESULT received - ip: %s)"), (LPCTSTR)ipstr(htonl(uFromIP)));
-					pError->Delete();
+					ex->Delete();
 					aAICHHashPopularity.RemoveAll();
 					aAICHHashes.RemoveAll();
 				}
@@ -1275,9 +1275,9 @@ void CSearch::SendFindValue(CContact *pContact, bool bReAskMore)
 				}
 			} else
 				ASSERT(0);
-	} catch (CIOException *ioe) {
-		AddDebugLogLine(false, _T("Exception in CSearch::SendFindValue (IO error(%i))"), ioe->m_iCause);
-		ioe->Delete();
+	} catch (CIOException *ex) {
+		AddDebugLogLine(false, _T("Exception in CSearch::SendFindValue (IO error(%i))"), ex->m_iCause);
+		ex->Delete();
 	} catch (...) {
 		AddDebugLogLine(false, _T("Exception in CSearch::SendFindValue"));
 	}
@@ -1417,9 +1417,9 @@ void CSearch::PreparePacketForTags(CByteIO *byIO, CKnownFile *pFile, uint8 byTar
 			//If we get here, bad things happened. Will fix this later if it is a real issue.
 			ASSERT(0);
 		}
-	} catch (CIOException *ioe) {
-		AddDebugLogLine(false, _T("Exception in CSearch::PreparePacketForTags (IO error(%i))"), ioe->m_iCause);
-		ioe->Delete();
+	} catch (CIOException *ex) {
+		AddDebugLogLine(false, _T("Exception in CSearch::PreparePacketForTags (IO error(%i))"), ex->m_iCause);
+		ex->Delete();
 	} catch (...) {
 		AddDebugLogLine(false, _T("Exception in CSearch::PreparePacketForTags"));
 	}

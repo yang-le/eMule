@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -193,12 +193,14 @@ bool		DirAccsess(const CString &strDir);
 #define CompareLocaleStringNoCase	CompareLocaleStringNoCaseA
 #endif // !UNICODE
 bool IsThumbsDb(const CString &sFilePath, const CString &sFileName);
+bool CheckFileOpen(LPCTSTR pszFilePath, LPCTSTR pszFileTitle = NULL);
+bool CFileOpen(CFile &file, LPCTSTR lpszFileName, UINT nOpenFlags, LPCTSTR lpszMsg);
+void CommitAndClose(CStdioFile &file);
 
 ///////////////////////////////////////////////////////////////////////////////
 // GUI helpers
 //
 void InstallSkin(LPCTSTR pszSkinPackage);
-bool CheckFileOpen(LPCTSTR pszFilePath, LPCTSTR pszFileTitle = NULL);
 HINSTANCE BrowserOpen(LPCTSTR lpURL, LPCTSTR lpDirectory);
 void ShellOpen(LPCTSTR lpName, LPCTSTR lpParameters);
 void ShellOpenFile(LPCTSTR lpName);
@@ -208,6 +210,7 @@ CString ShellGetFolderPath(int iCSIDL);
 bool SelectDir(HWND hWnd, LPTSTR pszPath, LPCTSTR pszTitle = NULL, LPCTSTR pszDlgTitle = NULL);
 BOOL DialogBrowseFile(CString &rstrPath, LPCTSTR pszFilters, LPCTSTR pszDefaultFileName = NULL, DWORD dwFlags = 0, bool openfilestyle = true);
 void AddBuddyButton(HWND hwndEdit, HWND hwndButton);
+void DestroyIconsArr(HICON *pIcon, size_t cnt);
 bool InitAttachedBrowseButton(HWND hwndButton, HICON &ricoBrowse);
 void GetPopupMenuPos(const CListCtrl &lv, CPoint &point);
 void GetPopupMenuPos(const CTreeCtrl &tv, CPoint &point);
@@ -246,6 +249,8 @@ int GetSystemErrorString(DWORD dwError, CString &rstrError);
 int GetModuleErrorString(DWORD dwError, CString &rstrError, LPCTSTR pszModule);
 int GetErrorMessage(DWORD dwError, CString &rstrErrorMsg, DWORD dwFlags = 0);
 CString GetErrorMessage(DWORD dwError, DWORD dwFlags = 0);
+CString CExceptionStr(CException &ex);
+CString CExceptionStrDash(CException &ex);
 BOOL GetExceptionMessage(const CException &ex, LPTSTR lpszErrorMsg, UINT nMaxError);
 LPCTSTR	GetShellExecuteErrMsg(DWORD dwShellExecError);
 CString DbgGetHexDump(const uint8 *data, UINT size); //limited to the first 50 bytes
@@ -254,7 +259,7 @@ void Debug(LPCTSTR pszFmtMsg, ...);
 void DebugHexDump(const void *data, UINT lenData);
 void DebugHexDump(CFile &file);
 CString DbgGetFileInfo(const uchar *hash);
-CString DbgGetFileStatus(UINT nPartCount, CSafeMemFile *data);
+CString DbgGetFileStatus(UINT nPartCount, CSafeMemFile &data);
 LPCTSTR DbgGetHashTypeString(const uchar *hash);
 CString DbgGetClientID(uint32 nClientID);
 CString DbgGetDonkeyClientTCPOpcode(UINT opcode);

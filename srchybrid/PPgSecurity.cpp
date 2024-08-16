@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -84,19 +84,16 @@ void CPPgSecurity::LoadSettings()
 
 	CheckDlgButton(IDC_USESECIDENT, thePrefs.m_bUseSecureIdent);
 
-	GetDlgItem(IDC_RUNASUSER)->EnableWindow(
-		(thePrefs.GetWindowsVersion() == _WINVER_XP_ || thePrefs.GetWindowsVersion() == _WINVER_2K_ || thePrefs.GetWindowsVersion() == _WINVER_2003_)
-		&& thePrefs.m_nCurrentUserDirMode == 2);
+	WORD wv = thePrefs.GetWindowsVersion();
+	GetDlgItem(IDC_RUNASUSER)->EnableWindow(wv >= _WINVER_2K_ && wv <= _WINVER_2003_ && thePrefs.m_nCurrentUserDirMode == 2);
 	CheckDlgButton(IDC_RUNASUSER, thePrefs.IsRunAsUserEnabled());
 
-	CheckDlgButton(IDC_DISABLEOBFUSCATION, static_cast<UINT>(!thePrefs.IsClientCryptLayerSupported()));
-	GetDlgItem(IDC_ENABLEOBFUSCATION)->EnableWindow(thePrefs.IsClientCryptLayerSupported());
-	GetDlgItem(IDC_ONLYOBFUSCATED)->EnableWindow(thePrefs.IsClientCryptLayerSupported());
+	CheckDlgButton(IDC_DISABLEOBFUSCATION, static_cast<UINT>(!thePrefs.IsCryptLayerEnabled()));
+	GetDlgItem(IDC_ENABLEOBFUSCATION)->EnableWindow(thePrefs.IsCryptLayerEnabled());
+	CheckDlgButton(IDC_ENABLEOBFUSCATION, static_cast<UINT>(thePrefs.IsCryptLayerPreferred()));
+	GetDlgItem(IDC_ONLYOBFUSCATED)->EnableWindow(thePrefs.IsCryptLayerPreferred());
 
-	CheckDlgButton(IDC_ENABLEOBFUSCATION, static_cast<UINT>(thePrefs.IsClientCryptLayerRequested()));
-	GetDlgItem(IDC_ONLYOBFUSCATED)->EnableWindow(thePrefs.IsClientCryptLayerRequested());
-
-	CheckDlgButton(IDC_ONLYOBFUSCATED, thePrefs.IsClientCryptLayerRequired());
+	CheckDlgButton(IDC_ONLYOBFUSCATED, thePrefs.IsCryptLayerRequired());
 	CheckDlgButton(IDC_SEARCHSPAMFILTER, thePrefs.IsSearchSpamFilterEnabled());
 	CheckDlgButton(IDC_CHECK_FILE_OPEN, thePrefs.GetCheckFileOpen());
 
@@ -135,18 +132,11 @@ BOOL CPPgSecurity::OnInitDialog()
 
 BOOL CPPgSecurity::OnApply()
 {
-	bool bIPFilterSettingsChanged = false;
-
-	UINT iNewFilterLevel = GetDlgItemInt(IDC_FILTERLEVEL, NULL, FALSE);
-	if (iNewFilterLevel != thePrefs.filterlevel) {
-		thePrefs.filterlevel = iNewFilterLevel;
-		bIPFilterSettingsChanged = IsDlgButtonChecked(IDC_FILTERSERVERBYIPFILTER) != 0;
-	}
-
-	if (!thePrefs.filterserverbyip && IsDlgButtonChecked(IDC_FILTERSERVERBYIPFILTER))
-		bIPFilterSettingsChanged = true;
+	UINT uLevel = thePrefs.filterlevel;
+	bool bFilter = thePrefs.filterserverbyip;
+	thePrefs.filterlevel = GetDlgItemInt(IDC_FILTERLEVEL, NULL, FALSE);
 	thePrefs.filterserverbyip = IsDlgButtonChecked(IDC_FILTERSERVERBYIPFILTER) != 0;
-	if (bIPFilterSettingsChanged)
+	if (thePrefs.filterserverbyip && (!bFilter || uLevel != thePrefs.filterlevel))
 		theApp.emuledlg->serverwnd->serverlistctrl.RemoveAllFilteredServers();
 
 	thePrefs.m_bUseSecureIdent = IsDlgButtonChecked(IDC_USESECIDENT) != 0;
@@ -324,7 +314,7 @@ void CPPgSecurity::OnLoadIPFFromURL()
 				rar.Close();
 			} else {
 				CString strError;
-				strError.Format(_T("Failed to open file \"%s\".\r\n\r\nInvalid file format?\r\n\r\nDownload latest version of UNRAR.DLL from http://www.rarlab.com and copy UNRAR.DLL into eMule installation folder."), (LPCTSTR)url);
+				strError.Format(_T("Failed to open file \"%s\".\r\n\r\nInvalid file format?\r\n\r\n%s"), (LPCTSTR)url, CRARFile::sUnrar_download);
 				AfxMessageBox(strError, MB_ICONERROR);
 			}
 		} else {
@@ -509,12 +499,11 @@ void CPPgSecurity::OnObfuscatedDisabledChange()
 
 void CPPgSecurity::OnObfuscatedRequestedChange()
 {
-	if (IsDlgButtonChecked(IDC_ENABLEOBFUSCATION)) {
-		GetDlgItem(IDC_ENABLEOBFUSCATION)->EnableWindow(TRUE);
-		GetDlgItem(IDC_ONLYOBFUSCATED)->EnableWindow(TRUE);
-	} else {
-		GetDlgItem(IDC_ONLYOBFUSCATED)->EnableWindow(FALSE);
-		CheckDlgButton(IDC_ONLYOBFUSCATED, 0);
-	}
+	bool bCheck = IsDlgButtonChecked(IDC_ENABLEOBFUSCATION) != 0;
+	if (bCheck)
+		GetDlgItem(IDC_ENABLEOBFUSCATION)->EnableWindow(bCheck);
+	else
+		CheckDlgButton(IDC_ONLYOBFUSCATED, bCheck);
+	GetDlgItem(IDC_ONLYOBFUSCATED)->EnableWindow(bCheck);
 	OnSettingsChange();
 }

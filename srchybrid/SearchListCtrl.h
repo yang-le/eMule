@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -67,6 +67,7 @@ public:
 	void	ClearResultViewState(uint32 nResultsID);
 	void	NoTabs()								{ m_nResultsID = 0; }
 	void	UpdateSearch(CSearchFile *toupdate);
+	void	UpdateTabHeader(uint32 nResultsID);
 	EFileSizeFormat GetFileSizeFormat() const		{ return m_eFileSizeFormat; }
 	void	SetFileSizeFormat(EFileSizeFormat eFormat);
 

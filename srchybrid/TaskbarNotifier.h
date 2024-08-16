@@ -52,7 +52,7 @@ public:
 	CTaskbarNotifier();
 	virtual	~CTaskbarNotifier();
 
-	int Create(CWnd *pWndParent);
+	int CreateWnd(CWnd *pWndParent);
 	bool LoadConfiguration(LPCTSTR pszFilePath);
 	void Show(LPCTSTR pszCaption, TbnMsg nMsgType, LPCTSTR pszLink, BOOL bAutoClose = TRUE);
 	void ShowLastHistoryMessage();

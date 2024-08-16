@@ -79,7 +79,7 @@ protected:
 	void PlayAnimation();
 	void SetProgress(DWORD dwBytesRead);
 	void UpdateControlsDuringTransfer(DWORD dwStartTicks, DWORD &dwCurrentTicks, DWORD dwTotalBytesRead, DWORD &dwLastTotalBytes
-				, DWORD& dwLastPercentage, BOOL bGotFileSize, DWORD dwFileSize);
+				, DWORD &dwLastPercentage, BOOL bGotFileSize, DWORD dwFileSize);
 
 	CFile			m_FileToWrite;
 	CString			m_sError;

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -15,14 +15,15 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-/* This class supports obfuscation and encryption for an eMule TCP connection.
-   Right now only basic obfuscation is supported, but this can be expanded, as their is a
-   dedicated handshake to negotiate the encryption method used.
-
-   Please note, even if obfuscation uses encryption methods, it does not fulfill cryptographic standards since it
-   doesn't use secret (and for rc4 important: unique) keys
-*/
-
+/*
+ * This class supports obfuscation and encryption for an eMule TCP connection.
+ *
+ * Right now only basic obfuscation is supported, but this can be expanded,
+ * as their is a dedicated handshake to negotiate the encryption method used.
+ *
+ * Please note, obfuscation uses encryption, but not up to cryptographic standards
+ * since it doesn't use secret (and important for rc4: unique) keys
+ */
 #pragma once
 #include "AsyncSocketEx.h"
 #include "cryptopp/integer.h"
@@ -32,7 +33,7 @@
 #define ERR_ENCRYPTION				0x03
 #define ERR_ENCRYPTION_NOTALLOWED	0x04
 
-enum EStreamCryptState
+enum EStreamCryptState : uint8
 {
 	ECS_NONE = 0,			// Disabled or not available
 	ECS_UNKNOWN,			// Incoming connection, will test the first incoming data for encrypted protocol
@@ -42,7 +43,7 @@ enum EStreamCryptState
 	ECS_ENCRYPTING			// Encryption enabled
 };
 
-enum ENegotiatingState
+enum ENegotiatingState : uint8
 {
 	ONS_NONE,
 
@@ -64,7 +65,7 @@ enum ENegotiatingState
 	ONS_COMPLETE
 };
 
-enum EEncryptionMethods
+enum EEncryptionMethods : uint8
 {
 	ENM_OBFUSCATION = 0x00
 };

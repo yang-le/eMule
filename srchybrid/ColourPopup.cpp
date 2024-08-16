@@ -121,10 +121,16 @@ CColourPopup::CColourPopup(CPoint p, COLORREF crColour, CWnd *pParentWnd
 
 	m_crColour = m_crInitialColour = crColour;
 	m_pParent = pParentWnd;
-	m_strDefaultText = szDefaultText ? szDefaultText : _T("");
-	m_strCustomText = szCustomText ? szCustomText : _T("");
+	if (szDefaultText)
+		m_strDefaultText = szDefaultText;
+	else
+		m_strDefaultText.Empty();
+	if (szCustomText)
+		m_strCustomText = szCustomText;
+	else
+		m_strCustomText.Empty();
 
-	CColourPopup::Create(p, crColour, pParentWnd, szDefaultText, szCustomText);
+	CColourPopup::CreateWnd(p, crColour, pParentWnd, szDefaultText, szCustomText);
 }
 
 void CColourPopup::Initialise()
@@ -154,8 +160,8 @@ void CColourPopup::Initialise()
 
 	// Create the font
 	NONCLIENTMETRICS ncm;
-	ncm.cbSize = (UINT)sizeof(NONCLIENTMETRICS);
-	VERIFY(SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0));
+	ncm.cbSize = (UINT)sizeof NONCLIENTMETRICS;
+	VERIFY(SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof NONCLIENTMETRICS, &ncm, 0));
 	m_Font.CreateFontIndirect(&(ncm.lfMessageFont));
 
 	// Create the palette
@@ -165,19 +171,19 @@ void CColourPopup::Initialise()
 		PALETTEENTRY  PalEntry[MAX_COLOURS];
 	} pal;
 
-	LOGPALETTE *pLogPalette = (LOGPALETTE*)&pal;
+	LOGPALETTE *pLogPalette = &pal.LogPalette;
 	pLogPalette->palVersion = 0x300;
 	pLogPalette->palNumEntries = (WORD)m_nNumColours;
 
 	if (colourArrayPassed == NULL) //use default array
-		for (int i = 0; i < m_nNumColours; ++i) {
+		for (int i = m_nNumColours; --i >= 0 ;) {
 			pLogPalette->palPalEntry[i].peRed	= GetRValue(m_crColours[i].crColour);
 			pLogPalette->palPalEntry[i].peGreen	= GetGValue(m_crColours[i].crColour);
 			pLogPalette->palPalEntry[i].peBlue	= GetBValue(m_crColours[i].crColour);
 			pLogPalette->palPalEntry[i].peFlags	= 0;
 		}
 	else //if an array has been passed use it
-		for(int i = 0; i < m_nNumColours; ++i) {
+		for (int i = m_nNumColours; --i >= 0;) {
 			pLogPalette->palPalEntry[i].peRed	= GetRValue(colourArrayPassed[i]);
 			pLogPalette->palPalEntry[i].peGreen	= GetGValue(colourArrayPassed[i]);
 			pLogPalette->palPalEntry[i].peBlue	= GetBValue(colourArrayPassed[i]);
@@ -193,7 +199,7 @@ CColourPopup::~CColourPopup()
 	m_Palette.DeleteObject();
 }
 
-BOOL CColourPopup::Create(CPoint p, COLORREF crColour, CWnd *pParentWnd
+BOOL CColourPopup::CreateWnd(CPoint p, COLORREF crColour, CWnd *pParentWnd
 						, LPCTSTR szDefaultText /* = NULL */
 						, LPCTSTR szCustomText  /* = NULL */)
 {

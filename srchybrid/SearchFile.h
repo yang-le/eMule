@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -175,14 +175,14 @@ private:
 		byte noshow : 1;  //bit #0 - do not display in GUI lists
 		byte nowrite : 1; //bit #1 - do not save this entry
 	} m_flags;
+	uint32	m_nSearchID;
 	uint32	m_nSources;
 	uint32	m_nCompleteSources;
+	uint32	m_nKadPublishInfo;
 	uint32	m_nClientID;
-	uint16	m_nClientPort;
-	uint32	m_nSearchID;
 	uint32	m_nClientServerIP;
 	uint16	m_nClientServerPort;
-	uint32	m_nKadPublishInfo;
+	uint16	m_nClientPort;
 	CSimpleArray<SClient> m_aClients;
 	CSimpleArray<SServer> m_aServers;
 	CSimpleArray<CxImage*> m_listImages;
@@ -192,11 +192,11 @@ private:
 	uint32	m_nSpamRating;
 
 	// GUI helpers
-	bool		m_bPreviewPossible;
-	bool		m_list_bExpanded;
 	UINT		m_list_childcount;
 	CSearchFile	*m_list_parent;
 	EKnownType	m_eKnown;
+	bool		m_bPreviewPossible;
+	bool		m_list_bExpanded;
 };
 
 bool IsValidSearchResultClientIPPort(uint32 nIP, uint16 nPort);

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -99,10 +99,10 @@ void CIconStatic::SetIcon(LPCTSTR lpszIconID)
 			if (pPixels) {
 				if (m_MemBMP.GetBitmapBits(dwSize, pPixels) == dwSize) {
 					LPBYTE pLine = pPixels;
-					for (int iLines = bmMem.bmHeight; iLines-- > 0;) {
+					for (int iLines = bmMem.bmHeight; iLines > 0; --iLines) {
 						LPDWORD pdwPixel = (LPDWORD)pLine;
 						for (int x = 0; x < bmMem.bmWidth; ++x)
-							*pdwPixel++ &= 0x00FFFFFFu;
+							*pdwPixel++ &= ~0xFF000000u;
 						pLine += bmMem.bmWidthBytes;
 					}
 					m_MemBMP.SetBitmapBits(dwSize, pPixels);

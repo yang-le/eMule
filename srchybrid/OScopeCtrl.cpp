@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -175,7 +175,7 @@ COScopeCtrl::~COScopeCtrl()
 	delete[] m_PlotData;
 }
 
-BOOL COScopeCtrl::Create(DWORD dwStyle, const CRect &rect, CWnd *pParentWnd, UINT nID)
+BOOL COScopeCtrl::CreateWnd(DWORD dwStyle, const CRect &rect, CWnd *pParentWnd, UINT nID)
 {
 	static const CString &className(AfxRegisterWndClass(CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW, AfxGetApp()->LoadStandardCursor(IDC_ARROW)));
 

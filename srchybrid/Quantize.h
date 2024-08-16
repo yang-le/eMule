@@ -49,11 +49,11 @@ public:
 	virtual ~CQuantizer();
 	BOOL ProcessImage(HANDLE hImage);
 	UINT GetColorCount() const;
-	void SetColorTable(RGBQUAD* prgb);
+	void SetColorTable(RGBQUAD *prgb);
 
 protected:
 	void AddColor(NODE **ppNode, BYTE r, BYTE g, BYTE b, BYTE a, UINT nColorBits, UINT nLevel, UINT *pLeafCount, NODE **pReducibleNodes);
-	void* CreateNode(UINT nLevel, UINT nColorBits, UINT* pLeafCount, NODE **pReducibleNodes);
+	void* CreateNode(UINT nLevel, UINT nColorBits, UINT *pLeafCount, NODE **pReducibleNodes);
 	void DeleteTree(NODE **ppNode);
 	static void ReduceTree(UINT nColorBits, UINT *pLeafCount, NODE **pReducibleNodes);
 	static void GetPaletteColors(NODE *pTree, RGBQUAD *prgb, UINT *pIndex, UINT *pSum);

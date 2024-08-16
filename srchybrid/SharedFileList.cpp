@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -420,9 +420,9 @@ int CAddFileThread::Run()
 		return 0;
 	}
 
-	// Locking that hashing thread is needed because we may create a couple of those threads
+	// Locking this hashing thread is needed because we may create a few of those threads
 	// at startup when rehashing potentially corrupted downloading part files.
-	// If all those hash threads would run concurrently, the io-system would be under
+	// If all those hash threads would run concurrently, the I/O system would be under
 	// very heavy load and slowly progressing
 	CSingleLock hashingLock(&theApp.hashing_mut, TRUE); // hash only one file at a time
 
@@ -706,9 +706,8 @@ bool CSharedFileList::AddFile(CKnownFile *pFile)
 			delete pFile->m_pCollection;
 			pFile->m_pCollection = NULL;
 		} else if (!pFile->m_pCollection->GetCollectionAuthorKeyString().IsEmpty()) {
-			//If the collection has a key, resetting the file name will
-			//cause the key to be added into the word list to be stored
-			//into Kad.
+			//If the collection has a key, resetting the file name will cause
+			//the key to be added into the word list to be stored in Kad.
 			pFile->SetFileName(pFile->GetFileName());
 			//During the initial startup, shared files are not accessible
 			//to SetFileName which will then not call AddKeywords.
@@ -1579,32 +1578,25 @@ void CSharedFileList::CheckAndAddSingleFile(const CFileFind &ff)
 void CSharedFileList::Save() const
 {
 	const CString &strFullPath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + SHAREDFILES_FILE);
-	CStdioFile sdirfile;
-	if (sdirfile.Open(strFullPath, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyWrite | CFile::typeBinary)) {
+	CStdioFile file;
+	if (file.Open(strFullPath, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyWrite | CFile::typeBinary)) {
 		try {
 			// write Unicode byte order mark 0xFEFF
 			static const WORD wBOM = u'\xFEFF';
-			sdirfile.Write(&wBOM, sizeof(wBOM));
+			file.Write(&wBOM, sizeof(wBOM));
 
 			for (POSITION pos = m_liSingleSharedFiles.GetHeadPosition(); pos != NULL;) {
-				sdirfile.WriteString(m_liSingleSharedFiles.GetNext(pos));
-				sdirfile.Write(_T("\r\n"), 2 * sizeof(TCHAR));
+				file.WriteString(m_liSingleSharedFiles.GetNext(pos));
+				file.Write(_T("\r\n"), 2 * sizeof(TCHAR));
 			}
 			for (POSITION pos = m_liSingleExcludedFiles.GetHeadPosition(); pos != NULL;) {
-				sdirfile.WriteString(_T('-') + m_liSingleExcludedFiles.GetNext(pos)); // a '-' prefix means excluded
-				sdirfile.Write(_T("\r\n"), 2 * sizeof(TCHAR));
+				file.WriteString(_T('-') + m_liSingleExcludedFiles.GetNext(pos)); // a '-' prefix means excluded
+				file.Write(_T("\r\n"), 2 * sizeof(TCHAR));
 			}
-			if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.IsClosing())) {
-				sdirfile.Flush(); // flush file stream buffers to disk buffers
-				if (_commit(_fileno(sdirfile.m_pStream)) != 0) // commit disk buffers to disk
-					AfxThrowFileException(CFileException::hardIO, ::GetLastError(), sdirfile.GetFileName());
-			}
-			sdirfile.Close();
-		} catch (CFileException *error) {
-			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			GetExceptionMessage(*error, buffer, _countof(buffer));
-			DebugLogError(_T("Failed to save %s - %s"), (LPCTSTR)strFullPath, buffer);
-			error->Delete();
+			CommitAndClose(file);
+		} catch (CFileException *ex) {
+			DebugLogError(_T("Failed to save %s%s"), (LPCTSTR)strFullPath, (LPCTSTR)CExceptionStrDash(*ex));
+			ex->Delete();
 		}
 	} else
 		DebugLogError(_T("Failed to save %s"), (LPCTSTR)strFullPath);
@@ -1638,11 +1630,9 @@ void CSharedFileList::LoadSingleSharedFilesList()
 						AddSingleSharedFile(toadd, true);
 			}
 			sdirfile.Close();
-		} catch (CFileException *error) {
-			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			GetExceptionMessage(*error, buffer, _countof(buffer));
-			DebugLogError(_T("Failed to load %s - %s"), (LPCTSTR)strFullPath, buffer);
-			error->Delete();
+		} catch (CFileException *ex) {
+			DebugLogError(_T("Failed to load %s%s"), (LPCTSTR)strFullPath, (LPCTSTR)CExceptionStrDash(*ex));
+			ex->Delete();
 		}
 	} else
 		DebugLogError(_T("Failed to load %s"), (LPCTSTR)strFullPath);

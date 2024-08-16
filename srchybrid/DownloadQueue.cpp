@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -181,9 +181,9 @@ void CDownloadQueue::AddSearchToDownload(CSearchFile *toadd, uint8 paused, int c
 			sources.WriteUInt16(toadd->GetClientPort());
 			sources.SeekToBegin();
 			newfile->AddSources(&sources, toadd->GetClientServerIP(), toadd->GetClientServerPort(), false);
-		} catch (CFileException *error) {
+		} catch (CFileException *ex) {
 			ASSERT(0);
-			error->Delete();
+			ex->Delete();
 		}
 	}
 
@@ -197,9 +197,9 @@ void CDownloadQueue::AddSearchToDownload(CSearchFile *toadd, uint8 paused, int c
 			sources.WriteUInt16(aClients[i].m_nPort);
 			sources.SeekToBegin();
 			newfile->AddSources(&sources, aClients[i].m_nServerIP, aClients[i].m_nServerPort, false);
-		} catch (CFileException *error) {
+		} catch (CFileException *ex) {
 			ASSERT(0);
-			error->Delete();
+			ex->Delete();
 			break;
 		}
 	}
@@ -475,7 +475,7 @@ bool CDownloadQueue::CheckAndAddSource(CPartFile *sender, CUpDownClient *source)
 	}
 
 	// filter sources which are incompatible with our encryption setting (one requires it, and the other one doesn't support it)
-	if ((source->RequiresCryptLayer() && (!thePrefs.IsClientCryptLayerSupported() || !source->HasValidHash())) || (thePrefs.IsClientCryptLayerRequired() && (!source->SupportsCryptLayer() || !source->HasValidHash()))) {
+	if ((source->RequiresCryptLayer() && (!thePrefs.IsCryptLayerEnabled() || !source->HasValidHash())) || (thePrefs.IsCryptLayerRequired() && (!source->SupportsCryptLayer() || !source->HasValidHash()))) {
 #if defined(_DEBUG) || defined(_BETA) || defined(_DEVBUILD)
 		//if (thePrefs.GetDebugSourceExchange()) // TODO: Uncomment after testing
 		AddDebugLogLine(DLP_DEFAULT, false, _T("Rejected source because CryptLayer-Setting (Obfuscation) was incompatible for file %s : %s"), (LPCTSTR)sender->GetFileName(), (LPCTSTR)source->DbgGetClientInfo());
@@ -551,7 +551,7 @@ bool CDownloadQueue::CheckAndAddKnownSource(CPartFile *sender, CUpDownClient *so
 	}
 
 	// filter sources which are incompatible with our encryption setting (one requires it, and the other one doesn't support it)
-	if ((source->RequiresCryptLayer() && (!thePrefs.IsClientCryptLayerSupported() || !source->HasValidHash())) || (thePrefs.IsClientCryptLayerRequired() && (!source->SupportsCryptLayer() || !source->HasValidHash()))) {
+	if ((source->RequiresCryptLayer() && (!thePrefs.IsCryptLayerEnabled() || !source->HasValidHash())) || (thePrefs.IsCryptLayerRequired() && (!source->SupportsCryptLayer() || !source->HasValidHash()))) {
 #if defined(_DEBUG) || defined(_BETA) || defined(_DEVBUILD)
 		//if (thePrefs.GetDebugSourceExchange()) // TODO: Uncomment after testing
 		AddDebugLogLine(DLP_DEFAULT, false, _T("Rejected source because CryptLayer-Setting (Obfuscation) was incompatible for file %s : %s"), (LPCTSTR)sender->GetFileName(), (LPCTSTR)source->DbgGetClientInfo());
@@ -759,7 +759,7 @@ bool CDownloadQueue::SendNextUDPPacket()
 	if (filelist.IsEmpty()
 		|| !theApp.serverconnect->IsUDPSocketAvailable()
 		|| !theApp.serverconnect->IsConnected()
-		|| thePrefs.IsClientCryptLayerRequired()) // we cannot use sources received without user hash, so don't ask
+		|| thePrefs.IsCryptLayerRequired()) // we cannot use sources received without user hash, so don't ask
 	{
 		return false;
 	}
@@ -990,7 +990,7 @@ void CDownloadQueue::CheckDiskspace(bool bNotEnoughSpaceLeft)
 	uint64 nTotalAvailableSpaceMain = bNotEnoughSpaceLeft ? 0 : GetFreeDiskSpaceX(thePrefs.GetTempDir());
 
 	for (POSITION pos = filelist.GetHeadPosition(); pos != NULL;) {
-		CPartFile* cur_file = filelist.GetNext(pos);
+		CPartFile *cur_file = filelist.GetNext(pos);
 
 		switch (cur_file->GetStatus()) {
 		case PS_PAUSED:
@@ -1357,7 +1357,7 @@ void CDownloadQueue::ProcessLocalRequests()
 				}
 
 				uint8 byOpcode;
-				if (thePrefs.IsClientCryptLayerSupported() && theApp.serverconnect->GetCurrentServer() != NULL && theApp.serverconnect->GetCurrentServer()->SupportsGetSourcesObfuscation())
+				if (thePrefs.IsCryptLayerEnabled() && theApp.serverconnect->GetCurrentServer() != NULL && theApp.serverconnect->GetCurrentServer()->SupportsGetSourcesObfuscation())
 					byOpcode = OP_GETSOURCES_OBFU;
 				else
 					byOpcode = OP_GETSOURCES;
@@ -1616,13 +1616,9 @@ void CDownloadQueue::ExportPartMetFilesOverview() const
 	strTmpFileListPath.ReleaseBuffer();
 
 	CSafeBufferedFile file;
-	CFileException fexp;
-	if (!file.Open(strTmpFileListPath, CFile::modeCreate | CFile::modeWrite | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-		CString strError;
-		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (GetExceptionMessage(fexp, szError, _countof(szError)))
-			strError.Format(_T(" - %s"), szError);
-		LogError(_T("Failed to create part.met file list%s"), (LPCTSTR)strError);
+	CFileException fex;
+	if (!file.Open(strTmpFileListPath, CFile::modeCreate | CFile::modeWrite | CFile::typeBinary | CFile::shareDenyWrite, &fex)) {
+		LogError(_T("Failed to create part.met file list%s"), (LPCTSTR)CExceptionStrDash(fex));
 		return;
 	}
 
@@ -1649,13 +1645,7 @@ void CDownloadQueue::ExportPartMetFilesOverview() const
 					file.printf(_T("%s\t%s\r\n"), (LPCTSTR)pPartFile->GetFullName(), (LPCTSTR)pPartFile->GetED2kLink());
 			}
 		}
-
-		if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.IsClosing())) {
-			file.Flush(); // flush file stream buffers to disk buffers
-			if (_commit(_fileno(file.m_pStream)) != 0) // commit disk buffers to disk
-				AfxThrowFileException(CFileException::hardIO, ::GetLastError(), file.GetFileName());
-		}
-		file.Close();
+		CommitAndClose(file);
 
 		CString strBakFileListPath(strFileListPath);
 		PathRenameExtension(strBakFileListPath.GetBuffer(MAX_PATH), _T(".bak"));
@@ -1666,13 +1656,9 @@ void CDownloadQueue::ExportPartMetFilesOverview() const
 		if (_taccess(strFileListPath, 0) == 0)
 			CFile::Rename(strFileListPath, strBakFileListPath);
 		CFile::Rename(strTmpFileListPath, strFileListPath);
-	} catch (CFileException *e) {
-		CString strError;
-		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (GetExceptionMessage(*e, szError, _countof(szError)))
-			strError.Format(_T(" - %s"), szError);
-		LogError(_T("Failed to write part.met file list%s"), (LPCTSTR)strError);
-		e->Delete();
+	} catch (CFileException *ex) {
+		LogError(_T("Failed to write part.met file list%s"), (LPCTSTR)CExceptionStrDash(*ex));
+		ex->Delete();
 		file.Abort();
 		(void)_tremove(file.GetFilePath());
 	}

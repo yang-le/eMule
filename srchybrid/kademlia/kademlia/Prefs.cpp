@@ -33,7 +33,6 @@ their client on the eMule forum.
 #include "preferences.h"
 #include "emule.h"
 #include "emuledlg.h"
-#include "SafeFile.h"
 #include "serverlist.h"
 #include "Log.h"
 #include "MD5Sum.h"
@@ -97,24 +96,24 @@ void CPrefs::Init(LPCTSTR szFilename)
 
 void CPrefs::ReadFile()
 {
+	CSafeBufferedFile file;
+	if (!file.Open(m_sFilename, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite, NULL))
+		return;
+
+	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 	try {
-		CSafeBufferedFile file;
-		CFileException fexp;
-		if (file.Open(m_sFilename, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-			::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
-			m_uIP = file.ReadUInt32();
-			file.ReadUInt16();
-			file.ReadUInt128(m_uClientID);
-			// get rid of invalid kad IDs which may have been stored by older versions
-			if (m_uClientID == 0)
-				m_uClientID.SetValueRandom();
-			file.Close();
-		}
+		m_uIP = file.ReadUInt32();
+		file.ReadUInt16();
+		file.ReadUInt128(m_uClientID);
+		// get rid of invalid kad IDs which may have been stored by older versions
+		if (m_uClientID == 0)
+			m_uClientID.SetValueRandom();
+		file.Close();
 	} catch (CException *ex) {
 		ASSERT(0);
 		ex->Delete();
 	} catch (...) {
-		TRACE("Exception in CPrefs::readFile\n");
+		TRACE("Exception in CPrefs::ReadFile\n");
 	}
 }
 
@@ -122,8 +121,7 @@ void CPrefs::WriteFile()
 {
 	try {
 		CSafeBufferedFile file;
-		CFileException fexp;
-		if (file.Open(m_sFilename, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
+		if (file.Open(m_sFilename, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, NULL)) {
 			::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 			file.WriteUInt32(m_uIP);
 			file.WriteUInt16(0); //This is no longer used.
@@ -135,7 +133,7 @@ void CPrefs::WriteFile()
 		ASSERT(0);
 		ex->Delete();
 	} catch (...) {
-		TRACE("Exception in CPrefs::writeFile\n");
+		TRACE("Exception in CPrefs::WriteFile\n");
 	}
 }
 

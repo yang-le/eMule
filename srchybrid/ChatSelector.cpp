@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -90,7 +90,7 @@ void CChatSelector::Init(CChatWnd *pParent)
 	ModifyStyle(0, WS_CLIPCHILDREN);
 	SetAllIcons();
 
-	VERIFY((m_Timer = SetTimer(IDT_CHATITEMS, 1500, NULL)) != 0);
+	VERIFY((m_Timer = SetTimer(IDT_CHATITEMS, SEC2MS(3) / 2, NULL)) != 0);
 }
 
 void CChatSelector::OnSysColorChange()
@@ -114,12 +114,13 @@ void CChatSelector::SetAllIcons()
 
 void CChatSelector::UpdateFonts(CFont *pFont)
 {
-	TCITEM item;
-	item.mask = TCIF_PARAM;
-	for (int i = 0; GetItem(i++, &item);) {
-		CChatItem *ci = reinterpret_cast<CChatItem*>(item.lParam);
-		ci->log->SetFont(pFont);
-	}
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	for (int i = GetItemCount(); --i >= 0;)
+		if (GetItem(i, &ti)) {
+			CChatItem *ci = reinterpret_cast<CChatItem*>(ti.lParam);
+			ci->log->SetFont(pFont);
+		}
 }
 
 CChatItem* CChatSelector::StartSession(CUpDownClient *client, bool show)
@@ -171,13 +172,13 @@ CChatItem* CChatSelector::StartSession(CUpDownClient *client, bool show)
 		name.Format(_T("(%s)"), (LPCTSTR)GetResString(IDS_UNKNOWN));
 	chatitem->log->SetTitle(name);
 
-	TCITEM newitem;
-	newitem.mask = TCIF_PARAM | TCIF_TEXT | TCIF_IMAGE;
-	newitem.lParam = (LPARAM)chatitem;
+	TCITEM ti;
+	ti.mask = TCIF_PARAM | TCIF_TEXT | TCIF_IMAGE;
+	ti.lParam = (LPARAM)chatitem;
 	DupAmpersand(name);
-	newitem.pszText = const_cast<LPTSTR>((LPCTSTR)name);
-	newitem.iImage = 0;
-	int iItemNr = InsertItem(GetItemCount(), &newitem);
+	ti.pszText = const_cast<LPTSTR>((LPCTSTR)name);
+	ti.iImage = 0;
+	int iItemNr = InsertItem(GetItemCount(), &ti);
 	if (show || IsWindowVisible()) {
 		SetCurSel(iItemNr);
 		ShowChat();
@@ -187,33 +188,33 @@ CChatItem* CChatSelector::StartSession(CUpDownClient *client, bool show)
 
 int CChatSelector::GetTabByClient(CUpDownClient *client)
 {
-	for (int i = GetItemCount(); --i >= 0;) {
-		TCITEM cur_item;
-		cur_item.mask = TCIF_PARAM;
-		if (GetItem(i, &cur_item) && reinterpret_cast<CChatItem*>(cur_item.lParam)->client == client)
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	for (int i = GetItemCount(); --i >= 0;)
+		if (GetItem(i, &ti) && reinterpret_cast<CChatItem*>(ti.lParam)->client == client)
 			return i;
-	}
+
 	return -1;
 }
 
 CChatItem* CChatSelector::GetItemByIndex(int index)
 {
-	TCITEM item;
-	item.mask = TCIF_PARAM;
-	if (!GetItem(index, &item))
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	if (!GetItem(index, &ti))
 		return NULL;
 
-	return reinterpret_cast<CChatItem*>(item.lParam);
+	return reinterpret_cast<CChatItem*>(ti.lParam);
 }
 
 CChatItem* CChatSelector::GetItemByClient(CUpDownClient *client)
 {
-	for (int i = GetItemCount(); --i >= 0;) {
-		TCITEM cur_item;
-		cur_item.mask = TCIF_PARAM;
-		if (GetItem(i, &cur_item) && reinterpret_cast<CChatItem*>(cur_item.lParam)->client == client)
-			return reinterpret_cast<CChatItem*>(cur_item.lParam);
-	}
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	for (int i = GetItemCount(); --i >= 0;)
+		if (GetItem(i, &ti) && reinterpret_cast<CChatItem*>(ti.lParam)->client == client)
+			return reinterpret_cast<CChatItem*>(ti.lParam);
+
 	return NULL;
 }
 
@@ -361,36 +362,33 @@ void CChatSelector::ConnectingResult(CUpDownClient *sender, bool success)
 
 void CChatSelector::DeleteAllItems()
 {
-	for (int i = GetItemCount(); --i >= 0;) {
-		TCITEM cur_item;
-		cur_item.mask = TCIF_PARAM;
-		if (GetItem(i, &cur_item))
-			delete reinterpret_cast<CChatItem*>(cur_item.lParam);
-	}
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	for (int i = GetItemCount(); --i >= 0;)
+		if (GetItem(i, &ti))
+			delete reinterpret_cast<CChatItem*>(ti.lParam);
 }
 
 void CChatSelector::OnTimer(UINT_PTR /*nIDEvent*/)
 {
 	m_blinkstate = !m_blinkstate;
 	bool globalnotify = false;
-	for (int i = GetItemCount(); --i >= 0;) {
-		TCITEM cur_item;
-		cur_item.mask = TCIF_PARAM | TCIF_IMAGE;
-		if (!GetItem(i, &cur_item))
-			break;
-
-		cur_item.mask = TCIF_IMAGE;
-		if (reinterpret_cast<CChatItem*>(cur_item.lParam)->notify) {
-			cur_item.iImage = (m_blinkstate) ? 1 : 2;
-			SetItem(i, &cur_item);
-			HighlightItem(i, TRUE);
-			globalnotify = true;
-		} else if (cur_item.iImage != 0) {
-			cur_item.iImage = 0;
-			SetItem(i, &cur_item);
-			HighlightItem(i, FALSE);
+	TCITEM ti;
+	ti.mask = TCIF_PARAM | TCIF_IMAGE;
+	for (int i = GetItemCount(); --i >= 0;)
+		if (GetItem(i, &ti)) {
+			ti.mask = TCIF_IMAGE;
+			if (reinterpret_cast<CChatItem*>(ti.lParam)->notify) {
+				ti.iImage = (m_blinkstate) ? 1 : 2;
+				SetItem(i, &ti);
+				HighlightItem(i, TRUE);
+				globalnotify = true;
+			} else if (ti.iImage != 0) {
+				ti.iImage = 0;
+				SetItem(i, &ti);
+				HighlightItem(i, FALSE);
+			}
 		}
-	}
 
 	if (globalnotify) {
 		theApp.emuledlg->ShowMessageState(m_blinkstate ? 1 : 2);
@@ -407,12 +405,12 @@ CChatItem* CChatSelector::GetCurrentChatItem()
 	if (iCurSel == -1)
 		return NULL;
 
-	TCITEM cur_item;
-	cur_item.mask = TCIF_PARAM;
-	if (!GetItem(iCurSel, &cur_item))
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	if (!GetItem(iCurSel, &ti))
 		return NULL;
 
-	return reinterpret_cast<CChatItem*>(cur_item.lParam);
+	return reinterpret_cast<CChatItem*>(ti.lParam);
 }
 
 void CChatSelector::ShowChat()
@@ -425,17 +423,17 @@ void CChatSelector::ShowChat()
 	ci->log->ShowWindow(SW_SHOW);
 	m_pParent->m_wndMessage.SetFocus();
 
-	TCITEM item;
-	item.mask = TCIF_IMAGE;
-	item.iImage = 0;
-	SetItem(GetCurSel(), &item);
+	TCITEM ti;
+	ti.mask = TCIF_IMAGE;
+	ti.iImage = 0;
+	SetItem(GetCurSel(), &ti);
 	HighlightItem(GetCurSel(), FALSE);
 
 	// hide all other chat windows
-	item.mask = TCIF_PARAM;
+	ti.mask = TCIF_PARAM;
 	int i = 0;
-	while (GetItem(i++, &item)) {
-		CChatItem *ci2 = reinterpret_cast<CChatItem*>(item.lParam);
+	while (GetItem(i++, &ti)) {
+		CChatItem *ci2 = reinterpret_cast<CChatItem*>(ti.lParam);
 		if (ci2 != ci)
 			ci2->log->ShowWindow(SW_HIDE);
 	}
@@ -469,11 +467,11 @@ void CChatSelector::EndSession(CUpDownClient *client)
 	if (iCurSel == -1)
 		return;
 
-	TCITEM item;
-	item.mask = TCIF_PARAM;
-	if (!GetItem(iCurSel, &item) || item.lParam == 0)
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	if (!GetItem(iCurSel, &ti) || ti.lParam == 0)
 		return;
-	CChatItem *ci = reinterpret_cast<CChatItem*>(item.lParam);
+	CChatItem *ci = reinterpret_cast<CChatItem*>(ti.lParam);
 	ci->client->SetChatState(MS_NONE);
 	ci->client->SetChatCaptchaState(CA_NONE);
 
@@ -506,10 +504,10 @@ void CChatSelector::OnSize(UINT nType, int cx, int cy)
 	CRect rcChat;
 	GetChatSize(rcChat);
 
-	TCITEM item;
-	item.mask = TCIF_PARAM;
-	for (int i = 0; GetItem(i, &item); ++i) {
-		CChatItem *ci = reinterpret_cast<CChatItem*>(item.lParam);
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	for (int i = 0; GetItem(i, &ti); ++i) {
+		CChatItem *ci = reinterpret_cast<CChatItem*>(ti.lParam);
 		ci->log->SetWindowPos(NULL, rcChat.left, rcChat.top, rcChat.Width(), rcChat.Height(), SWP_NOZORDER);
 	}
 }
@@ -582,11 +580,11 @@ void CChatSelector::OnContextMenu(CWnd*, CPoint point)
 	if (m_iContextIndex == -1)
 		return;
 
-	TCITEM item;
-	item.mask = TCIF_PARAM;
-	GetItem(m_iContextIndex, &item);
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	GetItem(m_iContextIndex, &ti);
 
-	const CChatItem *ci = reinterpret_cast<CChatItem*>(item.lParam);
+	const CChatItem *ci = reinterpret_cast<CChatItem*>(ti.lParam);
 	if (ci == NULL)
 		return;
 
@@ -613,12 +611,11 @@ void CChatSelector::OnContextMenu(CWnd*, CPoint point)
 
 void CChatSelector::EnableSmileys(bool bEnable)
 {
-	for (int i = GetItemCount(); --i >= 0;) {
-		TCITEM cur_item;
-		cur_item.mask = TCIF_PARAM;
-		if (GetItem(i, &cur_item) && reinterpret_cast<CChatItem*>(cur_item.lParam)->log)
-			reinterpret_cast<CChatItem*>(cur_item.lParam)->log->EnableSmileys(bEnable);
-	}
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	for (int i = GetItemCount(); --i >= 0;)
+		if (GetItem(i, &ti) && reinterpret_cast<CChatItem*>(ti.lParam)->log)
+			reinterpret_cast<CChatItem*>(ti.lParam)->log->EnableSmileys(bEnable);
 }
 
 void CChatSelector::ReportConnectionProgress(CUpDownClient *pClient, const CString &strProgressDesc, bool bNoTimeStamp)
