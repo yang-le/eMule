@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -160,19 +160,10 @@ void CClientCreditsList::LoadList()
 	const CString &strFileName(sConfDir + CLIENTS_MET_FILENAME);
 	const int iOpenFlags = CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite;
 	CSafeBufferedFile file;
-	CFileException fexp;
-	if (!file.Open(strFileName, iOpenFlags, &fexp)) {
-		if (fexp.m_cause != CFileException::fileNotFound) {
-			CString strError(GetResString(IDS_ERR_LOADCREDITFILE));
-			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, _countof(szError)))
-				strError.AppendFormat(_T(" - %s"), szError);
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
-		}
+	if (!CFileOpen(file, strFileName, iOpenFlags, GetResString(IDS_ERR_LOADCREDITFILE)))
 		return;
-	}
-	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 
+	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 	try {
 		uint8 version = file.ReadUInt8();
 		if (version != CREDITFILE_VERSION && version != CREDITFILE_VERSION_29) {
@@ -207,14 +198,9 @@ void CClientCreditsList::LoadList()
 				LogError(GetResString(IDS_ERR_MAKEBAKCREDITFILE));
 
 			// reopen file
-			if (!file.Open(strFileName, iOpenFlags, &fexp)) {
-				CString strError(GetResString(IDS_ERR_LOADCREDITFILE));
-				TCHAR szError[MAX_CFEXP_ERRORMSG];
-				if (GetExceptionMessage(fexp, szError, _countof(szError)))
-					strError.AppendFormat(_T(" - %s"), szError);
-				LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+			if (!CFileOpen(file, strFileName, iOpenFlags, GetResString(IDS_ERR_LOADCREDITFILE)))
 				return;
-			}
+
 			::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 			file.Seek(1, CFile::begin); //set file pointer behind file version byte
 		}
@@ -241,15 +227,12 @@ void CClientCreditsList::LoadList()
 			AddLogLine(false, GetResString(IDS_CREDITFILELOADED) + GetResString(IDS_CREDITSEXPIRED), count - cDeleted, cDeleted);
 		else
 			AddLogLine(false, GetResString(IDS_CREDITFILELOADED), count);
-	} catch (CFileException *error) {
-		if (error->m_cause == CFileException::endOfFile)
+	} catch (CFileException *ex) {
+		if (ex->m_cause == CFileException::endOfFile)
 			LogError(LOG_STATUSBAR, GetResString(IDS_CREDITFILECORRUPT));
-		else {
-			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			GetExceptionMessage(*error, buffer, _countof(buffer));
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_CREDITFILEREAD), buffer);
-		}
-		error->Delete();
+		else
+			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_CREDITFILEREAD), (LPCTSTR)CExceptionStr(*ex));
+		ex->Delete();
 	}
 }
 
@@ -259,18 +242,14 @@ void CClientCreditsList::SaveList()
 		AddDebugLogLine(false, _T("Saving clients credit list file \"%s\""), CLIENTS_MET_FILENAME);
 	m_nLastSaved = ::GetTickCount();
 
-	const CString &metname(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + CLIENTS_MET_FILENAME);
 	CFile file;// no buffering needed here since we swap out the entire array
-	CFileException fexp;
-	if (!file.Open(metname, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-		CString strError(GetResString(IDS_ERR_FAILED_CREDITSAVE));
-		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (GetExceptionMessage(fexp, szError, _countof(szError)))
-			strError.AppendFormat(_T(" - %s"), szError);
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+	if (!CFileOpen(file
+		, thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + CLIENTS_MET_FILENAME
+		, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite
+		, GetResString(IDS_ERR_FAILED_CREDITSAVE)))
+	{
 		return;
 	}
-
 	byte *pBuffer = new byte[m_mapClients.GetCount() * sizeof(CreditStruct)]; //not CreditStruct[] because of alignment
 	uint32 count = 0;
 	for (const CClientCreditsMap::CPair *pair = m_mapClients.PGetFirstAssoc(); pair != NULL; pair = m_mapClients.PGetNextAssoc(pair)) {
@@ -285,13 +264,9 @@ void CClientCreditsList::SaveList()
 		file.Write(&count, 4);
 		file.Write(pBuffer, (UINT)(count * sizeof(CreditStruct)));
 		file.Close();
-	} catch (CFileException *error) {
-		CString strError(GetResString(IDS_ERR_FAILED_CREDITSAVE));
-		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (GetExceptionMessage(*error, szError, _countof(szError)))
-			strError.AppendFormat(_T(" - %s"), szError);
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
-		error->Delete();
+	} catch (CFileException *ex) {
+		LogError(LOG_STATUSBAR, _T("%s%s"), (LPCTSTR)GetResString(IDS_ERR_FAILED_CREDITSAVE), (LPCTSTR)CExceptionStrDash(*ex));
+		ex->Delete();
 	}
 
 	delete[] pBuffer;

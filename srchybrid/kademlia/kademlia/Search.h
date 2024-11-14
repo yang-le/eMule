@@ -46,25 +46,25 @@ namespace Kademlia
 	{
 		friend class CSearchManager;
 	public:
-		uint32	GetSearchID() const									{ return m_uSearchID; };
-		uint32	GetSearchType() const								{ return m_uType; };
+		uint32	GetSearchID() const									{ return m_uSearchID; }
+		uint32	GetSearchType() const								{ return m_uType; }
 		void	SetSearchType(uint32 uVal);
-		void	SetTargetID(const CUInt128 &uVal)					{ m_uTarget = uVal; };
-		CUInt128 GetTarget() const									{ return m_uTarget; };
+		void	SetTargetID(const CUInt128 &uVal)					{ m_uTarget = uVal; }
+		const CUInt128& GetTarget() const							{ return m_uTarget; }
 		uint32	GetAnswers() const;
-		uint32	GetKadPacketSent() const							{ return m_uKadPacketSent; };
-		uint32	GetRequestAnswer() const							{ return m_uTotalRequestAnswers; };
+		uint32	GetKadPacketSent() const							{ return m_uKadPacketSent; }
+		uint32	GetRequestAnswer() const							{ return m_uTotalRequestAnswers; }
 		uint32	GetNodeLoad() const;
-		uint32	GetNodeLoadResponse() const							{ return m_uTotalLoadResponses; };
-		uint32	GetNodeLoadTotal() const							{ return m_uTotalLoad; };
-		const	CStringW& GetGUIName() const;
+		uint32	GetNodeLoadResponse() const							{ return m_uTotalLoadResponses; }
+		uint32	GetNodeLoadTotal() const							{ return m_uTotalLoad; }
+		const CStringW& GetGUIName() const;
 		void	SetGUIName(LPCWSTR sGUIName);
 		void	SetSearchTermData(uint32 uSearchTermDataSize, LPBYTE pucSearchTermsData);
 		static CString GetTypeName(uint32 uType);
 
 		void	AddFileID(const CUInt128 &uID);
 		static void	PreparePacketForTags(CByteIO *byIO, CKnownFile *pFile, uint8 byTargetKadVersion);
-		bool	Stoping() const										{ return m_bStoping; };
+		bool	Stoping() const										{ return m_bStoping; }
 		void	UpdateNodeLoad(uint8 uLoad);
 
 		CKadClientSearcher*	GetNodeSpecialSearchRequester() const	{ return pNodeSpecialSearchRequester; }

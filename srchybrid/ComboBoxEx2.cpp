@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -36,7 +36,7 @@ int CComboBoxEx2::AddItem(LPCTSTR pszText, int iImage)
 	COMBOBOXEXITEM cbi = {};
 	cbi.mask = CBEIF_TEXT;
 	cbi.iItem = -1;
-	cbi.pszText = (LPTSTR)pszText;
+	cbi.pszText = const_cast<LPTSTR>(pszText);
 	if (iImage >= 0) {
 		cbi.mask |= CBEIF_IMAGE | CBEIF_SELECTEDIMAGE;
 		cbi.iImage = iImage;

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -812,6 +812,8 @@ void CDownloadListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 
 void CDownloadListCtrl::HideSources(CPartFile *toCollapse)
 {
+	if (!toCollapse->srcarevisible)
+		return;
 	SetRedraw(false);
 	for (int i = GetItemCount(); --i >= 0;) {
 		CtrlItem_Struct *item = reinterpret_cast<CtrlItem_Struct*>(GetItemData(i));
@@ -831,7 +833,7 @@ void CDownloadListCtrl::ExpandCollapseItem(int iItem, int iAction, bool bCollaps
 		return;
 	CtrlItem_Struct *content = reinterpret_cast<CtrlItem_Struct*>(GetItemData(iItem));
 
-	// to collapse/expand files when one of its source is selected
+	// to collapse/expand files when one of its sources is selected
 	if (content != NULL && bCollapseSource && content->parent != NULL) {
 		content = content->parent;
 
@@ -989,10 +991,10 @@ void CDownloadListCtrl::OnContextMenu(CWnd*, CPoint point)
 				m_FileMenu.EnableMenuItem((UINT)m_PreviewMenu.m_hMenu, m_PreviewMenu.HasEnabledItems() ? MF_ENABLED : MF_GRAYED);
 
 				if (iPreviewMenuEntries > 0)
-					if (!thePrefs.GetExtraPreviewWithMenu())
-						m_PreviewMenu.InsertMenu(1, MF_POPUP | MF_BYPOSITION | (iSelectedItems == 1 ? MF_ENABLED : MF_GRAYED), (UINT_PTR)PreviewWithMenu.m_hMenu, GetResString(IDS_PREVIEWWITH));
-					else
+					if (thePrefs.GetExtraPreviewWithMenu())
 						m_FileMenu.InsertMenu(MP_METINFO, MF_POPUP | MF_BYCOMMAND | (iSelectedItems == 1 ? MF_ENABLED : MF_GRAYED), (UINT_PTR)PreviewWithMenu.m_hMenu, GetResString(IDS_PREVIEWWITH));
+					else
+						m_PreviewMenu.InsertMenu(1, MF_POPUP | MF_BYPOSITION | (iSelectedItems == 1 ? MF_ENABLED : MF_GRAYED), (UINT_PTR)PreviewWithMenu.m_hMenu, GetResString(IDS_PREVIEWWITH));
 			} else {
 				m_FileMenu.EnableMenuItem(MP_PREVIEW, (iSelectedItems == 1 && iFilesToPreview == 1) ? MF_ENABLED : MF_GRAYED);
 				if (iPreviewMenuEntries > 0)
@@ -2602,7 +2604,6 @@ bool CDownloadListCtrl::ReportAvailableCommands(CList<int> &liAvailableCommands)
 				//iFilesPreviewType += static_cast<int>(pFile->IsPreviewableFileType());
 				iFilesToPreview += static_cast<int>(pFile->IsReadyForPreview());
 			}
-
 
 			// enable commands if there is at least one item which can be used for the action
 			if (iFilesToCancel > 0)

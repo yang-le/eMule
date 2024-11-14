@@ -81,7 +81,7 @@ namespace Kademlia
 			return __ascii_stricmp(GetString(), psz);
 		}
 
-		friend bool operator==(const CKadTagNameString& str1, LPCSTR const psz2) noexcept
+		friend bool operator==(const CKadTagNameString &str1, LPCSTR const psz2) noexcept
 		{
 			return (str1.Compare(psz2) == 0);
 		}

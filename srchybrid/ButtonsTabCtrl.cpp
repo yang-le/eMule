@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -59,7 +59,6 @@ void CButtonsTabCtrl::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 	tci.cchTextMax = _countof(szLabel);
 	if (!GetItem(nTabIndex, &tci))
 		return;
-	szLabel[_countof(szLabel) - 1] = _T('\0');
 
 	CDC *pDC = CDC::FromHandle(lpDIS->hDC);
 	if (!pDC)

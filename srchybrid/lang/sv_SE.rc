@@ -1543,7 +1543,7 @@ BEGIN
     IDS_NEWMSG              "Nytt meddelande från '%s' (IP:%s)"
     IDS_PREF_STARTNEXTFILECATONLY "bara i samma kategori"
     IDS_LOG_ULDL_EVENTS     "Logga uppladdnings-/nedladdningshändelser"
-    IDS_PEERCACHE_ENABLED   "Din ISP stöder PeerCache teknologin, aktiverar cachade nedladdningar!"
+//    IDS_PEERCACHE_ENABLED   "Din ISP stöder PeerCache teknologin, aktiverar cachade nedladdningar!"
     IDS_IRC_EMULEPROTO_ALLOWADDFRIEND "Tillåt användare att lägga till dig som kompis."
     IDS_DL_TRY_TO_GET_PREVIEW_PARTS "Ladda hem de delar som behövs för förhandsvisning först"
 END
@@ -1585,9 +1585,9 @@ BEGIN
                             "Aktivera så att eMule startar när windows startar. (avaktiverad som standard)"
     IDS_KAD_WAITCBK         "Vänta på svar från Kad"
     IDS_KAD_TOOMANDYKADLKPS "För många Kad Lookups"
-    IDS_PCDS_CLIENTWAIT     "ClientWait" //!
-    IDS_PCDS_CACHEWAIT      "CacheWait" //!
-    IDS_CACHE               "Cache" //!
+//    IDS_PCDS_CLIENTWAIT     "ClientWait" //!
+//    IDS_PCDS_CACHEWAIT      "CacheWait" //!
+//    IDS_CACHE               "Cache" //!
     IDS_INDEXED             "Indexerad"
     IDS_KADINFO_SRC         "\tKälla: %u\r\n"
     IDS_KADINFO_KEYW        "\tOrd: %u\r\n"

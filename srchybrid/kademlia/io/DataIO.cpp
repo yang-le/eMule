@@ -334,8 +334,8 @@ void CDataIO::WriteTag(const CKadTag &Tag)
 		case TAGTYPE_BSOB:
 			WriteBsob(Tag.GetBsob(), Tag.GetBsobSize());
 		}
-	} catch (CIOException *ioe) {
-		AddDebugLogLine(false, _T("Exception in CDataIO:writeTag (IO Error(%i))"), ioe->m_iCause);
+	} catch (CIOException *ex) {
+		AddDebugLogLine(false, _T("Exception in CDataIO:writeTag (IO Error(%i))"), ex->m_iCause);
 		throw;
 	} catch (...) {
 		AddDebugLogLine(false, _T("Exception in CDataIO:writeTag"));

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -42,21 +42,6 @@ enum EDownloadState : uint8
 	DS_ERROR,
 	DS_NONE,
 	DS_REMOTEQUEUEFULL  // not used yet, except in statistics
-};
-
-enum EPeerCacheDownState : uint8
-{
-	PCDS_NONE			= 0,
-	PCDS_WAIT_CLIENT_REPLY,
-	PCDS_WAIT_CACHE_REPLY,
-	PCDS_DOWNLOADING
-};
-
-enum EPeerCacheUpState : uint8
-{
-	PCUS_NONE			= 0,
-	PCUS_WAIT_CACHE_REPLY,
-	PCUS_UPLOADING
 };
 
 enum EChatState : uint8

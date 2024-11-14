@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -43,13 +43,13 @@ enum SMTPauth: byte
 {
 	AUTH_NONE,
 	AUTH_PLAIN,
-	AUTH_LOGIN
-	/* AUTH_GSSAPI,
+	AUTH_LOGIN /*,
+	AUTH_GSSAPI,
 	AUTH_DIGEST,
 	AUTH_MD5,
 	AUTH_CRAM,
 	AUTH_OAUTH1,
-	AUTH_OAUTH2	*/
+	AUTH_OAUTH2 */
 };
 
 
@@ -146,6 +146,7 @@ class CPreferences
 
 	static LPCSTR	m_pszBindAddrA;
 	static LPCWSTR	m_pszBindAddrW;
+	static void		MovePreferences(EDefaultDirectory eSrc, LPCTSTR const sFile, const CString &dst);
 public:
 	static CString	strNick;
 	// ZZ:UploadSpeedSense -->
@@ -253,11 +254,9 @@ public:
 	// Cumulative port breakdown stats for sent bytes...
 	static uint64	cumUpDataPort_4662;
 	static uint64	cumUpDataPort_OTHER;
-	static uint64	cumUpDataPort_PeerCache;
 	// Session port breakdown stats for sent bytes...
 	static uint64	sesUpDataPort_4662;
 	static uint64	sesUpDataPort_OTHER;
-	static uint64	sesUpDataPort_PeerCache;
 
 	// Cumulative source breakdown stats for sent bytes...
 	static uint64	cumUpData_File;
@@ -308,11 +307,9 @@ public:
 	// Cumulative port breakdown stats for received bytes...
 	static uint64	cumDownDataPort_4662;
 	static uint64	cumDownDataPort_OTHER;
-	static uint64	cumDownDataPort_PeerCache;
 	// Session port breakdown stats for received bytes...
 	static uint64	sesDownDataPort_4662;
 	static uint64	sesDownDataPort_OTHER;
-	static uint64	sesDownDataPort_PeerCache;
 
 	// Saved stats for cumulative connection data...
 	static float	cumConnAvgDownRate;
@@ -610,13 +607,6 @@ public:
 
 	static bool		m_bUseOldTimeRemaining;
 
-	// PeerCache
-	static time_t	m_uPeerCacheLastSearch;
-	static uint16	m_nPeerCachePort;
-	static bool		m_bPeerCacheWasFound;
-	static bool		m_bPeerCacheEnabled;
-	static bool		m_bPeerCacheShow;
-
 	// Firewall settings
 	static bool		m_bOpenPortsOnStartUp;
 
@@ -844,19 +834,15 @@ public:
 
 	// Cumulative port breakdown stats for sent bytes...
 	static uint64	GetUpTotalPortData()				{ return  GetCumUpDataPort_4662()
-																+ GetCumUpDataPort_OTHER()
-																+ GetCumUpDataPort_PeerCache(); }
+																+ GetCumUpDataPort_OTHER(); }
 	static uint64	GetCumUpDataPort_4662()				{ return cumUpDataPort_4662 +		sesUpDataPort_4662; }
 	static uint64	GetCumUpDataPort_OTHER()			{ return cumUpDataPort_OTHER +		sesUpDataPort_OTHER; }
-	static uint64	GetCumUpDataPort_PeerCache()		{ return cumUpDataPort_PeerCache +	sesUpDataPort_PeerCache; }
 
 	// Session port breakdown stats for sent bytes...
 	static uint64	GetUpSessionPortData()				{ return  sesUpDataPort_4662
-																+ sesUpDataPort_OTHER
-																+ sesUpDataPort_PeerCache; }
+																+ sesUpDataPort_OTHER; }
 	static uint64	GetUpDataPort_4662()				{ return sesUpDataPort_4662; }
 	static uint64	GetUpDataPort_OTHER()				{ return sesUpDataPort_OTHER; }
-	static uint64	GetUpDataPort_PeerCache()			{ return sesUpDataPort_PeerCache; }
 
 	// Cumulative DS breakdown stats for sent bytes...
 	static uint64	GetUpTotalDataFile()				{ return GetCumUpData_File() +	GetCumUpData_Partfile(); }
@@ -905,19 +891,15 @@ public:
 
 	// Cumulative port breakdown stats for received bytes...
 	static uint64	GetDownTotalPortData()				{ return  GetCumDownDataPort_4662()
-																+ GetCumDownDataPort_OTHER()
-																+ GetCumDownDataPort_PeerCache(); }
+																+ GetCumDownDataPort_OTHER(); }
 	static uint64	GetCumDownDataPort_4662()			{ return cumDownDataPort_4662		+ sesDownDataPort_4662; }
 	static uint64	GetCumDownDataPort_OTHER()			{ return cumDownDataPort_OTHER		+ sesDownDataPort_OTHER; }
-	static uint64	GetCumDownDataPort_PeerCache()		{ return cumDownDataPort_PeerCache	+ sesDownDataPort_PeerCache; }
 
 	// Session port breakdown stats for received bytes...
 	static uint64	GetDownSessionDataPort()			{ return   sesDownDataPort_4662
-																+ sesDownDataPort_OTHER
-																+ sesDownDataPort_PeerCache; }
+																+ sesDownDataPort_OTHER; }
 	static uint64	GetDownDataPort_4662()				{ return sesDownDataPort_4662; }
 	static uint64	GetDownDataPort_OTHER()				{ return sesDownDataPort_OTHER; }
-	static uint64	GetDownDataPort_PeerCache()			{ return sesDownDataPort_PeerCache; }
 
 	// Saved stats for cumulative connection data
 	static float	GetConnAvgDownRate()				{ return cumConnAvgDownRate; }
@@ -1340,16 +1322,6 @@ public:
 	static bool		IsRunAsUserEnabled();
 	static bool		IsPreferingRestrictedOverUser()		{ return m_bPreferRestrictedOverUser; }
 
-	// PeerCache
-	static bool		IsPeerCacheDownloadEnabled()		{ return (m_bPeerCacheEnabled && !IsClientCryptLayerRequested()); }
-	static time_t	GetPeerCacheLastSearch()			{ return m_uPeerCacheLastSearch; }
-	static bool		WasPeerCacheFound()					{ return m_bPeerCacheWasFound; }
-	static void		SetPeerCacheLastSearch(time_t dwLastSearch) { m_uPeerCacheLastSearch = dwLastSearch; }
-	static void		SetPeerCacheWasFound(bool bFound)	{ m_bPeerCacheWasFound = bFound; }
-	static uint16	GetPeerCachePort()					{ return m_nPeerCachePort; }
-	static void		SetPeerCachePort(uint16 nPort)		{ m_nPeerCachePort = nPort; }
-	static bool		GetPeerCacheShow()					{ return m_bPeerCacheShow; }
-
 	// Verbose log options
 	static bool		GetEnableVerboseOptions()			{ return m_bEnableVerboseOptions; }
 	static bool		GetVerbose()						{ return m_bVerbose; }
@@ -1399,7 +1371,7 @@ public:
 	static void		SetRememberDownloadedFiles(bool nv)	{ m_bRememberDownloadedFiles = nv; }
 	static void		SetRememberCancelledFiles(bool nv)	{ m_bRememberCancelledFiles = nv; }
 	// mail notifier
-	static const EmailSettings &GetEmailSettings()		{ return m_email; };
+	static const EmailSettings &GetEmailSettings()		{ return m_email; }
 	static void		SetEmailSettings(const EmailSettings &settings) { m_email = settings; }
 
 	static bool		IsNotifierSendMailEnabled()			{ return m_email.bSendMail; }
@@ -1413,12 +1385,10 @@ public:
 	static void		SetAllocCompleteMode(bool in)		{ m_bAllocFull = in; }
 
 	// encryption
-	static bool		IsClientCryptLayerSupported()		{ return m_bCryptLayerSupported; }
-	static bool		IsClientCryptLayerRequested()		{ return IsClientCryptLayerSupported() && m_bCryptLayerRequested; }
-	static bool		IsClientCryptLayerRequired()		{ return IsClientCryptLayerRequested() && m_bCryptLayerRequired; }
-	static bool		IsClientCryptLayerRequiredStrict()	{ return false; } // not even incoming test connections will be answered
-	static bool		IsServerCryptLayerUDPEnabled()		{ return IsClientCryptLayerSupported(); }
-	static bool		IsServerCryptLayerTCPRequested()	{ return IsClientCryptLayerRequested(); }
+	static bool		IsCryptLayerEnabled()				{ return m_bCryptLayerSupported; }
+	static bool		IsCryptLayerPreferred()				{ return IsCryptLayerEnabled() && m_bCryptLayerRequested; }
+	static bool		IsCryptLayerRequired()				{ return IsCryptLayerPreferred() && m_bCryptLayerRequired; }
+	static bool		IsCryptLayerRequiredStrict()			{ return false; } // not even incoming test connections will be answered
 	static uint32	GetKadUDPKey()						{ return m_dwKadUDPKey; }
 	static uint8	GetCryptTCPPaddingLength()			{ return m_byCryptTCPPaddingLength; }
 

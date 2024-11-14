@@ -215,11 +215,11 @@ void CRoutingBin::GetClosestTo(uint32 uMaxType, const CUInt128 &uTarget, uint32 
 	if (bEmptyFirst)
 		rmapResult.clear();
 
-	// Return 0 since we have no entries.
-	if (m_listEntries.empty())
+	// Return empty since we have no entries.
+	if (m_listEntries.empty() || !uMaxRequired)
 		return;
 
-	// First put results in sort order for uTarget so we can insert them correctly.
+	// First put results in sorted by uTarget order so we can insert them correctly.
 	// We don't care about max results at this time.
 	for (ContactList::const_iterator itContact = m_listEntries.begin(); itContact != m_listEntries.end(); ++itContact)
 		if ((*itContact)->GetType() <= uMaxType && (*itContact)->IsIpVerified()) {
@@ -233,13 +233,14 @@ void CRoutingBin::GetClosestTo(uint32 uMaxType, const CUInt128 &uTarget, uint32 
 
 	// Remove any extra results by least wanted first.
 	while (rmapResult.size() > uMaxRequired) {
+		ContactMap::const_iterator it = --rmapResult.end();
 		// Dec in use count.
 		if (bInUse)
-			(--rmapResult.end())->second->DecUse();
+			it->second->DecUse();
 		// remove from results
-		rmapResult.erase(--rmapResult.end());
+		rmapResult.erase(it);
 	}
-	// Return result count to the caller.
+	// Return result to the caller.
 }
 
 void CRoutingBin::AdjustGlobalTracking(uint32 uIP, bool bIncrease)

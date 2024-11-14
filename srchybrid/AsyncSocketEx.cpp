@@ -210,7 +210,7 @@ public:
 			if (msg.wParam >= static_cast<WPARAM>(m_nWindowDataSize)) //Index is within socket storage
 				continue;
 
-			CAsyncSocketEx *pSocket = m_pAsyncSocketExWindowData[msg.wParam].m_pSocket;
+			const CAsyncSocketEx *pSocket = m_pAsyncSocketExWindowData[msg.wParam].m_pSocket;
 			CAsyncSocketExLayer::t_LayerNotifyMsg *pMsg = reinterpret_cast<CAsyncSocketExLayer::t_LayerNotifyMsg*>(msg.lParam);
 			if (!pMsg || !pSocket || pSocket->m_SocketData.hSocket == INVALID_SOCKET || pSocket == pOrigSocket || pSocket->m_SocketData.hSocket != pMsg->hSocket)
 				delete pMsg;
@@ -489,7 +489,7 @@ public:
 					return 0;
 				}
 
-				CAsyncSocketEx *socket = pWnd->m_pThreadData->layerCloseNotify.front();
+				const CAsyncSocketEx *socket = pWnd->m_pThreadData->layerCloseNotify.front();
 				pWnd->m_pThreadData->layerCloseNotify.pop_front();
 				if (pWnd->m_pThreadData->layerCloseNotify.empty())
 					::KillTimer(hWnd, 1);
@@ -587,18 +587,18 @@ private:
 IMPLEMENT_DYNAMIC(CAsyncSocketEx, CObject)
 
 CAsyncSocketEx::CAsyncSocketEx()
-	: m_lEvent()
+	: m_pLocalAsyncSocketExThreadData()
 	, m_pAsyncGetHostByNameBuffer()
 	, m_hAsyncGetHostByNameHandle()
 	, m_nAsyncGetHostByNamePort()
-	, m_pLocalAsyncSocketExThreadData()
 #ifndef NOSOCKETSTATES
-	, m_nPendingEvents()
 	, m_nState(notsock)
+	, m_nPendingEvents()
 #endif //NOSOCKETSTATES
 	, m_pFirstLayer()
 	, m_pLastLayer()
 	, m_nSocketPort()
+	, m_lEvent()
 {
 	m_SocketData.addrInfo = NULL;
 	m_SocketData.nextAddr = NULL;
@@ -1119,11 +1119,6 @@ BOOL CAsyncSocketEx::IOCtl(long lCommand, DWORD *lpArgument)
 	return !ioctlsocket(m_SocketData.hSocket, lCommand, lpArgument);
 }
 
-int CAsyncSocketEx::GetLastError()
-{
-	return WSAGetLastError();
-}
-
 BOOL CAsyncSocketEx::TriggerEvent(long lEvent)
 {
 	if (m_SocketData.hSocket == INVALID_SOCKET)
@@ -1144,11 +1139,6 @@ BOOL CAsyncSocketEx::TriggerEvent(long lEvent)
 		return res;
 	}
 	return ::PostMessage(GetHelperWindowHandle(), WM_SOCKETEX_NOTIFY + m_SocketData.nSocketIndex, m_SocketData.hSocket, WSAGETSELECTEVENT(lEvent));
-}
-
-SOCKET CAsyncSocketEx::GetSocketHandle()
-{
-	return m_SocketData.hSocket;
 }
 
 HWND CAsyncSocketEx::GetHelperWindowHandle()
@@ -1209,25 +1199,6 @@ BOOL CAsyncSocketEx::GetSockOpt(int nOptionName, void *lpOptionValue, int *lpOpt
 BOOL CAsyncSocketEx::SetSockOpt(int nOptionName, const void *lpOptionValue, int nOptionLen, int nLevel /*=SOL_SOCKET*/)
 {
 	return !setsockopt(m_SocketData.hSocket, nLevel, nOptionName, (LPSTR)lpOptionValue, nOptionLen);
-}
-
-#ifndef NOSOCKETSTATES
-
-int CAsyncSocketEx::GetState() const
-{
-	return m_nState;
-}
-
-void CAsyncSocketEx::SetState(int nState)
-{
-	m_nState = nState;
-}
-
-#endif //NOSOCKETSTATES
-
-ADDRESS_FAMILY CAsyncSocketEx::GetFamily() const
-{
-	return m_SocketData.nFamily;
 }
 
 bool CAsyncSocketEx::SetFamily(ADDRESS_FAMILY nFamily)

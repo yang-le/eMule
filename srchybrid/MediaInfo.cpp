@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -323,9 +323,8 @@ CString GetVideoFormatDisplayName(DWORD biCompression)
 		{
 			sName = CStringA((LPCSTR)&biCompression, 4);
 			DWORD fcc;
-			unsigned char *cp = (unsigned char*)&biCompression;
 			for (int i = 0; i < sizeof(DWORD); ++i)
-				((byte*)&fcc)[i] = (byte)toupper(*cp++);
+				((byte*)&fcc)[i] = (byte)toupper(((unsigned char*)&biCompression)[i]);
 
 			switch (fcc) {
 			case MAKEFOURCC('D', 'I', 'V', '3'):
@@ -416,7 +415,7 @@ CString GetVideoFormatDisplayName(DWORD biCompression)
 		}
 	}
 	if (pFormat)
-		sName += pFormat;;
+		sName += pFormat;
 	return sName;
 }
 
@@ -1079,9 +1078,9 @@ struct SRmFileProp
 	{
 	}
 	SRmFileProp(const SRmFileProp &r)
+		: strName(r.strName)
+		, strValue(r.strValue)
 	{
-		strName = r.strName;
-		strValue = r.strValue;
 	}
 
 	SRmFileProp& operator=(const SRmFileProp &r)
@@ -1158,7 +1157,6 @@ bool GetRMHeaders(LPCTSTR pszFileName, SMediaInfo *mi, bool &rbIsRM, bool bFullI
 	bool bReadPROP = false;
 	bool bReadMDPR_Video = false;
 	bool bReadMDPR_Audio = false;
-	bool bReadMDPR_File = false;
 	bool bReadCONT = false;
 	UINT nFileBitrate = 0;
 	CString strCopyright;
@@ -1194,6 +1192,7 @@ bool GetRMHeaders(LPCTSTR pszFileName, SMediaInfo *mi, bool &rbIsRM, bool bFullI
 		rbIsRM = true;
 		mi->strFileFormat = _T("Real Media");
 
+		bool bReadMDPR_File = false;
 		bool bBrokenFile = false;
 		while (!bBrokenFile && (!bReadCONT || !bReadPROP || !bReadMDPR_Video || !bReadMDPR_Audio || (bFullInfo && !bReadMDPR_File))) {
 			ullCurFilePos = file.GetPosition();
@@ -1495,7 +1494,7 @@ bool GetRMHeaders(LPCTSTR pszFileName, SMediaInfo *mi, bool &rbIsRM, bool bFullI
 			mi->strInfo << _T("   ") << _T("Copyright") << _T(":\t") << strCopyright << _T("\n");
 		if (!strComment.IsEmpty())
 			mi->strInfo << _T("   ") << GetResString(IDS_COMMENT) << _T(":\t") << strComment << _T("\n");
-		for (int i = 0; i < aFileProps.GetCount(); ++i)
+		for (INT_PTR i = 0; i < aFileProps.GetCount(); ++i)
 			if (!aFileProps[i].strValue.IsEmpty())
 				mi->strInfo << _T("   ") << (CString)aFileProps[i].strName << _T(":\t") << (CString)aFileProps[i].strValue << _T("\n");
 	}
@@ -1989,7 +1988,7 @@ bool GetWMHeaders(LPCTSTR pszFileName, SMediaInfo *mi, bool &rbIsWM, bool bFullI
 		HRESULT hr = E_FAIL;
 
 		// 1st, try to read the file with the 'WMEditor'. This object tends to give more (stream) information than the 'WMSyncReader'.
-		// Though the 'WMEditor' is not capable of reading files which are currently opened for 'writing'.
+		// Though the 'WMEditor' cannot read files that are open for 'writing'.
 		if (pIUnkReader == NULL) {
 			CComPtr<IWMMetadataEditor> pIWMMetadataEditor;
 			if (theWmvCoreDLL.m_pfnWMCreateEditor != NULL && (hr = (*theWmvCoreDLL.m_pfnWMCreateEditor)(&pIWMMetadataEditor)) == S_OK) {
@@ -2731,11 +2730,11 @@ bool GetWMHeaders(LPCTSTR pszFileName, SMediaInfo *mi, bool &rbIsWM, bool bFullI
 		CComQIPtr<IWMMetadataEditor> pIWMMetadataEditor(pIUnkReader);
 		if (pIWMMetadataEditor)
 			VERIFY(pIWMMetadataEditor->Close() == S_OK);
-	}
-	if (pIUnkReader) {
-		CComQIPtr<IWMSyncReader> pIWMSyncReader(pIUnkReader);
-		if (pIWMSyncReader)
-			VERIFY(pIWMSyncReader->Close() == S_OK);
+		else {
+			CComQIPtr<IWMSyncReader> pIWMSyncReader(pIUnkReader);
+			if (pIWMSyncReader)
+				VERIFY(pIWMSyncReader->Close() == S_OK);
+		}
 	}
 
 	return mi->iAudioStreams > 0

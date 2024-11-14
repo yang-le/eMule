@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -118,20 +118,20 @@ private:
 	CSearchListCtrl *outputwnd;
 	CString	m_strResultFileType;
 
-	uint32	m_nCurED2KSearchID;
-
 	// spam filter
 	typedef CMap<uint32, uint32, bool, bool> CSpammerIPMap;
 	typedef CMap<uint32, uint32, UDPServerRecord*, UDPServerRecord*> CUDPServerRecordMap;
-	CStringArray							m_astrSpamCheckCurSearchExp;
-	CStringArray							m_astrKnownSpamNames;
-	CStringArray							m_astrKnownSimilarSpamNames;
-	CSpammerIPMap							m_mapKnownSpamServerIPs;
-	CSpammerIPMap							m_mapKnownSpamSourcesIPs;
-	CMap<CSKey, const CSKey&, bool, bool>	m_mapKnownSpamHashes;
-	CArray<uint64>							m_aui64KnownSpamSizes;
-	CArray<uint32, uint32>					m_aCurED2KSentRequestsIPs;
-	CArray<uint32, uint32>					m_aCurED2KSentReceivedIPs;
-	CUDPServerRecordMap					m_mUDPServerRecords;
-	bool									m_bSpamFilterLoaded;
+	CMap<CSKey, const CSKey&, bool, bool> m_mapKnownSpamHashes;
+	CSpammerIPMap			m_mapKnownSpamServerIPs;
+	CSpammerIPMap			m_mapKnownSpamSourcesIPs;
+	CUDPServerRecordMap		m_mUDPServerRecords;
+	CStringArray			m_astrSpamCheckCurSearchExp;
+	CStringArray			m_astrKnownSpamNames;
+	CStringArray			m_astrKnownSimilarSpamNames;
+	CArray<uint64>			m_aui64KnownSpamSizes;
+	CArray<uint32, uint32>	m_aCurED2KSentRequestsIPs;
+	CArray<uint32, uint32>	m_aCurED2KSentReceivedIPs;
+
+	uint32	m_nCurED2KSearchID;
+	bool	m_bSpamFilterLoaded;
 };

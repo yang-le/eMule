@@ -218,7 +218,7 @@ protected:
 	virtual DWORD   GetWindowStyle();
 	virtual int     GetWidth();
 	virtual CString GetCaption();
-	COLORREF        GetColor() const						{ return m_Color; };
+	COLORREF        GetColor() const						{ return m_Color; }
 	void            SetColor(COLORREF color);
 	void            GetFontItem(LOGFONT *pLogFont);
 	void            SetFontItem(const LOGFONT *pLogFont);
@@ -353,11 +353,11 @@ public:
 
 protected:
 	//Misc methods
-	void SetTreeBuddy(CTreeOptionsCtrl *pTreeCtrl)			{ m_pTreeCtrl = pTreeCtrl; };
-	void SetTreeItem(HTREEITEM hItem)						{ m_hTreeCtrlItem = hItem; };
+	void SetTreeBuddy(CTreeOptionsCtrl *pTreeCtrl)			{ m_pTreeCtrl = pTreeCtrl; }
+	void SetTreeItem(HTREEITEM hItem)						{ m_hTreeCtrlItem = hItem; }
 	virtual DWORD GetWindowStyle();
-	DWORD GetIPAddress() const								{ return m_dwAddress; };
-	void SetIPAddress(DWORD dwAddress)						{ m_dwAddress = dwAddress; };
+	DWORD GetIPAddress() const								{ return m_dwAddress; }
+	void SetIPAddress(DWORD dwAddress)						{ m_dwAddress = dwAddress; }
 	virtual BOOL IsRelatedWnd(CWnd *pChild);
 
 	//{{AFX_VIRTUAL(CTreeOptionsIPAddressCtrl)
@@ -450,16 +450,16 @@ public:
 	virtual	~CTreeOptionsCtrl();
 
 	//Misc
-	void    SetAutoSelect(BOOL bAutoSelect)					{ m_bAutoSelect = bAutoSelect; };
-	BOOL    GetAutoSelect() const							{ return m_bAutoSelect; };
-	void    SetImageListResourceIDToUse(UINT nResourceID)	{ m_nilID = nResourceID; };
-	UINT    GetImageListResourceIDToUse() const				{ return m_nilID; };
-	void    SetToggleOverIconOnly(BOOL bToggle)				{ m_bToggleOverIconOnly = bToggle; };
-	BOOL    GetToggleOverIconOnly() const					{ return m_bToggleOverIconOnly; };
+	void    SetAutoSelect(BOOL bAutoSelect)					{ m_bAutoSelect = bAutoSelect; }
+	BOOL    GetAutoSelect() const							{ return m_bAutoSelect; }
+	void    SetImageListResourceIDToUse(UINT nResourceID)	{ m_nilID = nResourceID; }
+	UINT    GetImageListResourceIDToUse() const				{ return m_nilID; }
+	void    SetToggleOverIconOnly(BOOL bToggle)				{ m_bToggleOverIconOnly = bToggle; }
+	BOOL    GetToggleOverIconOnly() const					{ return m_bToggleOverIconOnly; }
 	DWORD   GetUserItemData(HTREEITEM hItem) const;
 	BOOL    SetUserItemData(HTREEITEM hItem, DWORD dwData);
-	void    SetTextSeparator(const CString &sSeparator)		{ m_sSeparator = sSeparator; };
-	const CString& GetTextSeparator() const					{ return m_sSeparator; };
+	void    SetTextSeparator(const CString &sSeparator)		{ m_sSeparator = sSeparator; }
+	const CString& GetTextSeparator() const					{ return m_sSeparator; }
 	void    Clear();
 	virtual BOOL DeleteAllItems();
 

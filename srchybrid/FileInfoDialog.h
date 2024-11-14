@@ -120,8 +120,8 @@ public:
 				// ---
 				ULONGLONG ullVersion = GetModuleVersion(m_hLib);
 				if (ullVersion >= MAKEDLLVERULL(0, 7, 13, 0)
-					&& ((thePrefs.GetWindowsVersion() == _WINVER_XP_ && ullVersion < MAKEDLLVERULL(21, 4, 0, 0))
-						|| ullVersion < MAKEDLLVERULL(23, 11, 0, 0)))
+					&& (thePrefs.GetWindowsVersion() >= _WINVER_VISTA_ && ullVersion < MAKEDLLVERULL(24, 7, 0, 0)
+						|| ullVersion < MAKEDLLVERULL(21, 4, 0, 0))) //21.03 for Windows XP
 				{
 					(FARPROC&)m_pfnMediaInfo_New = GetProcAddress(m_hLib, "MediaInfo_New");
 					(FARPROC&)m_pfnMediaInfo_Delete = GetProcAddress(m_hLib, "MediaInfo_Delete");

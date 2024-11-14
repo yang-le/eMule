@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -98,7 +98,6 @@
 			- Packets which use the senderkey are prone to BruteForce attacks, which take only a few minutes (2^32)
 			  which is while not acceptable for encryption fair enough for obfuscation
 */
-
 #include "stdafx.h"
 #include "EncryptedDatagramSocket.h"
 #include "emule.h"
@@ -158,7 +157,7 @@ int CEncryptedDatagramSocket::DecryptReceivedClient(BYTE *pbyBufIn, int nBufLen,
 	*nReceiverVerifyKey = 0;
 	*nSenderVerifyKey = 0;
 
-	if (nResult <= CRYPT_HEADER_SIZE /*|| !thePrefs.IsClientCryptLayerSupported()*/)
+	if (nResult <= CRYPT_HEADER_SIZE /*|| !thePrefs.IsCryptLayerEnabled()*/)
 		return nResult;
 
 	Crypt_Header_Struct &crypt = *reinterpret_cast<Crypt_Header_Struct*>(pbyBufIn);
@@ -290,7 +289,7 @@ int CEncryptedDatagramSocket::DecryptReceivedClient(BYTE *pbyBufIn, int nBufLen,
 uint32 CEncryptedDatagramSocket::EncryptSendClient(uchar *pbyBuf, uint32 nBufLen, const uchar *pachClientHashOrKadID, bool bKad, uint32 nReceiverVerifyKey, uint32 nSenderVerifyKey)
 {
 	ASSERT(theApp.GetPublicIP() != 0 || bKad);
-	ASSERT(thePrefs.IsClientCryptLayerSupported());
+	ASSERT(thePrefs.IsCryptLayerEnabled());
 	ASSERT(pachClientHashOrKadID != NULL || nReceiverVerifyKey);
 	ASSERT((nReceiverVerifyKey == 0 && nSenderVerifyKey == 0) || bKad);
 
@@ -381,7 +380,7 @@ int CEncryptedDatagramSocket::DecryptReceivedServer(BYTE *pbyBufIn, int nBufLen,
 	int nResult = nBufLen;
 	*ppbyBufOut = pbyBufIn;
 
-	if (nResult <= CRYPT_HEADER_SIZE || !thePrefs.IsServerCryptLayerUDPEnabled() || dwBaseKey == 0)
+	if (nResult <= CRYPT_HEADER_SIZE || !thePrefs.IsCryptLayerEnabled() || dwBaseKey == 0)
 		return nResult;
 
 	Crypt_Header_Struct &crypt = *reinterpret_cast<Crypt_Header_Struct*>(pbyBufIn);
@@ -426,7 +425,7 @@ int CEncryptedDatagramSocket::DecryptReceivedServer(BYTE *pbyBufIn, int nBufLen,
 
 uint32 CEncryptedDatagramSocket::EncryptSendServer(uchar *pbyBuf, uint32 nBufLen, uint32 dwBaseKey)
 {
-	ASSERT(thePrefs.IsServerCryptLayerUDPEnabled());
+	ASSERT(thePrefs.IsCryptLayerEnabled());
 	ASSERT(dwBaseKey);
 
 	const uint16 nRandomKeyPart = (uint16)cryptRandomGen.GenerateWord32(0, _UI16_MAX);

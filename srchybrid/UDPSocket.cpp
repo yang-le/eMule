@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -130,7 +130,7 @@ CUDPSocket::~CUDPSocket()
 bool CUDPSocket::Create()
 {
 	if (thePrefs.GetServerUDPPort()) {
-		VERIFY(m_udpwnd.CreateEx(0, AfxRegisterWndClass(0), _T("eMule Async DNS Resolve Socket Wnd #1"), WS_OVERLAPPED, 0, 0, 0, 0, HWND_MESSAGE, NULL));
+		VERIFY(m_udpwnd.CreateEx(0, AfxRegisterWndClass(0), _T("eMule Async DNS Resolver Socket #1"), 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, 0));
 		m_hWndResolveMessage = m_udpwnd.m_hWnd;
 		m_udpwnd.m_pOwner = this;
 		if (CAsyncSocket::Create(thePrefs.GetServerUDPPort() == _UI16_MAX ? 0 : thePrefs.GetServerUDPPort(), SOCK_DGRAM, FD_READ | FD_WRITE, thePrefs.GetBindAddrW()))
@@ -157,7 +157,7 @@ void CUDPSocket::OnReceive(int nErrorCode)
 	if (length != SOCKET_ERROR) {
 		int nPayLoadLen = length;
 		CServer *pServer = theApp.serverlist->GetServerByIPUDP(sockAddr.sin_addr.s_addr, ntohs(sockAddr.sin_port), true);
-		if (pServer != NULL && thePrefs.IsServerCryptLayerUDPEnabled()
+		if (pServer != NULL && thePrefs.IsCryptLayerEnabled()
 			&& ((pServer->GetServerKeyUDP() != 0 && pServer->SupportsObfuscationUDP()) || (pServer->GetCryptPingReplyPending() && pServer->GetChallenge() != 0)))
 		{
 			// TODO
@@ -166,8 +166,8 @@ void CUDPSocket::OnReceive(int nErrorCode)
 				dwKey = pServer->GetChallenge();
 			else
 				dwKey = pServer->GetServerKeyUDP();
-
 			ASSERT(dwKey);
+
 			nPayLoadLen = DecryptReceivedServer(buffer, length, &pBuffer, dwKey, sockAddr);
 			if (nPayLoadLen == length)
 				DebugLogWarning(_T("Expected encrypted packet, but received unencrypted from server %s, UDPKey %u, Challenge: %u"), (LPCTSTR)pServer->GetListName(), pServer->GetServerKeyUDP(), pServer->GetChallenge());
@@ -390,6 +390,11 @@ bool CUDPSocket::ProcessPacket(const BYTE *packet, UINT size, UINT opcode, uint3
 					nUDPObfuscationPort = nTCPObfuscationPort = 0;
 					dwServerUDPKey = 0;
 				}
+				//Apply default port numbers if short packet had no port data
+				if (!nTCPObfuscationPort && (uUDPFlags & SRV_UDPFLG_TCPOBFUSCATION))
+					nTCPObfuscationPort = pServer->GetPort();
+				if (!nUDPObfuscationPort && (uUDPFlags & SRV_UDPFLG_UDPOBFUSCATION))
+					nUDPObfuscationPort = pServer->GetPort() + 12;
 
 				pServer->SetPing(::GetTickCount() - pServer->GetLastPinged());
 				pServer->SetUserCount(cur_user);
@@ -482,7 +487,7 @@ bool CUDPSocket::ProcessPacket(const BYTE *packet, UINT size, UINT opcode, uint3
 					} else {
 						// A server sent us a new server description packet (including a challenge) although we did not
 						// ask for it. This may happen, if there are multiple servers running on the same machine with
-						// multiple IPs. If such a server is asked for a description, the server will answer 2 times,
+						// multiple IPs. If such server is asked for a description, the server will answer 2 times,
 						// but with the same IP.
 
 						if (thePrefs.GetDebugServerUDPLevel() > 0)
@@ -513,27 +518,21 @@ bool CUDPSocket::ProcessPacket(const BYTE *packet, UINT size, UINT opcode, uint3
 			return false;
 		}
 		return true;
-	} catch (CFileException *error) {
-		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		error->m_strFileName = _T("server UDP packet");
-		if (!GetExceptionMessage(*error, szError, _countof(szError)))
-			szError[0] = _T('\0');
-		ProcessPacketError(size, opcode, nIP, nUDPPort, szError);
-		error->Delete();
+	} catch (CFileException *ex) {
+		ex->m_strFileName = _T("server UDP packet");
+		ProcessPacketError(size, opcode, nIP, nUDPPort, CExceptionStr(*ex));
+		ex->Delete();
 		//ASSERT(0);
 		if (opcode == OP_GLOBSEARCHRES || opcode == OP_GLOBFOUNDSOURCES)
 			return true;
-	} catch (CMemoryException *error) {
-		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (!GetExceptionMessage(*error, szError, _countof(szError)))
-			szError[0] = _T('\0');
-		ProcessPacketError(size, opcode, nIP, nUDPPort, szError);
-		error->Delete();
+	} catch (CMemoryException *ex) {
+		ProcessPacketError(size, opcode, nIP, nUDPPort, (LPCTSTR)CExceptionStr(*ex));
+		ex->Delete();
 		//ASSERT(0);
 		if (opcode == OP_GLOBSEARCHRES || opcode == OP_GLOBFOUNDSOURCES)
 			return true;
-	} catch (const CString &error) {
-		ProcessPacketError(size, opcode, nIP, nUDPPort, error);
+	} catch (const CString &ex) {
+		ProcessPacketError(size, opcode, nIP, nUDPPort, ex);
 		//ASSERT(0);
 #ifndef _DEBUG
 	} catch (...) {
@@ -753,7 +752,7 @@ void CUDPSocket::SendPacket(Packet *packet, CServer *pServer, uint16 nSpecialPor
 	uint16 nPort = nSpecialPort;
 	if (packet != NULL) {
 		uRawPacketSize = packet->size + 2;
-		size_t iLen = thePrefs.IsServerCryptLayerUDPEnabled() && pServer->GetServerKeyUDP() && pServer->SupportsObfuscationUDP()
+		size_t iLen = thePrefs.IsCryptLayerEnabled() && pServer->GetServerKeyUDP() && pServer->SupportsObfuscationUDP()
 			? EncryptOverheadSize(false) : 0;
 		pRawPacket = new BYTE[uRawPacketSize + iLen];
 		memcpy(pRawPacket + iLen, packet->GetUDPHeader(), 2);

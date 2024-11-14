@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -16,6 +16,7 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
 #include "emule.h"
+#include "emuledlg.h"
 #include "SearchDlg.h"
 #include "TransferWnd.h"
 #include "TransferDlg.h"
@@ -23,7 +24,6 @@
 #include "ClientList.h"
 #include "UploadQueue.h"
 #include "DownloadQueue.h"
-#include "emuledlg.h"
 #include "MenuCmds.h"
 #include "PartFile.h"
 #include "CatDialog.h"
@@ -84,7 +84,6 @@ END_MESSAGE_MAP()
 
 CTransferWnd::CTransferWnd(CWnd* /*pParent =NULL*/)
 	: CResizableFormView(CTransferWnd::IDD)
-	//, m_pImageList(&CTransferWnd::m_ImageList)
 	, m_pLastMousePoint(POINT{ -1, -1 })
 	, m_uWnd2(wnd2Uploading)
 	, m_pDragImage()
@@ -98,7 +97,6 @@ CTransferWnd::CTransferWnd(CWnd* /*pParent =NULL*/)
 	, downloadlistactive()
 	, m_bLayoutInited()
 {
-	//SetImageList();
 }
 
 CTransferWnd::~CTransferWnd()
@@ -1499,7 +1497,7 @@ void CTransferWnd::ShowSplitWindow(bool bReDraw)
 	rcSpl.top = splitpos + WND_SPLITTER_YOFF;
 	rcSpl.bottom = rcSpl.top + WND_SPLITTER_HEIGHT;
 	if (!m_wndSplitter) {
-		m_wndSplitter.Create(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER);
+		m_wndSplitter.CreateWnd(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER);
 		m_wndSplitter.SetDrawBorder(true);
 	} else
 		m_wndSplitter.MoveWindow(&rcSpl, TRUE);
@@ -1834,11 +1832,10 @@ void CTransferWnd::OnPaint()
 
 void CTransferWnd::OnSysCommand(UINT nID, LPARAM lParam)
 {
-	if (nID == SC_KEYMENU) {
-		if (lParam == EMULE_HOTMENU_ACCEL)
-			theApp.emuledlg->SendMessage(WM_COMMAND, IDC_HOTMENU);
-		else
-			theApp.emuledlg->SendMessage(WM_SYSCOMMAND, nID, lParam);
-	} else
+	if ((nID & 0xFFF0) != SC_KEYMENU)
 		__super::OnSysCommand(nID, lParam);
+	else if (lParam == EMULE_HOTMENU_ACCEL)
+		theApp.emuledlg->SendMessage(WM_COMMAND, IDC_HOTMENU);
+	else
+		theApp.emuledlg->SendMessage(WM_SYSCOMMAND, nID, lParam);
 }

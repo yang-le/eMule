@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -46,15 +46,15 @@ public:
 	INT_PTR		GetServerCount() const			{ return list.GetCount(); }
 	CServer*	GetServerAt(INT_PTR pos) const	{ return list.GetAt(list.FindIndex(pos)); }
 	CServer*	GetSuccServer(const CServer *lastserver) const;
-	CServer*	GetNextServer(bool bOnlyObfuscated);
+	CServer*	GetNextServer(bool bTryObfuscated);
 	CServer*	GetServerByAddress(LPCTSTR address, uint16 port) const;
 	CServer*	GetServerByIP(uint32 nIP) const;
 	CServer*	GetServerByIPTCP(uint32 nIP, uint16 nTCPPort) const;
 	CServer*	GetServerByIPUDP(uint32 nIP, uint16 nUDPPort, bool bObfuscationPorts = true) const;
 	int			GetPositionOfServer(const CServer *pServer) const;
 
-	void		SetServerPosition(UINT newPosition);
-	UINT		GetServerPostion() const		{ return serverpos; }
+	void		SetServerPosition(INT_PTR newPosition);
+	INT_PTR		GetServerPostion() const		{ return serverpos; }
 
 	void		ResetSearchServerPos()			{ searchserverpos = 0; }
 	CServer*	GetNextSearchServer();
@@ -78,11 +78,10 @@ public:
 
 private:
 	CTypedPtrList<CPtrList, CServer*> list;
-	DWORD		m_nLastSaved;
-	UINT		serverpos;
-	UINT		searchserverpos;
-	UINT		statserverpos;
-	UINT		servercount;
+	INT_PTR		serverpos;
+	INT_PTR		searchserverpos;
+	INT_PTR		statserverpos;
 	UINT		delservercount;
+	DWORD		m_nLastSaved;
 	uint8		version;
 };

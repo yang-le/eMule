@@ -1512,7 +1512,7 @@ BEGIN
     IDS_NEWMSG              "Νέο μήνυμα από '%s' (IP:%s)"
     IDS_PREF_STARTNEXTFILECATONLY "μόνο από την ίδια κατηγορία"
     IDS_LOG_ULDL_EVENTS     "Καταγραφή ενεργειών ανεβάσματος/κατεβάσματος"
-    IDS_PEERCACHE_ENABLED   "Ο ISP σας υποστηρίζει την τεχνολογία PeerCache, ενεργοποιείται η λήψη μέσω αυτής!"
+//    IDS_PEERCACHE_ENABLED   "Ο ISP σας υποστηρίζει την τεχνολογία PeerCache, ενεργοποιείται η λήψη μέσω αυτής!"
     IDS_IRC_EMULEPROTO_ALLOWADDFRIEND "Επιτρέπεται να σας προσθέσουν σαν φίλο"
 END
 
@@ -1551,9 +1551,9 @@ BEGIN
     IDS_WIZ_STARTWITHWINDOWS "Ενεργοποιήστε αυτό για να εκκινεί το eMule όταν ξεκινάτε τα windows. (Προεπιλογή Όχι)"
     IDS_KAD_WAITCBK         "Αναμονή απάντησης (Kademlia)"
     IDS_KAD_TOOMANDYKADLKPS "Πάρα πολλές αναζητήσεις (Kademlia)"
-    IDS_PCDS_CLIENTWAIT     "ClientWait" //!
-    IDS_PCDS_CACHEWAIT      "CacheWait" //!
-    IDS_CACHE               "Cache" //!
+//    IDS_PCDS_CLIENTWAIT     "ClientWait" //!
+//    IDS_PCDS_CACHEWAIT      "CacheWait" //!
+//    IDS_CACHE               "Cache" //!
     IDS_INDEXED             "Καταχωρήσεις"
     IDS_KADINFO_SRC         "\tΠηγή: %u\r\n"
     IDS_KADINFO_KEYW        "\tΛέξη-κλειδί: %u\r\n"

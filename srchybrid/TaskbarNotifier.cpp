@@ -115,7 +115,7 @@ LRESULT CALLBACK My_AfxWndProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lPara
 	return DefWindowProc(hWnd, nMsg, wParam, lParam);
 }
 
-int CTaskbarNotifier::Create(CWnd *pWndParent)
+int CTaskbarNotifier::CreateWnd(CWnd *pWndParent)
 {
 	static LPCTSTR const s_szClassName = _T("eMule_TaskbarNotifierWndClass");
 	ASSERT(pWndParent != NULL);

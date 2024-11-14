@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -136,19 +136,19 @@ void DumpIID(REFIID iid, LPCTSTR pszClassName)
 #pragma warning(push)
 #pragma warning(disable:4555) // expression has no effect; expected expression with side-effect (because of the 'METHOD_PROLOGUE' macro)
 
-STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::QueryInterface(REFIID iid, LPVOID *ppvObj) XP_NOEXCEPT
+STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::QueryInterface(REFIID iid, LPVOID *ppvObj) NOEXCEPT
 {
 	METHOD_PROLOGUE(CMuleBrowserControlSite, InternetSecurityManager);
 	return (HRESULT)pThis->ExternalQueryInterface(&iid, ppvObj);
 }
 
-STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XInternetSecurityManager::AddRef() XP_NOEXCEPT
+STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XInternetSecurityManager::AddRef() NOEXCEPT
 {
 	METHOD_PROLOGUE(CMuleBrowserControlSite, InternetSecurityManager);
 	return pThis->ExternalAddRef();
 }
 
-STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XInternetSecurityManager::Release() XP_NOEXCEPT
+STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XInternetSecurityManager::Release() NOEXCEPT
 {
 	METHOD_PROLOGUE(CMuleBrowserControlSite, InternetSecurityManager);
 	return pThis->ExternalRelease();
@@ -267,19 +267,19 @@ STDMETHODIMP CMuleBrowserControlSite::XInternetSecurityManager::GetZoneMappings(
 // IServiceProvider
 //
 
-STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XServiceProvider::AddRef() XP_NOEXCEPT
+STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XServiceProvider::AddRef() NOEXCEPT
 {
 	METHOD_PROLOGUE(CMuleBrowserControlSite, ServiceProvider);
 	return pThis->ExternalAddRef();
 }
 
-STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XServiceProvider::Release() XP_NOEXCEPT
+STDMETHODIMP_(ULONG) CMuleBrowserControlSite::XServiceProvider::Release() NOEXCEPT
 {
 	METHOD_PROLOGUE(CMuleBrowserControlSite, ServiceProvider);
 	return pThis->ExternalRelease();
 }
 
-STDMETHODIMP CMuleBrowserControlSite::XServiceProvider::QueryInterface(REFIID iid, LPVOID *ppvObj) XP_NOEXCEPT
+STDMETHODIMP CMuleBrowserControlSite::XServiceProvider::QueryInterface(REFIID iid, LPVOID *ppvObj) NOEXCEPT
 {
 	METHOD_PROLOGUE(CMuleBrowserControlSite, ServiceProvider);
 	return (HRESULT)pThis->ExternalQueryInterface(&iid, ppvObj);

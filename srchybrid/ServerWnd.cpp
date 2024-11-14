@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -173,27 +173,27 @@ BOOL CServerWnd::OnInitDialog()
 	static_cast<CEdit*>(GetDlgItem(IDC_SPORT))->SetLimitText(5);
 	SetDlgItemText(IDC_SPORT, _T("4661"));
 
-	TCITEM newitem;
+	TCITEM ti;
 	CString name(GetResString(IDS_SV_SERVERINFO));
 	DupAmpersand(name);
-	newitem.mask = TCIF_TEXT | TCIF_IMAGE;
-	newitem.pszText = const_cast<LPTSTR>((LPCTSTR)name);
-	newitem.iImage = 1;
-	VERIFY(StatusSelector.InsertItem(StatusSelector.GetItemCount(), &newitem) == PaneServerInfo);
+	ti.mask = TCIF_TEXT | TCIF_IMAGE;
+	ti.pszText = const_cast<LPTSTR>((LPCTSTR)name);
+	ti.iImage = 1;
+	VERIFY(StatusSelector.InsertItem(StatusSelector.GetItemCount(), &ti) == PaneServerInfo);
 
 	name = GetResString(IDS_SV_LOG);
 	DupAmpersand(name);
-	newitem.mask = TCIF_TEXT | TCIF_IMAGE;
-	newitem.pszText = const_cast<LPTSTR>((LPCTSTR)name);
-	newitem.iImage = 0;
-	VERIFY(StatusSelector.InsertItem(StatusSelector.GetItemCount(), &newitem) == PaneLog);
+	ti.mask = TCIF_TEXT | TCIF_IMAGE;
+	ti.pszText = const_cast<LPTSTR>((LPCTSTR)name);
+	ti.iImage = 0;
+	VERIFY(StatusSelector.InsertItem(StatusSelector.GetItemCount(), &ti) == PaneLog);
 
 	name = SZ_DEBUG_LOG_TITLE;
 	DupAmpersand(name);
-	newitem.mask = TCIF_TEXT | TCIF_IMAGE;
-	newitem.pszText = const_cast<LPTSTR>((LPCTSTR)name);
-	newitem.iImage = 0;
-	VERIFY(StatusSelector.InsertItem(StatusSelector.GetItemCount(), &newitem) == PaneVerboseLog);
+	ti.mask = TCIF_TEXT | TCIF_IMAGE;
+	ti.pszText = const_cast<LPTSTR>((LPCTSTR)name);
+	ti.iImage = 0;
+	VERIFY(StatusSelector.InsertItem(StatusSelector.GetItemCount(), &ti) == PaneVerboseLog);
 
 	AddAnchor(IDC_SERVLST_ICO, TOP_LEFT);
 	AddAnchor(IDC_SERVLIST_TEXT, TOP_LEFT);
@@ -272,7 +272,7 @@ BOOL CServerWnd::OnInitDialog()
 
 	// splitter
 	CRect rcSpl(55, 55, 300, 55 + SVWND_SPLITTER_HEIGHT);
-	m_wndSplitter.Create(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_SERVER);
+	m_wndSplitter.CreateWnd(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_SERVER);
 	m_wndSplitter.SetDrawBorder(true);
 	InitSplitter();
 	GetDlgItem(IDC_ED2KCONNECT)->EnableWindow(false);
@@ -366,24 +366,24 @@ void CServerWnd::Localize()
 	SetDlgItemText(IDC_LOGRESET, GetResString(IDS_PW_RESET));
 	m_ctrlMyInfoFrm.SetWindowText(GetResString(IDS_MYINFO));
 
-	TCITEM item;
+	TCITEM ti;
 	CString name(GetResString(IDS_SV_SERVERINFO));
 	DupAmpersand(name);
-	item.mask = TCIF_TEXT;
-	item.pszText = const_cast<LPTSTR>((LPCTSTR)name);
-	StatusSelector.SetItem(PaneServerInfo, &item);
+	ti.mask = TCIF_TEXT;
+	ti.pszText = const_cast<LPTSTR>((LPCTSTR)name);
+	StatusSelector.SetItem(PaneServerInfo, &ti);
 
 	name = GetResString(IDS_SV_LOG);
 	DupAmpersand(name);
-	item.mask = TCIF_TEXT;
-	item.pszText = const_cast<LPTSTR>((LPCTSTR)name);
-	StatusSelector.SetItem(PaneLog, &item);
+	ti.mask = TCIF_TEXT;
+	ti.pszText = const_cast<LPTSTR>((LPCTSTR)name);
+	StatusSelector.SetItem(PaneLog, &ti);
 
 	name = SZ_DEBUG_LOG_TITLE;
 	DupAmpersand(name);
-	item.mask = TCIF_TEXT;
-	item.pszText = const_cast<LPTSTR>((LPCTSTR)name);
-	StatusSelector.SetItem(PaneVerboseLog, &item);
+	ti.mask = TCIF_TEXT;
+	ti.pszText = const_cast<LPTSTR>((LPCTSTR)name);
+	StatusSelector.SetItem(PaneVerboseLog, &ti);
 
 	UpdateLogTabSelection();
 	UpdateControlsState();
@@ -583,18 +583,17 @@ void CServerWnd::UpdateLogTabSelection()
 
 void CServerWnd::ToggleDebugWindow()
 {
-	int cur_sel = StatusSelector.GetCurSel();
 	if (thePrefs.GetVerbose() && !debug) {
-		TCITEM newitem;
+		TCITEM ti;
 		CString name(SZ_DEBUG_LOG_TITLE);
 		DupAmpersand(name);
-		newitem.mask = TCIF_TEXT | TCIF_IMAGE;
-		newitem.pszText = const_cast<LPTSTR>((LPCTSTR)name);
-		newitem.iImage = 0;
-		StatusSelector.InsertItem(StatusSelector.GetItemCount(), &newitem);
+		ti.mask = TCIF_TEXT | TCIF_IMAGE;
+		ti.pszText = const_cast<LPTSTR>((LPCTSTR)name);
+		ti.iImage = 0;
+		StatusSelector.InsertItem(StatusSelector.GetItemCount(), &ti);
 		debug = true;
 	} else if (!thePrefs.GetVerbose() && debug) {
-		if (cur_sel == PaneVerboseLog) {
+		if (StatusSelector.GetCurSel() == PaneVerboseLog) {
 			StatusSelector.SetCurSel(PaneLog);
 			StatusSelector.SetFocus();
 		}

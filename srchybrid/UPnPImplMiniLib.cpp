@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -14,7 +14,6 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
 #include "StdAfx.h"
 #include "emule.h"
 #include "preferences.h"
@@ -41,16 +40,17 @@ static LPCTSTR const sTCP = _T("TCP");
 static LPCTSTR const sUDP = _T("UDP");
 
 CUPnPImplMiniLib::CUPnPImplMiniLib()
-	: m_bSucceededOnce()
-	, m_pURLs()
+	: m_pURLs()
 	, m_pIGDData()
 	, m_hThreadHandle()
+	, m_bSucceededOnce()
 	, m_bAbortDiscovery()
 {
 	m_nOldUDPPort = 0;
 	m_nOldTCPPort = 0;
 	m_nOldTCPWebPort = 0;
 	m_achLanIP[0] = 0;
+	m_achWanIP[0] = 0;
 }
 
 CUPnPImplMiniLib::~CUPnPImplMiniLib()
@@ -147,7 +147,7 @@ void CUPnPImplMiniLib::DeletePorts(bool bSkipLock)
 void CUPnPImplMiniLib::StartDiscovery(uint16 nTCPPort, uint16 nUDPPort, uint16 nTCPWebPort)
 {
 	DebugLog(_T("Using MiniUPnPLib based implementation"));
-	DebugLog(_T("miniupnpc (c) 2005-2023 Thomas Bernard - http://miniupnp.free.fr/"));
+	DebugLog(_T("miniupnpc (c) 2005-2024 Thomas Bernard - http://miniupnp.free.fr/"));
 	GetOldPorts();
 	m_nUDPPort = nUDPPort;
 	m_nTCPPort = nTCPPort;
@@ -240,8 +240,8 @@ int CUPnPImplMiniLib::CStartDiscoveryThread::Run()
 
 			m_pOwner->m_pURLs = new UPNPUrls();
 			m_pOwner->m_pIGDData = new IGDdatas();
-
-			m_pOwner->m_achLanIP[0] = 0;
+			*m_pOwner->m_achLanIP = 0;
+			*m_pOwner->m_achWanIP = 0;
 			int iResult = UPNP_GetValidIGD(structDeviceList, m_pOwner->m_pURLs, m_pOwner->m_pIGDData, m_pOwner->m_achLanIP, sizeof m_pOwner->m_achLanIP);
 			freeUPNPDevlist(structDeviceList);
 			bool bNotFound = false;
@@ -250,13 +250,17 @@ int CUPnPImplMiniLib::CStartDiscoveryThread::Run()
 				DebugLog(_T("Found valid IGD : %S"), m_pOwner->m_pURLs->controlURL);
 				break;
 			case 2:
-				DebugLog(_T("Found a (not connected?) IGD : %S - Trying to continue anyway"), m_pOwner->m_pURLs->controlURL);
+				DebugLog(_T("Found an IGD with a reserved IP address (%S) : %S"), m_pOwner->m_achWanIP, m_pOwner->m_pURLs->controlURL);
+				bNotFound = true;
 				break;
 			case 3:
-				DebugLog(_T("UPnP device found. Is it an IGD ? : %S - Trying to continue anyway"), m_pOwner->m_pURLs->controlURL);
+				DebugLog(_T("Found a (not connected?) IGD : %S - Trying to continue anyway"), m_pOwner->m_pURLs->controlURL);
+				break;
+			case 4:
+				DebugLog(_T("UPnP device found. Is it an IGD? : %S - Trying to continue anyway"), m_pOwner->m_pURLs->controlURL);
 				break;
 			default:
-				DebugLog(_T("Found device (igd ?) : %S - Aborting"), m_pOwner->m_pURLs->controlURL != NULL ? m_pOwner->m_pURLs->controlURL : "(none)");
+				DebugLog(_T("Found device (IGD?) : %S - Aborting"), m_pOwner->m_pURLs->controlURL != NULL ? m_pOwner->m_pURLs->controlURL : "(none)");
 				bNotFound = true;
 			}
 			if (bNotFound || m_pOwner->m_pURLs->controlURL == NULL) {
@@ -282,12 +286,11 @@ int CUPnPImplMiniLib::CStartDiscoveryThread::Run()
 			if (m_pOwner->m_nTCPWebPort)
 				OpenPort(m_pOwner->m_nTCPWebPort, true, m_pOwner->m_achLanIP, m_pOwner->m_bCheckAndRefresh);	// don't fail if only the Web Interface port fails for some reason
 		}
-	}
 #if !(defined(_DEBUG) || defined(_BETA) || defined(_DEVBUILD))
-	catch (...) {
+	} catch (...) {
 		DebugLogError(_T("Unknown Exception in CUPnPImplMiniLib::CStartDiscoveryThread::Run()"));
-	}
 #endif
+	}
 	if (!m_pOwner->m_bAbortDiscovery) {	// don't send the result on an abort request
 		if (bSucceeded) {
 			m_pOwner->m_bUPnPPortsForwarded = TRIS_TRUE;

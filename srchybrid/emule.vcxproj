@@ -124,8 +124,6 @@
       <IgnoreSpecificDefaultLibraries>mpr.lib;rasapi32.lib;secur32.lib;sensapi.lib;vfw32.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <OptimizeReferences>false</OptimizeReferences>
       <SubSystem>Windows</SubSystem>
-      <AdditionalOptions>
-      </AdditionalOptions>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>res/$(TargetName)$(Platform).manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
@@ -187,7 +185,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='_SpecialBootstrapNodes|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.;..;..\id3lib\include;..\mbedtls\include;..\mbedtls\crypto\include;$(VC_ATLMFC_SourcePath);$(UniversalCRTSdkDir)Include\10.0.22621.0\um\;$(UniversalCRTSdkDir)Include\10.0.22621.0\shared;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..;..\id3lib\include;..\mbedtls\include;..\mbedtls\tf-psa-crypto\include;..\mbedtls\tf-psa-crypto\drivers\builtin\include;$(VC_ATLMFC_SourcePath);$(UniversalCRTSdkDir)Include\10.0.26100.0\um\;$(UniversalCRTSdkDir)Include\10.0.26100.0\shared;</AdditionalIncludeDirectories>
       <AdditionalOptions>/Zc:throwingNew</AdditionalOptions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -198,7 +196,7 @@
       <WarningLevel>EnableAllWarnings</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ADSIId.lib;crypt32.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;..\cryptopp\$(Platform)\Debug\cryptlib.lib;..\cximage\$(Platform)\Debug\cximage.lib;..\id3lib\libprj\$(Platform)\Debug\id3lib.lib;..\libpng\projects\visualc\$(Platform)\Debug\libpng.lib;..\mbedtls\visualc\vs2013\$(Platform)\Debug\mbedtls.lib;..\miniupnpc\msvc\$(Platform)\Debug\miniupnpc.lib;..\resizablelib\$(Platform)\Debug\resizablelib.lib;..\zlib\contrib\vstudio\vc\$(Platform)\Debug\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ADSIId.lib;crypt32.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;..\cryptopp\$(Platform)\Debug\cryptlib.lib;..\cximage\$(Platform)\Debug\cximage.lib;..\id3lib\libprj\$(Platform)\Debug\id3lib.lib;..\libpng\projects\visualc\$(Platform)\Debug\libpng.lib;..\mbedtls\visualc\vs2017\$(Platform)\Debug\mbedtls.lib;..\miniupnpc\msvc\$(Platform)\Debug\miniupnpc.lib;..\resizablelib\$(Platform)\Debug\resizablelib.lib;..\zlib\contrib\vstudio\vc\$(Platform)\Debug\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/safeseh</AdditionalOptions>
       <DelayLoadDLLs>gdiplus.dll;msimg32.dll;oleacc.dll;ws2_32.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreSpecificDefaultLibraries>mpr.lib;rasapi32.lib;secur32.lib;sensapi.lib;vfw32.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -213,7 +211,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='_SpecialBootstrapNodes|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.;..;..\id3lib\include;..\mbedtls\include;..\mbedtls\crypto\include;$(VC_ATLMFC_SourcePath);$(UniversalCRTSdkDir)Include\10.0.22621.0\um\;$(UniversalCRTSdkDir)Include\10.0.22621.0\shared;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..;..\id3lib\include;..\mbedtls\include;..\mbedtls\tf-psa-crypto\include;..\mbedtls\tf-psa-crypto\drivers\builtin\include;$(VC_ATLMFC_SourcePath);$(UniversalCRTSdkDir)Include\10.0.26100.0\um\;$(UniversalCRTSdkDir)Include\10.0.26100.0\shared;</AdditionalIncludeDirectories>
       <AdditionalOptions>/Zc:throwingNew</AdditionalOptions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -224,7 +222,7 @@
       <WarningLevel>EnableAllWarnings</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ADSIId.lib;crypt32.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;..\cryptopp\$(Platform)\Debug\cryptlib.lib;..\cximage\$(Platform)\Debug\cximage.lib;..\id3lib\libprj\$(Platform)\Debug\id3lib.lib;..\libpng\projects\visualc\$(Platform)\Debug\libpng.lib;..\mbedtls\visualc\vs2013\$(Platform)\Debug\mbedtls.lib;..\miniupnpc\msvc\$(Platform)\Debug\miniupnpc.lib;..\resizablelib\$(Platform)\Debug\resizablelib.lib;..\zlib\contrib\vstudio\vc\$(Platform)\Debug\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ADSIId.lib;crypt32.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;..\cryptopp\$(Platform)\Debug\cryptlib.lib;..\cximage\$(Platform)\Debug\cximage.lib;..\id3lib\libprj\$(Platform)\Debug\id3lib.lib;..\libpng\projects\visualc\$(Platform)\Debug\libpng.lib;..\mbedtls\visualc\vs2017\$(Platform)\Debug\mbedtls.lib;..\miniupnpc\msvc\$(Platform)\Debug\miniupnpc.lib;..\resizablelib\$(Platform)\Debug\resizablelib.lib;..\zlib\contrib\vstudio\vc\$(Platform)\Debug\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>gdiplus.dll;msimg32.dll;oleacc.dll;ws2_32.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreSpecificDefaultLibraries>mpr.lib;rasapi32.lib;secur32.lib;sensapi.lib;vfw32.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <OptimizeReferences>false</OptimizeReferences>
@@ -385,8 +383,6 @@
     <ClCompile Include="PartFile.cpp" />
     <ClCompile Include="PartFileConvert.cpp" />
     <ClCompile Include="PartFileWriteThread.cpp" />
-    <ClCompile Include="PeerCacheClient.cpp" />
-    <ClCompile Include="PeerCacheFinder.cpp" />
     <ClCompile Include="PerfLog.cpp" />
     <ClCompile Include="Pinger.cpp" />
     <ClCompile Include="PPgConnection.cpp" />
@@ -539,7 +535,6 @@
     <ClInclude Include="ClientListCtrl.h" />
     <ClInclude Include="ClientStateDefs.h" />
     <ClInclude Include="ClientUDPSocket.h" />
-    <ClInclude Include="ClientVersionInfo.h" />
     <ClInclude Include="ClosableTabCtrl.h" />
     <ClInclude Include="Collection.h" />
     <ClInclude Include="CollectionCreateDialog.h" />
@@ -682,8 +677,6 @@
     <ClInclude Include="PartFile.h" />
     <ClInclude Include="PartFileConvert.h" />
     <ClInclude Include="PartFileWriteThread.h" />
-    <ClInclude Include="PeerCacheFinder.h" />
-    <ClInclude Include="PeerCacheSocket.h" />
     <ClInclude Include="PerfLog.h" />
     <ClInclude Include="Pinger.h" />
     <ClInclude Include="PPgConnection.h" />

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -280,13 +280,9 @@ int CPartFileConvert::performConvertToeMule(const CString &folder)
 				if (!::WriteFile((HANDLE)file->m_hpartfile, ba.GetData(), nRead, NULL, &ov))
 					CFileException::ThrowOsError((LONG)::GetLastError(), file->m_hpartfile.GetFileName());
 			}
-		} catch (CFileException *error) {
-			CString strError(GetResString(IDS_IMP_IOERROR));
-			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(*error, szError, _countof(szError)))
-				strError.AppendFormat(_T(" - %s"), szError);
-			LogError(LOG_DEFAULT, _T("%s"), (LPCTSTR)strError);
-			error->Delete();
+		} catch (CFileException *ex) {
+			LogError(LOG_DEFAULT, _T("%s%s"), (LPCTSTR)GetResString(IDS_IMP_IOERROR), (LPCTSTR)CExceptionStrDash(*ex));
+			ex->Delete();
 			delete file;
 			return CONV_IOERROR;
 		}

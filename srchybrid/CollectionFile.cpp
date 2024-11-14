@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -14,7 +14,6 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
 #include "StdAfx.h"
 #include "collectionfile.h"
 #include "Packets.h"
@@ -67,7 +66,7 @@ CCollectionFile::CCollectionFile(CFileDataIO &in_data)
 	// to avoid using 'wrong' file types for part files when adding a search result to the download queue,
 	// in no case we will use the received file type (this has to be handled when creating the part files)
 	const CString &rstrFileType(GetStrTagValue(FT_FILETYPE));
-	CCollectionFile::SetFileName(GetStrTagValue(FT_FILENAME), false, rstrFileType.IsEmpty());
+	CCollectionFile::SetAFileName(GetStrTagValue(FT_FILENAME), false, rstrFileType.IsEmpty());
 	CCollectionFile::SetFileSize(GetInt64TagValue(FT_FILESIZE));
 	if (!rstrFileType.IsEmpty())
 		if (rstrFileType == _T(ED2KFTSTR_PROGRAM)) {
@@ -125,7 +124,7 @@ bool CCollectionFile::InitFromLink(const CString &sLink)
 	SetFileSize(pFileLink->GetSize());
 
 	m_taglist.Add(new CTag(FT_FILENAME, pFileLink->GetName()));
-	SetFileName(pFileLink->GetName());
+	SetAFileName(pFileLink->GetName());
 
 	if (pFileLink->HasValidAICHHash()) {
 		m_taglist.Add(new CTag(FT_AICH_HASH, pFileLink->GetAICHHash().GetString()));

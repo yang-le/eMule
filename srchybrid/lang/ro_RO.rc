@@ -1548,7 +1548,7 @@ BEGIN
     IDS_NEWMSG              "Mesaj nou de la '%s' (IP:%s)"
     IDS_PREF_STARTNEXTFILECATONLY "doar din aceeaşi categorie"
     IDS_LOG_ULDL_EVENTS     "Loghez evenimentele upload/download"
-    IDS_PEERCACHE_ENABLED   "ISP-ul tău permite tehnologia PeerCache, activez descărcarea cache!"
+//    IDS_PEERCACHE_ENABLED   "ISP-ul tău permite tehnologia PeerCache, activez descărcarea cache!"
     IDS_IRC_EMULEPROTO_ALLOWADDFRIEND
                             "Permit utilizatorului să te adauge la Prieteni."
     IDS_SOURCESWAPBLOCKED   "Swap blocat"
@@ -1590,9 +1590,9 @@ BEGIN
                             "Activează pentru ca eMule să pornească odată cu Windows. (Implicit: dezactivat)"
     IDS_KAD_WAITCBK         "Aştept răspuns Kad"
     IDS_KAD_TOOMANDYKADLKPS "Prea multe căutări Kad"
-    IDS_PCDS_CLIENTWAIT     "Aştept Client"
-    IDS_PCDS_CACHEWAIT      "Aştept Cache"
-    IDS_CACHE               "Cache" //!
+//    IDS_PCDS_CLIENTWAIT     "Aştept Client"
+//    IDS_PCDS_CACHEWAIT      "Aştept Cache"
+//    IDS_CACHE               "Cache" //!
     IDS_INDEXED             "Indexat"
     IDS_KADINFO_SRC         "\tSursă: %u\r\n"
     IDS_KADINFO_KEYW        "\tKeyword: %u\r\n" //!

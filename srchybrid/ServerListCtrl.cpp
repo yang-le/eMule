@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -426,16 +426,16 @@ BOOL CServerListCtrl::OnCommand(WPARAM wParam, LPARAM)
 				int iItem = GetNextSelectedItem(pos);
 				if (iItem > -1) {
 					const CServer *pServer = reinterpret_cast<CServer*>(GetItemData(iItem));
-					if (!thePrefs.IsClientCryptLayerRequired() || pServer->SupportsObfuscationTCP() || !pServer->TriedCrypt())
+					if (!thePrefs.IsCryptLayerRequired() || pServer->SupportsObfuscationTCP() || !pServer->TriedCrypt())
 						theApp.serverlist->MoveServerDown(pServer);
 				}
 			}
-			theApp.serverconnect->ConnectToAnyServer((UINT)(theApp.serverlist->GetServerCount() - GetSelectedCount()), false, false);
+			theApp.serverconnect->ConnectToAnyServer(theApp.serverlist->GetServerCount() - GetSelectedCount(), false, false);
 		} else {
 			int iItem = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
 			if (iItem > -1) {
 				const CServer *pServer = reinterpret_cast<CServer*>(GetItemData(iItem));
-				if (!thePrefs.IsClientCryptLayerRequired() || pServer->SupportsObfuscationTCP() || !pServer->TriedCrypt())
+				if (!thePrefs.IsCryptLayerRequired() || pServer->SupportsObfuscationTCP() || !pServer->TriedCrypt())
 					theApp.serverconnect->ConnectToServer(reinterpret_cast<CServer*>(GetItemData(iItem)));
 			}
 		}

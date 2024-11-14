@@ -30,7 +30,6 @@ their client on the eMule forum.
 
 #include "stdafx.h"
 #include "resource.h"
-#include "SafeFile.h"
 #include "Log.h"
 #include "emule.h"
 #include "emuledlg.h"
@@ -146,15 +145,13 @@ CSearch* CSearchManager::PrepareFindKeywords(LPCWSTR szKeyword, UINT uSearchTerm
 				return pSearch;
 			}
 		}
-	} catch (CIOException *ioe) {
-		strError.Format(_T("IO-Exception in %hs: Error %i"), __FUNCTION__, ioe->m_iCause);
-		ioe->Delete();
-	} catch (CFileException *e) {
-		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		e->m_strFileName = _T("search packet");
-		GetExceptionMessage(*e, szError, _countof(szError));
-		strError.Format(_T("Exception in %hs: %s"), __FUNCTION__, szError);
-		e->Delete();
+	} catch (CIOException *ex) {
+		strError.Format(_T("IO-Exception in %hs: Error %i"), __FUNCTION__, ex->m_iCause);
+		ex->Delete();
+	} catch (CFileException *ex) {
+		ex->m_strFileName = _T("search packet");
+		strError.Format(_T("Exception in %hs: %s"), __FUNCTION__, (LPCTSTR)CExceptionStr(*ex));
+		ex->Delete();
 	} catch (const CString&) {
 		delete pSearch;
 		throw;
@@ -198,9 +195,9 @@ CSearch* CSearchManager::PrepareLookup(uint32 uType, bool bStart, const CUInt128
 			pSearch->Go();
 		}
 		return pSearch;
-	} catch (CIOException *ioe) {
-		AddDebugLogLine(false, _T("Exception in CSearchManager::PrepareLookup (IO error(%i))"), ioe->m_iCause);
-		ioe->Delete();
+	} catch (CIOException *ex) {
+		AddDebugLogLine(false, _T("Exception in CSearchManager::PrepareLookup (IO error(%i))"), ex->m_iCause);
+		ex->Delete();
 	} catch (...) {
 		AddDebugLogLine(false, _T("Exception in CSearchManager::PrepareLookup"));
 	}

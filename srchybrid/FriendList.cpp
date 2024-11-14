@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -52,17 +52,12 @@ CFriendList::~CFriendList()
 
 bool CFriendList::LoadList()
 {
-	const CString &strFileName(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + EMFRIENDS_MET_FILENAME);
 	CSafeBufferedFile file;
-	CFileException fexp;
-	if (!file.Open(strFileName, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-		if (fexp.m_cause != CFileException::fileNotFound) {
-			CString strError(GetResString(IDS_ERR_READEMFRIENDS));
-			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, _countof(szError)))
-				strError.AppendFormat(_T(" - %s"), szError);
-			LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
-		}
+	if (!CFileOpen(file
+		, thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + EMFRIENDS_MET_FILENAME
+		, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite
+		, GetResString(IDS_ERR_READEMFRIENDS)))
+	{
 		return false;
 	}
 
@@ -80,15 +75,13 @@ bool CFriendList::LoadList()
 		}
 		file.Close();
 		return true;
-	} catch (CFileException *error) {
-		if (error->m_cause == CFileException::endOfFile)
+	} catch (CFileException *ex) {
+		if (ex->m_cause == CFileException::endOfFile)
 			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_EMFRIENDSINVALID));
 		else {
-			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			GetExceptionMessage(*error, buffer, _countof(buffer));
-			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_READEMFRIENDS), buffer);
+			LogError(LOG_STATUSBAR, GetResString(IDS_ERR_READEMFRIENDS), (LPCTSTR)CExceptionStr(*ex));
 		}
-		error->Delete();
+		ex->Delete();
 	}
 	return false;
 }
@@ -99,37 +92,25 @@ void CFriendList::SaveList()
 		AddDebugLogLine(false, _T("Saving friends list file \"%s\""), EMFRIENDS_MET_FILENAME);
 	m_nLastSaved = ::GetTickCount();
 
-	const CString &strFileName(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + EMFRIENDS_MET_FILENAME);
 	CSafeBufferedFile file;
-	CFileException fexp;
-	if (!file.Open(strFileName, CFile::modeCreate | CFile::modeWrite | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-		CString strError(_T("Failed to save ") EMFRIENDS_MET_FILENAME _T(" file"));
-		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (GetExceptionMessage(fexp, szError, _countof(szError)))
-			strError.AppendFormat(_T(" - %s"), szError);
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
+	if (!CFileOpen(file
+		, thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + EMFRIENDS_MET_FILENAME
+		, CFile::modeCreate | CFile::modeWrite | CFile::typeBinary | CFile::shareDenyWrite
+		, _T("Failed to save ") EMFRIENDS_MET_FILENAME))
+	{
 		return;
 	}
-	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 
+	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 	try {
 		file.WriteUInt8(MET_HEADER);
 		file.WriteUInt32((uint32)m_listFriends.GetCount());
 		for (POSITION pos = m_listFriends.GetHeadPosition(); pos != NULL;)
 			m_listFriends.GetNext(pos)->WriteToFile(file);
-		if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.IsClosing())) {
-			file.Flush(); // flush file stream buffers to disk buffers
-			if (_commit(_fileno(file.m_pStream)) != 0) // commit disk buffers to disk
-				AfxThrowFileException(CFileException::hardIO, ::GetLastError(), file.GetFileName());
-		}
-		file.Close();
-	} catch (CFileException *error) {
-		CString strError(_T("Failed to save ") EMFRIENDS_MET_FILENAME _T(" file"));
-		TCHAR szError[MAX_CFEXP_ERRORMSG];
-		if (GetExceptionMessage(*error, szError, _countof(szError)))
-			strError.AppendFormat(_T(" - %s"), szError);
-		LogError(LOG_STATUSBAR, _T("%s"), (LPCTSTR)strError);
-		error->Delete();
+		CommitAndClose(file);
+	} catch (CFileException *ex) {
+		LogError(LOG_STATUSBAR, _T("%s%s"), _T("Failed to save ") EMFRIENDS_MET_FILENAME, (LPCTSTR)CExceptionStrDash(*ex));
+		ex->Delete();
 	}
 }
 

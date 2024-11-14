@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -313,23 +313,23 @@ bool CIrcNickListCtrl::ChangeAllNick(const CString &sOldNick, const CString &sNe
 {
 	bool bChanged = false;
 	//Change the nick in ALL channels.
-	CIrcChannelTabCtrl& ChanSel = m_pParent->m_wndChanSel;
+	CIrcChannelTabCtrl &ChanSel = m_pParent->m_wndChanSel;
 	Channel *pChannel = ChanSel.FindChannelByName(sOldNick);
 
 	if (pChannel) {
 		//We had a private room opened with this nick. Update the title of the channel!
 		pChannel->m_sName = sNewNick;
 
-		TCITEM item;
-		item.mask = TCIF_PARAM;
-		item.lParam = -1;
+		TCITEM ti;
+		ti.mask = TCIF_PARAM;
+		ti.lParam = -1;
 		for (int iItem = ChanSel.GetItemCount(); --iItem >= 0;)
-			if (ChanSel.GetItem(iItem, &item) && reinterpret_cast<Channel*>(item.lParam) == pChannel) {
-				item.mask = TCIF_TEXT;
+			if (ChanSel.GetItem(iItem, &ti) && reinterpret_cast<Channel*>(ti.lParam) == pChannel) {
+				ti.mask = TCIF_TEXT;
 				CString strTcLabel(sNewNick);
 				DupAmpersand(strTcLabel);
-				item.pszText = const_cast<LPTSTR>((LPCTSTR)strTcLabel);
-				ChanSel.SetItem(iItem, &item);
+				ti.pszText = const_cast<LPTSTR>((LPCTSTR)strTcLabel);
+				ChanSel.SetItem(iItem, &ti);
 				bChanged = true;
 				break;
 			}
@@ -374,10 +374,10 @@ BOOL CIrcNickListCtrl::OnCommand(WPARAM wParam, LPARAM)
 	int iNickItem = GetNextItem(-1, LVIS_SELECTED | LVIS_FOCUSED);
 	int iChanItem = m_pParent->m_wndChanSel.GetCurSel();
 	const Nick *pNick = reinterpret_cast<Nick*>(GetItemData(iNickItem));
-	TCITEM item;
-	item.mask = TCIF_PARAM;
-	m_pParent->m_wndChanSel.GetItem(iChanItem, &item);
-	Channel *pChannel = reinterpret_cast<Channel*>(item.lParam);
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	m_pParent->m_wndChanSel.GetItem(iChanItem, &ti);
+	Channel *pChannel = reinterpret_cast<Channel*>(ti.lParam);
 
 	switch (wParam) {
 	case Irc_Priv:

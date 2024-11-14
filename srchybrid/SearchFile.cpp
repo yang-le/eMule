@@ -1,6 +1,6 @@
 // parts of this file are based on work from pan One (http://home-3.tiscali.nl/~meost/pms/)
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -113,9 +113,9 @@ IMPLEMENT_DYNAMIC(CSearchFile, CAbstractFile)
 
 CSearchFile::CSearchFile(const CSearchFile *copyfrom)
 	: CAbstractFile(copyfrom)
+	, m_list_childcount()
 	, m_bPreviewPossible()
 	, m_list_bExpanded()
-	, m_list_childcount()
 {
 	CSearchFile::UpdateFileRatingCommentAvail();
 
@@ -153,16 +153,16 @@ CSearchFile::CSearchFile(CFileDataIO &in_data, bool bOptUTF8, uint32 nSearchID, 
 	, m_bKademlia(bKademlia)
 	, m_bServerUDPAnswer(bServerUDPAnswer)
 	, m_flags()
+	, m_nSearchID(nSearchID)
 	, m_nSources()
 	, m_nCompleteSources()
-	, m_nSearchID(nSearchID)
 	, m_nKadPublishInfo()
 	, m_nSpamRating()
-	, m_bPreviewPossible()
-	, m_list_bExpanded()
 	, m_list_childcount()
 	, m_list_parent()
 	, m_eKnown(NotDetermined)
+	, m_bPreviewPossible()
+	, m_list_bExpanded()
 {
 	m_FileIdentifier.SetMD4Hash(in_data);
 	m_nClientID = in_data.ReadUInt32();
@@ -173,6 +173,16 @@ CSearchFile::CSearchFile(CFileDataIO &in_data, bool bOptUTF8, uint32 nSearchID, 
 		m_nClientID = 0;
 		m_nClientPort = 0;
 	}
+
+	m_nClientServerIP = nServerIP;
+	m_nClientServerPort = nServerPort;
+	if (m_nClientServerIP && m_nClientServerPort) {
+		SServer server(m_nClientServerIP, m_nClientServerPort, bServerUDPAnswer);
+		server.m_uAvail = GetIntTagValue(FT_SOURCES);
+		AddServer(server);
+	}
+	m_pszDirectory = pszDirectory ? _tcsdup(pszDirectory) : NULL;
+
 	uint32 tagcount = in_data.ReadUInt32();
 	// NSERVER2.EXE (lugdunum v16.38 patched for Win32) returns the ClientIP+Port of the client which offered that
 	// file, even if that client has not filled the according fields in the OP_OFFERFILES packet with its IP+Port.
@@ -234,6 +244,10 @@ CSearchFile::CSearchFile(CFileDataIO &in_data, bool bOptUTF8, uint32 nSearchID, 
 			case FT_COMPLETE_SOURCES:
 				if (tag->IsInt())
 					m_nCompleteSources = tag->GetInt();
+				break;
+			case FT_FOLDERNAME:
+				if (!bKademlia && !m_pszDirectory && tag->IsStr() && !tag->GetStr().IsEmpty())
+					m_pszDirectory = _tcsdup(tag->GetStr());
 			}
 			m_taglist.Add(tag);
 		}
@@ -249,7 +263,7 @@ CSearchFile::CSearchFile(CFileDataIO &in_data, bool bOptUTF8, uint32 nSearchID, 
 	// but, in no case, we will use the received file type when adding this search result to the download queue, to avoid
 	// that we are using 'wrong' file types in part files. (this has to be handled when creating the part files)
 	const CString &rstrFileType(GetStrTagValue(FT_FILETYPE));
-	CSearchFile::SetFileName(GetStrTagValue(FT_FILENAME), false, rstrFileType.IsEmpty(), true);
+	SetAFileName(GetStrTagValue(FT_FILENAME), false, rstrFileType.IsEmpty(), true);
 
 	uint64 ui64FileSize = 0;
 	CTag *pTagFileSize = GetTag(FT_FILESIZE);
@@ -276,15 +290,6 @@ CSearchFile::CSearchFile(CFileDataIO &in_data, bool bOptUTF8, uint32 nSearchID, 
 			CSearchFile::SetFileType(strDetailFileType.IsEmpty() ? rstrFileType : strDetailFileType);
 		} else
 			CSearchFile::SetFileType(rstrFileType);
-
-	m_nClientServerIP = nServerIP;
-	m_nClientServerPort = nServerPort;
-	if (m_nClientServerIP && m_nClientServerPort) {
-		SServer server(m_nClientServerIP, m_nClientServerPort, bServerUDPAnswer);
-		server.m_uAvail = GetIntTagValue(FT_SOURCES);
-		AddServer(server);
-	}
-	m_pszDirectory = pszDirectory ? _tcsdup(pszDirectory) : NULL;
 }
 
 CSearchFile::~CSearchFile()
@@ -299,8 +304,10 @@ void CSearchFile::StoreToFile(CFileDataIO &rFile) const
 	rFile.WriteHash16(m_FileIdentifier.GetMD4Hash());
 	rFile.WriteUInt32(m_nClientID);
 	rFile.WriteUInt16(m_nClientPort);
+	bool bHasDirectory = m_pszDirectory && *m_pszDirectory;
 	uint32 nTagCount = (uint32)m_taglist.GetCount();
 	nTagCount += static_cast<uint32>(m_FileIdentifier.HasAICHHash());
+	nTagCount += static_cast<uint32>(bHasDirectory);
 
 	rFile.WriteUInt32(nTagCount);
 	for (INT_PTR pos = 0; pos < m_taglist.GetCount(); ++pos) {
@@ -314,6 +321,8 @@ void CSearchFile::StoreToFile(CFileDataIO &rFile) const
 		CTag aichtag(FT_AICH_HASH, m_FileIdentifier.GetAICHHash().GetString());
 		aichtag.WriteNewEd2kTag(rFile);
 	}
+	if (bHasDirectory)
+		CTag(FT_FOLDERNAME, m_pszDirectory).WriteNewEd2kTag(rFile);
 }
 
 void CSearchFile::UpdateFileRatingCommentAvail(bool bForceUpdate)

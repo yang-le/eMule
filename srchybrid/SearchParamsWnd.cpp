@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -324,9 +324,9 @@ void CSearchParamsWnd::OnSize(UINT nType, int cx, int cy)
 		}
 		*/
 
-		int iWidthOpts = rcClient.right - (rcClient.left + m_rcOpts.left);
 		HDWP hdwp = BeginDeferWindowPos(12);
 		if (hdwp) {
+			int iWidthOpts = rcClient.right - (rcClient.left + m_rcOpts.left);
 			const UINT uFlags = SWP_NOZORDER | SWP_NOACTIVATE;
 			hdwp = DeferWindowPos(hdwp, *GetDlgItem(IDC_MSTATIC3), NULL, rcClient.left + m_rcNameLbl.left, rcClient.top + m_rcNameLbl.top, m_rcNameLbl.Width(), m_rcNameLbl.Height(), uFlags);
 			hdwp = DeferWindowPos(hdwp, m_ctlName, NULL, rcClient.left + m_rcName.left, rcClient.top + m_rcName.top, m_rcName.Width(), m_rcName.Height(), uFlags);
@@ -750,13 +750,12 @@ void CSearchParamsWnd::OnBnClickedSearchReset()
 
 void CSearchParamsWnd::OnSysCommand(UINT nID, LPARAM lParam)
 {
-	if (nID == SC_KEYMENU)
-		if (lParam == EMULE_HOTMENU_ACCEL)
-			theApp.emuledlg->SendMessage(WM_COMMAND, IDC_HOTMENU);
-		else
-			theApp.emuledlg->SendMessage(WM_SYSCOMMAND, nID, lParam);
-	else
+	if ((nID & 0xFFF0) != SC_KEYMENU)
 		CDialogBar::OnSysCommand(nID, lParam);
+	else if (lParam == EMULE_HOTMENU_ACCEL)
+		theApp.emuledlg->SendMessage(WM_COMMAND, IDC_HOTMENU);
+	else
+		theApp.emuledlg->SendMessage(WM_SYSCOMMAND, nID, lParam);
 }
 
 void CSearchParamsWnd::SetParameters(const SSearchParams *pParams)

@@ -1,4 +1,4 @@
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -146,7 +146,7 @@ public:
 
 	// local file system related properties
 	bool	IsNormalFile() const						{ return (m_dwFileAttributes & (FILE_ATTRIBUTE_COMPRESSED | FILE_ATTRIBUTE_SPARSE_FILE)) == 0; }
-	EMFileSize	GetRealFileSize() const;
+	EMFileSize	GetRealFileSize() const					{ return GetDiskFileSize(GetFilePath()); }
 	void	GetLeftToTransferAndAdditionalNeededSpace(uint64 &rui64LeftToTransfer, uint64 &rui64AdditionalNeededSpace) const;
 	uint64	GetNeededSpace() const;
 	virtual void SetFileSize(EMFileSize nFileSize);
@@ -182,7 +182,7 @@ public:
 	bool	IsPureGap(uint64 start, uint64 end) const;
 	bool	IsAlreadyRequested(uint64 start, uint64 end, bool bCheckBuffers = false) const;
 	bool	ShrinkToAvoidAlreadyRequested(uint64 &start, uint64 &end) const;
-	bool	IsCorruptedPart(UINT partnumber) const;
+	bool	IsCorruptedPart(UINT partnumber) const		{ return (corrupted_list.Find((uint16)partnumber) != NULL); }
 	uint64	GetTotalGapSizeInRange(uint64 uRangeStart, uint64 uRangeEnd) const;
 	uint64	GetTotalGapSizeInPart(UINT uPart) const;
 	void	UpdateCompletedInfos();
@@ -215,7 +215,7 @@ public:
 
 	UINT	GetSourceCount() const						{ return static_cast<UINT>(srclist.GetCount()); }
 	UINT	GetSrcA4AFCount() const						{ return static_cast<UINT>(A4AFsrclist.GetCount()); }
-	UINT	GetSrcStatisticsValue(EDownloadState nDLState) const;
+	UINT	GetSrcStatisticsValue(EDownloadState nDLState) const { return m_anStates[nDLState]; } //ASSERT(nDLState < _countof(m_anStates));
 	UINT	GetTransferringSrcCount() const;
 	uint64	GetTransferred() const						{ return m_uTransferred; }
 	uint32	GetDatarate() const							{ return m_datarate; }
@@ -230,12 +230,12 @@ public:
 	// Barry - Added as replacement for BlockReceived to buffer data before writing to disk
 	uint32	WriteToBuffer(uint64 transize, const BYTE *data, uint64 start, uint64 end, Requested_Block_Struct *block, const CUpDownClient *client, bool bCopyData);
 	void	FlushBuffer(bool bForceICH = false, bool bNoAICH = false);
-	// Barry - This will invert the gap list, up to caller to delete gaps when done
+	// Barry - This will invert the gap list, up to the caller to delete gaps when done
 	// 'Gaps' returned are really the filled areas, and guaranteed to be in order
 	void	GetFilledArray(CArray<Gap_Struct> &filled) const;
 
 	// Barry - Added to prevent list containing deleted blocks on shutdown
-	void	RemoveAllRequestedBlocks();
+	void	RemoveAllRequestedBlocks()					{ requestedblocks_list.RemoveAll(); }
 	bool	RemoveBlockFromList(uint64 start, uint64 end);
 	void	RemoveAllSources(bool bTryToSwap);
 
@@ -264,7 +264,7 @@ public:
 
 	DWORD	GetLastAnsweredTime() const					{ return m_ClientSrcAnswered; }
 	void	SetLastAnsweredTime()						{ m_ClientSrcAnswered = ::GetTickCount(); }
-	void	SetLastAnsweredTimeTimeout();
+	void	SetLastAnsweredTimeTimeout()				{ m_ClientSrcAnswered = ::GetTickCount() + 2 * CONNECTION_LATENCY - SOURCECLIENTREASKS; }
 
 	uint64	GetCorruptionLoss() const					{ return m_uCorruptionLoss; }
 	uint64	GetCompressionGain() const					{ return m_uCompressionGain; }
@@ -279,7 +279,6 @@ public:
 	const CStringA GetProgressString(uint16 size) const;
 	CString GetInfoSummary(bool bNoFormatCommands = false) const;
 
-//	int		GetCommonFilePenalty() const;
 	void	UpdateDisplayedInfo(bool force = false);
 
 	UINT	GetCategory() /*const*/;
@@ -292,14 +291,14 @@ public:
 	virtual bool GrabImage(uint8 nFramesToGrab, double dStartTime, bool bReduceColor, uint16 nMaxWidth, void *pSender);
 	virtual void GrabbingFinished(CxImage **imgResults, uint8 nFramesGrabbed, void *pSender);
 
-	void	FlushBuffersExceptionHandler(CFileException *error);
+	void	FlushBuffersExceptionHandler(CFileException *ex);
 	void	FlushBuffersExceptionHandler();
 
 	void	PerformFileCompleteEnd(DWORD dwResult);
 
-	void	SetFileOp(EPartFileOp eFileOp);
+	void	SetFileOp(EPartFileOp eFileOp)				{ m_eFileOp = eFileOp; }
 	EPartFileOp GetFileOp() const						{ return m_eFileOp; }
-	void	SetFileOpProgress(WPARAM uProgress);
+	void	SetFileOpProgress(WPARAM uProgress)			{ m_uFileOpProgress = uProgress; } //ASSERT(uProgress <= 100);
 	WPARAM	GetFileOpProgress() const					{ return m_uFileOpProgress; }
 
 	CAICHRecoveryHashSet* GetAICHRecoveryHashSet() const { return m_pAICHRecoveryHashSet; }
@@ -308,7 +307,7 @@ public:
 	bool	IsAICHPartHashSetNeeded() const				{ return m_FileIdentifier.HasAICHHash() && !m_FileIdentifier.HasExpectedAICHHashCount() && m_bAICHPartHashsetNeeded; }
 	void	SetAICHHashSetNeeded(bool bVal)				{ m_bAICHPartHashsetNeeded = bVal; }
 
-	bool	AllowSwapForSourceExchange()				{ return ::GetTickCount() >= lastSwapForSourceExchangeTick + SEC2MS(30); } // ZZ:DownloadManager
+	bool	AllowSwapForSourceExchange(DWORD dwTick) const { return dwTick >= lastSwapForSourceExchangeTick + SEC2MS(30); } // ZZ:DownloadManager
 	void	SetSwapForSourceExchangeTick()				{ lastSwapForSourceExchangeTick = ::GetTickCount(); } // ZZ:DownloadManager
 
 	UINT	SetPrivateMaxSources(uint32 in)				{ return m_uMaxSources = in; }
@@ -348,7 +347,7 @@ public:
 	bool	m_bMD4HashsetNeeded;
 
 protected:
-	bool	GetNextEmptyBlockInPart(UINT partNumber, Requested_Block_Struct *result) const;
+	bool	GetNextEmptyBlockInPart(UINT partNumber, Requested_Block_Struct *pReqBlock) const;
 	void	CompleteFile(bool bIsHashingDone);
 	void	CreatePartFile(UINT cat = 0);
 	void	Init();
@@ -389,6 +388,7 @@ private:
 	DWORD	lastSwapForSourceExchangeTick; // ZZ:DownloadManaager
 	DWORD	m_lastRefreshedDLDisplay;
 	DWORD	m_nLastBufferFlushTime;
+	DWORD	m_nNextMetFlushTime; //update .part.met file
 	DWORD	m_nFileFlushTime; //if file is idle long enough, flush new data to disk
 	DWORD	m_dwFileAttributes;
 	DWORD	m_random_update_wait;

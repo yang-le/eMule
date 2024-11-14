@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -14,7 +14,6 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
 #include "stdafx.h"
 #include "TitleMenu.h"
 #include "emule.h"
@@ -184,15 +183,16 @@ void CTitleMenu::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 
 		::SetBkColor(lpDIS->hDC, crOldBk);
 	} else {
-		CDC *dc = CDC::FromHandle(lpDIS->hDC);
-		int posY = lpDIS->rcItem.top + ((lpDIS->rcItem.bottom - lpDIS->rcItem.top) - ICONSIZE) / 2;
 		int nIconPos;
-		if (m_mapMenuIdToIconIdx.Lookup(lpDIS->itemID, nIconPos))
+		if (m_mapMenuIdToIconIdx.Lookup(lpDIS->itemID, nIconPos)) {
+			int posY = lpDIS->rcItem.top + ((lpDIS->rcItem.bottom - lpDIS->rcItem.top) - ICONSIZE) / 2;
+			CDC *dc = CDC::FromHandle(lpDIS->hDC);
 			if ((lpDIS->itemState & ODS_GRAYED) != 0)
 				DrawMonoIcon(nIconPos, CPoint(lpDIS->rcItem.left, posY), dc);
 			else
 				// Draw the bitmap on the menu.
 				m_ImageList.Draw(dc, nIconPos, CPoint(lpDIS->rcItem.left, posY), ILD_TRANSPARENT);
+		}
 	}
 }
 

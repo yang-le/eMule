@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -57,13 +57,15 @@ private:
 	void DeletePort(uint16 port, LPCTSTR prot);
 	void GetOldPorts();
 	void StartThread();
-	bool m_bSucceededOnce;
-	char m_achLanIP[16];
+
+	static CMutex m_mutBusy;
 
 	UPNPUrls *m_pURLs;
 	IGDdatas *m_pIGDData;
 	HANDLE m_hThreadHandle;
+	char m_achLanIP[40];
+	char m_achWanIP[40];
 
-	static CMutex m_mutBusy;
+	bool m_bSucceededOnce;
 	volatile bool m_bAbortDiscovery;
 };

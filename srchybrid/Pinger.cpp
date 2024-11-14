@@ -82,7 +82,7 @@
 * implement both approaches.
 *
 * Example code and ideas used from (credits go to articles authors):
-* http://tangentsoft.net/wskfaq/examples/rawping.html
+* https://tangentsoft.net/wskfaq/examples/rawping.html
 * http://www.cs.concordia.ca/~teaching/comp445/labs/webpage/ch16.htm
 * http://www.networksorcery.com/enp/protocol/icmp.htm
 *

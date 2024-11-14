@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -14,7 +14,6 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
 #include "stdafx.h"
 #include "emule.h"
 #include "emuleDlg.h"
@@ -49,7 +48,7 @@ CTransferDlg::CTransferDlg()
 {
 }
 
-BOOL CTransferDlg::Create(CWnd *pParent)
+BOOL CTransferDlg::CreateWnd(CWnd *pParent)
 {
 	// *) The initial size of that frame window must not exceed the window size of the
 	//    dialog resource template of the client window (the search results window).
@@ -70,6 +69,10 @@ int CTransferDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	context.m_pCurrentDoc = NULL;
 	context.m_pNewViewClass = RUNTIME_CLASS(CTransferWnd);
 	context.m_pNewDocTemplate = NULL;
+#ifdef _DEBUG
+	CFrameDoc dummy;
+	context.m_pCurrentDoc = &dummy;
+#endif
 	m_pwndTransfer = static_cast<CTransferWnd*>(CreateView(&context));
 	m_pwndTransfer->ModifyStyle(WS_BORDER, 0);
 	m_pwndTransfer->ModifyStyleEx(WS_EX_CLIENTEDGE, WS_EX_STATICEDGE);
@@ -134,14 +137,13 @@ void CTransferDlg::Localize()
 
 void CTransferDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
-	if (nID == SC_KEYMENU) {
-		if (lParam == EMULE_HOTMENU_ACCEL)
-			theApp.emuledlg->SendMessage(WM_COMMAND, IDC_HOTMENU);
-		else
-			theApp.emuledlg->SendMessage(WM_SYSCOMMAND, nID, lParam);
-		return;
-	}
-	CFrameWnd::OnSysCommand(nID, lParam);
+	if ((nID & 0xFFF0) != SC_KEYMENU)
+		CFrameWnd::OnSysCommand(nID, lParam);
+	else if (lParam == EMULE_HOTMENU_ACCEL)
+		theApp.emuledlg->SendMessage(WM_COMMAND, IDC_HOTMENU);
+	else
+		theApp.emuledlg->SendMessage(WM_SYSCOMMAND, nID, lParam);
+
 }
 
 BOOL CTransferDlg::PreTranslateMessage(MSG *pMsg)

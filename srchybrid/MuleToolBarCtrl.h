@@ -62,7 +62,7 @@ protected:
 	void SetAllButtonsWidth();
 
 #ifdef _DEBUG
-	void Dump();
+	void DumpInfo();
 #endif
 
 	void AutoSize();

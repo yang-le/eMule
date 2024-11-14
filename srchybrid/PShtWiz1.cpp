@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -806,7 +806,7 @@ BOOL FirstTimeWizard()
 	page3.m_uUDP = thePrefs.GetUDPPort();
 	page4.m_iDAP = 1;
 	page4.m_iUAP = 1;
-	page5.m_iObfuscation = static_cast<int>(thePrefs.IsClientCryptLayerSupported()); //was Requested()
+	page5.m_iObfuscation = static_cast<int>(thePrefs.IsCryptLayerEnabled()); //was Requested()
 	page6.m_iSafeServerConnect = 0;
 	page6.m_iKademlia = 1;
 	page6.m_iED2K = 1;

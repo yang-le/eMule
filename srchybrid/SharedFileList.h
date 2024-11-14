@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -100,7 +100,7 @@ public:
 	bool	GetPopularityRank(const CKnownFile *pFile, uint32 &rnOutSession, uint32 &rnOutTotal) const;
 
 	CCriticalSection m_mutWriteList; // don't acquire other locks while having this one in the main thread or make sure deadlocks are impossible
-	static uint8 GetRealPrio(uint8 in)				{ return (in < 4) ? in + 1 : 0; };
+	static uint8 GetRealPrio(uint8 in)				{ return (in < 4) ? in + 1 : 0; }
 	void	ResetPseudoDirNames()					{ m_mapPseudoDirNames.RemoveAll(); }
 
 protected:

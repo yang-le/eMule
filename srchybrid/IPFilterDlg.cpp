@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -81,9 +81,9 @@ CIPFilterDlg::CIPFilterDlg(CWnd *pParent /*=NULL*/)
 	: CResizableDialog(CIPFilterDlg::IDD, pParent)
 	, m_pMenuIPFilter()
 	, m_icoDlg()
-	, m_uIPFilterItems()
 	, m_ppIPFilterItems()
 	, m_ulFilteredIPs()
+	, m_uIPFilterItems()
 {
 	m_ipfilter.m_pParent = this;
 	m_ipfilter.SetRegistryKey(PREF_INI_SECTION);
@@ -382,7 +382,7 @@ void CIPFilterDlg::OnBnClickedAppend()
 				rar.Close();
 			} else {
 				CString strError;
-				strError.Format(_T("Failed to open file \"%s\".\r\n\r\nInvalid file format?\r\n\r\nDownload latest version of UNRAR.DLL from http://www.rarlab.com and copy UNRAR.DLL into eMule installation folder."), (LPCTSTR)strFilePath);
+				strError.Format(_T("Failed to open file \"%s\".\r\n\r\nInvalid file format?\r\n\r\n%s"), (LPCTSTR)strFilePath, CRARFile::sUnrar_download);
 				AfxMessageBox(strError, MB_ICONERROR);
 			}
 		} else if (szExt == _T(".gz")) {

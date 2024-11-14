@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -14,7 +14,6 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
 #pragma once
 #include "ResizableLib/ResizableDialog.h"
 #include "IrcNickListCtrl.h"
@@ -42,11 +41,11 @@ public:
 	virtual	~CIrcWnd();
 
 	void Localize();
-	bool GetLoggedIn() const						{ return m_bLoggedIn; };
-	void SetLoggedIn(bool bFlag)					{ m_bLoggedIn = bFlag; };
-	void SetSendFileString(const CString &sInFile)	{ m_sSendString = sInFile; };
-	const CString& GetSendFileString() const		{ return m_sSendString; };
-	bool IsConnected() const						{ return m_bConnected; };
+	bool GetLoggedIn() const						{ return m_bLoggedIn; }
+	void SetLoggedIn(bool bFlag)					{ m_bLoggedIn = bFlag; }
+	void SetSendFileString(const CString &sInFile)	{ m_sSendString = sInFile; }
+	const CString& GetSendFileString() const		{ return m_sSendString; }
+	bool IsConnected() const						{ return m_bConnected; }
 	void UpdateFonts(CFont *pFont);
 	void ParseChangeMode(const CString &sChannel, const CString &sChanger, CString sCommands, const CString &sParams);
 	void AddCurrent(const CString &sLine, bool bShowActivity = true, UINT uStatusCode = 0);

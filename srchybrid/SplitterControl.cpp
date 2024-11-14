@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -51,7 +51,7 @@ CSplitterControl::CSplitterControl()
 {
 }
 
-void CSplitterControl::Create(DWORD dwStyle, const CRect &rect, CWnd *pParent, UINT nID)
+void CSplitterControl::CreateWnd(DWORD dwStyle, const CRect &rect, CWnd *pParent, UINT nID)
 {
 	CRect rc = rect;
 	dwStyle |= SS_NOTIFY;

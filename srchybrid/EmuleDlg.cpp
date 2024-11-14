@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -91,7 +91,6 @@
 #include "IPFilterDlg.h"
 #include "WebServices.h"
 #include "DirectDownloadDlg.h"
-#include "PeerCacheFinder.h"
 #include "Statistics.h"
 #include "FirewallOpener.h"
 #include "StringConversion.h"
@@ -193,9 +192,6 @@ BEGIN_MESSAGE_MAP(CemuleDlg, CTrayDialog)
 	// Version Check DNS
 	ON_MESSAGE(UM_VERSIONCHECK_RESPONSE, OnVersionCheckResponse)
 
-	// PeerCache DNS
-	ON_MESSAGE(UM_PEERCACHE_RESPONSE, OnPeerCacheResponse)
-
 	// UPnP
 	ON_MESSAGE(UM_UPNP_RESULT, OnUPnPResult)
 
@@ -222,33 +218,26 @@ CemuleDlg::CemuleDlg(CWnd *pParent /*=NULL*/)
 	, m_pSplashWnd()
 	, activewnd()
 	, status()
-	, m_hIcon()
-	, ready()
-	, m_bStartMinimizedChecked()
-	, m_bStartMinimized()
 	, m_wpFirstRestore()
+	, m_hIcon()
 	, m_connicons()
 	, transicons()
 	, imicons()
 	, m_icoSysTrayCurrent()
 	, usericon()
-	, m_TrayIcon()
 	, m_icoSysTrayConnected()
 	, m_icoSysTrayDisconnected()
 	, m_icoSysTrayLowID()
+	, m_pSystrayDlg()
+	, m_pDropTarget()
 	, m_iMsgIcon()
 	, m_uLastSysTrayIconCookie(SYS_TRAY_ICON_COOKIE_FORCE_UPDATE)
 	, m_uUpDatarate()
 	, m_uDownDatarate()
-	, imagelist()
-	, trayPopup()
-	, m_pSystrayDlg()
-	, m_pDropTarget()
-	, m_SysMenuOptions()
-	, m_menuUploadCtrl()
-	, m_menuDownloadCtrl()
 	, m_acVCDNSBuffer()
-	, m_iMsgBlinkState()
+	, m_bStartMinimizedChecked()
+	, m_bStartMinimized()
+	, m_bMsgBlinkState()
 	, m_bConnectRequestDelayedForUPnP()
 	, m_bKadSuspendDisconnect()
 	, m_bEd2kSuspendDisconnect()
@@ -276,7 +265,6 @@ CemuleDlg::CemuleDlg(CWnd *pParent /*=NULL*/)
 	statisticswnd = new CStatisticsDlg;
 	toolbar = new CMuleToolbarCtrl;
 	statusbar = new CMuleStatusBarCtrl;
-	m_wndTaskbarNotifier = new CTaskbarNotifier;
 	m_pDropTarget = new CMainFrameDropTarget;
 }
 
@@ -309,13 +297,6 @@ CImageList& CemuleDlg::GetClientIconList()
 	return m_IconList;
 }
 
-void DestroyIconsArr(HICON *pIcon, size_t cnt)
-{
-	while (cnt-- > 0)
-		if (pIcon[cnt])
-			VERIFY(::DestroyIcon(pIcon[cnt]));
-}
-
 CemuleDlg::~CemuleDlg()
 {
 	CloseTTS();
@@ -346,21 +327,20 @@ CemuleDlg::~CemuleDlg()
 #endif
 
 	// already destroyed by windows?
-	//VERIFY( m_menuUploadCtrl.DestroyMenu() );
-	//VERIFY( m_menuDownloadCtrl.DestroyMenu() );
-	//VERIFY( m_SysMenuOptions.DestroyMenu() );
+	//VERIFY(m_menuUploadCtrl.DestroyMenu());
+	//VERIFY(m_menuDownloadCtrl.DestroyMenu());
+	//VERIFY(m_SysMenuOptions.DestroyMenu());
 
-	delete preferenceswnd;
-	delete serverwnd;
-	delete kademliawnd;
-	delete sharedfileswnd;
-	delete chatwnd;
-	delete ircwnd;
-	delete statisticswnd;
-	delete toolbar;
-	delete statusbar;
-	delete m_wndTaskbarNotifier;
 	delete m_pDropTarget;
+	delete statusbar;
+	delete toolbar;
+	delete statisticswnd;
+	delete ircwnd;
+	delete chatwnd;
+	delete sharedfileswnd;
+	delete kademliawnd;
+	delete serverwnd;
+	delete preferenceswnd;
 }
 
 void CemuleDlg::DoDataExchange(CDataExchange *pDX)
@@ -421,7 +401,7 @@ BOOL CemuleDlg::OnInitDialog()
 	// Create global GUI objects
 	theApp.CreateAllFonts();
 	theApp.CreateBackwardDiagonalBrush();
-	m_wndTaskbarNotifier->SetTextDefaultFont();
+	m_wndTaskbarNotifier.SetTextDefaultFont();
 	CTrayDialog::OnInitDialog();
 	InitWindowStyles(this);
 	CreateToolbarCmdIconMap();
@@ -472,7 +452,7 @@ BOOL CemuleDlg::OnInitDialog()
 	SetWindowText(_T("eMule v") + theApp.m_strCurVersionLong);
 
 	// Init taskbar notifier
-	m_wndTaskbarNotifier->Create(this);
+	m_wndTaskbarNotifier.CreateWnd(this);
 	LoadNotifier(thePrefs.GetNotifierConfiguration());
 
 	// set statusbar
@@ -485,9 +465,9 @@ BOOL CemuleDlg::OnInitDialog()
 	// create main window dialog pages
 	DialogCreateIndirect(serverwnd, IDD_SERVER);
 	DialogCreateIndirect(sharedfileswnd, IDD_FILES);
-	searchwnd->Create(this); // can not use 'DialogCreateIndirect' for the SearchWnd, grrr...
+	searchwnd->CreateWnd(this); // can not use 'DialogCreateIndirect' for the SearchWnd, grrr...
 	DialogCreateIndirect(chatwnd, IDD_CHAT);
-	transferwnd->Create(this);
+	transferwnd->CreateWnd(this);
 	DialogCreateIndirect(statisticswnd, IDD_STATISTICS);
 	DialogCreateIndirect(kademliawnd, IDD_KADEMLIAWND);
 	DialogCreateIndirect(ircwnd, IDD_IRC);
@@ -551,7 +531,7 @@ BOOL CemuleDlg::OnInitDialog()
 	rcClient.top += rcToolbar.Height();
 	rcClient.bottom -= rcStatusbar.Height();
 
-	CWnd* const apWnds[] =
+	CWnd *const apWnds[] =
 	{
 		serverwnd,
 		kademliawnd,
@@ -640,7 +620,7 @@ BOOL CemuleDlg::OnInitDialog()
 	if (thePrefs.GetWSIsEnabled())
 		theApp.webserver->StartServer();
 
-	VERIFY((m_hTimer = ::SetTimer(NULL, 0, 300, StartupTimer)) != 0);
+	VERIFY((m_hTimer = ::SetTimer(NULL, 0, SEC2MS(3)/10, StartupTimer)) != 0);
 	if (thePrefs.GetVerbose() && !m_hTimer)
 		AddDebugLogLine(true, _T("Failed to create 'startup' timer - %s"), (LPCTSTR)GetErrorMessage(::GetLastError()));
 
@@ -656,9 +636,6 @@ BOOL CemuleDlg::OnInitDialog()
 	}
 
 	VERIFY(m_pDropTarget->Register(this));
-
-	// initialize PeerCache
-	theApp.m_pPeerCache->Init(thePrefs.GetPeerCacheLastSearch(), thePrefs.WasPeerCacheFound(), thePrefs.IsPeerCacheDownloadEnabled(), thePrefs.GetPeerCachePort());
 
 	// start aichsyncthread
 	AfxBeginThread(RUNTIME_CLASS(CAICHSyncThread), THREAD_PRIORITY_IDLE, 0);
@@ -708,7 +685,6 @@ void CALLBACK CemuleDlg::StartupTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT_PTR /*
 		switch (theApp.emuledlg->status) {
 		case 0:
 			++theApp.emuledlg->status;
-			theApp.emuledlg->ready = true;
 			theApp.sharedfiles->SetOutputCtrl(&theApp.emuledlg->sharedfileswnd->sharedfilesctrl);
 			++theApp.emuledlg->status;
 		case 1:
@@ -814,7 +790,7 @@ void CemuleDlg::OnSysCommand(UINT nID, LPARAM lParam)
 		return;
 	}
 
-	switch (nID /*& 0xFFF0*/) {
+	switch (nID) {
 	case MP_ABOUTBOX:
 		{
 			CCreditsDlg dlgAbout;
@@ -940,7 +916,7 @@ void CemuleDlg::AddLogText(UINT uFlags, LPCTSTR pszText)
 			serverwnd->logbox->AddTyped(temp, iLen, uFlags & LOGMSGTYPEMASK);
 			if (::IsWindow(serverwnd->StatusSelector) && serverwnd->StatusSelector.GetCurSel() != CServerWnd::PaneLog)
 				serverwnd->StatusSelector.HighlightItem(CServerWnd::PaneLog, TRUE);
-			if (!(uFlags & LOG_DONTNOTIFY) && ready)
+			if (!(uFlags & LOG_DONTNOTIFY) && status) //status!=0 means this dialog has been created
 				ShowNotifier(pszText, TBN_LOG);
 			if (thePrefs.GetLog2Disk())
 				theLog.Log(temp, iLen);
@@ -1153,9 +1129,7 @@ void CemuleDlg::ShowTransferRate(bool bForceAll)
 	if (TrayIconVisible() || bForceAll) {
 		// set tray icon
 		int iDownRatePercent = (int)ceil((m_uDownDatarate / 10.24) / thePrefs.GetMaxGraphDownloadRate());
-		if (iDownRatePercent > 100)
-			iDownRatePercent = 100;
-		UpdateTrayIcon(iDownRatePercent);
+		UpdateTrayIcon(min(iDownRatePercent, 100));
 
 		CString buffer;
 		buffer.Format(_T("eMule v%s (%s)\r\n%s")
@@ -1665,6 +1639,10 @@ void CemuleDlg::OnClose()
 		return;
 	}
 	theApp.m_app_state = APP_STATE_SHUTTINGDOWN;
+	notifierenabled = false;
+	//flush queued messages
+	theApp.HandleDebugLogQueue();
+	theApp.HandleLogQueue();
 
 	Log(_T("Closing eMule"));
 	CloseTTS();
@@ -1719,13 +1697,12 @@ void CemuleDlg::OnClose()
 	// saving data & stuff
 	theApp.emuledlg->preferenceswnd->m_wndSecurity.DeleteDDB();
 
-	theApp.knownfiles->Save();						// CKnownFileList::Save
+	theApp.knownfiles->Save();
 	theApp.sharedfiles->Save();
 	searchwnd->SaveAllSettings();
 	serverwnd->SaveAllSettings();
 	kademliawnd->SaveAllSettings();
 
-	theApp.m_pPeerCache->Save();
 	theApp.scheduler->RestoreOriginals();
 	theApp.searchlist->SaveSpamFilter();
 	if (thePrefs.IsStoringSearchesEnabled())
@@ -1782,7 +1759,6 @@ void CemuleDlg::OnClose()
 	delete theApp.scheduler;				theApp.scheduler = NULL;
 	delete theApp.ipfilter;					theApp.ipfilter = NULL;			// CIPFilter::SaveToDefaultFile
 	delete theApp.webserver;				theApp.webserver = NULL;
-	delete theApp.m_pPeerCache;				theApp.m_pPeerCache = NULL;
 	delete theApp.m_pFirewallOpener;		theApp.m_pFirewallOpener = NULL;
 	delete theApp.uploadBandwidthThrottler;	theApp.uploadBandwidthThrottler = NULL;
 	delete theApp.lastCommonRouteFinder;	theApp.lastCommonRouteFinder = NULL;
@@ -1796,6 +1772,9 @@ void CemuleDlg::OnClose()
 	thePrefs.Uninit();
 	theApp.m_app_state = APP_STATE_DONE;
 	CTrayDialog::OnCancel();
+	//flush queued messages
+	theApp.HandleDebugLogQueue();
+	theApp.HandleLogQueue();
 	AddDebugLogLine(DLP_VERYLOW, _T("Closed eMule"));
 }
 
@@ -1846,7 +1825,7 @@ void CemuleDlg::OnTrayLButtonUp()
 		return;
 	}
 
-	if (thePrefs.GetEnableMiniMule()) {
+	if (thePrefs.GetEnableMiniMule())
 		try {
 			TRACE("%s - m_pMiniMule = new CMiniMule(this);\n", __FUNCTION__);
 			ASSERT(m_pMiniMule == NULL);
@@ -1863,7 +1842,6 @@ void CemuleDlg::OnTrayLButtonUp()
 			ASSERT(0);
 			m_pMiniMule = NULL;
 		}
-	}
 }
 
 void CemuleDlg::OnTrayRButtonUp(CPoint pt)
@@ -1946,8 +1924,8 @@ void CemuleDlg::AddSpeedSelectorMenus(CMenu *addToMenu)
 		m_menuUploadCtrl.AppendMenu(MF_STRING, MP_QS_U60, text);
 		text.Format(_T("80%%\t%i %s"), max(rate * 4 / 5, 1), (LPCTSTR)kbyps);
 		m_menuUploadCtrl.AppendMenu(MF_STRING, MP_QS_U80, text);
-		//text.Format(_T("100%%\t%i %s"), rate, (LPCTSTR)kbyps);
-		//m_menuUploadCtrl.AppendMenu(MF_STRING, MP_QS_U100, text);
+		text.Format(_T("100%%\t%i %s"), rate, (LPCTSTR)kbyps);
+		m_menuUploadCtrl.AppendMenu(MF_STRING, MP_QS_U100, text);
 		m_menuUploadCtrl.AppendMenu(MF_SEPARATOR);
 
 		if (GetRecMaxUpload() > 0) {
@@ -2062,14 +2040,14 @@ void CemuleDlg::UpdateTrayIcon(int iPercent)
 
 	// prepare it up
 	if (m_iMsgIcon != 0 && thePrefs.DoFlashOnNewMessage()) {
-		m_iMsgBlinkState = !m_iMsgBlinkState;
+		m_bMsgBlinkState = !m_bMsgBlinkState;
 
-		if (m_iMsgBlinkState)
+		if (m_bMsgBlinkState)
 			m_TrayIcon.Init(imicons[1], 100, 1, 1, 16, 16, thePrefs.GetStatsColor(11));
 	} else
-		m_iMsgBlinkState = false;
+		m_bMsgBlinkState = false;
 
-	if (!m_iMsgBlinkState) {
+	if (!m_bMsgBlinkState) {
 		HICON trayicon;
 		if (theApp.IsConnected())
 			trayicon = theApp.IsFirewalled() ? m_icoSysTrayLowID : m_icoSysTrayConnected;
@@ -2119,7 +2097,7 @@ void CemuleDlg::ShowNotifier(LPCTSTR pszText, TbnMsg nMsgType, LPCTSTR pszLink, 
 	switch (nMsgType) {
 	case TBN_CHAT:
 		if (thePrefs.GetNotifierOnChat()) {
-			m_wndTaskbarNotifier->Show(pszText, nMsgType, pszLink);
+			m_wndTaskbarNotifier.Show(pszText, nMsgType, pszLink);
 			bShowIt = true;
 			pszSoundEvent = _T("eMule_Chat");
 			iSoundPrio = 1;
@@ -2127,7 +2105,7 @@ void CemuleDlg::ShowNotifier(LPCTSTR pszText, TbnMsg nMsgType, LPCTSTR pszLink, 
 		break;
 	case TBN_DOWNLOADFINISHED:
 		if (thePrefs.GetNotifierOnDownloadFinished()) {
-			m_wndTaskbarNotifier->Show(pszText, nMsgType, pszLink);
+			m_wndTaskbarNotifier.Show(pszText, nMsgType, pszLink);
 			bShowIt = true;
 			pszSoundEvent = _T("eMule_DownloadFinished");
 			iSoundPrio = 1;
@@ -2136,7 +2114,7 @@ void CemuleDlg::ShowNotifier(LPCTSTR pszText, TbnMsg nMsgType, LPCTSTR pszLink, 
 		break;
 	case TBN_DOWNLOADADDED:
 		if (thePrefs.GetNotifierOnNewDownload()) {
-			m_wndTaskbarNotifier->Show(pszText, nMsgType, pszLink);
+			m_wndTaskbarNotifier.Show(pszText, nMsgType, pszLink);
 			bShowIt = true;
 			pszSoundEvent = _T("eMule_DownloadAdded");
 			iSoundPrio = 1;
@@ -2144,14 +2122,14 @@ void CemuleDlg::ShowNotifier(LPCTSTR pszText, TbnMsg nMsgType, LPCTSTR pszLink, 
 		break;
 	case TBN_LOG:
 		if (thePrefs.GetNotifierOnLog()) {
-			m_wndTaskbarNotifier->Show(pszText, nMsgType, pszLink);
+			m_wndTaskbarNotifier.Show(pszText, nMsgType, pszLink);
 			bShowIt = true;
 			pszSoundEvent = _T("eMule_LogEntryAdded");
 		}
 		break;
 	case TBN_IMPORTANTEVENT:
 		if (thePrefs.GetNotifierOnImportantError()) {
-			m_wndTaskbarNotifier->Show(pszText, nMsgType, pszLink);
+			m_wndTaskbarNotifier.Show(pszText, nMsgType, pszLink);
 			bShowIt = true;
 			pszSoundEvent = _T("eMule_Urgent");
 			iSoundPrio = 1;
@@ -2160,14 +2138,14 @@ void CemuleDlg::ShowNotifier(LPCTSTR pszText, TbnMsg nMsgType, LPCTSTR pszLink, 
 		break;
 	case TBN_NEWVERSION:
 		if (thePrefs.GetNotifierOnNewVersion()) {
-			m_wndTaskbarNotifier->Show(pszText, nMsgType, pszLink);
+			m_wndTaskbarNotifier.Show(pszText, nMsgType, pszLink);
 			bShowIt = true;
 			pszSoundEvent = _T("eMule_NewVersion");
 			iSoundPrio = 1;
 		}
 		break;
 	case TBN_NULL:
-		m_wndTaskbarNotifier->Show(pszText, nMsgType, pszLink);
+		m_wndTaskbarNotifier.Show(pszText, nMsgType, pszLink);
 		bShowIt = true;
 	}
 
@@ -2190,7 +2168,7 @@ void CemuleDlg::ShowNotifier(LPCTSTR pszText, TbnMsg nMsgType, LPCTSTR pszLink, 
 
 void CemuleDlg::LoadNotifier(const CString &configuration)
 {
-	notifierenabled = m_wndTaskbarNotifier->LoadConfiguration(configuration);
+	notifierenabled = m_wndTaskbarNotifier.LoadConfiguration(configuration);
 }
 
 LRESULT CemuleDlg::OnTaskbarNotifierClicked(WPARAM, LPARAM lParam)
@@ -2200,7 +2178,7 @@ LRESULT CemuleDlg::OnTaskbarNotifierClicked(WPARAM, LPARAM lParam)
 		free((void*)lParam);
 	}
 
-	switch (m_wndTaskbarNotifier->GetMessageType()) {
+	switch (m_wndTaskbarNotifier.GetMessageType()) {
 	case TBN_CHAT:
 		RestoreWindow();
 		SetActiveDialog(chatwnd);
@@ -2278,10 +2256,7 @@ void CemuleDlg::SetAllIcons()
 	//SetIcon(m_hIcon, FALSE);
 
 	// connection state
-	for (unsigned i = 0; i < _countof(m_connicons); ++i)
-		if (m_connicons[i])
-			VERIFY(::DestroyIcon(m_connicons[i]));
-
+	DestroyIconsArr(m_connicons, _countof(m_connicons));
 	m_connicons[0] = theApp.LoadIcon(_T("ConnectedNotNot"), 16, 16);
 	m_connicons[1] = theApp.LoadIcon(_T("ConnectedNotLow"), 16, 16);
 	m_connicons[2] = theApp.LoadIcon(_T("ConnectedNotHigh"), 16, 16);
@@ -2294,10 +2269,7 @@ void CemuleDlg::SetAllIcons()
 	ShowConnectionStateIcon();
 
 	// transfer state
-	for (int i = 0; i < 4; ++i)
-		if (transicons[i])
-			VERIFY(::DestroyIcon(transicons[i]));
-
+	DestroyIconsArr(transicons, _countof(transicons));
 	transicons[0] = theApp.LoadIcon(_T("UP0DOWN0"), 16, 16);
 	transicons[1] = theApp.LoadIcon(_T("UP0DOWN1"), 16, 16);
 	transicons[2] = theApp.LoadIcon(_T("UP1DOWN0"), 16, 16);
@@ -2322,10 +2294,7 @@ void CemuleDlg::SetAllIcons()
 	m_icoSysTrayLowID = theApp.LoadIcon(_T("TrayLowID"), 16, 16);
 	ShowTransferRate(true);
 
-	for (int i = 0; i < 3; ++i)
-		if (imicons[i])
-			VERIFY(::DestroyIcon(imicons[i]));
-
+	DestroyIconsArr(imicons, _countof(imicons));
 	imicons[0] = NULL;
 	imicons[1] = theApp.LoadIcon(_T("Message"), 16, 16);
 	imicons[2] = theApp.LoadIcon(_T("MessagePending"), 16, 16);
@@ -2339,40 +2308,28 @@ void CemuleDlg::Localize()
 		VERIFY(pSysMenu->ModifyMenu(MP_ABOUTBOX, MF_BYCOMMAND | MF_STRING, MP_ABOUTBOX, GetResString(IDS_ABOUTBOX)));
 		VERIFY(pSysMenu->ModifyMenu(MP_VERSIONCHECK, MF_BYCOMMAND | MF_STRING, MP_VERSIONCHECK, GetResString(IDS_VERSIONCHECK)));
 
-		switch (thePrefs.GetWindowsVersion()) {
-		case _WINVER_98_:
-		case _WINVER_95_:
-		case _WINVER_ME_:
-			// NOTE: I think the reason why the old version of the following code crashed under Win9X was because
-			// of the menus were destroyed right after they were added to the system menu. New code should work
-			// under Win9X too but I can't test it.
-			break;
-		default:
-			{
 		// localize the 'speed control' sub menus by deleting the current menus and creating a new ones.
 
 		// remove any already available 'speed control' menus from system menu
-				UINT uOptMenuPos = pSysMenu->GetMenuItemCount() - 1;
-				CMenu *pAccelMenu = pSysMenu->GetSubMenu(uOptMenuPos);
-				if (pAccelMenu) {
-					ASSERT(pAccelMenu->m_hMenu == m_SysMenuOptions.m_hMenu);
-					VERIFY(pSysMenu->RemoveMenu(uOptMenuPos, MF_BYPOSITION));
-				}
+		UINT uOptMenuPos = pSysMenu->GetMenuItemCount() - 1;
+		CMenu *pAccelMenu = pSysMenu->GetSubMenu(uOptMenuPos);
+		if (pAccelMenu) {
+			ASSERT(pAccelMenu->m_hMenu == m_SysMenuOptions.m_hMenu);
+			VERIFY(pSysMenu->RemoveMenu(uOptMenuPos, MF_BYPOSITION));
+		}
 
-				// destroy all 'speed control' menus
-				if (m_menuUploadCtrl)
-					VERIFY(m_menuUploadCtrl.DestroyMenu());
-				if (m_menuDownloadCtrl)
-					VERIFY(m_menuDownloadCtrl.DestroyMenu());
-				if (m_SysMenuOptions)
-					VERIFY(m_SysMenuOptions.DestroyMenu());
+		// destroy all 'speed control' menus
+		if (m_menuUploadCtrl)
+			VERIFY(m_menuUploadCtrl.DestroyMenu());
+		if (m_menuDownloadCtrl)
+			VERIFY(m_menuDownloadCtrl.DestroyMenu());
+		if (m_SysMenuOptions)
+			VERIFY(m_SysMenuOptions.DestroyMenu());
 
-				// create new 'speed control' menus
-				if (m_SysMenuOptions.CreateMenu()) {
-					AddSpeedSelectorMenus(&m_SysMenuOptions);
-					pSysMenu->AppendMenu(MF_STRING | MF_POPUP, (UINT_PTR)m_SysMenuOptions.m_hMenu, GetResString(IDS_EM_PREFS));
-				}
-			}
+		// create new 'speed control' menus
+		if (m_SysMenuOptions.CreateMenu()) {
+			AddSpeedSelectorMenus(&m_SysMenuOptions);
+			pSysMenu->AppendMenu(MF_STRING | MF_POPUP, (UINT_PTR)m_SysMenuOptions.m_hMenu, GetResString(IDS_EM_PREFS));
 		}
 	}
 
@@ -3147,11 +3104,6 @@ void CemuleDlg::HtmlHelp(DWORD_PTR dwData, UINT nCmd)
 	}
 }
 
-LRESULT CemuleDlg::OnPeerCacheResponse(WPARAM wParam, LPARAM lParam)
-{
-	return theApp.m_pPeerCache->OnPeerCacheCheckResponse(wParam, lParam);
-}
-
 void CemuleDlg::CreateToolbarCmdIconMap()
 {
 	m_mapTbarCmdToIcon[TBBTN_CONNECT] = _T("Connect");
@@ -3209,16 +3161,15 @@ BOOL CemuleDlg::OnChevronPushed(UINT id, LPNMHDR pNMHDR, LRESULT *plResult)
 	menu.CreatePopupMenu();
 	menu.AddMenuTitle(_T("eMule"), true);
 
+	TCHAR szString[256];
 	TBBUTTONINFO tbbi;
 	tbbi.cbSize = (UINT)sizeof tbbi;
 	tbbi.dwMask = TBIF_BYINDEX | TBIF_COMMAND | TBIF_STYLE | TBIF_STATE | TBIF_TEXT;
+	tbbi.cchText = _countof(szString);
+	tbbi.pszText = szString;
 
-	for (; i < iButtons; ++i) {
-		TCHAR szString[256];
-		tbbi.cchText = _countof(szString);
-		tbbi.pszText = szString;
-		if (toolbar->GetButtonInfo(i, &tbbi) >= 0) {
-			szString[_countof(szString) - 1] = _T('\0');
+	for (; i < iButtons; ++i)
+		if (toolbar->GetButtonInfo(i, &tbbi) >= 0)
 			if (tbbi.fsStyle & TBSTYLE_SEP) {
 				if (!bLastMenuItemIsSep)
 					bLastMenuItemIsSep = menu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
@@ -3229,8 +3180,6 @@ BOOL CemuleDlg::OnChevronPushed(UINT id, LPNMHDR pNMHDR, LRESULT *plResult)
 				if ((tbbi.fsState & TBSTATE_ENABLED) == 0)
 					menu.EnableMenuItem(tbbi.idCommand, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 			}
-		}
-	}
 
 	CPoint ptMenu(pnmrc->rc.left, pnmrc->rc.top);
 	ClientToScreen(&ptMenu);
@@ -3489,6 +3438,7 @@ LRESULT CemuleDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 	//DebugLog(_T("DEBUG:Power state change. wParam=%d lPararm=%ld"),wParam,lParam);
 	switch (wParam) {
 	case PBT_APMRESUMEAUTOMATIC:
+		theApp.ResetStandbyOff();
 		if (m_bEd2kSuspendDisconnect || m_bKadSuspendDisconnect) {
 			DebugLog(_T("Reconnect after Power state change. wParam=%d lPararm=%ld"), wParam, lParam);
 			RefreshUPnP(true);
@@ -3525,8 +3475,8 @@ void CemuleDlg::StartUPnP(bool bReset, uint16 nForceTCPPort, uint16 nForceUDPPor
 				/*theApp.emuledlg->*/PostMessage(UM_UPNP_RESULT, (WPARAM)CUPnPImpl::UPNP_FAILED, 0);
 		} catch (const CUPnPImpl::UPnPError&) {
 			//ignore
-		} catch (CException *e) {
-			e->Delete();
+		} catch (CException *ex) {
+			ex->Delete();
 		}
 	} else
 		ASSERT(0);
@@ -3550,8 +3500,8 @@ void CemuleDlg::RefreshUPnP(bool bRequestAnswer)
 				DebugLogWarning(_T("RefreshUPnP, implementation not ready"));
 		} catch (const CUPnPImpl::UPnPError&) {
 			//ignore
-		} catch (CException *e) {
-			e->Delete();
+		} catch (CException *ex) {
+			ex->Delete();
 		}
 	} else
 		ASSERT(0);

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -21,9 +21,9 @@
 
 class CAsyncProxySocketLayer;
 
-#define ES_DISCONNECTED	0xFF
-#define ES_NOTCONNECTED	0x00
-#define ES_CONNECTED	0x01
+#define EMS_DISCONNECTED	0xFF
+#define EMS_NOTCONNECTED	0x00
+#define EMS_CONNECTED		0x01
 
 struct StandardPacketQueueEntry
 {
@@ -39,7 +39,7 @@ public:
 	~CEMSocket();
 
 	virtual void SendPacket(Packet *packet, bool controlpacket = true, uint32 actualPayloadSize = 0, bool bForceImmediateSend = false);
-	bool	IsConnected() const				{ return byConnected == ES_CONNECTED; }
+	bool	IsConnected() const				{ return byConnected == EMS_CONNECTED; }
 	uint8	GetConState() const				{ return byConnected; }
 	void	SetConState(uint8 val)			{ sendLocker.Lock(); byConnected = val; sendLocker.Unlock(); }
 	virtual bool IsRawDataMode() const		{ return false; }
@@ -53,8 +53,8 @@ public:
 	virtual bool UseBigSendBuffer();
 	INT_PTR	DbgGetStdQueueCount() const		{ return standardpacket_queue.GetCount(); }
 
-	virtual DWORD GetTimeOut() const;
-	virtual void SetTimeOut(DWORD uTimeOut);
+	virtual DWORD GetTimeOut() const		{ return m_uTimeOut; }
+	virtual void SetTimeOut(DWORD uTimeOut) { m_uTimeOut = uTimeOut; }
 
 	virtual bool Connect(const CString &sHostAddress, UINT nHostPort);
 	virtual BOOL Connect(const LPSOCKADDR pSockAddr, int iSockAddrLen);
@@ -78,8 +78,8 @@ public:
 	uint32 GetSentPayloadSinceLastCall(bool bReset);
 	void TruncateQueues();
 
-	virtual SocketSentBytes SendControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize)			{ return Send(maxNumberOfBytesToSend, minFragSize, true); };
-	virtual SocketSentBytes SendFileAndControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize)	{ return Send(maxNumberOfBytesToSend, minFragSize, false); };
+	virtual SocketSentBytes SendControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize)			{ return SendEM(maxNumberOfBytesToSend, minFragSize, true); }
+	virtual SocketSentBytes SendFileAndControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize)	{ return SendEM(maxNumberOfBytesToSend, minFragSize, false); }
 
 	uint32	GetNeededBytes();
 #ifdef _DEBUG
@@ -94,14 +94,14 @@ protected:
 	virtual void	DataReceived(const BYTE *pcData, UINT uSize);
 	virtual bool	PacketReceived(Packet *packet) = 0;
 	virtual void	OnError(int nErrorCode) = 0;
-	uint8	byConnected;
-	UINT	m_uTimeOut;
-	bool	m_bProxyConnectFailed;
 	CAsyncProxySocketLayer *m_pProxyLayer;
 	CString m_strLastProxyError;
+	UINT	m_uTimeOut;
+	uint8	byConnected;
+	bool	m_bProxyConnectFailed;
 
 private:
-	virtual SocketSentBytes Send(uint32 maxNumberOfBytesToSend, uint32 minFragSize, bool onlyAllowedToSendControlPacket);
+	virtual SocketSentBytes SendEM(uint32 maxNumberOfBytesToSend, uint32 minFragSize, bool onlyAllowedToSendControlPacket);
 	SocketSentBytes SendStd(uint32 maxNumberOfBytesToSend, uint32 minFragSize, bool onlyAllowedToSendControlPacket);
 	SocketSentBytes SendOv(uint32 maxNumberOfBytesToSend, uint32 minFragSize, bool onlyAllowedToSendControlPacket);
 	void	ClearQueues();
@@ -110,17 +110,17 @@ private:
 	static uint32 GetNextFragSize(uint32 current, uint32 minFragSize);
 
 	// Download (pseudo) rate control
-	uint32	downloadLimit;
 	bool	downloadLimitEnable;
 	bool	pendingOnReceive;
-
-	// Download partial header
-	char	pendingHeader[PACKET_HEADER_SIZE];	// actually, this holds only 'PACKET_HEADER_SIZE-1' bytes.
-	size_t	pendingHeaderSize;
+	uint32	downloadLimit;
 
 	// Download partial packet
-	Packet	*pendingPacket;
 	uint32	pendingPacketSize;
+	Packet	*pendingPacket;
+
+	// Download partial header
+	size_t	pendingHeaderSize;
+	char	pendingHeader[PACKET_HEADER_SIZE];	// actually, this holds only 'PACKET_HEADER_SIZE-1' bytes.
 
 	// Upload control
 	char	*sendbuffer;

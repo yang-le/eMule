@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -467,7 +467,7 @@ LRESULT CFileInfoDialog::OnMediaInfoResult(WPARAM, LPARAM lParam)
 			if (ami.video.dwBitRate == _UI32_MAX)
 				buffer = _T("Variable");
 			else
-				buffer.Format(_T("%u %s"), (ami.video.dwBitRate + 500) / 1000, (LPCTSTR)GetResString(IDS_KBITSSEC));
+				buffer.Format(_T("%lu %s"), (ami.video.dwBitRate + SEC2MS(1) / 2) / SEC2MS(1), (LPCTSTR)GetResString(IDS_KBITSSEC));
 			SetDlgItemText(IDC_VBITRATE, buffer);
 		} else
 			SetDlgItemText(IDC_VBITRATE, _T(""));
@@ -531,7 +531,7 @@ LRESULT CFileInfoDialog::OnMediaInfoResult(WPARAM, LPARAM lParam)
 			if (ami.audio.nAvgBytesPerSec == _UI32_MAX)
 				buffer = _T("Variable");
 			else
-				buffer.Format(_T("%u %s"), (UINT)(ami.audio.nAvgBytesPerSec * 8.0f / 1000.0f + 0.5f), (LPCTSTR)GetResString(IDS_KBITSSEC));
+				buffer.Format(_T("%u %s"), (UINT)((ami.audio.nAvgBytesPerSec * 16ull + SEC2MS(1)) / SEC2MS(2)), (LPCTSTR)GetResString(IDS_KBITSSEC));
 			SetDlgItemText(IDC_ABITRATE, buffer);
 		} else
 			SetDlgItemText(IDC_ABITRATE, _T(""));
@@ -759,9 +759,9 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile *pFi
 				if (!bSingleFile) {
 					mi->strInfo << _T("   ") << GetResString(IDS_CODEC) << _T(":\t") << mi->strAudioFormat << _T("\n");
 					//no vbr bit rate
-					//mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << ((mp3info->vbr_bitrate ? mp3info->vbr_bitrate : mp3info->bitrate) + 500) / 1000 << _T(" ") << GetResString(IDS_KBITSSEC) << _T("\n");
-					mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << (mp3info->bitrate + 500) / 1000 << _T(" ") << GetResString(IDS_KBITSSEC) << _T("\n");
-					mi->strInfo << _T("   ") << GetResString(IDS_SAMPLERATE) << _T(":\t") << mp3info->frequency / 1000.0 << _T(" kHz\n");
+					//mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << ((mp3info->vbr_bitrate ? mp3info->vbr_bitrate : mp3info->bitrate) + SEC2MS(1) / 2) / SEC2MS(1) << _T(" ") << GetResString(IDS_KBITSSEC) << _T("\n");
+					mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << (mp3info->bitrate + SEC2MS(1) / 2) / SEC2MS(1) << _T(" ") << GetResString(IDS_KBITSSEC) << _T("\n");
+					mi->strInfo << _T("   ") << GetResString(IDS_SAMPLERATE) << _T(":\t") << mp3info->frequency / SEC2MS(1.0) << _T(" kHz\n");
 				}
 
 				++mi->iAudioStreams;
@@ -1229,7 +1229,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile *pFi
 						str = InfoGet(MediaInfo_Stream_General, 0, _T("Duration"));
 						if (str.IsEmpty())
 							str = InfoGet(MediaInfo_Stream_General, 0, _T("PlayTime")); //deprecated
-						float fFileLengthSec = _tstoi(str) / 1000.0F;
+						float fFileLengthSec = _tstoi(str) / SEC2MS(1.0f);
 						UINT uAllBitrates = 0;
 
 						str = InfoGet(MediaInfo_Stream_General, 0, _T("VideoCount"));
@@ -1302,7 +1302,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile *pFi
 											strBitrate = _T("Variable");
 											uAllBitrates = _UI32_MAX;
 										} else {
-											strBitrate.Format(_T("%u %s"), (iBitrate + 500u) / 1000, (LPCTSTR)GetResString(IDS_KBITSSEC));
+											strBitrate.Format(_T("%u %s"), (iBitrate + SEC2MS(1u) / 2) / SEC2MS(1), (LPCTSTR)GetResString(IDS_KBITSSEC));
 											if (uAllBitrates != _UI32_MAX)
 												uAllBitrates += iBitrate;
 										}
@@ -1401,7 +1401,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile *pFi
 											strBitrate = _T("Variable");
 											uAllBitrates = _UI32_MAX;
 										} else {
-											strBitrate.Format(_T("%u %s"), (iBitrate + 500u) / 1000, (LPCTSTR)GetResString(IDS_KBITSSEC));
+											strBitrate.Format(_T("%u %s"), (iBitrate + SEC2MS(1u) / 2) / SEC2MS(1), (LPCTSTR)GetResString(IDS_KBITSSEC));
 											if (uAllBitrates != _UI32_MAX)
 												uAllBitrates += iBitrate;
 										}
@@ -1670,7 +1670,7 @@ bool CGetMediaInfoThread::GetMediaInfo(HWND hWndOwner, const CShareableFile *pFi
 															if (wfx->nAvgBytesPerSec == _UI32_MAX)
 																strBitrate = _T("Variable");
 															else
-																strBitrate.Format(_T("%u %s"), (UINT)(((wfx->nAvgBytesPerSec * 8.0) + 500.0) / 1000.0), (LPCTSTR)GetResString(IDS_KBITSSEC));
+																strBitrate.Format(_T("%u %s"), (unsigned)(((wfx->nAvgBytesPerSec * 16ull) + SEC2MS(1)) / SEC2MS(2)), (LPCTSTR)GetResString(IDS_KBITSSEC));
 															mi->strInfo << _T("   ") << GetResString(IDS_BITRATE) << _T(":\t") << strBitrate << _T("\n");
 														}
 

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -128,7 +128,7 @@ CED2KFileLink::CED2KFileLink(LPCTSTR pszName, LPCTSTR pszSize, LPCTSTR pszHash
 		throw GetResString(uid);
 
 	bool bError = false;
-	for (int i = 0; !bError && i < astrParams.GetCount(); ++i) {
+	for (INT_PTR i = 0; !bError && i < astrParams.GetCount(); ++i) {
 		const CString &strParam(astrParams[i]);
 		ASSERT(!strParam.IsEmpty());
 

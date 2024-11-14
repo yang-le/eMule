@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -18,7 +18,6 @@
 #include "DebugHelpers.h"
 #include "emule.h"
 #include "ListenSocket.h"
-#include "PeerCacheSocket.h"
 #include "opcodes.h"
 #include "UpDownClient.h"
 #include "ClientList.h"
@@ -37,7 +36,6 @@
 #include "TransferDlg.h"
 #include "ClientListCtrl.h"
 #include "ChatWnd.h"
-#include "PeerCacheFinder.h"
 #include "Exceptions.h"
 #include "Kademlia/Utils/uint128.h"
 #include "Kademlia/Kademlia/kademlia.h"
@@ -121,26 +119,6 @@ void CClientReqSocket::ResetTimeOutTimer()
 	timeout_timer = ::GetTickCount();
 }
 
-DWORD CClientReqSocket::GetTimeOut() const
-{
-	// PC-TODO
-	// the PC socket may even already be disconnected and deleted and we still need to keep the
-	// ed2k socket open because remote client may still be downloading from cache.
-	DWORD uTimeout = CEMSocket::GetTimeOut();
-	DWORD u1 = 0;
-	if (client)
-		if (client->IsUploadingToPeerCache() && (client->m_pPCUpSocket == NULL || !client->m_pPCUpSocket->IsConnected()))
-			// we are uploading (or at least allow uploading) but currently no socket
-			u1 = GetPeerCacheSocketUploadTimeout();
-		else if (client->m_pPCUpSocket && client->m_pPCUpSocket->IsConnected())
-			// we have an uploading PC socket, but that socket is not used (nor can it be closed)
-			u1 = client->m_pPCUpSocket->GetTimeOut();
-		else if (client->m_pPCDownSocket && client->m_pPCDownSocket->IsConnected())
-			// we have a downloading PC socket
-			u1 = client->m_pPCDownSocket->GetTimeOut();
-	return max(uTimeout, u1);
-}
-
 bool CClientReqSocket::CheckTimeOut()
 {
 	const DWORD curTick = ::GetTickCount();
@@ -190,7 +168,7 @@ void CClientReqSocket::OnClose(int nErrorCode)
 
 void CClientReqSocket::Disconnect(LPCTSTR pszReason)
 {
-	CEMSocket::SetConState(ES_DISCONNECTED);
+	CEMSocket::SetConState(EMS_DISCONNECTED);
 	AsyncSelect(FD_CLOSE);
 	if (client) {
 		CString sMsg;
@@ -218,7 +196,7 @@ void CClientReqSocket::Delete_Timed()
 void CClientReqSocket::Safe_Delete()
 {
 	ASSERT(theApp.listensocket->IsValidSocket(this));
-	CEMSocket::SetConState(ES_DISCONNECTED);
+	CEMSocket::SetConState(EMS_DISCONNECTED);
 	AsyncSelect(FD_CLOSE);
 	deltimer = ::GetTickCount();
 	if (m_SocketData.hSocket != INVALID_SOCKET) // deadlake PROXYSUPPORT - changed to AsyncSocketEx
@@ -346,7 +324,7 @@ bool CClientReqSocket::ProcessPacket(const BYTE *packet, uint32 size, UINT opcod
 					client->SetCommentDirty();
 				client->SetUploadFileID(reqfile);
 
-				if (!client->ProcessExtendedInfo(&data_in, reqfile)) {
+				if (!client->ProcessExtendedInfo(data_in, reqfile)) {
 					if (thePrefs.GetDebugClientTCPLevel() > 0)
 						DebugSend("OP_FileReqAnsNoFil", client, packet);
 					Packet *replypacket = new Packet(OP_FILEREQANSNOFIL, 16);
@@ -476,7 +454,7 @@ bool CClientReqSocket::ProcessPacket(const BYTE *packet, uint32 size, UINT opcod
 			CPartFile *file = theApp.downloadqueue->GetFileByID(cfilehash);
 			if (file == NULL)
 				client->CheckFailedFileIdReqs(cfilehash);
-			client->ProcessFileInfo(&data, file);
+			client->ProcessFileInfo(data, file);
 		}
 		break;
 	case OP_FILESTATUS:
@@ -491,7 +469,7 @@ bool CClientReqSocket::ProcessPacket(const BYTE *packet, uint32 size, UINT opcod
 			CPartFile *file = theApp.downloadqueue->GetFileByID(cfilehash);
 			if (file == NULL)
 				client->CheckFailedFileIdReqs(cfilehash);
-			client->ProcessFileStatus(false, &data, file);
+			client->ProcessFileStatus(false, data, file);
 		}
 		break;
 	case OP_STARTUPLOADREQ:
@@ -607,10 +585,10 @@ bool CClientReqSocket::ProcessPacket(const BYTE *packet, uint32 size, UINT opcod
 					if (!creqfile->IsStopped() && creqfile->GetStatus() == PS_PAUSED || creqfile->GetStatus() == PS_ERROR)
 						newDS = DS_ONQUEUE;
 					else
-						newDS = DS_CONNECTED; //anything but DS_NONE or DS_ONQUEUE
+						newDS = DS_CONNECTED; //any state but DS_NONE or DS_ONQUEUE
 				}
 			}
-			if (newDS != DS_CONNECTED && client) { //could be deleted while debugging
+			if (newDS != DS_CONNECTED && client) { //client could have been deleted while debugging
 				client->SendCancelTransfer();
 				client->SetDownloadState(newDS);
 			}
@@ -971,7 +949,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE *packet, uint32 size, UINT op
 						if (thePrefs.GetDebugClientTCPLevel() > 0)
 							DebugRecv("OP_MPReqFileName", client, packet);
 
-						if (!client->ProcessExtendedInfo(&data_in, reqfile)) {
+						if (!client->ProcessExtendedInfo(data_in, reqfile)) {
 							if (thePrefs.GetDebugClientTCPLevel() > 0)
 								DebugSend("OP_FileReqAnsNoFil", client, packet);
 							Packet *replypacket = new Packet(OP_FILEREQANSNOFIL, 16);
@@ -1115,13 +1093,13 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE *packet, uint32 size, UINT op
 						if (thePrefs.GetDebugClientTCPLevel() > 0)
 							DebugRecv("OP_MPReqFileNameAns", client, packet);
 
-						client->ProcessFileInfo(&data_in, reqfile);
+						client->ProcessFileInfo(data_in, reqfile);
 						break;
 					case OP_FILESTATUS:
 						if (thePrefs.GetDebugClientTCPLevel() > 0)
 							DebugRecv("OP_MPFileStatus", client, packet);
 
-						client->ProcessFileStatus(false, &data_in, reqfile);
+						client->ProcessFileStatus(false, data_in, reqfile);
 						break;
 					case OP_AICHFILEHASHANS:
 						if (thePrefs.GetDebugClientTCPLevel() > 0)
@@ -1344,38 +1322,9 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE *packet, uint32 size, UINT op
 			client->ProcessPreviewAnswer(packet, size);
 			break;
 		case OP_PEERCACHE_QUERY:
-			theStats.AddDownDataOverheadFileRequest(uRawSize);
-			if (!client->ProcessPeerCacheQuery(packet, size)) {
-				CSafeMemFile dataSend(128);
-				dataSend.WriteUInt8(PCPCK_VERSION);
-				dataSend.WriteUInt8(PCOP_NONE);
-				if (thePrefs.GetDebugClientTCPLevel() > 0) {
-					DebugSend("OP_PeerCacheAnswer", client);
-					Debug(_T("  %s\n"), _T("Not supported"));
-				}
-				Packet *pEd2kPacket = new Packet(dataSend, OP_EMULEPROT, OP_PEERCACHE_ANSWER);
-				theStats.AddUpDataOverheadFileRequest(pEd2kPacket->size);
-				SendPacket(pEd2kPacket);
-			}
-			break;
 		case OP_PEERCACHE_ANSWER:
-			theStats.AddDownDataOverheadFileRequest(uRawSize);
-			if ((!client->ProcessPeerCacheAnswer(packet, size)) && client->GetDownloadState() != DS_NONEEDEDPARTS) {
-				// We have sent a PeerCache Query to the remote client, for any reason the remote client
-				// can not process it -> fall back to ed2k download.
-				client->SetPeerCacheDownState(PCDS_NONE);
-				ASSERT(client->m_pPCDownSocket == NULL);
-
-				// PC-TODO: Check client state.
-				ASSERT(client->GetDownloadState() == DS_DOWNLOADING);
-				client->SetDownloadState(DS_ONQUEUE, _T("Peer cache query trouble")); // clear block requests
-				if (client)
-					client->StartDownload();
-			}
-			break;
 		case OP_PEERCACHE_ACK:
 			theStats.AddDownDataOverheadFileRequest(uRawSize);
-			client->ProcessPeerCacheAcknowledge(packet, size);
 			break;
 		case OP_PUBLICIP_ANSWER:
 			if (thePrefs.GetDebugClientTCPLevel() > 0)
@@ -1526,7 +1475,7 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE *packet, uint32 size, UINT op
 						//anything to the extended info data as this will be taken care of in ProcessExtendedInfo()
 						//Update extended info.
 						if (sender->GetUDPVersion() > 3)
-							sender->ProcessExtendedInfo(&data_in, reqfile);
+							sender->ProcessExtendedInfo(data_in, reqfile);
 							//Update our complete source counts.
 						else if (sender->GetUDPVersion() > 2) {
 							uint16 nCompleteCountLast = sender->GetUpCompleteSourcesCount();
@@ -1684,10 +1633,10 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE *packet, uint32 size, UINT op
 						if (!creqfile->IsStopped() && creqfile->GetStatus() == PS_PAUSED || creqfile->GetStatus() == PS_ERROR)
 							newDS = DS_ONQUEUE;
 						else
-							newDS = DS_CONNECTED; //anything but DS_NONE or DS_ONQUEUE
+							newDS = DS_CONNECTED; //any state but DS_NONE or DS_ONQUEUE
 					}
 				}
-				if (newDS != DS_CONNECTED) {
+				if (newDS != DS_CONNECTED && client) { //client could have been deleted while debugging
 					client->SendCancelTransfer();
 					client->SetDownloadState(newDS);
 				}
@@ -1746,11 +1695,11 @@ bool CClientReqSocket::ProcessExtPacket(const BYTE *packet, uint32 size, UINT op
 			theStats.AddDownDataOverheadOther(uRawSize);
 			PacketToDebugLogLine(_T("eMule"), packet, size, opcode);
 		}
-	} catch(CFileException *error) {
-		error->Delete();
+	} catch(CFileException *ex) {
+		ex->Delete();
 		throw GetResString(IDS_ERR_INVALIDPACKET);
-	} catch(CMemoryException *error) {
-		error->Delete();
+	} catch(CMemoryException *ex) {
+		ex->Delete();
 		throwCStr(_T("Memory exception"));
 	}
 	return true;
@@ -1760,7 +1709,7 @@ void CClientReqSocket::PacketToDebugLogLine(LPCTSTR protocol, const uchar *packe
 {
 	if (thePrefs.GetVerbose()) {
 		CString buffer;
-		buffer.Format(_T("Unknown %s Protocol Opcode: 0x%02x, Size=%u, Data=["), protocol, opcode, size);
+		buffer.Format(_T("Unknown %s protocol Opcode: 0x%02x, Size=%u, Data=["), protocol, opcode, size);
 		UINT i;
 		for (i = 0; i < size && i < 50; ++i)
 			buffer.AppendFormat(*(&_T(" %02x")[static_cast<int>(i > 0)]), packet[i]);
@@ -1835,7 +1784,7 @@ void CClientReqSocket::OnError(int nErrorCode)
 
 bool CClientReqSocket::PacketReceived(Packet *packet)
 {
-	CString *sErr;
+	CString *psErr;
 	bool bDelClient;
 	const uint8 opcode = packet->opcode;
 	const UINT uRawSize = packet->size;
@@ -1878,41 +1827,41 @@ bool CClientReqSocket::PacketReceived(Packet *packet)
 					client->SetDownloadState(DS_ERROR, _T("Unknown protocol"));
 				Disconnect(_T("Unknown protocol"));
 			}
-		} catch (CFileException *error) {
-			error->Delete();
+		} catch (CFileException *ex) {
+			ex->Delete();
 			throw GetResString(IDS_ERR_INVALIDPACKET);
-		} catch (CMemoryException *error) {
-			error->Delete();
+		} catch (CMemoryException *ex) {
+			ex->Delete();
 			throwCStr(_T("Memory exception"));
 		} catch (...) { //trying to catch "Unspecified error"
 			throwCStr(_T("Unhandled exception"));
 		}
 		return true;
-	} catch (CClientException *ex) { // nearly the same as the 'CString' exception but with optional deleting of the client
+	} catch (CClientException *ex) { // similar to 'CString&' exception but client deletion is optional
 		bDelClient = ex->m_bDelete;
-		sErr = new CString(ex->m_strMsg);
+		psErr = new CString(ex->m_strMsg);
 		ex->Delete();
-	} catch (const CString &error) {
+	} catch (const CString &ex) {
 		bDelClient = true;
-		sErr = new CString(error);
+		psErr = new CString(ex);
 	}
 	//Error handling
 	bool bIsDonkey = (packet->prot == OP_EDONKEYPROT);
 	LPCTSTR sProtocol = bIsDonkey ? _T("eDonkey") : _T("eMule");
 	if (thePrefs.GetVerbose())
 		DebugLogWarning(_T("Error: '%s' while processing %s packet: opcode=%s  size=%u; %s")
-			, (LPCTSTR)sErr
+			, (LPCTSTR)*psErr
 			, sProtocol
 			, (LPCTSTR)(bIsDonkey ? DbgGetDonkeyClientTCPOpcode(opcode) : DbgGetMuleClientTCPOpcode(opcode))
 			, uRawSize
 			, (LPCTSTR)DbgGetClientInfo());
 
 	CString sErr2;
-	sErr2.Format(_T("Error while processing %s packet:  %s"), (LPCTSTR)sProtocol, (LPCTSTR)sErr);
+	sErr2.Format(_T("Error while processing %s packet:  %s"), (LPCTSTR)sProtocol, (LPCTSTR)*psErr);
 	if (bDelClient && client)
 		client->SetDownloadState(DS_ERROR, sErr2);
 	Disconnect(sErr2);
-	delete sErr;
+	delete psErr;
 	return false;
 }
 
@@ -2248,13 +2197,13 @@ void CListenSocket::RecalculateStats()
 	memset(m_ConnectionStates, 0, sizeof m_ConnectionStates);
 	for (POSITION pos = socket_list.GetHeadPosition(); pos != NULL;)
 		switch (socket_list.GetNext(pos)->GetConState()) {
-		case ES_DISCONNECTED:
+		case EMS_DISCONNECTED:
 			++m_ConnectionStates[0];
 			break;
-		case ES_NOTCONNECTED:
+		case EMS_NOTCONNECTED:
 			++m_ConnectionStates[1];
 			break;
-		case ES_CONNECTED:
+		case EMS_CONNECTED:
 			++m_ConnectionStates[2];
 		}
 }

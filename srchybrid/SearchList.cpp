@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -43,6 +43,19 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+namespace
+{
+	bool CFileOpenD(CFile &file, LPCTSTR lpszFileName, UINT nOpenFlags, LPCTSTR lpszMsg)
+	{
+		CFileException ex;
+		if (!file.Open(lpszFileName, nOpenFlags, &ex)) {
+			if (ex.m_cause != CFileException::fileNotFound)
+				DebugLogError(_T("%s%s"), lpszMsg, (LPCTSTR)CExceptionStrDash(ex));
+			return false;
+		}
+		return true;
+	}
+}
 
 #define SPAMFILTER_FILENAME		_T("SearchSpam.met")
 #define STOREDSEARCHES_FILENAME	_T("StoredSearches.met")
@@ -113,6 +126,7 @@ void CSearchList::ShowResults(uint32 nSearchID)
 		}
 	}
 
+	outputwnd->UpdateTabHeader(nSearchID);
 	outputwnd->SetUpdateMode(bCurUpdateMode);
 	outputwnd->SetRedraw(true);
 }
@@ -204,6 +218,8 @@ UINT CSearchList::ProcessSearchAnswer(const uchar *in_packet, uint32 size
 		toadd->SetPreviewPossible(sender.GetPreviewSupport() && ED2KFT_VIDEO == GetED2KFileTypeID(toadd->GetFileName()));
 		AddToList(toadd, true);
 	}
+	if (outputwnd)
+		outputwnd->UpdateTabHeader(uSearchID);
 
 	if (pbMoreResultsAvailable)
 		*pbMoreResultsAvailable = false;
@@ -244,6 +260,8 @@ UINT CSearchList::ProcessSearchAnswer(const uchar *in_packet, uint32 size, bool 
 		}
 		AddToList(toadd, false);
 	}
+	if (outputwnd)
+		outputwnd->UpdateTabHeader(m_nCurED2KSearchID);
 
 	if (pbMoreResultsAvailable)
 		*pbMoreResultsAvailable = false;
@@ -311,6 +329,9 @@ UINT CSearchList::ProcessUDPSearchAnswer(CFileDataIO &packet, bool bOptUTF8, uin
 	}
 
 	AddToList(toadd, false, nServerIP);
+	if (outputwnd)
+		outputwnd->UpdateTabHeader(m_nCurED2KSearchID);
+
 	return GetED2KResultCount();
 }
 
@@ -565,7 +586,7 @@ bool CSearchList::AddToList(CSearchFile *toadd, bool bClientResponse, uint32 dwF
 			}
 			if (bestEntry) {
 				parent->SetFileSize(bestEntry->GetFileSize());
-				parent->SetFileName(bestEntry->GetFileName());
+				parent->SetAFileName(bestEntry->GetFileName());
 				parent->SetFileType(bestEntry->GetFileType());
 				parent->SetSourceCount(uAllChildrenSourceCount);
 				parent->SetCompleteSourceCount(uAllChildrenCompleteSourceCount);
@@ -621,7 +642,7 @@ bool CSearchList::AddToList(CSearchFile *toadd, bool bClientResponse, uint32 dwF
 	// add the 'Availability' of this new search result entry to the total search result count for this search
 	AddResultCount(toadd->GetSearchID(), toadd->GetFileHash(), uAvail, toadd->IsConsideredSpam());
 
-	// add parent in GUI
+	// add to parent in GUI
 	if (outputwnd)
 		outputwnd->AddResult(toadd);
 
@@ -783,6 +804,8 @@ void CSearchList::KademliaSearchKeyword(uint32 nSearchID, const Kademlia::CUInt1
 		} else if (raAICHHashes.GetCount() > 1)
 			DEBUG_ONLY(DebugLog(_T("Received multiple (%u) AICH hashes for search result %s, ignoring AICH"), raAICHHashes.GetCount(), (LPCTSTR)tempFile->GetFileName()));
 		AddToList(tempFile);
+		if (outputwnd)
+			outputwnd->UpdateTabHeader(nSearchID);
 	} else
 		DebugLogWarning(_T("Kad Searchresult failed sanitize check against search query, ignoring. (%s)"), name);
 }
@@ -1229,21 +1252,16 @@ void CSearchList::LoadSpamFilter()
 
 	m_bSpamFilterLoaded = true;
 
-	const CString &fullpath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + SPAMFILTER_FILENAME);
 	CSafeBufferedFile file;
-	CFileException fexp;
-	if (!file.Open(fullpath, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-		if (fexp.m_cause != CFileException::fileNotFound) {
-			CString strError(_T("Failed to load ") SPAMFILTER_FILENAME _T(" file"));
-			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, _countof(szError)))
-				strError.AppendFormat(_T(" - %s"), szError);
-			DebugLogError(_T("%s"), (LPCTSTR)strError);
-		}
+	if (!CFileOpenD(file
+		, thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + SPAMFILTER_FILENAME
+		, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite
+		, _T("Failed to load ") SPAMFILTER_FILENAME))
+	{
 		return;
 	}
-	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 
+	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 	try {
 		uint8 header = file.ReadUInt8();
 		if (header != MET_HEADER_I64TAGS) {
@@ -1324,15 +1342,12 @@ void CSearchList::LoadSpamFilter()
 			, (unsigned)m_aui64KnownSpamSizes.GetCount()
 			, (unsigned)m_astrKnownSpamNames.GetCount()
 			, (unsigned)m_astrKnownSimilarSpamNames.GetCount());
-	} catch (CFileException *error) {
-		if (error->m_cause == CFileException::endOfFile)
+	} catch (CFileException *ex) {
+		if (ex->m_cause == CFileException::endOfFile)
 			DebugLogError(_T("Failed to load searchspam.met, corrupt"));
-		else {
-			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			GetExceptionMessage(*error, buffer, _countof(buffer));
-			DebugLogError(_T("Failed to load searchspam.met, %s"), buffer);
-		}
-		error->Delete();
+		else
+			DebugLogError(_T("Failed to load searchspam.met%s"), (LPCTSTR)CExceptionStrDash(*ex));
+		ex->Delete();
 	}
 }
 
@@ -1341,38 +1356,34 @@ void CSearchList::SaveSpamFilter()
 	if (!m_bSpamFilterLoaded)
 		return;
 
-	const CString &fullpath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + SPAMFILTER_FILENAME);
 	CSafeBufferedFile file;
-	CFileException fexp;
-	if (!file.Open(fullpath, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-		if (fexp.m_cause != CFileException::fileNotFound) {
-			CString strError(_T("Failed to load ") SPAMFILTER_FILENAME _T(" file"));
-			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, _countof(szError)))
-				strError.AppendFormat(_T(" - %s"), szError);
-			DebugLogError(_T("%s"), (LPCTSTR)strError);
-		}
+	if (!CFileOpenD(file
+		, thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + SPAMFILTER_FILENAME
+		, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite
+		, _T("Failed to load ") SPAMFILTER_FILENAME))
+	{
 		return;
 	}
+
 	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 	try {
 		uint32 nCount = 0;
 		file.WriteUInt8(MET_HEADER_I64TAGS);
 		file.WriteUInt32(nCount);
 
-		for (int i = 0; i < m_astrKnownSpamNames.GetCount(); ++i) {
+		for (INT_PTR i = 0; i < m_astrKnownSpamNames.GetCount(); ++i) {
 			CTag tag(SP_FILEFULLNAME, m_astrKnownSpamNames[i]);
 			tag.WriteNewEd2kTag(file, UTF8strOptBOM);
 			++nCount;
 		}
 
-		for (int i = 0; i < m_astrKnownSimilarSpamNames.GetCount(); ++i) {
+		for (INT_PTR i = 0; i < m_astrKnownSimilarSpamNames.GetCount(); ++i) {
 			CTag tag(SP_FILESIMILARNAME, m_astrKnownSimilarSpamNames[i]);
 			tag.WriteNewEd2kTag(file, UTF8strOptBOM);
 			++nCount;
 		}
 
-		for (int i = 0; i < m_aui64KnownSpamSizes.GetCount(); ++i) {
+		for (INT_PTR i = 0; i < m_aui64KnownSpamSizes.GetCount(); ++i) {
 			CTag tag(SP_FILESIZE, m_aui64KnownSpamSizes[i], true);
 			tag.WriteNewEd2kTag(file);
 			++nCount;
@@ -1407,31 +1418,24 @@ void CSearchList::SaveSpamFilter()
 		file.WriteUInt32(nCount);
 		file.Close();
 		DebugLog(_T("Stored searchspam.met, wrote %u records"), nCount);
-	} catch (CFileException *error) {
-		TCHAR buffer[MAX_CFEXP_ERRORMSG];
-		GetExceptionMessage(*error, buffer, _countof(buffer));
-		DebugLogError(_T("Failed to save searchspam.met, %s"), buffer);
-		error->Delete();
+	} catch (CFileException *ex) {
+		DebugLogError(_T("Failed to save searchspam.met%s"), (LPCTSTR)CExceptionStrDash(*ex));
+		ex->Delete();
 	}
 }
 
 void CSearchList::StoreSearches()
 {
 	// store open searches on shutdown to restore them on the next startup
-	const CString &fullpath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + STOREDSEARCHES_FILENAME);
-
 	CSafeBufferedFile file;
-	CFileException fexp;
-	if (!file.Open(fullpath, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-		if (fexp.m_cause != CFileException::fileNotFound) {
-			CString strError(_T("Failed to load ") STOREDSEARCHES_FILENAME _T(" file"));
-			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, _countof(szError)))
-				strError.AppendFormat(_T(" - %s"), szError);
-			DebugLogError(_T("%s"), (LPCTSTR)strError);
-		}
+	if (!CFileOpenD(file
+		, thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + STOREDSEARCHES_FILENAME
+		, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite
+		, _T("Failed to save ") STOREDSEARCHES_FILENAME))
+	{
 		return;
 	}
+
 	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 	try {
 		file.WriteUInt8(MET_HEADER_I64TAGS);
@@ -1464,32 +1468,25 @@ void CSearchList::StoreSearches()
 
 		file.Close();
 		DebugLog(_T("Stored %u open search(es) for restoring on next start"), nCount);
-	} catch (CFileException *error) {
-		TCHAR buffer[MAX_CFEXP_ERRORMSG];
-		GetExceptionMessage(*error, buffer, _countof(buffer));
-		DebugLogError(_T("Failed to save %s, %s"), STOREDSEARCHES_FILENAME, buffer);
-		error->Delete();
+	} catch (CFileException *ex) {
+		DebugLogError(_T("Failed to save %s%s"), STOREDSEARCHES_FILENAME, (LPCTSTR)CExceptionStrDash(*ex));
+		ex->Delete();
 	}
 }
 
 void CSearchList::LoadSearches()
 {
 	ASSERT(m_listFileLists.IsEmpty());
-	const CString &fullpath(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + STOREDSEARCHES_FILENAME);
 	CSafeBufferedFile file;
-	CFileException fexp;
-	if (!file.Open(fullpath, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite, &fexp)) {
-		if (fexp.m_cause != CFileException::fileNotFound) {
-			CString strError(_T("Failed to load ") STOREDSEARCHES_FILENAME _T(" file"));
-			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			if (GetExceptionMessage(fexp, szError, _countof(szError)))
-				strError.AppendFormat(_T(" - %s"), szError);
-			DebugLogError(_T("%s"), (LPCTSTR)strError);
-		}
+	if (!CFileOpenD(file
+		, thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + STOREDSEARCHES_FILENAME
+		, CFile::modeRead | CFile::osSequentialScan | CFile::typeBinary | CFile::shareDenyWrite
+		, _T("Failed to load ") STOREDSEARCHES_FILENAME))
+	{
 		return;
 	}
-	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 
+	::setvbuf(file.m_pStream, NULL, _IOFBF, 16384);
 	try {
 		uint8 header = file.ReadUInt8();
 		if (header != MET_HEADER_I64TAGS) {
@@ -1519,11 +1516,14 @@ void CSearchList::LoadSearches()
 			} else
 				ASSERT(0); //failed to create tab
 
-			// fill the list with stored results
-			for (uint32 nFileCount = file.ReadUInt32(); nFileCount-- > 0;) {
+			// fill the list using stored data
+			for (uint32 nFileCount = file.ReadUInt32(); nFileCount > 0; --nFileCount) {
 				CSearchFile *toadd = new CSearchFile(file, true, pParams->dwSearchID, 0, 0, NULL, pParams->eType == SearchTypeKademlia);
 				AddToList(toadd, pParams->bClientSharedFiles);
 			}
+			if (outputwnd)
+				outputwnd->UpdateTabHeader(pParams->dwSearchID);
+
 			if (bDeleteParams)
 				delete pParams;
 		}
@@ -1531,16 +1531,9 @@ void CSearchList::LoadSearches()
 		// adjust the starting values for search IDs to avoid reused IDs in loaded searches
 		Kademlia::CSearchManager::SetNextSearchID(++nID);
 		theApp.emuledlg->searchwnd->SetNextSearchID(0x80000000u + nID);
-	} catch (CFileException *error) {
-		LPCTSTR sErr;
-		TCHAR buffer[MAX_CFEXP_ERRORMSG];
-		if (error->m_cause == CFileException::endOfFile)
-			sErr = _T("corrupt");
-		else {
-			sErr = buffer;
-			GetExceptionMessage(*error, buffer, _countof(buffer));
-		}
-		DebugLogError(_T("Failed to load %s, %s"), STOREDSEARCHES_FILENAME, sErr);
-		error->Delete();
+	} catch (CFileException *ex) {
+		DebugLogError(_T("Failed to load %s%s"), STOREDSEARCHES_FILENAME
+			, (ex->m_cause == CFileException::endOfFile) ? _T(" - corrupt") : (LPCTSTR)CExceptionStrDash(*ex));
+		ex->Delete();
 	}
 }

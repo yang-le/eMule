@@ -132,10 +132,10 @@ void CreateNetworkInfo(CRichEditCtrlX &rCtrl, CHARFORMAT &rcfDef, CHARFORMAT &rc
 	CString buffer;
 	if (theApp.serverconnect->IsConnected()) {
 		rCtrl << GetResString(IDS_IP) << _T(":") << GetResString(IDS_PORT) << _T(":");
-		if (theApp.serverconnect->IsLowID() && theApp.GetPublicIP(true) == 0)
+		if (theApp.serverconnect->IsLowID() && theApp.GetED2KPublicIP() == 0)
 			buffer = GetResString(IDS_UNKNOWN);
 		else
-			buffer.Format(_T("%s:%u"), (LPCTSTR)ipstr(theApp.GetPublicIP(true)), thePrefs.GetPort());
+			buffer.Format(_T("%s:%u"), (LPCTSTR)ipstr(theApp.GetED2KPublicIP()), thePrefs.GetPort());
 		rCtrl << _T("\t") << buffer << _T("\r\n");
 
 		rCtrl << GetResString(IDS_ID) << _T(":\t");

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -263,10 +263,10 @@ bool CServerSocket::ProcessPacket(const BYTE *packet, uint32 size, uint8 opcode)
 				const LoginAnswer_Struct *la = reinterpret_cast<const LoginAnswer_Struct*>(packet);
 
 				// save TCP flags in 'cur_server'
-				CServer *pServer;
+				uint32 dwFlags = 0;
 				if (cur_server) {
 					if (size >= sizeof(LoginAnswer_Struct) + 4) {
-						uint32 dwFlags = PeekUInt32(packet + sizeof(LoginAnswer_Struct));
+						dwFlags = PeekUInt32(packet + sizeof(LoginAnswer_Struct));
 						if (thePrefs.GetDebugServerTCPLevel() > 0) {
 							CString strInfo;
 							strInfo.Format(_T("  TCP Flags=0x%08x"), dwFlags);
@@ -289,21 +289,23 @@ bool CServerSocket::ProcessPacket(const BYTE *packet, uint32 size, uint8 opcode)
 								strInfo.AppendFormat(_T("  TCP_Obfscation=1"));
 							Debug(_T("%s\n"), (LPCTSTR)strInfo);
 						}
-						cur_server->SetTCPFlags(dwFlags);
-					} else
-						cur_server->SetTCPFlags(0);
-
-					// copy TCP flags into the server in the server list
-					pServer = theApp.serverlist->GetServerByAddress(cur_server->GetAddress(), cur_server->GetPort());
-					if (pServer) {
-						if (IsObfusicating())
-							pServer->SetTriedCrypt(false);
-						pServer->SetTCPFlags(cur_server->GetTCPFlags());
 					}
-				} else {
-					pServer = NULL;
+					if (IsObfusicating())
+						dwFlags |= SRV_TCPFLG_TCPOBFUSCATION;
+					cur_server->SetTCPFlags(dwFlags);
+
+					// copy TCP flags into the entry in the server list
+					CServer *pServer = theApp.serverlist->GetServerByAddress(cur_server->GetAddress(), cur_server->GetPort());
+					if (pServer) {
+						if (IsObfusicating()) {
+							pServer->SetTriedCrypt(false);
+							if (!pServer->GetObfuscationPortTCP()) //obfuscated connection with the default port
+								pServer->SetObfuscationPortTCP(pServer->GetPort());
+						}
+						pServer->SetTCPFlags(dwFlags);
+					}
+				} else
 					ASSERT(0);
-				}
 
 				uint32 dwServerReportedIP;
 				if (size >= 16) {
@@ -360,8 +362,6 @@ bool CServerSocket::ProcessPacket(const BYTE *packet, uint32 size, uint8 opcode)
 				if (thePrefs.GetDebugServerTCPLevel() > 0)
 					Debug(_T("ServerMsg - OP_SearchResult\n"));
 				CServer *cur_srv = (serverconnect) ? serverconnect->GetCurrentServer() : NULL;
-				//CServer *pServer = cur_srv ? theApp.serverlist->GetServerByAddress(cur_srv->GetAddress(), cur_srv->GetPort()) : NULL;
-				//(void)pServer;
 				bool bMoreResultsAvailable;
 				UINT uSearchResults = theApp.searchlist->ProcessSearchAnswer(packet, size, true/*pServer ? pServer->GetUnicodeSupport() : false*/, cur_srv ? cur_srv->GetIP() : 0, cur_srv ? cur_srv->GetPort() : (uint16)0, &bMoreResultsAvailable);
 				theApp.emuledlg->searchwnd->LocalEd2kSearchEnd(uSearchResults, bMoreResultsAvailable);
@@ -418,7 +418,6 @@ bool CServerSocket::ProcessPacket(const BYTE *packet, uint32 size, uint8 opcode)
 					break;// throw "Invalid server info received";
 				}
 
-				CServer *pServer = cur_server ? theApp.serverlist->GetServerByAddress(cur_server->GetAddress(), cur_server->GetPort()) : NULL;
 				CString strInfo;
 				CSafeMemFile data(packet, size);
 
@@ -436,8 +435,10 @@ bool CServerSocket::ProcessPacket(const BYTE *packet, uint32 size, uint8 opcode)
 
 				CString strName;
 				CString strDescription;
-				for (uint32 i = 0; i < nTags; ++i) {
-					CTag tag(data, pServer ? pServer->GetUnicodeSupport() : false);
+				CServer *pServer = cur_server ? theApp.serverlist->GetServerByAddress(cur_server->GetAddress(), cur_server->GetPort()) : NULL;
+				bool bUTF8 = pServer ? pServer->GetUnicodeSupport() : false;
+				for (; nTags; --nTags) {
+					CTag tag(data, bUTF8);
 					if (tag.GetNameID() == ST_SERVERNAME) {
 						if (tag.IsStr()) {
 							strName = tag.GetStr();
@@ -506,10 +507,10 @@ bool CServerSocket::ProcessPacket(const BYTE *packet, uint32 size, uint8 opcode)
 						DebugHexDump(packet + servers.GetPosition(), uAddData);
 					}
 				}
-			} catch (CFileException *error) {
+			} catch (CFileException *ex) {
 				if (thePrefs.GetVerbose())
 					DebugLogError((LPCTSTR)GetResString(IDS_ERR_BADSERVERLISTRECEIVED));
-				error->Delete();
+				ex->Delete();
 			}
 			break;
 		case OP_CALLBACKREQUESTED:
@@ -586,33 +587,30 @@ bool CServerSocket::ProcessPacket(const BYTE *packet, uint32 size, uint8 opcode)
 		}
 
 		return true;
-	} catch (CFileException *error) {
+	} catch (CFileException *ex) {
 		if (thePrefs.GetVerbose()) {
-			TCHAR szError[MAX_CFEXP_ERRORMSG];
-			error->m_strFileName = _T("server packet");
-			GetExceptionMessage(*error, szError, _countof(szError));
-			ProcessPacketError(size, opcode, szError);
+			ex->m_strFileName = _T("server packet");
+			ProcessPacketError(size, opcode, CExceptionStr(*ex));
 		}
 		ASSERT(0);
-		error->Delete();
+		ex->Delete();
 		if (opcode == OP_SEARCHRESULT || opcode == OP_FOUNDSOURCES)
 			return true;
-	} catch (CMemoryException *error) {
+	} catch (CMemoryException *ex) {
 		ProcessPacketError(size, opcode, _T("CMemoryException"));
 		ASSERT(0);
-		error->Delete();
+		ex->Delete();
 		if (opcode == OP_SEARCHRESULT || opcode == OP_FOUNDSOURCES)
 			return true;
 	} catch (const CString &error) {
 		ProcessPacketError(size, opcode, error);
 		ASSERT(0);
-	}
 #ifndef _DEBUG
-	catch (...) {
+	} catch (...) {
 		ProcessPacketError(size, opcode, _T("Unknown exception"));
 		ASSERT(0);
-	}
 #endif
+	}
 
 	SetConnectionState(CS_DISCONNECTED);
 	return false;
@@ -642,7 +640,7 @@ void CServerSocket::ConnectTo(CServer *server, bool bNoCrypt)
 	}
 
 	cur_server = new CServer(server);
-	bool bEncrypt = !bNoCrypt && thePrefs.IsServerCryptLayerTCPRequested() && (cur_server->SupportsObfuscationTCP() || !cur_server->TriedCrypt());
+	bool bEncrypt = !bNoCrypt && thePrefs.IsCryptLayerPreferred() && (cur_server->SupportsObfuscationTCP() || !cur_server->TriedCrypt());
 	uint16 nPort;
 	if (bEncrypt) {
 		server->SetTriedCrypt(!server->SupportsObfuscationTCP()); //if no obfuscation support, try only once

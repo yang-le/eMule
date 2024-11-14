@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -52,7 +52,7 @@ BEGIN_MESSAGE_MAP(CPPgNotify, CPropertyPage)
 	ON_BN_CLICKED(IDC_SMTPSERVER, OnBnClickedSMTPserver)
 	ON_EN_CHANGE(IDC_EDIT_SENDER, OnSettingsChange)
 	ON_EN_CHANGE(IDC_EDIT_RECEIVER, OnSettingsChange)
-	ON_BN_CLICKED(IDC_CB_ENABLENOTIFICATIONS, OnBnClickedCbEnablenotifications)
+	ON_BN_CLICKED(IDC_CB_ENABLENOTIFICATIONS, OnBnClickedCbEnableNotifications)
 	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
@@ -120,11 +120,11 @@ BOOL CPPgNotify::OnInitDialog()
 
 void CPPgNotify::UpdateControls()
 {
-	UINT b = IsDlgButtonChecked(IDC_CB_TBN_USESOUND);
+	bool b = IsDlgButtonChecked(IDC_CB_TBN_USESOUND) != 0;
 	GetDlgItem(IDC_EDIT_TBN_WAVFILE)->EnableWindow(b);
 	GetDlgItem(IDC_BTN_BROWSE_WAV)->EnableWindow(b);
 
-	b = IsDlgButtonChecked(IDC_CB_ENABLENOTIFICATIONS);
+	b = IsDlgButtonChecked(IDC_CB_ENABLENOTIFICATIONS) != 0;
 	GetDlgItem(IDC_SMTPSERVER)->EnableWindow(b);
 	GetDlgItem(IDC_EDIT_RECEIVER)->EnableWindow(b);
 	GetDlgItem(IDC_EDIT_SENDER)->EnableWindow(b);
@@ -274,7 +274,7 @@ BOOL CPPgNotify::OnHelpInfo(HELPINFO*)
 	return TRUE;
 }
 
-void CPPgNotify::OnBnClickedCbEnablenotifications()
+void CPPgNotify::OnBnClickedCbEnableNotifications()
 {
 	UpdateControls();
 	SetModified();

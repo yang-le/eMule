@@ -123,7 +123,7 @@ protected:
 	//Calls OnLayerCallback on owner socket
 	int DoLayerCallback(int nType, WPARAM wParam, LPARAM lParam, const char* const str = NULL);
 
-	int GetLayerState() const;
+	AsyncSocketExState GetLayerState() const		{ return m_nLayerState; }
 	BOOL TriggerEvent(long lEvent, int nErrorCode, BOOL bPassThrough = FALSE);
 
 	//Gets the socket family
@@ -137,13 +137,13 @@ protected:
 
 private:
 	//Layer state can't be set directly from derived classes
-	void SetLayerState(int nLayerState);
-	int m_nLayerState;
+	void SetLayerState(AsyncSocketExState nLayerState);
+	AsyncSocketExState m_nLayerState;
 
 	ADDRESS_FAMILY m_nFamily;
-	int m_lEvent;
 	CString m_sSocketAddress;
 	UINT m_nSocketPort;
+	long m_lEvent;
 
 	addrinfo *m_addrInfo, *m_nextAddr;
 

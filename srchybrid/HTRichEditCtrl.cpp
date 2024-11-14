@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -202,7 +202,7 @@ COLORREF GetLogLineColor(UINT eMsgType)
 void CHTRichEditCtrl::FlushBuffer()
 {
 	if (!m_astrBuff.IsEmpty()) { // flush buffer
-		for (int i = 0; i < m_astrBuff.GetCount(); ++i) {
+		for (INT_PTR i = 0; i < m_astrBuff.GetCount(); ++i) {
 			const CString &rstrLine(m_astrBuff[i]);
 			if (!rstrLine.IsEmpty()) {
 				if ((UINT)rstrLine[0] < 8)
@@ -929,19 +929,19 @@ CBitmapDataObject::CBitmapDataObject(HBITMAP hBitmap)
 #pragma warning(disable:4100) // unreferenced parameter
 #pragma warning(disable:4555) // expression has no effect; expected expression with side-effect (because of the 'METHOD_PROLOGUE' macro)
 
-STDMETHODIMP CBitmapDataObject::XDataObject::QueryInterface(REFIID iid, LPVOID *ppvObj) XP_NOEXCEPT
+STDMETHODIMP CBitmapDataObject::XDataObject::QueryInterface(REFIID iid, LPVOID *ppvObj) NOEXCEPT
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 	return (HRESULT)pThis->ExternalQueryInterface(&iid, ppvObj);
 }
 
-STDMETHODIMP_(ULONG) CBitmapDataObject::XDataObject::AddRef() XP_NOEXCEPT
+STDMETHODIMP_(ULONG) CBitmapDataObject::XDataObject::AddRef() NOEXCEPT
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 	return pThis->ExternalAddRef();
 }
 
-STDMETHODIMP_(ULONG) CBitmapDataObject::XDataObject::Release() XP_NOEXCEPT
+STDMETHODIMP_(ULONG) CBitmapDataObject::XDataObject::Release() NOEXCEPT
 {
 	METHOD_PROLOGUE(CBitmapDataObject, DataObject);
 	return pThis->ExternalRelease();

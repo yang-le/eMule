@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( merkur-@users.sourceforge.net / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( merkur-@users.sourceforge.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -53,7 +53,7 @@ public:
 	bool m_bTextFormat;
 
 private:
+	uint32	m_nKeySize;
 	CCollectionFilesMap m_CollectionFilesMap;
 	byte	*m_pabyCollectionAuthorKey;
-	uint32	m_nKeySize;
 };

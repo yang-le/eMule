@@ -3,7 +3,7 @@
 // written by robert rostek - tecxx@rrs.at //
 /////////////////////////////////////////////
 
-#define MP_SHAREDFOLDERS_FIRST	46901
+#define MP_REMOVESHARE	46900
 
 class CDirectoryTreeCtrl : public CTreeCtrl
 {
@@ -21,6 +21,7 @@ public:
 	void GetSharedDirectories(CStringList &list);
 	// set shared directories
 	void SetSharedDirectories(CStringList &list);
+	bool AddUNCShare(const CString &strDir);
 
 private:
 	// add a new item
@@ -39,17 +40,18 @@ private:
 	void UpdateParentItems(HTREEITEM hChild);
 	void ShareSubDirTree(HTREEITEM hItem, BOOL bRecurse);
 
+	void AddDirectory(const CString &strDir);
+
 	// share list access
 	bool IsShared(const CString &strDir);
 	void AddShare(const CString &strDir);
-	void DelShare(const CString &strDir);
+	void RemShare(const CString &strDir);
 	void MarkChildren(HTREEITEM hChild, bool mark);
 
 	CImageList m_images;
 	CStringList m_lstShared;
-	CStringArray m_lstUNC;
+	CStringArray m_aUNCshares; //UNC "drives" (ordered array)
 	CString m_strLastRightClicked;
-//	bool m_bSelectSubDirs;
 
 protected:
 	DECLARE_MESSAGE_MAP()
@@ -58,7 +60,7 @@ protected:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnTvnDeleteItem(LPNMHDR pNMHDR, LRESULT *pResult);
 	afx_msg void OnContextMenu(CWnd*, CPoint point);
-	afx_msg void OnRButtonDown(UINT, CPoint);
+	afx_msg void OnRButtonDown(UINT, CPoint point);
 	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg void OnChar(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg void OnDestroy();

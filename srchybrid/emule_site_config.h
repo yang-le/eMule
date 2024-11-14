@@ -12,12 +12,12 @@
 #ifdef XP_BUILD
 #define _WIN32_WINNT _WIN32_WINNT_WINXP
 #define NTDDI_VERSION NTDDI_WINXP
-#if _MSC_VER<1937 //before VS2022 17.7
-#define XP_NOEXCEPT noexcept
-#else
-#define XP_NOEXCEPT
-#endif
 #endif //XP_BUILD
+#if _MSC_VER<1937 //before VS2022 17.7
+#define NOEXCEPT noexcept
+#else
+#define NOEXCEPT
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 // Visual Studio 2003
@@ -59,7 +59,7 @@
 #if _MSC_VER==1400
 
 // NOTE: eMule can not get compiled with VS2005 out of the box because the SDK
-// which is shipped with VS2005 does not contain the ‘upnp.h?header file - and
+// which is shipped with VS2005 does not contain the ï¿½upnp.h?header file - and
 // this feature is not yet optional for compiling eMule. Thus you need to install
 // an additional more recent SDK when compiling with VS2005.
 //

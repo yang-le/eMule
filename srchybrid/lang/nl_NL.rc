@@ -1546,7 +1546,7 @@ BEGIN
     IDS_NEWMSG              "Nieuw bericht van '%s' (IP:%s)"
     IDS_PREF_STARTNEXTFILECATONLY "Alleen in dezelfde categorie"
     IDS_LOG_ULDL_EVENTS     "Upload-/downloadgebeurtenissen loggen"
-    IDS_PEERCACHE_ENABLED   "ISP ondersteunt de PeerCache-technologie, activeer downloads van PeerCache-buffer!"
+//    IDS_PEERCACHE_ENABLED   "ISP ondersteunt de PeerCache-technologie, activeer downloads van PeerCache-buffer!"
     IDS_IRC_EMULEPROTO_ALLOWADDFRIEND "Gebruiker toestaan u als vriend toe te voegen."
     IDS_DL_TRY_TO_GET_PREVIEW_PARTS "Downloaddelen nodig voor voorvertoning"
 END
@@ -1588,9 +1588,9 @@ BEGIN
                             "Activeer dit om eMule te laten starten als Windows start."
     IDS_KAD_WAITCBK         "Wachten op terugroep van Kad"
     IDS_KAD_TOOMANDYKADLKPS "Te veel Kad-lookups"
-    IDS_PCDS_CLIENTWAIT     "ClientWacht"
-    IDS_PCDS_CACHEWAIT      "CacheWacht"
-    IDS_CACHE               "Cache" //!
+//    IDS_PCDS_CLIENTWAIT     "ClientWacht"
+//    IDS_PCDS_CACHEWAIT      "CacheWacht"
+//    IDS_CACHE               "Cache" //!
     IDS_INDEXED             "Geïndexeerd"
     IDS_KADINFO_SRC         "\tBron: %u\r\n"
     IDS_KADINFO_KEYW        "\tSleutelwoord: %u\r\n"

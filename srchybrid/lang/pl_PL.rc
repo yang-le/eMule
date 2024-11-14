@@ -912,7 +912,7 @@ BEGIN
     IDS_NEWMSG              "Nowa wiadomość od '%s' (IP:%s)"
     IDS_PREF_STARTNEXTFILECATONLY "Tylko w tej samej kategorii"
     IDS_LOG_ULDL_EVENTS     "Loguj zdarzenia pobierania/wysyłania"
-    IDS_PEERCACHE_ENABLED   "Twój dostawca ISP wspiera technologie PeerCache, umożliwiając szybsze pobieranie!"
+//    IDS_PEERCACHE_ENABLED   "Twój dostawca ISP wspiera technologie PeerCache, umożliwiając szybsze pobieranie!"
     IDS_IRC_EMULEPROTO_ALLOWADDFRIEND "Pozwól użytkownikowi dodać cię do listy znajomych"
     IDS_SOURCESWAPBLOCKED   "Wymiana zablokowana"
     IDS_TRICKLING           "Gotowy"
@@ -1623,9 +1623,9 @@ BEGIN
                             "Włącz eMula przy starcie Windowsa"
     IDS_KAD_WAITCBK         "Oczekiw. odp. KAD"
     IDS_KAD_TOOMANDYKADLKPS "Za dużo poszuka. KAD"
-    IDS_PCDS_CLIENTWAIT     "Oczek.klient"
-    IDS_PCDS_CACHEWAIT      "Oczek.Cache"
-    IDS_CACHE               "Cache" //!
+//    IDS_PCDS_CLIENTWAIT     "Oczek.klient"
+//    IDS_PCDS_CACHEWAIT      "Oczek.Cache"
+//    IDS_CACHE               "Cache" //!
     IDS_INDEXED             "Indeksowanie"
     IDS_KADINFO_SRC         "\tŹródło: %u\r\n"
     IDS_KADINFO_KEYW        "\tFraza: %u\r\n"

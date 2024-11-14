@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -110,7 +110,7 @@ BOOL CSharedFilesWnd::OnInitDialog()
 
 	rcSpl.left = rcSpl.right + SPLITTER_MARGIN;
 	rcSpl.right = rcSpl.left + SPLITTER_WIDTH;
-	m_wndSplitter.Create(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_SHAREDFILES);
+	m_wndSplitter.CreateWnd(WS_CHILD | WS_VISIBLE, rcSpl, this, IDC_SPLITTER_SHAREDFILES);
 
 	AddAnchor(m_ctlSharedDirTree, TOP_LEFT, BOTTOM_LEFT);
 	AddAnchor(IDC_RELOADSHAREDFILES, TOP_RIGHT);
@@ -350,7 +350,7 @@ LRESULT CSharedFilesWnd::OnChangeFilter(WPARAM wParam, LPARAM lParam)
 
 	bool bFilterDiff = (astrFilter.GetCount() != m_astrFilter.GetCount());
 	if (!bFilterDiff)
-		for (int i = (int)astrFilter.GetCount(); --i >= 0;)
+		for (INT_PTR i = astrFilter.GetCount(); --i >= 0;)
 			if (astrFilter[i] != m_astrFilter[i]) {
 				bFilterDiff = true;
 				break;
@@ -544,9 +544,9 @@ CSharedFileDetailsModelessSheet::CSharedFileDetailsModelessSheet()
 	/*LPCTSTR pPshStartPage = m_pPshStartPage;
 	if (m_uInvokePage != 0)
 		pPshStartPage = MAKEINTRESOURCE(m_uInvokePage);
-	for (int i = (int)m_pages.GetCount(); --i >= 0;)
+	for (INT_PTR i = m_pages.GetCount(); --i >= 0;)
 		if (GetPage(i)->m_psp.pszTemplate == pPshStartPage) {
-			m_psh.nStartPage = i;
+			m_psh.nStartPage = (UINT)i;
 			break;
 		}*/
 }

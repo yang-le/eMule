@@ -1,6 +1,6 @@
 /*
 Copyright (C)2003 Barry Dunne (https://www.emule-project.net)
-Copyright (C)2007-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+Copyright (C)2007-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 
 
 This program is free software; you can redistribute it and/or
@@ -1062,10 +1062,10 @@ void CKademliaUDPListener::Process_KADEMLIA2_SEARCH_KEY_REQ(const byte *pbyPacke
 	CUInt128 uTarget;
 	fileIO.ReadUInt128(uTarget);
 	uint16 uStartPosition = fileIO.ReadUInt16();
-	bool uRestrictive = ((uStartPosition & 0x8000) != 0);
-	uStartPosition &= 0x7FFF;
+	bool bRestrictive = ((uStartPosition & 0x8000) != 0);
+	uStartPosition &= ~0x8000;
 	SSearchTerm *pSearchTerms = NULL;
-	if (uRestrictive) {
+	if (bRestrictive) {
 		try {
 #if defined(_DEBUG) || defined(USE_DEBUG_DEVICE)
 			s_pstrDbgSearchExpr = (thePrefs.GetDebugServerSearchesLevel() > 0) ? new CString() : NULL;
@@ -1884,7 +1884,7 @@ void CKademliaUDPListener::SendPacket(const byte *pbyData, uint32 uLenData, uint
 	AddTrackedOutPacket(uDestinationHost, pbyData[1]);
 	theApp.clientudp->SendPacket(pPacket, ntohl(uDestinationHost), uDestinationPort, true
 		, (uCryptTargetID != NULL) ? uCryptTargetID->GetData() : NULL
-		, true, targetUDPKey.GetKeyValue(theApp.GetPublicIP(false)));
+		, true, targetUDPKey.GetKeyValue(theApp.GetPublicIP()));
 }
 
 void CKademliaUDPListener::SendPacket(const byte *pbyData, uint32 uLenData, byte byOpcode, uint32 uDestinationHost, uint16 uDestinationPort, const CKadUDPKey &targetUDPKey, const CUInt128 *uCryptTargetID)
@@ -1900,7 +1900,7 @@ void CKademliaUDPListener::SendPacket(const byte *pbyData, uint32 uLenData, byte
 	AddTrackedOutPacket(uDestinationHost, byOpcode);
 	theApp.clientudp->SendPacket(pPacket, ntohl(uDestinationHost), uDestinationPort, true
 		, (uCryptTargetID != NULL) ? uCryptTargetID->GetData() : NULL
-		, true, targetUDPKey.GetKeyValue(theApp.GetPublicIP(false)));
+		, true, targetUDPKey.GetKeyValue(theApp.GetPublicIP()));
 }
 
 void CKademliaUDPListener::SendPacket(CSafeMemFile &pbyData, byte byOpcode, uint32 uDestinationHost, uint16 uDestinationPort, const CKadUDPKey &targetUDPKey, const CUInt128 *uCryptTargetID)
@@ -1913,7 +1913,7 @@ void CKademliaUDPListener::SendPacket(CSafeMemFile &pbyData, byte byOpcode, uint
 	AddTrackedOutPacket(uDestinationHost, byOpcode);
 	theApp.clientudp->SendPacket(pPacket, htonl(uDestinationHost), uDestinationPort, true
 		, (uCryptTargetID != NULL) ? uCryptTargetID->GetData() : NULL
-		, true, targetUDPKey.GetKeyValue(theApp.GetPublicIP(false)));
+		, true, targetUDPKey.GetKeyValue(theApp.GetPublicIP()));
 }
 
 bool CKademliaUDPListener::FindNodeIDByIP(CKadClientSearcher *pRequester, uint32 dwIP, uint16 nTCPPort, uint16 nUDPPort)

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -14,7 +14,6 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
 #include "StdAfx.h"
 #include "collection.h"
 #include "KnownFile.h"
@@ -38,8 +37,8 @@ static char THIS_FILE[] = __FILE__;
 
 CCollection::CCollection()
 	: m_bTextFormat()
-	, m_pabyCollectionAuthorKey()
 	, m_nKeySize()
+	, m_pabyCollectionAuthorKey()
 {
 	m_CollectionFilesMap.InitHashTable(1031);
 	m_sCollectionName.Format(_T("New Collection-%u"), ::GetTickCount());
@@ -189,8 +188,8 @@ bool CCollection::InitCollectionFromFile(const CString &sFilePath, const CString
 		} else
 			m_sCollectionAuthorName.Empty();
 		data.Close();
-	} catch (CFileException *error) {
-		error->Delete();
+	} catch (CFileException *ex) {
+		ex->Delete();
 		return false;
 	} catch (...) {
 		ASSERT(0);
@@ -226,8 +225,8 @@ bool CCollection::InitCollectionFromFile(const CString &sFilePath, const CString
 				m_sCollectionName = sFileName.Left(iLen);
 				m_bTextFormat = true;
 				return true;
-			} catch (CFileException *error) {
-				error->Delete();
+			} catch (CFileException *ex) {
+				ex->Delete();
 			} catch (...) {
 				ASSERT(0);
 			}
@@ -252,8 +251,8 @@ void CCollection::WriteToFileAddShared(CryptoPP::RSASSA_PKCS1v15_SHA_Signer *pSi
 						data.WriteString(pair->value->GetED2kLink() + _T('\n'));
 
 				data.Close();
-			} catch (CFileException *error) {
-				error->Delete();
+			} catch (CFileException *ex) {
+				ex->Delete();
 				return;
 			} catch (...) {
 				ASSERT(0);
@@ -311,8 +310,8 @@ void CCollection::WriteToFileAddShared(CryptoPP::RSASSA_PKCS1v15_SHA_Signer *pSi
 					delete[] pBuffer;
 				}
 				data.Close();
-			} catch (CFileException *error) {
-				error->Delete();
+			} catch (CFileException *ex) {
+				ex->Delete();
 				return;
 			} catch (...) {
 				ASSERT(0);

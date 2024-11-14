@@ -49,53 +49,53 @@ namespace Kademlia
 		CContact();
 		CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint16 uTcpPort, uint8 uVersion, const CKadUDPKey &cUDPKey, bool bIPVerified);
 		CContact(const CUInt128 &uClientID, uint32 uIp, uint16 uUdpPort, uint16 uTcpPort, const CUInt128 &uTarget, uint8 uVersion, const CKadUDPKey &cUDPKey, bool bIPVerified);
-		CContact(const CContact &k1)				{ Copy(k1); }
-		CContact& operator=(const CContact &k1)		{ Copy(k1); return *this; }
+		CContact(const CContact &k1)					{ Copy(k1); }
+		CContact& operator=(const CContact &k1)			{ Copy(k1); return *this; }
 
-		void	GetClientID(CUInt128 &uId) const;
-		CUInt128 GetClientID() const;
+		void	GetClientID(CUInt128 &uId) const		{ uId.SetValue(m_uClientID); }
+		CUInt128 GetClientID() const					{ return m_uClientID; }
 		void	GetClientID(CString &sId) const;
 		void	SetClientID(const CUInt128 &uClientID);
-		void	GetDistance(CUInt128 &uDistance) const;
+		void	GetDistance(CUInt128 &uDistance) const	{ uDistance.SetValue(m_uDistance); }
 		void	GetDistance(CString &sDistance) const;
-		CUInt128 GetDistance() const;
-		uint32	GetIPAddress() const;
-		uint32	GetNetIP() const;
+		CUInt128 GetDistance() const					{ return m_uDistance; }
+		uint32	GetIPAddress() const					{ return m_uIp; }
+		uint32	GetNetIP() const						{ return m_uNetIp; }
 		void	GetIPAddress(CString &sIp) const;
 		void	SetIPAddress(uint32 uIp);
-		uint16	GetTCPPort() const;
+		uint16	GetTCPPort() const						{ return m_uTcpPort; }
 		void	GetTCPPort(CString &sPort) const;
-		void	SetTCPPort(uint16 uPort);
-		uint16	GetUDPPort() const;
+		void	SetTCPPort(uint16 uPort)				{ m_uTcpPort = uPort; }
+		uint16	GetUDPPort() const						{ return m_uUdpPort; }
 		void	GetUDPPort(CString &sPort) const;
-		void	SetUDPPort(uint16 uPort);
-		byte	GetType() const;
+		void	SetUDPPort(uint16 uPort)				{ m_uUdpPort = uPort; }
+		byte	GetType() const							{ return m_byType; }
 		void	UpdateType();
 		void	CheckingType();
-		bool	GetGuiRefs() const;
-		void	SetGuiRefs(bool bRefs);
-		bool	InUse() const;
-		void	IncUse();
+		bool	GetGuiRefs() const						{ return m_bGuiRefs; }
+		void	SetGuiRefs(bool bRefs)					{ m_bGuiRefs = bRefs; }
+		bool	InUse() const							{ return (m_uInUse > 0); }
+		void	IncUse()								{ ++m_uInUse; }
 		void	DecUse();
-		uint8	GetVersion() const;
-		void	SetVersion(uint8 uVersion);
-		time_t	GetCreatedTime() const;
-		time_t	GetExpireTime() const;
-		time_t	GetLastTypeSet() const;
+		uint8	GetVersion() const						{ return m_uVersion; }
+		void	SetVersion(uint8 uVersion)				{ m_uVersion = uVersion; }
+		time_t	GetCreatedTime() const					{ return m_tCreated; }
+		time_t	GetExpireTime() const					{ return m_tExpires; }
+		time_t	GetLastTypeSet() const					{ return m_tLastTypeSet; }
 		time_t	GetLastSeen() const;
 		void	Expire();
 
-		bool	GetReceivedHelloPacket() const		{ return m_bReceivedHelloPacket; }
-		void	SetReceivedHelloPacket()			{ m_bReceivedHelloPacket = true; }
+		bool	GetReceivedHelloPacket() const			{ return m_bReceivedHelloPacket; }
+		void	SetReceivedHelloPacket()				{ m_bReceivedHelloPacket = true; }
 
-		CKadUDPKey	GetUDPKey() const;
-		void	SetUDPKey(const CKadUDPKey &cUDPKey);
-		bool	IsIpVerified() const;
-		void	SetIpVerified(bool bIPVerified);
+		CKadUDPKey	GetUDPKey() const					{ return m_cUDPKey; }
+		void	SetUDPKey(const CKadUDPKey &cUDPKey)	{ m_cUDPKey = cUDPKey; }
+		bool	IsIpVerified() const					{ return m_bIPVerified; }
+		void	SetIpVerified(bool bIPVerified)			{ m_bIPVerified = bIPVerified; }
 
 		// bootstrapcontact functions only used for GUI
-		bool	IsBootstrapContact() const			{ return m_bBootstrapContact; }
-		void	SetBootstrapContact()				{ m_bBootstrapContact = true; }
+		bool	IsBootstrapContact() const				{ return m_bBootstrapContact; }
+		void	SetBootstrapContact()					{ m_bBootstrapContact = true; }
 
 	private:
 		void	InitContact(); // Common var initialization goes here

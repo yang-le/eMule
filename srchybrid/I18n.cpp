@@ -103,7 +103,7 @@ static SLanguage s_aLanguages[] =
 	{LANGID_DE_DE,		false,	1252,	_T("de_DE"),		_T("windows-1252")},	// German (Germany)
 	{LANGID_EL_GR,		false,	1253,	_T("el_GR"),		_T("windows-1253")},	// Greek
 	{LANGID_EN_US,		true,	1252,	_T("en_US"),		_T("windows-1252")},	// English
-	{LANGID_ES_AS,  	false,	1252,	_T("es_AS"),		_T("windows-1252")},	// Asturian
+	{LANGID_ES_AS,		false,	1252,	_T("es_AS"),		_T("windows-1252")},	// Asturian
 	{LANGID_ES_ES_T,	false,	1252,	_T("es_ES_T"),		_T("windows-1252")},	// Spanish (Castilian)
 	{LANGID_ET_EE,		false,	1257,	_T("et_EE"),		_T("windows-1257")},	// Estonian
 	{LANGID_FA_IR,		false,	1256,	_T("fa_IR"),		_T("windows-1256")},	// Farsi
@@ -133,7 +133,7 @@ static SLanguage s_aLanguages[] =
 	{LANGID_TR_TR,		false,	1254,	_T("tr_TR"),		_T("windows-1254")},	// Turkish
 	{LANGID_UA_UA,		false,	1251,	_T("ua_UA"),		_T("windows-1251")},	// Ukrainian
 	{LANGID_UG_CN,		false,	1256,	_T("ug_CN"),		_T("windows-1256")},	// Uighur
-	{LANGID_VA_ES,  	false,	1252,	_T("va_ES"),		_T("windows-1252")},	// Valencian AVL
+	{LANGID_VA_ES,		false,	1252,	_T("va_ES"),		_T("windows-1252")},	// Valencian AVL
 	{LANGID_VA_ES_RACV, false,	1252,	_T("va_ES_RACV"),	_T("windows-1252")},	// Valencian RACV
 	{LANGID_VI_VN,		false,	1258,	_T("vi_VN"),		_T("windows-1258")},	// Vietnamese
 	{LANGID_ZH_CN,		false,	 936,	_T("zh_CN"),		_T("gb2312")},			// Chinese (P.R.C.)

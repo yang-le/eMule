@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -93,16 +93,15 @@ bool CUrlClient::SetUrl(LPCTSTR pszUrl, uint32 nIP)
 	if (!::InternetCrackUrl(szUrl, 0, 0, &Url))
 		return false;
 
-	if (Url.dwSchemeLength == 0 || Url.nScheme != INTERNET_SCHEME_HTTP)		// we only support "http://"
+	if (Url.dwSchemeLength == 0					// non-empty URL
+		|| Url.nScheme != INTERNET_SCHEME_HTTP	// we only support "http://"
+		|| Url.dwHostNameLength == 0			// we must know the hostname
+		|| Url.dwUserNameLength > 0				// no support for user/password
+		|| Url.dwPasswordLength > 0				// no support for user/password
+		|| Url.dwUrlPathLength == 0)			// we must know the URL path on that host
+	{
 		return false;
-	if (Url.dwHostNameLength == 0)			// we must know the hostname
-		return false;
-	if (Url.dwUserNameLength != 0)			// no support for user/password
-		return false;
-	if (Url.dwPasswordLength != 0)			// no support for user/password
-		return false;
-	if (Url.dwUrlPathLength == 0)			// we must know the URL path on that host
-		return false;
+	}
 
 	m_strHostA = szHostName;
 
@@ -267,7 +266,7 @@ bool CUrlClient::ProcessHttpDownResponse(const CStringAArray &astrHeaders)
 
 	bool bNewLocation = false;
 	bool bValidContentRange = false;
-	for (int i = 1; i < astrHeaders.GetCount(); ++i) {
+	for (INT_PTR i = 1; i < astrHeaders.GetCount(); ++i) {
 		const CStringA &rstrHdr1 = astrHeaders[i];
 		if (bExpectData && _strnicmp(rstrHdr1, "Content-Length:", 15) == 0) {
 			uint64 uContentLength = _atoi64((LPCSTR)rstrHdr1 + 15);
@@ -382,8 +381,7 @@ void CUpDownClient::ProcessHttpBlockPacket(const BYTE *pucData, UINT uSize)
 		if (cur_block->block->StartOffset <= nStartPos && nStartPos <= cur_block->block->EndOffset) {
 			if (thePrefs.GetDebugClientTCPLevel() > 0) {
 				// NOTE: 'Left' is only accurate in case we have one(!) request block!
-				void *s = m_pPCDownSocket ? (void*)m_pPCDownSocket : (void*)socket;
-				Debug(_T("%p  Start=%I64u  End=%I64u  Size=%u  Left=%I64u  %s\n"), s, nStartPos, nEndPos, uSize, cur_block->block->EndOffset - (nStartPos + uSize) + 1, (LPCTSTR)DbgGetFileInfo(m_reqfile->GetFileHash()));
+				Debug(_T("%p  Start=%I64u  End=%I64u  Size=%u  Left=%I64u  %s\n"), (void*)socket, nStartPos, nEndPos, uSize, cur_block->block->EndOffset - (nStartPos + uSize) + 1, (LPCTSTR)DbgGetFileInfo(m_reqfile->GetFileHash()));
 			}
 
 			m_nLastBlockOffset = nStartPos;
@@ -402,7 +400,7 @@ void CUpDownClient::ProcessHttpBlockPacket(const BYTE *pucData, UINT uSize)
 						if (thePrefs.GetDebugClientTCPLevel() > 0)
 							DebugSend("More block requests", this);
 						m_nUrlStartPos = _UI64_MAX;
-						SendHttpBlockRequests();
+						static_cast<CUrlClient*>(this)->SendHttpBlockRequests();
 					}
 				}
 //				else

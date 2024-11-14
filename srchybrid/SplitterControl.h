@@ -34,7 +34,7 @@ class CSplitterControl : public CStatic
 public:
 	CSplitterControl();
 
-	void Create(DWORD dwStyle, const CRect &rect, CWnd *pParent, UINT nID);
+	void CreateWnd(DWORD dwStyle, const CRect &rect, CWnd *pParent, UINT nID);
 	int GetStyle();
 	int	SetStyle(int nStyle = SPS_VERTICAL);
 	void SetRange(int nMin, int nMax);

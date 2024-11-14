@@ -33,7 +33,7 @@ public:
 		DWORD dwTextFlags, LPCRECT pBoundingRect,
 		LPRECT pExtentRect);
 	static HRESULT GetThemeTextMetrics(HTHEME hTheme, HDC hdc,
-		int iPartId, int iStateId, TEXTMETRIC* ptm);
+		int iPartId, int iStateId, TEXTMETRIC *ptm);
 	static HRESULT GetThemeBackgroundRegion(HTHEME hTheme, HDC hdc,
 		int iPartId, int iStateId, LPCRECT pRect, HRGN *pRegion);
 	static HRESULT HitTestThemeBackground(HTHEME hTheme, HDC hdc, int iPartId,

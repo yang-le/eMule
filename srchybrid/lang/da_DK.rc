@@ -751,7 +751,7 @@ BEGIN
     IDS_NEWMSG              "Ny besked fra '%s' (IP:%s)"
     IDS_PREF_STARTNEXTFILECATONLY "kun i samme kategori"
     IDS_LOG_ULDL_EVENTS     "Log upload/download begivenheder"
-    IDS_PEERCACHE_ENABLED   "Din ISP understøtter PeerCache teknologien, aktiverer cache downloads!"
+//    IDS_PEERCACHE_ENABLED   "Din ISP understøtter PeerCache teknologien, aktiverer cache downloads!"
     IDS_IRC_EMULEPROTO_ALLOWADDFRIEND "Tillad bruger at tilføje dig som ven."
 END
 
@@ -1592,9 +1592,9 @@ BEGIN
                             "Aktiver dette så eMule vil starte sammen med Windows. (Deaktiveret som standard)"
     IDS_KAD_WAITCBK         "Afventer KAD Tilbagekald"
     IDS_KAD_TOOMANDYKADLKPS "For mange Kad Opslag"
-    IDS_PCDS_CLIENTWAIT     "KlientVent"
-    IDS_PCDS_CACHEWAIT      "CacheVent"
-    IDS_CACHE               "Cache"
+//    IDS_PCDS_CLIENTWAIT     "KlientVent"
+//    IDS_PCDS_CACHEWAIT      "CacheVent"
+//    IDS_CACHE               "Cache"
     IDS_INDEXED             "Indekseret"
     IDS_KADINFO_SRC         "\tKilde: %u\r\n"
     IDS_KADINFO_KEYW        "\tNøgleord: %u\r\n"

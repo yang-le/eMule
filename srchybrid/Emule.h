@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -20,7 +20,7 @@
 #endif
 #include "resource.h"
 
-#define	DEFAULT_NICK		thePrefs.GetHomepageBaseURL()
+#define	DEFAULT_NICK			thePrefs.GetHomepageBaseURL()
 #define	DEFAULT_TCP_PORT_OLD	4662
 #define	DEFAULT_UDP_PORT_OLD	(DEFAULT_TCP_PORT_OLD+10)
 
@@ -46,7 +46,6 @@ class CIPFilter;
 class CWebServer;
 class CAbstractFile;
 class CUpDownClient;
-class CPeerCacheFinder;
 class CFirewallOpener;
 class CUPnPImplWrapper;
 class CUploadDiskIOThread;
@@ -91,7 +90,6 @@ public:
 	CIPFilter			*ipfilter;
 	CWebServer			*webserver;
 	CScheduler			*scheduler;
-	CPeerCacheFinder	*m_pPeerCache;
 	CFirewallOpener		*m_pFirewallOpener;
 	CUPnPImplWrapper	*m_pUPnPFinder;
 	CUploadDiskIOThread	*m_pUploadDiskIOThread;
@@ -162,7 +160,8 @@ public:
 	bool		IsFirewalled();
 	bool		CanDoCallback(CUpDownClient *client);
 	uint32		GetID();
-	uint32		GetPublicIP(bool bIgnoreKadIP = false) const;	// return current (valid) public IP or 0 if unknown
+	uint32		GetED2KPublicIP() const;	// return current (valid) public IP or 0 if unknown (ignore KAD connection)
+	uint32		GetPublicIP() const;		// return current (valid) public IP or 0 if unknown
 	void		SetPublicIP(const uint32 dwIP);
 	void		ResetStandByIdleTimer();
 
@@ -201,6 +200,7 @@ public:
 	// Elandal:ThreadSafeLogging <--
 
 	bool		DidWeAutoStart()								{ return m_bAutoStart; }
+	void		ResetStandbyOff()								{ m_bStandbyOff = false; }
 
 protected:
 	bool ProcessCommandline();
@@ -235,6 +235,7 @@ protected:
 
 private:
 	UINT		m_wTimerRes;
+	bool		m_bStandbyOff;
 };
 
 extern CemuleApp theApp;

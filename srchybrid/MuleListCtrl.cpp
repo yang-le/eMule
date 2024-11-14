@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -100,37 +100,22 @@ CMuleListCtrl::CMuleListCtrl(PFNLVCOMPARE pfnCompare, LPARAM iParamSort)
 	, m_hAccel()
 	, m_eUpdateMode(lazy)
 	, m_iAutoSizeWidth(LVSCW_AUTOSIZE)
+	, m_iFindDirection(1)
+	, m_iFindColumn()
 	, m_bGeneralPurposeFind()
 	, m_bCanSearchInAllColumns()
 	, m_bFindMatchCase()
-	, m_iFindDirection(1)
-	, m_iFindColumn()
-	, m_iColumnsTracked()
 	, m_aColumns()
+	, m_iColumnsTracked()
 	, m_iCurrentSortItem(-1)
 	, m_atSortArrow()
 	, m_iRedrawCount()
 {
 }
 
-CMuleListCtrl::~CMuleListCtrl()
-{
-	delete[] m_aColumns;
-}
-
 int CALLBACK CMuleListCtrl::SortProc(LPARAM /*lParam1*/, LPARAM /*lParam2*/, LPARAM /*lParamSort*/)
 {
 	return 0;
-}
-
-void CMuleListCtrl::SetPrefsKey(LPCTSTR lpszName)
-{
-	m_Name = lpszName;
-}
-
-DWORD CMuleListCtrl::SetExtendedStyle(DWORD dwNewStyle)
-{
-	return CListCtrl::SetExtendedStyle(dwNewStyle | LVS_EX_HEADERDRAGDROP);
 }
 
 void CMuleListCtrl::PreSubclassWindow()
@@ -458,7 +443,7 @@ void CMuleListCtrl::SetColors()
 	if (!strBkImage.IsEmpty() && !g_bLowColorDesktop) {
 		// expand any optional available environment strings
 		TCHAR szExpSkinRes[MAX_PATH];
-		if (ExpandEnvironmentStrings(strBkImage, szExpSkinRes, _countof(szExpSkinRes)) != 0)
+		if (::ExpandEnvironmentStrings(strBkImage, szExpSkinRes, _countof(szExpSkinRes)) != 0)
 			strBkImage = szExpSkinRes;
 
 		// create absolute path to icon resource file
@@ -598,7 +583,6 @@ int CMuleListCtrl::MoveItem(int iOldIndex, int iNewIndex)
 	lvi.iIndent = 0;
 	if (!GetItem(&lvi))
 		return -1;
-	szText[_countof(szText) - 1] = _T('\0');
 
 	// copy strings of sub items
 	CSimpleArray<void*> aSubItems;
@@ -608,19 +592,18 @@ int CMuleListCtrl::MoveItem(int iOldIndex, int iNewIndex)
 		LVITEM lvi1;
 		lvi1.mask = LVIF_TEXT | LVIF_NORECOMPUTE;
 		lvi1.iItem = iOldIndex;
+		lvi1.cchTextMax = _countof(szText1);
 		for (int i = 1; i < m_iColumnsTracked; ++i) {
+			void *pstrSubItem;
 			lvi1.iSubItem = i;
-			lvi1.cchTextMax = _countof(szText1);
 			lvi1.pszText = szText1;
-			void *pstrSubItem = NULL;
-			if (GetItem(&lvi1)) {
+			if (GetItem(&lvi1))
 				if (lvi1.pszText == LPSTR_TEXTCALLBACK)
 					pstrSubItem = LPSTR_TEXTCALLBACK;
-				else {
-					szText1[_countof(szText1) - 1] = _T('\0');
+				else
 					pstrSubItem = new CString(szText1);
-				}
-			}
+			else
+				pstrSubItem = NULL;
 			aSubItems.Add(pstrSubItem);
 		}
 	}
@@ -764,7 +747,6 @@ BOOL CMuleListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT
 					item.mask = HDI_TEXT;
 					item.cchTextMax = _countof(text);
 					pHeaderCtrl->GetItem(iCurrent, &item);
-					text[_countof(text) - 1] = _T('\0');
 
 					tmColumnMenu.AppendMenu(MF_STRING | (m_aColumns[iCurrent].bHidden ? 0 : MF_CHECKED)
 						, MLC_IDC_MENU + iCurrent, item.pszText);
@@ -1621,11 +1603,6 @@ void CMuleListCtrl::OnLvnGetInfoTip(LPNMHDR pNMHDR, LRESULT *pResult)
 		}
 	}
 	*pResult = 0;
-}
-
-void CMuleListCtrl::SetAutoSizeWidth(int iAutoSizeWidth)
-{
-	m_iAutoSizeWidth = iAutoSizeWidth;
 }
 
 int CMuleListCtrl::InsertColumn(int nCol, LPCTSTR lpszColumnHeading, int nFormat, int nWidth, int nSubItem, bool bHiddenByDefault)

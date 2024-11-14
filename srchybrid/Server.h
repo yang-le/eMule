@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -169,7 +169,7 @@ public:
 
 private:
 	void	init();
-	TCHAR	ipfull[3+1+3+1+3+1+3+1]; // 16
+	TCHAR	ipfull[3+1+3+1+3+1+3+1]; // 16, null terminated
 	CString	m_strDescription;
 	CString	m_strName;
 	CString	m_strDynIP;

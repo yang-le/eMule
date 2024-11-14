@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( devs@emule-project.net / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( devs@emule-project.net / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -14,7 +14,6 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
 #include "stdafx.h"
 #include <io.h>
 #include <share.h>
@@ -47,9 +46,9 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define SHAREDDIRS _T("shareddir.dat")
+#define SHAREDDIRS	_T("shareddir.dat")
+LPCTSTR const strPreferencesDat = _T("preferences.dat");
 LPCTSTR const strDefaultToolbar = _T("0099010203040506070899091011");
-
 CPreferences thePrefs;
 
 CString CPreferences::m_astrDefaultDirs[13];
@@ -149,10 +148,8 @@ uint64	CPreferences::sesUpData_EMULECOMPAT;
 uint64	CPreferences::sesUpData_SHAREAZA;
 uint64	CPreferences::cumUpDataPort_4662;
 uint64	CPreferences::cumUpDataPort_OTHER;
-uint64	CPreferences::cumUpDataPort_PeerCache;
 uint64	CPreferences::sesUpDataPort_4662;
 uint64	CPreferences::sesUpDataPort_OTHER;
-uint64	CPreferences::sesUpDataPort_PeerCache;
 uint64	CPreferences::cumUpData_File;
 uint64	CPreferences::cumUpData_Partfile;
 uint64	CPreferences::sesUpData_File;
@@ -189,10 +186,8 @@ uint64	CPreferences::sesDownData_SHAREAZA;
 uint64	CPreferences::sesDownData_URL;
 uint64	CPreferences::cumDownDataPort_4662;
 uint64	CPreferences::cumDownDataPort_OTHER;
-uint64	CPreferences::cumDownDataPort_PeerCache;
 uint64	CPreferences::sesDownDataPort_4662;
 uint64	CPreferences::sesDownDataPort_OTHER;
-uint64	CPreferences::sesDownDataPort_PeerCache;
 float	CPreferences::cumConnAvgDownRate;
 float	CPreferences::cumConnMaxAvgDownRate;
 float	CPreferences::cumConnMaxDownRate;
@@ -440,18 +435,13 @@ bool	CPreferences::m_bKeepUnavailableFixedSharedDirs;
 CStringList CPreferences::shareddir_list;
 CStringList CPreferences::addresses_list;
 CString CPreferences::m_strFileCommentsFilePath;
-Preferences_Ext_Struct* CPreferences::prefsExt;
+Preferences_Ext_Struct *CPreferences::prefsExt;
 WORD	CPreferences::m_wWinVer;
 CArray<Category_Struct*, Category_Struct*> CPreferences::catArr;
 UINT	CPreferences::m_nWebMirrorAlertLevel;
 bool	CPreferences::m_bRunAsUser;
 bool	CPreferences::m_bPreferRestrictedOverUser;
 bool	CPreferences::m_bUseOldTimeRemaining;
-time_t	CPreferences::m_uPeerCacheLastSearch;
-bool	CPreferences::m_bPeerCacheWasFound;
-bool	CPreferences::m_bPeerCacheEnabled;
-uint16	CPreferences::m_nPeerCachePort;
-bool	CPreferences::m_bPeerCacheShow;
 
 bool	CPreferences::m_bOpenPortsOnStartUp;
 int		CPreferences::m_byLogLevel;
@@ -502,6 +492,14 @@ LPCTSTR CPreferences::GetConfigFile()
 	return theApp.m_pszProfileName;
 }
 
+void CPreferences::MovePreferences(EDefaultDirectory eSrc, LPCTSTR const sFile, const CString &dst)
+{
+	const CString &src(GetMuleDirectory(eSrc));
+	const CString &pathTxt(src + sFile);
+	if (::PathFileExists(pathTxt))
+		::MoveFile(pathTxt, dst + sFile);
+}
+
 void CPreferences::Init()
 {
 	//srand((unsigned)time(NULL)); // we need random numbers sometimes
@@ -523,22 +521,18 @@ void CPreferences::Init()
 	ff.Close();
 
 	///////////////////////////////////////////////////////////////////////////
-	// Move 'downloads.txt/bak' files from application and/or data-base directory
+	// Move 'downloads.txt/bak' files from application and/or database directory
 	// into 'config' directory
 	//
-	const CString &sDBdir(GetMuleDirectory(EMULE_DATABASEDIR));
-	if (::PathFileExists(sDBdir + _T("downloads.txt")))
-		::MoveFile(sDBdir + _T("downloads.txt"), sConfDir + _T("downloads.txt"));
-	if (::PathFileExists(sDBdir + _T("downloads.bak")))
-		::MoveFile(sDBdir + _T("downloads.bak"), sConfDir + _T("downloads.bak"));
-	const CString &sEXEdir(GetMuleDirectory(EMULE_EXECUTABLEDIR));
-	if (::PathFileExists(sEXEdir + _T("downloads.txt")))
-		::MoveFile(sEXEdir + _T("downloads.txt"), sConfDir + _T("downloads.txt"));
-	if (::PathFileExists(sEXEdir + _T("downloads.bak")))
-		::MoveFile(sEXEdir + _T("downloads.bak"), sConfDir + _T("downloads.bak"));
+	static LPCTSTR const strDownloadsTxt = _T("downloads.txt");
+	static LPCTSTR const strDownloadsBak = _T("downloads.bak");
+	MovePreferences(EMULE_DATABASEDIR, strDownloadsTxt, sConfDir);
+	MovePreferences(EMULE_EXECUTABLEDIR, strDownloadsTxt, sConfDir);
+	MovePreferences(EMULE_DATABASEDIR, strDownloadsBak, sConfDir);
+	MovePreferences(EMULE_EXECUTABLEDIR, strDownloadsBak, sConfDir);
 
 	// load preferences.dat or set standard values
-	CString strFullPath(sConfDir + _T("preferences.dat"));
+	CString strFullPath(sConfDir + strPreferencesDat);
 	FILE *preffile = _tfsopen(strFullPath, _T("rb"), _SH_DENYWR);
 
 	LoadPreferences();
@@ -762,7 +756,6 @@ void CPreferences::SaveStats(int bBackUp)
 	ini.WriteUInt64(_T("DownData_URL"), GetCumDownData_URL());
 	ini.WriteUInt64(_T("DownDataPort_4662"), GetCumDownDataPort_4662());
 	ini.WriteUInt64(_T("DownDataPort_OTHER"), GetCumDownDataPort_OTHER());
-	ini.WriteUInt64(_T("DownDataPort_PeerCache"), GetCumDownDataPort_PeerCache());
 
 	ini.WriteUInt64(_T("DownOverheadTotal"), theStats.GetDownDataOverheadFileRequest()
 		+ theStats.GetDownDataOverheadSourceExchange()
@@ -800,7 +793,6 @@ void CPreferences::SaveStats(int bBackUp)
 	ini.WriteUInt64(_T("UpData_SHAREAZA"), GetCumUpData_SHAREAZA());
 	ini.WriteUInt64(_T("UpDataPort_4662"), GetCumUpDataPort_4662());
 	ini.WriteUInt64(_T("UpDataPort_OTHER"), GetCumUpDataPort_OTHER());
-	ini.WriteUInt64(_T("UpDataPort_PeerCache"), GetCumUpDataPort_PeerCache());
 	ini.WriteUInt64(_T("UpData_File"), GetCumUpData_File());
 	ini.WriteUInt64(_T("UpData_Partfile"), GetCumUpData_Partfile());
 
@@ -1024,10 +1016,6 @@ void CPreferences::Add2SessionTransferData(UINT uClientID, UINT uClientPort, BOO
 		case 4662:
 			sesUpDataPort_4662 += bytes;
 			break;
-		case (UINT)-1:
-			sesUpDataPort_PeerCache += bytes;
-			break;
-		//case (UINT)-2:
 		default:
 			sesUpDataPort_OTHER += bytes;
 		}
@@ -1079,12 +1067,6 @@ void CPreferences::Add2SessionTransferData(UINT uClientID, UINT uClientPort, BOO
 		case 4662:
 			sesDownDataPort_4662 += bytes;
 			break;
-		case (UINT)-1:
-			sesDownDataPort_PeerCache += bytes;
-			break;
-		//case (UINT)-2:
-		//	sesDownDataPort_URL += bytes;
-		//	break;
 		default:
 			sesDownDataPort_OTHER += bytes;
 			break;
@@ -1139,7 +1121,6 @@ void CPreferences::ResetCumulativeStatistics()
 	cumUpData_SHAREAZA = 0;
 	cumUpDataPort_4662 = 0;
 	cumUpDataPort_OTHER = 0;
-	cumUpDataPort_PeerCache = 0;
 	cumDownCompletedFiles = 0;
 	cumDownSuccessfulSessions = 0;
 	cumDownFailedSessions = 0;
@@ -1157,7 +1138,6 @@ void CPreferences::ResetCumulativeStatistics()
 	cumDownData_URL = 0;
 	cumDownDataPort_4662 = 0;
 	cumDownDataPort_OTHER = 0;
-	cumDownDataPort_PeerCache = 0;
 	cumConnAvgDownRate = 0;
 	cumConnMaxAvgDownRate = 0;
 	cumConnMaxDownRate = 0;
@@ -1267,7 +1247,6 @@ bool CPreferences::LoadStats(int loadBackUp)
 	// Load cumulative port breakdown stats for sent bytes
 	cumUpDataPort_4662 = ini.GetUInt64(_T("UpDataPort_4662"));
 	cumUpDataPort_OTHER = ini.GetUInt64(_T("UpDataPort_OTHER"));
-	cumUpDataPort_PeerCache = ini.GetUInt64(_T("UpDataPort_PeerCache"));
 
 	// Load cumulative source breakdown stats for sent bytes
 	cumUpData_File = ini.GetUInt64(_T("UpData_File"));
@@ -1297,7 +1276,6 @@ bool CPreferences::LoadStats(int loadBackUp)
 	// Load cumulative port breakdown stats for received bytes
 	cumDownDataPort_4662 = ini.GetUInt64(_T("DownDataPort_4662"));
 	cumDownDataPort_OTHER = ini.GetUInt64(_T("DownDataPort_OTHER"));
-	cumDownDataPort_PeerCache = ini.GetUInt64(_T("DownDataPort_PeerCache"));
 
 	// Load stats for cumulative connection data
 	cumConnAvgDownRate = ini.GetFloat(_T("ConnAvgDownRate"));
@@ -1383,7 +1361,6 @@ bool CPreferences::LoadStats(int loadBackUp)
 		sesUpData_SHAREAZA = 0;
 		sesUpDataPort_4662 = 0;
 		sesUpDataPort_OTHER = 0;
-		sesUpDataPort_PeerCache = 0;
 
 		sesDownData_EDONKEY = 0;
 		sesDownData_EDONKEYHYBRID = 0;
@@ -1395,7 +1372,6 @@ bool CPreferences::LoadStats(int loadBackUp)
 		sesDownData_URL = 0;
 		sesDownDataPort_4662 = 0;
 		sesDownDataPort_OTHER = 0;
-		sesDownDataPort_PeerCache = 0;
 
 		sesDownSuccessfulSessions = 0;
 		sesDownFailedSessions = 0;
@@ -1438,7 +1414,7 @@ bool CPreferences::Save()
 {
 	static LPCTSTR const stmp = _T(".tmp");
 	const CString &sConfDir(GetMuleDirectory(EMULE_CONFIGDIR));
-	const CString &strPrefPath(sConfDir + _T("preferences.dat"));
+	const CString &strPrefPath(sConfDir + strPreferencesDat);
 	bool error;
 
 	FILE *preffile = _tfsopen(strPrefPath + stmp, _T("wb"), _SH_DENYWR); //keep contents
@@ -1457,24 +1433,22 @@ bool CPreferences::Save()
 	SaveStats();
 
 	const CString &strSharesPath(sConfDir + SHAREDDIRS);
-	CStdioFile sdirfile;
-	if (sdirfile.Open(strSharesPath + stmp, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyWrite | CFile::typeBinary)) {
+	CStdioFile file;
+	if (file.Open(strSharesPath + stmp, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyWrite | CFile::typeBinary)) {
 		try {
-			// write Unicode byte order mark 0xFEFF
-			static const WORD wBOM = u'\xFEFF'; //UTF-16LE
-			sdirfile.Write(&wBOM, sizeof wBOM);
+			// write UTF-16LE byte order mark 0xFEFF
+			static const WORD wBOM = u'\xFEFF';
+			file.Write(&wBOM, sizeof wBOM);
 			for (POSITION pos = shareddir_list.GetHeadPosition(); pos != NULL;) {
-				sdirfile.WriteString(shareddir_list.GetNext(pos));
-				sdirfile.Write(_T("\r\n"), 2 * sizeof(TCHAR));
+				file.WriteString(shareddir_list.GetNext(pos));
+				file.Write(_T("\r\n"), 2 * sizeof(TCHAR));
 			}
-			sdirfile.Close();
+			file.Close();
 			error |= (MoveFileEx(strSharesPath + stmp, strSharesPath, MOVEFILE_REPLACE_EXISTING) == 0);
-		} catch (CFileException *ferror) {
-			TCHAR buffer[MAX_CFEXP_ERRORMSG];
-			GetExceptionMessage(*ferror, buffer, _countof(buffer));
+		} catch (CFileException *ex) {
 			if (thePrefs.GetVerbose())
-				AddDebugLogLine(true, _T("Failed to save %s - %s"), (LPCTSTR)strSharesPath, buffer);
-			ferror->Delete();
+				AddDebugLogLine(true, _T("Failed to save %s%s"), (LPCTSTR)strSharesPath, (LPCTSTR)CExceptionStrDash(*ex));
+			ex->Delete();
 		}
 	} else
 		error = true;
@@ -1825,14 +1799,6 @@ void CPreferences::SavePreferences()
 	ini.WriteBool(_T("UseHTTPS"), m_bWebUseHttps);
 	ini.WriteString(_T("HTTPSCertificate"), m_sWebHttpsCertificate);
 	ini.WriteString(_T("HTTPSKey"), m_sWebHttpsKey);
-
-
-	///////////////////////////////////////////////////////////////////////////
-	// Section: "PeerCache"
-	//
-	ini.WriteInt(_T("LastSearch"), (int)m_uPeerCacheLastSearch, _T("PeerCache"));
-	ini.WriteBool(_T("Found"), m_bPeerCacheWasFound);
-	ini.WriteInt(_T("PCPort"), m_nPeerCachePort);
 
 	///////////////////////////////////////////////////////////////////////////
 	// Section: "UPnP"
@@ -2422,15 +2388,6 @@ void CPreferences::LoadPreferences()
 	m_sWebHttpsKey = ini.GetString(_T("HTTPSKey"), _T(""));
 
 	///////////////////////////////////////////////////////////////////////////
-	// Section: "PeerCache"
-	//
-	m_uPeerCacheLastSearch = ini.GetInt(_T("LastSearch"), 0, _T("PeerCache"));
-	m_bPeerCacheWasFound = ini.GetBool(_T("Found"), false);
-	m_bPeerCacheEnabled = ini.GetBool(_T("EnabledDeprecated"), false);
-	m_nPeerCachePort = (uint16)ini.GetInt(_T("PCPort"), 0);
-	m_bPeerCacheShow = ini.GetBool(_T("Show"), false);
-
-	///////////////////////////////////////////////////////////////////////////
 	// Section: "UPnP"
 	//
 	m_bEnableUPnP = ini.GetBool(_T("EnableUPnP"), false, _T("UPnP"));
@@ -2463,9 +2420,6 @@ UINT CPreferences::GetDefaultMaxConperFive()
 	case _WINVER_95_:
 	case _WINVER_ME_:
 		return MAXCON5WIN9X;
-	//case _WINVER_2K_:
-	//case _WINVER_XP_:
-	//	return MAXCONPER5SEC;
 	default:
 		return MAXCONPER5SEC;
 	}
@@ -2751,8 +2705,8 @@ UINT CPreferences::GetWebMirrorAlertLevel()
 bool CPreferences::IsRunAsUserEnabled()
 {
 	switch (GetWindowsVersion()) {
-	case _WINVER_XP_:
 	case _WINVER_2K_:
+	case _WINVER_XP_:
 	case _WINVER_2003_:
 		return m_bRunAsUser	&& m_nCurrentUserDirMode == 2;
 	}
@@ -2905,7 +2859,6 @@ CString CPreferences::GetDefaultDirectory(EDefaultDirectory eDirectory, bool bCr
 		// Get executable starting directory which was our default till Vista
 		TCHAR tchBuffer[MAX_PATH];
 		::GetModuleFileName(NULL, tchBuffer, _countof(tchBuffer));
-		tchBuffer[_countof(tchBuffer) - 1] = _T('\0');
 		LPTSTR pszFileName = _tcsrchr(tchBuffer, _T('\\')) + 1;
 		*pszFileName = _T('\0');
 		m_astrDefaultDirs[EMULE_EXECUTABLEDIR] = tchBuffer;

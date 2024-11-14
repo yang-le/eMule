@@ -336,7 +336,7 @@ number			{num1}|{num2}
 						BEGIN(INITIAL);
 					yylval.pstr = new CStringA(yytext);
 					return TOK_STRING;
-                }
+				}
 
 <INITIAL,STRING>"\""	{
 					int l = 128;

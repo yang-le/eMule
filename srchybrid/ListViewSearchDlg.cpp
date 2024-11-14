@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -89,7 +89,6 @@ BOOL CListViewSearchDlg::OnInitDialog()
 		lvc.pszText = szColTitle;
 		int iCol = 0;
 		while (m_pListView->GetColumn(iCol++, &lvc)) {
-			szColTitle[_countof(szColTitle) - 1] = _T('\0');
 			m_ctlSearchCol.AddString(szColTitle);
 			if (!m_bCanSearchInAllColumns)
 				break;

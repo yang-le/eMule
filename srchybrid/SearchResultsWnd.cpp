@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -87,6 +87,7 @@ BEGIN_MESSAGE_MAP(CSearchResultsWnd, CResizableFormView)
 	ON_BN_CLICKED(IDC_SDOWNLOAD, OnBnClickedDownloadSelected)
 	ON_BN_CLICKED(IDC_CLEARALL, OnBnClickedClearAll)
 	ON_NOTIFY(TCN_SELCHANGE, IDC_TAB1, OnSelChangeTab)
+	ON_NOTIFY(TCN_SELCHANGING, IDC_TAB1, OnSelChangingTab)
 	ON_MESSAGE(UM_CLOSETAB, OnCloseTab)
 	ON_MESSAGE(UM_DBLCLICKTAB, OnDblClickTab)
 	ON_WM_DESTROY()
@@ -312,16 +313,15 @@ void CSearchResultsWnd::OnTimer(UINT_PTR nIDEvent)
 
 void CSearchResultsWnd::SetSearchResultsIcon(uint32 uSearchID, int iImage)
 {
-	for (int i = searchselect.GetItemCount(); --i >= 0;) {
-		TCITEM item;
-		item.mask = TCIF_PARAM;
-		if (searchselect.GetItem(i, &item) && item.lParam != NULL && reinterpret_cast<SSearchParams*>(item.lParam)->dwSearchID == uSearchID) {
-			item.mask = TCIF_IMAGE;
-			item.iImage = iImage;
-			searchselect.SetItem(i, &item);
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	for (int i = searchselect.GetItemCount(); --i >= 0;)
+		if (searchselect.GetItem(i, &ti) && ti.lParam != NULL && reinterpret_cast<SSearchParams*>(ti.lParam)->dwSearchID == uSearchID) {
+			ti.mask = TCIF_IMAGE;
+			ti.iImage = iImage;
+			searchselect.SetItem(i, &ti);
 			break;
 		}
-	}
 }
 
 void CSearchResultsWnd::SetActiveSearchResultsIcon(uint32 uSearchID)
@@ -356,12 +356,12 @@ void CSearchResultsWnd::SetInactiveSearchResultsIcon(uint32 uSearchID)
 
 SSearchParams* CSearchResultsWnd::GetSearchResultsParams(uint32 uSearchID) const
 {
-	for (int i = searchselect.GetItemCount(); --i >= 0;) {
-		TCITEM item;
-		item.mask = TCIF_PARAM;
-		if (searchselect.GetItem(i, &item) && item.lParam != NULL && reinterpret_cast<SSearchParams*>(item.lParam)->dwSearchID == uSearchID)
-			return reinterpret_cast<SSearchParams*>(item.lParam);
-	}
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	for (int i = searchselect.GetItemCount(); --i >= 0;)
+		if (searchselect.GetItem(i, &ti) && ti.lParam != NULL && reinterpret_cast<SSearchParams*>(ti.lParam)->dwSearchID == uSearchID)
+			return reinterpret_cast<SSearchParams*>(ti.lParam);
+
 	return NULL;
 }
 
@@ -370,10 +370,10 @@ void CSearchResultsWnd::CancelSearch(uint32 uSearchID)
 	if (uSearchID == 0) {
 		int iCurSel = searchselect.GetCurSel();
 		if (iCurSel >= 0) {
-			TCITEM item;
-			item.mask = TCIF_PARAM;
-			if (searchselect.GetItem(iCurSel, &item) && item.lParam != NULL)
-				uSearchID = reinterpret_cast<SSearchParams*>(item.lParam)->dwSearchID;
+			TCITEM ti;
+			ti.mask = TCIF_PARAM;
+			if (searchselect.GetItem(iCurSel, &ti) && ti.lParam != NULL)
+				uSearchID = reinterpret_cast<SSearchParams*>(ti.lParam)->dwSearchID;
 		}
 	}
 	if (uSearchID == 0)
@@ -440,9 +440,9 @@ void CSearchResultsWnd::SearchCancelled(uint32 uSearchID)
 
 	int iSel = searchselect.GetCurSel();
 	if (iSel >= 0) {
-		TCITEM item;
-		item.mask = TCIF_PARAM;
-		if (searchselect.GetItem(iSel, &item) && item.lParam != NULL && uSearchID == reinterpret_cast<SSearchParams*>(item.lParam)->dwSearchID) {
+		TCITEM ti;
+		ti.mask = TCIF_PARAM;
+		if (searchselect.GetItem(iSel, &ti) && ti.lParam != NULL && uSearchID == reinterpret_cast<SSearchParams*>(ti.lParam)->dwSearchID) {
 			const CWnd *pWndFocus = GetFocus();
 			m_pwndParams->m_ctlCancel.EnableWindow(FALSE);
 			if (pWndFocus && pWndFocus->m_hWnd == m_pwndParams->m_ctlCancel.m_hWnd)
@@ -537,7 +537,7 @@ void CSearchResultsWnd::DownloadSelected(bool bPaused)
 			// create new DL queue entry with all properties of parent (e.g. already received sources!)
 			// but with the filename of the selected listview item.
 			CSearchFile tempFile(parent);
-			tempFile.SetFileName(sel_file->GetFileName());
+			tempFile.SetAFileName(sel_file->GetFileName());
 			tempFile.SetStrTagValue(FT_FILENAME, sel_file->GetFileName());
 			theApp.downloadqueue->AddSearchToDownload(&tempFile, bPaused, GetSelectedCat());
 
@@ -729,7 +729,7 @@ void ParsedSearchExpression(const CSearchExpr &expr)
 	int iOpNot = 0;
 	int iNonDefTags = 0;
 	//CStringA strDbg;
-	for (int i = 0; i < expr.m_aExpr.GetCount(); ++i) {
+	for (INT_PTR i = 0; i < expr.m_aExpr.GetCount(); ++i) {
 		const CSearchAttr &rSearchAttr(expr.m_aExpr[i]);
 		const CStringA &rstr(rSearchAttr.m_str);
 		if (rstr == SEARCHOPTOK_AND) {
@@ -789,7 +789,7 @@ void ParsedSearchExpression(const CSearchExpr &expr)
 		// the same or even better if we ask the node which indexes the rare keyword "oxymoronaccelerator", so we try to rearrange
 		// keywords and generally assume that the longer keywords are rarer
 		if (thePrefs.GetRearrangeKadSearchKeywords() && !s_strCurKadKeywordA.IsEmpty()) {
-			for (int i = 0; i < expr.m_aExpr.GetCount(); ++i) {
+			for (INT_PTR i = 0; i < expr.m_aExpr.GetCount(); ++i) {
 				const CStringA &cs(expr.m_aExpr[i].m_str);
 				if (   cs != SEARCHOPTOK_AND
 					&& cs != s_strCurKadKeywordA
@@ -804,7 +804,7 @@ void ParsedSearchExpression(const CSearchExpr &expr)
 		}
 
 		CStringA strAndTerms;
-		for (int i = 0; i < expr.m_aExpr.GetCount(); ++i) {
+		for (INT_PTR i = 0; i < expr.m_aExpr.GetCount(); ++i) {
 			const CStringA &cs(expr.m_aExpr[i].m_str);
 			if (cs != SEARCHOPTOK_AND) {
 				ASSERT(expr.m_aExpr[i].m_iTag == FT_FILENAME);
@@ -1018,7 +1018,7 @@ bool GetSearchPacket(CSafeMemFile &data, SSearchParams *pParams, bool bTargetSup
 		}
 	}
 	//TRACE(_T("Parsed search expr:\n"));
-	//for (int i = 0; i < s_SearchExpr.m_aExpr.GetCount(); ++i){
+	//for (INT_PTR i = 0; i < s_SearchExpr.m_aExpr.GetCount(); ++i){
 	//	TRACE(_T("%hs"), s_SearchExpr.m_aExpr[i]);
 	//	TRACE(_T("  %s\n"), (LPCTSTR)DbgGetHexDump((uchar*)(LPCSTR)s_SearchExpr.m_aExpr[i], s_SearchExpr.m_aExpr[i].GetLength()*sizeof(CHAR)));
 	//}
@@ -1076,8 +1076,8 @@ bool GetSearchPacket(CSafeMemFile &data, SSearchParams *pParams, bool bTargetSup
 		DebugLog(_T("Search Expr: %s"), (LPCTSTR)s_strSearchTree);
 	}
 
-	for (int j = 0; j < s_SearchExpr.m_aExpr.GetCount(); ++j) {
-		const CSearchAttr &rSearchAttr(s_SearchExpr.m_aExpr[j]);
+	for (INT_PTR i = 0; i < s_SearchExpr.m_aExpr.GetCount(); ++i) {
+		const CSearchAttr &rSearchAttr(s_SearchExpr.m_aExpr[i]);
 		const CStringA &rstrA(rSearchAttr.m_str);
 		if (rstrA == SEARCHOPTOK_AND)
 			target.WriteBooleanAND();
@@ -1348,37 +1348,37 @@ bool CSearchResultsWnd::DoNewKadSearch(SSearchParams *pParams)
 
 bool CSearchResultsWnd::CreateNewTab(SSearchParams *pParams, bool bActiveIcon)
 {
-	for (int i = searchselect.GetItemCount(); --i >= 0;) {
-		TCITEM item;
-		item.mask = TCIF_PARAM;
-		if (searchselect.GetItem(i, &item) && item.lParam != NULL && reinterpret_cast<SSearchParams*>(item.lParam)->dwSearchID == pParams->dwSearchID)
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	for (int i = searchselect.GetItemCount(); --i >= 0;)
+		if (searchselect.GetItem(i, &ti) && ti.lParam != NULL && reinterpret_cast<SSearchParams*>(ti.lParam)->dwSearchID == pParams->dwSearchID)
 			return false;
-	}
 
 	// add a new tab
-	TCITEM newitem;
 	if (pParams->strExpression.IsEmpty())
 		pParams->strExpression += _T('-');
-	newitem.mask = TCIF_PARAM | TCIF_TEXT | TCIF_IMAGE;
-	newitem.lParam = (LPARAM)pParams;
+	ti.mask = TCIF_PARAM | TCIF_TEXT | TCIF_IMAGE;
+	ti.lParam = (LPARAM)pParams;
 	pParams->strSearchTitle = (pParams->strSpecialTitle.IsEmpty() ? pParams->strExpression : pParams->strSpecialTitle);
 	CString strTcLabel(pParams->strSearchTitle);
 	DupAmpersand(strTcLabel);
-	newitem.pszText = const_cast<LPTSTR>((LPCTSTR)strTcLabel);
-	newitem.cchTextMax = 0;
+	ti.pszText = const_cast<LPTSTR>((LPCTSTR)strTcLabel);
+	ti.cchTextMax = 0;
 	if (pParams->bClientSharedFiles)
-		newitem.iImage = sriClient;
+		ti.iImage = sriClient;
 	else if (pParams->eType == SearchTypeKademlia)
-		newitem.iImage = bActiveIcon ? sriKadActice : sriKad;
+		ti.iImage = bActiveIcon ? sriKadActice : sriKad;
 	else if (pParams->eType == SearchTypeEd2kGlobal)
-		newitem.iImage = bActiveIcon ? sriGlobalActive : sriGlobal;
+		ti.iImage = bActiveIcon ? sriGlobalActive : sriGlobal;
 	else {
 		ASSERT(pParams->eType == SearchTypeEd2kServer);
-		newitem.iImage = bActiveIcon ? sriServerActive : sriServer;
+		ti.iImage = bActiveIcon ? sriServerActive : sriServer;
 	}
-	int itemnr = searchselect.InsertItem(INT_MAX, &newitem);
+	int itemnr = searchselect.InsertItem(INT_MAX, &ti);
 	if (!searchselect.IsWindowVisible())
 		ShowSearchSelector(true);
+	LRESULT lResult;
+	OnSelChangingTab(NULL, &lResult);
 	searchselect.SetCurSel(itemnr);
 	searchlistctrl.ShowResults(pParams->dwSearchID);
 	return true;
@@ -1386,18 +1386,13 @@ bool CSearchResultsWnd::CreateNewTab(SSearchParams *pParams, bool bActiveIcon)
 
 void CSearchResultsWnd::DeleteSelectedSearch()
 {
-	if (CanDeleteSearch()) {
+	if (CanDeleteSearches()) {
 		int iFocus = searchselect.GetCurFocus();
-		TCITEM item;
-		item.mask = TCIF_PARAM;
-		if (iFocus >= 0 && searchselect.GetItem(iFocus, &item) && item.lParam != NULL)
-			DeleteSearch(reinterpret_cast<SSearchParams*>(item.lParam)->dwSearchID);
+		TCITEM ti;
+		ti.mask = TCIF_PARAM;
+		if (iFocus >= 0 && searchselect.GetItem(iFocus, &ti) && ti.lParam != NULL)
+			DeleteSearch(reinterpret_cast<SSearchParams*>(ti.lParam)->dwSearchID);
 	}
-}
-
-bool CSearchResultsWnd::CanDeleteSearch() const
-{
-	return (searchselect.GetItemCount() > 0);
 }
 
 #pragma warning(push)
@@ -1406,10 +1401,10 @@ void CSearchResultsWnd::DeleteSearch(uint32 uSearchID)
 {
 	Kademlia::CSearchManager::StopSearch(uSearchID, false);
 
-	TCITEM item;
-	item.mask = TCIF_PARAM;
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
 	int i = searchselect.GetItemCount();
-	while (--i >= 0 && !(searchselect.GetItem(i, &item) && item.lParam != NULL && reinterpret_cast<SSearchParams*>(item.lParam)->dwSearchID == uSearchID));
+	while (--i >= 0 && !(searchselect.GetItem(i, &ti) && ti.lParam != NULL && reinterpret_cast<SSearchParams*>(ti.lParam)->dwSearchID == uSearchID));
 	if (i < 0)
 		return;
 
@@ -1427,7 +1422,7 @@ void CSearchResultsWnd::DeleteSearch(uint32 uSearchID)
 	// delete search tab
 	int iCurSel = searchselect.GetCurSel();
 	searchselect.DeleteItem(i);
-	delete reinterpret_cast<SSearchParams*>(item.lParam);
+	delete reinterpret_cast<SSearchParams*>(ti.lParam);
 
 	int iTabItems = searchselect.GetItemCount();
 	if (iTabItems > 0) {
@@ -1441,10 +1436,10 @@ void CSearchResultsWnd::DeleteSearch(uint32 uSearchID)
 		if (iCurSel == CB_ERR)					// if still error
 			iCurSel = searchselect.SetCurSel(0);
 		if (iCurSel != CB_ERR) {
-			item.mask = TCIF_PARAM;
-			if (searchselect.GetItem(iCurSel, &item) && item.lParam != NULL) {
+			ti.mask = TCIF_PARAM;
+			if (searchselect.GetItem(iCurSel, &ti) && ti.lParam != NULL) {
 				searchselect.HighlightItem(iCurSel, FALSE);
-				ShowResults(reinterpret_cast<SSearchParams*>(item.lParam));
+				ShowResults(reinterpret_cast<SSearchParams*>(ti.lParam));
 			}
 		}
 	} else
@@ -1452,24 +1447,19 @@ void CSearchResultsWnd::DeleteSearch(uint32 uSearchID)
 }
 #pragma warning(pop)
 
-bool CSearchResultsWnd::CanDeleteAllSearches() const
-{
-	return (searchselect.GetItemCount() > 0);
-}
-
 void CSearchResultsWnd::DeleteAllSearches()
 {
 	CancelEd2kSearch();
 
-	for (int i = searchselect.GetItemCount(); --i >= 0;) {
-		TCITEM item;
-		item.mask = TCIF_PARAM;
-		if (searchselect.GetItem(i, &item) && item.lParam != NULL) {
-			const SSearchParams *params = reinterpret_cast<SSearchParams*>(item.lParam);
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	for (int i = searchselect.GetItemCount(); --i >= 0;)
+		if (searchselect.GetItem(i, &ti) && ti.lParam != NULL) {
+			const SSearchParams *params = reinterpret_cast<SSearchParams*>(ti.lParam);
 			Kademlia::CSearchManager::StopSearch(params->dwSearchID, false);
 			delete params;
 		}
-	}
+
 	NoTabItems();
 }
 
@@ -1518,11 +1508,38 @@ void CSearchResultsWnd::OnSelChangeTab(LPNMHDR, LRESULT *pResult)
 	CWaitCursor curWait; // this may take a while
 	int cur_sel = searchselect.GetCurSel();
 	if (cur_sel >= 0) {
-		TCITEM item;
-		item.mask = TCIF_PARAM;
-		if (searchselect.GetItem(cur_sel, &item) && item.lParam != NULL) {
+		TCITEM ti;
+		ti.mask = TCIF_PARAM;
+		if (searchselect.GetItem(cur_sel, &ti) && ti.lParam != NULL) {
 			searchselect.HighlightItem(cur_sel, FALSE);
-			ShowResults(reinterpret_cast<SSearchParams*>(item.lParam));
+			ShowResults(reinterpret_cast<SSearchParams*>(ti.lParam));
+		}
+	}
+	*pResult = 0;
+}
+
+void CSearchResultsWnd::OnSelChangingTab(LPNMHDR, LRESULT *pResult)
+{
+	if (!m_astrFilter.IsEmpty()) {
+		int cur_sel = searchselect.GetCurSel();
+		if (cur_sel >= 0) {
+			CString strTabLabel;
+			TCITEM ti;
+			ti.cchTextMax = 512;
+			ti.pszText = strTabLabel.GetBuffer(ti.cchTextMax);
+			ti.mask = TCIF_TEXT;
+			bool b = searchselect.GetItem(cur_sel, &ti);
+			strTabLabel.ReleaseBuffer();
+			if (b) {
+				int i = strTabLabel.ReverseFind(_T('/'));
+				int j = strTabLabel.ReverseFind(_T('('));
+				if (j >= 0 && i > j) {
+					strTabLabel.Delete(j + 1, i - j);
+					DupAmpersand(strTabLabel);
+					ti.pszText = const_cast<LPTSTR>((LPCTSTR)strTabLabel);
+					searchselect.SetItem(cur_sel, &ti);
+				}
+			}
 		}
 	}
 	*pResult = 0;
@@ -1530,10 +1547,10 @@ void CSearchResultsWnd::OnSelChangeTab(LPNMHDR, LRESULT *pResult)
 
 LRESULT CSearchResultsWnd::OnCloseTab(WPARAM wParam, LPARAM)
 {
-	TCITEM item;
-	item.mask = TCIF_PARAM;
-	if (searchselect.GetItem((int)wParam, &item) && item.lParam != NULL) {
-		uint32 uSearchID = reinterpret_cast<SSearchParams*>(item.lParam)->dwSearchID;
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	if (searchselect.GetItem((int)wParam, &ti) && ti.lParam != NULL) {
+		uint32 uSearchID = reinterpret_cast<SSearchParams*>(ti.lParam)->dwSearchID;
 		if (!m_cancelled && uSearchID == m_nEd2kSearchID)
 			CancelEd2kSearch();
 		DeleteSearch(uSearchID);
@@ -1543,16 +1560,11 @@ LRESULT CSearchResultsWnd::OnCloseTab(WPARAM wParam, LPARAM)
 
 LRESULT CSearchResultsWnd::OnDblClickTab(WPARAM wParam, LPARAM)
 {
-	TCITEM item;
-	item.mask = TCIF_PARAM;
-	if (searchselect.GetItem((int)wParam, &item) && item.lParam != NULL)
-		m_pwndParams->SetParameters(reinterpret_cast<SSearchParams*>(item.lParam));
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	if (searchselect.GetItem((int)wParam, &ti) && ti.lParam != NULL)
+		m_pwndParams->SetParameters(reinterpret_cast<SSearchParams*>(ti.lParam));
 	return TRUE;
-}
-
-int CSearchResultsWnd::GetSelectedCat()
-{
-	return m_cattabs.GetCurSel();
 }
 
 void CSearchResultsWnd::UpdateCatTabs()
@@ -1597,12 +1609,11 @@ void CSearchResultsWnd::ShowSearchSelector(bool visible)
 
 void CSearchResultsWnd::OnDestroy()
 {
-	for (INT_PTR i = searchselect.GetItemCount(); --i >= 0;) {
-		TCITEM item;
-		item.mask = TCIF_PARAM;
-		if (searchselect.GetItem((int)i, &item))
-			delete reinterpret_cast<SSearchParams*>(item.lParam);
-	}
+	TCITEM ti;
+	ti.mask = TCIF_PARAM;
+	for (INT_PTR i = searchselect.GetItemCount(); --i >= 0;)
+		if (searchselect.GetItem((int)i, &ti))
+			delete reinterpret_cast<SSearchParams*>(ti.lParam);
 
 	CResizableFormView::OnDestroy();
 }
@@ -1636,13 +1647,12 @@ void CSearchResultsWnd::OnBnClickedOpenParamsWnd()
 
 void CSearchResultsWnd::OnSysCommand(UINT nID, LPARAM lParam)
 {
-	if (nID == SC_KEYMENU) {
-		if (lParam == EMULE_HOTMENU_ACCEL)
-			theApp.emuledlg->SendMessage(WM_COMMAND, IDC_HOTMENU);
-		else
-			theApp.emuledlg->SendMessage(WM_SYSCOMMAND, nID, lParam);
-	} else
+	if ((nID & 0xFFF0) != SC_KEYMENU)
 		__super::OnSysCommand(nID, lParam);
+	else if (lParam == EMULE_HOTMENU_ACCEL)
+		theApp.emuledlg->SendMessage(WM_COMMAND, IDC_HOTMENU);
+	else
+		theApp.emuledlg->SendMessage(WM_SYSCOMMAND, nID, lParam);
 }
 
 bool CSearchResultsWnd::CanSearchRelatedFiles() const
@@ -1756,10 +1766,10 @@ LRESULT CSearchResultsWnd::OnChangeFilter(WPARAM wParam, LPARAM lParam)
 
 	int iCurSel = searchselect.GetCurSel();
 	if (iCurSel >= 0) {
-		TCITEM item;
-		item.mask = TCIF_PARAM;
-		if (searchselect.GetItem(iCurSel, &item) && item.lParam != NULL)
-			ShowResults(reinterpret_cast<SSearchParams*>(item.lParam));
+		TCITEM ti;
+		ti.mask = TCIF_PARAM;
+		if (searchselect.GetItem(iCurSel, &ti) && ti.lParam != NULL)
+			ShowResults(reinterpret_cast<SSearchParams*>(ti.lParam));
 	}
 	return 0;
 }

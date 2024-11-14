@@ -13,10 +13,10 @@ class CSearchDlg : public CFrameWnd
 	DECLARE_DYNCREATE(CSearchDlg)
 
 public:
-	CSearchDlg();           // protected constructor used by dynamic creation
+	CSearchDlg();           // constructor used by dynamic creation
 	CSearchResultsWnd *m_pwndResults;
 
-	BOOL Create(CWnd *pParent);
+	BOOL CreateWnd(CWnd *pParent);
 
 	void Localize();
 	void CreateMenus();
@@ -28,7 +28,7 @@ public:
 	void CancelEd2kSearch();
 	void CancelKadSearch(UINT uSearchID);
 	void SetNextSearchID(uint32 uNextID);
-	void ProcessEd2kSearchLinkRequest(const CString &strSearchTerm);
+	void ProcessEd2kSearchLinkRequest(const CString &strSearchTerm)	{ m_wndParams.ProcessEd2kSearchLinkRequest(strSearchTerm); }
 
 	bool CanSearchRelatedFiles() const;
 	void SearchRelatedFiles(CPtrList &listFiles);
@@ -36,8 +36,7 @@ public:
 	void DownloadSelected();
 	void DownloadSelected(bool bPaused);
 
-	bool CanDeleteSearch() const;
-	bool CanDeleteAllSearches() const;
+	bool CanDeleteSearches() const;
 	void DeleteSearch(uint32 nSearchID);
 	void DeleteAllSearches();
 
@@ -46,18 +45,18 @@ public:
 
 	bool CreateNewTab(SSearchParams *pParams, bool bActiveIcon = true);
 	SSearchParams* GetSearchParamsBySearchID(uint32 nSearchID);
-	CClosableTabCtrl& GetSearchSelector();
+	CClosableTabCtrl& GetSearchSelector() const;
 
 	int GetSelectedCat();
 	void UpdateCatTabs();
-	void SaveAllSettings();
-	void ResetHistory();
+	void SaveAllSettings()					{ m_wndParams.SaveSettings(); }
+	void ResetHistory()						{ m_wndParams.ResetHistory(); }
 
 	void SetToolTipsDelay(UINT uDelay);
 	void DeleteAllSearchListCtrlItems();
 
-	BOOL IsSearchParamsWndVisible() const;
-	void OpenParametersWnd();
+	BOOL IsSearchParamsWndVisible() const	{ return m_wndParams.IsWindowVisible(); }
+	void OpenParametersWnd()				{ ShowControlBar(&m_wndParams, TRUE, TRUE); }
 	void DockParametersWnd();
 
 	void UpdateSearch(CSearchFile *pSearchFile);

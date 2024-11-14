@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -282,6 +282,42 @@ bool CheckFileOpen(LPCTSTR pszFilePath, LPCTSTR pszFileTitle)
 			return false;
 	}
 	return true;
+}
+
+CString CExceptionStr(CException &ex)
+{
+	TCHAR szError[MAX_PATH + 256];
+	GetExceptionMessage(ex, szError, _countof(szError));
+	return CString(szError);
+}
+
+CString CExceptionStrDash(CException &ex)
+{
+	CString s(CExceptionStr(ex));
+	if (!s.IsEmpty())
+		s.Insert(0, _T(" - "));
+	return s;
+}
+
+bool CFileOpen(CFile &file, LPCTSTR lpszFileName, UINT nOpenFlags, LPCTSTR lpszMsg)
+{
+	CFileException ex;
+	if (!file.Open(lpszFileName, nOpenFlags, &ex)) {
+		if (ex.m_cause != CFileException::fileNotFound)
+			LogError(LOG_STATUSBAR, _T("%s%s"), lpszMsg, (LPCTSTR)CExceptionStrDash(ex));
+		return false;
+	}
+	return true;
+}
+
+void CommitAndClose(CStdioFile &file)
+{
+	if (thePrefs.GetCommitFiles() >= 2 || (thePrefs.GetCommitFiles() >= 1 && theApp.IsClosing())) {
+		file.Flush(); // flush file stream buffers to disk buffers
+		if (_commit(_fileno(file.m_pStream)) != 0) // commit disk buffers to disk
+			AfxThrowFileException(CFileException::hardIO, ::GetLastError(), file.GetFileName());
+	}
+	file.Close();
 }
 
 HINSTANCE BrowserOpen(LPCTSTR lpURL, LPCTSTR lpDirectory)
@@ -699,7 +735,7 @@ WORD DetectWinVersion()
 				return _WINVER_8_1_;
 		}
 		if (osvi.dwMajorVersion == 10 && osvi.dwMinorVersion == 0)
-			return _WINVER_10_;
+			return _WINVER_10_; //for Windows 11 - osvi.dwBuildNumber>=22000
 		return _WINVER_7_; // never return Win95 if we get the info about a NT system
 
 	case VER_PLATFORM_WIN32_WINDOWS:
@@ -874,7 +910,7 @@ uint32 DecodeBase32(LPCTSTR pszInput, uchar *paucOutput, uint32 nBufferLen)
 	DWORD nBits = 0;
 	int nCount = 0;
 
-	for (int nChars = nInputLen; nChars-- > 0; ++pszInput) {
+	for (; nInputLen > 0; --nInputLen) {
 		if (*pszInput >= 'A' && *pszInput <= 'Z')
 			nBits |= (*pszInput - 'A');
 		else if (*pszInput >= 'a' && *pszInput <= 'z')
@@ -883,9 +919,9 @@ uint32 DecodeBase32(LPCTSTR pszInput, uchar *paucOutput, uint32 nBufferLen)
 			nBits |= (*pszInput - '2' + 26);
 		else
 			return 0;
+		++pszInput;
 
 		nCount += 5;
-
 		if (nCount >= 8) {
 			*paucOutput++ = (BYTE)(nBits >> (nCount - 8));
 			nCount -= 8;
@@ -995,7 +1031,7 @@ int CWebServices::GetAllMenuEntries(CTitleMenu *pMenu, DWORD dwFlags)
 
 bool CWebServices::RunURL(const CAbstractFile *file, UINT uMenuID)
 {
-	for (int i = 0; i < m_aServices.GetCount(); ++i) {
+	for (INT_PTR i = 0; i < m_aServices.GetCount(); ++i) {
 		const SEd2kLinkService &rSvc(m_aServices[i]);
 		if (rSvc.uMenuID == uMenuID) {
 			CString strUrlTemplate(rSvc.strUrl);
@@ -1796,7 +1832,7 @@ CString GetErrorMessage(DWORD dwError, DWORD dwFlags)
 
 BOOL GetExceptionMessage(const CException &ex, LPTSTR lpszErrorMsg, UINT nMaxError)
 {
-	BOOL ret = ex.GetErrorMessage(lpszErrorMsg, nMaxError);
+	BOOL ret = ex.GetErrorMessage(lpszErrorMsg, nMaxError, NULL);
 	if (lpszErrorMsg)
 		lpszErrorMsg[(ret && nMaxError) ? nMaxError - 1 : 0] = 0; //terminate string
 	return ret;
@@ -1975,7 +2011,7 @@ void DbgSetThreadName(LPCSTR szThreadName, ...)
 			lenBuf += 128;
 			delete[] buffer;
 			buffer = new char[lenBuf];
-			lenResult = _vsnprintf(buffer, lenBuf, szThreadName, args);
+			lenResult = vsnprintf(buffer, lenBuf, szThreadName, args);
 		} while (lenResult == -1);
 		va_end(args);
 		THREADNAME_INFO info;
@@ -2171,12 +2207,12 @@ void DebugHexDump(CFile &file)
 			data = new uint8[iSize];
 			file.Read(data, iSize);
 			DebugHexDump(data, iSize);
-		} catch (CFileException *e) {
+		} catch (CFileException *ex) {
 			TRACE("*** DebugHexDump(CFile&); CFileException\n");
-			e->Delete();
-		} catch (CMemoryException *e) {
+			ex->Delete();
+		} catch (CMemoryException *ex) {
 			TRACE("*** DebugHexDump(CFile&); CMemoryException\n");
-			e->Delete();
+			ex->Delete();
 		}
 		delete[] data;
 	}
@@ -2206,7 +2242,7 @@ CString DbgGetFileInfo(const uchar *hash)
 	return strInfo;
 }
 
-CString DbgGetFileStatus(UINT nPartCount, CSafeMemFile *data)
+CString DbgGetFileStatus(UINT nPartCount, CSafeMemFile &data)
 {
 	CString strFileStatus;
 	if (nPartCount == 0)
@@ -2218,7 +2254,7 @@ CString DbgGetFileStatus(UINT nPartCount, CSafeMemFile *data)
 		while (nPart < nPartCount) {
 			uint8 ucPartMask;
 			try {
-				ucPartMask = data->ReadUInt8();
+				ucPartMask = data.ReadUInt8();
 			} catch (CFileException *ex) {
 				ex->Delete();
 				strPartStatus = _T("*PacketException*");
@@ -2497,7 +2533,7 @@ void DebugRecv(LPCSTR pszOpcode, uint32 ip, uint16 port)
 
 void DebugHttpHeaders(const CStringAArray &astrHeaders)
 {
-	for (int i = 0; i < astrHeaders.GetCount(); ++i)
+	for (INT_PTR i = 0; i < astrHeaders.GetCount(); ++i)
 		Debug(_T("<%hs\n"), (LPCSTR)astrHeaders[i]);
 }
 
@@ -2637,7 +2673,7 @@ CStringA ipstrA(uint32 nIP)
 void ipstrA(CHAR *pszAddress, int iMaxAddress, uint32 nIP)
 {
 	const BYTE *pucIP = (BYTE*)&nIP;
-	_snprintf(pszAddress, iMaxAddress, "%u.%u.%u.%u", pucIP[0], pucIP[1], pucIP[2], pucIP[3]);
+	snprintf(pszAddress, iMaxAddress, "%u.%u.%u.%u", pucIP[0], pucIP[1], pucIP[2], pucIP[3]);
 }
 
 bool IsDaylightSavingTimeActive(LONG &rlDaylightBias)
@@ -2831,7 +2867,7 @@ __time64_t FileTimeToUnixTime(const FILETIME &ft)
 int statUTC(LPCTSTR pName, struct _stat64 &ft)
 {
 	WIN32_FILE_ATTRIBUTE_DATA fa;
-	if (GetFileAttributesEx(pName, GetFileExInfoStandard, &fa)) {
+	if (::GetFileAttributesEx(pName, GetFileExInfoStandard, &fa)) {
 		memset(&ft, 0, sizeof ft);
 		ft.st_atime = FileTimeToUnixTime(fa.ftLastAccessTime);
 		ft.st_ctime = FileTimeToUnixTime(fa.ftCreationTime);
@@ -2845,7 +2881,7 @@ int statUTC(LPCTSTR pName, struct _stat64 &ft)
 int statUTC(HANDLE hFile, struct _stat64 &ft)
 {
 	BY_HANDLE_FILE_INFORMATION fi;
-	if (GetFileInformationByHandle(hFile, &fi)) {
+	if (::GetFileInformationByHandle(hFile, &fi)) {
 		memset(&ft, 0, sizeof ft);
 		ft.st_atime = FileTimeToUnixTime(fi.ftLastAccessTime);
 		ft.st_ctime = FileTimeToUnixTime(fi.ftCreationTime);
@@ -2858,12 +2894,12 @@ int statUTC(HANDLE hFile, struct _stat64 &ft)
 
 bool ExpandEnvironmentStrings(CString &rstrStrings)
 {
-	DWORD dwSize = ExpandEnvironmentStrings(rstrStrings, NULL, 0);
+	DWORD dwSize = ::ExpandEnvironmentStrings(rstrStrings, NULL, 0);
 	if (dwSize == 0)
 		return false;
 
 	CString strExpanded;
-	DWORD dwCount = ExpandEnvironmentStrings(rstrStrings, strExpanded.GetBuffer(dwSize - 1), dwSize);
+	DWORD dwCount = ::ExpandEnvironmentStrings(rstrStrings, strExpanded.GetBuffer(dwSize - 1), dwSize);
 	if (dwCount == 0 || dwCount != dwSize) {
 		ASSERT(0);
 		return false;
@@ -2878,9 +2914,9 @@ uint16 GetRandomUInt16()
 #if RAND_MAX == 0x7fff
 	uint32 uRand0 = rand();
 	uint32 uRand1 = rand();
+	// NOTE: if the assert fires, most likely this function was called *without* calling 'srand' first.
+	// NOTE: each spawned thread HAS to call 'srand' for getting really random numbers.
 	ASSERT(uRand0 != 41 || uRand1 != 18467);
-	// NOTE: if this assert fires, most likely this function was called *without* calling 'srand' first.
-	// NOTE: each spawned thread HAS to call 'srand' for itself to get real random numbers.
 
 	uRand0 |= (uRand1 & 0x4000) << 1;
 	srand(::GetTickCount() ^ (uRand0 << 16));
@@ -3057,8 +3093,8 @@ void InstallSkin(LPCTSTR pszSkinPackage)
 
 			rar.Close();
 		} else {
-			CString strError(GetResString(IDS_INSTALL_SKIN_PKG_ERROR));
-			strError += _T("\r\n\r\nDownload latest version of UNRAR.DLL from https://www.rarlab.com and copy UNRAR.DLL into eMule installation folder.");
+			CString strError;
+			strError.Format(_T("%s\r\n\r\n%s"), (LPCTSTR)GetResString(IDS_INSTALL_SKIN_PKG_ERROR), CRARFile::sUnrar_download);
 			AfxMessageBox(strError, MB_ICONERROR);
 		}
 	}
@@ -3076,14 +3112,14 @@ void TriggerPortTest(uint16 tcp, uint16 udp)
 
 	// the port check will need to do an obfuscated callback too if obfuscation is requested,
 	// hence we have to provide our userhash so it can create the key
-	if (thePrefs.IsClientCryptLayerRequested())
+	if (thePrefs.IsCryptLayerPreferred())
 		m_sTestURL.AppendFormat(_T("&obf=1&clienthash=%s"), (LPCTSTR)md4str(thePrefs.GetUserHash()));
 	else
 		m_sTestURL += _T("&obf=0");
 	ShellOpenFile(m_sTestURL);
 }
 
- //CSTR_LESS_THAN=1 CSTR_EQUAL=2 CSTR_GREATER_THAN=3
+//CSTR_LESS_THAN=1 CSTR_EQUAL=2 CSTR_GREATER_THAN=3
 int CompareLocaleStringNoCaseA(LPCSTR psz1, LPCSTR psz2)
 {
 	// SDK says: The 'CompareString' function is optimized to run at the highest speed when 'dwCmpFlags' is set to 0
@@ -3759,7 +3795,7 @@ uint32 LevenshteinDistance(const CString &str1, const CString &str2)
 
 // Wrapper for _tmakepath which ensures that the output buffer does not exceed MAX_PATH
 // using a smaller buffer without checking the sizes prior calling this function is not safe
-// If the resulting path would be bigger than MAX_PATH-1, it will be empty and return false (similar to PathCombine)
+// If the resulting path would be longer than MAX_PATH-1, it will be empty and return false (similar to PathCombine)
 bool _tmakepathlimit(LPTSTR path, LPCTSTR drive, LPCTSTR dir, LPCTSTR fname, LPCTSTR ext)
 {
 	if (path == NULL) {
@@ -3824,9 +3860,9 @@ uint8 GetMyConnectOptions(bool bEncryption, bool bCallback)
 	// 1 CryptLayer Required
 	// 1 CryptLayer Requested
 	// 1 CryptLayer Supported
-	const uint8 uSupportsCryptLayer = static_cast<uint8>(thePrefs.IsClientCryptLayerSupported() && bEncryption);
-	const uint8 uRequestsCryptLayer = static_cast<uint8>(thePrefs.IsClientCryptLayerRequested() && bEncryption);
-	const uint8 uRequiresCryptLayer = static_cast<uint8>(thePrefs.IsClientCryptLayerRequired() && bEncryption);
+	const uint8 uSupportsCryptLayer = static_cast<uint8>(thePrefs.IsCryptLayerEnabled() && bEncryption);
+	const uint8 uRequestsCryptLayer = static_cast<uint8>(thePrefs.IsCryptLayerPreferred() && bEncryption);
+	const uint8 uRequiresCryptLayer = static_cast<uint8>(thePrefs.IsCryptLayerRequired() && bEncryption);
 	// direct callback is only possible if connected to kad, TCP firewalled and verified UDP open (for example on a full cone NAT)
 	const uint8 uDirectUDPCallback = static_cast<uint8>(bCallback && theApp.IsFirewalled() && Kademlia::CKademlia::IsRunning() && !Kademlia::CUDPFirewallTester::IsFirewalledUDP(true) && Kademlia::CUDPFirewallTester::IsVerified());
 

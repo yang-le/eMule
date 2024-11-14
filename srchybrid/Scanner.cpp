@@ -1257,14 +1257,11 @@ YY_RULE_SETUP
 	// as any other string term. It even can get combined with other search terms and operators
 	// within one search tree.
 					CString strError;
-					try
-					{
+					try {
 						CED2KLink *pLink = CED2KLink::CreateLinkFromUrl(CString(yytext));
-						if (pLink && pLink->GetKind() == CED2KLink::kFile)
-						{
+						if (pLink && pLink->GetKind() == CED2KLink::kFile) {
 							CED2KFileLink *pFileLink = pLink->GetFileLink();
-							if (pFileLink)
-							{
+							if (pFileLink) {
 								yylval.pstr = new CStringA;
 								yylval.pstr->Format("ed2k::%S", (LPCTSTR)md4str(pFileLink->GetHashKey()));
 								delete pLink;
@@ -1272,9 +1269,7 @@ YY_RULE_SETUP
 							}
 						}
 						delete pLink;
-					}
-					catch (const CString &strEd2kLinkError)
-					{
+					} catch (const CString &strEd2kLinkError) {
 						strError = strEd2kLinkError;
 					}
 					if (strError.IsEmpty())

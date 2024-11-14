@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -222,16 +222,16 @@ void CEditDelayed::OnLButtonDown(UINT nFlags, CPoint point)
 			int nCount = m_pctrlColumnHeader->GetItemCount();
 			for (int i = 0; i < nCount; ++i) {
 				int nIdx = m_pctrlColumnHeader->OrderToIndex(i);
-				m_pctrlColumnHeader->GetItem(nIdx, &hdi);
-				szBuffer[_countof(szBuffer) - 1] = _T('\0');
-				bool bVisible = true;
-				for (INT_PTR j = m_aIgnoredColumns.GetCount(); --j >= 0;)
-					if (m_aIgnoredColumns[j] == nIdx) {
-						bVisible = false;
-						break;
-					}
-				if (hdi.cxy > 0 && bVisible) // ignore hidden columns
-					menu.AppendMenu(MF_STRING | ((m_nCurrentColumnIdx == nIdx) ? MF_CHECKED : MF_UNCHECKED), MP_FILTERCOLUMNS + nIdx, hdi.pszText);
+				if (m_pctrlColumnHeader->GetItem(nIdx, &hdi)) {
+					bool bVisible = true;
+					for (INT_PTR j = m_aIgnoredColumns.GetCount(); --j >= 0;)
+						if (m_aIgnoredColumns[j] == nIdx) {
+							bVisible = false;
+							break;
+						}
+					if (hdi.cxy > 0 && bVisible) // ignore hidden columns
+						menu.AppendMenu(MF_STRING | ((m_nCurrentColumnIdx == nIdx) ? MF_CHECKED : MF_UNCHECKED), MP_FILTERCOLUMNS + nIdx, hdi.pszText);
+				}
 			}
 
 			// draw the menu on a fixed position so it doesn't hide the input text
@@ -310,10 +310,8 @@ void CEditDelayed::ShowColumnText(bool bShow)
 			hdi.mask = HDI_TEXT | HDI_WIDTH;
 			hdi.pszText = szBuffer;
 			hdi.cchTextMax = _countof(szBuffer);
-			if (m_pctrlColumnHeader->GetItem(m_nCurrentColumnIdx, &hdi)) {
-				szBuffer[_countof(szBuffer) - 1] = _T('\0');
+			if (m_pctrlColumnHeader->GetItem(m_nCurrentColumnIdx, &hdi))
 				SetWindowText(szBuffer);
-			}
 		} else
 			SetWindowText(m_strAlternateText);
 	} else if (m_bShowsColumnText) {

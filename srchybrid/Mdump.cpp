@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -36,14 +36,14 @@ TCHAR CMiniDumper::m_szDumpDir[MAX_PATH] = {};
 
 void CMiniDumper::Enable(LPCTSTR pszAppName, bool bShowErrors, LPCTSTR pszDumpDir)
 {
-	// if this assert fires then you have two instances of CMiniDumper which is not allowed
-	ASSERT(m_szAppName[0] == _T('\0'));
-	_tcsncpy(m_szAppName, pszAppName, _countof(m_szAppName) - 1);
+	// This assert fires if you have two instances of CMiniDumper which is not allowed
+	ASSERT(*m_szAppName == _T('\0'));
+	_tcsncpy(m_szAppName, pszAppName, _countof(m_szAppName));
 	m_szAppName[_countof(m_szAppName) - 1] = _T('\0');
 
 	// eMule may not have the permission to create a DMP file in the directory where the "emule.exe" is located.
 	// Need to pre-determine a valid directory.
-	_tcsncpy(m_szDumpDir, pszDumpDir, _countof(m_szDumpDir) - 2);
+	_tcsncpy(m_szDumpDir, pszDumpDir, _countof(m_szDumpDir));
 	m_szDumpDir[_countof(m_szDumpDir) - 2] = _T('\0');
 	::PathAddBackslash(m_szDumpDir);
 
@@ -91,69 +91,55 @@ LONG WINAPI CMiniDumper::TopLevelFilter(struct _EXCEPTION_POINTERS *pExceptionIn
 	HMODULE hDll = GetDebugHelperDll((FARPROC*)&pfnMiniDumpWriteDump, true);
 	if (hDll) {
 		if (pfnMiniDumpWriteDump) {
-			time_t tNow = time(NULL); //time of the crash
-			// Ask user if they want to save a dump file
+			SYSTEMTIME t;
+			GetLocalTime(&t); //time of this crash
+			// Ask user to confirm writing a dump file
 			// Do *NOT* localize that string (in fact, do not use MFC to load it)!
 			if (theCrashDumper.uCreateCrashDump == 2 || MessageBox(NULL, CRASHTEXT, m_szAppName, MB_ICONSTOP | MB_YESNO) == IDYES) {
-				// Create full path for DUMP file
-				TCHAR szDumpPath[MAX_PATH];
-				_tcsncpy(szDumpPath, m_szDumpDir, _countof(szDumpPath) - 1);
-				szDumpPath[_countof(szDumpPath) - 1] = _T('\0');
-				size_t uDumpPathLen = _tcslen(szDumpPath);
-
 				TCHAR szBaseName[MAX_PATH];
-				_tcsncpy(szBaseName, m_szAppName, _countof(szBaseName) - 1);
+				_sntprintf(szBaseName, MAX_PATH, _T("%s_%4d%02d%02d-%02d%02d%02d")
+					, m_szAppName, t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond);
 				szBaseName[_countof(szBaseName) - 1] = _T('\0');
-				size_t uBaseNameLen = _tcslen(szBaseName);
-
-				_tcsftime(szBaseName + uBaseNameLen, _countof(szBaseName) - uBaseNameLen, _T("_%Y%m%d-%H%M%S"), localtime(&tNow));
-				szBaseName[_countof(szBaseName) - 1] = _T('\0');
-
 				// Replace spaces and dots in file name.
-				LPTSTR psz = szBaseName;
-				while (*psz != _T('\0')) {
-					if (*psz == _T('.'))
-						*psz = _T('-');
-					else if (*psz == _T(' '))
-						*psz = _T('_');
-					++psz;
-				}
-				if (uDumpPathLen < _countof(szDumpPath) - 1) {
-					_tcsncat(szDumpPath, szBaseName, _countof(szDumpPath) - uDumpPathLen - 1);
-					szDumpPath[_countof(szDumpPath) - 1] = _T('\0');
-					uDumpPathLen = _tcslen(szDumpPath);
-					if (uDumpPathLen < _countof(szDumpPath) - 1) {
-						_tcsncat(szDumpPath, _T(".dmp"), _countof(szDumpPath) - uDumpPathLen - 1);
-						szDumpPath[_countof(szDumpPath) - 1] = _T('\0');
-					}
-				}
+				for (LPTSTR p = szBaseName; *p != _T('\0'); ++p)
+					if (*p == _T('.'))
+						*p = _T('-');
+					else if (*p == _T(' '))
+						*p = _T('_');
+
+				// Create full path for the dump file
+				TCHAR szDumpPath[MAX_PATH];
+				_sntprintf(szDumpPath, MAX_PATH, _T("%s%s.dmp"), m_szDumpDir, szBaseName);
+				szDumpPath[_countof(szDumpPath) - 1] = _T('\0');
 
 				TCHAR szResult[MAX_PATH + 1024];
 				*szResult = _T('\0');
 				HANDLE hFile = ::CreateFile(szDumpPath, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 				if (hFile != INVALID_HANDLE_VALUE) {
-					_MINIDUMP_EXCEPTION_INFORMATION ExInfo = {};
-					ExInfo.ThreadId = GetCurrentThreadId();
-					ExInfo.ExceptionPointers = pExceptionInfo;
-					ExInfo.ClientPointers = NULL;
-
+					_MINIDUMP_EXCEPTION_INFORMATION ExInfo = { GetCurrentThreadId(), pExceptionInfo, FALSE };
 					BOOL bOK = (*pfnMiniDumpWriteDump)(GetCurrentProcess(), GetCurrentProcessId(), hFile, MiniDumpNormal, &ExInfo, NULL, NULL);
 					if (bOK) {
-						// Do *NOT* localize that string (in fact, do not use MFC to load it)!
-						_sntprintf(szResult, _countof(szResult) - 1, _T("Saved dump file to \"%s\".\r\n\r\nPlease send this file together with a detailed bug report to dumps@emule-project.net !\r\n\r\nThank you for helping to improve eMule."), szDumpPath);
+						// Do *NOT* localize this string (in fact, do not use MFC to load it)!
+						_sntprintf(szResult, _countof(szResult)
+							, _T("Saved dump file to \"%s\".\r\n\r\n")
+							  _T("Please attach this file to a detailed bug report at forum.emule-project.net\r\n\r\n")
+							  _T("Thank you for helping to improve eMule!")
+							, szDumpPath);
 						szResult[_countof(szResult) - 1] = _T('\0');
 #ifdef _DEBUG
 						lRetValue = EXCEPTION_EXECUTE_HANDLER;
 #endif
 					} else {
-						// Do *NOT* localize that string (in fact, do not use MFC to load it)!
-						_sntprintf(szResult, _countof(szResult) - 1, _T("Failed to save dump file to \"%s\".\r\n\r\nError: %lu"), szDumpPath, ::GetLastError());
+						// Do *NOT* localize this string (in fact, do not use MFC to load it)!
+						_sntprintf(szResult, _countof(szResult), _T("Failed to save dump file to \"%s\".\r\n\r\nError: %lu")
+							, szDumpPath, ::GetLastError());
 						szResult[_countof(szResult) - 1] = _T('\0');
 					}
 					::CloseHandle(hFile);
 				} else {
-					// Do *NOT* localize that string (in fact, do not use MFC to load it)!
-					_sntprintf(szResult, _countof(szResult) - 1, _T("Failed to create dump file \"%s\".\r\n\r\nError: %lu"), szDumpPath, ::GetLastError());
+					// Do *NOT* localize this string (in fact, do not use MFC to load it)!
+					_sntprintf(szResult, _countof(szResult), _T("Failed to create dump file \"%s\".\r\n\r\nError: %lu")
+						, szDumpPath, ::GetLastError());
 					szResult[_countof(szResult) - 1] = _T('\0');
 				}
 				if (*szResult != _T('\0'))
@@ -165,7 +151,7 @@ LONG WINAPI CMiniDumper::TopLevelFilter(struct _EXCEPTION_POINTERS *pExceptionIn
 
 #ifndef _DEBUG
 	// Exit the process only in release builds, so that in debug builds the exception
-	// is passed to a possible installed debugger
+	// is passed to an installed debugger
 	ExitProcess(0);
 #else
 	return lRetValue;

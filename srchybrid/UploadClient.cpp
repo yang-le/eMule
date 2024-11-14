@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -29,7 +29,6 @@
 #include "PartFile.h"
 #include "ClientCredits.h"
 #include "ListenSocket.h"
-#include "PeerCacheSocket.h"
 #include "ServerConnect.h"
 #include "SafeFile.h"
 #include "DownloadQueue.h"
@@ -233,7 +232,7 @@ uint32 CUpDownClient::GetScore(bool sysvalue, bool isdownloading, bool onlybasev
 	return (uint32)fBaseValue;
 }
 
-bool CUpDownClient::ProcessExtendedInfo(CSafeMemFile *data, CKnownFile *tempreqfile)
+bool CUpDownClient::ProcessExtendedInfo(CSafeMemFile &data, CKnownFile *tempreqfile)
 {
 	delete[] m_abyUpPartStatus;
 	m_abyUpPartStatus = NULL;
@@ -242,7 +241,7 @@ bool CUpDownClient::ProcessExtendedInfo(CSafeMemFile *data, CKnownFile *tempreqf
 	if (GetExtendedRequestsVersion() == 0)
 		return true;
 
-	uint16 nED2KUpPartCount = data->ReadUInt16();
+	uint16 nED2KUpPartCount = data.ReadUInt16();
 	if (!nED2KUpPartCount) {
 		m_nUpPartCount = tempreqfile->GetPartCount();
 		if (!m_nUpPartCount)
@@ -257,7 +256,7 @@ bool CUpDownClient::ProcessExtendedInfo(CSafeMemFile *data, CKnownFile *tempreqf
 		m_nUpPartCount = tempreqfile->GetPartCount();
 		m_abyUpPartStatus = new uint8[m_nUpPartCount];
 		for (UINT done = 0; done < m_nUpPartCount;) {
-			uint8 toread = data->ReadUInt8();
+			uint8 toread = data.ReadUInt8();
 			for (UINT i = 0; i < 8; ++i) {
 				m_abyUpPartStatus[done] = (toread >> i) & 1;
 				//We may want to use this for another feature.
@@ -270,7 +269,7 @@ bool CUpDownClient::ProcessExtendedInfo(CSafeMemFile *data, CKnownFile *tempreqf
 	}
 	if (GetExtendedRequestsVersion() > 1) {
 		uint16 nCompleteCountLast = GetUpCompleteSourcesCount();
-		uint16 nCompleteCountNew = data->ReadUInt16();
+		uint16 nCompleteCountNew = data.ReadUInt16();
 		SetUpCompleteSourcesCount(nCompleteCountNew);
 		if (nCompleteCountLast != nCompleteCountNew)
 			tempreqfile->UpdatePartsInfo();
@@ -431,27 +430,13 @@ void CUpDownClient::UpdateUploadingStatisticsData()
 	uint32 sentBytesPartFile = 0;
 
 	CEMSocket *sock = GetFileUploadSocket();
-	if (sock && (m_ePeerCacheUpState != PCUS_WAIT_CACHE_REPLY)) {
-		UINT uUpStatsPort;
-		if (m_pPCUpSocket && IsUploadingToPeerCache()) {
-			uUpStatsPort = UINT_MAX;
-
-			// Check if file data has been sent via the normal socket since the last call.
-			uint64 sentBytesCompleteFileNormalSocket = socket->GetSentBytesCompleteFileSinceLastCallAndReset();
-			uint64 sentBytesPartFileNormalSocket = socket->GetSentBytesPartFileSinceLastCallAndReset();
-
-			if (thePrefs.GetVerbose() && (sentBytesCompleteFileNormalSocket + sentBytesPartFileNormalSocket > 0)) {
-				AddDebugLogLine(false, _T("Sent file data via normal socket when in PC mode. Bytes: %I64i."), sentBytesCompleteFileNormalSocket + sentBytesPartFileNormalSocket);
-			}
-		} else
-			uUpStatsPort = GetUserPort();
-
+	if (sock) {
 		// Extended statistics information based on which client software and which port we sent this data to...
 		// This also updates the grand total for sent bytes, etc.  And where this data came from.
 		sentBytesCompleteFile = (uint32)sock->GetSentBytesCompleteFileSinceLastCallAndReset();
 		sentBytesPartFile = (uint32)sock->GetSentBytesPartFileSinceLastCallAndReset();
-		thePrefs.Add2SessionTransferData(GetClientSoft(), uUpStatsPort, false, true, sentBytesCompleteFile, (IsFriend() && GetFriendSlot()));
-		thePrefs.Add2SessionTransferData(GetClientSoft(), uUpStatsPort, true, true, sentBytesPartFile, (IsFriend() && GetFriendSlot()));
+		thePrefs.Add2SessionTransferData(GetClientSoft(), GetUserPort(), false, true, sentBytesCompleteFile, (IsFriend() && GetFriendSlot()));
+		thePrefs.Add2SessionTransferData(GetClientSoft(), GetUserPort(), true, true, sentBytesPartFile, (IsFriend() && GetFriendSlot()));
 
 		m_nTransferredUp += sentBytesCompleteFile + sentBytesPartFile;
 		credits->AddUploaded(sentBytesCompleteFile + sentBytesPartFile, GetIP());
@@ -715,11 +700,6 @@ bool CUpDownClient::GetFriendSlot() const
 
 CEMSocket* CUpDownClient::GetFileUploadSocket(bool bLog)
 {
-	if (m_pPCUpSocket && (IsUploadingToPeerCache() || m_ePeerCacheUpState == PCUS_WAIT_CACHE_REPLY)) {
-		if (bLog && thePrefs.GetVerbose())
-			AddDebugLogLine(false, _T("%s got peercache socket."), (LPCTSTR)DbgGetClientInfo());
-		return m_pPCUpSocket;
-	}
 	if (bLog && thePrefs.GetVerbose())
 		AddDebugLogLine(false, _T("%s got normal socket."), (LPCTSTR)DbgGetClientInfo());
 	return socket;

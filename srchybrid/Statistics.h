@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -147,7 +147,7 @@ public:
 
 	static uint64	sessionReceivedBytes;
 	static uint64	sessionSentBytes;
-    static uint64	sessionSentBytesToFriend;
+	static uint64	sessionSentBytesToFriend;
 	static uint16	reconnects;
 	static DWORD	transferStarttime;
 	static DWORD	serverConnectTime;

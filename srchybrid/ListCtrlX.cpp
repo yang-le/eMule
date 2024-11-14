@@ -538,75 +538,61 @@ void CreateItemReport(CListCtrl &lv, CString &rstrReport)
 	}
 	TCHAR szItem[512];
 	int iItems = lv.GetItemCount();
+	LVCOLUMN lvc;
+	lvc.mask = LVCF_TEXT | LVCF_WIDTH;
+	lvc.pszText = szItem;
+	lvc.cchTextMax = _countof(szItem);
+	LVITEM lvi;
+	lvi.mask = LVIF_TEXT;
+	lvi.cchTextMax = _countof(szItem);
 
-//	memset(paiColWidths, 0, (sizeof *paiColWidths) * iCols);
-	for (int iCol = 0; iCol < iCols; ++iCol) {
-		LVCOLUMN lvc;
-		lvc.mask = LVCF_TEXT | LVCF_WIDTH;
-		lvc.pszText = szItem;
-		lvc.cchTextMax = _countof(szItem);
+	for (int iCol = 0; iCol < iCols; ++iCol)
 		if (lv.GetColumn(iCol, &lvc) && lvc.cx > 0) {
-			szItem[_countof(szItem) - 1] = _T('\0');
 			int iLen = (int)_tcslen(lvc.pszText);
 			if (iLen > paiColWidths[iCol])
 				paiColWidths[iCol] = iLen;
 
 			for (int iItem = 0; iItem < iItems; ++iItem) {
-				LVITEM lvi;
-				lvi.mask = LVIF_TEXT;
 				lvi.iItem = iItem;
 				lvi.iSubItem = iCol;
 				lvi.pszText = szItem;
-				lvi.cchTextMax = _countof(szItem);
 				if (lv.GetItem(&lvi)) {
-					szItem[_countof(szItem) - 1] = _T('\0');
 					iLen = (int)_tcslen(lvi.pszText);
 					if (iLen > paiColWidths[iCol])
 						paiColWidths[iCol] = iLen;
 				}
 			}
 		}
-	}
 
 	CString strLine;
-	for (int iCol = 0; iCol < iCols; ++iCol) {
-		if (paiColWidths[iCol] > 0) {
-			LVCOLUMN lvc;
-			lvc.mask = LVCF_TEXT;
-			lvc.pszText = szItem;
-			lvc.cchTextMax = _countof(szItem);
-			if (lv.GetColumn(iCol, &lvc)) {
-				szItem[_countof(szItem) - 1] = _T('\0');
-				strLine.AppendFormat(_T("%-*s"), paiColWidths[iCol] + 2, szItem);
-			}
-		}
-	}
+	lvc.mask = LVCF_TEXT;
+	for (int iCol = 0; iCol < iCols; ++iCol)
+		if (paiColWidths[iCol] > 0 && lv.GetColumn(iCol, &lvc))
+			strLine.AppendFormat(_T("%-*s"), paiColWidths[iCol] + 2, szItem);
+
 	if (!strLine.IsEmpty()) {
 		if (!rstrReport.IsEmpty())
 			rstrReport += _T("\r\n");
 		rstrReport.AppendFormat(_T("%s\r\n%s"), (LPCTSTR)strLine, (LPCTSTR)CString(_T('-'), strLine.GetLength()));
+		strLine.Empty();
 	}
 
+	lvi.mask = LVIF_TEXT;
 	for (int iItem = 0; iItem < iItems; ++iItem) {
-		for (int iCol = 0; iCol < iCols; ++iCol) {
+		for (int iCol = 0; iCol < iCols; ++iCol)
 			if (paiColWidths[iCol] > 0) {
-				LVITEM lvi;
-				lvi.mask = LVIF_TEXT;
 				lvi.iItem = iItem;
 				lvi.iSubItem = iCol;
 				lvi.pszText = szItem;
-				lvi.cchTextMax = _countof(szItem);
-				if (lv.GetItem(&lvi)) {
-					szItem[_countof(szItem) - 1] = _T('\0');
+				if (lv.GetItem(&lvi))
 					strLine.AppendFormat(_T("%-*s"), paiColWidths[iCol] + 2, szItem);
-				}
 			}
-		}
 
 		if (!strLine.IsEmpty()) {
 			if (!rstrReport.IsEmpty())
 				rstrReport += _T("\r\n");
 			rstrReport += strLine;
+			strLine.Empty();
 		}
 	}
 
@@ -656,9 +642,7 @@ void SetItemFocus(CListCtrl &ctl)
 	if (ctl.GetItemCount() > 0) {
 		int iSel = ctl.GetNextItem(-1, LVNI_FOCUSED);
 		if (iSel < 0) {
-			iSel = ctl.GetNextItem(-1, LVNI_SELECTED);
-			if (iSel < 0)
-				iSel = 0;
+			iSel = max(0, ctl.GetNextItem(-1, LVNI_SELECTED));
 			ctl.SetItemState(iSel, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
 			ctl.SetSelectionMark(iSel);
 		}
@@ -667,7 +651,7 @@ void SetItemFocus(CListCtrl &ctl)
 
 bool CListCtrlX::FindItem(const CListCtrlX &lv, int iItem, DWORD_PTR)
 {
-	CString strItemText(lv.GetItemText(iItem, lv.GetFindColumn()));
+	const CString &strItemText(lv.GetItemText(iItem, lv.GetFindColumn()));
 	if (!strItemText.IsEmpty()) {
 		if (lv.GetFindMatchCase()
 			? _tcsstr(strItemText, lv.GetFindText()) != NULL

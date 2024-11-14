@@ -286,7 +286,6 @@ void CTreePropSheet::RefillPageTree()
 		ti.pszText = strPagePath.GetBuffer(ti.cchTextMax);
 
 		pTabCtrl->GetItem(nPage, &ti);
-		ti.pszText[ti.cchTextMax - 1] = _T('\0');
 		strPagePath.ReleaseBuffer();
 
 		// Create an item in the tree for the page

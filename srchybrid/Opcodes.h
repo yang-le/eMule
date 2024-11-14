@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -261,9 +261,9 @@
 #define OP_PREVIEWANSWER		0x91	// <HASH 16><frames 1>{frames * <len 4><frame len>}
 #define OP_MULTIPACKET			0x92	// *DEPRECATED*
 #define OP_MULTIPACKETANSWER	0x93	// *DEPRECATED*
-#define	OP_PEERCACHE_QUERY		0x94	// *DEPRECATED*
-#define	OP_PEERCACHE_ANSWER		0x95	// *DEPRECATED*
-#define	OP_PEERCACHE_ACK		0x96	// *DEPRECATED*
+#define	OP_PEERCACHE_QUERY		0x94	// *DEFUNCT*
+#define	OP_PEERCACHE_ANSWER		0x95	// *DEFUNCT*
+#define	OP_PEERCACHE_ACK		0x96	// *DEFUNCT*
 #define	OP_PUBLICIP_REQ			0x97
 #define	OP_PUBLICIP_ANSWER		0x98
 #define OP_CALLBACK				0x99	// <HASH 16><HASH 16><uint 16>
@@ -330,11 +330,11 @@
 #define  FT_FILEFORMAT			 0x04	// <string>
 #define TAG_FILEFORMAT			"\x04"	// <string>
 #define  FT_LASTSEENCOMPLETE	 0x05	// <uint32>
-#define TAG_COLLECTION			"\x05"
-#define	TAG_PART_PATH			"\x06"	// <string>
-#define	TAG_PART_HASH			"\x07"
+//#define TAG_COLLECTION		"\x05"
+//#define TAG_PART_PATH			"\x06"	// <string>
+//#define TAG_PART_HASH			"\x07"
 #define  FT_TRANSFERRED			 0x08	// <uint32>
-#define	TAG_TRANSFERRED			"\x08"	// <uint32>
+//#define	TAG_TRANSFERRED			"\x08"	// <uint32>
 #define  FT_GAPSTART			 0x09	// <uint32>
 #define	TAG_GAPSTART			"\x09"	// <uint32>
 #define  FT_GAPEND				 0x0A	// <uint32>
@@ -350,7 +350,7 @@
 #define  FT_PARTFILENAME		 0x12	// <string>
 #define TAG_PARTFILENAME		"\x12"	// <string>
 //#define FT_PRIORITY			 0x13	// Not used any more
-#define TAG_PRIORITY			"\x13"	// <uint32>
+//#define TAG_PRIORITY			"\x13"	// <uint32>
 #define  FT_STATUS				 0x14	// <uint32>
 #define TAG_STATUS				"\x14"	// <uint32>
 #define  FT_SOURCES				 0x15	// <uint32>
@@ -358,9 +358,9 @@
 #define  FT_PERMISSIONS			 0x16	// <uint32>
 #define TAG_PERMISSIONS			"\x16"
 //#define FT_ULPRIORITY			 0x17	// Not used any more
-#define TAG_PARTS				"\x17"
-#define  FT_DLPRIORITY			 0x18	// Was 13
-#define  FT_ULPRIORITY			 0x19	// Was 17
+//#define TAG_PARTS				"\x17"
+#define  FT_DLPRIORITY			 0x18	// <uint32>	replaces unused 0x13
+#define  FT_ULPRIORITY			 0x19	// <uint32>	replaces unused 0x17
 #define	 FT_COMPRESSION			 0x1A
 #define	 FT_CORRUPTED			 0x1B
 #define  FT_KADLASTPUBLISHKEY	 0x20	// <uint32>
@@ -368,20 +368,21 @@
 #define	 FT_FLAGS				 0x22	// <uint32>
 #define	 FT_DL_ACTIVE_TIME		 0x23	// <uint32>
 #define	 FT_CORRUPTEDPARTS		 0x24	// <string>
-#define  FT_DL_PREVIEW			 0x25
+#define  FT_DL_PREVIEW			 0x25	// <uint32>
 #define  FT_KADLASTPUBLISHNOTES	 0x26	// <uint32>
 #define  FT_AICH_HASH			 0x27
 #define  FT_FILEHASH			 0x28
-#define	 FT_COMPLETE_SOURCES	 0x30	// nr. of sources which share a complete version of the associated file (supported by eserver 16.46+)
+#define	 FT_COMPLETE_SOURCES	 0x30	// <uint32> nr. of sources which share the complete version of the associated file (supported by eserver 16.46+)
 #define TAG_COMPLETE_SOURCES	"\x30"
-#define  FT_COLLECTIONAUTHOR	 0x31
-#define  FT_COLLECTIONAUTHORKEY  0x32
+#define  FT_COLLECTIONAUTHOR	 0x31	// <string>
+#define  FT_COLLECTIONAUTHORKEY  0x32	// <blob>
 #define  FT_PUBLISHINFO			 0x33	// <uint32>
 #define TAG_PUBLISHINFO			"\x33"	// <uint32>
 #define  FT_LASTSHARED			 0x34	// <uint32>
 #define  FT_AICHHASHSET			 0x35	// <uint32>
 #define	TAG_KADAICHHASHPUB		"\x36"	// <AICH Hash>
 #define TAG_KADAICHHASHRESULT	"\x37"	// <Count 1>{<Publishers 1><AICH Hash> Count}
+#define	 FT_FOLDERNAME			 0x38	// <string> in reply to View files request
 // statistic
 #define  FT_ATTRANSFERRED		 0x50	// <uint32>
 #define  FT_ATREQUESTED			 0x51	// <uint32>
@@ -546,13 +547,13 @@
 
 #define	PCPCK_VERSION			0x01
 
-// PeerCache packet sub objcodes
+// Defunct. PeerCache packet sub objcodes
 #define	PCOP_NONE				0x00
 #define	PCOP_REQ				0x01
 #define PCOP_RES				0x02
 #define	PCOP_ACK				0x03
 
-// PeerCache tags (NOTE: those tags are using the new eD2K tags (short tags))
+// Defunct. PeerCache tags (NOTE: those tags are using the new eD2K tags (short tags))
 #define	PCTAG_CACHEIP			0x01
 #define	PCTAG_CACHEPORT			0x02
 #define	PCTAG_PUBLICIP			0x03

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -24,7 +24,6 @@
 #include "Clientlist.h"
 #include "PartFile.h"
 #include "ListenSocket.h"
-#include "PeerCacheSocket.h"
 #include "Packets.h"
 #include "Opcodes.h"
 #include "SafeFile.h"
@@ -54,7 +53,6 @@
 #include "ChatWnd.h"
 #include "PreviewDlg.h"
 #include "Exceptions.h"
-#include "Peercachefinder.h"
 #include "ClientUDPSocket.h"
 #include "shahashset.h"
 #include "Log.h"
@@ -107,17 +105,6 @@ void CUpDownClient::Init()
 	m_abyUpPartStatus = NULL;
 	m_lastPartAsked = _UI16_MAX;
 	m_bAddNextConnect = false;
-	m_pPCDownSocket = NULL;
-	m_pPCUpSocket = NULL;
-
-	m_iHttpSendState = 0;
-	m_uPeerCacheDownloadPushId = 0;
-	m_uPeerCacheUploadPushId = 0;
-	m_uPeerCacheRemoteIP = 0;
-	m_bPeerCacheDownHit = false;
-	m_bPeerCacheUpHit = false;
-	m_ePeerCacheDownState = PCDS_NONE;
-	m_ePeerCacheUpState = PCUS_NONE;
 
 	if (socket) {
 		SOCKADDR_IN sockAddr = {};
@@ -294,14 +281,6 @@ CUpDownClient::~CUpDownClient()
 		socket->client = NULL;
 		socket->Safe_Delete();
 	}
-	if (m_pPCDownSocket) {
-		m_pPCDownSocket->client = NULL;
-		m_pPCDownSocket->Safe_Delete();
-	}
-	if (m_pPCUpSocket) {
-		m_pPCUpSocket->client = NULL;
-		m_pPCUpSocket->Safe_Delete();
-	}
 
 	free(m_pszUsername);
 	m_pszUsername = NULL;
@@ -348,8 +327,6 @@ void CUpDownClient::ClearHelloProperties()
 	m_fSharedDirectories = 0;
 	m_bMultiPacket = 0;
 	m_fPeerCache = 0;
-	m_uPeerCacheDownloadPushId = 0;
-	m_uPeerCacheUploadPushId = 0;
 	m_byKadVersion = 0;
 	m_fSupportsLargeFiles = 0;
 	m_fExtMultiPacket = 0;
@@ -686,8 +663,9 @@ bool CUpDownClient::ProcessHelloTypePacket(CSafeMemFile &data)
 	CString strBuffer(m_pszUsername);
 	strBuffer.Remove(_T(' '));
 	strBuffer.MakeUpper();
-	if (strBuffer.Find(_T("EMULE-CLIENT")) >= 0 || strBuffer.Find(_T("POWERMULE")) >= 0)
-		m_bGPLEvildoer = true;
+//	obsolete mods
+//	if (strBuffer.Find(_T("EMULE-CLIENT")) >= 0 || strBuffer.Find(_T("POWERMULE")) >= 0)
+//		m_bGPLEvildoer = true;
 
 	m_byInfopacketsReceived |= IP_EDONKEYPROTPACK;
 	// check if at least CT_EMULEVERSION was received, all other tags are optional
@@ -1007,7 +985,7 @@ void CUpDownClient::SendHelloTypePacket(CSafeMemFile &data)
 	const UINT uNoViewSharedFiles = static_cast<int>(thePrefs.CanSeeShares() == vsfaNobody); // for backward compatibility this has to be a 'negative' flag
 	const UINT uMultiPacket = 1;
 	const UINT uSupportPreview = static_cast<int>(thePrefs.CanSeeShares() != vsfaNobody); // set 'Preview supported' only if 'View Shared Files' allowed
-	const UINT uPeerCache = 1;
+	const UINT uPeerCache = 0;
 	const UINT uUnicodeSupport = 1;
 	const UINT nAICHVer = 1;
 	CTag tagMisOptions1(CT_EMULE_MISCOPTIONS1,
@@ -1031,9 +1009,9 @@ void CUpDownClient::SendHelloTypePacket(CSafeMemFile &data)
 	const UINT uSupportLargeFiles = 1;
 	const UINT uExtMultiPacket = 1;
 	const UINT uReserved = 0; // mod bit
-	const UINT uSupportsCryptLayer = static_cast<int>(thePrefs.IsClientCryptLayerSupported());
-	const UINT uRequestsCryptLayer = static_cast<int>(thePrefs.IsClientCryptLayerRequested());
-	const UINT uRequiresCryptLayer = static_cast<int>(thePrefs.IsClientCryptLayerRequired());
+	const UINT uSupportsCryptLayer = static_cast<int>(thePrefs.IsCryptLayerEnabled());
+	const UINT uRequestsCryptLayer = static_cast<int>(thePrefs.IsCryptLayerPreferred());
+	const UINT uRequiresCryptLayer = static_cast<int>(thePrefs.IsCryptLayerRequired());
 	const UINT uSupportsSourceEx2 = 1;
 	const UINT uSupportsCaptcha = 1;
 	// direct callback is only possible if connected to kad, TCP firewalled and verified UDP open (for example on a full cone NAT)
@@ -1157,8 +1135,6 @@ bool CUpDownClient::Disconnected(LPCTSTR pszReason, bool bFromSocket)
 
 	if (GetDownloadState() == DS_DOWNLOADING) {
 		ASSERT(m_eConnectingState == CCS_NONE);
-		if (m_ePeerCacheDownState == PCDS_WAIT_CACHE_REPLY || m_ePeerCacheDownState == PCDS_DOWNLOADING)
-			theApp.m_pPeerCache->DownloadAttemptFailed();
 		SetDownloadState(DS_ONQUEUE, CString(_T("Disconnected: ")) + pszReason);
 	} else {
 		// ensure that all possible block requests are removed from the partfile
@@ -1266,19 +1242,6 @@ bool CUpDownClient::Disconnected(LPCTSTR pszReason, bool bFromSocket)
 	m_fQueueRankPending = 0;
 	m_fFailedFileIdReqs = 0;
 	m_fUnaskQueueRankRecv = 0;
-	m_uPeerCacheDownloadPushId = 0;
-	m_uPeerCacheUploadPushId = 0;
-	m_uPeerCacheRemoteIP = 0;
-	SetPeerCacheDownState(PCDS_NONE);
-	SetPeerCacheUpState(PCUS_NONE);
-	if (m_pPCDownSocket) {
-		m_pPCDownSocket->client = NULL;
-		m_pPCDownSocket->Safe_Delete();
-	}
-	if (m_pPCUpSocket) {
-		m_pPCUpSocket->client = NULL;
-		m_pPCUpSocket->Safe_Delete();
-	}
 	m_fSentOutOfPartReqs = 0;
 	return false;
 }
@@ -1349,7 +1312,7 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 		return true;
 	}
 	// do not try to connect to source which are incompatible with our encryption setting (one requires it, and the other one doesn't support it)
-	if ((RequiresCryptLayer() && !thePrefs.IsClientCryptLayerSupported()) || (thePrefs.IsClientCryptLayerRequired() && !SupportsCryptLayer())) {
+	if ((RequiresCryptLayer() && !thePrefs.IsCryptLayerEnabled()) || (thePrefs.IsCryptLayerRequired() && !SupportsCryptLayer())) {
 		DEBUG_ONLY(AddDebugLogLine(DLP_DEFAULT, false, _T("Rejected outgoing connection because CryptLayer-Setting (Obfuscation) was incompatible %s"), (LPCTSTR)DbgGetClientInfo()));
 		if (Disconnected(_T("CryptLayer-Settings (Obfuscation) incompatible"))) {
 			delete this;
@@ -1531,7 +1494,7 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 void CUpDownClient::Connect()
 {
 	// enable or disable encryption based on our and the remote clients preference
-	if (HasValidHash() && SupportsCryptLayer() && thePrefs.IsClientCryptLayerSupported() && (RequestsCryptLayer() || thePrefs.IsClientCryptLayerRequested())) {
+	if (HasValidHash() && SupportsCryptLayer() && thePrefs.IsCryptLayerEnabled() && (RequestsCryptLayer() || thePrefs.IsCryptLayerPreferred())) {
 		//DebugLog(_T("Enabling CryptLayer on outgoing connection to client %s"), (LPCTSTR)DbgGetClientInfo()); // to be removed later
 		socket->SetConnectionEncryption(true, GetUserHash(), false);
 	} else
@@ -1550,21 +1513,22 @@ void CUpDownClient::Connect()
 void CUpDownClient::ConnectionEstablished()
 {
 	// OK we have a connection, lets see if we want anything from this client
-
-	/*// was this a direct callback?
+/*
+	// was this a direct callback?
 	if (m_nConnectingState == CCS_DIRECTCALLBACK) // TODO LOGREMOVE
 		DebugLog(_T("Direct Callback succeeded, connection established - %s"), (LPCTSTR)DbgGetClientInfo());
 
 	// remove the connecting timer and state
 	if (m_nConnectingState == CCS_NONE) // TODO LOGREMOVE
-		DEBUG_ONLY( DebugLog(_T("ConnectionEstablished with CCS_NONE (incoming, that's fine)")) );*/
+		DEBUG_ONLY( DebugLog(_T("ConnectionEstablished with CCS_NONE (incoming, that's fine)")) );
+*/
 	m_eConnectingState = CCS_NONE;
 	theApp.clientlist->RemoveConnectingClient(this);
 
-	// check if we should use this client to retrieve our public IP
+/*	// check if we should use this client to retrieve our public IP
 	if (theApp.GetPublicIP() == 0 && theApp.IsConnected() && m_fPeerCache)
 		SendPublicIPRequest();
-
+*/
 	switch (GetKadState()) {
 	case KS_CONNECTING_FWCHECK:
 		SetKadState(KS_CONNECTED_FWCHECK);
@@ -2522,33 +2486,9 @@ CString CUpDownClient::GetDownloadStateDisplayString() const
 		uid = IDS_KAD_TOOMANDYKADLKPS;
 		break;
 	default:
-		uid = 0;
+		return CString();
 	}
-	CString strState;
-	if (uid)
-		strState = GetResString(uid);
-
-	if (thePrefs.GetPeerCacheShow()) {
-		switch (m_ePeerCacheDownState) {
-		case PCDS_WAIT_CLIENT_REPLY:
-			uid = IDS_PCDS_CLIENTWAIT;
-			break;
-		case PCDS_WAIT_CACHE_REPLY:
-			uid = IDS_PCDS_CACHEWAIT;
-			break;
-		case PCDS_DOWNLOADING:
-			uid = IDS_CACHE;
-			break;
-		default:
-			uid = 0;
-		}
-		if (uid)
-			strState.AppendFormat(_T(" %s"), (LPCTSTR)GetResString(uid));
-		if (m_ePeerCacheDownState != PCDS_NONE && m_bPeerCacheDownHit)
-			strState += _T(" Hit");
-	}
-
-	return strState;
+	return GetResString(uid);
 }
 
 CString CUpDownClient::GetUploadStateDisplayString() const
@@ -2580,25 +2520,9 @@ CString CUpDownClient::GetUploadStateDisplayString() const
 			uid = IDS_TRICKLING;
 		break;
 	default:
-		uid = 0;
+		return CString();
 	}
-	CString strState;
-	if (uid)
-		strState = GetResString(uid);
-
-	if (thePrefs.GetPeerCacheShow()) {
-		switch (m_ePeerCacheUpState) {
-		case PCUS_WAIT_CACHE_REPLY:
-			strState += _T(" CacheWait");
-			break;
-		case PCUS_UPLOADING:
-			strState += _T(" Cache");
-		}
-		if (m_ePeerCacheUpState != PCUS_NONE && m_bPeerCacheUpHit)
-			strState += _T(" Hit");
-	}
-
-	return strState;
+	return GetResString(uid);
 }
 
 void CUpDownClient::SendPublicIPRequest()
@@ -2631,7 +2555,7 @@ void CUpDownClient::CheckFailedFileIdReqs(const uchar *aucFileHash)
 		return;
 	//if (GetDownloadState() != DS_DOWNLOADING) // filereq floods are never allowed!
 	{
-		if (m_fFailedFileIdReqs < 6)// NOTE: Do not increase this counter without increasing the bits for 'm_fFailedFileIdReqs'
+		if (m_fFailedFileIdReqs < 6)	// NOTE: Do not increase this counter without increasing the bits for 'm_fFailedFileIdReqs'
 			++m_fFailedFileIdReqs;
 		if (m_fFailedFileIdReqs == 6) {
 			if (theApp.clientlist->GetBadRequests(this) < 2)
@@ -2671,8 +2595,8 @@ bool  CUpDownClient::IsObfuscatedConnectionEstablished() const
 
 bool CUpDownClient::ShouldReceiveCryptUDPPackets() const
 {
-	return thePrefs.IsClientCryptLayerSupported() && SupportsCryptLayer() && theApp.GetPublicIP() != 0
-		&& HasValidHash() && (thePrefs.IsClientCryptLayerRequested() || RequestsCryptLayer());
+	return thePrefs.IsCryptLayerEnabled() && SupportsCryptLayer() && theApp.GetPublicIP() != 0
+		&& HasValidHash() && (thePrefs.IsCryptLayerPreferred() || RequestsCryptLayer());
 }
 
 void CUpDownClient::GetDisplayImage(int &iImage, UINT &uOverlayImage) const
@@ -2973,7 +2897,7 @@ void CUpDownClient::ProcessFirewallCheckUDPRequest(CSafeMemFile &data)
 	if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 		DebugSend("KADEMLIA2_FIREWALLUDP", ntohl(GetConnectIP()), nRemoteInternPort);
 	Kademlia::CKademlia::GetUDPListener()->SendPacket(fileTestPacket1, KADEMLIA2_FIREWALLUDP, ntohl(GetConnectIP())
-		, nRemoteInternPort, Kademlia::CKadUDPKey(dwSenderKey, theApp.GetPublicIP(false)), NULL);
+		, nRemoteInternPort, Kademlia::CKadUDPKey(dwSenderKey, theApp.GetPublicIP()), NULL);
 
 	// if the client has a router with PAT (and therefore a different extern port than intern), test this port too
 	if (nRemoteExternPort != 0 && nRemoteExternPort != nRemoteInternPort) {
@@ -2983,7 +2907,7 @@ void CUpDownClient::ProcessFirewallCheckUDPRequest(CSafeMemFile &data)
 		if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 			DebugSend("KADEMLIA2_FIREWALLUDP", ntohl(GetConnectIP()), nRemoteExternPort);
 		Kademlia::CKademlia::GetUDPListener()->SendPacket(fileTestPacket2, KADEMLIA2_FIREWALLUDP, ntohl(GetConnectIP())
-			, nRemoteExternPort, Kademlia::CKadUDPKey(dwSenderKey, theApp.GetPublicIP(false)), NULL);
+			, nRemoteExternPort, Kademlia::CKadUDPKey(dwSenderKey, theApp.GetPublicIP()), NULL);
 	}
 	DebugLog(_T("Answered UDP Firewall check request (%s)"), (LPCTSTR)DbgGetClientInfo());
 }

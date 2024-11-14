@@ -123,7 +123,7 @@ void CListBoxST::DrawItem(LPDRAWITEMSTRUCT lpDIStruct)
 	const CRect *pRect = (m_byRowSelect == ST_TEXTSELECT ? &rcCenteredText : &rcText);
 	OnDrawTextBackground(lpDIStruct->itemID, pDC, &rcItem, pRect, bIsDisabled, bIsSelected, crColor);
 
-	// Draw the icon (if any)
+	// Draw the icon, if any
 	if (m_pImageList)
 		OnDrawIcon(lpDIStruct->itemID, pDC, &rcItem, &rcIcon, lpLBData->nImage, bIsDisabled, bIsSelected);
 

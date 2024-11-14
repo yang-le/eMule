@@ -22,9 +22,9 @@ protected:
 	CMenu *m_pMenuIPFilter;
 	CListCtrlX m_ipfilter;
 	HICON m_icoDlg;
-	UINT m_uIPFilterItems;
 	const SIPFilter **m_ppIPFilterItems;
 	ULONG m_ulFilteredIPs;
+	UINT m_uIPFilterItems;
 
 	void SortIPFilterItems();
 	void InitIPFilters();

@@ -281,22 +281,21 @@ BOOL TabControl::ReorderTab(unsigned int nSrcTab, unsigned int nDstTab)
 	// Remember the current selected tab
 	unsigned int nSelectedTab = GetCurSel();
 
-	// Get information from the tab to move (to be deleted)
+	// Get information from the tab to be moved or deleted
 	TCHAR sBuffer[256];
-	TCITEM item;
-	item.mask = TCIF_IMAGE | TCIF_PARAM | TCIF_TEXT; //| TCIF_STATE;
-	item.pszText = sBuffer;
-	item.cchTextMax = _countof(sBuffer);
+	TCITEM ti;
+	ti.mask = TCIF_IMAGE | TCIF_PARAM | TCIF_TEXT; //| TCIF_STATE;
+	ti.pszText = sBuffer;
+	ti.cchTextMax = _countof(sBuffer);
 
-	BOOL bOK = GetItem(nSrcTab, &item);
-	sBuffer[_countof(sBuffer) - 1] = _T('\0');
+	BOOL bOK = GetItem(nSrcTab, &ti);
 	ASSERT(bOK);
 
 	bOK = DeleteItem(nSrcTab);
 	ASSERT(bOK);
 
 	// Insert it at new location
-	bOK = InsertItem(nDstTab - static_cast<unsigned>(m_nDstTab > m_nSrcTab), &item);
+	bOK = InsertItem(nDstTab - static_cast<unsigned>(m_nDstTab > m_nSrcTab), &ti);
 
 	// Setup new selected tab
 	if (nSelectedTab == nSrcTab)
@@ -370,7 +369,6 @@ void TabControl::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 	tci.cchTextMax = _countof(szLabel);
 	if (!GetItem(nTabIndex, &tci))
 		return;
-	szLabel[_countof(szLabel) - 1] = _T('\0');
 
 	CDC *pDC = CDC::FromHandle(lpDIS->hDC);
 	if (!pDC)

@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2020-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2020-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -14,8 +14,8 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
 #include "StdAfx.h"
+#include <timeapi.h>
 #include "updownclient.h"
 #include "PartFileWriteThread.h"
 #include "emule.h"
@@ -31,19 +31,25 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+#define RUN_STOP	0
+#define RUN_IDLE	1
+#define RUN_WORK	2
+#define WAKEUP		((ULONG_PTR)(~0))
+
 IMPLEMENT_DYNCREATE(CPartFileWriteThread, CWinThread)
 
 CPartFileWriteThread::CPartFileWriteThread()
 	: m_eventThreadEnded(FALSE, TRUE)
 	, m_hPort()
-	, m_bRun()
+	, m_Run(RUN_STOP)
+	, m_bNewData()
 {
 	AfxBeginThread(RunProc, (LPVOID)this, THREAD_PRIORITY_BELOW_NORMAL);
 }
 
 CPartFileWriteThread::~CPartFileWriteThread()
 {
-	ASSERT(!m_hPort && !m_bRun);
+	ASSERT(!m_hPort && !m_Run);
 }
 
 UINT AFX_CDECL CPartFileWriteThread::RunProc(LPVOID pParam)
@@ -55,7 +61,7 @@ UINT AFX_CDECL CPartFileWriteThread::RunProc(LPVOID pParam)
 
 void CPartFileWriteThread::EndThread()
 {
-	m_bRun = false;
+	m_Run = RUN_STOP;
 	PostQueuedCompletionStatus(m_hPort, 0, 0, NULL);
 	m_eventThreadEnded.Lock();
 }
@@ -67,37 +73,39 @@ UINT CPartFileWriteThread::RunInternal()
 		return ::GetLastError();
 
 	DWORD dwWrite = 0;
-	ULONG_PTR completionKey = 0; //pointer to CPartFile?
+	ULONG_PTR completionKey = 0;
 	OverlappedWrite_Struct *pCurIO = NULL;
-	m_bRun = true;
-	while (m_bRun
+	m_Run = RUN_IDLE;
+	while (m_Run
 		&& ::GetQueuedCompletionStatus(m_hPort, &dwWrite, &completionKey, (LPOVERLAPPED*)&pCurIO, INFINITE)
 		&& completionKey)
 	{
+		m_Run = RUN_WORK;
 		//move buffer lists into the local storage
 		if (!m_FlushList.IsEmpty()) {
 			m_lockFlushList.Lock();
 			while (!m_FlushList.IsEmpty())
 				m_listToWrite.AddTail(m_FlushList.RemoveHead());
+			InterlockedExchange8(&m_bNewData, 0);
 			m_lockFlushList.Unlock();
 		}
-
-		//write new buffers
+		//start new I/O
 		WriteBuffers();
-
 		//completed I/O
 		do {
 			if (!completionKey)
 				break;
-			if (completionKey != (ULONG_PTR)(~0)) //wake up call
+			if (completionKey != WAKEUP) //ignore wakeups
 				WriteCompletionRoutine(dwWrite, pCurIO);
 		} while (::GetQueuedCompletionStatus(m_hPort, &dwWrite, &completionKey, (LPOVERLAPPED*)&pCurIO, 0));
 
-		//thread termination
-		if (!completionKey) // && !dwRead && !pCurIO)
+		if (!completionKey) //thread termination
 			break;
+		m_Run = RUN_IDLE;
+		if (InterlockedExchange8(&m_bNewData, 0) && m_listPendingIO.IsEmpty())
+			PostQueuedCompletionStatus(m_hPort, 0, WAKEUP, NULL);
 	}
-	m_bRun = false;
+	m_Run = RUN_STOP;
 
 	//Improper termination of asynchronous I/O follows...
 	//close file handles to release I/O completion port
@@ -114,7 +122,7 @@ UINT CPartFileWriteThread::RunInternal()
 void CPartFileWriteThread::WriteBuffers()
 {
 	//process internal list
-	while (!m_listToWrite.IsEmpty() && m_bRun) {
+	while (!m_listToWrite.IsEmpty() && m_Run) {
 		const ToWrite &item = m_listToWrite.RemoveHead();
 		PartFileBufferedData *pBuffer = item.pBuffer;
 		ASSERT(pBuffer->end >= pBuffer->start && (pBuffer->data || pBuffer->end == pBuffer->start)); //verifies allocation requests too
@@ -160,7 +168,7 @@ void CPartFileWriteThread::WriteCompletionRoutine(DWORD dwBytesWritten, const Ov
 		return;
 	}
 	CPartFile *pFile = pOvWrite->pFile;
-	if (m_bRun) {
+	if (m_Run) {
 		PartFileBufferedData *pBuffer = pOvWrite->pBuffer;
 		const DWORD dwWrite = (DWORD)(pBuffer->end - pBuffer->start + 1);
 
@@ -191,17 +199,17 @@ void CPartFileWriteThread::WriteCompletionRoutine(DWORD dwBytesWritten, const Ov
 
 bool CPartFileWriteThread::AddFile(CPartFile *pFile)
 {
-	ASSERT(m_hPort && m_bRun);
+	ASSERT(m_hPort && m_Run);
 	if (pFile && pFile->m_hWrite == INVALID_HANDLE_VALUE) {
 		const CString sPartFile(RemoveFileExtension(pFile->GetFullName()));
 		pFile->m_hWrite = ::CreateFile(sPartFile, GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 		if (pFile->m_hWrite == INVALID_HANDLE_VALUE) {
-			DebugLogError(_T("Failed to open \"%s\" for overlapped write: %s"), (LPCTSTR)sPartFile, (LPCTSTR)GetErrorMessage(::GetLastError(), 1));
+			theApp.QueueDebugLogLineEx(LOG_ERROR, _T("Failed to open \"%s\" for overlapped write: %s"), (LPCTSTR)sPartFile, (LPCTSTR)GetErrorMessage(::GetLastError(), 1));
 			pFile->SetStatus(PS_ERROR);
 			return false;
 		}
 		if (m_hPort != ::CreateIoCompletionPort(pFile->m_hWrite, m_hPort, (ULONG_PTR)pFile, 0)) {
-			DebugLogError(_T("Failed to associate \"%s\" with IOCP: %s"), (LPCTSTR)sPartFile, (LPCTSTR)GetErrorMessage(::GetLastError(), 1));
+			theApp.QueueDebugLogLineEx(LOG_ERROR, _T("Failed to associate \"%s\" with IOCP: %s"), (LPCTSTR)sPartFile, (LPCTSTR)GetErrorMessage(::GetLastError(), 1));
 			RemFile(pFile);
 			pFile->SetStatus(PS_ERROR);
 			return false;
@@ -219,13 +227,11 @@ void CPartFileWriteThread::RemFile(CPartFile *pFile)
 	}
 }
 
-bool CPartFileWriteThread::IsRunning()
-{
-	return m_bRun;
-}
-
 void CPartFileWriteThread::WakeUpCall()
 {
-	if (m_bRun)
-		PostQueuedCompletionStatus(m_hPort, 0, (ULONG_PTR)(~0), NULL);
+	//pending I/O makes posting unnecessary
+	if (m_Run == RUN_IDLE && m_listPendingIO.IsEmpty())
+		PostQueuedCompletionStatus(m_hPort, 0, WAKEUP, NULL);
+	else
+		InterlockedExchange8(&m_bNewData, 1);
 }

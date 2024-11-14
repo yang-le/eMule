@@ -1552,7 +1552,7 @@ BEGIN
     IDS_NEWMSG              "Nova mensaxe de '%s' (IP:%s)"
     IDS_PREF_STARTNEXTFILECATONLY "só na mesma categoría"
     IDS_LOG_ULDL_EVENTS     "Rexistrar eventos de subida/baixada"
-    IDS_PEERCACHE_ENABLED   "O teu ISP soporta PeerCache, activando baixadas mediante cache!"
+//    IDS_PEERCACHE_ENABLED   "O teu ISP soporta PeerCache, activando baixadas mediante cache!"
     IDS_IRC_EMULEPROTO_ALLOWADDFRIEND "Permitir ao usuario engadirte como amigo."
     IDS_DL_TRY_TO_GET_PREVIEW_PARTS "Descargar primeiro as partes necesarias para a previsualización"
 END
@@ -1594,9 +1594,9 @@ BEGIN
                             "Activa isto para que eMule se inicie ao arrancar Windows. (Deshabilitado por defecto)"
     IDS_KAD_WAITCBK         "Esperar resposta Kad"
     IDS_KAD_TOOMANDYKADLKPS "Demasiadas buscas Kad"
-    IDS_PCDS_CLIENTWAIT     "Espera de cliente"
-    IDS_PCDS_CACHEWAIT      "Espera de cache"
-    IDS_CACHE               "Cache"//!
+//    IDS_PCDS_CLIENTWAIT     "Espera de cliente"
+//    IDS_PCDS_CACHEWAIT      "Espera de cache"
+//    IDS_CACHE               "Cache"//!
     IDS_INDEXED             "Indexado"
     IDS_KADINFO_SRC         "\tFonte: %u\r\n"
     IDS_KADINFO_KEYW        "\tPalabra clave: %u\r\n"

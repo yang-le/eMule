@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -349,7 +349,7 @@ void CMuleToolbarCtrl::OnNmRClick(LPNMHDR, LRESULT *pResult)
 
 		if (!astrToolbarFiles.IsEmpty()) {
 			Sort(astrToolbarFiles);
-			for (int f = 0; f < astrToolbarFiles.GetCount(); ++f) {
+			for (INT_PTR f = 0; f < astrToolbarFiles.GetCount(); ++f) {
 				const CString &bitmapFileName(astrToolbarFiles[f]);
 				LPCTSTR pTbBaseExt = stristr(bitmapFileName, EMULTB_BASEEXT);
 				int iBaseLen = pTbBaseExt ? (int)(pTbBaseExt - (LPCTSTR)bitmapFileName - 1) : bitmapFileName.GetLength();
@@ -407,7 +407,7 @@ void CMuleToolbarCtrl::OnNmRClick(LPNMHDR, LRESULT *pResult)
 
 		if (!astrSkinFiles.IsEmpty()) {
 			Sort(astrSkinFiles);
-			for (int f = 0; f < astrSkinFiles.GetCount(); ++f) {
+			for (INT_PTR f = 0; f < astrSkinFiles.GetCount(); ++f) {
 				const CString &skinFileName(astrSkinFiles[f]);
 				LPCTSTR pSkinBaseExt = stristr(skinFileName, _T(".") EMULSKIN_BASEEXT _T(".ini"));
 				int iBaseLen = pSkinBaseExt ? (int)(pSkinBaseExt - (LPCTSTR)skinFileName - 1) : skinFileName.GetLength();
@@ -906,7 +906,7 @@ void CMuleToolbarCtrl::UpdateIdealSize()
 
 #ifdef _DEBUG
 
-void CMuleToolbarCtrl::Dump()
+void CMuleToolbarCtrl::DumpInfo()
 {
 	TRACE("---\n");
 	CRect rcWnd;
@@ -964,10 +964,8 @@ void CMuleToolbarCtrl::Dump()
 		TCHAR szLabel[256];
 		tbbi.cchText = _countof(szLabel);
 		tbbi.pszText = szLabel;
-		if (GetButtonInfo(i, &tbbi) >= 0) {
-			szLabel[_countof(szLabel) - 1] = _T('\0');
+		if (GetButtonInfo(i, &tbbi) >= 0)
 			TRACE(" %2d ", tbbi.cx);
-		}
 	}
 	TRACE("\n");
 }

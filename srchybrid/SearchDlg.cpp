@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -28,7 +28,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-
 #define	IDBAR_SEARCH_PARAMS		(AFX_IDW_CONTROLBAR_FIRST + 32 + 1)	// do NOT change that ID, if not absolutely needed (it is stored by MFC in the bar profile!)
 #define	SEARCH_PARAMS_PROFILE	_T("SearchFrmBarState")
 
@@ -48,7 +47,7 @@ CSearchDlg::CSearchDlg()
 {
 }
 
-BOOL CSearchDlg::Create(CWnd *pParent)
+BOOL CSearchDlg::CreateWnd(CWnd *pParent)
 {
 	// *) The initial size of that frame window must not exceed the window size of the
 	//    dialog resource template of the client window (the search results window).
@@ -68,6 +67,10 @@ int CSearchDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	context.m_pCurrentDoc = NULL;
 	context.m_pNewViewClass = RUNTIME_CLASS(CSearchResultsWnd);
 	context.m_pNewDocTemplate = NULL;
+#ifdef _DEBUG
+	CFrameDoc dummy;
+	context.m_pCurrentDoc = &dummy;
+#endif
 	m_pwndResults = static_cast<CSearchResultsWnd*>(CreateView(&context));
 	m_wndParams.m_searchdlg = m_pwndResults;
 	m_pwndResults->ModifyStyle(WS_BORDER, 0);
@@ -120,26 +123,6 @@ void CSearchDlg::OnSetFocus(CWnd *pOldWnd)
 	CFrameWnd::OnSetFocus(pOldWnd);
 	if (m_wndParams.m_hWnd)
 		m_wndParams.SetFocus();
-}
-
-void CSearchDlg::SaveAllSettings()
-{
-	m_wndParams.SaveSettings();
-}
-
-void CSearchDlg::ResetHistory()
-{
-	m_wndParams.ResetHistory();
-}
-
-BOOL CSearchDlg::IsSearchParamsWndVisible() const
-{
-	return m_wndParams.IsWindowVisible();
-}
-
-void CSearchDlg::OpenParametersWnd()
-{
-	ShowControlBar(&m_wndParams, TRUE, TRUE);
 }
 
 void CSearchDlg::DockParametersWnd()
@@ -230,24 +213,14 @@ bool CSearchDlg::DoNewEd2kSearch(SSearchParams *pParams)
 	return m_pwndResults->DoNewEd2kSearch(pParams);
 }
 
-void CSearchDlg::ProcessEd2kSearchLinkRequest(const CString &strSearchTerm)
-{
-	m_wndParams.ProcessEd2kSearchLinkRequest(strSearchTerm);
-}
-
 void CSearchDlg::DeleteAllSearches()
 {
 	m_pwndResults->DeleteAllSearches();
 }
 
-bool CSearchDlg::CanDeleteSearch() const
+bool CSearchDlg::CanDeleteSearches() const
 {
-	return m_pwndResults->CanDeleteSearch();
-}
-
-bool CSearchDlg::CanDeleteAllSearches() const
-{
-	return m_pwndResults->CanDeleteAllSearches();
+	return m_pwndResults->CanDeleteSearches();
 }
 
 void CSearchDlg::DeleteSearch(uint32 nSearchID)
@@ -265,7 +238,7 @@ void CSearchDlg::DownloadSelected()
 	m_pwndResults->DownloadSelected();
 }
 
-CClosableTabCtrl& CSearchDlg::GetSearchSelector()
+CClosableTabCtrl& CSearchDlg::GetSearchSelector() const
 {
 	return m_pwndResults->searchselect;
 }

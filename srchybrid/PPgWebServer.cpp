@@ -1,5 +1,5 @@
 //this file is part of eMule
-//Copyright (C)2002-2023 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
+//Copyright (C)2002-2024 Merkur ( strEmail.Format("%s@%s", "devteam", "emule-project.net") / https://www.emule-project.net )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -51,7 +51,7 @@ struct options
 	LPCSTR	issuer_name;	//issuer name for certificate
 	LPCSTR	not_before;		//validity period not before
 	LPCSTR	not_after;		//validity period not after
-	LPCSTR	serial;			//serial number string
+	uint16	serial;			//serial number string
 };
 
 static int write_buffer(LPCTSTR output_file, const unsigned char *buffer)
@@ -76,47 +76,23 @@ static int write_private_key(mbedtls_pk_context *key, LPCTSTR output_file)
 	return ret ? ret : write_buffer(output_file, output_buf);
 }
 
+//create RSA 2048 key
 int KeyCreate(mbedtls_pk_context *key, mbedtls_ctr_drbg_context *ctr_drbg, LPCTSTR output_file)
 {
-	mbedtls_mpi N, P, Q, D, E, DP, DQ, QP;
 	LPCTSTR pmsg = NULL;
-	int ret;
-
-	mbedtls_mpi_init(&N);
-	mbedtls_mpi_init(&P);
-	mbedtls_mpi_init(&Q);
-	mbedtls_mpi_init(&D);
-	mbedtls_mpi_init(&E);
-	mbedtls_mpi_init(&DP);
-	mbedtls_mpi_init(&DQ);
-	mbedtls_mpi_init(&QP);
-
-	//create RSA 2048 key
-	ret = mbedtls_pk_setup(key, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA));
-	if (ret) {
-		pmsg = _T("mbedtls_pk_setup");
-		goto exit;
-	}
-	ret = mbedtls_rsa_gen_key(mbedtls_pk_rsa(*key), mbedtls_ctr_drbg_random, ctr_drbg, 2048u, 65537);
-	if (ret) {
-		pmsg = _T("mbedtls_rsa_gen_key");
-		goto exit;
-	}
-
-	//write the key to a file
-	ret = write_private_key(key, output_file);
+	int ret = mbedtls_pk_setup(key, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA));
 	if (ret)
-		DebugLogError(_T("Error: writing private key failed"));
-
-exit:
-	mbedtls_mpi_free(&N);
-	mbedtls_mpi_free(&P);
-	mbedtls_mpi_free(&Q);
-	mbedtls_mpi_free(&D);
-	mbedtls_mpi_free(&E);
-	mbedtls_mpi_free(&DP);
-	mbedtls_mpi_free(&DQ);
-	mbedtls_mpi_free(&QP);
+		pmsg = _T("mbedtls_pk_setup");
+	else {
+		ret = mbedtls_rsa_gen_key(mbedtls_pk_rsa(*key), mbedtls_ctr_drbg_random, ctr_drbg, 2048u, 65537);
+		if (ret)
+			pmsg = _T("mbedtls_rsa_gen_key");
+		else {
+			ret = write_private_key(key, output_file);	//write the key to a file
+			if (ret)
+				pmsg = _T("write_private_key");
+		}
+	}
 
 	if (pmsg)
 		DebugLogError(_T("Error: %s returned -0x%04x - %s"), pmsg, -ret, (LPCTSTR)SSLerror(ret));
@@ -127,7 +103,7 @@ int write_certificate(mbedtls_x509write_cert *crt, LPCTSTR output_file, int(*f_r
 {
 	unsigned char output_buf[4096];
 
-	int ret = mbedtls_x509write_crt_pem(crt, output_buf, 4096, f_rng, p_rng);
+	int ret = mbedtls_x509write_crt_pem(crt, output_buf, sizeof output_buf, f_rng, p_rng);
 	return ret ? ret : write_buffer(output_file, output_buf);
 }
 
@@ -140,36 +116,28 @@ int CertCreate(const struct options &opt)
 	mbedtls_entropy_context entropy;
 	mbedtls_ctr_drbg_context ctr_drbg;
 	LPCTSTR pmsg = NULL;
-	int ret;
 
 	mbedtls_threading_set_alt(threading_mutex_init_alt, threading_mutex_free_alt, threading_mutex_lock_alt, threading_mutex_unlock_alt);
 	mbedtls_x509write_crt_init(&crt);
 	mbedtls_pk_init(&issuer_key);
 	mbedtls_mpi_init(&serial);
 	mbedtls_ctr_drbg_init(&ctr_drbg);
+	mbedtls_entropy_init(&entropy);
 
 	//seed the PRNG
-	mbedtls_entropy_init(&entropy);
-	ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (unsigned char*)pers, strlen(pers));
+	int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (unsigned char*)pers, sizeof pers);
 	if (ret) {
-		DebugLogError(_T("Error: mbedtls_ctr_drbg_seed returned %d - %s"), ret, (LPCTSTR)SSLerror(ret));
+		pmsg = _T("mbedtls_ctr_drbg_seed");
 		goto exit;
 	}
 
 	//generate the key
 	ret = KeyCreate(&issuer_key, &ctr_drbg, opt.issuer_key);
 	if (ret)
-		goto exit;
+		goto exit; //the bug already was reported
 
 	mbedtls_x509write_crt_set_subject_key(&crt, &issuer_key);
 	mbedtls_x509write_crt_set_issuer_key(&crt, &issuer_key);
-
-	// Parse serial to MPI
-	ret = mbedtls_mpi_read_string(&serial, 10, opt.serial);
-	if (ret) {
-		pmsg = _T("mbedtls_mpi_read_string");
-		goto exit;
-	}
 
 	//set parameters
 	ret = mbedtls_x509write_crt_set_subject_name(&crt, opt.subject_name);
@@ -183,7 +151,7 @@ int CertCreate(const struct options &opt)
 		goto exit;
 	}
 
-	mbedtls_x509write_crt_set_version(&crt, 2); //2 for v3 version
+	mbedtls_x509write_crt_set_version(&crt, MBEDTLS_X509_CRT_VERSION_3);
 	mbedtls_x509write_crt_set_md_alg(&crt, MBEDTLS_MD_SHA256);
 
 	ret = mbedtls_x509write_crt_set_serial(&crt, &serial);
@@ -211,16 +179,6 @@ int CertCreate(const struct options &opt)
 		pmsg = _T("mbedtls_x509write_crt_set_authority_key_identifier");
 		goto exit;
 	}
-	ret = mbedtls_x509write_crt_set_key_usage(&crt, MBEDTLS_X509_KU_KEY_ENCIPHERMENT);
-	if (ret) {
-		pmsg = _T("mbedtls_x509write_crt_set_key_usage");
-		goto exit;
-	}
-	ret = mbedtls_x509write_crt_set_ns_cert_type(&crt, MBEDTLS_X509_NS_CERT_TYPE_SSL_SERVER);
-	if (ret) {
-		pmsg = _T("mbedtls_x509write_crt_set_ns_cert_type");
-		goto exit;
-	}
 
 	//write the certificate to a file
 	ret = write_certificate(&crt, opt.cert_file, mbedtls_ctr_drbg_random, &ctr_drbg);
@@ -228,11 +186,10 @@ int CertCreate(const struct options &opt)
 		pmsg = _T("write_certificate");
 
 exit:
-	mbedtls_x509write_crt_free(&crt);
-	mbedtls_pk_free(&issuer_key);
-	mbedtls_mpi_free(&serial);
-	mbedtls_ctr_drbg_free(&ctr_drbg);
 	mbedtls_entropy_free(&entropy);
+	mbedtls_ctr_drbg_free(&ctr_drbg);
+	mbedtls_pk_free(&issuer_key);
+	mbedtls_x509write_crt_free(&crt);
 
 	if (pmsg)
 		DebugLogError(_T("Error: %s returned -0x%04x - %s"), pmsg, -ret, (LPCTSTR)SSLerror(ret));
@@ -472,7 +429,7 @@ void CPPgWebServer::OnChangeHTTPS()
 
 void CPPgWebServer::OnEnChangeWSEnabled()
 {
-	BOOL bIsWIEnabled = (BOOL)IsDlgButtonChecked(IDC_WSENABLED);
+	bool bIsWIEnabled = IsDlgButtonChecked(IDC_WSENABLED) != 0;
 	GetDlgItem(IDC_WS_GZIP)->EnableWindow(bIsWIEnabled);
 	GetDlgItem(IDC_WSPORT)->EnableWindow(bIsWIEnabled);
 	GetDlgItem(IDC_TMPLPATH)->EnableWindow(bIsWIEnabled);
@@ -517,13 +474,11 @@ void CPPgWebServer::OnGenerateCertificate()
 	const CString &confdir(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR));
 	const CString &fkey(confdir + _T("cert.key"));
 	const CString &fcrt(confdir + _T("cert.crt"));
-	CStringA not_after, not_before, serial;
+	CStringA not_after, not_before;
 	SYSTEMTIME st;
 	GetSystemTime(&st);
 	not_before.Format("%4hu%02hu01000000", st.wYear, st.wMonth);
-	not_after.Format("%4hu%02hu01235959", st.wYear + 1, st.wMonth);
-	int nserial = rand() & 0xfff; //avoid repeated serials (kind of)
-	serial.Format("%d", nserial);
+	not_after.Format("%4hu%02hu01000000", st.wYear + 1, st.wMonth);
 
 	struct options opt;
 	opt.issuer_key = (LPCTSTR)fkey;
@@ -532,10 +487,12 @@ void CPPgWebServer::OnGenerateCertificate()
 	opt.issuer_name = "CN=eMule,O=emule-project.net";
 	opt.not_before = (LPCSTR)not_before;
 	opt.not_after = (LPCSTR)not_after;
-	opt.serial = (LPCSTR)serial;
+	opt.serial = _byteswap_ushort(rand() & 0xfff); //avoid repeated serials (kind of)
+	if (!opt.serial)
+		++opt.serial; //must be positive
 	m_bNewCert = !CertCreate(opt);
 	if (m_bNewCert) {
-		AddLogLine(false, _T("New certificate created; serial %d"), nserial);
+		AddLogLine(false, _T("New certificate created; serial %d"), opt.serial);
 		SetDlgItemText(IDC_KEYPATH, fkey);
 		SetDlgItemText(IDC_CERTPATH, fcrt);
 		GetDlgItem(IDC_WEB_GENERATE)->EnableWindow(FALSE);

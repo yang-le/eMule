@@ -1542,7 +1542,7 @@ BEGIN
     IDS_NEWMSG              "Zpráva od '%s' (IP:%s)"
     IDS_PREF_STARTNEXTFILECATONLY "pouze ve stejné kategorii"
     IDS_LOG_ULDL_EVENTS     "Logovat události uploadu/downloadu"
-    IDS_PEERCACHE_ENABLED   "Váš ISP podporuje technologii PeerCache, která umožňuje cashovat downloady!"
+//    IDS_PEERCACHE_ENABLED   "Váš ISP podporuje technologii PeerCache, která umožňuje cashovat downloady!"
     IDS_IRC_EMULEPROTO_ALLOWADDFRIEND "Povolit uživateli, aby si Vás přidal mezi přítele."
     IDS_SOURCESWAPBLOCKED   "Výměna zdrojů zablokována"
     IDS_A4AF_CHECK_THIS_NOW "Zkontrolujte tento zdroj (debug)"
@@ -1583,9 +1583,9 @@ BEGIN
                             "Zaškrtněte, pokud požadujete, aby se eMule spouštěl se startem Windows. (implicitně vypnuto)"
     IDS_KAD_WAITCBK         "Čekat na zpětné volání z Kad"
     IDS_KAD_TOOMANDYKADLKPS "Příliš mnoho Kad vyhledávání"
-    IDS_PCDS_CLIENTWAIT     "Klient Čeká"
-    IDS_PCDS_CACHEWAIT      "Cache Čeká"
-    IDS_CACHE               "Cache" //!
+//    IDS_PCDS_CLIENTWAIT     "Klient Čeká"
+//    IDS_PCDS_CACHEWAIT      "Cache Čeká"
+//    IDS_CACHE               "Cache" //!
     IDS_INDEXED             "Indexován"
     IDS_KADINFO_SRC         "\tZdroj: %u\r\n"
     IDS_KADINFO_KEYW        "\tKlíčové slovo: %u\r\n"
